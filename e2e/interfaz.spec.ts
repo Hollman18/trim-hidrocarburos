@@ -133,3 +133,43 @@ test.describe('390 px', () => {
     f.cerrar()
   })
 })
+
+// Menos texto: la producción y el diferido se leen como barra contra la meta.
+// Las aserciones de texto del auditor pasan aunque falte la barra (no tiene
+// texto): aquí se cuentan las barras y se mira que cada una tenga su raya.
+test('el resumen del gerente mide contra la meta con barras', async ({ flujo: f }) => {
+  await f.abrir('/#/ger/resumen/ceiba~portafolio/curso')
+  const barras = await f.page.evaluate(() => [...document.querySelectorAll('main [data-barra]')].map(b => ({
+    raya: !!b.querySelector('[data-raya]'),
+    relleno: (b.querySelector('[data-relleno]') as HTMLElement | null)?.getBoundingClientRect().width ?? -1,
+  })))
+  // 2 del promedio diario + 2 del cierre proyectado + 2 por cada uno de los 5 campos.
+  f.ok(barras.length === 14, `14 barras en el resumen del portafolio (${barras.length})`)
+  f.ok(barras.every(b => b.raya && b.relleno >= 0), 'cada barra tiene su raya de meta y su relleno')
+  f.ok((barras[0]?.relleno ?? 0) > 0, 'la producción del día llena su barra')
+  f.cerrar()
+})
+
+// Lo que la pantalla deja en un ⓘ o detrás de «ver N más» sale escrito en el
+// papel: el informe es la pantalla impresa y en el papel no hay globos.
+test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas', async ({ flujo: f }) => {
+  await f.abrir('/#/jefe/riesgo/ceiba~portafolio/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  let t = await f.textoPagina()
+  f.ok(t.includes('Qué hacer · K-101:') && t.includes('Costo si fallan:') && t.includes('Costo por falla:'), 'Riesgo: el «qué hacer», el costo y su origen salen escritos')
+  f.ok(t.includes('MPP-301') && !t.includes('ver 2 más'), 'Riesgo: las filas que «ver 2 más» esconde salen en el papel, y el botón no')
+  f.ok(/salió de su banda normal|ya llegó a su alarma/.test(t), 'Riesgo: el porqué de cada fila (su globo) sale escrito')
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/ger/resumen/ceiba~portafolio/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('Cierre proyectado: Si todo sigue') && t.includes('Valor: Sin contar'), 'Resumen: los ⓘ salen escritos')
+  f.ok(/A la fecha: [\d.]+ de [\d.]+ bbl/.test(t), 'Resumen: los totales a la fecha, que protege el folio, salen en el papel')
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/sup/turno/ceiba/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('Jairo Peña') && t.includes('Se cerró porque'), 'Turno: a quién le llegó cada WhatsApp y la causa de las paradas nuevas salen escritos')
+  await f.page.emulateMedia({ media: 'screen' })
+  f.cerrar()
+})

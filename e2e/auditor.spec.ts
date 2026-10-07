@@ -74,7 +74,11 @@ for (const ancho of ANCHOS) {
         if (!a) return
         const texto = await page.evaluate(() => document.body.innerText)
         const bajo = texto.toLowerCase()
-        for (const t of a.si) { comprobaciones++; if (!bajo.includes(t.toLowerCase())) fallasAsercion.push(`${clave}: falta «${t}»`) }
+        for (const t of a.si) {
+          comprobaciones++
+          const esta = t instanceof RegExp ? t.test(texto) : bajo.includes(t.toLowerCase())
+          if (!esta) fallasAsercion.push(`${clave}: falta «${t}»`)
+        }
         for (const t of a.no) { comprobaciones++; if (texto.includes(t)) fallasAsercion.push(`${clave}: sobra «${t}»`) }
       }
 

@@ -1,15 +1,18 @@
 import { useApp, useAmbito, useRol } from '@/app/store'
 import { useLibro, useRiesgo, usePreguntas } from '@/shared/api/diferidos'
 import { useMensajes } from '@/shared/api/mensajes'
-import { NOMBRE_REGLA, ORDEN_PASO } from '@/entities/mensajes'
+import { PASO_CORTO, ORDEN_PASO } from '@/entities/mensajes'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
 import { TIPO_CAUSA, COMO } from '@/entities/causa-senal'
 import { NOMBRE_PARTE } from '@/entities/partes'
+import { ESTADO_PARTE } from '@/entities/salud'
 import { campoPorId } from '@/entities/campos'
 import { AHORA, fechaHora } from '@/entities/reloj'
 import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, plural } from '@/shared/lib/formato'
 import { ArrowRight } from 'lucide-react'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
@@ -37,13 +40,15 @@ export function Turno() {
   const preguntas = todas.filter(p => p.pide)
   const enviados = useMensajes(ids).filter(m => new Date(m.hora).getTime() >= inicioTurno.getTime())
   const nombre = (id: string) => usuarios.find(x => x.id === id)?.nombre ?? id
-  const corta = (iso: string) => fechaHora(new Date(iso))
+  // Todo lo de este panel y del de paradas nuevas es de las últimas 12 h: basta la hora.
+  const hora = (d: Date) => fechaHora(d).replace(/^.*?, /, '')
+  const corta = (iso: string) => hora(new Date(iso))
   // Un hilo por evento (la parada, su pregunta y lo que siguió) o por orden;
   // cada paso, con todos los que lo recibieron; al final, si respondieron.
   const hilos = [...enviados.reduce((mapa, m) => {
     const clave = `${m.campoId}|${m.evento ?? m.orden ?? `${m.regla}|${m.equipo}`}`
     const h = mapa.get(clave) ?? { clave, campoId: m.campoId, equipo: m.equipo, evento: m.evento, pasos: [] as Paso[] }
-    const que = m.insistencia === 'recordatorio' ? 'recordatorio' : m.insistencia === 'escalamiento' ? 'escalado' : NOMBRE_REGLA[m.regla]
+    const que = PASO_CORTO[m.insistencia ?? m.regla]
     const paso = h.pasos.find(x => x.hora === m.hora && x.que === que) ?? (h.pasos.push({ hora: m.hora, rango: ORDEN_PASO[m.insistencia ?? m.regla], que, para: [], fallas: [] }), h.pasos.at(-1)!)
     // Lo que no salió no cuenta como avisado: va aparte, con su motivo.
     if (m.noEnviado) paso.fallas.push({ para: nombre(m.para), motivo: m.noEnviado })
@@ -76,71 +81,164 @@ export function Turno() {
   }
   const grupos = [...porEvento.values()]
 
+  const prioridadVigilar = (r: (typeof vigilar)[number]) => (r.horas !== undefined && r.horas < TURNO_H ? Math.min(r.prioridad || 3, 2) as 1 | 2 : r.prioridad)
+  const listaPerdiendo = useVerMas(perdiendo, { prioridad: r => (r.altoImpacto ? 1 : 2) })
+  // «No arrancar» es una instrucción de seguridad: esas filas nunca quedan detrás de «ver más».
+  const listaPreguntas = useVerMas(preguntas, { prioridad: p => (!p.fin ? 1 : 3) })
+  const listaVigilar = useVerMas(vigilar, { prioridad: prioridadVigilar })
+  const listaGrupos = useVerMas(grupos)
+  const listaHilos = useVerMas(hilos)
+  const sinEnviar = enviados.filter(m => m.noEnviado).length
+
+  const filaPerdiendo = (r: (typeof perdiendo)[number]) => (
+    <Tip key={`${r.campoId}${r.equipo}${r.tipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
+      titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
+      filas={[['Pozos parados', String(r.pozos)], ['Perdiéndose', `${n0(r.bblDia)} bbl/d`],
+        ['En el turno', `${n0(r.bblDia * TURNO_H / 24)} bbl`], ...(r.desde ? [['Desde', fechaHora(r.desde)] as [string, string]] : []),
+        ...(r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? [['Pozos cerrados desde', fechaHora(r.cierreDesde)] as [string, string]] : [])]}
+      imprimir="todo" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+      className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
+      <MarcaPrioridad s={r.altoImpacto ? 1 : 2} tamano={13} />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          <b className="text-[12.5px] leading-tight">{r.equipo}{donde(r.campoId)}</b>
+          <Chip tono={r.altoImpacto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>
+          {r.parte && <span className="text-[10.5px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
+        </span>
+        <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{plural(r.pozos, 'pozo', 'pozos')}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}</small>
+      </span>
+      <span className="tabular text-right">
+        <b className="block text-[14px] leading-tight">{n0(r.bblDia)}</b>
+        <small className="text-[9.5px] text-[var(--tinta3)]">bbl/d</small>
+      </span>
+    </Tip>
+  )
+
+  const filaPregunta = (p: (typeof preguntas)[number]) => (
+    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
+      <MarcaPrioridad s={!p.fin ? 2 : 3} tamano={12} />
+      <span className="min-w-0 flex-1">
+        <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span>
+      </span>
+      {!p.fin ? <Chip tono="fuerte">no arrancar</Chip> : <Chip>arrancó sin identificar</Chip>}
+    </div>
+  )
+
+  const filaVigilar = (r: (typeof vigilar)[number]) => (
+    <Tip key={`${r.campoId}${r.equipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
+      titulo={r.equipo} pista={r.motivo} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+      filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
+        ['Si falla', `${n0(r.bblDia)} bbl/d`]]}
+      className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
+      <MarcaPrioridad s={prioridadVigilar(r)} tamano={13} />
+      <span className="min-w-0 flex-1">
+        <b className="block truncate text-[12px]">{r.equipo}{donde(r.campoId)}</b>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]">
+          {r.parte
+            ? <>{NOMBRE_PARTE[r.parte].toLowerCase()}{r.estadoParte && <Chip tono={r.estadoParte === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[r.estadoParte]}</Chip>}</>
+            : <Chip>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>}
+        </span>
+      </span>
+      <span className="tabular text-right text-[11px]">
+        <b className="block">{r.horas !== undefined ? fmtHoras(r.horas) : 'ya fuera'}</b>
+        <small className="text-[9.5px] text-[var(--tinta3)]">{n0(r.bblDia)} bbl/d</small>
+      </span>
+    </Tip>
+  )
+
+  const filaGrupo = (g: (typeof grupos)[number]) => {
+    const t = g[0]!
+    const ini = g.map(x => new Date(x.evento.inicio))
+    const porOtro = t.causa.equipo !== t.pozo.id
+    const como = porOtro && t.causa.como === 'ninguno' ? 'parte por identificar' : COMO[t.causa.como]
+    const bbl = g.reduce((a, x) => a + x.bbl, 0)
+    const linea = g.length > 1
+      ? `${plural(g.length, 'pozo cerrado', 'pozos cerrados')} por ${t.causa.equipo}`
+      : `${hora(ini[0]!)} · ${t.pozo.id}${porOtro ? ` · por ${t.causa.equipo}` : ''}`
+    return (
+      <Tip key={t.causa.evento ?? t.evento.id} titulo={linea} pista={t.causa.texto} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+        filas={[...(porOtro ? [['Lo cerró', t.causa.equipo] as [string, string]] : []), ['Barriles', `${n0(bbl)} bbl`], ['Cómo se identificó', como]]}
+        className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 print:border-b-0">
+        <span className="flex min-w-0 flex-wrap items-center gap-x-2">
+          {g.length > 1 ? (
+            <span><b>{plural(g.length, 'pozo cerrado', 'pozos cerrados')}</b> por <b>{t.causa.equipo}</b>{donde(t.pozo.campoId)}
+              <span className="tabular text-[var(--tinta3)]"> · {hora(new Date(Math.min(...ini.map(x => x.getTime()))))}–{hora(new Date(Math.max(...ini.map(x => x.getTime()))))}</span></span>
+          ) : (
+            <span><b className="tabular">{hora(ini[0]!)}</b> · <b className="font-mono">{t.pozo.id}</b>{donde(t.pozo.campoId)}{porOtro && <> · por <b>{t.causa.equipo}</b></>}</span>
+          )}
+          <Chip>{como}</Chip>
+        </span>
+        <span className="tabular text-right">{n0(bbl)} bbl{g.some(x => x.abierto) ? <small className="text-[var(--tinta3)]"> · sigue</small> : ''}</span>
+      </Tip>
+    )
+  }
+
+  const filaHilo = (h: (typeof hilos)[number]) => (
+    <Tip key={h.clave} titulo={h.equipo} filas={h.pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
+      imprimir="todo" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+      className="border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 print:border-b-0">
+      <span className="flex flex-wrap items-center justify-between gap-x-3">
+        <span><b>{h.equipo}</b>{donde(h.campoId)}</span>
+        {h.estado && (h.estado === 'sin respuesta' ? <Chip tono="fuerte">sin respuesta</Chip> : <small className="text-[var(--tinta2)]">{h.estado}</small>)}
+      </span>
+      <span className="block text-[var(--tinta2)]">
+        {h.pasos.map((x, i) => <span key={`${x.hora}${x.que}`}>{i > 0 && ' → '}<span className="tabular">{corta(x.hora)}</span> {x.que}<NoEnviado fallas={x.fallas} /></span>)}
+      </span>
+    </Tip>
+  )
+
+  const cifra = 'tabular flex items-center gap-1.5 text-[20px] leading-none'
+  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
+
   return (
     <>
-      <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+      <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+        <Tip titulo="Turno que entra" pista={`Lo que se pierde ahora, sostenido las ${TURNO_H} horas del turno.`}
+          filas={[['Perdiéndose ahora', `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]} className="block">
+          <b className="tabular block text-[36px] leading-none">{n0(porDia * TURNO_H / 24)}<small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
+          <small className={rotulo}>se pierden · turno que entra</small>
+          <small className={apoyo}>si nada cambia</small>
+        </Tip>
         <span>
-          <b className="tabular block text-[36px] leading-none">{n0(porDia * TURNO_H / 24)}</b>
-          <small className="text-[11px] text-[var(--tinta3)]">bbl que se pierden en el turno que entra si nada cambia · {ambito.titulo}</small>
-        </span>
-        <span>
-          <b className="tabular flex items-center gap-1.5 text-[20px] leading-none">
+          <b className={cifra}>
             {perdiendo.length > 0 && <MarcaPrioridad s={perdiendo.some(r => r.altoImpacto) ? 1 : 2} tamano={14} />}{n0(porDia)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d</small>
           </b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">perdiéndose ahora · {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}</small>
+          <small className={rotulo}>perdiéndose ahora</small>
+          <small className={apoyo}>{plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}</small>
         </span>
         <span>
-          <b className="tabular flex items-center gap-1.5 text-[20px] leading-none">
-            {preguntas.some(p => !p.fin) && <MarcaPrioridad s={2} tamano={14} />}{preguntas.length}
-          </b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">paradas por identificar · {preguntas.filter(p => !p.fin).length} sin arrancar</small>
+          <b className={cifra}>{preguntas.some(p => !p.fin) && <MarcaPrioridad s={2} tamano={14} />}{preguntas.length}</b>
+          <small className={rotulo}>por identificar</small>
+          <small className={apoyo}>{preguntas.filter(p => !p.fin).length} sin arrancar</small>
         </span>
         <span>
-          <b className="tabular block text-[20px] leading-none">{n0(lb.diferido)}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">bbl diferidos en las últimas {TURNO_H} h · {plural(grupos.length, 'causa nueva', 'causas nuevas')}</small>
+          <b className={cifra}>{n0(lb.diferido)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
+          <small className={rotulo}>diferidos · {TURNO_H} h</small>
         </span>
       </div>
 
       <Lectura>
         Lo que deja el turno que sale y lo que recibe el que entra. Las cifras salen de los
         controladores de los pozos y del vigía; para entregar no hay que escribir nada, salvo
-        responder las paradas que ninguna señal explica.
+        responder las paradas que ninguna señal explica. Turno que entra: lo que se pierde ahora,
+        sostenido las {TURNO_H} horas, si nada cambia. Toque o pase el cursor por un hilo de WhatsApp para
+        ver a quién le llegó cada mensaje; lo que no se envió se marca en la fila.
       </Lectura>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
         <Panel titulo="PASANDO AHORA" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
           {perdiendo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
-          {perdiendo.map(r => (
-            <Tip key={`${r.campoId}${r.equipo}${r.tipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
-              titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
-              filas={[['Pozos parados', String(r.pozos)], ['Perdiéndose', `${n0(r.bblDia)} bbl/d`],
-                ['En el turno', `${n0(r.bblDia * TURNO_H / 24)} bbl`], ...(r.desde ? [['Desde', fechaHora(r.desde)] as [string, string]] : [])]}
-              className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)]">
-              <MarcaPrioridad s={r.altoImpacto ? 1 : 2} tamano={13} />
-              <span className="min-w-0 flex-1">
-                <b className="block truncate text-[12.5px] leading-tight">{r.equipo}{donde(r.campoId)}</b>
-                <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{TIPO_CAUSA[r.tipo].toLowerCase()}{r.parte ? ` · ${NOMBRE_PARTE[r.parte].toLowerCase()}` : ''} · {plural(r.pozos, 'pozo', 'pozos')}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}{r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? ` · pozos cerrados desde ${fechaHora(r.cierreDesde)}` : ''}</small>
-              </span>
-              <span className="tabular text-right">
-                <b className="block text-[14px] leading-tight">{n0(r.bblDia)}</b>
-                <small className="text-[9.5px] text-[var(--tinta3)]">bbl/d</small>
-              </span>
-            </Tip>
-          ))}
+          {listaPerdiendo.visibles.map(filaPerdiendo)}
+          {listaPerdiendo.resto.length > 0 && <div className="solo-impresion">{listaPerdiendo.resto.map(filaPerdiendo)}</div>}
+          <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
         </Panel>
 
-        <Panel titulo="POR IDENTIFICAR ANTES DE ENTREGAR" extra={`${preguntas.length}`}>
+        <Panel titulo="POR IDENTIFICAR" extra={`${preguntas.length}`}>
           {preguntas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
-          {preguntas.slice(0, 6).map(p => (
-            <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
-              <MarcaPrioridad s={!p.fin ? 2 : 3} tamano={12} />
-              <span className="min-w-0 flex-1">
-                <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span>
-                <small className="block text-[10.5px] text-[var(--tinta2)]">{!p.fin ? 'sigue parado: no arrancar hasta identificar' : 'arrancó sin identificar'}</small>
-              </span>
-              {!p.fin && <Chip tono="fuerte">no arrancar</Chip>}
-            </div>
-          ))}
+          {listaPreguntas.visibles.map(filaPregunta)}
+          {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
+          <VerMas ocultas={listaPreguntas.ocultas} abierto={listaPreguntas.abierto} onAlternar={listaPreguntas.alternar} />
           {rol.pantallas.includes('causa') ? (
             preguntas.length > 0 && (
               <Boton variante="principal" className="mt-2.5 w-full" onClick={() => setPantalla('causa')}>
@@ -150,71 +248,32 @@ export function Turno() {
           ) : preguntas.length > 0 && <Hueco>Lo responde quien estuvo en el equipo.</Hueco>}
         </Panel>
 
-        <Panel titulo="PARA VIGILAR EN EL TURNO QUE ENTRA" extra={plural(vigilar.length, 'equipo', 'equipos')}>
+        <Panel titulo="PARA VIGILAR" extra={plural(vigilar.length, 'equipo', 'equipos')}>
           {vigilar.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
-          {vigilar.map(r => (
-            <Tip key={`${r.campoId}${r.equipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
-              titulo={r.equipo} pista={r.motivo}
-              filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
-                ['Si falla', `${n0(r.bblDia)} bbl/d`]]}
-              className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)]">
-              <MarcaPrioridad s={r.horas !== undefined && r.horas < TURNO_H ? Math.min(r.prioridad || 3, 2) as 1 | 2 : r.prioridad} tamano={13} />
-              <span className="min-w-0 flex-1">
-                <b className="block truncate text-[12px]">{r.equipo}{donde(r.campoId)}</b>
-                <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{r.motivo}</small>
-              </span>
-              <span className="tabular text-right text-[11px]">
-                <b className="block">{r.horas !== undefined ? fmtHoras(r.horas) : 'fuera'}</b>
-                <small className="text-[9.5px] text-[var(--tinta3)]">{n0(r.bblDia)} bbl/d</small>
-              </span>
-            </Tip>
-          ))}
+          {listaVigilar.visibles.map(filaVigilar)}
+          {listaVigilar.resto.length > 0 && <div className="solo-impresion">{listaVigilar.resto.map(filaVigilar)}</div>}
+          <VerMas ocultas={listaVigilar.ocultas} abierto={listaVigilar.abierto} onAlternar={listaVigilar.alternar} />
         </Panel>
       </div>
 
-      <Panel className="mt-2.5" titulo={`LO QUE EMPEZÓ EN LAS ÚLTIMAS ${TURNO_H} HORAS`} extra={plural(grupos.length, 'causa nueva', 'causas nuevas')}>
-        {grupos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún pozo paró en el turno que sale.</p>}
-        {grupos.slice(0, 20).map(g => {
-          const t = g[0]!
-          const ini = g.map(x => new Date(x.evento.inicio))
-          const porOtro = t.causa.equipo !== t.pozo.id
-          return (
-            <div key={t.causa.evento ?? t.evento.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
-              <span className="min-w-0">
-                {g.length > 1 ? (
-                  <><b>{plural(g.length, 'pozo cerrado', 'pozos cerrados')}</b> por <b>{t.causa.equipo}</b>{donde(t.pozo.campoId)}
-                    <span className="text-[var(--tinta3)]"> · entre {fechaHora(new Date(Math.min(...ini.map(x => x.getTime()))))} y {fechaHora(new Date(Math.max(...ini.map(x => x.getTime()))))}</span></>
-                ) : (
-                  <><b className="tabular">{fechaHora(ini[0]!)}</b> · <b className="font-mono">{t.pozo.id}</b>{donde(t.pozo.campoId)}</>
-                )}
-                <span className="block text-[var(--tinta2)]">{t.causa.texto} <span className="text-[var(--tinta3)]">({porOtro && t.causa.como === 'ninguno' ? `por ${t.causa.equipo}; su parte, por identificar` : COMO[t.causa.como]})</span></span>
-              </span>
-              <span className="tabular text-right">{n0(g.reduce((a, x) => a + x.bbl, 0))} bbl{g.some(x => x.abierto) ? <small className="text-[var(--tinta3)]"> · sigue</small> : ''}</span>
-            </div>
-          )
-        })}
+      <Panel className="mt-2.5" titulo="PARADAS NUEVAS" extra={`${TURNO_H} h · ${plural(grupos.length, 'causa', 'causas')}`}>
+        {grupos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún pozo paró.</p>}
+        {listaGrupos.visibles.map(filaGrupo)}
+        {listaGrupos.resto.length > 0 && <div className="solo-impresion">{listaGrupos.resto.map(filaGrupo)}</div>}
+        <VerMas ocultas={listaGrupos.ocultas} abierto={listaGrupos.abierto} onAlternar={listaGrupos.alternar} />
       </Panel>
-      <Panel className="mt-2.5" titulo="WHATSAPP · LO QUE TRIM MANDÓ EN EL TURNO"
-        extra={`${plural(hilos.length, 'hilo', 'hilos')} · ${plural(enviados.filter(m => !m.noEnviado).length, 'mensaje', 'mensajes')}${enviados.some(m => m.noEnviado) ? ` · ${plural(enviados.filter(m => m.noEnviado).length, 'sin enviar', 'sin enviar')}` : ''}`}>
+      <Panel className="mt-2.5" titulo="WHATSAPP DEL TURNO"
+        extra={`${plural(enviados.length - sinEnviar, 'mensaje', 'mensajes')}${sinEnviar ? ` · ${plural(sinEnviar, 'sin enviar', 'sin enviar')}` : ''}`}>
         <Lectura>
           A quién le avisó TRIM y cuándo, con las reglas fijas del producto: parada de un equipo de
           alto impacto al supervisor y al operador; «¿qué se dañó?» al operador, recordatorio a los
           30 min y al supervisor a las 2 h; parte por cruzar su límite a confiabilidad y mantenimiento;
           orden liberada en SAP al técnico.
         </Lectura>
-        {hilos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">TRIM no mandó nada en el turno que sale.</p>}
-        {hilos.slice(0, 12).map(h => (
-          <div key={h.clave} className="border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
-            <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-              <span><b>{h.equipo}</b>{donde(h.campoId)}</span>
-              {h.estado && <small className={h.estado.startsWith('sin') ? 'font-semibold text-[var(--tinta)]' : 'text-[var(--tinta2)]'}>{h.estado}</small>}
-            </span>
-            <span className="block text-[var(--tinta2)]">
-              {h.pasos.map((x, i) => <span key={`${x.hora}${x.que}`}>{i > 0 && ' → '}<span className="tabular">{corta(x.hora)}</span> {x.que}{x.para.length > 0 && ` (${x.para.join(', ')})`}<NoEnviado fallas={x.fallas} /></span>)}
-            </span>
-          </div>
-        ))}
-        {hilos.length > 12 && <small className="mt-1 block text-[10.5px] text-[var(--tinta3)]">y {plural(hilos.length - 12, 'hilo más', 'hilos más')}</small>}
+        {hilos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">TRIM no mandó nada.</p>}
+        {listaHilos.visibles.map(filaHilo)}
+        {listaHilos.resto.length > 0 && <div className="solo-impresion">{listaHilos.resto.map(filaHilo)}</div>}
+        <VerMas ocultas={listaHilos.ocultas} abierto={listaHilos.abierto} onAlternar={listaHilos.alternar} />
       </Panel>
     </>
   )

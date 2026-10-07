@@ -21,17 +21,20 @@ export const NOTA_SIMPLE =
 /** El rango de tolerancia junto a los barriles no producidos. Lo ven todos
  *  los roles: es lo que protege la cifra cuando sale de la sala. El método
  *  (la ecuación, las bandas) se queda en ingeniería. */
-export function Rango({ lb, className, plano }: { lb: Libro; className?: string
+export function Rango({ lb, className, plano, corto }: { lb: Libro; className?: string
   /** Sin globo de ayuda: para cuando ya va dentro de otro. */
-  plano?: boolean }) {
+  plano?: boolean
+  /** «5.729–6.734 bbl · calculado»: el «no medido» y el porqué quedan en el globo. */
+  corto?: boolean }) {
   const decide = useNivel() === 'decision'
   const lo = Math.max(0, lb.brecha - lb.tolerancia), hi = lb.brecha + lb.tolerancia
-  if (plano) return <small className="tabular block text-[11px] text-[var(--tinta3)]">entre {n0(lo)} y {n0(hi)} bbl · calculado, no medido</small>
+  const texto = corto ? `${n0(lo)}–${n0(hi)} bbl · calculado` : `entre ${n0(lo)} y ${n0(hi)} bbl · calculado, no medido`
+  if (plano) return <small className="tabular block text-[11px] text-[var(--tinta3)]">{texto}</small>
   return (
     <Tip titulo={decide ? 'Margen del cálculo' : 'Rango de tolerancia'} pista={decide ? NOTA_SIMPLE : NOTA_DE_CALCULO}
       filas={[['Rango', `${n0(lo)} a ${n0(hi)} bbl`], ...(lb.aproximado > 0 ? [['Aparte, aproximado', `${n0(lb.aproximado)} bbl a frecuencia reducida`] as [string, string]] : [])]}
       className={className ?? 'block'}>
-      <small className="tabular block text-[11px] text-[var(--tinta3)]">entre {n0(lo)} y {n0(hi)} bbl · calculado, no medido</small>
+      <small className="tabular block text-[11px] text-[var(--tinta3)]">{texto}</small>
     </Tip>
   )
 }

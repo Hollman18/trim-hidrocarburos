@@ -394,6 +394,10 @@ export interface Riesgo {
   costoFalla?: number
   /** De dónde sale el tiempo fuera que usa `costoFalla`. */
   mdtFuente?: string
+  /** Con qué historia se estimó `costoFalla`: la del propio equipo o, si nunca
+   *  ha fallado, la de su flota en el campo (menos confiable). La pantalla lo
+   *  marca sin leer el texto de `mdtFuente`. */
+  costoDe?: 'propio' | 'flota'
   altoImpacto: boolean
 }
 
@@ -474,6 +478,7 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
         tag: sp.primera?.senal.tag ?? sp.fuera[0]?.senal.tag,
         costoFalla: h.bblPorFalla,
         mdtFuente: h.fallasCerradas ? `el promedio de sus ${h.fallasCerradas} fallas cerradas (el tanque absorbe una parte)` : undefined,
+        costoDe: h.bblPorFalla !== undefined ? 'propio' : undefined,
         altoImpacto: p.subtipo !== 'multifasica',
         motivo: motivoDeParte(sp) })
     }
@@ -504,6 +509,7 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
         costoFalla: mdt !== undefined ? crudoAsignado(p) * mdt / 24 : undefined,
         mdtFuente: h.mdtH !== undefined ? `${Math.round(h.mdtH / 24)} días fuera, el promedio de sus ${h.fallasCerradas} fallas cerradas`
           : mdt !== undefined ? `${Math.round(mdt / 24)} días fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)` : undefined,
+        costoDe: h.mdtH !== undefined ? 'propio' : mdt !== undefined ? 'flota' : undefined,
         altoImpacto: true,
         motivo: motivoDeParte(sp) })
     }

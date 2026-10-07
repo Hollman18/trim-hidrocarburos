@@ -5,7 +5,7 @@ import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { useMensajes } from '@/shared/api/mensajes'
 import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
-import { CAUSAS_POZO, NO_FUE_ESP, ORDEN_PASO, type Mensaje } from '@/entities/mensajes'
+import { CAUSAS_POZO, NO_FUE_ESP, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
 import { Telefono } from '@/widgets/whatsapp/Telefono'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
 import type { Pregunta } from '@/entities/libro'
@@ -311,8 +311,6 @@ const PASO_CLS = 'text-[12px] font-semibold text-[var(--tinta)]'
 const CHIP = 'min-h-10 cursor-pointer rounded-sm border border-[var(--linea)] px-1.5 py-0.5 text-[10.5px] hover:bg-[var(--panel2)] sm:min-h-0'
 const SELECCION = 'border-acento bg-acento-f text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--acento)]'
 
-/** Lo que dice un paso del hilo, en una palabra. */
-const PASO: Record<string, string> = { parada: 'parado', cierre: 'pozos cerrándose', causa: 'pregunta', recordatorio: 'recordatorio', escalamiento: 'escalado' }
 
 /** El hilo de WhatsApp de la parada en una línea (qué se mandó, a quién, y si
  *  respondieron), y a un clic el chat de quien recibió la pregunta, como lo ve
@@ -328,7 +326,7 @@ function HiloWhatsapp({ p, hilo }: { p: Pregunta; hilo: Mensaje[] }) {
   // Lo que no salió (un parámetro que Meta rechazaría) no cuenta como avisado: va aparte, con su motivo.
   const pasos = [...orden.reduce((mapa, m) => {
     const tipo = m.insistencia ?? m.regla, k = `${m.hora}|${tipo}`
-    const x = mapa.get(k) ?? { hora: m.hora, rango: ORDEN_PASO[tipo], que: PASO[tipo] ?? m.regla, para: [] as string[], fallas: [] as Array<{ para: string; motivo: string }> }
+    const x = mapa.get(k) ?? { hora: m.hora, rango: ORDEN_PASO[tipo], que: PASO_CORTO[tipo], para: [] as string[], fallas: [] as Array<{ para: string; motivo: string }> }
     if (m.noEnviado) x.fallas.push({ para: nombre(m.para), motivo: m.noEnviado })
     else if (!x.para.includes(nombre(m.para))) x.para.push(nombre(m.para))
     return mapa.set(k, x)

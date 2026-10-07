@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode, type ElementType } from 'react'
+import { useEffect, useId, useState, type ReactNode, type ElementType } from 'react'
 import { createPortal } from 'react-dom'
 
 export type Fila = [string, string]
@@ -19,7 +19,7 @@ export type Fila = [string, string]
  *  uno con el título y las cifras, y el rol de botón si hace algo (si no,
  *  de imagen). El <svg> que los contiene va como `role="group"`, no «img»:
  *  una imagen vuelve mudo todo lo que tiene adentro. */
-export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = false, onTecla, ...rest }: {
+export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = false, onTecla, imprimir, claseImpresion, ...rest }: {
   titulo: string; filas: Fila[]; pista?: string; children: ReactNode
   as?: ElementType; className?: string; onClick?: () => void
   /** Rol y nombre para el lector cuando la etiqueta no los da sola (un <g> clicable de un dibujo). */
@@ -30,6 +30,11 @@ export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = f
   tabIndex?: number; onTecla?: (e: React.KeyboardEvent) => void
   /** Todo lo del tooltip ya está a la vista: sin `onClick`, no recibe el foco. */
   aLaVista?: boolean
+  /** El informe es la pantalla impresa y en el papel no hay globos: lo que
+   *  solo dice el globo (la pista, o también sus filas) sale escrito debajo. */
+  imprimir?: 'pista' | 'todo'
+  /** Clases de esa nota impresa: en una lista, la raya entre filas va debajo de la nota y no entre la fila y su nota. */
+  claseImpresion?: string
   /** Atributos de datos: sirven para apuntar al elemento desde las pruebas. */
   [dato: `data-${string}`]: unknown
 }) {
@@ -38,6 +43,16 @@ export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = f
   const id = useId()
   const dibujo = as === 'g'
   const resumen = [titulo, ...filas.map(([k, v]) => `${k}: ${v}`)].join('; ')
+  const enPapel = !imprimir || dibujo ? '' : [...(imprimir === 'todo' ? filas.map(([k, v]) => `${k}: ${v}`) : []), pista ?? ''].filter(Boolean).join(' · ')
+  // Abierto con el ratón (sin foco), Escape también lo cierra (WCAG 1.4.13:
+  // descartable), sin cerrar lo de afuera.
+  const abierto = pos !== null
+  useEffect(() => {
+    if (!abierto) return
+    const cerrar = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setPos(null) } }
+    document.addEventListener('keydown', cerrar, true)
+    return () => document.removeEventListener('keydown', cerrar, true)
+  }, [abierto])
 
   return (
     <>
@@ -62,6 +77,7 @@ export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = f
         }}>
         {children}
       </Tag>
+      {enPapel && <small className={`solo-impresion text-[9pt] text-[var(--tinta2)] ${claseImpresion ?? ''}`}>{enPapel}</small>}
       {pos && createPortal(
         <div role="tooltip" id={id}
           className="pointer-events-none fixed z-[200] max-w-[280px] rounded border border-[var(--linea)] bg-[var(--elevado)] px-3 py-2.5 text-[11.5px] leading-relaxed shadow-[var(--sombra2)]"

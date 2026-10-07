@@ -96,9 +96,11 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   await test.step('Turno: el registro por hilo', async () => {
     await f.ir('#/sup/turno/ceiba/curso'); await f.esperar(400)
     t = await f.texto()
-    f.ok(t.includes('WHATSAPP · LO QUE TRIM MANDÓ EN EL TURNO') && /respondió Jairo Peña[^\n]*por WhatsApp: «Sello mecánico: fuga hacia afuera»/.test(t), 'Turno muestra el hilo de P-201B con la respuesta')
+    f.ok(t.includes('WHATSAPP DEL TURNO') && /respondió Jairo Peña[^\n]*por WhatsApp: «Sello mecánico: fuga hacia afuera»/.test(t), 'Turno muestra el hilo de P-201B con la respuesta')
     f.ok(t.includes('pozos cerrándose') && t.includes('escalado') && t.includes('orden liberada en SAP'), 'cada paso con su nombre: pozos cerrándose, escalado, orden liberada')
-    f.ok(t.indexOf('LO QUE EMPEZÓ EN LAS ÚLTIMAS') < t.indexOf('WHATSAPP · LO QUE TRIM MANDÓ'), 'el registro va después de lo que empezó en el turno')
+    // Con un título que falte, indexOf da −1 y la comparación pasaba sin comprobar nada.
+    const nuevas = t.indexOf('PARADAS NUEVAS'), registro = t.indexOf('WHATSAPP DEL TURNO')
+    f.ok(nuevas >= 0 && registro > nuevas, 'el registro va después de las paradas nuevas del turno')
   })
 
   await test.step('Mi trabajo: órdenes de SAP del técnico', async () => {
@@ -200,7 +202,9 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     f.ok(t.includes('REPARACIÓN ACTIVA Y ESPERA') && t.includes('Reparación activa') && t.includes('Espera'), 'confiabilidad tiene los tres relojes en su pantalla')
     await f.ir('#/ger/resumen/ceiba/curso'); await f.esperar(500)
     t = await f.texto()
-    f.ok(/Mantenimiento proactivo en el mismo lapso: \d+ %/.test(t), 'el gerente ve el porcentaje de mantenimiento proactivo en su Resumen')
+    // La cifra tiene que ser un renglón propio justo antes del rótulo: con «\s*» suelto
+    // tomaba el «+125 %» del renglón de arriba aunque faltara el porcentaje.
+    f.ok(/(?:^|\n)\d+ %\s*\n\s*mantenimiento proactivo/i.test(t), 'el gerente ve el porcentaje de mantenimiento proactivo en su Resumen')
   })
 
   await test.step('Accesos: el registro de lo enviado no se reescribe', async () => {

@@ -10,7 +10,10 @@ import { PUESTA_EN_MARCHA, SIN_META } from '@/entities/configuracion'
 import { conMeta, textoSinMeta } from '@/entities/libro'
 import { sumarMeses } from '@/entities/plan'
 import { Tip } from '@/shared/ui/Tip'
-import { Boton } from '@/shared/ui/primitivas'
+import { Boton, Chip } from '@/shared/ui/primitivas'
+import { Info } from '@/shared/ui/Info'
+import { BarraMeta } from '@/shared/ui/BarraMeta'
+import { Lectura } from '@/shared/ui/Lectura'
 import { MarcaPrioridad, FueraDeMeta } from '@/shared/ui/Prioridad'
 import { n0, usd, diaIso, plural } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
@@ -70,102 +73,150 @@ export function ResumenDirectivo() {
   const proxima = [...enRiesgo].filter(r => r.horas !== undefined).sort((a, b) => a.horas! - b.horas!)[0]
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
 
+  const servicioTip: Array<[string, string]> = servicios.map(r => [r.equipo, TIPO_CAUSA[r.tipo]])
+  const pieRiesgo = proxima ? `primero ${proxima.equipo} en ${fmtHoras(proxima.horas!)}` : enRiesgo[0] ? `${enRiesgo[0].equipo} ya fuera`
+    : perdiendo.some(r => r.altoImpacto) ? 'ninguna otra bomba ni electrosumergible avisa' : 'ninguna bomba ni electrosumergible avisa'
+  const enRiesgoCelda = (
+    <>
+      <small className="block text-[10.5px] text-[var(--tinta3)]">En riesgo · alto impacto</small>
+      <b className="tabular block text-[15px] leading-tight">{enRiesgo.length ? plural(enRiesgo.length, 'equipo', 'equipos') : 'ninguno'}</b>
+      <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{pieRiesgo}{servicios.length > 0 && ` · ${plural(servicios.length, 'servicio', 'servicios')} en alarma`}</small>
+    </>
+  )
+  const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  // Las cuatro columnas de «Por campo»: en el teléfono, nombre y total arriba y las dos barras debajo.
+  const filaCampo = 'grid grid-cols-2 items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(90px,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_64px]'
+
   return (
     <>
       <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <small className="text-[11px] tracking-[.04em] text-[var(--tinta3)]">{rango.nombre.toUpperCase()} · {ambito.titulo.toUpperCase()}</small>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          {/* El período ya lo dice la cabecera; en el teléfono la cabecera lo corta, y aquí queda. */}
+          <small className="text-[11px] tracking-[.04em] text-[var(--tinta3)] sm:hidden print:block">{rango.nombre.toUpperCase()}</small>
           <Tip titulo={pub.estado === 'publicable' ? 'Se puede publicar' : pub.estado === 'provisional' ? 'Provisional' : 'Todavía no se puede publicar'}
             pista={pub.texto} filas={[]}
-            className="inline-flex items-center gap-1.5 text-[11.5px]">
-            {pub.estado === 'publicable' ? <span className="text-[var(--tinta2)]">✓ se puede publicar</span>
-              : pub.estado === 'provisional' ? <span className="text-[var(--tinta2)]">provisional: el mes está en curso</span>
-                : <><FueraDeMeta si tamano={11} /><span>todavía no se puede publicar</span></>}
+            className="ml-auto inline-flex items-center gap-1.5">
+            {pub.estado === 'publicable' ? <Chip>✓ PUBLICABLE</Chip>
+              : pub.estado === 'provisional' ? <Chip>PROVISIONAL</Chip>
+                : <><FueraDeMeta si tamano={11} /><Chip tono="fuerte">NO PUBLICABLE</Chip></>}
           </Tip>
         </div>
         <div className="mt-1.5 flex flex-wrap items-end gap-x-8 gap-y-2">
           <span>
             <b className="tabular block text-[44px] leading-none">{n0(lb.brecha)}</b>
-            <small className="text-[12px] text-[var(--tinta2)]">barriles diferidos: no se produjeron, pudiendo</small>
-            <Rango lb={lb} />
+            <small className="text-[12px] text-[var(--tinta2)]">barriles diferidos</small>
+            <Rango lb={lb} corto />
           </span>
           <span className="pb-1">
             <b className="tabular block text-[22px] leading-none">{dinero ? `${dinero.valor} ${dinero.unidad}` : 'sin precio'}</b>
-            <small className="text-[11px] text-[var(--tinta3)]">{!dinero ? 'falta el precio neto en la configuración'
-              : sinPrecio.length ? `sin contar los días sin precio de ${sinPrecio.join(', ')}` : 'valor'}</small>
-          </span>
-          <span className="pb-1">
-            <b className="tabular flex items-center gap-1.5 text-[22px] leading-none"><FueraDeMeta si={bajoMeta} tamano={12} />{n0(realDia)} <small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
-            <small className="text-[11px] text-[var(--tinta3)]">producción · {hayMeta ? `meta ${n0(lb.meta.produccionDia)} bbl/d` : sinMeta}</small>
-          </span>
-          <span className="pb-1">
-            <b className="tabular flex items-center gap-1.5 text-[22px] leading-none"><FueraDeMeta si={sobreMax} tamano={12} />{n0(difDia)} <small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
-            <small className="text-[11px] text-[var(--tinta3)]">
-              diferido · {hayMeta ? `máximo ${n0(lb.meta.diferidoDia)} bbl/d` : sinMeta}{base ? ` · ${signo(base.cambio)} frente a ${base.nombre}` : ''}
+            <small className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta3)]">
+              {dinero && sinPrecio.length ? `valor · sin ${sinPrecio.join(', ')}` : 'valor'}
+              {!dinero && <Info titulo="Sin precio" texto="Falta el precio neto en la configuración." />}
+              {dinero && sinPrecio.length > 0 && <Info titulo="Valor" texto={`Sin contar los días sin precio de ${sinPrecio.join(', ')}.`} />}
             </small>
           </span>
         </div>
-        <div className="mt-3 grid gap-0.5 border-t border-[var(--linea2)] pt-2 text-[11.5px] text-[var(--tinta2)]">
-          {enCurso && (
-            <p className="mb-1 flex flex-wrap items-center gap-x-1.5 text-[12px] text-[var(--tinta)]">
-              <span>Si todo sigue como está ahora, el mes cierra con</span>
-              <span className="inline-flex items-center gap-1"><FueraDeMeta si={hayMeta && cierreProd < lb.meta.produccionTotal} tamano={11} /><b className="tabular">{n0(cierreProd)} bbl</b> producidos</span>
-              <span>{hayMeta ? `(meta ${n0(lb.meta.produccionTotal)})` : `(${sinMeta})`} y</span>
-              <span className="inline-flex items-center gap-1"><FueraDeMeta si={hayMeta && cierreDif > lb.meta.diferidoTotal} tamano={11} /><b className="tabular">{n0(cierreDif)} bbl</b> diferidos</span>
-              <span>{hayMeta ? `(máximo ${n0(lb.meta.diferidoTotal)})` : ''}.{perdiendoAhora > 0 ? ` Cada día así cuesta ${n0(perdiendoAhora)} bbl.` : ''}</span>
-            </p>
-          )}
-          <p>
-            {enCurso ? <>Meta del mes completo ({n0(lb.meta.diasTotal)} días)</> : <>Meta del período ({n0(lb.meta.diasTotal)} días)</>}:{' '}
-            {hayMeta ? <>producción <b className="tabular text-[var(--tinta)]">{n0(lb.meta.produccionTotal)} bbl</b> · diferido máximo{' '}
-              <b className="tabular text-[var(--tinta)]">{n0(lb.meta.diferidoTotal)} bbl</b></> : <b className="text-[var(--tinta)]">{sinMeta}</b>}
-          </p>
-          <p className="flex flex-wrap items-center gap-x-2">
-            <span>{enCurso ? 'A la fecha:' : 'Resultado:'}</span>
-            <span className="inline-flex items-center gap-1"><FueraDeMeta si={hayMeta && lb.real < lb.meta.produccion} tamano={11} />producido <b className="tabular text-[var(--tinta)]">{n0(lb.real)} bbl</b>{hayMeta ? ` de ${n0(lb.meta.produccion)} bbl` : ''}</span>
-            <span>·</span>
-            <span className="inline-flex items-center gap-1"><FueraDeMeta si={hayMeta && lb.brecha > lb.meta.diferido} tamano={11} />diferido <b className="tabular text-[var(--tinta)]">{n0(lb.brecha)} bbl</b>{hayMeta ? ` de un máximo de ${n0(lb.meta.diferido)} bbl` : ''}</span>
-          </p>
+        <div className="mt-3 grid gap-x-8 gap-y-3 border-t border-[var(--linea2)] pt-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))]">
+          <div className="grid content-start gap-2.5">
+            <h3 className={titulo}>PROMEDIO DIARIO</h3>
+            <BarraMeta rotulo="producción" valor={realDia} unidad="bbl/d" meta={hayMeta ? lb.meta.produccionDia : undefined}
+              rotuloMeta={hayMeta ? `meta ${n0(lb.meta.produccionDia)}` : sinMeta} fuera={bajoMeta}
+              tip={{ titulo: 'Producción', filas: [[enCurso ? 'A la fecha' : 'Del período', hayMeta ? `${n0(lb.real)} de ${n0(lb.meta.produccion)} bbl` : `${n0(lb.real)} bbl`],
+                ['Meta del período', hayMeta ? `${n0(lb.meta.produccionTotal)} bbl · ${n0(lb.meta.diasTotal)} días` : sinMeta]] }} />
+            <BarraMeta rotulo="diferido" valor={difDia} unidad="bbl/d" meta={hayMeta ? lb.meta.diferidoDia : undefined}
+              rotuloMeta={hayMeta ? `máx. ${n0(lb.meta.diferidoDia)}` : sinMeta} fuera={sobreMax}
+              apoyo={base ? `${signo(base.cambio)} frente a ${base.nombre}` : undefined}
+              tip={{ titulo: 'Diferido', filas: [[enCurso ? 'A la fecha' : 'Del período', hayMeta ? `${n0(lb.brecha)} de un máximo de ${n0(lb.meta.diferido)} bbl` : `${n0(lb.brecha)} bbl`],
+                ['Máximo del período', hayMeta ? `${n0(lb.meta.diferidoTotal)} bbl · ${n0(lb.meta.diasTotal)} días` : sinMeta]] }} />
+          </div>
+          <div className="grid content-start gap-2.5">
+            <div className="flex flex-wrap items-center gap-x-1">
+              <h3 className={titulo}>{enCurso ? 'CIERRE PROYECTADO' : 'TOTAL DEL PERÍODO'}</h3>
+              {enCurso && <Info titulo="Cierre proyectado" texto={`Si todo sigue como está ahora: lo que va del mes más el ritmo de hoy hasta el último día (${n0(lb.meta.diasTotal)} días).`} />}
+            </div>
+            {enCurso ? (
+              <>
+                <BarraMeta rotulo="producción" valor={cierreProd} unidad="bbl" meta={hayMeta ? lb.meta.produccionTotal : undefined}
+                  rotuloMeta={hayMeta ? `meta ${n0(lb.meta.produccionTotal)}` : sinMeta} fuera={hayMeta && cierreProd < lb.meta.produccionTotal} />
+                <BarraMeta rotulo="diferido" valor={cierreDif} unidad="bbl" meta={hayMeta ? lb.meta.diferidoTotal : undefined}
+                  rotuloMeta={hayMeta ? `máx. ${n0(lb.meta.diferidoTotal)}` : sinMeta} fuera={hayMeta && cierreDif > lb.meta.diferidoTotal} />
+              </>
+            ) : (
+              <>
+                <BarraMeta rotulo="producción" valor={lb.real} unidad="bbl" meta={hayMeta ? lb.meta.produccion : undefined}
+                  rotuloMeta={hayMeta ? `meta ${n0(lb.meta.produccion)}` : sinMeta} fuera={hayMeta && lb.real < lb.meta.produccion}
+                  tip={{ titulo: 'Producción del período', filas: [['Meta del período', hayMeta ? `${n0(lb.meta.produccionTotal)} bbl · ${n0(lb.meta.diasTotal)} días` : sinMeta]] }} />
+                <BarraMeta rotulo="diferido" valor={lb.brecha} unidad="bbl" meta={hayMeta ? lb.meta.diferido : undefined}
+                  rotuloMeta={hayMeta ? `máx. ${n0(lb.meta.diferido)}` : sinMeta} fuera={hayMeta && lb.brecha > lb.meta.diferido} />
+              </>
+            )}
+          </div>
         </div>
+        <Lectura>
+          Diferido: los barriles que no se produjeron, pudiendo. Lo producido se mide; lo diferido se
+          calcula, y la cifra real está dentro del rango. Cada barra va contra la meta que usted firmó
+          (la raya): la producción debe pasarla y el diferido quedarse antes. El cuadrado marca lo que
+          está fuera de meta. Cierre proyectado: lo que va del mes más el ritmo de hoy hasta el último día.
+        </Lectura>
       </section>
 
-      <section className="mb-2.5 flex flex-wrap items-center gap-x-6 gap-y-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-4 py-3 shadow-[var(--sombra)]">
-        <span className="flex min-w-[min(100%,260px)] flex-1 items-start gap-2">
-          {porDia > 0 && <MarcaPrioridad s={perdiendo.some(r => r.altoImpacto) ? 1 : 2} tamano={14} className="mt-[2px]" />}
-          <span className="min-w-0 text-[12.5px]">
-            <b>Ahora:</b>{' '}
-            {porDia > 0 ? <>{n0(porDia)} bbl/d perdiéndose · {parados} de {pozos} pozos parados · la causa mayor, {perdiendo[0]!.equipo}{ambito.global ? ` de ${campoPorId(perdiendo[0]!.campoId).nombre}` : ''} ({TIPO_CAUSA[perdiendo[0]!.tipo].toLowerCase()})</> : 'todos los pozos produciendo'}
-            <small className="block text-[11px] text-[var(--tinta2)]">
-              {enRiesgo.length ? `${plural(enRiesgo.length, 'bomba o electrosumergible', 'bombas o electrosumergibles')} con una parte avisando${proxima ? `; la primera, ${proxima.equipo}, en ${fmtHoras(proxima.horas!)}` : ''}`
-                : perdiendo.some(r => r.altoImpacto) ? 'ninguna otra bomba ni electrosumergible avisa' : 'ninguna bomba ni electrosumergible avisa'}
-              {servicios.length > 0 && ` · ${plural(servicios.length, 'servicio', 'servicios')} en alarma: ${servicios.map(r => r.equipo).join(', ')}`}
-            </small>
-          </span>
+      <section className="mb-2.5 grid items-center gap-x-6 gap-y-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-4 py-3 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
+        <span className="min-w-0">
+          <small className="block text-[10.5px] text-[var(--tinta3)]">Perdiéndose ahora</small>
+          <b className="tabular flex items-center gap-1.5 text-[18px] leading-tight">
+            {porDia > 0 && <MarcaPrioridad s={perdiendo.some(r => r.altoImpacto) ? 1 : 2} tamano={14} />}{porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}
+          </b>
+          <small className="block text-[10.5px] text-[var(--tinta2)]">{porDia > 0 ? `${parados} de ${pozos} pozos parados` : 'todos los pozos produciendo'}</small>
         </span>
-        {rol.pantallas.includes('riesgo') && <Boton onClick={() => setPantalla('riesgo')}>Ver qué está en riesgo</Boton>}
+        {porDia > 0 && (
+          <span className="min-w-0">
+            <small className="block text-[10.5px] text-[var(--tinta3)]">Causa mayor</small>
+            <b className="block truncate text-[15px] leading-tight">{perdiendo[0]!.equipo}{ambito.global ? ` · ${campoPorId(perdiendo[0]!.campoId).nombre}` : ''}</b>
+            <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{TIPO_CAUSA[perdiendo[0]!.tipo].toLowerCase()}</small>
+          </span>
+        )}
+        {servicios.length > 0
+          ? <Tip as="span" titulo="Servicios en alarma" filas={servicioTip} imprimir="todo" className="block min-w-0">{enRiesgoCelda}</Tip>
+          : <span className="min-w-0">{enRiesgoCelda}</span>}
+        {rol.pantallas.includes('riesgo') && <Boton className="justify-self-start" onClick={() => setPantalla('riesgo')}>Ver riesgo</Boton>}
       </section>
 
       <div className="mb-2.5 grid items-stretch gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
         <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
           <b className="tabular block text-[26px] leading-none">{n0(altoPct)} %</b>
-          <small className="block text-[11.5px] text-[var(--tinta2)]">viene de bombas de reinyección y electrosumergibles</small>
-          <small className="mt-1 block text-[11px] text-[var(--tinta2)]">
-            Desde que entró TRIM ({fechaCorta(inicio)}): <b className="tabular text-[var(--tinta)]">{n0(altoDespues)} bbl/d</b> de alto impacto;
-            los tres meses antes, {n0(altoAntes)} bbl/d ({altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}). Es una comparación, no la prueba de que lo bajó TRIM.
-          </small>
+          <small className="block text-[11.5px] text-[var(--tinta2)]">del diferido · reinyección y electrosumergibles</small>
+          <p className="mt-2 text-[11px] text-[var(--tinta2)]">
+            <span className="flex flex-wrap items-center gap-x-1">diferido alto impacto · antes → con TRIM
+              <Info titulo="Antes y con TRIM" texto={`Alto impacto por día desde que entró TRIM (${fechaCorta(inicio)}) contra los tres meses antes. Es una comparación, no la prueba de que lo bajó TRIM.`} />
+            </span>
+            <b className="tabular block text-[13px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
+          </p>
           {horas.porcentaje !== undefined && (
-            <small className="mt-1 block text-[11px] text-[var(--tinta2)]">
-              Mantenimiento proactivo en el mismo lapso: <b className="tabular text-[var(--tinta)]">{n0(horas.porcentaje)} %</b> de las horas fue
-              preventivo o predictivo ({n0(horas.proactivo)} h contra {n0(horas.correctivo)} h correctivas, en SAP). Si no sube, las fallas no bajan.
-            </small>
+            <div className="mt-2">
+              <p className="flex flex-wrap items-baseline gap-x-1.5">
+                <b className="tabular text-[18px] leading-none">{n0(horas.porcentaje)} %</b>
+                <span className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">mantenimiento proactivo
+                  <Info titulo="Mantenimiento proactivo" texto={`Horas preventivas o predictivas en SAP desde que entró TRIM (${fechaCorta(inicio)}). Si no sube, las fallas no bajan.`} />
+                </span>
+              </p>
+              <div className="mt-1 flex h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]" aria-hidden>
+                <i className="block h-full bg-[var(--dato-1)]" style={{ width: `${horas.porcentaje}%` }} />
+              </div>
+              <small className="tabular mt-0.5 block text-[10.5px] text-[var(--tinta2)]">{n0(horas.proactivo)} h proactivas · {n0(horas.correctivo)} h correctivas</small>
+            </div>
           )}
           <Tendencia serie={serie} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(diaIso(m.desde), diaIso(new Date(m.hasta.getTime() - 1)))} />
+          <Lectura>
+            Alto impacto: bombas de reinyección y electrosumergibles. Antes y con TRIM es una comparación,
+            no la prueba de que lo bajó TRIM. Mantenimiento proactivo: horas preventivas o predictivas en
+            SAP; si no sube, las fallas no bajan.
+          </Lectura>
         </section>
 
         <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
-          <h3 className="font-cond mb-2 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">QUIÉN SE LOS LLEVA</h3>
-          {top.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada diferido en el período.</p>}
+          <h3 className={`${titulo} mb-2`}>POR EQUIPO</h3>
+          {top.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada diferido.</p>}
           {top.map(f => (
             <button key={`${f.campoId}${f.equipo}${f.tipo}`} onClick={() => abrir(f.campoId, f.equipo)}
               className="grid w-full cursor-pointer grid-cols-[1fr_auto] items-baseline gap-3 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)]">
@@ -185,22 +236,30 @@ export function ResumenDirectivo() {
 
       {ambito.global && (
         <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
-          <h3 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">POR CAMPO</h3>
+          <h3 className={`${titulo} mb-1`}>POR CAMPO</h3>
+          <div className={`${filaCampo} pb-1 text-[10px] text-[var(--tinta3)]`} aria-hidden>
+            <span className="col-start-1 row-start-2 sm:col-start-2 sm:row-start-1">producción / meta · bbl/d</span>
+            <span className="col-start-2 row-start-2 sm:col-start-3 sm:row-start-1">diferido / máx. · bbl/d</span>
+            <span className="col-start-2 row-start-1 justify-self-end sm:col-start-4">bbl diferidos</span>
+          </div>
           {lb.porCampo.map(c => {
             const r = c.real / dias, d = c.brecha / dias, mp = c.metaProduccion / dias, md = c.metaDiferido / dias
             return (
               <button key={c.campoId} onClick={() => { setCampo(c.campoId) }}
-                className="grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-[var(--linea2)] py-1.5 text-left text-[12.5px] last:border-0 hover:bg-[var(--panel2)]">
-                <span className="min-w-0">
-                  <span className="block truncate">{campoPorId(c.campoId).nombre}</span>
-                  <small className="tabular flex flex-wrap items-center gap-x-1.5 text-[11px] text-[var(--tinta2)]">
-                    {c.sinMeta
-                      ? <span>produce {n0(r)} bbl/d · diferido {n0(d)} bbl/d · {SIN_META}</span>
-                      : <><span className="inline-flex items-center gap-1"><FueraDeMeta si={r < mp} tamano={11} />produce {n0(r)} de {n0(mp)} bbl/d</span>·
-                        <span className="inline-flex items-center gap-1"><FueraDeMeta si={d > md} tamano={11} />diferido {n0(d)} de máx. {n0(md)} bbl/d</span></>}
-                  </small>
+                className={`${filaCampo} w-full cursor-pointer border-b border-[var(--linea2)] py-1.5 text-left text-[12.5px] last:border-0 hover:bg-[var(--panel2)]`}>
+                <span className="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5">
+                  <span className="truncate">{campoPorId(c.campoId).nombre}</span>
+                  {c.sinMeta && <Chip>{SIN_META}</Chip>}
                 </span>
-                <span className="tabular text-right"><b className="block">{n0(c.brecha)}</b><small className="text-[10px] text-[var(--tinta3)]">bbl diferidos en el período</small></span>
+                <span className="col-start-1 row-start-2 min-w-0 sm:col-start-2 sm:row-start-1">
+                  <BarraMeta tamano="chica" ocultarRotulo rotulo="producción" valor={r} unidad="bbl/d" meta={c.sinMeta ? undefined : mp}
+                    rotuloMeta={c.sinMeta ? undefined : n0(mp)} fuera={!c.sinMeta && r < mp} />
+                </span>
+                <span className="col-start-2 row-start-2 min-w-0 sm:col-start-3 sm:row-start-1">
+                  <BarraMeta tamano="chica" ocultarRotulo tipoMeta="máximo" rotulo="diferido" valor={d} unidad="bbl/d" meta={c.sinMeta ? undefined : md}
+                    rotuloMeta={c.sinMeta ? undefined : n0(md)} fuera={!c.sinMeta && d > md} />
+                </span>
+                <b className="tabular col-start-2 row-start-1 justify-self-end sm:col-start-4">{n0(c.brecha)}<span className="sr-only"> bbl diferidos</span></b>
               </button>
             )
           })}

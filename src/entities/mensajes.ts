@@ -49,6 +49,12 @@ export const NOMBRE_REGLA: Record<Regla, string> = {
   parte: 'el vigía anticipa falla', orden: 'orden liberada en SAP',
 }
 
+/** Lo que dice un paso de un hilo, en una o dos palabras (Turno y Causa). */
+export const PASO_CORTO: Record<Regla | 'recordatorio' | 'escalamiento', string> = {
+  parada: 'parado', cierre: 'pozos cerrándose', causa: 'pregunta', parte: 'aviso del vigía',
+  orden: 'orden liberada en SAP', recordatorio: 'recordatorio', escalamiento: 'escalado',
+}
+
 /** Las causas frecuentes cuando la señal no explica por qué se cerró un pozo.
  *  Las mismas en la pantalla y en WhatsApp: ayudas para responder, sin orden
  *  de probabilidad (no hay señal que lo dé). */

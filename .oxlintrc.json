@@ -185,7 +185,7 @@
                 "message": "Del motor (mensajes) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
                 "allowImportNames": [
                   "CAUSAS_POZO",
-                  "NOMBRE_REGLA",
+                  "NOMBRE_REGLA", "PASO_CORTO",
                   "NO_FUE_ESP",
                   "ORDEN_PASO",
                   "OTRA",
