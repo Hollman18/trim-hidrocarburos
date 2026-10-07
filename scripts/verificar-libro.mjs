@@ -1,0 +1,1775 @@
+/* Verificación numérica del libro de diferidos y de la predicción.
+ *
+ * Corre las identidades que el backend también tiene que cumplir. Sale con
+ * código 1 si alguna falla: nunca se da por bueno un resultado sin mirarlo.
+ *
+ *   node scripts/verificar-libro.mjs
+ */
+import { createServer } from 'vite'
+import { fileURLToPath } from 'node:url'
+// Estas comprobaciones son del demo: un .env.local que apunte a un backend
+// (VITE_FUENTE=http, como pide CONTRATO.md al comprobar uno) no las cambia de
+// fuente. Vite respeta lo que ya trae el proceso antes que los archivos .env.
+process.env.VITE_FUENTE = 'demo'
+// fileURLToPath y no `.pathname`: con espacios o tildes en la carpeta («Mis
+// proyectos», «Producción») `.pathname` da la ruta en %20/%C3%B3 y Vite no la
+// encuentra; en Windows además da «/C:/…».
+const RAIZ = fileURLToPath(new URL('..', import.meta.url))
+// Sin la configuración del proyecto: la verificación no levanta el simulador
+// de la API ni escribe su base (y no depende de node:sqlite).
+const v = await createServer({ root: RAIZ, configFile: false, resolve: { alias: { '@': `${RAIZ}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
+// Los insumos del motor se instalan antes de calcular, como lo hace main.tsx en
+// el navegador: el motor no importa los datos de demostración (insumos.ts).
+const INS = await v.ssrLoadModule('/src/entities/insumos.ts')
+INS.instalarInsumos((await v.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
+const L = await v.ssrLoadModule('/src/entities/libro.ts')
+const D = await v.ssrLoadModule('/src/entities/diferido.ts')
+const B = await v.ssrLoadModule('/src/entities/bombas.ts')
+const P = await v.ssrLoadModule('/src/entities/pozos.ts')
+const C = await v.ssrLoadModule('/src/entities/configuracion.ts')
+const U = await v.ssrLoadModule('/src/entities/usuarios.ts')
+const I = await v.ssrLoadModule('/src/entities/informe.ts')
+const R = await v.ssrLoadModule('/src/entities/reloj.ts')
+const PL = await v.ssrLoadModule('/src/entities/plan.ts')
+const PT = await v.ssrLoadModule('/src/entities/planta.ts')
+const BO = await v.ssrLoadModule('/src/entities/bombas.ts')
+const EQ = await v.ssrLoadModule('/src/entities/equipos.ts')
+const SAP = await v.ssrLoadModule('/src/entities/sap.ts')
+const MSJ = await v.ssrLoadModule('/src/entities/mensajes.ts')
+const AC = await v.ssrLoadModule('/src/entities/aciertos.ts')
+const AS = await v.ssrLoadModule('/src/entities/asignacion.ts')
+const CAT = await v.ssrLoadModule('/src/entities/catalogo.ts')
+
+const f = n => Math.round(n).toLocaleString('es-CO')
+let fallos = 0, pruebas = 0
+const comprobar = (cond, msg) => { pruebas++; if (!cond) { fallos++; console.log('  ✗ FALLA:', msg) } else console.log('  ✓', msg) }
+const cerca = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Math.abs(b))
+const TODOS = ['ceiba', 'morichal', 'guacamayo', 'palmar', 'zarza']
+const ctx0 = L.contextoInicial()
+/** La parada real de P-201B que la sección 11 responde en pantalla y la 13 revisa. */
+let EV3
+
+console.log('\n=== 1. Identidades de cada mes y campo ===')
+let malas = 0, residuoMax = 0
+for (const c of TODOS) for (const m of L.serieMensual([c], ctx0)) {
+  const b = m.libro
+  residuoMax = Math.max(residuoMax, Math.abs(b.residuo))
+  const ok = cerca(b.potencial - b.real, b.diferido, 1e-9)
+    && cerca(b.identificado + b.declarado + b.pendiente, b.diferido)
+    && cerca(b.planeado + b.noPlaneado, b.diferido)
+    && cerca(b.porEquipo.reduce((a, e) => a + e.bbl, 0), b.diferido)
+    && cerca(b.porTipo.reduce((a, e) => a + e.bbl, 0), b.diferido)
+    && cerca(b.porPozo.reduce((a, e) => a + e.bbl, 0), b.diferido)
+    && cerca(b.altoImpacto, b.anticipable + b.sinInstrumento + b.sinParte)
+  if (!ok) { malas++; console.log('    ', c, m.mes, 'pot−real', b.potencial - b.real, 'dif', b.diferido) }
+}
+comprobar(malas === 0, `65 meses-campo: potencial − real = Σ eventos; por señal + declarado + sin identificar = Σ; programado + no = Σ; Paretos por equipo, tipo y pozo suman Σ; alto impacto = vigilado + sin instrumento + sin parte`)
+comprobar(residuoMax < 1e-6, `residuo de inventario en meses enteros: ${residuoMax.toExponential(1)} bbl`)
+
+console.log('\n=== 2. Portafolio por período ===')
+for (const per of ['cerrado', 'curso', 'trimestre', 'ytd', 'doce']) {
+  const r = D.rangoDePeriodo(per)
+  const lb = L.libro(TODOS, r.desde, r.hasta, ctx0)
+  console.log(`  ${r.nombre}: real ${f(lb.real)} · potencial ${f(lb.potencial)} · diferido ${f(lb.diferido)} ±${f(lb.tolerancia)} · alto impacto ${f(lb.altoImpacto)} · evitable por orden ${f(lb.evitablePorOrden)} · publicable ${lb.publicable}`)
+  comprobar(cerca(lb.porCampo.reduce((a, c) => a + c.brecha, 0), lb.brecha), `${r.nombre}: los campos suman la brecha del portafolio`)
+  comprobar(cerca(lb.brecha - lb.diferido, lb.residuo), `${r.nombre}: brecha − Σ eventos = inventario (${f(lb.residuo)} bbl)`)
+  const dias = L.porDia(TODOS, r.desde, r.hasta, ctx0)
+  comprobar(cerca(dias.reduce((a, d) => a + d.real, 0), lb.real, 1e-9) && cerca(dias.reduce((a, d) => a + d.potencial, 0), lb.potencial, 1e-9)
+    && cerca(dias.reduce((a, d) => a + d.diferido, 0), lb.diferido, 1e-9), `${r.nombre}: la serie diaria suma lo mismo que el libro`)
+}
+
+console.log('\n=== 3. Factor de asignación y custodia ===')
+const doce = L.libro(TODOS, new Date(L.calendario()[0].desde), new Date(L.calendario().at(-1).hasta), ctx0)
+const fuera = doce.fa.filter(x => !x.dentro).map(x => `${x.campoId} ${x.mes}`)
+comprobar(fuera.length === 1 && fuera[0] === 'palmar 2026-04', `solo El Palmar en abril sale de banda (sembrado): ${fuera.join(', ')}`)
+comprobar(doce.custodia.sinPrueba.map(p => p.id).join() === 'ZA-09', 'el único pozo sin prueba es ZA-09')
+comprobar(doce.tramos.every(t => t.causa.evidencia.length > 0 && t.causa.equipo), `los ${doce.tramos.length} tramos traen su causa, su equipo y su evidencia`)
+comprobar(doce.tramos.filter(t => t.sinCustodia).every(t => t.bbl === 0), 'un pozo sin prueba no tiene barriles: no se le inventa caudal')
+comprobar(doce.tramos.filter(t => t.aproximado).every(t => t.evento.codigo === 'HZ'), 'solo los tramos a frecuencia reducida son aproximados')
+
+console.log('\n=== 4. Bombas: colchón previsto contra el que aguantó ===')
+let comparadas = 0, desvio = 0
+for (const ev of B.eventosBomba()) {
+  const m = D.paradaMedida(ev, ctx0)
+  if (!m?.colchon || m.colchon.observadoH === undefined) continue
+  comparadas++
+  desvio = Math.max(desvio, Math.abs(m.colchon.previsto.horas - m.colchon.observadoH))
+}
+comprobar(comparadas >= 8 && desvio < 0.1, `${comparadas} paradas con cierre de pozos: el colchón previsto y el observado difieren a lo más ${desvio.toFixed(3)} h`)
+const ceibaTotal = B.eventosBomba().filter(e => e.campoId === 'ceiba' && e.perdida === 1).map(e => D.paradaMedida(e, ctx0))
+  .filter(m => m.causa.equipo === 'P-201B' && m.bbl > 0)
+comprobar(ceibaTotal.every(m => m.pozos >= 17), `La Ceiba sin respaldo: cada parada total cierra todo el campo (${ceibaTotal.map(m => m.pozos).join(', ')} pozos)`)
+const pc = D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0)
+const rc = D.riesgoAhora(['ceiba'], ctx0).find(r => r.equipo === 'P-201B' && r.estado === 'perdiendo')
+comprobar(pc.perdiendo && rc && cerca(pc.perdiendo.bblDia, rc.bblDia), `P-201B de La Ceiba parada: la predicción y el riesgo dicen lo mismo (${f(pc.perdiendo?.bblDia ?? 0)} bbl/d)`)
+const pm = D.prediccion(B.perfilBomba('P-201B', 'morichal'), ctx0)
+comprobar(pm.orden && pm.orden.crudoBpd <= pm.orden.crudoParejoBpd + 1e-9, `Morichal: cerrar en orden pierde ${f(pm.orden.crudoBpd)} bbl/d contra ${f(pm.orden.crudoParejoBpd)} parejo`)
+
+console.log('\n=== 5. Preguntas y no conformidades ===')
+const preg = L.libro(TODOS, new Date(L.calendario()[0].desde), new Date(Date.parse('2026-10-02T14:00:00-05:00')), ctx0).preguntas
+const nc = preg.filter(p => p.arrancoSinIdentificar).map(p => p.id).sort()
+comprobar(nc.join() === ['EP-LC08-261001-02', 'EP-PA04-260621-05', 'EV-M2011-260924'].sort().join(), `no conformidades: ${nc.join(', ')}`)
+comprobar(preg.some(p => p.id === 'EP-LC21-261001-01' && p.pide && !p.fin), 'LC-21 sigue parado sin identificar: no arrancar')
+
+console.log('\n=== 6. Lo que entra a mano cambia el cálculo como debe ===')
+const oct = { d: new Date('2026-10-01T00:00:00-05:00'), h: new Date('2026-10-02T14:00:00-05:00') }
+const antes = L.libro(['ceiba'], oct.d, oct.h, ctx0)
+const ctx1 = { config: ctx0.config, respuestas: { 'EP-LC21-261001-01': { texto: 'Cierre para cambiar la válvula de la cabeza', por: 'prueba', hora: '2026-10-02T14:00:00-05:00' } } }
+const despues = L.libro(['ceiba'], oct.d, oct.h, ctx1)
+comprobar(cerca(despues.pendiente, antes.pendiente - antes.tramos.filter(t => t.evento.id === 'EP-LC21-261001-01').reduce((a, t) => a + t.bbl, 0))
+  && cerca(despues.diferido, antes.diferido), `responder LC-21 pasa ${f(antes.pendiente - despues.pendiente)} bbl de «sin identificar» a «declarado» sin cambiar el total`)
+const sep = D.rangoDePeriodo('cerrado')
+const s0 = L.libro(['morichal'], sep.desde, sep.hasta, ctx0)
+const ctx2 = { config: ctx0.config, respuestas: { 'EV-M2011-260924': { texto: 'Sello con fuga', por: 'prueba', hora: '2026-10-02T14:00:00-05:00', parte: 'sello' } } }
+const s2 = L.libro(['morichal'], sep.desde, sep.hasta, ctx2)
+comprobar(s2.sinParte < s0.sinParte && cerca(s2.altoImpacto, s0.altoImpacto), `declarar la parte de P-201B (Morichal) baja «sin parte» de ${f(s0.sinParte)} a ${f(s2.sinParte)} bbl`)
+// Una meta nueva que rige desde el 15 de octubre: cambia el total del mes,
+// no lo que va a la fecha (hoy es 2 de octubre) ni septiembre, ni el diferido.
+const cur = D.rangoDePeriodo('curso')
+const cfg3 = C.conTramo(ctx0.config, 'ceiba', { desde: '2026-10-15', produccionBpd: 12000, diferidoMaxBpd: 600, netbackUsd: 48, criterioSinCausa: 2 })
+const ctx3 = { config: cfg3, respuestas: {} }
+const o0 = L.libro(['ceiba'], cur.desde, cur.hasta, ctx0), o3 = L.libro(['ceiba'], cur.desde, cur.hasta, ctx3)
+const sep3 = L.libro(['ceiba'], sep.desde, sep.hasta, ctx3), sep0 = L.libro(['ceiba'], sep.desde, sep.hasta, ctx0)
+comprobar(cerca(o3.meta.produccion, o0.meta.produccion) && cerca(o3.meta.produccionTotal - o0.meta.produccionTotal, (12000 - 10900) * 17)
+  && cerca(sep3.meta.produccion, sep0.meta.produccion) && cerca(o3.diferido, o0.diferido),
+  `una meta firmada desde el 15-oct suma ${f((12000 - 10900) * 17)} bbl al total de octubre y no toca lo que va a la fecha, ni septiembre, ni el diferido`)
+const cfg4 = structuredClone(ctx0.config); cfg4.respaldos.find(r => r.campoId === 'morichal' && r.equipo === 'P-201B').libreBpd = 10000
+const p4 = D.prediccion(B.perfilBomba('P-201B', 'morichal'), { config: cfg4, respuestas: {} })
+comprobar(p4.aguaSinSalidaBpd > pm.aguaSinSalidaBpd && p4.colchon.horas < pm.colchon.horas, `menos respaldo (15.100 → 10.000 bbl/d): más agua sin salida y menos colchón (${pm.colchon.horas.toFixed(1)} → ${p4.colchon.horas.toFixed(1)} h)`)
+comprobar(C.diferencias(ctx0.config, cfg4).length === 1, 'la firma lista exactamente el cambio hecho')
+
+console.log('\n=== 6b. Metas en barriles: la global es la suma ===')
+const sumaCampos = k => TODOS.reduce((a, c) => a + L.libro([c], cur.desde, cur.hasta, ctx0).meta[k], 0)
+const glob = L.libro(TODOS, cur.desde, cur.hasta, ctx0)
+comprobar(['produccion', 'diferido', 'produccionTotal', 'diferidoTotal'].every(k => cerca(glob.meta[k], sumaCampos(k))),
+  `la meta global es la suma de los campos: ${f(glob.meta.produccionDia)} bbl/d de producción y ${f(glob.meta.diferidoDia)} de máximo de diferido`)
+const semP = 10900 + 16700 + 6300 + 3250 + 3050, semD = 800 + 950 + 450 + 50 + 50
+comprobar(cerca(glob.meta.produccionTotal, semP * 31) && cerca(glob.meta.diferidoTotal, semD * 31) && cerca(glob.meta.diasTotal, 31),
+  `el total de octubre es la meta por día × 31 días: ${f(semP * 31)} bbl a producir y ${f(semD * 31)} como máximo de diferido`)
+comprobar(cerca(glob.meta.produccion, semP * glob.meta.dias) && glob.meta.dias < 2,
+  `lo que va a la fecha se prorratea: ${glob.meta.dias.toFixed(2)} días × ${f(semP)} = ${f(glob.meta.produccion)} bbl`)
+const dOct = L.porDia(['ceiba'], cur.desde, cur.hasta, ctx3)
+comprobar(dOct.every(d => cerca(d.meta, 10900 * d.horas / 24)), 'la meta de cada día de la gráfica es la del tramo que rige ese día')
+const mal = C.validarConfig(C.conTramo(ctx0.config, 'ceiba', { desde: '2026-09-15', produccionBpd: 1, diferidoMaxBpd: 1, netbackUsd: 48, criterioSinCausa: 2 }), ctx0.config, '2026-10-01')
+comprobar(mal.some(e => e.includes('mes que ya cerró')), 'no se puede firmar una meta que reescriba un mes cerrado')
+// El precio lleva fecha: subirlo desde hoy cambia el valor de octubre y no el de septiembre.
+const cfgP = C.conTramo(ctx0.config, 'ceiba', { desde: '2026-10-02', produccionBpd: 10900, diferidoMaxBpd: 800, netbackUsd: 60, criterioSinCausa: 2 })
+const ctxP = { config: cfgP, respuestas: {} }
+const sepP = L.libro(['ceiba'], sep.desde, sep.hasta, ctxP), octP = L.libro(['ceiba'], cur.desde, cur.hasta, ctxP)
+comprobar(cerca(sepP.valorUsd, sep0.valorUsd) && octP.valorUsd > o0.valorUsd,
+  `un precio nuevo desde hoy no toca septiembre (${f(sep0.valorUsd)} USD) y sí octubre (${f(o0.valorUsd)} → ${f(octP.valorUsd)} USD)`)
+const g4 = C.diferenciasPorGrupo(ctx0.config, cfg4), g3 = C.diferenciasPorGrupo(ctx0.config, cfg3)
+comprobar(g4.metas.length === 0 && g4.tecnica.length === 1 && g3.metas.length === 1 && g3.tecnica.length === 0,
+  'un respaldo lo firma el administrador; una meta, el gerente')
+
+// Lo que ya pasó no se reescribe por ningún lado: ni metas, ni el programa de paradas.
+const ahoraMs = R.AHORA.getTime()
+const conParadaPasada = structuredClone(ctx0.config)
+conParadaPasada.programa.push({ id: 'PR-prueba', campoId: 'ceiba', equipo: 'P-201B', desde: '2026-09-01T00:00:00-05:00', hasta: '2026-09-30T23:00:00-05:00', motivo: 'prueba de reglas' })
+const sinParadaPasada = structuredClone(ctx0.config)
+const pasada = sinParadaPasada.programa.find(p => Date.parse(p.desde) < ahoraMs)
+sinParadaPasada.programa = sinParadaPasada.programa.filter(p => p !== pasada)
+const sinTramoViejo = structuredClone(cfg3); sinTramoViejo.campos.ceiba.metas = sinTramoViejo.campos.ceiba.metas.filter(t => t.desde !== '2025-10-01')
+comprobar(C.validarConfig(conParadaPasada, ctx0.config, '2026-10-01', ahoraMs).some(e => e.includes('ya empezó'))
+  && C.validarConfig(sinParadaPasada, ctx0.config, '2026-10-01', ahoraMs).some(e => e.includes('ya empezó'))
+  && C.validarConfig(sinTramoViejo, cfg3, '2026-10-01', ahoraMs).some(e => e.includes('mes cerrado')),
+  'una parada no entra ni sale del programa después de empezar, y una meta de un mes cerrado no se quita')
+// La huella de una ficha es la de ESE equipo en SU campo, aunque se abra desde el portafolio.
+const portSep = L.libro(TODOS, sep.desde, sep.hasta, ctx0)
+const huellaCeiba = I.cifrasDe(portSep, TODOS, 1, { equipo: 'P-201B', campoId: 'ceiba' })
+const soloCeiba = L.libro(['ceiba'], sep.desde, sep.hasta, ctx0).porEquipo.filter(x => x.equipo === 'P-201B').reduce((a, x) => a + x.bbl, 0)
+comprobar(cerca(huellaCeiba.bblEquipo, Math.round(soloCeiba * 100) / 100, 1e-6),
+  `la huella de la ficha de P-201B de La Ceiba lleva sus ${f(soloCeiba)} bbl, no los de las P-201B de otros campos`)
+// Precio solo desde hoy para La Zarza: el campo queda «sin precio en parte del período» y lo valorado es solo lo que tiene precio.
+const cfgZ = C.conTramo(ctx0.config, 'zarza', { desde: '2026-10-02', produccionBpd: 3050, diferidoMaxBpd: 50, netbackUsd: 40, criterioSinCausa: 2 })
+const oz = L.libro(['zarza'], cur.desde, cur.hasta, { config: cfgZ, respuestas: {} })
+comprobar(oz.sinPrecio.includes('zarza') && oz.valorCampos.con === 0 && oz.valorUsd !== undefined,
+  'un campo con precio solo en parte del período no cuenta como «con precio», y sus días con precio sí se valoran')
+// El valor de una ficha usa el precio de cada día, como el libro.
+const cfgM = C.conTramo(ctx0.config, 'morichal', { desde: '2026-10-02', produccionBpd: 16700, diferidoMaxBpd: 950, netbackUsd: 60, criterioSinCausa: 2 })
+const tsM = L.diferidoDeEquipo('morichal', 'MN-41', cur.desde, cur.hasta, { config: cfgM, respuestas: {} }).tramos
+const esperado = tsM.reduce((a, t) => {
+  let x = 0
+  for (let d = Date.parse('2026-10-01T00:00:00-05:00'); d < t.fin.getTime(); d += 864e5) {
+    const parte = (Math.min(t.fin.getTime(), d + 864e5) - Math.max(t.inicio.getTime(), d)) / (t.fin.getTime() - t.inicio.getTime())
+    if (parte > 0) x += t.bbl * parte * (d >= Date.parse('2026-10-02T00:00:00-05:00') ? 60 : 48)
+  }
+  return a + x
+}, 0)
+comprobar(tsM.length > 0 && cerca(L.valorDeTramos(tsM, { config: cfgM, respuestas: {} }), esperado, 1e-9),
+  `la ficha valora cada día con su precio: MN-41 en octubre vale ${f(esperado)} USD con 48 el 1 y 60 desde el 2`)
+
+console.log('\n=== 6c. Accesos ===')
+const us = U.USUARIOS_INICIALES
+const ger = us.find(u => u.rolId === 'ger')
+comprobar(U.validarAcceso(us, { ...ger, estado: 'suspendido' }, 'adm', 'prueba de reglas').some(e => e.includes('al menos un gerente')),
+  'no se puede dejar la operación sin gerente con acceso')
+comprobar(U.validarAcceso(us, { ...ger, rolId: 'prod' }, ger.id, 'prueba de reglas').some(e => e.includes('a sí mismo')),
+  'nadie se quita su propio rol')
+const conInvitado = [...us, { id: 'u90', nombre: 'Gerente Nuevo', correo: 'gerente.nuevo@operadora.example', rolId: 'ger', campos: 'todos', estado: 'invitado', desde: '2026-10-02' }]
+comprobar(U.validarAcceso(conInvitado, { ...ger, estado: 'suspendido' }, 'adm', 'prueba de reglas').some(e => e.includes('al menos un gerente')),
+  'un gerente invitado (que todavía no entra) no cuenta como gerente con acceso')
+comprobar(U.validarAcceso(us, { id: 'u99', nombre: 'Persona Nueva', correo: us[1].correo, rolId: 'sup', campos: ['ceiba'], estado: 'invitado', desde: '' }, ger.id, 'nuevo supervisor').some(e => e.includes('ese correo')),
+  'no hay dos personas con el mismo correo')
+comprobar(U.validarAcceso(us, { ...us.find(u => u.rolId === 'sup'), campos: ['ceiba', 'morichal'] }, ger.id, '').some(e => e.includes('motivo'))
+  && U.validarAcceso(us, { ...us.find(u => u.rolId === 'sup'), campos: ['ceiba', 'morichal'] }, ger.id, 'cubre también Morichal').length === 0,
+  'todo cambio de acceso exige motivo, y con motivo pasa')
+
+console.log('\n=== 6d. Plan mes a mes (presupuesto) ===')
+const opc = { enBblMes: false, desdeMes: '2026-10', permitidos: TODOS }
+const pegado = 'Mes\tCampo\tProducción\tMáx\tPrecio\n2026-11\tLa Ceiba\t11.200\t750\t48,5\nnoviembre de 2026\tMorichal Norte\t16900\t900\t\n12/2026\tla ceiba\t11300\t700\t'
+const lp = PL.leerPlan(pegado, opc)
+comprobar(lp.errores.length === 0 && lp.filas.length === 3
+  && lp.filas[0].produccionBpd === 11200 && lp.filas[0].netbackUsd === 48.5 && lp.filas[1].mes === '2026-11' && lp.filas[1].campoId === 'morichal'
+  && lp.filas[2].mes === '2026-12' && lp.filas[2].netbackUsd === undefined,
+  'lee lo pegado de Excel: cabecera, miles «11.200», decimal «48,5», meses «noviembre de 2026» y «12/2026», campo sin importar mayúsculas')
+const malos = PL.leerPlan('2026-09;La Ceiba;11000;800\n2026-11;Campo X;100;1\n2026-11;La Ceiba;-5;1\n2026-11;La Ceiba;abc;1', opc)
+comprobar(malos.filas.length === 0 && malos.errores.some(e => e.includes('ya cerró')) && malos.errores.some(e => e.includes('no es un campo'))
+  && malos.errores.some(e => e.includes('mayor que cero')) && malos.errores.some(e => e.includes('«abc» no es un número')),
+  'rechaza un mes cerrado, un campo que no existe y una producción negativa o que no es número')
+const enMes = PL.leerPlan('2026-11;La Ceiba;330000;24000', { ...opc, enBblMes: true })
+comprobar(enMes.filas[0].produccionBpd === 11000 && enMes.filas[0].diferidoMaxBpd === 800, 'un presupuesto en bbl del mes se convierte a bbl/d (330.000 ÷ 30 días = 11.000)')
+const ajeno = PL.leerPlan('2026-11;La Zarza;3000;50', { ...opc, permitidos: ['ceiba'] })
+comprobar(ajeno.filas.length === 0 && ajeno.errores.some(e => e.includes('no tiene asignado')), 'no carga campos que quien carga no tiene asignados')
+// Cada mes del plan es un tramo desde su día 1: noviembre y diciembre se miden con su cifra.
+let cfgPlan = ctx0.config
+for (const [mes, prod] of [['2026-11', 11200], ['2026-12', 11300]]) cfgPlan = C.conTramo(cfgPlan, 'ceiba', { desde: `${mes}-01`, produccionBpd: prod, diferidoMaxBpd: 750, netbackUsd: 48, criterioSinCausa: 2 })
+const nov = L.metaEntre(cfgPlan, 'ceiba', Date.parse('2026-11-01T00:00:00-05:00'), Date.parse('2026-12-01T00:00:00-05:00'))
+const dic = L.metaEntre(cfgPlan, 'ceiba', Date.parse('2026-12-01T00:00:00-05:00'), Date.parse('2027-01-01T00:00:00-05:00'))
+const ene = L.metaEntre(cfgPlan, 'ceiba', Date.parse('2027-01-01T00:00:00-05:00'), Date.parse('2027-02-01T00:00:00-05:00'))
+comprobar(cerca(nov.produccion, 11200 * 30) && cerca(dic.produccion, 11300 * 31) && cerca(ene.produccion, 11300 * 31) && cerca(nov.diferido, 750 * 30),
+  'el plan mide cada mes con su cifra (nov 11.200 × 30, dic 11.300 × 31) y el mes sin cifra sigue con la última')
+
+console.log('\n=== 6e. Perfil de cada campo ===')
+let contradice = []
+for (const c of TODOS) {
+  const pf = C.perfilDe(ctx0.config, c)
+  const esp = P.pozosDe(c).filter(p => p.levantamiento === 'electrosumergible').length
+  const bombas = Object.keys(EQ.EQUIPOS).filter(id => BO.esBomba(id) && (BO.perfilBomba(id, c) || EQ.equipoEnCampo(id, c))).length
+  const gas = PT.CAMPO_PLANTA[c].gas.length
+  if ((esp > 0) !== pf.electrosumergibles || (bombas > 0) !== pf.bombas || (gas > 0) !== (pf.gas !== 'no')) contradice.push(c)
+}
+comprobar(contradice.length === 0, `el perfil semilla de cada campo cuadra con su registro (electrosumergibles, bombas, tren de gas)${contradice.length ? ': no cuadra ' + contradice.join(', ') : ''}`)
+// Apagar una familia la saca de la vigilancia (avisos y predicciones), no del libro.
+const cfgSinEsp = structuredClone(ctx0.config); cfgSinEsp.campos.morichal.perfil.electrosumergibles = false
+const rConEsp = D.riesgoAhora(['morichal'], ctx0), rSinEsp = D.riesgoAhora(['morichal'], { config: cfgSinEsp, respuestas: {} })
+const espAvisando = rConEsp.filter(r => r.estado === 'en-riesgo' && r.tipo === 'electrosumergible').length
+comprobar(espAvisando > 0 && !rSinEsp.some(r => r.estado === 'en-riesgo' && r.tipo === 'electrosumergible')
+  && cerca(L.libro(['morichal'], sep.desde, sep.hasta, { config: cfgSinEsp, respuestas: {} }).diferido, L.libro(['morichal'], sep.desde, sep.hasta, ctx0).diferido),
+  `sin electrosumergibles en el perfil, sus ${espAvisando} avisos salen de la vigilancia y el libro sigue contando lo mismo`)
+const sinGas = PT.armar(PT.CAMPO_PLANTA.palmar, new Set()), conGas = PT.armar(PT.CAMPO_PLANTA.ceiba, new Set())
+comprobar(!sinGas.bandas.some(b => b.titulo === 'Tren de gas') && conGas.bandas.some(b => b.titulo === 'Tren de gas') && sinGas.alto < conGas.alto,
+  'un campo sin gas no dibuja tren de gas ni le reserva el carril')
+
+console.log('\n=== 6f. Sin meta firmada (una configuración incompleta del servidor) ===')
+// GET /api/configuracion/historial puede traer una versión sin un campo, o con el campo y sin
+// tramos. Ni la semilla de la demostración ni un 0: el libro dice «sin meta firmada», no se
+// publica, no valoriza con el precio de la demo y el total global lo dice aunque falte uno solo.
+const cfgSinCeiba = structuredClone(ctx0.config); delete cfgSinCeiba.campos.ceiba
+const cfgCeibaVacia = structuredClone(ctx0.config); cfgCeibaVacia.campos.ceiba.metas = []
+const ctxSin = { config: cfgSinCeiba, respuestas: {} }, ctxVacia = { config: cfgCeibaVacia, respuestas: {} }
+const lSinMeta = L.libro(['ceiba'], sep.desde, sep.hasta, ctxSin), lVacia = L.libro(['ceiba'], sep.desde, sep.hasta, ctxVacia)
+const lConMeta = L.libro(['ceiba'], sep.desde, sep.hasta, ctx0)
+const portSin = L.libro(TODOS, sep.desde, sep.hasta, ctxSin)
+const diasSin = L.porDia(['ceiba', 'morichal'], sep.desde, sep.hasta, ctxSin)
+comprobar([lSinMeta, lVacia].every(lb => lb.meta.sinMeta.join() === 'ceiba' && lb.meta.produccion === 0 && !L.conMeta(lb.meta) && !lb.publicable
+    && lb.motivos.some(m => m.codigo === 'sin-meta' && m.campoId === 'ceiba') && lb.valorUsd === undefined && lb.sinPrecio.join() === 'ceiba' && lb.porCampo[0].sinMeta)
+  && C.metaEn(cfgSinCeiba, 'ceiba', sep.desde.getTime()) === undefined && C.criterioEn(cfgSinCeiba, 'ceiba', sep.desde.getTime()) === undefined
+  && C.precioEn(cfgSinCeiba, 'ceiba', sep.desde.getTime()) === undefined
+  && !C.perfilDe(cfgSinCeiba, 'ceiba').bombas && !C.perfilDe(cfgSinCeiba, 'ceiba').electrosumergibles && !C.tienePerfil(cfgSinCeiba, 'ceiba')
+  && L.conMeta(lConMeta.meta) && lConMeta.meta.produccion > 0
+  && portSin.meta.sinMeta.join() === 'ceiba' && !L.conMeta(portSin.meta) && /sin meta firmada en La Ceiba/.test(L.textoSinMeta(portSin.meta, true))
+  && portSin.porCampo.filter(c => c.sinMeta).map(c => c.campoId).join() === 'ceiba' && diasSin.every(d => d.meta === null)
+  && L.metaEntre(cfgSinCeiba, 'ceiba', sep.desde.getTime(), sep.hasta.getTime()).sinMeta,
+  `La Ceiba sin meta en la configuración (o con el campo y sin tramos): «sin meta firmada», no publicable (sin-meta), sin valor en USD ni precio de la demo, sin perfil inventado; el portafolio dice «${L.textoSinMeta(portSin.meta, true)}» y el día a día no da meta`)
+// Coma como separador: «9000,500,100» es legítima y entra sin error; «16700,1,200» entra leída como
+// dos columnas pero con un aviso visible antes de firmar (no se acepta en silencio).
+const plLegit = PL.leerPlan('2026-11,La Ceiba,9000,500,100', { enBblMes: false, desdeMes: '2026-10', permitidos: ['ceiba', 'morichal'] })
+const plDuda = PL.leerPlan('2026-11,Morichal,16700,1,200', { enBblMes: false, desdeMes: '2026-10', permitidos: ['ceiba', 'morichal'] })
+comprobar(plLegit.errores.length === 0 && plLegit.filas.length === 1 && plDuda.errores.length === 0 && plDuda.filas[0]?.diferidoMaxBpd === 1
+  && plDuda.avisos.some(a => a.includes('«1,200» se leyó como dos columnas')),
+  'plan con coma: «9000,500,100» entra limpia y «16700,1,200» entra con el aviso de que «1,200» se leyó como dos columnas')
+// Mi perfil: el operador ve «responder» concedido y solo «completar el análisis» negado, sin volver a
+// negar lo que hace; el jefe ve las dos concedidas (completar incluye responder).
+const TI = await v.ssrLoadModule('/src/entities/tipos.ts'), RO = await v.ssrLoadModule('/src/entities/roles.ts')
+const pOper = TI.permisosDelRol(RO.rolPorId('oper').puede), pJefe = TI.permisosDelRol(RO.rolPorId('jefe').puede)
+comprobar(pOper.concedidas.includes('causa:declarar') && pOper.negadas.includes('causa:completar') && !/[Rr]esponder/.test(TI.CAPACIDAD_NOMBRE['causa:completar'])
+  && pJefe.concedidas.includes('causa:declarar') && pJefe.concedidas.includes('causa:completar'),
+  'Mi perfil: el operador tiene «responder» y le falta solo «completar el análisis»; el jefe tiene las dos')
+// Un tramo que todavía no empezó no se usa hacia atrás: si La Ceiba tiene su primer tramo el 1-oct,
+// septiembre queda «sin meta firmada» (ni meta, ni precio, ni regla de cierre que nadie firmó para ese mes).
+const cfgTarde = structuredClone(ctx0.config); cfgTarde.campos.ceiba.metas = cfgTarde.campos.ceiba.metas.map(m => ({ ...m, desde: '2026-10-01' }))
+const lTarde = L.libro(['ceiba'], sep.desde, sep.hasta, { config: cfgTarde, respuestas: {} })
+comprobar(C.metaEn(cfgTarde, 'ceiba', sep.desde.getTime()) === undefined && C.precioEn(cfgTarde, 'ceiba', sep.desde.getTime()) === undefined
+  && C.criterioEn(cfgTarde, 'ceiba', sep.desde.getTime()) === undefined && C.metaEn(cfgTarde, 'ceiba', new Date('2026-10-02T12:00:00-05:00').getTime()) !== undefined
+  && lTarde.meta.sinMeta.join() === 'ceiba' && !lTarde.publicable && lTarde.valorUsd === undefined,
+  'un tramo que empieza el 1-oct no rige en septiembre: septiembre sale «sin meta firmada», sin precio ni regla de cierre, y octubre sí la tiene')
+// Firmar la meta de un campo que la configuración no traía lo agrega (no revienta), y la firma pide las casillas vacías.
+const conNueva = C.conTramo(cfgSinCeiba, 'ceiba', { desde: '2026-10-02', produccionBpd: 10000, diferidoMaxBpd: 700, criterioSinCausa: 2 })
+comprobar(conNueva.campos.ceiba.metas.length === 1 && !conNueva.campos.ceiba.perfil.bombas && C.diferencias(cfgSinCeiba, conNueva).some(x => /La Ceiba: campo nuevo/.test(x))
+  && C.validarConfig(C.conTramo(cfgSinCeiba, 'ceiba', { desde: '2026-10-02', produccionBpd: NaN, diferidoMaxBpd: NaN, criterioSinCausa: NaN }), cfgSinCeiba, '2026-10-01', R.AHORA.getTime()).some(e => /La Ceiba: la meta de producción/.test(e)),
+  'el gerente puede firmar la meta de un campo que la configuración no traía: entra como campo nuevo y, con las casillas vacías, la firma se rechaza')
+
+console.log('\n=== 7. Historia de fallas ===')
+let espMal = 0
+for (const p of P.todosLosPozos().filter(x => x.levantamiento === 'electrosumergible')) {
+  const h = L.historialDeEquipo(p.campoId, p.id, ctx0)
+  if (h.fallas < 2 ? h.mtbfDias !== undefined : !cerca(h.mtbfDias, h.dias / h.fallas)) espMal++
+}
+comprobar(espMal === 0, 'el tiempo entre fallas solo se calcula con dos fallas o más, y es días ÷ fallas')
+const hc = L.historialDeEquipo('ceiba', 'P-201B', ctx0)
+console.log(`  P-201B de La Ceiba: ${hc.fallas} fallas, una cada ${hc.mtbfDias?.toFixed(0)} días, ${hc.mdtH?.toFixed(1)} h fuera, ${f(hc.bbl)} bbl · partes ${hc.porParte.map(x => `${x.parte} ${x.fallas}`).join(', ')}`)
+const hg = L.historialDeEquipo('guacamayo', 'P-201B', ctx0)
+comprobar(hg.fallas > 0 && hg.bbl === 0, `Guacamayo (recobro): sus ${hg.fallas} fallas cuentan aunque no costaron barriles`)
+
+console.log('\n=== 8. SAP, WhatsApp, aciertos y asignación oficial ===')
+const ahora = R.AHORA.getTime()
+const hs = SAP.historiaSap(ctx0)
+// SAP: cada correctiva atiende una falla cerrada del PLC, aviso y orden se apuntan entre sí, nada liberado en el futuro.
+const fallasCerradas = new Set(TODOS.flatMap(c => [...new Set(hs.ordenes.filter(o => o.campoId === c && o.evento).map(o => o.equipo))]
+  .flatMap(eq => L.historialDeEquipo(c, eq, ctx0).eventos.filter(e => !e.disparo && e.fin).map(e => e.id))))
+const correctivas = hs.ordenes.filter(o => o.clase === 'PM01')
+comprobar(correctivas.length > 0 && correctivas.every(o => o.evento && fallasCerradas.has(o.evento)), `las ${correctivas.length} correctivas de SAP atienden cada una una falla cerrada del PLC`)
+comprobar(hs.avisos.every(a => !a.orden || hs.ordenes.find(o => o.numero === a.orden)?.aviso === a.numero), 'aviso y orden se apuntan entre sí')
+comprobar(hs.ordenes.every(o => (!o.liberada || new Date(o.liberada).getTime() <= ahora) && new Date(o.creada).getTime() <= ahora
+  && (o.estado !== 'REL' || !!o.liberada)), 'ninguna orden creada o liberada en el futuro; una liberada tiene su hora')
+// La historia de SAP es lo que quedó registrado: firmar o responder hoy no la renumera;
+// la parte declarada después sí llega al aviso y a la orden, con el mismo número.
+const cfgFut = structuredClone(ctx0.config)
+cfgFut.programa = [...cfgFut.programa, { id: 'PR-FUT-1', campoId: 'ceiba', equipo: 'P-201B', desde: '2026-10-05T06:00:00-05:00', hasta: '2026-10-05T18:00:00-05:00', motivo: 'Preventivo de prueba' }]
+cfgFut.campos.morichal.perfil.electrosumergibles = false
+const hf = SAP.historiaSap({ config: cfgFut, respuestas: {} })
+const numeros = h => h.ordenes.map(o => o.numero).join(',') + '|' + h.avisos.map(a => a.numero).join(',')
+comprobar(numeros(hf) === numeros(hs), 'firmar hoy un programa o apagar una familia no borra ni renumera nada de la historia de SAP')
+const sinParte = hs.avisos.find(a => a.evento && !a.parte && a.tipo === 'M2')
+const hR = sinParte ? SAP.historiaSap({ config: ctx0.config, respuestas: { [sinParte.evento]: { texto: 'Sello', por: 'x', parte: 'sello', modo: 'ELP', hora: R.AHORA.toISOString(), canal: 'pantalla' } } }) : undefined
+const avisoR = hR?.avisos.find(a => a.numero === sinParte?.numero), ordenR = hR?.ordenes.find(o => o.aviso === sinParte?.numero)
+comprobar(!!sinParte && avisoR?.parte === 'sello' && /sello/i.test(ordenR?.descripcion ?? '') && numeros(hR) === numeros(hs),
+  `una parte declarada después (${sinParte?.equipo}) llega al aviso ${sinParte?.numero} y a su orden, sin cambiar los números`)
+const hpc = SAP.horasPorClase(hs.ordenes, new Date(L.calendario()[0].desde), R.AHORA)
+const dentroH = hs.ordenes.filter(o => { const t = new Date(o.cierreTecnico ?? o.liberada ?? o.creada).getTime(); return t >= L.calendario()[0].desde && t < ahora })
+comprobar(cerca(hpc.proactivo + hpc.correctivo, dentroH.reduce((a, o) => a + o.horasReales, 0)), 'horas proactivas + correctivas = todas las horas confirmadas del período')
+const rj = SAP.relojes(hs.ordenes, ev => { for (const c of TODOS) for (const eq of new Set(hs.ordenes.filter(o => o.campoId === c).map(o => o.equipo))) { const f = L.historialDeEquipo(c, eq, ctx0).eventos.find(e => e.id === ev); if (f) return f.horas } })
+comprobar(!!rj && rj.esperaH >= 0 && cerca(rj.totalH, rj.activaH + rj.esperaH), 'tres relojes: total = reparación activa + espera, y la espera nunca es negativa')
+
+// WhatsApp: el registro se arma con el historial de la configuración (cada mensaje con la versión que regía a su hora).
+const V1 = [C.versionInicial()]
+const preguntas = L.libro(TODOS, new Date(L.calendario()[0].desde), R.AHORA, ctx0).preguntas
+const riesgoT = D.riesgoAhora(TODOS, ctx0)
+const registroPr = AC.registroDePredicciones(TODOS, ctx0, riesgoT)
+const msjs = MSJ.mensajesDe({ campos: TODOS, preguntas, predicciones: registroPr, ordenes: hs.ordenes, usuarios: U.USUARIOS_INICIALES, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) })
+comprobar(msjs.length > 0 && msjs.every(m => new Date(m.hora).getTime() <= ahora), `${msjs.length} mensajes, ninguno con hora futura`)
+comprobar(msjs.every(m => { const u = U.USUARIOS_INICIALES.find(x => x.id === m.para); return u && u.alertas && u.telefono && u.estado === 'activo' && (u.campos === 'todos' || u.campos.includes(m.campoId)) }),
+  'cada mensaje va a una persona activa, con alertas, con teléfono y con ese campo')
+const pide = preguntas.find(p => p.pide && p.equipo === 'P-201B' && p.campoId === 'ceiba')
+const p201 = msjs.filter(m => m.evento === pide.id && (m.regla === 'parada' || m.regla === 'cierre')).sort((a, b) => a.hora.localeCompare(b.hora))
+const alParar = p201.find(m => m.regla === 'parada'), alCerrar = p201.find(m => m.regla === 'cierre')
+comprobar(!!alParar && !!alCerrar && new Date(alParar.hora).getTime() === pide.inicio.getTime() + 60_000 && !/\d+ pozos|bbl/.test(alParar.texto)
+  && new Date(alCerrar.hora) > new Date(alParar.hora) && /se empezaron a cerrar pozos/.test(alCerrar.texto),
+  'P-201B: al parar (03:53) avisa sin cifras que todavía no se sabían; el cierre de pozos va en su propio mensaje, a su hora')
+comprobar(msjs.filter(m => m.insistencia === 'escalamiento').every(m => !/bbl/.test(m.texto)), 'el escalamiento no trae barriles: a las 2 h no se sabe cuánto va a costar')
+// Las sugerencias son las que se sabían al parar: no cambian si después alguien responde.
+const ctxResp = { config: ctx0.config, respuestas: { [pide.id]: { texto: 'Sello', por: 'x', parte: 'sello', hora: R.AHORA.toISOString(), canal: 'whatsapp' } } }
+const sugAntes = MSJ.causasSugeridas(pide, ctx0).opciones.map(o => `${o.texto}|${o.porque}`).join(';')
+const sugDespues = MSJ.causasSugeridas(pide, ctxResp).opciones.map(o => `${o.texto}|${o.porque}`).join(';')
+comprobar(sugAntes === sugDespues && /fallas anteriores/.test(sugAntes), 'las causas sugeridas se cuentan con las fallas anteriores a la parada, y responder después no las cambia')
+const esEspP = p => P.pozoDe(p.campoId, p.equipo)?.levantamiento === 'electrosumergible'
+const pozoComun = preguntas.find(p => p.sobre === 'pozo' && !esEspP(p)), pozoEsp = preguntas.find(p => p.sobre === 'pozo' && esEspP(p))
+comprobar(!!pozoComun && MSJ.causasSugeridas(pozoComun, ctx0).opciones.every(o => !o.parte), `un pozo sin electrosumergible (${pozoComun?.equipo}) recibe el catálogo de pozo, sin partes ni orden`)
+const sugEsp = pozoEsp ? MSJ.causasSugeridas(pozoEsp, ctx0).opciones : []
+comprobar(!!pozoEsp && sugEsp.some(o => o.parte) && sugEsp.every(o => !o.parte || CAT.catalogoDe(pozoEsp.campoId, pozoEsp.equipo).partes.some(x => x.id === o.parte)) && sugEsp.some(o => o.texto === MSJ.NO_FUE_ESP),
+  `un pozo con electrosumergible (${pozoEsp?.equipo}) recibe las partes de la electrosumergible y la salida «no fue ella»`)
+const bombaNueva = { ...pide, inicio: new Date(L.calendario()[0].desde) }
+const sugNueva = MSJ.causasSugeridas(bombaNueva, ctx0)
+comprobar(!sugNueva.conEvidencia && sugNueva.opciones.filter(o => o.clave !== '0').every(o => o.parte), 'una bomba sin historia antes de la parada ofrece sus partes, no las causas de un pozo')
+const avisosParte = msjs.filter(m => m.regla === 'parte')
+comprobar(avisosParte.length > 0 && avisosParte.every(m => registroPr.some(p => p.id === m.evento && p.emitida === m.hora)), 'el aviso de parte sale cuando el vigía emite la predicción, con su hora')
+// El número se guarda en E.164 (como dice el contrato) y se muestra agrupado.
+comprobar(U.normalizarTelefono('300 123 4567', { indicativo: '+57', patron: /^3\d{9}$/ }) === '+573001234567'
+  && U.telefonoLegible('+573001234567', { indicativo: '+57', patron: /^3\d{9}$/ }) === '+57 300 123 4567'
+  && U.validarAcceso(U.USUARIOS_INICIALES, { ...U.USUARIOS_INICIALES.find(u => u.rolId === 'prod'), alertas: true }, 'ger', 'prueba de alertas').some(e => /no recibe alertas/.test(e)),
+  'un celular de 10 dígitos se guarda con +57 en E.164 (+573001234567) y se lee agrupado (+57 300 123 4567); a un rol sin reglas de WhatsApp no se le encienden alertas')
+const deP = msjs.filter(m => m.evento === pide.id)
+comprobar(deP.some(m => !m.insistencia) && deP.some(m => m.insistencia === 'recordatorio') && deP.some(m => m.insistencia === 'escalamiento' && U.USUARIOS_INICIALES.find(u => u.id === m.para)?.rolId === 'sup'),
+  'parada sin causa: pregunta y recordatorio al operador, escalamiento al supervisor a las 2 h')
+// Con respuesta a los 20 minutos no hay recordatorio ni escalamiento.
+const pResp = { ...pide, causa: { ...pide.causa, declarado: { texto: 'Sello mecánico', por: 'x', hora: new Date(pide.inicio.getTime() + 20 * 60_000).toISOString(), canal: 'whatsapp' } } }
+const conResp = MSJ.mensajesDe({ campos: TODOS, preguntas: [pResp], predicciones: [], ordenes: [], usuarios: U.USUARIOS_INICIALES, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) })
+comprobar(conResp.length > 0 && conResp.every(m => !m.insistencia), 'respondida a los 20 min: no se le insiste a nadie')
+// Sin operador con alertas, la pregunta va al supervisor y no hay escalamiento.
+const sinOper = U.USUARIOS_INICIALES.map(u => (u.rolId === 'oper' ? { ...u, alertas: false } : u))
+const alSup = MSJ.mensajesDe({ campos: TODOS, preguntas: [pide], predicciones: [], ordenes: [], usuarios: sinOper, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) })
+comprobar(alSup.length > 0 && alSup.every(m => U.USUARIOS_INICIALES.find(u => u.id === m.para)?.rolId === 'sup') && !alSup.some(m => m.insistencia === 'escalamiento'),
+  'sin operador con alertas, la pregunta va directo al supervisor (sin escalarse a sí mismo)')
+// Meta no acepta saltos de línea dentro de un parámetro de plantilla: las opciones van en una sola línea.
+comprobar(msjs.filter(m => m.regla === 'causa').every(m => m.texto.split('\n').length === 2), 'las opciones de «¿qué se dañó?» van en una sola línea (parámetro de plantilla sin saltos)')
+const sugP = MSJ.causasSugeridas(pide, ctx0).opciones
+comprobar(sugP.some(o => o.texto === MSJ.OTRA_PARTE) && sugP.filter(o => o.parte).length <= 3, 'con partes sugeridas, WhatsApp ofrece además «otra parte del equipo» (todas las del catálogo a un toque)')
+comprobar(CAT.nombreModo('BRD', 'aislamiento') === 'Se quemó o dio a tierra' && CAT.nombreModo('UST') === 'Se disparó sin daño a la vista', 'el modo de falla se dice en palabras de campo, y cambia con la parte (aislamiento: se quemó o dio a tierra)')
+const ordTec = msjs.filter(m => m.regla === 'orden')
+// El aviso sale cuando SAP libera la orden y queda en el registro aunque hoy esté cerrada (TECO).
+const liberadasTec = hs.ordenes.filter(o => o.liberada && o.tecnico && Date.parse(o.liberada) >= L.calendario()[0].desde && Date.parse(o.liberada) <= ahora && U.recibeAlertas(U.USUARIOS_INICIALES.find(u => u.id === o.tecnico), o.campoId))
+comprobar(ordTec.length > 0 && ordTec.every(m => hs.ordenes.some(o => o.numero === m.orden && o.tecnico === m.para && o.liberada))
+  && liberadasTec.every(o => ordTec.some(m => m.orden === o.numero)) && ordTec.some(m => hs.ordenes.find(o => o.numero === m.orden)?.estado === 'TECO'),
+  `cada orden liberada le llega al técnico asignado, con su número, aunque hoy esté cerrada (${ordTec.length} avisos de ${liberadasTec.length} órdenes liberadas)`)
+// Causas sugeridas: hasta tres más «otra»; una parada cerrada no usa las lecturas de hoy.
+let malSug = 0
+for (const p of preguntas) {
+  const cs = MSJ.causasSugeridas(p, ctx0)
+  const conParte = cs.opciones.filter(o => o.parte)
+  const cat = CAT.catalogoDe(p.campoId, p.equipo)
+  // Con evidencia, hasta tres; sin ella, todas las partes del catálogo de su clase.
+  if (cs.opciones.at(-1).clave !== '0' || (cs.conEvidencia ? conParte.length > 3 : conParte.length !== (cat?.partes.length ?? 0))) malSug++
+  if (p.fin && conParte.some(o => /fuera de límite|salió de su banda|llegó a su alarma|venía avisando/.test(o.porque ?? ''))) malSug++
+}
+comprobar(malSug === 0, `causas sugeridas de ${preguntas.length} paradas: a lo sumo tres con su porqué, la última es «otra», y una parada cerrada no usa las lecturas de hoy`)
+
+// Aciertos
+const pr = { campoId: 'c', equipo: 'E', parte: 'sello', emitida: '2026-10-01T00:00:00-05:00', hasta: '2026-10-05T00:00:00-05:00' }
+const t0 = new Date('2026-10-03T00:00:00-05:00'), tFin = new Date('2026-10-06T00:00:00-05:00')
+comprobar(AC.calificar(pr, [{ campoId: 'c', equipo: 'E', parte: 'sello', inicio: t0 }], [], tFin) === 'acierto'
+  && AC.calificar(pr, [{ campoId: 'c', equipo: 'E', parte: 'motor', inicio: t0 }], [], tFin) === 'falsa-alarma'
+  && AC.calificar(pr, [], [{ campoId: 'c', equipo: 'E', fecha: t0 }], tFin) === 'intervenida'
+  && AC.calificar(pr, [], [], new Date('2026-10-04T00:00:00-05:00')) === 'seguimiento'
+  && AC.calificar(pr, [{ campoId: 'c', equipo: 'E', parte: 'sello', inicio: t0 }], [{ campoId: 'c', equipo: 'E', fecha: new Date('2026-10-02T00:00:00-05:00') }], tFin) === 'acierto',
+  'calificación: acierto (aunque se haya intervenido), otra parte = falsa alarma, intervenida, en seguimiento')
+const vig = AC.prediccionesVigentes(riesgoT)
+comprobar(vig.length > 0 && vig.every(p => p.calificacion === 'seguimiento' && p.desde <= p.hasta && p.emitida <= R.AHORA.toISOString()), `${vig.length} predicciones vigentes, todas en seguimiento, emitidas antes de ahora y con su ventana en orden`)
+const fv = AC.fallasVistas(TODOS, new Date(`${C.PUESTA_EN_MARCHA}T00:00:00-05:00`), ctx0, [C.versionInicial()])
+// El registro de predicciones del demo, coherente con el PLC y con SAP.
+const hist = AC.prediccionesHistoricas(TODOS, ctx0), inicioT = new Date(`${C.PUESTA_EN_MARCHA}T00:00:00-05:00`)
+const fallaDe = id => fv.find(f => f.falla.id === id)
+const malAcierto = hist.filter(p => p.calificacion === 'acierto').filter(p => {
+  const f = p.falla && fallaDe(p.falla.id)
+  return !f || f.equipo !== p.equipo || f.falla.parte !== p.parte || f.falla.inicio < new Date(p.emitida) || f.falla.inicio > new Date(p.hasta)
+})
+comprobar(hist.some(p => p.calificacion === 'acierto') && malAcierto.length === 0, `cada acierto del registro es una falla real del PLC, de esa parte y dentro de su ventana${malAcierto.length ? ': ' + malAcierto.map(p => p.id).join(', ') : ''}`)
+comprobar(hist.filter(p => p.calificacion === 'falsa-alarma').every(p => new Date(p.hasta) < R.AHORA && !fv.some(f => f.equipo === p.equipo && f.campoId === p.campoId && f.falla.parte === p.parte && f.falla.inicio >= new Date(p.emitida) && f.falla.inicio <= new Date(p.hasta))),
+  'una falsa alarma venció sin que esa parte fallara')
+comprobar(hist.filter(p => p.calificacion === 'intervenida').length > 0 && hist.filter(p => p.calificacion === 'intervenida').every(p => hs.ordenes.some(o => o.clase === 'PM03' && o.estado === 'TECO' && o.equipo === p.equipo && o.cierreTecnico === p.intervencion)),
+  'cada predicción intervenida tiene su orden predictiva cerrada en SAP')
+comprobar(hist.every(p => new Date(p.emitida) >= inicioT && p.calificacion !== 'seguimiento'), 'nada del registro se emitió antes de la puesta en marcha, y lo vencido está calificado')
+// Responder hoy una parada no crea una predicción en el pasado: el registro es lo que salió.
+const idsAntes = hist.map(p => p.id).join(',')
+const ctxHoy = { config: ctx0.config, respuestas: { [pide.id]: { texto: 'Sello', por: 'x', parte: 'sello', modo: 'ELP', hora: R.AHORA.toISOString(), canal: 'whatsapp' } } }
+comprobar(AC.prediccionesHistoricas(TODOS, ctxHoy).map(p => p.id).join(',') === idsAntes, 'responder hoy una parada no agrega al registro una predicción de días atrás')
+const vigiladasF = fv.filter(f => f.visibilidad === 'vigilada'), anticipadas = vigiladasF.filter(f => hist.some(p => p.falla?.id === f.falla.id))
+comprobar(anticipadas.length > 0 && anticipadas.length < vigiladasF.length && hist.some(p => p.calificacion === 'falsa-alarma'),
+  `registro realista: anticipó ${anticipadas.length} de ${vigiladasF.length} fallas de partes con instrumento, y tuvo falsas alarmas`)
+comprobar(fv.length > 0 && fv.every(f => !f.falla.disparo && f.falla.inicio >= new Date(`${C.PUESTA_EN_MARCHA}T00:00:00-05:00`)) && fv.every(f => f.visibilidad !== 'sin-parte' || !f.falla.parte),
+  `${fv.length} fallas desde la puesta en marcha, sin disparos, cada una con si el vigía la podía ver`)
+
+// Asignación oficial
+let asigMal = 0, mesesVistos = 0
+for (const c of TODOS) for (const m of L.calendario().filter(L.mesCerrado)) {
+  const a = L.asignacionPorPozo(c, m.mes, ctx0)
+  if (!a.length) continue
+  mesesVistos++
+  if (!cerca(a.reduce((x, f) => x + f.asignado, 0), L.libro([c], new Date(m.desde), new Date(m.hasta), ctx0).real, 1e-9)) asigMal++
+  if (a.some(f => f.horas < -1e-9 || f.horas > (m.hasta - m.desde) / 3.6e6 + 1e-9)) asigMal++
+}
+comprobar(mesesVistos > 0 && asigMal === 0, `en ${mesesVistos} meses cerrados, la asignación de TRIM pozo por pozo suma lo real del punto de medición oficial y las horas están dentro del mes`)
+comprobar(L.asignacionPorPozo('ceiba', L.calendario().at(-1).mes, ctx0).length === 0 && !L.mesCerrado(L.calendario().at(-1)), 'el mes en curso no se coteja: todavía no cerró')
+const aCeiba = L.asignacionPorPozo('ceiba', '2026-09', ctx0)
+const igual = AS.cotejar(aCeiba.map(f => ({ mes: '2026-09', campoId: 'ceiba', pozo: f.pozo, bbl: f.asignado, horas: f.horas })), aCeiba, 0.05)
+comprobar(igual.filas.every(f => !f.fuera && f.motivo === 'Cuadra.') && cerca(igual.totalOficial, igual.totalTrim), 'una asignación oficial igual a la de TRIM cuadra pozo por pozo y en el total')
+const mover = aCeiba[0], tasa = mover.asignado / mover.horas
+const corrida = AS.cotejar(aCeiba.map((f, i) => ({ mes: '2026-09', campoId: 'ceiba', pozo: f.pozo, bbl: i === 0 ? f.asignado + tasa * 10 : f.asignado, horas: i === 0 ? f.horas + 10 : f.horas })), aCeiba, 0.05)
+const fila0 = corrida.filas.find(f => f.pozo === mover.pozo)
+comprobar(cerca(fila0.porHoras, fila0.diferencia, 1e-9) && !/El resto/.test(fila0.motivo), '10 h más en la oficial: la diferencia la explican las horas, completa')
+const lr = AS.leerAsignacion('Mes;Campo;Pozo;Crudo;Horas\n2026-09;La Ceiba;lc-01;"12.345,5";700\n2026-10;ceiba;LC-02;100;\n2026-09;ceiba;LC-03;-4;\n2026-09;ceiba;LC-04;10;800', { permitidos: ['ceiba'], cerrados: ['2026-09'] })
+comprobar(lr.filas.length === 1 && lr.filas[0].pozo === 'LC-01' && lr.filas[0].bbl === 12345.5 && lr.errores.length === 3, 'la carga lee «12.345,5», pasa el pozo a mayúsculas y rechaza el mes abierto, el volumen negativo y 800 horas')
+
+console.log('\n=== 8b. Dominio: huella, firma, accesos, mensajes (auditoría) ===')
+const { createHash } = await import('node:crypto')
+const PUB = await v.ssrLoadModule('/src/widgets/diferidos/publicacion.ts')
+const CAMP = await v.ssrLoadModule('/src/entities/campos.ts')
+const ROL = await v.ssrLoadModule('/src/entities/roles.ts')
+const FL = await v.ssrLoadModule('/src/entities/flota.ts')
+const TIP = await v.ssrLoadModule('/src/entities/tipos.ts')
+
+// La huella: forma canónica escrita (no JSON del lenguaje), reproducible por otra implementación.
+const cif = { campos: ['zarza', 'ceiba'], desde: '2026-09-01T05:00:00Z', hasta: '2026-10-01T05:00:00Z', version: 3, real: 10900, potencial: 1.005,
+  noProducido: -1.5, diferido: 0, tolerancia: 12.344, metaProduccion: 1e6, metaDiferido: 0.1, eventos: 7, equipo: 'P-201B', campoEquipo: 'ceiba', bblEquipo: 99.995 }
+const canon = I.formaCanonica(cif)
+const lineas = canon.split('\n')
+comprobar(lineas[0] === 'campos=ceiba,zarza' && lineas.includes('real=10900.00') && lineas.includes('noProducido=-1.50') && lineas.includes('metaProduccion=1000000.00')
+  && lineas.includes('version=3') && lineas.includes('desde=2026-09-01T05:00:00Z') && lineas.slice(-3).join('|') === 'equipo=P-201B|campoEquipo=ceiba|bblEquipo=100.00' && !canon.endsWith('\n'),
+  'la forma canónica: una línea clave=valor en orden fijo, campos ordenados, dos decimales con punto, ISO en UTC al segundo y el equipo al final')
+comprobar(await I.huellaDe(cif) === createHash('sha256').update(canon, 'utf8').digest('hex'), 'la huella es el SHA-256 de la forma canónica: otra implementación (Node) da la misma')
+const consulta = { formato: 'pdf', titulo: 'x', alcance: 'x', periodo: 'x', campos: ['ceiba'], desde: sep.desde.toISOString(), hasta: sep.hasta.toISOString() }
+const reg = await I.registrarCifras(consulta, ctx0, 1)
+const libSep = L.libro(['ceiba'], sep.desde, sep.hasta, ctx0)
+comprobar(I.formaCanonica(reg.cifras) === I.formaCanonica(I.cifrasDe(libSep, ['ceiba'], 1)) && reg.huella === createHash('sha256').update(I.formaCanonica(reg.cifras)).digest('hex') && reg.version === 1,
+  'el registro calcula las cifras con el libro del servidor a partir de la CONSULTA (el front ya no manda la huella)')
+const rechazos = await Promise.all([{ ...consulta, campos: ['rubiales'] }, { ...consulta, hasta: consulta.desde }, { ...consulta, equipo: { equipo: 'P-201B', campoId: 'morichal' } }]
+  .map(q => I.registrarCifras(q, ctx0, 1).then(() => 'aceptó', e => e.message)))
+comprobar(rechazos.every(r => r !== 'aceptó'), `el registro rechaza un campo que no existe, un período al revés y una ficha de otro campo (${rechazos.join(' / ')})`)
+let estadosMal = 0
+for (const per of ['cerrado', 'curso', 'trimestre', 'ytd', 'doce']) for (const cs of [TODOS, ...TODOS.map(c => [c])]) {
+  const r = D.rangoDePeriodo(per), lb = L.libro(cs, r.desde, r.hasta, ctx0)
+  if (I.estadoDelLibro(lb) !== PUB.publicacion(lb).estado) estadosMal++
+}
+comprobar(estadosMal === 0, 'el estado que registra el folio (publicable, provisional, bloqueado) es el mismo que muestra la pantalla, en todos los períodos y campos')
+
+// La firma: todo lo técnico que cambia aparece, y lo que ya empezó no se mueve.
+comprobar(C.validarConfig(ctx0.config, ctx0.config, '2026-10-01', ahoraMs).length === 0 && C.diferencias(ctx0.config, structuredClone(ctx0.config)).length === 0,
+  'la configuración de arranque cumple todas las reglas de firma y no tiene diferencias consigo misma')
+const empezada = ctx0.config.programa.find(p => p.id === 'PR-2011-260819')
+const movida = structuredClone(ctx0.config); Object.assign(movida.programa.find(p => p.id === 'PR-2011-260819'), { desde: '2025-10-01T00:00:00-05:00', hasta: '2026-08-25T09:34:04-05:00' })
+const gMov = C.diferenciasPorGrupo(ctx0.config, movida), eMov = C.validarConfig(movida, ctx0.config, '2026-10-01', ahoraMs)
+comprobar(!!empezada && gMov.tecnica.some(x => x.includes('se cambió P-201B')) && eMov.some(x => x.includes('ya empezó')),
+  'cambiarle las fechas a una parada que ya empezó aparece como cambio técnico y no se puede firmar')
+const quitado = structuredClone(ctx0.config)
+quitado.tanques = quitado.tanques.filter(t => t.id !== 'TK-AG-CE'); quitado.respaldos = quitado.respaldos.filter(r => r.campoId !== 'morichal'); delete quitado.campos.zarza
+const gQ = C.diferenciasPorGrupo(ctx0.config, quitado)
+comprobar(gQ.tecnica.some(x => x.includes('se quitó el tanque')) && gQ.tecnica.filter(x => x.includes('se quitó el respaldo')).length === 2 && gQ.tecnica.some(x => x.includes('La Zarza: se quitó el campo'))
+  && C.validarConfig(quitado, ctx0.config, '2026-10-01', ahoraMs).some(x => x.includes('no se puede quitar el campo')),
+  'quitar un tanque, un respaldo o un campo aparece como cambio técnico, y un campo con meses cerrados no se quita')
+const otroCampo = structuredClone(ctx0.config); otroCampo.programa.push({ ...empezada, campoId: 'morichal' })
+comprobar(C.validarConfig(otroCampo, ctx0.config, '2026-10-01', ahoraMs).some(x => x.includes('dos paradas con el código')),
+  'una parada nueva con el código de otra (P-201B de otro campo) no pasa por «existente»: códigos repetidos no se firman')
+const conTanque = structuredClone(ctx0.config); conTanque.tanques.push({ ...conTanque.tanques[0], id: 'TK-AG-CE2' })
+comprobar(C.tanqueDe(ctx0.config, 'ceiba', 'P-201B')?.id === 'TK-AG-CE' && C.tanqueDe(ctx0.config, 'ceiba', 'MPP-301') === undefined
+  && C.validarConfig(conTanque, ctx0.config, '2026-10-01', ahoraMs).some(x => x.includes('más de un tanque')),
+  'el tanque es el de esa bomba en ese campo, y una bomba no puede tener dos tanques')
+const precioMalo = (v) => C.validarConfig(C.conTramo(ctx0.config, 'ceiba', { desde: '2026-11-01', produccionBpd: 10900, diferidoMaxBpd: 800, netbackUsd: v, criterioSinCausa: 2 }), ctx0.config, '2026-10-01', ahoraMs)
+const desdeMalo = C.validarConfig(C.conTramo(ctx0.config, 'ceiba', { desde: 'x2026', produccionBpd: 10900, diferidoMaxBpd: 800, netbackUsd: 48, criterioSinCausa: 2 }), ctx0.config, '2026-10-01', ahoraMs)
+const paradaHoy = structuredClone(ctx0.config); paradaHoy.programa.push({ id: 'PR-ceiba-P-201B-hoy', campoId: 'ceiba', equipo: 'P-201B', desde: '2026-10-01T08:00:00-05:00', hasta: '2026-10-03T08:00:00-05:00', motivo: 'Preventivo de prueba' })
+comprobar(precioMalo(48125).length > 0 && precioMalo(Infinity).length > 0 && precioMalo(48.125).length === 0 && desdeMalo.some(x => x.includes('no es un día'))
+  && C.validarConfig(paradaHoy, ctx0.config, '2026-10-01', ahoraMs).some(x => x.includes('antes de que empiece')),
+  'el precio tiene tope (48.125 o Infinity no pasan; 48,125 sí), el día del tramo tiene que ser un día, y una parada que empezó hoy temprano no se programa')
+const conNull = structuredClone(ctx0.config); conNull.campos.zarza.metas[0].netbackUsd = null
+const vNull = L.libro(TODOS, sep.desde, sep.hasta, { config: conNull, respuestas: {} }), vUnd = L.libro(TODOS, sep.desde, sep.hasta, ctx0)
+comprobar(C.diferencias(ctx0.config, conNull).length === 0 && vNull.sinPrecio.includes('zarza') && vNull.valorCampos.con === vUnd.valorCampos.con && cerca(vNull.valorUsd, vUnd.valorUsd)
+  && !('netbackUsd' in C.normalizarConfig(conNull).campos.zarza.metas[0]),
+  'un precio que llega como null es «sin precio»: no es un cambio, no se valora en 0 USD y el borde lo vuelve ausente')
+// Las fechas del historial firmado y el año se deciden en Colombia, no en la zona del navegador.
+const tzAntes = process.env.TZ
+process.env.TZ = 'Asia/Tokyo'
+const textoTokio = C.diferencias(ctx0.config, C.conTramo(ctx0.config, 'ceiba', { desde: '2026-11-01', produccionBpd: 11000, diferidoMaxBpd: 800, netbackUsd: 48, criterioSinCausa: 2 }))[0]
+process.env.TZ = 'Europe/Madrid'
+const finDeAnio = R.fechaHora(new Date('2025-12-31T21:00:00-05:00'))
+if (tzAntes === undefined) delete process.env.TZ; else process.env.TZ = tzAntes
+comprobar(textoTokio.includes('1 de nov') && /2025/.test(finDeAnio), `con el navegador en Tokio el historial dice «${textoTokio.split(':')[0]}», y en Madrid el 31-dic-2025 de Bogotá lleva su año (${finDeAnio})`)
+
+// Accesos: el WhatsApp es de una sola persona, y nadie otorga ni se cambia lo que no le toca.
+const supU = us.find(u => u.rolId === 'sup'), operU = us.find(u => u.rolId === 'oper')
+const mismoNumero = { ...operU, telefono: U.normalizarTelefono(supU.telefono.replace(/\s/g, ''), { indicativo: '+57', patron: /^3\d{9}$/ }) }
+comprobar(U.validarAcceso(us, mismoNumero, ger.id, 'prueba de número').some(x => x.includes('ya es de')) && mismoNumero.telefono === supU.telefono
+  && U.e164('+57 300 555 0103') === U.e164('+573005550103')
+  && U.validarAcceso(us.map(u => (u.id === supU.id ? { ...u, estado: 'suspendido' } : u)), mismoNumero, ger.id, 'prueba de número').every(x => !x.includes('ya es de')),
+  'un WhatsApp no puede ser de dos personas activas, se compara en E.164 (+573005550103 = +57 300 555 0103), y el de un suspendido se puede reasignar')
+const gerLim = us.map(u => (u.id === ger.id ? { ...u, campos: ['ceiba', 'palmar'] } : u)), yoLim = gerLim.find(u => u.id === ger.id)
+const prodU = gerLim.find(u => u.rolId === 'prod')
+comprobar(U.validarAcceso(gerLim, { ...yoLim, campos: 'todos' }, ger.id, 'prueba de alcance').some(x => x.includes('propios campos'))
+  && U.validarAcceso(gerLim, { ...prodU, campos: 'todos' }, ger.id, 'prueba de alcance').some(x => x.includes('«todos los campos»'))
+  && U.validarAcceso(gerLim, { ...prodU, campos: ['ceiba', 'palmar', 'morichal'] }, ger.id, 'prueba de alcance').some(x => x.includes('que usted no tiene'))
+  && U.validarAcceso(gerLim, { ...prodU, campos: ['ceiba'] }, ger.id, 'prueba de alcance').length === 0,
+  'un gerente de algunos campos no se cambia los suyos, no da «todos» ni campos que no tiene; sí quita de los que tiene')
+comprobar(!Object.values(U.ALERTAS_DEL_ROL).some(t => /menos de un día/.test(t)) && /pozos cerrándose/.test(U.ALERTAS_DEL_ROL.sup) && /predicción/.test(U.ALERTAS_DEL_ROL.conf),
+  'lo que la pantalla de accesos promete que llega por WhatsApp es la regla que se envía')
+comprobar(ROL.ROLES.every(r => Object.keys(r.puede).every(k => k in TIP.CAPACIDAD_NOMBRE)) && !ROL.ROLES.some(r => 'mes:cerrar' in r.puede || 'rol:suplantar' in r.puede),
+  'las capacidades son las que algún endpoint revisa (sin «cerrar el mes» ni «suplantar», que nada controlaba)')
+
+// Mensajes: el texto es el de la plantilla con sus parámetros, sin parámetros vacíos.
+comprobar(msjs.every(m => m.texto === MSJ.textoDe(m.plantilla, m.parametros) && Object.values(m.parametros).every(x => x.trim() && !/\n/.test(x)))
+  && Object.values(MSJ.PLANTILLAS).every(p => p.cuerpo.startsWith('TRIM · ')),
+  `los ${msjs.length} mensajes del registro son exactamente lo que sus plantillas aprobadas producen, sin un parámetro vacío`)
+const sinTag = msjs.filter(m => m.regla === 'parte' && !m.parametros.tag)
+comprobar(sinTag.length > 0 && sinTag.every(m => m.plantilla === 'parteSinTag' && !/\(\)/.test(m.texto)), `las ${sinTag.length} predicciones sin tag salen con su propia plantilla, sin «()»`)
+const espMsj = msjs.filter(m => m.plantilla === 'paradaEsp')
+const citaFutura = espMsj.filter(m => /última prueba/.test(m.texto) && !P.pozoDe(m.campoId, m.equipo).pruebas.some(p => Date.parse(p.fecha) <= Date.parse(m.hora) - 60_000))
+const lc06 = espMsj.find(m => m.equipo === 'LC-06' && m.hora.startsWith('2025-10-01'))
+comprobar(citaFutura.length === 0 && !!lc06 && /no tiene prueba/.test(lc06.texto), `ninguna parada de electrosumergible cita una prueba posterior (LC-06 el 1-oct-2025: «${lc06?.parametros.consecuencia}»)`)
+const conSupEnTodos = U.USUARIOS_INICIALES.map(u => (u.rolId === 'sup' ? { ...u, campos: 'todos' } : u))
+const deBombas = MSJ.mensajesDe({ campos: ['guacamayo', 'morichal', 'ceiba'], preguntas: [], predicciones: [], ordenes: [], usuarios: conSupEnTodos, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) })
+const consec = (c, eq) => deBombas.find(m => m.plantilla === 'parada' && m.campoId === c && m.equipo === eq)?.parametros.consecuencia ?? ''
+comprobar(/no hay que cerrar pozos/.test(consec('guacamayo', 'P-201B')) && /no para todo su caudal/.test(consec('morichal', 'P-201B')) && /hay que cerrar los pozos/.test(consec('ceiba', 'P-201B')),
+  'la parada de una bomba dice lo que su respaldo declarado permite: Guacamayo no cierra pozos, Morichal quizá, La Ceiba sí')
+const corta = { ...pide, fin: new Date(pide.inicio.getTime() + 20 * 60_000), causa: { ...pide.causa, declarado: undefined } }
+const recCorta = MSJ.mensajesDe({ campos: TODOS, preguntas: [corta], predicciones: [], ordenes: [], usuarios: U.USUARIOS_INICIALES, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) }).find(m => m.insistencia === 'recordatorio')
+comprobar(!!recCorta && recCorta.plantilla === 'recordatorioArranco' && !/Antes de arrancar/.test(recCorta.texto) && /arrancó a las/.test(recCorta.texto),
+  'si el equipo arrancó antes de los 30 min, el recordatorio no pide «antes de arrancar»: dice que arrancó sin causa')
+
+// Aciertos: la historia se juzga con el perfil que regía, no con el de hoy.
+const sinEspHoy = structuredClone(ctx0.config); sinEspHoy.campos.morichal.perfil.electrosumergibles = false
+const vers2 = [C.versionInicial(), { fecha: R.AHORA.toISOString(), config: sinEspHoy }]
+const cuenta = fs => fs.reduce((a, f) => ({ ...a, [f.visibilidad]: (a[f.visibilidad] ?? 0) + 1 }), {})
+const inicioPM = new Date(`${C.PUESTA_EN_MARCHA}T00:00:00-05:00`)
+comprobar(JSON.stringify(cuenta(AC.fallasVistas(['morichal'], inicioPM, ctx0, vers2))) === JSON.stringify(cuenta(AC.fallasVistas(['morichal'], inicioPM, ctx0, [C.versionInicial()])))
+  && AC.fallasVistas(['morichal'], inicioPM, ctx0, [{ fecha: '2025-01-01T00:00:00-05:00', config: sinEspHoy }]).some(f => f.visibilidad === 'fuera-de-perfil'),
+  'firmar hoy «sin electrosumergibles» en Morichal no vuelve «fuera de perfil» sus fallas pasadas; con ese perfil vigente entonces, sí')
+
+// SAP: el repuesto es el de la familia del equipo; lo que no se cruza con el PLC se cuenta.
+const espMat = hs.ordenes.filter(o => FL.flotaDe(o.campoId).find(f => f.equipo === o.equipo)?.familia !== 'electrosumergible' && o.repuestos.some(r => r.material.endsWith('-ESP')))
+comprobar(espMat.length === 0 && hs.ordenes.some(o => o.equipo === 'P-201B' && /motor/i.test(o.descripcion)), 'ninguna bomba de superficie pide un repuesto de electrosumergible (el motor de P-201B no es un motor de fondo)')
+const rjX = SAP.relojes(hs.ordenes, ev => (ev === correctivas[0].evento ? undefined : 5))
+comprobar(rjX.excluidas === 1 && rjX.fallas === correctivas.filter(o => o.estado === 'TECO').length - 1, 'los tres relojes cuentan las órdenes cuya parada del PLC no se encontró, en vez de descartarlas en silencio')
+
+// Cargas: lo ambiguo no se adivina, el precio no lleva miles y las horas son las del mes.
+const coma1 = PL.leerPlan('2026-11,La Ceiba,11,200,700', opc), coma2 = PL.leerPlan('2026-11,La Ceiba,11200,750,48', opc)
+const precio3 = PL.leerPlan('2026-11;La Ceiba;11200;700;48,125', opc), precioTope = PL.leerPlan('2026-11;La Ceiba;11200;700;48125', opc)
+comprobar(coma1.filas.length === 0 && coma1.errores.some(x => x.includes('puede ser un número con miles')) && coma2.errores.length === 0 && coma2.filas[0].produccionBpd === 11200
+  && precio3.filas[0]?.netbackUsd === 48.125 && precioTope.errores.some(x => x.includes('precio neto va entre')),
+  'con coma de separador, «11,200» sin comillas se rechaza (11200,750 sí pasa); «48,125» de precio es 48,125 USD/bbl y 48.125 no pasa')
+const asigS = o => AS.leerAsignacion(o, { permitidos: ['ceiba'], cerrados: ['2026-09'] })
+comprobar(asigS('2026-09,La Ceiba,LC-14,12,450').errores.length === 1 && asigS('2026-09;ceiba;LC-14;100;740').errores.some(x => x.includes('0 a 720'))
+  && asigS('2026-09;ceiba;LC-14;100;720').errores.length === 0, 'la asignación rechaza «12,450» ambiguo y 740 h en septiembre (tiene 720)')
+const cero = AS.cotejar([{ mes: '2026-09', campoId: 'ceiba', pozo: 'LC-99', bbl: 5000, horas: 300 }], [{ pozo: 'LC-99', horas: 0, asignado: 0 }], 0.01).filas[0]
+comprobar(!/Mismas horas/.test(cero.motivo) && /no produjo/.test(cero.motivo), `TRIM con 0 h y la oficial con 300 h no es «mismas horas»: ${cero.motivo}`)
+
+// Un campo que el registro no conoce se muestra como hueco, no como La Ceiba.
+const raro = CAMP.campoPorId('rubiales')
+comprobar(raro.desconocido && raro.nombre.includes('rubiales') && raro.nombre !== CAMP.CAMPOS[0].nombre, `un id de campo desconocido se rotula «${raro.nombre}», no «La Ceiba»`)
+
+// R8 (#108): un período desconocido no se vuelve «mes en curso»: la dirección lo descarta y periodoPorId lo dice.
+let periodoRaro = ''
+try { CAMP.periodoPorId('semestre') } catch (e) { periodoRaro = e.message }
+comprobar(/no es un período/.test(periodoRaro) && CAMP.esIdPeriodo('cerrado') && !CAMP.esIdPeriodo('semestre') && CAMP.periodoPorId('cerrado').id === 'cerrado',
+  `un id de período que no es de la cabecera no se disfraza de «mes en curso» (${periodoRaro || 'devolvió otro período'})`)
+let rangoRaro = ''
+try { D.rangoDePeriodo('medida') } catch (e) { rangoRaro = e.message }
+comprobar(/sin su rango/.test(rangoRaro), 'un «rango escogido» sin sus días no se calcula como el mes en curso: se dice')
+
+// R11 (#41): la regla de la coma no rechaza filas legítimas. Una fila que escribe sus
+// cifras sin separador de miles («9000») no está partiendo un número: «500,100» son dos columnas.
+const legit = PL.leerPlan('2026-11,La Ceiba,9000,500,100', opc), ambig = PL.leerPlan('2026-11,La Ceiba,11,200,700', opc)
+const ambig2 = PL.leerPlan('2026-11,La Ceiba,11,200', opc), conComillas = PL.leerPlan('2026-11,La Ceiba,"11,200",700', opc)
+comprobar(legit.errores.length === 0 && legit.filas[0]?.produccionBpd === 9000 && legit.filas[0]?.diferidoMaxBpd === 500 && legit.filas[0]?.netbackUsd === 100
+  && ambig.errores.some(x => x.includes('puede ser un número con miles')) && ambig2.errores.some(x => x.includes('puede ser un número con miles'))
+  && conComillas.errores.length === 0 && conComillas.filas[0]?.produccionBpd === 11200,
+  `«2026-11,La Ceiba,9000,500,100» se lee (9000 · 500 · 100 USD/bbl); «11,200,700» y «11,200» siguen siendo ambiguos; «"11,200"» entre comillas es 11.200`)
+comprobar(asigS('2026-09,La Ceiba,LC-11,29650,672').errores.length === 0 && asigS('2026-09,La Ceiba,LC-11,29650,672').filas[0]?.horas === 672
+  && PL.comaAmbigua('2026-09,LC-100,5,200', ',', 1) === '5,200' && PL.comaAmbigua('46327,La Ceiba,11,200', ',', 2) === '11,200',
+  'en la asignación, 29650 sin agrupar deja leer «29650,672» como bbl y horas; el mes (aunque sea el número de serie de Excel) y el pozo no cuentan como cifras')
+
+// R9 (#195): un nombre por concepto. Ningún tipo exportado del motor se llama igual en dos módulos.
+{
+  const { readdirSync } = await import('node:fs')
+  const dir = new URL('../src/entities/', import.meta.url), nombres = new Map()
+  for (const f of readdirSync(dir).filter(x => x.endsWith('.ts'))) {
+    const txt = (await import('node:fs')).readFileSync(new URL(f, dir), 'utf8')
+    for (const m of txt.matchAll(/^export (?:interface|type) (\w+)/gm)) nombres.set(m[1], [...(nombres.get(m[1]) ?? []), f])
+  }
+  const dobles = [...nombres].filter(([, fs]) => fs.length > 1).map(([n, fs]) => `${n} (${fs.join(', ')})`)
+  comprobar(dobles.length === 0, `ningún tipo exportado de src/entities tiene el mismo nombre en dos módulos${dobles.length ? `: ${dobles.join('; ')}` : ' (la topología de planta es PlantaCampo; ConfigCampo es solo la configuración firmada)'}`)
+}
+// El catálogo de daños sale de la clase ISO 14224 del registro (`claseDeCatalogo`), la misma tabla del contrato.
+{
+  const REG = JSON.parse((await import('node:fs')).readFileSync(new URL('../simulador-api/datos/registro-ingenieria.json', import.meta.url), 'utf8'))
+  const bombasReg = REG.equipos.filter(e => BO.perfilBomba(e.id, e.campoId))
+  const malas = bombasReg.filter(e => { const pb = BO.perfilBomba(e.id, e.campoId); return BO.CLASE_ISO[pb.tecnologia] !== e.clase || CAT.claseDeCatalogo(e.clase, pb.papel) !== CAT.catalogoDe(e.campoId, e.id)?.clase })
+  comprobar(bombasReg.length > 0 && malas.length === 0 && CAT.catalogoDe('morichal', 'MPP-301')?.clase === 'bomba-multifasica' && CAT.claseDeCatalogo('bomba-reciprocante') === undefined
+    && CAT.claseDeCatalogo('bomba-centrifuga', 'transporte') === 'bomba-multifasica' && CAT.claseDeCatalogo('bomba-centrifuga', 'recobro') === 'bomba-inyeccion',
+    `el catálogo de cada bomba del registro (${bombasReg.map(e => `${e.campoId}/${e.id}: ${e.clase}`).join(', ')}) es el que da claseDeCatalogo con su clase ISO y su papel${malas.length ? `; no cuadran: ${malas.map(e => e.id).join(', ')}` : ''}`)
+}
+
+// R12 (#129, #123): el registro no se reescribe. Una versión firmada HOY (respaldo
+// total para P-201B de La Ceiba) no cambia ningún mensaje enviado antes; una
+// firmada a mitad de la historia cambia solo lo que salió después de ella.
+{
+  const conRespaldo = structuredClone(C.versionInicial().config)
+  conRespaldo.respaldos = conRespaldo.respaldos.map(r => (r.campoId === 'ceiba' && r.equipo === 'P-201B' ? { ...r, libreBpd: 30000, detalle: 'P-201C nueva en paralelo' } : r))
+  const base = { campos: ['ceiba'], preguntas: [], predicciones: [], ordenes: [], usuarios: U.USUARIOS_INICIALES, ctx: ctx0, desde: new Date(L.calendario()[0].desde) }
+  const antes = MSJ.mensajesDe({ ...base, versiones: V1 })
+  const hoy = MSJ.mensajesDe({ ...base, versiones: [...V1, { fecha: R.AHORA.toISOString(), config: conRespaldo }] })
+  const corte = '2026-03-01T00:00:00-05:00'
+  const medio = MSJ.mensajesDe({ ...base, versiones: [...V1, { fecha: corte, config: conRespaldo }] })
+  const deBomba = ms => ms.filter(m => m.plantilla === 'parada' && m.equipo === 'P-201B')
+  const viejos = deBomba(medio).filter(m => Date.parse(m.hora) < Date.parse(corte)), nuevos = deBomba(medio).filter(m => Date.parse(m.hora) >= Date.parse(corte) + 60_000)
+  comprobar(JSON.stringify(hoy) === JSON.stringify(antes) && viejos.length > 0 && nuevos.length > 0
+    && viejos.every(m => /hay que cerrar los pozos/.test(m.texto)) && nuevos.every(m => /no hay que cerrar pozos/.test(m.texto) && /P-201C/.test(m.texto)),
+    `firmar un respaldo hoy no reescribe ningún mensaje viejo; firmado a mitad de la historia, ${viejos.length} paradas de antes siguen diciendo «cerrar pozos» y ${nuevos.length} de después citan el respaldo nuevo`)
+}
+
+// R13 (#93): un dato malo de SAP (una descripción vacía o de dos líneas) no tumba
+// el registro: ESE mensaje queda como no enviado, con su motivo, y los demás salen.
+{
+  const ord = hs.ordenes.filter(o => o.liberada && o.tecnico)
+  const sano = MSJ.mensajesDe({ campos: TODOS, preguntas: [], predicciones: [], ordenes: ord, usuarios: U.USUARIOS_INICIALES, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) })
+  const malas = ord.map((o, i) => (i === 0 ? { ...o, descripcion: '  ' } : i === 1 ? { ...o, descripcion: 'Cambio de sello\ny revisión' } : o))
+  let roto = '', conMalo = []
+  try { conMalo = MSJ.mensajesDe({ campos: TODOS, preguntas: [], predicciones: [], ordenes: malas, usuarios: U.USUARIOS_INICIALES, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) }) } catch (e) { roto = e.message }
+  const fallidos = conMalo.filter(m => m.noEnviado)
+  comprobar(!roto && ord.length > 2 && conMalo.length === sano.length && fallidos.length === sano.filter(m => m.orden === ord[0].numero || m.orden === ord[1].numero).length
+    && fallidos.every(m => m.texto === undefined && /descripcion/.test(m.noEnviado)) && conMalo.filter(m => !m.noEnviado).every(m => m.texto === MSJ.textoDe(m.plantilla, m.parametros)),
+    `con dos órdenes de SAP mal descritas, sus ${fallidos.length} avisos quedan «no enviado» con el motivo y los otros ${conMalo.length - fallidos.length} salen${roto ? ` (reventó: ${roto})` : ''}`)
+  let otro = ''
+  try { MSJ.textoDe('orden', { orden: '1', clase: 'x', prioridad: '1', equipo: 'P', campo: 'C', descripcion: 'd', sobra: 'x' }) } catch (e) { otro = e.name }
+  comprobar(otro === 'ErrorDePlantilla', 'el error de una plantilla es un ErrorDePlantilla: el registro atrapa solo ese y deja pasar cualquier otro')
+}
+
+console.log('\n=== 9. Reglas de causa y del motor (auditoría) ===')
+const CS = await v.ssrLoadModule('/src/entities/causa-senal.ts')
+const EVV = await v.ssrLoadModule('/src/entities/equipo-vivo.ts')
+const VG = await v.ssrLoadModule('/src/entities/vigia.ts')
+const ISO = await v.ssrLoadModule('/src/entities/iso14224.ts')
+const ESP = await v.ssrLoadModule('/src/entities/esp.ts')
+const CA = await v.ssrLoadModule('/src/entities/campos.ts')
+const bombaId = id => B.eventosBomba().find(e => e.id === id)
+const pozoEv = id => P.eventosPozos().find(e => e.id === id)
+
+// Un servicio explica su cascada, no todo lo que pase mientras está caído; la
+// bomba que paró antes manda; la primera alarma propia y la firma mandan.
+const p0325 = D.paradaMedida(bombaId('EV-2011-260325'), ctx0)
+comprobar(p0325.causa.parte === 'sello' && p0325.pozos === 18 && p0325.bbl > 0 && Math.abs(p0325.colchon.previsto.horas - p0325.colchon.observadoH) < 0.1
+  && !L.eventosCargadosA('ceiba', 'K-101', ctx0).some(e => e.id === 'SV-K-101-260325'),
+  `La Ceiba 25-mar: la P-201B paró 49 min antes que K-101; sus ${p0325.pozos} pozos (${f(p0325.bbl)} bbl) son de la bomba, cerrados a las ${p0325.colchon.observadoH.toFixed(2)} h del colchón previsto de ${p0325.colchon.previsto.horas.toFixed(2)} h`)
+comprobar(CS.causaDeParada(bombaId('EV-G2011-260309'), ctx0).parte === 'rodamientos',
+  'Guacamayo 9-mar: la P-201B con TSH-2011, 22 h después de restringirse el oleoducto, es falla de rodamientos, no evacuación')
+const hMpp = L.historialDeEquipo('morichal', 'MPP-301', ctx0)
+comprobar(['EV-3016-260310', 'EV-3016-260725'].every(id => { const c = CS.causaDeParada(bombaId(id), ctx0); return c.tipo === 'transporte' && c.parte === 'tornillos' && c.como === 'firma' })
+  && hMpp.porParte.find(x => x.parte === 'tornillos')?.fallas === 2,
+  `MPP-301: perder caudal sin disparar es desgaste de tornillos aunque un servicio lleve horas caído (historial: ${hMpp.porParte.map(x => `${x.parte} ${x.fallas}`).join(', ')})`)
+const cascada = P.eventosServicios().flatMap(sv => P.eventosPozos().filter(e => e.campoId === sv.campoId && Date.parse(e.inicio) >= Date.parse(sv.inicio) - 15 * 60e3 && Date.parse(e.inicio) <= Date.parse(sv.inicio) + 30 * 60e3)
+  .filter(e => !B.eventosBomba().some(b => b.campoId === e.campoId && Date.parse(b.inicio) < Date.parse(sv.inicio) - 15 * 60e3 && Date.parse(e.inicio) <= (b.fin ? Date.parse(b.fin) : ahoraMs) && Date.parse(e.inicio) >= Date.parse(b.inicio)))
+  .map(e => [sv, e]))
+comprobar(cascada.length > 100 && cascada.every(([sv, e]) => CS.causaDeEvento(e, ctx0).evento === sv.id),
+  `los ${cascada.length} cierres en cascada de la primera media hora de cada servicio siguen cargados a su servicio`)
+comprobar(CS.causaDeEvento(pozoEv('EP-MN18-260503-60'), ctx0).equipo === 'MPP-301',
+  'MN-18 el 3-may, con la P-201B y la MPP-301 paradas: manda la multifásica que lo mueve')
+const disparoPropio = B.eventosBomba().filter(e => e.primeraAlarma && !['52-SE2', 'PAL-1011'].includes(e.primeraAlarma.tag))
+comprobar(disparoPropio.every(e => Object.hasOwn(B.maquina(e.equipo).primerasAlarmas, e.primeraAlarma.tag) && CS.causaDeParada(e, ctx0).como !== 'ninguno'),
+  `las ${disparoPropio.length} primeras alarmas propias son disparos de SU máquina (la MPP-301 avisa el sello por LSL-3017, no por el LSH-2013 de la centrífuga)`)
+
+// El panel del equipo usa el contexto de la sesión, como el libro.
+const ctxLC21 = { config: ctx0.config, respuestas: { 'EP-LC21-261001-01': { texto: 'Válvula de cabeza cerrada para cambiarla', por: 'prueba', hora: R.AHORA.toISOString() } } }
+comprobar(/identificarlo/.test(EVV.equipoVivo('LC-21', 'ceiba', ctx0).lectura) && /Válvula de cabeza/.test(EVV.equipoVivo('LC-21', 'ceiba', ctxLC21).lectura),
+  'responder LC-21 cambia también el panel del pozo: deja de pedir que se identifique')
+
+// El respaldo sale de la configuración firmada, en la ficha igual que en la predicción.
+const cfgResp = structuredClone(ctx0.config); cfgResp.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B').libreBpd = 8000
+cfgResp.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B').detalle = 'P-201A nueva en paralelo, con 8.000 bbl/d libres'
+const ctxResp8 = { config: cfgResp, respuestas: {} }
+const fichaAntes = EVV.equipoVivo('P-201B', 'ceiba', ctx0), fichaDespues = EVV.equipoVivo('P-201B', 'ceiba', ctxResp8)
+comprobar(fichaAntes.redundancia === 'sin respaldo' && fichaAntes.aguasAbajo === 'todo el campo'
+  && fichaDespues.redundancia.startsWith('P-201A nueva') && fichaDespues.aguasAbajo === 'la parte del campo que el respaldo no cubre'
+  && D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctxResp8).respaldoLibreBpd === 8000 && B.perfilBomba('P-201B', 'ceiba').respaldo === undefined,
+  'firmar un respaldo para La Ceiba cambia la ficha y la predicción a la vez; el perfil de la bomba ya no trae respaldo propio')
+
+// Un id que llega de un enlace no puede devolver el prototipo.
+comprobar(['constructor', '__proto__', 'toString', 'hasOwnProperty'].every(id => ['ceiba', 'morichal'].every(c => EVV.equipoVivo(id, c, ctx0) === undefined && B.perfilBomba(id, c) === undefined) && !B.esBomba(id)),
+  'equipos «constructor», «__proto__», «toString» o «hasOwnProperty» no existen (no tumban la pantalla)')
+
+// Electrosumergible parada: lo que no se lee es hueco, no cero «normal».
+const espParadas = P.todosLosPozos().filter(p => p.levantamiento === 'electrosumergible' && !P.estadoAhora(p).produce)
+const malEsp = espParadas.flatMap(p => ESP.senalesEsp(p)).filter(s => ['pip', 't_motor', 'desbalance'].includes(s.plantilla.id) ? s.valor !== null || s.estado !== 'sin señal' : s.valor !== 0)
+const gu07 = EVV.equipoVivo('GU-07', 'guacamayo', ctx0).dispositivos
+comprobar(espParadas.length > 10 && malEsp.length === 0 && gu07.find(d => d.tipo === 'Presión de entrada').valor === '—' && !gu07.some(d => d.valor === 0 && /psi|°C|%/.test(d.unidad)),
+  `${espParadas.length} electrosumergibles paradas: presión de entrada, temperatura del motor y desbalance van como hueco; corriente y frecuencia, en cero medido`)
+
+// Fuera de banda y llega a su alarma en N h: se dice así, con la prioridad de la salud.
+const rMor = D.riesgoAhora(['morichal', 'guacamayo'], ctx0).filter(r => r.estado === 'en-riesgo')
+const rP201 = rMor.find(r => r.equipo === 'P-201B'), rGu04 = rMor.find(r => r.equipo === 'GU-04')
+comprobar(rP201?.prioridad === 2 && rP201.estadoParte === 'fuera' && /salió de su banda normal; llega a su alarma en 43 h/.test(rP201.motivo) && !rMor.some(r => /fuera de límite/.test(r.motivo))
+  && rGu04?.estadoParte === 'fuera',
+  `PI-2010 de Morichal: «${rP201?.motivo}» (prioridad ${rP201?.prioridad}); el desbalance de GU-04 fuera de banda también es «fuera»`)
+comprobar(P.todosLosPozos().flatMap(p => ESP.senalesEsp(p)).every(s => s.estado !== 'aviso'), 'fuera de banda sin llegar a la alarma es «atención» en electrosumergibles y bombas por igual')
+
+// Lo que ve operación de las señales de un pozo (DetallePozo): sin señal con el pozo parado
+// es lo esperado y no sale; bajo «fuera de banda» solo va lo que el instrumento reporta fuera.
+const EPZ = await v.ssrLoadModule('/src/widgets/pozos/estado.ts')
+const espTodas = P.todosLosPozos().filter(p => p.levantamiento === 'electrosumergible')
+const vistasOp = espTodas.map(p => ({ p, produce: P.estadoAhora(p).produce, o: EPZ.senalesParaOperar(ESP.senalesEsp(p), P.estadoAhora(p).produce) }))
+const lc01op = vistasOp.find(x => x.p.campoId === 'ceiba' && x.p.id === 'LC-01')
+const gu04op = vistasOp.find(x => x.p.campoId === 'guacamayo' && x.p.id === 'GU-04')
+comprobar(!!lc01op && !lc01op.produce && lc01op.o.fuera.length === 0 && lc01op.o.sinSenal.length === 0
+  && vistasOp.filter(x => !x.produce).every(x => x.o.sinSenal.length === 0 && x.o.fuera.every(s => s.estado !== 'sin señal'))
+  && vistasOp.every(x => x.o.fuera.every(s => ['aviso', 'atencion', 'alarma'].includes(s.estado)))
+  && !!gu04op?.produce && !!gu04op.o.fuera.some(s => s.plantilla.id === 'desbalance'),
+  `operación: las ${vistasOp.filter(x => !x.produce).length} electrosumergibles paradas no muestran «fuera de banda» por estar sin señal (LC-01 de La Ceiba, nada); el desbalance de GU-04, que produce fuera de banda, sí sale`)
+
+// Paretos: una fila por equipo y tipo; una por familia y parte; horas del equipo, no de cada pozo.
+const tri = D.rangoDePeriodo('trimestre')
+const lTri = L.libro(TODOS, tri.desde, tri.hasta, ctx0), lSep = L.libro(TODOS, sep.desde, sep.hasta, ctx0)
+const clavesEq = lTri.porEquipo.map(x => `${x.campoId}:${x.equipo}:${x.tipo}`)
+const mppProg = lTri.porEquipo.find(x => x.equipo === 'MPP-301' && x.tipo === 'programada'), mppTr = lTri.porEquipo.find(x => x.equipo === 'MPP-301' && x.tipo === 'transporte')
+comprobar(new Set(clavesEq).size === clavesEq.length && lTri.porEquipo.every(x => lTri.tramos.filter(t => t.bbl > 0 && t.pozo.campoId === x.campoId && t.causa.equipo === x.equipo).every(t => t.causa.tipo === x.tipo || clavesEq.includes(`${x.campoId}:${x.equipo}:${t.causa.tipo}`)))
+  && !!mppProg && !!mppTr,
+  `por equipo, una fila por tipo de causa: la MPP-301 en julio-septiembre son ${f(mppTr?.bbl ?? 0)} bbl de transporte y ${f(mppProg?.bbl ?? 0)} de programada, por separado`)
+const clavesPt = lSep.porParte.map(x => `${x.familia}|${x.parte}`)
+const selloIny = lSep.porParte.find(x => x.familia === 'inyeccion' && x.parte === 'sello'), selloMpp = lSep.porParte.find(x => x.familia === 'multifasica' && x.parte === 'sello')
+// Cada fila cuadra con sus tramos: los barriles de la fila son los de los tramos de esa familia y parte.
+const famDe = { reinyeccion: 'inyeccion', transporte: 'multifasica', electrosumergible: 'electrosumergible' }
+comprobar(new Set(clavesPt).size === clavesPt.length && lSep.porParte.every(x => cerca(x.bbl, lSep.tramos.filter(t => t.causa.parte === x.parte && famDe[t.causa.tipo] === x.familia).reduce((a, t) => a + t.bbl, 0), 1e-9))
+  && selloIny && selloMpp && selloIny.horas < 40 && selloMpp.horas < 50,
+  `por parte, una fila por familia: en septiembre el sello de reinyección estuvo fuera ${selloIny?.horas.toFixed(1)} h y el de la multifásica ${selloMpp?.horas.toFixed(1)} h (no la suma de cada pozo)`)
+// Las horas y las fallas salen de los EVENTOS del equipo: una parada que el tanque absorbió
+// (0 bbl, ningún pozo cerrado) también es una falla con sus horas fuera. Antes la fila
+// solo veía tramos con barriles y en marzo quedaba en 2 fallas y 74,3 h. Cambio a propósito:
+// ahora una fila puede ir en 0 bbl (P-201B de Guacamayo, recobro, en marzo).
+const mar = { desde: new Date('2026-03-01T00:00:00-05:00'), hasta: new Date('2026-04-01T00:00:00-05:00') }
+const lMar = L.libro(TODOS, mar.desde, mar.hasta, ctx0)
+const selloMar = lMar.porParte.find(x => x.familia === 'inyeccion' && x.parte === 'sello')
+const absorbida = B.paradaPorId('EV-M2011-260326')
+const horasAbs = (Date.parse(absorbida.fin) - Date.parse(absorbida.inicio)) / 3_600_000
+const tramosAbs = L.tramosEntre(['morichal'], mar.desde, mar.hasta, ctx0).filter(t => t.causa.evento === absorbida.id)
+const recobroMar = lMar.porParte.find(x => x.equipos.some(e => e.campoId === 'guacamayo' && e.equipo === 'P-201B'))
+comprobar(tramosAbs.every(t => t.bbl === 0) && selloMar?.fallas === 3 && cerca(selloMar.horas, 74.3 + horasAbs, 0.002) && selloMar.equipos.some(e => e.campoId === 'morichal' && e.equipo === 'P-201B')
+  && !!recobroMar && recobroMar.bbl === 0 && recobroMar.fallas >= 1 && recobroMar.horas > 0,
+  `por parte, de los eventos del equipo: EV-M2011-260326 (P-201B de Morichal, sello, ${horasAbs.toFixed(1)} h, 0 bbl) entra a «sello» de marzo: ${selloMar?.fallas} fallas y ${selloMar?.horas.toFixed(1)} h; la parada de recobro de Guacamayo va con 0 bbl y ${recobroMar?.horas.toFixed(1)} h`)
+
+// Una sola regla de proyección: lo súbito no da fecha.
+const plantillas = [...B.PLANTILLA_INYECCION, ...B.PLANTILLA_MULTIFASICA, ...ESP.PLANTILLA_ESP].filter(x => x.anuncia)
+comprobar(!VG.proyectable({ mecanismo: ISO.mecanismo('4.1') }) && plantillas.every(x => VG.proyectable({ mecanismo: ISO.mecanismo(x.anuncia.mecanismo) })),
+  'el vigía y la salud proyectan con la misma regla: un mecanismo súbito (cortocircuito) no da fecha, y todo lo que anuncia una plantilla es degradación')
+
+// El vigía lee el paso de la serie (CONTRATO.md · «Forma de las series»), no supone un
+// punto por día: la misma rampa por hora cruza en horas; un hueco no comprime el eje.
+const rampa = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+const tHora = VG.tendencia({ desde: '2026-10-02T03:00:00-05:00', pasoH: 1, valores: rampa })
+const tDia = VG.tendencia({ desde: '2026-09-21T14:00:00-05:00', pasoH: 24, valores: rampa })
+const tHueco = VG.tendencia({ desde: '2026-10-02T03:00:00-05:00', pasoH: 1, valores: rampa.map((x, i) => (i === 3 || i === 4 ? null : x)) })
+const pHora = VG.pronostico(tHora, 25, 'sube'), pDia = VG.pronostico(tDia, 25, 'sube'), pHueco = VG.pronostico(tHueco, 25, 'sube')
+let pasoMalo = ''
+try { VG.tendencia({ desde: '2026-10-02T03:00:00-05:00', pasoH: 0, valores: rampa }) } catch (e) { pasoMalo = e.message }
+comprobar(pHora.tipo === 'cruza' && cerca(pHora.horas, 4) && pDia.tipo === 'cruza' && cerca(pDia.horas, 96)
+  && tHueco.n === 10 && cerca(tHueco.pendiente, 1) && pHueco.tipo === 'cruza' && cerca(pHueco.horas, 4) && /pasoH/.test(pasoMalo),
+  `el vigía usa el paso de la serie: la misma rampa cruza en ${pHora.horas} h por hora y en ${pDia.horas} h por día; con dos huecos ajusta 10 puntos sin mover el eje; con paso 0 se niega («${pasoMalo.slice(0, 50)}…»)`)
+
+// El calendario sale de «ahora».
+const calNov = R.calendarioDe(new Date('2026-11-15T10:00:00-05:00')), calEne = R.calendarioDe(new Date('2027-01-10T10:00:00-05:00'))
+const isoDia = d => d.toISOString().slice(0, 10)
+comprobar(isoDia(calNov.curso.desde) === '2026-11-01' && calNov.cerrado.nombre === 'Octubre, cerrado' && isoDia(calNov.trimestre.desde) === '2026-08-01' && isoDia(calNov.doce.desde) === '2025-11-01'
+  && calEne.cerrado.nombre === 'Diciembre, cerrado' && isoDia(calEne.cerrado.desde) === '2026-12-01' && isoDia(calEne.ytd.desde) === '2027-01-01' && calEne.trimestre.nombre === 'Octubre a diciembre'
+  && CA.PERIODOS[0].detalle === '2 de 31 días de octubre' && CA.PERIODOS[1].nombre === 'Septiembre · cerrado',
+  'los períodos se mueven con «ahora»: el 15-nov el cerrado es octubre; el 10-ene, diciembre del año anterior')
+
+// La historia se calcula una vez y los promedios usan fallas cerradas.
+const hCe = L.historialDeEquipo('ceiba', 'P-201B', ctx0)
+const cerradasCe = hCe.eventos.filter(e => !e.disparo && e.fin)
+comprobar(L.historialDeEquipo('ceiba', 'P-201B', ctx0) === hCe && cerradasCe.length === hCe.fallas - 1
+  && cerca(hCe.mdtH, cerradasCe.reduce((a, e) => a + e.horas, 0) / cerradasCe.length) && cerca(hCe.bblPorFalla, cerradasCe.reduce((a, e) => a + e.bbl, 0) / cerradasCe.length)
+  && D.veredicto(B.perfilBomba('P-201B', 'ceiba'), ctx0).porFalla === hCe.bblPorFalla,
+  `P-201B de La Ceiba: ${hCe.fallas} fallas, el promedio de horas fuera (${hCe.mdtH.toFixed(1)} h) y de barriles (${f(hCe.bblPorFalla)}) sale de las ${cerradasCe.length} cerradas`)
+const tsEv = L.tramosDeEvento('ceiba', 'EV-2011-0909', ctx0), tsFresco = L.tramosEntre(['ceiba'], new Date(L.calendario()[0].desde), R.AHORA, { config: ctx0.config, respuestas: {} }).filter(t => (t.causa.evento ?? t.evento.id) === 'EV-2011-0909')
+comprobar(tsEv.length === tsFresco.length && cerca(tsEv.reduce((a, t) => a + t.bbl, 0), tsFresco.reduce((a, t) => a + t.bbl, 0)), 'los tramos de una parada salen de la historia ya calculada y son los mismos')
+
+console.log('\n=== 10. Datos que faltan, se pisan o no cuadran (mundo de prueba) ===')
+// Un servidor aparte: aquí se tocan los datos del demo para probar lo que
+// el demo no trae (huecos fiscales, eventos que se pisan, alarmas ajenas...).
+// Sin la configuración del proyecto: el mundo de prueba no levanta otro simulador de la API.
+const raiz = RAIZ
+const w = await createServer({ root: raiz, configFile: false, resolve: { alias: { '@': `${raiz}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
+const WD = await w.ssrLoadModule('/src/entities/datos/produccion-diaria.ts')
+const WE = await w.ssrLoadModule('/src/entities/datos/eventos-pozos.ts')
+const WB = await w.ssrLoadModule('/src/entities/datos/paradas-bombas.ts')
+const WPZ = await w.ssrLoadModule('/src/entities/datos/pozos.ts')
+const WM = await w.ssrLoadModule('/src/entities/metrologia.ts')
+// Guacamayo: le faltan los tres últimos días de septiembre. El Palmar: el 10-ago llega en null.
+const guSep = WD.PRODUCCION_DIARIA.find(m => m.campoId === 'guacamayo' && m.mes === '2026-09')
+const ultimos3 = guSep.dias.slice(-3).reduce((a, b) => a + b, 0)
+guSep.dias = guSep.dias.slice(0, -3)
+WD.PRODUCCION_DIARIA.find(m => m.campoId === 'palmar' && m.mes === '2026-08').dias[9] = null
+// Morichal todavía no publica septiembre; La Ceiba sí.
+WD.PRODUCCION_DIARIA.find(m => m.campoId === 'morichal' && m.mes === '2026-09').publicado = false
+// Eventos que se pisan en GU-03 (un paro y una baja carga dentro de él) y una
+// frecuencia reducida de GU-02 sin la frecuencia de la prueba, cruzada con su UL.
+WE.EVENTOS_POZOS.push(
+  { id: 'EP-PRUEBA-GU03-CMD', campoId: 'guacamayo', pozo: 'GU-03', inicio: '2026-08-10T00:00:00-05:00', fin: '2026-08-12T00:00:00-05:00', codigo: 'CMD', senal: 'prueba' },
+  { id: 'EP-PRUEBA-GU03-UL', campoId: 'guacamayo', pozo: 'GU-03', inicio: '2026-08-11T00:00:00-05:00', fin: '2026-08-11T12:00:00-05:00', codigo: 'UL', senal: 'prueba' },
+  { id: 'EP-PRUEBA-GU02-HZ', campoId: 'guacamayo', pozo: 'GU-02', inicio: '2026-08-20T00:00:00-05:00', fin: '2026-08-21T00:00:00-05:00', codigo: 'HZ', hz: 45, senal: 'prueba' },
+  // GU-03 hoy: una frecuencia reducida abierta y encima un paro abierto.
+  { id: 'EP-PRUEBA-GU03-HZ-HOY', campoId: 'guacamayo', pozo: 'GU-03', inicio: '2026-10-01T00:00:00-05:00', fin: null, codigo: 'HZ', hz: 45, senal: 'prueba' },
+  { id: 'EP-PRUEBA-GU03-CMD-HOY', campoId: 'guacamayo', pozo: 'GU-03', inicio: '2026-10-02T08:00:00-05:00', fin: null, codigo: 'CMD', senal: 'prueba' },
+  // MN-07 cerrado por la MPP-301, que paró hoy.
+  { id: 'EP-PRUEBA-MN07', campoId: 'morichal', pozo: 'MN-07', inicio: '2026-10-02T11:05:00-05:00', fin: null, codigo: 'CMD', senal: 'prueba' },
+)
+for (const pr of WPZ.POZOS_DEMO.find(p => p.campoId === 'guacamayo' && p.id === 'GU-02').pruebas) delete pr.hz
+// Paradas de bomba: una alarma que no es de la máquina, una abierta sin
+// alarma (firma) y la multifásica parada hoy. Y el arreglo en otro orden.
+WB.PARADAS_BOMBAS.push(
+  { id: 'EV-PRUEBA-ALARMA', campoId: 'ceiba', equipo: 'P-201B', inicio: '2026-06-10T10:00:00-05:00', fin: '2026-06-10T14:00:00-05:00', perdida: 1, senal: 'prueba', primeraAlarma: { tag: 'PSHH-2011', texto: 'presión muy alta de descarga' } },
+  { id: 'EV-PRUEBA-FIRMA', campoId: 'morichal', equipo: 'P-201B', inicio: '2026-10-02T12:00:00-05:00', fin: null, perdida: 1, senal: 'prueba' },
+  { id: 'EV-PRUEBA-MPP', campoId: 'morichal', equipo: 'MPP-301', inicio: '2026-10-02T11:00:00-05:00', fin: null, perdida: 1, senal: 'prueba' },
+)
+WB.PARADAS_BOMBAS.reverse()
+// La Zarza sin análisis de °API: llega `api: null`, como lo permite el contrato (el tipo lo admite).
+WM.METROLOGIA_CAMPO.zarza.api = null
+// Con los datos ya tocados, se instalan como insumos de este mundo.
+;(await w.ssrLoadModule('/src/entities/insumos.ts')).instalarInsumos((await w.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
+const WL = await w.ssrLoadModule('/src/entities/libro.ts')
+const WDf = await w.ssrLoadModule('/src/entities/diferido.ts')
+const WCS = await w.ssrLoadModule('/src/entities/causa-senal.ts')
+const WP = await w.ssrLoadModule('/src/entities/pozos.ts')
+const WBo = await w.ssrLoadModule('/src/entities/bombas.ts')
+const WEV = await w.ssrLoadModule('/src/entities/equipo-vivo.ts')
+const wctx = { config: WL.contextoInicial().config, respuestas: {} }
+
+// Un hueco fiscal no es cero: el factor sale de los días con dato y el libro no se publica.
+const guReal = L.libro(['guacamayo'], sep.desde, sep.hasta, ctx0), guHueco = WL.libro(['guacamayo'], sep.desde, sep.hasta, wctx)
+const faReal = guReal.fa[0].fa, faHueco = guHueco.fa[0].fa
+const diasGu = WL.porDia(['guacamayo'], sep.desde, sep.hasta, wctx)
+comprobar(Math.abs(faHueco - faReal) < 0.02 && cerca(guHueco.real, guReal.real - ultimos3, 1e-9) && !guHueco.publicable
+  && guHueco.motivos.some(m => /faltan 3 días de producción fiscal/.test(m.texto)) && diasGu.filter(d => d.real === null).length === 3,
+  `Guacamayo sin los 3 últimos días de septiembre: el factor queda en ${faHueco.toFixed(3)} (con todo, ${faReal.toFixed(3)}), lo real no los cuenta, el día a día los muestra como hueco y el libro no se publica`)
+const paAgo = WL.libro(['palmar'], new Date('2026-08-01T00:00:00-05:00'), new Date('2026-09-01T00:00:00-05:00'), wctx)
+comprobar(!paAgo.publicable && paAgo.motivos.some(m => /faltan 1 día/.test(m.texto)) && WL.porDia(['palmar'], new Date('2026-08-10T00:00:00-05:00'), new Date('2026-08-11T00:00:00-05:00'), wctx)[0].real === null,
+  'El Palmar con el 10-ago en null: ese día es un hueco, no un cero, y agosto no se publica')
+const moSep = WL.libro(['morichal'], sep.desde, sep.hasta, wctx), ceSep = WL.libro(['ceiba'], sep.desde, sep.hasta, wctx)
+comprobar(!moSep.fa[0].publicado && !moSep.publicable && ceSep.fa[0].publicado && ceSep.publicable && !WL.calendario().find(m => m.mes === '2026-09').publicado
+  && WL.serieMensual(['ceiba'], wctx).find(m => m.mes === '2026-09').parcial === false,
+  'cada campo publica su mes: Morichal sin publicar septiembre no sale publicable aunque La Ceiba ya lo publicó')
+const zaSep = WL.libro(['zarza'], sep.desde, sep.hasta, wctx)
+comprobar(!WL.bandaDe('zarza').verificable && !zaSep.publicable && zaSep.motivos.some(m => /Sin análisis de °API/.test(m.texto)) && zaSep.motivos.every(m => !/fuera de la banda/.test(m.texto)),
+  'La Zarza sin °API: no se escoge fila de la Fig. 10.2 a ciegas; el factor no se puede verificar y se dice')
+
+// Eventos que se pisan: cada hora del pozo se cobra una vez.
+const guAgo = WL.libro(['guacamayo'], new Date('2026-08-01T00:00:00-05:00'), new Date('2026-09-01T00:00:00-05:00'), wctx)
+const t03 = guAgo.tramos.filter(t => t.evento.id.startsWith('EP-PRUEBA-GU03'))
+const t02 = guAgo.tramos.find(t => t.evento.id === 'EP-PRUEBA-GU02-HZ')
+comprobar(cerca(guAgo.potencial - guAgo.real, guAgo.diferido, 1e-9) && cerca(t03.reduce((a, t) => a + t.horas, 0), 48) && t03.find(t => t.evento.codigo === 'UL').bbl === 0,
+  `GU-03 con una baja carga dentro de un paro: se cobran ${t03.reduce((a, t) => a + t.horas, 0)} h (no 60) y potencial − real sigue siendo Σ diferidos en agosto`)
+comprobar(t02.factor === 1 && t02.bbl >= 0 && t02.aproximado && cerca(t02.horas, 24 - 63 / 60, 1e-6) && guAgo.diferido >= 0,
+  `GU-02 a 45 Hz con una prueba sin frecuencia: se cuenta como cerrado (factor 1, aproximado), nunca negativo, y su baja carga manda en la hora que se cruzan (${t02.horas.toFixed(2)} h)`)
+const gu03 = WP.estadoAhora(WP.todosLosPozos().find(p => p.campoId === 'guacamayo' && p.id === 'GU-03'))
+comprobar(!gu03.produce && gu03.evento.codigo === 'CMD', 'con una frecuencia reducida y un paro abiertos a la vez, el pozo está parado: manda el paro')
+
+// Una alarma que no es de la máquina no identifica la parte; la respuesta sí.
+const evAl = WBo.paradaPorId('EV-PRUEBA-ALARMA')
+const cAl0 = WCS.causaDeParada(evAl, wctx)
+const cAl1 = WCS.causaDeParada(evAl, { config: wctx.config, respuestas: { 'EV-PRUEBA-ALARMA': { texto: 'Rodamiento caliente', por: 'prueba', hora: '2026-06-10T13:00:00-05:00', parte: 'rodamientos', modo: 'OHE' } } })
+comprobar(cAl0.como === 'ninguno' && WCS.estadoIdentificacion(cAl0, evAl.fin).pide && cAl1.como === 'declarado' && cAl1.parte === 'rodamientos' && !WCS.estadoIdentificacion(cAl1, evAl.fin).pide,
+  'P-201B con primera alarma PSHH-2011 (no es un disparo de su catálogo): pide la parte, y la respuesta del operario la cierra')
+
+// La firma se decide al parar y se conserva al cerrar.
+const evF = WBo.paradaPorId('EV-PRUEBA-FIRMA')
+const cF0 = WCS.causaDeParada(evF, wctx)
+const evFc = { ...evF, fin: '2026-10-02T13:30:00-05:00' }
+const cF1 = WCS.causaDeParada(evFc, { config: wctx.config, respuestas: {} })
+comprobar(cF0.como === 'firma' && cF0.parte === 'succion' && cF1.como === 'firma' && cF1.parte === 'succion' && !WCS.estadoIdentificacion(cF1, evFc.fin).pide && !WCS.estadoIdentificacion(cF1, evFc.fin).arrancoSinIdentificar,
+  'P-201B de Morichal sin primera alarma: la firma (succión) se decide al parar y sigue igual cuando la parada se cierra; no queda como no conformidad')
+
+// La multifásica parada dice lo que está perdiendo; el orden del arreglo no cambia la causa.
+const prMpp = WDf.prediccion(WBo.perfilBomba('MPP-301', 'morichal'), wctx)
+comprobar(prMpp.perdiendo && prMpp.perdiendo.pozos.some(p => p.id === 'MN-07') && prMpp.perdiendo.bblDia > 0,
+  `MPP-301 parada: la predicción trae lo que está perdiendo (${prMpp.perdiendo?.pozos.map(p => p.id).join(', ')}, ${f(prMpp.perdiendo?.bblDia ?? 0)} bbl/d)`)
+comprobar(WCS.causaDeEvento(WP.eventosPozos().find(e => e.id === 'EP-MN18-260503-60'), wctx).equipo === 'MPP-301',
+  'con las paradas de bomba en otro orden, MN-18 el 3-may sigue siendo de la multifásica')
+const lc01 = WEV.equipoVivo('LACT-01', 'guacamayo', wctx)
+const ult5 = WL.fiscalUltimosDias('guacamayo', 5)
+comprobar(ult5.slice(1, 4).every(x => x === null) && ult5[0] !== null && ult5[4] !== null && WL.fiscalUltimosDias('ceiba', 5).every(x => typeof x === 'number')
+  && (s => s?.valores.length === 12 && s.valores.filter(v => v === null).length === 3 && s.pasoH === 24
+    && Date.parse(s.desde) + 11 * 24 * 3_600_000 === WL.fiscalDeAyer('guacamayo').fecha.getTime())(lc01.dispositivos.find(d => d.tag === 'FQI-0101')?.serie),
+  'el computador de flujo sin dato da null, no cero: la serie del LACT-01 de Guacamayo lleva los tres días que faltan como hueco EN SU DÍA (antes se saltaban y el eje se comprimía)')
+
+// El evitable escoge entre los pozos que producían.
+const evM = L.tramosDeEvento('morichal', 'EV-M2011-260924', ctx0).filter(t => t.bbl > 0)
+comprobar(evM.length > 0 && cerca(L.evitableDeEvento(evM), (() => {
+  const cierre = Math.min(...evM.map(t => Date.parse(t.evento.inicio))), cerrados = new Set(evM.map(t => t.pozo.id))
+  const todos = P.todosLosPozos().filter(p => p.campoId === 'morichal' && p.pruebas.length && (cerrados.has(p.id) || !P.eventosPozos().some(e => e.campoId === 'morichal' && e.pozo === p.id && e.codigo !== 'HZ' && Date.parse(e.inicio) < cierre && (!e.fin || Date.parse(e.fin) > cierre))))
+  const dia = evM[0].inicio.getTime()
+  let cr = 0, ag = 0
+  for (const t of evM) { const pr = P.pruebaEn(t.pozo, dia); cr += pr.crudoBpd * t.factor; ag += pr.aguaBpd * t.factor }
+  const opt = L.ordenOptimo(todos, ag, dia).crudo
+  return cr > 0 && opt < cr ? evM.reduce((a, t) => a + t.bbl, 0) * (1 - opt / cr) : 0
+})()), `evitable por orden de EV-M2011-260924: ${f(L.evitableDeEvento(evM))} bbl, escogiendo solo entre los pozos que producían al empezar los cierres`)
+await w.close()
+
+console.log('\n=== 11. Estado, dirección y costura (auditoría S3) ===')
+{
+// El store vive en el navegador: se le da lo mínimo del navegador (dirección,
+// historial, eventos, almacenamiento) y se carga en el MISMO servidor que el
+// libro, para que la identidad de CONTEXTO_INICIAL sea la misma.
+const nav = { hash: '#/ger/resumen/ceiba/curso', oyentes: {} }
+const definir = (k, val) => Object.defineProperty(globalThis, k, { value: val, configurable: true, writable: true })
+definir('location', { get hash() { return nav.hash }, set hash(h) { nav.hash = h.startsWith('#') ? h : `#${h}`; nav.oyentes.hashchange?.() } })
+definir('history', { pushState: (_e, _t, u) => { nav.hash = u }, replaceState: (_e, _t, u) => { nav.hash = u } })
+definir('addEventListener', (tipo, f) => { nav.oyentes[tipo] = f })
+definir('matchMedia', () => ({ matches: false, addEventListener() {} }))
+definir('localStorage', { getItem: () => '1', setItem() {} })
+definir('document', { documentElement: { setAttribute() {}, style: {} } })
+const ST = await v.ssrLoadModule('/src/app/store.ts')
+// Los oyentes del navegador ya no se registran al cargar el estado: los pone iniciarApp().
+ST.iniciarApp()
+const SES = await v.ssrLoadModule('/src/shared/api/sesion.ts')
+const URLM = await v.ssrLoadModule('/src/app/url.ts')
+const CSV = await v.ssrLoadModule('/src/shared/lib/csv.ts')
+const CARGA = await v.ssrLoadModule('/src/shared/lib/carga.ts')
+// La configuración, las respuestas y los accesos viven en la sesión (shared/api/sesion.ts).
+const app = ST.useApp, est = () => ({ ...app.getState(), ...SES.sesion() })
+const ir = h => { location.hash = h }
+
+comprobar(est().ctx === L.contextoInicial(), 'la sesión arranca con el mismo objeto de contexto inicial que la historia de SAP y los mensajes (una sola vuelta de cachés)')
+
+nav.hash = '#/cont/resumen/ceiba/curso'
+comprobar(URLM.leerHash(undefined, 'ger').rolId === undefined, 'una dirección con un rol de v2 (cont) no trae rol')
+nav.hash = '#//produccion/palmar/curso'
+const sinRol = URLM.leerHash(undefined, 'oper')
+comprobar(sinRol.pantalla === 'bombas' && sinRol.campoId === undefined, `sin rol en la dirección se valida contra el rol que se ve: el operador no abre Producción ni El Palmar (${JSON.stringify(sinRol)})`)
+nav.hash = '#/x/bombas/palmar/curso'
+comprobar(URLM.leerHash(undefined, 'sup').campoId === undefined, 'con un rol inválido, el supervisor (solo La Ceiba) no abre El Palmar')
+nav.hash = '#/ger/perfil/ceiba/curso'
+comprobar(URLM.leerHash(undefined, 'ger').pantalla === 'perfil', '«Mi perfil» se acepta en la dirección de cualquier rol')
+
+est().setRol('ger'); ir('#/ger/resumen/ceiba/curso')
+ir('#/cont/resumen/ceiba/curso')
+comprobar(est().rolId === 'ger' && nav.hash.startsWith('#/ger/'), `pegar un enlace con un rol de v2 no deja guardado un rol fantasma (rol ${est().rolId}, dirección ${nav.hash})`)
+est().setRol('oper'); ir('#/oper/bombas/ceiba/curso')
+ir('#//produccion/palmar/curso')
+comprobar(est().rolId === 'oper' && est().pantalla === 'bombas' && est().campoId === 'ceiba', `operador con «#//produccion/palmar»: sigue en sus bombas de La Ceiba (${est().pantalla}, ${est().campoId})`)
+est().setRol('ger'); ir('#/ger/resumen/ceiba~portafolio/curso')
+ir('#/ger/resumen/zarza~portafolio/curso')
+comprobar(est().alcance === 'portafolio' && est().campoId === 'zarza' && nav.hash === '#/ger/resumen/zarza~portafolio/curso', `pegar un portafolio sobre otro portafolio lo conserva (${nav.hash})`)
+ir('#/ger/resumen/ceiba/curso/P-201B')
+ir('#/ger/diferidos/ceiba/curso/P-201B')
+comprobar(est().pantalla === 'diferidos' && est().equipoAbierto === 'P-201B', `cambiar de pantalla por la dirección con el mismo equipo lo deja abierto (${nav.hash})`)
+ir('#/ger/perfil/ceiba/curso')
+comprobar(est().pantalla === 'perfil', 'atrás/adelante a «Mi perfil» lo vuelve a abrir')
+
+est().setRol('ger'); est().setAlcance('portafolio'); est().setRol('adm')
+comprobar(est().alcance === 'campo', 'el administrador (ninguna pantalla suma campos) no queda en portafolio')
+est().setRol('tec'); est().setAlcance('portafolio')
+comprobar(est().alcance === 'campo', 'el técnico (un solo campo) no queda en portafolio')
+est().setRol('prod'); est().setCampo('ceiba'); est().redirigir('pozos', 'aviso de prueba'); est().setCampo('palmar')
+comprobar(est().avisoSub === null, 'cambiar de campo borra el aviso de una redirección hecha en el campo anterior')
+est().setCampo('zarza')
+comprobar(est().campoId === 'palmar', 'setCampo no abre un campo que el rol no tiene (producción no tiene La Zarza)')
+est().setPantalla('mantenimiento')
+comprobar(est().pantalla !== 'mantenimiento', 'setPantalla no abre una pantalla que el rol no tiene')
+comprobar(!est().setRango('2024-01-01', '2024-12-31').ok && est().setRango('2026-09-01', '2026-09-10').ok, 'un rango sin días con datos se rechaza con motivo; uno con datos se aplica')
+
+// Respuestas: capacidad, parte en una bomba, la primera gana. Sobre una parada
+// REAL de P-201B en La Ceiba: el servidor saca el campo del evento del PLC y un
+// id inventado ya no se responde (CONTRATO.md, S8). Una con primera alarma, para
+// que la respuesta no le cambie la causa al libro de las comprobaciones siguientes.
+EV3 = B.eventosBomba().find(e => e.campoId === 'ceiba' && e.equipo === 'P-201B' && e.primeraAlarma && !est().ctx.respuestas[e.id]).id
+const catP = CAT.catalogoDe('ceiba', 'P-201B'), parteP = catP.partes[0], modoP = CAT.modosDeParte(parteP)[0].codigo
+est().setRol('ger')
+comprobar(!(await est().responder({ evento: EV3, campoId: 'ceiba', equipo: 'P-201B', texto: 'Sello con fuga por el acople', parte: parteP.id, modo: modoP })).ok, 'el gerente (sin causa:declarar) no responde paradas')
+// Mi perfil no niega lo que la escritura deja hacer (ni promete lo que no):
+// cada rol responde con un campo que no es el del evento. La capacidad se
+// revisa primero, así que el rechazo «Su rol no responde paradas» sale solo
+// si Mi perfil la muestra como negada; los demás se rechazan por el campo o
+// la persona, y la parada no se gasta.
+const perfilVsEscritura = []
+for (const r of ROL.ROLES) {
+  est().setRol(r.id)
+  if (est().rolId !== r.id) continue
+  const res = await est().responder({ evento: EV3, campoId: 'zarza', equipo: 'P-201B', texto: '', parte: parteP.id, modo: modoP })
+  const niegaPerfil = TIP.permisosDelRol(r.puede).negadas.includes('causa:declarar')
+  if (res.ok || (res.error === 'Su rol no responde paradas.') !== niegaPerfil) perfilVsEscritura.push(`${r.id}: perfil ${niegaPerfil ? 'niega' : 'deja'}, escritura ${res.ok ? 'acepta' : res.error}`)
+}
+const jefePerfil = TIP.permisosDelRol(ROL.rolPorId('jefe').puede)
+comprobar(perfilVsEscritura.length === 0 && !est().ctx.respuestas[EV3]
+  && !jefePerfil.negadas.includes('causa:declarar') && /^Responder qué se dañó/.test(TIP.CAPACIDAD_NOMBRE[jefePerfil.concedidas.find(k => k.startsWith('causa:'))]),
+  `Mi perfil dice de responder paradas lo mismo que la escritura (el jefe, con completar, responde y no se le niega)${perfilVsEscritura.length ? ': ' + perfilVsEscritura.join(' · ') : ''}`)
+est().setRol('oper')
+comprobar(!(await est().responder({ evento: EV3, campoId: 'ceiba', equipo: 'P-201B', texto: 'Se dañó algo en la bomba' })).ok, 'en pantalla, una parada de bomba sin parte se rechaza')
+comprobar(!(await est().responder({ evento: EV3, campoId: 'palmar', equipo: 'P-201B', texto: '', parte: parteP.id, modo: modoP })).ok, 'el operador no responde una parada diciendo que es de otro campo (el campo sale del evento)')
+const r1 = (await est().responder({ evento: EV3, campoId: 'ceiba', equipo: 'P-201B', texto: '', parte: parteP.id, modo: modoP }))
+const r2 = (await est().responder({ evento: EV3, campoId: 'ceiba', equipo: 'P-201B', texto: '', parte: parteP.id, modo: modoP }))
+comprobar(r1.ok && !r2.ok && /Ya respondió Jairo/.test(r2.error) && est().ctx.respuestas[EV3].canal === 'pantalla', `la primera respuesta gana también en pantalla (${r2.ok ? '' : r2.error})`)
+est().setRol('jefe')
+const a1 = (await est().completarAnalisis(EV3, { mecanismo: '1.1', causaRaiz: '3' })), a2 = (await est().completarAnalisis(EV3, { mecanismo: '1.1', causaRaiz: '1' }))
+comprobar(a1.ok && a2.ok && est().analisis[EV3].causaRaiz === '1' && est().analisisAnteriores[EV3]?.[0]?.causaRaiz === '3', 'corregir un análisis deja el anterior en la historia')
+
+// Avisos, firma y asignación con las reglas del contrato.
+est().setRol('sup')
+const av = (await est().enviarAviso({ tipo: 'M1', campoId: 'palmar', equipo: 'P-201B', descripcion: 'Vibración alta en el cojinete', prioridad: '2' }))
+comprobar(!av.ok && /no lo tiene asignado/.test(av.error), 'el supervisor no envía avisos de un campo que no tiene')
+est().setRol('ger')
+const vig = est().versiones.at(-1).version
+const vieja = (await est().firmarConfig(est().ctx.config, 'motivo de prueba', vig - 1))
+comprobar(!vieja.ok && /Mientras editaba/.test(vieja.error), 'firmar sobre una versión que ya no es la vigente se rechaza (el 409 del contrato)')
+comprobar(!(await est().firmarConfig(est().ctx.config, 'motivo de prueba', vig)).ok, 'sobre la vigente y sin cambios, no hay nada que firmar')
+est().setRol('prod')
+const mesAbierto = L.calendario().at(-1).mes, mesCerr = L.calendario().filter(L.mesCerrado).at(-1).mes
+const MOT = 'asignación del mes reportada a la ANH'
+comprobar(!(await est().cargarAsignacion([{ mes: mesAbierto, campoId: 'ceiba', pozo: 'LC-14', bbl: 100 }], MOT)).ok, 'la asignación oficial de un mes abierto no se carga')
+comprobar(!(await est().cargarAsignacion([{ mes: mesCerr, campoId: 'zarza', pozo: 'LZ-01', bbl: 100 }], MOT)).ok, 'ni la de un campo que la persona no tiene')
+comprobar(!(await est().cargarAsignacion([{ mes: mesCerr, campoId: 'ceiba', pozo: 'LC-14', bbl: 100, horas: 9999 }], MOT)).ok, 'ni horas imposibles para el mes')
+const sinMotivo = await est().cargarAsignacion([{ mes: mesCerr, campoId: 'ceiba', pozo: 'LC-14', bbl: 100 }], '  ')
+comprobar(!sinMotivo.ok && /motivo/.test(sinMotivo.error) && est().asignacionOficial.length === 0 && est().cargasAsignacion.length === 0, 'ni sin motivo: reemplazar la oficial de un mes sin decir por qué no deja rastro útil')
+// R15 (#179): la capacidad la revisa la escritura, no la pantalla. Los cuatro roles que la reproducían ya no la pisan.
+const ajenas = []
+for (const r of ['oper', 'tec', 'sup', 'ger']) {
+  est().setRol(r)
+  const x = await est().cargarAsignacion([{ mes: '2026-08', campoId: 'ceiba', pozo: 'LC-14', bbl: 100 }], MOT)
+  if (x.ok || !/producción/.test(x.error)) ajenas.push(r)
+}
+est().setRol('prod')
+comprobar(ajenas.length === 0 && est().asignacionOficial.length === 0 && ROL.ROLES.filter(r => r.puede['asignacion:cargar']).map(r => r.id).join() === 'prod',
+  `solo producción (asignacion:cargar) carga la asignación oficial: operador, técnico, supervisor y gerente reciben el 403 (${ajenas.join(', ') || 'ninguno pasa'})`)
+comprobar((await est().cargarAsignacion([{ mes: mesCerr, campoId: 'ceiba', pozo: 'LC-14', bbl: 100 }], MOT)).ok && est().asignacionOficial.length === 1, 'una carga válida entra')
+// R16 (#86): cada carga deja quién, cuándo, por qué y qué reemplazó; reemplazar no borra el rastro de la anterior.
+const c1 = est().cargasAsignacion.at(-1)
+comprobar(!!c1 && /^Marcela Ríos · /.test(c1.por) && c1.motivo === MOT && /-05:00$/.test(c1.fecha) && c1.grupos.length === 1 && c1.grupos[0].reemplazados === 0
+  && est().asignacionOficial[0].carga === c1.id, `la carga queda con quién, cuándo y por qué (${c1?.por}, ${c1?.fecha}, «${c1?.motivo}») y cada fila dice qué carga la trajo`)
+await est().cargarAsignacion([{ mes: mesCerr, campoId: 'ceiba', pozo: 'LC-14', bbl: 120 }, { mes: mesCerr, campoId: 'ceiba', pozo: 'LC-15', bbl: 80 }], 'corrección del reporte de la operadora')
+const c2 = est().cargasAsignacion.at(-1)
+comprobar(est().cargasAsignacion.length === 2 && c2.grupos[0].reemplazados === 1 && c2.grupos[0].pozos === 2 && est().asignacionOficial.every(f => f.carga === c2.id)
+  && AS.cargaVigente(est().asignacionOficial, est().cargasAsignacion, mesCerr, 'ceiba') === c2,
+  'un reemplazo queda como otra carga (reemplazó 1 pozo, trajo 2); la anterior sigue en el rastro y la vigente es la nueva')
+// R14 (#42): el WhatsApp se guarda en E.164. El mismo número escrito con espacios y sin indicativo no es un cambio.
+est().setRol('ger')
+const supTel = est().usuarios.find(u => u.rolId === 'sup')
+const mismoTel = await est().guardarUsuario({ ...supTel, telefono: supTel.telefono.replace('+57', '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3') }, 'mismo número escrito distinto')
+comprobar(/^\+\d{8,15}$/.test(supTel.telefono) && !mismoTel.ok && mismoTel.errores.some(e => /No hay cambios/.test(e.texto)),
+  `el teléfono guardado está en E.164 (${supTel.telefono}) y escrito «300 555 …» sin indicativo es el mismo: no hay cambio que guardar`)
+est().setRol('prod')
+
+// Esquema de planta: capacidad, ids únicos, historial.
+const grupoPozos = ['tronco', 'gas', 'crudo', 'agua', 'servicios'].flatMap(t => est().plantas.ceiba[t]).find(e => e.miembros?.length)
+const yaEsta = grupoPozos.miembros[0]
+est().setRol('ger')
+comprobar(!(await est().agregarMiembro('ceiba', grupoPozos.id, { id: 'NUEVO-1', etiqueta: 'NUEVO-1' })).ok, 'el gerente (sin conector:configurar) no edita el esquema de planta')
+est().setRol('adm')
+const antesN = grupoPozos.miembros.length
+const dup = (await est().agregarMiembro('ceiba', grupoPozos.id, { id: yaEsta.id, etiqueta: yaEsta.id }))
+comprobar(!dup.ok, `un id repetido (${yaEsta.id}) se rechaza`)
+const nuevo = (await est().agregarMiembro('ceiba', grupoPozos.id, { id: 'LC-99', etiqueta: 'LC-99' }))
+const quit = (await est().quitarMiembro('ceiba', grupoPozos.id, 'LC-99'))
+const despues = ['tronco', 'gas', 'crudo', 'agua', 'servicios'].flatMap(t => est().plantas.ceiba[t]).find(e => e.id === grupoPozos.id)
+comprobar(nuevo.ok && quit.ok && despues.miembros.length === antesN && despues.miembros.some(m => m.id === yaEsta.id) && est().cambiosPlanta.length === 2,
+  'agregar y quitar deja el conjunto como estaba, sin perder el original, y los dos cambios quedan en el historial')
+
+// CSV y carga de pantallas.
+comprobar(CSV.textoCsv('=HYPERLINK("http://x","VER")').startsWith(`"'=`) && CSV.textoCsv('+57') === "'+57" && CSV.textoCsv('LC-14') === 'LC-14',
+  'el CSV neutraliza fórmulas (= + - @) en los textos y deja lo demás igual')
+{ const r0 = D.rangoDePeriodo('cerrado'), csvInf = I.csvDeLibro(L.libro(['ceiba'], r0.desde, r0.hasta, ctx0), [['Empresa', '=1+1'], ['Nota', 'línea\rotra']])
+  comprobar(csvInf.includes("'=1+1") && csvInf.includes('"línea\rotra"'), 'el CSV del informe con folio usa la misma regla: fórmulas neutralizadas y el retorno entre comillas') }
+comprobar(CARGA.archivoDelFallo(new TypeError('Failed to fetch dynamically imported module: http://localhost:5173/src/pages/Diferidos.tsx')) === 'http://localhost:5173/src/pages/Diferidos.tsx'
+  && CARGA.archivoDelFallo(new TypeError('error loading dynamically imported module: https://x.co/assets/Diferidos-Y7U6.js?t=1')) === 'https://x.co/assets/Diferidos-Y7U6.js'
+  && CARGA.archivoDelFallo(new TypeError('Importing a module script failed.')) === null,
+  'del fallo de una carga se saca el archivo que no llegó (Chromium y Firefox; Safari no lo dice)')
+
+// Exportar: el operador no tiene evidencia:exportar (el 403 de POST /api/informes).
+app.setState({ rolId: 'oper' })
+const infOper = await est().emitirInforme({ formato: 'csv', titulo: 'x', alcance: 'x', periodo: 'x', campos: ['ceiba'], desde: '2026-09-01T00:00:00-05:00', hasta: '2026-10-01T00:00:00-05:00' })
+comprobar(!infOper.ok && /no exporta/.test(infOper.error) && est().informes.length === 0, 'el operador (sin evidencia:exportar) no emite informes: el rechazo dice por qué y no se gasta folio')
+
+// La costura HTTP: una página en vez de JSON es «no hay servicio»; «no está en
+// el registro» solo cuando el servidor lo dice con su código. El error del
+// contrato tiene una sola forma: { error: { codigo, mensaje } }.
+const HTTP = await v.ssrLoadModule('/src/shared/api/fuente.ts')
+const fetchReal = globalThis.fetch
+const responder404 = (cuerpo, tipo = 'application/json') => async () => new Response(cuerpo, { status: 404, headers: { 'content-type': tipo } })
+const intentar = async f => { globalThis.fetch = f; try { await HTTP.pedirJson('/x'); return null } catch (e) { return e } finally { globalThis.fetch = fetchReal } }
+const eHtml = await intentar(async () => new Response('<!doctype html><html></html>', { status: 200, headers: { 'content-type': 'text/html' } }))
+const eTag = await intentar(responder404(JSON.stringify({ error: { codigo: 'tag-no-registrado', mensaje: 'el tag no está registrado' } })))
+const eRuta = await intentar(responder404(JSON.stringify({ error: { codigo: 'ruta-no-encontrada', mensaje: 'ruta no encontrada' } })))
+const eSinForma = await intentar(responder404(JSON.stringify({ error: 'texto suelto' })))
+const eRed = await intentar(async () => { throw new TypeError('Failed to fetch') })
+comprobar(eHtml?.message === HTTP.SIN_SERVICIO && eHtml.codigo === 'sin-servicio' && !/Unexpected token/.test(eHtml.message),
+  'una página HTML en vez de JSON se dice «no hay servicio», no con un error de sintaxis de JavaScript')
+comprobar(eTag instanceof HTTP.ErrorApi && eTag.estado === 404 && eTag.codigo === 'tag-no-registrado' && eTag.message === 'el tag no está registrado'
+  && eRuta?.estado === 404 && eRuta.codigo === 'ruta-no-encontrada' && eSinForma?.codigo === 'http-404' && eRed?.estado === 0 && eRed.codigo === 'sin-conexion',
+  'un 404 solo es «tag no registrado» con el código del contrato; un 404 de una ruta que no existe (o sin el error del contrato) no afirma nada del tag; sin red, «sin conexión»')
+
+}
+
+console.log('\n=== 12. Pantallas (auditoría S4) ===')
+{
+// Las pantallas piden a la capa de servicio (shared/api): se carga después de
+// la sección 11, que ya le dio al store lo mínimo del navegador.
+const API = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+const F = await v.ssrLoadModule('/src/shared/lib/formato.ts')
+
+// «Por su ESP» (Electrosumergibles): solo las fallas de la propia electrosumergible.
+// Sumada en el campo, es la línea «electrosumergible» del Pareto por tipo del libro.
+let malEsp = 0, ajenoEsp = 0, sinIdentificarFuera = 0
+for (const c of TODOS) for (const per of ['cerrado', 'curso', 'ytd']) {
+  const r = D.rangoDePeriodo(per)
+  const filas = API.pedirPozos(c, r.desde, r.hasta, ctx0)
+  const lb = L.libro([c], r.desde, r.hasta, ctx0)
+  const delLibro = lb.porTipo.find(t => t.tipo === 'electrosumergible')?.bbl ?? 0
+  if (!cerca(filas.reduce((a, x) => a + x.diferidoEsp, 0), delLibro, 1e-9)) { malEsp++; console.log('    ', c, per, filas.reduce((a, x) => a + x.diferidoEsp, 0), delLibro) }
+  ajenoEsp += filas.filter(x => x.pozo.levantamiento !== 'electrosumergible' && x.diferidoEsp > 0).length
+  // Una parada sin identificar del propio pozo no se le carga a su ESP.
+  const ts = L.tramosEntre([c], r.desde, r.hasta, ctx0)
+  for (const x of filas.filter(x => x.pozo.levantamiento === 'electrosumergible')) {
+    const pend = ts.filter(t => t.pozo.id === x.pozo.id && t.causa.equipo === x.pozo.id && t.causa.tipo !== 'electrosumergible').reduce((a, t) => a + t.bbl, 0)
+    if (pend > 0 && x.diferidoEsp > x.diferido - pend + 1e-6) sinIdentificarFuera++
+  }
+}
+comprobar(malEsp === 0, '«Por su ESP»: en cada campo y período, Σ de la columna = la línea «electrosumergible» del Pareto por tipo (la tarjeta de arriba)')
+comprobar(ajenoEsp === 0 && sinIdentificarFuera === 0, '«Por su ESP» no le carga nada a un pozo sin electrosumergible, ni a la ESP las paradas sin identificar o de otra causa del pozo')
+
+// «Mes a mes» con un rango que corta meses: cada mes recortado al rango suma lo
+// mismo que el rango (real, potencial y diferido), como las cifras de arriba.
+for (const campos of [['ceiba'], TODOS]) {
+  const desde = new Date('2026-07-15T00:00:00-05:00'), hasta = R.AHORA
+  const meses = L.serieMensual(campos, ctx0).filter(m => m.desde < hasta && m.hasta > desde)
+  const partes = meses.map(m => L.libro(campos, new Date(Math.max(m.desde.getTime(), desde.getTime())), new Date(Math.min(m.hasta.getTime(), hasta.getTime())), ctx0))
+  const todo = L.libro(campos, desde, hasta, ctx0)
+  const suma = k => partes.reduce((a, b) => a + b[k], 0)
+  comprobar(cerca(suma('real'), todo.real, 1e-9) && cerca(suma('potencial'), todo.potencial, 1e-9) && cerca(suma('diferido'), todo.diferido, 1e-9)
+    && suma('real') < meses.reduce((a, m) => a + m.libro.real, 0),
+    `${campos.length > 1 ? 'portafolio' : campos[0]}, 15-jul a hoy: los meses recortados suman lo del rango (${f(todo.real)} bbl reales); julio entero lo inflaba`)
+}
+
+// Evidencia: una parada que cruza el borde del período no se cuenta entera en
+// los dos lados. Se parte cada parada propia por la mitad: las dos mitades suman
+// sus horas y sus barriles, y las dos dicen que cruzan el borde.
+let partidas = 0, malPartida = 0
+const inicioHistoria = new Date(L.calendario()[0].desde)
+for (const c of TODOS) for (const id of Object.keys(EQ.EQUIPOS).filter(id => BO.esBomba(id) && BO.perfilBomba(id, c))) {
+  for (const m of API.pedirParadas(c, id, ctx0)) {
+    if (m.cargadoA !== m.evento.equipo || m.inicio < inicioHistoria || m.horasParada < 1) continue
+    const mitad = new Date((m.inicio.getTime() + m.fin.getTime()) / 2)
+    const a = API.pedirParadasEnPeriodo(c, id, inicioHistoria, mitad, ctx0).find(x => x.evento.id === m.evento.id)
+    const b = API.pedirParadasEnPeriodo(c, id, mitad, new Date(R.AHORA.getTime() + 1), ctx0).find(x => x.evento.id === m.evento.id)
+    partidas++
+    if (!a || !b || !a.cruzaBorde || !b.cruzaBorde || !cerca(a.horasEnPeriodo + b.horasEnPeriodo, m.horasParada, 1e-9)
+      || !cerca(a.bblEnPeriodo + b.bblEnPeriodo, m.bbl, 1e-9) || a.horasEnPeriodo >= m.horasParada) { malPartida++; console.log('    ', c, id, m.evento.id) }
+  }
+}
+comprobar(partidas > 0 && malPartida === 0, `Evidencia: ${partidas} paradas propias partidas a la mitad; las dos mitades suman sus horas y sus barriles, y cada una dice que cruza el borde`)
+
+// Un °API que llega null es un análisis que falta: Configuración lo dice y nunca pinta «0,0 °API».
+const MED = await v.ssrLoadModule('/src/shared/api/medicion.ts')
+const tApiNulo = MED.textoBanda({ banda: { valor: 0.15, fuente: '', verificable: false }, metrologia: { api: null, apiFuente: 'Laboratorio sin reporte' } })
+const tSinRegistro = MED.textoBanda({ banda: { valor: 0.15, fuente: '', verificable: false }, metrologia: undefined })
+const tCeiba = MED.textoBanda(MED.pedirMedicionOficial('ceiba'))
+comprobar(!/0,0 °API/.test(tApiNulo) && /sin análisis de °API/.test(tApiNulo) && /sin verificar/.test(tApiNulo) && /registro de metrología/.test(tSinRegistro) && /crudo de 19,4 °API/.test(tCeiba),
+  `°API ausente de punta a punta: «${tApiNulo}»; con análisis, «${tCeiba}»`)
+
+// El factor de asignación con la coma del país: con toFixed, «1.008» se leía mil ocho.
+comprobar(F.n3(1.008) === '1,008' && F.n3(0.969) === '0,969' && F.n3(1) === '1,000', 'el factor de asignación sale con coma decimal y tres cifras (1,008; 0,969; 1,000)')
+}
+
+console.log('\n=== 13. Componentes, accesibilidad y contraste (auditoría S5) ===')
+{
+const { readFileSync, existsSync } = await import('node:fs')
+const raiz = RAIZ
+const { createElement: h } = await import('react')
+const { renderToStaticMarkup } = await import('react-dom/server')
+const ST = await v.ssrLoadModule('/src/app/store.ts')
+const API = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+const SES2 = await v.ssrLoadModule('/src/shared/api/sesion.ts')
+const est = () => ({ ...ST.useApp.getState(), ...SES2.sesion() })
+
+// Contraste de los tokens (WCAG 2.2): se leen del CSS, en los dos temas.
+const css = readFileSync(`${raiz}src/index.css`, 'utf8')
+const bloque = sel => { const i = css.indexOf(`${sel}{`); return css.slice(i, css.indexOf('}', i)) }
+const tokens = b => Object.fromEntries([...b.matchAll(/--([\w-]+):(#[0-9a-fA-F]{6})\b/g)].map(m => [m[1], m[2]]))
+const lum = x => { const c = [1, 3, 5].map(i => parseInt(x.slice(i, i + 2), 16) / 255).map(q => q <= 0.03928 ? q / 12.92 : ((q + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] }
+const razon = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
+const temas = { claro: tokens(bloque(':root')), oscuro: tokens(bloque(':root[data-theme="dark"]')) }
+const FONDOS = ['suelo', 'superficie', 'panel', 'panel2', 'elevado']
+const textoMalo = [], formaMala = [], chipMalo = []
+for (const [t, k] of Object.entries(temas)) {
+  for (const tx of ['tinta', 'tinta2', 'tinta3']) for (const f of FONDOS) if (razon(k[tx], k[f]) < 4.5) textoMalo.push(`${t} ${tx}/${f} ${razon(k[tx], k[f]).toFixed(2)}`)
+  // Las formas de prioridad van sobre los paneles y la superficie (no sobre el suelo).
+  for (const fo of ['p1', 'p2', 'p4', 'invalido']) for (const f of ['superficie', 'panel', 'panel2', 'elevado']) if (razon(k[fo], k[f]) < 3) formaMala.push(`${t} ${fo}/${f} ${razon(k[fo], k[f]).toFixed(2)}`)
+  for (const s of ['p1', 'p2', 'p3', 'p4']) if (razon(k.tinta, k[`${s}-f`]) < 4.5) chipMalo.push(`${t} tinta/${s}-f`)
+  // El número dentro de la forma, contra el color de la forma (3:1, es parte del gráfico).
+  for (const s of ['p1', 'p2', 'p4']) if (razon(k['marca-num'], k[s]) < 3) formaMala.push(`${t} número/${s} ${razon(k['marca-num'], k[s]).toFixed(2)}`)
+}
+comprobar(textoMalo.length === 0, `todo texto en tinta, tinta2 y tinta3 da 4,5:1 sobre los cinco fondos, en claro y en oscuro${textoMalo.length ? ': ' + textoMalo.join('; ') : ''}`)
+comprobar(formaMala.length === 0, `las formas de prioridad 1, 2, 4 y el dato inválido dan 3:1 sobre los paneles, y el número de adentro se lee${formaMala.length ? ': ' + formaMala.join('; ') : ''}`)
+comprobar(chipMalo.length === 0 && razon(temas.claro.p3, temas.claro.panel) < 3 && razon(temas.claro['marca-trazo'], temas.claro.p3) >= 3,
+  'el texto de las etiquetas de prioridad va en tinta sobre su fondo, y el cuadrado amarillo (1,6:1 contra el panel) lleva trazo oscuro')
+
+// Las marcas: el cuadrado P3 lleva trazo; la etiqueta no repite la prioridad al lector.
+const PR = await v.ssrLoadModule('/src/shared/ui/Prioridad.tsx'), PRIM = await v.ssrLoadModule('/src/shared/ui/primitivas.tsx')
+const m3 = renderToStaticMarkup(h(PR.MarcaPrioridad, { s: 3 })), chip1 = renderToStaticMarkup(h(PRIM.Severidad_, { s: 1 }))
+comprobar(/stroke="var\(--marca-trazo\)"/.test(m3) && /aria-label="Prioridad 3/.test(m3) && /aria-hidden="true"/.test(chip1) && !/text-\[var\(--p1\)\]/.test(chip1) && chip1.includes('P1 · ALARMA'),
+  'MarcaPrioridad 3 lleva trazo y nombre; la etiqueta «P1 · ALARMA» pinta la forma sin anunciarla dos veces y el texto no va en rojo')
+
+// Tip: alcanzable con teclado y con nombre dentro de un dibujo.
+const TIP = await v.ssrLoadModule('/src/shared/ui/Tip.tsx')
+const g = renderToStaticMarkup(h('svg', null, h(TIP.Tip, { as: 'g', titulo: '2 oct', filas: [['Real', '11.059 bbl']] }, h('rect'))))
+const gb = renderToStaticMarkup(h('svg', null, h(TIP.Tip, { as: 'g', titulo: 'Septiembre', filas: [['Total', '1.234 bbl']], pista: 'Clic para ver este mes', onClick: () => {} }, h('rect'))))
+const div = renderToStaticMarkup(h(TIP.Tip, { titulo: 'Rango', filas: [['Margen', '±5 %']] }, 'texto'))
+comprobar(/role="img"/.test(g) && /aria-label="2 oct; Real: 11.059 bbl"/.test(g) && /tabindex="0"/.test(g) && /role="button"/.test(gb) && /Clic para ver este mes/.test(gb) && /tabindex="0"/.test(div),
+  'un Tip recibe el foco aunque no tenga acción; en un dibujo es imagen (o botón, si hace algo) con el título y las cifras como nombre')
+// …salvo que todo lo suyo ya esté a la vista (una tubería de Planta): sin acción no es parada de Tab, con acción sí.
+const vista = renderToStaticMarkup(h('svg', null, h(TIP.Tip, { as: 'g', aLaVista: true, titulo: 'Agua · P-201B → pozos', filas: [['Caudal ahora', '9.000 bbl/d']] }, h('path'))))
+const vistaClic = renderToStaticMarkup(h('svg', null, h(TIP.Tip, { as: 'g', aLaVista: true, titulo: 'x', filas: [], onClick: () => {} }, h('path'))))
+comprobar(!/tabindex/.test(vista) && /role="img"/.test(vista) && /aria-label="Agua · P-201B → pozos; Caudal ahora: 9.000 bbl\/d"/.test(vista) && /tabindex="0"/.test(vistaClic),
+  'un Tip con todo a la vista y sin acción no recibe el foco (el lector lo sigue leyendo por su nombre); si hace algo, sí')
+
+// El papel promete a quien lo recibe lo que el contrato le da sin sesión: la
+// verificación pública (coincide y fecha), no las cifras del registro completo.
+const MEM = await v.ssrLoadModule('/src/widgets/informe/Membrete.tsx')
+const pie = renderToStaticMarkup(h(MEM.PieDelInforme, { inf: { folio: 'INF-2026-0001', fecha: '2026-10-02T14:00:00-05:00', por: 'Prueba', version: 1, estado: 'publicable', cifras: {}, huella: '0'.repeat(64),
+  formato: 'pdf', titulo: 'x', alcance: 'x', periodo: 'x', campos: ['ceiba'], desde: '2026-09-01T00:00:00-05:00', hasta: '2026-10-01T00:00:00-05:00' } }))
+comprobar(/verificación pública recibe el folio y esta huella y responde solo si coinciden/.test(pie) && /no devuelve cifras/.test(pie) && !/devuelve las cifras registradas/.test(pie),
+  'el pie del informe remite a la verificación pública del folio (coincide y fecha), no promete las cifras del registro, que piden sesión')
+
+// El riel en portafolio: la peor prioridad de los campos, no la del último escogido.
+const PRL = await v.ssrLoadModule('/src/shared/lib/prioridad.ts')
+comprobar(PRL.peorSeveridad([0, 3, 1, 2]) === 1 && PRL.peorSeveridad([0, 3, 2]) === 2 && PRL.peorSeveridad([0, 0]) === 0 && PRL.peorSeveridad([]) === 0,
+  'la marca del portafolio es la prioridad más urgente de sus campos (1 > 2 > 3 > normal)')
+
+// El detalle de un pozo usa la regla de la lista: un pozo que cerró la bomba es gris.
+const POZ = await v.ssrLoadModule('/src/widgets/pozos/estado.ts'), EV = await v.ssrLoadModule('/src/entities/equipo-vivo.ts')
+const filas = API.pedirPozos('ceiba', new Date(L.calendario().at(-1).desde), R.AHORA, ctx0)
+const porBomba = filas.filter(fp => POZ.cerradoPorOtro(fp))
+const distintos = filas.filter(fp => EV.equipoVivo(fp.pozo.id, 'ceiba', ctx0)?.severidad !== POZ.sevPozo(fp)).map(fp => fp.pozo.id)
+comprobar(porBomba.length > 0 && porBomba.every(fp => POZ.sevPozo(fp) === 0 && EV.equipoVivo(fp.pozo.id, 'ceiba', ctx0)?.marcha === 'cerrado-por-otro') && distintos.length === 0,
+  `${porBomba.length} pozos de La Ceiba que cerró la bomba: gris en la lista y en el detalle, con marcha «cerrado por otro»; la ficha y la lista dan la misma prioridad a los ${filas.length}${distintos.length ? ` (difieren ${distintos.join(', ')})` : ''}`)
+
+// Estados por código, no por frase.
+const P201 = EV.equipoVivo('P-201B', 'ceiba', ctx0), P201m = EV.equipoVivo('P-201B', 'morichal', ctx0)
+const sinInstancia = TODOS.flatMap(c => Object.keys(EQ.EQUIPOS).map(id => EV.equipoVivo(id, c, ctx0))).filter(e => e && !e.instrumentado)
+comprobar(P201?.marcha === 'detenido' && P201m?.marcha === 'en-marcha' && sinInstancia.length > 0 && sinInstancia.every(e => e.marcha === 'sin-lectura'),
+  `cada equipo trae su marcha como código (P-201B de La Ceiba detenido, la de Morichal en marcha, ${sinInstancia.length} sin instancia «sin lectura»): el vigía y SAP no leen la frase del estado`)
+const PUB = await v.ssrLoadModule('/src/widgets/diferidos/publicacion.ts')
+const rc = D.rangoDePeriodo('curso'), lbCurso = L.libro(['ceiba'], rc.desde, rc.hasta, ctx0)
+const reescrito = { ...lbCurso, motivos: lbCurso.motivos.map(m => ({ ...m, texto: `Otra redacción del servidor: ${m.codigo}` })) }
+comprobar(lbCurso.motivos.length > 0 && lbCurso.motivos.every(m => m.codigo === 'en-curso') && PUB.publicacion(lbCurso).estado === 'provisional'
+  && PUB.publicacion(reescrito).estado === 'provisional' && I.estadoDelLibro(reescrito) === 'provisional',
+  'el mes en curso es provisional por el código de su motivo: si el servidor redacta distinto la frase, sigue provisional (pantalla e informe)')
+
+// Una parada abierta que todavía no cierra pozos no «lo absorbió todo».
+const BC = await v.ssrLoadModule('/src/widgets/bombas/comun.ts')
+comprobar(BC.tanqueAbierto(8, 4) === 'el tanque todavía absorbe: faltan 4,0 h del colchón' && /ya pasó el colchón previsto/.test(BC.tanqueAbierto(3, 5)),
+  `parada abierta sin pozos cerrados: «${BC.tanqueAbierto(8, 4)}»; si el colchón previsto ya pasó, se dice sin inventar cuándo cierra`)
+
+// Usuarios: el id, el día y el estado los pone el servidor; reactivar devuelve al estado de antes.
+est().setRol('ger')
+const antesN = est().usuarios.length
+const inv = (await est().invitarUsuario({ nombre: 'Lucía Prueba', correo: 'lucia.prueba@operadora.example', rolId: 'sup', campos: ['ceiba', 'morichal'], telefono: '', alertas: false }, 'supervisora de prueba de La Ceiba y Morichal'))
+const lucia = inv.ok ? est().usuarios.find(u => u.id === inv.id) : undefined
+const hist = est().accesos.at(-1)
+comprobar(inv.ok && est().usuarios.length === antesN + 1 && lucia?.estado === 'invitado' && lucia?.desde === '2026-10-02' && /^u\d+$/.test(lucia?.id ?? '')
+  && hist.cambios.some(c => c.startsWith('campos: ')) && hist.cambios.some(c => c.startsWith('WhatsApp: ')),
+  `invitar: el servidor pone el id (${lucia?.id}), el día del reloj y «invitado»; el historial dice con qué campos y qué WhatsApp (${hist?.cambios.join(' · ')})`)
+const sus = lucia && (await est().guardarUsuario({ ...lucia, estado: 'suspendido' }, 'prueba de suspensión antes de entrar'))
+const suspendida = est().usuarios.find(u => u.id === lucia?.id)
+const rea = suspendida && (await est().guardarUsuario({ ...suspendida, estado: 'activo' }, 'prueba de reactivación'))
+comprobar(!!sus?.ok && suspendida?.estado === 'suspendido' && !!rea?.ok && est().usuarios.find(u => u.id === lucia?.id)?.estado === 'invitado',
+  'suspender a quien nunca entró y quitarle la suspensión la devuelve a «invitado», no a «activo»')
+const fantasma = (await est().guardarUsuario({ ...lucia, id: 'u999' }, 'cambio de alguien que no existe'))
+const malCorreo = U.revisarAcceso(est().usuarios, { ...lucia, id: 'nuevo', correo: 'x@' }, est().usuarios.find(u => u.rolId === 'ger').id, '')
+comprobar(!fantasma.ok && fantasma.errores[0].campo === 'general' && malCorreo.some(e => e.campo === 'correo') && malCorreo.some(e => e.campo === 'motivo'),
+  'un PATCH a una persona que no existe se rechaza (invitar es otra llamada) y cada error dice de qué caja es (correo, motivo)')
+
+// WhatsApp: la respuesta lleva el id de quien respondió; el chat compara por id, no por el nombre.
+const resp = est().ctx.respuestas[EV3], operU = U.personaDelRol(est().usuarios, 'oper')
+comprobar(resp && resp.porId === operU?.id, `la respuesta guarda el id de quien respondió (${resp?.porId}) además de «${resp?.por}»`)
+
+// Aviso a SAP: el error de la descripción dice de qué caja es.
+est().setRol('sup')
+const avisoCorto = (await est().enviarAviso({ tipo: 'M1', campoId: 'ceiba', equipo: 'P-201B', descripcion: 'corto', prioridad: 3, parada: false, evidencia: [] }))
+comprobar(!avisoCorto.ok && avisoCorto.campo === 'descripcion', 'un aviso a SAP con una descripción corta se rechaza y dice que el error es de «Qué pasa»')
+
+// Fuentes: WOFF2 sin la cara Light, y cada archivo declarado existe.
+const caras = [...css.matchAll(/url\(\/fonts\/([^)]+)\)/g)].map(m => m[1])
+comprobar(caras.length === 8 && caras.every(c => c.endsWith('.woff2') && existsSync(`${raiz}public/fonts/${c}`)) && !/Light\.|font-weight:300/.test(css)
+  && readFileSync(`${raiz}index.html`, 'utf8').match(/rel="preload"[^>]+\.woff2/g)?.length === 3,
+  `las 8 caras de la marca van en WOFF2 y existen (${caras.length}); la Light no se declara; se precargan las 3 de arriba`)
+}
+
+console.log('\n=== 14. Simulador del registro: peticiones malas, ingesta y semilla (auditoría S6) ===')
+{
+// Una base desechable: la verificación no toca simulador-api/datos/trim.db.
+const { mkdtempSync, rmSync, readFileSync } = await import('node:fs')
+const { tmpdir } = await import('node:os')
+const { join } = await import('node:path')
+const { createServer: servidorHttp } = await import('node:http')
+const { execFileSync } = await import('node:child_process')
+const { DatabaseSync } = await import('node:sqlite')
+const tmp = mkdtempSync(join(tmpdir(), 'trim-verif-'))
+const rutaDb = join(tmp, 'trim.db')
+process.env.TRIM_DB = rutaDb
+const SIM = await import(new URL('../simulador-api/api.mjs', import.meta.url).href)
+const BASE = await import(new URL('../simulador-api/base.mjs', import.meta.url).href)
+SIM.arrancar()
+const srv = servidorHttp((req, res) => { SIM.manejar(req, res).then(h => { if (!h) { res.writeHead(404); res.end() } }) })
+await new Promise(ok => srv.listen(0, '127.0.0.1', ok))
+const url = `http://127.0.0.1:${srv.address().port}`
+const CAP = { 'x-capacidades': 'conector:configurar' }
+const pedir = async (ruta, init = {}) => { const r = await fetch(url + ruta, init); return { estado: r.status, cuerpo: await r.json() } }
+const postear = (ruta, cuerpo) => pedir(ruta, { method: 'POST', headers: { ...CAP, 'content-type': 'application/json' }, body: typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo) })
+
+const malas = [
+  await postear('/api/campos/ceiba/tags/XI-1017/equipo', '{mal'),
+  await postear('/api/campos/ceiba/tags/XI-1017/equipo', 'null'),
+  await pedir('/api/campos/%E0%A4%A/inventario'),
+  await postear('/api/inscripcion', 'null'),
+  await postear('/api/ingesta/nacimiento', '[1]'),
+]
+const sigue = await pedir('/api/salud')
+comprobar(malas.every(r => r.estado === 400 && typeof r.cuerpo.error?.codigo === 'string' && typeof r.cuerpo.error.mensaje === 'string') && sigue.estado === 200,
+  `un JSON roto, un cuerpo null, un % mal formado o un cuerpo que no es objeto dan 400 con el error del contrato ({ error: { codigo, mensaje } }), y el servidor sigue vivo (${malas.map(r => r.estado).join(', ')})`)
+
+// Cada tag que el catálogo tiene conectado en cada campo está en el registro, con su equipo.
+let sinRegistro = [], calculoMal = []
+for (const [campoId, cfg] of Object.entries(PT.CAMPO_PLANTA)) {
+  const ids = new Set([...cfg.tronco, ...cfg.gas, ...cfg.crudo, ...cfg.agua, ...cfg.servicios].flatMap(e => [e.equipo, ...(e.miembros ?? []).map(m => m.equipo)]).filter(Boolean))
+  for (const id of ids) {
+    const eq = EQ.equipoEnCampo(id, campoId)
+    if (!eq?.instrumentado) continue
+    for (const d of eq.dispositivos) {
+      const r = await pedir(`/api/campos/${campoId}/tags/${encodeURIComponent(d.tag)}/procedencia`)
+      if (r.estado !== 200 || r.cuerpo.instrumento.equipo !== id) sinRegistro.push(`${campoId}:${d.tag}`)
+      // La fórmula va solo en el tag que ES un cálculo; lo que mide un instrumento no se «calcula».
+      else if (!!r.cuerpo.calculo !== d.origen.startsWith('calculado')) calculoMal.push(`${campoId}:${d.tag}`)
+    }
+  }
+}
+comprobar(sinRegistro.length === 0, `cada tag conectado de cada campo tiene su nacimiento en la semilla y su equipo${sinRegistro.length ? ` (faltan ${sinRegistro.slice(0, 6).join(', ')})` : ''}`)
+comprobar(calculoMal.length === 0 && (await pedir('/api/campos/ceiba/tags/JI-2011/procedencia')).estado === 404,
+  `la fórmula sale solo en el tag calculado, no en la corriente o la temperatura de una bomba, y la energía por barril ya no está${calculoMal.length ? ` (${calculoMal.slice(0, 4).join(', ')})` : ''}`)
+
+const nac = (campo, gw, dispositivos) => ({ campo, gateway: { id: gw, modelo: 'GRV-EPIC-PR1', serie: 'S', firmware: '3.6.2', enlace: 'starlink', bufferH: 48 }, dispositivos })
+const metrica = (nombre, limite = '< 5', alto = 5) => ({ nombre, tipo: 'Prueba', unidad: '%', limite, bajo: null, alto, cadenciaS: 5, clase: 'continua' })
+const limiteDe = async (campo, tag) => (await pedir(`/api/campos/${campo}/tags/${tag}/procedencia`)).cuerpo.instrumento?.limite?.texto
+
+// Una sola fuente para el límite de cada tag (limites.ts · CONTRATO.md «Límite de cada tag»):
+// la banda que el registro del simulador cita en la procedencia es la del límite del tag en
+// cada tag de cada campo; el vigía proyecta contra la alarma de ese mismo registro, y VI-2011
+// dice 3,9 en los tres lugares (antes el simulador decía 4,5).
+const LIM = await v.ssrLoadModule('/src/entities/limites.ts')
+const VGl = await v.ssrLoadModule('/src/entities/vigia.ts')
+const sinNulo = x => (Number.isFinite(x) ? x : null)
+const desacuerdos = []
+for (const n of JSON.parse(readFileSync(new URL('../simulador-api/datos/nacimientos.json', import.meta.url), 'utf8')).filter(n => n.gateway.id.endsWith('-01')))
+  for (const m of n.dispositivos.flatMap(d => d.metricas)) {
+    const l = LIM.limiteDe(n.campo, m.nombre)
+    if (!l || (m.limite ?? '—') !== l.texto || m.bajo !== sinNulo(l.normal?.[0] ?? null) || m.alto !== sinNulo(l.normal?.[1] ?? null)) desacuerdos.push(`${n.campo}:${m.nombre} (${m.limite} contra ${l?.texto})`)
+  }
+const senalesBomba = TODOS.flatMap(c => ['P-201B', 'MPP-301'].map(e => BO.perfilBomba(e, c)).filter(Boolean).flatMap(p => VGl.senalesDe(p).map(s => ({ c: p.campoId, s }))))
+const ajenas = senalesBomba.filter(({ c, s }) => s.alarma !== LIM.limiteDe(c, s.tag)?.alarma || JSON.stringify(s.normal) !== JSON.stringify(LIM.limiteDe(c, s.tag)?.normal))
+const vi = LIM.limiteDe('ceiba', 'VI-2011'), viProc = (await pedir('/api/campos/ceiba/tags/VI-2011/procedencia')).cuerpo.instrumento?.limite
+comprobar(desacuerdos.length === 0 && senalesBomba.length > 20 && ajenas.length === 0 && !('alarmas' in BO.perfilBomba('P-201B', 'ceiba'))
+  && vi.alarma.alta === 3.9 && vi.normal[1] === 3.9 && viProc?.alto === 3.9 && viProc?.texto === vi.texto && /ISA-18\.2/.test(vi.firma.alarma) && /DBIRTH/.test(vi.firma.normal),
+  `el límite de cada tag sale de una sola fuente: la procedencia del simulador cita la misma banda en todos los tags (${desacuerdos.slice(0, 3).join('; ') || 'ninguno distinto'}), las ${senalesBomba.length} señales de bombas toman banda y alarma de ella (${ajenas.length} no) y VI-2011 dice < 3,9 con alarma 3,9 (API 610), cada número con quién lo firma`)
+
+// Nacimiento a medias: dice qué falta y no deja nada escrito.
+const roto = await postear('/api/ingesta/nacimiento', nac('ceiba', 'GW-PRUEBA', [
+  { nombre: 'P-201B', fuente: { protocolo: 'opc-ua', reloj: 'el PLC' }, metricas: [metrica('ZZ-1')] },
+  { nombre: 'P-201B', fuente: { protocolo: 'modbus-tcp' }, metricas: [metrica('ZZ-2')] }]))
+comprobar(roto.estado === 400 && roto.cuerpo.error.mensaje.includes('dispositivos[1].fuente.reloj') && (await pedir('/api/campos/ceiba/tags/ZZ-1/procedencia')).estado === 404
+  && !(await pedir('/api/campos/ceiba/inventario')).cuerpo.gateways.some(g => g.id === 'GW-PRUEBA'),
+  'un nacimiento mal formado dice qué campo falta (dispositivos[1].fuente.reloj) y no deja nada escrito: ni el gateway ni el primer tag')
+
+// Un gateway de Morichal no se apropia de los tags de La Ceiba.
+const limAntes = await limiteDe('ceiba', 'LT-2012')
+const ajenoCampo = await postear('/api/ingesta/nacimiento', nac('ceiba', 'EPIC-MORICHAL-02', [{ nombre: 'P-201B', fuente: { protocolo: 'opc-ua', reloj: 'el PLC' }, metricas: [metrica('LT-2012', '< 999', 999)] }]))
+const ajenoTag = await postear('/api/ingesta/nacimiento', nac('ceiba', 'GW-INTRUSO', [{ nombre: 'P-201B', fuente: { protocolo: 'opc-ua', reloj: 'el PLC' }, metricas: [metrica('LT-2012', '< 999', 999)] }]))
+const proc = (await pedir('/api/campos/ceiba/tags/LT-2012/procedencia', { headers: CAP })).cuerpo
+const rechazos = BASE.base().prepare('select count(*) as n from rechazo').get().n
+comprobar(ajenoCampo.estado === 403 && ajenoTag.estado === 409 && proc.instrumento.limite.texto === limAntes && proc.tecnico.gateway.id === 'EPIC-CEIBA-01' && rechazos === 2
+  && !(await pedir('/api/campos/ceiba/inventario')).cuerpo.gateways.some(g => g.id === 'GW-INTRUSO'),
+  `un gateway de otro campo (403) o uno nuevo que declara un tag ajeno (409) no le cambia límite ni fuente al tag de custodia, y los dos rechazos quedan registrados (${ajenoCampo.estado}, ${ajenoTag.estado})`)
+
+// Re-nacimiento: el mapeo que hizo una persona sigue, y lo que cambió queda en el historial.
+const skid = JSON.parse(readFileSync(new URL('../simulador-api/datos/nacimientos.json', import.meta.url), 'utf8')).find(n => n.gateway.id === 'EPIC-CEIBA-02')
+const tagSkid = skid.dispositivos[0].metricas[0].nombre
+const asociado = await postear(`/api/campos/ceiba/tags/${tagSkid}/equipo`, { equipo: 'V-101', origen: 'manual' })
+const otraVez = structuredClone(skid); otraVez.dispositivos[0].metricas[0].limite = '30 – 70'
+const renac = await postear('/api/ingesta/nacimiento', otraVez)
+const trasRenacer = (await pedir(`/api/campos/ceiba/tags/${tagSkid}/procedencia`)).cuerpo.instrumento
+const hist = BASE.base().prepare('select limite_texto from historial_tag where tag_id = ?').all(`ceiba:${tagSkid}`)
+comprobar(asociado.estado === 200 && renac.estado === 200 && trasRenacer.mapeo === 'manual' && trasRenacer.equipo === 'V-101'
+  && trasRenacer.limite.texto === '30 – 70' && hist.length === 1 && hist[0].limite_texto === skid.dispositivos[0].metricas[0].limite,
+  `una reconexión del borde (nuevo NBIRTH) no deshace la asociación manual de ${tagSkid}, y el límite que cambió deja el anterior en el historial`)
+
+// Un campo sin borde todavía: 0 por asociar, no null. Un campo que no existe: 404.
+BASE.base().prepare("insert into campo (id, nombre) values ('nuevo', 'Campo nuevo')").run()
+const invNuevo = await pedir('/api/campos/nuevo/inventario')
+comprobar(invNuevo.estado === 200 && invNuevo.cuerpo.tags.total === 0 && invNuevo.cuerpo.tags.pendientes === 0 && (await pedir('/api/campos/rubiales/inventario')).estado === 404
+  && (await pedir('/api/campos/rubiales/tags/pendientes')).estado === 404,
+  'el inventario de un campo sin tags da 0 por asociar (no null) y el de un campo que no existe da 404')
+await new Promise(ok => srv.close(ok))
+
+// La semilla cambió: el arranque reconstruye la base y lo dice, en vez de servir lo viejo.
+const vieja = new DatabaseSync(rutaDb)
+vieja.exec("update semilla set huella = 'otra'; update tag set limite_texto = 'VIEJO' where id = 'ceiba:LT-2012'")
+vieja.close()
+const salida = execFileSync(process.execPath, ['--no-warnings', '--input-type=module', '-e',
+  `const { arrancar } = await import(${JSON.stringify(new URL('../simulador-api/api.mjs', import.meta.url).href)}); arrancar()`],
+  { env: { ...process.env, TRIM_DB: rutaDb }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+const releida = new DatabaseSync(rutaDb)
+const limite = releida.prepare("select limite_texto from tag where id = 'ceiba:LT-2012'").get()?.limite_texto
+releida.close()
+comprobar(limite === limAntes && /registro cargado desde la semilla/.test(salida),
+  `con otra semilla u otro esquema la base se reconstruye al arrancar (LT-2012 vuelve a «${limite}»)`)
+rmSync(tmp, { recursive: true, force: true })
+delete process.env.TRIM_DB
+
+// Las salidas de referencia (referencia/) son las que un backend en otro
+// lenguaje compara por HTTP: si el motor cambió, se regeneran a propósito.
+let refSalida = '', refBien = true
+try { refSalida = execFileSync(process.execPath, [fileURLToPath(new URL('./referencia.mjs', import.meta.url)), 'comprobar'], { encoding: 'utf8' }) }
+catch (e) { refBien = false; refSalida = String(e.stdout ?? e.message) }
+comprobar(refBien, `las salidas de referencia de los endpoints calculados coinciden con el motor (${refSalida.trim().split('\n').at(-1)}${refBien ? '' : '; si el cambio es a propósito: npm run referencia'})`)
+}
+
+console.log('\n=== 14. Una sola entrada de datos, capas y cachés (auditoría S7a) ===')
+{
+const { readFileSync, readdirSync, statSync } = await import('node:fs')
+const { join } = await import('node:path')
+const { execFileSync } = await import('node:child_process')
+
+// La costura se carga en Node sin navegador: antes importaba el estado de la
+// aplicación, que registraba oyentes del navegador al cargarse, y no había cómo
+// probarla ni compararla con un backend. Se corre en un proceso aparte para
+// que no la ayuden los objetos del navegador que la sección 11 simuló aquí.
+const hijo = `
+const { createServer } = await import('vite')
+const raiz = process.cwd() + '/'
+const navegador = ['window', 'document', 'location', 'addEventListener', 'matchMedia', 'localStorage'].filter(k => k in globalThis)
+const v = await createServer({ root: raiz, configFile: false, resolve: { alias: { '@': raiz + 'src' } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
+try {
+  const ins = await v.ssrLoadModule('/src/entities/insumos.ts')
+  const antes = ins.hayInsumos()
+  ins.instalarInsumos((await v.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
+  const m = {}
+  for (const n of ['diferidos', 'equipos', 'medicion', 'calendario', 'predicciones', 'sap', 'mensajes', 'usuarios', 'sesion', 'informes', 'fuente'])
+    m[n] = await v.ssrLoadModule('/src/shared/api/' + n + '.ts')
+  const ctx = m.sesion.sesion().ctx, desde = new Date('2026-09-01T00:00:00-05:00'), hasta = new Date('2026-10-01T00:00:00-05:00')
+  console.log(JSON.stringify({ navegador, antes, fuente: m.fuente.FUENTE,
+    pozos: m.diferidos.pedirPozos('ceiba', desde, hasta, ctx).reduce((a, f) => a + f.diferido, 0),
+    esp: m.diferidos.pedirFlotaEsp(['ceiba', 'morichal'], desde, hasta, ctx).length,
+    bombas: m.equipos.pedirBombas(['ceiba', 'morichal', 'guacamayo'], desde, hasta, ctx).map(b => b.clave),
+    libro: m.diferidos.pedirLibro({ campos: ['ceiba'], desde, hasta }, ctx).diferido }))
+} finally { await v.close() }
+`
+let enNode, errorNode = ''
+try { enNode = JSON.parse(execFileSync(process.execPath, ['--no-warnings', '--input-type=module', '-e', hijo], { cwd: RAIZ, encoding: 'utf8' }).trim().split('\n').at(-1)) }
+catch (e) { errorNode = String(e.stderr ?? e.message).slice(0, 400) }
+const sepS7 = { desde: new Date('2026-09-01T00:00:00-05:00'), hasta: new Date('2026-10-01T00:00:00-05:00') }
+const API7 = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+const EQ7 = await v.ssrLoadModule('/src/shared/api/equipos.ts')
+const ctx7 = L.contextoInicial()
+comprobar(!!enNode && enNode.navegador.length === 0 && enNode.antes === false && enNode.fuente === 'demo'
+  && cerca(enNode.libro, L.libro(['ceiba'], sepS7.desde, sepS7.hasta, ctx7).diferido, 1e-9)
+  && cerca(enNode.pozos, API7.pedirPozos('ceiba', sepS7.desde, sepS7.hasta, ctx7).reduce((a, f) => a + f.diferido, 0), 1e-9),
+  `la costura (src/shared/api, 11 módulos) se carga y responde en Node sin navegador, con los insumos instalados a mano (${errorNode || `${enNode?.bombas.length} bombas, ${enNode?.esp} electrosumergibles`})`)
+
+// Ninguna pantalla, widget ni el estado de la aplicación importa datos de
+// demostración ni insumos; solo la costura los carga (fuente.ts), y con import dinámico.
+const archivos = d => readdirSync(d).flatMap(n => { const r = join(d, n); return statSync(r).isDirectory() ? archivos(r) : /\.tsx?$/.test(n) ? [r] : [] })
+const fuentes = archivos(join(RAIZ, 'src'))
+const conDatos = fuentes.filter(f => !f.includes(`${join('entities', 'datos')}`) && /from '@\/entities\/datos|import\('@\/entities\/datos|from '\.\/datos\//.test(readFileSync(f, 'utf8')))
+const dinamico = /import\('@\/entities\/datos'\)/.test(readFileSync(join(RAIZ, 'src/shared/api/fuente.ts'), 'utf8'))
+comprobar(conDatos.length === 1 && conDatos[0].endsWith(join('shared', 'api', 'fuente.ts')) && dinamico,
+  `los datos de demostración entran por un solo lugar, shared/api/fuente.ts, con import dinámico (${conDatos.map(f => f.slice(RAIZ.length)).join(', ')})`)
+const deUi = fuentes.filter(f => /src\/(pages|widgets|app)\//.test(f) || /src\/App\.tsx$/.test(f))
+const llamanMotor = deUi.filter(f => /\b(libro|serieMensual|riesgoAhora|estadoCampo|historialDeEquipo|eventosCargadosA|diferidoDeEquipo|equipoVivo|caudalesAhora|registroDePredicciones|fallasVistas|historiaSap|flotaDe|catalogoDe|perfilBomba|pozosDe|bandaDe|causasSugeridas|identidadSap|repuestosDe|registrarCifras)\(/.test(readFileSync(f, 'utf8').replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')))
+comprobar(llamanMotor.length === 0, `ninguna pantalla, widget ni el estado llama al motor para pedir datos (${llamanMotor.map(f => f.slice(RAIZ.length)).join(', ') || 'todo pasa por shared/api'})`)
+const capas = fuentes.filter(f => /src\/(shared|entities)\//.test(f) && /from '@\/(app|pages|widgets)\//.test(readFileSync(f, 'utf8')))
+comprobar(capas.length === 0, `shared/ y entities/ no importan de app/, pages/ ni widgets/ (${capas.map(f => f.slice(RAIZ.length)).join(', ') || 'ninguno'})`)
+
+// Las vistas que se movieron a la costura dan los mismos números del libro.
+const lbSep = L.libro(TODOS, sepS7.desde, sepS7.hasta, ctx7)
+const delLibro = (c, e) => lbSep.porEquipo.find(x => x.campoId === c && x.equipo === e)?.bbl ?? 0
+const bombas7 = EQ7.pedirBombas(TODOS, sepS7.desde, sepS7.hasta, ctx7)
+comprobar(bombas7.length > 0 && bombas7.every(b => !b.perfil || cerca(b.periodo.bbl, delLibro(b.campo.id, b.eq.id), 1e-9)),
+  `Bombas (GET /api/bombas): lo cargado a cada una en septiembre es lo del Pareto por equipo del libro (${bombas7.length} bombas)`)
+const ficha = EQ7.pedirFichaEquipo('ceiba', 'P-201B', sepS7.desde, sepS7.hasta, ctx7)
+const tsFicha = L.diferidoDeEquipo('ceiba', 'P-201B', sepS7.desde, sepS7.hasta, ctx7)
+comprobar(!!ficha && cerca(ficha.periodo.bbl, delLibro('ceiba', 'P-201B'), 1e-9) && ficha.periodo.usd === L.valorDeTramos(tsFicha.tramos, ctx7)
+  && ficha.hist === L.historialDeEquipo('ceiba', 'P-201B', ctx7) && EQ7.pedirFichaEquipo('ceiba', 'NO-EXISTE', sepS7.desde, sepS7.hasta, ctx7) === undefined,
+  'la ficha ejecutiva (GET …/equipos/:equipo/ficha) da los barriles y el dinero del libro, la misma historia de fallas, y nada para un equipo que no está en el campo')
+const flota = EQ7.pedirConfiabilidad(TODOS, ctx7)
+comprobar(flota.length > 0 && flota.every(e => e.h === L.historialDeEquipo(e.campoId, e.equipo, ctx7)),
+  `Confiabilidad (GET /api/confiabilidad): ${flota.length} equipos de alto impacto en un pedido, cada uno con la historia del libro`)
+const esp7 = API7.pedirFlotaEsp(TODOS, sepS7.desde, sepS7.hasta, ctx7)
+comprobar(esp7.length > 0 && esp7.every(x => x.historial === L.historialDeEquipo(x.fila.pozo.campoId, x.fila.pozo.id, ctx7) && x.fila.pozo.levantamiento === 'electrosumergible'),
+  `Electrosumergibles (GET /api/electrosumergibles): ${esp7.length} pozos, solo con electrosumergible y con su historia del libro`)
+
+// Cachés del motor: los mismos resultados que sin caché, y una sola cuenta por contexto.
+const ctxFresco = { config: ctx7.config, respuestas: { ...ctx7.respuestas } }
+comprobar(JSON.stringify(D.riesgoAhora(TODOS, ctx7)) === JSON.stringify(D.riesgoAhora(TODOS, ctxFresco))
+  && JSON.stringify(D.riesgoAhora(['morichal', 'ceiba'], ctx7)) === JSON.stringify(D.riesgoAhora(['morichal', 'ceiba'], ctxFresco)),
+  'el riesgo de varios campos, armado con lo guardado de cada campo, es el mismo que calculado de cero')
+comprobar(D.estadoCampo('ceiba', ctx7) === D.estadoCampo('ceiba', ctx7) && JSON.stringify(D.estadoCampo('ceiba', ctx7)) === JSON.stringify(D.estadoCampo('ceiba', ctxFresco)),
+  'el estado de un campo se calcula una vez por contexto (el riel, la cabecera y la pantalla lo comparten) y da lo mismo que de cero')
+let malIndice = 0
+for (const c of TODOS) {
+  if (JSON.stringify(P.pozosDe(c)) !== JSON.stringify(P.todosLosPozos().filter(p => p.campoId === c))) malIndice++
+  for (const p of P.pozosDe(c)) {
+    if (JSON.stringify(P.eventosDePozo(c, p.id)) !== JSON.stringify(P.eventosPozos().filter(e => e.campoId === c && e.pozo === p.id))) malIndice++
+    if (P.pozoDe(c, p.id) !== p) malIndice++
+    for (const t of [Date.parse('2025-10-15T00:00:00-05:00'), Date.parse('2026-06-01T00:00:00-05:00'), R.AHORA.getTime()]) {
+      let u; for (const x of p.pruebas) if (new Date(x.fecha).getTime() <= t) u = x
+      if (P.pruebaEn(p, t) !== (u ?? p.pruebas[0])) malIndice++
+    }
+  }
+  for (const id of ['P-201B', 'MPP-301']) if (JSON.stringify(B.paradasDe(id, c)) !== JSON.stringify(B.eventosBomba().filter(e => e.equipo === id && e.campoId === c))) malIndice++
+}
+comprobar(malIndice === 0, 'los índices por campo, pozo y bomba dan lo mismo que recorrer los insumos enteros (pozos, eventos, prueba vigente y paradas)')
+const banda1 = L.bandaDe('ceiba')
+comprobar(banda1 === L.bandaDe('ceiba') && L.fiscalPromedio('ceiba') === (() => { const m = [...P.produccionDiaria()].reverse().find(x => x.campoId === 'ceiba' && x.publicado); const vs = m.dias.filter(v => typeof v === 'number'); return vs.reduce((a, b) => a + b, 0) / vs.length })(),
+  'la banda de asignación se calcula una vez por campo y el promedio fiscal es el del último mes publicado, sin copiar la producción')
+
+// Reglas del motor que no dependen del id ni del tag del demo: el tipo de causa
+// de un servicio y el computador fiscal salen del registro del equipo.
+const motorTxt = ['diferido.ts', 'equipo-vivo.ts', 'causa-senal.ts'].map(n => readFileSync(join(RAIZ, 'src/entities', n), 'utf8').replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')).join('\n')
+const literales = ['K-101', 'SE-2', 'C-401', 'LACT-01', 'V-101', 'H-302', 'TK-102', 'FQI-0101', 'P-201B', 'MPP-301', 'LSH-2013'].filter(id => motorTxt.includes(`'${id}'`))
+const servicios = Object.values(EQ.EQUIPOS).filter(e => e.servicio)
+comprobar(literales.length === 0 && servicios.length === 7,
+  `las reglas del motor (causa, riesgo, equipo de hoy) no nombran equipos ni tags del demo (${literales.join(', ') || 'ninguno'}); el tipo de servicio va en el registro de ${servicios.length} equipos`)
+const lact = EVV.equipoVivo('LACT-01', 'morichal', ctx7)
+const serieFiscal = L.fiscalUltimosDias('morichal', 12)
+comprobar(JSON.stringify(lact.dispositivos.find(d => d.tag === EQ.EQUIPOS['LACT-01'].fiscal).serie.valores) === JSON.stringify(serieFiscal),
+  'el computador de flujo del punto oficial (marcado `fiscal` en el registro) lleva la serie del fiscal de cada día, la del libro')
+const PLAN = await v.ssrLoadModule('/src/entities/planta.ts')
+comprobar(!Object.hasOwn(PLAN.CAMPO_PLANTA, 'campo-nuevo') && /Object\.hasOwn\(planta, campoId\) \? planta\[campoId\] : undefined/.test(readFileSync(join(RAIZ, 'src/app/store.ts'), 'utf8')),
+  'un campo sin esquema de planta registrado no recibe la planta de La Ceiba: usePlanta da undefined y la pantalla muestra el hueco')
+}
+
+
+console.log('\n=== 15. Costura asíncrona, contrato y escrituras (auditoría S7b) ===')
+{
+const { readFileSync, readdirSync } = await import('node:fs')
+const { join } = await import('node:path')
+// Las formas JSON de cada endpoint y la fuente http se prueban en
+// scripts/verificar-contrato.mjs; aquí, lo que cambió del dominio y del demo.
+const RG = await v.ssrLoadModule('/src/entities/reglas.ts')
+const E = await v.ssrLoadModule('/src/shared/api/escrituras.ts')
+const SES3 = await v.ssrLoadModule('/src/shared/api/sesion.ts')
+const API = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+const EQS = await v.ssrLoadModule('/src/shared/api/equipos.ts')
+const CALS = await v.ssrLoadModule('/src/shared/api/calendario.ts')
+const CON = await v.ssrLoadModule('/src/shared/api/consulta.ts')
+const CTO = await v.ssrLoadModule('/src/shared/api/contrato.ts')
+
+// Los umbrales de lo que entra a mano son UNO, en entities/reglas.ts: la
+// pantalla, el servidor del demo y el contrato dicen lo mismo.
+const s0 = SES3.sesion(), nVersiones = s0.versiones.length
+const firmaOk = await E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...s0.ctx.config, empresa: `${s0.ctx.config.empresa} ` + 'x' }, motivo: 'ok', base: s0.versiones.at(-1).version })
+comprobar(RG.MOTIVO_MINIMO === 5 && RG.NOMBRE_MINIMO === 3 && RG.TEXTO_LIBRE_MINIMO === 8 && !firmaOk.ok && /Falta el motivo/.test(firmaOk.error) && SES3.sesion().versiones.length === nVersiones,
+  `una firma con motivo «ok» se rechaza (motivo de ${RG.MOTIVO_MINIMO} o más) y no deja versión`)
+const ger = U.personaDelRol(s0.usuarios, 'ger')
+const nuevaP = { id: 'nuevo-x', nombre: 'Ana Prueba', correo: 'ana.prueba.reglas@operadora.example', rolId: 'sup', campos: ['ceiba'], estado: 'activo', desde: '2026-10-02', alertas: false }
+const motivoCorto = U.revisarAcceso(s0.usuarios, nuevaP, ger.id, 'abcd').map(e => e.campo), motivoJusto = U.revisarAcceso(s0.usuarios, nuevaP, ger.id, 'abcde').map(e => e.campo)
+const nombreCorto = U.revisarAcceso(s0.usuarios, { ...nuevaP, nombre: 'Al' }, ger.id, 'motivo suficiente').map(e => e.campo)
+comprobar(motivoCorto.includes('motivo') && !motivoJusto.includes('motivo') && nombreCorto.includes('nombre'),
+  'un cambio de acceso pide motivo de 5 o más y nombre de 3 o más, con los mismos umbrales')
+const persona = s0.usuarios.find(u => u.alertas && u.estado === 'activo' && (u.campos === 'todos' || u.campos.includes('ceiba')))
+const preguntaAbierta = API.pedirPreguntas(['ceiba'], s0.ctx).find(p => p.pide && !s0.ctx.respuestas[p.id])
+const MSJ3 = await v.ssrLoadModule('/src/entities/mensajes.ts')
+const cero7 = persona && preguntaAbierta && await E.recibirWhatsapp({ evento: preguntaAbierta.id, campoId: 'ceiba', equipo: preguntaAbierta.equipo, usuarioId: persona.id, opcion: MSJ3.OTRA, texto: 'siete c' })
+comprobar(!!cero7 && !cero7.ok && /al menos una frase corta/.test(cero7.error) && !SES3.sesion().ctx.respuestas[preguntaAbierta.id],
+  'por WhatsApp, «0» con un texto de 7 caracteres se rechaza (8 o más) y la parada sigue sin responder')
+const literales = ['src/app', 'src/pages', 'src/widgets', 'src/shared/api'].flatMap(d => readdirSync(join(RAIZ, d), { recursive: true }).filter(f => /\.tsx?$/.test(f))
+  .filter(f => /\.trim\(\)\.length\s*[<>]=?\s*\d/.test(readFileSync(join(RAIZ, d, f), 'utf8'))).map(f => `${d}/${f}`))
+comprobar(literales.length === 0, `ninguna pantalla, acción ni escritura escribe un umbral de texto a mano (${literales.join(', ') || 'todas usan entities/reglas.ts'})`)
+
+// El esquema de planta se cambia por OPERACIÓN, con las reglas del servidor en el motor.
+const PLA = await v.ssrLoadModule('/src/entities/planta.ts')
+const cfgC = SES3.sesion().plantas.ceiba, grupoC = ['tronco', 'gas', 'crudo', 'agua', 'servicios'].flatMap(t => cfgC[t]).find(e => e.miembros?.length)
+const yaC = grupoC.miembros[0]
+const dupC = PLA.aplicarCambioPlanta(cfgC, { tipo: 'agregar-miembro', grupo: grupoC.id, miembro: { id: yaC.id, etiqueta: yaC.id } })
+const sinC = PLA.aplicarCambioPlanta(cfgC, { tipo: 'quitar-elemento', tren: 'gas', id: 'NO-ESTA' })
+const okC = PLA.aplicarCambioPlanta(cfgC, { tipo: 'agregar-miembro', grupo: grupoC.id, miembro: { id: 'LC-REGLA', etiqueta: 'LC-REGLA' } })
+const tieneRegla = c => ['tronco', 'gas', 'crudo', 'agua', 'servicios'].some(t => c[t].some(e => e.miembros?.some(m => m.id === 'LC-REGLA')))
+comprobar('error' in dupC && 'error' in sinC && !('error' in okC) && /agregó LC-REGLA/.test(okC.texto) && tieneRegla(okC.planta) && cfgC === SES3.sesion().plantas.ceiba && !tieneRegla(cfgC),
+  'aplicarCambioPlanta rechaza un id repetido y un elemento que no está, y aplica el cambio sin tocar la planta de la sesión')
+
+// La serie mensual va sin los tramos de cada mes, con las mismas cifras.
+const serieApi = API.pedirSerie(TODOS, ctx0), serieMotor = L.serieMensual(TODOS, ctx0)
+comprobar(serieApi.length === serieMotor.length && serieApi.every((m, i) => !('tramos' in m.libro) && !('porPozo' in m.libro) && !('preguntas' in m.libro) && !('custodia' in m.libro)
+  && m.libro.diferido === serieMotor[i].libro.diferido && m.libro.real === serieMotor[i].libro.real && m.libro.meta.diferido === serieMotor[i].libro.meta.diferido && m.desde.getTime() === serieMotor[i].desde.getTime()),
+  'la serie mensual de la costura trae las cifras de cada mes del libro, sin sus tramos, detalle por pozo, preguntas ni custodia')
+
+// El estado de los campos va por lote, en el orden pedido: el riel y la cabecera hacen un pedido.
+const lote = API.pedirEstadoCampos(['zarza', 'ceiba'], ctx0)
+comprobar(lote.map(e => e.campoId).join() === 'zarza,ceiba' && lote[1] === API.pedirEstadoCampo('ceiba', ctx0),
+  'GET /api/vistas/estado?campos= devuelve un estado por campo, en el orden pedido, el mismo de cada campo')
+
+// El catálogo (GET /api/catalogo) es la única fuente de los datos fijos del campo.
+comprobar(TODOS.every(c => EQS.pedirPerfilesBomba(c).map(p => p.equipo).join() === Object.keys(EQ.EQUIPOS).filter(BO.esBomba).filter(id => BO.perfilBomba(id, c)).join())
+  && CALS.pedirCalendario().map(m => m.mes).join() === L.calendario().map(m => m.mes).join() && EQS.pedirCatalogoDeDanos('ceiba', 'P-201B')?.clase === CAT.catalogoDe('ceiba', 'P-201B')?.clase
+  && EQS.pedirPerfilesBomba('campo-nuevo').length === 0,
+  'el catálogo del campo (perfiles de bombas, calendario, catálogo de daños) dice lo mismo que el motor, y un campo sin registro no trae nada')
+
+// La caché de consultas: la misma consulta con el mismo contexto es el mismo
+// objeto (una vez para la cabecera, el riel y la pantalla); otro contexto, otra entrada.
+const qS = { campos: ['ceiba'], desde: new Date('2026-09-01T00:00:00-05:00'), hasta: new Date('2026-10-01T00:00:00-05:00') }
+const l1 = await API.traerLibro(qS, ctx0), l2 = await API.traerLibro(qS, ctx0), l3 = await API.traerLibro(qS, { ...ctx0 })
+comprobar(l1 === l2 && l3 !== l1 && l3.diferido === l1.diferido && CON.versionDe(ctx0) === CON.versionDe(ctx0) && CON.versionDe({ ...ctx0 }) !== CON.versionDe(ctx0)
+  && CTO.urlDe(CTO.DIFERIDOS, qS) === CTO.urlDe(CTO.DIFERIDOS, { hasta: qS.hasta, desde: qS.desde, campos: ['ceiba'] }),
+  'la misma consulta con el mismo contexto sale de la caché (mismo objeto); un contexto nuevo es otra entrada; la clave no depende del orden de los parámetros')
+}
+
+console.log('\n=== 16. Las escrituras se limitan a los campos de la persona (auditoría S8, CONTRATO.md) ===')
+{
+const E = await v.ssrLoadModule('/src/shared/api/escrituras.ts')
+const SES = await v.ssrLoadModule('/src/shared/api/sesion.ts')
+const API = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+
+// camposTocados: lo que el 403 por campo revisa al firmar la configuración.
+const base = SES.sesion().ctx.config
+const ult = base.campos.morichal.metas.at(-1)
+const otraMeta = C.conTramo(base, 'morichal', { ...ult, desde: '2026-11-01', produccionBpd: ult.produccionBpd + 100 })
+const tq = base.tanques.find(t => t.campoId === 'ceiba')
+const tanqueMovido = { ...structuredClone(base), tanques: base.tanques.map(t => (t === tq ? { ...t, campoId: 'morichal' } : t)) }
+comprobar(C.camposTocados(base, otraMeta).join() === 'morichal' && C.camposTocados(base, tanqueMovido).join() === 'ceiba,morichal'
+  && C.camposTocados(base, { ...structuredClone(base), empresa: 'Otra empresa' }).length === 0 && C.camposTocados(base, structuredClone(base)).length === 0,
+  'camposTocados: una meta toca su campo; un tanque que cambia de campo toca los dos; el membrete y una copia idéntica no tocan ninguno')
+
+// Un gerente con solo La Ceiba no firma una meta de Morichal (403), y no queda versión.
+const s0 = SES.sesion(), ger = U.personaDelRol(s0.usuarios, 'ger')
+SES.cambiarSesion({ usuarios: s0.usuarios.map(u => (u.id === ger.id ? { ...u, campos: ['ceiba'] } : u)) })
+const firmaAjena = await E.firmarConfiguracion({ rolId: 'ger' }, { config: otraMeta, motivo: 'meta de noviembre', base: s0.versiones.at(-1).version })
+const sinVersion = SES.sesion().versiones.length === s0.versiones.length
+SES.cambiarSesion({ usuarios: s0.usuarios })
+comprobar(!firmaAjena.ok && /No tiene asignado Morichal/.test(firmaAjena.error) && sinVersion,
+  'POST /api/configuracion: quien no tiene asignado un campo no firma lo de ese campo, aunque tenga la capacidad (403), y no queda versión')
+
+// Responder: el campo sale del evento del PLC, no del cuerpo.
+const ajena = API.pedirPreguntas(['morichal'], s0.ctx).find(p => p.pide && !s0.ctx.respuestas[p.id])
+const disfrazada = ajena && await E.responderParada({ rolId: 'sup' }, { evento: ajena.id, campoId: 'ceiba', equipo: ajena.equipo, texto: 'Se encontró la línea de flujo rota' })
+const directa = ajena && await E.responderParada({ rolId: 'sup' }, { evento: ajena.id, campoId: 'morichal', equipo: ajena.equipo, texto: 'Se encontró la línea de flujo rota' })
+const inexistente = await E.responderParada({ rolId: 'sup' }, { evento: 'NO-EXISTE-1', campoId: 'ceiba', equipo: 'LC-14', texto: 'Se encontró la línea de flujo rota' })
+comprobar(!!ajena && !disfrazada.ok && /no es de ese campo/.test(disfrazada.error) && !directa.ok && /no tiene asignado/.test(directa.error)
+  && !inexistente.ok && /no está en el registro/.test(inexistente.error) && !SES.sesion().ctx.respuestas[ajena.id],
+  'POST /api/paradas/:evento/respuesta: una parada de Morichal no la responde quien solo tiene La Ceiba, ni cambiando el campo del cuerpo; un evento que no existe no se responde')
+
+// Analizar: el cuerpo no trae campo; sale del evento. Confiabilidad no tiene El Palmar ni La Zarza.
+const evAjeno = B.eventosBomba().find(e => e.campoId === 'zarza' || e.campoId === 'palmar') ?? P.eventosPozos().find(e => e.campoId === 'zarza' || e.campoId === 'palmar')
+const analisisAjeno = await E.completarAnalisis({ rolId: 'conf' }, { evento: evAjeno.id, mecanismo: '1.1', causaRaiz: '3' })
+comprobar(!analisisAjeno.ok && /no tiene asignado/.test(analisisAjeno.error) && !Object.hasOwn(SES.sesion().analisis, evAjeno.id),
+  `POST /api/analisis/:evento: confiabilidad no analiza una falla de ${evAjeno.campoId} (no la tiene asignada; el campo sale del evento ${evAjeno.id})`)
+}
+
+console.log('\n=== 17. Las fechas dicen lo mismo en todos los navegadores ===')
+{
+  // Safari escribía «3 de sep. de 2026» donde Chrome, Firefox y Node escriben
+  // «3 de sept de 2026»: el mismo informe impreso desde dos navegadores decía
+  // dos cosas. `formatoFecha` (shared/lib/fecha.ts) fija la abreviatura del mes.
+  const { readFileSync, readdirSync, statSync } = await import('node:fs')
+  const FE = await v.ssrLoadModule('/src/shared/lib/fecha.ts')
+  const OPCIONES = [
+    { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Bogota' },
+    { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' },
+  ]
+  const distintas = []
+  for (const o of OPCIONES) for (let m = 0; m < 12; m++) {
+    const d = new Date(Date.UTC(2026, m, 15, 17))
+    const propia = FE.formatoFecha(o).format(d), servidor = new Intl.DateTimeFormat('es-CO', o).format(d)
+    if (propia !== servidor) distintas.push(`«${propia}» ≠ «${servidor}»`)
+  }
+  comprobar(!distintas.length, `formatoFecha escribe los 12 meses como Node, que es el servidor${distintas.length ? ': ' + distintas.join(', ') : ''}`)
+
+  // El motor de Safari no corre en Node: se le hace escribir el mes como Safari.
+  const original = Intl.DateTimeFormat.prototype.formatToParts
+  Intl.DateTimeFormat.prototype.formatToParts = function (d) {
+    return original.call(this, d).map(x => x.type === 'month' ? { ...x, value: x.value === 'sept' ? 'sep.' : `${x.value}.` } : x)
+  }
+  let comoSafari, nodeComoSafari
+  try {
+    const opc = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Bogota' }, d = new Date('2026-09-03T12:00:00-05:00')
+    comoSafari = FE.formatoFecha(opc).format(d)
+    nodeComoSafari = new Intl.DateTimeFormat('es-CO', opc).formatToParts(d).map(x => x.value).join('')
+  } finally { Intl.DateTimeFormat.prototype.formatToParts = original }
+  comprobar(nodeComoSafari === '3 de sep. de 2026' && comoSafari === '3 de sept de 2026',
+    `con el mes como lo escribe Safari («${nodeComoSafari}»), formatoFecha da lo mismo que los demás: «${comoSafari}»`)
+
+  // Que ninguna fecha con mes abreviado se escape de formatoFecha.
+  const fuera = []
+  const recorrer = dir => { for (const n of readdirSync(dir)) {
+    const ruta = `${dir}/${n}`
+    if (statSync(ruta).isDirectory()) { recorrer(ruta); continue }
+    if (!/\.tsx?$/.test(n) || ruta.endsWith('shared/lib/fecha.ts')) continue
+    readFileSync(ruta, 'utf8').split('\n').forEach((l, i) => {
+      if ((/month: 'short'/.test(l) && !l.includes('formatoFecha(')) || /toLocaleDateString\(/.test(l)) fuera.push(`${ruta.slice(RAIZ.length)}:${i + 1}`)
+    })
+  } }
+  recorrer(`${RAIZ}src`)
+  comprobar(!fuera.length, `toda fecha con mes abreviado pasa por formatoFecha (y nadie usa toLocaleDateString)${fuera.length ? ': ' + fuera.join(', ') : ''}`)
+}
+
+await v.close()
+console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones bien.`)
+if (fallos) { console.log(`${fallos} FALLARON.`); process.exit(1) }

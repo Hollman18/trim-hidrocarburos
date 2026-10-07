@@ -1,0 +1,1 @@
+{"id":"aciertos/palmar","descripcion":"Registro de predicciones y fallas de palmar (aciertos)","endpoint":"/api/vistas/predicciones?campos=palmar","esperado":{"datos":{"registro":[],"fallas":[]},"refs":{}}}

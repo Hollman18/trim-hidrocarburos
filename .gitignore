@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# base de datos local del registro
+simulador-api/datos/*.db*
+
+# Copias de respaldo locales del proyecto entero: no se entregan ni se versionan
+# (un grep encontraba dos veces cada función y se terminaba editando la copia).
+.respaldos/
+
+# Resultados e informe de las pruebas de navegador (Playwright)
+e2e/.resultados/
+e2e/.informe/
+
+# Herramientas locales de quien desarrolla: no son del producto
+.claude/
+.codegraph/

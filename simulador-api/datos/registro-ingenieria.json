@@ -1,0 +1,302 @@
+{
+  "campos": [
+    {
+      "id": "ceiba",
+      "nombre": "La Ceiba"
+    },
+    {
+      "id": "morichal",
+      "nombre": "Morichal Norte"
+    },
+    {
+      "id": "guacamayo",
+      "nombre": "Guacamayo"
+    },
+    {
+      "id": "palmar",
+      "nombre": "El Palmar"
+    },
+    {
+      "id": "zarza",
+      "nombre": "La Zarza"
+    }
+  ],
+  "equipos": [
+    {
+      "id": "V-101",
+      "campoId": "ceiba",
+      "nombre": "Separador trifásico",
+      "clase": "separador-trifasico",
+      "criticidad": 4
+    },
+    {
+      "id": "C-401",
+      "campoId": "ceiba",
+      "nombre": "Compresor de gas",
+      "clase": "compresor-gas",
+      "criticidad": 4
+    },
+    {
+      "id": "H-302",
+      "campoId": "ceiba",
+      "nombre": "Tratador térmico",
+      "clase": "tratador-termico",
+      "criticidad": 4
+    },
+    {
+      "id": "TK-102",
+      "campoId": "ceiba",
+      "nombre": "Tanque de crudo en especificación",
+      "clase": "tanque-atmosferico",
+      "criticidad": 5
+    },
+    {
+      "id": "LACT-01",
+      "campoId": "ceiba",
+      "nombre": "Unidad LACT · punto de medición oficial",
+      "clase": "unidad-lact",
+      "criticidad": 5
+    },
+    {
+      "id": "P-201B",
+      "campoId": "ceiba",
+      "nombre": "Bomba multietapa de transferencia de agua",
+      "clase": "bomba-centrifuga",
+      "criticidad": 5
+    },
+    {
+      "id": "SE-2",
+      "campoId": "ceiba",
+      "nombre": "Pórtico 13,8 kV · subestación 2",
+      "clase": "switchgear",
+      "criticidad": 3
+    },
+    {
+      "id": "K-101",
+      "campoId": "ceiba",
+      "nombre": "Sistema de aire de instrumentos",
+      "clase": "compresor-aire",
+      "criticidad": 5
+    },
+    {
+      "id": "MPP-301",
+      "campoId": "morichal",
+      "nombre": "Bomba multifásica de doble tornillo · clúster norte",
+      "clase": "bomba-multifasica",
+      "criticidad": 5
+    },
+    {
+      "id": "V-101",
+      "campoId": "morichal",
+      "nombre": "Separador trifásico",
+      "clase": "separador-trifasico",
+      "criticidad": 4
+    },
+    {
+      "id": "C-401",
+      "campoId": "morichal",
+      "nombre": "Compresor de gas",
+      "clase": "compresor-gas",
+      "criticidad": 4
+    },
+    {
+      "id": "H-302",
+      "campoId": "morichal",
+      "nombre": "Tratador térmico",
+      "clase": "tratador-termico",
+      "criticidad": 4
+    },
+    {
+      "id": "TK-102",
+      "campoId": "morichal",
+      "nombre": "Tanque de crudo en especificación",
+      "clase": "tanque-atmosferico",
+      "criticidad": 5
+    },
+    {
+      "id": "LACT-01",
+      "campoId": "morichal",
+      "nombre": "Unidad LACT · punto de medición oficial",
+      "clase": "unidad-lact",
+      "criticidad": 5
+    },
+    {
+      "id": "P-201B",
+      "campoId": "morichal",
+      "nombre": "Bomba multietapa de transferencia de agua",
+      "clase": "bomba-centrifuga",
+      "criticidad": 5
+    },
+    {
+      "id": "SE-2",
+      "campoId": "morichal",
+      "nombre": "Pórtico 13,8 kV · subestación 2",
+      "clase": "switchgear",
+      "criticidad": 3
+    },
+    {
+      "id": "K-101",
+      "campoId": "morichal",
+      "nombre": "Sistema de aire de instrumentos",
+      "clase": "compresor-aire",
+      "criticidad": 5
+    },
+    {
+      "id": "V-101",
+      "campoId": "guacamayo",
+      "nombre": "Separador trifásico",
+      "clase": "separador-trifasico",
+      "criticidad": 4
+    },
+    {
+      "id": "H-302",
+      "campoId": "guacamayo",
+      "nombre": "Tratador térmico",
+      "clase": "tratador-termico",
+      "criticidad": 4
+    },
+    {
+      "id": "TK-102",
+      "campoId": "guacamayo",
+      "nombre": "Tanque de crudo en especificación",
+      "clase": "tanque-atmosferico",
+      "criticidad": 5
+    },
+    {
+      "id": "LACT-01",
+      "campoId": "guacamayo",
+      "nombre": "Unidad LACT · punto de medición oficial",
+      "clase": "unidad-lact",
+      "criticidad": 5
+    },
+    {
+      "id": "P-201B",
+      "campoId": "guacamayo",
+      "nombre": "Bomba multietapa de transferencia de agua",
+      "clase": "bomba-centrifuga",
+      "criticidad": 5
+    },
+    {
+      "id": "SE-2",
+      "campoId": "guacamayo",
+      "nombre": "Pórtico 13,8 kV · subestación 2",
+      "clase": "switchgear",
+      "criticidad": 3
+    },
+    {
+      "id": "K-101",
+      "campoId": "guacamayo",
+      "nombre": "Sistema de aire de instrumentos",
+      "clase": "compresor-aire",
+      "criticidad": 5
+    },
+    {
+      "id": "V-101",
+      "campoId": "palmar",
+      "nombre": "Separador trifásico",
+      "clase": "separador-trifasico",
+      "criticidad": 4
+    },
+    {
+      "id": "H-302",
+      "campoId": "palmar",
+      "nombre": "Tratador térmico",
+      "clase": "tratador-termico",
+      "criticidad": 4
+    },
+    {
+      "id": "TK-102",
+      "campoId": "palmar",
+      "nombre": "Tanque de crudo en especificación",
+      "clase": "tanque-atmosferico",
+      "criticidad": 5
+    },
+    {
+      "id": "LACT-01",
+      "campoId": "palmar",
+      "nombre": "Unidad LACT · punto de medición oficial",
+      "clase": "unidad-lact",
+      "criticidad": 5
+    },
+    {
+      "id": "P-201B",
+      "campoId": "palmar",
+      "nombre": "Bomba multietapa de transferencia de agua",
+      "clase": "bomba-centrifuga",
+      "criticidad": 5
+    },
+    {
+      "id": "SE-2",
+      "campoId": "palmar",
+      "nombre": "Pórtico 13,8 kV · subestación 2",
+      "clase": "switchgear",
+      "criticidad": 3
+    },
+    {
+      "id": "K-101",
+      "campoId": "palmar",
+      "nombre": "Sistema de aire de instrumentos",
+      "clase": "compresor-aire",
+      "criticidad": 5
+    },
+    {
+      "id": "V-101",
+      "campoId": "zarza",
+      "nombre": "Separador trifásico",
+      "clase": "separador-trifasico",
+      "criticidad": 4
+    },
+    {
+      "id": "C-401",
+      "campoId": "zarza",
+      "nombre": "Compresor de gas",
+      "clase": "compresor-gas",
+      "criticidad": 4
+    },
+    {
+      "id": "TK-102",
+      "campoId": "zarza",
+      "nombre": "Tanque de crudo en especificación",
+      "clase": "tanque-atmosferico",
+      "criticidad": 5
+    },
+    {
+      "id": "LACT-01",
+      "campoId": "zarza",
+      "nombre": "Unidad LACT · punto de medición oficial",
+      "clase": "unidad-lact",
+      "criticidad": 5
+    },
+    {
+      "id": "P-201B",
+      "campoId": "zarza",
+      "nombre": "Bomba multietapa de transferencia de agua",
+      "clase": "bomba-centrifuga",
+      "criticidad": 5
+    },
+    {
+      "id": "SE-2",
+      "campoId": "zarza",
+      "nombre": "Pórtico 13,8 kV · subestación 2",
+      "clase": "switchgear",
+      "criticidad": 3
+    },
+    {
+      "id": "K-101",
+      "campoId": "zarza",
+      "nombre": "Sistema de aire de instrumentos",
+      "clase": "compresor-aire",
+      "criticidad": 5
+    }
+  ],
+  "formulas": [
+    {
+      "id": "f1-compresor-aire",
+      "claseEquipo": "compresor-aire",
+      "tipoTag": "Derivada de presión",
+      "expresion": "pendiente de la presión de cabezal (PT-1011) en la ventana, en psi/h",
+      "version": 2,
+      "ventanaMin": 15
+    }
+  ]
+}

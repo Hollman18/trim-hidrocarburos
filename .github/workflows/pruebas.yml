@@ -1,0 +1,58 @@
+# Cada cambio pasa por las mismas pruebas que se corren a mano antes de
+# entregar: tipos, lint, motor, contrato y referencia (`npm test`), el build,
+# y las pruebas de navegador en Chrome, Safari y Firefox (`npm run e2e`).
+# Si algo falla, el informe de Playwright (capturas y trazas) queda como
+# artefacto de la corrida.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Un empuje nuevo a la misma rama cancela la corrida anterior.
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    # Con un runner propio: gh variable set RUNNER_LABEL --body <etiqueta>
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Dependencias (exactas, del lock)
+        run: npm ci
+
+      - name: Tipos, lint, motor, contrato y referencia
+        run: npm test
+
+      - name: Build con la política de seguridad
+        run: npm run build
+
+      - name: Navegadores de Playwright
+        run: npx playwright install --with-deps chromium webkit firefox
+
+      - name: Pruebas de navegador
+        run: npm run e2e
+
+      - name: Informe de las pruebas de navegador
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: informe-e2e
+          path: |
+            e2e/.informe/
+            e2e/.resultados/
+          retention-days: 14

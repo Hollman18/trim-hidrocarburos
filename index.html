@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" type="image/png" href="/brand/logo_256.png" />
+    <!-- Las tres caras que se ven arriba de toda pantalla: el texto, las cifras y los títulos de panel. -->
+    <link rel="preload" href="/fonts/Air-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Air-Semibold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/AirCondensed-Semibold.woff2" as="font" type="font/woff2" crossorigin />
+    <title>Trim · Hidrocarburos</title>
+    <meta name="description" content="Atribución de producción diferida para operadoras petroleras." />
+    <!-- La Content-Security-Policy la agrega el build (vite.config.ts, trim-csp) con la huella
+         SHA-256 de este script, calculada del HTML final: si se cambia, la huella cambia sola. -->
+    <script>
+      // Bloqueante a propósito: evita el destello de tema al cargar.
+      // style.colorScheme es lo que impide el parpadeo blanco de scrollbars e inputs.
+      (function () {
+        try {
+          var t = localStorage.getItem('trim.tema') || 'system'
+          var oscuro = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+          // Se estampa el tema YA RESUELTO: así el CSS tiene un solo juego de
+          // valores oscuros en vez de repetirlos para el modo sistema.
+          document.documentElement.setAttribute('data-theme', oscuro ? 'dark' : 'light')
+          document.documentElement.style.colorScheme = oscuro ? 'dark' : 'light'
+        } catch (e) {
+          // Sin acceso a localStorage (bloqueado por el navegador) queda el tema
+          // claro del CSS. La app aún no cargó: no hay dónde mostrar el aviso.
+          console.warn('No se pudo leer el tema guardado:', e)
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

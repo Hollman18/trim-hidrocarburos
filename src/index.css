@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Tipografía de marca ─────────────────────────
+   WOFF2: las mismas tablas de la TTF original, comprimidas sin pérdida
+   (≈55 KB cada cara contra ≈220 KB). En la red de un campo la fuente
+   tardaba más que toda la aplicación. El navegador solo baja las caras que
+   la página usa; el peso Light no se usa y no se declara. */
+@font-face{font-family:Air;src:url(/fonts/Air-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:Air;src:url(/fonts/Air-Medium.woff2) format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:Air;src:url(/fonts/Air-Semibold.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:Air;src:url(/fonts/Air-Bold.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Medium.woff2) format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Semibold.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Bold.woff2) format('woff2');font-weight:700;font-display:swap}
+
+/* `static` obliga a emitir TODA la rampa de marca aunque una escala solo se
+   use desde una plantilla de JS: Tailwind v4 poda las variables que no ve
+   escritas literalmente en el código, y las barras quedaban sin color. */
+@theme static {
+  --font-sans: Air, ui-sans-serif, system-ui, sans-serif;
+  --font-cond: "Air Condensed", Air, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Marca · valores fijos extraídos del wordmark oficial. No cambian con el tema. */
+  --color-marca-1: #12287a;  /* índigo */
+  --color-marca-2: #231e74;
+  --color-marca-3: #36126e;  /* violeta profundo */
+  --color-marca-4: #4d2473;  /* ciruela */
+  --color-marca-5: #51588a;  /* azul grisáceo */
+  --color-marca-6: #5691a8;
+  --color-marca-7: #50a5a9;  /* turquesa */
+}
+
+/* @theme inline es obligatorio para lo semántico: apunta a variables que el
+   tema redefine. Declarado directo en @theme, Tailwind congela el valor claro
+   y el modo oscuro no cambiaría nada. */
+@theme inline {
+  --color-suelo: var(--suelo);
+  --color-superficie: var(--superficie);
+  --color-panel: var(--panel);
+  --color-panel2: var(--panel2);
+  --color-elevado: var(--elevado);
+  --color-tinta: var(--tinta);
+  --color-tinta2: var(--tinta2);
+  --color-tinta3: var(--tinta3);
+  --color-linea: var(--linea);
+  --color-linea2: var(--linea2);
+  --color-p1: var(--p1);
+  --color-p2: var(--p2);
+  --color-p3: var(--p3);
+  --color-p4: var(--p4);
+  --color-invalido: var(--invalido);
+  --color-p1f: var(--p1-f);
+  --color-p2f: var(--p2-f);
+  --color-p3f: var(--p3-f);
+  --color-p4f: var(--p4-f);
+  --color-eq-off: var(--eq-off);
+  --color-eq-on: var(--eq-on);
+  --color-eq-sin: var(--eq-sin);
+  --color-eq-trazo: var(--eq-trazo);
+  --color-acento: var(--acento);
+  --color-acento-f: var(--acento-f);
+}
+
+/* ───────────── Tokens semánticos ─────────────
+   Práctica de High Performance HMI: fondo neutro de baja saturación,
+   el color se reserva para la condición anormal.
+   index.html estampa data-theme ya resuelto (claro|oscuro) antes de pintar,
+   así que aquí hay UN solo juego de valores por tema y no tres.
+   Contraste (WCAG 2.2; scripts/verificar-libro.mjs lo recalcula): todo texto
+   --tinta, --tinta2 y --tinta3 da al menos 4,5:1 sobre los cinco fondos
+   (suelo, superficie, panel, panel2, elevado) en los dos temas, porque el
+   texto secundario va en 10 px. Las formas de prioridad dan al menos 3:1
+   (WCAG 1.4.11) sobre los paneles; el cuadrado amarillo no lo logra con
+   ningún amarillo que siga siendo amarillo, así que lleva trazo oscuro.
+   En oscuro el rojo es salmón (#ff8a80): un rojo saturado no pasa de
+   2,5:1 sobre un panel gris medio, y una alarma que no se ve no avisa.
+   */
+:root{
+  color-scheme: light;
+  --suelo:#c9c9c7; --superficie:#d6d5d2; --panel:#eceae7; --panel2:#e2e0dd; --elevado:#f4f3f0;
+  --tinta:#1f2328; --tinta2:#3e444b; --tinta3:#4d535a;
+  --linea:#b4b3b0; --linea2:#c8c7c4;
+  --eq-off:#b0b0b0; --eq-on:#f2f2f2; --eq-sin:#8e8e8e; --eq-trazo:#5c6066; --eq-alto:#fafaf9;
+  /* Estado · nunca decorativo */
+  --p1:#b71c1c; --p2:#bf4000; --p3:#f9a825; --p4:#0d5bb5; --invalido:#8420a3;
+  --p1-f:#f2dcdc; --p2-f:#f5e2d4; --p3-f:#f6eed4; --p4-f:#dae4f0;
+  /* El número dentro de la forma: blanco sobre el color saturado del claro,
+     oscuro sobre los tonos claros del tema oscuro. El cuadrado P3 lleva
+     siempre número y trazo oscuros. */
+  --marca-num:#ffffff; --marca-trazo:#1f2328;
+  /* Acento de marca sobre el panel: la tinta de marca, legible en claro. */
+  --acento:#12287a; --acento-f:#12287a1a;
+  /* ISA-101: el dato normal NO lleva color. La rampa es de grises, del más
+     oscuro (lo que manda) al más claro. El color queda para lo anormal. */
+  --dato-1:#3c4148; --dato-2:#535960; --dato-3:#6a7077; --dato-4:#868b92; --dato-5:#a3a8ad;
+  /* Corrientes del proceso: también gris. El fluido se distingue por el
+     trazo de la línea y su etiqueta, nunca por el color (planta.tsx). */
+  --f-multi:#4f545b; --f-crudo:#3c4148; --f-gas:#6a7077; --f-agua:#5d6269;
+  --f-elec:#7a7f86; --f-aire:#8a8f95;
+  --sombra:0 1px 2px rgb(31 35 40 / .09);
+  --sombra2:0 10px 34px rgb(31 35 40 / .22);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --suelo:#34373a; --superficie:#3c4044; --panel:#474b4f; --panel2:#414549; --elevado:#51565a;
+  --tinta:#eaeae8; --tinta2:#d8dadc; --tinta3:#c8cbce;
+  --linea:#5a5e62; --linea2:#4e5256;
+  --eq-off:#6b6e71; --eq-on:#c9cbcd; --eq-sin:#808487; --eq-trazo:#aaadb0; --eq-alto:#dfe1e3;
+  --p1:#ff8a80; --p2:#ffab40; --p3:#ffd54f; --p4:#90caf9; --invalido:#e1a6ea;
+  --p1-f:#472a2a; --p2-f:#473425; --p3-f:#433d25; --p4-f:#283848;
+  --marca-num:#1f2328; --marca-trazo:#1f2328;
+  --acento:#b5d3e9; --acento-f:#b5d3e926;
+  --dato-1:#e3e5e7; --dato-2:#c9ccd0; --dato-3:#afb3b7; --dato-4:#959a9e; --dato-5:#7d8186;
+  --f-multi:#c4c7cb; --f-crudo:#dfe1e4; --f-gas:#a9adb1; --f-agua:#b8bcc0;
+  --f-elec:#9ea2a6; --f-aire:#8f9397;
+  --sombra:0 1px 2px rgb(0 0 0 / .3);
+  --sombra2:0 10px 34px rgb(0 0 0 / .45);
+}
+
+html,body,#root{height:100%}
+body{
+  margin:0; background:var(--suelo); color:var(--tinta);
+  font-family:var(--font-sans); font-size:13px; line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+*{box-sizing:border-box}
+:focus-visible{outline:2px solid var(--acento); outline-offset:1px}
+.tabular{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+
+/* El wordmark tiene dos archivos: el claro se usa sobre fondo oscuro. */
+.dark-show{display:none}
+:root[data-theme="dark"] .dark-hide{display:none}
+:root[data-theme="dark"] .dark-show{display:block}
+
+/* ───────────── Esquema de planta ─────────────
+   El movimiento de la línea dice que la corriente está corriendo. Si el
+   equipo se detuvo, la línea se queda quieta y se apaga: el esquema no
+   puede seguir «fluyendo» cuando el proceso está parado.            */
+/* ISA-101 reserva el movimiento para lo anormal: una línea con flujo normal
+   no se anima. Lo único que parpadea es la alarma de prioridad 1. */
+.detenido{opacity:.3}
+@keyframes latir{0%,100%{opacity:.9}50%{opacity:.15}}
+.latido{animation:latir 1.7s ease-in-out infinite}
+.nodo{cursor:pointer}
+.nodo:focus-visible{outline:none}
+.nodo:focus-visible .marco,.nodo:hover .marco{stroke:var(--acento); stroke-width:2}
+
+/* Indicador analógico (ISA-101). Se acomoda al ancho de SU contenedor, no
+   de la pantalla: en una placa angosta va en dos renglones (nombre y valor
+   arriba, barra abajo); con espacio, en uno solo. El valor nunca se recorta. */
+.analogico{container-type:inline-size; min-width:0}
+.analogico-rejilla{display:grid; grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"n v" "b b"; column-gap:.5rem; row-gap:.3rem; align-items:start}
+.a-nombre{grid-area:n; min-width:0}
+.a-valor{grid-area:v; justify-self:end}
+.a-barra{grid-area:b; min-width:0}
+@container (min-width: 460px){
+  .analogico-rejilla{grid-template-columns:minmax(0,1fr) minmax(150px,1.35fr) 104px;
+    grid-template-areas:"n b v"; align-items:center}
+}
+
+/* ─────────────── Informe impreso (Exportar → PDF) ───────────────
+   El papel lleva membrete, la vista y el pie con el folio. Se imprime en
+   claro (store.ts estampa el tema claro antes de imprimir). Si la ficha de
+   un equipo está abierta, el informe es la ficha. */
+.solo-impresion { display: none; }
+@media print {
+  @page {
+    size: A4; margin: 14mm 12mm 16mm;
+    @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #555; }
+    /* El membrete reemplaza este pie con el folio del informe (Membrete.tsx). */
+    @bottom-left { content: "TRIM · lo producido se mide; lo diferido se calcula"; font-size: 8pt; color: #555; }
+  }
+  .solo-impresion { display: block; }
+  .no-imprimir, [role="tooltip"] { display: none !important; }
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+  .raiz-app { display: block !important; height: auto !important; overflow: visible !important; background: #fff !important; }
+  .raiz-app > main, .raiz-app .vista { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
+  .raiz-app:has([data-panel-equipo]) > main { display: none !important; }
+  [data-panel-equipo] { position: static !important; display: block !important; }
+  [data-panel-equipo] aside { position: static !important; width: 100% !important; height: auto !important; border: 0 !important; }
+  [data-panel-equipo] aside, [data-panel-equipo] aside * { overflow: visible !important; max-height: none !important; }
+  section, .rounded.border, svg { break-inside: avoid; }
+  /* Lo que en pantalla se desplaza de lado, en el papel cabe completo. */
+  .overflow-x-auto { overflow: visible !important; }
+  .overflow-x-auto > svg, .overflow-x-auto > table { min-width: 0 !important; width: 100% !important; }
+  * { box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

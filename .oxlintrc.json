@@ -1,0 +1,419 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc"
+  ],
+  "ignorePatterns": [
+    ".respaldos/**",
+    "dist/**"
+  ],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/pages/**",
+        "src/widgets/**",
+        "src/app/**",
+        "src/App.tsx",
+        "src/arranque.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@/entities/aciertos",
+                "allowTypeImports": true,
+                "message": "Del motor (aciertos) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "NOMBRE_VISIBILIDAD",
+                  "NOMBRE_CALIFICACION"
+                ]
+              },
+              {
+                "name": "@/entities/asignacion",
+                "allowTypeImports": true,
+                "message": "Del motor (asignacion) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "cotejar",
+                  "leerAsignacion",
+                  "plantillaAsignacion",
+                  "cargaVigente"
+                ]
+              },
+              {
+                "name": "@/entities/bombas",
+                "allowTypeImports": true,
+                "message": "Del motor (bombas) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "NO_DA",
+                  "PAPEL_NOMBRE",
+                  "TECNOLOGIA_NOMBRE",
+                  "plantillaDe",
+                  "PLANTILLA_MULTIFASICA",
+                  "PLANTILLA_INYECCION"
+                ]
+              },
+              {
+                "name": "@/entities/catalogo",
+                "allowTypeImports": true,
+                "message": "Del motor (catalogo) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "MECANISMOS_POR_FAMILIA",
+                  "MECANISMO_SUGERIDO",
+                  "MODO_OTRO",
+                  "MODO_EN_CAMPO",
+                  "NOMBRE_CLASE_EQUIPO",
+                  "modosDeParte",
+                  "nombreModo",
+                  "claseDeCatalogo"
+                ]
+              },
+              {
+                "name": "@/entities/causa-senal",
+                "allowTypeImports": true,
+                "message": "Del motor (causa-senal) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "ALTO_IMPACTO",
+                  "COMO",
+                  "TIPO_CAUSA",
+                  "estadoIdentificacion"
+                ]
+              },
+              {
+                "name": "@/entities/configuracion",
+                "allowTypeImports": true,
+                "message": "Del motor (configuracion) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "NOMBRE_GAS",
+                  "PUESTA_EN_MARCHA",
+                  "PRIMER_DIA_METAS",
+                  "TOPE_BPD",
+                  "TOPE_PRECIO_USD",
+                  "SIN_META",
+                  "tienePerfil",
+                  "conMes",
+                  "conTramo",
+                  "criterioEn",
+                  "precioEn",
+                  "diaCo",
+                  "diferencias",
+                  "diferenciasPorGrupo",
+                  "metaEn",
+                  "mismoTramo",
+                  "normalizarConfig",
+                  "perfilDe",
+                  "tanqueDe",
+                  "respaldoDe",
+                  "configEn",
+                  "validarConfig"
+                ]
+              },
+              {
+                "name": "@/entities/diferido",
+                "allowTypeImports": true,
+                "message": "Del motor (diferido) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "rangoDePeriodo",
+                  "PERIODO_BOMBAS"
+                ]
+              },
+              {
+                "name": "@/entities/equipo-vivo",
+                "allowTypeImports": true,
+                "message": "Del motor (equipo-vivo) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts)."
+              },
+              {
+                "name": "@/entities/equipos",
+                "allowTypeImports": true,
+                "message": "Del motor (equipos) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts)."
+              },
+              {
+                "name": "@/entities/esp",
+                "allowTypeImports": true,
+                "message": "Del motor (esp) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "PLANTILLA_ESP"
+                ]
+              },
+              {
+                "name": "@/entities/flota",
+                "allowTypeImports": true,
+                "message": "Del motor (flota) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "NOMBRE_FAMILIA"
+                ]
+              },
+              {
+                "name": "@/entities/informe",
+                "allowTypeImports": true,
+                "message": "Del motor (informe) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "csvDeLibro",
+                  "formaCanonica",
+                  "huellaLegible",
+                  "CLAVES_HUELLA"
+                ]
+              },
+              {
+                "name": "@/entities/libro",
+                "allowTypeImports": true,
+                "message": "Del motor (libro) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "DISPARO_MAX_H",
+                  "FUENTE_POTENCIAL",
+                  "FUENTE_REAL",
+                  "metaEntre",
+                  "conMeta",
+                  "textoSinMeta"
+                ]
+              },
+              {
+                "name": "@/entities/mensajes",
+                "allowTypeImports": true,
+                "message": "Del motor (mensajes) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "CAUSAS_POZO",
+                  "NOMBRE_REGLA",
+                  "NO_FUE_ESP",
+                  "ORDEN_PASO",
+                  "OTRA",
+                  "OTRA_PARTE",
+                  "PLANTILLAS",
+                  "textoDe"
+                ]
+              },
+              {
+                "name": "@/entities/metrologia",
+                "allowTypeImports": true,
+                "message": "Del motor (metrologia) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "FUENTE_METODO",
+                  "FUENTE_BANDA",
+                  "toleranciaAsignacion",
+                  "raizSumaCuadrados",
+                  "AFORO_TANQUE"
+                ]
+              },
+              {
+                "name": "@/entities/planta",
+                "allowTypeImports": true,
+                "message": "Del motor (planta) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "NOMBRE_CORRIENTE",
+                  "armar"
+                ]
+              },
+              {
+                "name": "@/entities/pozos",
+                "allowTypeImports": true,
+                "message": "Del motor (pozos) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "CODIGO",
+                  "LEVANTAMIENTO_NOMBRE"
+                ]
+              },
+              {
+                "name": "@/entities/salud",
+                "allowTypeImports": true,
+                "message": "Del motor (salud) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "ESTADO_PARTE",
+                  "HORIZONTE_H",
+                  "motivoDeParte"
+                ]
+              },
+              {
+                "name": "@/entities/sap",
+                "allowTypeImports": true,
+                "message": "Del motor (sap) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "NOMBRE_CLASE",
+                  "NOMBRE_ESTADO_ORDEN",
+                  "NOMBRE_TIPO_AVISO"
+                ]
+              },
+              {
+                "name": "@/entities/usuarios",
+                "allowTypeImports": true,
+                "message": "Del motor (usuarios) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "ALERTAS_DEL_ROL",
+                  "ESTADO_NOMBRE",
+                  "ROLES_CON_ALERTAS",
+                  "cambiosDeInvitacion",
+                  "cambiosDeUsuario",
+                  "estadoAlGuardar",
+                  "nombreCampos",
+                  "normalizarTelefono",
+                  "personaDelRol",
+                  "recibeAlertas",
+                  "revisarAcceso",
+                  "correoDe",
+                  "camposAsignados",
+                  "telefonoLegible"
+                ]
+              },
+              {
+                "name": "@/entities/vigia",
+                "allowTypeImports": true,
+                "message": "Del motor (vigia) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
+                "allowImportNames": [
+                  "proyectable"
+                ]
+              },
+              {
+                "name": "@/shared/api/diferidos",
+                "importNames": [
+                  "pedirLibro",
+                  "pedirSerie",
+                  "pedirBase",
+                  "pedirDias",
+                  "pedirPotencialReciente",
+                  "pedirPotencialesRecientes",
+                  "pedirPreguntas",
+                  "pedirOpcionesRespuesta",
+                  "pedirSalud",
+                  "pedirPrediccion",
+                  "pedirParadas",
+                  "pedirParadasEnPeriodo",
+                  "pedirParadasDeBombas",
+                  "pedirRiesgo",
+                  "pedirEstadoCampo",
+                  "pedirEstadoCampos",
+                  "pedirPozos",
+                  "pedirFilasPozos",
+                  "pedirPozo",
+                  "pedirFlotaEsp"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/equipos",
+                "importNames": [
+                  "pedirEquipo",
+                  "pedirEquiposDeHoy",
+                  "pedirHistoriaEquipo",
+                  "pedirFilasEquipos",
+                  "pedirConfiabilidad",
+                  "pedirFichaEquipo",
+                  "pedirBombas"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/sap",
+                "importNames": [
+                  "pedirHistoriaSap",
+                  "pedirAvisosSap",
+                  "pedirOrdenesSap",
+                  "pedirEquipoSap",
+                  "pedirEquiposSap",
+                  "pedirRelojes"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/mensajes",
+                "importNames": [
+                  "pedirMensajes"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/predicciones",
+                "importNames": [
+                  "pedirPredicciones"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/medicion",
+                "importNames": [
+                  "pedirCampoAhora"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/informes",
+                "importNames": [
+                  "pedirCifrasInforme"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@/entities/datos",
+                  "@/entities/datos/*",
+                  "@/entities/insumos"
+                ],
+                "message": "Los insumos y los datos de demostración solo los toca la costura (src/shared/api/fuente.ts)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/shared/**",
+        "src/entities/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app/*",
+                  "@/pages/*",
+                  "@/widgets/*"
+                ],
+                "message": "Las capas de abajo (shared, entities) no conocen las de arriba: lo que necesiten entra por parámetro o por un módulo sin efectos (shared/api/sesion.ts, shared/config).",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/entities/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app/*",
+                  "@/pages/*",
+                  "@/widgets/*",
+                  "@/shared/api/*"
+                ],
+                "message": "El motor no conoce la costura ni la aplicación: la costura lo llama a él.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

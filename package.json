@@ -1,0 +1,47 @@
+{
+  "name": "trim-hidrocarburos",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint src",
+    "preview": "vite preview",
+    "verificar": "tsc -b && oxlint src && node scripts/verificar-libro.mjs && node scripts/verificar-contrato.mjs",
+    "verificar:libro": "node scripts/verificar-libro.mjs",
+    "verificar:contrato": "node scripts/verificar-contrato.mjs",
+    "test": "npm run verificar && node scripts/referencia.mjs comprobar",
+    "e2e": "playwright test",
+    "e2e:instalar": "playwright install chromium webkit firefox",
+    "referencia": "node scripts/referencia.mjs generar",
+    "semilla": "node simulador-api/generar-semilla.mjs",
+    "simulador": "node simulador-api/indice.mjs",
+    "demo": "node scripts/armar-demo.mjs",
+    "paquete": "node scripts/empaquetar.mjs armar",
+    "paquete:comprobar": "node scripts/empaquetar.mjs comprobar"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.50.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.7.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}

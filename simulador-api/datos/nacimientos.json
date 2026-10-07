@@ -1,0 +1,2782 @@
+[
+  {
+    "campo": "ceiba",
+    "gateway": {
+      "id": "EPIC-CEIBA-02",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVCEI9003",
+      "firmware": "3.6.0",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "SKID-AMPLIACION",
+        "fuente": {
+          "protocolo": "opc-ua",
+          "endpoint": "opc.tcp://skid-ceiba.ot.local:4840",
+          "reloj": "el PLC del skid"
+        },
+        "metricas": [
+          {
+            "nombre": "XI-1017",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XT-1017",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XP-4016",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "1.050 – 1.250",
+            "bajo": 1050,
+            "alto": 1250,
+            "cadenciaS": 5,
+            "clase": "continua"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "ceiba",
+    "gateway": {
+      "id": "EPIC-CEIBA-01",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVCEI0016",
+      "firmware": "3.6.2",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "V-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.ceiba.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1012",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-1012",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "C-401",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.ceiba.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-4011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "1.050 – 1.250",
+            "bajo": 1050,
+            "alto": 1250,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-4011",
+            "tipo": "Temperatura de descarga",
+            "unidad": "°C",
+            "limite": "< 120",
+            "bajo": null,
+            "alto": 120,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.ceiba.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-3021",
+            "tipo": "Temperatura de piel de tubo",
+            "unidad": "°C",
+            "limite": "280 – 310",
+            "bajo": 280,
+            "alto": 310,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-3022",
+            "tipo": "Temperatura de chimenea",
+            "unidad": "°C",
+            "limite": "< 450",
+            "bajo": null,
+            "alto": 450,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-3021",
+            "tipo": "Consumo de gas combustible",
+            "unidad": "KPCD",
+            "limite": "38 – 52",
+            "bajo": 38,
+            "alto": 52,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-3021",
+            "tipo": "BSW a la salida",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "atg",
+          "endpoint": "atg-ceiba.ot.local:10001",
+          "reloj": "la consola de tanques"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1102",
+            "tipo": "Nivel · medidor primario",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          },
+          {
+            "nombre": "LI-1103",
+            "tipo": "Nivel · medidor redundante",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "sis",
+          "endpoint": null,
+          "reloj": "el sistema instrumentado de seguridad"
+        },
+        "metricas": [
+          {
+            "nombre": "LSHH-1102",
+            "tipo": "Nivel alto-alto independiente",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-1102",
+            "tipo": "BSW",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "roc-plus",
+          "endpoint": "fc-ceiba.ot.local:4000",
+          "reloj": "el computador de flujo"
+        },
+        "metricas": [
+          {
+            "nombre": "FQI-0101",
+            "tipo": "Medidor de desplazamiento positivo",
+            "unidad": "BPDC",
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 60,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "abril de 2027",
+              "detalle": "Probado el 12 de abril de 2026 · factor 1,0021 · vigente hasta abril de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-ceiba.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-0101",
+            "tipo": "BSW en línea",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Analizador verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          },
+          {
+            "nombre": "DI-0101",
+            "tipo": "Densidad · gravedad API",
+            "unidad": "°API",
+            "limite": "28 – 31",
+            "bajo": 28,
+            "alto": 31,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.ceiba.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-2010",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "> 10",
+            "bajo": 10,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-2011",
+            "tipo": "Caudal",
+            "unidad": "bbl/d",
+            "limite": "18.000 – 20.400",
+            "bajo": 18000,
+            "alto": 20400,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "II-2011",
+            "tipo": "Corriente del motor",
+            "unidad": "A",
+            "limite": "95 – 130",
+            "bajo": 95,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-2011",
+            "tipo": "Temperatura de cojinete",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-2011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "180 – 240",
+            "bajo": 180,
+            "alto": 240,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-ceiba.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "VI-2011",
+            "tipo": "Vibración global",
+            "unidad": "mm/s",
+            "limite": "< 3,9",
+            "bajo": null,
+            "alto": 3.9,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "LSH-2013",
+            "tipo": "Fuga del sello",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          },
+          {
+            "nombre": "LT-2012",
+            "tipo": "Nivel del tanque de agua",
+            "unidad": "%",
+            "limite": "> 15",
+            "bajo": 15,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.ceiba.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "II-0021",
+            "tipo": "Corriente de barraje",
+            "unidad": "A",
+            "limite": "< 600",
+            "bajo": null,
+            "alto": 600,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VI-0021",
+            "tipo": "Tensión de barra",
+            "unidad": "kV",
+            "limite": "13,2 – 14,4",
+            "bajo": 13.2,
+            "alto": 14.4,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "ruta-manual",
+          "endpoint": null,
+          "reloj": "la hora en que se cerró la ruta"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-0021",
+            "tipo": "Termografía de conexiones",
+            "unidad": "°C",
+            "limite": "ΔT < 15",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 15552000,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.ceiba.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PT-1011",
+            "tipo": "Presión de cabezal",
+            "unidad": "psi",
+            "limite": "115 – 130",
+            "bajo": 115,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "AIT-1011",
+            "tipo": "Punto de rocío",
+            "unidad": "°C",
+            "limite": "< -30",
+            "bajo": null,
+            "alto": -30,
+            "cadenciaS": 900,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "calculado",
+          "endpoint": null,
+          "reloj": "el tag del que se deriva"
+        },
+        "metricas": [
+          {
+            "nombre": "PDT-1011",
+            "tipo": "Derivada de presión",
+            "unidad": "psi/h",
+            "limite": "> -0,2",
+            "bajo": -0.2,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-ceiba.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "ZI-1011",
+            "tipo": "Unidades en servicio",
+            "unidad": null,
+            "limite": "3",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "discreta"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "morichal",
+    "gateway": {
+      "id": "EPIC-MORICHAL-02",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVMOR9003",
+      "firmware": "3.6.0",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "SKID-AMPLIACION",
+        "fuente": {
+          "protocolo": "opc-ua",
+          "endpoint": "opc.tcp://skid-morichal.ot.local:4840",
+          "reloj": "el PLC del skid"
+        },
+        "metricas": [
+          {
+            "nombre": "XI-3016",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "35 – 60",
+            "bajo": 35,
+            "alto": 60,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XT-3016",
+            "tipo": "Temperatura de succión",
+            "unidad": "°C",
+            "limite": "45 – 75",
+            "bajo": 45,
+            "alto": 75,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XP-3016",
+            "tipo": "Caída de presión del filtro",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 5,
+            "clase": "continua"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "morichal",
+    "gateway": {
+      "id": "EPIC-MORICHAL-01",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVMOR0017",
+      "firmware": "3.6.2",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "MPP-301",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PT-3011",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "35 – 60",
+            "bajo": 35,
+            "alto": 60,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TE-3011",
+            "tipo": "Temperatura de succión",
+            "unidad": "°C",
+            "limite": "45 – 75",
+            "bajo": 45,
+            "alto": 75,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDT-3011",
+            "tipo": "Caída de presión del filtro",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PT-3012",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "320 – 360",
+            "bajo": 320,
+            "alto": 360,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TE-3012",
+            "tipo": "Temperatura de descarga",
+            "unidad": "°C",
+            "limite": "< 90",
+            "bajo": null,
+            "alto": 90,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TE-3013",
+            "tipo": "Temperatura de rodamiento",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VT-3013",
+            "tipo": "Vibración de la bomba",
+            "unidad": "mm/s",
+            "limite": "< 5,5",
+            "bajo": null,
+            "alto": 5.5,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TE-3014",
+            "tipo": "Temperatura de devanado",
+            "unidad": "°C",
+            "limite": "< 130",
+            "bajo": null,
+            "alto": 130,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TE-3015",
+            "tipo": "Temperatura de rodamiento del motor",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VT-3015",
+            "tipo": "Vibración del motor",
+            "unidad": "mm/s",
+            "limite": "< 4,5",
+            "bajo": null,
+            "alto": 4.5,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "SI-3016",
+            "tipo": "Velocidad",
+            "unidad": "rpm",
+            "limite": "1.300 – 1.650",
+            "bajo": 1300,
+            "alto": 1650,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "II-3016",
+            "tipo": "Corriente",
+            "unidad": "A",
+            "limite": "140 – 210",
+            "bajo": 140,
+            "alto": 210,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PT-3017",
+            "tipo": "Presión de barrera del sello",
+            "unidad": "psi",
+            "limite": "380 – 420",
+            "bajo": 380,
+            "alto": 420,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "LT-3017",
+            "tipo": "Nivel del depósito de barrera",
+            "unidad": "%",
+            "limite": "50 – 90",
+            "bajo": 50,
+            "alto": 90,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PT-3018",
+            "tipo": "Presión de aceite",
+            "unidad": "psi",
+            "limite": "25 – 45",
+            "bajo": 25,
+            "alto": 45,
+            "cadenciaS": 1,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TE-3018",
+            "tipo": "Temperatura de aceite",
+            "unidad": "°C",
+            "limite": "< 75",
+            "bajo": null,
+            "alto": 75,
+            "cadenciaS": 1,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "V-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.morichal.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1012",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-1012",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "C-401",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.morichal.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-4011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "1.050 – 1.250",
+            "bajo": 1050,
+            "alto": 1250,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-4011",
+            "tipo": "Temperatura de descarga",
+            "unidad": "°C",
+            "limite": "< 120",
+            "bajo": null,
+            "alto": 120,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.morichal.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-3021",
+            "tipo": "Temperatura de piel de tubo",
+            "unidad": "°C",
+            "limite": "280 – 310",
+            "bajo": 280,
+            "alto": 310,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-3022",
+            "tipo": "Temperatura de chimenea",
+            "unidad": "°C",
+            "limite": "< 450",
+            "bajo": null,
+            "alto": 450,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-3021",
+            "tipo": "Consumo de gas combustible",
+            "unidad": "KPCD",
+            "limite": "38 – 52",
+            "bajo": 38,
+            "alto": 52,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-3021",
+            "tipo": "BSW a la salida",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "atg",
+          "endpoint": "atg-morichal.ot.local:10001",
+          "reloj": "la consola de tanques"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1102",
+            "tipo": "Nivel · medidor primario",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          },
+          {
+            "nombre": "LI-1103",
+            "tipo": "Nivel · medidor redundante",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "sis",
+          "endpoint": null,
+          "reloj": "el sistema instrumentado de seguridad"
+        },
+        "metricas": [
+          {
+            "nombre": "LSHH-1102",
+            "tipo": "Nivel alto-alto independiente",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-1102",
+            "tipo": "BSW",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "roc-plus",
+          "endpoint": "fc-morichal.ot.local:4000",
+          "reloj": "el computador de flujo"
+        },
+        "metricas": [
+          {
+            "nombre": "FQI-0101",
+            "tipo": "Medidor de desplazamiento positivo",
+            "unidad": "BPDC",
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 60,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "abril de 2027",
+              "detalle": "Probado el 12 de abril de 2026 · factor 1,0021 · vigente hasta abril de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-0101",
+            "tipo": "BSW en línea",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Analizador verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          },
+          {
+            "nombre": "DI-0101",
+            "tipo": "Densidad · gravedad API",
+            "unidad": "°API",
+            "limite": "28 – 31",
+            "bajo": 28,
+            "alto": 31,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.morichal.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-2010",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "> 10",
+            "bajo": 10,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-2011",
+            "tipo": "Caudal",
+            "unidad": "bbl/d",
+            "limite": "19.350 – 24.000",
+            "bajo": 19350,
+            "alto": 24000,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "II-2011",
+            "tipo": "Corriente del motor",
+            "unidad": "A",
+            "limite": "95 – 130",
+            "bajo": 95,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-2011",
+            "tipo": "Temperatura de cojinete",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-2011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "180 – 240",
+            "bajo": 180,
+            "alto": 240,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "VI-2011",
+            "tipo": "Vibración global",
+            "unidad": "mm/s",
+            "limite": "< 3,9",
+            "bajo": null,
+            "alto": 3.9,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "LSH-2013",
+            "tipo": "Fuga del sello",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          },
+          {
+            "nombre": "LT-2012",
+            "tipo": "Nivel del tanque de agua",
+            "unidad": "%",
+            "limite": "> 15",
+            "bajo": 15,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.morichal.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "II-0021",
+            "tipo": "Corriente de barraje",
+            "unidad": "A",
+            "limite": "< 600",
+            "bajo": null,
+            "alto": 600,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VI-0021",
+            "tipo": "Tensión de barra",
+            "unidad": "kV",
+            "limite": "13,2 – 14,4",
+            "bajo": 13.2,
+            "alto": 14.4,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "ruta-manual",
+          "endpoint": null,
+          "reloj": "la hora en que se cerró la ruta"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-0021",
+            "tipo": "Termografía de conexiones",
+            "unidad": "°C",
+            "limite": "ΔT < 15",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 15552000,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.morichal.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PT-1011",
+            "tipo": "Presión de cabezal",
+            "unidad": "psi",
+            "limite": "115 – 130",
+            "bajo": 115,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "AIT-1011",
+            "tipo": "Punto de rocío",
+            "unidad": "°C",
+            "limite": "< -30",
+            "bajo": null,
+            "alto": -30,
+            "cadenciaS": 900,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "calculado",
+          "endpoint": null,
+          "reloj": "el tag del que se deriva"
+        },
+        "metricas": [
+          {
+            "nombre": "PDT-1011",
+            "tipo": "Derivada de presión",
+            "unidad": "psi/h",
+            "limite": "> -0,2",
+            "bajo": -0.2,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "ZI-1011",
+            "tipo": "Unidades en servicio",
+            "unidad": null,
+            "limite": "3",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "discreta"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "guacamayo",
+    "gateway": {
+      "id": "EPIC-GUACAMAYO-02",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVGUA9003",
+      "firmware": "3.6.0",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "SKID-AMPLIACION",
+        "fuente": {
+          "protocolo": "opc-ua",
+          "endpoint": "opc.tcp://skid-guacamayo.ot.local:4840",
+          "reloj": "el PLC del skid"
+        },
+        "metricas": [
+          {
+            "nombre": "XI-1017",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XT-1017",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XP-3026",
+            "tipo": "Temperatura de piel de tubo",
+            "unidad": "°C",
+            "limite": "280 – 310",
+            "bajo": 280,
+            "alto": 310,
+            "cadenciaS": 5,
+            "clase": "continua"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "guacamayo",
+    "gateway": {
+      "id": "EPIC-GUACAMAYO-01",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVGUA0015",
+      "firmware": "3.6.2",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "V-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.guacamayo.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1012",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-1012",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.guacamayo.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-3021",
+            "tipo": "Temperatura de piel de tubo",
+            "unidad": "°C",
+            "limite": "280 – 310",
+            "bajo": 280,
+            "alto": 310,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-3022",
+            "tipo": "Temperatura de chimenea",
+            "unidad": "°C",
+            "limite": "< 450",
+            "bajo": null,
+            "alto": 450,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-3021",
+            "tipo": "Consumo de gas combustible",
+            "unidad": "KPCD",
+            "limite": "38 – 52",
+            "bajo": 38,
+            "alto": 52,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-3021",
+            "tipo": "BSW a la salida",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "atg",
+          "endpoint": "atg-guacamayo.ot.local:10001",
+          "reloj": "la consola de tanques"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1102",
+            "tipo": "Nivel · medidor primario",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          },
+          {
+            "nombre": "LI-1103",
+            "tipo": "Nivel · medidor redundante",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "sis",
+          "endpoint": null,
+          "reloj": "el sistema instrumentado de seguridad"
+        },
+        "metricas": [
+          {
+            "nombre": "LSHH-1102",
+            "tipo": "Nivel alto-alto independiente",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-1102",
+            "tipo": "BSW",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "roc-plus",
+          "endpoint": "fc-guacamayo.ot.local:4000",
+          "reloj": "el computador de flujo"
+        },
+        "metricas": [
+          {
+            "nombre": "FQI-0101",
+            "tipo": "Medidor de desplazamiento positivo",
+            "unidad": "BPDC",
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 60,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "abril de 2027",
+              "detalle": "Probado el 12 de abril de 2026 · factor 1,0021 · vigente hasta abril de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-guacamayo.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-0101",
+            "tipo": "BSW en línea",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Analizador verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          },
+          {
+            "nombre": "DI-0101",
+            "tipo": "Densidad · gravedad API",
+            "unidad": "°API",
+            "limite": "28 – 31",
+            "bajo": 28,
+            "alto": 31,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.guacamayo.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-2010",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "> 10",
+            "bajo": 10,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-2011",
+            "tipo": "Caudal",
+            "unidad": "bbl/d",
+            "limite": "6.840 – 13.000",
+            "bajo": 6840,
+            "alto": 13000,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "II-2011",
+            "tipo": "Corriente del motor",
+            "unidad": "A",
+            "limite": "95 – 130",
+            "bajo": 95,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-2011",
+            "tipo": "Temperatura de cojinete",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-2011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "180 – 240",
+            "bajo": 180,
+            "alto": 240,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-guacamayo.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "VI-2011",
+            "tipo": "Vibración global",
+            "unidad": "mm/s",
+            "limite": "< 3,9",
+            "bajo": null,
+            "alto": 3.9,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "LSH-2013",
+            "tipo": "Fuga del sello",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          },
+          {
+            "nombre": "LT-2012",
+            "tipo": "Nivel del tanque de agua",
+            "unidad": "%",
+            "limite": "> 15",
+            "bajo": 15,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.guacamayo.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "II-0021",
+            "tipo": "Corriente de barraje",
+            "unidad": "A",
+            "limite": "< 600",
+            "bajo": null,
+            "alto": 600,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VI-0021",
+            "tipo": "Tensión de barra",
+            "unidad": "kV",
+            "limite": "13,2 – 14,4",
+            "bajo": 13.2,
+            "alto": 14.4,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "ruta-manual",
+          "endpoint": null,
+          "reloj": "la hora en que se cerró la ruta"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-0021",
+            "tipo": "Termografía de conexiones",
+            "unidad": "°C",
+            "limite": "ΔT < 15",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 15552000,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.guacamayo.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PT-1011",
+            "tipo": "Presión de cabezal",
+            "unidad": "psi",
+            "limite": "115 – 130",
+            "bajo": 115,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "AIT-1011",
+            "tipo": "Punto de rocío",
+            "unidad": "°C",
+            "limite": "< -30",
+            "bajo": null,
+            "alto": -30,
+            "cadenciaS": 900,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "calculado",
+          "endpoint": null,
+          "reloj": "el tag del que se deriva"
+        },
+        "metricas": [
+          {
+            "nombre": "PDT-1011",
+            "tipo": "Derivada de presión",
+            "unidad": "psi/h",
+            "limite": "> -0,2",
+            "bajo": -0.2,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-guacamayo.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "ZI-1011",
+            "tipo": "Unidades en servicio",
+            "unidad": null,
+            "limite": "3",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "discreta"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "palmar",
+    "gateway": {
+      "id": "EPIC-PALMAR-02",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVPAL9003",
+      "firmware": "3.6.0",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "SKID-AMPLIACION",
+        "fuente": {
+          "protocolo": "opc-ua",
+          "endpoint": "opc.tcp://skid-palmar.ot.local:4840",
+          "reloj": "el PLC del skid"
+        },
+        "metricas": [
+          {
+            "nombre": "XI-1017",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XT-1017",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XP-3026",
+            "tipo": "Temperatura de piel de tubo",
+            "unidad": "°C",
+            "limite": "280 – 310",
+            "bajo": 280,
+            "alto": 310,
+            "cadenciaS": 5,
+            "clase": "continua"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "palmar",
+    "gateway": {
+      "id": "EPIC-PALMAR-01",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVPAL0015",
+      "firmware": "3.6.2",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "V-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.palmar.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1012",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-1012",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.palmar.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-3021",
+            "tipo": "Temperatura de piel de tubo",
+            "unidad": "°C",
+            "limite": "280 – 310",
+            "bajo": 280,
+            "alto": 310,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-3022",
+            "tipo": "Temperatura de chimenea",
+            "unidad": "°C",
+            "limite": "< 450",
+            "bajo": null,
+            "alto": 450,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-3021",
+            "tipo": "Consumo de gas combustible",
+            "unidad": "KPCD",
+            "limite": "38 – 52",
+            "bajo": 38,
+            "alto": 52,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "H-302",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-3021",
+            "tipo": "BSW a la salida",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "atg",
+          "endpoint": "atg-palmar.ot.local:10001",
+          "reloj": "la consola de tanques"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1102",
+            "tipo": "Nivel · medidor primario",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          },
+          {
+            "nombre": "LI-1103",
+            "tipo": "Nivel · medidor redundante",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "sis",
+          "endpoint": null,
+          "reloj": "el sistema instrumentado de seguridad"
+        },
+        "metricas": [
+          {
+            "nombre": "LSHH-1102",
+            "tipo": "Nivel alto-alto independiente",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-1102",
+            "tipo": "BSW",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "roc-plus",
+          "endpoint": "fc-palmar.ot.local:4000",
+          "reloj": "el computador de flujo"
+        },
+        "metricas": [
+          {
+            "nombre": "FQI-0101",
+            "tipo": "Medidor de desplazamiento positivo",
+            "unidad": "BPDC",
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 60,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "abril de 2027",
+              "detalle": "Probado el 12 de abril de 2026 · factor 1,0021 · vigente hasta abril de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-palmar.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-0101",
+            "tipo": "BSW en línea",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Analizador verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          },
+          {
+            "nombre": "DI-0101",
+            "tipo": "Densidad · gravedad API",
+            "unidad": "°API",
+            "limite": "28 – 31",
+            "bajo": 28,
+            "alto": 31,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.palmar.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-2010",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "> 10",
+            "bajo": 10,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-2011",
+            "tipo": "Caudal",
+            "unidad": "bbl/d",
+            "limite": "2.160 – 5.500",
+            "bajo": 2160,
+            "alto": 5500,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "II-2011",
+            "tipo": "Corriente del motor",
+            "unidad": "A",
+            "limite": "95 – 130",
+            "bajo": 95,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-2011",
+            "tipo": "Temperatura de cojinete",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-2011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "180 – 240",
+            "bajo": 180,
+            "alto": 240,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-palmar.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "VI-2011",
+            "tipo": "Vibración global",
+            "unidad": "mm/s",
+            "limite": "< 3,9",
+            "bajo": null,
+            "alto": 3.9,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "LSH-2013",
+            "tipo": "Fuga del sello",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          },
+          {
+            "nombre": "LT-2012",
+            "tipo": "Nivel del tanque de agua",
+            "unidad": "%",
+            "limite": "> 15",
+            "bajo": 15,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.palmar.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "II-0021",
+            "tipo": "Corriente de barraje",
+            "unidad": "A",
+            "limite": "< 600",
+            "bajo": null,
+            "alto": 600,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VI-0021",
+            "tipo": "Tensión de barra",
+            "unidad": "kV",
+            "limite": "13,2 – 14,4",
+            "bajo": 13.2,
+            "alto": 14.4,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "ruta-manual",
+          "endpoint": null,
+          "reloj": "la hora en que se cerró la ruta"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-0021",
+            "tipo": "Termografía de conexiones",
+            "unidad": "°C",
+            "limite": "ΔT < 15",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 15552000,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.palmar.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PT-1011",
+            "tipo": "Presión de cabezal",
+            "unidad": "psi",
+            "limite": "115 – 130",
+            "bajo": 115,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "AIT-1011",
+            "tipo": "Punto de rocío",
+            "unidad": "°C",
+            "limite": "< -30",
+            "bajo": null,
+            "alto": -30,
+            "cadenciaS": 900,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "calculado",
+          "endpoint": null,
+          "reloj": "el tag del que se deriva"
+        },
+        "metricas": [
+          {
+            "nombre": "PDT-1011",
+            "tipo": "Derivada de presión",
+            "unidad": "psi/h",
+            "limite": "> -0,2",
+            "bajo": -0.2,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-palmar.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "ZI-1011",
+            "tipo": "Unidades en servicio",
+            "unidad": null,
+            "limite": "3",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "discreta"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "zarza",
+    "gateway": {
+      "id": "EPIC-ZARZA-02",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVZAR9003",
+      "firmware": "3.6.0",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "SKID-AMPLIACION",
+        "fuente": {
+          "protocolo": "opc-ua",
+          "endpoint": "opc.tcp://skid-zarza.ot.local:4840",
+          "reloj": "el PLC del skid"
+        },
+        "metricas": [
+          {
+            "nombre": "XI-1017",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XT-1017",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 5,
+            "clase": "continua"
+          },
+          {
+            "nombre": "XP-4016",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "1.050 – 1.250",
+            "bajo": 1050,
+            "alto": 1250,
+            "cadenciaS": 5,
+            "clase": "continua"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "campo": "zarza",
+    "gateway": {
+      "id": "EPIC-ZARZA-01",
+      "modelo": "GRV-EPIC-PR1",
+      "serie": "GRVZAR0014",
+      "firmware": "3.6.2",
+      "enlace": "starlink",
+      "bufferH": 48
+    },
+    "dispositivos": [
+      {
+        "nombre": "V-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.zarza.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1012",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-1012",
+            "tipo": "Presión diferencial",
+            "unidad": "psi",
+            "limite": "< 8",
+            "bajo": null,
+            "alto": 8,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "C-401",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.zarza.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-4011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "1.050 – 1.250",
+            "bajo": 1050,
+            "alto": 1250,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-4011",
+            "tipo": "Temperatura de descarga",
+            "unidad": "°C",
+            "limite": "< 120",
+            "bajo": null,
+            "alto": 120,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "atg",
+          "endpoint": "atg-zarza.ot.local:10001",
+          "reloj": "la consola de tanques"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-1102",
+            "tipo": "Nivel · medidor primario",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          },
+          {
+            "nombre": "LI-1103",
+            "tipo": "Nivel · medidor redundante",
+            "unidad": "pies",
+            "limite": "rebose 18,5",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 120,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "marzo de 2027",
+              "detalle": "Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "sis",
+          "endpoint": null,
+          "reloj": "el sistema instrumentado de seguridad"
+        },
+        "metricas": [
+          {
+            "nombre": "LSHH-1102",
+            "tipo": "Nivel alto-alto independiente",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "TK-102",
+        "fuente": {
+          "protocolo": "laboratorio",
+          "endpoint": null,
+          "reloj": "la hora de la toma de muestra"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-1102",
+            "tipo": "BSW",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 28800,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "roc-plus",
+          "endpoint": "fc-zarza.ot.local:4000",
+          "reloj": "el computador de flujo"
+        },
+        "metricas": [
+          {
+            "nombre": "FQI-0101",
+            "tipo": "Medidor de desplazamiento positivo",
+            "unidad": "BPDC",
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 60,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "abril de 2027",
+              "detalle": "Probado el 12 de abril de 2026 · factor 1,0021 · vigente hasta abril de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "LACT-01",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-zarza.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "AI-0101",
+            "tipo": "BSW en línea",
+            "unidad": "%",
+            "limite": "< 0,5",
+            "bajo": null,
+            "alto": 0.5,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Analizador verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          },
+          {
+            "nombre": "DI-0101",
+            "tipo": "Densidad · gravedad API",
+            "unidad": "°API",
+            "limite": "28 – 31",
+            "bajo": 28,
+            "alto": 31,
+            "cadenciaS": 300,
+            "clase": "continua",
+            "calibracion": {
+              "vigenteHasta": "enero de 2027",
+              "detalle": "Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
+            }
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.zarza.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PI-2010",
+            "tipo": "Presión de succión",
+            "unidad": "psi",
+            "limite": "> 10",
+            "bajo": 10,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-2011",
+            "tipo": "Caudal",
+            "unidad": "bbl/d",
+            "limite": "990 – 4.000",
+            "bajo": 990,
+            "alto": 4000,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "II-2011",
+            "tipo": "Corriente del motor",
+            "unidad": "A",
+            "limite": "95 – 130",
+            "bajo": 95,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-2011",
+            "tipo": "Temperatura de cojinete",
+            "unidad": "°C",
+            "limite": "< 85",
+            "bajo": null,
+            "alto": 85,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "PDI-2011",
+            "tipo": "Presión de descarga",
+            "unidad": "psi",
+            "limite": "180 – 240",
+            "bajo": 180,
+            "alto": 240,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "P-201B",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-zarza.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "VI-2011",
+            "tipo": "Vibración global",
+            "unidad": "mm/s",
+            "limite": "< 3,9",
+            "bajo": null,
+            "alto": 3.9,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "LSH-2013",
+            "tipo": "Fuga del sello",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": null,
+            "clase": "discreta"
+          },
+          {
+            "nombre": "LT-2012",
+            "tipo": "Nivel del tanque de agua",
+            "unidad": "%",
+            "limite": "> 15",
+            "bajo": 15,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.zarza.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "II-0021",
+            "tipo": "Corriente de barraje",
+            "unidad": "A",
+            "limite": "< 600",
+            "bajo": null,
+            "alto": 600,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VI-0021",
+            "tipo": "Tensión de barra",
+            "unidad": "kV",
+            "limite": "13,2 – 14,4",
+            "bajo": 13.2,
+            "alto": 14.4,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "ruta-manual",
+          "endpoint": null,
+          "reloj": "la hora en que se cerró la ruta"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-0021",
+            "tipo": "Termografía de conexiones",
+            "unidad": "°C",
+            "limite": "ΔT < 15",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 15552000,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "pi-web-api",
+          "endpoint": "https://pi.zarza.local/piwebapi",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "PT-1011",
+            "tipo": "Presión de cabezal",
+            "unidad": "psi",
+            "limite": "115 – 130",
+            "bajo": 115,
+            "alto": 130,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "AIT-1011",
+            "tipo": "Punto de rocío",
+            "unidad": "°C",
+            "limite": "< -30",
+            "bajo": null,
+            "alto": -30,
+            "cadenciaS": 900,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "calculado",
+          "endpoint": null,
+          "reloj": "el tag del que se deriva"
+        },
+        "metricas": [
+          {
+            "nombre": "PDT-1011",
+            "tipo": "Derivada de presión",
+            "unidad": "psi/h",
+            "limite": "> -0,2",
+            "bajo": -0.2,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "K-101",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-zarza.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "ZI-1011",
+            "tipo": "Unidades en servicio",
+            "unidad": null,
+            "limite": "3",
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "discreta"
+          }
+        ]
+      }
+    ]
+  }
+]

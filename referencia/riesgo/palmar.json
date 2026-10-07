@@ -1,0 +1,1 @@
+{"id":"riesgo/palmar","descripcion":"Riesgo de palmar a esta hora (vigía)","endpoint":"/api/vistas/riesgo?campos=palmar","esperado":{"datos":[],"refs":{}}}

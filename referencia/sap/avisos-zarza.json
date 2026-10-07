@@ -1,0 +1,1 @@
+{"id":"sap/avisos-zarza","descripcion":"Avisos SAP de zarza","endpoint":"/api/sap/avisos?campos=zarza","esperado":{"datos":[],"refs":{}}}
