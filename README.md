@@ -3,6 +3,22 @@
 Front-end del producto que **baja los barriles diferidos de los equipos de alto impacto**
 de un campo de crudo: las bombas de reinyección de agua y las electrosumergibles.
 
+## Cómo se ve
+
+Doce pantallas con los datos del demo: los cinco campos y la operadora son de demostración, y
+cada pantalla lo dice arriba («Datos de demostración»). Cada rol ve solo las suyas (ver «Cada rol
+ve lo que su decisión exige»). Un clic en una imagen la abre en grande. Se regeneran desde la
+aplicación con `npm run pantallazos`.
+
+| | |
+|---|---|
+| [![Resumen del activo · gerente](docs/pantallas/resumen-gerente.png)](docs/pantallas/resumen-gerente.png)<br>**Resumen del activo · gerente.** Los barriles diferidos del mes con su rango (calculado, no medido), su valor en USD y la proyección de cierre «si todo sigue como está». Debajo, cuánto viene de bombas y electrosumergibles y qué equipos se llevan más. | [![Libro de diferidos](docs/pantallas/diferidos.png)](docs/pantallas/diferidos.png)<br>**Libro de diferidos.** Cuántos barriles se perdieron, por equipo y por tipo de causa, mes a mes contra el máximo firmado. «Dónde se puede bajar» separa la parte vigilada, la que no tiene instrumento y la que nadie identificó. |
+| [![Bombas · confiabilidad](docs/pantallas/bombas-vigia.png)](docs/pantallas/bombas-vigia.png)<br>**Bombas · confiabilidad.** Una placa por bomba: cada variable contra su banda normal y su alarma, y cada parte (succión, sello, rodamientos…) con su estado y cuándo cruzaría su límite («cruza en 43 h»). | [![Ficha de una bomba parada](docs/pantallas/ficha-bomba-parada.png)](docs/pantallas/ficha-bomba-parada.png)<br>**Ficha de una bomba parada.** P-201B se detuvo sin primera alarma: «no arrancar hasta identificar qué se dañó». Trae el respaldo (no hay), los repuestos críticos en SAP, el botón para enviar el aviso a SAP y las señales fuera de banda. |
+| [![Entrega de turno · supervisor](docs/pantallas/turno.png)](docs/pantallas/turno.png)<br>**Entrega de turno · supervisor.** Lo que se está perdiendo ahora, lo que hay que identificar antes de entregar, lo que hay que vigilar y lo que TRIM mandó por WhatsApp en el turno: aviso, pregunta, recordatorio y escalamiento. | <a href="docs/pantallas/whatsapp-operario.png"><img src="docs/pantallas/whatsapp-operario.png" alt="WhatsApp del operario" width="230"></a><br>**WhatsApp del operario.** TRIM pregunta qué se dañó y ofrece las partes que más han fallado en ese equipo; el operario responde con un número. En este front es visual: el envío real lo hace el backend. |
+| [![Confiabilidad · ¿acierta el vigía?](docs/pantallas/confiabilidad.png)](docs/pantallas/confiabilidad.png)<br>**Confiabilidad · ¿acierta el vigía?.** Tiempo entre fallas por familia de equipo; lo que el vigía anunció y en qué quedó (acierto, falsa alarma, intervenida antes); lo que no anunció, y lo que sigue en seguimiento. | [![Mi trabajo · técnico](docs/pantallas/ordenes-sap-tecnico.png)](docs/pantallas/ordenes-sap-tecnico.png)<br>**Mi trabajo · técnico.** Lo parado, lo que falta identificar y las órdenes de SAP a su nombre. TRIM no crea órdenes: manda el aviso con su evidencia, las lee y avisa por WhatsApp cuando se liberan. |
+| [![Producción contra plan](docs/pantallas/produccion-cuadre.png)](docs/pantallas/produccion-cuadre.png)<br>**Producción contra plan.** Lo real (punto de medición oficial) contra el potencial y la meta firmada, día a día; el factor de asignación contra su banda, y el cuadre: real + diferido + inventario = potencial. | [![Planta](docs/pantallas/planta.png)](docs/pantallas/planta.png)<br>**Planta.** El esquema del campo. Lleno: el equipo captura datos; punteado: configurado, sin datos. Lo anormal lleva forma y color (ISA-101): aquí P-201B detenida deja la reinyección «sin flujo». |
+| [![Metas firmadas · gerente](docs/pantallas/metas-firmadas.png)](docs/pantallas/metas-firmadas.png)<br>**Metas firmadas · gerente.** Meta de producción y máximo de diferido por campo, desde una fecha; la meta global es la suma. Cada cambio se firma con motivo y queda en el historial. | [![Conectores · administrador](docs/pantallas/conectores.png)](docs/pantallas/conectores.png)<br>**Conectores · administrador.** SAP PM (avisos, órdenes, horas, repuestos y catálogos de daño) y WhatsApp Business (plantillas aprobadas). Se muestran conectados; en este front son visuales. |
+
 ## Una sola promesa
 
 > **Decir cuántos barriles se perdieron por cada equipo de alto impacto y por qué parte,
@@ -117,6 +133,7 @@ npm run verificar:contrato          # cada endpoint de src/shared/api/contrato.t
 npm test                            # verificar + referencia comprobar
 npm run e2e:instalar                # una vez: Chrome, Safari (WebKit) y Firefox de Playwright
 npm run e2e                         # las pruebas de navegador de e2e/ (flujos, auditor y demo construido) en los tres motores
+npm run pantallazos                 # regenera las imágenes de docs/pantallas/ que muestra este README
 npm run referencia                  # regenera referencia/ (insumos en JSON y salidas esperadas de los endpoints calculados)
 node scripts/referencia.mjs comparar --base-url=http://servidor:8080   # un backend contra referencia/
 node scripts/gen-linea.mjs          # regenera los datos de demo (determinista, byte a byte)
@@ -360,7 +377,8 @@ src/
   pages/      una vista por pantalla (el mapa id → vista está en app/pantallas.tsx)
 public/       fonts/ (Air y Air Condensed en WOFF2) y brand/
 simulador-api/  el registro de la cadena de datos (Node + SQLite) y su esquema de referencia
-scripts/    verificar-libro, referencia (salidas esperadas por HTTP), gen-linea, armar-demo
+scripts/    verificar-libro, referencia (salidas esperadas por HTTP), gen-linea, armar-demo, pantallazos
+docs/pantallas/  las imágenes de «Cómo se ve» (las saca scripts/pantallazos.mjs)
 referencia/ insumos en JSON y salidas esperadas de los endpoints calculados (las genera scripts/referencia.mjs)
 e2e/        pruebas de navegador con Playwright: flujos, auditor visual y demo construido
 demo/       servidor del demo, cabeceras de seguridad y lanzador
