@@ -1,0 +1,200 @@
+# 6B.4 La ficha de un equipo — todos los roles
+
+**Para qué.** Lo que hay que saber de **un** equipo sin salir de la pantalla en que se está: cómo está, qué lo dice, qué le ha costado, qué dice SAP y qué hacer. Flota sobre cualquier pantalla (`src/widgets/PanelEquipo.tsx`), siempre montada pero calculada solo con un equipo abierto.
+
+**Ruta.** Cualquier pantalla con el id del equipo al final: `#/<rol>/<pantalla>/<campo>/<período>/<equipo>` (`src/app/url.ts:58, 84`). Se abre también con un clic en un equipo (Riesgo, Turno, Diferidos, Superficie, Planta, Resumen, la placa en decisión…). Abrir un equipo **no** deja entrada en el historial; Escape o «×» la cierran; el botón de expandir la pasa a casi toda la pantalla.
+
+**Qué ficha sale** (`PanelEquipo.tsx:141-229`):
+
+| Nivel del rol | Clase del equipo | Contenido |
+|---|---|---|
+| `decision` | cualquiera | **ficha ejecutiva** (`src/widgets/equipo/FichaEjecutiva.tsx`) + una línea de SAP |
+| `operacion` / `ingenieria` | `pozo` | el **detalle del pozo** (`DetallePozo`, 6B.3) con «← Cerrar», y el bloque SAP si el pozo tiene electrosumergible |
+| `operacion` / `ingenieria` | `catalogo` (bomba, servicio, proceso, medición) | la **ficha técnica**: chips, lectura, diferido, SAP, dispositivos, historia; en ingeniería además «Cadena del dato» |
+
+**Lee.**
+
+| Endpoint | Para qué | Quién |
+|---|---|---|
+| `GET /api/vistas/equipos/:campo/:equipo` → `EquipoVivo \| null` | cabecera, chips, lectura, dispositivos (5B §7 «El equipo vivo») | todas |
+| `GET /api/vistas/diferidos?campos=<campo>&desde&hasta` → `Libro.porEquipo` | «Diferido · <período>» (`useBarrilesDeEquipos`, `src/shared/api/diferidos.ts:386-392`) | técnica |
+| `GET /api/vistas/paradas/por-identificar?campos` | «No arrancar…», «Identificar qué se dañó» | técnica, ejecutiva, SAP |
+| `GET /api/vistas/equipos/:campo/:equipo/historia` → `{ eventos, bomba? }` | «HISTORIA DEL PLC», «Última parada» (5B §7) | técnica (no para pozos) |
+| `GET /api/vistas/equipos/:campo/:equipo/ficha?desde&hasta` → `FichaEquipo` | toda la ficha ejecutiva (`pedirFichaEquipo`, `src/shared/api/equipos.ts:206-227`) | decisión |
+| `GET /api/vistas/riesgo?campos` | estado y «qué se está haciendo» de la ejecutiva; aviso SAP sugerido | decisión, SAP |
+| `GET /api/sap/equipos/:equipo?campo` + `GET /api/sap/avisos?campos` + `GET /api/sap/ordenes?campos` | bloque SAP (5D §6) | todas |
+| `GET /api/campos/:campo/tags/:tag/procedencia` | «Cadena del dato» (5D §8) | ingeniería, al pedirla |
+
+**Cabecera (todos los niveles).** Id en monoespaciada + chip de severidad (`Severidad_`: «NORMAL», «P1 · ALARMA», «P2 · ATENCIÓN», «P3 · AVISO»; `src/shared/ui/primitivas.tsx:38-48`), nombre del equipo entero, y «<sistema> · <campo> · <estado>». Botones: exportar la ficha en PDF (solo con `evidencia:exportar`, `src/widgets/informe/Exportar.tsx:128-140`; operador y técnico no lo ven), expandir/contraer, cerrar.
+
+---
+
+## Ficha técnica, operación (P-201B, supervisor, `#/sup/bombas/ceiba/curso/P-201B`)
+
+![Ficha de P-201B · supervisor · La Ceiba](../img/sup-bombas-ficha-P-201B.png)
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Severidad | «P1 · ALARMA» | `EquipoVivo.severidad` (en el demo, dato declarado de la instancia del equipo en el campo; ver Huecos) | `Severidad_` | `severidad` |
+| 2 | Sistema · campo · estado | «Tratamiento de agua · La Ceiba · detenido» | `sistema`, nombre del campo, `estado` | texto del servidor | `sistema`, `estado` |
+| 3 | Franja | «**No arrancar hasta identificar qué se dañó.**» + «Identificar» | solo en **operación** y si hay una pregunta del equipo que pide respuesta y **sigue sin arrancar** (`pide && !fin`, `PanelEquipo.tsx:47-48, 157-162`). Aserción `rutas.ts:81` | el botón, si el rol tiene la pantalla `causa` | `/vistas/paradas/por-identificar` |
+| 4 | Criticidad | «criticidad 5/5» | `criticidad` del registro del equipo | chip | `criticidad` |
+| 5 | Redundancia | «sin respaldo» (chip fuerte) | bombas: del **respaldo firmado** (`respaldoEnCampo`, `src/entities/equipos.ts:463-472`): sin respaldo declarado «respaldo sin declarar en la configuración»; `libreBpd > 0` el `detalle` del respaldo; 0 «sin respaldo». Otros equipos: su registro («3 unidades (N+1)») | tono fuerte solo con «sin respaldo» | `redundancia` |
+| 6 | Aguas abajo | «aguas abajo: todo el campo» | bombas por papel: transporte «N pozos»; recobro «soporte de presión del yacimiento»; disposición «todo el campo» (sin respaldo) / «la parte del campo que el respaldo no cubre» / «sin declarar: falta el respaldo en la configuración». Otros: su registro | chip | `aguasAbajo` |
+| 7 | Lectura | «Detenida, el agua no tiene salida: el tanque se llena y hay que cerrar los pozos del campo.» | diagnóstico en una frase (en el demo, texto declarado por instancia; en un pozo, la causa: «<texto>. Se le carga a <equipo>.», 5B §7) | — | `lectura` |
+| 8 | «Diferido · <período>» | «Diferido · octubre, en curso» | el nombre del período en minúscula | — | período de la cabecera |
+| 9 | Valor | **2.570 bbl** | fila del equipo en el Pareto por equipo del libro del período (5A §8 «Pareto por equipo»); 0 si no está | `n0` + « bbl» | `Libro.porEquipo[campoId, equipo].bbl` |
+| 10 | SAP | «SAP · MANTENIMIENTO · equipo 10759915 · CO-CEI-BAT1-AGU-P-201B» ⓘ | identidad del equipo en SAP (5D §6 «Identidad») | ⓘ «De dónde sale: Avisos, órdenes, horas y stock vienen de SAP. La orden la crea el planeador en SAP; TRIM envía el aviso y avisa cuando la orden se libera.» (`src/widgets/sap/BloqueSap.tsx:62-65`) | `/sap/equipos/:equipo` → `identidad` |
+| 11 | Estado en SAP | «Sin aviso ni orden abiertos» + chip «parado, SAP no lo sabe» | prioridad: orden abierta (estado ≠ TECO) → la orden; si no, aviso abierto → el aviso; si no, el formulario plegado (con `sap:aviso`) o «Sin aviso ni orden abiertos.» (sin la capacidad) (`BloqueSap.tsx:67-73`). El chip sale si el equipo está **parado**: `marcha = detenido`, o una fila de riesgo «perdiendo», o una pregunta abierta (`BloqueSap.tsx:143, 161-170`) | — | `/sap/avisos`, `/sap/ordenes`, `/vistas/riesgo`, preguntas |
+| 12 | «Enviar aviso a SAP» | botón principal | variante principal si está parado; abre el formulario del aviso (M2 avería si parado, M1 solicitud si no) prellenado: «Parada de P-201B, sin causa identificada», parte sugerida, prioridad SAP desde la severidad (1→1, 2→2, si no 3), evidencia (hasta 5 líneas). Envía `POST /api/sap/avisos` (5D §6) | — | — |
+| 13 | Repuesto en tránsito | «**Kit de sello mecánico** · 0 en bodega (mín. 1) · llega 1 el 9 de oct» | stock < mínimo con tránsito: sin marca | «<descripción> · <stock> en bodega (mín. <mínimo>)» + « · llega(n) N el <fechaCorta>» o « · pedirlo: N días» (`BloqueSap.tsx:75-94`) | `repuestos[]` |
+| 14 | Repuesto que falta | ■ «**Impulsor y anillos de desgaste** · 0 en bodega (mín. 1) · pedirlo: 45 días» | stock < mínimo y sin tránsito → ■ P3 (`FueraDeMeta`) | — | `repuestos[].stock/minimo/plazoDias` |
+| 15 | Encabezado de dispositivos | «FUERA DE BANDA · 3 DE 8» | operación: solo los dispositivos con estado ≠ normal (`PanelEquipo.tsx:66, 182`); «N» = no normales sin contar los «sin señal»; «M» = todos; « · K SIN SEÑAL» si hay | ingeniería: «DISPOSITIVOS · M»; sin ninguno fuera: «Todo dentro de banda.» | `dispositivos[].estado` |
+| 16 | Un dispositivo | ◆ «FI-2011 · Caudal · límite 18.000 – 20.400» · **0** bbl/d | marca `MarcaEstado` (estado → prioridad, «sin señal» = círculo magenta); tag, tipo, «límite <texto>» (en el papel antes va el origen); valor `num` (los decimales que trae) y unidad; sin señal: «—» y debajo el estado | globo: «Valor», «Límite», «Estado», «Origen», «Minigráfica»; pista «Clic para ver la cadena técnica de este dato». En operación no hay minigráfica | `dispositivos[]` |
+| 17 | Última parada (solo operación) | «Última parada: **2 de oct, 03:52**» ⓘ | el evento más reciente de la historia del equipo (`historia.eventos[0]`); « · <parte>» si la tiene | ⓘ «Por qué paró» con el texto de la causa (`PanelEquipo.tsx:211-216`) | `/historia` → `eventos[0]` |
+| 18 | «Identificar qué se dañó» | botón | con `causa:declarar`, la pantalla `causa` y una pregunta del equipo que pide respuesta (aunque ya haya arrancado) (`PanelEquipo.tsx:219-225`) | — | preguntas |
+| 19 | Los otros dos fuera de banda | ◆ «II-2011 · Corriente del motor · límite 95 – 130 · 0 A»; ◆ «PDI-2011 · Presión de descarga · límite 180 – 240 · 0 psi» | las reglas de la fila 16; con la bomba parada los tres miden 0 (5C §3) | — | `dispositivos[]` |
+| 20 | Repuesto con stock | «Juego de rodamientos · 2 en bodega (mín. 1)» | stock ≥ mínimo: sin marca ni tránsito (filas 13-14) | — | `repuestos[]` |
+
+Los dispositivos van de cinco en cinco con «ver N más», pero **ningún dispositivo que no esté normal queda escondido** (`PanelEquipo.tsx:237-247`). Si alguno está sin señal: hueco «**Sin señal**: valor de ruta manual» + ⓘ «Hay dispositivos sin señal: su último valor es de una ruta manual, no de una lectura en línea. No se estima el valor faltante.» Un equipo sin instancia en el campo: «**Sin conectar en <campo>**» + ⓘ «… No se muestran aquí las de otro campo: serían el número de otra máquina.»
+
+## Ficha técnica, ingeniería (P-201B, jefe de mantenimiento, `#/jefe/riesgo/ceiba/curso/P-201B`)
+
+![Ficha de P-201B · jefe de mantenimiento · La Ceiba](../img/jefe-riesgo-ficha-P-201B.png)
+
+Lo que agrega ingeniería (la operación no tiene «HISTORIA DEL PLC» ni «Modo de falla»: aserción `rutas.ts:81`):
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | ⓘ norma | «norma» | `EquipoVivo.norma` | — | `norma` |
+| 2 | Modo de falla | «Lubricación de cojinete» | `modoFalla` del registro (en un pozo con ESP, la peor parte o «Aislamiento, bomba de fondo, admisión») | — | `modoFalla` |
+| 3 | Historial SAP | «HISTORIAL SAP · 9 ÓRDENES» | órdenes del equipo, de la más reciente a la más vieja | `plural(n,'ORDEN','ÓRDENES')` | `/sap/ordenes` |
+| 4 | Una orden | «22 de sept **40012043** correctivo · Reparar rodamientos de P-201B cerrada · 8,0 h» | `fechaCorta(creada)`, número, `NOMBRE_CLASE` (PM01 correctivo, PM02 preventivo, PM03 predictivo), descripción (no se repite la de la orden abierta), `NOMBRE_ESTADO_ORDEN` (CRTD «creada, sin liberar», REL «liberada», PCNF «en ejecución», CNF «ejecutada», TECO «cerrada»), « · `n1(horasReales)` h» si hay | — | `OrdenSap` |
+| 5 | «ver 4 más» | — | cinco y el resto en el papel | — | — |
+| 6 | Dispositivos | «DISPOSITIVOS · 8» | todos | — | `dispositivos` |
+| 7 | Tag | «PI-2010 · Presión de succión · límite > 10 · 18,2 psi» | normal en gris | — | — |
+| 8 | Minigráfica | (la línea a la derecha) | `Sparkline` de la serie con la banda sombreada; la banda sale de **parsear el texto** `limite` (`banda()`, `src/shared/lib/formato.ts:49-60`; ver Huecos); sin serie: «SIN SEÑAL» (magenta) o «DISCRETA» | punto final del color de la prioridad | `dispositivos[].serie`, `limite` |
+| 9 | «ver 3 más» | — | — | — | — |
+| 10 | «HISTORIA DEL PLC» | — | `Historia` (`PanelEquipo.tsx:255-298`; 5B §7 «Cómo se ve la historia») | — | `/historia` |
+| 11 | Fallas (solo bombas con perfil) | «**9 fallas** en 12 meses · cada 41 d · 40,0 h fuera» | `historia.bomba`: fallas, $n_0(\text{días}/30{,}4)$, MTBF, MDT con `fmtHoras(h, true)` | MDT < 48 h en horas con un decimal; ≥ 48 h en días («2,0 d fuera» en MPP-301, que la placa escribe «48,7 h fuera»: ver Huecos) | `bomba.fallas/mtbfDias/mdtH` |
+| 12 | Por parte | «sello mecánico 5 · rodamientos 3» | `porParte[]`: «<parte en minúscula> <fallas>» | — | `bomba.porParte` |
+| 13 | Eventos | «10 eventos con pozos cerrados · **150.996 bbl**» | `eventosCargadosA` (5B §7): incluye la programada y lo que cerró pozos; Σ bbl | «Ningún pozo cerrado por este equipo en la historia.» si no hay | `eventos[]` |
+| 14 | Un evento | «2 de oct, 03:52 · sigue · 10,1 h · 17 pozos» / «sin identificar» / 2.570 bbl | inicio de la causa; duración **hasta que reabrió el último pozo** (no hasta que arrancó la bomba: «22 de sept, 10:05 · 17,2 h» aquí y «16,0 h» en la lista de paradas del detalle de la bomba); pozos distintos | segunda línea: «<Parte> · <cómo>»; si no hay parte y la causa tiene ≤ 6 palabras, la causa (+ « · <cómo>» salvo la programada); si no, solo el cómo. Globo: «Duración», «Barriles», «Cómo se identificó», pista = causa | `eventos[].inicio/fin/pozos/bbl/causa` |
+| 15 | Otro | «Rodamientos · por señal» | — | — | — |
+| 16 | «ver 5 más» | — | — | — | — |
+| 17 | «Cadena del dato» | botón | abre la cadena del primer dispositivo (`PanelEquipo.tsx:226`); cada fila también la abre | — | `/campos/:campo/tags/:tag/procedencia` |
+| 18 | Las otras órdenes a la vista | «9 de sept · 40012041 · correctivo · Reparar sello mecánico de P-201B · cerrada · 8,0 h»; «12 de ago · 40012051 · preventivo · Mantenimiento preventivo programado de la bomba · cerrada · 8,0 h»; «27 de jul · 40012036 · correctivo · Reparar sello mecánico de P-201B · cerrada · 8,0 h»; «9 de jul · 40012031 · correctivo · Reparar sello mecánico de P-201B · cerrada · 8,0 h» | `OrdenSap[]` del equipo con las reglas de la fila 4 (tras las horas, «confirmadas» solo para el lector de pantalla, `BloqueSap.tsx:56`) | — | `/sap/ordenes` |
+| 19 | Los otros dispositivos a la vista | ◆ «FI-2011 · Caudal · límite 18.000 – 20.400 · 0 bbl/d»; ◆ «II-2011 · Corriente del motor · límite 95 – 130 · 0 A»; «TI-2011 · Temperatura de cojinete · límite < 85 · 41 °C»; ◆ «PDI-2011 · Presión de descarga · límite 180 – 240 · 0 psi», cada uno con su minigráfica | reglas de las filas 7-8 (cinco a la vista y «ver 3 más») | — | `dispositivos[]` |
+| 20 | Los otros eventos a la vista | «22 de sept, 10:05 · 17,2 h · 18 pozos · Rodamientos · por señal · 6.089 bbl»; «9 de sept, 21:14 · 36,0 h · 18 pozos · Sello mecánico · por señal · 14.649 bbl»; «19 de ago, 18:19 · 14,5 h · 18 pozos · Mantenimiento preventivo programado de la bomba · 3.828 bbl»; «27 de jul, 19:10 · 2,6 d · 18 pozos · Sello mecánico · por señal · 30.705 bbl» | `eventosCargadosA` (5B §7) con las reglas de la fila 14 (duración hasta que reabrió el último pozo; ≥ 48 h en días) | — | `/historia` → `eventos[]` |
+| 21 | Repuestos | «Kit de sello mecánico · 0 en bodega (mín. 1) · llega 1 el 9 de oct», «Juego de rodamientos · 2 en bodega (mín. 1)», ■ «Impulsor y anillos de desgaste · 0 en bodega (mín. 1) · pedirlo: 45 días» | los de la ficha de operación (filas 13, 14 y 20) | — | `repuestos[]` |
+
+### Otros equipos del catálogo en la ficha técnica
+
+**MPP-301, confiabilidad** (`#/conf/confiabilidad/morichal/curso/MPP-301`):
+
+![Ficha de MPP-301 · confiabilidad · Morichal](../img/conf-confiabilidad-ficha-MPP-301.png)
+
+| # | Lo que se ve | En la captura | Regla / origen |
+|---|---|---|---|
+| 1 | Severidad | «P3 · AVISO» | `severidad` (dato de la instancia) |
+| 2 | Aguas abajo | «aguas abajo: 3 pozos» | papel `transporte` → `perfil.pozos.length` |
+| 3 | Lectura | «Para sostener la misma presión diferencial necesita 4,9 % más velocidad que hace 11 días, y la caída de presión del filtro se duplicó: está entrando arena…» | `lectura` (texto declarado; en producción debería generarlo el servidor o un ingeniero) |
+| 4 | Modo de falla | «Erosión de tornillos y camisa por arena» | `modoFalla` |
+| 5 | Diferido · octubre | «0 bbl» | no está en el Pareto por equipo del período |
+| 6 | Repuesto | ■ «**Juego de tornillos** · 0 en bodega (mín. 1) · pedirlo: 60 días» | falta y sin tránsito → ■ |
+| 7 | Dispositivos | «DISPOSITIVOS · 16» | las 16 variables de la plantilla multifásica instrumentadas |
+| 8–9 | Uno fuera de banda | ▲ «PDT-3011 · Caída de presión del filtro · límite < 8» · 9,6 psi | estado `atencion` → ▲; la minigráfica pinta la raya del límite y el punto final naranja |
+| 10 | «ver 11 más» | | |
+| 11 | Historia | «**7 fallas** en 12 meses · cada 52 d · 2,0 d fuera» · «sello mecánico 4 · tornillos y holguras 2 · lubricación 1» | 5B §7 |
+| 12 | Eventos | «8 eventos con pozos cerrados · **24.845 bbl**» | incluye la programada `EV-3016-260825` (811 bbl) |
+| 13 | Cómo se identificó | «Tornillos y holguras · por la firma de las señales» | `COMO.firma` |
+| 14 | Criticidad y redundancia | «criticidad 5/5» · «sin respaldo» (fuerte) | registro del equipo y respaldo firmado de MPP-301 («Sin bomba en paralelo ni derivación al manifold», 0 bbl/d; 6A.4.6) — reglas de las filas 4-5 de P-201B |
+| 15 | SAP | «equipo 10385444 · CO-MNO-BAT1-AGU-MPP-301»; «Sin aviso ni orden abiertos» sin chip | identidad (5D §6 «Identidad del equipo en SAP»); sin chip porque está en marcha (fila 11 de P-201B) |
+| 16 | Repuesto con stock | «Filtro canasta de succión · 4 en bodega (mín. 2)» | sin marca |
+| 17 | HISTORIAL SAP · 9 ÓRDENES | «24 de sept · 40012044 · correctivo · Reparar sello mecánico de MPP-301 · cerrada · 8,0 h»; «6 de sept · 40012056 · predictivo · Revisar lubricación y alineación; programar el cambio con el repuesto en mano. · cerrada · 4,0 h»; «18 de ago · 40012052 · preventivo · Mantenimiento preventivo programado de la bomba · cerrada · 8,0 h»; «25 de jul · 40012033 · correctivo · Reparar tornillos y holguras de MPP-301 · cerrada · 8,0 h»; «27 de jun · 40012028 · correctivo · Reparar lubricación de MPP-301 · cerrada · 8,0 h»; «ver 4 más» | reglas de la fila 4 de la ficha de ingeniería de P-201B |
+| 18 | Los otros dispositivos a la vista | «PT-3011 · Presión de succión · límite 35 – 60 · 45 psi»; «TE-3011 · Temperatura de succión · límite 45 – 75 · 58 °C»; «PT-3012 · Presión de descarga · límite 320 – 360 · 345 psi»; «TE-3012 · Temperatura de descarga · límite < 90 · 71 °C» (en banda, gris) | filas 7-8 de P-201B |
+| 19 | Los otros eventos a la vista | «24 de sept, 06:23 · 46,2 h · 3 pozos · Sello mecánico · por señal · 3.022 bbl»; «25 de ago, 15:06 · 12,5 h · 3 pozos · Mantenimiento preventivo programado de la bomba · 811 bbl»; «27 de jun, 02:00 · 11,2 h · 3 pozos · Lubricación · por señal · 773 bbl»; «7 de jun, 00:09 · 41,4 h · 3 pozos · Sello mecánico · por señal · 2.876 bbl» (con el de la fila 13, «25 de jul, 10:28 · 3,1 d · … · 5.066 bbl») | fila 14 de P-201B |
+
+Sin orden abierta y en marcha: «Sin aviso ni orden abiertos» sin chip y el botón «Enviar aviso a SAP» en variante normal (no principal).
+
+**K-101, jefe de mantenimiento** (`#/jefe/equipo/ceiba/curso/K-101`, un servicio con orden abierta):
+
+![Ficha de K-101 · jefe de mantenimiento · La Ceiba](../img/jefe-equipo-ficha-K-101.png)
+
+| # | Lo que se ve | En la captura | Regla / origen |
+|---|---|---|---|
+| 1 | Severidad | «P1 · ALARMA» | — |
+| 2 | Redundancia | «criticidad 5/5» · «3 unidades (N+1)» · «aguas abajo: todo el campo» | registro del equipo (no es bomba: no hay respaldo firmado; reglas de las filas 4-6 de P-201B) |
+| 3 | Modo de falla | «Pérdida de suministro → válvulas a posición segura» | — |
+| 4 | Orden abierta | «**Orden 40012053** · predictivo · prioridad 2 · liberada el 2 de oct, 09:10» y su descripción | `LineaOrden` (`BloqueSap.tsx:126-134`): número, clase, prioridad, estado; si `liberada`, « · liberada el <fechaHora>» (sin repetir «liberada» si el estado ya lo es) |
+| 5 | A quién | «asignada a Óscar Daza · aviso 10004146» | técnico de la orden por su id en el registro de usuarios; si no está, «la cuadrilla <puesto>»; « · aviso N» si viene de un aviso |
+| 6 | Historial | «HISTORIAL SAP · 1 ORDEN» · «2 de oct **40012053** predictivo liberada» | la orden abierta en el historial no repite su descripción; sin horas confirmadas, sin « · N h» |
+| 7 | Discreta | «ZI-1011 · Unidades en servicio · límite 3» · «DISCRETA» | dispositivo sin serie y con estado: variable discreta; el límite es el texto del registro («3» unidades) |
+| 8–9 | Valor y estado de una discreta | «2 de 3» · «atencion» | `valor` texto; sin unidad, debajo va el **estado tal como viene del contrato** («atencion», sin tilde: ver Huecos) |
+| 10 | Historia | «5 eventos con pozos cerrados · **12.997 bbl**» | sin renglón de fallas (no es bomba con perfil) |
+| 11 | Evento de otro año | «**15 de nov de 2025, 09:52** · 5,6 h · 18 pozos» / «Presión baja del aire de instrumentos · por señal» | `fechaHora` con año; la causa tiene 6 palabras → se escribe |
+| 12 | Lectura | «La presión de cabezal cae hace 7 días. La norma exige recibidor de 5 a 30 min de autonomía: hoy quedan 11. Alimenta cinco sistemas.» | `lectura` (texto declarado de la instancia en el demo, `src/entities/equipos.ts`; ver Huecos 1) |
+| 13 | SAP | «equipo 10176913 · CO-CEI-BAT1-SRV-K-101»; descripción de la orden «Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en 11 min de autonomía, una parada deja las válvulas en posición segura.» | identidad (5D §6) y `OrdenSap.descripcion` |
+| 14 | Los otros dispositivos («DISPOSITIVOS · 4») | ◆ «PT-1011 · Presión de cabezal · límite 115 – 130 · 112 psi»; ◆ «PDT-1011 · Derivada de presión · límite > -0,2 · -0,9 psi/h»; «AIT-1011 · Punto de rocío · límite < -30 · -38 °C» (normal) y la discreta de las filas 7-9 | reglas de las filas 7-8 de P-201B; los negativos con guion «-» como los da el límite |
+| 15 | Los otros eventos | «4 de ago, 22:13 · 5,4 h · 18 pozos · 2.238 bbl»; «15 de jul, 09:28 · 5,6 h · 2.552 bbl»; «23 de jun, 19:44 · 4,5 h · 1.880 bbl»; «28 de ene, 16:18 · 8,6 h · 3.908 bbl»; (fila 11) 2.419 bbl — todos «Presión baja del aire de instrumentos · por señal» | $2.238 + 2.552 + 1.880 + 3.908 + 2.419 = 12.997$ (fila 10) |
+
+Un aviso abierto sin orden se vería «**Aviso N** · avería|solicitud · prioridad P · hace N h (o «recién enviado») · <creado por>», la descripción, chip «sin orden» y ⓘ «La crea el planeador en SAP, y cuando la libere TRIM le avisa al técnico.» (`BloqueSap.tsx:110-124`).
+
+---
+
+## Ficha ejecutiva (decisión)
+
+### Una bomba parada (P-201B, gerente, septiembre cerrado, `#/ger/resumen/ceiba/cerrado/P-201B`)
+
+![Ficha ejecutiva de P-201B · gerente · La Ceiba · septiembre cerrado](../img/ger-resumen-ficha-P-201B.png)
+
+Las reglas de cada renglón están en 5B §7 («Ficha ejecutiva»); aquí, el valor de la captura y de dónde sale. Aserción `rutas.ts:58`: «Qué se está haciendo», «Le ha costado», «pozos cerrados desde» presentes; nada de `NO_DECISION` («Presión de succión», «Energía por barril», «VIGÍA», «FACTOR DE ASIGNACIÓN», «CADENA DE CUSTODIA», «Tolerancia», «DISPOSITIVOS»).
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Cifra | ◆ **11.059 bbl/d** perdiéndose | fila `perdiendo` del equipo en Riesgo (5B §5.2) | marca = `eq.severidad`; sin fila «perdiendo» no hay cifra | `/vistas/riesgo` → `bblDia` |
+| 2 | Estado | «Parada desde 2 de oct, 03:52 · pozos cerrados desde 2 de oct, 08:07» | `desde` y `cierreDesde` de la fila | « · pozos cerrados desde …» solo si `cierreDesde − desde > 1 min`; pozo cerrado por otro: «Cerrado por <equipo> desde <fecha>»; en riesgo: «En marcha · si falla, N bbl/d»; si no, nada (el estado ya va en la cabecera) (`FichaEjecutiva.tsx:39-45`) | `desde`, `cierreDesde` |
+| 3 | Redundancia | «sin respaldo» | ver ficha técnica, fila 5 | solo equipos del catálogo | `eq.redundancia` |
+| 4 | Si para | «si para: todo el campo» | `aguasAbajo` | — | `eq.aguasAbajo` |
+| 5 | Le ha costado | «20.739 bbl en septiembre, cerrado · 995 mil USD» | lo cargado al equipo en el período (`diferidoDeEquipo`) y su valor con el precio de cada día (`valorDeTramos`, 5A §6 «Valor en USD»): 20.738,86 bbl; 995.465 USD | `usd()`: ≥ 1 M «n1 M USD», ≥ 1.000 «n0 mil USD»; sin precio, sin valor | `/ficha` → `periodo.bbl/usd` |
+| 6 | Pie | «150.996 bbl desde 01 de oct de 2025 · 7,2 M USD» | toda la historia (`desdeHistoria` = inicio del calendario fiscal): 150.995,97 bbl; 7.247.807 USD | `fechaCorta` (con año) | `/ficha` → `historia`, `desdeHistoria` |
+| 7 | Cada cuánto falla | «9 fallas · una cada 41 días» | `hist` (5B §7) | sin fallas: «No ha fallado · N disparos que volvieron a arrancar» o «No ha fallado»; sin MTBF, solo «N fallas» | `/ficha` → `hist` |
+| 8 | Pie | «18.075 bbl por falla, en promedio» | `bblPorFalla` | — | `hist.bblPorFalla` |
+| 9 | Por qué parte | «sello mecánico 72 % · rodamientos 28 %» ⓘ | bbl de las fallas (no disparos) con parte, por parte, ÷ total, las dos mayores: 104.081,7 / 144.598,2 = 72,0 %; 40.516,5 / 144.598,2 = 28,0 % | `n0` %; ⓘ «Porcentaje de los barriles de sus fallas.» | `hist.eventos[]` |
+| 10 | Qué se está haciendo | «Espera que se identifique el daño · hace 10,1 h» ⓘ | pregunta abierta del equipo: horas desde su inicio hasta AHORA | orden de las reglas (`FichaEjecutiva.tsx:48-61`): pregunta abierta → esta frase + chip «no arrancar» + ⓘ «Quien la revise tiene que registrar qué se dañó: por regla no se arranca hasta identificarlo.»; pozo cerrado por otro → «Su pozo está bien · espera a <equipo>»; falla abierta → «Parada por <parte> · lleva N h · suele durar <MDT>»; perdiendo → el motivo; en riesgo → «<Parte> avisa · límite en N» + ⓘ «Mantenimiento tiene la acción en su pantalla.»; si no, «En marcha · ninguna parte avisa» | preguntas, riesgo, `hist` |
+| 11 | Chip | «no arrancar» | ver 10 | — | — |
+| 12 | SAP en una línea | «**En SAP:** sin aviso ni orden abiertos · ■ sin stock de kit de sello mecánico, impulsor y anillos de desgaste» | `BloqueSap` en decisión (`BloqueSap.tsx:42-48`): «orden N <estado>», «aviso N abierto, sin orden todavía» o «sin aviso ni orden abiertos»; « · ■ sin stock de …» con los repuestos con stock < mínimo (**incluye el que viene en tránsito**, a diferencia de la ficha técnica, que no lo marca) | — | SAP |
+
+Con «Octubre, en curso» la misma ficha dice «2.570 bbl en octubre, en curso · 123 mil USD» (123.372 USD).
+
+### Un servicio (SE-2, gerente, `#/ger/diferidos/morichal/curso/SE-2`)
+
+![Ficha ejecutiva de SE-2 · gerente · Morichal](../img/ger-diferidos-ficha-SE-2.png)
+
+| # | Lo que se ve | En la captura | Regla / origen |
+|---|---|---|---|
+| 1 | Severidad | «P3 · AVISO» | `severidad` |
+| 2 | Estado | «Distribución eléctrica · Morichal Norte · en servicio · corriente de barraje subiendo» | cabecera |
+| — | (sin cifra ni estado) | — | no tiene fila «perdiendo»; en «en riesgo» solo entran servicios de severidad 1 o 2 (5B §5.3 b), y SE-2 es 3: no hay renglón superior |
+| 3 | Le ha costado | «72 bbl en octubre, en curso · 3 mil USD» | 71,90 bbl, 3.451 USD (UV de MN-22 y MN-31 el 1-oct) |
+| 4 | Pie | «103.115 bbl desde 01 de oct de 2025 · 4,9 M USD» | 103.114,94 bbl; 4.949.517 USD |
+| 5 | Veces que cerró pozos | «60 veces» | equipo sin historia de fallas (no es bomba con perfil ni ESP): número de eventos cargados (`veces`), `plural(n,'vez','veces')` |
+| 6 | Qué se está haciendo | «En marcha · ninguna parte avisa» | la regla por defecto (ver Huecos: un servicio con P3 no tiene partes y la frase engaña) |
+| 7 | SAP | «**En SAP:** sin aviso ni orden abiertos» | sin repuestos declarados |
+| 8 | Nombre del equipo | «Pórtico 13,8 kV · subestación 2» | `nombre` del registro (cabecera de la ficha: «nombre del equipo entero») |
+
+Para una bomba en marcha con una parte que avisa (P-201B de Morichal, septiembre cerrado) los renglones serían: «En marcha · si falla, 1.671 bbl/d»; «9.838 bbl en septiembre, cerrado · 472 mil USD»; «8 fallas · una cada 46 días» / «3.365 bbl por falla, en promedio»; «sello mecánico 100 % · succión y filtro de entrada 0 %»; «Si para ahora · el tanque aguanta 19 h · luego se pierden 1.671 bbl/d» (`fmtHoras` sin decimal); «Succión y filtro de entrada avisa · límite en 43 h» (5B §7).
+
+### Variantes
+
+| Variante | Qué cambia |
+|---|---|
+| Período | Solo «Diferido · <período>» (técnica) y «Le ha costado» (ejecutiva). Lo demás es «ahora» o toda la historia |
+| Equipo sin conectar en el campo | Hueco «Sin conectar en <campo>» y lista vacía; la severidad sale 0 y el estado «sin lectura en este campo» (`equipos.ts:431`) |
+| Pozo | Ver 6B.3 (detalle del pozo) y 6B.2 (MN-07): en la ficha, el detalle del pozo y el bloque SAP si tiene ESP |
+| Equipo que no está en el campo | `/vistas/equipos/:campo/:equipo` responde `null` y no se abre nada; la ejecutiva diría «Este equipo no está en <campo>.» (`FichaEjecutiva.tsx:23`) |
+| Teléfono | 6B.6 |
+
+### Interacciones
+
+Clic en un dispositivo (técnica): la **cadena del dato** de ese tag reemplaza el contenido (Escape vuelve a la ficha); «Identificar»/«Identificar qué se dañó» cierran la ficha y van a la pantalla de causa; «Enviar aviso a SAP» abre el formulario (`POST /api/sap/avisos`); «Ver <equipo>» (pozo cerrado por otro) abre la ficha de ese equipo; exportar → `POST /api/informes` con `equipo` (5D §4).

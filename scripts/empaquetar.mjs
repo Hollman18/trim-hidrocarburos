@@ -37,7 +37,8 @@ if ((PAQUETE + sep).startsWith(resolve(RAIZ) + sep)) { console.error('el paquete
  *  respaldo, los resultados de las pruebas de navegador y las herramientas
  *  locales), y la historia de git: el paquete es la copia del código de hoy. */
 const FUERA = [/^\.git(\/|$)/, /^\.claude(\/|$)/, /^node_modules(\/|$)/, /^dist(\/|$)/, /^dist-ssr(\/|$)/, /^\.respaldos(\/|$)/, /^e2e\/\.resultados(\/|$)/, /^e2e\/\.informe(\/|$)/,
-  /^simulador-api\/datos\/.*\.db/, /(^|\/)\.DS_Store$/, /\.local$/, /\.log$/, /^\.vscode(\/|$)/, /^\.idea(\/|$)/, /^\.codegraph(\/|$)/]
+  /^simulador-api\/datos\/.*\.db/, /(^|\/)\.DS_Store$/, /\.local$/, /^(?!docs\/backend\/sql\/validacion\.log$).*\.log$/, /^\.vscode(\/|$)/, /^\.idea(\/|$)/, /^\.codegraph(\/|$)/,
+  /^docs\/backend\/sql\/herramientas\/(motor|cuenta-ejemplos)\.json$/]
 const seEntrega = rel => !FUERA.some(r => r.test(rel))
 
 /** Los archivos que se entregan, con su ruta relativa (con «/»). */

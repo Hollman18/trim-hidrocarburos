@@ -1,0 +1,42 @@
+# 5A.12 · Huecos y dudas
+
+Lo que no se pudo resolver leyendo el código, lo que parece inconsistente y lo que el backend real tiene que decidir. Cada punto con su archivo y línea.
+
+### Del modelo y los datos del demo
+
+1. **Cortes de agua del demo muy por debajo de la narrativa.** Las pruebas del demo dan BSW de campo de 29 % (La Zarza) a 71 % (Morichal) y de pozo de 15,5 % a 79,1 % (WOR 0,18 a 3,79). La propuesta habla de 92 % a 98 % (WOR 11,5 a 49). Las fórmulas no cambian, pero los tanques de agua, los colchones de horas y el «evitable cerrando en orden» se comportan muy distinto con WOR de 12 a 49. Conviene que el demo, o al menos un caso de `referencia/`, tenga cortes reales. (`src/entities/datos/pozos.ts`.)
+2. **El gas no entra al libro.** Solo se asigna crudo (fila `crudo` de la Fig. 10.2). La Zarza es un campo de gas con condensado y su libro va sobre el condensado (°API 34, ±5 %). Las filas `gas` y `agua` de `src/entities/metrologia.ts:30-33` no las usa nadie. El backend debe decidir si un campo de gas necesita su propio libro de gas.
+3. **La prueba vigente antes de la primera prueba es la primera** (`src/entities/pozos.ts:180`, `u ?? p.pruebas[0]`): una prueba posterior rige hacia atrás sin que nada lo diga. Para un pozo nuevo, el backend debería tratar ese tramo como «sin prueba» (sin custodia) o decirlo.
+4. **La prueba se toma al inicio del día.** Una prueba nueva de las 15:00 rige desde el día siguiente (`crudo(p, dia)`, `src/entities/libro.ts:84`). Es una convención; el backend tiene que usar la misma para dar los mismos números.
+
+### De la identidad y el residuo
+
+5. **Eventos en días sin fiscal.** Sus barriles se cuentan en los tramos (con el FA del mes) pero el día no entra en potencial ni real (`src/entities/libro.ts:328-335` contra `:670-672`). Resultado: en un mes con un día sin fiscal **y** eventos ese día, la identidad potencial − real = Σ eventos deja de ser exacta y el residuo es −(diferido de ese día). El comentario de `:474-476` lo reconoce. En el día a día pasa igual: `Dia.diferido` suma eventos de campos que ese día están en `faltan` (`:947-956`), así que el «inventario» del día mezcla dos cosas.
+6. **Valor del libro y valor de los equipos no suman igual.** `valorUsd` valora la brecha diaria (potencial − real, `src/entities/libro.ts:678`), incluidos días de inventario negativo; las fichas de equipo valoran tramos (`valorDeTramos`, `:1240-1251`). En un mes entero la diferencia es pequeña, pero no cero: la suma del valor de los equipos no es el valor del libro.
+7. **`faDe` y el libro no tratan igual un mes sin factor.** El libro pone 0 bbl y `sinFactor` (`:330-332`); `faDe` (riesgo, predicción, caudales de ahora, cierre proyectado) usa el último factor medido (`:211-219`). En el escenario «octubre de La Ceiba sin fiscal», el libro da 0 y `faDe` da 0,969. Es deliberado, pero el backend tiene que replicar las dos reglas.
+
+### De la publicación
+
+8. **Banda sin verificar se pinta como «fuera de banda».** Con `api: null`, `fa[].dentro` es `false` (`src/entities/libro.ts:702`) aunque el factor esté bien (El Palmar sep, 1,008 con «banda» 0,20). El motivo es solo `banda-sin-verificar`, pero el Cuadre lista ese mes con ■ y «fuera de ±20 %» (`src/widgets/diferidos/Cuadre.tsx:20`, `:53-61`) y el gráfico del factor lo pinta como cuadrado P3 con «Fuera de la banda: revisar pruebas, medición y pozos sin prueba» (`src/widgets/diferidos/Factor.tsx:44-50`). Debería decir «banda sin verificar».
+9. **«Publicable» de «POR CAMPO» se calcula en el front con otra regla** (`src/pages/Diferidos.tsx:85`): mira meta, `fa[].dentro` y el criterio, pero no `sin-fiscal` ni `sin-factor`. Un campo con días sin fiscal sale «Publicable: sí» mientras el sello dice «NO PUBLICABLE». Debería salir de `lb.motivos.filter(m => m.campoId === c && m.codigo !== 'en-curso')`.
+10. **`en-curso` depende de que haya fila de factor** (`src/entities/libro.ts:774`). Un mes en curso sin ningún día fiscal no tiene fila y no genera `en-curso` (sí `sin-factor` y `sin-fiscal`, así que igual se bloquea). Si el servidor cambia el orden o la regla, el sello puede pasar de «provisional» a «bloqueado» con la misma situación.
+11. **Gramática de dos textos.** «faltan 1 día de producción fiscal…» (`src/entities/libro.ts:775`) y «Faltan 1 pozo de La Ceiba en lo que se cargó…» (`src/widgets/produccion/AsignacionOficial.tsx:162`). El texto del motivo lo redacta el servidor: puede corregirlo sin romper nada (el front decide por el código).
+
+### De períodos, metas y pantallas
+
+12. **«En curso» solo existe para el mes en curso.** `diasTotal = días` en el año a la fecha y en un rango que llega a hoy (`src/entities/libro.ts:648`), así que esas vistas dicen «Máximo del período», «Meta del período» y «TOTAL DEL PERÍODO» aunque el período siga abierto, y el Resumen del gerente no proyecta cierre. Puede ser intencional (solo el mes tiene «cierre»), pero no está escrito.
+13. **Tendencia y Mes a mes miden cosas distintas.** Tendencia usa `diferido` (Σ eventos) y Mes a mes `brecha` (`src/widgets/resumen/ResumenDirectivo.tsx:274` contra `src/widgets/diferidos/MesAMes.tsx:64-65`). Iguales en meses enteros con todo el fiscal; distintos con días sin fiscal.
+14. **El «±%» del encabezado subestima con frecuencia reducida.** `tol / diferido` (`src/widgets/diferidos/Encabezado.tsx:27`) divide por todo el diferido, incluido lo aproximado que no tiene tolerancia: Morichal feb-2026 dice ±8,0 % cuando la parte no aproximada va a ±15 %. Y el rango se centra en la brecha con una tolerancia calculada sobre los tramos (`src/widgets/diferidos/Rango.tsx:30`).
+15. **Potencial reciente divide por 30 siempre** (`src/shared/api/diferidos.ts:105-106`): con días sin fiscal en los últimos 30, el promedio sale bajo (esos días no suman potencial). Debería dividir por los días con dato.
+16. **`ResumenCampo` y `Portafolio` no se alcanzan con los roles de hoy.** Solo el gerente tiene «resumen» y es nivel decisión (`src/pages/Resumen.tsx:34-37`, `src/entities/roles.ts:38-39`). La cifra «sin paradas programadas» y la de «evitable cerrando en orden» con su % solo viven ahí.
+17. **Signo menos inconsistente.** `signo()` usa «−» (U+2212) («−16 % frente a jun a ago») y `n0` de valores negativos usa «-» («Inventario -496»; «El resto, -68 bbl» del cotejo).
+
+### Del cotejo con la asignación oficial
+
+18. **«Fuera» del cotejo usa la banda del campo por pozo.** `|dif| > b·max(oficial, TRIM)` (`src/entities/asignacion.ts:133`). La banda regulatoria es para el factor del campo, no para cada pozo; aplicarla a un pozo es una decisión de producto razonable pero no regulatoria. Escribirla así en el contrato.
+19. **El total oficial incluye los pozos que TRIM no conoce** (`src/entities/asignacion.ts:148`): «La oficial suma N bbl menos/más» mezcla la diferencia de volumen con el nombre mal escrito. La pantalla lo mitiga con «Primero complete los pozos.».
+
+### Lo que la referencia no cubre
+
+20. No hay caso en `referencia/` para `GET /api/vistas/diferidos/base`, `GET /api/vistas/potencial-reciente`, el libro y el día a día del **mes en curso**, ni para un período que corte meses (residuo ≠ 0). Los números de este capítulo para esos casos salen de correr el motor; un backend no tiene contra qué compararlos por HTTP. Conviene agregar al menos: `diferidos/<campo>-curso`, `diferidos/<campo>-2026-09-15_2026-10-02`, `base/<campo>-curso` y `potencial-reciente/portafolio`.
+21. **Eventos que se pisan.** El contrato pide escoger entre normalizar (lo que hace el motor) o rechazar en la ingesta (`CONTRATO.md:855-858`). Hasta que se escoja, un backend que rechace dará otros números en los mismos datos.

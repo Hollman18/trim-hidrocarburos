@@ -37,3 +37,8 @@ e2e/.informe/
 # Herramientas locales de quien desarrolla: no son del producto
 .claude/
 .codegraph/
+
+# Lo que genera la validación del modelo de datos (docs/backend/sql/herramientas/validar.sh)
+docs/backend/sql/herramientas/motor.json
+docs/backend/sql/herramientas/cuenta-ejemplos.json
+!docs/backend/sql/validacion.log

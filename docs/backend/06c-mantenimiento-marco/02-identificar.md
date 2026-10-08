@@ -1,0 +1,205 @@
+## 6C.2 Identificar — «Paradas por identificar» · operador, supervisor, técnico, producción, jefe, confiabilidad
+
+**Para qué.** «Lo que ninguna señal explica, antes de arrancar.» (`src/widgets/Onboarding.tsx:25`).
+**Ruta.** `#/<rol>/causa/<campo>[~portafolio]/<período>` · **Roles y nivel.** `oper`, `sup`, `tec` (operación); `prod`, `jefe`, `conf` (ingeniería). El gerente no la tiene. Agrega campos (portafolio: cada tarjeta dice su campo).
+**Lee.** `GET /api/vistas/diferidos?campos&desde&hasta` → `Libro` (solo `diferido`, `identificado`, `declarado`, `pendiente`); `GET /api/vistas/paradas/por-identificar?campos` → `Pregunta[]` (**toda la historia**, no el período); `GET /api/vistas/paradas/:evento/opciones` → `{ catalogo?, sugeridas?, sospechosa? }` (una por tarjeta); `GET /api/mensajes?campos` → `Mensaje[]`; de arranque: `GET /api/usuarios`, `GET /api/paradas/respuestas`, `GET /api/analisis`.
+**Escribe.** `POST /api/paradas/:evento/respuesta` (formulario), el webhook de WhatsApp (el chat simulado) y `POST /api/analisis/:evento` (análisis de confiabilidad). Reglas y textos de rechazo: 5D §5 «La respuesta» y 5C §6 «El análisis».
+
+Fórmulas: qué es una pregunta, `pide` y `arrancoSinIdentificar` → 5B §3.2 «¿Pide respuesta? ¿Arrancó sin identificar?»; identificado/declarado/pendiente → 5A §3 «Identificado por señal · declarado · sin identificar» y 5B §3.2 «Cifras de identificación del período»; opciones numeradas → 5D §5.3 «Opciones numeradas»; reglas del hilo de WhatsApp (pregunta, recordatorio 30 min, escalamiento 2 h) → 5D §5.1 «Tabla de reglas»; catálogo de daños, modos y mecanismo sugerido → 5C §6.
+
+Las tres listas de la pantalla salen de las mismas preguntas (`Causa.tsx:49-51`):
+
+$$
+\text{pendientes} = \{p : p.\text{pide} \land \lnot p.\text{arrancoSinIdentificar}\} \quad
+\text{noConformes} = \{p : p.\text{arrancoSinIdentificar}\} \quad
+\text{declaradas} = \{p : \lnot p.\text{pide} \land p.\text{causa.declarado}\}
+$$
+
+Una pregunta respondida **después** de arrancar está a la vez en «NO CONFORMIDADES» (no se borra: arrancó sin identificar) y en «DECLARADAS» (ya tiene causa). Ver la captura 9.
+
+### Captura 1 · operador, La Ceiba, octubre en curso
+
+![Identificar · oper · La Ceiba · octubre en curso](../img/oper-causa.png)
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Regla de operación ⓘ | «No arrancar hasta identificar el daño · si arranca antes: no conformidad» | fija (`Causa.tsx:134-137`) | Globo «Regla de operación» (`REGLA`, `Causa.tsx:38`): «Un pozo o una bomba que paró sin causa identificable por su señal no se arranca hasta que quien lo revise registre aquí qué se dañó. TRIM no escribe en el PLC ni bloquea el arranque: la regla es de procedimiento. Si arranca antes, la parada queda como no conformidad, con la hora del PLC.» Debajo, según el rol: «Su rol no responde paradas: lo hace operación o mantenimiento.» (sin `causa:declarar` y con tarjetas) o «Nadie con acceso activo tiene este rol.» + ⓘ «La respuesta la da una persona con acceso, no un rol.» | `rol.puede`, persona |
+| 2 | Marca de la tarjeta | ▲ 2 | `arrancoSinIdentificar ? 3 : !fin ? 2 : 3` (`Causa.tsx:235`) | ▲ P2 = sigue parada (no arrancar); ■ P3 = arrancó sin identificar (no conformidad) | `pregunta.fin`, `.arrancoSinIdentificar` |
+| 3 | Equipo (botón) | «P-201B» | `pregunta.equipo` | abre la ficha del equipo (y cambia al campo) | `pregunta.equipo` |
+| 4 | Sobre qué | «· bomba de la línea» | `sobre = 'bomba'` → «bomba de la línea», `'pozo'` → «pozo»; en portafolio « · {campo}» | — | `pregunta.sobre` |
+| 5 | Cuándo paró y cuánto lleva | «Paró 2 de oct, 03:52 · hace 10,1 h» (P-201B); LC-21 «Paró 1 de oct, 18:20 · hace 19,7 h» (19,667 h) | `fechaHora(inicio)`; abierta: `AHORA − inicio` = 10,128 h; cerrada: «arrancó {fechaHora(fin)} ({fmtHoras(fin − inicio, precisa)})» | `fmtHoras(h, true)`: < 48 h → `n1` + « h»; si no, `n1(h/24)` + « d» (Morichal: 86,0 h → «3,6 d») | `pregunta.inicio`, `.fin` |
+| 6 | Chip «no arrancar» | «no arrancar» | `!fin` | chip fuerte; no sale si ya arrancó | `pregunta.fin` |
+| 7 | Barriles de la parada | «2.570 bbl» (P-201B); LC-21 «247 bbl»; LC-08 «109 bbl» | $\sum$ de los tramos de pozo cargados a esa parada, en **toda la historia** (es la pregunta de bomba: 2.570,26 bbl; LC-21: 246,51; LC-08: 108,51) → 5B §3.2 «Qué es una pregunta» | chip `n0` + « bbl» | `pregunta.bbl` |
+| 8 | ⓘ «no alcanzó» | (globo) | `causa.porQueNo` (solo si el servidor lo manda con nombre; se quita de la lista de evidencia) | Globo «Por qué no alcanzó la señal»: P-201B «Sin primera alarma y sin firma: el PLC no dice qué parte falló»; pozos «Ningún servicio caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla» (5B §2.2 «Regla 6», §3.1) | `pregunta.causa.porQueNo` |
+| 9 | SEÑAL (evidencia) | «ZS-2011 · marcha → paro · 2 de oct, 03:52» (P-201B); LC-21 «POC-LC21 · código CMD · 1 de oct, 18:20»; LC-08 «VSD-LC08 · código CMD · 1 de oct, 22:15» | `causa.evidencia` menos `porQueNo`, una por renglón en mono. Bomba: «{tag de marcha} · marcha → paro · {fechaHora(inicio)}» (5B §3.1); pozo: «{tag del controlador} · código {código} · {fechaHora(inicio)}» (5B §2.2, «Regla 6»: `evidencia = [base, porQueNo]`) | tal cual; si la parada ya se declaró, aparece «Declarado por {persona · rol} · {fechaHora}» (captura 9) | `pregunta.causa.evidencia` |
+| 10 | Título del formulario | «QUÉ SE DAÑÓ» | el equipo tiene catálogo de daños (`opciones.catalogo`) y no se tocó «No fue la electrosumergible» | «QUÉ SE DAÑÓ» (bomba o pozo con ESP) / «POR QUÉ PARÓ» (pozo sin catálogo, fila 19) | `GET …/opciones` → `catalogo.clase` |
+| 11 | Fuente de la pista | «Pista · historia del equipo» | `sugeridas.conEvidencia`; fuente: si alguna opción trae `fuente = 'senal'` → «señal e historia», si no «historia del equipo» (`Causa.tsx:204, 282`) | sin evidencia no hay pista y el desplegable dice «Escoja la parte…» | `sugeridas.opciones[].fuente` |
+| 12 | Opción sugerida 1 | «Sello mecánico · 5 de 8 fallas» | fallas **anteriores** del equipo con esa parte / fallas anteriores → 5D §5.3 | `pista()` (`Causa.tsx:353-356`): con `veces` y `total` → «{veces} de {total} falla(s)»; sin ellos (señal) → el `porque` del servidor («PT-2013 salió de su banda normal»). Las opciones sin parte («Otra parte del equipo», «0») no salen como botón | `sugeridas.opciones[].veces/.total` |
+| 13 | Opción sugerida 2 | «Rodamientos y cámara de empuje · 3 de 8 fallas» | ídem (3 de 8) | máx. 3 sugeridas (5D §5.3) | ídem |
+| 14 | Desplegable de partes | «O escoja cualquier parte…» | todas las partes del catálogo de la clase, en su orden (sello, succión, rodamientos, impulsores, motor) → 5C §3 «Catálogo de partes» | primera opción «O escoja cualquier parte…» con pista, «Escoja la parte…» sin ella | `catalogo.partes` |
+| 15 | Quién queda declarado | «Queda declarado por Jairo Peña · hora del sistema» | la persona de la sesión (`usePersona`) | la hora la pone el servidor, no el navegador | sesión |
+| 16 | Hilo de WhatsApp | «03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:52 escalado → 08:08 pozos cerrándose» | los mensajes de `GET /api/mensajes` con `evento = pregunta.id`, agrupados por (HH:MM, tipo), ordenados por hora y en el mismo minuto por `ORDEN_PASO` (parada, pregunta, recordatorio, escalamiento, cierre, parte, orden) (`Causa.tsx:376-389`) → 5D §5.1 | `PASO_CORTO`: «parado», «pregunta», «recordatorio», «escalado», «pozos cerrándose». El globo (y el papel) dice a quién: «03:53 parado · Nelson Ortiz, Jairo Peña», «05:52 escalado · Nelson Ortiz» | `mensajes[].hora/.regla/.insistencia/.para` |
+| 17 | Estado de la respuesta | chip «sin respuesta» | `causa.declarado` | por WhatsApp: «respondió {por} · {HH:MM}: «{texto}»» (negrita); en pantalla: «respondido en pantalla»; nada: chip fuerte «sin respuesta» | `pregunta.causa.declarado.canal` |
+| 18 | «Ver mi chat de WhatsApp» | botón | `primero` = el primer mensaje de pregunta (no insistencia, enviado); el botón abre el chat de **esa** persona | «Ver mi chat de WhatsApp» si es la persona de la sesión; «Ver el chat de {nombre}» si es otra (captura 3); «Cerrar el chat» abierto. Sin destinatario: «WhatsApp: sin destinatario» + ⓘ (captura 8) | `mensajes`, `GET /api/usuarios` |
+| 19 | Formulario de pozo sin catálogo | «POR QUÉ PARÓ» | LC-21 es de bombeo mecánico: sin catálogo de daños | las cuatro `CAUSAS_POZO` como botones; el texto «Qué encontró» es obligatorio (≥ 8 caracteres) | `catalogo` ausente |
+| 20 | Causa de pozo | «Cierre para prueba o intervención del pozo» | `CAUSAS_POZO` (fijas, sin orden de probabilidad) → 5D §5.3 | al tocarla se copia al texto | — |
+| 21 | Hilo de LC-21 | «18:21 pregunta → 18:50 recordatorio → 20:20 escalado»; el de LC-08 (no conformidad): «22:16 pregunta → 22:45 recordatorio → 00:15 escalado» | pregunta a inicio + 1 min, recordatorio + 30 min, escalamiento + 2 h (solo si la pregunta fue a operadores) | sin «parado»: un pozo sin ESP no dispara la regla `parada` | `mensajes` |
+| 22 | % causa probada por señal | **88,3 %** | $\dfrac{\text{identificado}}{\text{diferido}} \times 100$ = 2.688,2 / 3.043,2 → 5A §3 «Identificado por señal…» | `n1` + « %»; diferido 0 → 0 | `GET /api/vistas/diferidos` → `identificado`, `diferido` |
+| 23 | Apoyo | «2.688 de 3.043 bbl diferidos» | ídem | `n0` | ídem |
+| 24 | % causa declarada | **0,0 %** | declarado / diferido = 0 / 3.043,2 | `n1` + « %» | `declarado` |
+| 25 | Apoyo | «0 bbl · sin identificar 355 bbl (11,7 %)» | pendiente = 355,03 bbl (LC-21 + LC-08 dentro del período); 355,03 / 3.043,2 = 11,67 % | `n0` y `n1` | `pendiente` |
+| 26 | Por identificar · histórico | ▲ **2** (y el extra del panel POR IDENTIFICAR: «2», `pendientes.length`) | $\#\{\text{pide} \land \lnot\text{arrancoSinIdentificar}\}$ en **toda la historia** (no cambia con el período) | ▲ P2 si alguna sigue parada (`parados > 0`) | `pregunta.pide` |
+| 27 | Apoyo | «1 pozo · 1 bomba · 2 sin arrancar» | pozos = pendientes − bombas; bombas = pendientes con `sobre = 'bomba'`; sin arrancar = pendientes con `!fin` | `plural(…,'pozo','pozos')`, `plural(…,'bomba','bombas')`, número | ídem |
+| 28 | No conformidades | ■ **1** (y el extra del panel NO CONFORMIDADES: «1»; el lector oye «1 no conformidad») | $\#\{\text{arrancoSinIdentificar}\}$ (LC-08) | ■ P3 si > 0; rótulo «no conformidades» y «arrancaron sin identificar» | `pregunta.arrancoSinIdentificar` |
+| 29 | Marca de la no conformidad | ■ 3 | ver fila 2 | — | — |
+| 30 | Paró y arrancó | «Paró 1 de oct, 22:15 · arrancó 2 de oct, 01:10 (2,9 h)» | `fin − inicio` = 2,917 h | ver fila 5 | `pregunta.fin` |
+| 31 | Paso 1 de la ESP | «1 · Parte de la electrosumergible» | catálogo `bomba-electrosumergible` sin historia: `conEvidencia = false`, sin pista, «Escoja la parte…» | «Parte de la bomba» / «Parte de la electrosumergible» | `catalogo.clase` |
+| 32 | «No fue la electrosumergible» | botón | `NO_FUE_ESP_CORTO` (`mensajes.ts:178`); solo con catálogo de ESP | al tocarlo el formulario pasa a «POR QUÉ PARÓ» con las causas del pozo y aparece «Volver a las partes» | — |
+| 33 | Declarada: lo que dijo | «LC-06 · 14 de ago, 03:30» y debajo «Cabeza de pozo con fuga en el prensaestopas: cierre para cambiarlo» (extra del panel DECLARADAS: «1») | cabecera de la fila: `equipo` · (en portafolio, campo ·) `fechaHora(inicio)` (`Causa.tsx:513`); `causa.declarado.texto`; extra = número de declaradas | con parte: «**{parte}** · {lo que vio}» y el texto solo si no es el generado «{parte}: {vio}» (`Causa.tsx:507, 516`); sin parte: ««{texto}»» | `pregunta.causa.declarado`, `.parte` |
+| 34 | Quién y cuándo | «Nelson Ortiz · supervisor · 14 de ago, 04:10» | `declarado.por` · `fechaHora(declarado.hora)` | + « · por WhatsApp» si `canal = 'whatsapp'`; + « · sin parte» si es una bomba declarada sin parte | `pregunta.causa.declarado` |
+| 35 | Barriles de la declarada | «237 bbl» (LC-06) | `pregunta.bbl` (236,51) | `n0` | `pregunta.bbl` |
+
+**Orden de la pantalla según el nivel** (`Causa.tsx:79, 131, 163`): en `operacion` (oper, sup, tec) primero la regla, luego «POR IDENTIFICAR» y **después** la cabecera de cifras (quien opera llega a responder); en `ingenieria` la cabecera va arriba (capturas 4 a 8).
+
+**Globo de la cabecera** (toda la franja, «Identificación del período»): «Cuánto del diferido tiene causa probada por una señal, cuánto declaró un operario y cuánto falta.» · «Por señal 2.688 bbl · 88,3 %» · «Declarado 0 bbl · 0,0 %» · «Sin identificar 355 bbl · 11,7 %» · «Período Octubre, en curso».
+
+### Captura 2 · el chat de WhatsApp del operador (solo el teléfono simulado)
+
+Se abre con «Ver mi chat de WhatsApp» de la tarjeta de P-201B. El historial es desplazable (máx. 380 px) y arranca abajo: el primer mensaje («TRIM · P-201B de La Ceiba paró a las 03:52. Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.», 03:53) queda arriba, fuera del recorte.
+
+![Identificar · oper · chat de WhatsApp de P-201B](../img/oper-causa-chat.png)
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Destinatario | «a Jairo Peña · +57 300 555 0104» | la persona del primer mensaje de pregunta; `telefonoLegible(e164)` → 5D §3 «Número de WhatsApp en E.164» | sin teléfono: «sin número». Cabecera «TRIM · {campo}» + insignia «cuenta de empresa verificada» | `GET /api/usuarios` |
+| 2 | Pregunta (plantilla `trim_que_se_dano`) | «TRIM · P-201B de La Ceiba paró el 2 de oct, 03:52. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.⏎1) Sello mecánico (5 de las 8 fallas anteriores de este equipo) · 2) Rodamientos y cámara de empuje (3 de las 8 fallas anteriores de este equipo) · 3) Otra parte del equipo · 0) Otra cosa: escríbala» · 03:53 | `mensajes[].texto` (sale de la plantilla y sus parámetros) → 5D §5.2 «Las diez plantillas» | hora `HH:MM` en Colombia | `GET /api/mensajes` → `texto`, `hora` |
+| 3 | Recordatorio (`trim_recordatorio_causa`) | «TRIM · Recordatorio: P-201B sigue sin causa. Antes de arrancar, diga qué se dañó. Responda con un número. 1) Sello mecánico (5 de las 8 fallas anteriores de este equipo) · 2) Rodamientos y cámara de empuje (3 de las 8 fallas anteriores de este equipo) · 3) Otra parte del equipo · 0) Otra cosa: escríbala» · 04:22 (las mismas opciones: «{n}) {parte} ({veces} de las {total} fallas anteriores de este equipo)», 5D §5.3) | inicio + 30 min, solo si no hubo respuesta antes | si el equipo ya arrancó a esa hora: `trim_recordatorio_arranco` («… arrancó a las {hora} sin causa. Diga …») | ídem |
+| 4 | Cierre (`trim_pozos_cerrandose`) | «TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 08:07.» · 08:08 | primer pozo cerrado por esa parada + 1 min | — | ídem |
+| 5 | Respuesta rápida | «1 Sello mecánico» (y «2 Rodamientos y cámara de empuje», «3 Otra parte del equipo») | `pregunta.opciones` del mensaje (las de su hora, sin las lecturas de hoy) menos la «0», y al final «0 Otra cosa» | tocar una parte pregunta «TRIM · ¿Qué vio en {parte}? Responda con un número.» con los modos; «3 Otra parte del equipo» lista todas las partes; «No fue la electrosumergible» lista `CAUSAS_POZO` | `mensajes[].opciones` |
+| 6 | «0 Otra cosa» | «0 Otra cosa» | siempre | pide «TRIM · Escriba qué encontró.» y abre la caja «Escriba qué encontró» + «Enviar» | — |
+
+El escalado de las 05:52 **no** está en este chat: fue al supervisor (5D §5.1). Lo que no se envió (`noEnviado`) tampoco aparece en el teléfono: se dice en el hilo de la tarjeta con el ◌ morado «no se envió a {nombres}: {motivo}» (`NoEnviado.tsx`). Al responder, el chat muestra la burbuja de la persona y «TRIM · Registrado: «{texto}». Gracias.»; si respondió otra persona, «TRIM · Ya respondió {por}: «{texto}». Gracias.»; si el servidor rechaza, «TRIM · {error}» (`Telefono.tsx:47-69`). Responder aquí es responder **por WhatsApp** (en el demo, el webhook se simula en el navegador: 5D §5 «El webhook»).
+
+### Captura 3 · supervisor, La Ceiba
+
+![Identificar · sup · La Ceiba](../img/sup-causa.png)
+
+Lo demás (las tres listas, sus tarjetas y las cifras) es igual que en la captura 1 y se explica en su tabla; aquí, solo lo que cambia.
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Exportar | botón | el supervisor tiene `evidencia:exportar` (el operador y el técnico no) | ver 6C.8 | `rol.puede` |
+| 2 | Quién declara | «Queda declarado por Nelson Ortiz · hora del sistema» | persona de la sesión | — | sesión |
+| 3 | Chat de otra persona | «Ver el chat de Jairo Peña» | la pregunta fue al operador (con alertas) y no al supervisor: el supervisor ve el chat de quien la recibió | — | `mensajes`, `usuarios` |
+| 4 | Por identificar | ▲ 2 | igual que el operador | — | — |
+
+### Captura 4 · técnico, La Ceiba
+
+![Identificar · tec · La Ceiba](../img/tec-causa.png)
+
+Lo demás (las tres listas, sus tarjetas y las cifras) es igual que en la captura 1 y se explica en su tabla; aquí, solo lo que cambia.
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Quién declara | «Queda declarado por Óscar Daza · hora del sistema» | el técnico tiene `causa:declarar` | sin Exportar | sesión |
+| 2 | Chat | «Ver el chat de Jairo Peña» | ídem captura 3 | — | — |
+
+### Captura 5 · producción, La Ceiba (sin permiso para responder)
+
+![Identificar · prod · La Ceiba](../img/prod-causa.png)
+
+Lo demás (las tres listas, sus tarjetas y las cifras) es igual que en la captura 1 y se explica en su tabla; aquí, solo lo que cambia.
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Cabecera arriba | **88,3 %** | nivel `ingenieria`: la cabecera va antes de la regla | — | `Libro` |
+| 2 | Sin permiso | «Su rol no responde paradas: lo hace operación o mantenimiento.» | `hayTarjetas && !puede` (`causa:declarar` ni `causa:completar`) | una vez, en la franja; las tarjetas no muestran formulario | `rol.puede` |
+| 3 | Chat | «Ver el chat de Jairo Peña» | se puede ver, no responder (el chat simulado sí deja tocar: es el teléfono de Jairo) | — | — |
+| 4 | «no arrancar» | chip | — | — | — |
+
+### Captura 6 · producción, dirección a Morichal en «cerrado»
+
+`#/prod/causa/morichal/cerrado`: la ingeniera de producción **no tiene Morichal** (campos asignados `ceiba`, `palmar`): la dirección no abre un campo ajeno, se queda en La Ceiba y se reescribe como `#/prod/causa/ceiba/cerrado` (`src/app/url.ts:72-78`). El período «cerrado» sí se aplica.
+
+![Identificar · prod · La Ceiba · septiembre cerrado](../img/prod-causa-morichal-cerrado.png)
+
+Las tres listas son las de la captura 1 (toda la historia, no cambian con el período) y se explican en su tabla; aquí, lo que cambia.
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Período | «Septiembre · cerrado» | `PERIODOS` → 6C.8 | — | — |
+| 2 | Campo | «La Ceiba · 11.105 bbl producidos ayer» | Morichal no está asignado | — | `GET /api/campos`, sesión |
+| 3 | % por señal | **100,0 %** | 21.691,4 / 21.691,4 (septiembre no tiene nada declarado ni pendiente en La Ceiba) | — | `Libro` |
+| 4 | Apoyo | «21.691 de 21.691 bbl diferidos» | → 5A, tabla de cifras | — | ídem |
+| 5 | Apoyo | «0 bbl · sin identificar 0 bbl (0,0 %)» | — | — | ídem |
+| 6 | Por identificar · histórico | ▲ **2** | **no cambia con el período**: las preguntas son de toda la historia; LC-21 y P-201B siguen abiertas en octubre | por eso dice «· histórico» | `por-identificar` |
+
+### Captura 7 · jefe de mantenimiento, La Ceiba
+
+![Identificar · jefe · La Ceiba](../img/jefe-causa.png)
+
+Lo demás (las tres listas, sus tarjetas y las cifras) es igual que en la captura 1 y se explica en su tabla; aquí, solo lo que cambia.
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Cabecera arriba | 88,3 % | ingeniería | — | — |
+| 2 | Responde | «Queda declarado por Camilo Rueda · hora del sistema» | `causa:completar` incluye `causa:declarar` (`puedeHacer`, `tipos.ts`) | — | `rol.puede` |
+| 3 | Chat | «Ver el chat de Jairo Peña» | — | — | — |
+
+### Captura 8 · confiabilidad, Morichal (no conformidad de bomba, sin destinatario)
+
+![Identificar · conf · Morichal · octubre en curso](../img/conf-causa.png)
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | % por señal | **93,1 %** | 1.166,9 / 1.253,2 | — | `Libro` |
+| 2 | Apoyo | «1.167 de 1.253 bbl diferidos» | — | — | ídem |
+| 3 | % declarada | **6,9 %** | 86,3 / 1.253,2 (los barriles de octubre del cierre de MN-22, declarado por el operador el 30-sep) | — | `declarado` |
+| 4 | Apoyo | «86 bbl · sin identificar 0 bbl (0,0 %)» | — | — | `pendiente` |
+| 5 | Histórico | «0 pozos · 0 bombas · 0 sin arrancar» y cifra «0» sin marca (y el extra del panel POR IDENTIFICAR: «0») | ninguna pendiente en Morichal | sin marca ▲ con 0 | `por-identificar` |
+| 6 | Lista vacía | «Ninguna.» | — | — | — |
+| 7 | No conformidad de bomba | ■ 3 «P-201B · bomba de la línea» · «Paró 24 de sept, 16:51 · arrancó 28 de sept, 06:53 (3,6 d)» · SEÑAL «ZS-2011 · marcha → paro · 24 de sept, 16:51»; en la cabecera, «no conformidades» ■ **1** y el extra del panel «1» | P-201B arrancó sin que nadie dijera la parte (`arrancoSinIdentificar`); 86,03 h → `fmtHoras(h, precisa)` = 3,6 d | ■ P3 | `pregunta` `EV-M2011-260924` |
+| 8 | Barriles | «9.838 bbl» | 9.837,82 bbl cargados a esa parada | — | `pregunta.bbl` |
+| 9 | Pista | «Sello mecánico · 5 de 7 fallas» | 7 fallas anteriores a esa parada: 5 sello, 1 succión, 1 motor | — | `sugeridas` |
+| 10 | Pista | «Succión y filtro de entrada · 1 de 7 fallas» (y «Motor eléctrico · 1 de 7 fallas») | — | — | ídem |
+| 11 | Sin destinatario | «WhatsApp: sin destinatario» ⓘ | ningún mensaje de pregunta (ni uno no enviado) para ese evento: en Morichal no hay operador ni supervisor con alertas (5D §5.1, «315 mensajes, todos de La Ceiba») | ⓘ «Nadie de este campo tiene número con las alertas encendidas; la pregunta está solo en esta pantalla.» | `mensajes` |
+| 12 | Declarada | «MN-22 · 30 de sept, 16:20» · «Fuga en la línea de flujo del pozo: se cerró para repararla» · «193 bbl» (extra del panel DECLARADAS: «1») | MN-22, sin parte (no lleva análisis); `bbl` = 192,82 (todos sus tramos, 30-sep 16:20 → 1-oct 06:05) | — | `pregunta.causa.declarado`, `pregunta.bbl` |
+| 13 | Quién | «Jairo Peña · operador de campo · 30 de sept, 17:02» | — | — | ídem |
+
+### Captura 9 · confiabilidad responde y abre el análisis de causa raíz
+
+Pasos (`antes` de la captura): tocar «Sello mecánico · 5 de 7 fallas», «Fuga hacia afuera», «Registrar respuesta» y «Completar el análisis».
+
+![Identificar · conf · Morichal · respuesta y análisis](../img/conf-causa-analisis.png)
+
+Lo demás es igual que en la captura 8 y se explica en su tabla.
+
+| # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
+|---|---|---|---|---|---|
+| 1 | Aviso de la respuesta | «Respondido: P-201B (en pantalla, 14:00). Pasó a «Declaradas».» | las respondidas en esta sesión (`ctx.respuestas[p.id]`); el foco pasa aquí si el botón que lo tenía desapareció | «({por WhatsApp | en pantalla}, {HH:MM})»; varias se separan con « · » | respuesta del `POST` |
+| 2 | Evidencia nueva | «Declarado por Edwin Maestre · ingeniero de confiabilidad · 2 de oct, 14:00» | el servidor agrega la respuesta a la evidencia de la causa (con la hora del servidor = `AHORA` en el demo) | — | `pregunta.causa.evidencia` |
+| 3 | Respondido tras arrancar | «Respondido tras arrancar: «Sello mecánico: fuga hacia afuera»» | `causa.declarado` en una tarjeta que sigue en «NO CONFORMIDADES» (`respondidaTarde`) | el texto generado es «{parte}: {modo en minúscula}» | `declarado.texto` |
+| 4 | Extra de DECLARADAS | «2 · 1 sin análisis» (el lector oye «2 declaradas · 1 sin análisis») | declaradas con `parte` y sin análisis (`Causa.tsx:73, 171`) | « · {n} sin análisis» solo si > 0; esas van primero y nunca detrás de «ver N más» | `GET /api/analisis` |
+| 5 | Parte y lo que vio | «**Sello mecánico** · fuga hacia afuera» | `declarado.parte` + `nombreModo(modo, parte)` → 5C §6 «Qué vio» | — | `declarado.modo` |
+| 6 | Quién | «Edwin Maestre · ingeniero de confiabilidad · 2 de oct, 14:00» | — | — | — |
+| 7 | Mecanismo · ISO 14224 B.2 | «1.1 · Fuga» | arranca con `MECANISMO_SUGERIDO[modo]` (la fuga externa `ELP` → `1.1`), agrupado por familia (Mecánico, Material, Instrumento, Eléctrico, Influencia externa, Misceláneo) → 5C §6 «Mecanismos y el mecanismo sugerido» | lista «{código} · {nombre}» (37 mecanismos) | `catalogo.ts:97-104` |
+| 8 | Causa raíz · B.3 | «Escoja la causa…» | primer nivel de B.3: 1 Diseño, 2 Fabricación o instalación, 3 Operación o mantenimiento, 4 Gestión, 5 Misceláneo · causa combinada o común → 5C §6 «Causas raíz» | — | `iso14224.ts` |
+| 9 | Guardar | «Guardar el análisis» | `POST /api/analisis/:evento` `{ mecanismo, causaRaiz, nota }` | un error del servidor se dice bajo el formulario (`role="alert"`) | 5C §6 «El análisis» |
+
+**El análisis guardado** se lee en una línea (`Causa.tsx:448-459`): «Análisis: 1.1 fuga · causa raíz: operación o mantenimiento · «{nota}» · {por}» con el botón «Corregir» (solo con `causa:completar`). Corregir no borra: lo anterior queda debajo, «Antes: {mecanismo} · causa raíz {código} · «{nota}» · {por} · {fechaHora}» (`GET /api/analisis` guarda versiones; `useAnalisisAnteriores`). Quien no tiene `causa:completar` (operador, supervisor, técnico, producción) ve el chip «análisis pendiente» + ⓘ «Mecanismo y causa raíz los completa confiabilidad o el jefe de mantenimiento.» Con datos del demo **no hay** ninguna declarada con parte: este estado solo aparece después de responder con una parte.
+
+**Variantes.**
+- **Nivel.** Operación: regla → POR IDENTIFICAR → cabecera. Ingeniería: cabecera → regla → POR IDENTIFICAR. Exportar solo para quien tiene `evidencia:exportar` (sup, prod, jefe, conf; no oper ni tec).
+- **Portafolio.** `#/jefe/causa/ceiba~portafolio/curso`: las cifras son del portafolio (6.232 bbl; por señal 5.790 = 92,9 %; declarado 86 = 1,4 %; sin identificar 355 = 5,7 %, 5B §3.2), cada tarjeta dice su campo, y aparecen la no conformidad de Morichal y la de El Palmar (PA-04, respondida tarde).
+- **Período.** Solo cambian las tres cifras de identificación; las listas son de toda la historia.
+- **Disparo de ESP en «DECLARADAS».** Una ESP declarada con parte que arrancó en menos de 24 h lleva chip «disparo, no falla» + ⓘ «Arrancó en {fmtHoras(h, precisa)}: cuenta como disparo, no como falla de la electrosumergible.» (5B §3.3).
+
+**Estados.** Con una parada de bomba **abierta** y una parte de esa bomba fuera de límite hoy, bajo la SEÑAL sale «Sospechosa: **{parte en minúscula}** · {fraseParte}» (`GET …/opciones` → `sospechosa`), y las partes fuera o que avisan encabezan las sugeridas con `fuente = 'senal'` («Pista · señal e historia»; el porqué «{tag} llegó a su alarma» / «{tag} salió de su banda normal» / «{tag} venía avisando»). En el demo no ocurre: P-201B de La Ceiba está detenida y sus partes no traen lecturas fuera. Sin pendientes: «Ninguna.»; sin no conformidades: «Ninguna.»; sin declaradas: «Ninguna todavía.»; sin destinatario: «WhatsApp: sin destinatario»; con ESP sin historia: «Escoja la parte…» sin pista.
+
+**Interacciones y errores del formulario** (front, `Causa.tsx:214-223`; los 403/404/409/422 del servidor se muestran tal cual, 5D §5 «La respuesta en pantalla»):
+- con partes y sin parte: «Diga qué parte de la bomba se dañó.» / «Diga qué parte de la electrosumergible se dañó, o que no fue ella.»
+- sin modo: «Diga qué vio en esa parte.»; «Otra cosa» sin texto: «Escribió «Otra cosa»: diga qué vio, con al menos una frase corta.» (el rótulo pasa a «Qué vio (obligatorio)»)
+- sin catálogo o «No fue la electrosumergible» sin texto: «Escoja una de las causas o escriba qué encontró, con al menos una frase corta.» (mínimo `TEXTO_LIBRE_MINIMO = 8` caracteres)
+- el ⓘ «ISO 14224» del paso 2 dice «Se registra en el catálogo como ítem «{itemIso}» · daño {código} ({nombre del modo})».
+
+**Lectura («¿cómo se lee?»).** POR IDENTIFICAR: «Cada una trae lo que dijo su señal; el ⓘ junto a «señal» dice por qué no alcanzó. Responde quien revisó el equipo o estuvo en el pozo. Las pistas (la parte que estaba fuera de límite al parar, o las que más han fallado en ese equipo) son una pista, no una respuesta. Toque o pase el cursor por la línea de WhatsApp para ver a quién le llegó cada mensaje.» DECLARADAS: «Lo que respondió la gente de campo. Entra al libro como «declarado», separado de lo que probó una señal, y se puede auditar: quién, cuándo y si fue antes o después de arrancar. Primero las que esperan el análisis de confiabilidad.»

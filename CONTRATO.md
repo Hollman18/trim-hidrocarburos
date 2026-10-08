@@ -20,6 +20,8 @@ backend tiene que dar. **El simulador no es el servidor de producción.**
 
 ## Por dónde empezar
 
+> El documento técnico completo para construir el backend está en [`docs/backend/`](docs/backend/README.md): la fórmula, el ejemplo calculado y el texto en pantalla de cada cifra, las pantallas anotadas, el modelo de datos en PostgreSQL y lo que falta decidir. Este contrato es su anexo A.
+
 Para quien construye el backend, en este orden:
 
 1. **Leer «Quién calcula qué», «Sesión» y «Reglas del cable»** de este documento. Son las tres

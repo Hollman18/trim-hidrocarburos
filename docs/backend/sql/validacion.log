@@ -1,0 +1,147 @@
+# Validación del modelo de datos · 2026-10-08 16:31:26 -05
+initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
+
+## 1. Cluster temporal
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+initdb -D <temporal>/pg -U postgres --no-locale -E UTF8: bien
+El cluster escucha por TCP en 127.0.0.1:5440, sin socket Unix (-k ''): la ruta del socket en una carpeta temporal puede pasar el máximo de 103 caracteres de macOS.
+waiting for server to start.... done
+server started
+
+## 2. esquema.sql (psql -v ON_ERROR_STOP=1 -f esquema.sql)
+ asegurar_particiones_lectura 
+------------------------------
+                           15
+(1 row)
+
+89 tablas (sin contar 45 particiones de lectura), 9 vistas, 22 funciones, 75 triggers, 177 índices, 532 restricciones (89 PK, 144 FK, 27 únicas, 269 check)
+
+## 3. ejemplos.sql (filas reales del demo)
+libros 60 · tramos por día 86 · mensajes 315 · identidades 132 · repuestos 13
+ejemplos.sql: 10273 filas en 72 tablas; series sin tag registrado: 0
+ANALYZE
+filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 50 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 9 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1415 · evento_pozo 1349 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 315 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · orden_sap 57 · parada_bomba 36 · parada_programada 7 · parte 16 · parte_modo 42 · parte_variable 39 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 21 · plantilla_whatsapp 10 · pozo 87 · prediccion 14 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 38 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 23 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 86 · tramo_meta 5 · usuario 8 · usuario_campo 8 · version_config 1
+lectura (por partición): lectura_2026_09 1380 · lectura_2026_10 276
+
+## 4. Las restricciones muerden (pruebas.sql)
+NOTICE:  MUERDE  segunda respuesta al mismo evento (la primera gana)  [23505] duplicate key value violates unique constraint "respuesta_parada_pkey"
+NOTICE:  MUERDE  segundo aviso abierto del mismo equipo (K-101 de La Ceiba)  [23505] duplicate key value violates unique constraint "aviso_sap_uno_abierto"
+NOTICE:  MUERDE  UPDATE a version_config  [23001] la tabla version_config es de solo inserción: no admite UPDATE
+NOTICE:  MUERDE  teléfono repetido de un no suspendido  [23505] duplicate key value violates unique constraint "usuario_telefono_unico"
+NOTICE:  MUERDE  tanque con alto-alto 0,99  [23514] new row for relation "tanque" violates check constraint "tanque_alto_alto_check"
+NOTICE:  MUERDE  DELETE a version_config  [23001] la tabla version_config es de solo inserción: no admite DELETE
+NOTICE:  MUERDE  TRUNCATE a version_config  [23001] la tabla version_config es de solo inserción: no admite TRUNCATE
+NOTICE:  MUERDE  UPDATE a un tramo firmado  [23001] la tabla tramo_meta es de solo inserción: no admite UPDATE
+NOTICE:  MUERDE  dos firmas sobre la misma base (409 version-cambio)  [23505] duplicate key value violates unique constraint "version_config_pkey"
+NOTICE:  MUERDE  versión que no es base + 1  [23514] new row for relation "version_config" violates check constraint "version_config_check"
+NOTICE:  MUERDE  JSON firmado sin su forma normalizada (trigger diferido)  [23514] versión 2: las tablas normalizadas no dicen lo mismo que el JSON firmado
+NOTICE:  MUERDE  campo con perfil y sin ningún tramo  [23514] versión 2: el campo ceiba no tiene meta firmada; necesita al menos un tramo
+NOTICE:  PASA    una versión nueva coherente (JSON = normalizado)
+NOTICE:  MUERDE  precio de 501 USD/bbl  [23514] new row for relation "tramo_meta" violates check constraint "tramo_meta_netback_usd_check"
+NOTICE:  MUERDE  máximo sin causa de 21 %  [23514] new row for relation "tramo_meta" violates check constraint "tramo_meta_criterio_sin_causa_check"
+NOTICE:  MUERDE  meta de producción 0  [23514] new row for relation "tramo_meta" violates check constraint "tramo_meta_produccion_bpd_check"
+NOTICE:  MUERDE  producción NaN  [23514] new row for relation "tramo_meta" violates check constraint "tramo_meta_produccion_bpd_check"
+NOTICE:  MUERDE  dos tanques para la misma bomba  [23505] duplicate key value violates unique constraint "tanque_version_campo_id_bomba_key"
+NOTICE:  MUERDE  parada programada que termina antes de empezar  [23514] new row for relation "parada_programada" violates check constraint "parada_programada_check"
+NOTICE:  MUERDE  motivo de 4 caracteres  [23514] new row for relation "parada_programada" violates check constraint "parada_programada_motivo_check"
+NOTICE:  MUERDE  correo repetido (otras mayúsculas)  [23505] duplicate key value violates unique constraint "usuario_correo_unico"
+NOTICE:  PASA    el mismo WhatsApp en una persona suspendida
+NOTICE:  MUERDE  teléfono que no es E.164  [23514] new row for relation "usuario" violates check constraint "usuario_telefono_check"
+NOTICE:  MUERDE  alertas en un rol sin alertas (gerente)  [23514] el rol ger no recibe alertas por WhatsApp
+NOTICE:  MUERDE  borrar a una persona  [23001] nadie se borra: suspenda a tec en vez de borrarlo
+NOTICE:  MUERDE  suspender al único gerente activo  [23514] tiene que quedar al menos un gerente de activo con acceso
+NOTICE:  MUERDE  persona sin ningún campo  [23514] la persona sup tiene que tener «todos» los campos o al menos uno, no las dos cosas ni ninguna
+NOTICE:  MUERDE  cambio_acceso no se borra  [23001] la tabla cambio_acceso es de solo inserción: no admite DELETE
+NOTICE:  MUERDE  respuesta sin parte con texto de 7 caracteres  [23514] new row for relation "respuesta_parada" violates check constraint "respuesta_parada_check2"
+NOTICE:  MUERDE  modo que no es de la parte (VIB en el sello)  [23514] el modo VIB no es de la parte sello (inyeccion)
+NOTICE:  PASA    respuesta con parte y modo del catálogo
+NOTICE:  MUERDE  respuesta por WhatsApp sin su mensaje entrante  [23514] new row for relation "respuesta_parada" violates check constraint "respuesta_parada_check3"
+NOTICE:  MUERDE  respuesta a una caída de servicio  [23514] el evento SV-K-101-260804 es de un servicio: no se responde
+NOTICE:  MUERDE  análisis de una respuesta sin parte  [23514] la parada EP-LC06-260814-04 no tiene una respuesta declarada con parte: no hay qué analizar
+NOTICE:  MUERDE  análisis que salta una versión  [23514] el análisis de EV-2011-1002 va en la versión 1, no en la 2
+NOTICE:  MUERDE  mecanismo que no es de la Table B.2  [23503] insert or update on table "analisis" violates foreign key constraint "analisis_mecanismo_fkey"
+NOTICE:  MUERDE  aviso desde TRIM con descripción de 7 caracteres  [23514] new row for relation "aviso_sap" violates check constraint "aviso_sap_check1"
+NOTICE:  PASA    un aviso abierto de otro equipo del mismo campo
+NOTICE:  PASA    folios consecutivos por año
+NOTICE:  MUERDE  UPDATE a un informe  [23001] la tabla informe es de solo inserción: no admite UPDATE
+NOTICE:  MUERDE  folio que no es INF-AAAA-NNNN  [23514] new row for relation "informe" violates check constraint "informe_check"
+NOTICE:  MUERDE  reescribir el texto de un mensaje enviado  [23001] el registro de mensajes no se reescribe (causa-EP-LC06-260814-04--oper-2026-08-14T08:31:00.000Z)
+NOTICE:  PASA    poner el id de Meta una vez
+NOTICE:  MUERDE  cambiar el id de Meta ya puesto  [23001] el registro de mensajes no se reescribe (causa-EP-LC06-260814-04--oper-2026-08-14T08:31:00.000Z)
+NOTICE:  MUERDE  mensaje con texto y no_enviado a la vez  [23514] new row for relation "mensaje" violates check constraint "mensaje_check"
+NOTICE:  MUERDE  la segunda entrega del mismo mensaje entrante (Meta reintenta)  [23505] duplicate key value violates unique constraint "respuesta_entrante_pkey"
+NOTICE:  MUERDE  carga de asignación: no se borra  [23001] la tabla asignacion_oficial es de solo inserción: no admite DELETE
+NOTICE:  MUERDE  asignación con más horas que el mes (721 en septiembre)  [23514] new row for relation "asignacion_oficial" violates check constraint "asignacion_oficial_check"
+NOTICE:  MUERDE  cambio de planta: no se reescribe  [23001] la tabla cambio_planta es de solo inserción: no admite UPDATE
+NOTICE:  MUERDE  id de planta repetido entre elemento y miembro  [23505] ya hay un elemento LC-14 en el campo ceiba: un id identifica una sola cosa
+NOTICE:  MUERDE  recalificar una predicción ya calificada  [23001] la predicción PR-EV-2011-0922 ya se calificó (acierto): no se recalifica
+NOTICE:  MUERDE  acierto sin la falla que lo confirma  [23514] new row for relation "prediccion" violates check constraint "prediccion_check3"
+NOTICE:  PASA    diálogo por WhatsApp: escoge la parte, TRIM pide el modo, responde y entra la respuesta
+NOTICE:  MUERDE  pedir el modo sin la parte ya escogida  [23514] new row for relation "mensaje_libre" violates check constraint "mensaje_libre_check4"
+NOTICE:  MUERDE  reescribir un mensaje libre ya enviado  [23001] el registro de mensajes no se reescribe (3)
+NOTICE:  MUERDE  estado de entrega de un saliente que TRIM no registró  [23503] el estado sent es de un mensaje saliente que TRIM no registró (wamid.NADIE)
+NOTICE:  MUERDE  orden de SAP con un técnico que no está en el registro  [23503] insert or update on table "orden_sap" violates foreign key constraint "orden_sap_tecnico_id_fkey"
+NOTICE:  MUERDE  segunda orden del mismo aviso (AvisoSap.orden es una)  [23505] duplicate key value violates unique constraint "orden_sap_un_aviso"
+NOTICE:  MUERDE  folio de un año que no es el de su fecha (INF-2026 exportado el 1 de enero de 2027)  [23514] new row for relation "informe" violates check constraint "informe_check1"
+NOTICE:  MUERDE  TRUNCATE a un tramo firmado  [23001] la tabla tramo_meta es de solo inserción: no admite TRUNCATE
+NOTICE:  MUERDE  TRUNCATE a los eventos del PLC  [23001] la tabla evento es de solo inserción: no admite TRUNCATE
+NOTICE:  MUERDE  TRUNCATE a las personas  [23001] nadie se borra: la tabla usuario no admite TRUNCATE
+NOTICE:  MUERDE  TRUNCATE a la asignación oficial  [23001] la tabla asignacion_oficial es de solo inserción: no admite TRUNCATE
+NOTICE:  MUERDE  cambiar la hora de inicio de un evento del PLC  [23001] el evento EP-LC21-261001-01 del borde no se reescribe: solo se cierra (fin) y la firma se pone una vez
+NOTICE:  PASA    cerrar un evento abierto
+NOTICE:  MUERDE  volver a cerrar un evento cerrado  [23001] el evento EP-LC06-260814-04 del borde no se reescribe: solo se cierra (fin) y la firma se pone una vez
+NOTICE:  MUERDE  borrar un evento del PLC  [23001] los eventos del borde no se borran (evento_pozo: EP-LC06-260814-04)
+NOTICE:  MUERDE  evento con fin antes del inicio  [23514] new row for relation "evento_pozo" violates check constraint "evento_pozo_check"
+NOTICE:  MUERDE  evento de pozo con un id que ya es de una bomba  [23503] insert or update on table "evento_pozo" violates foreign key constraint "evento_pozo_id_clase_campo_id_pozo_fkey"
+NOTICE:  MUERDE  hz en un código que no es HZ  [23514] new row for relation "evento_pozo" violates check constraint "evento_pozo_check1"
+NOTICE:  PASA    poner la firma de una parada una vez
+NOTICE:  MUERDE  cambiar la firma ya puesta  [23001] el evento EV-2011-1002 del borde no se reescribe: solo se cierra (fin) y la firma se pone una vez
+NOTICE:  MUERDE  cambiar la pérdida de una parada registrada  [23001] el evento EV-2011-1002 del borde no se reescribe: solo se cierra (fin) y la firma se pone una vez
+NOTICE:  MUERDE  parada con pérdida de 1,2 de la capacidad  [23514] new row for relation "parada_bomba" violates check constraint "parada_bomba_perdida_check"
+NOTICE:  MUERDE  tag de un campo distinto al de su gateway  [23503] insert or update on table "tag" violates foreign key constraint "tag_dispositivo_id_campo_id_fkey"
+NOTICE:  MUERDE  tag repetido en su campo  [23505] duplicate key value violates unique constraint "tag_campo_id_nombre_key"
+NOTICE:  MUERDE  un nacimiento no deshace un mapeo manual  [23514] el tag XI-1017 fue asociado por manual y un nacimiento no lo deshace
+NOTICE:  MUERDE  otro gateway declara un tag ajeno  [23514] el tag VI-2011 lo publica el gateway EPIC-CEIBA-01: EPIC-CEIBA-02 no puede declararlo
+NOTICE:  MUERDE  tag pendiente con equipo  [23514] new row for relation "tag" violates check constraint "tag_check"
+NOTICE:  MUERDE  cambiar una versión vieja de la banda normal  [23001] la tabla historial_tag es de solo inserción: no admite DELETE
+NOTICE:  MUERDE  lectura sin valor y con calidad buena  [23514] new row for relation "lectura_2026_10" violates check constraint "lectura_check"
+NOTICE:  PASA    lectura sin valor marcada mala (dato inválido)
+NOTICE:  MUERDE  lectura fuera de las particiones (2030)  [23514] no partition of relation "lectura" found for row
+NOTICE:  MUERDE  fiscal negativo  [23514] new row for relation "produccion_fiscal_diaria" violates check constraint "produccion_fiscal_diaria_bbl_check"
+NOTICE:  PASA    día fiscal sin dato (NULL, nunca 0)
+NOTICE:  MUERDE  alarma baja por encima de la alta  [23514] new row for relation "alarma_tag" violates check constraint "alarma_tag_check"
+NOTICE:  MUERDE  cambiar una alarma firmada en sitio  [23001] la tabla alarma_tag es de solo inserción: no admite UPDATE
+NOTICE:  MUERDE  corregir un mes precalculado en sitio  [23001] el precálculo de libro_mes no se actualiza en sitio: se recalcula el mes (borrar e insertar) y se anota en recalculo_mes
+NOTICE:  MUERDE  libro publicable con motivos  [23514] new row for relation "libro_mes" violates check constraint "libro_mes_check"
+NOTICE:  PASA    recalcular un mes: borrar e insertar (y anotarlo)
+78 rechazos esperados y 12 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
+
+## 5. Cuadres de los datos cargados (cuadres.sql)
+NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
+NOTICE:  CUADRA  potencial − real = Σ diferidos en los 60 meses: diferencia máxima 0.000000000 bbl
+NOTICE:  CUADRA  FA = R/T en 60 meses; FA de La Ceiba en sep-2026 = 0.9689341798460919
+NOTICE:  CUADRA  Σ tramo_diferido de La Ceiba, sep-2026 = 21691.435282 bbl = libro_mes.diferido
+NOTICE:  CUADRA  Σ v_produccion_mes(ceiba, 2026-09).dias = 324688 bbl = libro_mes.real
+NOTICE:  CUADRA  libro_mes(ceiba, sep-2026) = referencia/mensual/ceiba.json: real 324688, diferido 21691.44, tolerancia 3253.72, valor USD 1041188.89
+NOTICE:  CUADRA  config_json(v) = JSON firmado en 1 versión(es); la vigente hoy es la 1
+NOTICE:  CUADRA  serie_de(VI-2011, desde 2026-09-21 14:00, paso 1 d, 12) = {2.2,2.1,2.2,2.3,2.2,2.1,2.2,2.2,2.3,2.2,2.4,0} (catálogo)
+NOTICE:  CUADRA  v_procedencia(ceiba, PDT-1011) = (PDT-1011,calculado,"el tag del que se deriva","Sistema de aire de instrumentos",compresor-aire,f1-compresor-aire,2,15,EPIC-CEIBA-01)
+NOTICE:  CUADRA  v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3.9,3.9,,"API 610, Tabla 8: 3,0 mm/s RMS en la región preferida y 3,9 en la permitida (hasta 3.600 rpm y 300 kW por etapa)","Base maestra de alarmas (ISA-18.2): la firma ingeniería de confiabilidad del cliente")
+NOTICE:  CUADRA  v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
+
+## 6. tablas.json contra esquema.sql
+tablas.json: 89 tablas, 9 vistas, 144 relaciones, 368 filas de ejemplo
+comparadas 89 tablas y 9 vistas, 796 columnas, 144 relaciones; columnas de tabla sin comentario: 0
+filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
+tablas.json COINCIDE 1:1 con esquema.sql
+
+## 7. TimescaleDB
+TimescaleDB NO está instalado en este PostgreSQL (pg_available_extensions no la trae): no se instaló.
+timescale.sql queda revisado a mano y SIN ejecutar; la base funciona con las particiones nativas mensuales de lectura.
+
+## 8. Cierre
+waiting for server to shut down.... done
+server stopped
+cluster detenido y su carpeta temporal borrada.
+VALIDACIÓN TERMINADA SIN ERRORES

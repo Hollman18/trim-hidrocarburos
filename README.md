@@ -3,6 +3,8 @@
 Front-end del producto que **baja los barriles diferidos de los equipos de alto impacto**
 de un campo de crudo: las bombas de reinyección de agua y las electrosumergibles.
 
+> **¿Va a construir el backend?** Empiece por [`docs/backend/`](docs/backend/README.md): el documento técnico completo. Trae cada cifra de la aplicación con su fórmula, su ejemplo calculado y el texto que se muestra según su valor, y todas las pantallas anotadas. También la cadena de datos, la API, el modelo de datos en PostgreSQL ([`sql/esquema.sql`](docs/backend/sql/esquema.sql), validado con filas reales del demo) y el libro de Excel de las tablas y sus relaciones ([`modelo-de-datos.xlsx`](docs/backend/modelo-de-datos.xlsx)). El contrato endpoint por endpoint sigue en [`CONTRATO.md`](CONTRATO.md).
+
 ## Cómo se ve
 
 Doce pantallas con los datos del demo: los cinco campos y la operadora son de demostración, y

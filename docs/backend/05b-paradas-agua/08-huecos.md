@@ -1,0 +1,45 @@
+# Huecos y dudas
+
+Lo que no se pudo resolver, lo que es simplificación del demo y lo que parece inconsistente en el código. Cada punto dice qué debería hacer el backend real.
+
+## A. Simplificaciones del demo que el backend tiene que reemplazar
+
+1. **El nivel del tanque ahora es una constante** (`NIVEL_AHORA`, `pozos.ts:202-206`: 89,6 / 61,8 / 42,3 %), buscada por `tanque.id` y no por `tagNivel`. El backend lo lee del transmisor (`GET /api/campos/:campo/tanques/:tanque/nivel`) con su hora; sin lectura, el colchón no se calcula (ya es el comportamiento).
+2. **El perfil de cada bomba por campo está en el código** (`PERFILES` y `MAQUINAS`, `bombas.ts:147-231`): papel, capacidad, pozos del clúster, `sinBomba.fraccion` y las primeras alarmas que identifican cada parte. Respaldos y tanques sí son configuración firmada. El backend necesita una fuente versionada para el perfil (registro de ingeniería o configuración firmada); hoy un cambio de papel no queda en el historial de firmas.
+3. **La firma de las señales al parar no viene en ningún evento del demo** (0 de 36). El front la calcula con la salud **de ahora** y solo para una parada abierta (`firmaAlParar`, `causa-senal.ts:155-166`); con la bomba ya detenida todas las partes quedan `detenida`, así que en la práctica nunca encuentra firma. **El backend debe decidir la firma con las lecturas del instante previo al paro y guardarla con el evento** (CONTRATO.md:877-878); si no, las paradas sin primera alarma quedan siempre «sin identificar».
+4. **La serie del caudal de la bomba es diaria (12 puntos)** y la mediana se toma sobre toda la serie (`aguaQueMueve`, `diferido.ts:52-59`). En producción hay que fijar la ventana (p. ej. los últimos N días en marcha) y la cadencia (`pasoH`); la mediana con una ventana distinta da otro colchón.
+5. **La historia de fallas usa el mismo denominador para todos**: días desde el primer mes fiscal (366,583). Un equipo instalado o reemplazado después tendría un MTBF inflado. El backend real debería contar desde la puesta en servicio del equipo (o del último reemplazo).
+
+## B. Inconsistencias en el código (con archivo:línea)
+
+6. **Evidencia duplicada al heredar la causa de una bomba sin primera alarma.** `causa-senal.ts:264` arma `[<senal bomba> · <hora>, cb.evidencia[0], base]`; cuando la causa de la bomba es `ninguno` o `declarado`, `cb.evidencia[0]` es la misma línea de la bomba. Demo: LC-16 y LC-04 traen dos veces «ZS-2011 · marcha → paro · 2 de oct, 03:52». El backend puede reproducirlo (para que la evidencia sea idéntica) o se corrige en los dos lados.
+7. **`porQueNo` no se hereda.** Un pozo cerrado por una bomba sin parte queda con `como: 'ninguno'` pero sin `porQueNo` (`causa-senal.ts:266-270`), aunque CONTRATO.md:1021-1025 dice que `porQueNo` acompaña a `como: 'ninguno'`. Hay que decidir si se copia el de la bomba.
+8. **Un servicio sin `fin` no tiene cascada.** `cascadaDe` usa `ms(s.fin)` (`causa-senal.ts:115`): con un servicio todavía caído la ventana es `NaN` y ningún pozo entra. El tipo `EventoServicio.fin` es `string` (no admite `null`) y el demo los trae todos cerrados. El backend real va a tener servicios abiertos: hay que usar AHORA como fin y declararlo en el contrato.
+9. **Dependencia del orden de llegada.** Si un pozo cae en la cascada de dos servicios, o dos servicios caen a ±15 min de una parada de bomba, gana el primero de la lista (`find`, `causa-senal.ts:107` y `:133`). Contradice «el resultado no depende del orden en que lleguen». Sugerencia: el servicio que cayó primero, y por id en empate.
+10. **`costoFalla` no es la misma cuenta en bombas y en electrosumergibles.** El comentario de `Riesgo.costoFalla` (`diferido.ts:392-393`) dice «crudo por día × horas fuera promedio», pero en bombas es `historial.bblPorFalla` (`diferido.ts:479`): el promedio de barriles **históricos** de sus fallas cerradas, con el factor y los pozos de cada mes y con ceros cuando el tanque absorbió. En ESP sí es `crudoAsignado × MDT / 24` con el crudo de hoy (`diferido.ts:509`). Las dos cifras se suman en la cabecera de Riesgo («≈ 56.706 bbl si fallan»). Hay que escoger una definición; si se mantienen las dos, documentarlo en el contrato.
+11. **Texto de `mdtFuente` en la multifásica.** MPP-301 dice «el promedio de sus 7 fallas cerradas (el tanque absorbe una parte)» (`diferido.ts:480`), pero la multifásica no tiene tanque. El texto debería depender del papel.
+12. **Respaldo sin declarar = respaldo cero.** La predicción toma 0 si la configuración no trae el respaldo (`diferido.ts:62`) y concluye «se cierra todo el campo»; en cambio el panel del equipo dice «respaldo sin declarar en la configuración» (`equipos.ts:465-469`). Un hueco de configuración termina en una predicción pesimista sin aviso; debería ser un hueco explícito (sin orden de cierre, con supuesto).
+13. **Colchón infinito en la placa.** Si el respaldo absorbe toda el agua, `colchon.horas = Infinity` (null en JSON) y la placa escribe «si se para: más de 3 meses de colchón, luego se pierden 0 bbl/d» (`Placa.tsx:159-160`). El método ya dice «El respaldo absorbe toda el agua: parar no cierra pozos»; la placa debería usar esa frase. No ocurre en el demo.
+14. **Colchón de una bomba ya parada.** La API devuelve `colchon` calculado con el nivel actual también para La Ceiba parada (0,05 h, rango 0,025–0,076, $\varepsilon$ = 51 %), que la pantalla esconde. Conviene no mandarlo (o mandarlo como «agotado») para que nadie lo lea.
+15. **Candidatos distintos para el orden de cierre.** Con la bomba parada, `ordenDeCierre(..., todos = true)` incluye pozos cerrados por otra causa (LC-21 en La Ceiba, `diferido.ts:255`), mientras que `evitableDeEvento` los excluye (`libro.ts:861-864`). En La Ceiba no cambia nada (se cierra todo), pero con respaldo daría órdenes distintas.
+16. **Agua de las pruebas contra caudal de la bomba en La Ceiba.** Los pozos de La Ceiba suman 21.649 bbl/d de agua de prueba, más que la capacidad de P-201B (20.400) y que su mediana medida (19.190). Con la bomba en marcha el tanque subiría ~2.459 bbl/d, pero el nivel histórico estaba estable (~52 %). Es una incoherencia de los datos del demo: el colchón usa el medidor de la bomba y el orden de cierre usa las pruebas.
+17. **Cortes de agua del demo por debajo de la propuesta de valor.** BSW por campo de 29 % a 71 % (por pozo, hasta 79,8 % en MN-27), contra 92–98 % del discurso (11,5 a 49 bbl de agua por bbl de crudo). Las fórmulas son las mismas, pero las cifras del demo subestiman el peso del agua y alargan el colchón. Si el demo se usa para vender, convendría regenerar las pruebas con cortes realistas.
+18. **Servicios en riesgo sin factor de frecuencia.** La fila de un servicio suma `crudoAsignado` de los pozos que producen, sin descontar los que están a frecuencia reducida (`diferido.ts:491`), a diferencia de `caudalesAhora` (`diferido.ts:580`).
+19. **«ya fuera» para servicios.** Un servicio nunca trae `horas`, así que la pantalla dice «ya fuera» y lo pone primero («El más cercano: K-101 · ya fuera»), aunque lo que dice su lectura es que **queda autonomía** (11 min de recibidor). Semánticamente es «en alarma», no «cruzó su límite».
+20. **Dos cifras de «por identificar».** Turno cuenta `pide` (4 en el demo: incluye las 2 que arrancaron sin respuesta) y la cabecera de Causa cuenta `pide && !arrancoSinIdentificar` (2). Las dos pantallas usan el mismo rótulo.
+21. **`parte` y `motivo` de una fila «perdiendo»** salen del primer pozo del grupo (`diferido.ts:451-452`), que depende del orden de `pozosDe`. Si en el mismo grupo hay un `HZ` y un `CMD` de la misma bomba, los textos difieren y la fila muestra uno al azar del orden de llegada.
+
+## C. Lo que el demo no ejercita (no hay datos que lo comprueben)
+
+22. Ningún `HZ` explicado por la bomba de reinyección (la frase «Se le bajó la frecuencia: la bomba de reinyección no daba abasto con el agua» no sale nunca).
+23. Ninguna parada identificada por `firma` al parar (regla 5 de bomba) ni por respuesta del operario a una bomba (regla 6): `ctx.respuestas` arranca vacío.
+24. Ninguna ESP con dos fallas: el MTBF de ESP nunca se calcula; ninguna ESP en riesgo con historia propia (`costoDe: 'propio'` solo aparece en bombas).
+25. Ningún evento de pozo que se pise con otro del mismo pozo: la normalización (`intervalosEfectivos`) no cambia ningún número del demo.
+26. Ninguna bomba de recobro en riesgo (Guacamayo P-201B está sana): la fila con `bblDia = 0` y «≈ 0 bbl por falla» no se ve.
+27. Ningún servicio abierto (ver punto 8).
+
+## D. Preguntas para el dueño del producto
+
+28. ¿El costo por falla de una bomba debe ser el histórico (bbl por falla) o el de hoy (crudo en riesgo × horas fuera promedio / 24)? Con el de hoy (`prediccion.crudoBpd × historial.mdtH / 24`, corrido con el motor), Morichal P-201B daría 1.670,66 × 47,094 / 24 = **3.278,3 bbl** en vez de 3.364,6, y MPP-301 **3.244,5** en vez de 3.433,5.
+29. ¿«Disparo» de 24 h exactas es falla? Hoy sí (`< 24` estricto).
+30. ¿La ventana de cascada (15 min) y la de servicio-bomba (±15 min) son configurables por campo? Hoy son constantes del producto.
