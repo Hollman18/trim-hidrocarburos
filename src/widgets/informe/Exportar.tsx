@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Download, FileText, Table } from 'lucide-react'
-import { useApp, useAmbito, useRango, useRol } from '@/app/store'
+import { useApp, useAmbito, useRango, useRol, usePeriodo } from '@/app/store'
 import { traerLibro } from '@/shared/api/diferidos'
 import { csvDeLibro, formaCanonica, huellaLegible, type Informe } from '@/entities/informe'
 import { PANTALLAS } from '@/app/pantallas'
@@ -9,17 +9,15 @@ import { fechaHoraLarga, AHORA } from '@/entities/reloj'
 import { NOTA_DE_CALCULO } from '@/widgets/diferidos/Rango'
 import { publicacion } from '@/widgets/diferidos/publicacion'
 import { useDesplegable } from '@/shared/ui/foco'
+import { Info } from '@/shared/ui/Info'
 import { useVersiones, useCtx, useInformes } from '@/shared/api/sesion'
-import { formatoFecha } from '@/shared/lib/fecha'
-
-const FMT_DIA = formatoFecha({ day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Bogota' })
-const dia = (d: Date) => FMT_DIA.format(d)
+import { periodoDelInforme } from './periodo'
 
 /** La lógica de exportar, aparte de dónde está el botón: el menú de la
  *  cabecera exporta la pantalla y la ficha de un equipo se exporta desde su
  *  propio panel, porque el panel tapa la cabecera mientras está abierto. */
 function useExportar() {
-  const rol = useRol(); const ambito = useAmbito(); const rango = useRango()
+  const rol = useRol(); const ambito = useAmbito(); const rango = useRango(); const parcial = usePeriodo().parcial
   const pantalla = useApp(s => s.pantalla), equipoAbierto = useApp(s => s.equipoAbierto), campoId = useApp(s => s.campoId), emitirInforme = useApp(s => s.emitirInforme), setImprimiendo = useApp(s => s.setImprimiendo)
   const ctx = useCtx(); const versiones = useVersiones(); const informes = useInformes()
   const [ocupado, setOcupado] = useState(false)
@@ -29,8 +27,8 @@ function useExportar() {
   // La ficha de un equipo es de su campo, aunque se haya abierto desde el portafolio.
   const campoFicha = campoPorId(campoId)
   const titulo = equipoAbierto ? `Ficha del equipo ${equipoAbierto} · ${campoFicha.nombre}` : PANTALLAS[pantalla]?.titulo ?? pantalla
-  const hastaDia = new Date(Math.min(rango.hasta.getTime(), AHORA.getTime()) - 1)
-  const periodo = `${rango.nombre} · ${dia(rango.desde)} a ${dia(hastaDia)}`
+  // Un período parcial lo dice en el folio, el CSV y el papel («Año a la fecha, en curso»).
+  const periodo = periodoDelInforme(rango, parcial)
   /** Registra la exportación: se manda la CONSULTA (campos, período, equipo de
    *  la ficha) y el servidor devuelve el folio con las cifras y su huella. El
    *  front no calcula ni manda la huella: si lo hiciera, el folio certificaría
@@ -78,7 +76,7 @@ function useExportar() {
     alEntregar?.()
   })
 
-  return { puede: !!rol.puede['evidencia:exportar'], titulo, ambito, rango, ocupado, aviso, setAviso, pdf, csv, ultimo: informes.at(-1) }
+  return { puede: !!rol.puede['evidencia:exportar'], titulo, ocupado, aviso, setAviso, pdf, csv, ultimo: informes.at(-1) }
 }
 
 /** Exportar lo que se está viendo: en PDF (la pantalla con membrete, fecha y
@@ -104,17 +102,19 @@ export function Exportar() {
           <button disabled={x.ocupado} onClick={() => x.pdf(cerrar)}
             className="flex w-full cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-left text-[11.5px] hover:bg-[var(--panel2)] disabled:opacity-60">
             <FileText className="mt-0.5 size-3.5 shrink-0 opacity-70" />
-            <span>Informe en PDF<span className="block text-[10px] text-[var(--tinta3)]">Lo que está viendo, con membrete, fecha y folio. En la ventana de imprimir escoja «Guardar como PDF».</span></span>
+            <span>Informe en PDF<span className="block text-[10px] text-[var(--tinta3)]">Con membrete y folio; al imprimir, «Guardar como PDF»</span></span>
           </button>
           <button disabled={x.ocupado} onClick={() => x.csv(cerrar)}
             className="flex w-full cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-left text-[11.5px] hover:bg-[var(--panel2)] disabled:opacity-60">
             <Table className="mt-0.5 size-3.5 shrink-0 opacity-70" />
-            <span>Datos en CSV<span className="block text-[10px] text-[var(--tinta3)]">Los eventos del período, uno por fila, con su causa y sus barriles. {x.ambito.titulo} · {x.rango.nombre.toLowerCase()}.</span></span>
+            <span>Datos en CSV<span className="block text-[10px] text-[var(--tinta3)]">Eventos del período, con causa y barriles</span></span>
           </button>
           {x.aviso && <p role="alert" className="border-t border-[var(--linea2)] px-2 py-1.5 text-[11px] text-[var(--tinta)]">{x.aviso}</p>}
-          <p className="border-t border-[var(--linea2)] px-2 py-1.5 text-[10px] leading-relaxed text-[var(--tinta3)]">
-            Cada exportación queda registrada con su folio y la huella de sus cifras: así se puede comprobar que no se modificó.
-            {x.ultimo && <> Último: <b className="text-[var(--tinta2)]">{x.ultimo.folio}</b> · {huellaLegible(x.ultimo.huella).slice(0, 14)}…</>}
+          {/* Por qué sirve de respaldo: en el ⓘ. A la vista, el último folio. */}
+          <p className="flex flex-wrap items-center gap-x-1.5 border-t border-[var(--linea2)] px-2 py-1.5 text-[10px] leading-relaxed text-[var(--tinta3)]">
+            <span>Queda registrada con folio y huella</span>
+            <Info titulo="Folio y huella" texto="Cada exportación queda registrada con su folio y la huella de sus cifras: así se puede comprobar que no se modificó." />
+            {x.ultimo && <span className="basis-full">Último: <b className="text-[var(--tinta2)]">{x.ultimo.folio}</b> · {huellaLegible(x.ultimo.huella).slice(0, 14)}…</span>}
           </p>
         </div>
       )}

@@ -74,6 +74,11 @@ export interface Opcion {
   porque?: string
   /** De dónde sale la sugerencia: una lectura fuera de límite o la historia del equipo. */
   fuente?: 'senal' | 'historia'
+  /** Con `fuente: 'historia'`: cuántas de las fallas anteriores del equipo fueron
+   *  de esa parte (`veces`) y cuántas hubo en total. La pantalla escribe de aquí;
+   *  `porque` es la misma cifra dicha en una frase. */
+  veces?: number
+  total?: number
 }
 
 interface MensajeBase {
@@ -168,7 +173,10 @@ export const OTRA: Opcion = { clave: '0', texto: 'Otra cosa: escríbala' }
 const numeradas = (xs: Array<Omit<Opcion, 'clave'>>): Opcion[] => [...xs.map((x, i) => ({ ...x, clave: String(i + 1) })), OTRA]
 
 /** En un pozo con electrosumergible, la salida para decir que el daño no fue de ella. */
-export const NO_FUE_ESP = 'No fue la electrosumergible: otra causa del pozo'
+/** La opción de un pozo con electrosumergible cuando no fue ella. La pantalla
+ *  muestra la parte corta (lo que sigue lo dice el paso siguiente). */
+export const NO_FUE_ESP_CORTO = 'No fue la electrosumergible'
+export const NO_FUE_ESP = `${NO_FUE_ESP_CORTO}: otra causa del pozo`
 
 /** Cuando se sugieren solo algunas partes: la puerta a todas las del catálogo. */
 export const OTRA_PARTE = 'Otra parte del equipo'
@@ -204,7 +212,7 @@ export function causasSugeridas(p: Pregunta, ctx: Contexto, lecturas = false): {
   const porParte = new Map<ParteId, number>()
   for (const e of antes) if (e.parte && sabida(e.id)) porParte.set(e.parte, (porParte.get(e.parte) ?? 0) + 1)
   for (const [parte, n] of [...porParte].sort((a, b) => b[1] - a[1]))
-    agregar({ parte, fuente: 'historia', porque: `${n} de las ${antes.length} fallas anteriores de este equipo` })
+    agregar({ parte, fuente: 'historia', veces: n, total: antes.length, porque: `${n} de las ${antes.length} fallas anteriores de este equipo` })
   const nombre = (id: ParteId) => cat.partes.find(x => x.id === id)?.nombre ?? NOMBRE_PARTE[id]
   if (candidatas.length) return { conEvidencia: true, opciones: numeradas([...candidatas.slice(0, 3).map(c => ({ ...c, texto: nombre(c.parte) })), { texto: OTRA_PARTE }, ...otraDelPozo]) }
   return { conEvidencia: false, opciones: numeradas([...cat.partes.map(x => ({ texto: x.nombre, parte: x.id })), ...otraDelPozo]) }

@@ -660,7 +660,9 @@ sugerencia (`fuente: 'senal' | 'historia'`).
   la clave de `PLANTILLAS` (`parada`, `paradaEsp`, `cierre`, `causa`, `recordatorio`,
   `recordatorioArranco`, `escalamiento`, `parte`, `parteSinTag`, `orden`) y de ahí sale su nombre
   aprobado; `texto` es **exactamente** el cuerpo de la plantilla con sus parámetros. `Opcion` =
-  `{ clave, texto, parte?, porque?, fuente? }`. Es **el registro de lo enviado**: se guarda al
+  `{ clave, texto, parte?, porque?, fuente?, veces?, total? }` (con `fuente: 'historia'`, `veces` de
+  `total` fallas anteriores del equipo fueron de esa parte: la pantalla escribe de esas cifras, no
+  de la frase de `porque`). Es **el registro de lo enviado**: se guarda al
   enviar y no se reescribe.
 - **Cada mensaje se arma con la versión de la configuración que regía a su hora** (`configEn`
   sobre el historial de versiones): el perfil (si la familia se vigilaba) y el respaldo de la
@@ -1015,6 +1017,12 @@ máquina no declara se deja en la evidencia y no identifica la parte.
 
 **Identificación:** pide respuesta la parada sin identificar, o la de bomba sin parte. Si arrancó
 sin respuesta, o la respuesta llegó después del arranque: **no conformidad**.
+
+**`porQueNo`** (opcional, en la causa): con `como: 'ninguno'`, por qué ninguna señal alcanzó
+(«Sin primera alarma y sin firma: el PLC no dice qué parte falló»; en un pozo, «Ningún servicio
+caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla»). También es el
+último renglón de `evidencia`, que es la cadena de custodia y no cambia; el front lo lee de este
+campo y no de su lugar en la lista.
 
 ### Cálculo del libro (asignación de producción)
 

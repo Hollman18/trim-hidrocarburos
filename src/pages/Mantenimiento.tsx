@@ -5,12 +5,18 @@ import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
 import { conMeta, textoSinMeta } from '@/entities/libro'
 import { fechaHora, AHORA } from '@/entities/reloj'
-import { Panel, Boton } from '@/shared/ui/primitivas'
+import { esBombaDeLinea } from '@/shared/api/equipos'
+import type { Riesgo as FilaRiesgo } from '@/entities/diferido'
+import { Panel, Boton, Chip } from '@/shared/ui/primitivas'
 import { PanelSapMantenimiento } from '@/widgets/sap/PanelSapMantenimiento'
 import { Tip } from '@/shared/ui/Tip'
+import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
+import { BarraMeta } from '@/shared/ui/BarraMeta'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
-import { FueraDeMeta, MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { ParetoPartes, Palancas } from '@/widgets/diferidos/Paretos'
 import { fmtHoras } from '@/widgets/bombas/comun'
 
@@ -42,78 +48,126 @@ export function Mantenimiento() {
     .sort((a, b) => a.desde.localeCompare(b.desde))
   const irA = (p: string) => (rol.pantallas.includes(p) ? () => setPantalla(p) : undefined)
   const difDia = lb.brecha / Math.max(1 / 24, lb.meta.dias)
+  const hayMeta = conMeta(lb.meta)
+  const donde = (c: string) => (ambito.global ? ` · ${campoPorId(c).nombre}` : '')
+
+  // Cinco a la vista y «ver N más»; lo de prioridad 1 nunca queda escondido, y
+  // una parada que sigue sin identificar («no arrancar») tampoco.
+  const listaRiesgo = useVerMas(riesgo, { prioridad: r => r.prioridad })
+  const listaSin = useVerMas(sinIdentificar, { prioridad: p => (!p.fin && !p.arrancoSinIdentificar ? 1 : 3) })
+
+  const filaRiesgo = (r: FilaRiesgo) => {
+    // Un servicio del campo que ya cayó a 0 bbl/d cierra lo que esté produciendo: lo mismo que dice Riesgo.
+    const servicio = r.tipo !== 'electrosumergible' && !esBombaDeLinea(r.equipo)
+    const siPara = servicio && r.bblDia === 0 ? 'todo el campo' : `${n0(r.bblDia)} bbl/d`
+    return (
+      <div key={`${r.campoId}${r.equipo}`} className="border-b border-[var(--linea2)] py-2 last:border-0">
+        <Tip as="button" onClick={() => { setCampo(r.campoId); abrirEquipo(r.equipo, false) }}
+          titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
+          filas={[...(r.parte ? [['Parte', NOMBRE_PARTE[r.parte]] as [string, string]] : []),
+            ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
+            ...(r.tag ? [['Instrumento', r.tag] as [string, string]] : []),
+            ['Si para', siPara], ...(r.costoFalla !== undefined ? [['Si falla', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
+          className="flex w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)]">
+          <MarcaPrioridad s={r.prioridad} tamano={12} className="mt-[2px]" />
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <b className="text-[12.5px]">{r.equipo}{donde(r.campoId)}</b>
+              <Chip>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>
+            </span>
+            <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-[var(--tinta2)]">
+              {r.horas !== undefined
+                ? <span>{r.parte ? `${NOMBRE_PARTE[r.parte].toLowerCase()} · ` : ''}cruza en {fmtHoras(r.horas)}</span>
+                : <>{r.parte && <span>{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}<Chip tono="fuerte">ya fuera</Chip></>}
+              {!r.parte && r.tag && <span className="font-mono text-[10.5px]">{r.tag}</span>}
+            </span>
+          </span>
+          <span className="tabular shrink-0 text-right text-[11px]">
+            <b className="block">{r.costoFalla !== undefined ? `≈ ${n0(r.costoFalla)} bbl` : siPara}</b>
+            <small className="text-[9.5px] text-[var(--tinta3)]">{r.costoFalla !== undefined ? 'si falla' : 'si para'}</small>
+          </span>
+        </Tip>
+        {r.accion && <div className="mt-0.5 pl-[22px]"><Info rotulo="qué hacer" titulo={`Qué hacer · ${r.equipo}`} texto={r.accion} /></div>}
+      </div>
+    )
+  }
+
+  const filaSin = (p: (typeof sinIdentificar)[number]) => (
+    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
+      <MarcaPrioridad s={p.arrancoSinIdentificar ? 3 : !p.fin ? 2 : 3} tamano={11} />
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2">
+        <span><b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span></span>
+        <Chip tono={!p.fin && !p.arrancoSinIdentificar ? 'fuerte' : 'neutro'}>{p.arrancoSinIdentificar ? 'arrancó sin identificar' : !p.fin ? 'sigue parado' : 'por identificar'}</Chip>
+      </span>
+      <span className="tabular">{n0(p.bbl)} bbl</span>
+    </div>
+  )
+
+  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
 
   return (
     <>
-      <Tip titulo="La balanza del mantenimiento, en barriles"
-        pista="Lo programado estaba en el programa de paradas aprobado; lo demás son fallas o restricciones. La mide el PLC."
-        filas={[['Programado', `${n0(lb.planeado)} bbl`], ['No programado', `${n0(lb.noPlaneado)} bbl`],
-          ['De alto impacto', `${n0(lb.altoImpacto)} bbl`], ['Con la parte vigilada', `${n0(lb.anticipable)} bbl`],
-          ['Período', rango.nombre]]}
-        className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+      <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
         <span>
-          <b className="tabular block text-[36px] leading-none">{n0(fallasAlto)}</b>
-          <small className="block text-[11px] text-[var(--tinta3)]">bbl de fallas de equipos de alto impacto · {rango.nombre}</small>
-          {/* El desglose también a la vista: en el recuadro flotante solo lo alcanzaba el ratón. */}
-          <small className="block text-[10.5px] text-[var(--tinta2)]">{n0(lb.anticipable)} bbl con la parte vigilada</small>
+          <small className={rotulo}>fallas de alto impacto</small>
+          <b className="tabular block text-[36px] leading-none">{n0(fallasAlto)}<small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
+          {/* Su desglose (parte vigilada, sin instrumento, sin identificar) está a la vista en «Dónde bajarlo». */}
         </span>
-        <span>
-          {/* Sin meta firmada en algún campo no hay máximo: se dice, sin marca ni «/ 0». */}
-          <b className="tabular block text-[20px] leading-none"><FueraDeMeta si={conMeta(lb.meta) && difDia > lb.meta.diferidoDia} tamano={12} />{n0(difDia)}{conMeta(lb.meta) ? ` / ${n0(lb.meta.diferidoDia)}` : ''}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">bbl/d de diferido {conMeta(lb.meta) ? 'contra el máximo firmado' : `· ${textoSinMeta(lb.meta, ids.length > 1)}`}{base ? ` · antes ${n0(base.baseDia)} bbl/d (${base.nombre})` : ''}</small>
-        </span>
-        <span>
+        {/* Sin meta firmada en algún campo no hay máximo: se dice, sin raya ni marca. */}
+        <BarraMeta rotulo="diferido" valor={difDia} unidad="bbl/d" meta={hayMeta ? lb.meta.diferidoDia : undefined}
+          rotuloMeta={hayMeta ? `máx. ${n0(lb.meta.diferidoDia)}` : textoSinMeta(lb.meta, ids.length > 1)} tipoMeta="máximo"
+          fuera={hayMeta && difDia > lb.meta.diferidoDia}
+          apoyo={base ? `antes ${n0(base.baseDia)} bbl/d (${base.nombre})` : undefined} />
+        {/* El <div> deja la nota impresa del globo en la misma celda de la grilla. */}
+        <div className="min-w-0"><Tip titulo="Programado y no programado"
+          pista="Lo programado estaba en el programa de paradas aprobado; lo demás son fallas o restricciones. La mide el PLC."
+          filas={[['Programado', `${n0(lb.planeado)} bbl`], ['No programado', `${n0(lb.noPlaneado)} bbl`],
+            ['De alto impacto', `${n0(lb.altoImpacto)} bbl`], ['Con la parte vigilada', `${n0(lb.anticipable)} bbl`]]}
+          imprimir="pista" className="block min-w-0">
+          <small className={rotulo}>del diferido, programado</small>
           <b className="tabular block text-[20px] leading-none">{n1(planPct)} %</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">del diferido fue programado · {n0(lb.planeado)} bbl · {n0(lb.noPlaneado)} bbl no programado</small>
-        </span>
+          <span aria-hidden className="mt-1.5 block h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
+            <i className="block h-full bg-[var(--dato-2)]" style={{ width: `${planPct}%` }} />
+          </span>
+          <small className={apoyo}>{n0(lb.planeado)} bbl · {n0(lb.noPlaneado)} bbl no programado</small>
+        </Tip></div>
         <span>
-          <b className="tabular flex items-center gap-1.5 text-[20px] leading-none">{noConformes.length > 0 && <MarcaPrioridad s={3} tamano={13} />}{pendientes.length} · {noConformes.length}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">paradas por identificar · arrancaron sin identificar</small>
+          <small className={rotulo}>por identificar</small>
+          <b className="tabular block text-[20px] leading-none">{pendientes.length}</b>
+          <small className={`${apoyo} flex items-center gap-1`}>{noConformes.length > 0 && <MarcaPrioridad s={3} tamano={11} />}{plural(noConformes.length, 'arrancó sin identificar', 'arrancaron sin identificar')}</small>
         </span>
-      </Tip>
+      </div>
 
       <Lectura>
         El indicador de mantenimiento se mueve antes que el diferido: si las fallas de alto impacto se
         anticipan (la parte avisó y se intervino a tiempo), pasan a ser paradas programadas, más
-        cortas y en la ventana que uno escoge. Abajo, lo que hay que atacar ahora y de qué se están
-        dañando los equipos.
+        cortas y en la ventana que uno escoge. Diferido: el promedio por día contra el máximo firmado
+        (la raya). Atacar ahora: primero lo que ya está fuera, luego lo que cruza antes su límite;
+        toque o pase el cursor por una fila para ver el porqué.
       </Lectura>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
-        <Panel titulo="LO QUE HAY QUE ATACAR AHORA" extra={`${plural(riesgo.length, 'equipo avisando', 'equipos avisando')}`}>
+        <Panel titulo="ATACAR AHORA" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
           {riesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
-          {riesgo.slice(0, 8).map(r => (
-            <div key={`${r.campoId}${r.equipo}`} className="border-b border-[var(--linea2)] py-2 last:border-0">
-              <button onClick={() => { setCampo(r.campoId); abrirEquipo(r.equipo, false) }} className="flex w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)]">
-                <MarcaPrioridad s={r.prioridad} tamano={12} className="mt-[2px]" />
-                <span className="min-w-0 flex-1">
-                  <b className="text-[12.5px]">{r.equipo}</b>
-                  <span className="text-[10.5px] text-[var(--tinta3)]">{ambito.global ? ` · ${campoPorId(r.campoId).nombre}` : ''} · {TIPO_CAUSA[r.tipo].toLowerCase()}</span>
-                  <small className="block text-[11px] text-[var(--tinta2)]">{r.parte ? `${NOMBRE_PARTE[r.parte]}: ` : ''}{r.horas !== undefined ? `cruza en ${fmtHoras(r.horas)}` : `${r.parte ? 'ya' : 'Ya'} fuera de límite`}{!r.parte && r.tag ? ` · ${r.tag}` : ''}</small>
-                </span>
-                <span className="tabular text-right text-[11px]">
-                  <b className="block">{r.costoFalla !== undefined ? `≈ ${n0(r.costoFalla)} bbl` : `${n0(r.bblDia)} bbl/d`}</b>
-                  <small className="text-[9.5px] text-[var(--tinta3)]">{r.costoFalla !== undefined ? 'si falla' : 'si para'}</small>
-                </span>
-              </button>
-              {r.accion && <p className="mt-0.5 pl-[22px] text-[10.5px] text-[var(--tinta2)]">{r.accion}</p>}
-            </div>
-          ))}
-          {irA('riesgo') && riesgo.length > 8 && <Boton className="mt-2 w-full" onClick={irA('riesgo')}>Ver los {riesgo.length}</Boton>}
+          {listaRiesgo.visibles.map(filaRiesgo)}
+          {listaRiesgo.resto.length > 0 && <div className="solo-impresion">{listaRiesgo.resto.map(filaRiesgo)}</div>}
+          <VerMas ocultas={listaRiesgo.ocultas} abierto={listaRiesgo.abierto} onAlternar={listaRiesgo.alternar} />
         </Panel>
 
-        <Palancas lb={lb} base={base} />
+        {/* El diferido contra el máximo ya va en la cabecera: Palancas no lo repite. */}
+        <Palancas lb={lb} base={base} conMaximo={false} />
       </div>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
         <ParetoPartes lb={lb} onIr={irA('confiabilidad') ?? irA('bombas')} />
 
-        <Panel titulo="PROGRAMA DE PARADAS APROBADO" extra="de la configuración firmada">
+        <Panel titulo="PROGRAMA DE PARADAS" extra="firmado">
           <Lectura>
             Lo que está aquí cuenta como programado, no como falla. Se cambia en la configuración, con
             firma: así una falla no se puede volver programada después.
           </Lectura>
-          {proximas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">No hay paradas programadas de aquí en adelante.</p>}
+          {proximas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada programado de aquí en adelante.</p>}
           {proximas.map(p => (
             <div key={p.id} className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
               <span className="min-w-0"><b>{p.equipo}</b>{ambito.global ? <span className="text-[var(--tinta3)]"> · {campoPorId(p.campoId).nombre}</span> : ''}
@@ -127,19 +181,18 @@ export function Mantenimiento() {
       <PanelSapMantenimiento />
 
       {(sinIdentificar.length > 0 || respondidasTarde.length > 0) && (
-        <Panel className="mt-2.5" titulo="PARADAS QUE NADIE HA IDENTIFICADO" extra="sin la parte, no hay de qué aprender">
+        <Panel className="mt-2.5" titulo="PARADAS POR IDENTIFICAR">
+          <Lectura>Sin la parte que falló no hay de qué aprender: el vigía no sabe qué mirar la próxima vez.</Lectura>
           {sinIdentificar.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
-          {sinIdentificar.slice(0, 8).map(p => (
-            <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
-              <MarcaPrioridad s={p.arrancoSinIdentificar ? 3 : !p.fin ? 2 : 3} tamano={11} />
-              <span className="min-w-0 flex-1"><b>{p.equipo}</b><span className="text-[var(--tinta3)]">{ambito.global ? ` · ${campoPorId(p.campoId).nombre}` : ''} · {fechaHora(p.inicio)} · {p.arrancoSinIdentificar ? 'arrancó sin identificar' : !p.fin ? 'sigue parado' : 'por identificar'}</span></span>
-              <span className="tabular">{n0(p.bbl)} bbl</span>
-            </div>
-          ))}
-          {respondidasTarde.length > 0 && <p className="mt-1.5 text-[10.5px] text-[var(--tinta3)]">
-            {plural(respondidasTarde.length, 'parada más arrancó', 'paradas más arrancaron')} sin identificar y se {respondidasTarde.length === 1 ? 'respondió' : 'respondieron'} después
-            de arrancar: ya {respondidasTarde.length === 1 ? 'tiene' : 'tienen'} causa, pero cuentan como no conformes arriba.
-          </p>}
+          {listaSin.visibles.map(filaSin)}
+          {listaSin.resto.length > 0 && <div className="solo-impresion">{listaSin.resto.map(filaSin)}</div>}
+          <VerMas ocultas={listaSin.ocultas} abierto={listaSin.abierto} onAlternar={listaSin.alternar} />
+          {respondidasTarde.length > 0 && (
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+              {respondidasTarde.length} más, {respondidasTarde.length === 1 ? 'respondida' : 'respondidas'} después de arrancar
+              <Info titulo="Respondidas después de arrancar" texto={`${plural(respondidasTarde.length, 'parada más arrancó', 'paradas más arrancaron')} sin identificar y se ${respondidasTarde.length === 1 ? 'respondió' : 'respondieron'} después de arrancar: ya ${respondidasTarde.length === 1 ? 'tiene' : 'tienen'} causa, pero ${respondidasTarde.length === 1 ? 'cuenta' : 'cuentan'} como no ${respondidasTarde.length === 1 ? 'conforme' : 'conformes'} arriba.`} />
+            </p>
+          )}
           {irA('causa') && sinIdentificar.length > 0 && <Boton variante="principal" className="mt-2 w-full" onClick={irA('causa')}>Ir a identificar</Boton>}
         </Panel>
       )}

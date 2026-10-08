@@ -1,10 +1,13 @@
 import { useId } from 'react'
+import { Info as IconoInfo } from 'lucide-react'
 import type { Campo } from '@/entities/tipos'
 import { metaEn, diaCo, SIN_META, type Config, type TramoMeta } from '@/entities/configuracion'
 import { metaEntre } from '@/entities/libro'
 import { AHORA } from '@/entities/reloj'
 import { Panel } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
+import { Info } from '@/shared/ui/Info'
+import { Tip } from '@/shared/ui/Tip'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
@@ -56,11 +59,12 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
   const mes0 = ref.slice(0, 8) // «AAAA-MM-»
   const mezcla = !partido && campos.some(c => (propuesta.campos[c.id]?.metas ?? []).some(x => x.desde.startsWith(mes0) && x.desde > `${mes0}01`))
 
-  const avisosMetas = filas.flatMap(({ c, prod, dif, pot }) => {
+  // Cada aviso: el hecho a la vista y sus cifras en el ⓘ (y en el papel). Avisa, no bloquea.
+  const avisosMetas = filas.flatMap(({ c, prod, dif, pot }): Array<[string, string]> => {
     if (!Number.isFinite(prod) || !Number.isFinite(dif) || pot <= 0) return []
-    if (prod > pot) return [`${c.nombre}: la meta pide ${n0(prod)} bbl/d y los pozos hoy pueden dar ≈ ${n0(pot)} bbl/d. No se alcanza ni sin diferido.`]
+    if (prod > pot) return [[`${c.nombre}: no se alcanza ni sin diferido (pueden dar ≈ ${n0(pot)} bbl/d)`, `La meta pide ${n0(prod)} bbl/d y los pozos hoy pueden dar ≈ ${n0(pot)} bbl/d.`]]
     if (dif > pot - prod + Math.max(50, pot * 0.02))
-      return [`${c.nombre}: con los ${n0(dif)} bbl/d de diferido que acepta, el campo daría ≈ ${n0(pot - dif)} bbl/d, menos que su meta de ${n0(prod)} bbl/d. Las dos metas no cuadran.`]
+      return [[`${c.nombre}: las dos metas no cuadran (daría ≈ ${n0(pot - dif)} bbl/d)`, `Con los ${n0(dif)} bbl/d de diferido que acepta, el campo daría ≈ ${n0(pot - dif)} bbl/d, menos que su meta de ${n0(prod)} bbl/d.`]]
     return []
   })
 
@@ -68,9 +72,9 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
 
   const programadas = campos.flatMap(c => (vigente.campos[c.id]?.metas ?? []).filter(x => x.desde > hoy).map(x => ({ c, x })))
   // Lo que se edita rige solo hasta la próxima meta ya firmada de ese campo: se avisa.
-  const recortadas = puede ? filas.filter(f => f.cambiado).flatMap(({ c }) => {
+  const recortadas = puede ? filas.filter(f => f.cambiado).flatMap(({ c }): Array<[string, string]> => {
     const sig = (vigente.campos[c.id]?.metas ?? []).find(x => x.desde > desde)
-    return sig ? [`${c.nombre}: ya hay una meta firmada desde el ${fechaDia(sig.desde)}; lo que cambie ahora rige solo hasta ese día.`] : []
+    return sig ? [[`${c.nombre}: rige solo hasta el ${fechaDia(sig.desde)}`, `Ya hay una meta firmada desde el ${fechaDia(sig.desde)}; lo que cambie ahora rige solo hasta ese día.`]] : []
   }) : []
   const avisos = [...avisosMetas, ...recortadas]
   const idBase = useId()
@@ -92,29 +96,46 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
   const columnas = 'grid grid-cols-[minmax(0,1fr)_minmax(76px,108px)_minmax(76px,108px)] items-center gap-x-2'
 
   return (
-    <Panel titulo="METAS DE LOS CAMPOS" extra="la meta global es la suma">
+    <Panel titulo="METAS POR CAMPO" extra={puede ? undefined : 'vigentes hoy'}>
       <Lectura>
         Cada campo tiene dos metas: lo que debe producir y lo máximo de diferido que se acepta (lo que se
         deja de producir pudiendo). Van en barriles por día porque los barriles se suman: la meta global
         es la suma de los campos y no se escribe aparte. Lo que los pozos pueden dar es el promedio de los
-        últimos 30 días: es referencia, no meta.
+        últimos 30 días: es referencia, no meta. Toque o pase el cursor por un campo para ver desde cuándo
+        rige su meta.
       </Lectura>
 
       <div role="table" aria-label="Metas por campo" className="text-[12px]">
         <div role="row" className={cn(columnas, 'items-end border-b border-[var(--linea)] pb-1 text-[10px] text-[var(--tinta3)]')}>
           <span role="columnheader">Campo</span>
           <span role="columnheader" className="text-right">Producción, bbl/d</span>
-          <span role="columnheader" className="text-right">Máximo de diferido, bbl/d</span>
+          <span role="columnheader" className="text-right">Máx. de diferido, bbl/d</span>
         </div>
         {filas.map(({ c, vig, prod, dif, pot, cambiado, antes }) => (
           <div role="row" key={c.id} className={cn(columnas, 'border-b border-[var(--linea2)] py-1.5')}>
             <span role="cell" className="min-w-0">
-              <b className="block truncate">{c.nombre}</b>
-              <small className="block text-[10px] leading-tight text-[var(--tinta3)]">
-                {cambiado
-                  ? (vig ? <>antes {n0(antes.produccionBpd)} · máx. {n0(antes.diferidoMaxBpd)} bbl/d</> : <>antes {SIN_META}</>)
-                  : <>pueden dar ≈ {n0(pot)} bbl/d · {vig ? `rige desde el ${fechaDia(vig.desde)}` : SIN_META}</>}
-              </small>
+              {/* Desde cuándo rige va en el globo del campo (y en el papel): la meta firmada o, si la fila
+                  se cambió, lo de antes y lo nuevo (desde la fecha de la firma). En la fila, la referencia. */}
+              {(() => {
+                const fechas: Array<[string, string]> = cambiado
+                  ? [...(vig ? [['Lo de antes, desde', fechaDia(vig.desde)] as [string, string]] : []), ['Lo nuevo, desde', fechaDia(desde)]]
+                  : vig ? [['Rige desde', fechaDia(vig.desde)]] : []
+                const nombre = <>
+                  <span className="flex min-w-0 items-center gap-1">
+                    <b className="truncate">{c.nombre}</b>
+                    {/* La señal de que el nombre tiene globo (la fecha está ahí). */}
+                    {fechas.length > 0 && <IconoInfo aria-hidden className="no-imprimir size-3 shrink-0 text-[var(--tinta3)]" />}
+                  </span>
+                  <small className="block text-[10px] leading-tight text-[var(--tinta3)]">
+                    {cambiado
+                      ? (vig ? <>antes {n0(antes.produccionBpd)} · máx. {n0(antes.diferidoMaxBpd)} bbl/d</> : <>antes {SIN_META}</>)
+                      : <>pueden dar ≈ {n0(pot)} bbl/d{vig ? '' : ` · ${SIN_META}`}</>}
+                  </small>
+                </>
+                return fechas.length
+                  ? <Tip as="span" titulo={c.nombre} filas={fechas} imprimir="todo" className="block min-w-0">{nombre}</Tip>
+                  : nombre
+              })()}
             </span>
             <span role="cell">{numero(c.id, 'produccionBpd', prod, `Meta de producción de ${c.nombre}, bbl/d`)}</span>
             <span role="cell">{numero(c.id, 'diferidoMaxBpd', dif, `Máximo de diferido de ${c.nombre}, bbl/d`)}</span>
@@ -133,28 +154,32 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
         </div>
       </div>
 
+      {/* El ⓘ va en línea con el texto (no como hermano flexible): en el teléfono no queda solo en su renglón. */}
       <p className="mt-2 text-[11.5px] text-[var(--tinta2)]">
-        Total de {MES[m - 1]} de {y} ({diasMes} días):{' '}
-        {mes.sinMeta ? <b className="text-[var(--tinta)]">{SIN_META} en algún campo: no hay total del mes</b> : <>
+        Total de {MES[m - 1]} de {y}:{' '}
+        {mes.sinMeta ? <b className="text-[var(--tinta)]">sin total: {SIN_META} en algún campo</b> : <>
           producción <b className="tabular text-[var(--tinta)]">{cifra(mes.prod)} bbl</b> ·
-          diferido máximo <b className="tabular text-[var(--tinta)]">{cifra(mes.dif)} bbl</b>
-          {partido && <> (del 1 al {diaDe(desde) - 1} con lo que regía; desde el {diaDe(desde)}, lo nuevo)</>}
-          {mezcla && <> (cada día con la meta que regía ese día)</>}</>}.
+          máx. diferido <b className="tabular text-[var(--tinta)]">{cifra(mes.dif)} bbl</b>
+          {(partido || mezcla) && <> · con cambio de meta</>}</>}
+        <Info className="ml-1" titulo="Total del mes"
+          texto={`La suma de los ${diasMes} días, cada uno con la meta que rige ese día.${partido ? ` Del 1 al ${diaDe(desde) - 1}, lo que regía; desde el ${diaDe(desde)}, lo nuevo.` : ''}`} />
       </p>
 
       {avisos.length > 0 && (
         <ul className="mt-2 grid gap-1 text-[11.5px] text-[var(--tinta)]">
-          {avisos.map(a => <li key={a} className="flex items-start gap-1.5"><FueraDeMeta si tamano={11} /><span>{a}</span></li>)}
+          {avisos.map(([a, cifras]) => (
+            <li key={a} className="flex items-start gap-1.5"><FueraDeMeta si tamano={11} /><span>{a}<Info className="ml-1" titulo="Detalle" texto={cifras} /></span></li>
+          ))}
         </ul>
       )}
       {programadas.length > 0 && programadas.length <= 3 && (
         <p className="mt-2 text-[11px] text-[var(--tinta2)]">
-          Ya firmadas para más adelante: {programadas.map(({ c, x }) => `${c.nombre} desde el ${fechaDia(x.desde)} (producción ${n0(x.produccionBpd)} bbl/d · máximo de diferido ${n0(x.diferidoMaxBpd)} bbl/d)`).join('; ')}.
+          Firmadas para después: {programadas.map(({ c, x }) => `${c.nombre} desde el ${fechaDia(x.desde)} (producción ${n0(x.produccionBpd)} · máx. ${n0(x.diferidoMaxBpd)} bbl/d)`).join('; ')}.
         </p>
       )}
       {programadas.length > 3 && (
         <p className="mt-2 text-[11px] text-[var(--tinta2)]">
-          Hay un plan mes a mes firmado hasta {fechaDia(programadas.map(p => p.x.desde).sort().at(-1)!)}: véalo en «Plan mes a mes».
+          Plan firmado hasta el {fechaDia(programadas.map(p => p.x.desde).sort().at(-1)!)}: véalo en «Plan mes a mes».
         </p>
       )}
     </Panel>

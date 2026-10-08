@@ -8,6 +8,8 @@ import { fechaHora } from '@/entities/reloj'
 import { useUsuarios, useRegistroDeAccesos, useAccesos, esCompleta } from '@/shared/api/usuarios'
 import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
 import { plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 
@@ -35,6 +37,18 @@ export function Accesos({ puede }: { puede: boolean }) {
   // Sin rol ni campos escogidos de antemano: invitar con el rol equivocado es fácil si ya viene puesto.
   // El id, el día y el estado no los pone el front: los da el servidor al invitar (`POST /api/usuarios`).
   const nuevo: Usuario = { id: INVITAR, nombre: '', correo: '', rolId: '', campos: [], estado: 'invitado', desde: '', telefono: '', alertas: false }
+  // El historial, el más reciente primero: cinco a la vista y «ver N más»; en el papel, todo.
+  const historial = useVerMas([...accesos].reverse())
+  const cambio = (a: typeof accesos[number]) => (
+    <li key={a.id} className="border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <b>{a.usuario}</b>
+        <span className="text-[10.5px] text-[var(--tinta3)]">{fechaHora(new Date(a.fecha))} · {a.por}</span>
+      </div>
+      <p className="text-[var(--tinta2)]">«{a.motivo}»</p>
+      <ul className="list-disc pl-4 text-[10.5px] text-[var(--tinta3)]">{a.cambios.map(c => <li key={c}>{c}</li>)}</ul>
+    </li>
+  )
 
   return (
     <>
@@ -45,7 +59,7 @@ export function Accesos({ puede }: { puede: boolean }) {
           y puede hacer lo fija el producto, no se cambia por persona. Nadie se borra: quien ya no debe
           entrar queda suspendido, y lo que firmó o respondió sigue a su nombre.
         </Lectura>
-        {!puede && <Hueco><Lock className="mr-1 inline size-3.5" />Los accesos los da el gerente de activo. Aquí se ven; no se cambian.</Hueco>}
+        {!puede && <Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: los da el gerente de activo.</Hueco>}
 
         <ul className="grid">
           {usuarios.map(u => (
@@ -74,18 +88,9 @@ export function Accesos({ puede }: { puede: boolean }) {
 
       <Panel className="mb-2.5" titulo="HISTORIAL DE ACCESOS" extra={plural(accesos.length, 'cambio', 'cambios')}>
         <Lectura>Todo cambio de acceso queda escrito con quién lo hizo, cuándo y por qué. No se edita ni se borra.</Lectura>
-        <ul className="max-h-[320px] overflow-y-auto">
-          {[...accesos].reverse().map(a => (
-            <li key={a.id} className="border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                <b>{a.usuario}</b>
-                <span className="text-[10.5px] text-[var(--tinta3)]">{fechaHora(new Date(a.fecha))} · {a.por}</span>
-              </div>
-              <p className="text-[var(--tinta2)]">«{a.motivo}»</p>
-              <ul className="list-disc pl-4 text-[10.5px] text-[var(--tinta3)]">{a.cambios.map(c => <li key={c}>{c}</li>)}</ul>
-            </li>
-          ))}
-        </ul>
+        <ul>{historial.visibles.map(cambio)}</ul>
+        {historial.resto.length > 0 && <ul className="solo-impresion">{historial.resto.map(cambio)}</ul>}
+        <VerMas ocultas={historial.ocultas} abierto={historial.abierto} onAlternar={historial.alternar} />
       </Panel>
     </>
   )
@@ -158,7 +163,7 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
         {puedeTodos && (
           <label className="flex min-h-8 items-center gap-1.5 text-[12px]">
             <input id={idCaja('campos')} type="checkbox" className="size-4" checked={todos} onChange={e => cambiar({ campos: e.target.checked ? 'todos' : visibles.map(c => c.id) })} />
-            Todos los campos (también los que se agreguen después)
+            Todos los campos, también los futuros
           </label>
         )}
         {!todos && (
@@ -185,11 +190,11 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
         </label>
       </div>
       {!nuevo && !propio && (
-        <label className="flex items-center gap-1.5 text-[12px]">
+        <label className="flex min-h-8 items-center gap-1.5 text-[12px]">
           <input type="checkbox" className="size-4" checked={u.estado === 'suspendido'}
             // Solo se dice si queda suspendida: al quitar la suspensión, el servidor la devuelve al estado de antes (quien nunca entró sigue invitado).
             onChange={e => cambiar({ estado: e.target.checked ? 'suspendido' : base.estado === 'suspendido' ? (base.antesDeSuspender ?? 'activo') : base.estado })} />
-          Suspender el acceso (no podrá entrar; lo que firmó sigue a su nombre)
+          Suspender el acceso · lo firmado sigue a su nombre
         </label>
       )}
       <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Motivo · obligatorio</span>

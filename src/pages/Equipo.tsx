@@ -81,19 +81,28 @@ export function Equipo() {
         <Chip>{f.eq.criticidad}/5</Chip>
         {f.eq.redundancia === 'sin respaldo' && <Chip tono="fuerte">sin respaldo</Chip>}
       </span>
+      {/* Las unidades van una vez, en el encabezado de cada columna; el lector las oye en la celda. */}
       <span className="tabular w-[70px] shrink-0 text-right">
-        <b className="block text-[13px] leading-tight">{f.mtbfDias ? `${n0(f.mtbfDias)} d` : '—'}</b>
+        <b className="block text-[13px] leading-tight"><span className="sr-only">{f.fallas !== undefined ? 'entre fallas ' : 'entre eventos '}</span>{f.mtbfDias ? `${n0(f.mtbfDias)} d` : '—'}</b>
         <small className="text-[9.5px] text-[var(--tinta3)]">{f.fallas !== undefined ? plural(f.fallas, 'falla', 'fallas') : plural(f.eventos, 'evento', 'eventos')}</small>
       </span>
       <span className="tabular w-[76px] shrink-0 text-right">
-        <b className="block text-[15px] leading-tight">{n0(f.bbl)}</b>
-        <small className="text-[9.5px] text-[var(--tinta3)]">bbl del período</small>
+        <b className="block text-[15px] leading-tight">{n0(f.bbl)}<span className="sr-only"> bbl del período</span></b>
       </span>
       <span className="tabular hidden w-[64px] shrink-0 text-right md:block">
-        <b className="block text-[13px] leading-tight">{f.ahora ? n0(f.ahora) : '—'}</b>
-        <small className="text-[9.5px] text-[var(--tinta3)]">bbl/d perdiéndose</small>
+        <b className="block text-[13px] leading-tight">{f.ahora ? n0(f.ahora) : '—'}<span className="sr-only"> bbl/d perdiéndose</span></b>
       </span>
     </Tip>
+  )
+
+  // Encabezado de las columnas: el rótulo una vez, no en cada fila. Para el lector va en cada celda.
+  const encabezado = (
+    <div className="flex gap-3 pb-1 text-[9.5px] text-[var(--tinta3)]" aria-hidden>
+      <span className="flex-1" />
+      <span className="w-[70px] shrink-0 text-right">cada cuánto</span>
+      <span className="w-[76px] shrink-0 text-right">bbl del período</span>
+      <span className="hidden w-[64px] shrink-0 text-right md:block">bbl/d ahora</span>
+    </div>
   )
 
   return (
@@ -101,7 +110,7 @@ export function Equipo() {
       <div className="mb-2.5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
         <span>
           <b className="tabular block text-[40px] leading-none">{filas.length}</b>
-          <small className="text-[11.5px] text-[var(--tinta3)]">equipos de superficie instrumentados · {ambito.titulo}</small>
+          <small className="text-[11.5px] text-[var(--tinta3)]">equipos instrumentados</small>
         </span>
         <span className="h-10 w-px bg-[var(--linea)]" />
         <span>
@@ -116,21 +125,26 @@ export function Equipo() {
 
       <Lectura>
         Ordenados por condición y, dentro de cada una, por los barriles que cuestan en el período.
+        Un clic abre la ficha del equipo. Las columnas: cada cuánto falla (días entre fallas, o entre
+        eventos con pozos cerrados) con cuántas van, barriles diferidos del período y lo que se está perdiendo ahora. Servicios y proceso son
+        aire, energía, compresión, separación, tratamiento y medición.
         La historia de cada equipo (cuántas veces cerró pozos y cada cuánto) sale del registro de
         eventos del PLC, no de un formulario. Los pozos y sus electrosumergibles tienen su propia
         pantalla.
       </Lectura>
 
-      <Panel className="mt-2.5" titulo={FOCO_BOMBAS ? 'BOMBAS DE LA LÍNEA · EL FOCO' : 'EQUIPOS'} extra="clic para abrir">
+      <Panel className="mt-2.5" titulo={FOCO_BOMBAS ? 'BOMBAS DE LÍNEA' : 'EQUIPOS'}>
+        {encabezado}
         {(FOCO_BOMBAS ? foco : filas).map(fila)}
         {FOCO_BOMBAS && fuera.length > 0 && (
           <details className="group mt-1 border-t border-[var(--linea2)]">
             <summary className="flex cursor-pointer list-none items-center gap-3 py-2.5 text-[12px] text-[var(--tinta2)] hover:bg-[var(--panel2)]">
               <MarcaPrioridad s={peorFuera} tamano={13} />
-              <span className="flex-1"><b className="text-[var(--tinta)]">Servicios y proceso · {fuera.length}</b> · aire, energía, compresión, separación, tratamiento, medición</span>
+              <span className="flex-1"><b className="text-[var(--tinta)]">Servicios y proceso · {fuera.length}</b></span>
               <span className="tabular text-[11px] text-[var(--tinta3)]">{n0(fuera.reduce((a, f) => a + f.bbl, 0))} bbl del período</span>
               <span className="text-[10px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
             </summary>
+            {encabezado}
             {fuera.map(fila)}
           </details>
         )}

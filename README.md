@@ -12,7 +12,7 @@ aplicación con `npm run pantallazos`.
 
 | | |
 |---|---|
-| [![Resumen del activo · gerente](docs/pantallas/resumen-gerente.png)](docs/pantallas/resumen-gerente.png)<br>**Resumen del activo · gerente.** Los barriles diferidos del mes con su rango (calculado, no medido), su valor en USD y la proyección de cierre «si todo sigue como está». Debajo, cuánto viene de bombas y electrosumergibles y qué equipos se llevan más. | [![Libro de diferidos](docs/pantallas/diferidos.png)](docs/pantallas/diferidos.png)<br>**Libro de diferidos.** Cuántos barriles se perdieron, por equipo y por tipo de causa, mes a mes contra el máximo firmado. «Dónde se puede bajar» separa la parte vigilada, la que no tiene instrumento y la que nadie identificó. |
+| [![Resumen del activo · gerente](docs/pantallas/resumen-gerente.png)](docs/pantallas/resumen-gerente.png)<br>**Resumen del activo · gerente.** Los barriles diferidos del mes con su rango («calculado»; el porqué, en el ⓘ), su valor en USD, el promedio diario y el cierre proyectado como barras contra la meta firmada, y qué equipos se llevan más. | [![Libro de diferidos](docs/pantallas/diferidos.png)](docs/pantallas/diferidos.png)<br>**Libro de diferidos.** Cuántos barriles se perdieron, por equipo y por tipo de causa, mes a mes contra el máximo firmado. «Dónde bajarlo» separa la parte vigilada, la que no tiene instrumento y la que nadie identificó. |
 | [![Bombas · confiabilidad](docs/pantallas/bombas-vigia.png)](docs/pantallas/bombas-vigia.png)<br>**Bombas · confiabilidad.** Una placa por bomba: cada variable contra su banda normal y su alarma, y cada parte (succión, sello, rodamientos…) con su estado y cuándo cruzaría su límite («cruza en 43 h»). | [![Ficha de una bomba parada](docs/pantallas/ficha-bomba-parada.png)](docs/pantallas/ficha-bomba-parada.png)<br>**Ficha de una bomba parada.** P-201B se detuvo sin primera alarma: «no arrancar hasta identificar qué se dañó». Trae el respaldo (no hay), los repuestos críticos en SAP, el botón para enviar el aviso a SAP y las señales fuera de banda. |
 | [![Entrega de turno · supervisor](docs/pantallas/turno.png)](docs/pantallas/turno.png)<br>**Entrega de turno · supervisor.** Lo que se está perdiendo ahora, lo que hay que identificar antes de entregar, lo que hay que vigilar y lo que TRIM mandó por WhatsApp en el turno: aviso, pregunta, recordatorio y escalamiento. | <a href="docs/pantallas/whatsapp-operario.png"><img src="docs/pantallas/whatsapp-operario.png" alt="WhatsApp del operario" width="230"></a><br>**WhatsApp del operario.** TRIM pregunta qué se dañó y ofrece las partes que más han fallado en ese equipo; el operario responde con un número. En este front es visual: el envío real lo hace el backend. |
 | [![Confiabilidad · ¿acierta el vigía?](docs/pantallas/confiabilidad.png)](docs/pantallas/confiabilidad.png)<br>**Confiabilidad · ¿acierta el vigía?.** Tiempo entre fallas por familia de equipo; lo que el vigía anunció y en qué quedó (acierto, falsa alarma, intervenida antes); lo que no anunció, y lo que sigue en seguimiento. | [![Mi trabajo · técnico](docs/pantallas/ordenes-sap-tecnico.png)](docs/pantallas/ordenes-sap-tecnico.png)<br>**Mi trabajo · técnico.** Lo parado, lo que falta identificar y las órdenes de SAP a su nombre. TRIM no crea órdenes: manda el aviso con su evidencia, las lee y avisa por WhatsApp cuando se liberan. |
@@ -105,8 +105,8 @@ La asignación oficial que se sube en Producción no entra al libro: es un cotej
   ventana (acierto, intervenida, falsa alarma); se muestran la tasa, las fallas anticipadas, la
   anticipación y lo que se le escapó. En el demo, el registro desde la puesta en marcha se arma
   con una regla fija sobre la historia del PLC, coherente con ella y con SAP.
-- **Demostración**: una sola marca en la cabecera («Datos de demostración»); las pantallas se
-  ven como el producto conectado.
+- **Demostración**: una sola marca en la cabecera («Datos de demostración»; «Demo» en el teléfono)
+  y en el membrete de cada hoja impresa; las pantallas se ven como el producto conectado.
 
 ## Cómo se calcula el diferido
 
@@ -335,8 +335,8 @@ motor: `npx playwright test --project=safari`.
 | `perfil-plan.spec.ts` | perfil del campo (sin electrosumergibles, sin gas) y el plan mes a mes pegado y firmado | 13 |
 | `qa2.spec.ts` | «atrás» después de una redirección; meses del plan que heredan; cifra del mes pegada como diaria | 5 |
 | `carril.spec.ts` | carril caliente por WhatsApp de punta a punta, análisis de confiabilidad, Turno, órdenes de SAP, aciertos del vigía, cuadre con la asignación oficial (con su motivo y su rastro), conectores y el menú de cada rol | 75 |
-| `auditor.spec.ts` | 94 rutas × 5 anchos (1512, 1280, 1024, 768 y 390 px): nada se sale de su tarjeta ni de la pantalla, nada se recorta ni se pisa, ninguna pantalla vacía, ningún error de la página, y lo que cada rol debe ver y no ver (21 rutas con aserciones). Antes de auditar se comprueba el detector plantándole dos defectos | 2 de la autoprueba; por ancho, 134 de lo que ve cada rol y 3 de conjunto (lo que se ve, errores, hallazgos) |
-| `interfaz.spec.ts` | dos diálogos abiertos a la vez (introducción y ficha): el de arriba recibe el foco y el de abajo queda inerte, Escape cierra uno por vez y no queda nada inerte; el foco no se pierde cuando la ficha cambia de equipo; las tuberías de Planta no son paradas de Tab y «SIN FLUJO» se lee (4,5:1) y lleva forma; en el teléfono, el último toque del chat de WhatsApp deja el foco en el aviso «Respondido» | 37 (los diálogos, en 390 y 1280 px) |
+| `auditor.spec.ts` | 94 rutas × 5 anchos (1512, 1280, 1024, 768 y 390 px): nada se sale de su tarjeta ni de la pantalla, nada se recorta ni se pisa, ninguna pantalla vacía, ningún error de la página, y lo que cada rol debe ver y no ver (22 rutas con aserciones; una expresión regular exige además el orden, p. ej. la cifra junto a su meta). Con la ficha o la introducción abiertas se audita el diálogo. Antes de auditar se comprueba el detector plantándole dos defectos | 2 de la autoprueba; por ancho, 134 de lo que ve cada rol y 3 de conjunto (lo que se ve, errores, hallazgos) |
+| `interfaz.spec.ts` | dos diálogos abiertos a la vez (introducción y ficha): el de arriba recibe el foco y el de abajo queda inerte, Escape cierra uno por vez; el foco no se pierde cuando la ficha cambia de equipo; las tuberías de Planta no son paradas de Tab y «SIN FLUJO» se lee (4,5:1) y lleva forma; el chat de WhatsApp en el teléfono; las barras contra la meta del resumen; **en el papel** sale lo que la pantalla deja en un ⓘ, un globo o tras «ver N más» (Riesgo, Resumen, Turno, Identificar, Diferidos, Conectores, Metas, Mi perfil, Planta) y «DATOS DE DEMOSTRACIÓN»; un período parcial dice «en curso» y en el teléfono no se corta (390 y 320 px); la introducción no se salta su lista; el tanque de Planta a la vista en el teléfono | 55 escritas |
 | `pozo-operacion.spec.ts` | una electrosumergible parada: en operación no sale «fuera de banda» por estar sin señal; en ingeniería se ven todas sus señales | 2 |
 | `demo-construido.spec.ts` | el build servido como se entrega carga cada pantalla por partes sin que la política de seguridad bloquee nada | 6 |
 
@@ -475,8 +475,9 @@ según él, con los mismos números debajo:
 | Técnico | Mi trabajo | qué se dañó, qué revisar y en qué tag; las órdenes que SAP liberó a su nombre |
 | Administrador | Configuración | tanques, respaldos, programa y membrete, con firma (las metas y los accesos son del gerente) |
 
-**Lo no producido lleva su rango para todos los roles** («entre X y Y · calculado, no medido»,
-`widgets/diferidos/Rango.tsx`): lo producido se mide; lo no producido se calcula por asignación.
+**Lo no producido lleva su rango para todos los roles** («5.729–6.734 bbl · calculado», con el
+«no medido» y su porqué en el globo y en el papel; `widgets/diferidos/Rango.tsx`): lo producido se
+mide; lo no producido se calcula por asignación.
 El método (Ec. 22, bandas) queda en ingeniería.
 
 **Exportar** (capacidad `evidencia:exportar`): el menú de la cabecera exporta la pantalla, y la

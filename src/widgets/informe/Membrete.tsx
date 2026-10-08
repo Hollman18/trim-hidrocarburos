@@ -1,8 +1,10 @@
-import { useApp, useAmbito } from '@/app/store'
+import { useApp, useAmbito, useRango, usePeriodo } from '@/app/store'
 import { formaCanonica, huellaLegible, type Informe } from '@/entities/informe'
 import { fechaHoraLarga, AHORA } from '@/entities/reloj'
 import { NOTA_DE_CALCULO } from '@/widgets/diferidos/Rango'
 import { useSesion, useVersiones } from '@/shared/api/sesion'
+import { FUENTE } from '@/shared/api/fuente'
+import { periodoDelInforme } from './periodo'
 
 /** Membrete del informe impreso. No se ve en pantalla: solo en el papel. Si
  *  alguien imprime sin pasar por «Exportar», sale sin folio y lo dice. */
@@ -14,20 +16,26 @@ export function Membrete() {
   // alguien firma entre exportar e imprimir, el papel sigue diciendo con cuál se calculó.
   const v = (inf && versiones.find(x => x.version === inf.version)) || versiones.at(-1)!
   const ambito = useAmbito()
+  // Sin folio (Ctrl+P) el papel también dice de qué período es: lo que está en la cabecera.
+  const rango = useRango(); const parcial = usePeriodo().parcial
+  // Con datos de demostración, el papel lo dice en el membrete y arriba de CADA hoja:
+  // un informe impreso del demo no puede pasar por uno real.
+  const demo = FUENTE === 'demo'
   // El folio va también al pie de CADA página: una hoja suelta sigue diciendo de qué informe es.
   const pie = inf ? `Folio ${inf.folio} · ${empresa} · lo producido se mide; lo diferido se calcula` : 'SIN FOLIO · no sirve como respaldo'
   return (
     <header className="solo-impresion mb-3 border-b-2 border-[var(--tinta)] pb-2 text-[10.5px]">
-      <style>{`@media print { @page { @bottom-left { content: ${JSON.stringify(pie)}; } } }`}</style>
+      <style>{`@media print { @page { @bottom-left { content: ${JSON.stringify(pie)}; }${demo ? ' @top-center { content: "DATOS DE DEMOSTRACIÓN"; font-size: 8pt; font-weight: 600; letter-spacing: .06em; }' : ''} } }`}</style>
       <div className="flex items-start justify-between gap-4">
         <span>
           <b className="block text-[16px] leading-tight">{empresa}</b>
           <b className="block text-[12.5px]">{inf?.titulo ?? 'Impresión sin folio'}</b>
-          <span className="block">{inf?.alcance ?? ambito.titulo} · {inf?.periodo ?? ''}</span>
+          <span className="block">{inf?.alcance ?? ambito.titulo} · {inf?.periodo ?? periodoDelInforme(rango, parcial)}</span>
         </span>
         <span className="text-right">
           <span className="block text-[10px] tracking-[.1em]">TRIM · HIDROCARBUROS</span>
           <b className="block text-[13px]">{inf ? `Folio ${inf.folio}` : 'SIN FOLIO'}</b>
+          {demo && <b className="block text-[11px] tracking-[.06em]">DATOS DE DEMOSTRACIÓN</b>}
           {inf && inf.estado !== 'publicable' && <b className="block text-[11px] tracking-[.06em]">{inf.estado === 'provisional' ? 'PROVISIONAL · MES EN CURSO' : 'NO PUBLICABLE TODAVÍA'}</b>}
           <span className="block">{inf ? `Generado el ${fechaHoraLarga(new Date(inf.fecha))}` : 'no sirve como respaldo'}</span>
         </span>

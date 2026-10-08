@@ -7,7 +7,7 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
 
   await test.step('Perfil del campo', async () => {
     t = await f.texto()
-    f.ok(t.includes('PERFIL DEL CAMPO') && t.includes('15 pozos con electrosumergible en el registro'), 'el administrador ve el perfil de La Ceiba con lo que tiene registrado')
+    f.ok(t.includes('PERFIL DEL CAMPO') && t.includes('15 pozos registrados'), 'el administrador ve el perfil de La Ceiba con lo que tiene registrado')
     f.ok(await f.marcar('Electrosumergibles'), 'le quita las electrosumergibles a La Ceiba'); await f.esperar(200)
     t = await f.texto()
     f.ok(t.includes('dejan de vigilarse') && t.includes('electrosumergibles sí → no'), 'avisa que quedan fuera y lo lista para firmar')

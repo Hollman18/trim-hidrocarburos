@@ -62,7 +62,7 @@ export function MenuPerfil({ colapsado = false }: { colapsado?: boolean }) {
             <>
               <div className="border-b border-[var(--linea2)] px-3 py-2.5">
                 <b className="block text-[13px]">{persona.nombre}</b>
-                <span className="block text-[11px] text-[var(--tinta3)]">{rol.nombre}{persona.sinAcceso ? ' · nadie con acceso activo tiene este rol' : ''}</span>
+                <span className="block text-[11px] text-[var(--tinta3)]">{rol.nombre}{persona.sinAcceso ? ' · sin acceso activo' : ''}</span>
                 <span className="mt-0.5 block font-mono text-[10px] text-[var(--tinta3)]">
                   {AREAS.find(a => a.id === rol.area)?.nombre} · {empresa}
                 </span>
@@ -74,7 +74,7 @@ export function MenuPerfil({ colapsado = false }: { colapsado?: boolean }) {
                 </button>
                 <button onClick={() => { abrirOnboarding(); setAbierto(false) }}
                   className="flex w-full cursor-pointer items-center gap-2.5 rounded px-2.5 py-2 text-left text-xs hover:bg-[var(--panel2)]">
-                  <BookOpen className="size-[15px] opacity-70" /> Ver la introducción
+                  <BookOpen className="size-[15px] opacity-70" /> Introducción
                 </button>
                 <button onClick={() => setVista('roles')}
                   className="flex w-full cursor-pointer items-center gap-2.5 rounded px-2.5 py-2 text-left text-xs hover:bg-[var(--panel2)]">
@@ -118,7 +118,7 @@ export function MenuPerfil({ colapsado = false }: { colapsado?: boolean }) {
                             r.id === rol.id && 'font-semibold shadow-[inset_2px_0_0_var(--acento)]')}>
                           {r.nombre}
                           <span className="block text-[10px] font-normal text-[var(--tinta3)]">
-                            {personaDelRol(usuarios, r.id)?.nombre ?? 'nadie con acceso a este rol'} · {r.pantallas.length} pantallas
+                            {personaDelRol(usuarios, r.id)?.nombre ?? 'nadie asignado'}
                           </span>
                         </button>
                       ))}
@@ -127,7 +127,7 @@ export function MenuPerfil({ colapsado = false }: { colapsado?: boolean }) {
                 ))}
               </div>
               <p className="border-t border-[var(--linea2)] px-3 py-2 text-[10px] leading-relaxed text-[var(--tinta3)]">
-                Al cambiar de rol no cambian campo, mes ni unidades.
+                Período y unidades se mantienen; el campo, si está asignado.
               </p>
             </>
           )}

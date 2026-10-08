@@ -1,20 +1,23 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { X, Maximize2, Minimize2 } from 'lucide-react'
 import { useApp, useCampo, useRol, useRango, useNivel } from '@/app/store'
 import { FichaEjecutiva } from '@/widgets/equipo/FichaEjecutiva'
 import { useBarrilesDeEquipos, usePreguntas } from '@/shared/api/diferidos'
-import { useEquipo, useHistoriaEquipo } from '@/shared/api/equipos'
+import { useEquipo, useHistoriaEquipo, type HistoriaEquipo } from '@/shared/api/equipos'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { COMO } from '@/entities/causa-senal'
 import { fechaHora, horasEntre, AHORA } from '@/entities/reloj'
 import { DetallePozo } from '@/widgets/pozos/DetallePozo'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { CadenaDato } from './CadenaDato'
-import { Severidad_, Chip, Boton, Cita, Hueco } from '@/shared/ui/primitivas'
+import { Severidad_, Chip, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
+import { Info } from '@/shared/ui/Info'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
 import { Sparkline } from '@/shared/ui/Sparkline'
 import { lecturasDe } from '@/entities/serie'
-import { n0, num, banda } from '@/shared/lib/formato'
+import { n0, num, banda, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { MarcaEstado } from '@/shared/ui/Prioridad'
 import { DE_ESTADO } from '@/shared/lib/prioridad'
@@ -22,7 +25,7 @@ import { pedirPozosDelCampo } from '@/shared/api/medicion'
 import { BloqueSap } from '@/widgets/sap/BloqueSap'
 import { ExportarFicha } from '@/widgets/informe/Exportar'
 import { useModal } from '@/shared/ui/foco'
-import { puedeHacer } from '@/entities/tipos'
+import { puedeHacer, type Dispositivo } from '@/entities/tipos'
 
 
 /** La ficha de un equipo flota sobre la pantalla. Siempre está montada (App),
@@ -58,19 +61,55 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
 
   useEffect(() => { setCadenaTag(null) }, [equipoAbierto])
 
-  if (!eq) return null
-  const disp = eq.dispositivos
+  const disp = eq?.dispositivos ?? []
   // En operación solo se muestra lo que está fuera de banda: lo demás no pide nada.
   const visibles = nivel === 'operacion' ? disp.filter(d => d.estado !== 'normal') : disp
+  if (!eq) return null
   // «Fuera de banda» cuenta solo lo que el instrumento reporta fuera; un
   // instrumento sin señal es un dato inválido, no un valor fuera, y se cuenta aparte.
   const sinSenalN = visibles.filter(d => d.estado === 'sin señal').length, fueraN = visibles.length - sinSenalN
   const activo = cadenaTag ? disp.find(d => d.tag === cadenaTag) : undefined
 
+  // Una fila por dispositivo. El origen de la lectura (PI, PLC…) va en el globo y en el papel;
+  // a la vista, solo cuando el dato es de una ruta manual (sin señal).
+  const fila = (d: (typeof disp)[number]) => (
+    <Tip key={d.tag} as="button" onClick={() => setCadenaTag(d.tag)}
+      titulo={`${d.tag} · ${d.tipo}`} pista="Clic para ver la cadena técnica de este dato"
+      filas={[['Valor', `${num(d.valor)} ${d.unidad}`.trim()], ['Límite', d.limite],
+        ['Estado', d.estado], ['Origen', d.origen],
+        ['Minigráfica', d.serie ? lecturasDe(d.serie)
+          : d.estado === 'sin señal' ? 'sin lecturas en línea: no hay serie que graficar'
+          : 'variable discreta: no lleva gráfica']]}
+      className="flex w-full cursor-pointer items-center gap-2.5 rounded border border-[var(--linea2)] bg-[var(--panel)] px-2.5 py-2 text-left hover:bg-[var(--elevado)]">
+      <MarcaEstado e={d.estado} tamano={11} />
+      <span className="min-w-0 flex-1">
+        <small className="block font-mono text-[10px] text-[var(--tinta3)]">{d.tag}</small>
+        <b className="block truncate text-[11.5px] font-medium">{d.tipo}</b>
+        <small className="block text-[10px] text-[var(--tinta3)]">
+          {d.estado === 'sin señal' ? `${d.origen} · ` : <span className="hidden print:inline">{d.origen} · </span>}límite {d.limite}
+        </small>
+      </span>
+      {nivel === 'operacion' ? null : d.serie
+        ? <Sparkline serie={d.serie.valores} limite={banda(d.limite)} ancho={96} alto={26} prioridad={DE_ESTADO[d.estado] ?? undefined} />
+        // Sin serie: el dato inválido se dice (ISA-101, magenta); la discreta, en gris.
+        : <span className={cn('font-cond w-[96px] text-center text-[9.5px] leading-tight', d.estado === 'sin señal' ? 'text-[var(--invalido)]' : 'text-[var(--tinta3)]')}>
+            {d.estado === 'sin señal' ? 'SIN SEÑAL' : 'DISCRETA'}
+          </span>}
+      <span className="tabular w-[84px] shrink-0 text-right">
+        {/* El estado lo lleva la forma al inicio de la fila: el valor, en tinta. */}
+        <b className={cn('block text-[14px] leading-tight', d.estado === 'sin señal' && 'text-[var(--tinta3)]')}>
+          {d.estado === 'sin señal' ? '—' : num(d.valor)}
+        </b>
+        <small className="text-[9.5px] text-[var(--tinta3)]">{d.unidad || d.estado}</small>
+      </span>
+    </Tip>
+  )
+
   return (
     <div ref={dialogo} tabIndex={-1} className="fixed inset-0 z-[120] flex outline-none" role="dialog" aria-modal="true" aria-labelledby={idTitulo} data-panel-equipo>
       {/* El fondo cierra con el ratón o el dedo; con teclado se cierra con Escape o con «Cerrar» de la cabecera. */}
-      <button aria-hidden tabIndex={-1} onClick={() => abrirEquipo(null)}
+      {/* Un <div>, no un botón: no entra en el ciclo de Tab de la ficha (un control escondido del lector). */}
+      <div aria-hidden onClick={() => abrirEquipo(null)}
         className="no-imprimir flex-1 cursor-default bg-black/35" />
       <aside className={cn('flex flex-col overflow-hidden border-l border-[var(--linea)] bg-[var(--superficie)] shadow-[var(--sombra2)]',
         equipoExpandido
@@ -83,7 +122,8 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
               <span className="font-mono text-[11px] text-[var(--tinta3)]">{eq.id}</span>
               <Severidad_ s={eq.severidad} />
             </div>
-            <h2 id={idTitulo} className="block truncate text-[14px] font-bold leading-tight">{eq.nombre}</h2>
+            {/* Entero, sin cortar: la ficha del gerente ya no lo repite debajo. */}
+            <h2 id={idTitulo} className="block text-[14px] font-bold leading-tight [text-wrap:balance]">{eq.nombre}</h2>
             <small className="block text-[10.5px] text-[var(--tinta3)]">{eq.sistema} · {campo.nombre} · {eq.estado}</small>
           </div>
           <ExportarFicha />
@@ -120,119 +160,61 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
                 {rol.pantallas.includes('causa') && <Boton variante="principal" onClick={() => { abrirEquipo(null); setPantalla('causa') }}>Identificar</Boton>}
               </div>
             )}
-            <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-              <section>
-                <div className="flex flex-wrap gap-1">
-                  <Chip>criticidad {eq.criticidad}/5</Chip>
-                  <Chip tono={eq.redundancia === 'sin respaldo' ? 'fuerte' : 'neutro'}>{eq.redundancia}</Chip>
-                  <Chip>aguas abajo: {eq.aguasAbajo}</Chip>
-                </div>
-                <p className="mt-2 text-[12px] leading-relaxed">{eq.lectura}</p>
-                <dl className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11.5px]">
-                  {nivel === 'ingenieria' && <><dt className="text-[var(--tinta3)]">Modo de falla típico de la familia</dt><dd className="m-0">{eq.modoFalla}</dd></>}
-                  <dt className="text-[var(--tinta3)]">Diferido · {rango.nombre.toLowerCase()}</dt>
-                  <dd className="tabular m-0">{bblDe(eq.id, campoId) ? `${n0(bblDe(eq.id, campoId))} bbl` : 'no ha diferido barriles'}</dd>
-                </dl>
-              </section>
-              {nivel === 'ingenieria' && <Cita>{eq.norma}</Cita>}
-            </div>
+            <section>
+              <div className="flex flex-wrap items-center gap-1">
+                <Chip>criticidad {eq.criticidad}/5</Chip>
+                <Chip tono={eq.redundancia === 'sin respaldo' ? 'fuerte' : 'neutro'}>{eq.redundancia}</Chip>
+                <Chip>aguas abajo: {eq.aguasAbajo}</Chip>
+                {nivel === 'ingenieria' && <Info rotulo="norma" titulo="Norma" texto={eq.norma} />}
+              </div>
+              {/* El diagnóstico del equipo, en una frase: es lo que dice por qué está como está. */}
+              <p className="mt-2 text-[12px] leading-relaxed">{eq.lectura}</p>
+              <dl className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11.5px]">
+                {nivel === 'ingenieria' && <><dt className="text-[var(--tinta3)]">Modo de falla</dt><dd className="m-0">{eq.modoFalla}</dd></>}
+                <dt className="text-[var(--tinta3)]">Diferido · {rango.nombre.toLowerCase()}</dt>
+                <dd className="tabular m-0">{n0(bblDe(eq.id, campoId) ?? 0)} bbl</dd>
+              </dl>
+            </section>
 
-            <BloqueSap campoId={campoId} equipo={eq.id} nivel={nivel} />
+            <BloqueSap key={`${campoId}|${eq.id}`} campoId={campoId} equipo={eq.id} nivel={nivel} />
 
             <h3 className="font-cond mb-1.5 mt-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
               {nivel === 'operacion' ? `FUERA DE BANDA · ${fueraN} DE ${disp.length}${sinSenalN ? ` · ${sinSenalN} SIN SEÑAL` : ''}` : `DISPOSITIVOS · ${disp.length}`}
             </h3>
             {!eq.instrumentado && (
               <Hueco>
-                <b>{campo.nombre} todavía no tiene conectada su instancia de este equipo.</b><br />
-                Existe en la topología, pero no hay lecturas propias. No se muestran aquí las de otro
-                campo: serían el número de otra máquina.
+                <span className="flex flex-wrap items-center gap-x-1">
+                  <b>Sin conectar en {campo.nombre}</b>
+                  <Info titulo="Sin conectar" texto={`${campo.nombre} todavía no tiene conectada su instancia de este equipo. Existe en la topología, pero no hay lecturas propias. No se muestran aquí las de otro campo: serían el número de otra máquina.`} />
+                </span>
               </Hueco>
             )}
             <div className="grid gap-1.5">
               {nivel === 'operacion' && visibles.length === 0 && (
-                <p className="text-[11.5px] text-[var(--tinta2)]">Todos sus instrumentos están dentro de banda.</p>
+                <p className="text-[11.5px] text-[var(--tinta2)]">Todo dentro de banda.</p>
               )}
-              {visibles.map(d => (
-                <Tip key={d.tag} as="button" onClick={() => setCadenaTag(d.tag)}
-                  titulo={`${d.tag} · ${d.tipo}`} pista="Clic para ver la cadena técnica de este dato"
-                  filas={[['Valor', `${num(d.valor)} ${d.unidad}`.trim()], ['Límite', d.limite],
-                    ['Estado', d.estado], ['Origen', d.origen],
-                    ['Minigráfica', d.serie ? lecturasDe(d.serie)
-                      : d.estado === 'sin señal' ? 'sin lecturas en línea: no hay serie que graficar'
-                      : 'variable discreta: no lleva gráfica']]}
-                  className="flex w-full cursor-pointer items-center gap-2.5 rounded border border-[var(--linea2)] bg-[var(--panel)] px-2.5 py-2 text-left hover:bg-[var(--elevado)]">
-                  <MarcaEstado e={d.estado} tamano={11} />
-                  <span className="min-w-0 flex-1">
-                    <small className="block font-mono text-[10px] text-[var(--tinta3)]">{d.tag}</small>
-                    <b className="block truncate text-[11.5px] font-medium">{d.tipo}</b>
-                    <small className="block text-[10px] text-[var(--tinta3)]">{d.origen} · límite {d.limite}</small>
-                  </span>
-                  {nivel === 'operacion' ? null : d.serie
-                    ? <Sparkline serie={d.serie.valores} limite={banda(d.limite)} ancho={96} alto={26} prioridad={DE_ESTADO[d.estado] ?? undefined} />
-                    : <span className="font-cond w-[96px] text-center text-[9.5px] leading-tight text-[var(--tinta3)]">
-                        {d.estado === 'sin señal' ? <>SIN LECTURA<br />EN LÍNEA</> : <>VARIABLE DISCRETA<br />SIN GRÁFICA</>}
-                      </span>}
-                  <span className="tabular w-[84px] shrink-0 text-right">
-                    {/* El estado lo lleva la forma al inicio de la fila: el valor, en tinta. */}
-                    <b className={cn('block text-[14px] leading-tight', d.estado === 'sin señal' && 'text-[var(--tinta3)]')}>
-                      {d.estado === 'sin señal' ? '—' : num(d.valor)}
-                    </b>
-                    <small className="text-[9.5px] text-[var(--tinta3)]">{d.unidad || d.estado}</small>
-                  </span>
-                </Tip>
-              ))}
+              {/* Con `key`: al pasar a otro equipo, la lista vuelve a abrir cerrada. */}
+              <ListaDispositivos key={eq.id} visibles={visibles} fila={fila} />
             </div>
 
             {disp.some(d => d.estado === 'sin señal') && (
               <div className="mt-2">
                 <Hueco>
-                  Hay dispositivos <b>sin señal</b>: su último valor es de una ruta manual, no de una
-                  lectura en línea. No se estima el valor faltante.
+                  <span className="flex flex-wrap items-center gap-x-1">
+                    <span><b>Sin señal</b>: valor de ruta manual</span>
+                    <Info titulo="Sin señal" texto="Hay dispositivos sin señal: su último valor es de una ruta manual, no de una lectura en línea. No se estima el valor faltante." />
+                  </span>
                 </Hueco>
               </div>
             )}
 
             {historia && nivel === 'operacion' && historia.eventos[0] && (
-              <p className="mt-3 text-[11.5px] text-[var(--tinta2)]">
-                La última vez paró el {fechaHora(historia.eventos[0].inicio)}: {historia.eventos[0].causa.parte ? NOMBRE_PARTE[historia.eventos[0].causa.parte].toLowerCase() : historia.eventos[0].causa.texto.toLowerCase()}.
+              <p className="mt-3 flex flex-wrap items-center gap-x-1 text-[11.5px] text-[var(--tinta2)]">
+                <span>Última parada: <b className="tabular text-[var(--tinta)]">{fechaHora(historia.eventos[0].inicio)}</b>{historia.eventos[0].causa.parte ? ` · ${NOMBRE_PARTE[historia.eventos[0].causa.parte].toLowerCase()}` : ''}</span>
+                <Info titulo="Por qué paró" texto={historia.eventos[0].causa.texto} />
               </p>
             )}
-            {historia && nivel === 'ingenieria' && (
-              <>
-                <h3 className="font-cond mb-1.5 mt-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-                  HISTORIA DEL PLC · LO QUE SE LE CARGÓ
-                </h3>
-                {historia.bomba && (
-                  <p className="mb-1.5 text-[11.5px] text-[var(--tinta2)]">
-                    <b className="text-[var(--tinta)]">{historia.bomba.fallas} fallas</b> en {n0(historia.bomba.dias / 30.4)} meses
-                    {historia.bomba.mtbfDias ? `, una cada ${n0(historia.bomba.mtbfDias)} días` : ''}
-                    {historia.bomba.mdtH ? `, ${fmtHoras(historia.bomba.mdtH, true)} fuera en promedio` : ''}.
-                    {historia.bomba.porParte.length > 0 && ` Por parte: ${historia.bomba.porParte.map(x => `${NOMBRE_PARTE[x.parte].toLowerCase()} ${x.fallas}`).join(', ')}.`}
-                  </p>
-                )}
-                {historia.eventos.length === 0 ? (
-                  <p className="text-[11.5px] text-[var(--tinta2)]">Ningún pozo se ha cerrado por este equipo en la historia que hay.</p>
-                ) : (
-                  <>
-                    <p className="mb-1 text-[11.5px] text-[var(--tinta2)]">
-                      {historia.eventos.length} {historia.eventos.length === 1 ? 'evento' : 'eventos'} con pozos cerrados ·{' '}
-                      <b className="tabular text-[var(--tinta)]">{n0(historia.eventos.reduce((a, x) => a + x.bbl, 0))} bbl</b> en total
-                    </p>
-                    {historia.eventos.slice(0, 6).map(x => (
-                      <div key={x.id} className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1 text-[11px] last:border-0">
-                        <span className="min-w-0">
-                          <b className="tabular">{fechaHora(x.inicio)}</b>
-                          <span className="text-[var(--tinta3)]"> · {x.fin ? fmtHoras(horasEntre(x.inicio, x.fin), true) : `sigue · ${fmtHoras(horasEntre(x.inicio, AHORA), true)}`} · {x.pozos} {x.pozos === 1 ? 'pozo' : 'pozos'}</span>
-                          <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{x.causa.parte ? `${NOMBRE_PARTE[x.causa.parte]} · ` : ''}{x.causa.texto} ({COMO[x.causa.como]})</small>
-                        </span>
-                        <b className="tabular">{n0(x.bbl)} bbl</b>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </>
-            )}
+            {historia && nivel === 'ingenieria' && <Historia key={eq.id} historia={historia} />}
 
             <div className="mt-3 flex flex-wrap gap-1.5">
               {puedeHacer(rol.puede, 'causa:declarar') && rol.pantallas.includes('causa')
@@ -241,11 +223,77 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
                   Identificar qué se dañó
                 </Boton>
               )}
-              {nivel === 'ingenieria' && disp[0] && <Boton onClick={() => setCadenaTag(disp[0]!.tag)}>Ver la cadena del dato</Boton>}
+              {nivel === 'ingenieria' && disp[0] && <Boton onClick={() => setCadenaTag(disp[0]!.tag)}>Cadena del dato</Boton>}
             </div>
           </div>
         )}
       </aside>
     </div>
+  )
+}
+
+/** Cinco y «ver N más»; lo que no está normal (fuera de banda, sin señal) nunca
+ *  se esconde. Lo que no se ve en la pantalla sale en el papel. */
+function ListaDispositivos({ visibles, fila }: { visibles: Dispositivo[]; fila: (d: Dispositivo) => ReactNode }) {
+  const lista = useVerMas(visibles, { prioridad: d => (d.estado !== 'normal' ? 1 : 3) })
+  return (
+    <>
+      {lista.visibles.map(fila)}
+      {lista.resto.length > 0 && <div className="solo-impresion grid gap-1.5">{lista.resto.map(fila)}</div>}
+      {/* Dentro de la rejilla: el botón no se estira a todo el ancho. */}
+      {lista.ocultas > 0 && <div><VerMas ocultas={lista.ocultas} abierto={lista.abierto} onAlternar={lista.alternar} /></div>}
+    </>
+  )
+}
+
+/** Seis palabras o menos: la causa de un servicio («Presión baja del aire de instrumentos») cabe en la fila. */
+const corto = (t: string) => t.trim().split(/\s+/).length <= 6
+
+/** Lo que el PLC dejó de este equipo: sus fallas (en una bomba) y cada evento
+ *  que cerró pozos. Cinco y «ver N más»; la causa de cada evento, en su globo
+ *  y en el papel (se repite de un evento a otro: la misma frase del pozo). */
+function Historia({ historia }: { historia: HistoriaEquipo }) {
+  const lista = useVerMas(historia.eventos)
+  const total = historia.eventos.reduce((a, x) => a + x.bbl, 0)
+  const fila = (x: HistoriaEquipo['eventos'][number]) => (
+    <Tip key={x.id} titulo={`${fechaHora(x.inicio)} · ${plural(x.pozos, 'pozo', 'pozos')}`}
+      filas={[['Duración', x.fin ? fmtHoras(horasEntre(x.inicio, x.fin), true) : `sigue · ${fmtHoras(horasEntre(x.inicio, AHORA), true)}`],
+        ['Barriles', `${n0(x.bbl)} bbl`], ['Cómo se identificó', COMO[x.causa.como]]]}
+      pista={x.causa.texto} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+      className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1 text-[11px] last:border-0 print:border-b-0">
+      <span className="min-w-0">
+        <b className="tabular">{fechaHora(x.inicio)}</b>
+        <span className="text-[var(--tinta3)]"> · {x.fin ? fmtHoras(horasEntre(x.inicio, x.fin), true) : `sigue · ${fmtHoras(horasEntre(x.inicio, AHORA), true)}`} · {plural(x.pozos, 'pozo', 'pozos')}</span>
+        <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{x.causa.parte ? `${NOMBRE_PARTE[x.causa.parte]} · ${COMO[x.causa.como]}`
+          // «Mantenimiento preventivo programado» ya dice «por el programa aprobado».
+          : corto(x.causa.texto) ? `${x.causa.texto}${x.causa.como === 'programa' ? '' : ` · ${COMO[x.causa.como]}`}` : COMO[x.causa.como]}</small>
+      </span>
+      <b className="tabular">{n0(x.bbl)} bbl</b>
+    </Tip>
+  )
+  return (
+    <>
+      <h3 className="font-cond mb-1.5 mt-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">HISTORIA DEL PLC</h3>
+      {historia.bomba && (
+        <p className="tabular mb-1.5 text-[11.5px] text-[var(--tinta2)]">
+          <b className="text-[var(--tinta)]">{plural(historia.bomba.fallas, 'falla', 'fallas')}</b> en {n0(historia.bomba.dias / 30.4)} meses
+          {historia.bomba.mtbfDias ? ` · cada ${n0(historia.bomba.mtbfDias)} d` : ''}
+          {historia.bomba.mdtH ? ` · ${fmtHoras(historia.bomba.mdtH, true)} fuera` : ''}
+          {historia.bomba.porParte.length > 0 && <span className="block text-[11px]">{historia.bomba.porParte.map(x => `${NOMBRE_PARTE[x.parte].toLowerCase()} ${x.fallas}`).join(' · ')}</span>}
+        </p>
+      )}
+      {historia.eventos.length === 0 ? (
+        <p className="text-[11.5px] text-[var(--tinta2)]">Ningún pozo cerrado por este equipo en la historia.</p>
+      ) : (
+        <>
+          <p className="tabular mb-1 text-[11.5px] text-[var(--tinta2)]">
+            {plural(historia.eventos.length, 'evento', 'eventos')} con pozos cerrados · <b className="text-[var(--tinta)]">{n0(total)} bbl</b>
+          </p>
+          {lista.visibles.map(fila)}
+          {lista.resto.length > 0 && <div className="solo-impresion">{lista.resto.map(fila)}</div>}
+          <VerMas ocultas={lista.ocultas} abierto={lista.abierto} onAlternar={lista.alternar} />
+        </>
+      )}
+    </>
   )
 }

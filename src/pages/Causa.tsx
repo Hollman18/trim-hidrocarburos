@@ -5,7 +5,7 @@ import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { useMensajes } from '@/shared/api/mensajes'
 import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
-import { CAUSAS_POZO, NO_FUE_ESP, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
+import { CAUSAS_POZO, NO_FUE_ESP_CORTO, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
 import { Telefono } from '@/widgets/whatsapp/Telefono'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
 import type { Pregunta } from '@/entities/libro'
@@ -15,10 +15,13 @@ import { modo as modoIso, mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entit
 import { campoPorId } from '@/entities/campos'
 import { fechaHora, horasEntre, AHORA } from '@/entities/reloj'
 import { fraseParte, fmtHoras } from '@/widgets/bombas/comun'
-import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Boton, Chip } from '@/shared/ui/primitivas'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
+import { Info } from '@/shared/ui/Info'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { useUsuarios } from '@/shared/api/usuarios'
@@ -31,8 +34,11 @@ import { puedeHacer } from '@/entities/tipos'
  *  Regla de operación: el equipo que paró sin causa identificable no se
  *  arranca hasta que se identifique el daño. TRIM no escribe en el PLC; el
  *  bloqueo es de procedimiento, y si arranca antes queda como no conformidad. */
+/** La regla completa: en la pantalla queda «no arrancar» y lo esencial; el resto, en el ⓘ (y en el papel). */
+const REGLA = 'Un pozo o una bomba que paró sin causa identificable por su señal no se arranca hasta que quien lo revise registre aquí qué se dañó. TRIM no escribe en el PLC ni bloquea el arranque: la regla es de procedimiento. Si arranca antes, la parada queda como no conformidad, con la hora del PLC.'
+
 export function Causa() {
-  const ambito = useAmbito(); const rango = useRango(); const rol = useRol()
+  const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const persona = usePersona()
   const ids = ambito.campos.map(c => c.id)
   const lb = useLibro({ campos: ids, desde: rango.desde, hasta: rango.hasta })
   const preguntas = usePreguntas(ids)
@@ -71,38 +77,51 @@ export function Causa() {
   const partesPendientes = pendientes.filter(p => p.sobre === 'bomba').length
   // Quien opera llega a responder: lo pendiente va primero.
   const opera = rol.nivel === 'operacion'
+  // Quien no puede responder (o el rol sin nadie con acceso) lo lee una vez, aquí, y no en cada tarjeta.
+  const responde = puede && !persona.sinAcceso
+  const hayTarjetas = pendientes.length + noConformes.length > 0
+  const porResponder = pendientes.length + noConformes.filter(p => !p.causa.declarado).length > 0
+  // Las que esperan el análisis son trabajo pendiente: nunca quedan detrás de
+  // «ver N más». Tampoco lo que en esta visita estuvo por analizar o se acaba
+  // de responder: al guardarlo baja a su lugar por fecha, y no puede irse de la
+  // pantalla justo cuando se guardó.
+  // (Se ajusta durante el render, como recomienda React: converge en una vuelta.)
+  const [vistas, setVistas] = useState<ReadonlySet<string>>(() => new Set())
+  const nuevasVistas = [...sinAnalisis, ...recien].filter(p => !vistas.has(p.id))
+  if (nuevasVistas.length) setVistas(new Set([...vistas, ...nuevasVistas.map(p => p.id)]))
+  const listaDeclaradas = useVerMas(declaradasEnOrden, { prioridad: p => (sinAnalisis.includes(p) || recien.includes(p) || vistas.has(p.id) ? 1 : 3) })
 
+  const cifra = 'tabular flex items-center gap-1.5 text-[22px] leading-tight'
+  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
   const cabecera = (
       <Tip titulo="Identificación del período"
         pista="Cuánto del diferido tiene causa probada por una señal, cuánto declaró un operario y cuánto falta."
         filas={[['Por señal', `${n0(lb.identificado)} bbl · ${n1(pct(lb.identificado))} %`],
           ['Declarado', `${n0(lb.declarado)} bbl · ${n1(pct(lb.declarado))} %`],
           ['Sin identificar', `${n0(lb.pendiente)} bbl · ${n1(pct(lb.pendiente))} %`], ['Período', rango.nombre]]}
-        className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+        className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Causa del cierre probada por señal · {rango.nombre}</small>
           <b className="tabular block text-[30px] leading-none">{n1(pct(lb.identificado))} %</b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">{n0(lb.identificado)} de {n0(lb.diferido)} bbl</small>
+          <small className={rotulo}>causa probada por señal</small>
+          <small className={apoyo}>{n0(lb.identificado)} de {n0(lb.diferido)} bbl diferidos</small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Causa del cierre declarada por operarios</small>
-          <b className="tabular block text-[22px] leading-tight">{n1(pct(lb.declarado))} %</b>
+          <b className={cifra}>{n1(pct(lb.declarado))} %</b>
+          <small className={rotulo}>causa declarada</small>
           {/* Lo que falta también a la vista: en el recuadro flotante solo lo alcanzaba el ratón. */}
-          <small className="block text-[10.5px] text-[var(--tinta2)]">{n0(lb.declarado)} bbl · sin identificar {n0(lb.pendiente)} bbl ({n1(pct(lb.pendiente))} %)</small>
+          <small className={apoyo}>{n0(lb.declarado)} bbl · sin identificar {n0(lb.pendiente)} bbl ({n1(pct(lb.pendiente))} %)</small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Por identificar · toda la historia</small>
-          <b className="tabular flex items-center gap-1.5 text-[22px] leading-tight">
-            {parados.length > 0 && <MarcaPrioridad s={2} tamano={15} />}{pendientes.length}
-          </b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">{plural(pendientes.length - partesPendientes, 'causa de pozo', 'causas de pozo')} · {plural(partesPendientes, 'parte de bomba', 'partes de bomba')} · {plural(parados.length, 'equipo esperando', 'equipos esperando')} para arrancar</small>
+          <b className={cifra}>{parados.length > 0 && <MarcaPrioridad s={2} tamano={15} />}{pendientes.length}</b>
+          {/* Esta cifra no es del período: cuenta todo lo que sigue sin identificar. */}
+          <small className={rotulo}>por identificar · histórico</small>
+          <small className={apoyo}>{plural(pendientes.length - partesPendientes, 'pozo', 'pozos')} · {plural(partesPendientes, 'bomba', 'bombas')} · {parados.length} sin arrancar</small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">No conformidades</small>
-          <b className="tabular flex items-center gap-1.5 text-[22px] leading-tight">
-            {noConformes.length > 0 && <MarcaPrioridad s={3} tamano={14} />}{noConformes.length}
-          </b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">arrancaron sin identificar el daño</small>
+          <b className={cifra}>{noConformes.length > 0 && <MarcaPrioridad s={3} tamano={14} />}{noConformes.length}</b>
+          <small className={rotulo}>no conformidades</small>
+          <small className={apoyo}>arrancaron sin identificar</small>
         </span>
       </Tip>
   )
@@ -111,41 +130,54 @@ export function Causa() {
     <>
       {!opera && cabecera}
 
-      <div className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[12px] shadow-[var(--sombra)]">
-        <b>Regla de operación:</b> un pozo o una bomba que paró sin causa identificable por su señal
-        no se arranca hasta que quien lo revise registre aquí qué se dañó. TRIM no escribe en el PLC
-        ni bloquea el arranque: la regla es de procedimiento. Si arranca antes, la parada queda como
-        no conformidad, con la hora del PLC.
+      {/* La regla de operación: «no arrancar» a la vista; el procedimiento completo, en el ⓘ. */}
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[12px] shadow-[var(--sombra)]">
+        <span><b>No arrancar</b> hasta identificar el daño</span>
+        <span className="text-[var(--tinta2)]"><span className="hidden sm:inline">· </span>si arranca antes: no conformidad</span>
+        <Info titulo="Regla de operación" texto={REGLA} />
+        {hayTarjetas && !puede && <span className="basis-full text-[11px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
+        {porResponder && puede && persona.sinAcceso && (
+          <span className="flex basis-full flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
+            Nadie con acceso activo tiene este rol.
+            <Info titulo="Sin persona con acceso" texto="La respuesta la da una persona con acceso, no un rol." />
+          </span>
+        )}
       </div>
 
-      <Panel className="mb-2.5" titulo="POR IDENTIFICAR" extra={`${pendientes.length} · primero lo que sigue parado`}>
+      <Panel className="mb-2.5" titulo="POR IDENTIFICAR" extra={<>{pendientes.length}<span className="sr-only"> por identificar</span></>}>
         <Lectura>
-          Cada una trae lo que dijeron sus señales y por qué no alcanzó. En una bomba, la parte que
-          estaba fuera de límite al parar aparece como sospechosa: es una pista, no una respuesta.
+          Cada una trae lo que dijo su señal; el ⓘ junto a «señal» dice por qué no alcanzó. Responde quien
+          revisó el equipo o estuvo en el pozo. Las pistas (la parte que estaba fuera de límite al parar, o
+          las que más han fallado en ese equipo) son una pista, no una respuesta. Toque o pase el cursor por
+          la línea de WhatsApp para ver a quién le llegó cada mensaje.
         </Lectura>
         {recien.length > 0 && (
           <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">
-            Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas», más abajo.
+            Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
           </p>
         )}
-        {pendientes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parada espera identificación.</p>}
-        {pendientes.map(p => <Tarjeta key={p.id} p={p} global={ambito.global} puede={puede} hilo={hilo(p)} />)}
+        {pendientes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
+        {pendientes.map(p => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} />)}
       </Panel>
 
       {opera && cabecera}
 
-      <Panel className="mb-2.5" titulo="NO CONFORMIDADES" extra="arrancaron sin identificar el daño">
+      {/* «Arrancaron sin identificar» ya lo dice la cifra de arriba; aquí, cuántas. */}
+      <Panel className="mb-2.5" titulo="NO CONFORMIDADES" extra={<>{noConformes.length}<span className="sr-only"> {noConformes.length === 1 ? 'no conformidad' : 'no conformidades'}</span></>}>
         {noConformes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
-        {noConformes.map(p => <Tarjeta key={p.id} p={p} global={ambito.global} puede={puede} hilo={hilo(p)} />)}
+        {noConformes.map(p => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} />)}
       </Panel>
 
-      <Panel titulo="DECLARADAS" extra={`${plural(declaradas.length, 'respuesta de operario', 'respuestas de operarios')}${sinAnalisis.length ? ` · ${sinAnalisis.length} sin análisis` : ''}`}>
+      <Panel titulo="DECLARADAS" extra={<>{declaradas.length}<span className="sr-only"> {declaradas.length === 1 ? 'declarada' : 'declaradas'}</span>{sinAnalisis.length ? ` · ${sinAnalisis.length} sin análisis` : ''}</>}>
         <Lectura>
           Lo que respondió la gente de campo. Entra al libro como «declarado», separado de lo que
           probó una señal, y se puede auditar: quién, cuándo y si fue antes o después de arrancar.
+          Primero las que esperan el análisis de confiabilidad.
         </Lectura>
         {declaradas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna todavía.</p>}
-        {declaradasEnOrden.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}
+        {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}
+        {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}</div>}
+        <VerMas ocultas={listaDeclaradas.ocultas} abierto={listaDeclaradas.abierto} onAlternar={listaDeclaradas.alternar} />
       </Panel>
     </>
   )
@@ -154,7 +186,7 @@ export function Causa() {
 /** Una parada por identificar: qué dijeron las señales, el formulario para
  *  decir qué se dañó (parte y lo que se vio, del catálogo de la clase de
  *  equipo) y el hilo de WhatsApp por el que también se responde. */
-function Tarjeta({ p, global, puede, hilo }: { p: Pregunta; global: boolean; puede: boolean; hilo: Mensaje[] }) {
+function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; responde: boolean; hilo: Mensaje[] }) {
   const persona = usePersona(); const responder = useApp(s => s.responder), abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const [texto, setTexto] = useState('')
   const [parte, setParte] = useState<ParteId | ''>('')
@@ -190,6 +222,13 @@ function Tarjeta({ p, global, puede, hilo }: { p: Pregunta; global: boolean; pue
     void enviarRespuesta({ texto: texto.trim() })
   }
 
+  // Por qué ninguna señal alcanzó («Sin primera alarma y sin firma…»): explica,
+  // no es una lectura, y va al ⓘ de «señal». Solo si el motor lo manda con
+  // nombre (`causa.porQueNo`); nunca se adivina por su lugar en `evidencia`.
+  // Sin ese dato, la evidencia sale completa, como antes.
+  const porQueNo = 'porQueNo' in p.causa && typeof p.causa.porQueNo === 'string' && p.causa.porQueNo ? p.causa.porQueNo : undefined
+  const lecturas = porQueNo ? p.causa.evidencia.filter(e => e !== porQueNo) : p.causa.evidencia
+
   return (
     <div className="border-b border-[var(--linea2)] py-3 last:border-0">
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
@@ -199,50 +238,53 @@ function Tarjeta({ p, global, puede, hilo }: { p: Pregunta; global: boolean; pue
             <b className="text-[13px] underline-offset-2 hover:underline">{p.equipo}</b>
           </button>
           <span className="text-[11px] text-[var(--tinta3)]"> · {p.sobre === 'bomba' ? 'bomba de la línea' : 'pozo'}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
+          {/* Sigue parado: lo dice «no arrancar»; aquí, desde cuándo. */}
           <small className="block text-[11px] text-[var(--tinta2)]">
-            Paró {fechaHora(p.inicio)} · {p.fin ? `arrancó ${fechaHora(p.fin)} (${fmtHoras(horas, true)})` : `sigue parado hace ${fmtHoras(horas, true)}`}
+            Paró {fechaHora(p.inicio)} · {p.fin ? `arrancó ${fechaHora(p.fin)} (${fmtHoras(horas, true)})` : `hace ${fmtHoras(horas, true)}`}
           </small>
         </span>
+        {/* «no conformidad» no va como etiqueta: la tarjeta ya está en ese panel. */}
         <span className="flex flex-wrap gap-1">
           {!p.fin && <Chip tono="fuerte">no arrancar</Chip>}
-          {p.arrancoSinIdentificar && <Chip tono="fuerte">no conformidad</Chip>}
           <Chip>{n0(p.bbl)} bbl</Chip>
         </span>
       </div>
       <div className="mt-2 grid gap-3 text-[11px] [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
         <div>
-          <h5 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE DIJO LA SEÑAL</h5>
+          <div className="mb-1 flex flex-wrap items-center gap-x-1">
+            <h5 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEÑAL</h5>
+            {porQueNo && <Info rotulo="no alcanzó" titulo="Por qué no alcanzó la señal" texto={porQueNo} />}
+          </div>
           <ul className="list-disc pl-4 text-[var(--tinta2)]">
-            {p.causa.evidencia.map(e => <li key={e} className="font-mono text-[10.5px]">{e}</li>)}
+            {lecturas.map(e => <li key={e} className="font-mono text-[10.5px]">{e}</li>)}
           </ul>
+          {/* La parte sospechosa es una pista: queda a la vista, con la variable que la delata. */}
           {sospechosa && (
             <p className="mt-1.5 text-[var(--tinta2)]">
-              Sospechosa: <b className="text-[var(--tinta)]">{sospechosa.parte.nombre.toLowerCase()}</b>, porque {fraseParte(sospechosa)}.
+              Sospechosa: <b className="text-[var(--tinta)]">{sospechosa.parte.nombre.toLowerCase()}</b> · {fraseParte(sospechosa)}
             </p>
           )}
+          {/* Quién lo declaró ya está en la evidencia («Declarado por …»). */}
           {p.causa.declarado && (
-            <p className="mt-1.5 text-[var(--tinta2)]">Respondido después de arrancar: «{p.causa.declarado.texto}» · {p.causa.declarado.por}.</p>
+            <p className="mt-1.5 text-[var(--tinta2)]">Respondido tras arrancar: «{p.causa.declarado.texto}»</p>
           )}
         </div>
-        {puede && !p.causa.declarado && persona.sinAcceso ? (
-          <Hueco>Nadie con acceso activo tiene este rol: la respuesta la da una persona con acceso, no un rol.</Hueco>
-        ) : puede && !p.causa.declarado ? (
+        {responde && !p.causa.declarado && (
           <form className="grid gap-1.5" onSubmit={e => { e.preventDefault(); enviar() }}>
-            <h5 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-              {conPartes ? `QUÉ SE DAÑÓ EN ${esp ? 'LA ELECTROSUMERGIBLE' : 'LA BOMBA'} · LO RESPONDE QUIEN LA REVISÓ` : 'POR QUÉ PARÓ · LO RESPONDE QUIEN ESTUVO'}
-            </h5>
+            <h5 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{conPartes ? 'QUÉ SE DAÑÓ' : 'POR QUÉ PARÓ'}</h5>
             {conPartes ? (
               <>
                 <span className="grid gap-1">
                   <label htmlFor={`parte-${p.id}`} className={PASO_CLS}>1 · Parte {esp ? 'de la electrosumergible' : 'de la bomba'}</label>
                   {sugeridas?.conEvidencia && (
                     <>
-                      <small className="text-[10.5px] text-[var(--tinta2)]">{deLaSenal ? 'Lo que sugieren la señal y la historia del equipo' : 'Lo que más ha fallado en este equipo'} (una pista, no una respuesta)</small>
+                      {/* «Pista»: lo que sugiere, no lo que pasó. La fuente se dice porque no es lo mismo una señal que la historia. */}
+                      <small className="text-[10.5px] text-[var(--tinta2)]">Pista · {deLaSenal ? 'señal e historia' : 'historia del equipo'}</small>
                       <span className="flex flex-wrap gap-1">
                         {sugeridas.opciones.filter(o => o.parte).map(o => (
                           <button type="button" key={o.clave} onClick={() => escoger(o.parte!)} aria-pressed={parte === o.parte}
                             className={cn(CHIP, 'text-left', parte === o.parte && SELECCION)}>
-                            <b className="font-semibold">{o.texto}</b> <span className="text-[var(--tinta3)]">· {o.porque}</span>
+                            <b className="font-semibold">{o.texto}</b> <span className="text-[var(--tinta3)]">· {pista(o)}</span>
                           </button>
                         ))}
                       </span>
@@ -253,30 +295,32 @@ function Tarjeta({ p, global, puede, hilo }: { p: Pregunta; global: boolean; pue
                     <option value="">{sugeridas?.conEvidencia ? 'O escoja cualquier parte…' : 'Escoja la parte…'}</option>
                     {cat!.partes.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                   </select>
+                  {/* «: otra causa del pozo» lo dice el paso siguiente (las causas del pozo). */}
                   {esp && (
                     <button type="button" onClick={() => { setOtraDelPozo(true); escoger(''); setTexto('') }} className={cn(CHIP, 'justify-self-start')}>
-                      {NO_FUE_ESP}
+                      {noFueEsp}
                     </button>
                   )}
                 </span>
                 {parteSel && (
                   <span className="grid gap-1">
-                    <span className={PASO_CLS}>2 · Qué vio</span>
+                    <span className="flex flex-wrap items-center gap-x-2">
+                      <span className={PASO_CLS}>2 · Qué vio</span>
+                      <Info rotulo="ISO 14224" titulo="Registro ISO 14224"
+                        texto={`Se registra en el catálogo como ítem «${parteSel.itemIso}»${modo ? ` · daño ${modo} (${modoIso(modo)?.nombre.toLowerCase()})` : ''}.`} />
+                    </span>
                     <span className="flex flex-wrap gap-1">
                       {modosDeParte(parteSel).map(m => (
                         <button type="button" key={m.codigo} onClick={() => { setModo(m.codigo); setError('') }} aria-pressed={modo === m.codigo}
                           className={cn(CHIP, modo === m.codigo && SELECCION)}>{nombreModo(m.codigo, parteSel.id)}</button>
                       ))}
                     </span>
-                    <small className="text-[10px] text-[var(--tinta3)]">
-                      Se registra en el catálogo como ítem «{parteSel.itemIso}»{modo ? <> · daño {modo} ({modoIso(modo)?.nombre.toLowerCase()})</> : ''} · ISO 14224.
-                    </small>
                   </span>
                 )}
               </>
             ) : (
               <>
-                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-10 justify-self-start text-[10.5px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes de la electrosumergible</button>}
+                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-10 justify-self-start text-[10.5px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes</button>}
                 <span className="flex flex-wrap gap-1">
                   {CAUSAS_POZO.map(f => (
                     <button type="button" key={f} onClick={() => { setTexto(f); setError('') }} aria-pressed={texto === f}
@@ -286,23 +330,33 @@ function Tarjeta({ p, global, puede, hilo }: { p: Pregunta; global: boolean; pue
               </>
             )}
             <label className="grid gap-0.5">
-              <span className="text-[10.5px] text-[var(--tinta2)]">{!conPartes ? 'Qué encontró' : modo === MODO_OTRO ? 'Qué vio (obligatorio: escogió «Otra cosa»)' : 'Qué encontró (opcional)'}</span>
+              {/* Escogió «Otra cosa»: el campo pasa a obligatorio (el porqué está en el botón marcado). */}
+              <span className="text-[10.5px] text-[var(--tinta2)]">{!conPartes ? 'Qué encontró' : modo === MODO_OTRO ? 'Qué vio (obligatorio)' : 'Qué encontró (opcional)'}</span>
               <textarea value={texto} onChange={e => { setTexto(e.target.value); setError('') }} rows={2}
                 placeholder={conPartes ? (esp ? 'Ej.: el motor dio a tierra al megger' : 'Ej.: sello con fuga por el lado de acople; se cambió') : 'Ej.: se cerró para cambiar la válvula de la cabeza'}
                 className="resize-y rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[12px]" />
             </label>
             {error && <p className="text-[11px] text-[var(--tinta)]" role="alert">{error}</p>}
             <Boton variante="principal" type="submit" className="min-h-10 sm:min-h-0">Registrar respuesta</Boton>
-            <small className="text-[10px] text-[var(--tinta3)]">Queda como declarado por {persona.nombre}, con la hora del sistema.</small>
+            <small className="text-[10px] text-[var(--tinta3)]">Queda declarado por {persona.nombre} · hora del sistema</small>
           </form>
-        ) : !puede ? (
-          <Hueco>Su rol no responde paradas. Lo hace el operador, el supervisor o mantenimiento.</Hueco>
-        ) : null}
+        )}
       </div>
       <HiloWhatsapp p={p} hilo={hilo} />
     </div>
   )
 }
+
+/** «5 de 8 fallas»: el rótulo de encima ya dice que es la historia del equipo.
+ *  Se escribe de los datos con nombre (`veces`, `total`); una sugerencia que no
+ *  los trae (una señal: «PT-2013 salió de su banda normal») va con su `porque`. */
+function pista(o: { porque?: string; veces?: number; total?: number }): string {
+  if (o.veces !== undefined && o.total !== undefined) return `${o.veces} de ${o.total} ${o.total === 1 ? 'falla' : 'fallas'}`
+  return o.porque ?? ''
+}
+
+/** «No fue la electrosumergible»: lo que sigue (otra causa del pozo) lo dice el paso siguiente. */
+const noFueEsp = NO_FUE_ESP_CORTO
 
 /** El rótulo de cada paso de la respuesta: se lee como instrucción, no como pie. */
 const PASO_CLS = 'text-[12px] font-semibold text-[var(--tinta)]'
@@ -324,34 +378,41 @@ function HiloWhatsapp({ p, hilo }: { p: Pregunta; hilo: Mensaje[] }) {
   const nombre = (id: string) => usuarios.find(x => x.id === id)?.nombre ?? id
   // Un paso por hora y tipo, con todos los que lo recibieron.
   // Lo que no salió (un parámetro que Meta rechazaría) no cuenta como avisado: va aparte, con su motivo.
+  const corta = (iso: string) => fechaHora(new Date(iso)).replace(/^.*?, /, '')
   const pasos = [...orden.reduce((mapa, m) => {
-    const tipo = m.insistencia ?? m.regla, k = `${m.hora}|${tipo}`
+    const tipo = m.insistencia ?? m.regla, k = `${corta(m.hora)}|${tipo}`
     const x = mapa.get(k) ?? { hora: m.hora, rango: ORDEN_PASO[tipo], que: PASO_CORTO[tipo], para: [] as string[], fallas: [] as Array<{ para: string; motivo: string }> }
     if (m.noEnviado) x.fallas.push({ para: nombre(m.para), motivo: m.noEnviado })
     else if (!x.para.includes(nombre(m.para))) x.para.push(nombre(m.para))
     return mapa.set(k, x)
   }, new Map<string, { hora: string; rango: number; que: string; para: string[]; fallas: Array<{ para: string; motivo: string }> }>()).values()]
     .sort((a, b) => new Date(a.hora).getTime() - new Date(b.hora).getTime() || a.rango - b.rango)
-  const corta = (iso: string) => fechaHora(new Date(iso)).replace(/^.*?, /, '')
 
   // Si la pregunta se armó pero no salió, no es que nadie tenga WhatsApp: se muestra el hilo con su motivo.
+  // Que nadie la recibe es un hueco: corto a la vista, el porqué en el ⓘ (y en el papel).
   if (!primero && !orden.some(m => m.regla === 'causa' && m.noEnviado)) return (
-    <p className="mt-2 text-[10.5px] text-[var(--tinta3)]">
-      WhatsApp: nadie de este campo tiene número con las alertas encendidas; la pregunta está solo en esta pantalla.
+    <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+      WhatsApp: sin destinatario
+      <Info titulo="Sin destinatario" texto="Nadie de este campo tiene número con las alertas encendidas; la pregunta está solo en esta pantalla." />
     </p>
   )
   const persona = primero && usuarios.find(u => u.id === primero.para)
 
+  // Como en Turno: una línea con la hora y el paso; a quién le llegó cada uno,
+  // en el globo y en el papel. Lo que no se envió sigue a la vista, con su motivo.
   return (
     <div className="mt-2.5 border-t border-dashed border-[var(--linea2)] pt-2 text-[11px]">
-      <h5 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">WHATSAPP · LO QUE MANDÓ TRIM</h5>
-      <p className="text-[var(--tinta2)]">
-        {/* En el teléfono, un paso por línea; en pantalla ancha, seguidos. */}
-        {pasos.map((x, i) => <span key={`${x.hora}${x.que}`} className="block sm:inline">{i > 0 && <span className="hidden sm:inline"> → </span>}<span className="tabular">{corta(x.hora)}</span> {x.que}{x.para.length > 0 && ` (${x.para.join(', ')})`}<NoEnviado fallas={x.fallas} /></span>)}
-        <span className="hidden sm:inline">{' · '}</span>{r?.canal === 'whatsapp'
-          ? <b className="text-[var(--tinta)]">respondió {r.por} a las {corta(r.hora)}: «{r.texto}»</b>
-          : r ? <span>respondido en pantalla</span> : <b className="text-[var(--tinta)]">sin respuesta</b>}
-      </p>
+      <h5 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">WHATSAPP</h5>
+      <Tip titulo={`WhatsApp · ${p.equipo}`} filas={pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
+        imprimir="todo" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--tinta2)]">
+        <span>
+          {/* La flecha queda fuera del paso sin cortes: el renglón se parte entre pasos, nunca dentro de uno. */}
+          {pasos.map((x, i) => <span key={`${x.hora}${x.que}`}>{i > 0 && ' → '}<span className="whitespace-nowrap"><span className="tabular">{corta(x.hora)}</span> {x.que}</span><NoEnviado fallas={x.fallas} /></span>)}
+        </span>
+        {r?.canal === 'whatsapp'
+          ? <b className="text-[var(--tinta)]">respondió {r.por} · {corta(r.hora)}: «{r.texto}»</b>
+          : r ? <span>respondido en pantalla</span> : <Chip tono="fuerte">sin respuesta</Chip>}
+      </Tip>
       {persona && (
         <>
           <Boton className="mt-1 min-h-10 sm:min-h-0" onClick={() => setVerChat(!verChat)} aria-expanded={verChat}>
@@ -378,9 +439,14 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
   const [nota, setNota] = useState('')
   const [error, setError] = useState('')
   const puede = rol.puede['causa:completar']
+  // Al guardar, el formulario (y el botón que tenía el foco) se va: el foco pasa
+  // al análisis guardado, que queda a la vista, y no cae en <body>.
+  const guardado = useRef<HTMLElement>(null)
+  const [enfocar, setEnfocar] = useState(false)
+  useEffect(() => { if (enfocar && guardado.current) { guardado.current.focus(); setEnfocar(false) } }, [enfocar, a, abierto])
 
   if (a && !abierto) return (
-    <small className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">
+    <small ref={guardado} tabIndex={-1} className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">
       Análisis: {a.mecanismo} {mecanismoIso(a.mecanismo)?.nombre.toLowerCase()} · causa raíz: {CAUSAS_RAIZ.find(c => c.codigo === a.causaRaiz)?.nombre.toLowerCase()}
       {a.nota ? ` · «${a.nota}»` : ''} · {a.por}
       {puede && <button type="button" onClick={() => { setMecanismo(a.mecanismo); setCausaRaiz(a.causaRaiz); setNota(a.nota ?? ''); setAbierto(true) }}
@@ -392,11 +458,16 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
       ))}
     </small>
   )
-  if (!puede) return <small className="mt-0.5 block text-[10.5px] text-[var(--tinta3)]">Análisis pendiente: mecanismo y causa raíz los completa confiabilidad o el jefe de mantenimiento.</small>
+  if (!puede) return (
+    <span className="mt-0.5 flex flex-wrap items-center gap-x-1">
+      <Chip>análisis pendiente</Chip>
+      <Info titulo="Análisis pendiente" texto="Mecanismo y causa raíz los completa confiabilidad o el jefe de mantenimiento." />
+    </span>
+  )
   if (!abierto) return <Boton variante="chico" className="mt-1 min-h-10 sm:min-h-0" onClick={() => setAbierto(true)}>Completar el análisis</Boton>
   return (
     <form className="mt-1.5 grid gap-1.5 rounded border border-[var(--linea2)] bg-[var(--panel2)] p-2"
-      onSubmit={async e => { e.preventDefault(); const r = await completar(evento, { mecanismo, causaRaiz, nota }); if (!r.ok) setError(r.error); else setAbierto(false) }}>
+      onSubmit={async e => { e.preventDefault(); const r = await completar(evento, { mecanismo, causaRaiz, nota }); if (!r.ok) setError(r.error); else { setAbierto(false); setEnfocar(true) } }}>
       <div className="grid gap-1.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))]">
         <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Mecanismo · ISO 14224 B.2</span>
           <select value={mecanismo} onChange={e => { setMecanismo(e.target.value); setError('') }} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-0">
@@ -438,14 +509,20 @@ function Declarada({ p, global }: { p: Pregunta; global: boolean }) {
   const horas = p.fin ? horasEntre(p.inicio, p.fin) : undefined
   const disparo = cat?.clase === 'bomba-electrosumergible' && !!p.causa.parte && horas !== undefined && horas < 24
   return (
-    <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+    <div data-declarada={p.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
       <span className="min-w-0">
         <b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· {global ? `${campoPorId(p.campoId).nombre} · ` : ''}{fechaHora(p.inicio)}</span>
         <span className="block text-[var(--tinta)]">
           {nombreParte ? <><b className="font-semibold">{nombreParte}</b>{vio ? ` · ${vio}` : ''}{!generado ? ` · «${r.texto}»` : ''}</> : <>«{r.texto}»</>}
         </span>
         <small className="block text-[10.5px] text-[var(--tinta3)]">{r.por} · {fechaHora(new Date(r.hora))}{r.canal === 'whatsapp' ? ' · por WhatsApp' : ''}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
-        {disparo && <small className="block text-[10.5px] text-[var(--tinta2)]">Arrancó en {fmtHoras(horas!, true)}: cuenta como disparo, no como falla de la electrosumergible.</small>}
+        {/* Estado como etiqueta; por qué (arrancó en menos de un día), en el ⓘ. */}
+        {disparo && (
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-1">
+            <Chip>disparo, no falla</Chip>
+            <Info titulo="Disparo" texto={`Arrancó en ${fmtHoras(horas!, true)}: cuenta como disparo, no como falla de la electrosumergible.`} />
+          </span>
+        )}
         {p.causa.parte && <AnalisisDeFalla evento={p.id} modo={r.modo} />}
       </span>
       <b className="tabular text-right">{n0(p.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>

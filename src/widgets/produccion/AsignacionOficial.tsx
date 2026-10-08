@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, Info as IconoInfo } from 'lucide-react'
 import { useApp, useRol } from '@/app/store'
 import { useAsignacionOficial, useCargasAsignacion } from '@/shared/api/sesion'
 import { useAsignacionPorPozo } from '@/shared/api/diferidos'
@@ -8,18 +8,22 @@ import { pedirMedicionOficial } from '@/shared/api/medicion'
 import { pedirMesesCerrados } from '@/shared/api/calendario'
 import { nombreMes } from '@/entities/plan'
 import { campoPorId } from '@/entities/campos'
-import { Panel, Boton, SubirCsv, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Boton, Chip, SubirCsv, Hueco } from '@/shared/ui/primitivas'
 import { FueraDeMeta, DatoInvalido } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
+import { Info } from '@/shared/ui/Info'
+import { Tip } from '@/shared/ui/Tip'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas, VISIBLES } from '@/shared/ui/listaCorta'
 import { descargarCsv } from '@/shared/lib/csv'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { desplazable } from '@/shared/ui/alFinal'
 import { fechaHora } from '@/entities/reloj'
 
-const VISIBLES = 12
-
 /** Cuadre pozo por pozo con la asignación oficial de un mes cerrado: se sube
- *  lo que reportó la operadora y se coteja con lo que asigna TRIM. */
+ *  lo que reportó la operadora y se coteja con lo que asigna TRIM. Es un
+ *  formulario: sus errores y el motivo de la carga quedan escritos. El porqué
+ *  de cada diferencia va en el ⓘ de la fila (y en el papel, en su renglón). */
 export function AsignacionOficial({ campos }: { campos: string[] }) {
   const oficial = useAsignacionOficial(); const cargas = useCargasAsignacion(); const cargar = useApp(s => s.cargarAsignacion)
   // Cargar la oficial es de quien la reporta (`asignacion:cargar`); los demás ven el cotejo de lo cargado.
@@ -31,8 +35,7 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
   const [texto, setTexto] = useState('')
   const [errores, setErrores] = useState<string[]>([])
   const [hecho, setHecho] = useState<string | null>(null)
-  const [todos, setTodos] = useState(false)
-  const idErrores = useId()
+  const idErrores = useId(), idMotivo = useId()
   // Si cambia el ámbito y el campo elegido ya no está, se toma el primero.
   const campoId = campos.includes(elegido) ? elegido : campos[0]!
   const trim = useAsignacionPorPozo(campoId, mes)
@@ -49,6 +52,8 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
   const comparables = r?.filas.filter(f => f.oficial !== undefined && f.trim !== undefined) ?? []
   const fuera = comparables.filter(f => f.fuera)
   const delta = r ? r.totalOficial - r.totalTrim : 0
+  // Primero las mayores diferencias (así las ordena el cotejo): cinco a la vista y el resto a un toque.
+  const lista = useVerMas(comparables, { n: comparables.length === VISIBLES + 1 ? comparables.length : VISIBLES })
 
   const revisar = async (t: string) => {
     const lr = leerAsignacion(t, { permitidos: campos, cerrados })
@@ -71,7 +76,7 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
   ])
 
   return (
-    <Panel className="mt-2.5" titulo="CUADRE CON LA ASIGNACIÓN OFICIAL" extra="mes cerrado · pozo por pozo">
+    <Panel className="mt-2.5" titulo="CUADRE · ASIGNACIÓN OFICIAL" extra="mes cerrado">
       <Lectura>
         TRIM asigna con el mismo método que la asignación oficial: lo que midió el punto de medición
         oficial, repartido por prueba × factor × horas que cada pozo estuvo abierto (las horas, del
@@ -100,24 +105,25 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
             a.href = URL.createObjectURL(new Blob([plantillaAsignacion(mes, campoId, trim.map(t => t.pozo))], { type: 'text/csv;charset=utf-8' }))
             a.download = `TRIM-asignacion-oficial-${campoId}-${mes}.csv`
             a.click(); URL.revokeObjectURL(a.href)
-          }}><Download className="mr-1 inline size-3.5" />Plantilla de {nombre}</Boton>
+          }}><Download className="mr-1 inline size-3.5" />Plantilla</Boton>
           <SubirCsv onTexto={t => void revisar(t)} onError={m => { setErrores([m]); setHecho(null) }} />
         </>}
       </div>
       {puede ? <>
         {/* El motivo va antes de cargar: un CSV subido se carga en seguida y reemplaza la oficial del mes. */}
-        <label className="mt-2 grid gap-0.5">
-          <span className="text-[10.5px] text-[var(--tinta2)]">Motivo de la carga · obligatorio (queda en el rastro con su nombre y la hora)</span>
-          <input value={motivo} onChange={e => { setMotivo(e.target.value); setErrores([]); setHecho(null) }} aria-label="Motivo de la carga"
-            placeholder="Ej.: asignación de septiembre reportada a la ANH"
-            className="w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento" />
-        </label>
+        <div className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+          <label htmlFor={idMotivo}>Motivo de la carga · obligatorio</label>
+          <Info titulo="Motivo de la carga" texto="Queda en el rastro con su nombre y la hora." />
+        </div>
+        <input id={idMotivo} value={motivo} onChange={e => { setMotivo(e.target.value); setErrores([]); setHecho(null) }} aria-label="Motivo de la carga"
+          placeholder="Ej.: asignación de septiembre reportada a la ANH"
+          className="mt-0.5 w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento" />
         <textarea value={texto} onChange={e => { setTexto(e.target.value); setErrores([]); setHecho(null) }} rows={3} aria-label="Filas de la asignación oficial"
           aria-invalid={errores.length > 0} aria-describedby={errores.length > 0 ? idErrores : undefined}
           placeholder={'O pegue de Excel: mes, campo, pozo, crudo (bbl), horas.\n2026-09  La Ceiba  LC-11  29650  672,5'}
           className="mt-2 w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
         <Boton className="mt-1" onClick={() => void revisar(texto)} disabled={!texto.trim()}>Cotejar</Boton>
-      </> : <div className="mt-2"><Hueco>La asignación oficial la carga producción: aquí se ve el cotejo de lo que ya se cargó.</Hueco></div>}
+      </> : <div className="mt-2"><Hueco>Solo lectura: la carga producción.</Hueco></div>}
       {errores.length > 0 && (
         <ul id={idErrores} role="alert" className="mt-1.5 list-disc pl-4 text-[11.5px] text-[var(--tinta)]">{errores.slice(0, 10).map(e => <li key={e}>{e}</li>)}
           {errores.length > 10 && <li>y {errores.length - 10} más.</li>}</ul>
@@ -125,9 +131,10 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
       {hecho && <p role="status" className="mt-1.5 text-[11.5px] text-[var(--tinta2)]">{hecho}</p>}
 
       {!r ? (
-        <p className="mt-2.5 text-[11.5px] text-[var(--tinta2)]">
-          Sin asignación oficial cargada para {nombre} en {nombreMes(mes)}. TRIM le asigna {n0(trim.reduce((a, t) => a + t.asignado, 0))} bbl
-          entre {plural(trim.length, 'pozo', 'pozos')}: lo que midió el punto de medición oficial.
+        <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-[var(--tinta2)]">
+          <Chip>sin cargar</Chip>
+          <span className="tabular">TRIM asigna {n0(trim.reduce((a, t) => a + t.asignado, 0))} bbl · {plural(trim.length, 'pozo', 'pozos')}</span>
+          <Info titulo={`${nombre} · ${nombreMes(mes)}`} texto="Sin asignación oficial cargada. Lo que asigna TRIM es lo que midió el punto de medición oficial." />
         </p>
       ) : (
         <div className="mt-2.5 text-[11.5px]">
@@ -137,11 +144,11 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
               {grupo && grupo.reemplazados > 0 && <> · reemplazó {plural(grupo.reemplazados, 'pozo', 'pozos')} de una carga anterior</>}.
             </p>
           )}
-          <p className="text-[var(--tinta2)]">
+          <p className="tabular text-[var(--tinta2)]">
             {/* Leídos son los que trae el archivo: los reconocidos más los que TRIM no tiene.
-                Un pozo que TRIM asigna en 0 y no vino en el archivo no se leyó. */}
-            {plural(comparables.length + desconocidos.length, 'pozo leído', 'pozos leídos')} de {nombreMes(mes)}: {plural(comparables.length, 'reconocido', 'reconocidos')}
-            {desconocidos.length > 0 && <> y {desconocidos.length} que TRIM no tiene</>}.
+                Un pozo que TRIM asigna en 0 y no vino en el archivo no se leyó. El mes ya lo dice el selector. */}
+            {plural(comparables.length + desconocidos.length, 'pozo leído', 'pozos leídos')} · {plural(comparables.length, 'reconocido', 'reconocidos')}
+            {desconocidos.length > 0 && <> · {desconocidos.length} que TRIM no tiene</>}
           </p>
           {desconocidos.length > 0 && (
             <p className="mt-1 flex items-start gap-1.5 text-[var(--tinta)]">
@@ -157,15 +164,15 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
             </p>
           )}
           <div className="mt-2 grid gap-x-6 gap-y-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-            <span><small className="block text-[10.5px] text-[var(--tinta3)]">Oficial · {nombreMes(mes)}</small><b className="tabular text-[18px]">{n0(r.totalOficial)} bbl</b></span>
-            <span><small className="block text-[10.5px] text-[var(--tinta3)]">TRIM · lo que midió el punto oficial</small><b className="tabular text-[18px]">{n0(r.totalTrim)} bbl</b></span>
-            <span><small className="block text-[10.5px] text-[var(--tinta3)]">Fuera de la banda del campo (±{n0(banda * 100)} %)</small>
+            <span><small className="block text-[10.5px] text-[var(--tinta3)]">oficial</small><b className="tabular text-[18px]">{n0(r.totalOficial)} bbl</b></span>
+            <span><small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">TRIM<Info titulo="TRIM" texto="Lo que midió el punto de medición oficial en el mes, repartido por prueba × factor × horas." /></small><b className="tabular text-[18px]">{n0(r.totalTrim)} bbl</b></span>
+            <span><small className="block text-[10.5px] text-[var(--tinta3)]">fuera de banda · ±{n0(banda * 100)} %</small>
               <b className="tabular flex items-center gap-1.5 text-[18px]">{fuera.length > 0 && <FueraDeMeta si tamano={12} />}{fuera.length} <small className="text-[11px] font-normal text-[var(--tinta3)]">de {plural(comparables.length, 'pozo cotejado', 'pozos cotejados')}</small></b></span>
           </div>
           {Math.abs(delta) >= 1 && (
-            <p className="mt-1.5 text-[var(--tinta2)]">
-              La oficial suma {n0(Math.abs(delta))} bbl {delta < 0 ? 'menos' : 'más'} que lo que midió el punto de medición oficial en el mes.
-              {faltan.length || desconocidos.length ? ' Primero complete los pozos.' : ' Las dos deberían sumar lo mismo: si no, una usó otro volumen (por ejemplo, un corte de agua de laboratorio corregido).'}
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">
+              <span>La oficial suma {n0(Math.abs(delta))} bbl {delta < 0 ? 'menos' : 'más'} que lo que midió el punto oficial.{faltan.length || desconocidos.length ? ' Primero complete los pozos.' : ''}</span>
+              {!(faltan.length || desconocidos.length) && <Info titulo="Diferencia de totales" texto="Las dos deberían sumar lo mismo: si no, una usó otro volumen (por ejemplo, un corte de agua de laboratorio corregido)." />}
             </p>
           )}
           {comparables.length > 0 && (
@@ -176,24 +183,25 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
                     <th className="px-2 font-normal">Diferencia</th><th className="pl-2 font-normal">Horas oficial · PLC</th></tr>
                 </thead>
                 <tbody>
-                  {(todos ? comparables : comparables.slice(0, VISIBLES)).flatMap(f => [
-                    <tr key={f.pozo} className="border-t border-[var(--linea2)]">
+                  {comparables.map(f => ({ f, oculta: lista.resto.includes(f) })).flatMap(({ f, oculta }) => [
+                    // Las filas que esconde «ver más» y el porqué de cada una salen en el papel.
+                    <tr key={f.pozo} className={`border-t border-[var(--linea2)] ${oculta ? 'hidden print:table-row' : ''}`}>
                       <td className="whitespace-nowrap py-1 pr-3 text-left font-mono">{f.pozo}</td>
                       <td className="whitespace-nowrap px-2">{n0(f.oficial!)}</td>
                       <td className="whitespace-nowrap px-2">{n0(f.trim!)}</td>
-                      <td className="whitespace-nowrap px-2"><span className="inline-flex items-center gap-1"><FueraDeMeta si={f.fuera} tamano={9} />{n0(f.diferencia)}</span></td>
+                      <td className="whitespace-nowrap px-2"><span className="inline-flex items-center gap-1"><FueraDeMeta si={f.fuera} tamano={9} />{n0(f.diferencia)}<Porque pozo={f.pozo} texto={f.motivo} /></span></td>
                       <td className="whitespace-nowrap pl-2 text-[var(--tinta2)]">{f.horasOficial !== undefined ? n1(f.horasOficial) : 'sin dato'} · {n1(f.horasTrim!)}</td>
                     </tr>,
-                    <tr key={`${f.pozo}-por-que`}>
-                      <td colSpan={5} className="pb-1.5 text-left text-[10.5px] text-[var(--tinta2)]">{f.motivo}</td>
+                    <tr key={`${f.pozo}-por-que`} className="hidden print:table-row">
+                      <td colSpan={5} className="pb-1.5 text-left text-[9pt] text-[var(--tinta2)]">{f.motivo}</td>
                     </tr>,
                   ])}
                 </tbody>
               </table>
             </div>
           )}
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {comparables.length > VISIBLES && <Boton onClick={() => setTodos(!todos)}>{todos ? 'Ver solo las mayores diferencias' : `Ver los ${comparables.length} pozos`}</Boton>}
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
+            <VerMas ocultas={lista.ocultas} abierto={lista.abierto} onAlternar={lista.alternar} />
             <Boton onClick={exportar}><Download className="mr-1 inline size-3.5" />Descargar el cotejo</Boton>
           </div>
         </div>
@@ -213,5 +221,17 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
         </details>
       )}
     </Panel>
+  )
+}
+
+/** El porqué de la diferencia de un pozo, a un toque: el ⓘ de `Info` sin su
+ *  nota impresa, porque en el papel el porqué va en su propio renglón de la
+ *  tabla (dentro de la celda rompería el ancho de la columna). */
+function Porque({ pozo, texto }: { pozo: string; texto: string }) {
+  return (
+    <Tip as="span" role="img" aria-label={`${pozo}: ${texto}`} titulo={pozo} filas={[]} pista={texto}
+      className="no-imprimir inline-flex min-h-6 min-w-6 cursor-help items-center justify-center sm:min-h-0 sm:min-w-0">
+      <IconoInfo className="size-3 text-[var(--tinta3)]" aria-hidden />
+    </Tip>
   )
 }

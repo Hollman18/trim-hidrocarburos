@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Plug, KeyRound, Check, Lock } from 'lucide-react'
-import { useApp, useCampo, useRol } from '@/app/store'
+import { useApp, useRol } from '@/app/store'
 import { useRegistro, sugerir, asociarTag, inscribirBorde, type TagPendiente } from '@/shared/api/registro'
 import type { Capacidad } from '@/entities/tipos'
 import { Panel, Metrica, Chip, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
+import { Info } from '@/shared/ui/Info'
 import { cadencia } from '@/entities/cadena'
 import { cn } from '@/shared/lib/cn'
 import { Integraciones } from '@/widgets/conectores/Integraciones'
@@ -21,7 +22,6 @@ const hace = (iso: string) => {
 }
 
 export function Conectores() {
-  const campo = useCampo()
   const rol = useRol()
   const campoId = useApp(s => s.campoId)
   const caps = useMemo(() => (Object.entries(rol.puede) as Array<[Capacidad, boolean]>)
@@ -85,22 +85,25 @@ export function Conectores() {
 
   // SAP y WhatsApp no dependen del registro de los bordes: se muestran aunque este no responda.
   const sistemas = <Integraciones campoId={campoId} />
-  if (error) return <>{sistemas}<Panel titulo="REGISTRO DE LOS BORDES"><Hueco>No se pudo consultar el registro: {error}.</Hueco></Panel></>
-  if (!datos) return <>{sistemas}<Panel titulo="REGISTRO DE LOS BORDES"><p className="text-[12px] text-[var(--tinta3)]">Consultando…</p></Panel></>
+  if (error) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><Hueco>No se pudo consultar el registro: {error}.</Hueco></Panel></>
+  if (!datos) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><p className="text-[12px] text-[var(--tinta3)]">Consultando…</p></Panel></>
 
   const { inv, pend } = datos
   const conSugerencia = pend.filter(t => sugerir(t.tag, inv.equipos))
+  const fila = (t: TagPendiente) => (
+    <FilaPendiente key={t.tag} t={t} equipos={inv.equipos} puede={puede} ocupado={ocupado}
+      onAsociar={(equipo, origen) => asociar(t.tag, equipo, origen)} />
+  )
 
   return (
     <>
       {sistemas}
       <div className="mb-2.5 grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-        <Metrica titulo="BORDES CONECTADOS" valor={String(inv.gateways.length)}
-          pie={<>en {campo.nombre}</>} />
+        <Metrica titulo="BORDES CONECTADOS" valor={String(inv.gateways.length)} />
         <Metrica titulo="TAGS REGISTRADOS" valor={String(inv.tags.total)}
-          pie={<>{inv.tags.total - inv.tags.pendientes} ya asociados a un equipo</>} />
+          pie={`${inv.tags.total - inv.tags.pendientes} asociados`} />
         <Metrica titulo="POR ASOCIAR" valor={String(inv.tags.pendientes)}
-          pie={inv.tags.pendientes ? 'llegaron del borde sin equipo resuelto' : 'ninguno pendiente'} />
+          pie={inv.tags.pendientes ? 'sin equipo resuelto' : undefined} />
         <Metrica titulo="EQUIPOS DEL CAMPO" valor={String(inv.equipos.length)}
           pie="del registro de ingeniería" />
       </div>
@@ -113,7 +116,7 @@ export function Conectores() {
 
       {aviso && <div className="mb-2.5"><Hueco>{aviso}</Hueco></div>}
 
-      <Panel className="mb-2.5" titulo="BORDES CONECTADOS" extra={`${inv.gateways.length} en ${campo.nombre}`}>
+      <Panel className="mb-2.5" titulo="BORDES">
         {inv.gateways.map(g => (
           <div key={g.id} className="flex flex-wrap items-center gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
             <Plug className="size-4 shrink-0 text-[var(--tinta3)]" />
@@ -147,32 +150,30 @@ export function Conectores() {
         ) : (
           <Hueco>
             <Lock className="mr-1 inline size-3.5" />
-            Su rol no inscribe bordes. Lo hace el administrador de la implementación.
+            Su rol no inscribe bordes: lo hace el administrador.
           </Hueco>
         )}
       </Panel>
 
-      <Panel titulo="TAGS POR ASOCIAR" extra={pend.length ? `${pend.length} pendientes` : 'ninguno'}>
+      <Panel titulo="TAGS POR ASOCIAR">
         {pend.length === 0 ? (
           <p className="text-[12px] text-[var(--tinta2)]">
-            Los {inv.tags.total} tags de {campo.nombre} están asociados a un equipo.
+            Los {inv.tags.total} tags tienen equipo.
           </p>
         ) : (
           <>
             {puede && conSugerencia.length > 0 && (
               <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2.5 py-2">
                 <span className="flex-1 text-[11.5px]">
-                  {conSugerencia.length} de {pend.length} tienen una sugerencia por nomenclatura.
+                  {conSugerencia.length} de {pend.length} con sugerencia
                 </span>
                 <Boton variante="principal" disabled={ocupado} onClick={() => aplicarTodas(conSugerencia)}>
                   <Check className="mr-1 inline size-3" />{ocupado ? 'Asociando…' : `Aplicar las ${conSugerencia.length}`}
                 </Boton>
               </div>
             )}
-            {pend.map(t => (
-              <FilaPendiente key={t.tag} t={t} equipos={inv.equipos} puede={puede} ocupado={ocupado}
-                onAsociar={(equipo, origen) => asociar(t.tag, equipo, origen)} />
-            ))}
+            {/* Es una cola de trabajo y «Aplicar las N» asocia todas: se ven todas, sin «ver N más». */}
+            {pend.map(fila)}
           </>
         )}
       </Panel>
@@ -199,9 +200,10 @@ function FilaPendiente({ t, equipos, puede, ocupado, onAsociar }: {
         </small>
       </span>
       {s && (
-        <span className="min-w-[160px] text-[11px] text-[var(--tinta2)]">
+        // Por qué se sugiere (la nomenclatura del tag) va en el ⓘ y en el papel.
+        <span className="flex min-w-[160px] flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
           <Chip tono={s.confianza === 'alta' ? 'fuerte' : 'neutro'}>sugerido {s.codigo}</Chip>
-          <span className="mt-0.5 block text-[10.5px] text-[var(--tinta3)]">{s.razon}</span>
+          <Info titulo={`Sugerido ${s.codigo}`} texto={`Por nomenclatura: ${s.razon}.`} />
         </span>
       )}
       {puede && (

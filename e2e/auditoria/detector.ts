@@ -17,7 +17,10 @@ export type Hallazgo = [tipo: 'pantalla' | 'sale' | 'recortado' | 'encimado', el
 export function detectar(): Hallazgo[] {
   const out: Hallazgo[] = []
   const vw = document.documentElement.clientWidth
-  const raiz = document.getElementById('root')
+  // Con un diálogo modal abierto (la ficha, la introducción) se audita solo el
+  // diálogo: la página sigue dibujada debajo del velo y cada título suyo «pisaba»
+  // a uno de la ficha (decenas de encimados falsos por ruta).
+  const raiz = document.querySelector('[role=dialog][aria-modal="true"]') ?? document.getElementById('root')
   if (!raiz) throw new Error('la página no tiene #root')
   const desc = (e: Element) => {
     const t = (e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 38)
@@ -66,7 +69,9 @@ export function detectar(): Hallazgo[] {
     const a = contenedor(el)
     if (!a) continue
     const ca = getComputedStyle(a)
-    if (ca.overflowX === 'auto' || ca.overflowX === 'scroll') continue
+    // Se salta un desplazable solo si de verdad se desplaza de lado: el de la ficha
+    // (overflow-y: auto, que computa overflow-x: auto) dejaba todo su contenido sin revisar.
+    if ((ca.overflowX === 'auto' || ca.overflowX === 'scroll') && a.scrollWidth > a.clientWidth + 1) continue
     const ra = a.getBoundingClientRect()
     const sale = Math.max(r.right - ra.right, ra.left - r.left)
     const elipsis = cs.textOverflow === 'ellipsis'

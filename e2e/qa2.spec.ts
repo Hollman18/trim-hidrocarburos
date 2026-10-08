@@ -23,7 +23,8 @@ test('atrás tras una redirección y meses que heredan', async ({ flujo: f }) =>
     f.ok(t.includes('La Ceiba, desde el 1 de dic de 2026'), 'volver diciembre a 10.900 sí queda como cambio (no se pierde)')
     await f.escribir('textarea[aria-label="Filas del presupuesto"]', 'Mes;Campo;Producción\nnov-26;La Ceiba;352.000;750'); await f.clic('Revisar'); await f.esperar(300)
     t = await f.texto()
-    f.ok(t.includes('veces') && t.includes('del mes'), 'avisa que 352.000 bbl/d parece una cifra del mes')
+    // Antes «veces» y «del mes» sueltos: los cumplían otros textos de la pantalla.
+    f.ok(/veces la meta de hoy/.test(t) && t.includes('son del mes y no bbl/d'), 'avisa que 352.000 bbl/d parece una cifra del mes')
   })
 
   f.cerrar()

@@ -71,12 +71,21 @@ export function Proyeccion({ s }: { s: Senal }) {
       {/* eje del tiempo */}
       <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea2)" strokeWidth={0.8} />
       <text x={G.x0} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta3)">hace {dias(ahora)} d</text>
-      <text x={X(ahora)} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta2)" fontWeight={600}
-        textAnchor={cruza ? 'middle' : 'end'}>hoy</text>
-      {cruza && (
+      {cruza && G.x1 - X(ahora) < 46 ? (
+        // Un cruce muy cerca de hoy dejaba «hoy» encima de «+0,2 d»: van juntos, al final del eje.
         <text x={G.x1} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta3)" textAnchor="end">
-          +{dias(finT - ahora)} d
+          <tspan fill="var(--tinta2)" fontWeight={600}>hoy</tspan> · +{dias(finT - ahora)} d
         </text>
+      ) : (
+        <>
+          <text x={X(ahora)} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta2)" fontWeight={600}
+            textAnchor={cruza ? 'middle' : 'end'}>hoy</text>
+          {cruza && (
+            <text x={G.x1} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta3)" textAnchor="end">
+              +{dias(finT - ahora)} d
+            </text>
+          )}
+        </>
       )}
     </svg>
   )

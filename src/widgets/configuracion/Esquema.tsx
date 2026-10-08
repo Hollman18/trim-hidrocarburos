@@ -6,6 +6,7 @@ import { pedirCatalogoEquipos } from '@/shared/api/equipos'
 import type { Elemento, Miembro, Simbolo } from '@/entities/planta'
 import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
+import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
 import { fechaHora } from '@/entities/reloj'
 
@@ -140,9 +141,9 @@ function Conjunto({ grupo, puede, onAgregar, onQuitar }: {
         </div>
       ))}
       {grupo.restantes && (
-        <p className="pt-2 text-[11px] text-[var(--tinta3)]">
-          + {grupo.restantes.cuantos} {grupo.restantes.etiqueta} sin detallar. En el esquema salen
-          agrupados en un solo nodo.
+        <p className="flex flex-wrap items-center gap-x-1 pt-2 text-[11px] text-[var(--tinta3)]">
+          + {grupo.restantes.cuantos} {grupo.restantes.etiqueta} sin detallar
+          <Info titulo="Sin detallar" texto="En el esquema salen agrupados en un solo nodo." />
         </p>
       )}
       {puede && (

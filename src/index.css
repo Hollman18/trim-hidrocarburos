@@ -185,7 +185,11 @@ body{
   [data-panel-equipo] { position: static !important; display: block !important; }
   [data-panel-equipo] aside { position: static !important; width: 100% !important; height: auto !important; border: 0 !important; }
   [data-panel-equipo] aside, [data-panel-equipo] aside * { overflow: visible !important; max-height: none !important; }
-  section, .rounded.border, svg { break-inside: avoid; }
+  /* Un panel largo se parte entre filas: entero saltaba a la hoja siguiente y dejaba
+     la primera casi en blanco (Planta, Conectores). No se parten el dibujo, una
+     tarjeta chica, una fila ni el título de un panel con lo que sigue. */
+  .rounded.border:not(section), svg, tr, section .border-b { break-inside: avoid; }
+  section > header { break-after: avoid; }
   /* Lo que en pantalla se desplaza de lado, en el papel cabe completo. */
   .overflow-x-auto { overflow: visible !important; }
   .overflow-x-auto > svg, .overflow-x-auto > table { min-width: 0 !important; width: 100% !important; }

@@ -1,3 +1,4 @@
+import { BadgeCheck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '@/app/store'
 import type { Pregunta } from '@/entities/libro'
@@ -114,9 +115,15 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
       aria-label={`Chat de WhatsApp de ${persona.nombre}`}>
       <div className="flex items-center gap-2 border-b border-[var(--linea)] bg-[var(--panel2)] px-3 py-2">
         <span className="grid size-7 place-items-center rounded-full border border-[var(--linea)] bg-[var(--panel)] text-[11px] font-semibold">T</span>
+        {/* Como en WhatsApp: «verificada» es la insignia junto al nombre (el lector la oye
+            escrita). Así el segundo renglón alcanza para el número, que antes se cortaba. */}
         <span className="min-w-0 flex-1 leading-tight">
-          <b className="block truncate text-[12px]">TRIM · {campoPorId(p.campoId).nombre}</b>
-          <small className="block truncate text-[10px] text-[var(--tinta3)]">cuenta de empresa verificada · a {persona.nombre}, {persona.telefono ? telefonoLegible(persona.telefono) : 'sin número'}</small>
+          <span className="flex min-w-0 items-center gap-1">
+            <b className="truncate text-[12px]">TRIM · {campoPorId(p.campoId).nombre}</b>
+            <span title="cuenta de empresa verificada" className="inline-flex shrink-0"><BadgeCheck className="size-3 text-[var(--tinta3)]" aria-hidden /></span>
+            <span className="sr-only">cuenta de empresa verificada</span>
+          </span>
+          <small className="block truncate text-[10px] text-[var(--tinta3)]">a {persona.nombre} · {persona.telefono ? telefonoLegible(persona.telefono) : 'sin número'}</small>
         </span>
       </div>
       {/* Enfocable: el historial se desplaza y con teclado tiene que poder recorrerse. */}

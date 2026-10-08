@@ -48,26 +48,35 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: string
     /CIERRE PROYECTADO[\s\S]{0,40}producción[\s\S]{0,40}meta 1\.[\d.]+[\s\S]{0,60}diferido[\s\S]{0,40}máx\. [\d.]+/i],
     no: [...NO_DECISION, 'QUIÉN SE LOS LLEVA', 'Si todo sigue como está ahora', 'A la fecha:'] },
   '#/ger/resumen/ceiba/curso': { si: ['barriles diferidos', 'POR EQUIPO', 'bbl · calculado', 'Mantenimiento proactivo'], no: NO_DECISION },
-  '#/ger/diferidos/ceiba/curso': { si: ['MES A MES', 'DÓNDE SE PUEDE BAJAR'], no: NO_DECISION },
-  '#/ger/produccion/ceiba/curso': { si: ['DÍA A DÍA'], no: [...NO_DECISION, 'PUNTO DE MEDICIÓN OFICIAL', 'CUADRE CON LA ASIGNACIÓN OFICIAL'] },
-  '#/ger/configuracion/ceiba/curso': { si: ['METAS DE LOS CAMPOS', 'Meta global', 'FIRMAR LA VERSIÓN', 'Usuarios y accesos'], no: ['TANQUES DE AGUA', 'PROGRAMA DE PARADAS APROBADO', 'LO QUE NO SE CONFIGURA', 'Configuración técnica'] },
+  '#/ger/diferidos/ceiba/curso': { si: ['MES A MES', 'DÓNDE BAJARLO'], no: NO_DECISION },
+  '#/ger/produccion/ceiba/curso': { si: ['DÍA A DÍA'], no: [...NO_DECISION, 'MEDICIÓN OFICIAL', 'ASIGNACIÓN OFICIAL'] },
+  // RegExp: en minúsculas «metas por campo» lo trae el motivo de la versión 1 y la aserción pasaría sin el panel.
+  '#/ger/configuracion/ceiba/curso': { si: [/METAS POR CAMPO/, 'Meta global', 'FIRMAR LA VERSIÓN', 'Usuarios y accesos'], no: ['TANQUES DE AGUA', 'PARADAS PROGRAMADAS', 'NO SE CONFIGURA', 'Configuración técnica'] },
   '#/prod/esp/palmar/curso': { si: ['no tiene electrosumergibles en su perfil', 'Todos'], no: ['Electrosumergible con aviso'] },
   '#/prod/planta/palmar/curso': { si: ['CAPTURANDO DATOS', 'no tiene tren de gas'], no: ['TREN DE GAS'] },
-  '#/adm/configuracion/ceiba/curso': { si: ['TANQUES DE AGUA', 'MEMBRETE DE LOS INFORMES', 'Metas de los campos'], no: ['Meta global'] },
+  '#/adm/configuracion/ceiba/curso': { si: ['TANQUES DE AGUA', 'MEMBRETE DEL INFORME', 'Metas de los campos'], no: ['Meta global'] },
   '#/ger/resumen/ceiba/cerrado/P-201B': { si: ['Qué se está haciendo', 'Le ha costado', 'pozos cerrados desde'], no: NO_DECISION },
   '#/oper/bombas/ceiba/curso': { si: ['No arrancar'], no: ['Energía por barril', 'acumulado'] },
-  '#/sup/bombas/ceiba/curso [detalle]': { si: ['MIENTRAS ESTÉ PARADA', 'ÚLTIMAS PARADAS', 'No arrancar hasta identificar'], no: ['VIGÍA', 'SALUD POR PARTE', 'SUPUESTOS', 'Energía por barril', 'Método de la tolerancia'] },
+  // Los «no» van en minúsculas: en ingeniería «supuestos» y «tolerancia» son ahora rótulos de ⓘ.
+  '#/sup/bombas/ceiba/curso [detalle]': { si: ['MIENTRAS ESTÉ PARADA', 'ÚLTIMAS PARADAS', 'No arrancar hasta identificar'], no: ['VIGÍA', 'SALUD POR PARTE', 'supuestos', 'Energía por barril', 'tolerancia'] },
   '#/sup/pozos/ceiba/curso': { si: ['POZOS'], no: ['Custodia', 'Sin custodia completa'] },
-  '#/conf/bombas/morichal/curso [detalle]': { si: ['VIGÍA', 'SALUD POR PARTE', 'SI SE PARA AHORA', 'SUPUESTOS'], no: [] },
-  '#/prod/produccion/ceiba/curso': { si: ['PUNTO DE MEDICIÓN OFICIAL', 'FACTOR DE ASIGNACIÓN', 'CUADRE CON LA ASIGNACIÓN OFICIAL', 'septiembre de 2026'], no: [] },
+  // RegExp: «Si se para ahora» también es la cifra de la cabecera del detalle; el panel es el título.
+  '#/conf/bombas/morichal/curso [detalle]': { si: ['VIGÍA', 'SALUD POR PARTE', /SI SE PARA AHORA/, 'SUPUESTOS'], no: [] },
+  // El título al comienzo del renglón: no lo confunde con «CUADRE · MEDICIÓN OFICIAL».
+  // El mes que se coteja ya no va escrito aparte: solo en las opciones de la lista, que Safari y
+  // Firefox no cuentan como texto visible. Que se ofrezca septiembre y no el mes en curso lo prueba carril.spec.
+  '#/prod/produccion/ceiba/curso': { si: [/(?:^|\n)MEDICIÓN OFICIAL/, 'FACTOR DE ASIGNACIÓN', 'CUADRE · ASIGNACIÓN OFICIAL'], no: [] },
   // «no arrancar» sigue a la vista (procedimiento); los pozos que cerró P-201B llevan «parte por
   // identificar», no «sin identificar», como si su parada no tuviera causa.
   '#/sup/turno/ceiba/curso': { si: ['pozos cerrados por P-201B', 'WHATSAPP DEL TURNO', 'escalado', 'no arrancar', 'parte por identificar'], no: ['(sin identificar)', 'preguntarle al operario', 'LO QUE TRIM MANDÓ'] },
   '#/jefe/riesgo/ceiba~portafolio/curso': { si: ['PERDIÉNDOSE AHORA', 'EN RIESGO', 'cruza en', 'qué hacer', 'bbl por falla', 'bbl si fallan', /ver \d+ más/i], no: ['LO QUE SE PUEDE EVITAR', 'ordenado por cuándo', 'Qué hacer:'] },
-  '#/oper/causa/ceiba/curso': { si: ['WHATSAPP · LO QUE MANDÓ TRIM', 'Lo que más ha fallado en este equipo', 'Ver mi chat de WhatsApp', 'sin respuesta', 'No fue la electrosumergible', 'demo'], no: ['Lo que sugiere la señal (', 'Demo · simular', 'en este demo'] },
+  // La regla de operación va en la franja: sus dos frases (los chips «no arrancar» no las satisfacen).
+  '#/oper/causa/ceiba/curso': { si: [/\d\d:\d\d pregunta → \d\d:\d\d recordatorio/, 'Pista · historia del equipo', /· \d+ de \d+ fallas?/, 'Ver mi chat de WhatsApp', 'sin respuesta', 'No fue la electrosumergible', 'No arrancar hasta identificar el daño', 'si arranca antes: no conformidad', 'demo'],
+    no: ['señal e historia', 'LO QUE DIJO LA SEÑAL', 'Regla de operación:', 'Demo · simular', 'en este demo'] },
   '#/tec/trabajo/ceiba/curso': { si: ['ÓRDENES EN SAP', 'a su nombre', 'TRIM le avisó por WhatsApp', 'vea «Órdenes en SAP»'], no: ['no está conectado', 'la primera en ya fuera'] },
   '#/conf/confiabilidad/morichal/curso': { si: ['REPARACIÓN ACTIVA Y ESPERA', '¿ACIERTA EL VIGÍA?', 'LO QUE ANUNCIÓ Y EN QUÉ QUEDÓ', 'Fallas anticipadas', 'Se le escaparon'], no: ['ninguna ha vencido', 'no se afirma'] },
-  '#/jefe/mantenimiento/ceiba/curso': { si: ['HORAS DE MANTENIMIENTO · SAP', 'ABIERTO EN SAP'], no: [': ya fuera de límite', 'En este demo'] },
-  '#/adm/conectores/ceiba/curso': { si: ['SISTEMAS DE LA EMPRESA', 'trim_que_se_dano', 'conectado', 'CATÁLOGOS DE DAÑO'], no: ['en este demo'] },
-  '#/sup/bombas/ceiba/curso/P-201B': { si: ['No arrancar hasta identificar'], no: ['HISTORIA DEL PLC', 'Modo de falla'] },
+  '#/jefe/mantenimiento/ceiba/curso': { si: ['HORAS EN SAP', 'ABIERTO EN SAP'], no: [': ya fuera de límite', 'En este demo'] },
+  '#/adm/conectores/ceiba/curso': { si: ['SISTEMAS CORPORATIVOS', 'trim_que_se_dano', 'conectado', 'CATÁLOGOS DE DAÑO'], no: ['en este demo'] },
+  // «qué se dañó»: solo lo dice la ficha (la placa de detrás también dice «No arrancar hasta identificar»).
+  '#/sup/bombas/ceiba/curso/P-201B': { si: ['No arrancar hasta identificar qué se dañó'], no: ['HISTORIA DEL PLC', 'Modo de falla'] },
 }

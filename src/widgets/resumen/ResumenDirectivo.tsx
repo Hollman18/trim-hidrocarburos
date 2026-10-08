@@ -14,11 +14,11 @@ import { Boton, Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { Lectura } from '@/shared/ui/Lectura'
-import { MarcaPrioridad, FueraDeMeta } from '@/shared/ui/Prioridad'
+import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { n0, usd, diaIso, plural } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { Rango } from '@/widgets/diferidos/Rango'
-import { publicacion } from '@/widgets/diferidos/publicacion'
+import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { alFinal } from '@/shared/ui/alFinal'
 
 const D = 86_400_000
@@ -43,9 +43,6 @@ export function ResumenDirectivo() {
   const servicios = riesgo.filter(r => r.estado === 'en-riesgo' && !r.altoImpacto)
   const estados = useEstadoCampos(ids)
   const parados = estados.reduce((a, e) => a + e.parados, 0), pozos = estados.reduce((a, e) => a + e.pozos, 0)
-  // Un mes en curso nunca se puede publicar: eso se dice en neutro. El
-  // cuadrado se reserva para lo que de verdad impide publicar.
-  const pub = publicacion(lb)
   const sinPrecio = lb.sinPrecio.map(c => campoPorId(c).nombre)
   const dias = Math.max(1 / 24, lb.meta.dias)
   const realDia = lb.real / dias, difDia = lb.brecha / dias
@@ -91,15 +88,9 @@ export function ResumenDirectivo() {
     <>
       <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          {/* El período ya lo dice la cabecera; en el teléfono la cabecera lo corta, y aquí queda. */}
-          <small className="text-[11px] tracking-[.04em] text-[var(--tinta3)] sm:hidden print:block">{rango.nombre.toUpperCase()}</small>
-          <Tip titulo={pub.estado === 'publicable' ? 'Se puede publicar' : pub.estado === 'provisional' ? 'Provisional' : 'Todavía no se puede publicar'}
-            pista={pub.texto} filas={[]}
-            className="ml-auto inline-flex items-center gap-1.5">
-            {pub.estado === 'publicable' ? <Chip>✓ PUBLICABLE</Chip>
-              : pub.estado === 'provisional' ? <Chip>PROVISIONAL</Chip>
-                : <><FueraDeMeta si tamano={11} /><Chip tono="fuerte">NO PUBLICABLE</Chip></>}
-          </Tip>
+          {/* El período lo dice la cabecera (también en el teléfono y en el papel). La
+              publicación, como en el libro de diferidos: si no se puede, se ve por qué. */}
+          <SelloPublicacion lb={lb} className="ml-auto" />
         </div>
         <div className="mt-1.5 flex flex-wrap items-end gap-x-8 gap-y-2">
           <span>
@@ -110,7 +101,7 @@ export function ResumenDirectivo() {
           <span className="pb-1">
             <b className="tabular block text-[22px] leading-none">{dinero ? `${dinero.valor} ${dinero.unidad}` : 'sin precio'}</b>
             <small className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta3)]">
-              {dinero && sinPrecio.length ? `valor · sin ${sinPrecio.join(', ')}` : 'valor'}
+              {dinero && sinPrecio.length ? `valor · falta precio en ${sinPrecio.join(', ')}` : 'valor'}
               {!dinero && <Info titulo="Sin precio" texto="Falta el precio neto en la configuración." />}
               {dinero && sinPrecio.length > 0 && <Info titulo="Valor" texto={`Sin contar los días sin precio de ${sinPrecio.join(', ')}.`} />}
             </small>
@@ -287,6 +278,7 @@ export function Tendencia({ serie, desde, hasta, onMes }: {
   const paso = (G.x1 - G.x0) / Math.max(1, pts.length)
   const ancho = paso * 0.6
   return (
+    <>
     <div ref={alFinal} className="mt-2 overflow-x-auto">
       <svg viewBox={`0 0 ${W} 118`} className="block h-auto w-full min-w-[420px]" role="group" aria-label="Diferido por día de cada mes contra su máximo firmado">
         <text x={G.x0} y={10} fontSize={10} fill="var(--tinta3)">bbl/d</text>
@@ -313,12 +305,14 @@ export function Tendencia({ serie, desde, hasta, onMes }: {
         })}
         <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" />
       </svg>
+    </div>
+      {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba. */}
       <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
         <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />alto impacto</span>
         <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-5)]" />lo demás</span>
-        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.3" strokeDasharray="3 2" /></svg>máximo de diferido firmado</span>
-        <span className="inline-flex items-center gap-1.5"><svg width="8" height="8" aria-hidden><rect x="0.5" y="0.5" width="7" height="7" rx="0.8" fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} /></svg>mes que lo pasó</span>
+        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.3" strokeDasharray="3 2" /></svg>máximo firmado</span>
+        <span className="inline-flex items-center gap-1.5"><svg width="8" height="8" aria-hidden><rect x="0.5" y="0.5" width="7" height="7" rx="0.8" fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} /></svg>pasó el máximo</span>
       </div>
-    </div>
+    </>
   )
 }

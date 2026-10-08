@@ -74,6 +74,10 @@ export interface Causa {
   como: ComoSeIdentifico
   /** Tags y hechos que la sostienen: la cadena de custodia de la causa. */
   evidencia: string[]
+  /** Con `como: 'ninguno'`: por qué ninguna señal alcanzó. Va también como último
+   *  renglón de `evidencia`, que es la cadena de custodia y no cambia; la pantalla
+   *  lo lee de aquí y no por su lugar en la lista. */
+  porQueNo?: string
   /** Evento que la produjo (parada de bomba o de servicio). */
   evento?: string
   texto: string
@@ -215,8 +219,9 @@ function deducirParada(ev: EventoBomba, ctx: Contexto): Causa {
   const r = respuestaDe(ctx, ev.id)
   if (r) return { tipo, equipo: ev.equipo, parte: r.parte, como: 'declarado', evento: ev.id, declarado: r,
     evidencia: [...conAlarma, `Declarado por ${r.por} · ${hora(r.hora)}`], texto: r.texto }
-  return { tipo, equipo: ev.equipo, como: 'ninguno', evento: ev.id,
-    evidencia: [...conAlarma, alarma ? 'Sin firma: el PLC no dice qué parte falló' : 'Sin primera alarma y sin firma: el PLC no dice qué parte falló'],
+  const porQueNo = alarma ? 'Sin firma: el PLC no dice qué parte falló' : 'Sin primera alarma y sin firma: el PLC no dice qué parte falló'
+  return { tipo, equipo: ev.equipo, como: 'ninguno', evento: ev.id, porQueNo,
+    evidencia: [...conAlarma, porQueNo],
     texto: alarma ? 'Paró con una alarma que no señala una parte: hay que identificar qué se dañó' : 'Paró sin primera alarma: hay que identificar qué se dañó' }
 }
 
@@ -289,8 +294,9 @@ function deducirEvento(ev: EventoPozo, ctx: Contexto): Causa {
   if (r) return { tipo: 'declarada', equipo: ev.pozo, como: 'declarado', evento: ev.id, declarado: r,
     evidencia: [...base, `Declarado por ${r.por} · ${hora(r.hora)}`], texto: r.texto }
   // 6. Nada lo explica.
-  return { tipo: 'pendiente', equipo: ev.pozo, como: 'ninguno', evento: ev.id,
-    evidencia: [...base, 'Ningún servicio caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla'],
+  const porQueNo = 'Ningún servicio caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla'
+  return { tipo: 'pendiente', equipo: ev.pozo, como: 'ninguno', evento: ev.id, porQueNo,
+    evidencia: [...base, porQueNo],
     texto: 'Ninguna señal explica por qué paró: hay que identificarlo' }
 }
 

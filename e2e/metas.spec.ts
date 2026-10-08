@@ -18,7 +18,8 @@ test('metas firmadas y accesos', async ({ flujo: f }) => {
     f.ok(t.includes('La Ceiba, desde el 1 de oct de 2026: producción 10.900 → 11.200 bbl/d'), 'la firma lista el cambio con su fecha')
     await f.clic('Firmar como')
     t = await f.texto()
-    f.ok(/motivo/i.test(t), 'sin motivo no se puede firmar (el botón lo pide)')
+    // Antes /motivo/i: cualquier rótulo con «motivo» lo cumplía aunque no saliera el error.
+    f.ok(t.includes('Falta el motivo'), 'sin motivo no se puede firmar (y se dice)')
     await f.escribir('input[placeholder^="Ej.: metas acordadas"]', 'Comité de producción de octubre')
     await f.clic('Firmar como'); await f.esperar(500)
     t = await f.texto()
@@ -90,14 +91,14 @@ test('metas firmadas y accesos', async ({ flujo: f }) => {
   await test.step('Permisos', async () => {
     await f.ir('#/adm/configuracion/ceiba/curso'); await f.esperar(300)
     t = await f.texto()
-    f.ok(t.includes('TANQUES DE AGUA') && t.includes('MEMBRETE DE LOS INFORMES'), 'el administrador ve lo técnico')
+    f.ok(t.includes('TANQUES DE AGUA') && t.includes('MEMBRETE DEL INFORME'), 'el administrador ve lo técnico')
     await f.clic('Metas de los campos'); await f.esperar(300)
     t = await f.texto()
     f.ok(t.includes('los fija y firma el gerente de activo')
       && await f.page.evaluate(() => document.querySelector<HTMLInputElement>('input[aria-label="Meta de producción de La Ceiba, bbl/d"]')?.disabled === true), 'y las metas las ve sin poder cambiarlas')
     await f.clic('Usuarios y accesos'); await f.esperar(300)
     t = await f.texto()
-    f.ok(t.includes('Los accesos los da el gerente de activo') && !t.includes('Invitar a una persona'), 'los accesos, igual: solo lectura')
+    f.ok(t.includes('Solo lectura: los da el gerente de activo') && !t.includes('Invitar a una persona'), 'los accesos, igual: solo lectura')
   })
 
   f.cerrar()

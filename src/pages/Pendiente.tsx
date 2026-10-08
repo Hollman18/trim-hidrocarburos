@@ -10,12 +10,9 @@ export const Pendiente = () => {
   return (
     <Panel titulo="PENDIENTE DE PORTAR">
       <p className="text-[13px]">
-        <b>{p?.titulo}</b> está diseñada y validada en el prototipo, y aún no se ha portado a este proyecto.
+        <b>{p?.titulo}</b>: validada en el prototipo, falta portarla.
       </p>
-      <Cita>
-        Mientras tanto, el diferido y la condición de los equipos de esta área se consultan desde
-        las pantallas de riesgo y de diferidos.
-      </Cita>
+      <Cita>Mientras tanto: Riesgo y Diferidos.</Cita>
     </Panel>
   )
 }

@@ -112,13 +112,13 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
         </svg>
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
-        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />identificado por señal</span>
-        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-3)]" />declarado por el operario</span>
+        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />por señal</span>
+        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-3)]" />declarado</span>
         <span className="inline-flex items-center gap-1.5">
           <svg width="10" height="10" aria-hidden><rect width="10" height="10" fill={`url(#sin-${id})`} stroke="var(--tinta3)" strokeWidth="1" /></svg>sin identificar
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.4" strokeDasharray="4 2" /></svg>máximo firmado del mes
+          <svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.4" strokeDasharray="4 2" /></svg>máximo firmado
         </span>
         <span className="inline-flex items-center gap-1.5">
           <svg width="8" height="8" aria-hidden><rect x="0.5" y="0.5" width="7" height="7" rx="0.8" fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} /></svg>pasó el máximo
@@ -127,7 +127,9 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
       <Lectura>
         Cada columna es un mes. Lo oscuro tiene causa probada por una señal (código del controlador,
         primera alarma del PLC, firma o programa); lo gris claro lo declaró un operario porque la
-        señal no alcanzaba; lo rayado nadie lo ha identificado todavía. La raya es el máximo de diferido que firmó el gerente para ese mes. Los meses del período que está mirando van al frente{onMes ? '; un clic en un mes lo abre' : ''}.
+        señal no alcanzaba; lo rayado nadie lo ha identificado todavía. La raya es el máximo de
+        diferido que firmó el gerente para ese mes. Los meses del período que está mirando van al
+        frente. Toque o pase el cursor por un mes para ver sus cifras{onMes ? '; un clic lo abre' : ''}.
       </Lectura>
     </>
   )

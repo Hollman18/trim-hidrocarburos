@@ -28,7 +28,9 @@ function oirErrores(page: Page, donde: () => string) {
 
 test('autoprueba: el detector ve lo que se sale y lo que se pisa', async ({ page }) => {
   // Se plantan dos defectos conocidos dentro de la placa de una bomba: un
-  // valor que se sale de su tarjeta y dos textos encimados.
+  // valor que se sale de su tarjeta y dos textos encimados. Sin la introducción
+  // abierta: con un diálogo modal encima, el detector revisa solo el diálogo.
+  await page.addInitScript(() => localStorage.setItem('trim.intro.sup', '1'))
   await page.goto('/#/sup/bombas/ceiba/curso')
   const placa = page.locator('[aria-label*="Abrir el detalle"]').first()
   await expect(placa, 'la pantalla de bombas tiene al menos una placa donde plantar los defectos').toBeAttached()
@@ -99,7 +101,9 @@ for (const ancho of ANCHOS) {
         // Se comprueba antes de cerrar: hay rutas que abren el panel del equipo por la URL.
         await asertar(ruta)
         const cerrar = page.locator('[aria-label="Cerrar"][class*="cursor-pointer"], [role=dialog] [aria-label="Cerrar"]').first()
-        if (await cerrar.count()) { await cerrar.click(); await esperar(page, 250) }
+        // La ficha abierta también se audita: antes se cerraba sin revisarla y un texto
+        // encimado en ella («hoy» sobre «+0,2 d») pasaba sin que nadie lo viera.
+        if (await cerrar.count()) { await detectarEn(`${ruta} [ficha]`); await cerrar.click(); await esperar(page, 250) }
         await detectarEn(ruta)
         if (ABRIR_FILA.has(ruta)) {
           // La primera fila que se ve: en el teléfono la tabla se esconde y

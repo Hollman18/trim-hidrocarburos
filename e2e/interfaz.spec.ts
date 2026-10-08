@@ -36,7 +36,8 @@ for (const ancho of [390, 1280]) {
 
       // Se usa: pasar de paso y cerrar con su botón.
       await intro.getByRole('button', { name: /Siguiente/ }).click()
-      await intro.getByRole('button', { name: 'Cerrar' }).click()
+      // Exacto: un nombre de pantalla de la lista también dice «cerrar» («…en qué orden cerrar pozos»).
+      await intro.getByRole('button', { name: 'Cerrar', exact: true }).click()
       await expect(intro, '«Cerrar» de la introducción la cierra').toHaveCount(0)
 
       // El control vuelve a la ficha, que ahora aísla y tiene el foco.
@@ -170,6 +171,100 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
   f.ok(t.includes('Jairo Peña') && t.includes('Se cerró porque'), 'Turno: a quién le llegó cada WhatsApp y la causa de las paradas nuevas salen escritos')
+
+  // Identificar: «ver N más» esconde declaradas en la pantalla y en el papel salen todas.
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/jefe/causa/ceiba~portafolio/curso')
+  const declaradas = () => f.page.evaluate(() => [...document.querySelectorAll('main [data-declarada]')].filter(e => e.checkVisibility()).length)
+  const total = await f.page.evaluate(() => document.querySelectorAll('main [data-declarada]').length)
+  const ocultas = Number((await f.texto()).match(/ver (\d+) más/)?.[1] ?? 0)
+  f.ok(ocultas > 0 && await declaradas() === total - ocultas, `Identificar: «ver ${ocultas} más» esconde ${ocultas} de ${total} declaradas en la pantalla`)
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(await declaradas() === total && !/ver \d+ más/.test(t), 'Identificar: en el papel salen todas las declaradas, y el botón no')
+  f.ok(t.includes('Regla de operación: Un pozo o una bomba') && /pregunta: Jairo Peña/.test(t) && t.includes('Sin destinatario: Nadie de este campo')
+    && t.includes('Por qué no alcanzó la señal:'), 'Identificar: la regla, a quién le llegó cada WhatsApp, el hueco de WhatsApp y el porqué de la señal salen escritos')
+
+  // Diferidos del portafolio, 12 meses: el motivo de «no publicable» y todos los equipos van al papel.
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/ger/diferidos/ceiba~portafolio/doce')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('Todavía no se puede publicar') && !/ver \d+ más/.test(t), 'Diferidos: por qué no se puede publicar y todas las filas, sin el botón')
+
+  // Conectores, metas y permisos: lo que quedó en un ⓘ, un globo o detrás de «ver N más».
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/adm/conectores/ceiba/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('trim_orden_liberada') && t.includes('Avisos: Con su evidencia') && !/ver \d+ más/.test(t), 'Conectores: la plantilla escondida y el ⓘ de los avisos salen en el papel')
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/ger/configuracion/ceiba/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('Rige desde: 1 de oct de 2025') && t.includes('Desde cuándo rige: Lo que va del mes se medirá con lo nuevo'), 'Metas: desde cuándo rige cada meta sale en el papel')
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/adm/perfil/ceiba/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('Firmar la configuración técnica: tanques, respaldos de bombas'), 'Mi perfil: el nombre completo de cada permiso sale en el papel')
+
+  // Planta: el contenido de «Capacidad por tren» sale en el papel, y no el control.
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/prod/planta/ceiba/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(/Capacidad por tren[\s\S]{0,60}Crudo/.test(t) && !t.includes('▾'), 'Planta: la capacidad por tren sale escrita y el desplegable no')
+
+  // El papel de la demostración lo dice (también sin folio, con su período).
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/ger/resumen/ceiba~portafolio/curso')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(t.includes('DATOS DE DEMOSTRACIÓN'), 'el membrete marca los datos de demostración')
+  f.ok(t.includes('Impresión sin folio') && /Portafolio · Octubre, en curso · \d+ de \w+ de \d{4} a/.test(t), 'el membrete sin folio lleva el período')
   await f.page.emulateMedia({ media: 'screen' })
   f.cerrar()
+})
+
+// Un período parcial lo dice en la cabecera (ya no existe el chip «PERÍODO EN CURSO»).
+test('año a la fecha: la cabecera dice que está en curso', async ({ flujo: f }) => {
+  await f.abrir('/#/ger/resumen/ceiba~portafolio/ytd')
+  // «en curso» lleva espacio duro (no se parte en el teléfono): se compara normalizado.
+  const etiqueta = (await f.page.locator('header button[aria-label^="Período"]').first().getAttribute('aria-label'))?.replace(/\u00a0/g, ' ')
+  f.ok(etiqueta === 'Período: Año a la fecha, en curso', `el botón dice «en curso» (${etiqueta})`)
+  f.cerrar()
+})
+
+// Introducción: un segundo Enter no se salta la lista de pantallas.
+base('introducción: tras «Siguiente» el foco va a la primera pantalla', async ({ page }) => {
+  await page.goto('/#/sup/bombas/ceiba/curso')
+  const intro = page.locator('[role=dialog][aria-label="Introducción"]')
+  await intro.getByRole('button', { name: /Siguiente/ }).focus(); await page.keyboard.press('Enter')
+  await expect.poll(() => page.evaluate(() => document.activeElement?.closest('[role=dialog]') ? (document.activeElement?.textContent ?? '') : '')).not.toBe('')
+  expect(await page.evaluate(() => document.activeElement?.tagName), 'el foco queda en un botón de la lista de pantallas').toBe('BUTTON')
+  expect(await page.evaluate(() => /Siguiente|Cerrar/.test(document.activeElement?.textContent ?? '')), 'y no en «Siguiente» ni «Cerrar»').toBe(false)
+})
+
+// En el teléfono el período se ve entero (antes el subtítulo lo cortaba y el calendario era solo un ícono).
+for (const ancho of [390, 320]) {
+  base(`teléfono ${ancho} px: la cabecera dice el período sin cortarlo`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: 860 })
+    await page.addInitScript(() => localStorage.setItem('trim.intro.ger', '1'))
+    await page.goto('/#/ger/resumen/ceiba~portafolio/curso')
+    // La cabecera va fuera de <main>; «en curso» lleva espacio duro (\s lo incluye).
+    const linea = page.locator('header p').filter({ hasText: /en\s+curso/ }).filter({ visible: true }).first()
+    await expect(linea).toContainText(/Demo[\s\S]*·\s*.*,\s+en\s+curso/)
+    expect(await linea.evaluate(e => e.scrollWidth <= e.clientWidth + 1), 'el renglón del período no se corta').toBe(true)
+  })
+}
+
+// Planta en el teléfono: el tanque de agua (cerca de su alto-alto) se ve sin abrir «ver N más».
+base('teléfono: Planta muestra el tanque de agua sin «ver más»', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 860 })
+  await page.addInitScript(() => localStorage.setItem('trim.intro.prod', '1'))
+  await page.goto('/#/prod/planta/ceiba/curso')
+  await expect(page.locator('main')).toContainText('CAPTURANDO DATOS')
+  const visibles = await page.evaluate(() => (document.querySelector('main') as HTMLElement).innerText)
+  expect(visibles, 'el tanque de agua de La Ceiba está a la vista').toContain('TK-AG-CE')
 })

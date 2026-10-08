@@ -14,7 +14,6 @@ import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
 import { n0, n1, diaIso as dia } from '@/shared/lib/formato'
-import { publicacion } from '@/widgets/diferidos/publicacion'
 
 /** El libro de diferidos: lo que no se produjo en el período, si cuadra con
  *  la medición oficial, a qué equipo y a qué parte se le carga, y dónde se
@@ -35,19 +34,20 @@ export function Diferidos() {
   const irA = (p: string) => (rol.pantallas.includes(p) ? () => setPantalla(p) : undefined)
 
   // El directivo ve el mismo libro sin el cuadre técnico: la tendencia de lo
-  // de alto impacto contra el máximo firmado, si se puede publicar, dónde se puede
-  // bajar y quién se lo lleva.
+  // de alto impacto contra el máximo firmado, si se puede publicar (el sello
+  // del encabezado), dónde se puede bajar y quién se lo lleva. El diferido por
+  // día contra el máximo va en el encabezado: «Dónde bajarlo» no lo repite.
   if (nivel === 'decision') return (
     <>
       <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} simple />
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
-        <Panel titulo="MES A MES" extra="bbl/día · clic en un mes para verlo">
+        <Panel titulo="MES A MES">
           <Tendencia serie={serie} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
-          <p className="mt-2 flex items-start gap-1.5 text-[11.5px] text-[var(--tinta2)]">
-            {publicacion(lb).estado === 'bloqueado' && <FueraDeMeta si tamano={11} />}
-            <span>{publicacion(lb).texto}</span>
-          </p>
+          <Lectura>
+            Diferido por día de cada mes: lo de alto impacto, oscuro; la raya, el máximo que usted firmó
+            para ese mes. Toque o pase el cursor por un mes para ver sus cifras; un clic lo abre.
+          </Lectura>
         </Panel>
         <Palancas lb={lb} base={base} />
       </div>
@@ -62,7 +62,7 @@ export function Diferidos() {
     <>
       <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} />
 
-      <Panel className="mb-2.5" titulo="MES A MES" extra="clic en un mes para verlo">
+      <Panel className="mb-2.5" titulo="MES A MES">
         <MesAMes serie={serie} desde={rango.desde} hasta={rango.hasta}
           onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
       </Panel>
@@ -70,11 +70,12 @@ export function Diferidos() {
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
         <Cuadre lb={lb} onIdentificar={irA('causa')} />
         {ambito.global ? (
-          <Panel titulo="DIFERIDO POR CAMPO" extra="clic para abrirlo">
+          <Panel titulo="POR CAMPO" extra="bbl">
             <Lectura>
-              Cada campo con su diferido, el máximo que firmó el gerente y cuánto tiene causa probada.
-              El cuadrado junto a la cifra marca el que no puede publicar: factor fuera de banda o
-              demasiado sin identificar.
+              Cada campo con su diferido, el máximo que firmó el gerente para el período y cuánto tiene
+              causa probada (la barra: por señal, declarado y, rayado, sin identificar). El cuadrado junto
+              a «máx.» marca el que lo pasó; junto a la cifra, el que no puede publicar: factor fuera de
+              banda o demasiado sin identificar. Un clic abre el campo.
             </Lectura>
             {lb.porCampo.map(f => {
               const c = campoPorId(f.campoId)
@@ -91,8 +92,8 @@ export function Diferidos() {
                     ['Alto impacto', `${n0(f.altoImpacto)} bbl`], ['Máximo firmado', maximo], ['Publicable', bloqueado ? 'no' : 'sí']]}
                   className="mb-2 block w-full cursor-pointer text-left">
                   <div className="flex justify-between gap-2 text-[11.5px]">
-                    <span className="min-w-0 truncate">{c.nombre} <span className="text-[var(--tinta3)]">· <FueraDeMeta si={sobreMax} tamano={11} />{f.sinMeta ? SIN_META : `máx. ${maximo} en el período`}</span></span>
-                    <span className="tabular shrink-0"><FueraDeMeta si={bloqueado} tamano={10} />{n0(f.brecha)}</span>
+                    <span className="min-w-0 truncate">{c.nombre} <span className="text-[var(--tinta3)]">· <FueraDeMeta si={sobreMax} tamano={11} />{f.sinMeta ? SIN_META : `máx. ${n0(f.metaDiferido)} bbl`}</span></span>
+                    <span className="tabular shrink-0"><FueraDeMeta si={bloqueado} tamano={10} />{n0(f.brecha)}<span className="sr-only"> bbl diferidos</span></span>
                   </div>
                   <div className="mt-1 flex h-2 overflow-hidden rounded-sm bg-[var(--panel2)]">
                     <i className="block h-full bg-[var(--dato-1)]" style={{ width: w(f.identificado) }} />
@@ -104,7 +105,7 @@ export function Diferidos() {
             })}
           </Panel>
         ) : (
-          <Panel titulo="FACTOR DE ASIGNACIÓN" extra="mes a mes, contra su banda">
+          <Panel titulo="FACTOR DE ASIGNACIÓN" extra="contra su banda">
             <Factor serie={serie} campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} />
           </Panel>
         )}

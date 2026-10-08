@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, ArrowRight, Check } from 'lucide-react'
 import { useApp, useRol, usePersona } from '@/app/store'
 import { useModal } from '@/shared/ui/foco'
@@ -7,45 +7,48 @@ import { pantallaVisible } from '@/shared/config/producto'
 import { Boton } from '@/shared/ui/primitivas'
 import { cn } from '@/shared/lib/cn'
 
-/** Para qué sirve cada pantalla, en una línea. Es lo que ve alguien la
- *  primera vez que entra con un rol: no un tour, una presentación. */
+/** Para qué sirve cada pantalla, en unas ocho palabras. Es lo que ve
+ *  alguien la primera vez que entra con un rol: no un tour, una presentación. */
 const PARA_QUE: Record<string, string> = {
-  bombas: 'Las bombas de reinyección: cuáles están costando crudo, cuánto aguanta el tanque si una se para y en qué orden cerrar los pozos.',
-  esp: 'Las electrosumergibles: cuál está por fallar, qué parte, y cuánto crudo pone en juego.',
-  trabajo: 'Lo que está parado y qué se dañó, lo que avisa y qué revisar.',
-  mantenimiento: 'Lo que hay que atacar para que el diferido de los equipos de alto impacto baje.',
-  confiabilidad: 'Cada cuánto fallan las bombas y las electrosumergibles, de qué parte, y qué tan bien está registrada cada falla.',
-  equipo: 'Los equipos de superficie ordenados por condición y por barriles, con su historia del PLC.',
-  produccion: 'Cuánto salió cada día por el punto de medición oficial, contra el potencial de las pruebas y la meta.',
-  pozos: 'Qué produce cada pozo, qué lo tiene parado y de dónde sale su caudal.',
-  turno: 'Lo que deja el turno anterior y lo que usted entrega al siguiente.',
-  resumen: 'Cuántos barriles no se produjeron, cuánto es de los equipos de alto impacto y si baja contra la meta.',
-  diferidos: 'Por qué no se produjeron, a qué equipo y a qué parte se le cargan, y si el libro se puede publicar.',
-  riesgo: 'A qué equipo ir hoy, ordenado por los barriles que cuesta cada uno.',
-  causa: 'Las paradas que ninguna señal explica: qué se dañó, antes de arrancar.',
-  planta: 'Dónde está el problema dentro del proceso. Gris es normal; el color es lo anormal.',
-  configuracion: 'Lo único que se escribe a mano, con firma: metas y accesos (gerente), tanques, respaldos y programa de paradas (administrador).',
-  conectores: 'Los bordes conectados y los tags que llegaron sin equipo resuelto.',
+  bombas: 'Cuáles cuestan crudo, cuánto aguanta el tanque y en qué orden cerrar pozos.',
+  esp: 'Cuál va a fallar, qué parte y cuánto crudo arriesga.',
+  trabajo: 'Qué está parado o avisa, y qué revisar.',
+  mantenimiento: 'Qué atacar para bajar el diferido de alto impacto.',
+  confiabilidad: 'Cada cuánto fallan, de qué parte y qué tan bien se registró.',
+  equipo: 'Por condición y barriles, con su historia del PLC.',
+  produccion: 'Lo medido cada día contra el potencial y la meta.',
+  pozos: 'Caudal de cada pozo, su origen y qué lo para.',
+  turno: 'Lo que recibe y lo que entrega.',
+  resumen: 'Diferido total y de alto impacto, contra la meta.',
+  diferidos: 'Por qué, a qué equipo y parte, y si se publica.',
+  riesgo: 'A qué equipo ir hoy, por los barriles que cuesta.',
+  causa: 'Lo que ninguna señal explica, antes de arrancar.',
+  planta: 'Dónde está el problema. Gris es normal; color, anormal.',
+  configuracion: 'Lo único que se escribe a mano, con firma.',
+  conectores: 'Bordes conectados y tags sin equipo resuelto.',
   perfil: 'Avisos, apariencia y permisos.',
 }
 
 /** Lo mismo dicho para quien decide: lo que ve en su nivel, sin lo técnico. */
 const PARA_QUE_DECISION: Record<string, string> = {
-  resumen: 'Cuántos barriles no se produjeron y cuánto valen, si va bien contra la meta, y quién se los lleva.',
-  diferidos: 'Mes a mes, quién se lleva los barriles y dónde se puede bajar.',
-  produccion: 'Cuánto salió cada día contra lo que se podía y contra la meta.',
-  riesgo: 'Qué se está perdiendo ahora y qué equipo está por fallar.',
-  bombas: 'Las bombas de reinyección: cuáles están paradas, cuánto cuestan y de qué fallan.',
-  esp: 'Las electrosumergibles: cuáles fallaron, cuáles avisan y cuánto cuestan.',
-  configuracion: 'Las metas de cada campo en barriles por día (la global es la suma) y quién tiene acceso a qué.',
+  resumen: 'Lo perdido contra la meta, su valor y a qué equipo.',
+  diferidos: 'Mes a mes: a qué equipo y dónde bajar.',
+  produccion: 'Cada día, contra lo posible y la meta.',
+  riesgo: 'Qué se pierde ahora y qué va a fallar.',
+  bombas: 'Cuáles están paradas, cuánto cuestan y de qué fallan.',
+  esp: 'Cuáles fallaron, cuáles avisan y cuánto cuestan.',
+  configuracion: 'Metas por campo (la global es la suma) y accesos.',
 }
 
+/** Qué es Trim, en tres renglones: lo mismo para todos los roles. */
 const PROMESA = [
-  ['Lo que hace Trim', 'Dice cuántos barriles se perdieron por cada bomba de reinyección y cada electrosumergible, por qué parte, y lo prueba.'],
-  ['Por qué importa', 'Son los equipos que, cuando fallan, cierran pozos. Vigilar la parte que se daña es lo que deja intervenir antes.'],
-  ['Cómo lo prueba', 'La hora la pone el sistema de control de cada equipo, cada barril trae su evento y su causa, y la conexión es de solo lectura.'],
+  ['QUÉ HACE', 'Barriles perdidos por bomba de reinyección y electrosumergible, y por qué parte.'],
+  ['POR QUÉ', 'Al fallar cierran pozos: vigilarlos deja intervenir antes.'],
+  ['CÓMO LO PRUEBA', 'Hora del PLC, evento y causa por barril; conexión de solo lectura.'],
 ] as const
 
+/** Dos pasos: qué decide este rol (y qué es Trim), y sus pantallas, cada una
+ *  con su para qué y a un toque. */
 export function Onboarding() {
   const rol = useRol()
   // La persona del registro de usuarios, la misma del menú de perfil: si el
@@ -56,18 +59,23 @@ export function Onboarding() {
   const dialogo = useModal<HTMLDivElement>(cerrarOnboarding)
   const [paso, setPaso] = useState(0)
   const pantallas = rol.pantallas.filter(pantallaVisible)
-  const total = pantallas.length + 1
+  const total = 2
 
-  const siguiente = () => (paso < total - 1 ? setPaso(paso + 1) : cerrarOnboarding())
   const irYCerrar = (id: string) => { setPantalla(id); cerrarOnboarding() }
+  // Al pasar a la lista, el foco va a la primera pantalla: el botón de abajo
+  // cambia de «Siguiente» a «Entrar…», y un segundo Enter se saltaba la lista
+  // (y el lector no la oía).
+  const primera = useRef<HTMLButtonElement>(null)
+  useEffect(() => { if (paso === 1) primera.current?.focus() }, [paso])
 
   return (
     <div ref={dialogo} tabIndex={-1} className="no-imprimir fixed inset-0 z-[160] flex items-center justify-center p-3 outline-none"
       role="dialog" aria-modal="true" aria-label="Introducción">
-      {/* El fondo cierra con el ratón; con teclado, Escape o el botón «Cerrar». */}
-      <button aria-hidden tabIndex={-1} onClick={cerrarOnboarding} className="absolute inset-0 cursor-default bg-black/45" />
-      <div className="relative flex w-full max-w-[520px] flex-col overflow-hidden rounded border border-[var(--linea)] bg-[var(--superficie)] shadow-[var(--sombra2)]">
-        <header className="flex items-start gap-2 border-b border-[var(--linea)] bg-[var(--panel)] px-3.5 py-3">
+      {/* El fondo cierra con el ratón; con teclado, Escape o el botón «Cerrar». No es
+          un botón: Tab no debe caer en algo sin nombre y oculto al lector. */}
+      <div aria-hidden onClick={cerrarOnboarding} className="absolute inset-0 cursor-default bg-black/45" />
+      <div className="relative flex max-h-full w-full max-w-[480px] flex-col overflow-hidden rounded border border-[var(--linea)] bg-[var(--superficie)] shadow-[var(--sombra2)]">
+        <header className="flex shrink-0 items-start gap-2 border-b border-[var(--linea)] bg-[var(--panel)] px-3.5 py-3">
           <span className="font-cond grid size-9 shrink-0 place-items-center rounded bg-marca-1 text-[13px] font-semibold text-white">
             {persona.iniciales}
           </span>
@@ -81,40 +89,45 @@ export function Onboarding() {
           </button>
         </header>
 
-        <div className="min-h-[190px] p-4">
+        <div className="min-h-0 overflow-y-auto p-4">
           {paso === 0 ? (
             <>
-              <b className="block text-[17px] leading-tight">{rol.foco}</b>
-              <div className="mt-3 grid gap-2.5">
+              {/* Lo que decide este rol: por eso ve lo que ve. */}
+              <b className="block text-[16px] leading-snug">{rol.foco}</b>
+              <dl className="mt-3.5 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1.5">
                 {PROMESA.map(([q, v]) => (
-                  <div key={q}>
-                    <small className="font-cond block text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-                      {q.toUpperCase()}
-                    </small>
-                    <span className="block text-[12.5px] leading-relaxed text-[var(--tinta2)]">{v}</span>
+                  <div key={q} className="contents">
+                    <dt className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{q}</dt>
+                    <dd className="m-0 text-[12.5px] leading-snug text-[var(--tinta2)]">{v}</dd>
                   </div>
                 ))}
+              </dl>
+            </>
+          ) : (
+            <>
+              <p className="font-cond pb-1.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SUS PANTALLAS</p>
+              {/* Cada una lleva a su pantalla y cierra la introducción. */}
+              <div className="grid gap-1">
+                {pantallas.map((id, i) => {
+                  const p = PANTALLAS[id]!
+                  return (
+                    <button key={id} ref={i === 0 ? primera : undefined} onClick={() => irYCerrar(id)}
+                      className="flex w-full cursor-pointer items-center gap-2.5 rounded border border-[var(--linea2)] bg-[var(--panel)] px-2.5 py-2 text-left hover:bg-[var(--elevado)]">
+                      <p.icono className="size-4 shrink-0 opacity-70" />
+                      <span className="min-w-0 flex-1">
+                        <b className="block text-[12.5px] font-semibold leading-tight">{p.corto}</b>
+                        <span className="block text-[11.5px] leading-snug text-[var(--tinta2)]">{(rol.nivel === 'decision' && PARA_QUE_DECISION[id]) || PARA_QUE[id]}</span>
+                      </span>
+                      <ArrowRight className="size-3.5 shrink-0 text-[var(--tinta3)]" />
+                    </button>
+                  )
+                })}
               </div>
             </>
-          ) : (() => {
-            const id = pantallas[paso - 1]!
-            const p = PANTALLAS[id]!
-            return (
-              <>
-                <div className="flex items-center gap-2.5">
-                  <span className="grid size-10 shrink-0 place-items-center rounded border border-[var(--linea)] bg-[var(--panel)]">
-                    <p.icono className="size-5 opacity-80" />
-                  </span>
-                  <b className="text-[17px] leading-tight">{p.titulo}</b>
-                </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-[var(--tinta2)]">{(rol.nivel === 'decision' && PARA_QUE_DECISION[id]) || PARA_QUE[id]}</p>
-                <Boton className="mt-3" onClick={() => irYCerrar(id)}>Ir a {p.corto}</Boton>
-              </>
-            )
-          })()}
+          )}
         </div>
 
-        <footer className="flex items-center gap-2 border-t border-[var(--linea)] bg-[var(--panel)] px-3.5 py-2.5">
+        <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--linea)] bg-[var(--panel)] px-3.5 py-2.5">
           <span className="flex flex-1 gap-1">
             {Array.from({ length: total }, (_, i) => (
               <i key={i} className={cn('h-1 flex-1 rounded-full',
@@ -126,7 +139,7 @@ export function Onboarding() {
               <Check className="mr-1 inline size-3" />Entrar con la lectura activada
             </Boton>
           ) : (
-            <Boton variante="principal" onClick={siguiente}>
+            <Boton variante="principal" onClick={() => setPaso(paso + 1)}>
               Siguiente<ArrowRight className="ml-1 inline size-3" />
             </Boton>
           )}

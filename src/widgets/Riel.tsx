@@ -105,10 +105,9 @@ export function Riel({ colapsado = false, onColapsar }: { colapsado?: boolean; o
           {enPortafolio ? 'Portafolio completo' : campo.nombre}
           {varios && <span className="ml-auto text-[10px] text-[var(--tinta3)]">▾</span>}
         </button>
+        {/* Cuántos campos tiene el rol: con varios, el selector se abre; con uno, no. */}
         <p className="mt-1 font-mono text-[10px] text-[var(--tinta3)]">
-          {enPortafolio
-            ? `${campos.length} campos asignados`
-            : `${campo.cuenca} · ${varios ? `1 de ${campos.length} asignados` : 'único campo asignado'}`}
+          {enPortafolio ? `${campos.length} campos` : varios ? `${campo.cuenca} · 1 de ${campos.length}` : campo.cuenca}
         </p>
         {menuCampo && (
           <div id={idMenu} role="group" aria-label="Escoger campo" className="absolute inset-x-3 top-[calc(100%-4px)] z-50 rounded border border-[var(--linea)] bg-[var(--elevado)] p-1 shadow-[var(--sombra2)]">
@@ -118,33 +117,40 @@ export function Riel({ colapsado = false, onColapsar }: { colapsado?: boolean; o
                 alcance === 'portafolio' && 'shadow-[inset_2px_0_0_var(--acento)]')}>
               <LayoutGrid className="size-3.5 shrink-0 opacity-70" />
               <span className="flex-1">Portafolio completo
-                <span className="block text-[10px] font-normal text-[var(--tinta3)]">
-                  los {campos.length} campos sumados, sin salir de esta pantalla
-                </span>
+                <span className="block text-[10px] font-normal text-[var(--tinta3)]">{campos.length} campos sumados</span>
               </span>
               {alcance === 'portafolio' && <Check className="size-3 text-acento" />}
             </button>
             <hr className="my-1 border-[var(--linea2)]" />
             </>)}
-            <p className="font-cond px-2 pb-1 pt-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-              CAMPOS ASIGNADOS · {campos.length}
+            {/* Lo producido ayer va en una columna con su rótulo arriba: la cifra se compara de un vistazo. */}
+            <p className="font-cond flex justify-between gap-2 px-2 pb-1 pt-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
+              <span>CAMPOS · {campos.length}</span><span aria-hidden className="pr-5">PRODUCIDO AYER</span>
             </p>
-            {campos.map(c => (
-              <button key={c.id} onClick={() => { setCampo(c.id); setMenuCampo(false) }}
-                className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-[var(--panel2)]">
-                <MarcaPrioridad s={estados.find(e => e.campoId === c.id)?.severidad ?? 0} tamano={11} />
-                <span className="flex-1">{c.nombre}
-                  <span className="block text-[10px] text-[var(--tinta3)]">{c.cuenca} · {((b?: number | null) => b === null || b === undefined ? 'sin fiscal' : `${n0(b)} bbl`)(estados.find(e => e.campoId === c.id)?.ayer.bbl)} el último día</span>
-                </span>
-                {c.id === campoId && alcance === 'campo' && <Check className="size-3 text-acento" />}
-              </button>
-            ))}
+            {campos.map(c => {
+              const b = estados.find(e => e.campoId === c.id)?.ayer.bbl
+              return (
+                <button key={c.id} onClick={() => { setCampo(c.id); setMenuCampo(false) }}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-[var(--panel2)]">
+                  <MarcaPrioridad s={estados.find(e => e.campoId === c.id)?.severidad ?? 0} tamano={11} />
+                  <span className="min-w-0 flex-1">{c.nombre}
+                    <span className="block text-[10px] text-[var(--tinta3)]">{c.cuenca}</span>
+                  </span>
+                  <span className="tabular shrink-0 text-right text-[10.5px] text-[var(--tinta2)]">
+                    {b === null || b === undefined
+                      ? <>sin fiscal<span className="sr-only"> ayer</span></>
+                      : <>{`${n0(b)}\u00a0bbl`}<span className="sr-only"> producidos ayer</span></>}
+                  </span>
+                  <span className="grid w-3 shrink-0 place-items-center">{c.id === campoId && alcance === 'campo' && <Check className="size-3 text-acento" />}</span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-1.5">
-        <p className="font-cond px-2 pb-1 pt-2.5 text-[10px] font-semibold tracking-[.12em] text-[var(--tinta3)]">PANTALLAS</p>
+      {/* La lista de pantallas se reconoce sola: sin rótulo encima, el nombre va al lector. */}
+      <div role="group" aria-label="Pantallas" className="flex-1 overflow-y-auto p-1.5 pt-2.5">
         {entradas.map(e => (
           <button key={e.id} onClick={e.ir} aria-current={e.activo}
             className={cn('flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-[12.5px]',

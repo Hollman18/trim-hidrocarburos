@@ -48,7 +48,8 @@ export function Subpantallas() {
       )}
       {(aviso || faltan.length > 0) && (
         <p className="mt-1 text-[11px] text-[var(--tinta3)]" role="status">
-          {aviso ?? `${ambito.titulo} no tiene ${faltan.map(p => PANTALLAS[p]!.corto.toLowerCase()).join(' ni ')} en su perfil: por eso no sale esa pestaña.`}
+          {/* Que falte la pestaña ya se ve: basta decir por qué. */}
+          {aviso ?? `${ambito.titulo} no tiene ${faltan.map(p => PANTALLAS[p]!.corto.toLowerCase()).join(' ni ')} en su perfil.`}
         </p>
       )}
     </div>

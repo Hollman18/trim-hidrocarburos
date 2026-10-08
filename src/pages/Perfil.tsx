@@ -1,10 +1,12 @@
 import { Monitor, Sun, Moon, Check, X } from 'lucide-react'
 import { useApp, useRol, usePersona, useCampos } from '@/app/store'
 import { CAMPOS } from '@/entities/campos'
-import { CAPACIDAD_NOMBRE, AREAS, permisosDelRol } from '@/entities/tipos'
+import { CAPACIDAD_NOMBRE, AREAS, permisosDelRol, type Capacidad } from '@/entities/tipos'
 import { personaDelRol, recibeAlertas, ROLES_CON_ALERTAS, ALERTAS_DEL_ROL, telefonoLegible } from '@/entities/usuarios'
 import { useUsuarios } from '@/shared/api/usuarios'
-import { Panel, Chip, Cita, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Chip, Hueco } from '@/shared/ui/primitivas'
+import { Info } from '@/shared/ui/Info'
+import { Tip } from '@/shared/ui/Tip'
 import { cn } from '@/shared/lib/cn'
 
 const TEMAS = [
@@ -13,14 +15,34 @@ const TEMAS = [
   { id: 'dark', nombre: 'Oscuro', Icono: Moon },
 ] as const
 
-const Fila = ({ etiqueta, children, pie, Icono }: {
+/** El nombre corto de cada permiso, para la lista; el completo (CAPACIDAD_NOMBRE)
+ *  va en el globo de la fila y en el papel. Cada uno sigue diciendo lo que la
+ *  capacidad agrega («Responder qué se dañó» no es «Completar el análisis»):
+ *  una línea negada no niega lo que el rol sí hace. Si se agrega una capacidad,
+ *  el tipo obliga a darle su nombre corto aquí. */
+const PERMISO_CORTO: Record<Capacidad, string> = {
+  'causa:declarar': 'Responder qué se dañó',
+  'causa:completar': 'Completar el análisis de la falla',
+  'evidencia:exportar': 'Exportar evidencia con folio',
+  'conector:configurar': 'Configurar conectores y tags',
+  'config:firmar': 'Firmar la configuración técnica',
+  'metas:firmar': 'Firmar metas y precio',
+  'usuarios:administrar': 'Dar acceso a otras personas',
+  'sap:aviso': 'Enviar avisos a SAP',
+  'asignacion:cargar': 'Cargar la asignación oficial',
+}
+
+const Fila = ({ etiqueta, children, pie, info }: {
   etiqueta: string; children: React.ReactNode; pie?: string
-  Icono?: React.ComponentType<{ className?: string }>
+  /** Lo que explica la fila (de dónde sale, quién la cambia): en el ⓘ y en el papel. */
+  info?: string
 }) => (
   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
-    {Icono && <Icono className="size-[15px] shrink-0 text-[var(--tinta3)]" />}
     <span className="min-w-[8.5rem] flex-1">
-      <b className="block text-[12.5px] font-medium">{etiqueta}</b>
+      <span className="flex flex-wrap items-center gap-x-1">
+        <b className="text-[12.5px] font-medium">{etiqueta}</b>
+        {info && <Info titulo={etiqueta} texto={info} />}
+      </span>
       {pie && <small className="block text-[10.5px] text-[var(--tinta3)]">{pie}</small>}
     </span>
     {children}
@@ -49,46 +71,54 @@ export function Perfil() {
           </span>
           <span className="min-w-0">
             <b className="block text-[15px] leading-tight">{persona.nombre}</b>
-            <small className="block text-[11.5px] text-[var(--tinta2)]">{rol.nombre}</small>
+            <small className="flex flex-wrap items-center gap-x-1 text-[11.5px] text-[var(--tinta2)]">
+              {rol.nombre}
+              <Info titulo="Rol activo" texto="Se cambia desde el menú de perfil, abajo a la izquierda." />
+            </small>
             <small className="block font-mono text-[10.5px] text-[var(--tinta3)]">
               {persona.correo ?? 'sin correo registrado'}
             </small>
           </span>
         </div>
         <div className="mt-3">
-          <Fila etiqueta="WhatsApp para avisos" pie="del registro de usuarios · lo cambia el gerente de activo en Accesos">
+          <Fila etiqueta="WhatsApp" info="Del registro de usuarios: lo cambia el gerente de activo en Accesos.">
             {yo?.telefono?.trim()
               ? <span className="tabular font-mono text-[11.5px]">{telefonoLegible(yo.telefono)}</span>
               : <span className="text-[11.5px] text-[var(--tinta3)]">sin número registrado</span>}
           </Fila>
-          <Fila etiqueta="Rol activo" pie="se cambia desde el menú de perfil, abajo a la izquierda">
-            <Chip tono="fuerte">{rol.nombre}</Chip>
-          </Fila>
-          <Fila etiqueta="Área" pie="cómo cuelga en el organigrama">
+          <Fila etiqueta="Área" info="Cómo cuelga en el organigrama.">
             <Chip>{AREAS.find(a => a.id === rol.area)?.nombre}</Chip>
           </Fila>
-          <Fila etiqueta="Campos a los que tiene acceso" pie={`${mios.length} de ${CAMPOS.length} · los asigna el gerente de activo`}>
+          <Fila etiqueta="Campos" pie={`${mios.length} de ${CAMPOS.length}`} info="Los campos a los que tiene acceso. Los asigna el gerente de activo.">
             <span className="flex flex-wrap justify-end gap-1">
               {mios.map(c => <Chip key={c.id} tono={c.id === campoId ? 'fuerte' : 'neutro'}>{c.nombre}</Chip>)}
             </span>
           </Fila>
         </div>
-        <Cita>Tu foco: {rol.foco}</Cita>
+        <p className="mt-2 text-[11px]"><Info rotulo="tu foco" titulo="Tu foco" texto={rol.foco} /></p>
       </Panel>
 
       {/* Lo que de verdad le llega: la regla de mensajes del rol y el registro de
           la persona. No hay otros canales ni otros avisos que encender. */}
-      <Panel titulo="AVISOS" extra="los decide la regla de su rol">
+      <Panel titulo="AVISOS">
         {!conAlertas ? (
-          <Hueco>Su rol no recibe alertas por WhatsApp: la regla de mensajes solo avisa a quien actúa sobre el equipo.</Hueco>
+          <Hueco>
+            <span className="flex flex-wrap items-center gap-x-1">
+              Su rol no recibe alertas por WhatsApp.
+              <Info titulo="Sin alertas" texto="Los avisos los decide la regla de su rol: la regla de mensajes solo avisa a quien actúa sobre el equipo." />
+            </span>
+          </Hueco>
         ) : (
-          <Fila etiqueta="Alertas por WhatsApp" pie={ALERTAS_DEL_ROL[rol.id]}>
+          <Fila etiqueta="Alertas por WhatsApp" info={`Las decide la regla de su rol: ${ALERTAS_DEL_ROL[rol.id]}.`}>
             <Chip tono={yo && recibeAlertas(yo) ? 'fuerte' : 'neutro'}>
               {!yo ? 'sin persona con acceso' : recibeAlertas(yo) ? 'le llegan' : !yo.telefono?.trim() ? 'no le llegan: sin número' : 'apagadas'}
             </Chip>
           </Fila>
         )}
-        <p className="mt-2 text-[10.5px] text-[var(--tinta3)]">Encenderlas, apagarlas o cambiar el número lo hace el gerente de activo en Accesos, con su motivo.</p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+          Las cambia el gerente de activo
+          <Info titulo="Quién las cambia" texto="Encenderlas, apagarlas o cambiar el número lo hace el gerente de activo en Accesos, con su motivo." />
+        </p>
       </Panel>
 
       <Panel titulo="APARIENCIA">
@@ -105,16 +135,8 @@ export function Perfil() {
       </Panel>
 
       <Panel titulo="PERMISOS" extra="los otorga el servidor">
-        {concedidas.map(k => (
-          <div key={k} className="flex items-center gap-2 border-b border-[var(--linea2)] py-[7px] text-[12px] last:border-0">
-            <Check className="size-3.5 shrink-0 text-[var(--tinta2)]" /> {CAPACIDAD_NOMBRE[k]}
-          </div>
-        ))}
-        {negadas.map(k => (
-          <div key={k} className="flex items-center gap-2 border-b border-[var(--linea2)] py-[7px] text-[12px] text-[var(--tinta3)] last:border-0">
-            <X className="size-3.5 shrink-0" /> {CAPACIDAD_NOMBRE[k]}
-          </div>
-        ))}
+        {concedidas.map(k => <Permiso key={k} k={k} si />)}
+        {negadas.map(k => <Permiso key={k} k={k} si={false} />)}
       </Panel>
 
       {/* Sesiones y contraseña son del servicio de identidad del cliente (OIDC / SSO,
@@ -122,8 +144,35 @@ export function Perfil() {
           quién es la persona con GET /api/sesion. Mientras el front no se conecte a
           ese servicio se dice el hueco en vez de pintar sesiones de demostración. */}
       <Panel titulo="SESIONES Y CONTRASEÑA">
-        <Hueco>Las sesiones abiertas y el cambio de contraseña los da el servicio de identidad de la empresa; esta versión todavía no se conecta a él.</Hueco>
+        <Hueco>
+          <span className="flex flex-wrap items-center gap-x-1">
+            Servicio de identidad de la empresa · sin conectar
+            <Info titulo="Sesiones y contraseña" texto="Las sesiones abiertas y el cambio de contraseña los da el servicio de identidad de la empresa; esta versión todavía no se conecta a él." />
+          </span>
+        </Hueco>
       </Panel>
+    </div>
+  )
+}
+
+/** Un permiso: concedido (✓) o negado (✕, tenue), con su nombre corto. El
+ *  completo, si dice más, en el globo de la fila; en el papel va el completo
+ *  en lugar del corto (una sola línea por permiso, con su ✓ o ✕). */
+function Permiso({ k, si }: { k: Capacidad; si: boolean }) {
+  const corto = PERMISO_CORTO[k], completo = CAPACIDAD_NOMBRE[k]
+  const Icono = si ? Check : X
+  const contenido = <>
+    <Icono className={cn('size-3.5 shrink-0', si && 'text-[var(--tinta2)]')} aria-hidden />
+    <span><span className="sr-only">{si ? 'Puede: ' : 'No puede: '}</span>
+      {corto === completo ? corto : <><span className="print:hidden">{corto}</span><span className="hidden print:inline">{completo}</span></>}</span>
+  </>
+  const clase = cn('flex items-center gap-2 py-[7px] text-[12px]', !si && 'text-[var(--tinta3)]')
+  // La raya va en la envoltura: así queda debajo de la nota impresa y no entre la fila y su nota.
+  return (
+    <div className="border-b border-[var(--linea2)] last:border-0">
+      {corto === completo
+        ? <div className={clase}>{contenido}</div>
+        : <Tip titulo={corto} filas={[]} pista={completo} className={clase}>{contenido}</Tip>}
     </div>
   )
 }

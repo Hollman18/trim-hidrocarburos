@@ -6,6 +6,7 @@ import { metaEntre } from '@/entities/libro'
 import { leerPlan, plantillaPlan, sumarMeses, nombreMes, type FilaPlan } from '@/entities/plan'
 import { Panel, Boton, SubirCsv } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
+import { Info } from '@/shared/ui/Info'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
@@ -55,10 +56,10 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
   return (
     <>
       {puede && <Cargar campos={campos} mesActual={mesActual} valor={valor} onCargar={onCargar} />}
-      <Panel className="mb-2.5" titulo="PLAN MES A MES" extra="cada mes rige desde su día 1">
+      <Panel className="mb-2.5" titulo="PLAN MES A MES">
         <Lectura>
           El presupuesto de la empresa, mes por mes y campo por campo. Cada mes rige desde su día 1 y se mide
-          contra lo que pasó ese mes. Un mes sin cifra propia sigue con la del anterior (va más tenue). Una
+          contra lo que pasó ese mes. Un mes sin cifra propia («hereda») sigue con la del anterior (va más tenue). Una
           cifra del plan vale para el mes completo: reemplaza cualquier meta que empezara a mitad de ese mes.
           La meta global de cada mes es la suma de los campos.
         </Lectura>
@@ -119,7 +120,7 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
                   <tr key={mes} className="border-b border-[var(--linea2)]">
                     <td className="py-1.5">
                       <span className={cn(suyo ? 'font-semibold' : 'text-[var(--tinta3)]')}>{corto(mes)}</span>
-                      <small className="block text-[10px] text-[var(--tinta3)]">{mes === mesActual ? 'en curso · ' : ''}{suyo ? 'cifra propia' : 'sigue la del mes anterior'}</small>
+                      <small className="block text-[10px] text-[var(--tinta3)]">{mes === mesActual ? 'en curso · ' : ''}{suyo ? 'cifra propia' : 'hereda'}</small>
                     </td>
                     <td className="w-[110px] pl-2">{caja('produccionBpd', v.produccionBpd, `Producción de ${nombre} en ${nombreMes(mes)}, bbl/d`, !(v.produccionBpd > 0))}</td>
                     <td className="w-[110px] pl-2">{caja('diferidoMaxBpd', v.diferidoMaxBpd, `Máximo de diferido de ${nombre} en ${nombreMes(mes)}, bbl/d`, !(v.diferidoMaxBpd >= 0))}</td>
@@ -131,11 +132,13 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
             </tbody>
           </table>
         </div>
-        <p className="mt-1 text-[10.5px] text-[var(--tinta3)] sm:hidden">Desplace la tabla hacia la derecha para ver el precio y el total del mes.</p>
+        <p className="mt-1 text-[10.5px] text-[var(--tinta3)] sm:hidden">Desplace a la derecha: precio y total del mes.</p>
         {seAcaba && (
           <p className="mt-2 flex items-start gap-1.5 text-[11.5px]">
             <FueraDeMeta si tamano={11} />
-            <span>El plan cargado llega hasta {nombreMes(finPlan!)}: {puede ? 'cargue' : 'el gerente de activo tiene que cargar'} el presupuesto siguiente antes de que se acabe. Después de ese mes sigue rigiendo su última cifra.</span>
+            <span>El plan llega hasta {nombreMes(finPlan!)}: falta el presupuesto siguiente.
+              <Info className="ml-1" titulo="El plan se acaba"
+                texto={`${puede ? 'Cárguelo' : 'Lo carga el gerente de activo'} antes de que se acabe. Después de ese mes sigue rigiendo su última cifra.`} /></span>
           </p>
         )}
       </Panel>
@@ -181,7 +184,7 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
   const meses = revision ? [...new Set(revision.filas.map(f => f.mes))].sort() : []
 
   return (
-    <Panel className="mb-2.5" titulo="CARGAR EL PRESUPUESTO" extra="pegar desde Excel o subir un CSV">
+    <Panel className="mb-2.5" titulo="CARGAR EL PRESUPUESTO">
       <Lectura>
         Una fila por mes y campo: mes, campo, producción, máximo de diferido y, si lo trae, precio. Descargue la
         plantilla con lo que rige hoy, llénela con el presupuesto y péguela aquí (o súbala). Los meses que ya
@@ -191,9 +194,9 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
         <Boton onClick={descargar}><Download className="mr-1 inline size-3.5" />Descargar la plantilla</Boton>
         <SubirCsv onTexto={t => { setTexto(t); revisar(t) }} onError={m => { setRevision(null); setHecho(null); setErrorArchivo(m) }} />
         <span className="flex items-center gap-3 text-[11.5px]">
-          <span className="text-[var(--tinta2)]">Las cifras vienen en</span>
-          <label className="flex items-center gap-1"><input type="radio" name="unidad-plan" checked={!enBblMes} onChange={() => { setEnBblMes(false); setRevision(null) }} />bbl/d</label>
-          <label className="flex items-center gap-1"><input type="radio" name="unidad-plan" checked={enBblMes} onChange={() => { setEnBblMes(true); setRevision(null) }} />bbl del mes</label>
+          <span className="text-[var(--tinta2)]">Cifras en</span>
+          <label className="flex min-h-6 items-center gap-1"><input type="radio" name="unidad-plan" checked={!enBblMes} onChange={() => { setEnBblMes(false); setRevision(null) }} />bbl/d</label>
+          <label className="flex min-h-6 items-center gap-1"><input type="radio" name="unidad-plan" checked={enBblMes} onChange={() => { setEnBblMes(true); setRevision(null) }} />bbl del mes</label>
         </span>
       </div>
       <textarea value={texto} onChange={e => { setTexto(e.target.value); setRevision(null); setHecho(null); setErrorArchivo(null) }} rows={5} aria-label="Filas del presupuesto"
@@ -207,7 +210,7 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
             onCargar(revision.filas)
             // Las filas con error no pasaron: se recuerda cuántas, porque la lista se borra con la revisión.
             const malas = revision.errores.length
-            setHecho(`${plural(revision.filas.length, 'fila pasó', 'filas pasaron')} al borrador${malas ? `; ${plural(malas, 'fila con error no se pasó', 'filas con error no se pasaron')}` : ''}. Revise la tabla y firme abajo.`)
+            setHecho(`${plural(revision.filas.length, 'fila pasó', 'filas pasaron')} al borrador${malas ? `; ${plural(malas, 'fila con error no se pasó', 'filas con error no se pasaron')}` : ''}. Revise y firme abajo.`)
             setRevision(null); setTexto('')
           }}>
             Pasar {plural(revision.filas.length, 'fila', 'filas')} al borrador

@@ -58,6 +58,43 @@ export function estadoCorto(sp: SaludParte): string {
   }
 }
 
+/** «41–45 h»: el rango de un pronóstico en corto. Vacío si los dos extremos
+ *  se escriben igual (ya lo dice la cifra de al lado). */
+export function rangoCorto([a, b]: [number, number]): string {
+  const x = fmtHoras(a), y = fmtHoras(b)
+  if (x === y) return ''
+  const unidad = (t: string) => t.split(' ').at(-1)
+  return unidad(x) === unidad(y) ? `${x.replace(/ \S+$/, '')}–${y}` : `${x}–${y}`
+}
+
+/** El pronóstico en corto: «en 43 h · 41–45 h». Las mismas cifras que
+ *  `textoPronostico`; solo cambia cómo se escribe el rango. */
+export function pronosticoCorto(p: Pronostico): string {
+  if (p.tipo !== 'cruza' || p.horas > HORIZONTE_H) return textoPronostico(p)
+  const r = rangoCorto(p.rango)
+  return `en ${fmtHoras(p.horas)}${r ? ` · ${r}` : ''}`
+}
+
+/** La frase de una parte en corto, para donde su estado ya va escrito en una
+ *  etiqueta («fuera de banda», «avisa»): qué variable lo dice y cuándo, sin
+ *  repetir el estado. La frase completa sigue siendo `fraseParte`. */
+export function fraseParteCorta(sp: SaludParte): string {
+  const v = (s: { plantilla: { nombre: string } }) => s.plantilla.nombre.toLowerCase()
+  if (sp.estado === 'fuera') {
+    const s = sp.fuera[0]?.senal
+    if (!s) return 'un instrumento suyo reporta alarma'
+    if (s.estado === 'alarma' || s.pronostico.tipo === 'cruzado') return `${v(s)} · ya en alarma`
+    return s.pronostico.tipo === 'cruza' ? `${v(s)} · alarma ${pronosticoCorto(s.pronostico)}` : v(s)
+  }
+  if (sp.primera) {
+    const mas = sp.coinciden > 1 ? ` · +${sp.coinciden - 1} ${sp.coinciden === 2 ? 'señal' : 'señales'}` : ''
+    return `${v(sp.primera.senal)} · cruza ${pronosticoCorto(sp.primera.senal.pronostico)}${mas}`
+  }
+  if (sp.causaActiva.length) return `la daña: ${v(sp.causaActiva[0]!.senal)}`
+  if (sp.lenta) return `${v(sp.lenta.senal)} · más de 3 meses`
+  return sp.estado === 'fallo' ? 'causa de la parada' : sp.estado === 'sin-dato' ? 'sin instrumentos' : ''
+}
+
 /** La frase de una parte: qué variable lo dice y cuándo. */
 export function fraseParte(sp: SaludParte): string {
   if (sp.estado === 'fuera') {

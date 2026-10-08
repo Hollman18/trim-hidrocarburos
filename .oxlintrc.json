@@ -187,6 +187,7 @@
                   "CAUSAS_POZO",
                   "NOMBRE_REGLA", "PASO_CORTO",
                   "NO_FUE_ESP",
+                  "NO_FUE_ESP_CORTO",
                   "ORDEN_PASO",
                   "OTRA",
                   "OTRA_PARTE",

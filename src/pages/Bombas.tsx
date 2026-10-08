@@ -7,7 +7,7 @@ import { n0, plural } from '@/shared/lib/formato'
 import { useBombas } from '@/shared/api/equipos'
 import { Placa } from '@/widgets/bombas/Placa'
 import { Detalle } from '@/widgets/bombas/Detalle'
-import { fmtBbl, fmtRango, fmtHoras, textoPronostico } from '@/widgets/bombas/comun'
+import { fmtBbl, fmtRango, fmtHoras, pronosticoCorto } from '@/widgets/bombas/comun'
 
 /** La estación de bombas: el nivel 2 de ISA-101. Las bombas multifásicas y
  *  de inyección son las que deciden la producción de la planta; aquí se ve
@@ -21,7 +21,7 @@ export function Bombas() {
   const bombas = useBombas(ambito.campos.map(c => c.id), rango.desde, rango.hasta)
 
   const sel = bombas.find(b => b.clave === abierta)
-  if (sel) return <Detalle b={sel} nivel={nivel} nombrePeriodo={rango.nombre} onVolver={() => setAbierta(null)} />
+  if (sel) return <Detalle b={sel} nivel={nivel} onVolver={() => setAbierta(null)} />
   // El directivo no entra al detalle técnico: abre la ficha del equipo.
   const abrir = (clave: string) => {
     if (nivel !== 'decision') return setAbierta(clave)
@@ -61,32 +61,32 @@ export function Bombas() {
           </small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Diferido que se les carga · {rango.nombre}</small>
+          <small className="block text-[10.5px] text-[var(--tinta3)]">Diferido que causaron</small>
           <b className="tabular block text-[22px] leading-tight">{fmtBbl(medido)}</b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">
-            {medido <= 0 ? 'sin paradas en el período' : nivel === 'ingenieria' ? `entre ${fmtRango(medidoRango)}` : 'por paradas de estas bombas'}
+          <small className="tabular block text-[10.5px] text-[var(--tinta2)]">
+            {medido <= 0 ? 'sin paradas con costo' : nivel === 'ingenieria' ? `${fmtRango(medidoRango)} · calculado` : 'calculado'}
           </small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">La próxima parte en fallar</small>
+          <small className="block text-[10.5px] text-[var(--tinta3)]">Próxima en fallar</small>
           {proxima ? (
             <>
               <b className="block truncate text-[14px] leading-tight">{proxima.b.eq.id} · {proxima.p.parte.nombre}</b>
               {nivel === 'decision' ? (
                 <small className="block text-[11px] text-[var(--tinta2)]">{proxima.b.campo.nombre} · en {fmtHoras(proxima.p.primera!.senal.pronostico.horas)}</small>
               ) : (
-                <>
-                  <small className="block truncate text-[11px] text-[var(--tinta)]">{proxima.b.campo.nombre} · {proxima.p.primera!.senal.plantilla.nombre}</small>
-                  <small className="block text-[10.5px] text-[var(--tinta2)]">{textoPronostico(proxima.p.primera!.senal.pronostico)}</small>
-                </>
+                <small className="tabular block text-[11px] text-[var(--tinta2)]">
+                  {ambito.global ? `${proxima.b.campo.nombre} · ` : ''}{proxima.p.primera!.senal.plantilla.nombre.toLowerCase()} · {pronosticoCorto(proxima.p.primera!.senal.pronostico)}
+                </small>
               )}
             </>
           ) : <b className="block text-[14px] text-[var(--tinta3)]">ninguna</b>}
         </span>
         <span className="text-right">
-          <b className="block text-[16px] leading-none">{ambito.titulo}</b>
+          {/* El ámbito ya lo dice la cabecera: aquí, cuántas son y cuántas no tienen perfil. */}
+          <b className="tabular block text-[22px] leading-none">{bombas.length}</b>
           <small className="text-[10.5px] text-[var(--tinta3)]">
-            {plural(bombas.length, 'bomba', 'bombas')}{sinPerfil ? ` · ${sinPerfil} sin ${nivel === 'decision' ? 'datos de la bomba' : 'perfil'}` : ''}
+            {bombas.length === 1 ? 'bomba' : 'bombas'}{sinPerfil ? ` · ${sinPerfil} sin ${nivel === 'decision' ? 'datos' : 'perfil'}` : ''}
           </small>
         </span>
       </div>
@@ -100,11 +100,14 @@ export function Bombas() {
       ) : (
         <Lectura>
         <b>Perdiéndose ahora</b> es el crudo de los pozos que están cerrados porque una bomba de
-        la línea está detenida, pozo por pozo con su prueba. <b>Diferido que se les carga</b> es lo
-        que ya se perdió en el período por paradas de estas bombas, con su rango de tolerancia.
-        Cada placa trae las cuatro variables que más dicen de esa bomba, sus partes (la que avisa
-        dice en cuántos días) y qué pasaría si se para ahora: cuánto aguanta el tanque y cuánto
-        crudo se pierde después, cerrando los pozos en el orden que menos cuesta.
+        la línea está detenida, pozo por pozo con su prueba, a la hora de referencia. <b>Diferido que
+        causaron</b> es lo que ya se perdió en el período por paradas de estas bombas (se le carga a
+        la bomba que paró), con su rango de tolerancia: es calculado, no medido. <b>Próxima en
+        fallar</b> es, de las bombas en marcha, la parte que antes llega a su límite. Cada placa trae
+        las cuatro variables que más dicen de esa bomba, las partes que avisan (las estables van
+        juntas en un renglón: toque o pase el cursor para ver cuáles) y qué pasaría si se para ahora:
+        cuánto aguanta el tanque y cuánto crudo se pierde después, cerrando los pozos en el orden que
+        menos cuesta. Las ⓘ dicen el porqué.
       </Lectura>
       )}
 
@@ -116,7 +119,7 @@ export function Bombas() {
 
       {bombas.length === 0 && (
         <p className="mt-3 text-[12px] text-[var(--tinta2)]">
-          {ambito.titulo} no tiene bombas multifásicas ni de inyección instrumentadas.
+          Sin bombas multifásicas ni de inyección instrumentadas.
         </p>
       )}
 

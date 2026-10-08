@@ -16,7 +16,8 @@ function escala(lo: number, hi: number): [number, number, number] {
 
 /** Producción de cada día del punto de medición oficial contra el potencial
  *  de las pruebas y la meta firmada, en bbl/d. Lo que separa la curva real
- *  del potencial es el diferido. El día de hoy es parcial y se dice. */
+ *  del potencial es el diferido. El día de hoy es parcial y se dice. La
+ *  leyenda va en corto: de dónde sale cada curva lo dice «¿cómo se lee?». */
 export function Diaria({ dias }: { dias: Dia[] }) {
   const tasa = (d: Dia, v: number) => (d.horas > 0 ? (v * 24) / d.horas : 0)
   // Un día sin fiscal no tiene punto: la curva real se corta ahí (hueco, no cero).
@@ -62,6 +63,7 @@ export function Diaria({ dias }: { dias: Dia[] }) {
   }
 
   return (
+    <>
     <div ref={alFinal} className="overflow-x-auto">
       <svg ref={dibujo} viewBox={`0 0 ${W} 196`} className="block h-auto w-full min-w-[540px]" role="group"
         aria-label={`Producción diaria contra potencial y meta, ${pts.length} días. Con las flechas se pasa de un día a otro.`}>
@@ -96,12 +98,14 @@ export function Diaria({ dias }: { dias: Dia[] }) {
         ))}
         <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" />
       </svg>
+    </div>
+      {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba. */}
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
-        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato-1)" strokeWidth="2" /></svg>real · punto de medición oficial</span>
-        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta2)" strokeWidth="1.2" strokeDasharray="5 3" /></svg>potencial · lo que los pozos podían dar</span>
+        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato-1)" strokeWidth="2" /></svg>real medido</span>
+        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta2)" strokeWidth="1.2" strokeDasharray="5 3" /></svg>potencial</span>
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta3)" strokeWidth="1" strokeDasharray="2 3" /></svg>meta firmada</span>
         <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--panel2)] ring-1 ring-[var(--linea)]" />diferido</span>
       </div>
-    </div>
+    </>
   )
 }

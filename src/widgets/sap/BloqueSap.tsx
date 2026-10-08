@@ -8,7 +8,10 @@ import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { modosDeParte, nombreModo } from '@/entities/catalogo'
 import { NOMBRE_CLASE, NOMBRE_ESTADO_ORDEN, NOMBRE_TIPO_AVISO, type AvisoSap, type OrdenSap } from '@/entities/sap'
 import { fechaHora, fechaCorta, horasEntre, AHORA } from '@/entities/reloj'
-import { Boton } from '@/shared/ui/primitivas'
+import { Boton, Chip } from '@/shared/ui/primitivas'
+import { Info } from '@/shared/ui/Info'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
@@ -33,6 +36,9 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
   // El técnico de una orden es una persona (su id), no un rol; si va a un contratista, solo el puesto.
   const tecnico = (o: OrdenSap) => usuarios.find(u => u.id === o.tecnico)?.nombre ?? `la cuadrilla ${o.puesto}`
 
+  // El historial: cinco y «ver N más»; lo que no se ve en la pantalla sale en el papel.
+  const historial = useVerMas(ordenes)
+
   if (nivel === 'decision') return (
     <p className="text-[12px] text-[var(--tinta2)]">
       <b className="text-[var(--tinta)]">En SAP:</b>{' '}
@@ -41,31 +47,44 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
     </p>
   )
 
+  const filaOrden = (o: OrdenSap, papel = false) => (
+    <li key={o.numero} className={papel ? 'hidden flex-wrap gap-x-2 print:flex' : 'flex flex-wrap gap-x-2'}>
+      <span className="tabular text-[var(--tinta3)]">{fechaCorta(new Date(o.creada))}</span>
+      <b className="text-[var(--tinta)]">{o.numero}</b>
+      {/* La orden abierta ya va arriba con su descripción. */}
+      <span>{NOMBRE_CLASE[o.clase]}{o.numero === ordenAbierta?.numero ? '' : ` · ${o.descripcion}`}</span>
+      <span className="text-[var(--tinta3)]">{NOMBRE_ESTADO_ORDEN[o.estado]}{o.horasReales ? <> · {n1(o.horasReales)} h<span className="sr-only"> confirmadas</span></> : ''}</span>
+    </li>
+  )
+
   return (
     <section aria-label="SAP">
-      <h3 className={titulo}>SAP · MANTENIMIENTO <span className="font-mono font-normal normal-case tracking-normal">· equipo {id.equipoSap} · {id.ubicacion}</span></h3>
+      <div className="mb-1.5 mt-3 flex flex-wrap items-center gap-x-1">
+        <h3 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SAP · MANTENIMIENTO <span className="font-mono font-normal normal-case tracking-normal">· equipo {id.equipoSap} · {id.ubicacion}</span></h3>
+        <Info titulo="De dónde sale" texto="Avisos, órdenes, horas y stock vienen de SAP. La orden la crea el planeador en SAP; TRIM envía el aviso y avisa cuando la orden se libera." />
+      </div>
       {/* Región viva: lo que cambia aquí (el aviso que se envió) se anuncia. */}
       <div aria-live="polite">
         {ordenAbierta && <LineaOrden o={ordenAbierta} tecnico={tecnico(ordenAbierta)} />}
         {abierto && !ordenAbierta && <LineaAviso a={abierto} enfocar={enviado === abierto.numero} />}
         {!abierto && !ordenAbierta && (rol.puede['sap:aviso']
           ? <EnviarAviso key={`${campoId}|${equipo}`} campoId={campoId} equipo={equipo} onEnviado={setEnviado} />
-          : <p className="text-[11.5px] text-[var(--tinta2)]">Sin aviso ni orden abiertos en SAP.</p>)}
+          : <p className="text-[11.5px] text-[var(--tinta2)]">Sin aviso ni orden abiertos.</p>)}
       </div>
 
       {repuestos.length > 0 && (
         <>
-          <h3 className={titulo}>REPUESTOS CRÍTICOS · STOCK EN SAP</h3>
+          <h3 className={titulo}>REPUESTOS CRÍTICOS</h3>
           <ul className="grid gap-1 text-[11.5px]">
             {repuestos.map(r => {
               const falta = r.stock < r.minimo
               return (
                 <li key={r.material} className="flex items-start gap-1.5">
                   <FueraDeMeta si={falta && !r.enTransito} tamano={10} />
-                  <span className="min-w-0 flex-1">
-                    <b>{r.descripcion}</b>: {plural(r.stock, 'en bodega', 'en bodega')} (mínimo {r.minimo})
-                    {r.enTransito ? ` · ${r.enTransito.cantidad} en tránsito, llega el ${fechaCorta(new Date(`${r.enTransito.llega}T12:00:00-05:00`))}`
-                      : falta ? ` · pedirlo tarda ${n0(r.plazoDias)} días` : ''}
+                  <span className="tabular min-w-0 flex-1">
+                    <b>{r.descripcion}</b> · {r.stock} en bodega (mín. {r.minimo})
+                    {r.enTransito ? ` · llega${r.enTransito.cantidad === 1 ? '' : 'n'} ${r.enTransito.cantidad} el ${fechaCorta(new Date(`${r.enTransito.llega}T12:00:00-05:00`))}`
+                      : falta ? ` · pedirlo: ${n0(r.plazoDias)} días` : ''}
                   </span>
                 </li>
               )
@@ -76,21 +95,14 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
 
       {nivel === 'ingenieria' && ordenes.length > 0 && (
         <>
-          <h3 className={titulo}>HISTORIAL EN SAP · {plural(ordenes.length, 'ORDEN', 'ÓRDENES')}{ordenes.length > 5 ? ' · LAS 5 MÁS RECIENTES' : ''}</h3>
+          <h3 className={titulo}>HISTORIAL SAP · {plural(ordenes.length, 'ORDEN', 'ÓRDENES')}</h3>
           <ul className="grid gap-1 text-[11px] text-[var(--tinta2)]">
-            {ordenes.slice(0, 5).map(o => (
-              <li key={o.numero} className="flex flex-wrap gap-x-2">
-                <span className="tabular text-[var(--tinta3)]">{fechaCorta(new Date(o.creada))}</span>
-                <b className="text-[var(--tinta)]">{o.numero}</b>
-                <span>{NOMBRE_CLASE[o.clase]} · {o.descripcion}</span>
-                <span className="text-[var(--tinta3)]">{NOMBRE_ESTADO_ORDEN[o.estado]}{o.horasReales ? ` · ${n1(o.horasReales)} h confirmadas` : ''}</span>
-              </li>
-            ))}
+            {historial.visibles.map(o => filaOrden(o))}
+            {historial.resto.map(o => filaOrden(o, true))}
           </ul>
-          {ordenes.length > 5 && <small className="text-[10.5px] text-[var(--tinta3)]">y {plural(ordenes.length - 5, 'orden más', 'órdenes más')} en SAP</small>}
+          <VerMas ocultas={historial.ocultas} abierto={historial.abierto} onAlternar={historial.alternar} />
         </>
       )}
-      <p className="mt-2 text-[10px] text-[var(--tinta3)]">Avisos, órdenes, horas y stock vienen de SAP. La orden la crea el planeador en SAP; TRIM envía el aviso y avisa cuando la orden se libera.</p>
     </section>
   )
 }
@@ -101,8 +113,12 @@ function LineaAviso({ a, enfocar }: { a: AvisoSap; enfocar?: boolean }) {
   useEffect(() => { if (enfocar) ref.current?.focus() }, [enfocar])
   return (
     <div ref={ref} tabIndex={-1} className="rounded border border-[var(--linea2)] bg-[var(--panel2)] px-2.5 py-2 text-[11.5px]">
-      <b>Aviso {a.numero}</b> ({NOMBRE_TIPO_AVISO[a.tipo]}, prioridad {a.prioridad}) {horas < 1 ? 'recién enviado' : `abierto hace ${fmtHoras(horas)}`} · {a.creadoPor}
-      <span className="block text-[var(--tinta2)]">{a.descripcion}. Sin orden todavía: la crea el planeador en SAP, y cuando la libere TRIM le avisa al técnico.</span>
+      <b>Aviso {a.numero}</b> · {NOMBRE_TIPO_AVISO[a.tipo]} · prioridad {a.prioridad} · {horas < 1 ? 'recién enviado' : `hace ${fmtHoras(horas)}`} · {a.creadoPor}
+      <span className="flex flex-wrap items-center gap-x-1.5 text-[var(--tinta2)]">
+        <span>{a.descripcion}</span>
+        <Chip>sin orden</Chip>
+        <Info titulo="Sin orden todavía" texto="La crea el planeador en SAP, y cuando la libere TRIM le avisa al técnico." />
+      </span>
     </div>
   )
 }
@@ -110,8 +126,9 @@ function LineaAviso({ a, enfocar }: { a: AvisoSap; enfocar?: boolean }) {
 function LineaOrden({ o, tecnico }: { o: OrdenSap; tecnico: string }) {
   return (
     <div className="rounded border border-[var(--linea2)] bg-[var(--panel2)] px-2.5 py-2 text-[11.5px]">
-      <b>Orden {o.numero}</b> ({NOMBRE_CLASE[o.clase]}, prioridad {o.prioridad}) · {NOMBRE_ESTADO_ORDEN[o.estado]}{o.liberada ? `${o.estado === 'REL' ? '' : ' · liberada'} el ${fechaHora(new Date(o.liberada))}` : ''}
-      <span className="block text-[var(--tinta2)]">{o.descripcion} · asignada a {tecnico}{o.aviso ? ` · del aviso ${o.aviso}` : ''}</span>
+      <b>Orden {o.numero}</b> · {NOMBRE_CLASE[o.clase]} · prioridad {o.prioridad} · {NOMBRE_ESTADO_ORDEN[o.estado]}{o.liberada ? `${o.estado === 'REL' ? '' : ' · liberada'} el ${fechaHora(new Date(o.liberada))}` : ''}
+      <span className="block text-[var(--tinta2)]">{o.descripcion}</span>
+      <span className="block text-[var(--tinta3)]">asignada a {tecnico}{o.aviso ? ` · aviso ${o.aviso}` : ''}</span>
     </div>
   )
 }
@@ -143,7 +160,11 @@ function EnviarAviso({ campoId, equipo, onEnviado }: { campoId: string; equipo: 
 
   if (!abierto) return (
     <div className="flex flex-wrap items-center gap-2 text-[11.5px]">
-      <span className="min-w-0 flex-1 text-[var(--tinta2)]">Sin aviso ni orden abiertos en SAP.{parada ? ' El equipo está parado: SAP todavía no lo sabe.' : ''}</span>
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 text-[var(--tinta2)]">
+        Sin aviso ni orden abiertos
+        {/* Parado y SAP sin saberlo: un estado, no una frase. */}
+        {parada && <Chip tono="fuerte">parado, SAP no lo sabe</Chip>}
+      </span>
       <Boton variante={parada ? 'principal' : 'normal'} onClick={() => setAbierto(true)}><Send className="mr-1 inline size-3.5" />Enviar aviso a SAP</Boton>
     </div>
   )
@@ -183,7 +204,7 @@ function EnviarAviso({ campoId, equipo, onEnviado }: { campoId: string; equipo: 
       </div>
       {parteSugerida && <small className="text-[10.5px] text-[var(--tinta3)]">La señal sugiere: {partes.find(p => p.id === parteSugerida)?.nombre.toLowerCase()}</small>}
       <div className="text-[10.5px] text-[var(--tinta2)]">
-        <span className="text-[var(--tinta3)]">Evidencia que va en el texto largo del aviso:</span>
+        <span className="text-[var(--tinta3)]">Evidencia (texto largo del aviso):</span>
         <ul className="list-disc pl-4">{evidencia.map(x => <li key={x}>{x}</li>)}</ul>
       </div>
       {error && <p id={idError} role="alert" className="text-[11.5px] text-[var(--tinta)]">{error.texto}</p>}

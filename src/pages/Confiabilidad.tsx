@@ -7,14 +7,20 @@ import { COMO, type ComoSeIdentifico } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
 import { Panel, Chip } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
+import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
-import { n0, n1, plural } from '@/shared/lib/formato'
+import { VerMas } from '@/shared/ui/VerMas'
+import { useVerMas } from '@/shared/ui/listaCorta'
+import { n0, plural } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { Aciertos } from '@/widgets/confiabilidad/Aciertos'
 import { TresRelojes } from '@/widgets/sap/TresRelojes'
 import { useRelojes } from '@/shared/api/sap'
 import { AHORA } from '@/entities/reloj'
 import { desplazable } from '@/shared/ui/alFinal'
+
+/** La familia de UN equipo, en corto (la tabla la dice por fila). */
+const UNA: Record<Familia, string> = { inyeccion: 'reinyección', multifasica: 'multifásica', electrosumergible: 'electrosumergible' }
 
 /** Confiabilidad de los equipos de alto impacto con la historia que dejó el
  *  PLC: cada cuánto fallan, cuánto tardan, de qué parte, y qué tan bien está
@@ -29,6 +35,9 @@ export function Confiabilidad() {
   // Su foco es la reparación activa, no la espera del repuesto: los tres relojes,
   // en toda la historia (como el tiempo entre fallas de esta pantalla).
   const reloj = useRelojes(clave.split(',').filter(Boolean), pedirInicioDeHistoria(), AHORA)
+  const malos = equipos.filter(e => e.h.fallas > 0).sort((a, b) => b.h.bbl - a.h.bbl || b.h.fallas - a.h.fallas).slice(0, 12)
+  // Cinco a la vista y «ver N más»; en el papel salen todas (la tabla no tiene alarmas que esconder).
+  const listaMalos = useVerMas(malos)
 
   if (!equipos.length) return <Panel titulo="CONFIABILIDAD"><p className="text-[12px] text-[var(--tinta2)]">{ambito.titulo} no tiene equipos de alto impacto.</p></Panel>
 
@@ -43,7 +52,6 @@ export function Confiabilidad() {
       bbl: es.reduce((a, e) => a + e.h.bbl, 0) }
   }
   const familias = (['inyeccion', 'electrosumergible', 'multifasica'] as Familia[]).filter(f => equipos.some(e => e.familia === f))
-  const malos = equipos.filter(e => e.h.fallas > 0).sort((a, b) => b.h.bbl - a.h.bbl || b.h.fallas - a.h.fallas).slice(0, 12)
 
   // Calidad del registro: cómo se identificó la parte de cada falla.
   const fallas = equipos.flatMap(e => e.h.eventos.filter(x => !x.disparo))
@@ -63,22 +71,24 @@ export function Confiabilidad() {
         {familias.map(f => {
           const x = flota(f)
           return (
-            <Tip key={f} titulo={FAMILIA[f]} pista="MTBF de la flota: días de historia por equipo ÷ fallas, sin contar disparos ni paradas que causó otro equipo."
+            // Disparos y barriles, en el globo: se alcanza con el teclado y con un
+            // toque (Tip recibe el foco). En el papel sale escrito solo lo que no
+            // está ya impreso arriba (disparos y barriles), dentro de la misma celda.
+            <div key={f} className="min-w-0"><Tip titulo={FAMILIA[f]} pista="MTBF de la flota: días de historia por equipo ÷ fallas, sin contar disparos ni paradas que causó otro equipo."
               filas={[['Equipos', String(x.n)], ['Fallas', String(x.fallas)], ['Disparos', String(x.disparos)],
-                ['Tiempo fuera promedio', x.mdt ? fmtHoras(x.mdt, true) : '—'], ['Barriles', `${n0(x.bbl)} bbl`]]}>
+                ['Tiempo fuera promedio', x.mdt ? fmtHoras(x.mdt, true) : '—'], ['Barriles en la historia', `${n0(x.bbl)} bbl`]]}
+              className="min-w-0">
               <small className="block text-[10.5px] text-[var(--tinta3)]">{FAMILIA[f]} · {x.n}</small>
               <b className="tabular block text-[26px] leading-none">{x.mtbf ? `${n0(x.mtbf)} d` : '—'}</b>
-              <small className="block text-[10.5px] text-[var(--tinta2)]">entre fallas · {plural(x.fallas, 'falla', 'fallas')}{x.mdt ? ` · ${fmtHoras(x.mdt, true)} fuera` : ''}</small>
-              {/* Disparos y barriles también a la vista: en el recuadro flotante solo
-                  los alcanzaba quien usa ratón. */}
-              <small className="block text-[10.5px] text-[var(--tinta3)]">{plural(x.disparos, 'disparo', 'disparos')} · {n0(x.bbl)} bbl en la historia</small>
-            </Tip>
+              <small className="block text-[10.5px] text-[var(--tinta3)]">entre fallas</small>
+              <small className="block text-[10.5px] text-[var(--tinta2)]">{plural(x.fallas, 'falla', 'fallas')}{x.mdt ? ` · ${fmtHoras(x.mdt, true)} fuera` : ''}</small>
+            </Tip><small className="solo-impresion text-[9pt] text-[var(--tinta2)]">{plural(x.disparos, 'disparo', 'disparos')} · {n0(x.bbl)} bbl en la historia</small></div>
           )
         })}
         <span>
           <small className="block text-[10.5px] text-[var(--tinta3)]">Historia</small>
           <b className="tabular block text-[26px] leading-none">{n0(dias / 30.4)} meses</b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">del registro de eventos del PLC</small>
+          <small className="block text-[10.5px] text-[var(--tinta2)]">eventos del PLC</small>
         </span>
       </div>
 
@@ -86,7 +96,8 @@ export function Confiabilidad() {
         Una falla es una parada propia del equipo: la que causó otro equipo (se cayó la energía, paró
         la bomba de la línea) o la que estaba en el programa no cuenta. En la electrosumergible, un
         disparo que vuelve a arrancar en menos de un día tampoco: la falla es la que obliga a sacarla
-        del pozo. Con menos de dos fallas no se calcula el tiempo entre fallas.
+        del pozo. Con menos de dos fallas no se calcula el tiempo entre fallas. Toque o pase el cursor
+        por una flota para ver sus disparos y sus barriles; el ⓘ de cada parte da su referencia publicada.
       </Lectura>
 
       <Aciertos onAbrir={(c, eq) => {
@@ -94,12 +105,12 @@ export function Confiabilidad() {
         if (e) abrir(e)
       }} />
 
-      <Panel className="mt-2.5" titulo="REPARACIÓN ACTIVA Y ESPERA" extra={reloj ? `promedio de ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
-        {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[12px] text-[var(--tinta2)]">No hay fallas cerradas con orden en SAP en estos campos.</p>}
+      <Panel className="mt-2.5" titulo="REPARACIÓN ACTIVA Y ESPERA" extra={reloj ? `promedio · ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
+        {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[12px] text-[var(--tinta2)]">Sin fallas cerradas con orden en SAP.</p>}
       </Panel>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
-        <Panel titulo="LOS QUE MÁS CUESTAN" extra="por barriles en la historia · clic para abrir">
+        <Panel titulo="LOS MÁS COSTOSOS" extra="bbl · toda la historia">
           <div className="overflow-x-auto">
             <table className="tabular w-full text-left text-[11.5px]">
               <thead className="text-[9.5px] text-[var(--tinta3)]">
@@ -107,11 +118,13 @@ export function Confiabilidad() {
                   <th className="hidden text-right font-normal sm:table-cell">Fuera</th><th className="pl-3 font-normal">Parte</th><th className="text-right font-normal">bbl</th></tr>
               </thead>
               <tbody>
-                {malos.map(e => (
-                  <tr key={`${e.campoId}${e.equipo}`} onClick={() => abrir(e)} className="cursor-pointer border-t border-[var(--linea2)] hover:bg-[var(--panel2)]">
+                {[...listaMalos.visibles, ...listaMalos.resto].map(e => (
+                  <tr key={`${e.campoId}${e.equipo}`} onClick={() => abrir(e)}
+                    // Lo que «ver N más» esconde sale igual en el papel (una tabla cortada en silencio engaña).
+                    className={`cursor-pointer border-t border-[var(--linea2)] hover:bg-[var(--panel2)] ${listaMalos.resto.includes(e) ? 'hidden print:table-row' : ''}`}>
                     {/* El botón da el foco y el Enter al teclado; su clic sube a la fila,
                         que es la que abre (así el ratón abre desde cualquier celda). */}
-                    <td className="py-1.5"><button type="button" aria-label={`Abrir ${e.equipo}`} className="cursor-pointer rounded-sm font-mono font-bold">{e.equipo}</button><small className="block text-[10px] text-[var(--tinta3)]">{FAMILIA[e.familia].toLowerCase()}{ambito.global ? ` · ${campoPorId(e.campoId).nombre}` : ''}</small></td>
+                    <td className="py-1.5"><button type="button" aria-label={`Abrir ${e.equipo}`} className="cursor-pointer rounded-sm font-mono font-bold">{e.equipo}</button><small className="block text-[10px] text-[var(--tinta3)]">{UNA[e.familia]}{ambito.global ? ` · ${campoPorId(e.campoId).nombre}` : ''}</small></td>
                     <td className="text-right">{e.h.fallas}{e.h.disparos ? <small className="text-[var(--tinta3)]"> +{e.h.disparos}</small> : ''}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mtbfDias ? `${n0(e.h.mtbfDias)} d` : '—'}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mdtH ? fmtHoras(e.h.mdtH, true) : '—'}</td>
@@ -122,9 +135,10 @@ export function Confiabilidad() {
               </tbody>
             </table>
           </div>
+          <VerMas ocultas={listaMalos.ocultas} abierto={listaMalos.abierto} onAlternar={listaMalos.alternar} />
         </Panel>
 
-        <Panel titulo="DE QUÉ FALLAN" extra="contra la referencia publicada">
+        <Panel titulo="DE QUÉ FALLAN" extra="contra la referencia">
           {familias.map(f => {
             const es = equipos.filter(e => e.familia === f)
             const cuenta = new Map<ParteId, number>()
@@ -135,13 +149,15 @@ export function Confiabilidad() {
               <div key={f} className="mb-3 last:mb-0">
                 <h4 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{FAMILIA[f].toUpperCase()} · {plural(total, 'FALLA', 'FALLAS')} CON PARTE</h4>
                 {partes.filter(p => cuenta.get(p.id)).sort((a, b) => (cuenta.get(b.id) ?? 0) - (cuenta.get(a.id) ?? 0)).map(p => (
-                  <Tip key={p.id} titulo={p.nombre} pista={`Referencia: ${p.peso.texto}. ${p.peso.fuente}.`}
-                    filas={[['Fallas aquí', String(cuenta.get(p.id))], ['De las fallas con parte', `${n1(((cuenta.get(p.id) ?? 0) / total) * 100)} %`]]}
-                    className="mb-1.5 block">
-                    <div className="flex justify-between text-[11.5px]"><span>{p.nombre}</span><span className="tabular">{cuenta.get(p.id)} · {n0(((cuenta.get(p.id) ?? 0) / total) * 100)} %</span></div>
-                    <div className="mt-0.5 h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]"><i className="block h-full bg-[var(--dato-1)]" style={{ width: `${((cuenta.get(p.id) ?? 0) / total) * 100}%` }} /></div>
-                    <small className="block text-[10px] text-[var(--tinta3)]">Referencia: {p.peso.texto}</small>
-                  </Tip>
+                  // La referencia publicada, en un ⓘ junto a la parte: a la vista queda que hay
+                  // contra qué compararla, y en el papel sale escrita con su fuente.
+                  <div key={p.id} className="mb-1.5">
+                    <div className="flex items-start justify-between gap-2 text-[11.5px]">
+                      <span className="flex min-w-0 flex-wrap items-center gap-x-1">{p.nombre}<Info titulo={`Referencia · ${p.nombre}`} texto={`${p.peso.texto}. ${p.peso.fuente}.`} /></span>
+                      <span className="tabular shrink-0">{cuenta.get(p.id)} · {n0(((cuenta.get(p.id) ?? 0) / total) * 100)} %</span>
+                    </div>
+                    <div aria-hidden className="mt-0.5 h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]"><i className="block h-full bg-[var(--dato-1)]" style={{ width: `${((cuenta.get(p.id) ?? 0) / total) * 100}%` }} /></div>
+                  </div>
                 ))}
                 {total === 0 && <p className="text-[11.5px] text-[var(--tinta2)]">Ninguna falla con la parte identificada.</p>}
               </div>
@@ -177,7 +193,7 @@ export function Confiabilidad() {
           </div>
         </Panel>
 
-        <Panel titulo="CALIDAD DEL REGISTRO DE FALLAS" extra="ISO 14224 pide la parte de cada falla">
+        <Panel titulo="CALIDAD DEL REGISTRO" extra="ISO 14224: parte por falla">
           <Lectura>
             Cómo se supo qué parte falló. Lo que dice una señal (primera alarma, código del variador) o
             la firma de las señales es evidencia; lo declarado depende de quien respondió; lo que no

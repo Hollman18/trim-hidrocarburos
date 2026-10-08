@@ -23,7 +23,7 @@ export function SoloCampo() {
             <span className="min-w-0 flex-1">
               <b className="block truncate text-[12.5px]">{c.nombre}</b>
               <small className="block text-[10.5px] text-[var(--tinta3)]">
-                {c.cuenca} · {e?.ayer.bbl === null || e?.ayer.bbl === undefined ? 'sin fiscal' : `${n0(e.ayer.bbl)} bbl`} el último día · {plural(e?.parados ?? 0, 'pozo parado', 'pozos parados')}
+                {c.cuenca} · {e?.ayer.bbl === null || e?.ayer.bbl === undefined ? 'sin fiscal' : `${n0(e.ayer.bbl)} bbl último día`} · {plural(e?.parados ?? 0, 'pozo parado', 'pozos parados')}
               </small>
             </span>
           </button>

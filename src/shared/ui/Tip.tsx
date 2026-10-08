@@ -49,9 +49,11 @@ export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = f
   const abierto = pos !== null
   useEffect(() => {
     if (!abierto) return
-    const cerrar = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setPos(null) } }
-    document.addEventListener('keydown', cerrar, true)
-    return () => document.removeEventListener('keydown', cerrar, true)
+    // En window y en captura (corre antes que document) y marcada como atendida:
+    // el desplegable que contiene el ⓘ respeta `defaultPrevented` y no se cierra con él.
+    const cerrar = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setPos(null) } }
+    addEventListener('keydown', cerrar, true)
+    return () => removeEventListener('keydown', cerrar, true)
   }, [abierto])
 
   return (
