@@ -11,8 +11,9 @@ import { Info } from '@/shared/ui/Info'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas, VISIBLES } from '@/shared/ui/listaCorta'
+import { marcaDeFila } from './marca'
 import { NOMBRE_PRIORIDAD } from '@/shared/lib/prioridad'
-import { n0, n1, plural } from '@/shared/lib/formato'
+import { n0, n1, plural, pctParte } from '@/shared/lib/formato'
 
 const FAMILIA: Record<string, string> = { inyeccion: 'reinyección', multifasica: 'multifásica', electrosumergible: 'electrosumergible' }
 const RAYADO = 'repeating-linear-gradient(45deg, var(--tinta3), var(--tinta3) 2px, transparent 2px, transparent 4px)'
@@ -26,6 +27,8 @@ const FILA = 'border-b border-[var(--linea2)] last:border-0'
 /** A qué equipo se le cargan los barriles, de mayor a menor, con el
  *  acumulado: los dos o tres primeros suelen explicar casi todo. Se ven cinco
  *  (y toda fila de prioridad 1, ISA-18.2); el resto, a un toque y en el papel.
+ *  La marca de cada fila es la de hoy de su equipo solo si la fila es de una
+ *  falla suya: una parada programada no la lleva (`marcaDeFila`).
  *  El nombre largo del equipo, la tolerancia y el peso de la parte van en el
  *  globo de la fila: a la vista quedan la etiqueta, el tipo y la parte. */
 export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerTodo }: {
@@ -42,13 +45,15 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
   const acumulado = filas.reduce<number[]>((a, f) => [...a, (a.at(-1) ?? 0) + f.bbl], [])
   const items = filas.map((f, i) => ({ f, i }))
   // Con `max` la pantalla ya corta (y lleva «Ver los N equipos»): no se corta dos veces.
-  const lista = useVerMas(items, { n: max ?? aLaVista(items.length), prioridad: ({ f }) => equipoEnCampo(f.equipo, f.campoId)?.severidad ?? 0 })
+  // La marca de la fila: el estado de hoy del equipo, solo en sus filas de falla (marca.ts).
+  const marca = (f: Libro['porEquipo'][number]) => marcaDeFila(f, equipoEnCampo(f.equipo, f.campoId)?.severidad)
+  const lista = useVerMas(items, { n: max ?? aLaVista(items.length), prioridad: ({ f }) => marca(f) })
   const columnaBbl = 'tabular w-[64px] shrink-0 text-right'
   const columnaAcum = 'tabular hidden w-[56px] shrink-0 text-right sm:block'
 
   const fila = ({ f, i }: typeof items[number], oculta: boolean) => {
     const eq = equipoEnCampo(f.equipo, f.campoId)
-    const s = eq?.severidad ?? 0
+    const s = marca(f)
     const pAcum = lb.diferido > 0 ? (acumulado[i]! / lb.diferido) * 100 : 0
     const parteTop = f.partes[0]
     const alto = ALTO_IMPACTO.includes(f.tipo)
@@ -145,7 +150,7 @@ export function ParetoPartes({ lb, onIr }: { lb: Libro; onIr?: () => void }) {
         </span>
         <span className="tabular w-[78px] shrink-0 text-right">
           <b className="block text-[15px] leading-tight">{n0(p.bbl)}</b>
-          <small className="text-[9.5px] text-[var(--tinta3)]">bbl · {n0(total ? (p.bbl / total) * 100 : 0)} %</small>
+          <small className="text-[9.5px] text-[var(--tinta3)]">bbl · {pctParte(total ? (p.bbl / total) * 100 : 0)}</small>
         </span>
       </Tip>
     </div>
@@ -182,7 +187,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
       <div key={t.tipo} className={`${FILA} py-1.5 ${oculta ? 'solo-impresion' : ''}`}>
         <div className="flex justify-between gap-2 text-[11.5px]">
           <span className={alto ? 'font-semibold' : ''}>{TIPO_CAUSA[t.tipo]}</span>
-          <span className="tabular shrink-0">{n0(t.bbl)} bbl · {n0(lb.diferido ? (t.bbl / lb.diferido) * 100 : 0)} %</span>
+          <span className="tabular shrink-0">{n0(t.bbl)} bbl · {pctParte(lb.diferido ? (t.bbl / lb.diferido) * 100 : 0)}</span>
         </div>
         <span className="mt-1 block h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]">
           <i className="block h-full" style={{
@@ -235,7 +240,7 @@ export function Palancas({ lb, base, conMaximo = false }: { lb: Libro; base?: Li
       </Lectura>
       <div className="text-[12px]">
         {filas.map(f => {
-          const pct = lb.diferido ? `${n0((f.v / lb.diferido) * 100)} %` : ''
+          const pct = lb.diferido ? pctParte((f.v / lb.diferido) * 100) : ''
           return (
             <div key={f.k} className={`${FILA} print:pb-1.5`}>
               <Tip titulo={f.k} pista={f.pie} filas={[['Barriles', `${n0(f.v)} bbl`], ...(pct ? [['Del diferido', pct] as [string, string]] : [])]}

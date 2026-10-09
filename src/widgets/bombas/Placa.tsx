@@ -8,8 +8,8 @@ import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { Analogico } from '@/shared/ui/Analogico'
 import { Info } from '@/shared/ui/Info'
 import { Tip } from '@/shared/ui/Tip'
-import { n0, n1, decimalesDe, plural } from '@/shared/lib/formato'
-import { CLAVE, fmtBbl, fmtRango, fmtHoras, estadoCorto, fraseParteCorta } from './comun'
+import { n0, decimalesDe, plural } from '@/shared/lib/formato'
+import { CLAVE, fmtBbl, fmtRango, fmtHoras, estadoCorto, fraseParteCorta, respaldoAbsorbe } from './comun'
 import { tipoNombre, type BombaVista } from './vista'
 import type { NivelDetalle } from '@/entities/tipos'
 
@@ -19,7 +19,6 @@ import type { NivelDetalle } from '@/entities/tipos'
 export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVista; global: boolean; nivel?: NivelDetalle; onAbrir: () => void }) {
   const { eq, perfil, senales, veredicto: ve, abierta, partes } = b
   const idNombre = useId()
-  if (nivel === 'decision') return <PlacaDirectiva b={b} global={global} onAbrir={onAbrir} />
   const peor = partes.find(p => p.estado === 'fallo' || p.estado === 'fuera' || p.estado === 'avisa')
   const pr = ve?.prediccion
   const plantilla = perfil ? plantillaDe(perfil.subtipo) : []
@@ -156,6 +155,11 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
                   <span>si se para: no cierra pozos hoy</span>
                   <Info className={encima} titulo="Si se para" texto="No cierra pozos hoy. Baja el soporte de presión." />
                 </>
+                // Colchón infinito: no hay «después del colchón» que contar.
+                : respaldoAbsorbe(pr) ? <>
+                  <span>si se para: no cierra pozos</span>
+                  <Info className={encima} titulo="Si se para" texto="El respaldo absorbe toda el agua: parar no cierra pozos." />
+                </>
                 : pr.colchon ? <>
                   <span>si se para: <b className="tabular text-[var(--tinta)]">{fmtHoras(pr.colchon.horas, true)}</b> de colchón, luego se pierden <b className="tabular text-[var(--tinta)]">{n0(pr.crudoBpd)} bbl/d</b></span>
                   {pr.crudoParejoBpd > pr.crudoBpd + 1 && (
@@ -169,7 +173,9 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
           {ve && nivel === 'ingenieria' && ve.historial.fallas > 0 && (
             <p className="tabular mt-0.5 text-[10.5px] text-[var(--tinta3)]">
               {plural(ve.historial.fallas, 'falla', 'fallas')} en {n0(ve.historial.dias / 30.4)} meses{ve.historial.mtbfDias ? ` · cada ${n0(ve.historial.mtbfDias)} d` : ''}
-              {ve.porFalla !== undefined ? ` · ${n0(ve.porFalla)} bbl/falla` : ''}{ve.historial.mdtH ? ` · ${n1(ve.historial.mdtH)} h fuera` : ''}
+              {ve.historial.mdtH ? ` · ${fmtHoras(ve.historial.mdtH, true)} fuera` : ''}
+              {/* Lo que YA costó (histórico); «si falla hoy» es la cifra de Riesgo. */}
+              {ve.porFalla !== undefined ? ` · le ha costado ${n0(ve.porFalla)} bbl por falla` : ''}
             </p>
           )}
         </div>
@@ -178,41 +184,5 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
       <button onClick={onAbrir} aria-label={`Abrir el detalle de ${eq.nombre}`}
         className="absolute inset-0 cursor-pointer rounded outline-none" />
     </article>
-  )
-}
-
-/** La bomba para quien decide: si está parada o en marcha, lo que está
- *  costando o costaría, lo que le ha costado y de qué falla. Sin variables. */
-function PlacaDirectiva({ b, global, onAbrir }: { b: BombaVista; global: boolean; onAbrir: () => void }) {
-  const idNombre = useId(), idEstado = useId(), idDetalle = useId()
-  const { eq, perfil, veredicto: ve, abierta, partes, periodo } = b
-  const pr = ve?.prediccion
-  const avisa = partes.find(p => p.estado === 'fuera' || p.estado === 'avisa')
-  const parte = ve?.historial.porParte[0]
-  return (
-    // El nombre del botón es la bomba y la descripción, lo que dice la tarjeta:
-    // un aria-label con solo el nombre dejaba mudos los barriles y la falla.
-    <button onClick={onAbrir} aria-labelledby={idNombre} aria-describedby={`${idEstado} ${idDetalle}`}
-      className="flex cursor-pointer flex-col rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-left shadow-[var(--sombra)] transition-colors hover:bg-[var(--elevado)] focus-visible:ring-2 focus-visible:ring-[var(--acento)]">
-      <span className="flex items-start gap-2">
-        <MarcaPrioridad s={eq.severidad} tamano={16} className="mt-[1px]" />
-        <span className="min-w-0 flex-1">
-          <b id={idNombre} className="block text-[13px] leading-tight">{eq.id}{global ? ` · ${b.campo.nombre}` : ''}</b>
-          <small id={idEstado} className="block text-[11px] text-[var(--tinta2)]">
-            {!perfil ? 'sin datos de la bomba en este campo' : abierta ? `Parada desde ${fechaHora(abierta.inicio)}` : avisa ? `En marcha · ${avisa.parte.nombre.toLowerCase()} avisa` : 'En marcha'}
-          </small>
-        </span>
-      </span>
-      {perfil && (
-        <span id={idDetalle} className="mt-2 grid gap-1 text-[12px]">
-          {pr?.perdiendo ? <span><b className="tabular">{n0(pr.perdiendo.bblDia)} bbl/d</b> perdiéndose · {pr.perdiendo.pozos.length} pozos cerrados</span>
-            : pr && !pr.inmediato ? <span className="text-[var(--tinta2)]">Si se para, no cierra pozos hoy</span>
-              : pr ? <span className="text-[var(--tinta2)]">Si se para: <b className="tabular text-[var(--tinta)]">{n0(pr.crudoBpd)} bbl/d</b></span> : null}
-          {abierta?.pide && <span className="text-[11px] text-[var(--tinta2)]">Esperando que se identifique el daño</span>}
-          <span className="text-[var(--tinta2)]">Le ha costado <b className="tabular text-[var(--tinta)]">{n0(periodo?.bbl ?? 0)} bbl</b> en el período</span>
-          {parte && <span className="text-[11px] text-[var(--tinta3)]">Falla más por {NOMBRE_PARTE[parte.parte].toLowerCase()}{ve?.historial.mtbfDias ? ` · una cada ${n0(ve.historial.mtbfDias)} días` : ''}</span>}
-        </span>
-      )}
-    </button>
   )
 }

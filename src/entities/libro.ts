@@ -415,6 +415,33 @@ export interface FilaEquipo {
   eventos: number
   pozos: number
   partes: Array<{ parte: ParteId; bbl: number }>
+  /** Solo en las filas de falla propia de un equipo de alto impacto
+   *  (`reinyeccion`, `transporte`, `electrosumergible`): sus fallas en el
+   *  período, de su historia de fallas (`historialDeEquipo`): los eventos que
+   *  se solapan con [desde, hasta), también la abierta y las que el tanque
+   *  absorbió, con la misma regla de período que `porParte`. En las demás
+   *  filas no va. */
+  fallas?: number
+  /** Las mismas filas: los disparos de la electrosumergible en el período (un
+   *  disparo no es una falla). En una bomba, 0. */
+  disparos?: number
+}
+
+/** Un equipo de la línea que falló (o disparó) en el período sin costar crudo:
+ *  el tanque, el respaldo o la salida alterna del agua lo absorbieron, así que
+ *  no tiene fila en `porEquipo` (que solo lleva barriles). La vista del
+ *  gerente lo pone al final de su campo: «5 fallas · no costó crudo». */
+export interface EquipoSinCosto {
+  campoId: string
+  equipo: string
+  /** La familia de sus fallas: `reinyeccion` (bomba de inyección, también la
+   *  de recobro), `transporte` (multifásica) o `electrosumergible`. */
+  tipo: TipoCausa
+  /** Con la regla de `FilaEquipo.fallas`: los eventos de su historia que se
+   *  solapan con el período, también la abierta. */
+  fallas: number
+  /** Electrosumergible: sus disparos en el período. En una bomba, 0. */
+  disparos: number
 }
 
 /** Una electrosumergible que dispara y vuelve a arrancar en menos de esto no
@@ -497,6 +524,12 @@ export interface Libro {
   evitablePorOrden: number
   porTipo: Array<{ tipo: TipoCausa; bbl: number }>
   porEquipo: FilaEquipo[]
+  /** Los equipos de la línea (bombas de inyección y multifásicas,
+   *  electrosumergibles) con fallas o disparos en el período y SIN fila de su
+   *  familia en `porEquipo`: fallaron sin costar crudo. Sin barriles: no son
+   *  diferido y no entran en ningún Pareto. Por campo (el orden de la
+   *  consulta), de más fallas a menos, luego disparos y el código del equipo. */
+  sinCosto: EquipoSinCosto[]
   porParte: FilaParte[]
   porPozo: Array<{ campoId: string; pozo: string; bbl: number; horas: number; eventos: number }>
   porCampo: Array<{ campoId: string; real: number; potencial: number; brecha: number; diferido: number; identificado: number; declarado: number; pendiente: number; altoImpacto: number; pe: number
@@ -717,17 +750,45 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
   // fila que sus fallas, no se mezcla bajo el tipo del primer tramo.
   const eqs = new Map<string, Tramo[]>()
   for (const t of tramos) if (t.bbl > 0) { const k = `${t.pozo.campoId}:${t.causa.equipo}:${t.causa.tipo}`; anotar(eqs, k, t) }
+  // Las fallas de un equipo de alto impacto en el período salen de su
+  // historia (las mismas que su ficha y Confiabilidad, también las que el
+  // tanque absorbió), no de los tramos con barriles: así se separan los
+  // disparos y nadie los cuenta en la pantalla.
+  const enPeriodo = (campoId: string, equipo: string) => {
+    const es = historialDeEquipo(campoId, equipo, ctx).eventos.filter(e => e.inicio.getTime() < h0 && (e.fin ? e.fin.getTime() : ahora) > d0)
+    return { fallas: es.filter(e => !e.disparo).length, disparos: es.filter(e => e.disparo).length }
+  }
   const porEquipo: FilaEquipo[] = [...eqs.values()].map((ts): FilaEquipo => {
     const partes = new Map<ParteId, number>()
     for (const t of ts) if (t.causa.parte) partes.set(t.causa.parte, (partes.get(t.causa.parte) ?? 0) + t.bbl)
+    const { pozo: { campoId }, causa: { equipo, tipo } } = ts[0]!
     return {
-      campoId: ts[0]!.pozo.campoId, equipo: ts[0]!.causa.equipo, tipo: ts[0]!.causa.tipo,
+      campoId, equipo, tipo,
       bbl: suma(ts), tolerancia: toleranciaDe(ts),
       eventos: new Set(ts.map(t => t.causa.evento ?? t.evento.id)).size,
       pozos: new Set(ts.map(t => t.pozo.id)).size,
       partes: [...partes.entries()].map(([parte, bbl]) => ({ parte, bbl })).sort((a, b) => b.bbl - a.bbl),
+      ...(familiaDe(tipo) ? enPeriodo(campoId, equipo) : {}),
     }
   }).sort((a, b) => b.bbl - a.bbl)
+
+  // Los equipos de la línea que fallaron sin costar crudo: con fallas o disparos
+  // en el período (la misma regla que la fila) y sin fila de su familia arriba.
+  // Una bomba sin ninguna parada en el campo no pudo fallar: basta mirar las que
+  // tienen paradas. La familia de la bomba es la de su causa (causa-senal.ts).
+  const conFila = new Set(porEquipo.map(f => `${f.campoId}:${f.equipo}:${f.tipo}`))
+  const sinCosto: EquipoSinCosto[] = campoIds.flatMap(c => {
+    const bombas = [...new Set(paradasDeCampo(c).map(e => e.equipo))].flatMap(id => {
+      const p = perfilBomba(id, c)
+      return p ? [{ equipo: id, tipo: (p.subtipo === 'multifasica' ? 'transporte' : 'reinyeccion') as TipoCausa }] : []
+    })
+    const esps = pozosDe(c).filter(p => p.levantamiento === 'electrosumergible').map(p => ({ equipo: p.id, tipo: 'electrosumergible' as TipoCausa }))
+    return [...bombas, ...esps]
+      .filter(x => !conFila.has(`${c}:${x.equipo}:${x.tipo}`))
+      .map(x => ({ campoId: c, ...x, ...enPeriodo(c, x.equipo) }))
+      .filter(x => x.fallas + x.disparos > 0)
+      .sort((a, b) => b.fallas - a.fallas || b.disparos - a.disparos || (a.equipo < b.equipo ? -1 : a.equipo > b.equipo ? 1 : 0))
+  })
 
   // Por parte: fallas de los equipos de la línea con la parte identificada,
   // con la misma regla que la historia de cada equipo (`armarHistorial`). Una
@@ -801,7 +862,7 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
     sinParte: suma(alto.filter(t => !t.causa.parte)),
     evitablePorOrden,
     porTipo: [...tipos.entries()].map(([tipo, bbl]) => ({ tipo, bbl })).sort((a, b) => b.bbl - a.bbl),
-    porEquipo, porParte, porPozo: [...pz.values()].sort((a, b) => b.bbl - a.bbl), porCampo, fa,
+    porEquipo, sinCosto, porParte, porPozo: [...pz.values()].sort((a, b) => b.bbl - a.bbl), porCampo, fa,
     custodia: {
       sinPrueba: todosLosPozos().filter(p => campoIds.includes(p.campoId) && !p.pruebas.length),
       estimados: todosLosPozos().filter(p => campoIds.includes(p.campoId) && p.origen === 'estimado'),

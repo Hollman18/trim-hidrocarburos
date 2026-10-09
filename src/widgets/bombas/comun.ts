@@ -1,6 +1,7 @@
 import type { Pronostico } from '@/entities/vigia'
 import type { VariableId, Subtipo } from '@/entities/bombas'
-import { HORIZONTE_H, type SaludParte } from '@/entities/salud'
+import type { Prediccion } from '@/entities/diferido'
+import { HORIZONTE_H, textoHoras, type SaludParte } from '@/entities/salud'
 
 const n0 = (v: number) => v.toLocaleString('es-CO', { maximumFractionDigits: 0 })
 const n1 = (v: number) => v.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -8,10 +9,15 @@ const n1 = (v: number) => v.toLocaleString('es-CO', { minimumFractionDigits: 1, 
 /** El horizonte (90 días) es el mismo que usa la salud por parte: más allá,
  *  una proyección lineal ya no se sostiene y se dice «más de tres meses».
  *  «precisa» para el registro de paradas, donde cada décima de hora son
- *  barriles; sin ella, para pronósticos, donde un decimal sería fingir. */
+ *  barriles; sin ella, para pronósticos, donde un decimal sería fingir.
+ *  Una sola regla con el motor: sin «precisa» es `textoHoras` (la de los
+ *  motivos del riesgo); con ella, solo cambia el decimal bajo 48 h. */
 export const fmtHoras = (h: number, precisa = false) =>
-  h > HORIZONTE_H ? 'más de 3 meses'
-    : h < 48 ? `${precisa ? n1(h) : n0(h)} h` : `${n1(h / 24)} d`
+  precisa && h <= HORIZONTE_H && h < 48 ? `${n1(h)} h` : textoHoras(h)
+
+/** Disposición cuyo respaldo absorbe toda el agua (colchón infinito): parar
+ *  no cierra pozos. La misma condición que usa el motor para el costo. */
+export const respaldoAbsorbe = (pr: Prediccion) => pr.perfil.papel === 'disposicion' && pr.aguaSinSalidaBpd <= 0
 
 /** Una parada abierta que todavía no cierra pozos no «lo absorbió todo»: el
  *  tanque sigue llenándose y lo que se dice es cuánto falta del colchón. Si el

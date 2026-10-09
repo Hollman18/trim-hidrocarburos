@@ -223,14 +223,20 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
           cursor por un evento para ver la frase de la señal, cómo se identificó y el código.
         </Lectura>
         {tramos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún evento.</p>}
-        {tramos.map(t => (
-          <Tip key={t.evento.id} titulo={`${fechaHora(t.inicio)} · ${TIPO_CAUSA[t.causa.tipo]}`} pista={t.causa.texto} imprimir="todo"
-            filas={[['Se le carga a', t.causa.equipo], ['Cómo se identificó', COMO[t.causa.como]], ['Código', `${t.evento.codigo} (${CODIGO[t.evento.codigo]})`]]}
+        {tramos.map(t => {
+          // La hora es la del PLC (el evento), no la del tramo: si el evento empezó
+          // antes del período (o sigue después), el tramo se recorta y se dice.
+          const plc = new Date(t.evento.inicio)
+          const recortado = t.inicio.getTime() > plc.getTime() || (!!t.evento.fin && t.fin.getTime() < Date.parse(t.evento.fin))
+          return (
+          <Tip key={t.evento.id} titulo={`${fechaHora(plc)} · ${TIPO_CAUSA[t.causa.tipo]}`} pista={t.causa.texto} imprimir="todo"
+            filas={[['Se le carga a', t.causa.equipo], ['Cómo se identificó', COMO[t.causa.como]], ['Código', `${t.evento.codigo} (${CODIGO[t.evento.codigo]})`],
+              ...(recortado ? [['En el período', `${fechaHora(t.inicio)} · ${fmtHoras(t.horas, true)}`] as [string, string]] : [])]}
             claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
             className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0 print:border-b-0 [&:has(+.solo-impresion:last-child)]:border-0">
             <span className="min-w-0">
-              <b className="tabular">{fechaHora(t.inicio)}</b>
-              <span className="text-[var(--tinta3)]"> · {t.abierto ? 'sigue' : fmtHoras(t.horas, true)} · </span>
+              <b className="tabular">{fechaHora(plc)}</b>
+              <span className="text-[var(--tinta3)]"> · {t.abierto ? 'sigue' : recortado ? '' : fmtHoras(t.horas, true)}{recortado ? `${t.abierto ? ' · ' : ''}${fmtHoras(t.horas, true)} en el período` : ''} · </span>
               <span className="font-mono text-[10.5px]">{t.evento.codigo}</span>
               {t.evento.hz !== undefined && <span className="text-[var(--tinta3)]"> a {n1(t.evento.hz)} Hz</span>}
               <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[var(--tinta2)]">
@@ -244,7 +250,8 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
               <small className="text-[10px] text-[var(--tinta3)]">{t.aproximado ? 'aproximado' : t.sinCustodia ? 'sin custodia' : ing ? `±${n0(t.sesgo * 100)} %` : ''}</small>
             </span>
           </Tip>
-        ))}
+          )
+        })}
       </Panel>
     </>
   )

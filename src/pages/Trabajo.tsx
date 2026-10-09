@@ -1,5 +1,5 @@
 import { useApp, useAmbito, useRol, usePersona } from '@/app/store'
-import { useRiesgo, usePreguntas, useCtx } from '@/shared/api/diferidos'
+import { useRiesgo, usePreguntas, useCtx, contarPorIdentificar } from '@/shared/api/diferidos'
 import { useSap } from '@/shared/api/sap'
 import { useMensajes } from '@/shared/api/mensajes'
 import { NOMBRE_CLASE, NOMBRE_ESTADO_ORDEN, type OrdenSap } from '@/entities/sap'
@@ -9,6 +9,7 @@ import { campoPorId } from '@/entities/campos'
 import { fechaHora, AHORA } from '@/entities/reloj'
 import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
 import { MarcaPrioridad, DatoInvalido } from '@/shared/ui/Prioridad'
+import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { VerMas } from '@/shared/ui/VerMas'
@@ -25,7 +26,10 @@ export function Trabajo() {
   const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo), setPantalla = useApp(s => s.setPantalla)
   const ids = ambito.campos.map(c => c.id)
   const riesgo = useRiesgo(ids)
-  const preguntas = usePreguntas(ids).filter(p => p.pide)
+  const todas = usePreguntas(ids)
+  const preguntas = todas.filter(p => p.pide)
+  // La cuenta única de «por identificar» (Turno, Mi trabajo, Identificar, Mantenimiento).
+  const pi = contarPorIdentificar(todas)
   const parados = riesgo.filter(r => r.estado === 'perdiendo' && r.altoImpacto)
   const avisan = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const programa = ctx.config.programa.filter(p => ids.includes(p.campoId) && new Date(p.hasta) >= AHORA)
@@ -43,7 +47,7 @@ export function Trabajo() {
   const listaPreguntas = useVerMas(preguntas, { prioridad: p => (!p.fin ? 1 : 3) })
   const listaAvisan = useVerMas(avisan, { prioridad: r => r.prioridad })
   const ordenMia = (r: (typeof avisan)[number]) => mias.find(o => o.campoId === r.campoId && o.equipo === r.equipo)
-  const sinArrancar = preguntas.filter(p => !p.fin).length
+  const sinArrancar = pi.porIdentificar - pi.arrancaronSinIdentificar
   const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
   const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
 
@@ -87,16 +91,17 @@ export function Trabajo() {
           <small className={apoyo}>alto impacto · {n0(parados.reduce((a, r) => a + r.bblDia, 0))} bbl/d</small>
         </span>
         <span>
-          <b className="tabular flex items-center gap-1.5 text-[22px] leading-none">{preguntas.some(p => !p.fin) && <MarcaPrioridad s={2} tamano={14} />}{preguntas.length}</b>
+          <b className="tabular flex items-center gap-1.5 text-[22px] leading-none">{sinArrancar > 0 && <MarcaPrioridad s={2} tamano={14} />}{pi.porIdentificar}</b>
           <small className={rotulo}>por identificar</small>
-          <small className={apoyo}>{sinArrancar} sin arrancar</small>
+          <ApoyoPorIdentificar pi={pi} />
         </span>
         <span>
           <b className="tabular block text-[22px] leading-none">{avisan.length}</b>
-          <small className={rotulo}>{avisan.length === 1 ? 'parte avisando' : 'partes avisando'}</small>
+          {/* Equipos, no partes: un servicio en alarma (K-101) avisa sin parte. Como en Mantenimiento. */}
+          <small className={rotulo}>{avisan.length === 1 ? 'equipo avisando' : 'equipos avisando'}</small>
           {avisan[0] && (avisan[0].horas !== undefined
-            ? <small className={apoyo}>la primera cruza en {fmtHoras(avisan[0].horas)}</small>
-            // Con varias, se dice cuántas están fuera: «3 partes avisando [ya fuera]» parecería que las tres.
+            ? <small className={apoyo}>el primero cruza en {fmtHoras(avisan[0].horas)}</small>
+            // Con varios, se dice cuántos están fuera: «3 equipos avisando [ya fuera]» parecería que los tres.
             : <small className={apoyo}><Chip tono="fuerte">{avisan.length === 1 ? 'ya fuera' : `${avisan.filter(r => r.horas === undefined).length} ya fuera`}</Chip></small>)}
         </span>
       </div>
@@ -129,7 +134,7 @@ export function Trabajo() {
           })}
         </Panel>
 
-        <Panel titulo="PARADAS POR IDENTIFICAR" extra={`${preguntas.length}`}>
+        <Panel titulo="PARADAS POR IDENTIFICAR" extra={`${pi.porIdentificar}`}>
           {preguntas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
@@ -140,7 +145,7 @@ export function Trabajo() {
         </Panel>
 
         <Panel titulo="AVISANDO · QUÉ REVISAR" extra={`${avisan.length}`}>
-          {avisan.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
+          {avisan.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
           {listaAvisan.visibles.map(filaAvisa)}
           {listaAvisan.resto.length > 0 && <div className="solo-impresion">{listaAvisan.resto.map(filaAvisa)}</div>}
           <VerMas ocultas={listaAvisan.ocultas} abierto={listaAvisan.abierto} onAlternar={listaAvisan.alternar} />

@@ -35,8 +35,6 @@ const PARA_QUE_DECISION: Record<string, string> = {
   diferidos: 'Mes a mes: a qué equipo y dónde bajar.',
   produccion: 'Cada día, contra lo posible y la meta.',
   riesgo: 'Qué se pierde ahora y qué va a fallar.',
-  bombas: 'Cuáles están paradas, cuánto cuestan y de qué fallan.',
-  esp: 'Cuáles fallaron, cuáles avisan y cuánto cuestan.',
   configuracion: 'Metas por campo (la global es la suma) y accesos.',
 }
 

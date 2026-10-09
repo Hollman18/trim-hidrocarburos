@@ -23,7 +23,10 @@ export interface SerieTag {
 export interface Dispositivo {
   tag: string
   tipo: string
-  valor: number | string
+  /** Número (analógico) o texto (un interruptor: «sin fuga», «armado»).
+   *  `null`: el instrumento no tiene lectura (sin señal); nunca se muestra
+   *  como cero (CONTRATO.md, «Un dato ausente no es cero»). */
+  valor: number | string | null
   unidad: string
   estado: EstadoDispositivo
   origen: string

@@ -31,6 +31,8 @@ export function equipoVivo(id: string, campoId: string, ctx: Contexto): EquipoVi
     // computador no se pinta como cero ni se salta: queda como hueco (null) en
     // su día, así la curva se corta ahí y el eje no se comprime. Cuál es ese
     // equipo y cuál su tag lo dice el registro (`fiscal`), no un id fijo.
+    // Sin dato del último día, el valor es `null` (CONTRATO.md: un instrumento
+    // sin lectura viaja con `valor: null`), nunca un texto como «—».
     if (eq.fiscal && eq.instrumentado) {
       const fiscal = fiscalUltimosDias(campoId, 12)
       const ultimo = fiscal.at(-1)
@@ -38,7 +40,7 @@ export function equipoVivo(id: string, campoId: string, ctx: Contexto): EquipoVi
       const serie = serieHasta(fiscal, 24, fiscalDeAyer(campoId).fecha.getTime())
       return { ...eq, clase: 'catalogo', dispositivos: eq.dispositivos.map(d => d.tag === eq.fiscal
         ? { ...d, unidad: 'bbl/d', serie, origen: 'computador de flujo · fiscal del día',
-          ...(ultimo === null || ultimo === undefined ? { valor: '—', estado: 'sin señal' as const } : { valor: ultimo }) } : d) }
+          ...(ultimo === null || ultimo === undefined ? { valor: null, estado: 'sin señal' as const } : { valor: ultimo }) } : d) }
     }
     return { ...eq, clase: 'catalogo' }
   }
@@ -47,7 +49,7 @@ export function equipoVivo(id: string, campoId: string, ctx: Contexto): EquipoVi
 
   const e = estadoAhora(p)
   const causa = e.evento ? causaDeEvento(e.evento, ctx) : undefined
-  const salud = p.levantamiento === 'electrosumergible' ? saludDeEsp(p) : []
+  const salud = p.levantamiento === 'electrosumergible' ? saludDeEsp(p, ctx) : []
   const peor = salud.find(s => s.estado === 'fuera' || s.estado === 'avisa')
   // Solo la causa lleva prioridad: cerrado por otro equipo es consecuencia.
   const porOtro = !!causa && causa.equipo !== p.id
@@ -61,9 +63,10 @@ export function equipoVivo(id: string, campoId: string, ctx: Contexto): EquipoVi
     origen: `${p.levantamiento === 'electrosumergible' ? 'variador' : p.levantamiento === 'bombeo-mecanico' ? 'controlador de bombeo' : 'válvula de cabeza'} · evento`,
     limite: '—',
   }
-  // Una señal sin lectura se muestra como hueco, nunca como cero.
+  // Una señal sin lectura viaja con `valor: null` (CONTRATO.md), nunca como
+  // cero ni como un texto: la pantalla la dice «sin señal» (`sinLectura`).
   const senales: Dispositivo[] = senalesEsp(p).map(s => ({
-    tag: s.tag, tipo: s.plantilla.nombre, valor: s.valor ?? '—', unidad: s.valor === null ? '' : s.unidad,
+    tag: s.tag, tipo: s.plantilla.nombre, valor: s.valor, unidad: s.valor === null ? '' : s.unidad,
     estado: s.estado, origen: s.origen, serie: s.serie,
     limite: s.alarma?.alta !== undefined ? `< ${fmt(s.alarma.alta)}` : s.alarma?.baja !== undefined ? `> ${fmt(s.alarma.baja)}`
       : s.normal ? `${fmt(s.normal[0])} – ${fmt(s.normal[1])}` : '—',

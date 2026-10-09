@@ -151,6 +151,25 @@ export function evaluarPartes(e: EntradaSalud): SaludParte[] {
     || (a.primera?.senal.pronostico.horas ?? Infinity) - (b.primera?.senal.pronostico.horas ?? Infinity))
 }
 
+const FMT_H0 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 })
+const FMT_D1 = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
+/** Horas para leer, con la regla de las pantallas (`fmtHoras` de
+ *  widgets/bombas/comun.ts, que el motor no puede importar): menos de 48 h en
+ *  horas enteras, si no en días con un decimal, y más allá del horizonte
+ *  «más de 3 meses». Así el motivo dice «10,9 d» donde la pantalla dice
+ *  «10,9 d», no «262 h». Igual que allá, el corte se mira antes de redondear
+ *  (47,6 h → «48 h»).
+ *  `haciaAbajo`: para un plazo que no se puede pasar («0 si vuelve antes de
+ *  19 h»), se trunca a lo que se escribe en vez de redondear: un colchón de
+ *  18,6 h dice «18 h», nunca «19 h». */
+export const textoHoras = (h: number, haciaAbajo = false): string => {
+  if (h > HORIZONTE_H) return 'más de 3 meses'
+  if (h < 48) return `${FMT_H0.format(haciaAbajo ? Math.floor(h) : h)} h`
+  // El 1e-9: 2,3 × 10 en coma flotante es 22,999…; truncar daría «2,2 d».
+  return `${FMT_D1.format(haciaAbajo ? Math.floor((h / 24) * 10 + 1e-9) / 10 : h / 24)} d`
+}
+
 /** Lo que se dice de una parte que está fuera o avisa. La banda normal y la
  *  alarma son dos límites distintos y se nombran por separado: una lectura
  *  que salió de su banda todavía no llegó a su alarma, y si va hacia ella se
@@ -161,7 +180,7 @@ export function motivoDeParte(sp: SaludParte): string {
     if (!s) return `${sp.parte.nombre}: un instrumento suyo reporta alarma`
     const nombre = s.plantilla.nombre.toLowerCase()
     if (s.estado === 'alarma' || s.pronostico.tipo === 'cruzado') return `${sp.parte.nombre}: ${nombre} ya llegó a su alarma`
-    const llega = sp.primera ? `; llega a su alarma en ${Math.round(sp.primera.senal.pronostico.horas)} h` : ''
+    const llega = sp.primera ? `; llega a su alarma en ${textoHoras(sp.primera.senal.pronostico.horas)}` : ''
     return `${sp.parte.nombre}: ${nombre} salió de su banda normal${llega}`
   }
   return `${sp.parte.nombre}: ${sp.primera?.senal.plantilla.nombre.toLowerCase() ?? 'avisa'}`

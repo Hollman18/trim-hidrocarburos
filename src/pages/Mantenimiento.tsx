@@ -1,11 +1,11 @@
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
-import { useLibro, useBase, useRiesgo, usePreguntas, useCtx } from '@/shared/api/diferidos'
+import { esServicio } from '@/shared/api/equipos'
+import { useLibro, useBase, useRiesgo, usePreguntas, useCtx, contarPorIdentificar } from '@/shared/api/diferidos'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
 import { conMeta, textoSinMeta } from '@/entities/libro'
 import { fechaHora, AHORA } from '@/entities/reloj'
-import { esBombaDeLinea } from '@/shared/api/equipos'
 import type { Riesgo as FilaRiesgo } from '@/entities/diferido'
 import { Panel, Boton, Chip } from '@/shared/ui/primitivas'
 import { PanelSapMantenimiento } from '@/widgets/sap/PanelSapMantenimiento'
@@ -17,8 +17,10 @@ import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { ParetoPartes, Palancas } from '@/widgets/diferidos/Paretos'
 import { fmtHoras } from '@/widgets/bombas/comun'
+import { costoHoy, colchonCorto, detalleCostoHoy, deFlota } from '@/shared/ui/costoHoy'
 
 /** Quien responde por que los barriles diferidos BAJEN. Su balanza aquí es en
  *  barriles y la mide el PLC: lo que se perdió en paradas programadas (estaban
@@ -33,13 +35,16 @@ export function Mantenimiento() {
   const base = useBase(q)
   const riesgo = useRiesgo(ids).filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const preguntas = usePreguntas(ids)
+  // «Por identificar» con la cuenta única (la misma de Turno, Mi trabajo e
+  // Identificar): las que piden respuesta; de esas, las que ya arrancaron.
+  const pi = contarPorIdentificar(preguntas)
+  const sinArrancar = pi.porIdentificar - pi.arrancaronSinIdentificar
   const pendientes = preguntas.filter(p => p.pide && !p.arrancoSinIdentificar)
-  const noConformes = preguntas.filter(p => p.arrancoSinIdentificar)
   // El panel de abajo es de lo que TODAVÍA no tiene causa. Una parada que arrancó
-  // sin identificar y se respondió después sigue contando como no conforme
-  // arriba, pero ya no es «que nadie ha identificado»: se dice aparte.
-  const sinIdentificar = [...pendientes, ...noConformes.filter(p => p.pide)]
-  const respondidasTarde = noConformes.filter(p => !p.pide)
+  // sin identificar y se respondió después sigue siendo no conforme, pero ya no
+  // es «que nadie ha identificado»: se dice aparte.
+  const sinIdentificar = [...pendientes, ...preguntas.filter(p => p.pide && p.arrancoSinIdentificar)]
+  const respondidasTarde = preguntas.filter(p => !p.pide && p.arrancoSinIdentificar)
   // Lo de alto impacto ya excluye lo programado: es su propio tipo de causa.
   const fallasAlto = lb.altoImpacto
   const planPct = lb.diferido > 0 ? (lb.planeado / lb.diferido) * 100 : 0
@@ -57,9 +62,13 @@ export function Mantenimiento() {
   const listaSin = useVerMas(sinIdentificar, { prioridad: p => (!p.fin && !p.arrancoSinIdentificar ? 1 : 3) })
 
   const filaRiesgo = (r: FilaRiesgo) => {
-    // Un servicio del campo que ya cayó a 0 bbl/d cierra lo que esté produciendo: lo mismo que dice Riesgo.
-    const servicio = r.tipo !== 'electrosumergible' && !esBombaDeLinea(r.equipo)
+    // Las mismas cifras, en el mismo orden y con los mismos rótulos que la fila
+    // de Riesgo: delante lo que se pierde por día si para; debajo, lo que
+    // costaría que fallara hoy. Un servicio del campo que ya cayó a 0 bbl/d
+    // cierra lo que esté produciendo. La regla de «servicio» es una sola (enAlarma.ts).
+    const servicio = esServicio(r)
     const siPara = servicio && r.bblDia === 0 ? 'todo el campo' : `${n0(r.bblDia)} bbl/d`
+    const detalle = detalleCostoHoy(r)
     return (
       <div key={`${r.campoId}${r.equipo}`} className="border-b border-[var(--linea2)] py-2 last:border-0">
         <Tip as="button" onClick={() => { setCampo(r.campoId); abrirEquipo(r.equipo, false) }}
@@ -67,7 +76,8 @@ export function Mantenimiento() {
           filas={[...(r.parte ? [['Parte', NOMBRE_PARTE[r.parte]] as [string, string]] : []),
             ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
             ...(r.tag ? [['Instrumento', r.tag] as [string, string]] : []),
-            ['Si para', siPara], ...(r.costoFalla !== undefined ? [['Si falla', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
+            ['Si para', servicio && r.bblDia === 0 ? 'cierra lo que esté produciendo en el campo' : siPara],
+            ...(r.costoFalla !== undefined ? [['Si falla hoy', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
           className="flex w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)]">
           <MarcaPrioridad s={r.prioridad} tamano={12} className="mt-[2px]" />
           <span className="min-w-0 flex-1">
@@ -82,12 +92,22 @@ export function Mantenimiento() {
               {!r.parte && r.tag && <span className="font-mono text-[10.5px]">{r.tag}</span>}
             </span>
           </span>
-          <span className="tabular shrink-0 text-right text-[11px]">
-            <b className="block">{r.costoFalla !== undefined ? `≈ ${n0(r.costoFalla)} bbl` : siPara}</b>
-            <small className="text-[9.5px] text-[var(--tinta3)]">{r.costoFalla !== undefined ? 'si falla' : 'si para'}</small>
+          <span className={columna}>
+            <b className="block text-[13px] leading-tight"><span className="sr-only">si para </span>{siPara}</b>
+            <small className="block text-[9.5px] leading-snug text-[var(--tinta3)]">
+              {costoHoy(r) ?? (servicio ? '' : 'sin historia')}
+              {colchonCorto(r) && <span className="block">{colchonCorto(r)}</span>}
+              {/* La misma marca que en Riesgo: estimado con la flota del campo. */}
+              {deFlota(r, rol.nivel) && <span className="block">flota</span>}
+            </small>
           </span>
         </Tip>
-        {r.accion && <div className="mt-0.5 pl-[22px]"><Info rotulo="qué hacer" titulo={`Qué hacer · ${r.equipo}`} texto={r.accion} /></div>}
+        {(r.accion || detalle) && (
+          <div className="mt-0.5 flex flex-wrap gap-x-3 pl-[22px]">
+            {r.accion && <Info rotulo="qué hacer" titulo={`Qué hacer · ${r.equipo}`} texto={r.accion} />}
+            {detalle && <Info rotulo="si falla hoy" titulo={`Si falla hoy · ${r.equipo}`} texto={detalle} />}
+          </div>
+        )}
       </div>
     )
   }
@@ -105,6 +125,7 @@ export function Mantenimiento() {
 
   const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
   const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
+  const columna = 'tabular w-[96px] shrink-0 text-right'
 
   return (
     <>
@@ -134,8 +155,9 @@ export function Mantenimiento() {
         </Tip></div>
         <span>
           <small className={rotulo}>por identificar</small>
-          <b className="tabular block text-[20px] leading-none">{pendientes.length}</b>
-          <small className={`${apoyo} flex items-center gap-1`}>{noConformes.length > 0 && <MarcaPrioridad s={3} tamano={11} />}{plural(noConformes.length, 'arrancó sin identificar', 'arrancaron sin identificar')}</small>
+          {/* ▲ como en Turno, Mi trabajo e Identificar: alguna sigue parada («no arrancar»). */}
+          <b className="tabular flex items-center gap-1.5 text-[20px] leading-none">{sinArrancar > 0 && <MarcaPrioridad s={2} tamano={14} />}{pi.porIdentificar}</b>
+          <ApoyoPorIdentificar pi={pi} />
         </span>
       </div>
 
@@ -149,7 +171,12 @@ export function Mantenimiento() {
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
         <Panel titulo="ATACAR AHORA" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
-          {riesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
+          {riesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
+          {riesgo.length > 0 && (
+            <div className="flex gap-3 pb-1 text-[10px] text-[var(--tinta3)]" aria-hidden>
+              <span className="flex-1" /><span className={columna}>si para</span>
+            </div>
+          )}
           {listaRiesgo.visibles.map(filaRiesgo)}
           {listaRiesgo.resto.length > 0 && <div className="solo-impresion">{listaRiesgo.resto.map(filaRiesgo)}</div>}
           <VerMas ocultas={listaRiesgo.ocultas} abierto={listaRiesgo.abierto} onAlternar={listaRiesgo.alternar} />
@@ -190,7 +217,7 @@ export function Mantenimiento() {
           {respondidasTarde.length > 0 && (
             <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
               {respondidasTarde.length} más, {respondidasTarde.length === 1 ? 'respondida' : 'respondidas'} después de arrancar
-              <Info titulo="Respondidas después de arrancar" texto={`${plural(respondidasTarde.length, 'parada más arrancó', 'paradas más arrancaron')} sin identificar y se ${respondidasTarde.length === 1 ? 'respondió' : 'respondieron'} después de arrancar: ya ${respondidasTarde.length === 1 ? 'tiene' : 'tienen'} causa, pero ${respondidasTarde.length === 1 ? 'cuenta' : 'cuentan'} como no ${respondidasTarde.length === 1 ? 'conforme' : 'conformes'} arriba.`} />
+              <Info titulo="Respondidas después de arrancar" texto={`${plural(respondidasTarde.length, 'parada más arrancó', 'paradas más arrancaron')} sin identificar y se ${respondidasTarde.length === 1 ? 'respondió' : 'respondieron'} después de arrancar: ya ${respondidasTarde.length === 1 ? 'tiene' : 'tienen'} causa, pero ${respondidasTarde.length === 1 ? 'queda' : 'quedan'} como no ${respondidasTarde.length === 1 ? 'conformidad' : 'conformidades'} (en Identificar).`} />
             </p>
           )}
           {irA('causa') && sinIdentificar.length > 0 && <Boton variante="principal" className="mt-2 w-full" onClick={irA('causa')}>Ir a identificar</Boton>}

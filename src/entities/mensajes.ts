@@ -198,7 +198,7 @@ export function causasSugeridas(p: Pregunta, ctx: Contexto, lecturas = false): {
   const agregar = (c: (typeof candidatas)[number]) => { if (!candidatas.some(x => x.parte === c.parte)) candidatas.push(c) }
   if (lecturas && !p.fin) {
     const bomba = perfilBomba(p.equipo, p.campoId), pozo = pozoDe(p.campoId, p.equipo)
-    const salud = bomba ? saludDePartes(bomba) : pozo ? saludDeEsp(pozo) : []
+    const salud = bomba ? saludDePartes(bomba) : pozo ? saludDeEsp(pozo, ctx) : []
     // La banda normal y la alarma son dos límites: se dice cuál pasó.
     for (const s of salud) if (s.estado === 'fuera') {
       const v = s.fuera[0]?.senal

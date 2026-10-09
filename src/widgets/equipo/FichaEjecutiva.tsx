@@ -8,7 +8,7 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { n0, usd, plural } from '@/shared/lib/formato'
-import { fmtHoras } from '@/widgets/bombas/comun'
+import { fmtHoras, respaldoAbsorbe } from '@/widgets/bombas/comun'
 
 /** Lo que un directivo necesita de un equipo: cómo está, cuánto le ha
  *  costado, por qué parte falla y qué se está haciendo. Sin tags, sin
@@ -42,7 +42,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     ? `${perdiendo.desde ? `Parada desde ${fechaHora(perdiendo.desde)}` : 'Parada'}${perdiendo.cierreDesde && perdiendo.desde && perdiendo.cierreDesde.getTime() - perdiendo.desde.getTime() > 60_000 ? ` · pozos cerrados desde ${fechaHora(perdiendo.cierreDesde)}` : ''}`
     : cerradoPor ? `Cerrado por ${cerradoPor.equipo}${desdeCierre ? ` desde ${fechaHora(desdeCierre)}` : ''}`
       // Sin nada de eso, el estado ya va en la cabecera de la ficha («… · en servicio»): no se repite.
-      : enRiesgo ? `En marcha · si falla, ${n0(enRiesgo.bblDia)} bbl/d` : undefined
+      : enRiesgo ? `En marcha · si para, ${n0(enRiesgo.bblDia)} bbl/d` : undefined
 
   // Qué se está haciendo, en corto; el porqué, en su ⓘ (y en el papel).
   let haciendo: string, porque: string | undefined, noArrancar = false
@@ -55,10 +55,22 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     porque = `Lo cerró ${cerradoPor.equipo}. Vuelve a producir cuando esa causa se resuelva.`
   } else if (abierta) haciendo = `Parada por ${abierta.parte ? NOMBRE_PARTE[abierta.parte].toLowerCase() : 'una falla'} · lleva ${fmtHoras(horasEntre(abierta.inicio, AHORA), true)}${hist?.mdtH ? ` · suele durar ${fmtHoras(hist.mdtH, true)}` : ''}`
   else if (perdiendo) haciendo = perdiendo.motivo
-  else if (enRiesgo) {
-    haciendo = `${enRiesgo.parte ? NOMBRE_PARTE[enRiesgo.parte] : 'Una parte'} avisa${enRiesgo.horas !== undefined ? ` · límite en ${fmtHoras(enRiesgo.horas)}` : ''}`
+  else if (enRiesgo?.parte) {
+    haciendo = `${NOMBRE_PARTE[enRiesgo.parte]} avisa${enRiesgo.horas !== undefined ? ` · límite en ${fmtHoras(enRiesgo.horas)}` : ''}`
     porque = 'Mantenimiento tiene la acción en su pantalla.'
-  } else haciendo = 'En marcha · ninguna parte avisa'
+  } else if (enRiesgo) {
+    // Un servicio en alarma no tiene partes: se dice su estado y su lectura.
+    haciendo = mayuscula(eq.estado)
+    porque = eq.lectura
+  } else if (hist) haciendo = 'En marcha · ninguna parte avisa'
+  else if (eq.clase === 'pozo') haciendo = mayuscula(eq.estado)
+  else {
+    // Un servicio (o un equipo sin partes vigiladas) que no está en riesgo ni
+    // cerrando pozos: su estado y que hoy no le quita producción. Si está en
+    // aviso (SE-2: P3), la lectura dice por qué.
+    haciendo = `${mayuscula(eq.estado)} · sin efecto en la producción hoy`
+    porque = eq.severidad ? eq.lectura : undefined
+  }
 
   return (
     // El nombre del equipo ya va en la cabecera de la ficha.
@@ -84,7 +96,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
         <Renglon k="Cada cuánto falla"
           v={hist.fallas ? `${plural(hist.fallas, 'falla', 'fallas')}${hist.mtbfDias ? ` · una cada ${n0(hist.mtbfDias)} días` : ''}`
             : hist.disparos ? `No ha fallado · ${plural(hist.disparos, 'disparo', 'disparos')} que volvieron a arrancar` : 'No ha fallado'}
-          pie={hist.bblPorFalla !== undefined ? `${n0(hist.bblPorFalla)} bbl por falla, en promedio` : undefined} />
+          pie={hist.bblPorFalla !== undefined ? `le ha costado ${n0(hist.bblPorFalla)} bbl por falla, en promedio` : undefined} />
       )}
       {partes.length > 0 && totalPartes > 0 && (
         <Renglon k="Por qué parte · % de bbl" info="Porcentaje de los barriles de sus fallas."
@@ -92,12 +104,15 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
       )}
       {veces !== undefined && <Renglon k="Veces que cerró pozos" v={plural(veces, 'vez', 'veces')} />}
       {pr && !pr.parada && pr.inmediato && pr.colchon && (
-        <Renglon k="Si para ahora" v={`el tanque aguanta ${fmtHoras(pr.colchon.horas)} · luego se pierden ${n0(pr.crudoBpd)} bbl/d`} />
+        <Renglon k="Si para ahora" v={respaldoAbsorbe(pr) ? 'no cierra pozos: el respaldo absorbe toda el agua'
+          : `el tanque aguanta ${fmtHoras(pr.colchon.horas)} · luego se pierden ${n0(pr.crudoBpd)} bbl/d`} />
       )}
       <Renglon k="Qué se está haciendo" v={haciendo} info={porque} chip={noArrancar ? 'no arrancar' : undefined} />
     </div>
   )
 }
+
+const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 function Renglon({ k, v, pie, info, chip }: { k: string; v: string; pie?: string; info?: string; chip?: string }) {
   return (

@@ -138,7 +138,11 @@ export function senalesDe(p: PerfilBomba): Senal[] {
   const out: Senal[] = []
   for (const pl of plantillaDe(p.subtipo)) {
     const d = dev(p.tags[pl.id])
-    if (!d || typeof d.valor !== 'number') continue
+    // Un instrumento sin lectura llega con `valor: null` (el contrato): es una
+    // señal sin señal, no una variable que no existe. Un texto es un
+    // interruptor y lo lee la salud como discreta.
+    if (!d || (d.valor !== null && typeof d.valor !== 'number')) continue
+    const sinLectura = d.valor === null
     const serie = d.serie
     // Banda y alarma salen del límite del tag: una sola fuente para las dos.
     const lt = limiteDelTag(p.campoId, d.tag)
@@ -147,7 +151,7 @@ export function senalesDe(p: PerfilBomba): Senal[] {
     const lim = limiteDe(alarma, sentido)
     const t = parada || !serie ? undefined : tendencia(serie)
     let pron: Pronostico
-    const sinSenal = d.estado === 'sin señal'
+    const sinSenal = sinLectura || d.estado === 'sin señal'
     if (sinSenal) pron = { tipo: 'sin-tendencia', motivo: `Sin señal en línea: ${d.origen}` }
     else if (parada) pron = { tipo: 'sin-tendencia', motivo: 'La bomba está detenida: no hay tendencia que proyectar' }
     else if (lim === undefined) pron = { tipo: 'sin-limite' }
@@ -156,7 +160,9 @@ export function senalesDe(p: PerfilBomba): Senal[] {
       pron = { tipo: 'no-atribuible', motivo: 'La presión diferencial cambió más de 5 %: la velocidad pudo subir por proceso, no por desgaste' }
     else pron = pronostico(t, lim, sentido)
     out.push({
-      plantilla: pl, tag: d.tag, unidad: d.unidad, valor: sinSenal ? null : d.valor, serie, origen: d.origen, estado: d.estado,
+      plantilla: pl, tag: d.tag, unidad: d.unidad, valor: sinSenal || typeof d.valor !== 'number' ? null : d.valor, serie, origen: d.origen,
+      // Sin lectura no hay estado que leer del número: es «sin señal».
+      estado: sinLectura ? 'sin señal' : d.estado,
       normal: lt?.normal, alarma,
       limite: lim !== undefined ? { valor: lim, sentido } : undefined,
       mecanismo: pl.anuncia ? mecanismo(pl.anuncia.mecanismo) : undefined,

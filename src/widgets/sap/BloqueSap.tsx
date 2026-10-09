@@ -32,7 +32,12 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
   const { avisos, ordenes, repuestos, identidad: id } = useSapDeEquipo(campoId, equipo)
   const abierto = avisos.find(a => !a.cerrado)
   const ordenAbierta = ordenes.find(o => o.estado !== 'TECO')
+  // Bajo el mínimo: sin stock es lo que no viene en camino; lo que viene se
+  // dice con su fecha (la ficha técnica tampoco le pone ■ al que está en tránsito).
   const faltan = repuestos.filter(r => r.stock < r.minimo)
+  const sinStock = faltan.filter(r => !r.enTransito)
+  const enCamino = faltan.filter(r => r.enTransito)
+  const llega = (r: (typeof faltan)[number]) => fechaCorta(new Date(`${r.enTransito!.llega}T12:00:00-05:00`))
   // El técnico de una orden es una persona (su id), no un rol; si va a un contratista, solo el puesto.
   const tecnico = (o: OrdenSap) => usuarios.find(u => u.id === o.tecnico)?.nombre ?? `la cuadrilla ${o.puesto}`
 
@@ -43,7 +48,8 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
     <p className="text-[12px] text-[var(--tinta2)]">
       <b className="text-[var(--tinta)]">En SAP:</b>{' '}
       {ordenAbierta ? `orden ${ordenAbierta.numero} ${NOMBRE_ESTADO_ORDEN[ordenAbierta.estado]}` : abierto ? `aviso ${abierto.numero} abierto, sin orden todavía` : 'sin aviso ni orden abiertos'}
-      {faltan.length > 0 && <> · <FueraDeMeta si tamano={10} />sin stock de {faltan.map(r => r.descripcion.toLowerCase()).join(', ')}</>}
+      {sinStock.length > 0 && <> · <FueraDeMeta si tamano={10} />sin stock de {sinStock.map(r => r.descripcion.toLowerCase()).join(', ')}</>}
+      {enCamino.map(r => <span key={r.material}> · {r.descripcion.toLowerCase()} llega el {llega(r)}</span>)}
     </p>
   )
 
@@ -83,7 +89,7 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
                   <FueraDeMeta si={falta && !r.enTransito} tamano={10} />
                   <span className="tabular min-w-0 flex-1">
                     <b>{r.descripcion}</b> · {r.stock} en bodega (mín. {r.minimo})
-                    {r.enTransito ? ` · llega${r.enTransito.cantidad === 1 ? '' : 'n'} ${r.enTransito.cantidad} el ${fechaCorta(new Date(`${r.enTransito.llega}T12:00:00-05:00`))}`
+                    {r.enTransito ? ` · llega${r.enTransito.cantidad === 1 ? '' : 'n'} ${r.enTransito.cantidad} el ${llega(r)}`
                       : falta ? ` · pedirlo: ${n0(r.plazoDias)} días` : ''}
                   </span>
                 </li>

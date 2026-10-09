@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Crosshair, Plug } from 'lucide-react'
 import { useApp, useCampo, usePlanta, usePerfil, useRango, useRol, useNivel } from '@/app/store'
-import { useBarrilesDeEquipos, useEstadoCampos, useCtx } from '@/shared/api/diferidos'
+import { useBarrilesDeEquipos, useEstadoCampos, useCtx, usePrediccion } from '@/shared/api/diferidos'
 import type { EquipoEnCampo } from '@/entities/equipos'
 import { useEquiposDeHoy, pedirPerfilesBomba } from '@/shared/api/equipos'
 import { useCampoAhora } from '@/shared/api/medicion'
@@ -16,7 +16,8 @@ import { Info } from '@/shared/ui/Info'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
-import { n0, n1, num, plural } from '@/shared/lib/formato'
+import { n0, n1, num, plural, sinLectura } from '@/shared/lib/formato'
+import { fmtHoras } from '@/widgets/bombas/comun'
 import { cn } from '@/shared/lib/cn'
 import type { Severidad } from '@/entities/tipos'
 import { MarcaPrioridad, FueraDeMeta } from '@/shared/ui/Prioridad'
@@ -41,7 +42,8 @@ const ESCALA_MINIMA = 0.7
 /** ISA-18.2: lo que anticipa una alarma no se tapa. El tanque de agua (la restricción
  *  del tren de agua: lleno, se cierran los pozos) sube a la vista desde estos puntos
  *  por debajo de su alto-alto (90 % → 80 %), o en cualquier nivel si la bomba de
- *  reinyección que lo vacía está detenida: entonces solo puede subir. */
+ *  reinyección que lo vacía está detenida. Su prioridad no sale de este margen
+ *  sino del llenado que calcula el motor (`tanqueSev`). */
 const MARGEN_TANQUE = 10
 /** Un pie más largo pisa al vecino (las cajas van cada 150 unidades). */
 const PIE_MAX = 24
@@ -49,10 +51,10 @@ const recortar = (t: string) => (t.length > PIE_MAX ? `${t.slice(0, PIE_MAX - 1)
 
 /** Un equipo captura datos si está instrumentado y al menos un dispositivo
  *  tiene señal. Lo demás está configurado, pero todavía no da datos. */
-const captura = (eq: EquipoEnCampo | undefined) => !!eq && eq.instrumentado && eq.dispositivos.some(d => d.estado !== 'sin señal')
+const captura = (eq: EquipoEnCampo | undefined) => !!eq && eq.instrumentado && eq.dispositivos.some(d => !sinLectura(d))
 /** La lectura que resume un equipo: su primera variable con número. */
 const lecturaClave = (eq: EquipoEnCampo) => {
-  const d = eq.dispositivos.find(x => typeof x.valor === 'number' && x.estado !== 'sin señal')
+  const d = eq.dispositivos.find(x => typeof x.valor === 'number' && !sinLectura(x))
   return d ? `${d.tag} ${num(d.valor)} ${d.unidad}`.trim() : undefined
 }
 
@@ -67,6 +69,8 @@ interface Fila {
   id: string; etiqueta: string; nodo: string; eq?: EquipoEnCampo; estado: string; lectura?: string; sev: Severidad; abrir?: string
   /** El tanque de agua: su nivel contra el alto-alto, en % (va como barra). */
   nivel?: { pct: number; altoAlto: number }
+  /** Con la bomba detenida: cuándo llega al alto-alto con el agua que entra, o que no sube. */
+  aviso?: string
 }
 
 const angosto = '(max-width: 639px)'
@@ -105,11 +109,29 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   // El esquema dibuja el tren de agua de la bomba de reinyección: su tanque.
   // Cuál es esa bomba lo dice su perfil en el registro, no un id fijo.
   const reinyeccion = pedirPerfilesBomba(campoId).find(p => p.subtipo === 'inyeccion')
+  const prReiny = usePrediccion(reinyeccion)
   const tanque = reinyeccion ? tanqueDe(ctx.config, campoId, reinyeccion.equipo) : undefined
   const nivelTanque = tanque && Object.hasOwn(niveles, tanque.id) ? niveles[tanque.id] : undefined
-  const tanqueSev: Severidad = tanque && nivelTanque && nivelTanque.pct >= tanque.altoAlto * 100 ? 1 : 0
 
   const equipoDeHoy = useEquiposDeHoy([campoId])
+  const equipoReiny = reinyeccion?.equipo
+  // La bomba de reinyección vacía el tanque de agua: detenida, el tanque sube con el agua que entra.
+  const bombaParada = !!equipoReiny && equipoDeHoy(equipoReiny, campoId)?.marcha === 'detenido'
+  // La prioridad del tanque (ISA-18.2: la da el tiempo hasta la consecuencia, no
+  // un porcentaje fijo):
+  //  - en el alto-alto: P1 (hay que cerrar pozos);
+  //  - con la bomba detenida: la del llenado del motor (`Prediccion.llenado`),
+  //    con el agua que ENTRA ahora (los pozos que siguen produciendo, menos el
+  //    respaldo), no con el colchón de «si parara con todo produciendo». Sin
+  //    agua sin salida (campo cerrado, o el respaldo la toma) no sube: gris;
+  //  - con la bomba en marcha: gris, por alto que esté.
+  const llenado = bombaParada ? prReiny?.llenado : undefined
+  const enAltoAlto = !!tanque && !!nivelTanque && nivelTanque.pct >= tanque.altoAlto * 100
+  const tanqueSev: Severidad = !tanque || !nivelTanque ? 0 : enAltoAlto ? 1 : llenado?.prioridad ?? 0
+  const llegaH = llenado?.colchon.horas ?? Infinity
+  const avisoTanque = !llenado || enAltoAlto ? undefined
+    : Number.isFinite(llegaH) ? `${equipoReiny} detenida: llega al alto-alto ${llegaH < 1 ? 'en menos de 1 h' : `en ${fmtHoras(llegaH)}`}`
+      : `${equipoReiny} detenida: ${llenado.aguaEntraBpd > 0 ? 'el respaldo toma el agua que entra' : 'no entra agua'}, el nivel no sube`
   const estado = useMemo(() => {
     const m = new Map<string, EquipoEnCampo | undefined>()
     for (const n of plano.nodos) if (n.equipo) m.set(n.id, equipoDeHoy(n.equipo, campoId))
@@ -117,8 +139,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   }, [plano, campoId, equipoDeHoy])
 
   // Las dos listas salen de lo configurado, uno por uno (también lo que va dentro de un conjunto).
-  const equipoReiny = reinyeccion?.equipo
-  const { capturan, sinDatos, porConjunto, bombaParada } = useMemo(() => {
+  const { capturan, sinDatos, porConjunto } = useMemo(() => {
     const capturan: Fila[] = [], sinDatos: Fila[] = []
     const porConjunto = new Map<string, { con: number; total: number }>()
     const trenes: Elemento[] = [...cfg.tronco, ...cfg.gas, ...cfg.crudo, ...cfg.agua, ...cfg.servicios]
@@ -127,7 +148,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       if (el.id === 'tanqueAgua') {
         if (tanque && nivelTanque) capturan.push({ id: tanque.id, etiqueta: tanque.nombre, nodo: el.id, sev: tanqueSev,
           estado: `nivel ${n1(nivelTanque.pct)} % · alto-alto ${n0(tanque.altoAlto * 100)} %`, lectura: `${nivelTanque.tag} ${n1(nivelTanque.pct)} %`,
-          nivel: { pct: nivelTanque.pct, altoAlto: tanque.altoAlto * 100 } })
+          nivel: { pct: nivelTanque.pct, altoAlto: tanque.altoAlto * 100 }, aviso: avisoTanque })
         // Configurado y sin lectura: el dibujo lo pinta «sin datos», así que también
         // cuenta y va en la lista de lo que falta por instrumentar, con su tag declarado.
         // «Registrado» ya lo dice el título de la lista (CONFIGURADOS SIN DATOS).
@@ -150,10 +171,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       if (el.miembros?.length) porConjunto.set(el.id, { con, total: items.length })
     }
     capturan.sort((a, b) => (a.sev || 9) - (b.sev || 9) || (b.eq ? bblDe(b.eq.id, campoId) : 0) - (a.eq ? bblDe(a.eq.id, campoId) : 0))
-    // La bomba de reinyección vacía el tanque de agua: detenida, el tanque solo puede subir.
-    const bombaParada = !!equipoReiny && equipoDeHoy(equipoReiny, campoId)?.marcha === 'detenido'
-    return { capturan, sinDatos, porConjunto, bombaParada }
-  }, [cfg, campoId, bblDe, tanque, nivelTanque, tanqueSev, equipoDeHoy, equipoReiny])
+    return { capturan, sinDatos, porConjunto }
+  }, [cfg, campoId, bblDe, tanque, nivelTanque, tanqueSev, avisoTanque, equipoDeHoy])
 
   // Lo que está en alarma, con el tanque en alto-alto (P1 ya calculado arriba: `tanqueSev`).
   const enAlarma = capturan.filter(f => f.sev === 1)
@@ -337,11 +356,11 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                     : `${eq.id} · ${eq.estado.split(' · ')[0]}`)
                     : proceso ? '' : 'sin datos'
             const pieProceso = proceso && !pie ? n.pie ?? 'proceso' : ''
-            const leido = esTanqueAgua ? `${nivelTanque!.tag} · nivel ${n1(nivelTanque!.pct)} %`
+            const leido = esTanqueAgua ? `${nivelTanque!.tag} · nivel ${n1(nivelTanque!.pct)} %${avisoTanque ? ` · ${avisoTanque}` : ''}`
               : !esPozos && vivo && eq && !(conjunto && conjunto.con < conjunto.total) ? `${eq.id} · ${eq.estado}` : pie
             const filas: Array<[string, string]> = esPozos
               ? [['Pozos', `${n0(pozos)} con su controlador`], ['Parados ahora', n0(parados)]]
-              : esTanqueAgua ? [['Nivel', `${n1(nivelTanque!.pct)} %`], ['Alto-alto', `${n0(tanque!.altoAlto * 100)} %`], ['Transmisor', nivelTanque!.tag], ['Capacidad', `${n0(tanque!.capacidadBbl)} bbl`]]
+              : esTanqueAgua ? [['Nivel', `${n1(nivelTanque!.pct)} %`], ['Alto-alto', `${n0(tanque!.altoAlto * 100)} %`], ...(avisoTanque ? [['Sube', avisoTanque] as [string, string]] : []), ['Transmisor', nivelTanque!.tag], ['Capacidad', `${n0(tanque!.capacidadBbl)} bbl`]]
                 : vivo && eq
                   ? [['Estado', eq.estado], ['Criticidad', `${eq.criticidad}/5`], ['Aguas abajo', eq.aguasAbajo],
                      ...(clave ? [['Lectura', clave] as [string, string]] : []),
@@ -426,6 +445,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
               <span className="mt-0.5 block max-w-[320px]">
                 <BarraMeta tamano="chica" rotulo="nivel" valor={f.nivel.pct} unidad="%" formato={v => `${n1(v)} %`}
                   meta={f.nivel.altoAlto} tipoMeta="máximo" rotuloMeta={`alto-alto ${n0(f.nivel.altoAlto)} %`} />
+                {f.aviso && <small className="block text-[10.5px] text-[var(--tinta2)]">{f.aviso}</small>}
               </span>
             ) : <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{f.estado}</small>}
           </span>

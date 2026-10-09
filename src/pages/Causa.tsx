@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp, useAmbito, useRol, useRango, usePersona } from '@/app/store'
-import { useLibro, usePreguntas, useCtx, useOpcionesRespuesta } from '@/shared/api/diferidos'
+import { useLibro, usePreguntas, useCtx, useOpcionesRespuesta, contarPorIdentificar } from '@/shared/api/diferidos'
 import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { useMensajes } from '@/shared/api/mensajes'
@@ -46,7 +46,13 @@ export function Causa() {
   const hilo = (p: Pregunta) => mensajes.filter(m => m.evento === p.id)
   const puede = puedeHacer(rol.puede, 'causa:declarar')
 
-  const pendientes = preguntas.filter(p => p.pide && !p.arrancoSinIdentificar)
+  // «Por identificar» con la cuenta única (Turno, Mi trabajo, Mantenimiento):
+  // las que piden respuesta, hayan arrancado o no. Abajo van en dos paneles:
+  // las que siguen paradas («no arrancar») y las que arrancaron sin
+  // identificar (no conformidades, con las que se respondieron tarde).
+  const pi = contarPorIdentificar(preguntas)
+  const piden = preguntas.filter(p => p.pide)
+  const pendientes = piden.filter(p => !p.arrancoSinIdentificar)
   const noConformes = preguntas.filter(p => p.arrancoSinIdentificar)
   const declaradas = preguntas.filter(p => !p.pide && p.causa.declarado)
   const ctx = useCtx(); const analisis = useAnalisis()
@@ -74,7 +80,7 @@ export function Causa() {
   const declaradasEnOrden = [...sinAnalisis, ...declaradas.filter(p => !sinAnalisis.includes(p))]
   const parados = pendientes.filter(p => !p.fin)
   const pct = (v: number) => (lb.diferido > 0 ? (v / lb.diferido) * 100 : 0)
-  const partesPendientes = pendientes.filter(p => p.sobre === 'bomba').length
+  const partesPendientes = piden.filter(p => p.sobre === 'bomba').length
   // Quien opera llega a responder: lo pendiente va primero.
   const opera = rol.nivel === 'operacion'
   // Quien no puede responder (o el rol sin nadie con acceso) lo lee una vez, aquí, y no en cada tarjeta.
@@ -113,10 +119,10 @@ export function Causa() {
           <small className={apoyo}>{n0(lb.declarado)} bbl · sin identificar {n0(lb.pendiente)} bbl ({n1(pct(lb.pendiente))} %)</small>
         </span>
         <span>
-          <b className={cifra}>{parados.length > 0 && <MarcaPrioridad s={2} tamano={15} />}{pendientes.length}</b>
+          <b className={cifra}>{parados.length > 0 && <MarcaPrioridad s={2} tamano={15} />}{pi.porIdentificar}</b>
           {/* Esta cifra no es del período: cuenta todo lo que sigue sin identificar. */}
           <small className={rotulo}>por identificar · histórico</small>
-          <small className={apoyo}>{plural(pendientes.length - partesPendientes, 'pozo', 'pozos')} · {plural(partesPendientes, 'bomba', 'bombas')} · {parados.length} sin arrancar</small>
+          <small className={apoyo}>{plural(pi.porIdentificar - partesPendientes, 'pozo', 'pozos')} · {plural(partesPendientes, 'bomba', 'bombas')} · {parados.length} sin arrancar</small>
         </span>
         <span>
           <b className={cifra}>{noConformes.length > 0 && <MarcaPrioridad s={3} tamano={14} />}{noConformes.length}</b>
@@ -144,7 +150,8 @@ export function Causa() {
         )}
       </div>
 
-      <Panel className="mb-2.5" titulo="POR IDENTIFICAR" extra={<>{pendientes.length}<span className="sr-only"> por identificar</span></>}>
+      {/* Las que siguen paradas; las que ya arrancaron sin identificar van en NO CONFORMIDADES. */}
+      <Panel className="mb-2.5" titulo="POR IDENTIFICAR · SIN ARRANCAR" extra={<>{pendientes.length}<span className="sr-only"> sin arrancar</span></>}>
         <Lectura>
           Cada una trae lo que dijo su señal; el ⓘ junto a «señal» dice por qué no alcanzó. Responde quien
           revisó el equipo o estuvo en el pozo. Las pistas (la parte que estaba fuera de límite al parar, o

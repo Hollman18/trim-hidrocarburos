@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp, useAmbito, useRango, useNivel } from '@/app/store'
+import { useAmbito, useRango, useNivel } from '@/app/store'
 import { useFlotaEsp, useLibro } from '@/shared/api/diferidos'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { ESTADO_PARTE } from '@/entities/salud'
@@ -25,7 +25,6 @@ import type { FilaEsp } from '@/shared/api/diferidos'
  *  cada una. Todo sale del variador y del sensor de fondo de cada pozo. */
 export function Esp() {
   const ambito = useAmbito(); const rango = useRango(); const nivel = useNivel()
-  const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo)
   const ing = nivel === 'ingenieria'
   const ids = ambito.campos.map(c => c.id)
   const flota = useFlotaEsp(ids, rango.desde, rango.hasta)
@@ -73,9 +72,7 @@ export function Esp() {
   const diferidoEsp = lb.porTipo.find(t => t.tipo === 'electrosumergible')?.bbl ?? 0
   const partesEsp = lb.porParte.filter(p => p.familia === 'electrosumergible')
 
-  const abrirFila = (campo: string, pozo: string) => nivel === 'decision'
-    ? (setCampo(campo), abrirEquipo(pozo, false))
-    : setAbierto({ campo, pozo })
+  const abrirFila = (campo: string, pozo: string) => setAbierto({ campo, pozo })
   const algunaParada = flota.some(x => !x.fila.produce)
   const avisa = (e?: string) => e === 'fuera' || e === 'avisa'
 
@@ -89,7 +86,7 @@ export function Esp() {
         <td className="py-1.5">
           {/* El botón da el foco y el Enter al teclado; su clic sube a la fila, que es la que abre. */}
           <span className="flex items-center gap-1.5"><MarcaPrioridad s={sevPozo(f)} tamano={11} /><button type="button" aria-label={`Abrir ${f.pozo.id}`} className="cursor-pointer rounded-sm font-mono font-bold">{f.pozo.id}</button></span>
-          <small className="block text-[10px] text-[var(--tinta3)]">{ambito.global ? `${campoPorId(f.pozo.campoId).nombre}` : ''}{nivel !== 'decision' && f.prueba?.hz ? `${ambito.global ? ' · ' : ''}${n1(f.hz ?? f.prueba.hz)} Hz` : ''}</small>
+          <small className="block text-[10px] text-[var(--tinta3)]">{ambito.global ? `${campoPorId(f.pozo.campoId).nombre}` : ''}{f.prueba?.hz ? `${ambito.global ? ' · ' : ''}${n1(f.hz ?? f.prueba.hz)} Hz` : ''}</small>
         </td>
         <td className="max-w-[340px]">
           {parado && cerradoPorOtro(f) ? (
@@ -104,7 +101,7 @@ export function Esp() {
               <b className="shrink-0">{peor.parte.nombre}</b>
               <span className="shrink-0 whitespace-nowrap"><Chip tono={peor.estado === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[peor.estado]}</Chip></span>
               {/* En el papel ya va la frase entera debajo: la corta, recortada, sobraría. */}
-              {nivel !== 'decision' && <span className="truncate text-[var(--tinta2)] print:hidden">{fraseParteCorta(peor)}</span>}
+              <span className="truncate text-[var(--tinta2)] print:hidden">{fraseParteCorta(peor)}</span>
             </Tip>
           ) : <span className="text-[var(--tinta3)]">{peor ? ESTADO_PARTE[peor.estado] : '—'}</span>}
         </td>
@@ -123,26 +120,21 @@ export function Esp() {
         <Cifra rotulo="En falla ahora" valor={`${enFalla.length} de ${flota.length}`} alerta={enFalla.length > 0}
           pie={enFalla.length ? `${n0(perdiendo)} bbl/d perdiéndose` : algunaParada ? 'las paradas, por otra causa' : 'todas produciendo'} />
         <Cifra rotulo="Con aviso" valor={String(avisan.length)}
-          pie={avisan.length ? `${n0(enJuego)} bbl/d si fallan` : 'ninguna parte avisa'} />
-        <Cifra rotulo="Diferido por sus fallas" valor={`${n0(diferidoEsp)} bbl`}
-          pie={partesEsp[0] ? `${n0(diferidoEsp ? (partesEsp[0].bbl / diferidoEsp) * 100 : 0)} % por ${NOMBRE_PARTE[partesEsp[0].parte].toLowerCase()}` : 'sin fallas'} />
-        {ing ? (
+          pie={avisan.length ? `${n0(enJuego)} bbl/d en juego` : 'ninguna parte avisa'} />
+        {/* Todo lo que se les carga a ellas en el período: fallas y disparos (el
+            disparo no es falla, pero también difiere). La columna «Por su ESP»
+            de la tabla cuenta igual: las dos suman lo mismo. */}
+        <Cifra rotulo="Diferido de sus electrosumergibles" valor={`${n0(diferidoEsp)} bbl`}
+          pie={partesEsp[0] ? `${n0(diferidoEsp ? (partesEsp[0].bbl / diferidoEsp) * 100 : 0)} % por ${NOMBRE_PARTE[partesEsp[0].parte].toLowerCase()}` : diferidoEsp > 0 ? 'parte sin identificar' : 'ninguna parada propia'}
+          info={{ titulo: 'Diferido de sus electrosumergibles', texto: 'Lo que se les cargó en el período por su propia electrosumergible: fallas y disparos. Un disparo no es una falla, pero también difiere.' }} />
+        {ing && (
           <Cifra rotulo={`Entre fallas · ${n0(dias / 30.4)} meses`} valor={mtbfFlota ? `${n0(mtbfFlota)} d` : '—'}
             pie={`${plural(fallas, 'falla', 'fallas')} · ${plural(disparos, 'disparo', 'disparos')}`}
             info={{ titulo: 'Fallas y disparos', texto: `Un disparo es una parada que vuelve a arrancar en menos de ${fmtHoras(DISPARO_MAX_H)}: no es una falla. La falla es la que obliga a sacar el equipo del pozo. «Entre fallas» se calcula con dos fallas o más en la historia que hay (${n0(dias / 30.4)} meses); con menos, no se inventa.` }} />
-        ) : nivel === 'decision' ? (
-          <Cifra rotulo={`Fallas en ${n0(dias / 30.4)} meses`} valor={String(fallas)} pie={`de ${flota.length} electrosumergibles`} />
-        ) : null}
+        )}
       </div>
 
-      {nivel === 'decision' ? (
-        <Lectura>
-          Cada electrosumergible con lo que le pasa ahora y lo que su propia falla costó en el período.
-          Primero lo que falló, luego lo que está más cerca de su límite. Las que están cerradas por
-          otro equipo van en gris: la causa es ese equipo. Un clic abre la ficha.
-        </Lectura>
-      ) : (
-        <Lectura>
+      <Lectura>
         Cada electrosumergible avisa por su variador (corriente, desbalance entre fases) y por su
         sensor de fondo (presión de entrada, temperatura del motor). Una parte avisa cuando una de
         esas variables va hacia el ajuste de protección del variador con tendencia real: «alarma en»
@@ -151,7 +143,6 @@ export function Esp() {
         a arrancar en menos de un día no es una falla: la falla es la que obliga a sacar el equipo
         del pozo. Toque o haga clic en un pozo para abrirlo.
       </Lectura>
-      )}
 
       <Panel className="mt-2.5" titulo="FLOTA" extra={flota.length}>
         {/* En el teléfono, una tarjeta por pozo: los barriles a la vista, sin desplazar. */}

@@ -296,17 +296,17 @@ tipo del motor. Lo que no se nombra va tal cual.
 
 | Ruta | Devuelve |
 |---|---|
-| `/vistas/diferidos?campos&desde&hasta` | `Libro` (`libro.ts`). `tramos[]`: `{ evento: clave en refs.eventos, pozo: clave en refs.pozos, causa, inicio, fin (ISO), abierto, horas, factor, bbl, aproximado, sinCustodia, sinFactor, sesgo, azar }`. `preguntas[]` con `inicio` y `fin` ISO o `null`. `custodia: { sinPrueba: [clave], estimados: [clave], bswLaboratorio }`. `sinFiscal: [{ campoId, dias: [ISO] }]`, `sinFactor: [{ campoId, mes }]`. `motivos: [{ codigo, texto, campoId?, mes? }]`, con `codigo` en `en-curso`, `sin-fiscal`, `sin-factor`, `banda-sin-verificar`, `fa-fuera-de-banda`, `sin-causa`, `sin-meta`: **el front decide por el código, nunca por la frase**. `valorUsd?`, `valorCampos: { con, total }`, `sinPrecio: [campoId]`. `meta.sinMeta: [campoId]` y `porCampo[].sinMeta` (ver «Sin meta firmada»). Paretos: `porEquipo` una fila por (campo, equipo, tipo); `porParte` una fila por (familia, parte) armada con los **eventos del equipo** (la parada de la bomba del PLC con su parte, el evento de la electrosumergible), también los que el tanque absorbió: `fallas`, `disparos` y `horas` (= unión de los intervalos de esos eventos por equipo, recortada al período) salen de ellos y `bbl` de los tramos que causaron (puede ser 0) |
+| `/vistas/diferidos?campos&desde&hasta` | `Libro` (`libro.ts`). `tramos[]`: `{ evento: clave en refs.eventos, pozo: clave en refs.pozos, causa, inicio, fin (ISO), abierto, horas, factor, bbl, aproximado, sinCustodia, sinFactor, sesgo, azar }`. `preguntas[]` con `inicio` y `fin` ISO o `null`. `custodia: { sinPrueba: [clave], estimados: [clave], bswLaboratorio }`. `sinFiscal: [{ campoId, dias: [ISO] }]`, `sinFactor: [{ campoId, mes }]`. `motivos: [{ codigo, texto, campoId?, mes? }]`, con `codigo` en `en-curso`, `sin-fiscal`, `sin-factor`, `banda-sin-verificar`, `fa-fuera-de-banda`, `sin-causa`, `sin-meta`: **el front decide por el código, nunca por la frase**. `valorUsd?`, `valorCampos: { con, total }`, `sinPrecio: [campoId]`. `meta.sinMeta: [campoId]` y `porCampo[].sinMeta` (ver «Sin meta firmada»). Paretos: `porEquipo` una fila por (campo, equipo, tipo); en las filas `reinyeccion`, `transporte` y `electrosumergible` van además `fallas` y `disparos` del período: los eventos de la historia de fallas del equipo (`historialDeEquipo`) que se solapan con `[desde, hasta)` (la misma regla de período que `porParte`; cuenta la abierta y las que el tanque absorbió; un disparo no es falla; en una bomba `disparos` es 0); en las demás filas no van; `sinCosto: [{ campoId, equipo, tipo, fallas, disparos }]` (nuevo) son los equipos de la línea (bombas de inyección, también la de recobro, y multifásicas con paradas en el campo; electrosumergibles) con `fallas + disparos > 0` en el período, con esa misma regla, y **sin fila de su familia** (`tipo` = `reinyeccion`, `transporte` o `electrosumergible`) en `porEquipo`: fallaron sin costar crudo (el tanque, el respaldo o la salida alterna lo absorbieron); sin barriles, no entran en ningún Pareto; por campo en el orden de la consulta, de más fallas a menos, luego disparos y el código del equipo (comparación de texto simple). Ejemplo: P-201B de Guacamayo (recobro), 5 fallas en 12 meses y 1 en el trimestre; `[]` si no hay; `porParte` una fila por (familia, parte) armada con los **eventos del equipo** (la parada de la bomba del PLC con su parte, el evento de la electrosumergible), también los que el tanque absorbió: `fallas`, `disparos` y `horas` (= unión de los intervalos de esos eventos por equipo, recortada al período) salen de ellos y `bbl` de los tramos que causaron (puede ser 0) |
 | `/vistas/diferidos/mensual?campos` | `[{ mes, corto, nombre, desde, hasta (ISO), parcial, libro }]`, con `libro` **sin** `tramos`, `porPozo`, `preguntas` ni `custodia` |
 | `/vistas/diferidos/base?campos&desde&hasta` | `{ desde, hasta (ISO), nombre, baseDia, periodoDia, cambio }` o `null` sin tres meses publicados antes |
 | `/vistas/produccion/diaria?campos&desde&hasta` | `[{ dia: ISO, horas, real \| null, faltan: [campoId], potencial, diferido, residuo \| null, meta \| null }]`: `meta` es `null` si algún campo pedido no tiene meta firmada ese día |
 | `/vistas/potencial-reciente?campos` | `{ campoId: bbl/d }`: potencial promedio de los últimos 30 días. Es la referencia con que el gerente fija la meta; no es meta y no se guarda |
-| `/vistas/paradas/por-identificar?campos` | `Pregunta[]` de toda la historia: las que piden respuesta, **y también las declaradas y las no conformes** (`pide`, `arrancoSinIdentificar`) |
+| `/vistas/paradas/por-identificar?campos` | `Pregunta[]` de toda la historia: las que piden respuesta, **y también las declaradas y las no conformes** (`pide`, `arrancoSinIdentificar`). «Por identificar» se cuenta igual en todas las pantallas (`cuentaPorIdentificar`, causa-senal.ts): `porIdentificar` = las que tienen `pide` (hayan arrancado o no); `arrancaronSinIdentificar` = de esas, las que tienen `arrancoSinIdentificar` (no conformidad). Una respondida tarde ya no pide y no cuenta, aunque sigue no conforme |
 | `/vistas/paradas/:evento/opciones` | `{ catalogo?, sugeridas?: { opciones: Opcion[], conEvidencia }, sospechosa?: SaludParte }` |
-| `/vistas/bombas/prediccion?campo&equipo` | `Prediccion`: `perfil` por clave; `perdiendo.pozos: [clave]` (una multifásica parada trae los pozos cerrados por ella; una de recobro parada, `{ bblDia: 0, pozos: [] }`); `colchon` con `null` = no se llena; `orden.pasos[].pozo` y `orden.sinPrueba` por clave |
-| `/vistas/bombas/paradas?campo&equipo` | `ParadaMedida[]` de la más reciente a la más vieja: `inicio`, `fin` ISO, `tramos` como en el libro, `colchon.previsto` |
+| `/vistas/bombas/prediccion?campo&equipo` | `Prediccion`: `perfil` por clave; `perdiendo.pozos: [clave]` (una multifásica parada trae los pozos cerrados por ella; una de recobro parada, `{ bblDia: 0, pozos: [] }`); `colchon` con `null` = no se llena (lo que aguantaría si parara **ahora con todo produciendo**); `llenado` (solo una de disposición **ya parada**, con tanque y nivel): `{ aguaEntraBpd, colchon, prioridad }`, el tanque con el agua que **entra** ahora (fórmula en «Predicción», abajo); `colchon.horas: null` = no sube; `orden.pasos[].pozo` y `orden.sinPrueba` por clave |
+| `/vistas/bombas/paradas?campo&equipo` | `ParadaMedida[]` de la más reciente a la más vieja: `inicio`, `fin` ISO, `tramos` como en el libro, `colchon.previsto`. El tanque y el respaldo de `colchon.previsto` son los de la configuración que **regía cuando paró** (`configEn(historial, inicio)`), como en los mensajes: firmar hoy otro respaldo no cambia una parada vieja. Lo mismo en `paradas-en-periodo` y en `abierta` de `/vistas/bombas` |
 | `/vistas/bombas/paradas-en-periodo?campos&desde&hasta` | `ParadaMedida` + `{ horasEnPeriodo, bblEnPeriodo, cruzaBorde }`: solo las que se solapan con el período, recortadas a `[desde, hasta)` con el factor de cada mes. Una parada que cruza el borde no se suma entera a los dos meses |
-| `/vistas/riesgo?campos` | `Riesgo[]` con `desde` y `cierreDesde` ISO; cada item trae `prioridad` (la de la salud de la parte) y `estadoParte`. Con `costoFalla` va `costoDe`: `'propio'` si sale de la historia del equipo, `'flota'` si el equipo nunca ha fallado y se estimó con el promedio de su flota en el campo (la pantalla lo marca; `mdtFuente` es solo texto para leer). El `motivo` dice «X salió de su banda normal; llega a su alarma en N h» o «X ya llegó a su alarma», nunca «fuera de límite» |
+| `/vistas/riesgo?campos` | `Riesgo[]` con `desde` y `cierreDesde` ISO; cada item trae `prioridad` (la de la salud de la parte) y `estadoParte`. **`costoFalla` = lo que costaría que el equipo fallara HOY** (fórmula en «Costo si falla hoy», abajo): una sola cuenta en bombas y electrosumergibles, así las filas se suman. `0` en una bomba de recobro o con un respaldo que absorbe toda el agua; **ausente** (no 0) si el equipo no tiene fallas cerradas propias ni, en una electrosumergible, de su flota. `colchonH` (nuevo): en una bomba de disposición con tanque, las horas que aguanta hoy el tanque (una reparación más corta no cuesta crudo); ausente con colchón infinito o sin colchón calculado. `costoDe`: `'propio'` si sale de la historia del equipo, `'flota'` si nunca ha fallado y se estimó con el promedio de su flota en el campo (la pantalla lo marca); no va cuando `costoFalla` es 0 por definición. `mdtFuente` es solo texto para leer («el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque»; en una electrosumergible «20,3 d fuera, el promedio de …»), con las horas en la regla de las pantallas y el colchón **truncado**, nunca redondeado hacia arriba (19,05 h → «19 h»; 18,6 h → «18 h»): la pantalla dice «0 si vuelve antes de 19 h» y tiene que ser cierto. Lo que el equipo **ya costó** por falla es otra cifra (`HistorialEquipo.bblPorFalla`, «le ha costado por falla»). El `motivo` dice «X salió de su banda normal; llega a su alarma en T» o «X ya llegó a su alarma», nunca «fuera de límite»; T con la regla de las pantallas: menos de 48 h en horas enteras («43 h»), si no en días con un decimal («10,9 d»), más de 90 días «más de 3 meses» |
 | `/vistas/estado?campos` | `EstadoCampo[]`, uno por campo pedido y en ese orden, con `ayer: { fecha: ISO, bbl \| null }` |
 | `/vistas/pozos?campos&desde&hasta` | `FilaPozo[]` con `pozo` y `evento` por clave y `salud?: SaludParte`. `diferidoEsp` = Σ de los tramos del período cuya causa es la electrosumergible del propio pozo (`causa.equipo === pozo` y `tipo === 'electrosumergible'`); sumado en el campo da la fila `electrosumergible` de `porTipo` |
 | `/vistas/pozos/:campo/:pozo?desde&hasta` | `{ fila, tramos, historicos: [{ evento: clave, causa }], senales, partes, historial? }` o `null` |
@@ -315,7 +315,7 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/predicciones?campos` | `{ registro: PrediccionVigia[], fallas: [{ …, falla: { inicio: ISO, fin: ISO \| null, … } }] }` |
 | `/vistas/relojes?campos&desde&hasta` | `{ fallas, excluidas, totalH?, activaH?, esperaH? }` o `null`. `excluidas` = órdenes PM01 cerradas sin su parada del PLC; sin ninguna falla cruzada, los promedios van vacíos |
 | `/vistas/campos/:campo/ahora` | `{ caudales: { crudo, agua } (bbl/d), niveles: { idTanque: { tag, pct, hora } } }`. Un tanque sin lectura **no aparece** |
-| `/vistas/equipos/:campo/:equipo` | `EquipoVivo` o `null` (también pozos). Trae `marcha`: `en-marcha`, `detenido`, `cerrado-por-otro` o `sin-lectura`, que es lo que se compara; `estado` es solo texto |
+| `/vistas/equipos/:campo/:equipo` | `EquipoVivo` o `null` (también pozos). Trae `marcha`: `en-marcha`, `detenido`, `cerrado-por-otro` o `sin-lectura`, que es lo que se compara; `estado` es solo texto. Un dispositivo sin lectura (el fiscal sin dato del último día, una señal de fondo de una electrosumergible parada) viaja con `valor: null` y estado `sin señal`, nunca con un texto como `"—"` (un texto es una lectura discreta) |
 | `/vistas/equipos-hoy?campos` | `{ campoId: EquipoVivo[] }`: catálogo y pozos |
 | `/vistas/equipos/:campo/:equipo/historia` | `{ eventos: [{ id, inicio: ISO, fin: ISO \| null, bbl, pozos, causa }], bomba?: HistorialEquipo }` |
 | `/vistas/equipos/:campo/:equipo/ficha?desde&hasta` | `FichaEquipo` o `null`, con `desdeHistoria` y `desdeCierre` ISO: los barriles del período y de toda la historia, con su valor en USD (lo calcula el servidor) |
@@ -329,7 +329,10 @@ y de la parte sale **solo de fallas cerradas** (en la parte es opcional); el MTB
 contando la falla abierta. `SaludParte`: las `Senal` internas (`primera`, `lenta`,
 `causaActiva`, `fuera`, `medidas`, `sinSenal`) llevan `normal` con `null` del lado abierto.
 Una electrosumergible con el pozo parado manda presión de entrada, temperatura del motor y
-desbalance con `valor: null` y estado «sin señal»; corriente y frecuencia van con 0 medido.
+desbalance con `valor: null` y estado «sin señal»; corriente y frecuencia van con 0 medido. Un
+instrumento de bomba que llega con `valor: null` (`Dispositivo.valor` admite `null`) **no se
+descarta**: es una señal sin lectura, con estado «sin señal», pronóstico «Sin señal en línea» y,
+en la salud, en `sinSenal` de su parte.
 
 **Aditividad.** `/vistas/diferidos` es aditivo en intervalos disjuntos: Producción pide cada mes
 recortado al rango escogido, y la suma de real, potencial y diferido tiene que dar lo mismo que
@@ -862,8 +865,10 @@ los solapes; hay que escoger una y decirla aquí.
 #### `GET /api/campos/:campo/servicios/eventos?desde=&hasta=`
 ```json
 [{ "id":"SV-SE-2-…", "campoId":"ceiba", "equipo":"SE-2", "tipo":"aire|energia|compresion|evacuacion|proceso|tratamiento",
-   "inicio":"…", "fin":"…", "tag":"52-SE2", "texto":"interruptor del pórtico 13,8 kV abierto" }]
+   "inicio":"…", "fin":"… | null", "tag":"52-SE2", "texto":"interruptor del pórtico 13,8 kV abierto" }]
 ```
+`fin: null`: el servicio **sigue caído**. Su cascada usa el ahora como fin (los pozos que cierran
+en ella mientras sigue caído son suyos).
 
 #### `GET /api/campos/:campo/bombas/:equipo/paradas?desde=&hasta=`
 Del PLC de la bomba. La parte que falló NO viene escrita a mano: se deduce de la primera alarma o
@@ -1000,10 +1005,17 @@ inválido y los que faltan en la oficial se dicen aparte. **El cotejo no cambia 
    primer cierre va a ±15 min de la caída y cada cierre siguiente a ≤ 15 min del anterior; lo
    que cierra horas después con el servicio caído tiene otra causa. Si una bomba de la línea que
    le sirve al pozo paró **antes** de la caída del servicio (más de 15 min antes), manda la bomba.
+   Si el cierre cae en la cascada de dos servicios, gana el que **cayó primero**; si cayeron a la
+   vez, el de **id menor** (orden de código del texto). Un servicio con `fin: null` llega hasta
+   ahora.
 2. Una **bomba de la línea** parada que le corta el paso a ese pozo. Con dos paradas a la vez,
    primero la multifásica que mueve ese pozo, después la de disposición (`LSHH`/`CMD`/`HZ`), y
    entre dos del mismo papel la que paró primero. El resultado no depende del orden en que
-   lleguen las paradas. Hereda la causa de la parada de la bomba.
+   lleguen las paradas. Hereda la causa de la parada de la bomba: su tipo, su parte, su `como` y,
+   sin parte, su `porQueNo`. Su `evidencia` es el paro de la bomba, lo que identificó la causa de
+   la bomba (el programa, la primera alarma, la firma o el servicio; la declaración, si fue
+   declarada) y el cierre del pozo, **sin repetir renglones**; sin identificar, el `porQueNo` de la
+   bomba va de último.
 3. El **programa** aprobado (configuración): programada.
 4. El **código del controlador**: electrosumergible `GF`/`PH` → aislamiento, `OL` → bomba de
    fondo, `UL` → admisión, `OT` → motor; bombeo mecánico `OL`/`UL` → levantamiento; `UV` →
@@ -1013,18 +1025,19 @@ inválido y los que faltan en la oficial se dicen aparte. **El cotejo no cambia 
 
 **Parada de bomba:** programa → **primera alarma**, solo si es un disparo de ESA máquina que
 protege una parte de su catálogo (`primerasAlarmas` del perfil) → **firma de caudal** (perdida
-< 1 sin disparar) → **servicio caído** a ±15 min de la parada → **firma de las señales al
-parar** (`firma` del evento) → **respuesta del operario** → sin identificar. Un tag que la
-máquina no declara se deja en la evidencia y no identifica la parte.
+< 1 sin disparar) → **servicio caído** a ±15 min de la parada (con dos, el que cayó primero; en
+empate, el de id menor) → **firma de las señales al parar** (`firma` del evento) → **respuesta
+del operario** → sin identificar. Un tag que la máquina no declara se deja en la evidencia y no
+identifica la parte.
 
 **Identificación:** pide respuesta la parada sin identificar, o la de bomba sin parte. Si arrancó
 sin respuesta, o la respuesta llegó después del arranque: **no conformidad**.
 
-**`porQueNo`** (opcional, en la causa): con `como: 'ninguno'`, por qué ninguna señal alcanzó
+**`porQueNo`** (en la causa): **siempre** con `como: 'ninguno'`, por qué ninguna señal alcanzó
 («Sin primera alarma y sin firma: el PLC no dice qué parte falló»; en un pozo, «Ningún servicio
-caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla»). También es el
-último renglón de `evidencia`, que es la cadena de custodia y no cambia; el front lo lee de este
-campo y no de su lugar en la lista.
+caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla»; un pozo cerrado
+por una bomba sin parte lleva el de su bomba). También es el último renglón de `evidencia`, que es
+la cadena de custodia y no cambia; el front lo lee de este campo y no de su lugar en la lista.
 
 ### Cálculo del libro (asignación de producción)
 
@@ -1086,8 +1099,41 @@ colchón (h)      = (alto-alto − nivel ahora) × capacidad / (agua sin salida 
   tolerancia     = √( (0,2 % × capacidad / libre)² + banda del agua² )   aforo (Res. 40236, Anexo 2) y medidor
 orden de cierre  = sin respaldo: todo el campo; con respaldo: menos crudo por barril de agua primero
 crudo en riesgo  = Σ crudo asignado de lo que se cierra; se compara contra cerrar parejo
-parada medida    = colchón previsto (con el nivel al parar) contra el observado (paro → primer pozo cerrado)
+parada medida    = colchón previsto (con el nivel al parar y el tanque y el respaldo que regían al parar)
+                   contra el observado (paro → primer pozo cerrado)
+
+YA PARADA (disposición, con tanque y nivel): llenado — el tanque sube con el agua que ENTRA, no con la que movía
+agua que entra   = Σ agua de la prueba vigente de los pozos que producen ahora (× la parte que no pierde el
+                   que va a frecuencia reducida; la misma del caudal de agua de /vistas/campos/:campo/ahora)
+agua sin salida  = max(0, entra − respaldo libre − (1 − pérdida de la parada) × mueve) × fracción sin bomba
+horas            = (alto-alto − nivel ahora) × capacidad / (agua sin salida / 24)          null si no sube
+  tolerancia     = √( aforo² + banda del agua² )   (el agua de las pruebas, no del medidor)
+prioridad        = 1 ya en el alto-alto · 2 menos de 24 h · 3 hasta 90 días · 0 no sube o más allá
 ```
+`colchon` sigue siendo «si parara ahora con todo produciendo»: con la bomba ya parada y el campo
+cerrado (La Ceiba hoy: 0 de 18 pozos produciendo) `colchon.horas` da 0,05 h, pero `llenado` da
+`aguaEntraBpd: 0`, `horas: null` y `prioridad: 0`: el tanque no sube y no hay alarma por eso. La
+pantalla (Planta) pinta el tanque con `llenado.prioridad`, o P1 si ya está en el alto-alto.
+
+#### Costo si falla hoy (`Riesgo.costoFalla`)
+
+```
+Q   = crudo por día que se pierde si para hoy: crudoBpd de la predicción (en el orden de cierre);
+      en una electrosumergible, el crudo asignado del pozo hoy
+dᵢ  = horas de cada falla CERRADA del equipo (sin disparos)        d̄ = su promedio
+h   = colchón de hoy (colchon.horas de la predicción)
+
+disposición con tanque          costo = Q × (1/n) Σ max(0, dᵢ − h) / 24     colchonH = h
+disposición sin colchón         costo = Q × d̄ / 24  (sin tanque o sin su nivel: un techo, y se dice)
+respaldo que absorbe toda el agua (colchón infinito), o recobro      costo = 0
+multifásica (transporte)        costo = Q × d̄ / 24
+electrosumergible               costo = Q × d̄ / 24; sin fallas propias, d̄ de las electrosumergibles
+                                del campo (costoDe 'flota')
+sin fallas cerradas propias (ni flota)                               costoFalla ausente
+```
+Ejemplos del demo: P-201B de Morichal = 1.670,7 × promedio(max(0, dᵢ − 19,05)) / 24 ≈ **2.086 bbl**;
+MPP-301 ≈ **3.244,5 bbl**. Lo que el equipo ya costó por falla (`bblPorFalla`, 3.364,6 en P-201B de
+Morichal) es la historia, no esta cifra.
 El tanque de una bomba se busca por la clave (`campoId`, `bomba`) en `tanques[]` de la
 configuración firmada; el respaldo, por (`campoId`, `equipo`) en `respaldos[]`.
 
@@ -1098,7 +1144,9 @@ la electrosumergible, un evento que vuelve a arrancar en menos de **24 h** es un
 una falla. Tiempo entre fallas = días de historia ÷ fallas, **solo con dos fallas o más** (cuenta
 la falla abierta). Tiempo fuera (`mdtH`) = promedio de la duración de sus fallas **cerradas**
 (incluye la espera; la reparación activa sale de las órdenes de SAP). Una parada que el tanque
-absorbió cuenta como falla con 0 bbl.
+absorbió cuenta como falla con 0 bbl. `bblPorFalla` = barriles promedio de sus fallas cerradas: lo
+que **le ha costado por falla** (la ficha y Confiabilidad lo rotulan así); no es `costoFalla` de
+Riesgo, que es lo que costaría si fallara hoy.
 
 ### Salud por parte
 
@@ -1107,7 +1155,7 @@ falla), **la daña** (la causa) o **confirma** (cambia cuando la falla ya empez�
 
 | Estado | Regla |
 |---|---|
-| `fallo` | la parada abierta se le atribuye a esta parte (primera alarma o firma) |
+| `fallo` | la parada abierta se le atribuye a esta parte (primera alarma o firma; en una electrosumergible, la causa del evento abierto del pozo cuando es su propia electrosumergible: código del variador o declarada con la parte) |
 | `fuera` | una variable que anuncia o confirma ya salió de su banda o su instrumento reporta alarma (con el equipo parado, lo que solo confirma no cuenta) |
 | `detenida` | el equipo está parado: no hay tendencia que leer |
 | `avisa` | una variable que anuncia o daña llega a su alarma en ≤ 90 días (pendiente > 2 errores estándar, y de un mecanismo que no es choque), o lo que la daña ya está fuera de banda |

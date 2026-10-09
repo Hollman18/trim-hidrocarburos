@@ -18,7 +18,7 @@ import { conLectura } from './serie'
 import { pozosDe, pruebaEn, estadoAhora, NIVEL_AHORA, servicioPorId, type Pozo } from './pozos'
 import { equipoEnCampo, EQUIPOS } from './equipos'
 import { perfilBomba, paradasDe, esBomba, paradaPorId, type PerfilBomba, type EventoBomba } from './bombas'
-import { tanqueDe, respaldoDe, perfilDe, type TanqueAgua } from './configuracion'
+import { tanqueDe, respaldoDe, perfilDe, configEn, type TanqueAgua, type Config, type Version } from './configuracion'
 import { toleranciaAsignacion, AFORO_TANQUE, raizSumaCuadrados, type Componente } from './metrologia'
 import {
   faDe, crudoAsignado, aguaDePrueba, ordenOptimo, bandaDe, fiscalPromedio, tramosDeEvento, toleranciaDe,
@@ -26,7 +26,7 @@ import {
 } from './libro'
 import { causaDeParada, causaDeEvento, estadoIdentificacion, ALTO_IMPACTO, type Causa, type Contexto, type TipoCausa } from './causa-senal'
 import { senalesDe, proyectable, type Senal } from './vigia'
-import { saludDePartes, motivoDeParte, type SaludParte, type EstadoParte } from './salud'
+import { saludDePartes, motivoDeParte, textoHoras, HORIZONTE_H, type SaludParte, type EstadoParte } from './salud'
 import { saludDeEsp } from './esp'
 import type { ParteId } from './partes'
 import type { Severidad, IdPeriodo } from './tipos'
@@ -58,19 +58,23 @@ export function aguaQueMueve(p: PerfilBomba): { bpd: number; fuente: string; med
   return { bpd: p.capacidadBpd, medido: false, fuente: 'Sin medidor de caudal: se toma la capacidad nominal (es un techo)' }
 }
 
-/** Capacidad libre del respaldo: de la configuración firmada. */
-const respaldoLibre = (p: PerfilBomba, ctx: Contexto) => respaldoDe(ctx.config, p.campoId, p.equipo)?.libreBpd ?? 0
+/** Capacidad libre del respaldo: de la configuración firmada (la vigente para
+ *  lo que pasa ahora; la que regía, para una parada vieja). */
+const respaldoLibre = (p: PerfilBomba, config: Config) => respaldoDe(config, p.campoId, p.equipo)?.libreBpd ?? 0
 
 /** El medidor de la bomba no es fiscal y su incertidumbre no está declarada:
  *  se acota con la banda del agua asignada de la Fig. 10.2, y se dice. La
  *  banda del agua no depende del °API y es la misma por encima y por debajo
  *  de 1.000 bpd (0,90–1,10): sin producción fiscal publicada no cambia, y la
  *  fuente lo dice en vez de suponer una fila. */
-const toleranciaAgua = (campoId: string): Componente => {
+const toleranciaAgua = (campoId: string, origen: 'medidor' | 'pruebas' = 'medidor'): Componente => {
   const prom = fiscalPromedio(campoId)
   const c = toleranciaAsignacion('agua', Number.NaN, prom ?? 0)
   const fuente = prom === undefined ? `${c.fuente.split(' · campo ')[0]} · banda 0,90–1,10 para cualquier producción (el campo no tiene mes publicado)` : c.fuente
-  return { ...c, nombre: 'Caudal de agua', fuente: `Incertidumbre del medidor no declarada; se acota con la banda del agua. ${fuente}` }
+  return origen === 'medidor'
+    ? { ...c, nombre: 'Caudal de agua', fuente: `Incertidumbre del medidor no declarada; se acota con la banda del agua. ${fuente}` }
+    // El agua que entra con la bomba parada: la de las pruebas de los pozos, con la banda del agua asignada.
+    : { ...c, nombre: 'Agua de los pozos', fuente: `Agua de la prueba vigente de los pozos que producen; se acota con la banda del agua. ${fuente}` }
 }
 
 /* ─────────────────────────── el orden de cierre ─────────────────────────── */
@@ -140,12 +144,12 @@ export interface Colchon {
   componentes: Componente[]
 }
 
-function colchonDe(tanque: TanqueAgua, pct: number, aguaSinSalidaBpd: number, campoId: string, tag: string, hora?: string): Colchon {
+function colchonDe(tanque: TanqueAgua, pct: number, aguaSinSalidaBpd: number, campoId: string, tag: string, hora?: string, origen: 'medidor' | 'pruebas' = 'medidor'): Colchon {
   const libreBbl = Math.max(0, (tanque.altoAlto - pct / 100) * tanque.capacidadBbl)
   const porHora = aguaSinSalidaBpd / 24
   const horas = porHora > 0 ? libreBbl / porHora : Infinity
   const aforo: Componente = { ...AFORO_TANQUE, valor: libreBbl > 0 ? AFORO_TANQUE.valor * tanque.capacidadBbl / libreBbl : 0 }
-  const componentes = [aforo, toleranciaAgua(campoId)]
+  const componentes = [aforo, toleranciaAgua(campoId, origen)]
   const rel = raizSumaCuadrados(componentes.map(c => c.valor))
   return { tanque, nivel: { tag, pct, hora }, libreBbl, aguaSinSalidaBpd, horas,
     rango: [horas * (1 - rel), horas * (1 + rel)], agotado: libreBbl <= 0, componentes }
@@ -164,7 +168,13 @@ export interface Prediccion {
   mueve?: { bpd: number; fuente: string; medido: boolean }
   respaldoLibreBpd: number
   aguaSinSalidaBpd: number
+  /** Lo que aguantaría el tanque si la bomba parara AHORA con todo el campo
+   *  produciendo (la predicción). Con la bomba ya parada NO es cuándo se
+   *  llena: eso es `llenado`. */
   colchon?: Colchon
+  /** Disposición ya parada, con tanque y nivel: cómo se está llenando el
+   *  tanque AHORA, con el agua que de verdad entra (`Llenado`). */
+  llenado?: Llenado
   orden?: OrdenDeCierre
   /** Crudo por día que se pierde una vez agotado el colchón (orden recomendado). */
   crudoBpd: number
@@ -177,13 +187,31 @@ export interface Prediccion {
   supuestos: string[]
 }
 
+/** El tanque de una bomba de disposición que YA está parada: sube con el agua
+ *  que entra ahora, no con la que movía la bomba. */
+export interface Llenado {
+  /** Agua que entra ahora al tanque: la de los pozos que producen (prueba
+   *  vigente, con la parte que pierde el que va a frecuencia reducida; la
+   *  misma cuenta de `caudalesAhora`). Con el campo cerrado, 0. */
+  aguaEntraBpd: number
+  /** El tanque con esa agua, menos el respaldo libre y lo que la bomba
+   *  todavía saca (una parada parcial): `aguaSinSalidaBpd`, `horas` hasta el
+   *  alto-alto y su `rango`. Sin agua sin salida, `horas` = Infinity (`null`
+   *  en el cable): el tanque no sube. */
+  colchon: Colchon
+  /** La prioridad del tanque (ISA-18.2: por el tiempo hasta la consecuencia,
+   *  la regla de la salud de las partes): ya en el alto-alto 1; llega en menos
+   *  de un día 2; dentro del horizonte (90 días) 3; no sube, o más allá, 0. */
+  prioridad: Severidad
+}
+
 /** Lo que pasaría si la bomba se parara ahora (o lo que está pasando, si ya
  *  está parada). */
 export function prediccion(p: PerfilBomba, ctx: Contexto): Prediccion {
   const parada = paradasDe(p.equipo, p.campoId).find(e => !e.fin)
   const banda = bandaDe(p.campoId)
   const crudoComp: Componente = { nombre: 'Crudo asignado a los pozos', valor: banda.valor, fuente: banda.fuente, correlado: true }
-  const base = { perfil: p, parada, respaldoLibreBpd: respaldoLibre(p, ctx), tolerancia: banda.valor, componentes: [crudoComp] }
+  const base = { perfil: p, parada, respaldoLibreBpd: respaldoLibre(p, ctx.config), tolerancia: banda.valor, componentes: [crudoComp] }
 
   if (p.papel === 'recobro') {
     // Parada o no, no cierra pozos hoy: lo que está perdiendo es cero, dicho.
@@ -215,10 +243,34 @@ export function prediccion(p: PerfilBomba, ctx: Contexto): Prediccion {
   if (parada) {
     const perdiendo = perdiendoPor(p, parada, ctx)
     const pr = prediccionEnMarcha(p, ctx, base, crudoComp)
-    return { ...pr, perdiendo,
+    const llenado = llenadoDe(p, parada, pr)
+    return { ...pr, perdiendo, ...(llenado ? { llenado } : {}),
       metodo: `Parada desde ${FMT_HORA.format(new Date(parada.inicio))}: ${perdiendo.pozos.length} ${perdiendo.pozos.length === 1 ? 'pozo cerrado' : 'pozos cerrados'} por ella` }
   }
   return prediccionEnMarcha(p, ctx, base, crudoComp)
+}
+
+/** Con la bomba de disposición ya parada, el tanque sube con el agua que ENTRA:
+ *
+ *    agua sin salida = max(0, agua que entra − respaldo libre − lo que la bomba
+ *                      todavía saca) × fracción sin bomba
+ *    horas           = libre hasta el alto-alto / (agua sin salida / 24)
+ *
+ *  donde lo que todavía saca es (1 − pérdida de la parada) × lo que mueve. No
+ *  es el colchón de la predicción («si parara ahora con todo produciendo»):
+ *  con los pozos cerrados no entra agua y el tanque no sube, esté donde esté.
+ *  Sin tanque firmado o sin su nivel no hay cuenta (ausente). */
+function llenadoDe(p: PerfilBomba, parada: EventoBomba, pr: Prediccion): Llenado | undefined {
+  const tanque = pr.colchon?.tanque, nivel = tanque ? NIVEL_AHORA[tanque.id] : undefined
+  if (!tanque || !nivel) return undefined
+  const aguaEntraBpd = caudalesAhora(p.campoId).agua
+  const saca = (1 - parada.perdida) * (pr.mueve?.bpd ?? 0)
+  const sinSalida = Math.max(0, aguaEntraBpd - pr.respaldoLibreBpd - saca) * p.sinBomba.fraccion
+  const colchon = colchonDe(tanque, nivel.pct, sinSalida, p.campoId, nivel.tag, nivel.hora, 'pruebas')
+  // La misma regla que la salud de una parte que avisa (salud.ts): lo que llega
+  // a su límite en menos de un día pide atención ya; más allá del horizonte, nada.
+  const prioridad: Severidad = colchon.agotado ? 1 : colchon.horas > HORIZONTE_H ? 0 : colchon.horas < 24 ? 2 : 3
+  return { aguaEntraBpd, colchon, prioridad }
 }
 
 /** Lo que una parada abierta está costando ahora: los pozos cuyo evento
@@ -244,14 +296,14 @@ function perdiendoPor(p: PerfilBomba, parada: EventoBomba, ctx: Contexto): { bbl
  *  porque es lo que se perdería en la próxima parada. */
 function prediccionEnMarcha(p: PerfilBomba, ctx: Contexto, base: Pick<Prediccion, 'perfil' | 'parada' | 'respaldoLibreBpd' | 'tolerancia' | 'componentes'>, crudoComp: Componente): Prediccion {
   const mueve = aguaQueMueve(p)
-  const sinSalida = Math.max(0, mueve.bpd - respaldoLibre(p, ctx)) * p.sinBomba.fraccion
+  const sinSalida = Math.max(0, mueve.bpd - respaldoLibre(p, ctx.config)) * p.sinBomba.fraccion
   const tanque = tanqueDe(ctx.config, p.campoId, p.equipo)
   const nivel = tanque ? NIVEL_AHORA[tanque.id] : undefined
   const colchon = tanque && nivel ? colchonDe(tanque, nivel.pct, sinSalida, p.campoId, nivel.tag, nivel.hora) : undefined
   // Sin respaldo, toda el agua se queda sin salida: se cierra todo el campo.
   // Con respaldo, lo que el respaldo no absorbe (medido en la bomba) se
   // quita de los pozos según sus pruebas.
-  const aQuitar = respaldoLibre(p, ctx) > 0 ? sinSalida : sinSalida > 0 ? Infinity : 0
+  const aQuitar = respaldoLibre(p, ctx.config) > 0 ? sinSalida : sinSalida > 0 ? Infinity : 0
   const orden = aQuitar > 0 ? ordenDeCierre(p.campoId, aQuitar, ahora, !!base.parada) : undefined
   return {
     ...base, inmediato: true, mueve, aguaSinSalidaBpd: sinSalida, colchon, orden,
@@ -259,7 +311,7 @@ function prediccionEnMarcha(p: PerfilBomba, ctx: Contexto, base: Pick<Prediccion
     componentes: [crudoComp, ...(colchon ? colchon.componentes : [])],
     metodo: sinSalida <= 0
       ? 'El respaldo absorbe toda el agua: parar no cierra pozos'
-      : respaldoLibre(p, ctx) <= 0
+      : respaldoLibre(p, ctx.config) <= 0
         ? 'Sin respaldo, el agua no tiene salida: al llenarse el tanque se cierra todo el campo'
         : `Hay que quitar ${n0(sinSalida)} bbl/d de agua: se cierran primero los pozos con menos crudo por barril de agua`,
     supuestos: [
@@ -299,7 +351,15 @@ export interface ParadaMedida {
   arrancoSinIdentificar: boolean
 }
 
-export function paradaMedida(ev: EventoBomba, ctx: Contexto): ParadaMedida | undefined {
+/** El historial de la configuración firmada, de la más vieja a la vigente
+ *  (`GET /api/configuracion/historial`). */
+export type Versiones = ReadonlyArray<Pick<Version, 'fecha' | 'config'>>
+
+/** Una parada de bomba medida. El tanque y el respaldo con que se calcula lo
+ *  que el tanque debía aguantar son los de la configuración que regía cuando
+ *  paró (`configEn(versiones, inicio)`), como en los mensajes: firmar hoy otro
+ *  respaldo no reescribe una parada de septiembre. */
+export function paradaMedida(ev: EventoBomba, ctx: Contexto, versiones: Versiones): ParadaMedida | undefined {
   const p = perfilBomba(ev.equipo, ev.campoId)
   if (!p) return undefined
   const causa = causaDeParada(ev, ctx)
@@ -311,9 +371,10 @@ export function paradaMedida(ev: EventoBomba, ctx: Contexto): ParadaMedida | und
   const bbl = tramos.reduce((a, t) => a + t.bbl, 0)
   const tol = toleranciaDe(tramos)
   let colchon: ParadaMedida['colchon']
-  const tanque = tanqueDe(ctx.config, ev.campoId, ev.equipo)
+  const regia = configEn(versiones, inicio.getTime())
+  const tanque = tanqueDe(regia, ev.campoId, ev.equipo)
   if (p.papel === 'disposicion' && tanque && ev.nivelAlParar && causa.equipo === ev.equipo) {
-    const sinSalida = Math.max(0, aguaQueMueve(p).bpd - respaldoLibre(p, ctx)) * ev.perdida * p.sinBomba.fraccion
+    const sinSalida = Math.max(0, aguaQueMueve(p).bpd - respaldoLibre(p, regia)) * ev.perdida * p.sinBomba.fraccion
     const previsto = colchonDe(tanque, ev.nivelAlParar.pct, sinSalida, ev.campoId, ev.nivelAlParar.tag)
     const primero = tramos.length ? Math.min(...tramos.map(t => new Date(t.evento.inicio).getTime())) : undefined
     colchon = { previsto, observadoH: primero !== undefined ? (primero - inicio.getTime()) / H : undefined }
@@ -389,14 +450,25 @@ export interface Riesgo {
   accion?: string
   /** El instrumento que da el aviso. */
   tag?: string
-  /** Barriles que cuesta una falla así: crudo por día × horas fuera promedio
-   *  (las del propio equipo; sin historia propia, las de su flota en el campo). */
+  /** Barriles que costaría que el equipo fallara HOY: el crudo por día que se
+   *  pierde si para hoy por las horas que duran sus fallas cerradas, sin las
+   *  que aguanta hoy el tanque (bomba de disposición). Una cuenta para todas
+   *  las familias, así las filas se pueden sumar. Recobro, o un respaldo que
+   *  absorbe toda el agua: 0. Sin fallas cerradas propias (ni flota, en una
+   *  electrosumergible): ausente, no 0. Lo que el equipo YA costó por falla
+   *  es otra cifra: `HistorialEquipo.bblPorFalla`. */
   costoFalla?: number
-  /** De dónde sale el tiempo fuera que usa `costoFalla`. */
+  /** Bomba de disposición con tanque: horas que aguanta hoy el tanque si
+   *  para (el colchón de la predicción). Una reparación más corta no cuesta
+   *  crudo. Ausente si el respaldo absorbe toda el agua o si no hay colchón
+   *  calculado (sin tanque o sin su nivel). */
+  colchonH?: number
+  /** De dónde sale `costoFalla`, en palabras (solo para leer). */
   mdtFuente?: string
   /** Con qué historia se estimó `costoFalla`: la del propio equipo o, si nunca
    *  ha fallado, la de su flota en el campo (menos confiable). La pantalla lo
-   *  marca sin leer el texto de `mdtFuente`. */
+   *  marca sin leer el texto de `mdtFuente`. Ausente cuando `costoFalla` es 0
+   *  por definición (recobro, respaldo que absorbe toda el agua). */
   costoDe?: 'propio' | 'flota'
   altoImpacto: boolean
 }
@@ -410,6 +482,35 @@ function mdtEspDelCampo(campoId: string, ctx: Contexto): number | undefined {
 }
 
 const peorParte = (ps: SaludParte[]) => ps.find(s => s.estado === 'fuera' || s.estado === 'avisa')
+
+type CostoFalla = Pick<Riesgo, 'costoFalla' | 'colchonH' | 'mdtFuente' | 'costoDe'>
+
+/** Lo que costaría que una bomba de la línea fallara HOY (decisión del dueño,
+ *  8-oct-2026). Con Q = el crudo por día que se pierde si para hoy (la
+ *  predicción, en el orden de cierre), dᵢ = las horas de cada falla suya
+ *  cerrada y h = el colchón de hoy:
+ *   - disposición con tanque: Q × promedio(max(0, dᵢ − h)) / 24;
+ *   - disposición sin colchón calculado (sin tanque o sin su nivel): Q × d̄ / 24,
+ *     un techo, y se dice;
+ *   - multifásica: Q × d̄ / 24 (no tiene tanque);
+ *   - recobro, o un respaldo que absorbe toda el agua: 0, dure lo que dure.
+ *  Sin fallas cerradas: sin cifra. */
+export function costoDeBomba(p: PerfilBomba, pr: Prediccion, h: HistorialEquipo): CostoFalla {
+  if (p.papel === 'recobro') return { costoFalla: 0, mdtFuente: 'una bomba de recobro no cierra pozos hoy' }
+  if (p.papel === 'disposicion' && pr.aguaSinSalidaBpd <= 0) return { costoFalla: 0, mdtFuente: 'el respaldo absorbe toda el agua: parar no cierra pozos' }
+  const d = h.eventos.filter(e => !e.disparo && e.fin).map(e => e.horas)
+  if (!d.length) return {}
+  const sus = `el promedio de ${d.length === 1 ? 'su falla cerrada' : `sus ${d.length} fallas cerradas`}`
+  const media = (xs: number[]) => xs.reduce((a, x) => a + x, 0) / xs.length
+  if (p.papel === 'disposicion' && pr.colchon) {
+    const hc = pr.colchon.horas
+    return { costoFalla: pr.crudoBpd * media(d.map(x => Math.max(0, x - hc))) / 24, colchonH: hc, costoDe: 'propio',
+      // Las horas del colchón, truncadas (`textoHoras(h, true)`): las mismas que dice la fila («0 si vuelve antes de 19 h»).
+      mdtFuente: pr.colchon.agotado ? `${sus}; el tanque ya está en el alto-alto, no aguanta nada` : `${sus}, sin las ${textoHoras(hc, true)} que aguanta hoy el tanque` }
+  }
+  return { costoFalla: pr.crudoBpd * media(d) / 24, costoDe: 'propio',
+    mdtFuente: p.papel === 'disposicion' ? `${sus}, sin descontar el tanque (no hay colchón calculado): es un techo` : sus }
+}
 
 /** Lo que se está perdiendo AHORA (eventos abiertos, cada uno con su causa) y
  *  lo que está en riesgo (equipos de alto impacto que producen y tienen una
@@ -476,9 +577,7 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
         bblDia: pr.crudoBpd, pozos: pr.orden?.pasos.length ?? (p.pozos?.length ?? 0), parte: sp.parte.id,
         horas: sp.primera?.senal.pronostico.horas, rango: sp.primera?.senal.pronostico.rango, accion: sp.parte.accion,
         tag: sp.primera?.senal.tag ?? sp.fuera[0]?.senal.tag,
-        costoFalla: h.bblPorFalla,
-        mdtFuente: h.fallasCerradas ? `el promedio de sus ${h.fallasCerradas} fallas cerradas (el tanque absorbe una parte)` : undefined,
-        costoDe: h.bblPorFalla !== undefined ? 'propio' : undefined,
+        ...costoDeBomba(p, pr, h),
         altoImpacto: p.subtipo !== 'multifasica',
         motivo: motivoDeParte(sp) })
     }
@@ -498,7 +597,7 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
     const mdtCampo = mdtEspDelCampo(campoId, ctx)
     for (const p of perfil.electrosumergibles ? pozosDe(campoId) : []) {
       if (p.levantamiento !== 'electrosumergible' || !estadoAhora(p).produce) continue
-      const sp = peorParte(saludDeEsp(p))
+      const sp = peorParte(saludDeEsp(p, ctx))
       if (!sp) continue
       const h = historialDeEquipo(campoId, p.id, ctx)
       const mdt = h.mdtH ?? mdtCampo
@@ -507,8 +606,9 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
         parte: sp.parte.id, horas: sp.primera?.senal.pronostico.horas, rango: sp.primera?.senal.pronostico.rango, accion: sp.parte.accion,
         tag: sp.primera?.senal.tag ?? sp.fuera[0]?.senal.tag,
         costoFalla: mdt !== undefined ? crudoAsignado(p) * mdt / 24 : undefined,
-        mdtFuente: h.mdtH !== undefined ? `${Math.round(h.mdtH / 24)} días fuera, el promedio de sus ${h.fallasCerradas} fallas cerradas`
-          : mdt !== undefined ? `${Math.round(mdt / 24)} días fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)` : undefined,
+        // Las horas con la regla de las pantallas (`textoHoras`): «26,0 d», «30 h»; nunca «1 días».
+        mdtFuente: h.mdtH !== undefined ? `${textoHoras(h.mdtH)} fuera, el promedio de ${h.fallasCerradas === 1 ? 'su falla cerrada' : `sus ${h.fallasCerradas} fallas cerradas`}`
+          : mdt !== undefined ? `${textoHoras(mdt)} fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)` : undefined,
         costoDe: h.mdtH !== undefined ? 'propio' : mdt !== undefined ? 'flota' : undefined,
         altoImpacto: true,
         motivo: motivoDeParte(sp) })

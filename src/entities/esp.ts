@@ -12,6 +12,7 @@ import { PARTES_ESP, type ParteId } from './partes'
 import { evaluarPartes, type SaludParte } from './salud'
 import { mecanismo } from './iso14224'
 import { pruebaEn, estadoAhora, type Pozo } from './pozos'
+import { causaDeEvento, type Contexto } from './causa-senal'
 export { estadoAhora }
 import type { Plantilla, VariableId } from './bombas'
 import type { EstadoDispositivo } from './tipos'
@@ -133,14 +134,28 @@ export function senalesEsp(p: Pozo): Senal[] {
   return out
 }
 
-/** Las partes de la electrosumergible con su estado. */
-export function saludDeEsp(p: Pozo, parteFallo?: ParteId): SaludParte[] {
+/** La parte de la electrosumergible a la que se le atribuye la parada
+ *  abierta del pozo: la de la causa de su evento abierto, cuando esa causa es
+ *  su PROPIA electrosumergible (código del variador o declarada con la
+ *  parte). Cerrado por otro equipo, a frecuencia reducida o produciendo: ninguna. */
+export function parteQueFallo(p: Pozo, ctx: Contexto): ParteId | undefined {
+  const e = estadoAhora(p)
+  if (e.produce || !e.evento) return undefined
+  const c = causaDeEvento(e.evento, ctx)
+  return c.tipo === 'electrosumergible' && c.equipo === p.id ? c.parte : undefined
+}
+
+/** Las partes de la electrosumergible con su estado. Con el pozo parado por
+ *  su propia electrosumergible, la parte de esa falla sale «falló» (como en
+ *  las bombas). Pide el contexto para que ningún llamador se la salte: la
+ *  causa toma las respuestas y el programa firmado. */
+export function saludDeEsp(p: Pozo, ctx: Contexto): SaludParte[] {
   if (p.levantamiento !== 'electrosumergible') return []
   const senales = senalesEsp(p)
   return evaluarPartes({
     partes: PARTES_ESP, plantilla: PLANTILLA_ESP, senales,
     instrumentada: () => true,
     detenido: !estadoAhora(p).produce,
-    parteFallo,
+    parteFallo: parteQueFallo(p, ctx),
   })
 }

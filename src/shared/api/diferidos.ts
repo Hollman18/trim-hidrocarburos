@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useCtx } from './sesion'
+import { useCtx, useVersiones } from './sesion'
 import { useDato, useDatoSi, useDatos, traer, versionDe } from './consulta'
 import {
   DIFERIDOS, DIFERIDOS_MENSUAL, DIFERIDOS_BASE, PRODUCCION_DIARIA, POTENCIAL_RECIENTE, PREGUNTAS, OPCIONES_RESPUESTA,
@@ -14,9 +14,9 @@ import { saludDeEsp, senalesEsp } from '@/entities/esp'
 import { perfilBomba, paradasDe, esBomba, type PerfilBomba } from '@/entities/bombas'
 import {
   prediccion, paradaMedida, riesgoAhora, estadoCampo,
-  type Prediccion, type ParadaMedida, type Riesgo, type EstadoCampo,
+  type Prediccion, type ParadaMedida, type Riesgo, type EstadoCampo, type Versiones,
 } from '@/entities/diferido'
-import { causaDeEvento, type Causa, type Contexto } from '@/entities/causa-senal'
+import { causaDeEvento, cuentaPorIdentificar, type Causa, type Contexto, type PorIdentificar } from '@/entities/causa-senal'
 import { pozosDe, pozoDe, pruebaEn, estadoAhora, eventosDePozo, type Pozo, type Prueba, type EventoPozo } from '@/entities/pozos'
 import { causasSugeridas, type Opcion } from '@/entities/mensajes'
 import { catalogoDe, type Catalogo } from '@/entities/catalogo'
@@ -79,6 +79,13 @@ export interface ConsultaLibro { campos: string[]; desde: Date; hasta: Date }
 
 /** La versión del contexto con que se calcula: entra en la clave de la caché. */
 const v = (ctx: Contexto) => String(versionDe(ctx))
+/** …y la del historial de versiones firmadas, en las consultas que lo leen. */
+const vv = (ctx: Contexto, versiones: Versiones) => `${versionDe(ctx)}.${versionDe(versiones)}`
+
+/** Sin historial a mano (los scripts que arman la referencia con el contexto
+ *  de arranque), la única versión que se conoce es la del contexto: rige en
+ *  toda la historia. Las pantallas siempre pasan el historial de la sesión. */
+export const soloLaVigente = (ctx: Contexto): Versiones => [{ fecha: '1970-01-01T00:00:00.000Z', config: ctx.config }]
 
 /* ─────────────────────────────── libro ─────────────────────────────── */
 
@@ -113,6 +120,14 @@ export const pedirPotencialesRecientes = (campos: string[], ctx: Contexto): Reco
 export function pedirPreguntas(campos: string[], ctx: Contexto): Pregunta[] {
   return libro(campos, new Date(calendario()[0]!.desde), AHORA, ctx).preguntas
 }
+
+/** «Por identificar» con una sola cuenta para todas las pantallas, sobre las
+ *  preguntas que ya llegaron (`usePreguntas`): `porIdentificar` = las que
+ *  piden respuesta (`pide`), hayan arrancado o no; `arrancaronSinIdentificar`
+ *  = de esas, las que ya arrancaron (no conformidad). Es la regla del motor
+ *  (`cuentaPorIdentificar`, causa-senal.ts); la pantalla no cuenta por su lado. */
+export const contarPorIdentificar = (preguntas: readonly Pregunta[]): PorIdentificar => cuentaPorIdentificar(preguntas)
+export type { PorIdentificar }
 
 export interface OpcionesRespuesta {
   /** Catálogo de daños del equipo (partes y modos); undefined si no tiene. */
@@ -160,13 +175,14 @@ export function usePrediccion(p: PerfilBomba | undefined): Prediccion | undefine
   return useDatoSi(PREDICCION, p ? { campo: p.campoId, equipo: p.equipo } : null, v(ctx), () => pedirPrediccion(p!, ctx))
 }
 /** `GET /api/vistas/bombas/paradas?campo=&equipo=` → toda la historia de
- *  paradas de la bomba, medidas, de la más reciente a la más vieja. */
-export const pedirParadas = (campo: string, equipo: string, ctx: Contexto): ParadaMedida[] =>
-  paradasDe(equipo, campo).map(e => paradaMedida(e, ctx)).filter((m): m is ParadaMedida => !!m)
+ *  paradas de la bomba, medidas, de la más reciente a la más vieja. Cada una
+ *  con el tanque y el respaldo que regían cuando paró (`versiones`). */
+export const pedirParadas = (campo: string, equipo: string, ctx: Contexto, versiones: Versiones = soloLaVigente(ctx)): ParadaMedida[] =>
+  paradasDe(equipo, campo).map(e => paradaMedida(e, ctx, versiones)).filter((m): m is ParadaMedida => !!m)
     .sort((a, b) => b.inicio.getTime() - a.inicio.getTime())
 export function useParadas(campo: string, equipo: string): ParadaMedida[] {
-  const ctx = useCtx()
-  return useDato(PARADAS_BOMBA, { campo, equipo }, v(ctx), () => pedirParadas(campo, equipo, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(PARADAS_BOMBA, { campo, equipo }, vv(ctx, versiones), () => pedirParadas(campo, equipo, ctx, versiones))
 }
 /** Una parada con lo que de ella cae dentro de un período: una parada que
  *  cruza el borde (del 31 al 1) no suma sus horas ni sus barriles completos a
@@ -181,9 +197,9 @@ export interface ParadaEnPeriodo extends ParadaMedida {
   cruzaBorde: boolean
 }
 /** Las paradas de una bomba que se solapan con el período, recortadas a él. */
-export function pedirParadasEnPeriodo(campo: string, equipo: string, desde: Date, hasta: Date, ctx: Contexto): ParadaEnPeriodo[] {
+export function pedirParadasEnPeriodo(campo: string, equipo: string, desde: Date, hasta: Date, ctx: Contexto, versiones: Versiones = soloLaVigente(ctx)): ParadaEnPeriodo[] {
   const enPeriodo = tramosEntre([campo], desde, hasta, ctx)
-  return pedirParadas(campo, equipo, ctx).filter(m => m.inicio < hasta && m.fin > desde).map(m => {
+  return pedirParadas(campo, equipo, ctx, versiones).filter(m => m.inicio < hasta && m.fin > desde).map(m => {
     const ids = new Set(m.tramos.map(t => t.evento.id))
     const ini = new Date(Math.max(m.inicio.getTime(), desde.getTime())), fin = new Date(Math.min(m.fin.getTime(), hasta.getTime()))
     return { ...m, horasEnPeriodo: Math.max(0, horasEntre(ini, fin)),
@@ -195,11 +211,11 @@ export function pedirParadasEnPeriodo(campo: string, equipo: string, desde: Date
 /** `GET /api/vistas/bombas/paradas-en-periodo?campos=&desde=&hasta=` → las
  *  paradas de todas las bombas de la línea con perfil en los campos,
  *  recortadas al período. Un pedido por lote, no uno por bomba. */
-export const pedirParadasDeBombas = (campos: string[], desde: Date, hasta: Date, ctx: Contexto): ParadaEnPeriodo[] =>
-  campos.flatMap(c => Object.keys(EQUIPOS).filter(id => esBomba(id) && perfilBomba(id, c)).flatMap(id => pedirParadasEnPeriodo(c, id, desde, hasta, ctx)))
+export const pedirParadasDeBombas = (campos: string[], desde: Date, hasta: Date, ctx: Contexto, versiones: Versiones = soloLaVigente(ctx)): ParadaEnPeriodo[] =>
+  campos.flatMap(c => Object.keys(EQUIPOS).filter(id => esBomba(id) && perfilBomba(id, c)).flatMap(id => pedirParadasEnPeriodo(c, id, desde, hasta, ctx, versiones)))
 export function useParadasDeBombas(campos: string[], desde: Date, hasta: Date): ParadaEnPeriodo[] {
-  const ctx = useCtx()
-  return useDato(PARADAS_EN_PERIODO, { campos, desde, hasta }, v(ctx), () => pedirParadasDeBombas(campos, desde, hasta, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(PARADAS_EN_PERIODO, { campos, desde, hasta }, vv(ctx, versiones), () => pedirParadasDeBombas(campos, desde, hasta, ctx, versiones))
 }
 
 /* ─────────────────────────────── riesgo ─────────────────────────────── */
@@ -246,7 +262,7 @@ export function pedirPozos(campo: string, desde: Date, hasta: Date, ctx: Context
     const e = estadoAhora(p)
     const prueba = p.pruebas.length ? pruebaEn(p, AHORA.getTime()) : undefined
     const mios = ts.filter(t => t.pozo.id === p.id)
-    const salud = p.levantamiento === 'electrosumergible' ? saludDeEsp(p)[0] : undefined
+    const salud = p.levantamiento === 'electrosumergible' ? saludDeEsp(p, ctx)[0] : undefined
     return {
       pozo: p, produce: e.produce, hz: e.hz, evento: e.evento, causa: e.evento ? causaDeEvento(e.evento, ctx) : undefined,
       crudoBpd: crudoAsignado(p), aguaBpd: aguaDePrueba(p), prueba,
@@ -289,7 +305,7 @@ export function pedirPozo(campo: string, id: string, desde: Date, hasta: Date, c
     tramos: tramosEntre([campo], desde, hasta, ctx).filter(t => t.pozo.id === id).sort((a, b) => b.inicio.getTime() - a.inicio.getTime()),
     historicos: eventosDePozo(campo, id).map(evento => ({ evento, causa: causaDeEvento(evento, ctx) }))
       .sort((a, b) => b.evento.inicio.localeCompare(a.evento.inicio)),
-    senales: esp ? senalesEsp(p) : [], partes: esp ? saludDeEsp(p) : [],
+    senales: esp ? senalesEsp(p) : [], partes: esp ? saludDeEsp(p, ctx) : [],
     historial: esp ? historialDeEquipo(campo, id, ctx) : undefined,
   }
 }
@@ -311,7 +327,7 @@ export function pedirFlotaEsp(campos: string[], desde: Date, hasta: Date, ctx: C
   // Solo los campos cuyo perfil firmado tiene electrosumergibles: las demás no se vigilan.
   return campos.filter(c => perfilDe(ctx.config, c).electrosumergibles).flatMap(c => pedirPozos(c, desde, hasta, ctx)
     .filter(f => f.pozo.levantamiento === 'electrosumergible')
-    .map(fila => ({ fila, partes: saludDeEsp(fila.pozo), historial: historialDeEquipo(c, fila.pozo.id, ctx) })))
+    .map(fila => ({ fila, partes: saludDeEsp(fila.pozo, ctx), historial: historialDeEquipo(c, fila.pozo.id, ctx) })))
 }
 
 /* ──────────────────────────── ganchos ──────────────────────────── */

@@ -10,7 +10,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
 
   await test.step('Identificar: causas sugeridas y el hilo de WhatsApp', async () => {
     t = await f.texto()
-    f.ok(await cifra('POR IDENTIFICAR') === '2 por identificar', 'antes de responder: 2 pendientes')
+    f.ok(await cifra('POR IDENTIFICAR · SIN ARRANCAR') === '2 sin arrancar', 'antes de responder: 2 pendientes')
     f.ok(t.includes('Pista · historia del equipo') && /· \d+ de \d+ fallas?/.test(t), 'la bomba trae las sugeridas de su historia, con su porqué (fallas anteriores)')
     f.ok(!t.includes('señal e historia'), 'no se le atribuye a la señal lo que viene de la historia')
     f.ok(await f.clic('Sello mecánico'), 'se puede escoger la sugerida con un toque')
@@ -61,7 +61,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     f.ok(await f.clic('1Fuga hacia afuera'), 'escoge lo que vio: segundo toque')
     await f.esperar(500)
     t = await f.texto()
-    f.ok(await cifra('POR IDENTIFICAR') === '1 por identificar', 'P-201B sale de lo pendiente (quedan 1 de 2)')
+    f.ok(await cifra('POR IDENTIFICAR · SIN ARRANCAR') === '1 sin arrancar', 'P-201B sale de lo pendiente (quedan 1 de 2)')
     f.ok(t.includes('Sello mecánico · fuga hacia afuera') && !t.includes('vio: fuga hacia afuera') && t.includes('por WhatsApp'), 'queda en DECLARADAS dicho una vez: parte · lo que vio, por WhatsApp')
     f.ok(t.includes('Respondido: P-201B (por WhatsApp') && t.includes('Pasó a «Declaradas»'), 'y se confirma arriba: respondido y a dónde pasó')
   })

@@ -101,18 +101,29 @@ const SERVICIO_A_TIPO: Record<EventoServicio['tipo'], TipoCausa> = {
   aire: 'aire', energia: 'energia', compresion: 'compresion', evacuacion: 'evacuacion', proceso: 'proceso', tratamiento: 'tratamiento',
 }
 
+/** De varios servicios candidatos, el que cayó primero; si cayeron a la vez,
+ *  el de id menor (orden de código del texto, el mismo en cualquier lenguaje).
+ *  Así el resultado no depende del orden en que lleguen los eventos. */
+function elPrimero(xs: readonly EventoServicio[]): EventoServicio | undefined {
+  let p: EventoServicio | undefined
+  for (const s of xs) if (!p || ms(s.inicio) < ms(p.inicio) || (ms(s.inicio) === ms(p.inicio) && s.id < p.id)) p = s
+  return p
+}
+
 /** El servicio que cayó a ±15 min de la parada de una bomba: una bomba que
- *  para por un servicio para cuando el servicio cae, no horas después. */
+ *  para por un servicio para cuando el servicio cae, no horas después. Con
+ *  dos, el que cayó primero. */
 const servicioAlParar = (campoId: string, t: number): EventoServicio | undefined =>
-  serviciosDeCampo(campoId).find(s => Math.abs(ms(s.inicio) - t) <= TOLERANCIA_MS)
+  elPrimero(serviciosDeCampo(campoId).filter(s => Math.abs(ms(s.inicio) - t) <= TOLERANCIA_MS))
 
 /* La cascada de cada servicio: los eventos de pozo que cerraron uno tras
-   otro desde su caída. Depende solo de los eventos del PLC: una vez. */
+   otro desde su caída. Depende solo de los eventos del PLC: una vez. Un
+   servicio todavía caído (`fin: null`) llega hasta ahora. */
 const CASCADA = new Map<string, Set<string>>()
 function cascadaDe(s: EventoServicio): Set<string> {
   const ya = CASCADA.get(s.id)
   if (ya) return ya
-  const a = ms(s.inicio), b = ms(s.fin)
+  const a = ms(s.inicio), b = s.fin ? ms(s.fin) : AHORA.getTime()
   const enVentana = eventosDeCampo(s.campoId)
     .filter(e => ms(e.inicio) >= a - TOLERANCIA_MS && ms(e.inicio) <= b)
     .sort((x, y) => ms(x.inicio) - ms(y.inicio))
@@ -128,9 +139,10 @@ function cascadaDe(s: EventoServicio): Set<string> {
   return ids
 }
 
-/** El servicio en cuya cascada cerró el pozo. */
+/** El servicio en cuya cascada cerró el pozo. Si cerró en la de dos, el que
+ *  cayó primero. */
 const servicioDeCascada = (ev: EventoPozo): EventoServicio | undefined =>
-  serviciosDeCampo(ev.campoId).find(s => cascadaDe(s).has(ev.id))
+  elPrimero(serviciosDeCampo(ev.campoId).filter(s => cascadaDe(s).has(ev.id)))
 
 function enPrograma(ctx: Contexto, campoId: string, equipo: string, t: number) {
   return ctx.config.programa.find(p => p.campoId === campoId && p.equipo === equipo && ms(p.desde) <= t && t <= ms(p.hasta))
@@ -261,9 +273,18 @@ function deducirEvento(ev: EventoPozo, ctx: Contexto): Causa {
   if (lb) {
     const { bomba, perfil } = lb
     const cb = causaDeParada(bomba, ctx)
-    const ev2 = [`${bomba.senal} · ${hora(bomba.inicio)}`, ...(cb.evidencia.slice(0, 1)), ...base]
+    // La evidencia del pozo: el paro de la bomba, lo que identificó su causa
+    // (el programa, la primera alarma, la firma o el servicio, que van
+    // primero; la declaración, que va al final) y el cierre del pozo. Sin
+    // nada que la identifique, el paro no se repite y el porqué va de último
+    // renglón, como en toda causa sin identificar.
+    const paro = `${bomba.senal} · ${hora(bomba.inicio)}`
+    const queLaIdentifico = cb.como === 'ninguno' ? [] : cb.como === 'declarado' ? cb.evidencia.slice(-1) : cb.evidencia.slice(0, 1)
+    const ev2 = [paro, ...queLaIdentifico.filter(x => x !== paro), ...base, ...(cb.porQueNo ? [cb.porQueNo] : [])]
     if (cb.tipo !== 'reinyeccion' && cb.tipo !== 'transporte') return { ...cb, evidencia: ev2 }
     return { tipo: cb.tipo, equipo: bomba.equipo, parte: cb.parte, como: cb.como, evento: bomba.id, declarado: cb.declarado,
+      // Sin parte, el pozo dice por qué con las palabras de su bomba.
+      ...(cb.porQueNo ? { porQueNo: cb.porQueNo } : {}),
       evidencia: ev2,
       texto: perfil.papel === 'transporte' ? 'La bomba multifásica que lo mueve estaba parada'
         : ev.codigo === 'HZ' ? 'Se le bajó la frecuencia: la bomba de reinyección no daba abasto con el agua'
@@ -298,6 +319,19 @@ function deducirEvento(ev: EventoPozo, ctx: Contexto): Causa {
   return { tipo: 'pendiente', equipo: ev.pozo, como: 'ninguno', evento: ev.id, porQueNo,
     evidencia: [...base, porQueNo],
     texto: 'Ninguna señal explica por qué paró: hay que identificarlo' }
+}
+
+/** «Por identificar», con UNA definición para todas las pantallas (Mi
+ *  trabajo, Turno, Identificar, Mantenimiento) y para el servidor:
+ *  - `porIdentificar`: las paradas que todavía piden respuesta (`pide`),
+ *    hayan arrancado o no;
+ *  - `arrancaronSinIdentificar`: de esas, las que ya arrancaron sin respuesta
+ *    (no conformidad). Una respuesta que llegó tarde ya no pide nada y no
+ *    está aquí (sigue siendo no conforme: `arrancoSinIdentificar`). */
+export interface PorIdentificar { porIdentificar: number; arrancaronSinIdentificar: number }
+export function cuentaPorIdentificar(xs: ReadonlyArray<{ pide: boolean; arrancoSinIdentificar: boolean }>): PorIdentificar {
+  const piden = xs.filter(x => x.pide)
+  return { porIdentificar: piden.length, arrancaronSinIdentificar: piden.filter(x => x.arrancoSinIdentificar).length }
 }
 
 /** ¿La parada necesita que alguien identifique el daño? ¿Arrancó antes? */

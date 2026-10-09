@@ -22,7 +22,9 @@ export function Analogico({
   normal?: [number, number]
   alarma?: { alta?: number; baja?: number }
   decimales?: number
-  /** El estado que reporta el instrumento manda; si no viene, se deduce. */
+  /** El estado que reporta el instrumento manda; si no viene, se deduce: en
+   *  alarma, 1; fuera de su banda normal sin alarma, atención (2), como dice
+   *  el contrato y la electrosumergible (`estadoDe`). */
   estado?: Severidad
   nombre?: ReactNode
   /** Segundo renglón del nombre: el tag y de dónde viene la lectura. */
@@ -46,7 +48,7 @@ export function Analogico({
   const fuera = valor !== null && !!normal && (valor < normal[0] || valor > normal[1])
   const enAlarma = valor !== null && !!alarma &&
     ((alarma.alta !== undefined && valor >= alarma.alta) || (alarma.baja !== undefined && valor <= alarma.baja))
-  const s: Severidad = estado ?? (enAlarma ? 1 : fuera ? 3 : 0)
+  const s: Severidad = estado ?? (enAlarma ? 1 : fuera ? 2 : 0)
   const tinta = s ? `var(--p${s})` : 'var(--tinta)'
   const limites = finitos([alarma?.baja, alarma?.alta])
 

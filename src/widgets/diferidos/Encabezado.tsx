@@ -1,4 +1,5 @@
 import type { Libro, LineaBase } from '@/entities/libro'
+import { useNivel } from '@/app/store'
 import { FUENTE_POTENCIAL, FUENTE_REAL, conMeta, textoSinMeta } from '@/entities/libro'
 import { campoPorId } from '@/entities/campos'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -25,6 +26,8 @@ export function Encabezado({ lb, base, nombrePeriodo, ambito, simple = false }: 
   simple?: boolean
 }) {
   const tol = lb.diferido > 0 ? lb.tolerancia / lb.diferido : 0
+  // Quien decide no ve tolerancias (8.12): su margen es el rango de abajo, ya en sus palabras.
+  const decide = useNivel() === 'decision'
   const dinero = lb.valorUsd !== undefined ? usd(lb.valorUsd) : undefined
   const sinPrecio = lb.sinPrecio.map(c => campoPorId(c).nombre)
   const parcial = dinero !== undefined && lb.valorCampos.con < lb.valorCampos.total
@@ -48,7 +51,7 @@ export function Encabezado({ lb, base, nombrePeriodo, ambito, simple = false }: 
             pista="Potencial (pruebas × factor de asignación) menos lo que midió el punto de medición oficial. Cada barril lleva su evento, su causa y los tags que la prueban."
             filas={[
               ['Potencial', `${n0(lb.potencial)} bbl`], ['Real medido', `${n0(lb.real)} bbl`],
-              ['Diferidos', `${n0(lb.brecha)} bbl`], ['Σ de los eventos', `${n0(lb.diferido)} bbl ±${n1(tol * 100)} % (Res. 40236)`],
+              ['Diferidos', `${n0(lb.brecha)} bbl`], ['Σ de los eventos', decide ? `${n0(lb.diferido)} bbl` : `${n0(lb.diferido)} bbl ±${n1(tol * 100)} % (Res. 40236)`],
               ['Por señal', `${n0(lb.identificado)} bbl`], ['Declarado', `${n0(lb.declarado)} bbl`], ['Sin identificar', `${n0(lb.pendiente)} bbl`],
               ...(lb.aproximado > 0 ? [['Frecuencia reducida (aprox.)', `${n0(lb.aproximado)} bbl`] as [string, string]] : []),
               ['Período', nombrePeriodo], ['Cierre', provisional ? 'provisional' : 'publicado']]}

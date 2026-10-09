@@ -232,7 +232,8 @@
                 "allowImportNames": [
                   "ESTADO_PARTE",
                   "HORIZONTE_H",
-                  "motivoDeParte"
+                  "motivoDeParte",
+                  "textoHoras"
                 ]
               },
               {

@@ -1,15 +1,15 @@
 import { useMemo } from 'react'
-import { useCtx } from './sesion'
+import { useCtx, useVersiones } from './sesion'
 import { useDato, useDatoSi, versionDe } from './consulta'
 import { EQUIPO_HOY, EQUIPOS_HOY, HISTORIA_EQUIPO, FILAS_EQUIPOS, CONFIABILIDAD, FICHA_EQUIPO, BOMBAS } from './contrato'
-import { pedirPrediccion } from './diferidos'
+import { pedirPrediccion, soloLaVigente } from './diferidos'
 import { catalogoDelCampo, equiposDelCatalogo, maquinasDelCatalogo } from './catalogo'
 import type { Campo } from '@/entities/tipos'
 import { campoPorId } from '@/entities/campos'
 import { EQUIPOS, equipoEnCampo, type EquipoEnCampo } from '@/entities/equipos'
 import { equipoVivo, type EquipoVivo } from '@/entities/equipo-vivo'
 import { esBomba, perfilBomba, paradasDe, type PerfilBomba } from '@/entities/bombas'
-import { paradaMedida, veredicto, type ParadaMedida, type Veredicto, type Prediccion } from '@/entities/diferido'
+import { paradaMedida, veredicto, type ParadaMedida, type Veredicto, type Prediccion, type Versiones } from '@/entities/diferido'
 import {
   diferidoDeEquipo, historialDeEquipo, eventosCargadosA, valorDeTramos, calendario,
   type HistorialEquipo, type EventoCargado,
@@ -46,6 +46,11 @@ export const pedirCatalogoEquipos = (): string[] => equiposDelCatalogo()
 export const pedirMaquinasBomba = (): string[] => maquinasDelCatalogo()
 /** ¿Es una máquina de bombeo de la línea? Del mismo catálogo. */
 export const esBombaDeLinea = (equipo: string): boolean => maquinasDelCatalogo().includes(equipo)
+
+/** Un servicio del campo (aire, energía, compresión…): ni bomba de la línea ni
+ *  electrosumergible. Una sola regla para Riesgo, Mantenimiento, el Resumen y la
+ *  franja «Ahora»: la multifásica es una bomba de la línea, no un servicio. */
+export const esServicio = (r: { tipo: string; equipo: string }): boolean => r.tipo !== 'electrosumergible' && !esBombaDeLinea(r.equipo)
 
 /** El perfil de cada bomba de la línea en el campo (papel, capacidad, pozos
  *  que mueve, tags), de `GET /api/catalogo` → `campos[campo].perfilesBomba`.
@@ -252,8 +257,9 @@ export interface BombaVista {
 
 /** `GET /api/vistas/bombas?campos=&desde=&hasta=` → las bombas de la línea
  *  instrumentadas de los campos cuyo perfil firmado tiene bombas, de la más
- *  urgente a la menos. Un pedido por lote. */
-export function pedirBombas(campos: string[], desde: Date, hasta: Date, ctx: Contexto): BombaVista[] {
+ *  urgente a la menos. Un pedido por lote. La parada abierta se mide con el
+ *  tanque y el respaldo que regían cuando paró (`versiones`). */
+export function pedirBombas(campos: string[], desde: Date, hasta: Date, ctx: Contexto, versiones: Versiones = soloLaVigente(ctx)): BombaVista[] {
   const out: BombaVista[] = []
   // Solo los campos cuyo perfil firmado tiene bombas de la línea: las demás no se vigilan.
   for (const campo of campos.filter(c => perfilDe(ctx.config, c).bombas).map(campoPorId)) {
@@ -262,7 +268,7 @@ export function pedirBombas(campos: string[], desde: Date, hasta: Date, ctx: Con
       if (!eq || !eq.instrumentado) continue
       const perfil = perfilBomba(id, campo.id)
       const ab = paradasDe(id, campo.id).find(e => !e.fin)
-      const abierta = ab ? paradaMedida(ab, ctx) : undefined
+      const abierta = ab ? paradaMedida(ab, ctx, versiones) : undefined
       const senales = perfil ? senalesDe(perfil) : []
       const parteFallo = abierta && abierta.causa.equipo === id ? abierta.causa.parte : undefined
       out.push({
@@ -284,8 +290,8 @@ export function pedirBombas(campos: string[], desde: Date, hasta: Date, ctx: Con
 }
 
 export function useBombas(campos: string[], desde: Date, hasta: Date): BombaVista[] {
-  const ctx = useCtx()
-  return useDato(BOMBAS, { campos, desde, hasta }, v(ctx), () => pedirBombas(campos, desde, hasta, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(BOMBAS, { campos, desde, hasta }, `${versionDe(ctx)}.${versionDe(versiones)}`, () => pedirBombas(campos, desde, hasta, ctx, versiones))
 }
 
 /* ───────────────────────────── topología ───────────────────────────── */

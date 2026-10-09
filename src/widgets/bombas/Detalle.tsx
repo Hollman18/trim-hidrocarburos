@@ -21,7 +21,7 @@ import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, n2, decimalesDe, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Proyeccion } from './Proyeccion'
-import { fmtBbl, fmtRango, fmtTol, fmtComponente, fmtHoras, textoPronostico, pronosticoCorto, tanqueAbierto, fraseParteCorta } from './comun'
+import { fmtBbl, fmtRango, fmtTol, fmtComponente, fmtHoras, textoPronostico, pronosticoCorto, tanqueAbierto, fraseParteCorta, respaldoAbsorbe } from './comun'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { BloqueParte } from './BloqueParte'
 import type { SaludParte } from '@/entities/salud'
@@ -110,13 +110,15 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
               pie={`${n0(pr.perdiendo.bblDia / 24)} bbl/h · ${plural(pr.perdiendo.pozos.length, 'pozo cerrado', 'pozos cerrados')}`} />
           ) : (
             <Cifra rotulo="Si se para ahora"
-              valor={!pr.inmediato ? 'no cierra pozos' : `${n0(pr.crudoBpd)} bbl/d`}
-              pie={!pr.inmediato ? 'recobro: el efecto llega en semanas' : pr.colchon ? `tras ${fmtHoras(pr.colchon.horas, true)} de colchón${ing ? ` · ${fmtTol(pr.tolerancia)}` : ''}` : `de inmediato${ing ? ` · ${fmtTol(pr.tolerancia)}` : ''}`} />
+              valor={!pr.inmediato || respaldoAbsorbe(pr) ? 'no cierra pozos' : `${n0(pr.crudoBpd)} bbl/d`}
+              pie={!pr.inmediato ? 'recobro: el efecto llega en semanas' : respaldoAbsorbe(pr) ? 'el respaldo absorbe toda el agua'
+                : pr.colchon ? `tras ${fmtHoras(pr.colchon.horas, true)} de colchón${ing ? ` · ${fmtTol(pr.tolerancia)}` : ''}` : `de inmediato${ing ? ` · ${fmtTol(pr.tolerancia)}` : ''}`} />
           )}
           {ing && (
-            <Cifra rotulo="Costo por falla"
+            // Lo que YA costó cada falla (histórico). Lo que costaría si falla hoy es la cifra de Riesgo.
+            <Cifra rotulo="Le ha costado por falla"
               valor={ve.porFalla !== undefined ? fmtBbl(ve.porFalla) : 'sin fallas'}
-              pie={h.fallas ? `${plural(h.fallas, 'falla', 'fallas')} en ${meses} meses${h.mtbfDias ? ` · cada ${n0(h.mtbfDias)} d` : ''}${h.mdtH ? ` · ${n1(h.mdtH)} h fuera` : ''}` : 'sin fallas en la historia que hay'} />
+              pie={h.fallas ? `${plural(h.fallas, 'falla', 'fallas')} en ${meses} meses${h.mtbfDias ? ` · cada ${n0(h.mtbfDias)} d` : ''}${h.mdtH ? ` · ${fmtHoras(h.mdtH, true)} fuera` : ''}` : 'sin fallas en la historia que hay'} />
           )}
         </div>
       </div>
@@ -318,7 +320,8 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
                 Aguanta
                 {!simple && <Info titulo="Tolerancia del colchón" texto={pr.colchon.componentes.map(c => `${c.nombre} ${fmtComponente(c.valor)}: ${c.fuente}`).join(' · ')} />}
               </dt>
-              <dd className="tabular border-t border-[var(--linea2)] py-0.5 text-right font-semibold">{fmtHoras(pr.colchon.horas, true)}{!simple && <small className="font-normal text-[var(--tinta3)]"> ({fmtHoras(pr.colchon.rango[0], true)} a {fmtHoras(pr.colchon.rango[1], true)})</small>}</dd>
+              {/* Colchón infinito: el tanque no se llena, no hay horas ni rango que dar. */}
+              <dd className="tabular border-t border-[var(--linea2)] py-0.5 text-right font-semibold">{respaldoAbsorbe(pr) ? 'no se llena' : <>{fmtHoras(pr.colchon.horas, true)}{!simple && <small className="font-normal text-[var(--tinta3)]"> ({fmtHoras(pr.colchon.rango[0], true)} a {fmtHoras(pr.colchon.rango[1], true)})</small>}</>}</dd>
             </dl>
           </div>
         )}
@@ -403,7 +406,9 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
         className="grid w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-3 py-2 text-left hover:bg-[var(--panel2)] sm:grid-cols-[150px_1fr_auto_auto]">
         <span className="tabular text-[11.5px]">
           <b className="block">{fechaHora(m.inicio)}</b>
-          <small className="text-[10px] text-[var(--tinta3)]">{m.abierto ? 'abierta' : `hasta ${fechaHora(m.fin)}`} · {fmtHoras(m.horasParada, true)}</small>
+          {/* De la parada de la bomba a su arranque. La ficha cuenta otra duración
+              (hasta que reabrió el último pozo): por eso cada una dice cuál es. */}
+          <small className="text-[10px] text-[var(--tinta3)]">{m.abierto ? 'abierta' : `hasta ${fechaHora(m.fin)}`} · bomba parada {fmtHoras(m.horasParada, true)}</small>
         </span>
         <span className="hidden min-w-0 text-[11px] text-[var(--tinta2)] sm:block">
           {/* Sin identificar, la causa la dice su marca («por identificar», «arrancó sin identificar»); la frase, abierta. */}

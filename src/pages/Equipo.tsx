@@ -32,9 +32,10 @@ interface Fila {
   mtbfDias?: number
   /** Lo que ya se está perdiendo por su causa (pozos que cerró y siguen cerrados). */
   ahora: number
-  /** Lo que pondría en juego si falla: produce, pero una parte avisa. No se
-   *  suma con `ahora`: todavía no se pierde nada. */
-  siFalla: number
+  /** Lo que se perdería por día si para (bbl/d): produce, pero una parte
+   *  avisa. No se suma con `ahora`: todavía no se pierde nada. «Si falla hoy»
+   *  es otra cifra, en bbl (la de Riesgo). */
+  siPara: number
 }
 
 /** Los equipos de superficie del campo: su estado, cuántas veces han parado
@@ -50,10 +51,10 @@ export function Equipo() {
   const diasHistoria = (AHORA.getTime() - pedirInicioDeHistoria().getTime()) / 86_400_000
 
   // «Ahora» es solo lo que ya cuesta: una bomba en marcha con una parte que
-  // avisa produce, y su caudal va aparte como «si falla» (igual que en Riesgo y Turno).
+  // avisa produce, y su caudal va aparte como «si para», en bbl/d (igual que en Riesgo y Turno).
   const deEquipo = (f: Pick<Fila, 'campoId' | 'eq'>, estado: 'perdiendo' | 'en-riesgo') => riesgo
     .filter(r => r.campoId === f.campoId && r.equipo === f.eq.id && r.estado === estado).reduce((a, r) => a + r.bblDia, 0)
-  const filas = lista.map((f): Fila => ({ ...f, campoNombre: campoPorId(f.campoId).nombre, bbl: bblDe(f.eq.id, f.campoId), ahora: deEquipo(f, 'perdiendo'), siFalla: deEquipo(f, 'en-riesgo') }))
+  const filas = lista.map((f): Fila => ({ ...f, campoNombre: campoPorId(f.campoId).nombre, bbl: bblDe(f.eq.id, f.campoId), ahora: deEquipo(f, 'perdiendo'), siPara: deEquipo(f, 'en-riesgo') }))
     .sort((a, b) => atencion(a.eq.severidad) - atencion(b.eq.severidad) || b.bbl - a.bbl || b.bblHistoria - a.bblHistoria)
   const foco = filas.filter(f => f.bomba)
   const fuera = filas.filter(f => !f.bomba)
@@ -70,7 +71,7 @@ export function Equipo() {
         ...(f.fallas !== undefined ? [['Fallas propias', String(f.fallas)] as [string, string]] : []),
         ['Entre eventos', f.mtbfDias ? `${n0(f.mtbfDias)} d` : 'menos de dos: no se calcula'],
         ['Perdiéndose ahora', f.ahora ? `${n0(f.ahora)} bbl/d` : '—'],
-        ...(f.siFalla ? [['En juego si falla', `${n0(f.siFalla)} bbl/d`] as [string, string]] : [])]}
+        ...(f.siPara ? [['Si para', `${n0(f.siPara)} bbl/d`] as [string, string]] : [])]}
       className="flex w-full cursor-pointer items-center gap-3 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)]">
       <MarcaPrioridad s={f.eq.severidad} tamano={13} />
       <span className="min-w-0 flex-[2]">

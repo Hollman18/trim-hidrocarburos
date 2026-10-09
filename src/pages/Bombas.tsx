@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp, useAmbito, useRango, useNivel } from '@/app/store'
+import { useAmbito, useRango, useNivel } from '@/app/store'
 import { fechaHora, AHORA } from '@/entities/reloj'
 import { Lectura } from '@/shared/ui/Lectura'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
@@ -7,7 +7,7 @@ import { n0, plural } from '@/shared/lib/formato'
 import { useBombas } from '@/shared/api/equipos'
 import { Placa } from '@/widgets/bombas/Placa'
 import { Detalle } from '@/widgets/bombas/Detalle'
-import { fmtBbl, fmtRango, fmtHoras, pronosticoCorto } from '@/widgets/bombas/comun'
+import { fmtBbl, fmtRango, pronosticoCorto } from '@/widgets/bombas/comun'
 
 /** La estación de bombas: el nivel 2 de ISA-101. Las bombas multifásicas y
  *  de inyección son las que deciden la producción de la planta; aquí se ve
@@ -15,19 +15,12 @@ import { fmtBbl, fmtRango, fmtHoras, pronosticoCorto } from '@/widgets/bombas/co
 export function Bombas() {
   const ambito = useAmbito()
   const rango = useRango(); const nivel = useNivel()
-  const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo)
   const [abierta, setAbierta] = useState<string | null>(null)
 
   const bombas = useBombas(ambito.campos.map(c => c.id), rango.desde, rango.hasta)
 
   const sel = bombas.find(b => b.clave === abierta)
   if (sel) return <Detalle b={sel} nivel={nivel} onVolver={() => setAbierta(null)} />
-  // El directivo no entra al detalle técnico: abre la ficha del equipo.
-  const abrir = (clave: string) => {
-    if (nivel !== 'decision') return setAbierta(clave)
-    const [c, eq] = clave.split(':')
-    setCampo(c!); abrirEquipo(eq!, false)
-  }
 
   // Lo que se está perdiendo AHORA: pozos cerrados por bombas detenidas.
   const costando = bombas.filter(b => b.veredicto?.prediccion.perdiendo?.bblDia)
@@ -72,13 +65,9 @@ export function Bombas() {
           {proxima ? (
             <>
               <b className="block truncate text-[14px] leading-tight">{proxima.b.eq.id} · {proxima.p.parte.nombre}</b>
-              {nivel === 'decision' ? (
-                <small className="block text-[11px] text-[var(--tinta2)]">{proxima.b.campo.nombre} · en {fmtHoras(proxima.p.primera!.senal.pronostico.horas)}</small>
-              ) : (
-                <small className="tabular block text-[11px] text-[var(--tinta2)]">
-                  {ambito.global ? `${proxima.b.campo.nombre} · ` : ''}{proxima.p.primera!.senal.plantilla.nombre.toLowerCase()} · {pronosticoCorto(proxima.p.primera!.senal.pronostico)}
-                </small>
-              )}
+              <small className="tabular block text-[11px] text-[var(--tinta2)]">
+                {ambito.global ? `${proxima.b.campo.nombre} · ` : ''}{proxima.p.primera!.senal.plantilla.nombre.toLowerCase()} · {pronosticoCorto(proxima.p.primera!.senal.pronostico)}
+              </small>
             </>
           ) : <b className="block text-[14px] text-[var(--tinta3)]">ninguna</b>}
         </span>
@@ -86,19 +75,12 @@ export function Bombas() {
           {/* El ámbito ya lo dice la cabecera: aquí, cuántas son y cuántas no tienen perfil. */}
           <b className="tabular block text-[22px] leading-none">{bombas.length}</b>
           <small className="text-[10.5px] text-[var(--tinta3)]">
-            {bombas.length === 1 ? 'bomba' : 'bombas'}{sinPerfil ? ` · ${sinPerfil} sin ${nivel === 'decision' ? 'datos' : 'perfil'}` : ''}
+            {bombas.length === 1 ? 'bomba' : 'bombas'}{sinPerfil ? ` · ${sinPerfil} sin perfil` : ''}
           </small>
         </span>
       </div>
 
-      {nivel === 'decision' ? (
-        <Lectura>
-          Arriba, lo que las bombas detenidas están costando ahora y lo que ya costaron en el período.
-          Cada tarjeta dice si la bomba está parada o en marcha, cuánto le ha costado y de qué falla
-          más. Un clic abre su ficha.
-        </Lectura>
-      ) : (
-        <Lectura>
+      <Lectura>
         <b>Perdiéndose ahora</b> es el crudo de los pozos que están cerrados porque una bomba de
         la línea está detenida, pozo por pozo con su prueba, a la hora de referencia. <b>Diferido que
         causaron</b> es lo que ya se perdió en el período por paradas de estas bombas (se le carga a
@@ -109,11 +91,10 @@ export function Bombas() {
         cuánto aguanta el tanque y cuánto crudo se pierde después, cerrando los pozos en el orden que
         menos cuesta. Las ⓘ dicen el porqué.
       </Lectura>
-      )}
 
       <div className="mt-2.5 grid items-stretch gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]">
         {bombas.map(b => (
-          <Placa key={b.clave} b={b} global={ambito.global} nivel={nivel} onAbrir={() => abrir(b.clave)} />
+          <Placa key={b.clave} b={b} global={ambito.global} nivel={nivel} onAbrir={() => setAbierta(b.clave)} />
         ))}
       </div>
 

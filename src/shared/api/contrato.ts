@@ -169,6 +169,8 @@ const prediccion = obj<Prediccion>()({
   perfil,
   perdiendo: opc(obj<NonNullable<Prediccion['perdiendo']>>()({ pozos: lista(pozo) })),
   colchon: opc(colchon),
+  // Con la bomba ya parada: el tanque con el agua que entra (horas `null` = no sube).
+  llenado: opc(obj<NonNullable<Prediccion['llenado']>>()({ colchon })),
   orden: opc(ordenCierre),
 })
 const paradaMedida = obj<ParadaMedida>()({

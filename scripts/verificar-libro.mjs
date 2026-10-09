@@ -46,6 +46,8 @@ const comprobar = (cond, msg) => { pruebas++; if (!cond) { fallos++; console.log
 const cerca = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Math.abs(b))
 const TODOS = ['ceiba', 'morichal', 'guacamayo', 'palmar', 'zarza']
 const ctx0 = L.contextoInicial()
+/** El historial de versiones firmadas del arranque: una sola, la de ctx0. */
+const V0 = [C.versionInicial()]
 /** La parada real de P-201B que la sección 11 responde en pantalla y la 13 revisa. */
 let EV3
 
@@ -90,13 +92,13 @@ comprobar(doce.tramos.filter(t => t.aproximado).every(t => t.evento.codigo === '
 console.log('\n=== 4. Bombas: colchón previsto contra el que aguantó ===')
 let comparadas = 0, desvio = 0
 for (const ev of B.eventosBomba()) {
-  const m = D.paradaMedida(ev, ctx0)
+  const m = D.paradaMedida(ev, ctx0, V0)
   if (!m?.colchon || m.colchon.observadoH === undefined) continue
   comparadas++
   desvio = Math.max(desvio, Math.abs(m.colchon.previsto.horas - m.colchon.observadoH))
 }
 comprobar(comparadas >= 8 && desvio < 0.1, `${comparadas} paradas con cierre de pozos: el colchón previsto y el observado difieren a lo más ${desvio.toFixed(3)} h`)
-const ceibaTotal = B.eventosBomba().filter(e => e.campoId === 'ceiba' && e.perdida === 1).map(e => D.paradaMedida(e, ctx0))
+const ceibaTotal = B.eventosBomba().filter(e => e.campoId === 'ceiba' && e.perdida === 1).map(e => D.paradaMedida(e, ctx0, V0))
   .filter(m => m.causa.equipo === 'P-201B' && m.bbl > 0)
 comprobar(ceibaTotal.every(m => m.pozos >= 17), `La Ceiba sin respaldo: cada parada total cierra todo el campo (${ceibaTotal.map(m => m.pozos).join(', ')} pozos)`)
 const pc = D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0)
@@ -712,7 +714,7 @@ const pozoEv = id => P.eventosPozos().find(e => e.id === id)
 
 // Un servicio explica su cascada, no todo lo que pase mientras está caído; la
 // bomba que paró antes manda; la primera alarma propia y la firma mandan.
-const p0325 = D.paradaMedida(bombaId('EV-2011-260325'), ctx0)
+const p0325 = D.paradaMedida(bombaId('EV-2011-260325'), ctx0, V0)
 comprobar(p0325.causa.parte === 'sello' && p0325.pozos === 18 && p0325.bbl > 0 && Math.abs(p0325.colchon.previsto.horas - p0325.colchon.observadoH) < 0.1
   && !L.eventosCargadosA('ceiba', 'K-101', ctx0).some(e => e.id === 'SV-K-101-260325'),
   `La Ceiba 25-mar: la P-201B paró 49 min antes que K-101; sus ${p0325.pozos} pozos (${f(p0325.bbl)} bbl) son de la bomba, cerrados a las ${p0325.colchon.observadoH.toFixed(2)} h del colchón previsto de ${p0325.colchon.previsto.horas.toFixed(2)} h`)
@@ -752,11 +754,11 @@ comprobar(fichaAntes.redundancia === 'sin respaldo' && fichaAntes.aguasAbajo ===
 comprobar(['constructor', '__proto__', 'toString', 'hasOwnProperty'].every(id => ['ceiba', 'morichal'].every(c => EVV.equipoVivo(id, c, ctx0) === undefined && B.perfilBomba(id, c) === undefined) && !B.esBomba(id)),
   'equipos «constructor», «__proto__», «toString» o «hasOwnProperty» no existen (no tumban la pantalla)')
 
-// Electrosumergible parada: lo que no se lee es hueco, no cero «normal».
+// Electrosumergible parada: lo que no se lee es hueco (valor null, como manda el contrato), no cero «normal».
 const espParadas = P.todosLosPozos().filter(p => p.levantamiento === 'electrosumergible' && !P.estadoAhora(p).produce)
 const malEsp = espParadas.flatMap(p => ESP.senalesEsp(p)).filter(s => ['pip', 't_motor', 'desbalance'].includes(s.plantilla.id) ? s.valor !== null || s.estado !== 'sin señal' : s.valor !== 0)
 const gu07 = EVV.equipoVivo('GU-07', 'guacamayo', ctx0).dispositivos
-comprobar(espParadas.length > 10 && malEsp.length === 0 && gu07.find(d => d.tipo === 'Presión de entrada').valor === '—' && !gu07.some(d => d.valor === 0 && /psi|°C|%/.test(d.unidad)),
+comprobar(espParadas.length > 10 && malEsp.length === 0 && gu07.find(d => d.tipo === 'Presión de entrada').valor === null && !gu07.some(d => d.valor === 0 && /psi|°C|%/.test(d.unidad)),
   `${espParadas.length} electrosumergibles paradas: presión de entrada, temperatura del motor y desbalance van como hueco; corriente y frecuencia, en cero medido`)
 
 // Fuera de banda y llega a su alarma en N h: se dice así, con la prioridad de la salud.
@@ -914,6 +916,16 @@ comprobar(!moSep.fa[0].publicado && !moSep.publicable && ceSep.fa[0].publicado &
 const zaSep = WL.libro(['zarza'], sep.desde, sep.hasta, wctx)
 comprobar(!WL.bandaDe('zarza').verificable && !zaSep.publicable && zaSep.motivos.some(m => /Sin análisis de °API/.test(m.texto)) && zaSep.motivos.every(m => !/fuera de la banda/.test(m.texto)),
   'La Zarza sin °API: no se escoge fila de la Fig. 10.2 a ciegas; el factor no se puede verificar y se dice')
+// F4 y F5 (5A·H8, H9): la pantalla dice el factor y «publicable» con los motivos del libro, no con su propia regla.
+{
+  const PUB = await w.ssrLoadModule('/src/widgets/diferidos/publicacion.ts')
+  const lbSepW = WL.libro(TODOS, sep.desde, sep.hasta, wctx)
+  const faZarzaSep = lbSepW.fa.find(x => x.campoId === 'zarza' && x.mes === '2026-09'), faCeibaSep = lbSepW.fa.find(x => x.campoId === 'ceiba' && x.mes === '2026-09')
+  comprobar(!!faZarzaSep && !faZarzaSep.dentro && PUB.estadoFactor(lbSepW, faZarzaSep) === 'sin-verificar' && PUB.estadoFactor(lbSepW, faCeibaSep) === 'dentro',
+    `F4: La Zarza sin °API en septiembre (factor ${faZarzaSep?.fa.toFixed(3)}, «dentro» falso) sale «banda sin verificar», no «fuera de banda»; La Ceiba, dentro`)
+  comprobar(PUB.campoPublicable(lbSepW, 'guacamayo') === false && PUB.campoPublicable(lbSepW, 'ceiba') === true && lbSepW.motivos.some(m => m.codigo === 'sin-fiscal' && m.campoId === 'guacamayo'),
+    'F5: Guacamayo sin 3 días de fiscal en septiembre no es «publicable» en «Por campo» (el mismo motivo del sello); La Ceiba sí')
+}
 
 // Eventos que se pisan: cada hora del pozo se cobra una vez.
 const guAgo = WL.libro(['guacamayo'], new Date('2026-08-01T00:00:00-05:00'), new Date('2026-09-01T00:00:00-05:00'), wctx)
@@ -1768,6 +1780,352 @@ console.log('\n=== 17. Las fechas dicen lo mismo en todos los navegadores ===')
   } }
   recorrer(`${RAIZ}src`)
   comprobar(!fuera.length, `toda fecha con mes abreviado pasa por formatoFecha (y nadie usa toLocaleDateString)${fuera.length ? ': ' + fuera.join(', ') : ''}`)
+}
+
+console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salud, causas ===')
+{
+  const API = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+  const SA = await v.ssrLoadModule('/src/entities/salud.ts')
+  const CO = await v.ssrLoadModule('/src/widgets/bombas/comun.ts')
+  const rTodos = D.riesgoAhora(TODOS, ctx0)
+  const fila = (c, e) => rTodos.find(r => r.campoId === c && r.equipo === e && r.estado === 'en-riesgo')
+  const cerradasDe = (c, e, ctx = ctx0) => L.historialDeEquipo(c, e, ctx).eventos.filter(x => !x.disparo && x.fin).map(x => x.horas)
+  const media = xs => xs.reduce((a, x) => a + x, 0) / xs.length
+
+  // 1. Costo por falla = lo que cuesta si el equipo falla HOY (decisión del dueño, 8-oct).
+  //    Disposición con tanque: Q × promedio(max(0, d − colchón de hoy)) / 24.
+  const rMo = fila('morichal', 'P-201B'), prMo = D.prediccion(B.perfilBomba('P-201B', 'morichal'), ctx0), dMo = cerradasDe('morichal', 'P-201B')
+  comprobar(!!rMo && Math.abs(rMo.costoFalla - 2086) < 1 && cerca(rMo.costoFalla, prMo.crudoBpd * media(dMo.map(d => Math.max(0, d - prMo.colchon.horas))) / 24, 1e-12)
+    && rMo.colchonH === prMo.colchon.horas && rMo.costoDe === 'propio' && /^el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque$/.test(rMo.mdtFuente),
+    `P-201B de Morichal: si falla hoy cuesta ≈ ${f(rMo?.costoFalla ?? 0)} bbl = ${f(prMo.crudoBpd)} bbl/d × promedio(max(0, d − ${prMo.colchon.horas.toFixed(2)} h)) / 24 de sus ${dMo.length} fallas cerradas (antes 3.365, lo histórico); colchonH ${rMo?.colchonH?.toFixed(2)} h`)
+  //    Multifásica: Q × d̄ / 24, sin tanque.
+  const rMpp = fila('morichal', 'MPP-301'), prMpp = D.prediccion(B.perfilBomba('MPP-301', 'morichal'), ctx0)
+  comprobar(!!rMpp && Math.abs(rMpp.costoFalla - 3244.5) < 0.5 && cerca(rMpp.costoFalla, prMpp.crudoBpd * media(cerradasDe('morichal', 'MPP-301')) / 24, 1e-12)
+    && rMpp.colchonH === undefined && rMpp.costoDe === 'propio' && rMpp.mdtFuente === 'el promedio de sus 7 fallas cerradas',
+    `MPP-301 (multifásica, sin tanque): ≈ ${f(rMpp?.costoFalla ?? 0)} bbl = crudo de hoy × horas fuera promedio / 24, y su texto ya no nombra un tanque que no tiene`)
+  //    Electrosumergible: crudo del pozo hoy × d̄ / 24, propio o de la flota del campo; la misma cuenta en todas.
+  const espR = rTodos.filter(r => r.tipo === 'electrosumergible' && r.estado === 'en-riesgo')
+  const mdtEsp = (c, id) => {
+    const propias = cerradasDe(c, id)
+    if (propias.length) return { d: media(propias), de: 'propio' }
+    const flota = P.pozosDe(c).filter(p => p.levantamiento === 'electrosumergible').flatMap(p => cerradasDe(c, p.id))
+    return flota.length ? { d: media(flota), de: 'flota' } : undefined
+  }
+  comprobar(espR.length >= 4 && espR.every(r => { const m = mdtEsp(r.campoId, r.equipo); return m && cerca(r.costoFalla, r.bblDia * m.d / 24, 1e-12) && r.costoDe === m.de && r.colchonH === undefined }),
+    `las ${espR.length} electrosumergibles en riesgo: crudo del pozo hoy × horas fuera promedio / 24 (las suyas o, sin fallas, las de la flota del campo, marcado «flota»)`)
+  //    El respaldo absorbe toda el agua (colchón infinito): 0, sin colchón ni historia que citar.
+  const cfgInf = structuredClone(ctx0.config)
+  cfgInf.respaldos.find(r => r.campoId === 'morichal' && r.equipo === 'P-201B').libreBpd = 1e6
+  const rInf = D.riesgoAhora(['morichal'], { config: cfgInf, respuestas: {} }).find(r => r.equipo === 'P-201B' && r.estado === 'en-riesgo')
+  comprobar(rInf?.costoFalla === 0 && rInf.colchonH === undefined && rInf.costoDe === undefined && /absorbe toda el agua/.test(rInf.mdtFuente),
+    `con un respaldo que toma toda el agua, P-201B de Morichal cuesta 0 bbl si falla («${rInf?.mdtFuente}»)`)
+  //    Disposición sin colchón calculado (sin tanque firmado): Q × d̄ / 24, dicho como techo.
+  const cfgSinTk = structuredClone(ctx0.config)
+  cfgSinTk.tanques = cfgSinTk.tanques.filter(t => t.campoId !== 'morichal')
+  const ctxSinTk = { config: cfgSinTk, respuestas: {} }
+  const rSinTk = D.riesgoAhora(['morichal'], ctxSinTk).find(r => r.equipo === 'P-201B' && r.estado === 'en-riesgo')
+  comprobar(!!rSinTk && cerca(rSinTk.costoFalla, D.prediccion(B.perfilBomba('P-201B', 'morichal'), ctxSinTk).crudoBpd * media(dMo) / 24, 1e-12) && rSinTk.colchonH === undefined && /es un techo/.test(rSinTk.mdtFuente),
+    `sin tanque firmado no hay colchón que descontar: P-201B de Morichal ≈ ${f(rSinTk?.costoFalla ?? 0)} bbl, dicho como techo`)
+  //    Recobro: no cierra pozos hoy, cuesta 0 dure lo que dure (el demo no la tiene en riesgo: la regla, con su predicción y su historia reales).
+  const pGu = B.perfilBomba('P-201B', 'guacamayo'), cRec = D.costoDeBomba(pGu, D.prediccion(pGu, ctx0), L.historialDeEquipo('guacamayo', 'P-201B', ctx0))
+  comprobar(pGu.papel === 'recobro' && cerradasDe('guacamayo', 'P-201B').length > 0 && cRec.costoFalla === 0 && cRec.costoDe === undefined && cRec.colchonH === undefined && /recobro/.test(cRec.mdtFuente),
+    `la bomba de recobro de Guacamayo, con ${cerradasDe('guacamayo', 'P-201B').length} fallas cerradas, costaría 0 bbl si falla hoy («${cRec.mdtFuente}»)`)
+  //    Lo que ya costó por falla sigue siendo otra cifra (la ficha y Confiabilidad: «le ha costado por falla»).
+  comprobar(cerca(D.veredicto(B.perfilBomba('P-201B', 'morichal'), ctx0).porFalla, L.historialDeEquipo('morichal', 'P-201B', ctx0).bblPorFalla) && Math.abs(L.historialDeEquipo('morichal', 'P-201B', ctx0).bblPorFalla - 3364.6) < 1,
+    'lo que P-201B de Morichal le ha costado por falla (histórico, 3.365 bbl) no cambia: es otra cifra que el costo si falla hoy')
+
+  // 2. Una electrosumergible parada por sí misma sale «falló» en la parte de su causa (MN-41: aislamiento).
+  const flotaEsp = API.pedirFlotaEsp(TODOS, sep.desde, sep.hasta, ctx0)
+  const propia = x => !x.fila.produce && x.fila.causa?.tipo === 'electrosumergible' && x.fila.causa.equipo === x.fila.pozo.id
+  const fallo = x => x.partes.filter(s => s.estado === 'fallo').map(s => s.parte.id).join()
+  const mn41 = flotaEsp.find(x => x.fila.pozo.campoId === 'morichal' && x.fila.pozo.id === 'MN-41')
+  const detMn41 = API.pedirPozo('morichal', 'MN-41', sep.desde, sep.hasta, ctx0)
+  const filaMn41 = API.pedirPozos('morichal', sep.desde, sep.hasta, ctx0).find(x => x.pozo.id === 'MN-41')
+  const ajenas = flotaEsp.filter(x => !x.fila.produce && !propia(x))
+  comprobar(fallo(mn41) === 'aislamiento' && detMn41.partes[0].estado === 'fallo' && detMn41.partes[0].parte.id === 'aislamiento' && filaMn41.salud?.estado === 'fallo' && filaMn41.salud.prioridad === 1
+    && flotaEsp.filter(propia).length >= 3 && flotaEsp.filter(propia).every(x => fallo(x) === x.fila.causa.parte)
+    && ajenas.length > 0 && ajenas.every(x => fallo(x) === '') && flotaEsp.filter(x => x.fila.produce).every(x => fallo(x) === ''),
+    `MN-41 (parada por falla a tierra desde el 3-sep) sale con su aislamiento «falló»; las ${flotaEsp.filter(propia).length} electrosumergibles paradas por sí mismas, con la parte de su causa; las ${ajenas.length} cerradas por otro equipo, ninguna`)
+
+  // 4. El motivo dice las horas como la pantalla (fmtHoras): «10,9 d», no «262 h».
+  const horasPrueba = [0.4, 3, 23.5, 47.4, 47.6, 48, 61, 124, 262, 2159, 2160, 2161, 5000]
+  const distintasH = horasPrueba.filter(h => SA.textoHoras(h) !== CO.fmtHoras(h))
+  const conHoras = rTodos.filter(r => /llega a su alarma en/.test(r.motivo))
+  comprobar(!distintasH.length && conHoras.length >= 4 && conHoras.every(r => r.motivo.endsWith(`llega a su alarma en ${CO.fmtHoras(r.horas)}`))
+    && fila('morichal', 'MN-27').motivo.endsWith('en 10,9 d') && fila('morichal', 'MPP-301').motivo.endsWith('en 5,2 d') && !conHoras.some(r => /\d{2,} h$/.test(r.motivo) && r.horas >= 48),
+    `el motivo del riesgo escribe las horas con la regla de fmtHoras (${conHoras.map(r => `${r.equipo}: «${r.motivo.split(' en ').at(-1)}»`).join(', ')})${distintasH.length ? `; distintas en ${distintasH.join(', ')} h` : ''}`)
+
+  // 5. Una parada vieja se mide con el tanque y el respaldo que regían cuando paró.
+  const sepMedidas = B.eventosBomba().map(e => D.paradaMedida(e, ctx0, V0)).filter(m => m?.colchon && m.inicio >= sep.desde && m.inicio < sep.hasta)
+  const m0 = sepMedidas[0]
+  const cfgHoy = structuredClone(ctx0.config)
+  cfgHoy.respaldos.find(r => r.campoId === m0.evento.campoId && r.equipo === m0.evento.equipo).libreBpd += 5000
+  const ctxHoy = { config: cfgHoy, respuestas: {} }
+  const vHoy = { ...V0[0], version: 2, fecha: R.AHORA.toISOString(), config: cfgHoy }
+  const vAntes = { ...vHoy, fecha: new Date(m0.inicio.getTime() - 86_400_000).toISOString() }
+  const mHoy = D.paradaMedida(m0.evento, ctxHoy, [V0[0], vHoy]), mAntes = D.paradaMedida(m0.evento, ctxHoy, [V0[0], vAntes])
+  const apiHoy = API.pedirParadas(m0.evento.campoId, m0.evento.equipo, ctxHoy, [V0[0], vHoy]).find(x => x.evento.id === m0.evento.id)
+  comprobar(mHoy.colchon.previsto.horas === m0.colchon.previsto.horas && apiHoy.colchon.previsto.horas === m0.colchon.previsto.horas
+    && mHoy.colchon.previsto.aguaSinSalidaBpd === m0.colchon.previsto.aguaSinSalidaBpd && mAntes.colchon.previsto.horas !== m0.colchon.previsto.horas,
+    `${m0.evento.id} (${m0.evento.equipo} de ${m0.evento.campoId}, septiembre): firmar hoy 5.000 bbl/d más de respaldo no cambia lo que el tanque debía aguantar (${m0.colchon.previsto.horas.toFixed(2)} h); firmado antes de la parada, sí (${mAntes.colchon.previsto.horas.toFixed(2)} h)`)
+
+  // 6. La evidencia no repite líneas y toda causa sin identificar dice por qué (también la heredada de la bomba).
+  const causasPozo = P.eventosPozos().map(e => CS.causaDeEvento(e, ctx0)), causasBomba = B.eventosBomba().map(e => CS.causaDeParada(e, ctx0))
+  const repetidas = [...causasPozo, ...causasBomba].filter(c => new Set(c.evidencia).size !== c.evidencia.length)
+  const sinPorQue = [...causasPozo, ...causasBomba].filter(c => c.como === 'ninguno' && (!c.porQueNo || c.evidencia.at(-1) !== c.porQueNo))
+  const filasCe = API.pedirPozos('ceiba', sep.desde, sep.hasta, ctx0)
+  const lc16 = filasCe.find(x => x.pozo.id === 'LC-16').causa, lc04 = filasCe.find(x => x.pozo.id === 'LC-04').causa
+  const paroCe = 'ZS-2011 · marcha → paro · 2 de oct, 03:52', cbCe = CS.causaDeParada(bombaId('EV-2011-1002'), ctx0)
+  comprobar(!repetidas.length && !sinPorQue.length && [lc16, lc04].every(c => c.evidencia.filter(x => x === paroCe).length === 1 && c.como === 'ninguno' && c.porQueNo === cbCe.porQueNo && c.evidencia.at(-1) === cbCe.porQueNo)
+    && causasPozo.filter(c => c.como === 'ninguno' && c.evento?.startsWith('EV-')).length > 0,
+    `ninguna de las ${causasPozo.length + causasBomba.length} causas repite un renglón; LC-16 y LC-04 nombran una vez «${paroCe}» y heredan el porqué de la P-201B («${cbCe.porQueNo}»)${repetidas.length ? `; repetidas: ${repetidas.slice(0, 3).map(c => c.evento).join(', ')}` : ''}`)
+
+  // 9. «Por identificar» con una sola cuenta: las que piden respuesta, y de esas las que ya arrancaron.
+  const pregTodas = API.pedirPreguntas(TODOS, ctx0), cuenta = API.contarPorIdentificar(pregTodas)
+  const ctxTarde = { config: ctx0.config, respuestas: { 'EV-M2011-260924': { texto: 'Sello de la bomba', por: 'prueba', hora: R.AHORA.toISOString(), parte: 'sello' } } }
+  const pregTarde = API.pedirPreguntas(TODOS, ctxTarde), cuentaTarde = API.contarPorIdentificar(pregTarde)
+  comprobar(cuenta.porIdentificar === 4 && cuenta.arrancaronSinIdentificar === 2 && cuenta.porIdentificar === pregTodas.filter(p => p.pide).length
+    && cuentaTarde.porIdentificar === 3 && cuentaTarde.arrancaronSinIdentificar === 1 && pregTarde.find(p => p.id === 'EV-M2011-260924')?.arrancoSinIdentificar === true,
+    `«por identificar» = ${cuenta.porIdentificar} (las que piden respuesta), de ellas ${cuenta.arrancaronSinIdentificar} ya arrancaron; respondida tarde, EV-M2011-260924 deja de contar (${cuentaTarde.porIdentificar} y ${cuentaTarde.arrancaronSinIdentificar}) y sigue no conforme`)
+
+  // Fallas y disparos por equipo en el libro (la fila de «Por equipo» y la lista de «Por campo» del gerente):
+  // las mismas que la pantalla contaba con la historia de fallas recortada al período.
+  const periodosF = [...['curso', 'cerrado', 'trimestre', 'ytd', 'doce'].map(x => D.rangoDePeriodo(x)),
+    { nombre: '15-ago a 10-sep', desde: new Date('2026-08-15T00:00:00-05:00'), hasta: new Date('2026-09-10T00:00:00-05:00') }]
+  const FAMILIAS_F = ['reinyeccion', 'transporte', 'electrosumergible']
+  let filasF = 0, conFallas = 0
+  const malasF = []
+  for (const r of periodosF) for (const x of L.libro(TODOS, r.desde, r.hasta, ctx0).porEquipo) {
+    filasF++
+    if (!FAMILIAS_F.includes(x.tipo)) { if ('fallas' in x || 'disparos' in x) malasF.push(`${r.nombre} ${x.campoId}/${x.equipo}/${x.tipo} trae fallas`); continue }
+    conFallas++
+    const en = L.historialDeEquipo(x.campoId, x.equipo, ctx0).eventos.filter(e => e.inicio < r.hasta && (e.fin === null || e.fin > r.desde))
+    const ok = x.fallas === en.filter(e => !e.disparo).length && x.disparos === en.filter(e => e.disparo).length
+      && (x.tipo === 'electrosumergible' ? x.fallas + x.disparos === x.eventos : x.disparos === 0 && x.fallas >= x.eventos)
+    if (!ok) malasF.push(`${r.nombre} ${x.campoId}/${x.equipo}/${x.tipo}: ${x.fallas}+${x.disparos} contra ${en.length} (${x.eventos} con barriles)`)
+  }
+  const moDoce = L.libro(TODOS, D.rangoDePeriodo('doce').desde, D.rangoDePeriodo('doce').hasta, ctx0).porEquipo.find(x => x.campoId === 'morichal' && x.equipo === 'P-201B' && x.tipo === 'reinyeccion')
+  comprobar(!malasF.length && conFallas > 30 && moDoce?.fallas === 8 && moDoce.eventos === 5,
+    `«Por equipo» del libro trae fallas y disparos del período en las ${conFallas} filas de bombas y electrosumergibles de 6 períodos (de ${filasF} filas; las demás no los traen), iguales a la historia de fallas del equipo; P-201B de Morichal en 12 meses: ${moDoce?.fallas} fallas, ${moDoce?.eventos} con barriles${malasF.length ? `; distintas: ${malasF.slice(0, 4).join(' · ')}` : ''}`)
+
+  // Mundos de prueba: lo que el demo no trae.
+  const mundo = async preparar => {
+    const m = await createServer({ root: RAIZ, configFile: false, resolve: { alias: { '@': `${RAIZ}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
+    const datos = { S: await m.ssrLoadModule('/src/entities/datos/servicios.ts'), E: await m.ssrLoadModule('/src/entities/datos/eventos-pozos.ts'),
+      B: await m.ssrLoadModule('/src/entities/datos/paradas-bombas.ts'), PZ: await m.ssrLoadModule('/src/entities/datos/pozos.ts'), EQ: await m.ssrLoadModule('/src/entities/equipos.ts') }
+    preparar(datos)
+    ;(await m.ssrLoadModule('/src/entities/insumos.ts')).instalarInsumos((await m.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
+    const L2 = await m.ssrLoadModule('/src/entities/libro.ts')
+    return { m, L: L2, D: await m.ssrLoadModule('/src/entities/diferido.ts'), CS: await m.ssrLoadModule('/src/entities/causa-senal.ts'),
+      P: await m.ssrLoadModule('/src/entities/pozos.ts'), Bo: await m.ssrLoadModule('/src/entities/bombas.ts'), VG: await m.ssrLoadModule('/src/entities/vigia.ts'),
+      SA: await m.ssrLoadModule('/src/entities/salud.ts'), ctx: { config: L2.contextoInicial().config, respuestas: {} } }
+  }
+  const sv = (id, campoId, equipo, tipo, inicio, fin) => ({ id, campoId, equipo, tipo, inicio, fin, tag: 'prueba', texto: `prueba: ${id}` })
+  const ep = (id, campoId, pozo, inicio, fin) => ({ id, campoId, pozo, inicio, fin, codigo: 'CMD', senal: 'prueba' })
+  const conServicios = alReves => d => {
+    d.S.EVENTOS_SERVICIOS.push(
+      // Palmar, hoy: un servicio que sigue caído (fin null).
+      sv('SV-PRUEBA-ABIERTO', 'palmar', 'SE-2', 'energia', '2026-10-02T10:00:00-05:00', null),
+      // Zarza, 10-sep: un cierre en la cascada de dos servicios; llega primero el que cayó después.
+      sv('SV-PRUEBA-TARDE', 'zarza', 'K-101', 'aire', '2026-09-10T09:05:00-05:00', '2026-09-10T11:00:00-05:00'),
+      sv('SV-PRUEBA-TEMPRANO', 'zarza', 'SE-2', 'energia', '2026-09-10T09:00:00-05:00', '2026-09-10T10:00:00-05:00'),
+      // Zarza, 12-sep: dos que caen a la vez; llega primero el de id mayor.
+      sv('SV-PRUEBA-Z', 'zarza', 'K-101', 'aire', '2026-09-12T09:00:00-05:00', '2026-09-12T10:00:00-05:00'),
+      sv('SV-PRUEBA-A', 'zarza', 'SE-2', 'energia', '2026-09-12T09:00:00-05:00', '2026-09-12T10:00:00-05:00'),
+      // Guacamayo, 15-sep: una parada de bomba sin alarma entre dos servicios a ±15 min.
+      sv('SV-PRUEBA-BOMBA-2', 'guacamayo', 'K-101', 'aire', '2026-09-15T09:10:00-05:00', '2026-09-15T10:00:00-05:00'),
+      sv('SV-PRUEBA-BOMBA-1', 'guacamayo', 'SE-2', 'energia', '2026-09-15T08:50:00-05:00', '2026-09-15T10:00:00-05:00'),
+    )
+    d.E.EVENTOS_POZOS.push(
+      ep('EP-PRUEBA-SV-1', 'palmar', 'PA-01', '2026-10-02T10:05:00-05:00', null),
+      ep('EP-PRUEBA-SV-2', 'palmar', 'PA-02', '2026-10-02T10:15:00-05:00', null),
+      ep('EP-PRUEBA-SV-3', 'palmar', 'PA-03', '2026-10-02T12:00:00-05:00', null),
+      ep('EP-PRUEBA-ORDEN', 'zarza', 'ZA-01', '2026-09-10T09:08:00-05:00', '2026-09-10T12:00:00-05:00'),
+      ep('EP-PRUEBA-EMPATE', 'zarza', 'ZA-02', '2026-09-12T09:03:00-05:00', '2026-09-12T12:00:00-05:00'),
+    )
+    d.B.PARADAS_BOMBAS.push({ id: 'EV-PRUEBA-SV', campoId: 'guacamayo', equipo: 'P-201B', inicio: '2026-09-15T09:00:00-05:00', fin: '2026-09-15T13:00:00-05:00', perdida: 1, senal: 'prueba' })
+    if (alReves) d.S.EVENTOS_SERVICIOS.reverse()
+  }
+  const wa = await mundo(conServicios(false))
+  const causaA = id => wa.CS.causaDeEvento(wa.P.eventosPozos().find(e => e.id === id), wa.ctx)
+  // 7. Un servicio todavía caído: su cascada llega hasta ahora.
+  const perdPalmar = wa.D.riesgoAhora(['palmar'], wa.ctx).find(r => r.estado === 'perdiendo' && r.equipo === 'SE-2')
+  comprobar(causaA('EP-PRUEBA-SV-1').evento === 'SV-PRUEBA-ABIERTO' && causaA('EP-PRUEBA-SV-2').evento === 'SV-PRUEBA-ABIERTO' && causaA('EP-PRUEBA-SV-3').tipo === 'pendiente'
+    && perdPalmar?.pozos === 2 && perdPalmar.desde.getTime() === Date.parse('2026-10-02T10:00:00-05:00'),
+    `un servicio todavía caído (fin null) usa el ahora como fin: PA-01 y PA-02, que cerraron en su cascada, son suyos (${perdPalmar?.pozos ?? 0} pozos perdiendo desde las 10:00); PA-03, dos horas después, no`)
+  // 8. Con dos servicios candidatos gana el que cayó primero; en empate, el de id menor.
+  const cParada = wa.CS.causaDeParada(wa.Bo.paradaPorId('EV-PRUEBA-SV'), wa.ctx)
+  comprobar(causaA('EP-PRUEBA-ORDEN').evento === 'SV-PRUEBA-TEMPRANO' && causaA('EP-PRUEBA-EMPATE').evento === 'SV-PRUEBA-A' && cParada.evento === 'SV-PRUEBA-BOMBA-1',
+    'dos servicios a la vez: el cierre de ZA-01 y la parada de la P-201B de Guacamayo son del servicio que cayó primero aunque llegue segundo; en empate, del de id menor (ZA-02 → SV-PRUEBA-A)')
+  const wr = await mundo(conServicios(true))
+  const huella = w => [...w.P.eventosPozos().map(e => `${e.id}:${w.CS.causaDeEvento(e, w.ctx).evento}`), ...w.Bo.eventosBomba().map(e => `${e.id}:${w.CS.causaDeParada(e, w.ctx).evento}`)].join('|')
+  const ordenA = wa.P.serviciosDeCampo('zarza').map(s => s.id).join(), ordenR = wr.P.serviciosDeCampo('zarza').map(s => s.id).join()
+  comprobar(ordenA !== ordenR && huella(wa) === huella(wr),
+    `con la lista de servicios al revés, las ${wa.P.eventosPozos().length + wa.Bo.eventosBomba().length} causas son las mismas: el resultado no depende del orden en que lleguen`)
+  await wa.m.close(); await wr.m.close()
+
+  const wb = await mundo(d => {
+    // La vibración de la P-201B de La Ceiba (lee el catálogo tal cual) llega sin lectura: valor null, como manda el contrato.
+    d.EQ.EQUIPOS['P-201B'].dispositivos.find(x => x.tag === 'VI-2011').valor = null
+    // La MPP-301 sin historia de paradas; las electrosumergibles de Guacamayo sin fallas propias.
+    const quitar = (xs, f) => { for (let i = xs.length - 1; i >= 0; i--) if (f(xs[i])) xs.splice(i, 1) }
+    quitar(d.B.PARADAS_BOMBAS, x => x.campoId === 'morichal' && x.equipo === 'MPP-301')
+    const espGu = new Set(d.PZ.POZOS_DEMO.filter(p => p.campoId === 'guacamayo' && p.levantamiento === 'electrosumergible').map(p => p.id))
+    quitar(d.E.EVENTOS_POZOS, x => x.campoId === 'guacamayo' && espGu.has(x.pozo) && (['GF', 'PH', 'OL', 'UL', 'OT'].includes(x.codigo) || x.respuesta?.parte))
+  })
+  // 3. Un instrumento de bomba con valor null es una señal sin lectura, no se descarta.
+  const pCeB = wb.Bo.perfilBomba('P-201B', 'ceiba')
+  const sVi = wb.VG.senalesDe(pCeB).find(s => s.tag === 'VI-2011')
+  const parteVi = wb.SA.saludDePartes(pCeB).find(sp => sp.sinSenal.some(x => x.senal.tag === 'VI-2011'))
+  comprobar(!!sVi && sVi.valor === null && sVi.estado === 'sin señal' && sVi.pronostico.tipo === 'sin-tendencia' && /^Sin señal en línea/.test(sVi.pronostico.motivo)
+    && !!parteVi && !parteVi.medidas.some(x => x.senal.tag === 'VI-2011') && !parteVi.discretas.some(x => x.tag === 'VI-2011'),
+    `VI-2011 de La Ceiba con valor null: entra al vigía como «${sVi?.pronostico.motivo}» y a la salud de «${parteVi?.parte.nombre}» como sin señal (antes se descartaba)`)
+  const rB = wb.D.riesgoAhora(['morichal', 'guacamayo'], wb.ctx)
+  const rMppB = rB.find(r => r.campoId === 'morichal' && r.equipo === 'MPP-301' && r.estado === 'en-riesgo')
+  const espGuB = rB.filter(r => r.campoId === 'guacamayo' && r.tipo === 'electrosumergible' && r.estado === 'en-riesgo')
+  comprobar(!!rMppB && !('costoFalla' in rMppB && rMppB.costoFalla !== undefined) && rMppB.costoDe === undefined && rMppB.mdtFuente === undefined
+    && espGuB.length >= 1 && espGuB.every(r => r.costoFalla === undefined && r.costoDe === undefined),
+    `sin fallas cerradas propias ni flota no hay cifra (ausente, no 0): la MPP-301 sin historia y ${espGuB.map(r => r.equipo).join(', ')} con la flota de Guacamayo sin fallas`)
+  await wb.m.close()
+}
+
+console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la bomba parada, horas, sin lectura, fallas sin costo ===')
+{
+  const { readFileSync } = await import('node:fs')
+  const fuente = rel => readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8')
+  const sinComentarios = t => t.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')
+  const SA = await v.ssrLoadModule('/src/entities/salud.ts')
+  const CH = await v.ssrLoadModule('/src/shared/ui/costoHoy.ts')
+  const EV = await v.ssrLoadModule('/src/entities/equipo-vivo.ts')
+  const K = await v.ssrLoadModule('/src/shared/api/cable.ts')
+  const CT = await v.ssrLoadModule('/src/shared/api/contrato.ts')
+
+  // 1. El tanque con la bomba de disposición YA parada sube con el agua que ENTRA, no con
+  //    el colchón de «si parara ahora con todo produciendo». La Ceiba hoy: P-201B parada,
+  //    0 de 18 pozos produciendo, tanque en 89,6 % (alto-alto 90 %).
+  const pCe = B.perfilBomba('P-201B', 'ceiba'), prCe = D.prediccion(pCe, ctx0)
+  const produciendoCe = P.pozosDe('ceiba').filter(w => P.estadoAhora(w).produce).length
+  comprobar(!!prCe.parada && produciendoCe === 0 && prCe.colchon.horas < 1 && !!prCe.llenado && prCe.llenado.aguaEntraBpd === 0
+    && prCe.llenado.aguaEntraBpd === D.caudalesAhora('ceiba').agua && prCe.llenado.colchon.horas === Infinity && prCe.llenado.prioridad === 0,
+    `La Ceiba (P-201B parada, ${produciendoCe} de ${P.pozosDe('ceiba').length} pozos produciendo): no entra agua, el tanque no sube (llenado ${prCe.llenado?.colchon.horas} h, prioridad ${prCe.llenado?.prioridad}); el colchón de «si parara con todo produciendo» (${prCe.colchon.horas.toFixed(2)} h) no es cuándo se llena`)
+  const enMarcha = [['morichal', 'P-201B'], ['morichal', 'MPP-301'], ['guacamayo', 'P-201B']].map(([c, e]) => D.prediccion(B.perfilBomba(e, c), ctx0))
+  comprobar(enMarcha.every(pr => !pr.parada && pr.llenado === undefined), 'una bomba en marcha, una multifásica o una de recobro no traen llenado')
+  //    En el cable: sin subir, las horas viajan como null (horasSinFin) y vuelven como Infinity.
+  const jCe = JSON.parse(JSON.stringify(K.aRespuesta(CT.PREDICCION.codec, prCe)))
+  comprobar(jCe.datos.llenado.colchon.horas === null && jCe.datos.llenado.prioridad === 0 && K.deRespuesta(CT.PREDICCION.codec, jCe).llenado.colchon.horas === Infinity,
+    '/vistas/bombas/prediccion de la P-201B de La Ceiba: llenado.colchon.horas viaja como null (no sube) y vuelve como Infinity')
+  //    Mundo de prueba: LC-04 y LC-16 vuelven a producir con la bomba parada: entra su agua y
+  //    el tanque llega al alto-alto en lo que dice la fórmula, con la prioridad de su tiempo.
+  const m = await createServer({ root: RAIZ, configFile: false, resolve: { alias: { '@': `${RAIZ}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
+  const ev = await m.ssrLoadModule('/src/entities/datos/eventos-pozos.ts')
+  for (let i = ev.EVENTOS_POZOS.length - 1; i >= 0; i--) {
+    const x = ev.EVENTOS_POZOS[i]
+    if (x.campoId === 'ceiba' && x.fin === null && ['LC-04', 'LC-16'].includes(x.pozo)) ev.EVENTOS_POZOS.splice(i, 1)
+  }
+  ;(await m.ssrLoadModule('/src/entities/insumos.ts')).instalarInsumos((await m.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
+  const L2 = await m.ssrLoadModule('/src/entities/libro.ts'), D2 = await m.ssrLoadModule('/src/entities/diferido.ts')
+  const B2 = await m.ssrLoadModule('/src/entities/bombas.ts'), P2 = await m.ssrLoadModule('/src/entities/pozos.ts'), C2 = await m.ssrLoadModule('/src/entities/configuracion.ts')
+  const ctx2 = L2.contextoInicial(), p2 = B2.perfilBomba('P-201B', 'ceiba'), pr2 = D2.prediccion(p2, ctx2)
+  const tk = C2.tanqueDe(ctx2.config, 'ceiba', 'P-201B'), nv = P2.NIVEL_AHORA[tk.id]
+  const entra = D2.caudalesAhora('ceiba').agua
+  const sinSalida = Math.max(0, entra - pr2.respaldoLibreBpd - (1 - pr2.parada.perdida) * pr2.mueve.bpd) * p2.sinBomba.fraccion
+  const horas = (tk.altoAlto - nv.pct / 100) * tk.capacidadBbl / (sinSalida / 24)
+  const prio = h => (h > SA.HORIZONTE_H ? 0 : h < 24 ? 2 : 3)
+  comprobar(P2.pozosDe('ceiba').filter(w => P2.estadoAhora(w).produce).length === 2 && entra > 0 && cerca(pr2.llenado.aguaEntraBpd, entra)
+    && cerca(pr2.llenado.colchon.aguaSinSalidaBpd, sinSalida) && cerca(pr2.llenado.colchon.horas, horas) && pr2.llenado.prioridad === prio(horas)
+    && pr2.llenado.colchon.componentes.some(x => x.nombre === 'Agua de los pozos'),
+    `con LC-04 y LC-16 produciendo y la P-201B parada entran ${f(entra)} bbl/d al tanque: llega al alto-alto en ${pr2.llenado?.colchon.horas.toFixed(2)} h = libre / (agua sin salida / 24), prioridad ${pr2.llenado?.prioridad}`)
+  const cfgResp = structuredClone(ctx2.config)
+  cfgResp.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B').libreBpd = 1e6
+  const prResp = D2.prediccion(p2, { config: cfgResp, respuestas: {} })
+  comprobar(prResp.llenado.aguaEntraBpd > 0 && prResp.llenado.colchon.horas === Infinity && prResp.llenado.prioridad === 0,
+    'si el respaldo toma toda el agua que entra, el tanque no sube aunque haya pozos produciendo: sin hora y sin prioridad')
+  //    Por tiempo hasta el alto-alto (ISA-18.2, la regla de la salud de las partes): < 24 h → 2, hasta 90 días → 3, más allá → 0.
+  const pruebaPrio = [[0.4, 2], [23.9, 2], [24, 3], [500, 3], [SA.HORIZONTE_H + 1, 0], [Infinity, 0]]
+  comprobar(pruebaPrio.every(([h, pr]) => prio(h) === pr), 'la prioridad del tanque: menos de un día P2, hasta 90 días P3, más allá o sin subir, gris')
+  await m.close()
+  //    La pantalla pinta el tanque con el llenado del motor, no con el colchón de la predicción.
+  const planta = sinComentarios(fuente('src/pages/Planta.tsx'))
+  comprobar(/prReiny\?\.llenado/.test(planta) && !/prReiny\?\.colchon/.test(planta) && /llenado\?\.prioridad/.test(planta),
+    'Planta: la prioridad y el aviso del tanque salen de Prediccion.llenado (el agua que entra), no de colchon.horas')
+
+  // 5. Las horas de «si falla hoy» con una sola regla (textoHoras) y el colchón truncado.
+  const trunc = [[19.05, '19 h'], [18.6, '18 h'], [47.9, '47 h'], [55.2, '2,3 d'], [62, '2,5 d'], [60, '2,5 d']]
+  comprobar(trunc.every(([h, t]) => SA.textoHoras(h, true) === t) && SA.textoHoras(18.6) === '19 h',
+    `textoHoras(h, true) trunca a lo que escribe (${trunc.map(([h, t]) => `${h} h → «${t}»`).join(', ')}); sin truncar, 18,6 h sigue siendo «19 h»`)
+  const rTodos = D.riesgoAhora(TODOS, ctx0)
+  const rMo = rTodos.find(r => r.campoId === 'morichal' && r.equipo === 'P-201B' && r.estado === 'en-riesgo')
+  const sinDuros = t => t?.replace(/\u00a0/g, ' ')
+  comprobar(sinDuros(CH.colchonCorto(rMo)) === '0 si vuelve antes de 19 h' && /sin las 19 h que aguanta hoy el tanque$/.test(rMo.mdtFuente)
+    && sinDuros(CH.colchonCorto({ costoFalla: 1, colchonH: 18.6 })) === '0 si vuelve antes de 18 h'
+    && CH.detalleCostoHoy(rMo) === 'El promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.',
+    `P-201B de Morichal (colchón ${rMo.colchonH.toFixed(2)} h): la fila dice «${sinDuros(CH.colchonCorto(rMo))}» y su ⓘ «${CH.detalleCostoHoy(rMo)}»: la misma hora, sin redondear hacia arriba; con 18,6 h, «18 h»`)
+  const espR = rTodos.filter(r => r.tipo === 'electrosumergible' && r.estado === 'en-riesgo' && r.mdtFuente)
+  const mdtDe = r => { const h = L.historialDeEquipo(r.campoId, r.equipo, ctx0); return h.mdtH ?? null }
+  comprobar(espR.length >= 4 && espR.every(r => r.mdtFuente.startsWith(`${SA.textoHoras(mdtDe(r) ?? r.costoFalla * 24 / r.bblDia)} fuera, `)) && !rTodos.some(r => /días fuera/.test(r.mdtFuente ?? '')),
+    `las electrosumergibles dicen su tiempo fuera con textoHoras («${espR[0]?.mdtFuente.split(' fuera')[0]} fuera»), nunca «N días fuera» («1 días»)`)
+
+  // 3. Un instrumento sin lectura viaja con valor null en /vistas/equipos/:campo/:equipo, nunca «—».
+  let guion = 0, nulos = 0, nulosSinEstado = 0
+  for (const c of TODOS) for (const id of [...P.pozosDe(c).map(w => w.id), ...Object.keys(EQ.EQUIPOS)]) {
+    const e = EV.equipoVivo(id, c, ctx0)
+    for (const d of e?.dispositivos ?? []) {
+      if (d.valor === '—' || (typeof d.valor === 'string' && d.valor.trim() === '')) guion++
+      if (d.valor === null) { nulos++; if (d.estado !== 'sin señal' || d.unidad !== '') nulosSinEstado++ }
+    }
+  }
+  comprobar(guion === 0 && nulos > 0 && nulosSinEstado === 0,
+    `/vistas/equipos: ningún dispositivo con «—» por valor (${guion}); los ${nulos} sin lectura van con valor null, estado «sin señal» y sin unidad`)
+
+  // 8. Equipos que fallaron sin costar crudo (Libro.sinCosto): con fallas o disparos en el período
+  //    y sin fila de su familia en porEquipo; ni uno de más ni uno de menos, y los Paretos igual.
+  const periodosS = [...['curso', 'cerrado', 'trimestre', 'ytd', 'doce'].map(x => D.rangoDePeriodo(x)),
+    { nombre: '15-ago a 10-sep', desde: new Date('2026-08-15T00:00:00-05:00'), hasta: new Date('2026-09-10T00:00:00-05:00') }]
+  const familia = (c, id) => { const pb = B.perfilBomba(id, c); return pb ? (pb.subtipo === 'multifasica' ? 'transporte' : 'reinyeccion') : 'electrosumergible' }
+  const malasS = []
+  let totalS = 0
+  for (const r of periodosS) {
+    const lb = L.libro(TODOS, r.desde, r.hasta, ctx0)
+    totalS += lb.sinCosto.length
+    const k = x => `${x.campoId}:${x.equipo}:${x.tipo}`
+    const conFila = new Set(lb.porEquipo.map(k)), sin = new Set(lb.sinCosto.map(k))
+    for (const c of TODOS) {
+      const linea = [...new Set(B.paradasDeCampo(c).map(e => e.equipo))].filter(id => B.perfilBomba(id, c))
+        .concat(P.pozosDe(c).filter(w => w.levantamiento === 'electrosumergible').map(w => w.id))
+      for (const id of linea) {
+        const en = L.historialDeEquipo(c, id, ctx0).eventos.filter(e => e.inicio < r.hasta && (e.fin === null || e.fin > r.desde))
+        const clave = `${c}:${id}:${familia(c, id)}`
+        const debe = en.length > 0 && !conFila.has(clave)
+        if (debe !== sin.has(clave)) malasS.push(`${r.nombre} ${clave}: ${en.length} eventos, ${conFila.has(clave) ? 'con' : 'sin'} fila, ${sin.has(clave) ? 'en' : 'fuera de'} sinCosto`)
+        const x = lb.sinCosto.find(y => k(y) === clave)
+        if (x && (x.fallas !== en.filter(e => !e.disparo).length || x.disparos !== en.filter(e => e.disparo).length || (x.tipo !== 'electrosumergible' && x.disparos !== 0)))
+          malasS.push(`${r.nombre} ${clave}: ${x.fallas}+${x.disparos} contra la historia`)
+      }
+    }
+    if (lb.sinCosto.some(x => 'bbl' in x || conFila.has(k(x)))) malasS.push(`${r.nombre}: una fila de sinCosto con barriles o con fila en porEquipo`)
+    if (!cerca(lb.porEquipo.reduce((a, x) => a + x.bbl, 0), lb.diferido, 1e-9)) malasS.push(`${r.nombre}: porEquipo ya no suma el diferido`)
+  }
+  const doceS = L.libro(TODOS, D.rangoDePeriodo('doce').desde, D.rangoDePeriodo('doce').hasta, ctx0).sinCosto
+  const triS = L.libro(TODOS, D.rangoDePeriodo('trimestre').desde, D.rangoDePeriodo('trimestre').hasta, ctx0).sinCosto
+  const guDoce = doceS.find(x => x.campoId === 'guacamayo' && x.equipo === 'P-201B')
+  comprobar(!malasS.length && totalS > 0 && guDoce?.fallas === 5 && guDoce.tipo === 'reinyeccion' && triS.find(x => x.campoId === 'guacamayo' && x.equipo === 'P-201B')?.fallas === 1
+    && L.libro(TODOS, D.rangoDePeriodo('curso').desde, D.rangoDePeriodo('curso').hasta, ctx0).sinCosto.length === 0,
+    `«sin costo» del libro en 6 períodos: los equipos de la línea con fallas o disparos y sin fila de barriles, ni uno más ni uno menos; P-201B de Guacamayo (recobro): ${guDoce?.fallas} fallas en 12 meses, ${triS.find(x => x.equipo === 'P-201B')?.fallas} en el trimestre; porEquipo sigue sumando el diferido${malasS.length ? `; mal: ${malasS.slice(0, 4).join(' · ')}` : ''}`)
+  //    La serie mensual (el mismo libro sin tramos) también lo trae.
+  const serieS = L.serieMensual(TODOS, ctx0).filter(x => x.libro.sinCosto.length)
+  comprobar(serieS.length > 0 && serieS.every(x => x.libro.sinCosto.every(y => y.fallas + y.disparos > 0)),
+    `la serie mensual trae sinCosto en ${serieS.length} meses (${serieS.map(x => x.mes).join(', ')})`)
+
+  // 2, 6 y 7. Rótulos, cuentas y papel.
+  const pantallas = ['src/pages/Esp.tsx', 'src/pages/Equipo.tsx', 'src/widgets/riesgo/Ahora.tsx', 'src/pages/Riesgo.tsx', 'src/pages/Mantenimiento.tsx', 'src/pages/Turno.tsx', 'src/widgets/equipo/FichaEjecutiva.tsx']
+  const siFallaBpd = pantallas.filter(rel => /bbl\/d si fallan?\b|[Ee]n juego si falla|por día si fallan?\b/.test(fuente(rel)))
+  comprobar(!siFallaBpd.length, `los bbl/d se rotulan «si para» o «en juego», nunca «si falla(n)» (que es la cifra en bbl de hoy)${siFallaBpd.length ? `: ${siFallaBpd.join(', ')}` : ''}`)
+  const ahoraTxt = sinComentarios(fuente('src/widgets/riesgo/Ahora.tsx')), mantTxt = sinComentarios(fuente('src/pages/Mantenimiento.tsx'))
+  comprobar(/contarPorIdentificar\(usePreguntas\(/.test(ahoraTxt) && !/\.filter\(p => p\.pide\)/.test(ahoraTxt) && !/ninguna parte va hacia su límite/.test(ahoraTxt) && /deFlota\(r, rol\.nivel\)/.test(mantTxt),
+    'Ahora cuenta «por identificar» con contarPorIdentificar y usa la frase del Resumen; Mantenimiento marca «flota» con la misma regla que Riesgo (deFlota)')
+  const css = fuente('src/index.css'), porCampo = fuente('src/widgets/resumen/PorCampo.tsx')
+  comprobar(/section \.border-b\[data-partible\] \{ break-inside: auto; \}/.test(css) && /<div data-partible className="border-b/.test(porCampo),
+    'en el papel, un campo desplegado de «POR CAMPO» se parte entre sus filas (no salta de hoja entero)')
 }
 
 await v.close()

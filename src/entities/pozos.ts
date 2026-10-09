@@ -97,7 +97,8 @@ export interface EventoServicio {
   equipo: string
   tipo: TipoServicio
   inicio: string
-  fin: string
+  /** null: el servicio sigue caído. Su cascada llega hasta ahora. */
+  fin: string | null
   tag: string
   texto: string
 }

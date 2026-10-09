@@ -5,6 +5,7 @@ import { useProcedencia } from '@/shared/api/procedencia'
 import { limiteDelTag } from '@/shared/api/catalogo'
 import { pasos, garantias, tecnico } from '@/entities/cadena'
 import type { Dispositivo, Capacidad } from '@/entities/tipos'
+import { sinLectura } from '@/shared/lib/formato'
 import { Hueco, Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
@@ -84,7 +85,7 @@ export function CadenaDato({ campoId, disp, equipoNombre, norma, onVolver }: {
           )}
 
           <ol className="mt-3 list-none p-0">
-            {pasos(r.datos, disp.estado === 'sin señal', limiteDelTag(campoId, disp.tag)).map((p, i, a) => (
+            {pasos(r.datos, sinLectura(disp), limiteDelTag(campoId, disp.tag)).map((p, i, a) => (
               <li key={p.titulo} className="grid grid-cols-[22px_1fr] gap-2.5 pb-3">
                 <span className="flex flex-col items-center">
                   <span className={cn('font-cond grid size-[22px] shrink-0 place-items-center rounded-full border text-[10px] font-semibold',

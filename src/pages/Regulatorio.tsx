@@ -6,7 +6,7 @@ import { CATALOGO, CATEGORIA_DE } from '@/entities/causas'
 import { Panel, Boton, Chip } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
-import { n0, n1, num } from '@/shared/lib/formato'
+import { n0, n1, num, sinLectura } from '@/shared/lib/formato'
 import { descargarCsv } from '@/shared/lib/csv'
 import { Download, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
@@ -77,7 +77,7 @@ export function Regulatorio() {
           {conCalibracion.length === 0 && <p className="text-[11.5px] text-[var(--tinta3)]">Ningún instrumento de custodia tiene calibración declarada en este campo.</p>}
           {conCalibracion.map(c => (
             <Tip key={c.d.tag} titulo={`${c.d.tag} · ${c.d.tipo}`} pista={c.d.calibracion}
-              filas={[['Punto', c.pmo], ['Valor', `${num(c.d.valor)} ${c.d.unidad}`.trim()], ['Calibración', c.d.calibracion ?? '—']]}
+              filas={[['Punto', c.pmo], ['Valor', sinLectura(c.d) ? 'sin señal' : `${num(c.d.valor)} ${c.d.unidad}`.trim()], ['Calibración', c.d.calibracion ?? '—']]}
               className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-1.5 last:border-0">
               <span className="min-w-0 flex-1"><b className="font-mono block text-[11.5px]">{c.d.tag}</b><small className="block truncate text-[10.5px] text-[var(--tinta3)]">{c.d.calibracion}</small></span>
             </Tip>

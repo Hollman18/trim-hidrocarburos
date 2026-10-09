@@ -6,7 +6,7 @@ import type { HistorialParte } from '@/entities/libro'
 import { Chip, Hueco } from '@/shared/ui/primitivas'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Info } from '@/shared/ui/Info'
-import { n0, plural } from '@/shared/lib/formato'
+import { n0, plural, NOMBRE_ESTADO } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Proyeccion } from './Proyeccion'
 import { fmtBbl, fmtHoras, pronosticoCorto, fraseParteCorta } from './comun'
@@ -25,7 +25,8 @@ export function BloqueParte({ sp, h }: { sp: SaludParte; h?: HistorialParte }) {
       valor: m.senal.valor === null ? 'sin señal' : `${m.senal.valor.toLocaleString('es-CO')} ${m.senal.unidad}`,
       pron: m.senal.pronostico.tipo === 'cruza' ? pronosticoCorto(m.senal.pronostico) : m.senal.pronostico.tipo === 'cruzado' ? 'ya cruzó' : '' })),
     ...sp.sinSenal.map(m => ({ nombre: m.senal.plantilla.nombre, tag: m.senal.tag, papel: m.papel, valor: 'sin señal', pron: '' })),
-    ...sp.discretas.map(d => ({ nombre: d.plantilla.nombre, tag: d.tag, papel: d.papel, valor: d.estado, pron: '' }))]
+    // Un interruptor sin lectura propia dice su estado, con su nombre para leer («atención», no la clave).
+    ...sp.discretas.map(d => ({ nombre: d.plantilla.nombre, tag: d.tag, papel: d.papel, valor: NOMBRE_ESTADO[d.estado], pron: '' }))]
   // Lo que la etiqueta ya dice (estable, equipo detenido) no se repite debajo del nombre.
   const frase = fraseParteCorta(sp)
   return (

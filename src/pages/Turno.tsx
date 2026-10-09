@@ -1,5 +1,5 @@
 import { useApp, useAmbito, useRol } from '@/app/store'
-import { useLibro, useRiesgo, usePreguntas } from '@/shared/api/diferidos'
+import { useLibro, useRiesgo, usePreguntas, contarPorIdentificar } from '@/shared/api/diferidos'
 import { useMensajes } from '@/shared/api/mensajes'
 import { PASO_CORTO, ORDEN_PASO } from '@/entities/mensajes'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
@@ -16,6 +16,7 @@ import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, plural } from '@/shared/lib/formato'
 import { ArrowRight } from 'lucide-react'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
 
@@ -38,6 +39,9 @@ export function Turno() {
   const riesgo = useRiesgo(ids)
   const todas = usePreguntas(ids)
   const preguntas = todas.filter(p => p.pide)
+  // La cuenta única de «por identificar» (Turno, Mi trabajo, Identificar, Mantenimiento).
+  const pi = contarPorIdentificar(todas)
+  const sinArrancar = pi.porIdentificar - pi.arrancaronSinIdentificar
   const enviados = useMensajes(ids).filter(m => new Date(m.hora).getTime() >= inicioTurno.getTime())
   const nombre = (id: string) => usuarios.find(x => x.id === id)?.nombre ?? id
   // Todo lo de este panel y del de paradas nuevas es de las últimas 12 h: basta la hora.
@@ -128,7 +132,7 @@ export function Turno() {
     <Tip key={`${r.campoId}${r.equipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
       titulo={r.equipo} pista={r.motivo} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
       filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
-        ['Si falla', `${n0(r.bblDia)} bbl/d`]]}
+        ['Si para', `${n0(r.bblDia)} bbl/d`]]}
       className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
       <MarcaPrioridad s={prioridadVigilar(r)} tamano={13} />
       <span className="min-w-0 flex-1">
@@ -208,9 +212,9 @@ export function Turno() {
           <small className={apoyo}>{plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}</small>
         </span>
         <span>
-          <b className={cifra}>{preguntas.some(p => !p.fin) && <MarcaPrioridad s={2} tamano={14} />}{preguntas.length}</b>
+          <b className={cifra}>{sinArrancar > 0 && <MarcaPrioridad s={2} tamano={14} />}{pi.porIdentificar}</b>
           <small className={rotulo}>por identificar</small>
-          <small className={apoyo}>{preguntas.filter(p => !p.fin).length} sin arrancar</small>
+          <ApoyoPorIdentificar pi={pi} />
         </span>
         <span>
           <b className={cifra}>{n0(lb.diferido)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
@@ -234,7 +238,7 @@ export function Turno() {
           <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
         </Panel>
 
-        <Panel titulo="POR IDENTIFICAR" extra={`${preguntas.length}`}>
+        <Panel titulo="POR IDENTIFICAR" extra={`${pi.porIdentificar}`}>
           {preguntas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}

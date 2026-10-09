@@ -115,7 +115,9 @@ export function Confiabilidad() {
             <table className="tabular w-full text-left text-[11.5px]">
               <thead className="text-[9.5px] text-[var(--tinta3)]">
                 <tr><th className="py-1 font-normal">Equipo</th><th className="text-right font-normal">Fallas</th><th className="hidden text-right font-normal sm:table-cell">Entre fallas</th>
-                  <th className="hidden text-right font-normal sm:table-cell">Fuera</th><th className="pl-3 font-normal">Parte</th><th className="text-right font-normal">bbl</th></tr>
+                  <th className="hidden text-right font-normal sm:table-cell">Fuera</th><th className="pl-3 font-normal">Parte</th>
+                  {/* Lo que YA le costó cada falla (histórico): «si falla hoy» es la cifra de Riesgo. */}
+                  <th className="hidden text-right font-normal leading-tight sm:table-cell">le ha costado<br />por falla</th><th className="text-right font-normal">bbl</th></tr>
               </thead>
               <tbody>
                 {[...listaMalos.visibles, ...listaMalos.resto].map(e => (
@@ -129,6 +131,7 @@ export function Confiabilidad() {
                     <td className="hidden text-right sm:table-cell">{e.h.mtbfDias ? `${n0(e.h.mtbfDias)} d` : '—'}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mdtH ? fmtHoras(e.h.mdtH, true) : '—'}</td>
                     <td className="pl-3">{e.h.porParte[0] ? NOMBRE_PARTE[e.h.porParte[0].parte].split(' ')[0] : '—'}</td>
+                    <td className="hidden text-right sm:table-cell">{e.h.bblPorFalla !== undefined ? n0(e.h.bblPorFalla) : '—'}</td>
                     <td className="text-right"><b>{n0(e.h.bbl)}</b></td>
                   </tr>
                 ))}

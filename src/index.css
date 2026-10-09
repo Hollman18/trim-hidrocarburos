@@ -189,6 +189,9 @@ body{
      la primera casi en blanco (Planta, Conectores). No se parten el dibujo, una
      tarjeta chica, una fila ni el título de un panel con lo que sigue. */
   .rounded.border:not(section), svg, tr, section .border-b { break-inside: avoid; }
+  /* Un bloque con una lista larga adentro (un campo desplegado de «POR CAMPO»: 47 equipos
+     de Morichal en 12 meses) sí se parte, entre sus filas, que siguen enteras. */
+  section .border-b[data-partible] { break-inside: auto; }
   section > header { break-after: avoid; }
   /* Lo que en pantalla se desplaza de lado, en el papel cabe completo. */
   .overflow-x-auto { overflow: visible !important; }

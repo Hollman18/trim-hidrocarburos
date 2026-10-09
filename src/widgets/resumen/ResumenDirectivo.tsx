@@ -6,20 +6,22 @@ import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
 import { AHORA, fechaCorta } from '@/entities/reloj'
-import { PUESTA_EN_MARCHA, SIN_META } from '@/entities/configuracion'
+import { PUESTA_EN_MARCHA } from '@/entities/configuracion'
 import { conMeta, textoSinMeta } from '@/entities/libro'
 import { sumarMeses } from '@/entities/plan'
 import { Tip } from '@/shared/ui/Tip'
-import { Boton, Chip } from '@/shared/ui/primitivas'
+import { Boton } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { Lectura } from '@/shared/ui/Lectura'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
-import { n0, usd, diaIso, plural } from '@/shared/lib/formato'
+import { n0, n1, usd, diaIso, plural } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { Rango } from '@/widgets/diferidos/Rango'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { alFinal } from '@/shared/ui/alFinal'
+import { otrosEnAlarma } from './enAlarma'
+import { PorCampo } from './PorCampo'
 
 const D = 86_400_000
 const signo = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${n0(Math.abs(v * 100))} %`
@@ -40,7 +42,8 @@ export function ResumenDirectivo() {
   const riesgo = useRiesgo(ids)
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo' && r.altoImpacto)
-  const servicios = riesgo.filter(r => r.estado === 'en-riesgo' && !r.altoImpacto)
+  // Lo demás en alarma, por lo que es: un servicio (la regla de Riesgo) no es la multifásica.
+  const otros = otrosEnAlarma(riesgo)
   const estados = useEstadoCampos(ids)
   const parados = estados.reduce((a, e) => a + e.parados, 0), pozos = estados.reduce((a, e) => a + e.pozos, 0)
   const sinPrecio = lb.sinPrecio.map(c => campoPorId(c).nombre)
@@ -70,19 +73,20 @@ export function ResumenDirectivo() {
   const proxima = [...enRiesgo].filter(r => r.horas !== undefined).sort((a, b) => a.horas! - b.horas!)[0]
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
 
-  const servicioTip: Array<[string, string]> = servicios.map(r => [r.equipo, TIPO_CAUSA[r.tipo]])
+  const otrosTip: Array<[string, string]> = (otros?.filas ?? []).map(r => [`${r.equipo}${ambito.global ? ` · ${campoPorId(r.campoId).nombre}` : ''}`, TIPO_CAUSA[r.tipo]])
   const pieRiesgo = proxima ? `primero ${proxima.equipo} en ${fmtHoras(proxima.horas!)}` : enRiesgo[0] ? `${enRiesgo[0].equipo} ya fuera`
     : perdiendo.some(r => r.altoImpacto) ? 'ninguna otra bomba ni electrosumergible avisa' : 'ninguna bomba ni electrosumergible avisa'
+  // Sin `truncate`: a 1.280 px con un campo se cortaba y el número de servicios no se veía.
+  // Lo que no es de alto impacto va en su renglón, que no se corta.
   const enRiesgoCelda = (
     <>
       <small className="block text-[10.5px] text-[var(--tinta3)]">En riesgo · alto impacto</small>
       <b className="tabular block text-[15px] leading-tight">{enRiesgo.length ? plural(enRiesgo.length, 'equipo', 'equipos') : 'ninguno'}</b>
-      <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{pieRiesgo}{servicios.length > 0 && ` · ${plural(servicios.length, 'servicio', 'servicios')} en alarma`}</small>
+      <small className="block text-[10.5px] text-[var(--tinta2)]">{pieRiesgo}</small>
+      {otros && <small className="block text-[10.5px] text-[var(--tinta2)]">+ {otros.texto}</small>}
     </>
   )
   const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
-  // Las cuatro columnas de «Por campo»: en el teléfono, nombre y total arriba y las dos barras debajo.
-  const filaCampo = 'grid grid-cols-2 items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(90px,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_64px]'
 
   return (
     <>
@@ -116,7 +120,7 @@ export function ResumenDirectivo() {
                 ['Meta del período', hayMeta ? `${n0(lb.meta.produccionTotal)} bbl · ${n0(lb.meta.diasTotal)} días` : sinMeta]] }} />
             <BarraMeta rotulo="diferido" valor={difDia} unidad="bbl/d" meta={hayMeta ? lb.meta.diferidoDia : undefined}
               rotuloMeta={hayMeta ? `máx. ${n0(lb.meta.diferidoDia)}` : sinMeta} fuera={sobreMax}
-              apoyo={base ? `${signo(base.cambio)} frente a ${base.nombre}` : undefined}
+              apoyo={base ? `${signo(base.cambio)} frente a ${base.nombre}` : 'sin base de comparación'}
               tip={{ titulo: 'Diferido', filas: [[enCurso ? 'A la fecha' : 'Del período', hayMeta ? `${n0(lb.brecha)} de un máximo de ${n0(lb.meta.diferido)} bbl` : `${n0(lb.brecha)} bbl`],
                 ['Máximo del período', hayMeta ? `${n0(lb.meta.diferidoTotal)} bbl · ${n0(lb.meta.diasTotal)} días` : sinMeta]] }} />
           </div>
@@ -166,8 +170,8 @@ export function ResumenDirectivo() {
             <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{TIPO_CAUSA[perdiendo[0]!.tipo].toLowerCase()}</small>
           </span>
         )}
-        {servicios.length > 0
-          ? <Tip as="span" titulo="Servicios en alarma" filas={servicioTip} imprimir="todo" className="block min-w-0">{enRiesgoCelda}</Tip>
+        {otros
+          ? <Tip as="span" titulo="También en alarma" filas={otrosTip} imprimir="todo" className="block min-w-0">{enRiesgoCelda}</Tip>
           : <span className="min-w-0">{enRiesgoCelda}</span>}
         {rol.pantallas.includes('riesgo') && <Boton className="justify-self-start" onClick={() => setPantalla('riesgo')}>Ver riesgo</Boton>}
       </section>
@@ -182,20 +186,23 @@ export function ResumenDirectivo() {
             </span>
             <b className="tabular block text-[13px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
           </p>
-          {horas.porcentaje !== undefined && (
-            <div className="mt-2">
-              <p className="flex flex-wrap items-baseline gap-x-1.5">
-                <b className="tabular text-[18px] leading-none">{n0(horas.porcentaje)} %</b>
-                <span className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">mantenimiento proactivo
-                  <Info titulo="Mantenimiento proactivo" texto={`Horas preventivas o predictivas en SAP desde que entró TRIM (${fechaCorta(inicio)}). Si no sube, las fallas no bajan.`} />
-                </span>
-              </p>
-              <div className="mt-1 flex h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]" aria-hidden>
-                <i className="block h-full bg-[var(--dato-1)]" style={{ width: `${horas.porcentaje}%` }} />
-              </div>
-              <small className="tabular mt-0.5 block text-[10.5px] text-[var(--tinta2)]">{n0(horas.proactivo)} h proactivas · {n0(horas.correctivo)} h correctivas</small>
-            </div>
-          )}
+          <div className="mt-2">
+            {/* Sin órdenes no hay porcentaje: se dice, no se borra el bloque. */}
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <b className="tabular text-[18px] leading-none">{horas.porcentaje !== undefined ? `${n0(horas.porcentaje)} %` : 'sin dato'}</b>
+              <span className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">mantenimiento proactivo
+                <Info titulo="Mantenimiento proactivo" texto={`Horas preventivas o predictivas en SAP desde que entró TRIM (${fechaCorta(inicio)}). Si no sube, las fallas no bajan.`} />
+              </span>
+            </p>
+            {horas.porcentaje !== undefined ? (
+              <>
+                <div className="mt-1 flex h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]" aria-hidden>
+                  <i className="block h-full bg-[var(--dato-1)]" style={{ width: `${horas.porcentaje}%` }} />
+                </div>
+                <small className="tabular mt-0.5 block text-[10.5px] text-[var(--tinta2)]">{n1(horas.proactivo)} h proactivas · {n1(horas.correctivo)} h correctivas</small>
+              </>
+            ) : <small className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">sin órdenes en SAP desde {fechaCorta(inicio)}</small>}
+          </div>
           <Tendencia serie={serie} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(diaIso(m.desde), diaIso(new Date(m.hasta.getTime() - 1)))} />
           <Lectura>
@@ -225,37 +232,7 @@ export function ResumenDirectivo() {
         </section>
       </div>
 
-      {ambito.global && (
-        <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
-          <h3 className={`${titulo} mb-1`}>POR CAMPO</h3>
-          <div className={`${filaCampo} pb-1 text-[10px] text-[var(--tinta3)]`} aria-hidden>
-            <span className="col-start-1 row-start-2 sm:col-start-2 sm:row-start-1">producción / meta · bbl/d</span>
-            <span className="col-start-2 row-start-2 sm:col-start-3 sm:row-start-1">diferido / máx. · bbl/d</span>
-            <span className="col-start-2 row-start-1 justify-self-end sm:col-start-4">bbl diferidos</span>
-          </div>
-          {lb.porCampo.map(c => {
-            const r = c.real / dias, d = c.brecha / dias, mp = c.metaProduccion / dias, md = c.metaDiferido / dias
-            return (
-              <button key={c.campoId} onClick={() => { setCampo(c.campoId) }}
-                className={`${filaCampo} w-full cursor-pointer border-b border-[var(--linea2)] py-1.5 text-left text-[12.5px] last:border-0 hover:bg-[var(--panel2)]`}>
-                <span className="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5">
-                  <span className="truncate">{campoPorId(c.campoId).nombre}</span>
-                  {c.sinMeta && <Chip>{SIN_META}</Chip>}
-                </span>
-                <span className="col-start-1 row-start-2 min-w-0 sm:col-start-2 sm:row-start-1">
-                  <BarraMeta tamano="chica" ocultarRotulo rotulo="producción" valor={r} unidad="bbl/d" meta={c.sinMeta ? undefined : mp}
-                    rotuloMeta={c.sinMeta ? undefined : n0(mp)} fuera={!c.sinMeta && r < mp} />
-                </span>
-                <span className="col-start-2 row-start-2 min-w-0 sm:col-start-3 sm:row-start-1">
-                  <BarraMeta tamano="chica" ocultarRotulo tipoMeta="máximo" rotulo="diferido" valor={d} unidad="bbl/d" meta={c.sinMeta ? undefined : md}
-                    rotuloMeta={c.sinMeta ? undefined : n0(md)} fuera={!c.sinMeta && d > md} />
-                </span>
-                <b className="tabular col-start-2 row-start-1 justify-self-end sm:col-start-4">{n0(c.brecha)}<span className="sr-only"> bbl diferidos</span></b>
-              </button>
-            )
-          })}
-        </section>
-      )}
+      {ambito.global && <PorCampo lb={lb} campos={ids} onAbrir={abrir} onCampo={setCampo} />}
     </>
   )
 }

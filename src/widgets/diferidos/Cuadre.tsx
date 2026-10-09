@@ -7,6 +7,7 @@ import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { n0, n1, n3, plural } from '@/shared/lib/formato'
+import { estadoFactor } from './publicacion'
 
 /** El cuadre del período contra la medición oficial y la cadena de custodia
  *  de cada número. Lo que no se puede probar se muestra, no se reparte: cada
@@ -17,7 +18,9 @@ import { n0, n1, n3, plural } from '@/shared/lib/formato'
 export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () => void }) {
   const tol = lb.diferido > 0 ? lb.tolerancia / lb.diferido : 0
   const parte = (v: number) => lb.brecha > 0 ? Math.max(0, Math.min(100, (v / lb.brecha) * 100)) : 0
-  const faFuera = lb.fa.filter(f => !f.dentro)
+  // Los meses que no están dentro: fuera de banda (con su marca) o con la banda
+  // sin verificar (sin marca: el factor puede estar bien, falta con qué compararlo).
+  const faRaros = lb.fa.map(f => ({ f, estado: estadoFactor(lb, f) })).filter(x => x.estado !== 'dentro')
   const residuoRel = lb.brecha !== 0 ? Math.abs(lb.residuo / lb.brecha) : 0
   const custodiaCompleta = lb.custodia.sinPrueba.length + lb.custodia.estimados.length + lb.custodia.bswLaboratorio.length === 0
 
@@ -50,13 +53,13 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
         <h3 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">FACTOR DE ASIGNACIÓN</h3>
         <Info titulo="Factor de asignación" texto="Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar." />
       </div>
-      {faFuera.length === 0
+      {faRaros.length === 0
         ? <p className="text-[11.5px] text-[var(--tinta2)]">{plural(lb.fa.length, 'mes-campo', 'meses-campo')} · <Chip>dentro de banda</Chip></p>
-        : faFuera.map(f => (
+        : faRaros.map(({ f, estado }) => (
           <p key={`${f.campoId}${f.mes}`} className="flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-[var(--tinta2)]">
-            <FueraDeMeta si tamano={10} />
+            <FueraDeMeta si={estado === 'fuera'} tamano={10} />
             <span>{campoPorId(f.campoId).nombre} · {f.mes} · <b className="tabular text-[var(--tinta)]">{n3(f.fa)}</b></span>
-            <Chip tono="fuerte">fuera de ±{n0(f.banda * 100)} %</Chip>
+            {estado === 'fuera' ? <Chip tono="fuerte">fuera de ±{n0(f.banda * 100)} %</Chip> : <Chip>banda sin verificar</Chip>}
           </p>
         ))}
       {lb.aproximado > 0 && (

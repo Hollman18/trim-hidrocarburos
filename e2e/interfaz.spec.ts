@@ -157,7 +157,7 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   await f.abrir('/#/jefe/riesgo/ceiba~portafolio/curso')
   await f.page.emulateMedia({ media: 'print' })
   let t = await f.textoPagina()
-  f.ok(t.includes('Qué hacer · K-101:') && t.includes('Costo si fallan:') && t.includes('Costo por falla:'), 'Riesgo: el «qué hacer», el costo y su origen salen escritos')
+  f.ok(t.includes('Qué hacer · K-101:') && t.includes('Exposición:') && t.includes('Si falla hoy · '), 'Riesgo: el «qué hacer», el costo y su origen salen escritos')
   f.ok(t.includes('MPP-301') && !t.includes('ver 2 más'), 'Riesgo: las filas que «ver 2 más» esconde salen en el papel, y el botón no')
   f.ok(/salió de su banda normal|ya llegó a su alarma/.test(t), 'Riesgo: el porqué de cada fila (su globo) sale escrito')
   await f.page.emulateMedia({ media: 'screen' })
@@ -166,6 +166,14 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   t = await f.textoPagina()
   f.ok(t.includes('Cierre proyectado: Si todo sigue') && t.includes('Valor: Sin contar'), 'Resumen: los ⓘ salen escritos')
   f.ok(/A la fecha: [\d.]+ de [\d.]+ bbl/.test(t), 'Resumen: los totales a la fecha, que protege el folio, salen en el papel')
+  await f.page.emulateMedia({ media: 'screen' })
+  // «POR CAMPO» sale desplegado en el papel: los equipos de cada campo, con su parte del campo
+  // («< 1 %», nunca «0 %») y, al final, los que fallaron sin costar crudo (P-201B de Guacamayo).
+  await f.ir('#/ger/resumen/ceiba~portafolio/doce')
+  await f.page.emulateMedia({ media: 'print' })
+  t = await f.textoPagina()
+  f.ok(/MN-41[\s\S]{0,80}bbl · \d+ %/.test(t) && t.includes('bbl · < 1 %') && !/bbl · 0 %/.test(t), 'Resumen: POR CAMPO sale desplegado, y lo menor de 1 % se dice «< 1 %»')
+  f.ok(/P-201B\s+bomba de reinyección · 5 fallas · no costó crudo/.test(t), 'Resumen: el equipo que falló sin costar crudo sale al final de su campo')
   await f.page.emulateMedia({ media: 'screen' })
   await f.ir('#/sup/turno/ceiba/curso')
   await f.page.emulateMedia({ media: 'print' })

@@ -1,13 +1,13 @@
 import { useApp, useAmbito, useRol, useRango, useNivel } from '@/app/store'
 import { Tendencia } from '@/widgets/resumen/ResumenDirectivo'
 import { campoPorId } from '@/entities/campos'
-import { criterioEn, SIN_META } from '@/entities/configuracion'
-import { AHORA } from '@/entities/reloj'
-import { useLibro, useSerie, useBase, useCtx } from '@/shared/api/diferidos'
+import { SIN_META } from '@/entities/configuracion'
+import { useLibro, useSerie, useBase } from '@/shared/api/diferidos'
 import { Encabezado } from '@/widgets/diferidos/Encabezado'
 import { MesAMes } from '@/widgets/diferidos/MesAMes'
 import { Cuadre } from '@/widgets/diferidos/Cuadre'
 import { Factor } from '@/widgets/diferidos/Factor'
+import { campoPublicable } from '@/widgets/diferidos/publicacion'
 import { ParetoEquipos, ParetoPartes, ParetoTipos, Palancas } from '@/widgets/diferidos/Paretos'
 import { Panel } from '@/shared/ui/primitivas'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
@@ -19,7 +19,7 @@ import { n0, n1, diaIso as dia } from '@/shared/lib/formato'
  *  la medición oficial, a qué equipo y a qué parte se le carga, y dónde se
  *  puede bajar. */
 export function Diferidos() {
-  const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const ctx = useCtx(); const nivel = useNivel()
+  const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const nivel = useNivel()
   const abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla), setCampo = useApp(s => s.setCampo), setRango = useApp(s => s.setRango), campoId = useApp(s => s.campoId)
   const ids = ambito.campos.map(c => c.id)
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
@@ -74,15 +74,14 @@ export function Diferidos() {
             <Lectura>
               Cada campo con su diferido, el máximo que firmó el gerente para el período y cuánto tiene
               causa probada (la barra: por señal, declarado y, rayado, sin identificar). El cuadrado junto
-              a «máx.» marca el que lo pasó; junto a la cifra, el que no puede publicar: factor fuera de
-              banda o demasiado sin identificar. Un clic abre el campo.
+              a «máx.» marca el que lo pasó; junto a la cifra, el que no se puede publicar (el sello dice
+              por qué). Un clic abre el campo.
             </Lectura>
             {lb.porCampo.map(f => {
               const c = campoPorId(f.campoId)
-              const crit = criterioEn(ctx.config, f.campoId, Math.min(rango.hasta.getTime(), AHORA.getTime()) - 1)
-              // Sin meta firmada no hay máximo contra qué marcar ni regla de cierre: no se publica (motivo «sin-meta»).
               const sobreMax = !f.sinMeta && f.brecha > f.metaDiferido
-              const bloqueado = f.sinMeta || lb.fa.some(x => x.campoId === f.campoId && !x.dentro) || (crit !== undefined && f.potencial > 0 && (f.pendiente / f.potencial) * 100 > crit)
+              // Los motivos del libro de ese campo (todos menos «en curso»): la regla del sello, no una propia.
+              const bloqueado = !campoPublicable(lb, f.campoId)
               const maximo = f.sinMeta ? SIN_META : `${n0(f.metaDiferido)} bbl`
               const w = (v: number) => `${lb.brecha ? (Math.max(0, v) / lb.brecha) * 100 : 0}%`
               return (
