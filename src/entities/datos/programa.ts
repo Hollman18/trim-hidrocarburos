@@ -11,6 +11,8 @@ export const PROGRAMA_INICIAL: ParadaProgramada[] = [
   {id: 'PR-M2011-260217', campoId: 'morichal', equipo: 'P-201B', desde: '2026-02-17T00:21:34-05:00', hasta: '2026-02-17T15:48:55-05:00', motivo: 'Mantenimiento preventivo programado de la bomba'},
   {id: 'PR-3016-260825', campoId: 'morichal', equipo: 'MPP-301', desde: '2026-08-25T14:36:55-05:00', hasta: '2026-08-26T05:10:37-05:00', motivo: 'Mantenimiento preventivo programado de la bomba'},
   {id: 'PR-G2011-251202', campoId: 'guacamayo', equipo: 'P-201B', desde: '2025-12-02T04:44:50-05:00', hasta: '2025-12-02T18:37:11-05:00', motivo: 'Mantenimiento preventivo programado de la bomba'},
+  {id: 'PR-VIG-MN05-260912-bomba', campoId: 'morichal', equipo: 'MN-05', desde: '2026-09-12T09:37:00-05:00', hasta: '2026-09-13T21:22:00-05:00', motivo: 'Orden predictiva: el vigía anticipó la falla de bomba de fondo; cambio de la electrosumergible en ventana programada'},
+  {id: 'PR-VIG-MN16-260904-bomba', campoId: 'morichal', equipo: 'MN-16', desde: '2026-09-04T19:25:00-05:00', hasta: '2026-09-06T06:03:00-05:00', motivo: 'Orden predictiva: el vigía anticipó la falla de bomba de fondo; cambio de la electrosumergible en ventana programada'},
   {id: 'PR-PA03-260429', campoId: 'palmar', equipo: 'PA-03', desde: '2026-04-29T19:59:00-05:00', hasta: '2026-04-30T10:44:06-05:00', motivo: 'Cambio programado de la bomba de subsuelo'},
   {id: 'PR-PA05-260510', campoId: 'palmar', equipo: 'PA-05', desde: '2026-05-10T07:49:00-05:00', hasta: '2026-05-11T06:00:15-05:00', motivo: 'Cambio programado de la bomba de subsuelo'},
   {id: 'PR-LC19-260123', campoId: 'ceiba', equipo: 'LC-19', desde: '2026-01-22T23:51:00-05:00', hasta: '2026-01-23T17:50:06-05:00', motivo: 'Cambio programado de la bomba de subsuelo'},

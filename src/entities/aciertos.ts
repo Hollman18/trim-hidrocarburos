@@ -21,8 +21,8 @@ import type { Riesgo } from './diferido'
 import { historialDeEquipo, vigilable, contextoInicial, type FallaEquipo } from './libro'
 import { flotaDe, type Familia } from './flota'
 import { perfilBomba, plantillaDe } from './bombas'
-import { partesDe, type ParteId } from './partes'
-import { perfilDe, configEn, PUESTA_EN_MARCHA, versionInicial, type Version } from './configuracion'
+import { partesDe, PARTES_ESP, type ParteId } from './partes'
+import { perfilDe, configEn, PUESTA_EN_MARCHA, versionInicial, type Version, type ParadaProgramada } from './configuracion'
 import { catalogoDe } from './catalogo'
 import type { Contexto } from './causa-senal'
 import { AHORA } from './reloj'
@@ -97,12 +97,25 @@ const azar = (s: string) => {
 }
 const D = 24 * H
 
+/** La parte de una intervención que pidió el vigía: una parada del programa que
+ *  sale de una orden predictiva (PM03) para cambiar la electrosumergible antes de
+ *  que falle. 🔴 DEMOSTRACIÓN: el demo la reconoce por su id
+ *  (`PR-VIG-<pozo>-<día>-<parte>`, lo arma scripts/gen-linea.mjs); en producción
+ *  la predicción y su orden las guarda el backend. */
+export function intervencionDelVigia(p: Pick<ParadaProgramada, 'id'>): ParteId | undefined {
+  const parte = /^PR-VIG-.+-([a-z_]+)$/.exec(p.id)?.[1]
+  return PARTES_ESP.find(x => x.id === parte)?.id
+}
+
 /** El registro de predicciones desde la puesta en marcha, ya calificadas.
  *  🔴 DEMOSTRACIÓN: el servidor guarda cada predicción cuando sale; el demo la
  *  arma con una regla fija sobre la historia del PLC, coherente con ella:
  *   · de las fallas de partes con instrumento, el vigía anticipó unas siete de
  *     cada diez, entre 2 y 9 días antes (las demás se le escaparon); una que
  *     habría salido antes de la puesta en marcha no cuenta: TRIM no estaba;
+ *   · las electrosumergibles que anticipó con tiempo se cambiaron antes de
+ *     fallar, en una parada programada que salió de una orden predictiva
+ *     (`intervencionDelVigia`): esas no tienen falla y quedan intervenidas;
  *   · sobre equipos que no fallaron hubo predicciones que vencieron sin nada
  *     (falsas alarmas) y otras que se atendieron con una orden predictiva en
  *     SAP antes de fallar (intervenidas).
@@ -128,6 +141,17 @@ export function prediccionesHistoricas(campos: string[], ctx: Contexto): Predicc
     if (emitida < inicio) continue
     out.push({ id: `PR-${f.falla.id}`, campoId: f.campoId, equipo: f.equipo, parte: f.falla.parte, accion: parte(f.campoId, f.equipo, f.falla.parte)?.accion,
       emitida: new Date(emitida).toISOString(), desde: new Date(emitida + anticipo * 0.6).toISOString(), hasta: new Date(emitida + anticipo * 1.4).toISOString() })
+  }
+  // Las que anticipó con tiempo de intervenir: la emitió unos días antes del cambio
+  // programado, con la ventana en que habría fallado; la orden se cerró al terminar.
+  for (const pr of base.config.programa) {
+    const pt = intervencionDelVigia(pr)
+    if (!pt || !campos.includes(pr.campoId) || ms(pr.desde) < inicio) continue
+    // Nunca antes de la puesta en marcha: TRIM no estaba.
+    const anticipo = (3 + Math.floor(azar(`l|${pr.id}`) * 5)) * D, emitida = Math.max(inicio, ms(pr.desde) - anticipo * 0.5)
+    out.push({ id: pr.id, campoId: pr.campoId, equipo: pr.equipo, parte: pt, accion: parte(pr.campoId, pr.equipo, pt)?.accion,
+      emitida: new Date(emitida).toISOString(), desde: new Date(emitida + anticipo * 0.6).toISOString(), hasta: new Date(emitida + anticipo * 1.4).toISOString(),
+      intervencion: new Date(ms(pr.hasta) - 3 * H).toISOString() })
   }
   for (const c of campos) {
     const perfil = perfilDe(base.config, c)

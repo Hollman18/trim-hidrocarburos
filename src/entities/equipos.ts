@@ -24,13 +24,13 @@ const d = (
 export const EQUIPOS: Record<string, Equipo> = {
   'P-201B': {
     id: 'P-201B', nombre: 'Bomba multietapa de transferencia de agua', sistema: 'Tratamiento de agua',
-    severidad: 1, marcha: 'detenido', estado: 'detenido', criticidad: 5, aguasAbajo: '7 pozos',
-    redundancia: 'sin respaldo', modoFalla: 'Lubricación de cojinete',
+    severidad: 1, marcha: 'detenido', estado: 'detenido', criticidad: 5, aguasAbajo: 'los pozos que el respaldo no cubre',
+    redundancia: 'P-201A y P-201C en paralelo', modoFalla: 'Lubricación de cojinete',
     norma: 'Centrífuga multietapa · API 610, Tabla 8: vibración en la caja de rodamientos.',
-    lectura: 'Detenida, el agua no tiene salida: el tanque se llena y hay que cerrar los pozos del campo.',
+    lectura: 'Detenida. P-201A y P-201C no alcanzan a tomar toda su agua: el tanque llegó al alto-alto y hubo que cerrar parte de los pozos.',
     intervencion: {
       ubicacion: 'Batería 1 · tren de agua',
-      accionInmediata: 'Confirmar nivel en los tanques de agua antes de intentar el arranque: si ya están altos, cerrar primero los pozos aguas arriba.',
+      accionInmediata: 'Llevar P-201A y P-201C a su caudal máximo y confirmar el nivel del tanque de agua antes de intentar el arranque: si ya está alto, cerrar primero los pozos con menos crudo por barril de agua.',
       avisarA: 'Supervisor de operaciones e ingeniería de producción',
     },
     distribucionFalla: {
@@ -40,10 +40,15 @@ export const EQUIPOS: Record<string, Equipo> = {
     dispositivos: [
       d('PI-2010', 'Presión de succión', 18.2, 'psi', 'normal', 'PI · 47 s', '> 10',
         [12.1, 12.0, 12.2, 12.1, 11.9, 12.0, 12.1, 11.8, 11.9, 12.0, 13.4, 18.2]),
-      d('FI-2011', 'Caudal', 0, 'bbl/d', 'alarma', 'PI · 47 s', '18.000 – 20.400',
-        [19210, 19180, 19240, 19190, 19170, 19220, 19200, 19180, 19190, 19150, 16300, 0]),
-      d('II-2011', 'Corriente del motor', 0, 'A', 'alarma', 'PI · 47 s', '95 – 130',
-        [118, 119, 121, 120, 122, 124, 126, 128, 129, 127, 112, 0]),
+      // Una de tres bombas iguales en paralelo (P-201A/B/C, 90.000 bbl/d de placa; el
+      // cabezal de disposición las limita a 89.250): mueve su parte del agua que entra,
+      // 74.200 bbl/d en marcha, la mediana que lee el colchón.
+      d('FI-2011', 'Caudal', 0, 'bbl/d', 'alarma', 'PI · 47 s', '66.800 – 89.250',
+        [74220, 74190, 74250, 74200, 74180, 74230, 74210, 74190, 74200, 74160, 63070, 0]),
+      // Motor de 480 V: a 74.200 bbl/d y unos 200 psi de diferencial la bomba pide
+      // unos 285 kW (eficiencia de bomba y motor ≈ 0,66), del orden de 400 A.
+      d('II-2011', 'Corriente del motor', 0, 'A', 'alarma', 'PI · 47 s', '320 – 445',
+        [398, 402, 408, 405, 412, 419, 425, 432, 436, 429, 378, 0]),
       d('TI-2011', 'Temperatura de cojinete', 41, '°C', 'normal', 'PI · 47 s', '< 85',
         [38, 39, 39, 40, 40, 41, 42, 43, 44, 45, 43, 41]),
       d('PDI-2011', 'Presión de descarga', 0, 'psi', 'alarma', 'PI · 47 s', '180 – 240',
@@ -53,7 +58,7 @@ export const EQUIPOS: Record<string, Equipo> = {
         [2.2, 2.1, 2.2, 2.3, 2.2, 2.1, 2.2, 2.2, 2.3, 2.2, 2.4, 0]),
       d('LSH-2013', 'Fuga del sello', 'sin fuga', '', 'normal', 'PLC · interruptor', '—'),
       d('LT-2012', 'Nivel del tanque de agua', 89.6, '%', 'normal', 'PLC · 47 s', '> 15',
-        [52, 51, 53, 50, 52, 51, 53, 52, 50, 51, 56, 89.6]),
+        [77.8, 77.1, 78.4, 76.9, 77.6, 77.2, 78.3, 77.9, 76.8, 77.4, 78.7, 89.6]),
     ],
   },
   'MPP-301': {
@@ -271,7 +276,7 @@ const NORMAL: Record<string, Record<string, Lecturas>> = {
     'PI-2010': { valor: 12.1, estado: 'normal', serie: [12.0, 12.1, 12.2, 12.0, 12.1, 11.9, 12.1, 12.0, 12.2, 12.1, 12.0, 12.1] },
     'VI-2011': { valor: 2.2, estado: 'normal', serie: [2.1, 2.2, 2.2, 2.1, 2.3, 2.2, 2.2, 2.1, 2.2, 2.3, 2.2, 2.2] },
     'LT-2012': { valor: 55, estado: 'normal', serie: [54, 55, 56, 55, 54, 56, 55, 54, 55, 56, 55, 55] },
-    'II-2011': { valor: 122, estado: 'normal', serie: [118, 119, 121, 120, 122, 121, 123, 122, 120, 121, 123, 122] },
+    'II-2011': { valor: 412, estado: 'normal', serie: [398, 402, 408, 405, 412, 408, 415, 412, 405, 408, 415, 412] },
     'TI-2011': { valor: 44, estado: 'normal', serie: [41, 42, 42, 43, 43, 44, 44, 45, 44, 44, 43, 44] },
     'PDI-2011': { valor: 212, estado: 'normal', serie: [214, 212, 215, 211, 213, 210, 212, 214, 211, 213, 212, 212] },
   },
@@ -305,11 +310,18 @@ const lact = (v: number) => ({
     serie: [v - 70, v - 40, v - 55, v - 20, v - 48, v - 5, v - 32, v + 10, v - 18, v + 21, v - 11, v] },
 })
 
-/** Caudal de una bomba de agua sana. Cada campo mueve lo suyo. */
-const caudalAgua = (v: number, techo: number) => ({
+/** Caudal y corriente del motor de una bomba de agua sana. Cada campo mueve
+ *  lo suyo (`v`, con la nominal `techo`), y la corriente va con el caudal
+ *  (`amperios`, motor de 480 V): la de una bomba de 90.000 bbl/d no es la de
+ *  una de 4.000. La mediana de la serie de caudal es `v − 5`. */
+const caudalAgua = (v: number, techo: number, amperios: number) => ({
   'FI-2011': { valor: v, estado: 'normal' as const,
     limite: `${Math.round(v * 0.9).toLocaleString('es-CO')} – ${techo.toLocaleString('es-CO')}`,
     serie: [v - 60, v + 20, v - 30, v + 40, v - 10, v + 30, v - 50, v + 10, v - 20, v + 50, v - 40, v] },
+  'II-2011': { valor: amperios, estado: 'normal' as const,
+    limite: `${Math.round(amperios * 0.8)} – ${Math.round(amperios * 1.11)}`,
+    // Con un motor chico, un decimal: si no, la serie queda plana por el redondeo.
+    serie: [0.97, 0.98, 0.99, 0.98, 1, 0.99, 1.01, 1, 0.98, 0.99, 1.01, 1].map(k => (amperios < 100 ? Math.round(amperios * k * 10) / 10 : Math.round(amperios * k))) },
 })
 
 const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, Instancia> }> = {
@@ -330,7 +342,9 @@ const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, I
       'LACT-01': sano('LACT-01', 'despachando', lact(14800)),
       'P-201B': {
         ...sano('P-201B', 'en marcha · succión cayendo', {
-          ...caudalAgua(21500, 24000),
+          // Una de siete bombas iguales (P-201A…G), su parte del agua que entra:
+          // mediana de FI-2011 = 79.900 bbl/d; el cabezal de disposición las limita a 86.500.
+          ...caudalAgua(79905, 86500, 429),
           'PI-2010': { valor: 8.8, estado: 'atencion', serie: [14.2, 13.9, 13.5, 13.0, 12.6, 12.1, 11.5, 11.0, 10.4, 9.9, 9.3, 8.8] },
           'LT-2012': { valor: 61.8, estado: 'normal', serie: [60.9, 61.4, 62.0, 61.2, 61.7, 62.3, 61.5, 61.1, 61.9, 62.2, 61.6, 61.8] },
         }),
@@ -347,7 +361,11 @@ const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, I
       'LACT-01': sano('LACT-01', 'despachando'),
       'H-302': { ...sano('H-302', 'en marcha') },
       'P-201B': {
-        ...sano('P-201B', 'en marcha', { ...caudalAgua(7600, 13000),
+        // Recobro: inyecta al yacimiento a ~1.800 psi (motor de 4,16 kV: 45.000 bbl/d × 1.790 psi
+        // ≈ 1.370 hhp, ≈ 1.900 hp al eje, ≈ 240 A).
+        ...sano('P-201B', 'en marcha', { ...caudalAgua(45000, 50000, 242),
+          'PDI-2011': { valor: 1800, estado: 'normal', limite: '1.650 – 1.950',
+            serie: [1795, 1802, 1798, 1805, 1799, 1801, 1796, 1803, 1800, 1797, 1802, 1800] },
           'LT-2012': { valor: 42.3, estado: 'normal', serie: [41.8, 42.5, 42.1, 42.9, 42.0, 42.6, 41.9, 42.4, 42.8, 42.2, 42.0, 42.3] } }),
         lectura: 'Inyección para recobro: sus paradas no cierran pozos hoy, por eso no difieren barriles en el período. Hoy está dentro de banda.',
       },
@@ -373,7 +391,7 @@ const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, I
         lectura: 'Nivel holgado. Los dos medidores independientes coinciden dentro de 0,1 pie.',
       },
       'LACT-01': sano('LACT-01', 'despachando', lact(3100)),
-      'P-201B': sano('P-201B', 'en marcha', caudalAgua(2400, 5500)),
+      'P-201B': sano('P-201B', 'en marcha', caudalAgua(13180, 16000, 80)),
       'K-101': sano('K-101', 'en marcha'),
       'SE-2': sano('SE-2', 'en servicio'),
     },
@@ -393,7 +411,7 @@ const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, I
       'SE-2': { ...sano('SE-2', 'en servicio') },
       'V-101': sano('V-101', 'en marcha'),
       'TK-102': sano('TK-102', 'en servicio', nivelTanque(5.4, 5.5)),
-      'P-201B': sano('P-201B', 'en marcha', caudalAgua(1100, 4000)),
+      'P-201B': sano('P-201B', 'en marcha', caudalAgua(1450, 4000, 13.4)),
       'K-101': sano('K-101', 'en marcha'),
     },
   },

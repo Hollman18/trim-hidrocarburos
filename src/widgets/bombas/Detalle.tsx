@@ -18,7 +18,7 @@ import { Tip } from '@/shared/ui/Tip'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
-import { n0, n1, n2, decimalesDe, plural } from '@/shared/lib/formato'
+import { n0, n1, n3, decimalesDe, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Proyeccion } from './Proyeccion'
 import { fmtBbl, fmtRango, fmtTol, fmtComponente, fmtHoras, textoPronostico, pronosticoCorto, tanqueAbierto, fraseParteCorta, respaldoAbsorbe } from './comun'
@@ -297,7 +297,8 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
       <td className="font-mono">{x.pozo.id}</td>
       <td className="text-right">{n0(x.crudoBpd)}</td>
       <td className="text-right">{n0(x.aguaBpd)}</td>
-      <td className="text-right">{n2(x.crudoPorAgua)}</td>
+      {/* Con 95-98 % de agua el crudo por barril de agua va de 0,01 a 0,05: dos decimales no separan los pozos. */}
+      <td className="text-right">{n3(x.crudoPorAgua)}</td>
       <td className="text-right">{x.fraccion >= 0.999 ? 'entero' : `${n0(x.fraccion * 100)} %`}</td>
     </tr>
   )

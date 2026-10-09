@@ -70,8 +70,8 @@ base('con los dos abiertos, Escape cierra el de arriba y después el de abajo', 
 })
 
 test('el foco no se pierde cuando la ficha cambia de equipo', async ({ flujo: f }) => {
-  // LC-08 lo cerró la bomba: su detalle enlaza a P-201B dentro de la misma ficha.
-  await f.abrir('/#/prod/pozos/ceiba/curso/LC-08')
+  // LC-16 lo cerró la bomba: su detalle enlaza a P-201B dentro de la misma ficha.
+  await f.abrir('/#/prod/pozos/ceiba/curso/LC-16')
   const ficha = f.page.locator('[data-panel-equipo]')
   await expect(ficha).toBeVisible()
   const ver = ficha.getByRole('button', { name: 'Ver P-201B' })
@@ -82,7 +82,7 @@ test('el foco no se pierde cuando la ficha cambia de equipo', async ({ flujo: f 
   f.cerrar()
 })
 
-test('las tuberías del dibujo de Planta no son paradas de Tab; «SIN FLUJO» se lee y lleva forma', async ({ flujo: f }) => {
+test('las tuberías del dibujo de Planta no son paradas de Tab; el tren de agua sigue con flujo con P-201B detenida', async ({ flujo: f }) => {
   await f.page.addInitScript(() => localStorage.setItem('trim.tema', 'dark'))
   await f.abrir('/#/conf/planta/ceiba/curso')
   const dibujo = f.page.locator('main svg[role=group]').first()
@@ -105,9 +105,15 @@ test('las tuberías del dibujo de Planta no son paradas de Tab; «SIN FLUJO» se
       return { razon: (a! + 0.05) / (b! + 0.05), forma: !!t.parentElement!.querySelector('svg path, svg rect') }
     })
   })
-  f.ok(sinFlujo.length > 0, `La Ceiba tiene tuberías sin flujo (P-201B detenida): ${sinFlujo.length}`)
-  f.ok(sinFlujo.every(s => s.razon >= 4.5), `«SIN FLUJO» da 4,5:1 en oscuro (${sinFlujo.map(s => s.razon.toFixed(2)).join(', ')})`)
-  f.ok(sinFlujo.every(s => s.forma), '«SIN FLUJO» lleva la forma de la prioridad del equipo que paró')
+  // P-201B es una de tres bombas en paralelo: con ella detenida, P-201A y P-201C siguen sacando
+  // el agua hacia los inyectores. El conjunto lleva la marca de P-201B y dice cuál paró.
+  f.ok(sinFlujo.length === 0, `La Ceiba no dibuja tuberías «SIN FLUJO»: el agua sigue llegando a los inyectores (${sinFlujo.length})`)
+  f.ok(sinFlujo.every(s => s.razon >= 4.5 && s.forma), '«SIN FLUJO», donde salga, da 4,5:1 en oscuro y lleva la forma de la prioridad')
+  const bombas = dibujo.locator('[data-nodo="bomba"]')
+  f.ok(/P-201B · detenido/.test(await bombas.getAttribute('aria-label') ?? '') && /Prioridad 1/.test(await bombas.getAttribute('aria-label') ?? '')
+    && await bombas.locator('svg path').count() > 0, 'el conjunto de bombas de agua dice que P-201B está detenida y lleva la marca de prioridad 1')
+  const haciaInyectores = await lineas.evaluateAll(ls => ls.map(l => l.getAttribute('aria-label') ?? '').filter(x => x.includes('→ Pozos inyectores')))
+  f.ok(haciaInyectores.length > 0 && haciaInyectores.every(x => x.includes('Estado: corriendo')), 'la tubería de las bombas a los inyectores sigue corriendo')
   f.cerrar()
 })
 

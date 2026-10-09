@@ -930,21 +930,38 @@ export function evitableDeEvento(ts: Tramo[]): number {
 }
 
 
+/** Lo más que se le baja el caudal a una electrosumergible para quitarle agua
+ *  sin apagarla: 25 % (de 60 a 45 Hz, con el caudal proporcional a la
+ *  frecuencia, `perdidaPorFrecuencia`). Más abajo, con la misma cabeza, deja de
+ *  levantar, trabaja en empuje descendente y el motor no se refrigera. */
+export const BAJA_MAXIMA_ESP = 0.25
+
 /** Cerrar primero lo que menos crudo da por barril de agua, hasta quitar el
- *  agua pedida. El último pozo se cierra en parte (en la práctica, se le baja
- *  la frecuencia o se estrangula). */
+ *  agua pedida. Cada pozo se cierra entero si cabe; si no, se cierra en parte
+ *  (en la práctica, se le baja la frecuencia o se estrangula), y una
+ *  electrosumergible no baja más de `BAJA_MAXIMA_ESP`: lo que falte lo da el
+ *  siguiente del orden. Si al final todavía falta agua (casi todo el campo hay
+ *  que quitar), las que se bajaron en parte se cierran enteras, en el mismo orden. */
 export function ordenOptimo(pozos: Pozo[], aguaAQuitar: number, t: number) {
   const orden = [...pozos].sort((a, b) => crudo(a, t) / Math.max(1, agua(a, t)) - crudo(b, t) / Math.max(1, agua(b, t)))
-  let w = 0, c = 0
+  let w = 0
   const pasos: Array<{ pozo: Pozo; fraccion: number; crudo: number; agua: number }> = []
   for (const p of orden) {
     if (w >= aguaAQuitar - 1e-9) break
     const ag = agua(p, t), cr = crudo(p, t)
-    const frac = Math.min(1, (aguaAQuitar - w) / Math.max(1, ag))
-    w += ag * frac; c += cr * frac
+    let frac = Math.min(1, (aguaAQuitar - w) / Math.max(1, ag))
+    if (frac < 1 && p.levantamiento === 'electrosumergible') frac = Math.min(frac, BAJA_MAXIMA_ESP)
+    w += ag * frac
     pasos.push({ pozo: p, fraccion: frac, crudo: cr * frac, agua: ag * frac })
   }
-  return { crudo: c, agua: w, pasos }
+  for (const x of pasos) {
+    if (w >= aguaAQuitar - 1e-9) break
+    if (x.fraccion >= 1) continue
+    const ag = agua(x.pozo, t)
+    w += ag * (1 - x.fraccion)
+    Object.assign(x, { fraccion: 1, crudo: crudo(x.pozo, t), agua: ag })
+  }
+  return { crudo: pasos.reduce((a, x) => a + x.crudo, 0), agua: w, pasos }
 }
 
 function evitable(tramos: Tramo[]): number {

@@ -98,10 +98,15 @@ for (const ev of B.eventosBomba()) {
   desvio = Math.max(desvio, Math.abs(m.colchon.previsto.horas - m.colchon.observadoH))
 }
 comprobar(comparadas >= 8 && desvio < 0.1, `${comparadas} paradas con cierre de pozos: el colchón previsto y el observado difieren a lo más ${desvio.toFixed(3)} h`)
+const pc = D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0)
+// La Ceiba tiene P-201A y P-201C en paralelo: una parada total de P-201B deja sin salida
+// lo que el respaldo no absorbe, y los operarios cierran pozos hasta quitar ESA agua (su
+// prueba al cerrarlos), no todo el campo.
 const ceibaTotal = B.eventosBomba().filter(e => e.campoId === 'ceiba' && e.perdida === 1).map(e => D.paradaMedida(e, ctx0, V0))
   .filter(m => m.causa.equipo === 'P-201B' && m.bbl > 0)
-comprobar(ceibaTotal.every(m => m.pozos >= 17), `La Ceiba sin respaldo: cada parada total cierra todo el campo (${ceibaTotal.map(m => m.pozos).join(', ')} pozos)`)
-const pc = D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0)
+const aguaCerrada = m => [...new Map(m.tramos.map(t => [t.pozo.id, L.aguaDePrueba(t.pozo, Date.parse(t.evento.inicio))])).values()].reduce((a, w) => a + w, 0)
+comprobar(ceibaTotal.length >= 8 && ceibaTotal.every(m => m.pozos < P.pozosDe('ceiba').length && aguaCerrada(m) >= pc.aguaSinSalidaBpd - 1),
+  `La Ceiba con respaldo: cada parada total propia cierra pozos hasta quitar los ${f(pc.aguaSinSalidaBpd)} bbl/d sin salida, nunca todo el campo (${ceibaTotal.map(m => m.pozos).join(', ')} de ${P.pozosDe('ceiba').length} pozos)`)
 const rc = D.riesgoAhora(['ceiba'], ctx0).find(r => r.equipo === 'P-201B' && r.estado === 'perdiendo')
 comprobar(pc.perdiendo && rc && cerca(pc.perdiendo.bblDia, rc.bblDia), `P-201B de La Ceiba parada: la predicción y el riesgo dicen lo mismo (${f(pc.perdiendo?.bblDia ?? 0)} bbl/d)`)
 const pm = D.prediccion(B.perfilBomba('P-201B', 'morichal'), ctx0)
@@ -137,7 +142,7 @@ comprobar(cerca(o3.meta.produccion, o0.meta.produccion) && cerca(o3.meta.producc
   `una meta firmada desde el 15-oct suma ${f((12000 - 10900) * 17)} bbl al total de octubre y no toca lo que va a la fecha, ni septiembre, ni el diferido`)
 const cfg4 = structuredClone(ctx0.config); cfg4.respaldos.find(r => r.campoId === 'morichal' && r.equipo === 'P-201B').libreBpd = 10000
 const p4 = D.prediccion(B.perfilBomba('P-201B', 'morichal'), { config: cfg4, respuestas: {} })
-comprobar(p4.aguaSinSalidaBpd > pm.aguaSinSalidaBpd && p4.colchon.horas < pm.colchon.horas, `menos respaldo (15.100 → 10.000 bbl/d): más agua sin salida y menos colchón (${pm.colchon.horas.toFixed(1)} → ${p4.colchon.horas.toFixed(1)} h)`)
+comprobar(p4.aguaSinSalidaBpd > pm.aguaSinSalidaBpd && p4.colchon.horas < pm.colchon.horas, `menos respaldo (${f(pm.respaldoLibreBpd)} → 10.000 bbl/d): más agua sin salida y menos colchón (${pm.colchon.horas.toFixed(1)} → ${p4.colchon.horas.toFixed(1)} h)`)
 comprobar(C.diferencias(ctx0.config, cfg4).length === 1, 'la firma lista exactamente el cambio hecho')
 
 console.log('\n=== 6b. Metas en barriles: la global es la suma ===')
@@ -366,9 +371,11 @@ comprobar(msjs.every(m => { const u = U.USUARIOS_INICIALES.find(x => x.id === m.
 const pide = preguntas.find(p => p.pide && p.equipo === 'P-201B' && p.campoId === 'ceiba')
 const p201 = msjs.filter(m => m.evento === pide.id && (m.regla === 'parada' || m.regla === 'cierre')).sort((a, b) => a.hora.localeCompare(b.hora))
 const alParar = p201.find(m => m.regla === 'parada'), alCerrar = p201.find(m => m.regla === 'cierre')
-comprobar(!!alParar && !!alCerrar && new Date(alParar.hora).getTime() === pide.inicio.getTime() + 60_000 && !/\d+ pozos|bbl/.test(alParar.texto)
+// El respaldo firmado sí va (es configuración y se sabe al parar); los pozos y los barriles, no.
+const sinElRespaldo = (alParar?.texto ?? '').replace(C.respaldoDe(ctx0.config, 'ceiba', 'P-201B').detalle, '')
+comprobar(!!alParar && !!alCerrar && new Date(alParar.hora).getTime() === pide.inicio.getTime() + 60_000 && !/\d+ pozos|bbl/.test(sinElRespaldo)
   && new Date(alCerrar.hora) > new Date(alParar.hora) && /se empezaron a cerrar pozos/.test(alCerrar.texto),
-  'P-201B: al parar (03:53) avisa sin cifras que todavía no se sabían; el cierre de pozos va en su propio mensaje, a su hora')
+  'P-201B: al parar (03:53) avisa sin cifras que todavía no se sabían (solo el respaldo firmado); el cierre de pozos va en su propio mensaje, a su hora')
 comprobar(msjs.filter(m => m.insistencia === 'escalamiento').every(m => !/bbl/.test(m.texto)), 'el escalamiento no trae barriles: a las 2 h no se sabe cuánto va a costar')
 // Las sugerencias son las que se sabían al parar: no cambian si después alguien responde.
 const ctxResp = { config: ctx0.config, respuestas: { [pide.id]: { texto: 'Sello', por: 'x', parte: 'sello', hora: R.AHORA.toISOString(), canal: 'whatsapp' } } }
@@ -587,8 +594,9 @@ comprobar(citaFutura.length === 0 && !!lc06 && /no tiene prueba/.test(lc06.texto
 const conSupEnTodos = U.USUARIOS_INICIALES.map(u => (u.rolId === 'sup' ? { ...u, campos: 'todos' } : u))
 const deBombas = MSJ.mensajesDe({ campos: ['guacamayo', 'morichal', 'ceiba'], preguntas: [], predicciones: [], ordenes: [], usuarios: conSupEnTodos, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) })
 const consec = (c, eq) => deBombas.find(m => m.plantilla === 'parada' && m.campoId === c && m.equipo === eq)?.parametros.consecuencia ?? ''
-comprobar(/no hay que cerrar pozos/.test(consec('guacamayo', 'P-201B')) && /no para todo su caudal/.test(consec('morichal', 'P-201B')) && /hay que cerrar los pozos/.test(consec('ceiba', 'P-201B')),
-  'la parada de una bomba dice lo que su respaldo declarado permite: Guacamayo no cierra pozos, Morichal quizá, La Ceiba sí')
+comprobar(/no hay que cerrar pozos/.test(consec('guacamayo', 'P-201B')) && /no para todo su caudal/.test(consec('morichal', 'P-201B'))
+  && /no para todo su caudal/.test(consec('ceiba', 'P-201B')) && /hay que cerrar los pozos/.test(consec('morichal', 'MPP-301')),
+  'la parada de una bomba dice lo que su respaldo declarado permite: Guacamayo no cierra pozos (todo su caudal), Morichal y La Ceiba quizá (parte), la MPP-301 sí (sin respaldo)')
 const corta = { ...pide, fin: new Date(pide.inicio.getTime() + 20 * 60_000), causa: { ...pide.causa, declarado: undefined } }
 const recCorta = MSJ.mensajesDe({ campos: TODOS, preguntas: [corta], predicciones: [], ordenes: [], usuarios: U.USUARIOS_INICIALES, ctx: ctx0, versiones: V1, desde: new Date(L.calendario()[0].desde) }).find(m => m.insistencia === 'recordatorio')
 comprobar(!!recCorta && recCorta.plantilla === 'recordatorioArranco' && !/Antes de arrancar/.test(recCorta.texto) && /arrancó a las/.test(recCorta.texto),
@@ -668,11 +676,13 @@ comprobar(asigS('2026-09,La Ceiba,LC-11,29650,672').errores.length === 0 && asig
 }
 
 // R12 (#129, #123): el registro no se reescribe. Una versión firmada HOY (respaldo
-// total para P-201B de La Ceiba) no cambia ningún mensaje enviado antes; una
-// firmada a mitad de la historia cambia solo lo que salió después de ella.
+// total para P-201B de La Ceiba: una cuarta bomba que toma todo su caudal) no cambia
+// ningún mensaje enviado antes; una firmada a mitad de la historia cambia solo lo que
+// salió después de ella.
 {
   const conRespaldo = structuredClone(C.versionInicial().config)
-  conRespaldo.respaldos = conRespaldo.respaldos.map(r => (r.campoId === 'ceiba' && r.equipo === 'P-201B' ? { ...r, libreBpd: 30000, detalle: 'P-201C nueva en paralelo' } : r))
+  const todoSuCaudal = B.perfilBomba('P-201B', 'ceiba').capacidadBpd
+  conRespaldo.respaldos = conRespaldo.respaldos.map(r => (r.campoId === 'ceiba' && r.equipo === 'P-201B' ? { ...r, libreBpd: todoSuCaudal, detalle: 'P-201D nueva en paralelo' } : r))
   const base = { campos: ['ceiba'], preguntas: [], predicciones: [], ordenes: [], usuarios: U.USUARIOS_INICIALES, ctx: ctx0, desde: new Date(L.calendario()[0].desde) }
   const antes = MSJ.mensajesDe({ ...base, versiones: V1 })
   const hoy = MSJ.mensajesDe({ ...base, versiones: [...V1, { fecha: R.AHORA.toISOString(), config: conRespaldo }] })
@@ -681,8 +691,8 @@ comprobar(asigS('2026-09,La Ceiba,LC-11,29650,672').errores.length === 0 && asig
   const deBomba = ms => ms.filter(m => m.plantilla === 'parada' && m.equipo === 'P-201B')
   const viejos = deBomba(medio).filter(m => Date.parse(m.hora) < Date.parse(corte)), nuevos = deBomba(medio).filter(m => Date.parse(m.hora) >= Date.parse(corte) + 60_000)
   comprobar(JSON.stringify(hoy) === JSON.stringify(antes) && viejos.length > 0 && nuevos.length > 0
-    && viejos.every(m => /hay que cerrar los pozos/.test(m.texto)) && nuevos.every(m => /no hay que cerrar pozos/.test(m.texto) && /P-201C/.test(m.texto)),
-    `firmar un respaldo hoy no reescribe ningún mensaje viejo; firmado a mitad de la historia, ${viejos.length} paradas de antes siguen diciendo «cerrar pozos» y ${nuevos.length} de después citan el respaldo nuevo`)
+    && viejos.every(m => /puede haber que cerrar pozos/.test(m.texto) && /P-201A y P-201C/.test(m.texto)) && nuevos.every(m => /no hay que cerrar pozos/.test(m.texto) && /P-201D/.test(m.texto)),
+    `firmar un respaldo hoy no reescribe ningún mensaje viejo; firmado a mitad de la historia, ${viejos.length} paradas de antes siguen diciendo «puede haber que cerrar pozos» (P-201A y P-201C) y ${nuevos.length} de después citan el respaldo nuevo`)
 }
 
 // R13 (#93): un dato malo de SAP (una descripción vacía o de dos líneas) no tumba
@@ -710,14 +720,18 @@ const ISO = await v.ssrLoadModule('/src/entities/iso14224.ts')
 const ESP = await v.ssrLoadModule('/src/entities/esp.ts')
 const CA = await v.ssrLoadModule('/src/entities/campos.ts')
 const bombaId = id => B.eventosBomba().find(e => e.id === id)
-const pozoEv = id => P.eventosPozos().find(e => e.id === id)
 
 // Un servicio explica su cascada, no todo lo que pase mientras está caído; la
 // bomba que paró antes manda; la primera alarma propia y la firma mandan.
+// La Ceiba 25-mar: K-101 cae 49 min después de parar la P-201B. Su cascada (los pozos que
+// cerraron uno tras otro al caer el aire) es de K-101; los que la bomba cerró horas después,
+// con el aire todavía caído pero fuera de esa cascada, son de la bomba.
 const p0325 = D.paradaMedida(bombaId('EV-2011-260325'), ctx0, V0)
-comprobar(p0325.causa.parte === 'sello' && p0325.pozos === 18 && p0325.bbl > 0 && Math.abs(p0325.colchon.previsto.horas - p0325.colchon.observadoH) < 0.1
-  && !L.eventosCargadosA('ceiba', 'K-101', ctx0).some(e => e.id === 'SV-K-101-260325'),
-  `La Ceiba 25-mar: la P-201B paró 49 min antes que K-101; sus ${p0325.pozos} pozos (${f(p0325.bbl)} bbl) son de la bomba, cerrados a las ${p0325.colchon.observadoH.toFixed(2)} h del colchón previsto de ${p0325.colchon.previsto.horas.toFixed(2)} h`)
+const deK101 = new Set(L.tramosDeEvento('ceiba', 'SV-K-101-260325', ctx0).map(t => t.pozo.id))
+const deBomba0325 = new Set(p0325.tramos.map(t => t.pozo.id))
+comprobar(p0325.causa.parte === 'sello' && p0325.pozos > 0 && p0325.bbl > 0 && Math.abs(p0325.colchon.previsto.horas - p0325.colchon.observadoH) < 0.1
+  && deK101.size > 0 && [...deBomba0325].every(id => !deK101.has(id)) && deK101.size + deBomba0325.size <= P.pozosDe('ceiba').length,
+  `La Ceiba 25-mar: la P-201B paró 49 min antes que K-101; los ${deK101.size} pozos de la cascada del aire son de K-101 y los ${p0325.pozos} que cerró la bomba (${f(p0325.bbl)} bbl), de la bomba, a las ${p0325.colchon.observadoH.toFixed(2)} h del colchón previsto de ${p0325.colchon.previsto.horas.toFixed(2)} h`)
 comprobar(CS.causaDeParada(bombaId('EV-G2011-260309'), ctx0).parte === 'rodamientos',
   'Guacamayo 9-mar: la P-201B con TSH-2011, 22 h después de restringirse el oleoducto, es falla de rodamientos, no evacuación')
 const hMpp = L.historialDeEquipo('morichal', 'MPP-301', ctx0)
@@ -729,8 +743,13 @@ const cascada = P.eventosServicios().flatMap(sv => P.eventosPozos().filter(e => 
   .map(e => [sv, e]))
 comprobar(cascada.length > 100 && cascada.every(([sv, e]) => CS.causaDeEvento(e, ctx0).evento === sv.id),
   `los ${cascada.length} cierres en cascada de la primera media hora de cada servicio siguen cargados a su servicio`)
-comprobar(CS.causaDeEvento(pozoEv('EP-MN18-260503-60'), ctx0).equipo === 'MPP-301',
-  'MN-18 el 3-may, con la P-201B y la MPP-301 paradas: manda la multifásica que lo mueve')
+// Un pozo del clúster que se cierra mientras la P-201B y la MPP-301 están paradas: manda la
+// multifásica que lo mueve (sin ella no fluye, haya o no tanque).
+const parada = (eq, t) => B.eventosBomba().some(b => b.campoId === 'morichal' && b.equipo === eq && Date.parse(b.inicio) <= t && t <= (b.fin ? Date.parse(b.fin) : ahoraMs))
+const conLasDos = P.eventosPozos().filter(e => e.campoId === 'morichal' && B.perfilBomba('MPP-301', 'morichal').pozos.includes(e.pozo)
+  && parada('MPP-301', Date.parse(e.inicio)) && parada('P-201B', Date.parse(e.inicio)))
+comprobar(conLasDos.length > 0 && conLasDos.every(e => CS.causaDeEvento(e, ctx0).equipo === 'MPP-301'),
+  `${conLasDos.map(e => `${e.pozo} el ${e.inicio.slice(0, 10)} (${e.codigo})`).join(', ')}: con la P-201B y la MPP-301 paradas, manda la multifásica que lo mueve`)
 const disparoPropio = B.eventosBomba().filter(e => e.primeraAlarma && !['52-SE2', 'PAL-1011'].includes(e.primeraAlarma.tag))
 comprobar(disparoPropio.every(e => Object.hasOwn(B.maquina(e.equipo).primerasAlarmas, e.primeraAlarma.tag) && CS.causaDeParada(e, ctx0).como !== 'ninguno'),
   `las ${disparoPropio.length} primeras alarmas propias son disparos de SU máquina (la MPP-301 avisa el sello por LSL-3017, no por el LSH-2013 de la centrífuga)`)
@@ -741,14 +760,17 @@ comprobar(/identificarlo/.test(EVV.equipoVivo('LC-21', 'ceiba', ctx0).lectura) &
   'responder LC-21 cambia también el panel del pozo: deja de pedir que se identifique')
 
 // El respaldo sale de la configuración firmada, en la ficha igual que en la predicción.
-const cfgResp = structuredClone(ctx0.config); cfgResp.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B').libreBpd = 8000
-cfgResp.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B').detalle = 'P-201A nueva en paralelo, con 8.000 bbl/d libres'
-const ctxResp8 = { config: cfgResp, respuestas: {} }
-const fichaAntes = EVV.equipoVivo('P-201B', 'ceiba', ctx0), fichaDespues = EVV.equipoVivo('P-201B', 'ceiba', ctxResp8)
-comprobar(fichaAntes.redundancia === 'sin respaldo' && fichaAntes.aguasAbajo === 'todo el campo'
-  && fichaDespues.redundancia.startsWith('P-201A nueva') && fichaDespues.aguasAbajo === 'la parte del campo que el respaldo no cubre'
-  && D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctxResp8).respaldoLibreBpd === 8000 && B.perfilBomba('P-201B', 'ceiba').respaldo === undefined,
-  'firmar un respaldo para La Ceiba cambia la ficha y la predicción a la vez; el perfil de la bomba ya no trae respaldo propio')
+// Firmar otro respaldo (P-201C sale a mantenimiento: solo queda P-201A con 8.000 libres) o
+// quitarlo (0: «sin respaldo», todo el campo) cambia la ficha y la predicción a la vez.
+const conRespaldoDe = (libreBpd, detalle) => { const c = structuredClone(ctx0.config); Object.assign(c.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B'), { libreBpd, detalle }); return { config: c, respuestas: {} } }
+const ctxResp8 = conRespaldoDe(8000, 'Solo P-201A en paralelo, con 8.000 bbl/d libres (P-201C en mantenimiento)'), ctxResp0 = conRespaldoDe(0, 'Sin bomba en paralelo')
+const fichaAntes = EVV.equipoVivo('P-201B', 'ceiba', ctx0), fichaDespues = EVV.equipoVivo('P-201B', 'ceiba', ctxResp8), fichaSin = EVV.equipoVivo('P-201B', 'ceiba', ctxResp0)
+comprobar(fichaAntes.redundancia.startsWith('P-201A y P-201C en paralelo') && fichaAntes.aguasAbajo === 'la parte del campo que el respaldo no cubre'
+  && fichaDespues.redundancia.startsWith('Solo P-201A') && fichaDespues.aguasAbajo === 'la parte del campo que el respaldo no cubre'
+  && fichaSin.redundancia === 'sin respaldo' && fichaSin.aguasAbajo === 'todo el campo'
+  && D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctxResp8).respaldoLibreBpd === 8000 && D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctxResp0).respaldoLibreBpd === 0
+  && B.perfilBomba('P-201B', 'ceiba').respaldo === undefined,
+  'firmar otro respaldo para La Ceiba (o quitarlo) cambia la ficha y la predicción a la vez; el perfil de la bomba ya no trae respaldo propio')
 
 // Un id que llega de un enlace no puede devolver el prototipo.
 comprobar(['constructor', '__proto__', 'toString', 'hasOwnProperty'].every(id => ['ceiba', 'morichal'].every(c => EVV.equipoVivo(id, c, ctx0) === undefined && B.perfilBomba(id, c) === undefined) && !B.esBomba(id)),
@@ -757,8 +779,9 @@ comprobar(['constructor', '__proto__', 'toString', 'hasOwnProperty'].every(id =>
 // Electrosumergible parada: lo que no se lee es hueco (valor null, como manda el contrato), no cero «normal».
 const espParadas = P.todosLosPozos().filter(p => p.levantamiento === 'electrosumergible' && !P.estadoAhora(p).produce)
 const malEsp = espParadas.flatMap(p => ESP.senalesEsp(p)).filter(s => ['pip', 't_motor', 'desbalance'].includes(s.plantilla.id) ? s.valor !== null || s.estado !== 'sin señal' : s.valor !== 0)
-const gu07 = EVV.equipoVivo('GU-07', 'guacamayo', ctx0).dispositivos
-comprobar(espParadas.length > 10 && malEsp.length === 0 && gu07.find(d => d.tipo === 'Presión de entrada').valor === null && !gu07.some(d => d.valor === 0 && /psi|°C|%/.test(d.unidad)),
+// Con TRIM las electrosumergibles vuelven en días (taladro programado): hoy quedan pocas paradas.
+const unaParada = espParadas[0], gu07 = unaParada ? EVV.equipoVivo(unaParada.id, unaParada.campoId, ctx0).dispositivos : []
+comprobar(espParadas.length >= 3 && malEsp.length === 0 && gu07.find(d => d.tipo === 'Presión de entrada')?.valor === null && !gu07.some(d => d.valor === 0 && /psi|°C|%/.test(d.unidad)),
   `${espParadas.length} electrosumergibles paradas: presión de entrada, temperatura del motor y desbalance van como hueco; corriente y frecuencia, en cero medido`)
 
 // Fuera de banda y llega a su alarma en N h: se dice así, con la prioridad de la salud.
@@ -774,13 +797,14 @@ comprobar(P.todosLosPozos().flatMap(p => ESP.senalesEsp(p)).every(s => s.estado 
 const EPZ = await v.ssrLoadModule('/src/widgets/pozos/estado.ts')
 const espTodas = P.todosLosPozos().filter(p => p.levantamiento === 'electrosumergible')
 const vistasOp = espTodas.map(p => ({ p, produce: P.estadoAhora(p).produce, o: EPZ.senalesParaOperar(ESP.senalesEsp(p), P.estadoAhora(p).produce) }))
-const lc01op = vistasOp.find(x => x.p.campoId === 'ceiba' && x.p.id === 'LC-01')
+// Una de La Ceiba parada (la cerró P-201B o su propia falla).
+const lc01op = vistasOp.find(x => x.p.campoId === 'ceiba' && !x.produce)
 const gu04op = vistasOp.find(x => x.p.campoId === 'guacamayo' && x.p.id === 'GU-04')
 comprobar(!!lc01op && !lc01op.produce && lc01op.o.fuera.length === 0 && lc01op.o.sinSenal.length === 0
   && vistasOp.filter(x => !x.produce).every(x => x.o.sinSenal.length === 0 && x.o.fuera.every(s => s.estado !== 'sin señal'))
   && vistasOp.every(x => x.o.fuera.every(s => ['aviso', 'atencion', 'alarma'].includes(s.estado)))
   && !!gu04op?.produce && !!gu04op.o.fuera.some(s => s.plantilla.id === 'desbalance'),
-  `operación: las ${vistasOp.filter(x => !x.produce).length} electrosumergibles paradas no muestran «fuera de banda» por estar sin señal (LC-01 de La Ceiba, nada); el desbalance de GU-04, que produce fuera de banda, sí sale`)
+  `operación: las ${vistasOp.filter(x => !x.produce).length} electrosumergibles paradas no muestran «fuera de banda» por estar sin señal (${lc01op?.p.id} de La Ceiba, nada); el desbalance de GU-04, que produce fuera de banda, sí sale`)
 
 // Paretos: una fila por equipo y tipo; una por familia y parte; horas del equipo, no de cada pozo.
 const tri = D.rangoDePeriodo('trimestre')
@@ -790,27 +814,38 @@ const mppProg = lTri.porEquipo.find(x => x.equipo === 'MPP-301' && x.tipo === 'p
 comprobar(new Set(clavesEq).size === clavesEq.length && lTri.porEquipo.every(x => lTri.tramos.filter(t => t.bbl > 0 && t.pozo.campoId === x.campoId && t.causa.equipo === x.equipo).every(t => t.causa.tipo === x.tipo || clavesEq.includes(`${x.campoId}:${x.equipo}:${t.causa.tipo}`)))
   && !!mppProg && !!mppTr,
   `por equipo, una fila por tipo de causa: la MPP-301 en julio-septiembre son ${f(mppTr?.bbl ?? 0)} bbl de transporte y ${f(mppProg?.bbl ?? 0)} de programada, por separado`)
-const clavesPt = lSep.porParte.map(x => `${x.familia}|${x.parte}`)
-const selloIny = lSep.porParte.find(x => x.familia === 'inyeccion' && x.parte === 'sello'), selloMpp = lSep.porParte.find(x => x.familia === 'multifasica' && x.parte === 'sello')
+// En el trimestre (julio-septiembre), donde paró el sello de las dos familias.
+const clavesPt = lTri.porParte.map(x => `${x.familia}|${x.parte}`)
+const selloIny = lTri.porParte.find(x => x.familia === 'inyeccion' && x.parte === 'sello'), selloMpp = lTri.porParte.find(x => x.familia === 'multifasica' && x.parte === 'sello')
 // Cada fila cuadra con sus tramos: los barriles de la fila son los de los tramos de esa familia y parte.
 const famDe = { reinyeccion: 'inyeccion', transporte: 'multifasica', electrosumergible: 'electrosumergible' }
-comprobar(new Set(clavesPt).size === clavesPt.length && lSep.porParte.every(x => cerca(x.bbl, lSep.tramos.filter(t => t.causa.parte === x.parte && famDe[t.causa.tipo] === x.familia).reduce((a, t) => a + t.bbl, 0), 1e-9))
-  && selloIny && selloMpp && selloIny.horas < 40 && selloMpp.horas < 50,
-  `por parte, una fila por familia: en septiembre el sello de reinyección estuvo fuera ${selloIny?.horas.toFixed(1)} h y el de la multifásica ${selloMpp?.horas.toFixed(1)} h (no la suma de cada pozo)`)
+const horasDePozos = x => lTri.tramos.filter(t => t.causa.parte === x.parte && famDe[t.causa.tipo] === x.familia).reduce((a, t) => a + t.horas, 0)
+comprobar(new Set(clavesPt).size === clavesPt.length && lTri.porParte.every(x => cerca(x.bbl, lTri.tramos.filter(t => t.causa.parte === x.parte && famDe[t.causa.tipo] === x.familia).reduce((a, t) => a + t.bbl, 0), 1e-9))
+  && selloIny && selloMpp && selloIny.horas < horasDePozos(selloIny) && selloMpp.horas < horasDePozos(selloMpp),
+  `por parte, una fila por familia: en julio-septiembre el sello de reinyección estuvo fuera ${selloIny?.horas.toFixed(1)} h y el de la multifásica ${selloMpp?.horas.toFixed(1)} h (no la suma de cada pozo: ${selloIny ? horasDePozos(selloIny).toFixed(0) : '—'} y ${selloMpp ? horasDePozos(selloMpp).toFixed(0) : '—'} h)`)
 // Las horas y las fallas salen de los EVENTOS del equipo: una parada que el tanque absorbió
 // (0 bbl, ningún pozo cerrado) también es una falla con sus horas fuera. Antes la fila
 // solo veía tramos con barriles y en marzo quedaba en 2 fallas y 74,3 h. Cambio a propósito:
 // ahora una fila puede ir en 0 bbl (P-201B de Guacamayo, recobro, en marzo).
 const mar = { desde: new Date('2026-03-01T00:00:00-05:00'), hasta: new Date('2026-04-01T00:00:00-05:00') }
 const lMar = L.libro(TODOS, mar.desde, mar.hasta, ctx0)
-const selloMar = lMar.porParte.find(x => x.familia === 'inyeccion' && x.parte === 'sello')
-const absorbida = B.paradaPorId('EV-M2011-260326')
-const horasAbs = (Date.parse(absorbida.fin) - Date.parse(absorbida.inicio)) / 3_600_000
-const tramosAbs = L.tramosEntre(['morichal'], mar.desde, mar.hasta, ctx0).filter(t => t.causa.evento === absorbida.id)
+// La parada que el tanque absorbió (sin cerrar pozos) y su mes: su fila de parte la cuenta
+// como falla, con sus horas, junto a las demás fallas de esa parte en el mes.
+const absorbida = B.eventosBomba().map(e => D.paradaMedida(e, ctx0, V0)).find(m => m?.colchon && m.bbl === 0 && m.causa.equipo === m.evento.equipo && m.causa.parte)?.evento
+const parteAbs = absorbida && CS.causaDeParada(absorbida, ctx0).parte
+const mesAbs = absorbida && (() => { const d = new Date(Date.parse(absorbida.inicio) - 5 * 3_600_000); return { desde: Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 5), hasta: Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1, 5) } })()
+const lAbs = absorbida && L.libro(TODOS, new Date(mesAbs.desde), new Date(mesAbs.hasta), ctx0)
+const filaAbs = lAbs?.porParte.find(x => x.familia === 'inyeccion' && x.parte === parteAbs)
+const mismaParte = absorbida ? B.eventosBomba().filter(e => Date.parse(e.inicio) < mesAbs.hasta && (e.fin ? Date.parse(e.fin) : ahoraMs) > mesAbs.desde && B.perfilBomba(e.equipo, e.campoId)
+  && famDe[CS.causaDeParada(e, ctx0).tipo] === 'inyeccion' && CS.causaDeParada(e, ctx0).parte === parteAbs) : []
+const horasMismaParte = mismaParte.reduce((a, e) => a + (Math.min(e.fin ? Date.parse(e.fin) : ahoraMs, mesAbs.hasta) - Math.max(Date.parse(e.inicio), mesAbs.desde)) / 3_600_000, 0)
+const horasAbs = absorbida ? (Date.parse(absorbida.fin) - Date.parse(absorbida.inicio)) / 3_600_000 : 0
+const tramosAbs = absorbida ? L.tramosEntre([absorbida.campoId], new Date(mesAbs.desde), new Date(mesAbs.hasta), ctx0).filter(t => t.causa.evento === absorbida.id) : []
 const recobroMar = lMar.porParte.find(x => x.equipos.some(e => e.campoId === 'guacamayo' && e.equipo === 'P-201B'))
-comprobar(tramosAbs.every(t => t.bbl === 0) && selloMar?.fallas === 3 && cerca(selloMar.horas, 74.3 + horasAbs, 0.002) && selloMar.equipos.some(e => e.campoId === 'morichal' && e.equipo === 'P-201B')
+comprobar(!!absorbida && tramosAbs.every(t => t.bbl === 0) && mismaParte.some(e => e.id === absorbida.id) && filaAbs?.fallas === mismaParte.length
+  && cerca(filaAbs.horas, horasMismaParte, 1e-6) && filaAbs.equipos.some(e => e.campoId === absorbida.campoId && e.equipo === absorbida.equipo)
   && !!recobroMar && recobroMar.bbl === 0 && recobroMar.fallas >= 1 && recobroMar.horas > 0,
-  `por parte, de los eventos del equipo: EV-M2011-260326 (P-201B de Morichal, sello, ${horasAbs.toFixed(1)} h, 0 bbl) entra a «sello» de marzo: ${selloMar?.fallas} fallas y ${selloMar?.horas.toFixed(1)} h; la parada de recobro de Guacamayo va con 0 bbl y ${recobroMar?.horas.toFixed(1)} h`)
+  `por parte, de los eventos del equipo: ${absorbida?.id} (${absorbida?.equipo} de ${absorbida?.campoId}, ${parteAbs}, ${horasAbs.toFixed(1)} h, 0 bbl: el tanque la absorbió) entra a «${parteAbs}» de su mes: ${filaAbs?.fallas} fallas y ${filaAbs?.horas.toFixed(1)} h; la parada de recobro de Guacamayo va con 0 bbl y ${recobroMar?.horas.toFixed(1)} h en marzo`)
 
 // Una sola regla de proyección: lo súbito no da fecha.
 const plantillas = [...B.PLANTILLA_INYECCION, ...B.PLANTILLA_MULTIFASICA, ...ESP.PLANTILLA_ESP].filter(x => x.anuncia)
@@ -957,8 +992,8 @@ comprobar(cF0.como === 'firma' && cF0.parte === 'succion' && cF1.como === 'firma
 const prMpp = WDf.prediccion(WBo.perfilBomba('MPP-301', 'morichal'), wctx)
 comprobar(prMpp.perdiendo && prMpp.perdiendo.pozos.some(p => p.id === 'MN-07') && prMpp.perdiendo.bblDia > 0,
   `MPP-301 parada: la predicción trae lo que está perdiendo (${prMpp.perdiendo?.pozos.map(p => p.id).join(', ')}, ${f(prMpp.perdiendo?.bblDia ?? 0)} bbl/d)`)
-comprobar(WCS.causaDeEvento(WP.eventosPozos().find(e => e.id === 'EP-MN18-260503-60'), wctx).equipo === 'MPP-301',
-  'con las paradas de bomba en otro orden, MN-18 el 3-may sigue siendo de la multifásica')
+comprobar(conLasDos.length > 0 && conLasDos.every(e0 => WCS.causaDeEvento(WP.eventosPozos().find(e => e.id === e0.id), wctx).equipo === 'MPP-301'),
+  `con las paradas de bomba en otro orden, ${conLasDos.map(e => `${e.pozo} el ${e.inicio.slice(0, 10)}`).join(', ')} sigue siendo de la multifásica`)
 const lc01 = WEV.equipoVivo('LACT-01', 'guacamayo', wctx)
 const ult5 = WL.fiscalUltimosDias('guacamayo', 5)
 comprobar(ult5.slice(1, 4).every(x => x === null) && ult5[0] !== null && ult5[4] !== null && WL.fiscalUltimosDias('ceiba', 5).every(x => typeof x === 'number')
@@ -1795,9 +1830,10 @@ console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salu
   // 1. Costo por falla = lo que cuesta si el equipo falla HOY (decisión del dueño, 8-oct).
   //    Disposición con tanque: Q × promedio(max(0, d − colchón de hoy)) / 24.
   const rMo = fila('morichal', 'P-201B'), prMo = D.prediccion(B.perfilBomba('P-201B', 'morichal'), ctx0), dMo = cerradasDe('morichal', 'P-201B')
-  comprobar(!!rMo && Math.abs(rMo.costoFalla - 2086) < 1 && cerca(rMo.costoFalla, prMo.crudoBpd * media(dMo.map(d => Math.max(0, d - prMo.colchon.horas))) / 24, 1e-12)
-    && rMo.colchonH === prMo.colchon.horas && rMo.costoDe === 'propio' && /^el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque$/.test(rMo.mdtFuente),
-    `P-201B de Morichal: si falla hoy cuesta ≈ ${f(rMo?.costoFalla ?? 0)} bbl = ${f(prMo.crudoBpd)} bbl/d × promedio(max(0, d − ${prMo.colchon.horas.toFixed(2)} h)) / 24 de sus ${dMo.length} fallas cerradas (antes 3.365, lo histórico); colchonH ${rMo?.colchonH?.toFixed(2)} h`)
+  const historicoMo = L.historialDeEquipo('morichal', 'P-201B', ctx0).bblPorFalla
+  comprobar(!!rMo && Math.abs(rMo.costoFalla - 1235) < 1 && cerca(rMo.costoFalla, prMo.crudoBpd * media(dMo.map(d => Math.max(0, d - prMo.colchon.horas))) / 24, 1e-12)
+    && rMo.colchonH === prMo.colchon.horas && rMo.costoDe === 'propio' && /^el promedio de sus 8 fallas cerradas, sin las 10 h que aguanta hoy el tanque$/.test(rMo.mdtFuente),
+    `P-201B de Morichal: si falla hoy cuesta ≈ ${f(rMo?.costoFalla ?? 0)} bbl = ${f(prMo.crudoBpd)} bbl/d × promedio(max(0, d − ${prMo.colchon.horas.toFixed(2)} h)) / 24 de sus ${dMo.length} fallas cerradas (lo histórico es otra cifra: ${f(historicoMo)}); colchonH ${rMo?.colchonH?.toFixed(2)} h`)
   //    Multifásica: Q × d̄ / 24, sin tanque.
   const rMpp = fila('morichal', 'MPP-301'), prMpp = D.prediccion(B.perfilBomba('MPP-301', 'morichal'), ctx0)
   comprobar(!!rMpp && Math.abs(rMpp.costoFalla - 3244.5) < 0.5 && cerca(rMpp.costoFalla, prMpp.crudoBpd * media(cerradasDe('morichal', 'MPP-301')) / 24, 1e-12)
@@ -1831,8 +1867,8 @@ console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salu
   comprobar(pGu.papel === 'recobro' && cerradasDe('guacamayo', 'P-201B').length > 0 && cRec.costoFalla === 0 && cRec.costoDe === undefined && cRec.colchonH === undefined && /recobro/.test(cRec.mdtFuente),
     `la bomba de recobro de Guacamayo, con ${cerradasDe('guacamayo', 'P-201B').length} fallas cerradas, costaría 0 bbl si falla hoy («${cRec.mdtFuente}»)`)
   //    Lo que ya costó por falla sigue siendo otra cifra (la ficha y Confiabilidad: «le ha costado por falla»).
-  comprobar(cerca(D.veredicto(B.perfilBomba('P-201B', 'morichal'), ctx0).porFalla, L.historialDeEquipo('morichal', 'P-201B', ctx0).bblPorFalla) && Math.abs(L.historialDeEquipo('morichal', 'P-201B', ctx0).bblPorFalla - 3364.6) < 1,
-    'lo que P-201B de Morichal le ha costado por falla (histórico, 3.365 bbl) no cambia: es otra cifra que el costo si falla hoy')
+  comprobar(cerca(D.veredicto(B.perfilBomba('P-201B', 'morichal'), ctx0).porFalla, historicoMo) && Math.abs(historicoMo - 2765) < 1 && Math.abs(historicoMo - rMo.costoFalla) > 1,
+    `lo que P-201B de Morichal le ha costado por falla (histórico, ${f(historicoMo)} bbl) no cambia: es otra cifra que el costo si falla hoy`)
 
   // 2. Una electrosumergible parada por sí misma sale «falló» en la parte de su causa (MN-41: aislamiento).
   const flotaEsp = API.pedirFlotaEsp(TODOS, sep.desde, sep.hasta, ctx0)
@@ -1843,9 +1879,9 @@ console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salu
   const filaMn41 = API.pedirPozos('morichal', sep.desde, sep.hasta, ctx0).find(x => x.pozo.id === 'MN-41')
   const ajenas = flotaEsp.filter(x => !x.fila.produce && !propia(x))
   comprobar(fallo(mn41) === 'aislamiento' && detMn41.partes[0].estado === 'fallo' && detMn41.partes[0].parte.id === 'aislamiento' && filaMn41.salud?.estado === 'fallo' && filaMn41.salud.prioridad === 1
-    && flotaEsp.filter(propia).length >= 3 && flotaEsp.filter(propia).every(x => fallo(x) === x.fila.causa.parte)
+    && flotaEsp.filter(propia).length >= 1 && flotaEsp.filter(propia).every(x => fallo(x) === x.fila.causa.parte)
     && ajenas.length > 0 && ajenas.every(x => fallo(x) === '') && flotaEsp.filter(x => x.fila.produce).every(x => fallo(x) === ''),
-    `MN-41 (parada por falla a tierra desde el 3-sep) sale con su aislamiento «falló»; las ${flotaEsp.filter(propia).length} electrosumergibles paradas por sí mismas, con la parte de su causa; las ${ajenas.length} cerradas por otro equipo, ninguna`)
+    `MN-41 (parada por falla a tierra desde el 25-sep) sale con su aislamiento «falló»; las ${flotaEsp.filter(propia).length} electrosumergibles paradas por sí mismas, con la parte de su causa; las ${ajenas.length} cerradas por otro equipo, ninguna`)
 
   // 4. El motivo dice las horas como la pantalla (fmtHoras): «10,9 d», no «262 h».
   const horasPrueba = [0.4, 3, 23.5, 47.4, 47.6, 48, 61, 124, 262, 2159, 2160, 2161, 5000]
@@ -1874,11 +1910,13 @@ console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salu
   const repetidas = [...causasPozo, ...causasBomba].filter(c => new Set(c.evidencia).size !== c.evidencia.length)
   const sinPorQue = [...causasPozo, ...causasBomba].filter(c => c.como === 'ninguno' && (!c.porQueNo || c.evidencia.at(-1) !== c.porQueNo))
   const filasCe = API.pedirPozos('ceiba', sep.desde, sep.hasta, ctx0)
-  const lc16 = filasCe.find(x => x.pozo.id === 'LC-16').causa, lc04 = filasCe.find(x => x.pozo.id === 'LC-04').causa
+  // Los pozos que cerró la parada abierta de La Ceiba.
+  const cerradosCe = D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0).perdiendo.pozos.map(p => p.id)
+  const causasCe = cerradosCe.map(id => filasCe.find(x => x.pozo.id === id)?.causa)
   const paroCe = 'ZS-2011 · marcha → paro · 2 de oct, 03:52', cbCe = CS.causaDeParada(bombaId('EV-2011-1002'), ctx0)
-  comprobar(!repetidas.length && !sinPorQue.length && [lc16, lc04].every(c => c.evidencia.filter(x => x === paroCe).length === 1 && c.como === 'ninguno' && c.porQueNo === cbCe.porQueNo && c.evidencia.at(-1) === cbCe.porQueNo)
+  comprobar(!repetidas.length && !sinPorQue.length && causasCe.length >= 2 && causasCe.every(c => c && c.evidencia.filter(x => x === paroCe).length === 1 && c.como === 'ninguno' && c.porQueNo === cbCe.porQueNo && c.evidencia.at(-1) === cbCe.porQueNo)
     && causasPozo.filter(c => c.como === 'ninguno' && c.evento?.startsWith('EV-')).length > 0,
-    `ninguna de las ${causasPozo.length + causasBomba.length} causas repite un renglón; LC-16 y LC-04 nombran una vez «${paroCe}» y heredan el porqué de la P-201B («${cbCe.porQueNo}»)${repetidas.length ? `; repetidas: ${repetidas.slice(0, 3).map(c => c.evento).join(', ')}` : ''}`)
+    `ninguna de las ${causasPozo.length + causasBomba.length} causas repite un renglón; ${cerradosCe.join(', ')} nombran una vez «${paroCe}» y heredan el porqué de la P-201B («${cbCe.porQueNo}»)${repetidas.length ? `; repetidas: ${repetidas.slice(0, 3).map(c => c.evento).join(', ')}` : ''}`)
 
   // 9. «Por identificar» con una sola cuenta: las que piden respuesta, y de esas las que ya arrancaron.
   const pregTodas = API.pedirPreguntas(TODOS, ctx0), cuenta = API.contarPorIdentificar(pregTodas)
@@ -1905,7 +1943,7 @@ console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salu
     if (!ok) malasF.push(`${r.nombre} ${x.campoId}/${x.equipo}/${x.tipo}: ${x.fallas}+${x.disparos} contra ${en.length} (${x.eventos} con barriles)`)
   }
   const moDoce = L.libro(TODOS, D.rangoDePeriodo('doce').desde, D.rangoDePeriodo('doce').hasta, ctx0).porEquipo.find(x => x.campoId === 'morichal' && x.equipo === 'P-201B' && x.tipo === 'reinyeccion')
-  comprobar(!malasF.length && conFallas > 30 && moDoce?.fallas === 8 && moDoce.eventos === 5,
+  comprobar(!malasF.length && conFallas > 30 && moDoce?.fallas === 8 && moDoce.eventos === 7,
     `«Por equipo» del libro trae fallas y disparos del período en las ${conFallas} filas de bombas y electrosumergibles de 6 períodos (de ${filasF} filas; las demás no los traen), iguales a la historia de fallas del equipo; P-201B de Morichal en 12 meses: ${moDoce?.fallas} fallas, ${moDoce?.eventos} con barriles${malasF.length ? `; distintas: ${malasF.slice(0, 4).join(' · ')}` : ''}`)
 
   // Mundos de prueba: lo que el demo no trae.
@@ -2000,27 +2038,37 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
   const K = await v.ssrLoadModule('/src/shared/api/cable.ts')
   const CT = await v.ssrLoadModule('/src/shared/api/contrato.ts')
 
-  // 1. El tanque con la bomba de disposición YA parada sube con el agua que ENTRA, no con
-  //    el colchón de «si parara ahora con todo produciendo». La Ceiba hoy: P-201B parada,
-  //    0 de 18 pozos produciendo, tanque en 89,6 % (alto-alto 90 %).
+  // 1. El tanque con la bomba de disposición YA parada sube con lo que la parada dejó sin
+  //    salida y no se ha quitado cerrando pozos, no con el colchón de «si parara ahora con
+  //    todo produciendo». La Ceiba hoy: P-201B parada, los pozos que hacía falta cerrar ya
+  //    cerrados, tanque en 89,6 % (alto-alto 90 %). Y cuadra con Planta: lo que entra no pasa
+  //    de lo que P-201A y P-201C sacan (su capacidad en el campo, la que limita el cabezal), y
+  //    la holgura es la misma que dice el llenado (lo cerrado de más), a menos de 1 %.
   const pCe = B.perfilBomba('P-201B', 'ceiba'), prCe = D.prediccion(pCe, ctx0)
   const produciendoCe = P.pozosDe('ceiba').filter(w => P.estadoAhora(w).produce).length
-  comprobar(!!prCe.parada && produciendoCe === 0 && prCe.colchon.horas < 1 && !!prCe.llenado && prCe.llenado.aguaEntraBpd === 0
-    && prCe.llenado.aguaEntraBpd === D.caudalesAhora('ceiba').agua && prCe.llenado.colchon.horas === Infinity && prCe.llenado.prioridad === 0,
-    `La Ceiba (P-201B parada, ${produciendoCe} de ${P.pozosDe('ceiba').length} pozos produciendo): no entra agua, el tanque no sube (llenado ${prCe.llenado?.colchon.horas} h, prioridad ${prCe.llenado?.prioridad}); el colchón de «si parara con todo produciendo» (${prCe.colchon.horas.toFixed(2)} h) no es cuándo se llena`)
+  const cerradoCe = prCe.perdiendo.pozos.reduce((a, w) => a + L.aguaDePrueba(w), 0)
+  const sacanAyC = 2 * pCe.capacidadBpd
+  const entraCe = prCe.llenado?.aguaEntraBpd ?? NaN
+  comprobar(!!prCe.parada && produciendoCe > 0 && produciendoCe < P.pozosDe('ceiba').length && prCe.colchon.horas < 1 && !!prCe.llenado
+    && entraCe === D.caudalesAhora('ceiba').agua && cerradoCe >= prCe.aguaSinSalidaBpd && entraCe <= sacanAyC && (sacanAyC - entraCe) / entraCe < 0.05
+    && Math.abs((sacanAyC - entraCe) - (cerradoCe - prCe.aguaSinSalidaBpd)) / entraCe < 0.01
+    && prCe.llenado.colchon.aguaSinSalidaBpd === 0 && prCe.llenado.colchon.horas === Infinity && prCe.llenado.prioridad === 0,
+    `La Ceiba (P-201B parada, ${produciendoCe} de ${P.pozosDe('ceiba').length} pozos produciendo): se cerraron ${f(cerradoCe)} bbl/d de agua para ${f(prCe.aguaSinSalidaBpd)} sin salida; entran ${f(entraCe)} y P-201A y P-201C sacan hasta ${f(sacanAyC)}: el tanque no sube (llenado ${prCe.llenado?.colchon.horas} h, prioridad ${prCe.llenado?.prioridad}); el colchón de «si parara con todo produciendo» (${prCe.colchon.horas.toFixed(2)} h) no es cuándo se llena`)
   const enMarcha = [['morichal', 'P-201B'], ['morichal', 'MPP-301'], ['guacamayo', 'P-201B']].map(([c, e]) => D.prediccion(B.perfilBomba(e, c), ctx0))
   comprobar(enMarcha.every(pr => !pr.parada && pr.llenado === undefined), 'una bomba en marcha, una multifásica o una de recobro no traen llenado')
   //    En el cable: sin subir, las horas viajan como null (horasSinFin) y vuelven como Infinity.
   const jCe = JSON.parse(JSON.stringify(K.aRespuesta(CT.PREDICCION.codec, prCe)))
   comprobar(jCe.datos.llenado.colchon.horas === null && jCe.datos.llenado.prioridad === 0 && K.deRespuesta(CT.PREDICCION.codec, jCe).llenado.colchon.horas === Infinity,
     '/vistas/bombas/prediccion de la P-201B de La Ceiba: llenado.colchon.horas viaja como null (no sube) y vuelve como Infinity')
-  //    Mundo de prueba: LC-04 y LC-16 vuelven a producir con la bomba parada: entra su agua y
-  //    el tanque llega al alto-alto en lo que dice la fórmula, con la prioridad de su tiempo.
+  //    Mundo de prueba: los pozos que cerró la P-201B vuelven a producir con la bomba parada:
+  //    entra su agua, lo que P-201A y P-201C no alcanzan a sacar llena el tanque y llega al
+  //    alto-alto en lo que dice la fórmula, con la prioridad de su tiempo.
+  const reabiertos = prCe.perdiendo.pozos.map(w => w.id)
   const m = await createServer({ root: RAIZ, configFile: false, resolve: { alias: { '@': `${RAIZ}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
   const ev = await m.ssrLoadModule('/src/entities/datos/eventos-pozos.ts')
   for (let i = ev.EVENTOS_POZOS.length - 1; i >= 0; i--) {
     const x = ev.EVENTOS_POZOS[i]
-    if (x.campoId === 'ceiba' && x.fin === null && ['LC-04', 'LC-16'].includes(x.pozo)) ev.EVENTOS_POZOS.splice(i, 1)
+    if (x.campoId === 'ceiba' && x.fin === null && reabiertos.includes(x.pozo)) ev.EVENTOS_POZOS.splice(i, 1)
   }
   ;(await m.ssrLoadModule('/src/entities/insumos.ts')).instalarInsumos((await m.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
   const L2 = await m.ssrLoadModule('/src/entities/libro.ts'), D2 = await m.ssrLoadModule('/src/entities/diferido.ts')
@@ -2028,13 +2076,14 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
   const ctx2 = L2.contextoInicial(), p2 = B2.perfilBomba('P-201B', 'ceiba'), pr2 = D2.prediccion(p2, ctx2)
   const tk = C2.tanqueDe(ctx2.config, 'ceiba', 'P-201B'), nv = P2.NIVEL_AHORA[tk.id]
   const entra = D2.caudalesAhora('ceiba').agua
-  const sinSalida = Math.max(0, entra - pr2.respaldoLibreBpd - (1 - pr2.parada.perdida) * pr2.mueve.bpd) * p2.sinBomba.fraccion
+  // Sin pozos cerrados por la parada no se ha quitado nada: queda toda el agua sin salida de la parada.
+  const sinSalida = Math.max(0, (pr2.parada.perdida * pr2.mueve.bpd - pr2.respaldoLibreBpd) * p2.sinBomba.fraccion)
   const horas = (tk.altoAlto - nv.pct / 100) * tk.capacidadBbl / (sinSalida / 24)
   const prio = h => (h > SA.HORIZONTE_H ? 0 : h < 24 ? 2 : 3)
-  comprobar(P2.pozosDe('ceiba').filter(w => P2.estadoAhora(w).produce).length === 2 && entra > 0 && cerca(pr2.llenado.aguaEntraBpd, entra)
+  comprobar(P2.pozosDe('ceiba').filter(w => P2.estadoAhora(w).produce).length === produciendoCe + reabiertos.length && pr2.perdiendo.pozos.length === 0 && sinSalida > 0 && cerca(pr2.llenado.aguaEntraBpd, entra)
     && cerca(pr2.llenado.colchon.aguaSinSalidaBpd, sinSalida) && cerca(pr2.llenado.colchon.horas, horas) && pr2.llenado.prioridad === prio(horas)
     && pr2.llenado.colchon.componentes.some(x => x.nombre === 'Agua de los pozos'),
-    `con LC-04 y LC-16 produciendo y la P-201B parada entran ${f(entra)} bbl/d al tanque: llega al alto-alto en ${pr2.llenado?.colchon.horas.toFixed(2)} h = libre / (agua sin salida / 24), prioridad ${pr2.llenado?.prioridad}`)
+    `con ${reabiertos.join(', ')} produciendo otra vez y la P-201B parada entran ${f(entra)} bbl/d al tanque y vuelven a sobrar ${f(sinSalida)}: llega al alto-alto en ${pr2.llenado?.colchon.horas.toFixed(2)} h = libre / (agua sin salida / 24), prioridad ${pr2.llenado?.prioridad}`)
   const cfgResp = structuredClone(ctx2.config)
   cfgResp.respaldos.find(r => r.campoId === 'ceiba' && r.equipo === 'P-201B').libreBpd = 1e6
   const prResp = D2.prediccion(p2, { config: cfgResp, respuestas: {} })
@@ -2056,9 +2105,9 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
   const rTodos = D.riesgoAhora(TODOS, ctx0)
   const rMo = rTodos.find(r => r.campoId === 'morichal' && r.equipo === 'P-201B' && r.estado === 'en-riesgo')
   const sinDuros = t => t?.replace(/\u00a0/g, ' ')
-  comprobar(sinDuros(CH.colchonCorto(rMo)) === '0 si vuelve antes de 19 h' && /sin las 19 h que aguanta hoy el tanque$/.test(rMo.mdtFuente)
+  comprobar(sinDuros(CH.colchonCorto(rMo)) === '0 si vuelve antes de 10 h' && /sin las 10 h que aguanta hoy el tanque$/.test(rMo.mdtFuente)
     && sinDuros(CH.colchonCorto({ costoFalla: 1, colchonH: 18.6 })) === '0 si vuelve antes de 18 h'
-    && CH.detalleCostoHoy(rMo) === 'El promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.',
+    && CH.detalleCostoHoy(rMo) === 'El promedio de sus 8 fallas cerradas, sin las 10 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.',
     `P-201B de Morichal (colchón ${rMo.colchonH.toFixed(2)} h): la fila dice «${sinDuros(CH.colchonCorto(rMo))}» y su ⓘ «${CH.detalleCostoHoy(rMo)}»: la misma hora, sin redondear hacia arriba; con 18,6 h, «18 h»`)
   const espR = rTodos.filter(r => r.tipo === 'electrosumergible' && r.estado === 'en-riesgo' && r.mdtFuente)
   const mdtDe = r => { const h = L.historialDeEquipo(r.campoId, r.equipo, ctx0); return h.mdtH ?? null }
@@ -2126,6 +2175,90 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
   const css = fuente('src/index.css'), porCampo = fuente('src/widgets/resumen/PorCampo.tsx')
   comprobar(/section \.border-b\[data-partible\] \{ break-inside: auto; \}/.test(css) && /<div data-partible className="border-b/.test(porCampo),
     'en el papel, un campo desplegado de «POR CAMPO» se parte entre sus filas (no salta de hoja entero)')
+}
+
+console.log('\n=== 20. Revisión de realismo (9-oct-2026): trenes en equilibrio, orden del operador, tope de frecuencia, antes y con TRIM ===')
+{
+  // 1. Cada bomba de un tren en paralelo mueve su parte del agua que entra. Morichal (en marcha):
+  //    7 × la mediana de FI-2011 = lo que entra hoy. La Ceiba (parada): 3 × la mediana = lo que
+  //    entraba al parar = lo que entra hoy + lo que se cerró por la parada. A menos de 0,5 %.
+  const pMo = B.perfilBomba('P-201B', 'morichal'), prMo2 = D.prediccion(pMo, ctx0)
+  const pCe2 = B.perfilBomba('P-201B', 'ceiba'), prCe2 = D.prediccion(pCe2, ctx0)
+  const entraMo = D.caudalesAhora('morichal').agua
+  const entrabaCe = D.caudalesAhora('ceiba').agua + prCe2.perdiendo.pozos.reduce((a, w) => a + L.aguaDePrueba(w), 0)
+  comprobar(Math.abs(7 * prMo2.mueve.bpd - entraMo) / entraMo < 0.005 && Math.abs(3 * prCe2.mueve.bpd - entrabaCe) / entrabaCe < 0.005
+    && prMo2.aguaSinSalidaBpd === 40400 && prCe2.aguaSinSalidaBpd === 44100
+    && Math.abs(6 * (pMo.capacidadBpd - prMo2.mueve.bpd) - prMo2.respaldoLibreBpd) / prMo2.respaldoLibreBpd < 0.01
+    && Math.abs(2 * (pCe2.capacidadBpd - prCe2.mueve.bpd) - prCe2.respaldoLibreBpd) / prCe2.respaldoLibreBpd < 0.01
+    && PT.CAMPO_PLANTA.ceiba.caudales.aguaCap === 3 * pCe2.capacidadBpd && PT.CAMPO_PLANTA.morichal.caudales.aguaCap === 7 * pMo.capacidadBpd,
+    `trenes en equilibrio: Morichal 7 × ${f(prMo2.mueve.bpd)} ≈ ${f(entraMo)} que entran; La Ceiba 3 × ${f(prCe2.mueve.bpd)} ≈ ${f(entrabaCe)} que entraban al parar; el respaldo es lo que les falta a las otras para su límite (${f(pCe2.capacidadBpd)} y ${f(pMo.capacidadBpd)}), y la capacidad del tren en Planta es la suma de esos límites`)
+
+  // 2. El orden de TRIM no baja una electrosumergible más de 25 % (≈ 45 Hz): entera o a lo más
+  //    un 25 %, y lo que falta lo da el siguiente pozo del orden.
+  const pasosEsp = [prMo2, prCe2].flatMap(pr => pr.orden.pasos).filter(x => x.pozo.levantamiento === 'electrosumergible')
+  const aguaOrden = prMo2.orden.pasos.reduce((a, x) => a + x.aguaBpd, 0)
+  comprobar(pasosEsp.length > 0 && pasosEsp.every(x => x.fraccion >= 0.999 || x.fraccion <= L.BAJA_MAXIMA_ESP + 1e-9) && cerca(aguaOrden, prMo2.aguaSinSalidaBpd, 1e-9)
+    && prMo2.orden.pasos.filter(x => x.fraccion < 0.999).length >= 2,
+    `orden de TRIM con tope de 25 % por electrosumergible: Morichal ${prMo2.orden.pasos.map(x => `${x.pozo.id} ${x.fraccion >= 0.999 ? 'entero' : `${Math.round(x.fraccion * 100)} %`}`).join(', ')} = ${f(prMo2.crudoBpd)} bbl/d`)
+  //    Si casi toda el agua hay que quitarla, lo que se bajó en parte se cierra entero: el orden
+  //    siempre llega al agua pedida.
+  const conPruebaMo = P.pozosDe('morichal').filter(w => w.pruebas.length)
+  const casiTodo = conPruebaMo.reduce((a, w) => a + L.aguaDePrueba(w), 0) * 0.98
+  const oTodo = L.ordenOptimo(conPruebaMo, casiTodo, ahoraMs)
+  comprobar(cerca(oTodo.agua, casiTodo, 1e-6) || oTodo.agua > casiTodo, `con el 98 % del agua de Morichal por quitar, el orden con tope llega al agua pedida (${f(oTodo.agua)} de ${f(casiTodo)})`)
+
+  // 3. Los operarios cierran como un operador: el alto-alto dispara el pozo que más agua da y se
+  //    sigue con el que más agua da, enteros. En cada parada de disposición, los pozos que cerró
+  //    van de más agua a menos.
+  const malOrden = B.eventosBomba().filter(e => e.equipo === 'P-201B' && e.perdida === 1).map(e => D.paradaMedida(e, ctx0, V0))
+    .filter(m => m?.colchon && m.causa.equipo === 'P-201B' && m.tramos.length).filter(m => {
+      const primeros = [...new Map([...m.tramos].sort((a, c) => a.evento.inicio.localeCompare(c.evento.inicio)).map(t => [t.pozo.id, L.aguaDePrueba(t.pozo, Date.parse(t.evento.inicio))])).values()]
+      return primeros.some((w, i) => i > 0 && w > primeros[i - 1] + 1)
+    })
+  comprobar(malOrden.length === 0, `los operarios cierran primero los pozos que más agua dan, en todas las paradas de disposición${malOrden.length ? `; no: ${malOrden.map(m => m.evento.id).join(', ')}` : ''}`)
+
+  // 4. Antes y con TRIM (desde la puesta en marcha): las electrosumergibles que fallan vuelven en
+  //    2 a 5 días (taladro y bomba programados), salvo MN-41 (falla a tierra del 25-sep, súbita, que
+  //    sigue esperando taladro: plantada); al arrancar una bomba de la línea, los pozos vuelven en
+  //    menos de 40 min (las de disposición: los de la multifásica arrancan con ella).
+  const puesta = Date.parse(`${C.PUESTA_EN_MARCHA}T00:00:00-05:00`)
+  const fallasEsp = P.eventosPozos().filter(e => ['GF', 'PH', 'OL', 'OT', 'UL'].includes(e.codigo) && Date.parse(e.inicio) >= puesta && P.pozoDe(e.campoId, e.pozo)?.levantamiento === 'electrosumergible'
+    && !(e.campoId === 'morichal' && e.pozo === 'MN-41') && CS.causaDeEvento(e, ctx0).tipo === 'electrosumergible'
+    // Fallas, no disparos que el variador rearranca solo (minutos a horas).
+    && ((e.fin ? Date.parse(e.fin) : ahoraMs) - Date.parse(e.inicio)) / 86_400_000 > 0.5)
+  const largas = fallasEsp.filter(e => ((e.fin ? Date.parse(e.fin) : ahoraMs) - Date.parse(e.inicio)) / 86_400_000 > 5.01)
+  const reaperturas = B.eventosBomba().filter(e => e.fin && Date.parse(e.fin) >= puesta && B.perfilBomba(e.equipo, e.campoId)?.papel === 'disposicion').flatMap(e => L.tramosDeEvento(e.campoId, e.id, ctx0).map(t => (Date.parse(t.evento.fin ?? '') - Date.parse(e.fin)) / 60_000))
+  comprobar(fallasEsp.length > 0 && largas.length === 0 && reaperturas.length > 0 && reaperturas.every(x => x <= 41),
+    `con TRIM: ${fallasEsp.length} fallas de electrosumergible desde la puesta en marcha, ninguna de más de 5 días (sin MN-41); los pozos vuelven a los ${Math.round(Math.min(...reaperturas))}-${Math.round(Math.max(...reaperturas))} min de arrancar la bomba`)
+
+  // 5. El vigía anticipa las fallas de desgaste de las electrosumergibles (bomba, motor, admisión)
+  //    y con TRIM se cambian antes, en una parada programada que sale de una orden predictiva: no
+  //    hay falla, es programada (no alto impacto), la predicción queda «intervenida» y SAP tiene
+  //    su PM03 (no una PM02). Las de aislamiento fallan igual: el registro no es 100 % de aciertos.
+  const AC2 = await v.ssrLoadModule('/src/entities/aciertos.ts')
+  const delVigia = ctx0.config.programa.filter(x => AC2.intervencionDelVigia(x))
+  const hist = AC2.prediccionesHistoricas(TODOS, ctx0)
+  const sap = SAP.historiaSap(ctx0)
+  const bienVigia = delVigia.every(pr => {
+    const ev = P.eventosPozos().find(e => e.campoId === pr.campoId && e.pozo === pr.equipo && Date.parse(e.inicio) >= Date.parse(pr.desde) && Date.parse(e.inicio) <= Date.parse(pr.hasta))
+    const p = hist.find(x => x.id === pr.id)
+    return ev && CS.causaDeEvento(ev, ctx0).tipo === 'programada' && p?.calificacion === 'intervenida' && p.parte === AC2.intervencionDelVigia(pr)
+      && sap.ordenes.some(o => o.clase === 'PM03' && o.equipo === pr.equipo && o.cierreTecnico === p.intervencion) && !sap.ordenes.some(o => o.clase === 'PM02' && o.equipo === pr.equipo && o.descripcion === pr.motivo)
+  })
+  const vistasDesde = AC2.fallasVistas(TODOS, new Date(puesta), ctx0, V0).filter(x => x.visibilidad === 'vigilada')
+  const aciertos = hist.filter(x => x.calificacion === 'acierto').length
+  comprobar(delVigia.length > 0 && bienVigia && aciertos > 0 && aciertos < vistasDesde.length && hist.some(x => x.calificacion === 'falsa-alarma'),
+    `el vigía anticipó ${delVigia.length} fallas de desgaste (${delVigia.map(x => x.equipo).join(', ')}): parada programada, predicción intervenida y PM03 en SAP; de las ${vistasDesde.length} fallas vigiladas que sí ocurrieron anunció ${aciertos}, y hubo falsas alarmas`)
+
+  // 6. Antes y con TRIM: el diferido de alto impacto por día, la cuenta del Resumen (tres meses
+  //    antes de la puesta en marcha contra lo que va desde ella), baja entre 15 y 25 % en el
+  //    portafolio y en La Ceiba. Es una comparación, no la prueba de que lo bajó TRIM.
+  const antes0 = new Date(`${C.PUESTA_EN_MARCHA.slice(0, 5)}${String(Number(C.PUESTA_EN_MARCHA.slice(5, 7)) - 3).padStart(2, '0')}-01T00:00:00-05:00`)
+  const cambio = ids => { const a = L.libro(ids, antes0, new Date(puesta), ctx0), d = L.libro(ids, new Date(puesta), R.AHORA, ctx0)
+    return (d.altoImpacto / d.meta.dias) / (a.altoImpacto / a.meta.dias) - 1 }
+  const cP = cambio(TODOS), cC = cambio(['ceiba'])
+  comprobar(cP <= -0.15 && cP >= -0.25 && cC <= -0.15 && cC >= -0.25,
+    `antes y con TRIM, alto impacto por día: portafolio ${(cP * 100).toFixed(1)} %, La Ceiba ${(cC * 100).toFixed(1)} % (desde el ${antes0.toISOString().slice(0, 10)} hasta la puesta en marcha, contra lo que va)`)
 }
 
 await v.close()

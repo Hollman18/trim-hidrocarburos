@@ -296,9 +296,14 @@ try {
     console.log(`    /vistas/diferidos: ${kb(lib.bytes)} en ${lib.n} casos (con el pozo y el evento en cada tramo eran ${kb(lib.crudo)})`)
     console.log(`    /vistas/diferidos/mensual: ${kb(men.bytes)} en ${men.n} casos (sin los tramos, el detalle por pozo, las preguntas ni la custodia de cada mes)`)
     comprobar(lib.bytes < lib.crudo * 0.7, `el libro con las entidades por clave pesa menos de 70 % que con ellas anidadas (${kb(lib.bytes)} contra ${kb(lib.crudo)})`)
-    const mensualPortafolio = JSON.stringify(K.aRespuesta(C.DIFERIDOS_MENSUAL.codec, R.DIFERIDOS_MENSUAL({ campos: TODOS }))).length
+    const cuerpoMensual = JSON.stringify(K.aRespuesta(C.DIFERIDOS_MENSUAL.codec, R.DIFERIDOS_MENSUAL({ campos: TODOS })))
+    const mensualPortafolio = cuerpoMensual.length
     const mensualViejo = JSON.stringify(L.serieMensual(TODOS, s.ctx)).length
-    comprobar(mensualPortafolio < mensualViejo * 0.1, `la serie mensual del portafolio va sin los tramos de cada mes: ${kb(mensualPortafolio)} contra ${kb(mensualViejo)} con trece libros enteros`)
+    const conDetalle = JSON.parse(cuerpoMensual).datos.filter(m => ['tramos', 'porPozo', 'preguntas', 'custodia'].some(k => k in m.libro)).length
+    // Con el agua nueva (9-oct-2026) La Ceiba ya no cierra los 18 pozos en cada parada de
+    // P-201B: hay menos tramos, los libros enteros pesan menos y la proporción pasó de
+    // menos de 10 % a 10,2 %. Lo que se prueba es que ningún mes lleva su detalle.
+    comprobar(conDetalle === 0 && mensualPortafolio < mensualViejo * 0.12, `la serie mensual del portafolio va sin los tramos, el detalle por pozo, las preguntas ni la custodia de cada mes: ${kb(mensualPortafolio)} contra ${kb(mensualViejo)} con trece libros enteros`)
 
     console.log('\n=== 6. La costura con la fuente http, de punta a punta ===')
     let salida = '', error = ''

@@ -25,10 +25,11 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     })
     f.ok(alto >= 18, `la sugerida tiene un alto usable en escritorio (${Math.round(alto)} px; en el teléfono, 40)`)
     const linea = await page.evaluate(() => ([...document.querySelectorAll('h5')].find(h => h.textContent === 'WHATSAPP')?.nextElementSibling as HTMLElement | null)?.innerText ?? '')
-    f.ok(/^03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:52 escalado → 08:08 pozos cerrándose\s+sin respuesta$/.test(linea), `el hilo en una línea, en orden (${linea})`)
+    // El tanque aguanta 1,8 h (P-201A y P-201C toman parte del agua): los pozos se empiezan a cerrar antes del escalado.
+    f.ok(/^03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado\s+sin respuesta$/.test(linea), `el hilo en una línea, en orden (${linea})`)
     // A quién le llegó cada paso ya no va en la línea: está en el globo y sale escrito en el papel.
     const papel = await page.evaluate(() => ([...document.querySelectorAll('h5')].find(h => h.textContent === 'WHATSAPP')?.nextElementSibling?.nextElementSibling)?.textContent ?? '')
-    f.ok(/03:53 pregunta: Jairo Peña · 04:22 recordatorio: Jairo Peña · 05:52 escalado: Nelson Ortiz/.test(papel), 'a quién le llegó cada paso: en el globo y en el papel')
+    f.ok(/03:53 pregunta: Jairo Peña · 04:22 recordatorio: Jairo Peña · 05:44 pozos cerrándose: Jairo Peña, Nelson Ortiz · 05:52 escalado: Nelson Ortiz/.test(papel), 'a quién le llegó cada paso: en el globo y en el papel')
     t = await f.texto()
     f.ok(t.includes('DATOS DE DEMOSTRACIÓN') && !t.includes('Demo · simular') && !t.includes('en este demo'), 'una sola marca de demostración en la cabecera; ninguna nota de demo en la pantalla')
     // En pantalla, «Otra cosa» como lo que vio exige escribirlo.
@@ -113,7 +114,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   await test.step('Mi trabajo: órdenes de SAP del técnico', async () => {
     await f.ir('#/tec/trabajo/ceiba/curso'); await f.esperar(400)
     t = await f.texto()
-    f.ok(t.includes('ÓRDENES EN SAP') && t.includes('40012053') && t.includes('a su nombre') && t.includes('TRIM le avisó por WhatsApp'), 'el técnico ve su orden liberada y el aviso de WhatsApp')
+    f.ok(t.includes('ÓRDENES EN SAP') && t.includes('40012056') && t.includes('a su nombre') && t.includes('TRIM le avisó por WhatsApp'), 'el técnico ve su orden liberada y el aviso de WhatsApp')
     const marcasEnOrdenes = await page.evaluate(() => {
       const h = [...document.querySelectorAll('*')].find(e => e.children.length === 0 && e.textContent.trim() === 'ÓRDENES EN SAP')
       const panel = h?.closest('section') ?? h?.parentElement?.parentElement?.parentElement

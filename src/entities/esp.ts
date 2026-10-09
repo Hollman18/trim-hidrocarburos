@@ -59,11 +59,16 @@ function lecturas(p: Pozo): Partial<Record<VariableId, Lectura>> {
   const t = TENDENCIAS[clave] ?? {}
   const fuera = YA_FUERA[clave] ?? {}
   const ctl = p.controlador
-  const corrBase = Math.round(35 + r() * 50)
+  // La corriente va con el caudal: una electrosumergible de 4 kV con unos 5.500 pies
+  // de cabeza pide ≈ 8,5 A por cada 1.000 bbl/d de líquido (5.000 → 43 A; 29.000 → 247 A),
+  // ±10 % de pozo a pozo (el mismo sorteo de antes: no mueve las demás señales).
+  // Sin prueba no se sabe su caudal: queda la corriente del sorteo, 35 a 85 A.
+  const pr = pruebaEn(p, AHORA.getTime()), sorteo = r()
+  const corrBase = pr ? Math.round((pr.crudoBpd + pr.aguaBpd) / 1000 * 8.5 * (0.9 + sorteo * 0.2)) : Math.round(35 + sorteo * 50)
   const pipBase = Math.round(350 + r() * 550)
   const tBase = Math.round(95 + r() * 30)
   const desBase = Math.round((1 + r() * 2.5) * 10) / 10
-  const hz = pruebaEn(p, AHORA.getTime())?.hz ?? 55
+  const hz = pr?.hz ?? 55
   const serie = (base: number, id: VariableId, arranque = 1) => Array.from({ length: 12 }, (_, i) => {
     const ruido = (r() - 0.5) * 0.012 * base
     const pend = (t[id] ?? 0) * base * i

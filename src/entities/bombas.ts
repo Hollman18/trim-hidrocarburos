@@ -196,7 +196,8 @@ export const esBomba = (equipoId: string) => Object.hasOwn(MAQUINAS, equipoId)
  *  cambian con la firma del administrador; aquí quedarían viejos. */
 interface PerfilCampo {
   papel: Papel
-  /** Capacidad nominal en el fluido que mueve, bbl/d. */
+  /** Capacidad en el fluido que mueve, bbl/d, en ESTE campo: la de placa, o
+   *  la que la limita (p. ej. la presión del cabezal de disposición). */
   capacidadBpd: number
   /** Multifásica: los pozos cuyo crudo pasa por ella. */
   pozos?: string[]
@@ -207,24 +208,28 @@ interface PerfilCampo {
 const PERFILES: Record<string, Record<string, PerfilCampo>> = {
   ceiba: {
     'P-201B': {
-      papel: 'disposicion', capacidadBpd: 20400,
-      sinBomba: { fraccion: 1, fuente: 'El agua no tiene otra salida: los pozos de disposición son su único destino' },
+      // Lo que da en este campo: la placa dice 90.000, el cabezal de disposición la limita a 89.250.
+      papel: 'disposicion', capacidadBpd: 89250,
+      sinBomba: { fraccion: 1, fuente: 'Lo que P-201A y P-201C no absorben no tiene otra salida' },
     },
   },
   morichal: {
     'P-201B': {
-      papel: 'disposicion', capacidadBpd: 24000,
-      sinBomba: { fraccion: 1, fuente: 'Lo que P-201A no absorbe no tiene otra salida' },
+      // Placa 90.000; el cabezal de disposición la limita a 86.500.
+      papel: 'disposicion', capacidadBpd: 86500,
+      sinBomba: { fraccion: 1, fuente: 'Lo que las otras seis bombas del tren no absorben no tiene otra salida' },
     },
     'MPP-301': {
-      papel: 'transporte', capacidadBpd: 22000,
+      // Los tres pozos del clúster (MN-07, MN-18 y MN-33) dan unos 1.630 bbl/d de
+      // crudo y 73.400 de agua (97,8 %): 75.000 bbl/d de líquido, más el gas.
+      papel: 'transporte', capacidadBpd: 90000,
       pozos: ['MN-07', 'MN-18', 'MN-33'],
       sinBomba: { fraccion: 1, fuente: 'Declarado por ingeniería: sin la bomba, la contrapresión de la línea no deja fluir el clúster' },
     },
   },
   guacamayo: {
     'P-201B': {
-      papel: 'recobro', capacidadBpd: 13000,
+      papel: 'recobro', capacidadBpd: 50000,
       sinBomba: { fraccion: 0, fuente: 'El agua tiene salida alterna: la parada no cierra pozos' },
     },
   },

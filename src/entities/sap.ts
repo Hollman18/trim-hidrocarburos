@@ -21,7 +21,7 @@ import { equipoEnCampo } from './equipos'
 import { esBomba } from './bombas'
 import { pozosDe } from './pozos'
 import { flotaDe } from './flota'
-import { prediccionesHistoricas } from './aciertos'
+import { prediccionesHistoricas, intervencionDelVigia } from './aciertos'
 import { CAMPOS } from './campos'
 import { NOMBRE_PARTE, type ParteId, type Familia } from './partes'
 import { PUESTA_EN_MARCHA } from './configuracion'
@@ -258,8 +258,9 @@ function armarHistoria(ctx: Contexto): HistoriaSap {
     avisos.push(aviso); ordenes.push(orden)
   }
 
-  // Preventivas: el programa de paradas aprobado (la configuración firmada).
-  for (const p of [...ctx.config.programa].sort((a, b) => a.desde.localeCompare(b.desde))) {
+  // Preventivas: el programa de paradas aprobado (la configuración firmada). Las
+  // que pidió el vigía son predictivas: van abajo, con su predicción (PM03).
+  for (const p of [...ctx.config.programa].filter(x => !intervencionDelVigia(x)).sort((a, b) => a.desde.localeCompare(b.desde))) {
     const fin = new Date(p.hasta).getTime(), ini = new Date(p.desde).getTime()
     // El planeador la crea una semana antes y la libera la víspera: antes de eso SAP no la tiene.
     const creada = mas(p.desde, -24 * 7), liberada = mas(p.desde, -24)

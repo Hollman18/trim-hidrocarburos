@@ -79,9 +79,9 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: string
   // «no arrancar» sigue a la vista (procedimiento); los pozos que cerró P-201B llevan «parte por
   // identificar», no «sin identificar», como si su parada no tuviera causa.
   '#/sup/turno/ceiba/curso': { si: ['pozos cerrados por P-201B', 'WHATSAPP DEL TURNO', 'escalado', 'no arrancar', 'parte por identificar'], no: ['(sin identificar)', 'preguntarle al operario', 'LO QUE TRIM MANDÓ'] },
-  // «Si falla hoy» en bbl y el colchón truncado con «antes de» (19,05 h → «19 h»); lo viejo no vuelve.
-  '#/jefe/riesgo/ceiba~portafolio/curso': { si: ['PERDIÉNDOSE AHORA', 'EN RIESGO', 'cruza en', 'qué hacer', 'bbl si falla hoy', 'bbl de exposición', 'bbl/d en juego', /0 si vuelve\santes\sde\s19\sh/, /ver \d+ más/i],
-    no: ['LO QUE SE PUEDE EVITAR', 'ordenado por cuándo', 'Qué hacer:', 'bbl si fallan', 'bbl por falla', '< 19 h'] },
+  // «Si falla hoy» en bbl y el colchón truncado con «antes de» (P-201B de Morichal: 10,05 h → «10 h»); lo viejo no vuelve.
+  '#/jefe/riesgo/ceiba~portafolio/curso': { si: ['PERDIÉNDOSE AHORA', 'EN RIESGO', 'cruza en', 'qué hacer', 'bbl si falla hoy', 'bbl de exposición', 'bbl/d en juego', /0 si vuelve\santes\sde\s10\sh/, /ver \d+ más/i],
+    no: ['LO QUE SE PUEDE EVITAR', 'ordenado por cuándo', 'Qué hacer:', 'bbl si fallan', 'bbl por falla', '< 10 h'] },
   // La regla de operación va en la franja: sus dos frases (los chips «no arrancar» no las satisfacen).
   '#/oper/causa/ceiba/curso': { si: [/\d\d:\d\d pregunta → \d\d:\d\d recordatorio/, 'Pista · historia del equipo', /· \d+ de \d+ fallas?/, 'Ver mi chat de WhatsApp', 'sin respuesta', 'No fue la electrosumergible', 'No arrancar hasta identificar el daño', 'si arranca antes: no conformidad', 'demo'],
     no: ['señal e historia', 'LO QUE DIJO LA SEÑAL', 'Regla de operación:', 'Demo · simular', 'en este demo'] },
@@ -93,9 +93,10 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: string
   // Las mismas cifras y marcas que Riesgo: «si falla hoy» y, estimado con la flota, «flota»; una
   // parte chica del total es «< 1 %», no «0 %».
   '#/jefe/mantenimiento/ceiba~portafolio/curso': { si: ['si falla hoy', /si falla hoy\s+flota/, /arranc(?:ó|aron) sin identificar/], no: ['Ninguna parte va hacia su límite', 'bbl · 0 %'] },
-  // El tanque con la bomba parada sube con el agua que ENTRA: La Ceiba tiene los 18 pozos cerrados,
-  // no entra agua y no hay alarma por eso (el colchón de «si parara con todo produciendo» no es eso).
-  '#/prod/planta/ceiba/curso': { si: ['no entra agua'], no: ['llega al alto-alto'] },
+  // El tanque con la bomba parada sube con el agua que ENTRA: en La Ceiba ya se cerraron los pozos que
+  // hacía falta y lo que entra lo sacan P-201A y P-201C; no sube y no hay alarma por eso (el colchón de
+  // «si parara con todo produciendo» no es eso). La capacidad del tren de agua se cuenta sin la detenida.
+  '#/prod/planta/ceiba/curso': { si: ['el respaldo toma el agua que entra'], no: ['llega al alto-alto', 'no entra agua'] },
   '#/adm/conectores/ceiba/curso': { si: ['SISTEMAS CORPORATIVOS', 'trim_que_se_dano', 'conectado', 'CATÁLOGOS DE DAÑO'], no: ['en este demo'] },
   // «qué se dañó»: solo lo dice la ficha (la placa de detrás también dice «No arrancar hasta identificar»).
   '#/sup/bombas/ceiba/curso/P-201B': { si: ['No arrancar hasta identificar qué se dañó'], no: ['HISTORIA DEL PLC', 'Modo de falla'] },

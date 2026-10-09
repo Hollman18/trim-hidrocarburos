@@ -258,7 +258,6 @@ export function Tendencia({ serie, desde, hasta, onMes }: {
     <>
     <div ref={alFinal} className="mt-2 overflow-x-auto">
       <svg viewBox={`0 0 ${W} 118`} className="block h-auto w-full min-w-[420px]" role="group" aria-label="Diferido por día de cada mes contra su máximo firmado">
-        <text x={G.x0} y={10} fontSize={10} fill="var(--tinta3)">bbl/d</text>
         {pts.map((p, i) => {
           const x = G.x0 + paso * i + (paso - ancho) / 2
           const activo = p.m.desde < hasta && p.m.hasta > desde
@@ -283,8 +282,10 @@ export function Tendencia({ serie, desde, hasta, onMes }: {
         <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" />
       </svg>
     </div>
-      {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba. */}
+      {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba.
+          La unidad va aquí y no en el dibujo: arriba a la izquierda la pisaba la cifra de la barra más alta. */}
       <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+        <span className="text-[var(--tinta3)]">bbl/d</span>
         <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />alto impacto</span>
         <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-5)]" />lo demás</span>
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.3" strokeDasharray="3 2" /></svg>máximo firmado</span>

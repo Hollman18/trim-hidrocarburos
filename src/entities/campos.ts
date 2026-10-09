@@ -4,8 +4,8 @@ import { AHORA, calendarioDe } from './reloj'
 /** El registro de campos del demo: lo que en producción entrega el servidor
  *  en `GET /api/campos`. */
 const CAMPOS_DEMO: Campo[] = [
-  { id: 'ceiba', nombre: 'La Ceiba', cuenca: 'Magdalena Medio', choke: 'Planta',
-    nota: 'Tren de agua con una sola bomba de reinyección, sin respaldo.' },
+  { id: 'ceiba', nombre: 'La Ceiba', cuenca: 'Llanos', choke: 'Planta',
+    nota: 'Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos.' },
   { id: 'morichal', nombre: 'Morichal Norte', cuenca: 'Llanos', choke: 'Pozos',
     nota: 'Todos sus pozos con electrosumergible; la reinyección tiene respaldo parcial.' },
   { id: 'guacamayo', nombre: 'Guacamayo', cuenca: 'Putumayo', choke: 'Evacuación',

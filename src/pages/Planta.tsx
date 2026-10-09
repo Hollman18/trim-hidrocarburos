@@ -117,6 +117,9 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const equipoReiny = reinyeccion?.equipo
   // La bomba de reinyección vacía el tanque de agua: detenida, el tanque sube con el agua que entra.
   const bombaParada = !!equipoReiny && equipoDeHoy(equipoReiny, campoId)?.marcha === 'detenido'
+  // El tren de agua sin la bomba de disposición detenida: las que siguen en
+  // marcha son toda la capacidad que queda (La Ceiba: P-201A y P-201C, no las tres).
+  const capFuera = bombaParada && reinyeccion?.papel === 'disposicion' ? reinyeccion.capacidadBpd : 0
   // La prioridad del tanque (ISA-18.2: la da el tiempo hasta la consecuencia, no
   // un porcentaje fijo):
   //  - en el alto-alto: P1 (hay que cerrar pozos);
@@ -348,16 +351,20 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
             // Bajo la caja: lo anormal y lo que falta. En marcha y sin nada anormal, solo el
             // código (el estado entero va en el globo y en el lector); el pie de un paso de
             // proceso («cabezal común», «límite de batería») pasa al globo y sale en el papel.
+            // Un conjunto (P-201A/B/C) con el equipo instrumentado detenido dice cuál, no solo cuántos tienen datos.
+            const conjuntoParcial = !!conjunto && conjunto.con < conjunto.total
+            const detenidoEnConjunto = conjuntoParcial && vivo && eq?.marcha === 'detenido'
             const pie = esPozos ? `${plural(pozos, 'pozo', 'pozos')} · ${plural(parados, 'parado', 'parados')}`
               : esTanqueAgua ? `${nivelTanque!.tag} · ${n1(nivelTanque!.pct)} %`
-                : conjunto && conjunto.con < conjunto.total ? `${conjunto.con} de ${conjunto.total} con datos`
+                : conjuntoParcial && !detenidoEnConjunto ? `${conjunto!.con} de ${conjunto!.total} con datos`
                   : vivo && eq ? recortar(eq.marcha === 'en-marcha'
                     ? (estadoCorto(eq) ? `${eq.id} · ${estadoCorto(eq)}` : eq.id)
                     : `${eq.id} · ${eq.estado.split(' · ')[0]}`)
                     : proceso ? '' : 'sin datos'
             const pieProceso = proceso && !pie ? n.pie ?? 'proceso' : ''
             const leido = esTanqueAgua ? `${nivelTanque!.tag} · nivel ${n1(nivelTanque!.pct)} %${avisoTanque ? ` · ${avisoTanque}` : ''}`
-              : !esPozos && vivo && eq && !(conjunto && conjunto.con < conjunto.total) ? `${eq.id} · ${eq.estado}` : pie
+              : detenidoEnConjunto ? `${eq!.id} · ${eq!.estado} · ${conjunto!.con} de ${conjunto!.total} con datos`
+                : !esPozos && vivo && eq && !conjuntoParcial ? `${eq.id} · ${eq.estado}` : pie
             const filas: Array<[string, string]> = esPozos
               ? [['Pozos', `${n0(pozos)} con su controlador`], ['Parados ahora', n0(parados)]]
               : esTanqueAgua ? [['Nivel', `${n1(nivelTanque!.pct)} %`], ['Alto-alto', `${n0(tanque!.altoAlto * 100)} %`], ...(avisoTanque ? [['Sube', avisoTanque] as [string, string]] : []), ['Transmisor', nivelTanque!.tag], ['Capacidad', `${n0(tanque!.capacidadBbl)} bbl`]]
@@ -525,13 +532,15 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       {nivel === 'ingenieria' && (
         <Desplegable titulo="Capacidad por tren" imprimir>
           <Panel>
-            {([['Crudo', cfg.caudales.crudo, cfg.caudales.crudoCap, 'bbl/d', 'crudo'],
-               ['Agua', cfg.caudales.agua, cfg.caudales.aguaCap, 'bbl/d de agua', 'agua']] as const).map(([nombre, v, cap, u, c]) => {
+            {([['Crudo', cfg.caudales.crudo, cfg.caudales.crudoCap, 0, 'bbl/d', 'crudo'],
+               ['Agua', cfg.caudales.agua, cfg.caudales.aguaCap - capFuera, capFuera, 'bbl/d de agua', 'agua']] as const).map(([nombre, v, cap, fuera, u, c]) => {
               const pct = (v / cap) * 100
               return (
                 <Tip key={nombre} titulo={`Tren de ${nombre.toLowerCase()}`} className="mb-2.5"
                   pista={pct > 90 ? 'Por encima del 90 % no queda margen para una parada parcial' : undefined}
-                  filas={[['Caudal ahora', `${n0(v)} ${u}`], ['Capacidad', `${n0(cap)} ${u}`], ['Uso', `${n1(pct)} %`], ['Holgura', `${n0(cap - v)} ${u}`]]}>
+                  filas={[['Caudal ahora', `${n0(v)} ${u}`],
+                    ['Capacidad', fuera > 0 ? `${n0(cap)} ${u} sin ${equipoReiny} (detenida); ${n0(cap + fuera)} con todo el tren` : `${n0(cap)} ${u}`],
+                    ['Uso', `${n1(pct)} %`], ['Holgura', `${n0(cap - v)} ${u}`]]}>
                   <div className="flex justify-between text-[11.5px]">
                     <span>{nombre}</span>
                     <span className={cn('tabular', pct > 90 && 'font-semibold')}><FueraDeMeta si={pct > 90} tamano={11} />{n1(pct)} %</span>
@@ -539,7 +548,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                   <div className="mt-1 h-1.5 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
                     <i className="block h-full" style={{ width: `${Math.min(pct, 100)}%`, background: COLOR[c] }} />
                   </div>
-                  <small className="tabular text-[10px] text-[var(--tinta3)]">{n0(v)} de {n0(cap)} {u}</small>
+                  <small className="tabular text-[10px] text-[var(--tinta3)]">{n0(v)} de {n0(cap)} {u}{fuera > 0 ? ` · sin ${equipoReiny}, detenida` : ''}</small>
                 </Tip>
               )
             })}

@@ -380,7 +380,7 @@ cambios[], config }`. `base` es la versión sobre la que se editó. La configura
                        "perfil":{ "gas":"venta", "bombas":true, "electrosumergibles":true } } },
   "tanques":[{ "id":"TK-AG-CE", "nombre":"…", "campoId":"ceiba", "bomba":"P-201B", "capacidadBbl":10000, "altoAlto":0.9,
                "tagNivel":"LT-2012", "aforo":"Certificado de aforo TK-AG-CE · tabla de 1 cm" }],
-  "respaldos":[{ "campoId":"morichal", "equipo":"P-201B", "libreBpd":15100, "detalle":"P-201A en paralelo" }],
+  "respaldos":[{ "campoId":"morichal", "equipo":"P-201B", "libreBpd":42500, "detalle":"Las otras seis bombas del tren" }],
   "programa":[{ "id":"PR-ceiba-P-201B-2026-11-04", "campoId":"ceiba", "equipo":"P-201B", "desde":"…", "hasta":"…", "motivo":"…" }] }
 ```
 
@@ -1067,6 +1067,7 @@ evitable por orden = por parada de reinyección que no cerró todo el campo, esc
                      los pozos que producían al empezar sus cierres:
                      bbl × (1 − crudo del orden óptimo / crudo de lo que se cerró)
                      orden óptimo: menos crudo por barril de agua primero, hasta quitar la misma agua
+                     (una electrosumergible entera o a lo más 25 % menos: el mismo orden de cierre)
 
 meta (metaEntre)  = Σ campos Σ días del período  tramo vigente ese día × horas del día dentro del período / 24
                     produccion con produccionBpd, diferido con diferidoMaxBpd. Lo que va a la fecha se
@@ -1097,23 +1098,32 @@ agua que mueve   = mediana de su medidor de caudal mientras trabaja (sin medidor
 agua sin salida  = max(0, mueve − respaldo libre) × fracción sin bomba
 colchón (h)      = (alto-alto − nivel ahora) × capacidad / (agua sin salida / 24)    null si no se llena
   tolerancia     = √( (0,2 % × capacidad / libre)² + banda del agua² )   aforo (Res. 40236, Anexo 2) y medidor
-orden de cierre  = sin respaldo: todo el campo; con respaldo: menos crudo por barril de agua primero
+orden de cierre  = sin respaldo: todo el campo; con respaldo: menos crudo por barril de agua primero,
+                   cada pozo entero si cabe; si no, en parte, y una electrosumergible a lo más 25 %
+                   (≈ 45 Hz: BAJA_MAXIMA_ESP) y lo que falta lo da el siguiente; si al final falta agua,
+                   las que se bajaron en parte se cierran enteras (el mismo orden para lo evitable)
 crudo en riesgo  = Σ crudo asignado de lo que se cierra; se compara contra cerrar parejo
 parada medida    = colchón previsto (con el nivel al parar y el tanque y el respaldo que regían al parar)
                    contra el observado (paro → primer pozo cerrado)
 
-YA PARADA (disposición, con tanque y nivel): llenado — el tanque sube con el agua que ENTRA, no con la que movía
+YA PARADA (disposición, con tanque y nivel): llenado — el tanque sube con lo que la parada dejó sin salida
+                   y que todavía no se quitó cerrando pozos
 agua que entra   = Σ agua de la prueba vigente de los pozos que producen ahora (× la parte que no pierde el
-                   que va a frecuencia reducida; la misma del caudal de agua de /vistas/campos/:campo/ahora)
-agua sin salida  = max(0, entra − respaldo libre − (1 − pérdida de la parada) × mueve) × fracción sin bomba
+                   que va a frecuencia reducida; la misma del caudal de agua de /vistas/campos/:campo/ahora):
+                   se devuelve para leer, no entra en la cuenta
+agua quitada     = Σ agua de la prueba vigente de los pozos cerrados por la parada (perdiendo.pozos), con
+                   la parte que deja de dar el que va a frecuencia reducida
+agua sin salida  = max(0, (pérdida de la parada × mueve − respaldo libre) × fracción sin bomba − agua quitada)
 horas            = (alto-alto − nivel ahora) × capacidad / (agua sin salida / 24)          null si no sube
   tolerancia     = √( aforo² + banda del agua² )   (el agua de las pruebas, no del medidor)
 prioridad        = 1 ya en el alto-alto · 2 menos de 24 h · 3 hasta 90 días · 0 no sube o más allá
 ```
-`colchon` sigue siendo «si parara ahora con todo produciendo»: con la bomba ya parada y el campo
-cerrado (La Ceiba hoy: 0 de 18 pozos produciendo) `colchon.horas` da 0,05 h, pero `llenado` da
-`aguaEntraBpd: 0`, `horas: null` y `prioridad: 0`: el tanque no sube y no hay alarma por eso. La
-pantalla (Planta) pinta el tanque con `llenado.prioridad`, o P1 si ya está en el alto-alto.
+`colchon` sigue siendo «si parara ahora con todo produciendo»: con la bomba ya parada y los pozos
+que hacía falta cerrar ya cerrados (La Ceiba hoy: P-201B parada, 15 de 18 pozos produciendo)
+`colchon.horas` da menos de 0,1 h, pero `llenado` da `horas: null` y `prioridad: 0`: la parada dejó
+44.100 bbl/d sin salida y se cerraron 48.510 (LC-16 y LC-07), así que el tanque no sube; no hay alarma
+por eso. Cuadra con Planta: entran ≈ 174.000 y P-201A y P-201C sacan hasta 178.500 (2 × 89.250). La pantalla (Planta) pinta el tanque con `llenado.prioridad`,
+o P1 si ya está en el alto-alto.
 
 #### Costo si falla hoy (`Riesgo.costoFalla`)
 

@@ -86,7 +86,8 @@ export interface PasoCierre {
   aguaBpd: number
   /** Crudo por barril de agua: el criterio del orden. */
   crudoPorAgua: number
-  /** 1 se cierra entero; menos, se le baja la frecuencia o se estrangula. */
+  /** 1 se cierra entero; menos, se le baja la frecuencia o se estrangula (una
+   *  electrosumergible, a lo más `BAJA_MAXIMA_ESP`: 25 %). */
   fraccion: number
   aguaAcumBpd: number
 }
@@ -190,14 +191,14 @@ export interface Prediccion {
 /** El tanque de una bomba de disposición que YA está parada: sube con el agua
  *  que entra ahora, no con la que movía la bomba. */
 export interface Llenado {
-  /** Agua que entra ahora al tanque: la de los pozos que producen (prueba
-   *  vigente, con la parte que pierde el que va a frecuencia reducida; la
-   *  misma cuenta de `caudalesAhora`). Con el campo cerrado, 0. */
+  /** Agua que entra ahora al tanque, para leer: la de los pozos que producen
+   *  (prueba vigente, con la parte que pierde el que va a frecuencia reducida;
+   *  la misma cuenta de `caudalesAhora`). Con el campo cerrado, 0. */
   aguaEntraBpd: number
-  /** El tanque con esa agua, menos el respaldo libre y lo que la bomba
-   *  todavía saca (una parada parcial): `aguaSinSalidaBpd`, `horas` hasta el
-   *  alto-alto y su `rango`. Sin agua sin salida, `horas` = Infinity (`null`
-   *  en el cable): el tanque no sube. */
+  /** El tanque con lo que la parada dejó sin salida (pérdida × lo que movía
+   *  − respaldo libre) menos el agua de los pozos que ya cerró o frenó:
+   *  `aguaSinSalidaBpd`, `horas` hasta el alto-alto y su `rango`. Sin agua sin
+   *  salida, `horas` = Infinity (`null` en el cable): el tanque no sube. */
   colchon: Colchon
   /** La prioridad del tanque (ISA-18.2: por el tiempo hasta la consecuencia,
    *  la regla de la salud de las partes): ya en el alto-alto 1; llega en menos
@@ -243,29 +244,37 @@ export function prediccion(p: PerfilBomba, ctx: Contexto): Prediccion {
   if (parada) {
     const perdiendo = perdiendoPor(p, parada, ctx)
     const pr = prediccionEnMarcha(p, ctx, base, crudoComp)
-    const llenado = llenadoDe(p, parada, pr)
+    const llenado = llenadoDe(p, parada, pr, perdiendo.pozos)
     return { ...pr, perdiendo, ...(llenado ? { llenado } : {}),
       metodo: `Parada desde ${FMT_HORA.format(new Date(parada.inicio))}: ${perdiendo.pozos.length} ${perdiendo.pozos.length === 1 ? 'pozo cerrado' : 'pozos cerrados'} por ella` }
   }
   return prediccionEnMarcha(p, ctx, base, crudoComp)
 }
 
-/** Con la bomba de disposición ya parada, el tanque sube con el agua que ENTRA:
+/** Con la bomba de disposición ya parada, el tanque sube con lo que la parada
+ *  dejó sin salida y que todavía no se quitó cerrando pozos:
  *
- *    agua sin salida = max(0, agua que entra − respaldo libre − lo que la bomba
- *                      todavía saca) × fracción sin bomba
+ *    agua sin salida = max(0, (pérdida × lo que mueve − respaldo libre) × fracción sin bomba
+ *                      − agua de los pozos que la parada cerró o frenó)
  *    horas           = libre hasta el alto-alto / (agua sin salida / 24)
  *
- *  donde lo que todavía saca es (1 − pérdida de la parada) × lo que mueve. No
- *  es el colchón de la predicción («si parara ahora con todo produciendo»):
- *  con los pozos cerrados no entra agua y el tanque no sube, esté donde esté.
- *  Sin tanque firmado o sin su nivel no hay cuenta (ausente). */
-function llenadoDe(p: PerfilBomba, parada: EventoBomba, pr: Prediccion): Llenado | undefined {
+ *  Lo que mueve la bomba es su parte del agua que entraba (la mediana de su
+ *  medidor), y el respaldo, lo que el resto del tren toma de más: lo que entra
+ *  de más al parar es la diferencia. Cada pozo que se cierra por la parada le
+ *  quita su agua (la de su prueba; uno a frecuencia reducida, la parte que deja
+ *  de dar). No es el colchón de la predicción («si parara ahora con todo
+ *  produciendo»): con los pozos que hacía falta cerrar ya cerrados, el tanque
+ *  no sube, esté donde esté. Sin tanque firmado o sin su nivel no hay cuenta
+ *  (ausente). `aguaEntraBpd` es el agua que entra ahora, para leer. */
+function llenadoDe(p: PerfilBomba, parada: EventoBomba, pr: Prediccion, cerrados: Pozo[]): Llenado | undefined {
   const tanque = pr.colchon?.tanque, nivel = tanque ? NIVEL_AHORA[tanque.id] : undefined
   if (!tanque || !nivel) return undefined
   const aguaEntraBpd = caudalesAhora(p.campoId).agua
-  const saca = (1 - parada.perdida) * (pr.mueve?.bpd ?? 0)
-  const sinSalida = Math.max(0, aguaEntraBpd - pr.respaldoLibreBpd - saca) * p.sinBomba.fraccion
+  const quitada = cerrados.reduce((a, w) => {
+    const e = estadoAhora(w)
+    return a + aguaDePrueba(w) * (e.produce ? perdidaPorFrecuencia(e.hz, pruebaEn(w, ahora)?.hz) : 1)
+  }, 0)
+  const sinSalida = Math.max(0, (parada.perdida * (pr.mueve?.bpd ?? 0) - pr.respaldoLibreBpd) * p.sinBomba.fraccion - quitada)
   const colchon = colchonDe(tanque, nivel.pct, sinSalida, p.campoId, nivel.tag, nivel.hora, 'pruebas')
   // La misma regla que la salud de una parte que avisa (salud.ts): lo que llega
   // a su límite en menos de un día pide atención ya; más allá del horizonte, nada.

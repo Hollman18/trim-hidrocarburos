@@ -121,14 +121,18 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'oleoducto', etiqueta: 'Oleoducto', simbolo: 'salida', pie: 'límite de batería' },
     ],
     agua: [
-      { id: 'bomba', etiqueta: 'Bomba de reinyección', simbolo: 'bomba', equipo: 'P-201B' },
+      // El tanque recibe el agua del separador y las bombas lo vacían hacia los inyectores.
       { id: 'tanqueAgua', etiqueta: 'Tanque de agua', simbolo: 'tanque', pie: 'proceso', fluido: 'agua' },
+      { id: 'bomba', etiqueta: 'Bombas de agua', simbolo: 'bomba', equipo: 'P-201B',
+        miembros: [{ id: 'P-201A', etiqueta: 'P-201A' }, { id: 'P-201B', etiqueta: 'P-201B', equipo: 'P-201B' }, { id: 'P-201C', etiqueta: 'P-201C' }] },
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
     ],
     servicios: SERVICIOS,
     chokes: { pozos: 12500, planta: 11800, evacuacion: 14000, mercado: 15000 },
-    caudales: { crudo: 10450, crudoCap: 12000, agua: 19180, aguaCap: 20400, gas: 3850, gasCap: 4200 },
-    nota: 'La bomba que mueve el agua no tiene respaldo: si para, el tanque se llena y se cierran los pozos. Es el cuello de botella del campo.',
+    // Agua: tres bombas iguales en paralelo (P-201A, B y C), 90.000 bbl/d de placa; el
+    // cabezal de disposición las limita a 89.250 cada una (3 × 89.250).
+    caudales: { crudo: 10450, crudoCap: 12000, agua: 224200, aguaCap: 267750, gas: 3850, gasCap: 4200 },
+    nota: 'El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el cuello de botella del campo.',
   },
 
   morichal: {
@@ -164,14 +168,18 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'oleoducto', etiqueta: 'Oleoducto', simbolo: 'salida', pie: 'límite de batería' },
     ],
     agua: [
-      { id: 'bomba', etiqueta: 'Bomba de reinyección', simbolo: 'bomba', equipo: 'P-201B' },
+      // El tanque recibe el agua del separador y las bombas lo vacían hacia los inyectores.
       { id: 'tanqueAgua', etiqueta: 'Tanque de agua', simbolo: 'tanque', pie: 'proceso', fluido: 'agua' },
+      { id: 'bomba', etiqueta: 'Bombas de agua', simbolo: 'bomba', equipo: 'P-201B',
+        miembros: ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(l => ({ id: `P-201${l}`, etiqueta: `P-201${l}`, ...(l === 'B' ? { equipo: 'P-201B' } : {}) })) },
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
     ],
     servicios: SERVICIOS,
     chokes: { pozos: 17950, planta: 19500, evacuacion: 21000, mercado: 24000 },
-    caudales: { crudo: 14800, crudoCap: 19500, agua: 36400, aguaCap: 44000, gas: 9100, gasCap: 11000 },
-    nota: 'Manda el levantamiento: 41 pozos con bomba electrosumergible. El compresor de gas, sin respaldo, ya cerró pozos cuando paró.',
+    // Agua: siete bombas iguales en paralelo (P-201A…G), 90.000 bbl/d de placa; el cabezal
+    // de disposición las limita a 86.500 cada una (7 × 86.500).
+    caudales: { crudo: 14800, crudoCap: 19500, agua: 580400, aguaCap: 605500, gas: 9100, gasCap: 11000 },
+    nota: 'Manda el levantamiento: 41 pozos con bomba electrosumergible y 97 % de agua, que sacan siete bombas casi al tope de lo que deja el cabezal de disposición. El compresor de gas, sin respaldo, ya cerró pozos cuando paró.',
   },
 
   guacamayo: {
@@ -195,13 +203,17 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'oleoducto', etiqueta: 'Oleoducto · nominación restringida', simbolo: 'salida', pie: 'límite de batería' },
     ],
     agua: [
-      { id: 'bomba', etiqueta: 'Bomba de reinyección', simbolo: 'bomba', equipo: 'P-201B' },
+      // El tanque recibe el agua del separador y las bombas lo vacían hacia los inyectores.
       { id: 'tanqueAgua', etiqueta: 'Tanque de agua', simbolo: 'tanque', pie: 'proceso', fluido: 'agua' },
-      { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
+      { id: 'bomba', etiqueta: 'Bombas de agua', simbolo: 'bomba', equipo: 'P-201B',
+        miembros: [{ id: 'P-201A', etiqueta: 'P-201A · disposición' }, { id: 'P-201B', etiqueta: 'P-201B · recobro', equipo: 'P-201B' }, { id: 'P-201C', etiqueta: 'P-201C · reserva' }] },
+      { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'recobro y disposición' },
     ],
     servicios: SERVICIOS,
     chokes: { pozos: 7200, planta: 7400, evacuacion: 6800, mercado: 9000 },
-    caudales: { crudo: 6200, crudoCap: 7400, agua: 7600, aguaCap: 13000, gas: 2100, gasCap: 2600 },
+    // Agua: P-201A de disposición (60.000 bbl/d) y P-201B de recobro (50.000, a ~1.800 psi);
+    // si P-201B para, P-201C de reserva (50.000) manda su agua a un pozo de disposición alterno.
+    caudales: { crudo: 6200, crudoCap: 7400, agua: 90300, aguaCap: 110000, gas: 2100, gasCap: 2600 },
     nota: 'Sin compresión: el gas va a consumo propio y el excedente a tea. La restricción está aguas abajo del LACT, en la nominación del oleoducto.',
   },
 
@@ -224,14 +236,15 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'oleoducto', etiqueta: 'Oleoducto', simbolo: 'salida', pie: 'límite de batería' },
     ],
     agua: [
-      { id: 'bomba', etiqueta: 'Bomba de reinyección', simbolo: 'bomba', equipo: 'P-201B' },
+      // El tanque recibe el agua del separador y las bombas lo vacían hacia los inyectores.
       { id: 'tanqueAgua', etiqueta: 'Tanque de agua', simbolo: 'tanque', pie: 'proceso', fluido: 'agua' },
+      { id: 'bomba', etiqueta: 'Bomba de agua', simbolo: 'bomba', equipo: 'P-201B' },
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
     ],
     servicios: SERVICIOS,
     chokes: { pozos: 3500, planta: 3295, evacuacion: 4200, mercado: 5000 },
-    caudales: { crudo: 3100, crudoCap: 3600, agua: 2400, aguaCap: 5500, gas: 0, gasCap: 0 },
-    nota: 'Campo chico de bombeo mecánico, sin tren de gas, con holgura en crudo y agua.',
+    caudales: { crudo: 3100, crudoCap: 3600, agua: 13180, aguaCap: 16000, gas: 0, gasCap: 0 },
+    nota: 'Campo chico de bombeo mecánico, sin tren de gas, con holgura en crudo y agua (80 % de agua, que saca una sola bomba de 16.000 bbl/d).',
   },
 
   zarza: {
@@ -256,13 +269,14 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'oleoducto', etiqueta: 'Oleoducto', simbolo: 'salida', pie: 'límite de batería' },
     ],
     agua: [
-      { id: 'bomba', etiqueta: 'Bomba de reinyección', simbolo: 'bomba', equipo: 'P-201B' },
+      // El tanque recibe el agua del separador y las bombas lo vacían hacia los inyectores.
       { id: 'tanqueAgua', etiqueta: 'Tanque de agua', simbolo: 'tanque', pie: 'proceso', fluido: 'agua' },
+      { id: 'bomba', etiqueta: 'Bomba de agua', simbolo: 'bomba', equipo: 'P-201B' },
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
     ],
     servicios: SERVICIOS,
     chokes: { pozos: 3900, planta: 3400, evacuacion: 4100, mercado: 3372 },
-    caudales: { crudo: 2900, crudoCap: 3400, agua: 1100, aguaCap: 4000, gas: 12400, gasCap: 16800 },
+    caudales: { crudo: 2900, crudoCap: 3400, agua: 1450, aguaCap: 4000, gas: 12400, gasCap: 16800 },
     nota: 'Campo de gas: el producto principal sale por arriba. Su restricción típica es comercial (la nominación del comprador), no técnica.',
   },
 }
@@ -481,13 +495,13 @@ export function armar(cfg: PlantaCampo, abiertos: Set<string>) {
     cadena(cfg.agua, carril.agua, colTronco, 'agua', sep),
   ]
 
-  // El tratador también manda agua a la bomba, cuando ambos existen.
-  const tratador = bloques.get('tratador'), bomba = bloques.get('bomba')
-  if (tratador && bomba && tratador.salidas.length === 1 && bomba.entradas.length === 1) {
-    const p = tratador.salidas[0]!, q = bomba.entradas[0]!
+  // El tratador también manda su agua al tanque de agua (o, sin tanque, a la bomba).
+  const tratador = bloques.get('tratador'), destino = bloques.get('tanqueAgua') ?? bloques.get('bomba')
+  if (tratador && destino && tratador.salidas.length === 1 && destino.entradas.length === 1) {
+    const p = tratador.salidas[0]!, q = destino.entradas[0]!
     const d = rutaOrto([p.x, p.y], [q.x, q.y], [[p.x, (p.y + q.y) / 2], [q.x, (p.y + q.y) / 2]])
     lineas.push({ id: `${p.id}>${q.id}`, d, corriente: 'agua', deId: p.id, aId: q.id,
-      de: 'Tratador térmico', a: 'Bomba de reinyección', medio: medioDe(d), inicio: inicioDe(d) })
+      de: 'Tratador térmico', a: bloques.get('tanqueAgua') ? 'Tanque de agua' : 'Bomba de agua', medio: medioDe(d), inicio: inicioDe(d) })
   }
 
   const maxCol = Math.max(...cols)

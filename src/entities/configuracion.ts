@@ -145,18 +145,24 @@ export const configInicial = perezoso((): Config => ({
   empresa: 'Operadora de demostración',
   campos: CAMPOS_INICIALES,
   tanques: [
-    { id: 'TK-AG-CE', nombre: 'Tanque de agua de La Ceiba', campoId: 'ceiba', bomba: 'P-201B', capacidadBbl: 10000,
+    { id: 'TK-AG-CE', nombre: 'Tanque de agua de La Ceiba', campoId: 'ceiba', bomba: 'P-201B', capacidadBbl: 30000,
       altoAlto: 0.9, tagNivel: 'LT-2012', aforo: 'Certificado de aforo TK-AG-CE · tabla de 1 cm' },
-    { id: 'TK-AG-MN', nombre: 'Tanque de agua de Morichal Norte', campoId: 'morichal', bomba: 'P-201B', capacidadBbl: 18000,
+    { id: 'TK-AG-MN', nombre: 'Tanque de agua de Morichal Norte', campoId: 'morichal', bomba: 'P-201B', capacidadBbl: 60000,
       altoAlto: 0.9, tagNivel: 'LT-2012', aforo: 'Certificado de aforo TK-AG-MN · tabla de 1 cm' },
-    { id: 'TK-AG-GU', nombre: 'Tanque de agua de Guacamayo', campoId: 'guacamayo', bomba: 'P-201B', capacidadBbl: 8000,
+    { id: 'TK-AG-GU', nombre: 'Tanque de agua de Guacamayo', campoId: 'guacamayo', bomba: 'P-201B', capacidadBbl: 20000,
       altoAlto: 0.9, tagNivel: 'LT-2012', aforo: 'Certificado de aforo TK-AG-GU · tabla de 1 cm' },
   ],
+  // Lo que el resto del tren toma de más cuando la bomba para. Lo que limita a
+  // las bombas es la presión del cabezal de disposición (la inyectividad de los
+  // pozos), no la placa de 90.000: en La Ceiba cada una llega a unos 89.250 y
+  // mueve 74.200 (su parte del agua que entra), así que P-201A y P-201C toman
+  // 30.100 más entre las dos; en Morichal llegan a 86.500 y mueven 79.900, y
+  // las otras seis toman 39.500 entre todas.
   respaldos: [
-    { campoId: 'ceiba', equipo: 'P-201B', libreBpd: 0, detalle: 'Única bomba del tren de agua' },
-    { campoId: 'morichal', equipo: 'P-201B', libreBpd: 15100, detalle: 'P-201A en paralelo, con 15.100 bbl/d libres' },
+    { campoId: 'ceiba', equipo: 'P-201B', libreBpd: 30100, detalle: 'P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una' },
+    { campoId: 'morichal', equipo: 'P-201B', libreBpd: 39500, detalle: 'Las otras seis bombas del tren, con 39.500 bbl/d libres entre todas: el cabezal de disposición las limita a unos 86.500 cada una' },
     { campoId: 'morichal', equipo: 'MPP-301', libreBpd: 0, detalle: 'Sin bomba en paralelo ni derivación al manifold' },
-    { campoId: 'guacamayo', equipo: 'P-201B', libreBpd: 13000, detalle: 'Pozo de disposición alterno con capacidad para todo el caudal' },
+    { campoId: 'guacamayo', equipo: 'P-201B', libreBpd: 50000, detalle: 'P-201C de reserva (50.000 bbl/d), alineada al pozo de disposición alterno: toma todo su caudal' },
   ],
   programa: insumos().programa,
 }))
