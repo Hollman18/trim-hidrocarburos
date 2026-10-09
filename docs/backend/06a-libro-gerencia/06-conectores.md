@@ -28,9 +28,9 @@ El auditor exige ver «SISTEMAS CORPORATIVOS», «trim_que_se_dano», «conectad
 |---|---|---|---|---|---|
 | 1 | Sincronizado | «sincronizado 2 de oct, 13:58» | `AHORA − 2 min` **fijo en el front** (`Integraciones.tsx:19`) | `fechaHora` | **hueco**: en producción, la hora de la última sincronización con SAP (5D.6 §4) |
 | 2 · 3 | Estado de la conexión | chips «conectado» (SAP y WhatsApp) | **fijos** | | **hueco**: estado real de cada conexión |
-| 4 | TRIM → SAP · avisos | «4 en total» + ⓘ «Avisos: Con su evidencia, desde la puesta en marcha: M1 solicitud (una parte avisa) · M2 avería (el equipo paró).» | avisos del campo con `origen: 'trim'` (toda la historia) | `n` « en total» | `GET /api/sap/avisos` → `[].origen` |
-| 5 | SAP → TRIM · órdenes | «16 órdenes · 1 abierta» + ⓘ «Órdenes: Con su estado: creada, liberada, en ejecución, cerrada.» | todas las órdenes del campo; abiertas = `estado ≠ TECO` | `plural` | `GET /api/sap/ordenes` → `[].estado` |
-| 6 | SAP → TRIM · horas | «116,0 h» + ⓘ «Horas: Confirmadas: la reparación activa de cada orden.» | $\sum$ `horasReales` de **todas** las órdenes del campo (no del período) | `n1` « h» | `[].horasReales` |
+| 4 | TRIM → SAP · avisos | «5 en total» + ⓘ «Avisos: Con su evidencia, desde la puesta en marcha: M1 solicitud (una parte avisa) · M2 avería (el equipo paró).» | avisos del campo con `origen: 'trim'` (toda la historia): M2 de P-201B (22-sep), M1 de LC-14 (25-sep), M2 de LC-11 y de LC-04 (26-sep) y M1 de K-101 (2-oct) | `n` « en total» | `GET /api/sap/avisos` → `[].origen` |
+| 5 | SAP → TRIM · órdenes | «18 órdenes · 1 abierta» + ⓘ «Órdenes: Con su estado: creada, liberada, en ejecución, cerrada.» | todas las órdenes del campo (14 PM01, 2 PM02, 2 PM03); abiertas = `estado ≠ TECO` (la PM03 de K-101 del 2-oct) | `plural` | `GET /api/sap/ordenes` → `[].estado` |
+| 6 | SAP → TRIM · horas | «132,0 h» + ⓘ «Horas: Confirmadas: la reparación activa de cada orden.» | $\sum$ `horasReales` de **todas** las órdenes del campo (no del período) | `n1` « h» | `[].horasReales` |
 | 7 | SAP → TRIM · repuestos | «5 materiales» + ⓘ «Repuestos: Los críticos: stock de libre utilización en la bodega del campo.» | materiales distintos en los repuestos de la flota | `plural(n, 'material', 'materiales')` | `GET /api/sap/equipos` → `[].repuestos[].material` |
 | 8 | PLC ↔ SAP · equipos | «16 de 16» + ⓘ «Equipos: Los de alto impacto, asociados entre el PLC y SAP. Por ejemplo: P-201B → equipo 10759915 · CO-CEI-BAT1-AGU-P-201B.» | `flota.length de flota.length` (P-201B y 15 pozos con ESP) | **tautológico** en el demo (5D.6 §«Conectores»): debe ser «con `equipoSap` asociado» de «flota» | `GET /api/sap/equipos` → `[].identidad` |
 | 9 · 10 | CATÁLOGOS DE DAÑO | «Bomba de reinyección · 5 partes (cat. B) · 11 daños (cat. C) · 5 causas (cat. 5)»; «Electrosumergible · 5 partes (cat. B) · 7 daños (cat. C) · 5 causas (cat. 5)» | una fila por clase de catálogo de la flota: partes = `catalogo.partes.length`; daños = modos distintos de sus partes + 1 («otro»); causas = `CAUSAS_RAIZ.length` (primer nivel de ISO 14224 Table B.3) — 5C.6 §«Clase del catálogo», §«Modos por clase», §«Causas raíz» | `NOMBRE_CLASE_EQUIPO[clase]`; sin flota: «Este campo no tiene equipos de alto impacto.» | `GET /api/sap/equipos` → `[].catalogo` |
@@ -63,7 +63,7 @@ Esta cola de trabajo **no** se corta con «ver N más» (se ven todos los pendie
 
 | # | En la captura | Regla |
 |---|---|---|
-| 35 | «Código para La Ceiba» y el código (`XK5YZ-FYHQN` en la primera corrida; `PBKU9-T5HHH` y `FBZCD-P74MQ` en las del verificador) | 10 caracteres de un alfabeto sin I, L, O, 0 ni 1, en dos grupos de 5; **cambia en cada corrida** — 5D.8 §«Inscribir un borde». El front lo guarda con el campo pedido y no lo muestra bajo otro campo |
+| 35 | «Código para La Ceiba» y el código (`F7SB3-VXGK5` en la captura del 9-oct; `XK5YZ-FYHQN` en la primera corrida y `PBKU9-T5HHH` y `FBZCD-P74MQ` en las del verificador) | 10 caracteres de un alfabeto sin I, L, O, 0 ni 1, en dos grupos de 5; **cambia en cada corrida** — 5D.8 §«Inscribir un borde». El front lo guarda con el campo pedido y no lo muestra bajo otro campo |
 | 36 | «Se pega en el gateway; al primer contacto se canjea por su certificado. Vence en 24 h.» | `instruccion` + « Vence en » + `expiraEn` |
 | 37 | «trim_orden_liberada» (la décima plantilla) | «ver 5 más» abre las otras cinco: trim_recordatorio_arranco, trim_escalado_causa, trim_vigia_anticipa, trim_vigia_anticipa_sin_tag, trim_orden_liberada |
 | 38 | «ver menos» | |
@@ -76,7 +76,7 @@ Si la inscripción falla: «No se pudo emitir el código: *motivo*.» (hueco arr
 
 | # | En la captura | Qué cambia |
 |---|---|---|
-| 4 · 5 · 6 | «6 en total» · «27 órdenes · 0 abiertas» · «207,7 h» | |
+| 4 · 5 · 6 | «7 en total» · «28 órdenes · 0 abiertas» · «207,7 h» | avisos: M1 de MN-16 (3-sep) y de MN-05 (10-sep), los que el vigía anticipó, M2 de MN-23, M1 y M2 de MPP-301, M2 de MN-33 y de P-201B; órdenes: 23 PM01, 2 PM02 y 3 PM03 |
 | 8 | «43 de 43» | P-201B, MPP-301 y 41 pozos con ESP |
 | 34 | «Bomba multifásica · 6 partes (cat. B) · 12 daños (cat. C) · 5 causas (cat. 5)» | tercera clase de catálogo: Morichal tiene MPP-301 |
 | 14 · 15 | «4 enviados» · «2 personas reciben alertas» | solo jefe y confiabilidad tienen Morichal con alertas |

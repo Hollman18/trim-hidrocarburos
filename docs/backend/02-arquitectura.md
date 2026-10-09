@@ -76,7 +76,7 @@ Toda la interfaz se maneja con la dirección (la parte después de `#`):
 
 En producción el `rol` de la dirección **no da permisos**: es solo la vista del demo. Los permisos salen del token (2.8).
 
-El recorrido de una cifra, por ejemplo los **6.232 barriles diferidos** del resumen del gerente en el portafolio, octubre en curso:
+El recorrido de una cifra, por ejemplo los **2.377 barriles diferidos** del resumen del gerente en el portafolio, octubre en curso:
 
 1. La dirección `#/ger/resumen/ceiba~portafolio/curso` se lee en `src/app/url.ts` (`leerHash`) y queda en el estado global (`src/app/store.ts`): campos = los cinco asignados, período = mes en curso.
 2. La pantalla (`src/pages/Resumen.tsx` → `src/widgets/resumen/ResumenDirectivo.tsx`) llama `useLibro({ campos, desde, hasta })` de la costura (`src/shared/api/diferidos.ts:323`).
@@ -85,7 +85,7 @@ El recorrido de una cifra, por ejemplo los **6.232 barriles diferidos** del resu
 5. El códec del endpoint (`contrato.ts`) **revive** el JSON: fechas ISO → `Date`, claves de `refs` → objetos, `null` de «horas que nunca llegan» → `Infinity`, precio `null` → ausente. Si la forma no es la del contrato, lanza `ErrorDeContrato` y la pantalla lo dice (no pinta números a medias).
 6. La caché (`src/shared/api/consulta.ts`) guarda la respuesta (hasta 150 entradas; la clave incluye la **versión del contexto**: al firmar una configuración o responder una parada, las consultas cambian de clave y se vuelven a pedir).
 7. La pantalla lee el dominio con `use()` de React 19. Mientras llega, el `<Suspense>` muestra «Cargando…»; si falla, el `LimiteDeError` ofrece reintentar.
-8. La interfaz **solo formatea**: `n0(6232.4) = "6.232"` (capítulo 8).
+8. La interfaz **solo formatea**: `n0(2376.75) = "2.377"` (capítulo 8).
 
 El mapa completo de qué endpoint alimenta qué pantalla está en el capítulo 7.
 

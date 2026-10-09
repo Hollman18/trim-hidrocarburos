@@ -20,7 +20,7 @@ Reglas generales del teléfono (ancho < 640 px, `sm` de Tailwind; < 1024 px, `lg
 
 | # | Lo que se ve | Qué cambia |
 |---|---|---|
-| 1 | «1 bomba detenida · 17 pozos cerrados · 461 bbl/h · 2 de oct, 14:00» | la cabecera se apila: «Perdiéndose ahora», «Diferido que causaron» y «Próxima en fallar» uno debajo de otro; el conteo («1 bomba») queda solo, a la derecha |
+| 1 | «1 bomba detenida · 2 pozos cerrados · 69 bbl/h · 2 de oct, 14:00» | la cabecera se apila: «Perdiéndose ahora», «Diferido que causaron» y «Próxima en fallar» uno debajo de otro; el conteo («1 bomba») queda solo, a la derecha |
 | 2 | «ninguna» | igual que en el escritorio |
 | 3 | Indicador de la presión de descarga | dos renglones (nombre y ◆ 0 psi arriba, la barra abajo) |
 | 4 | «No arrancar hasta identificar» | igual; la ⓘ con blanco de 24 px |
@@ -29,7 +29,7 @@ Reglas generales del teléfono (ancho < 640 px, `sm` de Tailwind; < 1024 px, `lg
 
 | # | Lo que se ve | Qué cambia |
 |---|---|---|
-| 1 | ◆ **11.059** bbl/d | igual que el supervisor; la cabecera no trae el botón de exportar (el operador no tiene `evidencia:exportar`) |
+| 1 | ◆ **1.665** bbl/d | igual que el supervisor; la cabecera no trae el botón de exportar (el operador no tiene `evidencia:exportar`) |
 | 2 | «No arrancar» | — |
 
 ### El detalle de la bomba
@@ -38,13 +38,13 @@ Reglas generales del teléfono (ancho < 640 px, `sm` de Tailwind; < 1024 px, `lg
 
 | # | Lo que se ve | Qué cambia |
 |---|---|---|
-| 1 | Chips «Disposición de agua», «sin respaldo» | quedan a la derecha del nombre, que se parte en varios renglones con el id y la tecnología |
+| 1 | Chips «Disposición de agua», «respaldo 30.100 bbl/d» | quedan a la derecha del nombre, que se parte en varios renglones con el id y la tecnología |
 | 2 | «No arrancar hasta identificar el daño» + «Identificar» | igual |
-| 3 | Fila de una parada: «2 de oct, 03:52» / «abierta · bomba parada 10,1 h» | **la columna del medio desaparece** (`hidden sm:block`, `Detalle.tsx:413`): en el teléfono la fila no dice la parte ni cómo se identificó, ni «colchón X h · aguantó Y h», ni la marca ▲ «por identificar» / ■ «arrancó sin identificar». Eso se ve solo **al abrir la parada** («POR QUÉ PARÓ», «EL TANQUE») |
-| 4 | «17 pozos cerrados» | a la derecha, con los barriles |
-| 5 | «Primer pozo cerrado a las 4,2 h» | dentro de la parada abierta; «EL TANQUE» y «POZOS QUE CERRÓ» se apilan (rejilla `auto-fit` de 260 px) |
+| 3 | Fila de una parada: «2 de oct, 03:52» / «abierta · bomba parada 10,1 h» | **la columna del medio desaparece** (`hidden sm:block`, `Detalle.tsx:414`): en el teléfono la fila no dice la parte ni cómo se identificó, ni «colchón X h · aguantó Y h», ni la marca ▲ «por identificar» / ■ «arrancó sin identificar». Eso se ve solo **al abrir la parada** («POR QUÉ PARÓ», «EL TANQUE») |
+| 4 | «2 pozos cerrados» | a la derecha, con los barriles |
+| 5 | «Primer pozo cerrado a las 1,8 h» | dentro de la parada abierta; «EL TANQUE» y «POZOS QUE CERRÓ» se apilan (rejilla `auto-fit` de 260 px) |
 
-Otros pliegues del detalle en el teléfono: en «SALUD POR PARTE» (ingeniería) la historia de cada parte («5 fallas · 104.082 bbl») no se ve (`hidden sm:block`, `BloqueParte.tsx:43`); «ORDEN DE CIERRE» se desplaza a lo ancho dentro de su caja (`desplazable`, ancho mínimo 360 px); los paneles «PARTES QUE AVISAN» y «FUERA DE BANDA» se apilan.
+Otros pliegues del detalle en el teléfono: en «SALUD POR PARTE» (ingeniería) la historia de cada parte («5 fallas · 26.344 bbl») no se ve (`hidden sm:block`, `BloqueParte.tsx:43`); «ORDEN DE CIERRE» se desplaza a lo ancho dentro de su caja (`desplazable`, ancho mínimo 360 px); los paneles «PARTES QUE AVISAN» y «FUERA DE BANDA» se apilan.
 
 ## Turno
 
@@ -52,16 +52,16 @@ Otros pliegues del detalle en el teléfono: en «SALUD POR PARTE» (ingeniería)
 
 | # | Lo que se ve | Qué cambia |
 |---|---|---|
-| 1 | **5.680** bbl · «se pierden · turno que entra» | las cuatro cifras en una rejilla de **2 × 2**; debajo de «▲ 3 por identificar», «2 sin arrancar ·» y «■ 1 arrancó sin identificar» se parten en dos renglones (6B.5, filas 5-6 y 30) |
-| 2 | **2.721** bbl · «diferidos · 12 h» | — |
+| 1 | **983** bbl · «se pierden · turno que entra» | las cuatro cifras en una rejilla de **2 × 2**; debajo de «▲ 3 por identificar», «2 sin arrancar ·» y «■ 1 arrancó sin identificar» se parten en dos renglones (6B.5, filas 5-6 y 30) |
+| 2 | **723** bbl · «diferidos · 12 h» | — |
 | 3 | «PASANDO AHORA» | los tres paneles de arriba («PASANDO AHORA», «POR IDENTIFICAR», «PARA VIGILAR») se **apilan** en vez de ir lado a lado |
-| 4 | «03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:52 escalado → 08:08 pozos cerrándose» | el hilo de WhatsApp parte la cadena en dos renglones; el chip «parte por identificar» de «PARADAS NUEVAS» baja debajo de «17 pozos cerrados por P-201B · 08:07–08:52» |
+| 4 | «03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado» | el hilo de WhatsApp parte la cadena en dos renglones; el chip «parte por identificar» de «PARADAS NUEVAS» baja debajo de «2 pozos cerrados por P-201B · 05:43–05:46» |
 
 ![Turno · operador · teléfono](../img/oper-turno-telefono.png)
 
 | # | Lo que se ve | Qué cambia |
 |---|---|---|
-| 1 | **5.680** bbl | idéntico al supervisor, sin el botón de exportar |
+| 1 | **983** bbl | idéntico al supervisor, sin el botón de exportar |
 
 ## La ficha de P-201B
 

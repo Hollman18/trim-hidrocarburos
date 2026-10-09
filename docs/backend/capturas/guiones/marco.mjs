@@ -196,7 +196,7 @@ try {
           ? [{ n: 1, texto: 'Operadora de demostración', exacto: true, i: 0 }, { n: 2, texto: /^Folio INF-/, i: 0 }, { n: 3, texto: 'DATOS DE DEMOSTRACIÓN', exacto: true, i: 0 },
              { n: 4, texto: 'PROVISIONAL · MES EN CURSO', exacto: true }, { n: 5, texto: /^Generado el / }, { n: 6, texto: /^Por .* Datos hasta el / }, { n: 7, texto: /^Exposición:/ },
              { n: 8, texto: /^Nota de cálculo\./ }, { n: 9, texto: /huella SHA-256/ }, { n: 10, texto: /^Cifras protegidas/ },
-             { n: 11, texto: /Octubre, en curso · 1 de oct de 2026/, i: 0 }, { n: 12, texto: /^Pozos parados: 17/, lado: 'der' }]
+             { n: 11, texto: /Octubre, en curso · 1 de oct de 2026/, i: 0 }, { n: 12, texto: /^Pozos parados: 2/, lado: 'der' }]
           : [{ n: 1, texto: 'Impresión sin folio', exacto: true }, { n: 2, texto: 'SIN FOLIO', exacto: true }, { n: 3, texto: 'no sirve como respaldo', exacto: true }, { n: 4, texto: /^Sin folio\./ },
              { n: 5, texto: /^Datos hasta el / }]
         await dibujar(p, marcas, true)

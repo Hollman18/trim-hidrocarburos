@@ -2,8 +2,8 @@
 
 Dos funciones del servidor alimentan la pantalla **Riesgo** (`#/<rol>/riesgo/<campo>/<período>`), la entrega de **Turno**, la cabecera de cada campo y la ficha ejecutiva:
 
-- `riesgoAhora(campos, ctx)` → `Riesgo[]` (`diferido.ts:519-618`) → `GET /api/vistas/riesgo?campos`.
-- `estadoCampo(campo, ctx)` → `EstadoCampo` (`diferido.ts:653-669`) → `GET /api/vistas/estado?campos` (uno por campo, en el orden pedido).
+- `riesgoAhora(campos, ctx)` → `Riesgo[]` (`diferido.ts:528-627`) → `GET /api/vistas/riesgo?campos`.
+- `estadoCampo(campo, ctx)` → `EstadoCampo` (`diferido.ts:662-678`) → `GET /api/vistas/estado?campos` (uno por campo, en el orden pedido).
 
 Nada de esto sale de una tabla escrita: sale de los eventos abiertos de los controladores, las pruebas, el factor del mes, el vigía (salud por parte) y la historia de fallas. Cada campo se calcula independiente (ninguno mira a otro) y se memoriza por (contexto, campo).
 
@@ -30,7 +30,7 @@ Nada de esto sale de una tabla escrita: sale de los eventos abiertos de los cont
 | `costoDe` | `'propio'` o `'flota'`; ausente si `costoFalla` es 0 por definición | — | — | |
 | `altoImpacto` | Si es de alto impacto | bool | `tipo ∈ {reinyeccion, electrosumergible}` | bomba no multifásica, o ESP |
 
-Orden en la API: primero `perdiendo`, luego `en-riesgo`; dentro de cada uno, `bblDia` descendente (`diferido.ts:524`). La pantalla reordena «en riesgo» (5.5).
+Orden en la API: primero `perdiendo`, luego `en-riesgo`; dentro de cada uno, `bblDia` descendente (`diferido.ts:533`). La pantalla reordena «en riesgo» (5.5).
 
 ---
 
@@ -38,7 +38,7 @@ Orden en la API: primero `perdiendo`, luego `en-riesgo`; dentro de cada uno, `bb
 
 **Qué es.** El crudo de los pozos apagados (o frenados) **en este momento**, cada uno cargado al equipo que lo apagó.
 
-**Fórmula** (`diferido.ts:542-560`). Para cada pozo $p$ del campo con evento abierto $e$ (`estadoAhora`), con causa $c = $ `causaDeEvento(e)`, se agrupa por la clave (`c.equipo`, `c.tipo`):
+**Fórmula** (`diferido.ts:551-569`). Para cada pozo $p$ del campo con evento abierto $e$ (`estadoAhora`), con causa $c = $ `causaDeEvento(e)`, se agrupa por la clave (`c.equipo`, `c.tipo`):
 
 $$
 \text{bblDia}_{k} = \sum_{p \in k} \text{crudoAsignado}(p) \cdot \begin{cases} f(hz_e, hz_{\text{prueba}}) & \text{si } p \text{ produce a frecuencia reducida} \\ 1 & \text{si está cerrado} \end{cases}
@@ -48,25 +48,23 @@ $$
 \text{crudoAsignado}(p) = c_{\text{prueba vigente}}(p) \cdot \text{FA}_{\text{mes}}
 $$
 
-`pozos` = número de pozos del grupo; `cierreDesde` = mínimo de `e.inicio`; `desde` = inicio de la parada de bomba o del servicio que es `c.evento` (`inicioDeCausa`, `diferido.ts:622-628`), o el mínimo `e.inicio` si la causa es el propio pozo; `parte` y `motivo` del **primer** pozo del grupo; `prioridad` = 1 si alto impacto, 2 si no.
+`pozos` = número de pozos del grupo; `cierreDesde` = mínimo de `e.inicio`; `desde` = inicio de la parada de bomba o del servicio que es `c.evento` (`inicioDeCausa`, `diferido.ts:631-637`), o el mínimo `e.inicio` si la causa es el propio pozo; `parte` y `motivo` del **primer** pozo del grupo; `prioridad` = 1 si alto impacto, 2 si no.
 
 **Ejemplo con los datos del demo** (portafolio, AHORA = 2-oct 14:00):
 
 | Equipo · campo | Tipo | Pozos | bbl/d | Desde | Pozos cerrados desde | Motivo |
 |---|---|---|---|---|---|---|
-| P-201B · La Ceiba | reinyección | 17 | 11.058,9 | 2-oct 03:52 | 2-oct 08:07 | Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno |
-| MN-41 · Morichal | electrosumergible (aislamiento) | 1 | 684,1 | 3-sep 06:40 | 3-sep 06:40 | El variador disparó por falla a tierra |
-| GU-07 · Guacamayo | electrosumergible (aislamiento) | 1 | 588,1 | 26-sep 02:04 | ídem | El variador disparó por falla a tierra |
-| GU-09 · Guacamayo | electrosumergible (aislamiento) | 1 | 585,2 | 13-sep 17:23 | ídem | El variador disparó por desbalance de fases |
+| P-201B · La Ceiba | reinyección | 2 | 1.665,2 | 2-oct 03:52 | 2-oct 05:43 | Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno |
+| MN-41 · Morichal | electrosumergible (aislamiento) | 1 | 684,1 | 25-sep 06:40 | 25-sep 06:40 | El variador disparó por falla a tierra |
 | LC-21 · La Ceiba | sin identificar | 1 | 300,8 | 1-oct 18:20 | ídem | Ninguna señal explica por qué paró: hay que identificarlo |
 
-Total perdiéndose: **13.217,1 bbl/d** en 21 pozos (17 + 1 + 1 + 1 + 1).
+Total perdiéndose: **2.650,1 bbl/d** en 4 pozos (2 + 1 + 1). P-201B de La Ceiba solo cerró los dos pozos que hacía falta para quitar el agua sin salida (LC-16 y LC-07, cap. 4); GU-07 y GU-09, que fallaron en septiembre, ya volvieron: desde la puesta en marcha de TRIM (1-sep) una electrosumergible caída espera taladro 2 a 5 días.
 
 **Qué texto se muestra según el valor** (Riesgo, `Riesgo.tsx:74-97`; Turno igual con «En el turno»):
 - Marca: ◆ P1 si `altoImpacto`, ▲ P2 si no (la pantalla la deduce de `altoImpacto`, igual que el servidor).
 - Renglón: **equipo** (+ « · <campo>» si el ámbito es el portafolio), chip con `TIPO_CAUSA[tipo]` en minúscula (tono fuerte si alto impacto), la parte en minúscula, «desde <fechaHora(desde)>»; a la derecha `n0(bblDia)` y «bbl/d · <plural(pozos, 'pozo', 'pozos')>».
 - Globo (y papel): «Pozos parados» · «Perdiéndose <n0> bbl/d» · «Por hora <n0(bblDia/24)> bbl/h» · «Desde» · «Pozos cerrados desde» (solo si `cierreDesde − desde > 1 min`) · «Del potencial <n1> %» (solo nivel `decision`, sobre el potencial del ámbito).
-- Ejemplo, P-201B: «P-201B · La Ceiba», chip «bomba de reinyección», «desde 2 de oct, 03:52», «**11.059** bbl/d · 17 pozos»; globo «Por hora 461 bbl/h», «Pozos cerrados desde 2 de oct, 08:07», «Del potencial 26,3 %» (portafolio) o 97,4 % (solo La Ceiba).
+- Ejemplo, P-201B: «P-201B · La Ceiba», chip «bomba de reinyección», «desde 2 de oct, 03:52», «**1.665** bbl/d · 2 pozos»; globo «Por hora 69 bbl/h», «Pozos cerrados desde 2 de oct, 05:43», «Del potencial 4,0 %» (portafolio) o 14,7 % (solo La Ceiba).
 - `fechaHora`: «2 de oct, 03:52»; con otro año, «19 de oct de 2025, 02:02».
 
 **Casos borde.** Un pozo sin prueba tiene crudo 0 (cuenta como pozo parado con 0 bbl/d). Un pozo a frecuencia reducida por causa propia no suma pozos parados en `EstadoCampo.parados` pero sí entra en «perdiendo» con su fracción. Sin factor medido en el campo, todo es 0.
@@ -77,9 +75,9 @@ Total perdiéndose: **13.217,1 bbl/d** en 21 pozos (17 + 1 + 1 + 1 + 1).
 
 **Qué es.** Equipos que **producen** pero tienen una parte que avisa: lo que se perdería por día si paran («si para»), cuándo cruza la alarma, y lo que costaría que fallaran **hoy** («si falla hoy», abajo). Solo se vigilan las familias que el **perfil firmado del campo** tiene (`perfilDe(config, campo).bombas` y `.electrosumergibles`).
 
-Tres fuentes, en este orden (`diferido.ts:567-615`):
+Tres fuentes, en este orden (`diferido.ts:576-624`):
 
-**(a) Bombas de la línea en marcha con una parte que avisa** (`diferido.ts:568-583`). Para cada bomba con perfil en el campo **sin parada abierta**: `sp` = la primera parte de `saludDePartes(perfil)` en estado `fuera` o `avisa` (la lista de salud ya viene ordenada por gravedad). Si hay:
+**(a) Bombas de la línea en marcha con una parte que avisa** (`diferido.ts:577-592`). Para cada bomba con perfil en el campo **sin parada abierta**: `sp` = la primera parte de `saludDePartes(perfil)` en estado `fuera` o `avisa` (la lista de salud ya viene ordenada por gravedad). Si hay:
 
 | Campo de la fila | Valor |
 |---|---|
@@ -87,10 +85,10 @@ Tres fuentes, en este orden (`diferido.ts:567-615`):
 | `pozos` | `orden.pasos.length` (disposición) o `perfil.pozos.length` (transporte) o 0 |
 | `horas`, `rango`, `tag` | de `sp.primera` (la variable que antes cruza); si no hay, el `tag` de `sp.fuera[0]` |
 | `prioridad` | `sp.prioridad || 3` |
-| `costoFalla`, `colchonH`, `mdtFuente`, `costoDe` | `costoDeBomba(p, prediccion(p), historialDeEquipo(p))` (`diferido.ts:498-513`): «Si falla hoy», abajo |
+| `costoFalla`, `colchonH`, `mdtFuente`, `costoDe` | `costoDeBomba(p, prediccion(p), historialDeEquipo(p))` (`diferido.ts:507-522`): «Si falla hoy», abajo |
 | `altoImpacto` | `subtipo !== 'multifasica'` |
 
-**(b) Servicios del campo en alarma que cuelgan de todo el campo** (`diferido.ts:586-594`). Cada equipo del catálogo que no es bomba, instrumentado en el campo, con severidad 1 o 2 y `aguasAbajo === 'todo el campo'`, y que no esté ya en la lista (p. ej. como «perdiendo»):
+**(b) Servicios del campo en alarma que cuelgan de todo el campo** (`diferido.ts:595-603`). Cada equipo del catálogo que no es bomba, instrumentado en el campo, con severidad 1 o 2 y `aguasAbajo === 'todo el campo'`, y que no esté ya en la lista (p. ej. como «perdiendo»):
 
 $$
 \text{bblDia} = \sum_{p\ \text{produce}} \text{crudoAsignado}(p) \qquad \text{pozos} = \#\{p\ \text{produce}\}
@@ -98,9 +96,9 @@ $$
 
 `prioridad` = severidad del equipo; `tipo` = `eq.servicio` (o `proceso`); `motivo` = «<nombre>: <estado>. <lectura>»; `accion` = `intervencion.accionInmediata`; sin `horas`, sin `costoFalla` (lo que cuesta la caída de un servicio depende de cuánto dure), `altoImpacto: false`.
 
-**(c) Electrosumergibles que producen con una parte que avisa** (`diferido.ts:597-615`). Para cada pozo ESP que produce: `sp` = peor parte de `saludDeEsp(p, ctx)`. `bblDia = crudoAsignado(p)`, `pozos = 1`, `altoImpacto: true`, y `costoFalla` con la cuenta de «Si falla hoy» (su crudo de hoy por sus horas fuera; sin fallas propias, las de su flota en el campo).
+**(c) Electrosumergibles que producen con una parte que avisa** (`diferido.ts:606-624`). Para cada pozo ESP que produce: `sp` = peor parte de `saludDeEsp(p, ctx)`. `bblDia = crudoAsignado(p)`, `pozos = 1`, `altoImpacto: true`, y `costoFalla` con la cuenta de «Si falla hoy» (su crudo de hoy por sus horas fuera; sin fallas propias, las de su flota en el campo).
 
-**Tiempo fuera promedio de la flota ESP** (`mdtEspDelCampo`, `diferido.ts:478-482`), con los datos del demo:
+**Tiempo fuera promedio de la flota ESP** (`mdtEspDelCampo`, `diferido.ts:487-491`), con los datos del demo:
 
 $$
 \text{mdtEspDelCampo} = \frac{1}{n} \sum_{\text{ESP del campo}}\ \sum_{\text{fallas cerradas, no disparos}} \text{horas}
@@ -108,9 +106,11 @@ $$
 
 | Campo | Fallas cerradas de ESP (no disparos) | Horas de cada una | Promedio |
 |---|---|---|---|
-| Morichal | 9 | MN-01 460,6 · MN-05 394,4 · MN-06 692,7 · MN-08 489,8 · MN-11 692,8 · MN-16 362,1 · MN-17 387,7 · MN-23 442,8 · MN-24 454,3 | **486,34 h** (20,3 días) |
-| Guacamayo | 5 | GU-02 782,7 · GU-05 821,6 · GU-06 290,6 · GU-08 449,8 · GU-11 735,8 | **616,10 h** (25,7 días) |
-| La Ceiba | 4 | LC-05 296,0 · LC-09 815,3 · LC-12 378,4 · LC-16 755,6 | 561,30 h |
+| Morichal | 8 | MN-01 460,6 · MN-06 692,7 · MN-08 489,8 · MN-11 692,8 · MN-17 387,7 · MN-23 68,2 · MN-24 454,3 · MN-33 102,8 | **418,60 h** (17,4 días) |
+| Guacamayo | 7 | GU-02 782,7 · GU-05 361,2 · GU-06 290,6 · GU-07 60,7 · GU-08 449,8 · GU-09 81,1 · GU-11 735,8 | **394,55 h** (16,4 días) |
+| La Ceiba | 6 | LC-04 61,2 · LC-05 296,0 · LC-09 815,3 · LC-11 84,7 · LC-12 378,4 · LC-16 755,6 | 398,50 h |
+
+Las fallas desde la puesta en marcha de TRIM (1-sep) duran de 61 a 103 h: el vigía avisa y el taladro y la bomba se programan antes (MN-23, MN-33, GU-07, GU-09, LC-04, LC-11); GU-05, que ya esperaba el 1-sep, volvió a los pocos días. Las de desgaste que el vigía anticipó (MN-05 y MN-16) ya no son fallas: son cambios programados (5C) y no entran en el promedio. MN-41, todavía abierta, tampoco entra.
 
 ---
 
@@ -118,9 +118,9 @@ $$
 
 **Qué es.** Los barriles que costaría que el equipo fallara **hoy**: el crudo que se pierde por día si para hoy, por las horas que suelen durar sus fallas, **sin las horas que aguanta hoy el tanque** (una bomba de disposición). Es la decisión del dueño del producto del 8-oct-2026 (cap. 10, D3): una sola cuenta para todas las familias, así las filas se pueden sumar (la «exposición» de la cabecera). No es lo que el equipo **ya costó** por falla (`HistorialEquipo.bblPorFalla`, cap. 7: «le ha costado por falla»).
 
-**Dónde se ve.** Riesgo, fila «en riesgo», debajo de la cifra «si para»: «≈ 2.086 bbl si falla hoy», con tanque «0 si vuelve antes de 19 h», y «flota» (solo ingeniería) si se estimó con la flota; ⓘ «si falla hoy» con el `mdtFuente`; globo «Si falla hoy · ≈ 2.086 bbl»; la cabecera los suma: «≈ 55.238 bbl de exposición» (5.5). Mantenimiento, ATACAR AHORA, con las mismas palabras en el mismo orden (cap. 6C).
+**Dónde se ve.** Riesgo, fila «en riesgo», debajo de la cifra «si para»: «≈ 1.235 bbl si falla hoy», con tanque «0 si vuelve antes de 10 h», y «flota» (solo ingeniería) si se estimó con la flota; ⓘ «si falla hoy» con el `mdtFuente`; globo «Si falla hoy · ≈ 1.235 bbl»; la cabecera los suma: «≈ 45.262 bbl de exposición» (5.5). Mantenimiento, ATACAR AHORA, con las mismas palabras en el mismo orden (cap. 6C).
 
-**Fórmula** (`costoDeBomba`, `diferido.ts:498-513`; electrosumergible, `diferido.ts:603-612`). Con $d_i$ = horas de cada falla **cerrada** del equipo (sin disparos), $\bar d$ su promedio, $n$ cuántas son:
+**Fórmula** (`costoDeBomba`, `diferido.ts:507-522`; electrosumergible, `diferido.ts:612-621`). Con $d_i$ = horas de cada falla **cerrada** del equipo (sin disparos), $\bar d$ su promedio, $n$ cuántas son:
 
 $$
 \text{costoFalla} =
@@ -144,23 +144,23 @@ $$
 
 Por qué $\max(0, d_i - h)$: mientras la bomba esté parada menos que el colchón, el tanque absorbe el agua y no se cierra ningún pozo; solo las horas que pasan del colchón cuestan crudo. Una falla más corta que el colchón de hoy cuesta 0.
 
-`mdtFuente` (texto, `diferido.ts:503-512`): «el promedio de sus N fallas cerradas» (`su falla cerrada` si es una) y, en disposición con tanque, «…, sin las <`textoHoras(h, true)`> que aguanta hoy el tanque» (las horas **truncadas**: 19,05 h → «19 h», 18,6 h → «18 h», nunca redondeadas hacia arriba); con el tanque ya en el alto-alto, «…; el tanque ya está en el alto-alto, no aguanta nada»; sin colchón calculado, «…, sin descontar el tanque (no hay colchón calculado): es un techo». Recobro: «una bomba de recobro no cierra pozos hoy»; respaldo total: «el respaldo absorbe toda el agua: parar no cierra pozos». Electrosumergible: «<`textoHoras(mdtH)`> fuera, el promedio de sus N fallas cerradas» o «<`textoHoras(mdt)`> fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)».
+`mdtFuente` (texto, `diferido.ts:512-521`): «el promedio de sus N fallas cerradas» (`su falla cerrada` si es una) y, en disposición con tanque, «…, sin las <`textoHoras(h, true)`> que aguanta hoy el tanque» (las horas **truncadas**: 10,05 h → «10 h», 18,6 h → «18 h», nunca redondeadas hacia arriba); con el tanque ya en el alto-alto, «…; el tanque ya está en el alto-alto, no aguanta nada»; sin colchón calculado, «…, sin descontar el tanque (no hay colchón calculado): es un techo». Recobro: «una bomba de recobro no cierra pozos hoy»; respaldo total: «el respaldo absorbe toda el agua: parar no cierra pozos». Electrosumergible: «<`textoHoras(mdtH)`> fuera, el promedio de sus N fallas cerradas» o «<`textoHoras(mdt)`> fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)».
 
-**Ejemplo con los datos del demo — P-201B de Morichal** (disposición, con tanque y respaldo P-201A de 15.100 bbl/d).
-1. $Q_{\text{hoy}}$ = **1.670,662 bbl/d** (cap. 4: cierra MN-27, MN-36, MN-13 y MN-39 al 78 %); $h_{\text{hoy}}$ = **19,0499 h** (cap. 4: 5.076 bbl libres / 266,46 bbl/h).
+**Ejemplo con los datos del demo — P-201B de Morichal** (disposición, con tanque y respaldo de las otras seis bombas, 39.500 bbl/d).
+1. $Q_{\text{hoy}}$ = **783,072 bbl/d** (cap. 4: cierra MN-27 y les baja la frecuencia a MN-36 y MN-13 al 25 % y a MN-39 al 16 %); $h_{\text{hoy}}$ = **10,0515 h** (cap. 4: 16.920 bbl libres / 1.683,33 bbl/h).
 2. Sus 8 fallas cerradas: $d$ = 86,03 · 50,48 · 60,09 · 39,84 · 49,58 · 3,67 · 20,36 · 66,71 h ($\bar d$ = 47,094 h).
-3. $\max(0, d_i - 19{,}05)$ = 66,98 · 31,43 · 41,04 · 20,79 · 30,53 · **0** · 1,31 · 47,66 h; promedio **29,967 h**. La falla de 3,67 h (`EV-M2011-260103`, succión) hoy no costaría nada: el tanque la aguanta.
-4. $\text{costoFalla} = 1.670{,}662 \times 29{,}967 / 24 = $ **2.086,0 bbl** → «≈ 2.086 bbl si falla hoy»; `colchonH` = 19,05 → «0 si vuelve antes de 19 h»; `mdtFuente` «el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque»; `costoDe: 'propio'`.
-5. Sin descontar el colchón daría $1.670{,}662 \times 47{,}094 / 24 = 3.278{,}3$ bbl (el «de hoy» sin tanque que se preguntaba en «Huecos», 28). Lo que **le ha costado** por falla (histórico) es otra cifra: 26.917,2 / 8 = **3.364,6 bbl** («le ha costado 3.365 bbl por falla», cap. 7).
+3. $\max(0, d_i - 10{,}05)$ = 75,97 · 40,43 · 50,04 · 29,79 · 39,52 · **0** · 10,30 · 56,66 h; promedio **37,840 h**. La falla de 3,67 h (`EV-M2011-260103`, succión) hoy no costaría nada: el tanque la aguanta.
+4. $\text{costoFalla} = 783{,}072 \times 37{,}840 / 24 = $ **1.234,6 bbl** → «≈ 1.235 bbl si falla hoy»; `colchonH` = 10,05 → «0 si vuelve antes de 10 h»; `mdtFuente` «el promedio de sus 8 fallas cerradas, sin las 10 h que aguanta hoy el tanque»; `costoDe: 'propio'`.
+5. Sin descontar el colchón daría $783{,}072 \times 47{,}094 / 24 = 1.536{,}6$ bbl (el «de hoy» sin tanque que se preguntaba en «Huecos», 28). Lo que **le ha costado** por falla (histórico) es otra cifra: 22.117,4 / 8 = **2.764,7 bbl** («le ha costado 2.765 bbl por falla», cap. 7): son los barriles que de verdad perdió cada falla (antes de TRIM se cerraba más agua de la necesaria y los pozos volvían horas después de arrancar la bomba).
 
-**MPP-301 de Morichal** (multifásica, sin tanque): $Q_{\text{hoy}}$ = 1.599,752 bbl/d (el clúster MN-07, MN-18, MN-33); 7 fallas cerradas, $d$ = 45,40 · 72,64 · 10,54 · 40,72 · 26,37 · 69,75 · 75,31 h, $\bar d$ = 48,676 h → $1.599{,}752 \times 48{,}676 / 24 = $ **3.244,5 bbl** («≈ 3.245 bbl si falla hoy»; `mdtFuente` «el promedio de sus 7 fallas cerradas»). Le ha costado 3.433,5 bbl por falla.
+**MPP-301 de Morichal** (multifásica, sin tanque): $Q_{\text{hoy}}$ = 1.599,752 bbl/d (el clúster MN-07, MN-18, MN-33); 7 fallas cerradas, $d$ = 45,40 · 72,64 · 10,54 · 40,72 · 26,37 · 69,75 · 75,31 h, $\bar d$ = 48,676 h → $1.599{,}752 \times 48{,}676 / 24 = $ **3.244,5 bbl** («≈ 3.245 bbl si falla hoy»; `mdtFuente` «el promedio de sus 7 fallas cerradas»). Le ha costado 3.226,1 bbl por falla.
 
-**Electrosumergibles** (ninguna en riesgo tiene fallas propias: todas `flota`): MN-07 $606{,}532 \times 486{,}339 / 24 = $ **12.290,8**; MN-18 $526{,}054 \times 486{,}339/24 = $ **10.660,0**; MN-27 $510{,}350 \times 486{,}339/24 = $ **10.341,8**; GU-04 $647{,}226 \times 616{,}103 / 24 = $ **16.614,9**. `mdtFuente` «20,3 d fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)» (Guacamayo: «25,7 d fuera, …»).
+**Electrosumergibles.** Las de Morichal y GU-04 no tienen fallas propias (`flota`): MN-07 $606{,}532 \times 418{,}60 / 24 = $ **10.578,8**; MN-18 $526{,}054 \times 418{,}60/24 = $ **9.175,2**; MN-27 $510{,}350 \times 418{,}60/24 = $ **8.901,3**; GU-04 $647{,}177 \times 394{,}55 / 24 = $ **10.639,5**. `mdtFuente` «17,4 d fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)» (Guacamayo: «16,4 d fuera, …»). GU-07 sí tiene la suya (la del 26-sep, 60,7 h): $588{,}079 \times 60{,}72 / 24 = $ **1.487,8**, `propio`, «2,5 d fuera, el promedio de su falla cerrada».
 
 **Casos que el demo no tiene en riesgo, corridos con el motor** (`verificar-libro` §18):
 - **Recobro**, P-201B de Guacamayo con su predicción y su historia reales (5 fallas cerradas, $\bar d$ = 41,03 h): `costoFalla: 0`, sin `costoDe` ni `colchonH`, «una bomba de recobro no cierra pozos hoy». En pantalla, «≈ 0 bbl si falla hoy».
 - **Respaldo que absorbe toda el agua** (Morichal con el respaldo de P-201B a $10^6$ bbl/d): `costoFalla: 0`, «el respaldo absorbe toda el agua: parar no cierra pozos». Un 0 por definición cuenta como cifra en la exposición.
-- **Sin tanque firmado** (Morichal sin tanques): $1.670{,}662 \times 47{,}094 / 24 \approx$ **3.278 bbl**, «…, sin descontar el tanque (no hay colchón calculado): es un techo»; sin `colchonH`.
+- **Sin tanque firmado** (Morichal sin tanques): $783{,}072 \times 47{,}094 / 24 \approx$ **1.537 bbl**, «…, sin descontar el tanque (no hay colchón calculado): es un techo»; sin `colchonH`.
 - **Sin historia** (MPP-301 sin paradas; las electrosumergibles de Guacamayo sin fallas propias ni de su flota): `costoFalla` **ausente**, no 0 → «sin historia» y fuera de la exposición.
 
 **Casos borde.**
@@ -176,15 +176,15 @@ Por qué $\max(0, d_i - h)$: mientras la bomba esté parada menos que el colchó
 
 **Qué texto se muestra según el valor** (`src/shared/ui/costoHoy.ts:15-36`, la misma forma en Riesgo y en Mantenimiento):
 - `costoHoy(r)`: «≈ <`n0(costoFalla)`> bbl si falla hoy»; sin `costoFalla`, nada (Riesgo escribe entonces «sin historia», o nada si es un servicio).
-- `colchonCorto(r)`: solo con `costoFalla` y $1 \le$ `colchonH` $\le$ 2.160 h: «0 si vuelve antes de <`textoHoras(colchonH, true)`>» (espacios duros en «antes de 19 h» para que la «h» no quede sola en la columna angosta).
-- `detalleCostoHoy(r)` (el ⓘ «si falla hoy»): `mdtFuente` con mayúscula inicial y punto, más « Una reparación más corta no cuesta crudo.» si hay `colchonCorto`. P-201B de Morichal: «El promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.»; MPP-301: «El promedio de sus 7 fallas cerradas.»
+- `colchonCorto(r)`: solo con `costoFalla` y $1 \le$ `colchonH` $\le$ 2.160 h: «0 si vuelve antes de <`textoHoras(colchonH, true)`>» (espacios duros en «antes de 10 h» para que la «h» no quede sola en la columna angosta).
+- `detalleCostoHoy(r)` (el ⓘ «si falla hoy»): `mdtFuente` con mayúscula inicial y punto, más « Una reparación más corta no cuesta crudo.» si hay `colchonCorto`. P-201B de Morichal: «El promedio de sus 8 fallas cerradas, sin las 10 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.»; MPP-301: «El promedio de sus 7 fallas cerradas.»
 - `deFlota(r, nivel)`: «flota» debajo, solo en el nivel `ingenieria` y con `costoDe = 'flota'`.
 
-**Lo que ya costó (no es esta cifra).** `HistorialEquipo.bblPorFalla` (promedio de los barriles de sus fallas cerradas, con los ceros de las que absorbió el tanque) se rotula siempre «le ha costado por falla»: Detalle de la bomba («Le ha costado por falla»), placa («· le ha costado 3.365 bbl por falla»), ficha ejecutiva («le ha costado 18.075 bbl por falla, en promedio»), panel del equipo y Confiabilidad (columna «le ha costado / por falla»). Cap. 7.
+**Lo que ya costó (no es esta cifra).** `HistorialEquipo.bblPorFalla` (promedio de los barriles de sus fallas cerradas, con los ceros de las que absorbió el tanque) se rotula siempre «le ha costado por falla»: Detalle de la bomba («Le ha costado por falla»), placa de P-201B de Morichal («· le ha costado 2.765 bbl por falla»), ficha ejecutiva de P-201B de La Ceiba («le ha costado 4.593 bbl por falla, en promedio»), panel del equipo y Confiabilidad (columna «le ha costado / por falla»). Cap. 7.
 
-**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/riesgo?campos` → `Riesgo.costoFalla?` (bbl), `colchonH?` (h, solo finito), `mdtFuente?` (texto) y `costoDe?` (`'propio'` | `'flota'`); son números y textos: el códec no cambia. Fórmula en CONTRATO.md «Costo si falla hoy» (`CONTRATO.md:1118-1138`).
+**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/riesgo?campos` → `Riesgo.costoFalla?` (bbl), `colchonH?` (h, solo finito), `mdtFuente?` (texto) y `costoDe?` (`'propio'` | `'flota'`); son números y textos: el códec no cambia. Fórmula en CONTRATO.md «Costo si falla hoy» (`CONTRATO.md:1128-1148`).
 
-**Referencia.** `diferido.ts:453-472` (tipo), `:498-513` (`costoDeBomba`), `:580`, `:603-612`; `src/shared/ui/costoHoy.ts`; casos `referencia/riesgo/{morichal,guacamayo,portafolio}.json`; `verificar-libro.mjs` §18 (1) y §19 (5).
+**Referencia.** `diferido.ts:462-481` (tipo), `:507-522` (`costoDeBomba`), `:589`, `:612-621`; `src/shared/ui/costoHoy.ts`; casos `referencia/riesgo/{morichal,guacamayo,portafolio}.json`; `verificar-libro.mjs` §18 (1) y §19 (5).
 
 ---
 
@@ -192,19 +192,20 @@ Por qué $\max(0, d_i - h)$: mientras la bomba esté parada menos que el colchó
 
 | Equipo · campo | Tipo | Parte · estado | Prio | Cruza en (rango) | Si para bbl/d | Pozos | Si falla hoy (bbl) | `colchonH` | `costoDe` |
 |---|---|---|---|---|---|---|---|---|---|
-| K-101 · La Ceiba | aire | — | 1 | — (ya fuera) | 0 | 0 | — | — | — |
-| MN-07 · Morichal | ESP | bomba · fuera | 2 | 3,79 h (3,64–3,96) | 606,5 | 1 | 606,532 × 486,339 / 24 = **12.290,8** | — | flota |
-| MN-18 · Morichal | ESP | admision · fuera | 2 | 30,16 h (29,6–30,7) | 526,1 | 1 | **10.660,0** | — | flota |
-| P-201B · Morichal | reinyección | succion · fuera | 2 | 43,09 h (41,3–45,0) | 1.670,7 | 4 | 1.670,662 × 29,967 / 24 = **2.086,0** | 19,05 | propio |
-| GU-04 · Guacamayo | ESP | aislamiento · fuera | 2 | 61,08 h (60,3–61,9) | 647,2 | 1 | 647,226 × 616,103 / 24 = **16.614,9** | — | flota |
+| K-101 · La Ceiba | aire | — | 1 | — (ya fuera) | 9.394,2 | 15 | — | — | — |
+| GU-07 · Guacamayo | ESP | aislamiento · fuera | 1 | — (ya fuera) | 588,1 | 1 | 588,079 × 60,72 / 24 = **1.487,8** | — | propio |
+| MN-07 · Morichal | ESP | bomba · fuera | 2 | 3,79 h (3,64–3,96) | 606,5 | 1 | 606,532 × 418,60 / 24 = **10.578,8** | — | flota |
+| MN-18 · Morichal | ESP | admision · fuera | 2 | 30,16 h (29,6–30,7) | 526,1 | 1 | **9.175,2** | — | flota |
+| P-201B · Morichal | reinyección | succion · fuera | 2 | 43,09 h (41,3–45,0) | 783,1 | 4 | 783,072 × 37,840 / 24 = **1.234,6** | 10,05 | propio |
+| GU-04 · Guacamayo | ESP | aislamiento · fuera | 2 | 61,08 h (60,3–61,9) | 647,2 | 1 | 647,177 × 394,55 / 24 = **10.639,5** | — | flota |
 | MPP-301 · Morichal | transporte | filtro · fuera | 2 | 124,31 h (113,3–137,6) | 1.599,8 | 3 | 1.599,752 × 48,676 / 24 = **3.244,5** | — | propio |
-| MN-27 · Morichal | ESP | protector · fuera | 2 | 261,54 h (245,9–279,3) | 510,4 | 1 | **10.341,8** | — | flota |
+| MN-27 · Morichal | ESP | protector · fuera | 2 | 261,54 h (245,9–279,3) | 510,4 | 1 | **8.901,3** | — | flota |
 
-Suma de «si falla hoy» = 12.290,8 + 10.660,0 + 2.086,0 + 16.614,9 + 3.244,5 + 10.341,8 = **55.238,1 bbl** (K-101, servicio, no lleva cifra). Antes de la corrección del 8-oct, P-201B de Morichal decía 3.364,6 y MPP-301 3.433,5 (lo que **ya** costaron por falla) y la suma era 56.706.
+Suma de «si falla hoy» = 1.487,8 + 10.578,8 + 9.175,2 + 1.234,6 + 10.639,5 + 3.244,5 + 8.901,3 = **45.261,6 bbl** (K-101, servicio, no lleva cifra). La cuenta es la del 8-oct; lo que cambió con el demo del 9-oct es lo de adentro: P-201B de Morichal pierde menos crudo si para (con 97 % de agua, cada barril de agua que se quita lleva menos crudo) y su tanque aguanta menos (10 h de colchón), y la flota de electrosumergibles vuelve antes (17,4 días en Morichal, 16,4 en Guacamayo).
 
-Motivos (textuales, horas con `textoHoras`, la regla de las pantallas): P-201B Morichal «Succión y filtro de entrada: presión de succión salió de su banda normal; llega a su alarma en 43 h» (tag `PI-2010`, acción «Limpiar el filtro o recuperar nivel en el tanque antes de que la bomba dispare por baja succión.»); MPP-301 «Filtro de entrada: caída de presión del filtro salió de su banda normal; llega a su alarma en 5,2 d» (`PDT-3011`); GU-04 «… llega a su alarma en 2,5 d»; MN-27 «Protector (sello del motor): temperatura del motor salió de su banda normal; llega a su alarma en 10,9 d»; MN-07 «Bomba de fondo (eje y etapas): corriente del motor salió de su banda normal; llega a su alarma en 4 h»; K-101 «Sistema de aire de instrumentos: en marcha · degradado. La presión de cabezal cae hace 7 días. La norma exige recibidor de 5 a 30 min de autonomía: hoy quedan 11. Alimenta cinco sistemas.»
+Motivos (textuales, horas con `textoHoras`, la regla de las pantallas): P-201B Morichal «Succión y filtro de entrada: presión de succión salió de su banda normal; llega a su alarma en 43 h» (tag `PI-2010`, acción «Limpiar el filtro o recuperar nivel en el tanque antes de que la bomba dispare por baja succión.»); MPP-301 «Filtro de entrada: caída de presión del filtro salió de su banda normal; llega a su alarma en 5,2 d» (`PDT-3011`); GU-04 «… llega a su alarma en 2,5 d»; MN-27 «Protector (sello del motor): temperatura del motor salió de su banda normal; llega a su alarma en 10,9 d»; GU-07 «Aislamiento del motor y del cable: desbalance de corriente entre fases ya llegó a su alarma» (`VSD-GU07`); MN-07 «Bomba de fondo (eje y etapas): corriente del motor salió de su banda normal; llega a su alarma en 4 h»; K-101 «Sistema de aire de instrumentos: en marcha · degradado. La presión de cabezal cae hace 7 días. La norma exige recibidor de 5 a 30 min de autonomía: hoy quedan 11. Alimenta cinco sistemas.»
 
-K-101 de La Ceiba entra por (b) con 0 bbl/d porque en La Ceiba **no produce ningún pozo**. SE-2 de Morichal (corriente de barraje subiendo) **no** entra: su severidad es 3 y (b) solo toma 1 o 2.
+K-101 de La Ceiba entra por (b) con **9.394,2 bbl/d**: el crudo asignado de los 15 pozos que producen (el aire de instrumentos cuelga de todo el campo; si se cae, se cierran todos). SE-2 de Morichal (corriente de barraje subiendo) **no** entra: su severidad es 3 y (b) solo toma 1 o 2.
 
 **Casos borde.**
 - Bomba con parada abierta: nunca está «en riesgo» (ya está «perdiendo» o el tanque absorbe).
@@ -219,11 +220,11 @@ K-101 de La Ceiba entra por (b) con 0 bbl/d porque en La Ceiba **no produce ning
 
 **Qué es.** El resumen de un campo ahora. Lo pide la cabecera del campo, el riel lateral y Riesgo (para el potencial).
 
-**Fórmulas** (`calcularEstado`, `diferido.ts:655-669`):
+**Fórmulas** (`calcularEstado`, `diferido.ts:664-678`):
 
 | Campo | Fórmula |
 |---|---|
-| `ayer` | `{ fecha, bbl }` del fiscal del último día completo del punto de medición oficial; `bbl: null` si el computador de flujo no lo reportó (`fiscalDeAyer`, `libro.ts:1036`) |
+| `ayer` | `{ fecha, bbl }` del fiscal del último día completo del punto de medición oficial; `bbl: null` si el computador de flujo no lo reportó (`fiscalDeAyer`, `libro.ts:1053`) |
 | `potencialBpd` | $\sum_{p \in \text{campo}} \text{crudoAsignado}(p)$ (todos los pozos, produzcan o no) |
 | `perdiendoBpd` | $\sum$ `bblDia` de las filas `perdiendo` |
 | `perdiendoAltoBpd` | lo mismo, solo filas con `altoImpacto` |
@@ -236,13 +237,13 @@ K-101 de La Ceiba entra por (b) con 0 bbl/d porque en La Ceiba **no produce ning
 
 | Campo | Ayer (1-oct) | Potencial bbl/d | Perdiendo | De alto impacto | Pozos | Parados | En riesgo | Severidad |
 |---|---|---|---|---|---|---|---|---|
-| La Ceiba | 11.105 | 11.359,7 | 11.359,7 | 11.058,9 | 18 | 18 | 1 | 1 |
+| La Ceiba | 11.105 | 11.360,2 | 1.966,0 | 1.665,2 | 18 | 3 | 1 | 1 |
 | Morichal | 16.685 | 17.604,1 | 684,1 | 684,1 | 41 | 1 | 5 | 1 |
-| Guacamayo | 5.439 | 6.615,7 | 1.173,3 | 1.173,3 | 12 | 2 | 1 | 1 |
+| Guacamayo | 6.611 | 6.615,2 | 0 | 0 | 12 | 0 | 2 | 3 |
 | Palmar | 3.186 | 3.276,9 | 0 | 0 | 7 | 0 | 0 | 0 |
 | Zarza | 3.163 | 3.158,5 | 0 | 0 | 9 | 0 | 0 | 0 |
 
-En La Ceiba el potencial es igual a lo que se pierde: los 18 pozos están cerrados (17 por P-201B y LC-21 sin identificar).
+En La Ceiba se pierde el 17,3 % del potencial: 1.665,2 bbl/d de los dos pozos que cerró P-201B (LC-16 y LC-07) y 300,8 de LC-21 (sin identificar); los otros 15 producen. Guacamayo no pierde nada ahora (GU-07 y GU-09 ya volvieron) y su severidad es 3 por sus dos filas en riesgo.
 
 **Quién lo calcula y por dónde viaja.** Servidor, `GET /api/vistas/estado?campos` → `EstadoCampo[]` con `ayer.fecha` ISO. Caso de referencia: no tiene caso propio; `riesgo/*` cubre las filas.
 
@@ -275,15 +276,15 @@ En La Ceiba el potencial es igual a lo que se pierde: los 18 pozos están cerrad
 
 | Ámbito | Perdiéndose ahora | Apoyo | En riesgo | Pie corto | El más cercano |
 |---|---|---|---|---|---|
-| Portafolio | ◆ **13.217** bbl/d | 31,5 % del potencial · 21 pozos parados | 7 equipos · **5.561** bbl/d en juego | «≈ 55.238 bbl de exposición · sin 1 servicio»; ⓘ «Suma de lo que costaría cada equipo si fallara hoy, uno por uno. Sin contar 1 servicio del campo.» | K-101 · La Ceiba · chip «ya fuera» |
-| La Ceiba | ◆ **11.360** | 100,0 % · 18 pozos parados | 1 equipo · **0** bbl/d en juego | «solo servicios del campo» | K-101 · «ya fuera» |
-| Morichal | ◆ **684** | 3,9 % · 1 pozo parado | 5 equipos · **4.913** | «≈ 38.623 bbl de exposición» (12.290,8 + 10.660,0 + 2.086,0 + 3.244,5 + 10.341,8) | MN-07 · Bomba de fondo · cruza en 4 h |
-| Guacamayo | ◆ **1.173** | 17,7 % · 2 pozos parados | 1 equipo · **647** | «≈ 16.615 bbl de exposición» | GU-04 · Aislamiento del motor y del cable · cruza en 2,5 d |
+| Portafolio | ◆ **2.650** bbl/d | 6,3 % del potencial · 4 pozos parados | 8 equipos · **14.655** bbl/d en juego | «≈ 45.262 bbl de exposición · sin 1 servicio»; ⓘ «Suma de lo que costaría cada equipo si fallara hoy, uno por uno. Sin contar 1 servicio del campo.» | K-101 · La Ceiba · chip «ya fuera» |
+| La Ceiba | ◆ **1.966** | 17,3 % · 3 pozos parados | 1 equipo · **9.394** bbl/d en juego | «solo servicios del campo» | K-101 · «ya fuera» |
+| Morichal | ◆ **684** | 3,9 % · 1 pozo parado | 5 equipos · **4.026** | «≈ 33.134 bbl de exposición» (10.578,8 + 9.175,2 + 1.234,6 + 3.244,5 + 8.901,3) | MN-07 · Bomba de fondo · cruza en 4 h |
+| Guacamayo | **0** (sin marca) | 0,0 % · 0 pozos parados | 2 equipos · **1.235** | «≈ 12.127 bbl de exposición» (10.639,5 + 1.487,8) | GU-07 · Aislamiento del motor y del cable · chip «ya fuera» |
 
-Orden de las filas del portafolio: K-101 (ya fuera) · MN-07 (4 h) · MN-18 (30 h · 30–31 h) · P-201B Morichal (43 h · 41–45 h) · GU-04 (2,5 d · 2,5–2,6 d) · MPP-301 (5,2 d · 4,7–5,7 d) · MN-27 (10,9 d · 10,2–11,6 d). Fila de K-101: ◆ «ya fuera», «si para **todo el campo**», sin cifra ni ⓘ «si falla hoy». Fila de P-201B Morichal: ▲ «succión y filtro de entrada» + «fuera de banda», «43 h» «41–45 h», «**1.671** bbl/d», debajo «≈ 2.086 bbl si falla hoy» y «0 si vuelve antes de 19 h»; ⓘ «si falla hoy»: «El promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.» Fila de MN-07: ▲, «4 h» (sin rango: 3,64 y 3,96 se escriben los dos «4 h»), «607 bbl/d», «≈ 12.291 bbl si falla hoy», «flota» en ingeniería; ⓘ «20,3 d fuera, el promedio de las electrosumergibles del campo (esta no ha fallado).». Fila de MPP-301: «1.600 bbl/d», «≈ 3.245 bbl si falla hoy» (sin «0 si vuelve…»: no tiene tanque).
+Orden de las filas del portafolio: K-101 (ya fuera) · GU-07 (ya fuera) · MN-07 (4 h) · MN-18 (30 h · 30–31 h) · P-201B Morichal (43 h · 41–45 h) · GU-04 (2,5 d · 2,5–2,6 d) · MPP-301 (5,2 d · 4,7–5,7 d) · MN-27 (10,9 d · 10,2–11,6 d); entre las dos «ya fuera» queda el orden de la API (más bbl/d primero). Fila de K-101: ◆ «ya fuera», «si para **9.394** bbl/d» (ya no «todo el campo»: eso solo se escribe con 0 bbl/d), sin cifra ni ⓘ «si falla hoy». Fila de GU-07: ◆ «aislamiento del motor y del cable» + «fuera de banda», «ya fuera», «588 bbl/d», «≈ 1.488 bbl si falla hoy» (sin «flota»: es la suya). Fila de P-201B Morichal: ▲ «succión y filtro de entrada» + «fuera de banda», «43 h» «41–45 h», «**783** bbl/d», debajo «≈ 1.235 bbl si falla hoy» y «0 si vuelve antes de 10 h»; ⓘ «si falla hoy»: «El promedio de sus 8 fallas cerradas, sin las 10 h que aguanta hoy el tanque. Una reparación más corta no cuesta crudo.» Fila de MN-07: ▲, «4 h» (sin rango: 3,64 y 3,96 se escriben los dos «4 h»), «607 bbl/d», «≈ 10.579 bbl si falla hoy», «flota» en ingeniería; ⓘ «17,4 d fuera, el promedio de las electrosumergibles del campo (esta no ha fallado).». Fila de MPP-301: «1.600 bbl/d», «≈ 3.245 bbl si falla hoy» (sin «0 si vuelve…»: no tiene tanque).
 
 **Ver más.** Se ven 5 filas y «ver N más»; una fila de prioridad 1 nunca se esconde (`listaCorta.ts:10-16`; en «perdiendo» la prioridad es 1 si alto impacto). En papel salen todas.
 
 **Texto fijo de la pantalla** (Lectura, `Riesgo.tsx:184-194`): «Perdiéndose ahora es el crudo de los pozos que están apagados en este momento, cada uno cargado al equipo que lo apagó. En riesgo son las bombas de la línea y las electrosumergibles que producen pero tienen una parte que avisa: lo que se perdería por día si paran, y lo que costaría que fallaran hoy con el tiempo fuera que suelen tener (la exposición lo suma).» (+ «En puntos de eficiencia: lo perdido sobre el potencial del campo.» en `decision`) + «La lista va ordenada por cuándo cruza su límite: primero lo que ya está fuera. El ⓘ «si falla hoy» de cada fila dice de dónde sale la cifra («flota»: el equipo nunca ha fallado y se estimó con su flota en el campo). Un servicio del campo no lleva esa cifra: lo que cuesta su caída depende de cuánto dure.»
 
-**Referencia.** `diferido.ts:424-669`, `pages/Riesgo.tsx`, `shared/ui/costoHoy.ts`; casos `referencia/riesgo/{ceiba,morichal,guacamayo,palmar,zarza,portafolio}.json`.
+**Referencia.** `diferido.ts:433-678`, `pages/Riesgo.tsx`, `shared/ui/costoHoy.ts`; casos `referencia/riesgo/{ceiba,morichal,guacamayo,palmar,zarza,portafolio}.json`.

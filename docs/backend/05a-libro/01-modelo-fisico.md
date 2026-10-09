@@ -48,29 +48,29 @@ $$
 
 | Campo | Crudo bbl/d | Agua bbl/d | BSW | WOR |
 |---|---:|---:|---:|---:|
-| La Ceiba (18 pozos) | 11.921 | 21.608 | 64,4 % | 1,81 |
-| Morichal Norte (41) | 18.025 | 43.971 | 70,9 % | 2,44 |
-| Guacamayo (12) | 6.831 | 8.324 | 54,9 % | 1,22 |
-| El Palmar (7) | 3.332 | 2.530 | 43,2 % | 0,76 |
-| La Zarza (9, uno sin prueba) | 3.076 | 1.258 | 29,0 % | 0,41 |
+| La Ceiba (18 pozos) | 11.921 | 223.688 | 94,9 % | 18,76 |
+| Morichal Norte (41) | 18.025 | 578.049 | 97,0 % | 32,07 |
+| Guacamayo (12) | 6.831 | 90.199 | 93,0 % | 13,20 |
+| El Palmar (7) | 3.332 | 13.091 | 79,7 % | 3,93 |
+| La Zarza (9, uno sin prueba) | 3.076 | 1.424 | 31,6 % | 0,46 |
 
-En La Ceiba, pozo a pozo: LC-01 376 bbl/d de crudo y 958 de agua (BSW 71,8 %); LC-02 395 y 1.179 (74,9 %); LC-03 (bombeo mecánico) 393 y 352 (47,2 %).
+En La Ceiba, pozo a pozo: LC-01 376 bbl/d de crudo y 10.543 de agua (BSW 96,6 %); LC-02 395 y 12.971 (97,0 %); LC-03 (bombeo mecánico) 393 y 1.479 (79,0 %). El crudo es el mismo de siempre; lo que cambió el 9-oct es el agua que lo acompaña (los cortes de los campos colombianos). El Palmar, todo de bombeo mecánico, queda en 80 %: una unidad de varilla no levanta más de unos 3.000 bbl/d de líquido; La Zarza es de gas y condensado.
 
 Rango pozo a pozo en el demo (prueba vigente al 15-sep):
 
 | Campo | Pozo de menor corte | Pozo de mayor corte |
 |---|---|---|
-| La Ceiba | LC-21: 42,3 % (WOR 0,73) | LC-02: 74,9 % (WOR 2,99) |
-| Morichal Norte | MN-09: 48,7 % (0,95) | MN-27: 79,1 % (3,79) |
-| Guacamayo | GU-03: 33,9 % (0,51) | GU-07: 64,9 % (1,85) |
-| El Palmar | PA-02: 27,7 % (0,38) | PA-07: 52,6 % (1,11) |
-| La Zarza | ZA-04: 15,5 % (0,18) | ZA-02: 37,1 % (0,59) |
+| La Ceiba | LC-19 (bombeo mecánico): 60,4 % (WOR 1,53) | LC-02: 97,0 % (WOR 32,84) |
+| Morichal Norte | MN-09: 92,6 % (12,45) | MN-27: 98,0 % (49,82) |
+| Guacamayo | GU-03: 84,8 % (5,56) | GU-07: 95,2 % (20,00) |
+| El Palmar | PA-02: 69,8 % (2,31) | PA-07: 87,0 % (6,67) |
+| La Zarza | ZA-04: 17,1 % (0,21) | ZA-02: 40,1 % (0,67) |
 
-> **Ojo (hueco del demo).** Los datos del demo tienen cortes de campo de 29 % a 71 % (de pozo, de 15,5 % a 79,1 %), no de 92 % a 98 %. Las fórmulas no dependen del corte, pero un backend con datos reales de la operadora verá WOR de 11,5 a 49 y, con ellas, tanques que se llenan mucho más rápido. Ver «Huecos y dudas».
+Desde el 9-oct los cortes del demo son los de los campos colombianos (La Ceiba 95 %, Morichal 97 %, Guacamayo 93 %): WOR de 13 a 32 en esos tres campos y hasta 50 por pozo. El hueco de los cortes bajos (5A.12, 1) quedó resuelto.
 
 **Casos borde.** Un pozo sin prueba no tiene corte ni caudal (no se le inventa). Un corte de laboratorio (no analizador) es «manual en origen» y se dice (`custodia.bswLaboratorio`, ver más abajo).
 
-**Quién lo calcula.** El libro no expone el BSW; usa crudo y agua por separado. Lo leen el orden de cierre (`ordenOptimo`, `src/entities/libro.ts:936`) y la predicción (otro capítulo).
+**Quién lo calcula.** El libro no expone el BSW; usa crudo y agua por separado. Lo leen el orden de cierre (`ordenOptimo`, `src/entities/libro.ts:945`) y la predicción (otro capítulo).
 
 ---
 
@@ -102,7 +102,7 @@ return u ?? p.pruebas[0]
 
 El libro la pide **por pozo y por día** (al inicio del día, `crudo(p, dia)` en `src/entities/libro.ts:84`): si un pozo tiene prueba nueva el 14-sep a las 15:00, el día 14 completo usa todavía la anterior y desde el 15 la nueva.
 
-**Ejemplo con los datos del demo.** LC-02 de La Ceiba: prueba del 2026-09-14T15:00 con 395 bbl/d de crudo, 1.179 de agua a 53 Hz; antes regía otra con 402 bbl/d y 1.150 de agua (se ve en el orden de cierre de la parada del 9-sep, 5A.3). LC-03 tiene prueba del 2026-07-12 (393 bbl/d) y otra del 2026-09-21 (390 bbl/d).
+**Ejemplo con los datos del demo.** LC-02 de La Ceiba: prueba del 2026-09-14T15:00 con 395 bbl/d de crudo, 12.971 de agua a 53 Hz; antes regía la del 2026-07-09 con 402 bbl/d y 12.656 de agua. LC-03 tiene prueba del 2026-07-12 (393 bbl/d) y otra del 2026-09-21 (390 bbl/d).
 
 **Casos borde.**
 
@@ -141,7 +141,7 @@ El libro la pide **por pozo y por día** (al inicio del día, `crudo(p, dia)` en
 | último elemento del mes en curso | lo que va del día de hoy | parcial: se prorratea por horas (ver abajo) |
 | `origen.bsw` | el corte de agua sale de un analizador en línea o del laboratorio | `laboratorio` = «manual en origen», se dice |
 
-**Ejemplo con los datos del demo.** La Ceiba, septiembre (publicado, 30 días): `[11700, 11640, 11607, 11674, 11596, 11318, 11342, 11520, 11372, 1090, 7100, 11318, …, 11596]`. El 10-sep el computador de flujo marcó **1.090 bbl** (la bomba de reinyección P-201B estaba parada y casi todos los pozos cerrados) y el 11-sep **7.100**. Octubre (no publicado): `[11105, 3838]`: el 1-oct completo y lo que van las 14 h del 2-oct.
+**Ejemplo con los datos del demo.** La Ceiba, septiembre (publicado, 30 días): `[11706, 11646, 11613, 11679, 11602, 11324, 11348, 11525, 11377, 11527, …, 10578, …, 10221, 9691, 9642, 11055, 11602]`. El 22-sep el computador de flujo marcó **10.578 bbl** (la bomba de reinyección P-201B estuvo parada 16 h y cerró 2 pozos) y del 26 al 28-sep **10.221, 9.691 y 9.642** (LC-04 y LC-11 caídos por sus electrosumergibles). Octubre (no publicado): `[11105, 5836]`: el 1-oct completo y lo que van las 14 h del 2-oct.
 
 Orígenes del demo: La Ceiba, Morichal y La Zarza con analizador; **Guacamayo y El Palmar con corte de laboratorio** (El Palmar mide con «LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho»).
 

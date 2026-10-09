@@ -1,7 +1,7 @@
 /* Capturas del capítulo 6C que el generador (scripts/pantallazos-doc.mjs) no
  * puede hacer porque hay que escribir en cajas de texto: el administrador
  * cambia el esquema de planta de Guacamayo en Configuración (un pozo nuevo en
- * «Pozos productores» y una bomba de respaldo en el tren de agua) y después se
+ * «Pozos productores» y una bomba de respaldo, P-201D, en el tren de agua: Guacamayo ya tiene P-201A, B y C) y después se
  * ve la Planta con el cambio.
  *
  *   node docs/backend/capturas/guiones/planta.mjs [--salida docs/backend/img] [--puerto 5197]
@@ -130,7 +130,7 @@ try {
   const fAgua = panelAgua.locator('form').last()
   if (!(await fAgua.count())) throw new Error('no aparece el formulario del tren de agua')
   await fAgua.getByLabel('Tipo de elemento').selectOption({ label: 'Bomba de reinyección' })
-  await fAgua.getByLabel('Nombre del elemento').fill('P-201C · respaldo')
+  await fAgua.getByLabel('Nombre del elemento').fill('P-201D · respaldo')
   await fAgua.getByRole('button', { name: 'Montar' }).click()
   await p.waitForTimeout(400)
   if (!(await p.getByText('CAMBIOS DEL ESQUEMA', { exact: true }).count())) throw new Error('el cambio no quedó registrado (no aparece «CAMBIOS DEL ESQUEMA»)')
@@ -140,17 +140,18 @@ try {
   if (!(await esquema.count())) throw new Error('no aparece el bloque «Esquema de planta»')
   await dibujar(p, [
     { n: 1, texto: 'CAMBIOS DEL ESQUEMA', exacto: true, lado: 'der' },
-    { n: 2, texto: /montó P-201C · respaldo/, lado: 'der' },
+    { n: 2, texto: /montó P-201D · respaldo/, lado: 'der' },
     { n: 3, texto: /agregó GU-13 · ESP \(GU-13\)/, lado: 'der' },
-    { n: 4, texto: 'P-201C · respaldo', exacto: true },
+    { n: 4, texto: 'P-201D · respaldo', exacto: true },
     { n: 5, texto: 'GU-13 · ESP', exacto: true },
     { n: 6, texto: '13 configurados', exacto: true },
     { n: 7, texto: '1 configurados', exacto: true },
     { n: 8, texto: 'TREN DE CRUDO', exacto: true },
+    { n: 9, texto: 'BOMBAS DE AGUA', exacto: true, lado: 'der' },
   ])
   if (errores.length) throw new Error(`la página lanzó un error (${errores.join(' | ')})`)
   await esquema.screenshot({ path: `${SALIDA}/adm-configuracion-esquema-guacamayo.png` })
-  console.log('  ✓ adm-configuracion-esquema-guacamayo.png  8 marcas')
+  console.log('  ✓ adm-configuracion-esquema-guacamayo.png  9 marcas')
   await p.evaluate(() => document.getElementById('marcas-doc')?.remove())
 
   // 2 · A Planta por el riel (el cambio vive en la sesión del demo; en producción lo guarda el servidor).
@@ -160,10 +161,10 @@ try {
   await p.waitForTimeout(600)
   await crecer(p, 1512)
   await dibujar(p, [
-    { n: 1, texto: '8 de 10', exacto: true },
-    { n: 2, texto: 'P-201C · respaldo', exacto: true, i: 0 },
-    { n: 3, texto: '2 equipos', exacto: true },
-    { n: 4, texto: 'P-201C · respaldo', exacto: true, i: 1, lado: 'der' },
+    { n: 1, texto: '8 de 12', exacto: true },
+    { n: 2, texto: 'P-201D · respaldo', exacto: true, i: 0 },
+    { n: 3, texto: '4 equipos', exacto: true },
+    { n: 4, texto: 'P-201D · respaldo', exacto: true, i: 1, lado: 'arriba' },
     { n: 5, rol: 'button', nombre: 'Conectores y tags' },
   ])
   if (errores.length) throw new Error(`la página lanzó un error (${errores.join(' | ')})`)

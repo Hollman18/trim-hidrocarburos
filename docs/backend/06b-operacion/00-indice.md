@@ -8,7 +8,7 @@ Todos los valores son del demo con `AHORA = 2026-10-02T14:00-05:00`, período «
 |---|---|---|
 | [01-bombas.md](01-bombas.md) | 6B.1 · Bombas: la estación, la placa de cada bomba y su detalle | `sup-bombas-ceiba`, `conf-bombas-morichal`, `conf-bombas-portafolio`, `sup-bombas-detalle-ceiba`, `conf-bombas-detalle-morichal`, `jefe-bombas-detalle-ceiba` |
 | [02-electrosumergibles.md](02-electrosumergibles.md) | 6B.2 · Electrosumergibles: la flota, la fila abierta y la ficha de MN-07 | `jefe-esp-morichal`, `conf-esp-morichal-fila`, `jefe-esp-ficha-MN-07`, `prod-esp-portafolio`, `sup-esp-ceiba`, `prod-esp-palmar` |
-| [03-pozos.md](03-pozos.md) | 6B.3 · Pozos: la tabla y el detalle de un pozo | `prod-pozos-ceiba`, `sup-pozos-ceiba`, `prod-pozos-ficha-LC-21`, `prod-pozos-ficha-LC-14` |
+| [03-pozos.md](03-pozos.md) | 6B.3 · Pozos: la tabla y el detalle de un pozo | `prod-pozos-ceiba`, `sup-pozos-ceiba`, `prod-pozos-ficha-LC-21`, `prod-pozos-ficha-LC-16` |
 | [04-ficha-equipo.md](04-ficha-equipo.md) | 6B.4 · La ficha de un equipo (operación, ingeniería, ejecutiva, servicio) | `sup-bombas-ficha-P-201B`, `jefe-riesgo-ficha-P-201B`, `ger-resumen-ficha-P-201B`, `conf-confiabilidad-ficha-MPP-301`, `jefe-equipo-ficha-K-101`, `ger-diferidos-ficha-SE-2` |
 | [05-turno.md](05-turno.md) | 6B.5 · Entrega de turno | `sup-turno-ceiba`, `oper-turno-ceiba` |
 | [06-telefono.md](06-telefono.md) | 6B.6 · En el teléfono (390 px) | `sup-bombas-telefono`, `oper-bombas-telefono`, `oper-bombas-detalle-telefono`, `sup-turno-telefono`, `oper-turno-telefono`, `sup-bombas-ficha-P-201B-telefono`, `oper-bombas-ficha-P-201B-telefono` |

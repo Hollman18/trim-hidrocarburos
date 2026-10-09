@@ -31,7 +31,7 @@ Sea `perfil = perfilBomba(ev.equipo, ev.campoId)`, `tipo = 'transporte'` si la b
 
 | Parada | Bomba | Lo que trae | Regla que aplica → causa |
 |---|---|---|---|
-| `EV-2011-0909` · 9-sep 21:14 → 11-sep 07:59 | Ceiba P-201B | primera alarma `LSH-2013` | 2 → reinyección · sello · señal · «Primera alarma: fuga de sello detectada» |
+| `EV-2011-0809` · 9-ago 21:14 → 11-ago 07:59 | Ceiba P-201B | primera alarma `LSH-2013` | 2 → reinyección · sello · señal · «Primera alarma: fuga de sello detectada» |
 | `EV-2011-0922` · 22-sep 10:05 | Ceiba P-201B | `TSH-2011` | 2 → rodamientos («temperatura alta en la cámara de empuje») |
 | `EV-2011-260819` · 19-ago 18:19 | Ceiba P-201B | dentro de `PR-2011-260819` | 1 → programada · programa |
 | `EV-2011-260128` · 28-ene 16:20 | Ceiba P-201B | primera alarma `PAL-1011` (no es de P-201B) | 2 no aplica; 4: K-101 cayó a las 16:18 (2 min antes) → **aire · K-101** · «Paró porque presión baja del aire de instrumentos» |
@@ -97,7 +97,7 @@ $$
 | Causa (Identificar), cabecera (no se muestra al nivel `operacion`) | «por identificar · histórico» = `porIdentificar` (las que piden, hayan arrancado o no); apoyo «N pozos · M bombas · K sin arrancar»; «no conformidades» = `arrancoSinIdentificar` con ■ P3 si > 0 (`Causa.tsx:49-56`, `:121-130`) | demo: **4** por identificar (2 pozos · 2 bombas · 2 sin arrancar) con ▲; **3** no conformidades; panel «POR IDENTIFICAR · SIN ARRANCAR» con 2 |
 | Placa de bomba (ingeniería/operación) | `abierta.pide` | ▲ «**No arrancar** hasta identificar» + ⓘ «<texto>. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.» (`Placa.tsx:139-146`) |
 | Detalle de bomba | `abierta.pide` | banda ▲ «No arrancar hasta identificar el daño» + ⓘ con el procedimiento (`Detalle.tsx:125-132`) |
-| Detalle de bomba, lista de paradas | por fila | ■ «arrancó sin identificar» si `arrancoSinIdentificar`; ▲ «por identificar» si `pide` y no arrancó (`Detalle.tsx:425-426`) |
+| Detalle de bomba, lista de paradas | por fila | ■ «arrancó sin identificar» si `arrancoSinIdentificar`; ▲ «por identificar» si `pide` y no arrancó (`Detalle.tsx:426-427`) |
 | Ficha ejecutiva | pregunta abierta de ese equipo (`pide && !fin`) | «Espera que se identifique el daño · hace <fmtHoras(AHORA − inicio, precisa)>» + chip fuerte «no arrancar». Demo, Ceiba P-201B: «hace 10,1 h» |
 
 **Cifras de identificación del período (cabecera de Causa).** Salen del libro (`libro.ts:741-742`, `:858`):
@@ -106,7 +106,7 @@ $$
 \text{pendiente} = \sum_{\text{tramos con tipo = pendiente}} \text{bbl} \qquad \text{declarado} = \sum_{\text{tramos esDeclarado}} \text{bbl} \qquad \text{identificado} = \text{diferido} - \text{pendiente} - \text{declarado}
 $$
 
-Ojo: los pozos que cerró una bomba **sin parte identificada** (`reinyeccion`, `como: 'ninguno'`) cuentan como **identificados** (el equipo está probado por señal; lo que falta es la parte, y eso lo pregunta la pregunta de bomba). Demo, portafolio, «Octubre, en curso» (1-oct 00:00 → 2-oct 14:00): diferido 6.232 bbl; por señal 5.790 bbl (**92,9 %**); declarado 86 bbl (1,4 %); sin identificar 355 bbl (5,7 %). Septiembre cerrado: 105.227 bbl; por señal 104.818 bbl; declarado 409 bbl; sin identificar 0.
+Ojo: los pozos que cerró una bomba **sin parte identificada** (`reinyeccion`, `como: 'ninguno'`) cuentan como **identificados** (el equipo está probado por señal; lo que falta es la parte, y eso lo pregunta la pregunta de bomba). Demo, portafolio, «Octubre, en curso» (1-oct 00:00 → 2-oct 14:00): diferido 2.377 bbl; por señal 1.935 bbl (**81,4 %**); declarado 86 bbl (3,6 %); sin identificar 355 bbl (14,9 %: LC-21, que sigue abierto, y LC-08). Septiembre cerrado: 33.945 bbl; por señal 33.536 bbl; declarado 409 bbl; sin identificar 0.
 
 **Quién lo calcula y por dónde viaja.** Servidor. `Pregunta[]` en `GET /api/vistas/paradas/por-identificar` y en `Libro.preguntas`; `ParadaMedida.pide` / `.arrancoSinIdentificar` en `GET /api/vistas/bombas/paradas` y en `BombaVista.abierta`.
 
@@ -161,8 +161,8 @@ $$
 
 `DISPARO_MAX_H = 24` (estricto: 24,0 h exactas es falla). Un evento **abierto** nunca es disparo (todavía no se sabe). En las bombas de superficie no aplica: toda parada propia es falla.
 
-**Ejemplo con los datos del demo.** MN-07 (Morichal): 7 eventos de su ESP en la historia, todos de 0,3 a 3,8 h (p. ej. `EP-MN07-260809-33`, `UL`, 9-ago 11:14 → 14:02, 2,8 h, 69 bbl) → **0 fallas, 7 disparos**, 314 bbl. LC-05 (La Ceiba): `GF` 24-oct-2025 08:55 → 5-nov 16:53 = 296 h → **1 falla** (más 8 disparos). MN-41: `GF` desde el 3-sep 06:40, abierto (703 h a AHORA) → 1 falla abierta.
+**Ejemplo con los datos del demo.** MN-07 (Morichal): 5 eventos de su ESP en la historia, todos de 0,3 a 2,8 h (p. ej. `EP-MN07-260809-56`, `UL`, 9-ago 11:14 → 14:02, 2,8 h, 69 bbl) → **0 fallas, 5 disparos**, 160 bbl. LC-05 (La Ceiba): `GF` 24-oct-2025 08:55 → 5-nov 16:53 = 296 h → **1 falla** (más 8 disparos). MN-41: `GF` desde el 25-sep 06:40, abierto (175,3 h a AHORA) → 1 falla abierta.
 
-**Qué texto se muestra.** Ficha ejecutiva, «Cada cuánto falla»: con fallas, «N falla(s) · una cada N días»; sin fallas pero con disparos, «No ha fallado · N disparos que volvieron a arrancar»; sin nada, «No ha fallado» (`FichaEjecutiva.tsx:96-100`). MN-07 → «No ha fallado · 7 disparos que volvieron a arrancar».
+**Qué texto se muestra.** Ficha ejecutiva, «Cada cuánto falla»: con fallas, «N falla(s) · una cada N días»; sin fallas pero con disparos, «No ha fallado · N disparos que volvieron a arrancar»; sin nada, «No ha fallado» (`FichaEjecutiva.tsx:96-100`). MN-07 → «No ha fallado · 5 disparos que volvieron a arrancar».
 
-**Referencia.** `libro.ts:447-455`, `libro.ts:1257-1262`; CONTRATO.md:1140-1141.
+**Referencia.** `libro.ts:447-455`, `libro.ts:1274-1279`; CONTRATO.md:1150-1151.

@@ -24,7 +24,8 @@ import { otrosEnAlarma } from './enAlarma'
 import { PorCampo } from './PorCampo'
 
 const D = 86_400_000
-const signo = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${n0(Math.abs(v * 100))} %`
+/** Un cambio en %: con signo, salvo que redondee a cero («0 %», nunca «−0 %»). */
+const signo = (v: number) => { const r = Math.round(v * 100); return `${r > 0 ? '+' : r < 0 ? '−' : ''}${n0(Math.abs(r))} %` }
 
 /** El resumen del directivo: cinco respuestas y nada más. Cuánto no se
  *  produjo y cuánto vale; si va bien o mal contra las metas que él firmó (en

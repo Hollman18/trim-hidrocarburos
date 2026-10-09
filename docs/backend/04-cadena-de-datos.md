@@ -200,7 +200,7 @@ Una lectura **mala** no entra en la serie: en su lugar va `null`. Un instrumento
 
 **Huecos.** Un hueco es la **ausencia** de lecturas en un paso (el gateway se cayó más de lo que guarda, el historiador no tiene datos). La serie lo devuelve como `null` **en su lugar**, no lo salta (saltarlo comprime el eje del vigía) y nunca lo rellena. Lo mismo el fiscal: un día sin dato del computador de flujo es `null` en `dias[]` (o un arreglo más corto), y el libro lo excluye de lo real y del potencial, lo nombra en `sinFiscal` y no se publica.
 
-**El reloj del PLC.** La hora de un evento la pone el PLC y de ella sale el diferido: un error de reloj de 1 minuto en una parada de la bomba de La Ceiba (que cierra 18 pozos) mueve barriles entre días y entre meses. Por eso:
+**El reloj del PLC.** La hora de un evento la pone el PLC y de ella sale el diferido: un error de reloj de 1 minuto en una caída del aire de instrumentos de La Ceiba (K-101, que cierra sus 18 pozos) o en una parada de su bomba de agua P-201B (que cierra 2 o 3: LC-16, LC-07 y LC-14, los que más agua dan) mueve barriles entre días y entre meses. Por eso:
 
 - Los PLC, los controladores, el computador de flujo y el gateway se sincronizan con NTP (o PTP) contra la misma referencia; la ingesta compara la marca de tiempo de cada mensaje con la hora de llegada y, si la diferencia pasa una tolerancia (propuesta: 2 s en tiempo real, sin límite para lo que llega de la cola marcado como histórico), marca la lectura `incierta` y avisa al administrador.
 - Una marca de tiempo **en el futuro** (más allá de la tolerancia) se rechaza.
@@ -226,7 +226,7 @@ El motor no lee tablas: recibe la interfaz `Insumos` (`src/entities/insumos.ts`)
 
 El evento se **abre** en la transición (marcha → paro, o frecuencia de operación → reducida) con `fin = null`, y se **cierra** en la transición de vuelta (la base solo deja poner `fin` una vez: `evento_solo_cierre`). `senal` es el tag y el código para leer (`POC-LC21 · código CMD`). El servidor **no** escribe la causa: la deduce el motor (capítulo 5B).
 
-**Ejemplos del demo.** `EP-LC21-261001-01`: LC-21 (bombeo mecánico) paró por orden el 1-oct-2026 a las 18:20 y sigue abierto (`fin: null`, `POC-LC21 · código CMD`). `EP-MN07-260214-16`: MN-07 bajó a 47 Hz el 14-feb-2026 a las 23:25 y volvió el 15-feb a las 23:58 (`VSD-MN07 · frecuencia a 47 Hz`); su prueba vigente se hizo a 59 Hz, así que dejó de dar $1 - 47/59 = 20{,}3\ \%$ de su crudo (capítulo 5B). En el demo hay 1.349 eventos de pozo (61 de frecuencia reducida), 21 abiertos en `AHORA`.
+**Ejemplos del demo.** `EP-LC21-261001-01`: LC-21 (bombeo mecánico) paró por orden el 1-oct-2026 a las 18:20 y sigue abierto (`fin: null`, `POC-LC21 · código CMD`). `EP-MN07-260214-32`: MN-07 bajó a 47 Hz el 14-feb-2026 a las 23:25 y volvió el 15-feb a las 23:58 (`VSD-MN07 · frecuencia a 47 Hz`); su prueba vigente se hizo a 59 Hz, así que dejó de dar $1 - 47/59 = 20{,}3\ \%$ de su crudo (capítulo 5B). En el demo hay 1.211 eventos de pozo (61 de frecuencia reducida), 4 abiertos en `AHORA` (LC-21; LC-16 y LC-07, cerrados por la parada de P-201B; MN-41, falla a tierra del 25-sep).
 
 **El id.** El demo usa `EP-<pozo>-<AAMMDD>-<consecutivo>`. El backend debe generar un id **determinístico** a partir de (campo, pozo, instante de inicio): así, si el gateway reenvía de su cola un evento que ya había llegado, la ingesta lo reconoce y no lo duplica.
 
@@ -242,16 +242,16 @@ El evento se **abre** en la transición (marcha → paro, o frecuencia de operac
 | `perdida` | 1 si paró; menor que 1 si siguió en marcha con menos caudal (la multifásica que sube la velocidad a caudal constante, la centrífuga que baja caudal en marcha). El contrato no fija con qué umbral se abre un evento de pérdida parcial: propuesta en Huecos |
 | `senal` | el tag y la transición (`ZS-2011 · marcha → paro`) |
 | `primeraAlarma` | el **first-out** que congeló el PLC al disparar (`{ tag: "LSH-2013", texto: "fuga de sello detectada" }`). Se lee del registro de primera alarma en el instante del disparo; si el PLC no lo tiene, no se inventa |
-| `firma` | la parte que **las señales** señalaban en el instante de parar. La decide el servidor con las lecturas de ese instante: la primera parte cuya salud estaba `fuera` (una variable que la anuncia o la confirma fuera de su banda normal, o su instrumento en alarma) antes del paro, con el tag que la delató. Es lo que hace `firmaAlParar` en el front (`src/entities/causa-senal.ts:156-166`), pero con las lecturas **del instante** y no las de ahora. Se guarda con el evento y no cambia al cerrarse la parada (la base la deja poner una vez) |
+| `firma` | la parte que **las señales** señalaban en el instante de parar. La decide el servidor con las lecturas de ese instante: la primera parte cuya salud estaba `fuera` (una variable que la anuncia o la confirma fuera de su banda normal, o su instrumento en alarma) antes del paro, con el tag que la delató. Es lo que hace `firmaAlParar` en el front (`src/entities/causa-senal.ts:168-178`), pero con las lecturas **del instante** y no las de ahora. Se guarda con el evento y no cambia al cerrarse la parada (la base la deja poner una vez) |
 | `nivelAlParar` | la última lectura del transmisor del tanque (`tanque.tag_nivel` de la configuración vigente, LT-2012) con instante ≤ inicio: con el aforo da el colchón previsto |
 
 Un disparo que no es de esa máquina (`PAL-1011` del aire de instrumentos en `EV-2011-260128`, `52-SE2` de la subestación en Morichal) se guarda tal cual como primera alarma: el motor no lo usa para la parte y busca el servicio caído a ±15 min (capítulo 5B).
 
-**Ejemplos del demo.** `EV-2011-0909` (La Ceiba): paró el 9-sep-2026 a las 21:14 con primera alarma LSH-2013 «fuga de sello detectada» y el tanque al 52 %; arrancó el 11-sep a las 07:59:36. `EV-2011-1002`: paró el 2-oct-2026 a las 03:52:18, sin primera alarma ni firma, con el tanque al 56 %, y sigue parada: por eso es «sin identificar» y sale la pregunta de WhatsApp. `EV-3016-260310` (MPP-301, Morichal): `perdida` 0,36 del 10 al 13-mar-2026. De las 36 paradas del demo, 27 traen primera alarma y **ninguna** trae firma (el demo nunca la manda: el backend real sí).
+**Ejemplos del demo.** `EV-2011-0809` (La Ceiba): paró el 9-ago-2026 a las 21:14 con primera alarma LSH-2013 «fuga de sello detectada» y el tanque al 77,3 %; arrancó el 11-ago a las 07:59:36. `EV-2011-1002`: paró el 2-oct-2026 a las 03:52:18, sin primera alarma ni firma, con el tanque al 78,7 %, y sigue parada: por eso es «sin identificar» y sale la pregunta de WhatsApp. `EV-3016-260310` (MPP-301, Morichal): `perdida` 0,36 del 10 al 13-mar-2026. De las 36 paradas del demo, 27 traen primera alarma y **ninguna** trae firma (el demo nunca la manda: el backend real sí).
 
 ### 4.7.3 Caídas de servicios (`EventoServicio`, `GET /api/campos/:campo/servicios/eventos`)
 
-**Fuente.** El PLC o el relé del servicio: el interruptor del pórtico (`52-SE2`), la alarma de presión baja del aire (`PAL-1011`), el disparo del tratador (`TSHH-3021`), el compresor de gas. `tipo` sale del registro de ingeniería (`equipo.servicio` del equipo que cae), no del id. **Ejemplo:** `SV-SE-2-260828`: en Morichal se abrió el interruptor del pórtico de 13,8 kV de SE-2 el 28-ago-2026 a las 18:08:46 y se cerró el 29-ago a las 11:07:35 (`tipo: energia`); cerró los 41 pozos de Morichal y paró P-201B. Hay 30 caídas en el demo, todas cerradas. Un servicio caído **ahora** no lo puede entregar el tipo TS de hoy (Huecos del capítulo 3).
+**Fuente.** El PLC o el relé del servicio: el interruptor del pórtico (`52-SE2`), la alarma de presión baja del aire (`PAL-1011`), el disparo del tratador (`TSHH-3021`), el compresor de gas. `tipo` sale del registro de ingeniería (`equipo.servicio` del equipo que cae), no del id. **Ejemplo:** `SV-SE-2-260828`: en Morichal se abrió el interruptor del pórtico de 13,8 kV de SE-2 el 28-ago-2026 a las 18:08:46 y se cerró el 29-ago a las 11:07:35 (`tipo: energia`); cerró los 41 pozos de Morichal y paró P-201B. Hay 30 caídas en el demo, todas cerradas. Un servicio caído **ahora** viaja con `fin: null` y su cascada llega hasta ahora (capítulo 3, Huecos 1, resuelto el 8-oct).
 
 ### 4.7.4 El fiscal del día (`ProduccionMes`, `GET /api/campos/:campo/produccion-diaria`)
 
@@ -261,11 +261,11 @@ Un disparo que no es de esa máquina (`PAL-1011` del aire de instrumentos en `EV
 
 **La hora de cierre del día.** El motor supone días de 00:00 a 24:00 de Colombia. Muchos computadores de flujo cierran su día a otra hora de contrato (las 06:00 es común). Si es así, el registro diario no cae en el día del libro: o se configura el computador con cierre a las 00:00, o la ingesta arma el día con los registros horarios. `punto_medicion.hora_contrato` deja escrita cuál es.
 
-**Ejemplos del demo.** La Ceiba, últimos días: 28, 29 y 30-sep-2026 = 11.522, 11.526 y 11.596 bbl; 1-oct = 11.105 bbl; 2-oct = 3.838 bbl (parcial, hasta las 14:00). El 20-oct-2025 el fiscal fue **0** (todos los pozos cerrados por la bomba): es una medición, no un hueco, y se guarda como 0; un hueco sería NULL. En el demo no hay ningún día sin dato.
+**Ejemplos del demo.** La Ceiba, últimos días: 28, 29 y 30-sep-2026 = 9.642, 11.055 y 11.602 bbl; 1-oct = 11.105 bbl; 2-oct = 5.836 bbl (parcial, hasta las 14:00). El 19-may-2026 el fiscal de Morichal Norte fue **0** (sus 41 pozos cerrados por la caída de energía de SE-2, `SV-SE-2-260518`, del 18-may 19:38 al 20-may 04:52): es una medición, no un hueco, y se guarda como 0; un hueco sería NULL. En el demo no hay ningún día sin dato.
 
 ### 4.7.5 Pruebas de pozo (`Prueba`, dentro de `GET /api/campos/:campo/pozos`)
 
-**Fuente.** El separador de prueba automatizado (`pozo.fuente_prueba`: «Separador de prueba automatizado SP-CE1 · FT-CE1011 crudo · FT-CE1012 agua · AT-CE1013 corte de agua» para LC-01), o una estimación desde la propia electrosumergible cuando no hay separador (`origen: estimado`: LC-17, «Estimación desde la electrosumergible VSD-LC17: curva de la bomba, frecuencia y presión de entrada»). Una prueba es el crudo y el agua totalizados durante la prueba divididos por su duración (bbl/d) y la frecuencia del variador durante ella (`hz`). **Ejemplo:** LC-01, 27-ago-2026 08:00: 376 bbl/d de crudo, 958 de agua, a 59,5 Hz. Un pozo sin `origen` y sin pruebas (ZA-09 de La Zarza) no tiene custodia: el motor no le asigna caudal.
+**Fuente.** El separador de prueba automatizado (`pozo.fuente_prueba`: «Separador de prueba automatizado SP-CE1 · FT-CE1011 crudo · FT-CE1012 agua · AT-CE1013 corte de agua» para LC-01), o una estimación desde la propia electrosumergible cuando no hay separador (`origen: estimado`: LC-17, «Estimación desde la electrosumergible VSD-LC17: curva de la bomba, frecuencia y presión de entrada»). Una prueba es el crudo y el agua totalizados durante la prueba divididos por su duración (bbl/d) y la frecuencia del variador durante ella (`hz`). **Ejemplo:** LC-01, 27-ago-2026 08:00: 376 bbl/d de crudo, 10.543 de agua (97 % de agua), a 59,5 Hz. Un pozo sin `origen` y sin pruebas (ZA-09 de La Zarza) no tiene custodia: el motor no le asigna caudal.
 
 ### 4.7.6 Series, nivel ahora, metrología
 
@@ -284,9 +284,9 @@ $$
 \text{efectivo}(e) = [a_e, b_e) \setminus \bigcup_{e' \prec e} \text{efectivo}(e')
 $$
 
-donde $\prec$ es ese orden (un paro manda sobre un `HZ`: con el pozo cerrado no hay frecuencia que reducir; entre dos del mismo tipo, el que empezó primero). El estado actual de un pozo con un paro y un `HZ` abiertos a la vez es el paro (`estadoAhora`, `src/entities/pozos.ts:166`).
+donde $\prec$ es ese orden (un paro manda sobre un `HZ`: con el pozo cerrado no hay frecuencia que reducir; entre dos del mismo tipo, el que empezó primero). El estado actual de un pozo con un paro y un `HZ` abiertos a la vez es el paro (`estadoAhora`, `src/entities/pozos.ts:167`).
 
-**Las dos opciones del contrato** (CONTRATO.md:853-858 y «Pendiente del lado del servidor»):
+**Las dos opciones del contrato** (CONTRATO.md:860-863 y «Pendiente del lado del servidor»):
 
 | | Normalizar (lo que hace el motor) | Rechazar en la ingesta |
 |---|---|---|
@@ -295,7 +295,7 @@ donde $\prec$ es ese orden (un paro manda sobre un `HZ`: con el pozo cerrado no 
 | Cuándo se resuelve | al calcular, con una regla escrita y probada | al recibir, con el orden de llegada (que con la cola del gateway no es el orden del PLC) |
 | Riesgo | una regla de prioridad discutible en un caso raro | un evento real que se pierde porque llegó antes uno espurio |
 
-**Recomendación técnica, a confirmar con el dueño del producto:** normalizar, que es lo que el motor y la base ya suponen (`evento_pozo` no tiene restricción de no solape), y que la ingesta **marque** los solapes en un reporte para que operación revise el controlador que los produce. En el demo no hay ningún solape (comprobado sobre los 1.349 eventos de `referencia/insumos/*/pozos-eventos.json`): la regla no cambia ningún número del demo, pero el backend real la necesita.
+**Recomendación técnica, a confirmar con el dueño del producto:** normalizar, que es lo que el motor y la base ya suponen (`evento_pozo` no tiene restricción de no solape), y que la ingesta **marque** los solapes en un reporte para que operación revise el controlador que los produce. En el demo no hay ningún solape (comprobado sobre los 1.211 eventos de `referencia/insumos/*/pozos-eventos.json`): la regla no cambia ningún número del demo, pero el backend real la necesita.
 
 ## 4.9 Qué valida la ingesta
 
@@ -340,7 +340,7 @@ Lo que pasa cuando el enlace del campo (Starlink en el demo) se cae:
 1. **Las señales que producen los eventos no están en el registro de la cadena del demo.** `ZS-2011`, los controladores de pozo (`VSD-LC14`, `POC-LC21`), `52-SE2`, `PAL-1011` y los interruptores de primera alarma (`PSL-2010`, `TSH-2011`…) no aparecen en `simulador-api/datos/nacimientos.json`: hoy no se puede mostrar la procedencia de un evento ni su hora de reloj. El backend real debe registrarlos como tags del dispositivo que los publica.
 2. **Las señales de las electrosumergibles no son tags y no tienen endpoint** (`referencia/insumos/<campo>/electrosumergibles.json`, `"endpoint": null`; nombres como `VSD-LC01 · corriente`). Falta decidir por dónde llegan los ajustes de protección del variador y registrar las cinco señales de cada pozo como tags.
 3. **Pérdida parcial de una bomba.** El contrato define `perdida < 1` («siguió en marcha con menos caudal») pero no cuándo se abre ni se cierra ese evento. Propuesta: se abre cuando el caudal medido con la bomba en marcha cae por debajo de una fracción de su capacidad declarada (umbral firmado por ingeniería) durante más de un tiempo mínimo, y `perdida = 1 − caudal/capacidad`. Además, las paradas parciales del demo traen `senal: "ZS-3016 · marcha → paro"` (`EV-3016-260310`, `EV-3016-260725`) y `"ZS-2011 · marcha → paro"` (`EV-G2011-260502`), que contradice «siguió en marcha».
-4. **Servicio caído ahora.** `EventoServicio.fin` es obligatorio en el tipo TS (`src/entities/pozos.ts:94`); un servicio que sigue caído no se puede entregar. Ver capítulo 3, Huecos 1.
+4. **Servicio caído ahora.** (Resuelto el 8-oct: `EventoServicio.fin` es `string | null`, `src/entities/pozos.ts:94-105`, y el motor corta en ahora.) `EventoServicio.fin` era obligatorio en el tipo TS; un servicio que sigue caído no se podía entregar. Ver capítulo 3, Huecos 1.
 5. **Valor de la serie en cada paso.** El contrato dice que el servidor escoge el paso y lo declara (`pasoH`), pero no si el valor del lugar $i$ es la lectura en ese instante, la última del paso o el promedio. `serie_de` usa la última válida del paso; `timescale.sql` guarda también el promedio. Afecta la pendiente del vigía: hay que fijarlo y escribirlo en el contrato.
 6. **Hora de cierre del día fiscal.** El motor supone 00:00 de Colombia; si el computador de flujo cierra a las 06:00, el día del libro no es el del ticket. `punto_medicion.hora_contrato` lo deja escrito, pero el contrato no dice qué hacer.
 7. **Mensajes de eventos que llegan tarde** (después de una caída del enlace): el contrato no dice si se mandan, con qué texto ni cómo se marcan.

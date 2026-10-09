@@ -8,7 +8,7 @@ La pantalla Producción (`src/pages/Produccion.tsx`; rutas `#/prod/produccion/<c
 
 **Qué es.** Por cada día del período: horas, real, potencial, diferido de los eventos, inventario y meta.
 
-**Fórmula** (`porDia`, `src/entities/libro.ts:985-1021`). Para cada día $d$ y campo $c$:
+**Fórmula** (`porDia`, `src/entities/libro.ts:1002-1038`). Para cada día $d$ y campo $c$:
 
 $$
 \text{real}_d = \sum_{c\,:\,F_{c,d},\ \text{FA}_{c}} F_{c,d}\frac{h_d}{H_d}
@@ -41,16 +41,17 @@ $$
 
 | Día | Horas | Real | Potencial | Diferido | Inventario | Eficiencia | Meta |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| 2-oct (hoy) | 14 | 3.838 | 6.626,495 | 2.789,147 | −0,652 | 57,9 % | 6.358,333 |
-| 1-oct | 24 | 11.105 | 11.359,706 | 254,053 | 0,652 | 97,8 % | 10.900 |
-| 30-sep | 24 | 11.596 | 11.488,653 | 0 | −107,347 | 100,9 % | 10.900 |
-| 23-sep | 24 | 10.177 | 11.535,161 | 1.403,715 | −45,554 | 88,2 % | 10.900 |
-| 22-sep | 24 | 6.736 | 11.542,913 | 4.746,502 | 60,411 | 58,4 % | 10.900 |
-| 11-sep | 24 | 7.100 | 11.557,447 | 4.348,184 | 109,263 | 61,4 % | 10.900 |
-| 10-sep | 24 | 1.090 | 11.557,447 | 10.463,723 | 3,724 | 9,4 % | 10.900 |
-| 1-sep | 24 | 11.700 | 11.579,732 | 0 | −120,268 | 101,0 % | 10.900 |
+| 2-oct (hoy) | 14 | 5.836 | 6.626,799 | 791,961 | −1,162 | 88,1 % | 6.358,333 |
+| 1-oct | 24 | 11.105 | 11.360,227 | 254,065 | 1,162 | 97,8 % | 10.900 |
+| 30-sep | 24 | 11.602 | 11.488,607 | 0 | −113,393 | 101,0 % | 10.900 |
+| 28-sep | 24 | 9.642 | 11.488,607 | 1.890,749 | −44,142 | 83,9 % | 10.900 |
+| 27-sep | 24 | 9.691 | 11.500,234 | 1.917,741 | −108,506 | 84,3 % | 10.900 |
+| 26-sep | 24 | 10.221 | 11.500,234 | 1.398,284 | −119,049 | 88,9 % | 10.900 |
+| 23-sep | 24 | 11.310 | 11.535,116 | 281,177 | −56,061 | 98,0 % | 10.900 |
+| 22-sep | 24 | 10.578 | 11.542,867 | 876,426 | 88,441 | 91,6 % | 10.900 |
+| 1-sep | 24 | 11.706 | 11.579,686 | 0 | −126,314 | 101,1 % | 10.900 |
 
-Sumas de septiembre: real 324.688; potencial 346.379,435; diferido 21.691,435; inventario **0** (se compensa en el mes). Octubre: 14.943; 17.986,201; 3.043,201; 0. Portafolio, 10-sep: real 30.099, potencial 42.365,002, diferido 12.466,337, inventario −200,335, meta 40.200.
+Del 26 al 28-sep, LC-04 y LC-11 caídos por sus electrosumergibles; el 22 y 23-sep, la parada de P-201B (2 pozos cerrados). Sumas de septiembre: real 338.662; potencial 346.378,059; diferido 7.716,059; inventario **0** (se compensa en el mes). Octubre: 16.941; 17.987,026; 1.046,026; 0. Portafolio, 27-sep: real 37.616, potencial 42.115,311, diferido 4.802,717, inventario −303,407, meta 40.200.
 
 **Casos borde (escenarios corridos).** 15-sep de La Ceiba sin fiscal: `{ real: null, potencial: 0, diferido: 0, residuo: null, faltan: ['ceiba'] }`. Octubre sin ningún fiscal: los dos días con `real: null` y `faltan: ['ceiba']`; el diferido del día queda 0 porque el mes no tiene factor. Un campo sin meta firmada ese día: `meta: null`.
 
@@ -79,7 +80,7 @@ Sumas de septiembre: real 324.688; potencial 346.379,435; diferido 21.691,435; i
 
 Orden: del más reciente al más viejo. Se ven los cinco más recientes (seis si son seis) **y todo día sin fiscal o bajo la meta** (nunca quedan detrás de «ver más»); en el papel salen todos.
 
-Ejemplo, La Ceiba octubre: «2 de oct · 14,0 h | ■ 3.838 | 6.626 | 2.789 | -1 | 57,9 % | 6.358» y «1 de oct | 11.105 | 11.360 | 254 | 1 | 97,8 % | 10.900». Septiembre: a la vista 30, 29, 28, 27 y 26-sep, más 23, 22, 11 y 10-sep (bajo la meta, con ■); «ver más» abre los otros 21.
+Ejemplo, La Ceiba octubre: «2 de oct · 14,0 h | ■ 5.836 | 6.627 | 792 | -1 | 88,1 % | 6.358» y «1 de oct | 11.105 | 11.360 | 254 | 1 | 97,8 % | 10.900». Septiembre: a la vista 30, 29, 28, 27 y 26-sep (los tres últimos bajo la meta, con ■), más el 22-sep (bajo la meta); «ver más» abre los otros 24.
 
 **Mensual.** Una fila por mes tocado por el período: nombre («Septiembre 2026»), « · 15 de sept a 30 de sept» si el mes está recortado o « · en curso» si es parcial; Real (■ si bajo la meta del mes), Potencial, Diferido, Inventario (`residuo`), Eficiencia (`pe`), Meta (`meta.produccion` o «sin meta firmada»). Los meses enteros salen de la serie mensual; los recortados se piden al libro (5A.5, aditividad).
 
@@ -97,7 +98,7 @@ Ejemplo, La Ceiba octubre: «2 de oct · 14,0 h | ■ 3.838 | 6.626 | 2.789 | -1
 
 **Fórmula.** Todo se dibuja como **tasa**: $\text{tasa}(d, v) = v\cdot 24/\text{horas}_d$.
 
-**Ejemplo con los datos del demo.** 2-oct (14 h): real $3.838\times24/14 = 6.579$ bbl/d, potencial 11.360 bbl/d, meta 10.900 bbl/d. 10-sep: real 1.090 bbl/d contra potencial 11.557.
+**Ejemplo con los datos del demo.** 2-oct (14 h): real $5.836\times24/14 = 10.005$ bbl/d, potencial 11.360 bbl/d, meta 10.900 bbl/d. 28-sep: real 9.642 bbl/d contra potencial 11.489.
 
 **Qué texto y qué dibujo según el valor.**
 
@@ -135,12 +136,14 @@ Ejemplo, La Ceiba octubre: «2 de oct · 14,0 h | ■ 3.838 | 6.626 | 2.789 | -1
 
 | | La Ceiba · oct | La Ceiba · sep | Portafolio · oct | Portafolio · sep |
 |---|---|---|---|---|
-| producción real | 14.943 ■ · meta a la fecha 17.258 | 324.688 ■ · meta 327.000 | 60.292 ■ · meta a la fecha 63.650 | 1.163.047 ■ · meta 1.206.000 |
-| apoyo | 9.438 bbl/d · eficiencia 83,1 % | 10.823 bbl/d · eficiencia 93,7 % | 38.079 bbl/d · eficiencia 90,6 % | 38.768 bbl/d · eficiencia 91,7 % |
+| producción real | 16.941 ■ · meta a la fecha 17.258 | 338.662 · meta 327.000 | 64.147 · meta a la fecha 63.650 | 1.234.322 · meta 1.206.000 |
+| apoyo | 10.700 bbl/d · eficiencia 94,2 % | 11.289 bbl/d · eficiencia 97,8 % | 40.514 bbl/d · eficiencia 96,4 % | 41.144 bbl/d · eficiencia 97,3 % |
 | meta por día | 10.900 | 10.900 | 40.200 | 40.200 |
 | meta del mes completo / período | 337.900 | 327.000 | 1.246.200 | 1.206.000 |
-| potencial | 17.986 · 11.360 bbl/d | 346.379 · 11.546 bbl/d | 66.524 · 42.015 bbl/d | 1.268.274 · 42.276 bbl/d |
-| real · 1 de oct | 11.105 | 11.105 | 39.578 | 39.578 |
+| potencial | 17.987 · 11.360 bbl/d | 346.378 · 11.546 bbl/d | 66.524 · 42.015 bbl/d | 1.268.267 · 42.276 bbl/d |
+| real · 1 de oct | 11.105 | 11.105 | 40.750 | 40.750 |
+
+Con el demo del 9-oct solo La Ceiba en octubre va bajo la meta (■): las demás producciones la pasan.
 
 «Real · último día» no depende del período: es el último día completo (`fiscalDeAyer`: 1-oct en el demo).
 

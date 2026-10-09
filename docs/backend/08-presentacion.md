@@ -1,6 +1,6 @@
 # 8. Reglas de presentación que valen en toda la aplicación
 
-El servidor manda **números sin redondear y sin formato**. El front los formatea con las reglas de este capítulo. Usted no tiene que implementarlas, pero sí conocerlas: explican por qué un valor que usted manda como `6232.4` se ve «6.232», por qué un precio en `null` se ve «falta precio» y no «0 USD», y por qué un `null` del historiador se ve «sin señal» y no «0».
+El servidor manda **números sin redondear y sin formato**. El front los formatea con las reglas de este capítulo. Usted no tiene que implementarlas, pero sí conocerlas: explican por qué un valor que usted manda como `2376.75` se ve «2.377», por qué un precio en `null` se ve «falta precio» y no «0 USD», y por qué un `null` del historiador se ve «sin señal» y no «0».
 
 Las reglas específicas de cada cifra (umbrales, frases según el valor) están en los capítulos 5 y 6. Aquí van las que se repiten en todas las pantallas.
 
@@ -10,19 +10,19 @@ Formato colombiano (`es-CO`): **miles con punto, decimal con coma**. Todos los f
 
 | Función | Regla | Ejemplo | Dónde se usa |
 |---|---|---|---|
-| `n0(v)` | Sin decimales; redondeo al entero más cercano; un valor que redondea a 0 se escribe `0` (nunca `-0`) | `6232.4` → «6.232»; `-0.3` → «0» | barriles, bbl/d, horas enteras, conteos |
+| `n0(v)` | Sin decimales; redondeo al entero más cercano; un valor que redondea a 0 se escribe `0` (nunca `-0`) | `2376.75` → «2.377»; `-0.3` → «0» | barriles, bbl/d, horas enteras, conteos |
 | `n1(v)` | Un decimal, siempre | `16.04` → «16,0» | porcentajes, horas cortas, millones de USD |
 | `n2(v)` | Dos decimales, siempre | `0.0512` → «0,05» | cifras chicas de ingeniería |
 | `n3(v)` | Tres decimales, siempre | `1.008` → «1,008» | **el factor de asignación** (con un punto, «1.008» se leería «mil ocho») |
 | `pct(v)` | `n1(v)` + « %» (con espacio) | `44.2` → «44,2 %» | porcentajes con decimal |
 | `num(v)` | Hasta 3 decimales, solo los que trae el dato; `null` (sin lectura) → «—» | `0.384` → «0,384» | valores de instrumento (respeta la resolución del instrumento: 0,384 kW/bbl no es 0,4). Un instrumento sin lectura llega con `valor: null` y se muestra «sin señal» (dato inválido, `sinLectura`), no «—» a secas ni 0 |
-| `usd(v)` | ≥ 1.000.000 → `n1(v/10⁶)` + «M USD»; ≥ 1.000 → `n0(v/10³)` + «mil USD»; si no, `n0(v)` + «USD» | `299 412` → «299 mil USD»; `1 250 000` → «1,3 M USD» | valor de los barriles diferidos |
+| `usd(v)` | ≥ 1.000.000 → `n1(v/10⁶)` + «M USD»; ≥ 1.000 → `n0(v/10³)` + «mil USD»; si no, `n0(v)` + «USD» | `113 900` → «114 mil USD»; `1 250 000` → «1,3 M USD» | valor de los barriles diferidos |
 | `plural(n, uno, varios)` | Singular solo si `round(n) = 1` | `plural(1,'bomba','bombas')` → «1 bomba» | todo conteo con sustantivo |
 | `decimalesDe(serie, valor)` | Los decimales que trae la serie del instrumento, máximo 3 (ISA-101, Tabla 7); los huecos (`null`) no cuentan | serie `[8.8, 9.15]` → 2 | señales de instrumento |
 
 Porcentajes enteros (por ejemplo «89 %», «+44 %», «41 %») salen de `n0(v)` + « %»; uno que no llega a 1 % se escribe «< 1 %» (nunca «0 %» para algo que no es cero). El signo `+` se escribe a mano cuando la cifra es un cambio («+44 % frente a jul a sep»). Las reglas de redondeo de cada porcentaje (entero o con un decimal) están en su ficha del capítulo 5.
 
-> **Una consecuencia para el servidor:** como el front redondea al mostrar, una suma de filas redondeadas puede no dar el total redondeado (1.922 + 1.173 + 792 + 49 + 0 = 3.936 en bbl/d se ve bien; con barriles por equipo puede faltar o sobrar 1). Eso es correcto: **el total sale de sumar los valores sin redondear**, nunca de sumar lo que se ve. El servidor no debe redondear antes de sumar.
+> **Una consecuencia para el servidor:** como el front redondea al mostrar, la suma de lo que se ve puede no dar el total que se ve. En el resumen del gerente (portafolio, octubre en curso), el diferido por día de cada campo se ve 792 + 661 + 49 + 0 + 0 = 1.502 bbl/d, y el total dice **1.501**. Eso es correcto: **el total sale de sumar los valores sin redondear**, nunca de sumar lo que se ve. El servidor no debe redondear antes de sumar.
 
 ## 8.2 Unidades
 
@@ -32,7 +32,7 @@ Porcentajes enteros (por ejemplo «89 %», «+44 %», «41 %») salen de `n0(v)`
 | Tasa de crudo | `bbl/d` | Lo **promedio por día calendario** del período. «La tasa no se acumula; el volumen sí» (`formato.ts`). |
 | Tasa por hora | `bbl/h` | Solo en lo que se está perdiendo con un equipo parado («461 bbl/h»). |
 | Dinero | `USD` (precio neto por barril firmado en la configuración) | Ver `usd(v)`. |
-| Horas | `h` | «cruza en 43 h», «aguanta 19 h». |
+| Horas | `h` | «cruza en 43 h», «aguanta 10,1 h». |
 | Instrumentos | la del tag (`psi`, `A`, `Hz`, `°C`, `mm/s`, `%`…) | La declara el instrumento al conectarse. |
 
 El adaptador de país (`src/shared/config/region.ts`, región `colombia`) declara además las condiciones estándar de referencia (**14,65 psia · 60 °F**) y los límites de entrega del crudo (**BS&W ≤ 0,5 %** y **sal ≤ 20 PTB**, Res. MME 40236 de 2022). Un cliente de otro país cambia esa configuración, no el código.
@@ -58,7 +58,7 @@ $$
 \text{fmtHoras}(h, \text{precisa}) = \begin{cases} n_1(h)\ \text{«h»} & \text{precisa y } h < 48 \\ \text{textoHoras}(h) & \text{si no} \end{cases}
 $$
 
-Cuando la cifra es un plazo que no se puede pasar («0 si vuelve antes de 19 h»: el colchón del tanque), `textoHoras(h, true)` **trunca** en vez de redondear: con un colchón de 19,7 h, redondear diría «antes de 20 h», y una bomba que vuelve a las 19,8 h sí costaría crudo; truncado dice «antes de 19 h», que siempre es cierto. 
+Cuando la cifra es un plazo que no se puede pasar («0 si vuelve antes de 10 h»: el colchón del tanque), `textoHoras(h, true)` **trunca** en vez de redondear: con un colchón de 19,7 h, redondear diría «antes de 20 h», y una bomba que vuelve a las 19,8 h sí costaría crudo; truncado dice «antes de 19 h», que siempre es cierto. 
 
 con $H_{\max}$ = `HORIZONTE_H` = 90 × 24 = 2.160 h (el horizonte del vigía, `src/entities/salud.ts:53`). Un pronóstico con rango se escribe «en *N* h (*a* h a *b* h)»; si los dos extremos se escriben igual, solo «en *N* h» (`textoPronostico`; los números reales están en el capítulo 5C).
 
@@ -97,7 +97,7 @@ $$
 - La raya va al 80 % del ancho para que se vea cuánto se pasa, hasta 1,25 veces la meta; de ahí en adelante la barra queda llena y la cifra dice cuánto.
 - **Sin meta** ($m$ ausente o 0): ni barra ni raya; solo la cifra y la salvedad («sin meta firmada»).
 - El cuadrado P3 lo decide **quien llama** con su propia comparación (la regla de cada cifra está en el capítulo 5): producción **por debajo** de la meta; diferido **por encima** del máximo.
-- Ejemplo (resumen del gerente, portafolio, octubre en curso): producción 38.079 bbl/d contra meta 40.200 → $\min(1{,}25;\ 0{,}947)/1{,}25 = 75{,}8\,\%$ del ancho, raya en 80 %, cuadrado P3 porque 38.079 < 40.200. Diferido 3.936 bbl/d contra máximo 2.300 → $\min(1{,}25;\ 1{,}711)/1{,}25 = 100\,\%$ (barra llena), cuadrado P3 porque 3.936 > 2.300.
+- Ejemplo (resumen del gerente, portafolio, octubre en curso): producción 40.514 bbl/d contra meta 40.200 → $\min(1{,}25;\ 1{,}008)/1{,}25 = 80{,}6\,\%$ del ancho, apenas pasada la raya del 80 %, sin cuadrado (40.514 ≥ 40.200). Diferido 1.501 bbl/d contra máximo 2.300 → $\min(1{,}25;\ 0{,}653)/1{,}25 = 52{,}2\,\%$, sin cuadrado (1.501 ≤ 2.300). El cierre proyectado sí lleva el cuadrado: 1.222.131 bbl de producción contra 1.246.200 de meta, y 80.334 bbl de diferido contra 71.300 de máximo.
 
 ## 8.6 Indicador analógico de una señal (`Analogico`)
 

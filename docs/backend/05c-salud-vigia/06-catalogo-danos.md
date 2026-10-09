@@ -37,7 +37,7 @@ dice cómo es la máquina; esta, qué partes y modos se ofrecen.
 | `bomba-centrifuga` | `disposicion` o `recobro` | `bomba-inyeccion` («Bomba de reinyección») |
 | otra (`bomba-reciprocante`…) | – | **sin catálogo** (la parada queda sin parte o se explica con causas de pozo) |
 
-La clase ISO sale de la tecnología de la máquina (`CLASE_ISO`, `bombas.ts:255-261`):
+La clase ISO sale de la tecnología de la máquina (`CLASE_ISO`, `bombas.ts:260-266`):
 doble tornillo y hélico-axial → `bomba-multifasica`; centrífuga HPS y API 610 → `bomba-centrifuga`;
 reciprocante → `bomba-reciprocante`. Un pozo **sin** electrosumergible no tiene partes.
 

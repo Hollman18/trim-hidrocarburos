@@ -130,11 +130,13 @@ $b_\sigma / \text{SE}_b = 47{,}3 > 2$ → cruza.
 $h = 0{,}9064 / 0{,}0210373 = 43{,}086$ h; rango $= [0{,}9064/0{,}0219277;\ 0{,}9064/0{,}0201470] = [41{,}34;\ 44{,}99]$ h.
 **En pantalla: «en 43 h · 41–45 h»** (corto: VIGÍA «Llega a 8 psi en 43 h · 41–45 h», placa y estación de bombas). La forma larga de `textoPronostico`, «en 43 h (41 h a 45 h)», es la que usan las frases de parte (`fraseParte`); para PI-2010 ninguna pantalla del demo la muestra (Riesgo escribe «en 43 h (41–45 h)» y el motivo del servidor «…llega a su alarma en 43 h»).
 
-*Corriente de la electrosumergible de MN-07, Morichal* (alarma alta 100 A, $\sigma = +1$): serie
-`[86,1 86,6 87,9 89,2 90,8 91,8 93,0 94,6 96,3 97,6 98,2 99,8]`; $b = 0{,}0540647$ A/h
-(1,30 A/día); $\text{SE}_b = 0{,}00111733$; $\hat y_{\text{fin}} = 99{,}7949$ A; $F = 0{,}2051$ A;
-$h = 3{,}794$ h; rango $[3{,}644;\ 3{,}958]$. **En pantalla: «en 4 h»** (los dos extremos del rango
-se escriben «4 h», así que no se repite el rango).
+*Corriente de la electrosumergible de MN-07, Morichal* (alarma alta 330 A, $\sigma = +1$): serie
+`[284,0 285,6 290,0 294,3 299,7 302,8 306,8 312,1 317,8 321,9 324,1 329,4]`; $b = 0{,}178890$ A/h
+(4,29 A/día); $\text{SE}_b = 0{,}0036748$; $\hat y_{\text{fin}} = 329{,}3218$ A; $F = 0{,}6782$ A;
+$h = 3{,}791$ h; rango $[3{,}642;\ 3{,}954]$. **En pantalla: «en 4 h»** (los dos extremos del rango
+se escriben «4 h», así que no se repite el rango). Desde el 9-oct la corriente de cada electrosumergible sale del
+líquido de su prueba (≈ 8,5 A por cada 1.000 bbl/d: MN-07 mueve 28.742 bbl/d con 97,9 % de agua) y su banda y sus
+alarmas se escalan con ella; la forma de la serie es la misma, por eso cruza en las mismas horas que antes.
 
 *PDT-3011, caída de presión del filtro de MPP-301, Morichal* (alarma 12 psi): $b = 0{,}0217512$
 psi/h, $\text{SE}_b = 0{,}00105289$, $\hat y_{\text{fin}} = 9{,}2962$, $h = 124{,}31$ h, rango
@@ -182,7 +184,7 @@ Si no están alineadas, o no hay $\Delta p$, **no es estable** y la velocidad no
 MPP-301 (Morichal) $\Delta p$ va de 297 a 302 psi (media ≈ 300): estable, y la velocidad SI-3016
 se proyecta: **«en 17,5 d · 16,6–18,5 d»** contra 1.650 rpm.
 
-En la electrosumergible (`senalesEsp`, `src/entities/esp.ts:105-135`): pozo parado →
+En la electrosumergible (`senalesEsp`, `src/entities/esp.ts:110-140`): pozo parado →
 «El pozo está parado: no hay tendencia que proyectar»; sin alarma en ese sentido → `sin-limite`
 (la frecuencia nunca tiene alarma); sin tendencia → «Faltan puntos…»; si no, `pronostico`.
 
@@ -192,7 +194,7 @@ En la electrosumergible (`senalesEsp`, `src/entities/esp.ts:105-135`): pozo para
 `/vistas/riesgo`. Tipo `Pronostico` (`vigia.ts:67-72`):
 `{ tipo: 'cruza', horas, rango } | { tipo: 'cruzado' } | { tipo: 'sin-tendencia', motivo } | { tipo: 'sin-limite' } | { tipo: 'no-atribuible', motivo }`.
 
-**Referencia.** `src/entities/vigia.ts`; CONTRATO.md «Vigía». `scripts/verificar-libro.mjs:817-831`
+**Referencia.** `src/entities/vigia.ts`; CONTRATO.md «Vigía». `scripts/verificar-libro.mjs:852-866`
 (regla `proyectable` y paso de la serie). Casos de `referencia/` que traen pronósticos:
 `referencia/salud/bombas-<campo>-2026-09.json` (`/api/vistas/bombas`, septiembre),
 `referencia/riesgo/<campo>.json` (`/api/vistas/riesgo`: `horas`, `rango`, `motivo`) y
@@ -234,7 +236,7 @@ El 4.5 se clasifica como degradación a propósito: el aislamiento pierde resist
 desbalance crece antes del disparo a tierra (`src/entities/iso14224.ts:101-105`).
 
 **Dónde se aplica.** En la salud por parte (solo las tendencias proyectables cuentan para
-`avisa`, `salud.ts:124`) y en el veredicto de la bomba (`diferido.ts:411-413`). `senalesDe`
+`avisa`, `salud.ts:124`) y en el veredicto de la bomba (`diferido.ts:420-422`). `senalesDe`
 calcula el pronóstico de todas; el filtro se aplica al usarlo.
 
 **Casos borde.** Con la tabla actual ninguna variable de plantilla anuncia un mecanismo de choque,
@@ -263,7 +265,7 @@ por debajo de 48 h llevan un decimal: «47,1 h».) Desde el 8-oct es **una sola 
 `fmtHoras(h)` sin `precisa` es `textoHoras(h)` de `src/entities/salud.ts:166-171`, la misma que escribe
 el `motivo` del riesgo (5C.3), así el servidor y la pantalla dicen «10,9 d» para la misma cifra.
 `textoHoras(h, true)` (hacia abajo) trunca a lo que escribe para un plazo que no se puede pasar:
-19,05 h → «19 h», 18,6 h → «18 h», 55,2 h → «2,3 d» («0 si vuelve antes de 19 h», 5B.5).
+10,05 h → «10 h», 18,6 h → «18 h», 55,2 h → «2,3 d» («0 si vuelve antes de 10 h», 5B.5).
 `verificar-libro` §18 compara las dos en 13 valores (47,6 h → «48 h» en las dos: el corte se mira
 antes de redondear) y falla a propósito si alguien cambia una sin la otra.
 

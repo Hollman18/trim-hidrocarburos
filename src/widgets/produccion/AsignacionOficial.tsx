@@ -120,7 +120,7 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
           className="mt-0.5 w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento" />
         <textarea value={texto} onChange={e => { setTexto(e.target.value); setErrores([]); setHecho(null) }} rows={3} aria-label="Filas de la asignación oficial"
           aria-invalid={errores.length > 0} aria-describedby={errores.length > 0 ? idErrores : undefined}
-          placeholder={'O pegue de Excel: mes, campo, pozo, crudo (bbl), horas.\n2026-09  La Ceiba  LC-11  29650  672,5'}
+          placeholder={'O pegue de Excel: mes, campo, pozo, crudo (bbl), horas.\n2026-09  La Ceiba  LC-11  28088  635,4'}
           className="mt-2 w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
         <Boton className="mt-1" onClick={() => void revisar(texto)} disabled={!texto.trim()}>Cotejar</Boton>
       </> : <div className="mt-2"><Hueco>Solo lectura: la carga producción.</Hueco></div>}

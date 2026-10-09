@@ -55,7 +55,7 @@ Un mes cerrado puede no estar publicado (el campo aún no cierra su balance): el
 | `doce` | Últimos 12 meses | «oct-2025 a sep-2026» | 2025-10-01 → 2026-10-01 | «Últimos 12 meses» |
 | `AAAA-MM-DD_AAAA-MM-DD` | Rango escogido | «18 días · 15 de sept a 2 de oct» | día `desde` 00:00 → día `hasta` + 1 a las 00:00, nunca más allá de ahora | «Rango escogido» |
 
-Reglas del rango a la medida (`rangoValido`, `src/app/url.ts:38-48`; `rangoDePeriodo`, `src/entities/diferido.ts:695-713`): fechas reales (se leen a mediodía de Colombia); al revés se enderezan; se recortan a [primer día con datos, hoy] (en el demo, 2025-10-01 a 2026-10-02); si no queda nada, error «Escoja dos fechas entre el 2025-10-01 y el 2026-10-02: fuera de esos días no hay datos.». `hasta` es el último día **incluido**. Ejemplo: `#/ger/diferidos/ceiba/2026-09-15_2026-10-10` se vuelve 15-sep → 2-oct (ahora).
+Reglas del rango a la medida (`rangoValido`, `src/app/url.ts:38-48`; `rangoDePeriodo`, `src/entities/diferido.ts:704-722`): fechas reales (se leen a mediodía de Colombia); al revés se enderezan; se recortan a [primer día con datos, hoy] (en el demo, 2025-10-01 a 2026-10-02); si no queda nada, error «Escoja dos fechas entre el 2025-10-01 y el 2026-10-02: fuera de esos días no hay datos.». `hasta` es el último día **incluido**. Ejemplo: `#/ger/diferidos/ceiba/2026-09-15_2026-10-10` se vuelve 15-sep → 2-oct (ahora).
 
 Un mes de la serie se abre con un clic (Mes a mes y Tendencia): `setRango(día 1, último día)` → rango a la medida de ese mes.
 
@@ -63,12 +63,12 @@ Un mes de la serie se abre con un clic (Mes a mes y Tendencia): `setRango(día 1
 
 | Período | La Ceiba: brecha · rango | Portafolio: brecha · rango |
 |---|---|---|
-| Octubre, en curso | 3.043 · 2.587–3.500 | 6.232 · 5.729–6.734 |
-| Septiembre, cerrado | 21.691 · 18.438–24.945 | 105.227 · 96.444–114.010 |
-| Julio a septiembre | 89.135 · 75.764–102.505 | 251.503 · 230.472–272.535 |
-| Año a la fecha | 184.305 · 156.659–211.950 | 484.233 · 442.667–525.798 |
-| Últimos 12 meses | 244.954 · 208.211–281.698 | 639.507 · 584.856–694.159 |
-| Rango 15-sep a 2-oct | 8.977 (Σ eventos 9.473; inventario −496) | 69.814 (Σ eventos 70.461; inventario −647) |
+| Octubre, en curso | 1.046 · 889–1.203 | 2.377 · 2.132–2.622 |
+| Septiembre, cerrado | 7.716 · 6.559–8.873 | 33.945 · 31.255–36.634 |
+| Julio a septiembre | 33.680 · 28.628–38.732 | 138.772 · 127.152–150.392 |
+| Año a la fecha | 115.498 · 98.173–132.822 | 357.752 · 326.917–388.586 |
+| Últimos 12 meses | 145.213 · 123.431–166.995 | 483.307 · 442.229–524.386 |
+| Rango 15-sep a 2-oct | 7.638 (Σ eventos 8.150; inventario −512) | 27.667 (Σ eventos 28.355; inventario −688) |
 
 Publicación por período: La Ceiba es publicable en septiembre, el trimestre y los 12 meses; provisional en octubre, el año a la fecha y el rango que llega a hoy. El portafolio está **bloqueado** en el año a la fecha y en los 12 meses (abril de El Palmar fuera de banda), y además provisional en el año a la fecha.
 
@@ -118,23 +118,25 @@ Las horas de cada día (`Dia.horas`) son las del día dentro del período: 24, s
 
 | Mes | Brecha | Máx. firmado | Pasó | Eficiencia | Publicable |
 |---|---:|---:|---|---:|---|
-| oct-25 | 33.067,5 | 24.800 | sí | 91,4 % | sí |
+| oct-25 | 16.852,1 | 24.800 | | 95,6 % | sí |
 | nov-25 | 7.477,9 | 24.000 | | 97,9 % | sí |
-| dic-25 | 23.147,7 | 24.800 | | 94,1 % | sí |
-| ene-26 | 5.353,9 | 24.800 | | 98,6 % | sí |
+| dic-25 | 6.431,3 | 24.800 | | 98,4 % | sí |
+| ene-26 | 5.355,8 | 24.800 | | 98,6 % | sí |
 | feb-26 | 23.348,8 | 22.400 | sí | 93,3 % | sí |
-| mar-26 | 20.082,3 | 24.800 | | 94,8 % | sí |
-| abr-26 | 18.364,0 | 24.000 | | 94,9 % | sí |
+| mar-26 | 17.021,0 | 24.800 | | 95,6 % | sí |
+| abr-26 | 10.068,5 | 24.000 | | 97,2 % | sí |
 | may-26 | 13.450,4 | 24.800 | | 96,5 % | sí |
 | jun-26 | 11.527,4 | 24.000 | | 96,7 % | sí |
-| jul-26 | 60.593,8 | 24.800 | sí | 84,2 % | sí |
-| ago-26 | 6.849,3 | 24.800 | | 98,0 % | sí |
-| sep-26 | 21.691,4 | 24.000 | | 93,7 % | sí |
-| oct-26 (en curso) | 3.043,2 | 1.266,7 | (no se marca) | 83,1 % | no (`en-curso`) |
+| jul-26 | 17.441,2 | 24.800 | | 95,4 % | sí |
+| ago-26 | 8.522,4 | 24.800 | | 97,6 % | sí |
+| sep-26 | 7.716,1 | 24.000 | | 97,8 % | sí |
+| oct-26 (en curso) | 1.046,0 | 1.266,7 | (no se marca) | 94,2 % | no (`en-curso`) |
+
+Con el demo del 9-oct solo febrero pasa el máximo (antes también octubre de 2025 y julio de 2026, cuando cada parada de P-201B cerraba los 18 pozos): los meses con paradas de la bomba ahora suman de 6.400 a 17.400 bbl de diferido.
 
 Portafolio: abril de 2026 sale «no publicable» (`fa-fuera-de-banda` de El Palmar); octubre, `en-curso`.
 
-**Quién lo calcula.** Servidor (`serieMensual`, `src/entities/libro.ts:1059-1068`; `pedirSerie`, `src/shared/api/diferidos.ts:104-105`). Caso `referencia/mensual/<campo>.json` y `portafolio.json`.
+**Quién lo calcula.** Servidor (`serieMensual`, `src/entities/libro.ts:1076-1085`; `pedirSerie`, `src/shared/api/diferidos.ts:104-105`). Caso `referencia/mensual/<campo>.json` y `portafolio.json`.
 
 ---
 
@@ -146,9 +148,9 @@ Portafolio: abril de 2026 sale «no publicable» (`fa-fuera-de-banda` de El Palm
 
 | Pedazo | Real | Potencial | Diferido | Residuo |
 |---|---:|---:|---:|---:|
-| 15-sep → 1-oct (16 días) | 178.482 | 184.415,305 | 6.429,624 | −496,320 |
-| 1-oct → ahora | 14.943 | 17.986,201 | 3.043,201 | 0 |
-| **Rango completo** | **193.425** | **202.401,505** | **9.472,825** | **−496,320** |
+| 15-sep → 1-oct (16 días) | 177.823 | 184.414,572 | 7.103,721 | −512,150 |
+| 1-oct → ahora | 16.941 | 17.987,026 | 1.046,026 | 0 |
+| **Rango completo** | **194.764** | **202.401,598** | **8.149,747** | **−512,150** |
 
 Las tablas de más de 62 días son mensuales («CUADRE MENSUAL»); las demás, diarias («CUADRE DIARIO»): este rango de 18 días sale en «CUADRE DIARIO», día por día. En un cuadre mensual, la fila del mes recortado lleva los límites con `fechaCorta`: con `#/prod/produccion/ceiba/2026-07-15_2026-10-02` (80 días) la pantalla dice «Julio 2026 · 15 de jul a 31 de jul».
 
@@ -180,13 +182,13 @@ Las tablas de más de 62 días son mensuales («CUADRE MENSUAL»); las demás, d
 
 | Campo | Brecha | Máx. del período | Marca | Barra (por señal / declarado / sin identificar) |
 |---|---:|---:|---|---|
-| Morichal Norte | 53.562 | 28.500 | ■ junto a «máx.» | 53.455 / 106 / 0 |
-| Guacamayo | 25.681 | 13.500 | ■ | 25.681 / 0 / 0 |
-| La Ceiba | 21.691 | 24.000 | — | 21.691 / 0 / 0 |
+| Morichal Norte | 15.539 | 28.500 | — | 15.433 / 106 / 0 |
+| La Ceiba | 7.716 | 24.000 | — | 7.716 / 0 / 0 |
+| Guacamayo | 6.396 | 13.500 | — | 6.396 / 0 / 0 |
 | El Palmar | 3.990 | 1.500 | ■ | 3.990 / 0 / 0 |
 | La Zarza | 303 | 1.500 | — | 0 / 303 / 0 |
 
-Cada fila: «Morichal Norte · ■ máx. 28.500 bbl» a la izquierda y la brecha a la derecha (con ■ si el campo no puede publicar: sin meta, algún factor con `dentro: false` o pendiente sobre el criterio). Globo: título = nombre del campo, pista = nota del campo («Todos sus pozos con electrosumergible; la reinyección tiene respaldo parcial.»), filas «Diferidos», «Del total» (`n1` %), «Por señal», «Declarado», «Sin identificar», «Alto impacto», «Máximo firmado» y «Publicable: sí/no». Un clic abre el campo. Las barras miden contra la brecha del portafolio.
+Cada fila: «El Palmar · ■ máx. 1.500 bbl» (o «Morichal Norte · máx. 28.500 bbl») a la izquierda y la brecha a la derecha (con ■ si el campo no puede publicar: sin meta, algún factor con `dentro: false` o pendiente sobre el criterio). Globo: título = nombre del campo, pista = nota del campo («Todos sus pozos con electrosumergible; la reinyección tiene respaldo parcial.»), filas «Diferidos», «Del total» (`n1` %), «Por señal», «Declarado», «Sin identificar», «Alto impacto», «Máximo firmado» y «Publicable: sí/no». Un clic abre el campo. Las barras miden contra la brecha del portafolio.
 
 **Quién lo calcula.** Servidor: un solo `GET /api/vistas/diferidos?campos=a,b,…`; el front no suma libros de campos.
 
@@ -204,7 +206,7 @@ $$
 \text{potencialReciente}_c = \frac{\text{Potencial}_c(\text{ahora} - 30\ \text{d},\ \text{ahora})}{30}
 $$
 
-**Ejemplo.** La Ceiba 11.534,4 bbl/d; Morichal 17.329,8; Guacamayo 6.866,6; El Palmar 3.352,6; La Zarza 3.170,4.
+**Ejemplo.** La Ceiba 11.534,4 bbl/d; Morichal 17.329,7; Guacamayo 6.866,5; El Palmar 3.352,6; La Zarza 3.170,4 (casi iguales al demo anterior: el potencial sale del crudo de las pruebas, que no cambió).
 
 **Casos borde.** Divide siempre por 30 aunque falten días fiscales (esos días no suman potencial): con huecos, el promedio baja (ver «Huecos y dudas»).
 

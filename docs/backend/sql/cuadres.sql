@@ -45,9 +45,9 @@ do $$ declare a numeric; b numeric; begin
 end $$;
 
 do $$ declare r record; begin
-  -- Contra referencia/mensual/ceiba.json (septiembre de 2026): real 324688, diferido 21691,43528228031, tolerancia 3253,715293317683.
+  -- Contra referencia/mensual/ceiba.json (septiembre de 2026): real 338662, diferido 7716,059192214809, tolerancia 1157,4088799693204.
   select real, diferido, tolerancia, valor_usd into r from libro_mes where campo_id = 'ceiba' and mes = '2026-09-01';
-  if r.real <> 324688 or abs(r.diferido - 21691.43528228031) > 1e-6 or abs(r.tolerancia - 3253.715293317683) > 1e-6 then
+  if r.real <> 338662 or abs(r.diferido - 7716.059192214809) > 1e-6 or abs(r.tolerancia - 1157.4088799693204) > 1e-6 then
     raise exception 'libro_mes de La Ceiba sep-2026 no es el de referencia/: %', r;
   end if;
   raise notice 'CUADRA  libro_mes(ceiba, sep-2026) = referencia/mensual/ceiba.json: real %, diferido %, tolerancia %, valor USD %', r.real, round(r.diferido, 2), round(r.tolerancia, 2), round(r.valor_usd, 2);

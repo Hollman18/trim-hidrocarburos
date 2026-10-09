@@ -2,13 +2,13 @@
 
 Este capítulo es la base de datos del servidor: **qué se guarda, en qué tabla, quién lo escribe, qué endpoint lo lee y qué reglas obliga la base** (no solo el código). Es PostgreSQL 16; TimescaleDB es opcional. El capítulo 4 cuenta cómo llegan los datos del borde a estas tablas; los capítulos 5A a 5D, qué calcula el motor con ellas; el 7, los endpoints.
 
-Todo lo de este capítulo está en la carpeta `03-modelo/`:
+Todo lo de este capítulo está en la carpeta `sql/`:
 
 | Archivo | Qué es |
 |---|---|
 | `esquema.sql` | El esquema completo, ejecutable con `psql -v ON_ERROR_STOP=1 -f esquema.sql`. Cada tabla y cada columna tienen su `COMMENT` en español. |
 | `timescale.sql` | Opcional, se corre **después** y solo si la extensión existe: convierte `lectura` en hipertabla con trozos de un mes, compresión y agregados continuos por hora y por día. |
-| `ejemplos.sql` | 10.273 filas **reales del demo** en 72 tablas (sale de `referencia/` y del motor; ninguna inventada). |
+| `ejemplos.sql` | 9.992 filas **reales del demo** en 72 tablas (sale de `referencia/` y del motor; ninguna inventada). |
 | `pruebas.sql` | 90 pruebas de que las restricciones muerden (78 rechazos y 12 aceptaciones esperadas). |
 | `cuadres.sql` | Las identidades del motor comprobadas sobre los datos cargados. |
 | `tablas.json` | La especificación para el Excel: grupos, tablas, columnas, filas de ejemplo y relaciones. Coincide 1:1 con `esquema.sql` (lo comprueba `herramientas/comprobar-tablas.mjs`). |
@@ -142,7 +142,7 @@ Registro de campos de la empresa (tipo Campo, src/entities/tipos.ts). GET /api/c
   - El catálogo no puede traer un campo que no esté aquí (el arranque se detiene).
   - La configuración firmada solo acepta campos del registro (validarConfig, 422).
 - **La apuntan:** `activo`, `planta_campo`, `gateway`, `inscripcion`, `nacimiento`, `punto_medicion`, `mes_fiscal`, `metrologia_campo`, `perfil_campo`, `tanque`, `respaldo`, `parada_programada`, `usuario_campo`, `stock_sap`, `informe_campo`, `carga_asignacion_grupo`, `cambio_planta`, `recalculo_mes`.
-- **Fila real del demo:** `{"id":"ceiba","nombre":"La Ceiba","cuenca":"Magdalena Medio","choke":"Planta","nota":"Tren de agua con una sola bomba de reinyección, sin respaldo."}`
+- **Fila real del demo:** `{"id":"ceiba","nombre":"La Ceiba","cuenca":"Llanos","choke":"Planta","nota":"Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos."}`
 
 #### `activo`
 
@@ -190,7 +190,7 @@ Cabecera del esquema de planta de un campo: caudales de diseño y los cuatro cue
   - Un campo sin planta no trae planta (hueco), nunca la de otro.
 - **Apunta a:** `campo` por (campo_id) 1:1.
 - **La apuntan:** `planta_elemento`.
-- **Fila real del demo:** `{"campo_id":"ceiba","crudo_bpd":10450,"crudo_cap_bpd":12000,"agua_bpd":19180,"agua_cap_bpd":20400,"gas_bpd":3850,"gas_cap_bpd":4200,"choke_pozos":12500,"choke_planta":11800,"choke_evacuacion":14000,"choke_mercado":15000,"nota":"La bomba que mueve el agua no ti…`
+- **Fila real del demo:** `{"campo_id":"ceiba","crudo_bpd":10450,"crudo_cap_bpd":12000,"agua_bpd":224200,"agua_cap_bpd":267750,"gas_bpd":3850,"gas_cap_bpd":4200,"choke_pozos":12500,"choke_planta":11800,"choke_evacuacion":14000,"choke_mercado":15000,"nota":"El agua (95 % de lo que sale d…`
 
 #### `planta_elemento`
 
@@ -716,7 +716,7 @@ Prueba de pozo (Prueba, src/entities/pozos.ts; Pozo.pruebas). Rige desde su fech
 - **Reglas:**
   - Rige desde su fecha hasta la siguiente; antes de la primera rige la primera (pruebaEn).
 - **Apunta a:** `pozo` por (campo_id, pozo) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","pozo":"LC-01","fecha":"2025-10-06T17:00:00+00:00","crudo_bpd":401,"agua_bpd":928,"hz":59.5}`
+- **Fila real del demo:** `{"campo_id":"ceiba","pozo":"LC-01","fecha":"2025-10-06T17:00:00+00:00","crudo_bpd":401,"agua_bpd":10217,"hz":59.5}`
 
 #### `evento`
 
@@ -735,7 +735,7 @@ Supertipo de los eventos del borde: un id único para todo el sistema (refs.even
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger evento_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `activo` por (campo_id, activo) N:1.
 - **La apuntan:** `evento_pozo`, `evento_servicio`, `parada_bomba`, `aviso_sap`, `orden_sap`, `prediccion`, `respuesta_entrante`, `respuesta_parada`, `mensaje`, `mensaje_libre`, `tramo_diferido`.
-- **Fila real del demo:** `{"id":"EP-LC04-260906-65","campo_id":"ceiba","clase":"pozo","activo":"LC-04","recibido":"2026-09-06T22:14:00+00:00"}`
+- **Fila real del demo:** `{"id":"EP-LC04-260906-85","campo_id":"ceiba","clase":"pozo","activo":"LC-04","recibido":"2026-09-06T22:14:00+00:00"}`
 
 #### `evento_pozo`
 
@@ -753,7 +753,7 @@ Evento del controlador de un pozo (EventoPozo, src/entities/pozos.ts): variador,
   - La hora del PLC no se corrige: solo se pone fin a un evento abierto (una vez) y, en una parada, la firma (una vez); no se borra. [trigger evento_pozo_solo_cierre: UPDATE DELETE]
 - **Apunta a:** `pozo` por (campo_id, pozo) N:1; `evento` por (id, clase, campo_id, pozo) 1:1.
 - **La apuntan:** `tramo_diferido`.
-- **Fila real del demo:** `{"id":"EP-MN07-260214-16","clase":"pozo","campo_id":"morichal","pozo":"MN-07","inicio":"2026-02-15T04:25:00+00:00","fin":"2026-02-16T04:58:00+00:00","codigo":"HZ","senal":"VSD-MN07 · frecuencia a 47 Hz","hz":47,"recibido":"2026-02-15T04:25:00+00:00"}`
+- **Fila real del demo:** `{"id":"EP-MN07-260214-32","clase":"pozo","campo_id":"morichal","pozo":"MN-07","inicio":"2026-02-15T04:25:00+00:00","fin":"2026-02-16T04:58:00+00:00","codigo":"HZ","senal":"VSD-MN07 · frecuencia a 47 Hz","hz":47,"recibido":"2026-02-15T04:25:00+00:00"}`
 
 #### `evento_servicio`
 
@@ -831,7 +831,7 @@ Barriles netos de cada día en el punto de medición oficial (ProduccionMes.dias
   - NULL o día ausente = sin dato, nunca 0.
   - El día de hoy es parcial (cerrado = false).
 - **Apunta a:** `punto_medicion` por (campo_id) N:1; `mes_fiscal` por (campo_id, mes) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","dia":"2025-10-19","mes":"2025-10-01","bbl":4332,"cerrado":true,"tag":"FQI-0101","recibido":"2025-10-20T05:00:00+00:00"}`
+- **Fila real del demo:** `{"campo_id":"ceiba","dia":"2025-10-19","mes":"2025-10-01","bbl":10223,"cerrado":true,"tag":"FQI-0101","recibido":"2025-10-20T05:00:00+00:00"}`
 
 #### `metrologia_campo`
 
@@ -874,7 +874,7 @@ Perfil de una bomba de la línea en su campo (PerfilBomba, src/entities/bombas.t
   - Único: (campo_id, equipo, subtipo).
 - **Apunta a:** `equipo` por (campo_id, equipo) 1:1.
 - **La apuntan:** `perfil_bomba_tag`, `perfil_bomba_pozo`, `perfil_bomba_primera_alarma`.
-- **Fila real del demo:** `{"campo_id":"ceiba","equipo":"P-201B","subtipo":"inyeccion","tecnologia":"centrifuga-hps","norma":"Centrífuga multietapa horizontal · API 610 (Tabla 8)","papel":"disposicion","capacidad_bpd":20400,"sin_bomba_fraccion":1,"sin_bomba_fuente":"El agua no tiene otr…`
+- **Fila real del demo:** `{"campo_id":"ceiba","equipo":"P-201B","subtipo":"inyeccion","tecnologia":"centrifuga-hps","norma":"Centrífuga multietapa horizontal · API 610 (Tabla 8)","papel":"disposicion","capacidad_bpd":89250,"sin_bomba_fraccion":1,"sin_bomba_fuente":"Lo que P-201A y P-20…`
 
 #### `perfil_bomba_tag`
 
@@ -932,7 +932,7 @@ Ajustes de protección del variador de cada electrosumergible (configuración de
 - **Clave:** (campo_id, pozo, variable).
 - **Columnas (11):** `campo_id`*, `pozo`*, `variable`*, `tag`*, `unidad`*, `normal_baja`, `normal_alta`, `alarma_baja`, `alarma_alta`, `fuente`*, `leido`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
 - **Apunta a:** `pozo` por (campo_id, pozo) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","pozo":"LC-01","variable":"corriente","tag":"VSD-LC01 · corriente","unidad":"A","normal_baja":61.199999999999996,"normal_alta":80.64000000000001,"alarma_baja":47,"alarma_alta":90,"fuente":"Ajuste de protección del variador del pozo (configu…`
+- **Fila real del demo:** `{"campo_id":"ceiba","pozo":"LC-01","variable":"corriente","tag":"VSD-LC01 · corriente","unidad":"A","normal_baja":82.45,"normal_alta":108.64000000000001,"alarma_baja":63,"alarma_alta":121,"fuente":"Ajuste de protección del variador del pozo (configuración del …`
 
 #### `modo_falla`
 
@@ -1247,7 +1247,7 @@ Tanque de agua de una bomba de reinyección (TanqueAgua de configuracion.ts), fi
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger tanque_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger tanque_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `campo` por (campo_id) N:1; `version_config` por (version) N:1.
-- **Fila real del demo:** `{"version":1,"id":"TK-AG-CE","orden":0,"nombre":"Tanque de agua de La Ceiba","campo_id":"ceiba","bomba":"P-201B","capacidad_bbl":10000,"alto_alto":0.9,"tag_nivel":"LT-2012","aforo":"Certificado de aforo TK-AG-CE · tabla de 1 cm"}`
+- **Fila real del demo:** `{"version":1,"id":"TK-AG-CE","orden":0,"nombre":"Tanque de agua de La Ceiba","campo_id":"ceiba","bomba":"P-201B","capacidad_bbl":30000,"alto_alto":0.9,"tag_nivel":"LT-2012","aforo":"Certificado de aforo TK-AG-CE · tabla de 1 cm"}`
 
 #### `respaldo`
 
@@ -1265,7 +1265,7 @@ Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto 
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respaldo_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respaldo_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `campo` por (campo_id) N:1; `version_config` por (version) N:1.
-- **Fila real del demo:** `{"version":1,"campo_id":"ceiba","equipo":"P-201B","orden":0,"libre_bpd":0,"detalle":"Única bomba del tren de agua"}`
+- **Fila real del demo:** `{"version":1,"campo_id":"ceiba","equipo":"P-201B","orden":0,"libre_bpd":30100,"detalle":"P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una"}`
 
 #### `parada_programada`
 
@@ -1591,7 +1591,7 @@ Registro de predicciones del vigía (PrediccionVigia de src/entities/aciertos.ts
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger prediccion_sin_truncate: TRUNCATE]
 - **Apunta a:** `activo` por (campo_id, equipo) N:1; `evento` por (falla_evento_id) N:1; `parte` por (familia, parte) N:1.
 - **La apuntan:** `mensaje`.
-- **Fila real del demo:** `{"id":"PR-EV-2011-0922","campo_id":"ceiba","equipo":"P-201B","familia":"inyeccion","parte":"rodamientos","tag":null,"accion":"Revisar aceite de la cámara de empuje y alineación; programar el cambio con el repuesto en mano.","emitida":"2026-09-20T15:05:00+00:00…`
+- **Fila real del demo:** `{"id":"PR-EP-LC04-260926-75","campo_id":"ceiba","equipo":"LC-04","familia":"electrosumergible","parte":"aislamiento","tag":null,"accion":"Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.","emitida":"2026-09…`
 
 #### `respuesta_entrante`
 
@@ -1951,7 +1951,7 @@ Avisos de mantenimiento de SAP PM (AvisoSap de src/entities/sap.ts): los que TRI
   - Índice único: CREATE UNIQUE INDEX aviso_sap_uno_abierto ON "trim".aviso_sap USING btree (campo_id, equipo) WHERE (NOT cerrado).
 - **Apunta a:** `activo` por (campo_id, equipo) N:1; `evento` por (evento_id) N:1; `parte` por (familia, parte) N:1; `modo_falla` por (modo) N:1.
 - **La apuntan:** `orden_sap`.
-- **Fila real del demo:** `{"numero":"10004146","tipo":"M1","campo_id":"ceiba","equipo":"K-101","descripcion":"Aire de instrumentos degradado: presión de cabezal cayendo","prioridad":2,"familia":null,"parte":null,"modo":null,"inicio_averia":null,"parada":false,"evidencia":["La presión d…`
+- **Fila real del demo:** `{"numero":"10004149","tipo":"M1","campo_id":"ceiba","equipo":"K-101","descripcion":"Aire de instrumentos degradado: presión de cabezal cayendo","prioridad":2,"familia":null,"parte":null,"modo":null,"inicio_averia":null,"parada":false,"evidencia":["La presión d…`
 
 #### `orden_sap`
 
@@ -1968,7 +1968,7 @@ Avisos de mantenimiento de SAP PM (AvisoSap de src/entities/sap.ts): los que TRI
   - Índice único: CREATE UNIQUE INDEX orden_sap_un_aviso ON "trim".orden_sap USING btree (aviso) WHERE (aviso IS NOT NULL).
 - **Apunta a:** `aviso_sap` por (aviso) N:1; `activo` por (campo_id, equipo) N:1; `clase_orden_sap` por (clase_sap) N:1; `evento` por (evento_id) N:1; `usuario` por (tecnico_id) N:1.
 - **La apuntan:** `confirmacion_sap`, `repuesto_orden`, `mensaje`.
-- **Fila real del demo:** `{"numero":"40012053","clase_sap":"PM03","campo_id":"ceiba","equipo":"K-101","descripcion":"Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en 11 min de autonomía, una parada deja las válvulas en posición segura.","estado":"REL"…`
+- **Fila real del demo:** `{"numero":"40012056","clase_sap":"PM03","campo_id":"ceiba","equipo":"K-101","descripcion":"Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en 11 min de autonomía, una parada deja las válvulas en posición segura.","estado":"REL"…`
 
 #### `confirmacion_sap`
 
@@ -2096,7 +2096,7 @@ Factor de asignación de un campo en un mes cerrado: FA = R/T con solo los días
   - No se actualiza en sitio: el mes se recalcula entero y se anota en recalculo_mes.
   - No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes. [trigger factor_asignacion_mes_sin_update: UPDATE]
 - **Apunta a:** `mes_fiscal` por (campo_id, mes) 1:1; `version_config` por (version_config) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","real":324688,"teorico":335098.09722222236,"dias_con_dato":30,"dias_sin_dato":0,"fa":0.9689341798460919,"banda":0.14999999999999997,"banda_verificable":true,"dentro":true,"version_config":1,"calculado":"2026-10-08T21:21:0…`
+- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","real":338662,"teorico":349521.51805555564,"dias_con_dato":30,"dias_sin_dato":0,"fa":0.9689303304815998,"banda":0.14999999999999997,"banda_verificable":true,"dentro":true,"version_config":1,"calculado":"2026-10-09T19:07:0…`
 
 #### `libro_mes`
 
@@ -2112,7 +2112,7 @@ El libro de un campo en un mes cerrado y publicado (Libro de src/entities/libro.
   - Las cifras de barriles no cambian; una respuesta tardía cambia la clasificación y obliga a recalcular el mes.
   - No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes. [trigger libro_mes_sin_update: UPDATE]
 - **Apunta a:** `mes_fiscal` por (campo_id, mes) 1:1; `version_config` por (version_config) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","real":324688,"potencial":346379.4352822801,"brecha":21691.435282280087,"diferido":21691.43528228031,"residuo":-2.219167072325945e-10,"tolerancia":3253.715293317683,"aproximado":0,"identificado":21691.43528228031,"declara…`
+- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","real":338662,"potencial":346378.05919221457,"brecha":7716.059192214569,"diferido":7716.059192214809,"residuo":-2.4010660126805305e-10,"tolerancia":1157.4088799693204,"aproximado":0,"identificado":7716.059192214809,"decla…`
 
 #### `tramo_diferido`
 
@@ -2127,7 +2127,7 @@ Lo que costó un evento de pozo, partido por día (un Tramo de src/entities/libr
   - Σ de los días de un mes = diferido del libro del mes.
   - No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes. [trigger tramo_diferido_sin_update: UPDATE]
 - **Apunta a:** `mes_fiscal` por (campo_id, mes) N:1; `pozo` por (campo_id, pozo) N:1; `evento` por (causa_evento_id) N:1; `parte` por (causa_familia, causa_parte) N:1; `evento_pozo` por (evento_id) N:1; `version_config` por (version_config) N:1.
-- **Fila real del demo:** `{"evento_id":"EP-LC11-260910-79","dia":"2026-09-10","campo_id":"ceiba","mes":"2026-09-01","pozo":"LC-11","inicio":"2026-09-10T07:03:00+00:00","fin":"2026-09-11T05:00:00+00:00","horas":21.95,"factor":1,"crudo_prueba_bpd":1097,"fa":0.9689341798460919,"bbl":972.1…`
+- **Fila real del demo:** `{"evento_id":"EP-LC11-260925-40","dia":"2026-09-27","campo_id":"ceiba","mes":"2026-09-01","pozo":"LC-11","inicio":"2026-09-27T05:00:00+00:00","fin":"2026-09-28T05:00:00+00:00","horas":24,"factor":1,"crudo_prueba_bpd":1076,"fa":0.9689303304815998,"bbl":1042.569…`
 
 #### `asignacion_pozo_mes`
 
@@ -2142,7 +2142,7 @@ Lo que TRIM asigna a cada pozo en un mes cerrado (AsignacionPozo de src/entities
   - Σ asignado = real del campo en el mes.
   - No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes. [trigger asignacion_pozo_mes_sin_update: UPDATE]
 - **Apunta a:** `mes_fiscal` por (campo_id, mes) N:1; `pozo` por (campo_id, pozo) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","pozo":"LC-11","horas":672.3833333333333,"potencial":31765.538152074274,"diferido":2106.2078888922356,"asignado":29659.330263182055,"calculado":"2026-10-08T21:21:07.724868+00:00"}`
+- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","pozo":"LC-11","horas":635.35,"potencial":31765.411954508756,"diferido":3677.2278693078233,"asignado":28088.184085200945,"calculado":"2026-10-09T19:07:03.506705+00:00"}`
 
 #### `recalculo_mes`
 
@@ -2158,7 +2158,7 @@ Bitácora del precálculo: cada vez que se (re)calcula un mes de un campo, por q
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger recalculo_mes_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger recalculo_mes_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `campo` por (campo_id) N:1.
-- **Fila real del demo:** `{"id":1,"campo_id":"ceiba","mes":"2025-10-01","cuando":"2026-10-08T21:21:07.724868+00:00","motivo":"Primer cálculo: carga del ejemplo desde el motor del demo","huella_antes":null,"huella_despues":"0bdcbf1d9fa5fc6420f2410de1af37e9f84cb3384e58d68515450756cff5c41…`
+- **Fila real del demo:** `{"id":1,"campo_id":"ceiba","mes":"2025-10-01","cuando":"2026-10-09T19:07:03.506705+00:00","motivo":"Primer cálculo: carga del ejemplo desde el motor del demo","huella_antes":null,"huella_despues":"5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f10…`
 
 
 ## 3.12 Cómo se rehace el libro de un mes viejo
@@ -2213,14 +2213,14 @@ La tolerancia se suma **en cuadratura entre campos** porque dentro de un campo e
 
 | Campo | Real (bbl) | Potencial (bbl) | Diferido (bbl) | Tolerancia (bbl) | Valor (USD) |
 |---|---:|---:|---:|---:|---:|
-| La Ceiba | 324.688 | 346.379,4 | 21.691,4 | 3.253,7 | 1.041.188,89 |
-| Morichal Norte | 466.040 | 519.601,8 | 53.561,8 | 8.034,3 | 2.570.965,01 |
-| Guacamayo | 180.748 | 206.429,2 | 25.681,2 | 1.284,1 | 1.232.696,02 |
+| La Ceiba | 338.662 | 346.378,1 | 7.716,1 | 1.157,4 | 370.370,84 |
+| Morichal Norte | 504.058 | 519.597,4 | 15.539,4 | 2.330,9 | 745.893,21 |
+| Guacamayo | 200.031 | 206.427,4 | 6.396,4 | 319,8 | 307.026,55 |
 | El Palmar | 96.715 | 100.705,2 | 3.990,2 | 598,5 | 191.530,55 |
 | La Zarza | 94.856 | 95.158,6 | 302,6 | 15,1 | sin precio |
-| **Portafolio** | **1.163.047** | **1.268.274,2** | **105.227,2** | **8.783,1** | **5.036.380,48** |
+| **Portafolio** | **1.234.322** | **1.268.266,7** | **33.944,7** | **2.689,5** | **1.614.821,15** |
 
-$\sqrt{3.253{,}7^2 + 8.034{,}3^2 + 1.284{,}1^2 + 598{,}5^2 + 15{,}1^2} = 8.783{,}13$ bbl y $100 \cdot 1.163.047 / 1.268.274{,}22 = 91{,}70\ \%$: exactamente lo que da el motor para el portafolio (`referencia/mensual/portafolio.json`: tolerancia 8.783,129535785944, pe 91,70311736219523). El valor suma 4 de 5 campos (`valorCampos = {con: 4, total: 5}`, `sinPrecio = ["zarza"]`).
+$\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}52$ bbl y $100 \cdot 1.234.322 / 1.268.266{,}74 = 97{,}32\ \%$: exactamente lo que da el motor para el portafolio (`referencia/mensual/portafolio.json`: tolerancia 2.689,5205994260273, pe 97,32353321659352). El valor suma 4 de 5 campos (`valorCampos = {con: 4, total: 5}`, `sinPrecio = ["zarza"]`).
 
 **Casos borde.** Un campo sin fila en `libro_mes` para ese mes (no publicado o en curso) obliga a calcular ese campo en vivo; el portafolio no se publica si un campo no se publica. `sin_meta` en cualquier campo deja al portafolio sin meta comparable (`meta.sinMeta`). Un campo con `valor_usd` NULL entra en `sinPrecio` y no suma.
 
@@ -2233,15 +2233,15 @@ $\sqrt{3.253{,}7^2 + 8.034{,}3^2 + 1.284{,}1^2 + 598{,}5^2 + 15{,}1^2} = 8.783{,
 `validacion.log` es la corrida completa en un PostgreSQL 16.14 temporal (puerto 5440, creado y borrado por `herramientas/validar.sh`):
 
 - 89 tablas (sin contar 45 particiones de lectura), 9 vistas, 22 funciones, 75 triggers, 177 índices, 532 restricciones (89 PK, 144 FK, 27 únicas, 269 check).
-- ejemplos.sql: 10273 filas en 72 tablas; series sin tag registrado: 0 (todas cargadas en una transacción: los triggers diferidos —configuración coherente, gerente activo, campos de cada persona— corrieron al confirmar).
+- ejemplos.sql: 9992 filas en 72 tablas; series sin tag registrado: 0 (todas cargadas en una transacción: los triggers diferidos —configuración coherente, gerente activo, campos de cada persona— corrieron al confirmar).
 - **Restricciones:** 78 rechazos y 12 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
 - **Cuadres** (`cuadres.sql`, todos bien):
   - Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
   - potencial − real = Σ diferidos en los 60 meses: diferencia máxima 0.000000000 bbl
-  - FA = R/T en 60 meses; FA de La Ceiba en sep-2026 = 0.9689341798460919
-  - Σ tramo_diferido de La Ceiba, sep-2026 = 21691.435282 bbl = libro_mes.diferido
-  - Σ v_produccion_mes(ceiba, 2026-09).dias = 324688 bbl = libro_mes.real
-  - libro_mes(ceiba, sep-2026) = referencia/mensual/ceiba.json: real 324688, diferido 21691.44, tolerancia 3253.72, valor USD 1041188.89
+  - FA = R/T en 60 meses; FA de La Ceiba en sep-2026 = 0.9689303304815998
+  - Σ tramo_diferido de La Ceiba, sep-2026 = 7716.059192 bbl = libro_mes.diferido
+  - Σ v_produccion_mes(ceiba, 2026-09).dias = 338662 bbl = libro_mes.real
+  - libro_mes(ceiba, sep-2026) = referencia/mensual/ceiba.json: real 338662, diferido 7716.06, tolerancia 1157.41, valor USD 370370.84
   - config_json(v) = JSON firmado en 1 versión(es); la vigente hoy es la 1
   - serie_de(VI-2011, desde 2026-09-21 14:00, paso 1 d, 12) = {2.2,2.1,2.2,2.3,2.2,2.1,2.2,2.2,2.3,2.2,2.4,0} (catálogo)
   - v_procedencia(ceiba, PDT-1011) = (PDT-1011,calculado,"el tag del que se deriva","Sistema de aire de instrumentos",compresor-aire,f1-compresor-aire,2,15,EPIC-CEIBA-01)
@@ -2249,13 +2249,13 @@ $\sqrt{3.253{,}7^2 + 8.034{,}3^2 + 1.284{,}1^2 + 598{,}5^2 + 15{,}1^2} = 8.783{,
   - v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
 - **tablas.json:** comparadas 89 tablas y 9 vistas, 796 columnas, 144 relaciones; columnas de tabla sin comentario: 0; tablas.json COINCIDE 1:1 con esquema.sql.
 - **TimescaleDB:** TimescaleDB NO está instalado en este PostgreSQL (pg_available_extensions no la trae): no se instaló. `timescale.sql` quedó revisado a mano y sin ejecutar.
-- **Transporte:** el cluster temporal escucha por TCP en `127.0.0.1:5440`, sin socket Unix (la ruta del socket en una carpeta temporal puede pasar el máximo de 103 caracteres de macOS); al final se detiene y su carpeta se borra.
+- **Transporte:** el cluster temporal escucha por TCP en `127.0.0.1:5440`, sin socket Unix (la ruta del socket en una carpeta temporal puede pasar el máximo de 103 caracteres de macOS); al final, o en cuanto un paso falla, se detiene y su carpeta se borra.
 
 ## 3.15 Huecos y dudas
 
 **Decisiones que este esquema toma y conviene confirmar.**
 
-1. **`evento_servicio.fin` admite NULL; el tipo TS no.** `EventoServicio.fin` es `string` (`src/entities/pozos.ts:94-103`) y el motor hace `ms(s.fin)`: un servicio caído **ahora** no tiene cómo viajar. La base lo guarda abierto (es el hecho físico). Hay que escoger cómo lo entrega `GET …/servicios/eventos`: (a) cambiar el tipo a `string | null` y que el motor lo corte en `ahora` como hace con los eventos de pozo; (b) entregarlo con `fin = ahora` (cambia en cada pedido); (c) no entregarlo hasta que cierre (los pozos que caen en su cascada quedan «sin identificar» y sale la pregunta de WhatsApp: es lo peor). Se recomienda (a).
+1. **`evento_servicio.fin` admite NULL; el tipo TS no.** (Resuelto el 8-oct con la opción (a): `EventoServicio.fin` es `string | null`, `src/entities/pozos.ts:94-105`, y el motor corta la cascada de un servicio abierto en ahora, `src/entities/causa-senal.ts:126`.) `EventoServicio.fin` era `string` y el motor hacía `ms(s.fin)`: un servicio caído **ahora** no tenía cómo viajar. La base lo guarda abierto (es el hecho físico). Hay que escoger cómo lo entrega `GET …/servicios/eventos`: (a) cambiar el tipo a `string | null` y que el motor lo corte en `ahora` como hace con los eventos de pozo; (b) entregarlo con `fin = ahora` (cambia en cada pedido); (c) no entregarlo hasta que cierre (los pozos que caen en su cascada quedan «sin identificar» y sale la pregunta de WhatsApp: es lo peor). Se recomienda (a).
 2. **Índice de un aviso abierto por equipo.** `aviso_sap_uno_abierto` aplica a todos los avisos, también los que se crean directo en SAP. Si la operadora llega a tener dos avisos abiertos del mismo equipo en SAP, la sincronización choca. Si eso pasa en el cliente, el índice debe quedar `where not cerrado and origen = 'trim'` y el 409 lo revisa el servidor contra todos los abiertos.
 3. **El mensaje separa `evento_id` y `prediccion_id`.** En `Mensaje.evento` (`src/entities/mensajes.ts:97`) viaja el id de la parada **o** el de la predicción (regla `parte`); la base los separa para tener clave foránea en los dos. La API los junta en `evento`. `mensaje.telefono` (el número al que se mandó) no está en el tipo TS y no viaja al front.
 4. **`asignacion_oficial` es de solo inserción con la carga en la clave.** El contrato dice «se reemplaza por (mes, campo)»; aquí las filas de una carga nueva no borran las anteriores: lo que rige es la carga más reciente (`v_asignacion_oficial`). Así el rastro guarda también los valores reemplazados, no solo cuántos fueron.
@@ -2269,7 +2269,7 @@ $\sqrt{3.253{,}7^2 + 8.034{,}3^2 + 1.284{,}1^2 + 598{,}5^2 + 15{,}1^2} = 8.783{,
 9. **Las señales que producen los eventos tampoco están registradas.** El paso marcha → paro (`ZS-2011`), el controlador de cada pozo (`VSD-LC14`, `POC-LC21`), el interruptor `52-SE2`, la alarma `PAL-1011` y los interruptores de primera alarma no están en `simulador-api/datos/nacimientos.json`: hoy la procedencia de un evento no se puede mostrar con `v_procedencia`. El backend real debe registrarlos (capítulo 4).
 10. **Calibración sin fecha.** El nacimiento del demo trae `vigenteHasta: "abril de 2027"` (texto). `calibracion.vigente_hasta` es `date` y quedó NULL en los ejemplos: el borde real debe mandar la fecha del certificado.
 11. **Respuestas históricas sin persona ni canal.** Las 9 respuestas pegadas a eventos del demo (`pozos-eventos.json`) traen `texto`, `por` y `hora`, sin `porId` ni `canal`; por eso `respuesta_parada.por_id` y `canal` admiten NULL. Toda respuesta nueva los trae (lo exige un CHECK si el canal es WhatsApp).
-12. **Ids del programa.** El contrato recomienda `PR-{campo}-{equipo}-{fecha}`; los del demo son `PR-2011-260819`, `PR-M2011-260217`… La base no obliga el formato.
+12. **Ids del programa.** El contrato recomienda `PR-{campo}-{equipo}-{fecha}`; los del demo son `PR-2011-260819`, `PR-M2011-260217`, `PR-VIG-MN05-260912-bomba` (las órdenes predictivas del vigía)… La base no obliga el formato.
 13. **Horas que el demo no trae.** Para cargar filas reales hubo que fijar horas que el demo no tiene (recepción de eventos, publicación de un mes, firma de la base de alarmas, fecha del análisis de °API): están al pie de `ejemplos.sql` y en `herramientas/cuenta-ejemplos.json`. Ninguna cifra de barriles, ninguna fecha de evento y ningún id se tocaron.
 
 **Lo que el motor todavía no fecha.**

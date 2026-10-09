@@ -7,7 +7,7 @@ contra lo que pasó después: la falla real del PLC y las órdenes cerradas en S
 (`src/entities/aciertos.ts`).
 
 > **Simplificación del demo (importante).** En el demo no hay un registro guardado: «el registro se
-> arma con una regla fija sobre la historia del PLC» (`prediccionesHistoricas`, `aciertos.ts:100-158`),
+> arma con una regla fija sobre la historia del PLC» (`prediccionesHistoricas`, `aciertos.ts:110-182`),
 > coherente con ella y con SAP, y las predicciones vigentes se derivan del riesgo de hoy con una hora
 > de emisión inventada. **El backend real no reconstruye nada**: guarda cada predicción en el momento
 > en que el vigía la emite, nunca la reescribe y la califica cuando vence. Ver «Qué debe hacer el
@@ -67,10 +67,12 @@ Reglas que se derivan:
 
 | Predicción | Emitida | Ventana | Contra qué | Calificación |
 |---|---|---|---|---|
-| MN-23 · admisión | 1 de sept, 14:17 | 3 de sept, 23:53 – 7 de sept, 04:41 | Falla `EP-MN23-260905-57` por admisión el 5 de sept, 14:17 (dentro) | **acierto**, 4,0 d antes |
-| MN-41 · aislamiento | 3 de sept, 01:55 | 4 de sept, 21:07 – 7 de sept, 06:43 | Falla `EP-MN41-260903-06` por aislamiento el 3 de sept, 06:40 (antes de `desde`, después de emitida) | **acierto**, 0,2 d antes |
+| MN-33 · aislamiento | 13 de sept, 02:26 | 15 de sept, 12:02 – 18 de sept, 16:50 | Falla `EP-MN33-260917-72` por aislamiento el 17 de sept, 02:26 (dentro) | **acierto**, 4,0 d antes |
+| MN-05 · bomba de fondo | 9 de sept, 21:37 | 12 de sept, 21:37 – 16 de sept, 21:37 | Cambio programado `PR-VIG-MN05-260912-bomba`: orden PM03 `40012059` cerrada el 13 de sept, 18:22 | **intervenida** |
+| MPP-301 · rodamientos | 5 de sept, 23:17 | 10 de sept, 04:05 – 15 de sept, 18:29 | Orden PM03 `40012060` cerrada el 7 de sept, 11:17 | **intervenida** |
 | MN-40 · aislamiento | 3 de sept, 03:59 | 4 de sept, 23:11 – 7 de sept, 08:47 | Nada; venció | **falsa alarma** |
-| MPP-301 · rodamientos | 5 de sept, 23:17 | 10 de sept, 04:05 – 15 de sept, 18:29 | Orden PM03 `40012056` cerrada el 7 de sept, 11:17 | **intervenida** |
+| MN-41 · aislamiento | 3 de sept, 01:55 | 4 de sept, 21:07 – 7 de sept, 06:43 | Nada en la ventana: su falla a tierra fue el 25 de sept | **falsa alarma** |
+| MN-16 · bomba de fondo | 2 de sept, 19:25 | 5 de sept, 05:01 – 8 de sept, 09:49 | Cambio programado `PR-VIG-MN16-260904-bomba`: orden PM03 `40012061` cerrada el 6 de sept, 03:03 | **intervenida** |
 | MN-07 · bomba de fondo | 1 de oct, 06:00 | 2 de oct, 17:38 – 17:57 | Ventana abierta | **seguimiento** |
 | MN-18 · admisión | 2 de oct, 08:00 | 3 de oct, 19:38 – 20:41 | Abierta | **seguimiento** |
 | P-201B · succión | 30 de sept, 17:00 | 4 de oct, 07:20 – 10:59 | Abierta | **seguimiento** |
@@ -111,7 +113,7 @@ está «en riesgo» (está «perdiendo»).
 ### Registro histórico del demo (`prediccionesHistoricas`): la regla fija
 
 **🔴 Demostración.** El servidor guarda cada predicción cuando sale; el demo la arma así, coherente
-con la historia del PLC (`aciertos.ts:100-158`). `azar(s)` es FNV-1a de un texto normalizado a [0, 1):
+con la historia del PLC (`aciertos.ts:110-182`). `azar(s)` es FNV-1a de un texto normalizado a [0, 1):
 la misma regla da siempre el mismo registro.
 
 1. **Desde la puesta en marcha** (`PUESTA_EN_MARCHA = 2026-09-01`, 00:00 hora de Colombia). Qué
@@ -128,22 +130,33 @@ la misma regla da siempre el mismo registro.
    $[t_e + 0{,}6P;\ t_e + 1{,}4P]$, y solo si ya venció. La mitad (`azar("i|…") < 0,5`) lleva
    intervención a $t_e + 1{,}5$ d. **Ojo:** esta regla incluye las multifásicas (MPP-301), que la
    vigente excluye.
-4. Se califican todas con `calificar` contra las fallas del contexto de hoy y las intervenciones de
-   la regla 3.
+4. **Lo que anticipó con tiempo de cambiar** (desde el 9-oct): cada parada del programa que salió de
+   una orden predictiva del vigía (`intervencionDelVigia`: el demo la reconoce por su id,
+   `PR-VIG-<pozo>-<día>-<parte>`) es una predicción sobre esa parte, con anticipo
+   $A = (3 + \lfloor 5\cdot\text{azar}("l|"+id)\rfloor)$ días, emitida en
+   $\max(\text{puesta en marcha},\ \text{desde} - 0{,}5A)$, ventana $[t_e + 0{,}6A;\ t_e + 1{,}4A]$ e
+   intervención al terminar el cambio (`hasta` − 3 h). No tiene falla: queda **intervenida**. El
+   generador del demo escribe esos cambios en vez de la falla para las fallas de desgaste de las
+   electrosumergibles (bomba de fondo, admisión, motor) que ocurrían con al menos 5 días de TRIM en
+   servicio; las de aislamiento caen en horas y fallan igual. En el demo: MN-16 (4-sep) y MN-05 (12-sep).
+5. Se califican todas con `calificar` contra las fallas del contexto de hoy y las intervenciones de
+   las reglas 3 y 4.
 
 El demo tiene además las órdenes SAP coherentes: por cada predicción intervenida, `historiaSap` crea
 un aviso M1 «El vigía anticipa falla: \<parte\> de \<equipo\>» (origen TRIM, evidencia «Predicción
 \<id\> · ventana hasta el \<fecha\>») y una orden **PM03** (predictiva) en TECO con
-`cierreTecnico = intervencion` y la acción de la parte como descripción (`src/entities/sap.ts:294-312`).
-En el demo: `40012054` (LC-14, La Ceiba, cerrada 26 de sept, 07:26), `40012055` (P-201B, Guacamayo,
-14 de sept, 17:23), `40012056` (MPP-301, Morichal, 7 de sept, 11:17).
+`cierreTecnico = intervencion` y la acción de la parte como descripción (`src/entities/sap.ts:295-313`).
+En el demo: `40012057` (LC-14, La Ceiba, cerrada 26 de sept, 07:26), `40012058` (P-201B, Guacamayo,
+14 de sept, 17:23), `40012059` (MN-05, Morichal, 13 de sept, 18:22), `40012060` (MPP-301, Morichal,
+7 de sept, 11:17) y `40012061` (MN-16, Morichal, 6 de sept, 03:03). Las dos de las electrosumergibles son
+las de los cambios programados de la regla 4: esas paradas no generan además una PM02 (`sap.ts`).
 
 ---
 
 ### Fallas vistas (`fallasVistas`): ¿el vigía podía verla?
 
 **Qué es.** Cada falla de la flota de alto impacto desde la puesta en marcha, con su visibilidad
-(`aciertos.ts:164-217`; viaja en `/vistas/predicciones` → `fallas[]`).
+(`aciertos.ts:188-241`; viaja en `/vistas/predicciones` → `fallas[]`).
 
 **Fórmula (en este orden).**
 
@@ -156,9 +169,10 @@ En el demo: `40012054` (LC-14, La Ceiba, cerrada 26 de sept, 07:26), `40012055` 
 
 Firmar hoy un perfil **no reescribe la historia**. Sin disparos.
 
-**Ejemplo (Morichal).** 6 fallas desde el 1 de sept: 5 `vigilada` (MPP-301 sello, 24 de sept 06:23;
-MN-05 bomba, 13 de sept 19:07; MN-16 bomba, 6 de sept 02:07; MN-23 admisión, 5 de sept 14:17; MN-41
-aislamiento, 3 de sept 06:40) y 1 `sin-parte` (P-201B, `EV-M2011-260924`, 24 de sept 16:51, «ninguno»).
+**Ejemplo (Morichal).** 5 fallas desde el 1 de sept: 4 `vigilada` (MN-41 aislamiento, 25 de sept 06:40;
+MPP-301 sello, 24 de sept 06:23; MN-33 aislamiento, 17 de sept 02:26; MN-23 admisión, 5 de sept 14:17) y
+1 `sin-parte` (P-201B, `EV-M2011-260924`, 24 de sept 16:51, «ninguno»). MN-05 y MN-16 ya no son fallas: el vigía
+las anticipó y se cambiaron en paradas programadas (regla 4 arriba).
 En el demo no hay ninguna `sin-instrumento` ni `fuera-de-perfil`.
 
 ---
@@ -179,13 +193,15 @@ $$
 
 | Cifra | Valor | Barra | Pie | Morichal | Portafolio (5 campos) |
 |---|---|---|---|---|---|
-| Acertó | «$A$ de $A+F$»; «—» si $A+F=0$ | tasa/100 | «67 % · 1 falsa alarma» (`n0`); nota «1 intervenida, sin calificar» + ⓘ si $I>0$ | **2 de 3** · «67 % · 1 falsa alarma» · «1 intervenida, sin calificar» | 5 de 6 · «83 % · 1 falsa alarma» · «3 intervenidas, sin calificar» |
-| Fallas anticipadas | «$A$ de $|W|$» | $A/|W|$ | «en partes con instrumento» | **2 de 5** | 5 de 9 |
-| Anticipación | «$\bar a$ d» (`n1`); «—» sin aciertos | – | «promedio · de min a max d»; «sin aciertos todavía» | **2,1 d** · «promedio · de 0,2 a 4,0 d» | 2,8 d · de 0,2 a 5,0 d |
+| Acertó | «$A$ de $A+F$»; «—» si $A+F=0$ | tasa/100 | «33 % · 2 falsas alarmas» (`n0`); nota «3 intervenidas, sin calificar» + ⓘ si $I>0$ | **1 de 3** · «33 % · 2 falsas alarmas» · «3 intervenidas, sin calificar» | 5 de 7 · «71 % · 2 falsas alarmas» · «5 intervenidas, sin calificar» |
+| Fallas anticipadas | «$A$ de $|W|$» | $A/|W|$ | «en partes con instrumento» | **1 de 4** | 5 de 9 |
+| Anticipación | «$\bar a$ d» (`n1`); «—» sin aciertos | – | «promedio · de min a max d»; «sin aciertos todavía» | **4,0 d** · «promedio · de 4,0 a 4,0 d» | 4,8 d · de 2,0 a 8,0 d |
 | En seguimiento | cuántas | – | «la primera vence \<fecha\>»; «nada en seguimiento» | **4** · «la primera vence 2 de oct, 17:57» | 5 · 2 de oct, 17:57 |
 
-La Ceiba sola: «2 de 2» · «100 % · 0 falsas alarmas» · «1 intervenida, sin calificar»; 2 de 2; 3,5 d
-(de 2,0 a 5,0 d); 0 · «nada en seguimiento». Guacamayo: «1 de 1»; 1 de 2; 3,0 d; 1.
+La Ceiba sola: «3 de 3» · «100 % · 0 falsas alarmas» · «1 intervenida, sin calificar»; 3 de 3 (LC-11, LC-04 y la
+parada de P-201B del 22-sep, por rodamientos); 4,7 d (de 2,0 a 8,0 d); 0 · «nada en seguimiento». Guacamayo: «1 de 1»;
+1 de 2 (GU-07 se le escapó); 6,0 d; 1. No es 100 % en todo: en Morichal acertó una de tres y de cuatro fallas
+vigiladas anunció una; en el portafolio, cinco de nueve.
 
 ⓘ «Intervenidas antes»: «Se le hizo mantenimiento a la parte antes de que fallara: es lo que se busca,
 pero no prueba que iba a fallar. No cuenta como acierto ni como falsa alarma.»
@@ -198,17 +214,19 @@ pero no prueba que iba a fallar. No cuenta como acierto ni como falsa alarma.»
    minúscula; «parte sin identificar» si no tiene) y debajo «avisó \<emitida\> → falló \<inicio\>» /
    «→ orden \<número PM03\> cerrada \<fecha\>» (o «orden predictiva» si no la encuentra) / «→ venció
    \<hasta\>»; a la derecha el chip «acierto» / «intervenida antes» / «falsa alarma» y, si acertó,
-   «N d antes». Morichal (4):
-   - MPP-301 · rodamientos — avisó 5 de sept, 23:17 → orden 40012056 cerrada 7 de sept, 11:17 · *intervenida antes*
+   «N d antes». Morichal (6):
+   - MN-33 · aislamiento del motor y del cable — avisó 13 de sept, 02:26 → falló 17 de sept, 02:26 · *acierto* · 4,0 d antes
+   - MN-05 · bomba de fondo — avisó 9 de sept, 21:37 → orden 40012059 cerrada 13 de sept, 18:22 · *intervenida antes*
+   - MPP-301 · rodamientos — avisó 5 de sept, 23:17 → orden 40012060 cerrada 7 de sept, 11:17 · *intervenida antes*
    - MN-40 · aislamiento del motor y del cable — avisó 3 de sept, 03:59 → venció 7 de sept, 08:47 · *falsa alarma*
-   - MN-41 · aislamiento del motor y del cable — avisó 3 de sept, 01:55 → falló 3 de sept, 06:40 · *acierto* · 0,2 d antes
-   - MN-23 · admisión y gas — avisó 1 de sept, 14:17 → falló 5 de sept, 14:17 · *acierto* · 4,0 d antes
+   - MN-41 · aislamiento del motor y del cable — avisó 3 de sept, 01:55 → venció 7 de sept, 06:43 · *falsa alarma*
+   - MN-16 · bomba de fondo — avisó 2 de sept, 19:25 → orden 40012061 cerrada 6 de sept, 03:03 · *intervenida antes* (tras «ver 1 más»)
 2. **«LO QUE NO ANUNCIÓ · N FALLAS»**: «Se le escaparon: tenían instrumento» (= fallas `vigiladas` que
    no son la `falla` de ningún acierto) y un grupo por cada visibilidad no vigilada, con su rótulo, la
    cuenta y la lista («**equipo** · fecha · parte»; «falta: …» si es sin instrumento). Morichal
-   «· 4 FALLAS»: se le escaparon **3** (MPP-301 · 24 de sept, 06:23 · sello mecánico; MN-05 · 13 de
-   sept, 19:07 · bomba de fondo; MN-16 · 6 de sept, 02:07 · bomba de fondo) y «Sin parte identificada:
-   no se sabe qué mirar» **1** (P-201B · 24 de sept, 16:51). Sin ninguna: «Ninguna falla sin anunciar
+   «· 4 FALLAS»: se le escaparon **3** (MN-41 · 25 de sept, 06:40 · aislamiento del motor y del cable,
+   una falla a tierra súbita; MPP-301 · 24 de sept, 06:23 · sello mecánico; MN-23 · 5 de sept, 14:17 ·
+   admisión y gas) y «Sin parte identificada: no se sabe qué mirar» **1** (P-201B · 24 de sept, 16:51). Sin ninguna: «Ninguna falla sin anunciar
    desde la puesta en marcha.»
 3. **«EN SEGUIMIENTO · N»** con el rótulo de columna «cruzaría el límite»: «**equipo** · parte», el tag
    y la ventana («2 de oct, 17:38–17:57» si es el mismo día; si no, «12 de oct, 19:55 – 14 de oct,

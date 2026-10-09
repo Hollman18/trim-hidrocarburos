@@ -9,17 +9,19 @@ número porque el capítulo 10 remite a él.
 
 1. **La electrosumergible nunca sale «falló».** `saludDeEsp(p, parteFallo?)` acepta la parte de la
    falla abierta, pero ningún llamador se la pasa: `src/shared/api/diferidos.ts:249, 292, 314`,
-   `src/entities/equipo-vivo.ts:50`, `src/entities/mensajes.ts:201`, `src/entities/diferido.ts:501`.
-   Resultado real: MN-41 (Morichal), parada desde el 3 de sept por aislamiento (código GF), muestra
+   `src/entities/equipo-vivo.ts:50`, `src/entities/mensajes.ts:201`, `src/entities/diferido.ts:510`.
+   Resultado real: MN-41 (Morichal), parada por aislamiento (código GF), muestra
    todas sus partes «equipo detenido» y nunca «falló»; en las bombas sí se pasa
    (`src/shared/api/equipos.ts:267`). **Recomendación:** el servidor debe pasar `causa.parte` del
    evento abierto del pozo cuando su causa es la propia ESP, igual que en las bombas.
    (Las líneas citadas son de la versión anterior a la corrección, `8700292`.)
-   **(Resuelto el 8-oct)** `parteQueFallo(p, ctx)` (`src/entities/esp.ts:141-146`) toma la parte de la
+   **(Resuelto el 8-oct)** `parteQueFallo(p, ctx)` (`src/entities/esp.ts:146-151`) toma la parte de la
    causa del evento abierto del pozo cuando es su propia electrosumergible, y `saludDeEsp(p, ctx)`
-   (`esp.ts:152-161`) **pide el contexto**, así ningún llamador se la puede saltar. MN-41, GU-07 y GU-09
-   salen con su aislamiento «falló» (P1) en `/vistas/pozos`, `/vistas/pozos/:campo/:pozo` y
-   `/vistas/electrosumergibles`; las 15 cerradas por otro equipo, ninguna (`verificar-libro` §18; 5C.4).
+   (`esp.ts:157-166`) **pide el contexto**, así ningún llamador se la puede saltar. MN-41 sale con su
+   aislamiento «falló» (P1) en `/vistas/pozos`, `/vistas/pozos/:campo/:pozo` y
+   `/vistas/electrosumergibles`; las cerradas por otro equipo (hoy LC-16 y LC-07, por P-201B), ninguna
+   (`verificar-libro` §18; 5C.4). Con el demo del 9-oct GU-07 y GU-09 ya volvieron (con TRIM una
+   electrosumergible caída espera 2 a 5 días): MN-41, que cayó el 25-sep, es la única parada por sí misma.
 
 2. **Instrumento de bomba con `valor: null`.** El contrato dice que un instrumento sin señal viaja con
    `valor: null`, pero `senalesDe` descarta todo dispositivo cuyo valor no sea número
@@ -76,14 +78,14 @@ número porque el capítulo 10 remite a él.
    **Recomendación:** una sola fuente (`marcha` derivada del PLC).
 
 9. **MTBF de la flota con una sola falla.** Por equipo, el MTBF exige ≥ 2 fallas
-   (`libro.ts:1264`); por flota, la pantalla lo calcula con $D \cdot N / \sum n_f$ si hay **al menos
+   (`libro.ts:1281`); por flota, la pantalla lo calcula con $D \cdot N / \sum n_f$ si hay **al menos
    una** (`src/pages/Esp.tsx:71`, `src/pages/Confiabilidad.tsx:50`), y el ⓘ de la flota dice
-   «se calcula con dos fallas o más». En Morichal hay 10, así que no se nota. **Decidir** el mínimo de
+   «se calcula con dos fallas o más». En Morichal hay 9 (desde el 9-oct; antes 10), así que no se nota. **Decidir** el mínimo de
    la flota y alinear el texto.
 
 10. **Qué predice el vigía: ¿multifásicas sí o no?** Las predicciones vigentes excluyen las multifásicas
-    (`altoImpacto = subtipo !== 'multifasica'`, `diferido.ts:581`; filtro en `aciertos.ts:81`), pero el
-    registro histórico del demo sí las incluye (`flotaDe` trae MPP-301; `aciertos.ts:134`): Morichal
+    (`altoImpacto = subtipo !== 'multifasica'`, `diferido.ts:590`; filtro en `aciertos.ts:81`), pero el
+    registro histórico del demo sí las incluye (`flotaDe` trae MPP-301; `aciertos.ts:158`): Morichal
     tiene una predicción intervenida de MPP-301 · rodamientos y ninguna vigente de MPP-301 aunque su
     filtro cruce en 5,2 d. Las fallas vistas también incluyen MPP-301 (su falla del 24 de sept cuenta
     como «se le escapó»). **Decidir** el alcance y aplicarlo a las tres listas.
@@ -110,7 +112,7 @@ número porque el capítulo 10 remite a él.
 14. **Ajustes de protección del variador sin endpoint.** La banda y la alarma de cada señal de la ESP
     no tienen ruta (CONTRATO.md, «Pendiente del lado del servidor»); `referencia/insumos/<campo>/
     electrosumergibles.json` las trae con `endpoint: null`. En el demo se generan en
-    `src/entities/esp.ts:56-87`.
+    `src/entities/esp.ts:56-92`.
 
 15. **Base maestra de alarmas.** En el código es una constante por máquina (`ALARMAS`,
     `src/entities/limites.ts:53-68`) y solo P-201B y MPP-301 la tienen; el backend necesita su tabla

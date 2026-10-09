@@ -33,7 +33,7 @@ El auditor (`e2e/auditoria/rutas.ts`) exige, entre otras cosas: en `#/ger/diferi
 - Los meses del período que se mira van al frente; los demás al 42 % de opacidad. El año va bajo el primer mes y bajo cada enero.
 - Globo: título «Septiembre 2026»; pista «Mes en curso: cifras parciales, cierre sin publicar.» o «Clic para ver este mes»; filas «Diferidos», «Identificado por señal», «Declarado», «Sin identificar», «Alto impacto», «Máximo firmado» (o «sin meta firmada…»), «Eficiencia» (`n1` %), «Cierre: sin publicar \| publicable \| no publicable».
 
-**Ejemplo (La Ceiba).** Rótulos de oct-25 a oct-26: 33,1 k ■ · 7,5 k · 23,1 k · 5,4 k · 23,3 k ■ · 20,1 k · 18,4 k · 13,5 k · 11,5 k · 60,6 k ■ · 6,8 k · 21,7 k · 3,0 k (en curso; pasa su máximo a la fecha de 1.267 pero no se marca por ser parcial). Agosto apila 6.613 por señal y 237 declarados.
+**Ejemplo (La Ceiba).** Rótulos de oct-25 a oct-26: 16,9 k · 7,5 k · 6,4 k · 5,4 k · 23,3 k ■ · 17,0 k · 10,1 k · 13,5 k · 11,5 k · 17,4 k · 8,5 k · 7,7 k · 1,0 k (en curso; no llega a su máximo a la fecha de 1.267, y de todos modos no se marcaría por ser parcial). Agosto apila 8.286 por señal y 237 declarados. Con el agua real solo febrero pasa su máximo (antes del 9-oct también octubre de 2025 y julio de 2026).
 
 **Quién lo calcula.** Front, con `GET /api/vistas/diferidos/mensual`.
 
@@ -46,14 +46,14 @@ El auditor (`e2e/auditoria/rutas.ts`) exige, entre otras cosas: en `#/ger/diferi
 | Endpoint | Devuelve | Lo consume | Tipo / módulo | Caso de `referencia/` |
 |---|---|---|---|---|
 | `GET /api/vistas/diferidos?campos&desde&hasta` | `Libro` completo (tramos por clave en `refs`) | Encabezado, Cuadre, Paretos, Palancas, Por campo, Producción (cabecera), Resumen (y su «POR CAMPO» desplegable: `porEquipo[].fallas/disparos`, `sinCosto`) | `libro()` · `src/entities/libro.ts:676` | `diferidos/<campo>-2026-09`, `diferidos/portafolio-2026-09` |
-| `GET /api/vistas/diferidos/mensual?campos` | `[{ mes, corto, nombre, desde, hasta, parcial, libro: ResumenLibro }]` | Mes a mes, Tendencia, Factor, cuadre mensual | `serieMensual` · `:1059` | `mensual/<campo>`, `mensual/portafolio` |
-| `GET /api/vistas/diferidos/base?campos&desde&hasta` | `LineaBase` o `null` | apoyo «+44 % frente a jul a sep» | `lineaBase` · `:1083` | — |
-| `GET /api/vistas/produccion/diaria?campos&desde&hasta` | `Dia[]` | Día a día, cuadre diario | `porDia` · `:985` | `diaria/<campo>-2026-09`, `diaria/portafolio-2026-09` |
+| `GET /api/vistas/diferidos/mensual?campos` | `[{ mes, corto, nombre, desde, hasta, parcial, libro: ResumenLibro }]` | Mes a mes, Tendencia, Factor, cuadre mensual | `serieMensual` · `:1076` | `mensual/<campo>`, `mensual/portafolio` |
+| `GET /api/vistas/diferidos/base?campos&desde&hasta` | `LineaBase` o `null` | apoyo «+80 % frente a jul a sep» | `lineaBase` · `:1100` | — |
+| `GET /api/vistas/produccion/diaria?campos&desde&hasta` | `Dia[]` | Día a día, cuadre diario | `porDia` · `:1002` | `diaria/<campo>-2026-09`, `diaria/portafolio-2026-09` |
 | `GET /api/vistas/potencial-reciente?campos` | `{ campo: bbl/d }` | Configuración (referencia para fijar la meta) | `pedirPotencialReciente` | — |
 | `GET /api/vistas/asignacion?campo&mes` | `AsignacionPozo[]` | Cotejo con la oficial | `asignacionPorPozo` · `:385` | `asignacion/<campo>-<mes>` |
 | `GET /api/asignacion-oficial` (arranque) | `{ filas: FilaCargada[], cargas: CargaAsignacion[] }` | Cotejo, rastro | `asignacion.ts` | — |
 | `POST /api/asignacion-oficial` | `{ filas, carga }` | Carga | `escrituras.ts:265` | `verificar` 8 |
-| `GET /api/vistas/estado?campos` | `EstadoCampo[]` (`ayer`, `potencialBpd`, `perdiendoBpd`, …) | Real del último día, cierre proyectado | `estadoCampo` · `diferido.ts:653` | (riesgo) |
+| `GET /api/vistas/estado?campos` | `EstadoCampo[]` (`ayer`, `potencialBpd`, `perdiendoBpd`, …) | Real del último día, cierre proyectado | `estadoCampo` · `diferido.ts:662` | (riesgo) |
 | `GET /api/catalogo` | `calendario`, `campos[c].medicion: { origen, banda, metrologia }` | Calendario, banda, Medición oficial | `catalogo.ts:78` | `insumos/arranque/catalogo.json` |
 | `GET /api/configuracion/historial` (arranque) | versiones firmadas | metas, precio, criterio (`metaEn`, `precioEn`, `criterioEn`) | `configuracion.ts` | `insumos/arranque/configuracion-historial.json` |
 

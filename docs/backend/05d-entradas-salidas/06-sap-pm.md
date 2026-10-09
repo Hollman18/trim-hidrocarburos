@@ -9,7 +9,7 @@ Por qué importa: una bomba de reinyección parada sin aviso en SAP es una parad
 
 Código: `src/entities/sap.ts` (352 líneas), `src/shared/api/sap.ts` (110), `src/shared/api/escrituras.ts:195-224`, `src/widgets/sap/BloqueSap.tsx`, `PanelSapMantenimiento.tsx`, `TresRelojes.tsx`, `src/pages/Mantenimiento.tsx`, `src/pages/Trabajo.tsx`, `src/widgets/conectores/Integraciones.tsx`.
 
-> 🔴 **Todo lo que se lee de SAP en el demo está simulado** con una regla fija y declarada a partir de la historia de paradas del PLC (`armarHistoria`, `sap.ts:228-315`), más un stock fijo (`STOCK`, `sap.ts:154-168`) y una identidad de equipo calculada con un hash (`identidadSap`). En producción viene de SAP por el backend: S/4HANA con sus API OData de avisos, órdenes, equipos y stock, o ECC con las BAPI de PM o IDoc; el integrador confirma versión y mecanismo (`CONTRATO.md` · «SAP PM»). **El front solo habla con el backend.**
+> 🔴 **Todo lo que se lee de SAP en el demo está simulado** con una regla fija y declarada a partir de la historia de paradas del PLC (`armarHistoria`, `sap.ts:228-316`), más un stock fijo (`STOCK`, `sap.ts:154-168`) y una identidad de equipo calculada con un hash (`identidadSap`). En producción viene de SAP por el backend: S/4HANA con sus API OData de avisos, órdenes, equipos y stock, o ECC con las BAPI de PM o IDoc; el integrador confirma versión y mecanismo (`CONTRATO.md` · «SAP PM»). **El front solo habla con el backend.**
 
 ---
 
@@ -52,7 +52,7 @@ interface AvisoSap { numero; tipo: 'M1'|'M2'; campoId; equipo; descripcion; prio
 | 5 | **un aviso abierto por (campo, equipo)**, contando los de SAP y los enviados | «Ya hay un aviso abierto de {equipo} en SAP: el {número}.» | 409 |
 | 6 | crear: `numero` (el de SAP), `creado` (ahora), `creadoPor: "{nombre} · desde TRIM"`, `origen: "trim"`, `cerrado: false`; el equipo y la ubicación técnica de SAP salen del maestro (`identidadSap`) | → `{ datos: { aviso } }` | 200 |
 
-**Ejemplo con los datos del demo.** (Corrido.) Técnico → «Su rol no envía avisos a SAP.»; producción → igual; supervisor (solo La Ceiba) para Morichal → «Ese campo no lo tiene asignado: el aviso no se envía.»; descripción «fuga» → «Escriba qué pasa, con al menos una frase corta.» (`campo: "descripcion"`); un aviso de K-101 de La Ceiba → «Ya hay un aviso abierto de K-101 en SAP: el 10004146.» (el M1 abierto del aire de instrumentos). El aviso del contrato para P-201B (M2, prioridad 1, sello `ELP`, «Sello mecánico: fuga por el lado de acople», inicio 03:52, evidencia `ZS-2011 · marcha → paro · 2 de oct, 03:52`) se crea con `numero: "10004150"`, `creado: "2026-10-02T14:00:00-05:00"`, `creadoPor: "Nelson Ortiz · desde TRIM"`, `origen: "trim"`, `cerrado: false`; un segundo aviso del operador para P-201B → «Ya hay un aviso abierto de P-201B en SAP: el 10004150.».
+**Ejemplo con los datos del demo.** (Corrido.) Técnico → «Su rol no envía avisos a SAP.»; producción → igual; supervisor (solo La Ceiba) para Morichal → «Ese campo no lo tiene asignado: el aviso no se envía.»; descripción «fuga» → «Escriba qué pasa, con al menos una frase corta.» (`campo: "descripcion"`); un aviso de K-101 de La Ceiba → «Ya hay un aviso abierto de K-101 en SAP: el 10004149.» (el M1 abierto del aire de instrumentos). El aviso del contrato para P-201B (M2, prioridad 1, sello `ELP`, «Sello mecánico: fuga por el lado de acople», inicio 03:52, evidencia `ZS-2011 · marcha → paro · 2 de oct, 03:52`) se crea con `numero: "10004155"` (el mayor de los avisos más uno: hay 55, del 10004100 al 10004154), `creado: "2026-10-02T14:00:00-05:00"`, `creadoPor: "Nelson Ortiz · desde TRIM"`, `origen: "trim"`, `cerrado: false`; un segundo aviso del operador para P-201B → «Ya hay un aviso abierto de P-201B en SAP: el 10004155.».
 
 **Casos borde.**
 - **TRIM no crea órdenes**: el aviso queda «sin orden» hasta que el planeador la cree en SAP. En la ficha: «Aviso {n} · {avería|solicitud} · prioridad {p} · {recién enviado | hace {fmtHoras}} · {creadoPor}», «{descripción}», chip «sin orden» (ⓘ «Sin orden todavía: La crea el planeador en SAP, y cuando la libere TRIM le avisa al técnico.»).
@@ -87,7 +87,7 @@ interface OrdenSap { numero; clase: 'PM01'|'PM02'|'PM03'; campoId; equipo; descr
 | `horasReales` | horas confirmadas en SAP | «{n1} h» en el historial |
 | `evento` | (PM01) la parada del PLC que atendió | — (se usa en los tres relojes) |
 
-**Ejemplo con los datos del demo.** (Corrido.) **57 órdenes**: PM01 46 (todas TECO: Morichal 24, La Ceiba 12, Guacamayo 10), PM02 7 (TECO), PM03 4 (1 REL, 3 TECO). **50 avisos**: M2 de SAP 39 (cerrados), M2 de TRIM 7 (cerrados), M1 de TRIM 1 abierto + 3 cerrados. La primera orden: `40012000`, PM01, Morichal, P-201B, «Reparar sello mecánico de P-201B», TECO, creada `2025-10-05T23:28:12Z`, liberada `2025-10-06T00:28:12Z`, cierre técnico `2025-10-08T20:11:02Z`, puesto `MEC-CONTRATISTA`, aviso `10004100`, 8 h, evento `EV-M2011-251005`, repuesto `MAT-SELLO-201` × 1. La única abierta: `40012053`, PM03, La Ceiba, K-101, REL, liberada `2026-10-02T09:10:00-05:00`, técnico `tec` (Óscar Daza), puesto `MEC-CEIBA`, aviso `10004146`, 0 h.
+**Ejemplo con los datos del demo.** (Corrido.) **62 órdenes**: PM01 49 (todas TECO: Morichal 23, La Ceiba 14, Guacamayo 12), PM02 7 (TECO), PM03 6 (1 REL, 5 TECO). **55 avisos**: M2 de SAP 40 (cerrados), M2 de TRIM 9 (cerrados), M1 de TRIM 1 abierto + 5 cerrados. (Con el demo del 9-oct cambian las fallas de las electrosumergibles: MN-05 y MN-16 dejan de ser PM01 y pasan a PM03 del vigía; aparecen las de LC-04, LC-11, MN-33 y GU-07.) La primera orden: `40012000`, PM01, Morichal, P-201B, «Reparar sello mecánico de P-201B», TECO, creada `2025-10-05T23:28:12Z`, liberada `2025-10-06T00:28:12Z`, cierre técnico `2025-10-08T20:11:02Z`, puesto `MEC-CONTRATISTA`, aviso `10004100`, 8 h, evento `EV-M2011-251005`, repuesto `MAT-SELLO-201` × 1. La única abierta: `40012056`, PM03, La Ceiba, K-101, REL, liberada `2026-10-02T09:10:00-05:00`, técnico `tec` (Óscar Daza), puesto `MEC-CEIBA`, aviso `10004149`, 0 h.
 
 **Regla de la simulación del demo** (lo que el backend **reemplaza** con SAP):
 
@@ -95,7 +95,7 @@ interface OrdenSap { numero; clase: 'PM01'|'PM02'|'PM03'; campoId; equipo; descr
 |---|---|---|
 | cada **falla cerrada** de un equipo de la flota (no disparos, con fin), en orden de inicio | M2, prioridad 1 si causó barriles (> 0) si no 2, parte de la falla, «{Parte}: parada de {equipo}», `inicioAveria` = inicio, cerrado; desde la puesta en marcha (2026-09-01, Colombia) `origen: trim`, `creado` = inicio + 0,05 h, «TRIM · desde la parada del PLC»; antes `origen: sap`, + 0,5 h, «Operación, directo en SAP» | PM01, TECO, creada inicio + 1 h, liberada + 2 h, cierre técnico = fin + 3 h, `horasReales = min(duración, 8 h)`, técnico `tec` en La Ceiba (puesto `MEC-CEIBA`) o ninguno (`MEC-CONTRATISTA`), un repuesto: el material de la parte para esa familia |
 | cada parada del **programa** firmado | — | PM02, prioridad 3, descripción = motivo; creada 7 días antes, liberada 1 día antes (no existe si la creación es futura); estado TECO si terminó, PCNF si empezó, REL si ya se liberó, CRTD si no; cierre = fin + 2 h; horas `min(duración, 8)` si terminó |
-| acción inmediata del aire de La Ceiba (K-101) | M1 abierto `10004146`, «Aire de instrumentos degradado: presión de cabezal cayendo», creado 07:40 de hoy, «TRIM · el aire cae hace 7 días» | PM03 REL `40012053` |
+| acción inmediata del aire de La Ceiba (K-101) | M1 abierto `10004149`, «Aire de instrumentos degradado: presión de cabezal cayendo», creado 07:40 de hoy, «TRIM · el aire cae hace 7 días» | PM03 REL `40012056` |
 | cada **predicción intervenida** del vigía | M1 cerrado, «El vigía anticipa falla: {parte} de {equipo}», evidencia «Predicción {id} · ventana hasta el {fecha}», creado emisión + 0,2 h | PM03 TECO, creada + 2 h, liberada + 4 h, cierre = intervención, 4 h |
 
 Numeración: avisos desde `10004100`, órdenes desde `40012000`. Una respuesta posterior de un operario cambia la parte del aviso y de la orden (SAP recibe ese dato), sin mover la numeración (`conPartesDeHoy`).
@@ -104,7 +104,7 @@ Numeración: avisos desde `10004100`, órdenes desde `40012000`. Una respuesta p
 
 **Quién lo calcula y por dónde viaja.** Servidor (lee SAP). `GET /api/sap/ordenes?campos` → `OrdenSap[]` de la más reciente a la más vieja (por `creada`). Las horas por clase **las suma el front** sobre lo recibido (ya no hay `/api/sap/horas`).
 
-**Referencia.** `src/entities/sap.ts:31-104, 178-315`; `referencia/sap/ordenes-*.json` y `avisos-*.json` (salidas esperadas por campo y portafolio).
+**Referencia.** `src/entities/sap.ts:31-104, 178-316`; `referencia/sap/ordenes-*.json` y `avisos-*.json` (salidas esperadas por campo y portafolio).
 
 ---
 
@@ -127,21 +127,21 @@ $$ P = \sum_{o:\ \text{clase} \in \{PM02, PM03\}} h_o, \qquad K = \sum_{o:\ \tex
 
 | Período | Alcance | Proactivo | Correctivo | Órdenes | % |
 |---|---|---|---|---|---|
-| Septiembre 2026 | La Ceiba | 4 h | 16 h | 3 | 20 % |
-| Septiembre 2026 | 5 campos | 12 h | 64 h | 11 | 15,79 → «16 %» |
-| Jul–sep 2026 | La Ceiba | 12 h | 32 h | 6 | 27,27 → «27 %» |
-| Jul–sep 2026 | 5 campos | 28 h | 136 h | 22 | 17,07 → «17 %» |
-| Últimos 12 meses | La Ceiba | 20 h | 96 h | 15 | 17,24 → «17 %» |
-| Últimos 12 meses | 5 campos | 68 h | 360,09 h | 56 | 15,88 → «16 %» |
+| Septiembre 2026 | La Ceiba | 4 h | 24 h | 4 | 14,29 → «14 %» |
+| Septiembre 2026 | 5 campos | 20 h | 80 h | 15 | 20 % |
+| Jul–sep 2026 | La Ceiba | 12 h | 48 h | 8 | 20 % |
+| Jul–sep 2026 | 5 campos | 36 h | 160 h | 27 | 18,37 → «18 %» |
+| Últimos 12 meses | La Ceiba | 20 h | 112 h | 17 | 15,15 → «15 %» |
+| Últimos 12 meses | 5 campos | 76 h | 384,09 h | 61 | 16,52 → «17 %» |
 | Octubre en curso | cualquiera | 0 | 0 | 1 | sin dato |
 
-La Ceiba, septiembre: PM03 `40012054` (LC-14, 4 h, cerrada 26-sep) + PM01 `40012043` (P-201B rodamientos, 8 h, 23-sep) + PM01 `40012041` (P-201B sello, 8 h, 11-sep) → $4/(4+16) = 20\,\%$; en pantalla «20 %», «4,0 h proactivas · 16,0 h correctivas · 3 órdenes».
+La Ceiba, septiembre: PM03 `40012057` (LC-14, 4 h, cerrada 26-sep) + PM01 `40012043` (P-201B rodamientos, 8 h, 23-sep) + PM01 `40012046` (LC-11 aislamiento, 8 h, 29-sep) + PM01 `40012048` (LC-04 aislamiento, 8 h, 29-sep) → $4/(4+24) = 14{,}29\,\%$; en pantalla «14 %», «4,0 h proactivas · 24,0 h correctivas · 4 órdenes». (La de sello de P-201B pasó al 9-ago.)
 
 **Casos borde.** $P + K = 0$ → `porcentaje` sin dato: «Sin órdenes cerradas en el período» (ⓘ «No hay órdenes cerradas en {período}. Escoja un período cerrado (el mes anterior, por ejemplo) para ver las horas.»). Ojo: una orden **abierta** cuenta en el período de su liberación (con 0 h); por eso en octubre la respuesta trae `ordenes: 1` con 0 h, aunque la pantalla no lo escribe: sin horas no hay porcentaje y el panel solo dice «Sin órdenes cerradas en el período» (el «1 orden» que se ve en octubre es otro: el del panel «ABIERTO EN SAP», «ahora · 0 avisos · 1 orden»). «sin meta configurada»: no hay meta de % proactivo en la configuración firmada.
 
 **Quién lo calcula.** Front, sumando lo que llegó de `GET /api/sap/ordenes`.
 
-**Referencia.** `src/entities/sap.ts:319-330`; `src/widgets/sap/PanelSapMantenimiento.tsx:37-68`.
+**Referencia.** `src/entities/sap.ts:320-331`; `src/widgets/sap/PanelSapMantenimiento.tsx:37-68`.
 
 ---
 
@@ -161,13 +161,13 @@ $$ \bar T = \frac{1}{n}\sum_i T_i, \qquad \bar A = \frac{1}{n}\sum_i \min(h_i, T
 | $h_i$ | horas confirmadas de su orden PM01 | h | SAP |
 | $n$ | fallas con su parada | — | cruce SAP ↔ PLC |
 
-**Ejemplo con los datos del demo.** La Ceiba, septiembre 2026 (corrido): `EV-2011-0909` (P-201B, 34,76 h) con orden `40012041` (8 h) y `EV-2011-0922` (P-201B, 15,99 h) con `40012043` (8 h) → $\bar T = 25{,}38$ h, $\bar A = 8$ h, $\bar E = 17{,}38$ h; en pantalla «Reparación activa 8 h · Espera **17 h** · Indisponibilidad total 25 h». Otros (corridos): 5 campos septiembre → 8 fallas, total 275,38 h, activa 8 h, espera 267,38 h («11,5 d» de total con `fmtHoras`); La Ceiba 12 meses → 12 fallas, 213,76 / 8 / 205,76 h; 5 campos 12 meses → 46 fallas, 237,94 / 7,83 / 230,11 h; octubre en curso → sin candidatas (`null`).
+**Ejemplo con los datos del demo.** La Ceiba, septiembre 2026 (corrido): `EV-2011-0922` (P-201B, 15,99 h) con orden `40012043` (8 h), LC-11 (84,67 h) con `40012046` (8 h) y LC-04 (61,15 h) con `40012048` (8 h) → $\bar T = 53{,}93$ h, $\bar A = 8$ h, $\bar E = 45{,}93$ h; en pantalla «Reparación activa 8 h · Espera **46 h** · Indisponibilidad total 2,2 d». Otros (corridos): 5 campos septiembre → 10 fallas, total 96,72 h, activa 8 h, espera 88,72 h («4,0 d» de total con `fmtHoras`); La Ceiba 12 meses → 14 fallas, 193,64 / 8 / 185,64 h; 5 campos 12 meses → 49 fallas, 198,86 / 7,84 / 191,02 h; octubre en curso → sin candidatas (`null`). Desde la puesta en marcha la espera de una electrosumergible baja de semanas a 2 a 5 días (5C.4), y eso es lo que mueve el promedio.
 
 **Casos borde.** Sin ninguna PM01 cerrada con evento en el período → la vista responde `null` y no se dibuja el bloque. Con candidatas pero ninguna con su parada → `{ fallas: 0, excluidas: n }` y los promedios ausentes («sin dato», nunca 0). Con excluidas: «{n} orden(es) fuera del promedio» (ⓘ «Promedio de {f} fallas cerradas; {n} órdenes correctivas cerradas no tienen la parada del PLC que las respalda…»). La reparación activa se recorta a la indisponibilidad ($\min$): horas de SAP mayores que la parada no dan espera negativa. Formato `fmtHoras`: < 48 h → «{n0} h»; ≥ 48 h → «{n1(h/24)} d»; más de 3 meses → «más de 3 meses».
 
 **Quién lo calcula y por dónde viaja.** Servidor (cruza SAP con el PLC): `GET /api/vistas/relojes?campos&desde&hasta` → `{ fallas, excluidas, totalH?, activaH?, esperaH? }` o `null`.
 
-**Referencia.** `src/entities/sap.ts:332-352`; `src/shared/api/sap.ts:93-110`; `src/widgets/sap/TresRelojes.tsx`.
+**Referencia.** `src/entities/sap.ts:333-353`; `src/shared/api/sap.ts:93-110`; `src/widgets/sap/TresRelojes.tsx`.
 
 ---
 
@@ -203,7 +203,7 @@ Prioridad de lo que se muestra: orden abierta (no TECO) > aviso abierto sin orde
 
 ### Mantenimiento: «ABIERTO EN SAP»
 
-Extra «ahora · {n} aviso(s) · {n} orden(es)»; avisos abiertos **sin orden** («Aviso {n} · {equipo} · hace {fmtHoras}» con chip «sin orden», ■ si prioridad 1 y > 4 h) y órdenes no TECO («Orden {n} · {clase} · {equipo}», «{liberada fecha} · {técnico o "cuadrilla {puesto}"}», chip con el estado). Corrido para La Ceiba hoy: 0 avisos sin orden (el M1 de K-101 ya tiene orden) y 1 orden (`40012053`, «liberada»).
+Extra «ahora · {n} aviso(s) · {n} orden(es)»; avisos abiertos **sin orden** («Aviso {n} · {equipo} · hace {fmtHoras}» con chip «sin orden», ■ si prioridad 1 y > 4 h) y órdenes no TECO («Orden {n} · {clase} · {equipo}», «{liberada fecha} · {técnico o "cuadrilla {puesto}"}», chip con el estado). Corrido para La Ceiba hoy: 0 avisos sin orden (el M1 de K-101 ya tiene orden) y 1 orden (`40012056`, «liberada»).
 
 ### Mi trabajo (técnico)
 
@@ -215,9 +215,9 @@ Bloque «SAP S/4HANA · Mantenimiento (PM)» con chip «conectado» (fijo del de
 
 | Fila | Valor | ⓘ |
 |---|---|---|
-| TRIM → SAP · avisos | «4 en total» (avisos con `origen: trim`) | «Con su evidencia, desde la puesta en marcha: M1 solicitud (una parte avisa) · M2 avería (el equipo paró).» |
-| SAP → TRIM · órdenes | «16 órdenes · 1 abierta» | «Con su estado: creada, liberada, en ejecución, cerrada.» |
-| SAP → TRIM · horas | «116,0 h» (suma de horas de todas sus órdenes) | «Confirmadas: la reparación activa de cada orden.» |
+| TRIM → SAP · avisos | «5 en total» (avisos con `origen: trim`) | «Con su evidencia, desde la puesta en marcha: M1 solicitud (una parte avisa) · M2 avería (el equipo paró).» |
+| SAP → TRIM · órdenes | «18 órdenes · 1 abierta» | «Con su estado: creada, liberada, en ejecución, cerrada.» |
+| SAP → TRIM · horas | «132,0 h» (suma de horas de todas sus órdenes) | «Confirmadas: la reparación activa de cada orden.» |
 | SAP → TRIM · repuestos | «5 materiales» | «Los críticos: stock de libre utilización en la bodega del campo.» |
 | PLC ↔ SAP · equipos | «16 de 16» (la flota de alto impacto: P-201B y 15 pozos con ESP) | «Los de alto impacto, asociados entre el PLC y SAP. Por ejemplo: P-201B → equipo 10759915 · CO-CEI-BAT1-AGU-P-201B.» |
 | CATÁLOGOS DE DAÑO | «Bomba de reinyección: 5 partes (cat. B) · 11 daños (cat. C) · 5 causas (cat. 5)»; «Electrosumergible: 5 partes (cat. B) · 7 daños (cat. C) · 5 causas (cat. 5)» (daños = modos distintos de las partes + 1 por «otro»; causas = `CAUSAS_RAIZ`, primer nivel de ISO 14224 Table B.3) | — |

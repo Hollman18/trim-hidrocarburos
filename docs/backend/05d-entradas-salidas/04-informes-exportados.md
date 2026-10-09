@@ -44,9 +44,9 @@ Código: `src/entities/informe.ts` (208 líneas), `src/shared/api/escrituras.ts:
 { "folio":"INF-2026-0001", "fecha":"2026-10-02T14:00:00-05:00", "por":"Andrés Vélez · gerente de activo",
   "version":1, "estado":"publicable",
   "cifras":{ "campos":["ceiba"], "desde":"2026-09-01T05:00:00Z", "hasta":"2026-10-01T05:00:00Z", "version":1,
-             "real":324688, "potencial":346379.44, "noProducido":21691.44, "diferido":21691.44, "tolerancia":3253.72,
-             "metaProduccion":327000, "metaDiferido":24000, "eventos":49 },
-  "huella":"fa38baaa420730961c4855543e7a4d6d3f086e665341f9534f30d2c21bd205ac" }
+             "real":338662, "potencial":346378.06, "noProducido":7716.06, "diferido":7716.06, "tolerancia":1157.41,
+             "metaProduccion":327000, "metaDiferido":24000, "eventos":18 },
+  "huella":"9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8" }
 ```
 
 Rechazos corridos: operador → «Su rol no exporta evidencia.»; producción pidiendo Morichal → «El informe incluye campos que no tiene asignados.»; `campos: []` → «El informe no tiene campos.»; `hasta = desde` → «El período del informe no es válido…»; ficha de P-201B de Morichal con `campos: ["ceiba"]` → «La ficha de un equipo va con el campo del equipo.».
@@ -88,7 +88,7 @@ $$ r_2(v) = \frac{\lfloor 100\,v + 0{,}5 \rfloor}{100} \quad \text{(calculado en
 
 `eventos` existe para que quitar un evento cambie la huella aunque pese 0 bbl.
 
-**Ejemplo con los datos del demo.** Libro de La Ceiba, septiembre 2026 (corrido): `real = 324688`, `potencial = 346379.4352822801`, `brecha = 21691.435282280087`, `diferido = 21691.43528228031`, `tolerancia = 3253.715293317683`, `meta.produccion = 327000` (10.900 × 30), `meta.diferido = 24000` (800 × 30), 49 tramos, `publicable: true`, sin motivos. Cifras: `real 324688`, `potencial 346379.44`, `noProducido 21691.44`, `diferido 21691.44`, `tolerancia 3253.72`, `metaProduccion 327000`, `metaDiferido 24000`, `eventos 49`. Ficha de P-201B (confiabilidad, `INF-2026-0002`): `bblEquipo = 20738.86`.
+**Ejemplo con los datos del demo.** Libro de La Ceiba, septiembre 2026 (corrido con el demo del 9-oct): `real = 338662`, `potencial = 346378.05919221457`, `brecha = 7716.059192214569`, `diferido = 7716.059192214809`, `tolerancia = 1157.4088799693204`, `meta.produccion = 327000` (10.900 × 30), `meta.diferido = 24000` (800 × 30), 18 tramos, `publicable: true`, sin motivos. Cifras: `real 338662`, `potencial 346378.06`, `noProducido 7716.06`, `diferido 7716.06`, `tolerancia 1157.41`, `metaProduccion 327000`, `metaDiferido 24000`, `eventos 18`. Ficha de P-201B (confiabilidad, `INF-2026-0002`): `bblEquipo = 1040.55`.
 
 **Referencia.** `src/entities/informe.ts:46-66, 131-144`.
 
@@ -119,34 +119,34 @@ const dosDecimales = (v: number) => { const k = centesimas(v), a = Math.abs(k)
 const isoUtc = (d: Date) => `${new Date(Math.floor(d.getTime() / 1000) * 1000).toISOString().slice(0, 19)}Z`
 ```
 
-**Ejemplo con los datos del demo (huella real calculada).** El informe `INF-2026-0001` (La Ceiba, septiembre de 2026) tiene esta forma canónica (12 líneas, 227 bytes):
+**Ejemplo con los datos del demo (huella real calculada).** El informe `INF-2026-0001` (La Ceiba, septiembre de 2026) tiene esta forma canónica (12 líneas, 225 bytes):
 
 ```
 campos=ceiba
 desde=2026-09-01T05:00:00Z
 hasta=2026-10-01T05:00:00Z
 version=1
-real=324688.00
-potencial=346379.44
-noProducido=21691.44
-diferido=21691.44
-tolerancia=3253.72
+real=338662.00
+potencial=346378.06
+noProducido=7716.06
+diferido=7716.06
+tolerancia=1157.41
 metaProduccion=327000.00
 metaDiferido=24000.00
-eventos=49
+eventos=18
 ```
 
 SHA-256 calculado por el motor (`crypto.subtle`) y verificado de forma independiente con `node:crypto` (`createHash('sha256').update(texto, 'utf8')`) y con Python (`hashlib.sha256(texto.encode())`):
 
 ```
-fa38baaa420730961c4855543e7a4d6d3f086e665341f9534f30d2c21bd205ac
+9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8
 ```
 
-En el papel se escribe agrupada de a cuatro (`huellaLegible`): `fa38 baaa 4207 3096 1c48 5554 3e7a 4d6d 3f08 6e66 5341 f953 4f30 d2c2 1bd2 05ac`.
+En el papel se escribe agrupada de a cuatro (`huellaLegible`): `9439 920a 3b19 1e5d efc4 4bbf 5a02 780c 01f4 c477 b423 2259 de35 5bd6 1823 4cb8`. (Con el demo anterior al 9-oct la misma consulta daba otra huella: las cifras cambiaron, como debe ser; un informe ya emitido conserva la suya.)
 
-Ficha de P-201B (`INF-2026-0002`), las mismas 12 líneas más `equipo=P-201B`, `campoEquipo=ceiba`, `bblEquipo=20738.86` → `58362143a85f45f3ec93aa154336db2ce4823c4b131cd9e3803e46d6d1b00d13`.
+Ficha de P-201B (`INF-2026-0002`), las mismas 12 líneas más `equipo=P-201B`, `campoEquipo=ceiba`, `bblEquipo=1040.55` → `affc31e5c72abc2f2794f5fb0941b1ce0fb812775a287dda54e1ce46075b5a42`.
 
-Portafolio de los 5 campos, octubre en curso (`INF-2026-0003`, gerente; `campos` llegó en el orden `zarza,ceiba,morichal,guacamayo,palmar` y se escribe `ceiba,guacamayo,morichal,palmar,zarza`): `desde=2026-10-01T05:00:00Z`, `hasta=2026-10-02T19:00:00Z`, `real=60292.00`, `potencial=66523.72`, `noProducido=6231.72`, `diferido=6231.72`, `tolerancia=502.47`, `metaProduccion=63650.00`, `metaDiferido=3641.67`, `eventos=28` → `8d82e85893f467396f890010f7aee344bbcafe5fec911321721f05f2d3f2279d`, `estado: "provisional"` (único motivo `en-curso`: «El período incluye días sin cierre publicado.»).
+Portafolio de los 5 campos, octubre en curso (`INF-2026-0003`, gerente; `campos` llegó en el orden `zarza,ceiba,morichal,guacamayo,palmar` y se escribe `ceiba,guacamayo,morichal,palmar,zarza`): `desde=2026-10-01T05:00:00Z`, `hasta=2026-10-02T19:00:00Z`, `real=64147.00`, `potencial=66523.75`, `noProducido=2376.75`, `diferido=2376.75`, `tolerancia=245.14`, `metaProduccion=63650.00`, `metaDiferido=3641.67`, `eventos=11` → `e4f2b430241fdc88bb041991e543924fd0478ec35695ba53cd05ac2318fd58b1`, `estado: "provisional"` (único motivo `en-curso`: «El período incluye días sin cierre publicado.»).
 
 **Casos borde (redondeo).** Corrido en JavaScript: $\lfloor 1{,}005 \times 100 + 0{,}5\rfloor = 100$ → «1.00» (no «1.01»: en doble IEEE-754, $1{,}005 \times 100 = 100{,}49999…$). Un backend que use decimal exacto da otra cosa: en Python, `Decimal('1.005')*100+Decimal('0.5')` redondeado hacia abajo da 101, mientras `math.floor(1.005*100+0.5)` da 100 (los dos corridos). Con 101 la huella cambia: **hay que calcular en doble**, con la misma multiplicación y suma. Otros: −1,5 → $k=-150$ → «-1.50»; −0,004 → $k=0$ → «0.00» (sin signo); 10.900 → «10900.00». Las cifras ya vienen redondeadas con $r_2$ y se vuelven a pasar por `centesimas` al escribir: el resultado es estable.
 
@@ -203,7 +203,7 @@ Ejemplo del demo (`INF-2026-0001`, exportado desde `#/ger/diferidos/ceiba/cerrad
 
 **Fórmula (formato).**
 - UTF-8 **con BOM** (`﻿`, para que la hoja lea las tildes), filas separadas por **CRLF**, celdas separadas por **`;`**.
-- **Números**: `toLocaleString('es-CO', { useGrouping: false, maximumFractionDigits: 2 })` → **coma decimal, sin separador de miles** («134,99», «21691,44»). No se neutralizan.
+- **Números**: `toLocaleString('es-CO', { useGrouping: false, maximumFractionDigits: 2 })` → **coma decimal, sin separador de miles** («134,99», «7716,06»). No se neutralizan.
 - **Textos** (`textoCsv`): si empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro, se les antepone `'` (**neutraliza fórmulas**: la hoja los ejecutaría aunque fueran entre comillas); si contienen `;`, `"`, CR o LF, van entre comillas dobles con las comillas internas duplicadas. Es la misma regla para todo CSV del producto.
 - Horas en Colombia como `AAAA-MM-DD HH:MM`; un evento abierto dice «sigue abierto». Las horas del evento son las del PLC aunque el evento empiece antes del período o siga después; «Horas dentro del período» es la parte recortada.
 
@@ -218,15 +218,15 @@ Estructura: filas del membrete `[clave;valor]` → fila vacía → cabecera → 
 
 Nombre del archivo: `TRIM-{folio}-eventos.csv`.
 
-**Ejemplo con los datos del demo.** (Corrido, La Ceiba, septiembre; 69 líneas en total.) Primeras filas de datos:
+**Ejemplo con los datos del demo.** (Corrido, La Ceiba, septiembre; 18 filas de eventos, 31 menos que antes del 9-oct: el mismo membrete y 38 líneas en total.) Primeras filas de datos:
 
 ```
-La Ceiba;LC-04;EP-LC04-260906-65;2026-09-06 17:14;2026-09-06 21:07;3,88;Energía eléctrica;SE-2;;por señal;134,99;no
-La Ceiba;LC-12;EP-LC12-260907-38;2026-09-07 08:44;2026-09-07 12:34;3,83;Energía eléctrica;SE-2;;por señal;62,68;no
-La Ceiba;LC-06;EP-LC06-260910-78;2026-09-10 01:59;2026-09-11 09:03;31,07;Bomba de reinyección;P-201B;Sello mecánico;por señal;905,56;no
+La Ceiba;LC-04;EP-LC04-260906-85;2026-09-06 17:14;2026-09-06 21:07;3,88;Energía eléctrica;SE-2;;por señal;134,99;no
+La Ceiba;LC-12;EP-LC12-260907-61;2026-09-07 08:44;2026-09-07 12:34;3,83;Energía eléctrica;SE-2;;por señal;62,68;no
+La Ceiba;LC-16;EP-LC16-260911-90;2026-09-11 11:30;2026-09-11 14:07;2,62;Electrosumergible;LC-16;Admisión y gas;por señal;95,82;no
 ```
 
-Pie: `Total;;;;;;;;;;21691,44;` y `Rango de tolerancia;18438 a 24945 bbl` (21.691,44 ∓ 3.253,72, redondeado al entero, sin separador de miles). Filas del membrete corridas: `Huella SHA-256;fa38baaa…05ac`, `Cifra protegida;campos=ceiba`, …, `Cifra protegida;eventos=49`.
+Pie: `Total;;;;;;;;;;7716,06;` y `Rango de tolerancia;6559 a 8873 bbl` (7.716,06 ∓ 1.157,41, redondeado al entero, sin separador de miles). Filas del membrete corridas: `Huella SHA-256;9439920a…4cb8`, `Cifra protegida;campos=ceiba`, …, `Cifra protegida;eventos=18`.
 
 **Casos borde.** Un pozo de una asignación subida o lo que escribió un operario puede empezar por `=`: sale como `'=…`. El precio, el valor en USD y las metas no van en el CSV de eventos (solo en las cifras protegidas).
 
@@ -245,7 +245,7 @@ Pie: `Total;;;;;;;;;;21691,44;` y `Rango de tolerancia;18438 a 24945 bbl` (21.69
 - `GET /api/informes/:folio/verificacion?huella=…` → **sin sesión**, responde solo `{ "datos": { "coincide": true|false, "fecha": "…" } }`. No devuelve quién exportó, ni campos, ni cifras. Con **límite de consultas por IP**. Recomendado: comparar la huella en tiempo constante y normalizar la huella recibida (minúsculas, sin espacios: en el papel va agrupada de a cuatro).
 - `GET /api/informes` (arranque) → `Informe[]` de los campos de la persona.
 
-**Ejemplo.** `GET /api/informes/INF-2026-0001/verificacion?huella=fa38baaa420730961c4855543e7a4d6d3f086e665341f9534f30d2c21bd205ac` → `{ "datos": { "coincide": true, "fecha": "2026-10-02T14:00:00-05:00" } }`. Cualquier cifra del papel cambiada (p. ej. `diferido=21000.00`) da otra huella → el documento fue modificado.
+**Ejemplo.** `GET /api/informes/INF-2026-0001/verificacion?huella=9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8` → `{ "datos": { "coincide": true, "fecha": "2026-10-02T14:00:00-05:00" } }`. Cualquier cifra del papel cambiada (p. ej. `diferido=21000.00`) da otra huella → el documento fue modificado.
 
 **Casos borde.** Folio inexistente en la verificación pública: el contrato no lo dice; recomendado responder `{ coincide: false }` (no `404`) para no confirmar qué folios existen, o `404` con límite de consultas. Está en «Pendiente del lado del servidor».
 

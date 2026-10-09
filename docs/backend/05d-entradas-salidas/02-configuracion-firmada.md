@@ -29,9 +29,9 @@ interface Version { version: number; fecha: string; por: string; motivo: string;
 | `metas[].diferidoMaxBpd` | lo máximo que se acepta dejar de producir, bbl/d | gerente | libro (`meta.diferido`), informe (`metaDiferido`) |
 | `metas[].netbackUsd` | precio neto del barril, USD/bbl; sin él no se pasa a dinero | gerente | `valorUsd` del libro, fichas de equipo; ausente → el campo va en `sinPrecio` |
 | `metas[].criterioSinCausa` | % máximo del potencial que puede quedar sin causa para poder **publicar** el libro | gerente | `publicable` / motivo `sin-causa` del libro (`libro.ts:845`) |
-| `tanques[]` | tanque de agua que vacía una bomba de reinyección: capacidad, alto-alto, transmisor de nivel, tabla de aforo | administrador (`config:firmar`) | colchón de la predicción («si la bomba se para ahora», con la versión vigente, `diferido.ts:300`) y colchón previsto de cada parada medida, con la versión **que regía cuando paró** (`configEn`, `diferido.ts:374-375`) |
+| `tanques[]` | tanque de agua que vacía una bomba de reinyección: capacidad, alto-alto, transmisor de nivel, tabla de aforo | administrador (`config:firmar`) | colchón de la predicción («si la bomba se para ahora», con la versión vigente, `diferido.ts:309`) y colchón previsto de cada parada medida, con la versión **que regía cuando paró** (`configEn`, `diferido.ts:383-384`) |
 | `respaldos[]` | caudal libre que toma el equipo en paralelo cuando la bomba para, bbl/d | administrador | agua sin salida y orden de cierre (`diferido.ts:63`; en una parada medida, el de la versión que regía al parar), consecuencia del WhatsApp de parada (`mensajes.ts:279-284`), ficha del equipo (`equipos.ts:470`) |
-| `programa[]` | paradas aprobadas antes de ocurrir: lo que cae dentro cuenta como **programado**, no como falla | administrador | causa de cada evento (`causa-senal.ts:148`), órdenes PM02 del demo (`sap.ts:262`) |
+| `programa[]` | paradas aprobadas antes de ocurrir: lo que cae dentro cuenta como **programado**, no como falla | administrador | causa de cada evento (`causa-senal.ts:148`), órdenes PM02 del demo (`sap.ts:263`; las paradas que pidió el vigía, `PR-VIG-…`, salen como PM03 con su predicción, 5C.5) |
 | `campos[].perfil` | qué maneja el campo: destino del gas y si tiene bombas de la línea y/o electrosumergibles | administrador | qué se dibuja en Planta, qué subpantallas existen, qué familias se **vigilan** (riesgo, predicciones, WhatsApp de parada) |
 | `empresa` | nombre de la empresa en el membrete de los informes | administrador | membrete y CSV (5D.4) |
 
@@ -47,18 +47,20 @@ interface Version { version: number; fecha: string; por: string; motivo: string;
 
 | Tanque | campo | bomba | capacidad | alto-alto | transmisor | aforo |
 |---|---|---|---|---|---|---|
-| TK-AG-CE | ceiba | P-201B | 10.000 bbl | 0,9 | LT-2012 | Certificado de aforo TK-AG-CE · tabla de 1 cm |
-| TK-AG-MN | morichal | P-201B | 18.000 bbl | 0,9 | LT-2012 | … TK-AG-MN … |
-| TK-AG-GU | guacamayo | P-201B | 8.000 bbl | 0,9 | LT-2012 | … TK-AG-GU … |
+| TK-AG-CE | ceiba | P-201B | 30.000 bbl | 0,9 | LT-2012 | Certificado de aforo TK-AG-CE · tabla de 1 cm |
+| TK-AG-MN | morichal | P-201B | 60.000 bbl | 0,9 | LT-2012 | … TK-AG-MN … |
+| TK-AG-GU | guacamayo | P-201B | 20.000 bbl | 0,9 | LT-2012 | … TK-AG-GU … |
 
 | Respaldo | libre | detalle |
 |---|---|---|
-| ceiba · P-201B | 0 bbl/d | Única bomba del tren de agua |
-| morichal · P-201B | 15.100 bbl/d | P-201A en paralelo, con 15.100 bbl/d libres |
+| ceiba · P-201B | 30.100 bbl/d | P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una |
+| morichal · P-201B | 39.500 bbl/d | Las otras seis bombas del tren, con 39.500 bbl/d libres entre todas: el cabezal de disposición las limita a unos 86.500 cada una |
 | morichal · MPP-301 | 0 bbl/d | Sin bomba en paralelo ni derivación al manifold |
-| guacamayo · P-201B | 13.000 bbl/d | Pozo de disposición alterno con capacidad para todo el caudal |
+| guacamayo · P-201B | 50.000 bbl/d | P-201C de reserva (50.000 bbl/d), alineada al pozo de disposición alterno: toma todo su caudal |
 
-Programa de paradas de arranque: **7 paradas, todas ya pasadas** respecto de AHORA (la más nueva, `PR-3016-260825`, MPP-301 de Morichal, 25-26 ago 2026). Ejemplo: `{ "id":"PR-2011-260819", "campoId":"ceiba", "equipo":"P-201B", "desde":"2026-08-19T17:49:23-05:00", "hasta":"2026-08-20T09:34:04-05:00", "motivo":"Mantenimiento preventivo programado de la bomba" }`. En el demo el programa viaja como insumo (`insumos().programa`, `configuracion.ts:161`); en producción es parte de la versión firmada.
+(Valores del demo del 9-oct, con el agua real: el tren de La Ceiba son tres bombas iguales en paralelo y el de Morichal, siete; 5B.4.)
+
+Programa de paradas de arranque: **7 paradas, todas ya pasadas** respecto de AHORA (la más nueva, `PR-3016-260825`, MPP-301 de Morichal, 25-26 ago 2026). Ejemplo: `{ "id":"PR-2011-260819", "campoId":"ceiba", "equipo":"P-201B", "desde":"2026-08-19T17:49:23-05:00", "hasta":"2026-08-20T09:34:04-05:00", "motivo":"Mantenimiento preventivo programado de la bomba" }`. En el demo el programa viaja como insumo (`insumos().programa`, `configuracion.ts:167`); en producción es parte de la versión firmada.
 
 > **Ids del programa.** Los 7 ids de arranque (`PR-2011-260819`, `PR-M2011-260217`…) no siguen la forma `PR-{campo}-{equipo}-{fecha}` que el contrato pide para los nuevos; la pantalla arma los nuevos como `PR-${campoId}-${equipo}-${AAAAMMDDhhmm}` (`Configuracion.tsx`, función `agregar`). El servidor puede asignarlos él; lo que importa es que sean **únicos** y **estables** (el id es lo que identifica una parada entre versiones).
 
@@ -112,7 +114,7 @@ donde `desdeMinimo` = primer día del mes en curso en Colombia (`${diaIso(AHORA)
 
 **Casos borde.**
 - **Una versión que toca los dos grupos exige las dos capacidades.** Ningún rol del producto tiene ambas (gerente: `metas:firmar`; administrador: `config:firmar`): un cambio mixto se rechaza siempre. La pantalla lo evita porque cada pestaña solo edita su grupo, pero un cliente HTTP podría mandarlo.
-- **Campo nuevo.** El gerente puede firmar la meta de un campo que la configuración no traía: entra como «campo nuevo» con perfil vacío (`{ gas:'no', bombas:false, electrosumergibles:false }`, `campoEditable`, `configuracion.ts:245`). La diferencia «{campo}: campo nuevo» va al grupo de **metas** (`configuracion.ts:290`), así que la firma el gerente; el perfil lo firma después el administrador.
+- **Campo nuevo.** El gerente puede firmar la meta de un campo que la configuración no traía: entra como «campo nuevo» con perfil vacío (`{ gas:'no', bombas:false, electrosumergibles:false }`, `campoEditable`, `configuracion.ts:251`). La diferencia «{campo}: campo nuevo» va al grupo de **metas** (`configuracion.ts:296`), así que la firma el gerente; el perfil lo firma después el administrador.
 - **Quitar un campo** va al grupo **técnico** («{campo}: se quitó el campo de la configuración (sus metas y su perfil)») y lo bloquea `validarConfig` si tenía tramos de un mes cerrado (todos los del demo: rigen desde 2025-10-01).
 - **Firmas concurrentes.** El 409 por `base` es la única protección contra la carrera: el servidor tiene que hacer la comprobación y la inserción de la versión en **una transacción** (o con `unique(version)` y reintento), no leer-y-escribir sin bloqueo.
 - **Un campo que no está en el registro** no se cuenta en la regla 6 (no se le puede pedir a nadie que lo tenga asignado): lo rechaza `validarConfig` con ««{id}» no es un campo registrado.» (422).
@@ -131,7 +133,7 @@ donde `desdeMinimo` = primer día del mes en curso en Colombia (`${diaIso(AHORA)
 
 **Dónde se ve.** Panel «FIRMAR LA VERSIÓN»: «METAS, PRECIO Y PUBLICACIÓN · FIRMA EL GERENTE DE ACTIVO» y «TÉCNICA · FIRMA EL ADMINISTRADOR», con un renglón por cambio; contador «{n} cambio(s) en el borrador». Panel «VERSIONES FIRMADAS»: los `cambios` de cada versión.
 
-**Fórmula.** Reglas (`configuracion.ts:283-347`), en este orden de salida:
+**Fórmula.** Reglas (`configuracion.ts:289-353`), en este orden de salida:
 
 | Grupo | Disparador | Texto (plantilla exacta) |
 |---|---|---|
@@ -141,21 +143,21 @@ donde `desdeMinimo` = primer día del mes en curso en Colombia (`${diaIso(AHORA)
 | metas | tramo de A que no está en B | `{Campo}: se quitó la meta que regía desde el {fecha}` |
 | técnica | perfil | `{Campo}: {gas A} → {gas B}` (con `NOMBRE_GAS`: «no tiene tren de gas», «gas a tea», «gas para consumo propio», «gas a venta») · `{Campo}: bombas de la línea sí → no` · `{Campo}: electrosumergibles no → sí` |
 | técnica | campo en A que no está en B | `{Campo}: se quitó el campo de la configuración (sus metas y su perfil)` |
-| técnica | tanque nuevo / cambiado / quitado | `{id}: tanque nuevo de {bomba} ({Campo})` · `{id}: nombre «a» → «b»` · `{id}: campo X → Y` · `{id}: bomba que lo vacía X → Y` · `{id}: capacidad 10.000 bbl → …` · `{id}: alto-alto 90 % → 85 %` · `{id}: transmisor X → Y` · `{id}: certificado de aforo cambiado` · `{id}: se quitó el tanque de {bomba} ({Campo})` |
+| técnica | tanque nuevo / cambiado / quitado | `{id}: tanque nuevo de {bomba} ({Campo})` · `{id}: nombre «a» → «b»` · `{id}: campo X → Y` · `{id}: bomba que lo vacía X → Y` · `{id}: capacidad 30.000 bbl → …` · `{id}: alto-alto 90 % → 85 %` · `{id}: transmisor X → Y` · `{id}: certificado de aforo cambiado` · `{id}: se quitó el tanque de {bomba} ({Campo})` |
 | técnica | respaldo (clave campo+equipo) | `{equipo} de {Campo}: respaldo declarado de {n} bbl/d` · `…: respaldo libre {a} bbl/d → {b} bbl/d` · `…: qué es el respaldo, «a» → «b»` · `…: se quitó el respaldo declarado ({n} bbl/d)` |
 | técnica | programa (clave `id`), comparado en **todos** sus datos | `Programa: se agregó {equipo} ({Campo}), {fecha hora} a {fecha hora} · {motivo}` · `Programa: se cambió {equipo} ({Campo}): campo …; equipo …; inicio …; fin …; motivo «a» → «b»` · `Programa: se quitó {equipo} ({Campo}) · {motivo}` |
 
-Las cifras se escriben con `toLocaleString('es-CO', { maximumFractionDigits: 2 })` («10.900», «48,5»); `NaN` → «vacío», infinito → «fuera de rango». Las fechas de día con `formatoFecha` en `America/Bogota` («15 de oct de 2026»); las de hora, «{d de mmm de aaaa} HH:MM» en Colombia (`fechaHoraCo`, `configuracion.ts:275-278`). Las fechas del programa se comparan **como instantes** (`Date.parse`), no como texto: `…-05:00` y `…Z` del mismo instante no son cambio.
+Las cifras se escriben con `toLocaleString('es-CO', { maximumFractionDigits: 2 })` («10.900», «48,5»); `NaN` → «vacío», infinito → «fuera de rango». Las fechas de día con `formatoFecha` en `America/Bogota` («15 de oct de 2026»); las de hora, «{d de mmm de aaaa} HH:MM» en Colombia (`fechaHoraCo`, `configuracion.ts:281-284`). Las fechas del programa se comparan **como instantes** (`Date.parse`), no como texto: `…-05:00` y `…Z` del mismo instante no son cambio.
 
-**Ejemplo con los datos del demo.** (Corrido.) Propuesta técnica sobre la versión 1: empresa «Operadora XYZ S.A.S.», El Palmar con gas a tea, alto-alto de TK-AG-CE a 0,85, respaldo de P-201B de La Ceiba a 6.000 bbl/d «P-201A alquilada en paralelo», y una parada nueva de P-201B el 20-oct de 10:00 a 18:00:
+**Ejemplo con los datos del demo.** (Corrido.) Propuesta técnica sobre la versión 1: empresa «Operadora XYZ S.A.S.», El Palmar con gas a tea, alto-alto de TK-AG-CE a 0,85, respaldo de P-201B de La Ceiba a 8.000 bbl/d «Solo P-201A en paralelo, con 8.000 bbl/d libres (P-201C en mantenimiento)», y una parada nueva de P-201B el 20-oct de 10:00 a 18:00:
 
 ```
 técnica:
   Empresa del membrete: «Operadora de demostración» → «Operadora XYZ S.A.S.»
   El Palmar: no tiene tren de gas → gas a tea
   TK-AG-CE: alto-alto 90 % → 85 %
-  P-201B de La Ceiba: respaldo libre 0 bbl/d → 6.000 bbl/d
-  P-201B de La Ceiba: qué es el respaldo, «Única bomba del tren de agua» → «P-201A alquilada en paralelo»
+  P-201B de La Ceiba: respaldo libre 30.100 bbl/d → 8.000 bbl/d
+  P-201B de La Ceiba: qué es el respaldo, «P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una» → «Solo P-201A en paralelo, con 8.000 bbl/d libres (P-201C en mantenimiento)»
   Programa: se agregó P-201B (La Ceiba), 20 de oct de 2026 10:00 a 20 de oct de 2026 18:00 · Cambio de sello programado
 ```
 
@@ -165,7 +167,7 @@ técnica:
 
 **Quién lo calcula.** Los dos: el front para la vista previa; el servidor para decidir capacidades (regla 4-5) y para guardar `cambios`.
 
-**Referencia.** `src/entities/configuracion.ts:280-353`.
+**Referencia.** `src/entities/configuracion.ts:286-359`.
 
 ---
 
@@ -183,7 +185,7 @@ Así, mover un tanque de La Ceiba a Morichal toca **los dos** campos; el membret
 
 **Casos borde.** Un gerente con `campos: ["ceiba"]` (no el del demo, que tiene «todos») que intente firmar una meta de Morichal recibe «No tiene asignado Morichal Norte: lo de ese campo lo firma quien lo tenga.».
 
-**Referencia.** `src/entities/configuracion.ts:355-371`; `escrituras.ts:112-116`.
+**Referencia.** `src/entities/configuracion.ts:361-377`; `escrituras.ts:112-116`.
 
 ---
 
@@ -260,7 +262,7 @@ Otros dos casos corridos: quitar La Zarza → `La Zarza: no se puede quitar el c
 
 **Quién lo calcula.** Los dos; los 422 del servidor mandan.
 
-**Referencia.** `src/entities/configuracion.ts:373-461`; `CONTRATO.md` · «`POST /api/configuracion`», reglas 1-8.
+**Referencia.** `src/entities/configuracion.ts:379-467`; `CONTRATO.md` · «`POST /api/configuracion`», reglas 1-8.
 
 ---
 
@@ -274,9 +276,9 @@ Otros dos casos corridos: quitar La Zarza → `La Zarza: no se puede quitar el c
 
 $$ \text{metaEn}(c, \text{campo}, t) = \text{el último tramo } x \text{ de } c.\text{campos[campo].metas con } x.\text{desde} \le \text{diaCo}(t) $$
 
-(comparación de textos `AAAA-MM-DD`, que ordena igual que las fechas). `precioEn` = `netbackUsd` de ese tramo si es número; `criterioEn` = su `criterioSinCausa`. `perfilDe(c, campo)` = el perfil firmado o, si el campo no está, `{ gas:'no', bombas:false, electrosumergibles:false }`. `configEn(versiones, t)` = la `config` de la última versión con `fecha ≤ t` (las versiones van de la más vieja a la vigente; antes de la primera, la primera). La usan los mensajes de WhatsApp (a la hora de cada mensaje, 5D.5) y, desde el 8-oct, **la parada medida de una bomba** (`paradaMedida(ev, ctx, versiones)`, `diferido.ts:356-377`): el tanque y el respaldo de «lo que el tanque debía aguantar» son los de `configEn(versiones, inicio de la parada)`, así firmar hoy otro respaldo no reescribe una parada vieja (5B.4).
+(comparación de textos `AAAA-MM-DD`, que ordena igual que las fechas). `precioEn` = `netbackUsd` de ese tramo si es número; `criterioEn` = su `criterioSinCausa`. `perfilDe(c, campo)` = el perfil firmado o, si el campo no está, `{ gas:'no', bombas:false, electrosumergibles:false }`. `configEn(versiones, t)` = la `config` de la última versión con `fecha ≤ t` (las versiones van de la más vieja a la vigente; antes de la primera, la primera). La usan los mensajes de WhatsApp (a la hora de cada mensaje, 5D.5) y, desde el 8-oct, **la parada medida de una bomba** (`paradaMedida(ev, ctx, versiones)`, `diferido.ts:365-386`): el tanque y el respaldo de «lo que el tanque debía aguantar» son los de `configEn(versiones, inicio de la parada)`, así firmar hoy otro respaldo no reescribe una parada vieja (5B.4).
 
-**Ejemplo de la parada medida** (corrido, `verificar-libro` §18): `EV-2011-0909`, P-201B de La Ceiba, 9-sep 21:14, tanque al 52,0 %: con la versión 1 (firmada el 1-sep) debía aguantar **4,75 h** (3.800 bbl libres / 19.190 bbl/d sin salida). Si hoy se firma una versión con 5.000 bbl/d más de respaldo, la parada sigue en 4,75 h; si esa versión hubiera tenido fecha anterior a la parada, la misma parada daría 3.800 / (14.190/24) = **6,43 h**. Lo que **sí** usa la vigente es lo de ahora: la predicción («si se para ahora») y el riesgo.
+**Ejemplo de la parada medida** (corrido, `verificar-libro` §18, la primera parada medida de septiembre): `EV-2011-0922`, P-201B de La Ceiba, 22-sep 10:05, tanque al 80,2 %: con la versión 1 (firmada el 1-sep) debía aguantar **1,60 h** (2.940 bbl libres / 44.100 bbl/d sin salida). Si hoy se firma una versión con 5.000 bbl/d más de respaldo, la parada sigue en 1,60 h; si esa versión hubiera tenido fecha anterior a la parada, la misma parada daría 2.940 / (39.100/24) = **1,80 h**. Lo que **sí** usa la vigente es lo de ahora: la predicción («si se para ahora») y el riesgo.
 
 **Ejemplo con los datos del demo.** `metaEn(v1, 'ceiba', AHORA)` = `{ desde:"2025-10-01", produccionBpd:10900, diferidoMaxBpd:800, netbackUsd:48, criterioSinCausa:2 }`; `precioEn(v1,'zarza',AHORA)` = `undefined` (La Zarza no tiene precio); `criterioEn` = 2 en los cinco campos; `perfilDe(v1,'palmar')` = `{ gas:"no", bombas:true, electrosumergibles:false }`.
 
@@ -287,7 +289,7 @@ $$ \text{metaEn}(c, \text{campo}, t) = \text{el último tramo } x \text{ de } c.
 
 **Quién lo calcula.** Los dos (`CONTRATO.md` · «Quién calcula qué»: «la meta o el perfil vigente de un campo… `perfilDe`, `metaEn`, `metaEntre`, `criterioEn`, `tanqueDe`»).
 
-**Referencia.** `src/entities/configuracion.ts:179-240`.
+**Referencia.** `src/entities/configuracion.ts:185-246`.
 
 ---
 
@@ -457,7 +459,7 @@ La vigente primero con chip «vigente»; por versión: «Versión {n}» · `fech
 
 **Quién lo calcula.** Front lee y arma la propuesta; el servidor solo recibe la configuración y aplica `validarConfig`. `CONTRATO.md` pone `plan.leerPlan` en «Los dos» (por si el servidor ofrece la carga directa del archivo).
 
-**Referencia.** `src/entities/plan.ts`; `src/widgets/configuracion/PlanMensual.tsx:151-245`; `src/entities/configuracion.ts:250-258` (`conMes`).
+**Referencia.** `src/entities/plan.ts`; `src/widgets/configuracion/PlanMensual.tsx:151-245`; `src/entities/configuracion.ts:256-264` (`conMes`).
 
 ---
 

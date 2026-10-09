@@ -2,7 +2,7 @@
 
 Todo lo que este capítulo describe (una firma, un mensaje de WhatsApp, un folio, una orden de SAP) lleva una hora. Antes de cualquier regla hay que fijar **qué es «ahora»**, **qué es un día** y **qué es un mes**, porque las reglas de escritura («un mes cerrado no se reescribe», «una parada solo se programa antes de empezar», «el recordatorio sale a los 30 min») se evalúan contra ese reloj.
 
-Código: `src/entities/reloj.ts` (67 líneas), `src/entities/campos.ts:63-85` (los períodos de la cabecera), `src/entities/libro.ts:56-80` y `:607` (calendario de meses y medianoche), `src/entities/configuracion.ts:204` (`diaCo`), `src/entities/diferido.ts:695` (`rangoDePeriodo`).
+Código: `src/entities/reloj.ts` (67 líneas), `src/entities/campos.ts:63-85` (los períodos de la cabecera), `src/entities/libro.ts:56-80` y `:607` (calendario de meses y medianoche), `src/entities/configuracion.ts:210` (`diaCo`), `src/entities/diferido.ts:704` (`rangoDePeriodo`).
 
 ---
 
@@ -50,7 +50,7 @@ $$ \text{AHORA} = 1\,790\,967\,600\,000 \text{ ms} = \texttt{2026-10-02T19:00:00
 $$ t_{CO} = t - 5\,\text{h} $$
 
 ```ts
-// src/entities/reloj.ts:24 y src/entities/configuracion.ts:204
+// src/entities/reloj.ts:24 y src/entities/configuracion.ts:210
 const anioCo = (d: Date) => new Date(d.getTime() - 5 * 3_600_000).getUTCFullYear()
 export const diaCo = (t: number) => new Date(t - 5 * 3_600_000).toISOString().slice(0, 10)
 ```
@@ -59,14 +59,14 @@ export const diaCo = (t: number) => new Date(t - 5 * 3_600_000).toISOString().sl
 
 **Casos borde.**
 - Nunca usar la zona del servidor ni la del navegador para cortar días o meses: un servidor en UTC cortaría el día a las 19:00 de Bogotá.
-- Los textos que quedan en registros firmados (el historial de versiones, el historial de accesos, los mensajes) se escriben con `timeZone: 'America/Bogota'` explícito (`configuracion.ts:273`, `mensajes.ts:166`), para que no dependan del lugar donde corre el código.
+- Los textos que quedan en registros firmados (el historial de versiones, el historial de accesos, los mensajes) se escriben con `timeZone: 'America/Bogota'` explícito (`configuracion.ts:279`, `mensajes.ts:166`), para que no dependan del lugar donde corre el código.
 - En el cable las fechas viajan en ISO 8601 **con zona** (`CONTRATO.md` · «Reglas del cable»): se acepta cualquier zona explícita; sin zona el front las rechaza.
 
-**Qué texto se muestra según el valor.** Formatos (todos `es-CO`, 24 h): `fechaHora` «2 de oct, 03:52» (con año si es de otro año: «31 de dic de 2025, 21:00»); `fechaCorta` «1 de oct»; `fechaHoraLarga` «2 de octubre de 2026 a las 14:00 (hora de Colombia)» (documentos); `fechaDia` de configuración «1 de oct de 2026» (historial firmado y pantallas de configuración, `configuracion.ts:273`, `widgets/configuracion/comun.ts:9`). Toda fecha con mes abreviado pasa por `formatoFecha` (`src/shared/lib/fecha.ts`), que fija la abreviatura del mes («sept», no «sep.» de Safari) para que el texto sea igual en todos los navegadores y en Node; el servidor que genere textos firmados tiene que usar exactamente esas abreviaturas: `ene feb mar abr may jun jul ago sept oct nov dic`.
+**Qué texto se muestra según el valor.** Formatos (todos `es-CO`, 24 h): `fechaHora` «2 de oct, 03:52» (con año si es de otro año: «31 de dic de 2025, 21:00»); `fechaCorta` «1 de oct»; `fechaHoraLarga` «2 de octubre de 2026 a las 14:00 (hora de Colombia)» (documentos); `fechaDia` de configuración «1 de oct de 2026» (historial firmado y pantallas de configuración, `configuracion.ts:279`, `widgets/configuracion/comun.ts:9`). Toda fecha con mes abreviado pasa por `formatoFecha` (`src/shared/lib/fecha.ts`), que fija la abreviatura del mes («sept», no «sep.» de Safari) para que el texto sea igual en todos los navegadores y en Node; el servidor que genere textos firmados tiene que usar exactamente esas abreviaturas: `ene feb mar abr may jun jul ago sept oct nov dic`.
 
 **Quién lo calcula y por dónde viaja.** Los dos lados. El servidor devuelve instantes ISO con zona; el front los formatea.
 
-**Referencia.** `src/entities/reloj.ts:15-37`; `src/entities/configuracion.ts:203-204`.
+**Referencia.** `src/entities/reloj.ts:15-37`; `src/entities/configuracion.ts:209-210`.
 
 ---
 
@@ -106,7 +106,7 @@ const inicioDiaCo = (t: number) => Math.floor((t - 5 * H) / D) * D + 5 * H
 
 **Quién lo calcula y por dónde viaja.** Servidor (libro, día a día, meta del día) y front (total del mes en Metas y Plan, que llama a `metaEntre`).
 
-**Referencia.** `src/entities/libro.ts:607` y `:612-624` (`metaEntre`); `src/entities/configuracion.ts:204`.
+**Referencia.** `src/entities/libro.ts:607` y `:612-624` (`metaEntre`); `src/entities/configuracion.ts:210`.
 
 ---
 
@@ -196,7 +196,7 @@ const inicio = (anio: number, mes: number) => new Date(Date.UTC(anio, mes, 1, 5)
 
 **Quién lo calcula y por dónde viaja.** Front (`reloj.ts`, `campos.ts`, `diferido.ts`). El servidor recibe los límites ya calculados en `desde`/`hasta` de cada vista. Lo único que el servidor tiene que aportar es AHORA.
 
-**Referencia.** `src/entities/reloj.ts:39-67`; `src/entities/campos.ts:63-85`; `src/entities/diferido.ts:695-712`; `src/widgets/informe/periodo.ts`.
+**Referencia.** `src/entities/reloj.ts:39-67`; `src/entities/campos.ts:63-85`; `src/entities/diferido.ts:704-721`; `src/widgets/informe/periodo.ts`.
 
 ---
 
@@ -205,8 +205,8 @@ const inicio = (anio: number, mes: number) => new Date(Date.UTC(anio, mes, 1, 5)
 | Constante | Valor | Uso | Código |
 |---|---|---|---|
 | `PRIMER_DIA_METAS` | `2025-10-01` | día desde el que rige la meta de arranque de cada campo (primer día con producción fiscal) | `configuracion.ts:129` |
-| `FECHA_ARRANQUE` | `2026-09-01T08:00:00-05:00` | fecha de la versión 1 de la configuración y del primer cambio de accesos | `configuracion.ts:165` |
-| `PUESTA_EN_MARCHA` | `2026-09-01` | día en que TRIM empezó a operar: en el demo, los avisos SAP de fallas desde ese día salen «desde TRIM» y los anteriores «directo en SAP» | `configuracion.ts:177`, `sap.ts:239` |
+| `FECHA_ARRANQUE` | `2026-09-01T08:00:00-05:00` | fecha de la versión 1 de la configuración y del primer cambio de accesos | `configuracion.ts:171` |
+| `PUESTA_EN_MARCHA` | `2026-09-01` | día en que TRIM empezó a operar: en el demo, los avisos SAP de fallas desde ese día salen «desde TRIM» y los anteriores «directo en SAP» | `configuracion.ts:183`, `sap.ts:239` |
 | `desde` de un usuario inicial | `2026-09-01` | día del acceso de las 8 personas de arranque | `usuarios.ts:174` |
 
 En producción: `PRIMER_DIA_METAS` es la fecha de la primera producción fiscal cargada; `FECHA_ARRANQUE` es la fecha real de la firma de la versión 1 (la firma el servidor al instalar la implementación); `PUESTA_EN_MARCHA` es esa misma fecha.

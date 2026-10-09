@@ -646,7 +646,7 @@ create table evento (
   foreign key (campo_id, activo) references activo(campo_id, codigo)
 );
 comment on table evento is 'Supertipo de los eventos del borde: un id único para todo el sistema (refs.eventos["id"] del contrato). clase pozo → evento_pozo, bomba → parada_bomba, servicio → evento_servicio.';
-comment on column evento.id is 'Id del evento como lo emite el borde (EP-LC21-261001-01, EV-2011-0909, SV-SE-2-260828).';
+comment on column evento.id is 'Id del evento como lo emite el borde (EP-LC21-261001-01, EV-2011-0809, SV-SE-2-260828).';
 comment on column evento.campo_id is 'Campo.';
 comment on column evento.clase is 'pozo, bomba o servicio.';
 comment on column evento.activo is 'Pozo o equipo del evento.';
@@ -753,7 +753,7 @@ create table parada_bomba (
   check ((nivel_al_parar_tag is null) = (nivel_al_parar_pct is null))
 );
 comment on table parada_bomba is 'Parada (o pérdida de caudal) de una bomba de la línea según su PLC (EventoBomba, src/entities/bombas.ts). GET /api/campos/:campo/bombas/:equipo/paradas. La parte NO viene escrita a mano: sale de la primera alarma o de la firma de las señales al parar.';
-comment on column parada_bomba.id is 'Id de la parada (EV-2011-0909).';
+comment on column parada_bomba.id is 'Id de la parada (EV-2011-0809).';
 comment on column parada_bomba.clase is 'Siempre bomba.';
 comment on column parada_bomba.campo_id is 'Campo.';
 comment on column parada_bomba.equipo is 'Bomba (P-201B, MPP-301).';

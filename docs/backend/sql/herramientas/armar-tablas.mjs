@@ -26,9 +26,9 @@ const FUNCION_REGLA = {
 
 const FILAS_SQL = {
   lectura: `where tag_id = (select id from trim.tag where campo_id = 'ceiba' and nombre = 'VI-2011') order by instante`,
-  evento_pozo: `where id in ('EP-LC21-261001-01', 'EP-LC06-260814-04', 'EP-LC04-260906-65', 'EP-MN07-260214-16', 'EP-LC16-261002-25') order by inicio`,
-  evento: `where id in ('EP-LC21-261001-01', 'EV-2011-0909', 'SV-SE-2-260828', 'EV-2011-1002', 'EP-LC04-260906-65') order by id`,
-  parada_bomba: `where id in ('EV-2011-0909', 'EV-2011-1002', 'EV-2011-260128', 'EV-2011-260819') or (campo_id = 'morichal' and perdida < 1) order by inicio`,
+  evento_pozo: `where id in ('EP-LC21-261001-01', 'EP-LC06-260814-04', 'EP-LC04-260906-85', 'EP-MN07-260214-32', 'EP-LC16-261002-78') order by inicio`,
+  evento: `where id in ('EP-LC21-261001-01', 'EV-2011-0809', 'SV-SE-2-260828', 'EV-2011-1002', 'EP-LC04-260906-85') order by id`,
+  parada_bomba: `where id in ('EV-2011-0809', 'EV-2011-1002', 'EV-2011-260128', 'EV-2011-260819') or (campo_id = 'morichal' and perdida < 1) order by inicio`,
   evento_servicio: `order by inicio desc`,
   tag: `where campo_id = 'ceiba' and nombre in ('VI-2011', 'PDT-1011', 'FQI-0101', 'LSH-2013', 'XI-1017') order by nombre`,
   calibracion: `order by tag_id`,

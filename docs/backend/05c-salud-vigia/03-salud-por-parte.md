@@ -104,7 +104,7 @@ anidada en cada `SaludParte.parte`.
 
 | # | Condición | Estado | Rótulo |
 |---|---|---|---|
-| 1 | La parada abierta se le atribuye a esta parte (`parteFallo`): en una bomba, la parte de la causa de su parada abierta propia (primera alarma, firma o declarada: `causa-senal.ts`); en una electrosumergible, la parte de la causa del evento abierto del pozo **cuando la causa es su propia ESP** (`parteQueFallo`, `esp.ts:141-146`) | `fallo` | «falló» |
+| 1 | La parada abierta se le atribuye a esta parte (`parteFallo`): en una bomba, la parte de la causa de su parada abierta propia (primera alarma, firma o declarada: `causa-senal.ts`); en una electrosumergible, la parte de la causa del evento abierto del pozo **cuando la causa es su propia ESP** (`parteQueFallo`, `esp.ts:146-151`) | `fallo` | «falló» |
 | 2 | $|\text{fuera}| > 0$ o discretaFuera | `fuera` | «fuera de banda» |
 | 3 | Equipo detenido | `detenida` | «equipo detenido» |
 | 4 | $|\text{cruzan}| > 0$ o $|\text{causaActiva}| > 0$ | `avisa` | «avisa» |
@@ -153,7 +153,7 @@ primera parte `fuera` de una bomba con la parada **abierta**: P-201B Morichal da
 MPP-301, `filtro`). Tipo `SaludParte` (`salud.ts:63-82`):
 `{ parte, estado, prioridad, primera?, coinciden, lenta?, causaActiva[], fuera[], medidas[], discretas[], sinSenal[], faltan[] }`.
 
-**Referencia.** `src/entities/salud.ts`; `src/entities/esp.ts:138-161`; CONTRATO.md «Salud por parte».
+**Referencia.** `src/entities/salud.ts`; `src/entities/esp.ts:143-166`; CONTRATO.md «Salud por parte».
 Casos: `referencia/salud/bombas-<campo>-2026-09.json` (`partes` de cada bomba),
 `referencia/salud/pozos-<campo>-2026-09.json` (`salud` de cada pozo; requiere
 `insumos/<campo>/electrosumergibles.json`), `referencia/riesgo/<campo>.json`.
@@ -195,7 +195,7 @@ primera a 248,2 h ≥ 24 h, sin causa activa → 3 ■. Bomba de fondo de MN-07:
 de MN-07: avisa con la corriente (la daña) anormal → 2 ▲.
 
 **Casos borde.** `fuera` con variable en `alarma` → 1. Prioridad 0 en una parte que avisa no
-puede darse; en el riesgo se usa `sp.prioridad || 3` por defensa (`diferido.ts:576, 604`).
+puede darse; en el riesgo se usa `sp.prioridad || 3` por defensa (`diferido.ts:585, 613`).
 
 **Quién lo calcula.** Servidor; `SaludParte.prioridad`, y `Riesgo.prioridad` (la misma: «la
 pantalla no la deduce de las horas»).
@@ -212,7 +212,7 @@ La **peor parte** según quien la use:
 
 | Consumidor | Regla | Código |
 |---|---|---|
-| Riesgo (`/vistas/riesgo`) | primera con estado `fuera` o `avisa` | `peorParte`, `diferido.ts:484` |
+| Riesgo (`/vistas/riesgo`) | primera con estado `fuera` o `avisa` | `peorParte`, `diferido.ts:493` |
 | Placa de bomba (negrita + frase) | primera con `fallo`, `fuera` o `avisa`; si hay parada abierta, no se resalta | `Placa.tsx:22, 96-103` |
 | Placa de decisión | (quitada el 8-oct con la variante del gerente) | — |
 | Fila de pozos (`/vistas/pozos` → `salud`) y flota ESP | `partes[0]` | `diferidos.ts:265`, `Esp.tsx` |
@@ -287,7 +287,7 @@ motivo decía «124 h», «262 h» y «61 h» mientras la pantalla decía «5,2 
 
 | Nivel | Qué muestra |
 |---|---|
-| Ingeniería (`conf`, `jefe`) | 4 variables clave de la familia (inyección: presión de succión, presión de descarga, caudal, vibración; multifásica: caída de presión del filtro, vibración, velocidad, nivel del depósito de barrera); bajo «PARTES», cada parte `fallo`/`fuera`/`avisa`/`sin-dato` en su renglón con marca y `estadoCorto`; la peor en negrita con su `fraseParteCorta`; el resto en un renglón gris «N partes estables» (o «con la bomba detenida»), con globo de nombre + estado; pie con la historia: «8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 3.365 bbl por falla» (lo que **ya** costó por falla; «si falla hoy» es la cifra de Riesgo, 5B.5). |
+| Ingeniería (`conf`, `jefe`) | 4 variables clave de la familia (inyección: presión de succión, presión de descarga, caudal, vibración; multifásica: caída de presión del filtro, vibración, velocidad, nivel del depósito de barrera); bajo «PARTES», cada parte `fallo`/`fuera`/`avisa`/`sin-dato` en su renglón con marca y `estadoCorto`; la peor en negrita con su `fraseParteCorta`; el resto en un renglón gris «N partes estables» (o «con la bomba detenida»), con globo de nombre + estado; pie con la historia: «8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 2.765 bbl por falla» (lo que **ya** costó por falla; «si falla hoy» es la cifra de Riesgo, 5B.5). |
 | Operación (`sup`, `oper`, `tec`) | Solo las variables fuera de banda («Instrumentos en banda.» si no hay); «PARTES QUE AVISAN» sin el renglón de estables; si ninguna, «Ninguna parte avisa.» |
 | Decisión (`ger`) | **Sin placa desde el 8-oct**: el gerente no ve Bombas ni Electrosumergibles (cap. 10, D23; su Resumen despliega por campo los equipos que fallan, 5A.8). Antes: «En marcha · succión y filtro de entrada avisa», «Falla más por sello mecánico · una cada 46 días». |
 
@@ -298,17 +298,17 @@ Impulsores y desgaste interno · estable; Motor eléctrico · estable). MPP-301:
 entrada** · fuera de banda / «caída de presión del filtro · alarma en 5,2 d · 4,7–5,7 d»;
 ■ Rodamientos · cruza en 10,3 d; ■ Tornillos y holguras · cruza en 17,5 d; ■ Sellos mecánicos
 (cuatro) · cruza en 33,0 d; «2 partes estables»; pie «7 fallas en 12 meses · cada 52 d · 2,0 d
-fuera · le ha costado 3.434 bbl por falla» (las horas fuera con `fmtHoras(h, true)`, como la ficha:
+fuera · le ha costado 3.226 bbl por falla» (las horas fuera con `fmtHoras(h, true)`, como la ficha:
 antes «48,7 h»).
 
 **Detalle de la bomba.**
 - Ingeniería: panel **SALUD POR PARTE**, un `BloqueParte` por parte (abierto si `fallo`, `fuera` o
   `avisa`): marca, nombre, frase corta, chip de estado y, si la parte tiene historia, «5 fallas ·
-  17.079 bbl». Abierto: la proyección de su `primera`; «QUÉ LA ANUNCIA» (cada variable con su papel
+  17.435 bbl». Abierto: la proyección de su `primera`; «QUÉ LA ANUNCIA» (cada variable con su papel
   —anuncia / la daña / confirma—, tag, pronóstico corto o «ya cruzó», y valor o «sin señal» en
   magenta); «Falta instrumentar: nivel de aceite de la cámara (LT)»; «LO QUE HA COSTADO»: fallas ·
   bbl · disparos, «una cada 73 días» (MTBF de la parte, ≥ 2 fallas), «fuera 2,2 d en promedio» (horas
-  fuera de sus fallas cerradas), «por falla 3.416 bbl»; ⓘ «qué hacer» (acción + ítem ISO 14224),
+  fuera de sus fallas cerradas), «por falla 3.487 bbl»; ⓘ «qué hacer» (acción + ítem ISO 14224),
   «anticipación», «cuánto pesa».
 - Operación: panel **PARTES QUE AVISAN** (cada una con marca, chip, frase corta y **«Qué hacer:»
   escrito**, no detrás de un ⓘ) y panel **FUERA DE BANDA** con los analógicos de las variables no
@@ -322,13 +322,13 @@ Números reales de «LO QUE HA COSTADO» (historia de 12 meses del PLC):
 
 | Equipo (campo) | Parte | Texto |
 |---|---|---|
-| P-201B (Morichal) | Sello mecánico | 5 fallas · 17.079 bbl; una cada 73 días; fuera 2,2 d en promedio; por falla 3.416 bbl |
+| P-201B (Morichal) | Sello mecánico | 5 fallas · 17.435 bbl; una cada 73 días; fuera 2,2 d en promedio; por falla 3.487 bbl |
 | P-201B (Morichal) | Succión y filtro de entrada | 1 falla · 0 bbl; fuera 3,7 h en promedio; por falla 0 bbl |
-| P-201B (Morichal) | Motor eléctrico | 1 falla · 0 bbl; fuera 20,4 h en promedio |
-| MPP-301 (Morichal) | Tornillos y holguras | 2 fallas · 9.725 bbl; una cada 183 días; fuera 3,0 d; por falla 4.862 bbl |
-| MPP-301 (Morichal) | Sellos mecánicos (cuatro) | 4 fallas · 13.536 bbl; una cada 92 días; fuera 46,9 h; por falla 3.384 bbl |
-| P-201B (La Ceiba) | Sello mecánico | 5 fallas · 104.082 bbl; una cada 73 días; fuera 44,8 h; por falla 20.816 bbl |
-| MN-07 (Morichal) | Admisión y separador de gas | 0 fallas · 219 bbl · 4 disparos |
+| P-201B (Morichal) | Motor eléctrico | 1 falla · 894 bbl; fuera 20,4 h en promedio; por falla 894 bbl |
+| MPP-301 (Morichal) | Tornillos y holguras | 2 fallas · 7.949 bbl; una cada 183 días; fuera 3,0 d; por falla 3.975 bbl |
+| MPP-301 (Morichal) | Sellos mecánicos (cuatro) | 4 fallas · 13.875 bbl; una cada 92 días; fuera 46,9 h; por falla 3.469 bbl |
+| P-201B (La Ceiba) | Sello mecánico | 5 fallas · 26.344 bbl; una cada 73 días; fuera 44,8 h; por falla 5.269 bbl |
+| MN-07 (Morichal) | Admisión y separador de gas | 0 fallas · 119 bbl · 3 disparos |
 
 (Una parte con 0 bbl en una falla: la parada la absorbió el tanque; cuenta como falla.)
 

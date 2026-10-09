@@ -42,7 +42,7 @@ select pg_temp.muerde('UPDATE a version_config', $$update version_config set mot
 select pg_temp.muerde('teléfono repetido de un no suspendido',
   $$insert into usuario (id, nombre, correo, rol_id, estado, desde, telefono, alertas) values ('u9', 'Lucía Prada', 'lucia.prada@operadora.example', 'sup', 'invitado', '2026-10-02', '+573005550103', true)$$, '23505');
 select pg_temp.muerde('tanque con alto-alto 0,99',
-  $$insert into tanque (version, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo) values (1, 'TK-PRUEBA', 9, 'Tanque de prueba', 'ceiba', 'P-201B', 10000, 0.99, 'LT-2012', 'Certificado')$$, '23514');
+  $$insert into tanque (version, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo) values (1, 'TK-PRUEBA', 9, 'Tanque de prueba', 'ceiba', 'P-201B', 30000, 0.99, 'LT-2012', 'Certificado')$$, '23514');
 
 -- ── Configuración firmada
 select pg_temp.muerde('DELETE a version_config', $$delete from version_config where version = 1$$, '23001');
@@ -173,14 +173,14 @@ select pg_temp.muerde('carga de asignación: no se borra',
   $s$do $x$ declare c bigint; begin
       insert into carga_asignacion (por, por_id, motivo) values ('Marcela Ríos · ingeniera de producción', 'prod', 'Asignación oficial de septiembre') returning id into c;
       insert into carga_asignacion_grupo values (c, '2026-09-01', 'ceiba', 1, 0);
-      insert into asignacion_oficial values (c, '2026-09-01', 'ceiba', 'LC-11', 29659.33, 672.38);
+      insert into asignacion_oficial values (c, '2026-09-01', 'ceiba', 'LC-11', 28088.18, 635.35);
       delete from asignacion_oficial where carga_id = c;
     end $x$ $s$, '23001');
 select pg_temp.muerde('asignación con más horas que el mes (721 en septiembre)',
   $s$do $x$ declare c bigint; begin
       insert into carga_asignacion (por, por_id, motivo) values ('Marcela Ríos · ingeniera de producción', 'prod', 'Asignación oficial de septiembre') returning id into c;
       insert into carga_asignacion_grupo values (c, '2026-09-01', 'ceiba', 1, 0);
-      insert into asignacion_oficial values (c, '2026-09-01', 'ceiba', 'LC-11', 29659.33, 721);
+      insert into asignacion_oficial values (c, '2026-09-01', 'ceiba', 'LC-11', 28088.18, 721);
     end $x$ $s$, '23514');
 select pg_temp.muerde('cambio de planta: no se reescribe',
   $s$do $x$ declare c bigint; begin

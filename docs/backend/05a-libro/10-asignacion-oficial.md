@@ -34,17 +34,17 @@ $$
 
 Ordenado por `asignado` de mayor a menor. Forma: `AsignacionPozo { campoId, pozo, horas, potencial, diferido, asignado }`.
 
-**Ejemplo con los datos del demo (La Ceiba, septiembre).** Real del mes 324.688; $\sum \text{potencial} = 346.379{,}435$, $\sum \text{diferido} = 21.691{,}435$ → $k = 1$ exacto (mes entero: el inventario es 0).
+**Ejemplo con los datos del demo (La Ceiba, septiembre).** Real del mes 338.662; $\sum \text{potencial} = 346.378{,}059$, $\sum \text{diferido} = 7.716{,}059$ → $k = 1$ exacto (mes entero: el inventario es 0).
 
 | Pozo | Horas | Potencial | Diferido | Asignado |
 |---|---:|---:|---:|---:|
-| LC-11 | 672,383 | 31.765,538 | 2.106,208 | 29.659,330 |
-| LC-08 | 675,800 | 27.256,118 | 1.675,357 | 25.580,761 |
-| LC-16 | 671,300 | 26.475,158 | 1.783,279 | 24.691,879 |
-| LC-04 | 673,850 | 25.021,756 | 1.604,198 | 23.417,559 |
+| LC-11 | 635,350 | 31.765,412 | 3.677,228 | 28.088,184 |
+| LC-08 | 718,383 | 27.256,010 | 60,830 | 27.195,180 |
+| LC-16 | 699,333 | 26.475,052 | 756,762 | 25.718,291 |
+| LC-04 | 654,967 | 25.021,657 | 2.260,583 | 22.761,074 |
 | … | | | | |
-| LC-21 | 677,550 | 9.106,043 | 536,538 | 8.569,506 |
-| **Σ 18 pozos** | | **346.379,435** | **21.691,435** | **324.688** |
+| LC-21 | 720,000 | 9.106,007 | 0 | 9.106,007 |
+| **Σ 18 pozos** | | **346.378,059** | **7.716,059** | **338.662** |
 
 **Casos borde.** Mes abierto o inexistente → `[]` (octubre 2026: `[]`). Mes sin factor → potencial 0 y asignado 0. Pozos sin prueba no aparecen (su crudo queda repartido entre los demás vía el factor). $\sum(\text{potencial}-\text{diferido}) = 0$ → $k = 0$.
 
@@ -146,24 +146,24 @@ Orden: primero los que TRIM no conoce, después la diferencia absoluta mayor. To
 | Pozo | Oficial | TRIM | Diferencia | Horas oficial · PLC | Fuera (±15 %) | Motivo |
 |---|---:|---:|---:|---|---|---|
 | LC-99 | 500 | — | 500 | 720 · — | sí | «TRIM no tiene ese pozo con prueba en el campo: revise el nombre o el maestro de pozos.» |
-| LC-21 | — | 8.569,5 | −8.569,5 | — · 677,6 | sí | «No está en la asignación oficial; TRIM le asigna 8.570 bbl.» |
-| LC-11 | 35.591 | 29.659,3 | 5.931,7 | 672,4 · 672,4 | **sí** ($5.932 > 0{,}15\times35.591 = 5.339$) | «Mismas horas: está en la prueba o el factor que usó cada uno.» |
-| LC-16 | 24.992 | 24.691,9 | 300,1 | 681,3 · 671,3 | no | «Horas: 681,3 oficial, 671,3 según el PLC; explican 368 bbl. El resto, -68 bbl, está en la prueba o el factor.» |
-| LC-19 | 22.186 | 22.186,5 | −0,5 | 676,8 · 676,8 | no | «Cuadra.» |
+| LC-21 | — | 9.106,0 | −9.106,0 | — · 720,0 | sí | «No está en la asignación oficial; TRIM le asigna 9.106 bbl.» |
+| LC-11 | 33.706 | 28.088,2 | 5.617,8 | 635,4 · 635,4 | **sí** ($5.618 > 0{,}15\times33.706 = 5.056$) | «Mismas horas: está en la prueba o el factor que usó cada uno.» |
+| LC-16 | 26.018 | 25.718,3 | 299,7 | 709,3 · 699,3 | no | «Horas: 709,3 oficial, 699,3 según el PLC; explican 368 bbl. El resto, -68 bbl, está en la prueba o el factor.» |
+| LC-03 | 11.398 | 11.397,5 | 0,5 | 720,0 · 720,0 | no | «Cuadra.» |
 | … 14 más | | | | | | «Cuadra.» |
 
-Totales: oficial 322.849; TRIM 324.688.
+Totales: oficial 335.975; TRIM 338.662.
 
 **Qué texto se muestra (el panel con esa carga).**
 
 - «18 pozos leídos · 17 reconocidos · 1 que TRIM no tiene».
 - Marca de dato inválido (círculo magenta punteado, ISA-101) + «TRIM no tiene LC-99 en La Ceiba: revise el nombre o el maestro de pozos.»
-- ■ P3 + «Faltan 1 pozo de La Ceiba en lo que se cargó (TRIM les asigna 8.570 bbl): ¿está completo el archivo?» y debajo «LC-21».
-- Cifras: «oficial **322.849 bbl**», «TRIM **324.688 bbl**» (ⓘ «Lo que midió el punto de medición oficial en el mes, repartido por prueba × factor × horas.»), «fuera de banda · ±15 %» **■ 1** «de 17 pozos cotejados».
-- Si $|\Sigma o - \Sigma t| \ge 1$: «La oficial suma 1.839 bbl menos que lo que midió el punto oficial. Primero complete los pozos.» (sin pozos faltantes ni desconocidos, en vez de la última frase va un ⓘ «Diferencia de totales: Las dos deberían sumar lo mismo: si no, una usó otro volumen (por ejemplo, un corte de agua de laboratorio corregido).»)
+- ■ P3 + «Faltan 1 pozo de La Ceiba en lo que se cargó (TRIM les asigna 9.106 bbl): ¿está completo el archivo?» y debajo «LC-21».
+- Cifras: «oficial **335.975 bbl**», «TRIM **338.662 bbl**» (ⓘ «Lo que midió el punto de medición oficial en el mes, repartido por prueba × factor × horas.»), «fuera de banda · ±15 %» **■ 1** «de 17 pozos cotejados».
+- Si $|\Sigma o - \Sigma t| \ge 1$: «La oficial suma 2.687 bbl menos que lo que midió el punto oficial. Primero complete los pozos.» (sin pozos faltantes ni desconocidos, en vez de la última frase va un ⓘ «Diferencia de totales: Las dos deberían sumar lo mismo: si no, una usó otro volumen (por ejemplo, un corte de agua de laboratorio corregido).»)
 - Tabla «Pozo · Oficial · TRIM · Diferencia · Horas oficial · PLC» solo con los comparables, cinco a la vista; ■ en «Diferencia» si está fuera; ⓘ por fila con el motivo (en el papel, el motivo en su renglón). Horas: `n1` o «sin dato».
 - Botón «Descargar el cotejo»: CSV `TRIM-cotejo-asignacion-ceiba-2026-09` con columnas Pozo, Oficial bbl, TRIM bbl, Diferencia bbl, Horas oficiales, Horas PLC, Explican las horas bbl, Fuera de la banda (sí/no), Explicación.
-- Sin carga: chip «sin cargar» + «TRIM asigna 324.688 bbl · 18 pozos» con ⓘ «La Ceiba · septiembre de 2026: Sin asignación oficial cargada. Lo que asigna TRIM es lo que midió el punto de medición oficial.»
+- Sin carga: chip «sin cargar» + «TRIM asigna 338.662 bbl · 18 pozos» con ⓘ «La Ceiba · septiembre de 2026: Sin asignación oficial cargada. Lo que asigna TRIM es lo que midió el punto de medición oficial.»
 
 Selectores: «Campo» (si hay más de uno) y «Mes» (solo meses cerrados, del más nuevo al más viejo; por omisión el último cerrado: septiembre de 2026).
 

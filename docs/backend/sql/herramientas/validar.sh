@@ -18,6 +18,16 @@ BIN=${PG_BIN:-${$(command -v psql):h}}
 P=($BIN/psql -h 127.0.0.1 -p 5440 -U postgres -v ON_ERROR_STOP=1)
 
 {
+# Si un paso falla (set -e), el cluster tampoco se queda corriendo: se detiene y se borra su carpeta.
+limpiar() {
+  local s=$?
+  if (( s != 0 )); then
+    if [[ -e $PGD/postmaster.pid ]]; then $BIN/pg_ctl -D $PGD -m fast -w stop; fi
+    rm -rf $S
+    echo "LA VALIDACIÓN FALLÓ (salida $s): cluster detenido y su carpeta temporal borrada."
+  fi
+}
+trap limpiar EXIT
 echo "# Validación del modelo de datos · $(date '+%Y-%m-%d %H:%M:%S %Z')"
 echo "$($BIN/initdb --version) · $($BIN/psql --version) · node $(node --version)"
 echo

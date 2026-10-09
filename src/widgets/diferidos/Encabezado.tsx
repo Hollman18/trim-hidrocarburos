@@ -10,7 +10,8 @@ import { n0, n1, usd } from '@/shared/lib/formato'
 import { Rango, NOTA_DE_CALCULO, NOTA_SIMPLE } from './Rango'
 import { SelloPublicacion } from './Sello'
 
-const signo = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${n0(Math.abs(v * 100))} %`
+/** Un cambio en %: con signo, salvo que redondee a cero («0 %», nunca «−0 %»). */
+const signo = (v: number) => { const r = Math.round(v * 100); return `${r > 0 ? '+' : r < 0 ? '−' : ''}${n0(Math.abs(r))} %` }
 
 /** El número que manda la pantalla: lo que no se produjo en el período, con
  *  su rango de tolerancia (todos los roles), si el libro se puede publicar,

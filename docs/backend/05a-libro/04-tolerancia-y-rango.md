@@ -25,7 +25,7 @@ $$
 | $1/3600$ | resolución del reloj del PLC (1 s) | h | `RESOLUCION_PLC_H`, `src/entities/libro.ts:41` |
 | $\text{horas}_t$ | horas del tramo | h | tramo |
 
-**Ejemplo.** Tramo de LC-11 del 10-sep (31,183 h, 1.381,059 bbl): sesgo 0,15 → 207,16 bbl; azar $= 1{,}41421/3600/31{,}183 = 1{,}26\times10^{-5}$ → 0,017 bbl. En todo septiembre de La Ceiba, la parte del reloj es $\sqrt{\sum(\text{bbl}\cdot\text{azar})^2} = 0{,}08$ bbl: despreciable frente al sesgo (3.253,7 bbl). Está para que un campo con banda demostrada muy chica la tenga en cuenta.
+**Ejemplo.** Tramo de LC-16 del 22 al 23-sep (14,750 h, 540,108 bbl): sesgo 0,15 → 81,02 bbl; azar $= 1{,}41421/3600/14{,}75 = 2{,}66\times10^{-5}$ → 0,014 bbl. En todo septiembre de La Ceiba, la parte del reloj es $\sqrt{\sum(\text{bbl}\cdot\text{azar})^2} = 0{,}05$ bbl: despreciable frente al sesgo (1.157,4 bbl). Está para que un campo con banda demostrada muy chica la tenga en cuenta.
 
 **Referencia.** `src/entities/libro.ts:298-300`, `:341-342`; `src/entities/metrologia.ts:36-45`, `:68-71`.
 
@@ -35,7 +35,7 @@ $$
 
 **Qué es.** El ± absoluto de los barriles diferidos del período.
 
-**Dónde se ve.** Indirectamente en el **rango** (abajo); como porcentaje en el globo del encabezado («Σ de los eventos: 21.691 bbl ±15,0 % (Res. 40236)»; desde el 8-oct, en el nivel `decision` solo «21.691 bbl»: quien decide no ve tolerancias, su margen es el rango, `Encabezado.tsx:29-30`, `:54`) y en el ⓘ de «Identificado por señal» del Cuadre («Tolerancia ±15,0 % (Res. 40236).»); por equipo en el Pareto (globo «Tolerancia ±3.111 bbl» y pista «tolerancia ±15,0 %», solo ingeniería).
+**Dónde se ve.** Indirectamente en el **rango** (abajo); como porcentaje en el globo del encabezado («Σ de los eventos: 7.716 bbl ±15,0 % (Res. 40236)»; desde el 8-oct, en el nivel `decision` solo «7.716 bbl»: quien decide no ve tolerancias, su margen es el rango, `Encabezado.tsx:29-30`, `:54`) y en el ⓘ de «Identificado por señal» del Cuadre («Tolerancia ±15,0 % (Res. 40236).»); por equipo en el Pareto (globo «Tolerancia ±3.111 bbl» y pista «tolerancia ±15,0 %», solo ingeniería).
 
 **Fórmula.**
 
@@ -47,25 +47,25 @@ Dentro de un campo, el sesgo se suma en línea (el mismo factor en todos sus poz
 
 **Ejemplo con los datos del demo.**
 
-*La Ceiba, septiembre.* $\sum \text{bbl}\cdot 0{,}15 = 21.691{,}435 \times 0{,}15 = 3.253{,}715$; la parte del reloj suma 0,006 bbl² → **tol = 3.253,715 bbl**. Relativa: $3.253{,}715 / 21.691{,}435 = 15{,}0\,\%$ → «±15,0 %».
+*La Ceiba, septiembre.* $\sum \text{bbl}\cdot 0{,}15 = 7.716{,}059 \times 0{,}15 = 1.157{,}409$; la parte del reloj suma 0,003 bbl² → **tol = 1.157,409 bbl**. Relativa: $1.157{,}409 / 7.716{,}059 = 15{,}0\,\%$ → «±15,0 %».
 
 *Portafolio, septiembre:*
 
 | Campo | Diferido (bbl) | $b$ | $\sum \text{bbl}\cdot b$ |
 |---|---:|---:|---:|
-| La Ceiba | 21.691,435 | 0,15 | 3.253,715 |
-| Morichal Norte | 53.561,771 | 0,15 | 8.034,266 |
-| Guacamayo | 25.681,167 | 0,05 | 1.284,058 |
+| La Ceiba | 7.716,059 | 0,15 | 1.157,409 |
+| Morichal Norte | 15.539,442 | 0,15 | 2.330,916 |
+| Guacamayo | 6.396,387 | 0,05 | 319,819 |
 | El Palmar | 3.990,220 | 0,15 | 598,533 |
 | La Zarza | 302,631 | 0,05 | 15,132 |
 
 $$
-\text{tol} = \sqrt{3.253{,}715^2 + 8.034{,}266^2 + 1.284{,}058^2 + 598{,}533^2 + 15{,}132^2} = 8.783{,}13\ \text{bbl}
+\text{tol} = \sqrt{1.157{,}409^2 + 2.330{,}916^2 + 319{,}819^2 + 598{,}533^2 + 15{,}132^2} = 2.689{,}52\ \text{bbl}
 $$
 
-Relativa $8.783{,}13 / 105.227{,}224 = 8{,}3\,\%$ → «±8,3 %». Sumado en línea habría dado 13.185,7 bbl (12,5 %): la cuadratura entre campos es la que hace que el portafolio tenga menos tolerancia relativa que cada campo.
+Relativa $2.689{,}52 / 33.944{,}738 = 7{,}9\,\%$ → «±7,9 %». Sumado en línea habría dado 4.421,8 bbl (13,0 %): la cuadratura entre campos es la que hace que el portafolio tenga menos tolerancia relativa que cada campo.
 
-*La Ceiba, octubre en curso:* 456,480 bbl (15,0 %). *Portafolio, octubre:* 502,470 bbl (8,1 %).
+*La Ceiba, octubre en curso:* 156,904 bbl (15,0 %). *Portafolio, octubre:* 245,137 bbl (10,3 %).
 
 **Casos borde.**
 
@@ -76,9 +76,9 @@ Relativa $8.783{,}13 / 105.227{,}224 = 8{,}3\,\%$ → «±8,3 %». Sumado en lí
 | Banda sin verificar | se usa la fila más ancha ($b = 0{,}20$): la tolerancia **crece** y se dice en la fuente |
 | Banda demostrada | su valor reemplaza $b$ |
 
-**Quién lo calcula.** Servidor: `Libro.tolerancia` (`toleranciaDe`, `src/entities/libro.ts:353-364`); por equipo, `porEquipo[].tolerancia` con la misma función sobre los tramos de ese equipo (P-201B de La Ceiba en septiembre: 3.110,829 bbl sobre 20.738,857).
+**Quién lo calcula.** Servidor: `Libro.tolerancia` (`toleranciaDe`, `src/entities/libro.ts:353-364`); por equipo, `porEquipo[].tolerancia` con la misma función sobre los tramos de ese equipo (P-201B de La Ceiba en septiembre: 156,083 bbl sobre 1.040,550).
 
-**Referencia.** `referencia/diferidos/ceiba-2026-09.json` → `tolerancia = 3253.715293317683`; `referencia/diferidos/portafolio-2026-09.json`.
+**Referencia.** `referencia/diferidos/ceiba-2026-09.json` → `tolerancia` ≈ 1157.409; `referencia/diferidos/portafolio-2026-09.json`.
 
 ---
 
@@ -86,7 +86,7 @@ Relativa $8.783{,}13 / 105.227{,}224 = 8{,}3\,\%$ → «±8,3 %». Sumado en lí
 
 **Qué es.** El intervalo en que está la cifra real de lo no producido. Lo ven **todos los roles**: es lo que protege el número cuando sale de la sala.
 
-**Dónde se ve.** Debajo de la cifra grande del encabezado de Diferidos (todos los niveles) y del Resumen del gerente: «**18.438–24.945 bbl · calculado**». Globo: título «Rango de tolerancia» (ingeniería y operación) o «Margen del cálculo» (decisión); pista = nota de cálculo; filas «Rango: 18.438 a 24.945 bbl» y, si hay, «Aparte, aproximado: N bbl a frecuencia reducida».
+**Dónde se ve.** Debajo de la cifra grande del encabezado de Diferidos (todos los niveles) y del Resumen del gerente: «**6.559–8.873 bbl · calculado**». Globo: título «Rango de tolerancia» (ingeniería y operación) o «Margen del cálculo» (decisión); pista = nota de cálculo; filas «Rango: 6.559 a 8.873 bbl» y, si hay, «Aparte, aproximado: N bbl a frecuencia reducida».
 
 **Fórmula.**
 
@@ -100,12 +100,12 @@ Ojo: la tolerancia se calcula sobre los tramos (Σ de los eventos) y el rango se
 
 | Período | Brecha | tol | Pantalla (corto) |
 |---|---:|---:|---|
-| La Ceiba · sep | 21.691,435 | 3.253,715 | «18.438–24.945 bbl · calculado» |
-| La Ceiba · oct | 3.043,201 | 456,480 | «2.587–3.500 bbl · calculado» |
-| Portafolio · sep | 105.227,224 | 8.783,130 | «96.444–114.010 bbl · calculado» |
-| Portafolio · oct | 6.231,716 | 502,470 | «5.729–6.734 bbl · calculado» |
-| La Ceiba · trimestre jul–sep | 89.134,521 | 13.370,178 | «75.764–102.505 bbl · calculado» |
-| Portafolio · últimos 12 meses | 639.507,243 | 54.651,706 | «584.856–694.159 bbl · calculado» |
+| La Ceiba · sep | 7.716,059 | 1.157,409 | «6.559–8.873 bbl · calculado» |
+| La Ceiba · oct | 1.046,026 | 156,904 | «889–1.203 bbl · calculado» |
+| Portafolio · sep | 33.944,738 | 2.689,521 | «31.255–36.634 bbl · calculado» |
+| Portafolio · oct | 2.376,755 | 245,137 | «2.132–2.622 bbl · calculado» |
+| La Ceiba · trimestre jul–sep | 33.679,668 | 5.051,950 | «28.628–38.732 bbl · calculado» |
+| Portafolio · últimos 12 meses | 483.307,402 | 41.078,577 | «442.229–524.386 bbl · calculado» |
 
 **Qué texto se muestra según el valor.**
 
@@ -132,7 +132,7 @@ $$
 \text{aproximado} = \sum_{t\,:\,\text{evento.codigo} = \text{HZ}} \text{bbl}_t
 $$
 
-**Ejemplo con los datos del demo.** La Ceiba no tiene eventos HZ en septiembre ni octubre (aproximado 0: las filas no salen). El demo tiene 61 eventos HZ: en Morichal (10 el 14-feb, 11 el 6-jul y 11 el 25-jul de 2026) y en Guacamayo (17-oct-2025, 8-mar, 15-abr y 11-jul de 2026); todos traen su `hz`. Morichal, febrero de 2026: diferido 2.157,245 bbl, de los que **1.001,437 son aproximados**; tol $= (2.157{,}245 - 1.001{,}437)\times 0{,}15 = 173{,}371$. El globo del rango dice «Aparte, aproximado: 1.001 bbl a frecuencia reducida» y el rango «1.984–2.331 bbl · calculado». El «±» del encabezado sale $173{,}371 / 2.157{,}245 = 8{,}0\,\%$ porque divide por todo el diferido, incluido lo aproximado (ver «Huecos y dudas»).
+**Ejemplo con los datos del demo.** La Ceiba no tiene eventos HZ en septiembre ni octubre (aproximado 0: las filas no salen). El demo tiene 61 eventos HZ: en Morichal (10 el 14-feb, 11 el 6-jul y 11 el 25-jul de 2026) y en Guacamayo (17-oct-2025, 8-mar, 15-abr y 11-jul de 2026); todos traen su `hz`. Morichal, febrero de 2026: diferido 2.752,202 bbl (con los 595 de la parada programada de P-201B del 17-feb, que desde el 9-oct cierra 3 pozos), de los que **1.001,435 son aproximados**; tol $= (2.752{,}202 - 1.001{,}435)\times 0{,}15 = 262{,}615$. El globo del rango dice «Aparte, aproximado: 1.001 bbl a frecuencia reducida» y el rango «2.490–3.015 bbl · calculado». El «±» del encabezado sale $262{,}615 / 2.752{,}202 = 9{,}5\,\%$ porque divide por todo el diferido, incluido lo aproximado (ver «Huecos y dudas»).
 
 **Casos borde.** Un HZ sin frecuencia (en el evento o en la prueba) cuenta como cerrado ($f = 1$) y también es aproximado.
 

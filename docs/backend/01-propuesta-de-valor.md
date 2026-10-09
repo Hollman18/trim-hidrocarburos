@@ -38,7 +38,7 @@ Si la bomba se para y nada más absorbe el agua, el tanque sube. Al llegar al ni
 
 El otro equipo de alto impacto es la **electrosumergible**, la bomba de fondo de cada pozo: si falla, ese pozo deja de producir hasta que se cambia (días o semanas de taladro).
 
-> **Sobre los datos del demo.** Los cortes de agua del demo son de **29 % a 71 % por campo** (hasta 79,8 % en el pozo MN-27), por debajo del 92–98 % típico. Las fórmulas no cambian con el corte. Lo que cambia es la escala: con 95 % cada barril de crudo arrastra 19 de agua, la bomba mueve varias veces más agua para el mismo crudo y el colchón del tanque es mucho más corto. En un piloto con datos reales, el corte real del cliente entra por las pruebas de pozo (capítulo 5B §4.1).
+> **El agua de los campos del demo** (pruebas vigentes, corridas con el motor): La Ceiba **95 %** (18,9 bbl de agua por barril de crudo), Morichal Norte **97 %** (32,4), Guacamayo **93 %** (13,2), El Palmar **80 %** (4,0: todo es bombeo mecánico, y una unidad de varilla no mueve más líquido) y La Zarza **32 %** (es de gas y condensado: el mismo producto sirve donde el agua no manda). En un piloto, el corte real del cliente entra por las pruebas de pozo (capítulo 5B §4.1).
 
 ## 1.2 Lo que cada nivel necesita saber
 
@@ -126,16 +126,16 @@ Las **metas** y el **precio** los firma el gerente, por tramos y con motivo, en 
 
 Todas las cifras salen del motor con los datos del demo (capítulo 5B §4).
 
-**Antes de la parada.** La Ceiba no tiene respaldo para su bomba de reinyección P-201B («única bomba del tren de agua»). Su tanque TK-AG-CE mide 10.000 bbl con alto-alto al 90 %. La bomba mueve una mediana de **19.190 bbl/d** de agua (medidor FI-2011).
+**Antes de la parada.** La Ceiba mueve **224.075 bbl/d de agua** (95 %) con tres bombas de reinyección de 90.000 bbl/d en paralelo: P-201A, P-201B y P-201C. P-201B mueve una mediana de **74.200 bbl/d** (medidor FI-2011). Si para, P-201A y P-201C pueden tomar 30.100 bbl/d más entre las dos (el respaldo firmado); el resto, **44.100 bbl/d**, se queda sin salida. El tanque TK-AG-CE mide 30.000 bbl con alto-alto al 90 %.
 
 | Hora | Qué pasa | Cálculo | Lo que se ve |
 |---|---|---|---|
-| **03:52** | P-201B para (evento `EV-2011-1002`). El tanque está en 56,0 % (LT-2012). | Volumen libre $= (0{,}90 - 0{,}56)\cdot 10.000 = 3.400$ bbl. Agua sin salida $= 19.190 - 0 = 19.190$ bbl/d $= 799{,}6$ bbl/h. Colchón $= 3.400 / 799{,}6 =$ **4,25 h** (3,83–4,68 h). | La placa pasa a ◆ P1 «detenido». WhatsApp al supervisor y al operador: equipo parado, sin respaldo. Ninguna señal explica la parte: «No arrancar hasta identificar qué se dañó», y TRIM le pregunta al operador qué se dañó. |
-| **08:07** | Primer pozo cerrado: LC-16, por nivel alto-alto (`LSHH`). | El tanque aguantó **4,245 h**: el modelo acertó al minuto. | Fila de la parada: «colchón 4,3 h · aguantó 4,2 h». |
-| **08:07–08:52** | Se cierran 17 pozos. Sin respaldo no hay orden que escoger: se cierra todo el campo. | Crudo en orden = crudo parejo = 11.359,7 bbl/d; ahorro 0. | «Sin respaldo, el agua no tiene salida: al llenarse el tanque se cierra todo el campo». |
-| **14:00** (ahora) | La parada sigue abierta. | Perdiéndose $= \sum$ crudo asignado de los 17 pozos $=$ **11.059 bbl/d** $=$ 461 bbl/h. Diferido de la parada $=$ **2.570 bbl** (2.185–2.956, ±15,0 %). | Bombas: «Perdiéndose ahora 11.059 bbl/d · 17 pozos cerrados · 461 bbl/h». Placa: «2.570 bbl · 2.185 – 2.956 · calculado». |
-| **Gerencia** | La misma parada en el resumen del portafolio, octubre en curso. | 2.570 de 6.232 bbl diferidos del portafolio $=$ 41 %. | «Causa mayor: P-201B · La Ceiba». Por equipo: «P-201B · La Ceiba · 2.570 bbl · 41 %». |
-| **Historia** | Lo que esta bomba le ha costado al campo. | 9 fallas, una cada **41 días**, **40,0 h** fuera en promedio, **18.075 bbl** por falla. | Ficha del equipo y Confiabilidad. |
+| **03:52** | P-201B para (evento `EV-2011-1002`). El tanque está en 78,7 % (LT-2012). | Volumen libre $= (0{,}90 - 0{,}787)\cdot 30.000 = 3.390$ bbl. Agua sin salida $= 74.200 - 30.100 = 44.100$ bbl/d $= 1.837{,}5$ bbl/h. Colchón $= 3.390 / 1.837{,}5 =$ **1,84 h** (1,66–2,03 h). | La placa pasa a ◆ P1 «detenido». WhatsApp al supervisor y al operador: equipo parado, el respaldo no alcanza para todo su caudal. Ninguna señal explica la parte: «No arrancar hasta identificar el daño», y TRIM le pregunta al operador qué se dañó. |
+| **05:43** | Primer pozo cerrado: LC-16, por nivel alto-alto (`LSHH`). | El tanque aguantó **1,845 h**: el modelo acertó al minuto. | Fila de la parada: «colchón 1,8 h · aguantó 1,8 h». |
+| **05:46** | Los operarios cierran LC-07. Cierran primero los pozos que más agua dan, como haría un buen operador: con esos dos se quita el agua sin salida. | Crudo de los dos pozos cerrados = **1.665 bbl/d**. En el orden de TRIM (primero los de menos crudo por barril de agua: LC-02, LC-10 y LC-01 enteros, y bajar la frecuencia de LC-17 y LC-07) serían **1.426 bbl/d**: 14 % menos. | Detalle de la bomba: «Orden de cierre»; la parada abierta dice «evitable en orden: 30 bbl» (lo que lleva hasta ahora). |
+| **14:00** (ahora) | La parada sigue abierta. El tanque está quieto en 89,6 %: con los dos pozos cerrados, P-201A y P-201C sacan toda el agua que entra. | Perdiéndose **1.665 bbl/d** $=$ 69 bbl/h. Diferido de la parada $=$ **573 bbl** (487–659, ±15,0 %). | Bombas: «Perdiéndose ahora 1.665 bbl/d · 69 bbl/h · 2 pozos cerrados». Placa: «573 bbl · 487 – 659 · calculado». Planta: el tanque, gris («P-201B detenida: el respaldo toma el agua que entra, el nivel no sube»). |
+| **Gerencia** | La misma parada en el Resumen del portafolio, octubre en curso. | 573 de 2.377 bbl diferidos del portafolio $=$ 24 %. MN-41, la electrosumergible de Morichal caída desde el 25-sep, lleva 1.083 (46 %). | «Causa mayor: P-201B · La Ceiba» (lo que más se pierde ahora). Por equipo: «MN-41 · 1.083 bbl · 46 %», «P-201B · 573 bbl · 24 %». |
+| **Historia** | Lo que esta bomba le ha costado al campo. | 9 fallas, una cada **41 días**, **40,0 h** fuera en promedio, **4.593 bbl** por falla. | Ficha del equipo y Confiabilidad: «le ha costado por falla». |
 
 La misma parada en la pantalla de la bomba (confiabilidad, La Ceiba, octubre en curso):
 
@@ -143,42 +143,40 @@ La misma parada en la pantalla de la bomba (confiabilidad, La Ceiba, octubre en 
 
 | # | Lo que se ve | Valor | De dónde sale |
 |---|---|---|---|
-| 1 | Respaldo de la bomba | «sin respaldo» | configuración firmada: `respaldos[]` (5B §4.2) |
-| 2 | Diferido que causó | 2.570 bbl (2.185 – 2.956 · ±15,0 %) | Σ de los tramos de los pozos cuya causa es esta parada (5B §4.4) |
-| 3 | Perdiéndose ahora | 11.059 bbl/d · 461 bbl/h · 17 pozos cerrados | Σ del crudo asignado de los pozos cerrados por ella (5B §4.3) |
-| 4 | Le ha costado por falla | 18.075 bbl · 9 fallas en 12 meses · cada 41 d · 40,0 h fuera | historia del equipo: lo que costaron sus fallas pasadas (5B §7) |
+| 1 | Respaldo de la bomba | «respaldo 30.100 bbl/d» | configuración firmada: `respaldos[]` (P-201A y P-201C en paralelo; 5B §4.2) |
+| 2 | Diferido que causó | 573 bbl (487 – 659 · ±15,0 %) | Σ de los tramos de los pozos cuya causa es esta parada (5B §4.4) |
+| 3 | Perdiéndose ahora | 1.665 bbl/d · 69 bbl/h · 2 pozos cerrados | Σ del crudo asignado de los pozos cerrados por ella (5B §4.3) |
+| 4 | Le ha costado por falla | 4.593 bbl · 9 fallas en 12 meses · cada 41 d · 40,0 h fuera | historia del equipo: lo que costaron sus fallas pasadas (5B §7) |
 | 5 | «No arrancar hasta identificar el daño» | P2 | ninguna señal explica la parte (5B §3) |
-| 6 | Pozos que cerró | 17 | eventos de pozo cargados a la parada (5B §4.3) |
-| 7 | Colchón contra lo observado | «colchón 4,3 h · aguantó 4,2 h» | previsto con el nivel al parar; observado = primer cierre − paro (5B §4.4) |
-| 8 | Libre hasta el alto-alto | 3.400 bbl | $(0{,}90 - 0{,}56) \cdot 10.000$ |
-| 9 | Agua sin salida | 19.190 bbl/d | mediana de FI-2011 − respaldo (0) |
-| 10 | Primer pozo cerrado | a las 4,2 h | LC-16 a las 08:07 |
+| 6 | Pozos que cerró | 2 (LC-07, LC-16) | eventos de pozo cargados a la parada (5B §4.3) |
+| 7 | Colchón contra lo observado | «colchón 1,8 h · aguantó 1,8 h» | previsto con el nivel al parar; observado = primer cierre − paro (5B §4.4) |
+| 8 | Libre hasta el alto-alto | 3.390 bbl | $(0{,}90 - 0{,}787) \cdot 30.000$ |
+| 9 | Agua sin salida | 44.100 bbl/d | mediana de FI-2011 (74.200) − respaldo (30.100) |
+| 10 | Primer pozo cerrado | a las 1,8 h | LC-16 a las 05:43 |
 | 11 | Por qué paró | «Sin primera alarma y sin firma: el PLC no dice qué parte falló» | árbol de causas de la bomba (5B §3) |
 
-**El mismo equipo con respaldo: P-201B de Morichal.** Morichal tiene la P-201A en paralelo, con 15.100 bbl/d libres. Con la bomba en marcha y el tanque en 61,8 %, si P-201B se para ahora:
+**La misma bomba con más respaldo: P-201B de Morichal.** Morichal mueve **581.849 bbl/d de agua** (97 %) con siete bombas de 90.000 bbl/d. P-201B mueve 79.900; las otras seis tienen 39.500 libres entre todas. Con la bomba en marcha y el tanque TK-AG-MN (60.000 bbl) en 61,8 %, si P-201B se para ahora:
 
-- el agua sin salida es solo $21.495 - 15.100 = 6.395$ bbl/d;
-- el tanque aguanta **19,0 h** (17,1–21,0 h; el cálculo da 19,0499 h);
-- después hay que cerrar 4 pozos: MN-27, MN-36, MN-13 enteros y MN-39 al 78 %;
-- se pierden **1.671 bbl/d** cerrando en ese orden, contra **2.543 bbl/d** cerrando parejo: **872 bbl/d menos**;
-- y si falla hoy, con lo que han durado sus 8 fallas (de 4 a 86 h), costaría **≈ 2.086 bbl**: de cada falla solo cuentan las horas después de las 19 h que aguanta el tanque. **Si vuelve antes de 19 h, no cuesta crudo.** Lo que de verdad le costó cada falla en el pasado, con el tanque y los pozos de entonces, fue 3.365 bbl en promedio («le ha costado por falla»).
+- el agua sin salida es $79.900 - 39.500 = 40.400$ bbl/d;
+- el tanque aguanta **10,1 h** (9,0–11,1 h; el cálculo da 10,05 h);
+- después hay que cerrar MN-27 y bajarles la frecuencia a MN-36 y MN-13 (25 %, lo más que aguanta una electrosumergible) y a MN-39 (16 %);
+- se pierden **783 bbl/d** en ese orden, contra **1.222 bbl/d** cerrando parejo: **439 bbl/d menos**;
+- y si falla hoy, con lo que han durado sus 8 fallas, costaría **≈ 1.235 bbl**: de cada falla solo cuentan las horas después de las 10 h que aguanta el tanque. **Si vuelve antes de 10 h, no cuesta crudo.** Lo que de verdad le costó cada falla en el pasado, con el tanque y los pozos de entonces, fue 2.765 bbl en promedio («le ha costado por falla»).
 
-En la historia del demo, cerrar en orden habría evitado **9.633 bbl** en las paradas de Morichal (4.762 solo en la del 24 de septiembre).
-
+En la historia del demo, los operarios de Morichal cerraron primero los pozos más aguateros; cerrar en el orden de TRIM habría evitado **1.029 bbl** en 12 meses (201 solo en la parada del 24 de septiembre). Es poco contra un buen operador, y así debe ser: la ganancia grande está en no cerrar parejo, en reparar antes de que el tanque se llene y en anticipar la falla.
 
 ![P-201B de Morichal en marcha: si se para ahora](img/cap1-morichal-p201b-detalle.png)
 
 | # | Lo que se ve | Valor | De dónde sale |
 |---|---|---|---|
-| 1 | Respaldo | «respaldo 15.100 bbl/d» | configuración firmada (P-201A en paralelo) |
-| 2 | Si se para ahora | 1.671 bbl/d tras 19,0 h de colchón | crudo en orden (5B §4.2) |
+| 1 | Respaldo | «respaldo 39.500 bbl/d» | configuración firmada (las otras seis bombas del tren) |
+| 2 | Si se para ahora | 783 bbl/d tras 10,1 h de colchón | crudo en orden (5B §4.2) |
 | 3 | Nivel del tanque | LT-2012 61,8 % contra alto-alto 90 % | transmisor de nivel |
-| 4 | Volumen libre | 5.076 bbl | $(0{,}90 - 0{,}618) \cdot 18.000$ |
-| 5 | Agua sin salida | 6.395 bbl/d | 21.495 − 15.100 |
-| 6 | Aguanta | 19,0 h (17,1 h a 21,0 h) | colchón con su rango (aforo ±0,7 %, agua ±10 %) |
-| 7 | Orden de cierre | MN-27, MN-36, MN-13 enteros y MN-39 al 78 % | crudo por barril de agua, de menor a mayor (5B §4.2) |
-| 8 | Ahorro contra cerrar parejo | «872 bbl/d menos que parejo» | 2.543 − 1.671 |
-| 9 | Evitable de la parada del 24-sep | 4.762 bbl | 5B §4.5 |
+| 4 | Volumen libre | 16.920 bbl | $(0{,}90 - 0{,}618) \cdot 60.000$ |
+| 5 | Agua sin salida | 40.400 bbl/d | 79.900 − 39.500 |
+| 6 | Aguanta | 10,1 h (9,0 h a 11,1 h) | colchón con su rango (aforo y medidor de agua) |
+| 7 | Orden de cierre | MN-27 entero; MN-36 y MN-13 al 25 %; MN-39 al 16 % | crudo por barril de agua, de menor a mayor, con el tope de frecuencia (5B §4.2) |
+| 8 | Ahorro contra cerrar parejo | «439 bbl/d menos que parejo» | 1.222 − 783 |
 
 Y lo que ve el gerente en el resumen del portafolio, el mismo día:
 
@@ -186,13 +184,13 @@ Y lo que ve el gerente en el resumen del portafolio, el mismo día:
 
 | # | Lo que se ve | Valor | De dónde sale |
 |---|---|---|---|
-| 1 | Barriles diferidos del portafolio | 6.232 | Σ de los tramos de los cinco campos en octubre (5A §3) |
-| 2 | Su rango | «5.729–6.734 bbl · calculado» | tolerancia por la Ec. 22, en cuadratura entre campos (5A §4) |
-| 3 | Perdiéndose ahora | 13.217 bbl/d · 21 de 87 pozos parados | riesgo ahora del portafolio (5B §5) |
-| 4 | Causa mayor y primer equipo del Pareto | «P-201B · La Ceiba» | el equipo con más barriles del período (5A §8) |
-| 5 | Sus barriles | 2.570 bbl · 41 % | la misma parada de arriba |
+| 1 | Barriles diferidos del portafolio | 2.377 | Σ de los tramos de los cinco campos en octubre (5A §3) |
+| 2 | Su rango | «2.132–2.622 bbl · calculado» | tolerancia por la Ec. 22, en cuadratura entre campos (5A §4) |
+| 3 | Perdiéndose ahora | 2.650 bbl/d · 4 de 87 pozos parados | riesgo ahora del portafolio (5B §5) |
+| 4 | Causa mayor | «P-201B · La Ceiba» | lo que más se pierde ahora (5B §5) |
+| 5 | Por equipo | MN-41 · 1.083 bbl · 46 %; P-201B · 573 bbl · 24 %; LC-21 · 247 bbl · 10 % | Pareto por equipo del período (5A §8) |
 
-**Esto es la operatividad de los equipos críticos traducida a barriles.** La bomba de agua no produce un barril, pero su respaldo, su tanque y el orden de cierre deciden si una parada cuesta 0 bbl (el tanque la absorbe), 1.671 bbl/d o todo el campo.
+**Esto es la operatividad de los equipos críticos traducida a barriles.** La bomba de agua no produce un barril, pero su respaldo, su tanque y el orden de cierre deciden si una parada cuesta 0 bbl (el tanque la absorbe), unos cientos de bbl/d o miles. Con 95 % de agua el margen es de horas, no de días: por eso hay que saberlo al minuto.
 
 ## 1.5 Por qué los cálculos son precisos
 
@@ -205,7 +203,7 @@ Y lo que ve el gerente en el resumen del portafolio, el mismo día:
 | Factor de asignación absurdo | Se compara contra la banda de la Res. 40236; fuera de banda, el libro no se publica. | 5A §2 |
 | Frecuencia reducida | Se estima con $1 - \text{Hz}/\text{Hz}_0$, se marca **aproximado** y se suma aparte. | 5A §3 |
 | Incertidumbre | Rango por la Ec. 22 (raíz de la suma de los cuadrados); el colchón suma la del aforo del tanque (0,2 %) y la del medidor de agua. | 5A §4, 5B §4 |
-| ¿El colchón predicho sirve? | Se mide contra lo observado en cada parada. En el demo: 4,25 h previstas contra 4,245 h observadas en La Ceiba, y como mucho 2 minutos de diferencia en las 15 paradas que llegaron a cerrar pozos (10 de La Ceiba y 5 de Morichal). | 5B §4.4 |
+| ¿El colchón predicho sirve? | Se mide contra lo observado en cada parada. En el demo: 1,84 h previstas contra 1,845 h observadas en La Ceiba, y como mucho 3 minutos de diferencia en las 18 paradas que llegaron a cerrar pozos. | 5B §4.4 |
 | Una parada que cruza dos meses | Se recorta a cada mes con el factor de ese mes; no se suma entera a los dos. | 5B §4.4 |
 | Lo que entra a mano | Solo la configuración firmada y la respuesta del operario, con fecha, firmante y motivo. Nada se sobrescribe: un mes viejo se recalcula con la versión que regía. | 5D |
 

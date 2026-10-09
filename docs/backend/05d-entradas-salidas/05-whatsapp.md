@@ -2,7 +2,7 @@
 
 TRIM avisa por WhatsApp, en minutos, a quien tiene que actuar sobre un equipo de alto impacto, y recibe la respuesta en el mismo hilo: **un toque para decir qué se dañó**. Es lo que convierte una parada «sin identificar» en un dato con parte y modo de falla (ISO 14224), que es lo que el vigía necesita para aprender y lo que hace defendible el libro.
 
-Por qué importa para el negocio: cuando la bomba de reinyección de La Ceiba (sin respaldo) se para, el tanque de agua empieza a llenarse; con cortes de agua de 92-98 %, en horas hay que cerrar pozos. El supervisor y el operador tienen que saberlo **al parar**, no al revisar el turno; y si ninguna señal del PLC explica la parada, la única fuente de la causa es quien abre el equipo.
+Por qué importa para el negocio: cuando la bomba de reinyección P-201B de La Ceiba se para, su respaldo (P-201A y P-201C) no alcanza a tomar toda el agua y el tanque empieza a llenarse; con el 95 % del líquido del campo en agua, en menos de dos horas hay que cerrar pozos. El supervisor y el operador tienen que saberlo **al parar**, no al revisar el turno; y si ninguna señal del PLC explica la parada, la única fuente de la causa es quien abre el equipo.
 
 Código: `src/entities/mensajes.ts` (349 líneas), `src/shared/api/mensajes.ts` (el registro del demo), `src/shared/api/escrituras.ts:334-410` (respuesta en pantalla y webhook simulado), `src/widgets/whatsapp/Telefono.tsx`, `NoEnviado.tsx`, `src/pages/Turno.tsx`, `src/pages/Causa.tsx:379-427`, `src/pages/Trabajo.tsx`, `src/widgets/conectores/Integraciones.tsx`, `src/entities/usuarios.ts:117-135`.
 
@@ -34,28 +34,28 @@ Detalles que el servidor tiene que respetar (`mensajes.ts:233-349`):
 - **Respuesta**: con `p.causa.declarado.hora`, se dejan de mandar el recordatorio y el escalamiento posteriores a esa hora.
 - **Orden**: el aviso queda aunque la orden pase después a TECO; una orden sin `liberada` o sin `tecnico` (contratista) no genera mensaje.
 
-**Ejemplo con los datos del demo.** (Corrido, `GET /api/mensajes` del demo con las 8 personas iniciales, de `2025-10-01` a AHORA.) **315 mensajes**, todos de La Ceiba (es el único campo con supervisor y operador con alertas): `parada/paradaEsp` 224, `parada/parada` 18, `cierre` 18, `causa` 4, `recordatorio` 4, `escalamiento` 3, `parte` 10, `parteSinTag` 18, `orden` 16. Por destinatario: oper 138, sup 133, tec 16, jefe 14, conf 14. **0 no enviados**. El más viejo `2025-10-01T07:56:00Z`, el más nuevo `2026-10-02T14:11:00Z`.
+**Ejemplo con los datos del demo.** (Corrido, `GET /api/mensajes` del demo con las 8 personas iniciales, de `2025-10-01` a AHORA.) **337 mensajes**: 311 de La Ceiba (el único campo con supervisor y operador con alertas) y 26 de los avisos del vigía a jefe y confiabilidad en Morichal (20) y Guacamayo (6): `parada/paradaEsp` 238, `parada/parada` 18, `cierre` 18, `causa` 4, `recordatorio` 4, `escalamiento` 3, `parte` 10, `parteSinTag` 24, `orden` 18. Por destinatario: oper 145, sup 140, tec 18, jefe 17, conf 17. **0 no enviados**. El más viejo `2025-10-01T07:56:00Z`, el más nuevo `2026-10-02T14:11:00Z`.
 
 El hilo de la parada de P-201B del 2 de octubre (`EV-2011-1002`, paró a las 03:52:18 hora de Colombia, sin causa por señal, todavía abierta):
 
 | Hora (UTC) | Hora Colombia | Para | Plantilla | Texto |
 |---|---|---|---|---|
-| 08:53:18 | 03:53 | sup, oper | `trim_equipo_parado` | TRIM · P-201B de La Ceiba paró a las 03:52. Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella. |
+| 08:53:18 | 03:53 | sup, oper | `trim_equipo_parado` | TRIM · P-201B de La Ceiba paró a las 03:52. Tiene respaldo (P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos. |
 | 08:53:18 | 03:53 | oper | `trim_que_se_dano` | TRIM · P-201B de La Ceiba paró el 2 de oct, 03:52. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.⏎1) Sello mecánico (5 de las 8 fallas anteriores de este equipo) · 2) Rodamientos y cámara de empuje (3 de las 8 fallas anteriores de este equipo) · 3) Otra parte del equipo · 0) Otra cosa: escríbala |
 | 09:22:18 | 04:22 | oper | `trim_recordatorio_causa` | TRIM · Recordatorio: P-201B sigue sin causa. Antes de arrancar, diga qué se dañó. Responda con un número.⏎(las mismas opciones) |
+| 10:44:00 | 05:44 | sup, oper | `trim_pozos_cerrandose` | TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 05:43. |
 | 10:52:18 | 05:52 | sup | `trim_escalado_causa` | TRIM · Escalado: P-201B de La Ceiba paró hace 2 h y nadie ha dicho qué se dañó.⏎(las mismas opciones) |
-| 13:08:00 | 08:08 | sup, oper | `trim_pozos_cerrandose` | TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 08:07. |
 
-(⏎ = el salto de línea que es parte del cuerpo aprobado.) El primer pozo se cerró a las 08:07: 4 h 15 min después de parar, que es lo que el tanque TK-AG-CE aguantó. **El mensaje de las 03:53 no lo sabía** y no lo dice.
+(⏎ = el salto de línea que es parte del cuerpo aprobado.) El primer pozo (LC-16) se cerró a las 05:43: 1 h 51 min después de parar, que es lo que el tanque TK-AG-CE aguantó con los 44.100 bbl/d que P-201A y P-201C no alcanzan a tomar. **El mensaje de las 03:53 no lo sabía** y no lo dice: dice lo que el respaldo firmado permite («puede haber que cerrar pozos»). Antes del 9-oct, con La Ceiba sin respaldo, el aviso de cierre llegaba de último (08:08); ahora llega antes que el escalamiento.
 
 Con supervisor y operador en todos los campos (corrido con esas dos personas en «todos»), aparecen las tres consecuencias de una bomba según su respaldo:
 
 | Campo · bomba | Respaldo libre / capacidad | Consecuencia (texto exacto) |
 |---|---|---|
-| La Ceiba · P-201B | 0 | «Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.» |
-| Morichal · MPP-301 | 0 / 22.000 | «Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.» |
-| Morichal · P-201B | 15.100 / 24.000 | «Tiene respaldo (P-201A en paralelo, con 15.100 bbl/d libres), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos.» |
-| Guacamayo · P-201B | 13.000 / 13.000 | «Tiene respaldo (Pozo de disposición alterno con capacidad para todo el caudal): toma todo su caudal y no hay que cerrar pozos.» |
+| La Ceiba · P-201B | 30.100 / 89.250 | «Tiene respaldo (P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos.» |
+| Morichal · MPP-301 | 0 / 90.000 | «Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.» |
+| Morichal · P-201B | 39.500 / 86.500 | «Tiene respaldo (Las otras seis bombas del tren, con 39.500 bbl/d libres entre todas: el cabezal de disposición las limita a unos 86.500 cada una), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos.» |
+| Guacamayo · P-201B | 50.000 / 50.000 | «Tiene respaldo (P-201C de reserva (50.000 bbl/d), alineada al pozo de disposición alterno: toma todo su caudal): toma todo su caudal y no hay que cerrar pozos.» |
 
 Regla:
 
@@ -101,7 +101,7 @@ WhatsApp exige que el mensaje que **inicia la empresa** sea una plantilla aproba
 | `desde`, `hasta` | ventana de la predicción | `fechaHora` | `3 de oct, 19:38` |
 | `tag` | tag que la anuncia, con su fuente | texto de la predicción | `PIT-MN18 · sensor de fondo` |
 | `accion` | acción de la predicción o de la parte en el catálogo; si no hay, `Vea la ficha de {equipo} en TRIM.` | texto | `Bajar la frecuencia o revisar el nivel de fluido antes de que dispare por baja carga.` |
-| `orden` | número de la orden SAP | texto | `40012053` |
+| `orden` | número de la orden SAP | texto | `40012056` |
 | `clase` | nombre de la clase en minúscula | `correctivo` / `preventivo` / `predictivo` | `predictivo` |
 | `prioridad` | prioridad SAP 1-4 | `String(n)` | `2` |
 | `descripcion` | descripción de la orden en SAP | tal cual | `Verificar que las tres unidades estén en servicio: hoy hay dos. …` |
@@ -109,16 +109,16 @@ WhatsApp exige que el mensaje que **inicia la empresa** sea una plantilla aproba
 **Validación (`textoDe`).** Una plantilla con un parámetro que **sobra**, **falta**, va **vacío** (o solo espacios) o trae **CR/LF** es un `ErrorDePlantilla` (Meta lo rechazaría). Textos corridos: «La plantilla trim_orden_liberada necesita «descripcion» en una sola línea y no vacío.», «La plantilla trim_pozos_cerrandose no lleva x.», «La plantilla trim_pozos_cerrandose necesita «campo» en una sola línea y no vacío.».
 
 **Ejemplos corridos de cada plantilla (registro del demo).**
-- `trim_equipo_parado`: «TRIM · P-201B de La Ceiba paró a las 03:52. Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.»
+- `trim_equipo_parado`: «TRIM · P-201B de La Ceiba paró a las 03:52. Tiene respaldo (P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos.» (sin respaldo, como la MPP-301: «… Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.»)
 - `trim_electrosumergible_parada`: «TRIM · LC-12 de La Ceiba (electrosumergible) paró a las 17:25. Según su última prueba, el pozo deja de producir unos 396 bbl/d.»
-- `trim_pozos_cerrandose`: «TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 08:07.»
+- `trim_pozos_cerrandose`: «TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 05:43.»
 - `trim_que_se_dano` (pozo sin catálogo, LC-21): «TRIM · LC-21 de La Ceiba paró el 1 de oct, 18:20. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.⏎1) Cierre para prueba o intervención del pozo · 2) Fuga o daño en la línea de flujo · 3) Orden de producción: nominación o restricción del comprador · 4) Falla del controlador o de un instrumento del pozo · 0) Otra cosa: escríbala»
 - `trim_que_se_dano` (pozo con electrosumergible sin historia, LC-08): «TRIM · LC-08 de La Ceiba paró el 1 de oct, 22:15. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.⏎1) Aislamiento del motor y del cable · 2) Protector (sello del motor) · 3) Bomba de fondo (eje y etapas) · 4) Admisión y separador de gas · 5) Motor de fondo · 6) No fue la electrosumergible: otra causa del pozo · 0) Otra cosa: escríbala»
 - `trim_recordatorio_causa` y `trim_escalado_causa`: ver el hilo de `EV-2011-1002` arriba.
 - `trim_recordatorio_arranco`: **no aparece en el demo** (ninguna pregunta del demo tiene el equipo arrancado antes de los 30 min sin respuesta). Con `equipo: LC-08`, `hora: 22:40`, `pregunta: qué se dañó` produciría «TRIM · Recordatorio: LC-08 arrancó a las 22:40 sin causa. Diga qué se dañó. Responda con un número.⏎{opciones}» (texto armado con la plantilla, no del registro).
 - `trim_vigia_anticipa`: «TRIM · MN-18 de Morichal Norte: el vigía anticipa falla en admisión y gas; cruzaría su límite entre el 3 de oct, 19:38 y el 3 de oct, 20:41 (PIT-MN18 · sensor de fondo). Bajar la frecuencia o revisar el nivel de fluido antes de que dispare por baja carga.» (va a jefe y conf, que tienen Morichal).
 - `trim_vigia_anticipa_sin_tag`: «TRIM · LC-14 de La Ceiba: el vigía anticipa falla en bomba de fondo; cruzaría su límite entre el 27 de sept, 05:02 y el 30 de sept, 09:50. Revisar sólidos y escala; programar tratamiento químico o el cambio de la bomba.»
-- `trim_orden_liberada`: «TRIM · SAP liberó la orden 40012053 (predictivo, prioridad 2) para K-101 de La Ceiba: Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en 11 min de autonomía, una parada deja las válvulas en posición segura.» (a tec, 2026-10-02T14:11Z = 09:11 Colombia, liberada 09:10).
+- `trim_orden_liberada`: «TRIM · SAP liberó la orden 40012056 (predictivo, prioridad 2) para K-101 de La Ceiba: Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en 11 min de autonomía, una parada deja las válvulas en posición segura.» (a tec, 2026-10-02T14:11Z = 09:11 Colombia, liberada 09:10).
 
 **Casos borde.** Lo que sigue a la respuesta de la persona (¿qué vio?, la confirmación) va **dentro de la ventana de 24 h** que abre su respuesta, y puede ser mensaje libre (no plantilla). Ver §5.
 

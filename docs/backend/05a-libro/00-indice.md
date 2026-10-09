@@ -19,23 +19,25 @@ Cada cifra sigue la plantilla de la guía: qué es, dónde se ve, fórmula, ejem
 | [09-produccion-dia-a-dia.md](09-produccion-dia-a-dia.md) | 5A.9 Producción | `Dia`, cuadre diario y mensual, gráfica «Día a día», cabecera de Producción, panel «Medición oficial» |
 | [10-asignacion-oficial.md](10-asignacion-oficial.md) | 5A.10 Asignación oficial | `asignacionPorPozo` (suma exacta lo real), formato y validación del CSV, carga y rastro, cotejo pozo por pozo |
 | [11-pantallas-y-endpoints.md](11-pantallas-y-endpoints.md) | 5A.11 Mapa | Qué ve cada rol, gráfico «Mes a mes», endpoints con sus casos de `referencia/` |
-| [12-huecos-y-dudas.md](12-huecos-y-dudas.md) | 5A.12 Huecos y dudas | 21 puntos con archivo y línea (8 y 9 resueltos el 8-oct) |
+| [12-huecos-y-dudas.md](12-huecos-y-dudas.md) | 5A.12 Huecos y dudas | 21 puntos con archivo y línea (8 y 9 resueltos el 8-oct; 1, el 9-oct con el agua real) |
 
 ## Las cifras que hay que reproducir (demo)
 
 | | La Ceiba · sep (cerrado) | La Ceiba · oct (en curso) | Portafolio · sep | Portafolio · oct |
 |---|---:|---:|---:|---:|
 | Factor de asignación | 0,969 | 0,958 | 0,961–1,032 | 0,958–1,032 |
-| Real (bbl) | 324.688 | 14.943 | 1.163.047 | 60.292 |
-| Potencial (bbl) | 346.379,435 | 17.986,201 | 1.268.274,224 | 66.523,716 |
-| Barriles diferidos | **21.691** | **3.043** | **105.227** | **6.232** |
-| Rango | 18.438–24.945 | 2.587–3.500 | 96.444–114.010 | 5.729–6.734 |
+| Real (bbl) | 338.662 | 16.941 | 1.234.322 | 64.147 |
+| Potencial (bbl) | 346.378,059 | 17.987,026 | 1.268.266,738 | 66.523,755 |
+| Barriles diferidos | **7.716** | **1.046** | **33.945** | **2.377** |
+| Rango | 6.559–8.873 | 889–1.203 | 31.255–36.634 | 2.132–2.622 |
 | Sin identificar | 0 | 355 | 0 | 355 |
-| Alto impacto | 21.494 (99 %) | 2.570 (84 %) | 97.496 (93 %) | 5.523 (89 %) |
-| Valor | 1,0 M USD | 146 mil USD | 5,0 M USD · falta precio en La Zarza | 299 mil USD · falta precio en La Zarza |
-| Diferido por día · máx. | 723 · 800 | 1.922 ■ · 800 | 3.508 ■ · 2.300 | 3.936 ■ · 2.300 |
-| Frente a los 3 meses antes | −16 % frente a jun a ago | +98 % frente a jul a sep | +83 % frente a jun a ago | +44 % frente a jul a sep |
+| Alto impacto | 7.477 (97 %) | 573 (55 %) | 24.782 (73 %) | 1.668 (70 %) |
+| Valor | 370 mil USD | 50 mil USD | 1,6 M USD · falta precio en La Zarza | 114 mil USD · falta precio en La Zarza |
+| Diferido por día · máx. | 257 · 800 | 661 · 800 | 1.131 · 2.300 | 1.501 · 2.300 |
+| Frente a los 3 meses antes | −37 % frente a jun a ago | +80 % frente a jul a sep | −23 % frente a jun a ago | 0 % frente a jul a sep |
 | Sello | ✓ PUBLICABLE | PROVISIONAL | ✓ PUBLICABLE | PROVISIONAL |
+
+Con el demo del 9-oct (cortes de agua reales y tren de agua) el factor de cada mes es el mismo de antes, pero una parada de la bomba de reinyección cierra 2 o 3 pozos y no el campo entero: el fiscal sube, el diferido baja (La Ceiba sep: de 21.691 a 7.716 bbl) y ningún período de la tabla pasa su máximo de diferido por día.
 
 ## Quién calcula qué, en una línea
 

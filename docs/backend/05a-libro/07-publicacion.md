@@ -34,7 +34,7 @@ El mes en letras sale de `NOMBRE_MES` («abril de 2026»).
 | Escenario: octubre de La Ceiba sin fiscal | `sin-fiscal` (2 días) y `sin-factor`: «La Ceiba, octubre de 2026: sin un día de producción fiscal no hay factor de asignación; sus diferidos no se pueden valorar.» (sin `en-curso`: no hay fila de factor que diga «no publicado») |
 | Escenario: El Palmar sin °API, septiembre | `banda-sin-verificar`: «El Palmar: Sin análisis de °API del crudo; no se puede verificar el factor contra la banda de la Res. 40236.» |
 | Escenario: La Zarza sin tramos de meta, portafolio sep | `sin-meta`: «La Zarza: el campo no tiene meta ni regla de cierre firmadas en el período; no se puede publicar.» |
-| Escenario: La Ceiba firma criterio 1 % desde el 1-oct | `en-curso`; `sin-causa`: «La Ceiba: 355 bbl sin causa identificada, más del 1 % del potencial.» ($355{,}027/17.986{,}201 = 1{,}974\,\%$) |
+| Escenario: La Ceiba firma criterio 1 % desde el 1-oct | `en-curso`; `sin-causa`: «La Ceiba: 355 bbl sin causa identificada, más del 1 % del potencial.» ($355{,}044/17.987{,}026 = 1{,}974\,\%$) |
 
 Con el criterio real (2 %), octubre de La Ceiba queda en 1,974 %: a 0,026 puntos del bloqueo, con LC-21 todavía cerrado sin respuesta (su pendiente crece unos 12,5 bbl por hora).
 

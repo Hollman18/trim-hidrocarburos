@@ -6,10 +6,10 @@ Hay cuatro familias de hechos que entran:
 
 | Hecho | Lo manda | Endpoint de insumo | Tipo | Cantidad en el demo |
 |---|---|---|---|---|
-| Evento de pozo | Controlador del pozo (variador VSD de la ESP, controlador de bombeo POC, válvula de cabeza XV) | `GET /api/campos/:campo/pozos/eventos?desde&hasta` | `EventoPozo` (`pozos.ts:77`) | 1.349 (21 abiertos ahora) |
-| Parada de bomba | PLC de la bomba | `GET /api/campos/:campo/bombas/:equipo/paradas?desde&hasta` | `EventoBomba` (`bombas.ts:276`) | 36 (Ceiba P-201B 11, Morichal P-201B 10, Morichal MPP-301 9, Guacamayo P-201B 6) |
+| Evento de pozo | Controlador del pozo (variador VSD de la ESP, controlador de bombeo POC, válvula de cabeza XV) | `GET /api/campos/:campo/pozos/eventos?desde&hasta` | `EventoPozo` (`pozos.ts:77`) | 1.211 (4 abiertos ahora) |
+| Parada de bomba | PLC de la bomba | `GET /api/campos/:campo/bombas/:equipo/paradas?desde&hasta` | `EventoBomba` (`bombas.ts:281`) | 36 (Ceiba P-201B 11, Morichal P-201B 10, Morichal MPP-301 9, Guacamayo P-201B 6) |
 | Caída de servicio | PLC/IED del servicio (subestación, compresor de aire, tratador…) | `GET /api/campos/:campo/servicios/eventos?desde&hasta` | `EventoServicio` (`pozos.ts:94`) | 30 |
-| Programa de paradas | Configuración firmada (a mano, versionada) | arranque: `config.programa` | `ParadaProgramada` (`configuracion.ts:64`) | 7 entradas |
+| Programa de paradas | Configuración firmada (a mano, versionada) | arranque: `config.programa` | `ParadaProgramada` (`configuracion.ts:64`) | 9 entradas |
 
 ---
 
@@ -50,7 +50,7 @@ Hay cuatro familias de hechos que entran:
 **Qué viene del PLC y qué se deduce.** Del PLC: `inicio`, `fin`, `codigo`, `senal`, `hz`. **Se deduce** (no viaja en el insumo): la causa (`Causa`), el estado actual del pozo, la fracción perdida y los barriles.
 
 **Casos borde.**
-- `fin: null` → abierto; para el cálculo el intervalo se corta en `AHORA` (`libro.ts:128`, `diferido.ts:367`).
+- `fin: null` → abierto; para el cálculo el intervalo se corta en `AHORA` (`libro.ts:128`, `diferido.ts:376`).
 - **Eventos que se pisan en el mismo pozo**: el servidor los normaliza para que cada hora se cobre una vez (`intervalosEfectivos`, `libro.ts:118-140`): se ordenan con los paros antes que los `HZ`, y entre iguales el que empezó primero; a cada evento se le quita lo ya cubierto por los anteriores. En el demo **no hay ningún solape** (comprobado: 0 pares que se pisen), así que la regla no cambia ningún número del demo; el backend real sí la necesita (CONTRATO.md:856-860 pide escoger entre normalizar o rechazar en la ingesta).
 - Un evento de un pozo que no está en `GET …/pozos` se ignora (`libro.ts:323`).
 
@@ -76,7 +76,7 @@ $$
 - Si el único abierto es `HZ`: `produce = true`, `hz = e.hz` (produce, pero menos).
 - Sin abiertos: `produce = true`.
 
-**Ejemplo con los datos del demo.** LC-21 (La Ceiba, bombeo mecánico) tiene abierto `EP-LC21-261001-01`, `CMD` desde el 1-oct 18:20 → `produce = false`. LC-04 tiene abierto un `CMD` desde el 2-oct 08:20 → `produce = false`. En La Ceiba los 18 pozos están parados (`EstadoCampo.parados = 18`).
+**Ejemplo con los datos del demo.** LC-21 (La Ceiba, bombeo mecánico) tiene abierto `EP-LC21-261001-01`, `CMD` desde el 1-oct 18:20 → `produce = false`. LC-16 tiene abierto `EP-LC16-261002-78`, `LSHH` desde el 2-oct 05:43, y LC-07 `EP-LC07-261002-79`, `CMD` desde las 05:46 → `produce = false`. En La Ceiba hay 3 pozos parados de 18 (`EstadoCampo.parados = 3`); los otros 15 producen. Los 4 eventos abiertos del demo son esos tres y MN-41 (`GF` desde el 25-sep 06:40).
 
 **Qué texto se muestra según el valor** (`equipo-vivo.ts:55-79`):
 
@@ -89,7 +89,7 @@ $$
 | Produce, una parte de su ESP avisa | `en-marcha` | `produciendo` | prioridad de la parte (o 3) |
 | Produce normal | `en-marcha` | `produciendo` | 0 |
 
-Ejemplos del demo: LC-04 → `cerrado-por-otro`, «cerrado por P-201B», severidad 0, lectura «Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno. Se le carga a P-201B.»; LC-21 → `detenido`, «detenido · parada por orden», severidad 2; MN-41 → `detenido`, «detenido · falla a tierra», severidad 1.
+Ejemplos del demo: LC-16 (y LC-07) → `cerrado-por-otro`, «cerrado por P-201B», severidad 0, lectura «Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno. Se le carga a P-201B.»; LC-04, que cerró por la parada de septiembre y ya volvió → `en-marcha`, «produciendo»; LC-21 → `detenido`, «detenido · parada por orden», severidad 2; MN-41 → `detenido`, «detenido · falla a tierra», severidad 1.
 
 **Referencia.** `pozos.ts:167`, `equipo-vivo.ts:25-89`.
 
@@ -113,11 +113,11 @@ $$
 
 Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el tramo queda marcado `aproximado`. Un paro (cualquier código que no sea `HZ`) tiene $f = 1$.
 
-**Ejemplo con los datos del demo.** `EP-MN07-260214-16`: MN-07 bajó a 47 Hz el 14-feb 23:25 (cayó el compresor C-401); su prueba se hizo a 59 Hz → $f = 1 - 47/59 = 0{,}203$: dejó de dar el 20,3 % de su crudo mientras duró.
+**Ejemplo con los datos del demo.** `EP-MN07-260214-32`: MN-07 bajó a 47 Hz el 14-feb 23:25 (cayó el compresor C-401); su prueba se hizo a 59 Hz → $f = 1 - 47/59 = 0{,}203$: dejó de dar el 20,3 % de su crudo mientras duró.
 
 **Casos borde.** `hz ≥ hz_prueba` → $f = 0$ (no pierde). La misma regla se usa en el libro, en `riesgoAhora` (perdiendo), en `perdiendoPor` (predicción) y en `caudalesAhora` (lo que produce = $1-f$). Lo de frecuencia reducida es **aproximado** y queda fuera de la tolerancia.
 
-**Referencia.** `libro.ts:92`, `diferido.ts:288`, `diferido.ts:548`, `diferido.ts:680`.
+**Referencia.** `libro.ts:92`, `diferido.ts:297`, `diferido.ts:557`, `diferido.ts:689`.
 
 ---
 
@@ -125,7 +125,7 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 
 **Qué es.** Una parada (o pérdida de caudal) de una bomba de la línea, registrada por su PLC.
 
-**Campos** (`bombas.ts:276-299`; CONTRATO.md:869-885):
+**Campos** (`bombas.ts:281-304`; CONTRATO.md:869-885):
 
 | Campo | Significado | Unidad | De dónde sale |
 |---|---|---|---|
@@ -143,8 +143,8 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 
 ```json
 { "id": "EV-2011-1002", "campoId": "ceiba", "equipo": "P-201B",
-  "inicio": "2026-10-02T03:52:00-05:00", "fin": null, "perdida": 1,
-  "senal": "ZS-2011 · marcha → paro", "nivelAlParar": { "tag": "LT-2012", "pct": 56 } }
+  "inicio": "2026-10-02T03:52:18-05:00", "fin": null, "perdida": 1,
+  "senal": "ZS-2011 · marcha → paro", "nivelAlParar": { "tag": "LT-2012", "pct": 78.7 } }
 ```
 
 Sin `primeraAlarma` y sin `firma`. Con la bomba detenida, ninguna parte queda en estado `fuera` (todas pasan a `detenida`), así que `firmaAlParar` tampoco encuentra firma → causa «sin identificar» (cap. 3).
@@ -167,7 +167,7 @@ En el demo hay primeras alarmas que **no** son de la máquina: `PAL-1011` (aire 
 
 **Casos borde.** Una bomba sin perfil en ese campo (`perfilBomba` devuelve `undefined`) no se mide (`paradaMedida` devuelve `undefined`) y sus paradas no cortan el paso a ningún pozo (`bombaQueLeCorta` la salta).
 
-**Referencia.** `bombas.ts:147-184` (máquinas), `bombas.ts:207-231` (perfiles por campo), `bombas.ts:276-327`.
+**Referencia.** `bombas.ts:147-184` (máquinas), `bombas.ts:208-236` (perfiles por campo), `bombas.ts:281-332`.
 
 ---
 
@@ -185,7 +185,7 @@ En el demo hay primeras alarmas que **no** son de la máquina: `PAL-1011` (aire 
 
 ### Programa de paradas (`ParadaProgramada`)
 
-**Qué es.** Paradas aprobadas de antemano (mantenimiento preventivo, cambio de bomba de subsuelo). Es **configuración firmada**: es una de las dos cosas que entran a mano. Es inmutable hacia atrás (una parada del pasado no se vuelve «programada» al firmar una versión nueva; `configuracion.ts:387`).
+**Qué es.** Paradas aprobadas de antemano (mantenimiento preventivo, cambio de bomba de subsuelo). Es **configuración firmada**: es una de las dos cosas que entran a mano. Es inmutable hacia atrás (una parada del pasado no se vuelve «programada» al firmar una versión nueva; `configuracion.ts:393`).
 
 **Campos**: `id`, `campoId`, `equipo` (bomba o pozo), `desde`, `hasta`, `motivo`.
 
@@ -197,4 +197,4 @@ $$
 
 (intervalo **cerrado** en los dos extremos; solo cuenta la hora de inicio del evento).
 
-**Ejemplo con los datos del demo.** Las 7 entradas: `PR-2011-260819` (Ceiba P-201B, 19-ago 17:49 → 20-ago 09:34), `PR-M2011-260217` (Morichal P-201B), `PR-3016-260825` (Morichal MPP-301), `PR-G2011-251202` (Guacamayo P-201B), `PR-PA03-260429`, `PR-PA05-260510` (Palmar, «Cambio programado de la bomba de subsuelo») y `PR-LC19-260123` (Ceiba LC-19). La parada `EV-2011-260819` de La Ceiba empezó a las 18:19 del 19-ago, dentro de la ventana → `programada`, y sus 18 pozos cerrados (3.828 bbl) se cargan a «Parada programada».
+**Ejemplo con los datos del demo.** Las 9 entradas: `PR-2011-260819` (Ceiba P-201B, 19-ago 17:49 → 20-ago 09:34), `PR-M2011-260217` (Morichal P-201B), `PR-3016-260825` (Morichal MPP-301), `PR-G2011-251202` (Guacamayo P-201B), `PR-PA03-260429`, `PR-PA05-260510` (Palmar, «Cambio programado de la bomba de subsuelo»), `PR-LC19-260123` (Ceiba LC-19) y las dos órdenes predictivas del vigía, `PR-VIG-MN16-260904-bomba` (4-sep 19:25 → 6-sep 06:03) y `PR-VIG-MN05-260912-bomba` (12-sep 09:37 → 13-sep 21:22), «Orden predictiva: el vigía anticipó la falla de bomba de fondo; cambio de la electrosumergible en ventana programada» (el cambio de bomba que el vigía anticipó entra al programa como cualquier otro; 5C). La parada `EV-2011-260819` de La Ceiba empezó a las 18:19 del 19-ago, dentro de la ventana → `programada`, y sus 3 pozos cerrados (LC-16, LC-07 y LC-14; 1.523 bbl) se cargan a «Parada programada».

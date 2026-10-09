@@ -31,7 +31,7 @@ Lo único que entra a mano al libro es la **configuración firmada**: por campo,
 | La Zarza | 3.050 | 50 | **sin precio** | 2 % |
 | **Portafolio** | **40.200** | **2.300** | | |
 
-(Semillas: máximo = diferido de jul–sep menos 20 %, al menos 50 bbl/d; meta = potencial de esos meses menos ese máximo, redondeada a 50 hacia abajo: `src/entities/campos.ts:31-49`.)
+(Semillas: máximo = diferido de jul–sep menos 20 %, al menos 50 bbl/d; meta = potencial de esos meses menos ese máximo, redondeada a 50 hacia abajo: `src/entities/campos.ts:31-49`. Son constantes sacadas del demo anterior: el 9-oct, con el agua real, se dejaron igual. Con el diferido nuevo de jul–sep la misma regla daría máximos más bajos, p. ej. La Ceiba 366 bbl/d − 20 % ≈ 290 en vez de 800; por eso hoy ningún período de la demo pasa su máximo de diferido.)
 
 **Quién lo calcula.** Regla de «los dos» (`metaEn`, `metaEntre`, `precioEn`, `criterioEn`): el front avisa, el servidor decide.
 
@@ -90,7 +90,7 @@ Con una meta que cambia a mitad de mes (escenario corrido: La Ceiba firma desde 
 
 La barra (`BarraMeta`) es gris; la raya va al 80 % del ancho; el relleno es $\min(1{,}25;\ v/\text{meta})/1{,}25$. Rótulos: «meta 40.200», «máx. 2.300» (`n0`). Para el lector: «por encima del máximo» / «por debajo de la meta».
 
-Valores en pantalla (corridos): La Ceiba octubre → «diferido por día **1.922** bbl/d ■ · máx. 800»; producción «14.943 bbl ■ · meta a la fecha 17.258». La Ceiba septiembre → «723 bbl/d · máx. 800» (sin marca); producción «324.688 ■ · meta 327.000» (2.312 bbl bajo la meta). Portafolio octubre → «3.936 ■ · máx. 2.300»; septiembre → «3.508 ■ · máx. 2.300».
+Valores en pantalla (corridos): La Ceiba octubre → «diferido por día **661** bbl/d · máx. 800» (sin marca); producción «16.941 bbl ■ · meta a la fecha 17.258». La Ceiba septiembre → «257 bbl/d · máx. 800» (sin marca); producción «338.662 · meta 327.000» (11.662 bbl sobre la meta: sin marca). Portafolio octubre → «1.501 · máx. 2.300»; septiembre → «1.131 · máx. 2.300». Con el agua real ningún período de la demo pasa su máximo de diferido; la marca ■ la sigue poniendo la producción de La Ceiba en octubre (va 317 bbl bajo la meta a la fecha).
 
 **Casos borde.** Ver «sin meta firmada». Un día parcial suma en proporción a sus horas. Un tramo que empieza a futuro no rige hacia atrás.
 
@@ -110,7 +110,7 @@ Valores en pantalla (corridos): La Ceiba octubre → «diferido por día **1.922
 
 **Quién lo calcula.** Servidor (`meta.sinMeta`, `porCampo[].sinMeta`, `Dia.meta`); `conMeta` y `textoSinMeta` los usa el front.
 
-**Referencia.** `src/entities/libro.ts:571-604`; `src/entities/configuracion.ts:204-230`; `verificar-libro.mjs` sección 6f.
+**Referencia.** `src/entities/libro.ts:571-604`; `src/entities/configuracion.ts:210-236`; `verificar-libro.mjs` sección 6f.
 
 ---
 
@@ -141,8 +141,8 @@ Marcas: producción ■ si $\text{cierreProd} < \text{produccionTotal}$; diferid
 
 **Ejemplo con los datos del demo.**
 
-- La Ceiba: potencial ahora 11.359,706 bbl/d y perdiendo 11.359,706 (los 18 pozos cerrados por la parada abierta de P-201B) → ritmo 0. Restantes $31 - 1{,}583 = 29{,}417$ días. Cierre producción $= 14.943 + 0 = $ **14.943** ■ (meta 337.900); cierre diferido $= 3.043{,}201 + 11.359{,}706\times 29{,}417 = $ **337.208** ■ (máx. 24.800).
-- Portafolio: ritmo 28.797,868 bbl/d (La Ceiba 0; Morichal 17.604,147 − 684,066; Guacamayo 6.615,655 − 1.173,339; El Palmar 3.276,945; La Zarza 3.158,526), perdiendo 13.217,110 → producción **907.429** ■ (meta 1.246.200), diferido **395.035** ■ (máx. 71.300).
+- La Ceiba: potencial ahora 11.360,227 bbl/d y perdiendo 1.966,027 (los 2 pozos que cerró la parada abierta de P-201B, 1.665,2, y LC-21, 300,8) → ritmo 9.394,199. Restantes $31 - 1{,}583 = 29{,}417$ días. Cierre producción $= 16.941 + 9.394{,}199\times 29{,}417 = $ **293.287** ■ (meta 337.900); cierre diferido $= 1.046{,}026 + 1.966{,}027\times 29{,}417 = $ **58.880** ■ (máx. 24.800).
+- Portafolio: ritmo 39.364,910 bbl/d (La Ceiba 11.360,227 − 1.966,027; Morichal 17.604,147 − 684,066; Guacamayo 6.615,158; El Palmar 3.276,945; La Zarza 3.158,526), perdiendo 2.650,093 → producción **1.222.131** ■ (meta 1.246.200), diferido **80.334** ■ (máx. 71.300).
 
 **Casos borde.** Sin meta: barras sin raya, rótulo «sin meta firmada…». El ritmo es una foto: si la bomba arranca en una hora, la proyección cambia por completo; es un escenario, no un compromiso.
 
@@ -150,13 +150,13 @@ Marcas: producción ■ si $\text{cierreProd} < \text{produccionTotal}$; diferid
 
 ---
 
-### Línea base: los 3 meses antes («+44 % frente a jul a sep»)
+### Línea base: los 3 meses antes («+80 % frente a jul a sep»)
 
 **Qué es.** El diferido por día de los tres meses publicados (en todos los campos pedidos) inmediatamente antes del período, contra el diferido por día del período. Es **contexto**, no meta: ¿va mejor o peor que antes?
 
-**Dónde se ve.** Apoyo de la barra «diferido por día» del encabezado de Diferidos y Resumen de campo («+98 % frente a jul a sep»), y de la del Resumen del gerente; globo: «Antes (jul a sep): 969 bbl/d» o «Antes: no hay tres meses antes del período». Palancas con máximo: «antes 969 bbl/d · jul a sep». Mantenimiento: «antes 969 bbl/d (jul a sep)».
+**Dónde se ve.** Apoyo de la barra «diferido por día» del encabezado de Diferidos y Resumen de campo («+80 % frente a jul a sep»), y de la del Resumen del gerente; globo: «Antes (jul a sep): 366 bbl/d» o «Antes: no hay tres meses antes del período». Palancas con máximo: «antes 366 bbl/d · jul a sep». Mantenimiento: «antes 366 bbl/d (jul a sep)».
 
-**Fórmula** (`lineaBase`, `src/entities/libro.ts:1083-1096`):
+**Fórmula** (`lineaBase`, `src/entities/libro.ts:1100-1113`):
 
 $$
 \text{baseDia} = \frac{\text{brecha}(\text{3 meses})}{\text{días de los 3 meses}}
@@ -172,17 +172,17 @@ Los tres meses: los últimos tres con `publicadoEnTodos(campos, mes)` y `hasta �
 
 | Período | Base | baseDia | periodoDia | cambio | Pantalla |
 |---|---|---:|---:|---:|---|
-| La Ceiba · oct | jul a sep (89.134,521 / 92) | 968,853 | 1.922,021 | +0,984 | «+98 % frente a jul a sep» |
-| La Ceiba · sep | jun a ago | 858,375 | 723,048 | −0,158 | «−16 % frente a jun a ago» |
-| Portafolio · oct | jul a sep | 2.733,732 | 3.935,821 | +0,440 | «+44 % frente a jul a sep» |
-| Portafolio · sep | jun a ago | 1.917,078 | 3.507,574 | +0,830 | «+83 % frente a jun a ago» |
-| La Ceiba · trimestre | abr a jun | 476,284 | 968,853 | +1,034 | «+103 % frente a abr a jun» |
-| La Ceiba · año a la fecha | oct a dic | 692,316 | 671,216 | −0,030 | «−3 % frente a oct a dic» |
+| La Ceiba · oct | jul a sep (33.679,668 / 92) | 366,083 | 660,648 | +0,805 | «+80 % frente a jul a sep» |
+| La Ceiba · sep | jun a ago | 407,511 | 257,202 | −0,369 | «−37 % frente a jun a ago» |
+| Portafolio · oct | jul a sep | 1.508,393 | 1.501,108 | −0,005 | «0 % frente a jul a sep» |
+| Portafolio · sep | jun a ago | 1.461,758 | 1.131,491 | −0,226 | «−23 % frente a jun a ago» |
+| La Ceiba · trimestre | abr a jun | 385,125 | 366,083 | −0,049 | «−5 % frente a abr a jun» |
+| La Ceiba · año a la fecha | oct a dic | 334,362 | 420,629 | +0,258 | «+26 % frente a oct a dic» |
 | Últimos 12 meses | — | — | — | — | «sin base de comparación» |
 
 **Casos borde.** Menos de tres meses publicados antes: `null` → «sin base de comparación», en el encabezado de Diferidos y, desde el 8-oct, también bajo la barra del diferido del Resumen del gerente (`ResumenDirectivo.tsx:123`; antes ahí no decía nada). Un mes no publicado en algún campo corta la base para todo el ámbito.
 
-**Qué texto.** `signo(x)` = «+», «−» (U+2212) o nada, más `n0(|x·100|)` y « %»; luego «frente a» + nombre.
+**Qué texto.** `signo(x)` = «+», «−» (U+2212) o nada (si $x\cdot100$ redondea a 0, como el portafolio de octubre), más `n0(|x·100|)` y « %»; luego «frente a» + nombre.
 
 **Quién lo calcula.** Servidor: `GET /api/vistas/diferidos/base?campos&desde&hasta` → `{ desde, hasta, nombre, baseDia, periodoDia, cambio }` o `null`. Sin caso en `referencia/`.
 
@@ -192,7 +192,7 @@ Los tres meses: los últimos tres con `publicadoEnTodos(campos, mes)` y `hasta �
 
 **Qué es.** Lo que vale lo no producido, con el precio neto que regía **cada día** (cambiar el precio hoy no reescribe el valor de un mes cerrado).
 
-**Dónde se ve.** Encabezado de Diferidos: «valor» y la cifra «**1,0** M USD»; Resumen del gerente: «146 mil USD» y «valor». Fichas de equipo (otro capítulo, `valorDeTramos`).
+**Dónde se ve.** Encabezado de Diferidos: «valor» y la cifra «**370** mil USD»; Resumen del gerente: «50 mil USD» y «valor». Fichas de equipo (otro capítulo, `valorDeTramos`).
 
 **Fórmula.**
 
@@ -210,12 +210,12 @@ $$
 
 | Período | Valor (USD) | Pantalla | Rótulo |
 |---|---:|---|---|
-| La Ceiba · sep | $21.691{,}435 \times 48 = 1.041.188{,}894$ | «1,0 M USD» | «valor» |
-| La Ceiba · oct | $3.043{,}201 \times 48 = 146.073{,}628$ | «146 mil USD» | «valor» |
-| Portafolio · sep | $(105.227{,}224 - 302{,}631) \times 48 = 5.036.380{,}476$ | «5,0 M USD» | «valor · falta precio en La Zarza» |
-| Portafolio · oct | 299.122,381 | «299 mil USD» | «valor · falta precio en La Zarza» |
-| La Ceiba · 12 meses | 11.757.815,953 | «11,8 M USD» | |
-| Escenario: La Ceiba sep, sin precio desde el 15-sep | 756.390,274 | «756 mil USD» | «valor · falta precio en La Ceiba» |
+| La Ceiba · sep | $7.716{,}059 \times 48 = 370.370{,}841$ | «370 mil USD» | «valor» |
+| La Ceiba · oct | $1.046{,}026 \times 48 = 50.209{,}225$ | «50 mil USD» | «valor» |
+| Portafolio · sep | $(33.944{,}738 - 302{,}631) \times 48 = 1.614.821{,}152$ | «1,6 M USD» | «valor · falta precio en La Zarza» |
+| Portafolio · oct | 114.084,224 | «114 mil USD» | «valor · falta precio en La Zarza» |
+| La Ceiba · 12 meses | 6.970.218,812 | «7,0 M USD» | |
+| Escenario: La Ceiba sep, sin precio desde el 15-sep | 53.975,388 | «54 mil USD» | «valor · falta precio en La Ceiba» (el diferido de septiembre cayó casi todo después del 15: la parada del 22 y las electrosumergibles del 26) |
 
 **Qué texto se muestra según el valor.**
 
@@ -236,7 +236,7 @@ $$
 
 **Qué es.** Cuánto del diferido se llevan las bombas de reinyección y las electrosumergibles.
 
-**Dónde se ve.** `#/ger/resumen/…`: cifra «**84 %**» con «del diferido · reinyección y electrosumergibles».
+**Dónde se ve.** `#/ger/resumen/…`: cifra «**55 %**» (La Ceiba, octubre) con «del diferido · reinyección y electrosumergibles».
 
 **Fórmula.**
 
@@ -244,7 +244,7 @@ $$
 \text{altoPct} = 100\cdot\frac{\text{altoImpacto}}{\text{diferido}} \quad (0 \text{ si diferido} = 0)
 $$
 
-**Ejemplo.** La Ceiba oct: $2.570{,}257/3.043{,}201 = 84{,}5\,\%$ → «84 %»; sep: 99 %. Portafolio oct: 88,6 % → «89 %»; sep: 93 %.
+**Ejemplo.** La Ceiba oct: $573{,}061/1.046{,}026 = 54{,}8\,\%$ → «55 %» (lo demás son LC-21 y LC-08 sin identificar y un `UV` de LC-05); sep: 97 %. Portafolio oct: 70,2 % → «70 %»; sep: 73 %.
 
 **Quién lo calcula.** Front, con `altoImpacto` y `diferido` del libro.
 
@@ -254,7 +254,7 @@ $$
 
 **Qué es.** El diferido de alto impacto por día desde la puesta en marcha (firma de arranque, `PUESTA_EN_MARCHA = 2026-09-01`) contra los tres meses anteriores. No depende del período escogido. Es una comparación, no la prueba de que lo bajó TRIM.
 
-**Dónde se ve.** Resumen del gerente: «diferido alto impacto · antes → con TRIM» y «**736 → 762 bbl/d · +3 %**»; ⓘ «Alto impacto por día desde que entró TRIM (1 de sept) contra los tres meses antes. Es una comparación, no la prueba de que lo bajó TRIM.»
+**Dónde se ve.** Resumen del gerente: «diferido alto impacto · antes → con TRIM» y «**310 → 255 bbl/d · −18 %**» (La Ceiba); ⓘ «Alto impacto por día desde que entró TRIM (1 de sept) contra los tres meses antes. Es una comparación, no la prueba de que lo bajó TRIM.»
 
 **Fórmula.**
 
@@ -264,7 +264,7 @@ $$
 \text{con TRIM} = \frac{\text{altoImpacto}(\text{2026-09-01},\ \text{ahora})}{\max(1/24,\ \text{días})}
 $$
 
-**Ejemplo.** La Ceiba: $67.733{,}617/92 = 736{,}2$ → $24.064{,}028/31{,}583 = 761{,}9$: «736 → 762 bbl/d · +3 %». Portafolio: $133.532{,}612/92 = 1.451{,}4$ → $103.019{,}005/31{,}583 = 3.261{,}8$: «1.451 → 3.262 bbl/d · +125 %».
+**Ejemplo.** La Ceiba: $28.558{,}295/92 = 310{,}4$ → $8.049{,}676/31{,}583 = 254{,}9$: «310 → 255 bbl/d · −18 %». Portafolio: $93.940{,}916/92 = 1.021{,}1$ → $26.450{,}357/31{,}583 = 837{,}5$: «1.021 → 837 bbl/d · −18 %». Por campo: Morichal 494,9 → 380,1 (−23 %), Guacamayo 215,8 → 202,5 (−6 %). Lo que lo explica en el demo del 9-oct: desde la puesta en marcha una electrosumergible caída espera taladro 2 a 5 días (antes 12 a 35), los pozos vuelven 10-40 min después de arrancar la bomba de disposición (antes 2 a 8 h), se cierra el agua que dice el colchón (antes 1,5 veces) y el vigía anticipó dos fallas de desgaste (MN-05, MN-16) como cambios programados, que no son alto impacto. Pesa en contra MN-41 (falla a tierra del 25-sep, sigue esperando taladro). Es una comparación, no la prueba.
 
 **Casos borde.** Antes = 0 → el cambio se muestra «—».
 
@@ -288,8 +288,8 @@ $$
 
 Marca ■ si $\text{total}_m > \text{máx}_m$ y el mes no es parcial. El mes del período va con borde y su cifra (`n0`).
 
-**Ejemplo (La Ceiba).** oct-25 1.067 (alto 944) ■ · nov 249 · dic 747 · ene 173 · feb 834 ■ · mar 648 · abr 612 · may 434 · jun 384 · jul 1.955 (1.868) ■ · ago 221 · sep 723 (716) · oct-26 1.922 (1.623), sin marca por ser parcial; máximo 800 en todos. Portafolio: jul 3.039 ■ y sep 3.508 ■ (máx. 2.300); oct 3.936 sin marca.
+**Ejemplo (La Ceiba).** oct-25 544 (alto 421) · nov 249 · dic 207 · ene 173 · feb 834 ■ · mar 549 · abr 336 · may 434 · jun 384 · jul 563 (476) · ago 275 · sep 257 (249) · oct-26 661 (362), sin marca por ser parcial; máximo 800 en todos. Portafolio: ningún mes pasa su máximo de 2.300 (el más alto, mayo, 1.844); oct 1.501.
 
-**Globo.** «Diferido: 723 bbl/d», «De alto impacto: 716 bbl/d», «Máximo firmado: 800 bbl/d» (o «sin meta firmada…»); pista «Clic para ver este mes».
+**Globo.** «Diferido: 257 bbl/d», «De alto impacto: 249 bbl/d», «Máximo firmado: 800 bbl/d» (o «sin meta firmada…»); pista «Clic para ver este mes».
 
 **Quién lo calcula.** Front con la serie mensual. Nota: usa `diferido` (Σ eventos), mientras Mes a mes usa `brecha`; en un mes entero son iguales.

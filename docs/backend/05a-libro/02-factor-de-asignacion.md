@@ -26,7 +26,7 @@ $$
 
 **Eventos que se pisan** (`intervalosEfectivos`, `src/entities/libro.ts:118-140`): por pozo, se ordenan primero los paros y después los HZ, y entre iguales el que empezó antes (y luego por id). Cada evento cobra solo lo que no cubrió uno anterior en ese orden. Un paro manda sobre un HZ; entre dos paros, gana el primero. Así una hora del pozo se cobra una vez y la identidad potencial − real = Σ diferidos sigue exacta. El contrato pide escoger entre esto o que la ingesta rechace los solapes (`CONTRATO.md:858-861`); el motor del demo hace lo primero.
 
-**Ejemplo con los datos del demo.** LC-11, 10-sep: el evento `EP-LC11-260910-79` (código CMD, cerrado por la parada de P-201B) va del 10-sep 02:03 al 11-sep 09:14. En el día 10 cobra 21,95 h con $f = 1$; en el 11, 9,233 h. HZ: MN-07 de Morichal, evento `EP-MN07-260214-16` del 14-feb 23:25 al 15-feb 23:58 a 47 Hz con prueba a 59 Hz: $f = 1 - 47/59 = 0{,}2034$ (el motor guarda `factor: 0,203`).
+**Ejemplo con los datos del demo.** LC-16, 22-sep: el evento `EP-LC16-260922-71` (código LSHH, cerrado por la parada de P-201B) va del 22-sep 11:41 al 23-sep 02:26. En el día 22 cobra 12,317 h con $f = 1$; en el 23, 2,433 h. HZ: MN-07 de Morichal, evento `EP-MN07-260214-32` del 14-feb 23:25 al 15-feb 23:58 a 47 Hz con prueba a 59 Hz: $f = 1 - 47/59 = 0{,}2034$ (el motor guarda `factor: 0,203`).
 
 **Casos borde.** `fin: null`: el evento llega hasta `AHORA`. Un evento de un pozo que no está en el registro se ignora. Un `hz` mayor que el de la prueba da $f = 0$ (no pierde nada).
 
@@ -61,10 +61,10 @@ $$
 
 | Campo · mes | $R_m$ (bbl) | $T_m$ (bbl) | Días con fiscal |
 |---|---:|---:|---:|
-| La Ceiba · sep-2026 | 324.688 | 335.098,097 | 30 |
-| La Ceiba · oct-2026 (en curso, 38 h) | 14.943 | 15.597,160 | 2 (el 2-oct con 14 h) |
-| Morichal · sep-2026 | 466.040 | 485.095,221 | 30 |
-| Guacamayo · sep-2026 | 180.748 | 179.444,971 | 30 |
+| La Ceiba · sep-2026 | 338.662 | 349.521,518 | 30 |
+| La Ceiba · oct-2026 (en curso, 38 h) | 16.941 | 17.681,816 | 2 (el 2-oct con 14 h) |
+| Morichal · sep-2026 | 504.058 | 524.672,054 | 30 |
+| Guacamayo · sep-2026 | 200.031 | 198.590,671 | 30 |
 | El Palmar · sep-2026 | 96.715 | 95.954,170 | 30 |
 | La Zarza · sep-2026 | 94.856 | 91.915,750 | 30 |
 
@@ -97,10 +97,11 @@ $$
 
 **Ejemplo con los datos del demo.**
 
-- La Ceiba, septiembre: $\text{FA} = 324.688 / 335.098{,}097 = 0{,}96893$ → pantalla **«0,969»** (`n3`).
-- La Ceiba, octubre en curso: $14.943 / 15.597{,}160 = 0{,}95806$ → **«0,958»**. Es el factor con que se valoran los barriles de octubre y el que muestra el chip de Medición oficial.
+- La Ceiba, septiembre: $\text{FA} = 338.662 / 349.521{,}518 = 0{,}96893$ → pantalla **«0,969»** (`n3`).
+- La Ceiba, octubre en curso: $16.941 / 17.681{,}816 = 0{,}95810$ → **«0,958»**. Es el factor con que se valoran los barriles de octubre y el que muestra el chip de Medición oficial.
 - Serie de La Ceiba, oct-2025 a oct-2026: 1,007 · 0,969 · 1,030 · 0,985 · 1,020 · 1,028 · 0,990 · 1,027 · 0,974 · 1,029 · 0,941 · 0,969 · 0,958.
 - Septiembre en los demás: Morichal 0,961 · Guacamayo 1,007 · El Palmar 1,008 · La Zarza 1,032.
+- Con el demo del 9-oct (agua real) los factores son los mismos de antes a tres decimales: las paradas de la bomba de reinyección cierran menos pozos, y el real y el teórico de cada mes suben en la misma proporción (La Ceiba sep: los dos un 4,3 %).
 - **El único fuera de banda del demo:** El Palmar, abril de 2026: $81.033 / 100.040{,}065 = 0{,}810$, con banda ±15 %.
 
 **Casos borde.**
@@ -117,7 +118,7 @@ $$
 El estado de cada mes contra la banda lo decide `estadoFactor` (`src/widgets/diferidos/publicacion.ts:9-12`, 5A.7) con los **motivos** del libro, no con `dentro` a secas: `sin-verificar` si el campo trae el motivo `banda-sin-verificar`; si no, `dentro` o `fuera`.
 
 - Cuadre: si todos los meses del período están dentro, «`N` mes-campo · [dentro de banda]» (`plural(n, 'mes-campo', 'meses-campo')`; La Ceiba sep: «1 mes-campo», portafolio sep: «5 meses-campo»). Si no, una línea por mes que no está dentro: **fuera** → cuadrado P3 ■ + «El Palmar · 2026-04 · **0,810**» + chip fuerte «fuera de ±15 %»; **sin verificar** → sin marca, «La Zarza · 2026-09 · **1,032**» + chip neutro «banda sin verificar» (`Cuadre.tsx:21-23`, `:56-64`). ⓘ: «Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar.»
-- Gráfico (widget `Factor`): círculo hueco si está dentro, cuadrado P3 (amarillo con trazo) si está fuera, **círculo punteado** si la banda no se puede verificar. Globo: título «Septiembre 2026 · factor 0,969»; pista «Dentro de la banda», «Fuera de la banda: revisar pruebas, medición y pozos sin prueba» o, sin verificar, el texto del motivo que redacta el servidor; filas «Factor 0,969», «Banda 0,85 – 1,15» (`n2`; «sin verificar»), «Fiscal del mes 324.688 bbl», «Cierre publicado | en curso» (`Factor.tsx:47-60`). Los meses fuera del período que se mira van al 50 % de opacidad. Desde el 8-oct el gráfico arranca desplazado al mes más reciente (`alFinal`), como Mes a mes, Tendencia y Diaria.
+- Gráfico (widget `Factor`): círculo hueco si está dentro, cuadrado P3 (amarillo con trazo) si está fuera, **círculo punteado** si la banda no se puede verificar. Globo: título «Septiembre 2026 · factor 0,969»; pista «Dentro de la banda», «Fuera de la banda: revisar pruebas, medición y pozos sin prueba» o, sin verificar, el texto del motivo que redacta el servidor; filas «Factor 0,969», «Banda 0,85 – 1,15» (`n2`; «sin verificar»), «Fiscal del mes 338.662 bbl», «Cierre publicado | en curso» (`Factor.tsx:47-60`). Los meses fuera del período que se mira van al 50 % de opacidad. Desde el 8-oct el gráfico arranca desplazado al mes más reciente (`alFinal`), como Mes a mes, Tendencia y Diaria.
 - Eje del gráfico: de $\min(0{,}75;\ 1-b-0{,}05)$ a $\max(1{,}25;\ 1+b+0{,}05)$ con marcas en el piso, $1-b$, 1, $1+b$ y el techo. Con $b = 0{,}15$: 0,75 · 0,85 · 1,00 · 1,15 · 1,25; con $b = 0{,}05$: 0,75 · 0,95 · 1,00 · 1,05 · 1,25. Un valor fuera del eje se dibuja pegado al borde.
 - «Cómo se lee» del gráfico: «Factor = producción fiscal del mes ÷ lo que dicen las pruebas por las horas que cada pozo produjo… La franja gris es la banda que acepta la regulación para este crudo (*fuente de la banda*)».
 
@@ -166,9 +167,9 @@ $$
 
 | Campo | °API | $\bar F$ (sep-2026) | Fila | $b$ |
 |---|---:|---:|---|---:|
-| La Ceiba | 19,4 | 10.822,9 | ≤ 22,3 · ≥ 1.000 | ±15 % |
-| Morichal Norte | 13,1 | 15.534,7 | ≤ 22,3 · ≥ 1.000 | ±15 % |
-| Guacamayo | 28,6 | 6.024,9 | > 22,3 · ≥ 1.000 | ±5 % |
+| La Ceiba | 19,4 | 11.288,7 | ≤ 22,3 · ≥ 1.000 | ±15 % |
+| Morichal Norte | 13,1 | 16.801,9 | ≤ 22,3 · ≥ 1.000 | ±15 % |
+| Guacamayo | 28,6 | 6.667,7 | > 22,3 · ≥ 1.000 | ±5 % |
 | El Palmar | 21,0 | 3.223,8 | ≤ 22,3 · ≥ 1.000 | ±15 % |
 | La Zarza | 34,0 | 3.161,9 | > 22,3 · ≥ 1.000 | ±5 % |
 

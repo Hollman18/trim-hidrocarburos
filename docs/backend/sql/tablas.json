@@ -97,7 +97,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Cuenca sedimentaria (Magdalena Medio, Llanos, Putumayo…).",
-     "ejemplo": "Magdalena Medio"
+     "ejemplo": "Llanos"
     },
     {
      "nombre": "choke",
@@ -121,16 +121,16 @@
      "check": null,
      "defecto": "''::text",
      "descripcion": "Nota libre del registro.",
-     "ejemplo": "Tren de agua con una sola bomba de reinyección, sin respaldo."
+     "ejemplo": "Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos."
     }
    ],
    "filas": [
     {
      "id": "ceiba",
      "nombre": "La Ceiba",
-     "cuenca": "Magdalena Medio",
+     "cuenca": "Llanos",
      "choke": "Planta",
-     "nota": "Tren de agua con una sola bomba de reinyección, sin respaldo."
+     "nota": "Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos."
     },
     {
      "id": "guacamayo",
@@ -570,7 +570,7 @@
      "modo_falla": "Lubricación de cojinete",
      "norma": "Centrífuga multietapa · API 610, Tabla 8: vibración en la caja de rodamientos.",
      "intervencion_ubicacion": "Batería 1 · tren de agua",
-     "intervencion_accion": "Confirmar nivel en los tanques de agua antes de intentar el arranque: si ya están altos, cerrar primero los pozos aguas arriba.",
+     "intervencion_accion": "Llevar P-201A y P-201C a su caudal máximo y confirmar el nivel del tanque de agua antes de intentar el arranque: si ya está alto, cerrar primero los pozos con menos crudo por barril de agua.",
      "intervencion_avisar_a": "Supervisor de operaciones e ingeniería de producción",
      "distribucion_falla": {
       "fuente": "Reparto de bombeo en campo Sirte (Libia), 673 elementos de falla clasificados.",
@@ -658,7 +658,7 @@
      "check": "CHECK ((agua_bpd >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Caudales.agua: agua producida, bbl/d.",
-     "ejemplo": 19180
+     "ejemplo": 224200
     },
     {
      "nombre": "agua_cap_bpd",
@@ -670,7 +670,7 @@
      "check": "CHECK ((agua_cap_bpd >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Caudales.aguaCap: capacidad del tren de agua, bbl/d.",
-     "ejemplo": 20400
+     "ejemplo": 267750
     },
     {
      "nombre": "gas_bpd",
@@ -754,7 +754,7 @@
      "check": null,
      "defecto": "''::text",
      "descripcion": "PlantaCampo.nota.",
-     "ejemplo": "La bomba que mueve el agua no tiene respaldo: si para, el tanque se llena y se cierran los pozos. Es el cuello de botella del campo."
+     "ejemplo": "El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el cuello de botella del campo."
     }
    ],
    "filas": [
@@ -762,22 +762,22 @@
      "campo_id": "ceiba",
      "crudo_bpd": 10450,
      "crudo_cap_bpd": 12000,
-     "agua_bpd": 19180,
-     "agua_cap_bpd": 20400,
+     "agua_bpd": 224200,
+     "agua_cap_bpd": 267750,
      "gas_bpd": 3850,
      "gas_cap_bpd": 4200,
      "choke_pozos": 12500,
      "choke_planta": 11800,
      "choke_evacuacion": 14000,
      "choke_mercado": 15000,
-     "nota": "La bomba que mueve el agua no tiene respaldo: si para, el tanque se llena y se cierran los pozos. Es el cuello de botella del campo."
+     "nota": "El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el cuello de botella del campo."
     },
     {
      "campo_id": "guacamayo",
      "crudo_bpd": 6200,
      "crudo_cap_bpd": 7400,
-     "agua_bpd": 7600,
-     "agua_cap_bpd": 13000,
+     "agua_bpd": 90300,
+     "agua_cap_bpd": 110000,
      "gas_bpd": 2100,
      "gas_cap_bpd": 2600,
      "choke_pozos": 7200,
@@ -790,35 +790,35 @@
      "campo_id": "morichal",
      "crudo_bpd": 14800,
      "crudo_cap_bpd": 19500,
-     "agua_bpd": 36400,
-     "agua_cap_bpd": 44000,
+     "agua_bpd": 580400,
+     "agua_cap_bpd": 605500,
      "gas_bpd": 9100,
      "gas_cap_bpd": 11000,
      "choke_pozos": 17950,
      "choke_planta": 19500,
      "choke_evacuacion": 21000,
      "choke_mercado": 24000,
-     "nota": "Manda el levantamiento: 41 pozos con bomba electrosumergible. El compresor de gas, sin respaldo, ya cerró pozos cuando paró."
+     "nota": "Manda el levantamiento: 41 pozos con bomba electrosumergible y 97 % de agua, que sacan siete bombas casi al tope de lo que deja el cabezal de disposición. El compresor de gas, sin respaldo, ya cerró pozos cuando paró."
     },
     {
      "campo_id": "palmar",
      "crudo_bpd": 3100,
      "crudo_cap_bpd": 3600,
-     "agua_bpd": 2400,
-     "agua_cap_bpd": 5500,
+     "agua_bpd": 13180,
+     "agua_cap_bpd": 16000,
      "gas_bpd": 0,
      "gas_cap_bpd": 0,
      "choke_pozos": 3500,
      "choke_planta": 3295,
      "choke_evacuacion": 4200,
      "choke_mercado": 5000,
-     "nota": "Campo chico de bombeo mecánico, sin tren de gas, con holgura en crudo y agua."
+     "nota": "Campo chico de bombeo mecánico, sin tren de gas, con holgura en crudo y agua (80 % de agua, que saca una sola bomba de 16.000 bbl/d)."
     },
     {
      "campo_id": "zarza",
      "crudo_bpd": 2900,
      "crudo_cap_bpd": 3400,
-     "agua_bpd": 1100,
+     "agua_bpd": 1450,
      "agua_cap_bpd": 4000,
      "gas_bpd": 12400,
      "gas_cap_bpd": 16800,
@@ -1050,9 +1050,9 @@
      "campo_id": "ceiba",
      "id": "bomba",
      "tren": "agua",
-     "orden": 0,
+     "orden": 1,
      "simbolo": "bomba",
-     "etiqueta": "Bomba de reinyección",
+     "etiqueta": "Bombas de agua",
      "equipo": "P-201B",
      "pie": null,
      "nivel_tag": null,
@@ -1215,7 +1215,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Texto al pie.",
-     "ejemplo": "sin instrumentar"
+     "ejemplo": null
     },
     {
      "nombre": "nivel_tag",
@@ -1227,7 +1227,7 @@
      "check": "CHECK (((nivel_tag IS NULL) = (nivel_tope IS NULL)))",
      "defecto": null,
      "descripcion": "nivelDe.tag.",
-     "ejemplo": "LI-1102"
+     "ejemplo": null
     },
     {
      "nombre": "nivel_tope",
@@ -1239,7 +1239,7 @@
      "check": "CHECK (((nivel_tag IS NULL) = (nivel_tope IS NULL)))",
      "defecto": null,
      "descripcion": "nivelDe.tope.",
-     "ejemplo": 18.5
+     "ejemplo": null
     },
     {
      "nombre": "fluido",
@@ -1251,7 +1251,7 @@
      "check": "CHECK ((fluido = ANY (ARRAY['multi'::text, 'crudo'::text, 'gas'::text, 'agua'::text, 'elec'::text, 'aire'::text])))",
      "defecto": null,
      "descripcion": "Corriente.",
-     "ejemplo": "crudo"
+     "ejemplo": null
     },
     {
      "nombre": "pmo",
@@ -1263,7 +1263,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Código del punto de medición oficial, si lo es.",
-     "ejemplo": "PMO-02"
+     "ejemplo": null
     }
    ],
    "filas": [
@@ -1308,29 +1308,29 @@
     },
     {
      "campo_id": "ceiba",
-     "elemento_id": "tanques",
-     "id": "TK-101",
-     "orden": 1,
-     "etiqueta": "TK-101 · respaldo",
+     "elemento_id": "bomba",
+     "id": "P-201A",
+     "orden": 0,
+     "etiqueta": "P-201A",
      "equipo": null,
-     "pie": "sin instrumentar",
+     "pie": null,
      "nivel_tag": null,
      "nivel_tope": null,
-     "fluido": "crudo",
+     "fluido": null,
      "pmo": null
     },
     {
      "campo_id": "ceiba",
-     "elemento_id": "tanques",
-     "id": "TK-102",
-     "orden": 0,
-     "etiqueta": "TK-102 · PMO-02",
-     "equipo": "TK-102",
+     "elemento_id": "bomba",
+     "id": "P-201B",
+     "orden": 1,
+     "etiqueta": "P-201B",
+     "equipo": "P-201B",
      "pie": null,
-     "nivel_tag": "LI-1102",
-     "nivel_tope": 18.5,
-     "fluido": "crudo",
-     "pmo": "PMO-02"
+     "nivel_tag": null,
+     "nivel_tope": null,
+     "fluido": null,
+     "pmo": null
     }
    ]
   },
@@ -1887,7 +1887,7 @@
      "bd_seq": null,
      "tags": 30,
      "pendientes": 0,
-     "carga": "{\"campo\":\"ceiba\",\"gateway\":{\"id\":\"EPIC-CEIBA-01\",\"serie\":\"GRVCEI0016\",\"enlace\":\"starlink\",\"modelo\":\"GRV-EPIC-PR1\",\"bufferH\":48,\"firmware\":\"3.6.2\"},\"dispositivos\":[{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"https://pi.ceiba.local/piwebapi\",\"protocolo\":\"pi-web-api\"},\"nombre\":\"V-101\",\"metricas\":[{\"alto\":65,\"bajo\":35,\"tipo\":\"Nivel de interfase\",\"clase\":\"continua\",\"limite\":\"35 – 65\",\"nombre\":\"LI-1012\",\"unidad\":\"%\",\"cadenciaS\":47},{\"alto\":8,\"bajo\":null,\"tipo\":\"Presión diferencial\",\"clase\":\"continua\",\"limite\":\"< 8\",\"nombre\":\"PDI-1012\",\"unidad\":\"psi\",\"cadenciaS\":47}]},{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"https://pi.ceiba.local/piwebapi\",\"protocolo\":\"pi-web-api\"},\"nombre\":\"C-401\",\"metricas\":[{\"alto\":1250,\"bajo\":1050,\"tipo\":\"Presión de descarga\",\"clase\":\"continua\",\"limite\":\"1.050 – 1.250\",\"nombre\":\"PI-4011\",\"unidad\":\"psi\",\"cadenciaS\":47},{\"alto\":120,\"bajo\":null,\"tipo\":\"Temperatura de descarga\",\"clase\":\"continua\",\"limite\":\"< 120\",\"nombre\":\"TI-4011\",\"unidad\":\"°C\",\"cadenciaS\":47}]},{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"https://pi.ceiba.local/piwebapi\",\"protocolo\":\"pi-web-api\"},\"nombre\":\"H-302\",\"metricas\":[{\"alto\":310,\"bajo\":280,\"tipo\":\"Temperatura de piel de tubo\",\"clase\":\"continua\",\"limite\":\"280 – 310\",\"nombre\":\"TI-3021\",\"unidad\":\"°C\",\"cadenciaS\":47},{\"alto\":450,\"bajo\":null,\"tipo\":\"Temperatura de chimenea\",\"clase\":\"continua\",\"limite\":\"< 450\",\"nombre\":\"TI-3022\",\"unidad\":\"°C\",\"cadenciaS\":47},{\"alto\":52,\"bajo\":38,\"tipo\":\"Consumo de gas combustible… [recortado para el Excel: 7245 caracteres]"
+     "carga": "{\"campo\":\"ceiba\",\"gateway\":{\"id\":\"EPIC-CEIBA-01\",\"serie\":\"GRVCEI0016\",\"enlace\":\"starlink\",\"modelo\":\"GRV-EPIC-PR1\",\"bufferH\":48,\"firmware\":\"3.6.2\"},\"dispositivos\":[{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"https://pi.ceiba.local/piwebapi\",\"protocolo\":\"pi-web-api\"},\"nombre\":\"V-101\",\"metricas\":[{\"alto\":65,\"bajo\":35,\"tipo\":\"Nivel de interfase\",\"clase\":\"continua\",\"limite\":\"35 – 65\",\"nombre\":\"LI-1012\",\"unidad\":\"%\",\"cadenciaS\":47},{\"alto\":8,\"bajo\":null,\"tipo\":\"Presión diferencial\",\"clase\":\"continua\",\"limite\":\"< 8\",\"nombre\":\"PDI-1012\",\"unidad\":\"psi\",\"cadenciaS\":47}]},{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"https://pi.ceiba.local/piwebapi\",\"protocolo\":\"pi-web-api\"},\"nombre\":\"C-401\",\"metricas\":[{\"alto\":1250,\"bajo\":1050,\"tipo\":\"Presión de descarga\",\"clase\":\"continua\",\"limite\":\"1.050 – 1.250\",\"nombre\":\"PI-4011\",\"unidad\":\"psi\",\"cadenciaS\":47},{\"alto\":120,\"bajo\":null,\"tipo\":\"Temperatura de descarga\",\"clase\":\"continua\",\"limite\":\"< 120\",\"nombre\":\"TI-4011\",\"unidad\":\"°C\",\"cadenciaS\":47}]},{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"https://pi.ceiba.local/piwebapi\",\"protocolo\":\"pi-web-api\"},\"nombre\":\"H-302\",\"metricas\":[{\"alto\":310,\"bajo\":280,\"tipo\":\"Temperatura de piel de tubo\",\"clase\":\"continua\",\"limite\":\"280 – 310\",\"nombre\":\"TI-3021\",\"unidad\":\"°C\",\"cadenciaS\":47},{\"alto\":450,\"bajo\":null,\"tipo\":\"Temperatura de chimenea\",\"clase\":\"continua\",\"limite\":\"< 450\",\"nombre\":\"TI-3022\",\"unidad\":\"°C\",\"cadenciaS\":47},{\"alto\":52,\"bajo\":38,\"tipo\":\"Consumo de gas combustible… [recortado para el Excel: 7247 caracteres]"
     },
     {
      "id": 3,
@@ -1959,7 +1959,7 @@
      "bd_seq": null,
      "tags": 46,
      "pendientes": 0,
-     "carga": "{\"campo\":\"morichal\",\"gateway\":{\"id\":\"EPIC-MORICHAL-01\",\"serie\":\"GRVMOR0017\",\"enlace\":\"starlink\",\"modelo\":\"GRV-EPIC-PR1\",\"bufferH\":48,\"firmware\":\"3.6.2\"},\"dispositivos\":[{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"plc-morichal.ot.local:502\",\"protocolo\":\"modbus-tcp\"},\"nombre\":\"MPP-301\",\"metricas\":[{\"alto\":60,\"bajo\":35,\"tipo\":\"Presión de succión\",\"clase\":\"continua\",\"limite\":\"35 – 60\",\"nombre\":\"PT-3011\",\"unidad\":\"psi\",\"cadenciaS\":1},{\"alto\":75,\"bajo\":45,\"tipo\":\"Temperatura de succión\",\"clase\":\"continua\",\"limite\":\"45 – 75\",\"nombre\":\"TE-3011\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":8,\"bajo\":null,\"tipo\":\"Caída de presión del filtro\",\"clase\":\"continua\",\"limite\":\"< 8\",\"nombre\":\"PDT-3011\",\"unidad\":\"psi\",\"cadenciaS\":1},{\"alto\":360,\"bajo\":320,\"tipo\":\"Presión de descarga\",\"clase\":\"continua\",\"limite\":\"320 – 360\",\"nombre\":\"PT-3012\",\"unidad\":\"psi\",\"cadenciaS\":1},{\"alto\":90,\"bajo\":null,\"tipo\":\"Temperatura de descarga\",\"clase\":\"continua\",\"limite\":\"< 90\",\"nombre\":\"TE-3012\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":85,\"bajo\":null,\"tipo\":\"Temperatura de rodamiento\",\"clase\":\"continua\",\"limite\":\"< 85\",\"nombre\":\"TE-3013\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":5.5,\"bajo\":null,\"tipo\":\"Vibración de la bomba\",\"clase\":\"continua\",\"limite\":\"< 5,5\",\"nombre\":\"VT-3013\",\"unidad\":\"mm/s\",\"cadenciaS\":1},{\"alto\":130,\"bajo\":null,\"tipo\":\"Temperatura de devanado\",\"clase\":\"continua\",\"limite\":\"< 130\",\"nombre\":\"TE-3014\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":85,\"bajo\":null,\"tipo\":\"Temperatura de rodamiento del motor\",\"cla… [recortado para el Excel: 9668 caracteres]"
+     "carga": "{\"campo\":\"morichal\",\"gateway\":{\"id\":\"EPIC-MORICHAL-01\",\"serie\":\"GRVMOR0017\",\"enlace\":\"starlink\",\"modelo\":\"GRV-EPIC-PR1\",\"bufferH\":48,\"firmware\":\"3.6.2\"},\"dispositivos\":[{\"fuente\":{\"reloj\":\"el PLC de la batería\",\"endpoint\":\"plc-morichal.ot.local:502\",\"protocolo\":\"modbus-tcp\"},\"nombre\":\"MPP-301\",\"metricas\":[{\"alto\":60,\"bajo\":35,\"tipo\":\"Presión de succión\",\"clase\":\"continua\",\"limite\":\"35 – 60\",\"nombre\":\"PT-3011\",\"unidad\":\"psi\",\"cadenciaS\":1},{\"alto\":75,\"bajo\":45,\"tipo\":\"Temperatura de succión\",\"clase\":\"continua\",\"limite\":\"45 – 75\",\"nombre\":\"TE-3011\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":8,\"bajo\":null,\"tipo\":\"Caída de presión del filtro\",\"clase\":\"continua\",\"limite\":\"< 8\",\"nombre\":\"PDT-3011\",\"unidad\":\"psi\",\"cadenciaS\":1},{\"alto\":360,\"bajo\":320,\"tipo\":\"Presión de descarga\",\"clase\":\"continua\",\"limite\":\"320 – 360\",\"nombre\":\"PT-3012\",\"unidad\":\"psi\",\"cadenciaS\":1},{\"alto\":90,\"bajo\":null,\"tipo\":\"Temperatura de descarga\",\"clase\":\"continua\",\"limite\":\"< 90\",\"nombre\":\"TE-3012\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":85,\"bajo\":null,\"tipo\":\"Temperatura de rodamiento\",\"clase\":\"continua\",\"limite\":\"< 85\",\"nombre\":\"TE-3013\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":5.5,\"bajo\":null,\"tipo\":\"Vibración de la bomba\",\"clase\":\"continua\",\"limite\":\"< 5,5\",\"nombre\":\"VT-3013\",\"unidad\":\"mm/s\",\"cadenciaS\":1},{\"alto\":130,\"bajo\":null,\"tipo\":\"Temperatura de devanado\",\"clase\":\"continua\",\"limite\":\"< 130\",\"nombre\":\"TE-3014\",\"unidad\":\"°C\",\"cadenciaS\":1},{\"alto\":85,\"bajo\":null,\"tipo\":\"Temperatura de rodamiento del motor\",\"cla… [recortado para el Excel: 9670 caracteres]"
     },
     {
      "id": 5,
@@ -3611,7 +3611,7 @@
      "check": "CHECK (((agua_bpd >= (0)::numeric) AND (agua_bpd <> 'Infinity'::numeric)))",
      "defecto": null,
      "descripcion": "Agua de la prueba, bbl/d (con el crudo da el corte de agua y el orden de cierre).",
-     "ejemplo": 928
+     "ejemplo": 10217
     },
     {
      "nombre": "hz",
@@ -3632,7 +3632,7 @@
      "pozo": "LC-01",
      "fecha": "2025-10-06T17:00:00+00:00",
      "crudo_bpd": 401,
-     "agua_bpd": 928,
+     "agua_bpd": 10217,
      "hz": 59.5
     },
     {
@@ -3640,7 +3640,7 @@
      "pozo": "LC-01",
      "fecha": "2026-01-09T16:00:00+00:00",
      "crudo_bpd": 393,
-     "agua_bpd": 945,
+     "agua_bpd": 10404,
      "hz": 59.5
     },
     {
@@ -3648,7 +3648,7 @@
      "pozo": "LC-01",
      "fecha": "2026-04-10T16:00:00+00:00",
      "crudo_bpd": 393,
-     "agua_bpd": 963,
+     "agua_bpd": 10600,
      "hz": 59.5
     },
     {
@@ -3656,7 +3656,7 @@
      "pozo": "LC-01",
      "fecha": "2026-07-10T16:00:00+00:00",
      "crudo_bpd": 389,
-     "agua_bpd": 952,
+     "agua_bpd": 10475,
      "hz": 59.5
     },
     {
@@ -3664,7 +3664,7 @@
      "pozo": "LC-01",
      "fecha": "2026-08-27T13:00:00+00:00",
      "crudo_bpd": 376,
-     "agua_bpd": 958,
+     "agua_bpd": 10543,
      "hz": 59.5
     }
    ]
@@ -3696,8 +3696,8 @@
      "unico": "único con (id, clase, campo_id, activo)",
      "check": "CHECK ((btrim(id) <> ''::text))",
      "defecto": null,
-     "descripcion": "Id del evento como lo emite el borde (EP-LC21-261001-01, EV-2011-0909, SV-SE-2-260828).",
-     "ejemplo": "EP-LC04-260906-65"
+     "descripcion": "Id del evento como lo emite el borde (EP-LC21-261001-01, EV-2011-0809, SV-SE-2-260828).",
+     "ejemplo": "EP-LC04-260906-85"
     },
     {
      "nombre": "campo_id",
@@ -3750,7 +3750,7 @@
    ],
    "filas": [
     {
-     "id": "EP-LC04-260906-65",
+     "id": "EP-LC04-260906-85",
      "campo_id": "ceiba",
      "clase": "pozo",
      "activo": "LC-04",
@@ -3764,11 +3764,11 @@
      "recibido": "2026-10-01T23:20:00+00:00"
     },
     {
-     "id": "EV-2011-0909",
+     "id": "EV-2011-0809",
      "campo_id": "ceiba",
      "clase": "bomba",
      "activo": "P-201B",
-     "recibido": "2026-09-10T02:14:00+00:00"
+     "recibido": "2026-08-10T02:14:00+00:00"
     },
     {
      "id": "EV-2011-1002",
@@ -3814,7 +3814,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Id del evento (EP-LC21-261001-01).",
-     "ejemplo": "EP-MN07-260214-16"
+     "ejemplo": "EP-MN07-260214-32"
     },
     {
      "nombre": "clase",
@@ -3927,7 +3927,7 @@
    ],
    "filas": [
     {
-     "id": "EP-MN07-260214-16",
+     "id": "EP-MN07-260214-32",
      "clase": "pozo",
      "campo_id": "morichal",
      "pozo": "MN-07",
@@ -3951,7 +3951,7 @@
      "recibido": "2026-08-14T08:30:00+00:00"
     },
     {
-     "id": "EP-LC04-260906-65",
+     "id": "EP-LC04-260906-85",
      "clase": "pozo",
      "campo_id": "ceiba",
      "pozo": "LC-04",
@@ -3975,16 +3975,16 @@
      "recibido": "2026-10-01T23:20:00+00:00"
     },
     {
-     "id": "EP-LC16-261002-25",
+     "id": "EP-LC16-261002-78",
      "clase": "pozo",
      "campo_id": "ceiba",
      "pozo": "LC-16",
-     "inicio": "2026-10-02T13:07:00+00:00",
+     "inicio": "2026-10-02T10:43:00+00:00",
      "fin": null,
      "codigo": "LSHH",
      "senal": "VSD-LC16 · código LSHH",
      "hz": null,
-     "recibido": "2026-10-02T13:07:00+00:00"
+     "recibido": "2026-10-02T10:43:00+00:00"
     }
    ]
   },
@@ -4214,7 +4214,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Id de la parada (EV-2011-0909).",
+     "descripcion": "Id de la parada (EV-2011-0809).",
      "ejemplo": "EV-2011-260128"
     },
     {
@@ -4395,7 +4395,7 @@
      "check": "CHECK (((nivel_al_parar_tag IS NULL) = (nivel_al_parar_pct IS NULL))) · CHECK (((nivel_al_parar_pct >= (0)::double precision) AND (nivel_al_parar_pct <= (100)::double precision)))",
      "defecto": null,
      "descripcion": "Nivel del tanque en el instante de parar, % (con el aforo da el colchón previsto).",
-     "ejemplo": 54.5
+     "ejemplo": 78.2
     },
     {
      "nombre": "recibido",
@@ -4427,7 +4427,7 @@
      "firma_tag": null,
      "firma_texto": null,
      "nivel_al_parar_tag": "LT-2012",
-     "nivel_al_parar_pct": 54.5,
+     "nivel_al_parar_pct": 78.2,
      "recibido": "2026-01-28T21:20:52+00:00"
     },
     {
@@ -4469,6 +4469,25 @@
      "recibido": "2026-07-25T15:28:39+00:00"
     },
     {
+     "id": "EV-2011-0809",
+     "clase": "bomba",
+     "campo_id": "ceiba",
+     "equipo": "P-201B",
+     "inicio": "2026-08-10T02:14:00+00:00",
+     "fin": "2026-08-11T12:59:36+00:00",
+     "perdida": 1,
+     "senal": "ZS-2011 · marcha → paro",
+     "primera_alarma_tag": "LSH-2013",
+     "primera_alarma_texto": "fuga de sello detectada",
+     "firma_parte": null,
+     "firma_familia": null,
+     "firma_tag": null,
+     "firma_texto": null,
+     "nivel_al_parar_tag": "LT-2012",
+     "nivel_al_parar_pct": 77.3,
+     "recibido": "2026-08-10T02:14:00+00:00"
+    },
+    {
      "id": "EV-2011-260819",
      "clase": "bomba",
      "campo_id": "ceiba",
@@ -4484,27 +4503,8 @@
      "firma_tag": null,
      "firma_texto": null,
      "nivel_al_parar_tag": "LT-2012",
-     "nivel_al_parar_pct": 47,
+     "nivel_al_parar_pct": 75.7,
      "recibido": "2026-08-19T23:19:23+00:00"
-    },
-    {
-     "id": "EV-2011-0909",
-     "clase": "bomba",
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "inicio": "2026-09-10T02:14:00+00:00",
-     "fin": "2026-09-11T12:59:36+00:00",
-     "perdida": 1,
-     "senal": "ZS-2011 · marcha → paro",
-     "primera_alarma_tag": "LSH-2013",
-     "primera_alarma_texto": "fuga de sello detectada",
-     "firma_parte": null,
-     "firma_familia": null,
-     "firma_tag": null,
-     "firma_texto": null,
-     "nivel_al_parar_tag": "LT-2012",
-     "nivel_al_parar_pct": 52,
-     "recibido": "2026-09-10T02:14:00+00:00"
     }
    ]
   },
@@ -4797,7 +4797,7 @@
      "check": "CHECK (((bbl >= (0)::numeric) AND (bbl <> 'Infinity'::numeric)))",
      "defecto": null,
      "descripcion": "Barriles netos del día. NULL = el computador de flujo lo reportó sin dato (hueco de custodia, nunca cero).",
-     "ejemplo": 4332
+     "ejemplo": 10223
     },
     {
      "nombre": "cerrado",
@@ -4841,7 +4841,7 @@
      "campo_id": "ceiba",
      "dia": "2025-10-19",
      "mes": "2025-10-01",
-     "bbl": 4332,
+     "bbl": 10223,
      "cerrado": true,
      "tag": "FQI-0101",
      "recibido": "2025-10-20T05:00:00+00:00"
@@ -4850,7 +4850,7 @@
      "campo_id": "ceiba",
      "dia": "2025-10-20",
      "mes": "2025-10-01",
-     "bbl": 0,
+     "bbl": 9723,
      "cerrado": true,
      "tag": "FQI-0101",
      "recibido": "2025-10-21T05:00:00+00:00"
@@ -4859,7 +4859,7 @@
      "campo_id": "ceiba",
      "dia": "2026-09-30",
      "mes": "2026-09-01",
-     "bbl": 11596,
+     "bbl": 11602,
      "cerrado": true,
      "tag": "FQI-0101",
      "recibido": "2026-10-01T05:00:00+00:00"
@@ -4877,7 +4877,7 @@
      "campo_id": "ceiba",
      "dia": "2026-10-02",
      "mes": "2026-10-01",
-     "bbl": 3838,
+     "bbl": 5836,
      "cerrado": false,
      "tag": "FQI-0101",
      "recibido": "2026-10-03T05:00:00+00:00"
@@ -5311,7 +5311,7 @@
      "check": "CHECK (((capacidad_bpd > (0)::numeric) AND (capacidad_bpd <= (10000000)::numeric)))",
      "defecto": null,
      "descripcion": "Capacidad nominal en el fluido que mueve, bbl/d.",
-     "ejemplo": 20400
+     "ejemplo": 89250
     },
     {
      "nombre": "sin_bomba_fraccion",
@@ -5335,7 +5335,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Quién lo declara y por qué.",
-     "ejemplo": "El agua no tiene otra salida: los pozos de disposición son su único destino"
+     "ejemplo": "Lo que P-201A y P-201C no absorben no tiene otra salida"
     }
    ],
    "filas": [
@@ -5346,9 +5346,9 @@
      "tecnologia": "centrifuga-hps",
      "norma": "Centrífuga multietapa horizontal · API 610 (Tabla 8)",
      "papel": "disposicion",
-     "capacidad_bpd": 20400,
+     "capacidad_bpd": 89250,
      "sin_bomba_fraccion": 1,
-     "sin_bomba_fuente": "El agua no tiene otra salida: los pozos de disposición son su único destino"
+     "sin_bomba_fuente": "Lo que P-201A y P-201C no absorben no tiene otra salida"
     },
     {
      "campo_id": "guacamayo",
@@ -5357,7 +5357,7 @@
      "tecnologia": "centrifuga-hps",
      "norma": "Centrífuga multietapa horizontal · API 610 (Tabla 8)",
      "papel": "recobro",
-     "capacidad_bpd": 13000,
+     "capacidad_bpd": 50000,
      "sin_bomba_fraccion": 0,
      "sin_bomba_fuente": "El agua tiene salida alterna: la parada no cierra pozos"
     },
@@ -5368,7 +5368,7 @@
      "tecnologia": "doble-tornillo",
      "norma": "Doble tornillo · API 676, 4.ª ed. 2022 (Anexos B y G)",
      "papel": "transporte",
-     "capacidad_bpd": 22000,
+     "capacidad_bpd": 90000,
      "sin_bomba_fraccion": 1,
      "sin_bomba_fuente": "Declarado por ingeniería: sin la bomba, la contrapresión de la línea no deja fluir el clúster"
     },
@@ -5379,9 +5379,9 @@
      "tecnologia": "centrifuga-hps",
      "norma": "Centrífuga multietapa horizontal · API 610 (Tabla 8)",
      "papel": "disposicion",
-     "capacidad_bpd": 24000,
+     "capacidad_bpd": 86500,
      "sin_bomba_fraccion": 1,
-     "sin_bomba_fuente": "Lo que P-201A no absorbe no tiene otra salida"
+     "sin_bomba_fuente": "Lo que las otras seis bombas del tren no absorben no tiene otra salida"
     }
    ]
   },
@@ -5766,7 +5766,7 @@
      "check": "CHECK (((normal_baja IS NULL) OR (normal_alta IS NULL) OR (normal_baja <= normal_alta)))",
      "defecto": null,
      "descripcion": "Lado bajo de la banda normal; NULL = abierto.",
-     "ejemplo": 61.199999999999996
+     "ejemplo": 82.45
     },
     {
      "nombre": "normal_alta",
@@ -5778,7 +5778,7 @@
      "check": "CHECK (((normal_baja IS NULL) OR (normal_alta IS NULL) OR (normal_baja <= normal_alta)))",
      "defecto": null,
      "descripcion": "Lado alto de la banda normal; NULL = abierto.",
-     "ejemplo": 80.64000000000001
+     "ejemplo": 108.64000000000001
     },
     {
      "nombre": "alarma_baja",
@@ -5790,7 +5790,7 @@
      "check": "CHECK (((alarma_baja IS NULL) OR (alarma_alta IS NULL) OR (alarma_baja < alarma_alta)))",
      "defecto": null,
      "descripcion": "Disparo por bajo del variador; NULL = no existe.",
-     "ejemplo": 47
+     "ejemplo": 63
     },
     {
      "nombre": "alarma_alta",
@@ -5802,7 +5802,7 @@
      "check": "CHECK (((alarma_baja IS NULL) OR (alarma_alta IS NULL) OR (alarma_baja < alarma_alta)))",
      "defecto": null,
      "descripcion": "Disparo por alto; NULL = no existe.",
-     "ejemplo": 90
+     "ejemplo": 121
     },
     {
      "nombre": "fuente",
@@ -5836,10 +5836,10 @@
      "variable": "corriente",
      "tag": "VSD-LC01 · corriente",
      "unidad": "A",
-     "normal_baja": 61.199999999999996,
-     "normal_alta": 80.64000000000001,
-     "alarma_baja": 47,
-     "alarma_alta": 90,
+     "normal_baja": 82.45,
+     "normal_alta": 108.64000000000001,
+     "alarma_baja": 63,
+     "alarma_alta": 121,
      "fuente": "Ajuste de protección del variador del pozo (configuración del pozo)",
      "leido": "2026-10-02T19:00:00+00:00"
     },
@@ -7093,7 +7093,7 @@
      "check": "CHECK ((jsonb_typeof(config) = 'object'::text))",
      "defecto": null,
      "descripcion": "La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa); precio sin configurar = ausente.",
-     "ejemplo": "{\"campos\":{\"ceiba\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":10900,\"diferidoMaxBpd\":800,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"zarza\":{\"metas\":[{\"desde\":\"2025-10-01\",\"produccionBpd\":3050,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":false}},\"palmar\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":3250,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"no\",\"bombas\":true,\"electrosumergibles\":false}},\"morichal\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":16700,\"diferidoMaxBpd\":950,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"guacamayo\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":6300,\"diferidoMaxBpd\":450,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"consumo\",\"bombas\":true,\"electrosumergibles\":true}}},\"empresa\":\"Operadora de demostración\",\"tanques\":[{\"id\":\"TK-AG-CE\",\"aforo\":\"Certificado de aforo TK-AG-CE · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de La Ceiba\",\"campoId\":\"ceiba\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":10000},{\"id\":\"TK-AG-MN\",\"aforo\":\"Certificado de aforo TK-AG-MN · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de Morichal Norte\",\"campoId\":\"morichal\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":18000},{\"id\":\"TK-AG-GU\",\"aforo\":\"Certificado de aforo TK-AG-GU · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nom… [recortado para el Excel: 3427 caracteres]"
+     "ejemplo": "{\"campos\":{\"ceiba\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":10900,\"diferidoMaxBpd\":800,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"zarza\":{\"metas\":[{\"desde\":\"2025-10-01\",\"produccionBpd\":3050,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":false}},\"palmar\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":3250,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"no\",\"bombas\":true,\"electrosumergibles\":false}},\"morichal\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":16700,\"diferidoMaxBpd\":950,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"guacamayo\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":6300,\"diferidoMaxBpd\":450,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"consumo\",\"bombas\":true,\"electrosumergibles\":true}}},\"empresa\":\"Operadora de demostración\",\"tanques\":[{\"id\":\"TK-AG-CE\",\"aforo\":\"Certificado de aforo TK-AG-CE · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de La Ceiba\",\"campoId\":\"ceiba\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":30000},{\"id\":\"TK-AG-MN\",\"aforo\":\"Certificado de aforo TK-AG-MN · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de Morichal Norte\",\"campoId\":\"morichal\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":60000},{\"id\":\"TK-AG-GU\",\"aforo\":\"Certificado de aforo TK-AG-GU · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nom… [recortado para el Excel: 4193 caracteres]"
     }
    ],
    "filas": [
@@ -7107,7 +7107,7 @@
      "cambios": [
       "Configuración inicial: metas por campo, precio neto, tanques de agua, respaldos de bombas y programa de paradas"
      ],
-     "config": "{\"campos\":{\"ceiba\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":10900,\"diferidoMaxBpd\":800,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"zarza\":{\"metas\":[{\"desde\":\"2025-10-01\",\"produccionBpd\":3050,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":false}},\"palmar\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":3250,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"no\",\"bombas\":true,\"electrosumergibles\":false}},\"morichal\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":16700,\"diferidoMaxBpd\":950,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"guacamayo\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":6300,\"diferidoMaxBpd\":450,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"consumo\",\"bombas\":true,\"electrosumergibles\":true}}},\"empresa\":\"Operadora de demostración\",\"tanques\":[{\"id\":\"TK-AG-CE\",\"aforo\":\"Certificado de aforo TK-AG-CE · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de La Ceiba\",\"campoId\":\"ceiba\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":10000},{\"id\":\"TK-AG-MN\",\"aforo\":\"Certificado de aforo TK-AG-MN · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de Morichal Norte\",\"campoId\":\"morichal\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":18000},{\"id\":\"TK-AG-GU\",\"aforo\":\"Certificado de aforo TK-AG-GU · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nom… [recortado para el Excel: 3427 caracteres]"
+     "config": "{\"campos\":{\"ceiba\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":10900,\"diferidoMaxBpd\":800,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"zarza\":{\"metas\":[{\"desde\":\"2025-10-01\",\"produccionBpd\":3050,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":false}},\"palmar\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":3250,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"no\",\"bombas\":true,\"electrosumergibles\":false}},\"morichal\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":16700,\"diferidoMaxBpd\":950,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"guacamayo\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":6300,\"diferidoMaxBpd\":450,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"consumo\",\"bombas\":true,\"electrosumergibles\":true}}},\"empresa\":\"Operadora de demostración\",\"tanques\":[{\"id\":\"TK-AG-CE\",\"aforo\":\"Certificado de aforo TK-AG-CE · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de La Ceiba\",\"campoId\":\"ceiba\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":30000},{\"id\":\"TK-AG-MN\",\"aforo\":\"Certificado de aforo TK-AG-MN · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de Morichal Norte\",\"campoId\":\"morichal\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":60000},{\"id\":\"TK-AG-GU\",\"aforo\":\"Certificado de aforo TK-AG-GU · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nom… [recortado para el Excel: 4193 caracteres]"
     }
    ]
   },
@@ -7528,7 +7528,7 @@
      "check": "CHECK (((capacidad_bbl > (0)::numeric) AND (capacidad_bbl <> 'NaN'::numeric) AND (capacidad_bbl <> 'Infinity'::numeric)))",
      "defecto": null,
      "descripcion": "Capacidad, bbl: mayor que cero y finita.",
-     "ejemplo": 10000
+     "ejemplo": 30000
     },
     {
      "nombre": "alto_alto",
@@ -7575,7 +7575,7 @@
      "nombre": "Tanque de agua de La Ceiba",
      "campo_id": "ceiba",
      "bomba": "P-201B",
-     "capacidad_bbl": 10000,
+     "capacidad_bbl": 30000,
      "alto_alto": 0.9,
      "tag_nivel": "LT-2012",
      "aforo": "Certificado de aforo TK-AG-CE · tabla de 1 cm"
@@ -7587,7 +7587,7 @@
      "nombre": "Tanque de agua de Guacamayo",
      "campo_id": "guacamayo",
      "bomba": "P-201B",
-     "capacidad_bbl": 8000,
+     "capacidad_bbl": 20000,
      "alto_alto": 0.9,
      "tag_nivel": "LT-2012",
      "aforo": "Certificado de aforo TK-AG-GU · tabla de 1 cm"
@@ -7599,7 +7599,7 @@
      "nombre": "Tanque de agua de Morichal Norte",
      "campo_id": "morichal",
      "bomba": "P-201B",
-     "capacidad_bbl": 18000,
+     "capacidad_bbl": 60000,
      "alto_alto": 0.9,
      "tag_nivel": "LT-2012",
      "aforo": "Certificado de aforo TK-AG-MN · tabla de 1 cm"
@@ -7682,7 +7682,7 @@
      "check": "CHECK (((libre_bpd >= (0)::numeric) AND (libre_bpd <= (10000000)::numeric)))",
      "defecto": null,
      "descripcion": "Capacidad libre del respaldo, bbl/d: 0 (sin respaldo) a 10.000.000.",
-     "ejemplo": 0
+     "ejemplo": 30100
     },
     {
      "nombre": "detalle",
@@ -7694,7 +7694,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Qué es el respaldo (P-201A en paralelo…).",
-     "ejemplo": "Única bomba del tren de agua"
+     "ejemplo": "P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una"
     }
    ],
    "filas": [
@@ -7703,16 +7703,16 @@
      "campo_id": "ceiba",
      "equipo": "P-201B",
      "orden": 0,
-     "libre_bpd": 0,
-     "detalle": "Única bomba del tren de agua"
+     "libre_bpd": 30100,
+     "detalle": "P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una"
     },
     {
      "version": 1,
      "campo_id": "guacamayo",
      "equipo": "P-201B",
      "orden": 3,
-     "libre_bpd": 13000,
-     "detalle": "Pozo de disposición alterno con capacidad para todo el caudal"
+     "libre_bpd": 50000,
+     "detalle": "P-201C de reserva (50.000 bbl/d), alineada al pozo de disposición alterno: toma todo su caudal"
     },
     {
      "version": 1,
@@ -7727,8 +7727,8 @@
      "campo_id": "morichal",
      "equipo": "P-201B",
      "orden": 1,
-     "libre_bpd": 15100,
-     "detalle": "P-201A en paralelo, con 15.100 bbl/d libres"
+     "libre_bpd": 39500,
+     "detalle": "Las otras seis bombas del tren, con 39.500 bbl/d libres entre todas: el cabezal de disposición las limita a unos 86.500 cada una"
     }
    ]
   },
@@ -7882,7 +7882,7 @@
     {
      "version": 1,
      "id": "PR-LC19-260123",
-     "orden": 6,
+     "orden": 8,
      "campo_id": "ceiba",
      "equipo": "LC-19",
      "desde": "2026-01-23T04:51:00+00:00",
@@ -8905,7 +8905,7 @@
      "check": "CHECK ((btrim(numero) <> ''::text))",
      "defecto": null,
      "descripcion": "Número de aviso de SAP (QMNUM). Lo devuelve SAP al crearlo.",
-     "ejemplo": "10004146"
+     "ejemplo": "10004149"
     },
     {
      "nombre": "tipo",
@@ -8989,7 +8989,7 @@
      "check": "CHECK (((familia IS NULL) = (parte IS NULL)))",
      "defecto": null,
      "descripcion": "Parte del objeto (catálogo B de SAP vía mapeo_catalogo_sap).",
-     "ejemplo": "bomba"
+     "ejemplo": "aislamiento"
     },
     {
      "nombre": "modo",
@@ -9013,7 +9013,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Inicio de la avería: la hora del PLC.",
-     "ejemplo": "2026-09-24T21:51:34+00:00"
+     "ejemplo": "2026-09-26T18:46:00+00:00"
     },
     {
      "nombre": "parada",
@@ -9099,7 +9099,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Evento del PLC que lo originó. (AvisoSap.orden no es columna: sale de orden_sap.aviso, única por aviso.)",
-     "ejemplo": "EV-M2011-260924"
+     "ejemplo": "EP-LC04-260926-75"
     },
     {
      "nombre": "cerrado",
@@ -9128,7 +9128,7 @@
    ],
    "filas": [
     {
-     "numero": "10004146",
+     "numero": "10004149",
      "tipo": "M1",
      "campo_id": "ceiba",
      "equipo": "K-101",
@@ -9151,7 +9151,76 @@
      "actualizado": "2026-10-02T19:00:00+00:00"
     },
     {
+     "numero": "10004148",
+     "tipo": "M2",
+     "campo_id": "ceiba",
+     "equipo": "LC-04",
+     "descripcion": "Aislamiento del motor y del cable: parada de LC-04",
+     "prioridad": 1,
+     "familia": "electrosumergible",
+     "parte": "aislamiento",
+     "modo": null,
+     "inicio_averia": "2026-09-26T18:46:00+00:00",
+     "parada": true,
+     "evidencia": [
+      "Parada del PLC EP-LC04-260926-75"
+     ],
+     "creado": "2026-09-26T18:49:00+00:00",
+     "creado_por": "TRIM · desde la parada del PLC",
+     "creado_por_id": null,
+     "origen": "trim",
+     "evento_id": "EP-LC04-260926-75",
+     "cerrado": true,
+     "actualizado": "2026-10-02T19:00:00+00:00"
+    },
+    {
      "numero": "10004147",
+     "tipo": "M2",
+     "campo_id": "guacamayo",
+     "equipo": "GU-07",
+     "descripcion": "Aislamiento del motor y del cable: parada de GU-07",
+     "prioridad": 1,
+     "familia": "electrosumergible",
+     "parte": "aislamiento",
+     "modo": null,
+     "inicio_averia": "2026-09-26T07:04:00+00:00",
+     "parada": true,
+     "evidencia": [
+      "Parada del PLC EP-GU07-260926-96"
+     ],
+     "creado": "2026-09-26T07:07:00+00:00",
+     "creado_por": "TRIM · desde la parada del PLC",
+     "creado_por_id": null,
+     "origen": "trim",
+     "evento_id": "EP-GU07-260926-96",
+     "cerrado": true,
+     "actualizado": "2026-10-02T19:00:00+00:00"
+    },
+    {
+     "numero": "10004146",
+     "tipo": "M2",
+     "campo_id": "ceiba",
+     "equipo": "LC-11",
+     "descripcion": "Aislamiento del motor y del cable: parada de LC-11",
+     "prioridad": 1,
+     "familia": "electrosumergible",
+     "parte": "aislamiento",
+     "modo": null,
+     "inicio_averia": "2026-09-26T00:56:00+00:00",
+     "parada": true,
+     "evidencia": [
+      "Parada del PLC EP-LC11-260925-40"
+     ],
+     "creado": "2026-09-26T00:59:00+00:00",
+     "creado_por": "TRIM · desde la parada del PLC",
+     "creado_por_id": null,
+     "origen": "trim",
+     "evento_id": "EP-LC11-260925-40",
+     "cerrado": true,
+     "actualizado": "2026-10-02T19:00:00+00:00"
+    },
+    {
+     "numero": "10004150",
      "tipo": "M1",
      "campo_id": "ceiba",
      "equipo": "LC-14",
@@ -9170,75 +9239,6 @@
      "creado_por_id": null,
      "origen": "trim",
      "evento_id": null,
-     "cerrado": true,
-     "actualizado": "2026-10-02T19:00:00+00:00"
-    },
-    {
-     "numero": "10004145",
-     "tipo": "M2",
-     "campo_id": "morichal",
-     "equipo": "P-201B",
-     "descripcion": "Parada de P-201B",
-     "prioridad": 1,
-     "familia": null,
-     "parte": null,
-     "modo": null,
-     "inicio_averia": "2026-09-24T21:51:34+00:00",
-     "parada": true,
-     "evidencia": [
-      "Parada del PLC EV-M2011-260924"
-     ],
-     "creado": "2026-09-24T21:54:34+00:00",
-     "creado_por": "TRIM · desde la parada del PLC",
-     "creado_por_id": null,
-     "origen": "trim",
-     "evento_id": "EV-M2011-260924",
-     "cerrado": true,
-     "actualizado": "2026-10-02T19:00:00+00:00"
-    },
-    {
-     "numero": "10004144",
-     "tipo": "M2",
-     "campo_id": "morichal",
-     "equipo": "MPP-301",
-     "descripcion": "Sello mecánico: parada de MPP-301",
-     "prioridad": 1,
-     "familia": "multifasica",
-     "parte": "sello",
-     "modo": null,
-     "inicio_averia": "2026-09-24T11:23:05+00:00",
-     "parada": true,
-     "evidencia": [
-      "Parada del PLC EV-3016-260924"
-     ],
-     "creado": "2026-09-24T11:26:05+00:00",
-     "creado_por": "TRIM · desde la parada del PLC",
-     "creado_por_id": null,
-     "origen": "trim",
-     "evento_id": "EV-3016-260924",
-     "cerrado": true,
-     "actualizado": "2026-10-02T19:00:00+00:00"
-    },
-    {
-     "numero": "10004143",
-     "tipo": "M2",
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "descripcion": "Rodamientos: parada de P-201B",
-     "prioridad": 1,
-     "familia": "inyeccion",
-     "parte": "rodamientos",
-     "modo": null,
-     "inicio_averia": "2026-09-22T15:05:00+00:00",
-     "parada": true,
-     "evidencia": [
-      "Parada del PLC EV-2011-0922"
-     ],
-     "creado": "2026-09-22T15:08:00+00:00",
-     "creado_por": "TRIM · desde la parada del PLC",
-     "creado_por_id": null,
-     "origen": "trim",
-     "evento_id": "EV-2011-0922",
      "cerrado": true,
      "actualizado": "2026-10-02T19:00:00+00:00"
     }
@@ -9271,7 +9271,7 @@
      "check": "CHECK ((btrim(numero) <> ''::text))",
      "defecto": null,
      "descripcion": "Número de orden (AUFNR).",
-     "ejemplo": "40012053"
+     "ejemplo": "40012056"
     },
     {
      "nombre": "clase_sap",
@@ -9379,7 +9379,7 @@
      "check": "CHECK (((estado <> 'TECO'::text) OR (cierre_tecnico IS NOT NULL)))",
      "defecto": null,
      "descripcion": "Cierre técnico (TECO).",
-     "ejemplo": "2026-09-26T12:26:17.357+00:00"
+     "ejemplo": "2026-09-29T10:55:00+00:00"
     },
     {
      "nombre": "tecnico_id",
@@ -9415,7 +9415,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Aviso que la originó. Un aviso tiene a lo más una orden (en SAP, QMEL-AUFNR es un solo número; índice único orden_sap_un_aviso): de aquí sale AvisoSap.orden de GET /api/sap/avisos.",
-     "ejemplo": "10004146"
+     "ejemplo": "10004149"
     },
     {
      "nombre": "horas_reales",
@@ -9439,7 +9439,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "En una correctiva: la parada del PLC que atendió (indisponibilidad total).",
-     "ejemplo": "EV-M2011-260924"
+     "ejemplo": "EP-LC04-260926-75"
     },
     {
      "nombre": "actualizado",
@@ -9456,7 +9456,7 @@
    ],
    "filas": [
     {
-     "numero": "40012053",
+     "numero": "40012056",
      "clase_sap": "PM03",
      "campo_id": "ceiba",
      "equipo": "K-101",
@@ -9468,13 +9468,67 @@
      "cierre_tecnico": null,
      "tecnico_id": "tec",
      "puesto": "MEC-CEIBA",
-     "aviso": "10004146",
+     "aviso": "10004149",
      "horas_reales": 0,
      "evento_id": null,
      "actualizado": "2026-10-02T19:00:00+00:00"
     },
     {
-     "numero": "40012054",
+     "numero": "40012048",
+     "clase_sap": "PM01",
+     "campo_id": "ceiba",
+     "equipo": "LC-04",
+     "descripcion": "Reparar aislamiento del motor y del cable de LC-04",
+     "estado": "TECO",
+     "prioridad": 1,
+     "creada": "2026-09-26T19:46:00+00:00",
+     "liberada": "2026-09-26T20:46:00+00:00",
+     "cierre_tecnico": "2026-09-29T10:55:00+00:00",
+     "tecnico_id": "tec",
+     "puesto": "MEC-CEIBA",
+     "aviso": "10004148",
+     "horas_reales": 8,
+     "evento_id": "EP-LC04-260926-75",
+     "actualizado": "2026-10-02T19:00:00+00:00"
+    },
+    {
+     "numero": "40012047",
+     "clase_sap": "PM01",
+     "campo_id": "guacamayo",
+     "equipo": "GU-07",
+     "descripcion": "Reparar aislamiento del motor y del cable de GU-07",
+     "estado": "TECO",
+     "prioridad": 1,
+     "creada": "2026-09-26T08:04:00+00:00",
+     "liberada": "2026-09-26T09:04:00+00:00",
+     "cierre_tecnico": "2026-09-28T22:47:00+00:00",
+     "tecnico_id": null,
+     "puesto": "MEC-CONTRATISTA",
+     "aviso": "10004147",
+     "horas_reales": 8,
+     "evento_id": "EP-GU07-260926-96",
+     "actualizado": "2026-10-02T19:00:00+00:00"
+    },
+    {
+     "numero": "40012046",
+     "clase_sap": "PM01",
+     "campo_id": "ceiba",
+     "equipo": "LC-11",
+     "descripcion": "Reparar aislamiento del motor y del cable de LC-11",
+     "estado": "TECO",
+     "prioridad": 1,
+     "creada": "2026-09-26T01:56:00+00:00",
+     "liberada": "2026-09-26T02:56:00+00:00",
+     "cierre_tecnico": "2026-09-29T16:35:00+00:00",
+     "tecnico_id": "tec",
+     "puesto": "MEC-CEIBA",
+     "aviso": "10004146",
+     "horas_reales": 8,
+     "evento_id": "EP-LC11-260925-40",
+     "actualizado": "2026-10-02T19:00:00+00:00"
+    },
+    {
+     "numero": "40012057",
      "clase_sap": "PM03",
      "campo_id": "ceiba",
      "equipo": "LC-14",
@@ -9486,63 +9540,9 @@
      "cierre_tecnico": "2026-09-26T12:26:17.357+00:00",
      "tecnico_id": "tec",
      "puesto": "MEC-CEIBA",
-     "aviso": "10004147",
+     "aviso": "10004150",
      "horas_reales": 4,
      "evento_id": null,
-     "actualizado": "2026-10-02T19:00:00+00:00"
-    },
-    {
-     "numero": "40012045",
-     "clase_sap": "PM01",
-     "campo_id": "morichal",
-     "equipo": "P-201B",
-     "descripcion": "Revisar y reparar P-201B",
-     "estado": "TECO",
-     "prioridad": 1,
-     "creada": "2026-09-24T22:51:34+00:00",
-     "liberada": "2026-09-24T23:51:34+00:00",
-     "cierre_tecnico": "2026-09-28T14:53:06+00:00",
-     "tecnico_id": null,
-     "puesto": "MEC-CONTRATISTA",
-     "aviso": "10004145",
-     "horas_reales": 8,
-     "evento_id": "EV-M2011-260924",
-     "actualizado": "2026-10-02T19:00:00+00:00"
-    },
-    {
-     "numero": "40012044",
-     "clase_sap": "PM01",
-     "campo_id": "morichal",
-     "equipo": "MPP-301",
-     "descripcion": "Reparar sello mecánico de MPP-301",
-     "estado": "TECO",
-     "prioridad": 1,
-     "creada": "2026-09-24T12:23:05+00:00",
-     "liberada": "2026-09-24T13:23:05+00:00",
-     "cierre_tecnico": "2026-09-26T11:47:15+00:00",
-     "tecnico_id": null,
-     "puesto": "MEC-CONTRATISTA",
-     "aviso": "10004144",
-     "horas_reales": 8,
-     "evento_id": "EV-3016-260924",
-     "actualizado": "2026-10-02T19:00:00+00:00"
-    },
-    {
-     "numero": "40012043",
-     "clase_sap": "PM01",
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "descripcion": "Reparar rodamientos de P-201B",
-     "estado": "TECO",
-     "prioridad": 1,
-     "creada": "2026-09-22T16:05:00+00:00",
-     "liberada": "2026-09-22T17:05:00+00:00",
-     "cierre_tecnico": "2026-09-23T10:04:28+00:00",
-     "tecnico_id": "tec",
-     "puesto": "MEC-CEIBA",
-     "aviso": "10004143",
-     "horas_reales": 8,
-     "evento_id": "EV-2011-0922",
      "actualizado": "2026-10-02T19:00:00+00:00"
     }
    ]
@@ -10169,7 +10169,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Id de la predicción.",
-     "ejemplo": "PR-EV-2011-0922"
+     "ejemplo": "PR-EP-LC04-260926-75"
     },
     {
      "nombre": "campo_id",
@@ -10193,7 +10193,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Equipo de alto impacto (bomba o pozo con electrosumergible).",
-     "ejemplo": "P-201B"
+     "ejemplo": "LC-04"
     },
     {
      "nombre": "familia",
@@ -10205,7 +10205,7 @@
      "check": "CHECK (((familia IS NULL) = (parte IS NULL)))",
      "defecto": null,
      "descripcion": "Familia de la parte.",
-     "ejemplo": "inyeccion"
+     "ejemplo": "electrosumergible"
     },
     {
      "nombre": "parte",
@@ -10217,7 +10217,7 @@
      "check": "CHECK (((familia IS NULL) = (parte IS NULL)))",
      "defecto": null,
      "descripcion": "Parte que va a fallar.",
-     "ejemplo": "rodamientos"
+     "ejemplo": "aislamiento"
     },
     {
      "nombre": "tag",
@@ -10241,7 +10241,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Qué hacer (del catálogo de la parte).",
-     "ejemplo": "Revisar aceite de la cámara de empuje y alineación; programar el cambio con el repuesto en mano."
+     "ejemplo": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro."
     },
     {
      "nombre": "emitida",
@@ -10253,7 +10253,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Cuándo la emitió el vigía (sale el WhatsApp a confiabilidad y jefe de mantenimiento).",
-     "ejemplo": "2026-09-20T15:05:00+00:00"
+     "ejemplo": "2026-09-22T18:46:00+00:00"
     },
     {
      "nombre": "desde",
@@ -10265,7 +10265,7 @@
      "check": "CHECK ((hasta >= desde))",
      "defecto": null,
      "descripcion": "Inicio de la ventana en que cruzaría su límite.",
-     "ejemplo": "2026-09-21T19:53:00+00:00"
+     "ejemplo": "2026-09-25T04:22:00+00:00"
     },
     {
      "nombre": "hasta",
@@ -10277,7 +10277,7 @@
      "check": "CHECK ((hasta >= desde))",
      "defecto": null,
      "descripcion": "Fin de la ventana.",
-     "ejemplo": "2026-09-23T10:17:00+00:00"
+     "ejemplo": "2026-09-28T09:10:00+00:00"
     },
     {
      "nombre": "calificacion",
@@ -10301,7 +10301,7 @@
      "check": "CHECK (((falla_evento_id IS NULL) = (falla_inicio IS NULL))) · CHECK (((calificacion = 'acierto'::text) = (falla_evento_id IS NOT NULL)))",
      "defecto": null,
      "descripcion": "Acierto: la falla del PLC que la confirmó.",
-     "ejemplo": "EV-2011-0922"
+     "ejemplo": "EP-LC04-260926-75"
     },
     {
      "nombre": "falla_inicio",
@@ -10313,7 +10313,7 @@
      "check": "CHECK (((falla_evento_id IS NULL) = (falla_inicio IS NULL)))",
      "defecto": null,
      "descripcion": "Inicio de esa falla.",
-     "ejemplo": "2026-09-22T15:05:00+00:00"
+     "ejemplo": "2026-09-26T18:46:00+00:00"
     },
     {
      "nombre": "intervencion",
@@ -10337,10 +10337,27 @@
      "check": "CHECK (((calificacion = 'seguimiento'::text) = (calificada IS NULL)))",
      "defecto": null,
      "descripcion": "Cuándo se calificó.",
-     "ejemplo": "2026-09-22T15:05:00+00:00"
+     "ejemplo": "2026-09-26T18:46:00+00:00"
     }
    ],
    "filas": [
+    {
+     "id": "PR-EP-LC04-260926-75",
+     "campo_id": "ceiba",
+     "equipo": "LC-04",
+     "familia": "electrosumergible",
+     "parte": "aislamiento",
+     "tag": null,
+     "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+     "emitida": "2026-09-22T18:46:00+00:00",
+     "desde": "2026-09-25T04:22:00+00:00",
+     "hasta": "2026-09-28T09:10:00+00:00",
+     "calificacion": "acierto",
+     "falla_evento_id": "EP-LC04-260926-75",
+     "falla_inicio": "2026-09-26T18:46:00+00:00",
+     "intervencion": null,
+     "calificada": "2026-09-26T18:46:00+00:00"
+    },
     {
      "id": "PR-EV-2011-0922",
      "campo_id": "ceiba",
@@ -10359,72 +10376,55 @@
      "calificada": "2026-09-22T15:05:00+00:00"
     },
     {
-     "id": "PR-EP-GU09-260913-93",
+     "id": "PR-EP-LC11-260925-40",
+     "campo_id": "ceiba",
+     "equipo": "LC-11",
+     "familia": "electrosumergible",
+     "parte": "aislamiento",
+     "tag": null,
+     "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+     "emitida": "2026-09-18T00:56:00+00:00",
+     "desde": "2026-09-22T20:08:00+00:00",
+     "hasta": "2026-09-29T05:44:00+00:00",
+     "calificacion": "acierto",
+     "falla_evento_id": "EP-LC11-260925-40",
+     "falla_inicio": "2026-09-26T00:56:00+00:00",
+     "intervencion": null,
+     "calificada": "2026-09-26T00:56:00+00:00"
+    },
+    {
+     "id": "PR-EP-MN33-260917-72",
+     "campo_id": "morichal",
+     "equipo": "MN-33",
+     "familia": "electrosumergible",
+     "parte": "aislamiento",
+     "tag": null,
+     "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+     "emitida": "2026-09-13T07:26:00+00:00",
+     "desde": "2026-09-15T17:02:00+00:00",
+     "hasta": "2026-09-18T21:50:00+00:00",
+     "calificacion": "acierto",
+     "falla_evento_id": "EP-MN33-260917-72",
+     "falla_inicio": "2026-09-17T07:26:00+00:00",
+     "intervencion": null,
+     "calificada": "2026-09-17T07:26:00+00:00"
+    },
+    {
+     "id": "PR-EP-GU09-260913-17",
      "campo_id": "guacamayo",
      "equipo": "GU-09",
      "familia": "electrosumergible",
      "parte": "aislamiento",
      "tag": null,
      "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
-     "emitida": "2026-09-10T22:23:00+00:00",
-     "desde": "2026-09-12T17:35:00+00:00",
-     "hasta": "2026-09-15T03:11:00+00:00",
+     "emitida": "2026-09-07T22:23:00+00:00",
+     "desde": "2026-09-11T12:47:00+00:00",
+     "hasta": "2026-09-16T07:59:00+00:00",
      "calificacion": "acierto",
-     "falla_evento_id": "EP-GU09-260913-93",
+     "falla_evento_id": "EP-GU09-260913-17",
      "falla_inicio": "2026-09-13T22:23:00+00:00",
      "intervencion": null,
      "calificada": "2026-09-13T22:23:00+00:00"
-    },
-    {
-     "id": "PR-EV-2011-0909",
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "familia": "inyeccion",
-     "parte": "sello",
-     "tag": null,
-     "accion": "Corregir la succión y revisar el plan de sello; tener el cartucho de repuesto en sitio antes de que la fuga crezca.",
-     "emitida": "2026-09-05T02:14:00+00:00",
-     "desde": "2026-09-08T02:14:00+00:00",
-     "hasta": "2026-09-12T02:14:00+00:00",
-     "calificacion": "acierto",
-     "falla_evento_id": "EV-2011-0909",
-     "falla_inicio": "2026-09-10T02:14:00+00:00",
-     "intervencion": null,
-     "calificada": "2026-09-10T02:14:00+00:00"
-    },
-    {
-     "id": "PR-morichal-MN-41-aislamiento",
-     "campo_id": "morichal",
-     "equipo": "MN-41",
-     "familia": "electrosumergible",
-     "parte": "aislamiento",
-     "tag": null,
-     "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
-     "emitida": "2026-09-03T06:55:34.097+00:00",
-     "desde": "2026-09-05T02:07:34.097+00:00",
-     "hasta": "2026-09-07T11:43:34.097+00:00",
-     "calificacion": "acierto",
-     "falla_evento_id": "EP-MN41-260903-06",
-     "falla_inicio": "2026-09-03T11:40:00+00:00",
-     "intervencion": null,
-     "calificada": "2026-09-03T11:40:00+00:00"
-    },
-    {
-     "id": "PR-EP-MN23-260905-57",
-     "campo_id": "morichal",
-     "equipo": "MN-23",
-     "familia": "electrosumergible",
-     "parte": "admision",
-     "tag": null,
-     "accion": "Bajar la frecuencia o revisar el nivel de fluido antes de que dispare por baja carga.",
-     "emitida": "2026-09-01T19:17:00+00:00",
-     "desde": "2026-09-04T04:53:00+00:00",
-     "hasta": "2026-09-07T09:41:00+00:00",
-     "calificacion": "acierto",
-     "falla_evento_id": "EP-MN23-260905-57",
-     "falla_inicio": "2026-09-05T19:17:00+00:00",
-     "intervencion": null,
-     "calificada": "2026-09-05T19:17:00+00:00"
     }
    ]
   },
@@ -10741,7 +10741,7 @@
      "entrante_meta_id": null
     },
     {
-     "evento_id": "EP-ZA06-260901-47",
+     "evento_id": "EP-ZA06-260901-71",
      "texto": "El comprador nominó menos gas: se cerró el pozo",
      "por": "Nelson Ortiz · supervisor",
      "por_id": null,
@@ -10753,7 +10753,7 @@
      "entrante_meta_id": null
     },
     {
-     "evento_id": "EP-ZA04-260826-46",
+     "evento_id": "EP-ZA04-260826-70",
      "texto": "El comprador nominó menos gas: se cerró el pozo",
      "por": "Nelson Ortiz · supervisor",
      "por_id": null,
@@ -10777,7 +10777,7 @@
      "entrante_meta_id": null
     },
     {
-     "evento_id": "EP-ZA01-260705-44",
+     "evento_id": "EP-ZA01-260705-68",
      "texto": "El comprador nominó menos gas: se cerró el pozo",
      "por": "Nelson Ortiz · supervisor",
      "por_id": null,
@@ -11468,7 +11468,7 @@
      "check": "CHECK (((regla = 'parte'::text) = (prediccion_id IS NOT NULL)))",
      "defecto": null,
      "descripcion": "Con regla parte: la predicción del vigía. En el JSON viaja también como evento.",
-     "ejemplo": "PR-EP-GU09-260913-93"
+     "ejemplo": "PR-EP-GU09-260913-17"
     },
     {
      "nombre": "orden",
@@ -11567,11 +11567,11 @@
      "meta_id": null
     },
     {
-     "id": "cierre-EV-2011-0909--oper-2026-09-10T07:00:00.000Z",
+     "id": "cierre-EV-2011-0809--oper-2026-08-10T04:19:00.000Z",
      "regla": "cierre",
      "plantilla": "cierre",
      "parametros": {
-      "hora": "01:59",
+      "hora": "23:18",
       "campo": "La Ceiba",
       "equipo": "P-201B"
      },
@@ -11579,11 +11579,11 @@
      "equipo": "P-201B",
      "para_id": "oper",
      "telefono": "+573005550104",
-     "hora": "2026-09-10T07:00:00+00:00",
-     "texto": "TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 01:59.",
+     "hora": "2026-08-10T04:19:00+00:00",
+     "texto": "TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 23:18.",
      "no_enviado": null,
      "opciones": null,
-     "evento_id": "EV-2011-0909",
+     "evento_id": "EV-2011-0809",
      "prediccion_id": null,
      "orden": null,
      "insistencia": null,
@@ -11616,7 +11616,7 @@
      "meta_id": null
     },
     {
-     "id": "parada-EP-LC01-251227-38--oper-2025-12-27T18:14:00.000Z",
+     "id": "parada-EP-LC01-251227-54--oper-2025-12-27T18:14:00.000Z",
      "regla": "parada",
      "plantilla": "paradaEsp",
      "parametros": {
@@ -11633,20 +11633,20 @@
      "texto": "TRIM · LC-01 de La Ceiba (electrosumergible) paró a las 13:13. Según su última prueba, el pozo deja de producir unos 401 bbl/d.",
      "no_enviado": null,
      "opciones": null,
-     "evento_id": "EP-LC01-251227-38",
+     "evento_id": "EP-LC01-251227-54",
      "prediccion_id": null,
      "orden": null,
      "insistencia": null,
      "meta_id": null
     },
     {
-     "id": "parte-PR-EP-GU09-260913-93--conf-2026-09-10T22:23:00.000Z",
+     "id": "parte-PR-EP-GU09-260913-17--conf-2026-09-07T22:23:00.000Z",
      "regla": "parte",
      "plantilla": "parteSinTag",
      "parametros": {
       "campo": "Guacamayo",
-      "desde": "12 de sept, 12:35",
-      "hasta": "14 de sept, 22:11",
+      "desde": "11 de sept, 07:47",
+      "hasta": "16 de sept, 02:59",
       "parte": "aislamiento del motor y del cable",
       "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
       "equipo": "GU-09"
@@ -11655,12 +11655,12 @@
      "equipo": "GU-09",
      "para_id": "conf",
      "telefono": "+573005550106",
-     "hora": "2026-09-10T22:23:00+00:00",
-     "texto": "TRIM · GU-09 de Guacamayo: el vigía anticipa falla en aislamiento del motor y del cable; cruzaría su límite entre el 12 de sept, 12:35 y el 14 de sept, 22:11. Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+     "hora": "2026-09-07T22:23:00+00:00",
+     "texto": "TRIM · GU-09 de Guacamayo: el vigía anticipa falla en aislamiento del motor y del cable; cruzaría su límite entre el 11 de sept, 07:47 y el 16 de sept, 02:59. Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
      "no_enviado": null,
      "opciones": null,
      "evento_id": null,
-     "prediccion_id": "PR-EP-GU09-260913-93",
+     "prediccion_id": "PR-EP-GU09-260913-17",
      "orden": null,
      "insistencia": null,
      "meta_id": null
@@ -12351,7 +12351,7 @@
      "check": "CHECK ((\"real\" >= (0)::numeric))",
      "defecto": null,
      "descripcion": "R: Σ del fiscal de los días con dato, bbl.",
-     "ejemplo": 324688
+     "ejemplo": 338662
     },
     {
      "nombre": "teorico",
@@ -12363,7 +12363,7 @@
      "check": "CHECK (((fa IS NULL) = ((dias_con_dato = 0) OR (teorico = (0)::numeric)))) · CHECK ((teorico >= (0)::numeric))",
      "defecto": null,
      "descripcion": "T: Σ días con dato Σ pozos con prueba de crudo de la prueba × (horas del día − horas perdidas)/24, bbl.",
-     "ejemplo": 335098.09722222236
+     "ejemplo": 349521.51805555564
     },
     {
      "nombre": "dias_con_dato",
@@ -12399,7 +12399,7 @@
      "check": "CHECK (((fa IS NULL) = ((dias_con_dato = 0) OR (teorico = (0)::numeric)))) · CHECK (((fa IS NULL) = (dentro IS NULL))) · CHECK ((fa > (0)::double precision))",
      "defecto": null,
      "descripcion": "R/T. NULL si el mes no tiene un solo día con dato (sin-factor).",
-     "ejemplo": 0.9689341798460919
+     "ejemplo": 0.9689303304815998
     },
     {
      "nombre": "banda",
@@ -12459,51 +12459,51 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-08T21:31:29.477801+00:00"
+     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
     }
    ],
    "filas": [
     {
      "campo_id": "ceiba",
      "mes": "2026-09-01",
-     "real": 324688,
-     "teorico": 335098.09722222236,
+     "real": 338662,
+     "teorico": 349521.51805555564,
      "dias_con_dato": 30,
      "dias_sin_dato": 0,
-     "fa": 0.9689341798460919,
+     "fa": 0.9689303304815998,
      "banda": 0.14999999999999997,
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "guacamayo",
      "mes": "2026-09-01",
-     "real": 180748,
-     "teorico": 179444.97083333333,
+     "real": 200031,
+     "teorico": 198590.67083333337,
      "dias_con_dato": 30,
      "dias_sin_dato": 0,
-     "fa": 1.0072614415473193,
+     "fa": 1.0072527534179863,
      "banda": 0.050000000000000044,
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "morichal",
      "mes": "2026-09-01",
-     "real": 466040,
-     "teorico": 485095.2208333333,
+     "real": 504058,
+     "teorico": 524672.0541666667,
      "dias_con_dato": 30,
      "dias_sin_dato": 0,
-     "fa": 0.9607185970610083,
+     "fa": 0.9607105924492055,
      "banda": 0.14999999999999997,
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "palmar",
@@ -12517,7 +12517,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "zarza",
@@ -12531,7 +12531,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     }
    ]
   },
@@ -12587,7 +12587,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Producción real: Σ fiscal de los días con dato, bbl.",
-     "ejemplo": 324688
+     "ejemplo": 338662
     },
     {
      "nombre": "potencial",
@@ -12599,7 +12599,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Σ pozos con prueba de crudo × FA × horas/24 de los días con dato, bbl.",
-     "ejemplo": 346379.4352822801
+     "ejemplo": 346378.05919221457
     },
     {
      "nombre": "brecha",
@@ -12611,7 +12611,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Potencial − real (no producido), bbl.",
-     "ejemplo": 21691.435282280087
+     "ejemplo": 7716.059192214569
     },
     {
      "nombre": "diferido",
@@ -12623,7 +12623,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Σ de los tramos (barriles diferidos), bbl. En un mes entero = brecha.",
-     "ejemplo": 21691.43528228031
+     "ejemplo": 7716.059192214809
     },
     {
      "nombre": "residuo",
@@ -12635,7 +12635,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Brecha − diferido (≈0 en un mes entero).",
-     "ejemplo": -2.219167072325945e-10
+     "ejemplo": -2.4010660126805305e-10
     },
     {
      "nombre": "tolerancia",
@@ -12647,7 +12647,7 @@
      "check": "CHECK ((tolerancia >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Tolerancia del diferido, bbl (Σ bbl×banda en línea y reloj del PLC en cuadratura).",
-     "ejemplo": 3253.715293317683
+     "ejemplo": 1157.4088799693204
     },
     {
      "nombre": "aproximado",
@@ -12671,7 +12671,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Diferido identificado por señal, firma o programa.",
-     "ejemplo": 21691.43528228031
+     "ejemplo": 7716.059192214809
     },
     {
      "nombre": "declarado",
@@ -12719,7 +12719,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Diferido no programado.",
-     "ejemplo": 21691.43528228031
+     "ejemplo": 7716.059192214809
     },
     {
      "nombre": "alto_impacto",
@@ -12731,7 +12731,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Diferido de reinyección + electrosumergibles.",
-     "ejemplo": 21493.77069097883
+     "ejemplo": 7476.615648635969
     },
     {
      "nombre": "anticipable",
@@ -12743,7 +12743,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Alto impacto con parte identificada y variable instrumentada que la anuncia o la daña.",
-     "ejemplo": 21493.77069097883
+     "ejemplo": 7476.615648635969
     },
     {
      "nombre": "sin_instrumento",
@@ -12779,7 +12779,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Lo que se habría perdido de menos cerrando primero los pozos con menos crudo por barril de agua.",
-     "ejemplo": 0
+     "ejemplo": 54.995928755535374
     },
     {
      "nombre": "pe",
@@ -12791,7 +12791,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Real/potencial × 100. NULL sin potencial.",
-     "ejemplo": 93.73766653767919
+     "ejemplo": 97.77235913550382
     },
     {
      "nombre": "meta_produccion",
@@ -12839,7 +12839,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Σ (potencial − real) del día × precio de ese día, solo días con dato y con precio. NULL si ningún día tuvo precio.",
-     "ejemplo": 1041188.8935494447
+     "ejemplo": 370370.8412263042
     },
     {
      "nombre": "sin_precio",
@@ -12913,15 +12913,15 @@
      "descripcion": "Libro.porTipo: [{tipo, bbl}].",
      "ejemplo": [
       {
-       "bbl": 20738.85724968679,
-       "tipo": "reinyeccion"
-      },
-      {
-       "bbl": 754.9134412920458,
+       "bbl": 6436.065217892938,
        "tipo": "electrosumergible"
       },
       {
-       "bbl": 197.66459130147743,
+       "bbl": 1040.5504307430315,
+       "tipo": "reinyeccion"
+      },
+      {
+       "bbl": 239.44354357884006,
        "tipo": "energia"
       }
      ]
@@ -12936,7 +12936,7 @@
      "check": "CHECK ((jsonb_typeof(por_equipo) = 'array'::text))",
      "defecto": null,
      "descripcion": "Libro.porEquipo: FilaEquipo[].",
-     "ejemplo": "[{\"bbl\":20738.85724968679,\"tipo\":\"reinyeccion\",\"pozos\":18,\"equipo\":\"P-201B\",\"partes\":[{\"bbl\":14649.470625413454,\"parte\":\"sello\"},{\"bbl\":6089.386624273328,\"parte\":\"rodamientos\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":3110.8285881692505},{\"bbl\":216.65435548454434,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-16\",\"partes\":[{\"bbl\":216.65435548454434,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":32.498159689858475},{\"bbl\":197.66459130147743,\"tipo\":\"energia\",\"pozos\":2,\"equipo\":\"SE-2\",\"partes\":[],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":29.649692535436152},{\"bbl\":136.11372039771268,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-11\",\"partes\":[{\"bbl\":136.11372039771268,\"parte\":\"bomba\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"tolerancia\":20.41706519134548},{\"bbl\":131.4016050772528,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-07\",\"partes\":[{\"bbl\":131.4016050772528,\"parte\":\"motor\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"tolerancia\":19.71024516785824},{\"bbl\":94.61103969430506,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-14\",\"partes\":[{\"bbl\":66.61960783208463,\"parte\":\"bomba\"},{\"bbl\":27.991431862220434,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":14.191668223012627},{\"bbl\":60.830226107504224,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-08\",\"partes\":[{\"bbl\":60.830226107504224,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"tolerancia\":9.124545888544908},{\"bbl\":54.85378625653688,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-09\",\"parte… [recortado para el Excel: 2212 caracteres]"
+     "ejemplo": "[{\"bbl\":3677.2278693078233,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-11\",\"fallas\":1,\"partes\":[{\"bbl\":3677.2278693078233,\"parte\":\"aislamiento\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":0,\"tolerancia\":551.5841806601529},{\"bbl\":2125.5969683085755,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-04\",\"fallas\":1,\"partes\":[{\"bbl\":2125.5969683085755,\"parte\":\"aislamiento\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":0,\"tolerancia\":318.839545538696},{\"bbl\":1040.5504307430315,\"tipo\":\"reinyeccion\",\"pozos\":2,\"equipo\":\"P-201B\",\"fallas\":1,\"partes\":[{\"bbl\":1040.5504307430315,\"parte\":\"rodamientos\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":0,\"tolerancia\":156.0825658307318},{\"bbl\":239.44354357884006,\"tipo\":\"energia\",\"pozos\":3,\"equipo\":\"SE-2\",\"partes\":[],\"campoId\":\"ceiba\",\"eventos\":3,\"tolerancia\":35.91653653227523},{\"bbl\":216.6534947639708,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-16\",\"fallas\":0,\"partes\":[{\"bbl\":216.6534947639708,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"disparos\":2,\"tolerancia\":32.498030581747145},{\"bbl\":131.4010830472911,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-07\",\"fallas\":0,\"partes\":[{\"bbl\":131.4010830472911,\"parte\":\"motor\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":1,\"tolerancia\":19.71016686334648},{\"bbl\":94.61066382524777,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-14\",\"fallas\":0,\"partes\":[{\"bbl\":66.61934316689045,\"parte\":\"bomba\"},{\"bbl\":27.991320658357328,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"disparos\":2,\"tolerancia\"… [recortado para el Excel: 2684 caracteres]"
     },
     {
      "nombre": "por_parte",
@@ -12948,7 +12948,123 @@
      "check": "CHECK ((jsonb_typeof(por_parte) = 'array'::text))",
      "defecto": null,
      "descripcion": "Libro.porParte: FilaParte[].",
-     "ejemplo": "[{\"bbl\":14649.470625413454,\"horas\":34.76,\"parte\":\"sello\",\"fallas\":1,\"equipos\":[{\"bbl\":14649.470625413454,\"equipo\":\"P-201B\",\"campoId\":\"ceiba\"}],\"familia\":\"inyeccion\",\"disparos\":0},{\"bbl\":6089.386624273328,\"horas\":15.991111111111111,\"parte\":\"rodamientos\",\"fallas\":1,\"equipos\":[{\"bbl\":6089.386624273328,\"equipo\":\"P-201B\",\"campoId\":\"ceiba\"}],\"familia\":\"inyeccion\",\"disparos\":0},{\"bbl\":395.9845589162674,\"horas\":12.699999999999998,\"parte\":\"admision\",\"fallas\":0,\"equipos\":[{\"bbl\":216.65435548454434,\"equipo\":\"LC-16\",\"campoId\":\"ceiba\"},{\"bbl\":60.830226107504224,\"equipo\":\"LC-08\",\"campoId\":\"ceiba\"},{\"bbl\":54.85378625653688,\"equipo\":\"LC-09\",\"campoId\":\"ceiba\"},{\"bbl\":27.991431862220434,\"equipo\":\"LC-14\",\"campoId\":\"ceiba\"},{\"bbl\":19.93380213745866,\"equipo\":\"LC-02\",\"campoId\":\"ceiba\"},{\"bbl\":15.720957068002841,\"equipo\":\"LC-12\",\"campoId\":\"ceiba\"}],\"familia\":\"electrosumergible\",\"disparos\":7},{\"bbl\":202.7333282297973,\"horas\":5.116666666666667,\"parte\":\"bomba\",\"fallas\":0,\"equipos\":[{\"bbl\":136.11372039771268,\"equipo\":\"LC-11\",\"campoId\":\"ceiba\"},{\"bbl\":66.61960783208463,\"equipo\":\"LC-14\",\"campoId\":\"ceiba\"}],\"familia\":\"electrosumergible\",\"disparos\":2},{\"bbl\":131.4016050772528,\"horas\":3.9166666666666665,\"parte\":\"motor\",\"fallas\":0,\"equipos\":[{\"bbl\":131.4016050772528,\"equipo\":\"LC-07\",\"campoId\":\"ceiba\"}],\"familia\":\"electrosumergible\",\"disparos\":1},{\"bbl\":24.793949068728327,\"horas\":1.6333333333333333,\"parte\":\"aislamiento\",\"fallas\":0,\"equipos\":[{\"bbl\":24.793949068728327,\"equipo\":\"LC-01\",\"campoId\":\"ceiba\"}],\"fami… [recortado para el Excel: 1539 caracteres]"
+     "ejemplo": [
+      {
+       "bbl": 5842.061805922908,
+       "horas": 148.31666666666666,
+       "parte": "aislamiento",
+       "fallas": 2,
+       "equipos": [
+        {
+         "bbl": 3677.2278693078233,
+         "equipo": "LC-11",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 2125.5969683085755,
+         "equipo": "LC-04",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 24.793850567768047,
+         "equipo": "LC-01",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 14.443117738741348,
+         "equipo": "LC-12",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 2
+      },
+      {
+       "bbl": 1040.5504307430315,
+       "horas": 15.991111111111111,
+       "parte": "rodamientos",
+       "fallas": 1,
+       "equipos": [
+        {
+         "bbl": 1040.5504307430315,
+         "equipo": "P-201B",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "inyeccion",
+       "disparos": 0
+      },
+      {
+       "bbl": 395.9829857558483,
+       "horas": 12.699999999999998,
+       "parte": "admision",
+       "fallas": 0,
+       "equipos": [
+        {
+         "bbl": 216.6534947639708,
+         "equipo": "LC-16",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 60.829984442262884,
+         "equipo": "LC-08",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 54.85356833438957,
+         "equipo": "LC-09",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 27.991320658357328,
+         "equipo": "LC-14",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 19.933722944803744,
+         "equipo": "LC-02",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 15.720894612063956,
+         "equipo": "LC-12",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 7
+      },
+      {
+       "bbl": 131.4010830472911,
+       "horas": 3.9166666666666665,
+       "parte": "motor",
+       "fallas": 0,
+       "equipos": [
+        {
+         "bbl": 131.4010830472911,
+         "equipo": "LC-07",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 1
+      },
+      {
+       "bbl": 66.61934316689045,
+       "horas": 1.9833333333333334,
+       "parte": "bomba",
+       "fallas": 0,
+       "equipos": [
+        {
+         "bbl": 66.61934316689045,
+         "equipo": "LC-14",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 1
+      }
+     ]
     },
     {
      "nombre": "custodia",
@@ -12978,7 +13094,7 @@
      "check": "CHECK ((eventos >= 0))",
      "defecto": null,
      "descripcion": "Tramos evento × pozo del mes (cifra eventos de la huella).",
-     "ejemplo": 49
+     "ejemplo": 18
     },
     {
      "nombre": "huella_cifras",
@@ -12990,7 +13106,7 @@
      "check": "CHECK ((huella_cifras ~ '^[0-9a-f]{64}$'::text))",
      "defecto": null,
      "descripcion": "SHA-256 de la forma canónica de las cifras del campo y mes.",
-     "ejemplo": "fa38baaa420730961c4855543e7a4d6d3f086e665341f9534f30d2c21bd205ac"
+     "ejemplo": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8"
     },
     {
      "nombre": "version_config",
@@ -13014,35 +13130,35 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-08T21:31:29.477801+00:00"
+     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
     }
    ],
    "filas": [
     {
      "campo_id": "ceiba",
      "mes": "2026-09-01",
-     "real": 324688,
-     "potencial": 346379.4352822801,
-     "brecha": 21691.435282280087,
-     "diferido": 21691.43528228031,
-     "residuo": -2.219167072325945e-10,
-     "tolerancia": 3253.715293317683,
+     "real": 338662,
+     "potencial": 346378.05919221457,
+     "brecha": 7716.059192214569,
+     "diferido": 7716.059192214809,
+     "residuo": -2.4010660126805305e-10,
+     "tolerancia": 1157.4088799693204,
      "aproximado": 0,
-     "identificado": 21691.43528228031,
+     "identificado": 7716.059192214809,
      "declarado": 0,
      "pendiente": 0,
      "planeado": 0,
-     "no_planeado": 21691.43528228031,
-     "alto_impacto": 21493.77069097883,
-     "anticipable": 21493.77069097883,
+     "no_planeado": 7716.059192214809,
+     "alto_impacto": 7476.615648635969,
+     "anticipable": 7476.615648635969,
      "sin_instrumento": 0,
      "sin_parte": 0,
-     "evitable_por_orden": 0,
-     "pe": 93.73766653767919,
+     "evitable_por_orden": 54.995928755535374,
+     "pe": 97.77235913550382,
      "meta_produccion": 327000,
      "meta_diferido": 24000,
      "sin_meta": false,
-     "valor_usd": 1041188.8935494447,
+     "valor_usd": 370370.8412263042,
      "sin_precio": false,
      "dias_sin_fiscal": [],
      "sin_factor": false,
@@ -13050,20 +13166,136 @@
      "motivos": [],
      "por_tipo": [
       {
-       "bbl": 20738.85724968679,
-       "tipo": "reinyeccion"
-      },
-      {
-       "bbl": 754.9134412920458,
+       "bbl": 6436.065217892938,
        "tipo": "electrosumergible"
       },
       {
-       "bbl": 197.66459130147743,
+       "bbl": 1040.5504307430315,
+       "tipo": "reinyeccion"
+      },
+      {
+       "bbl": 239.44354357884006,
        "tipo": "energia"
       }
      ],
-     "por_equipo": "[{\"bbl\":20738.85724968679,\"tipo\":\"reinyeccion\",\"pozos\":18,\"equipo\":\"P-201B\",\"partes\":[{\"bbl\":14649.470625413454,\"parte\":\"sello\"},{\"bbl\":6089.386624273328,\"parte\":\"rodamientos\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":3110.8285881692505},{\"bbl\":216.65435548454434,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-16\",\"partes\":[{\"bbl\":216.65435548454434,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":32.498159689858475},{\"bbl\":197.66459130147743,\"tipo\":\"energia\",\"pozos\":2,\"equipo\":\"SE-2\",\"partes\":[],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":29.649692535436152},{\"bbl\":136.11372039771268,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-11\",\"partes\":[{\"bbl\":136.11372039771268,\"parte\":\"bomba\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"tolerancia\":20.41706519134548},{\"bbl\":131.4016050772528,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-07\",\"partes\":[{\"bbl\":131.4016050772528,\"parte\":\"motor\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"tolerancia\":19.71024516785824},{\"bbl\":94.61103969430506,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-14\",\"partes\":[{\"bbl\":66.61960783208463,\"parte\":\"bomba\"},{\"bbl\":27.991431862220434,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"tolerancia\":14.191668223012627},{\"bbl\":60.830226107504224,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-08\",\"partes\":[{\"bbl\":60.830226107504224,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"tolerancia\":9.124545888544908},{\"bbl\":54.85378625653688,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-09\",\"parte… [recortado para el Excel: 2212 caracteres]",
-     "por_parte": "[{\"bbl\":14649.470625413454,\"horas\":34.76,\"parte\":\"sello\",\"fallas\":1,\"equipos\":[{\"bbl\":14649.470625413454,\"equipo\":\"P-201B\",\"campoId\":\"ceiba\"}],\"familia\":\"inyeccion\",\"disparos\":0},{\"bbl\":6089.386624273328,\"horas\":15.991111111111111,\"parte\":\"rodamientos\",\"fallas\":1,\"equipos\":[{\"bbl\":6089.386624273328,\"equipo\":\"P-201B\",\"campoId\":\"ceiba\"}],\"familia\":\"inyeccion\",\"disparos\":0},{\"bbl\":395.9845589162674,\"horas\":12.699999999999998,\"parte\":\"admision\",\"fallas\":0,\"equipos\":[{\"bbl\":216.65435548454434,\"equipo\":\"LC-16\",\"campoId\":\"ceiba\"},{\"bbl\":60.830226107504224,\"equipo\":\"LC-08\",\"campoId\":\"ceiba\"},{\"bbl\":54.85378625653688,\"equipo\":\"LC-09\",\"campoId\":\"ceiba\"},{\"bbl\":27.991431862220434,\"equipo\":\"LC-14\",\"campoId\":\"ceiba\"},{\"bbl\":19.93380213745866,\"equipo\":\"LC-02\",\"campoId\":\"ceiba\"},{\"bbl\":15.720957068002841,\"equipo\":\"LC-12\",\"campoId\":\"ceiba\"}],\"familia\":\"electrosumergible\",\"disparos\":7},{\"bbl\":202.7333282297973,\"horas\":5.116666666666667,\"parte\":\"bomba\",\"fallas\":0,\"equipos\":[{\"bbl\":136.11372039771268,\"equipo\":\"LC-11\",\"campoId\":\"ceiba\"},{\"bbl\":66.61960783208463,\"equipo\":\"LC-14\",\"campoId\":\"ceiba\"}],\"familia\":\"electrosumergible\",\"disparos\":2},{\"bbl\":131.4016050772528,\"horas\":3.9166666666666665,\"parte\":\"motor\",\"fallas\":0,\"equipos\":[{\"bbl\":131.4016050772528,\"equipo\":\"LC-07\",\"campoId\":\"ceiba\"}],\"familia\":\"electrosumergible\",\"disparos\":1},{\"bbl\":24.793949068728327,\"horas\":1.6333333333333333,\"parte\":\"aislamiento\",\"fallas\":0,\"equipos\":[{\"bbl\":24.793949068728327,\"equipo\":\"LC-01\",\"campoId\":\"ceiba\"}],\"fami… [recortado para el Excel: 1539 caracteres]",
+     "por_equipo": "[{\"bbl\":3677.2278693078233,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-11\",\"fallas\":1,\"partes\":[{\"bbl\":3677.2278693078233,\"parte\":\"aislamiento\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":0,\"tolerancia\":551.5841806601529},{\"bbl\":2125.5969683085755,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-04\",\"fallas\":1,\"partes\":[{\"bbl\":2125.5969683085755,\"parte\":\"aislamiento\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":0,\"tolerancia\":318.839545538696},{\"bbl\":1040.5504307430315,\"tipo\":\"reinyeccion\",\"pozos\":2,\"equipo\":\"P-201B\",\"fallas\":1,\"partes\":[{\"bbl\":1040.5504307430315,\"parte\":\"rodamientos\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":0,\"tolerancia\":156.0825658307318},{\"bbl\":239.44354357884006,\"tipo\":\"energia\",\"pozos\":3,\"equipo\":\"SE-2\",\"partes\":[],\"campoId\":\"ceiba\",\"eventos\":3,\"tolerancia\":35.91653653227523},{\"bbl\":216.6534947639708,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-16\",\"fallas\":0,\"partes\":[{\"bbl\":216.6534947639708,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"disparos\":2,\"tolerancia\":32.498030581747145},{\"bbl\":131.4010830472911,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-07\",\"fallas\":0,\"partes\":[{\"bbl\":131.4010830472911,\"parte\":\"motor\"}],\"campoId\":\"ceiba\",\"eventos\":1,\"disparos\":1,\"tolerancia\":19.71016686334648},{\"bbl\":94.61066382524777,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"LC-14\",\"fallas\":0,\"partes\":[{\"bbl\":66.61934316689045,\"parte\":\"bomba\"},{\"bbl\":27.991320658357328,\"parte\":\"admision\"}],\"campoId\":\"ceiba\",\"eventos\":2,\"disparos\":2,\"tolerancia\"… [recortado para el Excel: 2684 caracteres]",
+     "por_parte": [
+      {
+       "bbl": 5842.061805922908,
+       "horas": 148.31666666666666,
+       "parte": "aislamiento",
+       "fallas": 2,
+       "equipos": [
+        {
+         "bbl": 3677.2278693078233,
+         "equipo": "LC-11",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 2125.5969683085755,
+         "equipo": "LC-04",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 24.793850567768047,
+         "equipo": "LC-01",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 14.443117738741348,
+         "equipo": "LC-12",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 2
+      },
+      {
+       "bbl": 1040.5504307430315,
+       "horas": 15.991111111111111,
+       "parte": "rodamientos",
+       "fallas": 1,
+       "equipos": [
+        {
+         "bbl": 1040.5504307430315,
+         "equipo": "P-201B",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "inyeccion",
+       "disparos": 0
+      },
+      {
+       "bbl": 395.9829857558483,
+       "horas": 12.699999999999998,
+       "parte": "admision",
+       "fallas": 0,
+       "equipos": [
+        {
+         "bbl": 216.6534947639708,
+         "equipo": "LC-16",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 60.829984442262884,
+         "equipo": "LC-08",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 54.85356833438957,
+         "equipo": "LC-09",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 27.991320658357328,
+         "equipo": "LC-14",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 19.933722944803744,
+         "equipo": "LC-02",
+         "campoId": "ceiba"
+        },
+        {
+         "bbl": 15.720894612063956,
+         "equipo": "LC-12",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 7
+      },
+      {
+       "bbl": 131.4010830472911,
+       "horas": 3.9166666666666665,
+       "parte": "motor",
+       "fallas": 0,
+       "equipos": [
+        {
+         "bbl": 131.4010830472911,
+         "equipo": "LC-07",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 1
+      },
+      {
+       "bbl": 66.61934316689045,
+       "horas": 1.9833333333333334,
+       "parte": "bomba",
+       "fallas": 0,
+       "equipos": [
+        {
+         "bbl": 66.61934316689045,
+         "equipo": "LC-14",
+         "campoId": "ceiba"
+        }
+       ],
+       "familia": "electrosumergible",
+       "disparos": 1
+      }
+     ],
      "custodia": {
       "estimados": [
        "ceiba/LC-17"
@@ -13071,36 +13303,36 @@
       "sinPrueba": [],
       "bswLaboratorio": []
      },
-     "eventos": 49,
-     "huella_cifras": "fa38baaa420730961c4855543e7a4d6d3f086e665341f9534f30d2c21bd205ac",
+     "eventos": 18,
+     "huella_cifras": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "guacamayo",
      "mes": "2026-09-01",
-     "real": 180748,
-     "potencial": 206429.1670921492,
-     "brecha": 25681.167092149204,
-     "diferido": 25681.167092149168,
-     "residuo": 3.637978807091713e-11,
-     "tolerancia": 1284.0583550251051,
+     "real": 200031,
+     "potencial": 206427.38653823547,
+     "brecha": 6396.386538235471,
+     "diferido": 6396.386538235546,
+     "residuo": -7.548806024715304e-11,
+     "tolerancia": 319.8193285885733,
      "aproximado": 0,
-     "identificado": 25681.167092149168,
+     "identificado": 6396.386538235546,
      "declarado": 0,
      "pendiente": 0,
      "planeado": 0,
-     "no_planeado": 25681.167092149168,
-     "alto_impacto": 25681.167092149168,
-     "anticipable": 25681.167092149168,
+     "no_planeado": 6396.386538235546,
+     "alto_impacto": 6396.386538235546,
+     "anticipable": 6396.386538235546,
      "sin_instrumento": 0,
      "sin_parte": 0,
      "evitable_por_orden": 0,
-     "pe": 87.55933211672301,
+     "pe": 96.90138665924994,
      "meta_produccion": 189000,
      "meta_diferido": 13500,
      "sin_meta": false,
-     "valor_usd": 1232696.02042316,
+     "valor_usd": 307026.55383530445,
      "sin_precio": false,
      "dias_sin_fiscal": [],
      "sin_factor": false,
@@ -13108,25 +13340,25 @@
      "motivos": [],
      "por_tipo": [
       {
-       "bbl": 25681.167092149168,
+       "bbl": 6396.386538235546,
        "tipo": "electrosumergible"
       }
      ],
-     "por_equipo": "[{\"bbl\":11765.572580789412,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-05\",\"partes\":[{\"bbl\":11765.572580789412,\"parte\":\"bomba\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"tolerancia\":588.2786290938159},{\"bbl\":10510.289097464643,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-09\",\"partes\":[{\"bbl\":10510.289097464643,\"parte\":\"aislamiento\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"tolerancia\":525.5144549675836},{\"bbl\":3004.389479136126,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-07\",\"partes\":[{\"bbl\":3004.389479136126,\"parte\":\"aislamiento\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"tolerancia\":150.21947429016225},{\"bbl\":146.71602280671328,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-06\",\"partes\":[{\"bbl\":146.71602280671328,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":2,\"tolerancia\":7.335818324685073},{\"bbl\":73.68117444918641,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-01\",\"partes\":[{\"bbl\":73.68117444918641,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"tolerancia\":3.6840845059328466},{\"bbl\":61.37090076183136,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-12\",\"partes\":[{\"bbl\":61.37090076183136,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"tolerancia\":3.0685520188876407},{\"bbl\":43.3038481411885,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-03\",\"partes\":[{\"bbl\":43.3038481411885,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"tolerancia\":2.1652265021614623},{\"bbl\":34.04963364697251,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-10\",\"p… [recortado para el Excel: 2019 caracteres]",
+     "por_equipo": "[{\"bbl\":2393.7361684978446,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-05\",\"fallas\":1,\"partes\":[{\"bbl\":2393.7361684978446,\"parte\":\"bomba\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"disparos\":0,\"tolerancia\":119.68680869200017},{\"bbl\":2054.974684128855,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-09\",\"fallas\":1,\"partes\":[{\"bbl\":2054.974684128855,\"parte\":\"aislamiento\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"disparos\":0,\"tolerancia\":102.74873468899787},{\"bbl\":1546.763208948574,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-07\",\"fallas\":1,\"partes\":[{\"bbl\":1546.763208948574,\"parte\":\"aislamiento\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"disparos\":0,\"tolerancia\":77.33816109491865},{\"bbl\":146.71475730827487,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-06\",\"fallas\":0,\"partes\":[{\"bbl\":146.71475730827487,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":2,\"disparos\":2,\"tolerancia\":7.33575504961493},{\"bbl\":73.6805389125257,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-01\",\"fallas\":0,\"partes\":[{\"bbl\":73.6805389125257,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"disparos\":1,\"tolerancia\":3.6840527288774156},{\"bbl\":61.370371407384624,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-12\",\"fallas\":0,\"partes\":[{\"bbl\":61.370371407384624,\"parte\":\"admision\"}],\"campoId\":\"guacamayo\",\"eventos\":1,\"disparos\":1,\"tolerancia\":3.068525551105091},{\"bbl\":43.30347462402825,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"GU-03\",\"fallas\":0,\"partes\":[{\"bbl\":43.30347462402825,\"parte\":\"admisi… [recortado para el Excel: 2265 caracteres]",
      "por_parte": [
       {
-       "bbl": 13514.678576600769,
-       "horas": 532.55,
+       "bbl": 3601.7378930774294,
+       "horas": 141.78333333333333,
        "parte": "aislamiento",
        "fallas": 2,
        "equipos": [
         {
-         "bbl": 10510.289097464643,
+         "bbl": 2054.974684128855,
          "equipo": "GU-09",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 3004.389479136126,
+         "bbl": 1546.763208948574,
          "equipo": "GU-07",
          "campoId": "guacamayo"
         }
@@ -13135,18 +13367,18 @@
        "disparos": 0
       },
       {
-       "bbl": 11784.032045679991,
-       "horas": 578.9833333333333,
+       "bbl": 2412.1954741663867,
+       "horas": 118.56666666666666,
        "parte": "bomba",
        "fallas": 1,
        "equipos": [
         {
-         "bbl": 11765.572580789412,
+         "bbl": 2393.7361684978446,
          "equipo": "GU-05",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 18.459464890579,
+         "bbl": 18.45930566854212,
          "equipo": "GU-11",
          "campoId": "guacamayo"
         }
@@ -13155,38 +13387,38 @@
        "disparos": 1
       },
       {
-       "bbl": 382.45646986840495,
+       "bbl": 382.45317099173064,
        "horas": 15.533333333333333,
        "parte": "admision",
        "fallas": 0,
        "equipos": [
         {
-         "bbl": 146.71602280671328,
+         "bbl": 146.71475730827487,
          "equipo": "GU-06",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 73.68117444918641,
+         "bbl": 73.6805389125257,
          "equipo": "GU-01",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 61.37090076183136,
+         "bbl": 61.370371407384624,
          "equipo": "GU-12",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 43.3038481411885,
+         "bbl": 43.30347462402825,
          "equipo": "GU-03",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 34.04963364697251,
+         "bbl": 34.049339952000516,
          "equipo": "GU-10",
          "campoId": "guacamayo"
         },
         {
-         "bbl": 23.334890062512898,
+         "bbl": 23.334688787516683,
          "equipo": "GU-08",
          "campoId": "guacamayo"
         }
@@ -13205,35 +13437,35 @@
       ]
      },
      "eventos": 11,
-     "huella_cifras": "30dd89011fc9f3e48856548e50adbc9ed6a9b9b6d51b21a2bd651d4d900d6013",
+     "huella_cifras": "ed542826fa682035e79cb219d14b4c54a27cc7c262f0b887d70ae3512459e800",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "morichal",
      "mes": "2026-09-01",
-     "real": 466040,
-     "potencial": 519601.77106465516,
-     "brecha": 53561.77106465516,
-     "diferido": 53561.771064655164,
-     "residuo": -7.275957614183426e-12,
-     "tolerancia": 8034.265659817542,
+     "real": 504058,
+     "potencial": 519597.44179437525,
+     "brecha": 15539.441794375249,
+     "diferido": 15539.441794375472,
+     "residuo": -2.2373569663614035e-10,
+     "tolerancia": 2330.9162695329464,
      "aproximado": 0,
-     "identificado": 53455.27807683372,
-     "declarado": 106.49298782144315,
+     "identificado": 15432.949693843013,
+     "declarado": 106.49210053245986,
      "pendiente": 0,
-     "planeado": 0,
-     "no_planeado": 53561.771064655164,
-     "alto_impacto": 50321.01571530234,
-     "anticipable": 40483.193900656835,
+     "planeado": 1385.081813219098,
+     "no_planeado": 14154.359981156374,
+     "alto_impacto": 10909.287086664524,
+     "anticipable": 7120.750217426161,
      "sin_instrumento": 0,
-     "sin_parte": 9837.821814645504,
-     "evitable_por_orden": 4762.241668271593,
-     "pe": 89.69176510793872,
+     "sin_parte": 3788.5368692383636,
+     "evitable_por_orden": 200.64689830496417,
+     "pe": 97.00933058086055,
      "meta_produccion": 501000,
      "meta_diferido": 28500,
      "sin_meta": false,
-     "valor_usd": 2570965.011103444,
+     "valor_usd": 745893.2061300157,
      "sin_precio": false,
      "dias_sin_fiscal": [],
      "sin_factor": false,
@@ -13241,28 +13473,32 @@
      "motivos": [],
      "por_tipo": [
       {
-       "bbl": 40483.193900656835,
+       "bbl": 7120.750217426161,
        "tipo": "electrosumergible"
       },
       {
-       "bbl": 9837.821814645504,
+       "bbl": 3788.5368692383636,
        "tipo": "reinyeccion"
       },
       {
-       "bbl": 3022.4513959757824,
+       "bbl": 3026.7707600016465,
        "tipo": "transporte"
       },
       {
-       "bbl": 111.81096555559127,
+       "bbl": 1385.081813219098,
+       "tipo": "programada"
+      },
+      {
+       "bbl": 111.81003395774638,
        "tipo": "energia"
       },
       {
-       "bbl": 106.49298782144315,
+       "bbl": 106.49210053245986,
        "tipo": "declarada"
       }
      ],
-     "por_equipo": "[{\"bbl\":18638.10090274974,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-41\",\"partes\":[{\"bbl\":18638.10090274974,\"parte\":\"aislamiento\"}],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":2795.7151354341186},{\"bbl\":9837.821814645504,\"tipo\":\"reinyeccion\",\"pozos\":8,\"equipo\":\"P-201B\",\"partes\":[],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":1475.6732723337602},{\"bbl\":8645.059653938104,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-16\",\"partes\":[{\"bbl\":8580.551403139612,\"parte\":\"bomba\"},{\"bbl\":64.50825079849228,\"parte\":\"admision\"}],\"campoId\":\"morichal\",\"eventos\":2,\"tolerancia\":1296.7589481568727},{\"bbl\":7783.060897216348,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-05\",\"partes\":[{\"bbl\":7783.060897216348,\"parte\":\"bomba\"}],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":1167.4591346081925},{\"bbl\":4944.974735845033,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-23\",\"partes\":[{\"bbl\":4944.974735845033,\"parte\":\"admision\"}],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":741.7462103897301},{\"bbl\":3022.4513959757824,\"tipo\":\"transporte\",\"pozos\":3,\"equipo\":\"MPP-301\",\"partes\":[{\"bbl\":3022.4513959757824,\"parte\":\"sello\"}],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":453.3677096452056},{\"bbl\":111.81096555559127,\"tipo\":\"energia\",\"pozos\":5,\"equipo\":\"SE-2\",\"partes\":[],\"campoId\":\"morichal\",\"eventos\":5,\"tolerancia\":16.771650672788528},{\"bbl\":106.49298782144315,\"tipo\":\"declarada\",\"pozos\":1,\"equipo\":\"MN-22\",\"partes\":[],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":15.973949105207163},{\"bbl\":86.2… [recortado para el Excel: 3776 caracteres]",
-     "por_parte": "[{\"bbl\":18755.5967871703,\"horas\":673.8666666666667,\"parte\":\"aislamiento\",\"fallas\":1,\"equipos\":[{\"bbl\":18638.10090274974,\"equipo\":\"MN-41\",\"campoId\":\"morichal\"},{\"bbl\":40.3982170064154,\"equipo\":\"MN-27\",\"campoId\":\"morichal\"},{\"bbl\":38.71896095863584,\"equipo\":\"MN-12\",\"campoId\":\"morichal\"},{\"bbl\":38.37870645551007,\"equipo\":\"MN-13\",\"campoId\":\"morichal\"}],\"familia\":\"electrosumergible\",\"disparos\":3},{\"bbl\":16585.316797267173,\"horas\":770.8,\"parte\":\"bomba\",\"fallas\":2,\"equipos\":[{\"bbl\":8580.551403139612,\"equipo\":\"MN-16\",\"campoId\":\"morichal\"},{\"bbl\":7783.060897216348,\"equipo\":\"MN-05\",\"campoId\":\"morichal\"},{\"bbl\":76.24035949940743,\"equipo\":\"MN-19\",\"campoId\":\"morichal\"},{\"bbl\":52.08162261178511,\"equipo\":\"MN-24\",\"campoId\":\"morichal\"},{\"bbl\":35.04487949056989,\"equipo\":\"MN-01\",\"campoId\":\"morichal\"},{\"bbl\":33.75858403561598,\"equipo\":\"MN-37\",\"campoId\":\"morichal\"},{\"bbl\":24.57905127383653,\"equipo\":\"MN-20\",\"campoId\":\"morichal\"}],\"familia\":\"electrosumergible\",\"disparos\":5},{\"bbl\":5115.716447010624,\"horas\":451.5,\"parte\":\"admision\",\"fallas\":1,\"equipos\":[{\"bbl\":4944.974735845033,\"equipo\":\"MN-23\",\"campoId\":\"morichal\"},{\"bbl\":64.50825079849228,\"equipo\":\"MN-16\",\"campoId\":\"morichal\"},{\"bbl\":60.94024867551848,\"equipo\":\"MN-17\",\"campoId\":\"morichal\"},{\"bbl\":23.466886064599933,\"equipo\":\"MN-11\",\"campoId\":\"morichal\"},{\"bbl\":11.806164092771946,\"equipo\":\"MN-18\",\"campoId\":\"morichal\"},{\"bbl\":10.020161534207835,\"equipo\":\"MN-19\",\"campoId\":\"morichal\"}],\"familia\":\"electrosumergible\",\"disparos\":5},{\"bbl\":3022.4513959757… [recortado para el Excel: 1860 caracteres]",
+     "por_equipo": "[{\"bbl\":3831.687452362273,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-41\",\"fallas\":1,\"partes\":[{\"bbl\":3831.687452362273,\"parte\":\"aislamiento\"}],\"campoId\":\"morichal\",\"eventos\":1,\"disparos\":0,\"tolerancia\":574.7531179588469},{\"bbl\":3788.5368692383636,\"tipo\":\"reinyeccion\",\"pozos\":2,\"equipo\":\"P-201B\",\"fallas\":1,\"partes\":[],\"campoId\":\"morichal\",\"eventos\":1,\"disparos\":0,\"tolerancia\":568.2805305345369},{\"bbl\":3026.7707600016465,\"tipo\":\"transporte\",\"pozos\":3,\"equipo\":\"MPP-301\",\"fallas\":1,\"partes\":[{\"bbl\":3026.7707600016465,\"parte\":\"sello\"}],\"campoId\":\"morichal\",\"eventos\":1,\"disparos\":0,\"tolerancia\":454.01561424873296},{\"bbl\":1958.1256668110398,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-33\",\"fallas\":1,\"partes\":[{\"bbl\":1958.1256668110398,\"parte\":\"aislamiento\"}],\"campoId\":\"morichal\",\"eventos\":1,\"disparos\":0,\"tolerancia\":293.71885011703205},{\"bbl\":794.4356066610593,\"tipo\":\"electrosumergible\",\"pozos\":1,\"equipo\":\"MN-23\",\"fallas\":1,\"partes\":[{\"bbl\":794.4356066610593,\"parte\":\"admision\"}],\"campoId\":\"morichal\",\"eventos\":2,\"disparos\":1,\"tolerancia\":119.16534116068624},{\"bbl\":743.7074187392067,\"tipo\":\"programada\",\"pozos\":1,\"equipo\":\"MN-16\",\"partes\":[],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":111.55611319930645},{\"bbl\":641.3743944798914,\"tipo\":\"programada\",\"pozos\":1,\"equipo\":\"MN-05\",\"partes\":[],\"campoId\":\"morichal\",\"eventos\":1,\"tolerancia\":96.20615948433881},{\"bbl\":111.81003395774638,\"tipo\":\"energia\",\"pozos\":5,\"equipo\":\"SE-2\",\"partes\":[],\"campoId\":\"morichal\",\"eventos\":5,\"toleranc… [recortado para el Excel: 4452 caracteres]",
+     "por_parte": "[{\"bbl\":5907.3080246298505,\"horas\":248.63333333333335,\"parte\":\"aislamiento\",\"fallas\":2,\"equipos\":[{\"bbl\":3831.687452362273,\"equipo\":\"MN-41\",\"campoId\":\"morichal\"},{\"bbl\":1958.1256668110398,\"equipo\":\"MN-33\",\"campoId\":\"morichal\"},{\"bbl\":40.39788041248909,\"equipo\":\"MN-27\",\"campoId\":\"morichal\"},{\"bbl\":38.71863835610392,\"equipo\":\"MN-12\",\"campoId\":\"morichal\"},{\"bbl\":38.37838668794483,\"equipo\":\"MN-13\",\"campoId\":\"morichal\"}],\"familia\":\"electrosumergible\",\"disparos\":3},{\"bbl\":3026.7707600016465,\"horas\":45.40277777777778,\"parte\":\"sello\",\"fallas\":1,\"equipos\":[{\"bbl\":3026.7707600016465,\"equipo\":\"MPP-301\",\"campoId\":\"morichal\"}],\"familia\":\"multifasica\",\"disparos\":0},{\"bbl\":965.1758952236935,\"horas\":79.86666666666669,\"parte\":\"admision\",\"fallas\":1,\"equipos\":[{\"bbl\":794.4356066610593,\"equipo\":\"MN-23\",\"campoId\":\"morichal\"},{\"bbl\":64.50771332216229,\"equipo\":\"MN-16\",\"campoId\":\"morichal\"},{\"bbl\":60.939740927427316,\"equipo\":\"MN-17\",\"campoId\":\"morichal\"},{\"bbl\":23.466690540839135,\"equipo\":\"MN-11\",\"campoId\":\"morichal\"},{\"bbl\":11.806065724986903,\"equipo\":\"MN-18\",\"campoId\":\"morichal\"},{\"bbl\":10.020078047218485,\"equipo\":\"MN-19\",\"campoId\":\"morichal\"}],\"familia\":\"electrosumergible\",\"disparos\":6},{\"bbl\":221.70264969139626,\"horas\":14.333333333333332,\"parte\":\"bomba\",\"fallas\":0,\"equipos\":[{\"bbl\":76.23972427231456,\"equipo\":\"MN-19\",\"campoId\":\"morichal\"},{\"bbl\":52.08118867288526,\"equipo\":\"MN-24\",\"campoId\":\"morichal\"},{\"bbl\":35.044587500119356,\"equipo\":\"MN-01\",\"campoId\":\"morichal\"},{\"bbl\":33.75830276245125,\"equip… [recortado para el Excel: 1829 caracteres]",
      "custodia": {
       "estimados": [
        "morichal/MN-11",
@@ -13271,10 +13507,10 @@
       "sinPrueba": [],
       "bswLaboratorio": []
      },
-     "eventos": 35,
-     "huella_cifras": "1507ccacd9b9322188f1eaf7547e6cf62b5d0d3302deb9bcba0dbd248bc2c21a",
+     "eventos": 31,
+     "huella_cifras": "190cb266ba2594a2c185be30cfd7e7bad4d7bce844013f88ff09f73007458480",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "palmar",
@@ -13349,7 +13585,7 @@
      "eventos": 8,
      "huella_cifras": "c632efa5ec1c89e44223cf0d3a9736f74675237e50136524aa0383dfa75b7d73",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "zarza",
@@ -13410,7 +13646,7 @@
      "eventos": 1,
      "huella_cifras": "c7c447654ee2ccce3c562f23385b1e104894df7699354cc438d1633cc6105408",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     }
    ]
   },
@@ -13441,7 +13677,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Evento de pozo que cobra (Tramo.evento).",
-     "ejemplo": "EP-LC11-260910-79"
+     "ejemplo": "EP-LC11-260925-40"
     },
     {
      "nombre": "dia",
@@ -13453,7 +13689,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Día del campo.",
-     "ejemplo": "2026-09-10"
+     "ejemplo": "2026-09-27"
     },
     {
      "nombre": "campo_id",
@@ -13501,7 +13737,7 @@
      "check": "CHECK ((fin > inicio))",
      "defecto": null,
      "descripcion": "Inicio dentro del día de lo que el evento cobra (ya normalizados los eventos que se pisan).",
-     "ejemplo": "2026-09-10T07:03:00+00:00"
+     "ejemplo": "2026-09-27T05:00:00+00:00"
     },
     {
      "nombre": "fin",
@@ -13513,7 +13749,7 @@
      "check": "CHECK ((fin > inicio))",
      "defecto": null,
      "descripcion": "Fin dentro del día.",
-     "ejemplo": "2026-09-11T05:00:00+00:00"
+     "ejemplo": "2026-09-28T05:00:00+00:00"
     },
     {
      "nombre": "horas",
@@ -13525,7 +13761,7 @@
      "check": "CHECK (((horas > (0)::numeric) AND (horas <= (24)::numeric)))",
      "defecto": null,
      "descripcion": "Horas cobradas en el día.",
-     "ejemplo": 21.95
+     "ejemplo": 24
     },
     {
      "nombre": "factor",
@@ -13549,7 +13785,7 @@
      "check": "CHECK ((crudo_prueba_bpd >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Crudo de la prueba vigente ese día, bbl/d.",
-     "ejemplo": 1097
+     "ejemplo": 1076
     },
     {
      "nombre": "fa",
@@ -13561,7 +13797,7 @@
      "check": "CHECK (((fa IS NULL) = sin_factor))",
      "defecto": null,
      "descripcion": "Factor de asignación del mes. NULL = sin factor (no suma barriles).",
-     "ejemplo": 0.9689341798460919
+     "ejemplo": 0.9689303304815998
     },
     {
      "nombre": "bbl",
@@ -13573,7 +13809,7 @@
      "check": "CHECK ((bbl >= (0)::numeric))",
      "defecto": null,
      "descripcion": "crudo × FA × horas × factor / 24.",
-     "ejemplo": 972.1296440267092
+     "ejemplo": 1042.5690355982015
     },
     {
      "nombre": "aproximado",
@@ -13633,7 +13869,7 @@
      "check": "CHECK ((causa_tipo = ANY (ARRAY['reinyeccion'::text, 'transporte'::text, 'electrosumergible'::text, 'levantamiento'::text, 'energia'::text, 'aire'::text, 'compresion'::text, 'evacuacion'::text, 'proceso'::text, 'tratamiento'::text, 'programada'::text, 'declarada'::text, 'pendiente'::text])))",
      "defecto": null,
      "descripcion": "TipoCausa.",
-     "ejemplo": "reinyeccion"
+     "ejemplo": "electrosumergible"
     },
     {
      "nombre": "causa_equipo",
@@ -13645,7 +13881,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "A quién se le cargan los barriles.",
-     "ejemplo": "P-201B"
+     "ejemplo": "LC-11"
     },
     {
      "nombre": "causa_familia",
@@ -13657,7 +13893,7 @@
      "check": "CHECK (((causa_familia IS NULL) = (causa_parte IS NULL)))",
      "defecto": null,
      "descripcion": "Familia de la parte.",
-     "ejemplo": "inyeccion"
+     "ejemplo": "electrosumergible"
     },
     {
      "nombre": "causa_parte",
@@ -13669,7 +13905,7 @@
      "check": "CHECK (((causa_familia IS NULL) = (causa_parte IS NULL)))",
      "defecto": null,
      "descripcion": "Parte identificada.",
-     "ejemplo": "sello"
+     "ejemplo": "aislamiento"
     },
     {
      "nombre": "causa_como",
@@ -13693,7 +13929,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Evento que la produjo (la parada de bomba o la caída de servicio), o el propio.",
-     "ejemplo": "EV-2011-0909"
+     "ejemplo": "EP-LC11-260925-40"
     },
     {
      "nombre": "version_config",
@@ -13717,139 +13953,139 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-08T21:31:29.477801+00:00"
+     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
     }
    ],
    "filas": [
     {
-     "evento_id": "EP-LC11-260910-79",
-     "dia": "2026-09-10",
+     "evento_id": "EP-LC11-260925-40",
+     "dia": "2026-09-27",
      "campo_id": "ceiba",
      "mes": "2026-09-01",
      "pozo": "LC-11",
-     "inicio": "2026-09-10T07:03:00+00:00",
-     "fin": "2026-09-11T05:00:00+00:00",
-     "horas": 21.95,
+     "inicio": "2026-09-27T05:00:00+00:00",
+     "fin": "2026-09-28T05:00:00+00:00",
+     "horas": 24,
      "factor": 1,
-     "crudo_prueba_bpd": 1097,
-     "fa": 0.9689341798460919,
-     "bbl": 972.1296440267092,
+     "crudo_prueba_bpd": 1076,
+     "fa": 0.9689303304815998,
+     "bbl": 1042.5690355982015,
      "aproximado": false,
      "sin_custodia": false,
      "sin_factor": false,
      "sesgo": 0.14999999999999997,
-     "causa_tipo": "reinyeccion",
-     "causa_equipo": "P-201B",
-     "causa_familia": "inyeccion",
-     "causa_parte": "sello",
+     "causa_tipo": "electrosumergible",
+     "causa_equipo": "LC-11",
+     "causa_familia": "electrosumergible",
+     "causa_parte": "aislamiento",
      "causa_como": "senal",
-     "causa_evento_id": "EV-2011-0909",
+     "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
-     "evento_id": "EP-LC08-260910-85",
-     "dia": "2026-09-10",
+     "evento_id": "EP-LC11-260925-40",
+     "dia": "2026-09-28",
      "campo_id": "ceiba",
      "mes": "2026-09-01",
-     "pozo": "LC-08",
-     "inicio": "2026-09-10T07:06:00+00:00",
-     "fin": "2026-09-11T05:00:00+00:00",
-     "horas": 21.9,
+     "pozo": "LC-11",
+     "inicio": "2026-09-28T05:00:00+00:00",
+     "fin": "2026-09-29T05:00:00+00:00",
+     "horas": 24,
      "factor": 1,
-     "crudo_prueba_bpd": 942,
-     "fa": 0.9689341798460919,
-     "bbl": 832.8715976412044,
+     "crudo_prueba_bpd": 1076,
+     "fa": 0.9689303304815998,
+     "bbl": 1042.5690355982015,
      "aproximado": false,
      "sin_custodia": false,
      "sin_factor": false,
      "sesgo": 0.14999999999999997,
-     "causa_tipo": "reinyeccion",
-     "causa_equipo": "P-201B",
-     "causa_familia": "inyeccion",
-     "causa_parte": "sello",
+     "causa_tipo": "electrosumergible",
+     "causa_equipo": "LC-11",
+     "causa_familia": "electrosumergible",
+     "causa_parte": "aislamiento",
      "causa_como": "senal",
-     "causa_evento_id": "EV-2011-0909",
+     "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
-     "evento_id": "EP-LC16-260910-95",
-     "dia": "2026-09-10",
+     "evento_id": "EP-LC11-260925-40",
+     "dia": "2026-09-26",
      "campo_id": "ceiba",
      "mes": "2026-09-01",
-     "pozo": "LC-16",
-     "inicio": "2026-09-10T07:42:00+00:00",
-     "fin": "2026-09-11T05:00:00+00:00",
-     "horas": 21.3,
+     "pozo": "LC-11",
+     "inicio": "2026-09-26T05:00:00+00:00",
+     "fin": "2026-09-27T05:00:00+00:00",
+     "horas": 24,
      "factor": 1,
-     "crudo_prueba_bpd": 907,
-     "fa": 0.9689341798460919,
-     "bbl": 779.9556797443597,
+     "crudo_prueba_bpd": 1076,
+     "fa": 0.9689303304815998,
+     "bbl": 1042.5690355982015,
      "aproximado": false,
      "sin_custodia": false,
      "sin_factor": false,
      "sesgo": 0.14999999999999997,
-     "causa_tipo": "reinyeccion",
-     "causa_equipo": "P-201B",
-     "causa_familia": "inyeccion",
-     "causa_parte": "sello",
+     "causa_tipo": "electrosumergible",
+     "causa_equipo": "LC-11",
+     "causa_familia": "electrosumergible",
+     "causa_parte": "aislamiento",
      "causa_como": "senal",
-     "causa_evento_id": "EV-2011-0909",
+     "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
-     "evento_id": "EP-LC05-260910-82",
-     "dia": "2026-09-10",
-     "campo_id": "ceiba",
-     "mes": "2026-09-01",
-     "pozo": "LC-05",
-     "inicio": "2026-09-10T07:06:00+00:00",
-     "fin": "2026-09-11T05:00:00+00:00",
-     "horas": 21.9,
-     "factor": 1,
-     "crudo_prueba_bpd": 843,
-     "fa": 0.9689341798460919,
-     "bbl": 745.340506169358,
-     "aproximado": false,
-     "sin_custodia": false,
-     "sin_factor": false,
-     "sesgo": 0.14999999999999997,
-     "causa_tipo": "reinyeccion",
-     "causa_equipo": "P-201B",
-     "causa_familia": "inyeccion",
-     "causa_parte": "sello",
-     "causa_como": "senal",
-     "causa_evento_id": "EV-2011-0909",
-     "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
-    },
-    {
-     "evento_id": "EP-LC04-260910-88",
-     "dia": "2026-09-10",
+     "evento_id": "EP-LC04-260926-75",
+     "dia": "2026-09-27",
      "campo_id": "ceiba",
      "mes": "2026-09-01",
      "pozo": "LC-04",
-     "inicio": "2026-09-10T07:37:00+00:00",
-     "fin": "2026-09-11T05:00:00+00:00",
-     "horas": 21.383333333333333,
+     "inicio": "2026-09-27T05:00:00+00:00",
+     "fin": "2026-09-28T05:00:00+00:00",
+     "horas": 24,
      "factor": 1,
      "crudo_prueba_bpd": 861,
-     "fa": 0.9689341798460919,
-     "bbl": 743.2956513273078,
+     "fa": 0.9689303304815998,
+     "bbl": 834.2490145446576,
      "aproximado": false,
      "sin_custodia": false,
      "sin_factor": false,
      "sesgo": 0.14999999999999997,
-     "causa_tipo": "reinyeccion",
-     "causa_equipo": "P-201B",
-     "causa_familia": "inyeccion",
-     "causa_parte": "sello",
+     "causa_tipo": "electrosumergible",
+     "causa_equipo": "LC-04",
+     "causa_familia": "electrosumergible",
+     "causa_parte": "aislamiento",
      "causa_como": "senal",
-     "causa_evento_id": "EV-2011-0909",
+     "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
+    },
+    {
+     "evento_id": "EP-LC04-260926-75",
+     "dia": "2026-09-28",
+     "campo_id": "ceiba",
+     "mes": "2026-09-01",
+     "pozo": "LC-04",
+     "inicio": "2026-09-28T05:00:00+00:00",
+     "fin": "2026-09-29T05:00:00+00:00",
+     "horas": 24,
+     "factor": 1,
+     "crudo_prueba_bpd": 861,
+     "fa": 0.9689303304815998,
+     "bbl": 834.2490145446576,
+     "aproximado": false,
+     "sin_custodia": false,
+     "sin_factor": false,
+     "sesgo": 0.14999999999999997,
+     "causa_tipo": "electrosumergible",
+     "causa_equipo": "LC-04",
+     "causa_familia": "electrosumergible",
+     "causa_parte": "aislamiento",
+     "causa_como": "senal",
+     "causa_evento_id": "EP-LC04-260926-75",
+     "version_config": 1,
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     }
    ]
   },
@@ -13914,7 +14150,7 @@
      "check": "CHECK ((horas >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Horas produciendo según el PLC (las de frecuencia reducida cuentan).",
-     "ejemplo": 672.3833333333333
+     "ejemplo": 635.35
     },
     {
      "nombre": "potencial",
@@ -13926,7 +14162,7 @@
      "check": "CHECK ((potencial >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Prueba × FA × horas del mes, bbl.",
-     "ejemplo": 31765.538152074274
+     "ejemplo": 31765.411954508756
     },
     {
      "nombre": "diferido",
@@ -13938,7 +14174,7 @@
      "check": "CHECK ((diferido >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Σ de sus tramos, bbl.",
-     "ejemplo": 2106.2078888922356
+     "ejemplo": 3677.2278693078233
     },
     {
      "nombre": "asignado",
@@ -13950,7 +14186,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "(potencial − diferido) × real/Σ(potencial − diferido): incluye su parte del inventario.",
-     "ejemplo": 29659.330263182055
+     "ejemplo": 28088.184085200945
     },
     {
      "nombre": "calculado",
@@ -13962,7 +14198,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-08T21:31:29.477801+00:00"
+     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
     }
    ],
    "filas": [
@@ -13970,51 +14206,51 @@
      "campo_id": "ceiba",
      "mes": "2026-09-01",
      "pozo": "LC-11",
-     "horas": 672.3833333333333,
-     "potencial": 31765.538152074274,
-     "diferido": 2106.2078888922356,
-     "asignado": 29659.330263182055,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "horas": 635.35,
+     "potencial": 31765.411954508756,
+     "diferido": 3677.2278693078233,
+     "asignado": 28088.184085200945,
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "ceiba",
      "mes": "2026-09-01",
      "pozo": "LC-08",
-     "horas": 675.8,
-     "potencial": 27256.118479070585,
-     "diferido": 1675.3571755335483,
-     "asignado": 25580.761303537056,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "horas": 718.3833333333333,
+     "potencial": 27256.010196447387,
+     "diferido": 60.829984442262884,
+     "asignado": 27195.180212005136,
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "ceiba",
      "mes": "2026-09-01",
      "pozo": "LC-16",
-     "horas": 671.3,
-     "potencial": 26475.157530114622,
-     "diferido": 1783.2789485234891,
-     "asignado": 24691.87858159115,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
-    },
-    {
-     "campo_id": "ceiba",
-     "mes": "2026-09-01",
-     "pozo": "LC-04",
-     "horas": 673.85,
-     "potencial": 25021.75626034547,
-     "diferido": 1604.19770734631,
-     "asignado": 23417.558552999177,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "horas": 699.3333333333334,
+     "potencial": 26475.05235007924,
+     "diferido": 756.7615028375318,
+     "asignado": 25718.29084724172,
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "campo_id": "ceiba",
      "mes": "2026-09-01",
      "pozo": "LC-05",
-     "horas": 676.8666666666667,
-     "potencial": 24552.792117299978,
-     "diferido": 1470.4107747221442,
-     "asignado": 23082.38134257785,
-     "calculado": "2026-10-08T21:31:29.477801+00:00"
+     "horas": 720,
+     "potencial": 24552.694574403755,
+     "diferido": 0,
+     "asignado": 24552.694574403766,
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
+    },
+    {
+     "campo_id": "ceiba",
+     "mes": "2026-09-01",
+     "pozo": "LC-14",
+     "horas": 717.1833333333333,
+     "potencial": 24111.8312740346,
+     "diferido": 94.61066382524777,
+     "asignado": 24017.220610209362,
+     "calculado": "2026-10-09T19:07:03.506705+00:00"
     }
    ]
   },
@@ -14081,7 +14317,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Hora del recálculo.",
-     "ejemplo": "2026-10-08T21:31:29.477801+00:00"
+     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
     },
     {
      "nombre": "motivo",
@@ -14117,7 +14353,7 @@
      "check": "CHECK ((huella_despues ~ '^[0-9a-f]{64}$'::text))",
      "defecto": null,
      "descripcion": "Huella después.",
-     "ejemplo": "0bdcbf1d9fa5fc6420f2410de1af37e9f84cb3384e58d68515450756cff5c411"
+     "ejemplo": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
     }
    ],
    "filas": [
@@ -14125,16 +14361,16 @@
      "id": 1,
      "campo_id": "ceiba",
      "mes": "2025-10-01",
-     "cuando": "2026-10-08T21:31:29.477801+00:00",
+     "cuando": "2026-10-09T19:07:03.506705+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
-     "huella_despues": "0bdcbf1d9fa5fc6420f2410de1af37e9f84cb3384e58d68515450756cff5c411"
+     "huella_despues": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
     },
     {
      "id": 2,
      "campo_id": "ceiba",
      "mes": "2025-11-01",
-     "cuando": "2026-10-08T21:31:29.477801+00:00",
+     "cuando": "2026-10-09T19:07:03.506705+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "80979dd8e5f4057b805ffe6baaf7d5e097704223acb7ad94498bec69f2d8aebe"
@@ -14143,25 +14379,25 @@
      "id": 3,
      "campo_id": "ceiba",
      "mes": "2025-12-01",
-     "cuando": "2026-10-08T21:31:29.477801+00:00",
+     "cuando": "2026-10-09T19:07:03.506705+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
-     "huella_despues": "680d5233961f9946f8b3167c52b76304462ab6b1b2f260421d83a2f7dcdc8bbb"
+     "huella_despues": "3ee3116ec3bc84c4293321d097291669814f0af8cfa69fdeb7ff9233b5f63916"
     },
     {
      "id": 4,
      "campo_id": "ceiba",
      "mes": "2026-01-01",
-     "cuando": "2026-10-08T21:31:29.477801+00:00",
+     "cuando": "2026-10-09T19:07:03.506705+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
-     "huella_despues": "f71c87a7f8851963df606912d3ceca77669d2e5cf88a39e4c2e923255781655f"
+     "huella_despues": "753d300b99414f01cc760a56987a7be0cb75f02cf6ed36bb72949f39b071cd8b"
     },
     {
      "id": 5,
      "campo_id": "ceiba",
      "mes": "2026-02-01",
-     "cuando": "2026-10-08T21:31:29.477801+00:00",
+     "cuando": "2026-10-09T19:07:03.506705+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "6d35fb973add65cb0de0726e56b94e4bb27a6df08ae0208f889f0930c6a12b13"
@@ -15063,37 +15299,37 @@
      "defecto": null,
      "descripcion": null,
      "ejemplo": [
-      12443,
-      12582,
-      12333,
-      12477,
-      12570,
-      12400,
-      9003,
-      12422,
-      12399,
-      12321,
-      12491,
-      12623,
-      12231,
-      12245,
-      12393,
-      12430,
-      12379,
-      12514,
-      4332,
-      0,
-      11010,
-      12445,
-      12497,
-      11866,
-      11660,
-      11637,
-      11480,
-      11568,
-      11437,
-      11752,
-      11485
+      12447,
+      12586,
+      12337,
+      12481,
+      12574,
+      12404,
+      9006,
+      12426,
+      12403,
+      12325,
+      12495,
+      12627,
+      12235,
+      12249,
+      12397,
+      12434,
+      12383,
+      12518,
+      10223,
+      9723,
+      11501,
+      12449,
+      12502,
+      11870,
+      11664,
+      11641,
+      11483,
+      11571,
+      11441,
+      11756,
+      11489
      ]
     }
    ],
@@ -15103,37 +15339,37 @@
      "mes": "2025-10",
      "publicado": true,
      "dias": [
-      12443,
-      12582,
-      12333,
-      12477,
-      12570,
-      12400,
-      9003,
-      12422,
-      12399,
-      12321,
-      12491,
-      12623,
-      12231,
-      12245,
-      12393,
-      12430,
-      12379,
-      12514,
-      4332,
-      0,
-      11010,
-      12445,
-      12497,
-      11866,
-      11660,
-      11637,
-      11480,
-      11568,
-      11437,
-      11752,
-      11485
+      12447,
+      12586,
+      12337,
+      12481,
+      12574,
+      12404,
+      9006,
+      12426,
+      12403,
+      12325,
+      12495,
+      12627,
+      12235,
+      12249,
+      12397,
+      12434,
+      12383,
+      12518,
+      10223,
+      9723,
+      11501,
+      12449,
+      12502,
+      11870,
+      11664,
+      11641,
+      11483,
+      11571,
+      11441,
+      11756,
+      11489
      ]
     },
     {
@@ -15178,37 +15414,37 @@
      "mes": "2025-12",
      "publicado": true,
      "dias": [
+      12692,
+      12612,
+      12930,
+      12703,
       12690,
-      12611,
-      12928,
-      12701,
-      12689,
-      12837,
-      12828,
-      12801,
-      12635,
-      12590,
-      12784,
-      12843,
-      12544,
-      12747,
-      12672,
-      12781,
-      12584,
-      12912,
-      12938,
-      2073,
-      709,
-      12711,
-      12714,
-      12643,
-      12610,
-      12910,
-      12871,
-      12722,
-      12784,
+      12838,
       12829,
-      12641
+      12803,
+      12636,
+      12591,
+      12786,
+      12844,
+      12545,
+      12748,
+      12674,
+      12782,
+      12586,
+      12913,
+      12878,
+      9889,
+      10024,
+      12315,
+      12716,
+      12645,
+      12611,
+      12912,
+      12873,
+      12723,
+      12785,
+      12830,
+      12643
      ]
     },
     {
@@ -15243,7 +15479,7 @@
       11990,
       12091,
       12072,
-      8379,
+      8377,
       11716,
       11817,
       11957
@@ -15600,7 +15836,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "40012053"
+     "ejemplo": "40012056"
     },
     {
      "nombre": "clase",
@@ -15720,7 +15956,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "2026-09-26T12:26:17.357+00:00"
+     "ejemplo": "2026-09-29T10:55:00+00:00"
     },
     {
      "nombre": "tecnico",
@@ -15756,7 +15992,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "10004146"
+     "ejemplo": "10004149"
     },
     {
      "nombre": "horas_reales",
@@ -15780,7 +16016,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "EV-2011-0922"
+     "ejemplo": "EP-LC04-260926-75"
     },
     {
      "nombre": "repuestos",
@@ -15797,7 +16033,7 @@
    ],
    "filas": [
     {
-     "numero": "40012053",
+     "numero": "40012056",
      "clase": "PM03",
      "clase_sap": "PM03",
      "campo_id": "ceiba",
@@ -15810,13 +16046,63 @@
      "cierre_tecnico": null,
      "tecnico": "tec",
      "puesto": "MEC-CEIBA",
-     "aviso": "10004146",
+     "aviso": "10004149",
      "horas_reales": 0,
      "evento": null,
      "repuestos": []
     },
     {
-     "numero": "40012054",
+     "numero": "40012048",
+     "clase": "PM01",
+     "clase_sap": "PM01",
+     "campo_id": "ceiba",
+     "equipo": "LC-04",
+     "descripcion": "Reparar aislamiento del motor y del cable de LC-04",
+     "estado": "TECO",
+     "prioridad": 1,
+     "creada": "2026-09-26T19:46:00+00:00",
+     "liberada": "2026-09-26T20:46:00+00:00",
+     "cierre_tecnico": "2026-09-29T10:55:00+00:00",
+     "tecnico": "tec",
+     "puesto": "MEC-CEIBA",
+     "aviso": "10004148",
+     "horas_reales": 8,
+     "evento": "EP-LC04-260926-75",
+     "repuestos": [
+      {
+       "cantidad": 1,
+       "material": "MAT-CAB-ESP",
+       "descripcion": "Cable de potencia y empalme"
+      }
+     ]
+    },
+    {
+     "numero": "40012046",
+     "clase": "PM01",
+     "clase_sap": "PM01",
+     "campo_id": "ceiba",
+     "equipo": "LC-11",
+     "descripcion": "Reparar aislamiento del motor y del cable de LC-11",
+     "estado": "TECO",
+     "prioridad": 1,
+     "creada": "2026-09-26T01:56:00+00:00",
+     "liberada": "2026-09-26T02:56:00+00:00",
+     "cierre_tecnico": "2026-09-29T16:35:00+00:00",
+     "tecnico": "tec",
+     "puesto": "MEC-CEIBA",
+     "aviso": "10004146",
+     "horas_reales": 8,
+     "evento": "EP-LC11-260925-40",
+     "repuestos": [
+      {
+       "cantidad": 1,
+       "material": "MAT-CAB-ESP",
+       "descripcion": "Cable de potencia y empalme"
+      }
+     ]
+    },
+    {
+     "numero": "40012057",
      "clase": "PM03",
      "clase_sap": "PM03",
      "campo_id": "ceiba",
@@ -15829,7 +16115,7 @@
      "cierre_tecnico": "2026-09-26T12:26:17.357+00:00",
      "tecnico": "tec",
      "puesto": "MEC-CEIBA",
-     "aviso": "10004147",
+     "aviso": "10004150",
      "horas_reales": 4,
      "evento": null,
      "repuestos": []
@@ -15858,50 +16144,6 @@
        "descripcion": "Juego de rodamientos"
       }
      ]
-    },
-    {
-     "numero": "40012041",
-     "clase": "PM01",
-     "clase_sap": "PM01",
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "descripcion": "Reparar sello mecánico de P-201B",
-     "estado": "TECO",
-     "prioridad": 1,
-     "creada": "2026-09-10T03:14:00+00:00",
-     "liberada": "2026-09-10T04:14:00+00:00",
-     "cierre_tecnico": "2026-09-11T15:59:36+00:00",
-     "tecnico": "tec",
-     "puesto": "MEC-CEIBA",
-     "aviso": "10004141",
-     "horas_reales": 8,
-     "evento": "EV-2011-0909",
-     "repuestos": [
-      {
-       "cantidad": 1,
-       "material": "MAT-SELLO-201",
-       "descripcion": "Kit de sello mecánico"
-      }
-     ]
-    },
-    {
-     "numero": "40012051",
-     "clase": "PM02",
-     "clase_sap": "PM02",
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "descripcion": "Mantenimiento preventivo programado de la bomba",
-     "estado": "TECO",
-     "prioridad": 3,
-     "creada": "2026-08-12T22:49:23+00:00",
-     "liberada": "2026-08-18T22:49:23+00:00",
-     "cierre_tecnico": "2026-08-20T16:34:04+00:00",
-     "tecnico": "tec",
-     "puesto": "MEC-CEIBA",
-     "aviso": null,
-     "horas_reales": 8,
-     "evento": null,
-     "repuestos": []
     }
    ]
   },
@@ -16474,7 +16716,7 @@
    "desde": "parada_bomba.id,clase,campo_id,equipo",
    "hacia": "evento.id,clase,campo_id,activo",
    "cardinalidad": "1:1",
-   "descripcion": "Id de la parada (EV-2011-0909).",
+   "descripcion": "Id de la parada (EV-2011-0809).",
    "restriccion": "parada_bomba_id_clase_campo_id_equipo_fkey",
    "diferible": false
   },

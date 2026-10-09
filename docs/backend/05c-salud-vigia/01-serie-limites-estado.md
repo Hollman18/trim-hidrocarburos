@@ -85,13 +85,13 @@ otro → «cada N h» con formato es-CO.
 **Qué texto se muestra.** Solo `lecturasDe` (arriba) y los decimales: `decimalesDe(serie, valor)`
 (`src/shared/lib/formato.ts:85-92`) toma el máximo de decimales que traen los valores de la serie
 y el valor actual, entre 0 y 3, ignorando los `null` (ISA-101, Tabla 7: la resolución del dato).
-PI-2010 → 1 decimal («8,8 psi»); FI-2011 → 0 decimales («21.500 bbl/d»).
+PI-2010 → 1 decimal («8,8 psi»); FI-2011 → 0 decimales («79.905 bbl/d» en Morichal).
 
 **Quién lo calcula y por dónde viaja.** El servidor la lee del historiador y la entrega tal cual;
 el front solo la valida (`faltaEnSerie` en el códec de `src/shared/api/contrato.ts:138`).
 
 **Referencia.** `src/entities/serie.ts`; `src/entities/tipos.ts:9-20`; CONTRATO.md «Demás lecturas».
-`scripts/verificar-libro.mjs:821-831` comprueba que el vigía lee el paso (la misma rampa cruza en 4 h
+`scripts/verificar-libro.mjs:856-866` comprueba que el vigía lee el paso (la misma rampa cruza en 4 h
 por hora y en 96 h por día), que dos huecos no mueven el eje y que `pasoH: 0` se rechaza. En
 `referencia/`: las series viajan dentro de `referencia/salud/bombas-<campo>-2026-09.json`
 (`/api/vistas/bombas`) y las de la ESP en `referencia/insumos/<campo>/electrosumergibles.json`.
@@ -206,7 +206,7 @@ indicador con ▲ naranja y «8,8 psi», pie «normal > 10,0 · alarma 8,0».
 `limite: { valor, sentido }` (`Senal`, `src/entities/vigia.ts:89-110`).
 
 **Referencia.** `src/entities/limites.ts:22-100`; `src/shared/lib/formato.ts:68-81`; CONTRATO.md
-«Límite de cada tag». `scripts/verificar-libro.mjs:1431-1444` comprueba que la procedencia del
+«Límite de cada tag». `scripts/verificar-libro.mjs:1466-1479` comprueba que la procedencia del
 simulador cita la misma banda en todos los tags, que todas las señales de bombas toman banda y alarma
 de `limites` y que VI-2011 dice «< 3,9» con alarma 3,9 (API 610) y sus dos firmas. Los límites viajan
 en `referencia/insumos/arranque/catalogo.json` (`GET /api/catalogo`).
@@ -237,7 +237,7 @@ interna `SEV` de `src/entities/salud.ts:84`:
 - **Bombas de la línea**: lo pone el **PLC / sistema de alarmas** con el dispositivo (`Dispositivo.estado`).
   TRIM no lo recalcula. Ejemplo: PI-2010 en Morichal llega `atencion`.
 - **Electrosumergibles**: el demo lo deduce de los ajustes del variador (`estadoDe`,
-  `src/entities/esp.ts:92-94`):
+  `src/entities/esp.ts:97-99`):
 
 $$
 \text{estado} = \begin{cases}
@@ -262,8 +262,9 @@ $$
 |---|---|---|---|---|---|---|
 | P-201B (Morichal) | PI-2010 | 8,8 psi | > 10 | baja 8 | atencion | ▲ «8,8 psi» |
 | MPP-301 (Morichal) | PDT-3011 | 9,6 psi | < 8 | alta 12 | atencion | ▲ «9,6 psi» |
-| MN-07 (Morichal) | corriente | 99,8 A | 68 – 89,6 | alta 100, baja 52 | atencion (99,8 > 89,6 y < 100) | ▲ «99,8 A» |
-| P-201B (La Ceiba, detenida) | FI-2011 | 0 bbl/d | 18.000 – 20.400 | – | alarma | ◆ «0 bbl/d» |
+| MN-07 (Morichal) | corriente | 329,4 A | 224,4 – 295,7 | alta 330, baja 172 | atencion (329,4 > 295,7 y < 330) | ▲ «329,4 A» |
+| P-201B (La Ceiba, detenida) | FI-2011 | 0 bbl/d | 66.800 – 89.250 | – | alarma | ◆ «0 bbl/d» |
+| P-201B (La Ceiba, detenida) | II-2011 | 0 A | 320 – 445 | – | alarma | ◆ «0 A» |
 | P-201B (La Ceiba) | VI-2011 | 0 mm/s | < 3,9 | alta 3,9 | normal | sin marca |
 
 **Casos borde.** Con la bomba parada, el PLC puede reportar en alarma lo que la parada misma
@@ -272,7 +273,7 @@ causa (caudal, descarga, corriente en 0). La salud no lo toma como pista (5C.3).
 **Quién lo calcula y por dónde viaja.** Servidor; `Senal.estado` en `/vistas/bombas` y
 `/vistas/pozos/:campo/:pozo`; `Dispositivo.estado` en `/vistas/equipos…`.
 
-**Referencia.** `src/entities/tipos.ts:7`; `src/shared/lib/prioridad.ts`; `src/entities/esp.ts:89-94`.
+**Referencia.** `src/entities/tipos.ts:7`; `src/shared/lib/prioridad.ts`; `src/entities/esp.ts:94-99`.
 
 ---
 
@@ -281,7 +282,7 @@ causa (caudal, descarga, corriente en 0). La salud no lo toma como pista (5C.3).
 **Qué es.** Un instrumento que no tiene lectura en línea. Viaja como `valor: null` y estado
 `"sin señal"`, **nunca como cero ni como un texto** como `"—"` (un texto es una lectura discreta;
 premisa de custodia del contrato). Desde el 8-oct el motor lo cumple en todo
-`/vistas/equipos/:campo/:equipo` (`equipo-vivo.ts:43`, `:69`): 54 dispositivos sin lectura en el demo,
+`/vistas/equipos/:campo/:equipo` (`equipo-vivo.ts:43`, `:69`): 9 dispositivos sin lectura en el demo (antes del 9-oct, 54: había 18 pozos parados en La Ceiba),
 todos `null`, con estado «sin señal» y sin unidad (`verificar-libro` §19). La pantalla decide «sin
 lectura» con `sinLectura(d)` = estado «sin señal» **o** `valor: null` (`src/shared/lib/formato.ts:43-44`),
 así un `null` con otro estado también es dato inválido.
@@ -311,7 +312,7 @@ así un `null` con otro estado también es dato inválido.
 | Corriente y frecuencia del variador con el motor parado | No | se miden: **0** (no `null`); su alarma baja es consecuencia de la parada, que ya marca el controlador |
 
 **Ejemplo con los datos del demo.** MN-41 (Morichal) está parada por falla de aislamiento
-(evento `EP-MN41-260903-06`, código GF). Su presión de entrada, temperatura del motor y desbalance
+(evento `EP-MN41-260925-06`, código GF, desde el 25-sep). Su presión de entrada, temperatura del motor y desbalance
 viajan `valor: null`, `estado: "sin señal"`; corriente y frecuencia, `0`. En el demo **ninguna**
 electrosumergible queda sin señal mientras produce (las lecturas son sintéticas), así que el panel
 SIN SEÑAL no aparece en ningún pozo del demo.
@@ -324,5 +325,5 @@ bomba que llega con `valor: null` también entra así, aunque su estado no diga 
 **Procedencia.** «De dónde sale este número» llama `GET /api/campos/:campo/tags/:tag/procedencia`;
 un tag no registrado responde `404 tag-no-registrado` y el front muestra el hueco.
 
-**Referencia.** `src/entities/esp.ts:96-135`; `src/widgets/pozos/estado.ts`; CONTRATO.md «Premisa:
+**Referencia.** `src/entities/esp.ts:101-140`; `src/widgets/pozos/estado.ts`; CONTRATO.md «Premisa:
 cadena de custodia» y «Lo que ve operación de las señales de un pozo».

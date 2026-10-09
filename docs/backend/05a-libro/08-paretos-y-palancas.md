@@ -22,13 +22,16 @@ Tipos y rótulos (`TIPO_CAUSA`): `reinyeccion` «Bomba de reinyección», `trans
 
 | La Ceiba · sep | La Ceiba · oct | Portafolio · sep |
 |---|---|---|
-| **Bomba de reinyección** 20.739 bbl · 96 % | **Bomba de reinyección** 2.570 · 84 % | **Electrosumergible** 66.919 · 64 % |
-| **Electrosumergible** 755 · 3 % | Sin identificar 355 · 12 % (rayado) | **Bomba de reinyección** 30.577 · 29 % |
-| Energía eléctrica 198 · 1 % | Energía eléctrica 118 · 4 % | Bomba multifásica 3.022 · 3 % |
-| | | Bombeo mecánico 2.687 · 3 % |
-| | | Separación 1.304 · 1 % |
-| | | Declarada por el operario 409 · < 1 % |
-| | | Energía eléctrica 309 · < 1 % |
+| **Electrosumergible** 6.436 bbl · 83 % | **Bomba de reinyección** 573 · 55 % | **Electrosumergible** 19.953 · 59 % |
+| **Bomba de reinyección** 1.041 · 13 % | Sin identificar 355 · 34 % (rayado) | **Bomba de reinyección** 4.829 · 14 % |
+| Energía eléctrica 239 · 3 % | Energía eléctrica 118 · 11 % | Bomba multifásica 3.027 · 9 % |
+| | | Bombeo mecánico 2.687 · 8 % |
+| | | Parada programada 1.385 · 4 % |
+| | | Separación 1.304 · 4 % |
+| | | Declarada por el operario 409 · 1 % |
+| | | Energía eléctrica 351 · 1 % |
+
+Con el agua real la bomba de reinyección deja de mandar en La Ceiba: cada parada cierra 2 o 3 pozos (antes del 9-oct, los 18). En septiembre manda la electrosumergible (LC-11 y LC-04, caídas el 26-sep); la «Parada programada» de septiembre son los dos cambios de bomba que el vigía anticipó en Morichal (MN-05 y MN-16).
 
 **Qué texto.** `${TIPO_CAUSA} … ${n0(bbl)} bbl · ${pctParte(%)}`, con `pctParte` (`src/shared/lib/formato.ts:20-21`): lo que no es cero pero no llega a 1 % se escribe «< 1 %» (lector: «menos del 1 %»), nunca «0 %» (antes del 8-oct salía «0 %»); barra = bbl / bbl de la primera fila. Vacío: «Nada diferido.» Se ven cinco filas (seis si son exactamente seis) más «ver N más».
 
@@ -61,29 +64,29 @@ $$
 \text{disparos} = \#\{\ldots\ e.\text{disparo}\}
 $$
 
-En una bomba `disparos` = 0 y `fallas` ≥ `eventos` (una falla que el tanque absorbió no tiene barriles pero cuenta); en una electrosumergible `fallas + disparos = eventos`. Ejemplo: P-201B de Morichal en los últimos 12 meses, **8 fallas** y `eventos` 5 (solo 5 costaron barriles); La Ceiba septiembre: P-201B 2 fallas, LC-16 sin fallas · 2 disparos, LC-11 0 · 1. Antes del 8-oct la pantalla del gerente las contaba por su lado con la historia de fallas; ahora las da el servidor (`verificar-libro` §18: 279 filas de 6 períodos iguales a la historia).
+En una bomba `disparos` = 0 y `fallas` ≥ `eventos` (una falla que el tanque absorbió no tiene barriles pero cuenta); en una electrosumergible `fallas + disparos = eventos`. Ejemplo: P-201B de Morichal en los últimos 12 meses, **8 fallas** y `eventos` 7 (solo 7 costaron barriles: `260103` la absorbió el tanque); La Ceiba septiembre: P-201B 1 falla, LC-11 1 falla, LC-04 1 falla, LC-16 sin fallas · 2 disparos. Antes del 8-oct la pantalla del gerente las contaba por su lado con la historia de fallas; ahora las da el servidor (`verificar-libro` §18: 276 filas de 6 períodos iguales a la historia).
 
-**Ejemplo con los datos del demo (La Ceiba, septiembre: 11 equipos).**
+**Ejemplo con los datos del demo (La Ceiba, septiembre: 12 equipos).**
 
 | Equipo | Tipo | bbl | Del total | Acum. | Tolerancia | Eventos · pozos | Parte top |
 |---|---|---:|---:|---:|---:|---|---|
-| P-201B | Bomba de reinyección | 20.739 | 95,6 % | 96 % | ±3.111 (±15,0 %) | 2 · 18 | Sello mecánico 71 % |
-| LC-16 | Electrosumergible | 217 | 1,0 % | 97 % | ±32 | 2 · 1 | Admisión y gas 100 % |
-| SE-2 | Energía eléctrica | 198 | 0,9 % | 98 % | ±30 | 2 · 2 | — |
-| LC-11 | Electrosumergible | 136 | 0,6 % | 98 % | ±20 | 1 · 1 | Bomba de fondo |
-| LC-07 | Electrosumergible | 131 | 0,6 % | 99 % | ±20 | 1 · 1 | Motor eléctrico |
-| … (6 más: LC-14 95, LC-08 61, LC-09 55, LC-01 25, LC-02 20, LC-12 16) | | | | 100 % | | | |
+| LC-11 | Electrosumergible | 3.677 | 47,7 % | 48 % | ±552 (±15,0 %) | 1 · 1 | Aislamiento del motor y del cable 100 % |
+| LC-04 | Electrosumergible | 2.126 | 27,5 % | 75 % | ±319 | 1 · 1 | Aislamiento del motor y del cable 100 % |
+| P-201B | Bomba de reinyección | 1.041 | 13,5 % | 89 % | ±156 | 1 · 2 | Rodamientos 100 % |
+| SE-2 | Energía eléctrica | 239 | 3,1 % | 92 % | ±36 | 3 · 3 | — |
+| LC-16 | Electrosumergible | 217 | 2,8 % | 95 % | ±32 | 2 · 1 | Admisión y gas 100 % |
+| … (7 más: LC-07 131, LC-14 95, LC-08 61, LC-09 55, LC-12 30, LC-01 25, LC-02 20) | | | | 100 % | | | |
 
-P-201B: dos paradas (9-sep por sello: 14.649,471 bbl; 22-sep por rodamientos: 6.089,387 bbl) que cerraron los 18 pozos.
+LC-11 y LC-04: fallas a tierra del 26-sep, con la puesta en marcha de TRIM ya en servicio (volvieron en 85 y 61 h). P-201B: una parada (22-sep por rodamientos, 1.040,550 bbl) que cerró 2 pozos; la de sello pasó al 9-ago.
 
-Octubre de La Ceiba (4 equipos): P-201B 2.570 (84 %, 17 pozos, sin parte), LC-21 «sin identificar» 247 (93 %), SE-2 118 (96 %), LC-08 «sin identificar» 109 (100 %). Portafolio septiembre (43 equipos): P-201B · La Ceiba 20.739 (20 %), MN-41 · Morichal 18.638 (37 %, aislamiento), GU-05 · Guacamayo 11.766 (49 %, ±5,0 %), GU-09 10.510 (59 %), P-201B · Morichal 9.838 (68 %, 8 pozos, sin parte)…
+Octubre de La Ceiba (4 equipos): P-201B 573 (55 %, 2 pozos, sin parte), LC-21 «sin identificar» 247 (78 %), SE-2 118 (90 %), LC-08 «sin identificar» 109 (100 %). Portafolio septiembre (46 equipos): MN-41 · Morichal 3.832 (11 %, aislamiento), P-201B · Morichal 3.789 (22 %, 2 pozos, sin parte), LC-11 · La Ceiba 3.677 (33 %), MPP-301 · Morichal 3.027 (42 %), PA-07 · El Palmar 2.687 (50 %), GU-05 · Guacamayo 2.394 (57 %, ±5,0 %)…
 
 **Qué texto se muestra.**
 
-- Fila: marca de prioridad del equipo **hoy** (severidad de `/vistas/equipos-hoy`, otro capítulo) **solo si la fila es de una falla de ese equipo**: una fila de parada programada va sin marca y no se queda a la vista por ella (`marcaDeFila`, `src/widgets/diferidos/marca.ts`; lo declarado y lo sin identificar sí llevan la del equipo). Ejemplo, portafolio 12 meses: «P-201B · La Ceiba, parada programada: 3.828 bbl» y «MPP-301 · Morichal Norte, parada programada» van sin marca (antes ◆ P1 y ■ P3); etiqueta en negrita («P-201B», con «· La Ceiba» en el portafolio), chip con el tipo en minúsculas (tono fuerte si es de alto impacto), «18 pozos» si > 1, nombre de la parte top en minúsculas, barra (bbl / bbl del primero; oscura si alto impacto), `n0(bbl)` y `n0(acumulado)` % (oculto en pantallas chicas y en decisión).
-- Globo: título «P-201B» (+ campo); pista: nombre largo del equipo · «Sello mecánico: 71 % de sus barriles» · «tolerancia ±15,0 %» (no en decisión); filas «Diferidos», «Tolerancia ±3.111 bbl» (no en decisión), «Del total 95,6 %», «Acumulado 95,6 %», «Tipo», «Eventos», «Pozos afectados» y hasta tres partes con sus bbl.
+- Fila: marca de prioridad del equipo **hoy** (severidad de `/vistas/equipos-hoy`, otro capítulo) **solo si la fila es de una falla de ese equipo**: una fila de parada programada va sin marca y no se queda a la vista por ella (`marcaDeFila`, `src/widgets/diferidos/marca.ts`; lo declarado y lo sin identificar sí llevan la del equipo). Ejemplo, portafolio 12 meses: «P-201B · La Ceiba, parada programada: 1.523 bbl» y «MPP-301 · Morichal Norte, parada programada» van sin marca (antes ◆ P1 y ■ P3); etiqueta en negrita («P-201B», con «· La Ceiba» en el portafolio), chip con el tipo en minúsculas (tono fuerte si es de alto impacto), «2 pozos» si > 1, nombre de la parte top en minúsculas, barra (bbl / bbl del primero; oscura si alto impacto), `n0(bbl)` y `n0(acumulado)` % (oculto en pantallas chicas y en decisión).
+- Globo: título «LC-11» (+ campo); pista: nombre largo del equipo · «Aislamiento del motor y del cable: 100 % de sus barriles» · «tolerancia ±15,0 %» (no en decisión); filas «Diferidos», «Tolerancia ±552 bbl» (no en decisión), «Del total 47,7 %», «Acumulado 47,7 %», «Tipo», «Eventos», «Pozos afectados» y hasta tres partes con sus bbl.
 - Se ven cinco filas y **toda fila de prioridad 1** (ISA-18.2); «ver más» abre el resto; en el papel salen todas. Vacío: «Nada diferido.»
-- Resumen del gerente: tres filas con etiqueta, campo (en el portafolio), parte top o tipo en minúsculas, `n0(bbl)` y «bbl · 96 %».
+- Resumen del gerente: tres filas con etiqueta, campo (en el portafolio), parte top o tipo en minúsculas, `n0(bbl)` y «bbl · 48 %».
 
 **Casos borde.** Un tramo de 0 bbl (pozo sin prueba o mes sin factor) no crea fila. Un equipo que el tanque absorbió (0 bbl) no aparece aquí pero sí en el Pareto por parte y en `sinCosto` (abajo).
 
@@ -111,9 +114,9 @@ Orden: campo en el orden de la consulta; dentro, más fallas, más disparos, có
 | Últimos 12 meses | P-201B de Guacamayo (recobro): **5 fallas** · 0 disparos (sus paradas no cierran pozos hoy) |
 | Julio a septiembre | P-201B de Guacamayo: 1 falla |
 | Octubre en curso, septiembre cerrado | `[]` |
-| Diciembre de 2025 (serie mensual) | P-201B de **Morichal**: 1 falla (`EV-M2011-251207`, motor: el tanque la absorbió, 0 bbl) |
+| Enero de 2026 (serie mensual) | P-201B de **Morichal**: 1 falla (`EV-M2011-260103`, succión: el tanque la absorbió, 0 bbl) |
 
-En la serie mensual sale en 7 meses: Guacamayo nov-2025, mar, may, jun y ago-2026; Morichal dic-2025 y ene-2026 (las dos absorbidas por el tanque).
+En la serie mensual sale en 6 meses: Guacamayo nov-2025, mar, may, jun y ago-2026; Morichal ene-2026 (absorbida por el tanque). La de diciembre de 2025 (`EV-M2011-251207`, motor) ya no: con 40.400 bbl/d sin salida duró más que su colchón y cerró 3 pozos (894 bbl).
 
 **Casos borde.** Una bomba que falló **y** costó en el mismo período tiene su fila de barriles (con sus `fallas`, que cuentan también las absorbidas) y no sale aquí. Una bomba sin ninguna parada en el campo no puede estar. Sin nada, `[]`.
 
@@ -146,27 +149,26 @@ $$
 \%_{\text{fila}} = 100\cdot\frac{\text{bbl}}{\sum_{\text{filas}} \text{bbl}}
 $$
 
-Las horas son las del equipo fuera, no la suma de las de cada pozo cerrado (una falla que cerró 18 pozos son las horas de la bomba). Orden: bbl descendente y, a igualdad, horas.
+Las horas son las del equipo fuera, no la suma de las de cada pozo cerrado (una falla que cerró 3 pozos son las horas de la bomba, no tres veces esas horas). Orden: bbl descendente y, a igualdad, horas.
 
 **Ejemplo con los datos del demo (La Ceiba, septiembre).**
 
 | Parte | Familia | Fallas · disparos | bbl | % | Horas fuera |
 |---|---|---|---:|---:|---:|
-| Sello mecánico | reinyección | 1 falla | 14.649 | 68 % | 35 |
-| Rodamientos | reinyección | 1 falla | 6.089 | 28 % | 16 |
-| Admisión y gas | electrosumergible | sin fallas · 7 disparos | 396 | 2 % | 13 |
-| Bomba de fondo | electrosumergible | sin fallas · 2 disparos | 203 | 1 % | 5 |
-| Motor eléctrico | electrosumergible | sin fallas · 1 disparo | 131 | 1 % | 4 |
-| Aislamiento del motor y del cable | electrosumergible | sin fallas · 1 disparo | 25 | < 1 % | 2 |
+| Aislamiento del motor y del cable | electrosumergible | 2 fallas · 2 disparos | 5.842 | 78 % | 148 |
+| Rodamientos | reinyección | 1 falla | 1.041 | 14 % | 16 |
+| Admisión y gas | electrosumergible | sin fallas · 7 disparos | 396 | 5 % | 13 |
+| Motor eléctrico | electrosumergible | sin fallas · 1 disparo | 131 | 2 % | 4 |
+| Bomba de fondo | electrosumergible | sin fallas · 1 disparo | 67 | < 1 % | 2 |
 
-El total por parte es 21.493,772 bbl (el diferido de alto impacto). Portafolio septiembre: Aislamiento del motor y del cable (ESP) 3 fallas · 4 disparos · 32.295 bbl · 36 % · 1.208 h; Bomba de fondo 3 · 8 · 28.572 · 32 % · 1.355 h; Sello mecánico (reinyección) 14.649 · 16 %; Rodamientos 6.089 · 7 %; Admisión y gas 1 · 19 · 5.894 · 6 % · 480 h; Sello mecánico (multifásica, MPP-301) 1 falla · 3.022 · 3 % · 45 h; Motor eléctrico 2 disparos · 158 · < 1 %.
+El total por parte es 7.476,616 bbl (el diferido de alto impacto). Portafolio septiembre (total por parte 24.020,5: el alto impacto con parte más la multifásica): Aislamiento del motor y del cable (ESP) 6 fallas · 5 disparos · 15.351 bbl · 62 % · 539 h (MN-41, LC-11, LC-04…); Sello mecánico (multifásica, MPP-301) 1 falla · 3.027 · 12 % · 45 h; Bomba de fondo 1 · 7 · 2.701 · 11 % · 135 h (GU-05); Admisión y gas 1 · 20 · 1.744 · 7 % · 108 h; Rodamientos (reinyección, P-201B de La Ceiba) 1 falla · 1.041 · 4 % · 16 h; Motor eléctrico 2 disparos · 158 · < 1 %. La parada de P-201B de Morichal del 24-sep no tiene parte: no entra aquí (va a «sin la parte identificada»).
 
 **Qué texto se muestra.**
 
 - Fila: nombre de la parte en negrita; «{familia} · {N falla(s) | sin fallas}{ · M disparo(s)}»; barra (bbl / bbl de la primera, o 1 si la primera tiene 0); a la derecha `n0(bbl)` y «bbl · `pctParte(%)`» («< 1 %» si no llega a 1 %).
-- Globo: «Diferidos», «Del total por parte» (`n1` %), «Familia», «Fallas», «Disparos (menos de un día)» (si hay), «Horas fuera» (`n0` h) y hasta tres equipos «P-201B · La Ceiba: 14.649 bbl». Pista (si es clicable): «Clic para ver la salud de esa parte en los equipos».
+- Globo: «Diferidos», «Del total por parte» (`n1` %), «Familia», «Fallas», «Disparos (menos de un día)» (si hay), «Horas fuera» (`n0` h) y hasta tres equipos «LC-11 · La Ceiba: 3.677 bbl». Pista (si es clicable): «Clic para ver la salud de esa parte en los equipos».
 - Debajo: «+ N bbl sin la parte identificada» si `sinParte > 0`, con ⓘ «Barriles de equipos de alto impacto cuya parada no dejó primera alarma ni firma. Están en «paradas por identificar».»
-- Vacío: «Ninguna falla con la parte identificada.» Ejemplo: La Ceiba en octubre (la parada abierta de P-201B no tiene parte) → vacío y «+ 2.570 bbl sin la parte identificada».
+- Vacío: «Ninguna falla con la parte identificada.» Ejemplo: La Ceiba en octubre (la parada abierta de P-201B no tiene parte) → vacío y «+ 573 bbl sin la parte identificada».
 
 **Quién lo calcula.** Servidor: `porParte: FilaParte[]` (`src/entities/libro.ts:457-472`, `:793-824`).
 
@@ -212,13 +214,13 @@ Por construcción $\text{anticipable} + \text{sinInstrumento} + \text{sinParte} 
 
 | Palanca | La Ceiba · sep | La Ceiba · oct | Portafolio · sep | Portafolio · oct |
 |---|---|---|---|---|
-| Equipos de alto impacto | 21.494 · 99 % | 2.570 · 84 % | 97.496 · 93 % | 5.523 · 89 % |
-| Con parte vigilada | 21.494 · 99 % | 0 · 0 % | 87.658 · 83 % | 2.953 · 47 % |
+| Equipos de alto impacto | 7.477 · 97 % | 573 · 55 % | 24.782 · 73 % | 1.668 · 70 % |
+| Con parte vigilada | 7.477 · 97 % | 0 · 0 % | 20.994 · 62 % | 1.095 · 46 % |
 | Con parte sin instrumento | 0 · 0 % | 0 · 0 % | 0 · 0 % | 0 · 0 % |
-| Sin la parte identificada | 0 · 0 % | 2.570 · 84 % | 9.838 · 9 % | 2.570 · 41 % |
-| Evitable cerrando en orden | 0 · 0 % | 0 · 0 % | 4.762 · 5 % | 0 · 0 % |
+| Sin la parte identificada | 0 · 0 % | 573 · 55 % | 3.789 · 11 % | 573 · 24 % |
+| Evitable cerrando en orden | 55 · < 1 % | 30 · 3 % | 256 · < 1 % | 30 · 1 % |
 
-En el demo ningún mes tiene barriles «sin instrumento» (todas las fallas con parte son de sello, rodamientos o de electrosumergibles). «Sin la parte identificada» en septiembre del portafolio es la parada de P-201B de Morichal del 24-sep; en octubre, la parada abierta de P-201B de La Ceiba.
+En el demo ningún mes tiene barriles «sin instrumento» (todas las fallas con parte son de rodamientos o de electrosumergibles). «Sin la parte identificada» en septiembre del portafolio es la parada de P-201B de Morichal del 24-sep; en octubre, la parada abierta de P-201B de La Ceiba.
 
 **Qué texto.** Rótulo; `n0(bbl)`; `pctParte(100·bbl/diferido)` en chico («< 1 %» si no llega a 1 %; vacío si el diferido es 0). Globo: «Barriles», «Del diferido». Con `conMaximo` (hoy apagado en todas las pantallas que lo usan), además la barra «diferido por día» contra el máximo y «antes N bbl/d · jul a sep».
 
@@ -234,4 +236,4 @@ En el demo ningún mes tiene barriles «sin instrumento» (todas las fallas con 
 
 **Dónde se ve.** No en Diferidos (lo usan la pantalla de pozos e informes, otros capítulos). Viaja en `GET /api/vistas/diferidos`, no en la serie mensual.
 
-**Ejemplo.** La Ceiba septiembre: LC-11 2.106,2 bbl en 47,6 h (3 eventos), LC-16 1.783,3 (48,7 h, 4), LC-08 1.675,4 (44,2 h, 3)… LC-21 536,5 (42,5 h, 2).
+**Ejemplo.** La Ceiba septiembre (11 pozos): LC-11 3.677,2 bbl en 84,6 h (1 evento), LC-04 2.260,6 (65,0 h, 2), LC-16 756,8 (20,7 h, 3), LC-07 631,8 (18,8 h, 2)… LC-02 19,9 (1,3 h, 1).

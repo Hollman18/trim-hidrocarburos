@@ -1,4 +1,4 @@
-# Validación del modelo de datos · 2026-10-08 16:31:26 -05
+# Validación del modelo de datos · 2026-10-09 14:06:59 -05
 initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
 
 ## 1. Cluster temporal
@@ -18,10 +18,10 @@ server started
 89 tablas (sin contar 45 particiones de lectura), 9 vistas, 22 funciones, 75 triggers, 177 índices, 532 restricciones (89 PK, 144 FK, 27 únicas, 269 check)
 
 ## 3. ejemplos.sql (filas reales del demo)
-libros 60 · tramos por día 86 · mensajes 315 · identidades 132 · repuestos 13
-ejemplos.sql: 10273 filas en 72 tablas; series sin tag registrado: 0
+libros 60 · tramos por día 28 · mensajes 337 · identidades 132 · repuestos 13
+ejemplos.sql: 9992 filas en 72 tablas; series sin tag registrado: 0
 ANALYZE
-filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 50 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 9 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1415 · evento_pozo 1349 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 315 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · orden_sap 57 · parada_bomba 36 · parada_programada 7 · parte 16 · parte_modo 42 · parte_variable 39 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 21 · plantilla_whatsapp 10 · pozo 87 · prediccion 14 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 38 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 23 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 86 · tramo_meta 5 · usuario 8 · usuario_campo 8 · version_config 1
+filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 55 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 9 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1277 · evento_pozo 1211 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 337 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · orden_sap 62 · parada_bomba 36 · parada_programada 9 · parte 16 · parte_modo 42 · parte_variable 39 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 34 · plantilla_whatsapp 10 · pozo 87 · prediccion 17 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 41 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 23 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 28 · tramo_meta 5 · usuario 8 · usuario_campo 8 · version_config 1
 lectura (por partición): lectura_2026_09 1380 · lectura_2026_10 276
 
 ## 4. Las restricciones muerden (pruebas.sql)
@@ -75,7 +75,7 @@ NOTICE:  MUERDE  carga de asignación: no se borra  [23001] la tabla asignacion_
 NOTICE:  MUERDE  asignación con más horas que el mes (721 en septiembre)  [23514] new row for relation "asignacion_oficial" violates check constraint "asignacion_oficial_check"
 NOTICE:  MUERDE  cambio de planta: no se reescribe  [23001] la tabla cambio_planta es de solo inserción: no admite UPDATE
 NOTICE:  MUERDE  id de planta repetido entre elemento y miembro  [23505] ya hay un elemento LC-14 en el campo ceiba: un id identifica una sola cosa
-NOTICE:  MUERDE  recalificar una predicción ya calificada  [23001] la predicción PR-EV-2011-0922 ya se calificó (acierto): no se recalifica
+NOTICE:  MUERDE  recalificar una predicción ya calificada  [23001] la predicción PR-EP-LC04-260926-75 ya se calificó (acierto): no se recalifica
 NOTICE:  MUERDE  acierto sin la falla que lo confirma  [23514] new row for relation "prediccion" violates check constraint "prediccion_check3"
 NOTICE:  PASA    diálogo por WhatsApp: escoge la parte, TRIM pide el modo, responde y entra la respuesta
 NOTICE:  MUERDE  pedir el modo sin la parte ya escogida  [23514] new row for relation "mensaje_libre" violates check constraint "mensaje_libre_check4"
@@ -120,10 +120,10 @@ NOTICE:  PASA    recalcular un mes: borrar e insertar (y anotarlo)
 ## 5. Cuadres de los datos cargados (cuadres.sql)
 NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
 NOTICE:  CUADRA  potencial − real = Σ diferidos en los 60 meses: diferencia máxima 0.000000000 bbl
-NOTICE:  CUADRA  FA = R/T en 60 meses; FA de La Ceiba en sep-2026 = 0.9689341798460919
-NOTICE:  CUADRA  Σ tramo_diferido de La Ceiba, sep-2026 = 21691.435282 bbl = libro_mes.diferido
-NOTICE:  CUADRA  Σ v_produccion_mes(ceiba, 2026-09).dias = 324688 bbl = libro_mes.real
-NOTICE:  CUADRA  libro_mes(ceiba, sep-2026) = referencia/mensual/ceiba.json: real 324688, diferido 21691.44, tolerancia 3253.72, valor USD 1041188.89
+NOTICE:  CUADRA  FA = R/T en 60 meses; FA de La Ceiba en sep-2026 = 0.9689303304815998
+NOTICE:  CUADRA  Σ tramo_diferido de La Ceiba, sep-2026 = 7716.059192 bbl = libro_mes.diferido
+NOTICE:  CUADRA  Σ v_produccion_mes(ceiba, 2026-09).dias = 338662 bbl = libro_mes.real
+NOTICE:  CUADRA  libro_mes(ceiba, sep-2026) = referencia/mensual/ceiba.json: real 338662, diferido 7716.06, tolerancia 1157.41, valor USD 370370.84
 NOTICE:  CUADRA  config_json(v) = JSON firmado en 1 versión(es); la vigente hoy es la 1
 NOTICE:  CUADRA  serie_de(VI-2011, desde 2026-09-21 14:00, paso 1 d, 12) = {2.2,2.1,2.2,2.3,2.2,2.1,2.2,2.2,2.3,2.2,2.4,0} (catálogo)
 NOTICE:  CUADRA  v_procedencia(ceiba, PDT-1011) = (PDT-1011,calculado,"el tag del que se deriva","Sistema de aire de instrumentos",compresor-aire,f1-compresor-aire,2,15,EPIC-CEIBA-01)
