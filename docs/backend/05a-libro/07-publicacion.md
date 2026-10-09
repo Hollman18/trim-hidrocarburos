@@ -8,7 +8,7 @@ Un libro **se puede publicar** cuando cuadra con la medición oficial, tiene su 
 
 **Qué es.** Cada razón por la que el libro del período no se publica: `{ codigo, texto, campoId?, mes? }`.
 
-**Fórmula.** `publicable = motivos.length === 0`. Los motivos se agregan en este orden (`src/entities/libro.ts:772-787`):
+**Fórmula.** `publicable = motivos.length === 0`. Los motivos se agregan en este orden (`src/entities/libro.ts:833-848`):
 
 | # | `codigo` | Regla exacta | `campoId` / `mes` | `texto` (plantilla) |
 |---|---|---|---|---|
@@ -40,7 +40,7 @@ Con el criterio real (2 %), octubre de La Ceiba queda en 1,974 %: a 0,026 puntos
 
 **Quién lo calcula.** Servidor: `Libro.motivos` y `Libro.publicable` (`GET /api/vistas/diferidos`; también en cada mes de la serie). `CodigoMotivo` es cerrado: un código nuevo exige cambiar el front.
 
-**Referencia.** `src/entities/libro.ts:531-536`, `:772-787`, `:816`; `verificar-libro.mjs` secciones 1-3, 6f y 10.
+**Referencia.** `src/entities/libro.ts:564-569`, `:833-848`, `:877`; `verificar-libro.mjs` secciones 1-3, 6f y 10.
 
 ---
 
@@ -101,10 +101,43 @@ Ejemplo: portafolio año a la fecha → «NO PUBLICABLE» y «El Palmar · facto
 
 - Mes a mes, globo de cada mes: «Cierre: sin publicar» (mes parcial), «publicable» o «no publicable».
 - Encabezado, globo de la cifra: «Cierre: provisional | publicado» (por `fa[].publicado`, no por los motivos).
-- Por campo (Diferidos, portafolio): ■ junto a la cifra y «Publicable: no» si el campo no tiene meta, si algún `fa` del campo tiene `dentro: false` o si su pendiente pasa el criterio (regla del front, sin `sin-fiscal` ni `sin-factor`: ver «Huecos y dudas»).
+- Por campo (Diferidos, portafolio): ■ junto a la cifra y «Publicable: no» si el campo tiene algún motivo que no sea `en-curso` (`campoPublicable`, abajo). Hasta el 8-oct era una regla propia del front (meta, `fa[].dentro` y criterio, sin `sin-fiscal` ni `sin-factor`: «Huecos y dudas», 9).
+- Cuadre y gráfico del factor: un mes con la banda sin verificar dice «banda sin verificar», no «fuera de banda» (`estadoFactor`, abajo).
 - Cuadre: fila «Sin identificar» con ■ si existe el motivo `sin-causa`.
 - `ResumenCampo`: «sin identificar» con ■ si el libro no es publicable y hay pendiente; pista = textos de los motivos.
 
 **Quién lo calcula.** Front (presentación), con `motivos` del servidor.
 
-**Referencia.** `src/widgets/diferidos/Sello.tsx`; `src/widgets/diferidos/publicacion.ts`; `src/pages/Diferidos.tsx:82-92`.
+**Referencia.** `src/widgets/diferidos/Sello.tsx`; `src/widgets/diferidos/publicacion.ts`; `src/pages/Diferidos.tsx:81-96`.
+---
+
+### Publicable por campo (`campoPublicable`) y estado del factor (`estadoFactor`)
+
+**Qué es.** Dos lecturas de los mismos motivos, por campo y por mes, para que ninguna pantalla invente su propia regla (antes del 8-oct «Por campo» calculaba «Publicable» con otra regla y el Cuadre pintaba «fuera de banda» un factor que solo no se podía verificar: «Huecos y dudas», 8 y 9).
+
+**Fórmula** (`src/widgets/diferidos/publicacion.ts:9-18`):
+
+$$
+\text{campoPublicable}(c) \iff \nexists\, m \in \text{motivos} : m.\text{campoId} = c \ \wedge\ m.\text{codigo} \ne \text{en-curso}
+$$
+
+$$
+\text{estadoFactor}(f) = \begin{cases}
+\text{sin-verificar} & \exists\, m : m.\text{codigo} = \text{banda-sin-verificar} \wedge m.\text{campoId} = f.\text{campoId} \\
+\text{dentro} & f.\text{dentro} \\
+\text{fuera} & \text{si no}
+\end{cases}
+$$
+
+Las dos deciden **por el código del motivo**, nunca por su frase. `banda-sin-verificar` es por campo (no por mes): todos los meses de ese campo salen «sin verificar». `sin-causa` lleva `campoId`, así que también bloquea su campo.
+
+**Dónde se ve.**
+- Diferidos, «POR CAMPO» (portafolio, ingeniería): ■ junto a la cifra y globo «Publicable · no» si `!campoPublicable` (`src/pages/Diferidos.tsx:84`, `:91`, `:95`); Lectura: «… junto a la cifra, el que no se puede publicar (el sello dice por qué)».
+- Cuadre, «FACTOR DE ASIGNACIÓN»: un mes `fuera` lleva ■ P3 y el chip fuerte «fuera de ±N %»; un mes `sin-verificar`, **sin marca** y el chip neutro «banda sin verificar» (`src/widgets/diferidos/Cuadre.tsx:21-23`, `:56-64`).
+- Gráfico del factor (`Factor.tsx:47-60`): `fuera` es el cuadrado P3; `sin-verificar` es el círculo **punteado**, globo con «Banda · sin verificar» y la pista que redacta el servidor (el texto del motivo `banda-sin-verificar`).
+
+**Ejemplo (mundo de prueba de `verificar-libro` §10, corrido con el motor).** La Zarza sin °API (`api: null`) en septiembre: factor 1,032 con `dentro: false`; antes salía «fuera de ±20 %» con ■, ahora `estadoFactor` = **sin-verificar** («banda sin verificar», sin marca); La Ceiba, `dentro`. Guacamayo con 3 días sin fiscal en septiembre: antes «Publicable: sí» con el sello en «NO PUBLICABLE», ahora `campoPublicable` = **false** (motivo `sin-fiscal`); La Ceiba, `true`. El mes en curso por sí solo no bloquea un campo.
+
+**Quién lo calcula.** Front (presentación), con `Libro.motivos` y `Libro.fa` del servidor. Un backend que agregue el dato debe usar la misma regla.
+
+**Referencia.** `src/widgets/diferidos/publicacion.ts`; `verificar-libro.mjs` §10 (F4 y F5).

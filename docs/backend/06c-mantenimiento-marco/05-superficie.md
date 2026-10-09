@@ -7,7 +7,7 @@
 
 Fórmulas: el equipo «vivo» (estado, marcha, criticidad, redundancia, aguas abajo, lectura) → 5B §7 «El equipo vivo»; eventos con pozos cerrados → 5B §7 «Eventos con pozos cerrados (`eventosCargadosA`)»; fallas y MTBF de una bomba → 5B §7 «Fallas del equipo»; bbl del período por equipo → 5A §8 «Pareto por equipo»; perdiendo / en riesgo → 5B §5.
 
-**Orden de la tabla** (`Equipo.tsx:56-57`): por condición (P1, P2, P3 y al final lo normal: `atencion(s) = s === 0 ? 9 : s`), luego por bbl del período descendente, luego por bbl de toda la historia. Con `FOCO_BOMBAS = true` (`src/shared/config/producto.ts:23`) las bombas de la línea van arriba («BOMBAS DE LÍNEA») y el resto se pliega en «Servicios y proceso · N», que **no esconde** una alarma: su resumen lleva la peor marca.
+**Orden de la tabla** (`Equipo.tsx:57-58`): por condición (P1, P2, P3 y al final lo normal: `atencion(s) = s === 0 ? 9 : s`), luego por bbl del período descendente, luego por bbl de toda la historia. Con `FOCO_BOMBAS = true` (`src/shared/config/producto.ts:23`) las bombas de la línea van arriba («BOMBAS DE LÍNEA») y el resto se pliega en «Servicios y proceso · N», que **no esconde** una alarma: su resumen lleva la peor marca.
 
 ### Captura 1 · jefe, La Ceiba, octubre en curso (servicios desplegados)
 
@@ -27,7 +27,7 @@ Fórmulas: el equipo «vivo» (estado, marcha, criticidad, redundancia, aguas ab
 | 10 | **cada cuánto** (bombas) | **41 d** | bomba con perfil: `mtbfDias` de su historia = 40,73 d (9 fallas en 366,58 d) | `n0` + « d»; menos de 2 fallas: «—»; el lector oye «entre fallas …» | `FilaEquipo.mtbfDias` |
 | 11 | Cuántas | «9 fallas» | `fallas` (propias; las que causó otro equipo no cuentan) | `plural(n,'falla','fallas')` | `FilaEquipo.fallas` |
 | 12 | **bbl del período** | **2.570** | `porEquipo` del libro del período para ese equipo y campo → 5A §8 | `n0`; 0 si no difirió | `Libro.porEquipo[].bbl` |
-| 13 | **bbl/d ahora** | **11.059** | $\sum$ `bblDia` de las filas `perdiendo` de ese equipo (`Equipo.tsx:54-56`) | `n0`; 0 → «—»; columna oculta en pantallas angostas (< 768 px). «Si falla» **no** se suma aquí: va al globo | `riesgo[].bblDia` |
+| 13 | **bbl/d ahora** | **11.059** | $\sum$ `bblDia` de las filas `perdiendo` de ese equipo (`Equipo.tsx:55-57`) | `n0`; 0 → «—»; columna oculta en pantallas angostas (< 768 px). Lo que se perdería por día **si para** (filas `en-riesgo`) **no** se suma aquí: todavía no se pierde y va al globo («Si para») | `riesgo[].bblDia` |
 | 14 | Servicios y proceso | «Servicios y proceso · 7» | filas que no son bomba de la línea | marca = la peor de esas filas (`peorFuera`, aquí ◆ 1 por K-101) | — |
 | 15 | bbl del período de servicios | «118 bbl del período» | $\sum$ bbl del período de esas filas (SE-2) | `n0` | `porEquipo` |
 | 16 | K-101 | «K-101 · Servicios industriales · en marcha · degradado» | — | — | `eq` |
@@ -41,7 +41,7 @@ Fórmulas: el equipo «vivo» (estado, marcha, criticidad, redundancia, aguas ab
 | 21 | Cuántos | «28 eventos» | — | — | ídem |
 | 22 | bbl del período de SE-2 | «118» (las otras seis filas de servicios: «0 bbl del período» y «— bbl/d perdiéndose») | lo que sus caídas difirieron en octubre | — | `porEquipo` |
 
-**Globo de cada fila** (`Equipo.tsx:64-73`; en el papel la pista): título = nombre, pista = `eq.lectura`, filas «Estado», «Criticidad {n}/5», «Redundancia», «Aguas abajo», «Diferido · {período en minúscula} {n0} bbl», «Eventos con pozos cerrados {n} en {n0(D/30,4)} meses», «Fallas propias {n}» (solo bombas), «Entre eventos {n0} d» o «menos de dos: no se calcula», «Perdiéndose ahora {n0} bbl/d» o «—», «En juego si falla {n0} bbl/d» (solo si hay). Ejemplo P-201B: lectura «Detenida, el agua no tiene salida: el tanque se llena y hay que cerrar los pozos del campo.»; «Redundancia sin respaldo», «Aguas abajo todo el campo», «Diferido · octubre, en curso 2.570 bbl», «Eventos con pozos cerrados 10 en 12 meses», «Fallas propias 9», «Entre eventos 41 d», «Perdiéndose ahora 11.059 bbl/d». K-101: «Redundancia 3 unidades (N+1)», lectura «La presión de cabezal cae hace 7 días. La norma exige recibidor de 5 a 30 min de autonomía: hoy quedan 11. Alimenta cinco sistemas.»
+**Globo de cada fila** (`Equipo.tsx:65-75`; en el papel la pista): título = nombre, pista = `eq.lectura`, filas «Estado», «Criticidad {n}/5», «Redundancia», «Aguas abajo», «Diferido · {período en minúscula} {n0} bbl», «Eventos con pozos cerrados {n} en {n0(D/30,4)} meses», «Fallas propias {n}» (solo bombas), «Entre eventos {n0} d» o «menos de dos: no se calcula», «Perdiéndose ahora {n0} bbl/d» o «—», «Si para {n0} bbl/d» (solo si hay; $\sum$ `bblDia` de sus filas `en-riesgo`; antes «En juego si falla»: los bbl/d se llaman «si para» en todas las pantallas y «si falla hoy» es solo la cifra en bbl de Riesgo y Mantenimiento). Ejemplo P-201B: lectura «Detenida, el agua no tiene salida: el tanque se llena y hay que cerrar los pozos del campo.»; «Redundancia sin respaldo», «Aguas abajo todo el campo», «Diferido · octubre, en curso 2.570 bbl», «Eventos con pozos cerrados 10 en 12 meses», «Fallas propias 9», «Entre eventos 41 d», «Perdiéndose ahora 11.059 bbl/d». K-101: «Redundancia 3 unidades (N+1)», lectura «La presión de cabezal cae hace 7 días. La norma exige recibidor de 5 a 30 min de autonomía: hoy quedan 11. Alimenta cinco sistemas.»
 
 ### Captura 2 · confiabilidad, Morichal (servicios desplegados)
 
@@ -56,14 +56,14 @@ Las reglas de cada columna son las de la captura 1; aquí, los valores de Morich
 | 3 | P-201B | «P-201B · Tratamiento de agua · en marcha · succión cayendo» ▲ 2 · «5/5» · «entre fallas 46 d» · «8 fallas» | en marcha con una parte que avisa | — | `eq` |
 | 4 | MPP-301 | «Bomba multifásica de doble tornillo · clúster norte» · «MPP-301 · Recolección multifásica · en marcha · perdiendo eficiencia» ■ 3 · «5/5» · «sin respaldo» · «52 d» · «7 fallas» | 366,58 / 7 = 52,4 d (fallas propias) | — | `eq` |
 | 5 | bbl del período | «0» | en octubre no difirieron | — | `porEquipo` |
-| 6 | bbl/d ahora | «—» | no pierden nada ahora; su «si falla» (1.671 y 1.600 bbl/d) va al globo | — | `riesgo` |
+| 6 | bbl/d ahora | «—» | no pierden nada ahora; lo que perderían si paran (1.671 y 1.600 bbl/d) va al globo, «Si para · 1.671 bbl/d» y «Si para · 1.600 bbl/d» | — | `riesgo` |
 | 7 | SE-2 | «SE-2 · Distribución eléctrica · en servicio · corriente de barraje subiendo» ■ | — | — | `eq` |
 | 8 | Eventos | «60 eventos» · «6 d» (SE-2, «3/5», «sin respaldo»); C-401 «122 d» · «3 eventos» (366,58 / 3 = 122,2) · «4/5» · «sin respaldo»; V-101 «4/5» · «sin respaldo», K-101 «5/5», TK-102 «5/5», H-302 «4/5», LACT-01 «5/5» · «sin respaldo»: «—» · «0 eventos» | 366,58 / 60 = 6,11 | — | `FilaEquipo` |
 | 9 | bbl del período | «72» (SE-2; el resumen «Servicios y proceso · 7» ■ 3 dice «72 bbl del período»; las demás filas «0») | lo que difirieron sus caídas en octubre | — | `porEquipo` |
 
 **Variantes.** Portafolio: el sistema de la segunda línea se cambia por el campo; la tabla junta todos los campos con el mismo orden. Período: solo cambia «bbl del período» (y el orden dentro de cada condición). Teléfono: se ocultan la criticidad, «sin respaldo» y «bbl/d ahora» (`hidden sm:flex`, `md:block`).
 
-**Estados.** Lo normal lleva el punto gris; un instrumento «sin señal» no sube la severidad (SE-2 de La Ceiba tiene `TI-0021` sin señal y queda en punto gris; el dato inválido se ve dentro de la ficha).
+**Estados.** Lo normal lleva el punto gris; un instrumento «sin señal» no sube la severidad (SE-2 de La Ceiba tiene `TI-0021` sin señal y queda en punto gris; el dato inválido se ve dentro de la ficha). Un instrumento sin lectura viaja con `valor: null` y estado «sin señal» (las pantallas lo reconocen por cualquiera de los dos: `sinLectura`, `src/shared/lib/formato.ts:43-44`); nunca un «—» como valor.
 
 **Interacciones.** Un clic en una fila cambia al campo y abre la ficha del equipo (`abrirEquipo(id, false)`); el resumen «Servicios y proceso» abre y cierra el plegado (un `<details>`: en el papel sale como esté).
 

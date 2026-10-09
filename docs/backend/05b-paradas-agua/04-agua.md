@@ -69,11 +69,11 @@ Se busca por la clave (`campoId`, `bomba`) (`tanqueDe`, `configuracion.ts:181`).
 | morichal | MPP-301 | 0 | Sin bomba en paralelo ni derivación al manifold |
 | guacamayo | P-201B | 13.000 | Pozo de disposición alterno con capacidad para todo el caudal |
 
-Se busca por (`campoId`, `equipo`) (`respaldoDe`, `configuracion.ts:182`). **Sin respaldo declarado, la predicción toma 0** (`respaldoLibre`, `diferido.ts:62`).
+Se busca por (`campoId`, `equipo`) (`respaldoDe`, `configuracion.ts:182`). **Sin respaldo declarado, la predicción toma 0** (`respaldoLibre`, `diferido.ts:63`).
 
 ### Nivel del tanque ahora
 
-`NIVEL_AHORA` (`pozos.ts:202-206`): TK-AG-CE 89,6 %, TK-AG-MN 61,8 %, TK-AG-GU 42,3 %, todos de `LT-2012` a las 13:59 del 2-oct. **En el demo es una constante en el código**; en producción es `GET /api/campos/:campo/tanques/:tanque/nivel` (el transmisor). Viaja al front en `GET /api/vistas/campos/:campo/ahora` → `niveles` (un tanque sin lectura no aparece).
+`NIVEL_AHORA` (`pozos.ts:203-207`): TK-AG-CE 89,6 %, TK-AG-MN 61,8 %, TK-AG-GU 42,3 %, todos de `LT-2012` a las 13:59 del 2-oct. **En el demo es una constante en el código**; en producción es `GET /api/campos/:campo/tanques/:tanque/nivel` (el transmisor). Viaja al front en `GET /api/vistas/campos/:campo/ahora` → `niveles` (un tanque sin lectura no aparece).
 
 ---
 
@@ -110,7 +110,7 @@ Los huecos del historiador (`null`) **no** son caudal cero y no entran; los cero
 
 **Qué es.** Lo que el respaldo no absorbe: el caudal que llena el tanque cuando la bomba para.
 
-**Fórmula** (`diferido.ts:247`; en una parada medida, `diferido.ts:316`):
+**Fórmula** (`diferido.ts:299`; en una parada medida, `diferido.ts:377`):
 
 $$
 Q_{\text{sin salida}} = \max\left(0,\ Q_{\text{mueve}} - Q_{\text{respaldo}}\right) \cdot s \quad [\cdot\ p \text{ en una parada medida}]
@@ -133,12 +133,12 @@ $$
 **Qué es.** Las horas que tarda el tanque en llegar al alto-alto si la bomba se para ahora. Después de eso hay que cerrar pozos.
 
 **Dónde se ve.**
-- Placa de la bomba (ingeniería/operación, bomba en marcha): «si se para: **19,0 h** de colchón, luego se pierden **1.671 bbl/d**» (`Placa.tsx:159-165`).
-- Detalle de la bomba → panel «SI SE PARA AHORA» → «COLCHÓN DEL TANQUE»: barra del nivel contra el alto-alto, Capacidad, Volumen libre, Agua sin salida, **Aguanta** (`Detalle.tsx:307-323`).
-- Detalle → cifra «Si se para ahora» → pie «tras 19,0 h de colchón · ±15,0 %» (el ± solo en ingeniería) (`Detalle.tsx:111-115`).
-- Ficha ejecutiva: «Si para ahora · el tanque aguanta 19 h · luego se pierden 1.671 bbl/d» (`FichaEjecutiva.tsx:94-96`).
+- Placa de la bomba (ingeniería/operación, bomba en marcha): «si se para: **19,0 h** de colchón, luego se pierden **1.671 bbl/d**» (`Placa.tsx:163-169`).
+- Detalle de la bomba → panel «SI SE PARA AHORA» → «COLCHÓN DEL TANQUE»: barra del nivel contra el alto-alto, Capacidad, Volumen libre, Agua sin salida, **Aguanta** (`Detalle.tsx:309-326`).
+- Detalle → cifra «Si se para ahora» → pie «tras 19,0 h de colchón · ±15,0 %» (el ± solo en ingeniería) (`Detalle.tsx:111-116`).
+- Ficha ejecutiva: «Si para ahora · el tanque aguanta 19 h · luego se pierden 1.671 bbl/d» (`FichaEjecutiva.tsx:106-109`).
 
-**Fórmula** (`colchonDe`, `diferido.ts:143-152`):
+**Fórmula** (`colchonDe`, `diferido.ts:147-156`):
 
 $$
 V_{\text{libre}} = \max\left(0,\ \left(a - \frac{n}{100}\right) \cdot C\right)
@@ -162,7 +162,7 @@ $$
 | $V_{\text{libre}}$ | volumen libre hasta el alto-alto | bbl | calculado |
 | $h$ | colchón | h | calculado; $+\infty$ si $Q_{\text{sin salida}} = 0$ |
 | 0,002 | incertidumbre del aforo de un tanque (máx. 0,2 % del volumen total, Res. MME 40236/2022, Anexo 2) referida al volumen libre | — | `AFORO_TANQUE` (`metrologia.ts:62`) |
-| $\varepsilon_{\text{agua}}$ | incertidumbre del medidor de agua (no declarada): se acota con la banda de asignación del agua de la Fig. 10.2, 0,90–1,10 → 0,10 para cualquier producción | — | `toleranciaAgua` (`diferido.ts:69-74`) |
+| $\varepsilon_{\text{agua}}$ | incertidumbre del medidor de agua (no declarada): se acota con la banda de asignación del agua de la Fig. 10.2, 0,90–1,10 → 0,10 para cualquier producción | — | `toleranciaAgua` (`diferido.ts:70-78`) |
 
 **Ejemplo con los datos del demo — Morichal P-201B (en marcha).**
 1. $V_{\text{libre}} = (0{,}90 - 0{,}618) \cdot 18.000 = $ **5.076 bbl**.
@@ -172,13 +172,13 @@ $$
 5. Rango: **17,14 h a 20,96 h**.
 6. Pantalla: Detalle «Aguanta **19,0 h** (17,1 h a 21,0 h)» (`fmtHoras(h, true)`: < 48 h con un decimal); ⓘ «Aforo del tanque de agua ±0,7 %: Res. MME 40236/2022, Anexo 2… · Caudal de agua ±10,0 %: Incertidumbre del medidor no declarada; se acota con la banda del agua…»; Placa «19,0 h de colchón»; Ficha «aguanta 19 h» (`fmtHoras(h)` sin decimal); barra «nivel LT-2012 61,8 %» contra «alto-alto 90 %». Encabezado del panel: «TK-AG-MN · LT-2012 61,8 %».
 
-**La Ceiba P-201B (parada).** El motor también lo calcula con el nivel de ahora: $V_{\text{libre}} = (0{,}90 - 0{,}896) \cdot 10.000 = 40$ bbl, $h = 40 / (19.190/24) = 0{,}05$ h, $\varepsilon = 0{,}51$ (el aforo pesa: 0,2 % de 10.000 bbl = 20 bbl sobre 40 libres), rango 0,025–0,076 h. **La pantalla no lo muestra** con la bomba parada (`pr.colchon && !pr.parada`); viaja en la API.
+**La Ceiba P-201B (parada).** El motor también lo calcula con el nivel de ahora: $V_{\text{libre}} = (0{,}90 - 0{,}896) \cdot 10.000 = 40$ bbl, $h = 40 / (19.190/24) = 0{,}05$ h, $\varepsilon = 0{,}51$ (el aforo pesa: 0,2 % de 10.000 bbl = 20 bbl sobre 40 libres), rango 0,025–0,076 h. Es lo que aguantaría **si parara ahora con todo produciendo**; con la bomba ya parada **no es cuándo se llena el tanque** (eso es `llenado`, abajo). Detalle y Placa no lo muestran con la bomba parada (`pr.colchon && !pr.parada`); viaja en la API.
 
 **Casos borde.**
 
 | Situación | Qué devuelve | Qué muestra |
 |---|---|---|
-| $Q_{\text{sin salida}} = 0$ (el respaldo absorbe todo) | `horas: Infinity` → en JSON **`null`** (`horasSinFin`, `contrato.ts:165`); `rango` igual | método «El respaldo absorbe toda el agua: parar no cierra pozos»; ver «Huecos» sobre la frase de la placa |
+| $Q_{\text{sin salida}} = 0$ (el respaldo absorbe todo) | `horas: Infinity` → en JSON **`null`** (`horasSinFin`, `contrato.ts:165`); `rango` igual | método «El respaldo absorbe toda el agua: parar no cierra pozos»; placa «si se para: no cierra pozos» + ⓘ «El respaldo absorbe toda el agua: parar no cierra pozos.»; Detalle «Si se para ahora · **no cierra pozos**» con pie «el respaldo absorbe toda el agua» y «Aguanta · no se llena»; ficha ejecutiva «Si para ahora · no cierra pozos: el respaldo absorbe toda el agua» (`respaldoAbsorbe`, `widgets/bombas/comun.ts:20`). No ocurre en el demo |
 | Nivel ya en o sobre el alto-alto | `libreBbl = 0`, `horas = 0`, `agotado: true`, $\varepsilon_{\text{aforo}} = 0$ | «0,0 h» |
 | Sin tanque configurado | `colchon` ausente; supuesto «Sin tanque configurado: no se puede calcular el colchón» | cifra «Si se para ahora» con pie «de inmediato» |
 | Sin lectura de nivel | `colchon` ausente (sin supuesto propio) | ídem |
@@ -186,13 +186,72 @@ $$
 
 ---
 
+### Llenado del tanque con la bomba ya parada (`Prediccion.llenado`)
+
+**Qué es.** Con una bomba de disposición **ya parada**, cuándo llega el tanque al alto-alto con el agua que **entra ahora** (la de los pozos que siguen produciendo), no con la que movía la bomba. El colchón de arriba responde otra pregunta: «si la bomba parara ahora **con todo el campo produciendo**». Con la bomba ya parada y los pozos cerrados no entra agua y el tanque no sube, esté donde esté.
+
+**Dónde se ve.** Planta (`#/<rol>/planta/<campo>/…`): la marca de prioridad del tanque de agua (en la lista, la barra del nivel y el nodo del dibujo) y su aviso bajo la barra, en el globo («Sube») y en el lector: «P-201B detenida: llega al alto-alto en <`fmtHoras`>» («en menos de 1 h» por debajo de 1 h), solo con horas finitas; si no sube, «P-201B detenida: no entra agua, el nivel no sube» o, con agua entrando que el respaldo toma, «P-201B detenida: el respaldo toma el agua que entra, el nivel no sube» (`Planta.tsx:118-134`; 5D.7). La Planta ya no lee `colchon.horas` para esto.
+
+**Fórmula** (`llenadoDe`, `diferido.ts:263-274`; tipo `Llenado`, `diferido.ts:192-206`):
+
+$$
+Q_{\text{entra}} = \sum_{p\ \text{produce}} w_p \cdot \phi_p
+\qquad
+Q^{\text{parada}}_{\text{sin salida}} = \max\!\left(0,\ Q_{\text{entra}} - Q_{\text{respaldo}} - (1 - p)\, Q_{\text{mueve}}\right) \cdot s
+\qquad
+h_{\text{llena}} = \frac{V_{\text{libre}}}{Q^{\text{parada}}_{\text{sin salida}} / 24}
+$$
+
+$$
+\text{prioridad} = \begin{cases} 1 & V_{\text{libre}} = 0 \ (\text{ya en el alto-alto}) \\ 2 & h_{\text{llena}} < 24 \\ 3 & 24 \le h_{\text{llena}} \le 2.160\ (90\ \text{días}) \\ 0 & \text{no sube } (h = \infty) \text{ o más allá de 90 días} \end{cases}
+$$
+
+| Símbolo | Significado | Unidad | De dónde sale |
+|---|---|---|---|
+| $w_p$ | agua de la prueba vigente del pozo $p$ que produce ahora | bbl/d | `aguaDePrueba(p)` |
+| $\phi_p$ | la parte que no pierde un pozo a frecuencia reducida (1 si produce normal) | 0–1 | `1 − perdidaPorFrecuencia(hz, hz de la prueba)` |
+| $Q_{\text{entra}}$ | agua que entra al tanque | bbl/d | `caudalesAhora(campo).agua` (`diferido.ts:674-685`), el mismo caudal de `/vistas/campos/:campo/ahora` |
+| $p$ | pérdida de la parada (1 = paró del todo; < 1 = sigue sacando una parte) | 0–1 | `EventoBomba.perdida` |
+| $Q_{\text{mueve}}$, $Q_{\text{respaldo}}$, $s$, $V_{\text{libre}}$ | como en el colchón (arriba) | | |
+| tolerancia | $\sqrt{\varepsilon_{\text{aforo}}^2 + 0{,}10^2}$, con el componente «Agua de los pozos» (agua de las pruebas acotada con la banda del agua, no el medidor de la bomba) | — | `toleranciaAgua(campo, 'pruebas')` (`diferido.ts:70-78`) |
+
+La prioridad es la regla de la salud de las partes (ISA-18.2: por el tiempo hasta la consecuencia, no por un porcentaje del nivel).
+
+**Ejemplo con los datos del demo — La Ceiba P-201B** (parada desde el 2-oct 03:52, `perdida` 1, sin respaldo, tanque en 89,6 %).
+1. Pozos que producen ahora: **0 de 18** (17 cerrados por P-201B y LC-21 sin identificar) → $Q_{\text{entra}} = 0$.
+2. $Q^{\text{parada}}_{\text{sin salida}} = \max(0, 0 - 0 - 0 \cdot 19.190) \cdot 1 = 0$ → $h_{\text{llena}} = \infty$ (`null` en el cable), `prioridad` **0**; $V_{\text{libre}}$ = 40 bbl (a 0,4 puntos del alto-alto).
+3. El colchón de la predicción da 0,05 h (si parara ahora con 19.190 bbl/d entrando) y **no** es cuándo se llena: la Planta pinta el tanque en gris, «P-201B detenida: no entra agua, el nivel no sube». Antes de la corrección del 8-oct la pantalla leía ese colchón y decía «llega al alto-alto en menos de 1 h» con ▲ P2, que era falso.
+4. `llenado` = `{ aguaEntraBpd: 0, colchon: { libreBbl: 40, aguaSinSalidaBpd: 0, horas: null, … }, prioridad: 0 }`; componentes «Aforo del tanque de agua ±50,0 %» y «Agua de los pozos ±10,0 %: Agua de la prueba vigente de los pozos que producen; se acota con la banda del agua…».
+
+**Con dos pozos reabiertos** (mundo de prueba de `verificar-libro` §19: LC-04 y LC-16 vuelven a producir con la bomba parada).
+1. $Q_{\text{entra}}$ = 1.187 (LC-04) + 2.299 (LC-16) = **3.486 bbl/d**; nada lo saca (sin respaldo, $p$ = 1): $Q^{\text{parada}}_{\text{sin salida}}$ = 3.486 bbl/d = 145,25 bbl/h.
+2. $h_{\text{llena}} = 40 / 145{,}25 = $ **0,275 h** (16,5 min), rango 0,135–0,416 h ($\varepsilon$ = 0,51).
+3. Menos de 24 h → **prioridad 2** ▲; Planta: «P-201B detenida: llega al alto-alto en menos de 1 h».
+4. Con un respaldo que toma toda esa agua (respaldo de $10^6$ bbl/d): $Q^{\text{parada}}_{\text{sin salida}} = 0$, no sube, sin hora y prioridad 0 («el respaldo toma el agua que entra, el nivel no sube»).
+
+**Casos borde.**
+
+| Situación | `llenado` |
+|---|---|
+| Bomba en marcha, multifásica o de recobro | ausente (no aplica) |
+| Disposición parada sin tanque firmado o sin lectura de nivel | ausente |
+| Tanque ya en el alto-alto | `agotado: true`, `horas` 0, prioridad 1 (la Planta además pone P1 por el nivel, esté la bomba como esté) |
+| Agua que entra ≤ respaldo + lo que la bomba todavía saca | `horas: null`, prioridad 0 |
+| Más de 90 días hasta el alto-alto | prioridad 0 (gris) |
+
+**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/bombas/prediccion?campo&equipo` → `Prediccion.llenado?` = `{ aguaEntraBpd, colchon, prioridad }`; `colchon.horas` y `colchon.rango` viajan como `null` si no sube (`horasSinFin`, `contrato.ts:173`). CONTRATO.md:306 y «Predicción» (`CONTRATO.md:1105-1116`).
+
+**Referencia.** `diferido.ts:177-206`, `:243-274`; casos `referencia/prediccion/ceiba-P-201B.json` y `referencia/salud/bombas-ceiba-2026-09.json` (traen `llenado`); `verificar-libro.mjs` §19 (1).
+
+---
+
 ### Orden de cierre y crudo en riesgo
 
 **Qué es.** Cuando el tanque llega al alto-alto hay que quitar del sistema el agua que la bomba no saca. Cerrar «parejo» (la misma fracción a todos los pozos) es lo intuitivo; TRIM recomienda cerrar **primero los pozos que menos crudo dan por barril de agua**, hasta quitar la misma agua. Es un problema de mochila fraccionaria y el voraz por razón crudo/agua es óptimo.
 
-**Dónde se ve.** Detalle → «SI SE PARA AHORA» → «ORDEN DE CIERRE» (tabla `# · Pozo · Crudo bbl/d · Agua bbl/d · Crudo/agua · Cierre`, 12 filas máx. y «y N pozos más: se cierra todo el campo»), y la frase «pierde **1.671 bbl/d** en este orden · **872 bbl/d menos** que parejo» con ⓘ «Cerrando parejo (la misma fracción a todos) serían 2.543 bbl/d.» (`Detalle.tsx:338-358`). En la placa: la ⓘ «Si se para ahora» con «El tanque aguanta 19,0 h; luego se pierden 1.671 bbl/d cerrando los pozos en orden (2.543 bbl/d cerrando parejo).» (solo si parejo > orden + 1). En Riesgo, la fila de la bomba: «si falla 1.671 bbl/d» y `pozos` = número de pasos.
+**Dónde se ve.** Detalle → «SI SE PARA AHORA» → «ORDEN DE CIERRE» (tabla `# · Pozo · Crudo bbl/d · Agua bbl/d · Crudo/agua · Cierre`, 12 filas máx. y «y N pozos más: se cierra todo el campo»), y la frase «pierde **1.671 bbl/d** en este orden · **872 bbl/d menos** que parejo» con ⓘ «Cerrando parejo (la misma fracción a todos) serían 2.543 bbl/d.» (`Detalle.tsx:341-361`). En la placa: la ⓘ «Si se para ahora» con «El tanque aguanta 19,0 h; luego se pierden 1.671 bbl/d cerrando los pozos en orden (2.543 bbl/d cerrando parejo).» (solo si parejo > orden + 1). En Riesgo, la fila de la bomba: «si para **1.671** bbl/d» (debajo, «≈ 2.086 bbl si falla hoy», cap. 5) y `pozos` = número de pasos.
 
-**Fórmula** (`ordenDeCierre`, `diferido.ts:106-125`; `ordenOptimo`, `libro.ts:875-887`).
+**Fórmula** (`ordenDeCierre`, `diferido.ts:110-129`; `ordenOptimo`, `libro.ts:936-948`).
 
 Agua a quitar:
 
@@ -253,7 +312,7 @@ $$
 
 ## 4.3 La predicción completa por papel (`prediccion`)
 
-**Qué es.** Lo que pasaría si la bomba se parara ahora, o lo que está pasando si ya está parada. `GET /api/vistas/bombas/prediccion?campo&equipo` → `Prediccion` (`diferido.ts:156-178`).
+**Qué es.** Lo que pasaría si la bomba se parara ahora, o lo que está pasando si ya está parada. `GET /api/vistas/bombas/prediccion?campo&equipo` → `Prediccion` (`diferido.ts:160-188`).
 
 | Papel / estado | `inmediato` | `crudoBpd` | `colchon` / `orden` | `perdiendo` | `metodo` |
 |---|---|---|---|---|---|
@@ -261,9 +320,9 @@ $$
 | `transporte` en marcha (Morichal MPP-301) | true | $s \cdot \sum$ crudo asignado de los pozos del clúster que producen y tienen prueba | — | — | «Crudo de los 3 pozos que pasan por la bomba: prueba vigente × factor de asignación del mes (0,981)» |
 | `transporte` parada | true | ídem | — | `perdiendoPor` | «Parada desde <fecha>: N pozos cerrados por ella» |
 | `disposicion` en marcha (Morichal P-201B) | true | crudo en orden | sí / sí | — | «Hay que quitar 6.395 bbl/d de agua: se cierran primero los pozos con menos crudo por barril de agua» |
-| `disposicion` parada (La Ceiba P-201B) | true | crudo en orden (con todos los pozos) | sí / sí | `perdiendoPor` | «Parada desde 2 de oct, 03:52: 17 pozos cerrados por ella» |
+| `disposicion` parada (La Ceiba P-201B) | true | crudo en orden (con todos los pozos) | sí / sí, y además **`llenado`** (el tanque con el agua que entra; 4.2) | `perdiendoPor` | «Parada desde 2 de oct, 03:52: 17 pozos cerrados por ella» |
 
-**Lo que está perdiendo una bomba parada** (`perdiendoPor`, `diferido.ts:228-239`):
+**Lo que está perdiendo una bomba parada** (`perdiendoPor`, `diferido.ts:280-291`):
 
 $$
 \text{perdiendo} = \sum_{p\,:\,\text{causa del evento abierto de } p \text{ tiene } \text{evento} = \text{id}} \text{crudoAsignado}(p) \cdot \begin{cases} f(hz) & \text{si } p \text{ produce a frecuencia reducida} \\ 1 & \text{si está cerrado}\end{cases}
@@ -271,17 +330,17 @@ $$
 
 con `id` = `causaDeParada(parada).evento` (la propia parada, o el servicio que la paró: así una bomba parada por SE-2 no se queda con los pozos que son de SE-2).
 
-**Ejemplo — La Ceiba.** 17 pozos con su evento abierto cargado a `EV-2011-1002` (todos menos LC-21, que es «sin identificar» propio): **11.058,9 bbl/d**. En pantalla: Detalle, cifra «Perdiéndose ahora **11.059 bbl/d**», pie «461 bbl/h · 17 pozos cerrados»; panel «MIENTRAS ESTÉ PARADA» → «Parada desde 2 de oct, 03:52» y «POZOS QUE CERRÓ · 17» con la lista (LC-01, LC-02, …) y ⓘ «Se pierden 11.059 bbl/d mientras siga parada. Al arrancar, los pozos vuelven a producir a medida que el tanque baja.». Placa directiva: «**11.059 bbl/d** perdiéndose · 17 pozos cerrados».
+**Ejemplo — La Ceiba.** 17 pozos con su evento abierto cargado a `EV-2011-1002` (todos menos LC-21, que es «sin identificar» propio): **11.058,9 bbl/d**. En pantalla: Detalle, cifra «Perdiéndose ahora **11.059 bbl/d**», pie «461 bbl/h · 17 pozos cerrados»; panel «MIENTRAS ESTÉ PARADA» → «Parada desde 2 de oct, 03:52» y «POZOS QUE CERRÓ · 17» con la lista (LC-01, LC-02, …) y ⓘ «Se pierden 11.059 bbl/d mientras siga parada. Al arrancar, los pozos vuelven a producir a medida que el tanque baja.». (La placa directiva del gerente, «**11.059 bbl/d** perdiéndose · 17 pozos cerrados», se quitó el 8-oct: el gerente no ve Bombas.)
 
 **Ejemplo — Morichal MPP-301** (`supuestos`): «MN-07: 607 bbl/d · prueba del 2026-09-13», «MN-18: 526 bbl/d · prueba del 2026-09-25», «MN-33: 467 bbl/d · prueba del 2026-09-05», y la fuente de `sinBomba`. `crudoBpd` = **1.599,75 bbl/d**; pantalla: «si se para: **1.600 bbl/d** de inmediato». Panel «POZOS QUE PASAN POR ELLA» con esos renglones.
 
-**Ejemplo — Guacamayo P-201B.** `inmediato: false`, `crudoBpd: 0`. Placa: «si se para: no cierra pozos hoy» + ⓘ «No cierra pozos hoy. Baja el soporte de presión.»; Detalle: cifra «Si se para ahora · **no cierra pozos**», pie «recobro: el efecto llega en semanas»; placa directiva «Si se para, no cierra pozos hoy».
+**Ejemplo — Guacamayo P-201B.** `inmediato: false`, `crudoBpd: 0`. Placa: «si se para: no cierra pozos hoy» + ⓘ «No cierra pozos hoy. Baja el soporte de presión.»; Detalle: cifra «Si se para ahora · **no cierra pozos**», pie «recobro: el efecto llega en semanas». En Riesgo, una de recobro en riesgo dice «≈ 0 bbl si falla hoy» (cap. 5).
 
 **Tolerancia de la predicción.** `tolerancia` = banda de asignación del crudo del campo (`bandaDe(campo).valor`; 0,15 en La Ceiba y Morichal, 0,05 en Guacamayo), y `componentes` = [crudo asignado (correlado), aforo, caudal de agua]. En Detalle (ingeniería) se escribe `fmtTol` → «±15,0 %».
 
 **Supuestos** (Morichal P-201B, en este orden): «Mediana de FI-2011 mientras la bomba trabaja» · «P-201A en paralelo, con 15.100 bbl/d libres» · «Tanque de agua de Morichal Norte: 18.000 bbl, alto-alto al 90 % · Certificado de aforo TK-AG-MN · tabla de 1 cm» · «Nivel LT-2012: 61,8 %». En pantalla, ⓘ «supuestos» (no en la vista simple) y ⓘ «método» (solo con la bomba en marcha).
 
-**Referencia.** `diferido.ts:180-273`; casos `referencia/prediccion/{ceiba-P-201B,morichal-P-201B,morichal-MPP-301,guacamayo-P-201B}.json`.
+**Referencia.** `diferido.ts:208-325`; casos `referencia/prediccion/{ceiba-P-201B,morichal-P-201B,morichal-MPP-301,guacamayo-P-201B}.json`.
 
 ---
 
@@ -289,9 +348,9 @@ con `id` = `causaDeParada(parada).evento` (la propia parada, o el servicio que l
 
 **Qué es.** Cada parada de la historia de la bomba, con lo que costó, a quién se le carga, y —en disposición— cuánto **debía** aguantar el tanque contra cuánto **aguantó** (del paro al primer pozo cerrado). Es la prueba de que el modelo del colchón funciona con datos de la planta.
 
-**Dónde se ve.** Detalle de la bomba → lista de paradas (más reciente primero): fila con fecha, «hasta <fecha> · <horas>», parte o texto, cómo, «se carga a <equipo>» si no es propia, «colchón X h · aguantó Y h», barriles y rango. Al abrir: «POR QUÉ PARÓ», evidencia, «EL TANQUE», «POZOS QUE CERRÓ · N», «evitable en orden», «N bbl aproximados» (`Detalle.tsx:380-475`). Placa: «Detenida desde <fecha>» + barriles de la parada abierta.
+**Dónde se ve.** Detalle de la bomba → lista de paradas (más reciente primero): fila con fecha, «hasta <fecha> · <horas>», parte o texto, cómo, «se carga a <equipo>» si no es propia, «colchón X h · aguantó Y h», barriles y rango. Al abrir: «POR QUÉ PARÓ», evidencia, «EL TANQUE», «POZOS QUE CERRÓ · N», «evitable en orden», «N bbl aproximados» (`Detalle.tsx:383-480`). Placa: «Detenida desde <fecha>» + barriles de la parada abierta.
 
-**Fórmulas** (`diferido.ts:302-330`):
+**Fórmulas** (`diferido.ts:356-395`):
 
 $$
 \text{tramos} = \{\text{tramos de la historia con } (\text{causa.evento} \lor \text{evento.id}) = \text{id}\}\ \big[\cap\ (t_{\text{ini}}, t_{\text{fin}}) \text{ si la paró un servicio}\big]
@@ -302,10 +361,12 @@ $$
 $$
 
 $$
-\text{colchón previsto} = \text{colchonDe}\left(\text{tanque},\ n_{\text{al parar}},\ \max(0, Q_{\text{mueve}} - Q_{\text{respaldo}}) \cdot p \cdot s\right)
+\text{colchón previsto} = \text{colchonDe}\left(\text{tanque}_{\text{regía}},\ n_{\text{al parar}},\ \max(0, Q_{\text{mueve}} - Q^{\text{regía}}_{\text{respaldo}}) \cdot p \cdot s\right)
 \qquad
 \text{observado} = \frac{\min(\text{tramos.evento.inicio}) - t_{\text{ini}}}{1\ \text{h}}
 $$
+
+**La configuración que regía.** El tanque y el respaldo son los de la versión firmada vigente **cuando paró** la bomba: $\text{regía} = \text{configEn}(\text{versiones}, t_{\text{ini}})$ (`diferido.ts:356-376`; `configEn`, 5D.2), como en los mensajes de WhatsApp. Firmar hoy otro respaldo o cambiar un tanque no reescribe lo que el tanque **debía** aguantar en una parada de septiembre. `paradaMedida(ev, ctx, versiones)` recibe el historial (`GET /api/configuracion/historial`, de la más vieja a la vigente); la costura lo pasa en `pedirParadas`, `pedirParadasEnPeriodo`, `pedirParadasDeBombas` y `pedirBombas` (`shared/api/diferidos.ts:180-219`, `shared/api/equipos.ts:262`; sin historial a mano, `soloLaVigente(ctx)`, `shared/api/diferidos.ts:88`, que es lo que usa `scripts/referencia.mjs`). Ejemplo corrido (`verificar-libro` §18): `EV-2011-0909` (La Ceiba, 9-sep, nivel 52,0 %) debía aguantar **4,75 h** (3.800 bbl libres / 19.190 bbl/d); si hoy se firma 5.000 bbl/d más de respaldo, sigue en 4,75 h; si esa misma firma hubiera regido desde antes de la parada, 3.800 / (14.190/24) = **6,43 h**.
 
 El colchón solo se mide si la bomba es de `disposicion`, tiene tanque, la parada trae `nivelAlParar` y la causa es **la propia bomba** (`causa.equipo === ev.equipo`; incluye la programada, no la que paró un servicio). `id` = `causa.evento ?? ev.id`. Si la paró un servicio, los barriles son del servicio y aquí solo se muestran los que cayeron mientras la bomba estuvo parada; `cargadoA` = el servicio.
 
@@ -345,7 +406,7 @@ El colchón solo se mide si la bomba es de `disposicion`, tiene tanque, la parad
 
 **Lo que el tanque absorbió.** `EV-M2011-260326` (Morichal, sello): paró con el tanque en 30,6 % → libre 10.692 bbl → debía aguantar 40,1 h; la bomba volvió en 39,8 h: **ningún pozo cerró**, 0 bbl. Pantalla: «colchón 40,1 h · sin cerrar pozos», «0 bbl · no costó crudo», «EL TANQUE … lo absorbió sin cerrar pozos». Sigue siendo **una falla** de la bomba (cuenta en el MTBF con 0 bbl, cap. 7).
 
-**Textos del colchón según el valor** (`Detalle.tsx:398-399`, `comun.ts:19-21`):
+**Textos del colchón según el valor** (`Detalle.tsx:401-402`, `comun.ts:25-27`):
 
 | Situación | Texto corto en la fila | Texto en «EL TANQUE» |
 |---|---|---|
@@ -366,7 +427,7 @@ Horas con `fmtHoras(h, true)`: < 48 h → 1 decimal + « h»; 48 h a 90 días �
 
 **Dónde se ve.** Detalle → parada abierta → «evitable en orden: **4.762 bbl**» + ⓘ «Cerrando primero los de menos crudo por barril de agua se habrían perdido 4.762 bbl menos.» (solo si > 0). En el libro, `evitablePorOrden` (suma de las paradas del período; ver capítulo del libro).
 
-**Fórmula** (`evitableDeEvento`, `libro.ts:851-870`). Sea $T$ = tramos de la parada con bbl > 0, $t_0$ = el primer cierre, $d$ = inicio del primer tramo (para escoger la prueba vigente):
+**Fórmula** (`evitableDeEvento`, `libro.ts:912-931`). Sea $T$ = tramos de la parada con bbl > 0, $t_0$ = el primer cierre, $d$ = inicio del primer tramo (para escoger la prueba vigente):
 
 1. Candidatos: pozos con prueba que estaban cerrados por esta parada **o** que producían en $t_0$ (un pozo ya parado por otra causa no tiene agua que quitar).
 2. Si se cerraron todos los candidatos → **0** (no había orden que escoger).
@@ -400,4 +461,4 @@ Es decir, se escala lo realmente perdido por la proporción de crudo que el orde
 
 **Casos borde.** Ningún tramo con bbl → 0. Tramos a frecuencia reducida entran con su factor. El evitable de una parada **abierta** es parcial (crece mientras siga abierta).
 
-**Referencia.** `libro.ts:845-896`; CONTRATO.md:1049-1052.
+**Referencia.** `libro.ts:906-957`; CONTRATO.md:1062-1065.

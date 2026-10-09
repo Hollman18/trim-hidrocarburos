@@ -55,7 +55,7 @@ Un mes cerrado puede no estar publicado (el campo aún no cierra su balance): el
 | `doce` | Últimos 12 meses | «oct-2025 a sep-2026» | 2025-10-01 → 2026-10-01 | «Últimos 12 meses» |
 | `AAAA-MM-DD_AAAA-MM-DD` | Rango escogido | «18 días · 15 de sept a 2 de oct» | día `desde` 00:00 → día `hasta` + 1 a las 00:00, nunca más allá de ahora | «Rango escogido» |
 
-Reglas del rango a la medida (`rangoValido`, `src/app/url.ts:38-48`; `rangoDePeriodo`, `src/entities/diferido.ts:595-613`): fechas reales (se leen a mediodía de Colombia); al revés se enderezan; se recortan a [primer día con datos, hoy] (en el demo, 2025-10-01 a 2026-10-02); si no queda nada, error «Escoja dos fechas entre el 2025-10-01 y el 2026-10-02: fuera de esos días no hay datos.». `hasta` es el último día **incluido**. Ejemplo: `#/ger/diferidos/ceiba/2026-09-15_2026-10-10` se vuelve 15-sep → 2-oct (ahora).
+Reglas del rango a la medida (`rangoValido`, `src/app/url.ts:38-48`; `rangoDePeriodo`, `src/entities/diferido.ts:695-713`): fechas reales (se leen a mediodía de Colombia); al revés se enderezan; se recortan a [primer día con datos, hoy] (en el demo, 2025-10-01 a 2026-10-02); si no queda nada, error «Escoja dos fechas entre el 2025-10-01 y el 2026-10-02: fuera de esos días no hay datos.». `hasta` es el último día **incluido**. Ejemplo: `#/ger/diferidos/ceiba/2026-09-15_2026-10-10` se vuelve 15-sep → 2-oct (ahora).
 
 Un mes de la serie se abre con un clic (Mes a mes y Tendencia): `setRango(día 1, último día)` → rango a la medida de ese mes.
 
@@ -104,7 +104,7 @@ Las horas de cada día (`Dia.horas`) son las del día dentro del período: 24, s
 
 **Quién lo calcula.** Servidor: `Libro.meta.dias`, `meta.diasTotal`, `Dia.horas`.
 
-**Referencia.** `src/entities/libro.ts:646-648`, `:789`, `:812-813`.
+**Referencia.** `src/entities/libro.ts:679-681`, `:850`, `:873-874`.
 
 ---
 
@@ -134,7 +134,7 @@ Las horas de cada día (`Dia.horas`) son las del día dentro del período: 24, s
 
 Portafolio: abril de 2026 sale «no publicable» (`fa-fuera-de-banda` de El Palmar); octubre, `en-curso`.
 
-**Quién lo calcula.** Servidor (`serieMensual`, `src/entities/libro.ts:998-1007`; `pedirSerie`, `src/shared/api/diferidos.ts:97-98`). Caso `referencia/mensual/<campo>.json` y `portafolio.json`.
+**Quién lo calcula.** Servidor (`serieMensual`, `src/entities/libro.ts:1059-1068`; `pedirSerie`, `src/shared/api/diferidos.ts:104-105`). Caso `referencia/mensual/<campo>.json` y `portafolio.json`.
 
 ---
 
@@ -190,7 +190,7 @@ Cada fila: «Morichal Norte · ■ máx. 28.500 bbl» a la izquierda y la brecha
 
 **Quién lo calcula.** Servidor: un solo `GET /api/vistas/diferidos?campos=a,b,…`; el front no suma libros de campos.
 
-**Referencia.** `src/entities/libro.ts:660-705`; `src/pages/Diferidos.tsx:72-107`; caso `referencia/diferidos/portafolio-2026-09.json`.
+**Referencia.** `src/entities/libro.ts:693-738`; `src/pages/Diferidos.tsx:72-106`; caso `referencia/diferidos/portafolio-2026-09.json`.
 
 ---
 
@@ -208,4 +208,4 @@ $$
 
 **Casos borde.** Divide siempre por 30 aunque falten días fiscales (esos días no suman potencial): con huecos, el promedio baja (ver «Huecos y dudas»).
 
-**Quién lo calcula.** Servidor (`pedirPotencialReciente`, `src/shared/api/diferidos.ts:105-109`). Sin caso en `referencia/`.
+**Quién lo calcula.** Servidor (`pedirPotencialReciente`, `src/shared/api/diferidos.ts:112-116`). Sin caso en `referencia/`.

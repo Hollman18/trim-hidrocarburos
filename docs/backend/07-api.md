@@ -58,6 +58,13 @@ Todas responden el sobre `{ "datos": …, "refs": { … } }`.
 
 Las rutas con `_arranque_` se piden una vez al abrir la aplicación (sección 2.5) y alimentan el estado global; ninguna pantalla las vuelve a pedir.
 
+> **Cambios del 8 de octubre de 2026** (commit `cb8cd39`; la forma exacta, en el anexo A y en `contrato.ts`):
+> - `GET /api/vistas/riesgo`: `costoFalla` es ahora lo que costaría **si el equipo falla hoy**, descontando el colchón del tanque (5B, «Costo por falla»); campo nuevo `colchonH` (horas que aguanta hoy el tanque, solo bombas de disposición con tanque); `mdtFuente` lo dice en palabras.
+> - `GET /api/vistas/diferidos` (y `/mensual`): cada fila de `porEquipo` trae `fallas` y `disparos` en el período (bombas de la línea y electrosumergibles); campo nuevo `sinCosto`: los equipos que fallaron en el período sin costar crudo.
+> - `GET /api/vistas/bombas/prediccion`: campo nuevo `llenado` (con la bomba detenida, el agua que entra hoy al tanque y en cuántas horas llega al alto-alto; sin agua que entre, no sube).
+> - Instrumento sin lectura: `valor: null` (nunca «—» ni 0). Servicio todavía caído: `EventoServicio.fin: null`.
+> - «Por identificar» se cuenta igual en todas las pantallas sobre `GET /api/vistas/paradas/por-identificar` (`contarPorIdentificar`: las que piden respuesta y, de ellas, las que ya arrancaron sin identificar).
+
 > **Escala.** Con la fuente http, una pantalla que lee varias consultas las pide una tras otra (cada `use()` suspende hasta que llega la anterior). El servidor tiene que responder rápido (objetivo: < 300 ms por vista de un campo y un mes) o el front tendrá que precargarlas. `/vistas/diferidos` trae hoy todos los tramos; cuando el portafolio crezca conviene paginarlos (`GET /api/vistas/diferidos/tramos?cursor=`).
 
 ## 7.2 Registro de la cadena de datos

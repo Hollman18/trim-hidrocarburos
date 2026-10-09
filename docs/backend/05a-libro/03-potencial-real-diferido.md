@@ -1,6 +1,6 @@
 # 5A.3 · Potencial, real y diferido: el libro
 
-El libro (`libro()`, `src/entities/libro.ts:643-818`) responde `GET /api/vistas/diferidos?campos=&desde=&hasta=`. Aquí, cada cifra de ese objeto que no es tolerancia, período, meta, publicación ni Pareto (que van en 5A.4 a 5A.8).
+El libro (`libro()`, `src/entities/libro.ts:676-879`) responde `GET /api/vistas/diferidos?campos=&desde=&hasta=`. Aquí, cada cifra de ese objeto que no es tolerancia, período, meta, publicación ni Pareto (que van en 5A.4 a 5A.8).
 
 Notación común: $d$ recorre los días del período (hora de Colombia); $h_d$ son las horas del día $d$ que caen dentro de $[\text{desde}, \min(\text{hasta}, \text{ahora}))$; $H_d$ las horas del día dentro de su mes (24, salvo hoy); $m(d)$ el mes del día; $\text{FA}_{m}$ el factor del mes (5A.2); $q_{p,d}$ el crudo de la prueba vigente del pozo $p$ el día $d$.
 
@@ -25,13 +25,13 @@ $$
 
 **Ejemplo con los datos del demo.** La Ceiba, septiembre: $\sum F_d = 324.688$ bbl (30 días completos) → «324.688». La Ceiba, octubre en curso: $11.105 + 3.838 = 14.943$ → «14.943». Portafolio septiembre: 1.163.047; octubre: 60.292.
 
-**Casos borde.** Día sin fiscal: no suma (y el potencial de ese día tampoco). Día de un mes sin factor: tampoco suma, aunque tenga fiscal (`src/entities/libro.ts:672`). Con varios campos, cada uno pone lo suyo.
+**Casos borde.** Día sin fiscal: no suma (y el potencial de ese día tampoco). Día de un mes sin factor: tampoco suma, aunque tenga fiscal (`src/entities/libro.ts:705`). Con varios campos, cada uno pone lo suyo.
 
 **Qué texto.** `n0` + « bbl» (o «bbl/d» dividido por días).
 
 **Quién lo calcula.** Servidor. `Libro.real` (y `porCampo[].real`).
 
-**Referencia.** `src/entities/libro.ts:665-676`; `referencia/diferidos/ceiba-2026-09.json` → `real = 324688`.
+**Referencia.** `src/entities/libro.ts:698-709`; `referencia/diferidos/ceiba-2026-09.json` → `real = 324688`.
 
 ---
 
@@ -55,7 +55,7 @@ Pie de Producción: $\text{potencial} \times 24 / \sum h$ con $\sum h$ = horas d
 
 **Quién lo calcula.** Servidor. `Libro.potencial`.
 
-**Referencia.** `src/entities/libro.ts:51`, `:673-676`.
+**Referencia.** `src/entities/libro.ts:51`, `:706-709`.
 
 ---
 
@@ -82,11 +82,11 @@ $$
 
 **Casos borde.** Puede ser negativa en un día suelto (el tanque de venta entregó más de lo que produjeron los pozos ese día). En un mes entero es igual a la suma de los eventos (abajo).
 
-**Qué texto.** `n0(brecha)` sin unidad en la cifra grande; «barriles diferidos» debajo. Globo del encabezado: filas «Potencial», «Real medido», «Diferidos», «Σ de los eventos … ±x % (Res. 40236)», «Por señal», «Declarado», «Sin identificar», «Frecuencia reducida (aprox.)» (solo si hay), «Período» (el nombre del período, p. ej. «Septiembre, cerrado») y «Cierre: provisional | publicado» (`provisional` si algún `fa[].publicado` es falso).
+**Qué texto.** `n0(brecha)` sin unidad en la cifra grande; «barriles diferidos» debajo. Globo del encabezado: filas «Potencial», «Real medido», «Diferidos», «Σ de los eventos … ±x % (Res. 40236)» (en `decision`, sin la tolerancia: solo los barriles), «Por señal», «Declarado», «Sin identificar», «Frecuencia reducida (aprox.)» (solo si hay), «Período» (el nombre del período, p. ej. «Septiembre, cerrado») y «Cierre: provisional | publicado» (`provisional` si algún `fa[].publicado` es falso).
 
 **Quién lo calcula.** Servidor. `Libro.brecha`.
 
-**Referencia.** `src/entities/libro.ts:795`; `src/widgets/diferidos/Encabezado.tsx:47-58`.
+**Referencia.** `src/entities/libro.ts:856`; `src/widgets/diferidos/Encabezado.tsx:50-61`.
 
 ---
 
@@ -155,7 +155,7 @@ Otro, de un solo día: LC-04, `EP-LC04-260906-65` (UV → energía, alimentador 
 
 **Qué es.** La suma de los tramos del período: lo que se le puede cargar a un evento con causa.
 
-**Dónde se ve.** Globo del encabezado: «Σ de los eventos: 21.691 bbl ±15,0 % (Res. 40236)». Cuadre: es la base de «Identificado por señal». Paretos y palancas: los porcentajes van contra él. Producción (ingeniería): columna «Diferido» del cuadre diario/mensual. Tendencia del gerente: diferido por día de cada mes.
+**Dónde se ve.** Globo del encabezado: «Σ de los eventos: 21.691 bbl ±15,0 % (Res. 40236)» (el gerente, nivel `decision`, ve «21.691 bbl» sin la tolerancia). Cuadre: es la base de «Identificado por señal». Paretos y palancas: los porcentajes van contra él. Producción (ingeniería): columna «Diferido» del cuadre diario/mensual. Tendencia del gerente: diferido por día de cada mes.
 
 **Fórmula.**
 
@@ -192,7 +192,7 @@ porque $\text{Real}_m = R_m = \text{FA}_m\,T_m$ y $T_m = \sum q\,(H_d - P_{p,d})
 2. Un evento en un día **sin fiscal**: su diferido está en los tramos pero el día no entra en potencial ni real. Residuo = −(diferido de ese día).
 3. $P_{p,d} > H_d$ (más horas perdidas que horas del día, por datos malos): el `max(0, …)` del teórico rompe la igualdad.
 
-**Quién lo comprueba.** El backend tiene que cumplirla (`CONTRATO.md:1056-1058`); la referencia la trae implícita (`brecha`, `diferido`, `residuo` de `referencia/diferidos/*.json`).
+**Quién lo comprueba.** El backend tiene que cumplirla (`CONTRATO.md:1069-1071`); la referencia la trae implícita (`brecha`, `diferido`, `residuo` de `referencia/diferidos/*.json`).
 
 ---
 
@@ -219,7 +219,7 @@ $$
 
 **Quién lo calcula.** Servidor: `Libro.residuo`; `Dia.residuo`.
 
-**Referencia.** `src/entities/libro.ts:474-476`, `:795`, `:959`; `src/widgets/diferidos/Cuadre.tsx:21`, `:43-46`.
+**Referencia.** `src/entities/libro.ts:501-503`, `:856`, `:1020`; `src/widgets/diferidos/Cuadre.tsx:24`, `:46-49`.
 
 ---
 
@@ -295,7 +295,7 @@ $$
 \text{identificado} = \text{diferido} - \text{pendiente} - \text{declarado}
 $$
 
-En el Cuadre, la fila «Identificado por señal» se pinta como $\text{round}(\text{diferido}) - \text{round}(\text{declarado}) - \text{round}(\text{pendiente})$ para que la columna sume a la vista (`src/widgets/diferidos/Cuadre.tsx:36`); su barra usa el valor sin redondear.
+En el Cuadre, la fila «Identificado por señal» se pinta como $\text{round}(\text{diferido}) - \text{round}(\text{declarado}) - \text{round}(\text{pendiente})$ para que la columna sume a la vista (`src/widgets/diferidos/Cuadre.tsx:39`); su barra usa el valor sin redondear.
 
 **Ejemplo con los datos del demo.**
 
@@ -367,7 +367,7 @@ $$
 
 **Casos borde.** Sin tramos con barriles: 0. Un pozo sin prueba no es candidato. El día de la prueba es el del primer tramo recortado al período: una parada que empezó el mes anterior usa las pruebas del primer día del período. La fracción del último pozo se usa en la práctica bajándole la frecuencia o estrangulándolo.
 
-**Quién lo calcula.** Servidor: `Libro.evitablePorOrden` (`evitableDeEvento`, `ordenOptimo`: `src/entities/libro.ts:851-896`). La misma `ordenOptimo` arma el orden de cierre de la predicción (otro capítulo).
+**Quién lo calcula.** Servidor: `Libro.evitablePorOrden` (`evitableDeEvento`, `ordenOptimo`: `src/entities/libro.ts:912-957`). La misma `ordenOptimo` arma el orden de cierre de la predicción (otro capítulo).
 
 ---
 

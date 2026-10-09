@@ -42,7 +42,7 @@ pozo que mantiene ingeniería de producción. **Hoy no tienen endpoint**: CONTRA
 con `"endpoint": null` y la forma
 `{ pozo, senales: [{ variable, tag, unidad, serie, normal, alarma }] }`.
 
-**Cómo los arma el demo** (determinista por pozo; `lecturas`, `esp.ts:55-86`). Con valores base
+**Cómo los arma el demo** (determinista por pozo; `lecturas`, `esp.ts:56-87`). Con valores base
 sorteados por una semilla del pozo — corriente $I_0 \in [35, 85]$ A, presión de entrada
 $P_0 \in [350, 900]$ psi, temperatura $T_0 \in [95, 125]$ °C, desbalance $D_0 \in [1; 3{,}5]$ % — y la
 frecuencia de la prueba vigente (55 Hz si no hay):
@@ -70,7 +70,7 @@ temperatura del motor banda 110–135 °C, alarma 150 °C; desbalance 0–5 %, a
 ### Estado y lectura de cada señal
 
 **Fórmula.** Con el pozo **produciendo** (sin evento abierto, o solo con un evento de frecuencia
-reducida `HZ`; `estadoAhora`, `pozos.ts:166-172`):
+reducida `HZ`; `estadoAhora`, `pozos.ts:167-173`):
 
 - valor = último de la serie; estado = `estadoDe(valor)` (5C.1: alarma si ≥ alta o ≤ baja; atención
   si fuera de banda; si no, normal).
@@ -99,7 +99,12 @@ pozo produciendo** (`senalesParaOperar`). MN-07 en operación: FUERA DE BANDA co
 ### Salud por parte de la electrosumergible (`saludDeEsp`)
 
 **Qué es.** El mismo evaluador de 5C.3 con el catálogo `PARTES_ESP`, todas las variables
-instrumentadas, y «detenido» = el pozo no produce (`esp.ts:137-146`).
+instrumentadas, «detenido» = el pozo no produce y **`parteFallo` = `parteQueFallo(p, ctx)`**: la parte
+de la causa del evento abierto del pozo cuando esa causa es **su propia** electrosumergible (código del
+variador `GF`/`PH`/`OL`/`UL`/`OT`, o declarada con la parte); cerrado por otro equipo, a frecuencia
+reducida o produciendo, ninguna (`esp.ts:136-161`). `saludDeEsp(p, ctx)` pide el contexto (la causa
+depende de las respuestas y del programa firmado), así ningún llamador se puede saltar la parte que
+falló.
 
 **Ejemplo con los datos del demo: MN-07, Morichal** (produce; corriente 99,8 A en `atencion`,
 cruza la alarma de 100 A en 3,794 h, rango 3,644–3,958 h; el resto en banda):
@@ -125,19 +130,23 @@ Otros pozos del demo:
 | MN-18 (Morichal) | Admisión y separador de gas · fuera (P2) | presión de entrada | «presión de entrada · alarma en 30 h · 30–31 h» (30,16 h) |
 | MN-27 (Morichal) | Protector (sello del motor) · fuera (P2) | temperatura del motor | «temperatura del motor · alarma en 10,9 d · 10,2–11,6 d» (261,5 h) |
 | GU-04 (Guacamayo) | Aislamiento del motor y del cable · fuera (P2) | desbalance 8,9 % | «desbalance de corriente entre fases · alarma en 2,5 d · 2,5–2,6 d» (61,08 h) |
-| MN-41 (Morichal), parada por aislamiento | Aislamiento · **detenida** (P0) | – | – (ver «Huecos»: nunca sale «falló») |
+| MN-41 (Morichal), parada por falla a tierra (`GF`) desde el 3-sep | Aislamiento del motor y del cable · **falló** (P1 ◆); las demás partes «equipo detenido» (P0) | – | «causa de la parada» |
+| GU-07 (`GF`) y GU-09 (`PH`, desbalance de fases), Guacamayo | Aislamiento · **falló** (P1 ◆) | – | «causa de la parada» |
 | Resto de Morichal (36 en marcha) | Aislamiento · estable | – | – |
 | Las 15 de La Ceiba | detenidas (P0): las cierra la parada abierta de P-201B (14 con código CMD, 1 con LSHH); la flota dice «cerrado por P-201B» en gris | – | – |
 
-**Casos borde.** La ESP nunca recibe `parteFallo` (los tres puntos que la piden no lo pasan): una
-ESP parada por su propia falla sale «equipo detenido», no «falló» (ver «Huecos»). Un pozo sin
-electrosumergible no tiene partes (`saludDeEsp` → `[]`): su parada se explica con las causas de
-pozo.
+**Casos borde.** Una ESP parada por su propia falla sale «falló» en la parte de su causa (antes del
+8-oct nadie le pasaba `parteFallo` y salía «equipo detenido»: ver «Huecos», 1). Las 3 del demo paradas
+por sí mismas (MN-41, GU-07, GU-09) salen así; las 15 cerradas por otro equipo (La Ceiba, por P-201B)
+no tienen parte que falló (`verificar-libro` §18). En `/vistas/pozos` → `salud` (= `partes[0]`) MN-41
+pasa de `detenida`, prioridad 0, a `fallo`, prioridad 1 (`referencia/salud/pozos-morichal-2026-09.json`;
+GU-07 y GU-09 en `pozos-guacamayo-2026-09.json`). Un pozo sin electrosumergible no tiene partes
+(`saludDeEsp` → `[]`): su parada se explica con las causas de pozo.
 
 **Quién lo calcula y por dónde viaja.** Servidor. `/vistas/pozos/:campo/:pozo` → `senales`,
 `partes`, `historial`; `/vistas/pozos` → `salud` (= `partes[0]`); `/vistas/electrosumergibles` →
 `[{ fila, partes, historial }]`; `/vistas/equipos-hoy` y `/vistas/equipos/:campo/:equipo` (la salud
-dentro de `EquipoVivo`, `equipo-vivo.ts:50`).
+dentro de `EquipoVivo`, `equipo-vivo.ts:52`).
 
 ---
 
@@ -147,7 +156,7 @@ dentro de `EquipoVivo`, `equipo-vivo.ts:50`).
 un **disparo** (*trip*), no una falla. La falla es la que obliga a sacar el equipo del pozo, y eso
 tarda días. Contarlas juntas hundiría el MTBF.
 
-**Fórmula** (`esDisparo`, `src/entities/libro.ts:423-428`):
+**Fórmula** (`esDisparo`, `src/entities/libro.ts:450-455`):
 
 $$
 \text{disparo} \iff \text{causa} = \text{electrosumergible} \ \land\ \text{fin} \ne \text{null} \ \land\ \frac{\text{fin} - \text{inicio}}{1\ \text{h}} < 24
@@ -157,7 +166,7 @@ Solo aplica a la ESP: la parada de una bomba de superficie siempre es falla (sie
 ESP con el evento abierto **no** es disparo aunque lleve menos de 24 h (todavía no arrancó).
 
 **Qué es una falla.** Una parada **propia** del equipo: no la que causó otro equipo (servicio caído,
-bomba de la línea parada) ni la del programa aprobado (`historialDeEquipo` → `armarHistorial`, `libro.ts:1166-1219`). En la
+bomba de la línea parada) ni la del programa aprobado (`historialDeEquipo` → `armarHistorial`, `libro.ts:1227-1280`). En la
 bomba: paradas de su PLC cuya causa es `reinyeccion` o `transporte` (su propia familia). En la ESP:
 eventos del pozo cuya causa es `electrosumergible` con `equipo = pozo`. Una parada que el tanque
 absorbió **cuenta como falla con 0 bbl**.
@@ -203,14 +212,17 @@ todos sus eventos, también disparos) y `ultima`. Ordenadas por bbl y luego por 
 
 | Equipo (campo) | Fallas | Cerradas | MTBF | Horas fuera (MDT) | bbl por falla | Texto |
 |---|---|---|---|---|---|---|
-| P-201B (Morichal) | 8 | 8 | 366,58 / 8 = 45,8 d | 47,09 h | 3.364,6 | placa: «8 fallas en 12 meses · cada 46 d · 3.365 bbl/falla · 47,1 h fuera» |
-| MPP-301 (Morichal) | 7 | 7 | 52,4 d | 48,68 h | 3.433,5 | «7 fallas en 12 meses · cada 52 d · 3.434 bbl/falla · 48,7 h fuera» |
+| P-201B (Morichal) | 8 | 8 | 366,58 / 8 = 45,8 d | 47,09 h | 3.364,6 | placa: «8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 3.365 bbl por falla» |
+| MPP-301 (Morichal) | 7 | 7 | 52,4 d | 48,68 h | 3.433,5 | «7 fallas en 12 meses · cada 52 d · 2,0 d fuera · le ha costado 3.434 bbl por falla» |
 | MN-05 (Morichal) | 1 | 1 | — (< 2 fallas) | 394,38 h | – | tabla: «—» en «Entre fallas» |
 | MN-41 (Morichal) | 1 (abierta) | 0 | — | — | – | «—» |
 | MN-07 (Morichal) | 0 | 0 | — | — | – | «0 fallas», «7 disparos» |
 
 En el demo **ninguna electrosumergible tiene dos fallas**: la columna «Entre fallas» de la flota es
 «—» en todas, y el detalle del pozo nunca dice «1 falla cada N d».
+
+«bbl por falla» es lo que el equipo **ya costó** por falla y se rotula «le ha costado por falla»; no
+es el «si falla hoy» de Riesgo (crudo de hoy × horas fuera, 5B.5).
 
 **Casos borde.** Sin fallas cerradas: no hay MDT ni bbl por falla. Una falla abierta cuenta para el
 MTBF pero no para el MDT. Horas fuera incluye la espera (repuesto, taladro); la reparación activa sale
@@ -234,19 +246,18 @@ pozos con electrosumergible.» (Palmar: «no tiene electrosumergibles en su perf
 | Rótulo | Fórmula | Pie | Morichal, mes en curso |
 |---|---|---|---|
 | En falla ahora | «$a$ de $N$» con $a$ = pozos que **no producen** y cuya causa es su electrosumergible; marca ◆ si $a > 0$ | «X bbl/d perdiéndose» = Σ crudo asignado de esos pozos; si no hay pero hay paradas por otra causa, «las paradas, por otra causa»; si no, «todas produciendo» | **1 de 41** ◆ · «684 bbl/d perdiéndose» (MN-41) |
-| Con aviso | pozos que **producen** con alguna parte `fuera` o `avisa` | «X bbl/d si fallan» = Σ crudo asignado; o «ninguna parte avisa» | **3** · «1.643 bbl/d si fallan» (MN-07 606,5 + MN-18 526,1 + MN-27 510,4) |
-| Diferido por sus fallas | fila `electrosumergible` del Pareto por tipo del libro del período | «N % por \<parte\>» = bbl de la primera fila del Pareto por parte de la familia ÷ diferido ESP | **1.095 bbl** · «99 % por aislamiento del motor y del cable» (1.083,1 / 1.095,0). Septiembre cerrado: 40.483 bbl · «46 % por aislamiento…» |
+| Con aviso | pozos que **producen** con alguna parte `fuera` o `avisa` | «X bbl/d en juego» = Σ crudo asignado (como la cabecera de Riesgo; nunca «si fallan»); o «ninguna parte avisa» | **3** · «1.643 bbl/d en juego» (MN-07 606,5 + MN-18 526,1 + MN-27 510,4) |
+| Diferido de sus electrosumergibles | fila `electrosumergible` del Pareto por tipo del libro del período: **fallas y disparos** (un disparo no es falla, pero también difiere; la columna «Por su ESP» suma lo mismo) | «N % por \<parte\>» = bbl de la primera fila del Pareto por parte de la familia ÷ diferido ESP; sin parte, «parte sin identificar»; sin nada, «ninguna parada propia»; ⓘ «Lo que se les cargó en el período por su propia electrosumergible: fallas y disparos. Un disparo no es una falla, pero también difiere.» | **1.095 bbl** · «99 % por aislamiento del motor y del cable» (1.083,1 / 1.095,0). Septiembre cerrado: 40.483 bbl · «46 % por aislamiento…» |
 | Entre fallas · 12 meses (ingeniería) | $\text{MTBF}_{\text{flota}} = D \cdot N / \sum n_f$ si $\sum n_f > 0$ | «N fallas · M disparos» + ⓘ «Fallas y disparos» | **1.503 d** (366,58 × 41 / 10) · «10 fallas · 267 disparos» |
-| Fallas en 12 meses (decisión) | $\sum n_f$ | «de N electrosumergibles» | **10** · «de 41 electrosumergibles» |
 
-Operación no ve la cuarta cifra.
+Operación no ve la cuarta cifra. El gerente no tiene esta pantalla (decisión del 8-oct: su variante, con «Fallas en 12 meses», se quitó; `#/ger/esp/…` cae en su Resumen). Antes del 8-oct la segunda cifra decía «bbl/d si fallan» y la tercera «Diferido por sus fallas» (sumaba los disparos).
 
-**Tabla FLOTA.** Columnas: Pozo (marca `sevPozo`, id, campo en portafolio, Hz salvo decisión) · Ahora ·
+**Tabla FLOTA.** Columnas: Pozo (marca `sevPozo`, id, campo en portafolio, Hz) · Ahora ·
 Crudo bbl/d · Por su ESP bbl (diferido del período cuya causa es su propia ESP) · y en ingeniería
 Fallas · Disparos · Entre fallas («N d» o «—»). «Ahora»:
 - parado por otro equipo: «cerrado por P-201B» (gris);
 - parado por sí: «parado · aislamiento del motor y del cable» (o el tipo de causa; «sin identificar» si pide respuesta);
-- produce con la peor parte `fuera`/`avisa`: nombre en negrita + chip de estado + frase corta (salvo decisión); globo con la frase larga;
+- produce con la peor parte `fuera`/`avisa`: nombre en negrita + chip de estado + frase corta; globo con la frase larga;
 - si no, el rótulo del estado de la peor parte («estable»).
 
 Marca del pozo (`sevPozo`, `src/widgets/pozos/estado.ts:12-14`): parado por otro → 0; parado por su
@@ -306,9 +317,12 @@ CON PARTE»: Aislamiento 5 · 50 %, Bomba de fondo 2 · 20 %, Motor de fondo 2 �
 **«CALIDAD DEL REGISTRO»** (cómo se supo la parte de cada falla): Morichal, 25 fallas de 43 equipos:
 señal 22 (88 %), firma 2 (8 %), declarado 0 (0 %), ninguno 1 (4 %).
 
-**«LOS MÁS COSTOSOS»** (12 con más bbl en la historia): P-201B 8 · 46 d · 47,1 h · Sello · 26.917;
-MPP-301 7 · 52 d · 2,0 d · Sello · 24.035; MN-41 1 · — · — · Aislamiento · 19.721; MN-06 1 +4 · — ·
-28,9 d · Aislamiento · 16.206; …
+**«LOS MÁS COSTOSOS»** (12 con más bbl en la historia; columnas Equipo · Fallas · Entre fallas · Fuera ·
+Parte · **le ha costado por falla** · bbl; la penúltima, nueva el 8-oct, es `h.bblPorFalla` con «—» si
+no tiene fallas cerradas, y se oculta en el teléfono como «Entre fallas» y «Fuera»): P-201B 8 · 46 d ·
+47,1 h · Sello · 3.365 · 26.917; MPP-301 7 · 52 d · 2,0 d · Sello · 3.434 · 24.035; MN-41 1 · — · — ·
+Aislamiento · — (su falla sigue abierta) · 19.721; MN-06 1 +4 · — · 28,9 d · Aislamiento · 16.005 · 16.206;
+MN-11 · 12.133 · 12.371; MN-08 · 11.416 · 11.823; … (`src/pages/Confiabilidad.tsx:115-137`).
 
 **Quién lo calcula.** Servidor: `GET /api/vistas/confiabilidad?campos` → `[{ campoId, equipo, familia,
 h }]`; las cifras por familia las suma el front.

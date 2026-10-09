@@ -49,7 +49,7 @@ Lo único que entra a mano al libro es la **configuración firmada**: por campo,
 - Mes a mes → raya por mes (`meta.diferido`, bbl); Tendencia → raya por mes (`meta.diferidoDia`, bbl/d).
 - Día a día → curva punteada «meta firmada»; cuadre diario → columna «Meta».
 
-**Fórmula** (`metaEntre`, `src/entities/libro.ts:579-591`):
+**Fórmula** (`metaEntre`, `src/entities/libro.ts:612-624`):
 
 $$
 \text{meta}(a,b) = \sum_{c}\ \sum_{d\,=\,\text{día}(a)}^{<\,b} \text{tramo}_{c,d}\cdot\frac{\left|[a,b) \cap [d, d+24\,\text{h})\right|}{24}
@@ -110,7 +110,7 @@ Valores en pantalla (corridos): La Ceiba octubre → «diferido por día **1.922
 
 **Quién lo calcula.** Servidor (`meta.sinMeta`, `porCampo[].sinMeta`, `Dia.meta`); `conMeta` y `textoSinMeta` los usa el front.
 
-**Referencia.** `src/entities/libro.ts:538-571`; `src/entities/configuracion.ts:204-230`; `verificar-libro.mjs` sección 6f.
+**Referencia.** `src/entities/libro.ts:571-604`; `src/entities/configuracion.ts:204-230`; `verificar-libro.mjs` sección 6f.
 
 ---
 
@@ -146,7 +146,7 @@ Marcas: producción ■ si $\text{cierreProd} < \text{produccionTotal}$; diferid
 
 **Casos borde.** Sin meta: barras sin raya, rótulo «sin meta firmada…». El ritmo es una foto: si la bomba arranca en una hora, la proyección cambia por completo; es un escenario, no un compromiso.
 
-**Quién lo calcula.** Front, con `Libro` y `EstadoCampo[]` del servidor (`src/widgets/resumen/ResumenDirectivo.tsx:55-59`).
+**Quién lo calcula.** Front, con `Libro` y `EstadoCampo[]` del servidor (`src/widgets/resumen/ResumenDirectivo.tsx:58-62`).
 
 ---
 
@@ -156,7 +156,7 @@ Marcas: producción ■ si $\text{cierreProd} < \text{produccionTotal}$; diferid
 
 **Dónde se ve.** Apoyo de la barra «diferido por día» del encabezado de Diferidos y Resumen de campo («+98 % frente a jul a sep»), y de la del Resumen del gerente; globo: «Antes (jul a sep): 969 bbl/d» o «Antes: no hay tres meses antes del período». Palancas con máximo: «antes 969 bbl/d · jul a sep». Mantenimiento: «antes 969 bbl/d (jul a sep)».
 
-**Fórmula** (`lineaBase`, `src/entities/libro.ts:1022-1035`):
+**Fórmula** (`lineaBase`, `src/entities/libro.ts:1083-1096`):
 
 $$
 \text{baseDia} = \frac{\text{brecha}(\text{3 meses})}{\text{días de los 3 meses}}
@@ -180,7 +180,7 @@ Los tres meses: los últimos tres con `publicadoEnTodos(campos, mes)` y `hasta �
 | La Ceiba · año a la fecha | oct a dic | 692,316 | 671,216 | −0,030 | «−3 % frente a oct a dic» |
 | Últimos 12 meses | — | — | — | — | «sin base de comparación» |
 
-**Casos borde.** Menos de tres meses publicados antes: `null` → «sin base de comparación» (encabezado) o nada (resumen del gerente). Un mes no publicado en algún campo corta la base para todo el ámbito.
+**Casos borde.** Menos de tres meses publicados antes: `null` → «sin base de comparación», en el encabezado de Diferidos y, desde el 8-oct, también bajo la barra del diferido del Resumen del gerente (`ResumenDirectivo.tsx:123`; antes ahí no decía nada). Un mes no publicado en algún campo corta la base para todo el ámbito.
 
 **Qué texto.** `signo(x)` = «+», «−» (U+2212) o nada, más `n0(|x·100|)` y « %»; luego «frente a» + nombre.
 
@@ -228,7 +228,7 @@ $$
 
 **Quién lo calcula.** Servidor: `valorUsd?`, `valorCampos`, `sinPrecio`. El formato, el front.
 
-**Referencia.** `src/entities/libro.ts:654-683`, `:790-792`; `src/widgets/diferidos/Encabezado.tsx:28-30`, `:63-75`.
+**Referencia.** `src/entities/libro.ts:687-716`, `:851-853`; `src/widgets/diferidos/Encabezado.tsx:31-33`, `:66-78`.
 
 ---
 
@@ -270,7 +270,7 @@ $$
 
 **Quién lo calcula.** Front con dos `GET /api/vistas/diferidos` (los dos intervalos fijos). `PUESTA_EN_MARCHA` viene de la versión 1 de la configuración.
 
-**Referencia.** `src/widgets/resumen/ResumenDirectivo.tsx:60-66`, `:176-184`.
+**Referencia.** `src/widgets/resumen/ResumenDirectivo.tsx:63-69`, `:180-188`.
 
 ---
 

@@ -28,10 +28,10 @@ interface Version { version: number; fecha: string; por: string; motivo: string;
 | `metas[].produccionBpd` | lo que el campo debe producir, bbl/d, en el punto de medición oficial | gerente (`metas:firmar`) | libro (`meta.produccion`), día a día (`meta`), Resumen, informe (`metaProduccion` de la huella) |
 | `metas[].diferidoMaxBpd` | lo máximo que se acepta dejar de producir, bbl/d | gerente | libro (`meta.diferido`), informe (`metaDiferido`) |
 | `metas[].netbackUsd` | precio neto del barril, USD/bbl; sin él no se pasa a dinero | gerente | `valorUsd` del libro, fichas de equipo; ausente → el campo va en `sinPrecio` |
-| `metas[].criterioSinCausa` | % máximo del potencial que puede quedar sin causa para poder **publicar** el libro | gerente | `publicable` / motivo `sin-causa` del libro (`libro.ts:784`) |
-| `tanques[]` | tanque de agua que vacía una bomba de reinyección: capacidad, alto-alto, transmisor de nivel, tabla de aforo | administrador (`config:firmar`) | colchón de la predicción («si la bomba se para ahora», `diferido.ts:248`) y colchón previsto de cada parada medida (`diferido.ts:314`) |
-| `respaldos[]` | caudal libre que toma el equipo en paralelo cuando la bomba para, bbl/d | administrador | agua sin salida y orden de cierre (`diferido.ts:62`), consecuencia del WhatsApp de parada (`mensajes.ts:279-284`), ficha del equipo (`equipos.ts:464`) |
-| `programa[]` | paradas aprobadas antes de ocurrir: lo que cae dentro cuenta como **programado**, no como falla | administrador | causa de cada evento (`causa-senal.ts:136`), órdenes PM02 del demo (`sap.ts:262`) |
+| `metas[].criterioSinCausa` | % máximo del potencial que puede quedar sin causa para poder **publicar** el libro | gerente | `publicable` / motivo `sin-causa` del libro (`libro.ts:845`) |
+| `tanques[]` | tanque de agua que vacía una bomba de reinyección: capacidad, alto-alto, transmisor de nivel, tabla de aforo | administrador (`config:firmar`) | colchón de la predicción («si la bomba se para ahora», con la versión vigente, `diferido.ts:300`) y colchón previsto de cada parada medida, con la versión **que regía cuando paró** (`configEn`, `diferido.ts:374-375`) |
+| `respaldos[]` | caudal libre que toma el equipo en paralelo cuando la bomba para, bbl/d | administrador | agua sin salida y orden de cierre (`diferido.ts:63`; en una parada medida, el de la versión que regía al parar), consecuencia del WhatsApp de parada (`mensajes.ts:279-284`), ficha del equipo (`equipos.ts:470`) |
+| `programa[]` | paradas aprobadas antes de ocurrir: lo que cae dentro cuenta como **programado**, no como falla | administrador | causa de cada evento (`causa-senal.ts:148`), órdenes PM02 del demo (`sap.ts:262`) |
 | `campos[].perfil` | qué maneja el campo: destino del gas y si tiene bombas de la línea y/o electrosumergibles | administrador | qué se dibuja en Planta, qué subpantallas existen, qué familias se **vigilan** (riesgo, predicciones, WhatsApp de parada) |
 | `empresa` | nombre de la empresa en el membrete de los informes | administrador | membrete y CSV (5D.4) |
 
@@ -119,7 +119,7 @@ donde `desdeMinimo` = primer día del mes en curso en Colombia (`${diaIso(AHORA)
 
 **Qué texto se muestra según el valor.** Al firmar bien, arriba de las pestañas: «✓ Firmada la **versión {n}** · «{motivo}»» con ⓘ «Desde cuándo rige: Cada cambio rige desde la fecha que lleva; desde ahí las pantallas se miden contra él.» El editor se reinicia sobre la versión nueva. Un error del servidor aparece debajo del motivo (`role="alert"`); si falta el motivo, el foco va a su caja. Mientras `validarConfig` tenga errores, el botón «Firmar como …» está deshabilitado y arriba se lista «CORRIJA ANTES DE FIRMAR» con cada mensaje. Si nadie con acceso activo tiene el rol: hueco «Nadie con acceso activo tiene este rol.» (ⓘ «No hay quién firme: Firma una persona con acceso, no un rol. Los accesos los da el gerente de activo.»).
 
-**Quién lo calcula y por dónde viaja.** Servidor. `POST /api/configuracion { config, motivo, base }` → `{ datos: { version: Version } }` (códec `R_FIRMA`, `contrato.ts:329`; el códec pasa la configuración por `normalizarConfig`). El front corre `diferenciasPorGrupo` y `validarConfig` **antes** para avisar; **los 422 del servidor mandan**.
+**Quién lo calcula y por dónde viaja.** Servidor. `POST /api/configuracion { config, motivo, base }` → `{ datos: { version: Version } }` (códec `R_FIRMA`, `contrato.ts:331`; el códec pasa la configuración por `normalizarConfig`). El front corre `diferenciasPorGrupo` y `validarConfig` **antes** para avisar; **los 422 del servidor mandan**.
 
 **Referencia.** `src/shared/api/escrituras.ts:89-123`; `CONTRATO.md` · «`POST /api/configuracion`»; `verificar-libro`, secciones 6c/8b/11/15/16 (comprobaciones de escritura).
 
@@ -274,7 +274,9 @@ Otros dos casos corridos: quitar La Zarza → `La Zarza: no se puede quitar el c
 
 $$ \text{metaEn}(c, \text{campo}, t) = \text{el último tramo } x \text{ de } c.\text{campos[campo].metas con } x.\text{desde} \le \text{diaCo}(t) $$
 
-(comparación de textos `AAAA-MM-DD`, que ordena igual que las fechas). `precioEn` = `netbackUsd` de ese tramo si es número; `criterioEn` = su `criterioSinCausa`. `perfilDe(c, campo)` = el perfil firmado o, si el campo no está, `{ gas:'no', bombas:false, electrosumergibles:false }`. `configEn(versiones, t)` = la `config` de la última versión con `fecha ≤ t` (las versiones van de la más vieja a la vigente; antes de la primera, la primera).
+(comparación de textos `AAAA-MM-DD`, que ordena igual que las fechas). `precioEn` = `netbackUsd` de ese tramo si es número; `criterioEn` = su `criterioSinCausa`. `perfilDe(c, campo)` = el perfil firmado o, si el campo no está, `{ gas:'no', bombas:false, electrosumergibles:false }`. `configEn(versiones, t)` = la `config` de la última versión con `fecha ≤ t` (las versiones van de la más vieja a la vigente; antes de la primera, la primera). La usan los mensajes de WhatsApp (a la hora de cada mensaje, 5D.5) y, desde el 8-oct, **la parada medida de una bomba** (`paradaMedida(ev, ctx, versiones)`, `diferido.ts:356-377`): el tanque y el respaldo de «lo que el tanque debía aguantar» son los de `configEn(versiones, inicio de la parada)`, así firmar hoy otro respaldo no reescribe una parada vieja (5B.4).
+
+**Ejemplo de la parada medida** (corrido, `verificar-libro` §18): `EV-2011-0909`, P-201B de La Ceiba, 9-sep 21:14, tanque al 52,0 %: con la versión 1 (firmada el 1-sep) debía aguantar **4,75 h** (3.800 bbl libres / 19.190 bbl/d sin salida). Si hoy se firma una versión con 5.000 bbl/d más de respaldo, la parada sigue en 4,75 h; si esa versión hubiera tenido fecha anterior a la parada, la misma parada daría 3.800 / (14.190/24) = **6,43 h**. Lo que **sí** usa la vigente es lo de ahora: la predicción («si se para ahora») y el riesgo.
 
 **Ejemplo con los datos del demo.** `metaEn(v1, 'ceiba', AHORA)` = `{ desde:"2025-10-01", produccionBpd:10900, diferidoMaxBpd:800, netbackUsd:48, criterioSinCausa:2 }`; `precioEn(v1,'zarza',AHORA)` = `undefined` (La Zarza no tiene precio); `criterioEn` = 2 en los cinco campos; `perfilDe(v1,'palmar')` = `{ gas:"no", bombas:true, electrosumergibles:false }`.
 
@@ -317,7 +319,7 @@ Igual para `diferidoMaxBpd`. Si **algún** día del intervalo no tiene tramo, `s
 
 **Quién lo calcula.** El total del mes de la pantalla de metas lo calcula el front sobre la propuesta (es una vista previa). El del libro, el servidor.
 
-**Referencia.** `src/entities/libro.ts:574-591`; `src/widgets/configuracion/Metas.tsx:45-60, 144-166`.
+**Referencia.** `src/entities/libro.ts:607-624`; `src/widgets/configuracion/Metas.tsx:45-60, 144-166`.
 
 ---
 
@@ -467,4 +469,4 @@ La vigente primero con chip «vigente»; por versión: «Versión {n}» · `fech
 
 - `GET /api/configuracion/historial` → `Version[]` de la más vieja a la vigente (todas; la configuración es de la empresa, no se filtra por campo).
 - `GET /api/configuracion` (opcional) → la vigente.
-- **Toda vista calculada** usa la versión vigente, salvo donde el contrato dice «la que regía» (los mensajes de WhatsApp usan `configEn` a la hora de cada mensaje, 5D.5). Las metas, el precio y la regla de cierre son tramos con fecha, así que la vigente ya contiene la historia correcta de esos tres.
+- **Toda vista calculada** usa la versión vigente, salvo donde el contrato dice «la que regía»: los mensajes de WhatsApp usan `configEn` a la hora de cada mensaje (5D.5), y el colchón previsto de cada parada medida usa `configEn` al inicio de la parada (`GET /api/vistas/bombas/paradas`, `paradas-en-periodo` y la `abierta` de `/vistas/bombas`; CONTRATO.md:307). Para eso la costura pasa el historial (`pedirParadas`, `pedirParadasEnPeriodo`, `pedirParadasDeBombas`, `pedirBombas`; sin historial a mano, `soloLaVigente(ctx)`, que es lo que usa `scripts/referencia.mjs`) y las pantallas lo meten en la clave de su caché (`useVersiones()`). Las metas, el precio y la regla de cierre son tramos con fecha, así que la vigente ya contiene la historia correcta de esos tres.

@@ -35,7 +35,7 @@ $$
 
 **Qué es.** El ± absoluto de los barriles diferidos del período.
 
-**Dónde se ve.** Indirectamente en el **rango** (abajo); como porcentaje en el globo del encabezado («Σ de los eventos: 21.691 bbl ±15,0 % (Res. 40236)») y en el ⓘ de «Identificado por señal» del Cuadre («Tolerancia ±15,0 % (Res. 40236).»); por equipo en el Pareto (globo «Tolerancia ±3.111 bbl» y pista «tolerancia ±15,0 %», solo ingeniería).
+**Dónde se ve.** Indirectamente en el **rango** (abajo); como porcentaje en el globo del encabezado («Σ de los eventos: 21.691 bbl ±15,0 % (Res. 40236)»; desde el 8-oct, en el nivel `decision` solo «21.691 bbl»: quien decide no ve tolerancias, su margen es el rango, `Encabezado.tsx:29-30`, `:54`) y en el ⓘ de «Identificado por señal» del Cuadre («Tolerancia ±15,0 % (Res. 40236).»); por equipo en el Pareto (globo «Tolerancia ±3.111 bbl» y pista «tolerancia ±15,0 %», solo ingeniería).
 
 **Fórmula.**
 
@@ -138,4 +138,4 @@ $$
 
 **Quién lo calcula.** Servidor: `Libro.aproximado`; `Tramo.aproximado`.
 
-**Referencia.** `src/entities/libro.ts:337`, `:356`, `:796`.
+**Referencia.** `src/entities/libro.ts:337`, `:356`, `:857`.

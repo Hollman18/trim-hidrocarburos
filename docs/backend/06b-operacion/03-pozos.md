@@ -10,11 +10,11 @@
 
 | Endpoint | Para qué |
 |---|---|
-| `GET /api/vistas/pozos?campos&desde&hasta` → `FilaPozo[]` | la tabla y la cabecera (`pedirFilasPozos`, `src/shared/api/diferidos.ts:263`) |
-| `GET /api/vistas/pozos/:campo/:pozo?desde&hasta` → `DetallePozo \| null` | el detalle (`pedirPozo`, `diferidos.ts:282-294`) |
+| `GET /api/vistas/pozos?campos&desde&hasta` → `FilaPozo[]` | la tabla y la cabecera (`pedirFilasPozos`, `src/shared/api/diferidos.ts:279`) |
+| `GET /api/vistas/pozos/:campo/:pozo?desde&hasta` → `DetallePozo \| null` | el detalle (`pedirPozo`, `diferidos.ts:298-310`) |
 | configuración firmada (perfil del campo, ya cargada al arrancar) | si hay electrosumergibles en el alcance (`conEsp`, `Pozos.tsx:32-33`) |
 
-`FilaPozo` (`src/shared/api/diferidos.ts:217-240`, una por pozo del campo, calculada «ahora» salvo lo del período):
+`FilaPozo` (`src/shared/api/diferidos.ts:233-256`, una por pozo del campo, calculada «ahora» salvo lo del período):
 
 | Campo | Qué es | Ficha |
 |---|---|---|
@@ -56,11 +56,10 @@
 | 17 | Electrosumergible | «—» | pozo sin ESP | solo con ESP en el alcance; parte en minúscula + chip `ESTADO_PARTE` si `fallo`/`fuera`/`avisa` (neutro en `avisa`); si no, el estado en gris («equipo detenido», «estable») (`Pozos.tsx:125-127`) | `salud` |
 | 18 | Diferido bbl | **247** | `diferido`: Σ bbl de sus tramos del período, **sea cual sea la causa** (un pozo cerrado por la bomba aparece aquí, pero cuenta en la bomba en los Paretos) | `n0` | `diferido` |
 | 19 | Pie | «1 evento» | `eventos` (tramos) | `plural(n,'evento','eventos')` | `eventos` |
-| 20 | Otra fila | • «cerrado por P-201B» | `cerradoPorOtro`: causa con `equipo ≠ pozo` | gris, sin marca | `causa.equipo` |
+| 20 | Otra fila | • «cerrado por P-201B» | `cerradoPorOtro`: causa con `equipo ≠ pozo` | gris, sin marca. Globo de «Ahora» (fila 13) de un pozo cerrado por la bomba, p. ej. LC-08: las dos primeras evidencias de la causa, sin repetir: «Señal» = «ZS-2011 · marcha → paro · 2 de oct, 03:52» (el paro de la bomba), «Otra señal» = «VSD-LC08 · código CMD · 2 de oct, 08:22» (el cierre del pozo); la tercera, el porqué de la bomba sin identificar («Sin primera alarma y sin firma: …», también en `causa.porQueNo`). Antes las dos primeras eran el mismo paro de la bomba (6B·H13, resuelto el 8-oct) | `causa.equipo`, `causa.evidencia[]` |
 | 21 | Prueba estimada | chip «estimada · 5 d» | LC-17, `origen: estimado`, 4,96 d | — | — |
 | 22 | ESP detenida | «equipo detenido» | con el pozo parado su ESP no se evalúa | — | `salud.estado` |
 | 23 | «ver 13 más» | — | cinco a la vista; ningún pozo con marca **ni con salvedad** queda escondido (`Pozos.tsx:76`). Salvedad (`Pozos.tsx:64-65`): sin prueba, o (en ingeniería) prueba que no es del separador, o ESP produciendo sin dato. Orden (`Pozos.tsx:72`): marca (1, 2, 3, luego 0) → con salvedad primero → diferido descendente | en el papel salen todas (`Pozos.tsx:199`) | — |
-
 | 24 | Las otras filas a la vista | «LC-17 · cerrado por P-201B · 539 · 1.430 · estimada · 5 d · equipo detenido · 129 · 1 evento»; «LC-08 · cerrado por P-201B · 893 · 1.211 · 15 d · equipo detenido · 318 · 2 eventos»; «LC-05 · … · 812 · 1.060 · 12 d · … · 300 · 2 eventos»; «LC-11 · … · 1.031 · 1.635 · 8 d · … · 251 · 1 evento» | las reglas de las filas 11-22, fila por fila. Orden (fila 23): LC-21 (▲) primero, LC-17 (salvedad: prueba estimada) después, y el resto por diferido descendente (318, 300, 251). LC-08 y LC-05 tienen 2 eventos (motor): LC-08 = 108,5 bbl de su parada del 1-oct, 22:15, sin identificar (6B.5 fila 15) + 209,6 del cierre por P-201B; LC-05 = 117,9 de la caída de SE-2 del 1-oct, 09:16 + 182,2 del cierre por P-201B. La columna Diferido suma **todas** las causas (fila 18) | — | `FilaPozo[]` |
 
 El encabezado del panel «POZOS» dice cuántas filas deja el filtro (18).
@@ -71,7 +70,7 @@ El encabezado del panel «POZOS» dice cuántas filas deja el filtro (18).
 
 | # | Lo que cambia | En la captura | Regla |
 |---|---|---|---|
-| 1 | Tres cifras | «Pozos», «Potencial ahora», «Perdiéndose ahora 11.360 bbl/d» | sin «Custodia completa» (`Pozos.tsx:140`). Aserción `rutas.ts:62`: «Custodia» y «Sin custodia completa» no deben aparecer |
+| 1 | Tres cifras | «Pozos», «Potencial ahora», «Perdiéndose ahora 11.360 bbl/d» | sin «Custodia completa» (`Pozos.tsx:140`). Aserción `rutas.ts:66`: «Custodia» y «Sin custodia completa» no deben aparecer |
 | 2 | Filtros | «Todos · Parados o frenados · 18 · Electrosumergible con aviso · 0» | sin el de custodia; si el rol cambia a uno de operación con el filtro de custodia puesto, se vuelve a «Todos» (`Pozos.tsx:58`) |
 | 3 | Columnas | Pozo · Ahora · Crudo · Agua · **Electrosumergible** · Diferido | sin «Prueba» |
 | 4 | Orden | LC-21, **LC-08**, LC-05, LC-11, LC-16 | en operación la prueba estimada no es salvedad: LC-17 (129 bbl) baja a su lugar por diferido y queda tras «ver 13 más» |
@@ -93,7 +92,7 @@ La Lectura es la misma para los dos niveles («El estado de cada pozo lo dice su
 
 ## El detalle de un pozo (`DetallePozo`)
 
-`src/widgets/pozos/DetallePozo.tsx`. Se ve desde Pozos (fila o dirección), desde Electrosumergibles (6B.2) y en la ficha de cualquier pozo (6B.4). `DetallePozo` (`src/shared/api/diferidos.ts:270-280`) trae `fila` (la `FilaPozo` del pozo), `tramos` (sus tramos del período, más reciente primero), `historicos` (todos sus eventos con causa), `senales` y `partes` (solo ESP) e `historial` (solo ESP). Un pozo que no existe en el campo responde `null` y la pantalla dice «No hay un pozo <id> en <campo>.» (`DetallePozo.tsx:43`).
+`src/widgets/pozos/DetallePozo.tsx`. Se ve desde Pozos (fila o dirección), desde Electrosumergibles (6B.2) y en la ficha de cualquier pozo (6B.4). `DetallePozo` (`src/shared/api/diferidos.ts:286-296`) trae `fila` (la `FilaPozo` del pozo), `tramos` (sus tramos del período, más reciente primero), `historicos` (todos sus eventos con causa), `senales` y `partes` (solo ESP) e `historial` (solo ESP). Un pozo que no existe en el campo responde `null` y la pantalla dice «No hay un pozo <id> en <campo>.» (`DetallePozo.tsx:43`).
 
 ### Un pozo parado sin causa identificada (LC-21, ficha, producción)
 
@@ -101,7 +100,7 @@ La Lectura es la misma para los dos niveles («El estado de cada pozo lo dice su
 
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
-| 1 | Cabecera de la ficha | «LC-21» ▲ «P2 · ATENCIÓN» | severidad del pozo como equipo vivo (`src/entities/equipo-vivo.ts:54-55`, la misma regla que `sevPozo`) | `Severidad_` | `/vistas/equipos/ceiba/LC-21` → `severidad` |
+| 1 | Cabecera de la ficha | «LC-21» ▲ «P2 · ATENCIÓN» | severidad del pozo como equipo vivo (`src/entities/equipo-vivo.ts:56-57`, la misma regla que `sevPozo`) | `Severidad_` | `/vistas/equipos/ceiba/LC-21` → `severidad` |
 | 2 | Sistema · campo · estado | «Pozos productores · La Ceiba · detenido · parada por orden» | `estado` = «detenido · <CODIGO[código]>» (`CMD` = «parada por orden») | ver 6B.2 fila 2 | `EquipoVivo.estado` |
 | 3 | Identidad | «La Ceiba · Bombeo mecánico · POC-LC21 · alimentador SE-2» | campo · levantamiento · controlador · alimentador | — | `fila.pozo` |
 | 4 | Chip | «parado» | `!produce` | «parado» fuerte / «a N Hz» / «produciendo»; en ingeniería, además «prueba estimada» (neutro) o «sin prueba» (fuerte) si la prueba no es del separador (`DetallePozo.tsx:75-78`) | `fila.produce/hz`, `pozo.origen` |
@@ -117,7 +116,7 @@ La Lectura es la misma para los dos niveles («El estado de cada pozo lo dice su
 | 14 | Prueba vigente | «22 de sept» chip «vigente · 10 d» | la de `fila.prueba` | `fechaCorta`; otro año «09 de oct de 2025» | `prueba`, `diasDesdePrueba` |
 | 15 | Corte de cada prueba | «43 %» | $n_0(\text{agua}/(\text{agua}+\text{crudo})\times100)$ por fila; columna «Hz» solo para electrosumergible (`n1`, «—» si no trae) | — | `pozo.pruebas[]` |
 | 16 | Eventos | «EVENTOS» · «1 · octubre, en curso» | tramos del período; extra «N · <período>» o solo el período | «Ningún evento.» | `DetallePozo.tramos` |
-| 17 | Un evento | «1 de oct, 18:20 · sigue · **CMD**» / chip «sin identificar» | inicio **del tramo** (recortado al período), «sigue» o la duración `fmtHoras(h, true)`, código; « a N Hz» si es HZ; debajo, en negrita, «por <equipo>» si lo cargó otro, o `TIPO_CAUSA`; la parte; el chip de identificación | globo (y papel): «<fecha> · <tipo>», pista = `causa.texto`, filas «Se le carga a», «Cómo se identificó», «Código» (`DetallePozo.tsx:226-246`) | `tramos[]` |
+| 17 | Un evento | «1 de oct, 18:20 · sigue · **CMD**» / chip «sin identificar» | la hora **del PLC** (`evento.inicio`), no la del tramo; «sigue» o la duración `fmtHoras(h, true)`; si el tramo está **recortado** al período (empieza después del evento o termina antes que él), se dice: « · N h en el período» (abierto: «sigue · N h en el período»); código; « a N Hz» si es HZ; debajo, en negrita, «por <equipo>» si lo cargó otro, o `TIPO_CAUSA`; la parte; el chip de identificación. LC-21 paró dentro del período: sin recorte. Con recorte, ver MN-41 (6B.2, fila 17: «3 de sept, 06:40 · sigue · 38,0 h en el período · GF») | globo (y papel): «<hora del PLC> · <tipo>», pista = `causa.texto`, filas «Se le carga a», «Cómo se identificó», «Código» y, si está recortado, «En el período · <inicio del tramo> · <horas>» (`DetallePozo.tsx:226-252`). Antes la fila escribía el inicio del tramo (6B·H11, resuelto el 8-oct) | `tramos[].inicio/horas/abierto`, `evento.inicio/fin` |
 | 18 | Barriles del evento | **247 bbl** · «±15 %» | Σ del tramo (5A §3) | ingeniería: «±`n0(sesgo×100)` %»; «aproximado» (HZ) y «sin custodia» mandan; operación sin pie | `tramos[].bbl/sesgo` |
 | 19 | Las otras pruebas | «12 de jul · 313 · 229 · 42 %»; «11 de abr · 314 · 225 · 42 %»; «9 de ene · 318 · 223 · 41 %»; «09 de oct de 2025 · 328 · 223 · 40 %» (y la vigente «22 de sept · 314 · 234 · 43 %», filas 14-15) | una fila por prueba de `pozo.pruebas`, de la más nueva a la más vieja; corte de la fila 15; sin columna Hz (bombeo mecánico) | fecha de otro año con el día en dos cifras (Huecos 14) | `pozo.pruebas[]` |
 
@@ -158,7 +157,7 @@ La dirección pide Morichal, pero producción no tiene Morichal asignado (`prod`
 | Nivel | Qué ve |
 |---|---|
 | `ingenieria` (producción, jefe, confiabilidad) | Agua y corte, «Electrosumergible · N meses», chips de prueba estimada / sin prueba, «SALUD POR PARTE» (`BloqueParte`, 6B.1), «SEÑALES DEL POZO» (todas), «PRUEBAS», «±N %» en cada evento |
-| `operacion` (supervisor; y desde Electrosumergibles, operador y técnico) | sin Agua, sin ESP · N meses, sin PRUEBAS; «PARTES QUE AVISAN» (solo `fallo`/`fuera`/`avisa`, con la frase corta, globo con la frase larga y ⓘ «qué hacer»; «Ninguna parte avisa.»); «FUERA DE BANDA» (señales en aviso, atención o alarma) y «SIN SEÑAL · con el pozo produciendo» (sin lectura con el pozo produciendo: dato inválido); con el pozo parado la falta de lectura es lo esperado y no se repite (`src/widgets/pozos/estado.ts:28-33`) |
+| `operacion` (supervisor; y desde Electrosumergibles, operador y técnico) | sin Agua, sin ESP · N meses, sin PRUEBAS; «PARTES QUE AVISAN» (solo `fallo`/`fuera`/`avisa`, con la frase corta, globo con la frase larga y ⓘ «qué hacer»; «Ninguna parte avisa.»); «FUERA DE BANDA» (señales en aviso, atención o alarma) y «SIN SEÑAL · con el pozo produciendo» (un instrumento sin lectura viaja con `valor: null` y estado «sin señal»: es un dato inválido, ISA-101, y se dice «sin señal» en magenta, nunca 0 ni «—»); con el pozo parado la falta de lectura es lo esperado y no se repite (`src/widgets/pozos/estado.ts:28-33`) |
 
 **Estados.** Pozo produciendo sin evento: sin la línea «desde …» ni franjas. Pozo frenado por causa propia: chip «a N Hz», ⓘ «Por qué está frenado». Evento cerrado que pide respuesta (arrancó sin identificar): no hay franja «No arrancar» (`!f.evento?.fin`), pero el chip del evento sigue. Pozo sin prueba: «sin prueba» en vez del crudo, «—» en el agua, «sin custodia» en PRUEBAS.
 

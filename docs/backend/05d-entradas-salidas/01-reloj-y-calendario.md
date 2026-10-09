@@ -2,7 +2,7 @@
 
 Todo lo que este capítulo describe (una firma, un mensaje de WhatsApp, un folio, una orden de SAP) lleva una hora. Antes de cualquier regla hay que fijar **qué es «ahora»**, **qué es un día** y **qué es un mes**, porque las reglas de escritura («un mes cerrado no se reescribe», «una parada solo se programa antes de empezar», «el recordatorio sale a los 30 min») se evalúan contra ese reloj.
 
-Código: `src/entities/reloj.ts` (67 líneas), `src/entities/campos.ts:63-85` (los períodos de la cabecera), `src/entities/libro.ts:56-80` y `:574` (calendario de meses y medianoche), `src/entities/configuracion.ts:204` (`diaCo`), `src/entities/diferido.ts:595` (`rangoDePeriodo`).
+Código: `src/entities/reloj.ts` (67 líneas), `src/entities/campos.ts:63-85` (los períodos de la cabecera), `src/entities/libro.ts:56-80` y `:607` (calendario de meses y medianoche), `src/entities/configuracion.ts:204` (`diaCo`), `src/entities/diferido.ts:695` (`rangoDePeriodo`).
 
 ---
 
@@ -87,7 +87,7 @@ $$ \text{inicioDía}(t) = \left\lfloor \frac{t - 5\,\text{h}}{D} \right\rfloor \
 | $5\,\text{h}$ | desfase de Colombia | ms | constante (UTC−5) |
 
 ```ts
-// src/entities/libro.ts:574
+// src/entities/libro.ts:607
 const inicioDiaCo = (t: number) => Math.floor((t - 5 * H) / D) * D + 5 * H
 ```
 
@@ -106,7 +106,7 @@ const inicioDiaCo = (t: number) => Math.floor((t - 5 * H) / D) * D + 5 * H
 
 **Quién lo calcula y por dónde viaja.** Servidor (libro, día a día, meta del día) y front (total del mes en Metas y Plan, que llama a `metaEntre`).
 
-**Referencia.** `src/entities/libro.ts:574` y `:579-591` (`metaEntre`); `src/entities/configuracion.ts:204`.
+**Referencia.** `src/entities/libro.ts:607` y `:612-624` (`metaEntre`); `src/entities/configuracion.ts:204`.
 
 ---
 
@@ -196,7 +196,7 @@ const inicio = (anio: number, mes: number) => new Date(Date.UTC(anio, mes, 1, 5)
 
 **Quién lo calcula y por dónde viaja.** Front (`reloj.ts`, `campos.ts`, `diferido.ts`). El servidor recibe los límites ya calculados en `desde`/`hasta` de cada vista. Lo único que el servidor tiene que aportar es AHORA.
 
-**Referencia.** `src/entities/reloj.ts:39-67`; `src/entities/campos.ts:63-85`; `src/entities/diferido.ts:595-612`; `src/widgets/informe/periodo.ts`.
+**Referencia.** `src/entities/reloj.ts:39-67`; `src/entities/campos.ts:63-85`; `src/entities/diferido.ts:695-712`; `src/widgets/informe/periodo.ts`.
 
 ---
 

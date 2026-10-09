@@ -10,7 +10,7 @@
 | Diferidos `#/prod/…`, `#/jefe/…`, `#/conf/…` | Producción, Mantenimiento, Confiabilidad (ingeniería) | Encabezado completo; «MES A MES» (columnas apiladas); Cuadre + («POR CAMPO» en portafolio \| «FACTOR DE ASIGNACIÓN» con un campo); «DÓNDE BAJARLO» + «TIPO DE CAUSA»; «POR EQUIPO» + «POR PARTE» |
 | Producción `#/ger/produccion/…` | Gerente | Cabecera (sello, producción real contra meta, potencial, real del último día) y «DÍA A DÍA» |
 | Producción `#/prod/produccion/…` | Producción | Lo anterior + «MEDICIÓN OFICIAL» + (Cuadre en portafolio \| Factor con un campo) + «CUADRE DIARIO/MENSUAL» + «CUADRE · ASIGNACIÓN OFICIAL» |
-| Resumen `#/ger/resumen/…` | Gerente | `ResumenDirectivo`: cifra, rango, valor, sello; «PROMEDIO DIARIO»; «CIERRE PROYECTADO» o «TOTAL DEL PERÍODO»; perdiéndose ahora y en riesgo (otro capítulo); alto impacto %, antes → con TRIM, mantenimiento proactivo (SAP, otro capítulo), Tendencia; «POR EQUIPO» (tres); «POR CAMPO» (portafolio) |
+| Resumen `#/ger/resumen/…` | Gerente | `ResumenDirectivo`: cifra, rango, valor, sello; «PROMEDIO DIARIO»; «CIERRE PROYECTADO» o «TOTAL DEL PERÍODO»; perdiéndose ahora y en riesgo (otro capítulo); alto impacto %, antes → con TRIM, mantenimiento proactivo (SAP, otro capítulo), Tendencia; «POR EQUIPO» (tres); «POR CAMPO» (portafolio): desde el 8-oct cada campo se **despliega** con sus equipos (`porEquipo` del campo: equipo, lo que es, `fallas`/`disparos` o paradas, barriles y % del diferido del campo) y al final los que fallaron sin costar crudo (`sinCosto`); sin señales, tags ni tolerancias; en el papel, desplegado (5A.8) |
 | Mantenimiento `#/jefe/mantenimiento/…` | Jefe de mantenimiento | Barra «diferido» contra el máximo y «del diferido, programado» (5A.3) |
 
 El auditor (`e2e/auditoria/rutas.ts`) exige, entre otras cosas: en `#/ger/diferidos/ceiba/curso` ver «MES A MES» y «DÓNDE BAJARLO» y **no** ver «FACTOR DE ASIGNACIÓN», «CADENA DE CUSTODIA» ni «Tolerancia»; en `#/ger/produccion/ceiba/curso` ver «DÍA A DÍA» y no «MEDICIÓN OFICIAL» ni «ASIGNACIÓN OFICIAL»; en `#/prod/produccion/ceiba/curso` ver «MEDICIÓN OFICIAL», «FACTOR DE ASIGNACIÓN» y «CUADRE · ASIGNACIÓN OFICIAL»; en `#/ger/resumen/ceiba~portafolio/curso` ver «barriles diferidos», «bbl · calculado», «PROMEDIO DIARIO», «producción … bbl/d meta …», «diferido … bbl/d máx. …» y «CIERRE PROYECTADO … meta 1.…».
@@ -45,19 +45,19 @@ El auditor (`e2e/auditoria/rutas.ts`) exige, entre otras cosas: en `#/ger/diferi
 
 | Endpoint | Devuelve | Lo consume | Tipo / módulo | Caso de `referencia/` |
 |---|---|---|---|---|
-| `GET /api/vistas/diferidos?campos&desde&hasta` | `Libro` completo (tramos por clave en `refs`) | Encabezado, Cuadre, Paretos, Palancas, Por campo, Producción (cabecera), Resumen | `libro()` · `src/entities/libro.ts:643` | `diferidos/<campo>-2026-09`, `diferidos/portafolio-2026-09` |
-| `GET /api/vistas/diferidos/mensual?campos` | `[{ mes, corto, nombre, desde, hasta, parcial, libro: ResumenLibro }]` | Mes a mes, Tendencia, Factor, cuadre mensual | `serieMensual` · `:998` | `mensual/<campo>`, `mensual/portafolio` |
-| `GET /api/vistas/diferidos/base?campos&desde&hasta` | `LineaBase` o `null` | apoyo «+44 % frente a jul a sep» | `lineaBase` · `:1022` | — |
-| `GET /api/vistas/produccion/diaria?campos&desde&hasta` | `Dia[]` | Día a día, cuadre diario | `porDia` · `:924` | `diaria/<campo>-2026-09`, `diaria/portafolio-2026-09` |
+| `GET /api/vistas/diferidos?campos&desde&hasta` | `Libro` completo (tramos por clave en `refs`) | Encabezado, Cuadre, Paretos, Palancas, Por campo, Producción (cabecera), Resumen (y su «POR CAMPO» desplegable: `porEquipo[].fallas/disparos`, `sinCosto`) | `libro()` · `src/entities/libro.ts:676` | `diferidos/<campo>-2026-09`, `diferidos/portafolio-2026-09` |
+| `GET /api/vistas/diferidos/mensual?campos` | `[{ mes, corto, nombre, desde, hasta, parcial, libro: ResumenLibro }]` | Mes a mes, Tendencia, Factor, cuadre mensual | `serieMensual` · `:1059` | `mensual/<campo>`, `mensual/portafolio` |
+| `GET /api/vistas/diferidos/base?campos&desde&hasta` | `LineaBase` o `null` | apoyo «+44 % frente a jul a sep» | `lineaBase` · `:1083` | — |
+| `GET /api/vistas/produccion/diaria?campos&desde&hasta` | `Dia[]` | Día a día, cuadre diario | `porDia` · `:985` | `diaria/<campo>-2026-09`, `diaria/portafolio-2026-09` |
 | `GET /api/vistas/potencial-reciente?campos` | `{ campo: bbl/d }` | Configuración (referencia para fijar la meta) | `pedirPotencialReciente` | — |
 | `GET /api/vistas/asignacion?campo&mes` | `AsignacionPozo[]` | Cotejo con la oficial | `asignacionPorPozo` · `:385` | `asignacion/<campo>-<mes>` |
 | `GET /api/asignacion-oficial` (arranque) | `{ filas: FilaCargada[], cargas: CargaAsignacion[] }` | Cotejo, rastro | `asignacion.ts` | — |
 | `POST /api/asignacion-oficial` | `{ filas, carga }` | Carga | `escrituras.ts:265` | `verificar` 8 |
-| `GET /api/vistas/estado?campos` | `EstadoCampo[]` (`ayer`, `potencialBpd`, `perdiendoBpd`, …) | Real del último día, cierre proyectado | `estadoCampo` · `diferido.ts:553` | (riesgo) |
+| `GET /api/vistas/estado?campos` | `EstadoCampo[]` (`ayer`, `potencialBpd`, `perdiendoBpd`, …) | Real del último día, cierre proyectado | `estadoCampo` · `diferido.ts:653` | (riesgo) |
 | `GET /api/catalogo` | `calendario`, `campos[c].medicion: { origen, banda, metrologia }` | Calendario, banda, Medición oficial | `catalogo.ts:78` | `insumos/arranque/catalogo.json` |
 | `GET /api/configuracion/historial` (arranque) | versiones firmadas | metas, precio, criterio (`metaEn`, `precioEn`, `criterioEn`) | `configuracion.ts` | `insumos/arranque/configuracion-historial.json` |
 
-Insumos del servidor (no los pide ninguna pantalla): `…/pozos`, `…/pozos/eventos`, `…/servicios/eventos`, `…/bombas/:equipo/paradas`, `…/produccion-diaria`, `…/metrologia` (`CONTRATO.md:833-919`; `referencia/insumos/<campo>/`).
+Insumos del servidor (no los pide ninguna pantalla): `…/pozos`, `…/pozos/eventos`, `…/servicios/eventos`, `…/bombas/:equipo/paradas`, `…/produccion-diaria`, `…/metrologia` (`CONTRATO.md:836-924`; `referencia/insumos/<campo>/`).
 
 **Reglas del cable para el libro** (`src/shared/api/contrato.ts:147-160`): fechas ISO con zona (`desde`, `hasta`, `tramos[].inicio/fin`, `preguntas[].inicio/fin` o `null`, `sinFiscal[].dias[]`); pozos y eventos por clave en `refs.pozos` (`campo/pozo`) y `refs.eventos` (id); `custodia.sinPrueba` y `estimados` como claves de pozo; `valorUsd` ausente si no hay precio; `real` y `residuo` del día `null` si no hay fiscal. La serie mensual no trae `tramos`, `porPozo`, `preguntas` ni `custodia` (con cinco campos pesaba 2 MB).
 

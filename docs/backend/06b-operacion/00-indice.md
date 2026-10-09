@@ -22,7 +22,7 @@ Todos los valores son del demo con `AHORA = 2026-10-02T14:00-05:00`, período «
 | 5B §4 | `05B-paradas-agua/04-agua.md`: agua que mueve la bomba, agua sin salida, colchón, orden de cierre, predicción por papel, parada medida, evitable |
 | 5B §5 | `05B-paradas-agua/05-riesgo-ahora.md`: fila de riesgo, perdiéndose ahora, en riesgo, estado del campo |
 | 5B §6 | `05B-paradas-agua/06-turno.md`: las cifras del turno |
-| 5B §7 | `05B-paradas-agua/07-historia-equipo.md`: fallas, MTBF, MDT, bbl por falla, eventos cargados, equipo vivo, ficha ejecutiva |
+| 5B §7 | `05B-paradas-agua/07-historia-equipo.md`: fallas, MTBF, MDT, bbl por falla (lo que **le ha costado** cada falla, histórico; el «si falla hoy» de Riesgo es otra cifra, 5B §5), eventos cargados, equipo vivo, ficha ejecutiva |
 | 5B §1–3 | eventos, causa de un pozo, causa de una bomba, «pide» y «arrancó sin identificar» |
 | 5C §1–4 | serie y límites, vigía y pronóstico, salud por parte y sus frases, electrosumergibles |
 | 5A §3–4, §8 | tramo, diferido, tolerancia y rango «calculado», Paretos |
@@ -33,10 +33,10 @@ Todos los valores son del demo con `AHORA = 2026-10-02T14:00-05:00`, período «
 
 | Pantalla | `operacion` (sup, oper, tec) | `ingenieria` (prod, jefe, conf) | `decision` (ger) |
 |---|---|---|---|
-| Bombas · placa | solo las variables fuera de banda; «PARTES QUE AVISAN»; bbl/h en la cabecera | las 4 variables clave; «PARTES» con el renglón de estables; historia de fallas al pie; rango del diferido | `PlacaDirectiva` (sin variables) — **ningún rol de decisión tiene la pantalla** (ver Huecos) |
-| Bombas · detalle | «MIENTRAS ESTÉ PARADA»/«SI SE PARA AHORA» simple, «PARTES QUE AVISAN» con «Qué hacer:» escrito, «FUERA DE BANDA», «ÚLTIMAS PARADAS»; sin VIGÍA, SALUD POR PARTE, supuestos ni tolerancia (`e2e/auditoria/rutas.ts:61`) | todo: SALUD POR PARTE, VARIABLES, VIGÍA, «PARADAS DEL PLC», PUNTOS CIEGOS, ⓘ método/supuestos/tolerancia (`rutas.ts:64`) | — (abre la ficha ejecutiva) |
-| Electrosumergibles | sin la 4.ª cifra ni las columnas Fallas/Disparos/Entre fallas | todo | «Fallas en N meses»; la fila abre la ficha (inalcanzable: ver Huecos) |
-| Pozos | sin «Custodia completa», sin columna «Prueba», sin el filtro de custodia (`rutas.ts:62`) | todo | — |
+| Bombas · placa | solo las variables fuera de banda; «PARTES QUE AVISAN»; bbl/h en la cabecera | las 4 variables clave; «PARTES» con el renglón de estables; historia de fallas al pie con «le ha costado N bbl por falla» y las horas fuera con `fmtHoras` («2,0 d fuera», nunca «48,7 h fuera» ni «bbl/falla»: `rutas.ts:72`); rango del diferido | — **el gerente no tiene la pantalla** (decisión del dueño, 8-oct: se quitó la variante directiva; lo que le sirve, de qué campo viene el diferido y qué equipos fallan, está en su Resumen, 6A) |
+| Bombas · detalle | «MIENTRAS ESTÉ PARADA»/«SI SE PARA AHORA» simple, «PARTES QUE AVISAN» con «Qué hacer:» escrito, «FUERA DE BANDA», «ÚLTIMAS PARADAS»; sin VIGÍA, SALUD POR PARTE, supuestos ni tolerancia (`e2e/auditoria/rutas.ts:65`) | todo: SALUD POR PARTE, VARIABLES, VIGÍA, «PARADAS DEL PLC», PUNTOS CIEGOS, ⓘ método/supuestos/tolerancia, «Le ha costado por falla», «bomba parada» (`rutas.ts:70`) | — |
+| Electrosumergibles | sin la 4.ª cifra ni las columnas Fallas/Disparos/Entre fallas | todo; «bbl/d en juego» (`rutas.ts:74`) | — (el gerente no tiene la pantalla, como Bombas) |
+| Pozos | sin «Custodia completa», sin columna «Prueba», sin el filtro de custodia (`rutas.ts:66`) | todo | — |
 | Detalle del pozo | «PARTES QUE AVISAN», «FUERA DE BANDA», «SIN SEÑAL»; sin PRUEBAS ni Agua | SALUD POR PARTE, SEÑALES DEL POZO, PRUEBAS, Agua y corte, fallas de la ESP | — |
-| Ficha de equipo | «No arrancar hasta identificar qué se dañó.», «FUERA DE BANDA · N DE M», «Última parada» (`rutas.ts:81`) | «norma», «Modo de falla», «DISPOSITIVOS · N» con minigráfica, «HISTORIAL SAP», «HISTORIA DEL PLC», «Cadena del dato» | `FichaEjecutiva`: «Le ha costado», «Qué se está haciendo», «pozos cerrados desde» (`rutas.ts:58`) |
+| Ficha de equipo | «No arrancar hasta identificar qué se dañó.», «FUERA DE BANDA · N DE M», «Última parada» (`rutas.ts:101`) | «norma», «Modo de falla», «DISPOSITIVOS · N» con minigráfica, «HISTORIAL SAP», «HISTORIA DEL PLC», «Cadena del dato» | `FichaEjecutiva`: «Le ha costado», «Qué se está haciendo», «pozos cerrados desde», «llega el 9 de oct» y no «sin stock de kit» (`rutas.ts:62`) |
 | Turno | igual para sup y oper | — | — |

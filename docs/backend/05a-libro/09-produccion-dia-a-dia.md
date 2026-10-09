@@ -8,7 +8,7 @@ La pantalla Producción (`src/pages/Produccion.tsx`; rutas `#/prod/produccion/<c
 
 **Qué es.** Por cada día del período: horas, real, potencial, diferido de los eventos, inventario y meta.
 
-**Fórmula** (`porDia`, `src/entities/libro.ts:924-960`). Para cada día $d$ y campo $c$:
+**Fórmula** (`porDia`, `src/entities/libro.ts:985-1021`). Para cada día $d$ y campo $c$:
 
 $$
 \text{real}_d = \sum_{c\,:\,F_{c,d},\ \text{FA}_{c}} F_{c,d}\frac{h_d}{H_d}

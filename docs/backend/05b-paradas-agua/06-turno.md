@@ -10,7 +10,7 @@ La pantalla no calcula nada nuevo en el servidor: combina `GET /api/vistas/riesg
 
 **Qué es.** Lo que se está perdiendo ahora, sostenido las 12 horas del turno que entra, si nada cambia.
 
-**Dónde se ve.** Primera cifra de la cabecera, 36 px. En el demo solo la abren el supervisor y el operador, que tienen La Ceiba y no el portafolio (`#/sup/turno/ceiba/curso`): «**5.680** bbl se pierden · turno que entra si nada cambia»; globo «Turno que entra: Lo que se pierde ahora, sostenido las 12 horas del turno.» con «Perdiéndose ahora 11.360 bbl/d» y «Turno 12 h» (`Turno.tsx:197-202`).
+**Dónde se ve.** Primera cifra de la cabecera, 36 px. En el demo solo la abren el supervisor y el operador, que tienen La Ceiba y no el portafolio (`#/sup/turno/ceiba/curso`): «**5.680** bbl se pierden · turno que entra si nada cambia»; globo «Turno que entra: Lo que se pierde ahora, sostenido las 12 horas del turno.» con «Perdiéndose ahora 11.360 bbl/d» y «Turno 12 h» (`Turno.tsx:201-206`).
 
 **Fórmula.**
 
@@ -38,9 +38,9 @@ $$
 
 **Qué es.** Las preguntas de toda la historia que **piden** respuesta (`pide`), incluidas las que ya arrancaron sin respuesta (no conformidades).
 
-**Fórmula.** `preguntas = porIdentificar.filter(p => p.pide)`; cifra = `preguntas.length`; apoyo = «<número con `!fin`> sin arrancar»; ▲ P2 si alguna sigue sin arrancar (`Turno.tsx:210-214`).
+**Fórmula.** La cuenta única (`contarPorIdentificar`, cap. 3): cifra = `porIdentificar` (las que tienen `pide`); ▲ P2 si `porIdentificar − arrancaronSinIdentificar > 0` (alguna sigue sin arrancar); apoyo = `ApoyoPorIdentificar`: «<sin arrancar> sin arrancar · ■ <N> arrancó/arrancaron sin identificar» (un tramo en 0 no se escribe) (`Turno.tsx:42-44`, `:215-217`). La lista del panel son las mismas preguntas con `pide`; su extra es `porIdentificar`.
 
-**Ejemplo con los datos del demo.** Portafolio: **4** por identificar · 2 sin arrancar (▲). Filas (`Turno.tsx:117-125`):
+**Ejemplo con los datos del demo.** Portafolio: **4** por identificar ▲ · «2 sin arrancar · ■ 2 arrancaron sin identificar». La Ceiba (lo que abren supervisor y operador): **3** ▲ · «2 sin arrancar · ■ 1 arrancó sin identificar». Filas (`Turno.tsx:121-129`):
 
 | Marca | Equipo · fecha | Chip |
 |---|---|---|
@@ -71,7 +71,7 @@ Nota: Palmar PA-04 es no conforme (respuesta tardía) pero **no** sale aquí por
 
 **Qué es.** Los eventos de pozo que **empezaron** en el turno (lo que venía de antes sigue en «pasando ahora» y no se cuenta otra vez), agrupados por su causa: un evento con muchos pozos (paró la bomba) es **una sola línea**.
 
-**Fórmula** (`Turno.tsx:73-82`):
+**Fórmula** (`Turno.tsx:77-86`):
 
 $$
 \text{nuevos} = \{ t \in \text{tramos del libro de 12 h} : t.\text{evento.inicio} \ge \text{AHORA} - 12\,\text{h} \}
@@ -81,7 +81,7 @@ $$
 
 Por grupo: `bbl` = $\sum$ bbl; horas de inicio mínima y máxima; «sigue» si algún tramo está abierto. Extra del panel: «12 h · <plural(grupos, 'causa', 'causas')>».
 
-**Qué texto se muestra según el valor** (`Turno.tsx:149-174`):
+**Qué texto se muestra según el valor** (`Turno.tsx:153-178`):
 - Grupo de más de un pozo: «**N pozos cerrados** por **<equipo>** · HH:MM–HH:MM» + chip con cómo se identificó; a la derecha «<n0> bbl» (+ « · sigue»).
 - Un solo pozo: «**HH:MM** · **<pozo>**» (+ « · por <equipo>» si lo cerró otro) + chip.
 - Chip: «parte por identificar» si lo cerró otro equipo y `como = 'ninguno'`; si no, `COMO[como]`.
@@ -103,13 +103,13 @@ Sin grupos: «Ningún pozo paró.»
 
 **Qué es.** Las filas «en riesgo» (5.3), ordenadas como en Riesgo (lo ya fuera primero, luego por horas).
 
-**Prioridad en el turno** (`Turno.tsx:84`): si la parte cruza su alarma **dentro del turno** (`horas < 12`), la marca sube al menos a P2:
+**Prioridad en el turno** (`Turno.tsx:88`): si la parte cruza su alarma **dentro del turno** (`horas < 12`), la marca sube al menos a P2:
 
 $$
 \text{prioridad}_{\text{turno}} = \begin{cases} \min(\text{prioridad} \lor 3,\ 2) & \text{si } horas < 12 \\ \text{prioridad} & \text{si no} \end{cases}
 $$
 
-**Ejemplo.** MN-07 (cruza en 3,8 h) → ▲ P2 (ya era 2). K-101 → ◆ «ya fuera». Filas: equipo (+ campo), parte + chip de estado (o chip del tipo si no hay parte), a la derecha `fmtHoras(horas)` o «ya fuera» y `n0(bblDia)` «bbl/d»; globo «Parte · Cruza su límite · Si falla». Extra: «7 equipos». Sin filas: «Ninguna parte va hacia su límite.»
+**Ejemplo.** MN-07 (cruza en 3,8 h) → ▲ P2 (ya era 2). K-101 → ◆ «ya fuera». Filas: equipo (+ campo), parte + chip de estado (o chip del tipo si no hay parte), a la derecha `fmtHoras(horas)` o «ya fuera» y `n0(bblDia)` «bbl/d»; globo «Parte · Cruza su límite · Si para» (los bbl/d se llaman «si para»; «si falla hoy» es solo el costo en bbl de Riesgo). Extra: «7 equipos». Sin filas: «Ninguna parte va hacia su límite.»
 
 ---
 
@@ -117,4 +117,4 @@ $$
 
 Los mensajes con `hora ≥ AHORA − 12 h`, agrupados en hilos por evento (o por orden, o por regla y equipo). Es del capítulo de WhatsApp; aquí solo se nota que el estado del hilo sale de la pregunta del evento: «respondió <por> (por WhatsApp): «<texto>»» o chip «sin respuesta».
 
-**Referencia.** `src/pages/Turno.tsx:1-280`.
+**Referencia.** `src/pages/Turno.tsx:1-284`.

@@ -1,6 +1,6 @@
 # 3 · Árbol de atribución de una parada de bomba; identificación y no conformidad
 
-En una parada de bomba el **equipo siempre se sabe** (es la bomba): lo que se busca es **la parte** que falló, o si la paró otra cosa (el programa, un servicio). La función es `causaDeParada(ev, ctx)` (`causa-senal.ts:184`) → `deducirParada` (`causa-senal.ts:186-226`).
+En una parada de bomba el **equipo siempre se sabe** (es la bomba): lo que se busca es **la parte** que falló, o si la paró otra cosa (el programa, un servicio). La función es `causaDeParada(ev, ctx)` (`causa-senal.ts:196`) → `deducirParada` (`causa-senal.ts:198-238`).
 
 Sea `perfil = perfilBomba(ev.equipo, ev.campoId)`, `tipo = 'transporte'` si la bomba es multifásica y `'reinyeccion'` en cualquier otro caso (también recobro), y `base = ['<ev.senal> · <hora del paro>']`.
 
@@ -9,9 +9,9 @@ Sea `perfil = perfilBomba(ev.equipo, ev.campoId)`, `tipo = 'transporte'` si la b
 | # | Regla | Condición exacta | Resultado (`tipo` · `equipo` · `parte` · `como`) | `texto` |
 |---|---|---|---|---|
 | 1 | **Programa** | hay entrada con `equipo = bomba` y $\text{desde} \le t \le \text{hasta}$ | `programada` · bomba · — · `programa` | el `motivo` del programa |
-| 2 | **Primera alarma** | `ev.primeraAlarma` existe **y** su tag está en `perfil.primerasAlarmas` **y** la parte es del catálogo de partes de ese subtipo (`parteDeAlarma`, `causa-senal.ts:143-147`) | `tipo` · bomba · la parte · `senal` | «Primera alarma: <texto>» |
+| 2 | **Primera alarma** | `ev.primeraAlarma` existe **y** su tag está en `perfil.primerasAlarmas` **y** la parte es del catálogo de partes de ese subtipo (`parteDeAlarma`, `causa-senal.ts:155-159`) | `tipo` · bomba · la parte · `senal` | «Primera alarma: <texto>» |
 | 3 | **Firma de caudal** | `ev.perdida < 1` y la bomba tiene perfil (perdió caudal **sin disparar**) | `tipo` · bomba · `tornillos` (multifásica) o `hidraulica` (inyección) · `firma` | «Desgaste de los tornillos: bajó el caudal con la bomba en marcha» / «Desgaste interno: bajó el caudal con la bomba en marcha» |
-| 4 | **Servicio caído** | algún servicio del campo con $\lvert t_{\text{servicio}} - t_{\text{bomba}} \rvert \le 15\ \text{min}$ (`servicioAlParar`, `causa-senal.ts:106-107`) | tipo del servicio · **el servicio** · — · `senal`; `evento` = id del servicio | «Paró porque <texto del servicio>» |
+| 4 | **Servicio caído** | algún servicio del campo con $\lvert t_{\text{servicio}} - t_{\text{bomba}} \rvert \le 15\ \text{min}$ (`servicioAlParar`, `causa-senal.ts:116-117`); con dos, **el que cayó primero** y en empate el de id menor (`elPrimero`, `:107-111`) | tipo del servicio · **el servicio** · — · `senal`; `evento` = id del servicio | «Paró porque <texto del servicio>» |
 | 5 | **Firma de las señales al parar** | `ev.firma` (guardada por el backend) o, si la parada está **abierta** y no la trae, la primera parte de `saludDePartes(perfil)` en estado `fuera` | `tipo` · bomba · `firma.parte` · `firma` | «<Nombre de la parte>: estaba fuera de límite al parar» |
 | 6 | **Respuesta del operario** | `ctx.respuestas[ev.id]` | `tipo` · bomba · `r.parte` · `declarado` | `r.texto` |
 | 7 | **Sin identificar** | nada de lo anterior | `tipo` · bomba · — · `ninguno`, con `porQueNo` | «Paró sin primera alarma: hay que identificar qué se dañó» o «Paró con una alarma que no señala una parte: hay que identificar qué se dañó» |
@@ -45,14 +45,14 @@ Resumen: 27 paradas con primera alarma (24 propias → parte; 3 ajenas → servi
 
 **Casos borde.**
 - **Bomba sin perfil en el campo**: `perfil` es `undefined` → reglas 2, 3 y 5 no aplican (sin catálogo no hay parte), `tipo = 'reinyeccion'`.
-- **Firma calculada en el front**: es memoria de proceso (`FIRMAS`, `causa-senal.ts:155`), no persiste. **El backend real debe guardar `firma` con el evento al registrar la parada** (CONTRATO.md:877-878); si no, una parada que se cierra antes de que alguien la mire se queda sin firma para siempre.
-- La regla 4 usa solo la hora de **inicio** del servicio (no su cascada) y el primer servicio de la lista que cumpla.
+- **Firma calculada en el front**: es memoria de proceso (`FIRMAS`, `causa-senal.ts:167`), no persiste. **El backend real debe guardar `firma` con el evento al registrar la parada** (CONTRATO.md:882-883); si no, una parada que se cierra antes de que alguien la mire se queda sin firma para siempre.
+- La regla 4 usa solo la hora de **inicio** del servicio (no su cascada). Si dos servicios caen a ±15 min de la parada, gana el que cayó primero; en empate, el de id menor (comparación de texto por código). No depende del orden de la lista: en el mundo de prueba de `verificar-libro` §18, la parada `EV-PRUEBA-SV` de Guacamayo (09:00) entre `SV-PRUEBA-BOMBA-1` (08:50) y `SV-PRUEBA-BOMBA-2` (09:10) es de la `-1`, llegue primero cual llegue.
 
 ## 3.2 ¿Pide respuesta? ¿Arrancó sin identificar? (`estadoIdentificacion`)
 
 **Qué es.** La regla de operación: *una parada que ninguna señal explica no se arranca hasta que quien la revise registre qué se dañó*. TRIM es de solo lectura (no bloquea el PLC); si arranca antes, queda una **no conformidad** con la hora del PLC.
 
-**Fórmula** (`causa-senal.ts:304-311`):
+**Fórmula** (`causa-senal.ts:338-345`):
 
 $$
 \text{sinIdentificar} = (\text{tipo} = \text{pendiente}) \lor \big(\text{tipo} \in \{\text{reinyeccion}, \text{transporte}\} \land \lnot \text{parte} \land \text{como} \ne \text{declarado}\big)
@@ -72,11 +72,11 @@ $$
 | fin | `fin` del evento de pozo o de la parada de bomba | PLC |
 | $t_{\text{respuesta}}$ | `Respuesta.hora` | escritura (pantalla o WhatsApp), hora del servidor |
 
-**Qué es una «pregunta»** (`preguntasDe`, `libro.ts:822-843`). Sobre un rango:
+**Qué es una «pregunta»** (`preguntasDe`, `libro.ts:883-904`). Sobre un rango:
 - **De pozo**: cada tramo cuya causa es `pendiente` o es declarada **sobre el propio evento** (`esDeclarado`: `tipo = 'declarada'`, o `como = 'declarado'` con `causa.evento === evento.id`). `sobre: 'pozo'`, `equipo` = el pozo.
 - **De bomba**: cada parada de bomba que se solapa con el rango, con causa de tipo reinyección o transporte y **sin parte** o con la parte **declarada**. `sobre: 'bomba'`, `bbl` = suma de los tramos del rango cargados a esa parada.
 - Orden: primero las que `pide`, luego de la más reciente a la más vieja.
-- `GET /api/vistas/paradas/por-identificar` las pide sobre **toda la historia** (desde el primer mes del calendario hasta AHORA): una pregunta sin responder no prescribe al cambiar de período (`shared/api/diferidos.ts:113`).
+- `GET /api/vistas/paradas/por-identificar` las pide sobre **toda la historia** (desde el primer mes del calendario hasta AHORA): una pregunta sin responder no prescribe al cambiar de período (`shared/api/diferidos.ts:120`).
 
 **Ejemplo con los datos del demo** (portafolio, toda la historia):
 
@@ -93,15 +93,14 @@ $$
 
 | Pantalla | Regla | Texto / marca |
 |---|---|---|
-| Turno, «POR IDENTIFICAR» | lista = `pide` (incluye las no conformes) | `!fin` → ▲ P2 + chip fuerte «no arrancar»; `fin` → ■ P3 + chip «arrancó sin identificar» (`Turno.tsx:117-125`) |
-| Causa, cabecera (no se muestra al nivel `operacion`) | «por identificar · histórico» = `pide && !arrancoSinIdentificar`; apoyo «N pozos · M bombas · K sin arrancar»; «no conformidades» = `arrancoSinIdentificar` con ■ P3 si > 0 (`Causa.tsx:84-124`) | demo: **2** por identificar (1 pozo · 1 bomba · 2 sin arrancar) con ▲; **3** no conformidades |
-| Placa de bomba (ingeniería/operación) | `abierta.pide` | ▲ «**No arrancar** hasta identificar» + ⓘ «<texto>. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.» (`Placa.tsx:140-147`) |
-| Placa directiva | `abierta.pide` | «Esperando que se identifique el daño» |
-| Detalle de bomba | `abierta.pide` | banda ▲ «No arrancar hasta identificar el daño» + ⓘ con el procedimiento (`Detalle.tsx:123-130`) |
-| Detalle de bomba, lista de paradas | por fila | ■ «arrancó sin identificar» si `arrancoSinIdentificar`; ▲ «por identificar» si `pide` y no arrancó (`Detalle.tsx:420-421`) |
+| Turno, «POR IDENTIFICAR» | lista = `pide` (incluye las que arrancaron sin respuesta); cifra y extra = `porIdentificar` (abajo) | `!fin` → ▲ P2 + chip fuerte «no arrancar»; `fin` → ■ P3 + chip «arrancó sin identificar» (`Turno.tsx:121-129`) |
+| Causa (Identificar), cabecera (no se muestra al nivel `operacion`) | «por identificar · histórico» = `porIdentificar` (las que piden, hayan arrancado o no); apoyo «N pozos · M bombas · K sin arrancar»; «no conformidades» = `arrancoSinIdentificar` con ■ P3 si > 0 (`Causa.tsx:49-56`, `:121-130`) | demo: **4** por identificar (2 pozos · 2 bombas · 2 sin arrancar) con ▲; **3** no conformidades; panel «POR IDENTIFICAR · SIN ARRANCAR» con 2 |
+| Placa de bomba (ingeniería/operación) | `abierta.pide` | ▲ «**No arrancar** hasta identificar» + ⓘ «<texto>. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.» (`Placa.tsx:139-146`) |
+| Detalle de bomba | `abierta.pide` | banda ▲ «No arrancar hasta identificar el daño» + ⓘ con el procedimiento (`Detalle.tsx:125-132`) |
+| Detalle de bomba, lista de paradas | por fila | ■ «arrancó sin identificar» si `arrancoSinIdentificar`; ▲ «por identificar» si `pide` y no arrancó (`Detalle.tsx:425-426`) |
 | Ficha ejecutiva | pregunta abierta de ese equipo (`pide && !fin`) | «Espera que se identifique el daño · hace <fmtHoras(AHORA − inicio, precisa)>» + chip fuerte «no arrancar». Demo, Ceiba P-201B: «hace 10,1 h» |
 
-**Cifras de identificación del período (cabecera de Causa).** Salen del libro (`libro.ts:708-709`, `:797`):
+**Cifras de identificación del período (cabecera de Causa).** Salen del libro (`libro.ts:741-742`, `:858`):
 
 $$
 \text{pendiente} = \sum_{\text{tramos con tipo = pendiente}} \text{bbl} \qquad \text{declarado} = \sum_{\text{tramos esDeclarado}} \text{bbl} \qquad \text{identificado} = \text{diferido} - \text{pendiente} - \text{declarado}
@@ -111,13 +110,50 @@ Ojo: los pozos que cerró una bomba **sin parte identificada** (`reinyeccion`, `
 
 **Quién lo calcula y por dónde viaja.** Servidor. `Pregunta[]` en `GET /api/vistas/paradas/por-identificar` y en `Libro.preguntas`; `ParadaMedida.pide` / `.arrancoSinIdentificar` en `GET /api/vistas/bombas/paradas` y en `BombaVista.abierta`.
 
-**Referencia.** `causa-senal.ts:304`, `libro.ts:822`, `CONTRATO.md:1018-1019`; casos `referencia/diferidos/*.json` (campo `preguntas`).
+**Referencia.** `causa-senal.ts:338`, `libro.ts:883`, `CONTRATO.md:1033-1034`; casos `referencia/diferidos/*.json` (campo `preguntas`).
+
+### La cuenta única de «por identificar» (`contarPorIdentificar`)
+
+**Qué es.** Cuántas paradas siguen esperando que alguien diga qué se dañó, contado **igual en todas las pantallas** (Turno, Mi trabajo, Identificar, Mantenimiento y la franja «Ahora»). Antes de la corrección del 8-oct cada pantalla contaba distinto (Turno 4, Identificar y Mantenimiento 2, Mi trabajo 3 con el mismo rótulo; «Huecos», 20).
+
+**Fórmula** (`cuentaPorIdentificar`, `causa-senal.ts:331-336`; en la costura, `contarPorIdentificar(preguntas)`, `shared/api/diferidos.ts:129`), sobre las preguntas de toda la historia (`GET /api/vistas/paradas/por-identificar`):
+
+$$
+\text{porIdentificar} = \#\{q : q.\text{pide}\}
+\qquad
+\text{arrancaronSinIdentificar} = \#\{q : q.\text{pide} \land q.\text{arrancoSinIdentificar}\}
+\qquad
+\text{sinArrancar} = \text{porIdentificar} - \text{arrancaronSinIdentificar}
+$$
+
+`arrancaronSinIdentificar` es un **subconjunto** de `porIdentificar`, no aparte. Una pregunta respondida tarde ya no pide (no cuenta aquí) pero sigue no conforme (`arrancoSinIdentificar`): sale en las no conformidades de Identificar, no en esta cifra.
+
+**Ejemplo con los datos del demo.**
+
+| Ámbito | `porIdentificar` | `arrancaronSinIdentificar` | Sin arrancar | Cuáles |
+|---|---|---|---|---|
+| Portafolio | **4** | 2 | 2 | P-201B La Ceiba y LC-21 (sin arrancar); LC-08 y P-201B Morichal (arrancaron) |
+| La Ceiba | **3** | 1 | 2 | P-201B, LC-21; LC-08 |
+| Morichal | **1** | 1 | 0 | P-201B (`EV-M2011-260924`) |
+| Guacamayo, Palmar, Zarza | 0 | 0 | 0 | — (PA-04 de Palmar es no conforme por respuesta tardía, pero ya no pide) |
+
+Mundo de prueba (`verificar-libro` §18): si alguien responde hoy `EV-M2011-260924`, el portafolio pasa a **3 y 1**, y esa parada sigue no conforme.
+
+**Qué texto se muestra según el valor.**
+- Cifra «por identificar» = `porIdentificar`, con ▲ P2 si `sinArrancar > 0` (alguna espera para arrancar: «no arrancar»), en Turno (`Turno.tsx:215-217`), Mi trabajo (`Trabajo.tsx:94-96`) y Mantenimiento (`Mantenimiento.tsx:157-160`).
+- Debajo, `ApoyoPorIdentificar` (`shared/ui/PorIdentificar.tsx`), las mismas palabras en las tres: «<sinArrancar> sin arrancar · ■ <arrancaron> arrancó/arrancaron sin identificar» (■ P3: no conformidad); un tramo en 0 no se escribe y con los dos en 0 no hay renglón. Portafolio: «2 sin arrancar · ■ 2 arrancaron sin identificar»; La Ceiba: «2 sin arrancar · ■ 1 arrancó sin identificar».
+- Identificar (`Causa.tsx`): «por identificar · histórico» = `porIdentificar` (4 en el portafolio) y apoyo «2 pozos · 2 bombas · 2 sin arrancar»; el primer panel se llama «POR IDENTIFICAR · SIN ARRANCAR» (extra 2) y las que arrancaron van en NO CONFORMIDADES (2 + 2 = 4).
+- Franja «Ahora» (`widgets/riesgo/Ahora.tsx:20-50`): «Paradas por identificar» = `porIdentificar`, ▲ si `sinArrancar`, ■ si solo arrancaron.
+
+**Quién lo calcula y por dónde viaja.** La regla es del motor (`cuentaPorIdentificar`); no viaja un campo nuevo: cada pantalla cuenta sobre `GET /api/vistas/paradas/por-identificar`, que ya trae `pide` y `arrancoSinIdentificar` (CONTRATO.md:304). Un backend que agregue la cifra debe usar esta definición.
+
+**Referencia.** `causa-senal.ts:324-336`; `shared/api/diferidos.ts:124-130`; `shared/ui/PorIdentificar.tsx`; `verificar-libro.mjs` §18 (9).
 
 ## 3.3 Falla o disparo (electrosumergible)
 
 **Qué es.** Una ESP que dispara y vuelve a arrancar en menos de 24 h no falló: **disparó** (protección del variador, se repone desde superficie). La falla de una ESP es la que obliga a sacarla del pozo con taladro, y eso tarda días. Contarlas juntas hundiría su MTBF.
 
-**Fórmula** (`esDisparo`, `libro.ts:423-428`):
+**Fórmula** (`esDisparo`, `libro.ts:450-455`):
 
 $$
 \text{disparo} = (\text{tipo} = \text{electrosumergible}) \land \text{fin} \ne \text{null} \land \frac{t_{\text{fin}} - t_{\text{inicio}}}{1\ \text{h}} < 24
@@ -127,6 +163,6 @@ $$
 
 **Ejemplo con los datos del demo.** MN-07 (Morichal): 7 eventos de su ESP en la historia, todos de 0,3 a 3,8 h (p. ej. `EP-MN07-260809-33`, `UL`, 9-ago 11:14 → 14:02, 2,8 h, 69 bbl) → **0 fallas, 7 disparos**, 314 bbl. LC-05 (La Ceiba): `GF` 24-oct-2025 08:55 → 5-nov 16:53 = 296 h → **1 falla** (más 8 disparos). MN-41: `GF` desde el 3-sep 06:40, abierto (703 h a AHORA) → 1 falla abierta.
 
-**Qué texto se muestra.** Ficha ejecutiva, «Cada cuánto falla»: con fallas, «N falla(s) · una cada N días»; sin fallas pero con disparos, «No ha fallado · N disparos que volvieron a arrancar»; sin nada, «No ha fallado» (`FichaEjecutiva.tsx:84-88`). MN-07 → «No ha fallado · 7 disparos que volvieron a arrancar».
+**Qué texto se muestra.** Ficha ejecutiva, «Cada cuánto falla»: con fallas, «N falla(s) · una cada N días»; sin fallas pero con disparos, «No ha fallado · N disparos que volvieron a arrancar»; sin nada, «No ha fallado» (`FichaEjecutiva.tsx:96-100`). MN-07 → «No ha fallado · 7 disparos que volvieron a arrancar».
 
-**Referencia.** `libro.ts:420-428`, `libro.ts:1196-1201`; CONTRATO.md:1094-1095.
+**Referencia.** `libro.ts:447-455`, `libro.ts:1257-1262`; CONTRATO.md:1140-1141.

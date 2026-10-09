@@ -104,7 +104,7 @@ anidada en cada `SaludParte.parte`.
 
 | # | Condición | Estado | Rótulo |
 |---|---|---|---|
-| 1 | La parada abierta se le atribuye a esta parte (`parteFallo`, de la primera alarma o la firma: `causa-senal.ts`) | `fallo` | «falló» |
+| 1 | La parada abierta se le atribuye a esta parte (`parteFallo`): en una bomba, la parte de la causa de su parada abierta propia (primera alarma, firma o declarada: `causa-senal.ts`); en una electrosumergible, la parte de la causa del evento abierto del pozo **cuando la causa es su propia ESP** (`parteQueFallo`, `esp.ts:141-146`) | `fallo` | «falló» |
 | 2 | $|\text{fuera}| > 0$ o discretaFuera | `fuera` | «fuera de banda» |
 | 3 | Equipo detenido | `detenida` | «equipo detenido» |
 | 4 | $|\text{cruzan}| > 0$ o $|\text{causaActiva}| > 0$ | `avisa` | «avisa» |
@@ -141,7 +141,7 @@ descarga y corriente en `alarma`, pero solo confirman y con el equipo parado no 
 | Caso | Resultado |
 |---|---|
 | Variable del catálogo que no está en la plantilla de la familia | Se ignora. |
-| Instrumento de bomba con `valor: null` | **Hueco**: `senalesDe` exige `typeof valor === 'number'` (`vigia.ts:141`), así que la variable cae a `discretas` con estado «sin señal» en vez de a `sinSenal` (ver «Huecos y dudas»). |
+| Instrumento de bomba con `valor: null` | Señal sin lectura: `senalesDe` la acepta (`vigia.ts:144-165`) con `valor: null`, estado «sin señal» y pronóstico «Sin señal en línea: <origen>», y la salud la pone en `sinSenal` (antes del 8-oct caía a `discretas`; ver «Huecos y dudas», 2). Mundo de prueba (`verificar-libro` §18): VI-2011 de La Ceiba → `sinSenal` del sello mecánico. |
 | Todo lo de la parte sin señal (equipo en marcha) | `sin-dato`. |
 | Interruptor en `alarma` | discretaFuera → `fuera` con prioridad **2** (no 1; ver «Huecos»). |
 
@@ -153,7 +153,7 @@ primera parte `fuera` de una bomba con la parada **abierta**: P-201B Morichal da
 MPP-301, `filtro`). Tipo `SaludParte` (`salud.ts:63-82`):
 `{ parte, estado, prioridad, primera?, coinciden, lenta?, causaActiva[], fuera[], medidas[], discretas[], sinSenal[], faltan[] }`.
 
-**Referencia.** `src/entities/salud.ts`; `src/entities/esp.ts:137-146`; CONTRATO.md «Salud por parte».
+**Referencia.** `src/entities/salud.ts`; `src/entities/esp.ts:138-161`; CONTRATO.md «Salud por parte».
 Casos: `referencia/salud/bombas-<campo>-2026-09.json` (`partes` de cada bomba),
 `referencia/salud/pozos-<campo>-2026-09.json` (`salud` de cada pozo; requiere
 `insumos/<campo>/electrosumergibles.json`), `referencia/riesgo/<campo>.json`.
@@ -195,7 +195,7 @@ primera a 248,2 h ≥ 24 h, sin causa activa → 3 ■. Bomba de fondo de MN-07:
 de MN-07: avisa con la corriente (la daña) anormal → 2 ▲.
 
 **Casos borde.** `fuera` con variable en `alarma` → 1. Prioridad 0 en una parte que avisa no
-puede darse; en el riesgo se usa `sp.prioridad || 3` por defensa (`diferido.ts:474, 504`).
+puede darse; en el riesgo se usa `sp.prioridad || 3` por defensa (`diferido.ts:576, 604`).
 
 **Quién lo calcula.** Servidor; `SaludParte.prioridad`, y `Riesgo.prioridad` (la misma: «la
 pantalla no la deduce de las horas»).
@@ -212,11 +212,11 @@ La **peor parte** según quien la use:
 
 | Consumidor | Regla | Código |
 |---|---|---|
-| Riesgo (`/vistas/riesgo`) | primera con estado `fuera` o `avisa` | `peorParte`, `diferido.ts:409` |
-| Placa de bomba (negrita + frase) | primera con `fallo`, `fuera` o `avisa`; si hay parada abierta, no se resalta | `Placa.tsx:23, 97-104` |
-| Placa de decisión | primera `fuera` o `avisa`: «En marcha · \<parte\> avisa» | `Placa.tsx:190, 202` |
-| Fila de pozos (`/vistas/pozos` → `salud`) y flota ESP | `partes[0]` | `diferidos.ts:249`, `Esp.tsx` |
-| Pregunta de identificación (`sospechosa`) | primera `fuera` con la parada abierta | `diferidos.ts:135` |
+| Riesgo (`/vistas/riesgo`) | primera con estado `fuera` o `avisa` | `peorParte`, `diferido.ts:484` |
+| Placa de bomba (negrita + frase) | primera con `fallo`, `fuera` o `avisa`; si hay parada abierta, no se resalta | `Placa.tsx:22, 96-103` |
+| Placa de decisión | (quitada el 8-oct con la variante del gerente) | — |
+| Fila de pozos (`/vistas/pozos` → `salud`) y flota ESP | `partes[0]` | `diferidos.ts:265`, `Esp.tsx` |
+| Pregunta de identificación (`sospechosa`) | primera `fuera` con la parada abierta | `diferidos.ts:150` |
 
 **Ejemplo.** P-201B Morichal: orden Succión (fuera) → Sello (avisa, 43,09 h) → Rodamientos,
 Impulsores, Motor (estables). MPP-301: Filtro (fuera) → Rodamientos (248 h) → Tornillos (420 h) →
@@ -230,7 +230,7 @@ sin primera) → Admisión (fuera, sin primera) → Motor de fondo (avisa) → P
 **Qué es.** Lo que se escribe de cada parte: qué variable lo dice y cuándo, sin repetir el estado
 que ya va en el chip.
 
-**Reglas** (`src/widgets/bombas/comun.ts:49-115`, `src/entities/salud.ts:158-168`).
+**Reglas** (`src/widgets/bombas/comun.ts:55-121`, `src/entities/salud.ts:177-187`).
 
 `estadoCorto` (placa):
 
@@ -267,13 +267,17 @@ que ya va en el chip.
 | causa activa sin primera | «lo que la daña ya está fuera de banda: \<variable\>» | – |
 | lenta | «\<variable\> va hacia su límite, pero en más de 3 meses» | – |
 
-`motivoDeParte` (servidor; texto de `/vistas/riesgo` → `motivo`): «\<Parte\>: \<variable\> salió de
-su banda normal; llega a su alarma en **N h**» con $N = \text{round}(h)$ **siempre en horas**, o
-«\<Parte\>: \<variable\> ya llegó a su alarma», o «\<Parte\>: \<variable con primera\>». Ejemplos
-reales: «Succión y filtro de entrada: presión de succión salió de su banda normal; llega a su alarma
-en 43 h»; «Filtro de entrada: caída de presión del filtro salió de su banda normal; llega a su
-alarma en 124 h»; «Protector (sello del motor): temperatura del motor salió de su banda normal; llega
-a su alarma en 262 h» (en pantalla la misma parte dice «10,9 d»: ver «Huecos»).
+`motivoDeParte` (servidor, `salud.ts:177-187`; texto de `/vistas/riesgo` → `motivo`): «\<Parte\>:
+\<variable\> salió de su banda normal; llega a su alarma en **T**», con
+$T = \text{textoHoras}(h)$ (`salud.ts:166-171`), **la misma regla que `fmtHoras` de las pantallas**:
+menos de 48 h en horas enteras («43 h»), si no en días con un decimal («10,9 d»), más de 90 días
+«más de 3 meses»; o «\<Parte\>: \<variable\> ya llegó a su alarma», o «\<Parte\>: \<variable con
+primera\>». Ejemplos reales: «Succión y filtro de entrada: presión de succión salió de su banda normal;
+llega a su alarma en 43 h»; «Filtro de entrada: caída de presión del filtro salió de su banda normal;
+llega a su alarma en 5,2 d» (124,3 h); «Protector (sello del motor): temperatura del motor salió de su
+banda normal; llega a su alarma en 10,9 d» (261,5 h); GU-04 «… en 2,5 d» (61,1 h). Hasta el 8-oct el
+motivo decía «124 h», «262 h» y «61 h» mientras la pantalla decía «5,2 d», «10,9 d» y «2,5 d» (ver
+«Huecos», 3).
 
 ---
 
@@ -283,9 +287,9 @@ a su alarma en 262 h» (en pantalla la misma parte dice «10,9 d»: ver «Huecos
 
 | Nivel | Qué muestra |
 |---|---|
-| Ingeniería (`conf`, `jefe`) | 4 variables clave de la familia (inyección: presión de succión, presión de descarga, caudal, vibración; multifásica: caída de presión del filtro, vibración, velocidad, nivel del depósito de barrera); bajo «PARTES», cada parte `fallo`/`fuera`/`avisa`/`sin-dato` en su renglón con marca y `estadoCorto`; la peor en negrita con su `fraseParteCorta`; el resto en un renglón gris «N partes estables» (o «con la bomba detenida»), con globo de nombre + estado; pie con la historia: «8 fallas en 12 meses · cada 46 d · 3.365 bbl/falla · 47,1 h fuera». |
+| Ingeniería (`conf`, `jefe`) | 4 variables clave de la familia (inyección: presión de succión, presión de descarga, caudal, vibración; multifásica: caída de presión del filtro, vibración, velocidad, nivel del depósito de barrera); bajo «PARTES», cada parte `fallo`/`fuera`/`avisa`/`sin-dato` en su renglón con marca y `estadoCorto`; la peor en negrita con su `fraseParteCorta`; el resto en un renglón gris «N partes estables» (o «con la bomba detenida»), con globo de nombre + estado; pie con la historia: «8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 3.365 bbl por falla» (lo que **ya** costó por falla; «si falla hoy» es la cifra de Riesgo, 5B.5). |
 | Operación (`sup`, `oper`, `tec`) | Solo las variables fuera de banda («Instrumentos en banda.» si no hay); «PARTES QUE AVISAN» sin el renglón de estables; si ninguna, «Ninguna parte avisa.» |
-| Decisión (`ger`) | Sin variables: «En marcha · succión y filtro de entrada avisa», «Falla más por sello mecánico · una cada 46 días». |
+| Decisión (`ger`) | **Sin placa desde el 8-oct**: el gerente no ve Bombas ni Electrosumergibles (cap. 10, D23; su Resumen despliega por campo los equipos que fallan, 5A.8). Antes: «En marcha · succión y filtro de entrada avisa», «Falla más por sello mecánico · una cada 46 días». |
 
 Ejemplo real, placa de P-201B en Morichal (ingeniería): ▲ **Succión y filtro de entrada** · fuera de
 banda / «presión de succión · alarma en 43 h · 41–45 h»; ▲ Sello mecánico · cruza en 43 h;
@@ -293,8 +297,9 @@ renglón gris «3 partes estables» (globo: Rodamientos y cámara de empuje · t
 Impulsores y desgaste interno · estable; Motor eléctrico · estable). MPP-301: ▲ **Filtro de
 entrada** · fuera de banda / «caída de presión del filtro · alarma en 5,2 d · 4,7–5,7 d»;
 ■ Rodamientos · cruza en 10,3 d; ■ Tornillos y holguras · cruza en 17,5 d; ■ Sellos mecánicos
-(cuatro) · cruza en 33,0 d; «2 partes estables»; pie «7 fallas en 12 meses · cada 52 d · 3.434
-bbl/falla · 48,7 h fuera».
+(cuatro) · cruza en 33,0 d; «2 partes estables»; pie «7 fallas en 12 meses · cada 52 d · 2,0 d
+fuera · le ha costado 3.434 bbl por falla» (las horas fuera con `fmtHoras(h, true)`, como la ficha:
+antes «48,7 h»).
 
 **Detalle de la bomba.**
 - Ingeniería: panel **SALUD POR PARTE**, un `BloqueParte` por parte (abierto si `fallo`, `fuera` o

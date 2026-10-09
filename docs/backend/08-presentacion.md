@@ -15,12 +15,12 @@ Formato colombiano (`es-CO`): **miles con punto, decimal con coma**. Todos los f
 | `n2(v)` | Dos decimales, siempre | `0.0512` → «0,05» | cifras chicas de ingeniería |
 | `n3(v)` | Tres decimales, siempre | `1.008` → «1,008» | **el factor de asignación** (con un punto, «1.008» se leería «mil ocho») |
 | `pct(v)` | `n1(v)` + « %» (con espacio) | `44.2` → «44,2 %» | porcentajes con decimal |
-| `num(v)` | Hasta 3 decimales, solo los que trae el dato | `0.384` → «0,384» | valores de instrumento (respeta la resolución del instrumento: 0,384 kW/bbl no es 0,4) |
+| `num(v)` | Hasta 3 decimales, solo los que trae el dato; `null` (sin lectura) → «—» | `0.384` → «0,384» | valores de instrumento (respeta la resolución del instrumento: 0,384 kW/bbl no es 0,4). Un instrumento sin lectura llega con `valor: null` y se muestra «sin señal» (dato inválido, `sinLectura`), no «—» a secas ni 0 |
 | `usd(v)` | ≥ 1.000.000 → `n1(v/10⁶)` + «M USD»; ≥ 1.000 → `n0(v/10³)` + «mil USD»; si no, `n0(v)` + «USD» | `299 412` → «299 mil USD»; `1 250 000` → «1,3 M USD» | valor de los barriles diferidos |
 | `plural(n, uno, varios)` | Singular solo si `round(n) = 1` | `plural(1,'bomba','bombas')` → «1 bomba» | todo conteo con sustantivo |
 | `decimalesDe(serie, valor)` | Los decimales que trae la serie del instrumento, máximo 3 (ISA-101, Tabla 7); los huecos (`null`) no cuentan | serie `[8.8, 9.15]` → 2 | señales de instrumento |
 
-Porcentajes enteros (por ejemplo «89 %», «+44 %», «41 %») salen de `n0(v)` + « %». El signo `+` se escribe a mano cuando la cifra es un cambio («+44 % frente a jul a sep»). Las reglas de redondeo de cada porcentaje (entero o con un decimal) están en su ficha del capítulo 5.
+Porcentajes enteros (por ejemplo «89 %», «+44 %», «41 %») salen de `n0(v)` + « %»; uno que no llega a 1 % se escribe «< 1 %» (nunca «0 %» para algo que no es cero). El signo `+` se escribe a mano cuando la cifra es un cambio («+44 % frente a jul a sep»). Las reglas de redondeo de cada porcentaje (entero o con un decimal) están en su ficha del capítulo 5.
 
 > **Una consecuencia para el servidor:** como el front redondea al mostrar, una suma de filas redondeadas puede no dar el total redondeado (1.922 + 1.173 + 792 + 49 + 0 = 3.936 en bbl/d se ve bien; con barriles por equipo puede faltar o sobrar 1). Eso es correcto: **el total sale de sumar los valores sin redondear**, nunca de sumar lo que se ve. El servidor no debe redondear antes de sumar.
 
@@ -50,11 +50,15 @@ Todas en **hora de Colombia** (`America/Bogota`), con la abreviatura de mes fija
 
 Ojo: con `day: '2-digit'`, el formato es-CO (ICU 78) escribe el día **sin** cero a la izquierda cuando no hay año («2 de oct, 03:52») y **con** cero cuando lo hay («06 de oct de 2025»). Un servidor que genere textos con fecha tiene que reproducir eso, o usar el mismo formateador.
 
-**Horas y plazos** (`fmtHoras`, `src/widgets/bombas/comun.ts`; lo usan colchones, pronósticos y paradas):
+**Horas y plazos** (`textoHoras` del motor, `src/entities/salud.ts`, que usan `fmtHoras` en las pantallas y los textos que arma el servidor: colchones, pronósticos, paradas, horas fuera y el motivo del riesgo; una sola regla en todo el producto):
 
 $$
-\text{fmtHoras}(h) = \begin{cases} \text{«más de 3 meses»} & h > H_{\max} \\ n_0(h)\ \text{«h»} \ \ (\text{o } n_1(h) \text{ si se pide precisión}) & h < 48 \\ n_1(h/24)\ \text{«d»} & \text{si no} \end{cases}
+\text{textoHoras}(h) = \begin{cases} \text{«más de 3 meses»} & h > H_{\max} \\ n_0(h)\ \text{«h»} & h < 48 \\ n_1(h/24)\ \text{«d»} & \text{si no} \end{cases}
+\qquad
+\text{fmtHoras}(h, \text{precisa}) = \begin{cases} n_1(h)\ \text{«h»} & \text{precisa y } h < 48 \\ \text{textoHoras}(h) & \text{si no} \end{cases}
 $$
+
+Cuando la cifra es un plazo que no se puede pasar («0 si vuelve antes de 19 h»: el colchón del tanque), `textoHoras(h, true)` **trunca** en vez de redondear: con un colchón de 19,7 h, redondear diría «antes de 20 h», y una bomba que vuelve a las 19,8 h sí costaría crudo; truncado dice «antes de 19 h», que siempre es cierto. 
 
 con $H_{\max}$ = `HORIZONTE_H` = 90 × 24 = 2.160 h (el horizonte del vigía, `src/entities/salud.ts:53`). Un pronóstico con rango se escribe «en *N* h (*a* h a *b* h)»; si los dos extremos se escriben igual, solo «en *N* h» (`textoPronostico`; los números reales están en el capítulo 5C).
 
@@ -115,9 +119,9 @@ $$
 | $n_{\text{baja}}, n_{\text{alta}}$ | banda normal (un lado puede ser infinito: «< 3,9» no tiene piso) |
 | $a_{\text{alta}}, a_{\text{baja}}$ | límites de alarma (rayas verticales) |
 
-Prioridad que pinta: la que manda el servidor (`estado`); si no viene, $v \ge a_{\text{alta}}$ o $v \le a_{\text{baja}}$ → 1; fuera de la banda normal → 3; si no, 0. Con detalle, debajo de la barra se escribe «normal 2,0 – 4,0» (o «normal < 3,9», «normal > 85») y «alarma 4,5». Los decimales son los de la señal (`decimalesDe`).
+Prioridad que pinta: la que manda el servidor (`estado`); si no viene, $v \ge a_{\text{alta}}$ o $v \le a_{\text{baja}}$ → 1; fuera de la banda normal → 2; si no, 0. Con detalle, debajo de la barra se escribe «normal 2,0 – 4,0» (o «normal < 3,9», «normal > 85») y «alarma 4,5». Los decimales son los de la señal (`decimalesDe`).
 
-> En el servidor, la regla del contrato es: **fuera de la banda normal = atención (P2); en la alarma = alarma (P1)** (anexo A, «Límite de cada tag»). El respaldo del front pinta P3 fuera de banda solo cuando no le llega estado.
+> La regla del contrato es: **fuera de la banda normal = atención (P2); en la alarma = alarma (P1)** (anexo A, «Límite de cada tag»), y el indicador la sigue también cuando no le llega estado.
 
 ## 8.7 Listas largas: cinco y «ver N más»
 
@@ -158,7 +162,7 @@ Ningún hueco se pinta como cero. Frases fijas que aparecen en muchas pantallas:
 | Hueco del historiador | `null` en la serie | la línea se corta; «sin señal» en el valor actual |
 | Recurso que no existe | `"datos": null` (HTTP 200) | el hueco de la pantalla, con su motivo |
 | Campo que el registro no trae | un id que no está en `GET /api/campos` | «id (campo sin registrar)», nunca otro campo |
-| Tanque que no se llena | `colchon.horas: null` (infinito) | «más de 3 meses» (como toda hora más allá del horizonte, 8.3) |
+| Tanque que no se llena (el respaldo absorbe toda el agua) | `colchon.horas: null` (infinito) | «no cierra pozos» (no «más de 3 meses de colchón») |
 | Perfil del campo sin esa familia | el perfil firmado | «Este campo no tiene en su perfil ninguno de los equipos de esta pantalla» |
 
 ## 8.11 El papel

@@ -4,7 +4,7 @@ TRIM avisa por WhatsApp, en minutos, a quien tiene que actuar sobre un equipo de
 
 Por qué importa para el negocio: cuando la bomba de reinyección de La Ceiba (sin respaldo) se para, el tanque de agua empieza a llenarse; con cortes de agua de 92-98 %, en horas hay que cerrar pozos. El supervisor y el operador tienen que saberlo **al parar**, no al revisar el turno; y si ninguna señal del PLC explica la parada, la única fuente de la causa es quien abre el equipo.
 
-Código: `src/entities/mensajes.ts` (349 líneas), `src/shared/api/mensajes.ts` (el registro del demo), `src/shared/api/escrituras.ts:334-410` (respuesta en pantalla y webhook simulado), `src/widgets/whatsapp/Telefono.tsx`, `NoEnviado.tsx`, `src/pages/Turno.tsx`, `src/pages/Causa.tsx:372-420`, `src/pages/Trabajo.tsx`, `src/widgets/conectores/Integraciones.tsx`, `src/entities/usuarios.ts:117-135`.
+Código: `src/entities/mensajes.ts` (349 líneas), `src/shared/api/mensajes.ts` (el registro del demo), `src/shared/api/escrituras.ts:334-410` (respuesta en pantalla y webhook simulado), `src/widgets/whatsapp/Telefono.tsx`, `NoEnviado.tsx`, `src/pages/Turno.tsx`, `src/pages/Causa.tsx:379-427`, `src/pages/Trabajo.tsx`, `src/widgets/conectores/Integraciones.tsx`, `src/entities/usuarios.ts:117-135`.
 
 ---
 

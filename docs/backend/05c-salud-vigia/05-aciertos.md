@@ -151,7 +151,7 @@ En el demo: `40012054` (LC-14, La Ceiba, cerrada 26 de sept, 07:26), `40012055` 
 |---|---|---|
 | `fuera-de-perfil` | La familia estaba **apagada** en el perfil firmado que **regía en `falla.inicio`** (`configEn(versiones, t)`) | «Familia apagada en el perfil del campo» |
 | `sin-parte` | La falla no tiene parte identificada | «Sin parte identificada: no se sabe qué mirar» |
-| `vigilada` | La parte es vigilable: ESP siempre; bomba, si alguna variable de la parte que **anuncia o la daña** tiene tag en esa máquina (`vigilable`, `libro.ts:596-602`) | «Parte con instrumento: el vigía la mira» |
+| `vigilada` | La parte es vigilable: ESP siempre; bomba, si alguna variable de la parte que **anuncia o la daña** tiene tag en esa máquina (`vigilable`, `libro.ts:629-635`) | «Parte con instrumento: el vigía la mira» |
 | `sin-instrumento` | En otro caso; `faltan` = nombres de las variables (no «confirma») sin tag | «Parte sin instrumento: el vigía no la ve» |
 
 Firmar hoy un perfil **no reescribe la historia**. Sin disparos.

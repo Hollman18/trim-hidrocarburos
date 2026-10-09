@@ -70,7 +70,7 @@ prueba que cada endpoint de `contrato.ts` vuelve igual después de pasar por JSO
 npm run verificar
 ```
 
-corre `tsc -b`, el linter, el contrato y `scripts/verificar-libro.mjs`: **284 comprobaciones** del motor, de las reglas de escritura y del simulador (el número crece con cada corrección; el script imprime «N de N comprobaciones bien»). Sus secciones, que sirven de lista de lo que el motor garantiza:
+corre `tsc -b`, el linter, el contrato y `scripts/verificar-libro.mjs`: **320 comprobaciones** del motor, de las reglas de escritura y del simulador (el número crece con cada corrección; el script imprime «N de N comprobaciones bien»). Sus secciones, que sirven de lista de lo que el motor garantiza:
 
 | Sección | Qué garantiza |
 |---|---|
@@ -91,6 +91,8 @@ corre `tsc -b`, el linter, el contrato y `scripts/verificar-libro.mjs`: **284 co
 | 15 | Costura asíncrona, contrato y escrituras |
 | 16 | Las escrituras se limitan a los campos de la persona |
 | 17 | Las fechas dicen lo mismo en todos los navegadores |
+| 18 | Corrección del 8-oct: costo por falla «si falla hoy» (con el colchón del tanque), la electrosumergible que falló, causas que no dependen del orden de llegada, servicio todavía caído, fallas y disparos por equipo, banda sin verificar y «publicable» por campo |
+| 19 | Corrección de la revisión del 8-oct: el tanque solo sube si entra agua (`Prediccion.llenado`), horas con una sola regla, instrumento sin lectura = `null`, equipos que fallaron sin costar crudo (`Libro.sinCosto`) |
 
 Un backend en otro lenguaje no corre este script; lo que tiene que dar está en `referencia/` y en las reglas de este documento.
 

@@ -155,17 +155,19 @@ dos errores estándar: es ruido». En el panel VIGÍA: «Límite **3,9 mm/s** ·
 positiva (+0,049 %/día) → «La variable no va hacia el límite».
 
 **Casos borde y orden de las reglas.** Para cada variable de la plantilla de la bomba
-(`senalesDe`, `src/entities/vigia.ts:122-167`), en este orden:
+(`senalesDe`, `src/entities/vigia.ts:122-173`), en este orden:
 
 | # | Condición | Pronóstico | Texto (`motivo`) |
 |---|---|---|---|
-| 0 | El tag no existe o su `valor` no es número (interruptor, «sin fuga») | la variable **no entra** a `senales` | – |
-| 1 | `estado === 'sin señal'` | `sin-tendencia` | «Sin señal en línea: \<origen\>» |
+| 0 | El tag no existe o su `valor` es un **texto** (interruptor, «sin fuga»: lo lee la salud como discreta) | la variable **no entra** a `senales` | – |
+| 1 | `valor === null` (sin lectura) **o** `estado === 'sin señal'` | `sin-tendencia`; la señal sale con `valor: null` y estado `sin señal` | «Sin señal en línea: \<origen\>» |
 | 2 | El equipo está `detenido` (`eq.marcha`) | `sin-tendencia` | «La bomba está detenida: no hay tendencia que proyectar» |
 | 3 | El tag no tiene alarma en ese sentido | `sin-limite` | (pantalla: «sin límite declarado») |
 | 4 | Sin tendencia (n < 4) | `sin-tendencia` | «Faltan puntos para ajustar una tendencia» |
 | 5 | Velocidad de una **multifásica** con presión diferencial inestable | `no-atribuible` | «La presión diferencial cambió más de 5 %: la velocidad pudo subir por proceso, no por desgaste» |
 | 6 | En otro caso | `pronostico(t, L, σ)` | – |
+
+Regla 1 desde el 8-oct (`vigia.ts:144-155`): antes un `valor: null` caía en la regla 0 y la variable desaparecía del vigía (la salud la tomaba como discreta); ahora entra como señal sin lectura. Mundo de prueba (`verificar-libro` §18): VI-2011 de la P-201B de La Ceiba con `valor: null` → «Sin señal en línea: PLC · 47 s» y, en la salud, en `sinSenal` del sello mecánico.
 
 Regla 5 (API 676 B.2.1.2: a presión diferencial constante, más velocidad es menos eficiencia
 volumétrica por desgaste de tornillos y camisa). Si las series de descarga ($p_d$) y succión
@@ -180,7 +182,7 @@ Si no están alineadas, o no hay $\Delta p$, **no es estable** y la velocidad no
 MPP-301 (Morichal) $\Delta p$ va de 297 a 302 psi (media ≈ 300): estable, y la velocidad SI-3016
 se proyecta: **«en 17,5 d · 16,6–18,5 d»** contra 1.650 rpm.
 
-En la electrosumergible (`senalesEsp`, `src/entities/esp.ts:104-134`): pozo parado →
+En la electrosumergible (`senalesEsp`, `src/entities/esp.ts:105-135`): pozo parado →
 «El pozo está parado: no hay tendencia que proyectar»; sin alarma en ese sentido → `sin-limite`
 (la frecuencia nunca tiene alarma); sin tendencia → «Faltan puntos…»; si no, `pronostico`.
 
@@ -190,7 +192,7 @@ En la electrosumergible (`senalesEsp`, `src/entities/esp.ts:104-134`): pozo para
 `/vistas/riesgo`. Tipo `Pronostico` (`vigia.ts:67-72`):
 `{ tipo: 'cruza', horas, rango } | { tipo: 'cruzado' } | { tipo: 'sin-tendencia', motivo } | { tipo: 'sin-limite' } | { tipo: 'no-atribuible', motivo }`.
 
-**Referencia.** `src/entities/vigia.ts`; CONTRATO.md «Vigía». `scripts/verificar-libro.mjs:815-829`
+**Referencia.** `src/entities/vigia.ts`; CONTRATO.md «Vigía». `scripts/verificar-libro.mjs:817-831`
 (regla `proyectable` y paso de la serie). Casos de `referencia/` que traen pronósticos:
 `referencia/salud/bombas-<campo>-2026-09.json` (`/api/vistas/bombas`, septiembre),
 `referencia/riesgo/<campo>.json` (`/api/vistas/riesgo`: `horas`, `rango`, `motivo`) y
@@ -232,7 +234,7 @@ El 4.5 se clasifica como degradación a propósito: el aislamiento pierde resist
 desbalance crece antes del disparo a tierra (`src/entities/iso14224.ts:101-105`).
 
 **Dónde se aplica.** En la salud por parte (solo las tendencias proyectables cuentan para
-`avisa`, `salud.ts:124`) y en el veredicto de la bomba (`diferido.ts:350-352`). `senalesDe`
+`avisa`, `salud.ts:124`) y en el veredicto de la bomba (`diferido.ts:411-413`). `senalesDe`
 calcula el pronóstico de todas; el filtro se aplica al usarlo.
 
 **Casos borde.** Con la tabla actual ninguna variable de plantilla anuncia un mecanismo de choque,
@@ -256,8 +258,14 @@ $$
 \end{cases}
 $$
 
-(`fmtHoras`, `src/widgets/bombas/comun.ts:12-14`; con `precisa = true`, para paradas, las horas
-llevan un decimal: «47,1 h».)
+(`fmtHoras`, `src/widgets/bombas/comun.ts:15-17`; con `precisa = true`, para paradas, las horas
+por debajo de 48 h llevan un decimal: «47,1 h».) Desde el 8-oct es **una sola regla con el motor**:
+`fmtHoras(h)` sin `precisa` es `textoHoras(h)` de `src/entities/salud.ts:166-171`, la misma que escribe
+el `motivo` del riesgo (5C.3), así el servidor y la pantalla dicen «10,9 d» para la misma cifra.
+`textoHoras(h, true)` (hacia abajo) trunca a lo que escribe para un plazo que no se puede pasar:
+19,05 h → «19 h», 18,6 h → «18 h», 55,2 h → «2,3 d» («0 si vuelve antes de 19 h», 5B.5).
+`verificar-libro` §18 compara las dos en 13 valores (47,6 h → «48 h» en las dos: el corte se mira
+antes de redondear) y falla a propósito si alguien cambia una sin la otra.
 
 **Qué texto se muestra.**
 
@@ -307,7 +315,7 @@ rango 41,3–45,0 h; rótulo «en 1,8 d».
 mantenimiento, ingeniería). No sale en operación ni en decisión (el auditor exige que «VIGÍA» no
 aparezca en decisión: `e2e/auditoria/rutas.ts`, `NO_DECISION`).
 
-**Reglas** (`src/widgets/bombas/Detalle.tsx:67-70, 200-228`):
+**Reglas** (`src/widgets/bombas/Detalle.tsx:67-70, 202-230`):
 - Lista las señales **con mecanismo**, ordenadas por horas de cruce (las que no cruzan, al final,
   en el orden de la plantilla). Encabezado: «N señales».
 - Cada fila: nombre, «ISO 14224 2.1 · Cavitación», y
@@ -343,7 +351,7 @@ proyectar»; no se dibuja ninguna proyección.
 **Qué es.** De las bombas **en marcha** (sin parada abierta), la parte en estado `fuera` o `avisa`
 que tiene `primera` (una señal que cruza) con menos horas.
 
-**Dónde se ve.** Cabecera de la estación de bombas (`src/pages/Bombas.tsx:42-46`), todos los
+**Dónde se ve.** Cabecera de la estación de bombas (`src/pages/Bombas.tsx:35-39`), todos los
 niveles.
 
 **Fórmula.**

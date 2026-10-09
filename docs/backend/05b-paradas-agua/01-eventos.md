@@ -17,7 +17,7 @@ Hay cuatro familias de hechos que entran:
 
 **Qué es.** Un cambio de estado del controlador de un pozo: el pozo paró (o le bajaron la frecuencia) a una hora y volvió a producir a otra. Es la **unidad de cobro** del libro: cada barril diferido es un tramo de un evento de pozo.
 
-**Dónde se ve.** En todas las pantallas que hablan de pozos parados: Riesgo (`#/<rol>/riesgo/…`), Turno, Causa, el panel de un pozo, la historia de un equipo. En el panel del pozo el controlador aparece como el dispositivo «Estado del controlador» con valor `parado · CMD`, `a 47 Hz` o `en marcha` (`equipo-vivo.ts:57-63`).
+**Dónde se ve.** En todas las pantallas que hablan de pozos parados: Riesgo (`#/<rol>/riesgo/…`), Turno, Causa, el panel de un pozo, la historia de un equipo. En el panel del pozo el controlador aparece como el dispositivo «Estado del controlador» con valor `parado · CMD`, `a 47 Hz` o `en marcha` (`equipo-vivo.ts:59-65`).
 
 **Campos.**
 
@@ -50,8 +50,8 @@ Hay cuatro familias de hechos que entran:
 **Qué viene del PLC y qué se deduce.** Del PLC: `inicio`, `fin`, `codigo`, `senal`, `hz`. **Se deduce** (no viaja en el insumo): la causa (`Causa`), el estado actual del pozo, la fracción perdida y los barriles.
 
 **Casos borde.**
-- `fin: null` → abierto; para el cálculo el intervalo se corta en `AHORA` (`libro.ts:128`, `diferido.ts:307`).
-- **Eventos que se pisan en el mismo pozo**: el servidor los normaliza para que cada hora se cobre una vez (`intervalosEfectivos`, `libro.ts:118-140`): se ordenan con los paros antes que los `HZ`, y entre iguales el que empezó primero; a cada evento se le quita lo ya cubierto por los anteriores. En el demo **no hay ningún solape** (comprobado: 0 pares que se pisen), así que la regla no cambia ningún número del demo; el backend real sí la necesita (CONTRATO.md:853-857 pide escoger entre normalizar o rechazar en la ingesta).
+- `fin: null` → abierto; para el cálculo el intervalo se corta en `AHORA` (`libro.ts:128`, `diferido.ts:367`).
+- **Eventos que se pisan en el mismo pozo**: el servidor los normaliza para que cada hora se cobre una vez (`intervalosEfectivos`, `libro.ts:118-140`): se ordenan con los paros antes que los `HZ`, y entre iguales el que empezó primero; a cada evento se le quita lo ya cubierto por los anteriores. En el demo **no hay ningún solape** (comprobado: 0 pares que se pisen), así que la regla no cambia ningún número del demo; el backend real sí la necesita (CONTRATO.md:856-860 pide escoger entre normalizar o rechazar en la ingesta).
 - Un evento de un pozo que no está en `GET …/pozos` se ignora (`libro.ts:323`).
 
 **Quién lo calcula y por dónde viaja.** Insumo del servidor. Hacia el front viaja dentro de `Tramo.evento` (por clave en `refs.eventos`), `FilaPozo.evento`, `DetallePozo.historicos[].evento`.
@@ -66,7 +66,7 @@ Hay cuatro familias de hechos que entran:
 
 **Dónde se ve.** Panel del pozo (`marcha`: `en-marcha`, `detenido`, `cerrado-por-otro`), Riesgo (pozos parados), `EstadoCampo.parados`, `caudalesAhora`.
 
-**Regla** (`pozos.ts:166-172`):
+**Regla** (`pozos.ts:167-173`):
 
 $$
 \text{abiertos} = \{ e \in \text{eventos del pozo} : e.\text{fin} = \text{null} \land e.\text{inicio} \le \text{AHORA} \}
@@ -78,7 +78,7 @@ $$
 
 **Ejemplo con los datos del demo.** LC-21 (La Ceiba, bombeo mecánico) tiene abierto `EP-LC21-261001-01`, `CMD` desde el 1-oct 18:20 → `produce = false`. LC-04 tiene abierto un `CMD` desde el 2-oct 08:20 → `produce = false`. En La Ceiba los 18 pozos están parados (`EstadoCampo.parados = 18`).
 
-**Qué texto se muestra según el valor** (`equipo-vivo.ts:53-76`):
+**Qué texto se muestra según el valor** (`equipo-vivo.ts:55-79`):
 
 | Situación | `marcha` | `estado` | `severidad` del pozo |
 |---|---|---|---|
@@ -91,7 +91,7 @@ $$
 
 Ejemplos del demo: LC-04 → `cerrado-por-otro`, «cerrado por P-201B», severidad 0, lectura «Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno. Se le carga a P-201B.»; LC-21 → `detenido`, «detenido · parada por orden», severidad 2; MN-41 → `detenido`, «detenido · falla a tierra», severidad 1.
 
-**Referencia.** `pozos.ts:166`, `equipo-vivo.ts:25-86`.
+**Referencia.** `pozos.ts:167`, `equipo-vivo.ts:25-89`.
 
 ---
 
@@ -117,7 +117,7 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 
 **Casos borde.** `hz ≥ hz_prueba` → $f = 0$ (no pierde). La misma regla se usa en el libro, en `riesgoAhora` (perdiendo), en `perdiendoPor` (predicción) y en `caudalesAhora` (lo que produce = $1-f$). Lo de frecuencia reducida es **aproximado** y queda fuera de la tolerancia.
 
-**Referencia.** `libro.ts:92`, `diferido.ts:236`, `diferido.ts:447`, `diferido.ts:580`.
+**Referencia.** `libro.ts:92`, `diferido.ts:288`, `diferido.ts:548`, `diferido.ts:680`.
 
 ---
 
@@ -125,7 +125,7 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 
 **Qué es.** Una parada (o pérdida de caudal) de una bomba de la línea, registrada por su PLC.
 
-**Campos** (`bombas.ts:276-299`; CONTRATO.md:866-880):
+**Campos** (`bombas.ts:276-299`; CONTRATO.md:869-885):
 
 | Campo | Significado | Unidad | De dónde sale |
 |---|---|---|---|
@@ -137,7 +137,7 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 | `firma` | `{ parte, tag?, texto }`: la parte que **las señales** señalaban en el instante de parar | — | **la decide el backend al registrar la parada** y se guarda con el evento |
 | `nivelAlParar` | `{ tag, pct }`: nivel del tanque de agua en el instante de parar | % | transmisor `LT-…` |
 
-**Qué viene del PLC y qué se deduce.** Del PLC: horas, `perdida`, `senal`, `primeraAlarma`, `nivelAlParar`. **La parte que falló nunca viene escrita a mano**: se deduce de la primera alarma (si es un disparo de esa máquina) o de la `firma`. La `firma` es una deducción del backend **congelada en el momento de parar**: no cambia cuando la parada se cierra ni cuando las lecturas vuelven a banda (CONTRATO.md:877-878). El front, si no viene, la calcula una sola vez con la primera lectura que ve de la parada **abierta** y la recuerda por id (`firmaAlParar`, `causa-senal.ts:155-166`); una parada que llega **ya cerrada y sin firma** no se reconstruye.
+**Qué viene del PLC y qué se deduce.** Del PLC: horas, `perdida`, `senal`, `primeraAlarma`, `nivelAlParar`. **La parte que falló nunca viene escrita a mano**: se deduce de la primera alarma (si es un disparo de esa máquina) o de la `firma`. La `firma` es una deducción del backend **congelada en el momento de parar**: no cambia cuando la parada se cierra ni cuando las lecturas vuelven a banda (CONTRATO.md:882-883). El front, si no viene, la calcula una sola vez con la primera lectura que ve de la parada **abierta** y la recuerda por id (`firmaAlParar`, `causa-senal.ts:167-178`); una parada que llega **ya cerrada y sin firma** no se reconstruye.
 
 **Ejemplo con los datos del demo.** De las 36 paradas: 27 traen `primeraAlarma`, **ninguna trae `firma`** (el demo nunca la manda), 3 tienen `perdida < 1` (MPP-301 dos veces con 0,36, Guacamayo P-201B una con 0,43) y 27 traen `nivelAlParar`. La parada abierta de La Ceiba:
 
@@ -175,7 +175,7 @@ En el demo hay primeras alarmas que **no** son de la máquina: `PAL-1011` (aire 
 
 **Qué es.** La caída de un servicio o equipo de proceso que, al caer, apaga o frena pozos: aire de instrumentos (K-101), energía (pórtico SE-2), compresión (C-401), evacuación (LACT-01), separación (V-101), tratamiento (H-302).
 
-**Campos** (`pozos.ts:94-103`): `id`, `campoId`, `equipo`, `tipo` (`aire | energia | compresion | evacuacion | proceso | tratamiento`), `inicio`, `fin` (siempre cerrado en el demo), `tag`, `texto`.
+**Campos** (`pozos.ts:94-104`): `id`, `campoId`, `equipo`, `tipo` (`aire | energia | compresion | evacuacion | proceso | tratamiento`), `inicio`, `fin` (`string | null`: **`null` = el servicio sigue caído**, y su cascada llega hasta AHORA, cap. 2; en el demo todos vienen cerrados), `tag`, `texto`.
 
 **Ejemplo con los datos del demo.** `SV-SE-2-260828`: Morichal, SE-2, energía, 28-ago 18:08 → 29-ago 11:07, `52-SE2 · interruptor del pórtico 13,8 kV abierto`. Cerró los 41 pozos de Morichal y paró P-201B (`EV-M2011-260828`, primera alarma `52-SE2`).
 
@@ -189,7 +189,7 @@ En el demo hay primeras alarmas que **no** son de la máquina: `PAL-1011` (aire 
 
 **Campos**: `id`, `campoId`, `equipo` (bomba o pozo), `desde`, `hasta`, `motivo`.
 
-**Regla de pertenencia** (`enPrograma`, `causa-senal.ts:135-137`): un evento del equipo cae en el programa si
+**Regla de pertenencia** (`enPrograma`, `causa-senal.ts:147-149`): un evento del equipo cae en el programa si
 
 $$
 \text{desde} \le t_{\text{inicio del evento}} \le \text{hasta}

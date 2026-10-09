@@ -24,7 +24,7 @@ $$
 | $hz_e$ | frecuencia a la que quedó el pozo | Hz | `eventos[].hz` (`GET …/pozos/eventos`) |
 | $hz_{\text{prueba}}$ | frecuencia de la prueba vigente ese día | Hz | `pruebas[].hz` |
 
-**Eventos que se pisan** (`intervalosEfectivos`, `src/entities/libro.ts:118-140`): por pozo, se ordenan primero los paros y después los HZ, y entre iguales el que empezó antes (y luego por id). Cada evento cobra solo lo que no cubrió uno anterior en ese orden. Un paro manda sobre un HZ; entre dos paros, gana el primero. Así una hora del pozo se cobra una vez y la identidad potencial − real = Σ diferidos sigue exacta. El contrato pide escoger entre esto o que la ingesta rechace los solapes (`CONTRATO.md:855-858`); el motor del demo hace lo primero.
+**Eventos que se pisan** (`intervalosEfectivos`, `src/entities/libro.ts:118-140`): por pozo, se ordenan primero los paros y después los HZ, y entre iguales el que empezó antes (y luego por id). Cada evento cobra solo lo que no cubrió uno anterior en ese orden. Un paro manda sobre un HZ; entre dos paros, gana el primero. Así una hora del pozo se cobra una vez y la identidad potencial − real = Σ diferidos sigue exacta. El contrato pide escoger entre esto o que la ingesta rechace los solapes (`CONTRATO.md:858-861`); el motor del demo hace lo primero.
 
 **Ejemplo con los datos del demo.** LC-11, 10-sep: el evento `EP-LC11-260910-79` (código CMD, cerrado por la parada de P-201B) va del 10-sep 02:03 al 11-sep 09:14. En el día 10 cobra 21,95 h con $f = 1$; en el 11, 9,233 h. HZ: MN-07 de Morichal, evento `EP-MN07-260214-16` del 14-feb 23:25 al 15-feb 23:58 a 47 Hz con prueba a 59 Hz: $f = 1 - 47/59 = 0{,}2034$ (el motor guarda `factor: 0,203`).
 
@@ -114,14 +114,16 @@ $$
 
 **Qué texto se muestra según el valor.**
 
-- Cuadre: si ningún mes del período está fuera, «`N` mes-campo · [dentro de banda]» (`plural(n, 'mes-campo', 'meses-campo')`; La Ceiba sep: «1 mes-campo», portafolio sep: «5 meses-campo»). Si alguno está fuera, una línea por cada uno: cuadrado P3 ■ + «El Palmar · 2026-04 · **0,810**» + chip fuerte «fuera de ±15 %». ⓘ: «Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar.»
-- Gráfico (widget `Factor`): círculo hueco si está dentro, cuadrado P3 (amarillo con trazo) si está fuera. Globo: título «Septiembre 2026 · factor 0,969»; pista «Dentro de la banda» o «Fuera de la banda: revisar pruebas, medición y pozos sin prueba»; filas «Factor 0,969», «Banda 0,85 – 1,15» (`n2`), «Fiscal del mes 324.688 bbl», «Cierre publicado | en curso». Los meses fuera del período que se mira van al 50 % de opacidad.
+El estado de cada mes contra la banda lo decide `estadoFactor` (`src/widgets/diferidos/publicacion.ts:9-12`, 5A.7) con los **motivos** del libro, no con `dentro` a secas: `sin-verificar` si el campo trae el motivo `banda-sin-verificar`; si no, `dentro` o `fuera`.
+
+- Cuadre: si todos los meses del período están dentro, «`N` mes-campo · [dentro de banda]» (`plural(n, 'mes-campo', 'meses-campo')`; La Ceiba sep: «1 mes-campo», portafolio sep: «5 meses-campo»). Si no, una línea por mes que no está dentro: **fuera** → cuadrado P3 ■ + «El Palmar · 2026-04 · **0,810**» + chip fuerte «fuera de ±15 %»; **sin verificar** → sin marca, «La Zarza · 2026-09 · **1,032**» + chip neutro «banda sin verificar» (`Cuadre.tsx:21-23`, `:56-64`). ⓘ: «Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar.»
+- Gráfico (widget `Factor`): círculo hueco si está dentro, cuadrado P3 (amarillo con trazo) si está fuera, **círculo punteado** si la banda no se puede verificar. Globo: título «Septiembre 2026 · factor 0,969»; pista «Dentro de la banda», «Fuera de la banda: revisar pruebas, medición y pozos sin prueba» o, sin verificar, el texto del motivo que redacta el servidor; filas «Factor 0,969», «Banda 0,85 – 1,15» (`n2`; «sin verificar»), «Fiscal del mes 324.688 bbl», «Cierre publicado | en curso» (`Factor.tsx:47-60`). Los meses fuera del período que se mira van al 50 % de opacidad. Desde el 8-oct el gráfico arranca desplazado al mes más reciente (`alFinal`), como Mes a mes, Tendencia y Diaria.
 - Eje del gráfico: de $\min(0{,}75;\ 1-b-0{,}05)$ a $\max(1{,}25;\ 1+b+0{,}05)$ con marcas en el piso, $1-b$, 1, $1+b$ y el techo. Con $b = 0{,}15$: 0,75 · 0,85 · 1,00 · 1,15 · 1,25; con $b = 0{,}05$: 0,75 · 0,95 · 1,00 · 1,05 · 1,25. Un valor fuera del eje se dibuja pegado al borde.
 - «Cómo se lee» del gráfico: «Factor = producción fiscal del mes ÷ lo que dicen las pruebas por las horas que cada pozo produjo… La franja gris es la banda que acepta la regulación para este crudo (*fuente de la banda*)».
 
-**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/diferidos` → `fa: FilaFA[]` con `{ campoId, mes, fa, banda, dentro, publicado }` (una fila por campo y mes del período que tiene factor); `GET /api/vistas/diferidos/mensual` → `libro.fa` de cada mes (el gráfico usa esta). Tipo `FilaFA` (`src/entities/libro.ts:447`).
+**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/diferidos` → `fa: FilaFA[]` con `{ campoId, mes, fa, banda, dentro, publicado }` (una fila por campo y mes del período que tiene factor); `GET /api/vistas/diferidos/mensual` → `libro.fa` de cada mes (el gráfico usa esta). Tipo `FilaFA` (`src/entities/libro.ts:474`).
 
-**Referencia.** `src/entities/libro.ts:171-219`, `:697-703`; `src/widgets/diferidos/Factor.tsx`; `src/widgets/diferidos/Cuadre.tsx:49-61`. Casos `referencia/diferidos/<campo>-2026-09.json` (`fa`) y `referencia/mensual/<campo>.json`. `verificar-libro.mjs` sección 3.
+**Referencia.** `src/entities/libro.ts:171-219`, `:730-736`; `src/widgets/diferidos/Factor.tsx`; `src/widgets/diferidos/Cuadre.tsx:53-65`; `src/widgets/diferidos/publicacion.ts:9-12`. Casos `referencia/diferidos/<campo>-2026-09.json` (`fa`) y `referencia/mensual/<campo>.json`. `verificar-libro.mjs` sección 3.
 
 ---
 
@@ -176,16 +178,16 @@ Fuente que viaja con la banda de La Ceiba: «Res. MME 40236/2022, Anexo 2, Tabla
 
 | Caso | Motor (`calcularBanda`, `src/entities/libro.ts:265-274`) | Pantalla |
 |---|---|---|
-| `api: null` (o sin registro de metrología) | Se acota con la **fila más ancha** de crudo ($b = 0{,}20$: ≤ 22,3 y < 1.000), `verificable: false`; fuente: «Sin análisis de °API del crudo: no se puede escoger la fila de la Fig. 10.2 ni verificar el factor. La tolerancia se acota con la fila más ancha. …banda 0,80–1,20» | Motivo `banda-sin-verificar`; libro no publicable. Configuración dice «sin análisis de °API del crudo», nunca «0,0 °API» |
+| `api: null` (o sin registro de metrología) | Se acota con la **fila más ancha** de crudo ($b = 0{,}20$: ≤ 22,3 y < 1.000), `verificable: false`; fuente: «Sin análisis de °API del crudo: no se puede escoger la fila de la Fig. 10.2 ni verificar el factor. La tolerancia se acota con la fila más ancha. …banda 0,80–1,20» | Motivo `banda-sin-verificar`; libro no publicable. Cuadre y gráfico del factor dicen «banda sin verificar» (sin marca, punto punteado), **no** «fuera de banda» (`estadoFactor`). Configuración dice «sin análisis de °API del crudo», nunca «0,0 °API» |
 | Campo sin ningún mes publicado | Igual, con «Sin producción fiscal publicada: …» | Igual |
 | `demostrada` | Se usa su valor y su fuente, `verificable: true` | — |
 | Exactamente en el borde ($\lvert \text{FA}-1 \rvert = b$) | Dentro (por la holgura $10^{-9}$) | — |
 
-Escenario corrido con el motor (El Palmar con `api: null`, septiembre): $b = 0{,}20$, `verificable: false`, `fa[0] = { fa: 1,008, banda: 0,2, dentro: false }`, motivo `banda-sin-verificar` con el texto «El Palmar: Sin análisis de °API del crudo; no se puede verificar el factor contra la banda de la Res. 40236.» (no se agrega además `fa-fuera-de-banda`). La tolerancia del mes sube de ±15 % a ±20 % (798,0 bbl sobre 3.990,2).
+Escenario corrido con el motor (El Palmar con `api: null`, septiembre): $b = 0{,}20$, `verificable: false`, `fa[0] = { fa: 1,008, banda: 0,2, dentro: false }`, motivo `banda-sin-verificar` con el texto «El Palmar: Sin análisis de °API del crudo; no se puede verificar el factor contra la banda de la Res. 40236.» (no se agrega además `fa-fuera-de-banda`). La tolerancia del mes sube de ±15 % a ±20 % (798,0 bbl sobre 3.990,2). `dentro: false` **no** quiere decir «fuera»: la pantalla lee el estado con `estadoFactor` y dice «banda sin verificar» (hasta el 8-oct lo pintaba «fuera de ±20 %» con ■: «Huecos y dudas», 8).
 
 **Quién lo calcula.** Servidor (`bandaDe`, cacheado por campo). Viaja en `GET /api/catalogo` → `campos[campo].medicion.banda` (`{ valor, fuente, verificable }`, `src/shared/api/catalogo.ts:24-33`) y dentro de cada `FilaFA.banda` del libro.
 
-**Referencia.** `src/entities/metrologia.ts:20-59`; `src/entities/libro.ts:228-274`; `CONTRATO.md:906-911`.
+**Referencia.** `src/entities/metrologia.ts:20-59`; `src/entities/libro.ts:228-274`; `CONTRATO.md:911-916`.
 
 ---
 
@@ -203,4 +205,4 @@ Escenario corrido con el motor (El Palmar con `api: null`, septiembre): $b = 0{,
 
 **Texto.** El del motivo: `${campo}, ${mes en letras} de ${año}: factor de asignación ${fa con 3 decimales es-CO} fuera de la banda ±${round(b·100)} %.`
 
-**Referencia.** `src/entities/libro.ts:702`, `:778`.
+**Referencia.** `src/entities/libro.ts:735`, `:839`.

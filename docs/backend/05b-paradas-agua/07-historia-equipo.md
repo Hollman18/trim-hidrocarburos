@@ -4,8 +4,8 @@ Dos cuentas distintas, que no hay que confundir:
 
 | Cuenta | Función | Qué cuenta | Para qué equipos |
 |---|---|---|---|
-| **Historial de fallas** (`HistorialEquipo`) | `historialDeEquipo` (`libro.ts:1166-1221`) | las fallas **propias** del equipo, cuesten barriles o no (una parada que el tanque absorbió es una falla con 0 bbl) | bombas de la línea con perfil y ESP |
-| **Eventos cargados** (`EventoCargado[]`) | `eventosCargadosA` (`libro.ts:1134-1163`) | cada evento que **cerró pozos** y se le cargó a ese equipo, sea falla propia, programada o un servicio | cualquier equipo: bomba, servicio, alimentador, pozo |
+| **Historial de fallas** (`HistorialEquipo`) | `historialDeEquipo` (`libro.ts:1227-1282`) | las fallas **propias** del equipo, cuesten barriles o no (una parada que el tanque absorbió es una falla con 0 bbl) | bombas de la línea con perfil y ESP |
+| **Eventos cargados** (`EventoCargado[]`) | `eventosCargadosA` (`libro.ts:1195-1224`) | cada evento que **cerró pozos** y se le cargó a ese equipo, sea falla propia, programada o un servicio | cualquier equipo: bomba, servicio, alimentador, pozo |
 
 La historia empieza en el primer mes del calendario fiscal (`calendario()[0].desde`; en el demo, **1-oct-2025 00:00**) y termina en AHORA: $\text{días} = (\text{AHORA} - \text{desde}) / 1\ \text{d} = $ **366,583** días.
 
@@ -15,13 +15,13 @@ La historia empieza en el primer mes del calendario fiscal (`calendario()[0].des
 
 **Qué es.** Una **falla** es una parada propia del equipo: no la que causó otro equipo ni la programada. En la ESP, un evento que vuelve a arrancar en menos de 24 h es un **disparo**, no una falla (cap. 3.3).
 
-**Qué entra** (`armarHistorial`, `libro.ts:1177-1194`):
+**Qué entra** (`armarHistorial`, `libro.ts:1238-1255`):
 - **Bomba con perfil**: cada `EventoBomba` del equipo desde el inicio de la historia cuya causa (`causaDeParada`) es `reinyeccion` o `transporte` → falla. Quedan fuera la programada y la que paró un servicio. `disparo = false` siempre.
 - **ESP (pozo)**: cada `EventoPozo` del pozo cuya causa es `electrosumergible` **y** `causa.equipo === pozo` → evento; `disparo = esDisparo(...)`.
 
 Cada evento (`FallaEquipo`): `id`, `inicio`, `fin` (o `null`), `horas` = $(t_{\text{fin o AHORA}} - t_{\text{ini}})/1\,\text{h}$, `parte`, `como`, `bbl` = suma de los tramos cargados a ese id en toda la historia (`bblPorEvento`; **0 si el tanque o el respaldo lo absorbieron**), `disparo`. Orden: más reciente primero.
 
-**Fórmulas** (`libro.ts:1195-1220`):
+**Fórmulas** (`libro.ts:1256-1281`):
 
 $$
 \text{fallas} = \#\{e : \lnot e.\text{disparo}\} \qquad \text{fallasCerradas} = \#\{e : \lnot e.\text{disparo} \land e.\text{fin} \ne \text{null}\}
@@ -42,10 +42,12 @@ $$
 | días | días de historia | d |
 | MTBF | tiempo medio entre fallas («una cada N días») | d |
 | MDT | tiempo medio fuera de servicio de las fallas **cerradas** (incluye la espera de repuestos y logística; la reparación activa sale de las órdenes de SAP, en otro capítulo) | h |
-| bblPorFalla | barriles promedio de cada falla cerrada (las absorbidas cuentan como 0) | bbl |
+| bblPorFalla | barriles promedio de cada falla cerrada (las absorbidas cuentan como 0): lo que **le ha costado** por falla. No es `Riesgo.costoFalla` (lo que costaría si fallara **hoy**, cap. 5) | bbl |
 | bbl | todo lo cargado a sus eventos (fallas y disparos, abiertas incluidas) | bbl |
 
 La falla **abierta** entra en `fallas` y en el MTBF, pero no en MDT ni en bbl por falla (lleva horas y barriles parciales y se compararía consigo misma).
+
+> **Dos cifras por falla, con dos rótulos.** `bblPorFalla` es la **historia**: el promedio de lo que costaron sus fallas cerradas, con el factor y los pozos de cada mes y con los ceros de las que absorbió el tanque. Se rotula siempre «le ha costado por falla» (Detalle, placa, ficha ejecutiva, panel del equipo, Confiabilidad). «Si falla hoy» (`Riesgo.costoFalla`, cap. 5) es otra cuenta: el crudo de hoy por las horas de esas mismas fallas cerradas que pasan del colchón de hoy. P-201B de Morichal: le ha costado **3.364,6** bbl por falla; si falla hoy, **2.086,0**. Decisión del dueño del 8-oct (cap. 10, D3).
 
 **Por parte** (`porParte`): se agrupan **todos** los eventos con `parte` (fallas y disparos): `fallas`, `disparos`, `bbl` (de todos), `mdtH` y `bblPorFalla` (de sus fallas cerradas), `mtbfDias` (días ÷ fallas de la parte, con ≥ 2), `ultima` (inicio del más reciente). Orden: bbl descendente, luego fallas. Una falla **sin parte** (sin identificar) no aparece en `porParte`.
 
@@ -68,13 +70,13 @@ La falla **abierta** entra en `fallas` y en el MTBF, pero no en MDT ni en bbl po
 1. fallas = 9; cerradas = 8.
 2. MTBF = 366,583 / 9 = **40,73 días** → «cada 41 d» / «una cada 41 días».
 3. MDT = (15,99 + 34,76 + 62,13 + 54,61 + 30,09 + 24,70 + 49,78 + 47,85) / 8 = **39,99 h** → «40,0 h fuera».
-4. bbl por falla = (6.089,4 + 14.649,5 + 30.705,1 + 26.565,0 + 11.717,0 + 10.280,5 + 22.710,1 + 21.881,6) / 8 = 144.598,2 / 8 = **18.074,8 bbl** → «18.075 bbl/falla».
+4. bbl por falla = (6.089,4 + 14.649,5 + 30.705,1 + 26.565,0 + 11.717,0 + 10.280,5 + 22.710,1 + 21.881,6) / 8 = 144.598,2 / 8 = **18.074,8 bbl** → «le ha costado 18.075 bbl por falla».
 5. bbl total = 144.598,2 + 2.570,3 = **147.168,4 bbl**.
-6. Por parte: **sello** 5 fallas, 104.081,7 bbl, MDT 44,8 h, MTBF 73,3 d, 20.816 bbl/falla, última 9-sep; **rodamientos** 3 fallas, 40.516,5 bbl, MDT 32,0 h, MTBF 122,2 d, 13.505 bbl/falla, última 22-sep.
+6. Por parte: **sello** 5 fallas, 104.081,7 bbl, MDT 44,8 h, MTBF 73,3 d, 20.816 bbl por falla, última 9-sep; **rodamientos** 3 fallas, 40.516,5 bbl, MDT 32,0 h, MTBF 122,2 d, 13.505 bbl por falla, última 22-sep.
 
 **Otras bombas del demo.**
 
-| Bomba | Fallas (cerradas) | MTBF d | MDT h | bbl/falla | bbl total | Por parte |
+| Bomba | Fallas (cerradas) | MTBF d | MDT h | Le ha costado por falla (bbl) | bbl total | Por parte |
 |---|---|---|---|---|---|---|
 | Morichal P-201B | 8 (8) | 45,82 | 47,09 | 3.364,6 | 26.917,2 | sello 5 (17.079 bbl) · succión 1 (0 bbl) · motor 1 (0 bbl); 1 sin parte (`260924`, 9.838 bbl) |
 | Morichal MPP-301 | 7 (7) | 52,37 | 48,68 | 3.433,5 | 24.034,6 | sello 4 · tornillos 2 · lubricación 1 |
@@ -92,7 +94,7 @@ En Morichal P-201B, tres fallas no costaron crudo (`251207` motor, `260103` succ
 
 **Quién lo calcula y por dónde viaja.** Servidor. `HistorialEquipo` viaja en `GET /api/vistas/equipos/:campo/:equipo/historia` (`bomba`), `/ficha` (`hist`), `/vistas/bombas` (`veredicto.historial`, `veredicto.porFalla`), `/vistas/confiabilidad` (`h`), `/vistas/pozos/:campo/:pozo` (`historial`), `/vistas/electrosumergibles`. Fechas ISO; `fin` `null` si abierta; `porParte[].ultima` ISO.
 
-**Referencia.** `libro.ts:1039-1221`; CONTRATO.md:1092-1099; casos `referencia/salud/bombas-*.json` y `referencia/salud/pozos-*.json`.
+**Referencia.** `libro.ts:1100-1282`; CONTRATO.md:1138-1145; casos `referencia/salud/bombas-*.json` y `referencia/salud/pozos-*.json`.
 
 ---
 
@@ -100,7 +102,7 @@ En Morichal P-201B, tres fallas no costaron crudo (`251207` motor, `260103` succ
 
 **Qué es.** Lo que se le cargó a un equipo en toda la historia, evento por evento: cuántos pozos cerró, cuánto costó y cuánto duró.
 
-**Fórmula** (`libro.ts:1143-1163`). Sobre los tramos de toda la historia del campo con `causa.equipo === equipo`, se agrupa por `k = causa.evento ?? evento.id`:
+**Fórmula** (`libro.ts:1204-1224`). Sobre los tramos de toda la historia del campo con `causa.equipo === equipo`, se agrupa por `k = causa.evento ?? evento.id`:
 
 | Campo | Valor |
 |---|---|
@@ -125,49 +127,50 @@ Orden: más reciente primero.
 
 ### Cómo se ve la historia en pantalla
 
-**Placa de la bomba, ingeniería** (`Placa.tsx:169-174`), si hay fallas:
+**Placa de la bomba, ingeniería** (`Placa.tsx:173-180`), si hay fallas:
 
 $$
-\text{«}N\ \text{fallas en}\ n0(\text{días}/30{,}4)\ \text{meses} \cdot \text{cada}\ n0(\text{MTBF})\ \text{d} \cdot n0(\text{bblPorFalla})\ \text{bbl/falla} \cdot n1(\text{MDT})\ \text{h fuera»}
+\text{«}N\ \text{fallas en}\ n0(\text{días}/30{,}4)\ \text{meses} \cdot \text{cada}\ n0(\text{MTBF})\ \text{d} \cdot \text{fmtHoras}(\text{MDT}, \text{precisa})\ \text{fuera} \cdot \text{le ha costado}\ n0(\text{bblPorFalla})\ \text{bbl por falla»}
 $$
 
-La Ceiba P-201B: «9 fallas en 12 meses · cada 41 d · 18.075 bbl/falla · 40,0 h fuera». Morichal P-201B: «8 fallas en 12 meses · cada 46 d · 3.365 bbl/falla · 47,1 h fuera». Cada pieza se omite si no existe.
+`fmtHoras(h, precisa)`: < 48 h con un decimal y « h»; de 48 h a 90 días, días con un decimal y « d» (la misma regla que la ficha, el Detalle y Confiabilidad: una bomba no dice «48,7 h» en un lado y «2,0 d» en otro). La Ceiba P-201B: «9 fallas en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 18.075 bbl por falla». Morichal P-201B: «8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 3.365 bbl por falla». MPP-301: «7 fallas en 12 meses · cada 52 d · 2,0 d fuera · le ha costado 3.434 bbl por falla» (antes «48,7 h fuera»). Cada pieza se omite si no existe.
 
-**Placa directiva** (`Placa.tsx:212-213`): «Le ha costado **<n0(periodo.bbl)> bbl** en el período» y, con `porParte[0]`, «Falla más por <parte en minúscula> · una cada <n0(MTBF)> días». La Ceiba P-201B, Octubre en curso: «Le ha costado **2.570 bbl** en el período», «Falla más por sello mecánico · una cada 41 días».
+**Placa directiva** (quitada el 8-oct). La variante del gerente de la placa («Le ha costado N bbl en el período», «Falla más por …») ya no existe: el gerente no ve Bombas ni Electrosumergibles (cap. 10, D23). Lo que le interesa (de qué campo viene el diferido y qué equipos de ese campo fallan) está en su Resumen, en «POR CAMPO» desplegable (5A.8, `porEquipo.fallas/disparos` y `sinCosto`).
 
-**Detalle de la bomba** (`Detalle.tsx:104-120`):
+**Detalle de la bomba** (`Detalle.tsx:104-122`):
 - «Diferido que causó» = `periodo.bbl` (del libro, `diferidoDeEquipo`, solo lo **cargado a esta bomba** en el período): «2.570 bbl», pie (ingeniería) «2.185 – 2.956 · calculado · ±15,0 % · 1 parada»; sin barriles, «0 bbl · ninguna parada con costo». Septiembre cerrado: 20.739 bbl, 2 paradas.
-- «Costo por falla» (solo ingeniería) = «18.075 bbl», pie «9 fallas en 12 meses · cada 41 d · 40,0 h fuera»; sin fallas: «sin fallas» / «sin fallas en la historia que hay».
+- «Le ha costado por falla» (solo ingeniería; antes «Costo por falla») = `veredicto.porFalla` = «18.075 bbl», pie «9 fallas en 12 meses · cada 41 d · 40,0 h fuera» (`fmtHoras(MDT, true)`; MPP-301 «2,0 d fuera»); sin fallas: «sin fallas» / «sin fallas en la historia que hay» (`Detalle.tsx:119-122`).
+- Cada parada de la lista (4.4) dice su duración rotulada: «hasta <fecha> · **bomba parada** 16,0 h» (del paro de la bomba a su arranque), para no confundirla con la duración del panel del equipo (hasta que reabrió el último pozo).
 
-**Panel del equipo, «HISTORIA DEL PLC»** (`PanelEquipo.tsx:255-298`):
-- Nivel `ingenieria`: «**9 fallas** en 12 meses · cada 41 d · 40,0 h fuera» (`fmtHoras(MDT, true)`), debajo «sello mecánico 5 · rodamientos 3»; luego «10 eventos con pozos cerrados · **150.996 bbl**» y una fila por evento: «<fechaHora(inicio)> · <duración o 'sigue · <horas>'> · <N pozos>», debajo «<Parte> · <cómo>» o el texto de la causa si tiene ≤ 6 palabras (sin «· por el programa aprobado» en la programada) o solo el cómo; a la derecha «<n0(bbl)> bbl». Ejemplos: «2 de oct, 03:52 · sigue · 10,1 h · 17 pozos» / «sin identificar» / «2.570 bbl»; «22 de sept, 10:05 · 17,2 h · 18 pozos» / «Rodamientos · por señal» / «6.089 bbl». Sin eventos: «Ningún pozo cerrado por este equipo en la historia.» Cinco filas y «ver N más».
+**Panel del equipo, «HISTORIA DEL PLC»** (`PanelEquipo.tsx:262-312`):
+- Nivel `ingenieria`: «**9 fallas** en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 18.075 bbl por falla» (`fmtHoras(MDT, true)`; el último tramo solo si hay `bblPorFalla`), debajo «sello mecánico 5 · rodamientos 3»; luego «10 eventos con pozos cerrados · **150.996 bbl**» y una fila por evento: «<fechaHora(inicio)> · <N pozos cerrados> hasta <horas>» (cerrado: del paro hasta que reabrió el **último pozo**) o «<fechaHora(inicio)> · <N pozos cerrados> · sigue · <horas>» (abierto), debajo «<Parte> · <cómo>» o el texto de la causa si tiene ≤ 6 palabras (sin «· por el programa aprobado» en la programada) o solo el cómo; a la derecha «<n0(bbl)> bbl». Globo: «Hasta que reabrió el último pozo · 17,2 h» (o «Pozos cerrados, sigue · 10,1 h»), «Barriles», «Cómo se identificó» (`PanelEquipo.tsx:262-300`). Ejemplos: «2 de oct, 03:52 · 17 pozos cerrados · sigue · 10,1 h» / «sin identificar» / «2.570 bbl»; «22 de sept, 10:05 · 18 pozos cerrados hasta 17,2 h» / «Rodamientos · por señal» / «6.089 bbl» (la bomba volvió a las 16,0 h: lo dice su lista de paradas). Sin eventos: «Ningún pozo cerrado por este equipo en la historia.» Cinco filas y «ver N más».
 - Nivel `operacion`: solo «Última parada: <fechaHora> · <parte>» + ⓘ con el texto de la causa.
 
 **Ficha ejecutiva** (`FichaEjecutiva.tsx`), para quien decide:
 
 | Renglón | Regla | La Ceiba P-201B (Octubre en curso) | Morichal P-201B (Septiembre cerrado) |
 |---|---|---|---|
-| Cifra y estado | fila `perdiendo` del equipo: «<n0> bbl/d perdiéndose», «Parada desde <desde> · pozos cerrados desde <cierreDesde>»; o «Cerrado por <equipo> desde <fecha>» (pozo); o fila `en-riesgo`: «En marcha · si falla, <n0> bbl/d» | «**11.059 bbl/d** perdiéndose», «Parada desde 2 de oct, 03:52 · pozos cerrados desde 2 de oct, 08:07» | «En marcha · si falla, 1.671 bbl/d» |
-| Chips (equipos del catálogo) | `redundancia` (fuerte si «sin respaldo») y «si para: <aguasAbajo>» (`respaldoEnCampo`, `equipos.ts:463-472`) | «sin respaldo» · «si para: todo el campo» | «P-201A en paralelo, con 15.100 bbl/d libres» · «si para: la parte del campo que el respaldo no cubre» |
+| Cifra y estado | fila `perdiendo` del equipo: «<n0> bbl/d perdiéndose», «Parada desde <desde> · pozos cerrados desde <cierreDesde>»; o «Cerrado por <equipo> desde <fecha>» (pozo); o fila `en-riesgo`: «En marcha · si para, <n0> bbl/d» | «**11.059 bbl/d** perdiéndose», «Parada desde 2 de oct, 03:52 · pozos cerrados desde 2 de oct, 08:07» | «En marcha · si para, 1.671 bbl/d» |
+| Chips (equipos del catálogo) | `redundancia` (fuerte si «sin respaldo») y «si para: <aguasAbajo>» (`respaldoEnCampo`, `equipos.ts:469-478`) | «sin respaldo» · «si para: todo el campo» | «P-201A en paralelo, con 15.100 bbl/d libres» · «si para: la parte del campo que el respaldo no cubre» |
 | Le ha costado | «<n0(periodo.bbl)> bbl en <período> · <usd>»; pie «<n0(historia.bbl)> bbl desde <fechaCorta(desde)> · <usd>» (USD con el precio de cada día; `usd()`: ≥ 1 M → «n1 M USD», ≥ 1.000 → «n0 mil USD») | «2.570 bbl en octubre, en curso · 123 mil USD», pie «150.996 bbl desde 01 de oct de 2025 · 7,2 M USD» | «9.838 bbl en septiembre, cerrado · 472 mil USD», pie «26.917 bbl desde 01 de oct de 2025 · 1,3 M USD» |
-| Cada cuánto falla | «N fallas · una cada N días», pie «<n0(bblPorFalla)> bbl por falla, en promedio» | «9 fallas · una cada 41 días», pie «18.075 bbl por falla, en promedio» | «8 fallas · una cada 46 días», pie «3.365 bbl por falla, en promedio» |
+| Cada cuánto falla | «N fallas · una cada N días», pie «le ha costado <n0(bblPorFalla)> bbl por falla, en promedio» | «9 fallas · una cada 41 días», pie «le ha costado 18.075 bbl por falla, en promedio» | «8 fallas · una cada 46 días», pie «le ha costado 3.365 bbl por falla, en promedio» |
 | Por qué parte · % de bbl | sobre las fallas (no disparos) con parte: bbl de cada parte ÷ total, las 2 mayores, `n0` % | «sello mecánico 72 % · rodamientos 28 %» | «sello mecánico 100 % · succión y filtro de entrada 0 %» |
-| Si para ahora | solo bomba en marcha con colchón: «el tanque aguanta <fmtHoras(h)> · luego se pierden <n0> bbl/d» | — (está parada) | «el tanque aguanta 19 h · luego se pierden 1.671 bbl/d» |
-| Qué se está haciendo | pregunta abierta → «Espera que se identifique el daño · hace N h» + «no arrancar»; pozo cerrado por otro → «Su pozo está bien · espera a <equipo>»; falla abierta → «Parada por <parte> · lleva N h · suele durar <MDT>»; perdiendo → motivo; en riesgo → «<Parte> avisa · límite en <fmtHoras>» + ⓘ «Mantenimiento tiene la acción en su pantalla.»; si no, «En marcha · ninguna parte avisa» | «Espera que se identifique el daño · hace 10,1 h» + chip «no arrancar» | «Succión y filtro de entrada avisa · límite en 43 h» |
+| Si para ahora | solo bomba en marcha con colchón: «el tanque aguanta <fmtHoras(h)> · luego se pierden <n0> bbl/d»; si el respaldo absorbe toda el agua, «no cierra pozos: el respaldo absorbe toda el agua» | — (está parada) | «el tanque aguanta 19 h · luego se pierden 1.671 bbl/d» |
+| Qué se está haciendo | pregunta abierta → «Espera que se identifique el daño · hace N h» + «no arrancar»; pozo cerrado por otro → «Su pozo está bien · espera a <equipo>»; falla abierta → «Parada por <parte> · lleva N h · suele durar <MDT>»; perdiendo → motivo; en riesgo con parte → «<Parte> avisa · límite en <fmtHoras>» + ⓘ «Mantenimiento tiene la acción en su pantalla.»; en riesgo sin parte (un servicio: K-101) → su estado con mayúscula («En marcha · degradado») + ⓘ con su lectura; bomba o electrosumergible sin nada → «En marcha · ninguna parte avisa»; un pozo sin electrosumergible → su estado; un servicio que no está en riesgo ni cerrando pozos → «<Estado> · sin efecto en la producción hoy» (SE-2 de Morichal: «En servicio · corriente de barraje subiendo · sin efecto en la producción hoy», con su lectura en el ⓘ si está en aviso) (`FichaEjecutiva.tsx:47-73`) | «Espera que se identifique el daño · hace 10,1 h» + chip «no arrancar» | «Succión y filtro de entrada avisa · límite en 43 h» |
 
 Para un pozo cerrado por otro (LC-04): «Cerrado por P-201B desde 2 de oct, 08:20», «Le ha costado 0 bbl en …», pie «236 bbl desde 01 de oct de 2025 · 11 mil USD» (lo que se le cargó al propio pozo en la historia), «Cada cuánto falla · No ha fallado · 6 disparos que volvieron a arrancar», «Qué se está haciendo · Su pozo está bien · espera a P-201B» + ⓘ «Lo cerró P-201B. Vuelve a producir cuando esa causa se resuelva.».
 
-**Fila de la lista de equipos** (`pedirFilasEquipos`, `shared/api/equipos.ts:146-158`): `eventos` = eventos cargados; `bblHistoria`; `fallas` (solo bombas); `mtbfDias`: en bombas, el MTBF de fallas; **en los demás equipos, días ÷ eventos cargados con ≥ 2** (es «cada cuánto cierra pozos», no un MTBF de falla). Demo: La Ceiba P-201B 10 eventos, 150.996 bbl, 9 fallas, 40,7 d; K-101 5 eventos, 12.997 bbl, 73,3 d; SE-2 La Ceiba 28 eventos, 2.050 bbl, 13,1 d; Morichal SE-2 60 eventos, 103.115 bbl, 6,1 d.
+**Fila de la lista de equipos** (`pedirFilasEquipos`, `shared/api/equipos.ts:151-163`): `eventos` = eventos cargados; `bblHistoria`; `fallas` (solo bombas); `mtbfDias`: en bombas, el MTBF de fallas; **en los demás equipos, días ÷ eventos cargados con ≥ 2** (es «cada cuánto cierra pozos», no un MTBF de falla). Demo: La Ceiba P-201B 10 eventos, 150.996 bbl, 9 fallas, 40,7 d; K-101 5 eventos, 12.997 bbl, 73,3 d; SE-2 La Ceiba 28 eventos, 2.050 bbl, 13,1 d; Morichal SE-2 60 eventos, 103.115 bbl, 6,1 d.
 
 ---
 
 ### El equipo vivo (`EquipoVivo`)
 
-**Qué es.** El equipo como se ve hoy, sea del catálogo (bomba, servicio, medición) o un pozo. `GET /api/vistas/equipos/:campo/:equipo` (`equipo-vivo.ts:25-86`). El campo que se compara es `marcha` (`en-marcha`, `detenido`, `cerrado-por-otro`, `sin-lectura`); `estado` es solo texto.
+**Qué es.** El equipo como se ve hoy, sea del catálogo (bomba, servicio, medición) o un pozo. `GET /api/vistas/equipos/:campo/:equipo` (`equipo-vivo.ts:25-89`). El campo que se compara es `marcha` (`en-marcha`, `detenido`, `cerrado-por-otro`, `sin-lectura`); `estado` es solo texto.
 
-- **Catálogo**: `equipoEnCampo` + `conRespaldoFirmado` (la redundancia y lo que hay aguas abajo de una bomba salen del respaldo firmado: «sin respaldo» si `libreBpd = 0`, el `detalle` si > 0, «respaldo sin declarar en la configuración» si no hay; aguas abajo: transporte «N pozos», recobro «soporte de presión del yacimiento», disposición «todo el campo» / «la parte del campo que el respaldo no cubre» / «sin declarar: falta el respaldo en la configuración»). El dispositivo fiscal (`FQI-0101` de la LACT) reemplaza su serie por el fiscal de los últimos 12 días, con `null` en los días sin dato.
-- **Pozo**: severidad, marcha y estado según 1.2 (cap. 1); dispositivo «Estado del controlador» + las señales de la ESP (sin lectura → «—», nunca 0); `lectura` = «<texto de la causa>. Se le carga a <equipo>.», o «<parte>: avisa.», o «Produciendo dentro de banda.».
+- **Catálogo**: `equipoEnCampo` + `conRespaldoFirmado` (la redundancia y lo que hay aguas abajo de una bomba salen del respaldo firmado: «sin respaldo» si `libreBpd = 0`, el `detalle` si > 0, «respaldo sin declarar en la configuración» si no hay; aguas abajo: transporte «N pozos», recobro «soporte de presión del yacimiento», disposición «todo el campo» / «la parte del campo que el respaldo no cubre» / «sin declarar: falta el respaldo en la configuración»). El dispositivo fiscal (`FQI-0101` de la LACT) reemplaza su serie por el fiscal de los últimos 12 días, con `null` en los días sin dato; sin dato del último día, `valor: null` y estado «sin señal» (`equipo-vivo.ts:34-44`). En todo `/vistas/equipos/:campo/:equipo` del demo hay 54 dispositivos sin lectura, todos con `valor: null` y ninguno con «—» (`verificar-libro` §19).
+- **Pozo**: severidad, marcha y estado según 1.2 (cap. 1); dispositivo «Estado del controlador» + las señales de la ESP (sin lectura → `valor: null`, sin unidad y estado «sin señal», nunca 0 ni un texto como «—»; `equipo-vivo.ts:66-73`); `lectura` = «<texto de la causa>. Se le carga a <equipo>.», o «<parte>: avisa.», o «Produciendo dentro de banda.».
 
 **Ejemplo con los datos del demo.** La Ceiba P-201B: severidad 1, `detenido`, «sin respaldo», «todo el campo», lectura «Detenida, el agua no tiene salida: el tanque se llena y hay que cerrar los pozos del campo.». Morichal P-201B: severidad 2, `en-marcha`, «en marcha · succión cayendo», «P-201A en paralelo, con 15.100 bbl/d libres». MPP-301: severidad 3, «en marcha · perdiendo eficiencia», «sin respaldo», «3 pozos». K-101 La Ceiba: severidad 1, «en marcha · degradado», «3 unidades (N+1)», «todo el campo».
 
-**Referencia.** `equipo-vivo.ts`, `equipos.ts:402-481`.
+**Referencia.** `equipo-vivo.ts`, `equipos.ts:408-487`.

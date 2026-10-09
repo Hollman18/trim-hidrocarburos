@@ -101,7 +101,7 @@ dicho como lo diría quien lo vio (`nombreModo`, `catalogo.ts:76-90`).
 | Electrosumergible | Motor de fondo | Recalentada · Se disparó sin daño a la vista · Otra cosa |
 
 **Dónde se ve.**
-- Pantalla **Identificar** (`#/…/causa/…`, `src/pages/Causa.tsx:290-345`): paso «1 · Qué parte» (lista
+- Pantalla **Identificar** (`#/…/causa/…`, `src/pages/Causa.tsx:297-352`): paso «1 · Qué parte» (lista
   de partes del catálogo, o las sugeridas por la señal con «O escoja cualquier parte…»), paso
   «2 · Qué vio» (chips con las opciones de la parte), ⓘ «ISO 14224»: «Se registra en el catálogo como
   ítem «\<ítem ISO\>» · daño \<código\> (\<nombre ISO en minúscula\>).», y el texto «Qué encontró

@@ -9,9 +9,9 @@ Lo que rodea a cada pantalla: la **cabecera** (título, campo y lo producido aye
 | Pieza | Regla |
 |---|---|
 | Riel | desde 1.024 px, fijo a la izquierda (236 px; «Contraer la navegación» lo deja en 60 px con íconos y la marca del campo); debajo, un cajón que abre ☰ «Abrir la navegación» y se cierra al navegar o con «Cerrar la navegación» (captura 10). Solo uno de los dos se monta (`App.tsx:19-24`) |
-| Vista | la pantalla de la dirección; si el alcance es portafolio y la pantalla **no suma campos** (`agrega` falso: Mi trabajo, Planta, Configuración, Conectores, Perfil), se muestra `SoloCampo`: panel «{título} · elija un campo» con un botón por campo: marca de severidad, nombre, «{cuenca} · {n0} bbl último día | sin fiscal · {n} pozo(s) parado(s)» |
+| Vista | la pantalla de la dirección; si el alcance es portafolio y la pantalla **no suma campos** (`agrega` falso: Mi trabajo, Planta, Configuración, Conectores, Perfil), se muestra `SoloCampo`: panel «{título} · elija un campo» con un botón por campo: marca de severidad, nombre, «{cuenca} · {n0} bbl último día \| sin fiscal · {n} pozo(s) parado(s)» |
 | Sin perfil | una subpantalla de «Pozos y equipos» que el campo no tiene en su perfil firmado no se pinta vacía: «Este campo no tiene en su perfil ninguno de los equipos de esta pantalla. El perfil lo firma el administrador en Configuración técnica.» o «{campos}: sin perfil firmado en la configuración, no se sabe qué equipos tiene(n).» |
-| Límites de error | navegación, cabecera, vista y ficha del equipo fallan por separado. Textos: «{Esta pantalla | La navegación | La cabecera | La ficha del equipo} no se pudo cargar.» (código que no llegó: «Revise la señal y toque «Reintentar»…»); «… no pudo traer sus datos.» + «No hubo respuesta del servidor. Revise la señal y toque «Reintentar».» (estado 0) o **«El servidor respondió con un error: {message}.»** (un 4xx/5xx o una respuesta que no cumple el contrato) + «Lo que ya respondió en esta sesión sigue guardado.»; «… no se pudo mostrar.» (error de dibujo). Salidas: «Reintentar», «Volver al inicio» (pantalla de inicio del rol), «Cerrar la ficha» |
+| Límites de error | navegación, cabecera, vista y ficha del equipo fallan por separado. Textos: «{Esta pantalla \| La navegación \| La cabecera \| La ficha del equipo} no se pudo cargar.» (código que no llegó: «Revise la señal y toque «Reintentar»…»); «… no pudo traer sus datos.» + «No hubo respuesta del servidor. Revise la señal y toque «Reintentar».» (estado 0) o **«El servidor respondió con un error: {message}.»** (un 4xx/5xx o una respuesta que no cumple el contrato) + «Lo que ya respondió en esta sesión sigue guardado.»; «… no se pudo mostrar.» (error de dibujo). Salidas: «Reintentar», «Volver al inicio» (pantalla de inicio del rol), «Cerrar la ficha» |
 | Papel | `Membrete` arriba y `PieInforme` abajo, solo al imprimir (captura 11) |
 
 **Cómo leer las capturas del marco.** En todas, la cabecera y el riel se explican en las capturas 1 (cabecera y riel) y 4 (selector de campo); debajo de cada menú o diálogo queda una pantalla de fondo, que **no** se vuelve a explicar aquí: cada captura dice cuál es y dónde están sus cifras.
@@ -129,7 +129,7 @@ Aparece la primera vez que se entra con un rol (marca `localStorage['trim.intro.
 | 1 | Persona | «Camilo Rueda» (con sus iniciales «CR») | la persona del registro con ese rol (si el gerente le pasó el rol a otra, saluda a la nueva) | — | `GET /api/usuarios` |
 | 2 | Rol | «Jefe de mantenimiento» | `rol.nombre` | — | `roles.ts` |
 | 3 | Lo que decide | «Respondes por que los barriles diferidos bajen, no por explicarlos.» | `rol.foco` | uno por rol (tabla de abajo) | `roles.ts:38-104` |
-| 4 | Promesa | «QUÉ HACE · Barriles perdidos por bomba de reinyección y electrosumergible, y por qué parte.» · «POR QUÉ · Al fallar cierran pozos: vigilarlos deja intervenir antes.» · «CÓMO LO PRUEBA · Hora del PLC, evento y causa por barril; conexión de solo lectura.» | fija para todos (`PROMESA`, `Onboarding.tsx:44-48`) | — | — |
+| 4 | Promesa | «QUÉ HACE · Barriles perdidos por bomba de reinyección y electrosumergible, y por qué parte.» · «POR QUÉ · Al fallar cierran pozos: vigilarlos deja intervenir antes.» · «CÓMO LO PRUEBA · Hora del PLC, evento y causa por barril; conexión de solo lectura.» | fija para todos (`PROMESA`, `Onboarding.tsx:42-46`) | — | — |
 | 5 | Siguiente | botón | paso 1 de 2 (dos rayas abajo) | — | — |
 
 ![Marco · introducción · jefe · paso 2](../img/marco-intro-jefe-paso2.png)
@@ -137,7 +137,7 @@ Aparece la primera vez que se entra con un rol (marca `localStorage['trim.intro.
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
 | 1 | Título | «SUS PANTALLAS» | — | — | — |
-| 2 | Para qué | «Mantenimiento · Qué atacar para bajar el diferido de alto impacto.» | `PARA_QUE[pantalla]` (en nivel `decision`, `PARA_QUE_DECISION` si existe) | tabla de abajo | `Onboarding.tsx:12-41` |
+| 2 | Para qué | «Mantenimiento · Qué atacar para bajar el diferido de alto impacto.» | `PARA_QUE[pantalla]` (en nivel `decision`, `PARA_QUE_DECISION` si existe) | tabla de abajo | `Onboarding.tsx:12-39` |
 | 3 | Una pantalla | «Bombas» | aquí van las pantallas una por una (no el grupo «Equipos» del riel) | cada una lleva a su pantalla y cierra | `rol.pantallas` |
 | 4 | Entrar | «Entrar con la lectura activada» | cierra y enciende «¿cómo se lee?» | — | — |
 
@@ -148,12 +148,14 @@ Aparece la primera vez que se entra con un rol (marca `localStorage['trim.intro.
 | 1 | Resumen (decisión) | «Lo perdido contra la meta, su valor y a qué equipo.» | `PARA_QUE_DECISION.resumen` | — | — |
 | 2 | Riesgo (decisión) | «Qué se pierde ahora y qué va a fallar.» | `PARA_QUE_DECISION.riesgo` | — | — |
 
+Sus pantallas son Resumen, Diferidos, Producción, Riesgo y Configuración (`roles.ts`): el gerente **no** tiene Bombas ni Electrosumergibles (decisión del dueño, 8-oct). Su variante de esas dos pantallas, que no tenía ruta, se quitó del código (`PlacaDirectiva`, las ramas `nivel === 'decision'` de `Bombas.tsx` y `Esp.tsx`, y `PARA_QUE_DECISION.bombas/esp`); `#/ger/bombas/…` y `#/ger/esp/…` caen en su Resumen. Lo que le interesa de los equipos (de qué campo viene el diferido y qué equipos de ese campo fallan) está en «POR CAMPO» del Resumen, que se despliega por campo (6A).
+
 Textos completos (literales del código):
 
 | Pantalla | `PARA_QUE` (todos) | `PARA_QUE_DECISION` (gerente) |
 |---|---|---|
-| bombas | Cuáles cuestan crudo, cuánto aguanta el tanque y en qué orden cerrar pozos. | Cuáles están paradas, cuánto cuestan y de qué fallan. |
-| esp | Cuál va a fallar, qué parte y cuánto crudo arriesga. | Cuáles fallaron, cuáles avisan y cuánto cuestan. |
+| bombas | Cuáles cuestan crudo, cuánto aguanta el tanque y en qué orden cerrar pozos. | — (el gerente no tiene Bombas) |
+| esp | Cuál va a fallar, qué parte y cuánto crudo arriesga. | — (el gerente no tiene Electrosumergibles) |
 | trabajo | Qué está parado o avisa, y qué revisar. | — |
 | mantenimiento | Qué atacar para bajar el diferido de alto impacto. | — |
 | confiabilidad | Cada cuánto fallan, de qué parte y qué tan bien se registró. | — |
@@ -181,13 +183,13 @@ Textos completos (literales del código):
 | Técnico de mantenimiento (`tec`, operación) | Abres el equipo y dices qué encontraste cuando la señal no lo dice. De ahí aprende el vigía. |
 | Administrador de la implementación (`adm`) | Configuras conectores, umbrales, tanques, respaldos y el programa de paradas. Las metas y los accesos los da el gerente de activo. |
 
-(Para capturarla no se usa el generador, que siempre la salta: el guion [guiones/marco.mjs](guiones/marco.mjs) entra sin la marca `trim.intro.<rol>`; se corre con `node docs/backend/capturas/guiones/marco.mjs [--salida docs/backend/img] [--puerto 5198]`.)
+(Para capturarla no se usa el generador, que siempre la salta: el guion [guiones/marco.mjs](../capturas/guiones/marco.mjs) entra sin la marca `trim.intro.<rol>`; se corre con `node docs/backend/capturas/guiones/marco.mjs [--salida docs/backend/img] [--puerto 5198]`.)
 
 ### Captura 7 · subpantallas de «Pozos y equipos»
 
 ![Marco · subpantallas · jefe](../img/marco-subpantallas.png)
 
-Fondo: Bombas del jefe de mantenimiento (nivel ingeniería) en La Ceiba. La cabecera de la estación («Perdiéndose ahora 11.059 bbl/d · 1 bomba detenida · 17 pozos cerrados · 2 de oct, 14:00», «Diferido que causaron 2.570 bbl · 2.185 – 2.956 · calculado») se explica en 6B «La estación», captura `sup-bombas-ceiba`; la placa de P-201B en ingeniería («Presión de succión 18,2 psi», «Presión de descarga 0 psi», «Caudal 0 bbl/d», «Vibración 0,0 mm/s», «5 partes con la bomba detenida», «Detenida desde 2 de oct, 03:52», «2.570 bbl · 2.185 – 2.956 · calculado · 461 bbl/h · 17 pozos cerrados», «9 fallas en 12 meses · cada 41 d · 18.075 bbl/falla · 40,0 h fuera»), en 6B, captura `conf-bombas-portafolio` (filas de La Ceiba).
+Fondo: Bombas del jefe de mantenimiento (nivel ingeniería) en La Ceiba. La cabecera de la estación («Perdiéndose ahora 11.059 bbl/d · 1 bomba detenida · 17 pozos cerrados · 2 de oct, 14:00», «Diferido que causaron 2.570 bbl · 2.185 – 2.956 · calculado») se explica en 6B «La estación», captura `sup-bombas-ceiba`; la placa de P-201B en ingeniería («Presión de succión 18,2 psi», «Presión de descarga 0 psi», «Caudal 0 bbl/d», «Vibración 0,0 mm/s», «5 partes con la bomba detenida», «Detenida desde 2 de oct, 03:52», «2.570 bbl · 2.185 – 2.956 · calculado · 461 bbl/h · 17 pozos cerrados», «No arrancar hasta identificar» ⓘ, «9 fallas en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 18.075 bbl por falla»: las horas fuera con `fmtHoras(mdtH, true)` y lo que ya costó cada falla rotulado «le ha costado … por falla», antes «18.075 bbl/falla · 40,0 h fuera»), en 6B, captura `conf-bombas-portafolio` (filas de La Ceiba).
 
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
@@ -248,7 +250,7 @@ En el teléfono la cabecera es: ☰, título, «Demo · {período}» y «{campo}
 
 ### Captura 11 · el papel (Exportar → Informe en PDF) y la impresión sin folio
 
-Capturado con el guion [guiones/marco.mjs](guiones/marco.mjs): Exportar → «Informe en PDF» (con `window.print` anulado) y `page.emulateMedia({ media: 'print' })`, sobre `#/jefe/riesgo/ceiba/curso`; se le agregó un margen blanco a la captura para que los números no tapen el texto.
+Capturado con el guion [guiones/marco.mjs](../capturas/guiones/marco.mjs): Exportar → «Informe en PDF» (con `window.print` anulado) y `page.emulateMedia({ media: 'print' })`, sobre `#/jefe/riesgo/ceiba/curso`; se le agregó un margen blanco a la captura para que los números no tapen el texto.
 
 ![Marco · papel con folio](../img/marco-papel-folio.png)
 
@@ -262,7 +264,7 @@ Lo que se imprime es la pantalla Riesgo del jefe en La Ceiba (sus cifras, en 6C.
 | 4 | Estado | «PROVISIONAL · MES EN CURSO» | `informe.estado`: `provisional` → «PROVISIONAL · MES EN CURSO»; `bloqueado` → «NO PUBLICABLE TODAVÍA»; `publicable` → nada → 5D §4 «Estado del período en el informe» | — | `informe.estado` |
 | 5 | Generado | «Generado el 2 de octubre de 2026 a las 14:00 (hora de Colombia)» | `fechaHoraLarga(informe.fecha)` (hora del servidor) | — | `informe.fecha` |
 | 6 | Quién, hasta cuándo y con qué versión | «Por Camilo Rueda · jefe de mantenimiento · Datos hasta el 2 de octubre de 2026 a las 14:00 (hora de Colombia), reloj del PLC · Configuración versión 1, firmada por Hermes Leal · administrador de la implementación el 1 de septiembre de 2026 a las 08:00 (hora de Colombia)» | `informe.por`, AHORA, `informe.version` y su firma | — | `informe`, `GET /api/configuracion/historial` |
-| 7 | ⓘ escrito | «Costo si fallan: son servicios del campo: lo que cuesta su caída depende de cuánto dure» | todo ⓘ, globo y «ver N más» sale escrito en el papel; el resto de la hoja es la pantalla Riesgo del jefe en La Ceiba (cifras de 6C.1, captura 4: «11.360 bbl/d», «100,0 % del potencial · 18 pozos parados», «En riesgo · 1 equipo», «0 bbl/d si fallan», «2 causas», las filas de P-201B, LC-21 y K-101) | — | `GET /api/vistas/riesgo`, `/estado` |
+| 7 | ⓘ escrito | «Exposición: Son servicios del campo: lo que cuesta su caída depende de cuánto dure.» | todo ⓘ, globo y «ver N más» sale escrito en el papel («{título}: {texto}»); el resto de la hoja es la pantalla Riesgo del jefe en La Ceiba (cifras de 6C.1, captura 4: «11.360 bbl/d», «100,0 % del potencial · 18 pozos parados», «En riesgo · 1 equipo», «0 bbl/d en juego», «solo servicios del campo», «2 causas», las filas de P-201B, LC-21 y K-101 con la columna «si para» «todo el campo») | — | `GET /api/vistas/riesgo`, `/estado` |
 | 8 | Nota de cálculo | «Lo producido sale del punto de medición oficial. Lo no producido se calcula por asignación (prueba de cada pozo × factor de asignación × horas parado): es una estimación con su rango de tolerancia (Res. MME 40236, Ec. 22), no una medición directa. Las predicciones son escenarios, no compromisos.» | `NOTA_DE_CALCULO` (`widgets/diferidos/Rango.tsx`) | — | — |
 | 9 | Folio y huella | «Folio INF-2026-0001 · huella SHA-256 7781 d2a0 9d6b 7f10 317c abdf cf91 5770 1f5e fdfe f2f3 c21c 70b6 71bc 623a 864b · Para comprobarlo sin cuenta en TRIM, la verificación pública recibe el folio y esta huella…» | SHA-256 de la forma canónica de las cifras, agrupada de a 4 (`huellaLegible`) → 5D §4 «Forma canónica y huella» | — | `informe.huella` |
 | 10 | Cifras protegidas | «campos=ceiba · desde=2026-10-01T05:00:00Z · hasta=2026-10-02T19:00:00Z · version=1 · real=14943.00 · potencial=17986.20 · noProducido=3043.20 · diferido=3043.20 · tolerancia=456.48 · metaProduccion=17258.33 · metaDiferido=1266.67 · eventos=20» | `formaCanonica(informe.cifras)` (una por línea en el CSV; aquí unidas con « · ») | con ellas cualquiera recalcula el SHA-256 | `informe.cifras` |

@@ -14,7 +14,7 @@ Datos: el demo (`VITE_FUENTE=demo`), `AHORA = 2026-10-02T14:00-05:00`, período 
 | [06-trabajo.md](06-trabajo.md) | Mi trabajo (técnico) | `#/tec/trabajo/ceiba/curso` en escritorio y en teléfono | 2 |
 | [07-planta.md](07-planta.md) | Planta | `#/prod/planta/ceiba/curso` (1.512 px), `#/conf/planta/morichal/curso` (+ capacidad por tren), `#/prod/planta/palmar/curso` (sin gas), `#/adm/planta/guacamayo/curso` (+ el administrador cambia el esquema: Configuración y la planta después) | 7 |
 | [08-marco.md](08-marco.md) | El marco común | cabecera y riel, período y rango a la medida, sello de demostración, selector de campo, menú de la persona y cambio de rol, introducción de cada rol (2 pasos; jefe y gerente), subpantallas, Exportar, «¿cómo se lee?», cajón del teléfono, el papel con folio y sin folio | 16 |
-| [09-huecos-y-dudas.md](09-huecos-y-dudas.md) | Huecos y dudas | 29 puntos con archivo y línea | — |
+| [09-huecos-y-dudas.md](09-huecos-y-dudas.md) | Huecos y dudas | 29 puntos con archivo y línea (7 resueltos el 8-oct, marcados; la numeración no cambia) | — |
 
 **Capturas.** 45 en `doc/img/` con los prefijos del rol (`jefe-`, `conf-`, `oper-`, `sup-`, `tec-`, `prod-`, `ger-`, `adm-`) y `marco-`. 38 las genera el generador del repo con [capturas.mjs](../capturas/06c-mantenimiento-marco.mjs):
 

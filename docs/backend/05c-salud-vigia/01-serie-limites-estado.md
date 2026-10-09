@@ -58,7 +58,7 @@ El «ahora» de la serie es su último lugar: $t_{\text{fin}} = t_{\text{desde}}
 
 **Ejemplo con los datos del demo.** Las lecturas del demo se escriben como doce valores diarios
 que terminan en el «ahora» del demo y se convierten con `serieHasta(valores, 24)`
-(`src/entities/serie.ts:20-22`, `src/entities/equipos.ts:10-11`, `src/entities/esp.ts:51`):
+(`src/entities/serie.ts:20-22`, `src/entities/equipos.ts:10-11`, `src/entities/esp.ts:52`):
 
 - `AHORA = 2026-10-02T14:00-05:00`; $N = 12$; $\text{pasoH} = 24$.
 - $t_{\text{desde}} = \text{AHORA} - (12-1)\cdot 24\ \text{h} = $ `2026-09-21T14:00:00.000-05:00` (lo que da el motor para PI-2010 de P-201B en Morichal).
@@ -83,7 +83,7 @@ otro → «cada N h» con formato es-CO.
 | Variable discreta (interruptor `LSH-2013`) | No lleva serie: solo estado. |
 
 **Qué texto se muestra.** Solo `lecturasDe` (arriba) y los decimales: `decimalesDe(serie, valor)`
-(`src/shared/lib/formato.ts:66-73`) toma el máximo de decimales que traen los valores de la serie
+(`src/shared/lib/formato.ts:85-92`) toma el máximo de decimales que traen los valores de la serie
 y el valor actual, entre 0 y 3, ignorando los `null` (ISA-101, Tabla 7: la resolución del dato).
 PI-2010 → 1 decimal («8,8 psi»); FI-2011 → 0 decimales («21.500 bbl/d»).
 
@@ -91,7 +91,7 @@ PI-2010 → 1 decimal («8,8 psi»); FI-2011 → 0 decimales («21.500 bbl/d»).
 el front solo la valida (`faltaEnSerie` en el códec de `src/shared/api/contrato.ts:138`).
 
 **Referencia.** `src/entities/serie.ts`; `src/entities/tipos.ts:9-20`; CONTRATO.md «Demás lecturas».
-`scripts/verificar-libro.mjs:819-829` comprueba que el vigía lee el paso (la misma rampa cruza en 4 h
+`scripts/verificar-libro.mjs:821-831` comprueba que el vigía lee el paso (la misma rampa cruza en 4 h
 por hora y en 96 h por día), que dos huecos no mueven el eje y que `pasoH: 0` se rechaza. En
 `referencia/`: las series viajan dentro de `referencia/salud/bombas-<campo>-2026-09.json`
 (`/api/vistas/bombas`) y las de la ESP en `referencia/insumos/<campo>/electrosumergibles.json`.
@@ -153,7 +153,7 @@ En el motor, el lado abierto es `±Infinity`; en el cable va `null` (`bandaAbier
 | Campo | Regla | De dónde sale | Quién lo firma |
 |---|---|---|---|
 | `texto` | lo que declara el instrumento: `"> 10"`, `"< 3,9"`, `"180 – 240"`, `"—"` | registro de tags (DBIRTH: `limite`, `bajo`, `alto`), versionado en `historial_tag` | ingeniería del cliente |
-| `normal` | `banda(texto)` (`src/shared/lib/formato.ts:49-62`): «a – b» → `[a, b]`; «< b» → `[-∞, b]`; «> a» → `[a, +∞]`; otra cosa → sin banda | lo mismo | ídem |
+| `normal` | `banda(texto)` (`src/shared/lib/formato.ts:68-81`): «a – b» → `[a, b]`; «< b» → `[-∞, b]`; «> a» → `[a, +∞]`; otra cosa → sin banda | lo mismo | ídem |
 | `alarma` | `{ alta?, baja?, fuente }` de la **base maestra de alarmas de la máquina** (`ALARMAS`, `src/entities/limites.ts:53-68`) | norma u hoja de datos | ingeniería de confiabilidad |
 | `firma` | textos fijos `FIRMA_NORMAL` y `FIRMA_ALARMA` | – | – |
 
@@ -178,7 +178,7 @@ responde «sin límite declarado».
 
 **Sentido de la alarma (`sube`/`baja`).** Lo decide la plantilla de la variable si «anuncia» algo
 (`anuncia.sentido`); si no, `baja` cuando la alarma solo tiene `baja`, y `sube` en cualquier otro
-caso (`src/entities/vigia.ts:146`). El límite que se usa es `alarma.alta` si sube y `alarma.baja`
+caso (`src/entities/vigia.ts:150`). El límite que se usa es `alarma.alta` si sube y `alarma.baja`
 si baja (`vigia.ts:118-119`).
 
 **Ejemplo con los datos del demo.** PI-2010 en Morichal: `texto "> 10"` → `normal [10, ∞]`;
@@ -198,15 +198,15 @@ indicador con ▲ naranja y «8,8 psi», pie «normal > 10,0 · alarma 8,0».
 | Electrosumergible | La banda y la alarma son los **ajustes de protección del variador del pozo** (configuración del pozo) y viajan con cada señal (`normal`, `alarma` con `fuente: "Ajuste de protección del variador del pozo (configuración del pozo)"`). Hoy no tienen endpoint propio (ver 5C.4 y «Huecos»). |
 
 **Qué texto se muestra según el valor.** Indicador analógico con `detalle`
-(`src/shared/ui/Analogico.tsx:53-58`): `normal < X`, `normal > X`, `normal X – Y`, `alarma X` o
+(`src/shared/ui/Analogico.tsx:55-60`): `normal < X`, `normal > X`, `normal X – Y`, `alarma X` o
 `alarma X y Y`, con los decimales de la serie.
 
 **Quién lo calcula y por dónde viaja.** Servidor: `GET /api/catalogo` → `campos[campo].limites`
 (dato de catálogo del campo). En cada señal calculada viajan ya resueltos `normal`, `alarma` y
 `limite: { valor, sentido }` (`Senal`, `src/entities/vigia.ts:89-110`).
 
-**Referencia.** `src/entities/limites.ts:22-100`; `src/shared/lib/formato.ts:49-62`; CONTRATO.md
-«Límite de cada tag». `scripts/verificar-libro.mjs:1419-1432` comprueba que la procedencia del
+**Referencia.** `src/entities/limites.ts:22-100`; `src/shared/lib/formato.ts:68-81`; CONTRATO.md
+«Límite de cada tag». `scripts/verificar-libro.mjs:1431-1444` comprueba que la procedencia del
 simulador cita la misma banda en todos los tags, que todas las señales de bombas toman banda y alarma
 de `limites` y que VI-2011 dice «< 3,9» con alarma 3,9 (API 610) y sus dos firmas. Los límites viajan
 en `referencia/insumos/arranque/catalogo.json` (`GET /api/catalogo`).
@@ -237,7 +237,7 @@ interna `SEV` de `src/entities/salud.ts:84`:
 - **Bombas de la línea**: lo pone el **PLC / sistema de alarmas** con el dispositivo (`Dispositivo.estado`).
   TRIM no lo recalcula. Ejemplo: PI-2010 en Morichal llega `atencion`.
 - **Electrosumergibles**: el demo lo deduce de los ajustes del variador (`estadoDe`,
-  `src/entities/esp.ts:91-93`):
+  `src/entities/esp.ts:92-94`):
 
 $$
 \text{estado} = \begin{cases}
@@ -252,8 +252,9 @@ $$
 
 - **Sin estado del instrumento** (solo en el analógico, cuando el estado viene `sin señal` y por
   tanto `undefined`): el analógico deduce `alarma` → 1 si $v \ge$ alta o $v \le$ baja; fuera de banda
-  → **3**; si no, 0 (`src/shared/ui/Analogico.tsx:46-49`). Ojo: esta deducción da 3 donde el resto
-  del producto daría 2 (ver «Huecos»). En la práctica no se usa, porque toda señal trae estado.
+  → **2** (atención, como el contrato y `estadoDe` de la electrosumergible); si no, 0
+  (`src/shared/ui/Analogico.tsx:48-51`). Hasta el 8-oct esta deducción daba 3 (ver «Huecos», 6). En la
+  práctica no se usa, porque toda señal trae estado.
 
 **Ejemplo con los datos del demo.**
 
@@ -271,19 +272,29 @@ causa (caudal, descarga, corriente en 0). La salud no lo toma como pista (5C.3).
 **Quién lo calcula y por dónde viaja.** Servidor; `Senal.estado` en `/vistas/bombas` y
 `/vistas/pozos/:campo/:pozo`; `Dispositivo.estado` en `/vistas/equipos…`.
 
-**Referencia.** `src/entities/tipos.ts:7`; `src/shared/lib/prioridad.ts`; `src/entities/esp.ts:88-93`.
+**Referencia.** `src/entities/tipos.ts:7`; `src/shared/lib/prioridad.ts`; `src/entities/esp.ts:89-94`.
 
 ---
 
 ### Dato inválido: instrumento sin señal
 
 **Qué es.** Un instrumento que no tiene lectura en línea. Viaja como `valor: null` y estado
-`"sin señal"`, **nunca como cero** (premisa de custodia del contrato).
+`"sin señal"`, **nunca como cero ni como un texto** como `"—"` (un texto es una lectura discreta;
+premisa de custodia del contrato). Desde el 8-oct el motor lo cumple en todo
+`/vistas/equipos/:campo/:equipo` (`equipo-vivo.ts:43`, `:69`): 54 dispositivos sin lectura en el demo,
+todos `null`, con estado «sin señal» y sin unidad (`verificar-libro` §19). La pantalla decide «sin
+lectura» con `sinLectura(d)` = estado «sin señal» **o** `valor: null` (`src/shared/lib/formato.ts:43-44`),
+así un `null` con otro estado también es dato inválido.
 
 **Dónde se ve.**
 - Indicador analógico: en vez del número, «sin señal» en magenta y la escala punteada
-  (`Analogico.tsx:69-82`).
+  (`Analogico.tsx:71-84`).
 - `BloqueParte`: la fila de la variable dice «sin señal» en magenta.
+- Panel del equipo (`PanelEquipo.tsx:77-113`): marca de dato inválido, «SIN SEÑAL» en magenta en lugar de
+  la minigráfica, «—» con «sin señal» debajo en la columna del valor, globo «Valor · sin señal»; cuenta
+  en «· N SIN SEÑAL» y nunca queda detrás de «ver más» (también en operación, que solo lista lo no normal).
+- Cadena del dato (`CadenaDato.tsx:88`): con `sinLectura`, «Sin señal · el último valor es de la ruta
+  anterior».
 - Detalle del pozo, nivel **operación**: panel **SIN SEÑAL · con el pozo produciendo** (solo si
   el pozo produce). Nivel **ingeniería**: panel SEÑALES DEL POZO con todas, y si el pozo está
   parado, el rótulo «sin lectura: motor parado» una sola vez arriba
@@ -306,10 +317,12 @@ electrosumergible queda sin señal mientras produce (las lecturas son sintética
 SIN SEÑAL no aparece en ningún pozo del demo.
 
 **Vigía y salud.** Sin señal no se proyecta (`motivo: "Sin señal en línea: <origen>"`,
-`vigia.ts:151`) y la señal va a `sinSenal` de la parte, no a `medidas` (5C.3).
+`vigia.ts:155`) y la señal va a `sinSenal` de la parte, no a `medidas` (5C.3). Un instrumento de
+bomba que llega con `valor: null` también entra así, aunque su estado no diga «sin señal»
+(`senalesDe`, `vigia.ts:141-166`; ver 5C.3 y «Huecos», 2).
 
 **Procedencia.** «De dónde sale este número» llama `GET /api/campos/:campo/tags/:tag/procedencia`;
 un tag no registrado responde `404 tag-no-registrado` y el front muestra el hueco.
 
-**Referencia.** `src/entities/esp.ts:95-134`; `src/widgets/pozos/estado.ts`; CONTRATO.md «Premisa:
+**Referencia.** `src/entities/esp.ts:96-135`; `src/widgets/pozos/estado.ts`; CONTRATO.md «Premisa:
 cadena de custodia» y «Lo que ve operación de las señales de un pozo».

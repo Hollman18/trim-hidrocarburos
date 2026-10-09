@@ -1,6 +1,6 @@
 # 5D.9 · Huecos y dudas
 
-Lo que no se pudo resolver leyendo y corriendo el código, o que parece inconsistente. Cada punto con su archivo:línea y lo que se recomienda al backend.
+Lo que no se pudo resolver leyendo y corriendo el código, o que parece inconsistente. Cada punto con su archivo:línea y lo que se recomienda al backend. Los marcados **(Resuelto el 8-oct)** se corrigieron en el commit `cb8cd39`; conservan su número porque el capítulo 10 remite a él.
 
 ## Reloj y textos con fecha
 
@@ -10,7 +10,7 @@ Lo que no se pudo resolver leyendo y corriendo el código, o que parece inconsis
 
 ## Configuración
 
-4. **El colchón de las paradas históricas usa la configuración vigente.** `diferido.ts:62, 248, 314` leen `respaldoDe`/`tanqueDe` de `ctx.config` (la vigente). Firmar hoy otra capacidad de tanque o de respaldo cambia «lo que el tanque debía aguantar» (`colchon.previsto`) de paradas pasadas, mientras que los mensajes sí usan `configEn` (`mensajes.ts:274`). Recomendación: para una parada medida, `configEn(versiones, inicio)`. Esto no cambia barriles (los tramos salen del PLC), pero sí lo que se muestra de una parada vieja.
+4. **El colchón de las paradas históricas usa la configuración vigente.** `diferido.ts:62, 248, 314` leen `respaldoDe`/`tanqueDe` de `ctx.config` (la vigente). Firmar hoy otra capacidad de tanque o de respaldo cambia «lo que el tanque debía aguantar» (`colchon.previsto`) de paradas pasadas, mientras que los mensajes sí usan `configEn` (`mensajes.ts:274`). Recomendación: para una parada medida, `configEn(versiones, inicio)`. Esto no cambia barriles (los tramos salen del PLC), pero sí lo que se muestra de una parada vieja. (Las líneas citadas son de la versión anterior a la corrección, `8700292`.) **(Resuelto el 8-oct)** `paradaMedida(ev, ctx, versiones)` lee el tanque y el respaldo de `configEn(versiones, inicio)` (`diferido.ts:356-377`), como los mensajes; la costura pasa el historial firmado (`pedirParadas`, `pedirParadasEnPeriodo`, `pedirParadasDeBombas`, `pedirBombas`; por omisión `soloLaVigente`). Comprobado (`verificar-libro` §18): `EV-2011-0909` sigue en 4,75 h aunque hoy se firmen 5.000 bbl/d más de respaldo; firmado antes de la parada, 6,43 h (5B.4, 5D.2). CONTRATO.md:307 lo dice.
 5. **Se puede cambiar el motivo de una parada del programa que ya empezó.** `validarConfig` (`configuracion.ts:449-452`) compara campo, equipo, desde y hasta, no el motivo; `diferenciasPorGrupo` lo registra como «Programa: se cambió … motivo «a» → «b»». ¿Es intencional (corregir un texto) o debería quedar inmutable como el resto de la parada?
 6. **Orden de las reglas de la firma.** El demo revisa «No hay cambios que firmar» antes de las capacidades y el motivo después de `validarConfig` (`escrituras.ts:106-119`); el contrato pone la forma (422) al final. Recomendado en este capítulo: el orden de la tabla de 5D.2. El código HTTP de «sin cambios» no está en el contrato (se sugiere 422 `sin-cambios`).
 7. **Ids del programa de arranque.** Los 7 ids (`PR-2011-260819`…) no incluyen el campo, contra la forma `PR-{campo}-{equipo}-{fecha}` que pide el contrato (`CONTRATO.md` · regla 7). No rompe nada porque son únicos, pero dos campos con el mismo equipo y fecha chocarían con esa forma vieja.

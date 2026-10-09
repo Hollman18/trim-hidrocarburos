@@ -2,7 +2,7 @@
 
 Quién entra a TRIM, con qué rol y a qué campos, y qué puede escribir cada quien. **El producto fija lo que cada rol ve y hace** (`roles.ts`); **el gerente de activo decide quién tiene cada rol y qué campos** (`usuarios.ts`). Nadie se borra: quien ya no debe entrar queda suspendido y lo que firmó o respondió sigue a su nombre.
 
-Código: `src/entities/roles.ts` (114 líneas), `src/entities/tipos.ts:116-203`, `src/entities/usuarios.ts` (292), `src/shared/api/escrituras.ts` (las reglas de cada escritura), `src/shared/api/usuarios.ts`, `src/widgets/configuracion/Accesos.tsx`, `src/pages/Perfil.tsx`, `src/app/url.ts`.
+Código: `src/entities/roles.ts` (114 líneas), `src/entities/tipos.ts:119-206`, `src/entities/usuarios.ts` (292), `src/shared/api/escrituras.ts` (las reglas de cada escritura), `src/shared/api/usuarios.ts`, `src/widgets/configuracion/Accesos.tsx`, `src/pages/Perfil.tsx`, `src/app/url.ts`.
 
 ---
 
@@ -23,7 +23,7 @@ Código: `src/entities/roles.ts` (114 líneas), `src/entities/tipos.ts:116-203`,
 
 Además, **toda persona** puede abrir `perfil` (Mi perfil), que no está en el menú del rol pero sí en la dirección (`PANTALLAS_COMUNES`, `url.ts`). Pantallas de v2 (`agua`, `evidencia`, `regulatorio`) no se ofrecen.
 
-**Nivel de detalle** (`NivelDetalle`, `tipos.ts:138-142`): `decision` = barriles, valor, tendencia, quién se los lleva y si está parado o en riesgo; `operacion` = qué está parado, qué se pierde, qué hacer, solo la variable que está fuera; `ingenieria` = todo (señales, partes, vigía, tolerancias, custodia). **Los números son los mismos en los tres**; cambia qué se muestra. El servidor puede omitir señales, tags, tolerancias y custodia a nivel `decision` (`CONTRATO.md` · «Las capacidades»). Ejemplo en este capítulo: el bloque SAP de un equipo es una sola línea para `decision` y lleva el historial de órdenes solo para `ingenieria` (5D.6).
+**Nivel de detalle** (`NivelDetalle`, `tipos.ts:141-145`): `decision` = barriles, valor, tendencia, quién se los lleva y si está parado o en riesgo; `operacion` = qué está parado, qué se pierde, qué hacer, solo la variable que está fuera; `ingenieria` = todo (señales, partes, vigía, tolerancias, custodia). **Los números son los mismos en los tres**; cambia qué se muestra. El servidor puede omitir señales, tags, tolerancias y custodia a nivel `decision` (`CONTRATO.md` · «Las capacidades»). Ejemplo en este capítulo: el bloque SAP de un equipo es una sola línea para `decision` y lleva el historial de órdenes solo para `ingenieria` (5D.6).
 
 **Topología** (`topologia`): cómo navega cada rol el árbol de activos (`proceso`, `produccion`, `medicion` o ninguna). Área del organigrama (`area`): Dirección, Producción y operaciones, Mantenimiento y confiabilidad, Soporte y cumplimiento, Plataforma.
 
@@ -59,7 +59,7 @@ $$ \text{puedeHacer}(r, k) = r.\text{puede}[k] \;\lor\; \exists\, k' : r.\text{p
 
 **Quién lo calcula y por dónde viaja.** Servidor, desde el token: `GET /api/sesion` → `capacidades: Capacidad[]` (ya expandidas: el servidor puede mandar `causa:declarar` explícito a quien tiene `causa:completar`). En el demo, `rolPorId(rolId).puede`.
 
-**Referencia.** `src/entities/roles.ts:4-26`; `src/entities/tipos.ts:155-203`; `src/pages/Perfil.tsx:22-32`.
+**Referencia.** `src/entities/roles.ts:4-26`; `src/entities/tipos.ts:158-206`; `src/pages/Perfil.tsx:22-32`.
 
 ---
 

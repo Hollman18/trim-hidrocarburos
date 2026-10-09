@@ -28,7 +28,7 @@ interface AvisoSap { numero; tipo: 'M1'|'M2'; campoId; equipo; descripcion; prio
 
 **Dónde se ve.** Ficha de un equipo (panel lateral, todos los roles que lo abren), bloque «SAP · MANTENIMIENTO · equipo {equipoSap} · {ubicación técnica}» (ⓘ «De dónde sale: Avisos, órdenes, horas y stock vienen de SAP. La orden la crea el planeador en SAP; TRIM envía el aviso y avisa cuando la orden se libera.»). Sin aviso ni orden abiertos y con `sap:aviso` (sup, oper, jefe, conf): «Sin aviso ni orden abiertos» + chip fuerte «parado, SAP no lo sabe» si el equipo está detenido (o el riesgo dice «perdiendo», o hay una pregunta abierta) + botón «Enviar aviso a SAP».
 
-**Fórmula (el formulario prellenado, `BloqueSap.tsx:138-217`).**
+**Fórmula (el formulario prellenado, `BloqueSap.tsx:144-223`).**
 
 | Campo | Valor inicial |
 |---|---|
@@ -179,15 +179,15 @@ $$ \bar T = \frac{1}{n}\sum_i T_i, \qquad \bar A = \frac{1}{n}\sum_i \min(h_i, T
 interface Repuesto { material; descripcion; campoId; equipos: string[]; stock; minimo; plazoDias; enTransito?: { cantidad; llega /* AAAA-MM-DD */ } }
 ```
 
-**Dónde se ve.** Ficha del equipo, «REPUESTOS CRÍTICOS»: «**{descripción}** · {stock} en bodega (mín. {mínimo})» + « · llega(n) {cantidad} el {fecha}» si hay tránsito, o « · pedirlo: {plazo} días» si falta; marca P3 ■ si falta (stock < mínimo) **y** no hay tránsito. Para `decision`: una sola línea «**En SAP:** {orden abierta | aviso abierto, sin orden todavía | sin aviso ni orden abiertos} · ■ sin stock de {repuestos que faltan, en minúscula}».
+**Dónde se ve.** Ficha del equipo, «REPUESTOS CRÍTICOS»: «**{descripción}** · {stock} en bodega (mín. {mínimo})» + « · llega(n) {cantidad} el {fecha}» si hay tránsito, o « · pedirlo: {plazo} días» si falta; marca P3 ■ si falta (stock < mínimo) **y** no hay tránsito. Para `decision`: una sola línea «**En SAP:** {orden abierta | aviso abierto, sin orden todavía | sin aviso ni orden abiertos} · ■ sin stock de {repuestos bajo el mínimo **que no vienen en camino**, en minúscula}» y, por cada repuesto bajo el mínimo que sí viene, « · {descripción} llega el {fecha}» sin marca (como la ficha técnica, que no le pone ■ al que está en tránsito). Hasta el 8-oct el gerente veía «sin stock de» también lo que ya venía en camino.
 
-**Ejemplo con los datos del demo.** P-201B de La Ceiba (corrido): Kit de sello mecánico `MAT-SELLO-201` 0 (mín. 1, 21 días, **llega 1 el 9 de oct**); Juego de rodamientos `MAT-ROD-201` 2 (mín. 1); Impulsor y anillos de desgaste `MAT-IMP-201` 0 (mín. 1, **45 días**, sin tránsito → ■ «pedirlo: 45 días»). Línea del gerente: «En SAP: sin aviso ni orden abiertos · ■ sin stock de kit de sello mecánico, impulsor y anillos de desgaste». Pozo LC-14 (electrosumergible, comparte los del campo): Bomba electrosumergible (etapas) 1 (mín. 1, 60 días); Cable de potencia y empalme 0 (mín. 1, 30 días, llegan 2 el 20 de oct).
+**Ejemplo con los datos del demo.** P-201B de La Ceiba (corrido): Kit de sello mecánico `MAT-SELLO-201` 0 (mín. 1, 21 días, **llega 1 el 9 de oct**); Juego de rodamientos `MAT-ROD-201` 2 (mín. 1); Impulsor y anillos de desgaste `MAT-IMP-201` 0 (mín. 1, **45 días**, sin tránsito → ■ «pedirlo: 45 días»). Línea del gerente: «En SAP: sin aviso ni orden abiertos · ■ sin stock de impulsor y anillos de desgaste · kit de sello mecánico llega el 9 de oct». Pozo LC-14 (electrosumergible, comparte los del campo): Bomba electrosumergible (etapas) 1 (mín. 1, 60 días); Cable de potencia y empalme 0 (mín. 1, 30 días, llegan 2 el 20 de oct).
 
 **Casos borde.** Las electrosumergibles comparten los repuestos del campo (`equipos: []`). Un equipo sin repuestos declarados no muestra el bloque. El material de una parte depende de la **familia** (el «motor» de una bomba de superficie no es el motor de fondo de una ESP): donde no hay material declarado, la orden va sin repuesto.
 
 **Quién lo calcula.** Servidor (SAP MM). `GET /api/sap/equipos/:equipo?campo` → `{ identidad: { equipoSap, ubicacion }, repuestos: Repuesto[] }`; `GET /api/sap/equipos?campo` → `EquipoSap[]` (`{ equipo, familia, identidad, repuestos, catalogo? }`) de la flota de alto impacto del campo.
 
-**Referencia.** `src/entities/sap.ts:119-176`; `src/widgets/sap/BloqueSap.tsx:75-94`.
+**Referencia.** `src/entities/sap.ts:119-176`; `src/widgets/sap/BloqueSap.tsx:34-55` (línea del gerente), `:81-100`.
 
 ### Identidad del equipo en SAP (`identidadSap`)
 

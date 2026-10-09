@@ -70,7 +70,7 @@ Rango pozo a pozo en el demo (prueba vigente al 15-sep):
 
 **Casos borde.** Un pozo sin prueba no tiene corte ni caudal (no se le inventa). Un corte de laboratorio (no analizador) es «manual en origen» y se dice (`custodia.bswLaboratorio`, ver más abajo).
 
-**Quién lo calcula.** El libro no expone el BSW; usa crudo y agua por separado. Lo leen el orden de cierre (`ordenOptimo`, `src/entities/libro.ts:875`) y la predicción (otro capítulo).
+**Quién lo calcula.** El libro no expone el BSW; usa crudo y agua por separado. Lo leen el orden de cierre (`ordenOptimo`, `src/entities/libro.ts:936`) y la predicción (otro capítulo).
 
 ---
 
@@ -82,7 +82,7 @@ Rango pozo a pozo en el demo (prueba vigente al 15-sep):
 
 **Dónde se ve.** En la ficha de cada pozo (otro capítulo). En el libro, a través del potencial y del diferido; en la cadena de custodia del Cuadre («Prueba estimada: LC-17»).
 
-**Forma del insumo** (`GET /api/campos/:campo/pozos`, `CONTRATO.md:839-846`):
+**Forma del insumo** (`GET /api/campos/:campo/pozos`, `CONTRATO.md:842-849`):
 
 | Campo | Significado | Unidad |
 |---|---|---|
@@ -93,7 +93,7 @@ Rango pozo a pozo en el demo (prueba vigente al 15-sep):
 | `origen` | `instrumento` (separador automatizado) o `estimado` (desde la electrosumergible, sin separador) | — |
 | `fuentePrueba` | texto: «Separador de prueba automatizado SP-CE1 · FT-… · AT-…» | — |
 
-**Regla de la prueba vigente.** Para un instante $t$, la prueba vigente es la **última con fecha ≤ t** (`pruebaEn`, `src/entities/pozos.ts:176-181`):
+**Regla de la prueba vigente.** Para un instante $t$, la prueba vigente es la **última con fecha ≤ t** (`pruebaEn`, `src/entities/pozos.ts:177-182`):
 
 ```ts
 for (let i = 0; i < fechas.length; i++) if (fechas[i]! <= t) u = p.pruebas[i]
@@ -115,7 +115,7 @@ El libro la pide **por pozo y por día** (al inicio del día, `crudo(p, dia)` en
 
 **Quién lo calcula.** Servidor (lee los insumos). El front nunca ve las pruebas para calcular: las recibe en `refs.pozos` del libro.
 
-**Referencia.** `src/entities/pozos.ts:176`; `src/entities/libro.ts:84-85`; insumos en `referencia/insumos/<campo>/pozos.json`.
+**Referencia.** `src/entities/pozos.ts:177`; `src/entities/libro.ts:84-85`; insumos en `referencia/insumos/<campo>/pozos.json`.
 
 ---
 
@@ -127,7 +127,7 @@ El libro la pide **por pozo y por día** (al inicio del día, `crudo(p, dia)` en
 
 **Dónde se ve.** «Real medido» en el Cuadre y el encabezado de Diferidos; «producción real» en Producción; la curva sólida de «Día a día»; el panel «MEDICIÓN OFICIAL» de Producción (ingeniería) con la fuente: «FQI-0101 · computador de flujo de la unidad LACT-01».
 
-**Forma del insumo** (`GET /api/campos/:campo/produccion-diaria?desde=&hasta=`, `CONTRATO.md:882-889`):
+**Forma del insumo** (`GET /api/campos/:campo/produccion-diaria?desde=&hasta=`, `CONTRATO.md:887-894`):
 
 ```json
 { "origen": { "fuente": "FQI-0101 · computador de flujo de la unidad LACT-01", "bsw": "analizador|laboratorio" },
@@ -156,7 +156,7 @@ Orígenes del demo: La Ceiba, Morichal y La Zarza con analizador; **Guacamayo y 
 
 **Quién lo calcula.** El servidor recibe el fiscal del borde (computador de flujo) y lo guarda; nadie lo edita. El front solo muestra.
 
-**Referencia.** `src/entities/libro.ts:64-71` (fiscal por campo y mes), `:164-169` (`fiscalDelDia`); `src/entities/pozos.ts:124-127`; `referencia/insumos/<campo>/produccion-diaria.json`.
+**Referencia.** `src/entities/libro.ts:64-71` (fiscal por campo y mes), `:164-169` (`fiscalDelDia`); `src/entities/pozos.ts:125-128`; `referencia/insumos/<campo>/produccion-diaria.json`.
 
 ### Corte de agua de laboratorio (cadena de custodia)
 
@@ -164,7 +164,7 @@ Orígenes del demo: La Ceiba, Morichal y La Zarza con analizador; **Guacamayo y 
 
 **Dónde se ve.** Cuadre → «CADENA DE CUSTODIA»: «**Corte de agua de laboratorio:** Guacamayo, El Palmar» con ⓘ «No viene de un analizador en línea: es manual en origen.» En Producción → «MEDICIÓN OFICIAL», el chip «corte de agua: laboratorio» va en tono fuerte.
 
-**Fórmula.** `custodia.bswLaboratorio = campos del período cuyo origenPmo(c).bsw === 'laboratorio'` (`src/entities/libro.ts:808`).
+**Fórmula.** `custodia.bswLaboratorio = campos del período cuyo origenPmo(c).bsw === 'laboratorio'` (`src/entities/libro.ts:869`).
 
 **Ejemplo.** Portafolio, septiembre: `bswLaboratorio = ['guacamayo', 'palmar']`. La Ceiba sola: `[]`.
 

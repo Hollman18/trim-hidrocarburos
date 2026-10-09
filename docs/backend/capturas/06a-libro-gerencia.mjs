@@ -1,11 +1,15 @@
 /* Capturas anotadas del capítulo 6A (el libro y la gerencia).
- * Se generan desde /Users/hollman/trim-hidrocarburos con:
- *   node scripts/pantallazos-doc.mjs --capturas <esta carpeta>/capturas.mjs \
- *     --salida <scratchpad>/doc/img --puerto 5307 [--solo ger-resumen]
+ * Se generan desde la raíz del repositorio con:
+ *   npm run pantallazos:doc -- --capturas docs/backend/capturas/06a-libro-gerencia.mjs --puerto 5331 [--solo ger-resumen]
  * Cada marca remite a la fila del mismo número en la tabla de su pantalla. */
 
 /** Un globo (Tip / ⓘ) se abre con el ratón encima: el generador lo «toca» (clic = mover el ratón ahí). */
 const globo = sel => ({ sel })
+
+/** El bloque «POR CAMPO» del Resumen, la fila (botón) de un campo y la lista de sus equipos. */
+const POR_CAMPO = 'section:has(> h3:text-is("POR CAMPO"))'
+const CAMPO = nombre => `button[aria-expanded]:has-text("${nombre}")`
+const EQUIPOS = nombre => `ul[aria-label="Equipos de ${nombre}"]`
 
 const RESUMEN = [
   { archivo: 'ger-resumen-portafolio', ruta: '#/ger/resumen/ceiba~portafolio/curso', marcas: [
@@ -31,12 +35,13 @@ const RESUMEN = [
     { n: 19, texto: '21 de 87 pozos parados' },
     { n: 20, texto: 'P-201B · La Ceiba', exacto: true },
     { n: 21, texto: '5 equipos', exacto: true },
-    { n: 22, texto: 'primero MN-07 en 4 h · 2 servicios en alarma' },
+    { n: 22, texto: 'primero MN-07 en 4 h', exacto: true },
+    { n: 41, texto: '+ 1 servicio y 1 bomba multifásica en alarma' },
     { n: 23, rol: 'button', nombre: 'Ver riesgo' },
     { n: 24, texto: '89 %', exacto: true },
     { n: 25, texto: '1.451 → 3.262 bbl/d · +125 %' },
     { n: 26, texto: '16 %', exacto: true },
-    { n: 27, texto: '12 h proactivas · 64 h correctivas' },
+    { n: 27, texto: '12,0 h proactivas · 64,0 h correctivas' },
     { n: 28, sel: 'svg[aria-label^="Diferido por día de cada mes"]', caja: 'elemento' },
     { n: 29, sel: 'svg[aria-label^="Diferido por día de cada mes"] rect[fill="var(--p3)"]', i: 0, caja: 'elemento', lado: 'izq' },
     { n: 30, texto: '2.570', exacto: true },
@@ -46,7 +51,8 @@ const RESUMEN = [
     { n: 34, texto: '10.900', exacto: true },
     { n: 35, texto: '1.922' },
     { n: 36, texto: '800', exacto: true },
-    { n: 37, texto: '3.043' },
+    { n: 37, sel: 'button[aria-expanded] > b', i: 0, caja: 'elemento' },
+    { n: 42, sel: 'button[aria-expanded="false"] svg[class*="chevron"]', i: 0, caja: 'elemento' },
   ] },
   { archivo: 'ger-resumen-ceiba', ruta: '#/ger/resumen/ceiba/curso', marcas: [
     { n: 1, texto: '11.105 bbl producidos ayer' },
@@ -68,10 +74,11 @@ const RESUMEN = [
     { n: 20, texto: 'P-201B', exacto: true, i: 0 },
     { n: 21, texto: 'ninguno', exacto: true },
     { n: 22, texto: 'ninguna otra bomba ni electrosumergible avisa' },
+    { n: 41, texto: '+ 1 servicio en alarma' },
     { n: 24, texto: '84 %', exacto: true },
     { n: 25, texto: '736 → 762 bbl/d · +3 %' },
     { n: 26, texto: '20 %', exacto: true },
-    { n: 27, texto: '4 h proactivas · 16 h correctivas' },
+    { n: 27, texto: '4,0 h proactivas · 16,0 h correctivas' },
     { n: 32, texto: 'sin identificar', exacto: true },
     { n: 38, texto: 'bbl · 8 %' },
     { n: 30, texto: '118', exacto: true },
@@ -92,11 +99,12 @@ const RESUMEN = [
     { n: 19, texto: '1 de 41 pozos parados' },
     { n: 20, texto: 'MN-41', exacto: true, i: 0 },
     { n: 21, texto: '4 equipos', exacto: true },
-    { n: 22, texto: 'primero MN-07 en 4 h · 1 servicio en alarma' },
+    { n: 22, texto: 'primero MN-07 en 4 h', exacto: true },
+    { n: 41, texto: '+ 1 bomba multifásica en alarma' },
     { n: 24, texto: '78 %', exacto: true },
     { n: 25, texto: '499 → 1.628 bbl/d · +226 %' },
     { n: 26, texto: '9 %', exacto: true },
-    { n: 27, texto: '4 h proactivas · 40 h correctivas' },
+    { n: 27, texto: '4,0 h proactivas · 40,0 h correctivas' },
     { n: 28, sel: 'svg[aria-label^="Diferido por día de cada mes"]', caja: 'elemento' },
     { n: 39, texto: '849', exacto: true },
     { n: 30, texto: '18.638', exacto: false },
@@ -108,14 +116,55 @@ const RESUMEN = [
     antes: [globo('[aria-label^="Cierre proyectado:"]')], marcas: [{ n: 13, sel: '[role=tooltip]', caja: 'elemento' }] },
   { archivo: 'ger-resumen-ceiba-globo-rango', ruta: '#/ger/resumen/ceiba/curso',
     antes: [{ texto: '2.587–3.500 bbl · calculado', sel: 'text=2.587–3.500 bbl · calculado' }], marcas: [{ n: 4, sel: '[role=tooltip]', caja: 'elemento' }] },
-  { archivo: 'ger-resumen-portafolio-globo-servicios', ruta: '#/ger/resumen/ceiba~portafolio/curso',
-    antes: [{ sel: 'text=primero MN-07 en 4 h · 2 servicios en alarma' }], marcas: [{ n: 22, sel: '[role=tooltip]', caja: 'elemento' }] },
+  { archivo: 'ger-resumen-portafolio-globo-alarma', ruta: '#/ger/resumen/ceiba~portafolio/curso',
+    antes: [{ sel: 'text=+ 1 servicio y 1 bomba multifásica en alarma' }], marcas: [{ n: 41, sel: '[role=tooltip]', caja: 'elemento' }] },
+  // POR CAMPO desplegado (decisión 2 del 8-oct): La Ceiba y Morichal Norte abiertos; solo el bloque.
+  { archivo: 'ger-resumen-portafolio-porcampo', ruta: '#/ger/resumen/ceiba~portafolio/curso', elemento: POR_CAMPO,
+    antes: [{ sel: CAMPO('La Ceiba') }, { sel: CAMPO('Morichal Norte') }], marcas: [
+    { n: 37, sel: 'button[aria-expanded] > b', i: 0, caja: 'elemento' },
+    { n: 42, sel: 'button[aria-expanded="true"] svg[class*="chevron"]', i: 0, caja: 'elemento', lado: 'arriba' },
+    { n: 43, sel: `${EQUIPOS('La Ceiba')} li:nth-child(1) svg`, caja: 'elemento' },
+    { n: 44, texto: 'P-201B', exacto: true, dentro: EQUIPOS('La Ceiba'), lado: 'der' },
+    { n: 45, texto: 'bomba de reinyección · 1 falla', exacto: true, lado: 'der' },
+    { n: 46, texto: '2.570', exacto: true, dentro: EQUIPOS('La Ceiba') },
+    { n: 47, texto: 'bbl · 84 %' },
+    { n: 50, texto: 'sin identificar · 1 parada', exacto: true, i: 0, lado: 'der' },
+    { n: 48, texto: 'electrosumergible · sin fallas · 1 disparo', exacto: true, lado: 'der' },
+    { n: 49, texto: 'bbl · < 1 %' },
+    { n: 43, sel: `${EQUIPOS('Morichal Norte')} li:nth-child(3) svg`, caja: 'elemento' },
+    { n: 51, rol: 'button', nombre: 'Ir a La Ceiba' },
+  ] },
+  // 12 meses: «sin base de comparación» y Guacamayo abierto entero, con P-201B que falló sin costar crudo.
+  { archivo: 'ger-resumen-portafolio-doce', ruta: '#/ger/resumen/ceiba~portafolio/doce',
+    antes: [{ sel: CAMPO('Guacamayo') }, { rol: 'button', nombre: 'ver 9 más' }], marcas: [
+    { n: 3, texto: '639.507', exacto: true, i: 0 },
+    { n: 12, texto: 'sin base de comparación' },
+    { n: 37, sel: 'button[aria-expanded="true"] > b', caja: 'elemento' },
+    { n: 48, texto: 'electrosumergible · 1 falla · 7 disparos', exacto: true, i: 0, lado: 'der' },
+    { n: 43, sel: `${EQUIPOS('Guacamayo')} li:nth-child(5) svg`, caja: 'elemento', lado: 'arriba' },
+    { n: 49, texto: 'bbl · < 1 %', i: 0, lado: 'der' },
+    { n: 52, texto: 'bomba de reinyección · 5 fallas · no costó crudo', exacto: true, lado: 'der' },
+    { n: 53, rol: 'button', nombre: 'ver menos' },
+    { n: 51, rol: 'button', nombre: 'Ir a Guacamayo', lado: 'der' },
+  ] },
+  // Sin órdenes de SAP ni nada perdiéndose: El Palmar.
+  { archivo: 'ger-resumen-palmar', ruta: '#/ger/resumen/palmar/curso', marcas: [
+    { n: 18, texto: 'nada', exacto: true },
+    { n: 19, texto: 'todos los pozos produciendo' },
+    { n: 21, texto: 'ninguno', exacto: true },
+    { n: 22, texto: 'ninguna bomba ni electrosumergible avisa' },
+    { n: 25, texto: '0 → 0 bbl/d · —' },
+    { n: 26, texto: 'sin dato', exacto: true },
+    { n: 27, texto: 'sin órdenes en SAP desde 1 de sept' },
+  ] },
 ]
 
 
 const MAA = 'svg[aria-label^="Barriles diferidos mes a mes"]'
 const TEND = 'svg[aria-label^="Diferido por día de cada mes"]'
 const FACTOR = 'svg[aria-label^="Factor de asignación de"]'
+/** Lo que se ve del gráfico del factor: arranca al final (`alFinal`) y el svg sobra a la izquierda. */
+const FACTOR_VISTO = `div:has(> ${FACTOR})`
 const DIFERIDOS = [
   // Gerente (decisión): encabezado simple, Tendencia, Dónde bajarlo, Pareto simple y tipo de causa.
   { archivo: 'ger-diferidos-ceiba', ruta: '#/ger/diferidos/ceiba/curso', marcas: [
@@ -165,7 +214,7 @@ const DIFERIDOS = [
   { archivo: 'ger-diferidos-portafolio-doce', ruta: '#/ger/diferidos/ceiba~portafolio/doce', marcas: [
     { n: 1, texto: '639.507', exacto: true },
     { n: 2, texto: '584.856–694.159 bbl · calculado' },
-    { n: 3, texto: 'NO PUBLICABLE', exacto: true },
+    { n: 3, texto: 'NO PUBLICABLE', exacto: true, lado: 'arriba' },
     { n: 29, texto: 'El Palmar · factor fuera de banda' },
     { n: 4, texto: 'valor · falta precio en La Zarza' },
     { n: 5, texto: '30,3', i: 0 },
@@ -175,10 +224,10 @@ const DIFERIDOS = [
     { n: 12, texto: '2.108', exacto: true, lado: 'arriba' },
     { n: 17, texto: 'Evitable cerrando en orden' },
     { n: 18, texto: '97 equipos', exacto: true },
-    { n: 30, sel: '[role=img][aria-label="Prioridad 3 · aviso"]', i: 0, caja: 'elemento', lado: 'abajo' },
+    { n: 30, sel: '[role=img][aria-label="Prioridad 3 · aviso"]', i: 0, caja: 'elemento' },
     { n: 64, sel: '[role=img][aria-label="Prioridad 3 · aviso"]', i: 1, caja: 'elemento' },
     { n: 31, sel: '[role=img][aria-label="Prioridad 2 · atención"]', i: 0, caja: 'elemento' },
-    { n: 28, rol: 'button', nombre: 'ver 87 más' },
+    { n: 28, rol: 'button', nombre: 'ver 88 más' },
     { n: 32, rol: 'button', nombre: 'ver 7 más' },
   ] },
   // Ingeniería: encabezado completo, mes a mes apilado, cuadre, factor, palancas, tipos, equipos y partes.
@@ -200,7 +249,7 @@ const DIFERIDOS = [
     { n: 46, texto: 'dentro de banda', exacto: true, lado: 'der' },
     { n: 47, texto: 'Prueba estimada:' },
     { n: 48, rol: 'button', nombre: 'Ir a Identificar' },
-    { n: 49, sel: FACTOR, caja: 'elemento' },
+    { n: 49, sel: FACTOR_VISTO, caja: 'elemento', lado: 'arriba' },
     { n: 50, texto: '93 %', exacto: true },
     { n: 51, texto: 'Ninguna falla con la parte identificada.' },
     { n: 52, texto: '+ 2.570 bbl sin la parte identificada' },
@@ -239,6 +288,9 @@ const DIFERIDOS = [
   // Globos (se abren con el ratón encima).
   { archivo: 'prod-diferidos-ceiba-globo-cifra', ruta: '#/prod/diferidos/ceiba/curso', antes: [{ sel: 'b:text-is("3.043")' }],
     marcas: [{ n: 1, sel: '[role=tooltip]', caja: 'elemento' }] },
+  // El mismo globo para el gerente: sin la tolerancia (8.12).
+  { archivo: 'ger-diferidos-ceiba-globo-cifra', ruta: '#/ger/diferidos/ceiba/curso', antes: [{ sel: 'b:text-is("3.043")' }],
+    marcas: [{ n: 1, sel: '[role=tooltip]', caja: 'elemento' }] },
   { archivo: 'prod-diferidos-ceiba-globo-rango', ruta: '#/prod/diferidos/ceiba/curso', antes: [{ sel: 'text=2.587–3.500 bbl · calculado' }],
     marcas: [{ n: 2, sel: '[role=tooltip]', caja: 'elemento' }] },
   { archivo: 'prod-diferidos-ceiba-globo-identificado', ruta: '#/prod/diferidos/ceiba/curso', antes: [{ sel: '[aria-label^="Identificado por señal:"]' }],
@@ -273,7 +325,7 @@ const PRODUCCION = [
     { n: 15, texto: 'corte de agua: analizador' },
     { n: 16, texto: 'factor 0,958 · banda ±15 %' },
     { n: 17, texto: 'FQI-0101 · computador de flujo de la unidad LACT-01' },
-    { n: 18, sel: FACTOR, caja: 'elemento' },
+    { n: 18, sel: FACTOR_VISTO, caja: 'elemento', lado: 'arriba' },
     { n: 19, texto: 'CUADRE DIARIO', exacto: true },
     { n: 20, texto: '2 de oct · 14,0 h' },
     { n: 21, texto: '3.838', i: 0 },

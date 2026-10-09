@@ -52,7 +52,7 @@ Nivel decisión: solo esto (cabecera + DÍA A DÍA con su Lectura).
 | 15 | MEDICIÓN OFICIAL · corte de agua | chip «corte de agua: analizador» | `origen.bsw` del punto de medición — 5A §«Panel «MEDICIÓN OFICIAL»» | «corte de agua: analizador \| laboratorio \| sin dato»; tono fuerte si laboratorio | `GET /api/catalogo` → `campos[c].medicion.origen.bsw` |
 | 16 | Factor del campo | chip «factor 0,958 · banda ±15 %» | el **último** `fa` del período de ese campo; banda $b$ | `n3(fa)` · «banda ±*n0(b·100)* %»; sin `fa` en el período, el chip no sale | `fa[].fa` (libro) y `medicion.banda.valor` (catálogo) |
 | 17 | Fuente de lo real | «FQI-0101 · computador de flujo de la unidad LACT-01» | `origen.fuente` | monoespaciado; sin punto: «Sin punto de medición configurado» | `medicion.origen.fuente` |
-| 18 | FACTOR DE ASIGNACIÓN | gráfico mes a mes, eje «0,75» · «0,85» · «1,00» · «1,15» · «1,25» | igual que en Diferidos (6A.2 fila 49) | con un campo; con el portafolio se reemplaza por el Cuadre (6A.3.5) | serie mensual, catálogo |
+| 18 | FACTOR DE ASIGNACIÓN | gráfico mes a mes de OCT a OCT; el eje («0,75» · «0,85» · «1,00» · «1,15» · «1,25») no se ve | igual que en Diferidos (6A.2 fila 49): desde el 8-oct arranca al final (`alFinal`), y a 1.280 px el eje queda a la izquierda, fuera de la vista (6A.7 §20); el recuadro de la marca es lo que se ve del gráfico. Un mes con la banda sin verificar va punteado, sin marca | con un campo; con el portafolio se reemplaza por el Cuadre (6A.3.5) | serie mensual, catálogo, `motivos` |
 | 19 | Título del cuadre | «CUADRE DIARIO» | `dias.length > 62` → «CUADRE MENSUAL» | | — |
 | 20 | Día | «2 de oct · 14,0 h» | `fechaCorta(dia)` + « · *n1(horas)* h» si `horas < 23,99` — 5A §«Cuadre diario / mensual» | del más reciente al más viejo | `Dia[].dia`, `horas` |
 | 21 | Real del día | ■ «3.838» | `Dia.real` | «sin fiscal» si `null`; ■ si `meta ≠ null` y `real < meta` | `Dia[].real`, `meta` |
@@ -104,7 +104,7 @@ Filas a la vista, para cotejar: 30-sep 11.596 · 11.489 · 0 · -107 · 100,9 % 
 | 37 | «01 de oct de 2025» | primer día del eje: fecha de otro año | `FMT_FECHA_ANIO` pone el día con dos cifras («01») y la del año en curso no («1 de oct»): ver Huecos |
 | 15 · 17 | «corte de agua: laboratorio» (tono fuerte) · «LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho» | El Palmar mide por tanques, con corte de laboratorio | |
 | 16 | «factor 1,008 · banda ±15 %» | el último `fa` del período (sep-2026) | |
-| 38 | ■ en ABR del gráfico del factor | 0,810 < 0,85 | globo «Abril 2026 · factor 0,810», pista «Fuera de la banda: revisar pruebas, medición y pozos sin prueba» |
+| 38 | ■ en ABR del gráfico del factor | 0,810 < 0,85 y la banda de El Palmar se puede verificar (`estadoFactor` = «fuera») | globo «Abril 2026 · factor 0,810», pista «Fuera de la banda: revisar pruebas, medición y pozos sin prueba». El gráfico ya arranca en octubre; abril sigue a la vista a 1.280 px |
 | 19 | «CUADRE MENSUAL» | 365 días > 62 | una fila por mes tocado: nombre («Abril 2026»), « · *d* de *mes* a *d* de *mes*» si el mes está recortado o « · en curso» si es parcial; Real con ■ si bajo la meta del mes; Potencial; Diferido (`n0(diferido)`); Inventario (`n0(residuo)`); Eficiencia (`n1(pe)` %); Meta (`meta.produccion` o «sin meta firmada») |
 | 39 | ■ «81.033» (abril) | 81.033 < 97.500 | |
 | 12 | eje X «01 de oct de 2025» · «13 de dic de 2025» · «24 de feb» · «8 de may» · «20 de jul» · «30 de sept» | fecha más larga «01 de oct de 2025» (17 caracteres) → $c = \lfloor 634/105{,}8 \rfloor = 5$, $k = \lceil 365/5 \rceil = 73$: índices 0, 73, 146, 219, 292 y el último (364) | regla de la fila 12 de 6A.3.2 |
@@ -125,7 +125,7 @@ Las 12 filas: oct-25 104.691 · 104.691 · 0 · 0 · 100,0 % · 100.750; nov 96.
 | 9 | «14.291» | | |
 | 15 | dos filas en MEDICIÓN OFICIAL: La Ceiba (analizador · 0,958) y El Palmar (laboratorio, tono fuerte · 0,987) | el último `fa` de cada campo en el período (octubre) | |
 | 41 | «CUADRE · MEDICIÓN OFICIAL» en vez del gráfico del factor | portafolio (`:127`) | potencial 4.200.887, real 4.001.006, no producido 199.881, por señal 198.937, declarado 589, sin identificar 355 |
-| 42 · 43 | «■ El Palmar · 2026-04 · **0,810**» · chip «fuera de ±15 %» | `fa[]` con `dentro: false` | |
+| 42 · 43 | «■ El Palmar · 2026-04 · **0,810**» · chip «fuera de ±15 %» | `fa[]` con `dentro: false` y sin el motivo `banda-sin-verificar` de El Palmar (`estadoFactor`, 6A.2 fila 45) | un mes con la banda sin verificar saldría sin ■ y con chip neutro «banda sin verificar» |
 | 44 · 45 · 46 | «Octubre 2026 · en curso» · ■ «20.054» · «22.404» | mes parcial; meta a la fecha (10.900 + 3.250) × 38/24 | |
 | 47 | selector «Campo» | sale con más de un campo | |
 | 6 | «4.200.887 bbl» · «15.299 bbl/d» (filas 6-7) | potencial del año de los dos campos; por día $= 4.200.887 \times 24/6.590 = 15.299{,}1$ (6.590 h del día a día) | filas 6-7 de 6A.3.1 |
@@ -188,6 +188,7 @@ Una fila mala no carga nada:
 | Sin meta firmada | sin barra ni raya, «sin meta firmada…»; curva de meta cortada; celdas «sin meta firmada» | — |
 | Sin asignación oficial | chip «sin cargar» y lo que asigna TRIM | todas las rutas del demo (arranca vacío) |
 | Rol sin `asignacion:cargar` | «Solo lectura: la carga producción.» | — (ningún otro rol tiene Producción en ingeniería) |
+| Banda sin verificar (sin °API o sin producción fiscal publicada) | gráfico del factor con los puntos punteados y sin ■; en el portafolio, Cuadre «banda sin verificar» sin ■ (6A.2 filas 45 y 49); sello «… · banda sin verificar». El chip de MEDICIÓN OFICIAL no se entera: dice «factor 1,032 · banda ±20 %» (la fila más ancha), sin decir que no se pudo verificar (`src/pages/Produccion.tsx:119`; 6A.7 §22) | — (escenario de verificar-libro §10, `zarza.api = null`) |
 
 ## Interacciones
 

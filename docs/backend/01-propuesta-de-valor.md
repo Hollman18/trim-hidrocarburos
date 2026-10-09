@@ -111,7 +111,13 @@ con $a$ el alto-alto, $n$ el nivel, $C$ la capacidad del tanque, $Q_{\text{mueve
 Pasado el colchón hay que quitar el agua sin salida. TRIM recomienda cerrar **primero los pozos con menos crudo por barril de agua** ($r_j = c_j / w_j$): es una mochila fraccionaria y el orden voraz es óptimo. Después de cada parada mide cuánto se habría evitado con ese orden. → 5B §4.
 
 ### Paso 6 · Anticipar
-El **vigía** proyecta cada señal del equipo hacia su alarma (mínimos cuadrados sobre la serie del historiador) y dice **en cuántas horas cruza**, con rango y qué parte daña. Con eso, **riesgo** pone precio a cada equipo: el crudo que pierde si falla y lo que le cuesta cada falla según su historia (horas fuera × crudo por hora). Y **«¿acierta el vigía?»** registra cada predicción y en qué quedó. → 5C, 5B §5.
+El **vigía** proyecta cada señal del equipo hacia su alarma (mínimos cuadrados sobre la serie del historiador) y dice **en cuántas horas cruza**, con rango y qué parte daña. Con eso, **riesgo** pone precio a cada equipo: el crudo que pierde por día si para y **lo que costaría si falla hoy**:
+
+$$
+\text{si falla hoy} = Q_{\text{hoy}} \cdot \frac{1}{n}\sum_{i=1}^{n} \frac{\max(0,\ d_i - h_{\text{colchón}})}{24}
+$$
+
+con $Q_{\text{hoy}}$ el crudo que se perdería por día, $d_i$ las horas que duró cada una de sus $n$ fallas cerradas y $h_{\text{colchón}}$ las horas que el tanque aguanta hoy. Las horas que el tanque absorbe no cuestan crudo: **si la bomba vuelve antes de que el tanque se llene, la falla no cuesta nada**. Esa es la meta de reparación que la operación puede perseguir. Y **«¿acierta el vigía?»** registra cada predicción y en qué quedó. → 5C, 5B §5.
 
 ### Paso 7 · Cerrar el ciclo
 Las **metas** y el **precio** los firma el gerente, por tramos y con motivo, en versiones que nunca se sobrescriben. El libro de un mes se **publica** solo si el FA está en banda, toda parada tiene causa dentro del máximo firmado, hay fiscal y hay meta. Los **informes** salen con folio y una **huella SHA-256** que calcula el servidor. Las paradas avisan por **WhatsApp** a quien tiene que actuar, y los avisos van a **SAP PM** con su evidencia. → 5A §7, 5D.
@@ -140,7 +146,7 @@ La misma parada en la pantalla de la bomba (confiabilidad, La Ceiba, octubre en 
 | 1 | Respaldo de la bomba | «sin respaldo» | configuración firmada: `respaldos[]` (5B §4.2) |
 | 2 | Diferido que causó | 2.570 bbl (2.185 – 2.956 · ±15,0 %) | Σ de los tramos de los pozos cuya causa es esta parada (5B §4.4) |
 | 3 | Perdiéndose ahora | 11.059 bbl/d · 461 bbl/h · 17 pozos cerrados | Σ del crudo asignado de los pozos cerrados por ella (5B §4.3) |
-| 4 | Costo por falla | 18.075 bbl · 9 fallas en 12 meses · cada 41 d · 40,0 h fuera | historia del equipo (5B §7) |
+| 4 | Le ha costado por falla | 18.075 bbl · 9 fallas en 12 meses · cada 41 d · 40,0 h fuera | historia del equipo: lo que costaron sus fallas pasadas (5B §7) |
 | 5 | «No arrancar hasta identificar el daño» | P2 | ninguna señal explica la parte (5B §3) |
 | 6 | Pozos que cerró | 17 | eventos de pozo cargados a la parada (5B §4.3) |
 | 7 | Colchón contra lo observado | «colchón 4,3 h · aguantó 4,2 h» | previsto con el nivel al parar; observado = primer cierre − paro (5B §4.4) |
@@ -154,7 +160,8 @@ La misma parada en la pantalla de la bomba (confiabilidad, La Ceiba, octubre en 
 - el agua sin salida es solo $21.495 - 15.100 = 6.395$ bbl/d;
 - el tanque aguanta **19,0 h** (17,1–21,0 h; el cálculo da 19,0499 h);
 - después hay que cerrar 4 pozos: MN-27, MN-36, MN-13 enteros y MN-39 al 78 %;
-- se pierden **1.671 bbl/d** cerrando en ese orden, contra **2.543 bbl/d** cerrando parejo: **872 bbl/d menos**.
+- se pierden **1.671 bbl/d** cerrando en ese orden, contra **2.543 bbl/d** cerrando parejo: **872 bbl/d menos**;
+- y si falla hoy, con lo que han durado sus 8 fallas (de 4 a 86 h), costaría **≈ 2.086 bbl**: de cada falla solo cuentan las horas después de las 19 h que aguanta el tanque. **Si vuelve antes de 19 h, no cuesta crudo.** Lo que de verdad le costó cada falla en el pasado, con el tanque y los pozos de entonces, fue 3.365 bbl en promedio («le ha costado por falla»).
 
 En la historia del demo, cerrar en orden habría evitado **9.633 bbl** en las paradas de Morichal (4.762 solo en la del 24 de septiembre).
 

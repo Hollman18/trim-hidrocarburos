@@ -1,6 +1,6 @@
 # 2 · Árbol de atribución de un evento de pozo
 
-Cada evento de pozo recibe **una sola causa**: el equipo al que se le cargan sus barriles, la parte (si se sabe), cómo se identificó y la evidencia. La función es `causaDeEvento(ev, ctx)` (`causa-senal.ts:247`) → `deducirEvento` (`causa-senal.ts:249-301`). El backend tiene que reproducirla **exactamente**: el resultado no puede depender del orden en que lleguen los eventos.
+Cada evento de pozo recibe **una sola causa**: el equipo al que se le cargan sus barriles, la parte (si se sabe), cómo se identificó y la evidencia. La función es `causaDeEvento(ev, ctx)` (`causa-senal.ts:259`) → `deducirEvento` (`causa-senal.ts:261-322`). El backend tiene que reproducirla **exactamente**: el resultado no puede depender del orden en que lleguen los eventos.
 
 ## 2.1 La forma de una causa (`Causa`, `causa-senal.ts:69-85`)
 
@@ -11,7 +11,7 @@ Cada evento de pozo recibe **una sola causa**: el equipo al que se le cargan sus
 | `parte` | Parte del equipo que falló, si se sabe | `ParteId` (`sello`, `succion`, `rodamientos`, `hidraulica`, `motor`, `tornillos`, `filtro`, `lubricacion`, `aislamiento`, `protector`, `bomba`, `admision`) |
 | `como` | Cómo se identificó | `senal` · `firma` · `programa` · `declarado` · `ninguno` |
 | `evidencia` | Tags y hechos que la sostienen, en orden: **cadena de custodia**, no cambia | `string[]` |
-| `porQueNo` | Solo con `como: 'ninguno'` en la causa **propia** del evento: por qué ninguna señal alcanzó. También es el último renglón de `evidencia`; el front lo lee de este campo | texto |
+| `porQueNo` | Siempre con `como: 'ninguno'`: por qué ninguna señal alcanzó. En la causa propia del evento es el suyo; un pozo cerrado por una bomba sin parte **hereda el de la bomba**. También es el último renglón de `evidencia`; el front lo lee de este campo | texto |
 | `evento` | Id del evento que la produjo: la parada de bomba, la caída de servicio, o el propio evento de pozo | id |
 | `texto` | Frase para leer | texto |
 | `declarado` | La respuesta del operario, si la hubo | `Respuesta` |
@@ -51,7 +51,7 @@ Constante: `TOLERANCIA_MS = 15 min` (`causa-senal.ts:94`). Sea $t$ = `ev.inicio`
 6. SIN IDENTIFICAR: se pregunta.
 ```
 
-Las reglas 1 y 2 se evalúan juntas al principio (`causa-senal.ts:253-257`) porque la 1 depende de la 2.
+Las reglas 1 y 2 se evalúan juntas al principio (`causa-senal.ts:265-269`) porque la 1 depende de la 2.
 
 ---
 
@@ -59,14 +59,14 @@ Las reglas 1 y 2 se evalúan juntas al principio (`causa-senal.ts:253-257`) porq
 
 **Qué es.** Si un servicio (energía, aire, compresión…) cae, los pozos que cierran **uno tras otro desde su caída** son consecuencia del servicio. Lo que cierra horas después, con el servicio todavía caído, ya no es su cascada.
 
-**Fórmula** (`cascadaDe`, `causa-senal.ts:111-129`). Para un servicio $s$ con caída $a = s.\text{inicio}$ y vuelta $b = s.\text{fin}$:
+**Fórmula** (`cascadaDe`, `causa-senal.ts:122-140`). Para un servicio $s$ con caída $a = s.\text{inicio}$ y vuelta $b = s.\text{fin}$ (**AHORA** si el servicio sigue caído, `fin: null`):
 
 1. Candidatos: eventos de pozo del mismo campo con $a - 15\ \text{min} \le t_i \le b$, ordenados por $t_i$.
 2. Se recorren con $u_0 = a$; el evento $i$ entra si $t_i \le u_{i-1} + 15\ \text{min}$, y entonces $u_i = \max(u_{i-1}, t_i)$. **Al primer candidato que no cumple, se corta** (los siguientes tampoco entran).
 
 Es decir: el primer cierre a lo más 15 min antes o después de la caída, y cada siguiente a lo más 15 min del anterior. El código del pozo **no importa** (un `PSH`, `UV`, `CMD` o `HZ` entran igual). La cascada depende solo de los eventos del PLC y se calcula una vez por servicio.
 
-**Excepción: la bomba primero** (`causa-senal.ts:257`). Si además hay una bomba de la línea que le corta el paso al pozo (regla 2) y esa bomba paró **más de 15 min antes** de la caída del servicio, manda la bomba:
+**Excepción: la bomba primero** (`causa-senal.ts:269`). Si además hay una bomba de la línea que le corta el paso al pozo (regla 2) y esa bomba paró **más de 15 min antes** de la caída del servicio, manda la bomba:
 
 $$
 \text{bombaPrimero} = \text{lb existe} \land \text{sv existe} \land t_{\text{bomba}} < t_{\text{servicio}} - 15\ \text{min}
@@ -86,8 +86,8 @@ $$
 | `SV-C-401-260725` Morichal, compresión | 25-jul 08:07 | 15 | 11 | MN-18/33/07 `PSH` 10:30–10:32 → MPP-301 (firma de caudal); MN-03 `UL` 26-jul 04:21 → su propia ESP |
 
 **Casos borde.**
-- Un servicio sin `fin` no está previsto (`ms(s.fin)` de `undefined` es `NaN` y la ventana queda vacía). Todos los del demo vienen cerrados. **El backend real tiene que decidir** qué hace con un servicio todavía caído (ver «Huecos»).
-- Si el pozo está en la cascada de dos servicios, gana el primero de la lista `serviciosDeCampo(campo)` (`find`, `causa-senal.ts:132-133`): depende del orden de llegada. En el demo no ocurre.
+- **Servicio todavía caído** (`fin: null`): la ventana llega hasta AHORA (`causa-senal.ts:126`). Todos los del demo vienen cerrados; en un mundo de prueba (`verificar-libro` §18) un servicio abierto en El Palmar a las 10:00 se lleva PA-01 (10:05) y PA-02 (10:15), y el riesgo lo muestra «perdiendo» con 2 pozos desde las 10:00; PA-03 (12:00) no es de su cascada.
+- **Dos servicios candidatos**: si el pozo está en la cascada de dos, gana **el que cayó primero** y, si cayeron a la vez, el de **id menor** (comparación de texto por código, la misma en cualquier lenguaje; `elPrimero`, `causa-senal.ts:107-111`, usado en `servicioDeCascada`, `:144-145`). El resultado no depende del orden en que lleguen: con la lista de servicios al revés, las 1.391 causas del mundo de prueba son las mismas (ZA-01 → el que cayó primero; ZA-02, empate → `SV-PRUEBA-A`). En el demo no ocurre.
 
 ---
 
@@ -95,7 +95,7 @@ $$
 
 **Qué es.** Si en $t$ estaba parada una bomba de la línea que le sirve al pozo, el pozo cerró por ella.
 
-**Qué bomba le sirve** (`bombaQueLeCorta`, `causa-senal.ts:232-244`). Para cada parada de bomba del campo con $t_{\text{ini}} \le t \le (t_{\text{fin}}\ \text{o}\ \text{AHORA})$ y con perfil en ese campo:
+**Qué bomba le sirve** (`bombaQueLeCorta`, `causa-senal.ts:244-256`). Para cada parada de bomba del campo con $t_{\text{ini}} \le t \le (t_{\text{fin}}\ \text{o}\ \text{AHORA})$ y con perfil en ese campo:
 
 | Papel de la bomba | Le sirve al pozo si… |
 |---|---|
@@ -105,16 +105,17 @@ $$
 
 **Dos paradas a la vez.** Se ordenan: primero la multifásica (sin ella el pozo no fluye, haya o no tanque), después la de disposición; entre dos del mismo papel la que paró primero; empate exacto, por id. Se toma la primera. No depende del orden en que lleguen.
 
-**Herencia de la causa** (`causa-senal.ts:261-271`). Se calcula `cb = causaDeParada(bomba)` (cap. 3):
+**Herencia de la causa** (`causa-senal.ts:273-292`). Se calcula `cb = causaDeParada(bomba)` (cap. 3):
 - Si `cb.tipo` no es `reinyeccion` ni `transporte` (la bomba la paró un servicio o el programa), el pozo hereda **esa** causa tal cual (`tipo`, `equipo`, `como`, `evento`, `texto` del servicio o del programa) con la evidencia nueva.
 - Si no, la causa es la de la bomba: `tipo` = `cb.tipo`, `equipo` = la bomba, `parte` = `cb.parte`, **`como` = `cb.como`** (si la parte de la bomba está sin identificar, el pozo también queda `ninguno`), `evento` = id de la parada, `declarado` = `cb.declarado`, y el texto según el caso:
   - multifásica: «La bomba multifásica que lo mueve estaba parada»;
   - disposición con `HZ`: «Se le bajó la frecuencia: la bomba de reinyección no daba abasto con el agua»;
   - disposición con `LSHH`/`CMD`: «Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno».
-- Evidencia: `['<senal de la bomba> · <hora del paro>', <primer renglón de la evidencia de la bomba>, '<senal del pozo> · <hora>']`.
+- Evidencia (`causa-senal.ts:276-283`), sin renglones repetidos: `['<senal de la bomba> · <hora del paro>', <lo que identificó la causa de la bomba>, '<senal del pozo> · <hora>', <porQueNo de la bomba>]`, donde «lo que identificó» es el primer renglón de la evidencia de la bomba (el programa, la primera alarma, la firma o el servicio), o el último si fue **declarada** («Declarado por …»), o **nada** si la bomba quedó sin identificar (`como: 'ninguno'`: su primer renglón sería el mismo paro); el `porQueNo` de la bomba va de último solo si existe.
+- `porQueNo`: si la bomba no tiene parte (`como: 'ninguno'`), el pozo **hereda** su `porQueNo` (`causa-senal.ts:286-287`), así toda causa `ninguno` dice por qué.
 
 **Ejemplos con los datos del demo.**
-- LC-16 (ESP, La Ceiba), `LSHH` el 2-oct 08:07, con P-201B parada desde las 03:52 → `{ tipo: 'reinyeccion', equipo: 'P-201B', como: 'ninguno', evento: 'EV-2011-1002', texto: 'Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno' }`. `como` es `ninguno` porque la parada de la bomba no dejó primera alarma ni firma.
+- LC-16 (ESP, La Ceiba), `LSHH` el 2-oct 08:07, con P-201B parada desde las 03:52 → `{ tipo: 'reinyeccion', equipo: 'P-201B', como: 'ninguno', evento: 'EV-2011-1002', porQueNo: 'Sin primera alarma y sin firma: el PLC no dice qué parte falló', texto: 'Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno' }`, evidencia `['ZS-2011 · marcha → paro · 2 de oct, 03:52', 'VSD-LC16 · código LSHH · 2 de oct, 08:07', 'Sin primera alarma y sin firma: el PLC no dice qué parte falló']`. `como` es `ninguno` porque la parada de la bomba no dejó primera alarma ni firma. (Antes de la corrección del 8-oct el paro salía dos veces y faltaba `porQueNo`; ver «Huecos», 6 y 7.) Igual LC-04 (`CMD` 08:20) y los 8 pozos de Morichal cerrados por `EV-M2011-260924` (MN-17: «ZS-2011 · marcha → paro · 24 de sept, 16:51», «VSD-MN17 · código LSHH · 25 de sept, 09:00», el porqué).
 - **Dos paradas a la vez** · `EP-MN18-260503-60`: MN-18 (Morichal) `CMD` el 3-may 07:55. En ese instante estaban paradas P-201B (disposición, desde el 2-may 07:45, sello) **y** MPP-301 (multifásica del clúster de MN-18, desde el 2-may 12:12, sello). `CMD` califica para las dos; manda la multifásica → `{ tipo: 'transporte', equipo: 'MPP-301', parte: 'sello', como: 'senal', evento: 'EV-3016-260502' }`, evidencia `['ZS-3016 · marcha → paro · 2 de may, 12:12', 'Primera alarma LSL-3017 · nivel bajo del depósito de barrera del sello', 'VSD-MN18 · código CMD · 3 de may, 07:55']`.
 - **Programa heredado** · los 18 pozos que cerró P-201B el 19-ago (`EV-2011-260819`, dentro de `PR-2011-260819`) quedan `programada`, `equipo: 'P-201B'`, `como: 'programa'`.
 - **Servicio heredado** · cuando SE-2 paró P-201B de Morichal (`EV-M2011-260828`, primera alarma `52-SE2`), los pozos que cerraron por nivel alto se cargan a `energia / SE-2`.
@@ -154,7 +155,7 @@ $$
 
 ### Regla 5 · Declarada por el operario
 
-**Fórmula.** `r = ev.respuesta ?? ctx.respuestas[ev.id]` (`respuestaDe`, `causa-senal.ts:139`; la respuesta pegada al evento gana sobre la de la sesión).
+**Fórmula.** `r = ev.respuesta ?? ctx.respuestas[ev.id]` (`respuestaDe`, `causa-senal.ts:151`; la respuesta pegada al evento gana sobre la de la sesión).
 - Si `r.parte` existe y el pozo es ESP → `{ tipo: 'electrosumergible', equipo: pozo, parte: r.parte, como: 'declarado', declarado: r }` (es falla de alto impacto con su parte).
 - Si no → `{ tipo: 'declarada', equipo: pozo, como: 'declarado', declarado: r, texto: r.texto }`.
 - Evidencia: `[base, 'Declarado por <r.por> · <hora de r>']`.
@@ -205,16 +206,16 @@ Nota: en el demo no hay ningún `HZ` explicado por la bomba de reinyección (los
 
 ## 2.4 Memo y contexto
 
-La causa se memoriza por **contexto** = (configuración firmada vigente, respuestas de la sesión) (`MEMO`, `MEMO_POZO`, `causa-senal.ts:171-181`). Para el backend: la causa de un evento cambia cuando (a) se firma una versión de configuración que cambia el programa, los perfiles o los respaldos, o (b) llega una respuesta de operario. Hay que recalcular (o invalidar caché) en esos dos momentos, y en ninguno más.
+La causa se memoriza por **contexto** = (configuración firmada vigente, respuestas de la sesión) (`MEMO`, `MEMO_POZO`, `causa-senal.ts:183-193`). Para el backend: la causa de un evento cambia cuando (a) se firma una versión de configuración que cambia el programa, los perfiles o los respaldos, o (b) llega una respuesta de operario. Hay que recalcular (o invalidar caché) en esos dos momentos, y en ninguno más.
 
 ## 2.5 Qué se muestra
 
 | Dónde | Qué de la causa |
 |---|---|
 | Riesgo y Turno, fila «perdiendo» | `equipo` en negrita, chip con `TIPO_CAUSA[tipo]` en minúscula (fuerte si es alto impacto), parte en minúscula, globo con `texto` |
-| Turno, «Paradas nuevas» | chip con `COMO[como]`, o «parte por identificar» si lo cerró otro equipo y `como = 'ninguno'` (`Turno.tsx:153`) |
-| Panel del pozo | `lectura` = `«<texto>. Se le carga a <equipo>.»` (`equipo-vivo.ts:82`) |
-| Detalle de una parada de bomba | «POR QUÉ PARÓ · <COMO en mayúsculas>», `texto`, y la lista `evidencia` en monoespaciada (`Detalle.tsx:430-438`) |
-| Historia del equipo (panel, ingeniería) | `<Parte> · <COMO>` o el texto si tiene ≤ 6 palabras (`PanelEquipo.tsx:267-269`) |
+| Turno, «Paradas nuevas» | chip con `COMO[como]`, o «parte por identificar» si lo cerró otro equipo y `como = 'ninguno'` (`Turno.tsx:157`) |
+| Panel del pozo | `lectura` = `«<texto>. Se le carga a <equipo>.»` (`equipo-vivo.ts:85`) |
+| Detalle de una parada de bomba | «POR QUÉ PARÓ · <COMO en mayúsculas>», `texto`, y la lista `evidencia` en monoespaciada (`Detalle.tsx:435-443`) |
+| Historia del equipo (panel, ingeniería) | `<Parte> · <COMO>` o el texto si tiene ≤ 6 palabras (`PanelEquipo.tsx:279-281`) |
 
-**Referencia.** `src/entities/causa-senal.ts:1-301`; `CONTRATO.md:994-1025`; los libros de `referencia/diferidos/*.json` traen la causa de cada tramo.
+**Referencia.** `src/entities/causa-senal.ts:1-322`; `CONTRATO.md:1001-1041`; los libros de `referencia/diferidos/*.json` traen la causa de cada tramo.

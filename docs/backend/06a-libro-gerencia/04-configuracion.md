@@ -1,6 +1,6 @@
 # 6A.4 Metas, accesos y configuración — gerente y administrador
 
-**Para qué.** Decisión: «Metas por campo (la global es la suma) y accesos.»; ingeniería: «Lo único que se escribe a mano, con firma.» (`src/widgets/Onboarding.tsx:27`, `:40`).
+**Para qué.** Decisión: «Metas por campo (la global es la suma) y accesos.»; ingeniería: «Lo único que se escribe a mano, con firma.» (`src/widgets/Onboarding.tsx:27`, `:38`).
 **Ruta.** `#/<ger | adm>/configuracion/<campo>/<período>` (el período no cambia nada en esta pantalla). · **Roles.** `ger` (decisión; `metas:firmar`, `usuarios:administrar`): pestañas «Metas de los campos» y «Usuarios y accesos». `adm` (ingeniería; `config:firmar`, `conector:configurar`): «Configuración técnica» (primera), «Metas de los campos» (solo lectura) y «Usuarios y accesos» (solo lectura) (`src/pages/Configuracion.tsx:45-50`).
 **Lee.**
 

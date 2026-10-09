@@ -98,7 +98,7 @@ Ordenado por `asignado` de mayor a menor. Forma: `AsignacionPozo { campoId, pozo
 
 **Qué es.** La carga reemplaza lo cargado de cada (mes, campo) que trae y deja rastro: quién, cuándo, por qué y cuántos pozos reemplazó. Solo se inserta, nunca se corrige.
 
-**Reglas del servidor** (`cargarAsignacion`, `src/shared/api/escrituras.ts:265-305`; `CONTRATO.md:548-561`), todo o nada, en este orden:
+**Reglas del servidor** (`cargarAsignacion`, `src/shared/api/escrituras.ts:265-305`; `CONTRATO.md:551-564`), todo o nada, en este orden:
 
 1. Rol sin `asignacion:cargar` → 403 «La asignación oficial la carga producción: su rol no la reemplaza.»
 2. Sin persona activa del rol → 403.
@@ -169,4 +169,4 @@ Selectores: «Campo» (si hay más de uno) y «Mes» (solo meses cerrados, del m
 
 **Quién lo calcula.** «Los dos» (`cotejar` es regla compartida); los datos de TRIM, el servidor (`/vistas/asignacion`); la banda, el catálogo.
 
-**Referencia.** `src/entities/asignacion.ts`; `src/widgets/produccion/AsignacionOficial.tsx`; `verificar-libro.mjs` sección 8; `CONTRATO.md:980-992`, `:548-561`.
+**Referencia.** `src/entities/asignacion.ts`; `src/widgets/produccion/AsignacionOficial.tsx`; `verificar-libro.mjs` sección 8; `CONTRATO.md:985-997`, `:551-564`.

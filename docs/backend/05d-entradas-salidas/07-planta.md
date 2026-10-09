@@ -44,7 +44,9 @@ Cada campo trae además `caudales` (crudo, agua, gas y sus capacidades) y `choke
 
 **Fórmula.** Se recorren todos los elementos y miembros (tronco, gas, crudo, agua, servicios), salvo el grupo de pozos (cada pozo tiene su propio controlador) y lo que es solo proceso o límite de batería (`salida`, `manifold`, `tea`, `inyeccion`, `pozos`):
 
-$$ \text{captura}(e) \iff e.\text{equipo existe hoy} \land e.\text{instrumentado} \land \exists\, d \in e.\text{dispositivos}: d.\text{estado} \ne \text{«sin señal»} $$
+$$ \text{captura}(e) \iff e.\text{equipo existe hoy} \land e.\text{instrumentado} \land \exists\, d \in e.\text{dispositivos}: \lnot\,\text{sinLectura}(d) $$
+
+con $\text{sinLectura}(d) = (d.\text{estado} = \text{«sin señal»}) \lor (d.\text{valor} = \text{null})$ (`src/shared/lib/formato.ts:43-44`; `Planta.tsx:54`): un dispositivo sin lectura viaja con `valor: null` (5C.1), y desde el 8-oct un `null` con otro estado tampoco cuenta como captura.
 
 El **tanque de agua** (`tanqueAgua`) se resuelve por la configuración firmada: el tanque de la bomba de **reinyección** del campo (`tanqueDe(config, campo, bomba)`); captura si `/vistas/campos/:campo/ahora` trae su nivel; si el tanque está configurado pero sin lectura → «sin señal · {tagNivel}». Lo demás sin datos dice «sin señal» (equipo sin lectura) o «sin instrumento» (sin equipo asociado).
 
@@ -52,19 +54,27 @@ El **tanque de agua** (`tanqueAgua`) se resuelve por la configuración firmada: 
 
 | Campo | Capturan / total | Sin datos | Tanque de agua |
 |---|---|---|---|
-| La Ceiba | **9 de 11** | depurador (sin instrumento), TK-101 (sin instrumento) | TK-AG-CE, LT-2012 = 89,6 % (alto-alto 90 %), bomba P-201B **detenida** (severidad 1) |
+| La Ceiba | **9 de 11** | depurador (sin instrumento), TK-101 (sin instrumento) | TK-AG-CE, LT-2012 = 89,6 % (alto-alto 90 %), bomba P-201B **detenida** (severidad 1); el tanque, gris: no entra agua |
 | Morichal Norte | 10 de 13 | depurador, TK-101, TK-103 | TK-AG-MN 61,8 % |
 | Guacamayo | 8 de 9 | depurador | TK-AG-GU 42,3 % |
 | El Palmar | 7 de 7 | — | (sin tanque de agua configurado) |
 | La Zarza | 7 de 8 | depurador | (sin tanque de agua configurado) |
 
-**Casos borde.** El tanque de agua sube a la lista visible (nunca detrás de «ver más») si está a menos de 10 puntos de su alto-alto (90 % → 80 %) **o si la bomba que lo vacía está detenida** (entonces solo puede subir): La Ceiba hoy cumple las dos. Nivel ≥ alto-alto → severidad 1 (P1 ◆ alarma).
+**Casos borde.** El tanque de agua sube a la lista visible (nunca detrás de «ver más») si está a menos de 10 puntos de su alto-alto (90 % → 80 %) **o si la bomba que lo vacía está detenida**: La Ceiba hoy cumple las dos. Ese margen solo decide qué no se esconde; la **prioridad** del tanque (`tanqueSev`, `src/pages/Planta.tsx:118-134`) sale del tiempo hasta la consecuencia (ISA-18.2), no de un porcentaje:
+
+| Situación | Prioridad del tanque | Aviso (bajo la barra, en el globo «Sube» y en el lector) |
+|---|---|---|
+| Nivel ≥ alto-alto | **1** ◆ (hay que cerrar pozos) | — |
+| Bomba de reinyección **detenida** | `Prediccion.llenado.prioridad` del motor (5B.4, «Llenado»): 2 si llega al alto-alto en menos de 24 h, 3 hasta 90 días, 0 si no sube | con horas finitas: «P-201B detenida: llega al alto-alto en <`fmtHoras`>» («en menos de 1 h» bajo 1 h); sin subir: «P-201B detenida: no entra agua, el nivel no sube» o «P-201B detenida: el respaldo toma el agua que entra, el nivel no sube» |
+| Bomba en marcha | 0 (gris), por alto que esté | — |
+
+La Ceiba hoy (P-201B detenida, 0 de 18 pozos produciendo, 89,6 %): no entra agua → **gris**, «P-201B detenida: no entra agua, el nivel no sube»; el nodo del tanque en el dibujo, también gris. La Planta lee `llenado` y **no** `colchon.horas` (que es «si parara ahora con todo produciendo» y daría 0,05 h): hasta el 8-oct pintaba ▲ P2 «llega al alto-alto en menos de 1 h», que era falso. Con LC-04 y LC-16 reabiertos (mundo de prueba de `verificar-libro` §19) entrarían 3.486 bbl/d y llegaría en 0,28 h: ▲ P2 con ese aviso.
 
 **Qué texto se muestra según el valor.** Gris es normal; el color aparece solo con condición anormal, siempre con su forma (ISA-101). Un equipo en marcha y sin nada anormal lleva **solo su código**; en marcha con algo, lo que acompaña («degradado», «succión cayendo»); detenido o sin lectura, el estado entero. Pie de caja recortado a 24 caracteres.
 
-**Quién lo calcula.** Front (sobre `GET /api/vistas/equipos-hoy`, `GET /api/vistas/campos/:campo/ahora` y el catálogo).
+**Quién lo calcula.** Front (sobre `GET /api/vistas/equipos-hoy`, `GET /api/vistas/campos/:campo/ahora`, el catálogo y, para el tanque con la bomba detenida, `GET /api/vistas/bombas/prediccion` → `llenado`).
 
-**Referencia.** `src/pages/Planta.tsx:36-155`.
+**Referencia.** `src/pages/Planta.tsx:37-175`.
 
 ### Tuberías «sin flujo»
 
