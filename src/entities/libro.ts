@@ -116,7 +116,7 @@ function porDias(a: number, b: number, f: (dia: number, horas: number) => void) 
  *  nunca se cobra dos veces y potencial − real sigue siendo la suma exacta de
  *  los diferidos aunque el controlador mande eventos que se cruzan. */
 const EFECTIVO = new Map<string, Map<string, Array<[number, number]>>>()
-function intervalosEfectivos(campoId: string): Map<string, Array<[number, number]>> {
+export function intervalosEfectivos(campoId: string): Map<string, Array<[number, number]>> {
   const ya = EFECTIVO.get(campoId)
   if (ya) return ya
   const out = new Map<string, Array<[number, number]>>()

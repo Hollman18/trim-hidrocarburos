@@ -28,8 +28,8 @@
  *  Los barriles de cada fila son los del libro en ese tramo: no viajan a la ANH
  *  (la diferida ANH es otra cifra, P1 §1.8) y suman exacto lo del libro.
  */
-import { tramosEntre, esDisparo, perdidaPorFrecuencia, type Tramo } from './libro'
-import { eventosDeCampo, pozoDe, pruebaEn, servicioPorId, CODIGO, type EventoPozo } from './pozos'
+import { tramosEntre, esDisparo, perdidaPorFrecuencia, intervalosEfectivos, type Tramo } from './libro'
+import { pozoDe, pruebaEn, servicioPorId, CODIGO, type EventoPozo } from './pozos'
 import { paradaPorId } from './bombas'
 import { AHORA } from './reloj'
 import type { Causa, Contexto } from './causa-senal'
@@ -127,38 +127,12 @@ export interface OpcionesParadas extends OpcionesPropuesta {
   guardadas?: ReadonlyMap<string, BorradorClasificacion>
 }
 
-/* Lo que de verdad cobra cada evento de un pozo: su intervalo menos lo que ya
-   cubre otro evento del mismo pozo que manda (un paro manda sobre una
-   frecuencia reducida; entre dos del mismo tipo, el que empezó primero). Es
-   la regla de `intervalosEfectivos` de libro.ts, que allí es privada, repetida
-   al pie de la letra: la fila de la ANH empieza y termina donde el libro cobra,
-   y verificar-arbol comprueba que las horas de las filas suman las del libro. */
-const EFECTIVOS = new Map<string, Map<string, Array<[number, number]>>>()
-function efectivos(campoId: string): Map<string, Array<[number, number]>> {
-  const ya = EFECTIVOS.get(campoId)
-  if (ya) return ya
-  const out = new Map<string, Array<[number, number]>>()
-  const porPozo = new Map<string, EventoPozo[]>()
-  for (const ev of eventosDeCampo(campoId)) {
-    const g = porPozo.get(ev.pozo)
-    if (g) g.push(ev); else porPozo.set(ev.pozo, [ev])
-  }
-  for (const evs of porPozo.values()) {
-    const orden = [...evs].sort((a, b) => Number(a.codigo === 'HZ') - Number(b.codigo === 'HZ') || ms(a.inicio) - ms(b.inicio) || a.id.localeCompare(b.id))
-    const cubierto: Array<[number, number]> = []
-    for (const ev of orden) {
-      let libres: Array<[number, number]> = [[ms(ev.inicio), ev.fin ? ms(ev.fin) : ahora]]
-      for (const [c0, c1] of cubierto) {
-        libres = libres.flatMap(([a, b]): Array<[number, number]> => (c1 <= a || c0 >= b) ? [[a, b]]
-          : [...(c0 > a ? [[a, c0] as [number, number]] : []), ...(c1 < b ? [[c1, b] as [number, number]] : [])])
-      }
-      out.set(ev.id, libres)
-      cubierto.push(...libres)
-    }
-  }
-  EFECTIVOS.set(campoId, out)
-  return out
-}
+/* Lo que de verdad cobra cada evento de un pozo sale de la MISMA regla del
+   libro (`intervalosEfectivos`): su intervalo menos lo que ya cubre otro
+   evento del mismo pozo que manda. Así la fila de la ANH empieza y termina
+   donde el libro cobra, y verificar-arbol comprueba que las horas de las
+   filas suman las del libro. Una sola regla: si el libro cambia, la fila
+   cambia con él. */
 
 /** Un pedazo de un evento: dentro de un solo día y de un solo lado del fin de la ventana del programa. */
 interface Pedazo { a: number; b: number; exceso: boolean }
@@ -167,7 +141,7 @@ interface Pedazo { a: number; b: number; exceso: boolean }
  *  en la medianoche de Colombia y en el fin de la ventana del programa. */
 function pedazosDe(ev: EventoPozo, campoId: string, finVentana: number | undefined): Pedazo[] {
   const out: Pedazo[] = []
-  for (const [x, y] of efectivos(campoId).get(ev.id) ?? []) {
+  for (const [x, y] of intervalosEfectivos(campoId).get(ev.id) ?? []) {
     for (let a = x; a < y;) {
       let b = Math.min(y, inicioDiaCo(a) + D)
       if (finVentana !== undefined && a < finVentana && finVentana < b) b = finVentana

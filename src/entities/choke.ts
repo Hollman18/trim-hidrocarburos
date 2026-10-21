@@ -814,8 +814,9 @@ export interface PotencialesCampo {
   textoCorto: string
 }
 
-/** Cómo se dice lo que da ampliar el tren que limita. */
+/** Cómo se dice lo que da ampliar el tren que limita, y el tren mismo. */
 const TREN_FRASE: Record<TrenPlanta, string> = { crudo: 'el tren de crudo', agua: 'el agua', gas: 'el gas' }
+const TREN_NOMBRE: Record<TrenPlanta, string> = { crudo: 'tren de crudo', agua: 'agua', gas: 'gas' }
 
 /** Los potenciales de los tramos de un campo en el instante `t` (CHOKE-COMPLETO §3):
  *  - pozos = Σ crudo asignado de los pozos con prueba (la base del libro);
@@ -883,8 +884,8 @@ interface DiaCampo {
   potencial: number
   diferido: number
   residuo: number
-  /** Los potenciales del día, bbl/d: los pozos del libro, la planta y afuera del instante. */
-  tasas: { pozos: number; planta: number | null; exportacion: number | null }
+  /** Los potenciales del día, bbl/d: los pozos del libro, la planta y afuera del instante, y el tren que manda en la planta. */
+  tasas: { pozos: number; planta: number | null; exportacion: number | null; tren?: TrenPlanta }
   /** Potencial del sistema del día, bbl: el menor de los tres, o el de los
    *  pozos si el real pasó la capacidad declarada (`superado`). */
   sistema: number
@@ -917,7 +918,7 @@ function diasDelCampo(campoId: string, d0: number, hh: number, ctx: Contexto): D
     const p = potencialesDelCampo(campoId, x.dia.getTime(), ctx)
     const pozosDia = x.potencial / f
     const base = { dia: x.dia.getTime(), horas: x.horas, real: x.real, potencial: x.potencial, diferido: x.diferido, residuo: x.residuo ?? 0,
-      tasas: { pozos: pozosDia, planta: p.planta, exportacion: p.exportacion } }
+      tasas: { pozos: pozosDia, planta: p.planta, exportacion: p.exportacion, ...(p.trenQueLimita ? { tren: p.trenQueLimita } : {}) } }
     // Sin tubería de crudo no hay qué limite ni brecha estructural.
     if (p.dominante === null) { out.push({ ...base, sistema: x.potencial, estructural: 0, dominante: null, empate: false, casiIguales: null }); continue }
     const d = dominanteDe({ pozos: pozosDia, planta: p.planta ?? Infinity, exportacion: p.exportacion ?? Infinity })
@@ -1391,10 +1392,11 @@ export function lineaBasePorTramo(campoIds: string[], desde: Date, hasta: Date, 
   const noPlaneado = Object.fromEntries(CHOKES_Y_SIN_ASIGNAR.map(k => [k, fila(np0[k], np1[k])])) as Record<ChokeOSinAsignar, AntesYDespues>
   const diferido = Object.fromEntries(CHOKES_Y_SIN_ASIGNAR.map(k => [k, fila(b0.porChoke[k], b1.porChoke[k])])) as Record<ChokeOSinAsignar, AntesYDespues>
   const quien = campoIds.length === 1 ? `En ${campoPorId(campoIds[0]!).nombre}` : 'En el conjunto de campos'
-  const bajo = ORDEN_CHOKE.filter(k => (noPlaneado[k].cambio ?? 0) < 0).map(k => DONDE_PERIODO[k])
-  const subio = ORDEN_CHOKE.filter(k => (noPlaneado[k].cambio ?? 0) > 0).map(k => DONDE_PERIODO[k])
+  const LO_DE: Record<ChokeAnh, string> = { reservorio: 'lo del yacimiento', pozo: 'lo de los pozos', planta: 'lo de la planta', exportacion: 'lo de afuera' }
+  const bajo = ORDEN_CHOKE.filter(k => (noPlaneado[k].cambio ?? 0) < 0)
+  const subio = ORDEN_CHOKE.filter(k => (noPlaneado[k].cambio ?? 0) > 0)
   const texto = !bajo.length && !subio.length ? `${quien} lo no planeado no cambió por tramo.`
-    : `${quien} ${[bajo.length ? `bajó lo que se trabó ${lista(bajo)}` : '', subio.length ? `subió lo ${lista(subio)}` : ''].filter(Boolean).join(' y ')}.`
+    : `${quien} ${[bajo.length ? `bajó lo que se trabó ${lista(bajo.map(k => DONDE_PERIODO[k]))}` : '', subio.length ? `subió ${lista(subio.map(k => LO_DE[k]))}` : ''].filter(Boolean).join(' y ')}.`
   return { base: { desde: lb.desde, hasta: lb.hasta, nombre: lb.nombre }, periodo: { desde, hasta }, noPlaneado, diferido, texto }
 }
 
@@ -1418,8 +1420,8 @@ export interface DiaChoke {
   dominante: Record<string, ChokeCampo>
   /** Por campo: los tramos casi iguales ese día, o null. */
   casiIguales: Record<string, ChokeCampo[] | null>
-  /** Por campo: los potenciales del día, bbl/d. */
-  potenciales: Record<string, { pozos: number; planta: number | null; exportacion: number | null }>
+  /** Por campo: los potenciales del día, bbl/d, y el tren que manda en la planta. */
+  potenciales: Record<string, { pozos: number; planta: number | null; exportacion: number | null; tren?: TrenPlanta }>
   /** Los campos donde el real pasó la capacidad declarada del tramo que debía limitar. */
   superado: Record<string, ChokeCampo>
 }
@@ -1484,9 +1486,11 @@ export function serieChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Co
       if (k === vigente) { racha = undefined; continue }
       racha = racha?.k === k ? { ...racha, dias: racha.dias + 1 } : { k, desde: d, dias: 1 }
       if (racha.dias < diasParaCambio) continue
-      const valorBpd = racha.desde.potenciales[c]?.[k] ?? 0
+      const pot = racha.desde.potenciales[c]
+      const valorBpd = pot?.[k] ?? 0
+      const cual = (x: ChokeCampo) => `${SUJETO[x]}${x === 'planta' && pot?.tren ? ` · ${TREN_NOMBRE[pot.tren]}` : ''}`
       cambios.push({ campoId: c, dia: racha.desde.dia, de: vigente, a: k, valorBpd,
-        texto: `Cambió lo que limita en ${campoPorId(c).nombre}: desde el ${fechaCorta(racha.desde.dia)} ${k === 'pozos' ? 'limitan' : 'limita'} ${SUJETO[k]} (${n0(valorBpd)} bbl/d); antes, ${SUJETO[vigente]}. Cambian los equipos que más cuestan si fallan: revise «Si falla hoy».` })
+        texto: `Cambió lo que limita en ${campoPorId(c).nombre}: desde el ${fechaCorta(racha.desde.dia)} ${k === 'pozos' ? 'limitan' : 'limita'} ${cual(k)} (${n0(valorBpd)} bbl/d); antes, ${cual(vigente)} (${n0(pot?.[vigente] ?? 0)}). Cambian los equipos que más cuestan si fallan: revise «Si falla hoy».` })
       vigente = k
       racha = undefined
     }

@@ -1,7 +1,7 @@
 /** La tubería del agua de cada campo: el modelo choke de inyección
- *  (CHOKE-COMPLETO §9).
+ *  (CHOKE-COMPLETO §9; en pantalla, «La tubería del agua», U2 §5).
  *
- *  En un campo de 92–97 % de agua, el estrecho suele ser el agua en planta. Lo
+ *  En un campo de 92–97 % de agua, el agua decide más paradas que el crudo. Lo
  *  dice el modelo de BP: «In a field such as Magnus or Ula the Gross Potential
  *  is very dependent on water injection capacity, and a separate choke model
  *  can be used to model injection performance» (SPE-36848). La tubería:
@@ -16,10 +16,13 @@
  *    diferido.ts: el de la parada abierta de la bomba que lo vacía (el que ya
  *    se reporta: «colchón 1,8 h · aguantó 1,8 h») o, con la bomba en marcha, el
  *    de «si para ahora» (`prediccion`);
- *  - bombas: la capacidad INSTALADA del tren, la placa de las que están en
- *    servicio (la de reserva no suma). Una parada no la baja: la parada es
- *    brecha, no capacidad (NSTA p. 29).
- *  El dominante del agua es el tramo con caudal de menor potencial. Cada
+ *  - bombas: la capacidad INSTALADA del tren con UNA sola cifra por bomba, la
+ *    que usa diferido.ts (89.250 en La Ceiba, lo que deja el cabezal de
+ *    disposición); la placa (90.000) va solo como referencia. Así el colchón,
+ *    la predicción y la tubería dicen lo mismo. La de reserva no suma, y una
+ *    parada no baja la capacidad: es pérdida, no menos tubo (NSTA p. 29); lo que
+ *    queda hoy va aparte (`disponibleHoy`).
+ *  El tramo con caudal de menor potencial es el que limita el agua. Cada
  *  potencial se dice también en crudo: agua × crudo por barril de agua.
  *
  *  Es la foto de ahora: el nivel de un tanque solo se conoce ahora y al parar
@@ -32,7 +35,7 @@ import { crudoAsignado, aguaDePrueba } from './libro'
 import { prediccion, paradaMedida, aguaQueMueve, type Versiones } from './diferido'
 import { n0 } from './choke'
 import type { Contexto } from './causa-senal'
-import { AHORA } from './reloj'
+import { AHORA, fechaHora } from './reloj'
 
 export type TramoAgua = 'producida' | 'tratamiento' | 'tanques' | 'bombas' | 'inyectores'
 /** Los tramos, en el orden de la tubería. */
@@ -40,14 +43,9 @@ export const ORDEN_AGUA: readonly TramoAgua[] = ['producida', 'tratamiento', 'ta
 export const NOMBRE_TRAMO_AGUA: Record<TramoAgua, string> = {
   producida: 'Agua de los pozos',
   tratamiento: 'Tratamiento de agua',
-  tanques: 'Tanques de agua',
+  tanques: 'Tanque de agua',
   bombas: 'Bombas de reinyección',
   inyectores: 'Pozos inyectores (disposición)',
-}
-/** Dentro de una frase: «a los pozos inyectores les sobran…». */
-const DATIVO: Record<TramoAgua, string> = {
-  producida: 'a los pozos les', tratamiento: 'al tratamiento le', tanques: 'a los tanques les',
-  bombas: 'a las bombas les', inyectores: 'a los pozos inyectores les',
 }
 
 /** El colchón de un tanque de agua: cuántas horas aguanta antes del alto-alto. */
@@ -67,14 +65,20 @@ export interface ColchonAgua {
   aguaSinSalidaBpd: number
 }
 
-/** Una bomba del tren, con lo que el demo sabe de ella. */
+/** Una bomba del tren, con lo que se sabe de ella. */
 export interface BombaDelTren {
   id: string
+  /** La cifra única: lo que da en este campo (la que usa diferido.ts). */
+  capacidadBpd: number
+  /** La placa, solo como referencia. */
   placaBpd: number
+  papel: 'disposicion' | 'recobro'
   reserva: boolean
-  papel?: string
-  /** Tiene perfil firmado en el campo (PLC, medidor, historia): las demás no se miden. */
-  perfil: boolean
+  nota?: string
+  /** Tiene perfil con instrumentos (PLC, medidor, historia): las demás no se ven. */
+  instrumentada: boolean
+  /** Parada o en marcha según su PLC; una sin instrumento, sin lectura. */
+  marcha: 'en-marcha' | 'parada' | 'sin-lectura'
   /** Lo que mueve en marcha: la mediana de su medidor (`aguaQueMueve`, diferido.ts). */
   mueveBpd?: number
   /** Lo que el resto del tren toma de más si ella para (respaldo firmado). */
@@ -96,6 +100,8 @@ export interface TramoTuberiaAgua {
   fuente: string
   tanques?: Array<{ id: string; nombre: string; capacidadBbl: number; altoAlto: number; nivelPct?: number; colchon?: ColchonAgua; sinColchon?: string }>
   bombas?: BombaDelTren[]
+  /** Lo que queda hoy con una bomba parada (el tramo no se angosta). */
+  disponibleHoy?: { valor: number; equipo: string; texto: string }
 }
 
 export interface TuberiaAgua {
@@ -107,24 +113,36 @@ export interface TuberiaAgua {
   crudoBpd: number
   crudoPorAgua: number
   tramos: TramoTuberiaAgua[]
+  /** Capacidades del tratamiento y de los inyectores (null: sin dato). */
+  tratamientoBpd: number | null
+  admisionInyectoresBpd: number | null
   /** El tramo con caudal de menor potencial. Si es el agua de los pozos, la disposición no limita. */
   dominante: TramoAgua
   /** La disposición (no el agua de los pozos) es la que limita en régimen. */
   limita: boolean
+  /** El tramo de la disposición más angosto (sin el agua de los pozos). Con un
+   *  empate entre las bombas y los inyectores manda el de los inyectores: lo
+   *  que deja a cada bomba en su capacidad es el cabezal de disposición. */
+  angosto?: TramoAgua
+  /** Lo que le sobra a la disposición sobre el agua de los pozos, bbl/d (0 si limita). */
+  sobraBpd: number
   /** Agua sin salida en régimen, bbl/d (0 si sobra), y el crudo que eso frena. */
   faltaBpd: number
   crudoQueFrenaBpd: number
   /** Si para la bomba de la línea de este campo: lo que el respaldo no absorbe
-   *  y el crudo que se pierde en el orden de TRIM, como los calcula diferido.ts
-   *  (`prediccion`). Si ya está parada, también lo que se está perdiendo. */
-  sinUna?: { bomba: string; aguaSinSalidaBpd: number; crudoBpd: number; colchonH?: number; parada: boolean; perdiendoBpd?: number }
+   *  y el crudo que se pierde en el orden de TRIM y parejo, como los calcula
+   *  diferido.ts (`prediccion`). Si ya está parada, también lo que se está perdiendo. */
+  sinUna?: { bomba: string; papel: 'disposicion' | 'recobro'; aguaSinSalidaBpd: number; crudoBpd: number; crudoParejoBpd: number; colchonH?: number; parada: boolean; desde?: Date; perdiendoBpd?: number }
   /** Tramos sin dato en el demo: no se inventan. */
   sinDato: TramoAgua[]
+  /** Las frases del panel, sin teoría (U2 §5.3). */
+  frases: string[]
   texto: string
 }
 
 /** «1,8 h» bajo 10 h; «19 h»; «3,2 d». */
 const textoH = (h: number) => (!Number.isFinite(h) ? 'sin límite' : h < 10 ? `${h.toLocaleString('es-CO', { maximumFractionDigits: 1 })} h` : h < 48 ? `${Math.round(h)} h` : `${(h / 24).toLocaleString('es-CO', { maximumFractionDigits: 1 })} d`)
+const PALABRA = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez']
 
 /** La tubería del agua de un campo, ahora. `versiones` es el historial de la
  *  configuración firmada: con él, el colchón de una parada abierta se calcula
@@ -140,17 +158,24 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
   const fuenteTren = tren?.fuente ?? 'El campo no tiene tren de agua en el esquema de planta: sin dato.'
   const vs: Versiones = versiones ?? [{ fecha: '1970-01-01T00:00:00Z', config: ctx.config }]
 
-  // Las bombas: la placa de las que están en servicio.
+  // Las bombas: la cifra única de cada una; la placa, de referencia.
   const bombas: BombaDelTren[] = (tren?.bombas ?? []).map(b => {
     const perfil = perfilBomba(b.id, campoId)
     const respaldo = respaldoDe(ctx.config, campoId, b.id)
-    return { id: b.id, placaBpd: b.placaBpd, reserva: !!b.reserva, ...(b.papel ? { papel: b.papel } : {}), perfil: !!perfil,
-      ...(perfil ? { mueveBpd: aguaQueMueve(perfil).bpd } : {}), ...(respaldo ? { respaldoLibreBpd: respaldo.libreBpd } : {}) }
+    const marcha: BombaDelTren['marcha'] = !perfil ? 'sin-lectura' : paradasDe(b.id, campoId).some(e => !e.fin) ? 'parada' : 'en-marcha'
+    return { id: b.id, capacidadBpd: b.capacidadBpd, placaBpd: b.placaBpd, papel: b.papel, reserva: !!b.reserva, ...(b.nota ? { nota: b.nota } : {}),
+      instrumentada: !!perfil, marcha, ...(perfil ? { mueveBpd: aguaQueMueve(perfil).bpd } : {}), ...(respaldo ? { respaldoLibreBpd: respaldo.libreBpd } : {}) }
   })
-  const placa = bombas.filter(b => !b.reserva).reduce((a, b) => a + b.placaBpd, 0)
+  const enServicio = bombas.filter(b => !b.reserva)
+  const capacidad = enServicio.reduce((a, b) => a + b.capacidadBpd, 0)
+  const paradas = enServicio.filter(b => b.marcha === 'parada')
+  const disponibleHoy = paradas.length ? (() => {
+    const valor = capacidad - paradas.reduce((a, b) => a + b.capacidadBpd, 0), equipo = paradas.map(b => b.id).join(', ')
+    return { valor, equipo, texto: `hoy, sin ${equipo}: ${n0(valor)} de ${n0(capacidad)} bbl/d de agua` }
+  })() : undefined
 
   // Los tanques: la capacidad y el colchón, el mismo de diferido.ts.
-  const tanques = ctx.config.tanques.filter(x => x.campoId === campoId).map(x => {
+  const tanques: NonNullable<TramoTuberiaAgua['tanques']> = ctx.config.tanques.filter(x => x.campoId === campoId).map(x => {
     const perfil = perfilBomba(x.bomba, campoId)
     const nivel = Object.hasOwn(NIVEL_AHORA, x.id) ? NIVEL_AHORA[x.id] : undefined
     const base = { id: x.id, nombre: x.nombre, capacidadBbl: x.capacidadBbl, altoAlto: x.altoAlto, ...(nivel ? { nivelPct: nivel.pct } : {}) }
@@ -169,38 +194,54 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
     tramo: k, nombre: NOMBRE_TRAMO_AGUA[k], potencialBpd, crudoBpd: enCrudo(potencialBpd),
     holguraBpd: potencialBpd === null || k === 'producida' ? null : potencialBpd - agua, fuente, ...(sinDato ? { sinDato } : {}), ...extra,
   })
+  const tratamientoBpd = tren?.tratamientoBpd ?? null, admisionInyectoresBpd = tren?.admisionBpd ?? null
   const tramos: TramoTuberiaAgua[] = [
     tramo('producida', agua, 'Σ agua de la prueba vigente de los pozos con prueba (la misma base del potencial de los pozos)'),
-    tramo('tratamiento', tren?.tratamientoBpd ?? null, fuenteTren, {}, tren?.tratamientoBpd === undefined ? 'El demo no trae la capacidad del tratamiento de agua' : undefined),
+    tramo('tratamiento', tratamientoBpd, fuenteTren, {}, tratamientoBpd === null ? 'El demo no trae la capacidad del tratamiento de agua' : undefined),
     tramo('tanques', null, 'Tanques de agua firmados en la configuración: no tienen caudal, son colchón', { tanques },
       tanques.length ? undefined : 'El campo no tiene tanque de agua firmado en la configuración'),
-    tramo('bombas', bombas.length ? placa : null, fuenteTren, { bombas }, bombas.length ? undefined : 'El campo no tiene bombas de agua en el esquema'),
-    tramo('inyectores', tren?.admisionBpd ?? null, fuenteTren, {}, tren?.admisionBpd === undefined ? 'El demo no trae lo que admiten los pozos inyectores' : undefined),
+    tramo('bombas', bombas.length ? capacidad : null, `${fuenteTren} La capacidad es la que usa diferido.ts; la placa va de referencia.`,
+      { bombas, ...(disponibleHoy ? { disponibleHoy } : {}) }, bombas.length ? undefined : 'El campo no tiene bombas de agua en el esquema'),
+    tramo('inyectores', admisionInyectoresBpd, fuenteTren, {}, admisionInyectoresBpd === null ? 'El demo no trae lo que admiten los pozos inyectores' : undefined),
   ]
 
-  // El dominante: el menor de los tramos con caudal y dato (el tanque no entra).
+  // Lo que limita el agua: el menor de los tramos con caudal y dato (el tanque no entra).
   const conCaudal = tramos.filter((x): x is TramoTuberiaAgua & { potencialBpd: number } => x.potencialBpd !== null && x.tramo !== 'tanques')
   const menor = conCaudal.reduce((a, x) => (x.potencialBpd < a.potencialBpd ? x : a), conCaudal[0]!)
   const limita = menor.tramo !== 'producida'
+  const disposicion = conCaudal.filter(x => x.tramo !== 'producida')
+  const angosto = disposicion.reduce<(typeof disposicion)[number] | undefined>((a, x) => (!a || Math.round(x.potencialBpd) <= Math.round(a.potencialBpd) ? x : a), undefined)
   const faltaBpd = limita ? Math.max(0, agua - menor.potencialBpd) : 0
+  const sobraBpd = angosto && !limita ? angosto.potencialBpd - agua : 0
 
-  // Si para la bomba de la línea (la que tiene perfil de disposición o recobro), como lo dice diferido.ts.
-  const linea = bombas.find(b => b.perfil && !b.reserva)
-  const pr = linea ? prediccion(perfilBomba(linea.id, campoId)!, ctx) : undefined
-  const sinUna = linea && pr ? { bomba: linea.id, aguaSinSalidaBpd: pr.aguaSinSalidaBpd, crudoBpd: pr.crudoBpd, ...(pr.colchon ? { colchonH: pr.colchon.horas } : {}),
-    parada: !!pr.parada, ...(pr.perdiendo ? { perdiendoBpd: pr.perdiendo.bblDia } : {}) } : undefined
+  // Si para la bomba de la línea (la que tiene perfil), como lo dice diferido.ts.
+  const linea = enServicio.find(b => b.instrumentada)
+  const perfilLinea = linea ? perfilBomba(linea.id, campoId) : undefined
+  const pr = perfilLinea ? prediccion(perfilLinea, ctx) : undefined
+  const sinUna = linea && pr ? {
+    bomba: linea.id, papel: linea.papel, aguaSinSalidaBpd: pr.aguaSinSalidaBpd, crudoBpd: pr.crudoBpd, crudoParejoBpd: pr.crudoParejoBpd,
+    ...(pr.colchon ? { colchonH: pr.colchon.horas } : {}), parada: !!pr.parada,
+    ...(pr.parada ? { desde: new Date(pr.parada.inicio) } : {}), ...(pr.perdiendo ? { perdiendoBpd: pr.perdiendo.bblDia } : {}),
+  } : undefined
 
-  const sig = conCaudal.filter(x => x.tramo !== 'producida').sort((a, b) => a.potencialBpd - b.potencialBpd)[0]
-  const enRegimen = limita
-    ? `El agua limita: ${NOMBRE_TRAMO_AGUA[menor.tramo].toLowerCase()} deja pasar ${n0(menor.potencialBpd)} bbl/d y los pozos dan ${n0(agua)}; faltan ${n0(faltaBpd)} bbl/d de salida, que frenan ${n0(faltaBpd * crudoPorAgua)} bbl/d de crudo`
-    : sig ? `El agua no limita con todo el tren en servicio: ${DATIVO[sig.tramo]} sobran ${n0(sig.potencialBpd - agua)} bbl/d de agua (${n0((sig.potencialBpd - agua) * crudoPorAgua)} bbl/d de crudo)`
-      : 'Sin capacidades del tren de agua en el demo: no se puede decir si el agua limita'
-  const conUna = !sinUna ? ''
-    : sinUna.aguaSinSalidaBpd <= 0 ? `. Si para ${sinUna.bomba}, el respaldo toma toda su agua: no cierra pozos`
-      : sinUna.parada ? `. ${sinUna.bomba} está parada: quedan ${n0(sinUna.aguaSinSalidaBpd)} bbl/d sin salida y se pierden ${n0(sinUna.perdiendoBpd ?? 0)} bbl/d de crudo`
-        : `. Si para ${sinUna.bomba}, quedan ${n0(sinUna.aguaSinSalidaBpd)} bbl/d sin salida: ${n0(sinUna.crudoBpd)} bbl/d de crudo${sinUna.colchonH !== undefined ? ` después de ${textoH(sinUna.colchonH)} de colchón` : ''}`
+  // Las frases del panel (U2 §5.3 y §5.5).
+  const frases: string[] = []
+  const cuantas = enServicio.length === 1 ? 'Con su bomba' : `Con las ${PALABRA[enServicio.length] ?? n0(enServicio.length)} bombas`
+  if (limita) frases.push(`El agua limita: ${NOMBRE_TRAMO_AGUA[menor.tramo].toLowerCase()} deja pasar ${n0(menor.potencialBpd)} bbl/d y los pozos dan ${n0(agua)}; faltan ${n0(faltaBpd)} bbl/d de salida, que frenan ${n0(faltaBpd * crudoPorAgua)} bbl/d de crudo.`)
+  else if (angosto) frases.push(`${cuantas}, al agua le sobran ${n0(sobraBpd)} bbl/d.`)
+  else frases.push('Sin capacidades del tren de agua en el demo: no se puede decir si el agua limita.')
+  if (sinUna && sinUna.papel === 'recobro') frases.push(`Si para ${sinUna.bomba} hoy, no cierra pozos: el agua tiene otra salida. Si sigue parada semanas, el yacimiento pierde presión: eso se trabaría «en el yacimiento».`)
+  else if (sinUna && sinUna.aguaSinSalidaBpd <= 0) frases.push(`Si para ${sinUna.bomba}, el respaldo toma toda su agua: no cierra pozos.`)
+  else if (sinUna && sinUna.parada) frases.push(`${sinUna.bomba} está parada desde el ${fechaHora(sinUna.desde!)}: quedan ${n0(sinUna.aguaSinSalidaBpd)} bbl/d sin salida y se pierden ${n0(sinUna.perdiendoBpd ?? 0)} bbl/d de crudo.`)
+  else if (sinUna) {
+    const tk = tanques.find(x => x.colchon)?.colchon
+    frases.push(`Si para ${sinUna.bomba}, faltan ${n0(sinUna.aguaSinSalidaBpd)} bbl/d: ${tk ? `el tanque se llena en ${textoH(tk.horas)} y ` : ''}hay que cerrar pozos.`)
+  }
+  if (sinUna && sinUna.papel === 'disposicion' && sinUna.aguaSinSalidaBpd > 0)
+    frases.push(`Cerrando primero los más acuatosos se pierden ${n0(sinUna.crudoBpd)} bbl/d de crudo; cerrando parejo, ${n0(sinUna.crudoParejoBpd)}.`)
   return {
-    campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, tramos, dominante: menor.tramo, limita, faltaBpd, crudoQueFrenaBpd: faltaBpd * crudoPorAgua,
-    ...(sinUna ? { sinUna } : {}), sinDato: tramos.filter(x => x.sinDato).map(x => x.tramo), texto: `${enRegimen}${conUna}`,
+    campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, tramos, tratamientoBpd, admisionInyectoresBpd,
+    dominante: menor.tramo, limita, ...(angosto ? { angosto: angosto.tramo } : {}), sobraBpd, faltaBpd, crudoQueFrenaBpd: faltaBpd * crudoPorAgua,
+    ...(sinUna ? { sinUna } : {}), sinDato: tramos.filter(x => x.sinDato).map(x => x.tramo), frases, texto: frases.join(' '),
   }
 }

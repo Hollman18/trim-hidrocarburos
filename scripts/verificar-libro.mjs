@@ -2289,6 +2289,330 @@ console.log('\n=== 21. Ciclo ANTES / DURANTE / DESPUÉS ===')
     'planPorId encuentra el plan o no existe')
 }
 
+console.log('\n=== 22. Modelo choke: los cuatro tramos, la topología y «¿Dónde se trabó?» (CHOKE-COMPLETO §2 y §5) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const TOPO = await v.ssrLoadModule('/src/entities/datos/topologia.ts')
+  // §14.11 · La derivación alcance → tramo: un solo criterio, el de Edinson.
+  comprobar(CH.chokeDeAlcance('dedicado') === 'pozo' && CH.chokeDeAlcance('compartido') === 'planta' && CH.chokeDeAlcance('frontera') === 'exportacion'
+    && CH.chokeDeAlcance('tercero') === 'exportacion' && CH.alcancePorPozos(['LC-14']) === 'dedicado' && CH.alcancePorPozos(['LC-14', 'LC-14']) === 'dedicado'
+    && CH.alcancePorPozos(['LC-14', 'LC-09']) === 'compartido' && CH.conChoke({ elemento: 'X', alcance: 'compartido', pozos: ['LC-14', 'LC-09'] }).choke === 'planta',
+    'el tramo se deriva del alcance: un solo pozo = dedicado = «En el pozo»; varios = compartido = «En la planta o estación»; tercero o frontera hacia afuera = «Afuera»')
+  comprobar(CH.ORDEN_CHOKE.join() === 'reservorio,pozo,planta,exportacion' && CH.NOMBRE_CHOKE.reservorio === 'En el yacimiento' && CH.NOMBRE_CHOKE.pozo === 'En el pozo'
+    && CH.NOMBRE_CHOKE.planta === 'En la planta o estación' && CH.NOMBRE_CHOKE.exportacion === 'Afuera: oleoducto, transportador o cliente' && !('mercado' in CH.NOMBRE_CHOKE)
+    && CH.ORDEN_CHOKE.every(k => CH.EXPLICA_TRAMO[k]?.length > 20 && CH.RESUMEN_TRAMO[k]) && CH.EXPLICA_TRAMO.pozo.startsWith('Solo afectó a este pozo') && /mercado/i.test(CH.SUBNIVEL_MERCADO),
+    'los cuatro tramos con sus palabras y la línea que explica cada uno («En la planta o estación», U2 §1.1); «Mercado» es un subnivel de afuera, nunca un quinto valor')
+  // La topología del demo sale de lo que ya existe, y nada en ella contradice su alcance.
+  const topos = TODOS.map(c => [c, CH.topologiaDe(c, ctx0)])
+  const malDerivado = topos.flatMap(([c, t]) => t.filter(e => e.choke !== CH.chokeDeAlcance(e.alcance)).map(e => `${c}:${e.elemento}`))
+  const errores = topos.flatMap(([, t]) => CH.validarTopologia(t))
+  comprobar(malDerivado.length === 0 && errores.length === 0 && topos.every(([, t]) => t.length > 0),
+    `la topología del demo sale de lo que ya existe y cada elemento lleva el tramo de su alcance (${topos.map(([c, t]) => `${c} ${t.length}`).join(', ')} elementos)${errores.length ? `: ${errores.join('; ')}` : ''}`)
+  const el = (c, id) => CH.elementoDe(c, id, ctx0)
+  const todosCeiba = P.pozosDe('ceiba').map(p => p.id).sort().join()
+  comprobar(P.pozosDe('ceiba').every(p => el('ceiba', p.id)?.alcance === 'dedicado' && el('ceiba', p.id)?.pozos?.join() === p.id)
+    && el('ceiba', 'P-201B')?.alcance === 'compartido' && [...el('ceiba', 'P-201B').pozos].sort().join() === todosCeiba
+    && el('morichal', 'MPP-301')?.pozos?.join() === B.perfilBomba('MPP-301', 'morichal').pozos.join() && el('morichal', 'MPP-301')?.choke === 'planta'
+    && el('ceiba', 'SE-2')?.alcance === 'compartido' && el('ceiba', 'oleoducto')?.alcance === 'tercero' && el('ceiba', 'oleoducto')?.choke === 'exportacion',
+    'cada pozo es dedicado a sí mismo; P-201B sirve a los 18 pozos de La Ceiba, MPP-301 a los 3 de su perfil, SE-2 (el alimentador) a todos; el oleoducto es de un tercero')
+
+  const lbH = L.libro(TODOS, new Date(L.calendario()[0].desde), R.AHORA, ctx0)
+  const ch = t => CH.chokeDeCausa(t.causa, t.pozo.campoId, ctx0)
+  // §14.7 · Una electrosumergible dedicada da «En el pozo»; P-201B da «En la planta».
+  const esp = lbH.tramos.find(t => t.causa.tipo === 'electrosumergible' && t.pozo.campoId === 'ceiba')
+  const bomba = lbH.tramos.find(t => t.causa.tipo === 'reinyeccion' && t.causa.equipo === 'P-201B' && t.pozo.campoId === 'ceiba')
+  const chEsp = ch(esp), chB = ch(bomba)
+  comprobar(chEsp?.choke === 'pozo' && chEsp.alcance === 'dedicado' && chEsp.servidos === 1 && chB?.choke === 'planta' && chB.alcance === 'compartido'
+    && chB.porque === 'P-201B mueve el agua de 18 pozos: si para, se frenan varios' && chB.regla === 'choke.topologia@2' && chB.fuente === 'derivada',
+    `una electrosumergible dedicada da «${CH.NOMBRE_CHOKE[chEsp?.choke]}» («${chEsp?.porque}»); P-201B da «${CH.NOMBRE_CHOKE[chB?.choke]}»: «${chB?.porque}»`)
+  // §14.5 · En cascada manda la raíz: todas las paradas de una misma caída llevan el tramo y el elemento de su raíz.
+  const porEvento = new Map()
+  for (const t of lbH.tramos) if (t.causa.evento && t.causa.evento !== t.evento.id) porEvento.set(t.causa.evento, [...(porEvento.get(t.causa.evento) ?? []), t])
+  const cascadas = [...porEvento.values()].filter(g => new Set(g.map(t => t.pozo.id)).size >= 2)
+  const rotas = cascadas.filter(g => { const cs = g.map(ch); return cs.some(x => !x || x.choke !== cs[0].choke || x.elemento !== g[0].causa.equipo) })
+  const se2 = porEvento.get('SV-SE-2-251015') ?? [], aire = porEvento.get('SV-K-101-260128') ?? []
+  const paroAire = B.paradaPorId('EV-2011-260128')
+  comprobar(cascadas.length >= 20 && rotas.length === 0 && se2.length >= 10 && se2.every(t => ch(t)?.choke === 'planta' && ch(t)?.elemento === 'SE-2')
+    && paroAire && CS.causaDeParada(paroAire, ctx0).equipo === 'K-101' && new Set(aire.map(t => t.pozo.id)).size === 18 && aire.every(t => ch(t)?.choke === 'planta' && ch(t)?.elemento === 'K-101'),
+    `en cascada manda la raíz: ${cascadas.length} cascadas reales del demo, todas sus paradas con el tramo y el elemento de su raíz (SE-2 cerró ${new Set(se2.map(t => t.pozo.id)).size} pozos de Morichal el 15-oct-2025; la caída de K-101 del 28-ene, que paró también a P-201B, queda en K-101)`)
+  // Sin causa no hay tramo; tanques de crudo llenos y programadas.
+  const pend = lbH.tramos.filter(t => t.causa.tipo === 'pendiente')
+  const evac = lbH.tramos.find(t => t.causa.tipo === 'evacuacion'), chE = evac && ch(evac)
+  const prog = lbH.tramos.filter(t => t.causa.tipo === 'programada')
+  comprobar(pend.length > 0 && pend.every(t => ch(t) === null) && chE?.choke === 'planta' && chE.pregunta === '¿El oleoducto o el cliente estaba recibiendo?'
+    && prog.length > 0 && prog.every(t => ch(t)?.choke === (P.pozoDe(t.pozo.campoId, t.causa.equipo) ? 'pozo' : 'planta')),
+    `sin causa no hay tramo (${pend.length} paradas sin identificar dan null); el tanque de crudo lleno se propone «en la planta» con la pregunta «${chE?.pregunta}»; ${prog.length} paradas programadas llevan el tramo del elemento intervenido`)
+  // Declarada: según el motivo que escogió la persona; en texto libre, la topología como propuesta y la pregunta.
+  const decl = lbH.tramos.find(t => t.causa.tipo === 'declarada')
+  const conMotivo = txt => CH.chokeDeCausa({ ...decl.causa, texto: txt, declarado: { ...decl.causa.declarado, texto: txt } }, decl.pozo.campoId, ctx0)
+  comprobar(MSJ.CAUSAS_POZO.map(x => conMotivo(x)?.choke).join() === 'pozo,pozo,exportacion,pozo' && conMotivo(MSJ.CAUSAS_POZO[2])?.subnivel === 'mercado'
+    && ch(decl)?.choke === 'pozo' && !!ch(decl)?.pregunta,
+    'declarada: el tramo del motivo que escogió la persona (la nominación del comprador es afuera, subnivel mercado); en texto libre se propone el pozo y se pregunta')
+  // Coordinador, punto 3 · Baja tensión en UN pozo del alimentador: «En el pozo» con la pregunta de energía; en varios a la vez, la planta (regla @2).
+  const uvPropios = lbH.tramos.filter(t => t.evento.codigo === 'UV' && t.causa.tipo === 'energia' && t.causa.evento === t.evento.id)
+  const lc05 = L.libro(['ceiba'], D.rangoDePeriodo('curso').desde, R.AHORA, ctx0).tramos.find(t => t.pozo.id === 'LC-05' && t.evento.codigo === 'UV')
+  const enCascada = P.eventosDeCampo('morichal').find(e => e.codigo === 'UV' && CS.causaDeEvento(e, ctx0).evento !== e.id)
+  const varios = enCascada && CH.chokeDeCausa({ tipo: 'energia', equipo: 'SE-2', como: 'senal', evento: enCascada.id, evidencia: ['prueba'], texto: 'Baja tensión en el alimentador del pozo' }, 'morichal', ctx0)
+  comprobar(uvPropios.length > 0 && uvPropios.every(t => ch(t)?.choke === 'pozo' && ch(t)?.elemento === t.pozo.id && ch(t)?.pregunta === CH.PREGUNTA_ENERGIA)
+    && lc05 && ch(lc05)?.choke === 'pozo' && varios?.choke === 'planta' && !varios.pregunta && /a la vez/.test(varios.porque) && CH.REGLA_CHOKE === 'choke.topologia@2',
+    `baja tensión: un solo pozo del alimentador caído es «En el pozo», con la pregunta de energía (las ${uvPropios.length} del demo, LC-05 el 1-oct: «${lc05 && ch(lc05)?.porque}»); varios a la vez en la ventana de cascada, «En la planta» («${varios?.porque.slice(0, 60)}…»)`)
+  // Config.topologia manda; lo que la firma no trae sale de la regla por tipo; un campo sin entradas sigue con la derivada.
+  const ctxT = { config: { ...ctx0.config, topologia: [CH.conChoke({ elemento: 'P-201B', alcance: 'dedicado', pozos: ['LC-14'], campoId: 'ceiba' })] }, respuestas: {} }
+  const chT = CH.chokeDeCausa(bomba.causa, 'ceiba', ctxT), chK = CH.chokeDeCausa({ ...bomba.causa, tipo: 'aire', equipo: 'K-101' }, 'ceiba', ctxT)
+  comprobar(chT?.choke === 'pozo' && chT.fuente === 'firmada' && chK?.choke === 'planta' && chK.fuente === 'regla' && CH.topologiaFirmada('ceiba', ctxT) && !CH.topologiaFirmada('morichal', ctxT),
+    'Config.topologia manda: firmada P-201B como dedicada a un pozo, su parada pasa a «En el pozo»; lo que la firma no trae sale de la regla por tipo; un campo sin entradas sigue con la derivada')
+  const malas = CH.validarTopologia([
+    { elemento: 'P-201B', choke: 'pozo', alcance: 'compartido', pozos: ['LC-14', 'LC-09'], campoId: 'ceiba' },
+    { elemento: 'TR-1', choke: 'pozo', alcance: 'dedicado', pozos: ['LC-14', 'LC-09'], campoId: 'ceiba' },
+    { elemento: 'TR-2', choke: 'planta', alcance: 'compartido', pozos: ['LC-14'], campoId: 'ceiba' },
+    { elemento: 'TR-2', choke: 'planta', alcance: 'compartido', pozos: ['LC-14', 'XX-99'], campoId: 'ceiba' },
+  ])
+  comprobar(malas.length === 5, `la firma de una topología rechaza un tramo que no sale del alcance, un dedicado con dos pozos, un compartido con uno, un elemento repetido y un pozo de otro campo (${malas.length} errores)`)
+  // Coordinador, punto 8 · El caso de borde «misma locación»: la locación vive en datos/topologia.ts, no en Pozo.
+  const marcada = CH.marcarCasosBorde(CH.topologiaDe('morichal', ctx0), TOPO.locacionDemo('morichal')).filter(e => e.casoBorde)
+  comprobar(marcada.map(e => `${e.elemento}:${e.casoBorde}:${e.choke}`).join() === 'MPP-301:misma-locacion:planta'
+    && CH.casoBordeDe({ alcance: 'compartido', pozos: ['MN-07', 'MN-18', 'MN-33', 'MN-01'] }, TOPO.locacionDemo('morichal')) === undefined
+    && CH.casoBordeDe({ alcance: 'compartido', pozos: ['LC-12', 'LC-14'] }, TOPO.locacionDemo('ceiba')) === undefined && /Edinson/.test(CH.EXPLICA_CASO_BORDE),
+    'caso de borde: MPP-301 sirve a los 3 pozos del clúster norte (una sola locación) y queda marcado, sin dejar de ir a la planta; sin la locación de los pozos (el resto del demo) no se marca nada')
+  // Coordinador, punto 8 · Las propuestas de topología, con evidencia y conflictos.
+  const prC = CH.propuestasTopologia('ceiba', ctx0), prM = CH.propuestasTopologia('morichal', ctx0)
+  const de = (ps, fuente, id) => ps.find(x => x.fuente === fuente && x.elemento === id)
+  comprobar(de(prC, 'alimentador', 'SE-2')?.pozos.length === 18 && de(prC, 'cascadas', 'K-101')?.evidencia.length >= 5 && de(prC, 'cascadas', 'K-101')?.pozos.length === 18
+    && /4 pozos/.test(de(prC, 'registro', 'V-101')?.conflicto ?? '') && de(prM, 'bomba', 'MPP-301')?.pozos.join() === 'MN-07,MN-18,MN-33' && !!de(prM, 'cascadas', 'C-401')?.conflicto
+    && [...prC, ...prM].every(x => x.evidencia.length > 0 && x.porque.endsWith('?') || x.fuente === 'registro'),
+    `propuestas de topología con su evidencia: «${de(prC, 'alimentador', 'SE-2')?.porque}» · «${de(prC, 'cascadas', 'K-101')?.porque}» · conflicto: «${de(prC, 'registro', 'V-101')?.conflicto}»`)
+}
+
+console.log('\n=== 23. Qué limita hoy: potenciales, gas sin medir, «casi iguales» y campo de gas (CHOKE-COMPLETO §3–§4, U2 §0 y §11.3) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const ahoraC = R.AHORA.getTime()
+  const pots = TODOS.map(c => CH.potencialesDelCampo(c, ahoraC, ctx0))
+  const crudos = pots.filter(p => !p.campoDeGas)
+  const pc = id => pots.find(p => p.campoId === id)
+  // §14.1 · Potencial del sistema = el menor de pozos, planta y afuera.
+  comprobar(crudos.length === 4 && crudos.every(p => p.sistema === Math.min(p.pozos, p.planta ?? Infinity, p.exportacion ?? Infinity) && p.holgura[p.dominante] === 0
+      && CH.ORDEN_CHOKE_CAMPO.every(k => p.holgura[k] === null || p.holgura[k] >= 0)) && Object.keys(pots[0].holgura).join() === 'pozos,planta,exportacion',
+    `lo que limita es el menor de pozos, planta y afuera: ${crudos.map(p => `${p.campoId} ${f(p.sistema)} (${p.dominante})`).join(', ')}`)
+  // Coordinador, punto 10 · El potencial de los pozos lleva factor de asignación: la misma cifra de Producción.
+  comprobar(pots.every(p => cerca(p.pozos, D.estadoCampo(p.campoId, ctx0).potencialBpd, 1e-9)) && Math.round(pc('guacamayo').pozos) === 6615 && pc('guacamayo').exportacion === 6800
+    && pc('guacamayo').dominante === 'pozos',
+    `el potencial de los pozos es Σ prueba × factor de asignación, el mismo de Producción; en Guacamayo los pozos (${f(pc('guacamayo').pozos)}) quedan por debajo de afuera (6.800)`)
+  // Coordinador, punto 1 · Un tren sin medir no decide lo que limita: el gas sale «sin medir».
+  const ce = pc('ceiba'), mo = pc('morichal'), gasCe = ce.trenes.find(x => x.tren === 'gas')
+  comprobar(ce.planta === 12000 && ce.trenQueLimita === 'crudo' && Math.round(ce.holgura.planta) === 640 && mo.planta === 18320 && mo.trenQueLimita === 'agua' && Math.round(mo.holgura.planta) === 716
+    && gasCe && !gasCe.medido && gasCe.enCrudo === null && gasCe.capacidad === 4200 && gasCe.unidad === 'KPC/d de gas' && /le sobran 640/.test(ce.texto)
+    && crudos.every(p => p.trenes.filter(x => !x.medido).every(x => x.enCrudo === null) && p.planta === Math.min(...p.trenes.filter(x => x.medido && x.enCrudo !== null).map(x => x.enCrudo))),
+    `el gas sin medir queda fuera del mínimo: La Ceiba planta ${f(ce.planta)} (tren de crudo), le sobran ${f(ce.holgura.planta)}; Morichal ${f(mo.planta)} (agua), le sobran ${f(mo.holgura.planta)}`)
+  comprobar(crudos.every(p => p.trenes.find(x => x.tren === 'crudo').capacidad === PT.CAMPO_PLANTA[p.campoId].caudales.crudoCap
+      && Math.abs(p.trenes.find(x => x.tren === 'agua').enCrudo - PT.CAMPO_PLANTA[p.campoId].caudales.aguaCap * p.pozos / p.agua) <= 0.5
+      && p.exportacion === PT.CAMPO_PLANTA[p.campoId].chokes.evacuacion && p.mercado === PT.CAMPO_PLANTA[p.campoId].chokes.mercado),
+    'planta = el menor de los trenes medidos con la capacidad instalada (el agua pasada a crudo con las pruebas); afuera = la evacuación declarada, con el mercado de subnivel')
+  // §14.1 · Empate con explicación, y «casi iguales» con su umbral.
+  const emp = CH.dominanteDe({ pozos: 3400.4, planta: 3400, exportacion: 4100 }), noEmp = CH.dominanteDe({ pozos: 3401, planta: 3400, exportacion: 4100 })
+  comprobar(emp.empate && emp.empatados.join() === 'pozos,planta' && emp.dominante === 'pozos' && /NSTA/.test(emp.explicacion) && /3\.400/.test(emp.explicacion)
+    && !noEmp.empate && noEmp.dominante === 'planta' && noEmp.explicacion === undefined && crudos.every(p => !p.empate),
+    `empate al barril: se marca, se toma el primero de la tubería y se explica («${emp.explicacion}»); en el demo, ningún campo empatado hoy`)
+  const gu = pc('guacamayo')
+  comprobar(CH.PARAMETROS_CHOKE.umbralCasiIguales === 0.03 && CH.PARAMETROS_CHOKE.diasParaCambio === 3 && CH.dominanteDe({ pozos: 6615, planta: 7400, exportacion: 6800 }).casiIguales?.join() === 'pozos,exportacion'
+    && CH.dominanteDe({ pozos: 11360, planta: 12000, exportacion: 14000 }).casiIguales === null && gu.casiIguales?.join() === 'pozos,exportacion' && gu.umbral === 0.03 && ce.casiIguales === null,
+    `«casi iguales» con un umbral fijo y versionado (${CH.PARAMETROS_CHOKE.version}: 3 %, ${CH.PARAMETROS_CHOKE.diasParaCambio} días): Guacamayo, pozos y afuera a ${((gu.exportacion - gu.pozos) / gu.pozos * 100).toFixed(1)} % («${gu.texto}»)`)
+  // Coordinador, punto 5 · La Zarza es un campo de gas: sin tubería de crudo ni holgura.
+  const za = pc('zarza')
+  comprobar(za.campoDeGas && za.dominante === null && za.planta === null && za.sistema === null && Object.values(za.holgura).every(h => h === null) && /campo de gas/.test(za.texto)
+    && pots.filter(p => p.campoId !== 'zarza').every(p => !p.campoDeGas),
+    `La Zarza es un campo de gas: no da tubería de crudo ni holgura («${za.texto.slice(0, 70)}…»)`)
+  // §14.8 · El potencial de la planta no baja durante la parada de P-201B (NSTA p. 29).
+  const paradas = B.paradasDe('P-201B', 'ceiba').filter(e => e.perdida === 1)
+  const mismasPruebas = (a, b) => P.pozosDe('ceiba').every(w => P.pruebaEn(w, a) === P.pruebaEn(w, b))
+  const casos = paradas.map(e => ({ e, a: Date.parse(e.inicio) - 3_600_000, b: Math.min(e.fin ? Date.parse(e.fin) : ahoraC, Date.parse(e.inicio) + 6 * 3_600_000) }))
+    .filter(x => mismasPruebas(x.a, x.b) && L.faDe('ceiba', x.a) === L.faDe('ceiba', x.b))
+  const bajo = casos.filter(x => { const a = CH.potencialesDelCampo('ceiba', x.a, ctx0), b = CH.potencialesDelCampo('ceiba', x.b, ctx0); return a.planta !== b.planta || a.pozos !== b.pozos })
+  const abierta = paradas.find(e => !e.fin)
+  comprobar(casos.length >= 5 && bajo.length === 0 && abierta && casos.some(x => x.e === abierta),
+    `el potencial de la planta (y el de los pozos) no baja durante la parada de P-201B: igual antes y durante ${casos.length} paradas, también la abierta del 2-oct (${f(ce.planta)} bbl/d)`)
+  comprobar(crudos.every(p => p.textoCorto.startsWith('Qué limita hoy: ')) && ce.textoCorto === 'Qué limita hoy: los pozos (11.360 bbl/d)'
+    && /abrir más pozos no da nada/.test(CH.potencialesDelCampo('ceiba', Date.parse('2026-03-15T12:00:00-05:00'), ctx0).texto),
+    `lo que dice en palabras: «${ce.textoCorto}» · «${ce.texto}»; en marzo limitaba la planta: «${CH.potencialesDelCampo('ceiba', Date.parse('2026-03-15T12:00:00-05:00'), ctx0).texto}»`)
+}
+
+console.log('\n=== 24. Lo que se perdió, por tramo y por escalón, con el total del libro (CHOKE-COMPLETO §6–§8) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const suma = o => Object.values(o).reduce((a, x) => a + x, 0)
+  const periodos = [['un mes cerrado', D.rangoDePeriodo('cerrado')], ['el mes en curso', D.rangoDePeriodo('curso')], ['los 13 meses', { desde: new Date(L.calendario()[0].desde), hasta: R.AHORA }]]
+  let cuadres = 0
+  const malasId = [], malasEsc = [], malasEq = []
+  for (const [nombre, r] of periodos) for (const ids of [...TODOS.map(c => [c]), TODOS]) {
+    const b = CH.brechaPorChoke(ids, r.desde, r.hasta, ctx0), lb = L.libro(ids, r.desde, r.hasta, ctx0)
+    const sc = suma(b.porChoke)
+    cuadres++
+    // §14.2 · potencial − real = Σ por tramo + sin explicar, exacto; Σ por tramo = Σ de los tramos del libro.
+    if (!(cerca(sc + b.sinExplicar, lb.potencial - lb.real, 1e-9) && cerca(sc, lb.diferido, 1e-9) && cerca(b.sinExplicar, lb.residuo, 1e-6) && b.cuadra
+      && b.porCampo.every(x => { const l = lb.porCampo.find(y => y.campoId === x.campoId); return cerca(suma(x.porChoke) + x.sinExplicar, l.potencial - l.real, 1e-9) }))) malasId.push(`${nombre} ${ids.join('+')}`)
+    // §14.3 · Σ por escalón = Σ por tramo, y la escalera dentro de cada tramo suma su tramo.
+    if (!(cerca(suma(b.porEscalon), sc, 1e-9) && CH.CHOKES_Y_SIN_ASIGNAR.every(k => cerca(suma(b.porChokeEscalon[k]), b.porChoke[k], 1e-9))
+      && CH.ESCALONES.every(e => cerca(CH.CHOKES_Y_SIN_ASIGNAR.reduce((a, k) => a + b.porChokeEscalon[k][e], 0), b.porEscalon[e], 1e-9)))) malasEsc.push(`${nombre} ${ids.join('+')}`)
+    if (!CH.CHOKES_Y_SIN_ASIGNAR.every(k => cerca(b.porChokeEquipo[k].reduce((a, x) => a + x.bbl, 0), b.porChoke[k], 1e-9))) malasEq.push(`${nombre} ${ids.join('+')}`)
+  }
+  comprobar(malasId.length === 0, `potencial − real = Σ por tramo + sin explicar, exacto, en cada campo y en el portafolio, en un mes cerrado, en el mes en curso y en los 13 meses (${cuadres} cuadres; sin explicar ≤ 2,5 % del potencial)${malasId.length ? `: ${malasId.join(', ')}` : ''}`)
+  comprobar(malasEsc.length === 0 && malasEq.length === 0, `Σ por escalón = Σ por tramo en los mismos ${cuadres} cuadres; la escalera de cada tramo y sus equipos suman el tramo${[...malasEsc, ...malasEq].length ? `: ${[...malasEsc, ...malasEq].join(', ')}` : ''}`)
+  // §14.4 · La pérdida no entra. Todavía no hay pérdidas en el motor (EventoPerdida, P1 §1.9): la prueba queda lista.
+  const sep = D.rangoDePeriodo('cerrado')
+  const sinP = CH.brechaPorChoke(['ceiba'], sep.desde, sep.hasta, ctx0)
+  const conP = CH.brechaPorChoke(['ceiba'], sep.desde, sep.hasta, { ...ctx0, perdidas: [{ campoId: 'ceiba', tipo: 'derrame', bbl: 500, fecha: '2026-09-10T08:00:00-05:00' }] })
+  comprobar(CH.CHOKES_Y_SIN_ASIGNAR.every(k => conP.porChoke[k] === sinP.porChoke[k]) && conP.brecha === sinP.brecha && cerca(suma(conP.porChoke), L.libro(['ceiba'], sep.desde, sep.hasta, ctx0).diferido, 1e-9),
+    'la pérdida no entra: solo suman los tramos del libro (el motor todavía no tiene pérdidas; esta prueba queda lista para EventoPerdida, P1 §1.9)')
+  // Escalones del demo: el exceso de una parada programada sobre su ventana es otro tramo, no planeado.
+  const ago = L.libro(['ceiba'], new Date('2026-08-01T00:00:00-05:00'), new Date('2026-09-01T00:00:00-05:00'), ctx0)
+  const fin = Date.parse(ctx0.config.programa.find(x => x.id === 'PR-2011-260819').hasta)
+  const exceso = ago.tramos.filter(t => t.causa.tipo === 'programada' && t.causa.equipo === 'P-201B' && t.fin.getTime() > fin)
+    .map(t => ({ t, p: CH.escalonesDe(t, CH.chokeDeCausa(t.causa, 'ceiba', ctx0), ctx0) }))
+  comprobar(exceso.length === 3 && exceso.every(x => x.p.length === 2 && x.p[1][0] === 'disponibilidad-no-planeada' && x.p[1][1] > 0 && cerca(x.p[0][1] + x.p[1][1], x.t.bbl, 1e-12)),
+    `el exceso de una parada programada sobre su ventana es no planeado: los ${exceso.length} pozos que siguieron cerrados después del fin del programa de P-201B (09:34 del 20-ago) pasan ${f(exceso.reduce((a, x) => a + x.p[1][1], 0))} bbl a no planeada`)
+  const b12 = CH.brechaPorChoke(TODOS, new Date(L.calendario()[0].desde), R.AHORA, ctx0)
+  comprobar(b12.porEscalon.capacidad > 0 && b12.porChoke['sin-asignar'] === b12.porChokeEscalon['sin-asignar']['sin-clasificar'] && b12.porEscalon.desarrollo === 0 && b12.porChoke.reservorio === 0
+    && b12.porEscalon['disponibilidad-no-planeada'] > b12.porEscalon['disponibilidad-planeada'],
+    `la escalera del año: ${CH.ESCALONES.map(e => `${CH.NOMBRE_ESCALON[e].split(':')[0].toLowerCase()} ${f(b12.porEscalon[e])}`).join(', ')} bbl; el yacimiento nunca sale de una señal; lo sin identificar va sin tramo y sin escalón`)
+  // La brecha estructural se separa y se dice; un día con el real sobre la capacidad declarada no lleva estructural.
+  comprobar(cerca(b12.potencialSistema, b12.potencial - b12.estructural, 1e-12) && cerca(b12.brechaSistema, b12.brecha - b12.estructural, 1e-12) && b12.estructural > 0
+    && b12.porCampo.every(x => x.estructural >= 0 && x.estructuralPorChoke.pozos === 0 && cerca(x.potencialSistema, x.potencial - x.estructural, 1e-12)) && /estructural|no deja pasar/.test(b12.textoEstructural ?? ''),
+    `si lo que limita no son los pozos, la brecha estructural se separa y se dice: ${f(b12.estructural)} bbl en 13 meses (${b12.porCampo.filter(x => x.estructural > 0).map(x => `${x.campoId} ${f(x.estructural)}`).join(', ')}); ${b12.superado.length} días-campo con el real sobre la capacidad declarada`)
+  // §8 · PE = real ÷ potencial del sistema; PE no planeada = disponibilidad no planeada ÷ potencial del sistema.
+  const bs = CH.brechaPorChoke(TODOS, sep.desde, sep.hasta, ctx0), ef = CH.eficienciaProduccion(TODOS, sep.desde, sep.hasta, ctx0)
+  comprobar(cerca(bs.pe, bs.real / bs.potencialSistema * 100, 1e-12) && cerca(bs.peNoPlaneada, bs.porEscalon['disponibilidad-no-planeada'] / bs.potencialSistema * 100, 1e-12)
+    && ef.porCampo.every(x => { const c = bs.porCampo.find(y => y.campoId === x.campoId); return cerca(x.pe, c.real / c.potencialSistema * 100, 1e-12) && cerca(x.peNoPlaneada, c.porEscalon['disponibilidad-no-planeada'] / c.potencialSistema * 100, 1e-12) })
+    && cerca(ef.total.pe, bs.pe, 1e-12),
+    `PE y PE no planeada por campo y período: septiembre ${bs.pe.toFixed(1)} % y ${bs.peNoPlaneada.toFixed(2)} % (${ef.porCampo.map(x => `${x.campoId} ${x.pe.toFixed(1)} %`).join(', ')})`)
+}
+
+console.log('\n=== 25. La tubería del campo, mes a mes y antes → con TRIM (U2 §2, §7.3–§7.4, §11.1) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const oct = D.rangoDePeriodo('curso'), sep = D.rangoDePeriodo('cerrado')
+  const tu = CH.tuberiaCampo('ceiba', oct.desde, oct.hasta, ctx0)
+  const lbO = L.libro(['ceiba'], oct.desde, oct.hasta, ctx0)
+  const perdido = k => tu.perdidoPeriodo.find(x => x.tramo === k)
+  const pozosT = tu.tramos.find(x => x.tramo === 'pozo'), plantaT = tu.tramos.find(x => x.tramo === 'planta')
+  comprobar(cerca(tu.diferido, lbO.diferido, 1e-9) && cerca(tu.perdidoPeriodo.reduce((a, x) => a + x.bbl, 0) + tu.sinTramoBbl, lbO.diferido, 1e-9)
+    && Math.round(perdido('planta').bbl) === 573 && perdido('planta').equiposTop[0]?.equipo === 'P-201B' && Math.round(perdido('pozo').bbl) === 118 && perdido('pozo').equiposTop[0]?.equipo === 'LC-05'
+    && Math.round(tu.sinTramoBbl) === 355 && tu.sinTramoEquipos.map(x => x.equipo).join() === 'LC-21,LC-08',
+    `la tubería del campo lleva el MISMO total del libro: La Ceiba en octubre, ${f(perdido('planta').bbl)} en la planta (P-201B) + ${f(perdido('pozo').bbl)} en los pozos (LC-05) + ${f(tu.sinTramoBbl)} sin identificar = ${f(tu.diferido)} bbl`)
+  // Lo que deja pasar el tramo que limita − lo que pasa hoy = perdiéndose ahora (U2 §2.2), y el tramo de cada riesgo.
+  const perd = D.riesgoAhora(['ceiba'], ctx0).filter(r => r.estado === 'perdiendo')
+  const enRiesgo = D.riesgoAhora(TODOS, ctx0).filter(r => r.estado === 'en-riesgo')
+  comprobar(tu.limita === 'pozos' && cerca(tu.perdiendoAhora.reduce((a, x) => a + x.bpd, 0), perd.reduce((a, r) => a + r.bblDia, 0), 1e-9)
+    && cerca(pozosT.potencialBpd - tu.pasaHoyBpd, tu.perdiendoAhora.reduce((a, x) => a + x.bpd, 0), 1e-9) && cerca(tu.pasaHoyBpd, D.caudalesAhora('ceiba').crudo, 1e-12)
+    && perd.every(r => CH.tramoDeRiesgo(r, ctx0) === (r.equipo === 'P-201B' ? 'planta' : null)) && enRiesgo.every(r => CH.tramoDeRiesgo(r, ctx0) === (r.tipo === 'electrosumergible' ? 'pozo' : 'planta'))
+    && plantaT.disponibleHoy?.valor === 178500 && plantaT.potencialBpd === 12000,
+    `lo que limita − lo que pasa hoy = perdiéndose ahora: ${f(pozosT.potencialBpd)} − ${f(tu.pasaHoyBpd)} = ${f(pozosT.potencialBpd - tu.pasaHoyBpd)} bbl/d (P-201B en la planta; LC-21 sin identificar); el tramo de cada riesgo; «${plantaT.disponibleHoy?.texto}»`)
+  const tuS = CH.tuberiaCampo('ceiba', sep.desde, sep.hasta, ctx0), tuZ = CH.tuberiaCampo('zarza', oct.desde, oct.hasta, ctx0)
+  comprobar(tuS.fraseGerente === 'La Ceiba: 87 % en los pozos (LC-11, LC-04)' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
+    `la frase del gerente sale hecha del motor: «${tuS.fraseGerente}»; octubre: «${tu.fraseGerente}»; La Zarza, estado de campo de gas`)
+  // Mes a mes por tramo: el mismo total del libro cada mes.
+  const rm = CH.repartoPorMes(TODOS, ctx0), sm = L.serieMensual(TODOS, ctx0)
+  comprobar(rm.length === sm.length && rm.every((m, i) => m.mes === sm[i].mes && cerca(Object.values(m.porTramo).reduce((a, x) => a + x, 0), sm[i].libro.diferido, 1e-9) && cerca(m.diferido, sm[i].libro.diferido, 1e-9)),
+    `lo perdido por tramo, mes a mes: los ${rm.length} meses suman el diferido de cada mes del libro`)
+  // Antes → con TRIM, por tramo: la misma base de la línea base del libro.
+  const puesta = new Date(`${C.PUESTA_EN_MARCHA}T00:00:00-05:00`)
+  const lbt = CH.lineaBasePorTramo(['ceiba'], puesta, R.AHORA, ctx0), base = L.lineaBase(['ceiba'], puesta, R.AHORA, ctx0)
+  const diasB = (base.hasta.getTime() - base.desde.getTime()) / 86_400_000
+  const b0 = CH.brechaPorChoke(['ceiba'], base.desde, base.hasta, ctx0)
+  comprobar(lbt && lbt.base.desde.getTime() === base.desde.getTime() && lbt.base.hasta.getTime() === base.hasta.getTime()
+    && CH.CHOKES_Y_SIN_ASIGNAR.every(k => cerca(lbt.diferido[k].baseDia * diasB, b0.porChoke[k], 1e-9))
+    && lbt.noPlaneado.planta.periodoDia < lbt.noPlaneado.planta.baseDia && lbt.noPlaneado.pozo.periodoDia > lbt.noPlaneado.pozo.baseDia,
+    `antes → con TRIM, lo no planeado por tramo (${lbt?.base.nombre}): planta ${f(lbt?.noPlaneado.planta.baseDia)} → ${f(lbt?.noPlaneado.planta.periodoDia)} bbl/d, pozos ${f(lbt?.noPlaneado.pozo.baseDia)} → ${f(lbt?.noPlaneado.pozo.periodoDia)}: «${lbt?.texto}»`)
+}
+
+console.log('\n=== 26. Qué limitó cada día y el aviso «Cambió lo que limita» (CHOKE-COMPLETO §11, U2 §7) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const d0 = new Date(L.calendario()[0].desde)
+  const s = CH.serieChoke(TODOS, d0, R.AHORA, ctx0), b = CH.brechaPorChoke(TODOS, d0, R.AHORA, ctx0), dias = L.porDia(TODOS, d0, R.AHORA, ctx0)
+  const sumaK = k => s.dias.reduce((a, d) => a + d.porChoke[k], 0), sumaE = e => s.dias.reduce((a, d) => a + d.porEscalon[e], 0)
+  comprobar(CH.CHOKES_Y_SIN_ASIGNAR.every(k => cerca(sumaK(k), b.porChoke[k], 1e-9)) && CH.ESCALONES.every(e => cerca(sumaE(e), b.porEscalon[e], 1e-9)) && s.dias.length === dias.length
+    && s.dias.every((d, i) => cerca(Object.values(d.porChoke).reduce((a, x) => a + x, 0), dias[i].diferido, 1e-9))
+    && cerca(s.dias.reduce((a, d) => a + d.estructural, 0), b.estructural, 1e-9) && cerca(s.dias.reduce((a, d) => a + d.potencialSistema, 0), b.potencialSistema, 1e-9),
+    `serie diaria: cada día, lo perdido por tramo suma el diferido de ese día del libro; los ${s.dias.length} días suman lo del período por tramo y por escalón`)
+  // Coordinador, punto 2 · El aviso respeta el umbral y la persistencia: sin ellos, La Ceiba cambiaría 7 veces en 13 meses.
+  const persiste = s.cambios.every(c => {
+    const i = s.dias.findIndex(d => d.dia.getTime() === c.dia.getTime())
+    const siguientes = s.dias.slice(i).filter(d => d.dominante[c.campoId]).slice(0, CH.PARAMETROS_CHOKE.diasParaCambio)
+    return siguientes.length === CH.PARAMETROS_CHOKE.diasParaCambio && siguientes.every(d => d.dominante[c.campoId] === c.a && !d.casiIguales[c.campoId]) && c.de !== c.a
+  })
+  const ceiba = s.cambios.filter(c => c.campoId === 'ceiba')
+  comprobar(s.vueltas.ceiba === 7 && s.vueltas.guacamayo === 5 && ceiba.length === 1 && ceiba[0].a === 'pozos' && ceiba[0].de === 'planta' && ceiba[0].dia.toISOString().startsWith('2026-08')
+    && Math.round(ceiba[0].valorBpd) === 11265 && persiste && TODOS.every(c => s.cambios.filter(x => x.campoId === c).length <= s.vueltas[c]) && s.cambios.every(c => /revise «Si falla hoy»/.test(c.texto)),
+    `«Cambió lo que limita» solo con más del umbral y ${CH.PARAMETROS_CHOKE.diasParaCambio} días seguidos: La Ceiba ${s.vueltas.ceiba} vueltas → ${ceiba.length} aviso («${ceiba[0]?.texto}»); en todo el portafolio ${s.cambios.length} avisos (${TODOS.map(c => `${c} ${s.vueltas[c]}→${s.cambios.filter(x => x.campoId === c).length}`).join(', ')})`)
+  const sc = CH.serieChoke(['ceiba'], d0, R.AHORA, ctx0), sup = sc.dias.filter(d => d.superado.ceiba)
+  comprobar(sup.every(d => d.estructural === 0 && d.potencialSistema === d.potencial) && sup.length === b.superado.filter(x => x.campoId === 'ceiba').length,
+    `un día en que el real pasó la capacidad declarada no lleva brecha estructural y se avisa (La Ceiba: ${sup.length} días, el tren de crudo de 12.000 bbl/d)`)
+}
+
+console.log('\n=== 27. La tubería del agua (CHOKE-COMPLETO §9, U2 §5) ===')
+{
+  const AG = await v.ssrLoadModule('/src/entities/choke-agua.ts')
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const a = AG.tuberiaAgua('ceiba', ctx0, V0), tr = k => a.tramos.find(x => x.tramo === k)
+  const p201b = tr('bombas').bombas.find(x => x.id === 'P-201B'), tk = tr('tanques').tanques[0]
+  const perfil = B.perfilBomba('P-201B', 'ceiba'), abierta = B.paradasDe('P-201B', 'ceiba').find(e => !e.fin)
+  const reportado = D.paradaMedida(abierta, ctx0, V0).colchon.previsto.horas, pr = D.prediccion(perfil, ctx0)
+  comprobar(tr('bombas').bombas.length === 3 && tr('bombas').bombas.every(x => x.placaBpd === 90000 && x.capacidadBpd === perfil.capacidadBpd) && tr('bombas').potencialBpd === 3 * 89250
+    && p201b.mueveBpd === 74200 && p201b.mueveBpd === D.aguaQueMueve(perfil).bpd && p201b.respaldoLibreBpd === 30100 && 2 * (p201b.capacidadBpd - p201b.mueveBpd) === p201b.respaldoLibreBpd
+    && tk.capacidadBbl === 30000 && tk.colchon.cuando === 'al-parar' && tk.colchon.evento === abierta.id && tk.colchon.horas === reportado && tk.colchon.horas.toFixed(2) === '1.84'
+    && tr('inyectores').potencialBpd === 267750 && a.sinUna.aguaSinSalidaBpd === 44100 && a.sinUna.aguaSinSalidaBpd === pr.aguaSinSalidaBpd,
+    `la tubería del agua de La Ceiba: 3 bombas de 90.000 de placa que dan ${f(p201b.capacidadBpd)} cada una (la cifra única de diferido.ts: 2 × (89.250 − ${f(p201b.mueveBpd)}) = el respaldo de ${f(p201b.respaldoLibreBpd)}), tanque de ${f(tk.capacidadBbl)} bbl con el colchón que ya se reporta, ${tk.colchon.horas.toFixed(2)} h; sin P-201B quedan ${f(a.sinUna.aguaSinSalidaBpd)} bbl/d sin salida`)
+  const agua = P.pozosDe('ceiba').filter(w => w.pruebas.length).reduce((s, w) => s + L.aguaDePrueba(w, R.AHORA.getTime()), 0)
+  comprobar(cerca(tr('producida').potencialBpd, agua, 1e-12) && a.tramos.filter(x => x.potencialBpd !== null).every(x => cerca(x.crudoBpd, x.potencialBpd * a.crudoPorAgua, 1e-12))
+    && Math.abs(tr('inyectores').crudoBpd - CH.potencialesDelCampo('ceiba', R.AHORA.getTime(), ctx0).trenes.find(t => t.tren === 'agua').enCrudo) <= 0.5
+    && a.dominante === 'producida' && !a.limita && a.angosto === 'inyectores' && Math.round(a.sobraBpd) === 43675 && tr('bombas').disponibleHoy?.valor === 178500
+    && a.frases[0] === 'Con las tres bombas, al agua le sobran 43.675 bbl/d.' && a.frases.at(-1) === 'Cerrando primero los más acuatosos se pierden 1.426 bbl/d de crudo; cerrando parejo, 2.236.',
+    `cada tramo en agua y en crudo; con el tren completo el agua no limita, es lo más frágil: ${a.texto}`)
+  const am = AG.tuberiaAgua('morichal', ctx0, V0), prM = D.prediccion(B.perfilBomba('P-201B', 'morichal'), ctx0)
+  const todas = TODOS.map(c => AG.tuberiaAgua(c, ctx0, V0))
+  comprobar(am.tramos.find(x => x.tramo === 'tanques').tanques[0].colchon.cuando === 'si-para-ahora' && am.tramos.find(x => x.tramo === 'tanques').tanques[0].colchon.horas === prM.colchon.horas
+    && /faltan 40\.400 bbl\/d: el tanque se llena en 10 h/.test(am.texto) && /783 bbl\/d de crudo; cerrando parejo, 1\.222/.test(am.texto)
+    && todas.every(x => x.tratamientoBpd === null && x.tramos.find(t => t.tramo === 'tratamiento').potencialBpd === null)
+    && todas.every(x => x.tramos.every(t => t.tramo === 'tanques' || (t.potencialBpd === null) === !!t.sinDato)) && AG.tuberiaAgua('guacamayo', ctx0, V0).admisionInyectoresBpd === null,
+    `un tramo sin dato en el demo va «sin dato», nunca inventado (${todas.map(x => `${x.campoId}: ${x.sinDato.join(', ') || 'ninguno'}`).join('; ')}); con la bomba en marcha el colchón es el de «si para ahora» (Morichal ${prM.colchon.horas.toFixed(1)} h)`)
+}
+
+console.log('\n=== 28. «Si falla hoy» para todos los equipos (CHOKE-COMPLETO §10, U2 §6) ===')
+{
+  const CR = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const todas = TODOS.flatMap(c => { const r = CR.criticidadDelCampo(c, ctx0); return [...r.ranking, ...r.parados] })
+  // §14.9 · La criticidad de cada bomba instrumentada es el costo por falla de diferido.ts en el mismo instante.
+  const bombas = TODOS.flatMap(c => ['P-201B', 'MPP-301'].map(id => B.perfilBomba(id, c)).filter(Boolean))
+  const filas = bombas.map(p => ({ p, cr: todas.find(x => x.campoId === p.campoId && x.equipo === p.equipo), pr: D.prediccion(p, ctx0), cf: D.costoDeBomba(p, D.prediccion(p, ctx0), L.historialDeEquipo(p.campoId, p.equipo, ctx0)) }))
+  const riesgo = D.riesgoAhora(TODOS, ctx0)
+  comprobar(filas.length === 4 && filas.every(({ cr, pr, cf }) => cr && cr.costoFalla === cf.costoFalla && (cf.colchonH === undefined || cr.colchonH === cf.colchonH) && cr.bpd === pr.crudoBpd && cr.tramo === 'planta' && cr.vigilado)
+    && riesgo.filter(r => r.estado === 'en-riesgo' && B.perfilBomba(r.equipo, r.campoId)).every(r => todas.find(x => x.campoId === r.campoId && x.equipo === r.equipo)?.costoFalla === r.costoFalla),
+    `la criticidad de cada bomba con instrumento es el costo por falla de diferido.ts en el mismo instante: ${filas.map(({ p, cr }) => `${p.equipo} de ${p.campoId} ${f(cr.costoFalla ?? 0)} bbl`).join(', ')}`)
+  // Coordinador, punto 7 · Las hermanas sin instrumento, con su capacidad y su papel: suben cuando P-201B está parada.
+  const ce = CR.criticidadDelCampo('ceiba', ctx0)
+  const a = ce.ranking.find(x => x.equipo === 'P-201A'), cc = ce.ranking.find(x => x.equipo === 'P-201C')
+  const esperado = D.ordenDeCierre('ceiba', D.caudalesAhora('ceiba').agua - 89250, R.AHORA.getTime()).crudoBpd
+  comprobar(a && cc && cerca(a.bpd, esperado, 1e-12) && Math.round(a.bpd) === 3059 && a.colchonH < 0.05 && !a.vigilado && a.subio && cerca(cc.bpd, a.bpd, 1e-12)
+    && /P-201A y P-201C subieron al puesto \d+ porque P-201B está parada/.test(ce.cambioHoy ?? '') && ce.parados.some(x => x.equipo === 'P-201B' && cerca(x.perdiendoBpd, D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0).perdiendo.bblDia, 1e-12)),
+    `las hermanas sin instrumento cuentan: si P-201A falla hoy con P-201B parada, ${f(a?.bpd)} bbl/d después de ${Math.round((a?.colchonH ?? 0) * 60)} min de colchón; «${ce.cambioHoy}»; P-201B va en «Perdiéndose ahora», no en la lista`)
+  // Servicios con la regla «se cierra lo que esté produciendo», estén o no en alarma; un respaldo en línea cuesta cero.
+  const produciendo = P.pozosDe('ceiba').filter(w => P.estadoAhora(w).produce).reduce((s, w) => s + L.crudoAsignado(w), 0)
+  const se2 = ce.ranking.find(x => x.equipo === 'SE-2'), h302 = ce.ranking.find(x => x.equipo === 'H-302')
+  comprobar(se2 && cerca(se2.bpd, produciendo, 1e-12) && se2.estimacion && se2.tramo === 'planta' && !riesgo.some(r => r.campoId === 'ceiba' && r.equipo === 'SE-2')
+    && h302?.bpd === 0 && /respaldo/.test(h302.sinDato ?? '') && ce.ranking.filter(x => x.familia === 'servicio' && x !== h302).every(x => cerca(x.bpd, produciendo, 1e-12)),
+    `los servicios, estén o no en alarma: SE-2 ${f(se2?.bpd)} bbl/d aunque no esté en alarma (estimación: lo que esté produciendo); H-302 cero mientras su respaldo en línea esté bien`)
+  // Electrosumergible y bombeo mecánico: el crudo de su pozo, sin colchón; el costo de una falla es el de «en riesgo».
+  const espR = riesgo.filter(r => r.estado === 'en-riesgo' && r.tipo === 'electrosumergible')
+  comprobar(ce.ranking.filter(x => x.familia === 'electrosumergible' || x.familia === 'bombeo-mecanico').every(x => x.bpd === L.crudoAsignado(P.pozoDe('ceiba', x.equipo)) && x.colchonH === undefined && x.tramo === 'pozo' && x.servidos === 1)
+    && espR.every(r => todas.find(x => x.campoId === r.campoId && x.equipo === r.equipo)?.costoFalla === r.costoFalla),
+    `electrosumergible y bombeo mecánico: el crudo de su pozo, sin colchón, «en el pozo»; el costo de una falla de electrosumergible es el de «en riesgo» (${espR.length} hoy)`)
+  // §14.7 · Una falla que la holgura o el respaldo absorbe cuesta 0 bbl/d; la lista va de mayor a menor y deja aparte lo que no se puede medir.
+  const gu = CR.criticidadDelCampo('guacamayo', ctx0).ranking.find(x => x.equipo === 'P-201B')
+  comprobar(gu && gu.bpd === 0 && gu.costoFalla === 0 && ce.ranking.every((x, i, xs) => i === 0 || (xs[i - 1].bpd ?? -1) >= (x.bpd ?? -1)) && ce.ranking.every(x => x.alcance !== 'tercero')
+    && ce.sinCalcular.every(x => !ce.ranking.some(y => y.equipo === x.equipo)) && TODOS.every(c => CR.criticidadDelCampo(c, ctx0).ranking.length > 0),
+    `una falla que el respaldo absorbe cuesta 0 bbl/d (P-201B de Guacamayo: «${gu?.porque}»); la lista va de mayor a menor y lo que no se puede medir va aparte (${ce.sinCalcular.map(x => x.equipo).join(', ')})`)
+}
+
 await v.close()
 console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones bien.`)
 if (fallos) { console.log(`${fallos} FALLARON.`); process.exit(1) }
