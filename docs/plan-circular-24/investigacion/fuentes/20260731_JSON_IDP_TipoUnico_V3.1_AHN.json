@@ -1,0 +1,411 @@
+{
+  "$schema": "https://www.anh.gov.co/esquemas/esquema_anh_v3.schema.json",
+  "_comentario": " JSON IDP ANH | Versión 3.5 - Tipo Unico (Esquema ARRAY Optimizado + Balances) - PLANTILLA EN CEROS COHERENTE ",
+  "metadatos_archivo": {
+    "titulo": "JSON_IDP_ANH",
+    "version": "3.1",
+    "fecha_publicacion": "2026-07-31",
+    "tipo_json": "U",
+    "fuente_de_entrega": [
+      "TELEMETRÍA",
+      "OFICIAL",
+      "POR DEMANDA"
+    ],
+    "tipo_envio": [
+      "PROGRAMADO",
+      "EXTEMPORANEO",
+      "CORRECCION"
+    ]
+  },
+  "segmento_datos_operador": {
+    "datos_operador_contrato": [
+      {
+        "operador": [ "", "A", "string" ],
+        "f_operacional": [ "2026-07-31", "A", "ISO 8601 Date" ],
+        "f_carga": [ "2026-07-31T12:00:00Z", "A", "ISO 8601 DateTime" ],
+        "contrato": [ "", "A", "string" ],
+        "usuario": [ "", "M", "string" ]
+      }
+    ],
+    "datos_facilidad": [
+      {
+        "n_fac": [ "", "M", "string" ],
+        "tip_fac": [ "", "M", "string" ],
+        "edo_fac": [ "", "M", "string" ],
+        "campo": [ "", "M", "string" ],
+        "prod": [ "", "M", "string" ],
+        "pmo": [ false, "M", "boolean" ],
+        "id_mun": [ 0, "M", "integer" ],
+        "mun": [ "", "M", "string" ],
+        "id_dep": [ 0, "M", "integer" ],
+        "dep": [ "", "M", "string" ]
+      }
+    ]
+  },
+  "segmento_datos": {
+    "tanques": [
+      {
+        "n_tk": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "h_med": [ "2026-07-31T12:00:00Z", "A", "ISO 8601 DateTime" ],
+        "nft": [ 0.0, "A", "mm" ],
+        "tov": [ 0.0, "C", "bbl" ],
+        "nal": [ 0.0, "A", "mm" ],
+        "fwv": [ 0.0, "C", "bbl" ],
+        "gov": [ 0.0, "C", "bbl" ],
+        "api_lab": [ 0.0, "M", "api" ],
+        "temp_lab": [ 0.0, "M", "°F" ],
+        "api_60": [ 0.0, "M", "api" ],
+        "tct": [ 0.0, "A", "°F" ],
+        "temp_amb": [ 0.0, "A", "°F" ],
+        "ctl": [ 0.0, "C", "float" ],
+        "ctsh": [ 0.0, "C", "float" ],
+        "gsv": [ 0.0, "C", "bbl" ],
+        "bsw": [ 0.0, "M", "percentage (%)" ],
+        "csw": [ 0.0, "C", "float" ],
+        "nsv": [ 0.0, "C", "bbl" ],
+        "wv": [ 0.0, "C", "bbl" ],
+        "c_azufre": [ 0.0, "M", "percentageMass (%m)" ],
+        "c_sal": [ 0.0, "M", "ptb" ]
+      }
+    ],
+    "movimientos_tanque": [
+      {
+        "n_tk": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "h_ini": [ "2026-07-31T12:00:00Z", "A", "ISO 8601 DateTime" ],
+        "h_fin": [ "2026-07-31T13:00:00Z", "A", "ISO 8601 DateTime" ],
+        "t_mov": [ "", "A", "string" ],
+        "tov_med_inic": [ 0.0, "C", "mm" ],
+        "tov_med_fin": [ 0.0, "C", "mm" ],
+        "tov_aforo": [ 0.0, "C", "bbl" ],
+        "nal_med_ini": [ 0.0, "A", "mm" ],
+        "nal_med_fin": [ 0.0, "A", "mm" ],
+        "fwv_afo": [ 0.0, "M", "bbl" ],
+        "gov": [ 0.0, "C", "bbl" ],
+        "api_obs": [ 0.0, "M", "api" ],
+        "tco": [ 0.0, "M", "°F" ],
+        "api_60": [ 0.0, "M", "api" ],
+        "temp_tk": [ 0.0, "A", "°F" ],
+        "temp_amb": [ 0.0, "A", "°F" ],
+        "ctl": [ 0.0, "C", "float" ],
+        "cpl": [ 0.0, "C", "float" ],
+        "frc": [ 0.0, "C", "float" ],
+        "gsv": [ 0.0, "C", "bbl" ],
+        "bsw": [ 0.0, "M", "percentage (%)" ],
+        "factor_bsw": [ 0.0, "M", "float" ],
+        "nsv": [ 0.0, "C", "bbl" ],
+        "wv": [ 0.0, "C", "bbl" ],
+        "desp_cru": [ 0.0, "M", "bbl" ],
+        "rec_cru": [ 0.0, "M", "bbl" ],
+        "desp_agua": [ 0.0, "M", "bbl" ],
+        "rec_agua": [ 0.0, "A", "bbl" ],
+        "consumo": [ 0.0, "M", "bbl" ],
+        "rec_ext_cru": [ 0.0, "M", "bbl" ],
+        "tras_entre_cru": [ 0.0, "M", "bbl" ],
+        "tras_entre_agua": [ 0.0, "M", "bbl" ],
+        "tras_rec_cru": [ 0.0, "M", "bbl" ],
+        "tras_rec_agua": [ 0.0, "M", "bbl" ],
+        "comentario": [ "", "M", "string" ]
+      }
+    ],
+    "medidores_liquidos": [
+      {
+        "n_med": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "h_med": [ "2026-07-31T12:00:00Z", "A", "ISO 8601 DateTime" ],
+        "t_med_liq": [ "", "M", "string" ],
+        "gsv": [ 0.0, "C", "bbl" ],
+        "api_60": [ 0.0, "M", "api" ],
+        "bsw": [ 0.0, "M", "percentage (%)" ],
+        "temp_fluy": [ 0.0, "A", "°F" ],
+        "pres_flu": [ 0.0, "A", "psig" ],
+        "nsv": [ 0.0, "C", "bbl" ],
+        "wv": [ 0.0, "C", "bbl" ],
+        "comentario": [ "", "M", "string" ]
+      }
+    ],
+    "medidor_gas": [
+      {
+        "n_med": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "h_med": [ "2026-07-31T12:00:00Z", "A", "ISO 8601 DateTime" ],
+        "vol": [ 0.0, "A", "mmscfd" ],
+        "t_med_gas": [ "", "A", "string" ],
+        "comentario": [ "", "M", "string" ],
+        "presion": [ 0.0, "A", "psi" ],
+        "f_instan_dia": [ 0.0, "A", "mmscfd" ],
+        "f_instan_hora": [ 0.0, "A", "mmscfh" ],
+        "temp": [ 0.0, "A", "°F" ]
+      }
+    ],
+    "pruebas_potenciales": [
+      {
+        "n_pozo": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "uwi": [ "", "A", "string" ],
+        "form": [ "", "A", "string" ],
+        "campo": [ "", "A", "string" ],
+        "id_laboratorio": [ "", "M", "string" ],
+        "h_pbas": [ 0.0, "M", "hours (float)" ],
+        "prod_oil": [ 0.0, "M", "bbl" ],
+        "prod_gas": [ 0.0, "M", "kscfd" ],
+        "prod_agua": [ 0.0, "M", "bbl" ],
+        "cond": [ 0.0, "M", "bbl" ],
+        "bipd_dato": [ 0.0, "A", "bbl" ],
+        "frec": [ 0.0, "A", "Hz, SPM, RPM" ],
+        "pip": [ 0.0, "A", "psi" ],
+        "i_m": [ 0.0, "A", "ampere" ],
+        "long_stroke": [ 0.0, "A", "cm" ],
+        "posicion_val_choque": [ 0, "M", "1/64 inch" ],
+        "thp": [ 0.0, "A", "psia" ],
+        "chp": [ 0.0, "A", "psi" ],
+        "pres_anu_rev": [ 0.0, "A", "psi" ],
+        "tht": [ 0.0, "A", "°F" ],
+        "api_60": [ 0.0, "M", "api" ],
+        "gor": [ 0.0, "C", "scf/bbl" ],
+        "bsw": [ 0.0, "M", "percentage (%)" ]
+      }
+    ],
+    "paradas_pozo": [
+      {
+        "n_pozo": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "uwi": [ "", "A", "string" ],
+        "form": [ "", "A", "string" ],
+        "campo": [ "", "A", "string" ],
+        "pla_no_plan": [ "", "M", "string" ],
+        "h_ini_paro": [ "2026-07-31T10:00:00Z", "M", "ISO 8601 DateTime" ],
+        "h_fin_paro": [ "2026-07-31T12:00:00Z", "M", "ISO 8601 DateTime" ],
+        "cau_gral_paro": [ "", "M", "string" ],
+        "dif_perd": [ "", "M", "string" ],
+        "resp_par": [ "", "M", "string" ],
+        "choke_mod": [ "", "M", "string" ],
+        "cau_niv1": [ "", "M", "string" ],
+        "cau_niv2": [ "", "M", "string" ],
+        "desc_evid": [ "", "M", "string" ]
+      }
+    ],
+    "inyeccion_por_pozo": [
+      {
+        "n_pozo": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "form": [ "", "A", "string" ],
+        "campo": [ "", "A", "string" ],
+        "t_iny": [ "12:00", "M", "hours:minutes" ],
+        "t_fluid_iny": [ "", "M", "string" ],
+        "vol_iny": [ 0.0, "A", "bbl" ],
+        "pres_iny": [ 0.0, "A", "psi" ],
+        "obs": [ "", "M", "string" ]
+      }
+    ],
+    "produccion_por_pozo": [
+      {
+        "n_pozo": [ "", "A", "string" ],
+        "id_rec": [ "", "A", "string" ],
+        "uwi": [ "", "A", "string" ],
+        "form": [ "", "A", "string" ],
+        "campo": [ "", "A", "string" ],
+        "tip_lev": [ "", "M", "string" ],
+        "t_prod": [ 0.0, "M", "hours (float)" ],
+        "prd_oil": [ 0.0, "M", "bbl" ],
+        "prd_gas": [ 0.0, "M", "kscfd" ],
+        "prd_agua": [ 0.0, "M", "bbl" ],
+        "cond": [ 0.0, "M", "bbl" ],
+        "observaciones": [ "", "M", "string" ]
+      }
+    ],
+    "cromatografia": [
+      {
+        "fecha_muestreo": [ "2026-07-31", "A", "ISO 8601 Date" ],
+        "tip_muest": [ "", "A", "string" ],
+        "tipo_analis": [ "", "A", "string" ],
+        "tipo_prod": [ "", "A", "string" ],
+        "contrato": [ "", "A", "string" ],
+        "campo": [ "", "A", "string" ],
+        "fac": [ "", "A", "string" ],
+        "id_laboratorio": [ "", "M", "string" ],
+        "comentario": [ "", "M", "string" ],
+        "sg": [ 0.0, "M", "float" ],
+        "peso_mol": [ 0.0, "M", "g/mol" ],
+        "z": [ 0.0, "A", "float" ],
+        "igcv": [ 0.0, "A", "BTU/scf" ],
+        "lhv": [ 0.0, "A", "BTU/scf" ],
+        "rgcv": [ 0.0, "A", "BTU/scf" ],
+        "dens_id": [ 0.0, "A", "kg/m3" ],
+        "dens_real": [ 0.0, "A", "kg/m3" ],
+        "wi": [ 0.0, "A", "BTU/scf" ],
+        "num_metano": [ 0.0, "A", "float" ],
+        "gpm_c2": [ 0.0, "A", "GPM" ],
+        "gpm_c3": [ 0.0, "A", "GPM" ],
+        "gpm_c4": [ 0.0, "A", "GPM" ],
+        "gpm_c5": [ 0.0, "A", "GPM" ],
+        "co2": [ 0.0, "A", "mol%" ],
+        "n2": [ 0.0, "A", "mol%" ],
+        "c1": [ 0.0, "A", "mol%" ],
+        "c2": [ 0.0, "A", "mol%" ],
+        "c3": [ 0.0, "A", "mol%" ],
+        "ic4": [ 0.0, "A", "mol%" ],
+        "nc4": [ 0.0, "A", "mol%" ],
+        "ic5": [ 0.0, "A", "mol%" ],
+        "nc5": [ 0.0, "A", "mol%" ],
+        "c6": [ 0.0, "A", "mol%" ],
+        "c7": [ 0.0, "A", "mol%" ],
+        "c8": [ 0.0, "A", "mol%" ],
+        "c9": [ 0.0, "A", "mol%" ],
+        "c10": [ 0.0, "A", "mol%" ],
+        "c11": [ 0.0, "A", "mol%" ],
+        "c12": [ 0.0, "A", "mol%" ],
+        "total_comp": [ 0.0, "A", "mol%" ],
+        "o2": [ 0.0, "A", "ppm" ],
+        "ts": [ 0.0, "A", "ppm" ],
+        "h2s": [ 0.0, "A", "ppm" ],
+        "hum": [ 0.0, "A", "lmmscf" ],
+        "hcdp": [ 0.0, "A", "°C" ],
+        "pres_hcdp": [ 0.0, "A", "psi" ],
+        "est_crom": [ false, "A", "boolean" ]
+      }
+    ],
+    "balance_fluido_crudo": [
+      {
+        "id_rec": [ "", "A", "string" ],
+        "inventario_inicial": [ 0.0, "M", "bbl" ],
+        "produccion": [ 0.0, "M", "bbl" ],
+        "entregas": [ 0.0, "M", "bbl" ],
+        "consumo": [ 0.0, "M", "bbl" ],
+        "perdidas": [ 0.0, "M", "bbl" ],
+        "transferencia": [ 0.0, "M", "bbl" ],
+        "devolucion": [ 0.0, "M", "bbl" ],
+        "recibos": [ 0.0, "M", "bbl" ],
+        "ventas": [ 0.0, "M", "bbl" ],
+        "crudo_recuperado": [ 0.0, "M", "bbl" ],
+        "otros": [ 0.0, "M", "bbl" ],
+        "inventario_final": [ 0.0, "M", "bbl" ],
+        "balance": [ 0.0, "C", "bbl" ]
+      }
+    ],
+    "balance_fluido_agua": [
+      {
+        "id_rec": [ "", "A", "string" ],
+        "inventario_inicial": [ 0.0, "M", "bbl" ],
+        "produccion": [ 0.0, "M", "bbl" ],
+        "entregas": [ 0.0, "M", "bbl" ],
+        "consumo": [ 0.0, "M", "bbl" ],
+        "perdidas": [ 0.0, "M", "bbl" ],
+        "transferencia": [ 0.0, "M", "bbl" ],
+        "devolucion": [ 0.0, "M", "bbl" ],
+        "recibos": [ 0.0, "M", "bbl" ],
+        "otros": [ 0.0, "M", "bbl" ],
+        "inventario_final": [ 0.0, "M", "bbl" ],
+        "balance": [ 0.0, "C", "bbl" ]
+      }
+    ],
+    "balance_fluido_blancos": [
+      {
+        "id_rec": [ "", "A", "string" ],
+        "propano": {
+          "inventario_inicial": [ 0.0, "M", "bbl" ],
+          "produccion": [ 0.0, "M", "bbl" ],
+          "entregas": [ 0.0, "M", "bbl" ],
+          "consumo": [ 0.0, "M", "bbl" ],
+          "perdidas": [ 0.0, "M", "bbl" ],
+          "transferencia": [ 0.0, "M", "bbl" ],
+          "devolucion": [ 0.0, "M", "bbl" ],
+          "recibos": [ 0.0, "M", "bbl" ],
+          "ventas": [ 0.0, "M", "bbl" ],
+          "otros": [ 0.0, "M", "bbl" ],
+          "inventario_final": [ 0.0, "M", "bbl" ],
+          "balance": [ 0.0, "C", "bbl" ]
+        },
+        "butano": {
+          "inventario_inicial": [ 0.0, "M", "bbl" ],
+          "produccion": [ 0.0, "M", "bbl" ],
+          "entregas": [ 0.0, "M", "bbl" ],
+          "consumo": [ 0.0, "M", "bbl" ],
+          "perdidas": [ 0.0, "M", "bbl" ],
+          "transferencia": [ 0.0, "M", "bbl" ],
+          "devolucion": [ 0.0, "M", "bbl" ],
+          "recibos": [ 0.0, "M", "bbl" ],
+          "ventas": [ 0.0, "M", "bbl" ],
+          "otros": [ 0.0, "M", "bbl" ],
+          "inventario_final": [ 0.0, "M", "bbl" ],
+          "balance": [ 0.0, "C", "bbl" ]
+        },
+        "gasolina": {
+          "inventario_inicial": [ 0.0, "M", "bbl" ],
+          "produccion": [ 0.0, "M", "bbl" ],
+          "entregas": [ 0.0, "M", "bbl" ],
+          "consumo": [ 0.0, "M", "bbl" ],
+          "perdidas": [ 0.0, "M", "bbl" ],
+          "transferencia": [ 0.0, "M", "bbl" ],
+          "devolucion": [ 0.0, "M", "bbl" ],
+          "recibos": [ 0.0, "M", "bbl" ],
+          "ventas": [ 0.0, "M", "bbl" ],
+          "otros": [ 0.0, "M", "bbl" ],
+          "inventario_final": [ 0.0, "M", "bbl" ],
+          "balance": [ 0.0, "C", "bbl" ]
+        },
+        "nafta": {
+          "inventario_inicial": [ 0.0, "M", "bbl" ],
+          "produccion": [ 0.0, "M", "bbl" ],
+          "entregas": [ 0.0, "M", "bbl" ],
+          "consumo": [ 0.0, "M", "bbl" ],
+          "perdidas": [ 0.0, "M", "bbl" ],
+          "transferencia": [ 0.0, "M", "bbl" ],
+          "devolucion": [ 0.0, "M", "bbl" ],
+          "recibos": [ 0.0, "M", "bbl" ],
+          "ventas": [ 0.0, "M", "bbl" ],
+          "otros": [ 0.0, "M", "bbl" ],
+          "inventario_final": [ 0.0, "M", "bbl" ],
+          "balance": [ 0.0, "C", "bbl" ]
+        },
+        "glp": {
+          "inventario_inicial": [ 0.0, "M", "bbl" ],
+          "produccion": [ 0.0, "M", "bbl" ],
+          "entregas": [ 0.0, "M", "bbl" ],
+          "consumo": [ 0.0, "M", "bbl" ],
+          "perdidas": [ 0.0, "M", "bbl" ],
+          "transferencia": [ 0.0, "M", "bbl" ],
+          "devolucion": [ 0.0, "M", "bbl" ],
+          "recibos": [ 0.0, "M", "bbl" ],
+          "ventas": [ 0.0, "M", "bbl" ],
+          "otros": [ 0.0, "M", "bbl" ],
+          "inventario_final": [ 0.0, "M", "bbl" ],
+          "balance": [ 0.0, "C", "bbl" ]
+        },
+        "gasolina_natural": {
+          "inventario_inicial": [ 0.0, "M", "bbl" ],
+          "produccion": [ 0.0, "M", "bbl" ],
+          "entregas": [ 0.0, "M", "bbl" ],
+          "consumo": [ 0.0, "M", "bbl" ],
+          "perdidas": [ 0.0, "M", "bbl" ],
+          "transferencia": [ 0.0, "M", "bbl" ],
+          "devolucion": [ 0.0, "M", "bbl" ],
+          "recibos": [ 0.0, "M", "bbl" ],
+          "ventas": [ 0.0, "M", "bbl" ],
+          "otros": [ 0.0, "M", "bbl" ],
+          "inventario_final": [ 0.0, "M", "bbl" ],
+          "balance": [ 0.0, "C", "bbl" ]
+        }
+      }
+    ],
+    "balance_fluido_gas": [
+      {
+        "id_rec": [ "", "A", "string" ],
+        "produccion": [ 0.0, "M", "mmscfd" ],
+        "consumido": [ 0.0, "M", "mmscfd" ],
+        "quemado": [ 0.0, "M", "mmscfd" ],
+        "ventas": [ 0.0, "M", "mmscfd" ],
+        "inyectado": [ 0.0, "M", "mmscfd" ],
+        "generacion_electrica": [ 0.0, "M", "mmscfd" ],
+        "urbano": [ 0.0, "M", "mmscfd" ],
+        "transformado": [ 0.0, "M", "mmscfd" ],
+        "gas_lift": [ 0.0, "M", "mmscfd" ],
+        "enviado_planta": [ 0.0, "M", "mmscfd" ],
+        "entregas": [ 0.0, "M", "mmscfd" ],
+        "recibos": [ 0.0, "M", "mmscfd" ],
+        "balance": [ 0.0, "C", "mmscfd" ]
+      }
+    ]
+  }
+}

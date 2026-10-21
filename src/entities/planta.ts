@@ -625,3 +625,89 @@ export function aplicarCambioPlanta(cfg: PlantaCampo, c: CambioDePlanta): { plan
       return { planta: { ...cfg, [c.tren]: cfg[c.tren].filter(e => e.id !== c.id) }, texto: `quitó ${c.id} del tren ${c.tren}` }
   }
 }
+
+/* ─────────────────── el tren de agua para el modelo de inyección ─────────────────── */
+
+/** Una bomba del tren de agua: el perfil mínimo de CADA bomba, también de las
+ *  que no tienen instrumento (sin tags). Solo P-201B y MPP-301 tienen perfil
+ *  completo en `bombas.ts`; las hermanas viven aquí, con su capacidad y su
+ *  papel, para que «si falla hoy» y la tubería del agua las cuenten. */
+export interface BombaDeAgua {
+  id: string
+  /** Lo que da en ESTE campo, bbl/d de agua: la capacidad que usa diferido.ts
+   *  (`PerfilBomba.capacidadBpd`; la placa, o lo que la limita, como el cabezal
+   *  de disposición). UNA sola cifra en el colchón, la predicción y la tubería. */
+  capacidadBpd: number
+  /** La placa, bbl/d: solo como referencia para leer. */
+  placaBpd: number
+  /** Qué hace con el agua (`Papel` de bombas.ts). */
+  papel: 'disposicion' | 'recobro'
+  /** De reserva: entra solo si para otra, así que no suma a la capacidad del tren. */
+  reserva?: boolean
+  /** Para leer: lo que el esquema dice de ella. */
+  nota?: string
+}
+
+/** El tren de agua de un campo para el modelo choke de inyección
+ *  (CHOKE-COMPLETO §9; SPE-36848: «a separate choke model can be used to
+ *  model injection performance»). */
+export interface TrenAgua {
+  bombas: BombaDeAgua[]
+  /** Lo que admiten los pozos inyectores (o la disposición), bbl/d. Ausente: sin dato. */
+  admisionBpd?: number
+  /** Capacidad del tratamiento de agua, bbl/d. Ausente: sin dato. */
+  tratamientoBpd?: number
+  /** De dónde sale cada número, y lo que falta. */
+  fuente: string
+}
+
+/** El tren de agua de cada campo · DATOS DE DEMO. No es un número nuevo: sale
+ *  de las notas del esquema de arriba (`CAMPO_PLANTA`, `caudales.aguaCap`), del
+ *  perfil de las bombas (`bombas.ts`: P-201B de La Ceiba da 89.250, la de
+ *  Morichal 86.500) y de los respaldos firmados (`configuracion.ts`: P-201A y
+ *  P-201C toman 30.100 = 2 × (89.250 − 74.200)), escrito aquí como dato para
+ *  que el modelo de inyección no lo lea de un comentario. Lo que el demo no
+ *  tiene (el tratamiento de agua en todos los campos; la admisión de los
+ *  inyectores fuera de La Ceiba y Morichal) queda ausente y se dice «sin dato»:
+ *  nunca se inventa. No cambia el esquema de planta ni lo que viaja en el catálogo. */
+export const TREN_AGUA: Record<string, TrenAgua> = {
+  ceiba: {
+    bombas: ['P-201A', 'P-201B', 'P-201C'].map(id => ({ id, capacidadBpd: 89250, placaBpd: 90000, papel: 'disposicion' as const })),
+    // Lo que admiten los inyectores es el mismo límite del cabezal: 3 × 89.250 (caudales.aguaCap).
+    admisionBpd: 267750,
+    fuente: 'Tres bombas iguales en paralelo (P-201A, B y C), de 90.000 bbl/d de placa. El cabezal de disposición, es decir la inyectividad de los pozos, deja cada una en 89.250: 267.750 bbl/d entre las tres, lo mismo que admiten los inyectores (caudales.aguaCap), dato del demo deducido de ese límite y sin firmar. Tratamiento de agua: sin dato en el demo.',
+  },
+  morichal: {
+    bombas: ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(l => ({ id: `P-201${l}`, capacidadBpd: 86500, placaBpd: 90000, papel: 'disposicion' as const })),
+    admisionBpd: 605500,
+    fuente: 'Siete bombas iguales en paralelo (P-201A a G), de 90.000 bbl/d de placa; el cabezal de disposición deja cada una en 86.500: 605.500 bbl/d entre las siete, lo mismo que admiten los inyectores (caudales.aguaCap), dato del demo sin firmar. Tratamiento de agua: sin dato en el demo.',
+  },
+  guacamayo: {
+    bombas: [
+      { id: 'P-201A', capacidadBpd: 60000, placaBpd: 60000, papel: 'disposicion' },
+      { id: 'P-201B', capacidadBpd: 50000, placaBpd: 50000, papel: 'recobro', nota: 'inyecta al yacimiento a unos 1.800 psi' },
+      { id: 'P-201C', capacidadBpd: 50000, placaBpd: 50000, papel: 'disposicion', reserva: true, nota: 'de reserva: si para P-201B, manda su agua al pozo de disposición alterno' },
+    ],
+    fuente: 'P-201A de disposición (60.000 bbl/d) y P-201B de recobro (50.000): 110.000 bbl/d en servicio (caudales.aguaCap). P-201C (50.000) es de reserva y solo entra si para P-201B (respaldo firmado). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
+  },
+  palmar: {
+    bombas: [{ id: 'P-201B', capacidadBpd: 16000, placaBpd: 16000, papel: 'disposicion' }],
+    fuente: 'Una sola bomba de 16.000 bbl/d (nota del esquema; caudales.aguaCap). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
+  },
+  zarza: {
+    bombas: [{ id: 'P-201B', capacidadBpd: 4000, placaBpd: 4000, papel: 'disposicion' }],
+    fuente: 'Una bomba de agua de 4.000 bbl/d (caudales.aguaCap; la nominal de su medidor de caudal en equipos.ts). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
+  },
+}
+
+/** Los campos de gas: su producto principal sale por arriba («Campo de gas: el
+ *  producto principal sale por arriba», nota de La Zarza en el esquema). Su
+ *  tubería de crudo (el condensado) no es lo que los limita, y la tubería del
+ *  gas espera: «solo crudo hasta entender la tolerancia diferente del gas»
+ *  (PLAN-MAESTRO §3; U2 §1.5). DATO DE DEMO. */
+export const CAMPOS_DE_GAS: readonly string[] = ['zarza']
+
+/** Los campos donde el caudal de gas se mide. En esta fase, ninguno: «El gas
+ *  no se mide en esta fase» (Planta.tsx). Un tren que no se mide no entra en
+ *  el mínimo de la planta: decidiría lo que limita un número declarado (U2 §11.3, punto 1). */
+export const GAS_MEDIDO_EN: readonly string[] = []

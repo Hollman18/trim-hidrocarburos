@@ -12,6 +12,7 @@ import { CAMPOS, SEMILLAS } from './campos'
 import type { DestinoGas } from './tipos'
 import { insumos, perezoso } from './insumos'
 import { MOTIVO_MINIMO, alcanza } from './reglas'
+import type { ChokeDeElemento } from './choke'
 import { formatoFecha } from '@/shared/lib/fecha'
 
 /** Un tramo de lo que fija el gerente de activo para un campo: rige desde su
@@ -110,6 +111,12 @@ export interface Config {
   tanques: TanqueAgua[]
   respaldos: RespaldoBomba[]
   programa: ParadaProgramada[]
+  /** La topología del choke, firmada: a qué pozos sirve cada elemento
+   *  (dedicado = pozo, compartido = planta; CHOKE-COMPLETO §2). Es operativa,
+   *  no regulatoria (CHOKE-CONSTRUCCION, 21-oct). Opcional: un campo que no
+   *  trae ninguna entrada usa la que se deriva de lo que ya existe
+   *  (`topologiaDerivada` y `topologiaDe` en choke.ts). */
+  topologia?: ChokeDeElemento[]
 }
 
 /** Cada cambio de configuración es una versión firmada. Nunca se sobrescribe:

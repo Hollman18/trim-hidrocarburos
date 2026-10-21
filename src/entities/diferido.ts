@@ -484,7 +484,7 @@ export interface Riesgo {
 
 /** Horas fuera promedio de las fallas de electrosumergible del campo (sin
  *  disparos). Para la que no ha fallado en la historia que hay. */
-function mdtEspDelCampo(campoId: string, ctx: Contexto): number | undefined {
+export function mdtEspDelCampo(campoId: string, ctx: Contexto): number | undefined {
   const hs = pozosDe(campoId).filter(p => p.levantamiento === 'electrosumergible')
     .flatMap(p => historialDeEquipo(campoId, p.id, ctx).eventos.filter(e => !e.disparo && e.fin).map(e => e.horas))
   return hs.length ? hs.reduce((a, b) => a + b, 0) / hs.length : undefined
