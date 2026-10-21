@@ -17,11 +17,13 @@ import type { Rol, Capacidad } from './tipos'
  *   · sap:aviso             POST /api/sap/avisos
  *   · asignacion:cargar     POST /api/asignacion-oficial: la oficial de un mes la
  *                           reemplaza quien la reporta (producción), no cualquiera
- *                           que tenga el campo; el operador y el técnico ni ven Producción. */
+ *                           que tenga el campo; el operador y el técnico ni ven Producción.
+ *   · planes:decidir        POST /api/planes/:id (aceptar / marcar ejecutado) */
 const sin: Record<Capacidad, boolean> = {
   'causa:declarar': false, 'causa:completar': false, 'evidencia:exportar': false,
   'conector:configurar': false, 'config:firmar': false,
   'metas:firmar': false, 'usuarios:administrar': false, 'sap:aviso': false, 'asignacion:cargar': false,
+  'planes:decidir': false,
 }
 const con = (...ks: Capacidad[]) => ({ ...sin, ...Object.fromEntries(ks.map(k => [k, true])) })
 
@@ -37,7 +39,7 @@ const con = (...ks: Capacidad[]) => ({ ...sin, ...Object.fromEntries(ks.map(k =>
 export const ROLES: Rol[] = [
   { id: 'ger', nivel: 'decision', nombre: 'Gerente de activo', persona: 'Andrés Vélez', iniciales: 'AV',
     pantallas: ['resumen', 'diferidos', 'produccion', 'riesgo', 'configuracion'], inicio: 'resumen', topologia: null,
-    foco: 'Barriles que no se produjeron, cuánto es de los equipos de alto impacto, y si baja contra la meta que usted firmó. Usted fija las metas de cada campo y da los accesos.',
+    foco: 'Barriles que no se produjeron, el retorno posible del ciclo antes / durante / después, y si baja contra la meta que usted firmó. Usted fija las metas de cada campo y da los accesos.',
     area: 'direccion',
     campos: 'todos',
     puede: con('evidencia:exportar', 'metas:firmar', 'usuarios:administrar') },
@@ -49,10 +51,10 @@ export const ROLES: Rol[] = [
     puede: con('evidencia:exportar', 'asignacion:cargar') },
   { id: 'sup', nivel: 'operacion', nombre: 'Supervisor de operaciones', persona: 'Nelson Ortiz', iniciales: 'NO',
     pantallas: ['bombas', 'esp', 'turno', 'causa', 'pozos'], inicio: 'bombas', topologia: 'proceso',
-    foco: 'Entras por las bombas: lo gris está normal, el color es el problema. Si una para, cierras en el orden que menos cuesta.',
+    foco: 'Durante: turno, identificar y orden de cierre. Antes: bombas y lo que hay que vigilar. Si una para, cierras en el orden que menos cuesta.',
     area: 'produccion',
     campos: ['ceiba'],
-    puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso') },
+    puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir') },
   { id: 'oper', nivel: 'operacion', nombre: 'Operador de campo', persona: 'Jairo Peña', iniciales: 'JP',
     pantallas: ['bombas', 'esp', 'causa', 'turno'], inicio: 'bombas', topologia: 'proceso',
     foco: 'Cómo están las bombas, a qué equipo vas, y qué se dañó cuando la señal no lo dice.',
@@ -62,16 +64,16 @@ export const ROLES: Rol[] = [
   { id: 'jefe', nivel: 'ingenieria', nombre: 'Jefe de mantenimiento', persona: 'Camilo Rueda', iniciales: 'CR',
     pantallas: ['mantenimiento', 'diferidos', 'bombas', 'esp', 'confiabilidad', 'equipo', 'riesgo', 'causa'], inicio: 'mantenimiento',
     topologia: null,
-    foco: 'Respondes por que los barriles diferidos bajen, no por explicarlos.',
+    foco: 'Antes: intervenir a tiempo. Durante: identificar y planes simulados. Después: palancas y partes — para que bajen los barriles diferidos.',
     area: 'mantenimiento',
     campos: 'todos',
-    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso') },
+    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir') },
   { id: 'conf', nivel: 'ingenieria', nombre: 'Ingeniero de confiabilidad', persona: 'Edwin Maestre', iniciales: 'EM',
     pantallas: ['bombas', 'esp', 'confiabilidad', 'diferidos', 'riesgo', 'equipo', 'causa', 'planta'], inicio: 'bombas', topologia: 'proceso',
-    foco: 'Respondes por la reparación activa, no por la espera del repuesto.',
+    foco: 'Antes: vigía, aciertos y riesgo. Después: MTBF y costo por falla. La reparación activa, no la espera del repuesto.',
     area: 'mantenimiento',
     campos: ['ceiba', 'morichal', 'guacamayo'],
-    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso') },
+    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir') },
   { id: 'plan', nivel: 'ingenieria', nombre: 'Planeadora de mantenimiento', persona: 'Luz Caro', iniciales: 'LC',
     pantallas: ['equipo', 'confiabilidad'], inicio: 'equipo', topologia: 'proceso',
     foco: 'El horizonte es lo que deja pedir el repuesto sin pagar urgencia.',

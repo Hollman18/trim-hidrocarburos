@@ -1,0 +1,538 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Trim · Pitch</title>
+<style>
+@font-face{font-family:Air;src:url('file:///Users/hollman/trim-hidrocarburos/public/fonts/Air-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:Air;src:url('file:///Users/hollman/trim-hidrocarburos/public/fonts/Air-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:Air;src:url('file:///Users/hollman/trim-hidrocarburos/public/fonts/Air-Semibold.woff2') format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:Air;src:url('file:///Users/hollman/trim-hidrocarburos/public/fonts/Air-Bold.woff2') format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:"Air Condensed";src:url('file:///Users/hollman/trim-hidrocarburos/public/fonts/AirCondensed-Semibold.woff2') format('woff2');font-weight:600;font-display:swap}
+:root{
+  color-scheme:light;
+  --suelo:#c9c9c7;
+  --superficie:#d6d5d2;
+  --panel:#eceae7;
+  --panel2:#e2e0dd;
+  --elevado:#f4f3f0;
+  --tinta:#1f2328;
+  --tinta2:#3e444b;
+  --tinta3:#4d535a;
+  --linea:#b4b3b0;
+  --linea2:#c8c7c4;
+  --marca-1:#12287a;
+  --marca-7:#50a5a9;
+  --acento:#12287a;
+  --acento-f:#12287a1a;
+  --dato-1:#3c4148;
+  --p1:#b71c1c;
+  --radius:10px;
+  --sombra:0 1px 2px rgb(31 35 40 / .09);
+  --sombra2:0 10px 34px rgb(31 35 40 / .12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-family:Air,system-ui,sans-serif;color:var(--tinta);font-variant-numeric:tabular-nums}
+.tabular{font-variant-numeric:tabular-nums}
+.slide{
+  position:relative;width:1280px;height:720px;
+  background:var(--suelo);
+  page-break-after:always;overflow:hidden;
+  padding:44px 52px 36px;display:flex;flex-direction:column;
+}
+.slide:last-child{page-break-after:auto}
+header{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;margin-bottom:8px}
+.logo{height:26px;width:auto;opacity:.95}
+.n{font-family:"Air Condensed",Air,sans-serif;font-size:12px;letter-spacing:.16em;color:var(--tinta3)}
+.split{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;position:relative;z-index:2;min-height:0}
+.copy{max-width:520px}
+.kicker{font-family:"Air Condensed",Air,sans-serif;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--acento);margin-bottom:16px}
+.title{font-size:56px;font-weight:700;line-height:1.05;letter-spacing:-.025em;text-wrap:balance;margin-bottom:14px}
+.title em{font-style:normal;color:var(--acento)}
+.sub{font-size:18px;line-height:1.4;color:var(--tinta2)}
+.bullets{margin-top:18px;padding-left:1.15em;font-size:15px;line-height:1.55;color:var(--tinta2);max-width:480px}
+.bullets li{margin-bottom:8px}
+.bullets li::marker{color:var(--marca-1)}
+.bullets strong{color:var(--tinta);font-weight:600}
+.title-sm{font-size:46px}
+.aside{display:flex;flex-direction:column;gap:14px;justify-content:center}
+.aside-wide .ui-panel{min-height:320px}
+
+/* ── Paneles estilo producto (tema claro) ── */
+.ui-panel{
+  background:var(--panel);
+  border:1px solid var(--linea);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:var(--sombra);
+}
+.ui-panel-tight{padding:16px 18px}
+.ui-panel-ciclo{border:1px solid var(--linea);border-left:3px solid var(--marca-1)}
+.ui-panel-medido{border-style:dashed;border-color:var(--linea)}
+.ui-panel-compact{padding:14px 16px}
+.ui-panel-compact .ciclo-hero{font-size:26px}
+.ui-panel-compact .ciclo-usd{font-size:11px}
+.ui-panel-compact .ciclo-chips{margin-top:8px}
+.ui-panel-compact .ciclo-chips .chip{padding:3px 8px;font-size:10px}
+.ui-panel-compact .ciclo-grid{gap:8px}
+.ui-panel-compact .ciclo-bbl{font-size:15px}
+.ui-panel-ghost{background:var(--superficie);border:1px dashed var(--linea)}
+.hero-stat{display:flex;align-items:baseline;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--linea2);font-size:12px;color:var(--tinta3)}
+.hero-stat b{font-size:20px;color:var(--tinta);font-weight:700}
+.hero-stat-l{font-size:11px}
+.ui-cap{font-family:"Air Condensed",Air,sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta3);margin-bottom:10px}
+.ui-big{font-size:44px;font-weight:700;line-height:1;color:var(--tinta)}
+.ui-big small{font-size:14px;font-weight:500;color:var(--tinta3);margin-left:6px}
+.ui-big.p1{color:var(--p1)}
+.ui-big.accent{color:var(--acento)}
+.ui-sub{font-size:13px;color:var(--tinta2);margin-top:4px;margin-bottom:12px}
+.ui-range{font-size:12px;color:var(--tinta3);margin-bottom:14px}
+.ui-foot{font-size:15px;font-weight:600;color:var(--acento);margin-top:12px}
+.ui-stat{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--tinta3);margin-top:8px}
+.ui-stat b{font-size:22px;color:var(--tinta);font-weight:700}
+.ui-chip-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--panel2);color:var(--tinta2);border:1px solid var(--linea)}
+.chip-sim{font-size:10px;padding:3px 8px;background:var(--acento-f);color:var(--acento);border:1px solid var(--linea2)}
+
+.bar-track{display:block;position:relative;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden;margin:8px 0;border:1px solid var(--linea)}
+.bar-track i{display:block;height:100%;background:linear-gradient(90deg, var(--marca-1), var(--marca-7));border-radius:3px}
+.bar-sm{height:6px;margin-top:8px}
+.bar-sm i{background:var(--dato-1)}
+.bar-pareto{flex:1;height:10px}
+.meta-row{margin-top:4px}
+.meta-top{display:flex;align-items:baseline;gap:6px}
+.meta-val{font-size:22px;font-weight:700}
+.meta-unit{font-size:12px;color:var(--tinta3)}
+.meta-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--tinta3);margin-top:6px}
+
+.ciclo-head{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--linea2)}
+.ciclo-hero{font-size:36px;font-weight:700;line-height:1}
+.ciclo-hero small{font-size:13px;font-weight:500;color:var(--tinta3);margin-left:6px}
+.ciclo-usd{font-size:13px;color:var(--tinta2);margin-top:6px}
+.ciclo-chips{margin-top:10px}
+.ciclo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ciclo-cell{background:var(--panel2);border-radius:8px;padding:12px 10px;border:1px solid var(--linea2)}
+.ciclo-label{display:block;font-size:10px;color:var(--tinta3);margin-bottom:6px}
+.ciclo-label b{color:var(--marca-1);margin-right:4px}
+.ciclo-bbl{font-size:18px;font-weight:700;display:block}
+.ciclo-bbl small{font-size:10px;font-weight:500;color:var(--tinta3)}
+.ciclo-extra{font-size:10px;color:var(--tinta2);display:block;margin-top:2px}
+
+.pareto{display:flex;flex-direction:column;gap:10px}
+.pareto-row{display:grid;grid-template-columns:56px 1fr 52px 36px;gap:10px;align-items:center;font-size:12px}
+.pareto-id{font-weight:600;color:var(--tinta)}
+.pareto-bbl{text-align:right;font-weight:600}
+.pareto-pct{text-align:right;color:var(--tinta3)}
+
+.equip-cards{display:grid;gap:10px}
+.equip-cards.cols2{grid-template-columns:1fr 1fr}
+.eq{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:14px 16px;box-shadow:var(--sombra)}
+.eq-tag{display:block;font-weight:600;font-size:15px;margin-bottom:4px}
+.eq-line{font-size:12px;color:var(--tinta3)}
+
+.spark-wrap{background:var(--panel);border:1px solid var(--linea);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--sombra)}
+.flow-mini{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;font-weight:600;color:var(--tinta2)}
+.flow-mini i{color:var(--acento);font-style:normal}
+
+.split-ui.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+.split-ui.compare .ui-big{font-size:32px}
+.split-ui.compare .meta-val{font-size:18px}
+
+.cta-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;max-width:640px}
+.cta{font-size:36px;font-weight:700;color:var(--acento);margin-top:28px;letter-spacing:-.02em}
+
+.layout-cta .title{font-size:64px}
+
+.baseline-note{font-size:12px;line-height:1.45;color:var(--tinta2);margin-top:12px}
+.baseline-note strong{color:var(--tinta)}
+.baseline-svg{display:block;margin:10px 0 4px;max-width:100%}
+.baseline-svg .svg-label{font-size:11px;fill:var(--tinta3);font-family:Air,sans-serif}
+.baseline-svg .svg-track{fill:var(--panel2);stroke:var(--linea)}
+.baseline-svg .svg-real{fill:var(--dato-1)}
+.baseline-svg .svg-dif{fill:var(--p1);opacity:.85}
+.baseline-svg .svg-tag{font-size:10px;fill:var(--p1);font-family:Air,sans-serif;font-weight:600}
+.baseline-svg .svg-foot{font-size:10px;fill:var(--tinta3);font-family:Air,sans-serif}
+
+.stepper{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 4px;margin-top:8px}
+.step{flex:1;min-width:52px;background:var(--panel2);border:1px solid var(--linea2);border-radius:8px;padding:8px 6px;text-align:center}
+.step-n{display:block;font-size:11px;font-weight:700;color:var(--marca-1);margin-bottom:4px}
+.step-t{display:block;font-size:12px;font-weight:600;color:var(--tinta)}
+.step-d{display:block;font-size:9px;color:var(--tinta3);margin-top:4px;line-height:1.25}
+.step-arrow{align-self:center;color:var(--tinta3);font-size:14px;padding:0 2px}
+
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.compare-col .ui-cap{margin-bottom:8px}
+.mini-list{margin:0;padding-left:1.1em;font-size:12px;line-height:1.5;color:var(--tinta2)}
+.mini-list li{margin-bottom:6px}
+.compare-desp{border-left:3px solid var(--marca-1)}
+
+.roi-rows{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.roi-row{display:grid;grid-template-columns:118px 1fr 72px;gap:10px;align-items:center}
+.roi-lbl{font-size:11px;font-weight:600;color:var(--tinta);line-height:1.3}
+.roi-lbl small{display:block;font-weight:500;color:var(--tinta3);font-size:10px}
+.roi-val{font-size:13px;font-weight:700;text-align:right}
+.bar-roi{height:10px;margin:0}
+.bar-roi .bar-med{background:var(--p1)}
+
+.roles{display:grid;gap:10px}
+.role{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:12px 14px;box-shadow:var(--sombra)}
+.role-who{display:block;font-size:13px;font-weight:700;color:var(--marca-1);margin-bottom:4px}
+.role-q{display:block;font-size:12px;color:var(--tinta2);margin-bottom:4px}
+.role-p{display:block;font-size:11px;color:var(--tinta3)}
+.ui-stat b.p1{color:var(--p1)}
+</style></head><body>
+<section class="slide layout-split" data-n="1">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">01 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">TRIM · hidrocarburos</p>
+      <h1 class="title">Menos barriles <em>diferidos</em></h1>
+      <p class="sub">Prevenir paradas no planificadas · medir con custodia · decidir en barriles</p>
+      
+    </div>
+    <div class="aside"><div class="ui-panel ui-panel-ghost">
+      <div class="ui-cap">Ejemplo · portafolio</div>
+      <div class="ui-big tabular">2.377</div>
+      <div class="ui-sub">bbl diferidos · mes en curso</div>
+      <div class="hero-stat"><span class="hero-stat-l">Oportunidad priorizada</span><b class="tabular">45.233</b><span class="hero-stat-l">bbl · 2,2 M USD</span></div>
+    </div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="2">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">02 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">El problema</p>
+      <h1 class="title">Paradas que no estaban en el plan</h1>
+      <p class="sub">Cada hora parada son barriles que no entran al fiscal — y en ESP, multifásica o reinyección el impacto se multiplica.</p>
+      <ul class="bullets"><li>Gerencia ve el impacto tarde y sin desglose por equipo.</li><li>Operación y mantenimiento no priorizan con la misma cifra.</li><li>El diferido cuesta defenderlo ante auditoría o fiscalización.</li></ul>
+    </div>
+    <div class="aside"><div class="ui-panel ui-panel-tight">
+    <div class="ui-cap">Cuenta del período</div>
+    <p class="baseline-note">Potencial menos producción fiscal = <strong class="tabular">2.377 bbl</strong> diferidos · 114 mil USD</p>
+    <svg class="baseline-svg" viewBox="0 0 340 118" width="340" height="118" aria-hidden="true">
+      <text x="0" y="14" class="svg-label">Potencial</text>
+      <rect x="0" y="28" width="340" height="22" rx="4" class="svg-track"/>
+      <text x="0" y="72" class="svg-label">Real (fiscal)</text>
+      <rect x="0" y="78" width="265.2" height="22" rx="4" class="svg-real"/>
+      <rect x="265.2" y="78" width="74.8" height="22" rx="4" class="svg-dif"/>
+      <text x="271.2" y="93" class="svg-tag tabular">diferido</text>
+      <text x="0" y="108" class="svg-foot">Una sola cifra que cierra con el fiscal y se explica por equipo.</text>
+    </svg>
+    <div class="meta-row">
+    <div class="meta-top"><span class="meta-val tabular">1.501</span><span class="meta-unit">bbl/d</span></div>
+    <div class="bar-track"><i style="width:65.26086956521739%"></i></div>
+    <div class="meta-foot"><span>máx. 2.300</span><span>hoy · vs meta firmada</span></div>
+  </div>
+  </div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="3">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">03 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">La solución</p>
+      <h1 class="title">Prevenir · medir · actuar</h1>
+      <p class="sub">Una cadena desde la planta hasta la decisión del activo.</p>
+      <ul class="bullets"><li><strong>Anticipar</strong> fallas en equipos críticos, en barriles y en horas.</li><li><strong>Medir</strong> el diferido con trazabilidad por equipo y causa.</li><li><strong>Actuar</strong> en tres momentos: antes, durante y después de la parada.</li></ul>
+    </div>
+    <div class="aside"><div class="compare-grid">
+  <div class="ui-panel ui-panel-tight compare-col compare-antes">
+    <div class="ui-cap">Sin cadena unificada</div>
+    <ul class="mini-list">
+      <li>SCADA, Excel y reportes por separado</li>
+      <li>Parada = apagar el fuego</li>
+      <li>Diferido difícil de auditar</li>
+      <li>No se sabe qué equipo atender hoy</li>
+    </ul>
+  </div>
+  <div class="ui-panel ui-panel-tight compare-col compare-desp">
+    <div class="ui-cap">Con TRIM</div>
+    <ul class="mini-list">
+      <li>Informe auditable por equipo</li>
+      <li>Alertas antes de la falla</li>
+      <li>Prioridad en barriles (Antes / Durante / Después)</li>
+      <li>Operación y mantenimiento con el mismo número</li>
+    </ul>
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="4">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">04 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Cómo funciona</p>
+      <h1 class="title">De la señal al barril</h1>
+      <p class="sub">Producción fiscal, potencial por pozo, diferido explicado y prioridad clara.</p>
+      
+    </div>
+    <div class="aside"><div class="ui-panel ui-panel-tight">
+    <div class="ui-cap">Cadena en cinco pasos</div>
+    <div class="stepper">
+      <div class="step">
+        <span class="step-n tabular">1</span>
+        <span class="step-t">Medir</span>
+        <span class="step-d">Fiscal + pruebas de pozo</span>
+      </div><span class="step-arrow">→</span>
+      <div class="step">
+        <span class="step-n tabular">2</span>
+        <span class="step-t">Atribuir</span>
+        <span class="step-d">Diferido por equipo y causa</span>
+      </div><span class="step-arrow">→</span>
+      <div class="step">
+        <span class="step-n tabular">3</span>
+        <span class="step-t">Anticipar</span>
+        <span class="step-d">Alertas antes de la falla</span>
+      </div><span class="step-arrow">→</span>
+      <div class="step">
+        <span class="step-n tabular">4</span>
+        <span class="step-t">Priorizar</span>
+        <span class="step-d">Barriles en juego hoy</span>
+      </div><span class="step-arrow">→</span>
+      <div class="step">
+        <span class="step-n tabular">5</span>
+        <span class="step-t">Actuar</span>
+        <span class="step-d">Antes · Durante · Después</span>
+      </div></div>
+    <p class="baseline-note">Se integra con sus sistemas de planta; no sustituye el control del proceso.</p>
+  </div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="5">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">05 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">El producto</p>
+      <h1 class="title">Una plataforma, cuatro vistas</h1>
+      <p class="sub">Misma información para gerencia, mantenimiento, operación y producción.</p>
+      <ul class="bullets"><li><strong>Panel ejecutivo</strong> — diferido del período y dónde actuar.</li><li><strong>Alertas y confiabilidad</strong> — qué falla primero y cuánto cuesta.</li><li><strong>Sala de control</strong> — colchón, causa y arranque seguro.</li><li><strong>Planta</strong> — agua, severidad y pozos aguas abajo.</li></ul>
+    </div>
+    <div class="aside"><div class="ui-panel">
+  <div class="ui-cap">Diferido del período</div>
+  <div class="ui-big tabular">2.377</div>
+  <div class="ui-sub">barriles diferidos</div>
+  <div class="ui-range tabular">2.132–2.622 · calculado</div>
+  <div class="meta-row">
+    <div class="meta-top"><span class="meta-val tabular">1.501</span><span class="meta-unit">bbl/d</span></div>
+    <div class="bar-track"><i style="width:65.26086956521739%"></i></div>
+    <div class="meta-foot"><span>máx. 2.300</span><span>promedio diario · diferido</span></div>
+  </div>
+  <div class="ui-foot tabular">114 mil USD</div>
+</div>
+      <div class="spark-wrap"><span class="ui-cap">Tendencia · bbl/d</span><svg class="spark" viewBox="0 0 320 56" width="320" height="56" aria-hidden="true">
+    <defs><linearGradient id="sparkFill-trend" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--acento)" stop-opacity=".22"/><stop offset="100%" stop-color="var(--acento)" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="4,52 4.0,15.9 30.0,33.7 56.0,15.0 82.0,52.0 108.0,30.7 134.0,8.6 160.0,41.5 186.0,4.0 212.0,36.8 238.0,11.6 264.0,8.2 290.0,31.3 316.0,17.1 316,52" fill="url(#sparkFill-trend)"/>
+    <polyline points="4.0,15.9 30.0,33.7 56.0,15.0 82.0,52.0 108.0,30.7 134.0,8.6 160.0,41.5 186.0,4.0 212.0,36.8 238.0,11.6 264.0,8.2 290.0,31.3 316.0,17.1" fill="none" stroke="var(--acento)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="316" cy="17.139664804469277" r="3.5" fill="var(--acento)"/>
+  </svg></div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="6">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">06 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Propuesta de valor</p>
+      <h1 class="title">Barriles + custodia + prevención</h1>
+      <p class="sub">Campos maduros o en desarrollo · tres familias de equipo · una cuenta que cierra con el fiscal.</p>
+      <ul class="bullets"><li>Menos paradas evitables donde más barriles se pierden.</li><li>Informe auditable: asignación, causas y publicación.</li><li>Inversión de mantenimiento ordenada por retorno en <strong>Antes</strong>.</li><li>Complementa SCADA y hojas de cálculo — no los reemplaza.</li></ul>
+    </div>
+    <div class="aside"><div class="ui-panel ui-panel-tight"><div class="ui-cap">Concentración del diferido</div><div class="pareto">
+    <div class="pareto-row">
+      <span class="pareto-id">MN-41</span>
+      <span class="bar-track bar-pareto"><i style="width:100%"></i></span>
+      <span class="pareto-bbl tabular">1.083</span>
+      <span class="pareto-pct tabular">46 %</span>
+    </div>
+    <div class="pareto-row">
+      <span class="pareto-id">P-201B</span>
+      <span class="bar-track bar-pareto"><i style="width:52.90858725761773%"></i></span>
+      <span class="pareto-bbl tabular">573</span>
+      <span class="pareto-pct tabular">24 %</span>
+    </div>
+    <div class="pareto-row">
+      <span class="pareto-id">LC-21</span>
+      <span class="bar-track bar-pareto"><i style="width:22.807017543859647%"></i></span>
+      <span class="pareto-bbl tabular">247</span>
+      <span class="pareto-pct tabular">10 %</span>
+    </div></div></div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="7">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">07 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Palanca</p>
+      <h1 class="title">Prevenir antes de parar</h1>
+      <p class="sub">Alertas con horizonte en horas; el equipo crítico lleva el barril a la mesa.</p>
+      
+    </div>
+    <div class="aside"><div class="ui-panel">
+      <div class="ui-cap">Alerta temprana · ejemplo</div>
+      <div class="ui-big tabular accent">43 h</div>
+      <div class="ui-sub">hasta límite · P-201B</div>
+      <div class="flow-mini"><span>Señal</span><i>→</i><span>Impacto</span><i>→</i><span>Intervenir</span></div>
+      <div class="ui-stat"><span>En este momento</span><b class="tabular p1">2.650</b><span>bbl/d</span></div>
+    </div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="8">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">08 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Dónde</p>
+      <h1 class="title">Tres equipos críticos</h1>
+      <p class="sub">Electrosumergible · bomba multifásica · reinyección o disposición de agua.</p>
+      <ul class="bullets"><li>Cada pozo y cada línea con la misma cadena de custodia.</li><li>Alta BSW: la bomba de agua puede cerrar el activo en horas.</li><li>Campo nuevo: prevención desde el primer pozo en línea.</li></ul>
+    </div>
+    <div class="aside"><div class="equip-cards">
+      <div class="eq"><span class="eq-tag">ESP</span><span class="eq-line">Pozo a pozo</span></div>
+      <div class="eq"><span class="eq-tag">Multifásica</span><span class="eq-line">Cluster</span></div>
+      <div class="eq"><span class="eq-tag">Reinyección</span><span class="eq-line">Tanque · agua</span></div>
+    </div></div>
+  </div>
+</section>
+<section class="slide layout-full-ui" data-n="9">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">09 / 14</span></header>
+  <div class="split">
+      <div class="copy"><p class="kicker">Priorizar</p><h1 class="title">Antes · Durante · Después</h1><p class="sub">Evitar la parada · perder menos tiempo · no repetir la misma falla.</p></div>
+      <div class="aside aside-wide"><div class="ui-panel ui-panel-ciclo">
+  <div class="ui-cap">Prioridad en barriles</div>
+  <div class="ciclo-head">
+    <div class="ciclo-hero tabular">45.233<small>bbl · retorno</small></div>
+    <div class="ciclo-usd tabular">2,2 M USD</div>
+    <div class="ui-chip-row ciclo-chips"><span class="chip">Antes</span><span class="chip">Durante</span><span class="chip">Después</span></div>
+  </div>
+  <div class="ciclo-grid"><div class="ciclo-cell">
+      <span class="ciclo-label"><b>1</b> Antes</span>
+      <span class="ciclo-bbl tabular">42.017 <small>bbl</small></span>
+      
+      <span class="bar-track bar-sm"><i style="width:92.89014657440364%"></i></span>
+    </div><div class="ciclo-cell">
+      <span class="ciclo-label"><b>2</b> Durante</span>
+      <span class="ciclo-bbl tabular">2.102 <small>bbl</small></span>
+      <span class="ciclo-extra tabular">2.349 bbl/d</span>
+      <span class="bar-track bar-sm"><i style="width:4.6470497203369225%"></i></span>
+    </div><div class="ciclo-cell">
+      <span class="ciclo-label"><b>3</b> Después</span>
+      <span class="ciclo-bbl tabular">1.114 <small>bbl</small></span>
+      
+      <span class="bar-track bar-sm"><i style="width:2.4628037052594345%"></i></span>
+    </div></div>
+</div></div>
+    </div>
+</section>
+<section class="slide layout-split" data-n="10">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">10 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Retorno</p>
+      <h1 class="title">Cómo se paga la inversión</h1>
+      <p class="sub">El costo del período es contable; la oportunidad muestra dónde capturar barriles.</p>
+      <ul class="bullets"><li>Cuenta clara del diferido ya ocurrido, valorado en moneda.</li><li>Mapa de oportunidad por fase del evento.</li><li>Implementación por etapas: fiscal, pruebas, planta y alertas.</li></ul>
+    </div>
+    <div class="aside"><div class="ui-panel ui-panel-tight">
+    <div class="ui-cap">Costo vs oportunidad</div>
+    <div class="roi-rows">
+      <div class="roi-row">
+        <span class="roi-lbl">Costo del período <small>contabilizado</small></span>
+        <span class="bar-track bar-roi"><i class="bar-med" style="width:8%"></i></span>
+        <span class="roi-val tabular">114 mil USD</span>
+      </div>
+      <div class="roi-row">
+        <span class="roi-lbl">Oportunidad <small>priorizada</small></span>
+        <span class="bar-track bar-roi"><i style="width:100%"></i></span>
+        <span class="roi-val tabular">2,2 M USD</span>
+      </div>
+    </div>
+    <p class="baseline-note"><strong class="tabular">45.233 bbl</strong> donde la intervención más vale — Antes, Durante y Después del evento.</p>
+  </div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="11">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">11 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Confianza</p>
+      <h1 class="title">Contabilizado vs oportunidad</h1>
+      <p class="sub">Dos cifras distintas: lo que ya pasó y lo que aún puede moverse con acción.</p>
+      
+    </div>
+    <div class="aside"><div class="split-ui compare">
+      <div class="ui-panel ui-panel-ciclo ui-panel-compact">
+  <div class="ui-cap">Prioridad en barriles</div>
+  <div class="ciclo-head">
+    <div class="ciclo-hero tabular">45.233<small>bbl · retorno</small></div>
+    <div class="ciclo-usd tabular">2,2 M USD</div>
+    <div class="ui-chip-row ciclo-chips"><span class="chip">Antes</span><span class="chip">Durante</span><span class="chip">Después</span></div>
+  </div>
+  <div class="ciclo-grid"><div class="ciclo-cell">
+      <span class="ciclo-label"><b>1</b> Antes</span>
+      <span class="ciclo-bbl tabular">42.017 <small>bbl</small></span>
+      
+      <span class="bar-track bar-sm"><i style="width:92.89014657440364%"></i></span>
+    </div><div class="ciclo-cell">
+      <span class="ciclo-label"><b>2</b> Durante</span>
+      <span class="ciclo-bbl tabular">2.102 <small>bbl</small></span>
+      <span class="ciclo-extra tabular">2.349 bbl/d</span>
+      <span class="bar-track bar-sm"><i style="width:4.6470497203369225%"></i></span>
+    </div><div class="ciclo-cell">
+      <span class="ciclo-label"><b>3</b> Después</span>
+      <span class="ciclo-bbl tabular">1.114 <small>bbl</small></span>
+      
+      <span class="bar-track bar-sm"><i style="width:2.4628037052594345%"></i></span>
+    </div></div>
+</div>
+      <div class="ui-panel ui-panel-medido">
+  <div class="ui-cap">Diferido del período</div>
+  <div class="ui-big tabular">2.377</div>
+  <div class="ui-sub">barriles diferidos</div>
+  <div class="ui-range tabular">2.132–2.622 · calculado</div>
+  <div class="meta-row">
+    <div class="meta-top"><span class="meta-val tabular">1.501</span><span class="meta-unit">bbl/d</span></div>
+    <div class="bar-track"><i style="width:65.26086956521739%"></i></div>
+    <div class="meta-foot"><span>máx. 2.300</span><span>promedio diario · diferido</span></div>
+  </div>
+  <div class="ui-foot tabular">114 mil USD</div>
+</div>
+    </div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="12">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">12 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Para quién</p>
+      <h1 class="title">Un número, cuatro roles</h1>
+      <p class="sub">La misma verdad del activo; cada área ve su pregunta.</p>
+      
+    </div>
+    <div class="aside"><div class="roles">
+  <div class="role"><span class="role-who">Gerencia</span><span class="role-q">¿Cuánto perdimos y dónde invertir?</span><span class="role-p">Panel ejecutivo · diferido y oportunidad</span></div>
+  <div class="role"><span class="role-who">Mantenimiento</span><span class="role-q">¿A qué equipo ir hoy?</span><span class="role-p">Alertas · planes preventivos</span></div>
+  <div class="role"><span class="role-who">Operación</span><span class="role-q">¿Cuánto aguanta? ¿Es seguro arrancar?</span><span class="role-p">Colchón · causa · arranque</span></div>
+  <div class="role"><span class="role-who">Producción</span><span class="role-q">¿El informe cierra con el fiscal?</span><span class="role-p">Diferidos · asignación · publicación</span></div>
+</div></div>
+  </div>
+</section>
+<section class="slide layout-split" data-n="13">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">13 / 14</span></header>
+  <div class="split">
+    <div class="copy">
+      <p class="kicker">Implementación</p>
+      <h1 class="title">Maduro o en desarrollo</h1>
+      <p class="sub">Mismo producto; el énfasis cambia con la madurez del campo.</p>
+      
+    </div>
+    <div class="aside"><div class="equip-cards cols2">
+      <div class="eq"><span class="eq-tag">Alta BSW</span><span class="eq-line">Agua · reinyección · tiempo de colchón</span></div>
+      <div class="eq"><span class="eq-tag">Campo nuevo</span><span class="eq-line">Línea base clara · alertas desde el inicio</span></div>
+    </div>
+    <div class="ui-panel ui-panel-tight"><div class="ui-cap">Arranque típico</div><p class="baseline-note">Medición fiscal · pruebas de pozo · electrosumergibles · líneas de transporte y agua · integración con ERP y alertas al equipo de campo.</p></div></div>
+  </div>
+</section>
+<section class="slide layout-cta" data-n="14">
+  <header><img class="logo" src="file:///Users/hollman/trim-hidrocarburos/public/brand/logo_trim_dark.png" alt="Trim"><span class="n tabular">14 / 14</span></header>
+  <div class="cta-wrap">
+      <p class="kicker">Siguiente paso</p>
+      <h1 class="title">Demostración en 20 minutos</h1>
+      <p class="sub">Panel ejecutivo · alertas · parada en curso · planta · planes de acción</p>
+      <p class="cta">gotrim.ai</p>
+    </div>
+</section>
+</body></html>

@@ -26,6 +26,7 @@ Las 46 salen así, las 8 escritas incluidas (puerto propio con `--puerto`, p. ej
 ## Lo que hay que llevarse de este capítulo (para el servidor)
 
 - **Un solo libro por período** (`GET /api/vistas/diferidos`) alimenta el Resumen, el encabezado de Diferidos, la cabecera de Producción y todos los Paretos; la serie mensual alimenta Tendencia, Mes a mes, el factor y el cuadre mensual. El front solo divide por días, compara contra la meta y formatea.
+- **El retorno posible es otro GET** (`GET /api/vistas/ciclo`, capítulo 11): ANTES / DURANTE / DESPUÉS, cifra simulada, no entra al libro. El front ya lo pinta; el servidor de producción es quien lo calcula y persiste `POST /api/planes/:id`.
 - **«Ahora» no depende del período**: perdiéndose ahora, causa mayor, en riesgo (`/vistas/riesgo`, `/vistas/estado`), el real del último día (`ayer`), «antes → con TRIM» y «mantenimiento proactivo» (desde la puesta en marcha) son iguales en cualquier período.
 - **El sello sale de los códigos de `motivos`**, nunca de su frase; la frase la redacta el servidor y se muestra tal cual en los globos y en el papel.
 - **Las marcas de prioridad del Pareto por equipo vienen de `/vistas/equipos-hoy`** (severidad de hoy), no del libro, y solo van en las filas de falla del equipo: una fila de parada programada no lleva marca (`marcaDeFila`).

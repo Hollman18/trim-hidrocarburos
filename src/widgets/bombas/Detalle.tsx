@@ -7,7 +7,9 @@ import { COMO } from '@/entities/causa-senal'
 import { fechaHora } from '@/entities/reloj'
 import type { ParadaMedida, Prediccion } from '@/entities/diferido'
 import { useParadas } from '@/shared/api/diferidos'
-import { useApp, useRol } from '@/app/store'
+import { useCiclo, planesDeEquipo } from '@/shared/api/ciclo'
+import { PlanesDe } from '@/widgets/ciclo/Ciclo'
+import { useApp, useRol, useRango } from '@/app/store'
 import { Panel, Chip, Hueco, Boton } from '@/shared/ui/primitivas'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { DE_ESTADO } from '@/shared/lib/prioridad'
@@ -40,8 +42,11 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
   // Operación ve lo que necesita para decidir en campo; ingeniería, todo.
   const ing = nivel === 'ingenieria'
   const rol = useRol(); const setPantalla = useApp(s => s.setPantalla)
+  const rango = useRango()
   const campoId = b.campo.id
   const paradas = useParadas(campoId, eq.id)
+  const ciclo = useCiclo([campoId], rango.desde, rango.hasta)
+  const planes = planesDeEquipo(ciclo, campoId, eq.id)
   // Cinco y «ver N más»: nunca se esconde la parada abierta ni una que espera que se identifique.
   const listaParadas = useVerMas(paradas, { prioridad: m => (m.abierto || (m.pide && !m.arrancoSinIdentificar) ? 1 : 3) })
 
@@ -122,6 +127,12 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
           )}
         </div>
       </div>
+
+      {planes.length > 0 && (
+        <div className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 shadow-[var(--sombra)]">
+          <PlanesDe planes={planes} />
+        </div>
+      )}
 
       {abierta?.pide && (
         <div className="mb-2.5 flex flex-wrap items-center gap-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 shadow-[var(--sombra)]">

@@ -1,12 +1,12 @@
 # 1. El problema y su solución técnica
 
-> **En una frase.** TRIM calcula, con cadena de custodia, **cuántos barriles se dejaron de producir por cada equipo crítico y por qué parte**, desde el pozo hasta la gerencia. Además avisa **antes** de que vuelva a pasar, para que el equipo se intervenga sin cerrar pozos.
+> **En una frase.** TRIM es un producto **global** para **prevenir paradas no planificadas** (y medir las que ocurren) en **electrosumergibles**, **bombas multifásicas** y **bombas de reinyección o disposición de agua**: cadena de custodia del diferido en barriles por equipo y parte, **vigía** antes de la falla, y ciclo **antes · durante · después** desde operación hasta gerencia.
 
-Este capítulo explica el problema físico, la cadena de cálculo que lo resuelve y un caso real del demo de punta a punta. Cada paso remite al capítulo donde están sus fórmulas completas.
+Este capítulo explica el problema físico, la cadena de cálculo que lo resuelve y un caso real del demo de punta a punta. Incluye el alcance **global** del producto y la línea **gemelo digital** de simulación (§1.6, distinta del pitch de TRIM), las **tres palancas** de venta (§1.7) y el encargo al backend (§1.8). Cada paso remite al capítulo donde están sus fórmulas completas.
 
 ## 1.1 Por qué el agua manda
 
-Un pozo maduro en Colombia no produce crudo: produce **líquido**, y casi todo es agua de formación. El **corte de agua** (BSW) es la fracción de agua en el líquido:
+En un yacimiento **maduro** (Colombia, Oriente Medio, Asia-Pacífico, cuencas con alta BSW), el pozo no entrega solo crudo: entrega **líquido**, y una fracción grande es agua de formación. El **corte de agua** (BSW) es la fracción de agua en el líquido:
 
 $$
 \text{BSW} = \frac{Q_w}{Q_w + Q_o} \qquad\Longrightarrow\qquad \frac{Q_w}{Q_o} = \frac{\text{BSW}}{1 - \text{BSW}}
@@ -34,11 +34,11 @@ flowchart LR
   T -. "llega al alto-alto:<br/>hay que dejar de producir agua" .-> C["Cerrar pozos<br/>→ se pierde su crudo"]
 ```
 
-Si la bomba se para y nada más absorbe el agua, el tanque sube. Al llegar al nivel **alto-alto** hay que dejar de producir agua, y la única forma es **cerrar pozos**. Cada pozo cerrado se lleva su crudo. Con cortes de 92–98 %, una bomba de agua parada pesa sobre la producción **más** que cualquier pozo.
+Si la bomba se para y nada más absorbe el agua, el tanque sube. Al llegar al nivel **alto-alto** hay que dejar de producir agua, y la única forma es **cerrar o reducir pozos**. Cada pozo afectado se lleva su crudo. Con BSW altos, una bomba de agua parada pesa sobre la producción **más** que muchas fallas de fondo.
 
-El otro equipo de alto impacto es la **electrosumergible**, la bomba de fondo de cada pozo: si falla, ese pozo deja de producir hasta que se cambia (días o semanas de taladro).
+El otro equipo de alto impacto es la **electrosumergible** (ESP) o el sistema de levantamiento artificial del pozo: si falla, ese pozo deja de producir hasta un trabajo de fondo (días o semanas).
 
-> **El agua de los campos del demo** (pruebas vigentes, corridas con el motor): La Ceiba **95 %** (18,9 bbl de agua por barril de crudo), Morichal Norte **97 %** (32,4), Guacamayo **93 %** (13,2), El Palmar **80 %** (4,0: todo es bombeo mecánico, y una unidad de varilla no mueve más líquido) y La Zarza **32 %** (es de gas y condensado: el mismo producto sirve donde el agua no manda). En un piloto, el corte real del cliente entra por las pruebas de pozo (capítulo 5B §4.1).
+> **Global vs demo.** La física (BSW, tanque, respaldo, orden de cierre) es la misma en cualquier región; cambian las **reglas de custodia** (asignación, bandas, fiscal), la **moneda** y los **catálogos** — vía configuración regional (`src/shared/config/region.ts`). El demo usa **cinco campos en Colombia** (Res. MME 40236, hora `America/Bogota`, USD): La Ceiba **95 %**, Morichal **97 %**, Guacamayo **93 %**, El Palmar **80 %** (bombeo mecánico), La Zarza **32 %** (gas/condensado). En un piloto entran las pruebas o asignación del cliente (5B §4.1).
 
 ## 1.2 Lo que cada nivel necesita saber
 
@@ -46,7 +46,7 @@ El mismo cálculo responde preguntas distintas según quién mira. Lo que cambia
 
 | Nivel | Pregunta | Lo que TRIM responde | Capítulo |
 |---|---|---|---|
-| **Gerencia** (decisión) | ¿Cuánto dejamos de producir, cuánto vale, por culpa de qué, y baja contra la meta que firmé? | Barriles diferidos del período con su rango, valor en USD, % de alto impacto, por equipo y por campo, cierre proyectado contra la meta | 5A, 6 |
+| **Gerencia** (decisión) | ¿Cuánto dejamos de producir, cuánto vale, por culpa de qué, baja contra la meta que firmé, y cuánto puedo todavía evitar o recuperar? | Barriles diferidos del período (libro, **medido**) y el **retorno posible** del ciclo **1 · Antes / 2 · Durante / 3 · Después** (simulado, no entra al libro) | 5A, 6, 11 |
 | **Ingeniería de producción** | ¿El número aguanta una auditoría? | Factor de asignación en su banda regulatoria, custodia completa (pozos con prueba, días con fiscal), identidad exacta con el fiscal, publicación del libro | 5A |
 | **Operación** (supervisor, operador) | ¿Qué está parado, cuánto aguanta el tanque, qué pozos cierro primero, puedo arrancar? | Lo que se pierde ahora (bbl/d, bbl/h, pozos cerrados), colchón en horas, orden de cierre, «no arrancar hasta identificar» | 5B |
 | **Mantenimiento y confiabilidad** | ¿Qué parte va a fallar, cuándo, y cuánto crudo arriesga? | Vigía (cruce de la alarma en horas, con rango), salud por parte, riesgo por equipo, costo por falla, historia (MTBF, horas fuera) | 5C, 5B |
@@ -207,7 +207,124 @@ Y lo que ve el gerente en el resumen del portafolio, el mismo día:
 | Una parada que cruza dos meses | Se recorta a cada mes con el factor de ese mes; no se suma entera a los dos. | 5B §4.4 |
 | Lo que entra a mano | Solo la configuración firmada y la respuesta del operario, con fecha, firmante y motivo. Nada se sobrescribe: un mes viejo se recalcula con la versión que regía. | 5D |
 
-## 1.6 Qué tiene que construir el backend para que esto funcione
+## 1.6 Producto global TRIM y línea gemelo digital (simulación)
+
+### Qué vende TRIM (sin etiqueta «gemelo»)
+
+En **presentaciones comerciales** TRIM se describe como **software de barriles y paradas** con custodia: libro medido, vigía, colchón, ciclo Antes / Durante / Después. **No** se presenta como gemelo digital: esa palabra reserva otra línea de producto (abajo).
+
+El mismo binario sirve **globalmente** mientras el yacimiento encaje en el patrón «equipos críticos de superficie/fondo + agua que manda + medición fiscal»:
+
+| Dimensión | Qué es global | Qué configura el cliente / región |
+|---|---|---|
+| Física | BSW, tanque, respaldo, orden de cierre, ESP/bombas | Capacidades, tags, esquema de planta |
+| Custodia | Potencial − real = Σ eventos; hueco = no inventar | Banda de asignación, fiscal, publicación (p. ej. Res. 40236 en Colombia) |
+| Moneda y formato | Motor en barriles; UI formatea | Precio neto, locale (`region.ts`) |
+| Integraciones | Patrón borde → MQTT/PI → API | SAP, WhatsApp, historiador del sitio |
+
+```mermaid
+flowchart TB
+  subgraph Borde["Borde (solo lectura)"]
+    PLC["PLC · fiscal · LT · VSD"]
+    GW["Gateway / PI"]
+  end
+  subgraph TRIM["TRIM · medición y decisión"]
+    M["Modelo operativo<br/>tanque · respaldo · vigía"]
+    T["Topología<br/>esquema de planta 2D"]
+    L["Libro + ciclo<br/>medido · simulado"]
+  end
+  subgraph Personas["Roles"]
+    G["Gerencia"]
+    O["Operación"]
+    MT["Mantenimiento"]
+  end
+  PLC --> GW --> M
+  GW --> T
+  M --> L --> G
+  M --> O
+  T --> O
+  M --> MT
+```
+
+### Cuatro pilares del producto (contrato + front hecho)
+
+| Pilar | Pregunta | Pantallas / capítulos |
+|---|---|---|
+| **Comportamiento crítico** | ¿Cuánto aguanta el tanque y qué cuesta si falla hoy? | 5B, 5C, Bombas, Riesgo |
+| **Topología operativa** | ¿Dónde está el cuello de botella ahora? | Planta (6C.7), catálogo |
+| **Cadena del dato** | ¿Tag, hora, custodia? | Cap. 4, CadenaDato |
+| **Libro y ciclo** | ¿Medido vs qué puedo mover? | 5A, 11, Resumen |
+
+### RFP: TRIM frente a un «digital twin» genérico
+
+| Pregunta en la licitación | TRIM (hoy) |
+|---|---|
+| Barriles por equipo y parte, publicables | **Sí** |
+| Colchón, orden de cierre, vigía | **Sí** |
+| Trazabilidad tag → cifra | **Sí** |
+| Simular planta/proceso/línea completa con planos | **No** — línea gemelo digital |
+| 3D navegable del P&ID | **No** |
+| LLM que elija la intervención | **No** — ciclo por `bbl` y reglas |
+
+Frase de pitch: *«TRIM mide y prioriza paradas en barriles, con custodia desde el PLC hasta gerencia.»*
+
+### Gemelo digital (visión): simular proceso, planta o línea
+
+En la **estrategia de producto**, «gemelo digital» significa otra cosa: un modelo del **proceso, la planta o la línea del cliente** para **simular** escenarios, no solo registrar lo ocurrido.
+
+| Elemento del gemelo digital | Rol |
+|---|---|
+| **P&ID, planos, layouts, isométricos** | Geometría y conectividad: qué está en serie/paralelo, dónde actuar |
+| **Datasheets, curvas de bomba, límites de diseño** | Parámetros del simulador |
+| **Modelo de proceso** (balances, hidráulica, composición según necesidad) | Responder «qué pasa si paro X / subo Y» |
+| **Datos en vivo** (tags) | Calibrar y validar el modelo contra la realidad |
+| **Escenarios** | Capacidad, bottlenecks, mantenimiento, contingencias |
+
+Esa línea **no está en el MVP de TRIM** (cap. 11 §«Fuera de este producto»). Cuando exista, debe **compartir tags y documentos** con TRIM: el libro sigue siendo la verdad contable; el gemelo explora futuros. **No mezclar** en el mismo slide comercial.
+
+### Piloto mínimo TRIM (cualquier región)
+
+| # | Insumo | Para |
+|---|---|---|
+| 1 | Eventos de pozo (hora PLC) | Libro |
+| 2 | Paradas de bomba + alarma / firma al parar | Parte |
+| 3 | Fiscal diario | Real, asignación |
+| 4 | Nivel tanque de agua | Colchón |
+| 5 | Caudal y estado de bombas críticas | Pérdida ahora |
+| 6 | Pruebas o asignación de pozos | Potencial |
+| 7 | Configuración firmada | Tanque, respaldos, metas, precio |
+| 8 | Series vigía | Antes |
+| 9 | Esquema de planta | Planta |
+| 10 | Mensajería + ERP mantenimiento | Operación |
+
+Producción: reloj real, LT en vivo, firma al parar persistida, `decision_plan` (cap. 10 S1–S4, S24). Sin eso el demo enseña; el piloto en campo no cierra.
+
+### MVP vs v2
+
+Con `MVP = true` (`producto.ts`) están apagadas **Agua**, **Evidencia** y **Regulatorio**; el tren de agua ya se ve en Bombas y Planta. v2 amplía pantallas, no sustituye el libro por un simulador 3D.
+
+## 1.7 Las tres palancas comerciales (Antes · Durante · Después)
+
+TRIM se vende como **reducir paradas en tres momentos**, no como un único KPI de mantenimiento:
+
+```mermaid
+flowchart LR
+  A["1 · Antes<br/>Evitar que pare"] --> D["2 · Durante<br/>Perder menos tiempo"]
+  D --> P["3 · Después<br/>No repetir"]
+  A -. "vigía · riesgo · colchón" .-> A
+  D -. "MTTR · identificar · orden TRIM" .-> D
+  P -. "pareto · MTBF · libro" .-> P
+```
+
+| Palanca | Mensaje de venta (una frase) | Cifra en pantalla | Medido o simulado |
+|---|---|---|---|
+| **Antes** | «Intervenga mientras el tanque aguanta, no cuando ya cerró pozos.» | Σ lo que costaría si falla **hoy** (`costoFalla`) | Simulado |
+| **Durante** | «Cada hora parada cuesta barriles: recupere antes del MTTR e identifique antes de arrancar.» | Horas restantes × \(Q/24\) + evitable por orden | Simulado |
+| **Después** | «Ataque la parte que más costó en el período para que no se repita.» | Top parte + evitable histórico del período | Simulado (sobre libro) |
+
+El **libro** responde «cuánto dejamos de producir» (custodia, firmable). El **ciclo** responde «cuánto podemos todavía mover» (motor TRIM, chip «simulado»). En Resumen el ciclo va **arriba** y el libro **abajo**, para que no se confundan. Detalle de fórmulas, UI y contrato: capítulo **11**. Alcance global y gemelo digital (simulación): §1.6.
+
+## 1.8 Qué tiene que construir el backend para que esto funcione
 
 1. **Recibir del borde**, sin edición manual: los eventos de los controladores de pozo con su código y su hora, las paradas de las bombas con la primera alarma y la firma de señales al parar (en el demo la firma nunca llega; el backend tiene que guardarla al registrar la parada: capítulo 5B, «Huecos»), las caídas de servicios, el fiscal del día, el nivel de los tanques y las series de los tags. → Capítulo 4.
 2. **Guardar** eso y lo que entra a mano, con las reglas de custodia (solo inserción, versiones, quién y cuándo). → Capítulo 3.

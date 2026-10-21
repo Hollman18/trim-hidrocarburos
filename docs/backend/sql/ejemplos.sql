@@ -8023,6 +8023,7 @@ insert into capacidad (id, nombre, incluye) values ('metas:firmar', 'Fijar y fir
 insert into capacidad (id, nombre, incluye) values ('usuarios:administrar', 'Dar acceso a las demás personas: invitar, cambiar rol o campos, suspender', null);
 insert into capacidad (id, nombre, incluye) values ('sap:aviso', 'Enviarle a SAP el aviso de mantenimiento de un equipo (la orden la crea el planeador en SAP)', null);
 insert into capacidad (id, nombre, incluye) values ('asignacion:cargar', 'Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM', null);
+insert into capacidad (id, nombre, incluye) values ('planes:decidir', 'Aceptar o marcar ejecutado un plan de acción (antes, durante o después de una parada)', null);
 insert into capacidad (id, nombre, incluye) values ('causa:completar', 'Completar el análisis de la falla: mecanismo y causa raíz', 'causa:declarar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('ger', 'evidencia:exportar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('ger', 'metas:firmar');
@@ -8032,14 +8033,17 @@ insert into rol_capacidad (rol_id, capacidad_id) values ('prod', 'asignacion:car
 insert into rol_capacidad (rol_id, capacidad_id) values ('sup', 'causa:declarar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('sup', 'evidencia:exportar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('sup', 'sap:aviso');
+insert into rol_capacidad (rol_id, capacidad_id) values ('sup', 'planes:decidir');
 insert into rol_capacidad (rol_id, capacidad_id) values ('oper', 'causa:declarar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('oper', 'sap:aviso');
 insert into rol_capacidad (rol_id, capacidad_id) values ('jefe', 'causa:completar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('jefe', 'evidencia:exportar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('jefe', 'sap:aviso');
+insert into rol_capacidad (rol_id, capacidad_id) values ('jefe', 'planes:decidir');
 insert into rol_capacidad (rol_id, capacidad_id) values ('conf', 'causa:completar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('conf', 'evidencia:exportar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('conf', 'sap:aviso');
+insert into rol_capacidad (rol_id, capacidad_id) values ('conf', 'planes:decidir');
 insert into rol_capacidad (rol_id, capacidad_id) values ('plan', 'evidencia:exportar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('tec', 'causa:declarar');
 insert into rol_capacidad (rol_id, capacidad_id) values ('cont', 'evidencia:exportar');

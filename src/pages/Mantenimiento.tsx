@@ -1,6 +1,8 @@
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
 import { esServicio } from '@/shared/api/equipos'
 import { useLibro, useBase, useRiesgo, usePreguntas, useCtx, contarPorIdentificar } from '@/shared/api/diferidos'
+import { useCiclo } from '@/shared/api/ciclo'
+import { CicloCifras, PlanesDe } from '@/widgets/ciclo/Ciclo'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
@@ -33,6 +35,7 @@ export function Mantenimiento() {
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
   const lb = useLibro(q)
   const base = useBase(q)
+  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
   const riesgo = useRiesgo(ids).filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const preguntas = usePreguntas(ids)
   // «Por identificar» con la cuenta única (la misma de Turno, Mi trabajo e
@@ -129,6 +132,7 @@ export function Mantenimiento() {
 
   return (
     <>
+      <CicloCifras ciclo={ciclo} onIr={p => { if (rol.pantallas.includes(p)) setPantalla(p) }} />
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
         <span>
           <small className={rotulo}>fallas de alto impacto</small>
@@ -170,7 +174,7 @@ export function Mantenimiento() {
       </Lectura>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
-        <Panel titulo="ATACAR AHORA" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
+        <Panel titulo="1 · Intervenir" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
           {riesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
           {riesgo.length > 0 && (
             <div className="flex gap-3 pb-1 text-[10px] text-[var(--tinta3)]" aria-hidden>
@@ -206,6 +210,13 @@ export function Mantenimiento() {
       </div>
 
       <PanelSapMantenimiento />
+
+      {(ciclo.despues.planes.length > 0 || ciclo.antes.planes.length > 0 || ciclo.durante.planes.length > 0) && (
+        <PlanesDe
+          className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-1 shadow-[var(--sombra)]"
+          planes={[...ciclo.durante.planes, ...ciclo.antes.planes, ...ciclo.despues.planes]}
+          onAbrir={(c, eq) => { setCampo(c); abrirEquipo(eq, false) }} />
+      )}
 
       {(sinIdentificar.length > 0 || respondidasTarde.length > 0) && (
         <Panel className="mt-2.5" titulo="PARADAS POR IDENTIFICAR">

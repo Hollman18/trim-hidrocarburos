@@ -165,10 +165,10 @@ const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
   .indice li.n2 { margin-left: 6mm; font-size: 8.6pt; }
 </style></head><body>
 <div class="portada">
-  <div class="marca">TRIM Hidrocarburos · documento técnico</div>
+  <div class="marca">${L.marca ?? 'TRIM Hidrocarburos · documento técnico'}</div>
   <h1 class="t">${L.titulo}</h1>
   <div class="sub">${L.subtitulo}</div>
-  <div class="datos">${L.fecha}<br>Repositorio: Hollman18/trim-hidrocarburos · carpeta docs/backend/<br>Las cifras de ejemplo salen del motor del front con los datos de demostración (ahora = 2 de octubre de 2026, 14:00, hora de Colombia).</div>
+  <div class="datos">${L.fecha}<br>${L.notaPortada ?? 'Repositorio: Hollman18/trim-hidrocarburos · carpeta docs/backend/<br>Las cifras de ejemplo salen del motor del front con los datos de demostración (ahora = 2 de octubre de 2026, 14:00, hora de Colombia).'}</div>
 </div>
 <nav class="indice"><h1>Contenido</h1><ol>${indice}</ol></nav>
 ${cuerpo}

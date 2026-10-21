@@ -1,5 +1,7 @@
 import { useApp, useAmbito, useRol } from '@/app/store'
 import { useLibro, useRiesgo, usePreguntas, contarPorIdentificar } from '@/shared/api/diferidos'
+import { useCiclo } from '@/shared/api/ciclo'
+import { CicloCifras } from '@/widgets/ciclo/Ciclo'
 import { useMensajes } from '@/shared/api/mensajes'
 import { PASO_CORTO, ORDEN_PASO } from '@/entities/mensajes'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
@@ -37,6 +39,7 @@ export function Turno() {
   const inicioTurno = new Date(AHORA.getTime() - TURNO_H * 3_600_000)
   const lb = useLibro({ campos: ids, desde: inicioTurno, hasta: AHORA })
   const riesgo = useRiesgo(ids)
+  const ciclo = useCiclo(ids, inicioTurno, AHORA)
   const todas = usePreguntas(ids)
   const preguntas = todas.filter(p => p.pide)
   // La cuenta única de «por identificar» (Turno, Mi trabajo, Identificar, Mantenimiento).
@@ -197,6 +200,7 @@ export function Turno() {
 
   return (
     <>
+      <CicloCifras ciclo={ciclo} onIr={p => setPantalla(p)} />
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         <Tip titulo="Turno que entra" pista={`Lo que se pierde ahora, sostenido las ${TURNO_H} horas del turno.`}
           filas={[['Perdiéndose ahora', `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]} className="block">
@@ -231,14 +235,14 @@ export function Turno() {
       </Lectura>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
-        <Panel titulo="PASANDO AHORA" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
+        <Panel titulo="2 · Pasando ahora" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
           {perdiendo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
           {listaPerdiendo.visibles.map(filaPerdiendo)}
           {listaPerdiendo.resto.length > 0 && <div className="solo-impresion">{listaPerdiendo.resto.map(filaPerdiendo)}</div>}
           <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
         </Panel>
 
-        <Panel titulo="POR IDENTIFICAR" extra={`${pi.porIdentificar}`}>
+        <Panel titulo="2 · Identificar" extra={`${pi.porIdentificar}`}>
           {preguntas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
@@ -252,7 +256,7 @@ export function Turno() {
           ) : preguntas.length > 0 && <Hueco>Lo responde quien estuvo en el equipo.</Hueco>}
         </Panel>
 
-        <Panel titulo="PARA VIGILAR" extra={plural(vigilar.length, 'equipo', 'equipos')}>
+        <Panel titulo="1 · Vigilar" extra={plural(vigilar.length, 'equipo', 'equipos')}>
           {vigilar.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
           {listaVigilar.visibles.map(filaVigilar)}
           {listaVigilar.resto.length > 0 && <div className="solo-impresion">{listaVigilar.resto.map(filaVigilar)}</div>}

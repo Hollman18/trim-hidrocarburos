@@ -30,6 +30,7 @@ const PERMISO_CORTO: Record<Capacidad, string> = {
   'usuarios:administrar': 'Dar acceso a otras personas',
   'sap:aviso': 'Enviar avisos a SAP',
   'asignacion:cargar': 'Cargar la asignación oficial',
+  'planes:decidir': 'Aceptar planes de acción',
 }
 
 const Fila = ({ etiqueta, children, pie, info }: {

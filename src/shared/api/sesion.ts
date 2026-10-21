@@ -11,6 +11,7 @@ import type { Informe } from '@/entities/informe'
 import type { FilaCargada, CargaAsignacion } from '@/entities/asignacion'
 import type { Analisis } from '@/entities/catalogo'
 import type { PlantaCampo, CambioPlanta } from '@/entities/planta'
+import type { DecisionPlan } from '@/entities/escenarios'
 import { FUENTE } from './fuente'
 import { catalogoDelCampo } from './catalogo'
 
@@ -64,6 +65,9 @@ export interface Sesion {
   plantas: Record<string, PlantaCampo>
   /** `GET /api/planta/cambios`: el historial de cambios al esquema, de todos los campos. */
   cambiosPlanta: CambioPlanta[]
+  /** Decisiones sobre planes del ciclo (`POST /api/planes/:id`). El servidor
+   *  las aplica al responder `GET /api/vistas/ciclo`. En el demo viven aquí. */
+  planes: Record<string, DecisionPlan>
 }
 
 let instalada: Sesion | undefined
@@ -91,6 +95,7 @@ const tienda = perezoso((): UseBoundStore<StoreApi<Sesion>> => create<Sesion>(()
     analisisAnteriores: {},
     plantas: Object.fromEntries(CAMPOS.flatMap(c => { const p = catalogoDelCampo(c.id).planta; return p ? [[c.id, p]] : [] })),
     cambiosPlanta: [],
+    planes: {},
   }
 }))
 

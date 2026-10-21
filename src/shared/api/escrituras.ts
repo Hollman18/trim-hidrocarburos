@@ -1,7 +1,7 @@
 import { FUENTE, pedirJson, ErrorApi, mensajeDe } from './fuente'
 import { deRespuesta } from './cable'
 import {
-  R_FIRMA, R_USUARIO, R_AVISO, R_INFORME, R_ASIGNACION, R_RESPUESTA, R_ANALISIS, R_PLANTA,
+  R_FIRMA, R_USUARIO, R_AVISO, R_INFORME, R_ASIGNACION, R_RESPUESTA, R_ANALISIS, R_PLANTA, R_PLAN,
   type CuerpoFirma, type CuerpoUsuario, type CuerpoInvitacion, type CuerpoAviso, type CuerpoRespuesta, type CuerpoWhatsapp, type CuerpoAnalisis, type CuerpoAsignacion,
 } from './contrato'
 import { sesion, cambiarSesion } from './sesion'
@@ -33,6 +33,8 @@ import { AHORA } from '@/entities/reloj'
 import { region } from '@/shared/config/region'
 import { diaIso } from '@/shared/lib/formato'
 import { puedeHacer } from '@/entities/tipos'
+import { cicloValor, planPorId, type DecisionPlan, type EstadoPlan } from '@/entities/escenarios'
+import { calendario } from '@/entities/libro'
 
 /** LAS ESCRITURAS DEL CONTRATO: una función por cada POST/PATCH.
  *
@@ -476,4 +478,47 @@ export async function cambiarPlanta(q: Credencial, campo: string, cambio: Cambio
 function anotarPlanta(campo: string, planta: PlantaCampo, cambio: CambioPlanta) {
   const { plantas, cambiosPlanta } = sesion()
   cambiarSesion({ plantas: { ...plantas, [campo]: planta }, cambiosPlanta: [...cambiosPlanta, cambio] })
+}
+
+/* ─────────────────────────── planes del ciclo ─────────────────────────── */
+
+/** `POST /api/planes/:id { estado, motivo }` → la decisión. Un plan se
+ *  acepta y luego se marca ejecutado; no se revierte. Capacidad
+ *  `planes:decidir` y el campo del plan entre los de la persona. */
+export async function decidirPlan(q: Credencial, c: { id: string; estado: EstadoPlan; motivo: string }): Promise<Resultado<{ decision: DecisionPlan }>> {
+  if (c.estado !== 'aceptado' && c.estado !== 'ejecutado') return { ok: false, error: 'Un plan se acepta o se marca ejecutado.' }
+  if (FUENTE === 'http') {
+    const r = await escribir(q, 'POST', `/planes/${encodeURIComponent(c.id)}`, { estado: c.estado, motivo: c.motivo }, R_PLAN)
+    if (!r.ok) return r
+    const { planes } = sesion()
+    cambiarSesion({ planes: { ...planes, [r.datos.decision.id]: r.datos.decision } })
+    return { ok: true, decision: r.datos.decision }
+  }
+  const { ctx, versiones, usuarios, planes } = sesion()
+  const rol = rolPorId(q.rolId)
+  if (!puedeHacer(rol.puede, 'planes:decidir')) return { ok: false, error: 'Los planes los acepta operación o mantenimiento.' }
+  const yo = personaDelRol(usuarios, q.rolId)
+  if (!yo) return { ok: false, error: SIN_PERSONA }
+  if (!alcanza(c.motivo, MOTIVO_MINIMO)) return { ok: false, error: 'Falta el motivo: una decisión sin motivo no queda.' }
+  const mios = camposAsignados(rol, usuarios).map(x => x.id)
+  const cal = calendario()
+  const ciclo = cicloValor(mios, new Date(cal[0]!.desde), new Date(cal.at(-1)!.hasta), ctx, versiones)
+  const plan = planPorId(ciclo, c.id)
+  if (!plan) return { ok: false, error: 'Ese plan no existe.' }
+  if (!mios.includes(plan.campoId)) return { ok: false, error: 'Ese campo no lo tiene asignado.' }
+  const actual = Object.hasOwn(planes, c.id) ? planes[c.id] : undefined
+  const estadoActual = actual?.estado ?? 'propuesto'
+  if (c.estado === 'aceptado' && estadoActual !== 'propuesto') {
+    return { ok: false, error: estadoActual === 'aceptado' ? 'Ese plan ya está aceptado.' : 'Ese plan ya se ejecutó.' }
+  }
+  if (c.estado === 'ejecutado' && estadoActual !== 'aceptado') {
+    return { ok: false, error: estadoActual === 'ejecutado' ? 'Ese plan ya se ejecutó.' : 'Hay que aceptarlo antes de marcarlo ejecutado.' }
+  }
+  const decision: DecisionPlan = {
+    id: c.id, estado: c.estado,
+    por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`, porId: yo.id,
+    fecha: horaDelPlc(), motivo: c.motivo.trim(),
+  }
+  cambiarSesion({ planes: { ...planes, [c.id]: decision } })
+  return { ok: true, decision }
 }

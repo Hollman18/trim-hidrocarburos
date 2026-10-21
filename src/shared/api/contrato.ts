@@ -32,6 +32,7 @@ import type { Repuesto } from '@/entities/sap'
 import type { Predicciones } from './predicciones'
 import type { CampoAhora } from './medicion'
 import type { DatosDeCatalogo, CatalogoDeCampo } from './catalogo'
+import type { CicloValor, PlanAccion, TramoCiclo, DecisionPlan } from '@/entities/escenarios'
 
 /** EL CONTRATO DEL FRONT CON EL BACKEND, endpoint por endpoint.
  *
@@ -67,7 +68,8 @@ import type { DatosDeCatalogo, CatalogoDeCampo } from './catalogo'
  *    cadena de datos (procedencia, inventario). No los pide ninguna pantalla
  *    del libro: los consume el servidor.
  *  - Lo que entra a mano: `/configuracion`, `/usuarios`, `/paradas/…`,
- *    `/sap/…`, `/informes`, `/asignacion-oficial`, `/analisis`, `/planta/cambios`.
+ *    `/sap/…`, `/informes`, `/asignacion-oficial`, `/analisis`, `/planta/cambios`,
+ *    `/planes`.
  *  Ninguna ruta tiene un tramo literal al mismo nivel que un `:parámetro`. */
 
 /* ───────────────────────────── el endpoint ───────────────────────────── */
@@ -246,6 +248,18 @@ export const BOMBAS = get<ConsultaPeriodo>()('/vistas/bombas', lista(obj<BombaVi
   perfil: opc(perfil), veredicto: opc(veredicto), abierta: opc(paradaMedida), senales: lista(senal), partes: lista(saludParte),
 })))
 
+/** Ciclo ANTES / DURANTE / DESPUÉS: planes de acción con barriles simulados.
+ *  `estado` lo pone el servidor con lo guardado en `POST /api/planes/:id`. */
+const planAccion = obj<PlanAccion>()({})
+const tramoCiclo = obj<TramoCiclo>()({ planes: lista(planAccion) })
+const ciclo = obj<CicloValor>()({
+  desde: fecha, hasta: fecha,
+  antes: tramoCiclo,
+  durante: obj<CicloValor['durante']>()({ planes: lista(planAccion) }),
+  despues: tramoCiclo,
+})
+export const CICLO = get<ConsultaPeriodo>()('/vistas/ciclo', ciclo)
+
 /** Lo que TRIM mandó por WhatsApp: un registro del servidor, del más reciente al más viejo. */
 export const MENSAJES = get<PorCampos>()('/mensajes', tal<Mensaje[]>())
 export const SAP_AVISOS = get<PorCampos>()('/sap/avisos', tal<AvisoSap[]>())
@@ -326,6 +340,8 @@ export interface CuerpoWhatsapp { evento: string; campoId: string; equipo: strin
 export interface CuerpoAnalisis { evento: string; mecanismo: string; causaRaiz: string; nota?: string }
 /** Las filas que se cargan y por qué: reemplazar la oficial de un mes sin motivo no deja saber después qué pasó. */
 export interface CuerpoAsignacion { filas: FilaOficial[]; motivo: string }
+/** Aceptar o marcar ejecutado un plan del ciclo. El id va en la ruta. */
+export interface CuerpoPlan { estado: 'aceptado' | 'ejecutado'; motivo: string }
 
 /** `POST /configuracion` → la versión firmada (con la misma normalización que el historial). */
 export const R_FIRMA = obj<{ version: Version }>()({ version })
@@ -343,6 +359,8 @@ export const R_RESPUESTA = tal<{ respuesta: RespuestaParada }>()
 export const R_ANALISIS = tal<{ analisis: Analisis }>()
 /** `POST /planta/cambios` → la planta del campo como quedó y el cambio en el historial. */
 export const R_PLANTA = tal<{ planta: PlantaCampo; cambio: CambioPlanta }>()
+/** `POST /planes/:id` → la decisión como quedó. */
+export const R_PLAN = tal<{ decision: DecisionPlan }>()
 
 /* ───────────────────── las formas JSON, para leerlas ───────────────────── */
 

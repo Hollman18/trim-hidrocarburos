@@ -2261,6 +2261,34 @@ console.log('\n=== 20. Revisión de realismo (9-oct-2026): trenes en equilibrio,
     `antes y con TRIM, alto impacto por día: portafolio ${(cP * 100).toFixed(1)} %, La Ceiba ${(cC * 100).toFixed(1)} % (desde el ${antes0.toISOString().slice(0, 10)} hasta la puesta en marcha, contra lo que va)`)
 }
 
+console.log('\n=== 21. Ciclo ANTES / DURANTE / DESPUÉS ===')
+{
+  const ESC = await v.ssrLoadModule('/src/entities/escenarios.ts')
+  const cal = L.calendario(), curso = cal.at(-1)
+  const c = ESC.cicloValor(TODOS, new Date(curso.desde), new Date(curso.hasta), ctx0, V0)
+  comprobar(cerca(c.antes.bbl + c.durante.bbl + c.despues.bbl, c.retornoBbl),
+    `retorno = ANTES + DURANTE + DESPUÉS (${f(c.antes.bbl)} + ${f(c.durante.bbl)} + ${f(c.despues.bbl)} = ${f(c.retornoBbl)})`)
+  const enRiesgo = D.riesgoAhora(TODOS, ctx0).filter(r => r.estado === 'en-riesgo' && r.altoImpacto)
+  const costoHoy = enRiesgo.reduce((a, r) => a + (r.costoFalla ?? 0), 0)
+  comprobar(cerca(c.antes.bbl, costoHoy),
+    `ANTES es la suma de costoFalla de alto impacto en riesgo (${f(c.antes.bbl)} = ${f(costoHoy)})`)
+  comprobar(c.antes.planes.every(p => p.simulado === true) && c.durante.planes.every(p => p.simulado) && c.despues.planes.every(p => p.simulado),
+    'cada plan lleva simulado: true (no entra al libro)')
+  const perdiendo = D.riesgoAhora(TODOS, ctx0).filter(r => r.estado === 'perdiendo' && r.altoImpacto)
+  const bblDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
+  comprobar(cerca(c.durante.bblDia, bblDia),
+    `DURANTE.bblDia es lo que se pierde ahora de alto impacto (${f(c.durante.bblDia)})`)
+  const lb = L.libro(TODOS, new Date(curso.desde), new Date(curso.hasta), ctx0)
+  comprobar(c.despues.planes.some(p => p.id.endsWith(':orden')) === (lb.evitablePorOrden > 0)
+    && (!c.despues.planes.some(p => p.id.endsWith(':orden')) || cerca(c.despues.planes.find(p => p.id.endsWith(':orden')).bbl, lb.evitablePorOrden)),
+    `DESPUÉS trae el evitable por orden del período cuando hay (${f(lb.evitablePorOrden)} bbl)`)
+  const aceptado = ESC.conDecisiones(c, { [c.despues.planes[0]?.id ?? '_']: { id: c.despues.planes[0]?.id ?? '_', estado: 'aceptado', por: 'prueba', porId: 'jefe', fecha: '2026-10-02T14:00:00.000-05:00', motivo: 'prueba' } })
+  comprobar(!c.despues.planes[0] || aceptado.despues.planes[0].estado === 'aceptado',
+    'conDecisiones pone el estado sobre el plan, sin cambiar los barriles')
+  comprobar(ESC.planPorId(c, 'no-existe') === undefined && (!c.antes.planes[0] || ESC.planPorId(c, c.antes.planes[0].id)?.id === c.antes.planes[0].id),
+    'planPorId encuentra el plan o no existe')
+}
+
 await v.close()
 console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones bien.`)
 if (fallos) { console.log(`${fallos} FALLARON.`); process.exit(1) }

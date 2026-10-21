@@ -1400,11 +1400,11 @@ comment on column rol.recibe_alertas is 'Tiene reglas de WhatsApp (ROLES_CON_ALE
 comment on column rol.visible is 'Rol del primer producto (true) o de la versión 2 (false).';
 
 create table capacidad (
-  id       text primary key check (id in ('causa:declarar', 'causa:completar', 'evidencia:exportar', 'conector:configurar', 'config:firmar', 'metas:firmar', 'usuarios:administrar', 'sap:aviso', 'asignacion:cargar')),
+  id       text primary key check (id in ('causa:declarar', 'causa:completar', 'evidencia:exportar', 'conector:configurar', 'config:firmar', 'metas:firmar', 'usuarios:administrar', 'sap:aviso', 'asignacion:cargar', 'planes:decidir')),
   nombre   text not null,
   incluye  text references capacidad(id)
 );
-comment on table capacidad is 'Las nueve capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).';
+comment on table capacidad is 'Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).';
 comment on column capacidad.id is 'Id de la capacidad.';
 comment on column capacidad.nombre is 'Qué permite, dicho para leer.';
 comment on column capacidad.incluye is 'Otra capacidad que esta trae consigo (causa:completar incluye causa:declarar: INCLUYE de tipos.ts).';

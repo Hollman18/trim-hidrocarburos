@@ -2,7 +2,7 @@
 
 **Para qué.** «Lo que recibe y lo que entrega.» (`PARA_QUE.turno`, `src/widgets/Onboarding.tsx:21`).
 
-**Ruta.** `#/<rol>/turno/<campo>[~portafolio]/<período>`. **El período de la cabecera no aplica**: el turno son siempre las **12 horas que terminan en AHORA** (`TURNO_H = 12`, rotación 7×7 sobre una operación 24/7, `src/pages/Turno.tsx:24`). En el demo, del 2-oct 02:00 al 2-oct 14:00.
+**Ruta.** `#/<rol>/turno/<campo>[~portafolio]/<período>`. **El período de la cabecera no aplica**: el turno son siempre las **12 horas que terminan en AHORA** (`TURNO_H = 12`, rotación 7×7 sobre una operación 24/7, `src/pages/Turno.tsx:24`). En el demo, del 2-oct 02:00 al 2-oct 14:00. Arriba: `CicloCifras` (capítulo 11). Paneles «**2 · Pasando ahora**», «**2 · Identificar**», «**1 · Vigilar**» (palancas Durante / Antes).
 
 **Roles y nivel.** `sup`, `oper` → `operacion`. Las dos pantallas son idénticas salvo el botón «Exportar» de la cabecera (el operador no tiene `evidencia:exportar`).
 

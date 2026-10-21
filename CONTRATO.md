@@ -58,7 +58,7 @@ mandar, y el servidor las vuelve a correr y **sus 422 mandan**.
 
 | Dueño | Qué (módulos de `src/entities/` o de `src/shared/`) |
 |---|---|
-| **Servidor** | Todo lo que lee los insumos o sale de ellos: `libro`, `diferido`, `causa-senal`, `salud`, `vigia`, `esp`, `metrologia`, `sap` (lo que se lee de SAP), `aciertos`, `mensajes` (el registro y su texto), `equipo-vivo`, `flota`, y `informe` (`cifrasDe`, `formaCanonica`, la huella). También los datos de catálogo del campo: máquinas y perfiles de bomba, catálogo de equipos y de daños, el límite de cada tag (`limites`: banda normal y alarma), metrología, punto de medición oficial y topología de planta. |
+| **Servidor** | Todo lo que lee los insumos o sale de ellos: `libro`, `diferido`, `causa-senal`, `salud`, `vigia`, `esp`, `metrologia`, `sap` (lo que se lee de SAP), `aciertos`, `mensajes` (el registro y su texto), `equipo-vivo`, `flota`, `escenarios` (ciclo ANTES / DURANTE / DESPUÉS) y `informe` (`cifrasDe`, `formaCanonica`, la huella). También los datos de catálogo del campo: máquinas y perfiles de bomba, catálogo de equipos y de daños, el límite de cada tag (`limites`: banda normal y alarma), metrología, punto de medición oficial y topología de planta. |
 | **Los dos** | Las reglas de lo que entra a mano: `configuracion.validarConfig` y `camposTocados`, la meta o el perfil vigente de un campo (`perfilDe`, `metaEn`, `metaEntre`, `criterioEn`, `tanqueDe`), `usuarios.revisarAcceso` y `camposAsignados`, `reglas.ts` (`MOTIVO_MINIMO` = 5, `NOMBRE_MINIMO` = 3, `TEXTO_LIBRE_MINIMO` = 8), `planta.aplicarCambioPlanta`, `plan.leerPlan`, `asignacion.leerAsignacion` y `cotejar`. |
 | **Front** | `reloj` (los períodos salen de `calendarioDe(ahora)`), `shared/lib/formato`, `planta.armar` (el dibujo), `cadena` (las frases de la procedencia), los nombres de los catálogos de normas, y ordenar o filtrar lo que ya llegó. |
 
@@ -107,7 +107,7 @@ capacidades de la persona real, toda escritura con la suplantación activa respo
 ### Las capacidades
 
 Cada capacidad es un permiso que el servidor revisa en un endpoint (`403` sin ella). Son
-nueve (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`):
+diez (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`):
 
 | Capacidad | Endpoint |
 |---|---|
@@ -120,6 +120,7 @@ nueve (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts
 | `usuarios:administrar` | `POST /api/usuarios`, `PATCH /api/usuarios/:id` y el registro completo de `GET /api/usuarios` |
 | `sap:aviso` | `POST /api/sap/avisos` |
 | `asignacion:cargar` | `POST /api/asignacion-oficial` (producción: la reemplaza quien la reporta, no cualquiera con el campo) |
+| `planes:decidir` | `POST /api/planes/:id` (aceptar o marcar ejecutado un plan del ciclo ANTES / DURANTE / DESPUÉS; supervisor, jefe de mantenimiento, confiabilidad) |
 
 **Nivel de detalle.** Cada rol trae su nivel: `decision` (gerente), `operacion` (supervisor,
 operador, técnico) o `ingenieria` (producción, confiabilidad, mantenimiento, administración).
@@ -145,6 +146,7 @@ ajeno no devuelve datos de ese campo.
 | `POST /api/inscripcion` | `campo` del cuerpo |
 | `POST /api/campos/:campo/tags/:tag/equipo` | `:campo` de la ruta, que tiene que ser el del tag |
 | `POST /api/usuarios`, `PATCH /api/usuarios/:id` | ver «Usuarios»: nadie otorga campos que no tiene |
+| `POST /api/planes/:id` | del plan (`cicloValor` → `campoId`; `404` si el id no existe) |
 
 El demo aplica la misma regla en `escrituras.ts` (`camposAsignados`, `revisarEvento`) y
 `verificar-libro` la prueba en la sección 16.
@@ -322,6 +324,7 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/equipos?campos` | `FilaEquipo[]` |
 | `/vistas/confiabilidad?campos` | `[{ campoId, equipo, familia, h: HistorialEquipo }]` |
 | `/vistas/bombas?campos&desde&hasta` | `BombaVista[]` con `perfil` por clave, más `veredicto`, `abierta`, `senales` y `partes` (la salud llega aquí y en `sospechosa` de las opciones; ya no hay `/vistas/bombas/salud`) |
+| `/vistas/ciclo?campos&desde&hasta` | `CicloValor`: tramos `antes`, `durante` (con `bblDia`), `despues`; `retornoBbl`; `valorUsd?`; cada `PlanAccion` con `simulado: true`, `bbl`, `supuestos[]`, `estado?` (ausente = propuesto). Cifras **simuladas**: no entran al libro. Fórmulas en el capítulo 11. El servidor aplica `POST /api/planes/:id` sobre cada `id`. **Presentación (front hecho):** Resumen muestra el retorno primero y el libro después; planes plegados («Ver planes de acción»); copy largo solo en globos — capítulos 11 y 8 §8.13 |
 
 **Formas que se repiten.** `HistorialEquipo`: `eventos[]` con `inicio` ISO y `fin` ISO o
 `null`; `porParte[].ultima` ISO; `fallasCerradas` y `bblPorFalla` (nuevos); `mdtH` del equipo
@@ -564,6 +567,16 @@ persona (`403`), mes que no está cerrado, pozo vacío, `bbl` < 0, `horas` fuera
 × 24, sin filas o sin motivo de 5 caracteres o más (`422`). **Un reemplazo no borra el rastro**:
 la carga anterior sigue en `cargas` y la nueva dice cuántos pozos reemplazó. Producción muestra
 quién cargó lo que rige en el mes y campo, cuándo y por qué, y el rastro de todas las cargas.
+
+### `POST /api/planes/:id`
+
+Cuerpo `{ estado: "aceptado" | "ejecutado", motivo }` → `{ decision: { id, estado, por, porId, fecha, motivo } }`.
+Capacidad `planes:decidir` (supervisor, jefe de mantenimiento, confiabilidad) y el campo del
+plan entre los de la persona. `por`, `porId` y `fecha` los pone el servidor. Un plan se acepta
+y luego se marca ejecutado; no se revierte. `404` si el id no sale de `cicloValor` con los
+campos de la persona (historia completa). `409` si ya está en ese estado o se ejecuta sin
+aceptar. `422` si el motivo tiene menos de 5 caracteres. Las cifras del plan **no cambian**
+con la decisión: solo el `estado`. Detalle en el capítulo 11.
 
 ### `POST /api/planta/cambios`
 

@@ -7,7 +7,7 @@ Un backend está terminado cuando **el front, apuntado a él, muestra exactament
 `referencia/` trae, para los cinco campos del demo, **lo que entra** y **lo que tiene que salir**:
 
 - **31 archivos de insumos** (`referencia/insumos/`, listados en `referencia/indice.json` → `insumos[]`). Cada uno es `{ "endpoint", "respuesta" }` con la forma de los endpoints de insumo (capítulo 7.3): pozos y pruebas, eventos de los controladores, caídas de servicios, paradas de cada bomba, fiscal día a día, registro de campos, catálogo, configuración de arranque y respuestas. Con ellos se carga la base de pruebas **sin leer TypeScript**.
-- **116 casos** (`referencia/<familia>/*.json`, listados en `indice.json` → `casos[]`). Cada caso es `{ id, descripcion, endpoint, esperado }`:
+- **122 casos** (`referencia/<familia>/*.json`, listados en `indice.json` → `casos[]`). Cada caso es `{ id, descripcion, endpoint, esperado }`:
 
 | Familia | Casos | Qué prueba | Capítulo |
 |---|---|---|---|
@@ -15,6 +15,7 @@ Un backend está terminado cuando **el front, apuntado a él, muestra exactament
 | `mensual` | 6 | la serie mes a mes, por campo y del portafolio | 5A |
 | `diaria` | 6 | la producción día a día, por campo y del portafolio | 5A |
 | `riesgo` | 6 | lo que se pierde ahora y lo que está en riesgo | 5B |
+| `ciclo` | 6 | retorno ANTES / DURANTE / DESPUÉS del último mes cerrado, por campo y del portafolio | 11 |
 | `prediccion` | 4 | la predicción de cada bomba si se para ahora (colchón, orden de cierre) | 5B |
 | `salud` | 10 | bombas con la salud de cada parte y pozos con la de su electrosumergible | 5C |
 | `aciertos` | 6 | el registro de predicciones del vigía y las fallas | 5C |
@@ -94,6 +95,7 @@ corre `tsc -b`, el linter, el contrato y `scripts/verificar-libro.mjs`: **327 co
 | 18 | Corrección del 8-oct: costo por falla «si falla hoy» (con el colchón del tanque), la electrosumergible que falló, causas que no dependen del orden de llegada, servicio todavía caído, fallas y disparos por equipo, banda sin verificar y «publicable» por campo |
 | 19 | Corrección de la revisión del 8-oct: el tanque solo sube si entra agua (`Prediccion.llenado`), horas con una sola regla, instrumento sin lectura = `null`, equipos que fallaron sin costar crudo (`Libro.sinCosto`) |
 | 20 | El demo con el agua de los campos colombianos (9-oct): los trenes de agua en equilibrio después de los cierres, el tope de 25 % a la reducción de frecuencia de una electrosumergible, el orden de cierre de los operarios (los más aguateros primero) y el efecto de la puesta en marcha (el diferido de alto impacto por día baja entre 15 % y 25 %) |
+| 21 | Ciclo ANTES / DURANTE / DESPUÉS: retorno = suma de tramos; ANTES = Σ `costoFalla` de alto impacto en riesgo; DURANTE.bblDia = lo que se pierde ahora de alto impacto; cada plan `simulado === true` |
 
 Un backend en otro lenguaje no corre este script; lo que tiene que dar está en `referencia/` y en las reglas de este documento.
 
@@ -110,13 +112,16 @@ Además de los casos, estas igualdades **tienen que valer para cualquier dato**,
 | Portafolio = $\sum$ campos (barriles); la meta del portafolio = $\sum$ metas de los campos | 5A |
 | Una parada que cruza el borde de dos meses no se suma entera a los dos (se recorta con el factor de cada mes) | 5B |
 | La huella de un informe recalculada desde sus cifras da la misma huella | 5D |
+| \(retornoBbl = ANTES.bbl + DURANTE.bbl + DESPUÉS.bbl\); ANTES = Σ `costoFalla` de alto impacto en riesgo; cada plan `simulado === true` (no entra al libro) | 11 |
 
 ## 9.6 Lista de aceptación
 
 Su backend se puede entregar cuando:
 
-- [ ] `node scripts/referencia.mjs comparar --base-url=…` sale con 0 (116 de 116).
+- [ ] `node scripts/referencia.mjs comparar --base-url=…` sale con 0 (122 de 122, incluidos los 6 de `referencia/ciclo/`).
 - [ ] El front con `VITE_FUENTE=http` arranca (los diez GET del arranque responden) y `npm run e2e -- --project=dev` pasa.
+- [ ] En Resumen gerente (`#/ger/resumen/…/curso`), con la lista de planes **plegada**, aparecen «bbl · retorno», chips Antes / Durante / Después / simulado, «Ver planes de acción» y «MEDIDO»; **no** el copy largo de un plan en cuerpo visible (capítulo 11 §11.1b; `e2e/auditoria/rutas.ts`).
+- [ ] `GET /api/vistas/ciclo` y `POST /api/planes/:id` cumplen el capítulo 11 (estado persistido, no en la sesión del navegador).
 - [ ] Cada escritura responde los códigos del capítulo 7.4 en el orden de 2.8 (capacidad → recurso → campo → conflicto → forma), con el error único y el `mensaje` en español sin detalles internos.
 - [ ] Ninguna lectura devuelve datos de un campo que la persona no tiene.
 - [ ] Las identidades de 9.5 valen en los meses cerrados de los datos reales del cliente.

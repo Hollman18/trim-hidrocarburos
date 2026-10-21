@@ -42,5 +42,6 @@ export async function arrancarDelServidor(): Promise<void> {
     analisis: analisis.vigentes, analisisAnteriores: analisis.anteriores,
     plantas: Object.fromEntries(Object.entries(catalogo.campos).flatMap(([c, x]) => (x.planta ? [[c, x.planta]] : []))),
     cambiosPlanta,
+    planes: {},
   })
 }

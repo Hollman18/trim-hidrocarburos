@@ -39,7 +39,7 @@ flowchart LR
 ## 2.2 Lo que el servidor tiene que hacer, en seis bloques
 
 1. **Ingesta y registro de la cadena de datos.** Recibe del borde los eventos de los controladores de pozo, las paradas de las bombas con su primera alarma, las caídas de servicios (energía, aire, compresión…), las series de los tags del historiador y el valor fiscal del día del computador de flujo. Registra la procedencia de cada tag (de qué instrumento sale, por qué gateway, con qué banda normal). Capítulo 4.
-2. **El motor.** Con esos insumos y la configuración firmada calcula las vistas: el libro de diferidos por mes y período, la producción día a día, la predicción de cada bomba, el riesgo, la salud de cada parte, el registro de aciertos del vigía, la asignación por pozo. Capítulo 5.
+2. **El motor.** Con esos insumos y la configuración firmada calcula las vistas: el libro de diferidos por mes y período, la producción día a día, la predicción de cada bomba, el riesgo, la salud de cada parte, el registro de aciertos del vigía, la asignación por pozo y el ciclo ANTES / DURANTE / DESPUÉS (`escenarios.ts`, capítulo 11). Capítulo 5.
 3. **Las escrituras.** Lo único que entra a mano: la configuración firmada (metas, precio, tanques, respaldos, programa de paradas), los usuarios y accesos, la respuesta del operario sobre una parada, el análisis de causa raíz, el aviso a SAP, el informe con folio, la asignación oficial cargada y los cambios de planta. Cada una con sus reglas de autorización y de forma. Capítulo 5D y anexo A.
 4. **WhatsApp.** Enviar con las plantillas aprobadas lo que las reglas disparan (parada, cierre, pregunta de causa, recordatorio a los 30 min, escalamiento a las 2 h, parte que avisa, orden liberada) y recibir por el webhook firmado la respuesta del operario. Capítulo 5D.
 5. **SAP PM.** Leer órdenes, horas confirmadas y repuestos; enviar avisos M1/M2 con la evidencia. **TRIM no crea órdenes en SAP.** Capítulo 5D.
@@ -50,7 +50,7 @@ flowchart LR
 | | **A. Correr el motor TypeScript en Node** (recomendada para el MVP) | **B. Reescribirlo en otro lenguaje** |
 |---|---|---|
 | Qué se hace | Un servicio Node importa `src/entities/*` tal cual, le instala los insumos leídos de la base (`instalarInsumos`, `src/entities/insumos.ts`) y expone los endpoints con los códecs de `contrato.ts` (`aDTO`). | Se traduce cada fórmula de este documento. |
-| Igualdad de números | Por construcción: es el mismo código. | Hay que probarla: `node scripts/referencia.mjs comparar --base-url=…` contra los 116 casos de `referencia/`. |
+| Igualdad de números | Por construcción: es el mismo código. | Hay que probarla: `node scripts/referencia.mjs comparar --base-url=…` contra los 122 casos de `referencia/`. |
 | Riesgo | Bajo. El motor está cubierto por > 250 comprobaciones (`npm run verificar`). | Alto en los bordes (redondeos, zona horaria, meses parciales, eventos que se pisan). |
 | Costo | Un servicio Node 22. | Semanas por módulo. |
 

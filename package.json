@@ -24,7 +24,9 @@
     "simulador": "node simulador-api/indice.mjs",
     "demo": "node scripts/armar-demo.mjs",
     "paquete": "node scripts/empaquetar.mjs armar",
-    "paquete:comprobar": "node scripts/empaquetar.mjs comprobar"
+    "paquete:comprobar": "node scripts/empaquetar.mjs comprobar",
+    "pitch:pdf": "node docs/backend/herramientas/armar-pitch-deck.mjs docs/backend/TRIM-pitch-comercial.pdf",
+    "pitch:pdf-doc": "node docs/backend/herramientas/armar-pdf.mjs docs/backend/herramientas/pitch-pdf.json docs/backend/TRIM-pitch-notas.pdf"
   },
   "dependencies": {
     "clsx": "^2.1.1",

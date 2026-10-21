@@ -2,7 +2,7 @@
 
 Documentar cada número obligó a correr el motor caso por caso, y eso dejó a la vista decisiones que el código no toma, atajos del demo que un servidor real no puede copiar y algunos defectos. Este capítulo los junta en un solo lugar. Cada punto remite a la sección de «Huecos y dudas» del capítulo donde está explicado con su archivo y línea (por ejemplo, «5B·H10» es el punto 10 de los huecos del capítulo 5B; «6A·H3», el punto 3 de los huecos de las pantallas 6A).
 
-> **Estado al 8 de octubre de 2026.** El dueño del producto decidió D1, D3 y D23, y se corrigieron los defectos marcados ✅ (commit `cb8cd39`: motor, contrato, referencia y pantallas; `verificar-libro` pasó de 284 a 320 comprobaciones). Lo demás sigue abierto. Las fichas del capítulo 5 y las pantallas del 6 ya describen el comportamiento corregido.
+> **Estado al 15 de octubre de 2026.** El dueño del producto decidió D1, D3 y D23, y se corrigieron los defectos marcados ✅ (commit `cb8cd39`: motor, contrato, referencia y pantallas; `verificar-libro` pasó de 284 a 320 comprobaciones). **Ciclo de valor (capítulo 11):** motor, contrato, referencia `referencia/ciclo/`, front (`Ciclo.tsx`) y documentación comercial/técnica alineados; pendiente en producción solo **S24** (`decision_plan` + persistencia del POST planes). Lo demás sigue abierto salvo lo marcado ✅.
 
 **Cómo usarlo.**
 - 10.1 son **preguntas para el dueño del producto**: el backend no las puede adivinar.
@@ -68,6 +68,7 @@ Documentar cada número obligó a correr el motor caso por caso, y eso dejó a l
 | S21 | «Antes → con TRIM» y «mantenimiento proactivo» usan una fecha de puesta en marcha fija del front | El servidor expone la fecha de puesta en marcha de cada campo | 6A·H12 |
 | S22 | Respuestas, análisis y cambios de planta viven en la sesión del navegador (se pierden al recargar) | Los guarda el servidor (capítulo 3) | 6C·H12 |
 | S23 | El CSV de un informe lo arma el navegador con un libro que vuelve a pedir | Si el CSV es evidencia, lo arma el servidor junto con el folio (D19) | 6C·H23, 5D·H17 |
+| S24 | Las decisiones de un plan del ciclo (`POST /api/planes/:id`) viven en la sesión del navegador (`sesion.planes`); se pierden al recargar | Persistir `decision_plan` y devolver el `estado` ya aplicado en `GET /api/vistas/ciclo`. El front está hecho; el servidor no. Capítulo 11 | 11 |
 
 ## 10.3 Defectos encontrados en el front y el motor
 
@@ -133,10 +134,11 @@ Ordenados de más a menos grave. «Cambia lo que se ve» quiere decir que un usu
 | Cliente MQTT contra el broker y canje del código de inscripción por certificado | Hoy el nacimiento entra por HTTP |
 | `lectura` como hipertabla de TimescaleDB, particionada por mes | Capítulo 3 |
 | `GET /api/integraciones` y la fecha de puesta en marcha por campo | S20, S21 |
+| Tabla `decision_plan` y los endpoints del ciclo en el servidor de producción (`GET /api/vistas/ciclo`, `POST /api/planes/:id`) | El contrato, las fórmulas y el front ya están. El desarrollador del backend los implementa (capítulo 11, S24) |
 
 ## 10.5 Casos que la referencia todavía no cubre
 
-`referencia/` compara 116 casos, pero no tiene:
+`referencia/` compara 122 casos (incluye el ciclo ANTES / DURANTE / DESPUÉS), pero no tiene:
 
 - el libro, la línea base y el día a día del **mes en curso**, ni un período que corte meses (residuo ≠ 0);
 - el **potencial reciente**;

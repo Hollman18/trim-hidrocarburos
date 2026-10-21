@@ -77,7 +77,7 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
   }
 
   return (
-    <Panel className="mt-2.5" titulo="¿ACIERTA EL VIGÍA?" extra={`desde que entró TRIM · ${fechaCorta(inicio)}`}>
+    <Panel className="mt-2.5" titulo="¿ACIERTA EL VIGÍA?" extra={`1 · Antes · ${fechaCorta(inicio)}`}>
       <Lectura>
         Cada predicción se califica al vencer su ventana: acierto si esa parte falló; intervenida si
         se le hizo mantenimiento antes (es lo que se busca, pero no prueba que iba a fallar y no

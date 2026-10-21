@@ -4,20 +4,25 @@ Para quien va a construir el servidor. Con este documento se construye el backen
 
 > **Lo que resuelve.** Cuántos barriles se dejaron de producir por cada equipo crítico (bombas de reinyección de agua y electrosumergibles) y por qué parte, con cadena de custodia, desde el pozo hasta la gerencia. En Colombia los pozos producen sobre todo agua (cortes de 92–98 %): si la bomba de reinyección se para y el respaldo no alcanza, el tanque de agua se llena y hay que cerrar pozos. El capítulo 1 lo explica de punta a punta con un caso real del demo.
 
+## Pitch comercial (PDF corto)
+
+Deck (10 diapositivas, marca gotrim.ai): [`TRIM-pitch-comercial.pdf`](TRIM-pitch-comercial.pdf) · `npm run pitch:pdf` · HTML junto al PDF. Notas extendidas: [`pitch-trim-ventas.md`](pitch-trim-ventas.md) · `npm run pitch:pdf-doc`.
+
 ## Por dónde empezar
 
 1. **[Capítulo 1](01-propuesta-de-valor.md)**: el problema, la cadena de cálculo en siete pasos y el caso de P-201B, de la parada a la gerencia.
 2. **[Capítulo 2](02-arquitectura.md)**: qué hace el servidor, cómo viaja un número hasta la pantalla, el reloj, los períodos y los roles.
 3. **[Capítulo 7](07-api.md)**: el índice de la API (qué endpoint usa cada pantalla). El contrato completo está en [`CONTRATO.md`](../../CONTRATO.md) (anexo A).
 4. Después, según lo que esté construyendo: el modelo de datos (3), la cadena de datos (4), las fórmulas (5A–5D) o una pantalla (6).
-5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (116 casos de `referencia/`).
+5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (122 casos de `referencia/`).
 6. **[Capítulo 10](10-pendientes.md)**: decisiones abiertas, atajos del demo y defectos conocidos.
+7. **[Capítulo 11](11-ciclo-de-valor.md)**: ciclo ANTES / DURANTE / DESPUÉS. El front ya lo muestra; este capítulo es el encargo para implementar `GET /vistas/ciclo` y `POST /planes/:id` en el servidor.
 
 ## Contenido
 
 | Capítulo | Qué trae |
 |---|---|
-| [1 · El problema y su solución técnica](01-propuesta-de-valor.md) | Por qué el agua manda; qué necesita cada nivel; la cadena de cálculo en siete pasos; P-201B de La Ceiba minuto a minuto; por qué los cálculos son precisos |
+| [1 · El problema y su solución técnica](01-propuesta-de-valor.md) | Agua en yacimientos maduros (global); cadena de cálculo; P-201B; precisión; producto TRIM vs línea gemelo digital; palancas; backend |
 | [2 · Arquitectura](02-arquitectura.md) | Las tres capas del front; los seis bloques del servidor; motor en Node o reescrito; el recorrido de un número; arranque; reloj y períodos; campo y portafolio; sesión, roles y nivel de detalle; reglas del cable |
 | [3 · Modelo de datos](03-modelo-de-datos.md) | Tabla por tabla, con diagramas entidad-relación. El SQL ejecutable está en [`sql/esquema.sql`](sql/esquema.sql) (PostgreSQL 16) y [`sql/timescale.sql`](sql/timescale.sql) (opcional), con filas reales del demo ([`sql/ejemplos.sql`](sql/ejemplos.sql)), las pruebas de las restricciones ([`sql/pruebas.sql`](sql/pruebas.sql)) y los cuadres ([`sql/cuadres.sql`](sql/cuadres.sql)); el libro de Excel en [`modelo-de-datos.xlsx`](modelo-de-datos.xlsx) |
 | [4 · Cadena de datos](04-cadena-de-datos.md) | Del PLC al número: borde, nacimiento, cadencias, calidad, cómo se arma cada insumo del motor |
@@ -32,6 +37,7 @@ Para quien va a construir el servidor. Con este documento se construye el backen
 | [8 · Reglas de presentación](08-presentacion.md) | Formatos de números y fechas, unidades, prioridades ISA-101, barra contra meta, indicador analógico, «ver N más», ⓘ, medido y calculado, huecos, papel |
 | [9 · Verificación](09-verificacion.md) | La referencia por HTTP, el front contra su servidor, el contrato, las identidades que siempre valen, lista de aceptación |
 | [10 · Pendientes](10-pendientes.md) | Decisiones para el dueño del producto, lo que el servidor hace distinto al demo, defectos encontrados, endpoints y casos que faltan |
+| [11 · Ciclo de valor](11-ciclo-de-valor.md) | Por qué Antes / Durante / Después (venta), UI plegada y cinturón por rol (front hecho). Encargo backend: fórmulas, `GET /vistas/ciclo`, `POST /planes/:id`, `decision_plan`, referencia y e2e |
 | [Anexo A · Contrato de la API](../../CONTRATO.md) | La forma exacta de cada respuesta y las reglas de cada escritura |
 | [Anexo B · Glosario](anexo-b-glosario.md) | Los términos del sector y del producto |
 | [Anexo C · Normas](anexo-c-normas.md) | Las normas que el código aplica y dónde |

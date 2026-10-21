@@ -67,6 +67,8 @@ Las validaciones que el contrato exige **antes** que la forma (capacidad 403, re
 
 **Total: 89 tablas y 9 vistas, 144 claves foráneas.** Las particiones mensuales de `lectura` (`lectura_AAAA_MM`) no se cuentan como tablas.
 
+> **Tabla que el desarrollador del backend agrega.** `decision_plan` (aceptar / ejecutar un plan del ciclo ANTES / DURANTE / DESPUÉS) no está en `esquema.sql` todavía: el demo guarda las decisiones en la sesión del navegador. El SQL, las reglas y el contrato están en el [capítulo 11](11-ciclo-de-valor.md). No entra a este recuento hasta que se agregue al esquema y a `tablas.json`.
+
 ```mermaid
 flowchart LR
   A["(a) Registro de campos y planta<br/>campo · activo · equipo · pozo"] --> B["(b) Cadena de datos<br/>gateway → fuente → dispositivo → tag"]
@@ -1345,7 +1347,7 @@ Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija e
 
 #### `capacidad`
 
-Las nueve capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).
+Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).
 
 - **Tipo TS:** Capacidad (src/entities/tipos.ts).
 - **Quién escribe:** Producto.

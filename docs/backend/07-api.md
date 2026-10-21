@@ -40,6 +40,7 @@ Todas responden el sobre `{ "datos": …, "refs": { … } }`.
 | `GET /api/vistas/equipos` | `campos` | `FILAS_EQUIPOS` | **Superficie** | 5C |
 | `GET /api/vistas/confiabilidad` | `campos` | `CONFIABILIDAD` | **Confiabilidad** | 5C |
 | `GET /api/vistas/bombas` | `campos`, `desde`, `hasta` | `BOMBAS` | **Bombas** | 5B, 5C |
+| `GET /api/vistas/ciclo` | `campos`, `desde`, `hasta` | `CICLO` | **Resumen**, **Riesgo**, **Turno**, **Identificar**, **Mantenimiento**, `resumen/ResumenDirectivo`, `equipo/FichaEjecutiva`, `bombas/Detalle`, `ciclo/Ciclo` | 11 |
 | `GET /api/mensajes` | `campos` | `MENSAJES` | **Identificar**, **Mi trabajo**, **Turno**, `conectores/Integraciones` | 5D |
 | `GET /api/sap/avisos` | `campos` | `SAP_AVISOS` | **Mi trabajo**, `conectores/Integraciones`, `confiabilidad/Aciertos`, `resumen/ResumenDirectivo`, `sap/BloqueSap`, `sap/PanelSapMantenimiento` | 5D |
 | `GET /api/sap/ordenes` | `campos` | `SAP_ORDENES` | **Mi trabajo**, `conectores/Integraciones`, `confiabilidad/Aciertos`, `resumen/ResumenDirectivo`, `sap/BloqueSap`, `sap/PanelSapMantenimiento` | 5D |
@@ -55,6 +56,8 @@ Todas responden el sobre `{ "datos": …, "refs": { … } }`.
 | `GET /api/asignacion-oficial` | — | `ASIGNACION_OFICIAL` | _arranque (estado global)_ | 5A |
 | `GET /api/analisis` | — | `ANALISIS` | _arranque (estado global)_ | 5C, 5D |
 | `GET /api/planta/cambios` | — | `CAMBIOS_PLANTA` | _arranque (estado global)_ | 5D |
+
+**Presentación de `GET /api/vistas/ciclo` (front hecho).** El códec define números y planes; el front **no recalcula**. En Resumen el retorno simulado va **antes** de «MEDIDO · PERÍODO»; chip «simulado»; tres columnas «1 / 2 / 3» sin párrafos bajo cada una; el «por qué» en ⓘ y globos (`Tip`); lista «Ver planes de acción» **plegada** por defecto. En Riesgo, Turno y Mantenimiento: cinturón `CicloCifras` (sin lista de planes). Reglas de copy y accesibilidad: capítulo **11 §11.1b**, **8 §8.13**; cadenas que debe ver el auditor e2e: `e2e/auditoria/rutas.ts` (Resumen gerente). En el demo, `POST /api/planes/:id` aplica sobre la respuesta en sesión (S24 en capítulo 10).
 
 Las rutas con `_arranque_` se piden una vez al abrir la aplicación (sección 2.5) y alimentan el estado global; ninguna pantalla las vuelve a pedir.
 
@@ -119,6 +122,7 @@ Todas responden `{ "datos": … }` o el error único. **`por`, `porId`, `hora`, 
 | `POST /api/informes` | la **consulta**, no las cifras: `{ formato, titulo, alcance, periodo, campos, desde, hasta, equipo? }` | `evidencia:exportar` | `campos` del cuerpo (todos de la persona) | `{ informe }` con `folio`, `fecha`, `por`, `version`, `estado`, `cifras`, `huella` | 422 sin campos, campo inexistente, `hasta` ≤ `desde`, ficha de un equipo de otro campo | 5D |
 | `POST /api/asignacion-oficial` | `{ filas: [{ mes, campoId, pozo, bbl, horas? }], motivo }` | `asignacion:cargar` | `campoId` de cada fila | `{ filas, carga }` | todo o nada: 403 campo ajeno; 422 mes no cerrado, pozo vacío, `bbl` < 0, `horas` fuera de 0…días×24, sin filas, motivo < 5 | 5A |
 | `POST /api/planta/cambios` | `{ campo, cambio: { tipo: "agregar-miembro"\|"quitar-miembro"\|"agregar-elemento"\|"quitar-elemento", … } }` | `conector:configurar` | `campo` del cuerpo | `{ planta, cambio }` | 404 campo sin esquema; 409/422 id repetido o elemento que no está | 5D |
+| `POST /api/planes/:id` | `{ estado: "aceptado"\|"ejecutado", motivo }` | `planes:decidir` | del plan (`cicloValor` → `campoId`) | `{ decision }` (el servidor pone `por`, `porId`, `fecha`) | 404 si el id no es un plan del ciclo; 409 si ya está en ese estado o se ejecuta sin aceptar; 422 motivo < 5 | 11 |
 | `GET /api/webhooks/whatsapp` | `hub.mode`, `hub.verify_token`, `hub.challenge` | token de verificación de Meta | — | `hub.challenge` | 403 si el token no coincide | 5D |
 | `POST /api/webhooks/whatsapp` | lo que manda Meta | firma `X-Hub-Signature-256` (HMAC-SHA256 del cuerpo crudo con el *app secret*) | del evento del mensaje respondido (`context.id`) | **siempre 200** si queda aceptado o descartado | 401 sin firma válida; deduplica por `messages[].id`; persona = E.164 activa, con alertas y con el campo; la primera respuesta gana | 5D |
 

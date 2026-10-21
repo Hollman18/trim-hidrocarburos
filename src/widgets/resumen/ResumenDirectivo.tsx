@@ -1,5 +1,7 @@
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
 import { useLibro, useSerie, useBase, useRiesgo, useEstadoCampos } from '@/shared/api/diferidos'
+import { useCiclo } from '@/shared/api/ciclo'
+import { BloqueCiclo } from '@/widgets/ciclo/Ciclo'
 import { useHorasMantenimiento } from '@/shared/api/sap'
 import type { MesResumen } from '@/shared/api/diferidos'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
@@ -41,6 +43,7 @@ export function ResumenDirectivo() {
   const serie = useSerie(ids)
   const base = useBase(q)
   const riesgo = useRiesgo(ids)
+  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo' && r.altoImpacto)
   // Lo demás en alarma, por lo que es: un servicio (la regla de Riesgo) no es la multifásica.
@@ -91,7 +94,14 @@ export function ResumenDirectivo() {
 
   return (
     <>
+      {/* Palancas primero; la lista de planes va plegada dentro de BloqueCiclo. */}
+      <BloqueCiclo ciclo={ciclo} onAbrir={abrir} onIr={p => setPantalla(p)} />
+
       <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
+        <h3 className={`${titulo} mb-2 flex flex-wrap items-center gap-x-1`}>
+          MEDIDO · PERÍODO
+          <Info titulo="Medido vs simulado" texto="Arriba: retorno posible (simulado, no entra al libro). Aquí: barriles diferidos del período (custodia medida y calculada)." />
+        </h3>
         <div className="flex flex-wrap items-start justify-between gap-2">
           {/* El período lo dice la cabecera (también en el teléfono y en el papel). La
               publicación, como en el libro de diferidos: si no se puede, se ve por qué. */}
@@ -158,7 +168,7 @@ export function ResumenDirectivo() {
 
       <section className="mb-2.5 grid items-center gap-x-6 gap-y-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-4 py-3 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
         <span className="min-w-0">
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Perdiéndose ahora</small>
+          <small className="block text-[10.5px] text-[var(--tinta3)]">Durante · crudo en vivo</small>
           <b className="tabular flex items-center gap-1.5 text-[18px] leading-tight">
             {porDia > 0 && <MarcaPrioridad s={perdiendo.some(r => r.altoImpacto) ? 1 : 2} tamano={14} />}{porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}
           </b>
@@ -182,8 +192,8 @@ export function ResumenDirectivo() {
           <b className="tabular block text-[26px] leading-none">{n0(altoPct)} %</b>
           <small className="block text-[11.5px] text-[var(--tinta2)]">del diferido · reinyección y electrosumergibles</small>
           <p className="mt-2 text-[11px] text-[var(--tinta2)]">
-            <span className="flex flex-wrap items-center gap-x-1">diferido alto impacto · antes → con TRIM
-              <Info titulo="Antes y con TRIM" texto={`Alto impacto por día desde que entró TRIM (${fechaCorta(inicio)}) contra los tres meses antes. Es una comparación, no la prueba de que lo bajó TRIM.`} />
+            <span className="flex flex-wrap items-center gap-x-1">Alto impacto · tendencia (3 meses previos → con TRIM)
+              <Info titulo="Tendencia histórica" texto={`Alto impacto por día desde que entró TRIM (${fechaCorta(inicio)}) contra los tres meses antes. Es una comparación histórica, no la fase Antes del retorno posible.`} />
             </span>
             <b className="tabular block text-[13px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
           </p>
@@ -207,8 +217,8 @@ export function ResumenDirectivo() {
           <Tendencia serie={serie} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(diaIso(m.desde), diaIso(new Date(m.hasta.getTime() - 1)))} />
           <Lectura>
-            Alto impacto: bombas de reinyección y electrosumergibles. Antes y con TRIM es una comparación,
-            no la prueba de que lo bajó TRIM. Mantenimiento proactivo: horas preventivas o predictivas en
+            Alto impacto: bombas de reinyección y electrosumergibles. La tendencia «3 meses previos → con TRIM»
+            no es la fase Antes del retorno. Mantenimiento proactivo: horas preventivas o predictivas en
             SAP; si no sube, las fallas no bajan.
           </Lectura>
         </section>

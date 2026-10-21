@@ -187,6 +187,7 @@ async function conMotor(trabajo, insumosDe) {
       CAT: await cargar('/src/shared/api/catalogo.ts'), DIF: await cargar('/src/shared/api/diferidos.ts'),
       EQ: await cargar('/src/shared/api/equipos.ts'), SAP: await cargar('/src/shared/api/sap.ts'),
       PRE: await cargar('/src/shared/api/predicciones.ts'), ESP: await cargar('/src/entities/esp.ts'),
+      CIC: await cargar('/src/shared/api/ciclo.ts'),
     })
     M.ctx = M.L.contextoInicial()
     return await trabajo(M)
@@ -194,7 +195,7 @@ async function conMotor(trabajo, insumosDe) {
 }
 
 function casosDe(M) {
-  const { C, K, L, CAMPOS, DIF, EQ, SAP, PRE, CONF, ctx, ins } = M
+  const { C, K, L, CAMPOS, DIF, EQ, SAP, PRE, CONF, CIC, ctx, ins } = M
   const todos = CAMPOS.map(c => c.id)
   const cerrados = L.calendario().filter(L.mesCerrado)
   const ultimo = cerrados.at(-1)
@@ -221,6 +222,8 @@ function casosDe(M) {
     casos.push(caso(`diaria/${nombre}-${ultimo.mes}`, `Producción día a día de ${nombre}, ${ultimo.mes}`, C.PRODUCCION_DIARIA, q, DIF.pedirDias(q, ctx)))
     // Vigía: lo que va hacia su límite y cuándo llega.
     casos.push(caso(`riesgo/${nombre}`, `Riesgo de ${nombre} a esta hora (vigía)`, C.RIESGO, { campos: grupo }, DIF.pedirRiesgo(grupo, ctx), conEsp(grupo)))
+    casos.push(caso(`ciclo/${nombre}-${ultimo.mes}`, `Ciclo ANTES / DURANTE / DESPUÉS de ${nombre}, ${ultimo.mes}`, C.CICLO, q,
+      CIC.pedirCiclo(grupo, q.desde, q.hasta, ctx, [CONF.versionInicial()], {}), conEsp(grupo)))
     // Aciertos: el registro de predicciones del vigía y su calificación, con la versión de arranque.
     casos.push(caso(`aciertos/${nombre}`, `Registro de predicciones y fallas de ${nombre} (aciertos)`, C.PREDICCIONES, { campos: grupo },
       PRE.pedirPredicciones(grupo, ctx, [CONF.versionInicial()]), conEsp(grupo)))

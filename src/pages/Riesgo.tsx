@@ -1,6 +1,8 @@
-import { useApp, useAmbito, useRol } from '@/app/store'
+import { useApp, useAmbito, useRol, useRango } from '@/app/store'
 import { esServicio } from '@/shared/api/equipos'
 import { useRiesgo, useEstadoCampos } from '@/shared/api/diferidos'
+import { useCiclo } from '@/shared/api/ciclo'
+import { CicloCifras } from '@/widgets/ciclo/Ciclo'
 import { TIPO_CAUSA, type TipoCausa } from '@/entities/causa-senal'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { ESTADO_PARTE } from '@/entities/salud'
@@ -23,10 +25,11 @@ import { costoHoy, colchonCorto, detalleCostoHoy, deFlota } from '@/shared/ui/co
  *  una tabla: los eventos abiertos de los controladores, el vigía de cada
  *  bomba y de cada electrosumergible, y su historia de fallas. */
 export function Riesgo() {
-  const ambito = useAmbito(); const rol = useRol()
-  const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
+  const ambito = useAmbito(); const rol = useRol(); const rango = useRango()
+  const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo), setPantalla = useApp(s => s.setPantalla)
   const ids = ambito.campos.map(c => c.id)
   const riesgo = useRiesgo(ids)
+  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
   const estados = useEstadoCampos(ids)
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
@@ -152,16 +155,17 @@ export function Riesgo() {
 
   return (
     <>
+      <CicloCifras ciclo={ciclo} onIr={p => setPantalla(p)} />
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Perdiéndose ahora</small>
+          <small className="block text-[10.5px] text-[var(--tinta3)]">2 · Durante</small>
           <b className="tabular flex items-center gap-1.5 text-[30px] leading-none">
             {perdiendo.some(r => r.altoImpacto) && <MarcaPrioridad s={1} tamano={18} />}{n0(porDia)}<small className="text-[12px] font-normal text-[var(--tinta3)]">bbl/d</small>
           </b>
           <small className="block text-[10.5px] text-[var(--tinta2)]">{n1(potencial ? (porDia / potencial) * 100 : 0)} % del potencial · {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}</small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">En riesgo · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
+          <small className="block text-[10.5px] text-[var(--tinta3)]">1 · Antes · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
           <b className="tabular block text-[22px] leading-tight">{n0(enJuego)} <small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d en juego</small></b>
           <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
             {pieCorto}{enRiesgo.length > 0 && <Info titulo="Exposición" texto={pieCosto} />}

@@ -8126,7 +8126,7 @@
    "nombre": "capacidad",
    "grupo": "f",
    "clase": "tabla",
-   "descripcion": "Las nueve capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).",
+   "descripcion": "Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).",
    "tipoTS": "Capacidad (src/entities/tipos.ts)",
    "endpoints": [
     "GET /api/sesion → capacidades"
@@ -8141,7 +8141,7 @@
      "pk": true,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((id = ANY (ARRAY['causa:declarar'::text, 'causa:completar'::text, 'evidencia:exportar'::text, 'conector:configurar'::text, 'config:firmar'::text, 'metas:firmar'::text, 'usuarios:administrar'::text, 'sap:aviso'::text, 'asignacion:cargar'::text])))",
+     "check": "CHECK ((id = ANY (ARRAY['causa:declarar'::text, 'causa:completar'::text, 'evidencia:exportar'::text, 'conector:configurar'::text, 'config:firmar'::text, 'metas:firmar'::text, 'usuarios:administrar'::text, 'sap:aviso'::text, 'asignacion:cargar'::text, 'planes:decidir'::text])))",
      "defecto": null,
      "descripcion": "Id de la capacidad.",
      "ejemplo": "asignacion:cargar"
@@ -8175,6 +8175,11 @@
     {
      "id": "asignacion:cargar",
      "nombre": "Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM",
+     "incluye": null
+    },
+    {
+     "id": "planes:decidir",
+     "nombre": "Aceptar o marcar ejecutado un plan de acción (antes, durante o después de una parada)",
      "incluye": null
     },
     {

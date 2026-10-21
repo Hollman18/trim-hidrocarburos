@@ -4,25 +4,26 @@ import { useApp, useRol, usePersona } from '@/app/store'
 import { useModal } from '@/shared/ui/foco'
 import { PANTALLAS } from '@/app/pantallas'
 import { pantallaVisible } from '@/shared/config/producto'
-import { Boton } from '@/shared/ui/primitivas'
+import { Boton, Chip } from '@/shared/ui/primitivas'
+import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
 
 /** Para qué sirve cada pantalla, en unas ocho palabras. Es lo que ve
  *  alguien la primera vez que entra con un rol: no un tour, una presentación. */
 const PARA_QUE: Record<string, string> = {
-  bombas: 'Cuáles cuestan crudo, cuánto aguanta el tanque y en qué orden cerrar pozos.',
-  esp: 'Cuál va a fallar, qué parte y cuánto crudo arriesga.',
+  bombas: 'Antes: vigía y partes que avisan. Durante: orden de cierre y tanque.',
+  esp: 'Antes: qué ESP va a fallar y cuánto crudo arriesga.',
   trabajo: 'Qué está parado o avisa, y qué revisar.',
-  mantenimiento: 'Qué atacar para bajar el diferido de alto impacto.',
-  confiabilidad: 'Cada cuánto fallan, de qué parte y qué tan bien se registró.',
+  mantenimiento: 'Antes: intervenir a tiempo. Después: palancas y partes que más costaron.',
+  confiabilidad: 'Antes: aciertos del vigía. Después: MTBF, costo por falla, no repetir.',
   equipo: 'Por condición y barriles, con su historia del PLC.',
-  produccion: 'Lo medido cada día contra el potencial y la meta.',
+  produccion: 'Después: lo medido cada día, custodia y libro publicable.',
   pozos: 'Caudal de cada pozo, su origen y qué lo para.',
-  turno: 'Lo que recibe y lo que entrega.',
-  resumen: 'Diferido total y de alto impacto, contra la meta.',
-  diferidos: 'Por qué, a qué equipo y parte, y si se publica.',
-  riesgo: 'A qué equipo ir hoy, por los barriles que cuesta.',
-  causa: 'Lo que ninguna señal explica, antes de arrancar.',
+  turno: 'Durante: turno en curso e identificar. Antes: qué vigilar.',
+  resumen: 'Retorno posible (tres palancas) y libro medido del período.',
+  diferidos: 'Después: por qué, parte, palancas y si el mes se publica.',
+  riesgo: 'Antes y Durante: a qué equipo ir hoy, en bbl y si falla hoy.',
+  causa: 'Durante: identificar antes de arrancar (causa → SAP/ISO).',
   planta: 'Dónde está el problema. Gris es normal; color, anormal.',
   configuracion: 'Lo único que se escribe a mano, con firma.',
   conectores: 'Bordes conectados y tags sin equipo resuelto.',
@@ -31,7 +32,7 @@ const PARA_QUE: Record<string, string> = {
 
 /** Lo mismo dicho para quien decide: lo que ve en su nivel, sin lo técnico. */
 const PARA_QUE_DECISION: Record<string, string> = {
-  resumen: 'Lo perdido contra la meta, su valor y a qué equipo.',
+  resumen: 'Lo perdido, el retorno posible y a qué equipo ir.',
   diferidos: 'Mes a mes: a qué equipo y dónde bajar.',
   produccion: 'Cada día, contra lo posible y la meta.',
   riesgo: 'Qué se pierde ahora y qué va a fallar.',
@@ -39,11 +40,9 @@ const PARA_QUE_DECISION: Record<string, string> = {
 }
 
 /** Qué es Trim, en tres renglones: lo mismo para todos los roles. */
-const PROMESA = [
-  ['QUÉ HACE', 'Barriles perdidos por bomba de reinyección y electrosumergible, y por qué parte.'],
-  ['POR QUÉ', 'Al fallar cierran pozos: vigilarlos deja intervenir antes.'],
-  ['CÓMO LO PRUEBA', 'Hora del PLC, evento y causa por barril; conexión de solo lectura.'],
-] as const
+const AYUDA_TRIM = 'Reduce paradas con Antes (vigía), Durante (identificar) y Después (no repetir). Al fallar cierran pozos; tanque y orden de cierre dan tiempo. Retorno simulado; libro medido (PLC, causa por barril).'
+
+const AYUDA_PALANCAS = '1 Antes: vigía, riesgo, si falla hoy, aciertos, WhatsApp con ventana. 2 Durante: identificar, MTTR, orden TRIM (simulado). 3 Después: paretos, MTBF, libro publicable.'
 
 /** Dos pasos: qué decide este rol (y qué es Trim), y sus pantallas, cada una
  *  con su para qué y a un toque. */
@@ -92,14 +91,13 @@ export function Onboarding() {
             <>
               {/* Lo que decide este rol: por eso ve lo que ve. */}
               <b className="block text-[16px] leading-snug">{rol.foco}</b>
-              <dl className="mt-3.5 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1.5">
-                {PROMESA.map(([q, v]) => (
-                  <div key={q} className="contents">
-                    <dt className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{q}</dt>
-                    <dd className="m-0 text-[12.5px] leading-snug text-[var(--tinta2)]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
+              <p className="mt-3 flex flex-wrap items-center gap-2">
+                <Info titulo="Qué es TRIM" texto={AYUDA_TRIM} />
+              </p>
+              <p className="mt-2 flex flex-wrap items-center gap-2">
+                <Chip>1 Antes</Chip><Chip>2 Durante</Chip><Chip>3 Después</Chip>
+                <Info titulo="Tres palancas" texto={AYUDA_PALANCAS} />
+              </p>
             </>
           ) : (
             <>

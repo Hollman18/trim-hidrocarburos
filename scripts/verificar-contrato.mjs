@@ -68,6 +68,7 @@ try {
   const MSJ = await cargar('/src/shared/api/mensajes.ts')
   const PRE = await cargar('/src/shared/api/predicciones.ts')
   const CAT = await cargar('/src/shared/api/catalogo.ts')
+  const CIC = await cargar('/src/shared/api/ciclo.ts')
   const L = await cargar('/src/entities/libro.ts')
   const { CAMPOS } = await cargar('/src/entities/campos.ts')
   const TODOS = CAMPOS.map(c => c.id)
@@ -101,6 +102,7 @@ try {
     FILAS_EQUIPOS: p => EQ.pedirFilasEquipos(p.campos, s.ctx),
     CONFIABILIDAD: p => EQ.pedirConfiabilidad(p.campos, s.ctx),
     BOMBAS: p => EQ.pedirBombas(p.campos, p.desde, p.hasta, s.ctx),
+    CICLO: p => CIC.pedirCiclo(p.campos, p.desde, p.hasta, s.ctx, s.versiones, s.planes ?? {}),
     MENSAJES: p => MSJ.pedirMensajes(p.campos),
     SAP_AVISOS: p => SAP.pedirAvisosSap(p.campos, s.ctx, s.avisosEnviados),
     SAP_ORDENES: p => SAP.pedirOrdenesSap(p.campos, s.ctx),
@@ -151,8 +153,14 @@ try {
     }
     const grupo = ['tronco', 'gas', 'crudo', 'agua', 'servicios'].flatMap(t => SES.sesion().plantas.ceiba[t]).find(e => e.miembros?.length)
     escritas.planta = await E.cambiarPlanta({ rolId: 'adm' }, 'ceiba', { tipo: 'agregar-miembro', grupo: grupo.id, miembro: { id: 'LC-PRUEBA', etiqueta: 'LC-PRUEBA' } })
+    const cal0 = L.calendario()
+    const ciclo0 = CIC.pedirCiclo(TODOS, new Date(cal0[0].desde), new Date(cal0.at(-1).hasta), SES.sesion().ctx, SES.sesion().versiones, SES.sesion().planes)
+    const unPlan = [...ciclo0.antes.planes, ...ciclo0.durante.planes, ...ciclo0.despues.planes].find(p => p.bbl > 0)
+    escritas.plan = unPlan
+      ? await E.decidirPlan({ rolId: 'jefe' }, { id: unPlan.id, estado: 'aceptado', motivo: 'prueba del contrato' })
+      : { ok: false, error: 'el ciclo no trajo ningún plan con barriles' }
     const malas = Object.entries(escritas).filter(([, r]) => !r.ok)
-    comprobar(malas.length === 0, `las ocho escrituras del contrato pasan en el demo con el rol que las puede hacer (${malas.map(([k, r]) => `${k}: ${r.error ?? JSON.stringify(r.errores)}`).join('; ') || 'todas'})`)
+    comprobar(malas.length === 0, `las nueve escrituras del contrato pasan en el demo con el rol que las puede hacer (${malas.map(([k, r]) => `${k}: ${r.error ?? JSON.stringify(r.errores)}`).join('; ') || 'todas'})`)
     const invitada = SES.sesion().usuarios.find(u => u.id === escritas.invitacion.id)
     comprobar(invitada?.telefono === '+573005550199' && SES.sesion().accesos.at(-1).cambios.includes('WhatsApp: +57 300 555 0199'),
       `el WhatsApp invitado como «300 555 0199» se guarda en E.164 (${invitada?.telefono}) y el historial lo escribe como se lee (+57 300 555 0199)`)
@@ -185,7 +193,7 @@ try {
       EQUIPO_HOY: [...equipos, { campo: 'ceiba', equipo: 'NO-EXISTE' }], EQUIPOS_HOY: porCampos(),
       HISTORIA_EQUIPO: equipos.filter(e => !pozos.some(p => p.campo === e.campo && p.pozo === e.equipo)),
       FICHA_EQUIPO: [...equipos.map(e => ({ ...e, ...periodos[0] })), { campo: 'ceiba', equipo: 'NO-EXISTE', ...periodos[0] }],
-      FILAS_EQUIPOS: porCampos(), CONFIABILIDAD: porCampos(), BOMBAS: conPeriodo(),
+      FILAS_EQUIPOS: porCampos(), CONFIABILIDAD: porCampos(), BOMBAS: conPeriodo(), CICLO: conPeriodo(),
       MENSAJES: porCampos(), SAP_AVISOS: porCampos(), SAP_ORDENES: porCampos(),
       SAP_EQUIPOS: TODOS.map(campo => ({ campo })), SAP_EQUIPO: bombas,
       LISTA_CAMPOS: [{}], CATALOGO: [{}], CONFIGURACION_HISTORIAL: [{}], RESPUESTAS: [{}], USUARIOS: [{}], ACCESOS: [{}], INFORMES: [{}],
@@ -265,8 +273,9 @@ try {
       ['R_RESPUESTA', C.R_RESPUESTA, { respuesta: s2.ctx.respuestas[bomba.id] }],
       ['R_ANALISIS', C.R_ANALISIS, { analisis: s2.analisis[bomba.id] }],
       ['R_PLANTA', C.R_PLANTA, { planta: s2.plantas.ceiba, cambio: s2.cambiosPlanta.at(-1) }],
+      ['R_PLAN', C.R_PLAN, { decision: Object.values(s2.planes)[0] }],
     ].map(([n, cod, x]) => [n, vuelta(cod, x)])
-    comprobar(resp.every(([, d]) => !d), `las respuestas de las ocho escrituras vuelven iguales por JSON${resp.filter(([, d]) => d).map(([n, d]) => `; ${n}: ${d}`).join('')}`)
+    comprobar(resp.every(([, d]) => !d), `las respuestas de las nueve escrituras vuelven iguales por JSON${resp.filter(([, d]) => d).map(([n, d]) => `; ${n}: ${d}`).join('')}`)
     // El cuerpo de una firma lleva la configuración entera: tiene que ser JSON puro.
     const cuerpoFirma = { config: s2.ctx.config, motivo: 'x', base: 1 }
     comprobar(!diferencia(cuerpoFirma, JSON.parse(JSON.stringify(cuerpoFirma))), 'el cuerpo de POST /configuracion (la configuración entera) es JSON puro: vuelve igual')
@@ -274,7 +283,7 @@ try {
     console.log('\n=== 4. Rutas: una por recurso, sin choques ===')
     const rutas = [...ENDPOINTS.map(([, e]) => `GET ${e.ruta}`),
       'POST /configuracion', 'PATCH /usuarios/:id', 'POST /usuarios', 'POST /sap/avisos', 'POST /informes', 'POST /asignacion-oficial',
-      'POST /paradas/:evento/respuesta', 'POST /analisis/:evento', 'POST /planta/cambios']
+      'POST /paradas/:evento/respuesta', 'POST /analisis/:evento', 'POST /planta/cambios', 'POST /planes/:id']
     const repetidas = rutas.filter((r, i) => rutas.indexOf(r) !== i)
     // Dos rutas chocan si un mismo camino puede caer en las dos: mismo método,
     // mismo número de tramos y en cada tramo el mismo literal o un :parámetro.
@@ -471,6 +480,10 @@ try {
         if (camino.startsWith('/paradas/')) {
           const r = { texto: cuerpo.texto, por: 'Persona del servidor · operador', porId: 'oper', canal: 'pantalla', hora: '2026-10-02T14:00:00-05:00', ...(cuerpo.parte ? { parte: cuerpo.parte, modo: cuerpo.modo } : {}) }
           return json(200, K.aRespuesta(C.R_RESPUESTA, { respuesta: r }))
+        }
+        if (camino.startsWith('/planes/')) {
+          const d = { id: decodeURIComponent(camino.slice('/planes/'.length)), estado: cuerpo.estado, por: 'Persona del servidor · jefe de mantenimiento', porId: 'jefe', fecha: '2026-10-02T14:00:00-05:00', motivo: cuerpo.motivo }
+          return json(200, K.aRespuesta(C.R_PLAN, { decision: d }))
         }
         return json(500, { error: { codigo: 'interno', mensaje: 'el servidor de prueba no conoce esa escritura' } })
       }

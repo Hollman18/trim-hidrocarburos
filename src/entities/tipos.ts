@@ -170,6 +170,8 @@ export type Capacidad =
   | 'sap:aviso'
   /** Cargar (o reemplazar) la asignación oficial que reportó la operadora, para cotejarla. */
   | 'asignacion:cargar'
+  /** Aceptar o marcar ejecutado un plan de acción del ciclo ANTES / DURANTE / DESPUÉS. */
+  | 'planes:decidir'
 
 export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'causa:declarar': 'Responder qué se dañó cuando la señal no lo explica',
@@ -181,6 +183,7 @@ export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'usuarios:administrar': 'Dar acceso a las demás personas: invitar, cambiar rol o campos, suspender',
   'sap:aviso': 'Enviarle a SAP el aviso de mantenimiento de un equipo (la orden la crea el planeador en SAP)',
   'asignacion:cargar': 'Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM',
+  'planes:decidir': 'Aceptar o marcar ejecutado un plan de acción (antes, durante o después de una parada)',
 }
 
 /** Lo que una capacidad ya trae de otra. Con `causa:completar` también se

@@ -156,6 +156,14 @@
    ]
   },
   {
+   "id": "ciclo/ceiba-2026-09",
+   "endpoint": "/api/vistas/ciclo?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Ciclo ANTES / DURANTE / DESPUÉS de ceiba, 2026-09",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
    "id": "aciertos/ceiba",
    "endpoint": "/api/vistas/predicciones?campos=ceiba",
    "descripcion": "Registro de predicciones y fallas de ceiba (aciertos)",
@@ -192,6 +200,14 @@
    "id": "riesgo/morichal",
    "endpoint": "/api/vistas/riesgo?campos=morichal",
    "descripcion": "Riesgo de morichal a esta hora (vigía)",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "ciclo/morichal-2026-09",
+   "endpoint": "/api/vistas/ciclo?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Ciclo ANTES / DURANTE / DESPUÉS de morichal, 2026-09",
    "requiere": [
     "insumos/morichal/electrosumergibles.json"
    ]
@@ -238,6 +254,14 @@
    ]
   },
   {
+   "id": "ciclo/guacamayo-2026-09",
+   "endpoint": "/api/vistas/ciclo?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Ciclo ANTES / DURANTE / DESPUÉS de guacamayo, 2026-09",
+   "requiere": [
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
    "id": "aciertos/guacamayo",
    "endpoint": "/api/vistas/predicciones?campos=guacamayo",
    "descripcion": "Registro de predicciones y fallas de guacamayo (aciertos)",
@@ -276,6 +300,11 @@
    "descripcion": "Riesgo de palmar a esta hora (vigía)"
   },
   {
+   "id": "ciclo/palmar-2026-09",
+   "endpoint": "/api/vistas/ciclo?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Ciclo ANTES / DURANTE / DESPUÉS de palmar, 2026-09"
+  },
+  {
    "id": "aciertos/palmar",
    "endpoint": "/api/vistas/predicciones?campos=palmar",
    "descripcion": "Registro de predicciones y fallas de palmar (aciertos)"
@@ -311,6 +340,11 @@
    "descripcion": "Riesgo de zarza a esta hora (vigía)"
   },
   {
+   "id": "ciclo/zarza-2026-09",
+   "endpoint": "/api/vistas/ciclo?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Ciclo ANTES / DURANTE / DESPUÉS de zarza, 2026-09"
+  },
+  {
    "id": "aciertos/zarza",
    "endpoint": "/api/vistas/predicciones?campos=zarza",
    "descripcion": "Registro de predicciones y fallas de zarza (aciertos)"
@@ -344,6 +378,16 @@
    "id": "riesgo/portafolio",
    "endpoint": "/api/vistas/riesgo?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
    "descripcion": "Riesgo de portafolio a esta hora (vigía)",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "ciclo/portafolio-2026-09",
+   "endpoint": "/api/vistas/ciclo?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Ciclo ANTES / DURANTE / DESPUÉS de portafolio, 2026-09",
    "requiere": [
     "insumos/ceiba/electrosumergibles.json",
     "insumos/morichal/electrosumergibles.json",

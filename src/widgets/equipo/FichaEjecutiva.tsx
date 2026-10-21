@@ -1,5 +1,7 @@
 import { useRango } from '@/app/store'
 import { useRiesgo, usePreguntas } from '@/shared/api/diferidos'
+import { useCiclo, planesDeEquipo } from '@/shared/api/ciclo'
+import { PlanesDe } from '@/widgets/ciclo/Ciclo'
 import { useFichaEquipo } from '@/shared/api/equipos'
 import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
@@ -17,6 +19,8 @@ import { fmtHoras, respaldoAbsorbe } from '@/widgets/bombas/comun'
 export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: string }) {
   const rango = useRango()
   const riesgo = useRiesgo([campoId]).filter(r => r.equipo === equipo)
+  const ciclo = useCiclo([campoId], rango.desde, rango.hasta)
+  const planes = planesDeEquipo(ciclo, campoId, equipo)
   const pregunta = usePreguntas([campoId]).find(p => p.equipo === equipo && p.pide && !p.fin)
   // La ficha y su historia: toda la que hay, del libro (la misma cuenta que el Pareto).
   const ficha = useFichaEquipo(campoId, equipo, rango.desde, rango.hasta)
@@ -108,6 +112,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
           : `el tanque aguanta ${fmtHoras(pr.colchon.horas)} · luego se pierden ${n0(pr.crudoBpd)} bbl/d`} />
       )}
       <Renglon k="Qué se está haciendo" v={haciendo} info={porque} chip={noArrancar ? 'no arrancar' : undefined} />
+      {planes.length > 0 && <PlanesDe planes={planes} />}
     </div>
   )
 }

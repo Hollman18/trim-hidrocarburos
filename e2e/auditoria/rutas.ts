@@ -45,12 +45,12 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: string
   // y el cierre del mes contra la meta del mes completo («meta 1.…»: pasa del millón en el portafolio).
   // «En riesgo»: la multifásica no es un servicio (la regla de Riesgo); cada cosa por lo que es.
   // POR CAMPO se despliega por campo (plegado en la pantalla: sus equipos no son texto visible).
-  '#/ger/resumen/ceiba~portafolio/curso': { si: ['barriles diferidos', 'POR EQUIPO', 'del diferido · reinyección y electrosumergibles', 'bbl · calculado', 'PROMEDIO DIARIO',
+  '#/ger/resumen/ceiba~portafolio/curso': { si: ['barriles diferidos', 'bbl · retorno', 'Antes', 'Durante', 'Después', 'simulado', 'Ver planes de acción', 'MEDIDO', 'POR EQUIPO', 'del diferido · reinyección y electrosumergibles', 'bbl · calculado', 'PROMEDIO DIARIO',
     /producción\s+(3\s+)?[\d.]+\s+bbl\/d\s+meta [\d.]+/i, /diferido\s+(3\s+)?[\d.]+\s+bbl\/d\s+máx\. [\d.]+/i,
     /CIERRE PROYECTADO[\s\S]{0,40}producción[\s\S]{0,40}meta 1\.[\d.]+[\s\S]{0,60}diferido[\s\S]{0,40}máx\. [\d.]+/i,
     'POR CAMPO', '+ 1 servicio y 1 bomba multifásica en alarma'],
-    no: [...NO_DECISION, 'QUIÉN SE LOS LLEVA', 'Si todo sigue como está ahora', 'A la fecha:', '2 servicios en alarma'] },
-  '#/ger/resumen/ceiba/curso': { si: ['barriles diferidos', 'POR EQUIPO', 'bbl · calculado', 'Mantenimiento proactivo', '+ 1 servicio en alarma'], no: NO_DECISION },
+    no: [...NO_DECISION, 'QUIÉN SE LOS LLEVA', 'Si todo sigue como está ahora', 'A la fecha:', '2 servicios en alarma', 'Reparar y arrancar', 'WhatsApp con ventana'] },
+  '#/ger/resumen/ceiba/curso': { si: ['barriles diferidos', 'bbl · retorno', 'Antes', 'Durante', 'Después', 'Ver planes de acción', 'MEDIDO', 'POR EQUIPO', 'bbl · calculado', 'Mantenimiento proactivo', '+ 1 servicio en alarma'], no: NO_DECISION },
   '#/ger/diferidos/ceiba/curso': { si: ['MES A MES', 'DÓNDE BAJARLO'], no: NO_DECISION },
   '#/ger/produccion/ceiba/curso': { si: ['DÍA A DÍA'], no: [...NO_DECISION, 'MEDICIÓN OFICIAL', 'ASIGNACIÓN OFICIAL'] },
   // RegExp: en minúsculas «metas por campo» lo trae el motivo de la versión 1 y la aserción pasaría sin el panel.

@@ -186,3 +186,20 @@ El mismo número se ve igual para todos; cambia **qué** se ve (sección 2.8):
 | `ingenieria` | producción, jefe de mantenimiento, confiabilidad, administrador | todo | — |
 
 La lista exacta de lo que cada nivel ve y no ve en cada pantalla está en el capítulo 6 y la comprueban las aserciones del auditor (`e2e/auditoria/rutas.ts`, `ASERCIONES`).
+
+## 8.13 Ciclo de valor y planes de acción (simulado)
+
+El retorno ANTES / DURANTE / DESPUÉS y sus planes son **cifra simulada** (capítulo 11). Reglas de UI compartidas en `src/widgets/ciclo/Ciclo.tsx`:
+
+| Regla | Comportamiento |
+|---|---|
+| Jerarquía visual | Número grande de `retornoBbl`; columnas «1 · Antes», «2 · Durante», «3 · Después» con bbl y barra de proporción |
+| Texto de producto | `PALANCA_PRODUCTO` y lemas **no** van como párrafo bajo cada columna; van en globo (`Tip`) o ⓘ (`Info`) |
+| Medido vs simulado | Chip «simulado» en el bloque de retorno; sección de libro «MEDIDO · PERÍODO» debajo en Resumen gerente |
+| Lista de planes | **Plegada por defecto**: botón «Ver planes de acción» + contador; chevron; `aria-expanded` |
+| Fila de plan | Una línea: fase (1/2/3), equipo, título corto, bbl (y horas si aplica); `accion` y `supuestos[]` en globo al pasar el cursor |
+| Orden | Planes ordenados por `bbl` descendente |
+| Impresión | Globos vuelcan pista o filas según `imprimir` del `Tip` (capítulo 8.8); lo plegado se expande en papel si la pantalla lo imprime expandido |
+| Decisión | Botones «Aceptar» / «Ejecutar» solo con `planes:decidir`; variante `chico` en fila compacta |
+
+Misma lógica de plegado en Resumen, Mantenimiento, Identificar, ficha de equipo y detalle de bomba. El cinturón `CicloCifras` (Riesgo, Turno, Mantenimiento) **no** incluye la lista de planes.

@@ -46,12 +46,13 @@ interface Estado {
   equipoExpandido: boolean
   /* Lo que es del servidor NO vive aquí: la configuración firmada, las
      respuestas, los accesos, los avisos enviados, los informes emitidos, la
-     asignación oficial, los análisis y el esquema de planta los guarda la
-     sesión (`shared/api/sesion.ts`), y las escrituras del contrato
-     (`shared/api/escrituras.ts`) los cambian. Aquí quedan las acciones que la
-     vista llama: dicen quién actúa (el rol que se está viendo; en producción,
-     el token), esperan la escritura y ajustan la vista si hace falta. Todas
-     son asíncronas: con el servidor, cada una es un pedido. */
+     asignación oficial, los análisis, el esquema de planta y las decisiones
+     de planes del ciclo los guarda la sesión (`shared/api/sesion.ts`), y las
+     escrituras del contrato (`shared/api/escrituras.ts`) los cambian. Aquí
+     quedan las acciones que la vista llama: dicen quién actúa (el rol que se
+     está viendo; en producción, el token), esperan la escritura y ajustan la
+     vista si hace falta. Todas son asíncronas: con el servidor, cada una es
+     un pedido. */
   /** Firma una versión nueva (`POST /api/configuracion { config, motivo, base }`).
    *  `base` es la versión sobre la que se editó: si ya no es la vigente, alguien
    *  firmó en el medio y se rechaza (el 409 del contrato) en vez de pisarlo. */
@@ -87,6 +88,8 @@ interface Estado {
   /** Mecanismo y causa raíz de una falla declarada (`POST /api/analisis/:evento`).
    *  Los completa confiabilidad o el jefe de mantenimiento; la parte y el modo son de quien la vio. */
   completarAnalisis: (evento: string, a: { mecanismo: string; causaRaiz: string; nota?: string }) => Promise<{ ok: true } | { ok: false; error: string }>
+  /** Aceptar o marcar ejecutado un plan del ciclo (`POST /api/planes/:id`). */
+  decidirPlan: (id: string, estado: 'aceptado' | 'ejecutado', motivo: string) => Promise<{ ok: true } | { ok: false; error: string }>
   setCampo: (id: string) => void
   setAlcance: (a: 'campo' | 'portafolio') => void
   setPeriodo: (id: IdPeriodo) => void
@@ -204,6 +207,7 @@ export const useApp = create<Estado>((set, get) => ({
   responder: r => E.responderParada(quien(), r),
   recibirWhatsapp: r => E.recibirWhatsapp(r),
   completarAnalisis: (evento, a) => E.completarAnalisis(quien(), { evento, ...a }),
+  decidirPlan: (id, estado, motivo) => E.decidirPlan(quien(), { id, estado, motivo }),
 
   // Un campo que la persona no tiene no se abre, venga de donde venga. Al
   // cambiar de campo, el aviso de una redirección hablaba del anterior: se borra.

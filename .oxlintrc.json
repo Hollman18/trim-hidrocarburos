@@ -140,6 +140,16 @@
                 "message": "Del motor (equipos) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts)."
               },
               {
+                "name": "@/entities/escenarios",
+                "allowTypeImports": true,
+                "message": "Del motor (escenarios) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/ciclo.ts.",
+                "allowImportNames": [
+                  "NOMBRE_FASE",
+                  "LEMA_FASE",
+                  "ESTADO_PLAN"
+                ]
+              },
+              {
                 "name": "@/entities/esp",
                 "allowTypeImports": true,
                 "message": "Del motor (esp) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
@@ -344,6 +354,13 @@
                 "name": "@/shared/api/medicion",
                 "importNames": [
                   "pedirCampoAhora"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/ciclo",
+                "importNames": [
+                  "pedirCiclo"
                 ],
                 "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
               },

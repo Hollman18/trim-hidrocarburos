@@ -97,3 +97,12 @@ Términos del sector y del producto, en el sentido en que se usan en este docume
 | **Huella** | SHA-256 de la forma canónica de las cifras de un informe. Si el papel no da la misma huella, fue modificado. |
 | **Nivel de detalle** | Lo que un rol ve: `decision` (gerente), `operacion` (supervisor, operador, técnico), `ingenieria` (producción, mantenimiento, confiabilidad, administración). |
 | **Capacidad** | Un permiso que el servidor revisa en una escritura (`metas:firmar`, `causa:declarar`…). |
+
+## Producto y venta
+
+| Término | Qué es |
+|---|---|
+| **TRIM (producto global)** | **Prevenir paradas no planificadas** y contabilizarlas en barriles, foco en **electrosumergible**, **bomba multifásica** (`transporte`) y **bomba de reinyección** (`reinyeccion`); otras líneas en planta y causas. Libro, vigía, colchón, ciclo Antes/Durante/Después. Yacimientos maduros y en desarrollo. Capítulo 1. |
+| **Gemelo digital (línea futura)** | Modelo para **simular** el proceso, planta o línea del cliente, alimentado por **planos** (P&ID, layouts), datasheets y tags. Escenarios «qué pasa si…». **No** es el pitch de TRIM hoy. Capítulo 1 §1.6. |
+| **Ciclo de valor · Antes / Durante / Después** | Tres momentos comerciales traducidos a barriles **simulados** (`retornoBbl`): evitar la parada, perder menos tiempo en la parada, no repetir en el período. No entra al libro medido. Capítulo 11. |
+| **Medido vs simulado** | **Medido:** diferido del período, fiscal, libro publicable. **Simulado:** retorno del ciclo y planes de acción (chip «simulado» en pantalla). |

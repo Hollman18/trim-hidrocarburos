@@ -7,7 +7,7 @@
 
 Fórmulas: qué es una pregunta, `pide` y `arrancoSinIdentificar` → 5B §3.2 «¿Pide respuesta? ¿Arrancó sin identificar?»; identificado/declarado/pendiente → 5A §3 «Identificado por señal · declarado · sin identificar» y 5B §3.2 «Cifras de identificación del período»; opciones numeradas → 5D §5.3 «Opciones numeradas»; reglas del hilo de WhatsApp (pregunta, recordatorio 30 min, escalamiento 2 h) → 5D §5.1 «Tabla de reglas»; catálogo de daños, modos y mecanismo sugerido → 5C §6.
 
-La cifra y las tres listas de la pantalla salen de las mismas preguntas (`Causa.tsx:53-57`):
+Arriba de las listas, si aplica: `PlanesDe` con planes «durante · identificar» (**plegado**; capítulo 11). La cifra y las tres listas de la pantalla salen de las mismas preguntas (`Causa.tsx:53-57`):
 
 $$
 \text{porIdentificar} = \{p : p.\text{pide}\} \quad
