@@ -646,7 +646,7 @@
      "check": "CHECK ((crudo_cap_bpd >= (0)::numeric))",
      "defecto": null,
      "descripcion": "Caudales.crudoCap: capacidad del tren de crudo, bbl/d.",
-     "ejemplo": 12000
+     "ejemplo": 13000
     },
     {
      "nombre": "agua_bpd",
@@ -754,14 +754,14 @@
      "check": null,
      "defecto": "''::text",
      "descripcion": "PlantaCampo.nota.",
-     "ejemplo": "El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el cuello de botella del campo."
+     "ejemplo": "El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el tramo más frágil del campo: no es lo que lo limita, pero con una sola bomba fuera pasa a ser el más angosto."
     }
    ],
    "filas": [
     {
      "campo_id": "ceiba",
      "crudo_bpd": 10450,
-     "crudo_cap_bpd": 12000,
+     "crudo_cap_bpd": 13000,
      "agua_bpd": 224200,
      "agua_cap_bpd": 267750,
      "gas_bpd": 3850,
@@ -770,19 +770,19 @@
      "choke_planta": 11800,
      "choke_evacuacion": 14000,
      "choke_mercado": 15000,
-     "nota": "El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el cuello de botella del campo."
+     "nota": "El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el tramo más frágil del campo: no es lo que lo limita, pero con una sola bomba fuera pasa a ser el más angosto."
     },
     {
      "campo_id": "guacamayo",
      "crudo_bpd": 6200,
-     "crudo_cap_bpd": 7400,
+     "crudo_cap_bpd": 7500,
      "agua_bpd": 90300,
      "agua_cap_bpd": 110000,
      "gas_bpd": 2100,
      "gas_cap_bpd": 2600,
      "choke_pozos": 7200,
      "choke_planta": 7400,
-     "choke_evacuacion": 6800,
+     "choke_evacuacion": 7500,
      "choke_mercado": 9000,
      "nota": "Sin compresión: el gas va a consumo propio y el excedente a tea. La restricción está aguas abajo del LACT, en la nominación del oleoducto."
     },
@@ -7092,7 +7092,7 @@
      "unico": null,
      "check": "CHECK ((jsonb_typeof(config) = 'object'::text))",
      "defecto": null,
-     "descripcion": "La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa); precio sin configurar = ausente.",
+     "descripcion": "La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si la trae, topologia); precio sin configurar = ausente; una topología vacía no viaja.",
      "ejemplo": "{\"campos\":{\"ceiba\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":10900,\"diferidoMaxBpd\":800,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"zarza\":{\"metas\":[{\"desde\":\"2025-10-01\",\"produccionBpd\":3050,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":false}},\"palmar\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":3250,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"no\",\"bombas\":true,\"electrosumergibles\":false}},\"morichal\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":16700,\"diferidoMaxBpd\":950,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"guacamayo\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":6300,\"diferidoMaxBpd\":450,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"consumo\",\"bombas\":true,\"electrosumergibles\":true}}},\"empresa\":\"Operadora de demostración\",\"tanques\":[{\"id\":\"TK-AG-CE\",\"aforo\":\"Certificado de aforo TK-AG-CE · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de La Ceiba\",\"campoId\":\"ceiba\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":30000},{\"id\":\"TK-AG-MN\",\"aforo\":\"Certificado de aforo TK-AG-MN · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de Morichal Norte\",\"campoId\":\"morichal\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":60000},{\"id\":\"TK-AG-GU\",\"aforo\":\"Certificado de aforo TK-AG-GU · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nom… [recortado para el Excel: 4193 caracteres]"
     }
    ],
@@ -7902,6 +7902,130 @@
    ]
   },
   {
+   "nombre": "topologia",
+   "grupo": "e",
+   "clase": "tabla",
+   "descripcion": "Topología del modelo choke firmada (ChokeDeElemento de src/entities/choke.ts; Config.topologia): a qué pozos sirve cada equipo, servicio o alimentador. El tramo de una parada sale de aquí con el criterio de Edinson: dedicado (un solo pozo) = pozo, compartido = planta, frontera y tercero = exportación. Un campo sin filas usa la que se deriva del registro (GET /api/vistas/topologia). Firma config:firmar. No es inmutable hacia atrás: cada clasificación guarda su regla y lo que confirmó una persona no cambia solo.",
+   "tipoTS": "ChokeDeElemento (src/entities/choke.ts; Config.topologia)",
+   "endpoints": [
+    "GET /api/configuracion/historial",
+    "POST /api/configuracion",
+    "GET /api/vistas/topologia",
+    "POST /api/configuracion/vista-previa",
+    "POST /api/topologia/importar (lee, no firma)"
+   ],
+   "quienEscribe": "Servidor al firmar (config:firmar), sobre los campos de la persona.",
+   "reglas": [
+    "Solo inserción.",
+    "El choke sale del alcance: dedicado → pozo, compartido → planta, frontera y tercero → exportacion (check).",
+    "Un dedicado sirve a un solo pozo y un compartido a ninguno o a más de uno; cada pozo es del campo (validarTopologia, 422).",
+    "Un campo sin filas usa la topología que se deriva del registro; una fila sin campo vale para todos.",
+    "Único: (version, campo_id, elemento).",
+    "Cada pozo del elemento es del campo (validarTopologia, 422). [trigger topologia_pozos_del_campo: INSERT]",
+    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger topologia_sin_truncate: TRUNCATE]",
+    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger topologia_solo_insercion: UPDATE DELETE]"
+   ],
+   "columnas": [
+    {
+     "nombre": "version",
+     "tipo": "integer",
+     "nulo": false,
+     "pk": true,
+     "fk": "version_config.version",
+     "unico": "único con (version, campo_id, elemento)",
+     "check": null,
+     "defecto": null,
+     "descripcion": "Versión.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "orden",
+     "tipo": "smallint",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Lugar en la lista firmada (para devolver el JSON tal como se firmó).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "campo_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": "campo.id",
+     "unico": "único con (version, campo_id, elemento)",
+     "check": null,
+     "defecto": null,
+     "descripcion": "Campo donde está el elemento. NULL = vale para todos los campos (en el demo un mismo tag, P-201B o SE-2, está en varios).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "elemento",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": "único con (version, campo_id, elemento)",
+     "check": "CHECK ((btrim(elemento) <> ''::text))",
+     "defecto": null,
+     "descripcion": "Id de equipo, tag de servicio o alimentador (Pozo.alimentador). Único por (versión, campo).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "alcance",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((alcance = ANY (ARRAY['dedicado'::text, 'compartido'::text, 'frontera'::text, 'tercero'::text]))) · CHECK ((choke =\nCASE alcance\n    WHEN 'dedicado'::text THEN 'pozo'::text\n    WHEN 'compartido'::text THEN 'planta'::text\n    ELSE 'exportacion'::text\nEND)) · CHECK (((alcance <> 'dedicado'::text) OR (COALESCE(cardinality(pozos), 0) = 1))) · CHECK (((alcance <> 'compartido'::text) OR (COALESCE(cardinality(pozos), 0) <> 1)))",
+     "defecto": null,
+     "descripcion": "A quién sirve: dedicado (un pozo), compartido (varios), frontera (la brida de salida de la batería) o tercero (otro dueño, más allá de la batería).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "choke",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((choke =\nCASE alcance\n    WHEN 'dedicado'::text THEN 'pozo'::text\n    WHEN 'compartido'::text THEN 'planta'::text\n    ELSE 'exportacion'::text\nEND))",
+     "defecto": null,
+     "descripcion": "El tramo, DERIVADO del alcance y guardado para la auditoría: pozo, planta o exportacion (check). Nadie lo escoge.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "pozos",
+     "tipo": "text[]",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((alcance <> 'dedicado'::text) OR (COALESCE(cardinality(pozos), 0) = 1))) · CHECK (((alcance <> 'compartido'::text) OR (COALESCE(cardinality(pozos), 0) <> 1)))",
+     "defecto": null,
+     "descripcion": "«¿A qué pozos sirve?»: dedicado, exactamente uno; compartido, ninguno o más de uno. Cada pozo es del campo (trigger). NULL = no se dijo.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "caso_borde",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((caso_borde = 'misma-locacion'::text))",
+     "defecto": null,
+     "descripcion": "misma-locacion: sirve a 2 o 3 pozos de una misma locación; va a la planta mientras Edinson no confirme la regla (U2 §8.6).",
+     "ejemplo": null
+    }
+   ],
+   "filas": []
+  },
+  {
    "nombre": "rol",
    "grupo": "f",
    "clase": "tabla",
@@ -8126,7 +8250,7 @@
    "nombre": "capacidad",
    "grupo": "f",
    "clase": "tabla",
-   "descripcion": "Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).",
+   "descripcion": "Las trece capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).",
    "tipoTS": "Capacidad (src/entities/tipos.ts)",
    "endpoints": [
     "GET /api/sesion → capacidades"
@@ -8141,10 +8265,10 @@
      "pk": true,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((id = ANY (ARRAY['causa:declarar'::text, 'causa:completar'::text, 'evidencia:exportar'::text, 'conector:configurar'::text, 'config:firmar'::text, 'metas:firmar'::text, 'usuarios:administrar'::text, 'sap:aviso'::text, 'asignacion:cargar'::text, 'planes:decidir'::text])))",
+     "check": "CHECK ((id = ANY (ARRAY['causa:declarar'::text, 'causa:completar'::text, 'evidencia:exportar'::text, 'conector:configurar'::text, 'config:firmar'::text, 'metas:firmar'::text, 'usuarios:administrar'::text, 'sap:aviso'::text, 'asignacion:cargar'::text, 'planes:decidir'::text, 'anh:clasificar'::text, 'anh:confirmar'::text, 'anh:yacimiento'::text])))",
      "defecto": null,
      "descripcion": "Id de la capacidad.",
-     "ejemplo": "asignacion:cargar"
+     "ejemplo": "anh:clasificar"
     },
     {
      "nombre": "nombre",
@@ -8156,7 +8280,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Qué permite, dicho para leer.",
-     "ejemplo": "Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM"
+     "ejemplo": "Completar o corregir lo que pide la ANH de cada parada (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde"
     },
     {
      "nombre": "incluye",
@@ -8173,34 +8297,29 @@
    ],
    "filas": [
     {
-     "id": "asignacion:cargar",
-     "nombre": "Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM",
+     "id": "anh:clasificar",
+     "nombre": "Completar o corregir lo que pide la ANH de cada parada (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde",
      "incluye": null
     },
     {
-     "id": "planes:decidir",
-     "nombre": "Aceptar o marcar ejecutado un plan de acción (antes, durante o después de una parada)",
+     "id": "anh:confirmar",
+     "nombre": "Confirmar de una vez las paradas del día que tienen la misma cadena propuesta por TRIM",
+     "incluye": null
+    },
+    {
+     "id": "anh:yacimiento",
+     "nombre": "Decir que una parada fue del yacimiento, con lo que lo muestra (la prueba del pozo, el corte de agua o la presión de fondo)",
+     "incluye": null
+    },
+    {
+     "id": "asignacion:cargar",
+     "nombre": "Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM",
      "incluye": null
     },
     {
      "id": "causa:completar",
      "nombre": "Completar el análisis de la falla: mecanismo y causa raíz",
      "incluye": "causa:declarar"
-    },
-    {
-     "id": "causa:declarar",
-     "nombre": "Responder qué se dañó cuando la señal no lo explica",
-     "incluye": null
-    },
-    {
-     "id": "conector:configurar",
-     "nombre": "Configurar conectores y tags",
-     "incluye": null
-    },
-    {
-     "id": "config:firmar",
-     "nombre": "Firmar la configuración técnica: tanques, respaldos de bombas, programa de paradas, perfil de los campos y membrete",
-     "incluye": null
     }
    ]
   },
@@ -8256,11 +8375,11 @@
     },
     {
      "rol_id": "conf",
-     "capacidad_id": "causa:completar"
+     "capacidad_id": "anh:clasificar"
     },
     {
      "rol_id": "conf",
-     "capacidad_id": "evidencia:exportar"
+     "capacidad_id": "anh:yacimiento"
     }
    ]
   },
@@ -10914,6 +11033,369 @@
    "filas": []
   },
   {
+   "nombre": "confirmacion_lote",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Solo inserción.",
+   "tipoTS": "ConfirmacionLote (src/entities/anh-paradas.ts)",
+   "endpoints": [
+    "POST /api/anh/paradas/confirmar (varias filas)"
+   ],
+   "quienEscribe": "Persona con anh:confirmar (supervisión y producción) y los campos de las filas.",
+   "reglas": [
+    "Solo inserción.",
+    "Las filas tienen la misma cadena completa de 6 pasos (422 si no).",
+    "409 si la cadena que vio la persona ya no es la de alguna fila.",
+    "Confirma en lote quien tiene anh:confirmar. [trigger confirmacion_lote_reglas: INSERT]",
+    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger confirmacion_lote_sin_truncate: TRUNCATE]",
+    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger confirmacion_lote_solo_insercion: UPDATE DELETE]"
+   ],
+   "columnas": [
+    {
+     "nombre": "id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(id) <> ''::text))",
+     "defecto": null,
+     "descripcion": "Id del lote (lo pone el servidor).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "por_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "usuario.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Persona que confirmó (del token).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "por",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Nombre de la persona.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "rol_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "rol.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Rol con que confirmó: decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "hora",
+     "tipo": "timestamp with time zone",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Hora del toque.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "paradas",
+     "tipo": "text[]",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((cardinality(paradas) >= 2))",
+     "defecto": null,
+     "descripcion": "ParadaAnh.id de cada fila del lote (dos o más).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "cadena",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(cadena) <> ''::text))",
+     "defecto": null,
+     "descripcion": "La cadena de 6 pasos que vio, en códigos internos («op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/…»).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "pasos",
+     "tipo": "text[]",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((pasos <@ ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text]))",
+     "defecto": null,
+     "descripcion": "Los pasos que subió a confirmado según su rol (y la regla «una señal apunta»).",
+     "ejemplo": null
+    }
+   ],
+   "filas": []
+  },
+  {
+   "nombre": "clasificacion_paso",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos). POST /api/anh/paradas/:id/clasificacion, …/yacimiento y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. Solo inserción: una corrección es una fila nueva y la anterior queda al lado. La que rige es la última por (clave, paso): v_clasificacion_vigente. Coherencia planeada/causa y causa/detalle revisada al confirmar (trigger diferido).",
+   "tipoTS": "DatoClasificado (src/entities/anh-clasificacion.ts) de lo que dijo una persona",
+   "endpoints": [
+    "POST /api/anh/paradas/:id/clasificacion",
+    "POST /api/anh/paradas/:id/yacimiento",
+    "POST /api/anh/paradas/confirmar",
+    "GET /api/vistas/anh/paradas (aplicado)",
+    "GET /api/vistas/anh/calidad"
+   ],
+   "quienEscribe": "Persona con anh:clasificar (y anh:confirmar en lote, anh:yacimiento para «En el yacimiento»), solo en los pasos que su rol dice o avala.",
+   "reglas": [
+    "Solo inserción: una corrección es una fila nueva; rige la última por (clave, paso).",
+    "Lo que propone TRIM no se guarda: se vuelve a proponer con la regla de hoy al leer la fila.",
+    "Coherencia bloqueada al confirmar: planeada solo con P_…, no planeada solo con NP_…, el detalle es de su causa (la ANH rechaza la transmisión entera).",
+    "Cambiar lo que ya dijo una persona pide motivo (422); el operador no dice ni confirma dónde se trabó (403).",
+    "«En el yacimiento» solo de producción o confiabilidad y con evidencia.",
+    "Al confirmar: lo vigente de la parada es coherente (planeada con P_…, no planeada con NP_…, el detalle de su causa). [trigger clasificacion_coherente: INSERT, diferido]",
+    "El evento es del campo; el rol tiene anh:clasificar (anh:confirmar en lote, anh:yacimiento para «En el yacimiento»); la fila está en su lote. [trigger clasificacion_paso_reglas: INSERT]",
+    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger clasificacion_paso_sin_truncate: TRUNCATE]",
+    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger clasificacion_paso_solo_insercion: UPDATE DELETE]"
+   ],
+   "columnas": [
+    {
+     "nombre": "id",
+     "tipo": "bigint",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Consecutivo del servidor: el orden en que se dijo.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "clave",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text)))) · CHECK ((btrim(clave) <> ''::text))",
+     "defecto": null,
+     "descripcion": "ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "alcance",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "defecto": null,
+     "descripcion": "fila: solo ese tramo; evento: todos los tramos del evento (Unicidad, C24 p.5; aplicarAlEvento o aplicarALaCascada).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "evento_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "evento_pozo.id",
+     "unico": null,
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "defecto": null,
+     "descripcion": "El evento del controlador del pozo (de él sale el campo, nunca del cuerpo).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "campo_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "campo.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Campo del evento (trigger): tiene que estar entre los de la persona (403).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "paso",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK ((paso = ANY (ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text, 'cau_gral'::text, 'desc_evid'::text])))",
+     "defecto": null,
+     "descripcion": "responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral, desc_evid.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "valor",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text)))",
+     "defecto": null,
+     "descripcion": "El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…). Del catálogo de version_catalogo.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "procedencia",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((procedencia <> 'corregido'::text) OR (propuesto IS NOT NULL))) · CHECK (((lote_id IS NULL) OR (procedencia = 'confirmado'::text))) · CHECK ((procedencia = ANY (ARRAY['declarado'::text, 'confirmado'::text, 'corregido'::text])))",
+     "defecto": null,
+     "descripcion": "declarado (lo que faltaba), confirmado (lo que TRIM proponía, aceptado) o corregido (cambió lo que TRIM proponía). Lo que propone TRIM no se guarda.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "regla",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "La regla con que se dijo (preguntas:campo@1, choke.yacimiento@1) o la que proponía, si se confirmó (REGLAS_ANH@1#…, choke.topologia@2).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "porque",
+     "tipo": "jsonb",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text))))",
+     "defecto": null,
+     "descripcion": "El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "por_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "usuario.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Persona (del token).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "por",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Nombre de la persona. No viaja a la ANH (desc_evid nunca lleva nombres).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "rol_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "rol.id",
+     "unico": null,
+     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text))))",
+     "defecto": null,
+     "descripcion": "Rol con que lo dijo: decide si lo puede avalar (PASOS_QUE_DECLARA, PASOS_QUE_CONFIRMA). En el yacimiento, prod o conf.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "hora",
+     "tipo": "timestamp with time zone",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "La hora del toque.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "recibido",
+     "tipo": "timestamp with time zone",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": "now()",
+     "descripcion": "Hora del servidor al recibirlo.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "lote_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": "confirmacion_lote.id",
+     "unico": null,
+     "check": "CHECK (((lote_id IS NULL) OR (procedencia = 'confirmado'::text)))",
+     "defecto": null,
+     "descripcion": "El lote, si se confirmó en lote (solo confirmado).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "propuesto",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((procedencia <> 'corregido'::text) OR (propuesto IS NOT NULL)))",
+     "defecto": null,
+     "descripcion": "Lo que proponía TRIM, si la persona lo cambió (obligatorio en corregido): el tablero de correcciones por regla.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "version_catalogo",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((version_catalogo = ANY (ARRAY['C024-2026'::text, 'DICC-V3.2'::text])))",
+     "defecto": "'C024-2026'::text",
+     "descripcion": "Versión del catálogo de la circular con que se dijo (C024-2026 o DICC-V3.2).",
+     "ejemplo": null
+    }
+   ],
+   "filas": []
+  },
+  {
    "nombre": "folio_contador",
    "grupo": "g",
    "clase": "tabla",
@@ -12464,7 +12946,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
+     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
     }
    ],
    "filas": [
@@ -12480,7 +12962,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -12494,7 +12976,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "morichal",
@@ -12508,7 +12990,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "palmar",
@@ -12522,7 +13004,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "zarza",
@@ -12536,7 +13018,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     }
    ]
   },
@@ -13135,7 +13617,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
+     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
     }
    ],
    "filas": [
@@ -13311,7 +13793,7 @@
      "eventos": 18,
      "huella_cifras": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -13444,7 +13926,7 @@
      "eventos": 11,
      "huella_cifras": "ed542826fa682035e79cb219d14b4c54a27cc7c262f0b887d70ae3512459e800",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "morichal",
@@ -13515,7 +13997,7 @@
      "eventos": 31,
      "huella_cifras": "190cb266ba2594a2c185be30cfd7e7bad4d7bce844013f88ff09f73007458480",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "palmar",
@@ -13590,7 +14072,7 @@
      "eventos": 8,
      "huella_cifras": "c632efa5ec1c89e44223cf0d3a9736f74675237e50136524aa0383dfa75b7d73",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "zarza",
@@ -13651,7 +14133,7 @@
      "eventos": 1,
      "huella_cifras": "c7c447654ee2ccce3c562f23385b1e104894df7699354cc438d1633cc6105408",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     }
    ]
   },
@@ -13958,7 +14440,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
+     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
     }
    ],
    "filas": [
@@ -13986,7 +14468,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -14012,7 +14494,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -14038,7 +14520,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -14064,7 +14546,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -14090,7 +14572,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     }
    ]
   },
@@ -14203,7 +14685,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
+     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
     }
    ],
    "filas": [
@@ -14215,7 +14697,7 @@
      "potencial": 31765.411954508756,
      "diferido": 3677.2278693078233,
      "asignado": 28088.184085200945,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14225,7 +14707,7 @@
      "potencial": 27256.010196447387,
      "diferido": 60.829984442262884,
      "asignado": 27195.180212005136,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14235,7 +14717,7 @@
      "potencial": 26475.05235007924,
      "diferido": 756.7615028375318,
      "asignado": 25718.29084724172,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14245,7 +14727,7 @@
      "potencial": 24552.694574403755,
      "diferido": 0,
      "asignado": 24552.694574403766,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14255,7 +14737,7 @@
      "potencial": 24111.8312740346,
      "diferido": 94.61066382524777,
      "asignado": 24017.220610209362,
-     "calculado": "2026-10-09T19:07:03.506705+00:00"
+     "calculado": "2026-10-22T00:09:44.279498+00:00"
     }
    ]
   },
@@ -14322,7 +14804,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Hora del recálculo.",
-     "ejemplo": "2026-10-09T19:07:03.506705+00:00"
+     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
     },
     {
      "nombre": "motivo",
@@ -14366,7 +14848,7 @@
      "id": 1,
      "campo_id": "ceiba",
      "mes": "2025-10-01",
-     "cuando": "2026-10-09T19:07:03.506705+00:00",
+     "cuando": "2026-10-22T00:09:44.279498+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
@@ -14375,7 +14857,7 @@
      "id": 2,
      "campo_id": "ceiba",
      "mes": "2025-11-01",
-     "cuando": "2026-10-09T19:07:03.506705+00:00",
+     "cuando": "2026-10-22T00:09:44.279498+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "80979dd8e5f4057b805ffe6baaf7d5e097704223acb7ad94498bec69f2d8aebe"
@@ -14384,7 +14866,7 @@
      "id": 3,
      "campo_id": "ceiba",
      "mes": "2025-12-01",
-     "cuando": "2026-10-09T19:07:03.506705+00:00",
+     "cuando": "2026-10-22T00:09:44.279498+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "3ee3116ec3bc84c4293321d097291669814f0af8cfa69fdeb7ff9233b5f63916"
@@ -14393,7 +14875,7 @@
      "id": 4,
      "campo_id": "ceiba",
      "mes": "2026-01-01",
-     "cuando": "2026-10-09T19:07:03.506705+00:00",
+     "cuando": "2026-10-22T00:09:44.279498+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "753d300b99414f01cc760a56987a7be0cb75f02cf6ed36bb72949f39b071cd8b"
@@ -14402,7 +14884,7 @@
      "id": 5,
      "campo_id": "ceiba",
      "mes": "2026-02-01",
-     "cuando": "2026-10-09T19:07:03.506705+00:00",
+     "cuando": "2026-10-22T00:09:44.279498+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "6d35fb973add65cb0de0726e56b94e4bb27a6df08ae0208f889f0930c6a12b13"
@@ -15733,6 +16215,239 @@
    "filas": []
   },
   {
+   "nombre": "v_clasificacion_vigente",
+   "grupo": "g",
+   "clase": "vista",
+   "descripcion": "Lo que rige de cada paso de cada fila o evento: lo último que dijo una persona (OpcionesParadas.guardadas de anh-paradas.ts). Una fila usa lo suyo y, si no tiene, lo de su evento (salvo el tramo de exceso del programa). Lo anterior es la historia («antes: …», U1 §2.7).",
+   "tipoTS": "OpcionesParadas.guardadas (src/entities/anh-paradas.ts)",
+   "endpoints": [
+    "GET /api/vistas/anh/paradas (lo que se pone encima de lo que propone TRIM)"
+   ],
+   "quienEscribe": "(vista)",
+   "reglas": [
+    "Una fila usa lo suyo y, si no tiene, lo de su evento (salvo el tramo de exceso del programa)."
+   ],
+   "columnas": [
+    {
+     "nombre": "id",
+     "tipo": "bigint",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "clave",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "alcance",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "evento_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "campo_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "paso",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "valor",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "procedencia",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "regla",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "porque",
+     "tipo": "jsonb",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "por_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "por",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "rol_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "hora",
+     "tipo": "timestamp with time zone",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "recibido",
+     "tipo": "timestamp with time zone",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "lote_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "propuesto",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "version_catalogo",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    }
+   ],
+   "filas": []
+  },
+  {
    "nombre": "v_asignacion_oficial",
    "grupo": "g",
    "clase": "vista",
@@ -16397,7 +17112,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "reg"
+     "ejemplo": "conf"
     },
     {
      "nombre": "capacidad_id",
@@ -16409,29 +17124,29 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "evidencia:exportar"
+     "ejemplo": "anh:yacimiento"
     }
    ],
    "filas": [
     {
-     "rol_id": "reg",
-     "capacidad_id": "evidencia:exportar"
+     "rol_id": "conf",
+     "capacidad_id": "anh:yacimiento"
     },
     {
-     "rol_id": "jefe",
+     "rol_id": "conf",
      "capacidad_id": "causa:declarar"
     },
     {
-     "rol_id": "conf",
-     "capacidad_id": "causa:completar"
+     "rol_id": "sup",
+     "capacidad_id": "causa:declarar"
     },
     {
      "rol_id": "prod",
-     "capacidad_id": "asignacion:cargar"
+     "capacidad_id": "evidencia:exportar"
     },
     {
      "rol_id": "conf",
-     "capacidad_id": "evidencia:exportar"
+     "capacidad_id": "planes:decidir"
     }
    ]
   }
@@ -16990,6 +17705,22 @@
    "diferible": false
   },
   {
+   "desde": "topologia.campo_id",
+   "hacia": "campo.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Campo donde está el elemento. NULL = vale para todos los campos (en el demo un mismo tag, P-201B o SE-2, está en varios).",
+   "restriccion": "topologia_campo_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "topologia.version",
+   "hacia": "version_config.version",
+   "cardinalidad": "N:1",
+   "descripcion": "Versión.",
+   "restriccion": "topologia_version_fkey",
+   "diferible": false
+  },
+  {
    "desde": "capacidad.incluye",
    "hacia": "capacidad.id",
    "cardinalidad": "N:1",
@@ -17307,6 +18038,62 @@
    "cardinalidad": "N:1",
    "descripcion": "Persona.",
    "restriccion": "analisis_por_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "confirmacion_lote.por_id",
+   "hacia": "usuario.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Persona que confirmó (del token).",
+   "restriccion": "confirmacion_lote_por_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "confirmacion_lote.rol_id",
+   "hacia": "rol.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Rol con que confirmó: decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).",
+   "restriccion": "confirmacion_lote_rol_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.campo_id",
+   "hacia": "campo.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Campo del evento (trigger): tiene que estar entre los de la persona (403).",
+   "restriccion": "clasificacion_paso_campo_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.evento_id",
+   "hacia": "evento_pozo.id",
+   "cardinalidad": "N:1",
+   "descripcion": "El evento del controlador del pozo (de él sale el campo, nunca del cuerpo).",
+   "restriccion": "clasificacion_paso_evento_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.lote_id",
+   "hacia": "confirmacion_lote.id",
+   "cardinalidad": "N:1",
+   "descripcion": "El lote, si se confirmó en lote (solo confirmado).",
+   "restriccion": "clasificacion_paso_lote_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.por_id",
+   "hacia": "usuario.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Persona (del token).",
+   "restriccion": "clasificacion_paso_por_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.rol_id",
+   "hacia": "rol.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Rol con que lo dijo: decide si lo puede avalar (PASOS_QUE_DECLARA, PASOS_QUE_CONFIRMA). En el yacimiento, prod o conf.",
+   "restriccion": "clasificacion_paso_rol_id_fkey",
    "diferible": false
   },
   {

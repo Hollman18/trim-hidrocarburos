@@ -22,6 +22,10 @@ const FUNCION_REGLA = {
   estado_mensaje_de_saliente: 'El id de Meta es de un mensaje o de un mensaje_libre registrado (hace de clave foránea a las dos).',
   planta_id_unico: 'Un id no se repite entre elementos y miembros del campo.',
   precalculo_no_se_actualiza: 'No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes.',
+  topologia_pozos_del_campo: 'Cada pozo del elemento es del campo (validarTopologia, 422).',
+  clasificacion_paso_reglas: 'El evento es del campo; el rol tiene anh:clasificar (anh:confirmar en lote, anh:yacimiento para «En el yacimiento»); la fila está en su lote.',
+  clasificacion_coherente: 'Al confirmar: lo vigente de la parada es coherente (planeada con P_…, no planeada con NP_…, el detalle de su causa).',
+  confirmacion_lote_reglas: 'Confirma en lote quien tiene anh:confirmar.',
 }
 
 const FILAS_SQL = {

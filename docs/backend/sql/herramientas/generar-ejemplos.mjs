@@ -268,6 +268,9 @@ for (const v of HIST) {
   c.tanques.forEach((t, i) => meter('tanque', lit({ version: v.version, id: t.id, orden: i, nombre: t.nombre, campo_id: t.campoId, bomba: t.bomba, capacidad_bbl: t.capacidadBbl, alto_alto: t.altoAlto, tag_nivel: t.tagNivel, aforo: t.aforo })))
   c.respaldos.forEach((r, i) => meter('respaldo', lit({ version: v.version, campo_id: r.campoId, equipo: r.equipo, orden: i, libre_bpd: r.libreBpd, detalle: r.detalle })))
   c.programa.forEach((p, i) => meter('parada_programada', lit({ version: v.version, id: p.id, orden: i, campo_id: p.campoId, equipo: p.equipo, desde: p.desde, hasta: p.hasta, motivo: p.motivo })))
+  // La topología del choke, si la versión la firmó (la de arranque del demo no: rige la que se deriva del registro).
+  ;(c.topologia ?? []).forEach((e, i) => meter('topologia', { ...lit({ version: v.version, orden: i, campo_id: e.campoId ?? null, elemento: e.elemento,
+    alcance: e.alcance, choke: e.choke, caso_borde: e.casoBorde ?? null }), pozos: e.pozos ? arr(e.pozos) : 'null' }))
 }
 
 // ─── (g) escrituras a mano

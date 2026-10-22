@@ -1178,7 +1178,7 @@ comment on column version_config.por_id is 'Id de la persona que firmó (del tok
 comment on column version_config.por is 'Firma para leer: «Nombre · rol».';
 comment on column version_config.motivo is 'Por qué se cambió: 5 caracteres o más.';
 comment on column version_config.cambios is 'Lo que cambió dicho para leer (diferencias de configuracion.ts), metas primero.';
-comment on column version_config.config is 'La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa); precio sin configurar = ausente.';
+comment on column version_config.config is 'La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si la trae, topologia); precio sin configurar = ausente; una topología vacía no viaja.';
 
 create table membrete (
   version  integer primary key references version_config(version),
@@ -1291,6 +1291,44 @@ comment on column parada_programada.desde is 'Inicio aprobado.';
 comment on column parada_programada.hasta is 'Fin aprobado (después del inicio).';
 comment on column parada_programada.motivo is 'Motivo: 5 caracteres o más.';
 
+create table topologia (
+  version     integer not null references version_config(version),
+  orden       smallint not null,
+  campo_id    text references campo(id),
+  elemento    text not null check (btrim(elemento) <> ''),
+  alcance     text not null check (alcance in ('dedicado', 'compartido', 'frontera', 'tercero')),
+  choke       text not null check (choke = case alcance when 'dedicado' then 'pozo' when 'compartido' then 'planta' else 'exportacion' end),
+  pozos       text[],
+  caso_borde  text check (caso_borde = 'misma-locacion'),
+  primary key (version, orden),
+  unique nulls not distinct (version, campo_id, elemento),
+  check (alcance <> 'dedicado' or coalesce(cardinality(pozos), 0) = 1),
+  check (alcance <> 'compartido' or coalesce(cardinality(pozos), 0) <> 1)
+);
+comment on table topologia is 'Topología del modelo choke firmada (ChokeDeElemento de src/entities/choke.ts; Config.topologia): a qué pozos sirve cada equipo, servicio o alimentador. El tramo de una parada sale de aquí con el criterio de Edinson: dedicado (un solo pozo) = pozo, compartido = planta, frontera y tercero = exportación. Un campo sin filas usa la que se deriva del registro (GET /api/vistas/topologia). Firma config:firmar. No es inmutable hacia atrás: cada clasificación guarda su regla y lo que confirmó una persona no cambia solo.';
+comment on column topologia.version is 'Versión.';
+comment on column topologia.orden is 'Lugar en la lista firmada (para devolver el JSON tal como se firmó).';
+comment on column topologia.campo_id is 'Campo donde está el elemento. NULL = vale para todos los campos (en el demo un mismo tag, P-201B o SE-2, está en varios).';
+comment on column topologia.elemento is 'Id de equipo, tag de servicio o alimentador (Pozo.alimentador). Único por (versión, campo).';
+comment on column topologia.alcance is 'A quién sirve: dedicado (un pozo), compartido (varios), frontera (la brida de salida de la batería) o tercero (otro dueño, más allá de la batería).';
+comment on column topologia.choke is 'El tramo, DERIVADO del alcance y guardado para la auditoría: pozo, planta o exportacion (check). Nadie lo escoge.';
+comment on column topologia.pozos is '«¿A qué pozos sirve?»: dedicado, exactamente uno; compartido, ninguno o más de uno. Cada pozo es del campo (trigger). NULL = no se dijo.';
+comment on column topologia.caso_borde is 'misma-locacion: sirve a 2 o 3 pozos de una misma locación; va a la planta mientras Edinson no confirme la regla (U2 §8.6).';
+
+-- Los pozos de un elemento de la topología son del campo (no hay FK a un arreglo).
+create or replace function topologia_pozos_del_campo() returns trigger language plpgsql as $$
+declare ajeno text;
+begin
+  if new.campo_id is null or new.pozos is null then return new; end if;
+  select x into ajeno from unnest(new.pozos) as x where not exists (select 1 from pozo p where p.campo_id = new.campo_id and p.id = x) limit 1;
+  if ajeno is not null then
+    raise exception '% (%): el pozo % no es de ese campo', new.elemento, new.campo_id, ajeno using errcode = '23514';
+  end if;
+  return new;
+end $$;
+comment on function topologia_pozos_del_campo() is 'Trigger de topologia: cada pozo del elemento es del campo (validarTopologia de choke.ts, 422).';
+create trigger topologia_pozos_del_campo before insert on topologia for each row execute function topologia_pozos_del_campo();
+
 -- El instante en ISO 8601 con milisegundos en hora de Colombia, como viaja.
 create or replace function fecha_iso_co(t timestamptz) returns text language sql immutable as $$
   select to_char(t at time zone 'America/Bogota', 'YYYY-MM-DD"T"HH24:MI:SS.MS') || '-05:00'
@@ -1316,8 +1354,13 @@ create or replace function config_json(v integer) returns jsonb language sql sta
     'programa', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'campoId', campo_id, 'equipo', equipo,
         'desde', fecha_iso_co(desde), 'hasta', fecha_iso_co(hasta), 'motivo', motivo) order by orden)
       from parada_programada where version = v), '[]'::jsonb))
+  -- La topología solo va si la versión la trae (una vacía no viaja: normalizarConfig).
+  || case when exists (select 1 from topologia where version = v)
+       then jsonb_build_object('topologia', (select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('elemento', elemento, 'choke', choke, 'alcance', alcance,
+              'pozos', to_jsonb(pozos), 'campoId', campo_id, 'casoBorde', caso_borde)) order by orden) from topologia where version = v))
+       else '{}'::jsonb end
 $$;
-comment on function config_json(integer) is 'Rearma la Config de una versión desde membrete, perfil_campo, tramo_meta, tanque, respaldo y parada_programada (fechas del programa en ISO de Colombia con milisegundos).';
+comment on function config_json(integer) is 'Rearma la Config de una versión desde membrete, perfil_campo, tramo_meta, tanque, respaldo, parada_programada y topologia (fechas del programa en ISO de Colombia con milisegundos; la topología solo si la versión trae alguna fila).';
 
 -- El JSON firmado con las fechas del programa escritas igual que config_json
 -- y el precio sin configurar como ausente (normalizarConfig).
@@ -1370,6 +1413,8 @@ create trigger tramo_meta_sin_truncate before truncate on tramo_meta for each st
 create trigger tanque_sin_truncate before truncate on tanque for each statement execute function solo_insercion();
 create trigger respaldo_sin_truncate before truncate on respaldo for each statement execute function solo_insercion();
 create trigger parada_programada_sin_truncate before truncate on parada_programada for each statement execute function solo_insercion();
+create trigger topologia_solo_insercion before update or delete on topologia for each row execute function solo_insercion();
+create trigger topologia_sin_truncate before truncate on topologia for each statement execute function solo_insercion();
 create index parada_programada_por_equipo on parada_programada (campo_id, equipo, desde);
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -1400,11 +1445,11 @@ comment on column rol.recibe_alertas is 'Tiene reglas de WhatsApp (ROLES_CON_ALE
 comment on column rol.visible is 'Rol del primer producto (true) o de la versión 2 (false).';
 
 create table capacidad (
-  id       text primary key check (id in ('causa:declarar', 'causa:completar', 'evidencia:exportar', 'conector:configurar', 'config:firmar', 'metas:firmar', 'usuarios:administrar', 'sap:aviso', 'asignacion:cargar', 'planes:decidir')),
+  id       text primary key check (id in ('causa:declarar', 'causa:completar', 'evidencia:exportar', 'conector:configurar', 'config:firmar', 'metas:firmar', 'usuarios:administrar', 'sap:aviso', 'asignacion:cargar', 'planes:decidir', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento')),
   nombre   text not null,
   incluye  text references capacidad(id)
 );
-comment on table capacidad is 'Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).';
+comment on table capacidad is 'Las trece capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).';
 comment on column capacidad.id is 'Id de la capacidad.';
 comment on column capacidad.nombre is 'Qué permite, dicho para leer.';
 comment on column capacidad.incluye is 'Otra capacidad que esta trae consigo (causa:completar incluye causa:declarar: INCLUYE de tipos.ts).';
@@ -1906,6 +1951,139 @@ begin
 end $$;
 comment on function analisis_reglas() is 'Trigger de analisis: exige respuesta con parte y versiones consecutivas.';
 create trigger analisis_reglas before insert on analisis for each row execute function analisis_reglas();
+
+-- ── La clasificación ANH de las paradas (Circular 024, P1 §1.3-1.5) ──
+-- Las filas de paradas_pozo (ParadaAnh) NO se guardan: salen del libro cada vez
+-- (anh-paradas.ts). Lo que se guarda es lo que dijo una persona de cada paso, con
+-- su procedencia; lo que propone TRIM se vuelve a proponer con la regla de hoy.
+
+create table confirmacion_lote (
+  id       text primary key check (btrim(id) <> ''),
+  por_id   text not null references usuario(id),
+  por      text not null,
+  rol_id   text not null references rol(id),
+  hora     timestamptz not null,
+  paradas  text[] not null check (cardinality(paradas) >= 2),
+  cadena   text not null check (btrim(cadena) <> ''),
+  pasos    text[] not null check (pasos <@ array['responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2']::text[])
+);
+comment on table confirmacion_lote is 'Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Solo inserción.';
+comment on column confirmacion_lote.id is 'Id del lote (lo pone el servidor).';
+comment on column confirmacion_lote.por_id is 'Persona que confirmó (del token).';
+comment on column confirmacion_lote.por is 'Nombre de la persona.';
+comment on column confirmacion_lote.rol_id is 'Rol con que confirmó: decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).';
+comment on column confirmacion_lote.hora is 'Hora del toque.';
+comment on column confirmacion_lote.paradas is 'ParadaAnh.id de cada fila del lote (dos o más).';
+comment on column confirmacion_lote.cadena is 'La cadena de 6 pasos que vio, en códigos internos («op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/…»).';
+comment on column confirmacion_lote.pasos is 'Los pasos que subió a confirmado según su rol (y la regla «una señal apunta»).';
+
+create table clasificacion_paso (
+  id                bigint generated always as identity primary key,
+  clave             text not null check (btrim(clave) <> ''),
+  alcance           text not null check (alcance in ('fila', 'evento')),
+  evento_id         text not null references evento_pozo(id),
+  campo_id          text not null references campo(id),
+  paso              text not null check (paso in ('responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2', 'cau_gral', 'desc_evid')),
+  valor             text not null check (btrim(valor) <> '' or paso = 'desc_evid'),
+  procedencia       text not null check (procedencia in ('declarado', 'confirmado', 'corregido')),
+  regla             text,
+  porque            jsonb,
+  por_id            text not null references usuario(id),
+  por               text not null,
+  rol_id            text not null references rol(id),
+  hora              timestamptz not null,
+  recibido          timestamptz not null default now(),
+  lote_id           text references confirmacion_lote(id),
+  propuesto         text,
+  version_catalogo  text not null default 'C024-2026' check (version_catalogo in ('C024-2026', 'DICC-V3.2')),
+  check ((alcance = 'evento') = (clave = evento_id)),
+  check (alcance = 'evento' or clave like evento_id || '@%'),
+  check (procedencia <> 'corregido' or propuesto is not null),
+  check (lote_id is null or procedencia = 'confirmado'),
+  check (paso <> 'responsable' or valor in ('op-operacion', 'op-mantenimiento', 'op-planeacion', 'ext-energia', 'ext-transportador', 'comunidad', 'autoridad', 'tercero', 'fuerza-mayor')),
+  check (paso <> 'choke' or valor in ('reservorio', 'pozo', 'planta', 'exportacion')),
+  check (paso <> 'impacto' or valor in ('diferida', 'perdida')),
+  check (paso <> 'planeacion' or valor in ('planeada', 'no-planeada')),
+  check (paso <> 'n1' or valor ~ '^N?P_[A-Z_]+$'),
+  check (paso <> 'n2' or valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'),
+  check (paso <> 'choke' or valor <> 'reservorio' or (rol_id in ('prod', 'conf') and btrim(coalesce(porque ->> 'evidencia', '')) <> ''))
+);
+comment on table clasificacion_paso is 'Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos). POST /api/anh/paradas/:id/clasificacion, …/yacimiento y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. Solo inserción: una corrección es una fila nueva y la anterior queda al lado. La que rige es la última por (clave, paso): v_clasificacion_vigente. Coherencia planeada/causa y causa/detalle revisada al confirmar (trigger diferido).';
+comment on column clasificacion_paso.id is 'Consecutivo del servidor: el orden en que se dijo.';
+comment on column clasificacion_paso.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).';
+comment on column clasificacion_paso.alcance is 'fila: solo ese tramo; evento: todos los tramos del evento (Unicidad, C24 p.5; aplicarAlEvento o aplicarALaCascada).';
+comment on column clasificacion_paso.evento_id is 'El evento del controlador del pozo (de él sale el campo, nunca del cuerpo).';
+comment on column clasificacion_paso.campo_id is 'Campo del evento (trigger): tiene que estar entre los de la persona (403).';
+comment on column clasificacion_paso.paso is 'responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral, desc_evid.';
+comment on column clasificacion_paso.valor is 'El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…). Del catálogo de version_catalogo.';
+comment on column clasificacion_paso.procedencia is 'declarado (lo que faltaba), confirmado (lo que TRIM proponía, aceptado) o corregido (cambió lo que TRIM proponía). Lo que propone TRIM no se guarda.';
+comment on column clasificacion_paso.regla is 'La regla con que se dijo (preguntas:campo@1, choke.yacimiento@1) o la que proponía, si se confirmó (REGLAS_ANH@1#…, choke.topologia@2).';
+comment on column clasificacion_paso.porque is 'El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección).';
+comment on column clasificacion_paso.por_id is 'Persona (del token).';
+comment on column clasificacion_paso.por is 'Nombre de la persona. No viaja a la ANH (desc_evid nunca lleva nombres).';
+comment on column clasificacion_paso.rol_id is 'Rol con que lo dijo: decide si lo puede avalar (PASOS_QUE_DECLARA, PASOS_QUE_CONFIRMA). En el yacimiento, prod o conf.';
+comment on column clasificacion_paso.hora is 'La hora del toque.';
+comment on column clasificacion_paso.recibido is 'Hora del servidor al recibirlo.';
+comment on column clasificacion_paso.lote_id is 'El lote, si se confirmó en lote (solo confirmado).';
+comment on column clasificacion_paso.propuesto is 'Lo que proponía TRIM, si la persona lo cambió (obligatorio en corregido): el tablero de correcciones por regla.';
+comment on column clasificacion_paso.version_catalogo is 'Versión del catálogo de la circular con que se dijo (C024-2026 o DICC-V3.2).';
+
+-- Quién puede decir qué: la capacidad del rol, el campo del evento y el lote.
+create or replace function clasificacion_paso_reglas() returns trigger language plpgsql as $$
+declare capacidad_pedida text;
+begin
+  if not exists (select 1 from evento_pozo e where e.id = new.evento_id and e.campo_id = new.campo_id) then
+    raise exception 'el evento % no es del campo %', new.evento_id, new.campo_id using errcode = '23514';
+  end if;
+  capacidad_pedida := case when new.paso = 'choke' and new.valor = 'reservorio' then 'anh:yacimiento'
+                           when new.lote_id is not null then 'anh:confirmar' else 'anh:clasificar' end;
+  if not exists (select 1 from v_capacidades_rol c where c.rol_id = new.rol_id and c.capacidad_id = capacidad_pedida) then
+    raise exception 'el rol % no tiene % (paso % de %)', new.rol_id, capacidad_pedida, new.paso, new.clave using errcode = '23514';
+  end if;
+  if new.lote_id is not null and not exists (select 1 from confirmacion_lote l where l.id = new.lote_id and new.clave = any (l.paradas)) then
+    raise exception 'la fila % no está en el lote %', new.clave, new.lote_id using errcode = '23514';
+  end if;
+  return new;
+end $$;
+comment on function clasificacion_paso_reglas() is 'Trigger de clasificacion_paso: el evento es del campo, el rol tiene la capacidad (anh:clasificar; anh:confirmar en lote; anh:yacimiento para «En el yacimiento») y la fila está en su lote.';
+create trigger clasificacion_paso_reglas before insert on clasificacion_paso for each row execute function clasificacion_paso_reglas();
+
+-- La coherencia bloqueada (C24 p.7: la ANH rechaza la transmisión entera):
+-- planeada solo con una causa P_…, no planeada solo con NP_…, y el detalle es de su causa.
+create or replace function clasificacion_coherente() returns trigger language plpgsql as $$
+declare pl text; n1 text; n2 text;
+begin
+  select valor into pl from clasificacion_paso where clave = new.clave and paso = 'planeacion' order by id desc limit 1;
+  select valor into n1 from clasificacion_paso where clave = new.clave and paso = 'n1' order by id desc limit 1;
+  select valor into n2 from clasificacion_paso where clave = new.clave and paso = 'n2' order by id desc limit 1;
+  if pl is not null and n1 is not null and (pl = 'planeada') <> (n1 like 'P\_%') then
+    raise exception 'la parada %: «%» no va con la causa % (planeada solo con P_…, no planeada solo con NP_…)', new.clave, pl, n1 using errcode = '23514';
+  end if;
+  if n1 is not null and n2 is not null and n2 not like n1 || '/%' then
+    raise exception 'la parada %: el detalle % no es de la causa %', new.clave, n2, n1 using errcode = '23514';
+  end if;
+  return null;
+end $$;
+comment on function clasificacion_coherente() is 'Al confirmar la transacción: lo vigente de cada clave es coherente (planeación y causa; causa y detalle). Lo que propone TRIM no está aquí: el servidor lo revisa con clasificar() antes de guardar.';
+create constraint trigger clasificacion_coherente after insert on clasificacion_paso deferrable initially deferred
+  for each row execute function clasificacion_coherente();
+
+create or replace function confirmacion_lote_reglas() returns trigger language plpgsql as $$
+begin
+  if not exists (select 1 from v_capacidades_rol c where c.rol_id = new.rol_id and c.capacidad_id = 'anh:confirmar') then
+    raise exception 'el rol % no confirma en lote (anh:confirmar)', new.rol_id using errcode = '23514';
+  end if;
+  return new;
+end $$;
+comment on function confirmacion_lote_reglas() is 'Trigger de confirmacion_lote: confirma en lote quien tiene anh:confirmar (supervisión y producción).';
+create trigger confirmacion_lote_reglas before insert on confirmacion_lote for each row execute function confirmacion_lote_reglas();
+
+create trigger confirmacion_lote_solo_insercion before update or delete on confirmacion_lote for each row execute function solo_insercion();
+create trigger confirmacion_lote_sin_truncate before truncate on confirmacion_lote for each statement execute function solo_insercion();
+create trigger clasificacion_paso_solo_insercion before update or delete on clasificacion_paso for each row execute function solo_insercion();
+create trigger clasificacion_paso_sin_truncate before truncate on clasificacion_paso for each statement execute function solo_insercion();
+create index clasificacion_paso_por_clave on clasificacion_paso (clave, paso, id desc);
+create index clasificacion_paso_por_evento on clasificacion_paso (evento_id);
 
 create table folio_contador (
   anio    smallint primary key check (anio between 2000 and 2999),
@@ -2531,6 +2709,10 @@ comment on view v_calendario is 'catalogo.calendario (Mes de src/entities/libro.
 create view v_analisis_vigente as
 select distinct on (evento_id) * from analisis order by evento_id, version desc;
 comment on view v_analisis_vigente is 'GET /api/analisis → vigentes: la última versión de cada evento. Las demás son anteriores.';
+
+create view v_clasificacion_vigente as
+select distinct on (clave, paso) * from clasificacion_paso order by clave, paso, id desc;
+comment on view v_clasificacion_vigente is 'Lo que rige de cada paso de cada fila o evento: lo último que dijo una persona (OpcionesParadas.guardadas de anh-paradas.ts). Una fila usa lo suyo y, si no tiene, lo de su evento (salvo el tramo de exceso del programa). Lo anterior es la historia («antes: …», U1 §2.7).';
 
 create view v_asignacion_oficial as
 select a.mes, a.campo_id, a.pozo, a.bbl, a.horas, a.carga_id

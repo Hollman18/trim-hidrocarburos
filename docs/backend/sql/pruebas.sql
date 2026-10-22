@@ -297,3 +297,105 @@ select pg_temp.pasa('recalcular un mes: borrar e insertar (y anotarlo)',
       delete from tramo_diferido where campo_id = 'ceiba' and mes = '2026-09-01';
       insert into recalculo_mes (campo_id, mes, motivo, huella_antes, huella_despues) select 'ceiba', '2026-09-01', 'Respuesta tardía a EV-2011-1002', huella_cifras, huella_cifras from libro_mes where campo_id = 'ceiba' and mes = '2026-09-01';
     end $x$ $s$);
+
+-- ── La topología del modelo choke (Config.topologia)
+select pg_temp.muerde('topología con un tramo que no sale del alcance (compartido en el pozo)',
+  $$insert into topologia (version, orden, campo_id, elemento, alcance, choke, pozos) values (1, 0, 'ceiba', 'P-201B', 'compartido', 'pozo', array['LC-01', 'LC-02'])$$, '23514');
+select pg_temp.muerde('topología: un dedicado que sirve a dos pozos',
+  $$insert into topologia (version, orden, campo_id, elemento, alcance, choke, pozos) values (1, 0, 'ceiba', 'LC-01', 'dedicado', 'pozo', array['LC-01', 'LC-02'])$$, '23514');
+select pg_temp.muerde('topología: un pozo que no es del campo',
+  $$insert into topologia (version, orden, campo_id, elemento, alcance, choke, pozos) values (1, 0, 'ceiba', 'K-101', 'compartido', 'planta', array['LC-01', 'MN-07'])$$, '23514');
+select pg_temp.muerde('topología: el mismo elemento dos veces en el campo',
+  $$insert into topologia (version, orden, campo_id, elemento, alcance, choke) values (1, 0, 'ceiba', 'SE-2', 'compartido', 'planta'), (1, 1, 'ceiba', 'SE-2', 'compartido', 'planta')$$, '23505');
+select pg_temp.muerde('topología: el mismo elemento dos veces para todos los campos (sin campo no es distinto)',
+  $$insert into topologia (version, orden, campo_id, elemento, alcance, choke) values (1, 0, null, 'SE-2', 'compartido', 'planta'), (1, 1, null, 'SE-2', 'compartido', 'planta')$$, '23505');
+select pg_temp.pasa('una versión con topología: el JSON firmado = lo normalizado',
+  $s$do $x$ begin
+      insert into version_config (version, base, fecha, por_id, por, motivo, cambios, config)
+        select 2, 1, now(), 'adm', por, 'Topología de La Ceiba', '{"Topología de La Ceiba: se firma con 1 elemento"}',
+          config || '{"topologia":[{"elemento":"LC-01","choke":"pozo","alcance":"dedicado","pozos":["LC-01"],"campoId":"ceiba"},{"elemento":"SE-2","choke":"planta","alcance":"compartido"}]}'::jsonb
+        from version_config where version = 1;
+      insert into membrete select 2, empresa from membrete where version = 1;
+      insert into perfil_campo select 2, campo_id, gas, bombas, electrosumergibles from perfil_campo where version = 1;
+      insert into tramo_meta select 2, campo_id, desde, produccion_bpd, diferido_max_bpd, netback_usd, criterio_sin_causa from tramo_meta where version = 1;
+      insert into tanque select 2, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo from tanque where version = 1;
+      insert into respaldo select 2, campo_id, equipo, orden, libre_bpd, detalle from respaldo where version = 1;
+      insert into parada_programada select 2, id, orden, campo_id, equipo, desde, hasta, motivo from parada_programada where version = 1;
+      insert into topologia (version, orden, campo_id, elemento, alcance, choke, pozos) values (2, 0, 'ceiba', 'LC-01', 'dedicado', 'pozo', array['LC-01']), (2, 1, null, 'SE-2', 'compartido', 'planta', null);
+      set constraints all immediate;
+    end $x$ $s$);
+select pg_temp.muerde('una versión con topología en el JSON firmado y sin sus filas',
+  $s$do $x$ begin
+      insert into version_config (version, base, fecha, por_id, por, motivo, cambios, config)
+        select 2, 1, now(), 'adm', por, 'Topología sin normalizar', '{x}', config || '{"topologia":[{"elemento":"LC-01","choke":"pozo","alcance":"dedicado","pozos":["LC-01"],"campoId":"ceiba"}]}'::jsonb
+        from version_config where version = 1;
+      insert into membrete select 2, empresa from membrete where version = 1;
+      insert into perfil_campo select 2, campo_id, gas, bombas, electrosumergibles from perfil_campo where version = 1;
+      insert into tramo_meta select 2, campo_id, desde, produccion_bpd, diferido_max_bpd, netback_usd, criterio_sin_causa from tramo_meta where version = 1;
+      insert into tanque select 2, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo from tanque where version = 1;
+      insert into respaldo select 2, campo_id, equipo, orden, libre_bpd, detalle from respaldo where version = 1;
+      insert into parada_programada select 2, id, orden, campo_id, equipo, desde, hasta, motivo from parada_programada where version = 1;
+      set constraints all immediate;
+    end $x$ $s$, '23514');
+
+-- ── La clasificación ANH (Circular 024): lo que dice una persona, paso por paso
+select pg_temp.muerde('clasificación: planeada con una causa no planeada (trigger diferido)',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_SUB', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      set constraints all immediate;
+    end $x$ $s$, '23514');
+select pg_temp.muerde('clasificación: un detalle que no es de su causa',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_PROC', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n2', 'NP_SUB/falla-esp', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      set constraints all immediate;
+    end $x$ $s$, '23514');
+select pg_temp.muerde('clasificación: «En el yacimiento» puesto por el supervisor',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, porque, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'choke', 'reservorio', 'declarado', '{"regla":"choke.yacimiento@1","evidencia":"prueba"}', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');
+select pg_temp.muerde('clasificación: «En el yacimiento» sin evidencia',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'choke', 'reservorio', 'declarado', 'prod', 'Marcela Ríos', 'prod', now())$$, '23514');
+select pg_temp.muerde('clasificación: corregido sin lo que proponía TRIM',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'choke', 'planta', 'corregido', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');
+select pg_temp.muerde('clasificación: una causa que no es del catálogo',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'np_sub', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');
+select pg_temp.muerde('clasificación: lo que propone TRIM no se guarda (procedencia regla)',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'impacto', 'diferida', 'regla', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');
+select pg_temp.muerde('clasificación: el gerente no clasifica (sin anh:clasificar)',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'impacto', 'diferida', 'declarado', 'ger', 'Andrés Vélez', 'ger', now())$$, '23514');
+select pg_temp.muerde('clasificación: el evento es de otro campo',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'morichal', 'impacto', 'diferida', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');
+select pg_temp.muerde('clasificación: una fila que no es de su evento',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+    values ('EP-OTRO@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'impacto', 'diferida', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');
+select pg_temp.muerde('corregir una clasificación en sitio (se corrige con una fila nueva)',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora)
+        values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'impacto', 'diferida', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      update clasificacion_paso set valor = 'perdida' where clave = 'EP-LC21-261001-01';
+    end $x$ $s$, '23001');
+select pg_temp.muerde('lote del operador (sin anh:confirmar)',
+  $$insert into confirmacion_lote (id, por_id, por, rol_id, hora, paradas, cadena, pasos)
+    values ('LOTE-PRUEBA', 'oper', 'Jairo Peña', 'oper', now(), array['EP-LC21-261001-01@2026-10-01#1', 'EP-LC21-261001-01@2026-10-02#2'], 'op-operacion · pozo · diferida · no-planeada · NP_SUP · NP_SUP/falla-motor-superficie', array['planeacion', 'impacto'])$$, '23514');
+select pg_temp.pasa('una clasificación coherente, confirmada en lote por el supervisor',
+  $s$do $x$ begin
+      insert into confirmacion_lote (id, por_id, por, rol_id, hora, paradas, cadena, pasos)
+        values ('LOTE-PRUEBA', 'sup', 'Nelson Ortiz', 'sup', now(), array['EP-LC21-261001-01@2026-10-01#1', 'EP-LC21-261001-01@2026-10-02#2'],
+          'op-operacion · pozo · diferida · no-planeada · NP_SUP · NP_SUP/falla-motor-superficie', array['responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2']);
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, regla, por_id, por, rol_id, hora, lote_id) values
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'no-planeada', 'confirmado', 'REGLAS_ANH@1#bombeo-mecanico', 'sup', 'Nelson Ortiz', 'sup', now(), 'LOTE-PRUEBA'),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_SUP', 'confirmado', 'REGLAS_ANH@1#bombeo-mecanico', 'sup', 'Nelson Ortiz', 'sup', now(), 'LOTE-PRUEBA'),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n2', 'NP_SUP/falla-motor-superficie', 'confirmado', 'REGLAS_ANH@1#bombeo-mecanico', 'sup', 'Nelson Ortiz', 'sup', now(), 'LOTE-PRUEBA');
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, porque, por_id, por, rol_id, hora, propuesto)
+        values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'choke', 'reservorio', 'corregido', '{"regla":"choke.yacimiento@1","evidencia":"corte-agua"}', 'prod', 'Marcela Ríos', 'prod', now(), 'pozo');
+      set constraints all immediate;
+    end $x$ $s$);

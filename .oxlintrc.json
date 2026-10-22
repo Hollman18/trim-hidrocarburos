@@ -42,6 +42,65 @@
                 ]
               },
               {
+                "name": "@/entities/anh-calidad",
+                "allowTypeImports": true,
+                "message": "Del motor (anh-calidad) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/arbol.ts."
+              },
+              {
+                "name": "@/entities/anh-catalogo",
+                "allowTypeImports": true,
+                "message": "Del motor (anh-catalogo) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/arbol.ts.",
+                "allowImportNames": [
+                  "PASOS",
+                  "PASO_CAMPO",
+                  "PASO_CIRCULAR",
+                  "RESPONSABLES",
+                  "CHOKES",
+                  "IMPACTOS",
+                  "PLANEACIONES",
+                  "ETIQUETA_RESPONSABLE",
+                  "ETIQUETA_CHOKE",
+                  "ETIQUETA_IMPACTO",
+                  "ETIQUETA_PLANEACION",
+                  "N1_CIRCULAR",
+                  "N2_CIRCULAR",
+                  "CLAVES_N1",
+                  "textoN1",
+                  "textoN2",
+                  "n2DeN1",
+                  "n1DeCodigo",
+                  "planeacionDeN1",
+                  "esN1Planeada",
+                  "esN1NoPlaneada"
+                ]
+              },
+              {
+                "name": "@/entities/anh-clasificacion",
+                "allowTypeImports": true,
+                "message": "Del motor (anh-clasificacion) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/arbol.ts.",
+                "allowImportNames": [
+                  "PASOS_QUE_CONFIRMA",
+                  "PASOS_QUE_DECLARA",
+                  "PONEN_YACIMIENTO",
+                  "ATAJO_YACIMIENTO",
+                  "N1_EN_CAMPO",
+                  "ROLES_QUE_CONTESTAN",
+                  "DE_PERSONA",
+                  "esDePersona",
+                  "cadenaDe"
+                ]
+              },
+              {
+                "name": "@/entities/anh-paradas",
+                "allowTypeImports": true,
+                "message": "Del motor (anh-paradas) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/arbol.ts.",
+                "allowImportNames": [
+                  "CONFIRMAN_EN_LOTE",
+                  "gruposPorCadena",
+                  "horaAnh"
+                ]
+              },
+              {
                 "name": "@/entities/asignacion",
                 "allowTypeImports": true,
                 "message": "Del motor (asignacion) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
@@ -92,6 +151,47 @@
                 ]
               },
               {
+                "name": "@/entities/choke",
+                "allowTypeImports": true,
+                "message": "Del motor (choke) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts.",
+                "allowImportNames": [
+                  "ORDEN_CHOKE",
+                  "ORDEN_CHOKE_CAMPO",
+                  "CHOKES_Y_SIN_ASIGNAR",
+                  "ESCALONES",
+                  "NOMBRE_CHOKE",
+                  "EXPLICA_TRAMO",
+                  "RESUMEN_TRAMO",
+                  "DONDE_CHOKE",
+                  "NOMBRE_CHOKE_CAMPO",
+                  "SUBNIVEL_MERCADO",
+                  "NOMBRE_ALCANCE",
+                  "NOMBRE_ESCALON",
+                  "PARAMETROS_CHOKE",
+                  "EXPLICA_CASO_BORDE",
+                  "PREGUNTA_ENERGIA",
+                  "PREGUNTA_OLEODUCTO",
+                  "chokeDeAlcance",
+                  "alcancePorPozos",
+                  "casoBordeDe",
+                  "validarTopologia"
+                ]
+              },
+              {
+                "name": "@/entities/choke-agua",
+                "allowTypeImports": true,
+                "message": "Del motor (choke-agua) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts.",
+                "allowImportNames": [
+                  "ORDEN_AGUA",
+                  "NOMBRE_TRAMO_AGUA"
+                ]
+              },
+              {
+                "name": "@/entities/choke-config",
+                "allowTypeImports": true,
+                "message": "Del motor (choke-config) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts."
+              },
+              {
                 "name": "@/entities/configuracion",
                 "allowTypeImports": true,
                 "message": "Del motor (configuracion) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
@@ -119,6 +219,11 @@
                   "configEn",
                   "validarConfig"
                 ]
+              },
+              {
+                "name": "@/entities/criticidad",
+                "allowTypeImports": true,
+                "message": "Del motor (criticidad) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts."
               },
               {
                 "name": "@/entities/diferido",
@@ -361,6 +466,31 @@
                 "name": "@/shared/api/ciclo",
                 "importNames": [
                   "pedirCiclo"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/choke",
+                "importNames": [
+                  "pedirTuberia",
+                  "pedirSerieChoke",
+                  "pedirTuberiaAgua",
+                  "pedirCriticidad",
+                  "pedirRepartoChoke",
+                  "pedirRepartoMensual",
+                  "pedirBaseChoke",
+                  "pedirTopologia",
+                  "pedirPropuestasTopologia"
+                ],
+                "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/arbol",
+                "importNames": [
+                  "pedirParadasAnh",
+                  "pedirCalidadAnh",
+                  "pedirParadaAnh",
+                  "eventosDeLaCascada"
                 ],
                 "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
               },

@@ -12,7 +12,9 @@ import { CAMPOS, SEMILLAS } from './campos'
 import type { DestinoGas } from './tipos'
 import { insumos, perezoso } from './insumos'
 import { MOTIVO_MINIMO, alcanza } from './reglas'
-import type { ChokeDeElemento } from './choke'
+// choke.ts lee `perfilDe` de aquí y aquí se leen sus palabras y su validación: el
+// ciclo es benigno porque ninguno de los dos usa al otro al cargarse, solo en funciones.
+import { validarTopologia, chokeDeAlcance, NOMBRE_ALCANCE, DONDE_CHOKE, type ChokeDeElemento } from './choke'
 import { formatoFecha } from '@/shared/lib/fecha'
 
 /** Un tramo de lo que fija el gerente de activo para un campo: rige desde su
@@ -205,11 +207,21 @@ export function configEn(versiones: ReadonlyArray<Pick<Version, 'fecha' | 'confi
   return c
 }
 
+/** Las claves de un elemento de la topología firmada. Lo demás (el nombre y la
+ *  clase que trae `GET /api/vistas/topologia` para leer) no se firma. */
+const CLAVES_TOPOLOGIA = ['elemento', 'choke', 'alcance', 'pozos', 'campoId', 'casoBorde'] as const
+
 /** Lo que llega de afuera (el JSON del servidor, o lo que se va a firmar) con
- *  los huecos como ausentes: un `null` en el precio no es un precio de 0. */
+ *  los huecos como ausentes: un `null` en el precio no es un precio de 0. Una
+ *  topología vacía es lo mismo que ninguna (rige la que se deriva del registro)
+ *  y no viaja; cada elemento queda con sus claves de `ChokeDeElemento`, y lo que
+ *  llega en `null` (el campo, los pozos, el caso de borde) se vuelve ausente: así
+ *  el JSON firmado dice lo mismo que lo que se guarda normalizado. */
 export function normalizarConfig(c: Config): Config {
   const n = structuredClone(c)
   for (const cc of Object.values(n.campos)) for (const t of cc.metas) if (typeof t.netbackUsd !== 'number') delete t.netbackUsd
+  if (n.topologia == null || !n.topologia.length) delete n.topologia
+  else n.topologia = n.topologia.map(x => Object.fromEntries(CLAVES_TOPOLOGIA.flatMap(k => (x[k] == null ? [] : [[k, x[k]]]))) as unknown as ChokeDeElemento)
   return n
 }
 
@@ -356,6 +368,38 @@ export function diferenciasPorGrupo(a: Config, b: Config): { metas: string[]; te
     if (partes.length) tecnica.push(`Programa: se cambió ${v.equipo} (${nombre(v.campoId)}): ${partes.join('; ')}`)
   }
   for (const p of a.programa) if (!b.programa.some(x => x.id === p.id)) tecnica.push(`Programa: se quitó ${p.equipo} (${nombre(p.campoId)}) · ${p.motivo}`)
+  // La topología del choke (a qué pozos sirve cada equipo) es técnica: la firma el
+  // administrador, como el esquema que la origina (U2 §8.1). Se compara elemento
+  // por elemento, en el campo que dice cada uno (sin campo, vale para todos).
+  const dondeTopo = (x: ChokeDeElemento) => (x.campoId === undefined ? 'todos los campos' : nombre(x.campoId))
+  const claveTopo = (x: ChokeDeElemento) => `${x.campoId ?? ''}|${x.elemento}`
+  const sirve = (x: ChokeDeElemento) => {
+    const ps = [...new Set(x.pozos ?? [])]
+    const cuales = x.alcance === 'dedicado' || x.alcance === 'compartido' ? ` (${ps.length <= 4 ? ps.join(', ') || 'ningún pozo' : `${cifra(ps.length)} pozos`})` : ''
+    return `${NOMBRE_ALCANCE[x.alcance].toLowerCase()}${cuales}${x.casoBorde ? ', caso de borde' : ''}`
+  }
+  // Un campo que no tenía topología firmada la estrena entera: un renglón, no uno por
+  // elemento (antes regía la que TRIM deriva del registro, que aquí no se conoce:
+  // lo que cambia frente a ella lo dice la vista previa). Lo mismo al quitarla toda.
+  const grupoTopo = (c: Config) => {
+    const m = new Map<string, Map<string, ChokeDeElemento>>()
+    for (const x of c.topologia ?? []) { const k = x.campoId ?? ''; if (!m.has(k)) m.set(k, new Map()); m.get(k)!.set(claveTopo(x), x) }
+    return m
+  }
+  const gA = grupoTopo(a), gB = grupoTopo(b)
+  for (const k of [...new Set([...gA.keys(), ...gB.keys()])]) {
+    const ea = gA.get(k) ?? new Map<string, ChokeDeElemento>(), eb = gB.get(k) ?? new Map<string, ChokeDeElemento>()
+    const donde = k ? nombre(k) : 'todos los campos'
+    if (!ea.size) { tecnica.push(`Topología de ${donde}: se firma con ${cifra(eb.size)} ${eb.size === 1 ? 'elemento' : 'elementos'}; antes regía la que TRIM deriva del registro`); continue }
+    if (!eb.size) { tecnica.push(`Topología de ${donde}: se quitó la firmada (${cifra(ea.size)} ${ea.size === 1 ? 'elemento' : 'elementos'}); rige la que TRIM deriva del registro`); continue }
+    for (const [clave, x] of eb) {
+      const v = ea.get(clave)
+      if (!v) { tecnica.push(`Topología: ${x.elemento} (${dondeTopo(x)}) ${sirve(x)}: se traba ${DONDE_CHOKE[chokeDeAlcance(x.alcance)]}`); continue }
+      if (sirve(v) !== sirve(x) || v.choke !== x.choke)
+        tecnica.push(`Topología: ${x.elemento} (${dondeTopo(x)}): ${sirve(v)} → ${sirve(x)}; se traba ${DONDE_CHOKE[chokeDeAlcance(v.alcance)]} → ${DONDE_CHOKE[chokeDeAlcance(x.alcance)]}`)
+    }
+    for (const [clave, x] of ea) if (!eb.has(clave)) tecnica.push(`Topología: se quitó ${x.elemento} (${dondeTopo(x)})`)
+  }
   return { metas, tecnica }
 }
 
@@ -366,20 +410,24 @@ export function diferencias(a: Config, b: Config): string[] {
 }
 
 /** Los campos que toca un cambio de configuración, en orden alfabético: los
- *  de metas y perfil, y los de cada tanque, respaldo o parada del programa que
- *  cambia (el de antes y el de después, si se movió de campo). El membrete es
- *  de la empresa, no de un campo. El servidor responde 403 si quien firma no
- *  tiene asignado alguno: la capacidad dice QUÉ firma; los campos, DÓNDE.
- *  Se compara con `diferencias` sobre la configuración de cada campo, así lo
- *  que cuenta como cambio es exactamente lo que el historial va a decir. */
+ *  de metas y perfil, y los de cada tanque, respaldo, parada del programa o
+ *  elemento de la topología que cambia (el de antes y el de después, si se
+ *  movió de campo). Un elemento de la topología sin campo vale para todos: lo
+ *  toca cada campo de la configuración. El membrete es de la empresa, no de un
+ *  campo. El servidor responde 403 si quien firma no tiene asignado alguno: la
+ *  capacidad dice QUÉ firma; los campos, DÓNDE. Se compara con `diferencias`
+ *  sobre la configuración de cada campo, así lo que cuenta como cambio es
+ *  exactamente lo que el historial va a decir. */
 export function camposTocados(a: Config, b: Config): string[] {
   const de = (c: Config, id: string): Config => ({
     empresa: '', campos: Object.hasOwn(c.campos, id) ? { [id]: c.campos[id]! } : {},
     tanques: c.tanques.filter(t => t.campoId === id), respaldos: c.respaldos.filter(r => r.campoId === id),
     programa: c.programa.filter(p => p.campoId === id),
+    topologia: (c.topologia ?? []).filter(x => x.campoId === undefined || x.campoId === id),
   })
   const ids = new Set([...Object.keys(a.campos), ...Object.keys(b.campos),
-    ...[a, b].flatMap(c => [...c.tanques, ...c.respaldos, ...c.programa].map(x => x.campoId))])
+    ...[a, b].flatMap(c => [...c.tanques, ...c.respaldos, ...c.programa].map(x => x.campoId)),
+    ...[a, b].flatMap(c => (c.topologia ?? []).flatMap(x => (x.campoId === undefined ? [] : [x.campoId])))])
   return [...ids].filter(id => diferencias(de(a, id), de(b, id)).length > 0).sort()
 }
 
@@ -400,8 +448,14 @@ const diaValido = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && new Date(`${d}
  *  misma hora. El programa, como las metas, es inmutable hacia atrás: una
  *  parada solo entra, sale o se mueve antes de empezar (si no, una falla de un
  *  mes cerrado se volvería «programada» y los folios ya emitidos dejarían de
- *  cuadrar). */
-export function validarConfig(c: Config, antes: Config, desdeMinimo: string, ahora: number): string[] {
+ *  cuadrar). La topología del choke se valida con `validarTopologia` (choke.ts)
+ *  y sus campos tienen que estar registrados; no es inmutable hacia atrás: una
+ *  parada guarda la regla con que se clasificó, y lo que ya confirmó una persona
+ *  no cambia solo (U2 §8.5). `esPozoDe` dice si un pozo es de un campo: sin él,
+ *  se usa el registro de los insumos si los hay (el demo, el servidor); el front
+ *  con la fuente http puede pasar el del catálogo, o dejarle esa regla al servidor. */
+export function validarConfig(c: Config, antes: Config, desdeMinimo: string, ahora: number,
+  esPozoDe?: (campoId: string, pozo: string) => boolean | undefined): string[] {
   const e: string[] = []
   const nombre = (id: string) => CAMPOS.find(x => x.id === id)?.nombre ?? id
   const conocido = (id: string) => CAMPOS.some(x => x.id === id)
@@ -470,5 +524,8 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
   for (const p of antes.programa)
     if (!c.programa.some(x => x.id === p.id) && Date.parse(p.desde) < ahora)
       e.push(`Programa ${p.equipo}: no se puede quitar una parada que ya empezó (${fechaDia(p.desde.slice(0, 10))}): pasó como programada.`)
+  const topologia = c.topologia ?? []
+  for (const x of topologia) if (x.campoId !== undefined && !conocido(x.campoId)) e.push(`Topología ${x.elemento}: «${x.campoId}» no es un campo registrado.`)
+  e.push(...validarTopologia(topologia.filter(x => x.campoId === undefined || conocido(x.campoId)), esPozoDe))
   return e
 }

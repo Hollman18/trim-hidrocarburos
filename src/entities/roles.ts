@@ -18,12 +18,19 @@ import type { Rol, Capacidad } from './tipos'
  *   · asignacion:cargar     POST /api/asignacion-oficial: la oficial de un mes la
  *                           reemplaza quien la reporta (producción), no cualquiera
  *                           que tenga el campo; el operador y el técnico ni ven Producción.
- *   · planes:decidir        POST /api/planes/:id (aceptar / marcar ejecutado) */
+ *   · planes:decidir        POST /api/planes/:id (aceptar / marcar ejecutado)
+ *   · anh:clasificar        POST /api/anh/paradas/:id/clasificacion, y POST /api/anh/paradas/confirmar con
+ *                           una sola parada. Quien declara: sup, oper, tec, prod, jefe y conf (P1 §1.15);
+ *                           cada rol dice solo los pasos que son suyos (PASOS_QUE_DECLARA, anh-clasificacion.ts)
+ *   · anh:confirmar         POST /api/anh/paradas/confirmar con varias (en lote): sup y prod, quienes
+ *                           firman el día (CONFIRMAN_EN_LOTE, anh-paradas.ts)
+ *   · anh:yacimiento        POST /api/anh/paradas/:id/yacimiento: prod y conf (PONEN_YACIMIENTO)
+ *  El gerente no tiene ninguna de las tres: no ve el detalle técnico (P1 §1.15). */
 const sin: Record<Capacidad, boolean> = {
   'causa:declarar': false, 'causa:completar': false, 'evidencia:exportar': false,
   'conector:configurar': false, 'config:firmar': false,
   'metas:firmar': false, 'usuarios:administrar': false, 'sap:aviso': false, 'asignacion:cargar': false,
-  'planes:decidir': false,
+  'planes:decidir': false, 'anh:clasificar': false, 'anh:confirmar': false, 'anh:yacimiento': false,
 }
 const con = (...ks: Capacidad[]) => ({ ...sin, ...Object.fromEntries(ks.map(k => [k, true])) })
 
@@ -48,32 +55,32 @@ export const ROLES: Rol[] = [
     foco: 'Explicas el mes en barriles: el factor de asignación en banda, la custodia completa y nada sin identificar.',
     area: 'produccion',
     campos: ['ceiba', 'palmar'],
-    puede: con('evidencia:exportar', 'asignacion:cargar') },
+    puede: con('evidencia:exportar', 'asignacion:cargar', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento') },
   { id: 'sup', nivel: 'operacion', nombre: 'Supervisor de operaciones', persona: 'Nelson Ortiz', iniciales: 'NO',
     pantallas: ['bombas', 'esp', 'turno', 'causa', 'pozos'], inicio: 'bombas', topologia: 'proceso',
     foco: 'Durante: turno, identificar y orden de cierre. Antes: bombas y lo que hay que vigilar. Si una para, cierras en el orden que menos cuesta.',
     area: 'produccion',
     campos: ['ceiba'],
-    puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir') },
+    puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar', 'anh:confirmar') },
   { id: 'oper', nivel: 'operacion', nombre: 'Operador de campo', persona: 'Jairo Peña', iniciales: 'JP',
     pantallas: ['bombas', 'esp', 'causa', 'turno'], inicio: 'bombas', topologia: 'proceso',
     foco: 'Cómo están las bombas, a qué equipo vas, y qué se dañó cuando la señal no lo dice.',
     area: 'produccion',
     campos: ['ceiba'],
-    puede: con('causa:declarar', 'sap:aviso') },
+    puede: con('causa:declarar', 'sap:aviso', 'anh:clasificar') },
   { id: 'jefe', nivel: 'ingenieria', nombre: 'Jefe de mantenimiento', persona: 'Camilo Rueda', iniciales: 'CR',
     pantallas: ['mantenimiento', 'diferidos', 'bombas', 'esp', 'confiabilidad', 'equipo', 'riesgo', 'causa'], inicio: 'mantenimiento',
     topologia: null,
     foco: 'Antes: intervenir a tiempo. Durante: identificar y planes simulados. Después: palancas y partes — para que bajen los barriles diferidos.',
     area: 'mantenimiento',
     campos: 'todos',
-    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir') },
+    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar') },
   { id: 'conf', nivel: 'ingenieria', nombre: 'Ingeniero de confiabilidad', persona: 'Edwin Maestre', iniciales: 'EM',
     pantallas: ['bombas', 'esp', 'confiabilidad', 'diferidos', 'riesgo', 'equipo', 'causa', 'planta'], inicio: 'bombas', topologia: 'proceso',
     foco: 'Antes: vigía, aciertos y riesgo. Después: MTBF y costo por falla. La reparación activa, no la espera del repuesto.',
     area: 'mantenimiento',
     campos: ['ceiba', 'morichal', 'guacamayo'],
-    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir') },
+    puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar', 'anh:yacimiento') },
   { id: 'plan', nivel: 'ingenieria', nombre: 'Planeadora de mantenimiento', persona: 'Luz Caro', iniciales: 'LC',
     pantallas: ['equipo', 'confiabilidad'], inicio: 'equipo', topologia: 'proceso',
     foco: 'El horizonte es lo que deja pedir el repuesto sin pagar urgencia.',
@@ -85,7 +92,7 @@ export const ROLES: Rol[] = [
     foco: 'Abres el equipo y dices qué encontraste cuando la señal no lo dice. De ahí aprende el vigía.',
     area: 'mantenimiento',
     campos: ['ceiba'],
-    puede: con('causa:declarar') },
+    puede: con('causa:declarar', 'anh:clasificar') },
   { id: 'cont', nivel: 'decision', nombre: 'Abastecimiento y contratos', persona: 'Paula Gómez', iniciales: 'PG',
     pantallas: ['evidencia'], inicio: 'evidencia', topologia: null,
     foco: 'La línea de tiempo viene del PLC: deja de ser acta y pasa a ser evidencia.',

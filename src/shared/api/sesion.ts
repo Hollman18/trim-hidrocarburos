@@ -12,6 +12,8 @@ import type { FilaCargada, CargaAsignacion } from '@/entities/asignacion'
 import type { Analisis } from '@/entities/catalogo'
 import type { PlantaCampo, CambioPlanta } from '@/entities/planta'
 import type { DecisionPlan } from '@/entities/escenarios'
+import type { BorradorClasificacion } from '@/entities/anh-clasificacion'
+import type { ConfirmacionLote } from '@/entities/anh-paradas'
 import { FUENTE } from './fuente'
 import { catalogoDelCampo } from './catalogo'
 
@@ -68,6 +70,16 @@ export interface Sesion {
   /** Decisiones sobre planes del ciclo (`POST /api/planes/:id`). El servidor
    *  las aplica al responder `GET /api/vistas/ciclo`. En el demo viven aquí. */
   planes: Record<string, DecisionPlan>
+  /** Lo que dijeron las personas en la clasificación ANH de las paradas
+   *  (`POST /api/anh/paradas/:id/clasificacion`, `…/yacimiento` y
+   *  `/api/anh/paradas/confirmar`): solo los pasos con procedencia de persona, por
+   *  id de la fila (`ParadaAnh.id`) o del evento (`EventoPozo.id`, que vale para
+   *  todos sus tramos). El servidor lo aplica al responder `GET
+   *  /api/vistas/anh/paradas`; en el demo vive aquí. Con la fuente http esta copia
+   *  solo guarda lo que el servidor respondió: su versión hace que se pida de nuevo. */
+  clasificacionesAnh: Record<string, BorradorClasificacion>
+  /** Las confirmaciones en lote, de la más vieja a la más nueva (qué se vio y qué se confirmó de una vez). */
+  lotesAnh: ConfirmacionLote[]
 }
 
 let instalada: Sesion | undefined
@@ -96,6 +108,8 @@ const tienda = perezoso((): UseBoundStore<StoreApi<Sesion>> => create<Sesion>(()
     plantas: Object.fromEntries(CAMPOS.flatMap(c => { const p = catalogoDelCampo(c.id).planta; return p ? [[c.id, p]] : [] })),
     cambiosPlanta: [],
     planes: {},
+    clasificacionesAnh: {},
+    lotesAnh: [],
   }
 }))
 

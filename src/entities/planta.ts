@@ -131,8 +131,11 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
     chokes: { pozos: 12500, planta: 11800, evacuacion: 14000, mercado: 15000 },
     // Agua: tres bombas iguales en paralelo (P-201A, B y C), 90.000 bbl/d de placa; el
     // cabezal de disposición las limita a 89.250 cada una (3 × 89.250).
-    caudales: { crudo: 10450, crudoCap: 12000, agua: 224200, aguaCap: 267750, gas: 3850, gasCap: 4200 },
-    nota: 'El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el cuello de botella del campo.',
+    // Tren de crudo: 13.000 bbl/d (DATO DE DEMO; hasta el 21-oct decía 12.000). El
+    // fiscal del punto oficial llegó a 12.930 bbl/d el 3-dic-2025: una capacidad
+    // declarada no puede ser menor que lo que ya pasó por el tramo (CHOKE-CONSTRUCCION, C1).
+    caudales: { crudo: 10450, crudoCap: 13000, agua: 224200, aguaCap: 267750, gas: 3850, gasCap: 4200 },
+    nota: 'El agua (95 % de lo que sale de los pozos) la sacan tres bombas en paralelo, P-201A, B y C, de 90.000 bbl/d de placa; el cabezal de disposición las limita a unos 89.250 cada una. Si para una, las otras dos no alcanzan: el tanque se llena en un par de horas y hay que cerrar parte de los pozos. Es el tramo más frágil del campo: no es lo que lo limita, pero con una sola bomba fuera pasa a ser el más angosto.',
   },
 
   morichal: {
@@ -210,10 +213,15 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'recobro y disposición' },
     ],
     servicios: SERVICIOS,
-    chokes: { pozos: 7200, planta: 7400, evacuacion: 6800, mercado: 9000 },
+    // Evacuación: 7.500 bbl/d (DATO DE DEMO; hasta el 21-oct decía 6.800). El fiscal del
+    // punto oficial llegó a 7.440 bbl/d el 5-ene-2026 y pasó los 6.800 en 187 días: lo que
+    // ya salió del campo no puede ser más de lo que deja salir el oleoducto.
+    chokes: { pozos: 7200, planta: 7400, evacuacion: 7500, mercado: 9000 },
     // Agua: P-201A de disposición (60.000 bbl/d) y P-201B de recobro (50.000, a ~1.800 psi);
     // si P-201B para, P-201C de reserva (50.000) manda su agua a un pozo de disposición alterno.
-    caudales: { crudo: 6200, crudoCap: 7400, agua: 90300, aguaCap: 110000, gas: 2100, gasCap: 2600 },
+    // Tren de crudo: 7.500 bbl/d (DATO DE DEMO; hasta el 21-oct decía 7.400): los mismos 7.440
+    // del 5-ene-2026 lo pasaron dos días.
+    caudales: { crudo: 6200, crudoCap: 7500, agua: 90300, aguaCap: 110000, gas: 2100, gasCap: 2600 },
     nota: 'Sin compresión: el gas va a consumo propio y el excedente a tea. La restricción está aguas abajo del LACT, en la nominación del oleoducto.',
   },
 

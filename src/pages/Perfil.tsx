@@ -31,6 +31,9 @@ const PERMISO_CORTO: Record<Capacidad, string> = {
   'sap:aviso': 'Enviar avisos a SAP',
   'asignacion:cargar': 'Cargar la asignación oficial',
   'planes:decidir': 'Aceptar planes de acción',
+  'anh:clasificar': 'Clasificar paradas en el árbol de causas',
+  'anh:confirmar': 'Confirmar las paradas del día',
+  'anh:yacimiento': 'Decir que fue el yacimiento',
 }
 
 const Fila = ({ etiqueta, children, pie, info }: {

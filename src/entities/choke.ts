@@ -40,6 +40,7 @@ import {
 import { caudalesAhora, type Riesgo } from './diferido'
 import { EQUIPOS, equipoEnCampo } from './equipos'
 import { campoPorId } from './campos'
+import { hayInsumos } from './insumos'
 import { AHORA, fechaCorta } from './reloj'
 
 /* ───────────────────────── los cuatro tramos y sus palabras ───────────────────────── */
@@ -186,10 +187,18 @@ export const alcancePorPozos = (pozos: readonly string[]): 'dedicado' | 'compart
 /** Un elemento con su choke derivado del alcance. */
 export const conChoke = (e: Omit<ChokeDeElemento, 'choke'>): ChokeDeElemento => ({ ...e, choke: chokeDeAlcance(e.alcance) })
 
+/** ¿El pozo es de ese campo? Con los insumos del motor (el demo, el servidor).
+ *  Sin ellos (el front con la fuente http) no se sabe: undefined, y esa regla
+ *  la decide el servidor, que la vuelve a correr (sus 422 mandan). */
+const pozoDelRegistro = (campoId: string, pozo: string): boolean | undefined => (hayInsumos() ? !!pozoDe(campoId, pozo) : undefined)
+
 /** Lo que no deja firmar una topología. Las mismas reglas que tendrá el
  *  servidor (422): el choke guardado tiene que ser el que sale del alcance, un
- *  dedicado sirve a un solo pozo y un compartido a más de uno. */
-export function validarTopologia(t: readonly ChokeDeElemento[]): string[] {
+ *  dedicado sirve a un solo pozo y un compartido a más de uno. `esPozoDe` dice
+ *  si un pozo es del campo (por defecto, el registro de los insumos; quien no
+ *  los tiene puede pasar el del catálogo). Es regla de los dos lados
+ *  (`validarConfig`): no puede leer los insumos sin preguntar si están. */
+export function validarTopologia(t: readonly ChokeDeElemento[], esPozoDe: (campoId: string, pozo: string) => boolean | undefined = pozoDelRegistro): string[] {
   const e: string[] = []
   const vistos = new Set<string>()
   for (const x of t) {
@@ -203,7 +212,7 @@ export function validarTopologia(t: readonly ChokeDeElemento[]): string[] {
     const n = new Set(x.pozos ?? []).size
     if (x.alcance === 'dedicado' && n !== 1) e.push(`${id}${donde}: es dedicado, así que le sirve a un solo pozo (tiene ${n}).`)
     if (x.alcance === 'compartido' && n === 1) e.push(`${id}${donde}: le sirve a un solo pozo, así que es dedicado y no compartido.`)
-    if (x.campoId) for (const p of x.pozos ?? []) if (!pozoDe(x.campoId, p)) e.push(`${id}${donde}: el pozo ${p} no es de ese campo.`)
+    if (x.campoId) for (const p of x.pozos ?? []) if (esPozoDe(x.campoId, p) === false) e.push(`${id}${donde}: el pozo ${p} no es de ese campo.`)
   }
   return e
 }

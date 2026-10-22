@@ -1,4 +1,4 @@
-# Validación del modelo de datos · 2026-10-09 14:06:59 -05
+# Validación del modelo de datos · 2026-10-21 19:09:41 -05
 initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
 
 ## 1. Cluster temporal
@@ -15,13 +15,13 @@ server started
                            15
 (1 row)
 
-89 tablas (sin contar 45 particiones de lectura), 9 vistas, 22 funciones, 75 triggers, 177 índices, 532 restricciones (89 PK, 144 FK, 27 únicas, 269 check)
+92 tablas (sin contar 45 particiones de lectura), 10 vistas, 26 funciones, 85 triggers, 183 índices, 573 restricciones (92 PK, 153 FK, 28 únicas, 296 check)
 
 ## 3. ejemplos.sql (filas reales del demo)
 libros 60 · tramos por día 28 · mensajes 337 · identidades 132 · repuestos 13
-ejemplos.sql: 9992 filas en 72 tablas; series sin tag registrado: 0
+ejemplos.sql: 10009 filas en 72 tablas; series sin tag registrado: 0
 ANALYZE
-filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 55 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 9 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1277 · evento_pozo 1211 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 337 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · orden_sap 62 · parada_bomba 36 · parada_programada 9 · parte 16 · parte_modo 42 · parte_variable 39 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 34 · plantilla_whatsapp 10 · pozo 87 · prediccion 17 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 41 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 23 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 28 · tramo_meta 5 · usuario 8 · usuario_campo 8 · version_config 1
+filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 55 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 13 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1277 · evento_pozo 1211 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 337 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · orden_sap 62 · parada_bomba 36 · parada_programada 9 · parte 16 · parte_modo 42 · parte_variable 39 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 34 · plantilla_whatsapp 10 · pozo 87 · prediccion 17 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 41 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 36 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 28 · tramo_meta 5 · usuario 8 · usuario_campo 8 · version_config 1
 lectura (por partición): lectura_2026_09 1380 · lectura_2026_10 276
 
 ## 4. Las restricciones muerden (pruebas.sql)
@@ -115,7 +115,27 @@ NOTICE:  MUERDE  cambiar una alarma firmada en sitio  [23001] la tabla alarma_ta
 NOTICE:  MUERDE  corregir un mes precalculado en sitio  [23001] el precálculo de libro_mes no se actualiza en sitio: se recalcula el mes (borrar e insertar) y se anota en recalculo_mes
 NOTICE:  MUERDE  libro publicable con motivos  [23514] new row for relation "libro_mes" violates check constraint "libro_mes_check"
 NOTICE:  PASA    recalcular un mes: borrar e insertar (y anotarlo)
-78 rechazos esperados y 12 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
+NOTICE:  MUERDE  topología con un tramo que no sale del alcance (compartido en el pozo)  [23514] new row for relation "topologia" violates check constraint "topologia_check"
+NOTICE:  MUERDE  topología: un dedicado que sirve a dos pozos  [23514] new row for relation "topologia" violates check constraint "topologia_check1"
+NOTICE:  MUERDE  topología: un pozo que no es del campo  [23514] K-101 (ceiba): el pozo MN-07 no es de ese campo
+NOTICE:  MUERDE  topología: el mismo elemento dos veces en el campo  [23505] duplicate key value violates unique constraint "topologia_version_campo_id_elemento_key"
+NOTICE:  MUERDE  topología: el mismo elemento dos veces para todos los campos (sin campo no es distinto)  [23505] duplicate key value violates unique constraint "topologia_version_campo_id_elemento_key"
+NOTICE:  PASA    una versión con topología: el JSON firmado = lo normalizado
+NOTICE:  MUERDE  una versión con topología en el JSON firmado y sin sus filas  [23514] versión 2: las tablas normalizadas no dicen lo mismo que el JSON firmado
+NOTICE:  MUERDE  clasificación: planeada con una causa no planeada (trigger diferido)  [23514] la parada EP-LC21-261001-01: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
+NOTICE:  MUERDE  clasificación: un detalle que no es de su causa  [23514] la parada EP-LC21-261001-01: el detalle NP_SUB/falla-esp no es de la causa NP_PROC
+NOTICE:  MUERDE  clasificación: «En el yacimiento» puesto por el supervisor  [23514] el rol sup no tiene anh:yacimiento (paso choke de EP-LC21-261001-01)
+NOTICE:  MUERDE  clasificación: «En el yacimiento» sin evidencia  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check11"
+NOTICE:  MUERDE  clasificación: corregido sin lo que proponía TRIM  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check3"
+NOTICE:  MUERDE  clasificación: una causa que no es del catálogo  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check9"
+NOTICE:  MUERDE  clasificación: lo que propone TRIM no se guarda (procedencia regla)  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_procedencia_check"
+NOTICE:  MUERDE  clasificación: el gerente no clasifica (sin anh:clasificar)  [23514] el rol ger no tiene anh:clasificar (paso impacto de EP-LC21-261001-01)
+NOTICE:  MUERDE  clasificación: el evento es de otro campo  [23514] el evento EP-LC21-261001-01 no es del campo morichal
+NOTICE:  MUERDE  clasificación: una fila que no es de su evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check2"
+NOTICE:  MUERDE  corregir una clasificación en sitio (se corrige con una fila nueva)  [23001] la tabla clasificacion_paso es de solo inserción: no admite UPDATE
+NOTICE:  MUERDE  lote del operador (sin anh:confirmar)  [23514] el rol oper no confirma en lote (anh:confirmar)
+NOTICE:  PASA    una clasificación coherente, confirmada en lote por el supervisor
+96 rechazos esperados y 14 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
 
 ## 5. Cuadres de los datos cargados (cuadres.sql)
 NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
@@ -131,9 +151,9 @@ NOTICE:  CUADRA  v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3
 NOTICE:  CUADRA  v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
 
 ## 6. tablas.json contra esquema.sql
-tablas.json: 89 tablas, 9 vistas, 144 relaciones, 368 filas de ejemplo
-comparadas 89 tablas y 9 vistas, 796 columnas, 144 relaciones; columnas de tabla sin comentario: 0
-filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
+tablas.json: 92 tablas, 10 vistas, 153 relaciones, 368 filas de ejemplo
+comparadas 92 tablas y 10 vistas, 848 columnas, 153 relaciones; columnas de tabla sin comentario: 0
+filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, topologia, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, confirmacion_lote, clasificacion_paso, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
 tablas.json COINCIDE 1:1 con esquema.sql
 
 ## 7. TimescaleDB

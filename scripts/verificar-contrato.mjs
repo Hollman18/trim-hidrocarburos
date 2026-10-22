@@ -69,6 +69,10 @@ try {
   const PRE = await cargar('/src/shared/api/predicciones.ts')
   const CAT = await cargar('/src/shared/api/catalogo.ts')
   const CIC = await cargar('/src/shared/api/ciclo.ts')
+  const CHK = await cargar('/src/shared/api/choke.ts')
+  const ARB = await cargar('/src/shared/api/arbol.ts')
+  // La locación de los pozos del demo (el caso de borde del choke) entra por fuente.ts, como en el navegador.
+  F.instalarLocaciones((await cargar('/src/entities/datos/topologia.ts')).locacionDemo)
   const L = await cargar('/src/entities/libro.ts')
   const { CAMPOS } = await cargar('/src/entities/campos.ts')
   const TODOS = CAMPOS.map(c => c.id)
@@ -103,6 +107,17 @@ try {
     CONFIABILIDAD: p => EQ.pedirConfiabilidad(p.campos, s.ctx),
     BOMBAS: p => EQ.pedirBombas(p.campos, p.desde, p.hasta, s.ctx),
     CICLO: p => CIC.pedirCiclo(p.campos, p.desde, p.hasta, s.ctx, s.versiones, s.planes ?? {}),
+    TUBERIA: p => CHK.pedirTuberia(p.campo, p.desde, p.hasta, s.ctx),
+    SERIE_CHOKE: p => CHK.pedirSerieChoke(p.campo, p.desde, p.hasta, s.ctx),
+    TUBERIA_AGUA: p => CHK.pedirTuberiaAgua(p.campo, s.ctx, s.versiones),
+    CRITICIDAD: p => CHK.pedirCriticidad(p.campos, s.ctx),
+    REPARTO_CHOKE: p => CHK.pedirRepartoChoke(p, s.ctx),
+    REPARTO_CHOKE_MENSUAL: p => CHK.pedirRepartoMensual(p.campos, s.ctx),
+    BASE_CHOKE: p => CHK.pedirBaseChoke(p, s.ctx),
+    TOPOLOGIA: p => CHK.pedirTopologia(p.campo, s.ctx),
+    PROPUESTAS_TOPOLOGIA: p => CHK.pedirPropuestasTopologia(p.campo, s.ctx),
+    PARADAS_ANH: p => ARB.pedirParadasAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
+    CALIDAD_ANH: p => ARB.pedirCalidadAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
     MENSAJES: p => MSJ.pedirMensajes(p.campos),
     SAP_AVISOS: p => SAP.pedirAvisosSap(p.campos, s.ctx, s.avisosEnviados),
     SAP_ORDENES: p => SAP.pedirOrdenesSap(p.campos, s.ctx),
@@ -159,8 +174,32 @@ try {
     escritas.plan = unPlan
       ? await E.decidirPlan({ rolId: 'jefe' }, { id: unPlan.id, estado: 'aceptado', motivo: 'prueba del contrato' })
       : { ok: false, error: 'el ciclo no trajo ningún plan con barriles' }
+    // El árbol de paradas (Circular 024): el supervisor corrige el paso 2 de una
+    // parada, producción confirma un grupo de la misma cadena y pone el yacimiento.
+    const cerrado0 = cal0.filter(L.mesCerrado).at(-1)
+    const mesCe = { campos: ['ceiba'], desde: new Date(cerrado0.desde), hasta: new Date(cerrado0.hasta) }
+    const filas0 = ARB.pedirParadasAnh(mesCe, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const aCorregir = filas0.find(p => p.estado === 'propuesta' && p.clasificacion.choke?.valor === 'pozo')
+    escritas.clasificacion = aCorregir
+      ? await E.clasificarParada({ rolId: 'sup' }, aCorregir.id, { pasos: { choke: 'planta' }, motivo: 'prueba del contrato', cadena: ARB.cadenaVista(aCorregir.clasificacion) })
+      : { ok: false, error: 'no hay una parada propuesta en el pozo en La Ceiba' }
+    const grupo0 = [...ARB.gruposPorCadena(ARB.pedirParadasAnh(mesCe, SES.sesion().ctx, SES.sesion().clasificacionesAnh)).values()].find(g => g.length >= 2)
+    escritas.confirmacion = grupo0
+      ? await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: grupo0.map(p => p.id), cadena: ARB.cadenaVista(grupo0[0].clasificacion) })
+      : { ok: false, error: 'no hay dos paradas con la misma cadena en La Ceiba' }
+    const aYacimiento = ARB.pedirParadasAnh(mesCe, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+      .find(p => p.causa.tipo === 'electrosumergible' && p.id !== aCorregir?.id && !grupo0?.some(g => g.id === p.id))
+    escritas.yacimiento = aYacimiento ? await E.declararYacimientoAnh({ rolId: 'prod' }, aYacimiento.id, { evidencia: 'corte-agua' }) : { ok: false, error: 'no hay una parada de electrosumergible en La Ceiba' }
+    // La topología del choke: la vista previa, la carga por CSV y la firma (el
+    // administrador). La de prueba: la derivada de La Ceiba con P-201B al servicio de un solo pozo.
+    const topoCe = CHK.pedirTopologia('ceiba', SES.sesion().ctx).elementos.map(({ nombre: _n, clase: _c, ...e }) => e)
+    const topoPrueba = topoCe.map(e => (e.elemento === 'P-201B' ? { ...e, alcance: 'dedicado', choke: 'pozo', pozos: ['LC-16'] } : e))
+    escritas.vistaPrevia = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: { ...SES.sesion().ctx.config, topologia: topoPrueba } })
+    escritas.importar = await E.importarTopologia({ rolId: 'adm' }, { campo: 'morichal', texto: 'Equipo;Pozos a los que sirve\nSE-2;todos\nMPP-301;MN-07 MN-18 MN-33\n' })
+    escritas.topologia = await E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...SES.sesion().ctx.config, topologia: topoPrueba },
+      motivo: 'topología de La Ceiba de prueba del contrato', base: SES.sesion().versiones.at(-1).version })
     const malas = Object.entries(escritas).filter(([, r]) => !r.ok)
-    comprobar(malas.length === 0, `las nueve escrituras del contrato pasan en el demo con el rol que las puede hacer (${malas.map(([k, r]) => `${k}: ${r.error ?? JSON.stringify(r.errores)}`).join('; ') || 'todas'})`)
+    comprobar(malas.length === 0, `las ${Object.keys(escritas).length} escrituras del contrato pasan en el demo con el rol que las puede hacer (${malas.map(([k, r]) => `${k}: ${r.error ?? JSON.stringify(r.errores)}`).join('; ') || 'todas'})`)
     const invitada = SES.sesion().usuarios.find(u => u.id === escritas.invitacion.id)
     comprobar(invitada?.telefono === '+573005550199' && SES.sesion().accesos.at(-1).cambios.includes('WhatsApp: +57 300 555 0199'),
       `el WhatsApp invitado como «300 555 0199» se guarda en E.164 (${invitada?.telefono}) y el historial lo escribe como se lee (+57 300 555 0199)`)
@@ -194,6 +233,12 @@ try {
       HISTORIA_EQUIPO: equipos.filter(e => !pozos.some(p => p.campo === e.campo && p.pozo === e.equipo)),
       FICHA_EQUIPO: [...equipos.map(e => ({ ...e, ...periodos[0] })), { campo: 'ceiba', equipo: 'NO-EXISTE', ...periodos[0] }],
       FILAS_EQUIPOS: porCampos(), CONFIABILIDAD: porCampos(), BOMBAS: conPeriodo(), CICLO: conPeriodo(),
+      TUBERIA: TODOS.flatMap(campo => periodos.map(r => ({ campo, desde: r.desde, hasta: r.hasta }))),
+      SERIE_CHOKE: TODOS.flatMap(campo => periodos.map(r => ({ campo, desde: r.desde, hasta: r.hasta }))),
+      TUBERIA_AGUA: TODOS.map(campo => ({ campo })), CRITICIDAD: porCampos(),
+      REPARTO_CHOKE: conPeriodo(), REPARTO_CHOKE_MENSUAL: porCampos(), BASE_CHOKE: conPeriodo(),
+      TOPOLOGIA: TODOS.map(campo => ({ campo })), PROPUESTAS_TOPOLOGIA: TODOS.map(campo => ({ campo })),
+      PARADAS_ANH: conPeriodo(), CALIDAD_ANH: conPeriodo(),
       MENSAJES: porCampos(), SAP_AVISOS: porCampos(), SAP_ORDENES: porCampos(),
       SAP_EQUIPOS: TODOS.map(campo => ({ campo })), SAP_EQUIPO: bombas,
       LISTA_CAMPOS: [{}], CATALOGO: [{}], CONFIGURACION_HISTORIAL: [{}], RESPUESTAS: [{}], USUARIOS: [{}], ACCESOS: [{}], INFORMES: [{}],
@@ -274,8 +319,13 @@ try {
       ['R_ANALISIS', C.R_ANALISIS, { analisis: s2.analisis[bomba.id] }],
       ['R_PLANTA', C.R_PLANTA, { planta: s2.plantas.ceiba, cambio: s2.cambiosPlanta.at(-1) }],
       ['R_PLAN', C.R_PLAN, { decision: Object.values(s2.planes)[0] }],
+      ['R_CLASIFICACION', C.R_CLASIFICACION, { parada: escritas.clasificacion.parada, guardadas: s2.clasificacionesAnh }],
+      ['R_CLASIFICACION (yacimiento)', C.R_CLASIFICACION, { parada: escritas.yacimiento.parada, guardadas: {} }],
+      ['R_CONFIRMACION', C.R_CONFIRMACION, { lote: escritas.confirmacion.lote, paradas: escritas.confirmacion.paradas }],
+      ['R_VISTA_PREVIA', C.R_VISTA_PREVIA, { impacto: escritas.vistaPrevia.impacto }],
+      ['R_TOPOLOGIA_CSV', C.R_TOPOLOGIA_CSV, (({ ok: _ok, ...x }) => x)(escritas.importar)],
     ].map(([n, cod, x]) => [n, vuelta(cod, x)])
-    comprobar(resp.every(([, d]) => !d), `las respuestas de las nueve escrituras vuelven iguales por JSON${resp.filter(([, d]) => d).map(([n, d]) => `; ${n}: ${d}`).join('')}`)
+    comprobar(resp.every(([, d]) => !d), `las respuestas de las ${resp.length} escrituras vuelven iguales por JSON${resp.filter(([, d]) => d).map(([n, d]) => `; ${n}: ${d}`).join('')}`)
     // El cuerpo de una firma lleva la configuración entera: tiene que ser JSON puro.
     const cuerpoFirma = { config: s2.ctx.config, motivo: 'x', base: 1 }
     comprobar(!diferencia(cuerpoFirma, JSON.parse(JSON.stringify(cuerpoFirma))), 'el cuerpo de POST /configuracion (la configuración entera) es JSON puro: vuelve igual')
@@ -283,7 +333,9 @@ try {
     console.log('\n=== 4. Rutas: una por recurso, sin choques ===')
     const rutas = [...ENDPOINTS.map(([, e]) => `GET ${e.ruta}`),
       'POST /configuracion', 'PATCH /usuarios/:id', 'POST /usuarios', 'POST /sap/avisos', 'POST /informes', 'POST /asignacion-oficial',
-      'POST /paradas/:evento/respuesta', 'POST /analisis/:evento', 'POST /planta/cambios', 'POST /planes/:id']
+      'POST /paradas/:evento/respuesta', 'POST /analisis/:evento', 'POST /planta/cambios', 'POST /planes/:id',
+      'POST /anh/paradas/:id/clasificacion', 'POST /anh/paradas/:id/yacimiento', 'POST /anh/paradas/confirmar',
+      'POST /configuracion/vista-previa', 'POST /topologia/importar']
     const repetidas = rutas.filter((r, i) => rutas.indexOf(r) !== i)
     // Dos rutas chocan si un mismo camino puede caer en las dos: mismo método,
     // mismo número de tramos y en cada tramo el mismo literal o un :parámetro.
@@ -437,6 +489,130 @@ try {
     const sinArchivo = archivos.filter(a => !existsSync(`${RAIZ}${a.s}`))
     comprobar(nombrados.length > 5 && faltan.length === 0 && sinArchivo.length === 0 && 'test' in scripts && 'e2e' in scripts,
       `los ${nombrados.length} «npm run …» y ${archivos.length} «node …» de README, CONTRATO y .env.example existen${[...faltan, ...sinArchivo].map(n => `; ${n.d}: ${n.s}`).join('')}`)
+
+    console.log('\n=== 10. El choke y el árbol de paradas: lo que el contrato rechaza y lo que calcula ===')
+    const CONF = await cargar('/src/entities/configuracion.ts'), CHO = await cargar('/src/entities/choke.ts'), ANC = await cargar('/src/entities/anh-catalogo.ts')
+    const { AHORA } = await cargar('/src/entities/reloj.ts')
+    const mesA = { campos: ['ceiba'], desde: new Date(cerrado.desde), hasta: new Date(cerrado.hasta) }
+    // a. El códec de la clasificación rechaza lo incoherente al entrar, diciendo dónde y qué (P1 §2.2 y §5.4).
+    const sa = SES.sesion()
+    const jAnh = JSON.parse(JSON.stringify(K.aRespuesta(C.PARADAS_ANH.codec, ARB.pedirParadasAnh(mesA, sa.ctx, sa.clasificacionesAnh))))
+    const iNp = jAnh.datos.findIndex(p => p.clasificacion.planeacion?.valor === 'no-planeada' && p.clasificacion.n1 && p.clasificacion.n2)
+    const revivirAnh = j => { try { K.deRespuesta(C.PARADAS_ANH.codec, j); return '' } catch (e) { return e instanceof K.ErrorDeContrato ? e.message : `otro error: ${e.message}` } }
+    const cruzada = structuredClone(jAnh); cruzada.datos[iNp].clasificacion.planeacion.valor = 'planeada'
+    const otroN2 = ANC.N2_CIRCULAR.find(n => n.n1 !== jAnh.datos[iNp].clasificacion.n1.valor && n.n1.startsWith('NP_')).codigo
+    const ajenoN2 = structuredClone(jAnh); ajenoN2.datos[iNp].clasificacion.n2.valor = otroN2
+    const sinQuien = structuredClone(jAnh); Object.assign(sinQuien.datos[iNp].clasificacion.responsable, { procedencia: 'confirmado' })
+    const mCruzada = revivirAnh(cruzada), mAjeno = revivirAnh(ajenoN2), mQuien = revivirAnh(sinQuien)
+    comprobar(iNp >= 0 && revivirAnh(jAnh) === '' && new RegExp(`^\\[${iNp}\\]\\.clasificacion: la clasificación no es coherente: .*no va con`).test(mCruzada)
+      && /no es una causa de/.test(mAjeno) && /tiene que decir quién lo hizo y a qué hora/.test(mQuien),
+      `una parada que llega planeada con una causa no planeada, con un detalle de otra causa o confirmada sin quién no entra (${mCruzada.slice(0, 110)}…)`)
+    // La forma ligera: lo que repite la clasificación de la fila no viaja; lo que difiere, sí, y vuelve igual.
+    const ligeras = jAnh.datos.filter(p => !('borrador' in p.propuesta) && !('clasificacion' in p.propuesta)).length
+    const conClasif = ARB.pedirParadasAnh(mesA, sa.ctx, sa.clasificacionesAnh).find(p => p.propuesta.clasificacion)
+    const distinta = { ...conClasif, propuesta: { ...conClasif.propuesta, borrador: { ...conClasif.propuesta.borrador, cauGral: { valor: 'otra causa general', procedencia: 'regla' } } } }
+    const jDistinta = JSON.parse(JSON.stringify(K.aRespuesta(C.PARADAS_ANH.codec, [distinta])))
+    comprobar(ligeras === jAnh.datos.length && 'borrador' in jDistinta.datos[0].propuesta && !('clasificacion' in jDistinta.datos[0].propuesta)
+      && !diferencia(K.deRespuesta(C.PARADAS_ANH.codec, jDistinta), [distinta]),
+      `propuesta.borrador y propuesta.clasificacion no viajan cuando son la clasificación de la fila (${ligeras} de ${jAnh.datos.length} filas) y se reponen al entrar; uno distinto viaja y vuelve igual`)
+    // b. Las escrituras rechazan en palabras, en el orden del contrato.
+    const libre = ARB.pedirParadasAnh(mesA, sa.ctx, sa.clasificacionesAnh).find(p => p.estado === 'propuesta' && p.clasificacion.planeacion?.valor === 'no-planeada'
+      && !Object.keys(sa.clasificacionesAnh).some(k => k === p.id || k === p.eventoId))
+    const rech = {
+      incoherente: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { planeacion: 'planeada', n1: 'NP_SUB' } }),
+      operadorTramo: await E.clasificarParada({ rolId: 'oper' }, libre.id, { pasos: { choke: 'planta' } }),
+      yacimientoPorPaso: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { choke: 'reservorio' } }),
+      yacimientoSupervisor: await E.declararYacimientoAnh({ rolId: 'sup' }, libre.id, { evidencia: 'prueba' }),
+      yacimientoSinEvidencia: await E.declararYacimientoAnh({ rolId: 'conf' }, libre.id, { evidencia: '   ' }),
+      otraCadena: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { impacto: 'diferida' }, cadena: 'lo que vio otra persona' }),
+      gerente: await E.clasificarParada({ rolId: 'ger' }, libre.id, { pasos: { impacto: 'diferida' } }),
+      noExiste: await E.clasificarParada({ rolId: 'sup' }, 'EP-NO-EXISTE@2026-09-01#1', { pasos: { impacto: 'diferida' } }),
+      n2Inventado: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { n2: 'NP_SUB/no-existe' } }),
+      sinPasos: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: {} }),
+      confirmaTramo: await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id], pasos: ['choke'] }),
+      loteOperador: await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id, aYacimientoId()] }),
+    }
+    function aYacimientoId() { return escritas.yacimiento.parada.id }
+    const esperado = {
+      incoherente: /es una causa no planeada: cambie primero «¿Planeada\?»/, operadorTramo: /^Su rol no dice «Dónde se trabó»: lo dice supervisión, producción/,
+      yacimientoPorPaso: /«En el yacimiento» lo pone producción o confiabilidad/, yacimientoSupervisor: /lo ponen producción o confiabilidad/,
+      yacimientoSinEvidencia: /diga qué lo muestra/, otraCadena: /alguien cambió esta parada/, gerente: /Su rol no clasifica paradas/,
+      noExiste: /no está entre las de la ANH/, n2Inventado: /no es una causa del catálogo de la ANH/, sinPasos: /No llegó ningún paso/,
+      confirmaTramo: /^Su rol no confirma «Dónde se trabó»/, loteOperador: /lo hacen supervisión o producción/,
+    }
+    const noRechazadas = Object.entries(rech).filter(([k, r]) => r.ok || !esperado[k].test(r.error))
+    comprobar(noRechazadas.length === 0 && SES.sesion().clasificacionesAnh === sa.clasificacionesAnh,
+      `se rechazan en palabras y no guardan nada: la clasificación incoherente («${rech.incoherente.error}»), el tramo dicho por el operador, el yacimiento fuera de producción y confiabilidad o sin evidencia, una cadena que cambió (409), una confirmación de pasos ajenos al rol («${rech.confirmaTramo.error}») y un lote del operador${noRechazadas.map(([k, r]) => `; ${k}: ${r.ok ? 'pasó' : r.error}`).join('')}`)
+    // c. El toque del operador confirma solo lo suyo (¿planeada?, qué pasó): el paso 2 sigue siendo de TRIM.
+    const delOperador = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id] })
+    const fo = delOperador.paradas?.[0]
+    comprobar(delOperador.ok && fo.clasificacion.planeacion.procedencia === 'confirmado' && fo.clasificacion.impacto.procedencia === 'confirmado'
+      && fo.clasificacion.choke.procedencia === 'regla' && fo.estado === 'propuesta' && !delOperador.lote,
+      `el operador confirma «¿Planeada?» y «Qué pasó»; «Dónde se trabó» queda como propuesta de TRIM y la fila sigue ${fo?.estado} (P1 §1.3)`)
+    // d. Cambiar lo que dijo una persona pide motivo, y el motivo queda en el porqué.
+    const sinMotivo = await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { impacto: 'perdida' } })
+    const conMotivo = await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { impacto: 'perdida' }, motivo: 'Se regó crudo en la locación' })
+    const im = conMotivo.parada?.clasificacion.impacto
+    comprobar(!sinMotivo.ok && /Falta el motivo/.test(sinMotivo.error) && conMotivo.ok && im.valor === 'perdida' && im.procedencia === 'corregido' && im.porque === 'Se regó crudo en la locación' && im.porId === 'sup',
+      `corregir lo que ya dijo una persona pide motivo («${sinMotivo.error}»); con él queda corregido, con quién y por qué`)
+    // e. Una corrección para toda la cascada: las filas de la misma raíz cambian juntas (Unicidad, C24 p.5).
+    const historia = { campos: ['ceiba'], desde: new Date(cal[0].desde), hasta: AHORA }
+    const deCascada = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).find(p => p.raiz !== p.eventoId && p.causa.tipo === 'aire')
+    const enCascada = await E.clasificarParada({ rolId: 'sup' }, deCascada.id, { pasos: { responsable: 'op-mantenimiento' }, aplicarALaCascada: true })
+    const hermanas = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).filter(p => p.raiz === deCascada.raiz)
+    comprobar(enCascada.ok && hermanas.length > 5 && hermanas.every(p => p.clasificacion.responsable?.procedencia !== 'regla' && p.clasificacion.responsable?.porId === 'sup')
+      && new Set(hermanas.map(p => p.eventoId)).size === hermanas.filter(p => p.tramo.n === 1).length,
+      `una corrección con «aplicarALaCascada» vale para las ${hermanas.length} filas de la raíz ${deCascada.raiz} (${new Set(hermanas.map(p => p.pozo)).size} pozos)`)
+    // f. La calidad de la clasificación cuadra por paso, por regla y por equipo.
+    const cal10 = ARB.pedirCalidadAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const choke10 = cal10.porPaso.find(x => x.paso === 'choke')
+    comprobar(cal10.porPaso.every(x => x.propuestas + x.declaradas + x.enFalta === x.paradas && x.paradas === cal10.paradas)
+      && choke10.corregidas >= 1 && choke10.corregidas === cal10.porRegla.filter(r => r.paso === 'choke').reduce((a, r) => a + r.corregidas, 0)
+      && choke10.corregidas === cal10.chokePorEquipo.reduce((a, e) => a + e.corregidas, 0) && cal10.porPaso.find(x => x.paso === 'responsable').avaladas >= hermanas.length,
+      `la calidad de La Ceiba en 13 meses: ${cal10.paradas} filas; «Dónde se trabó»: ${choke10.avaladas} avaladas, ${choke10.corregidas} corregidas de ${choke10.propuestas} propuestas; ${cal10.sinTopologia.length} equipos sin topología`)
+    // g. La vista previa: P-201B al servicio de un solo pozo cambia el tramo de sus paradas, no lo que limita ni el libro.
+    const vp = escritas.vistaPrevia.impacto.campos[0]
+    comprobar(escritas.vistaPrevia.impacto.campos.length === 1 && vp.campoId === 'ceiba' && vp.limitaAntes === 'pozos' && vp.limitaDespues === 'pozos'
+      && vp.paradasQueCambian.total > 0 && vp.paradasQueCambian.porTramo.every(x => x.de === 'planta' && x.a === 'pozo')
+      && vp.criticidad.length === 1 && vp.criticidad[0].equipo === 'P-201B' && vp.criticidad[0].tramoAntes === 'planta' && vp.criticidad[0].tramoDespues === 'pozo'
+      && /no cambia/.test(vp.texto[0]) && /El libro no cambia/.test(vp.texto.at(-1)),
+      `si P-201B sirviera a un solo pozo: ${vp.texto.slice(0, 3).join(' · ')}`)
+    // h. Config.topologia se firma como la demás configuración técnica y entra en
+    //    diferenciasPorGrupo, validarConfig, camposTocados y normalizarConfig.
+    const firmaTopo = SES.sesion().versiones.at(-1), base10 = SES.sesion().ctx.config
+    const lineasTopo = firmaTopo.cambios.filter(x => x.startsWith('Topología'))
+    const otraVez = CONF.diferenciasPorGrupo(base10, { ...base10, topologia: base10.topologia.map(e => (e.elemento === 'P-201B' ? { ...e, alcance: 'compartido', choke: 'planta', pozos: ['LC-16', 'LC-07'] } : e)) })
+    comprobar(lineasTopo.length === 1 && /^Topología de La Ceiba: se firma con \d+ elementos; antes regía la que TRIM deriva del registro$/.test(lineasTopo[0])
+      && otraVez.metas.length === 0 && otraVez.tecnica.length === 1
+      && /^Topología: P-201B \(La Ceiba\): le sirve a un solo pozo \(LC-16\) → le sirve a varios pozos \(LC-16, LC-07\); se traba en el pozo → en la planta$/.test(otraVez.tecnica[0])
+      && CHO.topologiaFirmada('ceiba', SES.sesion().ctx) && CHO.elementoDe('ceiba', 'P-201B', SES.sesion().ctx)?.choke === 'pozo' && !CHO.topologiaFirmada('morichal', SES.sesion().ctx),
+      `la topología se firma como la demás configuración técnica (técnica, config:firmar) y el historial lo dice en palabras: «${lineasTopo[0]}»; después, elemento por elemento: «${otraVez.tecnica[0]}»`)
+    const mala = { ...base10, topologia: [{ elemento: 'P-201B', choke: 'pozo', alcance: 'dedicado', pozos: ['LC-16', 'LC-07'], campoId: 'ceiba' },
+      { elemento: 'X-1', choke: 'planta', alcance: 'compartido', pozos: ['A', 'B'], campoId: 'no-es-campo' }, { elemento: 'K-101', choke: 'pozo', alcance: 'compartido', pozos: ['LC-01', 'LC-99'], campoId: 'ceiba' }] }
+    const errs = CONF.validarConfig(mala, base10, '2026-10-01', AHORA.getTime())
+    const sinPozos = CONF.validarConfig(mala, base10, '2026-10-01', AHORA.getTime(), () => undefined)
+    const global = { ...base10, topologia: [...(base10.topologia ?? []), { elemento: 'SE-2', choke: 'planta', alcance: 'compartido', pozos: ['LC-01', 'LC-02'] }] }
+    const normal = CONF.normalizarConfig({ ...base10, topologia: [{ elemento: 'SE-2', choke: 'planta', alcance: 'compartido', pozos: ['LC-01', 'LC-02'], campoId: null, casoBorde: null, nombre: 'Subestación 13,8 kV', clase: 'servicio' }] })
+    comprobar(errs.some(x => /P-201B \(ceiba\): es dedicado, así que le sirve a un solo pozo \(tiene 2\)/.test(x)) && errs.some(x => /«no-es-campo» no es un campo registrado/.test(x))
+      && errs.some(x => /K-101 \(ceiba\): el choke guardado/.test(x)) && errs.some(x => /el pozo LC-99 no es de ese campo/.test(x)) && !sinPozos.some(x => /LC-99/.test(x))
+      && CONF.camposTocados(base10, global).length === Object.keys(base10.campos).length && CONF.camposTocados(base10, mala).join() === 'ceiba,no-es-campo'
+      && !('topologia' in CONF.normalizarConfig({ ...base10, topologia: [] })) && Object.keys(normal.topologia[0]).sort().join() === 'alcance,choke,elemento,pozos',
+      `una topología con un dedicado de dos pozos, un campo sin registrar, un tramo que no sale del alcance o un pozo ajeno no se firma (${errs.length} reglas); un elemento sin campo toca todos los campos; vacía, con null o con lo que trae la vista (nombre, clase) se normaliza a la forma firmada`)
+    // i. La carga por CSV: lo que bloquea, por fila; el caso de borde avisa sin bloquear.
+    const csv = await E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: 'equipo,pozos\nSE-2,todos\nNO-EXISTE,LC-01\nP-201B,"LC-16, LC-07"\np-201b,LC-01\nK-101,LC-99\nV-101,\n' })
+    const bloquean = csv.hallazgos?.filter(h => h.bloquea).map(h => h.fila).join()
+    const mpp = escritas.importar.hallazgos.find(h => h.equipo === 'MPP-301')
+    comprobar(csv.ok && bloquean === '3,5,6,7' && csv.topologia.map(e => `${e.elemento}:${e.alcance}:${e.pozos.length}`).join() === `SE-2:compartido:${MED.pedirPozosDelCampo('ceiba').length},P-201B:compartido:2`
+      && csv.filas === 6 && escritas.importar.topologia.find(e => e.elemento === 'MPP-301')?.casoBorde === 'misma-locacion' && mpp && !mpp.bloquea
+      && !(await E.importarTopologia({ rolId: 'sup' }, { campo: 'ceiba', texto: 'SE-2;todos' })).ok,
+      `el CSV dice por fila lo que bloquea (filas ${bloquean}: equipo que no existe, repetido, pozo ajeno, sin pozos) y el caso de borde de MPP-301 avisa sin bloquear («${mpp?.texto.slice(0, 70)}…»); solo el administrador la carga`)
+    // j. Las rutas nuevas están en CONTRATO.md.
+    const nuevas = ['TUBERIA', 'SERIE_CHOKE', 'TUBERIA_AGUA', 'CRITICIDAD', 'REPARTO_CHOKE', 'REPARTO_CHOKE_MENSUAL', 'BASE_CHOKE', 'TOPOLOGIA', 'PROPUESTAS_TOPOLOGIA', 'PARADAS_ANH', 'CALIDAD_ANH']
+      .map(n => `\`${C[n].ruta}`)
+    const posts = ['POST /api/anh/paradas/:id/clasificacion', 'POST /api/anh/paradas/:id/yacimiento', 'POST /api/anh/paradas/confirmar', 'POST /api/configuracion/vista-previa', 'POST /api/topologia/importar']
+    const sinDoc = [...nuevas, ...posts].filter(r => !contratoMd.includes(r))
+    const capacidades = ['anh:clasificar', 'anh:confirmar', 'anh:yacimiento'].filter(k => !contratoMd.includes(`\`${k}\``))
+    comprobar(sinDoc.length === 0 && capacidades.length === 0, `las ${nuevas.length} vistas y ${posts.length} escrituras nuevas, y sus tres capacidades, están en CONTRATO.md${[...sinDoc, ...capacidades].map(r => `; falta ${r}`).join('')}`)
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -452,6 +628,7 @@ try {
     const srv = { ctx: { config: configInicial(), respuestas: {} }, versiones: [v1], usuarios: USUARIOS_INICIALES, accesos: [], avisosEnviados: [],
       informes: [], asignacionOficial: [], cargasAsignacion: [], analisis: {}, analisisAnteriores: {}, cambiosPlanta: [], campos: [...CAMPOS, RUBIALES] }
     const R = responder(srv)
+    const IMP = await cargar('/src/entities/choke-config.ts')
     const pedidos = [], cuerpos = []
     /** Los parámetros de un camino según la ruta del endpoint, o null si no es suyo. */
     const leer = (ep, camino, consulta) => {
@@ -485,6 +662,15 @@ try {
           const d = { id: decodeURIComponent(camino.slice('/planes/'.length)), estado: cuerpo.estado, por: 'Persona del servidor · jefe de mantenimiento', porId: 'jefe', fecha: '2026-10-02T14:00:00-05:00', motivo: cuerpo.motivo }
           return json(200, K.aRespuesta(C.R_PLAN, { decision: d }))
         }
+        // El árbol de paradas: el servidor busca la fila por su id y responde cómo quedó.
+        if (camino.startsWith('/anh/paradas/') && camino !== '/anh/paradas/confirmar') {
+          const fila = ARB.pedirParadaAnh(decodeURIComponent(camino.split('/')[3]), srv.ctx, {})
+          if (!fila) return json(404, { error: { codigo: 'no-encontrado', mensaje: 'Esa parada no está entre las de la ANH.' } })
+          return json(200, K.aRespuesta(C.R_CLASIFICACION, { parada: fila, guardadas: { [fila.id]: {} } }))
+        }
+        if (camino === '/anh/paradas/confirmar') return json(200, K.aRespuesta(C.R_CONFIRMACION, { paradas: cuerpo.ids.map(id => ARB.pedirParadaAnh(id, srv.ctx, {})) }))
+        if (camino === '/configuracion/vista-previa') return json(200, K.aRespuesta(C.R_VISTA_PREVIA, { impacto: IMP.impactoConfig(srv.ctx, cuerpo.config, ['ceiba']) }))
+        if (camino === '/topologia/importar') return json(200, K.aRespuesta(C.R_TOPOLOGIA_CSV, IMP.leerTopologia(cuerpo.texto, cuerpo.campo)))
         return json(500, { error: { codigo: 'interno', mensaje: 'el servidor de prueba no conoce esa escritura' } })
       }
       for (const [nombre, ep] of ENDPOINTS) {
@@ -589,6 +775,37 @@ try {
     const conCanal = cuerpos.filter(x => 'canal' in x.cuerpo || 'por' in x.cuerpo || 'porId' in x.cuerpo)
     comprobar(conCanal.length === 0 && cuerpos.at(-1)?.camino === '/paradas/EV-PRUEBA-HTTP-2/respuesta' && pedidos.length === nPedidos + 1 && !wa.ok && wa.error === E.WHATSAPP_SOLO_WEBHOOK,
       `con la fuente http ningún POST lleva canal ni por (${cuerpos.length} cuerpos revisados), y el teléfono simulado no manda nada: lo dice (${wa.ok ? 'mandó' : wa.error.slice(0, 50)}…)`)
+
+    console.log('\n=== H5. El choke y el árbol de paradas por el servidor ===')
+    const qa = { campos: ['ceiba'], desde: q.desde, hasta: q.hasta }, qt = { campo: 'ceiba', desde: q.desde, hasta: q.hasta }
+    const nH = pedidos.length
+    const noCalcular = () => { throw new Error('con la fuente http no se calcula en el navegador') }
+    const tubH = await consulta.traer(C.TUBERIA, qt, 'h5', noCalcular)
+    const anhH = await consulta.traer(C.PARADAS_ANH, qa, 'h5', noCalcular)
+    const critH = await consulta.traer(C.CRITICIDAD, { campos: ['ceiba', 'morichal'] }, 'h5', noCalcular)
+    comprobar(pedidos.length === nH + 3 && pedidos.slice(-3).every(x => x.startsWith('GET /api/vistas/')) && !diferencia(tubH, R.TUBERIA(qt))
+      && !diferencia(anhH, R.PARADAS_ANH(qa)) && !diferencia(critH, R.CRITICIDAD({ campos: ['ceiba', 'morichal'] })) && anhH.some(p => p.clasificacion.n1),
+      `la tubería, las paradas ANH y «si falla hoy» llegan por GET y son lo mismo que calcula el motor (${pedidos.slice(-3).map(x => x.split('?')[0].slice(4)).join(', ')})`)
+    const filaH = anhH.find(p => p.estado === 'propuesta')
+    const antesH = SES.sesion().clasificacionesAnh, nC = cuerpos.length
+    const rc = await E.clasificarParada({ rolId: 'sup' }, filaH.id, { pasos: { impacto: 'diferida' }, por: 'alguien', porId: 'x', hora: '2026-10-02T14:00:00-05:00' })
+    const rl = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [filaH.id] })
+    const ry = await E.declararYacimientoAnh({ rolId: 'prod' }, filaH.id, { evidencia: 'prueba' })
+    const rv = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: s.ctx.config })
+    const ri = await E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: 'SE-2;todos' })
+    const caminosH = cuerpos.slice(nC).map(x => x.camino)
+    rechazo = { estado: 422, error: { codigo: 'clasificacion-incoherente', mensaje: '«No planeada - Mecánica subsuelo» es una causa no planeada: cambie primero «¿Planeada?».' } }
+    const rr = await E.clasificarParada({ rolId: 'sup' }, filaH.id, { pasos: { planeacion: 'planeada', n1: 'NP_SUB' } })
+    rechazo = { estado: 403, error: { codigo: 'sin-capacidad', mensaje: 'Su rol no confirma «Dónde se trabó»: lo confirma supervisión, producción, el jefe de mantenimiento o confiabilidad.' } }
+    const rp = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [filaH.id], pasos: ['choke'] })
+    rechazo = null
+    const idH = encodeURIComponent(filaH.id)
+    comprobar(rc.ok && rl.ok && ry.ok && rv.ok && ri.ok && rc.parada.id === filaH.id && rv.impacto.campos[0]?.campoId === 'ceiba' && ri.topologia.length === 1
+      && SES.sesion().clasificacionesAnh !== antesH && Object.hasOwn(SES.sesion().clasificacionesAnh, filaH.id)
+      && caminosH.join() === [`/anh/paradas/${idH}/clasificacion`, '/anh/paradas/confirmar', `/anh/paradas/${idH}/yacimiento`, '/configuracion/vista-previa', '/topologia/importar'].join()
+      && cuerpos.slice(nC).every(x => !['por', 'porId', 'hora', 'procedencia', 'rol'].some(k => k in x.cuerpo))
+      && !rr.ok && /cambie primero/.test(rr.error) && !rp.ok && /no confirma «Dónde se trabó»/.test(rp.error),
+      'las escrituras del árbol y de la topología van a su ruta sin por, hora ni procedencia (las pone el servidor), lo aceptado se copia a la sesión, y el 422 y el 403 llegan con sus palabras')
 
     console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones http bien.`)
   }

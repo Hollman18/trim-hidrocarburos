@@ -2383,6 +2383,20 @@ console.log('\n=== 22. Modelo choke: los cuatro tramos, la topología y «¿Dón
     `propuestas de topología con su evidencia: «${de(prC, 'alimentador', 'SE-2')?.porque}» · «${de(prC, 'cascadas', 'K-101')?.porque}» · conflicto: «${de(prC, 'registro', 'V-101')?.conflicto}»`)
 }
 
+/** Las capacidades que el demo declaraba hasta el 21-oct (La Ceiba 12.000 en el tren de crudo;
+ *  Guacamayo 6.800 afuera y 7.400 en crudo) estaban por debajo de lo que el campo ya produjo
+ *  (12.930 y 7.440 bbl/d): con ellas el real pasaba la capacidad 315 días-campo, y se corrigieron
+ *  en planta.ts (C1, paso 1). Con las corregidas limitan los pozos todos los días, así que lo que
+ *  solo se ve cuando limita otro tramo (lo estructural, el real sobre la capacidad, el aviso de
+ *  cambio) se prueba aquí con las de antes, como un escenario, y se devuelven al terminar. El
+ *  motor lee CAMPO_PLANTA en cada llamada (no lo guarda por contexto). */
+const conCapacidadesDeAntes = f => {
+  const ce = PT.CAMPO_PLANTA.ceiba, gu = PT.CAMPO_PLANTA.guacamayo
+  const hoy = [ce.caudales.crudoCap, gu.chokes.evacuacion, gu.caudales.crudoCap]
+  ce.caudales.crudoCap = 12000; gu.chokes.evacuacion = 6800; gu.caudales.crudoCap = 7400
+  try { return f() } finally { [ce.caudales.crudoCap, gu.chokes.evacuacion, gu.caudales.crudoCap] = hoy }
+}
+
 console.log('\n=== 23. Qué limita hoy: potenciales, gas sin medir, «casi iguales» y campo de gas (CHOKE-COMPLETO §3–§4, U2 §0 y §11.3) ===')
 {
   const CH = await v.ssrLoadModule('/src/entities/choke.ts')
@@ -2395,13 +2409,15 @@ console.log('\n=== 23. Qué limita hoy: potenciales, gas sin medir, «casi igual
       && CH.ORDEN_CHOKE_CAMPO.every(k => p.holgura[k] === null || p.holgura[k] >= 0)) && Object.keys(pots[0].holgura).join() === 'pozos,planta,exportacion',
     `lo que limita es el menor de pozos, planta y afuera: ${crudos.map(p => `${p.campoId} ${f(p.sistema)} (${p.dominante})`).join(', ')}`)
   // Coordinador, punto 10 · El potencial de los pozos lleva factor de asignación: la misma cifra de Producción.
-  comprobar(pots.every(p => cerca(p.pozos, D.estadoCampo(p.campoId, ctx0).potencialBpd, 1e-9)) && Math.round(pc('guacamayo').pozos) === 6615 && pc('guacamayo').exportacion === 6800
+  // C1, paso 1: afuera de Guacamayo es 7.500 (antes 6.800, por debajo de los 7.440 que ya salieron).
+  comprobar(pots.every(p => cerca(p.pozos, D.estadoCampo(p.campoId, ctx0).potencialBpd, 1e-9)) && Math.round(pc('guacamayo').pozos) === 6615 && pc('guacamayo').exportacion === 7500
     && pc('guacamayo').dominante === 'pozos',
-    `el potencial de los pozos es Σ prueba × factor de asignación, el mismo de Producción; en Guacamayo los pozos (${f(pc('guacamayo').pozos)}) quedan por debajo de afuera (6.800)`)
+    `el potencial de los pozos es Σ prueba × factor de asignación, el mismo de Producción; en Guacamayo los pozos (${f(pc('guacamayo').pozos)}) quedan por debajo de afuera (7.500)`)
   // Coordinador, punto 1 · Un tren sin medir no decide lo que limita: el gas sale «sin medir».
+  // C1, paso 1: el tren de crudo de La Ceiba es 13.000 (antes 12.000, por debajo de los 12.930 que ya pasaron).
   const ce = pc('ceiba'), mo = pc('morichal'), gasCe = ce.trenes.find(x => x.tren === 'gas')
-  comprobar(ce.planta === 12000 && ce.trenQueLimita === 'crudo' && Math.round(ce.holgura.planta) === 640 && mo.planta === 18320 && mo.trenQueLimita === 'agua' && Math.round(mo.holgura.planta) === 716
-    && gasCe && !gasCe.medido && gasCe.enCrudo === null && gasCe.capacidad === 4200 && gasCe.unidad === 'KPC/d de gas' && /le sobran 640/.test(ce.texto)
+  comprobar(ce.planta === 13000 && ce.trenQueLimita === 'crudo' && Math.round(ce.holgura.planta) === 1640 && mo.planta === 18320 && mo.trenQueLimita === 'agua' && Math.round(mo.holgura.planta) === 716
+    && gasCe && !gasCe.medido && gasCe.enCrudo === null && gasCe.capacidad === 4200 && gasCe.unidad === 'KPC/d de gas' && /le sobran 1\.640/.test(ce.texto)
     && crudos.every(p => p.trenes.filter(x => !x.medido).every(x => x.enCrudo === null) && p.planta === Math.min(...p.trenes.filter(x => x.medido && x.enCrudo !== null).map(x => x.enCrudo))),
     `el gas sin medir queda fuera del mínimo: La Ceiba planta ${f(ce.planta)} (tren de crudo), le sobran ${f(ce.holgura.planta)}; Morichal ${f(mo.planta)} (agua), le sobran ${f(mo.holgura.planta)}`)
   comprobar(crudos.every(p => p.trenes.find(x => x.tren === 'crudo').capacidad === PT.CAMPO_PLANTA[p.campoId].caudales.crudoCap
@@ -2414,9 +2430,12 @@ console.log('\n=== 23. Qué limita hoy: potenciales, gas sin medir, «casi igual
     && !noEmp.empate && noEmp.dominante === 'planta' && noEmp.explicacion === undefined && crudos.every(p => !p.empate),
     `empate al barril: se marca, se toma el primero de la tubería y se explica («${emp.explicacion}»); en el demo, ningún campo empatado hoy`)
   const gu = pc('guacamayo')
+  // C1, paso 1: con afuera en 7.500, Guacamayo ya no está «casi igual» (13,4 %); con los 6.800 de antes sí lo estaba (2,8 %).
+  const guAntes = conCapacidadesDeAntes(() => CH.potencialesDelCampo('guacamayo', ahoraC, ctx0))
   comprobar(CH.PARAMETROS_CHOKE.umbralCasiIguales === 0.03 && CH.PARAMETROS_CHOKE.diasParaCambio === 3 && CH.dominanteDe({ pozos: 6615, planta: 7400, exportacion: 6800 }).casiIguales?.join() === 'pozos,exportacion'
-    && CH.dominanteDe({ pozos: 11360, planta: 12000, exportacion: 14000 }).casiIguales === null && gu.casiIguales?.join() === 'pozos,exportacion' && gu.umbral === 0.03 && ce.casiIguales === null,
-    `«casi iguales» con un umbral fijo y versionado (${CH.PARAMETROS_CHOKE.version}: 3 %, ${CH.PARAMETROS_CHOKE.diasParaCambio} días): Guacamayo, pozos y afuera a ${((gu.exportacion - gu.pozos) / gu.pozos * 100).toFixed(1)} % («${gu.texto}»)`)
+    && CH.dominanteDe({ pozos: 11360, planta: 12000, exportacion: 14000 }).casiIguales === null && gu.casiIguales === null && gu.umbral === 0.03 && ce.casiIguales === null
+    && guAntes.casiIguales?.join() === 'pozos,exportacion' && /casi iguales/.test(guAntes.texto),
+    `«casi iguales» con un umbral fijo y versionado (${CH.PARAMETROS_CHOKE.version}: 3 %, ${CH.PARAMETROS_CHOKE.diasParaCambio} días): Guacamayo, pozos y afuera a ${((gu.exportacion - gu.pozos) / gu.pozos * 100).toFixed(1)} % («${gu.texto}»); con los 6.800 que declaraba antes, a ${((guAntes.exportacion - guAntes.pozos) / guAntes.pozos * 100).toFixed(1)} % («${guAntes.texto}»)`)
   // Coordinador, punto 5 · La Zarza es un campo de gas: sin tubería de crudo ni holgura.
   const za = pc('zarza')
   comprobar(za.campoDeGas && za.dominante === null && za.planta === null && za.sistema === null && Object.values(za.holgura).every(h => h === null) && /campo de gas/.test(za.texto)
@@ -2431,9 +2450,12 @@ console.log('\n=== 23. Qué limita hoy: potenciales, gas sin medir, «casi igual
   const abierta = paradas.find(e => !e.fin)
   comprobar(casos.length >= 5 && bajo.length === 0 && abierta && casos.some(x => x.e === abierta),
     `el potencial de la planta (y el de los pozos) no baja durante la parada de P-201B: igual antes y durante ${casos.length} paradas, también la abierta del 2-oct (${f(ce.planta)} bbl/d)`)
+  // C1, paso 1: con el tren de crudo en 13.000, en marzo también limitaban los pozos; con los 12.000 de antes limitaba la planta.
+  const marzo = Date.parse('2026-03-15T12:00:00-05:00')
+  const marzoHoy = CH.potencialesDelCampo('ceiba', marzo, ctx0), marzoAntes = conCapacidadesDeAntes(() => CH.potencialesDelCampo('ceiba', marzo, ctx0))
   comprobar(crudos.every(p => p.textoCorto.startsWith('Qué limita hoy: ')) && ce.textoCorto === 'Qué limita hoy: los pozos (11.360 bbl/d)'
-    && /abrir más pozos no da nada/.test(CH.potencialesDelCampo('ceiba', Date.parse('2026-03-15T12:00:00-05:00'), ctx0).texto),
-    `lo que dice en palabras: «${ce.textoCorto}» · «${ce.texto}»; en marzo limitaba la planta: «${CH.potencialesDelCampo('ceiba', Date.parse('2026-03-15T12:00:00-05:00'), ctx0).texto}»`)
+    && marzoHoy.dominante === 'pozos' && marzoAntes.dominante === 'planta' && /abrir más pozos no da nada/.test(marzoAntes.texto),
+    `lo que dice en palabras: «${ce.textoCorto}» · «${ce.texto}»; en marzo limitaban los pozos («${marzoHoy.texto}»), y con los 12.000 de antes, la planta: «${marzoAntes.texto}»`)
 }
 
 console.log('\n=== 24. Lo que se perdió, por tramo y por escalón, con el total del libro (CHOKE-COMPLETO §6–§8) ===')
@@ -2474,10 +2496,18 @@ console.log('\n=== 24. Lo que se perdió, por tramo y por escalón, con el total
   comprobar(b12.porEscalon.capacidad > 0 && b12.porChoke['sin-asignar'] === b12.porChokeEscalon['sin-asignar']['sin-clasificar'] && b12.porEscalon.desarrollo === 0 && b12.porChoke.reservorio === 0
     && b12.porEscalon['disponibilidad-no-planeada'] > b12.porEscalon['disponibilidad-planeada'],
     `la escalera del año: ${CH.ESCALONES.map(e => `${CH.NOMBRE_ESCALON[e].split(':')[0].toLowerCase()} ${f(b12.porEscalon[e])}`).join(', ')} bbl; el yacimiento nunca sale de una señal; lo sin identificar va sin tramo y sin escalón`)
+  // C1, paso 1: con las capacidades corregidas ningún día pasa una capacidad declarada, y como
+  // limitan los pozos todos los días no hay brecha estructural en el demo.
+  comprobar(b12.superado.length === 0 && b12.estructural === 0 && b12.textoEstructural === undefined && cerca(b12.potencialSistema, b12.potencial, 1e-12)
+    && b12.porCampo.filter(x => x.dominante !== null).every(x => x.dominante === 'pozos'),
+    `con las capacidades del demo (corregidas el 21-oct) ningún día el real pasa una capacidad declarada y limitan los pozos en los 13 meses: 0 bbl estructurales (${b12.porCampo.map(x => `${x.campoId} ${x.dominante ?? 'sin tubería'}`).join(', ')})`)
   // La brecha estructural se separa y se dice; un día con el real sobre la capacidad declarada no lleva estructural.
-  comprobar(cerca(b12.potencialSistema, b12.potencial - b12.estructural, 1e-12) && cerca(b12.brechaSistema, b12.brecha - b12.estructural, 1e-12) && b12.estructural > 0
-    && b12.porCampo.every(x => x.estructural >= 0 && x.estructuralPorChoke.pozos === 0 && cerca(x.potencialSistema, x.potencial - x.estructural, 1e-12)) && /estructural|no deja pasar/.test(b12.textoEstructural ?? ''),
-    `si lo que limita no son los pozos, la brecha estructural se separa y se dice: ${f(b12.estructural)} bbl en 13 meses (${b12.porCampo.filter(x => x.estructural > 0).map(x => `${x.campoId} ${f(x.estructural)}`).join(', ')}); ${b12.superado.length} días-campo con el real sobre la capacidad declarada`)
+  // Se prueba con las capacidades de antes, que dejaban limitar a la planta (La Ceiba) y a afuera (Guacamayo).
+  const b12a = conCapacidadesDeAntes(() => CH.brechaPorChoke(TODOS, new Date(L.calendario()[0].desde), R.AHORA, ctx0))
+  comprobar(cerca(b12a.potencialSistema, b12a.potencial - b12a.estructural, 1e-12) && cerca(b12a.brechaSistema, b12a.brecha - b12a.estructural, 1e-12) && b12a.estructural > 0
+    && b12a.porCampo.every(x => x.estructural >= 0 && x.estructuralPorChoke.pozos === 0 && cerca(x.potencialSistema, x.potencial - x.estructural, 1e-12)) && /estructural|no deja pasar/.test(b12a.textoEstructural ?? '')
+    && b12a.superado.length === 315 && cerca(b12a.potencial - b12a.real, b12.potencial - b12.real, 1e-12),
+    `si lo que limita no son los pozos, la brecha estructural se separa y se dice (con las capacidades de antes): ${f(b12a.estructural)} bbl en 13 meses (${b12a.porCampo.filter(x => x.estructural > 0).map(x => `${x.campoId} ${f(x.estructural)}`).join(', ')}); ${b12a.superado.length} días-campo con el real sobre la capacidad declarada, que es lo que se corrigió; la brecha del libro es la misma`)
   // §8 · PE = real ÷ potencial del sistema; PE no planeada = disponibilidad no planeada ÷ potencial del sistema.
   const bs = CH.brechaPorChoke(TODOS, sep.desde, sep.hasta, ctx0), ef = CH.eficienciaProduccion(TODOS, sep.desde, sep.hasta, ctx0)
   comprobar(cerca(bs.pe, bs.real / bs.potencialSistema * 100, 1e-12) && cerca(bs.peNoPlaneada, bs.porEscalon['disponibilidad-no-planeada'] / bs.potencialSistema * 100, 1e-12)
@@ -2504,7 +2534,7 @@ console.log('\n=== 25. La tubería del campo, mes a mes y antes → con TRIM (U2
   comprobar(tu.limita === 'pozos' && cerca(tu.perdiendoAhora.reduce((a, x) => a + x.bpd, 0), perd.reduce((a, r) => a + r.bblDia, 0), 1e-9)
     && cerca(pozosT.potencialBpd - tu.pasaHoyBpd, tu.perdiendoAhora.reduce((a, x) => a + x.bpd, 0), 1e-9) && cerca(tu.pasaHoyBpd, D.caudalesAhora('ceiba').crudo, 1e-12)
     && perd.every(r => CH.tramoDeRiesgo(r, ctx0) === (r.equipo === 'P-201B' ? 'planta' : null)) && enRiesgo.every(r => CH.tramoDeRiesgo(r, ctx0) === (r.tipo === 'electrosumergible' ? 'pozo' : 'planta'))
-    && plantaT.disponibleHoy?.valor === 178500 && plantaT.potencialBpd === 12000,
+    && plantaT.disponibleHoy?.valor === 178500 && plantaT.potencialBpd === 13000,
     `lo que limita − lo que pasa hoy = perdiéndose ahora: ${f(pozosT.potencialBpd)} − ${f(tu.pasaHoyBpd)} = ${f(pozosT.potencialBpd - tu.pasaHoyBpd)} bbl/d (P-201B en la planta; LC-21 sin identificar); el tramo de cada riesgo; «${plantaT.disponibleHoy?.texto}»`)
   const tuS = CH.tuberiaCampo('ceiba', sep.desde, sep.hasta, ctx0), tuZ = CH.tuberiaCampo('zarza', oct.desde, oct.hasta, ctx0)
   comprobar(tuS.fraseGerente === 'La Ceiba: 87 % en los pozos (LC-11, LC-04)' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
@@ -2534,19 +2564,24 @@ console.log('\n=== 26. Qué limitó cada día y el aviso «Cambió lo que limita
     && s.dias.every((d, i) => cerca(Object.values(d.porChoke).reduce((a, x) => a + x, 0), dias[i].diferido, 1e-9))
     && cerca(s.dias.reduce((a, d) => a + d.estructural, 0), b.estructural, 1e-9) && cerca(s.dias.reduce((a, d) => a + d.potencialSistema, 0), b.potencialSistema, 1e-9),
     `serie diaria: cada día, lo perdido por tramo suma el diferido de ese día del libro; los ${s.dias.length} días suman lo del período por tramo y por escalón`)
+  // C1, paso 1: con las capacidades corregidas limitan los pozos todos los días: no hay vueltas ni avisos en el demo.
+  comprobar(s.cambios.length === 0 && TODOS.every(c => s.vueltas[c] === 0) && s.dias.every(d => Object.values(d.dominante).every(k => k === 'pozos') && Object.keys(d.superado).length === 0),
+    `con las capacidades del demo (corregidas el 21-oct) limitan los pozos los ${s.dias.length} días en todos los campos: ninguna vuelta del dominante y ningún aviso «Cambió lo que limita»`)
   // Coordinador, punto 2 · El aviso respeta el umbral y la persistencia: sin ellos, La Ceiba cambiaría 7 veces en 13 meses.
-  const persiste = s.cambios.every(c => {
-    const i = s.dias.findIndex(d => d.dia.getTime() === c.dia.getTime())
-    const siguientes = s.dias.slice(i).filter(d => d.dominante[c.campoId]).slice(0, CH.PARAMETROS_CHOKE.diasParaCambio)
+  // Se prueba con las capacidades de antes, que dejaban limitar a la planta de La Ceiba y a afuera en Guacamayo.
+  const { sa, ba, sc } = conCapacidadesDeAntes(() => ({ sa: CH.serieChoke(TODOS, d0, R.AHORA, ctx0), ba: CH.brechaPorChoke(TODOS, d0, R.AHORA, ctx0), sc: CH.serieChoke(['ceiba'], d0, R.AHORA, ctx0) }))
+  const persiste = sa.cambios.every(c => {
+    const i = sa.dias.findIndex(d => d.dia.getTime() === c.dia.getTime())
+    const siguientes = sa.dias.slice(i).filter(d => d.dominante[c.campoId]).slice(0, CH.PARAMETROS_CHOKE.diasParaCambio)
     return siguientes.length === CH.PARAMETROS_CHOKE.diasParaCambio && siguientes.every(d => d.dominante[c.campoId] === c.a && !d.casiIguales[c.campoId]) && c.de !== c.a
   })
-  const ceiba = s.cambios.filter(c => c.campoId === 'ceiba')
-  comprobar(s.vueltas.ceiba === 7 && s.vueltas.guacamayo === 5 && ceiba.length === 1 && ceiba[0].a === 'pozos' && ceiba[0].de === 'planta' && ceiba[0].dia.toISOString().startsWith('2026-08')
-    && Math.round(ceiba[0].valorBpd) === 11265 && persiste && TODOS.every(c => s.cambios.filter(x => x.campoId === c).length <= s.vueltas[c]) && s.cambios.every(c => /revise «Si falla hoy»/.test(c.texto)),
-    `«Cambió lo que limita» solo con más del umbral y ${CH.PARAMETROS_CHOKE.diasParaCambio} días seguidos: La Ceiba ${s.vueltas.ceiba} vueltas → ${ceiba.length} aviso («${ceiba[0]?.texto}»); en todo el portafolio ${s.cambios.length} avisos (${TODOS.map(c => `${c} ${s.vueltas[c]}→${s.cambios.filter(x => x.campoId === c).length}`).join(', ')})`)
-  const sc = CH.serieChoke(['ceiba'], d0, R.AHORA, ctx0), sup = sc.dias.filter(d => d.superado.ceiba)
-  comprobar(sup.every(d => d.estructural === 0 && d.potencialSistema === d.potencial) && sup.length === b.superado.filter(x => x.campoId === 'ceiba').length,
-    `un día en que el real pasó la capacidad declarada no lleva brecha estructural y se avisa (La Ceiba: ${sup.length} días, el tren de crudo de 12.000 bbl/d)`)
+  const ceiba = sa.cambios.filter(c => c.campoId === 'ceiba')
+  comprobar(sa.vueltas.ceiba === 7 && sa.vueltas.guacamayo === 5 && ceiba.length === 1 && ceiba[0].a === 'pozos' && ceiba[0].de === 'planta' && ceiba[0].dia.toISOString().startsWith('2026-08')
+    && Math.round(ceiba[0].valorBpd) === 11265 && persiste && TODOS.every(c => sa.cambios.filter(x => x.campoId === c).length <= sa.vueltas[c]) && sa.cambios.every(c => /revise «Si falla hoy»/.test(c.texto)),
+    `«Cambió lo que limita» solo con más del umbral y ${CH.PARAMETROS_CHOKE.diasParaCambio} días seguidos (con las capacidades de antes): La Ceiba ${sa.vueltas.ceiba} vueltas → ${ceiba.length} aviso («${ceiba[0]?.texto}»); en todo el portafolio ${sa.cambios.length} avisos (${TODOS.map(c => `${c} ${sa.vueltas[c]}→${sa.cambios.filter(x => x.campoId === c).length}`).join(', ')})`)
+  const sup = sc.dias.filter(d => d.superado.ceiba)
+  comprobar(sup.length > 0 && sup.every(d => d.estructural === 0 && d.potencialSistema === d.potencial) && sup.length === ba.superado.filter(x => x.campoId === 'ceiba').length,
+    `un día en que el real pasó la capacidad declarada no lleva brecha estructural y se avisa (con el tren de crudo de 12.000 de antes, La Ceiba: ${sup.length} días; por eso se corrigió a 13.000)`)
 }
 
 console.log('\n=== 27. La tubería del agua (CHOKE-COMPLETO §9, U2 §5) ===')

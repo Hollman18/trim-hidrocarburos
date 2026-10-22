@@ -43,5 +43,9 @@ export async function arrancarDelServidor(): Promise<void> {
     plantas: Object.fromEntries(Object.entries(catalogo.campos).flatMap(([c, x]) => (x.planta ? [[c, x.planta]] : []))),
     cambiosPlanta,
     planes: {},
+    // La clasificación ANH guardada la aplica el servidor en GET /api/vistas/anh/paradas:
+    // aquí empieza vacía y solo copia lo que respondan las escrituras.
+    clasificacionesAnh: {},
+    lotesAnh: [],
   })
 }

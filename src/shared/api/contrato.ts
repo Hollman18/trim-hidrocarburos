@@ -33,6 +33,15 @@ import type { Predicciones } from './predicciones'
 import type { CampoAhora } from './medicion'
 import type { DatosDeCatalogo, CatalogoDeCampo } from './catalogo'
 import type { CicloValor, PlanAccion, TramoCiclo, DecisionPlan } from '@/entities/escenarios'
+import type { TuberiaCampo, BrechaChoke, BrechaCampoChoke, MesPorTramo, LineaBasePorTramo, DiaChoke, CambioDominante } from '@/entities/choke'
+import type { TuberiaAgua, TramoTuberiaAgua, ColchonAgua } from '@/entities/choke-agua'
+import type { FilaCriticidad } from '@/entities/criticidad'
+import type { ParadaAnh, ConfirmacionLote } from '@/entities/anh-paradas'
+import { clasificar, problemasDeClasificacion, type ClasificacionAnh, type BorradorClasificacion, type PropuestaAnh } from '@/entities/anh-clasificacion'
+import { PASOS, PASO_CAMPO, PASO_CIRCULAR, type PasoAnh } from '@/entities/anh-catalogo'
+import type { CalidadClasificacion } from '@/entities/anh-calidad'
+import type { ImpactoConfig, TopologiaLeida } from '@/entities/choke-config'
+import type { SerieChoke, VistaCriticidad, TopologiaVigente, PropuestaVista } from './choke'
 
 /** EL CONTRATO DEL FRONT CON EL BACKEND, endpoint por endpoint.
  *
@@ -69,7 +78,8 @@ import type { CicloValor, PlanAccion, TramoCiclo, DecisionPlan } from '@/entitie
  *    del libro: los consume el servidor.
  *  - Lo que entra a mano: `/configuracion`, `/usuarios`, `/paradas/…`,
  *    `/sap/…`, `/informes`, `/asignacion-oficial`, `/analisis`, `/planta/cambios`,
- *    `/planes`.
+ *    `/planes`, la clasificación ANH (`/anh/paradas/…`) y la topología del choke
+ *    (`/topologia/importar`, `/configuracion/vista-previa`, y su firma en `/configuracion`).
  *  Ninguna ruta tiene un tramo literal al mismo nivel que un `:parámetro`. */
 
 /* ───────────────────────────── el endpoint ───────────────────────────── */
@@ -260,6 +270,165 @@ const ciclo = obj<CicloValor>()({
 })
 export const CICLO = get<ConsultaPeriodo>()('/vistas/ciclo', ciclo)
 
+/* ─────────── el modelo choke: dónde se trabó, qué limita y si falla hoy ─────────── */
+
+interface PorCampo { campo: string }
+interface CampoPeriodo { campo: string; desde: Date; hasta: Date }
+
+/** Horas que pueden no llegar, en un campo opcional: ausente sigue ausente y
+ *  `null` es «no se llena» (Infinity en el motor), nunca «sin dato». */
+const horasOpcionales: Codec<number | undefined, number | null | undefined> = {
+  aDTO: h => (h === undefined ? undefined : h === Infinity ? null : h),
+  revivir: j => {
+    if (j === undefined) return undefined
+    if (j === null) return Infinity
+    if (typeof j !== 'number') throw new ErrorDeContrato(`se esperaba un número o null y llegó ${JSON.stringify(j)}`)
+    return j
+  },
+}
+
+const tuberia = obj<TuberiaCampo>()({ desde: fecha, hasta: fecha })
+const serieChoke = obj<SerieChoke>()({ dias: lista(obj<DiaChoke>()({ dia: fecha })), cambios: lista(obj<CambioDominante>()({ dia: fecha })) })
+const colchonAgua = obj<ColchonAgua>()({ horas: horasSinFin, rango: par(horasSinFin) })
+type TanqueDelTren = NonNullable<TramoTuberiaAgua['tanques']>[number]
+const tuberiaAgua = obj<TuberiaAgua>()({
+  tramos: lista(obj<TramoTuberiaAgua>()({ tanques: opc(lista(obj<TanqueDelTren>()({ colchon: opc(colchonAgua) }))) })),
+  sinUna: opc(obj<NonNullable<TuberiaAgua['sinUna']>>()({ desde: opc(fecha), colchonH: horasOpcionales })),
+})
+const filaCriticidad = obj<FilaCriticidad>()({ colchonH: horasOpcionales, subio: opc(obj<NonNullable<FilaCriticidad['subio']>>()({ desde: fecha })) })
+const vistaCriticidad = obj<VistaCriticidad>()({
+  ranking: lista(filaCriticidad), campos: lista(obj<VistaCriticidad['campos'][number]>()({ parados: lista(filaCriticidad) })),
+})
+const brechaChoke = obj<BrechaChoke>()({
+  desde: fecha, hasta: fecha, superado: lista(obj<BrechaChoke['superado'][number]>()({ dia: fecha })),
+  porCampo: lista(obj<BrechaCampoChoke>()({ superado: lista(obj<BrechaCampoChoke['superado'][number]>()({ dia: fecha })) })),
+})
+const mesPorTramo = obj<MesPorTramo>()({ desde: fecha, hasta: fecha })
+const lineaBaseTramo = obj<LineaBasePorTramo>()({
+  base: obj<LineaBasePorTramo['base']>()({ desde: fecha, hasta: fecha }), periodo: obj<LineaBasePorTramo['periodo']>()({ desde: fecha, hasta: fecha }),
+})
+
+/** La tubería del campo en una sola lectura (U2 §11.1): lo que limita hoy, cada
+ *  tramo con su potencial y su fuente, lo que pasa ahora, lo que se pierde ahora
+ *  por tramo y lo perdido en el período por tramo, con el MISMO total del libro.
+ *  Reemplaza a `/vistas/campos/:campo/choke` de P1 §5.2, que traía solo lo que limita. */
+export const TUBERIA = get<CampoPeriodo>()('/vistas/campos/:campo/tuberia', tuberia)
+/** Qué limitó cada día del período, la brecha de cada día por tramo y por
+ *  escalón, y el aviso «Cambió lo que limita» con su umbral y su persistencia (U2 §7.1-7.2). */
+export const SERIE_CHOKE = get<CampoPeriodo>()('/vistas/campos/:campo/choke/serie', serieChoke)
+/** La tubería del agua del campo ahora: agua de los pozos → tratamiento →
+ *  tanques → bombas de reinyección → inyectores, con el colchón (U2 §5). */
+export const TUBERIA_AGUA = get<PorCampo>()('/vistas/campos/:campo/agua', tuberiaAgua)
+/** «Si falla hoy»: todos los equipos de los campos de mayor a menor, y por campo
+ *  lo que ya está parado, lo que no se puede medir y lo que cambió hoy (U2 §6). */
+export const CRITICIDAD = get<PorCampos>()('/vistas/criticidad', vistaCriticidad)
+/** La brecha del libro del período repartida por tramo y por escalón, con la
+ *  eficiencia de producción (PE y PE no planeada), por campo y en conjunto.
+ *  Suma exacto: potencial − real = Σ por tramo + sin explicar. */
+export const REPARTO_CHOKE = get<ConsultaPeriodo>()('/vistas/choke/reparto', brechaChoke)
+/** Lo perdido por tramo cada mes del calendario, con el mismo total de cada mes del libro (U2 §7.4). */
+export const REPARTO_CHOKE_MENSUAL = get<PorCampos>()('/vistas/choke/mensual', lista(mesPorTramo))
+/** «Antes → con TRIM» por tramo: la línea base del libro (tres meses publicados
+ *  antes del período) repartida por tramo (U2 §7.3). `null` sin tres meses de historia. */
+export const BASE_CHOKE = get<ConsultaPeriodo>()('/vistas/choke/base', oNada(lineaBaseTramo))
+/** La topología que rige en el campo (la firmada, o la que se deriva del
+ *  registro), con el tramo de cada elemento y sus casos de borde (U2 §8). */
+export const TOPOLOGIA = get<PorCampo>()('/vistas/topologia', tal<TopologiaVigente>())
+/** Lo que TRIM propone de la topología con lo que ya sabe, para confirmarla y no escribirla (U2 §8.3). */
+export const PROPUESTAS_TOPOLOGIA = get<PorCampo>()('/vistas/topologia/propuestas', tal<PropuestaVista[]>())
+
+/* ─────────── el árbol de paradas de la ANH (Circular 024) ─────────── */
+
+/** Lo que `problemasDeClasificacion` dice de un paso que falta: en un borrador
+ *  no es una incoherencia, es lo que todavía no se sabe. */
+const FALTA = new Set(PASOS.map(p => `Falta «${PASO_CAMPO[p]}» (${PASO_CIRCULAR[p]}).`))
+/** Lo incoherente de una clasificación o de un borrador, sin contar lo que le
+ *  falta: planeada con una causa no planeada (o al revés), un detalle que no es
+ *  de su causa, un valor que no es del catálogo, el yacimiento sin evidencia o
+ *  un dato de persona sin quién ni cuándo. Vacío = coherente. */
+export const incoherencias = (b: BorradorClasificacion): string[] => problemasDeClasificacion(b).filter(m => !FALTA.has(m))
+
+/** Un borrador de clasificación: al entrar se revisa que lo que trae sea coherente. */
+const borradorAnh: Codec<BorradorClasificacion, BorradorClasificacion> = {
+  aDTO: b => b,
+  revivir: j => {
+    if (!j || typeof j !== 'object' || Array.isArray(j)) throw new ErrorDeContrato(`se esperaba una clasificación y llegó ${JSON.stringify(j)?.slice(0, 60)}`)
+    const malas = incoherencias(j)
+    if (malas.length) throw new ErrorDeContrato(`la clasificación no es coherente: ${malas.join(' ')}`)
+    return j
+  },
+}
+/** La clasificación ANH de una parada (P1 §1.4 y §5.4). Al entrar se revisa
+ *  con las mismas reglas del tipo: lo incoherente se rechaza diciendo qué (la
+ *  ANH rechaza la transmisión entera por una planeada con causa no planeada,
+ *  C24 p.7); con los 6 pasos se arma con `clasificar`, el único constructor de
+ *  una `ClasificacionAnh`, y si falta alguno queda como borrador. */
+const clasificacionAnh: Codec<ClasificacionAnh | BorradorClasificacion, ClasificacionAnh | BorradorClasificacion> = {
+  aDTO: c => c,
+  revivir: (j, l) => {
+    const b = borradorAnh.revivir(j, l)
+    return PASOS.every(p => b[p]) ? clasificar(b) : b
+  },
+}
+/** La de `PropuestaAnh.clasificacion`: solo existe completa. */
+const clasificacionCompleta: Codec<ClasificacionAnh, ClasificacionAnh> = {
+  aDTO: c => c,
+  revivir: (j, l) => {
+    const c = clasificacionAnh.revivir(j, l)
+    const faltan = PASOS.filter(p => !c[p])
+    if (faltan.length) throw new ErrorDeContrato(`una clasificación completa no puede faltarle ${faltan.map(p => `«${PASO_CAMPO[p]}»`).join(', ')}`)
+    return c as ClasificacionAnh
+  },
+}
+const propuestaAnh = obj<PropuestaAnh>()({ borrador: borradorAnh, clasificacion: opc(clasificacionCompleta) })
+const paradaCompleta = obj<ParadaAnh>()({ clasificacion: clasificacionAnh, propuesta: propuestaAnh })
+
+/** Dos valores JSON iguales, sin mirar el orden de las claves (una clave en undefined es una que no está). */
+function mismoJson(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a) !== Array.isArray(b)) return false
+  if (Array.isArray(a)) return a.length === (b as unknown[]).length && a.every((x, i) => mismoJson(x, (b as unknown[])[i]))
+  const x = a as Record<string, unknown>, y = b as Record<string, unknown>
+  const kx = Object.keys(x).filter(k => x[k] !== undefined), ky = Object.keys(y).filter(k => y[k] !== undefined)
+  return kx.length === ky.length && kx.every(k => Object.hasOwn(y, k) && mismoJson(x[k], y[k]))
+}
+
+/** Una fila de `paradas_pozo` (P1 §1.5): un pozo × un día operacional × una
+ *  causa, con la causa de TRIM, su clasificación (propuesta o lo que ya dijeron
+ *  las personas encima) y lo que falta preguntar (`propuesta`: opciones,
+ *  preguntas, sugerencias). Las horas van en hora de Colombia con su zona
+ *  («2026-10-02T03:52:18-05:00»).
+ *  `propuesta.borrador` y `propuesta.clasificacion` son casi siempre la misma
+ *  `clasificacion` de la fila: entonces NO viajan (eran el 42 % del peso) y al
+ *  entrar se reponen desde ella; si alguna difiere, viaja entera. Así no se pierde nada. */
+const paradaAnh: Codec<ParadaAnh, unknown> = {
+  aDTO: (p, r) => {
+    const j = paradaCompleta.aDTO(p, r) as unknown as { propuesta: Record<string, unknown> }
+    const propuesta = { ...j.propuesta }
+    if (mismoJson(p.propuesta.borrador, p.clasificacion)) delete propuesta.borrador
+    if (p.propuesta.clasificacion && mismoJson(p.propuesta.clasificacion, p.clasificacion)) delete propuesta.clasificacion
+    return { ...j, propuesta }
+  },
+  revivir: (j, l) => {
+    const f = j as { clasificacion?: unknown; propuesta?: Record<string, unknown> } | null
+    if (!f || typeof f !== 'object' || !f.propuesta || typeof f.propuesta !== 'object') return paradaCompleta.revivir(j as never, l)
+    const completa = !!f.clasificacion && typeof f.clasificacion === 'object' && PASOS.every(x => (f.clasificacion as Record<string, unknown>)[x])
+    const propuesta = { ...f.propuesta,
+      ...(Object.hasOwn(f.propuesta, 'borrador') ? {} : { borrador: f.clasificacion }),
+      ...(Object.hasOwn(f.propuesta, 'clasificacion') || !completa ? {} : { clasificacion: f.clasificacion }) }
+    return paradaCompleta.revivir({ ...f, propuesta } as never, l)
+  },
+}
+
+/** Las paradas ANH de los días operacionales que toca el período (llevado a
+ *  días enteros), con su clasificación propuesta o guardada: para Identificar y
+ *  el cierre del día. */
+export const PARADAS_ANH = get<ConsultaPeriodo>()('/vistas/anh/paradas', lista(paradaAnh))
+/** La calidad de la clasificación del período: % confirmado y % corregido por
+ *  paso, las reglas que más se corrigen, el paso 2 por equipo y los equipos sin
+ *  topología (P1 §2.1; U2 §4.6). */
+export const CALIDAD_ANH = get<ConsultaPeriodo>()('/vistas/anh/calidad', tal<CalidadClasificacion>())
+
 /** Lo que TRIM mandó por WhatsApp: un registro del servidor, del más reciente al más viejo. */
 export const MENSAJES = get<PorCampos>()('/mensajes', tal<Mensaje[]>())
 export const SAP_AVISOS = get<PorCampos>()('/sap/avisos', tal<AvisoSap[]>())
@@ -361,6 +530,45 @@ export const R_ANALISIS = tal<{ analisis: Analisis }>()
 export const R_PLANTA = tal<{ planta: PlantaCampo; cambio: CambioPlanta }>()
 /** `POST /planes/:id` → la decisión como quedó. */
 export const R_PLAN = tal<{ decision: DecisionPlan }>()
+
+/** `POST /anh/paradas/:id/clasificacion`: lo que una persona dice de los pasos de
+ *  una parada, en códigos internos (`pozo`, `no-planeada`, `NP_PROC`,
+ *  `NP_PROC/parada-estacion-bombeo-afecta-pozos`…). La procedencia, `por`,
+ *  `porId`, `rol` y `hora` los pone el servidor. Cada rol dice solo los pasos que
+ *  son suyos (`PASOS_QUE_DECLARA`); «En el yacimiento» va por `…/yacimiento`. */
+export interface CuerpoClasificacion {
+  pasos: Partial<Record<PasoAnh, string>>
+  /** Obligatorio (5 caracteres o más) si cambia algo que ya había dicho una persona. */
+  motivo?: string
+  /** Para todos los tramos del evento (Unicidad: un evento, una clasificación; P1 §5.3). */
+  aplicarAlEvento?: boolean
+  /** Para todos los eventos de su cascada: los que tienen la misma raíz (U2 §4.3, «Sí, a los {n}»). */
+  aplicarALaCascada?: boolean
+  /** La cadena de 6 pasos que vio quien la cambia (`cadenaVista`): si entretanto cambió, 409. */
+  cadena?: string
+}
+/** `POST /anh/paradas/confirmar`: confirmar una parada (`anh:clasificar`) o varias
+ *  de la misma cadena en lote (`anh:confirmar`). `pasos`: los que la pantalla
+ *  mostró para confirmar; uno que el rol no avala se rechaza (403), y los que no
+ *  vengan no se confirman. Sin `pasos`, todos los que el rol avala (`PASOS_QUE_CONFIRMA`). */
+export interface CuerpoConfirmacion { ids: string[]; cadena?: string; pasos?: PasoAnh[] }
+/** `POST /anh/paradas/:id/yacimiento`: «En el yacimiento», con lo que lo muestra
+ *  (`prueba`, `corte-agua`, `presion` o una nota escrita). */
+export interface CuerpoYacimiento { evidencia: string; motivo?: string; aplicarAlEvento?: boolean; cadena?: string }
+/** `POST /configuracion/vista-previa`: la configuración que se va a firmar, sin firmarla. */
+export interface CuerpoVistaPrevia { config: Config }
+/** `POST /topologia/importar`: un CSV o un pegado de Excel, «equipo; pozos a los que sirve». */
+export interface CuerpoTopologiaCsv { campo: string; texto: string }
+
+/** `POST /anh/paradas/:id/clasificacion` y `…/yacimiento` → la fila como quedó y lo
+ *  que el servidor guardó (por fila o por evento), para copiarlo a la sesión. */
+export const R_CLASIFICACION = obj<{ parada: ParadaAnh; guardadas: Record<string, BorradorClasificacion> }>()({ parada: paradaAnh, guardadas: dic(borradorAnh) })
+/** `POST /anh/paradas/confirmar` → las filas como quedaron y, si fue en lote, el lote. */
+export const R_CONFIRMACION = obj<{ lote?: ConfirmacionLote; paradas: ParadaAnh[] }>()({ paradas: lista(paradaAnh) })
+/** `POST /configuracion/vista-previa` → lo que cambiaría en cada campo tocado. */
+export const R_VISTA_PREVIA = obj<{ impacto: ImpactoConfig }>()({ impacto: obj<ImpactoConfig>()({ desde: fecha, hasta: fecha }) })
+/** `POST /topologia/importar` → la topología leída y lo que se encontró por fila. */
+export const R_TOPOLOGIA_CSV = tal<TopologiaLeida>()
 
 /* ───────────────────── las formas JSON, para leerlas ───────────────────── */
 

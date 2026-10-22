@@ -78,7 +78,7 @@ const esEsp = p => p.levantamiento === 'electrosumergible'
  *  que el cálculo lee (registro de campos, catálogo, configuración firmada y
  *  respuestas). Devuelve `[{ archivo, endpoint, respuesta }]`. */
 function exportarInsumos(M, ins) {
-  const { C, K, L, CAMPOS, CAT, CONF, ESP, ctx, AHORA } = M
+  const { C, K, L, CAMPOS, CAT, CONF, ESP, ctx, AHORA, LOC } = M
   const cal = L.calendario()
   // El rango que se pide a los endpoints con `desde` y `hasta`: toda la
   // historia hasta AHORA. Un insumo fuera de él no lo traería el endpoint,
@@ -124,6 +124,11 @@ function exportarInsumos(M, ins) {
     if (esp.length) sale.push({ archivo: `${c}/electrosumergibles.json`, endpoint: null, respuesta: json(esp.map(p => ({
       pozo: p.id, senales: ESP.senalesEsp(p).map(s => ({ variable: s.plantilla.id, tag: s.tag, unidad: s.unidad, serie: s.serie, normal: s.normal, alarma: s.alarma })),
     }))) })
+    // La locación de los pozos, para el caso de borde del choke (U2 §8.6): no está
+    // en `Pozo` ni tiene endpoint todavía (CONTRATO.md, «Pendiente»); el demo la trae
+    // aparte (datos/topologia.ts). Solo los campos que la tienen.
+    const loc = Object.fromEntries(del(ins.pozos).flatMap(p => { const l = LOC(c)(p.id); return l ? [[p.id, l]] : [] }))
+    if (Object.keys(loc).length) sale.push({ archivo: `${c}/locaciones.json`, endpoint: null, respuesta: loc })
   }
   // Un insumo que no entró a ningún archivo no lo tendría el backend.
   const contados = { pozos: 0, eventosPozos: 0, eventosServicios: 0, produccionDiaria: 0, paradasBombas: 0 }
@@ -148,8 +153,8 @@ function insumosDeArchivos(K, C) {
   const ins = { pozos: [], eventosPozos: [], eventosServicios: [], produccionDiaria: [], origenPmo: {}, paradasBombas: [], programa: [] }
   for (const { archivo } of lista) {
     const { respuesta } = leer(archivo), [campo, nombre] = archivo.split('/')
-    // Las lecturas de las electrosumergibles no son insumo del motor todavía (ver exportarInsumos).
-    if (nombre === 'electrosumergibles.json') continue
+    // Las lecturas de las electrosumergibles y la locación de los pozos no son insumo del motor todavía (ver exportarInsumos).
+    if (nombre === 'electrosumergibles.json' || nombre === 'locaciones.json') continue
     if (campo === 'arranque') {
       if (nombre === 'configuracion-historial.json') ins.programa = K.deRespuesta(C.CONFIGURACION_HISTORIAL.codec, respuesta).at(-1).config.programa
     } else if (nombre === 'pozos.json') ins.pozos.push(...respuesta)
@@ -162,6 +167,14 @@ function insumosDeArchivos(K, C) {
     else throw new Error(`referencia/insumos/${archivo}: no se sabe qué insumo es`)
   }
   return ins
+}
+
+/** La locación de los pozos leída SOLO de referencia/insumos/<campo>/locaciones.json. */
+function locacionesDeArchivos() {
+  const { insumos: lista } = JSON.parse(readFileSync(join(DIR, 'indice.json'), 'utf8'))
+  const por = Object.fromEntries(lista.filter(i => i.archivo.endsWith('/locaciones.json'))
+    .map(i => [i.archivo.split('/')[0], JSON.parse(readFileSync(join(DIR_INSUMOS, i.archivo), 'utf8')).respuesta]))
+  return campo => pozo => (Object.hasOwn(por, campo) && Object.hasOwn(por[campo], pozo) ? por[campo][pozo] : undefined)
 }
 
 /* ───── Casos, calculados con el motor ───── */
@@ -178,16 +191,19 @@ async function conMotor(trabajo, insumosDe) {
       C: await cargar('/src/shared/api/contrato.ts'), K: await cargar('/src/shared/api/cable.ts'),
       DEMO: (await cargar('/src/entities/datos/index.ts')).INSUMOS_DEMO,
     }
-    // Los insumos se instalan antes de calcular, como en el navegador (insumos.ts).
+    // Los insumos se instalan antes de calcular, como en el navegador (insumos.ts),
+    // y la locación de los pozos por la costura (fuente.ts), como la instala el demo.
     const ins = insumosDe ? insumosDe(M.K, M.C) : M.DEMO
     ;(await cargar('/src/entities/insumos.ts')).instalarInsumos(ins)
+    M.LOC = insumosDe ? locacionesDeArchivos() : (await cargar('/src/entities/datos/topologia.ts')).locacionDemo
+    ;(await cargar('/src/shared/api/fuente.ts')).instalarLocaciones(M.LOC)
     Object.assign(M, {
       ins, L: await cargar('/src/entities/libro.ts'), CAMPOS: (await cargar('/src/entities/campos.ts')).CAMPOS,
       AHORA: (await cargar('/src/entities/reloj.ts')).AHORA, CONF: await cargar('/src/entities/configuracion.ts'),
       CAT: await cargar('/src/shared/api/catalogo.ts'), DIF: await cargar('/src/shared/api/diferidos.ts'),
       EQ: await cargar('/src/shared/api/equipos.ts'), SAP: await cargar('/src/shared/api/sap.ts'),
       PRE: await cargar('/src/shared/api/predicciones.ts'), ESP: await cargar('/src/entities/esp.ts'),
-      CIC: await cargar('/src/shared/api/ciclo.ts'),
+      CIC: await cargar('/src/shared/api/ciclo.ts'), CHK: await cargar('/src/shared/api/choke.ts'), ARB: await cargar('/src/shared/api/arbol.ts'),
     })
     M.ctx = M.L.contextoInicial()
     return await trabajo(M)
@@ -195,7 +211,7 @@ async function conMotor(trabajo, insumosDe) {
 }
 
 function casosDe(M) {
-  const { C, K, L, CAMPOS, DIF, EQ, SAP, PRE, CONF, CIC, ctx, ins } = M
+  const { C, K, L, CAMPOS, DIF, EQ, SAP, PRE, CONF, CIC, CHK, ARB, ctx, ins } = M
   const todos = CAMPOS.map(c => c.id)
   const cerrados = L.calendario().filter(L.mesCerrado)
   const ultimo = cerrados.at(-1)
@@ -230,7 +246,17 @@ function casosDe(M) {
     // SAP: avisos y órdenes que salen de la historia con reglas fijas (sin avisos enviados en la sesión).
     casos.push(caso(`sap/avisos-${nombre}`, `Avisos SAP de ${nombre}`, C.SAP_AVISOS, { campos: grupo }, SAP.pedirAvisosSap(grupo, ctx, [])))
     casos.push(caso(`sap/ordenes-${nombre}`, `Órdenes SAP de ${nombre}`, C.SAP_ORDENES, { campos: grupo }, SAP.pedirOrdenesSap(grupo, ctx)))
+    // El modelo choke: lo perdido por tramo y por escalón con la eficiencia, mes a mes, contra la línea base, y «si falla hoy».
+    casos.push(caso(`choke/reparto-${nombre}-${ultimo.mes}`, `Lo perdido por tramo y por escalón en ${nombre}, ${ultimo.mes}, con la eficiencia de producción`, C.REPARTO_CHOKE, q, CHK.pedirRepartoChoke(q, ctx)))
+    casos.push(caso(`choke/mensual-${nombre}`, `Lo perdido por tramo cada mes en ${nombre}`, C.REPARTO_CHOKE_MENSUAL, { campos: grupo }, CHK.pedirRepartoMensual(grupo, ctx)))
+    casos.push(caso(`choke/base-${nombre}-${ultimo.mes}`, `Antes → con TRIM por tramo en ${nombre}, ${ultimo.mes} (línea base de tres meses publicados)`, C.BASE_CHOKE, q, CHK.pedirBaseChoke(q, ctx)))
+    casos.push(caso(`choke/criticidad-${nombre}`, `«Si falla hoy» de todos los equipos de ${nombre} a esta hora`, C.CRITICIDAD, { campos: grupo }, CHK.pedirCriticidad(grupo, ctx)))
+    // El árbol de paradas de la ANH: las filas del mes, con su clasificación propuesta, y su calidad (sin nada dicho por una persona).
+    casos.push(caso(`anh/paradas-${nombre}-${ultimo.mes}`, `Paradas ANH (paradas_pozo) de ${nombre}, ${ultimo.mes}, con la clasificación que propone TRIM`, C.PARADAS_ANH, q, ARB.pedirParadasAnh(q, ctx, {})))
+    casos.push(caso(`anh/calidad-${nombre}-${ultimo.mes}`, `Calidad de la clasificación ANH de ${nombre}, ${ultimo.mes}`, C.CALIDAD_ANH, q, ARB.pedirCalidadAnh(q, ctx, {})))
   }
+  // La locación de los pozos (el caso de borde de la topología) no tiene endpoint: los casos que la leen lo dicen.
+  const conLocacion = c => (ins.pozos.some(p => p.campoId === c && M.LOC(c)(p.id)) ? [`insumos/${c}/locaciones.json`] : undefined)
   for (const c of todos) {
     const q = { campos: [c], ...rango(ultimo) }
     // Salud por parte: la de las bombas va en /vistas/bombas y la de las electrosumergibles en las filas de /vistas/pozos.
@@ -241,6 +267,13 @@ function casosDe(M) {
       casos.push(caso(`prediccion/${c}-${p.equipo}`, `Si ${p.equipo} de ${c} se para ahora`, C.PREDICCION, { campo: c, equipo: p.equipo }, DIF.pedirPrediccion(p, ctx)))
     for (const m of cerrados)
       casos.push(caso(`asignacion/${c}-${m.mes}`, `Asignación por pozo de ${c}, ${m.mes}`, C.ASIGNACION, { campo: c, mes: m.mes }, L.asignacionPorPozo(c, m.mes, ctx)))
+    // La tubería del campo y la del agua, lo que limitó cada día, y la topología con sus propuestas.
+    const qc = { campo: c, ...rango(ultimo) }
+    casos.push(caso(`choke/tuberia-${c}-${ultimo.mes}`, `La tubería de ${c}: lo que limita a esta hora y lo perdido por tramo en ${ultimo.mes}`, C.TUBERIA, qc, CHK.pedirTuberia(c, qc.desde, qc.hasta, ctx)))
+    casos.push(caso(`choke/serie-${c}-${ultimo.mes}`, `Qué limitó cada día en ${c}, ${ultimo.mes}, y el aviso de cambio`, C.SERIE_CHOKE, qc, CHK.pedirSerieChoke(c, qc.desde, qc.hasta, ctx)))
+    casos.push(caso(`choke/topologia-${c}`, `La topología que rige en ${c} (la que se deriva del registro), con el tramo de cada elemento`, C.TOPOLOGIA, { campo: c }, CHK.pedirTopologia(c, ctx), conLocacion(c)))
+    casos.push(caso(`choke/propuestas-${c}`, `Lo que TRIM propone de la topología de ${c}`, C.PROPUESTAS_TOPOLOGIA, { campo: c }, CHK.pedirPropuestasTopologia(c, ctx), conLocacion(c)))
+    casos.push(caso(`agua-choke/${c}`, `La tubería del agua de ${c} a esta hora`, C.TUBERIA_AGUA, { campo: c }, CHK.pedirTuberiaAgua(c, ctx, [CONF.versionInicial()])))
   }
   return casos
 }
@@ -293,7 +326,7 @@ if (modo === 'generar') {
       }
       const casos = casosDe(M)
       const marcados = indice.casos.filter(c => c.requiere).map(c => `${c.id}:${c.requiere}`).join()
-      if (marcados !== casos.filter(c => c.requiere).map(c => `${c.id}:${c.requiere}`).join()) deriva.push('los casos que leen las lecturas de las electrosumergibles («requiere» del índice) cambiaron')
+      if (marcados !== casos.filter(c => c.requiere).map(c => `${c.id}:${c.requiere}`).join()) deriva.push('los casos que leen lo que todavía no tiene endpoint (las lecturas de las electrosumergibles, la locación de los pozos: «requiere» del índice) cambiaron')
       return { casos, deriva }
     }, insumosDeArchivos)
     for (const d of r.deriva) { console.log(`  ✗ ${d}: regenerar con «npm run referencia»`); aparte++ }

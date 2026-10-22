@@ -172,6 +172,12 @@ export type Capacidad =
   | 'asignacion:cargar'
   /** Aceptar o marcar ejecutado un plan de acción del ciclo ANTES / DURANTE / DESPUÉS. */
   | 'planes:decidir'
+  /** Completar o corregir los pasos de una parada para la ANH (Circular 024), los que su rol dice como suyos. */
+  | 'anh:clasificar'
+  /** Confirmar en lote lo que TRIM propuso para la ANH (quien firma el día: supervisión o producción). */
+  | 'anh:confirmar'
+  /** Poner «En el yacimiento» en el paso 2 de una parada, con su evidencia (producción y confiabilidad). */
+  | 'anh:yacimiento'
 
 export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'causa:declarar': 'Responder qué se dañó cuando la señal no lo explica',
@@ -184,6 +190,9 @@ export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'sap:aviso': 'Enviarle a SAP el aviso de mantenimiento de un equipo (la orden la crea el planeador en SAP)',
   'asignacion:cargar': 'Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM',
   'planes:decidir': 'Aceptar o marcar ejecutado un plan de acción (antes, durante o después de una parada)',
+  'anh:clasificar': 'Completar o corregir la clasificación de cada parada en el árbol de causas (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde; de ahí salen también el reporte a la ANH y la medición de las paradas no planificadas',
+  'anh:confirmar': 'Confirmar de una vez las paradas del día que tienen la misma cadena propuesta por TRIM',
+  'anh:yacimiento': 'Decir que una parada fue del yacimiento, con lo que lo muestra (la prueba del pozo, el corte de agua o la presión de fondo)',
 }
 
 /** Lo que una capacidad ya trae de otra. Con `causa:completar` también se

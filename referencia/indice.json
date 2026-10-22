@@ -75,6 +75,10 @@
    "endpoint": null
   },
   {
+   "archivo": "morichal/locaciones.json",
+   "endpoint": null
+  },
+  {
    "archivo": "guacamayo/pozos.json",
    "endpoint": "/api/campos/guacamayo/pozos"
   },
@@ -182,6 +186,36 @@
    "descripcion": "Órdenes SAP de ceiba"
   },
   {
+   "id": "choke/reparto-ceiba-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en ceiba, 2026-09, con la eficiencia de producción"
+  },
+  {
+   "id": "choke/mensual-ceiba",
+   "endpoint": "/api/vistas/choke/mensual?campos=ceiba",
+   "descripcion": "Lo perdido por tramo cada mes en ceiba"
+  },
+  {
+   "id": "choke/base-ceiba-2026-09",
+   "endpoint": "/api/vistas/choke/base?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Antes → con TRIM por tramo en ceiba, 2026-09 (línea base de tres meses publicados)"
+  },
+  {
+   "id": "choke/criticidad-ceiba",
+   "endpoint": "/api/vistas/criticidad?campos=ceiba",
+   "descripcion": "«Si falla hoy» de todos los equipos de ceiba a esta hora"
+  },
+  {
+   "id": "anh/paradas-ceiba-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH (paradas_pozo) de ceiba, 2026-09, con la clasificación que propone TRIM"
+  },
+  {
+   "id": "anh/calidad-ceiba-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Calidad de la clasificación ANH de ceiba, 2026-09"
+  },
+  {
    "id": "diferidos/morichal-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de morichal, 2026-09 (último mes cerrado)"
@@ -229,6 +263,36 @@
    "id": "sap/ordenes-morichal",
    "endpoint": "/api/sap/ordenes?campos=morichal",
    "descripcion": "Órdenes SAP de morichal"
+  },
+  {
+   "id": "choke/reparto-morichal-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en morichal, 2026-09, con la eficiencia de producción"
+  },
+  {
+   "id": "choke/mensual-morichal",
+   "endpoint": "/api/vistas/choke/mensual?campos=morichal",
+   "descripcion": "Lo perdido por tramo cada mes en morichal"
+  },
+  {
+   "id": "choke/base-morichal-2026-09",
+   "endpoint": "/api/vistas/choke/base?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Antes → con TRIM por tramo en morichal, 2026-09 (línea base de tres meses publicados)"
+  },
+  {
+   "id": "choke/criticidad-morichal",
+   "endpoint": "/api/vistas/criticidad?campos=morichal",
+   "descripcion": "«Si falla hoy» de todos los equipos de morichal a esta hora"
+  },
+  {
+   "id": "anh/paradas-morichal-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH (paradas_pozo) de morichal, 2026-09, con la clasificación que propone TRIM"
+  },
+  {
+   "id": "anh/calidad-morichal-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Calidad de la clasificación ANH de morichal, 2026-09"
   },
   {
    "id": "diferidos/guacamayo-2026-09",
@@ -280,6 +344,36 @@
    "descripcion": "Órdenes SAP de guacamayo"
   },
   {
+   "id": "choke/reparto-guacamayo-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en guacamayo, 2026-09, con la eficiencia de producción"
+  },
+  {
+   "id": "choke/mensual-guacamayo",
+   "endpoint": "/api/vistas/choke/mensual?campos=guacamayo",
+   "descripcion": "Lo perdido por tramo cada mes en guacamayo"
+  },
+  {
+   "id": "choke/base-guacamayo-2026-09",
+   "endpoint": "/api/vistas/choke/base?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Antes → con TRIM por tramo en guacamayo, 2026-09 (línea base de tres meses publicados)"
+  },
+  {
+   "id": "choke/criticidad-guacamayo",
+   "endpoint": "/api/vistas/criticidad?campos=guacamayo",
+   "descripcion": "«Si falla hoy» de todos los equipos de guacamayo a esta hora"
+  },
+  {
+   "id": "anh/paradas-guacamayo-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH (paradas_pozo) de guacamayo, 2026-09, con la clasificación que propone TRIM"
+  },
+  {
+   "id": "anh/calidad-guacamayo-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Calidad de la clasificación ANH de guacamayo, 2026-09"
+  },
+  {
    "id": "diferidos/palmar-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de palmar, 2026-09 (último mes cerrado)"
@@ -320,6 +414,36 @@
    "descripcion": "Órdenes SAP de palmar"
   },
   {
+   "id": "choke/reparto-palmar-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en palmar, 2026-09, con la eficiencia de producción"
+  },
+  {
+   "id": "choke/mensual-palmar",
+   "endpoint": "/api/vistas/choke/mensual?campos=palmar",
+   "descripcion": "Lo perdido por tramo cada mes en palmar"
+  },
+  {
+   "id": "choke/base-palmar-2026-09",
+   "endpoint": "/api/vistas/choke/base?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Antes → con TRIM por tramo en palmar, 2026-09 (línea base de tres meses publicados)"
+  },
+  {
+   "id": "choke/criticidad-palmar",
+   "endpoint": "/api/vistas/criticidad?campos=palmar",
+   "descripcion": "«Si falla hoy» de todos los equipos de palmar a esta hora"
+  },
+  {
+   "id": "anh/paradas-palmar-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH (paradas_pozo) de palmar, 2026-09, con la clasificación que propone TRIM"
+  },
+  {
+   "id": "anh/calidad-palmar-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Calidad de la clasificación ANH de palmar, 2026-09"
+  },
+  {
    "id": "diferidos/zarza-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de zarza, 2026-09 (último mes cerrado)"
@@ -358,6 +482,36 @@
    "id": "sap/ordenes-zarza",
    "endpoint": "/api/sap/ordenes?campos=zarza",
    "descripcion": "Órdenes SAP de zarza"
+  },
+  {
+   "id": "choke/reparto-zarza-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en zarza, 2026-09, con la eficiencia de producción"
+  },
+  {
+   "id": "choke/mensual-zarza",
+   "endpoint": "/api/vistas/choke/mensual?campos=zarza",
+   "descripcion": "Lo perdido por tramo cada mes en zarza"
+  },
+  {
+   "id": "choke/base-zarza-2026-09",
+   "endpoint": "/api/vistas/choke/base?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Antes → con TRIM por tramo en zarza, 2026-09 (línea base de tres meses publicados)"
+  },
+  {
+   "id": "choke/criticidad-zarza",
+   "endpoint": "/api/vistas/criticidad?campos=zarza",
+   "descripcion": "«Si falla hoy» de todos los equipos de zarza a esta hora"
+  },
+  {
+   "id": "anh/paradas-zarza-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH (paradas_pozo) de zarza, 2026-09, con la clasificación que propone TRIM"
+  },
+  {
+   "id": "anh/calidad-zarza-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Calidad de la clasificación ANH de zarza, 2026-09"
   },
   {
    "id": "diferidos/portafolio-2026-09",
@@ -413,6 +567,36 @@
    "id": "sap/ordenes-portafolio",
    "endpoint": "/api/sap/ordenes?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
    "descripcion": "Órdenes SAP de portafolio"
+  },
+  {
+   "id": "choke/reparto-portafolio-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en portafolio, 2026-09, con la eficiencia de producción"
+  },
+  {
+   "id": "choke/mensual-portafolio",
+   "endpoint": "/api/vistas/choke/mensual?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Lo perdido por tramo cada mes en portafolio"
+  },
+  {
+   "id": "choke/base-portafolio-2026-09",
+   "endpoint": "/api/vistas/choke/base?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Antes → con TRIM por tramo en portafolio, 2026-09 (línea base de tres meses publicados)"
+  },
+  {
+   "id": "choke/criticidad-portafolio",
+   "endpoint": "/api/vistas/criticidad?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "«Si falla hoy» de todos los equipos de portafolio a esta hora"
+  },
+  {
+   "id": "anh/paradas-portafolio-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH (paradas_pozo) de portafolio, 2026-09, con la clasificación que propone TRIM"
+  },
+  {
+   "id": "anh/calidad-portafolio-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Calidad de la clasificación ANH de portafolio, 2026-09"
   },
   {
    "id": "salud/bombas-ceiba-2026-09",
@@ -491,6 +675,31 @@
    "id": "asignacion/ceiba-2026-09",
    "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-09",
    "descripcion": "Asignación por pozo de ceiba, 2026-09"
+  },
+  {
+   "id": "choke/tuberia-ceiba-2026-09",
+   "endpoint": "/api/vistas/campos/ceiba/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La tubería de ceiba: lo que limita a esta hora y lo perdido por tramo en 2026-09"
+  },
+  {
+   "id": "choke/serie-ceiba-2026-09",
+   "endpoint": "/api/vistas/campos/ceiba/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Qué limitó cada día en ceiba, 2026-09, y el aviso de cambio"
+  },
+  {
+   "id": "choke/topologia-ceiba",
+   "endpoint": "/api/vistas/topologia?campo=ceiba",
+   "descripcion": "La topología que rige en ceiba (la que se deriva del registro), con el tramo de cada elemento"
+  },
+  {
+   "id": "choke/propuestas-ceiba",
+   "endpoint": "/api/vistas/topologia/propuestas?campo=ceiba",
+   "descripcion": "Lo que TRIM propone de la topología de ceiba"
+  },
+  {
+   "id": "agua-choke/ceiba",
+   "endpoint": "/api/vistas/campos/ceiba/agua",
+   "descripcion": "La tubería del agua de ceiba a esta hora"
   },
   {
    "id": "salud/bombas-morichal-2026-09",
@@ -576,6 +785,37 @@
    "descripcion": "Asignación por pozo de morichal, 2026-09"
   },
   {
+   "id": "choke/tuberia-morichal-2026-09",
+   "endpoint": "/api/vistas/campos/morichal/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La tubería de morichal: lo que limita a esta hora y lo perdido por tramo en 2026-09"
+  },
+  {
+   "id": "choke/serie-morichal-2026-09",
+   "endpoint": "/api/vistas/campos/morichal/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Qué limitó cada día en morichal, 2026-09, y el aviso de cambio"
+  },
+  {
+   "id": "choke/topologia-morichal",
+   "endpoint": "/api/vistas/topologia?campo=morichal",
+   "descripcion": "La topología que rige en morichal (la que se deriva del registro), con el tramo de cada elemento",
+   "requiere": [
+    "insumos/morichal/locaciones.json"
+   ]
+  },
+  {
+   "id": "choke/propuestas-morichal",
+   "endpoint": "/api/vistas/topologia/propuestas?campo=morichal",
+   "descripcion": "Lo que TRIM propone de la topología de morichal",
+   "requiere": [
+    "insumos/morichal/locaciones.json"
+   ]
+  },
+  {
+   "id": "agua-choke/morichal",
+   "endpoint": "/api/vistas/campos/morichal/agua",
+   "descripcion": "La tubería del agua de morichal a esta hora"
+  },
+  {
    "id": "salud/bombas-guacamayo-2026-09",
    "endpoint": "/api/vistas/bombas?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de guacamayo con la salud de cada parte, 2026-09"
@@ -654,6 +894,31 @@
    "descripcion": "Asignación por pozo de guacamayo, 2026-09"
   },
   {
+   "id": "choke/tuberia-guacamayo-2026-09",
+   "endpoint": "/api/vistas/campos/guacamayo/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La tubería de guacamayo: lo que limita a esta hora y lo perdido por tramo en 2026-09"
+  },
+  {
+   "id": "choke/serie-guacamayo-2026-09",
+   "endpoint": "/api/vistas/campos/guacamayo/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Qué limitó cada día en guacamayo, 2026-09, y el aviso de cambio"
+  },
+  {
+   "id": "choke/topologia-guacamayo",
+   "endpoint": "/api/vistas/topologia?campo=guacamayo",
+   "descripcion": "La topología que rige en guacamayo (la que se deriva del registro), con el tramo de cada elemento"
+  },
+  {
+   "id": "choke/propuestas-guacamayo",
+   "endpoint": "/api/vistas/topologia/propuestas?campo=guacamayo",
+   "descripcion": "Lo que TRIM propone de la topología de guacamayo"
+  },
+  {
+   "id": "agua-choke/guacamayo",
+   "endpoint": "/api/vistas/campos/guacamayo/agua",
+   "descripcion": "La tubería del agua de guacamayo a esta hora"
+  },
+  {
    "id": "salud/bombas-palmar-2026-09",
    "endpoint": "/api/vistas/bombas?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de palmar con la salud de cada parte, 2026-09"
@@ -724,6 +989,31 @@
    "descripcion": "Asignación por pozo de palmar, 2026-09"
   },
   {
+   "id": "choke/tuberia-palmar-2026-09",
+   "endpoint": "/api/vistas/campos/palmar/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La tubería de palmar: lo que limita a esta hora y lo perdido por tramo en 2026-09"
+  },
+  {
+   "id": "choke/serie-palmar-2026-09",
+   "endpoint": "/api/vistas/campos/palmar/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Qué limitó cada día en palmar, 2026-09, y el aviso de cambio"
+  },
+  {
+   "id": "choke/topologia-palmar",
+   "endpoint": "/api/vistas/topologia?campo=palmar",
+   "descripcion": "La topología que rige en palmar (la que se deriva del registro), con el tramo de cada elemento"
+  },
+  {
+   "id": "choke/propuestas-palmar",
+   "endpoint": "/api/vistas/topologia/propuestas?campo=palmar",
+   "descripcion": "Lo que TRIM propone de la topología de palmar"
+  },
+  {
+   "id": "agua-choke/palmar",
+   "endpoint": "/api/vistas/campos/palmar/agua",
+   "descripcion": "La tubería del agua de palmar a esta hora"
+  },
+  {
    "id": "salud/bombas-zarza-2026-09",
    "endpoint": "/api/vistas/bombas?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de zarza con la salud de cada parte, 2026-09"
@@ -792,6 +1082,31 @@
    "id": "asignacion/zarza-2026-09",
    "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-09",
    "descripcion": "Asignación por pozo de zarza, 2026-09"
+  },
+  {
+   "id": "choke/tuberia-zarza-2026-09",
+   "endpoint": "/api/vistas/campos/zarza/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La tubería de zarza: lo que limita a esta hora y lo perdido por tramo en 2026-09"
+  },
+  {
+   "id": "choke/serie-zarza-2026-09",
+   "endpoint": "/api/vistas/campos/zarza/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Qué limitó cada día en zarza, 2026-09, y el aviso de cambio"
+  },
+  {
+   "id": "choke/topologia-zarza",
+   "endpoint": "/api/vistas/topologia?campo=zarza",
+   "descripcion": "La topología que rige en zarza (la que se deriva del registro), con el tramo de cada elemento"
+  },
+  {
+   "id": "choke/propuestas-zarza",
+   "endpoint": "/api/vistas/topologia/propuestas?campo=zarza",
+   "descripcion": "Lo que TRIM propone de la topología de zarza"
+  },
+  {
+   "id": "agua-choke/zarza",
+   "endpoint": "/api/vistas/campos/zarza/agua",
+   "descripcion": "La tubería del agua de zarza a esta hora"
   }
  ]
 }

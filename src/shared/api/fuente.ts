@@ -93,6 +93,18 @@ export const cancelado = (e: unknown) => e instanceof DOMException && e.name ===
 /** El texto de un error para la persona. */
 export const mensajeDe = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
+/** La locación de los pozos de un campo (el caso de borde del choke, U2 §8.6):
+ *  `(campoId) => (pozo) => locación`. Un dato de demostración que no está en
+ *  `Pozo` (`datos/topologia.ts`): entra por aquí, como los demás datos del demo,
+ *  y el motor la recibe por parámetro (`marcarCasosBorde`, `leerTopologia`). Con
+ *  la fuente http no hace falta: el servidor manda la topología ya marcada. */
+type Locaciones = (campoId: string) => (pozo: string) => string | undefined
+let locaciones: Locaciones | undefined
+/** La instalan `prepararFuente` en el demo y los scripts que arman el motor a mano. */
+export function instalarLocaciones(l: Locaciones): void { locaciones = l }
+/** La locación de cada pozo del campo; sin locaciones instaladas, ninguna (el caso de borde no se marca). */
+export const locacionDe = (campoId: string) => (pozo: string): string | undefined => locaciones?.(campoId)(pozo)
+
 /** Deja lista la fuente antes de pintar. main.tsx la espera y solo entonces
  *  carga la aplicación. */
 export async function prepararFuente(): Promise<void> {
@@ -103,6 +115,7 @@ export async function prepararFuente(): Promise<void> {
     await arrancarDelServidor()
     return
   }
+  if (!locaciones) instalarLocaciones((await import('@/entities/datos/topologia')).locacionDemo)
   if (hayInsumos()) return
   const { INSUMOS_DEMO } = await import('@/entities/datos')
   instalarInsumos(INSUMOS_DEMO)

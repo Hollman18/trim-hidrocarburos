@@ -58,8 +58,8 @@ mandar, y el servidor las vuelve a correr y **sus 422 mandan**.
 
 | Dueño | Qué (módulos de `src/entities/` o de `src/shared/`) |
 |---|---|
-| **Servidor** | Todo lo que lee los insumos o sale de ellos: `libro`, `diferido`, `causa-senal`, `salud`, `vigia`, `esp`, `metrologia`, `sap` (lo que se lee de SAP), `aciertos`, `mensajes` (el registro y su texto), `equipo-vivo`, `flota`, `escenarios` (ciclo ANTES / DURANTE / DESPUÉS) y `informe` (`cifrasDe`, `formaCanonica`, la huella). También los datos de catálogo del campo: máquinas y perfiles de bomba, catálogo de equipos y de daños, el límite de cada tag (`limites`: banda normal y alarma), metrología, punto de medición oficial y topología de planta. |
-| **Los dos** | Las reglas de lo que entra a mano: `configuracion.validarConfig` y `camposTocados`, la meta o el perfil vigente de un campo (`perfilDe`, `metaEn`, `metaEntre`, `criterioEn`, `tanqueDe`), `usuarios.revisarAcceso` y `camposAsignados`, `reglas.ts` (`MOTIVO_MINIMO` = 5, `NOMBRE_MINIMO` = 3, `TEXTO_LIBRE_MINIMO` = 8), `planta.aplicarCambioPlanta`, `plan.leerPlan`, `asignacion.leerAsignacion` y `cotejar`. |
+| **Servidor** | Todo lo que lee los insumos o sale de ellos: `libro`, `diferido`, `causa-senal`, `salud`, `vigia`, `esp`, `metrologia`, `sap` (lo que se lee de SAP), `aciertos`, `mensajes` (el registro y su texto), `equipo-vivo`, `flota`, `escenarios` (ciclo ANTES / DURANTE / DESPUÉS), `informe` (`cifrasDe`, `formaCanonica`, la huella), el modelo choke (`choke`: el tramo de cada parada, lo que limita, la brecha por tramo y por escalón, la tubería y la serie; `choke-agua`; `criticidad`; la vista previa `choke-config.impactoConfig`) y el árbol de paradas de la ANH (`anh-paradas`, `anh-clasificacion`: las filas y su propuesta, con lo que dijeron las personas encima; `anh-calidad`). También los datos de catálogo del campo: máquinas y perfiles de bomba, catálogo de equipos y de daños, el límite de cada tag (`limites`: banda normal y alarma), metrología, punto de medición oficial y topología de planta. |
+| **Los dos** | Las reglas de lo que entra a mano: `configuracion.validarConfig` y `camposTocados`, la meta o el perfil vigente de un campo (`perfilDe`, `metaEn`, `metaEntre`, `criterioEn`, `tanqueDe`), `usuarios.revisarAcceso` y `camposAsignados`, `reglas.ts` (`MOTIVO_MINIMO` = 5, `NOMBRE_MINIMO` = 3, `TEXTO_LIBRE_MINIMO` = 8), `planta.aplicarCambioPlanta`, `plan.leerPlan`, `asignacion.leerAsignacion` y `cotejar`; la topología del choke (`choke.validarTopologia`, dentro de `validarConfig`; el tramo sale del alcance con `chokeDeAlcance` y el alcance del número de pozos con `alcancePorPozos`; la carga por CSV `choke-config.leerTopologia`) y la coherencia de la clasificación ANH (`clasificar` y `problemasDeClasificacion`: el códec la vuelve a revisar al entrar). |
 | **Front** | `reloj` (los períodos salen de `calendarioDe(ahora)`), `shared/lib/formato`, `planta.armar` (el dibujo), `cadena` (las frases de la procedencia), los nombres de los catálogos de normas, y ordenar o filtrar lo que ya llegó. |
 
 La misma división, con más detalle, está en la cabecera de `src/shared/api/diferidos.ts`.
@@ -107,7 +107,7 @@ capacidades de la persona real, toda escritura con la suplantación activa respo
 ### Las capacidades
 
 Cada capacidad es un permiso que el servidor revisa en un endpoint (`403` sin ella). Son
-diez (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`):
+trece (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`):
 
 | Capacidad | Endpoint |
 |---|---|
@@ -121,6 +121,13 @@ diez (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`
 | `sap:aviso` | `POST /api/sap/avisos` |
 | `asignacion:cargar` | `POST /api/asignacion-oficial` (producción: la reemplaza quien la reporta, no cualquiera con el campo) |
 | `planes:decidir` | `POST /api/planes/:id` (aceptar o marcar ejecutado un plan del ciclo ANTES / DURANTE / DESPUÉS; supervisor, jefe de mantenimiento, confiabilidad) |
+| `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, y `POST /api/anh/paradas/confirmar` con una sola parada (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`) |
+| `anh:confirmar` | `POST /api/anh/paradas/confirmar` con varias paradas de la misma cadena, en lote (quien firma el día: supervisor y producción) |
+| `anh:yacimiento` | `POST /api/anh/paradas/:id/yacimiento` («En el yacimiento» en el paso 2, con su evidencia: producción y confiabilidad) |
+
+El gerente no tiene ninguna de las tres de la ANH: no ve el detalle técnico. La topología del
+choke la firma `config:firmar` (es configuración técnica): su vista previa y su carga por CSV
+piden la misma capacidad.
 
 **Nivel de detalle.** Cada rol trae su nivel: `decision` (gerente), `operacion` (supervisor,
 operador, técnico) o `ingenieria` (producción, confiabilidad, mantenimiento, administración).
@@ -147,6 +154,9 @@ ajeno no devuelve datos de ese campo.
 | `POST /api/campos/:campo/tags/:tag/equipo` | `:campo` de la ruta, que tiene que ser el del tag |
 | `POST /api/usuarios`, `PATCH /api/usuarios/:id` | ver «Usuarios»: nadie otorga campos que no tiene |
 | `POST /api/planes/:id` | del plan (`cicloValor` → `campoId`; `404` si el id no existe) |
+| `POST /api/anh/paradas/:id/clasificacion`, `…/yacimiento` y `POST /api/anh/paradas/confirmar` | del evento del controlador de cada fila (el id es `${evento}@${día}#${n}`; `404` si no es una fila de la ANH). En lote, todas tienen que ser de la persona |
+| `POST /api/configuracion/vista-previa` | cada campo que el cambio toca (`camposTocados`, como la firma) |
+| `POST /api/topologia/importar` | `campo` del cuerpo (`404` si no está en el registro) |
 
 El demo aplica la misma regla en `escrituras.ts` (`camposAsignados`, `revisarEvento`) y
 `verificar-libro` la prueba en la sección 16.
@@ -221,7 +231,9 @@ Una por recurso, y **ningún tramo literal al mismo nivel que un `:parámetro`**
   datos. Ninguna pantalla del libro los pide: los consume el servidor (salvo Conectores y la
   cadena del dato, que leen el registro).
 - Lo que entra a mano: `/api/configuracion`, `/api/usuarios`, `/api/paradas/…`, `/api/sap/…`,
-  `/api/informes`, `/api/asignacion-oficial`, `/api/analisis`, `/api/planta/cambios`.
+  `/api/informes`, `/api/asignacion-oficial`, `/api/analisis`, `/api/planta/cambios`,
+  `/api/planes/…`, la clasificación ANH (`/api/anh/paradas/…`) y la topología del choke
+  (`/api/topologia/importar` y `/api/configuracion/vista-previa`; se firma con `/api/configuracion`).
 
 Parámetros: `campos=a,b`; `desde` y `hasta` en ISO con zona (el `hasta` no se incluye).
 
@@ -325,6 +337,17 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/confiabilidad?campos` | `[{ campoId, equipo, familia, h: HistorialEquipo }]` |
 | `/vistas/bombas?campos&desde&hasta` | `BombaVista[]` con `perfil` por clave, más `veredicto`, `abierta`, `senales` y `partes` (la salud llega aquí y en `sospechosa` de las opciones; ya no hay `/vistas/bombas/salud`) |
 | `/vistas/ciclo?campos&desde&hasta` | `CicloValor`: tramos `antes`, `durante` (con `bblDia`), `despues`; `retornoBbl`; `valorUsd?`; cada `PlanAccion` con `simulado: true`, `bbl`, `supuestos[]`, `estado?` (ausente = propuesto). Cifras **simuladas**: no entran al libro. Fórmulas en el capítulo 11. El servidor aplica `POST /api/planes/:id` sobre cada `id`. **Presentación (front hecho):** Resumen muestra el retorno primero y el libro después; planes plegados («Ver planes de acción»); copy largo solo en globos — capítulos 11 y 8 §8.13 |
+| `/vistas/campos/:campo/tuberia?desde&hasta` | `TuberiaCampo` (`choke.ts`; «La tubería del campo», U2 §2): `desde` y `hasta` ISO; `tramos[]` en el orden de la tubería (`reservorio`, `pozo`, `planta`, `exportacion`), cada uno `{ tramo, nombre, explica, potencialBpd, fuente, estado, holguraBpd, limita, casiIgual, trenes?, disponibleHoy?, subniveles?, perdiendoAhoraBpd, perdidoBbl, equiposTop }` (`potencialBpd` y `holguraBpd` en `null` = sin dato; `estado`: `pruebas`, `demo`, `firmado`, `sin-firmar` o `sin-dato`); `limita` (`pozos`, `planta`, `exportacion`, o `null` sin tubería de crudo), `casiIguales`, `umbral`, `empate`, `pasaHoyBpd`, `perdiendoAhora[]` `{ tramo, bpd, equipo, pozos }` (`tramo: null` = sin identificar), `perdidoPeriodo[]` por tramo con sus `equiposTop`, `sinTramoBbl` y `sinTramoEquipos` («sin identificar», que no es un tramo), `diferido`, `campoDeGas`, `textoCorto`, `frase`, `fraseGerente`. **Cuadres:** Σ `perdidoPeriodo` + `sinTramoBbl` = `diferido` = el de `/vistas/diferidos` del período; con los pozos limitando, el potencial de los pozos − `pasaHoyBpd` = Σ `perdiendoAhora`. Un tren sin medir (el gas) no entra en el mínimo de la planta. Reemplaza a `/vistas/campos/:campo/choke` de P1 §5.2 |
+| `/vistas/campos/:campo/choke/serie?desde&hasta` | `{ dias, cambios, vueltas }`: cada día (`dia` ISO) con `horas`, `real` (`null` sin fiscal), `potencial`, `potencialSistema`, `estructural`, `diferido`, `residuo`, `porChoke`, `porEscalon` y, por campo, `dominante`, `casiIguales`, `potenciales` y `superado` (el real pasó la capacidad declarada). `cambios[]` `{ campoId, dia (ISO), de, a, valorBpd, texto }`: el aviso «Cambió lo que limita», solo cuando el tramo nuevo gana por más del umbral de «casi iguales» y lo sostiene `diasParaCambio` días seguidos (`PARAMETROS_CHOKE`, `choke.parametros@1`). `vueltas` cuenta los cambios sin ese filtro. Cada día suma lo mismo que el libro de ese día |
+| `/vistas/campos/:campo/agua` | `TuberiaAgua` (`choke-agua.ts`; «La tubería del agua», U2 §5): `t` (ms), `aguaBpd`, `crudoBpd`, `crudoPorAgua`; `tramos[]` (`producida`, `tratamiento`, `tanques`, `bombas`, `inyectores`) con `potencialBpd` (`null` = sin dato, o el tanque, que es colchón y no caudal), `crudoBpd`, `holguraBpd`, `sinDato?`, `fuente`, `tanques[]` con `colchon?` `{ horas, rango, nivelPct, cuando, bomba, evento?, aguaSinSalidaBpd }` (`horas: null` = no se llena; `cuando`: `al-parar` o `si-para-ahora`) y `bombas[]` `{ id, capacidadBpd, placaBpd, papel, reserva, nota?, instrumentada, marcha, mueveBpd?, respaldoLibreBpd? }`; `tratamientoBpd` y `admisionInyectoresBpd` (`null` = sin dato), `dominante`, `limita`, `angosto?`, `sobraBpd`, `faltaBpd`, `crudoQueFrenaBpd`, `sinUna?` (con `desde` ISO y `colchonH`, `null` = no se llena), `sinDato`, `frases`, `texto`. La capacidad de cada bomba es UNA cifra (la de la predicción y el colchón); la placa va de referencia |
+| `/vistas/criticidad?campos` | `{ ranking, campos }` («Si falla hoy», `criticidad.ts`, U2 §6): `ranking` = `FilaCriticidad[]` de todos los campos pedidos, de mayor a menor bbl/d si falla hoy, sin lo ya parado: `{ campoId, equipo, nombre, familia, tramo, alcance, servidos, bpd, colchonH?, costoFalla?, costoDe?, mdtFuente?, vigilado, sinDato?, subio?, estimacion, parado, perdiendoBpd?, porque }` (`bpd: null` = sin dato; `subio.desde` ISO; `colchonH: null` = no se llena). `campos[]`, en el orden pedido: `{ campoId, parados, sinCalcular, cambioHoy? }`. En una bomba con instrumento, `costoFalla` es exactamente el de `/vistas/riesgo` |
+| `/vistas/choke/reparto?campos&desde&hasta` | `BrechaChoke` (`brechaPorChoke`, CHOKE-COMPLETO §6–§8): `desde`, `hasta` ISO, `potencial`, `real`, `brecha`, `diferido`, `porChoke` y `porEscalon` (con `sin-asignar` y `sin-clasificar`), `porChokeEscalon`, `porChokeEquipo`, `sinExplicar`, `cuadra`, `porConfirmar`, `estructural`, `estructuralPorChoke`, `potencialSistema`, `brechaSistema`, `pe`, `peNoPlaneada`, `dominante`, `horasPorDominante`, `superado[]` (`dia` ISO), `porCampo[]` con lo mismo por campo, `texto`, `textoEstructural?`. **Identidad exacta:** potencial − real (del libro) = Σ por tramo + sin explicar = Σ por escalón + sin explicar, y Σ por tramo = el diferido de `/vistas/diferidos` del mismo período |
+| `/vistas/choke/mensual?campos` | `MesPorTramo[]`: cada mes del calendario (`desde`, `hasta` ISO, `parcial`) con `porTramo`, `noPlaneado` y `diferido`, el mismo de cada mes de `/vistas/diferidos/mensual` |
+| `/vistas/choke/base?campos&desde&hasta` | `LineaBasePorTramo` o `null` sin tres meses publicados antes del período: `base` y `periodo` (`desde`, `hasta` ISO), `noPlaneado` y `diferido` por tramo (`{ baseDia, periodoDia, cambio }`, `cambio: null` sin base), `texto`. La misma base de `/vistas/diferidos/base` |
+| `/vistas/topologia?campo` | `{ campoId, firmada, elementos }`: la topología que rige en el campo (la firmada en `Config.topologia` o, si el campo no trae ninguna entrada, la que se deriva del registro), cada elemento `{ elemento, choke, alcance, pozos?, campoId?, casoBorde?, nombre?, clase? }` con el `choke` que sale de su alcance (dedicado → pozo, compartido → planta, frontera y tercero → afuera) y `casoBorde: "misma-locacion"` si sirve a 2 o 3 pozos de una misma locación |
+| `/vistas/topologia/propuestas?campo` | `[{ elemento, pozos, porque, fuente, evidencia, conflicto?, casoBorde? }]`: lo que TRIM propone de la topología con lo que ya sabe (`fuente`: `alimentador`, `bomba`, `cascadas` o `registro`), para confirmarlo. Nunca se firma solo |
+| `/vistas/anh/paradas?campos&desde&hasta` | `ParadaAnh[]` (`anh-paradas.ts`, P1 §1.5) de los días operacionales que toca el período (llevado a días enteros): una fila por pozo × día × causa, con lo que ya dijeron las personas encima. Ver «Clasificación ANH (Circular 024)» |
+| `/vistas/anh/calidad?campos&desde&hasta` | `CalidadClasificacion` (`anh-calidad.ts`; P1 §2.1, U2 §4.6): `paradas`, `porPaso[]` `{ paso, paradas, propuestas, avaladas, corregidas, declaradas, enFalta, pctConfirmado, pctCorregido }` (`null` sin filas o sin propuestas), `porRegla[]` `{ paso, regla, propuestas, corregidas, pctCorregido, cambiadoA }`, `chokePorEquipo[]` y `sinTopologia[]` (equipos cuya parada tomó el tramo de la regla por tipo de causa) |
 
 **Formas que se repiten.** `HistorialEquipo`: `eventos[]` con `inicio` ISO y `fin` ISO o
 `null`; `porParte[].ultima` ISO; `fallasCerradas` y `bblPorFalla` (nuevos); `mdtH` del equipo
@@ -384,8 +407,17 @@ cambios[], config }`. `base` es la versión sobre la que se editó. La configura
   "tanques":[{ "id":"TK-AG-CE", "nombre":"…", "campoId":"ceiba", "bomba":"P-201B", "capacidadBbl":10000, "altoAlto":0.9,
                "tagNivel":"LT-2012", "aforo":"Certificado de aforo TK-AG-CE · tabla de 1 cm" }],
   "respaldos":[{ "campoId":"morichal", "equipo":"P-201B", "libreBpd":42500, "detalle":"Las otras seis bombas del tren" }],
-  "programa":[{ "id":"PR-ceiba-P-201B-2026-11-04", "campoId":"ceiba", "equipo":"P-201B", "desde":"…", "hasta":"…", "motivo":"…" }] }
+  "programa":[{ "id":"PR-ceiba-P-201B-2026-11-04", "campoId":"ceiba", "equipo":"P-201B", "desde":"…", "hasta":"…", "motivo":"…" }],
+  "topologia":[{ "elemento":"P-201B", "choke":"planta", "alcance":"compartido", "pozos":["LC-01","…","LC-18"], "campoId":"ceiba" }] }
 ```
+
+`topologia` (opcional) es la del modelo choke: a qué pozos sirve cada equipo, servicio o
+alimentador (`ChokeDeElemento`, `choke.ts`). Un campo que no trae ninguna entrada usa la que
+se deriva del registro (`GET /api/vistas/topologia`); un elemento sin `campoId` vale para
+todos. El `choke` se guarda para la auditoría, pero **sale del alcance** (dedicado → `pozo`,
+compartido → `planta`, frontera y tercero → `exportacion`): nadie lo escoge. Una topología
+vacía es lo mismo que ninguna y no viaja; lo que llegue en `null` dentro de un elemento se
+vuelve ausente (`normalizarConfig`).
 
 - `409` si `base` no es la vigente (`version-cambio`): firmarlo pisaría lo que se firmó en el medio.
 - `403` si el rol no firma ese grupo, o si toca un campo que la persona no tiene (`camposTocados`):
@@ -393,7 +425,7 @@ cambios[], config }`. `base` es la versión sobre la que se editó. La configura
 | Grupo | Qué incluye | Capacidad |
 |---|---|---|
 | Metas | tramos: meta de producción, máximo de diferido, precio neto, máximo sin causa para publicar | `metas:firmar` (gerente de activo) |
-| Técnica | cualquier cambio del programa (alta, baja o cualquier dato), de tanques (alta, baja o nombre, campo, bomba, capacidad, alto-alto, tag, aforo), de respaldos (alta, baja o cambio), un campo quitado, el perfil del campo y la empresa del membrete | `config:firmar` (administrador de la implementación) |
+| Técnica | cualquier cambio del programa (alta, baja o cualquier dato), de tanques (alta, baja o nombre, campo, bomba, capacidad, alto-alto, tag, aforo), de respaldos (alta, baja o cambio), de la topología del choke (alta, baja o cambio de un elemento: a qué pozos sirve), un campo quitado, el perfil del campo y la empresa del membrete | `config:firmar` (administrador de la implementación) |
 
   Una versión que toca los dos grupos exige las dos capacidades.
 - `422` (`validarConfig`, con la hora del servidor al firmar como referencia; «mes cerrado» es
@@ -413,6 +445,18 @@ cambios[], config }`. `base` es la versión sobre la que se editó. La configura
      empieza después de ahora; en una que ya empezó no se cambian equipo, campo, desde ni hasta,
      y no se quita. **El programa es inmutable hacia atrás**, igual que las metas.
   8. Motivo de la firma de 5 caracteres o más.
+  9. Topología (`validarTopologia`, `choke.ts`): el `choke` guardado es el que sale del
+     alcance; un dedicado sirve a un solo pozo y un compartido a más de uno; los pozos son del
+     campo; el campo está registrado; ningún elemento dos veces en el mismo campo. **No es
+     inmutable hacia atrás:** cada parada guarda la regla con que se clasificó y lo que ya
+     confirmó una persona no cambia solo (queda para revisar en Identificar); la vista previa
+     dice cuántas cambiarían antes de firmar.
+
+El historial (`cambios`) dice la topología en palabras: la primera vez que un campo la firma,
+un renglón («Topología de La Ceiba: se firma con 36 elementos; antes regía la que TRIM deriva
+del registro»); después, uno por elemento que cambia («Topología: P-201B (La Ceiba): le sirve
+a varios pozos (18 pozos) → le sirve a un solo pozo (LC-16); se traba en la planta → en el
+pozo»). `camposTocados` cuenta el campo de cada elemento que cambia; uno sin campo toca todos.
 
 **Metas en barriles por día, por tramos.** Cada tramo rige desde su día (hora de Colombia)
 hasta que empiece el siguiente, y lleva con la misma fecha el **precio neto** y el **máximo sin
@@ -578,6 +622,36 @@ campos de la persona (historia completa). `409` si ya está en ese estado o se e
 aceptar. `422` si el motivo tiene menos de 5 caracteres. Las cifras del plan **no cambian**
 con la decisión: solo el `estado`. Detalle en el capítulo 11.
 
+### `POST /api/configuracion/vista-previa`
+
+Cuerpo `{ config }` (la versión que se va a firmar, sin firmarla) → `{ impacto: ImpactoConfig }`
+(`choke-config.ts`; U2 §8.5): `desde` y `hasta` ISO (las paradas que se miran: desde el primer
+día del tercer mes cerrado antes del actual, hasta ahora) y `campos[]`, uno por campo que el
+cambio toca, con `limitaAntes` y `limitaDespues` (lo que limita hoy con cada versión),
+`criticidad[]` (solo los equipos cuyo «si falla hoy» o cuyo tramo cambian: `{ equipo, nombre,
+antes, despues, tramoAntes, tramoDespues }`), `paradasQueCambian: { total, confirmadas,
+porTramo: [{ de, a, paradas }] }` (`confirmadas`: las que ya dijo o confirmó una persona, que no
+cambian solas) y `texto[]`, los renglones que pinta la pantalla. No guarda nada. Las mismas
+reglas de la firma, en el mismo orden: `config:firmar` y persona activa (`403`), los campos
+tocados entre los de la persona (`403`) y `validarConfig` (`422`). La topología no mueve
+barriles: el libro es el mismo con las dos versiones.
+
+### `POST /api/topologia/importar`
+
+Cuerpo `{ campo, texto }`: un CSV o un pegado de Excel con dos columnas, el equipo y los pozos
+a los que sirve, separadas por punto y coma, tabulador o coma (la primera fila con datos decide;
+una lista dentro de una celda con coma va entre comillas). Los pozos van en lista o con una
+palabra: «todos», «otro dueño» (más allá de la batería) o «punto de entrega» (la brida de
+salida). Un encabezado que empieza por «equipo» o «elemento» se salta. → `{ campoId,
+topologia, hallazgos, filas }` (`TopologiaLeida`, `leerTopologia` en `choke-config.ts`):
+`topologia` son los elementos de las filas sin nada que bloquee, con el alcance y el tramo que
+salen del número de pozos; `hallazgos[]` `{ fila, equipo?, texto, bloquea }`. Bloquea: equipo
+vacío o que TRIM no tiene en el registro del campo, equipo repetido, sin pozos o con un pozo que
+no es del campo. Avisa sin bloquear: el caso de borde (2 o 3 pozos de una misma locación). **No
+firma:** lo leído va al borrador de la configuración y se firma con `POST /api/configuracion`.
+`config:firmar` y el campo entre los de la persona (`403`); campo que no está en el registro
+(`404`); texto vacío (`422`).
+
 ### `POST /api/planta/cambios`
 
 Cuerpo `{ campo, cambio: { tipo: "agregar-miembro" | "quitar-miembro" | "agregar-elemento" |
@@ -590,6 +664,58 @@ no está. Cada cambio queda en el historial (`GET /api/planta/cambios`).
 ### Registro de la cadena: `POST /api/campos/:campo/tags/:tag/equipo` · `POST /api/inscripcion`
 
 Ver «Cadena de datos».
+
+### `POST /api/anh/paradas/:id/clasificacion`
+
+Cuerpo `{ pasos, motivo?, aplicarAlEvento?, aplicarALaCascada?, cadena? }` → `{ parada:
+ParadaAnh, guardadas: { clave: BorradorClasificacion } }`. `:id` es el de la fila
+(`${evento}@${día}#${n}`); `pasos` lleva los valores en códigos internos (`{ "choke": "planta",
+"planeacion": "no-planeada", "n1": "NP_PROC", "n2": "NP_PROC/parada-estacion-bombeo-afecta-pozos" }`).
+La procedencia, `por`, `porId`, `rol` y `hora` los pone el servidor: un paso que faltaba queda
+`declarado`; uno que TRIM proponía distinto, `corregido` (con `propuesto` al lado); el mismo,
+`confirmado` (`declararPaso`, `anh-clasificacion.ts`). `guardadas` dice lo que el servidor
+guardó, por fila o por evento: **solo lo que dijo una persona**; lo de TRIM se vuelve a proponer
+con la regla de hoy cada vez que se lee la fila. Revisión, en este orden:
+- `403`: sin `anh:clasificar` o sin persona activa; la fila es de un campo que la persona no
+  tiene; un paso que el rol no dice como suyo (`PASOS_QUE_DECLARA`: el operador, «¿Planeada?» y
+  «Qué pasó»; el técnico, además la causa y el detalle; supervisión, producción, el jefe de
+  mantenimiento y confiabilidad, los seis). Al operador nunca se le pide dónde se trabó.
+- `404`: la fila no existe (el evento no es de un pozo o el día no tiene esa fila).
+- `409`: `cadena` (la de los 6 pasos que vio la persona, con «—» en los que faltan: `cadenaVista`)
+  ya no es la de la fila.
+- `422`: un paso que no existe; ningún paso; un valor que no es del catálogo; «En el
+  yacimiento» (va por `…/yacimiento`); una causa de la otra planeación («cambie primero
+  ¿Planeada?»: la coherencia planeada/causa está bloqueada, C24 p.7); cambiar lo que ya dijo una
+  persona sin `motivo` de 5 caracteres o más (el motivo queda en el porqué del paso).
+
+`aplicarAlEvento` lo guarda para todos los tramos del evento (Unicidad: un evento, una
+clasificación); `aplicarALaCascada`, para todos los eventos con la misma raíz (U2 §4.3: «Sí, a
+los {n}»). Lo que había guardado por fila de esos eventos se reemplaza. Un tramo que se pasó de
+la ventana del programa (`exceso`) se guarda solo: es otra decisión, no planeada.
+
+### `POST /api/anh/paradas/:id/yacimiento`
+
+Cuerpo `{ evidencia, motivo?, aplicarAlEvento?, cadena? }` → como la clasificación. Pone «En el
+yacimiento» en el paso 2 (`declararYacimiento`): `evidencia` es `prueba` (la prueba del pozo),
+`corte-agua`, `presion` (la presión de fondo) o una nota escrita, y queda en
+`choke.porque.evidencia` (y en `ParadaAnh.evidenciaYacimiento`). `403` sin `anh:yacimiento`
+(solo producción y confiabilidad: nunca sale de una señal ni de la respuesta del operador);
+`422` sin evidencia, o sin motivo si cambia lo que ya dijo una persona; `404` y `409` como arriba.
+
+### `POST /api/anh/paradas/confirmar`
+
+Cuerpo `{ ids, cadena?, pasos? }` → `{ paradas: ParadaAnh[], lote?: ConfirmacionLote }`. Una sola
+fila la confirma quien tiene `anh:clasificar`; varias de una vez, solo quien tiene
+`anh:confirmar` (supervisión y producción, que firman el día), y tienen que tener la misma
+cadena completa de 6 pasos (`422` si no: «confírmelas por grupo»). La confirmación es **por
+paso** (P1 §1.3): sube a `confirmado` solo los pasos que el rol avala (`PASOS_QUE_CONFIRMA`) y
+que nadie había dicho; el toque del operador confirma «¿Planeada?» y «Qué pasó», y dónde se
+trabó sigue siendo propuesta de TRIM. Con «una señal apunta», la causa y el detalle solo los
+confirma quien abre o analiza el equipo (jefe y confiabilidad). `pasos` son los que la pantalla
+mostró para confirmar: uno que el rol no avala es `403` («Su rol no confirma «Dónde se
+trabó»…»), y los que no vengan no se confirman. `409` si `cadena` ya no es la de alguna fila.
+El lote (`{ id, porId, por, hora, paradas, cadena, pasos }`) guarda qué se vio y qué se confirmó
+de una vez.
 
 ---
 
@@ -1052,6 +1178,98 @@ caído, ninguna bomba de la línea parada, fuera del programa y sin código de f
 por una bomba sin parte lleva el de su bomba). También es el último renglón de `evidencia`, que es
 la cadena de custodia y no cambia; el front lo lee de este campo y no de su lugar en la lista.
 
+### El modelo choke: dónde se trabó cada parada y qué limita al campo (`choke.ts`)
+
+La producción pasa por una tubería en serie: **yacimiento → pozos → planta o estación → afuera**
+(oleoducto, transportador o cliente). El campo entrega como mucho lo que deja pasar el tramo más
+angosto (SPE-36848; NSTA, UKSS Production Efficiency Section Guide, §5.3). En pantalla no se
+dice «choke»: se dice «¿Dónde se trabó?», «Qué limita hoy» y «Si falla hoy».
+
+**El tramo de cada parada** (`chokeDeCausa`, regla `choke.topologia@2`). Manda el ORIGEN: la
+raíz de la cascada (`Causa.equipo`: el servicio que cayó, la bomba que paró antes, el pozo), y
+un solo criterio, el de Edinson: **lo dedicado a un pozo es pozo y lo compartido es planta**;
+la frontera de la batería y lo de otro dueño son afuera. El alcance de cada elemento sale de la
+topología (`Config.topologia`, o la que se deriva del registro: cada pozo dedicado a sí mismo;
+las bombas, a los pozos de su perfil o a todos; lo del esquema de planta, a todos; el oleoducto,
+de otro dueño; cada alimentador, a los pozos que cuelgan de él). Sin elemento en la topología,
+el tramo sale del tipo de causa. Casos que la señal no decide y quedan como propuesta con una
+pregunta: el tanque de crudo lleno («¿El oleoducto o el cliente estaba recibiendo?»), la baja
+tensión de un solo pozo (se propone el pozo y se pregunta de dónde vino el corte; si cayeron
+varios del mismo alimentador en la ventana de cascada, la planta) y la declaración en texto
+libre. **El yacimiento nunca sale de una señal:** lo pone producción o confiabilidad con su
+evidencia. Una parada sin causa no tiene tramo (`sin-asignar`, «sin identificar»).
+
+**Lo que limita** (`potencialesDelCampo`): pozos = Σ prueba vigente × factor de asignación del
+mes de los pozos con prueba (la misma cifra de Producción y del libro); planta = el menor de los
+trenes **medidos**, con la capacidad instalada (el agua pasada a crudo con las pruebas; el gas
+no se mide en esta fase y no entra al mínimo); afuera = la evacuación declarada, con el mercado
+de subnivel. Lo que limita es el menor; dos tramos iguales al barril son un empate que se
+explica, y dos a menos del umbral están «casi iguales» (`PARAMETROS_CHOKE`: 3 %, versionado).
+Un potencial es un máximo: si el real de un día lo pasa, la capacidad declarada está corta y se
+avisa (`superado`); ese día no se separa nada estructural.
+
+**La brecha por tramo y por escalón** (`brechaPorChoke`): cada barril de cada tramo del libro va
+a UN tramo y a un escalón (desarrollo, desempeño, disponibilidad planeada, disponibilidad no
+planeada, capacidad o sin clasificar), y la identidad es exacta: potencial − real = Σ por tramo
++ sin explicar. Si lo que limita no son los pozos, la parte estructural (pozos − sistema) se
+separa y se dice, nunca se suma aparte. PE = real ÷ potencial del sistema.
+
+**La tubería del agua** (`tuberiaAgua`) es el mismo modelo para la inyección: agua de los pozos →
+tratamiento → tanques (colchón, no caudal) → bombas de reinyección → inyectores, con UNA cifra
+por bomba (la de la predicción y el colchón). **«Si falla hoy»** (`criticidad.ts`) ordena todos
+los equipos por el crudo que el campo dejaría de sacar si fallaran hoy, agotado el colchón, con
+las mismas cuentas de la predicción y del riesgo (un servicio es una estimación: supone que se
+cierran todos los pozos que dependen de él, y se marca).
+
+### Clasificación ANH (Circular 024)
+
+Vive **al lado** de la causa de TRIM, nunca encima: la causa sigue siendo la de gestión y de
+ella sale una propuesta regulatoria de 6 pasos, en el orden de la circular (C24 p.5):
+
+| Paso | `PasoAnh` | En pantalla | Valores (códigos internos) |
+|---|---|---|---|
+| 1 | `responsable` | Quién | `op-operacion`, `op-mantenimiento`, `op-planeacion`, `ext-energia`, `ext-transportador`, `comunidad`, `autoridad`, `tercero`, `fuerza-mayor` |
+| 2 | `choke` | Dónde se trabó | `pozo`, `planta`, `exportacion`, `reservorio` |
+| 3 | `impacto` | Qué pasó | `diferida`, `perdida` |
+| 4 | `planeacion` | ¿Planeada? | `planeada`, `no-planeada` |
+| 5 | `n1` | Causa | las 20 claves de la Tabla 1 (`P_…` planeadas, `NP_…` no planeadas) |
+| 6 | `n2` | Detalle | `${n1}/${slug}`, 117 códigos (Anexo A de P1) |
+
+**Cada paso con su procedencia** (`DatoClasificado`): `{ valor, procedencia, regla?, porque?,
+por?, porId?, rol?, hora?, recibido?, lote?, propuesto? }`, con `procedencia` en `senal`,
+`registro`, `regla`, `conversion`, `programa` (lo que deduce TRIM) o `declarado`, `confirmado`,
+`corregido` (lo que dice una persona: llevan quién, con qué rol y a qué hora). El porqué del paso
+2 guarda los datos de la frase (`PorqueChoke`: `regla`, `elemento`, `pozosServidos`, `cascada`,
+`persona`, `texto`, `pregunta`, `evidencia`), no la frase armada en la pantalla.
+
+**La coherencia está bloqueada:** planeada solo va con una `n1` `P_…`, no planeada solo con una
+`NP_…`, y el `n2` es de su `n1` (la ANH rechaza la transmisión entera por esto, C24 p.7). El
+códec del contrato lo vuelve a revisar al entrar: una `ParadaAnh` incoherente, o un dato de
+persona sin quién ni cuándo, no entra (`ErrorDeContrato` con la ruta y el problema en palabras),
+y una clasificación con los 6 pasos se arma con `clasificar`, el único constructor.
+
+**La fila** (`ParadaAnh`, `paradasAnh`): una por pozo × día operacional × causa. El día
+operacional corta a las 23:59:59 hora de Colombia; una parada que cruza la medianoche se parte
+(«Tramo n de m del evento»), una abierta al corte termina a las 23:59:59 y lo dice, una
+frecuencia reducida es parcial (`fraccion` < 1), un disparo de electrosumergible también es
+fila, el exceso sobre la ventana del programa es otra fila no planeada, y una cascada de N pozos
+son N filas con la misma `raiz`. Los barriles de la fila (`diferidaTrimBbl`) son los del libro:
+no viajan a la ANH y suman exacto lo del libro. Estados: `propuesta` (los 6 pasos deducidos;
+nadie los confirmó), `por-precisar` (falta un paso que la señal no decide), `confirmada` (los 6
+con procedencia de persona de un rol que puede avalarlos) y `pendiente` (sin causa).
+
+**Lo que se guarda es solo lo que dijo una persona** (por fila, o por evento para todos sus
+tramos): al leer la fila, TRIM vuelve a proponer con la regla de hoy y pone encima lo guardado
+(`aplicarGuardada`). Ningún paso sale con procedencia de persona si nadie lo tocó.
+
+**`propuesta`** trae lo que necesita la pantalla para lo que falta: `faltan`, `opciones` (las
+cerradas que admite la regla, nunca las 117 si se pueden acotar), `sugerido`, `preguntas` (en
+palabras de campo, con quién las contesta), `problemas`, `fila` y `regla` (la de `REGLAS_ANH@1`),
+`apunta` («una señal apunta, no prueba»), `perdida`, `alternativas`, `hueco`, `preguntaChoke` y
+`porqueChoke`. **`propuesta.borrador` y `propuesta.clasificacion` no viajan cuando son la misma
+`clasificacion` de la fila** (el caso de siempre; eran el 42 % del peso): el front los repone al
+entrar. Si alguno difiere, viaja entero.
+
 ### Cálculo del libro (asignación de producción)
 
 ```
@@ -1213,7 +1431,9 @@ Cada tipo de causa cae en una casilla de `ReasonLost` (`src/entities/causas.ts`)
 multifásica, energía, aire y compresión → *topside equipment failure-maint*; electrosumergible y
 bombeo mecánico → *well equipment failure-maint*; programada → *planned maint turnaround*;
 separación y tratamiento → *process and operation problem*; evacuación → *3rd party processing*.
-Lo declarado o sin identificar no tiene casilla hasta que se clasifique.
+Lo declarado o sin identificar no tiene casilla hasta que se clasifique. **Es de gestión, no la
+salida regulatoria:** lo que pide la ANH (los 6 pasos de la Circular 024) es «Clasificación ANH»,
+arriba.
 
 ---
 
@@ -1239,6 +1459,9 @@ formas exactas son los tipos TS citados):
 | `asignacion_oficial` | (`mes`, `campoId`, `pozo`) | `FilaCargada` (`asignacion.ts`): la fila y la `carga` que la trajo | se reemplaza por (mes, campo), todo o nada |
 | `carga_asignacion` | `id` | `CargaAsignacion` (`asignacion.ts`): fecha, por, motivo, grupos (mes, campo, pozos, reemplazados) | solo se inserta: el rastro de quién cargó o reemplazó la oficial |
 | `cambio_planta` | `id` | `CambioPlanta` (`planta.ts`) | solo se inserta; la planta vigente es el resultado |
+| `topologia` | (`version`, `orden`); único (`version`, `campo_id`, `elemento`) | `ChokeDeElemento` (`choke.ts`) de cada versión firmada: elemento, alcance, choke, pozos, campo (null = todos), caso de borde | dentro de `version_config` (la `Config` lo trae en `topologia`); el `choke` tiene que ser el que sale del alcance |
+| `clasificacion_paso` | `id` (consecutivo); la vigente es la última por (`clave`, `paso`) | `DatoClasificado` (`anh-clasificacion.ts`) de lo que dijo una persona en una fila (`clave` = `ParadaAnh.id`) o en un evento (`clave` = `EventoPozo.id`): paso, valor, procedencia, regla, porqué, quién, rol, hora, lote, propuesto | solo se inserta (una corrección es una fila nueva: queda la anterior al lado); coherencia planeada/causa y causa/detalle revisada al confirmar |
+| `confirmacion_lote` | `id` | `ConfirmacionLote` (`anh-paradas.ts`): quién, cuándo, las filas, la cadena que vio y los pasos que subió | solo se inserta |
 
 ---
 
@@ -1276,6 +1499,16 @@ formas exactas son los tipos TS citados):
      órdenes de SAP; bombas con la salud de cada parte y pozos con la de su electrosumergible
      (último mes cerrado); predicción de cada bomba si se para ahora; y la asignación por pozo
      de cada mes cerrado. `referencia/indice.json` (`casos[]`) los lista con su endpoint.
+
+   Las familias del modelo choke y del árbol de paradas (21-oct-2026), del último mes cerrado
+   por campo y del portafolio: `choke/` (lo perdido por tramo y por escalón con la
+   eficiencia, mes a mes, contra la línea base, «si falla hoy», la tubería de cada campo, qué
+   limitó cada día, la topología y sus propuestas), `agua-choke/` (la tubería del agua de
+   cada campo) y `anh/` (las filas de `paradas_pozo` con la clasificación que propone TRIM y
+   su calidad, sin nada dicho por una persona). La topología de Morichal marca un caso de
+   borde con la locación de sus pozos, que todavía no tiene endpoint: va en
+   `referencia/insumos/morichal/locaciones.json` (`"endpoint": null`) y sus casos lo dicen en
+   `requiere`.
 
    Con esos insumos cargados:
    ```bash
@@ -1380,9 +1613,208 @@ El teléfono simulado de Identificar es del demo: con la fuente http no manda na
 - **Canje del código de inscripción** por certificado de cliente, y rechazo de nacimientos sin
   certificado válido. **Cliente MQTT** contra el broker: hoy el nacimiento entra por HTTP.
 - **`lectura`** (serie de tiempo) particionada por mes en TimescaleDB.
+- **La locación de cada pozo** (para el caso de borde del choke: 2 o 3 pozos de una misma
+  locación, U2 §8.6): no está en `Pozo` ni tiene endpoint. Se propone `Pozo.locacion` en
+  `GET /api/campos/:campo/pozos`; mientras tanto el demo la trae en `entities/datos/topologia.ts`
+  (entra por `fuente.ts`) y `referencia/insumos/<campo>/locaciones.json` sin endpoint.
+- **Las capacidades de los tramos firmadas** (`Config.capacidades` de U2 §11.1: el tren de
+  crudo, cada bomba de agua, la evacuación, el tratamiento y la admisión de los inyectores, con
+  su fuente y su fecha): hoy son datos del demo en el esquema de planta (`caudales.*Cap` y
+  `chokes`), sin firmar. Lo que pide la regla de U2 §8.4 —una capacidad no puede ser menor que
+  lo que ya pasó por el tramo— se cumplió a mano en el demo (21-oct-2026: La Ceiba 12.000 →
+  13.000 en el tren de crudo; Guacamayo 6.800 → 7.500 afuera y 7.400 → 7.500 en crudo); con las
+  capacidades firmadas, la firma lo tiene que revisar.
+- **La captura sin señal en la clasificación ANH** (U1 P-9): el cuerpo traería la hora del
+  toque y el servidor guardaría la suya en `recibido`. Hoy la hora la pone el servidor.
+- **El resto del carril ANH de P1 §5**: el reparto por causa, responsable y planeación
+  (`/vistas/anh/reparto`), las opciones por fila, el cierre del día, la conversión del árbol de
+  la operadora y el envío del IDP no están en este contrato todavía.
 - **Lecturas de las electrosumergibles:** por qué endpoint llegan los ajustes de protección del
   variador de cada pozo (la banda y la alarma de corriente, frecuencia, presión de entrada,
   temperatura del motor y desbalance). La serie va por `GET …/tags/:tag/serie`; los ajustes no
   tienen ruta. Hasta que se decida, `referencia/insumos/<campo>/electrosumergibles.json` los trae
   sin endpoint, y en el front el demo los arma del pozo en `entities/esp.ts` (no son un insumo
   del motor como los demás).
+
+---
+
+## Anexo A · Las formas del modelo choke y del árbol de paradas
+
+La forma exacta es el códec de `src/shared/api/contrato.ts` (`TUBERIA`, `SERIE_CHOKE`,
+`TUBERIA_AGUA`, `CRITICIDAD`, `REPARTO_CHOKE`, `REPARTO_CHOKE_MENSUAL`, `BASE_CHOKE`,
+`TOPOLOGIA`, `PROPUESTAS_TOPOLOGIA`, `PARADAS_ANH`, `CALIDAD_ANH` y las `R_*` de las escrituras),
+y `npm run verificar:contrato` la prueba de ida y vuelta. Aquí, en JSON, para leerla sin
+TypeScript. `ISO` es un instante con zona («2026-10-02T14:00:00.000-05:00»); un opcional
+ausente se omite; `null` solo donde se dice.
+
+```ts
+type Tramo = 'reservorio' | 'pozo' | 'planta' | 'exportacion'      // el paso 2 de la ANH
+type Limita = 'pozos' | 'planta' | 'exportacion'                    // lo que limita al campo
+type Escalon = 'desarrollo' | 'desempeno' | 'disponibilidad-planeada' | 'disponibilidad-no-planeada' | 'capacidad' | 'sin-clasificar'
+type Alcance = 'dedicado' | 'compartido' | 'frontera' | 'tercero'
+interface EquipoBbl { equipo: string; bbl: number }
+
+// GET /api/vistas/campos/:campo/tuberia?desde&hasta
+interface TuberiaCampo {
+  campoId: string; desde: ISO; hasta: ISO
+  tramos: Array<{
+    tramo: Tramo; nombre: string; explica: string
+    potencialBpd: number | null; fuente: string; estado: 'pruebas' | 'demo' | 'firmado' | 'sin-firmar' | 'sin-dato'
+    holguraBpd: number | null; limita: boolean; casiIgual: boolean
+    trenes?: Array<{ tren: 'crudo' | 'agua' | 'gas'; capacidad: number; unidad: string; enCrudo: number | null; medido: boolean; uso: number | null }>
+    disponibleHoy?: { valor: number; unidad: string; equipo: string; texto: string }
+    subniveles?: Array<{ nombre: string; potencialBpd: number; fuente: string }>
+    perdiendoAhoraBpd: number; perdidoBbl: number; equiposTop: EquipoBbl[]
+  }>
+  limita: Limita | null; casiIguales: Limita[] | null; umbral: number; empate: boolean
+  pasaHoyBpd: number
+  perdiendoAhora: Array<{ tramo: Tramo | null; bpd: number; equipo: string; pozos: number }>
+  perdidoPeriodo: Array<{ tramo: Tramo; bbl: number; equiposTop: EquipoBbl[] }>
+  sinTramoBbl: number; sinTramoEquipos: EquipoBbl[]; diferido: number; campoDeGas: boolean
+  textoCorto: string; frase: string; fraseGerente: string
+}
+
+// GET /api/vistas/campos/:campo/choke/serie?desde&hasta
+interface SerieChoke {
+  dias: Array<{
+    dia: ISO; horas: number; real: number | null; potencial: number; potencialSistema: number
+    estructural: number; diferido: number; residuo: number | null
+    porChoke: Record<Tramo | 'sin-asignar', number>; porEscalon: Record<Escalon, number>
+    dominante: Record<string, Limita>; casiIguales: Record<string, Limita[] | null>
+    potenciales: Record<string, { pozos: number; planta: number | null; exportacion: number | null; tren?: 'crudo' | 'agua' | 'gas' }>
+    superado: Record<string, Limita>
+  }>
+  cambios: Array<{ campoId: string; dia: ISO; de: Limita; a: Limita; valorBpd: number; texto: string }>
+  vueltas: Record<string, number>
+}
+
+// GET /api/vistas/campos/:campo/agua
+interface TuberiaAgua {
+  campoId: string; t: number; aguaBpd: number; crudoBpd: number; crudoPorAgua: number
+  tramos: Array<{
+    tramo: 'producida' | 'tratamiento' | 'tanques' | 'bombas' | 'inyectores'; nombre: string
+    potencialBpd: number | null; crudoBpd: number | null; holguraBpd: number | null; sinDato?: string; fuente: string
+    tanques?: Array<{ id: string; nombre: string; capacidadBbl: number; altoAlto: number; nivelPct?: number; sinColchon?: string
+      colchon?: { horas: number | null; rango: [number | null, number | null]; nivelPct: number; cuando: 'al-parar' | 'si-para-ahora'; bomba: string; evento?: string; aguaSinSalidaBpd: number } }>
+    bombas?: Array<{ id: string; capacidadBpd: number; placaBpd: number; papel: 'disposicion' | 'recobro'; reserva: boolean; nota?: string
+      instrumentada: boolean; marcha: 'en-marcha' | 'parada' | 'sin-lectura'; mueveBpd?: number; respaldoLibreBpd?: number }>
+    disponibleHoy?: { valor: number; equipo: string; texto: string }
+  }>
+  tratamientoBpd: number | null; admisionInyectoresBpd: number | null
+  dominante: string; limita: boolean; angosto?: string; sobraBpd: number; faltaBpd: number; crudoQueFrenaBpd: number
+  sinUna?: { bomba: string; papel: 'disposicion' | 'recobro'; aguaSinSalidaBpd: number; crudoBpd: number; crudoParejoBpd: number
+    colchonH?: number | null; parada: boolean; desde?: ISO; perdiendoBpd?: number }
+  sinDato: string[]; frases: string[]; texto: string
+}
+
+// GET /api/vistas/criticidad?campos
+interface FilaCriticidad {
+  campoId: string; equipo: string; nombre: string; familia: 'bomba' | 'electrosumergible' | 'bombeo-mecanico' | 'pozo' | 'servicio'
+  tramo: Tramo; alcance: Alcance; servidos: number; bpd: number | null; colchonH?: number | null
+  costoFalla?: number; costoDe?: 'propio' | 'flota'; mdtFuente?: string; vigilado: boolean; sinDato?: string
+  subio?: { desde: ISO; porque: string }; estimacion: boolean; parado: boolean; perdiendoBpd?: number; porque: string
+}
+interface VistaCriticidad {
+  ranking: FilaCriticidad[]
+  campos: Array<{ campoId: string; parados: FilaCriticidad[]; sinCalcular: Array<{ equipo: string; nombre: string; motivo: string }>; cambioHoy?: string }>
+}
+
+// GET /api/vistas/choke/reparto?campos&desde&hasta
+interface CifrasChoke {
+  potencial: number; real: number; brecha: number; diferido: number
+  porChoke: Record<Tramo | 'sin-asignar', number>; porEscalon: Record<Escalon, number>
+  porChokeEquipo: Record<Tramo | 'sin-asignar', EquipoBbl[]>
+  sinExplicar: number; cuadra: boolean; porConfirmar: number
+  estructural: number; estructuralPorChoke: Record<Limita, number>; potencialSistema: number; brechaSistema: number
+  pe: number; peNoPlaneada: number; dominante: Limita | null; horasPorDominante: Record<Limita, number>
+}
+interface BrechaChoke extends CifrasChoke {
+  desde: ISO; hasta: ISO
+  porChokeEscalon: Record<Tramo | 'sin-asignar', Record<Escalon, number>>
+  porCampo: Array<CifrasChoke & { campoId: string; superado: Array<{ dia: ISO; choke: Limita; capacidad: number; real: number }> }>
+  superado: Array<{ campoId: string; dia: ISO; choke: Limita; capacidad: number; real: number }>
+  texto: string; textoEstructural?: string
+}
+// GET /api/vistas/choke/mensual?campos → MesPorTramo[]
+interface MesPorTramo { mes: string; desde: ISO; hasta: ISO; parcial: boolean
+  porTramo: Record<Tramo | 'sin-asignar', number>; noPlaneado: Record<Tramo | 'sin-asignar', number>; diferido: number }
+// GET /api/vistas/choke/base?campos&desde&hasta → LineaBasePorTramo | null
+interface LineaBasePorTramo {
+  base: { desde: ISO; hasta: ISO; nombre: string }; periodo: { desde: ISO; hasta: ISO }
+  noPlaneado: Record<Tramo | 'sin-asignar', { baseDia: number; periodoDia: number; cambio: number | null }>
+  diferido: Record<Tramo | 'sin-asignar', { baseDia: number; periodoDia: number; cambio: number | null }>
+  texto: string
+}
+
+// GET /api/vistas/topologia?campo · lo que se firma en Config.topologia es ChokeDeElemento
+interface ChokeDeElemento { elemento: string; choke: Tramo; alcance: Alcance; pozos?: string[]; campoId?: string; casoBorde?: 'misma-locacion' }
+interface TopologiaVigente { campoId: string; firmada: boolean; elementos: Array<ChokeDeElemento & { nombre?: string; clase?: string }> }
+// GET /api/vistas/topologia/propuestas?campo
+type Propuestas = Array<{ elemento: string; pozos: string[]; porque: string; fuente: 'alimentador' | 'bomba' | 'cascadas' | 'registro'
+  evidencia: string[]; conflicto?: string; casoBorde?: 'misma-locacion' }>
+
+// GET /api/vistas/anh/paradas?campos&desde&hasta → ParadaAnh[]
+type Paso = 'responsable' | 'choke' | 'impacto' | 'planeacion' | 'n1' | 'n2'
+type Procedencia = 'senal' | 'registro' | 'regla' | 'conversion' | 'programa' | 'declarado' | 'confirmado' | 'corregido'
+interface DatoClasificado<T, Q = string> {
+  valor: T; procedencia: Procedencia; regla?: string; porque?: Q
+  por?: string; porId?: string; rol?: string; hora?: ISO; recibido?: ISO; lote?: string; propuesto?: T   // por, porId, rol y hora: obligatorios si es de persona
+}
+interface PorqueChoke { regla: string; elemento?: string; pozosServidos?: number; cascada?: { raiz: string; minutos: number }
+  persona?: string; texto?: string; pregunta?: string; evidencia?: string }
+interface Clasificacion {          // completa: los 6 pasos, coherentes; borrador: los que haya
+  responsable?: DatoClasificado<string>; choke?: DatoClasificado<Tramo, PorqueChoke>; impacto?: DatoClasificado<'diferida' | 'perdida'>
+  planeacion?: DatoClasificado<'planeada' | 'no-planeada'>; n1?: DatoClasificado<string>; n2?: DatoClasificado<string>
+  cauGral?: DatoClasificado<string>; descEvid?: DatoClasificado<string>; apunta?: { regla: 'senal-apunta@1'; porque: string }
+}
+interface ParadaAnh {
+  id: string                        // `${eventoId}@${diaOperacional}#${n}`
+  eventoId: string; raiz: string; minutosDesdeRaiz?: number; evidenciaYacimiento?: string
+  pozo: string; campoId: string; diaOperacional: string; inicio: ISO; fin: ISO
+  abiertaAlCorte: boolean; diaEnCurso: boolean; fraccion: number; parcial: boolean; disparo: boolean; exceso: boolean
+  tramo: { n: number; m: number | null }; horas: number; diferidaTrimBbl: number
+  causa: Causa                      // la de TRIM, tal cual (ver «Causa de cada evento»)
+  clasificacion: Clasificacion
+  estado: 'propuesta' | 'por-precisar' | 'confirmada' | 'pendiente'; faltan: Paso[]
+  propuesta: {
+    estado: string; faltan: Paso[]; opciones: Partial<Record<Paso, string[]>>; sugerido: Partial<Record<Paso, string>>
+    preguntas: Array<{ id: string; texto: string; pasos: Paso[]; quien: 'campo' | 'revisa' | 'yacimiento'; fuente: string
+      opciones: Array<{ texto: string; deja: Partial<Record<Paso, string>>; acota?: Partial<Record<Paso, string[]>>; sigue?: string; perdida?: string; yacimiento?: string }> }>
+    problemas: string[]; fila: string; regla: string; apunta?: object; perdida?: 'derrame' | 'tea' | 'rechazo'
+    alternativas?: string[]; hueco?: string; preguntaChoke?: string; porqueChoke?: PorqueChoke
+    escalada?: { pregunta: string; porId: string; hora: ISO }
+    causaPendiente: boolean; opcionesRegla: Partial<Record<Paso, string[]>>; preguntasPendientes: string[]
+    borrador?: Clasificacion        // no viaja si es igual a `clasificacion` (se repone de ella)
+    clasificacion?: Clasificacion   // ídem; solo existe completa
+  }
+  versionCatalogo: 'C024-2026' | 'DICC-V3.2'
+}
+
+// GET /api/vistas/anh/calidad?campos&desde&hasta
+interface CalidadClasificacion {
+  paradas: number
+  porPaso: Array<{ paso: Paso; paradas: number; propuestas: number; avaladas: number; corregidas: number; declaradas: number; enFalta: number
+    pctConfirmado: number | null; pctCorregido: number | null }>
+  porRegla: Array<{ paso: Paso; regla: string; propuestas: number; corregidas: number; pctCorregido: number; cambiadoA: Record<string, number> }>
+  chokePorEquipo: Array<{ campoId: string; equipo: string; paradas: number; corregidas: number; pctCorregido: number; cambiadoA: Partial<Record<Tramo, number>> }>
+  sinTopologia: Array<{ campoId: string; equipo: string; paradas: number }>
+}
+
+// POST /api/anh/paradas/:id/clasificacion · POST /api/anh/paradas/:id/yacimiento
+type CuerpoClasificacion = { pasos: Partial<Record<Paso, string>>; motivo?: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; cadena?: string }
+type CuerpoYacimiento = { evidencia: 'prueba' | 'corte-agua' | 'presion' | string; motivo?: string; aplicarAlEvento?: boolean; cadena?: string }
+type RespuestaClasificacion = { parada: ParadaAnh; guardadas: Record<string, Clasificacion> }   // clave: ParadaAnh.id o EventoPozo.id
+// POST /api/anh/paradas/confirmar
+type CuerpoConfirmacion = { ids: string[]; cadena?: string; pasos?: Paso[] }
+type RespuestaConfirmacion = { paradas: ParadaAnh[]; lote?: { id: string; porId: string; por: string; hora: ISO; paradas: string[]; cadena: string; pasos: Paso[] } }
+// POST /api/configuracion/vista-previa
+type CuerpoVistaPrevia = { config: Config }
+type RespuestaVistaPrevia = { impacto: { desde: ISO; hasta: ISO; campos: Array<{
+  campoId: string; limitaAntes: Limita | null; limitaDespues: Limita | null
+  criticidad: Array<{ equipo: string; nombre: string; antes: number | null; despues: number | null; tramoAntes: Tramo | null; tramoDespues: Tramo | null }>
+  paradasQueCambian: { total: number; confirmadas: number; porTramo: Array<{ de: Tramo | null; a: Tramo | null; paradas: number }> }
+  texto: string[] }> } }
+// POST /api/topologia/importar
+type CuerpoTopologiaCsv = { campo: string; texto: string }
+type RespuestaTopologiaCsv = { campoId: string; topologia: ChokeDeElemento[]; hallazgos: Array<{ fila: number; equipo?: string; texto: string; bloquea: boolean }>; filas: number }
+```
