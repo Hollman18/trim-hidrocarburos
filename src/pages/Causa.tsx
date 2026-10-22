@@ -10,6 +10,7 @@ import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
 import { CAUSAS_POZO, NO_FUE_ESP_CORTO, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
 import { Telefono } from '@/widgets/whatsapp/Telefono'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
+import { ArbolIdentificar } from '@/widgets/arbol/ArbolIdentificar'
 import type { Pregunta } from '@/entities/libro'
 import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { modosDeParte, nombreModo, MECANISMOS_POR_FAMILIA, MECANISMO_SUGERIDO, MODO_OTRO } from '@/entities/catalogo'
@@ -175,6 +176,11 @@ export function Causa() {
 
       {opera && cabecera}
 
+      {/* La cadena de 6 pasos de cada parada para la ANH (U1 §2; U2 §4): después
+          de lo que no se arranca, que es una instrucción de seguridad. */}
+      {/* Otro rol es otra lente: lo que estaba abierto (una hoja de corregir) no pasa de un rol a otro. */}
+      <ArbolIdentificar key={rol.id} campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} periodo={rango.nombre} />
+
       {/* «Arrancaron sin identificar» ya lo dice la cifra de arriba; aquí, cuántas. */}
       <Panel className="mb-2.5" titulo="NO CONFORMIDADES" extra={<>{noConformes.length}<span className="sr-only"> {noConformes.length === 1 ? 'no conformidad' : 'no conformidades'}</span></>}>
         {noConformes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
@@ -188,8 +194,8 @@ export function Causa() {
           Primero las que esperan el análisis de confiabilidad.
         </Lectura>
         {declaradas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna todavía.</p>}
-        {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}
-        {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}</div>}
+        {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}
+        {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}</div>}
         <VerMas ocultas={listaDeclaradas.ocultas} abierto={listaDeclaradas.abierto} onAlternar={listaDeclaradas.alternar} />
       </Panel>
     </>
@@ -511,8 +517,13 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
 
 /** Una respuesta registrada, dicha una sola vez: la parte y lo que vio (o la
  *  causa del pozo), y el texto de quien respondió solo si escribió algo más. */
-function Declarada({ p, global }: { p: Pregunta; global: boolean }) {
+function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Mensaje[] }) {
   const r = p.causa.declarado!
+  // Lo que se respondió por WhatsApp se puede volver a ver en el chat, donde quien
+  // respondió avala lo que contestó (U1 §2.6, corregido por S1 U1-2).
+  const usuarios = useUsuarios()
+  const [verChat, setVerChat] = useState(false)
+  const quien = r.canal === 'whatsapp' ? usuarios.find(u => u.id === r.porId) : undefined
   const cat = pedirCatalogoDeDanos(p.campoId, p.equipo)
   const parte = p.causa.parte ? cat?.partes.find(x => x.id === p.causa.parte) : undefined
   const nombreParte = parte?.nombre ?? (p.causa.parte ? NOMBRE_PARTE[p.causa.parte] : undefined)
@@ -537,6 +548,14 @@ function Declarada({ p, global }: { p: Pregunta; global: boolean }) {
           </span>
         )}
         {p.causa.parte && <AnalisisDeFalla evento={p.id} modo={r.modo} />}
+        {quien && hilo.length > 0 && (
+          <>
+            <Boton variante="chico" className="mt-1 min-h-10 sm:min-h-0" aria-expanded={verChat} onClick={() => setVerChat(v => !v)}>
+              {verChat ? 'Cerrar el chat' : `Ver el chat de ${quien.nombre}`}
+            </Boton>
+            {verChat && <div className="mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>}
+          </>
+        )}
       </span>
       <b className="tabular text-right">{n0(p.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
     </div>

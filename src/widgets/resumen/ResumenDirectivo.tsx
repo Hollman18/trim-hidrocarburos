@@ -1,5 +1,7 @@
+import { useId, useState } from 'react'
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
 import { useLibro, useSerie, useBase, useRiesgo, useEstadoCampos } from '@/shared/api/diferidos'
+import { useRepartoMensual, CHOKES_Y_SIN_ASIGNAR, type MesPorTramo } from '@/shared/api/choke'
 import { useCiclo } from '@/shared/api/ciclo'
 import { BloqueCiclo } from '@/widgets/ciclo/Ciclo'
 import { useHorasMantenimiento } from '@/shared/api/sap'
@@ -22,8 +24,12 @@ import { fmtHoras } from '@/widgets/bombas/comun'
 import { Rango } from '@/widgets/diferidos/Rango'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { alFinal } from '@/shared/ui/alFinal'
+import { cn } from '@/shared/lib/cn'
+import { Muestra } from '@/widgets/diferidos/tramos'
+import { RELLENO, LARGO_TRAMO, mayuscula } from '@/widgets/diferidos/reparto'
 import { otrosEnAlarma } from './enAlarma'
 import { PorCampo } from './PorCampo'
+import { PanelDondeSeTrabo, AntesConTrimPorTramo } from './DondeSeTrabo'
 
 const D = 86_400_000
 /** Un cambio en %: con signo, salvo que redondee a cero («0 %», nunca «−0 %»). */
@@ -41,6 +47,7 @@ export function ResumenDirectivo() {
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
   const lb = useLibro(q)
   const serie = useSerie(ids)
+  const porTramo = useRepartoMensual(ids)
   const base = useBase(q)
   const riesgo = useRiesgo(ids)
   const ciclo = useCiclo(ids, rango.desde, rango.hasta)
@@ -197,6 +204,8 @@ export function ResumenDirectivo() {
             </span>
             <b className="tabular block text-[13px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
           </p>
+          {/* La misma comparación abierta por tramo, con las dos flechas (U2 §7.3). */}
+          <AntesConTrimPorTramo campos={ids} desde={inicio} hasta={AHORA} />
           <div className="mt-2">
             {/* Sin órdenes no hay porcentaje: se dice, no se borra el bloque. */}
             <p className="flex flex-wrap items-baseline gap-x-1.5">
@@ -214,12 +223,13 @@ export function ResumenDirectivo() {
               </>
             ) : <small className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">sin órdenes en SAP desde {fechaCorta(inicio)}</small>}
           </div>
-          <Tendencia serie={serie} desde={rango.desde} hasta={rango.hasta}
+          <Tendencia serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(diaIso(m.desde), diaIso(new Date(m.hasta.getTime() - 1)))} />
           <Lectura>
             Alto impacto: bombas de reinyección y electrosumergibles. La tendencia «3 meses previos → con TRIM»
-            no es la fase Antes del retorno. Mantenimiento proactivo: horas preventivas o predictivas en
-            SAP; si no sube, las fallas no bajan.
+            no es la fase Antes del retorno. «Por dónde se trabó» la abre por tramo, con lo que bajó y lo que
+            subió. Mantenimiento proactivo: horas preventivas o predictivas en SAP; si no sube, las fallas no
+            bajan. El mes a mes se puede ver por equipo o por dónde se trabó.
           </Lectura>
         </section>
 
@@ -243,23 +253,35 @@ export function ResumenDirectivo() {
         </section>
       </div>
 
-      {ambito.global && <PorCampo lb={lb} campos={ids} onAbrir={abrir} onCampo={setCampo} />}
+      {ambito.global
+        ? <PorCampo lb={lb} campos={ids} desde={rango.desde} hasta={rango.hasta} onAbrir={abrir} onCampo={setCampo} />
+        : <PanelDondeSeTrabo campos={ids} desde={rango.desde} hasta={rango.hasta} conPerdida />}
     </>
   )
 }
 
 /** Diferido por día de cada mes: lo de alto impacto oscuro, el resto claro,
  *  y sobre cada mes la raya de su máximo firmado (la meta puede cambiar de un
- *  mes a otro). Un clic en un mes lo abre. */
-export function Tendencia({ serie, desde, hasta, onMes }: {
+ *  mes a otro). Un clic en un mes lo abre. Con `porTramo`, la misma gráfica se
+ *  puede ver «Por dónde se trabó» (U2 §7.4): cada barra apilada en los cuatro
+ *  tramos, en grises, más lo sin identificar, rayado; la raya del máximo no cambia. */
+export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
   serie: MesResumen[]; desde: Date; hasta: Date; onMes: (m: MesResumen) => void
+  /** Lo perdido por tramo de cada mes (`useRepartoMensual`): los mismos meses y el mismo total del libro. */
+  porTramo?: MesPorTramo[]
 }) {
+  const [vista, setVista] = useState<'equipo' | 'tramo'>('equipo')
+  const rayado = `rayado-${useId().replace(/:/g, '')}`
+  const deMes = new Map((porTramo ?? []).map(t => [t.mes, t]))
+  const porDonde = vista === 'tramo' && porTramo !== undefined
   const W = 520, G = { x0: 8, x1: 512, y0: 18, y1: 96 }
   const pts = serie.map(m => {
     const d = Math.max(1 / 24, (Math.min(m.hasta.getTime(), AHORA.getTime()) - m.desde.getTime()) / D)
     // Un mes con algún campo sin meta firmada no tiene máximo: sin raya ni marca.
     const max = conMeta(m.libro.meta) ? m.libro.meta.diferidoDia : undefined
-    return { m, total: m.libro.diferido / d, alto: m.libro.altoImpacto / d, max, sobre: max !== undefined && !m.parcial && m.libro.diferido / d > max }
+    const t = deMes.get(m.mes)
+    const tramos = CHOKES_Y_SIN_ASIGNAR.map(k => [k, (t?.porTramo[k] ?? 0) / d] as const)
+    return { m, total: m.libro.diferido / d, alto: m.libro.altoImpacto / d, max, sobre: max !== undefined && !m.parcial && m.libro.diferido / d > max, tramos }
   })
   const techo = Math.max(1, ...pts.map(p => Math.max(p.total, p.max ?? 0))) * 1.1
   const Y = (v: number) => G.y1 - (v / techo) * (G.y1 - G.y0)
@@ -267,19 +289,55 @@ export function Tendencia({ serie, desde, hasta, onMes }: {
   const ancho = paso * 0.6
   return (
     <>
+    {porTramo && (
+      <div role="group" aria-label="Cómo se parte cada mes" className="no-imprimir mt-2 flex flex-wrap gap-1">
+        {([['equipo', 'Por equipo'], ['tramo', 'Por dónde se trabó']] as const).map(([v, t]) => (
+          <button key={v} type="button" aria-pressed={vista === v} onClick={() => setVista(v)}
+            className={cn('min-h-6 cursor-pointer rounded border px-2.5 py-[2px] text-[11px]',
+              vista === v ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+            {t}
+          </button>
+        ))}
+      </div>
+    )}
     <div ref={alFinal} className="mt-2 overflow-x-auto">
-      <svg viewBox={`0 0 ${W} 118`} className="block h-auto w-full min-w-[420px]" role="group" aria-label="Diferido por día de cada mes contra su máximo firmado">
+      <svg viewBox={`0 0 ${W} 118`} className="block h-auto w-full min-w-[420px]" role="group"
+        aria-label={porDonde ? 'Diferido por día de cada mes, por dónde se trabó, contra su máximo firmado' : 'Diferido por día de cada mes contra su máximo firmado'}>
+        <defs>
+          <pattern id={rayado} width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="4" height="4" fill="var(--panel)" />
+            <line x1="0" y1="0" x2="0" y2="4" stroke="var(--tinta3)" strokeWidth="1.5" />
+          </pattern>
+        </defs>
         {pts.map((p, i) => {
           const x = G.x0 + paso * i + (paso - ancho) / 2
           const activo = p.m.desde < hasta && p.m.hasta > desde
+          let base = 0
+          const maximo: [string, string] = ['Máximo firmado', p.max === undefined ? textoSinMeta(p.m.libro.meta, p.m.libro.porCampo.length > 1) : `${n0(p.max)} bbl/d`]
           return (
             <Tip key={p.m.mes} as="g" titulo={p.m.nombre} pista="Clic para ver este mes"
-              filas={[['Diferido', `${n0(p.total)} bbl/d`], ['De alto impacto', `${n0(p.alto)} bbl/d`], ['Máximo firmado', p.max === undefined ? textoSinMeta(p.m.libro.meta, p.m.libro.porCampo.length > 1) : `${n0(p.max)} bbl/d`]]}
+              filas={porDonde
+                ? [['Diferido', `${n0(p.total)} bbl/d`], ...p.tramos.filter(([, v]) => v >= 0.5).map(([k, v]) => [mayuscula(LARGO_TRAMO[k]), `${n0(v)} bbl/d`] as [string, string]), maximo]
+                : [['Diferido', `${n0(p.total)} bbl/d`], ['De alto impacto', `${n0(p.alto)} bbl/d`], maximo]}
               onClick={() => onMes(p.m)}>
               <g className="cursor-pointer">
                 <rect x={x - (paso - ancho) / 2} y={G.y0 - 16} width={paso} height={G.y1 - G.y0 + 36} fill="transparent" />
-                <rect x={x} y={Y(p.total)} width={ancho} height={Math.max(0.5, G.y1 - Y(p.total))} fill="var(--dato-5)" />
-                <rect x={x} y={Y(p.alto)} width={ancho} height={Math.max(0.5, G.y1 - Y(p.alto))} fill="var(--dato-1)" />
+                {porDonde
+                  // De abajo arriba en el orden de la tubería; lo sin identificar, rayado y encima.
+                  ? p.tramos.map(([k, v]) => {
+                    if (v <= 0) return null
+                    const y1 = Y(base), y0 = Y(base + v)
+                    base += v
+                    const sin = k === 'sin-asignar'
+                    return <rect key={k} x={x} y={y0} width={ancho} height={Math.max(0.5, y1 - y0)} fill={sin ? `url(#${rayado})` : RELLENO[k]}
+                      stroke={sin ? 'var(--tinta3)' : 'var(--panel)'} strokeWidth={sin ? 0.8 : 0.6} strokeDasharray={sin ? '2 1.5' : undefined} />
+                  })
+                  : (
+                    <>
+                      <rect x={x} y={Y(p.total)} width={ancho} height={Math.max(0.5, G.y1 - Y(p.total))} fill="var(--dato-5)" />
+                      <rect x={x} y={Y(p.alto)} width={ancho} height={Math.max(0.5, G.y1 - Y(p.alto))} fill="var(--dato-1)" />
+                    </>
+                  )}
                 {/* El mes que se mira se marca con un borde y su cifra, no apagando a los demás. */}
                 {activo && <rect x={x - 2} y={Y(p.total) - 2} width={ancho + 4} height={G.y1 - Y(p.total) + 2} fill="none" stroke="var(--tinta)" strokeWidth={1.2} />}
                 {p.max !== undefined && <line x1={x - 3} x2={x + ancho + 3} y1={Y(p.max)} y2={Y(p.max)} stroke="var(--tinta)" strokeWidth={1.3} strokeDasharray="3 2" />}
@@ -297,8 +355,14 @@ export function Tendencia({ serie, desde, hasta, onMes }: {
           La unidad va aquí y no en el dibujo: arriba a la izquierda la pisaba la cifra de la barra más alta. */}
       <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
         <span className="text-[var(--tinta3)]">bbl/d</span>
-        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />alto impacto</span>
-        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-5)]" />lo demás</span>
+        {porDonde
+          ? CHOKES_Y_SIN_ASIGNAR.map(k => <span key={k} className="inline-flex items-center gap-1.5"><Muestra k={k} />{LARGO_TRAMO[k]}</span>)
+          : (
+            <>
+              <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />alto impacto</span>
+              <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-5)]" />lo demás</span>
+            </>
+          )}
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.3" strokeDasharray="3 2" /></svg>máximo firmado</span>
         <span className="inline-flex items-center gap-1.5"><svg width="8" height="8" aria-hidden><rect x="0.5" y="0.5" width="7" height="7" rx="0.8" fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} /></svg>pasó el máximo</span>
       </div>

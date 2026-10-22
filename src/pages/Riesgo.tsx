@@ -1,8 +1,11 @@
+import { useMemo } from 'react'
 import { useApp, useAmbito, useRol, useRango } from '@/app/store'
 import { esServicio } from '@/shared/api/equipos'
 import { useRiesgo, useEstadoCampos } from '@/shared/api/diferidos'
+import { useCriticidad, DONDE_CHOKE } from '@/shared/api/choke'
 import { useCiclo } from '@/shared/api/ciclo'
 import { CicloCifras } from '@/widgets/ciclo/Ciclo'
+import { SiFallaHoy } from '@/widgets/riesgo/SiFallaHoy'
 import { TIPO_CAUSA, type TipoCausa } from '@/entities/causa-senal'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { ESTADO_PARTE } from '@/entities/salud'
@@ -23,7 +26,12 @@ import { costoHoy, colchonCorto, detalleCostoHoy, deFlota } from '@/shared/ui/co
 /** Qué está en riesgo: lo que se está perdiendo ahora y lo que se va a perder
  *  si no se actúa, por equipo, con su horizonte y lo que cuesta. Nada sale de
  *  una tabla: los eventos abiertos de los controladores, el vigía de cada
- *  bomba y de cada electrosumergible, y su historia de fallas. */
+ *  bomba y de cada electrosumergible, y su historia de fallas.
+ *
+ *  Para el jefe de mantenimiento y confiabilidad, además, «Si falla hoy»
+ *  (U2 §6): todos los equipos del campo por lo que le quitarían si fallaran
+ *  hoy, y en cada fila de «En riesgo», dónde se trabaría. El gerente no ve la
+ *  lista (U2 §3.1): ve los equipos en riesgo. */
 export function Riesgo() {
   const ambito = useAmbito(); const rol = useRol(); const rango = useRango()
   const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo), setPantalla = useApp(s => s.setPantalla)
@@ -31,6 +39,10 @@ export function Riesgo() {
   const riesgo = useRiesgo(ids)
   const ciclo = useCiclo(ids, rango.desde, rango.hasta)
   const estados = useEstadoCampos(ids)
+  const ingenieria = rol.nivel === 'ingenieria'
+  // Dónde se trabaría cada equipo si falla: el tramo de la topología, el mismo de «Si falla hoy».
+  const crit = useCriticidad(ingenieria ? ids : [])
+  const tramoDe = useMemo(() => new Map([...crit.ranking, ...crit.campos.flatMap(c => c.parados)].map(f => [`${f.campoId}|${f.equipo}`, f.tramo])), [crit])
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const porDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
@@ -101,6 +113,7 @@ export function Riesgo() {
 
   const filaRiesgo = (r: FilaRiesgo) => {
     const servicio = esServicio(r)
+    const tramo = ingenieria ? tramoDe.get(`${r.campoId}|${r.equipo}`) : undefined
     const siPara = servicio && r.bblDia === 0 ? 'todo el campo' : `${n0(r.bblDia)} bbl/d`
     const detalle = detalleCostoHoy(r)
     return (
@@ -124,6 +137,7 @@ export function Riesgo() {
                 {r.estadoParte && <Chip tono={r.estadoParte === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[r.estadoParte]}</Chip>}
               </span>
             )}
+            {tramo && <small className="block text-[10.5px] text-[var(--tinta3)]" data-se-trabaria={tramo}>se trabaría {DONDE_CHOKE[tramo]}</small>}
           </span>
           <span className={columna}>
             <b className="block text-[13px] leading-tight"><span className="sr-only">cruza en </span>{r.horas !== undefined ? fmtHoras(r.horas) : 'ya fuera'}</b>
@@ -204,7 +218,14 @@ export function Riesgo() {
         <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
       </Panel>
 
-      <Panel className="mt-2.5" titulo="EN RIESGO">
+      <Panel className="mt-2.5" titulo="EN RIESGO"
+        extra={ingenieria && (
+          // Al lado, en la misma pantalla: lleva a la lista completa y le pasa el foco.
+          <button type="button" className="no-imprimir min-h-6 cursor-pointer tracking-normal underline decoration-dotted underline-offset-2 hover:text-[var(--tinta)]"
+            onClick={() => { const e = document.getElementById('si-falla-hoy'); e?.scrollIntoView({ behavior: 'smooth', block: 'start' }); e?.focus({ preventScroll: true }) }}>
+            ver «Si falla hoy»
+          </button>
+        )}>
         {enRiesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
         {enRiesgo.length > 0 && (
           <div className="flex gap-3 pb-1 text-[10px] text-[var(--tinta3)]" aria-hidden>
@@ -215,6 +236,11 @@ export function Riesgo() {
         {listaRiesgo.resto.length > 0 && <div className="solo-impresion">{listaRiesgo.resto.map(filaRiesgo)}</div>}
         <VerMas ocultas={listaRiesgo.ocultas} abierto={listaRiesgo.abierto} onAlternar={listaRiesgo.alternar} />
       </Panel>
+
+      {ingenieria && (
+        <SiFallaHoy campos={ids} global={ambito.global} rol={rol.id === 'conf' ? 'conf' : rol.id === 'jefe' ? 'jefe' : 'otro'}
+          onAbrir={(c, eq) => { setCampo(c); abrirEquipo(eq, false) }} />
+      )}
     </>
   )
 }

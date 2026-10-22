@@ -23,17 +23,24 @@ import { PlanMensual } from '@/widgets/configuracion/PlanMensual'
 import type { FilaPlan } from '@/entities/plan'
 import { cajaNumero, cajaMala, fechaDia, edicionDe } from '@/widgets/configuracion/comun'
 import { Accesos } from '@/widgets/configuracion/Accesos'
+import { FilosofiaOperacional, type PasoFilosofia } from '@/widgets/configuracion/Filosofia'
+import { conTopologia, pendientesDe, type RespuestaEquipo, type TopologiaEnBorrador } from '@/widgets/configuracion/topologia'
+import type { TopologiaVigente } from '@/shared/api/choke'
+import { campoPorId } from '@/entities/campos'
 import { useSesion, useVersiones, usePlantas } from '@/shared/api/sesion'
 
 const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento disabled:opacity-70'
 
-type Pestana = 'metas' | 'accesos' | 'tecnica'
-const PESTANA: Record<Pestana, string> = { metas: 'Metas de los campos', accesos: 'Usuarios y accesos', tecnica: 'Configuración técnica' }
+type Pestana = 'metas' | 'accesos' | 'tecnica' | 'filosofia'
+const PESTANA: Record<Pestana, string> = {
+  metas: 'Metas de los campos', accesos: 'Usuarios y accesos', tecnica: 'Configuración técnica', filosofia: 'Filosofía operacional',
+}
 
 /** Lo único que se escribe a mano en TRIM: las metas, los accesos y la
  *  configuración técnica del campo. Las metas (con el precio y la regla de
  *  cierre) y los accesos son del gerente de activo; tanques, respaldos,
- *  programa y membrete, del administrador de la implementación. Todo se edita
+ *  programa y membrete, del administrador de la implementación, como la
+ *  filosofía operacional (a qué pozos sirve cada equipo: U2 §8). Todo se edita
  *  en un borrador y rige solo cuando quien puede lo FIRMA con un motivo; cada
  *  firma es una versión y ninguna se sobrescribe. Lo demás (producido,
  *  diferido, causas, salud) sale de los equipos y no se configura aquí. */
@@ -45,9 +52,14 @@ export function Configuracion() {
 function ConPestanas() {
   const versiones = useVersiones()
   const rol = useRol()
-  const pestanas: Pestana[] = rol.puede['config:firmar'] ? ['tecnica', 'metas', 'accesos'] : ['metas', 'accesos']
+  // La filosofía operacional la prepara y la firma el administrador; producción y
+  // confiabilidad la pueden abrir y leer (si su rol tiene Configuración); el gerente no entra (U2 §8.1).
+  const pestanas: Pestana[] = rol.puede['config:firmar'] ? ['tecnica', 'filosofia', 'metas', 'accesos']
+    : rol.nivel === 'ingenieria' ? ['filosofia', 'metas', 'accesos'] : ['metas', 'accesos']
   const [pestana, setPestana] = useState<Pestana>(pestanas[0]!)
   const actual = pestanas.includes(pestana) ? pestana : pestanas[0]!
+  // El paso de la filosofía vive aquí, como el modo de las metas: al firmar, el editor se rehace y no lo pierde.
+  const [pasoFilosofia, setPasoFilosofia] = useState<PasoFilosofia>(1)
   // Si ya hay un plan cargado (meses con cifra propia del mes en curso en adelante), se abre en
   // el plan. El modo vive aquí y no en el editor: al firmar, el editor se rehace y no lo pierde.
   const config = useSesion(s => s.ctx.config)
@@ -92,13 +104,17 @@ function ConPestanas() {
       </div>
       {/* Al firmar cambia la versión vigente: el editor arranca de nuevo sobre ella. El borrador sobrevive al cambiar de pestaña. */}
       <div role="tabpanel" id={idPanel} aria-labelledby={idPestana(actual)}>
-        <Editor key={versiones.length} pestana={actual} modo={modo} setModo={setModo} />
+        <Editor key={versiones.length} pestana={actual} modo={modo} setModo={setModo}
+          pasoFilosofia={pasoFilosofia} setPasoFilosofia={setPasoFilosofia} onPestana={setPestana} />
       </div>
     </>
   )
 }
 
-function Editor({ pestana, modo, setModo }: { pestana: Pestana; modo: 'vigente' | 'plan'; setModo: (m: 'vigente' | 'plan') => void }) {
+function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPestana }: {
+  pestana: Pestana; modo: 'vigente' | 'plan'; setModo: (m: 'vigente' | 'plan') => void
+  pasoFilosofia: PasoFilosofia; setPasoFilosofia: (p: PasoFilosofia) => void; onPestana: (p: Pestana) => void
+}) {
   const campo = useCampo(); const rol = useRol(); const persona = usePersona(); const ctx = useCtx()
   const campos = useCampos()
   const campoId = useApp(s => s.campoId), versiones = useVersiones(), firmarConfig = useApp(s => s.firmarConfig), setPantalla = useApp(s => s.setPantalla)
@@ -121,11 +137,30 @@ function Editor({ pestana, modo, setModo }: { pestana: Pestana; modo: 'vigente' 
   // El plan mes a mes: lo editado por campo y mes («campo|AAAA-MM»), cada uno un tramo desde su día 1.
   const [plan, setPlan] = useState<Record<string, EdicionMeta>>({})
   const mesActual = desdeMin.slice(0, 7)
+  // La filosofía operacional: lo contestado por campo y equipo, sobre la topología que regía.
+  const [topologia, setTopologia] = useState<Record<string, TopologiaEnBorrador>>({})
   const conVigente = useMemo(() => Object.entries(ediciones).reduce((c, [id, e]) => conTramo(c, id, { desde, ...e }), borrador), [borrador, ediciones, desde])
-  const propuesta = useMemo(() => Object.entries(plan).reduce((c, [k, e]) => {
+  const conPlan = useMemo(() => Object.entries(plan).reduce((c, [k, e]) => {
     const [id, mes] = k.split('|') as [string, string]
     return conMes(c, id, { desde: `${mes}-01`, ...e })
   }, conVigente), [conVigente, plan])
+  const propuesta = useMemo(() => conTopologia(conPlan, topologia), [conPlan, topologia])
+  /** Lo contestado de uno o varios equipos de un campo; null quita lo contestado. */
+  const responderTopologia = (id: string, vigente: TopologiaVigente, cambios: Record<string, RespuestaEquipo | null>) => {
+    setTopologia(x => {
+      const ya = x[id] ?? { base: vigente.elementos, firmada: vigente.firmada, respuestas: {} }
+      const respuestas = { ...ya.respuestas }
+      for (const [k, r] of Object.entries(cambios)) { if (r) respuestas[k] = r; else delete respuestas[k] }
+      return { ...x, [id]: { ...ya, respuestas } }
+    })
+    setMensaje(null)
+  }
+  // TRIM propone, pero no firma nada solo (U2 §8.3): un campo que estrena su
+  // topología la firma entera, así que cada equipo tiene que tener respuesta.
+  const faltanTopologia = Object.entries(topologia).flatMap(([id, t]) => {
+    const n = pendientesDe(t).length
+    return n ? [`${campoPorId(id).nombre}: ${plural(n, 'equipo queda', 'equipos quedan')} sin contestar en la filosofía operacional. TRIM propone, pero no firma nada solo: contéstelos o acéptelos por tipo.`] : []
+  })
   // Lo que un mes heredaría sin cifra propia: lo firmado (o editado como meta vigente), o el
   // último mes anterior del plan en el borrador si empieza después.
   const baseMes = (id: string, mes: string): EdicionMeta => {
@@ -176,13 +211,21 @@ function Editor({ pestana, modo, setModo }: { pestana: Pestana; modo: 'vigente' 
   const grupos = useMemo(() => diferenciasPorGrupo(ctx.config, propuesta), [ctx.config, propuesta])
   const cambios = [...grupos.metas, ...grupos.tecnica]
   // Con la hora de la firma, igual que el store: lo que la pantalla da por bueno es lo que se firma.
-  const errores = validarConfig(propuesta, ctx.config, desdeMin, AHORA.getTime())
+  // Lo que no deja firmar: las reglas de la configuración (las mismas del servidor) y lo que falta contestar de la topología.
+  const errores = [...validarConfig(propuesta, ctx.config, desdeMin, AHORA.getTime()), ...faltanTopologia]
   const cfgCampo = borrador.campos[campoId]
   const firmaVisible = pestana === 'metas' ? puedeMetas : puedeTecnica
 
   const cambiar = (f: (c: Config) => void) => { setBorrador(b => { const n = structuredClone(b); f(n); return n }); setMensaje(null) }
-  const descartar = () => { setBorrador(structuredClone(ctx.config)); setVersionBase(versiones.at(-1)!.version); setEdiciones({}); setPlan({}); setDesde(diaCo(AHORA.getTime())); setMensaje(null) }
+  const descartar = () => { setBorrador(structuredClone(ctx.config)); setVersionBase(versiones.at(-1)!.version); setEdiciones({}); setPlan({}); setTopologia({}); setDesde(diaCo(AHORA.getTime())); setMensaje(null) }
   const firmar = async () => {
+    // La filosofía operacional cambia dónde se trabó cada parada: sin motivo no hay cómo auditarla después.
+    // (La misma regla del servidor; aquí con palabras de la topología y no de las metas.)
+    if (pestana === 'filosofia' && !alcanza(motivo, MOTIVO_MINIMO)) {
+      setMensaje('Falta el motivo: diga por qué cambia la filosofía operacional. Queda en el historial de versiones, con su firma.')
+      document.getElementById(idMotivo)?.focus()
+      return
+    }
     // Quién firma no lo manda la pantalla: lo pone el store (en producción, el token).
     const r = await firmarConfig(propuesta, motivo, versionBase)
     if (r.ok) setVersionBase(r.version)
@@ -222,7 +265,8 @@ function Editor({ pestana, modo, setModo }: { pestana: Pestana; modo: 'vigente' 
             <span className="text-[10.5px] text-[var(--tinta2)]">Motivo · obligatorio</span>
             <input id={idMotivo} value={motivo} onChange={e => { setMotivo(e.target.value); setMensaje(null) }} className={campoInput}
               aria-invalid={!!mensaje && !alcanza(motivo, MOTIVO_MINIMO)} aria-describedby={mensaje ? idMensaje : undefined}
-              placeholder={Object.keys(plan).length ? 'Ej.: presupuesto 2027 aprobado por la junta' : grupos.metas.length ? 'Ej.: metas acordadas en el comité de producción de octubre' : 'Ej.: nuevo certificado de aforo del tanque'} />
+              placeholder={pestana === 'filosofia' ? 'Ej.: topología revisada en campo con el jefe de planta'
+                : Object.keys(plan).length ? 'Ej.: presupuesto 2027 aprobado por la junta' : grupos.metas.length ? 'Ej.: metas acordadas en el comité de producción de octubre' : 'Ej.: nuevo certificado de aforo del tanque'} />
           </label>
           {mensaje && <p id={idMensaje} className="text-[11.5px] text-[var(--tinta)]" role="alert">{mensaje}</p>}
           <span className="flex flex-wrap gap-1.5">
@@ -235,6 +279,12 @@ function Editor({ pestana, modo, setModo }: { pestana: Pestana; modo: 'vigente' 
   )
 
   const historial = <Historial versiones={versiones} />
+
+  if (pestana === 'filosofia') return (
+    <FilosofiaOperacional campoId={campoId} topologia={topologia} onResponder={responderTopologia} propuesta={propuesta}
+      puede={puedeTecnica} cambios={cambios.length} firma={firmaVisible && firma} historial={historial}
+      paso={pasoFilosofia} onPaso={setPasoFilosofia} onTecnica={() => onPestana('tecnica')} />
+  )
 
   const selectorModo = (
     // Es un modo de la misma pestaña, no otra pestaña: botones que dicen cuál está puesto.
@@ -427,7 +477,8 @@ function Editor({ pestana, modo, setModo }: { pestana: Pestana; modo: 'vigente' 
       <details className="group">
         <summary className="mb-2 flex cursor-pointer list-none items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[12px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
           <b className="flex-1">Esquema de planta</b>
-          <span className="text-[10.5px] text-[var(--tinta3)]">topología · no cambia cálculos</span>
+          {/* Con el modelo choke el esquema sí cambia algo: de él sale a qué pozos sirve cada equipo (U2 §8.5 y §12, punto 7). */}
+          <span className="text-[10.5px] text-[var(--tinta3)]">de él TRIM deduce a qué pozos sirve cada equipo</span>
           <span className="text-[10px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
         </summary>
         <Esquema puede={rol.puede['conector:configurar']} conGas={perfilDe(borrador, campoId).gas !== 'no'} />

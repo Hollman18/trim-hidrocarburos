@@ -3,12 +3,15 @@ import { Tendencia } from '@/widgets/resumen/ResumenDirectivo'
 import { campoPorId } from '@/entities/campos'
 import { SIN_META } from '@/entities/configuracion'
 import { useLibro, useSerie, useBase } from '@/shared/api/diferidos'
+import { useRepartoMensual } from '@/shared/api/choke'
 import { Encabezado } from '@/widgets/diferidos/Encabezado'
 import { MesAMes } from '@/widgets/diferidos/MesAMes'
 import { Cuadre } from '@/widgets/diferidos/Cuadre'
 import { Factor } from '@/widgets/diferidos/Factor'
 import { campoPublicable } from '@/widgets/diferidos/publicacion'
 import { ParetoEquipos, ParetoPartes, ParetoTipos, Palancas } from '@/widgets/diferidos/Paretos'
+import { PorTramo } from '@/widgets/diferidos/PorTramo'
+import { PanelDondeSeTrabo } from '@/widgets/resumen/DondeSeTrabo'
 import { Panel } from '@/shared/ui/primitivas'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -16,8 +19,8 @@ import { Tip } from '@/shared/ui/Tip'
 import { n0, n1, diaIso as dia } from '@/shared/lib/formato'
 
 /** El libro de diferidos: lo que no se produjo en el período, si cuadra con
- *  la medición oficial, a qué equipo y a qué parte se le carga, y dónde se
- *  puede bajar. */
+ *  la medición oficial, a qué equipo y a qué parte se le carga, dónde se
+ *  trabó (por tramo y por escalón, U2 §3.1) y dónde se puede bajar. */
 export function Diferidos() {
   const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const nivel = useNivel()
   const abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla), setCampo = useApp(s => s.setCampo), setRango = useApp(s => s.setRango), campoId = useApp(s => s.campoId)
@@ -25,6 +28,7 @@ export function Diferidos() {
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
   const lb = useLibro(q)
   const serie = useSerie(ids)
+  const porTramo = useRepartoMensual(ids)
   const base = useBase(q)
 
   const abrir = (c: string, eq: string) => {
@@ -42,15 +46,18 @@ export function Diferidos() {
       <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} simple />
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
         <Panel titulo="MES A MES">
-          <Tendencia serie={serie} desde={rango.desde} hasta={rango.hasta}
+          <Tendencia serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
           <Lectura>
             Diferido por día de cada mes: lo de alto impacto, oscuro; la raya, el máximo que usted firmó
-            para ese mes. Toque o pase el cursor por un mes para ver sus cifras; un clic lo abre.
+            para ese mes. «Por dónde se trabó» parte cada mes por tramo. Toque o pase el cursor por un mes
+            para ver sus cifras; un clic lo abre.
           </Lectura>
         </Panel>
         <Palancas lb={lb} base={base} />
       </div>
+      {/* La vista «Por dónde se trabó» del gerente (U2 §3.1): la misma de su Resumen. */}
+      <PanelDondeSeTrabo className="mb-2.5" campos={ids} desde={rango.desde} hasta={rango.hasta} />
       <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))]">
         <ParetoEquipos lb={lb} global={ambito.global} simple onAbrir={abrir} />
         <ParetoTipos lb={lb} />
@@ -63,7 +70,7 @@ export function Diferidos() {
       <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} />
 
       <Panel className="mb-2.5" titulo="MES A MES">
-        <MesAMes serie={serie} desde={rango.desde} hasta={rango.hasta}
+        <MesAMes serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
           onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
       </Panel>
 
@@ -113,6 +120,11 @@ export function Diferidos() {
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
         <Palancas lb={lb} base={base} />
         <ParetoTipos lb={lb} />
+      </div>
+
+      {/* Junto a los Paretos: el mismo total por tramo y por escalón (U2 §3.1; CHOKE-COMPLETO §6–§7). */}
+      <div className="mb-2.5">
+        <PorTramo campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} onIdentificar={irA('causa')} />
       </div>
 
       <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">

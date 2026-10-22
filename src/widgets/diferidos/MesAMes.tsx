@@ -1,10 +1,14 @@
 import { alFinal } from '@/shared/ui/alFinal'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import type { MesResumen } from '@/shared/api/diferidos'
+import { CHOKES_Y_SIN_ASIGNAR, type MesPorTramo } from '@/shared/api/choke'
 import { conMeta, textoSinMeta } from '@/entities/libro'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
 import { n0, n1 } from '@/shared/lib/formato'
+import { cn } from '@/shared/lib/cn'
+import { Muestra } from './tramos'
+import { LARGO_TRAMO, RELLENO, mayuscula } from './reparto'
 
 /** Redondea hacia arriba a un tope «limpio» para el eje: 1, 2 o 5 por una
  *  potencia de diez. */
@@ -18,13 +22,21 @@ const k = (v: number) => v >= 1000 ? `${n1(v / 1000)} k` : n0(v)
 
 /** Diferido de cada mes, partido en lo identificado por señal, lo declarado
  *  por el operario y lo que sigue sin identificar, contra el máximo de diferido firmado del mes.
+ *  Con `porTramo`, la misma columna se puede partir por dónde se trabó (U2
+ *  §7.4): los cuatro tramos en grises y lo sin identificar, rayado. El total
+ *  es el mismo: el del libro.
  *
  *  ISA-101: todo en grises; el único color es la marca de prioridad 3 sobre
  *  los meses que pasaron su máximo firmado, y siempre con su forma (cuadrado). */
-export function MesAMes({ serie, desde, hasta, onMes }: {
+export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
   serie: MesResumen[]; desde: Date; hasta: Date; onMes?: (m: MesResumen) => void
+  /** Lo perdido por tramo de cada mes (`useRepartoMensual`): los mismos meses del libro. */
+  porTramo?: MesPorTramo[]
 }) {
   const id = useId().replace(/:/g, '')
+  const [vista, setVista] = useState<'como' | 'tramo'>('como')
+  const deMes = new Map((porTramo ?? []).map(t => [t.mes, t]))
+  const porDonde = vista === 'tramo' && porTramo !== undefined
   const W = 720, G = { x0: 54, x1: 712, y0: 22, y1: 168 }
   const n = serie.length
   const paso = (G.x1 - G.x0) / n
@@ -36,9 +48,20 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
 
   return (
     <>
+      {porTramo && (
+        <div role="group" aria-label="Cómo se parte cada mes" className="no-imprimir mb-1.5 flex flex-wrap gap-1">
+          {([['como', 'Cómo se identificó'], ['tramo', 'Por dónde se trabó']] as const).map(([v, t]) => (
+            <button key={v} type="button" aria-pressed={vista === v} onClick={() => setVista(v)}
+              className={cn('min-h-6 cursor-pointer rounded border px-2.5 py-[2px] text-[11px]',
+                vista === v ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
       <div ref={alFinal} className="overflow-x-auto">
         <svg viewBox={`0 0 ${W} 206`} className="block h-auto w-full min-w-[560px]" role="group"
-          aria-label={`Barriles diferidos mes a mes, de ${serie[0]?.nombre} a ${serie.at(-1)?.nombre}`}>
+          aria-label={`Barriles diferidos mes a mes${porDonde ? ', por dónde se trabó' : ''}, de ${serie[0]?.nombre} a ${serie.at(-1)?.nombre}`}>
           <defs>
             <pattern id={`sin-${id}`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
               <rect width="5" height="5" fill="var(--panel)" />
@@ -54,9 +77,12 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
           {serie.map((m, i) => {
             const l = m.libro
             const x = G.x0 + paso * i + (paso - ancho) / 2
-            const tramos: Array<[number, string]> = [
-              [l.identificado, 'var(--dato-1)'], [l.declarado, 'var(--dato-3)'], [Math.max(0, l.pendiente), `url(#sin-${id})`],
-            ]
+            // Por dónde se trabó: los tramos de abajo arriba en el orden de la tubería; lo sin identificar, rayado y encima.
+            const t = deMes.get(m.mes)
+            const tramos: Array<[number, string]> = porDonde
+              ? CHOKES_Y_SIN_ASIGNAR.map(k => [k === 'sin-asignar' ? Math.max(0, t?.porTramo[k] ?? 0) : t?.porTramo[k] ?? 0, k === 'sin-asignar' ? `url(#sin-${id})` : RELLENO[k]])
+              : [[l.identificado, 'var(--dato-1)'], [l.declarado, 'var(--dato-3)'], [Math.max(0, l.pendiente), `url(#sin-${id})`]]
+            const rayado = tramos.length - 1
             let base = 0
             const activo = enPeriodo(m)
             // Un mes con algún campo sin meta firmada no tiene máximo: ni raya ni marca.
@@ -66,8 +92,10 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
             return (
               <Tip key={m.mes} as="g" titulo={m.nombre}
                 pista={m.parcial ? 'Mes en curso: cifras parciales, cierre sin publicar.' : onMes ? 'Clic para ver este mes' : 'Mes cerrado'}
-                filas={[['Diferidos', `${n0(l.brecha)} bbl`], ['Identificado por señal', `${n0(l.identificado)} bbl`],
-                  ['Declarado', `${n0(l.declarado)} bbl`], ['Sin identificar', `${n0(l.pendiente)} bbl`],
+                filas={[['Diferidos', `${n0(l.brecha)} bbl`],
+                  ...(porDonde
+                    ? CHOKES_Y_SIN_ASIGNAR.filter(k => (t?.porTramo[k] ?? 0) >= 0.5).map(k => [mayuscula(LARGO_TRAMO[k]), `${n0(t?.porTramo[k] ?? 0)} bbl`] as [string, string])
+                    : [['Identificado por señal', `${n0(l.identificado)} bbl`], ['Declarado', `${n0(l.declarado)} bbl`], ['Sin identificar', `${n0(l.pendiente)} bbl`]] as Array<[string, string]>),
                   ['Alto impacto', `${n0(l.altoImpacto)} bbl`],
                   ['Máximo firmado', hayMeta ? `${n0(l.meta.diferido)} bbl` : textoSinMeta(l.meta, l.porCampo.length > 1)], ['Eficiencia', `${n1(l.pe)} %`],
                   ['Cierre', m.parcial ? 'sin publicar' : l.publicable ? 'publicable' : 'no publicable']]}
@@ -79,7 +107,8 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
                     const y1 = Y(base), y0 = Y(base + v)
                     base += v
                     return <rect key={j} x={x} y={y0} width={ancho} height={Math.max(0.6, y1 - y0)} fill={fill}
-                      stroke={j === 2 ? 'var(--tinta3)' : 'none'} strokeWidth={j === 2 ? 0.8 : 0} />
+                      stroke={j === rayado ? 'var(--tinta3)' : porDonde ? 'var(--panel)' : 'none'} strokeWidth={j === rayado ? 0.8 : porDonde ? 0.6 : 0}
+                      strokeDasharray={j === rayado && porDonde ? '2 1.5' : undefined} />
                   })}
                   {m.parcial && (
                     <rect x={x} y={yTope} width={ancho} height={G.y1 - yTope} fill="none"
@@ -112,11 +141,17 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
         </svg>
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
-        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />por señal</span>
-        <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-3)]" />declarado</span>
-        <span className="inline-flex items-center gap-1.5">
-          <svg width="10" height="10" aria-hidden><rect width="10" height="10" fill={`url(#sin-${id})`} stroke="var(--tinta3)" strokeWidth="1" /></svg>sin identificar
-        </span>
+        {porDonde
+          ? CHOKES_Y_SIN_ASIGNAR.map(k => <span key={k} className="inline-flex items-center gap-1.5"><Muestra k={k} />{LARGO_TRAMO[k]}</span>)
+          : (
+            <>
+              <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-1)]" />por señal</span>
+              <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--dato-3)]" />declarado</span>
+              <span className="inline-flex items-center gap-1.5">
+                <svg width="10" height="10" aria-hidden><rect width="10" height="10" fill={`url(#sin-${id})`} stroke="var(--tinta3)" strokeWidth="1" /></svg>sin identificar
+              </span>
+            </>
+          )}
         <span className="inline-flex items-center gap-1.5">
           <svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.4" strokeDasharray="4 2" /></svg>máximo firmado
         </span>
@@ -130,6 +165,7 @@ export function MesAMes({ serie, desde, hasta, onMes }: {
         señal no alcanzaba; lo rayado nadie lo ha identificado todavía. La raya es el máximo de
         diferido que firmó el gerente para ese mes. Los meses del período que está mirando van al
         frente. Toque o pase el cursor por un mes para ver sus cifras{onMes ? '; un clic lo abre' : ''}.
+        {porTramo && ' «Por dónde se trabó» parte la misma columna entre el yacimiento, los pozos, la planta o estación y afuera; lo sin identificar sigue rayado.'}
       </Lectura>
     </>
   )

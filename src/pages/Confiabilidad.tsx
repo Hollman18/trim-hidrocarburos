@@ -1,4 +1,4 @@
-import { useApp, useAmbito } from '@/app/store'
+import { useApp, useAmbito, useRango } from '@/app/store'
 import { useConfiabilidad, type EquipoConfiable as Equipo } from '@/shared/api/equipos'
 import { pedirCalendario, pedirInicioDeHistoria } from '@/shared/api/calendario'
 import { NOMBRE_FAMILIA as FAMILIA, type Familia } from '@/entities/flota'
@@ -18,6 +18,7 @@ import { TresRelojes } from '@/widgets/sap/TresRelojes'
 import { useRelojes } from '@/shared/api/sap'
 import { AHORA } from '@/entities/reloj'
 import { desplazable } from '@/shared/ui/alFinal'
+import { CalidadClasificacion } from '@/widgets/arbol/Calidad'
 
 /** La familia de UN equipo, en corto (la tabla la dice por fila). */
 const UNA: Record<Familia, string> = { inyeccion: 'reinyección', multifasica: 'multifásica', electrosumergible: 'electrosumergible' }
@@ -26,7 +27,7 @@ const UNA: Record<Familia, string> = { inyeccion: 'reinyección', multifasica: '
  *  PLC: cada cuánto fallan, cuánto tardan, de qué parte, y qué tan bien está
  *  registrada cada falla. Nada sale de un formulario. */
 export function Confiabilidad() {
-  const ambito = useAmbito()
+  const ambito = useAmbito(); const rango = useRango()
   const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const clave = ambito.campos.map(c => c.id).join(',')
 
@@ -213,6 +214,9 @@ export function Confiabilidad() {
           <p className="mt-2 flex flex-wrap gap-1"><Chip>{plural(fallas.length, 'falla', 'fallas')}</Chip><Chip>{plural(equipos.length, 'equipo', 'equipos')}</Chip></p>
         </Panel>
       </div>
+
+      {/* Cuánto de lo que TRIM propone para la ANH confirma o corrige la gente, con el paso 2 aparte (U2 §4.6). */}
+      <CalidadClasificacion campos={clave.split(',').filter(Boolean)} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} global={ambito.global} />
     </>
   )
 }

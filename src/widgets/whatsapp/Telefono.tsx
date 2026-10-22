@@ -30,6 +30,9 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
   const [paso, setPaso] = useState<Paso>({ tipo: 'opciones' })
   const [locales, setLocales] = useState<Burbuja[]>([])
   const [escrito, setEscrito] = useState('')
+  /** El cierre de la conversación (U1 §2.6, corregido por S1 U1-2): el operador
+   *  avala solo lo que contestó; lo técnico lo revisa su supervisor. */
+  const [cierre, setCierre] = useState<'bien' | 'mal' | null>(null)
   const chat = useRef<HTMLDivElement>(null)
   const botones = useRef<HTMLDivElement>(null)
   // Cada toque cambia las respuestas rápidas: el botón que tenía el foco
@@ -44,11 +47,21 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
   const cat = pedirCatalogoDeDanos(p.campoId, p.equipo)
   const ahora = AHORA.toISOString()
 
+  // ¿La respuesta es de quien mira este chat? Por el id de la persona, no por el texto de `por`.
+  const suya = !!r && r.canal === 'whatsapp' && r.porId === persona.id
+  const nombre = persona.nombre.split(' ')[0] ?? persona.nombre
   const burbujas: Burbuja[] = [
     ...suyos.map(m => ({ de: 'trim' as const, texto: m.texto, hora: m.hora })),
-    // ¿La respuesta es de quien mira este chat? Por el id de la persona, no por el texto de `por`.
-    ...(r ? (r.canal === 'whatsapp' && r.porId === persona.id
-      ? [{ de: 'persona' as const, texto: r.texto, hora: r.hora }, { de: 'trim' as const, texto: `TRIM · Registrado: «${r.texto}». Gracias.`, hora: r.hora }]
+    ...(r ? (suya
+      ? [{ de: 'persona' as const, texto: r.texto, hora: r.hora },
+        // Lo que se le muestra para avalar es SOLO lo que contestó: la parte y lo que vio.
+        // Dónde se trabó, la causa y el detalle no van: los confirma su supervisor (S1 U1-2; P1 §1.3).
+        { de: 'trim' as const, texto: `TRIM · Así queda lo que usted contestó: ${p.equipo}, ${r.texto.charAt(0).toLowerCase()}${r.texto.slice(1)}. El resto del reporte lo revisa su supervisor.\n1) Está bien · 2) Algo está mal`, hora: r.hora },
+        ...(cierre ? [{ de: 'persona' as const, texto: cierre === 'bien' ? '1' : '2', hora: r.hora },
+          { de: 'trim' as const, hora: r.hora, texto: cierre === 'bien'
+            ? `TRIM · Listo. Gracias, ${nombre}. Su respuesta queda guardada a las ${hora(r.hora)}.`
+            // «Algo está mal» todavía no se guarda en la parada (no hay escritura para eso): se dice qué hacer.
+            : 'TRIM · Entendido. Avísele a su supervisor qué está mal: él lo corrige en la pantalla de Identificar.' }] : [])]
       : [{ de: 'trim' as const, texto: `TRIM · Ya respondió ${r.por}: «${r.texto}». Gracias.`, hora: r.hora }])
       : locales),
   ]
@@ -88,8 +101,11 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
   }
   const volver = { clave: '↩', texto: 'Escoger otra parte', hacer: () => setPaso({ tipo: 'opciones' }) }
 
-  // Las respuestas rápidas del paso en que va la conversación.
-  const rapidas: Array<{ clave: string; texto: string; hacer: () => void }> = r || !pregunta ? [] :
+  // Las respuestas rápidas del paso en que va la conversación. Ya respondida,
+  // a quien respondió le queda avalar lo que contestó (o decir que algo está mal).
+  const rapidas: Array<{ clave: string; texto: string; hacer: () => void }> = r
+    ? (suya && !cierre ? [{ clave: '1', texto: 'Está bien', hacer: () => setCierre('bien') }, { clave: '2', texto: 'Algo está mal', hacer: () => setCierre('mal') }] : [])
+    : !pregunta ? [] :
     paso.tipo === 'opciones' ? (pregunta.opciones ?? []).filter(o => o.clave !== OTRA.clave).map(o => ({ clave: o.clave, texto: o.texto, hacer: () => tocar(o) }))
       .concat([{ clave: '0', texto: 'Otra cosa', hacer: () => tocar(OTRA) }])
     : paso.tipo === 'partes' ? (cat?.partes ?? []).map((x, i) => ({ clave: String(i + 1), texto: x.nombre, hacer: () => preguntarModo({ clave: String(i + 1), texto: x.nombre, parte: x.id }) }))

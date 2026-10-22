@@ -21,6 +21,8 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
+import { HoyLimita, DondeSeTrabo } from '@/widgets/arbol/HoyLimita'
+import { CierreDeHoy } from '@/widgets/arbol/CierreDeHoy'
 
 /** Turno de 12 horas (rotación 7×7 sobre una operación 24/7). */
 const TURNO_H = 12
@@ -74,6 +76,8 @@ export function Turno() {
   const vigilar = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const porDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
+  // El operador no ve el modelo del tramo (U2 §3.1): contesta lo que vio.
+  const veTramo = rol.id !== 'oper' && rol.id !== 'tec'
   const donde = (c: string) => (ambito.global ? ` · ${campoPorId(c).nombre}` : '')
   // Nuevos son los eventos que EMPEZARON en el turno; lo que venía de antes
   // sigue en «pasando ahora», no se cuenta otra vez.
@@ -110,6 +114,7 @@ export function Turno() {
         <span className="flex flex-wrap items-baseline gap-x-2">
           <b className="text-[12.5px] leading-tight">{r.equipo}{donde(r.campoId)}</b>
           <Chip tono={r.altoImpacto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>
+          {veTramo && <DondeSeTrabo campoId={r.campoId} equipo={r.equipo} desde={inicioTurno} hasta={AHORA} />}
           {r.parte && <span className="text-[10.5px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
         </span>
         <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{plural(r.pozos, 'pozo', 'pozos')}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}</small>
@@ -234,7 +239,11 @@ export function Turno() {
         ver a quién le llegó cada mensaje; lo que no se envió se marca en la fila.
       </Lectura>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+      {/* «Hoy limita» separa lo que limita, lo más frágil y lo que más cuesta si falla (U2 §3.1, §12 punto 1). */}
+      {veTramo && <div className="mt-2.5"><HoyLimita campos={ids} desde={inicioTurno} hasta={AHORA} /></div>}
+      <div className={veTramo ? '' : 'mt-2.5'}><CierreDeHoy key={rol.id} campos={ids} global={ambito.global} /></div>
+
+      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
         <Panel titulo="2 · Pasando ahora" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
           {perdiendo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
           {listaPerdiendo.visibles.map(filaPerdiendo)}

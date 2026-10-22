@@ -7,10 +7,12 @@
  */
 export const MVP = true
 
-/** Lo que espera a v2: el tren de agua como pantalla propia, la evidencia
- *  contractual y el reporte al regulador. El lazo de mantenimiento SÍ entra:
- *  sin alguien que haga bajar los barriles, el número de arriba no sirve. */
-export const PANTALLAS_V2 = new Set(['agua', 'evidencia', 'regulatorio'])
+/** Lo que espera a v2: la evidencia contractual y el reporte al regulador.
+ *  El lazo de mantenimiento SÍ entra: sin alguien que haga bajar los barriles,
+ *  el número de arriba no sirve. El tren de agua («La tubería del agua», U2
+ *  §5.6) se encendió con el choke (21-oct-2026): el norte del plan son las
+ *  bombas de reinyección, y la pantalla ya existía para esto. */
+export const PANTALLAS_V2 = new Set(['evidencia', 'regulatorio'])
 export const ROLES_V2 = new Set(['plan', 'cont', 'reg'])
 
 export const pantallaVisible = (id: string) => !MVP || !PANTALLAS_V2.has(id)

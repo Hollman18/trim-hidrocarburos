@@ -22,6 +22,8 @@ import { cn } from '@/shared/lib/cn'
 import type { Severidad } from '@/entities/tipos'
 import { MarcaPrioridad, FueraDeMeta } from '@/shared/ui/Prioridad'
 import { NOMBRE_PRIORIDAD } from '@/shared/lib/prioridad'
+import { pantallaVisible } from '@/shared/config/producto'
+import { TuberiaDelCampo } from '@/widgets/choke/Tuberia'
 
 const COLOR: Record<Corriente, string> = {
   multi: 'var(--f-multi)', crudo: 'var(--f-crudo)', gas: 'var(--f-gas)',
@@ -79,7 +81,11 @@ const suscribir = (cb: () => void) => { const m = matchMedia(angosto); m.addEven
 /** La planta del campo: el dibujo de lo que el campo tiene (según su perfil),
  *  y encima de todo, lo que de verdad se está midiendo. Lo que captura datos
  *  va lleno; lo configurado sin datos, tenue y punteado: es lo que falta por
- *  instrumentar. Los pasos de proceso y los límites de batería van sin caja. */
+ *  instrumentar. Los pasos de proceso y los límites de batería van sin caja.
+ *
+ *  Arriba del esquema va «La tubería del campo» (U2 §2.4): el esquema es el
+ *  dibujo de los equipos y la tubería, su resumen en cuatro tramos. Los dos se
+ *  enlazan, y el tren de agua lleva a «La tubería del agua» (U2 §5.7). */
 export function Planta() {
   const plantaCfg = usePlanta()
   const campo = useCampo()
@@ -99,6 +105,11 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const { caudales, niveles } = useCampoAhora(campoId)
   const cfg = useMemo(() => ({ ...plantaCfg, caudales: { ...plantaCfg.caudales, ...caudales } }), [plantaCfg, caudales])
   const verPozos = rol.pantallas.includes('pozos')
+  const verAgua = rol.pantallas.includes('agua') && pantallaVisible('agua')
+  // La tubería y el esquema se enlazan (U2 §2.4): sin animación, nada se mueve solo (U2 §2.8).
+  const refTuberia = useRef<HTMLDivElement>(null), refEsquema = useRef<HTMLDivElement>(null)
+  const verTuberia = () => refTuberia.current?.scrollIntoView({ block: 'start' })
+  const verEsquema = () => refEsquema.current?.scrollIntoView({ block: 'start' })
 
   const [destacado, setDestacado] = useState<string | null>(null)
   const refs = useRef(new Map<string, SVGGElement>())
@@ -244,7 +255,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       )}
       {/* En el teléfono el dibujo va cerrado: el destino del gas (su salvedad, «no tiene tren de gas») se dice aquí. */}
       {estrecho && <span className="text-[12px] text-[var(--tinta2)]">{NOMBRE_GAS[perfil.gas]}</span>}
-      <Info className="sm:ml-auto" rotulo="la planta" titulo="Nota de planta" texto={cfg.nota} />
+      {!estrecho && <Boton variante="chico" className="sm:ml-auto" onClick={verTuberia}>Ver la tubería</Boton>}
+      <Info className={estrecho ? 'sm:ml-auto' : undefined} rotulo="la planta" titulo="Nota de planta" texto={cfg.nota} />
     </div>
   )
 
@@ -520,6 +532,10 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
         </div>
       )}
 
+      <div ref={refTuberia}>
+        <TuberiaDelCampo campoId={campoId} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} onUbicarPlanta={estrecho ? undefined : verEsquema} />
+      </div>
+
       {/* En el teléfono el dibujo no se lee: primero las listas, y el dibujo a un clic. */}
       {estrecho ? (
         <>
@@ -527,7 +543,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           {listas}
           <Desplegable titulo="Ver el esquema">{dibujo}</Desplegable>
         </>
-      ) : <>{dibujo}{listas}</>}
+      ) : <><div ref={refEsquema}>{dibujo}</div>{listas}</>}
 
       {nivel === 'ingenieria' && (
         <Desplegable titulo="Capacidad por tren" imprimir>
@@ -552,6 +568,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                 </Tip>
               )
             })}
+            {verAgua && <Boton variante="chico" onClick={() => setPantalla('agua')}>Ver la tubería del agua</Boton>}
           </Panel>
         </Desplegable>
       )}

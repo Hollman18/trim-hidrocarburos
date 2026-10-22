@@ -50,7 +50,8 @@ export function Esquema({ puede, conGas = true }: { puede: boolean
     <>
       <Lectura>
         Cada pozo, tanque o máquina que se registre aparece en su tren del esquema de planta y queda
-        conectado a lo que sigue. Es la topología: no cambia ningún cálculo de barriles.
+        conectado a lo que sigue. No cambia los barriles del libro, pero de aquí TRIM deduce a qué pozos sirve
+        cada equipo, y con eso dónde se trabó cada parada: se revisa y se firma en «Filosofía operacional».
       </Lectura>
       {error && <p role="alert" className="mt-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[12px] font-semibold">{error}</p>}
       <div className="mb-2.5 mt-2 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">

@@ -20,11 +20,23 @@ import { Cuadre } from '@/widgets/diferidos/Cuadre'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { AsignacionOficial } from '@/widgets/produccion/AsignacionOficial'
 import { desplazable } from '@/shared/ui/alFinal'
+import { TuberiaDelCampo } from '@/widgets/choke/Tuberia'
+import { TuberiaDeCadaCampo } from '@/widgets/choke/Campos'
+import { SerieLimita } from '@/widgets/choke/Serie'
+import { Escalera } from '@/widgets/choke/Escalera'
+import { PorTramoMensual } from '@/widgets/choke/Mensual'
 
 /** La curva es el hecho; el diferido es la consecuencia. Producción entra por
  *  aquí: cuánto salió por el punto de medición oficial, contra lo que daban
  *  las pruebas y contra la meta firmada, día por día. Lo real contra la meta
- *  va en barra; si el libro se puede publicar, en el sello de arriba. */
+ *  va en barra; si el libro se puede publicar, en el sello de arriba.
+ *
+ *  Para producción, entre el bloque de arriba y «Día a día», va «La tubería
+ *  del campo» (U2 §2.4): qué limita hoy, lo que le sobra a cada tramo y lo que
+ *  se perdió por tramo, con el total del libro; debajo, qué limitó cada día.
+ *  Con todos los campos, una fila por campo. Después de «Día a día», lo que no
+ *  se produjo escalón por escalón con la eficiencia, y lo perdido por tramo mes
+ *  a mes. El gerente no ve nada de esto: es detalle técnico (U2 §3.2). */
 export function Produccion() {
   const ambito = useAmbito(); const rango = useRango()
   // El directivo ve la curva y si el número se puede publicar; la custodia,
@@ -89,6 +101,15 @@ export function Produccion() {
         </div>
       </section>
 
+      {ing && (ambito.global
+        ? <TuberiaDeCadaCampo campos={ids} desde={rango.desde} hasta={rango.hasta} />
+        : (
+          <>
+            <TuberiaDelCampo campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
+            <SerieLimita campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
+          </>
+        ))}
+
       <Panel className="mb-2.5" titulo="DÍA A DÍA" extra="bbl/d">
         <Diaria dias={dias} />
         <Lectura>
@@ -99,6 +120,9 @@ export function Produccion() {
           ver sus cifras; con el teclado, las flechas pasan de un día a otro.
         </Lectura>
       </Panel>
+
+      {ing && <Escalera campos={ids} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />}
+      {ing && <PorTramoMensual campos={ids} desde={rango.desde} hasta={rango.hasta} />}
 
       {ing && <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
         <Panel titulo="MEDICIÓN OFICIAL">
