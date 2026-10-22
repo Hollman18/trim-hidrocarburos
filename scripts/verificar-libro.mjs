@@ -2323,7 +2323,7 @@ console.log('\n=== 22. Modelo choke: los cuatro tramos, la topología y «¿Dón
   const bomba = lbH.tramos.find(t => t.causa.tipo === 'reinyeccion' && t.causa.equipo === 'P-201B' && t.pozo.campoId === 'ceiba')
   const chEsp = ch(esp), chB = ch(bomba)
   comprobar(chEsp?.choke === 'pozo' && chEsp.alcance === 'dedicado' && chEsp.servidos === 1 && chB?.choke === 'planta' && chB.alcance === 'compartido'
-    && chB.porque === 'P-201B mueve el agua de 18 pozos: si para, se frenan varios' && chB.regla === 'choke.topologia@2' && chB.fuente === 'derivada',
+    && chB.porque === 'P-201B mueve el agua de 18 pozos: si para, se frenan varios' && chB.regla === 'choke.topologia@3' && chB.fuente === 'derivada',
     `una electrosumergible dedicada da «${CH.NOMBRE_CHOKE[chEsp?.choke]}» («${chEsp?.porque}»); P-201B da «${CH.NOMBRE_CHOKE[chB?.choke]}»: «${chB?.porque}»`)
   // §14.5 · En cascada manda la raíz: todas las paradas de una misma caída llevan el tramo y el elemento de su raíz.
   const porEvento = new Map()
@@ -2354,7 +2354,7 @@ console.log('\n=== 22. Modelo choke: los cuatro tramos, la topología y «¿Dón
   const enCascada = P.eventosDeCampo('morichal').find(e => e.codigo === 'UV' && CS.causaDeEvento(e, ctx0).evento !== e.id)
   const varios = enCascada && CH.chokeDeCausa({ tipo: 'energia', equipo: 'SE-2', como: 'senal', evento: enCascada.id, evidencia: ['prueba'], texto: 'Baja tensión en el alimentador del pozo' }, 'morichal', ctx0)
   comprobar(uvPropios.length > 0 && uvPropios.every(t => ch(t)?.choke === 'pozo' && ch(t)?.elemento === t.pozo.id && ch(t)?.pregunta === CH.PREGUNTA_ENERGIA)
-    && lc05 && ch(lc05)?.choke === 'pozo' && varios?.choke === 'planta' && !varios.pregunta && /a la vez/.test(varios.porque) && CH.REGLA_CHOKE === 'choke.topologia@2',
+    && lc05 && ch(lc05)?.choke === 'pozo' && varios?.choke === 'planta' && !varios.pregunta && /a la vez/.test(varios.porque) && CH.REGLA_CHOKE === 'choke.topologia@3',
     `baja tensión: un solo pozo del alimentador caído es «En el pozo», con la pregunta de energía (las ${uvPropios.length} del demo, LC-05 el 1-oct: «${lc05 && ch(lc05)?.porque}»); varios a la vez en la ventana de cascada, «En la planta» («${varios?.porque.slice(0, 60)}…»)`)
   // Config.topologia manda; lo que la firma no trae sale de la regla por tipo; un campo sin entradas sigue con la derivada.
   const ctxT = { config: { ...ctx0.config, topologia: [CH.conChoke({ elemento: 'P-201B', alcance: 'dedicado', pozos: ['LC-14'], campoId: 'ceiba' })] }, respuestas: {} }
@@ -2534,7 +2534,7 @@ console.log('\n=== 25. La tubería del campo, mes a mes y antes → con TRIM (U2
   comprobar(tu.limita === 'pozos' && cerca(tu.perdiendoAhora.reduce((a, x) => a + x.bpd, 0), perd.reduce((a, r) => a + r.bblDia, 0), 1e-9)
     && cerca(pozosT.potencialBpd - tu.pasaHoyBpd, tu.perdiendoAhora.reduce((a, x) => a + x.bpd, 0), 1e-9) && cerca(tu.pasaHoyBpd, D.caudalesAhora('ceiba').crudo, 1e-12)
     && perd.every(r => CH.tramoDeRiesgo(r, ctx0) === (r.equipo === 'P-201B' ? 'planta' : null)) && enRiesgo.every(r => CH.tramoDeRiesgo(r, ctx0) === (r.tipo === 'electrosumergible' ? 'pozo' : 'planta'))
-    && plantaT.disponibleHoy?.valor === 178500 && plantaT.potencialBpd === 13000,
+    && plantaT.disponibleHoy?.agua.valor === 178500 && plantaT.disponibleHoy.unidad === 'bbl/d de crudo' && plantaT.disponibleHoy.valor > 0 && plantaT.potencialBpd === 13000,
     `lo que limita − lo que pasa hoy = perdiéndose ahora: ${f(pozosT.potencialBpd)} − ${f(tu.pasaHoyBpd)} = ${f(pozosT.potencialBpd - tu.pasaHoyBpd)} bbl/d (P-201B en la planta; LC-21 sin identificar); el tramo de cada riesgo; «${plantaT.disponibleHoy?.texto}»`)
   const tuS = CH.tuberiaCampo('ceiba', sep.desde, sep.hasta, ctx0), tuZ = CH.tuberiaCampo('zarza', oct.desde, oct.hasta, ctx0)
   comprobar(tuS.fraseGerente === 'La Ceiba: 87 % en los pozos (LC-11, LC-04)' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
@@ -2646,6 +2646,143 @@ console.log('\n=== 28. «Si falla hoy» para todos los equipos (CHOKE-COMPLETO �
   comprobar(gu && gu.bpd === 0 && gu.costoFalla === 0 && ce.ranking.every((x, i, xs) => i === 0 || (xs[i - 1].bpd ?? -1) >= (x.bpd ?? -1)) && ce.ranking.every(x => x.alcance !== 'tercero')
     && ce.sinCalcular.every(x => !ce.ranking.some(y => y.equipo === x.equipo)) && TODOS.every(c => CR.criticidadDelCampo(c, ctx0).ranking.length > 0),
     `una falla que el respaldo absorbe cuesta 0 bbl/d (P-201B de Guacamayo: «${gu?.porque}»); la lista va de mayor a menor y lo que no se puede medir va aparte (${ce.sinCalcular.map(x => x.equipo).join(', ')})`)
+}
+
+console.log('\n=== 29. Tanda 4: el mercado, «Todavía no sé», las capacidades firmadas y lo que piden las pantallas ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const CR = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const CAP = await v.ssrLoadModule('/src/entities/capacidades.ts')
+  const AG = await v.ssrLoadModule('/src/entities/choke-agua.ts')
+  const ahora = R.AHORA.getTime()
+  const lbH = L.libro(TODOS, new Date(L.calendario()[0].desde), R.AHORA, ctx0)
+  // ZA-06: «el comprador nominó menos» es el mercado, afuera, con responsable externo (decisión del coordinador, punto 1).
+  const za = lbH.tramos.filter(t => t.pozo.campoId === 'zarza' && t.causa.tipo === 'declarada' && /comprador nominó/.test(t.causa.declarado?.texto ?? ''))
+  const chZa = za.map(t => CH.chokeDeTramo(t, ctx0))
+  const libre = lbH.tramos.find(t => t.causa.tipo === 'declarada' && !/comprador/.test(t.causa.declarado?.texto ?? ''))
+  comprobar(za.length === 6 && chZa.every(c => c?.choke === 'exportacion' && c.subnivel === 'mercado' && c.alcance === 'tercero' && !c.pregunta)
+    && za.every(t => CH.escalonesDe(t, CH.chokeDeTramo(t, ctx0), ctx0)[0][0] === 'capacidad') && za.some(t => t.pozo.id === 'ZA-06')
+    && CH.chokeDeTramo(libre, ctx0)?.choke === 'pozo' && !!CH.chokeDeTramo(libre, ctx0)?.pregunta,
+    `las ${za.length} declaraciones «El comprador nominó menos gas» de La Zarza (ZA-06 entre ellas) son afuera, en el mercado, con responsable externo y escalón de capacidad: «${chZa[0]?.porque}»; otra declaración libre sigue sin interpretarse (${libre?.pozo.id}: el pozo, con su pregunta)`)
+  const bZa = CH.brechaPorChoke(['zarza'], new Date(L.calendario()[0].desde), R.AHORA, ctx0)
+  comprobar(bZa.porChoke.exportacion > 0 && cerca(bZa.porChoke.exportacion, za.reduce((x, t) => x + t.bbl, 0) + lbH.tramos.filter(t => t.pozo.campoId === 'zarza' && t.causa.tipo !== 'declarada' && CH.chokeDeTramo(t, ctx0)?.choke === 'exportacion').reduce((x, t) => x + t.bbl, 0), 1e-9),
+    `en La Zarza lo del comprador queda afuera: ${f(bZa.porChoke.exportacion)} bbl en 13 meses`)
+  // Guacamayo: el crudo de la planta sube a 8.000 y la salida se queda en 7.500 (punto 2): sin empate artificial.
+  const gu = CH.potencialesDelCampo('guacamayo', ahora, ctx0)
+  comprobar(PT.CAMPO_PLANTA.guacamayo.caudales.crudoCap === 8000 && gu.exportacion === 7500 && gu.planta !== null && Math.round(gu.planta) !== Math.round(gu.exportacion)
+    && gu.dominante === 'pozos' && gu.holgura.exportacion < gu.holgura.planta && /^Afuera reciben/.test(gu.texto)
+    && !CAP.revisarCapacidades(undefined, CH.vistaCapacidades('guacamayo', ctx0).entrada).some(h => h.tramo === 'empate'),
+    `Guacamayo: planta ${f(gu.planta)} y salida ${f(gu.exportacion)}, sin empate; lo que sigue a los pozos es la salida («${gu.texto}»)`)
+
+  // Las capacidades: sin firma rigen las del demo, con los mismos números de antes (punto 4).
+  const demoIgual = TODOS.every(c => { const k = CAP.capacidadesDe(ctx0.config, c), pl = PT.CAMPO_PLANTA[c]
+    return k.crudo.valor === pl.caudales.crudoCap && k.afuera.valor === pl.chokes.evacuacion && k.mercado.valor === pl.chokes.mercado && k.agua.valor === pl.caudales.aguaCap
+      && k.crudo.estado === 'demo' && !k.firmadas && !/[A-Za-z]+\.[a-z]+Cap|Chokes\.|diferido\.ts|equipos\.ts/.test([k.crudo, k.agua, k.afuera, k.mercado, k.gas, k.tratamiento, k.admision].map(x => x.fuente).join(' ')) })
+  comprobar(demoIgual, 'sin firma rigen las capacidades del demo, con su estado «demo» y su fuente en palabras (ningún nombre del código): los mismos números de antes en los cinco campos')
+  const firmar = (config, caps) => ({ ...ctx0, config: { ...config, capacidades: caps } })
+  const ctxF = firmar(ctx0.config, [{ campoId: 'ceiba', crudo: { bpd: 11000, fuente: 'prueba' } }])
+  const pF = CH.potencialesDelCampo('ceiba', ahora, ctxF), tF = CH.tuberiaCampo('ceiba', new Date('2026-10-01T00:00:00-05:00'), R.AHORA, ctxF)
+  comprobar(pF.planta === 11000 && pF.dominante === 'planta' && pF.trenQueLimita === 'crudo' && pF.capacidades.crudo.estado === 'firmado'
+    && tF.tramos.find(x => x.tramo === 'planta').estado === 'firmado' && tF.tramos.find(x => x.tramo === 'planta').trenQueLimita === 'crudo'
+    && tF.capacidades.estado === 'parte' && pF.textoCorto === 'Qué limita hoy: la planta · tren de crudo (11.000 bbl/d)',
+    `firmado el tren de crudo de La Ceiba en 11.000, lo que limita hoy es la planta: «${pF.textoCorto}»; la tubería lo dice firmado («${tF.capacidades.texto}»)`)
+  // Con el historial, cada día usa las capacidades que regían: firmar hoy no cambia septiembre.
+  const vF = [C.versionInicial(), { version: 2, fecha: '2026-10-02T14:00:00-05:00', por: 'Hermes Leal · administrador de la implementación', motivo: 'prueba', cambios: [], config: ctxF.config }]
+  const sep = [new Date('2026-09-01T00:00:00-05:00'), new Date('2026-10-01T00:00:00-05:00')]
+  const b0 = CH.brechaPorChoke(['ceiba'], ...sep, ctx0), bSin = CH.brechaPorChoke(['ceiba'], ...sep, ctxF), bCon = CH.brechaPorChoke(['ceiba'], ...sep, ctxF, vF)
+  const tV = CH.tuberiaCampo('ceiba', new Date('2026-10-01T00:00:00-05:00'), R.AHORA, ctxF, vF)
+  comprobar(cerca(bCon.estructural, b0.estructural, 1e-9) && bSin.estructural > b0.estructural && tV.capacidades.firma?.version === 2 && /firmadas el 2 de oct por Hermes Leal/.test(tV.capacidades.texto),
+    `con el historial, septiembre se mide con las capacidades que regían (estructural ${f(bCon.estructural)} = ${f(b0.estructural)} bbl; sin el historial serían ${f(bSin.estructural)}); la tubería dice quién y cuándo las firmó: «${tV.capacidades.texto}»`)
+  // La revisión de lo que se va a firmar (U2 §8.4): las mismas reglas en la pantalla y en el servidor.
+  const vista = CH.vistaCapacidades('ceiba', ctx0, V0)
+  const rev = prop => CAP.revisarCapacidades({ campoId: 'ceiba', ...prop }, vista.entrada)
+  const bajo = rev({ crudo: { bpd: 5000, fuente: 'placa' } }), sinFuente = rev({ afuera: { bpd: 14000, fuente: 'otra' } }), grande = rev({ crudo: { bpd: 17000, fuente: 'placa' } })
+  const empata = rev({ afuera: { bpd: 13000, fuente: 'contrato' } }), explicado = rev({ afuera: { bpd: 13000, fuente: 'contrato' }, explicacionEmpate: 'El oleoducto se dimensionó con la planta' })
+  comprobar(vista.entrada.maximoCrudo && vista.entrada.maximoCrudo.bpd > 11000 && bajo.some(h => h.tramo === 'crudo' && h.bloquea && /ya pasaron/.test(h.texto))
+    && sinFuente.some(h => h.tramo === 'afuera' && h.bloquea && /de dónde sale/.test(h.texto)) && grande.some(h => h.tramo === 'crudo' && !h.bloquea && /cambia 31 %/.test(h.texto))
+    && empata.some(h => h.tramo === 'empate' && h.bloquea) && explicado.some(h => h.tramo === 'empate' && !h.bloquea) && !explicado.some(h => h.bloquea)
+    && !vista.hallazgos.some(h => h.bloquea) && vista.hallazgos.some(h => h.tramo === 'fuentes'),
+    `la revisión: menos de lo que ya pasó (${f(vista.entrada.maximoCrudo?.bpd ?? 0)} bbl/d el ${R.fechaCorta(vista.entrada.maximoCrudo?.dia ?? R.AHORA)}) bloquea; sin fuente bloquea; un cambio grande pide confirmar sin bloquear; un empate exacto bloquea hasta que se explica («${empata.find(h => h.tramo === 'empate')?.texto}»)`)
+  const malas = CAP.validarCapacidades([{ campoId: 'nada', crudo: { bpd: 1, fuente: 'placa' } }, { campoId: 'ceiba', crudo: { bpd: -1, fuente: 'placa' }, bombas: [{ equipo: 'P-999', bpd: 100, fuente: 'placa' }] }, { campoId: 'ceiba' }])
+  const cfgF = { ...ctx0.config, capacidades: [{ campoId: 'ceiba', crudo: { bpd: 11000, fuente: 'prueba' } }, { campoId: 'guacamayo', crudo: null, afuera: { bpd: 7500, fuente: 'contrato' }, explicacionEmpate: '  ' }] }
+  const norm = C.normalizarConfig(cfgF)
+  comprobar(malas.some(e => /«nada» no es un campo/.test(e)) && malas.some(e => /mayor que cero/.test(e)) && malas.some(e => /P-999 no es una bomba/.test(e)) && malas.some(e => /dos veces/.test(e))
+    && !norm.capacidades[1].crudo && !('explicacionEmpate' in norm.capacidades[1]) && C.normalizarConfig({ ...ctx0.config, capacidades: [] }).capacidades === undefined
+    && C.diferencias(ctx0.config, norm).some(x => x === 'Capacidades de La Ceiba (se firman por primera vez): tren de crudo 11.000 bbl/d de crudo (prueba de capacidad)')
+    && C.camposTocados(ctx0.config, norm).join() === 'ceiba,guacamayo' && C.validarConfig(norm, ctx0.config, '2026-10-01', ahora).length === 0,
+    'las capacidades firmadas se validan en la forma (campo registrado, una vez, número mayor que cero, bomba del tren), se normalizan, el historial las dice en palabras y tocan su campo')
+
+  // «Todavía no sé» (punto 3): el motor no adivina; el tramo de sus paradas queda en falta.
+  const ctxPS = { ...ctx0, config: { ...ctx0.config, topologiaPorSaber: [{ elemento: 'K-101', campoId: 'ceiba' }] } }
+  const aire = lbH.tramos.filter(t => t.pozo.campoId === 'ceiba' && t.causa.equipo === 'K-101')
+  const crPS = CR.criticidadDelCampo('ceiba', ctxPS)
+  const bPS = CH.brechaPorChoke(['ceiba'], new Date(L.calendario()[0].desde), R.AHORA, ctxPS), bBase = CH.brechaPorChoke(['ceiba'], new Date(L.calendario()[0].desde), R.AHORA, ctx0)
+  comprobar(aire.length > 0 && aire.every(t => CH.chokeDeTramo(t, ctxPS) === null && CH.porSaberDe(t.causa, 'ceiba', ctxPS)?.pregunta === CH.PREGUNTA_ORIGEN)
+    && cerca(bPS.porChoke['sin-asignar'] - bBase.porChoke['sin-asignar'], aire.reduce((x, t) => x + t.bbl, 0), 1e-9) && cerca(bPS.diferido, bBase.diferido, 1e-12)
+    && !crPS.ranking.some(x => x.equipo === 'K-101') && crPS.sinCalcular.some(x => x.equipo === 'K-101' && /Todavía no sé/.test(x.motivo))
+    && CH.topologiaDe('ceiba', ctxPS).every(e => e.elemento !== 'K-101'),
+    `K-101 «por saber»: sus ${aire.length} paradas quedan sin tramo (${f(aire.reduce((x, t) => x + t.bbl, 0))} bbl pasan a «sin identificar», el total no cambia), «si falla hoy» no le inventa un costo y nada lo adivina por el tipo de falla`)
+  const conTopo = { ...ctx0.config, topologia: CH.topologiaDerivada('ceiba').map(e => ({ elemento: e.elemento, choke: e.choke, alcance: e.alcance, pozos: e.pozos, campoId: 'ceiba' })), topologiaPorSaber: [{ elemento: 'SE-2', campoId: 'ceiba' }] }
+  comprobar(C.validarConfig(conTopo, ctx0.config, '2026-10-01', ahora).some(e => /a la vez como «Todavía no sé»/.test(e))
+    && C.diferencias(ctx0.config, { ...ctx0.config, topologiaPorSaber: [{ elemento: 'K-101', campoId: 'ceiba' }] }).some(x => /K-101 \(La Ceiba\): todavía no se sabe a qué pozos sirve/.test(x)),
+    '«Todavía no sé» se firma, se dice en el historial y no puede estar a la vez contestado')
+  // Topología firmada: los equipos nuevos del registro aparecen para contestar sin perder lo firmado (punto 10).
+  const firmadaSinC401 = { ...ctx0, config: { ...ctx0.config, topologia: CH.topologiaDerivada('ceiba').filter(e => e.elemento !== 'C-401').map(e => ({ elemento: e.elemento, choke: e.choke, alcance: e.alcance, pozos: e.pozos, campoId: 'ceiba' })) } }
+  comprobar(CH.sinResponderDe('ceiba', firmadaSinC401).map(e => e.elemento).join() === 'C-401' && CH.sinResponderDe('ceiba', ctx0).length === 0
+    && CR.criticidadDelCampo('ceiba', firmadaSinC401).sinCalcular.some(x => x.equipo === 'C-401' && /nuevo en el registro/.test(x.motivo)) && CH.topologiaFirmada('ceiba', firmadaSinC401),
+    'con la topología firmada, lo que el registro tiene y la firma no (C-401) queda para contestar, sin perder lo firmado')
+
+  // «Si falla hoy» (punto 5): el puesto, las frases del jefe y de confiabilidad y la del desembotellamiento salen del motor.
+  const ce = CR.criticidadDelCampo('ceiba', ctx0)
+  comprobar(ce.ranking.every(x => x.puesto === (x.bpd === null ? null : 1 + ce.ranking.filter(y => (y.bpd ?? -1) > x.bpd).length)) && ce.parados.every(x => x.puesto === null)
+    && new RegExp(`subieron al puesto ${ce.ranking.find(x => x.equipo === 'P-201A').puesto} porque P-201B`).test(ce.cambioHoy)
+    && /^Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy\.$/.test(ce.noIntervenir ?? '')
+    && /^Lo primero de la lista sin instrumento: P-201A y P-201C \(puesto \d+, 3\.059 bbl\/d si falla hoy\)/.test(ce.proximoInstrumento ?? '') && ce.avisosTrabajo.length === 0,
+    `el puesto de cada fila sale del motor (los que cuestan lo mismo lo comparten) y con él las líneas de cada rol: «${ce.noIntervenir}» · «${ce.proximoInstrumento}»`)
+  const p201b = L.historialDeEquipo('ceiba', 'P-201B', ctx0).bblPorFalla
+  comprobar(ce.desembotellar === `En La Ceiba, otra bomba de agua no sube la producción: evita que una falla cierre pozos. Hoy cada falla de P-201B cuesta unos ${f(p201b)} bbl. Para producir más hay que sacarles más a los pozos: la planta y afuera dejan pasar más.`
+    && Math.round(p201b) === 4593 && /^En Guacamayo, para producir más/.test(CR.criticidadDelCampo('guacamayo', ctx0).desembotellar) && CR.criticidadDelCampo('zarza', ctx0).desembotellar === undefined,
+    `la frase de U2 §6.5, hecha en el motor: «${ce.desembotellar}»`)
+  // El cruce con el programa: un trabajo sobre un equipo que hoy vale más se avisa al jefe.
+  const conTrabajo = { ...ctx0, config: { ...ctx0.config, programa: [...ctx0.config.programa, { id: 'PR-PRUEBA-P201A', campoId: 'ceiba', equipo: 'P-201A', desde: '2026-10-04T07:00:00-05:00', hasta: '2026-10-04T15:00:00-05:00', motivo: 'Preventivo de la bomba' }] } }
+  const av = CR.criticidadDelCampo('ceiba', conTrabajo).avisosTrabajo
+  comprobar(av.length === 1 && av[0].equipo === 'P-201A' && av[0].tarea === 'PR-PRUEBA-P201A' && /^Ojo: P-201A vale más mientras P-201B esté parada: tiene programado «Preventivo de la bomba» el 4 de oct\. ¿Mover el trabajo\?$/.test(av[0].texto),
+    `un trabajo programado sobre una bomba que hoy vale más se avisa: «${av[0]?.texto}»`)
+
+  // La tubería trae lo que pidieron las pantallas (punto 9).
+  const t = CH.tuberiaCampo('ceiba', new Date('2026-10-01T00:00:00-05:00'), R.AHORA, ctx0, V0)
+  const tp = k => t.tramos.find(x => x.tramo === k)
+  const p201 = t.perdiendoAhora.find(x => x.equipo === 'P-201B')
+  const codigo = /[a-z]+Cap\b|Chokes\.|\.ts\b|caudales\.|Σ/
+  comprobar(tp('planta').trenQueLimita === 'crudo' && tp('planta').disponibleHoy?.unidad === 'bbl/d de crudo' && tp('planta').disponibleHoy.agua.valor === 178500
+    && cerca(tp('planta').disponibleHoy.valor, Math.round(178500 * CH.potencialesDelCampo('ceiba', ahora, ctx0).crudoPorAgua), 1e-12)
+    && tp('pozo').pruebaMasVieja?.dias >= 0 && /la prueba más vieja es de hace \d+ días/.test(tp('pozo').pruebaMasVieja.texto)
+    && t.medidor?.estado === 'en-linea' && /FQI-0101/.test(t.medidor.medidor) && t.capacidades.estado === 'demo' && t.capacidades.texto === 'capacidades del demo, sin firmar'
+    && p201?.listaPozos.join() === 'LC-07,LC-16' && p201.desde.getTime() === Date.parse('2026-10-02T05:43:00-05:00') && cerca(t.perdiendoAhoraBpd, t.perdiendoAhora.reduce((x, y) => x + y.bpd, 0), 1e-12)
+    && cerca(t.sinTramoAhoraBpd, t.perdiendoAhora.filter(x => x.tramo === null).reduce((x, y) => x + y.bpd, 0), 1e-12)
+    && !t.tramos.some(x => codigo.test(x.fuente) || (x.subniveles ?? []).some(s => codigo.test(s.fuente))),
+    `la tubería trae el tren que limita, lo que queda hoy en crudo («${tp('planta').disponibleHoy?.texto}»), la prueba más vieja, el medidor («${t.medidor?.texto}»), quién firmó las capacidades, desde cuándo y qué pozos se pierden ahora (P-201B: ${p201?.listaPozos.join(' y ')}), y cada fuente en palabras`)
+  const ag = AG.tuberiaAgua('ceiba', ctx0, V0)
+  comprobar(ag.casiIguales?.join() === 'bombas,inyectores' && ag.tramos.find(x => x.tramo === 'bombas').casiIgual && ag.tramos.find(x => x.tramo === 'inyectores').casiIgual
+    && ag.tramos.find(x => x.tramo === 'producida').estado === 'pruebas' && ag.tramos.find(x => x.tramo === 'bombas').estado === 'demo' && ag.tramos.find(x => x.tramo === 'tratamiento').estado === 'sin-dato'
+    && ag.tramos.every(x => !codigo.test(x.fuente)),
+    `la tubería del agua dice el estado de cada tramo y lo que está casi igual: las bombas y los inyectores de La Ceiba (${ag.casiIguales?.join(' y ')}); cada fuente en palabras`)
+
+  // Un servicio ya caído dice lo de ahora, no «si cae hoy»; un medidor sin dato dice desde cuándo (mundo de prueba).
+  const w = await createServer({ root: RAIZ, configFile: false, resolve: { alias: { '@': `${RAIZ}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
+  const S = await w.ssrLoadModule('/src/entities/datos/servicios.ts'), E = await w.ssrLoadModule('/src/entities/datos/eventos-pozos.ts'), PD = await w.ssrLoadModule('/src/entities/datos/produccion-diaria.ts')
+  S.EVENTOS_SERVICIOS.push({ id: 'SV-PRUEBA-CAIDO', campoId: 'palmar', equipo: 'SE-2', tipo: 'energia', inicio: '2026-10-02T10:00:00-05:00', fin: null, tag: 'prueba', texto: 'prueba' })
+  E.EVENTOS_POZOS.push({ id: 'EP-PRUEBA-CAIDO-1', campoId: 'palmar', pozo: 'PA-01', inicio: '2026-10-02T10:05:00-05:00', fin: null, codigo: 'CMD', senal: 'prueba' })
+  const oct = PD.PRODUCCION_DIARIA.find(m => m.campoId === 'ceiba' && m.mes === '2026-10')
+  oct.dias = []
+  ;(await w.ssrLoadModule('/src/entities/insumos.ts')).instalarInsumos((await w.ssrLoadModule('/src/entities/datos/index.ts')).INSUMOS_DEMO)
+  const wL = await w.ssrLoadModule('/src/entities/libro.ts'), wCR = await w.ssrLoadModule('/src/entities/criticidad.ts'), wCH = await w.ssrLoadModule('/src/entities/choke.ts')
+  const wctx = { config: wL.contextoInicial().config, respuestas: {} }
+  const caido = wCR.criticidadDelCampo('palmar', wctx).parados.find(x => x.equipo === 'SE-2')
+  const tw = wCH.tuberiaCampo('ceiba', new Date('2026-09-01T00:00:00-05:00'), R.AHORA, wctx)
+  comprobar(caido && /^SE-2 está caído: se pierden [\d.]+ bbl\/d ahora$/.test(caido.porque) && tw.medidor?.estado === 'sin-comunicacion' && /desde el 1 de oct/.test(tw.medidor.texto),
+    `un servicio ya caído lo dice el motor («${caido?.porque}»); un medidor sin el dato del último día, también («${tw.medidor?.texto}»)`)
+  await w.close()
 }
 
 await v.close()

@@ -1178,7 +1178,7 @@ comment on column version_config.por_id is 'Id de la persona que firmó (del tok
 comment on column version_config.por is 'Firma para leer: «Nombre · rol».';
 comment on column version_config.motivo is 'Por qué se cambió: 5 caracteres o más.';
 comment on column version_config.cambios is 'Lo que cambió dicho para leer (diferencias de configuracion.ts), metas primero.';
-comment on column version_config.config is 'La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si la trae, topologia); precio sin configurar = ausente; una topología vacía no viaja.';
+comment on column version_config.config is 'La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si los trae, topologia, topologiaPorSaber y capacidades); precio sin configurar = ausente; una lista vacía no viaja.';
 
 create table membrete (
   version  integer primary key references version_config(version),
@@ -1329,6 +1329,69 @@ end $$;
 comment on function topologia_pozos_del_campo() is 'Trigger de topologia: cada pozo del elemento es del campo (validarTopologia de choke.ts, 422).';
 create trigger topologia_pozos_del_campo before insert on topologia for each row execute function topologia_pozos_del_campo();
 
+create table topologia_por_saber (
+  version   integer not null references version_config(version),
+  orden     smallint not null,
+  campo_id  text not null references campo(id),
+  elemento  text not null check (btrim(elemento) <> ''),
+  primary key (version, orden),
+  unique (version, campo_id, elemento)
+);
+comment on table topologia_por_saber is 'Los equipos de los que el administrador contestó «Todavía no sé» a «¿A qué pozos sirve?» (ElementoPorSaber de src/entities/choke.ts; Config.topologiaPorSaber). El motor NO adivina su tramo: sus paradas quedan con el paso 2 en falta y la pregunta «¿Dónde se originó la parada?» (PREGUNTA_ORIGEN), y en «si falla hoy» van sin calcular. Un elemento no puede estar a la vez en topologia del mismo campo (trigger). Firma config:firmar. Solo inserción.';
+comment on column topologia_por_saber.version is 'Versión.';
+comment on column topologia_por_saber.orden is 'Lugar en la lista firmada (para devolver el JSON tal como se firmó).';
+comment on column topologia_por_saber.campo_id is 'Campo del equipo.';
+comment on column topologia_por_saber.elemento is 'Id de equipo, tag de servicio o alimentador del que todavía no se sabe a qué pozos sirve.';
+
+-- Un equipo «por saber» no está a la vez contestado en la topología del mismo campo.
+create or replace function topologia_por_saber_unica() returns trigger language plpgsql as $$
+begin
+  if exists (select 1 from topologia t where t.version = new.version and t.campo_id = new.campo_id and t.elemento = new.elemento) then
+    raise exception '% (%): está a la vez en la topología y como «Todavía no sé»', new.elemento, new.campo_id using errcode = '23514';
+  end if;
+  return new;
+end $$;
+comment on function topologia_por_saber_unica() is 'Trigger de topologia_por_saber: el equipo no está a la vez en topologia del mismo campo y versión (validarConfig, 422).';
+create trigger topologia_por_saber_unica before insert on topologia_por_saber for each row execute function topologia_por_saber_unica();
+
+create table capacidades_campo (
+  version             integer not null references version_config(version),
+  orden               smallint not null,
+  campo_id            text not null references campo(id),
+  explicacion_empate  text check (explicacion_empate is null or btrim(explicacion_empate) <> ''),
+  primary key (version, campo_id),
+  unique (version, orden)
+);
+comment on table capacidades_campo is 'Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4), que va con la firma. Cada número va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.';
+comment on column capacidades_campo.version is 'Versión.';
+comment on column capacidades_campo.orden is 'Lugar del campo en la lista firmada.';
+comment on column capacidades_campo.campo_id is 'Campo (registrado, una vez por versión).';
+comment on column capacidades_campo.explicacion_empate is 'Por qué dos tramos (pozos, planta, afuera) dan exactamente lo mismo. La pide la revisión de la firma (revisarCapacidades) solo si hay un empate exacto.';
+
+create table capacidad_firmada (
+  version   integer not null,
+  campo_id  text not null,
+  tramo     text not null check (tramo in ('crudo', 'bomba', 'gas', 'afuera', 'mercado', 'tratamiento', 'admision')),
+  equipo    text not null default '',
+  orden     smallint not null,
+  bpd       numeric not null check (bpd > 0 and bpd <= 10000000),
+  fuente    text not null check (fuente in ('placa', 'prueba', 'contrato', 'nominacion', 'estimado')),
+  medido    boolean,
+  primary key (version, campo_id, tramo, equipo),
+  foreign key (version, campo_id) references capacidades_campo(version, campo_id),
+  check ((tramo = 'bomba') = (equipo <> '')),
+  check ((tramo = 'gas') = (medido is not null))
+);
+comment on table capacidad_firmada is 'Un número firmado de las capacidades de un campo (CapacidadFirmada de capacidades.ts): bbl/d (el gas en KPC/d) y de dónde sale. El tren de agua no se firma entero: va una fila por bomba (tramo bomba, con su equipo) y TRIM muestra la suma de las que están en servicio. La revisión contra lo que ya pasó (no menos que lo máximo de un día en los últimos 30, el empate explicado) la hace el servidor al firmar (capacidadesQueBloquean, 422). Solo inserción.';
+comment on column capacidad_firmada.version is 'Versión.';
+comment on column capacidad_firmada.campo_id is 'Campo.';
+comment on column capacidad_firmada.tramo is 'crudo (tren de crudo), bomba (una bomba del tren de agua), gas (tren de gas), afuera (oleoducto o transportador), mercado (el cliente o la nominación: subnivel de afuera), tratamiento (de agua) o admision (de los inyectores).';
+comment on column capacidad_firmada.equipo is 'La bomba, solo en tramo bomba (vacío en los demás): una del tren de agua del campo (validarCapacidades, 422).';
+comment on column capacidad_firmada.orden is 'Lugar de la bomba en la lista firmada (0 en los demás tramos).';
+comment on column capacidad_firmada.bpd is 'Capacidad por día: bbl/d de crudo (crudo, afuera, mercado), bbl/d de agua (bomba, tratamiento, admision) o KPC/d (gas). > 0 y ≤ 10.000.000 (TOPE_BPD).';
+comment on column capacidad_firmada.fuente is 'De dónde sale: placa (del equipo), prueba (de capacidad), contrato (de transporte), nominacion (aceptada) o estimado (de ingeniería).';
+comment on column capacidad_firmada.medido is 'Solo en el gas: si se mide. Un tren de gas sin medir no entra en lo que limita.';
+
 -- El instante en ISO 8601 con milisegundos en hora de Colombia, como viaja.
 create or replace function fecha_iso_co(t timestamptz) returns text language sql immutable as $$
   select to_char(t at time zone 'America/Bogota', 'YYYY-MM-DD"T"HH24:MI:SS.MS') || '-05:00'
@@ -1359,8 +1422,23 @@ create or replace function config_json(v integer) returns jsonb language sql sta
        then jsonb_build_object('topologia', (select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('elemento', elemento, 'choke', choke, 'alcance', alcance,
               'pozos', to_jsonb(pozos), 'campoId', campo_id, 'casoBorde', caso_borde)) order by orden) from topologia where version = v))
        else '{}'::jsonb end
+  -- «Todavía no sé» y las capacidades, igual: solo si la versión trae alguna fila.
+  || case when exists (select 1 from topologia_por_saber where version = v)
+       then jsonb_build_object('topologiaPorSaber', (select jsonb_agg(jsonb_build_object('elemento', elemento, 'campoId', campo_id) order by orden)
+              from topologia_por_saber where version = v))
+       else '{}'::jsonb end
+  || case when exists (select 1 from capacidades_campo where version = v)
+       then jsonb_build_object('capacidades', (select jsonb_agg(
+              jsonb_build_object('campoId', cc.campo_id)
+              || coalesce((select jsonb_object_agg(cf.tramo, jsonb_strip_nulls(jsonb_build_object('bpd', cf.bpd, 'fuente', cf.fuente, 'medido', cf.medido)))
+                   from capacidad_firmada cf where cf.version = v and cf.campo_id = cc.campo_id and cf.tramo <> 'bomba'), '{}'::jsonb)
+              || coalesce((select jsonb_build_object('bombas', jsonb_agg(jsonb_build_object('equipo', cf.equipo, 'bpd', cf.bpd, 'fuente', cf.fuente) order by cf.orden))
+                   from capacidad_firmada cf where cf.version = v and cf.campo_id = cc.campo_id and cf.tramo = 'bomba' having count(*) > 0), '{}'::jsonb)
+              || case when cc.explicacion_empate is null then '{}'::jsonb else jsonb_build_object('explicacionEmpate', cc.explicacion_empate) end
+            order by cc.orden) from capacidades_campo cc where cc.version = v))
+       else '{}'::jsonb end
 $$;
-comment on function config_json(integer) is 'Rearma la Config de una versión desde membrete, perfil_campo, tramo_meta, tanque, respaldo, parada_programada y topologia (fechas del programa en ISO de Colombia con milisegundos; la topología solo si la versión trae alguna fila).';
+comment on function config_json(integer) is 'Rearma la Config de una versión desde membrete, perfil_campo, tramo_meta, tanque, respaldo, parada_programada, topologia, topologia_por_saber, capacidades_campo y capacidad_firmada (fechas del programa en ISO de Colombia con milisegundos; la topología, «Todavía no sé» y las capacidades solo si la versión trae alguna fila).';
 
 -- El JSON firmado con las fechas del programa escritas igual que config_json
 -- y el precio sin configurar como ausente (normalizarConfig).
@@ -1415,6 +1493,12 @@ create trigger respaldo_sin_truncate before truncate on respaldo for each statem
 create trigger parada_programada_sin_truncate before truncate on parada_programada for each statement execute function solo_insercion();
 create trigger topologia_solo_insercion before update or delete on topologia for each row execute function solo_insercion();
 create trigger topologia_sin_truncate before truncate on topologia for each statement execute function solo_insercion();
+create trigger topologia_por_saber_solo_insercion before update or delete on topologia_por_saber for each row execute function solo_insercion();
+create trigger topologia_por_saber_sin_truncate before truncate on topologia_por_saber for each statement execute function solo_insercion();
+create trigger capacidades_campo_solo_insercion before update or delete on capacidades_campo for each row execute function solo_insercion();
+create trigger capacidades_campo_sin_truncate before truncate on capacidades_campo for each statement execute function solo_insercion();
+create trigger capacidad_firmada_solo_insercion before update or delete on capacidad_firmada for each row execute function solo_insercion();
+create trigger capacidad_firmada_sin_truncate before truncate on capacidad_firmada for each statement execute function solo_insercion();
 create index parada_programada_por_equipo on parada_programada (campo_id, equipo, desde);
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -2019,7 +2103,7 @@ comment on column clasificacion_paso.campo_id is 'Campo del evento (trigger): ti
 comment on column clasificacion_paso.paso is 'responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral, desc_evid.';
 comment on column clasificacion_paso.valor is 'El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…). Del catálogo de version_catalogo.';
 comment on column clasificacion_paso.procedencia is 'declarado (lo que faltaba), confirmado (lo que TRIM proponía, aceptado) o corregido (cambió lo que TRIM proponía). Lo que propone TRIM no se guarda.';
-comment on column clasificacion_paso.regla is 'La regla con que se dijo (preguntas:campo@1, choke.yacimiento@1) o la que proponía, si se confirmó (REGLAS_ANH@1#…, choke.topologia@2).';
+comment on column clasificacion_paso.regla is 'La regla con que se dijo (preguntas:campo@1, choke.yacimiento@1) o la que proponía, si se confirmó (REGLAS_ANH@2#…, choke.topologia@3; lo guardado conserva la versión con que se dijo).';
 comment on column clasificacion_paso.porque is 'El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección).';
 comment on column clasificacion_paso.por_id is 'Persona (del token).';
 comment on column clasificacion_paso.por is 'Nombre de la persona. No viaja a la ANH (desc_evid nunca lleva nombres).';
@@ -2123,6 +2207,130 @@ create trigger clasificacion_paso_solo_insercion before update or delete on clas
 create trigger clasificacion_paso_sin_truncate before truncate on clasificacion_paso for each statement execute function solo_insercion();
 create index clasificacion_paso_por_clave on clasificacion_paso (clave, paso, id desc);
 create index clasificacion_paso_por_evento on clasificacion_paso (evento_id);
+
+create table respuesta_campo (
+  id         bigint generated always as identity primary key,
+  clave      text not null check (btrim(clave) <> ''),
+  alcance    text not null check (alcance in ('fila', 'evento')),
+  evento_id  text not null references evento_pozo(id),
+  campo_id   text not null references campo(id),
+  pregunta   text not null check (pregunta in ('que-lo-paro', 'tanques', 'oleoducto', 'afecto-clima', 'afecto-orden-publico', 'corte', 'trabajo',
+               'programado', 'se-perdio', 'nominacion', 'aporte', 'evidencia-yacimiento', 'choke', 'raiz', 'detalle')),
+  opcion     text not null check (btrim(opcion) <> ''),
+  sigue      text,
+  acota      jsonb check (acota is null or jsonb_typeof(acota) = 'object'),
+  perdida    text check (perdida in ('derrame', 'tea', 'rechazo')),
+  no_se      boolean not null default false,
+  por_id     text not null references usuario(id),
+  por        text not null,
+  rol_id     text not null references rol(id),
+  hora       timestamptz not null,
+  recibido   timestamptz not null default now(),
+  check ((alcance = 'evento') = (clave = evento_id)),
+  check (alcance = 'evento' or clave like evento_id || '@%'),
+  check (not no_se or (sigue is null and acota is null and perdida is null))
+);
+comment on table respuesta_campo is 'La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clasificacion.ts): lo que una persona contestó a una pregunta abierta («¿Qué lo paró?», «¿De dónde vino el corte?»…). POST /api/anh/paradas/:id/respuesta corre responder(): lo que la opción deja va a clasificacion_paso como dicho por esa persona; aquí queda la respuesta, para seguir la conversación al leer la fila (la pregunta que abrió, sigue, llega en la vista). «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa. Quién contesta cada pregunta (ROLES_QUE_CONTESTAN) lo revisa el servidor antes de insertar (403). Solo inserción, en el orden de id.';
+comment on column respuesta_campo.id is 'Consecutivo del servidor: el orden de la conversación.';
+comment on column respuesta_campo.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento: vale para todos sus tramos), como en clasificacion_paso.';
+comment on column respuesta_campo.alcance is 'fila o evento (aplicarAlEvento, aplicarALaCascada).';
+comment on column respuesta_campo.evento_id is 'El evento del controlador del pozo.';
+comment on column respuesta_campo.campo_id is 'Campo del evento (trigger): entre los de la persona (403).';
+comment on column respuesta_campo.pregunta is 'La pregunta contestada (IdPregunta).';
+comment on column respuesta_campo.opcion is 'El texto exacto del botón que se tocó (OpcionCampo.texto).';
+comment on column respuesta_campo.sigue is 'La pregunta que abrió la respuesta, si abrió una.';
+comment on column respuesta_campo.acota is 'Lo que la respuesta acota sin fijar («Comunidad o Tercero»): { paso: [valores] }.';
+comment on column respuesta_campo.perdida is 'La pérdida que la respuesta propone registrar aparte: derrame, tea o rechazo.';
+comment on column respuesta_campo.no_se is '«No sé»: no fija nada; la pregunta sigue abierta y escala a quien revisa.';
+comment on column respuesta_campo.por_id is 'Persona (del token).';
+comment on column respuesta_campo.por is 'Nombre de la persona.';
+comment on column respuesta_campo.rol_id is 'Rol con que contestó: tiene que tener anh:clasificar (trigger).';
+comment on column respuesta_campo.hora is 'La hora del toque.';
+comment on column respuesta_campo.recibido is 'Hora del servidor al recibirla.';
+
+create table revision_parada (
+  id         bigint generated always as identity primary key,
+  clave      text not null check (btrim(clave) <> ''),
+  alcance    text not null check (alcance in ('fila', 'evento')),
+  evento_id  text not null references evento_pozo(id),
+  campo_id   text not null references campo(id),
+  motivo     text not null check (alcanza(motivo, 5)),
+  pedir_a    text references rol(id) check (pedir_a in ('sup', 'prod', 'jefe', 'conf')),
+  por_id     text not null references usuario(id),
+  por        text not null,
+  rol_id     text not null references rol(id),
+  hora       timestamptz not null,
+  recibido   timestamptz not null default now(),
+  check ((alcance = 'evento') = (clave = evento_id)),
+  check (alcance = 'evento' or clave like evento_id || '@%'),
+  check (pedir_a is null or pedir_a <> rol_id)
+);
+comment on table revision_parada is '«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision. No corrige nada: pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). Rige la última por clave. Solo inserción.';
+comment on column revision_parada.id is 'Consecutivo del servidor.';
+comment on column revision_parada.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).';
+comment on column revision_parada.alcance is 'fila o evento.';
+comment on column revision_parada.evento_id is 'El evento del controlador del pozo.';
+comment on column revision_parada.campo_id is 'Campo del evento (trigger).';
+comment on column revision_parada.motivo is 'Qué está mal, o qué se pide («¿Fue el yacimiento?»): 5 caracteres o más.';
+comment on column revision_parada.pedir_a is 'A quién se le pide (prod para el yacimiento). NULL: a quien revisa. Nunca el propio rol.';
+comment on column revision_parada.por_id is 'Persona que la marcó (del token).';
+comment on column revision_parada.por is 'Nombre de la persona.';
+comment on column revision_parada.rol_id is 'Rol con que la marcó: tiene que tener anh:clasificar (trigger).';
+comment on column revision_parada.hora is 'La hora del toque.';
+comment on column revision_parada.recibido is 'Hora del servidor al recibirla.';
+
+create table revision_atendida (
+  revision_id  bigint primary key references revision_parada(id),
+  por_id       text not null references usuario(id),
+  por          text not null,
+  rol_id       text not null references rol(id),
+  hora         timestamptz not null,
+  recibido     timestamptz not null default now()
+);
+comment on table revision_atendida is 'Quién atendió una revisión y cuándo (RevisionAnh.atendida): la primera escritura de la parada (clasificación, yacimiento, respuesta o confirmación) de un rol al que le toca (conRevisionAtendida). Una por revisión. Solo inserción.';
+comment on column revision_atendida.revision_id is 'La revisión atendida.';
+comment on column revision_atendida.por_id is 'Persona que la atendió.';
+comment on column revision_atendida.por is 'Nombre de la persona.';
+comment on column revision_atendida.rol_id is 'Rol con que la atendió: el de pedir_a o, sin él, uno que revisa (trigger).';
+comment on column revision_atendida.hora is 'La hora de la escritura que la atendió.';
+comment on column revision_atendida.recibido is 'Hora del servidor.';
+
+-- Lo que se escribe de una parada (la respuesta de campo, la revisión): el evento es del campo y el rol clasifica.
+create or replace function anh_escrito_reglas() returns trigger language plpgsql as $$
+begin
+  if not exists (select 1 from evento_pozo e where e.id = new.evento_id and e.campo_id = new.campo_id) then
+    raise exception 'el evento % no es del campo %', new.evento_id, new.campo_id using errcode = '23514';
+  end if;
+  if not exists (select 1 from v_capacidades_rol c where c.rol_id = new.rol_id and c.capacidad_id = 'anh:clasificar') then
+    raise exception 'el rol % no tiene anh:clasificar (%)', new.rol_id, new.clave using errcode = '23514';
+  end if;
+  return new;
+end $$;
+comment on function anh_escrito_reglas() is 'Trigger de respuesta_campo y revision_parada: el evento es del campo y el rol tiene anh:clasificar.';
+create trigger respuesta_campo_reglas before insert on respuesta_campo for each row execute function anh_escrito_reglas();
+create trigger revision_parada_reglas before insert on revision_parada for each row execute function anh_escrito_reglas();
+
+-- Una revisión la atiende el rol al que se le pidió o, sin pedirA, uno que revisa.
+create or replace function revision_atendida_reglas() returns trigger language plpgsql as $$
+declare r revision_parada;
+begin
+  select * into r from revision_parada where id = new.revision_id;
+  if (r.pedir_a is not null and new.rol_id <> r.pedir_a) or (r.pedir_a is null and new.rol_id not in ('sup', 'prod', 'jefe', 'conf')) then
+    raise exception 'la revisión % no le toca al rol %', new.revision_id, new.rol_id using errcode = '23514';
+  end if;
+  return new;
+end $$;
+comment on function revision_atendida_reglas() is 'Trigger de revision_atendida: la atiende el rol al que se le pidió o, sin pedir_a, uno que revisa (quienRevisa).';
+create trigger revision_atendida_reglas before insert on revision_atendida for each row execute function revision_atendida_reglas();
+
+create trigger respuesta_campo_solo_insercion before update or delete on respuesta_campo for each row execute function solo_insercion();
+create trigger respuesta_campo_sin_truncate before truncate on respuesta_campo for each statement execute function solo_insercion();
+create trigger revision_parada_solo_insercion before update or delete on revision_parada for each row execute function solo_insercion();
+create trigger revision_parada_sin_truncate before truncate on revision_parada for each statement execute function solo_insercion();
+create trigger revision_atendida_solo_insercion before update or delete on revision_atendida for each row execute function solo_insercion();
+create trigger revision_atendida_sin_truncate before truncate on revision_atendida for each statement execute function solo_insercion();
+create index respuesta_campo_por_clave on respuesta_campo (clave, id);
+create index revision_parada_por_clave on revision_parada (clave, id desc);
 
 create table folio_contador (
   anio    smallint primary key check (anio between 2000 and 2999),

@@ -295,6 +295,9 @@ const CASOS = [
     extra: p => p.preguntas.some(q => q.id === 'trabajo' && q.opciones.length === 9) && p.opciones.n1.length === 8 && p.borrador.planeacion.procedencia === 'programa' },
   { fila: 'declarada-chip', id: 'EP-LC21-261001-01', como: 'evento real sin causa, contestado con el motivo «Fuga o daño en la línea de flujo»', ctx: ctxChip('Fuga o daño en la línea de flujo'),
     espera: { responsable: 'op-mantenimiento', planeacion: 'no-planeada', n1: 'NP_INTEG', n2: 'NP_INTEG/fuga-dano-en-linea-interna' }, faltan: [], extra: p => p.perdida === 'derrame' },
+  { fila: 'declarada-mercado', id: 'EP-ZA06-260901-71', como: 'real',
+    espera: { responsable: 'ext-transportador', choke: 'exportacion', impacto: 'diferida', planeacion: 'no-planeada', n1: 'NP_TRANSP', n2: 'NP_TRANSP/restriccion-nominacion-entrega' }, faltan: [],
+    extra: p => /el comprador no recibió todo/.test(p.borrador.choke.porque.texto) && p.borrador.responsable.regla === 'REGLAS_ANH@2#declarada-mercado' },
   { fila: 'declarada-libre', id: 'EP-LC06-260814-04', como: 'real', espera: { impacto: 'diferida' }, faltan: ['responsable', 'planeacion', 'n1', 'n2'],
     extra: p => p.preguntas.some(q => q.id === 'que-lo-paro') && p.preguntas.some(q => q.id === 'programado') },
 ]
@@ -314,7 +317,7 @@ for (const c of CASOS) {
   if (!ok) console.log('      ', JSON.stringify({ fila: p?.fila, vs, faltan: p?.faltan, estado: p?.estado, chokeOk }))
 }
 comprobar(igual(CASOS.map(c => c.fila), A.REGLAS_ANH.filas.map(f => f.id)),
-  `las ${A.REGLAS_ANH.filas.length} filas de REGLAS_ANH v1 tienen su caso: ${CASOS.filter(c => c.como === 'real').length} tal cual del demo y ${CASOS.filter(c => c.como !== 'real').length} con un evento real y la entrada que todavía no existe`)
+  `las ${A.REGLAS_ANH.filas.length} filas de ${A.REGLAS_ANH.id} tienen su caso: ${CASOS.filter(c => c.como === 'real').length} tal cual del demo y ${CASOS.filter(c => c.como !== 'real').length} con un evento real y la entrada que todavía no existe`)
 const pend = proponer(tramo('EP-LC21-261001-01'))
 comprobar(pend.estado === 'pendiente' && igual(pend.faltan, K.PASOS) && K.PASOS.every(x => !pend.borrador[x]) && igual(pend.preguntas.map(q => q.id), ['que-lo-paro', 'programado', 'se-perdio']),
   'causa sin identificar (LC-21, 1-oct): «sin causa», los 6 pasos en falta, nada propuesto, y las preguntas 1, 3 y 4 de U1 (P1 §2.1 punto 1)')
@@ -518,18 +521,71 @@ comprobar(deCampo.length > 0 && deCampo.every(q => !prohibidas.test(q.texto) && 
   `las ${f0(deCampo.length)} preguntas de campo del demo no dicen «¿Dónde se trabó?», «en la planta», «afuera» ni «yacimiento» (U2 §4.5)`)
 comprobar(todas.flatMap(p => p.preguntas).filter(q => q.id === 'choke').every(q => q.quien === 'revisa' && q.opciones.every(o => o.deja.choke !== 'reservorio')),
   'la pregunta del choke es de quien revisa y nunca ofrece el yacimiento')
+// La causa y el detalle de la tabla de la ANH los contesta quien abre el equipo o revisa, nunca el operador (P1 §1.3; U2 §4.5).
+const deCausa = todas.flatMap(p => p.preguntas).filter(q => q.id === 'raiz' || q.id === 'detalle')
+const conDetalle = todas.find(p => p.preguntas.some(q => q.id === 'detalle'))
+let eDetalle = null
+try { A.responder(conDetalle, 'detalle', 0, JAIRO, 'oper', HORA) } catch (e) { eDetalle = e }
+comprobar(deCausa.length > 0 && deCausa.every(q => q.quien === 'causa') && !A.ROLES_QUE_CONTESTAN.causa.includes('oper') && A.ROLES_QUE_CONTESTAN.causa.includes('tec')
+  && eDetalle instanceof A.ErrorClasificacion && /nunca se le piden la causa ni el detalle/.test(eDetalle.message),
+  `«¿Qué falló primero?» y «¿Qué fue, exactamente?» (${f0(deCausa.length)} en el demo) los contesta el técnico que abre el equipo o quien revisa, nunca el operador`)
 const r3 = A.responder(pEv, 'tanques', 1, JAIRO, 'oper', HORA), r4 = A.responder(r3, 'oleoducto', 1, JAIRO, 'oper', HORA)
-comprobar(r4.borrador.choke.valor === 'exportacion' && r4.borrador.choke.procedencia === 'regla' && r4.borrador.responsable.valor === 'ext-transportador'
+comprobar(r4.borrador.choke.valor === 'exportacion' && r4.borrador.choke.procedencia === 'declarado' && r4.borrador.choke.rol === 'oper' && r4.borrador.choke.porque.persona === 'Jairo Peña'
+  && !A.avalado(r4.borrador, 'choke') && r4.borrador.responsable.valor === 'ext-transportador'
   && r4.borrador.n1.valor === 'NP_TRANSP' && A.origenesDe(r4.borrador).choke === 'C' && r4.borrador.planeacion.procedencia === 'confirmado'
-  && igual(r4.faltan, ['n2']) && r4.preguntas.some(q => q.id === 'detalle' && q.opciones.length === 5),
-  'el operador contesta hechos («el tanque de crudo está lleno», «no recibía»): afuera queda como propuesta de TRIM (origen C) y solo «¿Planeada?» es suyo')
+  && igual(r4.faltan, ['n2']) && r4.preguntas.some(q => q.id === 'detalle' && q.opciones.length === 5) && r4.borrador.respuestas?.length === 2,
+  'el operador contesta hechos («el tanque de crudo está lleno», «no recibía»): afuera queda dicho por él, con su nombre en el porqué, pero no avalado (origen C); solo «¿Planeada?» es suyo')
 const uv = proponer(tramo('EP-LC07-251006-04')), rUv = A.responder(uv, 'corte', 1, JAIRO, 'oper', HORA)
-comprobar(rUv.borrador.choke.valor === 'planta' && rUv.borrador.choke.procedencia === 'regla' && !rUv.borrador.choke.porque.pregunta
+comprobar(rUv.borrador.choke.valor === 'planta' && rUv.borrador.choke.procedencia === 'declarado' && !A.avalado(rUv.borrador, 'choke') && !rUv.borrador.choke.porque.pregunta
   && rUv.borrador.choke.porque.persona === 'Jairo Peña' && !rUv.preguntas.some(q => q.pasos.includes('choke')) && rUv.preguntas.some(q => q.id === 'detalle'),
-  'baja tensión: el operador dice «Del campo…» y la pregunta del motor del choke queda contestada; el tramo sigue siendo propuesta de TRIM y queda el detalle')
+  'baja tensión: el operador dice «Del campo…» y la pregunta del motor del choke queda contestada en campo; el tramo queda dicho por él, sin avalar, y queda el detalle')
 const nombres = RO.ROLES.map(r => r.persona)
 comprobar(PS.every(p => nombres.every(n => !p.clasificacion.descEvid.valor.includes(n))) && PS.some(p => /Declarado por el supervisor/.test(p.clasificacion.descEvid.valor)),
   'ninguna descripción lleva el nombre de una persona: va su rol («Declarado por el supervisor»; S1 R-D)')
+
+console.log('\n=== 13. La respuesta de campo, «Algo está mal» y «Todavía no sé» (tanda 4) ===')
+// Lo que se guarda de una respuesta: los pasos dichos por la persona y la conversación (como `soloDePersona` de la costura).
+const guardado = b => ({ ...Object.fromEntries(K.PASOS.filter(x => b[x] && A.esDePersona(b[x].procedencia)).map(x => [x, b[x]])),
+  ...(b.respuestas ? { respuestas: b.respuestas } : {}), ...(b.revision ? { revision: b.revision } : {}) })
+const lc21 = tramo('EP-LC21-261001-01'), pSin = proponer(lc21)
+const q1 = A.responder(pSin, 'que-lo-paro', pSin.preguntas.find(q => q.id === 'que-lo-paro').opciones.findIndex(o => o.texto === 'Se fue la energía'), JAIRO, 'oper', HORA)
+const leida = A.aplicarGuardada(proponer(lc21), guardado(q1.borrador))
+comprobar(pSin.estado === 'pendiente' && q1.preguntas.some(q => q.id === 'corte') && leida.preguntas.some(q => q.id === 'corte')
+  && !leida.preguntas.some(q => q.id === 'que-lo-paro') && leida.borrador.respuestas?.[0]?.opcion === 'Se fue la energía' && leida.borrador.respuestas[0].por === 'Jairo Peña',
+  '«¿Qué lo paró?» → «Se fue la energía» no deja ningún paso, pero la conversación se guarda: al leer la fila otra vez, la pregunta que sigue («¿De dónde vino el corte?») llega en la vista')
+const q2 = A.responder(leida, 'corte', 2, JAIRO, 'oper', HORA)
+const leida2 = A.aplicarGuardada(proponer(lc21), guardado(q2.borrador))
+comprobar(leida2.borrador.choke?.valor === 'pozo' && leida2.borrador.choke.procedencia === 'declarado' && leida2.borrador.choke.porque.persona === 'Jairo Peña'
+  && !A.avalado(leida2.borrador, 'choke') && A.avalado(leida2.borrador, 'planeacion') && igual(leida2.faltan, ['impacto', 'n2'])
+  && leida2.preguntas.some(q => q.id === 'detalle') && leida2.preguntas.some(q => q.id === 'se-perdio') && A.origenesDe(leida2.borrador).choke === 'C',
+  '«De este pozo»: el tramo, quién y la causa quedan dichos por el operador (con su nombre), sin avalar (origen C); «¿Planeada?» sí es suyo; faltan qué pasó y el detalle, y llegan sus preguntas')
+const conf2 = A.confirmarPasos(leida2.borrador, 'sup', NELSON, HORA)
+comprobar(conf2.choke.procedencia === 'confirmado' && conf2.choke.por === 'Nelson Ortiz' && conf2.choke.porque.persona === 'Jairo Peña' && A.avalado(conf2, 'choke')
+  && conf2.planeacion.procedencia === 'declarado' && conf2.planeacion.por === 'Jairo Peña',
+  'el supervisor confirma lo que se dedujo de la respuesta del operador: queda avalado, con los dos nombres; lo que el operador avala no se toca')
+const noSe = A.responder(pSin, 'que-lo-paro', pSin.preguntas.find(q => q.id === 'que-lo-paro').opciones.length - 1, JAIRO, 'oper', HORA)
+const leidaNoSe = A.aplicarGuardada(proponer(lc21), guardado(noSe.borrador))
+const despues = A.responder(leidaNoSe, 'que-lo-paro', 0, NELSON, 'sup', HORA)
+comprobar(noSe.escalada?.pregunta === 'que-lo-paro' && leidaNoSe.escalada?.pregunta === 'que-lo-paro' && leidaNoSe.preguntas.some(q => q.id === 'que-lo-paro')
+  && !despues.escalada && despues.borrador.respuestas.length === 2,
+  '«No sé» es una respuesta: queda guardada, la pregunta sigue abierta y escalada al supervisor; cuando él la contesta, deja de estar escalada')
+const rev = { motivo: 'La causa no es esa', por: 'Jairo Peña', porId: JAIRO.id, rol: 'oper', hora: HORA }
+const bRev = { ...gf.borrador, revision: rev }
+comprobar(!A.conRevisionAtendida(bRev, JAIRO, 'oper', HORA).revision.atendida && A.conRevisionAtendida(bRev, NELSON, 'sup', HORA).revision.atendida?.por === 'Nelson Ortiz'
+  && !A.conRevisionAtendida({ ...bRev, revision: { ...rev, pedirA: 'prod' } }, NELSON, 'sup', HORA).revision.atendida
+  && A.conRevisionAtendida({ ...bRev, revision: { ...rev, pedirA: 'prod' } }, MARCELA, 'prod', HORA).revision.atendida?.rol === 'prod'
+  && P.conClasificacion(PS.find(x => x.eventoId === 'EP-LC05-251024-86'), bRev).revision?.motivo === 'La causa no es esa',
+  '«Algo está mal» la atiende quien revisa (o el rol al que se le pidió, «Pedir a producción»), no quien la marcó; la fila la lleva a la vista (ParadaAnh.revision)')
+const ctxPS = { ...ctx0, config: { ...ctx0.config, topologiaPorSaber: [{ elemento: 'K-101', campoId: 'ceiba' }] } }
+const aire = tramo('EP-LC12-251115-22'), pAire = proponer(aire, ctxPS)
+comprobar(CH.chokeDeCausa(aire.causa, 'ceiba', ctxPS) === null && pAire.faltan.includes('choke') && !pAire.sugerido.choke && /Todavía no sé/.test(pAire.porqueChoke?.texto ?? '')
+  && pAire.preguntas.some(q => q.id === 'choke' && q.quien === 'revisa' && q.texto === CH.PREGUNTA_ORIGEN) && !!CH.chokeDeCausa(aire.causa, 'ceiba', ctx0),
+  '«Todavía no sé» de K-101: el motor no adivina el tramo (ni por el tipo de falla): queda en falta, con su porqué y la pregunta que contesta quien revisa')
+comprobar(A.nombreDeRegla('REGLAS_ANH@2#declarada-mercado') === 'Declarada: el comprador nominó menos' && A.nombreDeRegla(CH.REGLA_CHOKE) === 'La topología: a qué pozos sirve cada equipo'
+  && A.nombreDeRegla('otra@9') === 'otra@9' && A.REGLAS_ANH.filas.every(f => A.nombreDeRegla(`${A.REGLAS_ANH.id}#${f.id}`) !== `${A.REGLAS_ANH.id}#${f.id}`),
+  'los nombres de las reglas en palabras salen del motor, uno por cada fila de la tabla (una regla desconocida se muestra con su id)')
+comprobar(A.esperaAQuienAbre(c2) && !A.esperaAQuienAbre(c3) && !A.esperaAQuienAbre(c1) && igual(A.CONFIRMAN_LO_QUE_APUNTA, ['jefe', 'conf']),
+  'lo que espera a quien abre el equipo (todo avalado menos la causa que una señal apunta) lo dice el motor: el jefe o confiabilidad')
 
 await v.close()
 console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones bien.`)

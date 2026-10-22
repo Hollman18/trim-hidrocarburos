@@ -7,8 +7,10 @@ import {
 } from '@/entities/anh-paradas'
 import {
   esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA, PONEN_YACIMIENTO, ATAJO_YACIMIENTO, N1_EN_CAMPO, ROLES_QUE_CONTESTAN,
+  CONFIRMAN_LO_QUE_APUNTA, NOMBRE_FILA, nombreDeRegla, esperaAQuienAbre, esNoSe, quienRevisa, esperaRevision,
   type BorradorClasificacion, type ClasificacionAnh, type DatoClasificado, type PorqueChoke, type Procedencia, type PropuestaAnh,
-  type PreguntaCampo, type OpcionCampo, type AtajoYacimiento, type EvidenciaYacimiento,
+  type PreguntaCampo, type OpcionCampo, type AtajoYacimiento, type EvidenciaYacimiento, type RespuestaCampo, type RevisionAnh,
+  type IdPregunta, type QuienContesta,
 } from '@/entities/anh-clasificacion'
 import {
   PASOS, PASO_CAMPO, PASO_CIRCULAR, RESPONSABLES, CHOKES, IMPACTOS, PLANEACIONES, ETIQUETA_RESPONSABLE, ETIQUETA_CHOKE,
@@ -27,8 +29,8 @@ import type { Contexto } from '@/entities/causa-senal'
  *  `GET /api/vistas/anh/paradas` y `GET /api/vistas/anh/calidad`: el servidor
  *  arma las filas (`paradasAnh`, entities/anh-paradas.ts) con lo que ya dijeron
  *  las personas encima; en el demo eso vive en la sesión (`clasificacionesAnh`)
- *  y se aplica aquí. Las escrituras (clasificar, confirmar, el yacimiento) están
- *  en escrituras.ts: usan las ayudas de abajo para encontrar la fila, guardar
+ *  y se aplica aquí. Las escrituras (clasificar, confirmar, el yacimiento, la respuesta de
+ *  campo y la revisión) están en escrituras.ts: usan las ayudas de abajo para encontrar la fila, guardar
  *  solo lo que dijo una persona y extender una corrección al evento o a la cascada.
  *
  *  Las pantallas leen `useParadasAnh` y `useCalidadAnh`; las palabras y las
@@ -39,11 +41,18 @@ export {
   PASOS, PASO_CAMPO, PASO_CIRCULAR, RESPONSABLES, CHOKES, IMPACTOS, PLANEACIONES, ETIQUETA_RESPONSABLE, ETIQUETA_CHOKE,
   ETIQUETA_IMPACTO, ETIQUETA_PLANEACION, textoN1, textoN2, N1_EN_CAMPO, ATAJO_YACIMIENTO,
   PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA, PONEN_YACIMIENTO, CONFIRMAN_EN_LOTE, ROLES_QUE_CONTESTAN, esDePersona, gruposPorCadena,
+  // Las reglas del árbol que las pantallas dicen y no copian: quién confirma la
+  // causa que una señal solo apunta (el jefe de mantenimiento y confiabilidad,
+  // que abren o analizan el equipo), el nombre de cada regla, si la fila espera
+  // a quien abre el equipo, si una opción es «No sé» y quién atiende una
+  // parada marcada «Algo está mal» o pedida a un rol.
+  CONFIRMAN_LO_QUE_APUNTA, NOMBRE_FILA, nombreDeRegla, esperaAQuienAbre, esNoSe, quienRevisa, esperaRevision,
 }
 export type {
   ParadaAnh, ConfirmacionLote, EstadoParadaAnh, BorradorClasificacion, ClasificacionAnh, DatoClasificado, PorqueChoke, Procedencia,
   PropuestaAnh, PreguntaCampo, OpcionCampo, AtajoYacimiento, EvidenciaYacimiento, PasoAnh, Responsable, Impacto, Planeacion,
-  ClaveN1, CodigoN2, CalidadClasificacion, CalidadPaso, CalidadRegla, CalidadEquipoChoke,
+  ClaveN1, CodigoN2, CalidadClasificacion, CalidadPaso, CalidadRegla, CalidadEquipoChoke, RespuestaCampo, RevisionAnh, IdPregunta,
+  QuienContesta,
 }
 
 const D = 86_400_000
@@ -63,12 +72,16 @@ export function guardadasDe(r: Record<string, BorradorClasificacion>): ReadonlyM
 export const cadenaVista = (b: BorradorClasificacion): string => PASOS.map(p => (b[p] ? String(b[p]!.valor) : '—')).join(' · ')
 
 /** Solo lo que dijo una persona: es lo que se guarda (lo de TRIM se vuelve a
- *  proponer con la regla de hoy al leer la fila; `aplicarGuardada`, anh-clasificacion.ts). */
+ *  proponer con la regla de hoy al leer la fila; `aplicarGuardada`, anh-clasificacion.ts).
+ *  Con las respuestas de campo (la conversación sigue donde quedó: la pregunta
+ *  que abrió cada una llega en la vista) y la revisión pedida, si la hay. */
 export function soloDePersona(b: BorradorClasificacion): BorradorClasificacion {
   const r: Record<string, unknown> = {}
   for (const p of PASOS) { const d = b[p]; if (d && esDePersona(d.procedencia)) r[p] = d }
   if (b.cauGral && b.cauGral.procedencia !== 'regla') r.cauGral = b.cauGral
   if (b.descEvid && esDePersona(b.descEvid.procedencia)) r.descEvid = b.descEvid
+  if (b.respuestas?.length) r.respuestas = b.respuestas
+  if (b.revision) r.revision = b.revision
   return r as BorradorClasificacion
 }
 

@@ -42,13 +42,6 @@ export const OPCION_CHOKE: Record<ChokeAnh, string> = {
 }
 export const LINEA_CHOKE: Record<ChokeAnh, string> = RESUMEN_TRAMO
 
-/** «¿El oleoducto o el cliente estaba recibiendo?» (U2 §4.4, caso 3): la
- *  respuesta en palabras de campo y el tramo que deja. */
-export const RESPUESTA_OLEODUCTO: ReadonlyArray<{ choke: ChokeAnh; texto: string; linea: string }> = [
-  { choke: 'planta', texto: 'Sí, recibía', linea: 'en la planta: fue capacidad propia' },
-  { choke: 'exportacion', texto: 'No, no recibía', linea: 'afuera' },
-]
-
 /** Los atajos de «¿Por qué lo cambia?» (U2 §1.5). */
 export const MOTIVOS = ['El equipo es de otro pozo', 'La raíz fue otra', 'El oleoducto sí recibía', 'El oleoducto no recibía'] as const
 
@@ -112,41 +105,6 @@ export function marcaDeTrim(p: Procedencia): string {
  *  en la pantalla de campo sobran; el texto del motor no se cambia. */
 export const sinReferencias = (s: string) =>
   s.replace(/\s*\((?:P1|U1|U2|R1|R2|R4|S1|C24|C-?003|CHOKE-COMPLETO)[^)]*\)/g, '').replace(/\s+([.,;:])/g, '$1').trim()
-
-/** Cómo se dice cada regla de TRIM en el tablero de calidad (U2 §4.6): el id de
- *  la regla va en el ⓘ; en el rótulo, lo que la regla mira. Una regla nueva
- *  que no está aquí se muestra con su id: no se esconde. */
-const REGLA_EN_PALABRAS: Record<string, string> = {
-  'esp-falla': 'Falla de la electrosumergible (código del variador)',
-  'esp-admision': 'Electrosumergible parada por baja carga',
-  'bombeo-mecanico': 'Bombeo mecánico parado por su controlador',
-  'linea-rodamientos': 'Bomba de la línea: rodamientos',
-  'linea-motor': 'Bomba de la línea: motor',
-  'linea-lubricacion': 'Bomba de la línea: lubricación',
-  'linea-variador': 'Bomba de la línea: primera alarma del variador o del arrancador',
-  'linea-sin-n2': 'Bomba de la línea sin causa exacta en la tabla de la ANH',
-  'linea-capacidad': 'Tanque de agua al límite sin falla de la bomba',
-  'energia-uv-o-dedicado': 'Baja tensión en un pozo',
-  'energia-compartido': 'Cayó la energía que comparten varios pozos',
-  'energia-frontera': 'Cayó la energía en la frontera del campo',
-  aire: 'Cayó el aire de instrumentos',
-  compresion: 'Se detuvo el compresor de gas',
-  evacuacion: 'Tanque de crudo o despacho de la batería',
-  proceso: 'El separador cerró la entrada',
-  tratamiento: 'El tratador cerró la entrada',
-  'programada-con-pareja': 'Programa firmado, con su causa',
-  'programada-sin-pareja': 'Programa firmado, sin la causa',
-  'declarada-chip': 'Declarada con un motivo cerrado',
-  'declarada-libre': 'Declarada con sus palabras',
-  pendiente: 'Sin causa',
-}
-export function reglaEnPalabras(regla: string): string {
-  if (regla.startsWith('choke.topologia@')) return 'La topología: a qué pozos sirve cada equipo'
-  if (regla.startsWith('choke.yacimiento@')) return 'En el yacimiento, puesto por una persona'
-  if (regla.startsWith('programa-exceso@')) return 'Se pasó de la ventana del programa'
-  const fila = regla.includes('#') ? regla.slice(regla.indexOf('#') + 1) : regla
-  return Object.hasOwn(REGLA_EN_PALABRAS, fila) ? REGLA_EN_PALABRAS[fila]! : regla
-}
 
 /** Una lista dicha: «LC-16 y LC-07», «LC-02, LC-05 y LC-09». */
 export const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)

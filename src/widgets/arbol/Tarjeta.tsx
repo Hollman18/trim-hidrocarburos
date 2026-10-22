@@ -1,27 +1,30 @@
 import { useId, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { useRol, usePersona } from '@/app/store'
-import { CONFIRMAN_EN_LOTE, ROLES_QUE_CONTESTAN, esDePersona, type ParadaAnh, type PasoAnh } from '@/shared/api/arbol'
+import { useApp, useRol, usePersona } from '@/app/store'
+import {
+  CONFIRMAN_EN_LOTE, CONFIRMAN_LO_QUE_APUNTA, PASOS_QUE_CONFIRMA, ROLES_QUE_CONTESTAN, esDePersona, esperaAQuienAbre,
+  type ParadaAnh, type PasoAnh, type RevisionAnh,
+} from '@/shared/api/arbol'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
+import { rolPorId } from '@/entities/roles'
+import { MOTIVO_MINIMO, alcanza } from '@/entities/reglas'
 import { puedeHacer } from '@/entities/tipos'
 import { Boton, Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Cadena, Falta } from './Cadena'
-import { Preguntas } from './Preguntas'
+import { Preguntas, OPCION } from './Preguntas'
 import { Editor } from './Editor'
-import { confirmar } from './escribir'
-import { ABREN_EL_EQUIPO, esperaAQuienAbre, type Grupo } from './grupos'
+import type { Grupo } from './grupos'
 import { marcaDelPaso } from './marcas'
 import { ESTADO, horaCorta, lista, valorEnPalabras, sinReferencias } from './palabras'
 
-/** Los roles que abren el equipo o estuvieron en el pozo: contestan lo suyo y
- *  confirman solo eso (P1 §1.3). Ven la cadena técnica plegada (U1 §10.1). */
-const DE_CAMPO = ['oper', 'tec']
-/** Lo que es de su terreno: «¿estaba programado?» y «¿se perdió algo?». */
-const SUYO: readonly PasoAnh[] = ['planeacion', 'impacto']
+/* El operador y el técnico (los que no revisan, `ROLES_QUE_CONTESTAN.revisa`)
+   contestan lo suyo y confirman solo lo que su rol avala (`PASOS_QUE_CONFIRMA`,
+   P1 §1.3). Ven la cadena técnica plegada (U1 §10.1). Las palabras de sus dos
+   preguntas: */
 const RESPUESTA_CAMPO: Partial<Record<PasoAnh, Record<string, string>>> = {
   planeacion: { planeada: 'Sí, estaba en el programa', 'no-planeada': 'No, fue de repente' },
   impacto: { diferida: 'No, solo dejó de producir', perdida: 'Sí, se perdió crudo o gas' },
@@ -43,13 +46,15 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
   const rol = useRol(); const persona = usePersona()
   const id = useId()
   const p = g.primera
-  const deCampo = DE_CAMPO.includes(rol.id)
+  const confirmarAnh = useApp(s => s.confirmarAnh)
   const revisa = ROLES_QUE_CONTESTAN.revisa.includes(rol.id)
+  const deCampo = !revisa
+  const suyos: readonly PasoAnh[] = Object.hasOwn(PASOS_QUE_CONFIRMA, rol.id) && deCampo ? PASOS_QUE_CONFIRMA[rol.id]! : []
   // Los códigos de la ANH (NP_PROC…) solo a un toque y solo para confiabilidad (U1 §1.0, punto 7).
   const codigos = rol.id === 'conf'
   const puede = puedeHacer(rol.puede, 'anh:clasificar') && !persona.sinAcceso
   const enLote = CONFIRMAN_EN_LOTE.includes(rol.id)
-  const [editor, setEditor] = useState<null | 'choke' | 'otros' | 'faltan'>(null)
+  const [editor, setEditor] = useState<null | 'choke' | 'otros' | 'faltan' | 'mal'>(null)
   const [verTecnico, setVerTecnico] = useState(false)
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
@@ -61,16 +66,16 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
   const que = g.cascada ? `por ${p.causa.equipo}` : TIPO_CAUSA[p.causa.tipo].toLowerCase()
   const verbo = g.pozos.length > 1 ? 'cerraron' : 'cerró'
   // Lo que el operador puede confirmar: lo suyo que todavía no dijo una persona.
-  const suyoPorConfirmar = SUYO.filter(x => { const d = p.clasificacion[x]; return !!d && !esDePersona(d.procedencia) })
+  const suyoPorConfirmar = suyos.filter(x => { const d = p.clasificacion[x]; return !!d && !esDePersona(d.procedencia) })
   // Supervisión no confirma la causa que una señal solo apunta: la confirma quien abre el equipo (P1 §2.1).
-  const confirmable = g.estado === 'propuesta' && (!esperaAQuienAbre(p) || ABREN_EL_EQUIPO.includes(rol.id))
+  const confirmable = g.estado === 'propuesta' && (!esperaAQuienAbre(p.clasificacion) || CONFIRMAN_LO_QUE_APUNTA.includes(rol.id))
   // Varias filas que este rol no confirma de una vez (solo supervisión y producción lo hacen en lote): una por una.
   const porFila = puede && g.filas.length > 1 && (deCampo ? suyoPorConfirmar.length > 0 : confirmable && !enLote)
   const [verFilas, setVerFilas] = useState(porFila)
 
   const enviar = async (ids: string[], pasos?: PasoAnh[]) => {
     setOcupado(true); setError('')
-    const r = await confirmar({ ids, cadena: g.cadena, ...(pasos ? { pasos } : {}) })
+    const r = await confirmarAnh({ ids, cadena: g.cadena, ...(pasos ? { pasos } : {}) })
     setOcupado(false)
     if (!r.ok) return setError(r.error)
     const filas = r.paradas
@@ -86,6 +91,7 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
   const chips = (
     <span className="flex flex-wrap items-center gap-1">
       {g.estado === 'confirmada' || g.estado === 'propuesta' ? <Chip>{ESTADO[g.estado]}</Chip> : <Falta>{ESTADO[g.estado]}</Falta>}
+      {p.revision && !p.revision.atendida && <Chip tono="fuerte">para revisar</Chip>}
       {sigue && <Chip tono="fuerte">sigue parado</Chip>}
       {p.parcial && <Chip>parcial · {n0(p.fraccion * 100)} % del caudal</Chip>}
       {p.disparo && <Chip>disparo</Chip>}
@@ -110,6 +116,8 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
         {chips}
       </header>
 
+      {p.revision && <Revision r={p.revision} />}
+
       {g.cascada && (
         <p className="mt-1 text-[11px] text-[var(--tinta2)]">
           {g.pozos.length > 4
@@ -120,7 +128,7 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
 
       {deCampo ? (
         <div className="mt-2 grid gap-1.5 text-[11.5px]">
-          {SUYO.map(x => {
+          {suyos.map(x => {
             const d = p.clasificacion[x]
             return (
               <div key={x} className="flex flex-wrap items-baseline gap-x-2">
@@ -164,14 +172,19 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
         </p>
       )}
 
-      {puede && <Preguntas g={g} rolId={rol.id} deCampo={deCampo} onHecho={onHecho} />}
+      {puede && <Preguntas g={g} rolId={rol.id} onHecho={onHecho} />}
 
       {puede && (
         <div className="no-imprimir mt-2.5 flex flex-wrap items-center gap-1.5">
           {deCampo ? (
-            suyoPorConfirmar.length > 0 && g.filas.length === 1 && (
-              <Boton variante="principal" disabled={ocupado} className="min-h-10 sm:min-h-0" onClick={() => void enviar([p.id], suyoPorConfirmar)}>Confirmar lo que contesté</Boton>
-            )
+            <>
+              {suyoPorConfirmar.length > 0 && g.filas.length === 1 && (
+                <Boton variante="principal" disabled={ocupado} className="min-h-10 sm:min-h-0" onClick={() => void enviar([p.id], suyoPorConfirmar)}>Confirmar lo que contesté</Boton>
+              )}
+              {!(p.revision && !p.revision.atendida) && (
+                <Boton disabled={ocupado} className="min-h-10 sm:min-h-0" aria-expanded={editor === 'mal'} onClick={() => setEditor(editor === 'mal' ? null : 'mal')}>Algo está mal</Boton>
+              )}
+            </>
           ) : (
             <>
               {confirmable && (g.filas.length === 1 || enLote) && (
@@ -192,7 +205,8 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
       )}
       {!puede && revisa && persona.sinAcceso && <p className="mt-2 text-[10.5px] text-[var(--tinta2)]">Nadie con acceso activo tiene este rol: confirma una persona, no un rol.</p>}
 
-      {editor && (
+      {editor === 'mal' && <AlgoEstaMal g={g} onCerrar={() => setEditor(null)} onHecho={onHecho} />}
+      {editor && editor !== 'mal' && (
         <Editor g={g} rolId={rol.id}
           pasos={editor === 'choke' ? ['choke'] : editor === 'faltan' ? p.faltan : ['responsable', 'impacto', 'planeacion', 'n1', 'n2']}
           titulo={editor === 'choke' ? `¿Dónde se trabó? · ${pozos}` : editor === 'faltan' ? `Lo que falta · ${pozos}` : `Corregir un paso · ${pozos}`}
@@ -209,7 +223,7 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
           </button>
           <ul id={`${id}-filas`} data-partible className={cn('mt-1 grid gap-0.5 pl-5 text-[11px]', !verFilas && 'hidden print:grid')} aria-label={`Filas de ${pozos}`}>
             {g.filas.map(f => {
-              const suyo = SUYO.filter(x => { const d = f.clasificacion[x]; return !!d && !esDePersona(d.procedencia) })
+              const suyo = suyos.filter(x => { const d = f.clasificacion[x]; return !!d && !esDePersona(d.procedencia) })
               return <Fila key={f.id} f={f} confirmable={porFila && (!deCampo || suyo.length > 0)}
                 ocupado={ocupado} onConfirmar={() => void enviar([f.id], deCampo ? suyo : undefined)} />
             })}
@@ -217,6 +231,49 @@ export function TarjetaParada({ g, global, onHecho }: { g: Grupo; global: boolea
         </div>
       )}
     </article>
+  )
+}
+
+/** Lo que alguien marcó para revisar (U1 §2.7; P1 §1.5, `ParadaAnh.revision`): quién, qué y a quién; y quién la atendió. */
+function Revision({ r }: { r: RevisionAnh }) {
+  const aQuien = r.pedirA ? `le pidió a ${rolPorId(r.pedirA).nombre.toLowerCase()}` : 'marcó «Algo está mal»'
+  return (
+    <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-revision={r.atendida ? 'atendida' : 'abierta'}>
+      {r.por} {aQuien} · {horaCorta(r.hora)}: «{r.motivo}»
+      {r.atendida && <span className="text-[var(--tinta3)]"> · la revisó {r.atendida.por} · {horaCorta(r.atendida.hora)}</span>}
+    </p>
+  )
+}
+
+/** «Algo está mal» (U1 §2.7): no corrige nada; pasa la parada a quien la revisa,
+ *  con lo que vio quien estuvo en el pozo (`POST /api/anh/paradas/:id/revision`). */
+function AlgoEstaMal({ g, onCerrar, onHecho }: { g: Grupo; onCerrar: () => void; onHecho: (texto: string) => void }) {
+  const revisarAnh = useApp(s => s.revisarAnh)
+  const [motivo, setMotivo] = useState('')
+  const [error, setError] = useState('')
+  const [ocupado, setOcupado] = useState(false)
+  const idMotivo = useId()
+  const enviar = async () => {
+    if (!alcanza(motivo, MOTIVO_MINIMO)) return setError('Diga qué está mal: lo lee quien la revisa.')
+    setOcupado(true); setError('')
+    const r = await revisarAnh(g.primera.id, { motivo: motivo.trim(), ...(g.cascada ? { aplicarALaCascada: true } : { aplicarAlEvento: true }), cadena: g.cadena })
+    setOcupado(false)
+    if (!r.ok) return setError(r.error)
+    onHecho(`Listo: ${lista(g.pozos)} queda para revisar. Lo ve su supervisor con lo que usted escribió.`)
+    onCerrar()
+  }
+  return (
+    <form className="no-imprimir mt-2 grid gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5" aria-label={`Algo está mal · ${lista(g.pozos)}`}
+      onSubmit={e => { e.preventDefault(); void enviar() }}>
+      <label htmlFor={idMotivo} className="text-[11.5px] font-semibold">¿Qué está mal?</label>
+      <textarea id={idMotivo} value={motivo} rows={2} onChange={e => { setMotivo(e.target.value); setError('') }}
+        className="min-h-10 w-full rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px]" placeholder="Ej.: el pozo no paró por la energía, lo cerraron para una prueba" />
+      {error && <p role="alert" className="text-[11px] text-[var(--tinta)]">{error}</p>}
+      <span className="flex flex-wrap gap-1.5">
+        <button type="submit" disabled={ocupado} className={cn(OPCION, 'font-semibold')}>Enviar a revisar</button>
+        <button type="button" onClick={onCerrar} className={OPCION}>Cancelar</button>
+      </span>
+    </form>
   )
 }
 

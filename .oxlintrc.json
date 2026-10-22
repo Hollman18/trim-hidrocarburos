@@ -187,6 +187,11 @@
                 ]
               },
               {
+                "name": "@/entities/capacidades",
+                "allowTypeImports": true,
+                "message": "Del motor (capacidades) las pantallas y el estado de la aplicación no importan nada: las capacidades, sus nombres y la revisión de la firma llegan por la costura: src/shared/api/choke.ts."
+              },
+              {
                 "name": "@/entities/choke-config",
                 "allowTypeImports": true,
                 "message": "Del motor (choke-config) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts."
@@ -300,7 +305,8 @@
                 "message": "Del motor (mensajes) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api (ver la regla en shared/api/diferidos.ts).",
                 "allowImportNames": [
                   "CAUSAS_POZO",
-                  "NOMBRE_REGLA", "PASO_CORTO",
+                  "NOMBRE_REGLA",
+                  "PASO_CORTO",
                   "NO_FUE_ESP",
                   "NO_FUE_ESP_CORTO",
                   "ORDEN_PASO",
@@ -480,7 +486,8 @@
                   "pedirRepartoMensual",
                   "pedirBaseChoke",
                   "pedirTopologia",
-                  "pedirPropuestasTopologia"
+                  "pedirPropuestasTopologia",
+                  "pedirCapacidades"
                 ],
                 "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
               },

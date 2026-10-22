@@ -62,8 +62,20 @@ export const PANTALLAS: Record<string, Pantalla> = {
   evidencia:    { corto: 'Evidencia',     titulo: 'Evidencia de parada',         ruta: 'evidencia', agrega: true,                       icono: Scale,              Vista: Evidencia },
   regulatorio:  { corto: 'Regulatorio',   titulo: 'Reporte al regulador',        ruta: 'regulatorio',                     icono: FileCheck2,         Vista: Regulatorio },
   configuracion:{ corto: 'Configuración', titulo: 'Metas, accesos y configuración', ruta: 'configuracion',                  icono: SlidersHorizontal,  Vista: Configuracion },
+  // La misma vista que Configuración, abierta en la filosofía operacional: así el
+  // enlace la conserva y el borrador no se pierde al pasar de una a otra.
+  filosofia:    { corto: 'Filosofía operacional', titulo: 'Filosofía operacional', ruta: 'filosofia',                    icono: SlidersHorizontal,  Vista: Configuracion },
   conectores:   { corto: 'Conectores',    titulo: 'Conectores y tags del campo', ruta: 'conectores',                      icono: Plug,               Vista: Conectores },
 }
+
+/** Pantallas que viven DENTRO de otra: tienen dirección propia, pero en el
+ *  menú y en la introducción va la de afuera (la filosofía operacional es una
+ *  pestaña de Configuración con su propio enlace). */
+export const DENTRO_DE: Readonly<Record<string, string>> = { filosofia: 'configuracion' }
+/** ¿Va como entrada propia en el menú y en la introducción? */
+export const enElMenu = (id: string) => !Object.hasOwn(DENTRO_DE, id)
+/** La entrada del menú que se marca para una pantalla: ella misma, o la de afuera. */
+export const entradaDe = (id: string) => (Object.hasOwn(DENTRO_DE, id) ? DENTRO_DE[id]! : id)
 
 /** Pantallas que en el menú van juntas, como subpantallas de una sola. Cada
  *  subpantalla aparece si el rol la tiene y el campo tiene ese tipo de equipo

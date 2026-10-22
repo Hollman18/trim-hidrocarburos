@@ -1,4 +1,4 @@
-# Validación del modelo de datos · 2026-10-21 19:39:30 -05
+# Validación del modelo de datos · 2026-10-22 06:46:44 -05
 initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
 
 ## 1. Cluster temporal
@@ -15,7 +15,7 @@ server started
                            15
 (1 row)
 
-92 tablas (sin contar 45 particiones de lectura), 11 vistas, 27 funciones, 85 triggers, 183 índices, 574 restricciones (92 PK, 153 FK, 28 únicas, 297 check)
+98 tablas (sin contar 45 particiones de lectura), 11 vistas, 30 funciones, 101 triggers, 193 índices, 622 restricciones (98 PK, 170 FK, 30 únicas, 320 check)
 
 ## 3. ejemplos.sql (filas reales del demo)
 libros 60 · tramos por día 28 · mensajes 337 · identidades 132 · repuestos 13
@@ -122,6 +122,20 @@ NOTICE:  MUERDE  topología: el mismo elemento dos veces en el campo  [23505] du
 NOTICE:  MUERDE  topología: el mismo elemento dos veces para todos los campos (sin campo no es distinto)  [23505] duplicate key value violates unique constraint "topologia_version_campo_id_elemento_key"
 NOTICE:  PASA    una versión con topología: el JSON firmado = lo normalizado
 NOTICE:  MUERDE  una versión con topología en el JSON firmado y sin sus filas  [23514] versión 2: las tablas normalizadas no dicen lo mismo que el JSON firmado
+NOTICE:  MUERDE  «Todavía no sé» de un equipo que está en la topología del mismo campo  [23514] K-101 (ceiba): está a la vez en la topología y como «Todavía no sé»
+NOTICE:  MUERDE  una capacidad en cero  [23514] new row for relation "capacidad_firmada" violates check constraint "capacidad_firmada_bpd_check"
+NOTICE:  MUERDE  una capacidad sin fuente reconocida  [23514] new row for relation "capacidad_firmada" violates check constraint "capacidad_firmada_fuente_check"
+NOTICE:  MUERDE  una bomba sin su equipo  [23514] new row for relation "capacidad_firmada" violates check constraint "capacidad_firmada_check"
+NOTICE:  MUERDE  el tren de gas sin decir si se mide  [23514] new row for relation "capacidad_firmada" violates check constraint "capacidad_firmada_check1"
+NOTICE:  PASA    una versión con «Todavía no sé» y capacidades: el JSON firmado = lo normalizado
+NOTICE:  MUERDE  una versión con capacidades en el JSON firmado y sin sus filas  [23514] versión 2: las tablas normalizadas no dicen lo mismo que el JSON firmado
+NOTICE:  PASA    el operador contesta «¿De dónde vino el corte?» para el evento
+NOTICE:  MUERDE  una respuesta de un rol que no clasifica (el gerente)  [23514] el rol ger no tiene anh:clasificar (EP-LC21-261001-01)
+NOTICE:  MUERDE  «No sé» que abre otra pregunta  [23514] new row for relation "respuesta_campo" violates check constraint "respuesta_campo_check2"
+NOTICE:  MUERDE  una revisión sin motivo  [23514] new row for relation "revision_parada" violates check constraint "revision_parada_motivo_check"
+NOTICE:  MUERDE  una revisión pedida al propio rol  [23514] new row for relation "revision_parada" violates check constraint "revision_parada_check2"
+NOTICE:  MUERDE  «Pedir a producción» atendida por el supervisor  [23514] la revisión 3 no le toca al rol sup
+NOTICE:  PASA    «Algo está mal» del operador, atendida por el supervisor
 NOTICE:  MUERDE  clasificación: planeada con una causa no planeada (trigger diferido)  [23514] la parada EP-LC21-261001-01: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
 NOTICE:  MUERDE  clasificación: un detalle que no es de su causa  [23514] la parada EP-LC21-261001-01: el detalle NP_SUB/falla-esp no es de la causa NP_PROC
 NOTICE:  MUERDE  clasificación: planeada en el evento y una causa no planeada en una de sus filas (lo que rige en la fila)  [23514] la parada EP-LC21-261001-01@2026-10-01#1: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
@@ -141,7 +155,7 @@ NOTICE:  MUERDE  clasificación: una fila que no es de su evento  [23514] new ro
 NOTICE:  MUERDE  corregir una clasificación en sitio (se corrige con una fila nueva)  [23001] la tabla clasificacion_paso es de solo inserción: no admite UPDATE
 NOTICE:  MUERDE  lote del operador (sin anh:confirmar)  [23514] el rol oper no confirma en lote (anh:confirmar)
 NOTICE:  PASA    una clasificación coherente, confirmada en lote por el supervisor
-99 rechazos esperados y 17 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
+110 rechazos esperados y 20 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
 
 ## 5. Cuadres de los datos cargados (cuadres.sql)
 NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
@@ -157,9 +171,9 @@ NOTICE:  CUADRA  v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3
 NOTICE:  CUADRA  v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
 
 ## 6. tablas.json contra esquema.sql
-tablas.json: 92 tablas, 11 vistas, 153 relaciones, 368 filas de ejemplo
-comparadas 92 tablas y 11 vistas, 854 columnas, 153 relaciones; columnas de tabla sin comentario: 0
-filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, topologia, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, confirmacion_lote, clasificacion_paso, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
+tablas.json: 98 tablas, 11 vistas, 170 relaciones, 368 filas de ejemplo
+comparadas 98 tablas y 11 vistas, 904 columnas, 170 relaciones; columnas de tabla sin comentario: 0
+filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, topologia, topologia_por_saber, capacidades_campo, capacidad_firmada, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, confirmacion_lote, clasificacion_paso, respuesta_campo, revision_parada, revision_atendida, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
 tablas.json COINCIDE 1:1 con esquema.sql
 
 ## 7. TimescaleDB

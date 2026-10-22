@@ -1,7 +1,7 @@
 import { useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useApp, useCampo } from '@/app/store'
-import type { TopologiaVigente } from '@/shared/api/choke'
+import { pendientesDe, type TopologiaVigente, type RespuestaEquipo, type TopologiaEnBorrador, type CapacidadesCampo } from '@/shared/api/choke'
 import type { Config } from '@/entities/configuracion'
 import { Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -11,7 +11,6 @@ import { cn } from '@/shared/lib/cn'
 import { TopologiaPaso } from './TopologiaPaso'
 import { CapacidadesPaso } from './CapacidadesPaso'
 import { ImpactoPaso } from './ImpactoPaso'
-import { pendientesDe, type RespuestaEquipo, type TopologiaEnBorrador } from './topologia'
 
 /** El ⓘ de «modelo choke», el rótulo secundario de Configuración (U2 §1.3, texto exacto). */
 const EXPLICA_MODELO_CHOKE = 'Es un método internacional para ubicar dónde se pierde producción: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
@@ -28,17 +27,21 @@ const esAngosto = () => matchMedia(ANGOSTO).matches
  *  está armado el campo, en tres pasos (U2 §8):
  *   1. Equipos y pozos: una sola pregunta por equipo, «¿A qué pozos sirve?»;
  *      TRIM deduce el tramo y propone lo que ya sabe, con su porqué.
- *   2. Capacidades: lo que deja pasar cada tramo, con las reglas de la firma.
+ *   2. Capacidades: lo que deja pasar cada tramo, escrito con su fuente y
+ *      revisado con las reglas de la firma (`Config.capacidades`).
  *   3. Ver el impacto y firmar: la vista previa y la firma de la versión.
- *  La prepara y la firma el administrador (`config:firmar`). Lo contestado
- *  vive en el borrador de la configuración hasta que se firma. */
-export function FilosofiaOperacional({ campoId, topologia, onResponder, propuesta, puede, cambios, firma, historial, paso, onPaso, onTecnica }: {
+ *  La prepara y la firma el administrador (`config:firmar`); producción y
+ *  confiabilidad la leen. Lo contestado y lo escrito viven en el borrador de la
+ *  configuración hasta que se firma. */
+export function FilosofiaOperacional({ campoId, topologia, onResponder, onCapacidades, propuesta, puede, cambios, firma, historial, paso, onPaso, onTecnica }: {
   campoId: string
   /** La topología del borrador, por campo. */
   topologia: Readonly<Record<string, TopologiaEnBorrador>>
   /** La prepara y la firma quien tiene `config:firmar`; los demás la leen. */
   puede: boolean
   onResponder: (campoId: string, vigente: TopologiaVigente, cambios: Record<string, RespuestaEquipo | null>) => void
+  /** Las capacidades de un campo en el borrador; undefined quita las firmadas. */
+  onCapacidades: (campoId: string, c: CapacidadesCampo | undefined) => void
   /** Lo que se firmaría: todo el borrador de la configuración. */
   propuesta: Config
   /** Cuántos cambios lleva el borrador (de todas las pestañas). */
@@ -90,8 +93,9 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, propuest
       <Lectura>
         Aquí se dice cómo está armado el campo: a qué pozos sirve cada equipo y cuánto deja pasar cada tramo. No se
         escoge «pozo» o «planta»: se contesta a qué pozos sirve cada equipo y TRIM deduce dónde se traba cuando para
-        (lo de un solo pozo, en el pozo; lo de varios, en la planta o estación; lo de otro dueño, afuera). TRIM
-        propone lo que ya sabe y usted lo confirma. Nada rige hasta que se firma.
+        (lo de un solo pozo, en el pozo; lo de varios, en la planta o estación; lo de otro dueño, afuera). Si todavía
+        no se sabe, se dice: TRIM no lo adivina. TRIM propone lo que ya sabe y usted lo confirma. Nada rige hasta que
+        se firma.
       </Lectura>
       <h3 id={`paso-filosofia-${paso}`} tabIndex={-1} className="mb-1.5 mt-1 text-[13px] font-semibold outline-none">
         Paso {paso} · {nombrePaso}
@@ -104,7 +108,11 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, propuest
         <TopologiaPaso key={campoId} campoId={campoId} campoNombre={campo.nombre} borrador={topologia[campoId]} estrecho={estrecho} puede={puede}
           filtroInicial={soloFalta ? 'sin-responder' : 'todos'} onResponder={(v, c) => onResponder(campoId, v, c)} />
       )}
-      {paso === 2 && <CapacidadesPaso campoId={campoId} campoNombre={campo.nombre} onTecnica={puede ? onTecnica : undefined} />}
+      {paso === 2 && (
+        <CapacidadesPaso key={campoId} campoId={campoId} campoNombre={campo.nombre} puede={puede}
+          propuesta={propuesta.capacidades?.find(x => x.campoId === campoId)} onCambio={c => onCapacidades(campoId, c)}
+          onTecnica={puede ? onTecnica : undefined} />
+      )}
       {paso === 3 && (
         <ImpactoPaso propuesta={propuesta} puede={puede} hayCambios={cambios > 0} resumen={resumen} firma={firma} historial={historial}
           estrecho={estrecho} onFaltan={id => { if (id !== campoId) setCampo(id); ir(1, true) }} />

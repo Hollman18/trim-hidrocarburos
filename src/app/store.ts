@@ -14,7 +14,9 @@ import type { Informe, ConsultaInforme } from '@/entities/informe'
 import type { AvisoSap } from '@/entities/sap'
 import { sesion, useSesion } from '@/shared/api/sesion'
 import * as E from '@/shared/api/escrituras'
-import type { CuerpoAviso, CuerpoRespuesta, CuerpoWhatsapp } from '@/shared/api/contrato'
+import type {
+  CuerpoAviso, CuerpoRespuesta, CuerpoWhatsapp, CuerpoClasificacion, CuerpoConfirmacion, CuerpoYacimiento, CuerpoRespuestaAnh, CuerpoRevisionAnh,
+} from '@/shared/api/contrato'
 import type { FilaOficial } from '@/entities/asignacion'
 import type { Respuesta } from '@/entities/pozos'
 import type { Rol } from '@/entities/tipos'
@@ -90,6 +92,23 @@ interface Estado {
   completarAnalisis: (evento: string, a: { mecanismo: string; causaRaiz: string; nota?: string }) => Promise<{ ok: true } | { ok: false; error: string }>
   /** Aceptar o marcar ejecutado un plan del ciclo (`POST /api/planes/:id`). */
   decidirPlan: (id: string, estado: 'aceptado' | 'ejecutado', motivo: string) => Promise<{ ok: true } | { ok: false; error: string }>
+  /* El árbol de paradas de la ANH (Circular 024). Responden la fila como quedó o
+     `{ ok: false, error }` con las palabras del servidor: el 403 (no le toca), el
+     409 (otro cambió la parada mientras la miraba) y el 422 (incoherente). */
+  /** Lo que una persona dice de los pasos de una parada (`POST /api/anh/paradas/:id/clasificacion`). */
+  clasificarAnh: (id: string, c: CuerpoClasificacion) => ReturnType<typeof E.clasificarParada>
+  /** Confirmar una parada, o varias de la misma cadena en lote (`POST /api/anh/paradas/confirmar`). */
+  confirmarAnh: (c: CuerpoConfirmacion) => ReturnType<typeof E.confirmarParadasAnh>
+  /** «En el yacimiento», con lo que lo muestra (`POST /api/anh/paradas/:id/yacimiento`). */
+  yacimientoAnh: (id: string, c: CuerpoYacimiento) => ReturnType<typeof E.declararYacimientoAnh>
+  /** La respuesta de campo a una pregunta de la parada (`POST /api/anh/paradas/:id/respuesta`). */
+  responderAnh: (id: string, c: CuerpoRespuestaAnh) => ReturnType<typeof E.responderPreguntaAnh>
+  /** «Algo está mal» o «Pedir a producción» (`POST /api/anh/paradas/:id/revision`). */
+  revisarAnh: (id: string, c: CuerpoRevisionAnh) => ReturnType<typeof E.revisarParadaAnh>
+  /** Lo que cambiaría si se firmara el borrador, sin firmarlo (`POST /api/configuracion/vista-previa`). */
+  previsualizarConfig: (config: Config) => ReturnType<typeof E.previsualizarConfiguracion>
+  /** La topología leída de un CSV o un pegado de Excel (`POST /api/topologia/importar`): va al borrador, no se firma sola. */
+  importarTopologia: (campo: string, texto: string) => ReturnType<typeof E.importarTopologia>
   setCampo: (id: string) => void
   setAlcance: (a: 'campo' | 'portafolio') => void
   setPeriodo: (id: IdPeriodo) => void
@@ -208,6 +227,13 @@ export const useApp = create<Estado>((set, get) => ({
   recibirWhatsapp: r => E.recibirWhatsapp(r),
   completarAnalisis: (evento, a) => E.completarAnalisis(quien(), { evento, ...a }),
   decidirPlan: (id, estado, motivo) => E.decidirPlan(quien(), { id, estado, motivo }),
+  clasificarAnh: (id, c) => E.clasificarParada(quien(), id, c),
+  confirmarAnh: c => E.confirmarParadasAnh(quien(), c),
+  yacimientoAnh: (id, c) => E.declararYacimientoAnh(quien(), id, c),
+  responderAnh: (id, c) => E.responderPreguntaAnh(quien(), id, c),
+  revisarAnh: (id, c) => E.revisarParadaAnh(quien(), id, c),
+  previsualizarConfig: config => E.previsualizarConfiguracion(quien(), { config }),
+  importarTopologia: (campo, texto) => E.importarTopologia(quien(), { campo, texto }),
 
   // Un campo que la persona no tiene no se abre, venga de donde venga. Al
   // cambiar de campo, el aviso de una redirección hablaba del anterior: se borra.

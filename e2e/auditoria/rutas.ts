@@ -8,12 +8,15 @@ const R = (rol: string, pantallas: string[], campos: string[]) =>
 export const RUTAS = [
   ...R('ger', ['resumen', 'diferidos', 'produccion', 'riesgo', 'configuracion'], ['ceiba', 'ceiba~portafolio']),
   ...R('prod', ['produccion', 'diferidos', 'pozos', 'esp', 'causa', 'planta'], ['ceiba', 'ceiba~portafolio']),
+  // Configuración en solo lectura para producción y confiabilidad, con la filosofía operacional en su propia dirección.
+  ...R('prod', ['configuracion', 'filosofia'], ['ceiba']),
   ...R('sup', ['bombas', 'esp', 'turno', 'causa', 'pozos'], ['ceiba']),
   ...R('oper', ['bombas', 'esp', 'causa', 'turno'], ['ceiba']),
   ...R('jefe', ['mantenimiento', 'diferidos', 'bombas', 'esp', 'confiabilidad', 'equipo', 'riesgo', 'causa'], ['ceiba', 'ceiba~portafolio']),
   ...R('conf', ['bombas', 'esp', 'confiabilidad', 'diferidos', 'riesgo', 'equipo', 'causa', 'planta'], ['morichal', 'morichal~portafolio']),
+  ...R('conf', ['configuracion', 'filosofia'], ['morichal']),
   ...R('tec', ['trabajo', 'bombas', 'esp', 'causa'], ['ceiba']),
-  ...R('adm', ['configuracion', 'conectores', 'planta', 'perfil'], ['ceiba', 'morichal']),
+  ...R('adm', ['configuracion', 'filosofia', 'conectores', 'planta', 'perfil'], ['ceiba', 'morichal']),
   // estados que se abren con un clic o desde la URL: bomba, pozo, servicio
   '#/sup/bombas/ceiba/curso/P-201B', '#/jefe/riesgo/ceiba/curso/P-201B', '#/conf/confiabilidad/morichal/curso/MPP-301',
   '#/prod/pozos/ceiba/curso/LC-21', '#/prod/pozos/morichal/curso/LC-14', '#/jefe/esp/morichal/curso/MN-07',
@@ -58,6 +61,10 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: string
   '#/prod/esp/palmar/curso': { si: ['no tiene electrosumergibles en su perfil', 'Todos'], no: ['Electrosumergible con aviso'] },
   '#/prod/planta/palmar/curso': { si: ['CAPTURANDO DATOS', 'no tiene tren de gas'], no: ['TREN DE GAS'] },
   '#/adm/configuracion/ceiba/curso': { si: ['TANQUES DE AGUA', 'MEMBRETE DEL INFORME', 'Metas de los campos'], no: ['Meta global'] },
+  // La filosofía operacional tiene dirección propia; producción y confiabilidad la leen sin firmar nada.
+  '#/adm/filosofia/ceiba/curso': { si: ['Filosofía operacional · La Ceiba', 'Paso 1 · Equipos y pozos', '¿A qué pozos sirve este equipo?'], no: ['Solo lectura'] },
+  '#/prod/filosofia/ceiba/curso': { si: ['Filosofía operacional · La Ceiba', 'Solo lectura: la prepara y la firma el administrador'], no: ['FIRMAR LA VERSIÓN', 'Subir Excel o CSV'] },
+  '#/conf/configuracion/morichal/curso': { si: ['Solo lectura: lo prepara y lo firma el administrador', 'TANQUES DE AGUA', 'Filosofía operacional'], no: ['FIRMAR LA VERSIÓN', 'Usuarios y accesos'] },
   // Lo que viene en camino no es «sin stock»: se dice cuándo llega, sin marca (6B·H8).
   '#/ger/resumen/ceiba/cerrado/P-201B': { si: ['Qué se está haciendo', 'Le ha costado', 'pozos cerrados desde', 'llega el 9 de oct'], no: [...NO_DECISION, 'sin stock de kit'] },
   '#/oper/bombas/ceiba/curso': { si: ['No arrancar'], no: ['Energía por barril', 'acumulado'] },

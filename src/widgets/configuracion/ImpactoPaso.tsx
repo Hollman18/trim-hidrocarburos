@@ -1,8 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useApp } from '@/app/store'
-import { previsualizarConfiguracion } from '@/shared/api/escrituras'
 import {
-  NOMBRE_CHOKE, NOMBRE_CHOKE_CAMPO,
+  NOMBRE_CHOKE, NOMBRE_CHOKE_CAMPO, dondeTramo,
   type ImpactoConfig, type ImpactoCampo, type ChokeAnh, type ChokeCampo,
 } from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
@@ -12,7 +11,6 @@ import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { n0, plural } from '@/shared/lib/formato'
-import { dondeTramo } from './topologia'
 
 /** «los pozos», «la planta o estación», «afuera». */
 const sujeto = (k: ChokeCampo | null) => (k === null ? 'sin tubería de crudo' : NOMBRE_CHOKE_CAMPO[k].split(':')[0]!.toLowerCase())
@@ -43,7 +41,7 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
   /** Lleva al paso 1, a lo que falta contestar en ese campo. */
   onFaltan: (campoId: string) => void
 }) {
-  const rolId = useApp(s => s.rolId)
+  const rolId = useApp(s => s.rolId), previsualizarConfig = useApp(s => s.previsualizarConfig)
   const hayCambios = puede && conCambios
   // La respuesta dice para qué borrador y qué rol se pidió: mientras no sea la de lo que se ve, está «calculando».
   const [vista, setVista] = useState<{ para: Config | null; rol: string; impacto?: ImpactoConfig; error?: string }>({ para: null, rol: rolId })
@@ -51,11 +49,11 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
     if (!hayCambios) return
     // Si el borrador cambia mientras llega la respuesta, la vieja no pisa a la nueva.
     let vigente = true
-    void previsualizarConfiguracion({ rolId }, { config: propuesta }).then(r => {
+    void previsualizarConfig(propuesta).then(r => {
       if (vigente) setVista(r.ok ? { para: propuesta, rol: rolId, impacto: r.impacto } : { para: propuesta, rol: rolId, error: r.error })
     })
     return () => { vigente = false }
-  }, [propuesta, hayCambios, rolId])
+  }, [propuesta, hayCambios, rolId, previsualizarConfig])
   const pidiendo = hayCambios && (vista.para !== propuesta || vista.rol !== rolId)
   const impacto = hayCambios && !pidiendo ? vista.impacto : undefined
   const error = hayCambios && !pidiendo ? vista.error : undefined

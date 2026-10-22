@@ -338,6 +338,94 @@ select pg_temp.muerde('una versión con topología en el JSON firmado y sin sus 
       set constraints all immediate;
     end $x$ $s$, '23514');
 
+-- ── «Todavía no sé» y las capacidades firmadas (Config.topologiaPorSaber, Config.capacidades)
+select pg_temp.muerde('«Todavía no sé» de un equipo que está en la topología del mismo campo',
+  $s$do $x$ begin
+      insert into topologia (version, orden, campo_id, elemento, alcance, choke) values (1, 0, 'ceiba', 'K-101', 'compartido', 'planta');
+      insert into topologia_por_saber (version, orden, campo_id, elemento) values (1, 0, 'ceiba', 'K-101');
+    end $x$ $s$, '23514');
+select pg_temp.muerde('una capacidad en cero',
+  $s$do $x$ begin
+      insert into capacidades_campo (version, orden, campo_id) values (1, 0, 'ceiba');
+      insert into capacidad_firmada (version, campo_id, tramo, orden, bpd, fuente) values (1, 'ceiba', 'crudo', 0, 0, 'placa');
+    end $x$ $s$, '23514');
+select pg_temp.muerde('una capacidad sin fuente reconocida',
+  $s$do $x$ begin
+      insert into capacidades_campo (version, orden, campo_id) values (1, 0, 'ceiba');
+      insert into capacidad_firmada (version, campo_id, tramo, orden, bpd, fuente) values (1, 'ceiba', 'crudo', 0, 12000, 'me-lo-dijeron');
+    end $x$ $s$, '23514');
+select pg_temp.muerde('una bomba sin su equipo',
+  $s$do $x$ begin
+      insert into capacidades_campo (version, orden, campo_id) values (1, 0, 'ceiba');
+      insert into capacidad_firmada (version, campo_id, tramo, orden, bpd, fuente) values (1, 'ceiba', 'bomba', 0, 89250, 'placa');
+    end $x$ $s$, '23514');
+select pg_temp.muerde('el tren de gas sin decir si se mide',
+  $s$do $x$ begin
+      insert into capacidades_campo (version, orden, campo_id) values (1, 0, 'ceiba');
+      insert into capacidad_firmada (version, campo_id, tramo, orden, bpd, fuente) values (1, 'ceiba', 'gas', 0, 2400, 'placa');
+    end $x$ $s$, '23514');
+select pg_temp.pasa('una versión con «Todavía no sé» y capacidades: el JSON firmado = lo normalizado',
+  $s$do $x$ begin
+      insert into version_config (version, base, fecha, por_id, por, motivo, cambios, config)
+        select 2, 1, now(), 'adm', por, 'Capacidades de La Ceiba', '{"Capacidades de La Ceiba (se firman por primera vez)"}',
+          config || '{"topologiaPorSaber":[{"elemento":"K-101","campoId":"ceiba"}],"capacidades":[{"campoId":"ceiba","crudo":{"bpd":12000,"fuente":"prueba"},"gas":{"bpd":2400,"fuente":"placa","medido":false},"bombas":[{"equipo":"P-201A","bpd":89250,"fuente":"placa"},{"equipo":"P-201B","bpd":89250,"fuente":"placa"}],"explicacionEmpate":"El oleoducto se dimensionó con la planta"}]}'::jsonb
+        from version_config where version = 1;
+      insert into membrete select 2, empresa from membrete where version = 1;
+      insert into perfil_campo select 2, campo_id, gas, bombas, electrosumergibles from perfil_campo where version = 1;
+      insert into tramo_meta select 2, campo_id, desde, produccion_bpd, diferido_max_bpd, netback_usd, criterio_sin_causa from tramo_meta where version = 1;
+      insert into tanque select 2, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo from tanque where version = 1;
+      insert into respaldo select 2, campo_id, equipo, orden, libre_bpd, detalle from respaldo where version = 1;
+      insert into parada_programada select 2, id, orden, campo_id, equipo, desde, hasta, motivo from parada_programada where version = 1;
+      insert into topologia_por_saber (version, orden, campo_id, elemento) values (2, 0, 'ceiba', 'K-101');
+      insert into capacidades_campo (version, orden, campo_id, explicacion_empate) values (2, 0, 'ceiba', 'El oleoducto se dimensionó con la planta');
+      insert into capacidad_firmada (version, campo_id, tramo, equipo, orden, bpd, fuente, medido) values
+        (2, 'ceiba', 'crudo', '', 0, 12000, 'prueba', null), (2, 'ceiba', 'gas', '', 0, 2400, 'placa', false),
+        (2, 'ceiba', 'bomba', 'P-201A', 0, 89250, 'placa', null), (2, 'ceiba', 'bomba', 'P-201B', 1, 89250, 'placa', null);
+      set constraints all immediate;
+    end $x$ $s$);
+select pg_temp.muerde('una versión con capacidades en el JSON firmado y sin sus filas',
+  $s$do $x$ begin
+      insert into version_config (version, base, fecha, por_id, por, motivo, cambios, config)
+        select 2, 1, now(), 'adm', por, 'Capacidades sin normalizar', '{x}', config || '{"capacidades":[{"campoId":"ceiba","crudo":{"bpd":12000,"fuente":"prueba"}}]}'::jsonb
+        from version_config where version = 1;
+      insert into membrete select 2, empresa from membrete where version = 1;
+      insert into perfil_campo select 2, campo_id, gas, bombas, electrosumergibles from perfil_campo where version = 1;
+      insert into tramo_meta select 2, campo_id, desde, produccion_bpd, diferido_max_bpd, netback_usd, criterio_sin_causa from tramo_meta where version = 1;
+      insert into tanque select 2, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo from tanque where version = 1;
+      insert into respaldo select 2, campo_id, equipo, orden, libre_bpd, detalle from respaldo where version = 1;
+      insert into parada_programada select 2, id, orden, campo_id, equipo, desde, hasta, motivo from parada_programada where version = 1;
+      set constraints all immediate;
+    end $x$ $s$, '23514');
+
+-- ── La respuesta de campo y la revisión de una parada (POST …/respuesta, …/revision)
+select pg_temp.pasa('el operador contesta «¿De dónde vino el corte?» para el evento',
+  $$insert into respuesta_campo (clave, alcance, evento_id, campo_id, pregunta, opcion, sigue, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'corte', 'De este pozo: su transformador, su variador o su cable', 'detalle', 'oper', 'Jairo Peña', 'oper', now())$$);
+select pg_temp.muerde('una respuesta de un rol que no clasifica (el gerente)',
+  $$insert into respuesta_campo (clave, alcance, evento_id, campo_id, pregunta, opcion, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'corte', 'Del campo: pórtico, red de media o subestación', 'ger', 'Andrés Vélez', 'ger', now())$$, '23514');
+select pg_temp.muerde('«No sé» que abre otra pregunta',
+  $$insert into respuesta_campo (clave, alcance, evento_id, campo_id, pregunta, opcion, sigue, no_se, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'corte', 'No sé', 'detalle', true, 'oper', 'Jairo Peña', 'oper', now())$$, '23514');
+select pg_temp.muerde('una revisión sin motivo',
+  $$insert into revision_parada (clave, alcance, evento_id, campo_id, motivo, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'mal', 'oper', 'Jairo Peña', 'oper', now())$$, '23514');
+select pg_temp.muerde('una revisión pedida al propio rol',
+  $$insert into revision_parada (clave, alcance, evento_id, campo_id, motivo, pedir_a, por_id, por, rol_id, hora)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', '¿Fue el yacimiento?', 'prod', 'prod', 'Marcela Ríos', 'prod', now())$$, '23514');
+select pg_temp.muerde('«Pedir a producción» atendida por el supervisor',
+  $s$do $x$ declare r bigint; begin
+      insert into revision_parada (clave, alcance, evento_id, campo_id, motivo, pedir_a, por_id, por, rol_id, hora)
+        values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', '¿Fue el yacimiento? Revise la prueba', 'prod', 'sup', 'Nelson Ortiz', 'sup', now()) returning id into r;
+      insert into revision_atendida (revision_id, por_id, por, rol_id, hora) values (r, 'sup', 'Nelson Ortiz', 'sup', now());
+    end $x$ $s$, '23514');
+select pg_temp.pasa('«Algo está mal» del operador, atendida por el supervisor',
+  $s$do $x$ declare r bigint; begin
+      insert into revision_parada (clave, alcance, evento_id, campo_id, motivo, por_id, por, rol_id, hora)
+        values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'No paró por la energía: lo cerraron para una prueba', 'oper', 'Jairo Peña', 'oper', now()) returning id into r;
+      insert into revision_atendida (revision_id, por_id, por, rol_id, hora) values (r, 'sup', 'Nelson Ortiz', 'sup', now());
+    end $x$ $s$);
+
 -- ── La clasificación ANH (Circular 024): lo que dice una persona, paso por paso
 select pg_temp.muerde('clasificación: planeada con una causa no planeada (trigger diferido)',
   $s$do $x$ begin

@@ -1,4 +1,4 @@
-import { useTuberia, useRepartoChoke, useBaseChoke, CHOKES_Y_SIN_ASIGNAR, type ChokeCampo, type TuberiaCampo } from '@/shared/api/choke'
+import { useTuberia, useRepartoChoke, useBaseChoke, useCriticidad, CHOKES_Y_SIN_ASIGNAR } from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
 import { fechaCorta } from '@/entities/reloj'
 import { Info } from '@/shared/ui/Info'
@@ -16,24 +16,6 @@ import { LARGO_TRAMO, leidoReparto, textoReparto } from '@/widgets/diferidos/rep
    y sin la palabra «choke»: campo → dónde → qué equipo. */
 
 const D = 86_400_000
-const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
-const SUJETO: Record<ChokeCampo, string> = { pozos: 'los pozos', planta: 'la planta', exportacion: 'afuera' }
-
-/** «Para producir más…» (U2 §3.1 y §6.5): lo que limita HOY al campo dicho
- *  como decisión, en una línea y sin cifras. Lo decide el motor (`limita`,
- *  `casiIguales`); aquí solo se dice. Un campo de gas no tiene tubería de
- *  crudo todavía: no se dice nada. */
-function paraProducirMas(t: Pick<TuberiaCampo, 'limita' | 'casiIguales' | 'campoDeGas'>): string | undefined {
-  if (t.campoDeGas || !t.limita) return undefined
-  if (t.casiIguales && t.casiIguales.length > 1)
-    return `Para producir más: ampliar ${lista(t.casiIguales.map(k => SUJETO[k]))} (hoy están casi iguales: lo que se gane en uno lo frena el otro).`
-  const frase: Record<ChokeCampo, string> = {
-    pozos: 'Para producir más: sacarles más a los pozos (hoy limitan ellos; la planta y afuera dejan pasar más).',
-    planta: 'Para producir más: ampliar la planta (hoy limita ella; abrir más pozos no da nada).',
-    exportacion: 'Para producir más: más salida afuera, por oleoducto, transportador o nominación (hoy limita eso).',
-  }
-  return frase[t.limita]
-}
 
 /** Dónde se trabó un campo en el período: la barra por tramo (con «sin
  *  identificar» aparte), sus barriles, la frase del motor y lo que hay que
@@ -45,15 +27,16 @@ export function DondeSeTraboCampo({ campoId, desde, hasta, className }: {
 }) {
   const t = useTuberia(campoId, desde, hasta)
   const b = useRepartoChoke({ campos: [campoId], desde, hasta })
+  // Lo que se gana desembotellando (U2 §6.5): qué da producir más y qué da otra bomba de agua. Lo dice el motor.
+  const mas = useCriticidad([campoId]).campos[0]?.desembotellar
   const nombre = campoPorId(campoId).nombre
   const v = b.porChoke
   const nada = b.diferido < 0.5
   // Lo que no es de ningún tramo (potencial − real − Σ de los eventos): el período corta meses.
   const inventario = Math.round(b.sinExplicar)
-  const mas = paraProducirMas(t)
   return (
     <div className={cn('min-w-0', className)} data-donde-se-trabo={campoId} data-total={b.diferido}>
-      {!nada && <BarraTramos valores={v} leido={`Dónde se trabó ${nombre} en el período: ${leidoReparto(v)}, el diferido del libro.`} />}
+      {!nada && <BarraTramos valores={v} leido={`Dónde se trabó ${nombre} en el período: ${leidoReparto(v, b.diferido)}, el diferido del libro.`} />}
       {(!nada || inventario !== 0) && (
         <p className="tabular mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
           {!nada && <span>{textoReparto(v)} bbl</span>}

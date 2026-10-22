@@ -107,13 +107,14 @@ try {
     CONFIABILIDAD: p => EQ.pedirConfiabilidad(p.campos, s.ctx),
     BOMBAS: p => EQ.pedirBombas(p.campos, p.desde, p.hasta, s.ctx),
     CICLO: p => CIC.pedirCiclo(p.campos, p.desde, p.hasta, s.ctx, s.versiones, s.planes ?? {}),
-    TUBERIA: p => CHK.pedirTuberia(p.campo, p.desde, p.hasta, s.ctx),
-    SERIE_CHOKE: p => CHK.pedirSerieChoke(p.campo, p.desde, p.hasta, s.ctx),
+    TUBERIA: p => CHK.pedirTuberia(p.campo, p.desde, p.hasta, s.ctx, s.versiones),
+    SERIE_CHOKE: p => CHK.pedirSerieChoke(p.campo, p.desde, p.hasta, s.ctx, s.versiones),
     TUBERIA_AGUA: p => CHK.pedirTuberiaAgua(p.campo, s.ctx, s.versiones),
+    CAPACIDADES: p => CHK.pedirCapacidades(p.campo, s.ctx, s.versiones),
     CRITICIDAD: p => CHK.pedirCriticidad(p.campos, s.ctx),
-    REPARTO_CHOKE: p => CHK.pedirRepartoChoke(p, s.ctx),
-    REPARTO_CHOKE_MENSUAL: p => CHK.pedirRepartoMensual(p.campos, s.ctx),
-    BASE_CHOKE: p => CHK.pedirBaseChoke(p, s.ctx),
+    REPARTO_CHOKE: p => CHK.pedirRepartoChoke(p, s.ctx, s.versiones),
+    REPARTO_CHOKE_MENSUAL: p => CHK.pedirRepartoMensual(p.campos, s.ctx, s.versiones),
+    BASE_CHOKE: p => CHK.pedirBaseChoke(p, s.ctx, s.versiones),
     TOPOLOGIA: p => CHK.pedirTopologia(p.campo, s.ctx),
     PROPUESTAS_TOPOLOGIA: p => CHK.pedirPropuestasTopologia(p.campo, s.ctx),
     PARADAS_ANH: p => ARB.pedirParadasAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
@@ -235,7 +236,7 @@ try {
       FILAS_EQUIPOS: porCampos(), CONFIABILIDAD: porCampos(), BOMBAS: conPeriodo(), CICLO: conPeriodo(),
       TUBERIA: TODOS.flatMap(campo => periodos.map(r => ({ campo, desde: r.desde, hasta: r.hasta }))),
       SERIE_CHOKE: TODOS.flatMap(campo => periodos.map(r => ({ campo, desde: r.desde, hasta: r.hasta }))),
-      TUBERIA_AGUA: TODOS.map(campo => ({ campo })), CRITICIDAD: porCampos(),
+      TUBERIA_AGUA: TODOS.map(campo => ({ campo })), CAPACIDADES: TODOS.map(campo => ({ campo })), CRITICIDAD: porCampos(),
       REPARTO_CHOKE: conPeriodo(), REPARTO_CHOKE_MENSUAL: porCampos(), BASE_CHOKE: conPeriodo(),
       TOPOLOGIA: TODOS.map(campo => ({ campo })), PROPUESTAS_TOPOLOGIA: TODOS.map(campo => ({ campo })),
       PARADAS_ANH: conPeriodo(), CALIDAD_ANH: conPeriodo(),
@@ -335,6 +336,7 @@ try {
       'POST /configuracion', 'PATCH /usuarios/:id', 'POST /usuarios', 'POST /sap/avisos', 'POST /informes', 'POST /asignacion-oficial',
       'POST /paradas/:evento/respuesta', 'POST /analisis/:evento', 'POST /planta/cambios', 'POST /planes/:id',
       'POST /anh/paradas/:id/clasificacion', 'POST /anh/paradas/:id/yacimiento', 'POST /anh/paradas/confirmar',
+      'POST /anh/paradas/:id/respuesta', 'POST /anh/paradas/:id/revision',
       'POST /configuracion/vista-previa', 'POST /topologia/importar']
     const repetidas = rutas.filter((r, i) => rutas.indexOf(r) !== i)
     // Dos rutas chocan si un mismo camino puede caer en las dos: mismo método,
@@ -619,12 +621,106 @@ try {
       && !(await E.importarTopologia({ rolId: 'sup' }, { campo: 'ceiba', texto: 'SE-2;todos' })).ok,
       `el CSV dice por fila lo que bloquea (filas ${bloquean}: equipo que no existe, repetido, pozo ajeno, sin pozos) y el caso de borde de MPP-301 avisa sin bloquear («${mpp?.texto.slice(0, 70)}…»); solo el administrador la carga`)
     // j. Las rutas nuevas están en CONTRATO.md.
-    const nuevas = ['TUBERIA', 'SERIE_CHOKE', 'TUBERIA_AGUA', 'CRITICIDAD', 'REPARTO_CHOKE', 'REPARTO_CHOKE_MENSUAL', 'BASE_CHOKE', 'TOPOLOGIA', 'PROPUESTAS_TOPOLOGIA', 'PARADAS_ANH', 'CALIDAD_ANH']
+    const nuevas = ['TUBERIA', 'SERIE_CHOKE', 'TUBERIA_AGUA', 'CAPACIDADES', 'CRITICIDAD', 'REPARTO_CHOKE', 'REPARTO_CHOKE_MENSUAL', 'BASE_CHOKE', 'TOPOLOGIA', 'PROPUESTAS_TOPOLOGIA', 'PARADAS_ANH', 'CALIDAD_ANH']
       .map(n => `\`${C[n].ruta}`)
-    const posts = ['POST /api/anh/paradas/:id/clasificacion', 'POST /api/anh/paradas/:id/yacimiento', 'POST /api/anh/paradas/confirmar', 'POST /api/configuracion/vista-previa', 'POST /api/topologia/importar']
+    const posts = ['POST /api/anh/paradas/:id/clasificacion', 'POST /api/anh/paradas/:id/yacimiento', 'POST /api/anh/paradas/confirmar',
+      'POST /api/anh/paradas/:id/respuesta', 'POST /api/anh/paradas/:id/revision', 'POST /api/configuracion/vista-previa', 'POST /api/topologia/importar']
     const sinDoc = [...nuevas, ...posts].filter(r => !contratoMd.includes(r))
     const capacidades = ['anh:clasificar', 'anh:confirmar', 'anh:yacimiento'].filter(k => !contratoMd.includes(`\`${k}\``))
     comprobar(sinDoc.length === 0 && capacidades.length === 0, `las ${nuevas.length} vistas y ${posts.length} escrituras nuevas, y sus tres capacidades, están en CONTRATO.md${[...sinDoc, ...capacidades].map(r => `; falta ${r}`).join('')}`)
+
+    console.log('\n=== 11. La respuesta de campo, «Algo está mal» y las capacidades firmadas (tanda 4) ===')
+    // a. El operador contesta en el campo: lo que TRIM deduce queda dicho por él, y la pregunta que sigue llega con la vista.
+    const s11 = SES.sesion()
+    const todas11 = ARB.pedirParadasAnh(historia, s11.ctx, s11.clasificacionesAnh)
+    const conCorte = todas11.find(p => p.propuesta.preguntas.some(x => x.id === 'corte') && !Object.keys(s11.clasificacionesAnh).some(k => k === p.id || k === p.eventoId))
+    const conQue = todas11.find(p => p.propuesta.preguntas.some(x => x.id === 'que-lo-paro') && p.eventoId !== conCorte?.eventoId)
+    const deEstePozo = 'De este pozo: su transformador, su variador o su cable'
+    const r11 = await E.responderPreguntaAnh({ rolId: 'oper' }, conCorte.id, { pregunta: 'corte', opcion: deEstePozo, aplicarAlEvento: true, cadena: ARB.cadenaVista(conCorte.clasificacion) })
+    const ch11 = r11.parada?.clasificacion.choke
+    const guardada11 = SES.sesion().clasificacionesAnh[conCorte.eventoId]
+    const leida11 = ARB.pedirParadaAnh(conCorte.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    comprobar(r11.ok && ch11?.valor === 'pozo' && ch11.procedencia === 'declarado' && ch11.porId === 'oper' && /contestó Jairo Peña en el campo/.test(ch11.porque?.texto ?? '')
+      && guardada11?.respuestas?.at(-1)?.opcion === deEstePozo && !leida11.propuesta.preguntas.some(x => x.id === 'corte') && leida11.estado !== 'confirmada',
+      `«¿De dónde vino el corte?» lo contesta el operador en el campo (POST …/respuesta): «${deEstePozo}» deja el tramo «${ch11?.valor}» dicho por él (${ch11?.procedencia}), la respuesta queda en la conversación y la fila sigue ${leida11?.estado}: lo avala quien revisa`)
+    const r11b = await E.responderPreguntaAnh({ rolId: 'oper' }, conQue.id, { pregunta: 'que-lo-paro', opcion: 'Se fue la energía', aplicarAlEvento: true })
+    const sigue11 = ARB.pedirParadaAnh(conQue.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    comprobar(r11b.ok && sigue11.propuesta.preguntas.some(x => x.id === 'corte') && !sigue11.propuesta.preguntas.some(x => x.id === 'que-lo-paro'),
+      `«¿Qué lo paró?» → «Se fue la energía»: al leer la fila otra vez llega «¿De dónde vino el corte?» (${sigue11.propuesta.preguntas.map(x => x.id).join(', ')})`)
+    const rech11 = {
+      cerrada: await E.responderPreguntaAnh({ rolId: 'oper' }, conCorte.id, { pregunta: 'corte', opcion: deEstePozo }),
+      opcion: await E.responderPreguntaAnh({ rolId: 'oper' }, conQue.id, { pregunta: 'corte', opcion: 'De la luna' }),
+      gerente: await E.responderPreguntaAnh({ rolId: 'ger' }, conQue.id, { pregunta: 'corte', opcion: deEstePozo }),
+      cadena: await E.responderPreguntaAnh({ rolId: 'oper' }, conQue.id, { pregunta: 'corte', opcion: deEstePozo, cadena: 'otra' }),
+    }
+    comprobar(!rech11.cerrada.ok && /ya contestó esa pregunta/.test(rech11.cerrada.error) && !rech11.opcion.ok && /no es una de las respuestas/.test(rech11.opcion.error)
+      && !rech11.gerente.ok && /no contesta las preguntas/.test(rech11.gerente.error) && !rech11.cadena.ok && /alguien cambió esta parada/.test(rech11.cadena.error),
+      'se rechazan en palabras: una pregunta que ya se cerró (409), una opción que no es de la pregunta (422), un rol que no contesta (403) y una cadena que cambió (409)')
+    // «Todavía no sé» firmado: el tramo de sus paradas queda en falta con su pregunta, que contesta quien revisa (nunca el operador).
+    // La topología de La Ceiba ya está firmada (arriba): «Todavía no sé» saca a K-101 de ella y lo firma por saber (`conTopologia`, el motor).
+    const vig11 = CHK.pedirTopologia('ceiba', SES.sesion().ctx)
+    const conNoSe = CHK.conTopologia(SES.sesion().ctx.config, { ceiba: { base: vig11.elementos, firmada: vig11.firmada, respuestas: { 'K-101': { r: 'no-se', elemento: null } } } })
+    const noSe11 = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conNoSe, motivo: 'el aire de instrumentos: todavía no se sabe a qué pozos sirve', base: SES.sesion().versiones.at(-1).version })
+    const delAire = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).find(p => p.causa.equipo === 'K-101' && !p.clasificacion.choke)
+    const qTramo = delAire?.propuesta.preguntas.find(x => x.id === 'choke')
+    const enPlanta = qTramo?.opciones.find(o => o.deja.choke === 'planta')
+    const operTramo = delAire && await E.responderPreguntaAnh({ rolId: 'oper' }, delAire.id, { pregunta: 'choke', opcion: enPlanta.texto })
+    const supTramo = delAire && await E.responderPreguntaAnh({ rolId: 'sup' }, delAire.id, { pregunta: 'choke', opcion: enPlanta.texto })
+    comprobar(noSe11.ok && vig11.firmada && !conNoSe.topologia.some(e => e.elemento === 'K-101' && e.campoId === 'ceiba') && CHK.pedirTopologia('ceiba', SES.sesion().ctx).porSaber.some(e => e.elemento === 'K-101')
+      && SES.sesion().versiones.at(-1).cambios.some(x => /K-101 \(La Ceiba\): todavía no se sabe a qué pozos sirve/.test(x))
+      && !!delAire && delAire.faltan.includes('choke') && qTramo?.quien === 'revisa' && qTramo.texto === CHO.PREGUNTA_ORIGEN
+      && !operTramo.ok && /la contesta supervisión, producción/.test(operTramo.error) && supTramo.ok && supTramo.parada.clasificacion.choke?.valor === 'planta' && supTramo.parada.clasificacion.choke.porId === 'sup',
+      `«Todavía no sé» firmado para K-101: sus paradas quedan sin tramo con «${qTramo?.texto}», que el operador no contesta («${operTramo?.error}») y el supervisor sí`)
+    // a2. Lo confirmado por fila y lo dicho después para todo el evento: la vista trae lo último (lo guardado no se cambia
+    //     después de leído: es la clave de la caché de las vistas, y un objeto cambiado dejaba la fila vieja).
+    const sola = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+      .find(p => p.propuesta.preguntas.some(x => x.id === 'corte') && !Object.keys(SES.sesion().clasificacionesAnh).some(k => k === p.id || k === p.eventoId))
+    const conf11 = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [sola.id], pasos: ['planeacion', 'impacto'] })
+    const resp11 = await E.responderPreguntaAnh({ rolId: 'oper' }, sola.id, { pregunta: 'corte', opcion: deEstePozo, aplicarAlEvento: true })
+    const vista11 = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).find(p => p.id === sola.id)
+    comprobar(conf11.ok && resp11.ok && vista11.clasificacion.choke?.procedencia === 'declarado' && vista11.clasificacion.planeacion?.procedencia === 'confirmado'
+      && !vista11.propuesta.preguntas.some(x => x.id === 'corte') && !Object.hasOwn(SES.sesion().clasificacionesAnh, sola.id),
+      `confirmado por fila y contestado después para el evento (${sola.id}): la vista trae las dos cosas y lo de la fila pasa al evento`)
+    // b. «Algo está mal» y «Pedir a producción»: no corrigen; quien revisa la atiende al decir algo de ella.
+    const aRev = todas11.find(p => p.estado === 'propuesta' && p.eventoId !== conCorte.eventoId && p.eventoId !== conQue.eventoId && !Object.keys(SES.sesion().clasificacionesAnh).some(k => k === p.id || k === p.eventoId))
+    const rv11 = await E.revisarParadaAnh({ rolId: 'oper' }, aRev.id, { motivo: 'No paró por la energía: lo cerraron para una prueba', aplicarAlEvento: true })
+    const revAbierta = ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const atiende = await E.clasificarParada({ rolId: 'sup' }, aRev.id, { pasos: { impacto: 'diferida' }, aplicarAlEvento: true })
+    const revAtendida = ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const pide = await E.revisarParadaAnh({ rolId: 'sup' }, aRev.id, { motivo: '¿Fue el yacimiento? Revise la prueba del pozo', pedirA: 'prod', aplicarAlEvento: true })
+    const supOtraVez = await E.clasificarParada({ rolId: 'sup' }, aRev.id, { pasos: { impacto: 'diferida' }, aplicarAlEvento: true })
+    const sigueParaProd = ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const prodConfirma = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [aRev.id] })
+    const yaProd = ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    comprobar(rv11.ok && revAbierta.revision?.motivo.startsWith('No paró') && !revAbierta.revision.atendida && ARB.esperaRevision(revAbierta.revision, 'sup') && !ARB.esperaRevision(revAbierta.revision, 'oper')
+      && atiende.ok && revAtendida.revision?.atendida?.porId === 'sup'
+      && pide.ok && supOtraVez.ok && sigueParaProd.revision?.pedirA === 'prod' && !sigueParaProd.revision.atendida && ARB.esperaRevision(sigueParaProd.revision, 'prod')
+      && prodConfirma.ok && yaProd.revision?.atendida?.porId === 'prod',
+      '«Algo está mal» (POST …/revision) deja la parada para quien revisa y la atiende el supervisor al corregirla; «Pedir a producción» solo la atiende producción, aunque el supervisor vuelva a tocarla')
+    const rechRev = {
+      corto: await E.revisarParadaAnh({ rolId: 'oper' }, aRev.id, { motivo: 'mal' }),
+      aQuien: await E.revisarParadaAnh({ rolId: 'sup' }, aRev.id, { motivo: 'revise esto por favor', pedirA: 'ger' }),
+      propio: await E.revisarParadaAnh({ rolId: 'prod' }, aRev.id, { motivo: 'revise esto por favor', pedirA: 'prod' }),
+      gerente: await E.revisarParadaAnh({ rolId: 'ger' }, aRev.id, { motivo: 'revise esto por favor' }),
+    }
+    comprobar(!rechRev.corto.ok && /Diga qué está mal/.test(rechRev.corto.error) && !rechRev.aQuien.ok && /se le pide a quien revisa/.test(rechRev.aQuien.error)
+      && !rechRev.propio.ok && /corríjala usted/.test(rechRev.propio.error) && !rechRev.gerente.ok && /no marca paradas/.test(rechRev.gerente.error),
+      `la revisión se rechaza en palabras: sin motivo (422), pedida a quien no revisa (422) o al propio rol (422), y desde un rol que no clasifica (403)`)
+    // c. Las capacidades se firman con la configuración y pasan por la revisión de la firma (U2 §8.4).
+    const CAPV = CHK.pedirCapacidades('ceiba', SES.sesion().ctx, SES.sesion().versiones)
+    const base11 = () => ({ config: SES.sesion().ctx.config, base: SES.sesion().versiones.at(-1).version })
+    const conCap = cap => ({ ...base11().config, capacidades: [cap] })
+    const menos = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 5000, fuente: 'placa' } }), motivo: 'prueba de capacidades', base: base11().base })
+    const empata = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', afuera: { bpd: 13000, fuente: 'contrato' } }), motivo: 'prueba de capacidades', base: base11().base })
+    const previa = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 12000, fuente: 'prueba' } }) })
+    const firma11 = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 12000, fuente: 'prueba' } }), motivo: 'capacidades de La Ceiba de prueba', base: base11().base })
+    const despues11 = CHK.pedirCapacidades('ceiba', SES.sesion().ctx, SES.sesion().versiones)
+    const tub11 = CHK.pedirTuberia('ceiba', new Date(cal.at(-1).desde), AHORA, SES.sesion().ctx, SES.sesion().versiones)
+    comprobar(CAPV.vigentes.crudo.estado === 'demo' && !CAPV.firma && !menos.ok && /no puede dejar pasar menos de lo que ya pasó/.test(menos.error)
+      && !empata.ok && /explicar un empate/.test(empata.error) && previa.ok && previa.impacto.campos[0]?.campoId === 'ceiba'
+      && firma11.ok && SES.sesion().versiones.at(-1).cambios.some(x => /^Capacidades de La Ceiba \(se firman por primera vez\): tren de crudo 12\.000/.test(x))
+      && despues11.vigentes.crudo.estado === 'firmado' && despues11.firma?.version === firma11.version && tub11.capacidades.estado === 'parte' && /firmadas el/.test(tub11.capacidades.texto),
+      `las capacidades se firman con la configuración: menos de lo que ya pasó o un empate sin explicar no se firman (422: «${menos.error?.slice(0, 70)}…»), con las mismas reglas en la vista previa; firmadas, la vista y la tubería dicen quién y cuándo («${tub11.capacidades.texto}»)`)
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -805,6 +901,8 @@ try {
     const ry = await E.declararYacimientoAnh({ rolId: 'prod' }, filaH.id, { evidencia: 'prueba' })
     const rv = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: s.ctx.config })
     const ri = await E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: 'SE-2;todos' })
+    const rs = await E.responderPreguntaAnh({ rolId: 'oper' }, filaH.id, { pregunta: 'corte', opcion: 'Del campo: pórtico, red de media o subestación', aplicarAlEvento: true })
+    const rm = await E.revisarParadaAnh({ rolId: 'oper' }, filaH.id, { motivo: 'No paró por la energía', aplicarAlEvento: true })
     const caminosH = cuerpos.slice(nC).map(x => x.camino)
     rechazo = { estado: 422, error: { codigo: 'clasificacion-incoherente', mensaje: '«No planeada - Mecánica subsuelo» es una causa no planeada: cambie primero «¿Planeada?».' } }
     const rr = await E.clasificarParada({ rolId: 'sup' }, filaH.id, { pasos: { planeacion: 'planeada', n1: 'NP_SUB' } })
@@ -812,12 +910,13 @@ try {
     const rp = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [filaH.id], pasos: ['choke'] })
     rechazo = null
     const idH = encodeURIComponent(filaH.id)
-    comprobar(rc.ok && rl.ok && ry.ok && rv.ok && ri.ok && rc.parada.id === filaH.id && rv.impacto.campos[0]?.campoId === 'ceiba' && ri.topologia.length === 1
+    comprobar(rc.ok && rl.ok && ry.ok && rv.ok && ri.ok && rs.ok && rm.ok && rc.parada.id === filaH.id && rv.impacto.campos[0]?.campoId === 'ceiba' && ri.topologia.length === 1
       && SES.sesion().clasificacionesAnh !== antesH && Object.hasOwn(SES.sesion().clasificacionesAnh, filaH.id)
-      && caminosH.join() === [`/anh/paradas/${idH}/clasificacion`, '/anh/paradas/confirmar', `/anh/paradas/${idH}/yacimiento`, '/configuracion/vista-previa', '/topologia/importar'].join()
+      && caminosH.join() === [`/anh/paradas/${idH}/clasificacion`, '/anh/paradas/confirmar', `/anh/paradas/${idH}/yacimiento`, '/configuracion/vista-previa', '/topologia/importar',
+        `/anh/paradas/${idH}/respuesta`, `/anh/paradas/${idH}/revision`].join()
       && cuerpos.slice(nC).every(x => !['por', 'porId', 'hora', 'procedencia', 'rol'].some(k => k in x.cuerpo))
       && !rr.ok && /cambie primero/.test(rr.error) && !rp.ok && /no confirma «Dónde se trabó»/.test(rp.error),
-      'las escrituras del árbol y de la topología van a su ruta sin por, hora ni procedencia (las pone el servidor), lo aceptado se copia a la sesión, y el 422 y el 403 llegan con sus palabras')
+      'las escrituras del árbol (también la respuesta de campo y la revisión) y de la topología van a su ruta sin por, hora ni procedencia (las pone el servidor), lo aceptado se copia a la sesión, y el 422 y el 403 llegan con sus palabras')
 
     console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones http bien.`)
   }

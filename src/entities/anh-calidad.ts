@@ -44,8 +44,8 @@ export interface CalidadPaso {
 /** Lo que una regla propuso en un paso y cuánto se le corrigió. */
 export interface CalidadRegla {
   paso: PasoAnh
-  /** La regla que propuso: la fila de `REGLAS_ANH` (`REGLAS_ANH@1#esp-falla`)
-   *  o, en el paso 2, la del motor del choke (`choke.topologia@2`). */
+  /** La regla que propuso: la fila de `REGLAS_ANH` (`REGLAS_ANH@2#esp-falla`)
+   *  o, en el paso 2, la del motor del choke (`choke.topologia@3`). */
   regla: string
   propuestas: number
   corregidas: number

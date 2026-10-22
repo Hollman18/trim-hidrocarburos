@@ -33,9 +33,13 @@ import type { Predicciones } from './predicciones'
 import type { CampoAhora } from './medicion'
 import type { DatosDeCatalogo, CatalogoDeCampo } from './catalogo'
 import type { CicloValor, PlanAccion, TramoCiclo, DecisionPlan } from '@/entities/escenarios'
-import type { TuberiaCampo, BrechaChoke, BrechaCampoChoke, MesPorTramo, LineaBasePorTramo, DiaChoke, CambioDominante } from '@/entities/choke'
+import type {
+  TuberiaCampo, TramoTuberia, PerdiendoAhora, MedidorDelCampo, BrechaChoke, BrechaCampoChoke, MesPorTramo, LineaBasePorTramo, DiaChoke,
+  CambioDominante, VistaCapacidades,
+} from '@/entities/choke'
+import type { EntradaRevision } from '@/entities/capacidades'
 import type { TuberiaAgua, TramoTuberiaAgua, ColchonAgua } from '@/entities/choke-agua'
-import type { FilaCriticidad } from '@/entities/criticidad'
+import type { FilaCriticidad, AvisoTrabajoCritico } from '@/entities/criticidad'
 import type { ParadaAnh, ConfirmacionLote } from '@/entities/anh-paradas'
 import { clasificar, problemasDeClasificacion, type ClasificacionAnh, type BorradorClasificacion, type PropuestaAnh } from '@/entities/anh-clasificacion'
 import { PASOS, PASO_CAMPO, PASO_CIRCULAR, type PasoAnh } from '@/entities/anh-catalogo'
@@ -287,7 +291,11 @@ const horasOpcionales: Codec<number | undefined, number | null | undefined> = {
   },
 }
 
-const tuberia = obj<TuberiaCampo>()({ desde: fecha, hasta: fecha })
+const tramoTuberia = obj<TramoTuberia>()({ pruebaMasVieja: opc(obj<NonNullable<TramoTuberia['pruebaMasVieja']>>()({ fecha })) })
+const medidor = obj<MedidorDelCampo>()({ desde: opc(fecha), ultimoDia: opc(obj<NonNullable<MedidorDelCampo['ultimoDia']>>()({ dia: fecha })) })
+const tuberia = obj<TuberiaCampo>()({
+  desde: fecha, hasta: fecha, tramos: lista(tramoTuberia), perdiendoAhora: lista(obj<PerdiendoAhora>()({ desde: fecha })), medidor: opc(medidor),
+})
 const serieChoke = obj<SerieChoke>()({ dias: lista(obj<DiaChoke>()({ dia: fecha })), cambios: lista(obj<CambioDominante>()({ dia: fecha })) })
 const colchonAgua = obj<ColchonAgua>()({ horas: horasSinFin, rango: par(horasSinFin) })
 type TanqueDelTren = NonNullable<TramoTuberiaAgua['tanques']>[number]
@@ -296,8 +304,13 @@ const tuberiaAgua = obj<TuberiaAgua>()({
   sinUna: opc(obj<NonNullable<TuberiaAgua['sinUna']>>()({ desde: opc(fecha), colchonH: horasOpcionales })),
 })
 const filaCriticidad = obj<FilaCriticidad>()({ colchonH: horasOpcionales, subio: opc(obj<NonNullable<FilaCriticidad['subio']>>()({ desde: fecha })) })
+const avisoTrabajo = obj<AvisoTrabajoCritico>()({ desde: fecha, hasta: fecha })
 const vistaCriticidad = obj<VistaCriticidad>()({
-  ranking: lista(filaCriticidad), campos: lista(obj<VistaCriticidad['campos'][number]>()({ parados: lista(filaCriticidad) })),
+  ranking: lista(filaCriticidad),
+  campos: lista(obj<VistaCriticidad['campos'][number]>()({ parados: lista(filaCriticidad), avisosTrabajo: lista(avisoTrabajo) })),
+})
+const vistaCapacidadesCodec = obj<VistaCapacidades>()({
+  entrada: obj<EntradaRevision>()({ maximoCrudo: opc(obj<NonNullable<EntradaRevision['maximoCrudo']>>()({ dia: fecha })) }),
 })
 const brechaChoke = obj<BrechaChoke>()({
   desde: fecha, hasta: fecha, superado: lista(obj<BrechaChoke['superado'][number]>()({ dia: fecha })),
@@ -319,8 +332,14 @@ export const SERIE_CHOKE = get<CampoPeriodo>()('/vistas/campos/:campo/choke/seri
 /** La tubería del agua del campo ahora: agua de los pozos → tratamiento →
  *  tanques → bombas de reinyección → inyectores, con el colchón (U2 §5). */
 export const TUBERIA_AGUA = get<PorCampo>()('/vistas/campos/:campo/agua', tuberiaAgua)
+/** Lo que deja pasar cada tramo del campo hoy (firmado o del demo, con su
+ *  fuente en palabras), quién y cuándo lo firmó y lo que la revisión de la firma
+ *  necesita del pasado: lo máximo que pasó en un día en los últimos 30 (U2 §8.4).
+ *  Se escriben con la configuración (`Config.capacidades`, `POST /api/configuracion`). */
+export const CAPACIDADES = get<PorCampo>()('/vistas/campos/:campo/capacidades', vistaCapacidadesCodec)
 /** «Si falla hoy»: todos los equipos de los campos de mayor a menor, y por campo
- *  lo que ya está parado, lo que no se puede medir y lo que cambió hoy (U2 §6). */
+ *  lo que ya está parado, lo que no se puede medir, lo que cambió hoy, lo que
+ *  decide cada rol con la lista y la frase del desembotellamiento (U2 §6). */
 export const CRITICIDAD = get<PorCampos>()('/vistas/criticidad', vistaCriticidad)
 /** La brecha del libro del período repartida por tramo y por escalón, con la
  *  eficiencia de producción (PE y PE no planeada), por campo y en conjunto.
@@ -555,13 +574,31 @@ export interface CuerpoConfirmacion { ids: string[]; cadena?: string; pasos?: Pa
 /** `POST /anh/paradas/:id/yacimiento`: «En el yacimiento», con lo que lo muestra
  *  (`prueba`, `corte-agua`, `presion` o una nota escrita). */
 export interface CuerpoYacimiento { evidencia: string; motivo?: string; aplicarAlEvento?: boolean; cadena?: string }
+/** `POST /anh/paradas/:id/respuesta`: lo que contestó una persona a una pregunta
+ *  de campo abierta en la parada («¿Qué lo paró?», «¿De dónde vino el corte?»…),
+ *  con el texto exacto del botón (`OpcionCampo.texto`). El servidor corre
+ *  `responder`: lo que TRIM deduce de la respuesta queda dicho por esa persona
+ *  (`declarado`, con ella en el porqué) y la pregunta que sigue llega en la vista. */
+export interface CuerpoRespuestaAnh {
+  pregunta: string
+  opcion: string
+  aplicarAlEvento?: boolean
+  aplicarALaCascada?: boolean
+  cadena?: string
+}
+/** `POST /anh/paradas/:id/revision`: «Algo está mal» (sin `pedirA`: a quien
+ *  revisa) o «Pedir a producción» (`pedirA: 'prod'`). No corrige nada: pasa la
+ *  parada a quien corrige, con el motivo. Queda atendida cuando ese rol dice,
+ *  corrige o confirma algo de ella. */
+export interface CuerpoRevisionAnh { motivo: string; pedirA?: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; cadena?: string }
 /** `POST /configuracion/vista-previa`: la configuración que se va a firmar, sin firmarla. */
 export interface CuerpoVistaPrevia { config: Config }
 /** `POST /topologia/importar`: un CSV o un pegado de Excel, «equipo; pozos a los que sirve». */
 export interface CuerpoTopologiaCsv { campo: string; texto: string }
 
-/** `POST /anh/paradas/:id/clasificacion` y `…/yacimiento` → la fila como quedó y lo
- *  que el servidor guardó (por fila o por evento), para copiarlo a la sesión. */
+/** `POST /anh/paradas/:id/clasificacion`, `…/yacimiento`, `…/respuesta` y
+ *  `…/revision` → la fila como quedó y lo que el servidor guardó (por fila o por
+ *  evento), para copiarlo a la sesión. */
 export const R_CLASIFICACION = obj<{ parada: ParadaAnh; guardadas: Record<string, BorradorClasificacion> }>()({ parada: paradaAnh, guardadas: dic(borradorAnh) })
 /** `POST /anh/paradas/confirmar` → las filas como quedaron y, si fue en lote, el lote. */
 export const R_CONFIRMACION = obj<{ lote?: ConfirmacionLote; paradas: ParadaAnh[] }>()({ paradas: lista(paradaAnh) })

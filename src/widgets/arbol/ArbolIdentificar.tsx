@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRol } from '@/app/store'
-import { useParadasAnh, CONFIRMAN_EN_LOTE, type EstadoParadaAnh } from '@/shared/api/arbol'
+import { useParadasAnh, CONFIRMAN_EN_LOTE, ROLES_QUE_CONTESTAN, esperaRevision, type EstadoParadaAnh } from '@/shared/api/arbol'
 import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
@@ -21,10 +21,12 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo }: {
   campos: string[]; desde: Date; hasta: Date; global: boolean; periodo: string
 }) {
   const rol = useRol()
-  const deCampo = rol.id === 'oper' || rol.id === 'tec'
+  const deCampo = !ROLES_QUE_CONTESTAN.revisa.includes(rol.id)
   const ps = useParadasAnh({ campos, desde, hasta })
   const grupos = useMemo(() => agrupar(ps), [ps])
-  const por = (e: EstadoParadaAnh) => grupos.filter(g => g.estado === e)
+  // Lo que alguien marcó «Algo está mal» o le pidió a este rol va primero, en «REVISAR» (U1 §2.7).
+  const aRevisar = grupos.filter(g => esperaRevision(g.primera.revision, rol.id))
+  const por = (e: EstadoParadaAnh) => grupos.filter(g => g.estado === e && !aRevisar.includes(g))
   const cuenta = (e: EstadoParadaAnh) => ps.filter(p => p.estado === e).length
   // Lo que se hizo con un toque se dice arriba, y el foco va ahí: la tarjeta
   // pudo cambiar de bloque (o salir) con el toque y el botón con ella.
@@ -56,23 +58,26 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo }: {
       </p>
       {aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">{aviso}</p>}
       {ps.length === 0 && <Hueco>Ninguna parada de pozo en {periodo}: no hay nada que reportar.</Hueco>}
-      {ORDEN_SECCIONES.map(e => <Seccion key={e} estado={e} grupos={por(e)} global={global} onHecho={setAviso} />)}
+      <Seccion titulo="REVISAR" clave="revisar" grupos={aRevisar} global={global} onHecho={setAviso} />
+      {ORDEN_SECCIONES.map(e => <Seccion key={e} titulo={SECCION[e]} clave={e} plegada={e === 'confirmada'} grupos={por(e)} global={global} onHecho={setAviso} />)}
     </Panel>
   )
 }
 
-/** Un bloque de un estado: cinco tarjetas a la vista y «ver las otras N»; las
- *  completas, plegadas. En el papel salen todas. */
-function Seccion({ estado, grupos, global, onHecho }: { estado: EstadoParadaAnh; grupos: Grupo[]; global: boolean; onHecho: (t: string) => void }) {
+/** Un bloque: cinco tarjetas a la vista y «ver las otras N»; las completas,
+ *  plegadas. En el papel salen todas. */
+function Seccion({ titulo, clave, plegada, grupos, global, onHecho }: {
+  titulo: string; clave: EstadoParadaAnh | 'revisar'; plegada?: boolean; grupos: Grupo[]; global: boolean; onHecho: (t: string) => void
+}) {
   const [abierto, setAbierto] = useState(false)
   if (!grupos.length) return null
-  const n = estado === 'confirmada' ? 0 : VISIBLES
+  const n = plegada ? 0 : VISIBLES
   const visibles = abierto ? grupos : grupos.slice(0, n)
   const resto = abierto ? [] : grupos.slice(n)
   const filas = grupos.reduce((a, g) => a + g.filas.length, 0)
   return (
-    <section aria-label={`${SECCION[estado]}: ${plural(filas, 'fila', 'filas')}`} data-seccion={estado} className="mb-2 last:mb-0">
-      <h3 className={`${TITULO} border-b border-[var(--linea2)] pb-1`}>{SECCION[estado]} · {filas}</h3>
+    <section aria-label={`${titulo}: ${plural(filas, 'fila', 'filas')}`} data-seccion={clave} className="mb-2 last:mb-0">
+      <h3 className={`${TITULO} border-b border-[var(--linea2)] pb-1`}>{titulo} · {filas}</h3>
       {visibles.map(g => <TarjetaParada key={g.clave} g={g} global={global} onHecho={onHecho} />)}
       {resto.length > 0 && <div className="solo-impresion">{resto.map(g => <TarjetaParada key={g.clave} g={g} global={global} onHecho={onHecho} />)}</div>}
       {(resto.length > 0 || abierto) && (

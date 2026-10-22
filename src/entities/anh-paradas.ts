@@ -38,7 +38,7 @@ import {
   proponerClasificacion, propuestaDeExceso, aplicarGuardada, conDescripcion, conCascada, reevaluar, programaDeCausa, confirmarPasos, cadenaDe,
   PASOS_QUE_CONFIRMA,
   type PropuestaAnh, type BorradorClasificacion, type ClasificacionAnh, type EstadoParadaAnh, type OpcionesPropuesta, type Persona,
-  type EvidenciaYacimiento,
+  type EvidenciaYacimiento, type RevisionAnh,
 } from './anh-clasificacion'
 
 export type { EstadoParadaAnh }
@@ -83,6 +83,9 @@ export interface ParadaAnh {
   minutosDesdeRaiz?: number
   /** «En el yacimiento»: lo que lo muestra, si producción o confiabilidad lo puso (U2 §11.1). */
   evidenciaYacimiento?: EvidenciaYacimiento
+  /** «Algo está mal» o «Pedir a producción» (P1 §1.5; U1 §2.7): la parada espera a
+   *  quien revisa; con `atendida`, ya la miró. */
+  revision?: RevisionAnh
   pozo: string
   campoId: string
   diaOperacional: string
@@ -237,7 +240,7 @@ export function paradasAnh(campoIds: string[], desde: Date, hasta: Date, ctx: Co
         const evidencia = clasificacion.choke?.valor === 'reservorio' ? clasificacion.choke.porque?.evidencia : undefined
         out.push({
           id, eventoId: ev.id, raiz, ...(minutos !== undefined ? { minutosDesdeRaiz: minutos } : {}),
-          ...(evidencia ? { evidenciaYacimiento: evidencia } : {}), pozo: ev.pozo, campoId,
+          ...(evidencia ? { evidenciaYacimiento: evidencia } : {}), ...(clasificacion.revision ? { revision: clasificacion.revision } : {}), pozo: ev.pozo, campoId,
           diaOperacional: diaOperacional(pz.a), inicio: isoCo(pz.a), fin: isoCo(fin),
           abiertaAlCorte: abierta, diaEnCurso: finDia > ahora,
           fraccion, parcial: ev.codigo === 'HZ', disparo, exceso: pz.exceso,
@@ -259,6 +262,8 @@ export function conClasificacion(p: ParadaAnh, b: BorradorClasificacion): Parada
   const r: ParadaAnh = { ...p, propuesta, clasificacion, estado: propuesta.estado, faltan: propuesta.faltan }
   if (evidencia) r.evidenciaYacimiento = evidencia
   else delete r.evidenciaYacimiento
+  if (clasificacion.revision) r.revision = clasificacion.revision
+  else delete r.revision
   return r
 }
 

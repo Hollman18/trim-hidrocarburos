@@ -1,5 +1,5 @@
 import { useApp, useRol } from '@/app/store'
-import { useTuberiaAgua, useTuberia, NOMBRE_TRAMO_AGUA, type TuberiaAgua, type TramoTuberiaAgua, type BombaDelTren } from '@/shared/api/choke'
+import { useTuberiaAgua, NOMBRE_TRAMO_AGUA, type TuberiaAgua, type TramoTuberiaAgua, type BombaDelTren } from '@/shared/api/choke'
 import { useEstadoCampos, usePrediccion, useParadas, useBarrilesDeEquipos } from '@/shared/api/diferidos'
 import { useEquiposDeHoy, useHistoriaEquipo, pedirPerfilesBomba } from '@/shared/api/equipos'
 import { useCampoAhora } from '@/shared/api/medicion'
@@ -17,7 +17,7 @@ import { formatoFecha } from '@/shared/lib/fecha'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { fmtHoras } from '@/widgets/bombas/comun'
-import { TEXTO, mayuscula, lista } from './palabras'
+import { TEXTO, ESTADO_TRAMO, sinFirma, mayuscula, lista } from './palabras'
 
 const HORA = formatoFecha({ hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' })
 const PALABRA = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez']
@@ -38,10 +38,6 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
   const { caudales, niveles } = useCampoAhora(campoId)
   const estado = useEstadoCampos([campoId])[0]
   const hoy = useEquiposDeHoy([campoId])
-  // Las capacidades del agua son las del mismo esquema de planta: llevan su misma marca (firmadas o del demo).
-  const tub = useTuberia(campoId, desde, hasta)
-  const planta = tub.tramos.find(x => x.tramo === 'planta')
-  const sinFirmar = planta?.estado !== 'firmado'
   const nombre = campoPorId(campoId).nombre
   const marca = (equipo: string): Severidad => hoy(equipo, campoId)?.severidad ?? 0
   const linea = a.sinUna ? pedirPerfilesBomba(campoId).find(p => p.equipo === a.sinUna!.bomba) : undefined
@@ -53,7 +49,7 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
       <div data-tuberia-agua={campoId}>
         <small className="mb-1.5 block text-[10.5px] text-[var(--tinta3)]">
           <span className="solo-impresion">{nombre} · {periodo} · </span>
-          agua de las pruebas vigentes · capacidades del esquema de planta: {sinFirmar ? 'dato del demo, sin firmar' : 'firmadas'}
+          agua de las pruebas vigentes · cada capacidad dice de dónde sale: firmada o dato del demo, sin firmar
         </small>
         <Lectura>
           De izquierda a derecha, el camino del agua. Cada tramo dice cuánta agua deja pasar por día y,
@@ -65,7 +61,7 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
         <div role="group" aria-label={resumenAgua(a, nombre, caudales.agua)} data-dibujo="agua"
           className="grid gap-x-5 gap-y-2 md:[grid-template-columns:minmax(0,1fr)_minmax(0,.8fr)_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] print:[grid-template-columns:minmax(0,1fr)_minmax(0,.8fr)_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] print:[&_.solo-impresion]:hidden!">
           {a.tramos.map((x, i) => (
-            <Tramo key={x.tramo} x={x} primero={i === 0} angosto={a.angosto === x.tramo} sinFirmar={sinFirmar}>
+            <Tramo key={x.tramo} x={x} primero={i === 0} angosto={a.angosto === x.tramo}>
               {x.tramo === 'producida' && (
                 <small className="block text-[10.5px] leading-snug text-[var(--tinta2)]">
                   con todos los pozos produciendo
@@ -111,8 +107,10 @@ function resumenAgua(a: TuberiaAgua, nombre: string, entraHoy: number): string {
 }
 
 /** Un tramo del agua: su rótulo, su número (o «sin dato», discontinuo), lo que es en crudo y lo que le sobra. */
-function Tramo({ x, primero, angosto, sinFirmar, children }: { x: TramoTuberiaAgua; primero: boolean; angosto: boolean; sinFirmar: boolean; children?: React.ReactNode }) {
+function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero: boolean; angosto: boolean; children?: React.ReactNode }) {
   const conNumero = x.potencialBpd !== null
+  // Cada tramo dice de dónde sale su número (el motor: `estado` y `fuente`); un número sin firmar lleva la advertencia en él mismo.
+  const sinFirmar = sinFirma(x.estado)
   const esTanque = x.tramo === 'tanques'
   // Lo que falta (sin capacidad, o el tanque sin firmar) va en gris discontinuo.
   const sinDato = esTanque ? !x.tanques?.length : !conNumero
@@ -129,12 +127,12 @@ function Tramo({ x, primero, angosto, sinFirmar, children }: { x: TramoTuberiaAg
       {!esTanque && (
         conNumero ? (
           <>
-            <b className={cn('tabular block text-[16px] leading-tight', sinFirmar && x.tramo !== 'producida' && 'underline decoration-dashed decoration-[var(--tinta3)] underline-offset-[3px]')}>
+            <b className={cn('tabular block text-[16px] leading-tight', sinFirmar && 'underline decoration-dashed decoration-[var(--tinta3)] underline-offset-[3px]')}>
               {n0(x.potencialBpd!)}<small className="ml-0.5 text-[10.5px] font-normal text-[var(--tinta3)]">bbl/d</small>
             </b>
             {x.crudoBpd !== null && <small className="block text-[10.5px] text-[var(--tinta3)]">≈ <span className="tabular">{n0(x.crudoBpd)}</span> de crudo</small>}
             {x.holguraBpd !== null && <small className="block text-[10.5px] text-[var(--tinta2)]">le sobran <span className="tabular">{n0(x.holguraBpd)}</span></small>}
-            {sinFirmar && x.tramo !== 'producida' && <small className="block text-[10.5px] text-[var(--tinta3)]">┄ dato del demo, sin firmar</small>}
+            <small className="block text-[10.5px] text-[var(--tinta3)]" title={x.fuente} data-estado={x.estado}>{sinFirmar ? '┄ ' : ''}{ESTADO_TRAMO[x.estado]}</small>
           </>
         ) : (
           <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta3)]">
@@ -142,9 +140,11 @@ function Tramo({ x, primero, angosto, sinFirmar, children }: { x: TramoTuberiaAg
           </span>
         )
       )}
-      {angosto && (
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] font-semibold" data-limita-marca>
-          <span className="font-cond tracking-[.08em]">◄ LIMITA</span><Info titulo="Lo que limita el agua" texto={TEXTO.limita} />
+      {(angosto || x.casiIgual) && (
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold" data-limita-marca={angosto ? '' : undefined}>
+          {angosto && <span className="font-cond tracking-[.08em]">◄ LIMITA</span>}
+          {x.casiIgual && <span className="font-cond font-normal tracking-[.06em] text-[var(--tinta2)]" data-casi-igual>casi iguales</span>}
+          {angosto && <Info titulo="Lo que limita el agua" texto={TEXTO.limita} />}
         </span>
       )}
       {children}

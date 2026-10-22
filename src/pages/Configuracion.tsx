@@ -24,9 +24,10 @@ import type { FilaPlan } from '@/entities/plan'
 import { cajaNumero, cajaMala, fechaDia, edicionDe } from '@/widgets/configuracion/comun'
 import { Accesos } from '@/widgets/configuracion/Accesos'
 import { FilosofiaOperacional, type PasoFilosofia } from '@/widgets/configuracion/Filosofia'
-import { conTopologia, pendientesDe, type RespuestaEquipo, type TopologiaEnBorrador } from '@/widgets/configuracion/topologia'
-import type { TopologiaVigente } from '@/shared/api/choke'
-import { campoPorId } from '@/entities/campos'
+import {
+  conTopologia, faltanParaFirmar, capacidadesQueBloquean,
+  type TopologiaVigente, type RespuestaEquipo, type TopologiaEnBorrador, type CapacidadesCampo,
+} from '@/shared/api/choke'
 import { useSesion, useVersiones, usePlantas } from '@/shared/api/sesion'
 
 const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento disabled:opacity-70'
@@ -52,12 +53,22 @@ export function Configuracion() {
 function ConPestanas() {
   const versiones = useVersiones()
   const rol = useRol()
+  const pantalla = useApp(s => s.pantalla), setPantalla = useApp(s => s.setPantalla)
   // La filosofía operacional la prepara y la firma el administrador; producción y
-  // confiabilidad la pueden abrir y leer (si su rol tiene Configuración); el gerente no entra (U2 §8.1).
+  // confiabilidad abren Configuración en solo lectura (la filosofía, lo técnico y
+  // las metas); el gerente no entra a la filosofía (U2 §8.1).
   const pestanas: Pestana[] = rol.puede['config:firmar'] ? ['tecnica', 'filosofia', 'metas', 'accesos']
-    : rol.nivel === 'ingenieria' ? ['filosofia', 'metas', 'accesos'] : ['metas', 'accesos']
-  const [pestana, setPestana] = useState<Pestana>(pestanas[0]!)
-  const actual = pestanas.includes(pestana) ? pestana : pestanas[0]!
+    : rol.nivel === 'ingenieria' ? ['filosofia', 'tecnica', 'metas'] : ['metas', 'accesos']
+  // La filosofía operacional tiene dirección propia (#/…/filosofia/…): su pestaña
+  // es esa pantalla. Las demás son pestañas de Configuración.
+  const otras: Pestana[] = pestanas.filter(p => p !== 'filosofia')
+  const [pestana, setPestana] = useState<Pestana>(otras[0]!)
+  const actual: Pestana = pantalla === 'filosofia' && pestanas.includes('filosofia') ? 'filosofia' : otras.includes(pestana) ? pestana : otras[0]!
+  const irA = (p: Pestana) => {
+    if (p === 'filosofia') return setPantalla('filosofia')
+    setPestana(p)
+    if (pantalla !== 'configuracion') setPantalla('configuracion')
+  }
   // El paso de la filosofía vive aquí, como el modo de las metas: al firmar, el editor se rehace y no lo pierde.
   const [pasoFilosofia, setPasoFilosofia] = useState<PasoFilosofia>(1)
   // Si ya hay un plan cargado (meses con cifra propia del mes en curso en adelante), se abre en
@@ -80,8 +91,8 @@ function ConPestanas() {
     if (sig === null) return
     e.preventDefault()
     const p = pestanas[(sig + n) % n]!
-    setPestana(p)
-    document.getElementById(idPestana(p))?.focus()
+    irA(p)
+    requestAnimationFrame(() => document.getElementById(idPestana(p))?.focus())
   }
   return (
     <>
@@ -95,7 +106,7 @@ function ConPestanas() {
       <div role="tablist" aria-label="Partes de la configuración" className="mb-2.5 flex flex-wrap gap-1">
         {pestanas.map((p, i) => (
           <button key={p} id={idPestana(p)} role="tab" aria-selected={actual === p} aria-controls={idPanel}
-            tabIndex={actual === p ? 0 : -1} onKeyDown={e => moverCon(e, i)} onClick={() => setPestana(p)}
+            tabIndex={actual === p ? 0 : -1} onKeyDown={e => moverCon(e, i)} onClick={() => irA(p)}
             className={cn('cursor-pointer rounded border px-3 py-1.5 text-[12px]',
               actual === p ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
             {PESTANA[p]}
@@ -105,7 +116,7 @@ function ConPestanas() {
       {/* Al firmar cambia la versión vigente: el editor arranca de nuevo sobre ella. El borrador sobrevive al cambiar de pestaña. */}
       <div role="tabpanel" id={idPanel} aria-labelledby={idPestana(actual)}>
         <Editor key={versiones.length} pestana={actual} modo={modo} setModo={setModo}
-          pasoFilosofia={pasoFilosofia} setPasoFilosofia={setPasoFilosofia} onPestana={setPestana} />
+          pasoFilosofia={pasoFilosofia} setPasoFilosofia={setPasoFilosofia} onPestana={irA} />
       </div>
     </>
   )
@@ -145,6 +156,12 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
     return conMes(c, id, { desde: `${mes}-01`, ...e })
   }, conVigente), [conVigente, plan])
   const propuesta = useMemo(() => conTopologia(conPlan, topologia), [conPlan, topologia])
+  /** Las capacidades de un campo en el borrador (U2 §8.4); undefined quita las firmadas (rigen las del demo). */
+  const cambiarCapacidades = (id: string, c: CapacidadesCampo | undefined) => cambiar(cfg => {
+    const todas = [...(cfg.capacidades ?? []).filter(x => x.campoId !== id), ...(c ? [c] : [])]
+    if (todas.length) cfg.capacidades = todas
+    else delete cfg.capacidades
+  })
   /** Lo contestado de uno o varios equipos de un campo; null quita lo contestado. */
   const responderTopologia = (id: string, vigente: TopologiaVigente, cambios: Record<string, RespuestaEquipo | null>) => {
     setTopologia(x => {
@@ -156,11 +173,8 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
     setMensaje(null)
   }
   // TRIM propone, pero no firma nada solo (U2 §8.3): un campo que estrena su
-  // topología la firma entera, así que cada equipo tiene que tener respuesta.
-  const faltanTopologia = Object.entries(topologia).flatMap(([id, t]) => {
-    const n = pendientesDe(t).length
-    return n ? [`${campoPorId(id).nombre}: ${plural(n, 'equipo queda', 'equipos quedan')} sin contestar en la filosofía operacional. TRIM propone, pero no firma nada solo: contéstelos o acéptelos por tipo.`] : []
-  })
+  // topología la firma entera, así que cada equipo tiene que tener respuesta (la regla es del motor).
+  const faltanTopologia = faltanParaFirmar(topologia)
   // Lo que un mes heredaría sin cifra propia: lo firmado (o editado como meta vigente), o el
   // último mes anterior del plan en el borrador si empieza después.
   const baseMes = (id: string, mes: string): EdicionMeta => {
@@ -212,7 +226,10 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
   const cambios = [...grupos.metas, ...grupos.tecnica]
   // Con la hora de la firma, igual que el store: lo que la pantalla da por bueno es lo que se firma.
   // Lo que no deja firmar: las reglas de la configuración (las mismas del servidor) y lo que falta contestar de la topología.
-  const errores = [...validarConfig(propuesta, ctx.config, desdeMin, AHORA.getTime()), ...faltanTopologia]
+  const validacion = validarConfig(propuesta, ctx.config, desdeMin, AHORA.getTime())
+  // Las capacidades que cambian pasan por la revisión de la firma (U2 §8.4), la misma del servidor.
+  const bloqueanCapacidades = useMemo(() => capacidadesQueBloquean(ctx.config, propuesta, ctx, versiones), [ctx, propuesta, versiones])
+  const errores = [...validacion, ...(validacion.length ? [] : bloqueanCapacidades), ...faltanTopologia]
   const cfgCampo = borrador.campos[campoId]
   const firmaVisible = pestana === 'metas' ? puedeMetas : puedeTecnica
 
@@ -282,7 +299,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
 
   if (pestana === 'filosofia') return (
     <FilosofiaOperacional campoId={campoId} topologia={topologia} onResponder={responderTopologia} propuesta={propuesta}
-      puede={puedeTecnica} cambios={cambios.length} firma={firmaVisible && firma} historial={historial}
+      onCapacidades={cambiarCapacidades} puede={puedeTecnica} cambios={cambios.length} firma={firmaVisible && firma} historial={historial}
       paso={pasoFilosofia} onPaso={setPasoFilosofia} onTecnica={() => onPestana('tecnica')} />
   )
 
@@ -390,6 +407,9 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
 
   return (
     <>
+      {!puedeTecnica && (
+        <div className="mb-2.5"><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: lo prepara y lo firma el administrador de la implementación.</Hueco></div>
+      )}
       {/* Lo que la pestaña reúne y quién es dueño de qué: lo dicen los paneles de abajo
           y la pestaña de metas; aquí queda para quien lo pida con «¿cómo se lee?». */}
       <div className="mb-2.5 empty:hidden">

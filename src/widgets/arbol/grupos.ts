@@ -26,7 +26,9 @@ export interface Grupo {
 export function agrupar(ps: readonly ParadaAnh[]): Grupo[] {
   const m = new Map<string, ParadaAnh[]>()
   for (const p of ps) {
-    const k = [p.campoId, p.raiz, p.estado, cadenaVista(p.clasificacion), p.exceso ? 'exceso' : ''].join('|')
+    // Lo marcado «Algo está mal» (sin atender) es otra decisión: no se confirma de un toque con lo demás.
+    const revisar = p.revision && !p.revision.atendida ? `revisar:${p.revision.hora}` : ''
+    const k = [p.campoId, p.raiz, p.estado, cadenaVista(p.clasificacion), p.exceso ? 'exceso' : '', revisar].join('|')
     const g = m.get(k)
     if (g) g.push(p); else m.set(k, [p])
   }
@@ -45,14 +47,3 @@ export function agrupar(ps: readonly ParadaAnh[]): Grupo[] {
 /** Los pasos que ya dijo o confirmó una persona. */
 export const deMano = (p: ParadaAnh): PasoAnh[] => PASOS.filter(x => { const d = p.clasificacion[x]; return !!d && esDePersona(d.procedencia) })
 
-/** Quienes abren o analizan el equipo: con «una señal apunta», la causa y el
- *  detalle solo los confirman ellos. Es la regla del motor
- *  (`CONFIRMAN_LO_QUE_APUNTA`, anh-clasificacion.ts), que todavía no se exporta
- *  a las pantallas: el servidor la vuelve a aplicar al confirmar. */
-export const ABREN_EL_EQUIPO: readonly string[] = ['jefe', 'conf']
-
-/** Lo que espera a quien abre el equipo: todo lo demás ya lo avaló una persona
- *  y solo faltan la causa y el detalle que una señal apunta (P1 §2.1). */
-export const esperaAQuienAbre = (p: ParadaAnh): boolean =>
-  p.estado === 'propuesta' && !!p.clasificacion.apunta
-  && PASOS.filter(x => x !== 'n1' && x !== 'n2').every(x => { const d = p.clasificacion[x]; return !!d && esDePersona(d.procedencia) })

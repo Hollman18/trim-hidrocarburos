@@ -26,7 +26,7 @@ import {
   type PasoAnh, type Responsable, type ChokeAnh, type Impacto, type Planeacion, type ClaveN1, type ClaveN1Planeada,
   type ClaveN1NoPlaneada, type CodigoN2, type CodigoN2De, type CausaGeneral, type IdVersionCatalogo, type OrigenAnh,
 } from './anh-catalogo'
-import { chokeDeCausa, type ChokeDeParada } from './choke'
+import { chokeDeCausa, esDeclaracionDeMercado, porSaberDe, PREGUNTA_ORIGEN, REGLA_CHOKE, type ChokeDeParada } from './choke'
 import type { Causa, Contexto, TipoCausa } from './causa-senal'
 import type { ParadaProgramada } from './configuracion'
 import type { CAUSAS_POZO } from './mensajes'
@@ -59,7 +59,7 @@ export interface DatoClasificado<T, Q = string> {
   valor: T
   procedencia: Procedencia
   /** La regla, tabla o programa que lo propuso, con su versión:
-   *  'REGLAS_ANH@1#esp-falla', 'choke.topologia@1', 'programa:PR-2011-260819'. */
+   *  'REGLAS_ANH@2#esp-falla', 'choke.topologia@3', 'programa:PR-2011-260819'. */
   regla?: string
   /** Por qué, en palabras de campo: la pantalla lo pone al lado («TRIM lo dedujo: …», U1 §2). */
   porque?: Q
@@ -135,6 +135,45 @@ export interface SenalApunta {
   porque: string
 }
 
+/** Una respuesta de campo guardada (U1 §2.4; `POST /api/anh/paradas/:id/respuesta`):
+ *  qué se preguntó, qué botón se tocó y quién. Lo que la respuesta deja en los
+ *  pasos ya va en ellos, con su procedencia; aquí queda lo que la respuesta ABRE
+ *  (la pregunta que sigue), lo que acota y el «No sé», para que al leer la fila
+ *  el motor vuelva a armar la conversación donde quedó (`aplicarGuardada`). */
+export interface RespuestaCampo {
+  pregunta: IdPregunta
+  /** El texto del botón que se tocó. */
+  opcion: string
+  /** La pregunta que abre. */
+  sigue?: IdPregunta
+  /** Lo que acota sin fijar (U1 §2.4: «Comunidad o Tercero»). */
+  acota?: Partial<OpcionesCerradas>
+  /** La pérdida que TRIM propone registrar aparte. */
+  perdida?: PerdidaPropuesta
+  /** «No sé»: la pregunta sigue abierta y escala al supervisor (U1 §2.4). */
+  noSe?: true
+  por: string
+  porId: string
+  rol: string
+  hora: string
+}
+
+/** «Algo está mal» o «Pedir a producción» (U1 §2.7; U2 §4.3; P1 §1.5,
+ *  `ParadaAnh.revision`): no corrige nada; pasa la parada a quien corrige.
+ *  `POST /api/anh/paradas/:id/revision`. */
+export interface RevisionAnh {
+  /** Qué está mal, o qué se pide («¿Fue el yacimiento?»). */
+  motivo: string
+  /** A quién se le pide: un rol que revisa (producción para el yacimiento). Sin él, a quien revisa. */
+  pedirA?: string
+  por: string
+  porId: string
+  rol: string
+  hora: string
+  /** Quien revisa ya la atendió: dijo, corrigió o confirmó algo de la parada después. */
+  atendida?: { por: string; porId: string; rol: string; hora: string }
+}
+
 /* ───────────────────────── la clasificación y su borrador ───────────────────────── */
 
 /** El valor de cada paso. */
@@ -158,6 +197,10 @@ export type BorradorClasificacion = { [P in PasoAnh]?: DatoDePaso<P> } & {
    *  nombres de personas (P1 §1.3; S1 R-D). */
   descEvid?: DatoClasificado<string>
   apunta?: SenalApunta
+  /** Las respuestas de campo, en el orden en que se dieron (la conversación). */
+  respuestas?: readonly RespuestaCampo[]
+  /** «Algo está mal» o «Pedir a producción»: la parada espera a quien revisa. */
+  revision?: RevisionAnh
 }
 
 /* La marca de que pasó por `clasificar`: existe solo en el tipo. Así nadie arma
@@ -172,6 +215,8 @@ interface BaseClasificacion {
   cauGral: DatoClasificado<CausaGeneral | string>
   descEvid: DatoClasificado<string>
   apunta?: SenalApunta
+  respuestas?: readonly RespuestaCampo[]
+  revision?: RevisionAnh
 }
 
 /** Los 6 pasos completos y coherentes. La planeación y la N1 van atadas en el
@@ -243,6 +288,8 @@ export function clasificar(b: BorradorClasificacion): ClasificacionAnh {
     cauGral: b.cauGral ?? { valor: causaGeneralDe(n2.valor), procedencia: 'regla', regla: CAU_GRAL_DE_N1.id },
     descEvid: b.descEvid ?? { valor: '', procedencia: 'regla' },
     ...(b.apunta ? { apunta: b.apunta } : {}),
+    ...(b.respuestas?.length ? { respuestas: b.respuestas } : {}),
+    ...(b.revision ? { revision: b.revision } : {}),
   }
   // La marca existe solo en el tipo: este es el único sitio donde se pone.
   return x as unknown as ClasificacionAnh
@@ -272,12 +319,16 @@ export type IdPregunta =
   | 'programado' | 'se-perdio' | 'nominacion' | 'aporte' | 'evidencia-yacimiento' | 'choke' | 'raiz' | 'detalle'
 
 /** Quién contesta una pregunta: 'campo', el operador, el técnico y quienes
- *  revisan; 'revisa', solo supervisión, producción, el jefe y confiabilidad
- *  (al operador nunca se le pide dónde se trabó; P1 §1.3, U2 §4.5);
- *  'yacimiento', solo producción y confiabilidad (U2 §4.3). */
-export type QuienContesta = 'campo' | 'revisa' | 'yacimiento'
+ *  revisan (hechos en palabras de campo: «¿Qué lo paró?», «¿De dónde vino el
+ *  corte?»); 'causa', quien abre el equipo (el técnico) y quienes revisan: la
+ *  causa y el detalle de la tabla de la ANH, que al operador nunca se le piden
+ *  (P1 §1.3, `PASOS_QUE_DECLARA`; U2 §4.5); 'revisa', solo supervisión,
+ *  producción, el jefe y confiabilidad (al operador nunca se le pide dónde se
+ *  trabó); 'yacimiento', solo producción y confiabilidad (U2 §4.3). */
+export type QuienContesta = 'campo' | 'causa' | 'revisa' | 'yacimiento'
 export const ROLES_QUE_CONTESTAN: Record<QuienContesta, readonly string[]> = {
   campo: ['oper', 'tec', 'sup', 'prod', 'jefe', 'conf'],
+  causa: ['tec', 'sup', 'prod', 'jefe', 'conf'],
   revisa: ['sup', 'prod', 'jefe', 'conf'],
   yacimiento: PONEN_YACIMIENTO,
 }
@@ -475,7 +526,7 @@ function preguntaRaiz(n1s: readonly ClaveN1[]): PreguntaCampo {
   if (n1s.every(k => planeacionDeN1(k) === 'planeada')) return { ...PREGUNTAS_CAMPO.trabajo,
     opciones: PREGUNTAS_CAMPO.trabajo.opciones.filter(o => !o.deja.n1 || n1s.includes(o.deja.n1)) }
   return {
-    id: 'raiz', texto: '¿Qué falló primero?', quien: 'campo', fuente: 'Palabras de N1_EN_CAMPO (U1 §2.3: dos niveles cortos, nunca las 117)',
+    id: 'raiz', texto: '¿Qué falló primero?', quien: 'causa', fuente: 'Palabras de N1_EN_CAMPO (U1 §2.3: dos niveles cortos, nunca las 117)',
     pasos: ['n1'],
     opciones: [...n1s.map((k): OpcionCampo => ({ texto: N1_EN_CAMPO[k], deja: { planeacion: planeacionDeN1(k), n1: k }, sigue: 'detalle' })), NO_SE],
   }
@@ -483,7 +534,7 @@ function preguntaRaiz(n1s: readonly ClaveN1[]): PreguntaCampo {
 
 /** «¿Qué fue, exactamente?»: el N2 entre los que quedan, con la cadena de la Tabla 1 (U1 §2.3). */
 const preguntaDetalle = (n2s: readonly CodigoN2[]): PreguntaCampo => ({
-  id: 'detalle', texto: '¿Qué fue, exactamente?', quien: 'campo', fuente: 'Tabla 1 de la circular (C24 p.6-7), filtrada por la regla',
+  id: 'detalle', texto: '¿Qué fue, exactamente?', quien: 'causa', fuente: 'Tabla 1 de la circular (C24 p.6-7), filtrada por la regla',
   pasos: ['n2'],
   opciones: [...n2s.map((c): OpcionCampo => { const k = n1DeCodigo(c); return { texto: textoN2(c), deja: { planeacion: planeacionDeN1(k), n1: k, n2: c } } }), NO_SE],
 })
@@ -500,8 +551,10 @@ const preguntaChoke = (texto: string, chokes: readonly ChokeAnh[]): PreguntaCamp
 /* ─────────────────────────────── REGLAS_ANH v1 ─────────────────────────────── */
 
 /** La versión de la tabla de reglas: va en `DatoClasificado.regla` de cada
- *  paso que propone. Una v2 se agrega; lo ya reportado conserva su `@1` (P1 §3.1). */
-export const REGLAS_ANH_ID = 'REGLAS_ANH@1'
+ *  paso que propone. Una versión nueva se agrega; lo ya reportado conserva la
+ *  suya (P1 §3.1). La @2 (22-oct) agrega la fila `declarada-mercado`: la
+ *  declaración de que el comprador nominó menos (ZA-06; R2 §2.2). */
+export const REGLAS_ANH_ID = 'REGLAS_ANH@2'
 
 /** Las filas de `REGLAS_ANH` v1 (P1 §2.1), en su orden. */
 export type IdFila =
@@ -509,7 +562,7 @@ export type IdFila =
   | 'linea-rodamientos' | 'linea-motor' | 'linea-lubricacion' | 'linea-variador' | 'linea-sin-n2' | 'linea-capacidad'
   | 'energia-uv-o-dedicado' | 'energia-compartido' | 'energia-frontera'
   | 'aire' | 'compresion' | 'evacuacion' | 'proceso' | 'tratamiento'
-  | 'programada-con-pareja' | 'programada-sin-pareja' | 'declarada-chip' | 'declarada-libre'
+  | 'programada-con-pareja' | 'programada-sin-pareja' | 'declarada-chip' | 'declarada-mercado' | 'declarada-libre'
 
 export interface FilaRegla {
   id: IdFila
@@ -649,6 +702,11 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
       cuando: 'Declarada con uno de los cuatro motivos cerrados de CAUSAS_POZO (mensajes.ts): lo que propone cada uno está en CHIPS_ANH',
       propone: { impacto: 'diferida' }, opciones: {}, preguntas: [],
       porque: 'Lo declaró una persona con un motivo cerrado', fuente: 'P1 §2.1, fila 20' },
+    { id: 'declarada-mercado', tipos: ['declarada'],
+      cuando: 'Declarada con sus palabras, diciendo que el comprador (o el cliente, o el transportador) nominó menos: es el mercado, un subnivel de afuera',
+      propone: { responsable: 'ext-transportador', impacto: 'diferida', planeacion: NP, n1: 'NP_TRANSP', n2: 'NP_TRANSP/restriccion-nominacion-entrega' },
+      chokeEsperado: 'exportacion', opciones: {}, preguntas: [],
+      porque: 'Quien declaró dijo que el comprador nominó menos: es una restricción de la nominación (Restricción nominación/entrega)', fuente: 'R2 §2.2; U2 §4.2 (ZA-06 → afuera)' },
     { id: 'declarada-libre', tipos: ['declarada'],
       cuando: 'Declarada en texto libre: TRIM no interpreta lo que escribió la persona',
       propone: { impacto: 'diferida' }, opciones: {}, preguntas: ['que-lo-paro', 'programado', 'detalle'],
@@ -656,6 +714,46 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
   ],
 }
 const FILA_POR_ID = new Map(REGLAS_ANH.filas.map(f => [f.id, f]))
+
+/** Cómo se dice cada fila de `REGLAS_ANH` en el tablero de calidad (U2 §4.6):
+ *  lo que la regla mira, sin su id (el id va en el ⓘ). Una fila nueva sin
+ *  nombre aquí no compila. */
+export const NOMBRE_FILA: Readonly<Record<IdFila | 'pendiente', string>> = {
+  'esp-falla': 'Falla de la electrosumergible (código del variador)',
+  'esp-admision': 'Electrosumergible parada por baja carga',
+  'bombeo-mecanico': 'Bombeo mecánico parado por su controlador',
+  'linea-rodamientos': 'Bomba de la línea: rodamientos',
+  'linea-motor': 'Bomba de la línea: motor',
+  'linea-lubricacion': 'Bomba de la línea: lubricación',
+  'linea-variador': 'Bomba de la línea: primera alarma del variador o del arrancador',
+  'linea-sin-n2': 'Bomba de la línea sin causa exacta en la tabla de la ANH',
+  'linea-capacidad': 'Tanque de agua al límite sin falla de la bomba',
+  'energia-uv-o-dedicado': 'Baja tensión en un pozo',
+  'energia-compartido': 'Cayó la energía que comparten varios pozos',
+  'energia-frontera': 'Cayó la energía en la frontera del campo',
+  aire: 'Cayó el aire de instrumentos',
+  compresion: 'Se detuvo el compresor de gas',
+  evacuacion: 'Tanque de crudo o despacho de la batería',
+  proceso: 'El separador cerró la entrada',
+  tratamiento: 'El tratador cerró la entrada',
+  'programada-con-pareja': 'Programa firmado, con su causa',
+  'programada-sin-pareja': 'Programa firmado, sin la causa',
+  'declarada-chip': 'Declarada con un motivo cerrado',
+  'declarada-mercado': 'Declarada: el comprador nominó menos',
+  'declarada-libre': 'Declarada con sus palabras',
+  pendiente: 'Sin causa',
+}
+
+/** El nombre de una regla en palabras: la fila de `REGLAS_ANH`, la del motor
+ *  del choke, la del yacimiento o la del exceso del programa (U2 §4.6). Una
+ *  regla que no se conoce se muestra con su id: no se esconde. */
+export function nombreDeRegla(regla: string): string {
+  if (regla.startsWith('choke.topologia@')) return 'La topología: a qué pozos sirve cada equipo'
+  if (regla.startsWith('choke.yacimiento@')) return 'En el yacimiento, puesto por una persona'
+  if (regla.startsWith('programa-exceso@')) return 'Se pasó de la ventana del programa'
+  const fila = regla.includes('#') ? regla.slice(regla.indexOf('#') + 1) : regla
+  return Object.hasOwn(NOMBRE_FILA, fila) ? NOMBRE_FILA[fila as IdFila] : regla
+}
 
 type Chip = (typeof CAUSAS_POZO)[number]
 interface FilaChip {
@@ -806,7 +904,7 @@ function filaDe(c: Causa, campoId: string, ctx: Contexto, op: OpcionesPropuesta,
       const pr = programaDeCausa(c, campoId, ctx)
       return pr && propio(op.parejaDelPrograma, pr.id) ? 'programada-con-pareja' : 'programada-sin-pareja'
     }
-    case 'declarada': return chipDe(c) ? 'declarada-chip' : 'declarada-libre'
+    case 'declarada': return chipDe(c) ? 'declarada-chip' : esDeclaracionDeMercado(c) ? 'declarada-mercado' : 'declarada-libre'
   }
 }
 
@@ -900,8 +998,12 @@ export function proponerClasificacion(causa: Causa, campoId: string, ctx: Contex
   // Paso 2: el motor del choke, con su porqué guardado como datos (U2 §11.1).
   // Si la fila depende de una respuesta (tanques llenos), queda sugerido y en
   // falta; si no, se propone y su pregunta, si la trae, viaja sin frenar la cadena.
+  // Si el equipo está «por saber» (U2 §8.2), el motor no lo propone: queda en
+  // falta con su porqué y la pregunta, que contesta quien revisa.
   const sugerido: Partial<ValoresPasos> = { ...(chip ? {} : fila.sugiere) }
-  const porqueChoke = ch ? porqueDeChoke(ch) : undefined
+  const ps = ch ? undefined : porSaberDe(causa, campoId, ctx)
+  const porqueChoke: PorqueChoke | undefined = ch ? porqueDeChoke(ch)
+    : ps ? { regla: REGLA_CHOKE, elemento: ps.elemento, texto: ps.porque, pregunta: ps.pregunta } : undefined
   if (ch && porqueChoke && !fila.chokeEnFalta) b = conPaso(b, 'choke', { valor: ch.choke, procedencia: 'regla', regla: ch.regla, porque: porqueChoke })
   else if (ch) sugerido.choke = ch.choke
 
@@ -917,7 +1019,7 @@ export function proponerClasificacion(causa: Causa, campoId: string, ctx: Contex
     ...(perdida ? { perdida } : {}),
     ...(fila.alternativas ? { alternativas: fila.alternativas } : {}),
     ...(fila.hueco ? { hueco: fila.hueco } : {}),
-    ...(ch?.pregunta ? { preguntaChoke: ch.pregunta } : {}),
+    ...(ch?.pregunta ? { preguntaChoke: ch.pregunta } : ps ? { preguntaChoke: ps.pregunta } : {}),
     ...(porqueChoke ? { porqueChoke } : {}),
   })
 }
@@ -976,7 +1078,7 @@ function evaluar(p: PropuestaAnh): PropuestaAnh {
     else if (id !== 'choke') agregar(PREGUNTAS_CAMPO[id])
   }
   if (abierto('choke') && !preguntas.some(q => q.opciones.some(x => x.deja.choke)))
-    agregar(preguntaChoke(p.preguntaChoke ?? '¿Dónde se originó la parada: en el pozo, en la planta o afuera?', o.choke ?? CHOKES))
+    agregar(preguntaChoke(p.preguntaChoke ?? PREGUNTA_ORIGEN, o.choke ?? CHOKES))
 
   const problemas = faltan.length ? [] : problemasDeClasificacion(b)
   const sugerido: Partial<ValoresPasos> = {}
@@ -1022,6 +1124,15 @@ export function avalado(b: BorradorClasificacion, paso: PasoAnh): boolean {
   return !(b.apunta && (paso === 'n1' || paso === 'n2') && !CONFIRMAN_LO_QUE_APUNTA.includes(d.rol))
 }
 
+/** Lo que espera a quien abre el equipo (P1 §2.1, «una señal apunta»): la
+ *  propuesta está completa, todo lo demás ya lo avaló una persona y solo faltan
+ *  la causa y el detalle, que solo confirman el jefe de mantenimiento o
+ *  confiabilidad (`CONFIRMAN_LO_QUE_APUNTA`). */
+export function esperaAQuienAbre(b: BorradorClasificacion): boolean {
+  if (!b.apunta || !completa(b)) return false
+  return PASOS.filter(x => x !== 'n1' && x !== 'n2').every(x => avalado(b, x)) && (!avalado(b, 'n1') || !avalado(b, 'n2'))
+}
+
 /** El estado de una clasificación (P1 §1.5). `causaPendiente`: la causa de
  *  TRIM es «sin identificar»; si una persona completó los 6 pasos, ya se puede reportar. */
 export function estadoDe(b: BorradorClasificacion, causaPendiente = false): EstadoParadaAnh {
@@ -1045,14 +1156,19 @@ export function declararPaso<P extends PasoAnh>(b: BorradorClasificacion, paso: 
   const persona = { por: quien.nombre, porId: quien.id, rol, hora }
   let d: DatoDePaso<P>
   if (!suyo) {
-    // Lo que contestó quien no avala este paso no pisa lo que dijo otra
-    // persona. Si coincide con lo propuesto, solo da por contestada la
-    // pregunta del motor del choke: el paso sigue siendo propuesta (origen C).
+    // Lo que TRIM deduce de la respuesta de quien no avala este paso (el
+    // operador que dice de dónde vino el corte) queda guardado como dicho por
+    // esa persona, con ella en el porqué. NO lo avala: su origen sigue siendo
+    // C y la parada sigue por confirmar hasta que lo confirme quien revisa
+    // (`avalado`, P1 §1.3). No pisa lo que dijo otra persona; si coincide con
+    // lo propuesto, solo da por contestada la pregunta del motor del choke.
     if (antes && esDePersona(antes.procedencia)) return b
     const preguntaba = paso === 'choke' && !!(antes as DatoClasificado<ChokeAnh, PorqueChoke> | undefined)?.porque?.pregunta
     if (antes && antes.valor === valor && !preguntaba) return b
-    const porque = porqueDePersona(paso, antes, regla, quien, `TRIM lo dedujo de lo que contestó ${quien.nombre} a las ${hora}`)
-    d = { valor, procedencia: 'regla', regla, ...(porque !== undefined ? { porque } : {}), ...(antes && antes.valor !== valor ? { propuesto: antes.valor } : {}) }
+    // Quién y cuándo ya van en el dato (`por`, `hora`): el porqué dice de dónde salió.
+    const porque = porqueDePersona(paso, antes, regla, quien, `TRIM lo dedujo de lo que contestó ${quien.nombre} en el campo`)
+    d = { valor, procedencia: 'declarado', regla, ...persona, ...(porque !== undefined ? { porque } : {}),
+      ...(antes && antes.valor !== valor ? { propuesto: antes.propuesto ?? antes.valor } : {}) }
   } else if (antes && antes.valor === valor) d = esDePersona(antes.procedencia) ? antes : { ...antes, procedencia: 'confirmado', ...persona }
   else {
     const porque = porqueDePersona(paso, antes, regla, quien)
@@ -1116,8 +1232,10 @@ export function declararYacimiento(b: BorradorClasificacion, evidencia: Evidenci
  *  causa (el paso 4 filtra el 5) y la causa antes del detalle. */
 const ORDEN_DEJA: readonly PasoAnh[] = ['planeacion', 'n1', 'n2', 'responsable', 'choke', 'impacto']
 
-const QUIEN_CONTESTA: Record<QuienContesta, string> = {
+/** Quién contesta cada grupo de preguntas, en palabras (lo dice el rechazo). */
+export const QUIEN_CONTESTA: Record<QuienContesta, string> = {
   campo: 'operación, mantenimiento, supervisión, producción o confiabilidad',
+  causa: 'el técnico que abre el equipo, supervisión, producción, el jefe de mantenimiento o confiabilidad (al operador nunca se le piden la causa ni el detalle)',
   revisa: 'supervisión, producción, el jefe de mantenimiento o confiabilidad (al operador nunca se le pide dónde se trabó)',
   yacimiento: 'producción o confiabilidad',
 }
@@ -1136,15 +1254,32 @@ export function responder(p: PropuestaAnh, pregunta: IdPregunta, opcion: number,
   }
   if (o.yacimiento) b = declararYacimiento(b, o.yacimiento, quien, rol, hora)
   // «No sé» no fija nada: la pregunta sigue abierta y escala al supervisor (U1 §2.4).
-  const noSe = !o.sigue && !o.acota && !o.yacimiento && Object.keys(o.deja).length === 0
-  const siguen = noSe ? p.preguntasPendientes
-    : [...p.preguntasPendientes.filter(x => x !== pregunta), ...(o.sigue && o.sigue !== pregunta ? [o.sigue] : [])]
-  const perdida = o.perdida ?? p.perdida
-  return evaluar({
-    ...p, borrador: b, opcionesRegla: { ...p.opcionesRegla, ...o.acota }, preguntasPendientes: siguen,
-    ...(perdida ? { perdida } : {}),
-    ...(noSe ? { escalada: { pregunta, porId: quien.id, hora } } : {}),
-  })
+  const noSe = esNoSe(o)
+  // La respuesta queda en la conversación: al leer la fila, el motor la vuelve a seguir.
+  const registro: RespuestaCampo = { pregunta, opcion: o.texto, ...(o.sigue ? { sigue: o.sigue } : {}), ...(o.acota ? { acota: o.acota } : {}),
+    ...(o.perdida ? { perdida: o.perdida } : {}), ...(noSe ? { noSe: true as const } : {}), por: quien.nombre, porId: quien.id, rol, hora }
+  b = { ...b, respuestas: [...(b.respuestas ?? []), registro] }
+  return evaluar(seguirConversacion({ ...p, borrador: b }, [registro]))
+}
+
+/** ¿La opción es «No sé»? No deja nada ni abre otra pregunta. */
+export const esNoSe = (o: OpcionCampo): boolean => !o.sigue && !o.acota && !o.yacimiento && Object.keys(o.deja).length === 0
+
+/** La conversación después de unas respuestas: cada una cierra su pregunta y
+ *  abre la que sigue; lo que acota se suma; un «No sé» deja la pregunta abierta
+ *  y la escala, hasta que alguien la conteste. Los pasos no se tocan aquí:
+ *  van con su procedencia en el borrador. */
+function seguirConversacion(p: PropuestaAnh, rs: readonly RespuestaCampo[]): PropuestaAnh {
+  let pendientes = p.preguntasPendientes, opciones = p.opcionesRegla, perdida = p.perdida, escalada = p.escalada
+  for (const r of rs) {
+    if (r.noSe) { escalada = { pregunta: r.pregunta, porId: r.porId, hora: r.hora }; continue }
+    pendientes = [...pendientes.filter(x => x !== r.pregunta), ...(r.sigue && r.sigue !== r.pregunta ? [r.sigue] : [])]
+    if (r.acota) opciones = { ...opciones, ...r.acota }
+    if (r.perdida) perdida = r.perdida
+    if (escalada?.pregunta === r.pregunta) escalada = undefined
+  }
+  const { escalada: _, perdida: __, ...resto } = p
+  return { ...resto, preguntasPendientes: pendientes, opcionesRegla: opciones, ...(perdida ? { perdida } : {}), ...(escalada ? { escalada } : {}) }
 }
 
 /** El toque «Confirmar» de una persona: sube a `confirmado` solo los pasos que
@@ -1158,7 +1293,9 @@ export function confirmarPasos(c: BorradorClasificacion, rol: string, quien: Per
   let r = c
   for (const paso of PASOS) {
     const d = r[paso]
-    if (!d || esDePersona(d.procedencia) || !puede.includes(paso)) continue
+    // Lo que ya avaló alguien que puede no se toca; lo que dijo quien no lo avala
+    // (el tramo que se dedujo de la respuesta del operador) sí se confirma.
+    if (!d || avalado(r, paso) || !puede.includes(paso)) continue
     if (r.apunta && (paso === 'n1' || paso === 'n2') && !CONFIRMAN_LO_QUE_APUNTA.includes(rol)) continue
     r = conPaso(r, paso, { ...d, procedencia: 'confirmado', por: quien.nombre, porId: quien.id, rol, hora, ...(lote ? { lote } : {}) })
   }
@@ -1179,8 +1316,26 @@ export function aplicarGuardada(p: PropuestaAnh, g: BorradorClasificacion): Prop
   if (b.n1 && b.planeacion && planeacionDeN1(b.n1.valor) !== b.planeacion.valor && !esDePersona(b.n1.procedencia))
     b = conPaso(conPaso(b, 'n1', undefined), 'n2', undefined)
   if (b.n2 && b.n1 && n1DeCodigo(b.n2.valor) !== b.n1.valor && !esDePersona(b.n2.procedencia)) b = conPaso(b, 'n2', undefined)
-  return evaluar({ ...p, borrador: conCausaGeneral(b) })
+  // Las respuestas de campo y la revisión van con lo que dijeron las personas:
+  // la conversación sigue donde quedó (la pregunta que abrió cada respuesta).
+  if (g.respuestas?.length) b = { ...b, respuestas: g.respuestas }
+  if (g.revision) b = { ...b, revision: g.revision }
+  const base = g.respuestas?.length ? seguirConversacion(p, g.respuestas) : p
+  return evaluar({ ...base, borrador: conCausaGeneral(b) })
 }
+
+/** Quien revisa una parada marcada «Algo está mal» (o pedida a un rol) la
+ *  atiende al decir, corregir o confirmar algo de ella: la marca queda con quién
+ *  y cuándo, y la parada sale de «REVISAR». */
+export function conRevisionAtendida(b: BorradorClasificacion, quien: Persona, rol: string, hora: string): BorradorClasificacion {
+  const r = b.revision
+  if (!r || r.atendida || !quienRevisa(r).includes(rol)) return b
+  return { ...b, revision: { ...r, atendida: { por: quien.nombre, porId: quien.id, rol, hora } } }
+}
+/** Quién atiende una revisión: el rol al que se le pidió, o quien revisa (supervisión, producción, el jefe y confiabilidad). */
+export const quienRevisa = (r: Pick<RevisionAnh, 'pedirA'>): readonly string[] => (r.pedirA ? [r.pedirA] : ROLES_QUE_CONTESTAN.revisa)
+/** ¿La parada espera a ese rol? Tiene una revisión sin atender que le toca. */
+export const esperaRevision = (r: RevisionAnh | undefined, rol: string): boolean => !!r && !r.atendida && quienRevisa(r).includes(rol)
 
 /** La regla del exceso de una parada planeada (P1 §2.2; CHOKE-COMPLETO §5.5). */
 export const REGLA_EXCESO = 'programa-exceso@1'

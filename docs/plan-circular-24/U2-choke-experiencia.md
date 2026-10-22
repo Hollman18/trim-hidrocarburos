@@ -384,7 +384,7 @@ Así cabe sin desplazarse de lado. Es la regla del teléfono de `Planta.tsx` («
 |---|---|---|---|
 | La Ceiba | Pozos, 11.360 | Planta (tren de crudo), 640, o 5,6 % | P-201B parada: «hoy, sin P-201B: 178.500 de 267.750 bbl/d de agua». Gas sin medir |
 | Morichal Norte | Pozos, 17.604 | Planta (agua), 716, o 4,1 %: «al agua le falta poco para ser lo que limita» | El tren de agua va al 92,4 % ahora [cálculo U2] |
-| Guacamayo | Pozos, 6.615 | Afuera, 185, o 2,8 % → **«casi iguales»** con el umbral de 3 % (ejemplo) | Afuera es la «nominación restringida» del oleoducto (`planta.ts`) |
+| Guacamayo | Pozos, 6.615 | Afuera, 885, o 13,4 % (ya no «casi iguales») | Afuera, 7.500, es la «nominación restringida» del oleoducto (`planta.ts`). El crudo de la planta es 8.000: hasta el 22-oct los dos estaban en 7.500, un empate artificial que el método pide explicar (NSTA §5.4) |
 | El Palmar | Pozos, 3.277 | Planta (tren de crudo), 323, o 9,9 % | Sin tren de gas |
 | La Zarza | — | — | Estado vacío de campo de gas (§1.5) |
 
@@ -873,7 +873,9 @@ El administrador **nunca escoge «pozo» o «planta»**: contesta un hecho, y TR
 | «Es de otro dueño, más allá de la batería (oleoducto, transportador, cliente)» | `tercero` → afuera | «Si para, se traba afuera.» |
 | «Es el punto de entrega: de la brida de salida de la batería hacia afuera» | `frontera` → afuera | «Si para, se traba afuera.» |
 | «Es la llegada de la energía del proveedor (acometida, subestación de llegada)» | `compartido` → planta | «Si para, se traba en la planta o estación. Quién respondió (el proveedor o nosotros) se pregunta en cada parada.» |
-| «Todavía no sé» | sin topología | «Sus paradas quedarán en "falta" en el paso 2 hasta que lo diga.» |
+| «Todavía no sé» | queda firmado «por saber» (`Config.topologiaPorSaber`): TRIM no adivina el tramo | «Mientras no se sepa, TRIM no adivina: sus paradas quedan sin tramo y en Identificar cada una pregunta «¿Dónde se originó la parada: en el pozo, en la planta o afuera?».» |
+
+«Todavía no sé» (decisión del 22-oct): el motor **no** le pone a esas paradas el tramo de la regla por tipo de falla. El paso 2 queda en `faltan` con la pregunta de origen, que contesta quien revisa (nunca el operador), y en «Si falla hoy» el equipo va sin calcular, con el porqué. Con la topología firmada, un equipo nuevo del registro aparece «sin responder» y, mientras nadie lo conteste, su parada sí toma el tramo de la regla por tipo de falla: no es «Todavía no sé», es que nadie lo ha preguntado.
 
 Los nombres de los alcances son los del motor en construcción (`AlcanceElemento` en `choke.ts`):
 - `frontera` es la brida de salida hacia afuera;

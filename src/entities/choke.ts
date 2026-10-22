@@ -26,22 +26,36 @@
 import type { Causa, Contexto, TipoCausa } from './causa-senal'
 import { causaDeEvento } from './causa-senal'
 import type { CAUSAS_POZO } from './mensajes'
-import { perfilDe, type ParadaProgramada } from './configuracion'
+import { perfilDe, configEn, type Config, type ParadaProgramada, type Version } from './configuracion'
 import {
-  pozoDe, pozosDe, servicioPorId, serviciosDeCampo, eventosDeCampo, estadoAhora, pruebaEn,
+  pozoDe, pozosDe, servicioPorId, serviciosDeCampo, eventosDeCampo, estadoAhora, pruebaEn, origenPmo,
   LEVANTAMIENTO_NOMBRE, type EventoPozo,
 } from './pozos'
 import { perfilBomba, paradaPorId, paradasDe, PAPEL_NOMBRE } from './bombas'
-import { CAMPO_PLANTA, TREN_AGUA, CAMPOS_DE_GAS, GAS_MEDIDO_EN, trenesEnCrudo, type Caudales, type Elemento, type Simbolo } from './planta'
+import { CAMPO_PLANTA, CAMPOS_DE_GAS, type Elemento, type Simbolo } from './planta'
+import {
+  capacidadesDe, firmaDeCapacidades, trenesDePlanta, trenMenor, revisarCapacidades, capacidadesFirmadas,
+  type TrenTuberia, type TrenPlanta, type CapacidadesVigentes, type FirmaCapacidades,
+  type HallazgoCapacidad, type EntradaRevision,
+} from './capacidades'
 import {
   libro, porDia, tramosEntre, tramosDeEvento, crudoAsignado, aguaDePrueba, calendario, publicadoEnTodos,
-  lineaBase, perdidaPorFrecuencia, type Tramo,
+  lineaBase, perdidaPorFrecuencia, fiscalDeAyer, fiscalUltimosDias, type Tramo,
 } from './libro'
 import { caudalesAhora, type Riesgo } from './diferido'
 import { EQUIPOS, equipoEnCampo } from './equipos'
 import { campoPorId } from './campos'
 import { hayInsumos } from './insumos'
 import { AHORA, fechaCorta } from './reloj'
+
+export type { TrenTuberia, TrenPlanta }
+
+/** El historial de versiones firmadas, de la más vieja a la vigente: con él,
+ *  cada día usa las capacidades que regían ese día (U2 §8.5: «meses cerrados:
+ *  no cambian»). Sin él, rige la configuración del contexto. */
+export type Historial = ReadonlyArray<Pick<Version, 'version' | 'fecha' | 'por' | 'config'>>
+/** La configuración que regía en el instante `t`. */
+const configDe = (ctx: Contexto, t: number, versiones?: Historial): Config => (versiones?.length ? configEn(versiones, t) : ctx.config)
 
 /* ───────────────────────── los cuatro tramos y sus palabras ───────────────────────── */
 
@@ -85,6 +99,12 @@ export interface ChokeDeElemento {
   /** Un caso que espera la respuesta de Edinson (`casoBordeDe`, U2 §8.6). */
   casoBorde?: 'misma-locacion'
 }
+
+/** Un equipo del que el administrador contestó «Todavía no sé» a «¿A qué pozos
+ *  sirve?» (U2 §8.2). Se firma en `Config.topologiaPorSaber`: el motor no
+ *  adivina su tramo (ni por el tipo de falla): el paso 2 de sus paradas queda
+ *  en «falta», con su pregunta, hasta que alguien lo diga. */
+export interface ElementoPorSaber { elemento: string; campoId: string }
 
 /** Los escalones de la brecha (patente US 8,195,401 B2; NSTA §5.3 y §6.4;
  *  CHOKE-COMPLETO §7). El norte vive en `disponibilidad-no-planeada`. */
@@ -341,6 +361,8 @@ interface Indice {
   lista: ChokeDeElemento[]
   /** Por elemento, con el choke que sale del alcance. */
   elementos: Map<string, ChokeDeElemento>
+  /** Los que el administrador contestó «Todavía no sé»: su tramo no se adivina. */
+  porSaber: Set<string>
 }
 /* El choke se pide por cada tramo del libro: el índice va por contexto (la
    configuración firmada) y campo. */
@@ -355,10 +377,12 @@ function indiceDe(campoId: string, ctx: Contexto): Indice {
   const vigentes = new Map<string, ChokeDeElemento>()
   for (const e of firmadas.filter(x => x.campoId === undefined)) vigentes.set(e.elemento, e)
   for (const e of firmadas.filter(x => x.campoId === campoId)) vigentes.set(e.elemento, e)
-  const lista = firmadas.length ? [...vigentes.values()] : derivadaDe(campoId)
+  // «Todavía no sé» manda sobre lo que se derivaría del registro: no se adivina.
+  const porSaber = new Set((ctx.config.topologiaPorSaber ?? []).filter(x => x.campoId === campoId).map(x => x.elemento))
+  const lista = (firmadas.length ? [...vigentes.values()] : derivadaDe(campoId)).filter(e => !porSaber.has(e.elemento))
   const elementos = new Map<string, ChokeDeElemento>()
   for (const e of lista) elementos.set(e.elemento, { ...e, choke: chokeDeAlcance(e.alcance) })
-  const r: Indice = { firmada: firmadas.length > 0, lista, elementos }
+  const r: Indice = { firmada: firmadas.length > 0, lista, elementos, porSaber }
   m.set(campoId, r)
   return r
 }
@@ -372,6 +396,28 @@ export const topologiaFirmada = (campoId: string, ctx: Contexto): boolean => ind
 /** Un elemento de la topología del campo, con el choke que sale de su alcance. */
 export const elementoDe = (campoId: string, elemento: string, ctx: Contexto): ChokeDeElemento | undefined =>
   indiceDe(campoId, ctx).elementos.get(elemento)
+/** Los equipos del campo de los que el administrador contestó «Todavía no sé». */
+export const porSaberDelCampo = (campoId: string, ctx: Contexto): string[] => [...indiceDe(campoId, ctx).porSaber]
+/** Con una topología firmada, lo que el registro tiene y la firma no (un
+ *  equipo nuevo): espera su respuesta, sin perder lo firmado (U2 §8.3). Mientras
+ *  tanto el tramo de su parada sale de la regla por tipo de causa, como antes de
+ *  firmar nada. Sin topología firmada, ninguno: rige entera la del registro. */
+export function sinResponderDe(campoId: string, ctx: Contexto): ElementoDerivado[] {
+  const idx = indiceDe(campoId, ctx)
+  if (!idx.firmada) return []
+  return derivadaDe(campoId).filter(e => !idx.elementos.has(e.elemento) && !idx.porSaber.has(e.elemento))
+}
+
+/** La pregunta del paso 2 cuando TRIM no lo puede proponer: la contesta quien revisa, nunca el operador. */
+export const PREGUNTA_ORIGEN = '¿Dónde se originó la parada: en el pozo, en la planta o afuera?'
+
+/** El paso 2 de una parada cuyo equipo está «por saber» (U2 §4.2, «equipo sin
+ *  topología»): no se adivina; queda en falta con su porqué y su pregunta. */
+export function porSaberDe(c: Causa, campoId: string, ctx: Contexto): { elemento: string; porque: string; pregunta: string } | undefined {
+  if (c.tipo === 'pendiente' || !indiceDe(campoId, ctx).porSaber.has(c.equipo)) return undefined
+  return { elemento: c.equipo, pregunta: PREGUNTA_ORIGEN,
+    porque: `Falta saber a qué pozos sirve ${c.equipo}: el administrador contestó «Todavía no sé» y TRIM no lo adivina` }
+}
 
 /* ───────────────────────── las propuestas de topología ───────────────────────── */
 
@@ -449,8 +495,11 @@ export function propuestasTopologia(campoId: string, ctx: Contexto): PropuestaTo
 /* ───────────────────────── el choke de cada parada ───────────────────────── */
 
 /** La versión de la regla: va con cada propuesta (`DatoClasificado.regla`,
- *  P1 §1.3). La @2 cambia la baja tensión de un solo pozo (U2 §4.4, caso 8). */
-export const REGLA_CHOKE = 'choke.topologia@2'
+ *  P1 §1.3; lo ya clasificado conserva la suya). La @2 cambió la baja tensión de
+ *  un solo pozo (U2 §4.4, caso 8). La @3 (22-oct): la declaración que dice que
+ *  el comprador nominó menos es afuera, en el mercado (ZA-06; U2 §4.2, R2 §2.2),
+ *  y el equipo del que el administrador contestó «Todavía no sé» no se adivina. */
+export const REGLA_CHOKE = 'choke.topologia@3'
 
 /** El choke de una parada, con su porqué. */
 export interface ChokeDeParada {
@@ -542,8 +591,26 @@ function chipDe(c: Causa): (typeof CHIPS)[Chip] | undefined {
   const t = (c.declarado?.texto ?? c.texto).trim()
   return Object.hasOwn(CHIPS, t) ? CHIPS[t as Chip] : undefined
 }
-/** El escalón que dice el motivo cerrado de una declaración, si lo hay. */
-export const escalonDeDeclaracion = (c: Causa): EscalonBrecha | undefined => (c.tipo === 'declarada' ? chipDe(c)?.escalon : undefined)
+
+/* La declaración que nombra al comprador (o al cliente, o al transportador) Y
+   la nominación: «El comprador nominó menos gas: se cerró el pozo» (La Zarza).
+   Es una regla cerrada sobre dos palabras, no una lectura del texto: cualquier
+   otra declaración libre sigue sin interpretarse. */
+const MERCADO_QUIEN = /\b(?:comprador|cliente|transportador)(?![\p{L}\p{N}])/iu
+// Sin `\b` al final: en JavaScript la «ó» no es letra para `\b`.
+const MERCADO_QUE = /\bnomin(?:ó|o|aron|ación|acion)(?![\p{L}\p{N}])/iu
+/** ¿Quien declaró dijo que el comprador nominó menos? Es el mercado: afuera, un
+ *  subnivel de exportación, con responsable externo (U2 §4.2: ZA-06 → afuera;
+ *  R2 §2.2, «Restricción nominación/entrega»). Lo propone TRIM y lo confirma una persona. */
+export function esDeclaracionDeMercado(c: Causa): boolean {
+  if (c.tipo !== 'declarada' || chipDe(c)) return false
+  const t = c.declarado?.texto ?? c.texto
+  return MERCADO_QUIEN.test(t) && MERCADO_QUE.test(t)
+}
+/** El escalón que dice el motivo cerrado de una declaración, si lo hay. La
+ *  nominación del comprador es capacidad: restricción sin falla. */
+export const escalonDeDeclaracion = (c: Causa): EscalonBrecha | undefined =>
+  (c.tipo === 'declarada' ? chipDe(c)?.escalon ?? (esDeclaracionDeMercado(c) ? 'capacidad' : undefined) : undefined)
 
 const FMT_N0 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 })
 /** Un número como lo lee una persona en Colombia: «1.665». */
@@ -602,6 +669,10 @@ function deducirChoke(c: Causa, campoId: string, ctx: Contexto): ChokeDeParada |
   // 6. Sin causa no hay origen: lo dice una persona (el yacimiento tampoco sale de una señal).
   if (c.tipo === 'pendiente') return null
   const idx = indiceDe(campoId, ctx)
+  // «Todavía no sé» (U2 §8.2): el administrador no sabe a qué pozos sirve el
+  // equipo. Ni la topología derivada ni el tipo de falla lo adivinan: el paso 2
+  // queda en falta, con su pregunta (`porSaberDe`).
+  if (idx.porSaber.has(c.equipo)) return null
   // 1–2. El elemento raíz: la causa ya lo trae (el servicio, la bomba, el
   // alimentador del pozo en un UV, o el propio pozo).
   const el = idx.elementos.get(c.equipo)
@@ -622,6 +693,12 @@ function deducirChoke(c: Causa, campoId: string, ctx: Contexto): ChokeDeParada |
       // 5. Lo que escogió quien declaró, si fue uno de los motivos cerrados.
       const chip = chipDe(c)
       if (chip) return { ...base, choke: chip.choke, porque: chip.porque, ...(chip.subnivel ? { subnivel: chip.subnivel } : {}) }
+      // El comprador nominó menos: el mercado, afuera, con responsable externo.
+      if (esDeclaracionDeMercado(c)) {
+        const quien = c.declarado?.por?.split(' · ')[0]?.trim() || 'Quien declaró'
+        return { ...base, choke: 'exportacion', subnivel: 'mercado', alcance: 'tercero', fuente: 'regla',
+          porque: `${quien} dijo «${(c.declarado?.texto ?? c.texto).trim()}»: el comprador no recibió todo, así que es afuera, en el mercado` }
+      }
       // En texto libre TRIM no interpreta lo que escribió la persona: propone
       // la topología (el pozo) y pregunta (P1 §2.1, «declarada en texto libre»).
       const choke = delElemento ?? 'pozo'
@@ -736,43 +813,6 @@ export function dominanteDe(p: Record<ChokeCampo, number>, umbral: number = PARA
     explicacion: `${mayuscula(empatados.map(k => SUJETO[k]).join(' y '))} dan lo mismo, ${n0(sistema)} bbl/d: la NSTA (§5.4) pide explicarlo por escrito. Ampliar uno solo no da un barril más; se toma ${SUJETO[dominante]}, el primero de la tubería.` }
 }
 
-export type TrenPlanta = 'crudo' | 'agua' | 'gas'
-/** Un carril de la planta (U2 §2.3 y §11.1). */
-export interface TrenTuberia {
-  tren: TrenPlanta
-  /** La capacidad instalada, en su unidad. */
-  capacidad: number
-  unidad: 'bbl/d de crudo' | 'bbl/d de agua' | 'KPC/d de gas'
-  /** La misma capacidad en crudo. Null si no se puede pasar a crudo: un tren
-   *  sin medir, o el agua sin agua en las pruebas. */
-  enCrudo: number | null
-  /** Se mide en el campo. Solo un tren medido entra en el mínimo de la planta:
-   *  uno sin medir decidiría lo que limita con un número declarado (U2 §11.3, punto 1). */
-  medido: boolean
-  /** % de la capacidad que usaría todo el potencial de los pozos; null sin medir. */
-  uso: number | null
-}
-
-/** Los trenes de la planta, con la capacidad INSTALADA del esquema (no baja por
- *  una parada: NSTA p. 29). El agua se pasa a crudo con `trenesEnCrudo` y la
- *  relación crudo/agua de las pruebas vigentes en ese instante, la misma base
- *  del potencial de los pozos: con la foto del esquema (`caudales`, la lectura
- *  de un día) el real de Morichal pasaba ese «potencial» todos los meses. El
- *  gas no se mide en esta fase (`GAS_MEDIDO_EN`): queda «sin medir», sin pasarlo
- *  a crudo, y fuera del mínimo. */
-function trenesDe(cau: Caudales, crudo: number, agua: number, conGas: boolean, gasMedido: boolean): TrenTuberia[] {
-  const out: TrenTuberia[] = [{ tren: 'crudo', capacidad: cau.crudoCap, unidad: 'bbl/d de crudo', enCrudo: cau.crudoCap, medido: true, uso: cau.crudoCap > 0 ? (crudo / cau.crudoCap) * 100 : null }]
-  if (cau.aguaCap > 0) {
-    const enCrudo = crudo > 0 && agua > 0
-      ? trenesEnCrudo({ crudo, crudoCap: cau.crudoCap, agua, aguaCap: cau.aguaCap, gas: 0, gasCap: 0 }).find(x => x.tren === 'Agua')?.cap ?? null
-      : null
-    out.push({ tren: 'agua', capacidad: cau.aguaCap, unidad: 'bbl/d de agua', enCrudo, medido: true, uso: (agua / cau.aguaCap) * 100 })
-  }
-  if (conGas && cau.gasCap > 0) out.push({ tren: 'gas', capacidad: cau.gasCap, unidad: 'KPC/d de gas',
-    enCrudo: gasMedido && cau.gas > 0 ? Math.round(cau.gasCap * cau.crudo / cau.gas) : null, medido: gasMedido, uso: null })
-  return out
-}
-
 /** Los potenciales de un campo en un instante, en bbl/d de crudo. */
 export interface PotencialesCampo {
   campoId: string
@@ -787,7 +827,8 @@ export interface PotencialesCampo {
    *  baja por una parada (NSTA p. 29). Null: sin tren medido, sin esquema o
    *  campo de gas. */
   planta: number | null
-  /** La capacidad de evacuación declarada (`Chokes.evacuacion`). Null sin esquema o en un campo de gas. */
+  /** Lo que deja salir el oleoducto o el transportador: la capacidad firmada o,
+   *  sin firma, la del demo. Null sin esquema o en un campo de gas. */
   exportacion: number | null
   /** El menor de los tres (null sin tubería de crudo). */
   sistema: number | null
@@ -803,9 +844,11 @@ export interface PotencialesCampo {
   trenes: TrenTuberia[]
   /** El tren que manda dentro de la planta. */
   trenQueLimita?: TrenPlanta
-  /** El subnivel mercado de afuera: lo que el comprador recibe
-   *  (`Chokes.mercado`). No baja el potencial de afuera (NSTA p. 29). */
+  /** El subnivel mercado de afuera: lo que el comprador recibe. No baja el
+   *  potencial de afuera (NSTA p. 29). */
   mercado?: number
+  /** Las capacidades con que se calculó (firmadas o del demo), con su estado y su fuente. */
+  capacidades: CapacidadesVigentes
   /** El comprador recibe menos de lo que el sistema puede dar. */
   mercadoBajo: boolean
   /** El agua de los pozos con prueba, bbl/d, y el crudo que trae cada barril de agua. */
@@ -830,16 +873,21 @@ const TREN_NOMBRE: Record<TrenPlanta, string> = { crudo: 'tren de crudo', agua: 
 /** Los potenciales de los tramos de un campo en el instante `t` (CHOKE-COMPLETO §3):
  *  - pozos = Σ crudo asignado de los pozos con prueba (la base del libro);
  *  - planta = el menor de los trenes medidos en crudo, con la capacidad instalada;
- *  - afuera = la capacidad de evacuación declarada; el mercado, subnivel.
+ *  - afuera = lo que deja salir el oleoducto o el transportador; el mercado, subnivel.
+ *  Las capacidades son las firmadas (`Config.capacidades`) y, donde no se
+ *  firmó, las del demo, con su estado (capacidades.ts). Con el historial de
+ *  versiones, las que regían en `t`: firmar hoy no cambia un día cerrado.
  *  Lo que limita es el menor; un empate al barril pide explicación y dos a
  *  menos del umbral están «casi iguales». Un campo de gas no tiene tubería de
  *  crudo: se dice y no se da holgura. */
-export function potencialesDelCampo(campoId: string, t: number, ctx: Contexto): PotencialesCampo {
+export function potencialesDelCampo(campoId: string, t: number, ctx: Contexto, versiones?: Historial): PotencialesCampo {
   let pozos = 0, agua = 0
   for (const p of pozosDe(campoId)) if (p.pruebas.length) { pozos += crudoAsignado(p, t); agua += aguaDePrueba(p, t) }
   const umbral = PARAMETROS_CHOKE.umbralCasiIguales
   const nombre = campoPorId(campoId).nombre
-  const comun = { campoId, t, pozos, agua, crudoPorAgua: agua > 0 ? pozos / agua : 0, umbral }
+  const config = configDe(ctx, t, versiones)
+  const capacidades = capacidadesDe(config, campoId)
+  const comun = { campoId, t, pozos, agua, crudoPorAgua: agua > 0 ? pozos / agua : 0, umbral, capacidades }
   const sinTuberia = (campoDeGas: boolean, sinDato: ChokeCampo[], texto: string, textoCorto: string): PotencialesCampo => ({
     ...comun, planta: null, exportacion: null, sistema: null, dominante: null, empate: false, empatados: [], casiIguales: null,
     holgura: { pozos: null, planta: null, exportacion: null }, trenes: [], mercadoBajo: false, campoDeGas, sinDato, texto, textoCorto })
@@ -849,16 +897,17 @@ export function potencialesDelCampo(campoId: string, t: number, ctx: Contexto): 
   const pl = Object.hasOwn(CAMPO_PLANTA, campoId) ? CAMPO_PLANTA[campoId] : undefined
   if (!pl) return sinTuberia(false, ['planta', 'exportacion'], `${nombre} no tiene esquema de planta registrado: sin él no se sabe qué limita.`,
     'Sin esquema de planta: no se sabe qué limita')
-  const trenes = trenesDe(pl.caudales, pozos, agua, perfilDe(ctx.config, campoId).gas !== 'no', GAS_MEDIDO_EN.includes(campoId))
-  const menor = trenes.filter(x => x.medido && x.enCrudo !== null).reduce<TrenTuberia | undefined>((a, x) => (!a || x.enCrudo! < a.enCrudo! ? x : a), undefined)
+  const trenes = trenesDePlanta(capacidades, pozos, agua, perfilDe(config, campoId).gas !== 'no', pl.caudales)
+  const menor = trenMenor(trenes)
   const planta = menor?.enCrudo ?? null
-  const exportacion = pl.chokes.evacuacion
-  const d = dominanteDe({ pozos, planta: planta ?? Infinity, exportacion }, umbral)
-  const mercado = pl.chokes.mercado
+  const exportacion = capacidades.afuera.valor
+  const d = dominanteDe({ pozos, planta: planta ?? Infinity, exportacion: exportacion ?? Infinity }, umbral)
+  const mercado = capacidades.mercado.valor ?? undefined
+  const sinDato: ChokeCampo[] = [...(planta === null ? ['planta' as const] : []), ...(exportacion === null ? ['exportacion' as const] : [])]
   const r: PotencialesCampo = { ...comun, planta, exportacion, sistema: d.sistema, dominante: d.dominante, empate: d.empate, empatados: d.empatados,
-    casiIguales: d.casiIguales, holgura: { pozos: d.holgura.pozos, planta: planta === null ? null : d.holgura.planta, exportacion: d.holgura.exportacion },
-    trenes, ...(menor ? { trenQueLimita: menor.tren } : {}), mercado, mercadoBajo: mercado < d.sistema, campoDeGas: false,
-    sinDato: planta === null ? ['planta'] : [], ...(d.explicacion ? { explicacion: d.explicacion } : {}), texto: '', textoCorto: '' }
+    casiIguales: d.casiIguales, holgura: { pozos: d.holgura.pozos, planta: planta === null ? null : d.holgura.planta, exportacion: exportacion === null ? null : d.holgura.exportacion },
+    trenes, ...(menor ? { trenQueLimita: menor.tren } : {}), ...(mercado !== undefined ? { mercado } : {}), mercadoBajo: mercado !== undefined && mercado < d.sistema, campoDeGas: false,
+    sinDato, ...(d.explicacion ? { explicacion: d.explicacion } : {}), texto: '', textoCorto: '' }
   return { ...r, ...textosDeHoy(r) }
 }
 
@@ -866,7 +915,7 @@ export function potencialesDelCampo(campoId: string, t: number, ctx: Contexto): 
 function textosDeHoy(p: PotencialesCampo): { texto: string; textoCorto: string } {
   const dom = p.dominante ?? 'pozos'
   const valor = dom === 'pozos' ? p.pozos : dom === 'planta' ? p.planta ?? 0 : p.exportacion ?? 0
-  const tren = dom === 'planta' && p.trenQueLimita ? ` · ${p.trenQueLimita}` : ''
+  const tren = dom === 'planta' && p.trenQueLimita ? ` · ${TREN_NOMBRE[p.trenQueLimita]}` : ''
   const textoCorto = `Qué limita hoy: ${SUJETO[dom]}${tren} (${n0(valor)} bbl/d)`
   const pct = (p.umbral * 100).toLocaleString('es-CO', { maximumFractionDigits: 1 })
   const mercado = p.mercadoBajo && p.mercado !== undefined ? ` El comprador recibe hasta ${n0(p.mercado)} bbl/d: es el mercado, un subnivel de afuera.` : ''
@@ -918,13 +967,13 @@ interface DiaCampo {
  *  avisa (`superado`; NSTA §5.4: un potencial que no cuadra se explica), no se
  *  separa nada estructural porque no se sabe cuánto es, y el sistema se mide
  *  contra los pozos. */
-function diasDelCampo(campoId: string, d0: number, hh: number, ctx: Contexto): DiaCampo[] {
+function diasDelCampo(campoId: string, d0: number, hh: number, ctx: Contexto, versiones?: Historial): DiaCampo[] {
   const out: DiaCampo[] = []
   for (const x of porDia([campoId], new Date(d0), new Date(hh), ctx)) {
     // Sin fiscal, el día no entra ni en lo real ni en el potencial (igual que el libro).
     if (x.real === null || x.horas <= 0) continue
     const f = x.horas / 24
-    const p = potencialesDelCampo(campoId, x.dia.getTime(), ctx)
+    const p = potencialesDelCampo(campoId, x.dia.getTime(), ctx, versiones)
     const pozosDia = x.potencial / f
     const base = { dia: x.dia.getTime(), horas: x.horas, real: x.real, potencial: x.potencial, diferido: x.diferido, residuo: x.residuo ?? 0,
       tasas: { pozos: pozosDia, planta: p.planta, exportacion: p.exportacion, ...(p.trenQueLimita ? { tren: p.trenQueLimita } : {}) } }
@@ -1082,7 +1131,7 @@ function acumular(a: Acumulado, t: Tramo, ch: ChokeDeParada | null, partes: Arra
  *  (pozos − sistema): se separa, se dice y no se suma aparte; la brecha contra
  *  el potencial del sistema es la del libro menos la estructural. La pérdida
  *  (lo producido que no se vende) nunca entra: aquí solo hay tramos del libro. */
-export function brechaPorChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto): BrechaChoke {
+export function brechaPorChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): BrechaChoke {
   const d0 = desde.getTime(), hh = Math.min(hasta.getTime(), ahora)
   const lb = libro(campoIds, desde, hasta, ctx)
   const total = acumulado()
@@ -1097,7 +1146,7 @@ export function brechaPorChoke(campoIds: string[], desde: Date, hasta: Date, ctx
 
   const porCampo: BrechaCampoChoke[] = campoIds.map(c => {
     const l = lb.porCampo.find(x => x.campoId === c)
-    const dias = diasDelCampo(c, d0, hh, ctx)
+    const dias = diasDelCampo(c, d0, hh, ctx, versiones)
     const estructuralPorChoke = ceros(ORDEN_CHOKE_CAMPO), horasPorDominante = ceros(ORDEN_CHOKE_CAMPO)
     for (const x of dias) if (x.dominante) { estructuralPorChoke[x.dominante] += x.estructural; horasPorDominante[x.dominante] += x.horas }
     return cifras(c, l?.potencial ?? 0, l?.real ?? 0, l?.diferido ?? 0, porCampoAcc.get(c) ?? acumulado(), estructuralPorChoke, horasPorDominante,
@@ -1171,8 +1220,8 @@ export interface EficienciaProduccion {
   dominante: ChokeCampo | null
 }
 /** PE y PE no planeada por campo y período: la misma cuenta de `brechaPorChoke`. */
-export function eficienciaProduccion(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto): { porCampo: EficienciaProduccion[]; total: EficienciaProduccion } {
-  const b = brechaPorChoke(campoIds, desde, hasta, ctx)
+export function eficienciaProduccion(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): { porCampo: EficienciaProduccion[]; total: EficienciaProduccion } {
+  const b = brechaPorChoke(campoIds, desde, hasta, ctx, versiones)
   const de = (x: Pick<BrechaCampoChoke, 'real' | 'potencialSistema' | 'pe' | 'peNoPlaneada' | 'dominante'>) =>
     ({ real: x.real, potencialSistema: x.potencialSistema, pe: x.pe, peNoPlaneada: x.peNoPlaneada, dominante: x.dominante })
   return { porCampo: b.porCampo.map(x => ({ campoId: x.campoId, ...de(x) })), total: de(b) }
@@ -1192,6 +1241,7 @@ export interface TramoTuberia {
   /** Lo que puede dejar pasar, bbl/d de crudo. Null: el yacimiento (va con los
    *  pozos), sin dato, o un campo de gas. */
   potencialBpd: number | null
+  /** De dónde sale el número, en palabras (nunca un nombre del código). */
   fuente: string
   estado: EstadoTramo
   /** Lo que le sobra sobre el que limita, bbl/d. */
@@ -1200,15 +1250,52 @@ export interface TramoTuberia {
   casiIgual: boolean
   /** La planta por dentro: un carril por tren. */
   trenes?: TrenTuberia[]
-  /** Lo que queda hoy con un equipo parado. El tramo NO se angosta: su alto
-   *  sigue siendo la capacidad instalada (NSTA p. 29); esto solo dice cuánto queda. */
-  disponibleHoy?: { valor: number; unidad: string; equipo: string; texto: string }
+  /** El tren que manda dentro de la planta: el menor de los medidos. */
+  trenQueLimita?: TrenPlanta
+  /** Lo que queda hoy con un equipo parado, en CRUDO (y el agua de donde sale).
+   *  El tramo NO se angosta: su alto sigue siendo la capacidad instalada (NSTA
+   *  p. 29); esto solo dice cuánto queda mientras dura la parada. */
+  disponibleHoy?: { valor: number; unidad: 'bbl/d de crudo'; agua: { valor: number; de: number }; equipo: string; texto: string }
   /** Afuera por dentro: el oleoducto y el cliente. */
-  subniveles?: Array<{ nombre: string; potencialBpd: number; fuente: string }>
+  subniveles?: Array<{ nombre: string; potencialBpd: number; fuente: string; estado: EstadoTramo }>
+  /** La prueba más vieja de los pozos con prueba (U2 §1.5: «la prueba más vieja es de hace {n} días»). */
+  pruebaMasVieja?: { pozo: string; fecha: Date; dias: number; texto: string }
   /** Perdiéndose ahora en este tramo, bbl/d, y lo que se perdió en el período, bbl. */
   perdiendoAhoraBpd: number
   perdidoBbl: number
   equiposTop: EquipoBbl[]
+}
+
+/** Lo que se pierde ahora por un equipo (o sin identificar), con sus pozos y desde cuándo. */
+export interface PerdiendoAhora {
+  /** Null: sin identificar todavía. */
+  tramo: ChokeAnh | null
+  bpd: number
+  equipo: string
+  pozos: number
+  /** Los pozos, por nombre, en orden. */
+  listaPozos: string[]
+  /** Desde cuándo: el primero de sus pozos que paró. */
+  desde: Date
+}
+
+/** Si las capacidades de la planta y de afuera están firmadas (quién y cuándo) o son del demo. */
+export interface CapacidadesDeLaTuberia {
+  estado: 'firmadas' | 'demo' | 'parte'
+  firma?: FirmaCapacidades
+  texto: string
+}
+
+/** El medidor del punto oficial: el que da lo real del campo. */
+export interface MedidorDelCampo {
+  /** El medidor, en palabras: «FQI-0101 · computador de flujo de la unidad LACT-01». */
+  medidor: string
+  estado: 'en-linea' | 'sin-comunicacion'
+  /** Sin comunicación: desde qué día no llega su dato. */
+  desde?: Date
+  /** El último día completo con dato y lo que dio, bbl. */
+  ultimoDia?: { dia: Date; bbl: number }
+  texto: string
 }
 
 /** La tubería de un campo en una sola lectura (U2 §11.1, `TuberiaCampo`). */
@@ -1224,7 +1311,10 @@ export interface TuberiaCampo {
   /** El crudo que sale ahora (`caudalesAhora`). */
   pasaHoyBpd: number
   /** Lo que se pierde ahora, por tramo y equipo (null = sin identificar). */
-  perdiendoAhora: Array<{ tramo: ChokeAnh | null; bpd: number; equipo: string; pozos: number }>
+  perdiendoAhora: PerdiendoAhora[]
+  /** Σ de lo que se pierde ahora, y de eso, lo que todavía no tiene tramo. */
+  perdiendoAhoraBpd: number
+  sinTramoAhoraBpd: number
   /** Lo que se perdió en el período por tramo, con los equipos que más pesan. */
   perdidoPeriodo: Array<{ tramo: ChokeAnh; bbl: number; equiposTop: EquipoBbl[] }>
   /** «Sin identificar»: no es un tramo, es lo que todavía no se sabe (U2 §2.3). */
@@ -1233,6 +1323,10 @@ export interface TuberiaCampo {
   /** El diferido del libro: Σ perdido por tramo + sin identificar (U2 §0, principio 6). */
   diferido: number
   campoDeGas: boolean
+  /** Las capacidades: firmadas, quién y cuándo, o del demo. */
+  capacidades: CapacidadesDeLaTuberia
+  /** El medidor del punto oficial y si comunica. Ausente si el campo no lo tiene registrado. */
+  medidor?: MedidorDelCampo
   /** «Qué limita hoy: los pozos (11.360 bbl/d)» y la frase de abajo (U2 §1.5). */
   textoCorto: string
   frase: string
@@ -1242,9 +1336,10 @@ export interface TuberiaCampo {
 
 /** Lo que se pierde ahora, pozo por pozo, juntado por tramo y equipo: la misma
  *  cuenta de `riesgoAhora` (crudo asignado de cada pozo con un evento abierto,
- *  la parte que pierde si está a frecuencia reducida), con el tramo de su causa. */
-function perdiendoPorTramo(campoId: string, ctx: Contexto): TuberiaCampo['perdiendoAhora'] {
-  const por = new Map<string, TuberiaCampo['perdiendoAhora'][number]>()
+ *  la parte que pierde si está a frecuencia reducida), con el tramo de su causa,
+ *  sus pozos y desde cuándo. */
+function perdiendoPorTramo(campoId: string, ctx: Contexto): PerdiendoAhora[] {
+  const por = new Map<string, PerdiendoAhora>()
   for (const p of pozosDe(campoId)) {
     const e = estadoAhora(p)
     if (!e.evento) continue
@@ -1252,9 +1347,12 @@ function perdiendoPorTramo(campoId: string, ctx: Contexto): TuberiaCampo['perdie
     const ch = chokeDeCausa(c, campoId, ctx)
     const tramo = ch?.choke ?? null, equipo = ch?.elemento ?? c.equipo
     const k = `${tramo}|${equipo}`
-    const x = por.get(k) ?? { tramo, bpd: 0, equipo, pozos: 0 }
+    const inicio = new Date(e.evento.inicio)
+    const x = por.get(k) ?? { tramo, bpd: 0, equipo, pozos: 0, listaPozos: [], desde: inicio }
     x.bpd += crudoAsignado(p) * (e.produce ? perdidaPorFrecuencia(e.hz, pruebaEn(p, ahora)?.hz) : 1)
     x.pozos++
+    x.listaPozos = [...x.listaPozos, p.id].sort()
+    if (inicio < x.desde) x.desde = inicio
     por.set(k, x)
   }
   return [...por.values()].sort((a, b) => b.bpd - a.bpd)
@@ -1280,21 +1378,67 @@ export function tramoDeRiesgo(r: Riesgo, ctx: Contexto): ChokeAnh | null {
     for (const [k, v] of por) if (v > max) { mejor = k; max = v }
     return mejor
   }
+  // «Todavía no sé»: dónde se trabaría no se adivina.
+  if (indiceDe(r.campoId, ctx).porSaber.has(r.equipo)) return null
   return elementoDe(r.campoId, r.equipo, ctx)?.choke ?? chokePorTipo(r.tipo)
 }
 
 /** Lo que queda hoy del tren de agua con una bomba parada: las bombas en
- *  marcha (una sin instrumento se cuenta en marcha: TRIM no la ve parar). */
-function aguaDisponibleHoy(campoId: string): TramoTuberia['disponibleHoy'] | undefined {
-  const tren = Object.hasOwn(TREN_AGUA, campoId) ? TREN_AGUA[campoId] : undefined
-  if (!tren) return undefined
-  const enServicio = tren.bombas.filter(b => !b.reserva)
-  const paradas = enServicio.filter(b => perfilBomba(b.id, campoId) && paradasDe(b.id, campoId).some(e => !e.fin))
+ *  marcha (una sin instrumento se cuenta en marcha: TRIM no la ve parar), en
+ *  agua y pasado a crudo con el corte de las pruebas, como el carril del agua. */
+function aguaDisponibleHoy(campoId: string, cap: CapacidadesVigentes, crudoPozos: number, aguaPozos: number): TramoTuberia['disponibleHoy'] | undefined {
+  const enServicio = cap.bombas.filter(b => !b.reserva)
+  const paradas = enServicio.filter(b => perfilBomba(b.equipo, campoId) && paradasDe(b.equipo, campoId).some(e => !e.fin))
   if (!paradas.length) return undefined
-  const total = enServicio.reduce((a, b) => a + b.capacidadBpd, 0)
-  const valor = total - paradas.reduce((a, b) => a + b.capacidadBpd, 0)
-  const equipo = paradas.map(b => b.id).join(', ')
-  return { valor, unidad: 'bbl/d de agua', equipo, texto: `hoy, sin ${equipo}: ${n0(valor)} de ${n0(total)} bbl/d de agua` }
+  const total = enServicio.reduce((a, b) => a + b.valor, 0)
+  const agua = total - paradas.reduce((a, b) => a + b.valor, 0)
+  const valor = aguaPozos > 0 ? Math.round(agua * crudoPozos / aguaPozos) : 0
+  const equipo = paradas.map(b => b.equipo).join(', ')
+  return { valor, unidad: 'bbl/d de crudo', agua: { valor: agua, de: total }, equipo,
+    texto: `hoy, sin ${equipo}: ${n0(agua)} de ${n0(total)} bbl/d de agua, unos ${n0(valor)} bbl/d de crudo` }
+}
+
+const DIA_MS = 86_400_000
+/** La prueba más vieja de los pozos con prueba: con ella se sabe qué tan al día está el potencial de los pozos. */
+function pruebaMasViejaDe(campoId: string): TramoTuberia['pruebaMasVieja'] {
+  let mas: { pozo: string; fecha: Date } | undefined
+  for (const p of pozosDe(campoId)) {
+    const pr = p.pruebas.length ? pruebaEn(p, ahora) : undefined
+    if (!pr) continue
+    const f = new Date(pr.fecha)
+    if (!mas || f < mas.fecha) mas = { pozo: p.id, fecha: f }
+  }
+  if (!mas) return undefined
+  const dias = Math.max(0, Math.floor((ahora - mas.fecha.getTime()) / DIA_MS))
+  return { ...mas, dias, texto: `la prueba más vieja es de hace ${n0(dias)} ${dias === 1 ? 'día' : 'días'} (${mas.pozo}, ${fechaCorta(mas.fecha)})` }
+}
+
+/** El medidor del punto oficial: comunica si trae el dato del último día
+ *  completo; si no, desde qué día no llega. Lo que el demo no registra no se inventa. */
+function medidorDe(campoId: string): MedidorDelCampo | undefined {
+  const origen = origenPmo(campoId)
+  if (!origen) return undefined
+  const ayer = fiscalDeAyer(campoId)
+  if (ayer.bbl !== null) return { medidor: origen.fuente, estado: 'en-linea', ultimoDia: { dia: ayer.fecha, bbl: ayer.bbl },
+    texto: `Punto de medición oficial (${origen.fuente}): en línea; el último día completo dio ${n0(ayer.bbl)} bbl` }
+  // Los días que no llegaron, contados hacia atrás desde el último día completo.
+  const dias = fiscalUltimosDias(campoId, 120)
+  let sin = 0
+  for (let i = dias.length - 1; i >= 0 && dias[i] === null; i--) sin++
+  const desde = new Date(ayer.fecha.getTime() - (sin - 1) * DIA_MS)
+  return { medidor: origen.fuente, estado: 'sin-comunicacion', desde,
+    texto: `Sin comunicación con el punto de medición oficial (${origen.fuente}) desde el ${fechaCorta(desde)}: lo real de esos días queda sin dato` }
+}
+
+/** Si las capacidades de la planta y de afuera están firmadas, y quién las firmó. */
+function capacidadesDeLaTuberia(p: PotencialesCampo, versiones?: Historial): CapacidadesDeLaTuberia {
+  const cap = p.capacidades
+  const usadas = [...p.trenes.filter(x => x.medido).map(x => x.estado), cap.afuera.estado].filter(e => e !== 'sin-dato')
+  const firma = versiones?.length ? firmaDeCapacidades(versiones, p.campoId) : undefined
+  const quien = firma ? ` el ${fechaCorta(new Date(firma.fecha))} por ${firma.por.split(' · ')[0]}` : ''
+  if (usadas.length && usadas.every(e => e === 'firmado')) return { estado: 'firmadas', ...(firma ? { firma } : {}), texto: `capacidades firmadas${quien}` }
+  if (usadas.some(e => e === 'firmado')) return { estado: 'parte', ...(firma ? { firma } : {}), texto: `capacidades: unas firmadas${quien}, otras del demo, sin firmar` }
+  return { estado: 'demo', texto: 'capacidades del demo, sin firmar' }
 }
 
 /** La tubería de un campo para las vistas, en una sola lectura (U2 §11.1):
@@ -1302,32 +1446,40 @@ function aguaDisponibleHoy(campoId: string): TramoTuberia['disponibleHoy'] | und
  *  perdiendo por tramo y lo que se perdió en el período por tramo, con el
  *  MISMO total del libro. Se cumplen los dos cuadres de U2 §2.2: lo que deja
  *  pasar el tramo que limita − lo que pasa hoy = perdiéndose ahora (si limitan
- *  los pozos), y el reparto por tramo + sin identificar = el diferido del libro. */
-export function tuberiaCampo(campoId: string, desde: Date, hasta: Date, ctx: Contexto): TuberiaCampo {
-  const p = potencialesDelCampo(campoId, ahora, ctx)
-  const b = brechaPorChoke([campoId], desde, hasta, ctx)
+ *  los pozos), y el reparto por tramo + sin identificar = el diferido del libro.
+ *  Con el historial de versiones, cada día usa las capacidades que regían y se
+ *  dice quién firmó las de hoy. */
+export function tuberiaCampo(campoId: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): TuberiaCampo {
+  const p = potencialesDelCampo(campoId, ahora, ctx, versiones)
+  const b = brechaPorChoke([campoId], desde, hasta, ctx, versiones)
   const ahoraPorTramo = perdiendoPorTramo(campoId, ctx)
   const pl = Object.hasOwn(CAMPO_PLANTA, campoId) ? CAMPO_PLANTA[campoId] : undefined
+  const cap = p.capacidades
   const enTramo = (k: ChokeAnh) => ahoraPorTramo.filter(x => x.tramo === k).reduce((a, x) => a + x.bpd, 0)
   const tramo = (k: ChokeAnh, x: Pick<TramoTuberia, 'potencialBpd' | 'fuente' | 'estado'> & Partial<TramoTuberia>): TramoTuberia => ({
     tramo: k, nombre: NOMBRE_CHOKE[k], explica: EXPLICA_TRAMO[k], holguraBpd: null, limita: false, casiIgual: false,
     perdiendoAhoraBpd: enTramo(k), perdidoBbl: b.porChoke[k], equiposTop: b.porChokeEquipo[k].slice(0, 3), ...x })
   const casi = (k: ChokeCampo) => !!p.casiIguales?.includes(k)
-  const disponible = aguaDisponibleHoy(campoId)
+  const disponible = p.campoDeGas || !pl ? undefined : aguaDisponibleHoy(campoId, cap, p.pozos, p.agua)
+  const menor = p.trenes.find(x => x.tren === p.trenQueLimita)
+  const gas = 'Campo de gas: la tubería del gas todavía no está'
+  const vieja = pruebaMasViejaDe(campoId)
   const tramos: TramoTuberia[] = [
     tramo('reservorio', { potencialBpd: null, estado: 'sin-dato', fuente: 'El yacimiento no tiene un número propio: lo que puede dar se mide con las pruebas de los pozos' }),
-    tramo('pozo', { potencialBpd: p.pozos, estado: 'pruebas', fuente: 'Σ prueba vigente × factor de asignación del mes de los pozos con prueba',
-      holguraBpd: p.holgura.pozos, limita: p.dominante === 'pozos', casiIgual: casi('pozos') }),
-    tramo('planta', { potencialBpd: p.planta, estado: p.planta === null ? 'sin-dato' : 'demo',
-      fuente: p.campoDeGas ? 'Campo de gas: la tubería del gas todavía no está' : pl ? 'El menor de los trenes medidos (crudoCap y aguaCap del esquema), con el agua pasada a crudo con las pruebas; el gas no se mide en esta fase. Dato del demo, sin firmar' : 'Sin esquema de planta',
+    tramo('pozo', { potencialBpd: p.pozos, estado: 'pruebas', fuente: 'La suma de lo que dan los pozos con su prueba vigente, con el factor de asignación del mes',
+      holguraBpd: p.holgura.pozos, limita: p.dominante === 'pozos', casiIgual: casi('pozos'), ...(vieja ? { pruebaMasVieja: vieja } : {}) }),
+    tramo('planta', { potencialBpd: p.planta, estado: p.planta === null || !menor ? 'sin-dato' : menor.estado,
+      fuente: p.campoDeGas ? gas : !pl ? 'Sin esquema de planta' : !menor ? 'Ningún tren medido con capacidad: no se sabe cuánto deja pasar'
+        : `El más angosto de sus trenes medidos: ${TREN_FRASE[menor.tren]}. ${menor.tren === 'crudo' ? cap.crudo.fuente : menor.tren === 'agua' ? cap.agua.fuente : cap.gas.fuente}. El agua se pasa a crudo con el corte de las pruebas; el gas no se mide en esta fase`,
       holguraBpd: p.holgura.planta, limita: p.dominante === 'planta', casiIgual: casi('planta'), trenes: p.trenes,
-      ...(disponible && !p.campoDeGas ? { disponibleHoy: disponible } : {}) }),
-    tramo('exportacion', { potencialBpd: p.exportacion, estado: p.exportacion === null ? 'sin-dato' : 'demo',
-      fuente: p.campoDeGas ? 'Campo de gas: la tubería del gas todavía no está' : pl ? 'Capacidad de evacuación del esquema (Chokes.evacuacion). Dato del demo, sin firmar' : 'Sin esquema de planta',
+      ...(p.trenQueLimita ? { trenQueLimita: p.trenQueLimita } : {}), ...(disponible ? { disponibleHoy: disponible } : {}) }),
+    tramo('exportacion', { potencialBpd: p.exportacion, estado: p.exportacion === null ? 'sin-dato' : cap.afuera.estado,
+      fuente: p.campoDeGas ? gas : !pl ? 'Sin esquema de planta' : cap.afuera.fuente,
       holguraBpd: p.holgura.exportacion, limita: p.dominante === 'exportacion', casiIgual: casi('exportacion'),
       ...(pl && !p.campoDeGas ? { subniveles: [
-        { nombre: 'El oleoducto o el transportador', potencialBpd: pl.chokes.evacuacion, fuente: 'Chokes.evacuacion: dato del demo, sin firmar' },
-        { nombre: 'El terminal o el cliente (mercado)', potencialBpd: pl.chokes.mercado, fuente: 'Chokes.mercado: subnivel de afuera; no baja su potencial (NSTA p. 29)' },
+        ...(cap.afuera.valor !== null ? [{ nombre: 'El oleoducto o el transportador', potencialBpd: cap.afuera.valor, fuente: cap.afuera.fuente, estado: cap.afuera.estado }] : []),
+        ...(cap.mercado.valor !== null ? [{ nombre: 'El terminal o el cliente (mercado)', potencialBpd: cap.mercado.valor, estado: cap.mercado.estado,
+          fuente: `${cap.mercado.fuente}. Es un subnivel de afuera: no baja lo que puede pasar afuera` }] : []),
       ] } : {}) }),
   ]
   const nombre = campoPorId(campoId).nombre
@@ -1336,13 +1488,78 @@ export function tuberiaCampo(campoId: string, desde: Date, hasta: Date, ctx: Con
   const pct = (x: number) => Math.round((x / b.diferido) * 100)
   const fraseGerente = b.diferido <= 0 ? `Nada se trabó en ${nombre} en el período.`
     : `${nombre}: ${pct(b.porChoke[mayor])} % ${DONDE_PERIODO[mayor]}${b.porChokeEquipo[mayor].length ? ` (${b.porChokeEquipo[mayor].slice(0, 2).map(x => x.equipo).join(', ')})` : ''}${sinTramoBbl > 0 ? `; ${pct(sinTramoBbl)} % sin identificar` : ''}`
+  const medidor = medidorDe(campoId)
   return {
     campoId, desde, hasta, tramos, limita: p.dominante, casiIguales: p.casiIguales, umbral: p.umbral, empate: p.empate,
     pasaHoyBpd: caudalesAhora(campoId).crudo, perdiendoAhora: ahoraPorTramo,
+    perdiendoAhoraBpd: ahoraPorTramo.reduce((a, x) => a + x.bpd, 0), sinTramoAhoraBpd: ahoraPorTramo.filter(x => x.tramo === null).reduce((a, x) => a + x.bpd, 0),
     perdidoPeriodo: ORDEN_CHOKE.map(k => ({ tramo: k, bbl: b.porChoke[k], equiposTop: b.porChokeEquipo[k].slice(0, 3) })),
     sinTramoBbl, sinTramoEquipos: b.porChokeEquipo['sin-asignar'], diferido: b.diferido, campoDeGas: p.campoDeGas,
+    capacidades: capacidadesDeLaTuberia(p, versiones), ...(medidor ? { medidor } : {}),
     textoCorto: p.textoCorto, frase: p.texto, fraseGerente,
   }
+}
+
+/* ───────────────────────── las capacidades, para firmarlas ───────────────────────── */
+
+/** Lo máximo que pasó por los tramos de crudo en un día completo de los
+ *  últimos `dias` (el fiscal del punto oficial): una capacidad no puede ser
+ *  menor que eso (U2 §8.4). Undefined sin días completos con fiscal. */
+export function maximoCrudoDiario(campoId: string, ctx: Contexto, dias = 30): { bpd: number; dia: Date } | undefined {
+  let m: { bpd: number; dia: Date } | undefined
+  for (const x of porDia([campoId], new Date(ahora - dias * D), new Date(ahora), ctx)) {
+    if (x.real === null || x.horas < 24) continue
+    if (!m || x.real > m.bpd) m = { bpd: x.real, dia: x.dia }
+  }
+  return m
+}
+
+/** Lo que necesita la firma de las capacidades de un campo (U2 §8.4,
+ *  `GET /api/vistas/campos/:campo/capacidades`): lo que rige (firmado o del demo), quién lo
+ *  firmó, lo que la revisión necesita del pasado (lo máximo que ya pasó, el
+ *  potencial de los pozos) y la revisión de lo que rige. La pantalla revisa lo
+ *  que se va a firmar con `revisarCapacidades` y esta `entrada`; el servidor lo
+ *  vuelve a revisar al firmar (sus 422 mandan). */
+export interface VistaCapacidades {
+  campoId: string
+  vigentes: CapacidadesVigentes
+  firma?: FirmaCapacidades
+  entrada: EntradaRevision
+  hallazgos: HallazgoCapacidad[]
+}
+export function vistaCapacidades(campoId: string, ctx: Contexto, versiones?: Historial): VistaCapacidades {
+  const p = potencialesDelCampo(campoId, ahora, ctx, versiones)
+  const pl = Object.hasOwn(CAMPO_PLANTA, campoId) ? CAMPO_PLANTA[campoId] : undefined
+  const maximo = maximoCrudoDiario(campoId, ctx)
+  const entrada: EntradaRevision = { campoId, vigentes: p.capacidades, ...(maximo ? { maximoCrudo: maximo } : {}), pozosBpd: p.pozos, aguaPozosBpd: p.agua,
+    conGas: perfilDe(ctx.config, campoId).gas !== 'no', caudalesGas: { crudo: pl?.caudales.crudo ?? 0, gas: pl?.caudales.gas ?? 0 } }
+  const firma = versiones?.length ? firmaDeCapacidades(versiones, campoId) : undefined
+  return { campoId, vigentes: p.capacidades, ...(firma ? { firma } : {}), entrada, hallazgos: revisarCapacidades(capacidadesFirmadas(ctx.config, campoId), entrada) }
+}
+
+/** Lo que no deja firmar unas capacidades (U2 §8.4): lo que bloquea de
+ *  `revisarCapacidades` (menos de lo que ya pasó, sin fuente, un número que no
+ *  es mayor que cero, un empate sin explicar), solo en los campos cuyas
+ *  capacidades cambian con esta firma: lo ya firmado no traba firmar otra cosa.
+ *  Las mismas reglas en la pantalla y en el servidor (`POST /api/configuracion`
+ *  y la vista previa responden 422 con estas palabras). Un campo que no está en
+ *  el registro lo dice `validarConfig`. */
+export function capacidadesQueBloquean(antes: Config, despues: Config, ctx: Contexto, versiones?: Historial): string[] {
+  const ids = [...new Set([...(antes.capacidades ?? []), ...(despues.capacidades ?? [])].map(c => c.campoId))]
+  return ids.flatMap(id => {
+    const a = capacidadesFirmadas(antes, id), d = capacidadesFirmadas(despues, id)
+    if (!d || mismaForma(a, d) || campoPorId(id).desconocido) return []
+    return revisarCapacidades(d, vistaCapacidades(id, ctx, versiones).entrada).filter(h => h.bloquea).map(h => `${campoPorId(id).nombre}: ${h.texto}`)
+  })
+}
+/** Dos valores JSON iguales, sin mirar el orden de las claves. */
+function mismaForma(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a) !== Array.isArray(b)) return false
+  if (Array.isArray(a)) return a.length === (b as unknown[]).length && a.every((x, i) => mismaForma(x, (b as unknown[])[i]))
+  const x = a as Record<string, unknown>, y = b as Record<string, unknown>
+  const kx = Object.keys(x).filter(k => x[k] !== undefined), ky = Object.keys(y).filter(k => y[k] !== undefined)
+  return kx.length === ky.length && kx.every(k => Object.hasOwn(y, k) && mismaForma(x[k], y[k]))
 }
 
 /* ───────────────────────── mes a mes y contra la línea base ───────────────────────── */
@@ -1366,9 +1583,9 @@ export interface MesPorTramo {
 }
 /** El reparto por tramo de cada mes del calendario, con los mismos meses de
  *  `serieMensual` (libro.ts) y el mismo total. */
-export function repartoPorMes(campoIds: string[], ctx: Contexto): MesPorTramo[] {
+export function repartoPorMes(campoIds: string[], ctx: Contexto, versiones?: Historial): MesPorTramo[] {
   return calendario().map(m => {
-    const b = brechaPorChoke(campoIds, new Date(m.desde), new Date(m.hasta), ctx)
+    const b = brechaPorChoke(campoIds, new Date(m.desde), new Date(m.hasta), ctx, versiones)
     return { mes: m.mes, desde: new Date(m.desde), hasta: new Date(m.hasta), parcial: !publicadoEnTodos(campoIds, m.mes),
       porTramo: b.porChoke, noPlaneado: noPlaneadoPorTramo(b), diferido: b.diferido }
   })
@@ -1390,10 +1607,10 @@ export interface LineaBasePorTramo {
 /** La línea base por tramo: la misma base de `lineaBase` (libro.ts, los tres
  *  meses publicados antes del período) repartida por tramo. Sin tres meses de
  *  historia, no hay base. */
-export function lineaBasePorTramo(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto): LineaBasePorTramo | undefined {
+export function lineaBasePorTramo(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): LineaBasePorTramo | undefined {
   const lb = lineaBase(campoIds, desde, hasta, ctx)
   if (!lb) return undefined
-  const b0 = brechaPorChoke(campoIds, lb.desde, lb.hasta, ctx), b1 = brechaPorChoke(campoIds, desde, hasta, ctx)
+  const b0 = brechaPorChoke(campoIds, lb.desde, lb.hasta, ctx, versiones), b1 = brechaPorChoke(campoIds, desde, hasta, ctx, versiones)
   const dias = (a: Date, z: Date) => Math.max(1e-9, (Math.min(z.getTime(), ahora) - a.getTime()) / D)
   const d0 = dias(lb.desde, lb.hasta), d1 = dias(desde, hasta)
   const fila = (x: number, y: number): AntesYDespues => ({ baseDia: x / d0, periodoDia: y / d1, cambio: x > 0 ? (y / d1 - x / d0) / (x / d0) : null })
@@ -1446,7 +1663,7 @@ export interface CambioDominante { campoId: string; dia: Date; de: ChokeCampo; a
  *  de cambio respeta el umbral y la persistencia (PARAMETROS_CHOKE); `vueltas`
  *  cuenta, por campo, los cambios del dominante sin ese filtro (U2 §7.1: sin
  *  él, La Ceiba cambiaría siete veces en trece meses). */
-export function serieChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto): { dias: DiaChoke[]; cambios: CambioDominante[]; vueltas: Record<string, number> } {
+export function serieChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): { dias: DiaChoke[]; cambios: CambioDominante[]; vueltas: Record<string, number> } {
   const d0 = desde.getTime(), hh = Math.min(hasta.getTime(), ahora)
   const dias = new Map<number, DiaChoke>()
   for (const x of porDia(campoIds, desde, hasta, ctx)) dias.set(x.dia.getTime(), {
@@ -1455,7 +1672,7 @@ export function serieChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Co
     dominante: {}, casiIguales: {}, potenciales: {}, superado: {},
   })
   for (const c of campoIds) {
-    for (const x of diasDelCampo(c, d0, hh, ctx)) {
+    for (const x of diasDelCampo(c, d0, hh, ctx, versiones)) {
       const d = dias.get(x.dia)
       if (!d) continue
       d.potencialSistema += x.sistema

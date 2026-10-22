@@ -35,10 +35,10 @@ export const conBarriles = (v: Partial<Record<ChokeOSinAsignar, number>>): Choke
 export const textoReparto = (v: Partial<Record<ChokeOSinAsignar, number>>, largo = false): string =>
   conBarriles(v).map(k => `${largo ? LARGO_TRAMO[k] : CORTO_TRAMO[k]} ${n0(v[k] ?? 0)}`).join(' · ')
 
-/** Lo que el lector de pantalla oye de una barra: cada tramo con su cifra y el total. */
-export const leidoReparto = (v: Partial<Record<ChokeOSinAsignar, number>>): string => {
+/** Lo que el lector de pantalla oye de una barra: cada tramo con su cifra y el
+ *  total, el del motor (`diferido`: Σ de los tramos del libro), no una suma hecha aquí. */
+export const leidoReparto = (v: Partial<Record<ChokeOSinAsignar, number>>, total: number): string => {
   const ks = conBarriles(v)
-  const total = ks.reduce((a, k) => a + (v[k] ?? 0), 0)
   return ks.length ? `${ks.map(k => `${LARGO_TRAMO[k]} ${n0(v[k] ?? 0)} barriles`).join(', ')}; en total ${n0(total)} barriles` : 'nada se trabó'
 }
 

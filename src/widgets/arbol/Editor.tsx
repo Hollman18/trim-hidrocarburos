@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import { useApp } from '@/app/store'
 import {
   PASOS, RESPONSABLES, IMPACTOS, PLANEACIONES, PONEN_YACIMIENTO, ETIQUETA_PLANEACION, ETIQUETA_RESPONSABLE, cadenaVista, esDePersona,
   type PasoAnh, type ParadaAnh, type Planeacion, type ClaveN1, type CodigoN2,
 } from '@/shared/api/arbol'
 import { CLAVES_N1, planeacionDeN1, n1DeCodigo, n2DeN1 } from '@/entities/anh-catalogo'
+import { MOTIVO_MINIMO, alcanza } from '@/entities/reglas'
 import type { ChokeAnh } from '@/shared/api/choke'
 import { Boton } from '@/shared/ui/primitivas'
 import { cn } from '@/shared/lib/cn'
-import { clasificar, ponerYacimiento } from './escribir'
 import { OPCION } from './Preguntas'
 import { marcaDelPaso } from './marcas'
 import {
@@ -17,7 +18,8 @@ import type { Grupo } from './grupos'
 
 const MARCADA = 'border-acento bg-acento-f shadow-[inset_0_0_0_1px_var(--acento)]'
 const CAMPO = 'min-h-10 w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-8'
-const MOTIVO_MINIMO = 5
+/** Lo que se le pide a producción con «Pedir a producción», para que lo lea con la parada. */
+const PIDE_YACIMIENTO = '¿Fue el yacimiento? Revise la prueba del pozo, el corte de agua o la presión de fondo.'
 
 type Valores = Partial<Record<PasoAnh, string>>
 
@@ -36,6 +38,7 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
   onCerrar: () => void; onHecho: (texto: string) => void
 }) {
   const p = g.primera
+  const clasificarAnh = useApp(s => s.clasificarAnh), yacimientoAnh = useApp(s => s.yacimientoAnh), revisarAnh = useApp(s => s.revisarAnh)
   const actual = (x: PasoAnh) => (p.clasificacion[x] ? String(p.clasificacion[x]!.valor) : undefined)
   const faltan = (x: PasoAnh) => p.faltan.includes(x)
   // La planeación arrastra la causa y el detalle: se ven con ella.
@@ -103,7 +106,7 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
     : cruzada ? `«${ETIQUETA_PLANEACION[planFinal!]}» no va con esa causa: la ANH rechaza el reporte entero (Circular 024, p. 7). Escoja una causa ${planFinal === 'planeada' ? 'planeada' : 'no planeada'}.`
       : detalleAjeno ? 'Ese detalle no es de la causa escogida.'
         : yac && !evidenciaFinal ? 'Diga qué lo muestra.'
-          : tocaAPersona && motivoFinal.length < MOTIVO_MINIMO ? 'Diga por qué lo cambia: ya lo había dicho una persona.' : ''
+          : tocaAPersona && !alcanza(motivoFinal, MOTIVO_MINIMO) ? 'Diga por qué lo cambia: ya lo había dicho una persona.' : ''
 
   const cascada = g.cascada && g.pozos.length > 1
   // «En el yacimiento» es de cada pozo (su roca, su fluido): no se extiende a la cascada.
@@ -115,12 +118,23 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
     const fila: ParadaAnh = filaDe(soloAEf)
     const alcance = cascada && !soloAEf ? { aplicarALaCascada: true } : { aplicarAlEvento: true }
     const r = yac
-      ? await ponerYacimiento(fila.id, { evidencia: evidenciaFinal, ...(tocaAPersona ? { motivo: motivoFinal } : {}), aplicarAlEvento: true, cadena: cadenaVista(fila.clasificacion) })
-      : await clasificar(fila.id, { pasos: Object.fromEntries(cambios.map(x => [x, valores[x]!])), ...(tocaAPersona ? { motivo: motivoFinal } : {}), ...alcance, cadena: cadenaVista(fila.clasificacion) })
+      ? await yacimientoAnh(fila.id, { evidencia: evidenciaFinal, ...(tocaAPersona ? { motivo: motivoFinal } : {}), aplicarAlEvento: true, cadena: cadenaVista(fila.clasificacion) })
+      : await clasificarAnh(fila.id, { pasos: Object.fromEntries(cambios.map(x => [x, valores[x]!])), ...(tocaAPersona ? { motivo: motivoFinal } : {}), ...alcance, cadena: cadenaVista(fila.clasificacion) })
     setOcupado(false)
     if (!r.ok) return setError(r.error)
     const a = cascada && !soloAEf ? `los ${g.pozos.length} pozos` : soloAEf ?? g.pozos.join(', ')
     onHecho(`Guardado en ${a}: ${cambios.map(x => `${ROTULO[x]} → ${valorEnPalabras(x, valores[x]!)}`).join(' · ')}.`)
+    onCerrar()
+  }
+  // «Pedir a producción» (U2 §4.3): quien no pone el yacimiento se lo pide a quien sí, con la parada.
+  const [pedido, setPedido] = useState(PIDE_YACIMIENTO)
+  const pedir = async () => {
+    if (!alcanza(pedido, MOTIVO_MINIMO)) return setError('Diga qué le pide a producción.')
+    setOcupado(true); setError('')
+    const r = await revisarAnh(p.id, { motivo: pedido.trim(), pedirA: 'prod', ...(cascada ? { aplicarALaCascada: true } : { aplicarAlEvento: true }), cadena: g.cadena })
+    setOcupado(false)
+    if (!r.ok) return setError(r.error)
+    onHecho(`Listo: se le pidió a producción que revise ${cascada ? `los ${g.pozos.length} pozos` : g.pozos.join(', ')}. La parada le aparece en «Revisar».`)
     onCerrar()
   }
 
@@ -155,7 +169,15 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
           {x === 'choke' && (
             <div role="radiogroup" aria-label={ROTULO.choke} className="grid gap-1">
               {radios<ChokeAnh>('choke', opcionesChoke, c => OPCION_CHOKE[c], c => LINEA_CHOKE[c])}
-              {!ponerYac && <small className="text-[10.5px] text-[var(--tinta2)]">¿Fue el yacimiento? Lo pone producción o confiabilidad, con lo que lo muestra: la prueba del pozo, el corte de agua o la presión de fondo.</small>}
+              {!ponerYac && (
+                <div className="grid gap-1" data-pedir-a="prod">
+                  <small className="text-[10.5px] text-[var(--tinta2)]">¿Fue el yacimiento? Lo pone producción o confiabilidad, con lo que lo muestra: la prueba del pozo, el corte de agua o la presión de fondo.</small>
+                  <span className="flex flex-wrap items-center gap-1">
+                    <input value={pedido} onChange={e => { setPedido(e.target.value); setError('') }} className={cn(CAMPO, 'sm:flex-1')} aria-label="Lo que le pide a producción" />
+                    <button type="button" disabled={ocupado} onClick={() => void pedir()} className={OPCION}>Pedir a producción</button>
+                  </span>
+                </div>
+              )}
               {yac && (
                 <div role="group" aria-label="¿Qué lo muestra?" className="grid gap-1 border-l-2 border-[var(--linea)] pl-2">
                   <span className="text-[11.5px] font-semibold">¿Qué lo muestra?</span>

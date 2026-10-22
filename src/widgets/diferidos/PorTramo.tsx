@@ -66,7 +66,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
           ? <p className="text-[12px] text-[var(--tinta2)]">Nada se trabó en el período.</p>
           : (
             <>
-              <BarraTramos valores={b.porChoke} leido={`Dónde se trabó en el período: ${leidoReparto(b.porChoke)}, el diferido del libro.`} alto="h-3.5" className="mt-1" />
+              <BarraTramos valores={b.porChoke} leido={`Dónde se trabó en el período: ${leidoReparto(b.porChoke, b.diferido)}, el diferido del libro.`} alto="h-3.5" className="mt-1" />
               <p className="mt-1 text-[12px] leading-snug">{b.texto}</p>
             </>
           )}
@@ -161,7 +161,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
                   <span className="min-w-0 truncate text-[12px]">{nombre}</span>
                   <span className="min-w-0">
                     {c.diferido >= 0.5
-                      ? <BarraTramos valores={c.porChoke} leido={`${nombre}: ${leidoReparto(c.porChoke)}.`} alto="h-2" palabras={false} />
+                      ? <BarraTramos valores={c.porChoke} leido={`${nombre}: ${leidoReparto(c.porChoke, c.diferido)}.`} alto="h-2" palabras={false} />
                       : <small className="text-[10.5px] text-[var(--tinta3)]">nada se trabó</small>}
                     {c.diferido >= 0.5 && <small className="tabular block text-[10.5px] text-[var(--tinta2)]">{textoReparto(c.porChoke)}</small>}
                   </span>

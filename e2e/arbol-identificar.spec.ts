@@ -35,7 +35,7 @@ test('el supervisor confirma una parada deducida en un toque: la cascada de P-20
   f.cerrar()
 })
 
-test('el operador nunca escoge el tramo, la causa ni el detalle, y su toque no sube esos pasos', async ({ flujo: f }) => {
+test('el operador contesta hechos y nunca escoge el tramo, la causa ni el detalle: lo que TRIM deduce queda dicho por él y lo avala su supervisor', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
   const panel = arbol(f.page)
   await expect(panel.getByRole('heading', { level: 2 })).toHaveText('POR CONTESTAR · ÁRBOL DE CAUSAS')
@@ -45,23 +45,30 @@ test('el operador nunca escoge el tramo, la causa ni el detalle, y su toque no s
   f.ok(vistos.length === 0, `ningún botón para escoger el tramo, la causa o el detalle (${vistos.join(' | ')})`)
   f.ok(await panel.locator('select, [role="radio"], [role="radiogroup"]').count() === 0, 'ninguna lista ni opción del tramo, la causa o el detalle')
   const lc05 = tarjeta(f.page, 'LC-05')
-  await expect(lc05).toContainText('«¿De dónde vino el corte?»: la registra su supervisor')
-  f.ok(!(await lc05.innerText()).includes('Del campo: pórtico'), 'al operador no se le ofrecen las respuestas que su rol no registra')
+  // «¿De dónde vino el corte?» se contesta en el campo: es un hecho, en palabras de campo (U1 §2.4).
+  const corte = lc05.getByRole('group', { name: '¿De dónde vino el corte?' })
+  f.ok((await corte.getByRole('button').allInnerTexts()).map(x => x.trim()).join(' | ')
+    === 'Del proveedor: la red de la empresa de energía | Del campo: pórtico, red de media o subestación | De este pozo: su transformador, su variador o su cable | No sé',
+  'al operador se le pregunta de dónde vino el corte, con sus respuestas en palabras de campo')
+  f.ok(!(await lc05.innerText()).includes('¿Qué fue, exactamente?'), 'el detalle de la tabla de la ANH no se le pregunta')
   // Su toque confirma lo suyo: «¿estaba programado?» y «¿se perdió algo?».
   await lc05.getByRole('button', { name: 'Confirmar lo que contesté' }).click()
   await expect(f.page.getByRole('status').filter({ hasText: 'Su respuesta en LC-05 queda guardada' })).toBeVisible()
   await expect(lc05).toContainText('confirmó Jairo Peña')
-  // Lo técnico sigue como propuesta de TRIM: plegado, sin opciones.
+  // Contesta el corte: lo que TRIM deduce de su respuesta queda dicho por él, con él en el porqué.
+  await lc05.getByRole('button', { name: 'De este pozo: su transformador, su variador o su cable' }).click()
+  await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en LC-05' })).toContainText('«De este pozo: su transformador, su variador o su cable»')
   await lc05.getByRole('button', { name: /^Lo técnico/ }).click()
-  await expect(lc05.locator('[data-paso="choke"]')).toContainText('TRIM lo propone')
+  await expect(lc05.locator('[data-paso="choke"]')).toContainText('dijo Jairo Peña')
+  await expect(lc05.locator('[data-paso="choke"]')).toContainText('TRIM lo dedujo de lo que contestó Jairo Peña en el campo')
+  // La causa que deja su respuesta es la misma que TRIM proponía: sigue siendo de TRIM, por confirmar.
   await expect(lc05.locator('[data-paso="n1"]')).toContainText('TRIM lo dedujo')
-  await expect(lc05.locator('[data-paso="responsable"]')).toContainText('TRIM lo dedujo')
-  // El supervisor ve lo mismo: lo del operador confirmado; el tramo, la causa y el detalle, por confirmar.
+  // El supervisor ve lo mismo: lo del operador confirmado; el tramo y la causa dichos por él, por avalar; el detalle, en falta.
   await f.ir('#/sup/causa/ceiba/curso')
   const sup = tarjeta(f.page, 'LC-05')
   await expect(sup.locator('[data-paso="planeacion"]')).toContainText('confirmó Jairo Peña')
   await expect(sup.locator('[data-paso="impacto"]')).toContainText('confirmó Jairo Peña')
-  await expect(sup.locator('[data-paso="choke"]')).toContainText('TRIM lo propone')
+  await expect(sup.locator('[data-paso="choke"]')).toContainText('dijo Jairo Peña')
   await expect(sup).toHaveAttribute('data-estado', 'por-precisar')
   f.cerrar()
 })
@@ -98,19 +105,22 @@ test('la combinación planeada con una causa no planeada no se puede armar ni en
 test('tanques llenos: TRIM pregunta si el oleoducto o el cliente estaba recibiendo', async ({ flujo: f }) => {
   // Guacamayo, 17-oct-2025: LACT-01 limitó el despacho; la nota dice «nominación del oleoducto».
   await f.abrir('/#/conf/causa/guacamayo/2025-10-17_2025-10-17')
-  const t = f.page.locator('main article[data-parada-anh]').filter({ has: f.page.getByRole('group', { name: '¿Qué lo paró?' }) }).first()
+  const primeraTarjeta = f.page.locator('main article[data-parada-anh]').filter({ has: f.page.getByRole('group', { name: '¿Qué lo paró?' }) }).first()
+  // La tarjeta por su fila: al contestar, la pregunta se cierra y la siguiente llega con la vista.
+  const t = f.page.locator(`main article[data-parada-anh="${await primeraTarjeta.getAttribute('data-parada-anh')}"]`)
   await expect(t.locator('[data-paso="choke"]')).toContainText('TRIM sugiere: En la planta o estación')
   await expect(t.locator('[data-paso="choke"]')).toContainText('falta: «¿El oleoducto o el cliente estaba recibiendo?»')
   const primera = t.getByRole('group', { name: '¿Qué lo paró?' })
   f.ok((await primera.getByRole('button').allInnerTexts()).map(x => x.trim()).join(' | ') === 'La planta no recibe (agua o proceso) | El tanque de crudo está lleno | No sé',
     'la primera pregunta: el agua no es el crudo (U2 §4.4, caso 3)')
   await primera.getByRole('button', { name: 'El tanque de crudo está lleno' }).click()
+  await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en' })).toContainText('«El tanque de crudo está lleno»')
   const segunda = t.getByRole('group', { name: '¿El oleoducto o el cliente estaba recibiendo?' })
   await expect(segunda).toBeVisible()
   f.ok((await segunda.getByRole('button').allInnerTexts()).map(x => x.split('\n')[0]!.trim()).join(' | ') === 'Sí, recibía | No, no recibía | No sé',
     'la segunda pregunta: ¿el oleoducto o el cliente estaba recibiendo?')
   await segunda.getByRole('button', { name: /^No, no recibía/ }).click()
-  await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en' })).toContainText('El tanque de crudo está lleno · No, no recibía')
+  await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en' })).toContainText('«No, no recibía»')
   const despues = f.page.locator('main article[data-parada-anh] [data-paso="choke"]').filter({ hasText: 'Afuera: oleoducto, transportador o cliente' }).first()
   await expect(despues).toContainText('dijo Edwin Maestre')
   f.cerrar()

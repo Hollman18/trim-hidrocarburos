@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X, ArrowRight, Check } from 'lucide-react'
 import { useApp, useRol, usePersona } from '@/app/store'
 import { useModal } from '@/shared/ui/foco'
-import { PANTALLAS } from '@/app/pantallas'
+import { PANTALLAS, enElMenu } from '@/app/pantallas'
 import { pantallaVisible } from '@/shared/config/producto'
 import { Boton, Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
@@ -25,6 +25,7 @@ const PARA_QUE: Record<string, string> = {
   riesgo: 'Antes y Durante: a qué equipo ir hoy, en bbl y si falla hoy.',
   causa: 'Durante: identificar antes de arrancar (causa → SAP/ISO).',
   planta: 'Dónde está el problema. Gris es normal; color, anormal.',
+  agua: 'Tren de agua: qué limita, el colchón y si para una bomba.',
   configuracion: 'Lo único que se escribe a mano, con firma.',
   conectores: 'Bordes conectados y tags sin equipo resuelto.',
   perfil: 'Avisos, apariencia y permisos.',
@@ -55,7 +56,7 @@ export function Onboarding() {
   // Diálogo modal: el foco entra, Escape cierra y al cerrar vuelve a donde estaba.
   const dialogo = useModal<HTMLDivElement>(cerrarOnboarding)
   const [paso, setPaso] = useState(0)
-  const pantallas = rol.pantallas.filter(pantallaVisible)
+  const pantallas = rol.pantallas.filter(x => pantallaVisible(x) && enElMenu(x))
   const total = 2
 
   const irYCerrar = (id: string) => { setPantalla(id); cerrarOnboarding() }

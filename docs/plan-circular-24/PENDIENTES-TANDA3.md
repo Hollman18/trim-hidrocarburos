@@ -5,41 +5,41 @@ Lo junta el coordinador a medida que cierran los agentes. Es la entrada de la ta
 ## P2-UI · gerente, «Si falla hoy», diferidos por tramo (terminó 21-oct)
 
 **Pedidos al motor y al contrato:**
-1. La frase completa de U2 §6.5, hecha en el motor: «otra bomba no sube la producción; evita que una falla cierre pozos; cada falla cuesta X bbl». Hoy la pantalla pinta una línea genérica, «Para producir más».
-2. `FilaCriticidad.puesto` la calcula la PANTALLA con la regla de `cambioHoy`. Tiene que venir del motor: el motor calcula y la pantalla pinta.
-3. Cruce con el programa (`AvisoTrabajoCritico`), para el «¿moverlo?» del jefe, y una escritura para «Proponer un plan».
-4. Un gancho de pérdidas (`EventoPerdida`): la pérdida aparte sale vacía porque todavía no existe el registro de pérdidas.
-5. Las paradas que el vigía volvió planeadas (U2 §7.3).
-6. Para un servicio ya caído, el motor solo trae la frase «si cae hoy»; la pantalla dice «está caído: se pierden N bbl/d». La frase debe venir del motor.
+1. ✅ **Hecho (F1, 22-oct).** La frase de U2 §6.5 la hace el motor: `CriticidadDelCampo.desembotellar` (`criticidad.ts`), «En La Ceiba, otra bomba de agua no sube la producción: evita que una falla cierre pozos. Hoy cada falla de P-201B cuesta unos 4.593 bbl. Para producir más…». La pinta `widgets/resumen/DondeSeTrabo.tsx`; se borró `paraProducirMas`.
+2. ✅ **Hecho.** `FilaCriticidad.puesto` sale del motor (`criticidad.ts`), con `cambioHoy`, `proximoInstrumento` y `noIntervenir`. `widgets/riesgo/SiFallaHoy.tsx` ya no calcula el puesto ni las líneas de cada rol.
+3. ✅ **Hecho el cruce:** `AvisoTrabajoCritico` (`criticidad.ts`, `CriticidadDelCampo.avisosTrabajo`), en la vista `/vistas/criticidad` y en la línea del jefe. ⛔ **«Proponer un plan» queda fuera de esta tanda** (decisión del coordinador): es otra escritura y no está en el contrato; la pantalla dice que el programa lo cambia el administrador con firma.
+4. ⛔ **Fuera de esta tanda:** el gancho `EventoPerdida` necesita el registro de pérdidas, que todavía no existe; la línea de pérdida sigue con su estado vacío.
+5. ⛔ **Fuera de esta tanda:** el vigía no deja un campo estructurado con lo que volvió planeado; sin él, la línea de U2 §7.3 no tiene de dónde salir.
+6. ✅ **Hecho.** El motor dice lo de ahora en un servicio caído: «SE-2 está caído: se pierden N bbl/d ahora» (`FilaCriticidad.porque`, `criticidad.ts`). La pantalla lo pinta tal cual.
 
 **Revisar en QA:**
-- `src/widgets/diferidos/reparto.ts`: un archivo de cálculo dentro de `widgets`; verificar que no calcule lo que es del motor.
-- El motor discrepa de U2 en ZA-06: queda en el pozo y U2 esperaba «afuera».
-- Guacamayo ya no sale «casi iguales». Es lo esperado desde la corrección de capacidades de C1; U2 tiene la cifra vieja.
-- A 320 px, `widgets/ciclo` encima «bbl». Ya venía del trabajo del 15-oct.
+- ✅ `src/widgets/diferidos/reparto.ts`: solo palabras y rellenos; la suma que hacía `leidoReparto` ahora la da el motor (`diferido`, Σ de los tramos del libro).
+- ✅ ZA-06: «el comprador nominó menos» es mercado: afuera, subnivel mercado, `ext-transportador`, N1 `NP_TRANSP` «Restricción nominación/entrega» (`choke.ts` `choke.topologia@3`, fila `declarada-mercado` de `REGLAS_ANH@2`). Pruebas en `verificar-libro` §29 y `verificar-arbol`.
+- ✅ Guacamayo: el crudo de la planta sube a 8.000 y la salida se queda en 7.500 (`planta.ts`); ya no hay empate artificial. U2 §2.9 con la cifra nueva; la referencia se regeneró a propósito.
+- ✅ A 320 px, `widgets/ciclo`: revisado con el detector del auditor en Mantenimiento, Riesgo, Turno y Resumen: 0 hallazgos; no se reproduce.
 
 ## P4-UI · Filosofía operacional (terminó 21-oct)
 
 **Datos del demo:**
-- **Empate artificial en Guacamayo.** El crudo de la planta y la salida quedaron los dos en 7.500 bbl/d, porque C1 redondeó ambos al siguiente número redondo sobre el máximo real (7.440). El método pide explicar un empate (NSTA §5.4). Corregir el dato: la salida se queda en 7.500 y es lo que sigue a los pozos, como en la historia original de Guacamayo; el crudo de la planta sube a 8.000. Regenerar la referencia a propósito.
+- ✅ **Hecho.** Guacamayo: crudo de la planta 8.000, salida 7.500 (`planta.ts`, `caudales.crudoCap`). Referencia regenerada a propósito (`npm run referencia`).
 
 **Motor:**
-- **«Todavía no sé»:** U2 dice que esas paradas quedan «en falta», pero el motor les pone el tramo por tipo de falla. Decidir y alinear. Propuesta: si el administrador responde que no sabe, el tramo va a `faltan` con su pregunta y el motor no adivina.
-- **Equipos nuevos del registro:** con una topología firmada no aparecen para contestar.
-- **La regla de la primera firma** (la topología va completa) y la plantilla CSV deben vivir en el motor, no en `widgets/configuracion/topologia.ts`. Revisar ese archivo.
-- **Nombres de código:** el `fuente` de la tubería trae cosas como `Chokes.evacuacion`. Debe traer un texto en palabras.
+- ✅ **«Todavía no sé»:** se firma en `Config.topologiaPorSaber` y el motor no adivina: el paso 2 queda en `faltan` con la pregunta «¿Dónde se originó la parada…?» (`PREGUNTA_ORIGEN`), que contesta quien revisa; en «si falla hoy» va sin calcular (`choke.ts`, `criticidad.ts`). Pantalla (`BOTON`, `fraseDe`) y U2 §8.2 alineadas.
+- ✅ **Equipos nuevos del registro:** con la topología firmada aparecen «sin responder», con lo que TRIM deduce, sin perder lo firmado (`sinResponderDe`, `GET /api/vistas/topologia` → `sinResponder`, `TopologiaPaso.tsx`).
+- ✅ **La regla de la primera firma y la plantilla CSV** viven en el motor (`choke-config.ts`: `conTopologia`, `pendientesDe`, `faltanParaFirmar`, `plantillaTopologia`, `elementoDeRespuesta`, `respuestaDe`, `fraseDe`, `renglonDe`). `widgets/configuracion/topologia.ts` quedó con palabras solamente. La carga lee también «todavía no sé».
+- ✅ **Nombres de código:** cada `fuente` de la tubería del campo y del agua va en palabras (`capacidades.ts`, `choke.ts`, `choke-agua.ts`); `verificar-libro` §29 lo prueba.
 
 **Contrato y store:**
-- `Config.capacidades` y el máximo diario por tramo, para poder escribirlas y firmarlas. Hoy el paso 2 solo muestra.
-- Acciones del store para la vista previa y la carga: hoy la pantalla llama `escrituras.ts` directamente.
-- Un borrador guardado en el servidor, para contestar en el teléfono y firmar en el escritorio.
+- ✅ `Config.capacidades` firmable (`capacidades.ts`; `validarCapacidades`, `revisarCapacidades`, `capacidadesQueBloquean`: 422 en la firma y en la vista previa), con el máximo diario de los últimos 30 días (`maximoCrudoDiario`) y la vista `GET /api/vistas/campos/:campo/capacidades`. El paso 2 escribe y revisa (`CapacidadesPaso.tsx`); se firma en el paso 3 con lo demás. La explicación de un empate va en la firma (`explicacionEmpate`), sin endpoint aparte.
+- ✅ Store: `previsualizarConfig` e `importarTopologia` (y las escrituras del árbol) en `app/store.ts`.
+- ⛔ **Fuera de esta tanda:** el borrador guardado en el servidor. Pide un recurso nuevo con su concurrencia; mientras tanto, lo contestado vive en el borrador de la sesión.
 
 **Rutas y roles:**
-- Una dirección propia para «Filosofía operacional»: hoy es una pestaña y el enlace no la conserva.
-- Configuración para prod y conf, en solo lectura (`roles.ts`).
+- ✅ Dirección propia: pantalla `filosofia` (`#/adm/filosofia/…`), la misma vista que Configuración (el borrador no se pierde al pasar), marcada dentro de Configuración en el menú (`pantallas.tsx`: `DENTRO_DE`).
+- ✅ Configuración para prod y conf en solo lectura (`roles.ts`: filosofía, técnica y metas); rutas del auditor agregadas.
 
 **Revisar en QA:**
-- El rótulo del «Esquema de planta» cambió: ya no dice «no cambia cálculos».
+- ✅ El rótulo del «Esquema de planta» se queda: de él TRIM deduce a qué pozos sirve cada equipo, así que sí cambia cálculos.
 
 ## P1-UI · tubería del campo y del agua (terminó 21-oct)
 
@@ -47,27 +47,27 @@ Lo junta el coordinador a medida que cierran los agentes. Es la entrada de la ta
 - **ZA-06 («el comprador nominó menos») cae «en el pozo».** Es mercado → «afuera» (exportación, subnivel mercado), con responsable externo (U2 §1.1; R2 §2.2). Corregir `chokeDeCausa` y su prueba.
 
 **Pedidos al motor y al contrato:**
-- Tubería del campo: `trenQueLimita`; `disponibleHoy` en CRUDO (hoy llega en agua); quién y cuándo firmó las capacidades; la prueba más vieja; el estado del medidor.
-- Agua: `estado` y `casiIguales` por tramo.
-- «Perdiéndose ahora»: desde cuándo y los pozos por nombre.
-- Una escritura para «Explicar» un empate exacto (NSTA §5.4).
+- ✅ Tubería del campo (`choke.ts`, `TUBERIA`): `trenQueLimita`, `disponibleHoy` en crudo (con el agua de donde sale), `capacidades` (quién y cuándo las firmó), `pruebaMasVieja`, `medidor`; `Tuberia.tsx` los pinta y ya no recalcula el tren menor ni las sumas.
+- ✅ Agua (`choke-agua.ts`): `estado` y `casiIgual` por tramo y `casiIguales`; `Agua.tsx` los pinta.
+- ✅ «Perdiéndose ahora»: `desde` y `listaPozos`, más `perdiendoAhoraBpd` y `sinTramoAhoraBpd`.
+- ✅ El empate se explica con la firma de las capacidades (`explicacionEmpate`), sin escritura aparte (decisión del coordinador).
 
 **Fuera de sus archivos:**
-- `Onboarding.tsx` no tiene texto para la pantalla Agua.
-- `docs/backend/01` dice que Agua está apagada (lo hace D1).
+- ✅ `Onboarding.tsx` tiene el texto de Agua.
+- ⛔ `docs/backend/01` es de D1: no se tocó.
 
 **Revisar en QA:**
-- Usó `!` para ocultar en el papel las notas dentro del dibujo, porque `.solo-impresion` de `index.css` no está en una capa. Ver si conviene ponerla en una capa en vez de `!`.
-- `src/widgets/choke/palabras.ts`: textos de pantalla; confirmar que no tenga cálculos.
+- ✅ **Se deja el `!`.** `.solo-impresion` vive fuera de las capas a propósito: le gana a cualquier utilidad de pantalla. En una capa, los elementos que la combinan con `grid` o `flex` (hay) se verían en pantalla.
+- ✅ `src/widgets/choke/palabras.ts`: solo textos y un predicado de presentación (`sinFirma`); ningún cálculo.
 
 ## P3-UI · árbol en Identificar, Turno y Confiabilidad (terminó 21-oct)
 
 **Contrato y motor:**
-1. **Respuesta de campo del operador.** `clasificarParada` le rechaza los pasos que no son suyos, y lo que TRIM deduce de su respuesta no se guarda. Por eso «¿De dónde vino el corte?» le sale como «la registra su supervisor». Falta `POST /anh/paradas/:id/respuesta {pregunta, opcion}`, que corra `responder`.
-2. **«¿Qué lo paró?»** no se muestra: sus preguntas siguientes no llegan a las pantallas.
-3. **«Algo está mal» y «Pedir a producción»** no tienen escritura para marcarlas; el chat le dice al operador que avise a su supervisor.
-4. **Reglas copiadas en los widgets:** quién confirma la causa que una señal solo apunta (jefe y confiabilidad) y los nombres de las reglas. Exportarlas desde `src/shared/api/arbol.ts` y borrar las copias.
-5. **Escrituras fuera del store:** pasan por `widgets/arbol/escribir.ts` con el rol actual, porque `app/store.ts` no las tiene. Igual que en P4: llevarlas al store.
-6. **«Si falla hoy» en Confiabilidad** no estaba en ningún encargo. Decidir si va (hoy está en Riesgo para jefe y conf).
+1. ✅ **Hecho.** `POST /api/anh/paradas/:id/respuesta {pregunta, opcion}` (`escrituras.ts` `responderPreguntaAnh`, `responder` del motor): lo que TRIM deduce queda `declarado` con la persona en el porqué y lo avala quien revisa. «¿De dónde vino el corte?» se contesta en el campo. La causa y el detalle de la tabla (`raiz`, `detalle`) quedan para quien abre el equipo o revisa (`QuienContesta` `causa`), nunca el operador. Contrato, `CONTRATO.md`, SQL (`respuesta_campo`) y `verificar-contrato` §11.
+2. ✅ **Hecho.** La conversación se guarda (`BorradorClasificacion.respuestas`) y se sigue al leer la fila: «¿Qué lo paró?» y sus siguientes llegan en la vista (`Preguntas.tsx`).
+3. ✅ **Hecho.** `POST /api/anh/paradas/:id/revision {motivo, pedirA?}` (`ParadaAnh.revision`; SQL `revision_parada`, `revision_atendida`): «Algo está mal» en la tarjeta, «Pedir a producción» en el editor y la sección REVISAR en Identificar; queda atendida cuando el rol al que le toca escribe en la parada.
+4. ✅ **Hecho.** `CONFIRMAN_LO_QUE_APUNTA`, `nombreDeRegla`, `esperaAQuienAbre`, `esNoSe`, `quienRevisa` y `esperaRevision` salen de `shared/api/arbol.ts`; se borraron las copias de `widgets/arbol/*`.
+5. ✅ **Hecho.** Las escrituras del árbol van por `app/store.ts`; se borró `widgets/arbol/escribir.ts`. (De paso: guardar por evento cambiaba lo guardado después de leído y la vista quedaba vieja; corregido en `guardarClasificacion` y probado en `verificar-contrato`.)
+6. ✅ **Decidido: no va.** «Si falla hoy» se queda en Riesgo para jefe y confiabilidad; Confiabilidad no lo repite.
 
 **Coordinador (hecho):** los títulos y textos decían «REPORTE A LA ANH» y «CIERRE DE HOY PARA LA ANH». Ahora dicen «ÁRBOL DE CAUSAS» y «CIERRE DE HOY · PARADAS POR CONFIRMAR», y el reporte a la ANH queda como lo que sale de lo mismo (el norte). La prueba de P3 quedó ajustada.

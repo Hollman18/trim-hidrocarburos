@@ -28,13 +28,17 @@ import { pozosDe, pozoDe, estadoAhora, pruebaEn, serviciosDeCampo, NIVEL_AHORA, 
 import { perfilBomba, esBomba, paradasDe, type PerfilBomba } from './bombas'
 import { perfilDe } from './configuracion'
 import { EQUIPOS, equipoEnCampo } from './equipos'
-import { TREN_AGUA } from './planta'
+import { capacidadesDe } from './capacidades'
 import { prediccion, costoDeBomba, mdtEspDelCampo, riesgoAhora, ordenDeCierre, caudalesAhora } from './diferido'
 import { crudoAsignado, historialDeEquipo, perdidaPorFrecuencia } from './libro'
-import { topologiaDe, topologiaDerivada, chokeDeAlcance, n0, type ChokeAnh, type AlcanceElemento, type ChokeDeElemento } from './choke'
+import {
+  topologiaDe, topologiaDerivada, chokeDeAlcance, potencialesDelCampo, porSaberDelCampo, sinResponderDe, n0,
+  type ChokeAnh, type AlcanceElemento, type ChokeDeElemento,
+} from './choke'
+import { campoPorId } from './campos'
 import { textoHoras } from './salud'
 import type { Contexto } from './causa-senal'
-import { AHORA } from './reloj'
+import { AHORA, fechaCorta } from './reloj'
 
 export type FamiliaCriticidad = 'bomba' | 'electrosumergible' | 'bombeo-mecanico' | 'pozo' | 'servicio'
 
@@ -65,16 +69,37 @@ export interface FilaCriticidad {
   vigilado: boolean
   /** Lo que falta para que el número sea cierto, o por qué es un techo. */
   sinDato?: string
-  /** Subió porque otro equipo está parado. */
-  subio?: { desde: Date; porque: string }
+  /** Subió porque otro equipo está parado (`otro`). */
+  subio?: { desde: Date; porque: string; otro: string }
   /** Supone que se cierran todos los pozos que dependen de él: un techo. */
   estimacion: boolean
   /** Ya está parado (o con la frecuencia bajada). */
   parado: boolean
   /** Si ya está parado, lo que está costando ahora, bbl/d. */
   perdiendoBpd?: number
-  /** Una frase en palabras de campo: «Si falla P-201B hoy, el campo pierde 783 bbl/d después de 10 h de colchón». */
+  /** El puesto en la lista: los que cuestan lo mismo lo comparten (1 + cuántos
+   *  cuestan más). Null: sin dato, o ya parado (va en «Perdiéndose ahora»). */
+  puesto: number | null
+  /** Una frase en palabras de campo: «Si falla P-201B hoy, el campo pierde 783
+   *  bbl/d después de 10 h de colchón»; si ya está parado o caído, lo de ahora. */
   porque: string
+}
+
+/** Un trabajo del programa sobre un equipo que hoy vale más porque otro está
+ *  parado (U2 §1.5 y §6.4): para que el jefe decida si lo mueve. Proponer el
+ *  plan es otra escritura (no está en esta versión). */
+export interface AvisoTrabajoCritico {
+  campoId: string
+  /** La parada del programa firmado (`ParadaProgramada.id`). */
+  tarea: string
+  equipo: string
+  desde: Date
+  hasta: Date
+  motivo: string
+  /** Por qué ese equipo vale más hoy. */
+  porque: string
+  /** «Ojo: P-201A vale más mientras P-201B esté parada: tiene programado …. ¿Mover el trabajo?» */
+  texto: string
 }
 
 export interface CriticidadDelCampo {
@@ -87,6 +112,16 @@ export interface CriticidadDelCampo {
   sinCalcular: Array<{ equipo: string; nombre: string; motivo: string }>
   /** La línea que hace dinámica la lista: «Cambió hoy: P-201A y P-201C subieron al puesto 3…». */
   cambioHoy?: string
+  /** Lo que decide confiabilidad con la lista (U2 §6.4): dónde va el próximo
+   *  instrumento, el primero de la lista que TRIM no ve venir. */
+  proximoInstrumento?: string
+  /** Lo que decide el jefe (U2 §6.4): no intervenir hoy lo que hoy vale más. */
+  noIntervenir?: string
+  /** Los trabajos del programa que tocan un equipo que hoy vale más (`AvisoTrabajoCritico`). */
+  avisosTrabajo: AvisoTrabajoCritico[]
+  /** Lo que se gana desembotellando (U2 §6.5): qué da producir más y qué da otra
+   *  bomba de agua. Para el gerente y producción. Ausente sin tubería de crudo. */
+  desembotellar?: string
 }
 
 const ahora = AHORA.getTime()
@@ -94,7 +129,7 @@ const ahora = AHORA.getTime()
 const textoH = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} min` : h < 10 ? `${h.toLocaleString('es-CO', { maximumFractionDigits: 1 })} h` : h < 48 ? `${Math.round(h)} h` : `${(h / 24).toLocaleString('es-CO', { maximumFractionDigits: 1 })} d`)
 const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
 
-type Base = Pick<FilaCriticidad, 'campoId' | 'equipo' | 'tramo' | 'alcance' | 'servidos'>
+type Base = Pick<FilaCriticidad, 'campoId' | 'equipo' | 'tramo' | 'alcance' | 'servidos' | 'puesto'>
 
 /** ¿Lo vigila TRIM? Una bomba con perfil, o un equipo del registro con instrumentos en este campo. */
 const vigiladoEn = (id: string, campoId: string) => {
@@ -160,15 +195,16 @@ function deBomba(p: PerfilBomba, base: Base, ctx: Contexto): FilaCriticidad {
  *  si está en marcha: se supone que sí, y se dice. */
 function deHermana(id: string, base: Base, ctx: Contexto): FilaCriticidad {
   const c = base.campoId
-  const tren = TREN_AGUA[c]!
-  const esta = tren.bombas.find(b => b.id === id)!
+  // La capacidad de cada bomba: la firmada o, sin firma, la del demo (capacidades.ts).
+  const bombas = capacidadesDe(ctx.config, c).bombas
+  const esta = bombas.find(b => b.equipo === id)!
   const nombre = `${id} · bomba de ${esta.papel === 'recobro' ? 'recobro' : 'reinyección'}`
   const paradaDe = (b: string) => (perfilBomba(b, c) ? paradasDe(b, c).find(e => !e.fin) : undefined)
   const comun = { ...base, nombre, familia: 'bomba' as const, vigilado: vigiladoEn(id, c), estimacion: false, parado: false,
     mdtFuente: 'Sin historia propia: no tiene instrumento' }
   if (esta.reserva) return { ...comun, bpd: 0, porque: `${id} es de reserva${esta.nota ? ` (${esta.nota})` : ''}: si falla hoy no cierra pozos` }
-  const paradas = tren.bombas.filter(b => b.id !== id && !b.reserva && paradaDe(b.id))
-  const otras = tren.bombas.filter(b => b.id !== id && !b.reserva && !paradaDe(b.id)).reduce((a, b) => a + b.capacidadBpd, 0)
+  const paradas = bombas.filter(b => b.equipo !== id && !b.reserva && paradaDe(b.equipo))
+  const otras = bombas.filter(b => b.equipo !== id && !b.reserva && !paradaDe(b.equipo)).reduce((a, b) => a + b.valor, 0)
   const entra = caudalesAhora(c).agua
   const sinSalida = Math.max(0, entra - otras)
   const bpd = sinSalida > 0 ? ordenDeCierre(c, sinSalida, ahora).crudoBpd : 0
@@ -180,14 +216,14 @@ function deHermana(id: string, base: Base, ctx: Contexto): FilaCriticidad {
   const sinDato = [
     vigiladoEn(id, c) ? '' : 'Sin instrumento: TRIM no ve si está en marcha; se supone que sí',
     tk && nivel ? '' : sinSalida > 0 ? 'Sin tanque de agua firmado o sin su nivel: no se sabe cuánto aguanta' : '',
-    tren.bombas.some(b => b.reserva) ? 'La reserva no se cuenta: solo está declarada para otra bomba' : '',
+    bombas.some(b => b.reserva) ? 'La reserva no se cuenta: solo está declarada para otra bomba' : '',
   ].filter(Boolean).join('. ')
   const parada = paradas[0]
-  const desde = parada ? paradaDe(parada.id) : undefined
+  const desde = parada ? paradaDe(parada.equipo) : undefined
   const porque = sinSalida <= 0 ? `Si ${id} falla hoy, las otras bombas sacan toda el agua: no cierra pozos`
     : `Si ${id} falla hoy, quedan ${n0(sinSalida)} bbl/d de agua sin salida: el campo pierde ${n0(bpd)} bbl/d${despues}`
   return { ...comun, bpd, ...(colchonH !== undefined ? { colchonH } : {}), ...(sinDato ? { sinDato } : {}),
-    ...(desde && parada && bpd > 0 ? { subio: { desde: new Date(desde.inicio), porque: `${id} sube porque ${parada.id} está parada: si ${id} falla ahora, el campo pierde ${n0(bpd)} bbl/d${despues}` } } : {}),
+    ...(desde && parada && bpd > 0 ? { subio: { desde: new Date(desde.inicio), otro: parada.equipo, porque: `${id} sube porque ${parada.equipo} está parada: si ${id} falla ahora, el campo pierde ${n0(bpd)} bbl/d${despues}` } } : {}),
     porque }
 }
 
@@ -207,10 +243,12 @@ function deServicio(e: ChokeDeElemento, base: Base, ctx: Contexto): FilaCriticid
   // esté bien (U2 §6.2, el tercer caso; equipos.ts del tratador: «su
   // desviación no difiere barriles de proceso»). Otro respaldo (unidades N+1,
   // un tanque de reserva) no se sabe si alcanza: se deja la regla y se dice.
+  // Ya caído, la frase es la de ahora, no la de «si cae hoy».
+  const caidoTexto = `${e.elemento} está caído: se pierden ${n0(perdiendo ?? 0)} bbl/d ahora`
   if (respaldo && /^respaldo en l[ií]nea/i.test(respaldo)) return { ...base, nombre: eq?.nombre ?? e.elemento, familia: 'servicio', bpd: 0,
     vigilado: vigiladoEn(e.elemento, base.campoId), sinDato: `Cero mientras el respaldo esté bien (${respaldo})`, estimacion: true, parado: caido,
     ...(perdiendo !== undefined ? { perdiendoBpd: perdiendo } : {}),
-    porque: `Si ${e.elemento} cae hoy, toma su carga el ${respaldo}: no cierra pozos mientras el respaldo esté bien` }
+    porque: caido ? caidoTexto : `Si ${e.elemento} cae hoy, toma su carga el ${respaldo}: no cierra pozos mientras el respaldo esté bien` }
   const sinDato = [
     'Estimación: supone que se cierran todos los pozos que dependen de él',
     respaldo ? `tiene respaldo declarado (${respaldo}): es un techo` : '',
@@ -218,7 +256,7 @@ function deServicio(e: ChokeDeElemento, base: Base, ctx: Contexto): FilaCriticid
   ].filter(Boolean).join('; ')
   return { ...base, nombre: eq?.nombre ?? `Alimentador ${e.elemento}`, familia: 'servicio', bpd: bbl, vigilado: vigiladoEn(e.elemento, base.campoId),
     sinDato, estimacion: true, parado: caido, ...(perdiendo !== undefined ? { perdiendoBpd: perdiendo } : {}),
-    porque: `Si ${e.elemento} cae hoy, se frenan los ${produciendo.length} pozos que producen y dependen de él: hasta ${n0(bbl)} bbl/d, desde el primer minuto` }
+    porque: caido ? caidoTexto : `Si ${e.elemento} cae hoy, se frenan los ${produciendo.length} pozos que producen y dependen de él: hasta ${n0(bbl)} bbl/d, desde el primer minuto` }
 }
 
 /* Se pide por cada pantalla de confiabilidad: una vez por contexto y campo. */
@@ -233,13 +271,13 @@ export function criticidadDelCampo(campoId: string, ctx: Contexto): CriticidadDe
   // Los nombres y la clase de cada elemento, de la topología derivada del registro.
   const derivada = new Map(topologiaDerivada(campoId).map(e => [e.elemento, e]))
   const alimentadores = new Set(pozosDe(campoId).map(p => p.alimentador))
-  const delTren = new Set((Object.hasOwn(TREN_AGUA, campoId) ? TREN_AGUA[campoId]!.bombas : []).map(b => b.id))
+  const delTren = new Set(capacidadesDe(ctx.config, campoId).bombas.map(b => b.equipo))
   const filas: FilaCriticidad[] = []
   const sinCalcular: CriticidadDelCampo['sinCalcular'] = []
   for (const e of topologiaDe(campoId, ctx)) {
     // Lo de afuera no es un equipo del campo.
     if (e.alcance === 'tercero' || e.alcance === 'frontera') continue
-    const base: Base = { campoId, equipo: e.elemento, tramo: chokeDeAlcance(e.alcance), alcance: e.alcance, servidos: new Set(e.pozos ?? []).size }
+    const base: Base = { campoId, equipo: e.elemento, tramo: chokeDeAlcance(e.alcance), alcance: e.alcance, servidos: new Set(e.pozos ?? []).size, puesto: null }
     const pozo = pozoDe(campoId, e.elemento)
     if (pozo) { filas.push(dePozo(pozo, base, ctx)); continue }
     const perfil = perfilBomba(e.elemento, campoId)
@@ -253,18 +291,80 @@ export function criticidadDelCampo(campoId: string, ctx: Contexto): CriticidadDe
     if (Object.hasOwn(EQUIPOS, e.elemento) || alimentadores.has(e.elemento)) { filas.push(deServicio(e, base, ctx)); continue }
     sinCalcular.push({ equipo: e.elemento, nombre, motivo: 'Sin equipo registrado en TRIM: no hay con qué medir su falla' })
   }
-  const ranking = filas.filter(x => !x.parado).sort(orden)
+  // Lo que la topología no sabe todavía tampoco se mide: no se le inventa un costo.
+  for (const id of porSaberDelCampo(campoId, ctx))
+    sinCalcular.push({ equipo: id, nombre: EQUIPOS[id]?.nombre ?? derivada.get(id)?.nombre ?? id, motivo: 'Falta saber a qué pozos sirve: el administrador contestó «Todavía no sé»' })
+  for (const e of sinResponderDe(campoId, ctx))
+    sinCalcular.push({ equipo: e.elemento, nombre: EQUIPOS[e.elemento]?.nombre ?? e.nombre, motivo: 'Es nuevo en el registro y la topología firmada no lo tiene: falta contestar a qué pozos sirve' })
+  const sinPuesto = filas.filter(x => !x.parado).sort(orden)
+  // El puesto: los que cuestan lo mismo lo comparten (1 + cuántos cuestan más).
+  const puestoDe = (x: FilaCriticidad) => (x.bpd === null ? null : 1 + sinPuesto.filter(y => (y.bpd ?? -1) > x.bpd!).length)
+  const ranking = sinPuesto.map(x => ({ ...x, puesto: puestoDe(x) }))
   const parados = filas.filter(x => x.parado).sort((a, b) => (b.perdiendoBpd ?? 0) - (a.perdiendoBpd ?? 0) || (a.equipo < b.equipo ? -1 : 1))
   // La línea de abajo: lo que subió porque otro equipo está parado (U2 §6.3).
   const suben = ranking.filter(x => x.subio)
-  const puesto = (x: FilaCriticidad) => 1 + ranking.filter(y => (y.bpd ?? -1) > (x.bpd ?? -1)).length
-  const causa = suben[0]?.subio?.porque.match(/porque (.+?) está parada/)?.[1]
-  const cambioHoy = suben.length && causa
-    ? `Cambió hoy: ${lista(suben.map(x => x.equipo))} ${suben.length === 1 ? 'subió' : 'subieron'} al puesto ${puesto(suben[0]!)} porque ${causa} está parada.${suben.every(x => !x.vigilado) ? ` ${suben.length === 1 ? 'No tiene' : `Ninguna de las ${suben.length === 2 ? 'dos' : suben.length} tiene`} instrumento: TRIM no verá venir su falla.` : ''}`
+  const otro = suben[0]?.subio?.otro
+  const ninguna = (n: number) => (n === 1 ? 'No tiene' : `Ninguna de las ${n === 2 ? 'dos' : n} tiene`)
+  const cambioHoy = suben.length && otro
+    ? `Cambió hoy: ${lista(suben.map(x => x.equipo))} ${suben.length === 1 ? 'subió' : 'subieron'} al puesto ${suben[0]!.puesto} porque ${otro} está parada.${suben.every(x => !x.vigilado) ? ` ${ninguna(suben.length)} instrumento: TRIM no verá venir su falla.` : ''}`
     : undefined
-  const r: CriticidadDelCampo = { campoId, ranking, parados, sinCalcular, ...(cambioHoy ? { cambioHoy } : {}) }
+  // Lo que decide cada rol con la lista (U2 §6.4).
+  const sinVigia = ranking.filter(x => !x.vigilado && (x.bpd ?? 0) > 0)
+  const primeros = sinVigia.filter(x => x.puesto === sinVigia[0]?.puesto)
+  const proximoInstrumento = primeros.length
+    ? `Lo primero de la lista sin instrumento: ${lista(primeros.map(x => x.equipo))} (puesto ${primeros[0]!.puesto}, ${n0(primeros[0]!.bpd ?? 0)} bbl/d si falla hoy). TRIM no ve venir su falla.`
+    : undefined
+  const noIntervenir = suben.length && otro
+    ? `Ojo: ${lista(suben.map(x => x.equipo))} ${suben.length === 1 ? 'vale' : 'valen'} más mientras ${otro} esté parada: no conviene ${suben.length === 1 ? 'intervenirla' : 'intervenirlas'} hoy.`
+    : undefined
+  const avisosTrabajo = avisosDeTrabajo(campoId, suben, ctx)
+  const desembotellar = desembotellarDe(campoId, ctx)
+  const r: CriticidadDelCampo = { campoId, ranking, parados, sinCalcular, ...(cambioHoy ? { cambioHoy } : {}),
+    ...(proximoInstrumento ? { proximoInstrumento } : {}), ...(noIntervenir ? { noIntervenir } : {}), avisosTrabajo,
+    ...(desembotellar ? { desembotellar } : {}) }
   m.set(campoId, r)
   return r
+}
+
+/** Los trabajos del programa firmado que todavía no terminan y tocan un equipo
+ *  que hoy vale más porque otro está parado (U2 §1.5, «Trabajo programado sobre
+ *  un equipo que hoy vale más»): el cruce de `ParadaProgramada` con «si falla hoy». */
+function avisosDeTrabajo(campoId: string, suben: readonly FilaCriticidad[], ctx: Contexto): AvisoTrabajoCritico[] {
+  const out: AvisoTrabajoCritico[] = []
+  for (const p of ctx.config.programa) {
+    if (p.campoId !== campoId || Date.parse(p.hasta) <= ahora) continue
+    const f = suben.find(x => x.equipo === p.equipo)
+    if (!f?.subio) continue
+    const desde = new Date(p.desde), hasta = new Date(p.hasta)
+    out.push({ campoId, tarea: p.id, equipo: p.equipo, desde, hasta, motivo: p.motivo, porque: f.subio.porque,
+      texto: `Ojo: ${p.equipo} vale más mientras ${f.subio.otro} esté parada: tiene programado «${p.motivo}» ${desde.getTime() <= ahora ? 'desde' : 'el'} ${fechaCorta(desde)}. ¿Mover el trabajo?` })
+  }
+  return out.sort((a, b) => a.desde.getTime() - b.desde.getTime() || a.equipo.localeCompare(b.equipo))
+}
+
+const SUJETO_TRAMO = { pozos: 'los pozos', planta: 'la planta', exportacion: 'afuera' } as const
+const TREN_PALABRA = { crudo: 'el tren de crudo', agua: 'el agua', gas: 'el gas' } as const
+
+/** Lo que se gana desembotellando (U2 §6.5; CHOKE-COMPLETO §10), en una frase
+ *  para el gerente y producción: qué da producir más (lo que limita hoy) y qué
+ *  da otra bomba de agua (que una falla no cierre pozos), con lo que ha costado
+ *  en promedio cada falla de la bomba de disposición del campo. */
+function desembotellarDe(campoId: string, ctx: Contexto): string | undefined {
+  const p = potencialesDelCampo(campoId, ahora, ctx)
+  if (p.campoDeGas || p.dominante === null) return undefined
+  const nombre = campoPorId(campoId).nombre
+  const producir = p.casiIguales && p.casiIguales.length > 1
+    ? `Para producir más hay que ampliar ${lista(p.casiIguales.map(k => SUJETO_TRAMO[k]))} a la vez: están casi iguales, y lo que se gane en uno lo frena el otro.`
+    : p.dominante === 'pozos' ? 'Para producir más hay que sacarles más a los pozos: la planta y afuera dejan pasar más.'
+      : p.dominante === 'planta' ? `Para producir más hay que ampliar ${TREN_PALABRA[p.trenQueLimita ?? 'crudo']} de la planta: abrir más pozos no da nada.`
+        : 'Para producir más hace falta más salida afuera: oleoducto, transportador o nominación.'
+  const bomba = capacidadesDe(ctx.config, campoId).bombas.map(b => perfilBomba(b.equipo, campoId)).find(x => x?.papel === 'disposicion')
+  const costo = bomba ? historialDeEquipo(campoId, bomba.equipo, ctx).bblPorFalla : undefined
+  if (!bomba || !costo) return `En ${nombre}, ${producir[0]!.toLowerCase()}${producir.slice(1)}`
+  const cuesta = `Hoy cada falla de ${bomba.equipo} cuesta unos ${n0(costo)} bbl.`
+  return p.dominante === 'planta' && p.trenQueLimita === 'agua'
+    ? `En ${nombre}, otra bomba de agua sí sube la producción: hoy el agua es lo que limita, y además evita que una falla cierre pozos. ${cuesta}`
+    : `En ${nombre}, otra bomba de agua no sube la producción: evita que una falla cierre pozos. ${cuesta} ${producir}`
 }
 
 /** De mayor a menor: bbl/d si falla hoy (sin dato, al final); a igual cifra, el

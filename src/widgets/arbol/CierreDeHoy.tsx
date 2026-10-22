@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp, useRol, usePersona } from '@/app/store'
-import { useParadasAnh, gruposPorCadena, CONFIRMAN_EN_LOTE, PASOS, type ParadaAnh } from '@/shared/api/arbol'
+import { useParadasAnh, gruposPorCadena, esperaAQuienAbre, CONFIRMAN_EN_LOTE, PASOS, type ParadaAnh } from '@/shared/api/arbol'
 import { campoPorId } from '@/entities/campos'
 import { AHORA } from '@/entities/reloj'
 import { puedeHacer } from '@/entities/tipos'
 import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { diaIso, n0, plural } from '@/shared/lib/formato'
-import { confirmar } from './escribir'
-import { esperaAQuienAbre } from './grupos'
 import { ESTADO, horaCorta, lista, valorEnPalabras } from './palabras'
 import { Falta } from './Cadena'
 
@@ -34,13 +32,15 @@ function lotesDe(ps: readonly ParadaAnh[]): Lote[] {
  *  persona cambió ya no tiene la misma cadena: sale solo del lote. */
 export function CierreDeHoy({ campos, global }: { campos: string[]; global: boolean }) {
   const rol = useRol(); const persona = usePersona()
-  const setPantalla = useApp(s => s.setPantalla)
+  const setPantalla = useApp(s => s.setPantalla), confirmarAnh = useApp(s => s.confirmarAnh)
   const hoy = diaIso(AHORA)
   const ps = useParadasAnh({ campos, desde: new Date(`${hoy}T00:00:00-05:00`), hasta: AHORA }).filter(p => p.diaOperacional === hoy)
   const firma = CONFIRMAN_EN_LOTE.includes(rol.id) && puedeHacer(rol.puede, 'anh:confirmar') && !persona.sinAcceso
   const completas = ps.filter(p => p.estado === 'confirmada')
-  const lotes = lotesDe(ps.filter(p => p.estado === 'propuesta' && !esperaAQuienAbre(p)))
-  const esperan = ps.filter(esperaAQuienAbre)
+  // Lo que espera a quien abre el equipo (la causa que una señal solo apunta) no entra en un lote (P1 §2.1).
+  const espera = (p: ParadaAnh) => p.estado === 'propuesta' && esperaAQuienAbre(p.clasificacion)
+  const lotes = lotesDe(ps.filter(p => p.estado === 'propuesta' && !espera(p)))
+  const esperan = ps.filter(espera)
   const faltaDato = ps.filter(p => p.estado === 'por-precisar')
   const sinCausa = ps.filter(p => p.estado === 'pendiente')
   const [ocupado, setOcupado] = useState(false)
@@ -58,7 +58,7 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
 
   const confirmarLote = async (l: Lote) => {
     setOcupado(true); setError('')
-    const r = await confirmar({ ids: l.filas.map(f => f.id), cadena: l.cadena })
+    const r = await confirmarAnh({ ids: l.filas.map(f => f.id), cadena: l.cadena })
     setOcupado(false)
     if (!r.ok) return setError(r.error)
     const listas = r.paradas.filter(p => p.estado === 'confirmada').length

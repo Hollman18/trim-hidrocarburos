@@ -219,9 +219,12 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
     chokes: { pozos: 7200, planta: 7400, evacuacion: 7500, mercado: 9000 },
     // Agua: P-201A de disposición (60.000 bbl/d) y P-201B de recobro (50.000, a ~1.800 psi);
     // si P-201B para, P-201C de reserva (50.000) manda su agua a un pozo de disposición alterno.
-    // Tren de crudo: 7.500 bbl/d (DATO DE DEMO; hasta el 21-oct decía 7.400): los mismos 7.440
-    // del 5-ene-2026 lo pasaron dos días.
-    caudales: { crudo: 6200, crudoCap: 7500, agua: 90300, aguaCap: 110000, gas: 2100, gasCap: 2600 },
+    // Tren de crudo: 8.000 bbl/d (DATO DE DEMO; decía 7.400 hasta el 21-oct y 7.500 hasta el
+    // 22-oct). Con 7.500 empataba al barril con la salida (7.500), un empate artificial que
+    // salía de redondear los dos al número redondo sobre el máximo real (7.440 el 5-ene-2026);
+    // la NSTA (§5.4) pide explicar un empate. Como en la historia original de Guacamayo, lo que
+    // sigue a los pozos es la salida (la nominación del oleoducto): la planta deja pasar más.
+    caudales: { crudo: 6200, crudoCap: 8000, agua: 90300, aguaCap: 110000, gas: 2100, gasCap: 2600 },
     nota: 'Sin compresión: el gas va a consumo propio y el excedente a tea. La restricción está aguas abajo del LACT, en la nominación del oleoducto.',
   },
 
@@ -683,12 +686,12 @@ export const TREN_AGUA: Record<string, TrenAgua> = {
     bombas: ['P-201A', 'P-201B', 'P-201C'].map(id => ({ id, capacidadBpd: 89250, placaBpd: 90000, papel: 'disposicion' as const })),
     // Lo que admiten los inyectores es el mismo límite del cabezal: 3 × 89.250 (caudales.aguaCap).
     admisionBpd: 267750,
-    fuente: 'Tres bombas iguales en paralelo (P-201A, B y C), de 90.000 bbl/d de placa. El cabezal de disposición, es decir la inyectividad de los pozos, deja cada una en 89.250: 267.750 bbl/d entre las tres, lo mismo que admiten los inyectores (caudales.aguaCap), dato del demo deducido de ese límite y sin firmar. Tratamiento de agua: sin dato en el demo.',
+    fuente: 'Tres bombas iguales en paralelo (P-201A, B y C), de 90.000 bbl/d de placa. El cabezal de disposición, es decir la inyectividad de los pozos, deja cada una en 89.250: 267.750 bbl/d entre las tres, lo mismo que admiten los inyectores: dato del demo deducido de ese límite, sin firmar. Tratamiento de agua: sin dato en el demo.',
   },
   morichal: {
     bombas: ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(l => ({ id: `P-201${l}`, capacidadBpd: 86500, placaBpd: 90000, papel: 'disposicion' as const })),
     admisionBpd: 605500,
-    fuente: 'Siete bombas iguales en paralelo (P-201A a G), de 90.000 bbl/d de placa; el cabezal de disposición deja cada una en 86.500: 605.500 bbl/d entre las siete, lo mismo que admiten los inyectores (caudales.aguaCap), dato del demo sin firmar. Tratamiento de agua: sin dato en el demo.',
+    fuente: 'Siete bombas iguales en paralelo (P-201A a G), de 90.000 bbl/d de placa; el cabezal de disposición deja cada una en 86.500: 605.500 bbl/d entre las siete, lo mismo que admiten los inyectores: dato del demo, sin firmar. Tratamiento de agua: sin dato en el demo.',
   },
   guacamayo: {
     bombas: [
@@ -696,15 +699,15 @@ export const TREN_AGUA: Record<string, TrenAgua> = {
       { id: 'P-201B', capacidadBpd: 50000, placaBpd: 50000, papel: 'recobro', nota: 'inyecta al yacimiento a unos 1.800 psi' },
       { id: 'P-201C', capacidadBpd: 50000, placaBpd: 50000, papel: 'disposicion', reserva: true, nota: 'de reserva: si para P-201B, manda su agua al pozo de disposición alterno' },
     ],
-    fuente: 'P-201A de disposición (60.000 bbl/d) y P-201B de recobro (50.000): 110.000 bbl/d en servicio (caudales.aguaCap). P-201C (50.000) es de reserva y solo entra si para P-201B (respaldo firmado). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
+    fuente: 'P-201A de disposición (60.000 bbl/d) y P-201B de recobro (50.000): 110.000 bbl/d en servicio. P-201C (50.000) es de reserva y solo entra si para P-201B (el respaldo firmado). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
   },
   palmar: {
     bombas: [{ id: 'P-201B', capacidadBpd: 16000, placaBpd: 16000, papel: 'disposicion' }],
-    fuente: 'Una sola bomba de 16.000 bbl/d (nota del esquema; caudales.aguaCap). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
+    fuente: 'Una sola bomba de 16.000 bbl/d (la nota del esquema de planta). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
   },
   zarza: {
     bombas: [{ id: 'P-201B', capacidadBpd: 4000, placaBpd: 4000, papel: 'disposicion' }],
-    fuente: 'Una bomba de agua de 4.000 bbl/d (caudales.aguaCap; la nominal de su medidor de caudal en equipos.ts). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
+    fuente: 'Una bomba de agua de 4.000 bbl/d (la capacidad nominal de su medidor de caudal). Admisión de los inyectores y tratamiento de agua: sin dato en el demo.',
   },
 }
 

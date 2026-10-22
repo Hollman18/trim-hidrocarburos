@@ -1,59 +1,70 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { useRango } from '@/app/store'
 import {
-  useTuberia, useTuberiaAgua, useRepartoChoke, NOMBRE_CHOKE_CAMPO,
-  type TramoTuberia, type TrenTuberia, type ChokeCampo, type BombaDelTren,
+  useTuberia, useCapacidades, useRepartoChoke, revisarCapacidades, NOMBRE_CHOKE_CAMPO, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD,
+  type TramoTuberia, type TrenTuberia, type ChokeCampo, type CapacidadesCampo, type CapacidadFirmada, type CapacidadVigente,
+  type FuenteCapacidad, type HallazgoCapacidad, type BombaVigente,
 } from '@/shared/api/choke'
 import { pedirInicioDeHistoria } from '@/shared/api/calendario'
-import { AHORA, fechaCorta } from '@/entities/reloj'
-import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
+import { AHORA, fechaCorta, fechaHora } from '@/entities/reloj'
+import { Panel, Boton, Hueco, Chip } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
-import { n0, plural } from '@/shared/lib/formato'
+import { DatoInvalido } from '@/shared/ui/Prioridad'
+import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { EtiquetaFalta, Limita, MarcaFalta } from './marcas'
 
-/** Las fuentes que pide la firma de una capacidad (U2 §8.4). */
-const FUENTES = 'placa del equipo, prueba de capacidad, contrato de transporte, nominación aceptada o estimado de ingeniería'
-const DEMO = 'dato del demo, sin firmar'
+type Simple = 'crudo' | 'afuera' | 'mercado' | 'tratamiento' | 'admision'
+const CAJA = 'min-h-8 w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1 text-[12px] outline-none focus:border-acento disabled:opacity-70'
 
-/** Paso 2 · Las capacidades de los tramos (U2 §8.4). Hoy son datos del demo
- *  (el esquema de planta y el tren de agua): se muestran marcados así y
- *  pasados por las reglas de la firma. No se escriben aquí todavía: la
- *  configuración no las trae. El paso a crudo nunca se escribe: lo calcula
- *  TRIM con el corte de agua de las pruebas. */
-export function CapacidadesPaso({ campoId, campoNombre, onTecnica }: {
+/** Paso 2 · Las capacidades de los tramos (U2 §8.4): lo que deja pasar cada
+ *  tramo por día, escrito con su fuente. Lo que no se escribe sigue con el dato
+ *  del demo, marcado así. Lo escrito queda en el borrador de la configuración
+ *  (`Config.capacidades`) y se firma en el paso 3 con lo demás; las reglas de la
+ *  firma (`revisarCapacidades`, las mismas del servidor) se revisan aquí mientras
+ *  se escribe. El paso a crudo nunca se escribe: lo calcula TRIM con el corte de
+ *  agua de las pruebas. Quien no firma (producción, confiabilidad) lo lee. */
+export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCambio, onTecnica }: {
   campoId: string; campoNombre: string
+  /** Lo escribe quien firma la configuración técnica (`config:firmar`). */
+  puede: boolean
+  /** Lo que el borrador lleva de las capacidades de este campo (lo firmado, con lo escrito encima). */
+  propuesta: CapacidadesCampo | undefined
+  onCambio: (c: CapacidadesCampo | undefined) => void
   /** Lleva a la configuración técnica; sin él (quien solo lee) no se ofrece. */
   onTecnica?: () => void
 }) {
   const rango = useRango()
+  const vista = useCapacidades(campoId)
   const tub = useTuberia(campoId, rango.desde, rango.hasta)
-  const agua = useTuberiaAgua(campoId)
   const desde = pedirInicioDeHistoria()
   const historia = useRepartoChoke({ campos: [campoId], desde, hasta: AHORA })
+  const v = vista.vigentes
   const tramo = (k: TramoTuberia['tramo']) => tub.tramos.find(t => t.tramo === k)
   const pozos = tramo('pozo'), planta = tramo('planta'), afuera = tramo('exportacion')
   const tren = (k: TrenTuberia['tren']) => planta?.trenes?.find(t => t.tren === k)
-  const crudo = tren('crudo'), aguaTren = tren('agua'), gas = tren('gas')
-  const bombas = agua.tramos.find(t => t.tramo === 'bombas')
-  const inyectores = agua.tramos.find(t => t.tramo === 'inyectores')
-  const sinEsquema = !tub.campoDeGas && planta?.potencialBpd == null && afuera?.potencialBpd == null
-
-  // Las reglas de U2 §8.4 sobre los números que hay. Un número que no es mayor que
-  // cero no se firmaría; dos tramos iguales al barril piden una explicación escrita.
-  const numeros: Array<[string, number]> = [
-    ...(crudo ? [['Tren de crudo', crudo.capacidad] as [string, number]] : []),
-    ...(bombas?.bombas ?? []).map(b => [`${b.id}`, b.capacidadBpd] as [string, number]),
-    ...(gas ? [['Tren de gas', gas.capacidad] as [string, number]] : []),
-    ...(afuera?.subniveles ?? []).map(s => [s.nombre, s.potencialBpd] as [string, number]),
-  ]
-  const noPositivos = numeros.filter(([, v]) => !(v > 0))
-  const potenciales: Array<[ChokeCampo, number]> = ([['pozos', pozos?.potencialBpd], ['planta', planta?.potencialBpd], ['exportacion', afuera?.potencialBpd]] as Array<[ChokeCampo, number | null | undefined]>)
-    .flatMap(([k, v]) => (v == null ? [] : [[k, v] as [ChokeCampo, number]]))
-  const empates = potenciales.flatMap(([a, x], i) => potenciales.slice(i + 1).filter(([, y]) => Math.round(x) === Math.round(y)).map(([b]) => ({ a, b, valor: x })))
+  const sinEsquema = !tub.campoDeGas && v.crudo.estado === 'sin-dato' && v.afuera.estado === 'sin-dato'
+  // Las reglas de la firma sobre lo que se firmaría (o, sin nada escrito, sobre lo que rige): las del motor.
+  const hallazgos = revisarCapacidades(propuesta, vista.entrada)
+  const deTramo = (t: HallazgoCapacidad['tramo'], equipo?: string) => hallazgos.filter(h => h.tramo === t && (equipo === undefined || h.equipo === equipo))
   const superado = historia.superado.filter(s => s.campoId === campoId)
   const sujeto = (k: ChokeCampo) => NOMBRE_CHOKE_CAMPO[k].split(':')[0]!.toLowerCase()
+
+  /** El borrador con un cambio: lo que queda vacío no viaja; un campo sin nada escrito, tampoco. */
+  const conCambio = (cambio: Partial<CapacidadesCampo>) => {
+    const n: Record<string, unknown> = { ...(propuesta ?? { campoId }), ...cambio, campoId }
+    for (const k of Object.keys(n)) if (n[k] === undefined) delete n[k]
+    if (Array.isArray(n.bombas) && !n.bombas.length) delete n.bombas
+    onCambio(Object.keys(n).length > 1 ? n as unknown as CapacidadesCampo : undefined)
+  }
+  const escribir = (k: Simple) => (x: CapacidadFirmada | undefined) => conCambio({ [k]: x })
+  const escribirBomba = (equipo: string) => (x: CapacidadFirmada | undefined) => {
+    const otras = (propuesta?.bombas ?? []).filter(b => b.equipo !== equipo)
+    conCambio({ bombas: x ? [...otras, { equipo, ...x }] : otras })
+  }
+  const hayEmpate = deTramo('empate').length > 0 || !!propuesta?.explicacionEmpate
+  const idEmpate = useId()
 
   return (
     <>
@@ -61,8 +72,14 @@ export function CapacidadesPaso({ campoId, campoNombre, onTecnica }: {
         Cada tramo deja pasar como mucho su capacidad por día. La de los pozos sale de sus pruebas y no se escribe.
         La de la planta es la del más angosto de sus trenes medidos, y la de afuera, la del oleoducto o el
         transportador. El tren de agua no se escribe entero: se escribe cada bomba con su límite y TRIM muestra la
-        suma. Lo que hoy viene del demo dice «{DEMO}».
+        suma. Cada número va con su fuente; lo que no se escriba sigue con el dato del demo, marcado así. Lo escrito
+        queda en el borrador y se firma en el paso 3.
       </Lectura>
+      <p className="mb-2 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-[var(--tinta2)]" data-firma-capacidades>
+        {vista.firma
+          ? <>Las que rigen se firmaron en la versión {vista.firma.version} el {fechaHora(new Date(vista.firma.fecha))} por {vista.firma.por}.</>
+          : <>Ninguna está firmada todavía: rigen los datos del demo.</>}
+      </p>
       {tub.campoDeGas && (
         <div className="mb-2.5"><Hueco>
           {campoNombre} es un campo de gas. La tubería del gas todavía no está: el gas tiene «una tolerancia diferente» (Edinson) y falta definir cómo se mide su potencial.
@@ -79,36 +96,45 @@ export function CapacidadesPaso({ campoId, campoNombre, onTecnica }: {
 
       <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))]">
         <Panel titulo="LOS POZOS" extra={pozos?.limita ? <Limita /> : undefined}>
-          <Cifra valor={pozos?.potencialBpd ?? null} unidad="bbl/d de crudo" limita={!!pozos?.limita} />
-          <p className="mt-1 text-[11px] text-[var(--tinta2)]">Sale de las pruebas de los pozos: no se escribe.</p>
+          <Cifra valor={vista.entrada.pozosBpd} unidad="bbl/d de crudo" limita={!!pozos?.limita} />
+          <p className="mt-1 text-[11px] text-[var(--tinta2)]">Sale de las pruebas de los pozos: no se escribe.{pozos?.pruebaMasVieja ? ` ${pozos.pruebaMasVieja.texto[0]!.toUpperCase()}${pozos.pruebaMasVieja.texto.slice(1)}.` : ''}</p>
         </Panel>
 
         <Panel titulo="LA PLANTA O ESTACIÓN" extra={planta?.limita ? <Limita /> : undefined}>
           <Cifra valor={planta?.potencialBpd ?? null} unidad="bbl/d de crudo" limita={!!planta?.limita}
             pie={planta?.potencialBpd != null ? 'el más angosto de sus trenes medidos' : undefined} />
           <div className="mt-2 grid gap-1.5">
-            {crudo && (
-              <Fila titulo="Tren de crudo" valor={crudo.capacidad} unidad={crudo.unidad} estado={<EtiquetaFalta>{DEMO}</EtiquetaFalta>}
-                como="Se escribe a mano, con su fuente." />
-            )}
-            <Fila titulo="Tren de agua" valor={bombas?.potencialBpd ?? aguaTren?.capacidad ?? null} unidad="bbl/d de agua"
-              enCrudo={bombas?.crudoBpd ?? aguaTren?.enCrudo ?? null}
-              estado={bombas?.potencialBpd != null || aguaTren ? <EtiquetaFalta>{DEMO}</EtiquetaFalta> : <EtiquetaFalta>sin dato</EtiquetaFalta>}
+            <Capacidad titulo="Tren de crudo" vigente={v.crudo} escrita={propuesta?.crudo} puede={puede} hallazgos={deTramo('crudo')}
+              onEscribir={escribir('crudo')} />
+            <Fila titulo="Tren de agua" vigente={v.agua} enCrudo={tren('agua')?.enCrudo ?? null}
               como="No se escribe el total: se escribe cada bomba con su límite, y TRIM muestra la suma.">
-              {bombas?.bombas && bombas.bombas.length > 0 && <Bombas lista={bombas.bombas} />}
+              {v.bombas.length > 0 && (
+                <ul className="mt-1 grid gap-1">
+                  {v.bombas.map(b => (
+                    <li key={b.equipo}>
+                      <Bomba b={b} escrita={propuesta?.bombas?.find(x => x.equipo === b.equipo)} puede={puede}
+                        hallazgos={deTramo('bomba', b.equipo)} onEscribir={escribirBomba(b.equipo)} />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Fila>
-            {gas ? (
-              <Fila titulo="Tren de gas" valor={gas.capacidad} unidad={gas.unidad}
-                estado={<span className="flex flex-wrap items-center gap-1"><EtiquetaFalta>gas · sin medir</EtiquetaFalta>
-                  <Info titulo="Gas sin medir" texto="El gas no se mide en esta fase: no se puede saber si el tren de gas es el más angosto. Por eso no entra en lo que limita." /></span>}
-                como="El gas va en KPC por día (miles de pies cúbicos). Se escribe a mano, y si se mide o no." />
+            {v.gas.estado !== 'sin-dato' || propuesta?.gas ? (
+              <Capacidad titulo="Tren de gas" vigente={v.gas} escrita={propuesta?.gas} puede={puede} hallazgos={deTramo('gas')}
+                onEscribir={x => conCambio({ gas: x ? { ...x, medido: propuesta?.gas?.medido ?? v.gas.medido } : undefined })}
+                extra={(
+                  <label className="flex items-center gap-1.5 text-[11px]">
+                    <input type="checkbox" disabled={!puede} checked={propuesta?.gas?.medido ?? v.gas.medido}
+                      onChange={e => conCambio({ gas: { bpd: propuesta?.gas?.bpd ?? v.gas.valor ?? NaN, fuente: propuesta?.gas?.fuente ?? v.gas.fuenteFirmada ?? ('' as FuenteCapacidad), medido: e.target.checked } })} />
+                    Se mide
+                    <Info titulo="Gas sin medir" texto="Un tren de gas sin medir no entra en lo que limita: no se puede saber si es el más angosto." />
+                  </label>
+                )} />
             ) : !tub.campoDeGas && !sinEsquema && <p className="text-[11px] text-[var(--tinta2)]">Sin tren de gas en el esquema.</p>}
-            <Fila titulo="Tratamiento de agua" valor={agua.tratamientoBpd} unidad="bbl/d de agua"
-              estado={agua.tratamientoBpd == null ? <EtiquetaFalta>sin dato: no está en el esquema</EtiquetaFalta> : <EtiquetaFalta>{DEMO}</EtiquetaFalta>}
-              como="Se escribe a mano, si el campo lo tiene." />
-            <Fila titulo="Admisión de los inyectores" valor={agua.admisionInyectoresBpd} unidad="bbl/d de agua" enCrudo={inyectores?.crudoBpd ?? null}
-              estado={agua.admisionInyectoresBpd == null ? <EtiquetaFalta>sin dato en el demo</EtiquetaFalta> : <EtiquetaFalta>{DEMO}</EtiquetaFalta>}
-              como="Se escribe a mano, con la prueba de inyectividad: es un dato de la operadora." />
+            <Capacidad titulo="Tratamiento de agua" vigente={v.tratamiento} escrita={propuesta?.tratamiento} puede={puede} hallazgos={deTramo('tratamiento')}
+              onEscribir={escribir('tratamiento')} />
+            <Capacidad titulo="Admisión de los inyectores" vigente={v.admision} escrita={propuesta?.admision} puede={puede} hallazgos={deTramo('admision')}
+              onEscribir={escribir('admision')} como="Con la prueba de inyectividad: es un dato de la operadora." />
           </div>
         </Panel>
 
@@ -116,48 +142,44 @@ export function CapacidadesPaso({ campoId, campoNombre, onTecnica }: {
           <Cifra valor={afuera?.potencialBpd ?? null} unidad="bbl/d de crudo" limita={!!afuera?.limita}
             pie={afuera?.potencialBpd != null ? 'el oleoducto o el transportador' : undefined} />
           <div className="mt-2 grid gap-1.5">
-            {(afuera?.subniveles ?? []).map((s, i) => (
-              <Fila key={s.nombre} titulo={s.nombre} valor={s.potencialBpd} unidad="bbl/d de crudo"
-                estado={i === 0 ? <EtiquetaFalta>{DEMO}</EtiquetaFalta> : (
-                  <span className="flex flex-wrap items-center gap-1"><EtiquetaFalta>{DEMO}</EtiquetaFalta>
-                    <Info titulo="Un subnivel de afuera" texto="El cliente o la nominación son un subnivel de afuera, no un tramo aparte: si el cliente no recibe, se trabó afuera. Su número no cambia lo que puede pasar afuera." /></span>
-                )}
-                como="Se escribe a mano, con su fuente y su fecha: la nominación cambia cada mes." />
-            ))}
-            {afuera?.potencialBpd != null && (
-              <p className="flex items-start gap-1.5 text-[11px] text-[var(--tinta2)]"><span className="mt-[2px]"><MarcaFalta decorativa /></span>
-                <span>Carrotanques, punto de despacho y nominación aceptada: sin dato en el demo.</span></p>
-            )}
+            <Capacidad titulo="El oleoducto o el transportador" vigente={v.afuera} escrita={propuesta?.afuera} puede={puede} hallazgos={deTramo('afuera')}
+              onEscribir={escribir('afuera')} />
+            <Capacidad titulo="El cliente o la nominación" vigente={v.mercado} escrita={propuesta?.mercado} puede={puede} hallazgos={deTramo('mercado')}
+              onEscribir={escribir('mercado')} como="Es un subnivel de afuera: si el cliente no recibe, se trabó afuera. La nominación cambia cada mes: escríbala con su fecha en el motivo." />
           </div>
         </Panel>
       </div>
 
+      {hayEmpate && (
+        <Panel className="mt-2.5" titulo="EXPLICAR EL EMPATE" extra={campoNombre}>
+          <label htmlFor={idEmpate} className="mb-0.5 block text-[11px] text-[var(--tinta2)]">
+            Dos tramos que dan exactamente lo mismo se explican por escrito (NSTA §5.4): va con la firma de las capacidades.
+          </label>
+          <textarea id={idEmpate} rows={2} disabled={!puede} value={propuesta?.explicacionEmpate ?? ''}
+            onChange={e => conCambio({ explicacionEmpate: e.target.value || undefined })}
+            placeholder="Ej.: el oleoducto se dimensionó con la planta" className={cn(CAJA, 'resize-y')} />
+        </Panel>
+      )}
+
       <Panel className="mt-2.5" titulo="REVISIÓN CON LAS REGLAS DE LA FIRMA" extra={campoNombre}>
-        <ul className="grid gap-1.5 text-[11.5px]">
-          <Regla ok={noPositivos.length === 0} texto={noPositivos.length === 0
-            ? `Todas son mayores que cero (${plural(numeros.length, 'capacidad', 'capacidades')}).`
-            : `Escriba un número mayor que cero: ${noPositivos.map(([n]) => n).join(', ')}.`} />
-          {/* Sin tubería de crudo (campo de gas o sin esquema) no hay tramo que limite: la regla no aplica. */}
-          {!tub.campoDeGas && !sinEsquema && <>
-            <Regla ok={superado.length === 0} texto={superado.length === 0
-              ? `Desde el ${fechaCorta(desde)}, lo real nunca pasó la capacidad del tramo que limitaba cada día: ese número no está por debajo de lo que ya pasó.`
-              : `Por ${superado.length === 1 ? 'un día' : `${n0(superado.length)} días`} lo real pasó la capacidad del tramo que limitaba (${superado.slice(0, 3).map(s => `${fechaCorta(s.dia)}: ${n0(s.real)} bbl con ${sujeto(s.choke)} en ${n0(s.capacidad)}`).join('; ')}): ese número está por debajo de lo que ya pasó. Revise el número o la unidad.`} />
-            <Regla falta texto="Los tramos que no limitaban todavía no se revisan contra lo que pasó por ellos: falta el máximo diario de cada tramo en los últimos 30 días." />
-          </>}
-          <Regla falta texto={`Ninguna tiene fuente firmada: son datos del demo. Al firmarlas, cada una dirá de dónde sale: ${FUENTES}.`} />
-          {empates.map(x => (
-            <Regla key={`${x.a}-${x.b}`} ok={false}
-              texto={`Con estos números, ${sujeto(x.a)} y ${sujeto(x.b)} dan exactamente lo mismo (${n0(x.valor)} bbl/d). El método pide explicar un empate: escriba por qué.`} />
-          ))}
-        </ul>
+        {hallazgos.length === 0
+          ? <p className="text-[11.5px] text-[var(--tinta2)]">Todas cumplen las reglas de la firma.</p>
+          : <ul className="grid gap-1.5 text-[11.5px]">{hallazgos.map(h => <Regla key={`${h.tramo}-${h.equipo ?? ''}-${h.texto}`} h={h} />)}</ul>}
+        {!tub.campoDeGas && !sinEsquema && (
+          <p className="mt-1.5 text-[11px] text-[var(--tinta2)]">
+            {superado.length === 0
+              ? `Desde el ${fechaCorta(desde)}, lo real nunca pasó la capacidad del tramo que limitaba cada día.`
+              : `Por ${superado.length === 1 ? 'un día' : `${n0(superado.length)} días`} lo real pasó la capacidad del tramo que limitaba (${superado.slice(0, 3).map(s => `${fechaCorta(s.dia)}: ${n0(s.real)} bbl con ${sujeto(s.choke)} en ${n0(s.capacidad)}`).join('; ')}).`}
+          </p>
+        )}
       </Panel>
 
       <div className="mt-2.5">
         <Hueco>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            Estas capacidades no se firman aquí todavía: cuando la configuración las traiga, se escribirán con su fuente y
-            pasarán por la vista previa y la firma. Lo que sí se firma hoy es el respaldo de cada bomba y los tanques de agua:
-            cambian «si falla hoy» y entran en la vista previa del paso 3.
+            {puede
+              ? 'Lo escrito queda en el borrador: el paso 3 muestra lo que cambia (qué limita hoy y «si falla hoy») y ahí se firma, con el respaldo de cada bomba y los tanques de la configuración técnica.'
+              : 'Las capacidades las escribe y las firma el administrador de la implementación.'}
             {onTecnica && <Boton type="button" variante="chico" onClick={onTecnica}>Ir a la configuración técnica</Boton>}
           </span>
         </Hueco>
@@ -177,15 +199,23 @@ function Cifra({ valor, unidad, limita, pie }: { valor: number | null; unidad: s
   )
 }
 
-/** Un renglón de capacidad: el número en su unidad, en crudo si aplica, de dónde sale y cómo se llena. */
-function Fila({ titulo, valor, unidad, enCrudo, estado, como, children }: {
-  titulo: string; valor: number | null; unidad: string; enCrudo?: number | null; estado: ReactNode; como: string; children?: ReactNode
-}) {
+/** De dónde sale lo que rige: firmado (con su fuente) o del demo, sin firmar. */
+function Estado({ vigente }: { vigente: Pick<CapacidadVigente, 'estado' | 'fuente'> }) {
   return (
-    <div className={cn('rounded border px-2 py-1.5', valor == null ? 'border-dashed border-[var(--tinta3)]' : 'border-[var(--linea2)]')}>
+    <span className="flex flex-wrap items-center gap-1 text-[10.5px] text-[var(--tinta2)]">
+      {vigente.estado === 'firmado' ? <Chip>firmado</Chip> : <EtiquetaFalta>{vigente.estado === 'demo' ? 'dato del demo, sin firmar' : 'sin dato'}</EtiquetaFalta>}
+      <span className="min-w-0 break-words">{vigente.fuente}</span>
+    </span>
+  )
+}
+
+/** Un renglón que no se escribe (el tren de agua: la suma de sus bombas). */
+function Fila({ titulo, vigente, enCrudo, como, children }: { titulo: string; vigente: CapacidadVigente; enCrudo?: number | null; como: string; children?: ReactNode }) {
+  return (
+    <div className={cn('rounded border px-2 py-1.5', vigente.valor == null ? 'border-dashed border-[var(--tinta3)]' : 'border-[var(--linea2)]')}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-2">
         <b className="text-[12px]">{titulo}</b>
-        <span className="tabular text-[12px]">{valor == null ? '—' : <>{n0(valor)} <small className="text-[10.5px] text-[var(--tinta3)]">{unidad}</small></>}</span>
+        <span className="tabular text-[12px]">{vigente.valor == null ? '—' : <>{n0(vigente.valor)} <small className="text-[10.5px] text-[var(--tinta3)]">{vigente.unidad}</small></>}</span>
       </div>
       {enCrudo != null && (
         <p className="flex flex-wrap items-center justify-end gap-1 text-[10.5px] text-[var(--tinta2)]">
@@ -193,38 +223,81 @@ function Fila({ titulo, valor, unidad, enCrudo, estado, como, children }: {
           <Info titulo="En crudo" texto="El paso a crudo nunca se escribe: TRIM lo calcula con el corte de agua de las pruebas, que cambia todos los días." />
         </p>
       )}
-      <div className="mt-0.5">{estado}</div>
+      <div className="mt-0.5"><Estado vigente={vigente} /></div>
       {children}
       <p className="mt-0.5 text-[10.5px] text-[var(--tinta3)]">{como}</p>
     </div>
   )
 }
 
-/** Las bombas del tren de agua: cada una con su límite; la de reserva no suma. */
-function Bombas({ lista }: { lista: BombaDelTren[] }) {
+/** Un número que se escribe: lo que rige, la cifra y su fuente, y lo que la revisión dice de él. */
+function Capacidad({ titulo, vigente, escrita, puede, hallazgos, onEscribir, como, extra }: {
+  titulo: string; vigente: CapacidadVigente; escrita: CapacidadFirmada | undefined; puede: boolean
+  hallazgos: HallazgoCapacidad[]; onEscribir: (x: CapacidadFirmada | undefined) => void; como?: string; extra?: ReactNode
+}) {
   return (
-    <ul className="mt-1 grid gap-0.5 text-[11px]">
-      {lista.map(b => (
-        <li key={b.id} className="border-t border-[var(--linea2)] pt-0.5">
-          <span className="flex flex-wrap items-baseline justify-between gap-x-2">
-            <span><b>{b.id}</b> <span className="text-[var(--tinta3)]">{b.reserva ? 'de reserva: no suma' : b.papel === 'recobro' ? 'recobro' : 'disposición'}</span></span>
-            <span className="tabular">{n0(b.capacidadBpd)}{b.placaBpd !== b.capacidadBpd && <small className="text-[var(--tinta3)]"> · placa {n0(b.placaBpd)}</small>}</span>
-          </span>
-          {b.respaldoLibreBpd != null && <small className="block text-[10px] text-[var(--tinta3)]">Si para, las demás toman {n0(b.respaldoLibreBpd)} bbl/d de su agua (respaldo firmado).</small>}
-        </li>
-      ))}
-    </ul>
+    <div className={cn('rounded border px-2 py-1.5', vigente.valor == null && !escrita ? 'border-dashed border-[var(--tinta3)]' : 'border-[var(--linea2)]')} data-capacidad={vigente.tramo}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+        <b className="text-[12px]">{titulo}</b>
+        <span className="tabular text-[12px]">{vigente.valor == null ? '—' : <>{n0(vigente.valor)} <small className="text-[10.5px] text-[var(--tinta3)]">{vigente.unidad}</small></>}</span>
+      </div>
+      <div className="mt-0.5"><Estado vigente={vigente} /></div>
+      <Escribir nombre={titulo} unidad={vigente.unidad} rige={vigente.valor} fuenteRige={vigente.fuenteFirmada} escrita={escrita} puede={puede} onEscribir={onEscribir} />
+      {extra}
+      {hallazgos.length > 0 && <ul className="mt-1 grid gap-0.5 text-[11px]">{hallazgos.map(h => <Regla key={h.texto} h={h} />)}</ul>}
+      {como && <p className="mt-0.5 text-[10.5px] text-[var(--tinta3)]">{como}</p>}
+    </div>
   )
 }
 
-/** Una regla de la firma y cómo sale con los números de hoy: forma y texto, en gris. */
-function Regla({ ok, falta, texto }: { ok?: boolean; falta?: boolean; texto: string }) {
+/** Una bomba del tren de agua: su límite en este campo (la placa solo se lee); la de reserva no suma. */
+function Bomba({ b, escrita, puede, hallazgos, onEscribir }: {
+  b: BombaVigente; escrita: CapacidadFirmada | undefined; puede: boolean; hallazgos: HallazgoCapacidad[]; onEscribir: (x: CapacidadFirmada | undefined) => void
+}) {
+  return (
+    <div className="border-t border-[var(--linea2)] pt-1 text-[11px]" data-bomba={b.equipo}>
+      <span className="flex flex-wrap items-baseline justify-between gap-x-2">
+        <span><b>{b.equipo}</b> <span className="text-[var(--tinta3)]">{b.reserva ? 'de reserva: no suma' : b.papel === 'recobro' ? 'recobro' : 'disposición'}</span></span>
+        <span className="tabular">{n0(b.valor)}{b.placa !== b.valor && <small className="text-[var(--tinta3)]"> · placa {n0(b.placa)}</small>}</span>
+      </span>
+      <Estado vigente={b} />
+      <Escribir nombre={`Bomba ${b.equipo}`} unidad="bbl/d de agua" rige={b.valor} fuenteRige={b.fuenteFirmada} escrita={escrita} puede={puede} onEscribir={onEscribir} />
+      {hallazgos.length > 0 && <ul className="mt-0.5 grid gap-0.5">{hallazgos.map(h => <Regla key={h.texto} h={h} />)}</ul>}
+    </div>
+  )
+}
+
+/** La cifra y la fuente que se escriben. Vacía, rige lo de arriba; con algo, va al borrador. */
+function Escribir({ nombre, unidad, rige, fuenteRige, escrita, puede, onEscribir }: {
+  nombre: string; unidad: string; rige: number | null; fuenteRige: FuenteCapacidad | undefined
+  escrita: CapacidadFirmada | undefined; puede: boolean; onEscribir: (x: CapacidadFirmada | undefined) => void
+}) {
+  if (!puede && !escrita) return null
+  const cifra = (t: string) => {
+    if (t === '') return onEscribir(undefined)
+    onEscribir({ bpd: Number(t), fuente: escrita?.fuente ?? fuenteRige ?? ('' as FuenteCapacidad) })
+  }
+  const fuente = (f: string) => onEscribir({ bpd: escrita?.bpd ?? rige ?? NaN, fuente: f as FuenteCapacidad })
+  return (
+    <div className="mt-1 grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] items-center gap-1.5">
+      <input type="number" min={0} step={100} disabled={!puede} value={escrita && Number.isFinite(escrita.bpd) ? escrita.bpd : ''}
+        placeholder={rige == null ? 'sin dato' : n0(rige)} onChange={e => cifra(e.target.value)}
+        aria-label={`${nombre}, ${unidad}`} className={cn(CAJA, 'tabular')} />
+      <select value={escrita?.fuente ?? ''} disabled={!puede} onChange={e => fuente(e.target.value)} aria-label={`De dónde sale: ${nombre}`} className={CAJA}>
+        <option value="">¿De dónde sale?</option>
+        {FUENTES_CAPACIDAD.map(f => <option key={f} value={f}>{NOMBRE_FUENTE_CAPACIDAD[f]}</option>)}
+      </select>
+    </div>
+  )
+}
+
+/** Lo que encontró la revisión: lo que bloquea (morado, círculo punteado: un dato
+ *  que no corresponde), lo que pide confirmar o falta (gris discontinuo). */
+function Regla({ h }: { h: HallazgoCapacidad }) {
   return (
     <li className="flex items-start gap-1.5">
-      <span className="mt-[2px] w-3 shrink-0 text-center font-bold leading-none" aria-hidden>
-        {falta ? <MarcaFalta decorativa /> : ok ? '✓' : '✗'}
-      </span>
-      <span><span className="sr-only">{falta ? 'Falta: ' : ok ? 'Cumple: ' : 'No cumple: '}</span>{texto}</span>
+      <span className="mt-[3px] shrink-0">{h.bloquea ? <DatoInvalido etiqueta="Bloquea la firma" tamano={12} /> : <MarcaFalta etiqueta="Revisar" />}</span>
+      <span className="min-w-0 break-words">{h.texto}</span>
     </li>
   )
 }

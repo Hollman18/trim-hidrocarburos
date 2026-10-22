@@ -24,8 +24,6 @@ const colchon = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} min`
 /** «Compresor de gas», «electrosumergible»: el nombre sin repetir el código que ya va en negrita. */
 const nombreSinId = (f: FilaCriticidad) =>
   f.nombre === f.equipo ? '' : f.nombre.startsWith(`${f.equipo} · `) ? f.nombre.slice(f.equipo.length + 3) : f.nombre
-/** El puesto en la lista: los que cuestan lo mismo comparten puesto, como lo cuenta el motor en «Cambió hoy». */
-const puestoEn = (filas: readonly FilaCriticidad[]) => (f: FilaCriticidad) => 1 + filas.filter(y => (y.bpd ?? -1) > (f.bpd ?? -1)).length
 /** Lo que ya está parado y cierra pozos por sí mismo (una bomba, un servicio) lleva su renglón; un pozo parado, no. */
 const esRaiz = (f: FilaCriticidad) => f.familia === 'bomba' || f.familia === 'servicio'
 
@@ -35,8 +33,9 @@ const esRaiz = (f: FilaCriticidad) => f.familia === 'bomba' || f.familia === 'se
  *  TRIM lo vigila. Lo ya parado no entra en la lista (va en «Perdiéndose
  *  ahora»): lleva su renglón arriba, con lo que costaría cuando vuelva. Todo
  *  lo calcula el motor (`useCriticidad`): la cifra de cada bomba es la misma
- *  de su ficha y de «En riesgo». Es para confiabilidad y el jefe de
- *  mantenimiento: a cada uno, la línea de lo que decide con ella (§6.4). */
+ *  de su ficha y de «En riesgo», el puesto de cada fila, lo que dice lo ya
+ *  parado y la línea de lo que decide cada rol con la lista (§6.4). Es para
+ *  confiabilidad y el jefe de mantenimiento. */
 export function SiFallaHoy({ campos, global, rol, onAbrir }: {
   campos: string[]; global: boolean
   /** Confiabilidad ve «modelo choke ⓘ» y dónde va el próximo instrumento; el jefe, lo que no debe intervenir hoy. */
@@ -87,17 +86,12 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
   onAbrir: (campoId: string, equipo: string) => void
 }) {
   const nombre = campoPorId(c.campoId).nombre
-  const puesto = puestoEn(filas)
   // Cinco a la vista, sin partir un empate: si el quinto comparte puesto con los que siguen, van todos.
   const quinto = filas[VISIBLES - 1]
-  const corte = quinto ? filas.findIndex((f, i) => i >= VISIBLES && puesto(f) !== puesto(quinto)) : -1
+  const corte = quinto ? filas.findIndex((f, i) => i >= VISIBLES && f.puesto !== quinto.puesto) : -1
   // Siempre a la vista: lo que subió por otro equipo parado y lo que está en alarma (ISA-18.2: una alarma no se tapa).
   const lista_ = useVerMas(filas, { n: corte === -1 ? (quinto ? filas.length : VISIBLES) : corte, prioridad: f => (f.subio || sev(f) === 1 ? 1 : 2) })
   const raices = c.parados.filter(esRaiz), pozosParados = c.parados.filter(f => !esRaiz(f))
-  const suben = filas.filter(f => f.subio)
-  // Confiabilidad: el primero de la lista que TRIM no ve venir (con lo que comparte su puesto) es donde rinde el próximo instrumento.
-  const sinVigia = filas.filter(f => !f.vigilado && (f.bpd ?? 0) > 0)
-  const primeros = sinVigia.length ? sinVigia.filter(f => puesto(f) === puesto(sinVigia[0]!)) : []
   const estimados = filas.some(f => f.estimacion && (f.bpd ?? 0) > 0)
   const rejilla = cn('grid items-baseline gap-x-2 gap-y-0.5',
     'grid-cols-[1.75rem_minmax(0,1fr)_auto] [grid-template-areas:"n_e_c"_"._t_t"_"._x_x"]',
@@ -105,7 +99,7 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
 
   const fila = (f: FilaCriticidad, oculta: boolean) => {
     const s = sev(f)
-    const p = f.bpd === null ? null : puesto(f)
+    const p = f.puesto
     const otro = nombreSinId(f)
     const donde = `${DONDE_CHOKE[f.tramo]}${f.tramo === 'planta' && f.servidos > 0 ? ` · ${plural(f.servidos, 'pozo', 'pozos')}` : ''}`
     const cifra = f.bpd === null ? 'sin dato' : f.estimacion && f.bpd > 0 ? `hasta ${n0(f.bpd)}` : n0(f.bpd)
@@ -162,8 +156,8 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
       {raices.map(f => (
         <p key={f.equipo} data-parado={f.equipo} data-perdiendo={f.perdiendoBpd ?? ''} className="mb-1 flex items-start gap-1.5 text-[12px]">
           <MarcaPrioridad s={sev(f)} tamano={13} className="mt-0.5" />
-          {/* La bomba trae su frase hecha («está parada… cuando vuelva…»); la de un servicio es la de «si cae», así que se dice lo de ahora. */}
-          <span className="min-w-0">{f.familia === 'bomba' ? f.porque : `${f.equipo} está caído: se pierden ${n0(f.perdiendoBpd ?? 0)} bbl/d ahora.`}</span>
+          {/* La frase la hace el motor: la bomba, «está parada… cuando vuelva…»; el servicio, «está caído: se pierden N bbl/d ahora». */}
+          <span className="min-w-0">{f.porque}{/[.?!]$/.test(f.porque) ? '' : '.'}</span>
         </p>
       ))}
       {pozosParados.length > 0 && (
@@ -172,18 +166,20 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
         </p>
       )}
       {c.cambioHoy && <p className="mb-1 text-[12px]" data-cambio-hoy="">{c.cambioHoy}</p>}
-      {rol === 'conf' && primeros.length > 0 && (
+      {rol === 'conf' && c.proximoInstrumento && (
         <p className="mb-1 text-[11.5px] text-[var(--tinta2)]" data-decide="conf">
-          <b className="font-semibold text-[var(--tinta)]">¿Dónde va el próximo instrumento?</b>{' '}
-          Lo primero de la lista sin instrumento: {lista(primeros.map(f => f.equipo))} (puesto {puesto(primeros[0]!)}, {n0(primeros[0]!.bpd ?? 0)} bbl/d si falla hoy). TRIM no ve venir su falla.
+          <b className="font-semibold text-[var(--tinta)]">¿Dónde va el próximo instrumento?</b> {c.proximoInstrumento}
         </p>
       )}
-      {rol === 'jefe' && suben.length > 0 && (
-        <p className="mb-1 text-[11.5px] text-[var(--tinta2)]" data-decide="jefe">
-          <b className="font-semibold text-[var(--tinta)]">Ojo:</b>{' '}
-          {lista(suben.map(f => f.equipo))} {suben.length === 1 ? 'vale' : 'valen'} más mientras siga así: no conviene {suben.length === 1 ? 'intervenirla' : 'intervenirlas'} hoy. Si {suben.length === 1 ? 'tiene' : 'tienen'} un trabajo programado, ¿moverlo?
-        </p>
+      {rol === 'jefe' && c.noIntervenir && (
+        <p className="mb-1 text-[11.5px] text-[var(--tinta2)]" data-decide="jefe">{c.noIntervenir}</p>
       )}
+      {/* El cruce con el programa (U2 §6.4): un trabajo sobre lo que hoy vale más. Moverlo es del programa de paradas firmado. */}
+      {rol === 'jefe' && c.avisosTrabajo.map(a => (
+        <p key={a.tarea} className="mb-1 text-[11.5px] text-[var(--tinta2)]" data-aviso-trabajo={a.tarea}>
+          {a.texto} <span className="text-[var(--tinta3)]">El programa lo cambia el administrador en Configuración, con firma.</span>
+        </p>
+      ))}
 
       {filas.length === 0
         ? <p className="text-[11.5px] text-[var(--tinta2)]">Ningún equipo de {nombre} tiene con qué medir su falla.</p>

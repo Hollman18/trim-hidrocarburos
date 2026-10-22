@@ -2,35 +2,52 @@ import { useCtx, useVersiones } from './sesion'
 import { useDato, versionDe } from './consulta'
 import { locacionDe } from './fuente'
 import {
-  TUBERIA, SERIE_CHOKE, TUBERIA_AGUA, CRITICIDAD, REPARTO_CHOKE, REPARTO_CHOKE_MENSUAL, BASE_CHOKE, TOPOLOGIA, PROPUESTAS_TOPOLOGIA,
+  TUBERIA, SERIE_CHOKE, TUBERIA_AGUA, CRITICIDAD, REPARTO_CHOKE, REPARTO_CHOKE_MENSUAL, BASE_CHOKE, TOPOLOGIA, PROPUESTAS_TOPOLOGIA, CAPACIDADES,
   type ConsultaPeriodo,
 } from './contrato'
 import {
   tuberiaCampo, serieChoke, brechaPorChoke, repartoPorMes, lineaBasePorTramo, topologiaDe, topologiaFirmada, topologiaDerivada,
-  propuestasTopologia, marcarCasosBorde, casoBordeDe, alcancePorPozos, chokeDeAlcance, validarTopologia,
+  propuestasTopologia, marcarCasosBorde, casoBordeDe, alcancePorPozos, chokeDeAlcance, validarTopologia, porSaberDelCampo, sinResponderDe,
+  vistaCapacidades, capacidadesQueBloquean,
   ORDEN_CHOKE, ORDEN_CHOKE_CAMPO, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_CHOKE, EXPLICA_TRAMO, RESUMEN_TRAMO, DONDE_CHOKE,
-  NOMBRE_CHOKE_CAMPO, SUBNIVEL_MERCADO, NOMBRE_ALCANCE, NOMBRE_ESCALON, PARAMETROS_CHOKE, EXPLICA_CASO_BORDE,
+  NOMBRE_CHOKE_CAMPO, SUBNIVEL_MERCADO, NOMBRE_ALCANCE, NOMBRE_ESCALON, PARAMETROS_CHOKE, EXPLICA_CASO_BORDE, PREGUNTA_ORIGEN,
   type ChokeAnh, type ChokeCampo, type ChokeOSinAsignar, type EscalonBrecha, type EscalonOSinClasificar, type AlcanceElemento,
   type ChokeDeElemento, type ClaseElemento, type PropuestaTopologia, type TuberiaCampo, type TramoTuberia, type TrenTuberia,
   type TrenPlanta, type EstadoTramo, type BrechaChoke, type BrechaCampoChoke, type EquipoBbl, type MesPorTramo,
-  type LineaBasePorTramo, type AntesYDespues, type DiaChoke, type CambioDominante,
+  type LineaBasePorTramo, type AntesYDespues, type DiaChoke, type CambioDominante, type Historial, type VistaCapacidades,
+  type PerdiendoAhora, type CapacidadesDeLaTuberia, type MedidorDelCampo,
 } from '@/entities/choke'
 import {
   tuberiaAgua, ORDEN_AGUA, NOMBRE_TRAMO_AGUA,
   type TuberiaAgua, type TramoTuberiaAgua, type TramoAgua, type BombaDelTren, type ColchonAgua,
 } from '@/entities/choke-agua'
-import { criticidad, criticidadDelCampo, type FilaCriticidad, type CriticidadDelCampo, type FamiliaCriticidad } from '@/entities/criticidad'
-import type { ImpactoConfig, ImpactoCampo, CambioCriticidad, CambioDeTramo, TopologiaLeida, HallazgoTopologia } from '@/entities/choke-config'
+import {
+  criticidad, criticidadDelCampo,
+  type FilaCriticidad, type CriticidadDelCampo, type FamiliaCriticidad, type AvisoTrabajoCritico,
+} from '@/entities/criticidad'
+import {
+  FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, revisarCapacidades,
+  type FuenteCapacidad, type CapacidadFirmada, type CapacidadesCampo, type CapacidadVigente, type BombaVigente, type CapacidadesVigentes,
+  type TramoCapacidad, type EstadoCapacidad, type HallazgoCapacidad, type FirmaCapacidades, type EntradaRevision,
+} from '@/entities/capacidades'
+import {
+  RESPUESTAS_TOPOLOGIA, elementoDeRespuesta, respuestaDe, respuestaDePozos, fraseDe, renglonDe, dondeTramo, dondeCorto,
+  conTopologia, pendientesDe, faltanParaFirmar, plantillaTopologia,
+  type RespuestaTopologia, type RespuestaEquipo, type TopologiaEnBorrador,
+  type ImpactoConfig, type ImpactoCampo, type CambioCriticidad, type CambioDeTramo, type TopologiaLeida, type HallazgoTopologia,
+} from '@/entities/choke-config'
 import type { Contexto } from '@/entities/causa-senal'
 import type { Versiones } from '@/entities/diferido'
 
 /** LA COSTURA DEL MODELO CHOKE: «¿Dónde se trabó?», «Qué limita hoy» y «Si falla hoy».
  *
  *  Cada vista es un GET de contrato.ts (`/vistas/campos/:campo/tuberia`,
- *  `…/choke/serie`, `…/agua`, `/vistas/criticidad`, `/vistas/choke/…`,
- *  `/vistas/topologia…`). El servidor corre el motor (entities/choke.ts,
- *  choke-agua.ts, criticidad.ts) con la configuración firmada vigente; en el
- *  demo responde el motor en el navegador con la sesión. Aquí, por vista:
+ *  `…/choke/serie`, `…/agua`, `…/capacidades`, `/vistas/criticidad`,
+ *  `/vistas/choke/…`, `/vistas/topologia…`). El servidor corre el motor
+ *  (entities/choke.ts, choke-agua.ts, criticidad.ts) con la configuración
+ *  firmada y su historial (cada día se mide con las capacidades que regían ese
+ *  día: firmar hoy no reescribe un mes cerrado); en el demo responde el motor en
+ *  el navegador con la sesión. Aquí, por vista:
  *  - `pedir*`: la respuesta del demo, la misma fórmula que el backend (con ella
  *    se arma la referencia y se prueba el contrato). Ninguna pantalla los llama;
  *  - `use*`: lo que leen las pantallas, con la caché de consulta.ts (la versión
@@ -46,28 +63,42 @@ import type { Versiones } from '@/entities/diferido'
 export {
   ORDEN_CHOKE, ORDEN_CHOKE_CAMPO, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_CHOKE, EXPLICA_TRAMO, RESUMEN_TRAMO, DONDE_CHOKE,
   NOMBRE_CHOKE_CAMPO, SUBNIVEL_MERCADO, NOMBRE_ALCANCE, NOMBRE_ESCALON, PARAMETROS_CHOKE, EXPLICA_CASO_BORDE, ORDEN_AGUA, NOMBRE_TRAMO_AGUA,
+  PREGUNTA_ORIGEN, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, RESPUESTAS_TOPOLOGIA,
   // Reglas de lo que entra a mano (las dos puntas: la pantalla avisa, el servidor decide):
-  // el tramo sale del alcance y el alcance del número de pozos (U2 §8.2).
-  chokeDeAlcance, alcancePorPozos, casoBordeDe, validarTopologia,
+  // el tramo sale del alcance y el alcance del número de pozos (U2 §8.2); la
+  // respuesta de cada equipo, la topología del borrador encima de la
+  // configuración, la regla de la primera firma y la plantilla de la carga
+  // (choke-config.ts); la revisión de las capacidades que se van a firmar (U2 §8.4).
+  chokeDeAlcance, alcancePorPozos, casoBordeDe, validarTopologia, revisarCapacidades, capacidadesQueBloquean,
+  elementoDeRespuesta, respuestaDe, respuestaDePozos, conTopologia, pendientesDe, faltanParaFirmar, plantillaTopologia,
+  // Las palabras de la filosofía operacional, hechas por el motor.
+  fraseDe, renglonDe, dondeTramo, dondeCorto,
 }
 export type {
   ChokeAnh, ChokeCampo, ChokeOSinAsignar, EscalonBrecha, EscalonOSinClasificar, AlcanceElemento, ChokeDeElemento, ClaseElemento,
   PropuestaTopologia, TuberiaCampo, TramoTuberia, TrenTuberia, TrenPlanta, EstadoTramo, BrechaChoke, BrechaCampoChoke, EquipoBbl,
-  MesPorTramo, LineaBasePorTramo, AntesYDespues, DiaChoke, CambioDominante,
-  TuberiaAgua, TramoTuberiaAgua, TramoAgua, BombaDelTren, ColchonAgua, FilaCriticidad, FamiliaCriticidad,
+  MesPorTramo, LineaBasePorTramo, AntesYDespues, DiaChoke, CambioDominante, PerdiendoAhora, CapacidadesDeLaTuberia, MedidorDelCampo,
+  TuberiaAgua, TramoTuberiaAgua, TramoAgua, BombaDelTren, ColchonAgua, FilaCriticidad, FamiliaCriticidad, AvisoTrabajoCritico,
   ImpactoConfig, ImpactoCampo, CambioCriticidad, CambioDeTramo, TopologiaLeida, HallazgoTopologia,
+  RespuestaTopologia, RespuestaEquipo, TopologiaEnBorrador, VistaCapacidades,
+  FuenteCapacidad, CapacidadFirmada, CapacidadesCampo, CapacidadVigente, BombaVigente, CapacidadesVigentes, TramoCapacidad,
+  EstadoCapacidad, HallazgoCapacidad, FirmaCapacidades, EntradaRevision,
 }
 
 /** La versión del contexto con que se calcula: entra en la clave de la caché. */
 const v = (ctx: Contexto) => String(versionDe(ctx))
+/** Lo mismo con el historial de versiones firmadas (las capacidades de cada día). */
+const vh = (ctx: Contexto, versiones: Historial | Versiones) => `${versionDe(ctx)}.${versionDe(versiones)}`
 
 /* ─────────────────────────── la tubería del campo ─────────────────────────── */
 
-/** `GET /api/vistas/campos/:campo/tuberia?desde=&hasta=` */
-export const pedirTuberia = (campo: string, desde: Date, hasta: Date, ctx: Contexto): TuberiaCampo => tuberiaCampo(campo, desde, hasta, ctx)
+/** `GET /api/vistas/campos/:campo/tuberia?desde=&hasta=`. Con el historial,
+ *  cada día del período usa las capacidades que regían ese día, y la tubería
+ *  dice quién y cuándo firmó las de hoy. */
+export const pedirTuberia = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): TuberiaCampo => tuberiaCampo(campo, desde, hasta, ctx, versiones)
 export function useTuberia(campo: string, desde: Date, hasta: Date): TuberiaCampo {
-  const ctx = useCtx()
-  return useDato(TUBERIA, { campo, desde, hasta }, v(ctx), () => pedirTuberia(campo, desde, hasta, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(TUBERIA, { campo, desde, hasta }, vh(ctx, versiones), () => pedirTuberia(campo, desde, hasta, ctx, versiones))
 }
 
 /** La serie de lo que limitó cada día y los avisos «Cambió lo que limita». */
@@ -78,10 +109,10 @@ export interface SerieChoke {
   vueltas: Record<string, number>
 }
 /** `GET /api/vistas/campos/:campo/choke/serie?desde=&hasta=` */
-export const pedirSerieChoke = (campo: string, desde: Date, hasta: Date, ctx: Contexto): SerieChoke => serieChoke([campo], desde, hasta, ctx)
+export const pedirSerieChoke = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): SerieChoke => serieChoke([campo], desde, hasta, ctx, versiones)
 export function useSerieChoke(campo: string, desde: Date, hasta: Date): SerieChoke {
-  const ctx = useCtx()
-  return useDato(SERIE_CHOKE, { campo, desde, hasta }, v(ctx), () => pedirSerieChoke(campo, desde, hasta, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(SERIE_CHOKE, { campo, desde, hasta }, vh(ctx, versiones), () => pedirSerieChoke(campo, desde, hasta, ctx, versiones))
 }
 
 /* ─────────────────────────── la tubería del agua ─────────────────────────── */
@@ -92,17 +123,34 @@ export const pedirTuberiaAgua = (campo: string, ctx: Contexto, versiones: Versio
 export function useTuberiaAgua(campo: string): TuberiaAgua {
   const ctx = useCtx()
   const versiones = useVersiones()
-  return useDato(TUBERIA_AGUA, { campo }, `${versionDe(ctx)}.${versionDe(versiones)}`, () => pedirTuberiaAgua(campo, ctx, versiones))
+  return useDato(TUBERIA_AGUA, { campo }, vh(ctx, versiones), () => pedirTuberiaAgua(campo, ctx, versiones))
+}
+
+/* ─────────────────────────── las capacidades ─────────────────────────── */
+
+/** `GET /api/vistas/campos/:campo/capacidades`: lo que deja pasar cada tramo
+ *  hoy (firmado o del demo, con su fuente en palabras), quién y cuándo firmó, lo
+ *  que la revisión necesita del pasado (lo máximo que pasó en un día) y lo que
+ *  la revisión encuentra en lo que rige (U2 §8.4). Se escriben y se firman con
+ *  la configuración (`POST /api/configuracion`, `Config.capacidades`). */
+export const pedirCapacidades = (campo: string, ctx: Contexto, versiones?: Historial): VistaCapacidades => vistaCapacidades(campo, ctx, versiones)
+export function useCapacidades(campo: string): VistaCapacidades {
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(CAPACIDADES, { campo }, vh(ctx, versiones), () => pedirCapacidades(campo, ctx, versiones))
 }
 
 /* ─────────────────────────── si falla hoy ─────────────────────────── */
 
 /** «Si falla hoy» de varios campos: un ranking de todos y, por campo, lo que no entra en él. */
 export interface VistaCriticidad {
-  /** Todos los equipos de los campos pedidos, de mayor a menor bbl/d si fallan hoy, sin lo que ya está parado. */
+  /** Todos los equipos de los campos pedidos, de mayor a menor bbl/d si fallan hoy, sin lo que ya está parado.
+   *  El `puesto` de cada fila es el de su campo (1 + cuántos de su campo cuestan más). */
   ranking: FilaCriticidad[]
-  /** Por campo, en el orden pedido: lo ya parado (va en «Perdiéndose ahora»), lo que no se puede medir y la línea «Cambió hoy». */
-  campos: Array<Pick<CriticidadDelCampo, 'campoId' | 'parados' | 'sinCalcular' | 'cambioHoy'>>
+  /** Por campo, en el orden pedido: lo ya parado (va en «Perdiéndose ahora»), lo
+   *  que no se puede medir, la línea «Cambió hoy», lo que decide cada rol (el
+   *  próximo instrumento, no intervenir hoy, los trabajos del programa que tocan
+   *  un equipo que hoy vale más) y la frase del desembotellamiento (U2 §6.4-6.5). */
+  campos: Array<Pick<CriticidadDelCampo, 'campoId' | 'parados' | 'sinCalcular' | 'cambioHoy' | 'proximoInstrumento' | 'noIntervenir' | 'avisosTrabajo' | 'desembotellar'>>
 }
 /** `GET /api/vistas/criticidad?campos=a,b` */
 export function pedirCriticidad(campos: string[], ctx: Contexto): VistaCriticidad {
@@ -110,7 +158,9 @@ export function pedirCriticidad(campos: string[], ctx: Contexto): VistaCriticida
     ranking: criticidad(campos, ctx),
     campos: campos.map(c => {
       const x = criticidadDelCampo(c, ctx)
-      return { campoId: c, parados: x.parados, sinCalcular: x.sinCalcular, ...(x.cambioHoy ? { cambioHoy: x.cambioHoy } : {}) }
+      return { campoId: c, parados: x.parados, sinCalcular: x.sinCalcular, avisosTrabajo: x.avisosTrabajo,
+        ...(x.cambioHoy ? { cambioHoy: x.cambioHoy } : {}), ...(x.proximoInstrumento ? { proximoInstrumento: x.proximoInstrumento } : {}),
+        ...(x.noIntervenir ? { noIntervenir: x.noIntervenir } : {}), ...(x.desembotellar ? { desembotellar: x.desembotellar } : {}) }
     }),
   }
 }
@@ -122,24 +172,24 @@ export function useCriticidad(campos: string[]): VistaCriticidad {
 /* ─────────────────────────── lo perdido por tramo ─────────────────────────── */
 
 /** `GET /api/vistas/choke/reparto?campos=&desde=&hasta=` */
-export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto): BrechaChoke => brechaPorChoke(q.campos, q.desde, q.hasta, ctx)
+export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial): BrechaChoke => brechaPorChoke(q.campos, q.desde, q.hasta, ctx, versiones)
 export function useRepartoChoke(q: ConsultaPeriodo): BrechaChoke {
-  const ctx = useCtx()
-  return useDato(REPARTO_CHOKE, q, v(ctx), () => pedirRepartoChoke(q, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(REPARTO_CHOKE, q, vh(ctx, versiones), () => pedirRepartoChoke(q, ctx, versiones))
 }
 
 /** `GET /api/vistas/choke/mensual?campos=` */
-export const pedirRepartoMensual = (campos: string[], ctx: Contexto): MesPorTramo[] => repartoPorMes(campos, ctx)
+export const pedirRepartoMensual = (campos: string[], ctx: Contexto, versiones?: Historial): MesPorTramo[] => repartoPorMes(campos, ctx, versiones)
 export function useRepartoMensual(campos: string[]): MesPorTramo[] {
-  const ctx = useCtx()
-  return useDato(REPARTO_CHOKE_MENSUAL, { campos }, v(ctx), () => pedirRepartoMensual(campos, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(REPARTO_CHOKE_MENSUAL, { campos }, vh(ctx, versiones), () => pedirRepartoMensual(campos, ctx, versiones))
 }
 
 /** `GET /api/vistas/choke/base?campos=&desde=&hasta=` · undefined sin tres meses publicados antes del período. */
-export const pedirBaseChoke = (q: ConsultaPeriodo, ctx: Contexto): LineaBasePorTramo | undefined => lineaBasePorTramo(q.campos, q.desde, q.hasta, ctx)
+export const pedirBaseChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial): LineaBasePorTramo | undefined => lineaBasePorTramo(q.campos, q.desde, q.hasta, ctx, versiones)
 export function useBaseChoke(q: ConsultaPeriodo): LineaBasePorTramo | undefined {
-  const ctx = useCtx()
-  return useDato(BASE_CHOKE, q, v(ctx), () => pedirBaseChoke(q, ctx))
+  const ctx = useCtx(), versiones = useVersiones()
+  return useDato(BASE_CHOKE, q, vh(ctx, versiones), () => pedirBaseChoke(q, ctx, versiones))
 }
 
 /* ─────────────────────────── la topología ─────────────────────────── */
@@ -149,6 +199,8 @@ export interface ElementoTopologia extends ChokeDeElemento {
   nombre?: string
   clase?: ClaseElemento
 }
+/** Un equipo del que se firmó «Todavía no sé», con su nombre y su clase cuando el registro los tiene. */
+export interface EquipoPorSaber { elemento: string; nombre?: string; clase?: ClaseElemento }
 /** La topología que rige en un campo. */
 export interface TopologiaVigente {
   campoId: string
@@ -156,17 +208,30 @@ export interface TopologiaVigente {
   firmada: boolean
   /** Cada elemento con el tramo que sale de su alcance y, si aplica, su caso de borde. */
   elementos: ElementoTopologia[]
+  /** Los equipos firmados «Todavía no sé»: sin tramo, sus paradas lo preguntan (TRIM no lo adivina). */
+  porSaber: EquipoPorSaber[]
+  /** Con la topología firmada, lo que el registro tiene y la firma no (un equipo
+   *  nuevo), con lo que TRIM deduce del registro: espera su respuesta sin perder
+   *  lo firmado. Mientras tanto, el tramo de sus paradas sale de la regla por tipo de falla. */
+  sinResponder: ElementoTopologia[]
 }
 /** `GET /api/vistas/topologia?campo=`. El caso de borde (2 o 3 pozos de una
  *  misma locación, U2 §8.6) se marca con la locación de los pozos: en el demo, la
  *  de `datos/topologia.ts`, que entra por fuente.ts; el servidor, con la suya. */
 export function pedirTopologia(campo: string, ctx: Contexto): TopologiaVigente {
   const derivada = new Map(topologiaDerivada(campo).map(e => [e.elemento, e]))
-  const elementos = marcarCasosBorde(topologiaDe(campo, ctx), locacionDe(campo)).map((e): ElementoTopologia => {
+  const loc = locacionDe(campo)
+  const conNombre = (e: ChokeDeElemento): ElementoTopologia => {
     const d = derivada.get(e.elemento)
     return { ...e, choke: chokeDeAlcance(e.alcance), ...(d && !('nombre' in e) ? { nombre: d.nombre, clase: d.clase } : {}) }
+  }
+  const elementos = marcarCasosBorde(topologiaDe(campo, ctx), loc).map(conNombre)
+  const porSaber = porSaberDelCampo(campo, ctx).map((elemento): EquipoPorSaber => {
+    const d = derivada.get(elemento)
+    return { elemento, ...(d ? { nombre: d.nombre, clase: d.clase } : {}) }
   })
-  return { campoId: campo, firmada: topologiaFirmada(campo, ctx), elementos }
+  const sinResponder = marcarCasosBorde(sinResponderDe(campo, ctx), loc).map(conNombre)
+  return { campoId: campo, firmada: topologiaFirmada(campo, ctx), elementos, porSaber, sinResponder }
 }
 export function useTopologia(campo: string): TopologiaVigente {
   const ctx = useCtx()

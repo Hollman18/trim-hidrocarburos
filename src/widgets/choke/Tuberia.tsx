@@ -4,7 +4,7 @@ import { useTuberia, type TuberiaCampo, type TramoTuberia, type TrenTuberia, typ
 import { useEstadoCampos } from '@/shared/api/diferidos'
 import { useEquiposDeHoy } from '@/shared/api/equipos'
 import { campoPorId } from '@/entities/campos'
-import { AHORA, fechaCorta } from '@/entities/reloj'
+import { AHORA, fechaCorta, fechaHora } from '@/entities/reloj'
 import { puedeHacer } from '@/entities/tipos'
 import type { Severidad } from '@/entities/tipos'
 import { pantallaVisible } from '@/shared/config/producto'
@@ -55,8 +55,6 @@ export function TuberiaDelCampo({ campoId, desde, hasta, periodo, onUbicarPlanta
   const marca = (equipo: string): Severidad => hoy(equipo, campoId)?.severidad ?? 0
   const sinTuberia = t.campoDeGas || t.limita === null
   const pozos = estado?.pozos ?? 0
-  const capacidades = t.tramos.filter(x => x.tramo === 'planta' || x.tramo === 'exportacion')
-  const firmadas = capacidades.every(x => x.estado === 'firmado')
 
   return (
     <Panel className={cn('mb-2.5 print:break-inside-avoid', className)} titulo="LA TUBERÍA DEL CAMPO"
@@ -65,7 +63,8 @@ export function TuberiaDelCampo({ campoId, desde, hasta, periodo, onUbicarPlanta
         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <small className="text-[10.5px] text-[var(--tinta3)]">
             <span className="solo-impresion">{nombre} · {periodo} · </span>
-            potenciales con las pruebas vigentes al {fechaCorta(AHORA)} · capacidades: {sinTuberia ? 'sin tubería de crudo' : firmadas ? 'firmadas' : 'dato del demo, sin firmar'}
+            potenciales con las pruebas vigentes al {fechaCorta(AHORA)} · {sinTuberia ? 'sin tubería de crudo' : t.capacidades.texto}
+            {t.medidor && <span className="block" data-medidor={t.medidor.estado}>{t.medidor.texto}</span>}
           </small>
           {!sinTuberia && (
             <Boton variante="chico" aria-expanded={tabla} onClick={() => setTabla(v => !v)}>{tabla ? 'Ocultar la tabla' : 'Ver como tabla'}</Boton>
@@ -145,10 +144,8 @@ function Numero({ x, grande = true }: { x: TramoTuberia; grande?: boolean }) {
   )
 }
 
-/** El carril que manda dentro de la planta: el tren medido cuya capacidad en
- *  crudo es la de la planta (el motor la da como el menor de los medidos). */
-const esElMenor = (x: TramoTuberia, tr: TrenTuberia) =>
-  x.potencialBpd !== null && tr.medido && tr.enCrudo !== null && Math.round(tr.enCrudo) === Math.round(x.potencialBpd)
+/** El carril que manda dentro de la planta: lo dice el motor (`trenQueLimita`, el menor de los medidos). */
+const esElMenor = (x: TramoTuberia, tr: TrenTuberia) => x.trenQueLimita === tr.tren
 
 /** Los carriles de la planta, en renglones: su capacidad en crudo y, entre paréntesis, en su unidad (U2 §2.3). */
 function Carriles({ x, onAgua }: { x: TramoTuberia; onAgua?: () => void }) {
@@ -209,7 +206,7 @@ function resumenDe(t: TuberiaCampo, nombre: string): string {
   const lim = t.tramos.find(x => x.limita)
   const k = t.limita!
   const otros = t.tramos.filter(x => x.tramo !== 'reservorio' && !x.limita)
-  const perdiendo = t.perdiendoAhora.reduce((a, p) => a + p.bpd, 0)
+  const perdiendo = t.perdiendoAhoraBpd
   return [
     `Tubería de ${nombre}.`,
     lim ? `${mayuscula(VERBO[k])} ${SUJETO[k]}: ${n0(lim.potencialBpd ?? 0)} barriles por día.` : '',
@@ -264,7 +261,7 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
   const tope = Math.max(1, ...numeros, t.pasaHoyBpd)
   const px = (v: number) => Math.max(2, Math.round((v / tope) * ALTO))
   const pozo = t.tramos.find(x => x.tramo === 'pozo')
-  const sinTramoAhora = t.perdiendoAhora.filter(p => p.tramo === null).reduce((a, p) => a + p.bpd, 0)
+  const sinTramoAhora = t.sinTramoAhoraBpd
   const rejilla = 'grid gap-x-4 [grid-template-columns:minmax(64px,.5fr)_repeat(3,minmax(0,1fr))_minmax(104px,.72fr)]'
   const titulo = 'font-cond flex min-h-[28px] flex-wrap items-end gap-x-2 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 
@@ -426,10 +423,11 @@ function Detalle({ x, t, pozos, onCerrar, onAgua, onUbicar }: {
         <dt className="text-[var(--tinta3)]">Lo que puede dejar pasar</dt>
         <dd className="tabular">{x.tramo === 'reservorio' ? 'va con los pozos' : x.potencialBpd === null ? 'sin dato' : `${n0(x.potencialBpd)} bbl/d · ${ESTADO_TRAMO[x.estado]}`}</dd>
         <dt className="text-[var(--tinta3)]">De dónde sale</dt><dd>{x.fuente}</dd>
+        {x.pruebaMasVieja && <><dt className="text-[var(--tinta3)]">Las pruebas</dt><dd>{x.pruebaMasVieja.texto}</dd></>}
         {x.holguraBpd !== null && !x.limita && x.tramo !== 'reservorio' && <><dt className="text-[var(--tinta3)]">Le sobran</dt><dd className="tabular">{n0(x.holguraBpd)} bbl/d</dd></>}
         {x.limita && <><dt className="text-[var(--tinta3)]">Lo que limita</dt><dd>es el tramo más angosto hoy: el tope del campo</dd></>}
         <dt className="text-[var(--tinta3)]">Perdiéndose ahora</dt>
-        <dd className="tabular">{ahora.length ? ahora.map(p => `${p.equipo} ${n0(p.bpd)} bbl/d (${plural(p.pozos, 'pozo', 'pozos')})`).join(' · ') : 'nada'}</dd>
+        <dd className="tabular">{ahora.length ? ahora.map(p => `${p.equipo} ${n0(p.bpd)} bbl/d (${p.listaPozos.length <= 3 ? lista(p.listaPozos) : plural(p.pozos, 'pozo', 'pozos')}, desde ${fechaHora(p.desde)})`).join(' · ') : 'nada'}</dd>
         <dt className="text-[var(--tinta3)]">Se trabó en el período</dt>
         <dd className="tabular">{n0(x.perdidoBbl)} bbl{x.equiposTop.length ? ` · ${x.equiposTop.map(e => `${e.equipo} ${n0(e.bbl)}`).join(' · ')}` : ''}</dd>
       </dl>
@@ -456,7 +454,7 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
   t: TuberiaCampo; marca: Marca; sinTuberia: boolean; periodo: string
   onAbrir: (equipo: string) => void; onIdentificar?: () => void; onPorTramo?: () => void
 }) {
-  const perdiendo = t.perdiendoAhora.reduce((a, p) => a + p.bpd, 0)
+  const perdiendo = t.perdiendoAhoraBpd
   const rotulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   const fila = 'flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--linea2)] py-1.5 text-[12px]'
   return (
@@ -486,7 +484,7 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
                   <b className="tabular w-[52px] shrink-0 text-right">{n0(p.bpd)}</b>
                   <span className="inline-flex min-w-0 items-center gap-1">
                     {s > 0 && <MarcaPrioridad s={s} tamano={12} />}
-                    <span>{p.equipo} · {p.tramo ? `cerró ${plural(p.pozos, 'pozo', 'pozos')}` : 'todavía sin causa'}</span>
+                    <span>{p.equipo} · {p.tramo ? `cerró ${p.listaPozos.length <= 3 ? lista(p.listaPozos) : plural(p.pozos, 'pozo', 'pozos')}` : 'todavía sin causa'} · desde {fechaHora(p.desde)}</span>
                   </span>
                   <span className="ml-auto">
                     {p.tramo === null
@@ -543,8 +541,7 @@ export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: Tube
 
 /** «Ver como tabla»: los mismos números del dibujo (U2 §2.2). Es la que se imprime. */
 function Tabla({ t, pozos, periodo }: { t: TuberiaCampo; pozos: number; periodo: string }) {
-  const sinTramoAhora = t.perdiendoAhora.filter(p => p.tramo === null).reduce((a, p) => a + p.bpd, 0)
-  const perdiendo = t.perdiendoAhora.reduce((a, p) => a + p.bpd, 0)
+  const sinTramoAhora = t.sinTramoAhoraBpd, perdiendo = t.perdiendoAhoraBpd
   const th = 'py-1 pr-2 text-left font-normal'
   return (
     <div className="overflow-x-auto" {...desplazable('La tubería del campo como tabla')}>

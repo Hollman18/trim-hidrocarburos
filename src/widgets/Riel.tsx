@@ -7,7 +7,7 @@ import { Wordmark, Isotipo } from '@/shared/brand/Logo'
 import { n0 } from '@/shared/lib/formato'
 import { useEstadoCampos } from '@/shared/api/diferidos'
 import { cn } from '@/shared/lib/cn'
-import { PANTALLAS, GRUPOS, grupoDe, nombreGrupo } from '@/app/pantallas'
+import { PANTALLAS, GRUPOS, grupoDe, nombreGrupo, enElMenu, entradaDe } from '@/app/pantallas'
 import { pantallaVisible } from '@/shared/config/producto'
 import { MenuPerfil } from './MenuPerfil'
 import { peorSeveridad } from '@/shared/lib/prioridad'
@@ -35,10 +35,11 @@ export function Riel({ colapsado = false, onColapsar }: { colapsado?: boolean; o
     const perfiles = ambito.campos.map(c => perfilDe(config, c.id))
     const vistos = new Set<string>()
     const out: Array<{ id: string; corto: string; icono: typeof PANTALLAS[string]['icono']; activo: boolean; ir: () => void }> = []
-    for (const id of rol.pantallas.filter(pantallaVisible)) {
+    for (const id of rol.pantallas.filter(x => pantallaVisible(x) && enElMenu(x))) {
       const p = PANTALLAS[id]; if (!p) continue
       const g = grupoDe(id)
-      if (!g) { out.push({ id, corto: p.corto, icono: p.icono, activo: pantalla === id, ir: () => setPantalla(id) }); continue }
+      // Una pantalla que vive dentro de otra (la filosofía operacional) marca la de afuera.
+      if (!g) { out.push({ id, corto: p.corto, icono: p.icono, activo: entradaDe(pantalla) === id, ir: () => setPantalla(id) }); continue }
       if (vistos.has(g)) continue
       vistos.add(g)
       const subs = rol.pantallas.filter(x => pantallaVisible(x) && GRUPOS[g]!.miembros.includes(x) && hayEquipo(x, perfiles))

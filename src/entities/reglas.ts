@@ -14,5 +14,9 @@ export const NOMBRE_MINIMO = 3
  *  descripción de un aviso a SAP. Una frase corta, no «ok». */
 export const TEXTO_LIBRE_MINIMO = 8
 
+/** Tope de sentido común para una cifra en bbl/d (o KPC/d): lo que lo pase es
+ *  un error de dedo. Lo usan las metas, los respaldos y las capacidades. */
+export const TOPE_BPD = 10_000_000
+
 /** ¿Alcanza el texto (sin los espacios de los bordes)? */
 export const alcanza = (texto: string | undefined, minimo: number) => (texto ?? '').trim().length >= minimo

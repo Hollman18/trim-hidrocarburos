@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRol } from '@/app/store'
-import { useCalidadAnh, type CalidadPaso, type PasoAnh } from '@/shared/api/arbol'
+import { useCalidadAnh, nombreDeRegla, type CalidadPaso, type PasoAnh } from '@/shared/api/arbol'
 import { NOMBRE_CHOKE, type ChokeAnh } from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
 import { Panel, Boton } from '@/shared/ui/primitivas'
@@ -9,7 +9,7 @@ import { Info } from '@/shared/ui/Info'
 import { VISIBLES } from '@/shared/ui/listaCorta'
 import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { ROTULO, INFO_METODO, reglaEnPalabras, valorEnPalabras } from './palabras'
+import { ROTULO, INFO_METODO, valorEnPalabras } from './palabras'
 
 const TITULO = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 const pct = (v: number | null) => (v === null ? '—' : `${n0(v)} %`)
@@ -66,7 +66,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
   const filaRegla = (r: (typeof corregidas)[number]) => (
     <li key={`${r.paso}|${r.regla}`} className="grid gap-x-3 gap-y-0.5 border-b border-dashed border-[var(--linea2)] py-1.5 last:border-0 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.2fr)] sm:items-baseline">
       <span className="flex min-w-0 flex-wrap items-center gap-x-1">
-        <b className="font-semibold">{reglaEnPalabras(r.regla)}</b>
+        <b className="font-semibold">{nombreDeRegla(r.regla)}</b>
         <span className="text-[10.5px] text-[var(--tinta3)]">· {ROTULO[r.paso]}</span>
         <Info titulo="La regla" texto={`${r.regla}: la regla de TRIM que propuso el paso «${ROTULO[r.paso]}».`} />
       </span>

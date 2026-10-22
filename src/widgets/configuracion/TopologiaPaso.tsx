@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Upload, Undo2 } from 'lucide-react'
 import {
-  useTopologia, usePropuestasTopologia, EXPLICA_CASO_BORDE,
+  useTopologia, usePropuestasTopologia, EXPLICA_CASO_BORDE, RESPUESTAS_TOPOLOGIA,
+  elementoDeRespuesta, respuestaDe, respuestaDePozos, fraseDe, renglonDe,
   type TopologiaVigente, type PropuestaVista, type ChokeDeElemento, type ClaseElemento,
+  type RespuestaTopologia as Respuesta, type RespuestaEquipo, type TopologiaEnBorrador,
 } from '@/shared/api/choke'
 import { pedirPozosDelCampo } from '@/shared/api/medicion'
 import { locacionDe } from '@/shared/api/fuente'
@@ -10,10 +12,7 @@ import { Panel, Boton } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import {
-  RESPUESTAS, BOTON, GRUPO, ORDEN_GRUPO, NOMBRE_ESTADO, elementoDeRespuesta, respuestaDe, fraseDe, renglonDe,
-  type Respuesta, type RespuestaEquipo, type TopologiaEnBorrador, type EstadoEquipo,
-} from './topologia'
+import { BOTON, GRUPO, ORDEN_GRUPO, NOMBRE_ESTADO, type EstadoEquipo } from './topologia'
 import { MarcaEstado, MarcaFalta, EtiquetaFalta } from './marcas'
 import { CargaTopologia } from './CargaTopologia'
 
@@ -25,6 +24,10 @@ interface Equipo {
   grupo: ClaseElemento | 'otro'
   /** Lo que rige hoy (firmado o deducido del registro); null si no está en la topología. */
   vigente: ChokeDeElemento | null
+  /** Un equipo nuevo que la topología firmada no trae: lo que TRIM deduce del registro, sin regir. */
+  deducido: ChokeDeElemento | null
+  /** Firmado «Todavía no sé»: sin tramo, sus paradas lo preguntan. */
+  porSaber: boolean
   respuesta?: RespuestaEquipo
   /** Lo que queda si se firma: lo contestado, o lo que rige. */
   queda: ChokeDeElemento | null
@@ -47,30 +50,36 @@ const FUENTE: Record<PropuestaVista['fuente'], string> = {
   cascadas: 'las cascadas de la historia', registro: 'el registro del equipo',
 }
 
+/** Lo que TRIM ya tiene de un equipo: lo que rige o, en uno nuevo, lo que deduce del registro. */
+const loQueTiene = (e: Equipo) => e.vigente ?? e.deducido
 /** «Aceptar» en lote solo dentro de un tipo y solo lo que TRIM ya tiene: lo
  *  que no cuadra entre dos fuentes lo decide una persona (U2 §8.3). */
-const aceptable = (e: Equipo) => !!e.vigente && !e.conflicto && (e.estado === 'sin-responder' || e.estado === 'propuesta')
+const aceptable = (e: Equipo) => !!loQueTiene(e) && !e.conflicto && (e.estado === 'sin-responder' || e.estado === 'propuesta')
 
 function armarEquipos(v: TopologiaVigente, ps: readonly PropuestaVista[], b: TopologiaEnBorrador | undefined): Equipo[] {
   const propuestasDe = new Map<string, PropuestaVista[]>()
   for (const p of ps) propuestasDe.set(p.elemento, [...(propuestasDe.get(p.elemento) ?? []), p])
   const vigentes = new Map(v.elementos.map(e => [e.elemento, e]))
-  // Lo que TRIM propone y no está en la topología también se pregunta.
-  const ids = [...new Set([...v.elementos.map(e => e.elemento), ...ps.map(p => p.elemento)])]
+  const nuevos = new Map(v.sinResponder.map(e => [e.elemento, e]))
+  const porSaber = new Map(v.porSaber.map(e => [e.elemento, e]))
+  // Lo que TRIM propone y no está en la topología también se pregunta; lo firmado
+  // «Todavía no sé» y los equipos nuevos del registro, también.
+  const ids = [...new Set([...v.elementos.map(e => e.elemento), ...v.porSaber.map(e => e.elemento), ...v.sinResponder.map(e => e.elemento), ...ps.map(p => p.elemento)])]
   // En el orden en que se ven, por tipo de equipo: la lista, el selector del
   // teléfono y «Siguiente equipo» siguen el mismo (el orden es estable dentro de cada tipo).
   const orden = (g: Equipo['grupo']) => ORDEN_GRUPO.indexOf(g)
   return ids.map((id): Equipo => {
-    const e = vigentes.get(id) ?? null
+    const e = vigentes.get(id) ?? null, nuevo = nuevos.get(id) ?? null, ps0 = porSaber.get(id)
     const respuesta = b && Object.hasOwn(b.respuestas, id) ? b.respuestas[id] : undefined
     const props = propuestasDe.get(id) ?? []
     const conflicto = props.find(p => p.conflicto)?.conflicto
     const queda = respuesta ? respuesta.elemento : e
-    const estado: EstadoEquipo = respuesta ? 'contestado' : v.firmada && e ? 'firmado' : props.length ? 'propuesta' : 'sin-responder'
-    const nombre = e?.nombre ?? id
+    const estado: EstadoEquipo = respuesta ? 'contestado' : (v.firmada && e) || ps0 ? 'firmado' : props.length ? 'propuesta' : 'sin-responder'
+    const nombre = e?.nombre ?? nuevo?.nombre ?? ps0?.nombre ?? id
     const detalle = nombre.startsWith(id) ? nombre.slice(id.length).replace(/^\s*·\s*/, '') : nombre
-    return { id, detalle, grupo: e?.clase ?? 'otro', vigente: e, ...(respuesta ? { respuesta } : {}), queda, propuestas: props,
-      ...(conflicto ? { conflicto } : {}), estado, borde: !!queda?.casoBorde || (!respuesta && props.some(p => p.casoBorde)) }
+    return { id, detalle, grupo: e?.clase ?? nuevo?.clase ?? ps0?.clase ?? 'otro', vigente: e, deducido: nuevo, porSaber: !!ps0,
+      ...(respuesta ? { respuesta } : {}), queda, propuestas: props,
+      ...(conflicto ? { conflicto } : {}), estado, borde: !!queda?.casoBorde || (!respuesta && (props.some(p => p.casoBorde) || !!nuevo?.casoBorde)) }
   }).sort((a, b) => orden(a.grupo) - orden(b.grupo))
 }
 
@@ -110,10 +119,13 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
   }
   const responder = (cambios: Record<string, RespuestaEquipo | null>) => onResponder(vigente, cambios)
   const aceptarGrupo = (g: Equipo['grupo']) => responder(Object.fromEntries(equipos.filter(e => e.grupo === g && aceptable(e)).map(e => {
-    const r = respuestaDe(e.vigente, todos)
+    const r = respuestaDe(loQueTiene(e)!, todos)
     return [e.id, { r: r.r, elemento: elementoDeRespuesta(e.id, campoId, r.r, r.pozos, todos, locacion) }]
   })))
-  const pasarLeidos = (leidos: ChokeDeElemento[]) => responder(Object.fromEntries(leidos.map(e => [e.elemento, { r: respuestaDe(e, todos).r, elemento: { ...e, campoId } }])))
+  const pasarLeidos = (leidos: ChokeDeElemento[], porSaber: readonly string[]) => responder(Object.fromEntries([
+    ...leidos.map(e => [e.elemento, { r: respuestaDe(e, todos).r, elemento: { ...e, campoId } }] as const),
+    ...porSaber.map(id => [id, { r: 'no-se' as const, elemento: null }] as const),
+  ]))
   const grupos = ORDEN_GRUPO.map(g => ({ g, lista: visibles.filter(e => e.grupo === g), aceptables: equipos.filter(e => e.grupo === g && aceptable(e)).length }))
     .filter(x => x.lista.length > 0)
 
@@ -138,7 +150,8 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
   )
   const carga = conCarga && (
     <CargaTopologia campoId={campoId} campoNombre={campoNombre} todos={todos} onPasar={pasarLeidos}
-      elementos={equipos.flatMap(e => (e.queda ? [e.queda] : []))} />
+      elementos={equipos.flatMap(e => (e.queda ? [e.queda] : []))}
+      porSaber={equipos.filter(e => (e.respuesta ? e.respuesta.r === 'no-se' : e.porSaber)).map(e => e.id)} />
   )
   const vacio = <p className="text-[12px] text-[var(--tinta2)]">Nada en «{FILTRO[filtro]}». <button type="button" className="cursor-pointer underline" onClick={() => setFiltro('todos')}>Ver todos</button></p>
   const pregunta = actual && (
@@ -235,7 +248,7 @@ function Renglon({ equipo: e, todos, elegido, onElegir }: { equipo: Equipo; todo
           {e.detalle && <span className="min-w-0 break-words text-[10.5px] text-[var(--tinta3)]">{e.detalle}</span>}
           <span className="ml-auto text-[10px] text-[var(--tinta3)]">{e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}</span>
         </span>
-        <span className="block break-words text-[10.5px] text-[var(--tinta2)]">{renglonDe(e.queda, e.respuesta?.r, todos)}</span>
+        <span className="block break-words text-[10.5px] text-[var(--tinta2)]">{renglonDe(e.queda, e.respuesta?.r ?? (e.porSaber ? 'no-se' : undefined), todos)}</span>
         {e.borde && <EtiquetaFalta className="mt-0.5">caso de borde: misma locación</EtiquetaFalta>}
       </span>
     </button>
@@ -274,14 +287,17 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
   onSiguiente?: () => void
 }) {
   const idBase = useId()
-  const contestado = e.respuesta ? { r: e.respuesta.r, pozos: [...(e.respuesta.elemento?.pozos ?? [])] } : respuestaDe(e.vigente, todos)
+  // Lo que se ve marcado: lo contestado en el borrador, lo firmado «Todavía no sé», o lo que TRIM ya tiene; un equipo sin nada, ninguna.
+  const tiene = loQueTiene(e)
+  const contestado: { r: Respuesta | null; pozos: string[] } = e.respuesta ? { r: e.respuesta.r, pozos: [...(e.respuesta.elemento?.pozos ?? [])] }
+    : e.porSaber ? { r: 'no-se', pozos: [] } : tiene ? respuestaDe(tiene, todos) : { r: null, pozos: [] }
   // Solo mientras «A varios pozos» no tiene los dos pozos: lo demás se lee del
   // borrador. Una respuesta a medias saca la anterior del borrador; si llega una
   // (el lote, la carga por CSV), manda la que llegó.
-  const [aMedias, setAMedias] = useState<{ r: Respuesta; pozos: string[] } | null>(null)
+  const [aMedias, setAMedias] = useState<{ r: Respuesta | null; pozos: string[] } | null>(null)
   const sel = aMedias && !e.respuesta ? aMedias : contestado
   const propio = todos.includes(e.id) ? e.id : undefined
-  const completa = (r: Respuesta, pozos: readonly string[]) => (r !== 'varios' || pozos.length >= 2) && (r !== 'uno' || pozos.length === 1)
+  const completa = (r: Respuesta | null, pozos: readonly string[]) => r !== null && (r !== 'varios' || pozos.length >= 2) && (r !== 'uno' || pozos.length === 1)
   const elemento = (r: Respuesta, pozos: readonly string[]) => elementoDeRespuesta(e.id, campoId, r, pozos, todos, locacion)
   const contestar = (r: Respuesta, pozos: string[]) => {
     if (!completa(r, pozos)) {
@@ -300,7 +316,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
   }
   const alternarPozo = (p: string) => contestar('varios', sel.pozos.includes(p) ? sel.pozos.filter(x => x !== p) : [...sel.pozos, p])
   const listo = completa(sel.r, sel.pozos)
-  const deduce = listo ? elemento(sel.r, sel.pozos) : null
+  const deduce = listo && sel.r ? elemento(sel.r, sel.pozos) : null
   const { candidatos, conflictos } = candidatosDe(e, todos)
   const nombre = `${e.id}${e.detalle ? ` · ${e.detalle}` : ''}`
 
@@ -309,7 +325,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
       <fieldset className="min-w-0">
         <legend className="mb-1.5 text-[13px] font-semibold">¿A qué pozos sirve este equipo?</legend>
         <div className="grid gap-1">
-          {RESPUESTAS.map(r => (
+          {RESPUESTAS_TOPOLOGIA.map(r => (
             <div key={r}>
               <label className={cn('flex min-h-9 cursor-pointer items-start gap-2 rounded border px-2 py-1.5 text-[12px]',
                 sel.r === r ? 'border-[var(--tinta)] bg-[var(--elevado)] font-semibold' : 'border-[var(--linea2)] hover:bg-[var(--panel2)]')}>
@@ -346,7 +362,9 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
       </fieldset>
 
       <div aria-live="polite" className="mt-2 rounded border-l-2 border-[var(--tinta)] bg-[var(--panel2)] px-2 py-1.5 text-[12px]">
-        {listo ? <>→ {fraseDe(sel.r, deduce, todos)}</> : <>Escoja al menos dos pozos. Si sirve a uno solo, es «A un solo pozo».</>}
+        {listo && sel.r ? <>→ {fraseDe(sel.r, deduce, todos)}</>
+          : sel.r === null ? <>Nadie lo ha contestado: {renglonDe(null, undefined, todos)}.</>
+            : <>Escoja al menos dos pozos. Si sirve a uno solo, es «A un solo pozo».</>}
       </div>
       {deduce?.casoBorde && <CasoBorde className="mt-1.5" />}
       {puede && e.respuesta && (
@@ -389,6 +407,8 @@ interface Candidato {
   pozos: string[]
   /** Es lo que rige hoy (deducido del registro, o firmado). */
   rige: boolean
+  /** Es lo que TRIM deduce del registro para un equipo nuevo que la firma no trae (no rige). */
+  deducido: boolean
   propuestas: PropuestaVista[]
 }
 
@@ -398,16 +418,18 @@ interface Candidato {
  *  pozos» pero el esquema lo pone después del cabezal común: U2 §8.3). */
 function candidatosDe(e: Equipo, todos: readonly string[]): { candidatos: Candidato[]; conflictos: PropuestaVista[] } {
   const candidatos: Candidato[] = [], conflictos: PropuestaVista[] = []
-  const poner = (r: Respuesta, pozos: string[], rige: boolean, p?: PropuestaVista) => {
+  const poner = (r: Respuesta, pozos: string[], o: { rige?: boolean; deducido?: boolean; p?: PropuestaVista }) => {
     const clave = r === 'tercero' || r === 'frontera' ? r : `${r === 'uno' ? 'uno' : 'varios'}|${[...pozos].sort().join(',')}`
     const ya = candidatos.find(c => c.clave === clave)
-    if (ya) { ya.rige ||= rige; if (p) ya.propuestas.push(p); return }
-    candidatos.push({ clave, r, pozos, rige, propuestas: p ? [p] : [] })
+    if (ya) { ya.rige ||= !!o.rige; ya.deducido ||= !!o.deducido; if (o.p) ya.propuestas.push(o.p); return }
+    candidatos.push({ clave, r, pozos, rige: !!o.rige, deducido: !!o.deducido, propuestas: o.p ? [o.p] : [] })
   }
-  if (e.vigente) { const r = respuestaDe(e.vigente, todos); poner(r.r, r.pozos, true) }
+  if (e.vigente) { const r = respuestaDe(e.vigente, todos); poner(r.r, r.pozos, { rige: true }) }
+  if (e.deducido) { const r = respuestaDe(e.deducido, todos); poner(r.r, r.pozos, { deducido: true }) }
   for (const p of e.propuestas) {
     if (!p.pozos.length) { conflictos.push(p); continue }
-    poner(p.pozos.length === 1 ? 'uno' : todos.length > 1 && todos.every(x => p.pozos.includes(x)) ? 'todos' : 'varios', [...p.pozos], false, p)
+    const r = respuestaDePozos(p.pozos, todos)
+    poner(r.r, r.pozos, { p })
   }
   return { candidatos, conflictos }
 }
@@ -429,6 +451,7 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
       </p>
       <ul className="mt-0.5 grid gap-1">
         {c.rige && <li>{firmado ? 'Así está firmado en la versión vigente.' : 'Así lo deduce TRIM del registro del campo (los pozos y el esquema de planta). Nadie lo ha confirmado todavía.'}</li>}
+        {c.deducido && <li>Es un equipo nuevo del registro que la versión firmada no trae: así lo deduce TRIM. Mientras nadie lo conteste, sus paradas toman el tramo de la regla por tipo de falla.</li>}
         {c.propuestas.map((p, i) => (
           <li key={`${p.fuente}-${i}`}>
             {p.porque} <span className="text-[10.5px] text-[var(--tinta3)]">· {FUENTE[p.fuente]}</span>

@@ -1,14 +1,12 @@
 import { useId, useRef, useState } from 'react'
 import { Download } from 'lucide-react'
 import { useApp } from '@/app/store'
-import { importarTopologia } from '@/shared/api/escrituras'
-import type { ChokeDeElemento, HallazgoTopologia, TopologiaLeida } from '@/shared/api/choke'
+import { plantillaTopologia, type ChokeDeElemento, type HallazgoTopologia, type TopologiaLeida } from '@/shared/api/choke'
 import { Panel, Boton, SubirCsv } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { DatoInvalido } from '@/shared/ui/Prioridad'
 import { descargarCsv } from '@/shared/lib/csv'
 import { plural } from '@/shared/lib/formato'
-import { pozosEnPlantilla } from './topologia'
 import { MarcaFalta } from './marcas'
 
 /** Cargar la topología desde un archivo (U2 §8.3, carga masiva): dos
@@ -18,15 +16,17 @@ import { MarcaFalta } from './marcas'
  *  que bloquea no pasa nada al borrador: una topología a medias cambiaría el
  *  tramo de las paradas de los equipos que sí venían bien. Nada rige hasta que
  *  se firma. */
-export function CargaTopologia({ campoId, campoNombre, elementos, todos, onPasar }: {
+export function CargaTopologia({ campoId, campoNombre, elementos, porSaber, todos, onPasar }: {
   campoId: string
   campoNombre: string
   /** Lo que quedaría hoy (lo que rige con lo contestado encima): va en la plantilla. */
   elementos: ChokeDeElemento[]
+  /** Lo que quedaría «Todavía no sé»: va en la plantilla con esas palabras. */
+  porSaber: readonly string[]
   todos: readonly string[]
-  onPasar: (leidos: ChokeDeElemento[]) => void
+  onPasar: (leidos: ChokeDeElemento[], porSaber: readonly string[]) => void
 }) {
-  const rolId = useApp(s => s.rolId)
+  const importarTopologia = useApp(s => s.importarTopologia)
   const [texto, setTexto] = useState('')
   const [leida, setLeida] = useState<TopologiaLeida | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -39,22 +39,21 @@ export function CargaTopologia({ campoId, campoNombre, elementos, todos, onPasar
   const revisar = async (t = texto) => {
     const n = ++pedido.current
     setHecho(null); setError(null); setLeida(null); setRevisando(true)
-    const r = await importarTopologia({ rolId }, { campo: campoId, texto: t })
+    const r = await importarTopologia(campoId, t)
     if (n !== pedido.current) return
     setRevisando(false)
     if (!r.ok) { setError(r.error); return }
-    setLeida({ campoId: r.campoId, topologia: r.topologia, hallazgos: r.hallazgos, filas: r.filas })
+    setLeida({ campoId: r.campoId, topologia: r.topologia, porSaber: r.porSaber ?? [], hallazgos: r.hallazgos, filas: r.filas })
   }
-  const descargar = () => descargarCsv(`TRIM-topologia-${campoId}`, [
-    ['equipo', 'pozos a los que sirve'],
-    ...elementos.map(e => [e.elemento, pozosEnPlantilla(e, todos)]),
-  ])
+  // La plantilla la arma el motor con las mismas palabras que lee la carga.
+  const descargar = () => descargarCsv(`TRIM-topologia-${campoId}`, plantillaTopologia(elementos, porSaber, todos))
   const bloquean = leida?.hallazgos.filter(h => h.bloquea) ?? []
   const avisos = leida?.hallazgos.filter(h => !h.bloquea) ?? []
+  const listos = leida ? leida.topologia.length + leida.porSaber.length : 0
   const pasar = () => {
-    if (!leida || bloquean.length || !leida.topologia.length) return
-    onPasar(leida.topologia)
-    setHecho(`${plural(leida.topologia.length, 'equipo pasó', 'equipos pasaron')} al borrador. Revíselos en la lista y firme en el paso 3.`)
+    if (!leida || bloquean.length || !listos) return
+    onPasar(leida.topologia, leida.porSaber)
+    setHecho(`${plural(listos, 'equipo pasó', 'equipos pasaron')} al borrador${leida.porSaber.length ? ` (${leida.porSaber.length} «todavía no sé»)` : ''}. Revíselos en la lista y firme en el paso 3.`)
     setLeida(null); setTexto('')
   }
 
@@ -62,9 +61,9 @@ export function CargaTopologia({ campoId, campoNombre, elementos, todos, onPasar
     <Panel className="mb-2.5" titulo="SUBIR EXCEL O CSV" extra={campoNombre}>
       <Lectura>
         Una fila por equipo, con dos columnas: el equipo y los pozos a los que sirve. Los pozos van en lista
-        (separados por espacios) o con una palabra: «todos», «otro dueño» (más allá de la batería) o «punto de
-        entrega» (la brida de salida). Descargue la plantilla con lo que rige hoy, cámbiela y péguela aquí o
-        súbala. Una fila que bloquea se dice con su número, y con ella no pasa nada al borrador.
+        (separados por espacios) o con una palabra: «todos», «otro dueño» (más allá de la batería), «punto de
+        entrega» (la brida de salida) o «todavía no sé». Descargue la plantilla con lo que rige hoy, cámbiela y
+        péguela aquí o súbala. Una fila que bloquea se dice con su número, y con ella no pasa nada al borrador.
       </Lectura>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <Boton onClick={descargar}><Download className="mr-1 inline size-3.5" />Descargar la plantilla</Boton>
@@ -78,17 +77,17 @@ export function CargaTopologia({ campoId, campoNombre, elementos, todos, onPasar
         className="w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         <Boton onClick={() => void revisar()} disabled={!texto.trim() || revisando}>{revisando ? 'Revisando…' : 'Revisar'}</Boton>
-        {leida && leida.topologia.length > 0 && (
+        {leida && listos > 0 && (
           <Boton variante="principal" onClick={pasar} disabled={bloquean.length > 0}
             aria-describedby={bloquean.length ? idHallazgos : undefined}>
-            Pasar {plural(leida.topologia.length, 'equipo', 'equipos')} al borrador
+            Pasar {plural(listos, 'equipo', 'equipos')} al borrador
           </Boton>
         )}
       </div>
       {leida && (
         <div className="mt-2 text-[11.5px]">
           <p className="text-[var(--tinta2)]">
-            {plural(leida.filas, 'fila leída', 'filas leídas')}: {plural(leida.topologia.length, 'equipo listo', 'equipos listos')}
+            {plural(leida.filas, 'fila leída', 'filas leídas')}: {plural(listos, 'equipo listo', 'equipos listos')}
             {bloquean.length ? `, ${plural(bloquean.length, 'fila bloquea', 'filas bloquean')}` : ''}.
           </p>
           {bloquean.length > 0 && (

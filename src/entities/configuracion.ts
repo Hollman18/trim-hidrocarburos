@@ -11,10 +11,11 @@
 import { CAMPOS, SEMILLAS } from './campos'
 import type { DestinoGas } from './tipos'
 import { insumos, perezoso } from './insumos'
-import { MOTIVO_MINIMO, alcanza } from './reglas'
+import { MOTIVO_MINIMO, TOPE_BPD, alcanza } from './reglas'
 // choke.ts lee `perfilDe` de aquí y aquí se leen sus palabras y su validación: el
 // ciclo es benigno porque ninguno de los dos usa al otro al cargarse, solo en funciones.
-import { validarTopologia, chokeDeAlcance, NOMBRE_ALCANCE, DONDE_CHOKE, type ChokeDeElemento } from './choke'
+import { validarTopologia, chokeDeAlcance, NOMBRE_ALCANCE, DONDE_CHOKE, type ChokeDeElemento, type ElementoPorSaber } from './choke'
+import { validarCapacidades, normalizarCapacidades, diferenciasCapacidades, capacidadesFirmadas, type CapacidadesCampo } from './capacidades'
 import { formatoFecha } from '@/shared/lib/fecha'
 
 /** Un tramo de lo que fija el gerente de activo para un campo: rige desde su
@@ -119,6 +120,14 @@ export interface Config {
    *  trae ninguna entrada usa la que se deriva de lo que ya existe
    *  (`topologiaDerivada` y `topologiaDe` en choke.ts). */
   topologia?: ChokeDeElemento[]
+  /** Los equipos de los que el administrador contestó «Todavía no sé» a «¿A qué
+   *  pozos sirve?» (U2 §8.2). El motor no adivina su tramo: sus paradas quedan
+   *  en «falta» en el paso 2, con su pregunta, hasta que lo diga. Opcional. */
+  topologiaPorSaber?: ElementoPorSaber[]
+  /** Las capacidades firmadas de los tramos de cada campo, con su fuente (U2
+   *  §8.4; capacidades.ts). Opcional: lo que un campo no trae firmado sigue con
+   *  el dato del demo y se dice «dato del demo, sin firmar». */
+  capacidades?: CapacidadesCampo[]
 }
 
 /** Cada cambio de configuración es una versión firmada. Nunca se sobrescribe:
@@ -222,6 +231,12 @@ export function normalizarConfig(c: Config): Config {
   for (const cc of Object.values(n.campos)) for (const t of cc.metas) if (typeof t.netbackUsd !== 'number') delete t.netbackUsd
   if (n.topologia == null || !n.topologia.length) delete n.topologia
   else n.topologia = n.topologia.map(x => Object.fromEntries(CLAVES_TOPOLOGIA.flatMap(k => (x[k] == null ? [] : [[k, x[k]]]))) as unknown as ChokeDeElemento)
+  // «Todavía no sé»: solo el equipo y su campo; una lista vacía no viaja.
+  if (n.topologiaPorSaber == null || !n.topologiaPorSaber.length) delete n.topologiaPorSaber
+  else n.topologiaPorSaber = n.topologiaPorSaber.map(x => ({ elemento: x.elemento, campoId: x.campoId }))
+  const caps = normalizarCapacidades(n.capacidades)
+  if (caps) n.capacidades = caps
+  else delete n.capacidades
   return n
 }
 
@@ -400,6 +415,14 @@ export function diferenciasPorGrupo(a: Config, b: Config): { metas: string[]; te
     }
     for (const [clave, x] of ea) if (!eb.has(clave)) tecnica.push(`Topología: se quitó ${x.elemento} (${dondeTopo(x)})`)
   }
+  // «Todavía no sé» también se firma: el motor deja en falta el tramo de sus paradas (U2 §8.2).
+  const porSaber = (c: Config) => new Set((c.topologiaPorSaber ?? []).map(x => `${x.campoId}|${x.elemento}`))
+  const psA = porSaber(a), psB = porSaber(b)
+  for (const k of psB) if (!psA.has(k)) { const [campo, el] = k.split('|') as [string, string]; tecnica.push(`Topología: ${el} (${nombre(campo)}): todavía no se sabe a qué pozos sirve; el tramo de sus paradas queda en falta hasta que se diga`) }
+  for (const k of psA) if (!psB.has(k)) { const [campo, el] = k.split('|') as [string, string]; tecnica.push(`Topología: ${el} (${nombre(campo)}): ya no está «por saber»`) }
+  // Las capacidades de los tramos (U2 §8.4): técnicas, como los tanques y los respaldos.
+  for (const id of [...new Set([...(a.capacidades ?? []), ...(b.capacidades ?? [])].map(x => x.campoId))])
+    tecnica.push(...diferenciasCapacidades(capacidadesFirmadas(a, id), capacidadesFirmadas(b, id), nombre(id)))
   return { metas, tecnica }
 }
 
@@ -424,15 +447,17 @@ export function camposTocados(a: Config, b: Config): string[] {
     tanques: c.tanques.filter(t => t.campoId === id), respaldos: c.respaldos.filter(r => r.campoId === id),
     programa: c.programa.filter(p => p.campoId === id),
     topologia: (c.topologia ?? []).filter(x => x.campoId === undefined || x.campoId === id),
+    topologiaPorSaber: (c.topologiaPorSaber ?? []).filter(x => x.campoId === id),
+    capacidades: (c.capacidades ?? []).filter(x => x.campoId === id),
   })
   const ids = new Set([...Object.keys(a.campos), ...Object.keys(b.campos),
-    ...[a, b].flatMap(c => [...c.tanques, ...c.respaldos, ...c.programa].map(x => x.campoId)),
+    ...[a, b].flatMap(c => [...c.tanques, ...c.respaldos, ...c.programa, ...(c.topologiaPorSaber ?? []), ...(c.capacidades ?? [])].map(x => x.campoId)),
     ...[a, b].flatMap(c => (c.topologia ?? []).flatMap(x => (x.campoId === undefined ? [] : [x.campoId])))])
   return [...ids].filter(id => diferencias(de(a, id), de(b, id)).length > 0).sort()
 }
 
 /** Tope de sentido común para una cifra en bbl/d: lo que lo pase es un error de dedo. */
-export const TOPE_BPD = 10_000_000
+export { TOPE_BPD }
 /** Tope de sentido común para el precio neto: el barril nunca se ha vendido a
  *  más de ~150 USD. Lo que pase de 500 es un error de dedo o de lectura
  *  («48,125» leído como 48.125 USD/bbl). */
@@ -527,5 +552,18 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
   const topologia = c.topologia ?? []
   for (const x of topologia) if (x.campoId !== undefined && !conocido(x.campoId)) e.push(`Topología ${x.elemento}: «${x.campoId}» no es un campo registrado.`)
   e.push(...validarTopologia(topologia.filter(x => x.campoId === undefined || conocido(x.campoId)), esPozoDe))
+  // «Todavía no sé»: un equipo de un campo registrado, una vez, y no a la vez contestado en ese campo.
+  const porSaber = new Set<string>()
+  for (const x of c.topologiaPorSaber ?? []) {
+    const el = (x.elemento ?? '').trim()
+    if (!el) { e.push('Topología: un equipo «por saber» no tiene nombre.'); continue }
+    if (!conocido(x.campoId)) e.push(`Topología ${el}: «${x.campoId}» no es un campo registrado.`)
+    const k = `${x.campoId}|${el}`
+    if (porSaber.has(k)) e.push(`Topología ${el} (${nombre(x.campoId)}): está dos veces como «Todavía no sé».`)
+    porSaber.add(k)
+    if (topologia.some(t => t.elemento === el && t.campoId === x.campoId))
+      e.push(`Topología ${el} (${nombre(x.campoId)}): está contestado y a la vez como «Todavía no sé»: es lo uno o lo otro.`)
+  }
+  e.push(...validarCapacidades(c.capacidades))
   return e
 }
