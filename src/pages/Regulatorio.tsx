@@ -11,11 +11,14 @@ import { descargarCsv } from '@/shared/lib/csv'
 import { Download, Lock } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
+import { ArbolCircular } from '@/widgets/choke/ArbolCircular'
 
 /** Lo que el regulador necesita: si el libro del período se puede publicar
  *  (factor de asignación en banda, custodia, sin identificar bajo el
- *  criterio), los puntos de medición y su calibración, y el diferido en las
- *  casillas de PRODML. TRIM lee la medición; nunca escribe sobre ella. */
+ *  criterio); el panel principal, el árbol de causas en el orden de la Circular
+ *  024 con lo que viaja a la ANH en cada paso (el árbol de pérdidas del choke,
+ *  orden `circular`); y debajo, los puntos de medición y su calibración y lo
+ *  mismo en las casillas de PRODML. TRIM lee la medición; nunca escribe sobre ella. */
 export function Regulatorio() {
   const campo = useCampo(); const cfg = usePlanta(); const rol = useRol(); const rango = useRango()
   const campoId = useApp(s => s.campoId), abrirEquipo = useApp(s => s.abrirEquipo)
@@ -60,7 +63,9 @@ export function Regulatorio() {
         </span>
       </Tip>
 
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(310px,1fr))]">
+      <ArbolCircular campoId={campoId} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
+
+      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr))]">
         <Panel titulo="PUNTOS DE MEDICIÓN OFICIAL" extra={`${pmos.length} en ${campo.nombre}`}>
           <p className="mb-1.5 text-[11px] text-[var(--tinta2)]">{medicion.origen?.fuente ?? 'sin punto de medición'} · corte de agua: {medicion.origen?.bsw ?? 'sin dato'}</p>
           {pmos.map(p => (
@@ -84,8 +89,8 @@ export function Regulatorio() {
           ))}
         </Panel>
 
-        <Panel titulo="DIFERIDO EN LAS CASILLAS DE PRODML" extra="ReasonLost · Energistics">
-          <Lectura>Cada barril del libro en la casilla del estándar. Lo declarado o sin identificar no tiene casilla hasta que alguien lo clasifique.</Lectura>
+        <Panel titulo="TAMBIÉN EN PRODML" extra="ReasonLost · Energistics">
+          <Lectura>El mismo diferido del árbol de arriba, en las casillas del estándar PRODML. Lo declarado o sin identificar no tiene casilla hasta que alguien lo clasifique.</Lectura>
           {porCategoria.map(({ c, bbl }) => (
             <div key={c.id} className="flex items-baseline justify-between gap-2 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
               <span className="min-w-0">{c.nombre}<small className="font-mono block text-[9.5px] text-[var(--tinta3)]">{c.prodml}</small></span>

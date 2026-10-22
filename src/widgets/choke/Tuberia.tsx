@@ -1,6 +1,7 @@
-import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { useApp, useRol } from '@/app/store'
-import { useTuberia, type TuberiaCampo, type TramoTuberia, type TrenTuberia, type ChokeAnh } from '@/shared/api/choke'
+import { useTuberia, useArbolChoke, type TuberiaCampo, type TramoTuberia, type TrenTuberia, type ChokeAnh, type NodoArbol } from '@/shared/api/choke'
 import { useEstadoCampos } from '@/shared/api/diferidos'
 import { useEquiposDeHoy } from '@/shared/api/equipos'
 import { campoPorId } from '@/entities/campos'
@@ -15,7 +16,8 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { desplazable } from '@/shared/ui/alFinal'
 import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { CAJA, DONDE, SUJETO, VERBO, TONO, ESTADO_TRAMO, TEXTO, FALTA_CAPACIDAD, sinFirma, mayuscula, lista } from './palabras'
+import { CAJA, DONDE, SUJETO, VERBO, TONO, ESTADO_TRAMO, TEXTO, FALTA_CAPACIDAD, sinFirma, mayuscula, lista, codigosDelRol, type VerCodigos } from './palabras'
+import { Ramas } from './Ramas'
 
 /** «LA TUBERÍA DEL CAMPO» (U2 §2): ¿dónde está hoy el tope del campo, cuánto
  *  está pasando y qué se perdió en cada tramo? Cuatro tramos en serie
@@ -503,19 +505,19 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
 }
 
 /** «Se trabó en el período», por tramo, con los equipos que más pesan y «sin
- *  identificar» aparte. El total es el diferido del libro (U2 §0, principio 6). */
+ *  identificar» aparte. El total es el diferido del libro (U2 §0, principio 6).
+ *  Cada tramo se abre en su árbol de pérdidas (el «modelo choke expandido»):
+ *  planeada o no → causa → detalle → equipos → partes, con sus barriles y su
+ *  parte del tramo; las ramas suman el tramo (`useArbolChoke`, orden de gestión). */
 export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: TuberiaCampo; periodo: string; onPorTramo?: () => void; encabezado?: boolean }) {
+  const arbol = useArbolChoke({ campos: [t.campoId], desde: t.desde, hasta: t.hasta, orden: 'gestion' })
+  const codigos = codigosDelRol(useRol().id)
   const rotulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   const equipos = (xs: Array<{ equipo: string; bbl: number }>, conBbl: boolean) => xs.length
     ? ` (${xs.slice(0, 3).map(e => (conBbl ? `${e.equipo} ${n0(e.bbl)}` : e.equipo)).join(' · ')})` : ''
   const renglon = (clave: string, dondeTxt: string, bbl: number, eqs: string, discontinuo: boolean, tono?: string): ReactNode => (
-    <li key={clave} className="flex items-baseline gap-x-2 py-0.5 text-[11.5px]" data-tramo-periodo={clave} data-bbl={bbl}>
-      <i aria-hidden className={cn('inline-block h-2.5 w-3 shrink-0 translate-y-[1px] rounded-[1px]', discontinuo && 'border border-dashed border-[var(--tinta3)]')}
-        style={discontinuo ? undefined : { background: tono }} />
-      <span className="w-[104px] shrink-0 text-[var(--tinta2)]">{dondeTxt}</span>
-      <b className="tabular w-[52px] shrink-0 text-right">{n0(bbl)}</b>
-      <span className="min-w-0 text-[var(--tinta2)]">{eqs}</span>
-    </li>
+    <RenglonTramo key={clave} clave={clave} dondeTxt={dondeTxt} bbl={bbl} eqs={eqs} discontinuo={discontinuo} tono={tono}
+      nodo={arbol.raiz.hijos.find(h => h.valor === clave)} codigos={codigos} />
   )
   return (
     <div className="border-t border-[var(--linea2)] py-1.5" data-se-trabo data-total={t.diferido}>
@@ -528,12 +530,59 @@ export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: Tube
         </div>
       )}
       {t.diferido <= 0 ? <p className="text-[11.5px] text-[var(--tinta2)]">Nada se trabó en el período ({periodo.toLowerCase()}).</p> : (
-        <ul className="pl-3">
-          {t.perdidoPeriodo.map(p => renglon(p.tramo, DONDE[p.tramo], p.bbl, equipos(p.equiposTop, false), false, TONO[p.tramo]))}
-          {renglon('sin-asignar', 'sin identificar', t.sinTramoBbl, equipos(t.sinTramoEquipos, true), true)}
-        </ul>
+        <>
+          <ul className="pl-1">
+            {t.perdidoPeriodo.map(p => renglon(p.tramo, DONDE[p.tramo], p.bbl, equipos(p.equiposTop, false), false, TONO[p.tramo]))}
+            {renglon('sin-asignar', 'sin identificar', t.sinTramoBbl, equipos(t.sinTramoEquipos, true), true)}
+          </ul>
+          <p className="no-imprimir mt-0.5 pl-1 text-[10.5px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>
+        </>
       )}
     </div>
+  )
+}
+
+/** Un tramo de «Se trabó en el período»: con barriles, un botón que abre su
+ *  árbol (`aria-expanded`); en el papel, desplegado. Los equipos van fuera del
+ *  botón: el botón dice el tramo y sus barriles. */
+function RenglonTramo({ clave, dondeTxt, bbl, eqs, discontinuo, tono, nodo, codigos }: {
+  clave: string; dondeTxt: string; bbl: number; eqs: string; discontinuo: boolean; tono?: string
+  nodo: NodoArbol | undefined; codigos: VerCodigos
+}) {
+  const [abierto, setAbierto] = useState(false)
+  const id = useId()
+  const conRamas = !!nodo && bbl >= 0.5 && nodo.hijos.length > 0
+  const muestra = (
+    <i aria-hidden className={cn('inline-block h-2.5 w-3 shrink-0 translate-y-[1px] rounded-[1px]', discontinuo && 'border border-dashed border-[var(--tinta3)]')}
+      style={discontinuo ? undefined : { background: tono }} />
+  )
+  const cifras = (
+    <>
+      <span className="w-[104px] shrink-0 text-[var(--tinta2)]">{dondeTxt}</span>
+      <b className="tabular w-[52px] shrink-0 text-right">{n0(bbl)}</b>
+    </>
+  )
+  return (
+    <li className="py-0.5 text-[11.5px]" data-tramo-periodo={clave} data-bbl={bbl}>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        {conRamas ? (
+          <button type="button" aria-expanded={abierto} aria-controls={id} onClick={() => setAbierto(a => !a)}
+            className="flex min-h-6 shrink-0 cursor-pointer items-baseline gap-x-2 rounded-sm text-left hover:bg-[var(--panel2)]">
+            <ChevronRight aria-hidden size={12} className={cn('shrink-0 translate-y-[2px] text-[var(--tinta3)] transition-transform print:rotate-90', abierto && 'rotate-90')} />
+            {muestra}{cifras}
+            <span className="sr-only"> bbl, con sus ramas: planeada o no, causa, detalle y equipos</span>
+          </button>
+        ) : (
+          <span className="flex shrink-0 items-baseline gap-x-2"><span aria-hidden className="inline-block w-3" />{muestra}{cifras}</span>
+        )}
+        <span className="min-w-0 text-[var(--tinta2)]">{eqs}</span>
+      </div>
+      {conRamas && (
+        <div id={id} className={cn('mb-1 ml-[22px] mt-0.5 max-w-[640px]', !abierto && 'hidden print:block')} data-ramas={clave}>
+          <Ramas nodo={nodo} base={nodo.bbl} codigos={codigos} />
+        </div>
+      )}
+    </li>
   )
 }
 

@@ -254,6 +254,13 @@ function casosDe(M) {
     // El árbol de paradas de la ANH: las filas del mes, con su clasificación propuesta, y su calidad (sin nada dicho por una persona).
     casos.push(caso(`anh/paradas-${nombre}-${ultimo.mes}`, `Paradas ANH (paradas_pozo) de ${nombre}, ${ultimo.mes}, con la clasificación que propone TRIM`, C.PARADAS_ANH, q, ARB.pedirParadasAnh(q, ctx, {})))
     casos.push(caso(`anh/calidad-${nombre}-${ultimo.mes}`, `Calidad de la clasificación ANH de ${nombre}, ${ultimo.mes}`, C.CALIDAD_ANH, q, ARB.pedirCalidadAnh(q, ctx, {})))
+    // El árbol de pérdidas del choke: cada barril diferido de su tramo y de los pasos del árbol, en el
+    // orden de gestión y en el de la circular (con las cadenas de la ANH), sin nada dicho por una persona.
+    for (const [orden, como] of [['gestion', 'de gestión: tramo → planeada o no → causa → detalle → equipo → parte'],
+      ['circular', 'de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle']]) {
+      const qo = { ...q, orden }
+      casos.push(caso(`choke-arbol/${nombre}-${ultimo.mes}-${orden}`, `El árbol de pérdidas del choke de ${nombre}, ${ultimo.mes}, en el orden ${como}`, C.ARBOL_CHOKE, qo, CHK.pedirArbolChoke(qo, ctx, {})))
+    }
   }
   // La locación de los pozos (el caso de borde de la topología) no tiene endpoint: los casos que la leen lo dicen.
   const conLocacion = c => (ins.pozos.some(p => p.campoId === c && M.LOC(c)(p.id)) ? [`insumos/${c}/locaciones.json`] : undefined)

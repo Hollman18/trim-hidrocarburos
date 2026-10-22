@@ -10,7 +10,7 @@ import { expect, test as base, type ElementHandle, type Page } from '@playwright
 
 /** Los roles de src/entities/roles.ts: con su introducción marcada como vista,
  *  la pantalla que se prueba no queda detrás de ella. */
-const ROLES = ['ger', 'prod', 'sup', 'oper', 'jefe', 'conf', 'tec', 'adm']
+const ROLES = ['ger', 'prod', 'sup', 'oper', 'jefe', 'conf', 'tec', 'reg', 'adm']
 
 export class Flujo {
   /** Las excepciones sin atrapar de la página (las que antes se oían por

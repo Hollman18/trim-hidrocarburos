@@ -115,6 +115,7 @@ try {
     REPARTO_CHOKE: p => CHK.pedirRepartoChoke(p, s.ctx, s.versiones),
     REPARTO_CHOKE_MENSUAL: p => CHK.pedirRepartoMensual(p.campos, s.ctx, s.versiones),
     BASE_CHOKE: p => CHK.pedirBaseChoke(p, s.ctx, s.versiones),
+    ARBOL_CHOKE: p => CHK.pedirArbolChoke(p, s.ctx, s.clasificacionesAnh ?? {}),
     TOPOLOGIA: p => CHK.pedirTopologia(p.campo, s.ctx),
     PROPUESTAS_TOPOLOGIA: p => CHK.pedirPropuestasTopologia(p.campo, s.ctx),
     PARADAS_ANH: p => ARB.pedirParadasAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
@@ -238,6 +239,7 @@ try {
       SERIE_CHOKE: TODOS.flatMap(campo => periodos.map(r => ({ campo, desde: r.desde, hasta: r.hasta }))),
       TUBERIA_AGUA: TODOS.map(campo => ({ campo })), CAPACIDADES: TODOS.map(campo => ({ campo })), CRITICIDAD: porCampos(),
       REPARTO_CHOKE: conPeriodo(), REPARTO_CHOKE_MENSUAL: porCampos(), BASE_CHOKE: conPeriodo(),
+      ARBOL_CHOKE: conPeriodo().flatMap(q => ['gestion', 'circular', 'responsable'].map(orden => ({ ...q, orden }))),
       TOPOLOGIA: TODOS.map(campo => ({ campo })), PROPUESTAS_TOPOLOGIA: TODOS.map(campo => ({ campo })),
       PARADAS_ANH: conPeriodo(), CALIDAD_ANH: conPeriodo(),
       MENSAJES: porCampos(), SAP_AVISOS: porCampos(), SAP_ORDENES: porCampos(),
@@ -621,7 +623,7 @@ try {
       && !(await E.importarTopologia({ rolId: 'sup' }, { campo: 'ceiba', texto: 'SE-2;todos' })).ok,
       `el CSV dice por fila lo que bloquea (filas ${bloquean}: equipo que no existe, repetido, pozo ajeno, sin pozos) y el caso de borde de MPP-301 avisa sin bloquear («${mpp?.texto.slice(0, 70)}…»); solo el administrador la carga`)
     // j. Las rutas nuevas están en CONTRATO.md.
-    const nuevas = ['TUBERIA', 'SERIE_CHOKE', 'TUBERIA_AGUA', 'CAPACIDADES', 'CRITICIDAD', 'REPARTO_CHOKE', 'REPARTO_CHOKE_MENSUAL', 'BASE_CHOKE', 'TOPOLOGIA', 'PROPUESTAS_TOPOLOGIA', 'PARADAS_ANH', 'CALIDAD_ANH']
+    const nuevas = ['TUBERIA', 'SERIE_CHOKE', 'TUBERIA_AGUA', 'CAPACIDADES', 'CRITICIDAD', 'REPARTO_CHOKE', 'REPARTO_CHOKE_MENSUAL', 'BASE_CHOKE', 'ARBOL_CHOKE', 'TOPOLOGIA', 'PROPUESTAS_TOPOLOGIA', 'PARADAS_ANH', 'CALIDAD_ANH']
       .map(n => `\`${C[n].ruta}`)
     const posts = ['POST /api/anh/paradas/:id/clasificacion', 'POST /api/anh/paradas/:id/yacimiento', 'POST /api/anh/paradas/confirmar',
       'POST /api/anh/paradas/:id/respuesta', 'POST /api/anh/paradas/:id/revision', 'POST /api/configuracion/vista-previa', 'POST /api/topologia/importar']
@@ -721,6 +723,31 @@ try {
       && firma11.ok && SES.sesion().versiones.at(-1).cambios.some(x => /^Capacidades de La Ceiba \(se firman por primera vez\): tren de crudo 12\.000/.test(x))
       && despues11.vigentes.crudo.estado === 'firmado' && despues11.firma?.version === firma11.version && tub11.capacidades.estado === 'parte' && /firmadas el/.test(tub11.capacidades.texto),
       `las capacidades se firman con la configuración: menos de lo que ya pasó o un empate sin explicar no se firman (422: «${menos.error?.slice(0, 70)}…»), con las mismas reglas en la vista previa; firmadas, la vista y la tubería dicen quién y cuándo («${tub11.capacidades.texto}»)`)
+
+    console.log('\n=== 12. El árbol de pérdidas del choke (GET /api/vistas/choke/arbol) ===')
+    // a. Lo que guardaron las personas en esta sesión (la corrección, el lote y el yacimiento de la sección 1) llega al árbol.
+    const s12 = SES.sesion()
+    const qa12 = { campos: ['ceiba'], desde: new Date(cerrado.desde), hasta: new Date(cerrado.hasta) }
+    const filas12 = ARB.pedirParadasAnh(qa12, s12.ctx, s12.clasificacionesAnh)
+    const arboles12 = ['gestion', 'circular', 'responsable'].map(orden => CHK.pedirArbolChoke({ ...qa12, orden }, s12.ctx, s12.clasificacionesAnh))
+    const confirmadas12 = filas12.filter(p => p.estado === 'confirmada').reduce((a, p) => a + p.diferidaTrimBbl, 0)
+    const libro12 = DIF.pedirLibro(qa12, s12.ctx)
+    const cerca12 = (a, b) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b))
+    comprobar(confirmadas12 > 0 && arboles12.every(a => cerca12(a.raiz.confirmadoBbl, confirmadas12) && cerca12(a.raiz.bbl, libro12.diferido) && a.raiz.filas === filas12.length),
+      `lo que dijeron las personas en la sesión llega al árbol: ${Math.round(confirmadas12)} bbl con los 6 pasos confirmados en La Ceiba, ${cerrado.mes}, en los tres órdenes; la raíz sigue siendo el diferido del libro (${Math.round(libro12.diferido)} bbl)`)
+    // b. El códec revisa el árbol al entrar: un nodo que no suma, unas hermanas fuera de orden o un orden que no existe no entran, y dice dónde.
+    const j12 = JSON.parse(JSON.stringify(K.aRespuesta(C.ARBOL_CHOKE.codec, arboles12[0])))
+    const revivir12 = j => { try { K.deRespuesta(C.ARBOL_CHOKE.codec, j); return '' } catch (e) { return e instanceof K.ErrorDeContrato ? e.message : `otro error: ${e.message}` } }
+    const noSuma = structuredClone(j12); noSuma.datos.raiz.hijos[0].hijos[0].bbl += 10
+    const desordenado = structuredClone(j12); desordenado.datos.raiz.hijos.reverse()
+    const otroOrden = structuredClone(j12); otroOrden.datos.orden = 'por-capricho'
+    const mNoSuma = revivir12(noSuma), mDesorden = revivir12(desordenado), mOrden = revivir12(otroOrden)
+    comprobar(revivir12(j12) === '' && /^raiz\.hijos\[0\]: el árbol no se puede creer: no suma sus ramas/.test(mNoSuma) && /fuera de orden/.test(mDesorden) && /no es un orden del árbol/.test(mOrden)
+      && !diferencia(K.deRespuesta(C.ARBOL_CHOKE.codec, j12), arboles12[0]),
+      `un árbol que no suma sus ramas no entra y dice dónde («${mNoSuma.slice(0, 90)}…»); tampoco unas hermanas fuera de orden ni un orden que no existe`)
+    // c. La ruta lleva el orden en la consulta.
+    comprobar(C.urlDe(C.ARBOL_CHOKE, { ...qa12, orden: 'circular' }).startsWith('/vistas/choke/arbol?campos=ceiba&desde=') && /&orden=circular$/.test(C.urlDe(C.ARBOL_CHOKE, { ...qa12, orden: 'circular' })),
+      `el orden va en la consulta: ${C.urlDe(C.ARBOL_CHOKE, { ...qa12, orden: 'circular' }).replace(/desde=[^&]+&hasta=[^&]+/, 'desde=…&hasta=…')}`)
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -891,9 +918,11 @@ try {
     const tubH = await consulta.traer(C.TUBERIA, qt, 'h5', noCalcular)
     const anhH = await consulta.traer(C.PARADAS_ANH, qa, 'h5', noCalcular)
     const critH = await consulta.traer(C.CRITICIDAD, { campos: ['ceiba', 'morichal'] }, 'h5', noCalcular)
-    comprobar(pedidos.length === nH + 3 && pedidos.slice(-3).every(x => x.startsWith('GET /api/vistas/')) && !diferencia(tubH, R.TUBERIA(qt))
-      && !diferencia(anhH, R.PARADAS_ANH(qa)) && !diferencia(critH, R.CRITICIDAD({ campos: ['ceiba', 'morichal'] })) && anhH.some(p => p.clasificacion.n1),
-      `la tubería, las paradas ANH y «si falla hoy» llegan por GET y son lo mismo que calcula el motor (${pedidos.slice(-3).map(x => x.split('?')[0].slice(4)).join(', ')})`)
+    const arbolH = await consulta.traer(C.ARBOL_CHOKE, { ...qa, orden: 'circular' }, 'h5', noCalcular)
+    comprobar(pedidos.length === nH + 4 && pedidos.slice(-4).every(x => x.startsWith('GET /api/vistas/')) && !diferencia(tubH, R.TUBERIA(qt))
+      && !diferencia(anhH, R.PARADAS_ANH(qa)) && !diferencia(critH, R.CRITICIDAD({ campos: ['ceiba', 'morichal'] })) && anhH.some(p => p.clasificacion.n1)
+      && !diferencia(arbolH, R.ARBOL_CHOKE({ ...qa, orden: 'circular' })) && arbolH.raiz.hijos.every(h => h.dimension === 'responsable') && /orden=circular/.test(pedidos.at(-1)),
+      `la tubería, las paradas ANH, «si falla hoy» y el árbol del choke llegan por GET y son lo mismo que calcula el motor (${pedidos.slice(-4).map(x => x.split('?')[0].slice(4)).join(', ')})`)
     const filaH = anhH.find(p => p.estado === 'propuesta')
     const antesH = SES.sesion().clasificacionesAnh, nC = cuerpos.length
     const rc = await E.clasificarParada({ rolId: 'sup' }, filaH.id, { pasos: { impacto: 'diferida' }, por: 'alguien', porId: 'x', hora: '2026-10-02T14:00:00-05:00' })

@@ -57,3 +57,11 @@ export const FALTA_CAPACIDAD: Partial<Record<ChokeAnh, string>> = { planta: 'la 
 export const mayuscula = (s: string) => (s ? `${s[0]!.toUpperCase()}${s.slice(1)}` : s)
 /** «LC-21 y LC-08», «LC-02, LC-10 y LC-01». */
 export const lista = (xs: readonly string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+
+/** Cómo se ven los códigos de la ANH en el árbol de pérdidas: nunca, en el ⓘ de cada paso o al lado. */
+export type VerCodigos = 'no' | 'info' | 'vista'
+/** Quién ve los códigos de la ANH y cómo (U2 §1.3; U1 §1.0, punto 7): regulatorio
+ *  los lee al lado de cada paso; confiabilidad y el administrador, en el ⓘ. Nadie
+ *  más: el gerente, producción y mantenimiento leen las palabras de campo. */
+export const codigosDelRol = (rolId: string): VerCodigos =>
+  (rolId === 'reg' ? 'vista' : rolId === 'conf' || rolId === 'adm' ? 'info' : 'no')

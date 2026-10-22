@@ -101,7 +101,7 @@ export const ROLES: Rol[] = [
     puede: con('evidencia:exportar') },
   { id: 'reg', nivel: 'ingenieria', nombre: 'Cumplimiento regulatorio', persona: 'Iván Salas', iniciales: 'IS',
     pantallas: ['regulatorio'], inicio: 'regulatorio', topologia: 'medicion',
-    foco: 'Vigilamos que la medición esté viva. Nunca la tocamos.',
+    foco: 'Cada parada en el árbol de la circular, con lo que va a la ANH, y la medición viva. Nunca la tocamos.',
     area: 'soporte',
     campos: 'todos',
     puede: con('evidencia:exportar') },

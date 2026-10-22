@@ -178,6 +178,11 @@
                 ]
               },
               {
+                "name": "@/entities/choke-arbol",
+                "allowTypeImports": true,
+                "message": "Del motor (choke-arbol) las pantallas y el estado de la aplicación no importan nada: el árbol, sus palabras y sus reglas de presentación llegan por la costura: src/shared/api/choke.ts."
+              },
+              {
                 "name": "@/entities/choke-agua",
                 "allowTypeImports": true,
                 "message": "Del motor (choke-agua) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts.",
@@ -487,7 +492,8 @@
                   "pedirBaseChoke",
                   "pedirTopologia",
                   "pedirPropuestasTopologia",
-                  "pedirCapacidades"
+                  "pedirCapacidades",
+                  "pedirArbolChoke"
                 ],
                 "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
               },

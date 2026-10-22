@@ -17,6 +17,8 @@ export const RUTAS = [
   ...R('conf', ['configuracion', 'filosofia'], ['morichal']),
   ...R('tec', ['trabajo', 'bombas', 'esp', 'causa'], ['ceiba']),
   ...R('adm', ['configuracion', 'filosofia', 'conectores', 'planta', 'perfil'], ['ceiba', 'morichal']),
+  // Cumplimiento regulatorio (encendido con el árbol de pérdidas del choke): el árbol en el orden de la circular.
+  ...R('reg', ['regulatorio'], ['ceiba', 'morichal']),
   // estados que se abren con un clic o desde la URL: bomba, pozo, servicio
   '#/sup/bombas/ceiba/curso/P-201B', '#/jefe/riesgo/ceiba/curso/P-201B', '#/conf/confiabilidad/morichal/curso/MPP-301',
   '#/prod/pozos/ceiba/curso/LC-21', '#/prod/pozos/morichal/curso/LC-14', '#/jefe/esp/morichal/curso/MN-07',
@@ -55,6 +57,8 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: string
     no: [...NO_DECISION, 'QUIÉN SE LOS LLEVA', 'Si todo sigue como está ahora', 'A la fecha:', '2 servicios en alarma', 'Reparar y arrancar', 'WhatsApp con ventana'] },
   '#/ger/resumen/ceiba/curso': { si: ['barriles diferidos', 'bbl · retorno', 'Antes', 'Durante', 'Después', 'Ver planes de acción', 'MEDIDO', 'POR EQUIPO', 'bbl · calculado', 'Mantenimiento proactivo', '+ 1 servicio en alarma'], no: NO_DECISION },
   '#/ger/diferidos/ceiba/curso': { si: ['MES A MES', 'DÓNDE BAJARLO'], no: NO_DECISION },
+  // Regulatorio: el árbol de la circular con la cadena de cada paso, la rama vacía de la pérdida y PRODML debajo.
+  '#/reg/regulatorio/ceiba/curso': { si: ['ÁRBOL DE CAUSAS · COMO LA CIRCULAR', 'resp_par', 'choke_mod', 'cau_niv1', 'Pérdida: TRIM todavía no tiene registro de pérdidas', 'el diferido del libro', 'TAMBIÉN EN PRODML'], no: [] },
   '#/ger/produccion/ceiba/curso': { si: ['DÍA A DÍA'], no: [...NO_DECISION, 'MEDICIÓN OFICIAL', 'ASIGNACIÓN OFICIAL'] },
   // RegExp: en minúsculas «metas por campo» lo trae el motivo de la versión 1 y la aserción pasaría sin el panel.
   '#/ger/configuracion/ceiba/curso': { si: [/METAS POR CAMPO/, 'Meta global', 'FIRMAR LA VERSIÓN', 'Usuarios y accesos'], no: ['TANQUES DE AGUA', 'PARADAS PROGRAMADAS', 'NO SE CONFIGURA', 'Configuración técnica'] },

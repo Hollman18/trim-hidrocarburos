@@ -1,10 +1,17 @@
-import { useCtx, useVersiones } from './sesion'
+import { useCtx, useVersiones, useSesion } from './sesion'
 import { useDato, versionDe } from './consulta'
 import { locacionDe } from './fuente'
+import { guardadasDe } from './arbol'
 import {
   TUBERIA, SERIE_CHOKE, TUBERIA_AGUA, CRITICIDAD, REPARTO_CHOKE, REPARTO_CHOKE_MENSUAL, BASE_CHOKE, TOPOLOGIA, PROPUESTAS_TOPOLOGIA, CAPACIDADES,
-  type ConsultaPeriodo,
+  ARBOL_CHOKE, type ConsultaPeriodo, type ConsultaArbol,
 } from './contrato'
+import {
+  arbolDelChoke, ORDENES_ARBOL, NIVELES_ARBOL, NOMBRE_ORDEN, NOMBRE_NIVEL, PASO_DE_NIVEL, CAMPO_ANH, FALTA, SIN_ASIGNAR,
+  TEXTO_FALTA, TEXTO_PERDIDA, EXPLICA_PERDIDA, esRamaQueFalta,
+  type ArbolChoke, type NodoArbol, type OrdenArbol, type NivelArbol, type DimensionArbol,
+} from '@/entities/choke-arbol'
+import type { BorradorClasificacion } from '@/entities/anh-clasificacion'
 import {
   tuberiaCampo, serieChoke, brechaPorChoke, repartoPorMes, lineaBasePorTramo, topologiaDe, topologiaFirmada, topologiaDerivada,
   propuestasTopologia, marcarCasosBorde, casoBordeDe, alcancePorPozos, chokeDeAlcance, validarTopologia, porSaberDelCampo, sinResponderDe,
@@ -64,6 +71,10 @@ export {
   ORDEN_CHOKE, ORDEN_CHOKE_CAMPO, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_CHOKE, EXPLICA_TRAMO, RESUMEN_TRAMO, DONDE_CHOKE,
   NOMBRE_CHOKE_CAMPO, SUBNIVEL_MERCADO, NOMBRE_ALCANCE, NOMBRE_ESCALON, PARAMETROS_CHOKE, EXPLICA_CASO_BORDE, ORDEN_AGUA, NOMBRE_TRAMO_AGUA,
   PREGUNTA_ORIGEN, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, RESPUESTAS_TOPOLOGIA,
+  // Las palabras del árbol de pérdidas del choke: sus órdenes y niveles, lo
+  // que falta, la rama vacía de la pérdida y el campo de la ANH de cada paso.
+  ORDENES_ARBOL, NIVELES_ARBOL, NOMBRE_ORDEN, NOMBRE_NIVEL, PASO_DE_NIVEL, CAMPO_ANH, FALTA, SIN_ASIGNAR, TEXTO_FALTA, TEXTO_PERDIDA,
+  EXPLICA_PERDIDA, esRamaQueFalta,
   // Reglas de lo que entra a mano (las dos puntas: la pantalla avisa, el servidor decide):
   // el tramo sale del alcance y el alcance del número de pozos (U2 §8.2); la
   // respuesta de cada equipo, la topología del borrador encima de la
@@ -83,6 +94,7 @@ export type {
   RespuestaTopologia, RespuestaEquipo, TopologiaEnBorrador, VistaCapacidades,
   FuenteCapacidad, CapacidadFirmada, CapacidadesCampo, CapacidadVigente, BombaVigente, CapacidadesVigentes, TramoCapacidad,
   EstadoCapacidad, HallazgoCapacidad, FirmaCapacidades, EntradaRevision,
+  ArbolChoke, NodoArbol, OrdenArbol, NivelArbol, DimensionArbol, ConsultaArbol,
 }
 
 /** La versión del contexto con que se calcula: entra en la clave de la caché. */
@@ -183,6 +195,18 @@ export const pedirRepartoMensual = (campos: string[], ctx: Contexto, versiones?:
 export function useRepartoMensual(campos: string[]): MesPorTramo[] {
   const ctx = useCtx(), versiones = useVersiones()
   return useDato(REPARTO_CHOKE_MENSUAL, { campos }, vh(ctx, versiones), () => pedirRepartoMensual(campos, ctx, versiones))
+}
+
+/** `GET /api/vistas/choke/arbol?campos=&desde=&hasta=&orden=`: el árbol de
+ *  pérdidas del choke del período, con la clasificación vigente de cada
+ *  parada. El servidor aplica lo que dijeron las personas; en el demo eso vive
+ *  en la sesión (`clasificacionesAnh`), como en `/vistas/anh/paradas`. */
+export const pedirArbolChoke = (q: ConsultaArbol, ctx: Contexto, guardadas: Record<string, BorradorClasificacion>): ArbolChoke =>
+  arbolDelChoke(q.campos, q.desde, q.hasta, ctx, { orden: q.orden, guardadas: guardadasDe(guardadas) })
+export function useArbolChoke(q: ConsultaArbol): ArbolChoke {
+  const ctx = useCtx()
+  const guardadas = useSesion(s => s.clasificacionesAnh)
+  return useDato(ARBOL_CHOKE, q, `${versionDe(ctx)}.${versionDe(guardadas)}`, () => pedirArbolChoke(q, ctx, guardadas))
 }
 
 /** `GET /api/vistas/choke/base?campos=&desde=&hasta=` · undefined sin tres meses publicados antes del período. */

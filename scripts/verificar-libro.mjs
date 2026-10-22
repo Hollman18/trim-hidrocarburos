@@ -2785,6 +2785,159 @@ console.log('\n=== 29. Tanda 4: el mercado, «Todavía no sé», las capacidades
   await w.close()
 }
 
+console.log('\n=== 30. El árbol de pérdidas del choke: cada barril cuelga de su tramo y de los pasos del árbol (SPE-36848, «modelo expandido»; CHOKE-COMPLETO §6) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const AR = await v.ssrLoadModule('/src/entities/choke-arbol.ts')
+  const PA = await v.ssrLoadModule('/src/entities/anh-paradas.ts')
+  const CL = await v.ssrLoadModule('/src/entities/anh-clasificacion.ts')
+  const KA = await v.ssrLoadModule('/src/entities/anh-catalogo.ts')
+  const nodos = (n, out = []) => { out.push(n); for (const h of n.hijos) nodos(h, out); return out }
+  const hojas = n => (n.hijos.length ? n.hijos.flatMap(hojas) : [n])
+  const deNivel = (n, nivel) => nodos(n).filter(x => x.dimension === nivel)
+  // Exacto: cada cifra de un nodo con ramas es la suma de sus ramas, en su orden, sin tolerancia.
+  const sumaExacta = n => !n.hijos.length || (['bbl', 'filas', 'confirmadoBbl', 'noPlaneadaBbl'].every(k => n.hijos.reduce((a, h) => a + h[k], 0) === n[k]) && n.hijos.every(sumaExacta))
+  const suma = (ps, f = () => true) => ps.filter(f).reduce((a, p) => a + p.diferidaTrimBbl, 0)
+  const grupos = [...TODOS.map(c => [c]), TODOS]
+  const malas = { suma: [], raiz: [], hojas: [], cotas: [], revision: [], tramo: [], equipos: [], n1: [], noPlaneada: [] }
+  let arboles = 0
+  for (const [nombre, r] of [['un mes cerrado', D.rangoDePeriodo('cerrado')], ['el mes en curso', D.rangoDePeriodo('curso')]]) for (const ids of grupos) {
+    const ps = PA.paradasAnh(ids, r.desde, r.hasta, ctx0)
+    const lb = L.libro(ids, r.desde, r.hasta, ctx0)
+    const b = CH.brechaPorChoke(ids, r.desde, r.hasta, ctx0)
+    const conc = PA.conciliarAnh(ps)
+    for (const orden of AR.ORDENES_ARBOL) {
+      const a = AR.arbolDelChoke(ids, r.desde, r.hasta, ctx0, { orden })
+      const quien = `${nombre} ${ids.length === 1 ? ids[0] : 'portafolio'} (${orden})`
+      arboles++
+      if (!sumaExacta(a.raiz)) malas.suma.push(quien)
+      if (!(cerca(a.raiz.bbl, lb.diferido, 1e-9) && cerca(a.raiz.bbl, suma(ps), 1e-9) && a.raiz.filas === ps.length
+        && a.raiz.eventos === new Set(ps.map(p => p.eventoId)).size)) malas.raiz.push(`${quien}: ${a.raiz.bbl} contra ${lb.diferido}`)
+      if (hojas(a.raiz).reduce((x, h) => x + h.filas, 0) !== ps.length) malas.hojas.push(quien)
+      if (!nodos(a.raiz).every(n => n.confirmadoBbl <= n.bbl && n.noPlaneadaBbl <= n.bbl && n.eventos <= n.filas)) malas.cotas.push(quien)
+      const rev = AR.revisarArbol(a)
+      if (rev.length) malas.revision.push(`${quien}: ${rev[0].ruta} ${rev[0].texto}`)
+      if (!cerca(a.raiz.noPlaneadaBbl, suma(ps, p => p.clasificacion.planeacion?.valor === 'no-planeada'), 1e-9)) malas.noPlaneada.push(quien)
+      // Σ por N1 (lo que falta es «sin-causa») = la conciliación de la ANH.
+      const porN1 = {}
+      for (const n of deNivel(a.raiz, 'n1')) { const k = n.valor === AR.FALTA ? 'sin-causa' : n.valor; porN1[k] = (porN1[k] ?? 0) + n.bbl }
+      if (![...new Set([...Object.keys(porN1), ...Object.keys(conc.porN1)])].every(k => cerca(porN1[k] ?? 0, conc.porN1[k] ?? 0, 1e-9))) malas.n1.push(quien)
+      if (orden !== 'gestion') continue
+      // El primer nivel de `gestion` es el reparto por tramo de la tubería y de «Por dónde se trabó», tramo por tramo.
+      const primero = Object.fromEntries(a.raiz.hijos.map(h => [h.valor, h.bbl]))
+      if (!(a.raiz.hijos.every(h => h.dimension === 'tramo' && CH.CHOKES_Y_SIN_ASIGNAR.includes(h.valor))
+        && CH.CHOKES_Y_SIN_ASIGNAR.every(k => cerca(primero[k] ?? 0, b.porChoke[k], 1e-9)))) malas.tramo.push(quien)
+      // Y dentro de cada tramo, sus equipos son los mismos de la tubería, con los mismos barriles.
+      for (const t of a.raiz.hijos) {
+        const eq = {}
+        for (const n of deNivel(t, 'equipo')) eq[n.valor] = (eq[n.valor] ?? 0) + n.bbl
+        const es = b.porChokeEquipo[t.valor] ?? []
+        if (!(es.length === Object.keys(eq).length && es.every(x => cerca(eq[x.equipo] ?? 0, x.bbl, 1e-9)))) malas.equipos.push(`${quien} · ${t.valor}`)
+      }
+    }
+  }
+  const dice = xs => (xs.length ? `: ${xs.slice(0, 4).join('; ')}` : '')
+  comprobar(malas.suma.length === 0, `cada nodo = Σ de sus ramas, exacto (barriles, filas, lo confirmado y lo no planeado), en los ${arboles} árboles: cada campo y el portafolio, un mes cerrado y el mes en curso, en los tres órdenes${dice(malas.suma)}`)
+  comprobar(malas.raiz.length === 0 && malas.hojas.length === 0,
+    `la raíz es el diferido del libro del período (Σ diferidaTrimBbl = libro().diferido) con todas sus filas y eventos, y las hojas suman el número de filas de la ANH: ningún barril se queda afuera ni se cuenta dos veces${dice([...malas.raiz, ...malas.hojas])}`)
+  comprobar(malas.tramo.length === 0 && malas.equipos.length === 0,
+    `el primer nivel del orden «gestion» es brechaPorChoke().porChoke, tramo por tramo (con «sin identificar»), y dentro de cada tramo los equipos son los de porChokeEquipo${dice([...malas.tramo, ...malas.equipos])}`)
+  comprobar(malas.n1.length === 0, `Σ por causa (N1) en los tres órdenes = conciliarAnh().porN1 (lo que falta = «sin-causa»)${dice(malas.n1)}`)
+  comprobar(malas.cotas.length === 0 && malas.noPlaneada.length === 0 && malas.revision.length === 0,
+    `lo confirmado y lo no planeado nunca pasan del nodo, lo no planeado es el de las filas no planeadas, y revisarArbol no encuentra nada: niveles en su lugar, hermanas de más a menos y lo que falta al final${dice([...malas.cotas, ...malas.noPlaneada, ...malas.revision])}`)
+
+  // En los 13 meses: las filas cuyo paso 2 espera una respuesta cuentan donde las propone TRIM, como en la tubería.
+  const hD = new Date(L.calendario()[0].desde), hH = R.AHORA
+  const malasH = grupos.filter(ids => {
+    const a = AR.arbolDelChoke(ids, hD, hH, ctx0), b = CH.brechaPorChoke(ids, hD, hH, ctx0)
+    const primero = Object.fromEntries(a.raiz.hijos.map(h => [h.valor, h.bbl]))
+    return !CH.CHOKES_Y_SIN_ASIGNAR.every(k => cerca(primero[k] ?? 0, b.porChoke[k], 1e-9)) || !sumaExacta(a.raiz)
+  })
+  const espera = PA.paradasAnh(['guacamayo'], hD, hH, ctx0).filter(p => !p.clasificacion.choke && p.propuesta.sugerido.choke)
+  comprobar(malasH.length === 0 && espera.length > 0 && espera.every(p => p.causa.tipo === 'evacuacion' && p.propuesta.sugerido.choke === 'planta' && p.faltan.includes('choke')),
+    `en los 13 meses también: las ${espera.length} filas de Guacamayo (LACT-01, ${f(suma(espera))} bbl) que esperan «¿el oleoducto o el cliente estaba recibiendo?» cuentan en la planta, donde las propone TRIM, como en la tubería; no se reparten${dice(malasH.map(x => x.join('+')))}`)
+
+  // Los tres órdenes reparten el mismo barril.
+  const sep = D.rangoDePeriodo('cerrado')
+  const tres = AR.ORDENES_ARBOL.map(orden => AR.arbolDelChoke(TODOS, sep.desde, sep.hasta, ctx0, { orden }))
+  comprobar(tres.every(a => cerca(a.raiz.bbl, tres[0].raiz.bbl, 1e-12) && a.raiz.filas === tres[0].raiz.filas && a.raiz.eventos === tres[0].raiz.eventos
+      && cerca(a.raiz.noPlaneadaBbl, tres[0].raiz.noPlaneadaBbl, 1e-12) && a.raiz.confirmadoBbl === tres[0].raiz.confirmadoBbl)
+    && tres.map(a => a.niveles.join(' → ')).join(' | ') === 'tramo → planeacion → n1 → n2 → equipo → parte | responsable → tramo → impacto → planeacion → n1 → n2 | responsable → tramo → n1 → equipo'
+    && tres.every(a => a.regla === AR.REGLA_ARBOL && a.version === 'C024-2026'),
+    `los tres órdenes (gestión, circular y por responsable) reparten el mismo barril: ${f(tres[0].raiz.bbl)} bbl, ${tres[0].raiz.filas} filas y ${tres[0].raiz.eventos} eventos en septiembre`)
+  comprobar(/no es un orden del árbol/.test((() => { try { AR.arbolDelChoke(['ceiba'], sep.desde, sep.hasta, ctx0, { orden: 'otro' }); return '' } catch (e) { return e.message } })()),
+    'un orden que no existe se rechaza en palabras')
+
+  // La rama de la pérdida existe en el paso 3 y está vacía: no hay registro de pérdidas.
+  const pasos3 = deNivel(tres[1].raiz, 'tramo').map(t => t.hijos)
+  comprobar(pasos3.length > 0 && pasos3.every(hs => hs.every(h => h.dimension === 'impacto') && hs.some(h => h.valor === 'perdida' && h.bbl === 0 && h.filas === 0 && h.hijos.length === 0
+      && h.texto === AR.TEXTO_PERDIDA && h.cadena === 'PERDIDA')) && !deNivel(tres[0].raiz, 'impacto').length,
+    `la rama de la pérdida existe en cada paso 3 del orden de la circular (${pasos3.length}), vacía y diciendo por qué («${AR.TEXTO_PERDIDA}»): ningún barril diferido se pasa a ella`)
+
+  // Las cadenas del árbol son las que viajan a la ANH, fila por fila, en las dos formas de salida.
+  for (const version of ['C024-2026', 'DICC-V3.2']) {
+    const a = AR.arbolDelChoke(TODOS, sep.desde, sep.hasta, ctx0, { orden: 'circular', version })
+    const esperado = new Map(), delArbol = new Map()
+    for (const p of PA.paradasAnh(TODOS, sep.desde, sep.hasta, ctx0, { version })) {
+      const c = p.clasificacion
+      if (!KA.PASOS.every(x => c[x])) continue
+      const s = KA.cadenasAnh({ responsable: c.responsable.valor, choke: c.choke.valor, impacto: c.impacto.valor, planeacion: c.planeacion.valor, n1: c.n1.valor, n2: c.n2.valor, cauGral: c.cauGral.valor }, version)
+      const k = [s.resp_par, s.choke_mod, s.dif_perd, s.pla_no_plan, s.cau_niv1, s.cau_niv2].join(' | ')
+      esperado.set(k, (esperado.get(k) ?? 0) + p.diferidaTrimBbl)
+    }
+    const bajar = (n, camino) => {
+      const c = n.dimension === 'raiz' ? camino : [...camino, n.cadena]
+      if (n.hijos.length) { for (const h of n.hijos) bajar(h, c); return }
+      if (n.filas && c.length === 6 && c.every(Boolean)) delArbol.set(c.join(' | '), (delArbol.get(c.join(' | ')) ?? 0) + n.bbl)
+    }
+    bajar(a.raiz, [])
+    comprobar(esperado.size > 0 && esperado.size === delArbol.size && [...esperado].every(([k, x]) => cerca(delArbol.get(k) ?? NaN, x, 1e-9)) && a.version === version,
+      `${version}: las cadenas del árbol son las de cadenasAnh fila por fila (${esperado.size} cadenas de 6 pasos; por ejemplo «${[...esperado.keys()][0]}»)`)
+  }
+
+  // Lo que dijeron las personas: lo confirmado sube en su rama; lo corregido mueve sus barriles, sin repartir.
+  const oct = D.rangoDePeriodo('curso')
+  const filasOct = PA.paradasAnh(['ceiba'], oct.desde, oct.hasta, ctx0)
+  const EDWIN = { id: 'u-conf', nombre: 'Edwin Maestre' }, NELSON = { id: 'u-sup', nombre: 'Nelson Ortiz' }, HORA = '2026-10-02T14:30:00-05:00'
+  const p201 = filasOct.find(p => p.causa.equipo === 'P-201B' && p.estado === 'propuesta')
+  const confirmada = PA.confirmarParada(p201, 'conf', EDWIN, HORA)
+  const a1 = AR.arbolDelChoke(['ceiba'], oct.desde, oct.hasta, ctx0, { guardadas: new Map([[p201.eventoId, confirmada.clasificacion]]) })
+  const delEvento = suma(filasOct, p => p.eventoId === p201.eventoId)
+  const planta1 = a1.raiz.hijos.find(h => h.valor === 'planta')
+  comprobar(confirmada.estado === 'confirmada' && cerca(a1.raiz.confirmadoBbl, delEvento, 1e-12) && cerca(planta1.confirmadoBbl, delEvento, 1e-12) && sumaExacta(a1.raiz),
+    `lo que confirma una persona sube a «confirmado» en su rama: confiabilidad confirma los 6 pasos de ${p201.pozo} (P-201B) y la planta de La Ceiba en octubre queda con ${f(planta1.confirmadoBbl)} de ${f(planta1.bbl)} bbl confirmados`)
+  const pozo = filasOct.find(p => p.clasificacion.choke?.valor === 'pozo')
+  const corregida = CL.declararPaso(pozo.clasificacion, 'choke', 'planta', NELSON, 'sup', HORA)
+  const a0 = AR.arbolDelChoke(['ceiba'], oct.desde, oct.hasta, ctx0)
+  const a2 = AR.arbolDelChoke(['ceiba'], oct.desde, oct.hasta, ctx0, { guardadas: new Map([[pozo.eventoId, corregida]]) })
+  const de = (a, k) => a.raiz.hijos.find(h => h.valor === k)?.bbl ?? 0
+  const movido = suma(filasOct, p => p.eventoId === pozo.eventoId)
+  comprobar(corregida.choke.procedencia === 'corregido' && movido > 0 && cerca(de(a2, 'pozo'), de(a0, 'pozo') - movido, 1e-9) && cerca(de(a2, 'planta'), de(a0, 'planta') + movido, 1e-9)
+    && cerca(a2.raiz.bbl, a0.raiz.bbl, 1e-12) && AR.revisarArbol(a2).length === 0,
+    `lo que corrige una persona mueve sus barriles de rama: el supervisor dice que ${pozo.pozo} se trabó en la planta y ${f(movido)} bbl pasan del pozo a la planta; la raíz no cambia`)
+
+  // Lo que muestra el demo: La Ceiba en octubre y en septiembre, por tramo.
+  const t = (a, k) => a.raiz.hijos.find(h => h.valor === k)
+  const pl = t(a0, 'planta'), sin = t(a0, 'sin-asignar')
+  const sepCe = AR.arbolDelChoke(['ceiba'], sep.desde, sep.hasta, ctx0)
+  const pozoSep = t(sepCe, 'pozo'), n1Mayor = pozoSep.hijos[0].hijos[0]
+  comprobar(pl.noPlaneadaBbl === pl.bbl && pl.hijos[0].hijos[0].valor === 'NP_PROC' && deNivel(pl, 'equipo').map(n => n.valor).join() === 'P-201B'
+    && sin.noPlaneadaBbl === 0 && sin.hijos[0].valor === AR.FALTA && deNivel(sin, 'equipo').map(n => n.valor).join() === 'LC-21,LC-08'
+    && a0.raiz.hijos.map(h => h.valor).join() === 'planta,pozo,sin-asignar' && n1Mayor.valor === 'NP_SUB' && n1Mayor.hijos[0].valor === 'NP_SUB/falla-esp',
+    `La Ceiba, octubre: la planta ${f(pl.bbl)} bbl, ${Math.round(pl.noPlaneadaBbl / pl.bbl * 100)} % no planeado («${pl.hijos[0].hijos[0].texto}», P-201B); sin identificar ${f(sin.bbl)} (LC-21, LC-08), sin saber si fue planeado, al final. Septiembre: en el pozo ${f(pozoSep.bbl)}, la causa mayor «${n1Mayor.texto}» (${f(n1Mayor.bbl)} bbl; «${n1Mayor.hijos[0].texto}» ${f(n1Mayor.hijos[0].bbl)})`)
+
+  // revisarArbol: lo que no suma o va fuera de orden no pasa (es la regla del códec del contrato).
+  const roto = structuredClone(sepCe)
+  roto.raiz.hijos[0].hijos[0].bbl += 1
+  const volteado = structuredClone(sepCe)
+  volteado.raiz.hijos.reverse()
+  const bajo = structuredClone(sepCe)
+  bajo.raiz.hijos[0].dimension = 'n1'
+  comprobar(/no suma sus ramas/.test(AR.revisarArbol(roto).map(x => x.texto).join()) && /fuera de orden/.test(AR.revisarArbol(volteado).map(x => x.texto).join())
+    && /en ese lugar va «tramo»/.test(AR.revisarArbol(bajo).map(x => x.texto).join()) && AR.revisarArbol(sepCe).length === 0,
+    `revisarArbol dice lo que no se puede creer: un nodo que no suma sus ramas («${AR.revisarArbol(roto)[0]?.texto}»), hermanas fuera de orden y una rama del nivel equivocado`)
+}
+
 await v.close()
 console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones bien.`)
 if (fallos) { console.log(`${fallos} FALLARON.`); process.exit(1) }

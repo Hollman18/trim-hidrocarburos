@@ -28,6 +28,7 @@ const PARA_QUE: Record<string, string> = {
   agua: 'Tren de agua: qué limita, el colchón y si para una bomba.',
   configuracion: 'Lo único que se escribe a mano, con firma.',
   conectores: 'Bordes conectados y tags sin equipo resuelto.',
+  regulatorio: 'El árbol de la circular de cada parada, con lo que va a la ANH.',
   perfil: 'Avisos, apariencia y permisos.',
 }
 

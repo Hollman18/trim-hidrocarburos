@@ -1,10 +1,13 @@
-import { useTuberia, useRepartoChoke, useBaseChoke, useCriticidad, CHOKES_Y_SIN_ASIGNAR } from '@/shared/api/choke'
+import {
+  useTuberia, useRepartoChoke, useBaseChoke, useCriticidad, useArbolChoke, CHOKES_Y_SIN_ASIGNAR,
+  type ChokeOSinAsignar, type EquipoBbl,
+} from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
 import { fechaCorta } from '@/entities/reloj'
 import { Info } from '@/shared/ui/Info'
 import { Chip } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
-import { n0 } from '@/shared/lib/formato'
+import { n0, pctParte } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { BarraTramos, LeyendaTramos } from '@/widgets/diferidos/tramos'
 import { LARGO_TRAMO, leidoReparto, textoReparto } from '@/widgets/diferidos/reparto'
@@ -55,7 +58,56 @@ export function DondeSeTraboCampo({ campoId, desde, hasta, className }: {
         </p>
       )}
       <p className="text-[11.5px] leading-snug">{t.fraseGerente}</p>
+      {!nada && <NoPlaneadoPorTramo campoId={campoId} desde={desde} hasta={hasta} equipos={b.porChokeEquipo} />}
       {mas && <p className="text-[10.5px] leading-snug text-[var(--tinta3)]">{mas}</p>}
+    </div>
+  )
+}
+
+/** Lo NO planeado de cada tramo, en barriles y en su parte del tramo: el
+ *  indicador del norte (bajar las paradas que nadie programó). Sale del árbol
+ *  de pérdidas del choke (`useArbolChoke`, orden de gestión: su primer nivel es
+ *  el mismo reparto por tramo de la barra). Para el gerente, sin códigos ni
+ *  causas: el tramo, planeado o no, y los equipos que más pesan. Lo que todavía
+ *  no tiene causa no se sabe si fue planeado: se dice así, no se cuenta como
+ *  planeado ni como no planeado. */
+function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos }: {
+  campoId: string; desde: Date; hasta: Date; equipos: Partial<Record<ChokeOSinAsignar, EquipoBbl[]>>
+}) {
+  const arbol = useArbolChoke({ campos: [campoId], desde, hasta, orden: 'gestion' })
+  const tramos = arbol.raiz.hijos.filter(h => h.bbl >= 0.5)
+  if (!tramos.length) return null
+  // El orden de la tubería (yacimiento, pozos, planta, afuera y, al final, lo sin identificar), como la barra.
+  const orden = (k: string) => CHOKES_Y_SIN_ASIGNAR.indexOf(k as ChokeOSinAsignar)
+  return (
+    <div className="mt-1" data-no-planeado={campoId}>
+      <p className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+        <span>lo no planeado de cada tramo</span>
+        <Info titulo="Lo no planeado" texto="Las paradas que nadie programó: fallas, disparos y terceros. Es lo que TRIM tiene que bajar. Lo que todavía no tiene causa no se sabe si fue planeado: va aparte, sin contarse como planeado ni como no planeado." />
+      </p>
+      <ul className="text-[11px]">
+        {[...tramos].sort((a, b) => orden(a.valor) - orden(b.valor)).map(t => {
+          const k = t.valor as ChokeOSinAsignar
+          const pct = t.bbl > 0 ? (t.noPlaneadaBbl / t.bbl) * 100 : 0
+          const planeado = t.hijos.find(h => h.valor === 'planeada')?.bbl ?? 0
+          const sinSaber = t.bbl - t.noPlaneadaBbl - planeado
+          const eqs = (equipos[k] ?? []).slice(0, 2).map(e => e.equipo)
+          return (
+            <li key={k} className="flex flex-wrap items-baseline gap-x-1.5 border-b border-[var(--linea2)] py-0.5 last:border-0"
+              data-tramo-no-planeado={k} data-bbl={t.bbl} data-no-planeada={t.noPlaneadaBbl}>
+              <span className="text-[var(--tinta2)]">{LARGO_TRAMO[k]}</span>
+              <span className="tabular">{n0(t.bbl)} bbl</span>
+              <span className="text-[var(--tinta3)]">·</span>
+              {t.noPlaneadaBbl >= 0.5
+                ? <b className="tabular font-semibold">no planeado {n0(t.noPlaneadaBbl)} ({pctParte(pct)})</b>
+                : <span className="text-[var(--tinta2)]">{sinSaber >= 0.5 ? 'sin saber si fue planeado' : 'nada no planeado'}</span>}
+              {t.noPlaneadaBbl >= 0.5 && planeado >= 0.5 && <span className="tabular text-[var(--tinta2)]">· planeado {n0(planeado)}</span>}
+              {t.noPlaneadaBbl >= 0.5 && sinSaber >= 0.5 && <span className="tabular text-[var(--tinta3)]">· {n0(sinSaber)} sin saber</span>}
+              {eqs.length > 0 && <span className="min-w-0 text-[var(--tinta3)]">· {eqs.join(', ')}</span>}
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

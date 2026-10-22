@@ -1,6 +1,10 @@
 import { useId, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { useRepartoChoke, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_ESCALON, type EscalonOSinClasificar, type ChokeOSinAsignar } from '@/shared/api/choke'
+import { useRol } from '@/app/store'
+import {
+  useRepartoChoke, useArbolChoke, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_ESCALON,
+  type EscalonOSinClasificar, type ChokeOSinAsignar, type EquipoBbl, type NodoArbol,
+} from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
 import { Boton } from '@/shared/ui/primitivas'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
@@ -11,6 +15,8 @@ import { n0, pctParte } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { BarraTramos, LeyendaTramos, Muestra } from './tramos'
 import { LARGO_TRAMO, leidoReparto, mayuscula, textoReparto } from './reparto'
+import { Ramas } from '@/widgets/choke/Ramas'
+import { codigosDelRol, type VerCodigos } from '@/widgets/choke/palabras'
 
 /** Lo que no se produjo, dicho por escalón con palabras de campo (U2 §1.4):
  *  el nombre técnico de la escalera (NSTA §5.3 y §6.4) va en el globo, nunca
@@ -31,13 +37,17 @@ const ORDEN_ESCALON: EscalonOSinClasificar[] = ['disponibilidad-no-planeada', ..
  *  el período repartido por tramo (con los equipos que más pesan en cada uno)
  *  y por escalón, el cruce de los dos y, con varios campos, cada campo en su
  *  barra. Todo sale de `useRepartoChoke`: suma exacto el diferido del libro y
- *  lo que no es de ningún tramo se dice, no se reparte. */
+ *  lo que no es de ningún tramo se dice, no se reparte. Cada tramo se abre en
+ *  su árbol de pérdidas (`useArbolChoke`, el «modelo choke expandido»):
+ *  planeada o no → causa → detalle → equipos → partes, que suma el tramo. */
 export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
   campos: string[]; desde: Date; hasta: Date; global: boolean
   /** Lleva a Identificar lo que sigue sin identificar (si el rol tiene la pantalla). */
   onIdentificar?: () => void
 }) {
   const b = useRepartoChoke({ campos, desde, hasta })
+  const arbol = useArbolChoke({ campos, desde, hasta, orden: 'gestion' })
+  const codigos = codigosDelRol(useRol().id)
   const [cruce, setCruce] = useState(false)
   const idCruce = useId()
   const total = b.diferido
@@ -74,32 +84,14 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
         <div className="mt-2.5 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))]">
           <div className="min-w-0" data-por-tramo="">
             <h3 className={`${titulo} mb-0.5`}>POR TRAMO</h3>
-            {CHOKES_Y_SIN_ASIGNAR.map(k => {
-              const v = b.porChoke[k], eq = b.porChokeEquipo[k]
-              const sin = k === 'sin-asignar'
-              return (
-                <div key={k} className={cn(fila, v < 0.5 && 'text-[var(--tinta3)]')}>
-                  <Tip titulo={mayuscula(LARGO_TRAMO[k])} pista={sin ? 'Paradas que todavía no tienen causa: hasta que alguien diga qué pasó, no se sabe dónde se trabó. No se reparten entre los tramos.' : undefined}
-                    filas={[['Barriles', `${n0(v)} bbl`], ...(total > 0 ? [['Del diferido', parte(v)] as [string, string]] : []),
-                      ...eq.slice(0, 5).map(x => [x.equipo, `${n0(x.bbl)} bbl`] as [string, string])]}
-                    aLaVista={eq.length <= 3} className="flex items-baseline gap-2 text-[12px]">
-                    <Muestra k={k} />
-                    <span className={cn('min-w-0 flex-1', !sin && v >= 0.5 && 'font-medium')}>{mayuscula(LARGO_TRAMO[k])}</span>
-                    <b className="tabular shrink-0 text-[13px]" data-tramo={k} data-bbl={v}>{n0(v)}</b>
-                    <small className="tabular w-[42px] shrink-0 text-right text-[10px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
-                  </Tip>
-                  {eq.length > 0 && (
-                    <small className="tabular block pl-[18px] text-[10.5px] text-[var(--tinta2)]">
-                      {eq.slice(0, 3).map(x => `${x.equipo} ${n0(x.bbl)}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}
-                    </small>
-                  )}
-                  {sin && v >= 0.5 && onIdentificar && <Boton variante="chico" className="ml-[18px] mt-1 min-h-6" onClick={onIdentificar}>Identificar</Boton>}
-                </div>
-              )
-            })}
+            {CHOKES_Y_SIN_ASIGNAR.map(k => (
+              <TramoConRamas key={k} k={k} v={b.porChoke[k]} eq={b.porChokeEquipo[k]} parte={parte} fila={fila}
+                nodo={arbol.raiz.hijos.find(h => h.valor === k)} codigos={codigos} onIdentificar={onIdentificar} />
+            ))}
             <p className="tabular mt-1 flex flex-wrap items-baseline justify-between gap-x-2 text-[12px]">
               <span>= el diferido del libro</span><b className="text-[13px]" data-total-tramos={total}>{n0(total)} bbl</b>
             </p>
+            {total >= 0.5 && <p className="no-imprimir text-[10.5px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>}
           </div>
 
           <div className="min-w-0" data-por-escalon="">
@@ -206,5 +198,54 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
         <LeyendaTramos className="mt-2.5" />
       </div>
     </section>
+  )
+}
+
+/** Un tramo de «POR TRAMO»: su muestra, sus barriles y su parte del diferido;
+ *  con barriles, un botón que abre su árbol de pérdidas (`aria-expanded`; en
+ *  el papel, desplegado). Los equipos van fuera del botón, en su renglón. */
+function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: {
+  k: ChokeOSinAsignar; v: number; eq: EquipoBbl[]; parte: (v: number) => string; fila: string
+  nodo: NodoArbol | undefined; codigos: VerCodigos; onIdentificar?: () => void
+}) {
+  const [abierto, setAbierto] = useState(false)
+  const id = useId()
+  const sin = k === 'sin-asignar'
+  const conRamas = !!nodo && v >= 0.5 && nodo.hijos.length > 0
+  const renglon = (
+    <>
+      <Muestra k={k} />
+      <span className={cn('min-w-0 flex-1', !sin && v >= 0.5 && 'font-medium')}>{mayuscula(LARGO_TRAMO[k])}</span>
+      <b className="tabular shrink-0 text-[13px]" data-tramo={k} data-bbl={v}>{n0(v)}</b>
+      <small className="tabular w-[42px] shrink-0 text-right text-[10px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
+    </>
+  )
+  return (
+    <div className={cn(fila, v < 0.5 && 'text-[var(--tinta3)]')} data-tramo-fila={k}>
+      <div className="flex items-baseline gap-1 text-[12px]">
+        {conRamas ? (
+          <button type="button" aria-expanded={abierto} aria-controls={id} onClick={() => setAbierto(a => !a)}
+            className="flex min-h-6 min-w-0 flex-1 cursor-pointer items-baseline gap-2 rounded-sm text-left hover:bg-[var(--panel2)]">
+            <ChevronRight aria-hidden size={12} className={cn('shrink-0 translate-y-[2px] text-[var(--tinta3)] transition-transform print:rotate-90', abierto && 'rotate-90')} />
+            {renglon}
+            <span className="sr-only">, con sus ramas: planeada o no, causa, detalle y equipos</span>
+          </button>
+        ) : (
+          <span className="flex min-w-0 flex-1 items-baseline gap-2"><span aria-hidden className="inline-block w-3 shrink-0" />{renglon}</span>
+        )}
+        {sin && <Info titulo="Sin identificar" texto="Paradas que todavía no tienen causa: hasta que alguien diga qué pasó, no se sabe dónde se trabó. No se reparten entre los tramos." />}
+      </div>
+      {eq.length > 0 && (
+        <small className="tabular block pl-[38px] text-[10.5px] text-[var(--tinta2)]">
+          {eq.slice(0, 3).map(x => `${x.equipo} ${n0(x.bbl)}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}
+        </small>
+      )}
+      {sin && v >= 0.5 && onIdentificar && <Boton variante="chico" className="ml-[38px] mt-1 min-h-6" onClick={onIdentificar}>Identificar</Boton>}
+      {conRamas && (
+        <div id={id} className={cn('mb-1 ml-[20px] mt-1 max-w-[640px]', !abierto && 'hidden print:block')} data-ramas={k}>
+          <Ramas nodo={nodo} base={nodo.bbl} codigos={codigos} />
+        </div>
+      )}
+    </div>
   )
 }

@@ -45,6 +45,7 @@ import { clasificar, problemasDeClasificacion, type ClasificacionAnh, type Borra
 import { PASOS, PASO_CAMPO, PASO_CIRCULAR, type PasoAnh } from '@/entities/anh-catalogo'
 import type { CalidadClasificacion } from '@/entities/anh-calidad'
 import type { ImpactoConfig, TopologiaLeida } from '@/entities/choke-config'
+import { revisarArbol, type ArbolChoke, type OrdenArbol } from '@/entities/choke-arbol'
 import type { SerieChoke, VistaCriticidad, TopologiaVigente, PropuestaVista } from './choke'
 
 /** EL CONTRATO DEL FRONT CON EL BACKEND, endpoint por endpoint.
@@ -350,6 +351,30 @@ export const REPARTO_CHOKE_MENSUAL = get<PorCampos>()('/vistas/choke/mensual', l
 /** «Antes → con TRIM» por tramo: la línea base del libro (tres meses publicados
  *  antes del período) repartida por tramo (U2 §7.3). `null` sin tres meses de historia. */
 export const BASE_CHOKE = get<ConsultaPeriodo>()('/vistas/choke/base', oNada(lineaBaseTramo))
+/** La consulta del árbol de pérdidas del choke: el período y el orden. */
+export interface ConsultaArbol extends ConsultaPeriodo { orden: OrdenArbol }
+const arbolBase = obj<ArbolChoke>()({ desde: fecha, hasta: fecha })
+/** El árbol viaja tal cual (sus nodos son JSON puro); al entrar se revisa con
+ *  la regla del motor (`revisarArbol`): un nodo que no suma sus ramas, una rama
+ *  del nivel equivocado o las hermanas fuera de orden no entran, diciendo dónde. */
+const arbolChoke: Codec<ArbolChoke, DTO<typeof arbolBase>> = {
+  aDTO: (a, r) => arbolBase.aDTO(a, r),
+  revivir: (j, l) => {
+    const a = arbolBase.revivir(j, l)
+    const [malo] = revisarArbol(a)
+    if (malo) throw new ErrorDeContrato(`el árbol no se puede creer: ${malo.texto}`, malo.ruta)
+    return a
+  },
+}
+/** El árbol de pérdidas del choke (el «modelo choke expandido», SPE-36848):
+ *  cada barril diferido del período cuelga de su tramo y, dentro de él, de los
+ *  pasos del árbol de la circular, en uno de tres órdenes (`gestion`,
+ *  `circular`, `responsable`), con la clasificación vigente (lo guardado
+ *  encima de lo que propone TRIM). Cada nodo suma exacto sus ramas; la raíz es
+ *  el diferido de `/vistas/diferidos` y el primer nivel de `gestion`, el
+ *  reparto por tramo de `/vistas/choke/reparto` (mientras nadie corrija el
+ *  paso 2: el reparto todavía no lee lo guardado y el árbol sí). */
+export const ARBOL_CHOKE = get<ConsultaArbol>()('/vistas/choke/arbol', arbolChoke)
 /** La topología que rige en el campo (la firmada, o la que se deriva del
  *  registro), con el tramo de cada elemento y sus casos de borde (U2 §8). */
 export const TOPOLOGIA = get<PorCampo>()('/vistas/topologia', tal<TopologiaVigente>())

@@ -345,6 +345,7 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/choke/reparto?campos&desde&hasta` | `BrechaChoke` (`brechaPorChoke`, CHOKE-COMPLETO §6–§8): `desde`, `hasta` ISO, `potencial`, `real`, `brecha`, `diferido`, `porChoke` y `porEscalon` (con `sin-asignar` y `sin-clasificar`), `porChokeEscalon`, `porChokeEquipo`, `sinExplicar`, `cuadra`, `porConfirmar`, `estructural`, `estructuralPorChoke`, `potencialSistema`, `brechaSistema`, `pe`, `peNoPlaneada`, `dominante`, `horasPorDominante`, `superado[]` (`dia` ISO), `porCampo[]` con lo mismo por campo, `texto`, `textoEstructural?`. **Identidad exacta:** potencial − real (del libro) = Σ por tramo + sin explicar = Σ por escalón + sin explicar, y Σ por tramo = el diferido de `/vistas/diferidos` del mismo período |
 | `/vistas/choke/mensual?campos` | `MesPorTramo[]`: cada mes del calendario (`desde`, `hasta` ISO, `parcial`) con `porTramo`, `noPlaneado` y `diferido`, el mismo de cada mes de `/vistas/diferidos/mensual` |
 | `/vistas/choke/base?campos&desde&hasta` | `LineaBasePorTramo` o `null` sin tres meses publicados antes del período: `base` y `periodo` (`desde`, `hasta` ISO), `noPlaneado` y `diferido` por tramo (`{ baseDia, periodoDia, cambio }`, `cambio: null` sin base), `texto`. La misma base de `/vistas/diferidos/base` |
+| `/vistas/choke/arbol?campos&desde&hasta&orden` | `ArbolChoke` (`arbolDelChoke`, `choke-arbol.ts`; «el árbol de pérdidas del choke», el modelo expandido de SPE-36848): `orden` (`gestion`, `circular` o `responsable`; obligatorio), `niveles` (los de ese orden), `desde`, `hasta` ISO, `campos`, `version` (la forma de salida de las cadenas: `C024-2026` por defecto), `regla` (`choke.arbol@1`) y `raiz`. Cada nodo `{ dimension, valor, texto, cadena?, bbl, filas, eventos, confirmadoBbl, noPlaneadaBbl, hijos }`: `dimension` es el nivel (`raiz`, `tramo`, `responsable`, `impacto`, `planeacion`, `n1`, `n2`, `equipo`, `parte`); `valor` el código interno (`planta`, `no-planeada`, `NP_SUB`, `NP_SUB/falla-esp`, `op-mantenimiento`, `P-201B`, `sello`), `falta` si el paso falta y, en el tramo, `sin-asignar` («sin identificar»); `texto` en palabras de campo; `cadena` lo que viaja a la ANH en la forma de salida (`choke_mod`, `resp_par`, `dif_perd`, `pla_no_plan`, `cau_niv1`, `cau_niv2`), solo en los pasos con valor; `filas` y `eventos`, las filas de `/vistas/anh/paradas` y sus eventos; `confirmadoBbl`, los barriles con los 6 pasos avalados por una persona (estado `confirmada`); `noPlaneadaBbl`, los de las paradas no planeadas. Los niveles: `gestion` = tramo → planeada o no → causa → detalle → equipo → parte; `circular` = responsable → tramo → diferida o pérdida → planeada o no → causa → detalle (C24 p. 5); `responsable` = responsable → tramo → causa → equipo. Con la clasificación **vigente** de cada fila: lo que dijeron las personas encima de lo que propone TRIM; el tramo de una fila cuyo paso 2 espera una respuesta (el tanque de crudo: «¿el oleoducto recibía?») es el que propone el motor del choke, como en la tubería. Un paso que falta va en su rama `falta` y **nunca se reparte**. En el paso 3 la rama `perdida` siempre está, hoy vacía (`bbl: 0`, `filas: 0`): TRIM todavía no registra pérdidas. **Hijos de más a menos barriles; `falta` y `sin-asignar` al final.** **Cuadres:** cada nodo = Σ de sus hijos (barriles, filas, confirmado y no planeado); la raíz = el diferido de `/vistas/diferidos` del período (Σ `diferidaTrimBbl`); el primer nivel de `gestion` = `porChoke` de `/vistas/choke/reparto`, tramo por tramo, mientras nadie haya corregido el paso 2 (el reparto sale de la regla del motor y todavía no lee lo que corrigen las personas; el árbol sí: una corrección mueve esos barriles de tramo); Σ por causa = la conciliación por N1 de las filas; las hojas suman las filas. Al entrar, el front revisa el árbol con la misma regla (`revisarArbol`) y rechaza el que no cuadra, diciendo dónde. Es un cálculo sobre las filas de la ANH: **no tiene tabla ni vista SQL propia** |
 | `/vistas/topologia?campo` | `{ campoId, firmada, elementos, porSaber, sinResponder }`: la topología que rige en el campo (la firmada en `Config.topologia` o, si el campo no trae ninguna entrada, la que se deriva del registro), cada elemento `{ elemento, choke, alcance, pozos?, campoId?, casoBorde?, nombre?, clase? }` con el `choke` que sale de su alcance (dedicado → pozo, compartido → planta, frontera y tercero → afuera) y `casoBorde: "misma-locacion"` si sirve a 2 o 3 pozos de una misma locación. `porSaber[]` `{ elemento, nombre?, clase? }`: lo firmado «Todavía no sé» (sin tramo). `sinResponder[]`: con la topología firmada, los equipos que el registro tiene y la firma no (uno nuevo), con lo que TRIM deduce del registro; esperan su respuesta sin perder lo firmado y, mientras tanto, su parada toma el tramo de la regla por tipo de falla |
 | `/vistas/topologia/propuestas?campo` | `[{ elemento, pozos, porque, fuente, evidencia, conflicto?, casoBorde? }]`: lo que TRIM propone de la topología con lo que ya sabe (`fuente`: `alimentador`, `bomba`, `cascadas` o `registro`), para confirmarlo. Nunca se firma solo |
 | `/vistas/anh/paradas?campos&desde&hasta` | `ParadaAnh[]` (`anh-paradas.ts`, P1 §1.5) de los días operacionales que toca el período (llevado a días enteros): una fila por pozo × día × causa, con lo que ya dijeron las personas encima. Ver «Clasificación ANH (Circular 024)» |
@@ -1296,6 +1297,19 @@ planeada, capacidad o sin clasificar), y la identidad es exacta: potencial − r
 + sin explicar. Si lo que limita no son los pozos, la parte estructural (pozos − sistema) se
 separa y se dice, nunca se suma aparte. PE = real ÷ potencial del sistema.
 
+**El árbol de pérdidas del choke** (`arbolDelChoke`, `choke-arbol.ts`, regla `choke.arbol@1`):
+el «modelo choke expandido» de SPE-36848, que abre cada tramo «down to at least another level e.g.
+ESP failure». En la ANH esos niveles son los pasos del árbol de Edinson (transcript [26:48]: «esto
+está copiado del modelo choque»). Cada barril diferido del período cuelga de UN tramo y, dentro de él,
+de todo el árbol, con la clasificación vigente de su fila (`/vistas/anh/paradas`), en uno de tres
+órdenes: `gestion` (tramo → planeada o no → causa → detalle → equipo → parte, el del norte),
+`circular` (responsable → tramo → diferida o pérdida → planeada o no → causa → detalle, el de la
+circular) y `responsable` (responsable → tramo → causa → equipo). Cada nodo suma exacto sus ramas;
+lo que falta va en su rama y no se reparte; la pérdida tiene su rama, vacía mientras TRIM no
+registre pérdidas. El primer nivel de `gestion` es el mismo reparto por tramo de `brechaPorChoke`;
+si una persona corrige el paso 2, el árbol mueve esos barriles y `brechaPorChoke` (que no lee lo
+guardado) se queda con la regla: pendiente para que el reparto también lea las correcciones.
+
 **La tubería del agua** (`tuberiaAgua`) es el mismo modelo para la inyección: agua de los pozos →
 tratamiento → tanques (colchón, no caudal) → bombas de reinyección → inyectores, con UNA cifra
 por bomba (la de la predicción y el colchón). **«Si falla hoy»** (`criticidad.ts`) ordena todos
@@ -1595,6 +1609,10 @@ formas exactas son los tipos TS citados):
    `referencia/insumos/morichal/locaciones.json` (`"endpoint": null`) y sus casos lo dicen en
    `requiere`.
 
+   El árbol de pérdidas del choke (22-oct-2026), en `choke-arbol/`: el del último mes cerrado de
+   cada campo y del portafolio, en los órdenes `gestion` y `circular` (con las cadenas de la forma
+   `C024-2026`), con la clasificación que propone TRIM (sin nada dicho por una persona).
+
    Con esos insumos cargados:
    ```bash
    node scripts/referencia.mjs comparar --base-url=http://servidor:8080
@@ -1727,7 +1745,7 @@ El teléfono simulado de Identificar es del demo: con la fuente http no manda na
 
 La forma exacta es el códec de `src/shared/api/contrato.ts` (`TUBERIA`, `SERIE_CHOKE`,
 `TUBERIA_AGUA`, `CAPACIDADES`, `CRITICIDAD`, `REPARTO_CHOKE`, `REPARTO_CHOKE_MENSUAL`, `BASE_CHOKE`,
-`TOPOLOGIA`, `PROPUESTAS_TOPOLOGIA`, `PARADAS_ANH`, `CALIDAD_ANH` y las `R_*` de las escrituras),
+`ARBOL_CHOKE`, `TOPOLOGIA`, `PROPUESTAS_TOPOLOGIA`, `PARADAS_ANH`, `CALIDAD_ANH` y las `R_*` de las escrituras),
 y `npm run verificar:contrato` la prueba de ida y vuelta. Aquí, en JSON, para leerla sin
 TypeScript. `ISO` es un instante con zona («2026-10-02T14:00:00.000-05:00»); un opcional
 ausente se omite; `null` solo donde se dice.
@@ -1861,6 +1879,27 @@ interface LineaBasePorTramo {
   diferido: Record<Tramo | 'sin-asignar', { baseDia: number; periodoDia: number; cambio: number | null }>
   texto: string
 }
+
+// GET /api/vistas/choke/arbol?campos&desde&hasta&orden → ArbolChoke
+type OrdenArbol = 'gestion' | 'circular' | 'responsable'
+type NivelArbol = 'tramo' | 'responsable' | 'impacto' | 'planeacion' | 'n1' | 'n2' | 'equipo' | 'parte'
+// gestion: tramo → planeacion → n1 → n2 → equipo → parte
+// circular: responsable → tramo → impacto → planeacion → n1 → n2      (C24 p. 5)
+// responsable: responsable → tramo → n1 → equipo
+interface NodoArbol {
+  dimension: 'raiz' | NivelArbol
+  valor: string            // código interno; 'falta' si el paso falta; en el tramo, 'sin-asignar' («sin identificar»); en la raíz, 'total'
+  texto: string            // en palabras de campo
+  cadena?: string          // choke_mod, resp_par, dif_perd, pla_no_plan, cau_niv1 o cau_niv2 en la forma de salida; solo con valor
+  bbl: number              // Σ de sus hijos, exacto
+  filas: number            // filas de /vistas/anh/paradas
+  eventos: number          // eventos distintos del controlador
+  confirmadoBbl: number    // con los 6 pasos avalados por una persona
+  noPlaneadaBbl: number    // de las paradas no planeadas (el paso 4 vigente)
+  hijos: NodoArbol[]       // de más a menos barriles; 'falta' y 'sin-asignar' al final. En 'impacto', 'perdida' siempre está (hoy vacía)
+}
+interface ArbolChoke { orden: OrdenArbol; niveles: NivelArbol[]; desde: ISO; hasta: ISO; campos: string[]
+  version: 'C024-2026' | 'DICC-V3.2'; regla: 'choke.arbol@1'; raiz: NodoArbol }
 
 // GET /api/vistas/topologia?campo · lo que se firma en Config.topologia es ChokeDeElemento
 interface ChokeDeElemento { elemento: string; choke: Tramo; alcance: Alcance; pozos?: string[]; campoId?: string; casoBorde?: 'misma-locacion' }

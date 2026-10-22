@@ -216,6 +216,16 @@
    "descripcion": "Calidad de la clasificación ANH de ceiba, 2026-09"
   },
   {
+   "id": "choke-arbol/ceiba-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de ceiba, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
+  },
+  {
+   "id": "choke-arbol/ceiba-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "El árbol de pérdidas del choke de ceiba, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
+  },
+  {
    "id": "diferidos/morichal-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de morichal, 2026-09 (último mes cerrado)"
@@ -293,6 +303,16 @@
    "id": "anh/calidad-morichal-2026-09",
    "endpoint": "/api/vistas/anh/calidad?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Calidad de la clasificación ANH de morichal, 2026-09"
+  },
+  {
+   "id": "choke-arbol/morichal-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de morichal, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
+  },
+  {
+   "id": "choke-arbol/morichal-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "El árbol de pérdidas del choke de morichal, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
   },
   {
    "id": "diferidos/guacamayo-2026-09",
@@ -374,6 +394,16 @@
    "descripcion": "Calidad de la clasificación ANH de guacamayo, 2026-09"
   },
   {
+   "id": "choke-arbol/guacamayo-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de guacamayo, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
+  },
+  {
+   "id": "choke-arbol/guacamayo-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "El árbol de pérdidas del choke de guacamayo, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
+  },
+  {
    "id": "diferidos/palmar-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de palmar, 2026-09 (último mes cerrado)"
@@ -444,6 +474,16 @@
    "descripcion": "Calidad de la clasificación ANH de palmar, 2026-09"
   },
   {
+   "id": "choke-arbol/palmar-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de palmar, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
+  },
+  {
+   "id": "choke-arbol/palmar-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "El árbol de pérdidas del choke de palmar, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
+  },
+  {
    "id": "diferidos/zarza-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de zarza, 2026-09 (último mes cerrado)"
@@ -512,6 +552,16 @@
    "id": "anh/calidad-zarza-2026-09",
    "endpoint": "/api/vistas/anh/calidad?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Calidad de la clasificación ANH de zarza, 2026-09"
+  },
+  {
+   "id": "choke-arbol/zarza-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de zarza, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
+  },
+  {
+   "id": "choke-arbol/zarza-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "El árbol de pérdidas del choke de zarza, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
   },
   {
    "id": "diferidos/portafolio-2026-09",
@@ -597,6 +647,16 @@
    "id": "anh/calidad-portafolio-2026-09",
    "endpoint": "/api/vistas/anh/calidad?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Calidad de la clasificación ANH de portafolio, 2026-09"
+  },
+  {
+   "id": "choke-arbol/portafolio-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de portafolio, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
+  },
+  {
+   "id": "choke-arbol/portafolio-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "El árbol de pérdidas del choke de portafolio, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
   },
   {
    "id": "salud/bombas-ceiba-2026-09",
