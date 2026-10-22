@@ -353,6 +353,52 @@ select pg_temp.muerde('clasificación: un detalle que no es de su causa',
         ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n2', 'NP_SUB/falla-esp', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
       set constraints all immediate;
     end $x$ $s$, '23514');
+select pg_temp.muerde('clasificación: planeada en el evento y una causa no planeada en una de sus filas (lo que rige en la fila)',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_SUB', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      set constraints all immediate;
+    end $x$ $s$, '23514');
+select pg_temp.muerde('clasificación: una fila dice «no planeada» después de que su evento dijo una causa planeada (lo que rige en la fila)',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'P_MANT_ELE', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'no-planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      set constraints all immediate;
+    end $x$ $s$, '23514');
+select pg_temp.pasa('clasificación: lo guardado en el evento después reemplaza lo de sus filas (no se mezclan)',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'no-planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_SUB', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'P_MANT_ELE', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      set constraints all immediate;
+    end $x$ $s$);
+select pg_temp.pasa('clasificación: el tramo de exceso no hereda la planeación de su evento',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'P_MANT_ELE', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora, exceso) values
+        ('EP-LC21-261001-01@2026-10-01#2', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_SUB', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now(), true);
+      set constraints all immediate;
+    end $x$ $s$);
+select pg_temp.muerde('clasificación: «exceso» en una clave de evento',
+  $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora, exceso)
+    values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'impacto', 'diferida', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now(), true)$$, '23514');
+select pg_temp.pasa('clasificación: el evento planeado y una fila que corrige planeación, causa y detalle (lo que rige es coherente en los dos)',
+  $s$do $x$ begin
+      insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, por_id, por, rol_id, hora) values
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n1', 'P_MANT_ELE', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'n2', 'P_MANT_ELE/transformador', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'planeacion', 'no-planeada', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n1', 'NP_ENINT', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now()),
+        ('EP-LC21-261001-01@2026-10-01#1', 'fila', 'EP-LC21-261001-01', 'ceiba', 'n2', 'NP_ENINT/falla-transformador', 'declarado', 'sup', 'Nelson Ortiz', 'sup', now());
+      set constraints all immediate;
+    end $x$ $s$);
 select pg_temp.muerde('clasificación: «En el yacimiento» puesto por el supervisor',
   $$insert into clasificacion_paso (clave, alcance, evento_id, campo_id, paso, valor, procedencia, porque, por_id, por, rol_id, hora)
     values ('EP-LC21-261001-01', 'evento', 'EP-LC21-261001-01', 'ceiba', 'choke', 'reservorio', 'declarado', '{"regla":"choke.yacimiento@1","evidencia":"prueba"}', 'sup', 'Nelson Ortiz', 'sup', now())$$, '23514');

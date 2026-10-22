@@ -8024,7 +8024,7 @@ insert into capacidad (id, nombre, incluye) values ('usuarios:administrar', 'Dar
 insert into capacidad (id, nombre, incluye) values ('sap:aviso', 'Enviarle a SAP el aviso de mantenimiento de un equipo (la orden la crea el planeador en SAP)', null);
 insert into capacidad (id, nombre, incluye) values ('asignacion:cargar', 'Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM', null);
 insert into capacidad (id, nombre, incluye) values ('planes:decidir', 'Aceptar o marcar ejecutado un plan de acción (antes, durante o después de una parada)', null);
-insert into capacidad (id, nombre, incluye) values ('anh:clasificar', 'Completar o corregir lo que pide la ANH de cada parada (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde', null);
+insert into capacidad (id, nombre, incluye) values ('anh:clasificar', 'Completar o corregir la clasificación de cada parada en el árbol de causas (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde; de ahí salen también el reporte a la ANH y la medición de las paradas no planificadas', null);
 insert into capacidad (id, nombre, incluye) values ('anh:confirmar', 'Confirmar de una vez las paradas del día que tienen la misma cadena propuesta por TRIM', null);
 insert into capacidad (id, nombre, incluye) values ('anh:yacimiento', 'Decir que una parada fue del yacimiento, con lo que lo muestra (la prueba del pozo, el corte de agua o la presión de fondo)', null);
 insert into capacidad (id, nombre, incluye) values ('causa:completar', 'Completar el análisis de la falla: mecanismo y causa raíz', 'causa:declarar');

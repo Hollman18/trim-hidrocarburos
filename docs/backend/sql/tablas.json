@@ -8280,7 +8280,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Qué permite, dicho para leer.",
-     "ejemplo": "Completar o corregir lo que pide la ANH de cada parada (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde"
+     "ejemplo": "Completar o corregir la clasificación de cada parada en el árbol de causas (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde; de ahí salen también el reporte a la ANH y la medición de las paradas no planificadas"
     },
     {
      "nombre": "incluye",
@@ -8298,7 +8298,7 @@
    "filas": [
     {
      "id": "anh:clasificar",
-     "nombre": "Completar o corregir lo que pide la ANH de cada parada (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde",
+     "nombre": "Completar o corregir la clasificación de cada parada en el árbol de causas (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde; de ahí salen también el reporte a la ANH y la medición de las paradas no planificadas",
      "incluye": null
     },
     {
@@ -11167,7 +11167,8 @@
    "reglas": [
     "Solo inserción: una corrección es una fila nueva; rige la última por (clave, paso).",
     "Lo que propone TRIM no se guarda: se vuelve a proponer con la regla de hoy al leer la fila.",
-    "Coherencia bloqueada al confirmar: planeada solo con P_…, no planeada solo con NP_…, el detalle es de su causa (la ANH rechaza la transmisión entera).",
+    "Coherencia bloqueada al confirmar sobre lo que RIGE en el evento y en cada fila (v_clasificacion_fuente), no solo clave por clave: planeada solo con P_…, no planeada solo con NP_…, el detalle es de su causa (la ANH rechaza la transmisión entera).",
+    "exceso marca el tramo que se pasó de la ventana del programa: no hereda de su evento y lo guardado en el evento no lo reemplaza.",
     "Cambiar lo que ya dijo una persona pide motivo (422); el operador no dice ni confirma dónde se trabó (403).",
     "«En el yacimiento» solo de producción o confiabilidad y con evidencia.",
     "Al confirmar: lo vigente de la parada es coherente (planeada con P_…, no planeada con NP_…, el detalle de su causa). [trigger clasificacion_coherente: INSERT, diferido]",
@@ -11207,7 +11208,7 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((NOT exceso) OR (alcance = 'fila'::text))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
      "defecto": null,
      "descripcion": "fila: solo ese tramo; evento: todos los tramos del evento (Unicidad, C24 p.5; aplicarAlEvento o aplicarALaCascada).",
      "ejemplo": null
@@ -11243,7 +11244,7 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK ((paso = ANY (ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text, 'cau_gral'::text, 'desc_evid'::text])))",
+     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK ((paso = ANY (ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text, 'cau_gral'::text, 'desc_evid'::text])))",
      "defecto": null,
      "descripcion": "responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral, desc_evid.",
      "ejemplo": null
@@ -11255,7 +11256,7 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text)))",
+     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text]))))",
      "defecto": null,
      "descripcion": "El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…). Del catálogo de version_catalogo.",
      "ejemplo": null
@@ -11390,6 +11391,18 @@
      "check": "CHECK ((version_catalogo = ANY (ARRAY['C024-2026'::text, 'DICC-V3.2'::text])))",
      "defecto": "'C024-2026'::text",
      "descripcion": "Versión del catálogo de la circular con que se dijo (C024-2026 o DICC-V3.2).",
+     "ejemplo": null
+    },
+    {
+     "nombre": "exceso",
+     "tipo": "boolean",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((NOT exceso) OR (alcance = 'fila'::text)))",
+     "defecto": "false",
+     "descripcion": "La fila es el tramo que se pasó de la ventana del programa (ParadaAnh.exceso): otra decisión, no planeada. No hereda de su evento y lo que se guarde en el evento no la reemplaza.",
      "ejemplo": null
     }
    ],
@@ -12946,7 +12959,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
+     "ejemplo": "2026-10-22T00:39:33.022941+00:00"
     }
    ],
    "filas": [
@@ -12962,7 +12975,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -12976,7 +12989,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "morichal",
@@ -12990,7 +13003,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "palmar",
@@ -13004,7 +13017,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "zarza",
@@ -13018,7 +13031,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     }
    ]
   },
@@ -13617,7 +13630,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
+     "ejemplo": "2026-10-22T00:39:33.022941+00:00"
     }
    ],
    "filas": [
@@ -13793,7 +13806,7 @@
      "eventos": 18,
      "huella_cifras": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -13926,7 +13939,7 @@
      "eventos": 11,
      "huella_cifras": "ed542826fa682035e79cb219d14b4c54a27cc7c262f0b887d70ae3512459e800",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "morichal",
@@ -13997,7 +14010,7 @@
      "eventos": 31,
      "huella_cifras": "190cb266ba2594a2c185be30cfd7e7bad4d7bce844013f88ff09f73007458480",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "palmar",
@@ -14072,7 +14085,7 @@
      "eventos": 8,
      "huella_cifras": "c632efa5ec1c89e44223cf0d3a9736f74675237e50136524aa0383dfa75b7d73",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "zarza",
@@ -14133,7 +14146,7 @@
      "eventos": 1,
      "huella_cifras": "c7c447654ee2ccce3c562f23385b1e104894df7699354cc438d1633cc6105408",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     }
    ]
   },
@@ -14440,7 +14453,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
+     "ejemplo": "2026-10-22T00:39:33.022941+00:00"
     }
    ],
    "filas": [
@@ -14468,7 +14481,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -14494,7 +14507,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -14520,7 +14533,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -14546,7 +14559,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -14572,7 +14585,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     }
    ]
   },
@@ -14685,7 +14698,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
+     "ejemplo": "2026-10-22T00:39:33.022941+00:00"
     }
    ],
    "filas": [
@@ -14697,7 +14710,7 @@
      "potencial": 31765.411954508756,
      "diferido": 3677.2278693078233,
      "asignado": 28088.184085200945,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14707,7 +14720,7 @@
      "potencial": 27256.010196447387,
      "diferido": 60.829984442262884,
      "asignado": 27195.180212005136,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14717,7 +14730,7 @@
      "potencial": 26475.05235007924,
      "diferido": 756.7615028375318,
      "asignado": 25718.29084724172,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14727,7 +14740,7 @@
      "potencial": 24552.694574403755,
      "diferido": 0,
      "asignado": 24552.694574403766,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -14737,7 +14750,7 @@
      "potencial": 24111.8312740346,
      "diferido": 94.61066382524777,
      "asignado": 24017.220610209362,
-     "calculado": "2026-10-22T00:09:44.279498+00:00"
+     "calculado": "2026-10-22T00:39:33.022941+00:00"
     }
    ]
   },
@@ -14804,7 +14817,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Hora del recálculo.",
-     "ejemplo": "2026-10-22T00:09:44.279498+00:00"
+     "ejemplo": "2026-10-22T00:39:33.022941+00:00"
     },
     {
      "nombre": "motivo",
@@ -14848,7 +14861,7 @@
      "id": 1,
      "campo_id": "ceiba",
      "mes": "2025-10-01",
-     "cuando": "2026-10-22T00:09:44.279498+00:00",
+     "cuando": "2026-10-22T00:39:33.022941+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
@@ -14857,7 +14870,7 @@
      "id": 2,
      "campo_id": "ceiba",
      "mes": "2025-11-01",
-     "cuando": "2026-10-22T00:09:44.279498+00:00",
+     "cuando": "2026-10-22T00:39:33.022941+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "80979dd8e5f4057b805ffe6baaf7d5e097704223acb7ad94498bec69f2d8aebe"
@@ -14866,7 +14879,7 @@
      "id": 3,
      "campo_id": "ceiba",
      "mes": "2025-12-01",
-     "cuando": "2026-10-22T00:09:44.279498+00:00",
+     "cuando": "2026-10-22T00:39:33.022941+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "3ee3116ec3bc84c4293321d097291669814f0af8cfa69fdeb7ff9233b5f63916"
@@ -14875,7 +14888,7 @@
      "id": 4,
      "campo_id": "ceiba",
      "mes": "2026-01-01",
-     "cuando": "2026-10-22T00:09:44.279498+00:00",
+     "cuando": "2026-10-22T00:39:33.022941+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "753d300b99414f01cc760a56987a7be0cb75f02cf6ed36bb72949f39b071cd8b"
@@ -14884,7 +14897,7 @@
      "id": 5,
      "campo_id": "ceiba",
      "mes": "2026-02-01",
-     "cuando": "2026-10-22T00:09:44.279498+00:00",
+     "cuando": "2026-10-22T00:39:33.022941+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "6d35fb973add65cb0de0726e56b94e4bb27a6df08ae0208f889f0930c6a12b13"
@@ -16218,14 +16231,14 @@
    "nombre": "v_clasificacion_vigente",
    "grupo": "g",
    "clase": "vista",
-   "descripcion": "Lo que rige de cada paso de cada fila o evento: lo último que dijo una persona (OpcionesParadas.guardadas de anh-paradas.ts). Una fila usa lo suyo y, si no tiene, lo de su evento (salvo el tramo de exceso del programa). Lo anterior es la historia («antes: …», U1 §2.7).",
+   "descripcion": "Lo último que dijo una persona de cada paso, por clave (fila o evento). Qué clave rige en cada fila lo dice v_clasificacion_fuente: nunca se mezclan pasos de la fila con pasos del evento. Lo anterior es la historia («antes: …», U1 §2.7).",
    "tipoTS": "OpcionesParadas.guardadas (src/entities/anh-paradas.ts)",
    "endpoints": [
     "GET /api/vistas/anh/paradas (lo que se pone encima de lo que propone TRIM)"
    ],
    "quienEscribe": "(vista)",
    "reglas": [
-    "Una fila usa lo suyo y, si no tiene, lo de su evento (salvo el tramo de exceso del programa)."
+    "Lo último que dijo una persona de cada paso, por clave (fila o evento). Qué clave rige en cada fila: v_clasificacion_fuente; nunca se mezclan pasos de la fila con pasos del evento."
    ],
    "columnas": [
     {
@@ -16434,6 +16447,85 @@
     },
     {
      "nombre": "version_catalogo",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "exceso",
+     "tipo": "boolean",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    }
+   ],
+   "filas": []
+  },
+  {
+   "nombre": "v_clasificacion_fuente",
+   "grupo": "g",
+   "clase": "vista",
+   "descripcion": "Qué rige en cada fila con algo guardado (OpcionesParadas.guardadas de anh-paradas.ts y guardarClasificacion de escrituras.ts). fila: lo suyo, y lo que no diga lo propone TRIM. evento: lo de su evento, porque se guardó después y reemplazó lo de la fila. El tramo de exceso del programa rige siempre con lo suyo y no hereda. Una fila sin nada guardado usa lo de su evento, salvo el exceso, que usa lo que propone TRIM.",
+   "tipoTS": "OpcionesParadas.guardadas (src/entities/anh-paradas.ts) y guardarClasificacion (src/shared/api/escrituras.ts)",
+   "endpoints": [
+    "GET /api/vistas/anh/paradas (qué rige en cada fila)"
+   ],
+   "quienEscribe": "(vista)",
+   "reglas": [
+    "Rige lo más reciente entre la fila y su evento: lo guardado en el evento reemplaza lo de sus filas.",
+    "El tramo de exceso del programa rige siempre con lo suyo y no hereda de su evento.",
+    "Una fila sin nada guardado usa lo de su evento, salvo el exceso, que usa lo que propone TRIM."
+   ],
+   "columnas": [
+    {
+     "nombre": "clave",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "evento_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "exceso",
+     "tipo": "boolean",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "rige",
      "tipo": "text",
      "nulo": true,
      "pk": false,

@@ -563,6 +563,18 @@ try {
     comprobar(enCascada.ok && hermanas.length > 5 && hermanas.every(p => p.clasificacion.responsable?.procedencia !== 'regla' && p.clasificacion.responsable?.porId === 'sup')
       && new Set(hermanas.map(p => p.eventoId)).size === hermanas.filter(p => p.tramo.n === 1).length,
       `una corrección con «aplicarALaCascada» vale para las ${hermanas.length} filas de la raíz ${deCascada.raiz} (${new Set(hermanas.map(p => p.pozo)).size} pozos)`)
+    // e2. Lo guardado en el tramo de exceso del programa es otra decisión: lo que se
+    //     dice del evento entero no lo borra (guardarClasificacion; v_clasificacion_fuente).
+    const historiaTodos = { campos: ['ceiba', 'morichal', 'guacamayo', 'palmar', 'zarza'], desde: new Date(cal[0].desde), hasta: AHORA }
+    const todas = ARB.pedirParadasAnh(historiaTodos, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const exc = todas.find(p => p.exceso && todas.some(q => q.eventoId === p.eventoId && !q.exceso))
+    const hermanaExc = exc && todas.find(q => q.eventoId === exc.eventoId && !q.exceso)
+    const enExceso = exc && await E.clasificarParada({ rolId: 'jefe' }, exc.id, { pasos: { impacto: exc.clasificacion.impacto.valor } })
+    const enEvento = hermanaExc && await E.clasificarParada({ rolId: 'jefe' }, hermanaExc.id, { pasos: { responsable: 'op-mantenimiento' }, aplicarAlEvento: true })
+    const excDespues = exc && ARB.pedirParadaAnh(exc.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    comprobar(!!exc && enExceso?.ok && enEvento?.ok && Object.hasOwn(SES.sesion().clasificacionesAnh, exc.id)
+      && excDespues?.clasificacion.impacto.porId === 'jefe' && excDespues?.clasificacion.impacto.procedencia !== 'regla',
+      `guardar en el evento ${exc?.eventoId ?? '(no hay un tramo de exceso en el demo)'} no borra lo que se guardó en su tramo de exceso ${exc?.id ?? ''}: sigue con lo que dijo el jefe de mantenimiento${enExceso?.ok === false ? ` (en el exceso: ${enExceso.error})` : ''}${enEvento?.ok === false ? ` (en el evento: ${enEvento.error})` : ''}${exc && !Object.hasOwn(SES.sesion().clasificacionesAnh, exc.id) ? ' (se borró lo guardado del exceso)' : ''}${excDespues ? ` [impacto: ${excDespues.clasificacion.impacto.procedencia}, ${excDespues.clasificacion.impacto.porId ?? 'sin persona'}]` : ''}`)
     // f. La calidad de la clasificación cuadra por paso, por regla y por equipo.
     const cal10 = ARB.pedirCalidadAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
     const choke10 = cal10.porPaso.find(x => x.paso === 'choke')

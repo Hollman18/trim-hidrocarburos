@@ -1996,7 +1996,9 @@ create table clasificacion_paso (
   lote_id           text references confirmacion_lote(id),
   propuesto         text,
   version_catalogo  text not null default 'C024-2026' check (version_catalogo in ('C024-2026', 'DICC-V3.2')),
+  exceso            boolean not null default false,
   check ((alcance = 'evento') = (clave = evento_id)),
+  check (not exceso or alcance = 'fila'),
   check (alcance = 'evento' or clave like evento_id || '@%'),
   check (procedencia <> 'corregido' or propuesto is not null),
   check (lote_id is null or procedencia = 'confirmado'),
@@ -2026,6 +2028,7 @@ comment on column clasificacion_paso.hora is 'La hora del toque.';
 comment on column clasificacion_paso.recibido is 'Hora del servidor al recibirlo.';
 comment on column clasificacion_paso.lote_id is 'El lote, si se confirmó en lote (solo confirmado).';
 comment on column clasificacion_paso.propuesto is 'Lo que proponía TRIM, si la persona lo cambió (obligatorio en corregido): el tablero de correcciones por regla.';
+comment on column clasificacion_paso.exceso is 'La fila es el tramo que se pasó de la ventana del programa (ParadaAnh.exceso): otra decisión, no planeada. No hereda de su evento y lo que se guarde en el evento no la reemplaza.';
 comment on column clasificacion_paso.version_catalogo is 'Versión del catálogo de la circular con que se dijo (C024-2026 o DICC-V3.2).';
 
 -- Quién puede decir qué: la capacidad del rol, el campo del evento y el lote.
@@ -2050,21 +2053,57 @@ create trigger clasificacion_paso_reglas before insert on clasificacion_paso for
 
 -- La coherencia bloqueada (C24 p.7: la ANH rechaza la transmisión entera):
 -- planeada solo con una causa P_…, no planeada solo con NP_…, y el detalle es de su causa.
-create or replace function clasificacion_coherente() returns trigger language plpgsql as $$
-declare pl text; n1 text; n2 text;
+-- Se revisa lo que RIGE en cada fila, con la regla de v_clasificacion_fuente
+-- (la misma de guardarClasificacion en escrituras.ts):
+--   · lo guardado en el evento rige en todos sus tramos y reemplaza lo que sus
+--     filas tenían guardado de antes;
+--   · una fila con algo guardado DESPUÉS que su evento rige con lo suyo; lo que no
+--     diga se completa aquí con lo del evento, para que una fila nunca pueda dejar
+--     vigente «planeada» con una causa NP_… aunque cada clave, sola, cuadre;
+--   · el tramo de exceso del programa (exceso) rige siempre con lo suyo y no hereda.
+-- Revisar solo clave por clave, como antes, dejaba pasar esa mezcla de alcances.
+create or replace function clasificacion_revisar(p_clave text, pl text, n1 text, n2 text) returns void language plpgsql as $$
 begin
-  select valor into pl from clasificacion_paso where clave = new.clave and paso = 'planeacion' order by id desc limit 1;
-  select valor into n1 from clasificacion_paso where clave = new.clave and paso = 'n1' order by id desc limit 1;
-  select valor into n2 from clasificacion_paso where clave = new.clave and paso = 'n2' order by id desc limit 1;
   if pl is not null and n1 is not null and (pl = 'planeada') <> (n1 like 'P\_%') then
-    raise exception 'la parada %: «%» no va con la causa % (planeada solo con P_…, no planeada solo con NP_…)', new.clave, pl, n1 using errcode = '23514';
+    raise exception 'la parada %: «%» no va con la causa % (planeada solo con P_…, no planeada solo con NP_…)', p_clave, pl, n1 using errcode = '23514';
   end if;
   if n1 is not null and n2 is not null and n2 not like n1 || '/%' then
-    raise exception 'la parada %: el detalle % no es de la causa %', new.clave, n2, n1 using errcode = '23514';
+    raise exception 'la parada %: el detalle % no es de la causa %', p_clave, n2, n1 using errcode = '23514';
   end if;
+end $$;
+comment on function clasificacion_revisar(text, text, text, text) is 'La regla de coherencia de la circular sobre lo que rige en una fila o un evento (planeación y causa; causa y detalle). La llama clasificacion_coherente().';
+
+create or replace function clasificacion_coherente() returns trigger language plpgsql as $$
+declare ev_pl text; ev_n1 text; ev_n2 text; ev_ultima bigint; f record;
+begin
+  -- Lo vigente del evento.
+  select valor into ev_pl from clasificacion_paso where clave = new.evento_id and paso = 'planeacion' order by id desc limit 1;
+  select valor into ev_n1 from clasificacion_paso where clave = new.evento_id and paso = 'n1' order by id desc limit 1;
+  select valor into ev_n2 from clasificacion_paso where clave = new.evento_id and paso = 'n2' order by id desc limit 1;
+  select max(id) into ev_ultima from clasificacion_paso where clave = new.evento_id;
+  perform clasificacion_revisar(new.evento_id, ev_pl, ev_n1, ev_n2);
+  -- Las filas del evento que rigen con lo suyo (guardadas después que el evento,
+  -- o el tramo de exceso): lo suyo y, salvo el exceso, lo que les falte del evento.
+  for f in
+    select c.clave, c.exceso,
+      (select x.valor from clasificacion_paso x where x.clave = c.clave and x.paso = 'planeacion' order by x.id desc limit 1) as pl,
+      (select x.valor from clasificacion_paso x where x.clave = c.clave and x.paso = 'n1' order by x.id desc limit 1) as n1,
+      (select x.valor from clasificacion_paso x where x.clave = c.clave and x.paso = 'n2' order by x.id desc limit 1) as n2
+    from (select clave, bool_or(exceso) as exceso, max(id) as ultima from clasificacion_paso
+          where evento_id = new.evento_id and alcance = 'fila'
+            and (new.alcance = 'evento' or clave = new.clave)
+          group by clave) c
+    where c.exceso or c.ultima > coalesce(ev_ultima, 0)
+  loop
+    if f.exceso then
+      perform clasificacion_revisar(f.clave, f.pl, f.n1, f.n2);
+    else
+      perform clasificacion_revisar(f.clave, coalesce(f.pl, ev_pl), coalesce(f.n1, ev_n1), coalesce(f.n2, ev_n2));
+    end if;
+  end loop;
   return null;
 end $$;
-comment on function clasificacion_coherente() is 'Al confirmar la transacción: lo vigente de cada clave es coherente (planeación y causa; causa y detalle). Lo que propone TRIM no está aquí: el servidor lo revisa con clasificar() antes de guardar.';
+comment on function clasificacion_coherente() is 'Al confirmar la transacción: lo que RIGE en el evento y en cada fila que rige con lo suyo es coherente (planeación y causa; causa y detalle), con la regla de v_clasificacion_fuente. Lo que propone TRIM no está aquí: el servidor lo revisa con clasificar() antes de guardar.';
 create constraint trigger clasificacion_coherente after insert on clasificacion_paso deferrable initially deferred
   for each row execute function clasificacion_coherente();
 
@@ -2712,7 +2751,16 @@ comment on view v_analisis_vigente is 'GET /api/analisis → vigentes: la últim
 
 create view v_clasificacion_vigente as
 select distinct on (clave, paso) * from clasificacion_paso order by clave, paso, id desc;
-comment on view v_clasificacion_vigente is 'Lo que rige de cada paso de cada fila o evento: lo último que dijo una persona (OpcionesParadas.guardadas de anh-paradas.ts). Una fila usa lo suyo y, si no tiene, lo de su evento (salvo el tramo de exceso del programa). Lo anterior es la historia («antes: …», U1 §2.7).';
+comment on view v_clasificacion_vigente is 'Lo último que dijo una persona de cada paso, por clave (fila o evento). Qué clave rige en cada fila lo dice v_clasificacion_fuente: nunca se mezclan pasos de la fila con pasos del evento. Lo anterior es la historia («antes: …», U1 §2.7).';
+
+create view v_clasificacion_fuente as
+select f.clave, f.evento_id, f.exceso,
+       case when f.exceso or f.ultima > coalesce(e.ultima, 0) then 'fila' else 'evento' end as rige
+from (select clave, evento_id, bool_or(exceso) as exceso, max(id) as ultima
+      from clasificacion_paso where alcance = 'fila' group by clave, evento_id) f
+left join (select evento_id, max(id) as ultima
+           from clasificacion_paso where alcance = 'evento' group by evento_id) e using (evento_id);
+comment on view v_clasificacion_fuente is 'Qué rige en cada fila con algo guardado (OpcionesParadas.guardadas de anh-paradas.ts y guardarClasificacion de escrituras.ts). fila: lo suyo, y lo que no diga lo propone TRIM. evento: lo de su evento, porque se guardó después y reemplazó lo de la fila. El tramo de exceso del programa rige siempre con lo suyo y no hereda. Una fila sin nada guardado usa lo de su evento, salvo el exceso, que usa lo que propone TRIM.';
 
 create view v_asignacion_oficial as
 select a.mes, a.campo_id, a.pozo, a.bbl, a.horas, a.carga_id

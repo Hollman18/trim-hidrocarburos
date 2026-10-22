@@ -1,4 +1,4 @@
-# Validación del modelo de datos · 2026-10-21 19:09:41 -05
+# Validación del modelo de datos · 2026-10-21 19:39:30 -05
 initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
 
 ## 1. Cluster temporal
@@ -15,7 +15,7 @@ server started
                            15
 (1 row)
 
-92 tablas (sin contar 45 particiones de lectura), 10 vistas, 26 funciones, 85 triggers, 183 índices, 573 restricciones (92 PK, 153 FK, 28 únicas, 296 check)
+92 tablas (sin contar 45 particiones de lectura), 11 vistas, 27 funciones, 85 triggers, 183 índices, 574 restricciones (92 PK, 153 FK, 28 únicas, 297 check)
 
 ## 3. ejemplos.sql (filas reales del demo)
 libros 60 · tramos por día 28 · mensajes 337 · identidades 132 · repuestos 13
@@ -124,18 +124,24 @@ NOTICE:  PASA    una versión con topología: el JSON firmado = lo normalizado
 NOTICE:  MUERDE  una versión con topología en el JSON firmado y sin sus filas  [23514] versión 2: las tablas normalizadas no dicen lo mismo que el JSON firmado
 NOTICE:  MUERDE  clasificación: planeada con una causa no planeada (trigger diferido)  [23514] la parada EP-LC21-261001-01: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
 NOTICE:  MUERDE  clasificación: un detalle que no es de su causa  [23514] la parada EP-LC21-261001-01: el detalle NP_SUB/falla-esp no es de la causa NP_PROC
+NOTICE:  MUERDE  clasificación: planeada en el evento y una causa no planeada en una de sus filas (lo que rige en la fila)  [23514] la parada EP-LC21-261001-01@2026-10-01#1: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
+NOTICE:  MUERDE  clasificación: una fila dice «no planeada» después de que su evento dijo una causa planeada (lo que rige en la fila)  [23514] la parada EP-LC21-261001-01@2026-10-01#1: «no-planeada» no va con la causa P_MANT_ELE (planeada solo con P_…, no planeada solo con NP_…)
+NOTICE:  PASA    clasificación: lo guardado en el evento después reemplaza lo de sus filas (no se mezclan)
+NOTICE:  PASA    clasificación: el tramo de exceso no hereda la planeación de su evento
+NOTICE:  MUERDE  clasificación: «exceso» en una clave de evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check2"
+NOTICE:  PASA    clasificación: el evento planeado y una fila que corrige planeación, causa y detalle (lo que rige es coherente en los dos)
 NOTICE:  MUERDE  clasificación: «En el yacimiento» puesto por el supervisor  [23514] el rol sup no tiene anh:yacimiento (paso choke de EP-LC21-261001-01)
-NOTICE:  MUERDE  clasificación: «En el yacimiento» sin evidencia  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check11"
-NOTICE:  MUERDE  clasificación: corregido sin lo que proponía TRIM  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check3"
-NOTICE:  MUERDE  clasificación: una causa que no es del catálogo  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check9"
+NOTICE:  MUERDE  clasificación: «En el yacimiento» sin evidencia  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check12"
+NOTICE:  MUERDE  clasificación: corregido sin lo que proponía TRIM  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check4"
+NOTICE:  MUERDE  clasificación: una causa que no es del catálogo  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check10"
 NOTICE:  MUERDE  clasificación: lo que propone TRIM no se guarda (procedencia regla)  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_procedencia_check"
 NOTICE:  MUERDE  clasificación: el gerente no clasifica (sin anh:clasificar)  [23514] el rol ger no tiene anh:clasificar (paso impacto de EP-LC21-261001-01)
 NOTICE:  MUERDE  clasificación: el evento es de otro campo  [23514] el evento EP-LC21-261001-01 no es del campo morichal
-NOTICE:  MUERDE  clasificación: una fila que no es de su evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check2"
+NOTICE:  MUERDE  clasificación: una fila que no es de su evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check3"
 NOTICE:  MUERDE  corregir una clasificación en sitio (se corrige con una fila nueva)  [23001] la tabla clasificacion_paso es de solo inserción: no admite UPDATE
 NOTICE:  MUERDE  lote del operador (sin anh:confirmar)  [23514] el rol oper no confirma en lote (anh:confirmar)
 NOTICE:  PASA    una clasificación coherente, confirmada en lote por el supervisor
-96 rechazos esperados y 14 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
+99 rechazos esperados y 17 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
 
 ## 5. Cuadres de los datos cargados (cuadres.sql)
 NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
@@ -151,8 +157,8 @@ NOTICE:  CUADRA  v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3
 NOTICE:  CUADRA  v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
 
 ## 6. tablas.json contra esquema.sql
-tablas.json: 92 tablas, 10 vistas, 153 relaciones, 368 filas de ejemplo
-comparadas 92 tablas y 10 vistas, 848 columnas, 153 relaciones; columnas de tabla sin comentario: 0
+tablas.json: 92 tablas, 11 vistas, 153 relaciones, 368 filas de ejemplo
+comparadas 92 tablas y 11 vistas, 854 columnas, 153 relaciones; columnas de tabla sin comentario: 0
 filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, topologia, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, confirmacion_lote, clasificacion_paso, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
 tablas.json COINCIDE 1:1 con esquema.sql
 

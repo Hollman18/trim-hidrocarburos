@@ -583,9 +583,10 @@ const corrigeAPersona = (p: ParadaAnh, valores: Partial<Record<PasoAnh, string>>
 
 /** Guarda lo que dijo la persona en la fila, en su evento o en su cascada, y
  *  devuelve la fila como quedó y lo guardado. Lo dicho por evento rige en todos
- *  sus tramos: lo que había guardado por fila de ese evento se reemplaza. Un
- *  tramo que se pasó de la ventana del programa (`exceso`) se guarda solo: es
- *  otra decisión, no planeada. */
+ *  sus tramos: lo que había guardado por fila de ese evento se reemplaza (nunca
+ *  se mezclan pasos de la fila con pasos del evento). Un tramo que se pasó de la
+ *  ventana del programa (`exceso`) se guarda solo y no hereda del evento: es otra
+ *  decisión, no planeada, y lo que se diga del evento entero no lo borra. */
 function guardarClasificacion(p: ParadaAnh, b: BorradorClasificacion, alcance: { aplicarAlEvento?: boolean; aplicarALaCascada?: boolean }, ctx: Contexto) {
   const { clasificacionesAnh } = sesion()
   const lo = soloDePersona(b)
@@ -593,7 +594,9 @@ function guardarClasificacion(p: ParadaAnh, b: BorradorClasificacion, alcance: {
   const guardadas: Record<string, BorradorClasificacion> = {}
   const eventos = p.exceso ? [] : alcance.aplicarALaCascada ? eventosDeLaCascada(p, ctx, clasificacionesAnh) : alcance.aplicarAlEvento ? [p.eventoId] : []
   for (const ev of eventos) {
-    for (const k of filasGuardadasDe(nuevas, ev)) delete nuevas[k]
+    // Lo guardado en el tramo de exceso del programa es otra decisión (no
+    // planeada, y no hereda del evento): lo que se dice del evento entero no lo borra.
+    for (const k of filasGuardadasDe(nuevas, ev)) if (!pedirParadaAnh(k, ctx, nuevas)?.exceso) delete nuevas[k]
     nuevas[ev] = guardadas[ev] = lo
   }
   if (!eventos.length) nuevas[p.id] = guardadas[p.id] = lo
