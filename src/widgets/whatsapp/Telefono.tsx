@@ -26,13 +26,15 @@ interface Burbuja { de: 'trim' | 'persona'; texto: string; hora: string }
  *  teléfono: lo que TRIM le mandó y las respuestas rápidas. Responder aquí es
  *  responder por WhatsApp: escoge la parte y después qué vio, en dos toques. */
 export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; persona: PersonaVisible }) {
-  const recibirWhatsapp = useApp(s => s.recibirWhatsapp)
+  const recibirWhatsapp = useApp(s => s.recibirWhatsapp), revisarWhatsapp = useApp(s => s.revisarWhatsapp)
   const [paso, setPaso] = useState<Paso>({ tipo: 'opciones' })
   const [locales, setLocales] = useState<Burbuja[]>([])
   const [escrito, setEscrito] = useState('')
   /** El cierre de la conversación (U1 §2.6, corregido por S1 U1-2): el operador
-   *  avala solo lo que contestó; lo técnico lo revisa su supervisor. */
+   *  avala solo lo que contestó; lo técnico lo revisa su supervisor. «2 Algo está
+   *  mal» se guarda en la parada (la misma revisión del botón de la pantalla, B-05). */
   const [cierre, setCierre] = useState<'bien' | 'mal' | null>(null)
+  const [errorCierre, setErrorCierre] = useState('')
   const chat = useRef<HTMLDivElement>(null)
   const botones = useRef<HTMLDivElement>(null)
   // Cada toque cambia las respuestas rápidas: el botón que tenía el foco
@@ -60,8 +62,8 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
         ...(cierre ? [{ de: 'persona' as const, texto: cierre === 'bien' ? '1' : '2', hora: r.hora },
           { de: 'trim' as const, hora: r.hora, texto: cierre === 'bien'
             ? `TRIM · Listo. Gracias, ${nombre}. Su respuesta queda guardada a las ${hora(r.hora)}.`
-            // «Algo está mal» todavía no se guarda en la parada (no hay escritura para eso): se dice qué hacer.
-            : 'TRIM · Entendido. Avísele a su supervisor qué está mal: él lo corrige en la pantalla de Identificar.' }] : [])]
+            : 'TRIM · Entendido. Lo revisa su supervisor en Identificar; usted no tiene que hacer nada más.' }] : []),
+        ...(errorCierre ? [{ de: 'trim' as const, hora: r.hora, texto: `TRIM · ${errorCierre}` }] : [])]
       : [{ de: 'trim' as const, texto: `TRIM · Ya respondió ${r.por}: «${r.texto}». Gracias.`, hora: r.hora }])
       : locales),
   ]
@@ -72,6 +74,13 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
     ;(botones.current?.querySelector('button') ?? chat.current)?.focus()
   }, [paso, burbujas.length])
 
+  // «2 Algo está mal»: la parada queda para revisar, a nombre de quien tiene este número (B-05).
+  const algoEstaMal = async () => {
+    setErrorCierre('')
+    const res = await revisarWhatsapp({ evento: p.id, campoId: p.campoId, usuarioId: persona.id })
+    if (res.ok) setCierre('mal')
+    else setErrorCierre(res.error)
+  }
   const decir = (yo: string, trim?: string) =>
     setLocales(x => [...x, { de: 'persona', texto: yo, hora: ahora }, ...(trim ? [{ de: 'trim' as const, texto: trim, hora: ahora }] : [])])
   // La escritura nunca rechaza: lo que el servidor no acepte vuelve como `{ ok: false }` y se dice en el chat.
@@ -104,7 +113,7 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
   // Las respuestas rápidas del paso en que va la conversación. Ya respondida,
   // a quien respondió le queda avalar lo que contestó (o decir que algo está mal).
   const rapidas: Array<{ clave: string; texto: string; hacer: () => void }> = r
-    ? (suya && !cierre ? [{ clave: '1', texto: 'Está bien', hacer: () => setCierre('bien') }, { clave: '2', texto: 'Algo está mal', hacer: () => setCierre('mal') }] : [])
+    ? (suya && !cierre ? [{ clave: '1', texto: 'Está bien', hacer: () => setCierre('bien') }, { clave: '2', texto: 'Algo está mal', hacer: () => void algoEstaMal() }] : [])
     : !pregunta ? [] :
     paso.tipo === 'opciones' ? (pregunta.opciones ?? []).filter(o => o.clave !== OTRA.clave).map(o => ({ clave: o.clave, texto: o.texto, hacer: () => tocar(o) }))
       .concat([{ clave: '0', texto: 'Otra cosa', hacer: () => tocar(OTRA) }])

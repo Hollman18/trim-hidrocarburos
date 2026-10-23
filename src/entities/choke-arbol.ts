@@ -22,13 +22,20 @@
  *  Reglas:
  *   - Un paso que falta va en su propia rama, `falta` («sin identificar» en el
  *     tramo, `sin-asignar`). Nunca se reparte para que cuadre (U2 §0, principio 5).
- *   - El tramo es el paso 2 vigente. Si el paso 2 espera una respuesta (el
- *     tanque de crudo lleno: «¿el oleoducto o el cliente estaba recibiendo?»), la
- *     fila cuenta donde lo propone el motor del choke mientras tanto, como en la
- *     tubería y en «Por dónde se trabó» (`brechaPorChoke`): así el primer nivel
- *     del orden `gestion` es el mismo reparto por tramo de todas las vistas.
- *     Si una persona corrige el paso 2, el árbol la sigue y mueve esos barriles
- *     de tramo; `brechaPorChoke` todavía no lee lo guardado (pendiente).
+ *   - El tramo es el paso 2 vigente (`tramoVigente`, choke-reparto.ts). Si el
+ *     paso 2 espera una respuesta (el tanque de crudo lleno: «¿el oleoducto o el
+ *     cliente estaba recibiendo?»), la fila cuenta donde lo propone el motor del
+ *     choke mientras tanto. Son las MISMAS filas y la misma regla del reparto de
+ *     todas las vistas (`brechaPorChoke`, la tubería, la serie, el mes a mes): el
+ *     primer nivel del orden `gestion` es ese reparto, también después de que una
+ *     persona corrige el paso 2 o el 4 (QA-A-01; C-09).
+ *   - Lo no planeado de cada nodo (`noPlaneadaBbl`) es la cifra del norte (D4):
+ *     el escalón `disponibilidad-no-planeada` de sus filas (`escalonDeFila`), sin
+ *     el curtailment ni lo sin identificar. El paso 4 de la ANH (planeada o no,
+ *     con la nominación del oleoducto como «no planeada») es su nivel propio,
+ *     `planeacion`, el que lee Regulatorio.
+ *   - Un período que no empieza a medianoche toma de cada fila solo sus horas
+ *     dentro (QA-A-11): la raíz es siempre el diferido del libro del período.
  *   - La rama de la pérdida existe en el paso 3, pero hoy está vacía: TRIM
  *     todavía no registra pérdidas (lo producido que no se vendió). Ningún
  *     barril diferido se pasa a ella para llenarla (P1 §1.9).
@@ -37,8 +44,9 @@
  *  Va en su propio archivo porque lee las filas de la ANH, que a su vez leen el
  *  motor del choke: dentro de choke.ts sería una importación circular. No
  *  cambia el libro, la causa, el choke ni la clasificación: los lee y los ordena. */
-import { chokeDeCausa, NOMBRE_CHOKE } from './choke'
+import { NOMBRE_CHOKE, type EscalonOSinClasificar } from './choke'
 import { paradasAnh, type ParadaAnh, type OpcionesParadas } from './anh-paradas'
+import { filasDelChoke, tramoVigente, escalonDeFila, elementoDeFila, bblEnPeriodo, filaEnPeriodo } from './choke-reparto'
 import { N1_EN_CAMPO } from './anh-clasificacion'
 import {
   VERSIONES_CATALOGO, VERSION_POR_DEFECTO, ETIQUETA_RESPONSABLE, ETIQUETA_IMPACTO, ETIQUETA_PLANEACION,
@@ -47,6 +55,7 @@ import {
 } from './anh-catalogo'
 import { NOMBRE_PARTE } from './partes'
 import { TIPO_CAUSA, type Contexto, type TipoCausa } from './causa-senal'
+import { AHORA } from './reloj'
 
 /* ───────────────────────────── los órdenes y sus niveles ───────────────────────────── */
 
@@ -132,7 +141,9 @@ export interface NodoArbol {
   eventos: number
   /** Los barriles con los 6 pasos avalados por una persona (estado `confirmada`). */
   confirmadoBbl: number
-  /** Los barriles de las paradas no planeadas (el paso 4 vigente): el norte. */
+  /** Los barriles de las paradas no planeadas: el escalón
+   *  `disponibilidad-no-planeada` de sus filas, la cifra del norte (D4). No
+   *  cuenta la nominación del oleoducto ni lo sin identificar. */
   noPlaneadaBbl: number
   /** De más a menos barriles; «falta» y «sin identificar» al final. */
   hijos: NodoArbol[]
@@ -157,24 +168,24 @@ export interface OpcionesArbol extends OpcionesParadas {
   orden?: OrdenArbol
 }
 
-/** Una fila de la ANH con el valor que toma en cada nivel. */
-interface FilaArbol { p: ParadaAnh; tipo: TipoCausa; valores: Record<NivelArbol, string> }
+/** Una fila de la ANH con el valor que toma en cada nivel, su escalón y sus barriles en el período. */
+interface FilaArbol { p: ParadaAnh; tipo: TipoCausa; bbl: number; escalon: EscalonOSinClasificar; valores: Record<NivelArbol, string> }
 
 /** El valor de cada nivel de una fila, con su clasificación vigente. */
-function filaDe(p: ParadaAnh, ctx: Contexto): FilaArbol {
+function filaDe(p: ParadaAnh, ctx: Contexto, d0: number, hh: number): FilaArbol {
   const c = p.clasificacion
   return {
-    p, tipo: p.causa.tipo,
+    p, tipo: p.causa.tipo, bbl: bblEnPeriodo(p, d0, hh), escalon: escalonDeFila(p),
     valores: {
       // El paso 2 vigente; si espera una respuesta, donde lo propone el motor del choke (ver arriba).
-      tramo: c.choke?.valor ?? p.propuesta.sugerido.choke ?? SIN_ASIGNAR,
+      tramo: tramoVigente(p),
       responsable: c.responsable?.valor ?? FALTA,
       impacto: c.impacto?.valor ?? FALTA,
       planeacion: c.planeacion?.valor ?? FALTA,
       n1: c.n1?.valor ?? FALTA,
       n2: c.n2?.valor ?? FALTA,
       // El elemento donde se originó (la raíz de la cascada), el mismo de `brechaPorChoke.porChokeEquipo`.
-      equipo: chokeDeCausa(p.causa, p.campoId, ctx)?.elemento ?? p.causa.equipo,
+      equipo: elementoDeFila(p, ctx),
       parte: p.causa.parte ?? FALTA,
     },
   }
@@ -186,7 +197,7 @@ const propio = <T,>(o: Readonly<Record<string, T>>, k: string): T | undefined =>
 /** El tipo de causa que más pesa en las filas de un equipo: «P-201B · bomba de reinyección». */
 function tipoMayor(fs: readonly FilaArbol[]): TipoCausa | undefined {
   const por = new Map<TipoCausa, number>()
-  for (const f of fs) por.set(f.tipo, (por.get(f.tipo) ?? 0) + f.p.diferidaTrimBbl)
+  for (const f of fs) por.set(f.tipo, (por.get(f.tipo) ?? 0) + f.bbl)
   let mayor: TipoCausa | undefined, max = -Infinity
   for (const [t, v] of por) if (v > max) { mayor = t; max = v }
   return mayor
@@ -240,10 +251,9 @@ function armar(dimension: DimensionArbol, valor: string, texto: string, cadena: 
   const nivel = niveles[i]
   if (!nivel) {
     for (const f of filas) {
-      const bbl = f.p.diferidaTrimBbl
-      n.bbl += bbl
-      if (f.p.estado === 'confirmada') n.confirmadoBbl += bbl
-      if (f.valores.planeacion === 'no-planeada') n.noPlaneadaBbl += bbl
+      n.bbl += f.bbl
+      if (f.p.estado === 'confirmada') n.confirmadoBbl += f.bbl
+      if (f.escalon === 'disponibilidad-no-planeada') n.noPlaneadaBbl += f.bbl
     }
     return n
   }
@@ -260,16 +270,21 @@ function armar(dimension: DimensionArbol, valor: string, texto: string, cadena: 
   return n
 }
 
-/** El árbol de pérdidas del choke de unos campos en un período (los días
- *  operacionales que toca, como `paradasAnh`), en un orden. La raíz es el
- *  diferido del libro del período (Σ `diferidaTrimBbl`); con los 6 pasos que
- *  dijeron las personas encima de lo que propone TRIM (`op.guardadas`). */
+/** El árbol de pérdidas del choke de unos campos en un período, en un orden.
+ *  La raíz es el diferido del libro del período (Σ de los barriles de las
+ *  filas en el período); con los 6 pasos que dijeron las personas encima de lo
+ *  que propone TRIM (`op.guardadas`). Las filas son las del reparto
+ *  (`filasDelChoke`, una vez por contexto y por lo guardado); con otras
+ *  opciones de la propuesta (las protecciones, sin parciales…), se arman aparte. */
 export function arbolDelChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, op: OpcionesArbol = {}): ArbolChoke {
   const { orden = 'gestion', ...opParadas } = op
   if (!ORDENES_ARBOL.includes(orden)) throw new Error(`«${String(orden)}» no es un orden del árbol: ${ORDENES_ARBOL.join(', ')}.`)
   const version = op.version ?? VERSION_POR_DEFECTO
   const niveles = NIVELES_ARBOL[orden]
-  const filas = paradasAnh(campoIds, desde, hasta, ctx, opParadas).map(p => filaDe(p, ctx))
+  const d0 = desde.getTime(), hh = Math.min(hasta.getTime(), AHORA.getTime())
+  const { guardadas, version: _v, ...otras } = opParadas
+  const ps = Object.values(otras).some(x => x !== undefined) ? paradasAnh(campoIds, desde, hasta, ctx, opParadas) : filasDelChoke(campoIds, desde, hasta, ctx, guardadas)
+  const filas = ps.filter(p => filaEnPeriodo(p, d0, hh)).map(p => filaDe(p, ctx, d0, hh))
   const raiz = armar('raiz', 'total', 'Lo diferido del período', undefined, filas, niveles, 0, version)
   return { orden, niveles: [...niveles], desde, hasta, campos: [...campoIds], version, regla: REGLA_ARBOL, raiz }
 }

@@ -246,6 +246,23 @@ for (const r of MOTOR.roles) meter('rol', { ...lit({ id: r.id, nombre: r.nombre,
 for (const [id, nombre] of Object.entries(MOTOR.capacidadNombre)) if (id !== 'causa:completar') meter('capacidad', lit({ id, nombre, incluye: null }))
 meter('capacidad', lit({ id: 'causa:completar', nombre: MOTOR.capacidadNombre['causa:completar'], incluye: 'causa:declarar' }))
 for (const r of MOTOR.roles) for (const k of r.capacidades) meter('rol_capacidad', lit({ rol_id: r.id, capacidad_id: k }))
+
+// El catálogo de la clasificación ANH que cierra lo que se escribe (C-07): sale del motor.
+titulo('catálogo de la clasificación ANH (Circular 024): causas, pasos por rol y preguntas de campo')
+for (const n of MOTOR.anh.n1) meter('causa_n1', lit({ clave: n.clave, planeacion: n.planeacion, texto: n.texto }))
+for (const n of MOTOR.anh.n2) meter('causa_n2', lit({ version_catalogo: n.version, codigo: n.codigo, n1: n.n1, texto: n.texto }))
+for (const c of MOTOR.anh.causasGenerales) meter('causa_general', lit({ id: c.id, texto: c.texto }))
+for (const x of MOTOR.anh.pasosPorRol) meter('paso_por_rol', lit({ rol_id: x.rol, paso: x.paso, accion: x.accion }))
+for (const q of MOTOR.anh.preguntas) meter('pregunta_campo', lit({ id: q.id, quien: q.quien, texto: q.texto }))
+for (const x of MOTOR.anh.contestan) meter('contesta_pregunta', lit({ quien: x.quien, rol_id: x.rol }))
+const opcionesVistas = new Set()
+for (const o of MOTOR.anh.opciones) {
+  // Un mismo botón en dos lugares de la misma pregunta (un detalle que se repite en dos causas) va una vez.
+  const k = `${o.pregunta}|${o.texto}`
+  if (opcionesVistas.has(k)) continue
+  opcionesVistas.add(k)
+  meter('opcion_campo', lit({ pregunta: o.pregunta, texto: o.texto }))
+}
 const USU = Object.fromEntries(MOTOR.usuarios.map(u => [u.id, u]))
 for (const u of MOTOR.usuarios) {
   meter('usuario', lit({ id: u.id, nombre: u.nombre, correo: u.correo, rol_id: u.rolId, todos_los_campos: u.campos === 'todos', estado: u.estado, desde: u.desde,

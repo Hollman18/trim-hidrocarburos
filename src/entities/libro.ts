@@ -311,14 +311,24 @@ export function tramosDeEvento(campoId: string, eventoId: string, ctx: Contexto)
   return historiaDe(campoId, ctx).filter(t => (t.causa.evento ?? t.evento.id) === eventoId)
 }
 
+/* Los eventos de cada campo con su inicio y su fin ya leídos, en el orden del
+   registro: `tramosDe` se pide por cada día del período (las filas de la ANH,
+   la serie diaria del choke) y leer el texto de cada fecha en cada pedido era
+   casi todo su costo (QA-A-15). Mismo orden, mismos tramos. */
+const TIEMPOS_EVENTOS = new Map<string, ReadonlyArray<{ ev: EventoPozo; a0: number; b0: number }>>()
+function eventosConTiempo(campoId: string): ReadonlyArray<{ ev: EventoPozo; a0: number; b0: number }> {
+  let x = TIEMPOS_EVENTOS.get(campoId)
+  if (!x) TIEMPOS_EVENTOS.set(campoId, x = eventosDeCampo(campoId).map(ev => ({ ev, a0: ms(ev.inicio), b0: ev.fin ? ms(ev.fin) : ahora })))
+  return x
+}
+
 function tramosDe(campoIds: string[], desde: number, hasta: number, ctx: Contexto): Tramo[] {
   const hh = Math.min(hasta, ahora)
   const out: Tramo[] = []
   for (const campoId of campoIds) {
     const calc = calcCampo(campoId)
     const sesgo = bandaDe(campoId).valor
-    for (const ev of eventosDeCampo(campoId)) {
-      const a0 = ms(ev.inicio), b0 = ev.fin ? ms(ev.fin) : ahora
+    for (const { ev, a0, b0 } of eventosConTiempo(campoId)) {
       if (b0 <= desde || a0 >= hh) continue
       const p = pozoDe(ev.campoId, ev.pozo)
       if (!p) continue

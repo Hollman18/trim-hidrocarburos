@@ -87,6 +87,10 @@ interface Estado {
    *  webhook de WhatsApp al servidor). Entra solo de un número registrado con
    *  alertas y con ese campo; la primera respuesta gana. */
   recibirWhatsapp: (r: CuerpoWhatsapp) => Promise<{ ok: true } | { ok: false; error: string }>
+  /** «2 Algo está mal» al cierre de una respuesta por WhatsApp (B-05): la misma
+   *  escritura que el botón de la pantalla (`…/revision`), a nombre de la persona
+   *  del número. En producción la manda el webhook; con el servidor, el teléfono del demo no la envía. */
+  revisarWhatsapp: (r: { evento: string; campoId: string; usuarioId: string }) => Promise<{ ok: true } | { ok: false; error: string }>
   /** Mecanismo y causa raíz de una falla declarada (`POST /api/analisis/:evento`).
    *  Los completa confiabilidad o el jefe de mantenimiento; la parte y el modo son de quien la vio. */
   completarAnalisis: (evento: string, a: { mecanismo: string; causaRaiz: string; nota?: string }) => Promise<{ ok: true } | { ok: false; error: string }>
@@ -225,6 +229,7 @@ export const useApp = create<Estado>((set, get) => ({
   invitarUsuario: (invitacion, motivo) => E.invitarUsuario(quien(), { invitacion, motivo }),
   responder: r => E.responderParada(quien(), r),
   recibirWhatsapp: r => E.recibirWhatsapp(r),
+  revisarWhatsapp: r => E.revisarDesdeWhatsapp(r),
   completarAnalisis: (evento, a) => E.completarAnalisis(quien(), { evento, ...a }),
   decidirPlan: (id, estado, motivo) => E.decidirPlan(quien(), { id, estado, motivo }),
   clasificarAnh: (id, c) => E.clasificarParada(quien(), id, c),

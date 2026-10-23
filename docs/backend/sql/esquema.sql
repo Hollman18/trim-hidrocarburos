@@ -36,12 +36,21 @@ begin
 end $$;
 comment on function solo_insercion() is 'Trigger: rechaza UPDATE, DELETE y TRUNCATE en las tablas de solo inserción (SQLSTATE 23001).';
 
--- Texto no vacío y de al menos n caracteres sin los espacios de los bordes
--- (`alcanza` de src/entities/reglas.ts).
+-- Texto de al menos n caracteres sin lo que no se ve en los bordes (los espacios,
+-- también el no separable y los de Unicode, y los de ancho cero) y con al menos
+-- una letra o un número (`alcanza` de src/entities/reglas.ts, C-26: `btrim` solo
+-- quitaba espacios ASCII y cinco espacios de ancho cero eran un motivo invisible).
 create or replace function alcanza(t text, n int) returns boolean language sql immutable as $$
-  select char_length(btrim(coalesce(t, ''))) >= n
+  select char_length(x) >= n and (n <= 0 or x ~ '[0-9A-Za-z\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u00ff]')
+  from (select regexp_replace(coalesce(t, ''), '^[ \t\n\r\f\v\u00a0\u1680\u2000-\u200d\u2028\u2029\u202f\u205f\u3000\ufeff]+|[ \t\n\r\f\v\u00a0\u1680\u2000-\u200d\u2028\u2029\u202f\u205f\u3000\ufeff]+$', '', 'g') as x) s
 $$;
-comment on function alcanza(text, int) is 'Igual que alcanza() de src/entities/reglas.ts: el texto sin espacios de los bordes tiene n caracteres o más.';
+comment on function alcanza(text, int) is 'Igual que alcanza() de src/entities/reglas.ts: sin lo que no se ve en los bordes (espacios, también el no separable y los de Unicode, y los de ancho cero), el texto tiene n caracteres o más y al menos una letra o un número.';
+
+-- Una lista sin repetidos (no hay subconsultas en un check).
+create or replace function sin_repetidos(xs text[]) returns boolean language sql immutable as $$
+  select xs is null or cardinality(xs) = (select count(distinct x) from unnest(xs) as x)
+$$;
+comment on function sin_repetidos(text[]) is 'Una lista sin elementos repetidos (validarTopologia cuenta los pozos con un Set).';
 
 -- El primer instante (00:00 de Bogotá) de un mes dado como date.
 create or replace function inicio_mes_co(m date) returns timestamptz language sql immutable as $$
@@ -1303,7 +1312,8 @@ create table topologia (
   primary key (version, orden),
   unique nulls not distinct (version, campo_id, elemento),
   check (alcance <> 'dedicado' or coalesce(cardinality(pozos), 0) = 1),
-  check (alcance <> 'compartido' or coalesce(cardinality(pozos), 0) <> 1)
+  check (alcance <> 'compartido' or coalesce(cardinality(pozos), 0) <> 1),
+  check (sin_repetidos(pozos))
 );
 comment on table topologia is 'Topología del modelo choke firmada (ChokeDeElemento de src/entities/choke.ts; Config.topologia): a qué pozos sirve cada equipo, servicio o alimentador. El tramo de una parada sale de aquí con el criterio de Edinson: dedicado (un solo pozo) = pozo, compartido = planta, frontera y tercero = exportación. Un campo sin filas usa la que se deriva del registro (GET /api/vistas/topologia). Firma config:firmar. No es inmutable hacia atrás: cada clasificación guarda su regla y lo que confirmó una persona no cambia solo.';
 comment on column topologia.version is 'Versión.';
@@ -1312,13 +1322,24 @@ comment on column topologia.campo_id is 'Campo donde está el elemento. NULL = v
 comment on column topologia.elemento is 'Id de equipo, tag de servicio o alimentador (Pozo.alimentador). Único por (versión, campo).';
 comment on column topologia.alcance is 'A quién sirve: dedicado (un pozo), compartido (varios), frontera (la brida de salida de la batería) o tercero (otro dueño, más allá de la batería).';
 comment on column topologia.choke is 'El tramo, DERIVADO del alcance y guardado para la auditoría: pozo, planta o exportacion (check). Nadie lo escoge.';
-comment on column topologia.pozos is '«¿A qué pozos sirve?»: dedicado, exactamente uno; compartido, ninguno o más de uno. Cada pozo es del campo (trigger). NULL = no se dijo.';
+comment on column topologia.pozos is '«¿A qué pozos sirve?»: dedicado, exactamente uno; compartido, ninguno o más de uno, sin repetidos. Cada pozo es del campo (trigger). NULL = no se dijo. Que el elemento esté en el registro del campo lo revisa el servidor (validarConfig, 422): la topología que TRIM deriva del registro no vive en una tabla.';
 comment on column topologia.caso_borde is 'misma-locacion: sirve a 2 o 3 pozos de una misma locación; va a la planta mientras Edinson no confirme la regla (U2 §8.6).';
 
--- Los pozos de un elemento de la topología son del campo (no hay FK a un arreglo).
+-- Los pozos de un elemento de la topología son del campo (no hay FK a un arreglo);
+-- un pozo solo se sirve a sí mismo (C-13: como compartido o dedicado a otro,
+-- las fallas del pozo pasarían a «planta», que es escoger el tramo); y un
+-- equipo no está a la vez contestado y «Todavía no sé» (también uno sin campo,
+-- que vale para todos, y sin importar cuál se inserte primero).
 create or replace function topologia_pozos_del_campo() returns trigger language plpgsql as $$
 declare ajeno text;
 begin
+  if exists (select 1 from pozo p where p.id = new.elemento and (new.campo_id is null or p.campo_id = new.campo_id))
+     and not (new.alcance = 'dedicado' and new.pozos = array[new.elemento]) then
+    raise exception '% es un pozo: solo se sirve a sí mismo (dedicado a %)', new.elemento, new.elemento using errcode = '23514';
+  end if;
+  if exists (select 1 from topologia_por_saber s where s.version = new.version and s.elemento = new.elemento and (new.campo_id is null or s.campo_id = new.campo_id)) then
+    raise exception '% (%): está a la vez en la topología y como «Todavía no sé»', new.elemento, coalesce(new.campo_id, 'todos los campos') using errcode = '23514';
+  end if;
   if new.campo_id is null or new.pozos is null then return new; end if;
   select x into ajeno from unnest(new.pozos) as x where not exists (select 1 from pozo p where p.campo_id = new.campo_id and p.id = x) limit 1;
   if ajeno is not null then
@@ -1326,7 +1347,7 @@ begin
   end if;
   return new;
 end $$;
-comment on function topologia_pozos_del_campo() is 'Trigger de topologia: cada pozo del elemento es del campo (validarTopologia de choke.ts, 422).';
+comment on function topologia_pozos_del_campo() is 'Trigger de topologia: cada pozo del elemento es del campo (validarTopologia de choke.ts, 422); un pozo solo es dedicado a sí mismo y un equipo no está a la vez en topologia_por_saber de la misma versión (validarConfig, 422; C-13).';
 create trigger topologia_pozos_del_campo before insert on topologia for each row execute function topologia_pozos_del_campo();
 
 create table topologia_por_saber (
@@ -1346,12 +1367,12 @@ comment on column topologia_por_saber.elemento is 'Id de equipo, tag de servicio
 -- Un equipo «por saber» no está a la vez contestado en la topología del mismo campo.
 create or replace function topologia_por_saber_unica() returns trigger language plpgsql as $$
 begin
-  if exists (select 1 from topologia t where t.version = new.version and t.campo_id = new.campo_id and t.elemento = new.elemento) then
+  if exists (select 1 from topologia t where t.version = new.version and (t.campo_id = new.campo_id or t.campo_id is null) and t.elemento = new.elemento) then
     raise exception '% (%): está a la vez en la topología y como «Todavía no sé»', new.elemento, new.campo_id using errcode = '23514';
   end if;
   return new;
 end $$;
-comment on function topologia_por_saber_unica() is 'Trigger de topologia_por_saber: el equipo no está a la vez en topologia del mismo campo y versión (validarConfig, 422).';
+comment on function topologia_por_saber_unica() is 'Trigger de topologia_por_saber: el equipo no está a la vez en topologia de la misma versión, del mismo campo o sin campo (validarConfig, 422). topologia_pozos_del_campo revisa lo mismo al revés.';
 create trigger topologia_por_saber_unica before insert on topologia_por_saber for each row execute function topologia_por_saber_unica();
 
 create table capacidades_campo (
@@ -1391,6 +1412,22 @@ comment on column capacidad_firmada.orden is 'Lugar de la bomba en la lista firm
 comment on column capacidad_firmada.bpd is 'Capacidad por día: bbl/d de crudo (crudo, afuera, mercado), bbl/d de agua (bomba, tratamiento, admision) o KPC/d (gas). > 0 y ≤ 10.000.000 (TOPE_BPD).';
 comment on column capacidad_firmada.fuente is 'De dónde sale: placa (del equipo), prueba (de capacidad), contrato (de transporte), nominacion (aceptada) o estimado (de ingeniería).';
 comment on column capacidad_firmada.medido is 'Solo en el gas: si se mide. Un tren de gas sin medir no entra en lo que limita.';
+
+-- La bomba de una capacidad firmada es del tren de agua del campo (C-28): un
+-- miembro del elemento «bomba» del tren de agua de su esquema de planta. No hay
+-- FK posible (el tren vive en planta_miembro): el trigger responde como una (23503).
+create or replace function capacidad_bomba_del_tren() returns trigger language plpgsql as $$
+begin
+  -- Sin equipo, lo dice el check de la tabla (23514).
+  if new.tramo = 'bomba' and new.equipo <> '' and not exists (
+    select 1 from planta_miembro m join planta_elemento e on e.campo_id = m.campo_id and e.id = m.elemento_id
+    where m.campo_id = new.campo_id and e.tren = 'agua' and e.simbolo = 'bomba' and (m.id = new.equipo or m.equipo = new.equipo)) then
+    raise exception '% no es una bomba del tren de agua de %', new.equipo, new.campo_id using errcode = '23503';
+  end if;
+  return new;
+end $$;
+comment on function capacidad_bomba_del_tren() is 'Trigger de capacidad_firmada: la bomba es del tren de agua del campo en su esquema de planta (validarCapacidades, 422; C-28).';
+create trigger capacidad_bomba_del_tren before insert on capacidad_firmada for each row execute function capacidad_bomba_del_tren();
 
 -- El instante en ISO 8601 con milisegundos en hora de Colombia, como viaja.
 create or replace function fecha_iso_co(t timestamptz) returns text language sql immutable as $$
@@ -1517,8 +1554,8 @@ create table rol (
   visible         boolean not null default true,
   check (inicio = any (pantallas))
 );
-comment on table rol is 'Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija el producto: el gerente decide quién tiene cada rol, no qué hace el rol. visible=false son los de la versión 2 (plan, cont, reg), que no se ofrecen.';
-comment on column rol.id is 'Id del rol (ger, prod, sup, oper, jefe, conf, tec, adm).';
+comment on table rol is 'Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija el producto: el gerente decide quién tiene cada rol, no qué hace el rol. visible=false son los de la versión 2 (plan, cont), que no se ofrecen: ninguna persona tiene uno (trigger de usuario) y ninguna escritura los acepta.';
+comment on column rol.id is 'Id del rol (ger, prod, sup, oper, jefe, conf, tec, reg, adm; plan y cont, de la versión 2).';
 comment on column rol.nombre is 'Nombre (Gerente de activo).';
 comment on column rol.nivel is 'Nivel de detalle: decision, operacion o ingenieria. Cambia lo que se muestra, no los números.';
 comment on column rol.area is 'Área del organigrama.';
@@ -1628,9 +1665,13 @@ begin
   if new.alertas and not (select recibe_alertas from rol where id = new.rol_id) then
     raise exception 'el rol % no recibe alertas por WhatsApp', new.rol_id using errcode = '23514';
   end if;
+  -- Un rol de la versión 2 no se le da a nadie (C-14): el servidor no lo trata como otro rol.
+  if not (select visible from rol where id = new.rol_id) then
+    raise exception 'el rol % no se ofrece en el primer producto: no se le da a una persona', new.rol_id using errcode = '23514';
+  end if;
   return new;
 end $$;
-comment on function usuario_reglas() is 'Trigger de usuario: no se borra a nadie (ni DELETE ni TRUNCATE) y las alertas solo van en roles que las tienen.';
+comment on function usuario_reglas() is 'Trigger de usuario: no se borra a nadie (ni DELETE ni TRUNCATE), las alertas solo van en roles que las tienen y nadie tiene un rol de la versión 2 (visible = false).';
 create trigger usuario_reglas before insert or update or delete on usuario for each row execute function usuario_reglas();
 create trigger usuario_sin_truncate before truncate on usuario for each statement execute function usuario_reglas();
 
@@ -2040,6 +2081,92 @@ create trigger analisis_reglas before insert on analisis for each row execute fu
 -- Las filas de paradas_pozo (ParadaAnh) NO se guardan: salen del libro cada vez
 -- (anh-paradas.ts). Lo que se guarda es lo que dijo una persona de cada paso, con
 -- su procedencia; lo que propone TRIM se vuelve a proponer con la regla de hoy.
+-- D1 (CORRECCIONES-QA): se guarda POR PASO, solo por inserción, y nunca se borra
+-- ni se copia a nombre de otro:
+--   · una escritura inserta solo los pasos que dijo esa persona en esa petición,
+--     en una fila (clave = ParadaAnh.id) o en un evento (clave = EventoPozo.id);
+--   · en cada fila rige, paso por paso, lo más reciente (el id) entre su clave y
+--     la de su evento; el tramo de exceso del programa solo usa lo suyo
+--     (v_clasificacion_fuente; rigeEnFila de anh-clasificacion.ts);
+--   · lo que un cambio deja incoherente de lo que dijo una persona se inserta
+--     «retirado» (quién y motivo): la fila vuelve a lo que propone TRIM.
+
+-- Los catálogos que cierran lo que se escribe (C-07): las 20 causas y los N2 de
+-- cada versión del catálogo, las 18 causas generales, qué pasos dice o confirma
+-- cada rol, y las preguntas de campo con quién las contesta y sus opciones. Sus
+-- filas salen del motor (anh-catalogo.ts y anh-clasificacion.ts): ejemplos.sql.
+
+create table causa_n1 (
+  clave       text primary key check (clave ~ '^N?P_[A-Z_]+$'),
+  planeacion  text not null check (planeacion in ('planeada', 'no-planeada')),
+  texto       text not null check (btrim(texto) <> ''),
+  check ((planeacion = 'planeada') = (left(clave, 2) = 'P_'))
+);
+comment on table causa_n1 is 'Las 20 causas de la Tabla 1 de la Circular 024 (TABLA_1 de src/entities/anh-catalogo.ts): 8 planeadas (P_…) y 12 no planeadas (NP_…). clasificacion_paso.valor del paso n1 tiene que estar aquí (FK, C-07).';
+comment on column causa_n1.clave is 'La clave de la circular (NP_SUB, P_MANT_ELE…).';
+comment on column causa_n1.planeacion is 'planeada o no-planeada: la que va con esta causa (la coherencia bloqueada, C24 p.7).';
+comment on column causa_n1.texto is 'El texto de la circular.';
+
+create table causa_n2 (
+  version_catalogo  text not null check (version_catalogo in ('C024-2026', 'DICC-V3.2')),
+  codigo            text not null check (codigo ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'),
+  n1                text not null references causa_n1(clave),
+  texto             text not null check (btrim(texto) <> ''),
+  primary key (version_catalogo, codigo),
+  check (left(codigo, char_length(n1) + 1) = n1 || '/')
+);
+comment on table causa_n2 is 'Los N2 de cada versión del catálogo (N2_CIRCULAR y VERSIONES_CATALOGO de anh-catalogo.ts): 117 en la circular. clasificacion_paso.valor del paso n2 tiene que estar aquí, en su versión (FK, C-07).';
+comment on column causa_n2.version_catalogo is 'C024-2026 (la circular) o DICC-V3.2 (el diccionario).';
+comment on column causa_n2.codigo is 'El código interno ${n1}/${slug}.';
+comment on column causa_n2.n1 is 'La causa a la que pertenece (el prefijo del código).';
+comment on column causa_n2.texto is 'La cadena de la Tabla 1 (o del diccionario) en esa versión.';
+
+create table causa_general (
+  id     text primary key check (id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
+  texto  text not null check (btrim(texto) <> '')
+);
+comment on table causa_general is 'Las 18 causas de paro de la Res. 0651 art. 15.1 par. 2 para cau_gral_paro (CAUSAS_GENERALES de anh-catalogo.ts). Lo que dice una persona de la causa general es una de ellas, nunca un texto libre: lo escrito no viaja a la ANH (D2).';
+comment on column causa_general.id is 'Código interno (mecanico, electrico…).';
+comment on column causa_general.texto is 'El texto de la resolución.';
+
+create table paso_por_rol (
+  rol_id  text not null references rol(id),
+  paso    text not null check (paso in ('responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2')),
+  accion  text not null check (accion in ('declara', 'confirma')),
+  primary key (rol_id, paso, accion)
+);
+comment on table paso_por_rol is 'Qué pasos dice (PASOS_QUE_DECLARA) y cuáles confirma (PASOS_QUE_CONFIRMA) cada rol (anh-clasificacion.ts): el operador y el técnico, solo lo de su terreno; supervisión, producción, el jefe y confiabilidad, los seis. Lo revisa el trigger de clasificacion_paso (C-07).';
+comment on column paso_por_rol.rol_id is 'Rol.';
+comment on column paso_por_rol.paso is 'Paso de la clasificación.';
+comment on column paso_por_rol.accion is 'declara (lo dice, declarado o corregido) o confirma (sube lo propuesto a confirmado).';
+
+create table pregunta_campo (
+  id     text primary key,
+  quien  text not null check (quien in ('campo', 'causa', 'revisa', 'yacimiento')),
+  texto  text not null check (btrim(texto) <> '')
+);
+comment on table pregunta_campo is 'Las preguntas de campo de una parada (IdPregunta y PREGUNTAS_CAMPO de anh-clasificacion.ts) y quién las contesta. Las de la causa, el detalle y el tramo las arma el motor por fila (raiz, detalle, choke): su texto aquí es el genérico.';
+comment on column pregunta_campo.id is 'IdPregunta (que-lo-paro, corte, detalle…).';
+comment on column pregunta_campo.quien is 'campo (el operador, el técnico y quienes revisan), causa (el técnico y quienes revisan), revisa (supervisión, producción, el jefe y confiabilidad) o yacimiento (producción y confiabilidad).';
+comment on column pregunta_campo.texto is 'La pregunta, sin códigos.';
+
+create table contesta_pregunta (
+  quien   text not null check (quien in ('campo', 'causa', 'revisa', 'yacimiento')),
+  rol_id  text not null references rol(id),
+  primary key (quien, rol_id)
+);
+comment on table contesta_pregunta is 'Qué roles contestan cada grupo de preguntas (ROLES_QUE_CONTESTAN de anh-clasificacion.ts): al operador nunca se le pregunta dónde se trabó, la causa ni el detalle (C-07).';
+comment on column contesta_pregunta.quien is 'El grupo de preguntas.';
+comment on column contesta_pregunta.rol_id is 'Un rol que las contesta.';
+
+create table opcion_campo (
+  pregunta  text not null references pregunta_campo(id),
+  texto     text not null check (btrim(texto) <> ''),
+  primary key (pregunta, texto)
+);
+comment on table opcion_campo is 'Los botones de cada pregunta (OpcionCampo.texto): las fijas y, en las que arma el motor, todas las posibles (las 20 causas en palabras de campo, los 117 detalles, los tramos) con «No sé». respuesta_campo.opcion tiene que estar aquí (FK, C-07).';
+comment on column opcion_campo.pregunta is 'La pregunta.';
+comment on column opcion_campo.texto is 'El texto exacto del botón.';
 
 create table confirmacion_lote (
   id       text primary key check (btrim(id) <> ''),
@@ -2049,17 +2176,17 @@ create table confirmacion_lote (
   hora     timestamptz not null,
   paradas  text[] not null check (cardinality(paradas) >= 2),
   cadena   text not null check (btrim(cadena) <> ''),
-  pasos    text[] not null check (pasos <@ array['responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2']::text[])
+  pasos    text[] not null check (pasos <@ array['responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2']::text[] and cardinality(pasos) > 0)
 );
-comment on table confirmacion_lote is 'Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Solo inserción.';
+comment on table confirmacion_lote is 'Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Un lote que no sube ningún paso no se guarda (C-19). Solo inserción.';
 comment on column confirmacion_lote.id is 'Id del lote (lo pone el servidor).';
-comment on column confirmacion_lote.por_id is 'Persona que confirmó (del token).';
+comment on column confirmacion_lote.por_id is 'Persona que confirmó (del token): activa, con el rol de rol_id y con el campo de cada fila (trigger).';
 comment on column confirmacion_lote.por is 'Nombre de la persona.';
-comment on column confirmacion_lote.rol_id is 'Rol con que confirmó: decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).';
+comment on column confirmacion_lote.rol_id is 'Rol con que confirmó: el de la persona; decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).';
 comment on column confirmacion_lote.hora is 'Hora del toque.';
 comment on column confirmacion_lote.paradas is 'ParadaAnh.id de cada fila del lote (dos o más).';
-comment on column confirmacion_lote.cadena is 'La cadena de 6 pasos que vio, en códigos internos («op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/…»).';
-comment on column confirmacion_lote.pasos is 'Los pasos que subió a confirmado según su rol (y la regla «una señal apunta»).';
+comment on column confirmacion_lote.cadena is 'La cadena de 6 pasos que VIO quien confirma: la de la petición (obligatoria, C-06), en códigos internos («op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/…»).';
+comment on column confirmacion_lote.pasos is 'Los pasos que subió a confirmado según su rol (y la regla «una señal apunta»): al menos uno.';
 
 create table clasificacion_paso (
   id                bigint generated always as identity primary key,
@@ -2067,9 +2194,9 @@ create table clasificacion_paso (
   alcance           text not null check (alcance in ('fila', 'evento')),
   evento_id         text not null references evento_pozo(id),
   campo_id          text not null references campo(id),
-  paso              text not null check (paso in ('responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2', 'cau_gral', 'desc_evid')),
-  valor             text not null check (btrim(valor) <> '' or paso = 'desc_evid'),
-  procedencia       text not null check (procedencia in ('declarado', 'confirmado', 'corregido')),
+  paso              text not null check (paso in ('responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2', 'cau_gral')),
+  valor             text not null check (btrim(valor) <> ''),
+  procedencia       text not null check (procedencia in ('declarado', 'confirmado', 'corregido', 'retirado')),
   regla             text,
   porque            jsonb,
   por_id            text not null references usuario(id),
@@ -2081,124 +2208,157 @@ create table clasificacion_paso (
   propuesto         text,
   version_catalogo  text not null default 'C024-2026' check (version_catalogo in ('C024-2026', 'DICC-V3.2')),
   exceso            boolean not null default false,
+  -- Los catálogos (C-07): la causa, el detalle de su versión y la causa general.
+  n1_codigo         text generated always as (case when paso = 'n1' then valor end) stored references causa_n1(clave),
+  n2_codigo         text generated always as (case when paso = 'n2' then valor end) stored,
+  cau_gral_id       text generated always as (case when paso = 'cau_gral' then valor end) stored references causa_general(id),
+  foreign key (version_catalogo, n2_codigo) references causa_n2(version_catalogo, codigo),
   check ((alcance = 'evento') = (clave = evento_id)),
   check (not exceso or alcance = 'fila'),
-  check (alcance = 'evento' or clave like evento_id || '@%'),
+  -- La clave de una fila es ${evento}@${AAAA-MM-DD}#${n} (C-07).
+  check (alcance = 'evento' or (left(clave, char_length(evento_id) + 1) = evento_id || '@'
+    and substr(clave, char_length(evento_id) + 2) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$')),
   check (procedencia <> 'corregido' or propuesto is not null),
   check (lote_id is null or procedencia = 'confirmado'),
+  -- Lo retira una persona, con su motivo, y no rige: la fila vuelve a lo que propone TRIM (D1).
+  check (procedencia <> 'retirado' or alcanza(porque #>> '{}', 5)),
   check (paso <> 'responsable' or valor in ('op-operacion', 'op-mantenimiento', 'op-planeacion', 'ext-energia', 'ext-transportador', 'comunidad', 'autoridad', 'tercero', 'fuerza-mayor')),
   check (paso <> 'choke' or valor in ('reservorio', 'pozo', 'planta', 'exportacion')),
   check (paso <> 'impacto' or valor in ('diferida', 'perdida')),
   check (paso <> 'planeacion' or valor in ('planeada', 'no-planeada')),
   check (paso <> 'n1' or valor ~ '^N?P_[A-Z_]+$'),
   check (paso <> 'n2' or valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'),
-  check (paso <> 'choke' or valor <> 'reservorio' or (rol_id in ('prod', 'conf') and btrim(coalesce(porque ->> 'evidencia', '')) <> ''))
+  check (paso <> 'choke' or valor <> 'reservorio' or procedencia = 'retirado' or (rol_id in ('prod', 'conf') and btrim(coalesce(porque ->> 'evidencia', '')) <> ''))
 );
-comment on table clasificacion_paso is 'Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos). POST /api/anh/paradas/:id/clasificacion, …/yacimiento y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. Solo inserción: una corrección es una fila nueva y la anterior queda al lado. La que rige es la última por (clave, paso): v_clasificacion_vigente. Coherencia planeada/causa y causa/detalle revisada al confirmar (trigger diferido).';
-comment on column clasificacion_paso.id is 'Consecutivo del servidor: el orden en que se dijo.';
-comment on column clasificacion_paso.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).';
-comment on column clasificacion_paso.alcance is 'fila: solo ese tramo; evento: todos los tramos del evento (Unicidad, C24 p.5; aplicarAlEvento o aplicarALaCascada).';
+comment on table clasificacion_paso is 'Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos salvo el de exceso). POST /api/anh/paradas/:id/clasificacion, …/yacimiento, …/respuesta (el paso que la respuesta determina) y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. D1: cada escritura inserta SOLO los pasos que dijo esa persona en esa petición; solo inserción (una corrección es una fila nueva y la anterior queda al lado). En cada fila rige, paso por paso, lo más reciente entre su clave y la de su evento (v_clasificacion_fuente). Coherencia planeada/causa y causa/detalle de lo que rige, revisada al confirmar (trigger diferido).';
+comment on column clasificacion_paso.id is 'Consecutivo del servidor: el orden en que se dijo (DatoClasificado.n). Decide qué rige entre la fila y su evento.';
+comment on column clasificacion_paso.clave is 'ParadaAnh.id (alcance fila, con la forma ${evento}@AAAA-MM-DD#n) o EventoPozo.id (alcance evento).';
+comment on column clasificacion_paso.alcance is 'fila: solo ese tramo; evento: todos los tramos del evento salvo el de exceso (Unicidad, C24 p.5; aplicarAlEvento, o cada evento de aplicarALaCascada con las filas que se vieron).';
 comment on column clasificacion_paso.evento_id is 'El evento del controlador del pozo (de él sale el campo, nunca del cuerpo).';
-comment on column clasificacion_paso.campo_id is 'Campo del evento (trigger): tiene que estar entre los de la persona (403).';
-comment on column clasificacion_paso.paso is 'responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral, desc_evid.';
-comment on column clasificacion_paso.valor is 'El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…). Del catálogo de version_catalogo.';
-comment on column clasificacion_paso.procedencia is 'declarado (lo que faltaba), confirmado (lo que TRIM proponía, aceptado) o corregido (cambió lo que TRIM proponía). Lo que propone TRIM no se guarda.';
+comment on column clasificacion_paso.campo_id is 'Campo del evento (trigger): tiene que estar entre los de la persona, o la persona tiene «todos» (trigger, 403).';
+comment on column clasificacion_paso.paso is 'responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral. La descripción (desc_evid) no está: la arma TRIM con lo estructurado, nunca una persona (D2).';
+comment on column clasificacion_paso.valor is 'El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…), del catálogo de version_catalogo. En un «retirado», el valor que se retiró.';
+comment on column clasificacion_paso.procedencia is 'declarado (lo que faltaba, o lo que determinó una respuesta), confirmado (lo que TRIM proponía, aceptado), corregido (cambió lo que TRIM proponía) o retirado (un cambio lo dejó incoherente: no rige y vuelve lo que propone TRIM). Lo que propone TRIM no se guarda.';
 comment on column clasificacion_paso.regla is 'La regla con que se dijo (preguntas:campo@1, choke.yacimiento@1) o la que proponía, si se confirmó (REGLAS_ANH@2#…, choke.topologia@3; lo guardado conserva la versión con que se dijo).';
-comment on column clasificacion_paso.porque is 'El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección).';
-comment on column clasificacion_paso.por_id is 'Persona (del token).';
+comment on column clasificacion_paso.porque is 'El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección o de un retiro). Se queda en TRIM: no viaja a la ANH (D2).';
+comment on column clasificacion_paso.por_id is 'Persona (del token): activa (trigger).';
 comment on column clasificacion_paso.por is 'Nombre de la persona. No viaja a la ANH (desc_evid nunca lleva nombres).';
-comment on column clasificacion_paso.rol_id is 'Rol con que lo dijo: decide si lo puede avalar (PASOS_QUE_DECLARA, PASOS_QUE_CONFIRMA). En el yacimiento, prod o conf.';
+comment on column clasificacion_paso.rol_id is 'Rol con que lo dijo: el de la persona (trigger). Decide si lo puede decir o avalar (paso_por_rol). En el yacimiento, prod o conf.';
 comment on column clasificacion_paso.hora is 'La hora del toque.';
 comment on column clasificacion_paso.recibido is 'Hora del servidor al recibirlo.';
-comment on column clasificacion_paso.lote_id is 'El lote, si se confirmó en lote (solo confirmado).';
+comment on column clasificacion_paso.lote_id is 'El lote, si se confirmó en lote (solo confirmado). Se guarda en la fila, nunca en su evento: no se copia.';
 comment on column clasificacion_paso.propuesto is 'Lo que proponía TRIM, si la persona lo cambió (obligatorio en corregido): el tablero de correcciones por regla.';
-comment on column clasificacion_paso.exceso is 'La fila es el tramo que se pasó de la ventana del programa (ParadaAnh.exceso): otra decisión, no planeada. No hereda de su evento y lo que se guarde en el evento no la reemplaza.';
 comment on column clasificacion_paso.version_catalogo is 'Versión del catálogo de la circular con que se dijo (C024-2026 o DICC-V3.2).';
+comment on column clasificacion_paso.exceso is 'La fila es el tramo que se pasó de la ventana del programa (ParadaAnh.exceso): otra decisión, no planeada. No hereda de su evento.';
+comment on column clasificacion_paso.n1_codigo is 'El valor del paso n1 (generada): llave foránea a causa_n1.';
+comment on column clasificacion_paso.n2_codigo is 'El valor del paso n2 (generada): llave foránea a causa_n2 de su versión.';
+comment on column clasificacion_paso.cau_gral_id is 'El valor del paso cau_gral (generada): llave foránea a causa_general (nunca un texto libre, D2).';
 
--- Quién puede decir qué: la capacidad del rol, el campo del evento y el lote.
+-- La persona que escribe (C-07): activa, con el rol con que escribe, un rol del
+-- producto, y con el campo asignado (o «todos»). Lo usan los triggers de lo que
+-- se escribe de una parada.
+create or replace function anh_persona_revisar(p_por_id text, p_rol_id text, p_campo_id text, p_que text) returns void language plpgsql as $$
+declare u usuario;
+begin
+  select * into u from usuario where id = p_por_id;
+  if u.id is null or u.estado <> 'activo' then
+    raise exception '% no es una persona con acceso activo (%)', p_por_id, p_que using errcode = '23514';
+  end if;
+  if u.rol_id <> p_rol_id then
+    raise exception '% escribe como % y su rol es % (%)', p_por_id, p_rol_id, u.rol_id, p_que using errcode = '23514';
+  end if;
+  if not (select r.visible from rol r where r.id = u.rol_id) then
+    raise exception 'el rol % no es del primer producto: no escribe (%)', u.rol_id, p_que using errcode = '23514';
+  end if;
+  if p_campo_id is not null and not u.todos_los_campos
+     and not exists (select 1 from usuario_campo c where c.usuario_id = u.id and c.campo_id = p_campo_id) then
+    raise exception '% no tiene asignado el campo % (%)', p_por_id, p_campo_id, p_que using errcode = '23514';
+  end if;
+end $$;
+comment on function anh_persona_revisar(text, text, text, text) is 'Lo que el servidor revisa de quien escribe en una parada (403): persona activa, rol_id = el de la persona, un rol del producto y el campo entre los suyos (camposAsignados). La llaman los triggers de clasificacion_paso, confirmacion_lote, respuesta_campo, revision_parada y revision_atendida (C-07).';
+
+-- Quién puede decir qué: la persona, el campo del evento, la capacidad, los pasos
+-- de su rol y el lote.
 create or replace function clasificacion_paso_reglas() returns trigger language plpgsql as $$
-declare capacidad_pedida text;
+declare capacidad_pedida text; quiere text;
 begin
   if not exists (select 1 from evento_pozo e where e.id = new.evento_id and e.campo_id = new.campo_id) then
     raise exception 'el evento % no es del campo %', new.evento_id, new.campo_id using errcode = '23514';
   end if;
-  capacidad_pedida := case when new.paso = 'choke' and new.valor = 'reservorio' then 'anh:yacimiento'
+  perform anh_persona_revisar(new.por_id, new.rol_id, new.campo_id, new.clave);
+  capacidad_pedida := case when new.paso = 'choke' and new.valor = 'reservorio' and new.procedencia <> 'retirado' then 'anh:yacimiento'
                            when new.lote_id is not null then 'anh:confirmar' else 'anh:clasificar' end;
   if not exists (select 1 from v_capacidades_rol c where c.rol_id = new.rol_id and c.capacidad_id = capacidad_pedida) then
     raise exception 'el rol % no tiene % (paso % de %)', new.rol_id, capacidad_pedida, new.paso, new.clave using errcode = '23514';
+  end if;
+  -- Los pasos del rol (PASOS_QUE_DECLARA y PASOS_QUE_CONFIRMA): confirmado y
+  -- corregido solo en los suyos; un declarado fuera de su terreno solo sale de
+  -- una respuesta de campo (preguntas:campo@1), que no lo avala.
+  if new.paso <> 'cau_gral' and new.procedencia <> 'retirado' then
+    quiere := case new.procedencia when 'confirmado' then 'confirma' else 'declara' end;
+    if not exists (select 1 from paso_por_rol x where x.rol_id = new.rol_id and x.paso = new.paso and x.accion = quiere)
+       and not (new.procedencia = 'declarado' and new.regla = 'preguntas:campo@1') then
+      raise exception 'el rol % no % el paso % (%)', new.rol_id, case quiere when 'confirma' then 'confirma' else 'dice' end, new.paso, new.clave using errcode = '23514';
+    end if;
   end if;
   if new.lote_id is not null and not exists (select 1 from confirmacion_lote l where l.id = new.lote_id and new.clave = any (l.paradas)) then
     raise exception 'la fila % no está en el lote %', new.clave, new.lote_id using errcode = '23514';
   end if;
   return new;
 end $$;
-comment on function clasificacion_paso_reglas() is 'Trigger de clasificacion_paso: el evento es del campo, el rol tiene la capacidad (anh:clasificar; anh:confirmar en lote; anh:yacimiento para «En el yacimiento») y la fila está en su lote.';
+comment on function clasificacion_paso_reglas() is 'Trigger de clasificacion_paso: el evento es del campo; la persona está activa, escribe con su rol y tiene el campo (anh_persona_revisar); el rol tiene la capacidad (anh:clasificar; anh:confirmar en lote; anh:yacimiento para «En el yacimiento»); confirma o dice solo los pasos de su rol (paso_por_rol; un declarado ajeno solo desde una respuesta de campo); la fila está en su lote.';
 create trigger clasificacion_paso_reglas before insert on clasificacion_paso for each row execute function clasificacion_paso_reglas();
 
 -- La coherencia bloqueada (C24 p.7: la ANH rechaza la transmisión entera):
 -- planeada solo con una causa P_…, no planeada solo con NP_…, y el detalle es de su causa.
--- Se revisa lo que RIGE en cada fila, con la regla de v_clasificacion_fuente
--- (la misma de guardarClasificacion en escrituras.ts):
---   · lo guardado en el evento rige en todos sus tramos y reemplaza lo que sus
---     filas tenían guardado de antes;
---   · una fila con algo guardado DESPUÉS que su evento rige con lo suyo; lo que no
---     diga se completa aquí con lo del evento, para que una fila nunca pueda dejar
---     vigente «planeada» con una causa NP_… aunque cada clave, sola, cuadre;
---   · el tramo de exceso del programa (exceso) rige siempre con lo suyo y no hereda.
--- Revisar solo clave por clave, como antes, dejaba pasar esa mezcla de alcances.
+-- Se revisa lo que RIGE, paso por paso (v_clasificacion_fuente: lo más reciente
+-- entre la fila y su evento; un «retirado» no rige), en cada fila con algo
+-- guardado y en el evento (lo que heredan sus filas sin nada propio). Lo que
+-- propone TRIM no está aquí: el servidor quita lo suyo que no va con lo que dijo
+-- una persona y revisa la clasificación completa con clasificar() antes de guardar.
 create or replace function clasificacion_revisar(p_clave text, pl text, n1 text, n2 text) returns void language plpgsql as $$
 begin
-  if pl is not null and n1 is not null and (pl = 'planeada') <> (n1 like 'P\_%') then
+  if pl is not null and n1 is not null and (pl = 'planeada') <> (left(n1, 2) = 'P_') then
     raise exception 'la parada %: «%» no va con la causa % (planeada solo con P_…, no planeada solo con NP_…)', p_clave, pl, n1 using errcode = '23514';
   end if;
-  if n1 is not null and n2 is not null and n2 not like n1 || '/%' then
+  if n1 is not null and n2 is not null and left(n2, char_length(n1) + 1) <> n1 || '/' then
     raise exception 'la parada %: el detalle % no es de la causa %', p_clave, n2, n1 using errcode = '23514';
   end if;
 end $$;
 comment on function clasificacion_revisar(text, text, text, text) is 'La regla de coherencia de la circular sobre lo que rige en una fila o un evento (planeación y causa; causa y detalle). La llama clasificacion_coherente().';
 
 create or replace function clasificacion_coherente() returns trigger language plpgsql as $$
-declare ev_pl text; ev_n1 text; ev_n2 text; ev_ultima bigint; f record;
+declare f record;
 begin
-  -- Lo vigente del evento.
-  select valor into ev_pl from clasificacion_paso where clave = new.evento_id and paso = 'planeacion' order by id desc limit 1;
-  select valor into ev_n1 from clasificacion_paso where clave = new.evento_id and paso = 'n1' order by id desc limit 1;
-  select valor into ev_n2 from clasificacion_paso where clave = new.evento_id and paso = 'n2' order by id desc limit 1;
-  select max(id) into ev_ultima from clasificacion_paso where clave = new.evento_id;
-  perform clasificacion_revisar(new.evento_id, ev_pl, ev_n1, ev_n2);
-  -- Las filas del evento que rigen con lo suyo (guardadas después que el evento,
-  -- o el tramo de exceso): lo suyo y, salvo el exceso, lo que les falte del evento.
   for f in
-    select c.clave, c.exceso,
-      (select x.valor from clasificacion_paso x where x.clave = c.clave and x.paso = 'planeacion' order by x.id desc limit 1) as pl,
-      (select x.valor from clasificacion_paso x where x.clave = c.clave and x.paso = 'n1' order by x.id desc limit 1) as n1,
-      (select x.valor from clasificacion_paso x where x.clave = c.clave and x.paso = 'n2' order by x.id desc limit 1) as n2
-    from (select clave, bool_or(exceso) as exceso, max(id) as ultima from clasificacion_paso
-          where evento_id = new.evento_id and alcance = 'fila'
-            and (new.alcance = 'evento' or clave = new.clave)
-          group by clave) c
-    where c.exceso or c.ultima > coalesce(ev_ultima, 0)
+    select clave,
+      max(valor) filter (where paso = 'planeacion') as pl,
+      max(valor) filter (where paso = 'n1') as n1,
+      max(valor) filter (where paso = 'n2') as n2
+    from v_clasificacion_fuente where evento_id = new.evento_id group by clave
   loop
-    if f.exceso then
-      perform clasificacion_revisar(f.clave, f.pl, f.n1, f.n2);
-    else
-      perform clasificacion_revisar(f.clave, coalesce(f.pl, ev_pl), coalesce(f.n1, ev_n1), coalesce(f.n2, ev_n2));
-    end if;
+    perform clasificacion_revisar(f.clave, f.pl, f.n1, f.n2);
   end loop;
   return null;
 end $$;
-comment on function clasificacion_coherente() is 'Al confirmar la transacción: lo que RIGE en el evento y en cada fila que rige con lo suyo es coherente (planeación y causa; causa y detalle), con la regla de v_clasificacion_fuente. Lo que propone TRIM no está aquí: el servidor lo revisa con clasificar() antes de guardar.';
+comment on function clasificacion_coherente() is 'Al confirmar la transacción: lo que RIGE, paso por paso, en el evento y en cada fila suya con algo guardado es coherente (planeación y causa; causa y detalle), con la regla de v_clasificacion_fuente. Un «retirado» no rige.';
 create constraint trigger clasificacion_coherente after insert on clasificacion_paso deferrable initially deferred
   for each row execute function clasificacion_coherente();
 
 create or replace function confirmacion_lote_reglas() returns trigger language plpgsql as $$
+declare x text; campo text;
 begin
+  foreach x in array new.paradas loop
+    select e.campo_id into campo from evento_pozo e where e.id = split_part(x, '@', 1);
+    if campo is null then raise exception 'la fila % no es de un evento de pozo', x using errcode = '23514'; end if;
+    perform anh_persona_revisar(new.por_id, new.rol_id, campo, new.id);
+  end loop;
   if not exists (select 1 from v_capacidades_rol c where c.rol_id = new.rol_id and c.capacidad_id = 'anh:confirmar') then
     raise exception 'el rol % no confirma en lote (anh:confirmar)', new.rol_id using errcode = '23514';
   end if;
   return new;
 end $$;
-comment on function confirmacion_lote_reglas() is 'Trigger de confirmacion_lote: confirma en lote quien tiene anh:confirmar (supervisión y producción).';
+comment on function confirmacion_lote_reglas() is 'Trigger de confirmacion_lote: confirma en lote quien tiene anh:confirmar (supervisión y producción), activo, con su rol y con el campo de cada fila (C-07).';
 create trigger confirmacion_lote_reglas before insert on confirmacion_lote for each row execute function confirmacion_lote_reglas();
 
 create trigger confirmacion_lote_solo_insercion before update or delete on confirmacion_lote for each row execute function solo_insercion();
@@ -2214,10 +2374,9 @@ create table respuesta_campo (
   alcance    text not null check (alcance in ('fila', 'evento')),
   evento_id  text not null references evento_pozo(id),
   campo_id   text not null references campo(id),
-  pregunta   text not null check (pregunta in ('que-lo-paro', 'tanques', 'oleoducto', 'afecto-clima', 'afecto-orden-publico', 'corte', 'trabajo',
-               'programado', 'se-perdio', 'nominacion', 'aporte', 'evidencia-yacimiento', 'choke', 'raiz', 'detalle')),
+  pregunta   text not null references pregunta_campo(id),
   opcion     text not null check (btrim(opcion) <> ''),
-  sigue      text,
+  sigue      text references pregunta_campo(id),
   acota      jsonb check (acota is null or jsonb_typeof(acota) = 'object'),
   perdida    text check (perdida in ('derrame', 'tea', 'rechazo')),
   no_se      boolean not null default false,
@@ -2226,25 +2385,27 @@ create table respuesta_campo (
   rol_id     text not null references rol(id),
   hora       timestamptz not null,
   recibido   timestamptz not null default now(),
+  foreign key (pregunta, opcion) references opcion_campo(pregunta, texto),
   check ((alcance = 'evento') = (clave = evento_id)),
-  check (alcance = 'evento' or clave like evento_id || '@%'),
+  check (alcance = 'evento' or (left(clave, char_length(evento_id) + 1) = evento_id || '@'
+    and substr(clave, char_length(evento_id) + 2) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$')),
   check (not no_se or (sigue is null and acota is null and perdida is null))
 );
-comment on table respuesta_campo is 'La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clasificacion.ts): lo que una persona contestó a una pregunta abierta («¿Qué lo paró?», «¿De dónde vino el corte?»…). POST /api/anh/paradas/:id/respuesta corre responder(): lo que la opción deja va a clasificacion_paso como dicho por esa persona; aquí queda la respuesta, para seguir la conversación al leer la fila (la pregunta que abrió, sigue, llega en la vista). «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa. Quién contesta cada pregunta (ROLES_QUE_CONTESTAN) lo revisa el servidor antes de insertar (403). Solo inserción, en el orden de id.';
-comment on column respuesta_campo.id is 'Consecutivo del servidor: el orden de la conversación.';
+comment on table respuesta_campo is 'La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clasificacion.ts): lo que una persona contestó a una pregunta abierta («¿Qué lo paró?», «¿De dónde vino el corte?»…). POST /api/anh/paradas/:id/respuesta corre responder(): la respuesta no corrige ni confirma (D1); solo el paso que determina va a clasificacion_paso como declarado por esa persona; aquí queda la respuesta, para seguir la conversación al leer la fila. «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa. Quién contesta cada pregunta (contesta_pregunta) y sus opciones (opcion_campo) los revisa el trigger. Solo inserción, en el orden de id.';
+comment on column respuesta_campo.id is 'Consecutivo del servidor: el orden de la conversación (RespuestaCampo.n).';
 comment on column respuesta_campo.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento: vale para todos sus tramos), como en clasificacion_paso.';
-comment on column respuesta_campo.alcance is 'fila o evento (aplicarAlEvento, aplicarALaCascada).';
+comment on column respuesta_campo.alcance is 'fila o evento (aplicarAlEvento; aplicarALaCascada, una por evento de las filas que se vieron).';
 comment on column respuesta_campo.evento_id is 'El evento del controlador del pozo.';
-comment on column respuesta_campo.campo_id is 'Campo del evento (trigger): entre los de la persona (403).';
-comment on column respuesta_campo.pregunta is 'La pregunta contestada (IdPregunta).';
-comment on column respuesta_campo.opcion is 'El texto exacto del botón que se tocó (OpcionCampo.texto).';
-comment on column respuesta_campo.sigue is 'La pregunta que abrió la respuesta, si abrió una.';
-comment on column respuesta_campo.acota is 'Lo que la respuesta acota sin fijar («Comunidad o Tercero»): { paso: [valores] }.';
+comment on column respuesta_campo.campo_id is 'Campo del evento: entre los de la persona (trigger).';
+comment on column respuesta_campo.pregunta is 'La pregunta contestada (IdPregunta; pregunta_campo).';
+comment on column respuesta_campo.opcion is 'El texto exacto del botón que se tocó (OpcionCampo.texto; opcion_campo de esa pregunta).';
+comment on column respuesta_campo.sigue is 'La pregunta que abrió la respuesta, si abrió una (una de pregunta_campo).';
+comment on column respuesta_campo.acota is 'Lo que la respuesta acota sin fijar («Comunidad o Tercero»): { paso: [valores] }, con pasos de la clasificación (trigger).';
 comment on column respuesta_campo.perdida is 'La pérdida que la respuesta propone registrar aparte: derrame, tea o rechazo.';
 comment on column respuesta_campo.no_se is '«No sé»: no fija nada; la pregunta sigue abierta y escala a quien revisa.';
-comment on column respuesta_campo.por_id is 'Persona (del token).';
+comment on column respuesta_campo.por_id is 'Persona (del token): activa (trigger).';
 comment on column respuesta_campo.por is 'Nombre de la persona.';
-comment on column respuesta_campo.rol_id is 'Rol con que contestó: tiene que tener anh:clasificar (trigger).';
+comment on column respuesta_campo.rol_id is 'Rol con que contestó: el de la persona, con anh:clasificar y entre los que contestan esa pregunta (trigger).';
 comment on column respuesta_campo.hora is 'La hora del toque.';
 comment on column respuesta_campo.recibido is 'Hora del servidor al recibirla.';
 
@@ -2254,7 +2415,7 @@ create table revision_parada (
   alcance    text not null check (alcance in ('fila', 'evento')),
   evento_id  text not null references evento_pozo(id),
   campo_id   text not null references campo(id),
-  motivo     text not null check (alcanza(motivo, 5)),
+  motivo     text not null check (alcanza(motivo, 5) and char_length(motivo) <= 500),
   pedir_a    text references rol(id) check (pedir_a in ('sup', 'prod', 'jefe', 'conf')),
   por_id     text not null references usuario(id),
   por        text not null,
@@ -2262,20 +2423,21 @@ create table revision_parada (
   hora       timestamptz not null,
   recibido   timestamptz not null default now(),
   check ((alcance = 'evento') = (clave = evento_id)),
-  check (alcance = 'evento' or clave like evento_id || '@%'),
+  check (alcance = 'evento' or (left(clave, char_length(evento_id) + 1) = evento_id || '@'
+    and substr(clave, char_length(evento_id) + 2) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$')),
   check (pedir_a is null or pedir_a <> rol_id)
 );
-comment on table revision_parada is '«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision. No corrige nada: pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). Rige la última por clave. Solo inserción.';
-comment on column revision_parada.id is 'Consecutivo del servidor.';
+comment on table revision_parada is '«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.';
+comment on column revision_parada.id is 'Consecutivo del servidor (RevisionAnh.n).';
 comment on column revision_parada.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).';
 comment on column revision_parada.alcance is 'fila o evento.';
 comment on column revision_parada.evento_id is 'El evento del controlador del pozo.';
-comment on column revision_parada.campo_id is 'Campo del evento (trigger).';
-comment on column revision_parada.motivo is 'Qué está mal, o qué se pide («¿Fue el yacimiento?»): 5 caracteres o más.';
+comment on column revision_parada.campo_id is 'Campo del evento: entre los de la persona (trigger).';
+comment on column revision_parada.motivo is 'Qué está mal, o qué se pide («¿Fue el yacimiento?»): de 5 a 500 caracteres, con al menos una letra o un número. Se queda en TRIM (D2).';
 comment on column revision_parada.pedir_a is 'A quién se le pide (prod para el yacimiento). NULL: a quien revisa. Nunca el propio rol.';
-comment on column revision_parada.por_id is 'Persona que la marcó (del token).';
+comment on column revision_parada.por_id is 'Persona que la marcó (del token): activa (trigger).';
 comment on column revision_parada.por is 'Nombre de la persona.';
-comment on column revision_parada.rol_id is 'Rol con que la marcó: tiene que tener anh:clasificar (trigger).';
+comment on column revision_parada.rol_id is 'Rol con que la marcó: el de la persona, con anh:clasificar (trigger).';
 comment on column revision_parada.hora is 'La hora del toque.';
 comment on column revision_parada.recibido is 'Hora del servidor al recibirla.';
 
@@ -2287,26 +2449,40 @@ create table revision_atendida (
   hora         timestamptz not null,
   recibido     timestamptz not null default now()
 );
-comment on table revision_atendida is 'Quién atendió una revisión y cuándo (RevisionAnh.atendida): la primera escritura de la parada (clasificación, yacimiento, respuesta o confirmación) de un rol al que le toca (conRevisionAtendida). Una por revisión. Solo inserción.';
+comment on table revision_atendida is 'Quién atendió una revisión y cuándo (RevisionAnh.atendida): la primera escritura de la parada (clasificación, yacimiento, respuesta o confirmación) de un rol al que le toca. Una por revisión. Solo inserción.';
 comment on column revision_atendida.revision_id is 'La revisión atendida.';
-comment on column revision_atendida.por_id is 'Persona que la atendió.';
+comment on column revision_atendida.por_id is 'Persona que la atendió: activa, con el campo de la revisión (trigger).';
 comment on column revision_atendida.por is 'Nombre de la persona.';
-comment on column revision_atendida.rol_id is 'Rol con que la atendió: el de pedir_a o, sin él, uno que revisa (trigger).';
+comment on column revision_atendida.rol_id is 'Rol con que la atendió: el de la persona; el de pedir_a o, sin él, uno que revisa (trigger).';
 comment on column revision_atendida.hora is 'La hora de la escritura que la atendió.';
 comment on column revision_atendida.recibido is 'Hora del servidor.';
 
--- Lo que se escribe de una parada (la respuesta de campo, la revisión): el evento es del campo y el rol clasifica.
+-- Lo que se escribe de una parada (la respuesta de campo, la revisión): el
+-- evento es del campo, la persona (activa, con su rol y su campo) clasifica, y en
+-- la respuesta, su rol contesta esa pregunta y lo que acota son pasos (C-07).
 create or replace function anh_escrito_reglas() returns trigger language plpgsql as $$
+declare j jsonb;
 begin
   if not exists (select 1 from evento_pozo e where e.id = new.evento_id and e.campo_id = new.campo_id) then
     raise exception 'el evento % no es del campo %', new.evento_id, new.campo_id using errcode = '23514';
   end if;
+  perform anh_persona_revisar(new.por_id, new.rol_id, new.campo_id, new.clave);
   if not exists (select 1 from v_capacidades_rol c where c.rol_id = new.rol_id and c.capacidad_id = 'anh:clasificar') then
     raise exception 'el rol % no tiene anh:clasificar (%)', new.rol_id, new.clave using errcode = '23514';
   end if;
+  if tg_table_name = 'respuesta_campo' then
+    j := to_jsonb(new);
+    if not exists (select 1 from pregunta_campo p join contesta_pregunta c on c.quien = p.quien where p.id = j ->> 'pregunta' and c.rol_id = new.rol_id) then
+      raise exception 'el rol % no contesta la pregunta % (%)', new.rol_id, j ->> 'pregunta', new.clave using errcode = '23514';
+    end if;
+    if j -> 'acota' is not null and jsonb_typeof(j -> 'acota') = 'object' and exists (select 1 from jsonb_object_keys(j -> 'acota') k
+       where k not in ('responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2')) then
+      raise exception 'la respuesta acota algo que no es un paso de la clasificación (%)', new.clave using errcode = '23514';
+    end if;
+  end if;
   return new;
 end $$;
-comment on function anh_escrito_reglas() is 'Trigger de respuesta_campo y revision_parada: el evento es del campo y el rol tiene anh:clasificar.';
+comment on function anh_escrito_reglas() is 'Trigger de respuesta_campo y revision_parada: el evento es del campo; la persona está activa, escribe con su rol y tiene el campo (anh_persona_revisar); el rol tiene anh:clasificar; en la respuesta, el rol contesta esa pregunta (contesta_pregunta) y acota solo pasos.';
 create trigger respuesta_campo_reglas before insert on respuesta_campo for each row execute function anh_escrito_reglas();
 create trigger revision_parada_reglas before insert on revision_parada for each row execute function anh_escrito_reglas();
 
@@ -2315,12 +2491,13 @@ create or replace function revision_atendida_reglas() returns trigger language p
 declare r revision_parada;
 begin
   select * into r from revision_parada where id = new.revision_id;
+  perform anh_persona_revisar(new.por_id, new.rol_id, r.campo_id, r.clave);
   if (r.pedir_a is not null and new.rol_id <> r.pedir_a) or (r.pedir_a is null and new.rol_id not in ('sup', 'prod', 'jefe', 'conf')) then
     raise exception 'la revisión % no le toca al rol %', new.revision_id, new.rol_id using errcode = '23514';
   end if;
   return new;
 end $$;
-comment on function revision_atendida_reglas() is 'Trigger de revision_atendida: la atiende el rol al que se le pidió o, sin pedir_a, uno que revisa (quienRevisa).';
+comment on function revision_atendida_reglas() is 'Trigger de revision_atendida: la atiende el rol al que se le pidió o, sin pedir_a, uno que revisa (quienRevisa), una persona activa con ese rol y con el campo (C-07).';
 create trigger revision_atendida_reglas before insert on revision_atendida for each row execute function revision_atendida_reglas();
 
 create trigger respuesta_campo_solo_insercion before update or delete on respuesta_campo for each row execute function solo_insercion();
@@ -2959,16 +3136,21 @@ comment on view v_analisis_vigente is 'GET /api/analisis → vigentes: la últim
 
 create view v_clasificacion_vigente as
 select distinct on (clave, paso) * from clasificacion_paso order by clave, paso, id desc;
-comment on view v_clasificacion_vigente is 'Lo último que dijo una persona de cada paso, por clave (fila o evento). Qué clave rige en cada fila lo dice v_clasificacion_fuente: nunca se mezclan pasos de la fila con pasos del evento. Lo anterior es la historia («antes: …», U1 §2.7).';
+comment on view v_clasificacion_vigente is 'Lo último que se dijo de cada paso, por clave (fila o evento), también un «retirado». Lo que rige en cada fila, paso por paso, lo dice v_clasificacion_fuente. Lo anterior es la historia («antes: …», U1 §2.7).';
 
 create view v_clasificacion_fuente as
-select f.clave, f.evento_id, f.exceso,
-       case when f.exceso or f.ultima > coalesce(e.ultima, 0) then 'fila' else 'evento' end as rige
-from (select clave, evento_id, bool_or(exceso) as exceso, max(id) as ultima
-      from clasificacion_paso where alcance = 'fila' group by clave, evento_id) f
-left join (select evento_id, max(id) as ultima
-           from clasificacion_paso where alcance = 'evento' group by evento_id) e using (evento_id);
-comment on view v_clasificacion_fuente is 'Qué rige en cada fila con algo guardado (OpcionesParadas.guardadas de anh-paradas.ts y guardarClasificacion de escrituras.ts). fila: lo suyo, y lo que no diga lo propone TRIM. evento: lo de su evento, porque se guardó después y reemplazó lo de la fila. El tramo de exceso del programa rige siempre con lo suyo y no hereda. Una fila sin nada guardado usa lo de su evento, salvo el exceso, que usa lo que propone TRIM.';
+select c.clave, c.evento_id, c.exceso, p.paso,
+       case when c.clave <> c.evento_id and r.clave = c.clave then 'fila' else 'evento' end as rige,
+       r.id, r.valor, r.procedencia, r.regla, r.porque, r.por_id, r.por, r.rol_id, r.hora, r.lote_id, r.propuesto, r.version_catalogo
+from (select clave, evento_id, bool_or(exceso) as exceso from clasificacion_paso where alcance = 'fila' group by clave, evento_id
+      union all
+      select evento_id, evento_id, false from clasificacion_paso where alcance = 'evento' group by evento_id) c
+cross join (values ('responsable'), ('choke'), ('impacto'), ('planeacion'), ('n1'), ('n2'), ('cau_gral')) as p(paso)
+join lateral (select x.* from clasificacion_paso x
+              where x.paso = p.paso and (x.clave = c.clave or (not c.exceso and x.clave = c.evento_id))
+              order by x.id desc limit 1) r on true
+where r.procedencia <> 'retirado';
+comment on view v_clasificacion_fuente is 'Lo que RIGE de lo que dijeron las personas, PASO POR PASO (D1; rigeEnFila de anh-clasificacion.ts y paradasAnh de anh-paradas.ts): en cada fila con algo guardado, lo más reciente (por id) entre su clave y la de su evento; el tramo de exceso del programa, solo lo suyo; y en cada evento (clave = evento_id), lo suyo: lo que heredan sus filas sin nada propio. rige dice dónde está lo que rige (fila o evento). Un paso cuyo último dicho es «retirado» no sale: rige lo que propone TRIM. Un paso que no sale aquí lo propone TRIM al leer la fila.';
 
 create view v_asignacion_oficial as
 select a.mes, a.campo_id, a.pozo, a.bbl, a.horas, a.carga_id

@@ -7,6 +7,7 @@
  *  mismas reglas que el servidor aplica al firmar.
  */
 import { CAMPOS } from './campos'
+import { textoCsv } from '@/shared/lib/csv'
 import { TOPE_PRECIO_USD } from './configuracion'
 
 export interface FilaPlan {
@@ -205,5 +206,6 @@ export function leerPlan(texto: string, opciones: { enBblMes: boolean; desdeMes:
 export function plantillaPlan(filas: FilaPlan[]): string {
   const cab = 'Mes;Campo;Producción bbl/d;Máximo de diferido bbl/d;Precio neto USD/bbl (opcional)'
   const n = (v: number | undefined) => (v === undefined ? '' : v.toLocaleString('es-CO', { useGrouping: false, maximumFractionDigits: 2 }))
-  return '\uFEFF' + [cab, ...filas.map(f => [f.mes, CAMPOS.find(c => c.id === f.campoId)!.nombre, n(f.produccionBpd), n(f.diferidoMaxBpd), n(f.netbackUsd)].join(';'))].join('\r\n')
+  // Los textos por `textoCsv` (C-25), como todo CSV del producto; las cifras no.
+  return '\uFEFF' + [cab, ...filas.map(f => [textoCsv(f.mes), textoCsv(CAMPOS.find(c => c.id === f.campoId)!.nombre), n(f.produccionBpd), n(f.diferidoMaxBpd), n(f.netbackUsd)].join(';'))].join('\r\n')
 }

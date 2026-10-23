@@ -532,9 +532,10 @@ comprobar(deCausa.length > 0 && deCausa.every(q => q.quien === 'causa') && !A.RO
 const r3 = A.responder(pEv, 'tanques', 1, JAIRO, 'oper', HORA), r4 = A.responder(r3, 'oleoducto', 1, JAIRO, 'oper', HORA)
 comprobar(r4.borrador.choke.valor === 'exportacion' && r4.borrador.choke.procedencia === 'declarado' && r4.borrador.choke.rol === 'oper' && r4.borrador.choke.porque.persona === 'Jairo Peña'
   && !A.avalado(r4.borrador, 'choke') && r4.borrador.responsable.valor === 'ext-transportador'
-  && r4.borrador.n1.valor === 'NP_TRANSP' && A.origenesDe(r4.borrador).choke === 'C' && r4.borrador.planeacion.procedencia === 'confirmado'
+  && r4.borrador.n1.valor === 'NP_TRANSP' && A.origenesDe(r4.borrador).choke === 'C' && r4.borrador.planeacion.procedencia === 'regla'
+  && K.PASOS.every(x => r4.borrador[x]?.procedencia !== 'confirmado')
   && igual(r4.faltan, ['n2']) && r4.preguntas.some(q => q.id === 'detalle' && q.opciones.length === 5) && r4.borrador.respuestas?.length === 2,
-  'el operador contesta hechos («el tanque de crudo está lleno», «no recibía»): afuera queda dicho por él, con su nombre en el porqué, pero no avalado (origen C); solo «¿Planeada?» es suyo')
+  'el operador contesta hechos («el tanque de crudo está lleno», «no recibía»): afuera queda dicho por él, con su nombre en el porqué, pero no avalado (origen C); «¿Planeada?», que TRIM ya proponía igual, sigue siendo de TRIM: una respuesta no «confirma» nada (D1; B-04)')
 const uv = proponer(tramo('EP-LC07-251006-04')), rUv = A.responder(uv, 'corte', 1, JAIRO, 'oper', HORA)
 comprobar(rUv.borrador.choke.valor === 'planta' && rUv.borrador.choke.procedencia === 'declarado' && !A.avalado(rUv.borrador, 'choke') && !rUv.borrador.choke.porque.pregunta
   && rUv.borrador.choke.porque.persona === 'Jairo Peña' && !rUv.preguntas.some(q => q.pasos.includes('choke')) && rUv.preguntas.some(q => q.id === 'detalle'),
@@ -586,6 +587,52 @@ comprobar(A.nombreDeRegla('REGLAS_ANH@2#declarada-mercado') === 'Declarada: el c
   'los nombres de las reglas en palabras salen del motor, uno por cada fila de la tabla (una regla desconocida se muestra con su id)')
 comprobar(A.esperaAQuienAbre(c2) && !A.esperaAQuienAbre(c3) && !A.esperaAQuienAbre(c1) && igual(A.CONFIRMAN_LO_QUE_APUNTA, ['jefe', 'conf']),
   'lo que espera a quien abre el equipo (todo avalado menos la causa que una señal apunta) lo dice el motor: el jefe o confiabilidad')
+
+console.log('\n=== 14. Lo guardado, paso por paso, y lo que sale de TRIM (D1, D2; C-03, C-04, B-04) ===')
+/** Corre una comprobación aparte: si lanza (una función que todavía no existe), falla esa y siguen las demás. */
+const aparte = (msg, f) => { let r; try { r = f() } catch (e) { r = { bien: false, dice: `excepción: ${e?.message ?? e}` } } comprobar(r.bien, `${msg}${r.dice ? ` (${r.dice})` : ''}`) }
+const SUPd = { por: 'Nelson Ortiz', porId: 'u-sup', rol: 'sup', hora: HORA }, JEFEd = { por: 'Camilo Rueda', porId: 'u-jefe', rol: 'jefe', hora: HORA }
+// a. En cada fila rige, paso por paso, lo más reciente entre la fila y su evento (el consecutivo `n` del servidor).
+aparte('en cada fila rige, PASO POR PASO, lo más reciente entre la fila y su evento: el detalle del evento (n 7) sobre el de la fila (n 5), la planeación de la fila (n 2) sobre la del evento (n 1), «Quién» solo del evento; la conversación de las dos en su orden; sin evento (el exceso), solo lo suyo', () => {
+  const deFila = { n2: { valor: 'NP_SUB/falla-esp', procedencia: 'corregido', propuesto: 'NP_SUB/falla-pcp', ...JEFEd, n: 5 }, planeacion: { valor: 'no-planeada', procedencia: 'confirmado', ...SUPd, n: 2 },
+    revision: { motivo: 'La causa no es esa', ...SUPd, n: 4 }, respuestas: [{ pregunta: 'corte', opcion: 'Del campo', por: 'Jairo Peña', porId: 'u-oper', rol: 'oper', hora: HORA, n: 6 }] }
+  const delEvento = { n2: { valor: 'NP_SUB/arenamiento-obstruccion', procedencia: 'corregido', propuesto: 'NP_SUB/falla-pcp', ...SUPd, n: 7 }, responsable: { valor: 'op-operacion', procedencia: 'declarado', ...SUPd, n: 3 },
+    planeacion: { valor: 'no-planeada', procedencia: 'declarado', ...JEFEd, n: 1 }, respuestas: [{ pregunta: 'que-lo-paro', opcion: 'Se fue la energía', por: 'Jairo Peña', porId: 'u-oper', rol: 'oper', hora: HORA, n: 2 }] }
+  const rige = A.rigeEnFila(deFila, delEvento)
+  return { bien: rige.n2.n === 7 && rige.planeacion.n === 2 && rige.responsable.n === 3 && rige.revision.n === 4 && igual(rige.respuestas.map(r => r.n), [2, 6])
+    && A.rigeEnFila(deFila, undefined) === deFila && A.rigeEnFila(undefined, delEvento) === delEvento }
+})
+// b. Un paso `retirado` (lo que un cambio dejó incoherente) vuelve a lo que propone TRIM: nada desaparece, y no rige como valor.
+aparte('«retirado» es lo más reciente y la fila vuelve a lo que propone TRIM (el detalle de la regla, no el del jefe); lleva quién y cuándo, como lo que dice una persona', () => {
+  const retiro = { n2: { valor: 'NP_SUB/falla-esp', procedencia: 'retirado', ...SUPd, porque: 'Estaba en el programa', n: 9 } }
+  const conRetiro = A.aplicarGuardada(gf, A.rigeEnFila({ n2: { valor: 'NP_SUB/falla-pcp', procedencia: 'corregido', propuesto: 'NP_SUB/falla-esp', ...JEFEd, n: 5 } }, retiro))
+  return { bien: conRetiro.borrador.n2?.procedencia === 'regla' && conRetiro.borrador.n2.valor === gf.borrador.n2.valor && A.problemasDeClasificacion(retiro).every(x => /^Falta/.test(x))
+    && /tiene que decir quién/.test(A.problemasDeClasificacion({ n2: { valor: 'NP_SUB/falla-esp', procedencia: 'retirado', n: 1 } }).join(' ')),
+    dice: `el detalle queda ${conRetiro.borrador.n2?.valor} · ${conRetiro.borrador.n2?.procedencia}` }
+})
+// c. B-04: una respuesta no toca lo que ya dijo una persona ni «confirma» lo que TRIM ya proponía.
+aparte('«La planta no recibe», contestado por el supervisor, deja el tramo y la causa dichos por él, pero «Quién», que ya había dicho el jefe, sigue del jefe: una respuesta no corrige (D1)', () => {
+  const conJefe = A.aplicarGuardada(proponer(lc21), { responsable: { valor: 'op-mantenimiento', procedencia: 'declarado', ...JEFEd, n: 1 } })
+  const iPlanta = conJefe.preguntas.find(q => q.id === 'que-lo-paro').opciones.findIndex(o => o.texto === 'La planta no recibe (agua o proceso)')
+  const b = A.responder(conJefe, 'que-lo-paro', iPlanta, NELSON, 'sup', HORA).borrador
+  return { bien: b.responsable.porId === 'u-jefe' && b.responsable.valor === 'op-mantenimiento' && b.choke?.procedencia === 'declarado' && b.choke.porId === NELSON.id
+    && K.PASOS.every(x => b[x]?.procedencia !== 'confirmado' && b[x]?.procedencia !== 'corregido'), dice: `«Quién»: ${b.responsable.valor} · ${b.responsable.porId} · ${b.responsable.procedencia}` }
+})
+// d. D2 (C-04): `desc_evid` solo con lo estructurado: el texto libre de quien respondió no viaja, aunque nombre a dos personas.
+aparte('desc_evid se arma solo con lo estructurado (D2): «Lo encontró Jairo Peña con Nelson Ortiz…» (pantalla) y «Revisó el pozo Jairo…» (WhatsApp) se quedan en TRIM', () => {
+  const enDia = (ev, ctx) => { const t = tramo(ev); const d0 = P.inicioDiaCo(t.inicio.getTime()); return P.paradasAnh([t.pozo.campoId], new Date(d0), new Date(d0 + D), ctx).filter(p => p.eventoId === ev) }
+  const conTexto = (texto, canal) => ({ ...ctx0, respuestas: { ...ctx0.respuestas, 'EP-LC21-261001-01': { texto, por: 'Jairo Peña · operador de campo', porId: 'oper', canal, hora: '2026-10-01T09:00:00-05:00' } } })
+  const filas = [...enDia('EP-LC21-261001-01', conTexto('Lo encontró Jairo Peña con Nelson Ortiz: se quemó el cable de potencia', 'pantalla')),
+    ...enDia('EP-LC21-261001-01', conTexto('Revisó el pozo Jairo y no tenía energía', 'whatsapp'))]
+  const vetadas = ['Jairo', 'Nelson', 'Peña', 'Ortiz', 'cable de potencia', 'no tenía energía']
+  const malas = filas.filter(p => p.causa.tipo !== 'declarada' || vetadas.some(n => p.clasificacion.descEvid.valor.includes(n)) || !/Declarado por el operador de campo/.test(p.clasificacion.descEvid.valor))
+  return { bien: filas.length >= 2 && !malas.length, dice: `viaja «${(malas[0] ?? filas[0])?.clasificacion.descEvid.valor.slice(0, 110)}»` }
+})
+aparte('el motivo escrito de una parada del programa tampoco viaja a la ANH: va el programa por su id', () => {
+  const programada = PS.find(p => p.causa.como === 'programa')
+  return { bien: !!programada && !programada.clasificacion.descEvid.valor.includes(programada.causa.texto) && /Programa PR-/.test(programada.clasificacion.descEvid.valor),
+    dice: `«${programada?.clasificacion.descEvid.valor.slice(0, 90)}»` }
+})
 
 await v.close()
 console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones bien.`)

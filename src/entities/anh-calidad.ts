@@ -9,13 +9,14 @@
  *  - avalada: un rol que puede avalar ese paso lo dijo o lo confirmó
  *    (`avalado`, anh-clasificacion.ts); es lo que pide «confirmada» (P1 §1.5);
  *  - corregida: una persona cambió lo que TRIM proponía (procedencia
- *    `corregido`, con `propuesto` al lado);
+ *    `corregido`, con `propuesto` al lado, o una respuesta de campo que dejó
+ *    otro valor: `declarado` con `propuesto`, D1);
  *  - declarada: una persona lo dijo donde TRIM no proponía nada;
  *  - en falta: todavía sin valor.
  *  % confirmado = avaladas ÷ filas; % corregido = corregidas ÷ propuestas (las
  *  filas donde TRIM propuso algo): cuánto se equivoca la regla. */
 import { PASOS, type PasoAnh, type ChokeAnh } from './anh-catalogo'
-import { avalado } from './anh-clasificacion'
+import { avalado, type DatoClasificado } from './anh-clasificacion'
 import { chokeDeCausa, REGLA_CHOKE } from './choke'
 import type { ParadaAnh } from './anh-paradas'
 import type { Contexto } from './causa-senal'
@@ -79,6 +80,14 @@ export interface CalidadClasificacion {
 
 const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : null)
 
+/** ¿TRIM propuso algo en este paso? Todo lo que no es «lo dijo una persona
+ *  donde TRIM no proponía nada». Una respuesta de campo que cambia lo que TRIM
+ *  proponía queda `declarada`, con lo propuesto al lado (D1): también lo propuso TRIM. */
+const propusoTrim = (d: DatoClasificado<unknown, unknown>) => d.procedencia !== 'declarado' || d.propuesto !== undefined
+/** ¿Una persona cambió lo que TRIM proponía? Corregido en el editor, o una respuesta que dejó otro valor. */
+const cambioATrim = (d: DatoClasificado<unknown, unknown>) =>
+  d.procedencia === 'corregido' || (d.procedencia === 'declarado' && d.propuesto !== undefined && String(d.propuesto) !== String(d.valor))
+
 /** La regla que propuso un paso de una fila. Lo que dijo una persona encima
  *  borra la regla del dato, así que se toma de la propuesta de la fila, que no
  *  cambia: la fila de `REGLAS_ANH` (o la del exceso del programa) y, en el paso
@@ -94,9 +103,9 @@ export function calidadClasificacion(ps: readonly ParadaAnh[], ctx: Contexto): C
     for (const p of ps) {
       const d = p.clasificacion[paso]
       if (!d) { enFalta++; continue }
-      if (d.procedencia === 'declarado') declaradas++
-      else propuestas++
-      if (d.procedencia === 'corregido') corregidas++
+      if (propusoTrim(d)) propuestas++
+      else declaradas++
+      if (cambioATrim(d)) corregidas++
       if (avalado(p.clasificacion, paso)) avaladas++
     }
     return { paso, paradas: ps.length, propuestas, avaladas, corregidas, declaradas, enFalta,
@@ -109,19 +118,19 @@ export function calidadClasificacion(ps: readonly ParadaAnh[], ctx: Contexto): C
   for (const p of ps) {
     for (const paso of PASOS) {
       const d = p.clasificacion[paso]
-      if (!d || d.procedencia === 'declarado') continue
+      if (!d || !propusoTrim(d)) continue
       const regla = reglaQuePropuso(p, paso), k = `${paso}|${regla}`
       const r = reglas.get(k) ?? { paso, regla, propuestas: 0, corregidas: 0, pctCorregido: 0, cambiadoA: {} }
       r.propuestas++
-      if (d.procedencia === 'corregido') { r.corregidas++; r.cambiadoA[String(d.valor)] = (r.cambiadoA[String(d.valor)] ?? 0) + 1 }
+      if (cambioATrim(d)) { r.corregidas++; r.cambiadoA[String(d.valor)] = (r.cambiadoA[String(d.valor)] ?? 0) + 1 }
       reglas.set(k, r)
     }
     const ch = p.clasificacion.choke
-    if (ch && ch.procedencia !== 'declarado') {
+    if (ch && propusoTrim(ch)) {
       const equipo = ch.porque?.elemento ?? p.causa.equipo, k = `${p.campoId}|${equipo}`
       const e = equipos.get(k) ?? { campoId: p.campoId, equipo, paradas: 0, corregidas: 0, pctCorregido: 0, cambiadoA: {} }
       e.paradas++
-      if (ch.procedencia === 'corregido') { e.corregidas++; e.cambiadoA[ch.valor] = (e.cambiadoA[ch.valor] ?? 0) + 1 }
+      if (cambioATrim(ch)) { e.corregidas++; e.cambiadoA[ch.valor] = (e.cambiadoA[ch.valor] ?? 0) + 1 }
       equipos.set(k, e)
     }
     // Sin topología: el motor del choke no encontró el elemento y usó la regla por tipo de causa.

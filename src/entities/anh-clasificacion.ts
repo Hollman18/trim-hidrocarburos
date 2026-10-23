@@ -21,7 +21,7 @@
  */
 import {
   PASOS, PASO_CAMPO, PASO_CIRCULAR, RESPONSABLES, CHOKES, IMPACTOS, PLANEACIONES, CLAVES_N1,
-  ETIQUETA_PLANEACION, ETIQUETA_CHOKE, VERSIONES_CATALOGO, VERSION_POR_DEFECTO, CAU_GRAL_DE_N1,
+  ETIQUETA_PLANEACION, ETIQUETA_CHOKE, VERSIONES_CATALOGO, VERSION_POR_DEFECTO, CAU_GRAL_DE_N1, CAUSAS_GENERALES,
   causaGeneralDe, esClaveN1, esCodigoN2Conocido, esN1Planeada, n1DeCodigo, n1DePlaneacion, n2DeN1, planeacionDeN1, textoN1, textoN2,
   type PasoAnh, type Responsable, type ChokeAnh, type Impacto, type Planeacion, type ClaveN1, type ClaveN1Planeada,
   type ClaveN1NoPlaneada, type CodigoN2, type CodigoN2De, type CausaGeneral, type IdVersionCatalogo, type OrigenAnh,
@@ -31,6 +31,7 @@ import type { Causa, Contexto, TipoCausa } from './causa-senal'
 import type { ParadaProgramada } from './configuracion'
 import type { CAUSAS_POZO } from './mensajes'
 import { NOMBRE_PARTE } from './partes'
+import { nombreModo, MODO_OTRO } from './catalogo'
 import { CODIGO, eventosPozos, type CodigoControlador } from './pozos'
 import { paradaPorId } from './bombas'
 import { perezoso } from './insumos'
@@ -47,10 +48,15 @@ export type Procedencia =
   | 'declarado'    // lo escribió o lo contestó una persona
   | 'confirmado'   // una persona aceptó lo propuesto (uno a uno o en lote)
   | 'corregido'    // una persona cambió lo propuesto
+  | 'retirado'     // un cambio de una persona dejó incoherente lo que dijo otra: rige otra vez lo que propone TRIM
 
-/** Las procedencias que pone una persona: llevan quién y a qué hora. */
+/** Las procedencias de un valor que dijo una persona: llevan quién y a qué hora. */
 export const DE_PERSONA: readonly Procedencia[] = ['declarado', 'confirmado', 'corregido']
 export const esDePersona = (p: Procedencia) => DE_PERSONA.includes(p)
+/** Lo que guarda el servidor de un paso (D1): lo que dice una persona y lo que
+ *  retira. `retirado` lleva quién, cuándo y el motivo, y el valor que se retiró;
+ *  nunca rige como valor: la fila vuelve a lo que propone TRIM. */
+export const esDeclaracion = (p: Procedencia) => esDePersona(p) || p === 'retirado'
 
 /** Un paso de la clasificación con su procedencia (P1 §1.3). `Q` es la forma
  *  de su porqué: una frase, salvo en el paso 2, que guarda los datos de la
@@ -78,6 +84,10 @@ export interface DatoClasificado<T, Q = string> {
   /** Lo que propuso TRIM, si la persona lo cambió: para la auditoría y para
    *  el tablero de «correcciones por regla» (P1 §2.1). */
   propuesto?: T
+  /** El consecutivo del servidor: el orden en que se dijo (`clasificacion_paso.id`).
+   *  Con él se sabe, paso por paso, qué es lo más reciente entre lo dicho en una
+   *  fila y lo dicho en su evento (`rigeEnFila`). Solo en lo que dijo una persona. */
+  n?: number
 }
 
 /** Quién toca la clasificación. */
@@ -156,6 +166,8 @@ export interface RespuestaCampo {
   porId: string
   rol: string
   hora: string
+  /** El consecutivo del servidor (`respuesta_campo.id`): el orden de la conversación. */
+  n?: number
 }
 
 /** «Algo está mal» o «Pedir a producción» (U1 §2.7; U2 §4.3; P1 §1.5,
@@ -172,6 +184,8 @@ export interface RevisionAnh {
   hora: string
   /** Quien revisa ya la atendió: dijo, corrigió o confirmó algo de la parada después. */
   atendida?: { por: string; porId: string; rol: string; hora: string }
+  /** El consecutivo del servidor (`revision_parada.id`): rige la más reciente. */
+  n?: number
 }
 
 /* ───────────────────────── la clasificación y su borrador ───────────────────────── */
@@ -238,22 +252,38 @@ export class ErrorClasificacion extends Error {
 }
 
 const enLista = <T extends string>(xs: readonly T[], x: unknown): x is T => typeof x === 'string' && (xs as readonly string[]).includes(x)
-const PROCEDENCIAS: readonly Procedencia[] = ['senal', 'registro', 'regla', 'conversion', 'programa', 'declarado', 'confirmado', 'corregido']
+const PROCEDENCIAS: readonly Procedencia[] = ['senal', 'registro', 'regla', 'conversion', 'programa', 'declarado', 'confirmado', 'corregido', 'retirado']
+
+/** Los pasos que valen como valor: un paso `retirado` es una marca de lo que se
+ *  guardó (vuelve a lo que propone TRIM), no un valor que rija. */
+function vivos(b: BorradorClasificacion): BorradorClasificacion {
+  if (!PASOS.some(p => b[p]?.procedencia === 'retirado')) return b
+  const r: Record<string, unknown> = { ...b }
+  for (const p of PASOS) if (b[p]?.procedencia === 'retirado') delete r[p]
+  return r as BorradorClasificacion
+}
 
 /** Lo que impide que un borrador sea una clasificación, en palabras. Vacío =
  *  se puede clasificar. No lanza: la pantalla lo muestra al lado del paso. */
-export function problemasDeClasificacion(b: BorradorClasificacion): string[] {
+export function problemasDeClasificacion(todo: BorradorClasificacion): string[] {
   const e: string[] = []
+  const b = vivos(todo)
   for (const p of PASOS) if (!b[p]) e.push(`Falta «${PASO_CAMPO[p]}» (${PASO_CIRCULAR[p]}).`)
   type Cualquiera = DatoClasificado<unknown, unknown> | undefined
-  const datos: Array<[string, Cualquiera]> = [...PASOS.map((p): [string, Cualquiera] => [PASO_CAMPO[p], b[p]]),
-    ['Causa general', b.cauGral], ['Descripción y evidencia', b.descEvid]]
+  const datos: Array<[string, Cualquiera]> = [...PASOS.map((p): [string, Cualquiera] => [PASO_CAMPO[p], todo[p]]),
+    ['Causa general', todo.cauGral], ['Descripción y evidencia', todo.descEvid]]
   for (const [nombre, d] of datos) {
     if (!d) continue
     if (!enLista(PROCEDENCIAS, d.procedencia)) e.push(`«${nombre}»: «${String(d.procedencia)}» no es una procedencia conocida.`)
-    else if (esDePersona(d.procedencia) && (!d.por || !d.porId || !d.hora))
+    else if (esDeclaracion(d.procedencia) && (!d.por || !d.porId || !d.hora))
       e.push(`«${nombre}»: un dato ${d.procedencia} tiene que decir quién lo hizo y a qué hora.`)
   }
+  // Lo que viaja a la ANH no lleva lo que escribió una persona (D2): la
+  // descripción la arma TRIM con lo estructurado y la causa general es una de las 18.
+  if (todo.descEvid && enLista(PROCEDENCIAS, todo.descEvid.procedencia) && esDeclaracion(todo.descEvid.procedencia))
+    e.push('«Descripción y evidencia» la arma TRIM con lo estructurado: nunca lleva lo que escribió una persona.')
+  if (todo.cauGral && enLista(PROCEDENCIAS, todo.cauGral.procedencia) && esDeclaracion(todo.cauGral.procedencia) && !enLista(CAUSAS_GENERALES, todo.cauGral.valor))
+    e.push(`«${String(todo.cauGral.valor).slice(0, 60)}» no es una de las 18 causas generales: lo que dice una persona de la causa general es una de ellas, nunca un texto libre.`)
   const { responsable, choke, impacto, planeacion, n1, n2 } = b
   if (responsable && !enLista(RESPONSABLES, responsable.valor)) e.push(`«${String(responsable.valor)}» no es uno de los nueve responsables de la circular (C24 p.5).`)
   if (choke && !enLista(CHOKES, choke.valor)) e.push(`«${String(choke.valor)}» no es uno de los cuatro componentes de la circular: pozo, planta, exportación o reservorio (C24 p.5).`)
@@ -929,15 +959,43 @@ function comoRol(por: string): string {
   return i >= 0 ? `el ${por.slice(i + 3).trim()}` : 'una persona del campo'
 }
 
-/** `desc_evid` armado por TRIM desde la causa: lo que dice, la parte y la
- *  evidencia, con la persona dicha por su rol (P1 §1.3; S1 R-D). Lo armó TRIM:
- *  procedencia de regla, origen C. */
-export function descripcionDeCausa(c: Causa): DatoClasificado<string> {
+/** Lo que dijo quien declaró, solo en lo cerrado (D2): uno de los motivos de
+ *  `CAUSAS_POZO` o lo que vio en la parte, del catálogo. Lo que escribió con
+ *  sus palabras se queda en TRIM. */
+function declaracionCerrada(c: Causa): string[] {
+  const chip = chipDe(c)
+  if (chip) return [chip]
+  const r = c.declarado
+  return r?.parte && r.modo && r.modo !== MODO_OTRO ? [`Lo que vio: ${nombreModo(r.modo, r.parte).toLowerCase()}`] : []
+}
+
+/** El motivo escrito de una parada del programa, fuera del renglón de la evidencia («Programa PR-…»). */
+const sinMotivoDelPrograma = (s: string) => s.replace(/^(Programa [^\s:]+): [\s\S]*$/, '$1')
+
+/** `desc_evid` armado por TRIM SOLO con lo estructurado (D2; P1 §1.3; S1 R-D):
+ *  la frase de TRIM sobre la causa, la parte, lo que vio de la lista y la
+ *  evidencia de las señales, con la persona dicha por su rol. Lo que una
+ *  persona escribió con sus palabras (la respuesta de una parada, el motivo de
+ *  una parada del programa) se queda en TRIM: nunca va a la ANH, aunque traiga
+ *  nombres que no son los del registro. Lo armó TRIM: procedencia de regla, origen C. */
+/** La causa de TRIM para lo que SALE de TRIM (D2): la ANH (`desc_evid`) y
+ *  cualquier exportación. La frase de la causa es de TRIM, salvo en dos casos
+ *  que se cambian por lo cerrado: la respuesta de quien declaró (su texto tal
+ *  cual) y el motivo escrito de la parada del programa. La evidencia de las
+ *  señales va igual, con la persona dicha por su rol y sin el motivo escrito del programa. */
+export function causaParaSalir(c: Causa): { que: string[]; evidencia: string[] } {
   const quien = c.declarado?.por
   const sinNombre = (s: string) => (quien ? s.split(quien).join(comoRol(quien)) : s)
-  const lineas = [c.texto, ...(c.parte ? [`Parte: ${NOMBRE_PARTE[c.parte]}`] : []), ...c.evidencia]
-    .map(s => sinNombre(s).trim().replace(/[.\s]+$/, '')).filter(Boolean)
-  return { valor: lineas.join('. '), procedencia: 'regla', regla: DESC_EVID_ID, porque: 'TRIM la armó con la causa y su evidencia' }
+  const que = c.declarado && c.texto === c.declarado.texto ? declaracionCerrada(c)
+    : c.como === 'programa' ? ['Estaba en el programa de paradas firmado'] : [c.texto]
+  return { que: que.map(sinNombre), evidencia: c.evidencia.map(s => sinNombre(sinMotivoDelPrograma(s))) }
+}
+
+export function descripcionDeCausa(c: Causa): DatoClasificado<string> {
+  const { que, evidencia } = causaParaSalir(c)
+  const lineas = [...que, ...(c.parte ? [`Parte: ${NOMBRE_PARTE[c.parte]}`] : []), ...evidencia]
+    .map(s => s.trim().replace(/[.\s]+$/, '')).filter(Boolean)
+  return { valor: lineas.join('. '), procedencia: 'regla', regla: DESC_EVID_ID, porque: 'TRIM la armó con lo estructurado de la causa y su evidencia (lo escrito por una persona no viaja)' }
 }
 
 const dato = <T,>(valor: T, regla: string, porque: string, procedencia: Procedencia = 'regla'): DatoClasificado<T> => ({ valor, procedencia, regla, porque })
@@ -1140,36 +1198,26 @@ export function estadoDe(b: BorradorClasificacion, causaPendiente = false): Esta
   return PASOS.every(x => avalado(b, x)) ? 'confirmada' : 'propuesta'
 }
 
-/** Una persona dice el valor de un paso. Si el paso faltaba, queda
- *  `declarado`; si TRIM proponía otro, `corregido` (con lo propuesto al lado);
- *  si es el mismo, `confirmado`. Si el paso no es del terreno de su rol
- *  (`PASOS_QUE_DECLARA`), lo que dijo queda como propuesta de TRIM (origen C).
- *  La coherencia no se rompe (P1 §2.2; U1 §2.5): cambiar la planeación borra la
- *  causa de la otra planeación; una N1 de la otra planeación se rechaza; un N2
+/** Una persona dice el valor de un paso (`POST …/clasificacion`). Si el paso
+ *  faltaba, queda `declarado`; si TRIM proponía otro, `corregido` (con lo
+ *  propuesto al lado); si es el mismo, `confirmado`; si ya lo había dicho una
+ *  persona con ese mismo valor, no cambia. Solo los pasos del terreno de su rol
+ *  (`PASOS_QUE_DECLARA`): lo que se deduce de una respuesta de campo va por
+ *  `responder`, que nunca confirma ni corrige (D1). La coherencia no se rompe
+ *  (P1 §2.2; U1 §2.5): cambiar la planeación quita la causa de la otra
+ *  planeación (quien guarda la retira con motivo si la había dicho una persona:
+ *  procedencia `retirado`); una N1 de la otra planeación se rechaza; un N2
  *  arrastra su N1. */
 export function declararPaso<P extends PasoAnh>(b: BorradorClasificacion, paso: P, valor: ValoresPasos[P], quien: Persona, rol: string,
   hora: string, regla: string = PREGUNTAS_CAMPO_ID): BorradorClasificacion {
   const antes = b[paso] as DatoDePaso<P> | undefined
   if (paso === 'choke' && valor === 'reservorio' && antes?.valor !== 'reservorio')
     throw new ErrorClasificacion(['«En el yacimiento» lo ponen producción o confiabilidad diciendo qué lo muestra (declararYacimiento; U2 §4.3).'])
-  const suyo = (propio(PASOS_QUE_DECLARA, rol) ?? []).includes(paso)
+  if (!(propio(PASOS_QUE_DECLARA, rol) ?? []).includes(paso))
+    throw new ErrorClasificacion([`Su rol no dice «${PASO_CAMPO[paso]}» (PASOS_QUE_DECLARA): lo que se deduce de una respuesta de campo va por la respuesta.`])
   const persona = { por: quien.nombre, porId: quien.id, rol, hora }
   let d: DatoDePaso<P>
-  if (!suyo) {
-    // Lo que TRIM deduce de la respuesta de quien no avala este paso (el
-    // operador que dice de dónde vino el corte) queda guardado como dicho por
-    // esa persona, con ella en el porqué. NO lo avala: su origen sigue siendo
-    // C y la parada sigue por confirmar hasta que lo confirme quien revisa
-    // (`avalado`, P1 §1.3). No pisa lo que dijo otra persona; si coincide con
-    // lo propuesto, solo da por contestada la pregunta del motor del choke.
-    if (antes && esDePersona(antes.procedencia)) return b
-    const preguntaba = paso === 'choke' && !!(antes as DatoClasificado<ChokeAnh, PorqueChoke> | undefined)?.porque?.pregunta
-    if (antes && antes.valor === valor && !preguntaba) return b
-    // Quién y cuándo ya van en el dato (`por`, `hora`): el porqué dice de dónde salió.
-    const porque = porqueDePersona(paso, antes, regla, quien, `TRIM lo dedujo de lo que contestó ${quien.nombre} en el campo`)
-    d = { valor, procedencia: 'declarado', regla, ...persona, ...(porque !== undefined ? { porque } : {}),
-      ...(antes && antes.valor !== valor ? { propuesto: antes.propuesto ?? antes.valor } : {}) }
-  } else if (antes && antes.valor === valor) d = esDePersona(antes.procedencia) ? antes : { ...antes, procedencia: 'confirmado', ...persona }
+  if (antes && antes.valor === valor) d = esDePersona(antes.procedencia) ? antes : { ...antes, procedencia: 'confirmado', ...persona }
   else {
     const porque = porqueDePersona(paso, antes, regla, quien)
     d = { valor, procedencia: antes ? 'corregido' : 'declarado', regla, ...persona, ...(porque !== undefined ? { porque } : {}),
@@ -1208,10 +1256,52 @@ function porqueDePersona<P extends PasoAnh>(paso: P, antes: DatoDePaso<P> | unde
   return p as PorqueDePaso[P]
 }
 
+/** Lo que una respuesta de campo deja en un paso (D1; B-04). La respuesta no
+ *  corrige ni confirma: solo el paso que DETERMINA queda `declarado` a nombre de
+ *  quien contestó, con «TRIM lo dedujo de lo que contestó…» en el porqué (y lo
+ *  que TRIM proponía en `propuesto`, si era otro). Determina un paso que faltaba,
+ *  uno que TRIM proponía distinto o el tramo cuya pregunta del motor del choke
+ *  seguía abierta. Lo demás no se toca:
+ *  - lo que ya dijo una persona (para cambiarlo está el editor, con motivo);
+ *  - lo que TRIM ya proponía igual: sigue siendo de TRIM, nadie lo «confirmó»;
+ *  - un valor que no va con lo que dijo una persona (la planeación con su causa,
+ *    la causa con su detalle): la respuesta queda en la conversación y el paso no se deja.
+ *  Lo que TRIM proponía y ya no va con el paso que se deja se quita, como siempre. */
+function dejarDeRespuesta<P extends PasoAnh>(b: BorradorClasificacion, paso: P, valor: ValoresPasos[P], quien: Persona, rol: string, hora: string): BorradorClasificacion {
+  if (paso === 'choke' && valor === 'reservorio')
+    throw new ErrorClasificacion(['«En el yacimiento» lo ponen producción o confiabilidad diciendo qué lo muestra (declararYacimiento; U2 §4.3).'])
+  const antes = b[paso] as DatoDePaso<P> | undefined
+  if (antes && esDePersona(antes.procedencia)) return b
+  const preguntaba = paso === 'choke' && !!(antes as DatoClasificado<ChokeAnh, PorqueChoke> | undefined)?.porque?.pregunta
+  if (antes && antes.valor === valor && !preguntaba) return b
+  const dePersona = <Q extends PasoAnh>(q: Q) => { const d = b[q]; return d && esDePersona(d.procedencia) ? d : undefined }
+  const pl = dePersona('planeacion'), n1 = dePersona('n1'), n2 = dePersona('n2')
+  if (paso === 'planeacion' && n1 && planeacionDeN1(n1.valor) !== valor) return b
+  if (paso === 'n1' && ((pl && planeacionDeN1(valor as ClaveN1) !== pl.valor) || (n2 && n1DeCodigo(n2.valor) !== valor))) return b
+  if (paso === 'n2' && n1 && n1DeCodigo(valor as CodigoN2) !== n1.valor) return b
+  if (paso === 'n2' && pl && planeacionDeN1(n1DeCodigo(valor as CodigoN2)) !== pl.valor) return b
+  const porque = porqueDePersona(paso, antes, PREGUNTAS_CAMPO_ID, quien, `TRIM lo dedujo de lo que contestó ${quien.nombre} en el campo`)
+  const d: DatoDePaso<P> = { valor, procedencia: 'declarado', regla: PREGUNTAS_CAMPO_ID, por: quien.nombre, porId: quien.id, rol, hora,
+    ...(porque !== undefined ? { porque } : {}), ...(antes && antes.valor !== valor ? { propuesto: antes.propuesto ?? antes.valor } : {}) }
+  let r = conPaso(b, paso, d)
+  if (paso === 'planeacion' && r.n1 && planeacionDeN1(r.n1.valor) !== valor) r = conPaso(conPaso(r, 'n1', undefined), 'n2', undefined)
+  if (paso === 'n1') {
+    if (r.planeacion && planeacionDeN1(valor as ClaveN1) !== r.planeacion.valor) r = conPaso(r, 'planeacion', undefined)
+    if (r.n2 && n1DeCodigo(r.n2.valor) !== valor) r = conPaso(r, 'n2', undefined)
+  }
+  if (paso === 'n2') {
+    const k = n1DeCodigo(valor as CodigoN2)
+    if (!r.n1 || r.n1.valor !== k) r = dejarDeRespuesta(r, 'n1', k, quien, rol, hora)
+  }
+  return conCausaGeneral(r)
+}
+
 /** «En el yacimiento» (P1 §2.1; U2 §4.3): solo producción o confiabilidad lo
  *  ponen, y diciendo qué lo muestra (un atajo o una nota). Nunca sale de una
- *  señal ni de la respuesta del operador. */
-export function declararYacimiento(b: BorradorClasificacion, evidencia: EvidenciaYacimiento, quien: Persona, rol: string, hora: string): BorradorClasificacion {
+ *  señal ni de la respuesta del operador. Desde una respuesta de campo
+ *  («¿Qué lo muestra?») queda `declarado` (D1): una respuesta no corrige. */
+export function declararYacimiento(b: BorradorClasificacion, evidencia: EvidenciaYacimiento, quien: Persona, rol: string, hora: string,
+  deRespuesta = false): BorradorClasificacion {
   if (!PONEN_YACIMIENTO.includes(rol))
     throw new ErrorClasificacion(['«En el yacimiento» solo lo ponen producción o confiabilidad: necesita una prueba de pozo, el corte de agua o la presión de fondo, que no se ven desde el campo (U2 §4.3).'])
   const ev = evidencia.trim()
@@ -1219,7 +1309,7 @@ export function declararYacimiento(b: BorradorClasificacion, evidencia: Evidenci
   const antes = b.choke
   const queMuestra = Object.hasOwn(ATAJO_YACIMIENTO, ev) ? ATAJO_YACIMIENTO[ev as AtajoYacimiento] : ev
   const d: DatoDePaso<'choke'> = {
-    valor: 'reservorio', procedencia: antes && antes.valor !== 'reservorio' ? 'corregido' : 'declarado', regla: REGLA_YACIMIENTO,
+    valor: 'reservorio', procedencia: antes && antes.valor !== 'reservorio' && !deRespuesta ? 'corregido' : 'declarado', regla: REGLA_YACIMIENTO,
     por: quien.nombre, porId: quien.id, rol, hora,
     porque: { regla: REGLA_YACIMIENTO, persona: quien.nombre, evidencia: ev, texto: `Lo puso ${quien.nombre}: ${queMuestra}`,
       ...(antes?.porque?.elemento !== undefined ? { elemento: antes.porque.elemento } : {}) },
@@ -1247,12 +1337,13 @@ export function responder(p: PropuestaAnh, pregunta: IdPregunta, opcion: number,
   const o = q.opciones[opcion]
   if (!o) throw new Error(`La pregunta «${q.texto}» no tiene la opción ${opcion}.`)
   if (!ROLES_QUE_CONTESTAN[q.quien].includes(rol)) throw new ErrorClasificacion([`«${q.texto}» la contesta ${QUIEN_CONTESTA[q.quien]}.`])
+  // Solo lo que la respuesta determina, dicho por quien contestó (D1; B-04): nada sale «confirmado».
   let b = p.borrador
   for (const paso of ORDEN_DEJA) {
     const v = o.deja[paso]
-    if (v !== undefined) b = declararPaso(b, paso, v, quien, rol, hora)
+    if (v !== undefined) b = dejarDeRespuesta(b, paso, v, quien, rol, hora)
   }
-  if (o.yacimiento) b = declararYacimiento(b, o.yacimiento, quien, rol, hora)
+  if (o.yacimiento && !(b.choke && esDePersona(b.choke.procedencia))) b = declararYacimiento(b, o.yacimiento, quien, rol, hora, true)
   // «No sé» no fija nada: la pregunta sigue abierta y escala al supervisor (U1 §2.4).
   const noSe = esNoSe(o)
   // La respuesta queda en la conversación: al leer la fila, el motor la vuelve a seguir.
@@ -1302,19 +1393,50 @@ export function confirmarPasos(c: BorradorClasificacion, rol: string, quien: Per
   return completa(r) ? clasificar(r) : r
 }
 
-/** Una propuesta con lo que ya dijeron las personas encima (lo guardado por
- *  evento: Unicidad, un evento una clasificación; P1 §2.6). Lo que TRIM
- *  propuso y ya no va con lo que dijo una persona se quita (P1 §2.2). */
+/** El consecutivo de lo guardado: sin él (lo que se arma a mano), 0. */
+const consecutivo = (d: { n?: number } | undefined) => d?.n ?? 0
+
+/** Lo que rige en una fila de lo que guardaron las personas, PASO POR PASO (D1):
+ *  lo más reciente entre lo dicho en la fila (`fila`, clave `ParadaAnh.id`) y lo
+ *  dicho en su evento (`evento`, clave `EventoPozo.id`), por el consecutivo del
+ *  servidor (`n`; en un empate, la fila). Un paso `retirado` es lo más reciente
+ *  y la fila vuelve a lo que propone TRIM. El tramo de exceso del programa solo
+ *  usa lo suyo: quien llama no le pasa el evento. La conversación junta las dos
+ *  en el orden en que se dijo; la revisión que rige es la más reciente. Es la
+ *  misma regla de `v_clasificacion_rige` (esquema.sql). */
+export function rigeEnFila(fila: BorradorClasificacion | undefined, evento: BorradorClasificacion | undefined): BorradorClasificacion | undefined {
+  if (!fila || !evento) return fila ?? evento
+  const r: Record<string, unknown> = {}
+  const masReciente = <T extends { n?: number }>(a: T | undefined, b: T | undefined): T | undefined =>
+    a && b ? (consecutivo(b) > consecutivo(a) ? b : a) : a ?? b
+  for (const p of PASOS) { const d = masReciente(fila[p], evento[p]); if (d) r[p] = d }
+  const cauGral = masReciente(fila.cauGral, evento.cauGral)
+  if (cauGral) r.cauGral = cauGral
+  const respuestas = [...(evento.respuestas ?? []), ...(fila.respuestas ?? [])]
+    .map((x, i) => ({ x, i })).sort((a, b) => consecutivo(a.x) - consecutivo(b.x) || a.i - b.i).map(y => y.x)
+  if (respuestas.length) r.respuestas = respuestas
+  const revision = masReciente(fila.revision, evento.revision)
+  if (revision) r.revision = revision
+  return r as BorradorClasificacion
+}
+
+/** Una propuesta con lo que ya dijeron las personas encima: lo que rige en la
+ *  fila (`rigeEnFila`). Un paso `retirado` deja lo que propone TRIM. Lo que TRIM
+ *  propuso y ya no va con lo que dijo una persona se quita (P1 §2.2). La
+ *  descripción la arma siempre TRIM y la causa general de una persona es una de
+ *  las 18: lo que escribe una persona no viaja (D2). */
 export function aplicarGuardada(p: PropuestaAnh, g: BorradorClasificacion): PropuestaAnh {
   let b: BorradorClasificacion = { ...p.borrador }
   for (const paso of ORDEN_DEJA) {
     const d = g[paso]
     if (d && esDePersona(d.procedencia)) b = conPaso(b, paso, d)
   }
-  if (g.cauGral && g.cauGral.procedencia !== 'regla') b = { ...b, cauGral: g.cauGral }
-  if (g.descEvid && esDePersona(g.descEvid.procedencia)) b = { ...b, descEvid: g.descEvid }
+  if (g.cauGral && esDePersona(g.cauGral.procedencia) && enLista(CAUSAS_GENERALES, g.cauGral.valor)) b = { ...b, cauGral: g.cauGral }
   if (b.n1 && b.planeacion && planeacionDeN1(b.n1.valor) !== b.planeacion.valor && !esDePersona(b.n1.procedencia))
     b = conPaso(conPaso(b, 'n1', undefined), 'n2', undefined)
+  // La causa que dijo una persona manda sobre la planeación que TRIM proponía (el paso 4 que no va con ella se quita).
+  if (b.n1 && b.planeacion && planeacionDeN1(b.n1.valor) !== b.planeacion.valor && !esDePersona(b.planeacion.procedencia))
+    b = conPaso(b, 'planeacion', undefined)
   if (b.n2 && b.n1 && n1DeCodigo(b.n2.valor) !== b.n1.valor && !esDePersona(b.n2.procedencia)) b = conPaso(b, 'n2', undefined)
   // Las respuestas de campo y la revisión van con lo que dijeron las personas:
   // la conversación sigue donde quedó (la pregunta que abrió cada respuesta).
@@ -1392,9 +1514,9 @@ export function origenesDe(b: BorradorClasificacion, version: IdVersionCatalogo 
 /* ───────────────────────── para el tramo reportable ───────────────────────── */
 
 /** La misma propuesta con la descripción de su tramo («Tramo n de m…»,
- *  «Continúa al corte del día»), armada por TRIM. La que escribió una persona no se toca. */
+ *  «Continúa al corte del día»), armada por TRIM. Siempre la arma TRIM con lo
+ *  estructurado: ninguna persona la escribe (D2). */
 export function conDescripcion(p: PropuestaAnh, valor: string): PropuestaAnh {
-  if (p.borrador.descEvid && esDePersona(p.borrador.descEvid.procedencia)) return p
   return evaluar({ ...p, borrador: { ...p.borrador, descEvid: { valor, procedencia: 'regla', regla: DESC_EVID_ID, porque: 'TRIM la armó con la causa, su evidencia y el tramo' } } })
 }
 

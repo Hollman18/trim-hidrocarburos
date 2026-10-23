@@ -121,7 +121,7 @@ trece (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts
 | `sap:aviso` | `POST /api/sap/avisos` |
 | `asignacion:cargar` | `POST /api/asignacion-oficial` (producción: la reemplaza quien la reporta, no cualquiera con el campo) |
 | `planes:decidir` | `POST /api/planes/:id` (aceptar o marcar ejecutado un plan del ciclo ANTES / DURANTE / DESPUÉS; supervisor, jefe de mantenimiento, confiabilidad) |
-| `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, y `POST /api/anh/paradas/confirmar` con una sola parada (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`) |
+| `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/respuesta`, `POST /api/anh/paradas/:id/revision` y `POST /api/anh/paradas/confirmar` con una sola parada (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`, y contesta solo sus preguntas, `ROLES_QUE_CONTESTAN`) |
 | `anh:confirmar` | `POST /api/anh/paradas/confirmar` con varias paradas de la misma cadena, en lote (quien firma el día: supervisor y producción) |
 | `anh:yacimiento` | `POST /api/anh/paradas/:id/yacimiento` («En el yacimiento» en el paso 2, con su evidencia: producción y confiabilidad) |
 
@@ -154,7 +154,7 @@ ajeno no devuelve datos de ese campo.
 | `POST /api/campos/:campo/tags/:tag/equipo` | `:campo` de la ruta, que tiene que ser el del tag |
 | `POST /api/usuarios`, `PATCH /api/usuarios/:id` | ver «Usuarios»: nadie otorga campos que no tiene |
 | `POST /api/planes/:id` | del plan (`cicloValor` → `campoId`; `404` si el id no existe) |
-| `POST /api/anh/paradas/:id/clasificacion`, `…/yacimiento` y `POST /api/anh/paradas/confirmar` | del evento del controlador de cada fila (el id es `${evento}@${día}#${n}`; `404` si no es una fila de la ANH). En lote, todas tienen que ser de la persona |
+| `POST /api/anh/paradas/:id/clasificacion`, `…/yacimiento`, `…/respuesta`, `…/revision` y `POST /api/anh/paradas/confirmar` | del evento del controlador de cada fila (el id es `${evento}@${día}#${n}`). Una fila que no existe y una de un campo que la persona no tiene responden **lo mismo**, `404` (C-20: el id lleva pozo y día; no se dice si existe). En lote o en cascada, todas tienen que ser de la persona |
 | `POST /api/configuracion/vista-previa` | cada campo que el cambio toca (`camposTocados`, como la firma) |
 | `POST /api/topologia/importar` | `campo` del cuerpo (`404` si no está en el registro) |
 
@@ -207,7 +207,7 @@ sea JSON, el front la trata como **«no hay servicio»**, no como una afirmació
 
 | HTTP | Cuándo | Códigos en uso |
 |---|---|---|
-| 400 | JSON roto, cuerpo que no es objeto, `%` mal formado, nacimiento mal formado, origen distinto de `manual`/`regla` | `peticion-invalida`, `url-invalida` |
+| 400 | JSON roto, cuerpo que no es objeto, un campo del cuerpo con otra forma (un texto donde va una lista, un número donde va un texto: C-11, se responde con la ruta, «`pasos.impacto` tiene que ser un texto»), `%` mal formado, nacimiento mal formado, origen distinto de `manual`/`regla`, un parámetro de una vista que no se puede leer | `peticion-invalida`, `url-invalida` |
 | 401 | Sin sesión válida | `sin-sesion` |
 | 403 | Sin la capacidad, sin persona activa o fuera de los campos asignados | `sin-capacidad`, `sin-permiso`, `gateway-de-otro-campo` |
 | 404 | No existe el recurso o la ruta | `no-encontrado`, `tag-no-registrado`, `campo-desconocido`, `equipo-desconocido`, `ruta-no-encontrada` |
@@ -215,6 +215,27 @@ sea JSON, el front la trata como **«no hay servicio»**, no como una afirmació
 | 413 | Cuerpo de más de 2 MB | `cuerpo-muy-grande` |
 | 422 | La forma o una regla del dominio | `peticion-invalida` o uno propio (`texto-corto`, `acceso-invalido`, `descripcion-corta`…) |
 | 5xx | Lo inesperado: **sin el mensaje interno** (SQL, rutas del servidor) | `interno` |
+
+**Las escrituras de la clasificación ANH** (`/api/anh/paradas/…`) usan estos códigos (C-22):
+
+| HTTP | Código | Cuándo |
+|---|---|---|
+| 400 | `peticion-invalida` | el cuerpo no tiene la forma del contrato (antes de cualquier regla) |
+| 403 | `sin-capacidad` | sin `anh:clasificar`, `anh:confirmar` (lote) o `anh:yacimiento` |
+| 403 | `rol-desconocido` | el rol de la sesión no está entre los del producto (uno de la versión 2 o inventado: el servidor no le presta las capacidades de otro, C-14) |
+| 403 | `sin-persona` | nadie con acceso activo tiene ese rol |
+| 403 | `paso-ajeno` | un paso que el rol no dice (`PASOS_QUE_DECLARA`) o no confirma (`PASOS_QUE_CONFIRMA`), o una pregunta que no contesta (`ROLES_QUE_CONTESTAN`) |
+| 404 | `no-encontrado` | la fila no existe **o es de un campo que la persona no tiene** (la misma respuesta, C-20) |
+| 409 | `cadena-cambio` | la cadena que vio la persona ya no es la de la fila (o la de alguna fila del lote) |
+| 409 | `pregunta-cerrada` | otra persona ya contestó esa pregunta |
+| 409 | `cascada-cambio` | «para la cascada», la raíz trae eventos que no están en los `ids` que mostró la pantalla |
+| 409 | `cambia-a-otra-persona` | sin `motivo`, la escritura cambiaría o retiraría lo que dijo OTRA persona en otra fila o evento del alcance; el mensaje dice cuáles (pozo, día, paso y quién) |
+| 409 | `lote-sin-pasos` | el lote no sube ningún paso: ya estaban confirmadas (no se guarda, C-19) |
+| 422 | `clasificacion-incoherente` | planeada con una causa `NP_…` (o al revés), un detalle de otra causa, un valor fuera del catálogo, «cambie primero ¿Planeada?» |
+| 422 | `falta-motivo` | cambia o retira lo que ya dijo una persona en la fila de la dirección, o retira lo que dijo una persona en cualquier fila, sin `motivo` de 5 caracteres o más |
+| 422 | `texto-largo` | `motivo` o `evidencia` de más de 500 caracteres (C-12) |
+| 422 | `pregunta-ajena` | una pregunta que TRIM no tiene o que no es de esa fila (C-18); una opción que no es de la pregunta |
+| 422 | `cascada-sin-ids` | «para la cascada» sin `ids`, sin la fila de la dirección entre ellos o con una fila de otra raíz |
 
 Campos extra según el caso: `errores: [{ campo, texto }]` en accesos (`campo` es `nombre`,
 `correo`, `rol`, `campos`, `whatsapp`, `alertas`, `motivo` o `general`: el `ErrorAcceso` de
@@ -235,7 +256,16 @@ Una por recurso, y **ningún tramo literal al mismo nivel que un `:parámetro`**
   `/api/planes/…`, la clasificación ANH (`/api/anh/paradas/…`) y la topología del choke
   (`/api/topologia/importar` y `/api/configuracion/vista-previa`; se firma con `/api/configuracion`).
 
-Parámetros: `campos=a,b`; `desde` y `hasta` en ISO con zona (el `hasta` no se incluye).
+Parámetros: `campos=a,b`, **sin repetidos** (C-10: `campos=ceiba,ceiba` multiplicaba el reparto; el
+servidor responde `400 peticion-invalida` o cuenta cada campo una vez, y el front nunca lo repite:
+`urlDe` los quita); `desde` y `hasta` en ISO con zona (el `hasta` no se incluye).
+
+**Lo que una vista responde con parámetros que no sirven** (C-16), la misma regla en todas:
+- un campo que la persona no tiene: `403 sin-permiso` (nunca datos de ese campo);
+- un campo que no está en el registro: `404 campo-desconocido`;
+- `desde ≥ hasta`, o una fecha que no es fecha o va sin zona: `400 peticion-invalida`;
+- `orden` ausente o fuera de su lista (el árbol del choke): `400 peticion-invalida`.
+En el demo no hay sesión: lo del campo ajeno queda en «Pendiente del lado del servidor».
 
 ---
 
@@ -391,10 +421,12 @@ sale del token (se propone `por: { id, nombre, rol }` para leerlo; hoy es el tex
 «Nombre · rol»). Los textos con fecha que quedan en registros firmados se escriben en hora de
 Colombia (`America/Bogota`).
 
-Todas exigen además una **persona activa** en la sesión (`403` si no la hay) y los campos de la
-regla general. El orden en que se revisan es el de `escrituras.ts`: capacidad y persona
-(`403`); el recurso (`404`), que el campo del cuerpo sea el suyo (`422`) y que la persona lo
-tenga (`403`); conflicto (`409`); forma (`422`).
+Todas exigen además una **persona activa** en la sesión (`403` si no la hay), un rol del producto
+(un rol de la versión 2 o inventado no escribe: el servidor no le presta las capacidades de otro,
+C-14) y los campos de la regla general. El orden en que se revisan es el de `escrituras.ts`: la
+forma del cuerpo (`400`, antes de cualquier regla: un campo con otra forma no es una excepción del
+servidor, C-11); capacidad y persona (`403`); el recurso (`404`), que el campo del cuerpo sea el
+suyo (`422`) y que la persona lo tenga (`403`); conflicto (`409`); las reglas del dominio (`422`).
 
 ### `POST /api/configuracion` · `GET /api/configuracion/historial`
 
@@ -710,88 +742,116 @@ Ver «Cadena de datos».
 
 ### `POST /api/anh/paradas/:id/clasificacion`
 
-Cuerpo `{ pasos, motivo?, aplicarAlEvento?, aplicarALaCascada?, cadena? }` → `{ parada:
+Cuerpo `{ pasos, motivo?, aplicarAlEvento?, aplicarALaCascada?, ids?, cadena? }` → `{ parada:
 ParadaAnh, guardadas: { clave: BorradorClasificacion } }`. `:id` es el de la fila
 (`${evento}@${día}#${n}`); `pasos` lleva los valores en códigos internos (`{ "choke": "planta",
 "planeacion": "no-planeada", "n1": "NP_PROC", "n2": "NP_PROC/parada-estacion-bombeo-afecta-pozos" }`).
-La procedencia, `por`, `porId`, `rol` y `hora` los pone el servidor: un paso que faltaba queda
-`declarado`; uno que TRIM proponía distinto, `corregido` (con `propuesto` al lado); el mismo,
-`confirmado` (`declararPaso`, `anh-clasificacion.ts`). `guardadas` dice lo que el servidor
-guardó, por fila o por evento: **solo lo que dijo una persona**; lo de TRIM se vuelve a proponer
-con la regla de hoy cada vez que se lee la fila. Revisión, en este orden:
-- `403`: sin `anh:clasificar` o sin persona activa; la fila es de un campo que la persona no
-  tiene; un paso que el rol no dice como suyo (`PASOS_QUE_DECLARA`: el operador, «¿Planeada?» y
-  «Qué pasó»; el técnico, además la causa y el detalle; supervisión, producción, el jefe de
-  mantenimiento y confiabilidad, los seis). Al operador nunca se le pide dónde se trabó.
-- `404`: la fila no existe (el evento no es de un pozo o el día no tiene esa fila).
-- `409`: `cadena` (la de los 6 pasos que vio la persona, con «—» en los que faltan: `cadenaVista`)
-  ya no es la de la fila.
-- `422`: un paso que no existe; ningún paso; un valor que no es del catálogo; «En el
-  yacimiento» (va por `…/yacimiento`); una causa de la otra planeación («cambie primero
-  ¿Planeada?»: la coherencia planeada/causa está bloqueada, C24 p.7); cambiar lo que ya dijo una
-  persona sin `motivo` de 5 caracteres o más (el motivo queda en el porqué del paso).
+La procedencia, `por`, `porId`, `rol`, `hora` y `n` los pone el servidor: un paso que faltaba
+queda `declarado`; uno que TRIM proponía distinto, `corregido` (con `propuesto` al lado); el
+mismo, `confirmado` (`declararPaso`, `anh-clasificacion.ts`). **Se guardan solo esos pasos**
+(D1, «Clasificación ANH»), más los `retirado` que la coherencia pida; `guardadas` dice lo que
+se guardó en esta petición, por clave. El alcance:
+- sin bandera, la fila; `aplicarAlEvento`, todos los tramos del evento (Unicidad: un evento, una
+  clasificación); `aplicarALaCascada`, **cada evento de las filas de `ids`** (las que mostró la
+  pantalla, U2 §4.3: «Sí, a los {n}»), una escritura por evento. Si la raíz trae eventos que no
+  están en `ids`, `409`: la pantalla tiene que mostrarlos antes. La fila de la dirección va entre
+  los `ids`;
+- el tramo de exceso del programa (`exceso`) se guarda solo, en su fila: es otra decisión, no
+  planeada, y no hereda de su evento.
 
-`aplicarAlEvento` lo guarda para todos los tramos del evento (Unicidad: un evento, una
-clasificación); `aplicarALaCascada`, para todos los eventos con la misma raíz (U2 §4.3: «Sí, a
-los {n}»). Lo que había guardado por fila de esos eventos se reemplaza. Un tramo que se pasó de
-la ventana del programa (`exceso`) se guarda solo: es otra decisión, no planeada.
+Revisión, en este orden: `400` la forma del cuerpo; `403` sin `anh:clasificar`, con un rol que no
+es del producto o sin persona activa; `404` la fila no existe o es de un campo que la persona no
+tiene (la misma respuesta); `403` un paso que el rol no dice como suyo (`PASOS_QUE_DECLARA`: el
+operador, «¿Planeada?» y «Qué pasó»; el técnico, además la causa y el detalle; supervisión,
+producción, el jefe de mantenimiento y confiabilidad, los seis); `409` `cadena` (la de los 6
+pasos que vio la persona, con «—» en los que faltan: `cadenaVista`) ya no es la de la fila; `422`
+un paso que no existe, ningún paso, un valor que no es del catálogo, «En el yacimiento» (va por
+`…/yacimiento`), un `motivo` de más de 500 caracteres; `422`/`409` el alcance de la cascada (sin
+`ids`, una fila de otra raíz, una raíz con más eventos); `422` una causa de la otra planeación en
+alguna fila del alcance («cambie primero ¿Planeada?»: la coherencia planeada/causa está
+bloqueada, C24 p.7); y lo que cambia de lo que dijeron las personas:
+- en la fila de la dirección, cambiar o retirar lo que ya dijo una persona sin `motivo` de 5
+  caracteres o más es `422` (C-05: cambiar «¿Planeada?» retira la causa y el detalle que no van, y
+  eso también cuenta);
+- en otra fila u otro evento del alcance, cambiar o retirar lo que dijo OTRA persona sin
+  `motivo` es `409`, diciendo cuáles (pozo, día, paso y quién);
+- retirar lo que dijo una persona, en cualquier fila, siempre lleva `motivo`.
+Cuando hace falta (la escritura cambia o retira lo que dijo una persona), el `motivo` queda en el
+porqué de lo que se guarda en esa petición: es una corrección con su motivo.
 
 ### `POST /api/anh/paradas/:id/yacimiento`
 
 Cuerpo `{ evidencia, motivo?, aplicarAlEvento?, cadena? }` → como la clasificación. Pone «En el
 yacimiento» en el paso 2 (`declararYacimiento`): `evidencia` es `prueba` (la prueba del pozo),
-`corte-agua`, `presion` (la presión de fondo) o una nota escrita, y queda en
-`choke.porque.evidencia` (y en `ParadaAnh.evidenciaYacimiento`). `403` sin `anh:yacimiento`
+`corte-agua`, `presion` (la presión de fondo) o una nota escrita (500 caracteres o menos), y
+queda en `choke.porque.evidencia` (y en `ParadaAnh.evidenciaYacimiento`). **Es de cada pozo**: el
+alcance es la fila o su evento, nunca la cascada; el servidor arma el alcance solo con los campos
+de este cuerpo, y un `aplicarALaCascada` que llegue no se lee (C-17). `403` sin `anh:yacimiento`
 (solo producción y confiabilidad: nunca sale de una señal ni de la respuesta del operador);
-`422` sin evidencia, o sin motivo si cambia lo que ya dijo una persona; `404` y `409` como arriba.
+`422` sin evidencia, o sin motivo si cambia lo que ya dijo una persona; `400`, `404`, `409` como
+arriba.
 
 ### `POST /api/anh/paradas/confirmar`
 
-Cuerpo `{ ids, cadena?, pasos? }` → `{ paradas: ParadaAnh[], lote?: ConfirmacionLote }`. Una sola
-fila la confirma quien tiene `anh:clasificar`; varias de una vez, solo quien tiene
-`anh:confirmar` (supervisión y producción, que firman el día), y tienen que tener la misma
-cadena completa de 6 pasos (`422` si no: «confírmelas por grupo»). La confirmación es **por
-paso** (P1 §1.3): sube a `confirmado` solo los pasos que el rol avala (`PASOS_QUE_CONFIRMA`) y
-que nadie había dicho; el toque del operador confirma «¿Planeada?» y «Qué pasó», y dónde se
-trabó sigue siendo propuesta de TRIM. Con «una señal apunta», la causa y el detalle solo los
-confirma quien abre o analiza el equipo (jefe y confiabilidad). `pasos` son los que la pantalla
-mostró para confirmar: uno que el rol no avala es `403` («Su rol no confirma «Dónde se
-trabó»…»), y los que no vengan no se confirman. `409` si `cadena` ya no es la de alguna fila.
-El lote (`{ id, porId, por, hora, paradas, cadena, pasos }`) guarda qué se vio y qué se confirmó
-de una vez.
+Cuerpo `{ ids, cadena, pasos? }` → `{ paradas: ParadaAnh[], lote?: ConfirmacionLote }`. **`cadena`
+es obligatoria** (`400` sin ella, C-06): se confirma lo que la persona vio. Una sola fila la
+confirma quien tiene `anh:clasificar`; varias de una vez, solo quien tiene `anh:confirmar`
+(supervisión y producción, que firman el día), y tienen que tener la misma cadena completa de 6
+pasos (`422` si no: «confírmelas por grupo»). La confirmación es **por paso** (P1 §1.3): sube a
+`confirmado` solo los pasos que el rol avala (`PASOS_QUE_CONFIRMA`) y que nadie había avalado, y
+se guarda **en cada fila, nunca en su evento** (la marca del lote no se copia a otra fila). El
+toque del operador confirma «¿Planeada?» y «Qué pasó», y dónde se trabó sigue siendo propuesta de
+TRIM. Con «una señal apunta», la causa y el detalle solo los confirma quien abre o analiza el
+equipo (jefe y confiabilidad). `pasos` son los que la pantalla mostró para confirmar: uno que el
+rol no avala es `403` («Su rol no confirma «Dónde se trabó»…»), y los que no vengan no se
+confirman. `404` si alguna fila no existe o es de un campo ajeno (sin decir cuál de las dos);
+`409` si `cadena` ya no es la de alguna fila; **`409` si el lote no sube ningún paso** (ya estaban
+confirmadas: no se guarda un lote vacío, C-19). Una fila sola que ya estaba confirmada responde
+`200` sin guardar nada. El lote (`{ id, porId, por, hora, paradas, cadena, pasos }`) guarda qué se
+vio (**la `cadena` de la petición**) y qué se confirmó de una vez. Hasta 1.000 filas por petición.
 
 ### `POST /api/anh/paradas/:id/respuesta`
 
-Cuerpo `{ pregunta, opcion, aplicarAlEvento?, aplicarALaCascada?, cadena? }` → como la
+Cuerpo `{ pregunta, opcion, aplicarAlEvento?, aplicarALaCascada?, ids?, cadena? }` → como la
 clasificación (`{ parada, guardadas }`). Lo que una persona contesta en el campo a una pregunta
 abierta de la fila (`ParadaAnh.propuesta.preguntas`: «¿Qué lo paró?», «¿De dónde vino el
 corte?», «¿El oleoducto o el cliente estaba recibiendo?», «¿Qué fue, exactamente?»…), con
 `pregunta` = su `id` y `opcion` = el **texto exacto del botón** (`OpcionCampo.texto`). El servidor
-corre `responder` (`anh-clasificacion.ts`): lo que la opción deja queda **dicho por esa persona**
-(`declarado`, con ella en el porqué); un paso que su rol no avala como suyo (el tramo que sale
-de «De este pozo: su transformador…» dicho por el operador) no cuenta como avalado hasta que lo
-confirme quien revisa. La respuesta queda en `clasificacion.respuestas[]` (`{ pregunta, opcion,
-sigue?, acota?, perdida?, noSe?, por, porId, rol, hora }`) y la conversación sigue: al leer la
-fila, la pregunta que abrió (`sigue`) llega en `propuesta.preguntas`. «No sé» no fija nada: la
-pregunta sigue abierta y escala a quien revisa (`propuesta.escalada`). Revisión, en este orden:
-`403` sin `anh:clasificar`, sin persona activa o con la fila de un campo ajeno; `404` la fila no
-existe; `409` `cadena` cambió, o la pregunta ya no está abierta (otra persona la contestó);
-`403` el rol no contesta esa pregunta (`ROLES_QUE_CONTESTAN`: al operador nunca se le pregunta
-dónde se trabó; el yacimiento, solo producción y confiabilidad); `422` la opción no es de esa
-pregunta. Se guarda por fila, por evento o por cascada como la clasificación.
+corre `responder` (`anh-clasificacion.ts`). **La respuesta no corrige ni confirma** (D1; B-04):
+solo el paso que determina queda `declarado` por esa persona, con «TRIM lo dedujo de lo que
+contestó …» en el porqué (y `propuesto`, si TRIM proponía otro valor); un paso que su rol no avala
+como suyo (el tramo que sale de «De este pozo: su transformador…» dicho por el operador) no cuenta
+como avalado hasta que lo confirme quien revisa; lo que TRIM ya proponía igual sigue siendo de
+TRIM; y donde una persona ya dijo ese paso (en cualquier fila del alcance) no se deja nada: la
+respuesta queda en la conversación. La respuesta queda en `clasificacion.respuestas[]` de cada
+clave (`{ pregunta, opcion, sigue?, acota?, perdida?, noSe?, por, porId, rol, hora, n }`) y la
+conversación sigue: al leer la fila, la pregunta que abrió (`sigue`) llega en
+`propuesta.preguntas`. «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa
+(`propuesta.escalada`); repetirlo, la misma persona a la misma pregunta, no se guarda otra vez.
+Revisión, en este orden: `400` la forma; `403` sin `anh:clasificar`, con un rol que no es del
+producto o sin persona activa; `404` la fila no existe o es de un campo ajeno; `409` `cadena`
+cambió; `409` la pregunta ya no está abierta porque otra persona la contestó; `422` una pregunta
+que TRIM no tiene o que no es de esta fila (C-18); `403` el rol no contesta esa pregunta
+(`ROLES_QUE_CONTESTAN`: al operador nunca se le pregunta dónde se trabó; el yacimiento, solo
+producción y confiabilidad); `422` la opción no es de esa pregunta; `422`/`409` el alcance de la
+cascada, como en la clasificación. Se guarda por fila, por evento o por cascada como la
+clasificación.
 
 ### `POST /api/anh/paradas/:id/revision`
 
-Cuerpo `{ motivo, pedirA?, aplicarAlEvento?, aplicarALaCascada?, cadena? }` → como la
+Cuerpo `{ motivo, pedirA?, aplicarAlEvento?, aplicarALaCascada?, ids?, cadena? }` → como la
 clasificación. «Algo está mal» (sin `pedirA`: a quien revisa) o «Pedir a producción»
-(`pedirA: "prod"`, la pregunta del yacimiento). No corrige nada: deja en la fila
-`revision: { motivo, pedirA?, por, porId, rol, hora }` (`RevisionAnh`; viaja en
+(`pedirA: "prod"`, la pregunta del yacimiento). **No toca ningún paso** (D1): deja en cada clave
+del alcance `revision: { motivo, pedirA?, por, porId, rol, hora, n }` (`RevisionAnh`; viaja en
 `ParadaAnh.revision` y en `clasificacion.revision`) y la pasa a quien corrige, que la ve en
-«REVISAR». Queda **atendida** (`revision.atendida: { por, porId, rol, hora }`) cuando ese rol
-(o, sin `pedirA`, supervisión, producción, el jefe o confiabilidad) dice, corrige, contesta o
-confirma algo de la fila. `403` sin `anh:clasificar`, sin persona o con un campo ajeno; `404` la
-fila no existe; `409` `cadena` cambió; `422` motivo de menos de 5 caracteres, `pedirA` que no es
-un rol que revisa, o pedírselo al propio rol.
+«REVISAR». Queda **atendida** (`revision.atendida: { por, porId, rol, hora }`) cuando ese rol (o,
+sin `pedirA`, supervisión, producción, el jefe o confiabilidad) dice, corrige, contesta o
+confirma algo de la fila. La misma revisión de la misma persona, todavía sin atender, no se
+guarda dos veces. `400` la forma; `403` sin `anh:clasificar`, sin persona o con un rol que no es
+del producto; `404` la fila no existe o es de un campo ajeno; `409` `cadena` cambió; `422`
+motivo de menos de 5 caracteres (sin contar lo que no se ve) o de más de 500, `pedirA` que no es
+un rol que revisa, o pedírselo al propio rol; `422`/`409` el alcance de la cascada. «2 Algo está
+mal» por WhatsApp es esta misma escritura (ver «El webhook de WhatsApp»).
 
 ---
 
@@ -917,9 +977,17 @@ sesión de persona y autenticada por Meta:
      contesta quién respondió. Al webhook siempre se le responde `200` en cuanto el mensaje
      queda aceptado o descartado; el `409` es para la pantalla.
 - La respuesta queda con `canal: "whatsapp"`, `por` y `porId` de la persona resuelta.
+- **El cierre de la respuesta** («Así queda lo que usted contestó … 1) Está bien · 2) Algo está
+  mal»): «2» es la misma escritura que el botón de la pantalla (`POST …/revision`, B-05), a nombre
+  de la persona del número, sobre las filas ANH de la parada (las de su evento o, si la parada es
+  de una bomba o de un servicio, las de su cascada), con un motivo cerrado («Por WhatsApp: «Algo
+  está mal» en lo que contestó»). No toca ningún paso. TRIM contesta: «Entendido. Lo revisa su
+  supervisor en Identificar; usted no tiene que hacer nada más.»
+- Lo que una persona escribe por WhatsApp se queda en TRIM: no viaja a la ANH ni a ningún informe
+  (D2; `desc_evid` se arma con lo estructurado).
 
 En el demo, el teléfono simulado de Identificar hace de webhook dentro del navegador
-(`recibirWhatsapp` en `escrituras.ts`, con estas mismas reglas). **Con la fuente http no manda
+(`recibirWhatsapp` y `revisarDesdeWhatsapp` en `escrituras.ts`, con estas mismas reglas). **Con la fuente http no manda
 nada**: ningún cuerpo del front lleva `canal` ni `por` (los pone el servidor), y una respuesta por
 WhatsApp solo entra por el webhook firmado. El teléfono lo dice en el chat.
 
@@ -1281,8 +1349,12 @@ pregunta «¿Dónde se originó la parada…?». **El yacimiento nunca sale de u
 producción o confiabilidad con su evidencia. Una parada sin causa no tiene tramo (`sin-asignar`,
 «sin identificar»).
 
-**Lo que limita** (`potencialesDelCampo`): pozos = Σ prueba vigente × factor de asignación del
-mes de los pozos con prueba (la misma cifra de Producción y del libro); planta = el menor de los
+**Lo que limita** (`potencialesDelCampo`): pozos = Σ prueba vigente de los pozos con prueba ×
+el factor de medición fijo y firmado del campo (`PARAMETROS_CHOKE.factorMedicion`, 1 si no se
+firmó), NUNCA el factor de asignación del mes: ese sale de lo que ya pasó por la planta y
+escondería lo que la planta limita (QA-A-02, decisión D3). El libro sigue valorando el diferido con
+su factor de asignación: son dos preguntas distintas («cuánto pudo dar el pozo» frente a «cuánto se
+asigna»); planta = el menor de los
 trenes **medidos**, con la capacidad instalada (el agua pasada a crudo con las pruebas; el gas
 no se mide en esta fase y no entra al mínimo); afuera = la evacuación declarada, con el mercado
 de subnivel. Las capacidades son las firmadas (`Config.capacidades`) o, donde no se firmó, el
@@ -1291,10 +1363,15 @@ tramos iguales al barril son un empate que se explica con la firma (`explicacion
 Un potencial es un máximo: si el real de un día lo pasa, la capacidad declarada está corta y se
 avisa (`superado`); ese día no se separa nada estructural.
 
-**La brecha por tramo y por escalón** (`brechaPorChoke`): cada barril de cada tramo del libro va
-a UN tramo y a un escalón (desarrollo, desempeño, disponibilidad planeada, disponibilidad no
-planeada, capacidad o sin clasificar), y la identidad es exacta: potencial − real = Σ por tramo
-+ sin explicar. Si lo que limita no son los pozos, la parte estructural (pozos − sistema) se
+**La brecha por tramo y por escalón** (`brechaPorChoke`, `choke-reparto.ts`): suma LAS MISMAS
+filas que el árbol (`/vistas/anh/paradas`, con la clasificación vigente: lo que dijeron las
+personas incluido), así que corregir el paso 2 o el 4 mueve a la vez la tubería, el reparto, la
+serie, el mes a mes, la línea base y el árbol (QA-A-01, C-09). Cada barril va a UN tramo y a un
+escalón (desarrollo, desempeño, disponibilidad planeada, disponibilidad no planeada, capacidad o
+sin clasificar), y la identidad es exacta: potencial − real = Σ por tramo + sin explicar. **El
+indicador del norte es UNA sola cifra**: el escalón `disponibilidad-no-planeada` (D4); todas las
+vistas la leen. Lo sin identificar nunca cuenta como no planeado. `Libro.noPlaneado` es otra
+cosa: lo «no programado (libro)». Si el tramo no se sabe, el escalón sale de la causa (D5). Si lo que limita no son los pozos, la parte estructural (pozos − sistema) se
 separa y se dice, nunca se suma aparte. PE = real ÷ potencial del sistema.
 
 **El árbol de pérdidas del choke** (`arbolDelChoke`, `choke-arbol.ts`, regla `choke.arbol@1`):
@@ -1306,9 +1383,9 @@ de todo el árbol, con la clasificación vigente de su fila (`/vistas/anh/parada
 `circular` (responsable → tramo → diferida o pérdida → planeada o no → causa → detalle, el de la
 circular) y `responsable` (responsable → tramo → causa → equipo). Cada nodo suma exacto sus ramas;
 lo que falta va en su rama y no se reparte; la pérdida tiene su rama, vacía mientras TRIM no
-registre pérdidas. El primer nivel de `gestion` es el mismo reparto por tramo de `brechaPorChoke`;
-si una persona corrige el paso 2, el árbol mueve esos barriles y `brechaPorChoke` (que no lee lo
-guardado) se queda con la regla: pendiente para que el reparto también lea las correcciones.
+registre pérdidas. El primer nivel de `gestion` es el mismo reparto por tramo de `brechaPorChoke`,
+también después de que una persona corrige el paso 2: los dos leen las mismas filas
+(`verificar-contrato` §12 a2).
 
 **La tubería del agua** (`tuberiaAgua`) es el mismo modelo para la inyección: agua de los pozos →
 tratamiento → tanques (colchón, no caudal) → bombas de reinyección → inyectores, con UNA cifra
@@ -1354,11 +1431,54 @@ no viajan a la ANH y suman exacto lo del libro. Estados: `propuesta` (los 6 paso
 nadie los confirmó), `por-precisar` (falta un paso que la señal no decide), `confirmada` (los 6
 con procedencia de persona de un rol que puede avalarlos) y `pendiente` (sin causa).
 
-**Lo que se guarda es solo lo que dijo una persona** (por fila, o por evento para todos sus
-tramos): al leer la fila, TRIM vuelve a proponer con la regla de hoy y pone encima lo guardado
-(`aplicarGuardada`). Ningún paso sale con procedencia de persona si nadie lo tocó. También se
-guardan la conversación de campo (`respuestas`: al leer la fila se sigue, y la pregunta que
-abrió cada respuesta llega en `propuesta.preguntas`) y la revisión pedida (`revision`).
+**Lo que se guarda es solo lo que dijo una persona, POR PASO, solo por inserción, y nunca se
+borra ni se copia a nombre de otro** (D1, CORRECCIONES-QA):
+- **Una escritura guarda solo los pasos que dijo esta persona en esta petición**, con su
+  nombre, su hora y el consecutivo del servidor (`n`, el `id` de `clasificacion_paso`), en una
+  clave: una fila (`ParadaAnh.id`) o un evento (`EventoPozo.id`). «Para la cascada» es una
+  escritura por evento de las filas que mostró la pantalla (`ids`). Nada más viaja: ni lo que
+  otras personas dijeron en la fila de origen, ni el yacimiento, ni la marca de un lote.
+- **Lo que rige en una fila, paso por paso** (`rigeEnFila`, `anh-clasificacion.ts`; la vista
+  `v_clasificacion_fuente` del esquema): lo más reciente (`n`) entre lo dicho en la fila y lo
+  dicho en su evento; si no hay nada, lo que propone TRIM con la regla de hoy (`aplicarGuardada`).
+  El tramo de exceso del programa solo usa lo suyo. Así, una escritura en otro paso del evento no
+  toca lo que una persona dijo de este paso en la fila, y lo que se dice del evento después rige
+  en todas sus filas.
+- **`retirado`**: cuando un cambio deja incoherente lo que dijo una persona (otra planeación
+  deja sin sentido su causa; otra causa, su detalle), no desaparece nada: se guarda en ese paso
+  una marca `retirado` con quién, cuándo, el motivo (obligatorio) y el valor que se retira, y la
+  fila vuelve a lo que propone TRIM (que, si tampoco va, queda en falta). Un `retirado` está en
+  `guardadas` y en la historia; nunca rige como valor y nunca sale en `ParadaAnh.clasificacion`.
+- **La revisión y la respuesta de campo no tocan pasos.** La única excepción: el paso que la
+  respuesta determina (uno que faltaba, uno que TRIM proponía distinto o el tramo cuya pregunta
+  del motor del choke seguía abierta) queda `declarado` a nombre de quien contestó; lo que TRIM
+  ya proponía igual sigue siendo de TRIM, nada sale «confirmado» por una respuesta (B-04) y lo que
+  ya dijo una persona no se toca.
+- Ningún paso sale con procedencia de persona si nadie lo tocó. También se guardan la
+  conversación de campo (`respuestas`, con su `n`: al leer la fila se juntan las de la fila y las
+  de su evento en el orden en que se dijeron, y la pregunta que abrió cada una llega en
+  `propuesta.preguntas`) y la revisión pedida (`revision`: rige la más reciente entre la fila y su
+  evento).
+
+El TS (`escribirPasos`, `escrituras.ts`, que reemplaza a `guardarClasificacion`) y el SQL
+(`clasificacion_paso`, `v_clasificacion_fuente`, `clasificacion_coherente`) aplican la MISMA
+regla: un backend con el esquema da la misma fila que el servidor del demo (C-03).
+
+**`desc_evid` y lo que sale de TRIM se arman solo con lo estructurado** (D2; S1 R-D): la frase de
+TRIM sobre la causa, la parte, lo que vio de la lista (el modo del catálogo), uno de los motivos
+cerrados de `CAUSAS_POZO`, el id del programa y la evidencia de las señales, con la persona dicha
+por su rol («Declarado por el operador de campo»). **El texto libre de una persona nunca viaja**:
+ni la respuesta de una parada escrita con sus palabras (por pantalla o por WhatsApp, aunque
+nombre a otras personas), ni el motivo escrito de una parada del programa, ni un motivo o un
+porqué. Se queda en TRIM. Una persona no escribe `desc_evid`, y su causa general es una de las
+18 (`causa_general`), nunca un texto libre. Lo mismo en las exportaciones (el CSV de Evidencia:
+`causaParaSalir`).
+
+**Una fila mala es un error del servidor** (C-15): una `ParadaAnh` con un valor fuera del
+catálogo o incoherente no puede salir de un servidor con el esquema (las llaves foráneas de
+`causa_n1`, `causa_n2` y `causa_general` y el trigger de coherencia la impiden al guardar); si
+llega, el códec rechaza la respuesta entera con `ErrorDeContrato` y la pantalla lo dice y ofrece
+reintentar. No se muestra una lista a medias como si estuviera completa.
 
 **`propuesta`** trae lo que necesita la pantalla para lo que falta: `faltan`, `opciones` (las
 cerradas que admite la regla, nunca las 117 si se pueden acotar), `sugerido`, `preguntas` (en
@@ -1559,8 +1679,14 @@ formas exactas son los tipos TS citados):
 | `carga_asignacion` | `id` | `CargaAsignacion` (`asignacion.ts`): fecha, por, motivo, grupos (mes, campo, pozos, reemplazados) | solo se inserta: el rastro de quién cargó o reemplazó la oficial |
 | `cambio_planta` | `id` | `CambioPlanta` (`planta.ts`) | solo se inserta; la planta vigente es el resultado |
 | `topologia` | (`version`, `orden`); único (`version`, `campo_id`, `elemento`) | `ChokeDeElemento` (`choke.ts`) de cada versión firmada: elemento, alcance, choke, pozos, campo (null = todos), caso de borde | dentro de `version_config` (la `Config` lo trae en `topologia`); el `choke` tiene que ser el que sale del alcance |
-| `clasificacion_paso` | `id` (consecutivo); la vigente es la última por (`clave`, `paso`) | `DatoClasificado` (`anh-clasificacion.ts`) de lo que dijo una persona en una fila (`clave` = `ParadaAnh.id`) o en un evento (`clave` = `EventoPozo.id`): paso, valor, procedencia, regla, porqué, quién, rol, hora, lote, propuesto | solo se inserta (una corrección es una fila nueva: queda la anterior al lado); coherencia planeada/causa y causa/detalle revisada al confirmar |
-| `confirmacion_lote` | `id` | `ConfirmacionLote` (`anh-paradas.ts`): quién, cuándo, las filas, la cadena que vio y los pasos que subió | solo se inserta |
+| `clasificacion_paso` | `id` (consecutivo, `DatoClasificado.n`); la última por (`clave`, `paso`) en `v_clasificacion_vigente`; lo que rige en cada fila, paso por paso, en `v_clasificacion_fuente` | `DatoClasificado` (`anh-clasificacion.ts`) de lo que dijo una persona en una fila (`clave` = `ParadaAnh.id`) o en un evento (`clave` = `EventoPozo.id`): paso, valor, procedencia (`declarado`, `confirmado`, `corregido` o `retirado`), regla, porqué, quién, rol, hora, lote, propuesto | solo se inserta, y solo los pasos de cada petición (D1); en cada fila rige lo más reciente entre su clave y la de su evento; coherencia de lo que rige revisada al confirmar; persona activa, con su rol y su campo, y pasos de su rol (`paso_por_rol`); N1, N2 y causa general del catálogo (FK) |
+| `confirmacion_lote` | `id` | `ConfirmacionLote` (`anh-paradas.ts`): quién, cuándo, las filas, la cadena que vio (la de la petición) y los pasos que subió (al menos uno) | solo se inserta |
+| `respuesta_campo` | `id` (consecutivo, `RespuestaCampo.n`) | `RespuestaCampo` (`anh-clasificacion.ts`): la pregunta, el botón, lo que abre, acota o propone, quién y cuándo, por fila o por evento | solo se inserta, en el orden de la conversación; pregunta y opción del catálogo (`pregunta_campo`, `opcion_campo`) y el rol entre los que la contestan (`contesta_pregunta`) |
+| `revision_parada` | `id` (consecutivo, `RevisionAnh.n`) | `RevisionAnh`: motivo, a quién se le pide, quién y cuándo, por fila o por evento | solo se inserta; rige la más reciente entre la fila y su evento; no toca ningún paso |
+| `revision_atendida` | `revision_id` | `RevisionAnh.atendida`: quién la atendió y cuándo | una por revisión; la atiende el rol al que se le pidió o uno que revisa |
+| `topologia` · `topologia_por_saber` | (`version`, `orden`) | `ChokeDeElemento` y `ElementoPorSaber` (`choke.ts`) de cada versión firmada | dentro de `version_config`; un pozo solo se sirve a sí mismo; un equipo no está a la vez contestado y «Todavía no sé»; sin pozos repetidos |
+| `capacidades_campo` · `capacidad_firmada` | (`version`, `campo_id`) · (`version`, `campo_id`, `tramo`, `equipo`) | `CapacidadesCampo` y `CapacidadFirmada` (`capacidades.ts`) | dentro de `version_config`; la bomba es del tren de agua del campo |
+| `causa_n1` · `causa_n2` · `causa_general` · `paso_por_rol` · `pregunta_campo` · `contesta_pregunta` · `opcion_campo` | sus claves | los catálogos que cierran lo que se escribe (`anh-catalogo.ts`, `anh-clasificacion.ts`) | del producto: salen del motor |
 
 ---
 
@@ -1727,6 +1853,15 @@ El teléfono simulado de Identificar es del demo: con la fuente http no manda na
   lo que ya pasó por el tramo— se cumplió a mano en el demo (21-oct-2026: La Ceiba 12.000 →
   13.000 en el tren de crudo; Guacamayo 6.800 → 7.500 afuera y 7.400 → 7.500 en crudo); con las
   capacidades firmadas, la firma lo tiene que revisar.
+- **El campo ajeno en las vistas** (C-16): `403 sin-permiso` con una dirección que pide un campo
+  que la persona no tiene. Sin sesión, el demo no lo puede probar.
+- **Las preguntas de campo por WhatsApp** (B-33): la plantilla de Meta para la pregunta de la
+  clasificación («¿De dónde vino el corte?» con sus opciones numeradas), el registro de mensajes
+  que la manda al operador del campo cuando la fila tiene una pregunta de campo abierta (y la que
+  sigue cuando llega la respuesta), y la entrada del webhook, que usa las reglas de
+  `POST …/respuesta` con la persona del número.
+- **Los artefactos del SQL** (C-23): `ejemplos.sql`, `tablas.json` y `validacion.log` se
+  regeneran con `herramientas/validar.sh` en el commit de cierre, sobre el mismo código.
 - **La captura sin señal en la clasificación ANH** (U1 P-9): el cuerpo traería la hora del
   toque y el servidor guardaría la suya en `recibido`. Hoy la hora la pone el servidor.
 - **El resto del carril ANH de P1 §5**: el reparto por causa, responsable y planeación
@@ -1913,9 +2048,11 @@ type Propuestas = Array<{ elemento: string; pozos: string[]; porque: string; fue
 // GET /api/vistas/anh/paradas?campos&desde&hasta → ParadaAnh[]
 type Paso = 'responsable' | 'choke' | 'impacto' | 'planeacion' | 'n1' | 'n2'
 type Procedencia = 'senal' | 'registro' | 'regla' | 'conversion' | 'programa' | 'declarado' | 'confirmado' | 'corregido'
+  | 'retirado'                      // solo en `guardadas`: lo retiró una persona (con motivo) y rige lo de TRIM
 interface DatoClasificado<T, Q = string> {
   valor: T; procedencia: Procedencia; regla?: string; porque?: Q
   por?: string; porId?: string; rol?: string; hora?: ISO; recibido?: ISO; lote?: string; propuesto?: T   // por, porId, rol y hora: obligatorios si es de persona
+  n?: number                        // el consecutivo del servidor (clasificacion_paso.id): decide qué rige entre la fila y su evento
 }
 interface PorqueChoke { regla: string; elemento?: string; pozosServidos?: number; cascada?: { raiz: string; minutos: number }
   persona?: string; texto?: string; pregunta?: string; evidencia?: string }
@@ -1924,10 +2061,10 @@ interface Clasificacion {          // completa: los 6 pasos, coherentes; borrado
   planeacion?: DatoClasificado<'planeada' | 'no-planeada'>; n1?: DatoClasificado<string>; n2?: DatoClasificado<string>
   cauGral?: DatoClasificado<string>; descEvid?: DatoClasificado<string>; apunta?: { regla: 'senal-apunta@1'; porque: string }
   respuestas?: Array<{ pregunta: string; opcion: string; sigue?: string; acota?: Partial<Record<Paso, string[]>>; perdida?: string; noSe?: true
-    por: string; porId: string; rol: string; hora: ISO }>             // la conversación de campo: se sigue al leer la fila
+    por: string; porId: string; rol: string; hora: ISO; n?: number }>  // la conversación de campo: se sigue al leer la fila
   revision?: Revision
 }
-interface Revision { motivo: string; pedirA?: string; por: string; porId: string; rol: string; hora: ISO
+interface Revision { motivo: string; pedirA?: 'sup' | 'prod' | 'jefe' | 'conf'; por: string; porId: string; rol: string; hora: ISO; n?: number
   atendida?: { por: string; porId: string; rol: string; hora: ISO } }
 interface ParadaAnh {
   id: string                        // `${eventoId}@${diaOperacional}#${n}`
@@ -1963,11 +2100,11 @@ interface CalidadClasificacion {
 }
 
 // POST /api/anh/paradas/:id/clasificacion · POST /api/anh/paradas/:id/yacimiento
-type CuerpoClasificacion = { pasos: Partial<Record<Paso, string>>; motivo?: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; cadena?: string }
+type CuerpoClasificacion = { pasos: Partial<Record<Paso, string>>; motivo?: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; ids?: string[]; cadena?: string }   // ids: con aplicarALaCascada
 type CuerpoYacimiento = { evidencia: 'prueba' | 'corte-agua' | 'presion' | string; motivo?: string; aplicarAlEvento?: boolean; cadena?: string }
-type RespuestaClasificacion = { parada: ParadaAnh; guardadas: Record<string, Clasificacion> }   // clave: ParadaAnh.id o EventoPozo.id
+type RespuestaClasificacion = { parada: ParadaAnh; guardadas: Record<string, Clasificacion> }   // clave: ParadaAnh.id o EventoPozo.id; solo lo guardado en esta petición (pasos con su n, también los «retirado»)
 // POST /api/anh/paradas/confirmar
-type CuerpoConfirmacion = { ids: string[]; cadena?: string; pasos?: Paso[] }
+type CuerpoConfirmacion = { ids: string[]; cadena: string; pasos?: Paso[] }   // cadena: la que vio la persona (obligatoria)
 type RespuestaConfirmacion = { paradas: ParadaAnh[]; lote?: { id: string; porId: string; por: string; hora: ISO; paradas: string[]; cadena: string; pasos: Paso[] } }
 // POST /api/configuracion/vista-previa
 type CuerpoVistaPrevia = { config: Config }
@@ -1980,7 +2117,7 @@ type RespuestaVistaPrevia = { impacto: { desde: ISO; hasta: ISO; campos: Array<{
 type CuerpoTopologiaCsv = { campo: string; texto: string }
 type RespuestaTopologiaCsv = { campoId: string; topologia: ChokeDeElemento[]; porSaber: string[]; hallazgos: Array<{ fila: number; equipo?: string; texto: string; bloquea: boolean }>; filas: number }
 // POST /api/anh/paradas/:id/respuesta → RespuestaClasificacion
-type CuerpoRespuestaAnh = { pregunta: string; opcion: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; cadena?: string }   // opcion: el texto del botón
+type CuerpoRespuestaAnh = { pregunta: string; opcion: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; ids?: string[]; cadena?: string }   // opcion: el texto del botón
 // POST /api/anh/paradas/:id/revision → RespuestaClasificacion
-type CuerpoRevisionAnh = { motivo: string; pedirA?: 'sup' | 'prod' | 'jefe' | 'conf'; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; cadena?: string }
+type CuerpoRevisionAnh = { motivo: string; pedirA?: 'sup' | 'prod' | 'jefe' | 'conf'; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; ids?: string[]; cadena?: string }
 ```

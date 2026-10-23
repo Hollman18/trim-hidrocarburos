@@ -183,6 +183,11 @@
                 "message": "Del motor (choke-arbol) las pantallas y el estado de la aplicación no importan nada: el árbol, sus palabras y sus reglas de presentación llegan por la costura: src/shared/api/choke.ts."
               },
               {
+                "name": "@/entities/choke-reparto",
+                "allowTypeImports": true,
+                "message": "Del motor (choke-reparto) las pantallas y el estado de la aplicación no importan nada: lo perdido por tramo, la tubería, la serie y el mes a mes llegan por la costura: src/shared/api/choke.ts."
+              },
+              {
                 "name": "@/entities/choke-agua",
                 "allowTypeImports": true,
                 "message": "Del motor (choke-agua) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts.",

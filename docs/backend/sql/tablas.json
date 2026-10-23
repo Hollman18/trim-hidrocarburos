@@ -8005,9 +8005,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((alcance <> 'dedicado'::text) OR (COALESCE(cardinality(pozos), 0) = 1))) · CHECK (((alcance <> 'compartido'::text) OR (COALESCE(cardinality(pozos), 0) <> 1)))",
+     "check": "CHECK (((alcance <> 'dedicado'::text) OR (COALESCE(cardinality(pozos), 0) = 1))) · CHECK (((alcance <> 'compartido'::text) OR (COALESCE(cardinality(pozos), 0) <> 1))) · CHECK (\"trim\".sin_repetidos(pozos))",
      "defecto": null,
-     "descripcion": "«¿A qué pozos sirve?»: dedicado, exactamente uno; compartido, ninguno o más de uno. Cada pozo es del campo (trigger). NULL = no se dijo.",
+     "descripcion": "«¿A qué pozos sirve?»: dedicado, exactamente uno; compartido, ninguno o más de uno, sin repetidos. Cada pozo es del campo (trigger). NULL = no se dijo. Que el elemento esté en el registro del campo lo revisa el servidor (validarConfig, 422): la topología que TRIM deriva del registro no vive en una tabla.",
      "ejemplo": null
     },
     {
@@ -8187,6 +8187,7 @@
     "Solo inserción.",
     "Una bomba es del tren de agua del campo; cada número con su fuente (validarCapacidades, 422).",
     "El tren de crudo y afuera no dejan pasar menos de lo máximo que ya pasó en un día en los últimos 30 (revisarCapacidades, 422); un cambio de más del 20 % solo pide confirmar.",
+    "capacidad_bomba_del_tren [trigger capacidad_bomba_del_tren: INSERT]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidad_firmada_sin_truncate: TRUNCATE]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidad_firmada_solo_insercion: UPDATE DELETE]"
    ],
@@ -8294,7 +8295,7 @@
    "nombre": "rol",
    "grupo": "f",
    "clase": "tabla",
-   "descripcion": "Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija el producto: el gerente decide quién tiene cada rol, no qué hace el rol. visible=false son los de la versión 2 (plan, cont, reg), que no se ofrecen.",
+   "descripcion": "Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija el producto: el gerente decide quién tiene cada rol, no qué hace el rol. visible=false son los de la versión 2 (plan, cont), que no se ofrecen: ninguna persona tiene uno (trigger de usuario) y ninguna escritura los acepta.",
    "tipoTS": "Rol (src/entities/tipos.ts; ROLES en roles.ts)",
    "endpoints": [
     "GET /api/sesion → rolId, nivel"
@@ -8311,7 +8312,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Id del rol (ger, prod, sup, oper, jefe, conf, tec, adm).",
+     "descripcion": "Id del rol (ger, prod, sup, oper, jefe, conf, tec, reg, adm; plan y cont, de la versión 2).",
      "ejemplo": "adm"
     },
     {
@@ -8775,7 +8776,7 @@
      "check": "CHECK (((NOT alertas) OR (telefono IS NOT NULL))) · CHECK ((telefono ~ '^\\+[0-9]{8,15}$'::text))",
      "defecto": null,
      "descripcion": "WhatsApp en E.164 (+573005550101): así se guarda, viaja y compara. NULL = sin número.",
-     "ejemplo": "+573005550108"
+     "ejemplo": "+573005550109"
     },
     {
      "nombre": "alertas",
@@ -8811,7 +8812,7 @@
      "todos_los_campos": true,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550108",
+     "telefono": "+573005550109",
      "alertas": false,
      "antes_de_suspender": null
     },
@@ -11305,19 +11306,542 @@
    "filas": []
   },
   {
+   "nombre": "causa_n1",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Las 20 causas de la Tabla 1 de la Circular 024 (TABLA_1 de src/entities/anh-catalogo.ts): 8 planeadas (P_…) y 12 no planeadas (NP_…). clasificacion_paso.valor del paso n1 tiene que estar aquí (FK, C-07).",
+   "tipoTS": "TABLA_1 y ClaveN1 (src/entities/anh-catalogo.ts)",
+   "endpoints": [
+    "GET /api/vistas/anh/paradas (los códigos)"
+   ],
+   "quienEscribe": "Producto (el catálogo de la circular).",
+   "reglas": [
+    "Las 20 causas: 8 planeadas (P_…) y 12 no planeadas (NP_…). El paso n1 de clasificacion_paso tiene que estar aquí (FK)."
+   ],
+   "columnas": [
+    {
+     "nombre": "clave",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((planeacion = 'planeada'::text) = (\"left\"(clave, 2) = 'P_'::text))) · CHECK ((clave ~ '^N?P_[A-Z_]+$'::text))",
+     "defecto": null,
+     "descripcion": "La clave de la circular (NP_SUB, P_MANT_ELE…).",
+     "ejemplo": "NP_AUT"
+    },
+    {
+     "nombre": "planeacion",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((planeacion = 'planeada'::text) = (\"left\"(clave, 2) = 'P_'::text))) · CHECK ((planeacion = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))",
+     "defecto": null,
+     "descripcion": "planeada o no-planeada: la que va con esta causa (la coherencia bloqueada, C24 p.7).",
+     "ejemplo": "no-planeada"
+    },
+    {
+     "nombre": "texto",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(texto) <> ''::text))",
+     "defecto": null,
+     "descripcion": "El texto de la circular.",
+     "ejemplo": "No planeada - Autoridad / Restricción"
+    }
+   ],
+   "filas": [
+    {
+     "clave": "NP_AUT",
+     "planeacion": "no-planeada",
+     "texto": "No planeada - Autoridad / Restricción"
+    },
+    {
+     "clave": "NP_CLIMA",
+     "planeacion": "no-planeada",
+     "texto": "No planeada - Clima / Natural"
+    },
+    {
+     "clave": "NP_CTRL",
+     "planeacion": "no-planeada",
+     "texto": "No planeada - Control / Comunicaciones"
+    },
+    {
+     "clave": "NP_ENEXT",
+     "planeacion": "no-planeada",
+     "texto": "No planeada - Energía externa"
+    },
+    {
+     "clave": "NP_ENINT",
+     "planeacion": "no-planeada",
+     "texto": "No planeada - Eléctrica interna"
+    }
+   ]
+  },
+  {
+   "nombre": "causa_n2",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Los N2 de cada versión del catálogo (N2_CIRCULAR y VERSIONES_CATALOGO de anh-catalogo.ts): 117 en la circular. clasificacion_paso.valor del paso n2 tiene que estar aquí, en su versión (FK, C-07).",
+   "tipoTS": "N2_CIRCULAR y VERSIONES_CATALOGO (src/entities/anh-catalogo.ts)",
+   "endpoints": [
+    "GET /api/vistas/anh/paradas (los códigos)"
+   ],
+   "quienEscribe": "Producto (el catálogo de cada versión).",
+   "reglas": [
+    "Los N2 de cada versión del catálogo, con su N1 (el prefijo del código). El paso n2 de clasificacion_paso tiene que estar aquí, en su versión (FK)."
+   ],
+   "columnas": [
+    {
+     "nombre": "version_catalogo",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((version_catalogo = ANY (ARRAY['C024-2026'::text, 'DICC-V3.2'::text])))",
+     "defecto": null,
+     "descripcion": "C024-2026 (la circular) o DICC-V3.2 (el diccionario).",
+     "ejemplo": "C024-2026"
+    },
+    {
+     "nombre": "codigo",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((\"left\"(codigo, (char_length(n1) + 1)) = (n1 || '/'::text))) · CHECK ((codigo ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))",
+     "defecto": null,
+     "descripcion": "El código interno ${n1}/${slug}.",
+     "ejemplo": "NP_AUT/restriccion-ambiental"
+    },
+    {
+     "nombre": "n1",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": "causa_n1.clave",
+     "unico": null,
+     "check": "CHECK ((\"left\"(codigo, (char_length(n1) + 1)) = (n1 || '/'::text)))",
+     "defecto": null,
+     "descripcion": "La causa a la que pertenece (el prefijo del código).",
+     "ejemplo": "NP_AUT"
+    },
+    {
+     "nombre": "texto",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(texto) <> ''::text))",
+     "defecto": null,
+     "descripcion": "La cadena de la Tabla 1 (o del diccionario) en esa versión.",
+     "ejemplo": "Restricción ambiental"
+    }
+   ],
+   "filas": [
+    {
+     "version_catalogo": "C024-2026",
+     "codigo": "NP_AUT/restriccion-ambiental",
+     "n1": "NP_AUT",
+     "texto": "Restricción ambiental"
+    },
+    {
+     "version_catalogo": "C024-2026",
+     "codigo": "NP_AUT/restriccion-autoridad",
+     "n1": "NP_AUT",
+     "texto": "Restricción autoridad"
+    },
+    {
+     "version_catalogo": "C024-2026",
+     "codigo": "NP_AUT/suspension-orden-autoridad",
+     "n1": "NP_AUT",
+     "texto": "Suspensión/orden autoridad"
+    },
+    {
+     "version_catalogo": "C024-2026",
+     "codigo": "NP_CLIMA/deslizamiento-derrumbe",
+     "n1": "NP_CLIMA",
+     "texto": "Deslizamiento / derrumbe"
+    },
+    {
+     "version_catalogo": "C024-2026",
+     "codigo": "NP_CLIMA/fuertes-lluvias-vias-intransitables",
+     "n1": "NP_CLIMA",
+     "texto": "Fuertes lluvias / vías intransitables"
+    }
+   ]
+  },
+  {
+   "nombre": "causa_general",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Las 18 causas de paro de la Res. 0651 art. 15.1 par. 2 para cau_gral_paro (CAUSAS_GENERALES de anh-catalogo.ts). Lo que dice una persona de la causa general es una de ellas, nunca un texto libre: lo escrito no viaja a la ANH (D2).",
+   "tipoTS": "CAUSAS_GENERALES (src/entities/anh-catalogo.ts)",
+   "endpoints": [
+    "GET /api/vistas/anh/paradas (cau_gral)"
+   ],
+   "quienEscribe": "Producto (Res. 0651).",
+   "reglas": [
+    "Las 18 causas de paro. Lo que dice una persona de la causa general es una de ellas, nunca un texto libre (D2)."
+   ],
+   "columnas": [
+    {
+     "nombre": "id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))",
+     "defecto": null,
+     "descripcion": "Código interno (mecanico, electrico…).",
+     "ejemplo": "abandono"
+    },
+    {
+     "nombre": "texto",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(texto) <> ''::text))",
+     "defecto": null,
+     "descripcion": "El texto de la resolución.",
+     "ejemplo": "abandono"
+    }
+   ],
+   "filas": [
+    {
+     "id": "abandono",
+     "texto": "abandono"
+    },
+    {
+     "id": "alto-sw",
+     "texto": "alto S&W"
+    },
+    {
+     "id": "ambiental",
+     "texto": "ambiental"
+    },
+    {
+     "id": "bajo-potencial",
+     "texto": "bajo potencial"
+    },
+    {
+     "id": "bombeo-transporte",
+     "texto": "bombeo/transporte"
+    }
+   ]
+  },
+  {
+   "nombre": "paso_por_rol",
+   "grupo": "f",
+   "clase": "tabla",
+   "descripcion": "Qué pasos dice (PASOS_QUE_DECLARA) y cuáles confirma (PASOS_QUE_CONFIRMA) cada rol (anh-clasificacion.ts): el operador y el técnico, solo lo de su terreno; supervisión, producción, el jefe y confiabilidad, los seis. Lo revisa el trigger de clasificacion_paso (C-07).",
+   "tipoTS": "PASOS_QUE_DECLARA y PASOS_QUE_CONFIRMA (src/entities/anh-clasificacion.ts)",
+   "endpoints": [
+    "POST /api/anh/paradas/:id/clasificacion (403 en un paso ajeno)",
+    "POST /api/anh/paradas/confirmar (403 en un paso ajeno)"
+   ],
+   "quienEscribe": "Producto.",
+   "reglas": [
+    "Lo revisa el trigger de clasificacion_paso: confirmado y corregido solo en los pasos del rol; un declarado ajeno solo desde una respuesta de campo (preguntas:campo@1), que no lo avala (C-07)."
+   ],
+   "columnas": [
+    {
+     "nombre": "rol_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": "rol.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Rol.",
+     "ejemplo": "conf"
+    },
+    {
+     "nombre": "paso",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((paso = ANY (ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text])))",
+     "defecto": null,
+     "descripcion": "Paso de la clasificación.",
+     "ejemplo": "choke"
+    },
+    {
+     "nombre": "accion",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((accion = ANY (ARRAY['declara'::text, 'confirma'::text])))",
+     "defecto": null,
+     "descripcion": "declara (lo dice, declarado o corregido) o confirma (sube lo propuesto a confirmado).",
+     "ejemplo": "confirma"
+    }
+   ],
+   "filas": [
+    {
+     "rol_id": "conf",
+     "paso": "choke",
+     "accion": "confirma"
+    },
+    {
+     "rol_id": "conf",
+     "paso": "choke",
+     "accion": "declara"
+    },
+    {
+     "rol_id": "conf",
+     "paso": "impacto",
+     "accion": "confirma"
+    },
+    {
+     "rol_id": "conf",
+     "paso": "impacto",
+     "accion": "declara"
+    },
+    {
+     "rol_id": "conf",
+     "paso": "n1",
+     "accion": "confirma"
+    }
+   ]
+  },
+  {
+   "nombre": "pregunta_campo",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Las preguntas de campo de una parada (IdPregunta y PREGUNTAS_CAMPO de anh-clasificacion.ts) y quién las contesta. Las de la causa, el detalle y el tramo las arma el motor por fila (raiz, detalle, choke): su texto aquí es el genérico.",
+   "tipoTS": "IdPregunta y PREGUNTAS_CAMPO (src/entities/anh-clasificacion.ts)",
+   "endpoints": [
+    "GET /api/vistas/anh/paradas (propuesta.preguntas)",
+    "POST /api/anh/paradas/:id/respuesta"
+   ],
+   "quienEscribe": "Producto.",
+   "reglas": [
+    "Las preguntas de campo y quién las contesta; las de la causa, el detalle y el tramo las arma el motor por fila."
+   ],
+   "columnas": [
+    {
+     "nombre": "id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "IdPregunta (que-lo-paro, corte, detalle…).",
+     "ejemplo": "afecto-clima"
+    },
+    {
+     "nombre": "quien",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((quien = ANY (ARRAY['campo'::text, 'causa'::text, 'revisa'::text, 'yacimiento'::text])))",
+     "defecto": null,
+     "descripcion": "campo (el operador, el técnico y quienes revisan), causa (el técnico y quienes revisan), revisa (supervisión, producción, el jefe y confiabilidad) o yacimiento (producción y confiabilidad).",
+     "ejemplo": "campo"
+    },
+    {
+     "nombre": "texto",
+     "tipo": "text",
+     "nulo": false,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(texto) <> ''::text))",
+     "defecto": null,
+     "descripcion": "La pregunta, sin códigos.",
+     "ejemplo": "¿Qué se afectó?"
+    }
+   ],
+   "filas": [
+    {
+     "id": "afecto-clima",
+     "quien": "campo",
+     "texto": "¿Qué se afectó?"
+    },
+    {
+     "id": "afecto-orden-publico",
+     "quien": "campo",
+     "texto": "¿Qué se afectó?"
+    },
+    {
+     "id": "aporte",
+     "quien": "yacimiento",
+     "texto": "Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?"
+    },
+    {
+     "id": "choke",
+     "quien": "revisa",
+     "texto": "¿Dónde se originó la parada: en el pozo, en la planta o afuera?"
+    },
+    {
+     "id": "corte",
+     "quien": "campo",
+     "texto": "¿De dónde vino el corte?"
+    }
+   ]
+  },
+  {
+   "nombre": "contesta_pregunta",
+   "grupo": "f",
+   "clase": "tabla",
+   "descripcion": "Qué roles contestan cada grupo de preguntas (ROLES_QUE_CONTESTAN de anh-clasificacion.ts): al operador nunca se le pregunta dónde se trabó, la causa ni el detalle (C-07).",
+   "tipoTS": "ROLES_QUE_CONTESTAN (src/entities/anh-clasificacion.ts)",
+   "endpoints": [
+    "POST /api/anh/paradas/:id/respuesta (403 si el rol no la contesta)"
+   ],
+   "quienEscribe": "Producto.",
+   "reglas": [
+    "Al operador nunca se le pregunta dónde se trabó, la causa ni el detalle; el yacimiento, solo producción y confiabilidad."
+   ],
+   "columnas": [
+    {
+     "nombre": "quien",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((quien = ANY (ARRAY['campo'::text, 'causa'::text, 'revisa'::text, 'yacimiento'::text])))",
+     "defecto": null,
+     "descripcion": "El grupo de preguntas.",
+     "ejemplo": "campo"
+    },
+    {
+     "nombre": "rol_id",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": "rol.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "Un rol que las contesta.",
+     "ejemplo": "conf"
+    }
+   ],
+   "filas": [
+    {
+     "quien": "campo",
+     "rol_id": "conf"
+    },
+    {
+     "quien": "campo",
+     "rol_id": "jefe"
+    },
+    {
+     "quien": "campo",
+     "rol_id": "oper"
+    },
+    {
+     "quien": "campo",
+     "rol_id": "prod"
+    },
+    {
+     "quien": "campo",
+     "rol_id": "sup"
+    }
+   ]
+  },
+  {
+   "nombre": "opcion_campo",
+   "grupo": "g",
+   "clase": "tabla",
+   "descripcion": "Los botones de cada pregunta (OpcionCampo.texto): las fijas y, en las que arma el motor, todas las posibles (las 20 causas en palabras de campo, los 117 detalles, los tramos) con «No sé». respuesta_campo.opcion tiene que estar aquí (FK, C-07).",
+   "tipoTS": "OpcionCampo.texto (src/entities/anh-clasificacion.ts)",
+   "endpoints": [
+    "POST /api/anh/paradas/:id/respuesta (422 si la opción no es de la pregunta)"
+   ],
+   "quienEscribe": "Producto.",
+   "reglas": [
+    "Todos los botones posibles de cada pregunta, con «No sé». respuesta_campo.opcion tiene que estar aquí (FK)."
+   ],
+   "columnas": [
+    {
+     "nombre": "pregunta",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": "pregunta_campo.id",
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": "La pregunta.",
+     "ejemplo": "afecto-clima"
+    },
+    {
+     "nombre": "texto",
+     "tipo": "text",
+     "nulo": false,
+     "pk": true,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK ((btrim(texto) <> ''::text))",
+     "defecto": null,
+     "descripcion": "El texto exacto del botón.",
+     "ejemplo": "El oleoducto"
+    }
+   ],
+   "filas": [
+    {
+     "pregunta": "afecto-clima",
+     "texto": "El oleoducto"
+    },
+    {
+     "pregunta": "afecto-clima",
+     "texto": "El pozo, la locación o la vía"
+    },
+    {
+     "pregunta": "afecto-clima",
+     "texto": "No sé"
+    },
+    {
+     "pregunta": "afecto-clima",
+     "texto": "Un instrumento"
+    },
+    {
+     "pregunta": "afecto-orden-publico",
+     "texto": "El oleoducto"
+    }
+   ]
+  },
+  {
    "nombre": "confirmacion_lote",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Solo inserción.",
+   "descripcion": "Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Un lote que no sube ningún paso no se guarda (C-19). Solo inserción.",
    "tipoTS": "ConfirmacionLote (src/entities/anh-paradas.ts)",
    "endpoints": [
     "POST /api/anh/paradas/confirmar (varias filas)"
    ],
-   "quienEscribe": "Persona con anh:confirmar (supervisión y producción) y los campos de las filas.",
+   "quienEscribe": "Persona activa con anh:confirmar (supervisión y producción), con su rol y con el campo de cada fila.",
    "reglas": [
     "Solo inserción.",
     "Las filas tienen la misma cadena completa de 6 pasos (422 si no).",
-    "409 si la cadena que vio la persona ya no es la de alguna fila.",
+    "cadena es obligatoria y es la que vio la persona: 409 si ya no es la de alguna fila (C-06).",
+    "Un lote que no sube ningún paso no se guarda (409; check cardinality > 0, C-19).",
+    "Las marcas del lote quedan en cada fila, nunca en su evento: no se copian a otra fila.",
     "Confirma en lote quien tiene anh:confirmar. [trigger confirmacion_lote_reglas: INSERT]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger confirmacion_lote_sin_truncate: TRUNCATE]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger confirmacion_lote_solo_insercion: UPDATE DELETE]"
@@ -11344,7 +11868,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Persona que confirmó (del token).",
+     "descripcion": "Persona que confirmó (del token): activa, con el rol de rol_id y con el campo de cada fila (trigger).",
      "ejemplo": null
     },
     {
@@ -11368,7 +11892,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Rol con que confirmó: decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).",
+     "descripcion": "Rol con que confirmó: el de la persona; decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).",
      "ejemplo": null
     },
     {
@@ -11404,7 +11928,7 @@
      "unico": null,
      "check": "CHECK ((btrim(cadena) <> ''::text))",
      "defecto": null,
-     "descripcion": "La cadena de 6 pasos que vio, en códigos internos («op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/…»).",
+     "descripcion": "La cadena de 6 pasos que VIO quien confirma: la de la petición (obligatoria, C-06), en códigos internos («op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/…»).",
      "ejemplo": null
     },
     {
@@ -11414,9 +11938,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((pasos <@ ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text]))",
+     "check": "CHECK (((pasos <@ ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text]) AND (cardinality(pasos) > 0)))",
      "defecto": null,
-     "descripcion": "Los pasos que subió a confirmado según su rol (y la regla «una señal apunta»).",
+     "descripcion": "Los pasos que subió a confirmado según su rol (y la regla «una señal apunta»): al menos uno.",
      "ejemplo": null
     }
    ],
@@ -11426,23 +11950,26 @@
    "nombre": "clasificacion_paso",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos). POST /api/anh/paradas/:id/clasificacion, …/yacimiento y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. Solo inserción: una corrección es una fila nueva y la anterior queda al lado. La que rige es la última por (clave, paso): v_clasificacion_vigente. Coherencia planeada/causa y causa/detalle revisada al confirmar (trigger diferido).",
+   "descripcion": "Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos salvo el de exceso). POST /api/anh/paradas/:id/clasificacion, …/yacimiento, …/respuesta (el paso que la respuesta determina) y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. D1: cada escritura inserta SOLO los pasos que dijo esa persona en esa petición; solo inserción (una corrección es una fila nueva y la anterior queda al lado). En cada fila rige, paso por paso, lo más reciente entre su clave y la de su evento (v_clasificacion_fuente). Coherencia planeada/causa y causa/detalle de lo que rige, revisada al confirmar (trigger diferido).",
    "tipoTS": "DatoClasificado (src/entities/anh-clasificacion.ts) de lo que dijo una persona",
    "endpoints": [
     "POST /api/anh/paradas/:id/clasificacion",
     "POST /api/anh/paradas/:id/yacimiento",
+    "POST /api/anh/paradas/:id/respuesta (el paso que determina)",
     "POST /api/anh/paradas/confirmar",
     "GET /api/vistas/anh/paradas (aplicado)",
     "GET /api/vistas/anh/calidad"
    ],
-   "quienEscribe": "Persona con anh:clasificar (y anh:confirmar en lote, anh:yacimiento para «En el yacimiento»), solo en los pasos que su rol dice o avala.",
+   "quienEscribe": "Persona activa con anh:clasificar (y anh:confirmar en lote, anh:yacimiento para «En el yacimiento»), con su rol y su campo, solo en los pasos que su rol dice o avala (paso_por_rol).",
    "reglas": [
-    "Solo inserción: una corrección es una fila nueva; rige la última por (clave, paso).",
+    "D1: cada escritura inserta SOLO los pasos que dijo esa persona en esa petición, en una fila o en un evento («para la cascada»: una por evento de las filas que se vieron).",
+    "Solo inserción; en cada fila rige, paso por paso, lo más reciente entre su clave y la de su evento (v_clasificacion_fuente). El exceso del programa solo usa lo suyo.",
     "Lo que propone TRIM no se guarda: se vuelve a proponer con la regla de hoy al leer la fila.",
-    "Coherencia bloqueada al confirmar sobre lo que RIGE en el evento y en cada fila (v_clasificacion_fuente), no solo clave por clave: planeada solo con P_…, no planeada solo con NP_…, el detalle es de su causa (la ANH rechaza la transmisión entera).",
-    "exceso marca el tramo que se pasó de la ventana del programa: no hereda de su evento y lo guardado en el evento no lo reemplaza.",
-    "Cambiar lo que ya dijo una persona pide motivo (422); el operador no dice ni confirma dónde se trabó (403).",
-    "«En el yacimiento» solo de producción o confiabilidad y con evidencia.",
+    "retirado: lo que un cambio dejó incoherente de lo que dijo una persona, con quién y motivo; no rige (vuelve lo de TRIM).",
+    "Coherencia bloqueada al confirmar sobre lo que RIGE en cada fila y en el evento: planeada solo con P_…, no planeada solo con NP_…, el detalle es de su causa.",
+    "Cambiar lo que ya dijo una persona pide motivo (422 en la fila; 409 si es de otra persona en otra fila o evento); el operador no dice ni confirma dónde se trabó (403).",
+    "N1, N2 y la causa general, del catálogo (FK); la clave de una fila con la forma ${evento}@AAAA-MM-DD#n.",
+    "«En el yacimiento» solo de producción o confiabilidad y con evidencia; nunca se copia a otro pozo.",
     "Al confirmar: lo vigente de la parada es coherente (planeada con P_…, no planeada con NP_…, el detalle de su causa). [trigger clasificacion_coherente: INSERT, diferido]",
     "El evento es del campo; el rol tiene anh:clasificar (anh:confirmar en lote, anh:yacimiento para «En el yacimiento»); la fila está en su lote. [trigger clasificacion_paso_reglas: INSERT]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger clasificacion_paso_sin_truncate: TRUNCATE]",
@@ -11458,7 +11985,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Consecutivo del servidor: el orden en que se dijo.",
+     "descripcion": "Consecutivo del servidor: el orden en que se dijo (DatoClasificado.n). Decide qué rige entre la fila y su evento.",
      "ejemplo": null
     },
     {
@@ -11468,9 +11995,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text)))) · CHECK ((btrim(clave) <> ''::text))",
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text)))) · CHECK ((btrim(clave) <> ''::text))",
      "defecto": null,
-     "descripcion": "ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).",
+     "descripcion": "ParadaAnh.id (alcance fila, con la forma ${evento}@AAAA-MM-DD#n) o EventoPozo.id (alcance evento).",
      "ejemplo": null
     },
     {
@@ -11480,9 +12007,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((NOT exceso) OR (alcance = 'fila'::text))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((NOT exceso) OR (alcance = 'fila'::text))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text))))",
      "defecto": null,
-     "descripcion": "fila: solo ese tramo; evento: todos los tramos del evento (Unicidad, C24 p.5; aplicarAlEvento o aplicarALaCascada).",
+     "descripcion": "fila: solo ese tramo; evento: todos los tramos del evento salvo el de exceso (Unicidad, C24 p.5; aplicarAlEvento, o cada evento de aplicarALaCascada con las filas que se vieron).",
      "ejemplo": null
     },
     {
@@ -11492,7 +12019,7 @@
      "pk": false,
      "fk": "evento_pozo.id",
      "unico": null,
-     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text))))",
      "defecto": null,
      "descripcion": "El evento del controlador del pozo (de él sale el campo, nunca del cuerpo).",
      "ejemplo": null
@@ -11506,7 +12033,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Campo del evento (trigger): tiene que estar entre los de la persona (403).",
+     "descripcion": "Campo del evento (trigger): tiene que estar entre los de la persona, o la persona tiene «todos» (trigger, 403).",
      "ejemplo": null
     },
     {
@@ -11516,9 +12043,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK ((paso = ANY (ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text, 'cau_gral'::text, 'desc_evid'::text])))",
+     "check": "CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR (procedencia = 'retirado'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK ((paso = ANY (ARRAY['responsable'::text, 'choke'::text, 'impacto'::text, 'planeacion'::text, 'n1'::text, 'n2'::text, 'cau_gral'::text])))",
      "defecto": null,
-     "descripcion": "responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral, desc_evid.",
+     "descripcion": "responsable, choke, impacto, planeacion, n1, n2 (los 6 de la circular) o cau_gral. La descripción (desc_evid) no está: la arma TRIM con lo estructurado, nunca una persona (D2).",
      "ejemplo": null
     },
     {
@@ -11528,9 +12055,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((btrim(valor) <> ''::text) OR (paso = 'desc_evid'::text))) · CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text]))))",
+     "check": "CHECK (((paso <> 'n1'::text) OR (valor ~ '^N?P_[A-Z_]+$'::text))) · CHECK (((paso <> 'n2'::text) OR (valor ~ '^N?P_[A-Z_]+/[a-z0-9]+(-[a-z0-9]+)*$'::text))) · CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR (procedencia = 'retirado'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((paso <> 'responsable'::text) OR (valor = ANY (ARRAY['op-operacion'::text, 'op-mantenimiento'::text, 'op-planeacion'::text, 'ext-energia'::text, 'ext-transportador'::text, 'comunidad'::text, 'autoridad'::text, 'tercero'::text, 'fuerza-mayor'::text])))) · CHECK (((paso <> 'choke'::text) OR (valor = ANY (ARRAY['reservorio'::text, 'pozo'::text, 'planta'::text, 'exportacion'::text])))) · CHECK (((paso <> 'impacto'::text) OR (valor = ANY (ARRAY['diferida'::text, 'perdida'::text])))) · CHECK (((paso <> 'planeacion'::text) OR (valor = ANY (ARRAY['planeada'::text, 'no-planeada'::text])))) · CHECK ((btrim(valor) <> ''::text))",
      "defecto": null,
-     "descripcion": "El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…). Del catálogo de version_catalogo.",
+     "descripcion": "El valor en código interno (pozo, no-planeada, NP_PROC, NP_PROC/parada-estacion-bombeo-afecta-pozos…), del catálogo de version_catalogo. En un «retirado», el valor que se retiró.",
      "ejemplo": null
     },
     {
@@ -11540,9 +12067,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((procedencia <> 'corregido'::text) OR (propuesto IS NOT NULL))) · CHECK (((lote_id IS NULL) OR (procedencia = 'confirmado'::text))) · CHECK ((procedencia = ANY (ARRAY['declarado'::text, 'confirmado'::text, 'corregido'::text])))",
+     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR (procedencia = 'retirado'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((procedencia <> 'corregido'::text) OR (propuesto IS NOT NULL))) · CHECK (((lote_id IS NULL) OR (procedencia = 'confirmado'::text))) · CHECK (((procedencia <> 'retirado'::text) OR \"trim\".alcanza((porque #>> '{}'::text[]), 5))) · CHECK ((procedencia = ANY (ARRAY['declarado'::text, 'confirmado'::text, 'corregido'::text, 'retirado'::text])))",
      "defecto": null,
-     "descripcion": "declarado (lo que faltaba), confirmado (lo que TRIM proponía, aceptado) o corregido (cambió lo que TRIM proponía). Lo que propone TRIM no se guarda.",
+     "descripcion": "declarado (lo que faltaba, o lo que determinó una respuesta), confirmado (lo que TRIM proponía, aceptado), corregido (cambió lo que TRIM proponía) o retirado (un cambio lo dejó incoherente: no rige y vuelve lo que propone TRIM). Lo que propone TRIM no se guarda.",
      "ejemplo": null
     },
     {
@@ -11564,9 +12091,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text))))",
+     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR (procedencia = 'retirado'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text)))) · CHECK (((procedencia <> 'retirado'::text) OR \"trim\".alcanza((porque #>> '{}'::text[]), 5)))",
      "defecto": null,
-     "descripcion": "El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección).",
+     "descripcion": "El porqué: en el paso 2, PorqueChoke (regla, elemento, pozosServidos, cascada, persona, texto, pregunta, evidencia); en los demás, el texto (el motivo de una corrección o de un retiro). Se queda en TRIM: no viaja a la ANH (D2).",
      "ejemplo": null
     },
     {
@@ -11578,7 +12105,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Persona (del token).",
+     "descripcion": "Persona (del token): activa (trigger).",
      "ejemplo": null
     },
     {
@@ -11600,9 +12127,9 @@
      "pk": false,
      "fk": "rol.id",
      "unico": null,
-     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text))))",
+     "check": "CHECK (((paso <> 'choke'::text) OR (valor <> 'reservorio'::text) OR (procedencia = 'retirado'::text) OR ((rol_id = ANY (ARRAY['prod'::text, 'conf'::text])) AND (btrim(COALESCE((porque ->> 'evidencia'::text), ''::text)) <> ''::text))))",
      "defecto": null,
-     "descripcion": "Rol con que lo dijo: decide si lo puede avalar (PASOS_QUE_DECLARA, PASOS_QUE_CONFIRMA). En el yacimiento, prod o conf.",
+     "descripcion": "Rol con que lo dijo: el de la persona (trigger). Decide si lo puede decir o avalar (paso_por_rol). En el yacimiento, prod o conf.",
      "ejemplo": null
     },
     {
@@ -11638,7 +12165,7 @@
      "unico": null,
      "check": "CHECK (((lote_id IS NULL) OR (procedencia = 'confirmado'::text)))",
      "defecto": null,
-     "descripcion": "El lote, si se confirmó en lote (solo confirmado).",
+     "descripcion": "El lote, si se confirmó en lote (solo confirmado). Se guarda en la fila, nunca en su evento: no se copia.",
      "ejemplo": null
     },
     {
@@ -11658,7 +12185,7 @@
      "tipo": "text",
      "nulo": false,
      "pk": false,
-     "fk": null,
+     "fk": "causa_n2.version_catalogo",
      "unico": null,
      "check": "CHECK ((version_catalogo = ANY (ARRAY['C024-2026'::text, 'DICC-V3.2'::text])))",
      "defecto": "'C024-2026'::text",
@@ -11674,7 +12201,43 @@
      "unico": null,
      "check": "CHECK (((NOT exceso) OR (alcance = 'fila'::text)))",
      "defecto": "false",
-     "descripcion": "La fila es el tramo que se pasó de la ventana del programa (ParadaAnh.exceso): otra decisión, no planeada. No hereda de su evento y lo que se guarde en el evento no la reemplaza.",
+     "descripcion": "La fila es el tramo que se pasó de la ventana del programa (ParadaAnh.exceso): otra decisión, no planeada. No hereda de su evento.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "n1_codigo",
+     "tipo": "text (generada)",
+     "nulo": true,
+     "pk": false,
+     "fk": "causa_n1.clave",
+     "unico": null,
+     "check": null,
+     "defecto": "\nCASE\n    WHEN (paso = 'n1'::text) THEN valor\n    ELSE NULL::text\nEND",
+     "descripcion": "El valor del paso n1 (generada): llave foránea a causa_n1.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "n2_codigo",
+     "tipo": "text (generada)",
+     "nulo": true,
+     "pk": false,
+     "fk": "causa_n2.codigo",
+     "unico": null,
+     "check": null,
+     "defecto": "\nCASE\n    WHEN (paso = 'n2'::text) THEN valor\n    ELSE NULL::text\nEND",
+     "descripcion": "El valor del paso n2 (generada): llave foránea a causa_n2 de su versión.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "cau_gral_id",
+     "tipo": "text (generada)",
+     "nulo": true,
+     "pk": false,
+     "fk": "causa_general.id",
+     "unico": null,
+     "check": null,
+     "defecto": "\nCASE\n    WHEN (paso = 'cau_gral'::text) THEN valor\n    ELSE NULL::text\nEND",
+     "descripcion": "El valor del paso cau_gral (generada): llave foránea a causa_general (nunca un texto libre, D2).",
      "ejemplo": null
     }
    ],
@@ -11684,18 +12247,19 @@
    "nombre": "respuesta_campo",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clasificacion.ts): lo que una persona contestó a una pregunta abierta («¿Qué lo paró?», «¿De dónde vino el corte?»…). POST /api/anh/paradas/:id/respuesta corre responder(): lo que la opción deja va a clasificacion_paso como dicho por esa persona; aquí queda la respuesta, para seguir la conversación al leer la fila (la pregunta que abrió, sigue, llega en la vista). «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa. Quién contesta cada pregunta (ROLES_QUE_CONTESTAN) lo revisa el servidor antes de insertar (403). Solo inserción, en el orden de id.",
+   "descripcion": "La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clasificacion.ts): lo que una persona contestó a una pregunta abierta («¿Qué lo paró?», «¿De dónde vino el corte?»…). POST /api/anh/paradas/:id/respuesta corre responder(): la respuesta no corrige ni confirma (D1); solo el paso que determina va a clasificacion_paso como declarado por esa persona; aquí queda la respuesta, para seguir la conversación al leer la fila. «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa. Quién contesta cada pregunta (contesta_pregunta) y sus opciones (opcion_campo) los revisa el trigger. Solo inserción, en el orden de id.",
    "tipoTS": "RespuestaCampo (src/entities/anh-clasificacion.ts; BorradorClasificacion.respuestas)",
    "endpoints": [
     "POST /api/anh/paradas/:id/respuesta",
     "GET /api/vistas/anh/paradas (la conversación se sigue al leer la fila)"
    ],
-   "quienEscribe": "Persona con anh:clasificar, en los campos de la persona, si su rol contesta esa pregunta (ROLES_QUE_CONTESTAN).",
+   "quienEscribe": "Persona activa con anh:clasificar, con su rol y su campo, si su rol contesta esa pregunta (contesta_pregunta).",
    "reglas": [
     "Solo inserción, en el orden de id: es la conversación.",
-    "Lo que la opción deja va a clasificacion_paso como dicho por esa persona; un paso que su rol no avala queda declarado y lo confirma quien revisa.",
-    "Una pregunta que ya se cerró es 409; una opción que no es de la pregunta, 422; al operador nunca se le pregunta dónde se trabó (403).",
-    "«No sé» no fija nada: la pregunta sigue abierta y escala.",
+    "La respuesta no corrige ni confirma (D1): solo el paso que determina va a clasificacion_paso como declarado por esa persona; lo que ya dijo una persona no se toca.",
+    "La pregunta y su opción, del catálogo (FK a pregunta_campo y opcion_campo); acota solo pasos.",
+    "Una pregunta que otra persona ya contestó es 409; una que no es de la parada, 422; una opción que no es de la pregunta, 422; al operador nunca se le pregunta dónde se trabó (403).",
+    "«No sé» no fija nada: la pregunta sigue abierta y escala; repetirlo no se guarda dos veces.",
     "El evento es del campo y el rol tiene anh:clasificar. [trigger respuesta_campo_reglas: INSERT]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_campo_sin_truncate: TRUNCATE]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_campo_solo_insercion: UPDATE DELETE]"
@@ -11710,7 +12274,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Consecutivo del servidor: el orden de la conversación.",
+     "descripcion": "Consecutivo del servidor: el orden de la conversación (RespuestaCampo.n).",
      "ejemplo": null
     },
     {
@@ -11720,7 +12284,7 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text)))) · CHECK ((btrim(clave) <> ''::text))",
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text)))) · CHECK ((btrim(clave) <> ''::text))",
      "defecto": null,
      "descripcion": "ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento: vale para todos sus tramos), como en clasificacion_paso.",
      "ejemplo": null
@@ -11732,9 +12296,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text))))",
      "defecto": null,
-     "descripcion": "fila o evento (aplicarAlEvento, aplicarALaCascada).",
+     "descripcion": "fila o evento (aplicarAlEvento; aplicarALaCascada, una por evento de las filas que se vieron).",
      "ejemplo": null
     },
     {
@@ -11744,7 +12308,7 @@
      "pk": false,
      "fk": "evento_pozo.id",
      "unico": null,
-     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text))))",
      "defecto": null,
      "descripcion": "El evento del controlador del pozo.",
      "ejemplo": null
@@ -11758,7 +12322,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Campo del evento (trigger): entre los de la persona (403).",
+     "descripcion": "Campo del evento: entre los de la persona (trigger).",
      "ejemplo": null
     },
     {
@@ -11766,11 +12330,11 @@
      "tipo": "text",
      "nulo": false,
      "pk": false,
-     "fk": null,
+     "fk": "pregunta_campo.id · opcion_campo.pregunta",
      "unico": null,
-     "check": "CHECK ((pregunta = ANY (ARRAY['que-lo-paro'::text, 'tanques'::text, 'oleoducto'::text, 'afecto-clima'::text, 'afecto-orden-publico'::text, 'corte'::text, 'trabajo'::text, 'programado'::text, 'se-perdio'::text, 'nominacion'::text, 'aporte'::text, 'evidencia-yacimiento'::text, 'choke'::text, 'raiz'::text, 'detalle'::text])))",
+     "check": null,
      "defecto": null,
-     "descripcion": "La pregunta contestada (IdPregunta).",
+     "descripcion": "La pregunta contestada (IdPregunta; pregunta_campo).",
      "ejemplo": null
     },
     {
@@ -11778,11 +12342,11 @@
      "tipo": "text",
      "nulo": false,
      "pk": false,
-     "fk": null,
+     "fk": "opcion_campo.texto",
      "unico": null,
      "check": "CHECK ((btrim(opcion) <> ''::text))",
      "defecto": null,
-     "descripcion": "El texto exacto del botón que se tocó (OpcionCampo.texto).",
+     "descripcion": "El texto exacto del botón que se tocó (OpcionCampo.texto; opcion_campo de esa pregunta).",
      "ejemplo": null
     },
     {
@@ -11790,11 +12354,11 @@
      "tipo": "text",
      "nulo": true,
      "pk": false,
-     "fk": null,
+     "fk": "pregunta_campo.id",
      "unico": null,
      "check": "CHECK (((NOT no_se) OR ((sigue IS NULL) AND (acota IS NULL) AND (perdida IS NULL))))",
      "defecto": null,
-     "descripcion": "La pregunta que abrió la respuesta, si abrió una.",
+     "descripcion": "La pregunta que abrió la respuesta, si abrió una (una de pregunta_campo).",
      "ejemplo": null
     },
     {
@@ -11806,7 +12370,7 @@
      "unico": null,
      "check": "CHECK (((acota IS NULL) OR (jsonb_typeof(acota) = 'object'::text))) · CHECK (((NOT no_se) OR ((sigue IS NULL) AND (acota IS NULL) AND (perdida IS NULL))))",
      "defecto": null,
-     "descripcion": "Lo que la respuesta acota sin fijar («Comunidad o Tercero»): { paso: [valores] }.",
+     "descripcion": "Lo que la respuesta acota sin fijar («Comunidad o Tercero»): { paso: [valores] }, con pasos de la clasificación (trigger).",
      "ejemplo": null
     },
     {
@@ -11842,7 +12406,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Persona (del token).",
+     "descripcion": "Persona (del token): activa (trigger).",
      "ejemplo": null
     },
     {
@@ -11866,7 +12430,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Rol con que contestó: tiene que tener anh:clasificar (trigger).",
+     "descripcion": "Rol con que contestó: el de la persona, con anh:clasificar y entre los que contestan esa pregunta (trigger).",
      "ejemplo": null
     },
     {
@@ -11900,7 +12464,7 @@
    "nombre": "revision_parada",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision. No corrige nada: pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). Rige la última por clave. Solo inserción.",
+   "descripcion": "«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.",
    "tipoTS": "RevisionAnh (src/entities/anh-clasificacion.ts; ParadaAnh.revision)",
    "endpoints": [
     "POST /api/anh/paradas/:id/revision",
@@ -11909,7 +12473,7 @@
    "quienEscribe": "Persona con anh:clasificar («Algo está mal»; «Pedir a producción» desde quien revisa).",
    "reglas": [
     "Solo inserción; rige la última por clave.",
-    "No corrige nada: pasa la parada a quien corrige, que la ve en REVISAR.",
+    "No toca ningún paso (D1): pasa la parada a quien corrige, que la ve en REVISAR.",
     "Motivo de 5 caracteres o más; pedir_a es un rol que revisa y nunca el propio (422).",
     "El evento es del campo y el rol tiene anh:clasificar. [trigger revision_parada_reglas: INSERT]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger revision_parada_sin_truncate: TRUNCATE]",
@@ -11925,7 +12489,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Consecutivo del servidor.",
+     "descripcion": "Consecutivo del servidor (RevisionAnh.n).",
      "ejemplo": null
     },
     {
@@ -11935,7 +12499,7 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text)))) · CHECK ((btrim(clave) <> ''::text))",
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text)))) · CHECK ((btrim(clave) <> ''::text))",
      "defecto": null,
      "descripcion": "ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).",
      "ejemplo": null
@@ -11947,7 +12511,7 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK ((alcance = ANY (ARRAY['fila'::text, 'evento'::text]))) · CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text))))",
      "defecto": null,
      "descripcion": "fila o evento.",
      "ejemplo": null
@@ -11959,7 +12523,7 @@
      "pk": false,
      "fk": "evento_pozo.id",
      "unico": null,
-     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR (clave ~~ (evento_id || '@%'::text))))",
+     "check": "CHECK (((alcance = 'evento'::text) = (clave = evento_id))) · CHECK (((alcance = 'evento'::text) OR ((\"left\"(clave, (char_length(evento_id) + 1)) = (evento_id || '@'::text)) AND (substr(clave, (char_length(evento_id) + 2)) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$'::text))))",
      "defecto": null,
      "descripcion": "El evento del controlador del pozo.",
      "ejemplo": null
@@ -11973,7 +12537,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Campo del evento (trigger).",
+     "descripcion": "Campo del evento: entre los de la persona (trigger).",
      "ejemplo": null
     },
     {
@@ -11983,9 +12547,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK (\"trim\".alcanza(motivo, 5))",
+     "check": "CHECK ((\"trim\".alcanza(motivo, 5) AND (char_length(motivo) <= 500)))",
      "defecto": null,
-     "descripcion": "Qué está mal, o qué se pide («¿Fue el yacimiento?»): 5 caracteres o más.",
+     "descripcion": "Qué está mal, o qué se pide («¿Fue el yacimiento?»): de 5 a 500 caracteres, con al menos una letra o un número. Se queda en TRIM (D2).",
      "ejemplo": null
     },
     {
@@ -12009,7 +12573,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Persona que la marcó (del token).",
+     "descripcion": "Persona que la marcó (del token): activa (trigger).",
      "ejemplo": null
     },
     {
@@ -12033,7 +12597,7 @@
      "unico": null,
      "check": "CHECK (((pedir_a IS NULL) OR (pedir_a <> rol_id)))",
      "defecto": null,
-     "descripcion": "Rol con que la marcó: tiene que tener anh:clasificar (trigger).",
+     "descripcion": "Rol con que la marcó: el de la persona, con anh:clasificar (trigger).",
      "ejemplo": null
     },
     {
@@ -12067,7 +12631,7 @@
    "nombre": "revision_atendida",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "Quién atendió una revisión y cuándo (RevisionAnh.atendida): la primera escritura de la parada (clasificación, yacimiento, respuesta o confirmación) de un rol al que le toca (conRevisionAtendida). Una por revisión. Solo inserción.",
+   "descripcion": "Quién atendió una revisión y cuándo (RevisionAnh.atendida): la primera escritura de la parada (clasificación, yacimiento, respuesta o confirmación) de un rol al que le toca. Una por revisión. Solo inserción.",
    "tipoTS": "RevisionAnh.atendida (src/entities/anh-clasificacion.ts)",
    "endpoints": [
     "POST /api/anh/paradas/:id/clasificacion",
@@ -12104,7 +12668,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Persona que la atendió.",
+     "descripcion": "Persona que la atendió: activa, con el campo de la revisión (trigger).",
      "ejemplo": null
     },
     {
@@ -12128,7 +12692,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Rol con que la atendió: el de pedir_a o, sin él, uno que revisa (trigger).",
+     "descripcion": "Rol con que la atendió: el de la persona; el de pedir_a o, sin él, uno que revisa (trigger).",
      "ejemplo": null
     },
     {
@@ -13709,7 +14273,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T11:46:48.371902+00:00"
+     "ejemplo": "2026-10-22T20:40:59.206474+00:00"
     }
    ],
    "filas": [
@@ -13725,7 +14289,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -13739,7 +14303,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "morichal",
@@ -13753,7 +14317,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "palmar",
@@ -13767,7 +14331,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "zarza",
@@ -13781,7 +14345,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     }
    ]
   },
@@ -14380,7 +14944,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T11:46:48.371902+00:00"
+     "ejemplo": "2026-10-22T20:40:59.206474+00:00"
     }
    ],
    "filas": [
@@ -14556,7 +15120,7 @@
      "eventos": 18,
      "huella_cifras": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -14689,7 +15253,7 @@
      "eventos": 11,
      "huella_cifras": "ed542826fa682035e79cb219d14b4c54a27cc7c262f0b887d70ae3512459e800",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "morichal",
@@ -14760,7 +15324,7 @@
      "eventos": 31,
      "huella_cifras": "190cb266ba2594a2c185be30cfd7e7bad4d7bce844013f88ff09f73007458480",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "palmar",
@@ -14835,7 +15399,7 @@
      "eventos": 8,
      "huella_cifras": "c632efa5ec1c89e44223cf0d3a9736f74675237e50136524aa0383dfa75b7d73",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "zarza",
@@ -14896,7 +15460,7 @@
      "eventos": 1,
      "huella_cifras": "c7c447654ee2ccce3c562f23385b1e104894df7699354cc438d1633cc6105408",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     }
    ]
   },
@@ -15203,7 +15767,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T11:46:48.371902+00:00"
+     "ejemplo": "2026-10-22T20:40:59.206474+00:00"
     }
    ],
    "filas": [
@@ -15231,7 +15795,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -15257,7 +15821,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -15283,7 +15847,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -15309,7 +15873,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -15335,7 +15899,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     }
    ]
   },
@@ -15448,7 +16012,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-22T11:46:48.371902+00:00"
+     "ejemplo": "2026-10-22T20:40:59.206474+00:00"
     }
    ],
    "filas": [
@@ -15460,7 +16024,7 @@
      "potencial": 31765.411954508756,
      "diferido": 3677.2278693078233,
      "asignado": 28088.184085200945,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -15470,7 +16034,7 @@
      "potencial": 27256.010196447387,
      "diferido": 60.829984442262884,
      "asignado": 27195.180212005136,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -15480,7 +16044,7 @@
      "potencial": 26475.05235007924,
      "diferido": 756.7615028375318,
      "asignado": 25718.29084724172,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -15490,7 +16054,7 @@
      "potencial": 24552.694574403755,
      "diferido": 0,
      "asignado": 24552.694574403766,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -15500,7 +16064,7 @@
      "potencial": 24111.8312740346,
      "diferido": 94.61066382524777,
      "asignado": 24017.220610209362,
-     "calculado": "2026-10-22T11:46:48.371902+00:00"
+     "calculado": "2026-10-22T20:40:59.206474+00:00"
     }
    ]
   },
@@ -15567,7 +16131,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Hora del recálculo.",
-     "ejemplo": "2026-10-22T11:46:48.371902+00:00"
+     "ejemplo": "2026-10-22T20:40:59.206474+00:00"
     },
     {
      "nombre": "motivo",
@@ -15611,7 +16175,7 @@
      "id": 1,
      "campo_id": "ceiba",
      "mes": "2025-10-01",
-     "cuando": "2026-10-22T11:46:48.371902+00:00",
+     "cuando": "2026-10-22T20:40:59.206474+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
@@ -15620,7 +16184,7 @@
      "id": 2,
      "campo_id": "ceiba",
      "mes": "2025-11-01",
-     "cuando": "2026-10-22T11:46:48.371902+00:00",
+     "cuando": "2026-10-22T20:40:59.206474+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "80979dd8e5f4057b805ffe6baaf7d5e097704223acb7ad94498bec69f2d8aebe"
@@ -15629,7 +16193,7 @@
      "id": 3,
      "campo_id": "ceiba",
      "mes": "2025-12-01",
-     "cuando": "2026-10-22T11:46:48.371902+00:00",
+     "cuando": "2026-10-22T20:40:59.206474+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "3ee3116ec3bc84c4293321d097291669814f0af8cfa69fdeb7ff9233b5f63916"
@@ -15638,7 +16202,7 @@
      "id": 4,
      "campo_id": "ceiba",
      "mes": "2026-01-01",
-     "cuando": "2026-10-22T11:46:48.371902+00:00",
+     "cuando": "2026-10-22T20:40:59.206474+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "753d300b99414f01cc760a56987a7be0cb75f02cf6ed36bb72949f39b071cd8b"
@@ -15647,7 +16211,7 @@
      "id": 5,
      "campo_id": "ceiba",
      "mes": "2026-02-01",
-     "cuando": "2026-10-22T11:46:48.371902+00:00",
+     "cuando": "2026-10-22T20:40:59.206474+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "6d35fb973add65cb0de0726e56b94e4bb27a6df08ae0208f889f0930c6a12b13"
@@ -16981,14 +17545,14 @@
    "nombre": "v_clasificacion_vigente",
    "grupo": "g",
    "clase": "vista",
-   "descripcion": "Lo último que dijo una persona de cada paso, por clave (fila o evento). Qué clave rige en cada fila lo dice v_clasificacion_fuente: nunca se mezclan pasos de la fila con pasos del evento. Lo anterior es la historia («antes: …», U1 §2.7).",
+   "descripcion": "Lo último que se dijo de cada paso, por clave (fila o evento), también un «retirado». Lo que rige en cada fila, paso por paso, lo dice v_clasificacion_fuente. Lo anterior es la historia («antes: …», U1 §2.7).",
    "tipoTS": "OpcionesParadas.guardadas (src/entities/anh-paradas.ts)",
    "endpoints": [
     "GET /api/vistas/anh/paradas (lo que se pone encima de lo que propone TRIM)"
    ],
    "quienEscribe": "(vista)",
    "reglas": [
-    "Lo último que dijo una persona de cada paso, por clave (fila o evento). Qué clave rige en cada fila: v_clasificacion_fuente; nunca se mezclan pasos de la fila con pasos del evento."
+    "Lo último que se dijo de cada paso, por clave (fila o evento), también un «retirado». Lo que rige en cada fila, paso por paso: v_clasificacion_fuente."
    ],
    "columnas": [
     {
@@ -17218,6 +17782,42 @@
      "defecto": null,
      "descripcion": null,
      "ejemplo": null
+    },
+    {
+     "nombre": "n1_codigo",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "n2_codigo",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "cau_gral_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
     }
    ],
    "filas": []
@@ -17226,16 +17826,17 @@
    "nombre": "v_clasificacion_fuente",
    "grupo": "g",
    "clase": "vista",
-   "descripcion": "Qué rige en cada fila con algo guardado (OpcionesParadas.guardadas de anh-paradas.ts y guardarClasificacion de escrituras.ts). fila: lo suyo, y lo que no diga lo propone TRIM. evento: lo de su evento, porque se guardó después y reemplazó lo de la fila. El tramo de exceso del programa rige siempre con lo suyo y no hereda. Una fila sin nada guardado usa lo de su evento, salvo el exceso, que usa lo que propone TRIM.",
-   "tipoTS": "OpcionesParadas.guardadas (src/entities/anh-paradas.ts) y guardarClasificacion (src/shared/api/escrituras.ts)",
+   "descripcion": "Lo que RIGE de lo que dijeron las personas, PASO POR PASO (D1; rigeEnFila de anh-clasificacion.ts y paradasAnh de anh-paradas.ts): en cada fila con algo guardado, lo más reciente (por id) entre su clave y la de su evento; el tramo de exceso del programa, solo lo suyo; y en cada evento (clave = evento_id), lo suyo: lo que heredan sus filas sin nada propio. rige dice dónde está lo que rige (fila o evento). Un paso cuyo último dicho es «retirado» no sale: rige lo que propone TRIM. Un paso que no sale aquí lo propone TRIM al leer la fila.",
+   "tipoTS": "rigeEnFila (src/entities/anh-clasificacion.ts) y OpcionesParadas.guardadas (src/entities/anh-paradas.ts)",
    "endpoints": [
     "GET /api/vistas/anh/paradas (qué rige en cada fila)"
    ],
    "quienEscribe": "(vista)",
    "reglas": [
-    "Rige lo más reciente entre la fila y su evento: lo guardado en el evento reemplaza lo de sus filas.",
-    "El tramo de exceso del programa rige siempre con lo suyo y no hereda de su evento.",
-    "Una fila sin nada guardado usa lo de su evento, salvo el exceso, que usa lo que propone TRIM."
+    "Paso por paso, rige lo más reciente entre la fila y su evento (D1).",
+    "El tramo de exceso del programa rige con lo suyo y no hereda de su evento.",
+    "Un paso cuyo último dicho es «retirado» no sale: rige lo que propone TRIM.",
+    "El evento sale con lo suyo: es lo que heredan sus filas sin nada propio."
    ],
    "columnas": [
     {
@@ -17275,7 +17876,163 @@
      "ejemplo": null
     },
     {
+     "nombre": "paso",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
      "nombre": "rige",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "id",
+     "tipo": "bigint",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "valor",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "procedencia",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "regla",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "porque",
+     "tipo": "jsonb",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "por_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "por",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "rol_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "hora",
+     "tipo": "timestamp with time zone",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "lote_id",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "propuesto",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": null,
+     "defecto": null,
+     "descripcion": null,
+     "ejemplo": null
+    },
+    {
+     "nombre": "version_catalogo",
      "tipo": "text",
      "nulo": true,
      "pk": false,
@@ -18923,10 +19680,42 @@
    "diferible": false
   },
   {
+   "desde": "causa_n2.n1",
+   "hacia": "causa_n1.clave",
+   "cardinalidad": "N:1",
+   "descripcion": "La causa a la que pertenece (el prefijo del código).",
+   "restriccion": "causa_n2_n1_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "paso_por_rol.rol_id",
+   "hacia": "rol.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Rol.",
+   "restriccion": "paso_por_rol_rol_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "contesta_pregunta.rol_id",
+   "hacia": "rol.id",
+   "cardinalidad": "N:1",
+   "descripcion": "Un rol que las contesta.",
+   "restriccion": "contesta_pregunta_rol_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "opcion_campo.pregunta",
+   "hacia": "pregunta_campo.id",
+   "cardinalidad": "N:1",
+   "descripcion": "La pregunta.",
+   "restriccion": "opcion_campo_pregunta_fkey",
+   "diferible": false
+  },
+  {
    "desde": "confirmacion_lote.por_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona que confirmó (del token).",
+   "descripcion": "Persona que confirmó (del token): activa, con el rol de rol_id y con el campo de cada fila (trigger).",
    "restriccion": "confirmacion_lote_por_id_fkey",
    "diferible": false
   },
@@ -18934,7 +19723,7 @@
    "desde": "confirmacion_lote.rol_id",
    "hacia": "rol.id",
    "cardinalidad": "N:1",
-   "descripcion": "Rol con que confirmó: decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).",
+   "descripcion": "Rol con que confirmó: el de la persona; decide qué pasos pudo subir (PASOS_QUE_CONFIRMA) y tiene que tener anh:confirmar (trigger).",
    "restriccion": "confirmacion_lote_rol_id_fkey",
    "diferible": false
   },
@@ -18942,8 +19731,16 @@
    "desde": "clasificacion_paso.campo_id",
    "hacia": "campo.id",
    "cardinalidad": "N:1",
-   "descripcion": "Campo del evento (trigger): tiene que estar entre los de la persona (403).",
+   "descripcion": "Campo del evento (trigger): tiene que estar entre los de la persona, o la persona tiene «todos» (trigger, 403).",
    "restriccion": "clasificacion_paso_campo_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.cau_gral_id",
+   "hacia": "causa_general.id",
+   "cardinalidad": "N:1",
+   "descripcion": "El valor del paso cau_gral (generada): llave foránea a causa_general (nunca un texto libre, D2).",
+   "restriccion": "clasificacion_paso_cau_gral_id_fkey",
    "diferible": false
   },
   {
@@ -18958,15 +19755,23 @@
    "desde": "clasificacion_paso.lote_id",
    "hacia": "confirmacion_lote.id",
    "cardinalidad": "N:1",
-   "descripcion": "El lote, si se confirmó en lote (solo confirmado).",
+   "descripcion": "El lote, si se confirmó en lote (solo confirmado). Se guarda en la fila, nunca en su evento: no se copia.",
    "restriccion": "clasificacion_paso_lote_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.n1_codigo",
+   "hacia": "causa_n1.clave",
+   "cardinalidad": "N:1",
+   "descripcion": "El valor del paso n1 (generada): llave foránea a causa_n1.",
+   "restriccion": "clasificacion_paso_n1_codigo_fkey",
    "diferible": false
   },
   {
    "desde": "clasificacion_paso.por_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona (del token).",
+   "descripcion": "Persona (del token): activa (trigger).",
    "restriccion": "clasificacion_paso_por_id_fkey",
    "diferible": false
   },
@@ -18974,15 +19779,23 @@
    "desde": "clasificacion_paso.rol_id",
    "hacia": "rol.id",
    "cardinalidad": "N:1",
-   "descripcion": "Rol con que lo dijo: decide si lo puede avalar (PASOS_QUE_DECLARA, PASOS_QUE_CONFIRMA). En el yacimiento, prod o conf.",
+   "descripcion": "Rol con que lo dijo: el de la persona (trigger). Decide si lo puede decir o avalar (paso_por_rol). En el yacimiento, prod o conf.",
    "restriccion": "clasificacion_paso_rol_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "clasificacion_paso.version_catalogo,n2_codigo",
+   "hacia": "causa_n2.version_catalogo,codigo",
+   "cardinalidad": "N:1",
+   "descripcion": "Versión del catálogo de la circular con que se dijo (C024-2026 o DICC-V3.2).",
+   "restriccion": "clasificacion_paso_version_catalogo_n2_codigo_fkey",
    "diferible": false
   },
   {
    "desde": "respuesta_campo.campo_id",
    "hacia": "campo.id",
    "cardinalidad": "N:1",
-   "descripcion": "Campo del evento (trigger): entre los de la persona (403).",
+   "descripcion": "Campo del evento: entre los de la persona (trigger).",
    "restriccion": "respuesta_campo_campo_id_fkey",
    "diferible": false
   },
@@ -18998,23 +19811,47 @@
    "desde": "respuesta_campo.por_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona (del token).",
+   "descripcion": "Persona (del token): activa (trigger).",
    "restriccion": "respuesta_campo_por_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "respuesta_campo.pregunta",
+   "hacia": "pregunta_campo.id",
+   "cardinalidad": "N:1",
+   "descripcion": "La pregunta contestada (IdPregunta; pregunta_campo).",
+   "restriccion": "respuesta_campo_pregunta_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "respuesta_campo.pregunta,opcion",
+   "hacia": "opcion_campo.pregunta,texto",
+   "cardinalidad": "N:1",
+   "descripcion": "La pregunta contestada (IdPregunta; pregunta_campo).",
+   "restriccion": "respuesta_campo_pregunta_opcion_fkey",
    "diferible": false
   },
   {
    "desde": "respuesta_campo.rol_id",
    "hacia": "rol.id",
    "cardinalidad": "N:1",
-   "descripcion": "Rol con que contestó: tiene que tener anh:clasificar (trigger).",
+   "descripcion": "Rol con que contestó: el de la persona, con anh:clasificar y entre los que contestan esa pregunta (trigger).",
    "restriccion": "respuesta_campo_rol_id_fkey",
+   "diferible": false
+  },
+  {
+   "desde": "respuesta_campo.sigue",
+   "hacia": "pregunta_campo.id",
+   "cardinalidad": "N:1",
+   "descripcion": "La pregunta que abrió la respuesta, si abrió una (una de pregunta_campo).",
+   "restriccion": "respuesta_campo_sigue_fkey",
    "diferible": false
   },
   {
    "desde": "revision_parada.campo_id",
    "hacia": "campo.id",
    "cardinalidad": "N:1",
-   "descripcion": "Campo del evento (trigger).",
+   "descripcion": "Campo del evento: entre los de la persona (trigger).",
    "restriccion": "revision_parada_campo_id_fkey",
    "diferible": false
   },
@@ -19038,7 +19875,7 @@
    "desde": "revision_parada.por_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona que la marcó (del token).",
+   "descripcion": "Persona que la marcó (del token): activa (trigger).",
    "restriccion": "revision_parada_por_id_fkey",
    "diferible": false
   },
@@ -19046,7 +19883,7 @@
    "desde": "revision_parada.rol_id",
    "hacia": "rol.id",
    "cardinalidad": "N:1",
-   "descripcion": "Rol con que la marcó: tiene que tener anh:clasificar (trigger).",
+   "descripcion": "Rol con que la marcó: el de la persona, con anh:clasificar (trigger).",
    "restriccion": "revision_parada_rol_id_fkey",
    "diferible": false
   },
@@ -19054,7 +19891,7 @@
    "desde": "revision_atendida.por_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona que la atendió.",
+   "descripcion": "Persona que la atendió: activa, con el campo de la revisión (trigger).",
    "restriccion": "revision_atendida_por_id_fkey",
    "diferible": false
   },
@@ -19070,7 +19907,7 @@
    "desde": "revision_atendida.rol_id",
    "hacia": "rol.id",
    "cardinalidad": "N:1",
-   "descripcion": "Rol con que la atendió: el de pedir_a o, sin él, uno que revisa (trigger).",
+   "descripcion": "Rol con que la atendió: el de la persona; el de pedir_a o, sin él, uno que revisa (trigger).",
    "restriccion": "revision_atendida_rol_id_fkey",
    "diferible": false
   },

@@ -22,7 +22,7 @@ import {
   type ChokeAnh, type ChokeCampo, type ChokeDeElemento, type AlcanceElemento, type ElementoPorSaber,
 } from './choke'
 import { criticidadDelCampo, type FilaCriticidad } from './criticidad'
-import { paradasAnh } from './anh-paradas'
+import { filasDelChoke } from './choke-reparto'
 import { esDePersona, type BorradorClasificacion } from './anh-clasificacion'
 import { pozosDe } from './pozos'
 import { EQUIPOS, equipoEnCampo } from './equipos'
@@ -255,7 +255,8 @@ export function impactoConfig(ctx: Contexto, nueva: Config, campoIds: string[], 
     // misma (la topología no la cambia); solo cambia dónde se trabó.
     const porTramo = new Map<string, CambioDeTramo>()
     let total = 0, confirmadas = 0
-    for (const p of paradasAnh([campoId], desde, hasta, ctx, guardadas ? { guardadas } : {})) {
+    // Las mismas filas del reparto y del árbol, ya calculadas (QA-A-15).
+    for (const p of filasDelChoke([campoId], desde, hasta, ctx, guardadas)) {
       if (p.causa.tipo === 'pendiente') continue
       const de = chokeDeCausa(p.causa, campoId, ctx)?.choke ?? null, a = chokeDeCausa(p.causa, campoId, despues)?.choke ?? null
       if (de === a) continue

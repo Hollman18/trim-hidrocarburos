@@ -10,11 +10,13 @@
  */
 import { CAMPOS, SEMILLAS } from './campos'
 import type { DestinoGas } from './tipos'
-import { insumos, perezoso } from './insumos'
+import { insumos, perezoso, hayInsumos } from './insumos'
 import { MOTIVO_MINIMO, TOPE_BPD, alcanza } from './reglas'
 // choke.ts lee `perfilDe` de aquí y aquí se leen sus palabras y su validación: el
 // ciclo es benigno porque ninguno de los dos usa al otro al cargarse, solo en funciones.
-import { validarTopologia, chokeDeAlcance, NOMBRE_ALCANCE, DONDE_CHOKE, type ChokeDeElemento, type ElementoPorSaber } from './choke'
+import { validarTopologia, topologiaDerivada, chokeDeAlcance, NOMBRE_ALCANCE, DONDE_CHOKE, type ChokeDeElemento, type ElementoPorSaber } from './choke'
+import { EQUIPOS, equipoEnCampo } from './equipos'
+import { pozoDe } from './pozos'
 import { validarCapacidades, normalizarCapacidades, diferenciasCapacidades, capacidadesFirmadas, type CapacidadesCampo } from './capacidades'
 import { formatoFecha } from '@/shared/lib/fecha'
 
@@ -466,6 +468,44 @@ export const TOPE_PRECIO_USD = 500
 /** «AAAA-MM-DD» que además es un día del calendario (no «2026-02-30»). */
 const diaValido = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && new Date(`${d}T12:00:00Z`).toISOString().slice(0, 10) === d
 
+/** Cuántos elementos tiene, a lo más, la topología de un campo (C-13): un campo
+ *  de verdad tiene decenas de pozos y equipos, no miles de filas de basura. */
+export const MAXIMO_ELEMENTOS = 500
+
+/** Lo que la topología no deja escoger (C-13), además de `validarTopologia`:
+ *  - un pozo solo se sirve a sí mismo (criterio de Edinson: lo dedicado a un pozo
+ *    es pozo): como compartido o dedicado a otro, las fallas de un pozo pasarían
+ *    a «planta», que es escoger el tramo;
+ *  - el elemento está en el registro de su campo, lo mismo que pide la carga CSV
+ *    (lo que TRIM deriva del registro: pozos, planta, alimentadores; y los equipos
+ *    del campo); sin campo, en el de alguno. Sin los insumos (el front con la
+ *    fuente http) esto lo revisa el servidor;
+ *  - a lo más `MAXIMO_ELEMENTOS` por campo. */
+function topologiaDelRegistro(t: readonly ChokeDeElemento[], nombre: (id: string) => string): string[] {
+  if (!hayInsumos()) return []
+  const e: string[] = []
+  const registro = new Map<string, Set<string>>()
+  const delCampo = (cid: string) => {
+    let r = registro.get(cid)
+    if (!r) registro.set(cid, r = new Set([...topologiaDerivada(cid).map(x => x.elemento), ...Object.keys(EQUIPOS).filter(id => equipoEnCampo(id, cid))]))
+    return r
+  }
+  const cuantos = new Map<string, number>()
+  for (const x of t) {
+    const el = typeof x.elemento === 'string' ? x.elemento.trim() : ''
+    if (!el) continue
+    const campos = x.campoId ? [x.campoId] : CAMPOS.map(c => c.id)
+    const donde = x.campoId ? ` (${nombre(x.campoId)})` : ''
+    if (campos.some(cid => !!pozoDe(cid, el)) && !(x.alcance === 'dedicado' && (x.pozos ?? []).length === 1 && x.pozos![0] === el))
+      e.push(`Topología ${el}${donde}: es un pozo, así que solo se sirve a sí mismo (dedicado a ${el}): el tramo de sus paradas no se escoge.`)
+    if (!campos.some(cid => delCampo(cid).has(el)))
+      e.push(`Topología ${el}${donde}: no está en el registro${x.campoId ? ` de ${nombre(x.campoId)}` : ' de ningún campo'}: regístrelo primero (esquema de planta o Conectores).`)
+    for (const cid of campos) cuantos.set(cid, (cuantos.get(cid) ?? 0) + 1)
+  }
+  for (const [cid, n] of cuantos) if (n > MAXIMO_ELEMENTOS) e.push(`Topología de ${nombre(cid)}: ${n} elementos; una topología tiene hasta ${MAXIMO_ELEMENTOS}.`)
+  return e
+}
+
 /** Reglas que la configuración tiene que cumplir para poder firmarse. Las
  *  mismas que el servidor responde con 422 (CONTRATO.md). `desdeMinimo` es el
  *  primer día del mes en curso: lo de un mes cerrado no se reescribe. `ahora`
@@ -552,6 +592,7 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
   const topologia = c.topologia ?? []
   for (const x of topologia) if (x.campoId !== undefined && !conocido(x.campoId)) e.push(`Topología ${x.elemento}: «${x.campoId}» no es un campo registrado.`)
   e.push(...validarTopologia(topologia.filter(x => x.campoId === undefined || conocido(x.campoId)), esPozoDe))
+  e.push(...topologiaDelRegistro(topologia.filter(x => x.campoId === undefined || conocido(x.campoId)), nombre))
   // «Todavía no sé»: un equipo de un campo registrado, una vez, y no a la vez contestado en ese campo.
   const porSaber = new Set<string>()
   for (const x of c.topologiaPorSaber ?? []) {
@@ -561,7 +602,8 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
     const k = `${x.campoId}|${el}`
     if (porSaber.has(k)) e.push(`Topología ${el} (${nombre(x.campoId)}): está dos veces como «Todavía no sé».`)
     porSaber.add(k)
-    if (topologia.some(t => t.elemento === el && t.campoId === x.campoId))
+    // Un elemento sin campo vale para todos: también choca con «Todavía no sé» de un campo (C-13).
+    if (topologia.some(t => t.elemento === el && (t.campoId === x.campoId || t.campoId === undefined)))
       e.push(`Topología ${el} (${nombre(x.campoId)}): está contestado y a la vez como «Todavía no sé»: es lo uno o lo otro.`)
   }
   e.push(...validarCapacidades(c.capacidades))

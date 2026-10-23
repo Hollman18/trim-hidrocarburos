@@ -1,4 +1,4 @@
-# Validación del modelo de datos · 2026-10-22 06:46:44 -05
+# Validación del modelo de datos · 2026-10-22 15:40:56 -05
 initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
 
 ## 1. Cluster temporal
@@ -15,13 +15,13 @@ server started
                            15
 (1 row)
 
-98 tablas (sin contar 45 particiones de lectura), 11 vistas, 30 funciones, 101 triggers, 193 índices, 622 restricciones (98 PK, 170 FK, 30 únicas, 320 check)
+105 tablas (sin contar 45 particiones de lectura), 11 vistas, 33 funciones, 102 triggers, 200 índices, 656 restricciones (105 PK, 180 FK, 30 únicas, 337 check)
 
 ## 3. ejemplos.sql (filas reales del demo)
 libros 60 · tramos por día 28 · mensajes 337 · identidades 132 · repuestos 13
-ejemplos.sql: 10009 filas en 72 tablas; series sin tag registrado: 0
+ejemplos.sql: 10566 filas en 79 tablas; series sin tag registrado: 0
 ANALYZE
-filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 55 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 13 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1277 · evento_pozo 1211 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 337 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · orden_sap 62 · parada_bomba 36 · parada_programada 9 · parte 16 · parte_modo 42 · parte_variable 39 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 34 · plantilla_whatsapp 10 · pozo 87 · prediccion 17 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 41 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 36 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 28 · tramo_meta 5 · usuario 8 · usuario_campo 8 · version_config 1
+filas por tabla: activo 128 · ajuste_variador 340 · alarma_tag 26 · asignacion_pozo_mes 1032 · aviso_sap 55 · banda_regulatoria 8 · calculo 5 · calculo_entrada 5 · calibracion 25 · campo 5 · capacidad 13 · causa_general 18 · causa_n1 20 · causa_n2 234 · causa_raiz 5 · clase_catalogo 3 · clase_iso_catalogo 5 · clase_orden_sap 3 · contesta_pregunta 17 · dispositivo 82 · equipo 41 · equipo_sap 128 · evento 1277 · evento_pozo 1211 · evento_servicio 30 · factor_asignacion_mes 60 · formula 1 · fuente 45 · gateway 10 · libro_mes 60 · material_sap 9 · mecanismo_falla 38 · membrete 1 · mensaje 337 · mes_fiscal 65 · metrologia_campo 5 · modo_falla 19 · modo_por_clase 77 · nacimiento 10 · opcion_campo 194 · orden_sap 62 · parada_bomba 36 · parada_programada 9 · parte 16 · parte_modo 42 · parte_variable 39 · paso_por_rol 58 · perfil_bomba 4 · perfil_bomba_pozo 3 · perfil_bomba_primera_alarma 28 · perfil_bomba_tag 40 · perfil_campo 5 · planta_campo 5 · planta_elemento 74 · planta_miembro 34 · plantilla_whatsapp 10 · pozo 87 · prediccion 17 · pregunta_campo 15 · produccion_fiscal_diaria 1835 · prueba_pozo 430 · punto_medicion 5 · recalculo_mes 60 · repuesto_equipo 8 · repuesto_orden 41 · respaldo 4 · respuesta_parada 9 · rol 11 · rol_capacidad 36 · stock_sap 13 · tag 173 · tanque 3 · tramo_diferido 28 · tramo_meta 5 · usuario 9 · usuario_campo 8 · version_config 1
 lectura (por partición): lectura_2026_09 1380 · lectura_2026_10 276
 
 ## 4. Las restricciones muerden (pruebas.sql)
@@ -116,7 +116,7 @@ NOTICE:  MUERDE  corregir un mes precalculado en sitio  [23001] el precálculo d
 NOTICE:  MUERDE  libro publicable con motivos  [23514] new row for relation "libro_mes" violates check constraint "libro_mes_check"
 NOTICE:  PASA    recalcular un mes: borrar e insertar (y anotarlo)
 NOTICE:  MUERDE  topología con un tramo que no sale del alcance (compartido en el pozo)  [23514] new row for relation "topologia" violates check constraint "topologia_check"
-NOTICE:  MUERDE  topología: un dedicado que sirve a dos pozos  [23514] new row for relation "topologia" violates check constraint "topologia_check1"
+NOTICE:  MUERDE  topología: un dedicado que sirve a dos pozos  [23514] LC-01 es un pozo: solo se sirve a sí mismo (dedicado a LC-01)
 NOTICE:  MUERDE  topología: un pozo que no es del campo  [23514] K-101 (ceiba): el pozo MN-07 no es de ese campo
 NOTICE:  MUERDE  topología: el mismo elemento dos veces en el campo  [23505] duplicate key value violates unique constraint "topologia_version_campo_id_elemento_key"
 NOTICE:  MUERDE  topología: el mismo elemento dos veces para todos los campos (sin campo no es distinto)  [23505] duplicate key value violates unique constraint "topologia_version_campo_id_elemento_key"
@@ -142,20 +142,58 @@ NOTICE:  MUERDE  clasificación: planeada en el evento y una causa no planeada e
 NOTICE:  MUERDE  clasificación: una fila dice «no planeada» después de que su evento dijo una causa planeada (lo que rige en la fila)  [23514] la parada EP-LC21-261001-01@2026-10-01#1: «no-planeada» no va con la causa P_MANT_ELE (planeada solo con P_…, no planeada solo con NP_…)
 NOTICE:  PASA    clasificación: lo guardado en el evento después reemplaza lo de sus filas (no se mezclan)
 NOTICE:  PASA    clasificación: el tramo de exceso no hereda la planeación de su evento
-NOTICE:  MUERDE  clasificación: «exceso» en una clave de evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check2"
+NOTICE:  MUERDE  clasificación: «exceso» en una clave de evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check1"
 NOTICE:  PASA    clasificación: el evento planeado y una fila que corrige planeación, causa y detalle (lo que rige es coherente en los dos)
 NOTICE:  MUERDE  clasificación: «En el yacimiento» puesto por el supervisor  [23514] el rol sup no tiene anh:yacimiento (paso choke de EP-LC21-261001-01)
 NOTICE:  MUERDE  clasificación: «En el yacimiento» sin evidencia  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check12"
-NOTICE:  MUERDE  clasificación: corregido sin lo que proponía TRIM  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check4"
+NOTICE:  MUERDE  clasificación: corregido sin lo que proponía TRIM  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check3"
 NOTICE:  MUERDE  clasificación: una causa que no es del catálogo  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check10"
 NOTICE:  MUERDE  clasificación: lo que propone TRIM no se guarda (procedencia regla)  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_procedencia_check"
 NOTICE:  MUERDE  clasificación: el gerente no clasifica (sin anh:clasificar)  [23514] el rol ger no tiene anh:clasificar (paso impacto de EP-LC21-261001-01)
 NOTICE:  MUERDE  clasificación: el evento es de otro campo  [23514] el evento EP-LC21-261001-01 no es del campo morichal
-NOTICE:  MUERDE  clasificación: una fila que no es de su evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check3"
+NOTICE:  MUERDE  clasificación: una fila que no es de su evento  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check2"
 NOTICE:  MUERDE  corregir una clasificación en sitio (se corrige con una fila nueva)  [23001] la tabla clasificacion_paso es de solo inserción: no admite UPDATE
 NOTICE:  MUERDE  lote del operador (sin anh:confirmar)  [23514] el rol oper no confirma en lote (anh:confirmar)
 NOTICE:  PASA    una clasificación coherente, confirmada en lote por el supervisor
-110 rechazos esperados y 20 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
+NOTICE:  MUERDE  clasificación: el supervisor (solo La Ceiba) en una parada de Morichal  [23514] sup no tiene asignado el campo morichal (EP-MN01-251015-78)
+NOTICE:  MUERDE  revisión: el operador (solo La Ceiba) en Morichal  [23514] oper no tiene asignado el campo morichal (EP-MN01-251015-78)
+NOTICE:  MUERDE  respuesta: el operador (solo La Ceiba) contesta en Morichal  [23514] oper no tiene asignado el campo morichal (EP-MN01-251015-78)
+NOTICE:  MUERDE  clasificación: rol_id distinto del rol de la persona (el operador firmando como prod pone el yacimiento)  [23514] oper escribe como prod y su rol es oper (EP-LC21-261001-01)
+NOTICE:  MUERDE  lote: el operador firmando como sup  [23514] oper escribe como sup y su rol es oper (LOTE-QA)
+NOTICE:  MUERDE  revisión atendida por el operador firmando como sup  [23514] oper escribe como sup y su rol es oper (EP-LC21-261001-01)
+NOTICE:  MUERDE  clasificación: una persona suspendida  [23514] tec no es una persona con acceso activo (EP-LC21-261001-01)
+NOTICE:  MUERDE  una persona con un rol de la versión 2 (cont): nadie lo tiene (C-14)  [23514] el rol cont no se ofrece en el primer producto: no se le da a una persona
+NOTICE:  MUERDE  el operador CONFIRMA «Dónde se trabó»  [23514] el rol oper no confirma el paso choke (EP-LC21-261001-01)
+NOTICE:  MUERDE  el operador CORRIGE el detalle  [23514] el rol oper no dice el paso n2 (EP-LC21-261001-01)
+NOTICE:  MUERDE  el técnico confirma «Quién» (solo confirma la planeación y qué pasó)  [23514] el rol tec no confirma el paso responsable (EP-LC21-261001-01)
+NOTICE:  PASA    el operador deja el tramo por una respuesta de campo (declarado, regla preguntas:campo@1: no avalado)
+NOTICE:  MUERDE  respuesta: el operador contesta la pregunta del tramo (la contesta quien revisa)  [23514] el rol oper no contesta la pregunta choke (EP-LC21-261001-01)
+NOTICE:  MUERDE  respuesta: el operador contesta el detalle (lo contesta quien abre el equipo o revisa)  [23514] el rol oper no contesta la pregunta detalle (EP-LC21-261001-01)
+NOTICE:  MUERDE  respuesta: el supervisor contesta «¿Fue el yacimiento?» (solo producción y confiabilidad)  [23514] el rol sup no contesta la pregunta aporte (EP-LC21-261001-01)
+NOTICE:  MUERDE  respuesta: una opción que no es de la pregunta («De la luna»)  [23503] insert or update on table "respuesta_campo" violates foreign key constraint "respuesta_campo_pregunta_opcion_fkey"
+NOTICE:  MUERDE  respuesta: «sigue» a una pregunta que no existe  [23503] insert or update on table "respuesta_campo" violates foreign key constraint "respuesta_campo_sigue_fkey"
+NOTICE:  MUERDE  respuesta: acota un paso que no existe  [23514] la respuesta acota algo que no es un paso de la clasificación (EP-LC21-261001-01)
+NOTICE:  MUERDE  una N1 que no es de las 20 (NP_INVENTADA)  [23503] insert or update on table "clasificacion_paso" violates foreign key constraint "clasificacion_paso_n1_codigo_fkey"
+NOTICE:  MUERDE  un N2 que no es del catálogo (NP_SUB/no-existe)  [23503] insert or update on table "clasificacion_paso" violates foreign key constraint "clasificacion_paso_version_catalogo_n2_codigo_fkey"
+NOTICE:  MUERDE  una causa general escrita a mano (texto libre: no viaja a la ANH, D2)  [23503] insert or update on table "clasificacion_paso" violates foreign key constraint "clasificacion_paso_cau_gral_id_fkey"
+NOTICE:  MUERDE  una descripción (desc_evid) escrita por una persona (D2: la arma TRIM)  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_paso_check"
+NOTICE:  MUERDE  una fila cuyo día no es fecha  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check2"
+NOTICE:  MUERDE  un motivo de seis espacios no separables  [23514] new row for relation "revision_parada" violates check constraint "revision_parada_motivo_check"
+NOTICE:  MUERDE  un motivo de cinco espacios de ancho cero  [23514] new row for relation "revision_parada" violates check constraint "revision_parada_motivo_check"
+NOTICE:  MUERDE  un motivo de más de 500 caracteres (C-12)  [23514] new row for relation "revision_parada" violates check constraint "revision_parada_motivo_check"
+NOTICE:  MUERDE  un lote que no sube ningún paso (C-19)  [23514] new row for relation "confirmacion_lote" violates check constraint "confirmacion_lote_pasos_check"
+NOTICE:  PASA    lo que el jefe dijo del evento B sigue vigente después de que otra escritura guarda otro paso en B
+NOTICE:  PASA    en una fila rige, paso por paso, lo más reciente entre la fila y su evento
+NOTICE:  MUERDE  cambiar «¿Planeada?» sobre la causa que dijo otra persona sin retirarla: lo que rige quedaría incoherente  [23514] la parada EP-LC21-261001-01: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
+NOTICE:  PASA    cambiar «¿Planeada?» retirando la causa de otra persona, con su marca (procedencia retirado) y motivo
+NOTICE:  MUERDE  un retiro sin motivo  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check5"
+NOTICE:  MUERDE  una bomba que no es del tren de agua del campo  [23503] P-999 no es una bomba del tren de agua de ceiba
+NOTICE:  MUERDE  un compartido con un pozo repetido (LC-01, LC-01)  [23514] new row for relation "topologia" violates check constraint "topologia_pozos_check"
+NOTICE:  MUERDE  un pozo que le sirve a otro pozo  [23514] LC-01 es un pozo: solo se sirve a sí mismo (dedicado a LC-01)
+NOTICE:  MUERDE  un pozo como elemento compartido (sus fallas pasarían a la planta)  [23514] LC-01 es un pozo: solo se sirve a sí mismo (dedicado a LC-01)
+NOTICE:  MUERDE  «Todavía no sé» insertado antes que la misma topología  [23514] K-101 (ceiba): está a la vez en la topología y como «Todavía no sé»
+NOTICE:  MUERDE  un equipo para todos los campos y a la vez «Todavía no sé» en La Ceiba  [23514] K-101 (ceiba): está a la vez en la topología y como «Todavía no sé»
+144 rechazos esperados y 24 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
 
 ## 5. Cuadres de los datos cargados (cuadres.sql)
 NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
@@ -171,9 +209,9 @@ NOTICE:  CUADRA  v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3
 NOTICE:  CUADRA  v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
 
 ## 6. tablas.json contra esquema.sql
-tablas.json: 98 tablas, 11 vistas, 170 relaciones, 368 filas de ejemplo
-comparadas 98 tablas y 11 vistas, 904 columnas, 170 relaciones; columnas de tabla sin comentario: 0
-filas de ejemplo: 368 en 78 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, topologia, topologia_por_saber, capacidades_campo, capacidad_firmada, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, confirmacion_lote, clasificacion_paso, respuesta_campo, revision_parada, revision_atendida, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
+tablas.json: 105 tablas, 11 vistas, 180 relaciones, 403 filas de ejemplo
+comparadas 105 tablas y 11 vistas, 942 columnas, 180 relaciones; columnas de tabla sin comentario: 0
+filas de ejemplo: 403 en 85 tablas/vistas; sin filas del demo: inscripcion, rechazo, historial_tag, mapeo_catalogo_sap, topologia, topologia_por_saber, capacidades_campo, capacidad_firmada, identidad_oidc, cambio_acceso, confirmacion_sap, respuesta_entrante, analisis, confirmacion_lote, clasificacion_paso, respuesta_campo, revision_parada, revision_atendida, folio_contador, informe, informe_campo, mensaje_libre, estado_mensaje, carga_asignacion, carga_asignacion_grupo, asignacion_oficial, cambio_planta
 tablas.json COINCIDE 1:1 con esquema.sql
 
 ## 7. TimescaleDB

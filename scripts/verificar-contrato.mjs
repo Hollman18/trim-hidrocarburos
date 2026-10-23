@@ -533,22 +533,22 @@ try {
       noExiste: await E.clasificarParada({ rolId: 'sup' }, 'EP-NO-EXISTE@2026-09-01#1', { pasos: { impacto: 'diferida' } }),
       n2Inventado: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: { n2: 'NP_SUB/no-existe' } }),
       sinPasos: await E.clasificarParada({ rolId: 'sup' }, libre.id, { pasos: {} }),
-      confirmaTramo: await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id], pasos: ['choke'] }),
-      loteOperador: await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id, aYacimientoId()] }),
+      confirmaTramo: await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id], pasos: ['choke'], cadena: ARB.cadenaVista(libre.clasificacion) }),
+      loteOperador: await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id, aYacimientoId()], cadena: ARB.cadenaVista(libre.clasificacion) }),
     }
     function aYacimientoId() { return escritas.yacimiento.parada.id }
     const esperado = {
       incoherente: /es una causa no planeada: cambie primero «¿Planeada\?»/, operadorTramo: /^Su rol no dice «Dónde se trabó»: lo dice supervisión, producción/,
       yacimientoPorPaso: /«En el yacimiento» lo pone producción o confiabilidad/, yacimientoSupervisor: /lo ponen producción o confiabilidad/,
       yacimientoSinEvidencia: /diga qué lo muestra/, otraCadena: /alguien cambió esta parada/, gerente: /Su rol no clasifica paradas/,
-      noExiste: /no está entre las de la ANH/, n2Inventado: /no es una causa del catálogo de la ANH/, sinPasos: /No llegó ningún paso/,
+      noExiste: /no está entre las de sus campos/, n2Inventado: /no es una causa del catálogo de la ANH/, sinPasos: /No llegó ningún paso/,
       confirmaTramo: /^Su rol no confirma «Dónde se trabó»/, loteOperador: /lo hacen supervisión o producción/,
     }
     const noRechazadas = Object.entries(rech).filter(([k, r]) => r.ok || !esperado[k].test(r.error))
     comprobar(noRechazadas.length === 0 && SES.sesion().clasificacionesAnh === sa.clasificacionesAnh,
       `se rechazan en palabras y no guardan nada: la clasificación incoherente («${rech.incoherente.error}»), el tramo dicho por el operador, el yacimiento fuera de producción y confiabilidad o sin evidencia, una cadena que cambió (409), una confirmación de pasos ajenos al rol («${rech.confirmaTramo.error}») y un lote del operador${noRechazadas.map(([k, r]) => `; ${k}: ${r.ok ? 'pasó' : r.error}`).join('')}`)
     // c. El toque del operador confirma solo lo suyo (¿planeada?, qué pasó): el paso 2 sigue siendo de TRIM.
-    const delOperador = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id] })
+    const delOperador = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [libre.id], cadena: ARB.cadenaVista(libre.clasificacion) })
     const fo = delOperador.paradas?.[0]
     comprobar(delOperador.ok && fo.clasificacion.planeacion.procedencia === 'confirmado' && fo.clasificacion.impacto.procedencia === 'confirmado'
       && fo.clasificacion.choke.procedencia === 'regla' && fo.estado === 'propuesta' && !delOperador.lote,
@@ -561,14 +561,16 @@ try {
       `corregir lo que ya dijo una persona pide motivo («${sinMotivo.error}»); con él queda corregido, con quién y por qué`)
     // e. Una corrección para toda la cascada: las filas de la misma raíz cambian juntas (Unicidad, C24 p.5).
     const historia = { campos: ['ceiba'], desde: new Date(cal[0].desde), hasta: AHORA }
-    const deCascada = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).find(p => p.raiz !== p.eventoId && p.causa.tipo === 'aire')
-    const enCascada = await E.clasificarParada({ rolId: 'sup' }, deCascada.id, { pasos: { responsable: 'op-mantenimiento' }, aplicarALaCascada: true })
+    const conRaiz = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const deCascada = conRaiz.find(p => p.raiz !== p.eventoId && p.causa.tipo === 'aire')
+    const enCascada = await E.clasificarParada({ rolId: 'sup' }, deCascada.id, { pasos: { responsable: 'op-mantenimiento' }, aplicarALaCascada: true,
+      ids: conRaiz.filter(p => p.raiz === deCascada.raiz).map(p => p.id) })
     const hermanas = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).filter(p => p.raiz === deCascada.raiz)
     comprobar(enCascada.ok && hermanas.length > 5 && hermanas.every(p => p.clasificacion.responsable?.procedencia !== 'regla' && p.clasificacion.responsable?.porId === 'sup')
       && new Set(hermanas.map(p => p.eventoId)).size === hermanas.filter(p => p.tramo.n === 1).length,
       `una corrección con «aplicarALaCascada» vale para las ${hermanas.length} filas de la raíz ${deCascada.raiz} (${new Set(hermanas.map(p => p.pozo)).size} pozos)`)
     // e2. Lo guardado en el tramo de exceso del programa es otra decisión: lo que se
-    //     dice del evento entero no lo borra (guardarClasificacion; v_clasificacion_fuente).
+    //     dice del evento entero no lo borra (objetivosDe en escrituras.ts; v_clasificacion_fuente).
     const historiaTodos = { campos: ['ceiba', 'morichal', 'guacamayo', 'palmar', 'zarza'], desde: new Date(cal[0].desde), hasta: AHORA }
     const todas = ARB.pedirParadasAnh(historiaTodos, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
     const exc = todas.find(p => p.exceso && todas.some(q => q.eventoId === p.eventoId && !q.exceso))
@@ -677,12 +679,14 @@ try {
     //     después de leído: es la clave de la caché de las vistas, y un objeto cambiado dejaba la fila vieja).
     const sola = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
       .find(p => p.propuesta.preguntas.some(x => x.id === 'corte') && !Object.keys(SES.sesion().clasificacionesAnh).some(k => k === p.id || k === p.eventoId))
-    const conf11 = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [sola.id], pasos: ['planeacion', 'impacto'] })
+    const conf11 = await E.confirmarParadasAnh({ rolId: 'oper' }, { ids: [sola.id], pasos: ['planeacion', 'impacto'], cadena: ARB.cadenaVista(sola.clasificacion) })
     const resp11 = await E.responderPreguntaAnh({ rolId: 'oper' }, sola.id, { pregunta: 'corte', opcion: deEstePozo, aplicarAlEvento: true })
     const vista11 = ARB.pedirParadasAnh(historia, SES.sesion().ctx, SES.sesion().clasificacionesAnh).find(p => p.id === sola.id)
+    const g11 = SES.sesion().clasificacionesAnh
     comprobar(conf11.ok && resp11.ok && vista11.clasificacion.choke?.procedencia === 'declarado' && vista11.clasificacion.planeacion?.procedencia === 'confirmado'
-      && !vista11.propuesta.preguntas.some(x => x.id === 'corte') && !Object.hasOwn(SES.sesion().clasificacionesAnh, sola.id),
-      `confirmado por fila y contestado después para el evento (${sola.id}): la vista trae las dos cosas y lo de la fila pasa al evento`)
+      && !vista11.propuesta.preguntas.some(x => x.id === 'corte') && g11[sola.id]?.planeacion?.procedencia === 'confirmado' && g11[sola.eventoId]?.choke?.procedencia === 'declarado'
+      && !g11[sola.eventoId]?.planeacion,
+      `confirmado por fila y contestado después para el evento (${sola.id}): la vista trae las dos cosas, paso por paso (D1); lo de la fila se queda en la fila y el evento guarda solo lo que la respuesta determinó`)
     // b. «Algo está mal» y «Pedir a producción»: no corrigen; quien revisa la atiende al decir algo de ella.
     const aRev = todas11.find(p => p.estado === 'propuesta' && p.eventoId !== conCorte.eventoId && p.eventoId !== conQue.eventoId && !Object.keys(SES.sesion().clasificacionesAnh).some(k => k === p.id || k === p.eventoId))
     const rv11 = await E.revisarParadaAnh({ rolId: 'oper' }, aRev.id, { motivo: 'No paró por la energía: lo cerraron para una prueba', aplicarAlEvento: true })
@@ -692,7 +696,7 @@ try {
     const pide = await E.revisarParadaAnh({ rolId: 'sup' }, aRev.id, { motivo: '¿Fue el yacimiento? Revise la prueba del pozo', pedirA: 'prod', aplicarAlEvento: true })
     const supOtraVez = await E.clasificarParada({ rolId: 'sup' }, aRev.id, { pasos: { impacto: 'diferida' }, aplicarAlEvento: true })
     const sigueParaProd = ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
-    const prodConfirma = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [aRev.id] })
+    const prodConfirma = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [aRev.id], cadena: ARB.cadenaVista(ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh).clasificacion) })
     const yaProd = ARB.pedirParadaAnh(aRev.id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
     comprobar(rv11.ok && revAbierta.revision?.motivo.startsWith('No paró') && !revAbierta.revision.atendida && ARB.esperaRevision(revAbierta.revision, 'sup') && !ARB.esperaRevision(revAbierta.revision, 'oper')
       && atiende.ok && revAtendida.revision?.atendida?.porId === 'sup'
@@ -735,6 +739,20 @@ try {
     const cerca12 = (a, b) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b))
     comprobar(confirmadas12 > 0 && arboles12.every(a => cerca12(a.raiz.confirmadoBbl, confirmadas12) && cerca12(a.raiz.bbl, libro12.diferido) && a.raiz.filas === filas12.length),
       `lo que dijeron las personas en la sesión llega al árbol: ${Math.round(confirmadas12)} bbl con los 6 pasos confirmados en La Ceiba, ${cerrado.mes}, en los tres órdenes; la raíz sigue siendo el diferido del libro (${Math.round(libro12.diferido)} bbl)`)
+    // a2. QA-A-01 / C-09: el reparto por tramo lee LAS MISMAS filas que el árbol, con lo que corrigen las
+    //     personas: corregir «Dónde se trabó» mueve igual las dos vistas. La sesión vuelve a como estaba.
+    const foto12 = { ...SES.sesion() }
+    const deTramo12 = filas12.find(p => p.clasificacion.choke?.valor === 'planta' && p.estado !== 'confirmada')
+    const corr12 = deTramo12 && await E.clasificarParada({ rolId: 'jefe' }, deTramo12.id, { pasos: { choke: 'pozo' }, motivo: 'Se revisó en campo: solo afectó a ese pozo', cadena: ARB.cadenaVista(deTramo12.clasificacion) })
+    const s12b = SES.sesion()
+    const rep12 = CHK.pedirRepartoChoke(qa12, s12b.ctx, undefined, s12b.clasificacionesAnh)
+    const arb12b = CHK.pedirArbolChoke({ ...qa12, orden: 'gestion' }, s12b.ctx, s12b.clasificacionesAnh)
+    const nivel12 = Object.fromEntries(arb12b.raiz.hijos.map(h => [h.valor, h.bbl]))
+    const tramos12 = [...new Set([...Object.keys(rep12.porChoke), ...Object.keys(nivel12)])]
+    const movio12 = deTramo12 && ARB.pedirParadaAnh(deTramo12.id, s12b.ctx, s12b.clasificacionesAnh)?.clasificacion.choke?.valor === 'pozo'
+    comprobar(!!corr12?.ok && !!movio12 && tramos12.every(k => cerca12(rep12.porChoke[k] ?? 0, nivel12[k] ?? 0)),
+      `corregir «Dónde se trabó» de ${deTramo12?.pozo ?? '(no hay una fila de planta sin confirmar)'} a «En el pozo» mueve igual el reparto por tramo y el árbol: ${tramos12.filter(k => (nivel12[k] ?? 0) > 0).map(k => `${k} ${Math.round(nivel12[k])}`).join(' · ')}${corr12 && !corr12.ok ? ` (no se pudo corregir: ${corr12.error})` : ''}`)
+    SES.cambiarSesion(foto12)
     // b. El códec revisa el árbol al entrar: un nodo que no suma, unas hermanas fuera de orden o un orden que no existe no entran, y dice dónde.
     const j12 = JSON.parse(JSON.stringify(K.aRespuesta(C.ARBOL_CHOKE.codec, arboles12[0])))
     const revivir12 = j => { try { K.deRespuesta(C.ARBOL_CHOKE.codec, j); return '' } catch (e) { return e instanceof K.ErrorDeContrato ? e.message : `otro error: ${e.message}` } }
@@ -748,6 +766,273 @@ try {
     // c. La ruta lleva el orden en la consulta.
     comprobar(C.urlDe(C.ARBOL_CHOKE, { ...qa12, orden: 'circular' }).startsWith('/vistas/choke/arbol?campos=ceiba&desde=') && /&orden=circular$/.test(C.urlDe(C.ARBOL_CHOKE, { ...qa12, orden: 'circular' })),
       `el orden va en la consulta: ${C.urlDe(C.ARBOL_CHOKE, { ...qa12, orden: 'circular' }).replace(/desde=[^&]+&hasta=[^&]+/, 'desde=…&hasta=…')}`)
+
+    console.log('\n=== 13. Lo que dicen las personas se guarda paso por paso (D1: C-01, C-02, C-03, C-05, C-06; B-04) ===')
+    // Cada caso vuelve a la misma foto de la sesión y corre aparte: si algo lanza,
+    // la comprobación falla con la excepción y las demás siguen.
+    const foto13 = { ...SES.sesion() }
+    const volver13 = () => SES.cambiarSesion(foto13)
+    const fila13 = id => ARB.pedirParadaAnh(id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+    const caso = async (msg, f) => {
+      volver13()
+      let r
+      try { r = await f() } catch (e) { r = { bien: false, dice: `excepción: ${e?.message ?? e}` } }
+      comprobar(r.bien, `${msg}${r.dice ? ` (${r.dice})` : ''}`)
+    }
+    const hist13 = ARB.pedirParadasAnh(historia, foto13.ctx, foto13.clasificacionesAnh)
+    const sinGuardar = p => !Object.keys(foto13.clasificacionesAnh).some(k => k === p.id || k === p.eventoId)
+    const porRaiz13 = new Map()
+    for (const p of hist13) if (p.raiz !== p.eventoId && !p.exceso) (porRaiz13.get(p.raiz) ?? porRaiz13.set(p.raiz, []).get(p.raiz)).push(p)
+    // Una cascada de varios eventos con la cadena completa, sin nada guardado todavía.
+    const [raiz13, filasC] = [...porRaiz13.entries()].find(([, fs]) => new Set(fs.map(f => f.eventoId)).size >= 3 && fs.every(sinGuardar)
+      && fs.every(f => f.clasificacion.n1 && f.clasificacion.n2 && f.clasificacion.responsable))
+    const idsC = hist13.filter(p => p.raiz === raiz13).map(p => p.id)
+    const A13 = filasC[0], B13 = filasC.find(f => f.eventoId !== A13.eventoId)
+    const otroDetalle = f => ANC.N2_CIRCULAR.find(n => n.n1 === f.clasificacion.n1.valor && n.codigo !== f.clasificacion.n2.valor)?.codigo
+    const otroResp = v => (v === 'op-operacion' ? 'op-mantenimiento' : 'op-operacion')
+    /** El jefe corrige el detalle de B para su evento, con motivo: lo que tiene que sobrevivir. */
+    const jefeEnB = async () => {
+      const r = await E.clasificarParada({ rolId: 'jefe' }, B13.id, { pasos: { n2: otroDetalle(B13) }, motivo: 'Se abrió el equipo: fue otra cosa', aplicarAlEvento: true, cadena: ARB.cadenaVista(B13.clasificacion) })
+      if (!r.ok) throw new Error(`el jefe no pudo corregir B: ${r.error}`)
+      return fila13(B13.id).clasificacion.n2
+    }
+
+    await caso(`C-01 · «Algo está mal» del operador en ${A13.pozo} para la cascada de ${raiz13} (con las filas que vio) no toca ningún paso: el detalle que corrigió el jefe en ${B13.pozo} sigue suyo`, async () => {
+      const n2 = await jefeEnB()
+      const rv = await E.revisarParadaAnh({ rolId: 'oper' }, A13.id, { motivo: 'No paró por la energía: lo cerraron para una prueba', aplicarALaCascada: true, ids: idsC, cadena: ARB.cadenaVista(fila13(A13.id).clasificacion) })
+      const b = fila13(B13.id)
+      return { bien: rv.ok && b.clasificacion.n2?.porId === 'jefe' && b.clasificacion.n2?.valor === n2.valor && b.revision?.porId === 'oper' && b.estado === fila13(B13.id).estado,
+        dice: rv.ok ? `${B13.pozo}: detalle ${b.clasificacion.n2?.valor} · ${b.clasificacion.n2?.porId ?? 'TRIM'}` : rv.error }
+    })
+    await caso('C-01 · una respuesta de campo del operador para la cascada no cambia lo que dijo el jefe en otro pozo: queda en la conversación de cada evento', async () => {
+      // Una cascada cuya fila trae una pregunta de campo que deja «Quién» (la del programa: «¿Qué trabajo era?»).
+      const [r, fs] = [...porRaiz13.entries()].find(([, x]) => new Set(x.map(f => f.eventoId)).size >= 2 && x.every(sinGuardar)
+        && x[0].propuesta.preguntas.some(q => q.quien === 'campo' && q.opciones.some(o => o.deja.responsable))) ?? []
+      if (!r) return { bien: false, dice: 'el demo no trae una cascada con una pregunta de campo abierta' }
+      const a = fs[0], b = fs.find(f => f.eventoId !== a.eventoId)
+      const q = a.propuesta.preguntas.find(x => x.quien === 'campo' && x.opciones.some(o => o.deja.responsable))
+      const op = q.opciones.find(o => o.deja.responsable)
+      const delJefe = otroResp(op.deja.responsable)
+      const j = await E.clasificarParada({ rolId: 'jefe' }, b.id, { pasos: { responsable: delJefe }, motivo: 'Ese trabajo lo hizo operación', aplicarAlEvento: true, cadena: ARB.cadenaVista(b.clasificacion) })
+      if (!j.ok) throw new Error(`el jefe no pudo decir «Quién» en ${b.pozo}: ${j.error}`)
+      const ids = hist13.filter(p => p.raiz === r).map(p => p.id)
+      const rr = await E.responderPreguntaAnh({ rolId: 'oper' }, a.id, { pregunta: q.id, opcion: op.texto, aplicarALaCascada: true, ids, cadena: ARB.cadenaVista(fila13(a.id).clasificacion) })
+      const fb = fila13(b.id), fa = fila13(a.id)
+      return { bien: rr.ok && fb.clasificacion.responsable?.valor === delJefe && fb.clasificacion.responsable.porId === 'jefe' && fb.clasificacion.respuestas?.some(x => x.porId === 'oper' && x.opcion === op.texto)
+        && fa.clasificacion.responsable?.porId === 'oper' && fa.clasificacion.responsable.procedencia === 'declarado',
+        dice: rr.ok ? `«${op.texto}» en ${r}: «Quién» de ${b.pozo} = ${fb.clasificacion.responsable?.valor} · ${fb.clasificacion.responsable?.porId}` : rr.error }
+    })
+    await caso(`C-01 · cambiar «Quién» para la cascada cuando el jefe dijo otro en ${B13.pozo}: 409 diciendo cuál, sin motivo; con motivo pasa, como corrección, y el detalle del jefe sigue (paso por paso)`, async () => {
+      await jefeEnB()
+      const respB = fila13(B13.id).clasificacion.responsable.valor
+      const r0 = await E.clasificarParada({ rolId: 'jefe' }, B13.id, { pasos: { responsable: otroResp(respB) }, motivo: 'El equipo es de operación', aplicarAlEvento: true, cadena: ARB.cadenaVista(fila13(B13.id).clasificacion) })
+      if (!r0.ok) throw new Error(r0.error)
+      const cuerpo = { pasos: { responsable: otroResp(fila13(B13.id).clasificacion.responsable.valor) }, aplicarALaCascada: true, ids: idsC, cadena: ARB.cadenaVista(fila13(A13.id).clasificacion) }
+      const sin = await E.clasificarParada({ rolId: 'sup' }, A13.id, cuerpo)
+      const con = await E.clasificarParada({ rolId: 'sup' }, A13.id, { ...cuerpo, motivo: 'Lo opera la estación de operación' })
+      const b = fila13(B13.id)
+      return { bien: !sin.ok && /otra persona/.test(sin.error) && sin.error.includes(B13.pozo) && con.ok
+        && b.clasificacion.responsable?.porId === 'sup' && b.clasificacion.responsable?.porque === 'Lo opera la estación de operación' && b.clasificacion.n2?.porId === 'jefe',
+        dice: `sin motivo: ${sin.ok ? 'PASÓ' : sin.error.slice(0, 110)}${con.ok ? '' : `; con motivo: ${con.error}`}` }
+    })
+    await caso(`C-01 · la cascada con una fila que la pantalla no mostró: 409 («la cascada cambió»); una fila de otra raíz: 422`, async () => {
+      const otroEv = idsC.filter(id => !id.startsWith(`${B13.eventoId}@`))
+      const falta = await E.clasificarParada({ rolId: 'sup' }, A13.id, { pasos: { impacto: 'diferida' }, aplicarALaCascada: true, ids: otroEv })
+      const ajena = hist13.find(p => p.raiz !== raiz13)
+      const deOtra = await E.clasificarParada({ rolId: 'sup' }, A13.id, { pasos: { impacto: 'diferida' }, aplicarALaCascada: true, ids: [...idsC, ajena.id] })
+      const sinIds = await E.clasificarParada({ rolId: 'sup' }, A13.id, { pasos: { impacto: 'diferida' }, aplicarALaCascada: true })
+      return { bien: !falta.ok && /cascada de .* cambió/.test(falta.error) && falta.error.includes(B13.pozo) && !deOtra.ok && /no es de la cascada/.test(deOtra.error)
+        && !sinIds.ok && /ids/.test(sinIds.error) && SES.sesion().clasificacionesAnh === foto13.clasificacionesAnh,
+        dice: `${falta.ok ? 'PASÓ sin ver una fila' : falta.error.slice(0, 90)} · ${deOtra.ok ? 'PASÓ con una fila ajena' : deOtra.error.slice(0, 60)} · ${sinIds.ok ? 'PASÓ sin ids' : 'sin ids: 422'}` }
+    })
+    await caso(`C-01 · dentro de un evento: «Algo está mal» del operador en una fila no borra la confirmación de producción en otra`, async () => {
+      const largos = new Map()
+      for (const p of hist13) if (!p.exceso && sinGuardar(p)) (largos.get(p.eventoId) ?? largos.set(p.eventoId, []).get(p.eventoId)).push(p)
+      const [, fs] = [...largos.entries()].find(([, x]) => x.length >= 3 && x.every(f => f.estado === 'propuesta'))
+      const [R1, R2] = fs
+      const c2 = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [R2.id], cadena: ARB.cadenaVista(R2.clasificacion) })
+      const rv = await E.revisarParadaAnh({ rolId: 'oper' }, R1.id, { motivo: 'Este pozo no paró por esto: revisen', aplicarAlEvento: true, cadena: ARB.cadenaVista(fila13(R1.id).clasificacion) })
+      return { bien: c2.ok && rv.ok && fila13(R2.id).estado === 'confirmada' && fila13(R1.id).revision?.porId === 'oper', dice: `${R2.id} queda ${fila13(R2.id).estado}` }
+    })
+    await caso(`C-02 · el yacimiento que puso producción en ${A13.pozo} no se copia a los otros pozos cuando el supervisor cambia otro paso para la cascada`, async () => {
+      const y = await E.declararYacimientoAnh({ rolId: 'prod' }, A13.id, { evidencia: 'corte-agua', motivo: 'El corte de agua subió al 98 %', cadena: ARB.cadenaVista(A13.clasificacion) })
+      if (!y.ok) throw new Error(y.error)
+      const r = await E.clasificarParada({ rolId: 'sup' }, A13.id, { pasos: { responsable: otroResp(fila13(A13.id).clasificacion.responsable.valor) }, motivo: 'Lo opera la estación',
+        aplicarALaCascada: true, ids: idsC, cadena: ARB.cadenaVista(fila13(A13.id).clasificacion) })
+      const otras = idsC.filter(id => !id.startsWith(`${A13.eventoId}@`)).map(fila13)
+      return { bien: r.ok && fila13(A13.id).clasificacion.choke?.valor === 'reservorio' && otras.every(f => f.clasificacion.choke?.valor !== 'reservorio' && f.clasificacion.choke?.porId !== 'prod')
+        && otras.every(f => f.clasificacion.responsable?.porId === 'sup'),
+        dice: r.ok ? `${otras.filter(f => f.clasificacion.choke?.valor === 'reservorio').length} de ${otras.length} filas con el yacimiento copiado` : r.error }
+    })
+    await caso('C-02 · la marca de un lote no se copia a filas que no estuvieron en él cuando el jefe corrige para la cascada', async () => {
+      const grupo = [...ARB.gruposPorCadena(filasC.map(f => fila13(f.id))).values()].find(g => g.length >= 2)
+      const lote = await E.confirmarParadasAnh({ rolId: 'sup' }, { ids: grupo.slice(0, 2).map(p => p.id), cadena: ARB.cadenaVista(grupo[0].clasificacion) })
+      if (!lote.ok) throw new Error(lote.error)
+      const r = await E.clasificarParada({ rolId: 'jefe' }, grupo[0].id, { pasos: { n2: otroDetalle(grupo[0]) }, motivo: 'Se abrió el equipo: fue otra cosa', aplicarALaCascada: true, ids: idsC, cadena: ARB.cadenaVista(fila13(grupo[0].id).clasificacion) })
+      const fuera = idsC.filter(id => !lote.lote.paradas.includes(id)).map(fila13)
+      return { bien: r.ok && fuera.every(f => ANC.PASOS.every(x => f.clasificacion[x]?.lote !== lote.lote.id)),
+        dice: r.ok ? `${fuera.filter(f => ANC.PASOS.some(x => f.clasificacion[x]?.lote === lote.lote.id)).length} filas ajenas con la marca del lote` : r.error }
+    })
+    await caso('C-03 · lo guardado es por paso y con su consecutivo: el evento guarda solo los pasos de esta petición (no el borrador entero de la fila)', async () => {
+      await jefeEnB()
+      const g = SES.sesion().clasificacionesAnh[B13.eventoId]
+      const pasosB = ANC.PASOS.filter(x => g?.[x])
+      return { bien: pasosB.every(x => typeof g[x].n === 'number' && g[x].porId === 'jefe') && pasosB.every(x => ['n1', 'n2'].includes(x)) && !g.responsable,
+        dice: `en ${B13.eventoId}: ${pasosB.map(x => `${x}·${g[x].procedencia}·n${g[x].n}`).join(', ')}` }
+    })
+    await caso('C-05 · cambiar «¿Planeada?» sobre la causa del jefe pide motivo; con él, la causa y el detalle quedan «retirados» (con quién y por qué) y vuelve lo de TRIM', async () => {
+      const n2 = await jefeEnB()
+      const sin = await E.clasificarParada({ rolId: 'sup' }, B13.id, { pasos: { planeacion: 'planeada' }, aplicarAlEvento: true, cadena: ARB.cadenaVista(fila13(B13.id).clasificacion) })
+      const con = await E.clasificarParada({ rolId: 'sup' }, B13.id, { pasos: { planeacion: 'planeada' }, motivo: 'Estaba en el programa del mes', aplicarAlEvento: true, cadena: ARB.cadenaVista(fila13(B13.id).clasificacion) })
+      const g = SES.sesion().clasificacionesAnh[B13.eventoId], b = fila13(B13.id)
+      return { bien: !sin.ok && /Falta el motivo/.test(sin.error) && con.ok && g.n2?.procedencia === 'retirado' && g.n2.valor === n2.valor && g.n2.porId === 'sup' && g.n2.porque === 'Estaba en el programa del mes'
+        && !g.n1 && g.planeacion?.procedencia === 'corregido' && !b.clasificacion.n1 && !ARB.esDePersona(b.clasificacion.n2?.procedencia ?? 'regla') && b.clasificacion.planeacion?.valor === 'planeada',
+        dice: `sin motivo: ${sin.ok ? 'PASÓ y borró la causa del jefe' : 'pide motivo'}; guardado: ${ANC.PASOS.filter(x => g?.[x]).map(x => `${x}·${g[x].procedencia}`).join(', ')}` }
+    })
+    await caso('C-06 · confirmar sin «cadena» es 400; el lote guarda la cadena que vio la persona', async () => {
+      const grupo = [...ARB.gruposPorCadena(ARB.pedirParadasAnh(mesA, foto13.ctx, foto13.clasificacionesAnh).filter(sinGuardar)).values()].find(g => g.length >= 2)
+      const sin = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [grupo[0].id] })
+      const vista = ARB.cadenaVista(grupo[0].clasificacion)
+      const lote = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: grupo.map(p => p.id), cadena: vista })
+      return { bien: !sin.ok && /«cadena» falta/.test(sin.error) && lote.ok && lote.lote?.cadena === vista, dice: sin.ok ? 'confirmó sin ver' : sin.error.slice(0, 70) }
+    })
+    await caso('B-04 · contestar una pregunta deja «declarado» solo el paso que determina: ningún paso sale «confirmado» por una respuesta', async () => {
+      const p = hist13.find(x => sinGuardar(x) && x.propuesta.preguntas.some(q => q.id === 'corte') && x.clasificacion.planeacion?.procedencia === 'regla')
+      const q = p.propuesta.preguntas.find(x => x.id === 'corte')
+      const op = q.opciones.find(o => o.deja.planeacion === p.clasificacion.planeacion.valor && o.deja.choke && o.deja.choke !== p.clasificacion.choke?.valor) ?? q.opciones[0]
+      const r = await E.responderPreguntaAnh({ rolId: 'oper' }, p.id, { pregunta: 'corte', opcion: op.texto, aplicarAlEvento: true, cadena: ARB.cadenaVista(p.clasificacion) })
+      const f = fila13(p.id)
+      return { bien: r.ok && ANC.PASOS.every(x => f.clasificacion[x]?.procedencia !== 'confirmado') && f.clasificacion.planeacion?.procedencia === 'regla'
+        && f.clasificacion.choke?.procedencia === 'declarado' && f.clasificacion.choke.porId === 'oper',
+        dice: r.ok ? ANC.PASOS.map(x => `${x}:${f.clasificacion[x]?.procedencia ?? '—'}`).join(' ') : r.error }
+    })
+
+    console.log('\n=== 14. Contrato, permisos, formas y topes (C-06, C-10 a C-27; B-05) ===')
+    await caso('C-17 · «En el yacimiento» con aplicarALaCascada (que su cuerpo no trae) se queda en su pozo', async () => {
+      const r = await E.declararYacimientoAnh({ rolId: 'prod' }, A13.id, { evidencia: 'prueba', aplicarALaCascada: true, ids: idsC, cadena: ARB.cadenaVista(A13.clasificacion) })
+      const otras = idsC.filter(id => !id.startsWith(`${A13.eventoId}@`)).map(fila13)
+      return { bien: r.ok && otras.every(f => f.clasificacion.choke?.valor !== 'reservorio'), dice: `${otras.filter(f => f.clasificacion.choke?.valor === 'reservorio').length} filas de otros pozos «en el yacimiento»` }
+    })
+    await caso('C-18 · una pregunta que no es de TRIM o no es de esta parada es 422, no «alguien ya la contestó»', async () => {
+      const p = hist13.find(x => sinGuardar(x) && x.propuesta.preguntas.some(q => q.id === 'corte'))
+      const inventada = await E.responderPreguntaAnh({ rolId: 'oper' }, p.id, { pregunta: 'no-existe', opcion: 'x' })
+      const ajena = await E.responderPreguntaAnh({ rolId: 'oper' }, p.id, { pregunta: 'nominacion', opcion: 'x' })
+      const q = p.propuesta.preguntas.find(x => x.id === 'corte')
+      await E.responderPreguntaAnh({ rolId: 'oper' }, p.id, { pregunta: 'corte', opcion: q.opciones[0].texto })
+      const otraVez = await E.responderPreguntaAnh({ rolId: 'oper' }, p.id, { pregunta: 'corte', opcion: q.opciones[0].texto })
+      return { bien: !inventada.ok && /no es una pregunta de TRIM/.test(inventada.error) && !ajena.ok && /no es de esta parada/.test(ajena.error) && !otraVez.ok && /ya contestó/.test(otraVez.error),
+        dice: `${inventada.error} · ${ajena.error} · ${otraVez.error?.slice(0, 40)}` }
+    })
+    await caso('C-19 · el mismo lote dos veces no deja un lote vacío; la misma revisión sin atender y «No sé» repetido no se guardan dos veces', async () => {
+      const grupo = [...ARB.gruposPorCadena(ARB.pedirParadasAnh(mesA, foto13.ctx, foto13.clasificacionesAnh).filter(sinGuardar)).values()].find(g => g.length >= 2)
+      const cuerpo = { ids: grupo.map(p => p.id), cadena: ARB.cadenaVista(grupo[0].clasificacion) }
+      const l1 = await E.confirmarParadasAnh({ rolId: 'sup' }, cuerpo)
+      const l2 = await E.confirmarParadasAnh({ rolId: 'sup' }, { ...cuerpo, cadena: ARB.cadenaVista(fila13(grupo[0].id).clasificacion) })
+      const lotes = SES.sesion().lotesAnh.length
+      const x = hist13.find(p => sinGuardar(p) && p.estado === 'propuesta' && p.eventoId !== grupo[0].eventoId)
+      await E.revisarParadaAnh({ rolId: 'oper' }, x.id, { motivo: 'Esto no fue así, revisen' })
+      const n1 = fila13(x.id).revision?.n
+      await E.revisarParadaAnh({ rolId: 'oper' }, x.id, { motivo: 'Esto no fue así, revisen' })
+      const conCorte = hist13.find(p => sinGuardar(p) && p.propuesta.preguntas.some(q => q.id === 'corte'))
+      for (let i = 0; i < 3; i++) await E.responderPreguntaAnh({ rolId: 'oper' }, conCorte.id, { pregunta: 'corte', opcion: 'No sé' })
+      return { bien: l1.ok && !l2.ok && /Ya estaban confirmadas/.test(l2.error) && lotes === foto13.lotesAnh.length + 1 && fila13(x.id).revision?.n === n1
+        && fila13(conCorte.id).clasificacion.respuestas?.length === 1,
+        dice: `segundo lote: ${l2.ok ? `PASÓ (${l2.lote?.id}, ${l2.lote?.pasos.length} pasos)` : 'no se guarda'}; respuestas «No sé»: ${fila13(conCorte.id).clasificacion.respuestas?.length}` }
+    })
+    await caso('C-20 · una fila de un campo que la persona no tiene y una que no existe responden lo mismo (no se dice si existe)', async () => {
+      const deMorichal = ARB.pedirParadasAnh({ campos: ['morichal'], desde: mesA.desde, hasta: mesA.hasta }, foto13.ctx, foto13.clasificacionesAnh)[0]
+      const existe = await E.clasificarParada({ rolId: 'sup' }, deMorichal.id, { pasos: { impacto: 'diferida' } })
+      const noExiste = await E.clasificarParada({ rolId: 'sup' }, deMorichal.id.replace(/#\d+$/, '#99'), { pasos: { impacto: 'diferida' } })
+      return { bien: !existe.ok && !noExiste.ok && existe.error === noExiste.error, dice: `${existe.error} | ${noExiste.error}` }
+    })
+    await caso('C-14 · una persona con un rol oculto (cont) no escribe con las capacidades de producción', async () => {
+      SES.cambiarSesion({ usuarios: [...foto13.usuarios, { id: 'u-cont', nombre: 'Paula Gómez', correo: 'paula.gomez@operadora.example', rolId: 'cont', campos: 'todos', estado: 'activo', desde: '2026-09-01', alertas: false }] })
+      const x = hist13.find(p => p.estado === 'propuesta')
+      const rv = await E.revisarParadaAnh({ rolId: 'cont' }, x.id, { motivo: 'Esto no fue así, revisen' })
+      const asig = await E.cargarAsignacion({ rolId: 'cont' }, { filas: [{ mes: '2026-08', campoId: 'ceiba', pozo: 'LC-14', bbl: 1, horas: 1 }], motivo: 'prueba del rol oculto' })
+      return { bien: !rv.ok && !asig.ok && /no está entre los del producto/.test(rv.error) && /no está entre los del producto/.test(asig.error), dice: `${rv.ok ? 'marcó la revisión' : rv.error} · ${asig.ok ? 'cargó la asignación' : asig.error}` }
+    })
+    await caso('C-11 · cuerpos con una forma inesperada: 400 en palabras, nunca una excepción', async () => {
+      const x = hist13.find(p => p.estado === 'propuesta')
+      const conEl = { ...foto13.ctx.config }
+      const formas = await Promise.all([
+        E.confirmarParadasAnh({ rolId: 'sup' }, { ids: 5, cadena: 'x' }), E.confirmarParadasAnh({ rolId: 'sup' }, { ids: [x.id], pasos: 'choke', cadena: 'x' }),
+        E.clasificarParada({ rolId: 'sup' }, x.id, { pasos: ['choke'] }), E.clasificarParada({ rolId: 'sup' }, x.id, { pasos: { impacto: 1 } }),
+        E.clasificarParada({ rolId: 'sup' }, x.id, { pasos: { impacto: 'perdida' }, motivo: 123456 }), E.clasificarParada({ rolId: 'sup' }, x.id, { pasos: { impacto: 'diferida' }, cadena: 7 }),
+        E.declararYacimientoAnh({ rolId: 'prod' }, x.id, { evidencia: { x: 1 } }), E.responderPreguntaAnh({ rolId: 'oper' }, x.id, { pregunta: 'corte', opcion: 0 }),
+        E.revisarParadaAnh({ rolId: 'oper' }, x.id, { motivo: ['a', 'b', 'c', 'd', 'e'] }), E.revisarParadaAnh({ rolId: 'oper' }, x.id, { motivo: 123456 }),
+        E.previsualizarConfiguracion({ rolId: 'adm' }, { config: null }),
+        E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...conEl, capacidades: 'texto' }, motivo: 'prueba de formas', base: foto13.versiones.at(-1).version }),
+        E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...conEl, topologia: 'texto' }, motivo: 'prueba de formas', base: foto13.versiones.at(-1).version }),
+        E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...conEl, topologia: [null] }, motivo: 'prueba de formas', base: foto13.versiones.at(-1).version }),
+        E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...conEl, topologia: [{ elemento: 42, choke: 'planta', alcance: 'compartido', pozos: ['LC-01', 'LC-02'], campoId: 'ceiba' }] }, motivo: 'prueba de formas', base: foto13.versiones.at(-1).version }),
+        E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...conEl, topologia: [{ elemento: 'K-101', choke: 'planta', alcance: 'compartido', pozos: 'LC-01', campoId: 'ceiba' }] }, motivo: 'prueba de formas', base: foto13.versiones.at(-1).version }),
+        E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: 42 }),
+      ].map(pr => pr.catch(e => ({ ok: false, excepcion: e.message }))))
+      const malas = formas.map((r, i) => [i, r]).filter(([, r]) => r.ok || r.excepcion || !/forma del contrato|tiene que ser|Diga qué está mal|Falta el motivo/.test(r.error))
+      return { bien: malas.length === 0, dice: malas.length ? malas.map(([i, r]) => `#${i}: ${r.ok ? 'PASÓ' : r.excepcion ?? r.error}`).join(' · ').slice(0, 300) : `${formas.length} cuerpos, todos con palabras` }
+    })
+    await caso('C-12 · un motivo de más de 500 caracteres no entra; la carga CSV devuelve a lo más 50 hallazgos y recorta el equipo escrito', async () => {
+      const x = hist13.find(p => sinGuardar(p) && p.estado === 'propuesta')
+      const largo = await E.revisarParadaAnh({ rolId: 'oper' }, x.id, { motivo: 'a'.repeat(600) })
+      const csv = await E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: `${'X'.repeat(1000)};LC-01\n` + Array.from({ length: 120 }, (_, i) => `NO-EXISTE-${i};LC-01`).join('\n') })
+      return { bien: !largo.ok && /500 caracteres/.test(largo.error) && csv.ok && csv.hallazgos.length === 51 && /^Y \d+ hallazgos más/.test(csv.hallazgos.at(-1).texto)
+        && csv.hallazgos.every(h => (h.equipo ?? '').length <= 65 && h.texto.length < 400),
+        dice: `${largo.ok ? 'el motivo de 600 entró' : 'motivo: 422'} · ${csv.hallazgos?.length} hallazgos` }
+    })
+    await caso('C-21 · la vista previa de una versión que toca metas también pide metas:firmar', async () => {
+      const c0 = foto13.ctx.config
+      const ce = c0.campos.ceiba
+      // Una meta válida (un tramo que rige desde el mes que viene): lo único que la frena es quién la firma.
+      const conMeta = { ...c0, campos: { ...c0.campos, ceiba: { ...ce, metas: [...ce.metas, { ...ce.metas.at(-1), desde: '2026-11-01', produccionBpd: ce.metas.at(-1).produccionBpd + 100 }] } } }
+      const r = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: conMeta })
+      return { bien: !r.ok && /firma el gerente/.test(r.error), dice: r.ok ? 'la previsualizó' : r.error }
+    })
+    await caso('C-10 · un campo repetido cuenta una vez: la dirección no lo repite y las paradas ANH no se duplican', async () => {
+      const una = ARB.pedirParadasAnh(mesA, foto13.ctx, foto13.clasificacionesAnh).length
+      const dos = ARB.pedirParadasAnh({ ...mesA, campos: ['ceiba', 'ceiba'] }, foto13.ctx, foto13.clasificacionesAnh).length
+      const url = C.urlDe(C.PARADAS_ANH, { ...mesA, campos: ['ceiba', 'ceiba'] })
+      return { bien: una === dos && /campos=ceiba&/.test(url), dice: `${una} y ${dos} filas · ${url.slice(0, 40)}` }
+    })
+    await caso('C-13 · la topología no firma un pozo que sirve a otros, un elemento fuera del registro ni un equipo para todos que está «por saber» en un campo', async () => {
+      const base = foto13.ctx.config, v = foto13.versiones.at(-1).version
+      const topo = CHK.pedirTopologia('ceiba', foto13.ctx).elementos.map(({ nombre: _n, clase: _c, ...e }) => e)
+      // Cada firma parte de la misma foto: una que pase no le cambia la versión a la siguiente.
+      const firmar = t => { volver13(); return E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...base, ...t }, motivo: 'prueba de la topología', base: v }) }
+      const pozo = await firmar({ topologia: topo.map(e => (e.elemento === 'LC-01' ? { ...e, alcance: 'compartido', choke: 'planta', pozos: ['LC-01', 'LC-02'] } : e)) })
+      const noExiste = await firmar({ topologia: [...topo, { elemento: 'NO-EXISTE', choke: 'planta', alcance: 'compartido', pozos: ['LC-01', 'LC-02'], campoId: 'ceiba' }] })
+      const global = await firmar({ topologia: [...topo.filter(e => e.elemento !== 'K-101'), { elemento: 'K-101', choke: 'planta', alcance: 'compartido', pozos: ['LC-01', 'LC-02'] }], topologiaPorSaber: [{ elemento: 'K-101', campoId: 'ceiba' }] })
+      return { bien: !pozo.ok && /es un pozo/.test(pozo.error) && !noExiste.ok && /no está en el registro/.test(noExiste.error) && !global.ok && /a la vez/.test(global.error),
+        dice: `${pozo.ok ? 'firmó el pozo compartido' : pozo.error.slice(0, 60)} · ${noExiste.ok ? 'firmó NO-EXISTE' : noExiste.error.slice(0, 60)} · ${global.ok ? 'firmó K-101 global y por saber' : global.error.slice(0, 60)}` }
+    })
+    await caso('C-27 · sin motivo, la firma técnica dice lo de la configuración técnica, no lo de una meta', async () => {
+      const c0 = foto13.ctx.config
+      const r = await E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...c0, empresa: 'Otra empresa S.A.' }, motivo: '', base: foto13.versiones.at(-1).version })
+      return { bien: !r.ok && /configuración técnica/.test(r.error) && !/meta/.test(r.error), dice: r.error }
+    })
+    await caso('C-26 · un motivo invisible no alcanza: seis espacios no separables, cinco de ancho cero o solo signos', async () => {
+      const { alcanza } = await cargar('/src/entities/reglas.ts')
+      const nbsp = String.fromCharCode(0xa0).repeat(6), zw = String.fromCharCode(0x200b).repeat(5)
+      return { bien: !alcanza(nbsp, 5) && !alcanza(zw, 5) && !alcanza('.....', 5) && alcanza('Señal', 5) && alcanza(`  Ñandú ${zw}`, 5) && !alcanza(5, 5),
+        dice: [alcanza(nbsp, 5), alcanza(zw, 5), alcanza('.....', 5)].join(',') }
+    })
+    await caso('C-25 · las plantillas de la asignación y del plan neutralizan fórmulas y separadores', async () => {
+      const AS = await cargar('/src/entities/asignacion.ts'), PL = await cargar('/src/entities/plan.ts')
+      const t = AS.plantillaAsignacion('2026-08', 'ceiba', ['=1+1', 'LC;01'])
+      return { bien: t.includes(";'=1+1;") && t.includes(';"LC;01";') && !/;=1\+1;/.test(t) && PL.plantillaPlan([{ mes: '2026-08', campoId: 'ceiba', produccionBpd: 1 }]).includes('2026-08;La Ceiba;1'),
+        dice: t.split('\r\n').slice(1).join(' | ') }
+    })
+    await caso('B-05 · «2 Algo está mal» por WhatsApp deja para revisar las filas de la parada (la misma revisión del botón) y no toca ningún paso', async () => {
+      // Una parada de bomba de La Ceiba que cerró pozos: sus filas son las de la cascada de esa bomba.
+      const raizBomba = hist13.find(f => f.raiz !== f.eventoId && f.raiz.startsWith('EV-') && !f.exceso && sinGuardar(f))?.raiz
+      const antes = hist13.filter(f => f.raiz === raizBomba && !f.exceso)
+      const r = await E.revisarDesdeWhatsapp({ evento: raizBomba, campoId: 'ceiba', usuarioId: 'oper' })
+      const despues = antes.map(f => fila13(f.id))
+      return { bien: r.ok && despues.length > 0 && despues.every(f => f.revision?.porId === 'oper' && f.revision.motivo === E.MOTIVO_WHATSAPP && !f.revision.atendida)
+        && despues.every((f, i) => ANC.PASOS.every(x => f.clasificacion[x]?.valor === antes[i].clasificacion[x]?.valor && f.clasificacion[x]?.procedencia === antes[i].clasificacion[x]?.procedencia)),
+        dice: r.ok ? `${despues.filter(f => f.revision?.porId === 'oper').length} de ${despues.length} filas para revisar` : r.error }
+    })
+    volver13()
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */

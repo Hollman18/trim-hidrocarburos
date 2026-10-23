@@ -9,7 +9,9 @@
  *    agua de los pozos → tratamiento → tanques → bombas de reinyección → inyectores
  *
  *  - agua de los pozos = Σ agua de la prueba vigente de los pozos con prueba:
- *    la misma base del potencial de los pozos y del libro;
+ *    la misma base del potencial de los pozos; el agua se pasa a crudo con el
+ *    crudo de esas mismas pruebas (× el factor de medición, D3), nunca con el
+ *    factor de asignación del mes;
  *  - tratamiento y admisión de los inyectores: las capacidades firmadas o, sin
  *    firma, las del demo (capacidades.ts, `capacidadesDe`); lo que el demo no
  *    tiene va «sin dato»;
@@ -28,12 +30,14 @@
  *
  *  Es la foto de ahora: el nivel de un tanque solo se conoce ahora y al parar
  *  cada bomba. */
-import { pozosDe, NIVEL_AHORA } from './pozos'
+import { pozosDe, pruebaEn, NIVEL_AHORA } from './pozos'
 import { perfilBomba, paradasDe } from './bombas'
 import { respaldoDe } from './configuracion'
-import { crudoAsignado, aguaDePrueba } from './libro'
+import { aguaDePrueba } from './libro'
 import { prediccion, paradaMedida, aguaQueMueve, type Versiones } from './diferido'
-import { n0, PARAMETROS_CHOKE, type EstadoTramo } from './choke'
+import { n0, PARAMETROS_CHOKE, factorMedicion, listaY, mayuscula, type EstadoTramo } from './choke'
+import { CAMPOS_DE_GAS } from './planta'
+import { campoPorId } from './campos'
 import { capacidadesDe, type FuenteCapacidad } from './capacidades'
 import type { Contexto } from './causa-senal'
 import { AHORA, fechaHora } from './reloj'
@@ -47,6 +51,11 @@ export const NOMBRE_TRAMO_AGUA: Record<TramoAgua, string> = {
   tanques: 'Tanque de agua',
   bombas: 'Bombas de reinyección',
   inyectores: 'Pozos inyectores (disposición)',
+}
+/** Lo que falta de un tramo sin número, dicho en una frase (B-18). */
+const FALTA_TRAMO_AGUA: Record<TramoAgua, string> = {
+  producida: 'el agua de los pozos', tratamiento: 'la capacidad del tratamiento de agua', tanques: 'el tanque de agua',
+  bombas: 'la capacidad de las bombas', inyectores: 'la admisión de los inyectores',
 }
 
 /** El colchón de un tanque de agua: cuántas horas aguanta antes del alto-alto. */
@@ -118,17 +127,21 @@ export interface TuberiaAgua {
   campoId: string
   /** El instante de la foto, ms. */
   t: number
-  /** Agua y crudo de los pozos con prueba (prueba vigente; el crudo, asignado). */
+  /** Agua y crudo de los pozos con prueba (prueba vigente; el crudo, × el factor de medición, D3). */
   aguaBpd: number
   crudoBpd: number
+  /** El crudo que trae cada barril de agua según las pruebas. En un campo de gas, 0: su agua no se pasa a crudo (B-18). */
   crudoPorAgua: number
+  /** Un campo de gas: el agua se dice en agua, sin «≈ de crudo» (B-18; PLAN-MAESTRO §3). */
+  campoDeGas: boolean
   tramos: TramoTuberiaAgua[]
   /** Capacidades del tratamiento y de los inyectores (null: sin dato). */
   tratamientoBpd: number | null
   admisionInyectoresBpd: number | null
   /** El tramo con caudal de menor potencial. Si es el agua de los pozos, la disposición no limita. */
   dominante: TramoAgua
-  /** La disposición (no el agua de los pozos) es la que limita en régimen. */
+  /** La disposición (no el agua de los pozos) es la que limita en régimen. Solo
+   *  se dice con todos los tramos de la disposición con número (`faltanParaDecir` vacío). */
   limita: boolean
   /** El tramo de la disposición más angosto (sin el agua de los pozos). Con un
    *  empate entre las bombas y los inyectores manda el de los inyectores: lo
@@ -137,6 +150,11 @@ export interface TuberiaAgua {
   /** Los tramos de la disposición a menos del umbral del más angosto (U2 §0,
    *  principio 7), o null si el más angosto gana por más del umbral. */
   casiIguales: TramoAgua[] | null
+  /** Dos tramos de la disposición que dan exactamente lo mismo al barril (U2 §1.5, «Empate exacto»). */
+  empate: boolean
+  /** Los tramos de la disposición sin número: mientras falten, no se puede
+   *  decir que uno limita (B-18) y lo que cabe se dice sin contarlos. */
+  faltanParaDecir: TramoAgua[]
   /** Lo que le sobra a la disposición sobre el agua de los pozos, bbl/d (0 si limita). */
   sobraBpd: number
   /** Agua sin salida en régimen, bbl/d (0 si sobra), y el crudo que eso frena. */
@@ -163,10 +181,12 @@ const PALABRA = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', '
  *  con los de `ctx`. */
 export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versiones): TuberiaAgua {
   const t = AHORA.getTime()
+  const fm = factorMedicion(campoId)
+  const campoDeGas = CAMPOS_DE_GAS.includes(campoId)
   let agua = 0, crudo = 0
-  for (const p of pozosDe(campoId)) if (p.pruebas.length) { agua += aguaDePrueba(p, t); crudo += crudoAsignado(p, t) }
-  const crudoPorAgua = agua > 0 ? crudo / agua : 0
-  const enCrudo = (w: number | null) => (w === null ? null : w * crudoPorAgua)
+  for (const p of pozosDe(campoId)) if (p.pruebas.length) { agua += aguaDePrueba(p, t); crudo += (pruebaEn(p, t)?.crudoBpd ?? 0) * fm }
+  const crudoPorAgua = agua > 0 && !campoDeGas ? crudo / agua : 0
+  const enCrudo = (w: number | null) => (w === null || campoDeGas ? null : w * crudoPorAgua)
   const vs: Versiones = versiones ?? [{ fecha: '1970-01-01T00:00:00Z', config: ctx.config }]
   // Las capacidades que rigen: las firmadas y, donde no, las del demo (capacidades.ts).
   const cap = capacidadesDe(ctx.config, campoId)
@@ -222,19 +242,27 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
     tramo('inyectores', admisionInyectoresBpd, cap.admision.fuente, cap.admision.estado, {}, admisionInyectoresBpd === null ? cap.admision.fuente : undefined),
   ]
 
-  // Lo que limita el agua: el menor de los tramos con caudal y dato (el tanque no entra).
+  // Lo que limita el agua: el menor de los tramos con caudal y dato (el tanque
+  // no entra). Si a la disposición le falta el número de un tramo, no se puede
+  // decir que la disposición limita: ese tramo podría ser más angosto (B-18).
   const conCaudal = tramos.filter((x): x is TramoTuberiaAgua & { potencialBpd: number } => x.potencialBpd !== null && x.tramo !== 'tanques')
   const menor = conCaudal.reduce((a, x) => (x.potencialBpd < a.potencialBpd ? x : a), conCaudal[0]!)
-  const limita = menor.tramo !== 'producida'
+  const faltanParaDecir = tramos.filter(x => x.tramo !== 'producida' && x.tramo !== 'tanques' && x.potencialBpd === null).map(x => x.tramo)
+  const limita = menor.tramo !== 'producida' && !faltanParaDecir.length
   const disposicion = conCaudal.filter(x => x.tramo !== 'producida')
   const angosto = disposicion.reduce<(typeof disposicion)[number] | undefined>((a, x) => (!a || Math.round(x.potencialBpd) <= Math.round(a.potencialBpd) ? x : a), undefined)
   const faltaBpd = limita ? Math.max(0, agua - menor.potencialBpd) : 0
-  const sobraBpd = angosto && !limita ? angosto.potencialBpd - agua : 0
-  // «Casi iguales» dentro de la disposición, con el mismo umbral de la tubería del campo.
+  const sobraBpd = angosto && menor.tramo === 'producida' ? angosto.potencialBpd - agua : 0
+  // «Casi iguales» dentro de la disposición, con el mismo umbral de la tubería del
+  // campo; dos al barril son un empate exacto, que se dice como tal (U2 §1.5; B-16).
   const umbral = PARAMETROS_CHOKE.umbralCasiIguales
   const cerca = angosto && angosto.potencialBpd > 0 ? disposicion.filter(x => (x.potencialBpd - angosto.potencialBpd) / angosto.potencialBpd < umbral).map(x => x.tramo) : []
   const casiIguales = cerca.length > 1 ? cerca : null
   if (casiIguales) for (const x of tramos) x.casiIgual = casiIguales.includes(x.tramo)
+  const empatados = angosto ? disposicion.filter(x => Math.round(x.potencialBpd) === Math.round(angosto.potencialBpd)).map(x => x.tramo) : []
+  const empate = empatados.length > 1
+  const nombres = (ks: readonly TramoAgua[]) => listaY(ks.map(k => NOMBRE_TRAMO_AGUA[k].toLowerCase().replace(/ \(disposición\)$/, '')))
+  const queFalta = (ks: readonly TramoAgua[]) => listaY(ks.map(k => FALTA_TRAMO_AGUA[k]))
 
   // Si para la bomba de la línea (la que tiene perfil), como lo dice diferido.ts.
   const linea = enServicio.find(b => b.instrumentada)
@@ -246,24 +274,36 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
     ...(pr.parada ? { desde: new Date(pr.parada.inicio) } : {}), ...(pr.perdiendo ? { perdiendoBpd: pr.perdiendo.bblDia } : {}),
   } : undefined
 
-  // Las frases del panel (U2 §5.3 y §5.5).
+  // Las frases del panel (U2 §5.3 y §5.5), sin teoría.
   const frases: string[] = []
   const cuantas = enServicio.length === 1 ? 'Con su bomba' : `Con las ${PALABRA[enServicio.length] ?? n0(enServicio.length)} bombas`
-  if (limita) frases.push(`El agua limita: ${NOMBRE_TRAMO_AGUA[menor.tramo].toLowerCase()} deja pasar ${n0(menor.potencialBpd)} bbl/d y los pozos dan ${n0(agua)}; faltan ${n0(faltaBpd)} bbl/d de salida, que frenan ${n0(faltaBpd * crudoPorAgua)} bbl/d de crudo.`)
-  else if (angosto) frases.push(`${cuantas}, al agua le sobran ${n0(sobraBpd)} bbl/d.`)
+  const sinContar = faltanParaDecir.length ? ` (sin contar ${queFalta(faltanParaDecir)}: ${faltanParaDecir.length === 1 ? 'no tiene' : 'no tienen'} dato)` : ''
+  if (campoDeGas) frases.push(`${campoPorId(campoId).nombre} es un campo de gas: su agua se dice en agua, sin pasarla a crudo.`)
+  if (limita) frases.push(`El agua limita: ${NOMBRE_TRAMO_AGUA[menor.tramo].toLowerCase()} deja pasar ${n0(menor.potencialBpd)} bbl/d y los pozos dan ${n0(agua)}; faltan ${n0(faltaBpd)} bbl/d de salida${campoDeGas ? '' : `, que frenan ${n0(faltaBpd * crudoPorAgua)} bbl/d de crudo`}.`)
+  else if (menor.tramo !== 'producida') frases.push(`No se puede decir qué limita el agua: falta ${queFalta(faltanParaDecir)}. La firma el administrador.`)
+  else if (angosto) frases.push(`${cuantas}, cabe más agua: ${n0(sobraBpd)} bbl/d${sinContar}.`)
   else frases.push('Sin capacidades del tren de agua en el demo: no se puede decir si el agua limita.')
+  // Dos tramos iguales al barril o casi iguales: se dice con quién (B-16).
+  // Un empate con la admisión sin firmar es del dato del demo (la deduce del mismo límite del cabezal): se dice;
+  // con todo firmado, producción tiene que explicarlo (NSTA §5.4).
+  const delDemo = empatados.includes('inyectores') && cap.admision.estado !== 'firmado'
+  if (empate) frases.push(`${mayuscula(nombres(empatados))} dan exactamente lo mismo: ${n0(angosto!.potencialBpd)} bbl/d. Lo que se gane en uno lo frena el otro; ${delDemo ? 'la admisión de los inyectores no está firmada: el demo la deduce del mismo límite del cabezal que deja a cada bomba en su capacidad' : 'producción tiene que explicar por qué (lo pide el método)'}.`)
+  else if (casiIguales) frases.push(`${mayuscula(nombres(casiIguales))} están casi iguales (menos de ${(umbral * 100).toLocaleString('es-CO', { maximumFractionDigits: 1 })} % de diferencia): lo que se gane en uno lo frena el otro.`)
+  const tk = tanques.find(x => x.colchon)?.colchon
+  const llena = (n: number) => `faltan ${n0(n)} bbl/d de salida: ${tk ? `el tanque se llena en ${textoH(tk.horas)} y ` : ''}hay que cerrar pozos`
   if (sinUna && sinUna.papel === 'recobro') frases.push(`Si para ${sinUna.bomba} hoy, no cierra pozos: el agua tiene otra salida. Si sigue parada semanas, el yacimiento pierde presión: eso se trabaría «en el yacimiento».`)
   else if (sinUna && sinUna.aguaSinSalidaBpd <= 0) frases.push(`Si para ${sinUna.bomba}, el respaldo toma toda su agua: no cierra pozos.`)
-  else if (sinUna && sinUna.parada) frases.push(`${sinUna.bomba} está parada desde el ${fechaHora(sinUna.desde!)}: quedan ${n0(sinUna.aguaSinSalidaBpd)} bbl/d sin salida y se pierden ${n0(sinUna.perdiendoBpd ?? 0)} bbl/d de crudo.`)
-  else if (sinUna) {
-    const tk = tanques.find(x => x.colchon)?.colchon
-    frases.push(`Si para ${sinUna.bomba}, faltan ${n0(sinUna.aguaSinSalidaBpd)} bbl/d: ${tk ? `el tanque se llena en ${textoH(tk.horas)} y ` : ''}hay que cerrar pozos.`)
-  }
+  else if (sinUna && sinUna.parada) {
+    // En condicional lo de «si para» y en pasado lo que ya pasó: con los pozos ya cerrados, el nivel no sube (B-17).
+    const cerrados = pr?.perdiendo?.pozos.map(w => w.id).sort() ?? []
+    frases.push(`Si para una con todos los pozos produciendo, ${llena(sinUna.aguaSinSalidaBpd)}.`)
+    frases.push(`${sinUna.bomba} está parada desde el ${fechaHora(sinUna.desde!)}: ${cerrados.length ? `se ${cerrados.length === 1 ? 'cerró' : 'cerraron'} ${listaY(cerrados)} y ` : ''}se pierden ${n0(sinUna.perdiendoBpd ?? 0)} bbl/d de crudo.`)
+  } else if (sinUna) frases.push(`Si para ${sinUna.bomba}, ${llena(sinUna.aguaSinSalidaBpd)}.`)
   if (sinUna && sinUna.papel === 'disposicion' && sinUna.aguaSinSalidaBpd > 0)
     frases.push(`Cerrando primero los más acuatosos se pierden ${n0(sinUna.crudoBpd)} bbl/d de crudo; cerrando parejo, ${n0(sinUna.crudoParejoBpd)}.`)
   return {
-    campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, tramos, tratamientoBpd, admisionInyectoresBpd,
-    dominante: menor.tramo, limita, ...(angosto ? { angosto: angosto.tramo } : {}), casiIguales, sobraBpd, faltaBpd, crudoQueFrenaBpd: faltaBpd * crudoPorAgua,
+    campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, campoDeGas, tramos, tratamientoBpd, admisionInyectoresBpd,
+    dominante: menor.tramo, limita, ...(angosto ? { angosto: angosto.tramo } : {}), casiIguales, empate, faltanParaDecir, sobraBpd, faltaBpd, crudoQueFrenaBpd: faltaBpd * crudoPorAgua,
     ...(sinUna ? { sinUna } : {}), sinDato: tramos.filter(x => x.sinDato).map(x => x.tramo), frases, texto: frases.join(' '),
   }
 }

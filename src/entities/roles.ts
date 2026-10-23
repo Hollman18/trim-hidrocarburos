@@ -117,7 +117,14 @@ export const ROLES_VISIBLES = ROLES.filter(r => rolVisible(r.id))
 /** Con qué rol se entra. Se declara aparte para que reordenar el menú no
  *  cambie por accidente la pantalla con la que abre la aplicación. */
 export const ROL_INICIAL = 'prod'
+/** El rol para NAVEGAR el demo: un id que no se ofrece cae en el de inicio. El
+ *  servidor nunca usa este respaldo (C-14): revisa con `rolExacto`. */
 export const rolPorId = (id: string) =>
   ROLES.find(r => r.id === id && rolVisible(r.id))
   ?? ROLES.find(r => r.id === ROL_INICIAL)
   ?? ROLES_VISIBLES[0]!
+/** El rol tal cual, SIN respaldo: undefined si no existe o no se ofrece en el
+ *  primer producto (los de la versión 2). Es el que usa el servidor en cada
+ *  escritura (C-14): un rol sin entrada no tiene capacidades, y una persona con
+ *  un rol oculto no escribe con las de producción. */
+export const rolExacto = (id: string): Rol | undefined => ROLES.find(r => r.id === id && rolVisible(r.id))

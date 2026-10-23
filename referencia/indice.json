@@ -4,7 +4,7 @@
   "relativa": 0.000001,
   "absoluta": 0.005
  },
- "regla": "la respuesta contiene lo esperado; fechas como instante; el orden de las listas importa",
+ "regla": "la respuesta contiene lo esperado (sin los campos que van ausentes cuando no aplican); null exige null; los registros cerrados traen sus claves; fechas como instante y con zona; el orden de las listas importa",
  "insumos": [
   {
    "archivo": "arranque/campos.json",
@@ -133,6 +133,22 @@
   {
    "archivo": "zarza/produccion-diaria.json",
    "endpoint": "/api/campos/zarza/produccion-diaria?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "escenarios/capacidades-de-antes.json",
+   "endpoint": "/api/configuracion/historial"
+  },
+  {
+   "archivo": "escenarios/cambio-de-limita.json",
+   "endpoint": "/api/configuracion/historial"
+  },
+  {
+   "archivo": "escenarios/empate.json",
+   "endpoint": "/api/configuracion/historial"
+  },
+  {
+   "archivo": "escenarios/correcciones.json",
+   "endpoint": null
   }
  ],
  "casos": [
@@ -226,6 +242,11 @@
    "descripcion": "El árbol de pérdidas del choke de ceiba, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
   },
   {
+   "id": "choke-arbol/ceiba-2026-09-responsable",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=responsable",
+   "descripcion": "El árbol de pérdidas del choke de ceiba, 2026-09, en el orden por quién: responsable → tramo → causa → equipo"
+  },
+  {
    "id": "diferidos/morichal-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de morichal, 2026-09 (último mes cerrado)"
@@ -313,6 +334,11 @@
    "id": "choke-arbol/morichal-2026-09-circular",
    "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
    "descripcion": "El árbol de pérdidas del choke de morichal, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
+  },
+  {
+   "id": "choke-arbol/morichal-2026-09-responsable",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=responsable",
+   "descripcion": "El árbol de pérdidas del choke de morichal, 2026-09, en el orden por quién: responsable → tramo → causa → equipo"
   },
   {
    "id": "diferidos/guacamayo-2026-09",
@@ -404,6 +430,11 @@
    "descripcion": "El árbol de pérdidas del choke de guacamayo, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
   },
   {
+   "id": "choke-arbol/guacamayo-2026-09-responsable",
+   "endpoint": "/api/vistas/choke/arbol?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=responsable",
+   "descripcion": "El árbol de pérdidas del choke de guacamayo, 2026-09, en el orden por quién: responsable → tramo → causa → equipo"
+  },
+  {
    "id": "diferidos/palmar-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de palmar, 2026-09 (último mes cerrado)"
@@ -484,6 +515,11 @@
    "descripcion": "El árbol de pérdidas del choke de palmar, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
   },
   {
+   "id": "choke-arbol/palmar-2026-09-responsable",
+   "endpoint": "/api/vistas/choke/arbol?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=responsable",
+   "descripcion": "El árbol de pérdidas del choke de palmar, 2026-09, en el orden por quién: responsable → tramo → causa → equipo"
+  },
+  {
    "id": "diferidos/zarza-2026-09",
    "endpoint": "/api/vistas/diferidos?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Libro de zarza, 2026-09 (último mes cerrado)"
@@ -562,6 +598,11 @@
    "id": "choke-arbol/zarza-2026-09-circular",
    "endpoint": "/api/vistas/choke/arbol?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
    "descripcion": "El árbol de pérdidas del choke de zarza, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
+  },
+  {
+   "id": "choke-arbol/zarza-2026-09-responsable",
+   "endpoint": "/api/vistas/choke/arbol?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=responsable",
+   "descripcion": "El árbol de pérdidas del choke de zarza, 2026-09, en el orden por quién: responsable → tramo → causa → equipo"
   },
   {
    "id": "diferidos/portafolio-2026-09",
@@ -657,6 +698,91 @@
    "id": "choke-arbol/portafolio-2026-09-circular",
    "endpoint": "/api/vistas/choke/arbol?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
    "descripcion": "El árbol de pérdidas del choke de portafolio, 2026-09, en el orden de la circular: responsable → tramo → diferida o pérdida → planeada o no → causa → detalle"
+  },
+  {
+   "id": "choke-arbol/portafolio-2026-09-responsable",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=responsable",
+   "descripcion": "El árbol de pérdidas del choke de portafolio, 2026-09, en el orden por quién: responsable → tramo → causa → equipo"
+  },
+  {
+   "id": "anh/paradas-ceiba-2026-10",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de ceiba, 2026-10: el mes en curso: sin causa, el día que no ha cortado y «¿Se perdió crudo o gas?»"
+  },
+  {
+   "id": "choke-arbol/ceiba-2026-10-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de ceiba, 2026-10 (el mes en curso: sin causa, el día que no ha cortado y «¿Se perdió crudo o gas?»), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-guacamayo-2025-10",
+   "endpoint": "/api/vistas/anh/paradas?campos=guacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de guacamayo, 2025-10: el tanque de crudo lleno («¿El oleoducto recibía?»), parciales y disparos"
+  },
+  {
+   "id": "choke-arbol/guacamayo-2025-10-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=guacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de guacamayo, 2025-10 (el tanque de crudo lleno («¿El oleoducto recibía?»), parciales y disparos), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-morichal-2026-02",
+   "endpoint": "/api/vistas/anh/paradas?campos=morichal&desde=2026-02-01T00%3A00%3A00.000-05%3A00&hasta=2026-03-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de morichal, 2026-02: compresión, una parada del programa con su exceso y parciales"
+  },
+  {
+   "id": "choke-arbol/morichal-2026-02-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-02-01T00%3A00%3A00.000-05%3A00&hasta=2026-03-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de morichal, 2026-02 (compresión, una parada del programa con su exceso y parciales), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-zarza-2026-01",
+   "endpoint": "/api/vistas/anh/paradas?campos=zarza&desde=2026-01-01T00%3A00%3A00.000-05%3A00&hasta=2026-02-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de zarza, 2026-01: energía de un elemento compartido"
+  },
+  {
+   "id": "choke-arbol/zarza-2026-01-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=zarza&desde=2026-01-01T00%3A00%3A00.000-05%3A00&hasta=2026-02-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de zarza, 2026-01 (energía de un elemento compartido), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-ceiba-2025-11",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba&desde=2025-11-01T00%3A00%3A00.000-05%3A00&hasta=2025-12-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de ceiba, 2025-11: el aire de instrumentos y la pregunta de la raíz"
+  },
+  {
+   "id": "choke-arbol/ceiba-2025-11-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2025-11-01T00%3A00%3A00.000-05%3A00&hasta=2025-12-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de ceiba, 2025-11 (el aire de instrumentos y la pregunta de la raíz), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-ceiba-2025-10",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de ceiba, 2025-10: el tratador"
+  },
+  {
+   "id": "choke-arbol/ceiba-2025-10-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de ceiba, 2025-10 (el tratador), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-morichal-2026-06",
+   "endpoint": "/api/vistas/anh/paradas?campos=morichal&desde=2026-06-01T00%3A00%3A00.000-05%3A00&hasta=2026-07-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de morichal, 2026-06: la lubricación de una bomba de la línea"
+  },
+  {
+   "id": "choke-arbol/morichal-2026-06-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-06-01T00%3A00%3A00.000-05%3A00&hasta=2026-07-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de morichal, 2026-06 (la lubricación de una bomba de la línea), en el orden de gestión"
+  },
+  {
+   "id": "anh/paradas-morichal-2025-12",
+   "endpoint": "/api/vistas/anh/paradas?campos=morichal&desde=2025-12-01T00%3A00%3A00.000-05%3A00&hasta=2026-01-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Paradas ANH de morichal, 2025-12: el motor de una bomba de la línea"
+  },
+  {
+   "id": "choke-arbol/morichal-2025-12-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2025-12-01T00%3A00%3A00.000-05%3A00&hasta=2026-01-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "El árbol de pérdidas del choke de morichal, 2025-12 (el motor de una bomba de la línea), en el orden de gestión"
   },
   {
    "id": "salud/bombas-ceiba-2026-09",
@@ -760,6 +886,11 @@
    "id": "agua-choke/ceiba",
    "endpoint": "/api/vistas/campos/ceiba/agua",
    "descripcion": "La tubería del agua de ceiba a esta hora"
+  },
+  {
+   "id": "choke/capacidades-ceiba",
+   "endpoint": "/api/vistas/campos/ceiba/capacidades",
+   "descripcion": "Las capacidades de ceiba: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
   },
   {
    "id": "salud/bombas-morichal-2026-09",
@@ -876,6 +1007,11 @@
    "descripcion": "La tubería del agua de morichal a esta hora"
   },
   {
+   "id": "choke/capacidades-morichal",
+   "endpoint": "/api/vistas/campos/morichal/capacidades",
+   "descripcion": "Las capacidades de morichal: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
+  },
+  {
    "id": "salud/bombas-guacamayo-2026-09",
    "endpoint": "/api/vistas/bombas?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de guacamayo con la salud de cada parte, 2026-09"
@@ -979,6 +1115,11 @@
    "descripcion": "La tubería del agua de guacamayo a esta hora"
   },
   {
+   "id": "choke/capacidades-guacamayo",
+   "endpoint": "/api/vistas/campos/guacamayo/capacidades",
+   "descripcion": "Las capacidades de guacamayo: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
+  },
+  {
    "id": "salud/bombas-palmar-2026-09",
    "endpoint": "/api/vistas/bombas?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de palmar con la salud de cada parte, 2026-09"
@@ -1074,6 +1215,11 @@
    "descripcion": "La tubería del agua de palmar a esta hora"
   },
   {
+   "id": "choke/capacidades-palmar",
+   "endpoint": "/api/vistas/campos/palmar/capacidades",
+   "descripcion": "Las capacidades de palmar: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
+  },
+  {
    "id": "salud/bombas-zarza-2026-09",
    "endpoint": "/api/vistas/bombas?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de zarza con la salud de cada parte, 2026-09"
@@ -1167,6 +1313,281 @@
    "id": "agua-choke/zarza",
    "endpoint": "/api/vistas/campos/zarza/agua",
    "descripcion": "La tubería del agua de zarza a esta hora"
+  },
+  {
+   "id": "choke/capacidades-zarza",
+   "endpoint": "/api/vistas/campos/zarza/capacidades",
+   "descripcion": "Las capacidades de zarza: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/reparto-ceiba+guacamayo-13-meses",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba%2Cguacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Lo perdido por tramo y por escalón en ceiba y guacamayo (13-meses), con lo estructural, lo que cabía en la holgura y la eficiencia",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/serie-ceiba-2026-03",
+   "endpoint": "/api/vistas/campos/ceiba/choke/serie?desde=2026-03-01T00%3A00%3A00.000-05%3A00&hasta=2026-04-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Qué limitó cada día en ceiba (2026-03), con lo estructural y el aviso de cambio",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/serie-guacamayo-2026-03",
+   "endpoint": "/api/vistas/campos/guacamayo/choke/serie?desde=2026-03-01T00%3A00%3A00.000-05%3A00&hasta=2026-04-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Qué limitó cada día en guacamayo (2026-03), con lo estructural y el aviso de cambio",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/tuberia-ceiba",
+   "endpoint": "/api/vistas/campos/ceiba/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. La tubería de ceiba",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/tuberia-guacamayo",
+   "endpoint": "/api/vistas/campos/guacamayo/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. La tubería de guacamayo",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/capacidades-ceiba",
+   "endpoint": "/api/vistas/campos/ceiba/capacidades",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Las capacidades de ceiba y su revisión",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/capacidades-de-antes/capacidades-guacamayo",
+   "endpoint": "/api/vistas/campos/guacamayo/capacidades",
+   "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Las capacidades de guacamayo y su revisión",
+   "requiere": [
+    "insumos/escenarios/capacidades-de-antes.json"
+   ],
+   "escenario": "capacidades-de-antes"
+  },
+  {
+   "id": "escenarios/cambio-de-limita/serie-ceiba-2026-04-a-2026-05",
+   "endpoint": "/api/vistas/campos/ceiba/choke/serie?desde=2026-04-01T00%3A00%3A00.000-05%3A00&hasta=2026-06-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El tren de crudo de La Ceiba en 11.500 desde el comienzo (limita la planta) y en 13.500 desde el 1 de mayo (limitan los pozos): un aviso «Cambió lo que limita». Qué limitó cada día en ceiba (2026-04-a-2026-05), con lo estructural y el aviso de cambio",
+   "requiere": [
+    "insumos/escenarios/cambio-de-limita.json"
+   ],
+   "escenario": "cambio-de-limita"
+  },
+  {
+   "id": "escenarios/cambio-de-limita/tuberia-ceiba",
+   "endpoint": "/api/vistas/campos/ceiba/tuberia?desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "El tren de crudo de La Ceiba en 11.500 desde el comienzo (limita la planta) y en 13.500 desde el 1 de mayo (limitan los pozos): un aviso «Cambió lo que limita». La tubería de ceiba",
+   "requiere": [
+    "insumos/escenarios/cambio-de-limita.json"
+   ],
+   "escenario": "cambio-de-limita"
+  },
+  {
+   "id": "escenarios/empate/tuberia-ceiba",
+   "endpoint": "/api/vistas/campos/ceiba/tuberia?desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "La planta y afuera de La Ceiba en 11.000 cada uno, con su explicación: un empate al barril en lo que limita. La tubería de ceiba",
+   "requiere": [
+    "insumos/escenarios/empate.json"
+   ],
+   "escenario": "empate"
+  },
+  {
+   "id": "escenarios/empate/serie-ceiba-2026-09",
+   "endpoint": "/api/vistas/campos/ceiba/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La planta y afuera de La Ceiba en 11.000 cada uno, con su explicación: un empate al barril en lo que limita. Qué limitó cada día en ceiba (2026-09), con lo estructural y el aviso de cambio",
+   "requiere": [
+    "insumos/escenarios/empate.json"
+   ],
+   "escenario": "empate"
+  },
+  {
+   "id": "escenarios/empate/reparto-ceiba-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "La planta y afuera de La Ceiba en 11.000 cada uno, con su explicación: un empate al barril en lo que limita. Lo perdido por tramo y por escalón en ceiba (2026-09), con lo estructural, lo que cabía en la holgura y la eficiencia",
+   "requiere": [
+    "insumos/escenarios/empate.json"
+   ],
+   "escenario": "empate"
+  },
+  {
+   "id": "escenarios/correcciones/paradas-ceiba-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Paradas ANH de ceiba, 2026-09",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/arbol-ceiba-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). El árbol de ceiba, 2026-09, en el orden de gestión",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/reparto-ceiba-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Lo perdido por tramo y por escalón en ceiba, 2026-09: el primer nivel del árbol",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/paradas-guacamayo-2025-10",
+   "endpoint": "/api/vistas/anh/paradas?campos=guacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Paradas ANH de guacamayo, 2025-10",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/arbol-guacamayo-2025-10-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=guacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). El árbol de guacamayo, 2025-10, en el orden de gestión",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/reparto-guacamayo-2025-10",
+   "endpoint": "/api/vistas/choke/reparto?campos=guacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2025-11-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Lo perdido por tramo y por escalón en guacamayo, 2025-10: el primer nivel del árbol",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/paradas-morichal-2026-09",
+   "endpoint": "/api/vistas/anh/paradas?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Paradas ANH de morichal, 2026-09",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/arbol-morichal-2026-09-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). El árbol de morichal, 2026-09, en el orden de gestión",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/reparto-morichal-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Lo perdido por tramo y por escalón en morichal, 2026-09: el primer nivel del árbol",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/paradas-ceiba-2026-10",
+   "endpoint": "/api/vistas/anh/paradas?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Paradas ANH de ceiba, 2026-10",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/arbol-ceiba-2026-10-gestion",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00&orden=gestion",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). El árbol de ceiba, 2026-10, en el orden de gestión",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/reparto-ceiba-2026-10",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Lo perdido por tramo y por escalón en ceiba, 2026-10: el primer nivel del árbol",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/arbol-ceiba-2026-09-circular",
+   "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=circular",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). El árbol de La Ceiba, septiembre, en el orden de la circular",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/calidad-ceiba-2026-09",
+   "endpoint": "/api/vistas/anh/calidad?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). La calidad de la clasificación de La Ceiba, septiembre",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/tuberia-ceiba-2026-09",
+   "endpoint": "/api/vistas/campos/ceiba/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). La tubería de La Ceiba, septiembre",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/serie-ceiba-2026-09",
+   "endpoint": "/api/vistas/campos/ceiba/choke/serie?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Qué limitó cada día en La Ceiba, septiembre",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/mensual-portafolio",
+   "endpoint": "/api/vistas/choke/mensual?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Lo perdido por tramo cada mes en el portafolio",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
+  },
+  {
+   "id": "escenarios/correcciones/base-ceiba-2026-10",
+   "endpoint": "/api/vistas/choke/base?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre). Antes → con TRIM por tramo en La Ceiba, octubre (la base trae septiembre)",
+   "requiere": [
+    "insumos/escenarios/correcciones.json"
+   ],
+   "escenario": "correcciones"
   }
  ]
 }

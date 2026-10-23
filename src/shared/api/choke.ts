@@ -12,8 +12,9 @@ import {
   type ArbolChoke, type NodoArbol, type OrdenArbol, type NivelArbol, type DimensionArbol,
 } from '@/entities/choke-arbol'
 import type { BorradorClasificacion } from '@/entities/anh-clasificacion'
+import { tuberiaCampo, serieChoke, brechaPorChoke, repartoPorMes, lineaBasePorTramo } from '@/entities/choke-reparto'
 import {
-  tuberiaCampo, serieChoke, brechaPorChoke, repartoPorMes, lineaBasePorTramo, topologiaDe, topologiaFirmada, topologiaDerivada,
+  topologiaDe, topologiaFirmada, topologiaDerivada,
   propuestasTopologia, marcarCasosBorde, casoBordeDe, alcancePorPozos, chokeDeAlcance, validarTopologia, porSaberDelCampo, sinResponderDe,
   vistaCapacidades, capacidadesQueBloquean,
   ORDEN_CHOKE, ORDEN_CHOKE_CAMPO, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_CHOKE, EXPLICA_TRAMO, RESUMEN_TRAMO, DONDE_CHOKE,
@@ -101,16 +102,24 @@ export type {
 const v = (ctx: Contexto) => String(versionDe(ctx))
 /** Lo mismo con el historial de versiones firmadas (las capacidades de cada día). */
 const vh = (ctx: Contexto, versiones: Historial | Versiones) => `${versionDe(ctx)}.${versionDe(versiones)}`
+/** Y con lo que dijeron las personas en la clasificación: las vistas que
+ *  reparten por tramo o por planeación leen la fila vigente (QA-A-01; C-09),
+ *  así que una escritura las vuelve a pedir. */
+const vhg = (ctx: Contexto, versiones: Historial | Versiones, guardadas: object) => `${vh(ctx, versiones)}.${versionDe(guardadas)}`
+/** Lo guardado de la sesión como lo lee el motor, o nada. */
+const conGuardadas = (guardadas: Record<string, BorradorClasificacion>) => ({ guardadas: guardadasDe(guardadas) })
 
 /* ─────────────────────────── la tubería del campo ─────────────────────────── */
 
 /** `GET /api/vistas/campos/:campo/tuberia?desde=&hasta=`. Con el historial,
  *  cada día del período usa las capacidades que regían ese día, y la tubería
- *  dice quién y cuándo firmó las de hoy. */
-export const pedirTuberia = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): TuberiaCampo => tuberiaCampo(campo, desde, hasta, ctx, versiones)
+ *  dice quién y cuándo firmó las de hoy. Lo perdido y lo que se pierde ahora
+ *  van por el tramo vigente de cada fila (`guardadas`: lo que dijeron las personas). */
+export const pedirTuberia = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): TuberiaCampo =>
+  tuberiaCampo(campo, desde, hasta, ctx, versiones, conGuardadas(guardadas))
 export function useTuberia(campo: string, desde: Date, hasta: Date): TuberiaCampo {
-  const ctx = useCtx(), versiones = useVersiones()
-  return useDato(TUBERIA, { campo, desde, hasta }, vh(ctx, versiones), () => pedirTuberia(campo, desde, hasta, ctx, versiones))
+  const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
+  return useDato(TUBERIA, { campo, desde, hasta }, vhg(ctx, versiones, guardadas), () => pedirTuberia(campo, desde, hasta, ctx, versiones, guardadas))
 }
 
 /** La serie de lo que limitó cada día y los avisos «Cambió lo que limita». */
@@ -121,10 +130,11 @@ export interface SerieChoke {
   vueltas: Record<string, number>
 }
 /** `GET /api/vistas/campos/:campo/choke/serie?desde=&hasta=` */
-export const pedirSerieChoke = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial): SerieChoke => serieChoke([campo], desde, hasta, ctx, versiones)
+export const pedirSerieChoke = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): SerieChoke =>
+  serieChoke([campo], desde, hasta, ctx, versiones, conGuardadas(guardadas))
 export function useSerieChoke(campo: string, desde: Date, hasta: Date): SerieChoke {
-  const ctx = useCtx(), versiones = useVersiones()
-  return useDato(SERIE_CHOKE, { campo, desde, hasta }, vh(ctx, versiones), () => pedirSerieChoke(campo, desde, hasta, ctx, versiones))
+  const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
+  return useDato(SERIE_CHOKE, { campo, desde, hasta }, vhg(ctx, versiones, guardadas), () => pedirSerieChoke(campo, desde, hasta, ctx, versiones, guardadas))
 }
 
 /* ─────────────────────────── la tubería del agua ─────────────────────────── */
@@ -155,14 +165,15 @@ export function useCapacidades(campo: string): VistaCapacidades {
 
 /** «Si falla hoy» de varios campos: un ranking de todos y, por campo, lo que no entra en él. */
 export interface VistaCriticidad {
-  /** Todos los equipos de los campos pedidos, de mayor a menor bbl/d si fallan hoy, sin lo que ya está parado.
-   *  El `puesto` de cada fila es el de su campo (1 + cuántos de su campo cuestan más). */
+  /** Todos los equipos de los campos pedidos, sin lo que ya está parado: primero lo medido, de mayor a
+   *  menor bbl/d si fallan hoy; después los techos y al final lo que no tiene cifra (D6). El `puesto`
+   *  de cada fila medida es el de su campo (1 + cuántos medidos de su campo cuestan más). */
   ranking: FilaCriticidad[]
   /** Por campo, en el orden pedido: lo ya parado (va en «Perdiéndose ahora»), lo
    *  que no se puede medir, la línea «Cambió hoy», lo que decide cada rol (el
    *  próximo instrumento, no intervenir hoy, los trabajos del programa que tocan
    *  un equipo que hoy vale más) y la frase del desembotellamiento (U2 §6.4-6.5). */
-  campos: Array<Pick<CriticidadDelCampo, 'campoId' | 'parados' | 'sinCalcular' | 'cambioHoy' | 'proximoInstrumento' | 'noIntervenir' | 'avisosTrabajo' | 'desembotellar'>>
+  campos: Array<Pick<CriticidadDelCampo, 'campoId' | 'parados' | 'sinCalcular' | 'cambioHoy' | 'proximoInstrumento' | 'noIntervenir' | 'avisosTrabajo' | 'desembotellar' | 'campoDeGas'>>
 }
 /** `GET /api/vistas/criticidad?campos=a,b` */
 export function pedirCriticidad(campos: string[], ctx: Contexto): VistaCriticidad {
@@ -170,7 +181,7 @@ export function pedirCriticidad(campos: string[], ctx: Contexto): VistaCriticida
     ranking: criticidad(campos, ctx),
     campos: campos.map(c => {
       const x = criticidadDelCampo(c, ctx)
-      return { campoId: c, parados: x.parados, sinCalcular: x.sinCalcular, avisosTrabajo: x.avisosTrabajo,
+      return { campoId: c, parados: x.parados, sinCalcular: x.sinCalcular, avisosTrabajo: x.avisosTrabajo, ...(x.campoDeGas ? { campoDeGas: x.campoDeGas } : {}),
         ...(x.cambioHoy ? { cambioHoy: x.cambioHoy } : {}), ...(x.proximoInstrumento ? { proximoInstrumento: x.proximoInstrumento } : {}),
         ...(x.noIntervenir ? { noIntervenir: x.noIntervenir } : {}), ...(x.desembotellar ? { desembotellar: x.desembotellar } : {}) }
     }),
@@ -183,18 +194,21 @@ export function useCriticidad(campos: string[]): VistaCriticidad {
 
 /* ─────────────────────────── lo perdido por tramo ─────────────────────────── */
 
-/** `GET /api/vistas/choke/reparto?campos=&desde=&hasta=` */
-export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial): BrechaChoke => brechaPorChoke(q.campos, q.desde, q.hasta, ctx, versiones)
+/** `GET /api/vistas/choke/reparto?campos=&desde=&hasta=`: sobre las filas de
+ *  la ANH con su clasificación vigente, las mismas del árbol (QA-A-01). */
+export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): BrechaChoke =>
+  brechaPorChoke(q.campos, q.desde, q.hasta, ctx, versiones, conGuardadas(guardadas))
 export function useRepartoChoke(q: ConsultaPeriodo): BrechaChoke {
-  const ctx = useCtx(), versiones = useVersiones()
-  return useDato(REPARTO_CHOKE, q, vh(ctx, versiones), () => pedirRepartoChoke(q, ctx, versiones))
+  const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
+  return useDato(REPARTO_CHOKE, q, vhg(ctx, versiones, guardadas), () => pedirRepartoChoke(q, ctx, versiones, guardadas))
 }
 
 /** `GET /api/vistas/choke/mensual?campos=` */
-export const pedirRepartoMensual = (campos: string[], ctx: Contexto, versiones?: Historial): MesPorTramo[] => repartoPorMes(campos, ctx, versiones)
+export const pedirRepartoMensual = (campos: string[], ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): MesPorTramo[] =>
+  repartoPorMes(campos, ctx, versiones, conGuardadas(guardadas))
 export function useRepartoMensual(campos: string[]): MesPorTramo[] {
-  const ctx = useCtx(), versiones = useVersiones()
-  return useDato(REPARTO_CHOKE_MENSUAL, { campos }, vh(ctx, versiones), () => pedirRepartoMensual(campos, ctx, versiones))
+  const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
+  return useDato(REPARTO_CHOKE_MENSUAL, { campos }, vhg(ctx, versiones, guardadas), () => pedirRepartoMensual(campos, ctx, versiones, guardadas))
 }
 
 /** `GET /api/vistas/choke/arbol?campos=&desde=&hasta=&orden=`: el árbol de
@@ -210,10 +224,11 @@ export function useArbolChoke(q: ConsultaArbol): ArbolChoke {
 }
 
 /** `GET /api/vistas/choke/base?campos=&desde=&hasta=` · undefined sin tres meses publicados antes del período. */
-export const pedirBaseChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial): LineaBasePorTramo | undefined => lineaBasePorTramo(q.campos, q.desde, q.hasta, ctx, versiones)
+export const pedirBaseChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): LineaBasePorTramo | undefined =>
+  lineaBasePorTramo(q.campos, q.desde, q.hasta, ctx, versiones, conGuardadas(guardadas))
 export function useBaseChoke(q: ConsultaPeriodo): LineaBasePorTramo | undefined {
-  const ctx = useCtx(), versiones = useVersiones()
-  return useDato(BASE_CHOKE, q, vh(ctx, versiones), () => pedirBaseChoke(q, ctx, versiones))
+  const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
+  return useDato(BASE_CHOKE, q, vhg(ctx, versiones, guardadas), () => pedirBaseChoke(q, ctx, versiones, guardadas))
 }
 
 /* ─────────────────────────── la topología ─────────────────────────── */

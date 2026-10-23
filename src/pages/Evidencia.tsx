@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useApp, useAmbito, useRol, useRango } from '@/app/store'
 import { useParadasDeBombas } from '@/shared/api/diferidos'
+import { causaParaSalir } from '@/shared/api/arbol'
 import { COMO } from '@/entities/causa-senal'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
@@ -33,7 +34,8 @@ export function Evidencia() {
     ['campo', 'equipo', 'evento', 'inicio (PLC)', 'fin (PLC)', 'horas', 'horas en el período', 'cruza el borde del período', 'causa', 'parte', 'cómo se identificó', 'evidencia', 'se carga a',
       'colchón previsto h', 'colchón observado h', 'pozos cerrados', 'bbl', 'bbl en el período', 'tolerancia %', 'evitable con el orden bbl', 'no conformidad'],
     ...paradas.map(m => [campoPorId(m.evento.campoId).nombre, m.evento.equipo, m.evento.id, m.evento.inicio, m.evento.fin ?? 'abierta',
-      m.horasParada, m.horasEnPeriodo, m.cruzaBorde ? 'sí' : 'no', m.causa.texto, m.causa.parte ? NOMBRE_PARTE[m.causa.parte] : '', COMO[m.causa.como], m.causa.evidencia.join(' | '), m.cargadoA,
+      // Lo que sale de TRIM va con lo estructurado (D2): ni el texto libre de quien respondió ni nombres.
+      m.horasParada, m.horasEnPeriodo, m.cruzaBorde ? 'sí' : 'no', causaParaSalir(m.causa).que.join('. '), m.causa.parte ? NOMBRE_PARTE[m.causa.parte] : '', COMO[m.causa.como], causaParaSalir(m.causa).evidencia.join(' | '), m.cargadoA,
       m.colchon?.previsto.horas, m.colchon?.observadoH, m.pozos, m.bbl, m.bblEnPeriodo, m.tolerancia * 100, m.evitable, m.arrancoSinIdentificar ? 'sí' : 'no']),
   ])
 

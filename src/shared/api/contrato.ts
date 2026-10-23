@@ -104,7 +104,8 @@ const get = <P extends object>() => <T, J>(ruta: string, codec: Codec<T, J>): En
 
 const aTexto = (k: string, v: Valor): string => {
   if (v instanceof Date) return isoColombia(v)
-  if (Array.isArray(v)) return v.join(',')
+  // Una lista no repite (C-10): `campos=ceiba,ceiba` contaba dos veces lo mismo.
+  if (Array.isArray(v)) return [...new Set(v)].join(',')
   if (typeof v === 'number' || typeof v === 'string') return String(v)
   throw new ErrorDeContrato(`parámetro «${k}» con un valor que no se puede mandar: ${String(v)}`)
 }
@@ -582,48 +583,63 @@ export const R_PLAN = tal<{ decision: DecisionPlan }>()
  *  son suyos (`PASOS_QUE_DECLARA`); «En el yacimiento» va por `…/yacimiento`. */
 export interface CuerpoClasificacion {
   pasos: Partial<Record<PasoAnh, string>>
-  /** Obligatorio (5 caracteres o más) si cambia algo que ya había dicho una persona. */
+  /** Obligatorio (5 caracteres o más) si cambia algo que ya había dicho una
+   *  persona en esta fila (422) o lo que dijo OTRA persona en otra fila o evento
+   *  del alcance (409 sin él). Queda en el porqué de lo que cambia o retira. */
   motivo?: string
   /** Para todos los tramos del evento (Unicidad: un evento, una clasificación; P1 §5.3). */
   aplicarAlEvento?: boolean
-  /** Para todos los eventos de su cascada: los que tienen la misma raíz (U2 §4.3, «Sí, a los {n}»). */
+  /** Para todos los eventos de su cascada: los que tienen la misma raíz (U2 §4.3,
+   *  «Sí, a los {n}»). Exige `ids`: una escritura por evento, solo en esos. */
   aplicarALaCascada?: boolean
+  /** Con `aplicarALaCascada`: las filas que mostró la pantalla. Si la raíz trae
+   *  más eventos que los de estas filas, 409 (la persona no los vio). */
+  ids?: string[]
   /** La cadena de 6 pasos que vio quien la cambia (`cadenaVista`): si entretanto cambió, 409. */
   cadena?: string
 }
 /** `POST /anh/paradas/confirmar`: confirmar una parada (`anh:clasificar`) o varias
  *  de la misma cadena en lote (`anh:confirmar`). `pasos`: los que la pantalla
  *  mostró para confirmar; uno que el rol no avala se rechaza (403), y los que no
- *  vengan no se confirman. Sin `pasos`, todos los que el rol avala (`PASOS_QUE_CONFIRMA`). */
-export interface CuerpoConfirmacion { ids: string[]; cadena?: string; pasos?: PasoAnh[] }
+ *  vengan no se confirman. Sin `pasos`, todos los que el rol avala (`PASOS_QUE_CONFIRMA`).
+ *  `cadena` es obligatoria (C-06): se confirma lo que se vio, y el lote la guarda. */
+export interface CuerpoConfirmacion { ids: string[]; cadena: string; pasos?: PasoAnh[] }
 /** `POST /anh/paradas/:id/yacimiento`: «En el yacimiento», con lo que lo muestra
- *  (`prueba`, `corte-agua`, `presion` o una nota escrita). */
+ *  (`prueba`, `corte-agua`, `presion` o una nota escrita de 500 caracteres o
+ *  menos). Es de cada pozo: nunca para la cascada (C-17). */
 export interface CuerpoYacimiento { evidencia: string; motivo?: string; aplicarAlEvento?: boolean; cadena?: string }
 /** `POST /anh/paradas/:id/respuesta`: lo que contestó una persona a una pregunta
  *  de campo abierta en la parada («¿Qué lo paró?», «¿De dónde vino el corte?»…),
  *  con el texto exacto del botón (`OpcionCampo.texto`). El servidor corre
- *  `responder`: lo que TRIM deduce de la respuesta queda dicho por esa persona
- *  (`declarado`, con ella en el porqué) y la pregunta que sigue llega en la vista. */
+ *  `responder`: solo el paso que la respuesta determina queda dicho por esa
+ *  persona (`declarado`, con ella en el porqué); nada sale confirmado ni se
+ *  cambia lo que ya dijo otra persona (D1). La pregunta que sigue llega en la vista. */
 export interface CuerpoRespuestaAnh {
   pregunta: string
   opcion: string
   aplicarAlEvento?: boolean
   aplicarALaCascada?: boolean
+  /** Con `aplicarALaCascada`: las filas que mostró la pantalla (como en la clasificación). */
+  ids?: string[]
   cadena?: string
 }
+/** Los roles a los que se les pide una parada: los que revisan. */
+export type RolQueRevisa = 'sup' | 'prod' | 'jefe' | 'conf'
 /** `POST /anh/paradas/:id/revision`: «Algo está mal» (sin `pedirA`: a quien
- *  revisa) o «Pedir a producción» (`pedirA: 'prod'`). No corrige nada: pasa la
- *  parada a quien corrige, con el motivo. Queda atendida cuando ese rol dice,
- *  corrige o confirma algo de ella. */
-export interface CuerpoRevisionAnh { motivo: string; pedirA?: string; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; cadena?: string }
+ *  revisa) o «Pedir a producción» (`pedirA: 'prod'`). No toca ningún paso
+ *  (D1): pasa la parada a quien corrige, con el motivo. Queda atendida cuando
+ *  ese rol dice, corrige o confirma algo de ella. */
+export interface CuerpoRevisionAnh { motivo: string; pedirA?: RolQueRevisa; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; ids?: string[]; cadena?: string }
 /** `POST /configuracion/vista-previa`: la configuración que se va a firmar, sin firmarla. */
 export interface CuerpoVistaPrevia { config: Config }
 /** `POST /topologia/importar`: un CSV o un pegado de Excel, «equipo; pozos a los que sirve». */
 export interface CuerpoTopologiaCsv { campo: string; texto: string }
 
 /** `POST /anh/paradas/:id/clasificacion`, `…/yacimiento`, `…/respuesta` y
- *  `…/revision` → la fila como quedó y lo que el servidor guardó (por fila o por
- *  evento), para copiarlo a la sesión. */
+ *  `…/revision` → la fila como quedó y lo que el servidor guardó en esta
+ *  petición, por clave (fila o evento): solo los pasos que dijo o retiró la
+ *  persona (con su consecutivo `n`), la respuesta y la revisión. Se copia a la
+ *  sesión paso por paso (D1). */
 export const R_CLASIFICACION = obj<{ parada: ParadaAnh; guardadas: Record<string, BorradorClasificacion> }>()({ parada: paradaAnh, guardadas: dic(borradorAnh) })
 /** `POST /anh/paradas/confirmar` → las filas como quedaron y, si fue en lote, el lote. */
 export const R_CONFIRMACION = obj<{ lote?: ConfirmacionLote; paradas: ParadaAnh[] }>()({ paradas: lista(paradaAnh) })

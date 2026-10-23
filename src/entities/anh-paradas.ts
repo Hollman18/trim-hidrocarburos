@@ -35,7 +35,7 @@ import { AHORA } from './reloj'
 import type { Causa, Contexto } from './causa-senal'
 import { PASOS, VERSION_POR_DEFECTO, type IdVersionCatalogo, type PasoAnh } from './anh-catalogo'
 import {
-  proponerClasificacion, propuestaDeExceso, aplicarGuardada, conDescripcion, conCascada, reevaluar, programaDeCausa, confirmarPasos, cadenaDe,
+  proponerClasificacion, propuestaDeExceso, aplicarGuardada, rigeEnFila, conDescripcion, conCascada, reevaluar, programaDeCausa, confirmarPasos, cadenaDe,
   PASOS_QUE_CONFIRMA,
   type PropuestaAnh, type BorradorClasificacion, type ClasificacionAnh, type EstadoParadaAnh, type OpcionesPropuesta, type Persona,
   type EvidenciaYacimiento, type RevisionAnh,
@@ -126,7 +126,9 @@ export interface OpcionesParadas extends OpcionesPropuesta {
   /** `Config.anh.reportarParciales` (por defecto sí, P1 §2.1): apagarlo no toca datos. */
   reportarParciales?: boolean
   /** Lo que ya dijeron las personas, por id de la fila o por evento (Unicidad:
-   *  un evento, una clasificación, que se copia a sus tramos; P1 §2.6). */
+   *  un evento, una clasificación, que vale para sus tramos; P1 §2.6): en cada
+   *  clave, lo último dicho de cada paso, con su consecutivo `n`. En cada fila
+   *  rige, paso por paso, lo más reciente entre su clave y la de su evento (`rigeEnFila`). */
   guardadas?: ReadonlyMap<string, BorradorClasificacion>
 }
 
@@ -234,7 +236,9 @@ export function paradasAnh(campoIds: string[], desde: Date, hasta: Date, ctx: Co
         const inicioRaiz = raiz === ev.id ? undefined : servicioPorId(raiz)?.inicio ?? paradaPorId(raiz)?.inicio
         const minutos = inicioRaiz ? Math.round((ms(ev.inicio) - ms(inicioRaiz)) / 60_000) : undefined
         if (minutos !== undefined) propuesta = conCascada(propuesta, { raiz, minutos })
-        const guardada = op.guardadas?.get(id) ?? (pz.exceso ? undefined : op.guardadas?.get(ev.id))
+        // Lo que dijeron las personas, paso por paso: lo más reciente entre la
+        // fila y su evento (D1). El tramo de exceso del programa solo usa lo suyo.
+        const guardada = rigeEnFila(op.guardadas?.get(id), pz.exceso ? undefined : op.guardadas?.get(ev.id))
         if (guardada) propuesta = aplicarGuardada(propuesta, guardada)
         const clasificacion = propuesta.clasificacion ?? propuesta.borrador
         const evidencia = clasificacion.choke?.valor === 'reservorio' ? clasificacion.choke.porque?.evidencia : undefined
@@ -304,12 +308,15 @@ export function gruposPorCadena(ps: readonly ParadaAnh[]): Map<string, ParadaAnh
 }
 
 /** Confirma de una vez las filas de una misma cadena (una cascada, un grupo
- *  del cierre del día). Cambiar algo de una fila la saca del lote (P1 §2.1). */
-export function confirmarLote(ps: readonly ParadaAnh[], rol: string, quien: Persona, hora: string, id: string): { lote: ConfirmacionLote; paradas: ParadaAnh[] } {
+ *  del cierre del día). Cambiar algo de una fila la saca del lote (P1 §2.1).
+ *  `vista` es la cadena que vio quien confirma (la de la petición, C-06): es la
+ *  que guarda el lote, y si alguna fila ya no la tiene no se confirma nada. */
+export function confirmarLote(ps: readonly ParadaAnh[], rol: string, quien: Persona, hora: string, id: string, vista?: string): { lote: ConfirmacionLote; paradas: ParadaAnh[] } {
   if (!CONFIRMAN_EN_LOTE.includes(rol)) throw new Error('Su rol no confirma en lote: lo hace supervisión o producción.')
   const cadenas = new Set(ps.map(p => cadenaDe(p.clasificacion)))
   const cadena = [...cadenas][0]
   if (!ps.length || cadenas.size !== 1 || !cadena) throw new Error('Un lote es de filas con la misma cadena completa de 6 pasos: confírmelas por grupo.')
+  if (vista !== undefined && vista !== cadena) throw new Error('Mientras las revisaba, alguien cambió estas paradas: vuelva a abrir el grupo.')
   const paradas = ps.map(p => conClasificacion(p, confirmarPasos(p.clasificacion, rol, quien, hora, id)))
   const subio = new Set<PasoAnh>()
   for (const p of paradas) for (const paso of PASOS) if (p.clasificacion[paso]?.lote === id) subio.add(paso)

@@ -7,14 +7,14 @@ import {
   type CuerpoClasificacion, type CuerpoConfirmacion, type CuerpoYacimiento, type CuerpoVistaPrevia, type CuerpoTopologiaCsv,
   type CuerpoRespuestaAnh, type CuerpoRevisionAnh,
 } from './contrato'
-import { pedirParadaAnh, eventosDeLaCascada, filasGuardadasDe, soloDePersona, cadenaVista, guardadasDe } from './arbol'
+import { pedirParadaAnh, eventosDeLaCascada, filasDeEventos, filasDeRaiz, campoDeLaFila, partesDelId, soloDePersona, cadenaVista, guardadasDe } from './arbol'
 import {
-  declararPaso, declararYacimiento, responder, conRevisionAtendida, ErrorClasificacion, esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA,
-  ROLES_QUE_CONTESTAN, QUIEN_CONTESTA,
-  type BorradorClasificacion, type PorqueChoke, type ValoresPasos, type IdPregunta,
+  declararPaso, declararYacimiento, responder, conRevisionAtendida, quienRevisa, esNoSe, ErrorClasificacion, esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA,
+  ROLES_QUE_CONTESTAN, QUIEN_CONTESTA, PREGUNTAS_CAMPO,
+  type BorradorClasificacion, type DatoClasificado, type PorqueChoke, type ValoresPasos, type IdPregunta, type Persona, type RevisionAnh,
 } from '@/entities/anh-clasificacion'
 import { confirmarLote, confirmarParada, conClasificacion, type ParadaAnh, type ConfirmacionLote } from '@/entities/anh-paradas'
-import { PASOS, PASO_CAMPO, type PasoAnh } from '@/entities/anh-catalogo'
+import { PASOS, PASO_CAMPO, ETIQUETA_PLANEACION, planeacionDeN1, n1DeCodigo, type PasoAnh, type Planeacion, type ClaveN1, type CodigoN2 } from '@/entities/anh-catalogo'
 import { impactoConfig, leerTopologia, type ImpactoConfig, type TopologiaLeida } from '@/entities/choke-config'
 import { capacidadesQueBloquean } from '@/entities/choke'
 import type { Contexto } from '@/entities/causa-senal'
@@ -29,7 +29,7 @@ import {
   revisarAcceso, cambiosDeUsuario, cambiosDeInvitacion, estadoAlGuardar, personaDelRol, recibeAlertas, normalizarTelefono, camposAsignados, registroCompleto,
   type Usuario, type ErrorAcceso, type CambioAcceso,
 } from '@/entities/usuarios'
-import { rolPorId } from '@/entities/roles'
+import { rolExacto } from '@/entities/roles'
 import { CAMPOS, campoPorId } from '@/entities/campos'
 import { eventosBomba } from '@/entities/bombas'
 import { eventosPozos } from '@/entities/pozos'
@@ -42,10 +42,11 @@ import { mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entities/iso14224'
 import { diasDelMes, nombreMes } from '@/entities/plan'
 import { aplicarCambioPlanta, type CambioDePlanta, type CambioPlanta, type PlantaCampo } from '@/entities/planta'
 import type { Respuesta } from '@/entities/pozos'
-import { MOTIVO_MINIMO, TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
+import { MOTIVO_MINIMO, TEXTO_LIBRE_MINIMO, TEXTO_MAXIMO, alcanza } from '@/entities/reglas'
 import { AHORA } from '@/entities/reloj'
 import { region } from '@/shared/config/region'
 import { diaIso } from '@/shared/lib/formato'
+import { formatoFecha } from '@/shared/lib/fecha'
 import { puedeHacer } from '@/entities/tipos'
 import { cicloValor, planPorId, type DecisionPlan, type EstadoPlan } from '@/entities/escenarios'
 import { calendario } from '@/entities/libro'
@@ -72,6 +73,10 @@ type Resultado<T extends object = object> = ({ ok: true } & T) | Rechazo
 
 /** Lo que se responde cuando nadie con acceso activo tiene el rol que se está viendo. */
 const SIN_PERSONA = 'Nadie con acceso activo tiene este rol: firma, responde o exporta una persona con acceso, no un rol.'
+/** El 403 de un rol que no está entre los del producto (C-14): el servidor busca
+ *  el rol SIN respaldo (`rolExacto`); un rol oculto o inventado no escribe con
+ *  las capacidades de otro. */
+const SIN_ROL = 'Su rol no está entre los del producto: no escribe nada.'
 
 /** La hora con que se firma: la del reloj del sistema (en el demo, la del
  *  PLC, que está congelada). Con el servidor la pone él. */
@@ -111,6 +116,10 @@ export async function firmarConfiguracion(q: Credencial, c: CuerpoFirma): Promis
     return { ok: true, cambios: v.cambios, version: v.version }
   }
   const { ctx, versiones, usuarios } = sesion()
+  const forma = revisarForma(c, { config: 'objeto', motivo: 'texto?', base: 'entero' }) ?? formaDeConfig(c.config)
+  if (forma) return { ok: false, error: forma }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   // Lo que llega se normaliza en el borde, como lo hace el servidor: un precio en null es «sin precio», no 0.
   const config = normalizarConfig(c.config)
   // Firma una persona con acceso, no un rol: si nadie activo tiene este rol, no hay quién firme.
@@ -122,12 +131,12 @@ export async function firmarConfiguracion(q: Credencial, c: CuerpoFirma): Promis
   const cambios = diferencias(ctx.config, config)
   if (!cambios.length) return { ok: false, error: 'No hay cambios que firmar.' }
   // Lo mismo que el servidor responde con 403: cada grupo lo firma quien puede.
-  const grupos = diferenciasPorGrupo(ctx.config, config), puede = rolPorId(q.rolId).puede
+  const grupos = diferenciasPorGrupo(ctx.config, config), puede = rol.puede
   if (grupos.metas.length && !puede['metas:firmar']) return { ok: false, error: 'Las metas, el precio y la regla de cierre los firma el gerente de activo.' }
   if (grupos.tecnica.length && !puede['config:firmar']) return { ok: false, error: 'Tanques, respaldos, programa y membrete los firma el administrador de la implementación.' }
   // También 403: la capacidad dice qué firma; los campos asignados, dónde. Un
   // id que no es campo no se cuenta aquí: lo rechaza validarConfig (422).
-  const mios = camposAsignados(rolPorId(q.rolId), usuarios).map(x => x.id)
+  const mios = camposAsignados(rol, usuarios).map(x => x.id)
   const ajenos = camposTocados(ctx.config, config).filter(id => CAMPOS.some(x => x.id === id) && !mios.includes(id))
   if (ajenos.length) return { ok: false, error: `No tiene asignado ${ajenos.map(id => campoPorId(id).nombre).join(', ')}: lo de ese campo lo firma quien lo tenga.` }
   const errores = validarConfig(config, ctx.config, `${diaIso(AHORA).slice(0, 8)}01`, AHORA.getTime())
@@ -135,8 +144,13 @@ export async function firmarConfiguracion(q: Credencial, c: CuerpoFirma): Promis
   // Las capacidades que cambian pasan por la revisión de la firma (U2 §8.4): lo que bloquea es 422.
   const capacidades = capacidadesQueBloquean(ctx.config, config, ctx, versiones)
   if (capacidades.length) return { ok: false, error: capacidades.join(' ') }
-  if (!alcanza(c.motivo, MOTIVO_MINIMO)) return { ok: false, error: 'Falta el motivo: una meta que se mueve sin motivo no es meta.' }
-  const v: Version = { version: vigente.version + 1, fecha: horaDelPlc(), por: `${yo.nombre} · ${rolPorId(q.rolId).nombre.toLowerCase()}`, motivo: c.motivo.trim(), cambios, config }
+  // El motivo, con las palabras del grupo que se firma (C-27): una meta, o la configuración técnica.
+  if (!alcanza(c.motivo, MOTIVO_MINIMO)) return { ok: false, error: grupos.metas.length
+    ? 'Falta el motivo: una meta que se mueve sin motivo no es meta.'
+    : 'Falta el motivo: diga por qué cambia la configuración técnica (queda en el historial con su firma).' }
+  const tope = revisarTopes(c as unknown as Record<string, unknown>, ['motivo'])
+  if (tope) return { ok: false, error: tope }
+  const v: Version = { version: vigente.version + 1, fecha: horaDelPlc(), por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`, motivo: c.motivo.trim(), cambios, config }
   cambiarSesion({ ctx: { ...ctx, config }, versiones: [...versiones, v] })
   return { ok: true, cambios, version: v.version }
 }
@@ -168,7 +182,9 @@ export async function guardarUsuario(q: Credencial, c: CuerpoUsuario): Promise<R
   }
   // En el demo la sesión ES el registro del servidor: siempre completo.
   const { accesos } = sesion(), usuarios = registroCompleto(sesion().usuarios), u = c.usuario
-  if (!rolPorId(q.rolId).puede['usuarios:administrar']) return { ok: false, errores: [{ campo: 'general', texto: 'Los accesos los da el gerente de activo.' }] }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, errores: [{ campo: 'general', texto: SIN_ROL }] }
+  if (!rol.puede['usuarios:administrar']) return { ok: false, errores: [{ campo: 'general', texto: 'Los accesos los da el gerente de activo.' }] }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, errores: [{ campo: 'general', texto: SIN_PERSONA }] }
   // PATCH: la persona tiene que existir; invitar es otra llamada (POST) y el id lo da el servidor.
@@ -180,7 +196,7 @@ export async function guardarUsuario(q: Credencial, c: CuerpoUsuario): Promise<R
   if (errores.length) return { ok: false, errores }
   const cambios = cambiosDeUsuario(antes, limpio)
   if (!cambios.length) return { ok: false, errores: [{ campo: 'general', texto: 'No hay cambios que guardar.' }] }
-  anotarAcceso(limpio, { id: accesos.length + 1, fecha: horaDelPlc(), por: `${yo.nombre} · ${rolPorId(q.rolId).nombre.toLowerCase()}`,
+  anotarAcceso(limpio, { id: accesos.length + 1, fecha: horaDelPlc(), por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`,
     usuario: limpio.nombre, cambios, motivo: c.motivo.trim() })
   return { ok: true }
 }
@@ -195,7 +211,9 @@ export async function invitarUsuario(q: Credencial, c: CuerpoInvitacion): Promis
     return { ok: true, id: r.datos.usuario.id }
   }
   const { accesos } = sesion(), usuarios = registroCompleto(sesion().usuarios), datos = c.invitacion
-  if (!rolPorId(q.rolId).puede['usuarios:administrar']) return { ok: false, errores: [{ campo: 'general', texto: 'Los accesos los da el gerente de activo.' }] }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, errores: [{ campo: 'general', texto: SIN_ROL }] }
+  if (!rol.puede['usuarios:administrar']) return { ok: false, errores: [{ campo: 'general', texto: 'Los accesos los da el gerente de activo.' }] }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, errores: [{ campo: 'general', texto: SIN_PERSONA }] }
   // Lo que pone el servidor: un id que nadie tiene, el día del reloj del PLC y «invitado».
@@ -206,7 +224,7 @@ export async function invitarUsuario(q: Credencial, c: CuerpoInvitacion): Promis
     ...(datos.telefono !== undefined ? { telefono: normalizarTelefono(datos.telefono, region.celular) } : {}) }
   const errores = revisarAcceso(usuarios, limpio, yo.id, c.motivo)
   if (errores.length) return { ok: false, errores }
-  anotarAcceso(limpio, { id: accesos.length + 1, fecha: hora, por: `${yo.nombre} · ${rolPorId(q.rolId).nombre.toLowerCase()}`,
+  anotarAcceso(limpio, { id: accesos.length + 1, fecha: hora, por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`,
     usuario: limpio.nombre, cambios: cambiosDeInvitacion(limpio), motivo: c.motivo.trim() })
   return { ok: true, id: limpio.id }
 }
@@ -226,11 +244,13 @@ export async function enviarAviso(q: Credencial, a: CuerpoAviso): Promise<Result
     return { ok: true, aviso: r.datos.aviso }
   }
   const { usuarios, ctx, avisosEnviados } = sesion()
-  if (!rolPorId(q.rolId).puede['sap:aviso']) return { ok: false, error: 'Su rol no envía avisos a SAP.' }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
+  if (!rol.puede['sap:aviso']) return { ok: false, error: 'Su rol no envía avisos a SAP.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
   // Como en el resto del contrato: nadie actúa sobre un campo que no tiene asignado.
-  if (!camposAsignados(rolPorId(q.rolId), usuarios).some(c => c.id === a.campoId)) return { ok: false, error: 'Ese campo no lo tiene asignado: el aviso no se envía.' }
+  if (!camposAsignados(rol, usuarios).some(c => c.id === a.campoId)) return { ok: false, error: 'Ese campo no lo tiene asignado: el aviso no se envía.' }
   if (!alcanza(a.descripcion, TEXTO_LIBRE_MINIMO)) return { ok: false, error: 'Escriba qué pasa, con al menos una frase corta.', campo: 'descripcion' }
   const todos = [...pedirHistoriaSap(ctx).avisos, ...avisosEnviados]
   // Un aviso abierto por equipo: el segundo no se crea y se dice cuál está abierto (409).
@@ -257,7 +277,8 @@ export async function emitirInforme(q: Credencial, c: ConsultaInforme): Promise<
   const { usuarios, ctx, versiones } = sesion()
   // Lo mismo que el servidor responde con 403: exporta quien tiene la
   // capacidad, una persona con acceso y solo de sus campos.
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!rol.puede['evidencia:exportar']) return { ok: false, error: 'Su rol no exporta evidencia.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
@@ -289,7 +310,8 @@ export async function cargarAsignacion(q: Credencial, c: CuerpoAsignacion): Prom
     return { ok: true }
   }
   const { usuarios, asignacionOficial, cargasAsignacion } = sesion(), filas = c.filas
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   // El 403 del contrato: la oficial de un mes la reemplaza quien la reporta,
   // no cualquiera con el campo (antes el operador y el técnico la pisaban).
   if (!rol.puede['asignacion:cargar']) return { ok: false, error: 'La asignación oficial la carga producción: su rol no la reemplaza.' }
@@ -364,7 +386,8 @@ export async function responderParada(q: Credencial, c: CuerpoRespuesta): Promis
     return { ok: true }
   }
   const { ctx, usuarios } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   // Las reglas del servidor, en su orden: capacidad (403), persona activa,
   // campo asignado, la primera respuesta gana (409) y la forma (422).
   if (!puedeHacer(rol.puede, 'causa:declarar')) return { ok: false, error: 'Su rol no responde paradas.' }
@@ -410,6 +433,8 @@ export async function recibirWhatsapp(c: CuerpoWhatsapp): Promise<Resultado> {
   if (malEvento) return { ok: false, error: malEvento }
   if (!u || !recibeAlertas(u, c.campoId))
     return { ok: false, error: 'Ese número no recibe las alertas de este campo: la respuesta no entra.' }
+  const rolDelNumero = rolExacto(u.rolId)
+  if (!rolDelNumero) return { ok: false, error: SIN_ROL }
   const previa = ctx.respuestas[c.evento]
   if (previa) return { ok: false, error: `Ya respondió ${previa.por}.` }
   const libre = (c.texto ?? '').trim()
@@ -422,7 +447,7 @@ export async function recibirWhatsapp(c: CuerpoWhatsapp): Promise<Resultado> {
   anotarRespuesta(c.evento, {
     texto: c.opcion.clave === OTRA.clave ? libre : parte && c.modo === MODO_OTRO ? `${c.opcion.texto}: ${libre}`
       : parte && c.modo ? `${c.opcion.texto}: ${nombreModo(c.modo, parte.id).toLowerCase()}` : c.opcion.texto,
-    por: `${u.nombre} · ${rolPorId(u.rolId).nombre.toLowerCase()}`, porId: u.id,
+    por: `${u.nombre} · ${rolDelNumero.nombre.toLowerCase()}`, porId: u.id,
     ...(c.opcion.parte ? { parte: c.opcion.parte, modo: c.modo } : {}), canal: 'whatsapp', hora: horaDelPlc(),
   })
   return { ok: true }
@@ -451,18 +476,20 @@ export async function completarAnalisis(q: Credencial, c: CuerpoAnalisis): Promi
     return { ok: true }
   }
   const { usuarios, ctx } = sesion()
-  if (!rolPorId(q.rolId).puede['causa:completar']) return { ok: false, error: 'El análisis lo completa confiabilidad o el jefe de mantenimiento.' }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
+  if (!rol.puede['causa:completar']) return { ok: false, error: 'El análisis lo completa confiabilidad o el jefe de mantenimiento.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
   // El campo sale del evento (el cuerpo no lo trae): nadie analiza una falla de un campo que no tiene.
-  const malEvento = revisarEvento(c.evento, undefined, camposAsignados(rolPorId(q.rolId), usuarios).map(x => x.id))
+  const malEvento = revisarEvento(c.evento, undefined, camposAsignados(rol, usuarios).map(x => x.id))
   if (malEvento) return { ok: false, error: malEvento }
   if (!ctx.respuestas[c.evento]?.parte) return { ok: false, error: 'Solo se analiza una falla declarada con su parte.' }
   if (!mecanismoIso(c.mecanismo)) return { ok: false, error: 'Escoja el mecanismo de falla.' }
   if (!CAUSAS_RAIZ.some(x => x.codigo === c.causaRaiz)) return { ok: false, error: 'Escoja la causa raíz.' }
   const nota = c.nota?.trim()
   anotarAnalisis(c.evento, { mecanismo: c.mecanismo, causaRaiz: c.causaRaiz, ...(nota ? { nota } : {}),
-    por: `${yo.nombre} · ${rolPorId(q.rolId).nombre.toLowerCase()}`, hora: horaDelPlc() })
+    por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`, hora: horaDelPlc() })
   return { ok: true }
 }
 
@@ -480,7 +507,8 @@ export async function cambiarPlanta(q: Credencial, campo: string, cambio: Cambio
     return { ok: true }
   }
   const { usuarios, plantas, cambiosPlanta } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!rol.puede['conector:configurar']) return { ok: false, error: 'El esquema de planta lo edita el administrador de la implementación.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
@@ -512,7 +540,8 @@ export async function decidirPlan(q: Credencial, c: { id: string; estado: Estado
     return { ok: true, decision: r.datos.decision }
   }
   const { ctx, versiones, usuarios, planes } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!puedeHacer(rol.puede, 'planes:decidir')) return { ok: false, error: 'Los planes los acepta operación o mantenimiento.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
@@ -542,18 +571,243 @@ export async function decidirPlan(q: Credencial, c: { id: string; estado: Estado
 
 /* ─────────────────────────── la clasificación ANH ─────────────────────────── */
 
-/* Las tres escrituras del árbol de paradas (Circular 024). La fila se busca en
-   el servidor por su id (`${evento}@${día}#${n}`), nunca se recibe; su campo
-   sale del evento del controlador. Orden de revisión, el de siempre: capacidad y
-   persona (403); la fila (404); su campo entre los de la persona (403); los
-   pasos que el rol no dice o no avala como suyos (403); la cadena que vio la
-   persona (409); la forma y la coherencia (422). Se guarda SOLO lo que dijo una
-   persona: lo de TRIM se vuelve a proponer con la regla de hoy al leer la fila. */
+/* Las escrituras del árbol de paradas (Circular 024). Lo que dicen las personas
+   se guarda POR PASO, solo por inserción, y nunca se borra ni se copia a nombre
+   de otro (D1 de CORRECCIONES-QA):
+   - Una escritura guarda solo los pasos que dijo esta persona en esta petición,
+     con su nombre, su hora y el consecutivo del servidor (`n`), en una fila o en
+     un evento. «Para la cascada» es una escritura por evento de las filas que
+     mostró la pantalla (`ids`): si la raíz trae más eventos, 409.
+   - En cada fila rige, paso por paso, lo más reciente entre su clave y la de su
+     evento (`rigeEnFila`, anh-clasificacion.ts); sin nada, lo que propone TRIM.
+     El tramo de exceso del programa solo usa lo suyo.
+   - Cambiar lo que ya dijo una persona pide motivo: en la fila de la dirección,
+     422 sin él; lo que dijo OTRA persona en otra fila o evento, 409 diciendo
+     cuáles. Con motivo, queda como corrección con su motivo.
+   - Lo que un cambio deja incoherente de lo que dijo una persona (la causa de la
+     otra planeación) queda `retirado`, con quién y el motivo: la fila vuelve a lo
+     que propone TRIM. Nada desaparece.
+   - La revisión no toca ningún paso; la respuesta de campo, solo el que determina.
+   - El yacimiento y la marca de lote nunca se copian: cada escritura lleva lo suyo.
+   La fila se busca en el servidor por su id (`${evento}@${día}#${n}`), nunca se
+   recibe; su campo sale del evento del controlador. Orden de revisión: la forma
+   del cuerpo (400); capacidad y persona (403); la fila (404, también si es de un
+   campo que la persona no tiene: no se dice si existe, C-20); los pasos que el
+   rol no dice o no avala (403); la cadena que vio la persona (409); la forma y la
+   coherencia (422); el alcance (422; 409 si la cascada trae más de lo que se vio);
+   lo que cambia de lo que dijeron otras personas (422 en la fila; 409 en las demás). */
 
 /** Quiénes dicen o confirman todos los pasos (`PASOS_QUE_DECLARA` y `PASOS_QUE_CONFIRMA`). */
 const QUIENES_TODO = 'supervisión, producción, el jefe de mantenimiento o confiabilidad'
 /** El 409: otra persona cambió la fila mientras esta la miraba. */
 const CAMBIO_LA_PARADA = 'Mientras la revisaba, alguien cambió esta parada: vuelva a abrirla para ver cómo quedó.'
+/** El 404 de una fila: no existe, o es de un campo que la persona no tiene (no se dice cuál de las dos, C-20). */
+const NO_ESTA = 'Esa parada no está entre las de sus campos: revise el evento y el día.'
+/** El 422 de una cascada sin las filas que vio la persona. */
+const CASCADA_SIN_IDS = 'Para la cascada, mande las filas que mostró la pantalla («ids»): se guarda solo en sus eventos.'
+/** Cuántas filas caben en una petición (C-12): un lote o una cascada de verdad son decenas. */
+const MAXIMO_IDS = 1000
+
+/* ─────────── la forma del cuerpo (400, C-11) ─────────── */
+
+type Forma = 'texto' | 'texto?' | 'bool?' | 'textos' | 'textos?' | 'objeto' | 'entero'
+/** El 400 `peticion-invalida`, con la ruta de lo que no tiene la forma. */
+const PETICION = (ruta: string, que: string) => `La petición no tiene la forma del contrato: «${ruta}» ${que}.`
+const QUE_ES: Record<string, string> = {
+  texto: 'tiene que ser un texto', bool: 'tiene que ser sí o no (true o false)', textos: 'tiene que ser una lista de textos',
+  objeto: 'tiene que ser un objeto', entero: 'tiene que ser un número entero',
+}
+/** La forma de un cuerpo, ANTES de las reglas: lo que no la tiene es un 400 en
+ *  palabras, nunca una excepción (500). Lo que el cuerpo traiga de más no se lee. */
+function revisarForma(c: unknown, forma: Readonly<Record<string, Forma>>): string | undefined {
+  if (!c || typeof c !== 'object' || Array.isArray(c)) return 'La petición no tiene la forma del contrato: el cuerpo tiene que ser un objeto.'
+  const o = c as Record<string, unknown>
+  for (const [k, f] of Object.entries(forma)) {
+    const v = o[k]
+    const base = f.replace('?', '')
+    if (v === undefined || v === null) { if (f.endsWith('?')) continue; return PETICION(k, 'falta') }
+    const bien = base === 'texto' ? typeof v === 'string'
+      : base === 'bool' ? typeof v === 'boolean'
+        : base === 'textos' ? Array.isArray(v) && v.every(x => typeof x === 'string')
+          : base === 'objeto' ? typeof v === 'object' && !Array.isArray(v)
+            : Number.isInteger(v)
+    if (!bien) return PETICION(k, QUE_ES[base] ?? 'no tiene la forma')
+  }
+  return undefined
+}
+/** Los topes de lo escrito (C-12): un motivo o una nota no es un documento. */
+function revisarTopes(c: Record<string, unknown>, campos: readonly string[]): string | undefined {
+  for (const k of campos) {
+    const v = c[k]
+    if (typeof v === 'string' && v.length > TEXTO_MAXIMO) return `«${k}» es de ${TEXTO_MAXIMO} caracteres o menos: escriba lo esencial.`
+  }
+  return undefined
+}
+
+/* ─────────── la fila, el alcance y lo que cambia ─────────── */
+
+const FMT_DIA = formatoFecha({ day: 'numeric', month: 'short', timeZone: 'America/Bogota' })
+/** «LC-07 (3 oct)»: una fila dicha para leer. */
+const filaEnPalabras = (f: ParadaAnh) => `${f.pozo} (${FMT_DIA.format(new Date(`${f.diaOperacional}T12:00:00-05:00`))})`
+
+/** La fila de la dirección: undefined (404) si no existe o si es de un campo que
+ *  la persona no tiene, sin decir cuál de las dos (C-20): el campo sale del
+ *  evento del controlador antes de armar la fila. */
+function filaDe(id: unknown, mios: readonly string[], ctx: Contexto, g: Record<string, BorradorClasificacion>): ParadaAnh | undefined {
+  if (typeof id !== 'string' || id.length > 200) return undefined
+  const campo = campoDeLaFila(id)
+  if (!campo || !mios.includes(campo)) return undefined
+  return pedirParadaAnh(id, ctx, g)
+}
+
+/** Dónde se guarda una escritura (una fila o un evento) y las filas que rigen con esa clave. */
+interface Objetivo { clave: string; filas: ParadaAnh[] }
+/** Lo que se guarda en esta petición, por clave. */
+type Escritos = Record<string, BorradorClasificacion>
+
+/** «a, b y c». */
+const listaEnPalabras = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+/** Los pozos de unos eventos, para decirlos en palabras. */
+const pozosDeEventos = (eventos: readonly string[]) => listaEnPalabras([...new Set(eventos.map(e => eventosPozos().find(x => x.id === e)?.pozo ?? e))])
+
+/** Dónde se guarda lo que dice la persona: en su fila, en su evento (todos sus
+ *  tramos) o, para la cascada, en cada evento de las filas que mostró la pantalla
+ *  (`ids`). Si la raíz trae eventos que la persona no vio, 409: la pantalla tiene
+ *  que mostrarlos antes (C-01). El tramo de exceso del programa es otra decisión,
+ *  no planeada: se guarda solo, en su fila. Un tramo de exceso de otro evento no
+ *  hereda lo del evento: no está entre las filas de su clave. */
+function objetivosDe(p: ParadaAnh, a: { aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; ids?: readonly string[] }, ctx: Contexto,
+  g: Record<string, BorradorClasificacion>): { objetivos: Objetivo[] } | { error: string } {
+  if (p.exceso) return { objetivos: [{ clave: p.id, filas: [p] }] }
+  const conLaDeLaDireccion = (fs: ParadaAnh[]) => fs.filter(f => !f.exceso).map(f => (f.id === p.id ? p : f))
+  if (a.aplicarALaCascada) {
+    const ids = [...new Set(a.ids ?? [])]
+    if (!ids.length) return { error: CASCADA_SIN_IDS }
+    if (ids.length > MAXIMO_IDS) return { error: `Una petición lleva hasta ${MAXIMO_IDS} filas.` }
+    if (!ids.includes(p.id)) return { error: 'La fila de la dirección tiene que estar entre las que mostró la pantalla («ids»).' }
+    const eventos = eventosDeLaCascada(p, ctx, g)
+    const ajenas = ids.filter(id => !eventos.includes(partesDelId(id)?.eventoId ?? ''))
+    if (ajenas.length) return { error: `${listaEnPalabras(ajenas.slice(0, 3))}${ajenas.length > 3 ? ` y ${ajenas.length - 3} más` : ''} no ${ajenas.length === 1 ? 'es' : 'son'} de la cascada de ${p.raiz}: revise las filas que mandó.` }
+    const vistos = new Set(ids.map(id => partesDelId(id)!.eventoId))
+    const faltan = eventos.filter(e => !vistos.has(e))
+    if (faltan.length) return { error: `Mientras la revisaba, la cascada de ${p.raiz} cambió: son ${eventos.length} pozos y la pantalla mostró ${vistos.size} (falta ${pozosDeEventos(faltan)}). Vuelva a abrirla para verlos todos.` }
+    const filas = conLaDeLaDireccion(filasDeEventos(p.campoId, eventos, ctx, g))
+    return { objetivos: eventos.map(e => ({ clave: e, filas: filas.filter(f => f.eventoId === e) })) }
+  }
+  if (a.aplicarAlEvento) return { objetivos: [{ clave: p.eventoId, filas: conLaDeLaDireccion(filasDeEventos(p.campoId, [p.eventoId], ctx, g)) }] }
+  return { objetivos: [{ clave: p.id, filas: [p] }] }
+}
+
+/** Lo que una persona cambiaría de lo que dijo una persona en una fila. */
+interface Cambio { fila: ParadaAnh; paso: PasoAnh; antes: DatoClasificado<unknown, unknown>; retira: boolean }
+const cambioEnPalabras = (c: Cambio) => `${filaEnPalabras(c.fila)}: «${PASO_CAMPO[c.paso]}», que dijo ${c.antes.por}`
+
+/** Lo que dice una persona en las filas de una clave, paso por paso: el valor
+ *  nuevo de cada paso (lo que deja `decir` en la primera fila donde cambia algo;
+ *  con su procedencia: declarado, corregido o confirmado), lo que retira porque ya
+ *  no va con lo nuevo (la causa de la otra planeación: solo lo que dijo una
+ *  persona; lo de TRIM se quita solo al leer) y lo que cambiaría de lo que dijeron
+ *  las personas en cada fila. Un paso que no va con lo que dijo una persona en
+ *  alguna fila es 422, con la fila. */
+function decirEn(o: Objetivo, p: ParadaAnh, decir: (b: BorradorClasificacion) => BorradorClasificacion):
+  { nuevos: Map<PasoAnh, DatoClasificado<unknown, unknown>>; retirados: Map<PasoAnh, unknown>; cambios: Cambio[] } | { error: string } {
+  const filas = [...o.filas].sort((a, b) => Number(b.id === p.id) - Number(a.id === p.id))
+  const nuevos = new Map<PasoAnh, DatoClasificado<unknown, unknown>>(), retirados = new Map<PasoAnh, unknown>()
+  const despues = new Map<string, BorradorClasificacion>()
+  for (const f of filas) {
+    let b: BorradorClasificacion
+    try { b = decir(f.clasificacion) } catch (e) {
+      if (e instanceof ErrorClasificacion) return { error: f.id === p.id ? e.message : `En ${filaEnPalabras(f)}: ${e.message}` }
+      throw e
+    }
+    despues.set(f.id, b)
+    for (const x of PASOS) {
+      const a = f.clasificacion[x], d = b[x]
+      if (d && d !== a && !nuevos.has(x)) nuevos.set(x, d)
+      if (a && !d && esDePersona(a.procedencia) && !retirados.has(x)) retirados.set(x, a.valor)
+    }
+  }
+  // Lo nuevo vale para todas las filas de la clave: lo que dijo una persona en
+  // otra fila y ya no va con ello también se retira (la clave lo pisa en todas).
+  for (const f of filas) {
+    const c = f.clasificacion
+    const queda = <Q extends PasoAnh>(q: Q) => (nuevos.get(q) ?? (retirados.has(q) ? undefined : c[q])) as DatoClasificado<string, unknown> | undefined
+    const pl = queda('planeacion'), n1 = queda('n1'), n2 = queda('n2')
+    if (pl && n1 && planeacionDeN1(n1.valor as ClaveN1) !== pl.valor) {
+      if (nuevos.has('n1') && esDePersona(pl.procedencia) && !nuevos.has('planeacion'))
+        return { error: `En ${filaEnPalabras(f)} «¿Planeada?» es «${ETIQUETA_PLANEACION[pl.valor as Planeacion]}» (lo dijo ${pl.por}): cambie primero «¿Planeada?».` }
+      if (!nuevos.has('n1') && esDePersona(n1.procedencia)) { retirados.set('n1', n1.valor); if (n2 && esDePersona(n2.procedencia) && !nuevos.has('n2')) retirados.set('n2', n2.valor) }
+    }
+    const n1b = queda('n1'), n2b = queda('n2')
+    if (n1b && n2b && n1DeCodigo(n2b.valor as CodigoN2) !== n1b.valor && esDePersona(n2b.procedencia) && !nuevos.has('n2')) retirados.set('n2', n2b.valor)
+  }
+  const cambios: Cambio[] = []
+  for (const f of filas) for (const x of new Set([...nuevos.keys(), ...retirados.keys()])) {
+    const d = f.clasificacion[x]
+    if (!d || !esDePersona(d.procedencia)) continue
+    const retira = retirados.has(x) && !nuevos.has(x)
+    if (retira || String(d.valor) !== String(nuevos.get(x)!.valor)) cambios.push({ fila: f, paso: x, antes: d, retira })
+  }
+  return { nuevos, retirados, cambios }
+}
+
+/** El motivo de una corrección, en el porqué de lo que se guarda (P1 §5.3). */
+function conMotivo<D extends DatoClasificado<unknown, unknown>>(d: D, paso: PasoAnh, motivo: string): D {
+  if (paso !== 'choke') return { ...d, porque: motivo }
+  const q = (d.porque ?? { regla: d.regla ?? '' }) as PorqueChoke
+  return { ...d, porque: { ...q, texto: q.texto ? `${q.texto}. Motivo: ${motivo}` : motivo } }
+}
+
+/** El consecutivo que sigue: el orden en que se dice (`clasificacion_paso.id`). */
+function contadorDe(g: Readonly<Record<string, BorradorClasificacion>>): () => number {
+  let n = 0
+  for (const b of Object.values(g)) {
+    for (const p of PASOS) n = Math.max(n, b[p]?.n ?? 0)
+    for (const r of b.respuestas ?? []) n = Math.max(n, r.n ?? 0)
+    n = Math.max(n, b.revision?.n ?? 0, b.cauGral?.n ?? 0)
+  }
+  return () => ++n
+}
+
+/** Lo guardado en una clave con lo nuevo encima, paso por paso: la conversación
+ *  se alarga y la revisión es la última (o la misma, atendida). */
+export function fusionarGuardado(antes: BorradorClasificacion | undefined, nuevo: BorradorClasificacion): BorradorClasificacion {
+  const r: Record<string, unknown> = { ...antes }
+  for (const p of PASOS) if (nuevo[p]) r[p] = nuevo[p]
+  if (nuevo.cauGral) r.cauGral = nuevo.cauGral
+  if (nuevo.respuestas?.length) r.respuestas = [...(antes?.respuestas ?? []), ...nuevo.respuestas]
+  if (nuevo.revision) r.revision = nuevo.revision
+  return r as BorradorClasificacion
+}
+
+/** Atiende lo que se le pidió a este rol en las filas que toca la escritura
+ *  («Algo está mal», «Pedir a producción»): la revisión que rige en cada fila
+ *  queda con quién y cuándo, en la clave donde está guardada. */
+function atender(escritos: Escritos, filas: readonly ParadaAnh[], g: Record<string, BorradorClasificacion>, quien: Persona, rol: string, hora: string) {
+  for (const f of filas) {
+    const rv = f.revision
+    if (!rv || rv.atendida || !quienRevisa(rv).includes(rol)) continue
+    const clave = [f.id, f.eventoId].find(k => g[k]?.revision === rv || (rv.n !== undefined && g[k]?.revision?.n === rv.n))
+    if (!clave || escritos[clave]?.revision?.atendida) continue
+    escritos[clave] = { ...escritos[clave], revision: conRevisionAtendida({ revision: rv }, quien, rol, hora).revision! }
+  }
+}
+
+/** Guarda en la sesión lo escrito (paso por paso, D1) y devuelve la fila de la dirección como quedó. */
+function guardar(id: string, escritos: Escritos, ctx: Contexto) {
+  const { clasificacionesAnh } = sesion()
+  const nuevas = { ...clasificacionesAnh }
+  for (const [k, e] of Object.entries(escritos)) nuevas[k] = fusionarGuardado(clasificacionesAnh[k], e)
+  cambiarSesion({ clasificacionesAnh: nuevas })
+  return { parada: pedirParadaAnh(id, ctx, nuevas)!, guardadas: escritos }
+}
+
+/** Lo que el servidor guardó, en la copia de la sesión (con la fuente http), paso
+ *  por paso: cambia su versión y las vistas de la ANH se piden de nuevo. */
+function anotarClasificaciones(g: Record<string, BorradorClasificacion>) {
+  const antes = sesion().clasificacionesAnh
+  cambiarSesion({ clasificacionesAnh: { ...antes, ...Object.fromEntries(Object.entries(g).map(([k, e]) => [k, fusionarGuardado(antes[k], e)])) } })
+}
 
 /** Los pasos que el rol no dice (o no confirma) como suyos, dichos en palabras; undefined si son todos suyos. */
 function pasosAjenos(rolId: string, pasos: readonly PasoAnh[], tabla: Readonly<Record<string, readonly PasoAnh[]>>, verbo: 'dice' | 'confirma'): string | undefined {
@@ -565,81 +819,84 @@ function pasosAjenos(rolId: string, pasos: readonly PasoAnh[], tabla: Readonly<R
 
 /** Lo que no cuadra en el valor de un paso (el 422), con las mismas palabras de `clasificar`. */
 function valorInvalido(paso: PasoAnh, valor: unknown): string | undefined {
-  if (typeof valor !== 'string' || !valor.trim()) return `«${PASO_CAMPO[paso]}» llegó vacío.`
+  if (typeof valor !== 'string') return PETICION(`pasos.${paso}`, 'tiene que ser un texto')
+  if (!valor.trim()) return `«${PASO_CAMPO[paso]}» llegó vacío.`
   return incoherencias({ [paso]: { valor, procedencia: 'regla' } } as BorradorClasificacion)[0]
 }
 
-/** Por qué una persona cambió lo que ya había dicho otra: queda en el porqué de cada paso que cambió. */
-function conMotivo(b: BorradorClasificacion, pasos: readonly PasoAnh[], motivo: string): BorradorClasificacion {
-  const r: Record<string, unknown> = { ...b }
-  for (const p of pasos) {
-    const d = b[p]
-    if (!d || !esDePersona(d.procedencia)) continue
-    if (p === 'choke') {
-      const q = (d.porque ?? { regla: d.regla ?? '' }) as PorqueChoke
-      r[p] = { ...d, porque: { ...q, texto: q.texto ? `${q.texto}. Motivo: ${motivo}` : motivo } }
-    } else r[p] = { ...d, porque: motivo }
+/** Lo que dice una persona de unos pasos en las claves de la escritura: las
+ *  revisiones de motivo (422 en la fila de la dirección, 409 en las demás) y lo
+ *  que se guarda en cada clave. Lo común a `…/clasificacion` y `…/yacimiento`. */
+function escribirPasos(p: ParadaAnh, objetivos: readonly Objetivo[], decir: (b: BorradorClasificacion) => BorradorClasificacion,
+  motivo: string | undefined, yo: { id: string; nombre: string }, rol: string, hora: string, faltaMotivo: string):
+  { escritos: Escritos } | { error: string } {
+  const porClave: Array<{ o: Objetivo; nuevos: Map<PasoAnh, DatoClasificado<unknown, unknown>>; retirados: Map<PasoAnh, unknown> }> = []
+  const cambios: Cambio[] = []
+  for (const o of objetivos) {
+    const r = decirEn(o, p, decir)
+    if ('error' in r) return r
+    porClave.push({ o, nuevos: r.nuevos, retirados: r.retirados })
+    cambios.push(...r.cambios)
   }
-  return r as BorradorClasificacion
+  const conMotivoValido = alcanza(motivo, MOTIVO_MINIMO)
+  const enLaFila = cambios.filter(c => c.fila.id === p.id)
+  if (enLaFila.length && !conMotivoValido) return { error: faltaMotivo }
+  const deOtros = cambios.filter(c => c.fila.id !== p.id && c.antes.porId !== yo.id)
+  if (deOtros.length && !conMotivoValido) {
+    const unicos = [...new Map(deOtros.map(c => [`${c.fila.id}|${c.paso}`, c])).values()]
+    return { error: `Esto cambia lo que dijo otra persona en ${unicos.length === 1 ? 'otra fila' : `${unicos.length} pasos de otras filas`}: ${unicos.slice(0, 4).map(cambioEnPalabras).join('; ')}${unicos.length > 4 ? `; y ${unicos.length - 4} más` : ''}. Para cambiarlo, diga por qué (un motivo de ${MOTIVO_MINIMO} caracteres o más).` }
+  }
+  // Retirar lo que dijo una persona (también uno mismo, en otra fila) siempre lleva motivo: queda con el retiro.
+  const retira = porClave.flatMap(x => [...x.retirados.keys()])
+  if (retira.length && !conMotivoValido)
+    return { error: `Falta el motivo: esto retira ${[...new Set(retira)].map(x => `«${PASO_CAMPO[x]}»`).join(', ')}, que ya había dicho una persona (vuelve a lo que propone TRIM).` }
+  const m = conMotivoValido && cambios.length ? motivo!.trim() : undefined
+  const n = contadorDe(sesion().clasificacionesAnh)
+  const escritos: Escritos = {}
+  for (const { o, nuevos, retirados } of porClave) {
+    const e: Record<string, unknown> = {}
+    for (const x of PASOS) {
+      const d = nuevos.get(x)
+      if (d) e[x] = { ...(m ? conMotivo(d, x, m) : d), n: n() }
+      else if (retirados.has(x)) e[x] = { valor: retirados.get(x), procedencia: 'retirado', por: yo.nombre, porId: yo.id, rol, hora, ...(m ? { porque: m } : {}), n: n() }
+    }
+    if (Object.keys(e).length) escritos[o.clave] = e as BorradorClasificacion
+  }
+  return { escritos }
 }
-
-/** ¿Cambia algo que ya había dicho una persona? Entonces el motivo es obligatorio (P1 §5.3). */
-const corrigeAPersona = (p: ParadaAnh, valores: Partial<Record<PasoAnh, string>>): boolean =>
-  PASOS.some(x => { const d = p.clasificacion[x]; return valores[x] !== undefined && !!d && esDePersona(d.procedencia) && String(d.valor) !== valores[x] })
-
-/** Guarda lo que dijo la persona en la fila, en su evento o en su cascada, y
- *  devuelve la fila como quedó y lo guardado. Lo dicho por evento rige en todos
- *  sus tramos: lo que había guardado por fila de ese evento se reemplaza (nunca
- *  se mezclan pasos de la fila con pasos del evento). Un tramo que se pasó de la
- *  ventana del programa (`exceso`) se guarda solo y no hereda del evento: es otra
- *  decisión, no planeada, y lo que se diga del evento entero no lo borra. */
-function guardarClasificacion(p: ParadaAnh, b: BorradorClasificacion, alcance: { aplicarAlEvento?: boolean; aplicarALaCascada?: boolean }, ctx: Contexto) {
-  const { clasificacionesAnh } = sesion()
-  const lo = soloDePersona(b)
-  const guardadas: Record<string, BorradorClasificacion> = {}
-  const eventos = p.exceso ? [] : alcance.aplicarALaCascada ? eventosDeLaCascada(p, ctx, clasificacionesAnh) : alcance.aplicarAlEvento ? [p.eventoId] : []
-  // Lo que había guardado por fila de esos eventos se reemplaza. Lo guardado en
-  // el tramo de exceso del programa es otra decisión (no planeada, y no hereda
-  // del evento): lo que se dice del evento entero no lo borra. Se mira con lo
-  // que había, sin tocarlo: lo guardado es la clave de la caché de las vistas
-  // (`guardadasDe`), y un objeto que cambia después de leído deja la caché vieja.
-  const reemplazadas = new Set(eventos.flatMap(ev => filasGuardadasDe(clasificacionesAnh, ev).filter(k => !pedirParadaAnh(k, ctx, clasificacionesAnh)?.exceso)))
-  const nuevas: Record<string, BorradorClasificacion> = Object.fromEntries(Object.entries(clasificacionesAnh).filter(([k]) => !reemplazadas.has(k)))
-  for (const ev of eventos) nuevas[ev] = guardadas[ev] = lo
-  if (!eventos.length) nuevas[p.id] = guardadas[p.id] = lo
-  cambiarSesion({ clasificacionesAnh: nuevas })
-  return { parada: pedirParadaAnh(p.id, ctx, nuevas)!, guardadas }
-}
-
-/** Lo que el servidor guardó, en la copia de la sesión (con la fuente http): cambia
- *  su versión y las vistas de la ANH se piden de nuevo. */
-const anotarClasificaciones = (g: Record<string, BorradorClasificacion>) =>
-  cambiarSesion({ clasificacionesAnh: { ...sesion().clasificacionesAnh, ...g } })
 
 /** `POST /api/anh/paradas/:id/clasificacion { pasos, motivo?, aplicarAlEvento?,
- *  aplicarALaCascada?, cadena? }` → la fila como quedó y lo guardado. Un paso que
- *  faltaba queda `declarado`; uno que TRIM proponía distinto, `corregido` (con lo
- *  propuesto al lado); el mismo, `confirmado` (`declararPaso`). La coherencia
- *  planeada / causa no se rompe: una causa de la otra planeación se rechaza en
- *  palabras y un detalle arrastra su causa. «En el yacimiento» va por `…/yacimiento`. */
+ *  aplicarALaCascada?, ids?, cadena? }` → la fila como quedó y lo guardado. Un
+ *  paso que faltaba queda `declarado`; uno que TRIM proponía distinto,
+ *  `corregido` (con lo propuesto al lado); el mismo, `confirmado` (`declararPaso`).
+ *  Se guardan SOLO los pasos de esta petición (D1), en la fila, en el evento o en
+ *  cada evento de la cascada que mostró la pantalla. La coherencia planeada /
+ *  causa no se rompe: una causa de la otra planeación se rechaza en palabras,
+ *  un detalle arrastra su causa, y la causa de una persona que una planeación
+ *  nueva deja incoherente queda `retirada`, con motivo (C-05). «En el
+ *  yacimiento» va por `…/yacimiento`. */
 export async function clasificarParada(q: Credencial, id: string, c: CuerpoClasificacion): Promise<Resultado<{ parada: ParadaAnh }>> {
-  const cuerpo: CuerpoClasificacion = { pasos: c.pasos, ...(c.motivo !== undefined ? { motivo: c.motivo } : {}),
-    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) }
+  const cuerpoDe = (): CuerpoClasificacion => ({ pasos: c.pasos, ...(c.motivo !== undefined ? { motivo: c.motivo } : {}),
+    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true, ids: c.ids ?? [] } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) })
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/clasificacion`, cuerpo, R_CLASIFICACION)
+    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/clasificacion`, cuerpoDe(), R_CLASIFICACION)
     if (!r.ok) return r
     anotarClasificaciones(r.datos.guardadas)
     return { ok: true, parada: r.datos.parada }
   }
+  // El servidor: la forma del cuerpo antes que las reglas (400, C-11).
+  const forma = revisarForma(c, { pasos: 'objeto', motivo: 'texto?', aplicarAlEvento: 'bool?', aplicarALaCascada: 'bool?', ids: 'textos?', cadena: 'texto?' })
+  if (forma) return { ok: false, error: forma }
+  const cuerpo = cuerpoDe()
   const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!puedeHacer(rol.puede, 'anh:clasificar')) return { ok: false, error: 'Su rol no clasifica paradas para la ANH.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
-  const parada = pedirParadaAnh(id, ctx, clasificacionesAnh)
-  if (!parada) return { ok: false, error: 'Esa parada no está entre las de la ANH: revise el evento y el día.' }
-  if (!camposAsignados(rol, usuarios).some(x => x.id === parada.campoId)) return { ok: false, error: 'Esa parada es de un campo que no tiene asignado.' }
-  const valores = (c.pasos ?? {}) as Partial<Record<PasoAnh, string>>
+  const parada = filaDe(id, camposAsignados(rol, usuarios).map(x => x.id), ctx, clasificacionesAnh)
+  if (!parada) return { ok: false, error: NO_ESTA }
+  const valores = Object.fromEntries(Object.entries(c.pasos as Record<string, unknown>)) as Partial<Record<PasoAnh, string>>
   const pasos = PASOS.filter(p => Object.hasOwn(valores, p))
   const ajeno = pasosAjenos(q.rolId, pasos, PASOS_QUE_DECLARA, 'dice')
   if (ajeno) return { ok: false, error: ajeno }
@@ -649,95 +906,124 @@ export async function clasificarParada(q: Credencial, id: string, c: CuerpoClasi
   if (!pasos.length) return { ok: false, error: 'No llegó ningún paso que guardar.' }
   for (const p of pasos) { const m = valorInvalido(p, valores[p]); if (m) return { ok: false, error: m } }
   if (valores.choke === 'reservorio') return { ok: false, error: '«En el yacimiento» lo pone producción o confiabilidad diciendo qué lo muestra (la prueba del pozo, el corte de agua o la presión de fondo).' }
-  const corrige = corrigeAPersona(parada, valores)
-  if (corrige && !alcanza(c.motivo, MOTIVO_MINIMO)) return { ok: false, error: 'Falta el motivo: cambia algo que ya había dicho una persona.' }
+  const tope = revisarTopes(c as unknown as Record<string, unknown>, ['motivo'])
+  if (tope) return { ok: false, error: tope }
+  const alcance = objetivosDe(parada, cuerpo, ctx, clasificacionesAnh)
+  if ('error' in alcance) return { ok: false, error: alcance.error }
   const hora = horaDelPlc(), quien = { id: yo.id, nombre: yo.nombre }
-  let b: BorradorClasificacion = parada.clasificacion
-  try {
-    for (const p of pasos) b = declararPaso(b, p, valores[p] as ValoresPasos[PasoAnh], quien, q.rolId, hora)
-  } catch (e) {
-    if (e instanceof ErrorClasificacion) return { ok: false, error: e.message }
-    throw e
-  }
-  if (corrige) b = conMotivo(b, pasos, c.motivo!.trim())
-  b = conRevisionAtendida(b, quien, q.rolId, hora)
-  return { ok: true, parada: guardarClasificacion(parada, b, c, ctx).parada }
+  const decir = (b: BorradorClasificacion) => pasos.reduce((x, p) => declararPaso(x, p, valores[p] as ValoresPasos[PasoAnh], quien, q.rolId, hora), b)
+  const r = escribirPasos(parada, alcance.objetivos, decir, c.motivo, quien, q.rolId, hora, 'Falta el motivo: cambia algo que ya había dicho una persona.')
+  if ('error' in r) return { ok: false, error: r.error }
+  atender(r.escritos, alcance.objetivos.flatMap(o => o.filas), clasificacionesAnh, quien, q.rolId, hora)
+  return { ok: true, parada: guardar(parada.id, r.escritos, ctx).parada }
 }
 
 /** `POST /api/anh/paradas/:id/yacimiento { evidencia, motivo?, aplicarAlEvento?,
  *  cadena? }` → la fila con «En el yacimiento» en el paso 2. Solo producción y
  *  confiabilidad (`anh:yacimiento`): necesita la prueba del pozo, el corte de
- *  agua o la presión de fondo, que no se ven desde el campo, y nunca sale de una señal. */
+ *  agua o la presión de fondo, que no se ven desde el campo, y nunca sale de una
+ *  señal. Es de cada pozo: el alcance es la fila o su evento, nunca la cascada
+ *  (C-17: el alcance sale solo de los campos del cuerpo del contrato). */
 export async function declararYacimientoAnh(q: Credencial, id: string, c: CuerpoYacimiento): Promise<Resultado<{ parada: ParadaAnh }>> {
-  const cuerpo: CuerpoYacimiento = { evidencia: c.evidencia, ...(c.motivo !== undefined ? { motivo: c.motivo } : {}),
-    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) }
+  const cuerpoDe = (): CuerpoYacimiento => ({ evidencia: c.evidencia, ...(c.motivo !== undefined ? { motivo: c.motivo } : {}),
+    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) })
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/yacimiento`, cuerpo, R_CLASIFICACION)
+    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/yacimiento`, cuerpoDe(), R_CLASIFICACION)
     if (!r.ok) return r
     anotarClasificaciones(r.datos.guardadas)
     return { ok: true, parada: r.datos.parada }
   }
+  const forma = revisarForma(c, { evidencia: 'texto', motivo: 'texto?', aplicarAlEvento: 'bool?', cadena: 'texto?' })
+  if (forma) return { ok: false, error: forma }
+  const cuerpo = cuerpoDe()
   const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!puedeHacer(rol.puede, 'anh:yacimiento'))
     return { ok: false, error: '«En el yacimiento» lo ponen producción o confiabilidad: necesita la prueba del pozo, el corte de agua o la presión de fondo, que no se ven desde el campo.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
-  const parada = pedirParadaAnh(id, ctx, clasificacionesAnh)
-  if (!parada) return { ok: false, error: 'Esa parada no está entre las de la ANH: revise el evento y el día.' }
-  if (!camposAsignados(rol, usuarios).some(x => x.id === parada.campoId)) return { ok: false, error: 'Esa parada es de un campo que no tiene asignado.' }
+  const parada = filaDe(id, camposAsignados(rol, usuarios).map(x => x.id), ctx, clasificacionesAnh)
+  if (!parada) return { ok: false, error: NO_ESTA }
   if (c.cadena !== undefined && c.cadena !== cadenaVista(parada.clasificacion)) return { ok: false, error: CAMBIO_LA_PARADA }
-  const corrige = corrigeAPersona(parada, { choke: 'reservorio' })
-  if (corrige && !alcanza(c.motivo, MOTIVO_MINIMO)) return { ok: false, error: 'Falta el motivo: cambia dónde se trabó, que ya había dicho una persona.' }
-  let b: BorradorClasificacion
+  const tope = revisarTopes(c as unknown as Record<string, unknown>, ['evidencia', 'motivo'])
+  if (tope) return { ok: false, error: tope }
+  // Solo los campos del cuerpo del contrato: «para la cascada» no existe aquí (C-17).
+  const alcance = objetivosDe(parada, { ...(cuerpo.aplicarAlEvento ? { aplicarAlEvento: true } : {}) }, ctx, clasificacionesAnh)
+  if ('error' in alcance) return { ok: false, error: alcance.error }
   const hora = horaDelPlc(), quien = { id: yo.id, nombre: yo.nombre }
-  try { b = declararYacimiento(parada.clasificacion, typeof c.evidencia === 'string' ? c.evidencia : '', quien, q.rolId, hora) }
-  catch (e) {
-    if (e instanceof ErrorClasificacion) return { ok: false, error: e.message }
-    throw e
-  }
-  if (corrige) b = conMotivo(b, ['choke'], c.motivo!.trim())
-  b = conRevisionAtendida(b, quien, q.rolId, hora)
-  return { ok: true, parada: guardarClasificacion(parada, b, c, ctx).parada }
+  const r = escribirPasos(parada, alcance.objetivos, b => declararYacimiento(b, c.evidencia, quien, q.rolId, hora), c.motivo, quien, q.rolId, hora,
+    'Falta el motivo: cambia dónde se trabó, que ya había dicho una persona.')
+  if ('error' in r) return { ok: false, error: r.error }
+  atender(r.escritos, alcance.objetivos.flatMap(o => o.filas), clasificacionesAnh, quien, q.rolId, hora)
+  return { ok: true, parada: guardar(parada.id, r.escritos, ctx).parada }
 }
 
 /** El 409 de una pregunta que se cerró mientras se veía (otra persona ya la contestó). */
 const YA_CONTESTADA = 'Mientras la veía, alguien ya contestó esa pregunta: vuelva a abrir la parada para ver cómo quedó.'
+/** Las preguntas que existen (las fijas y las que arma el motor: el tramo, la causa y el detalle). */
+const PREGUNTAS_QUE_EXISTEN: readonly string[] = [...Object.keys(PREGUNTAS_CAMPO), 'raiz', 'detalle', 'choke']
+
+/** ¿Va el valor que deja una respuesta con lo que dijo una persona en esta fila? (planeación y causa; causa y detalle). */
+function vaConLoDicho(b: BorradorClasificacion, paso: PasoAnh, valor: string): boolean {
+  const dePersona = (q: PasoAnh) => { const d = b[q]; return d && esDePersona(d.procedencia) ? String(d.valor) : undefined }
+  const pl = dePersona('planeacion'), n1 = dePersona('n1'), n2 = dePersona('n2')
+  if (paso === 'planeacion') return !n1 || planeacionDeN1(n1 as ClaveN1) === valor
+  if (paso === 'n1') return (!pl || planeacionDeN1(valor as ClaveN1) === pl) && (!n2 || n1DeCodigo(n2 as CodigoN2) === valor)
+  if (paso === 'n2') return (!n1 || n1DeCodigo(valor as CodigoN2) === n1) && (!pl || planeacionDeN1(n1DeCodigo(valor as CodigoN2)) === pl)
+  return true
+}
 
 /** `POST /api/anh/paradas/:id/respuesta { pregunta, opcion, aplicarAlEvento?,
- *  aplicarALaCascada?, cadena? }` → la fila como quedó. Lo que contesta una
+ *  aplicarALaCascada?, ids?, cadena? }` → la fila como quedó. Lo que contesta una
  *  persona en el campo a una pregunta abierta de la parada («¿Qué lo paró?»,
  *  «¿De dónde vino el corte?»…), con el texto exacto del botón. Corre
- *  `responder`: lo que la opción deja queda dicho por esa persona (`declarado`,
- *  con ella en el porqué; un paso que su rol no avala, como el tramo que sale de
- *  «De este pozo», lo confirma después quien revisa), la respuesta queda en la
- *  conversación y la pregunta que sigue llega en la vista. «No sé» no fija nada:
- *  la pregunta sigue abierta y escala a quien revisa. Orden: capacidad y persona
- *  (403), la fila (404), su campo (403), la cadena que vio (409), la pregunta
- *  abierta (409: otro la contestó), quién la contesta (403) y la opción (422). */
+ *  `responder`: la respuesta no corrige ni confirma (D1; B-04): solo el paso que
+ *  determina queda `declarado` a nombre de quien contestó (un paso que su rol no
+ *  avala, como el tramo que sale de «De este pozo», lo confirma después quien
+ *  revisa); lo que ya dijo una persona en una fila del alcance no se toca. La
+ *  respuesta queda en la conversación de cada clave y la pregunta que sigue
+ *  llega en la vista. «No sé» no fija nada: la pregunta sigue abierta y escala a
+ *  quien revisa (y repetirlo no la vuelve a guardar). Orden: forma (400),
+ *  capacidad y persona (403), la fila (404), la cadena (409), la pregunta (409 si
+ *  otra persona ya la contestó; 422 si no es de esta parada), quién la contesta
+ *  (403), la opción (422) y el alcance (422/409). */
 export async function responderPreguntaAnh(q: Credencial, id: string, c: CuerpoRespuestaAnh): Promise<Resultado<{ parada: ParadaAnh }>> {
-  const cuerpo: CuerpoRespuestaAnh = { pregunta: c.pregunta, opcion: c.opcion,
-    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) }
+  const cuerpoDe = (): CuerpoRespuestaAnh => ({ pregunta: c.pregunta, opcion: c.opcion,
+    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true, ids: c.ids ?? [] } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) })
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/respuesta`, cuerpo, R_CLASIFICACION)
+    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/respuesta`, cuerpoDe(), R_CLASIFICACION)
     if (!r.ok) return r
     anotarClasificaciones(r.datos.guardadas)
     return { ok: true, parada: r.datos.parada }
   }
+  const forma = revisarForma(c, { pregunta: 'texto', opcion: 'texto', aplicarAlEvento: 'bool?', aplicarALaCascada: 'bool?', ids: 'textos?', cadena: 'texto?' })
+  if (forma) return { ok: false, error: forma }
+  const cuerpo = cuerpoDe()
   const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!puedeHacer(rol.puede, 'anh:clasificar')) return { ok: false, error: 'Su rol no contesta las preguntas de las paradas.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
-  const parada = pedirParadaAnh(id, ctx, clasificacionesAnh)
-  if (!parada) return { ok: false, error: 'Esa parada no está entre las de la ANH: revise el evento y el día.' }
-  if (!camposAsignados(rol, usuarios).some(x => x.id === parada.campoId)) return { ok: false, error: 'Esa parada es de un campo que no tiene asignado.' }
+  const parada = filaDe(id, camposAsignados(rol, usuarios).map(x => x.id), ctx, clasificacionesAnh)
+  if (!parada) return { ok: false, error: NO_ESTA }
   if (c.cadena !== undefined && c.cadena !== cadenaVista(parada.clasificacion)) return { ok: false, error: CAMBIO_LA_PARADA }
   const pregunta = parada.propuesta.preguntas.find(x => x.id === c.pregunta)
-  if (!pregunta) return { ok: false, error: YA_CONTESTADA }
+  if (!pregunta) {
+    // Otra persona la contestó (409) o no es de esta parada (422, C-18).
+    const contestada = (parada.clasificacion.respuestas ?? []).some(r => r.pregunta === c.pregunta && !r.noSe)
+    return { ok: false, error: contestada ? YA_CONTESTADA
+      : PREGUNTAS_QUE_EXISTEN.includes(c.pregunta) ? 'Esa pregunta no es de esta parada: TRIM no la abrió.' : `«${c.pregunta.slice(0, 40)}» no es una pregunta de TRIM.` }
+  }
   if (!ROLES_QUE_CONTESTAN[pregunta.quien].includes(q.rolId)) return { ok: false, error: `«${pregunta.texto}» la contesta ${QUIEN_CONTESTA[pregunta.quien]}.` }
   const i = pregunta.opciones.findIndex(o => o.texto === c.opcion)
-  if (i < 0) return { ok: false, error: `«${typeof c.opcion === 'string' ? c.opcion : String(c.opcion)}» no es una de las respuestas de «${pregunta.texto}».` }
+  if (i < 0) return { ok: false, error: `«${c.opcion.slice(0, 80)}» no es una de las respuestas de «${pregunta.texto}».` }
+  const alcance = objetivosDe(parada, cuerpo, ctx, clasificacionesAnh)
+  if ('error' in alcance) return { ok: false, error: alcance.error }
+  // «No sé» otra vez, de la misma persona, a la misma pregunta: ya está guardado (C-19).
+  const ultima = parada.clasificacion.respuestas?.at(-1)
+  if (esNoSe(pregunta.opciones[i]!) && ultima?.noSe && ultima.pregunta === pregunta.id && ultima.porId === yo.id) return { ok: true, parada }
   const hora = horaDelPlc(), quien = { id: yo.id, nombre: yo.nombre }
   let b: BorradorClasificacion
   try { b = responder(parada.propuesta, pregunta.id as IdPregunta, i, quien, q.rolId, hora).borrador }
@@ -745,45 +1031,108 @@ export async function responderPreguntaAnh(q: Credencial, id: string, c: CuerpoR
     if (e instanceof ErrorClasificacion) return { ok: false, error: e.message }
     throw e
   }
-  b = conRevisionAtendida(b, quien, q.rolId, hora)
-  return { ok: true, parada: guardarClasificacion(parada, b, c, ctx).parada }
+  // Lo que la respuesta determinó en la fila de la dirección: lo nuevo de una persona.
+  const dejados = PASOS.filter(x => { const d = b[x]; return !!d && d !== parada.clasificacion[x] && esDePersona(d.procedencia) })
+  const registro = b.respuestas!.at(-1)!
+  const n = contadorDe(clasificacionesAnh)
+  const escritos: Escritos = {}
+  for (const o of alcance.objetivos) {
+    const e: Record<string, unknown> = {}
+    for (const x of dejados) {
+      const d = b[x]!
+      // Donde una persona ya dijo ese paso, o donde no iría con lo que dijo, no se deja: la respuesta no corrige.
+      if (o.filas.some(f => f.id !== parada.id && ((f.clasificacion[x] && esDePersona(f.clasificacion[x]!.procedencia)) || !vaConLoDicho(f.clasificacion, x, String(d.valor))))) continue
+      e[x] = { ...d, n: n() }
+    }
+    e.respuestas = [{ ...registro, n: n() }]
+    escritos[o.clave] = e as BorradorClasificacion
+  }
+  atender(escritos, alcance.objetivos.flatMap(o => o.filas), clasificacionesAnh, quien, q.rolId, hora)
+  return { ok: true, parada: guardar(parada.id, escritos, ctx).parada }
 }
 
 /** Los roles a los que se les puede pedir una parada: los que revisan. */
 const PIDEN_A = ROLES_QUE_CONTESTAN.revisa
 
+/** Escribe una revisión en las claves de la escritura (no toca ningún paso, D1),
+ *  salvo que ya esté la misma sin atender (C-19). */
+function escribirRevision(p: ParadaAnh, objetivos: readonly Objetivo[], revision: Omit<RevisionAnh, 'n'>): Escritos {
+  const r = p.revision
+  if (r && !r.atendida && r.porId === revision.porId && r.motivo === revision.motivo && (r.pedirA ?? '') === (revision.pedirA ?? '')) return {}
+  const n = contadorDe(sesion().clasificacionesAnh)
+  return Object.fromEntries(objetivos.map(o => [o.clave, { revision: { ...revision, n: n() } }]))
+}
+
 /** `POST /api/anh/paradas/:id/revision { motivo, pedirA?, aplicarAlEvento?,
- *  aplicarALaCascada?, cadena? }` → la fila como quedó, con su `revision`. «Algo está mal» (sin
- *  `pedirA`: a quien revisa) o «Pedir a producción» (`pedirA: 'prod'`, la
- *  pregunta del yacimiento). No corrige nada: pasa la parada a quien corrige,
- *  con el motivo, y sale de REVISAR cuando ese rol dice, corrige o confirma algo
- *  de ella (`conRevisionAtendida`). Orden: capacidad y persona (403), la fila
- *  (404), su campo (403), la cadena (409), el motivo y a quién (422). */
+ *  aplicarALaCascada?, ids?, cadena? }` → la fila como quedó, con su `revision`.
+ *  «Algo está mal» (sin `pedirA`: a quien revisa) o «Pedir a producción»
+ *  (`pedirA: 'prod'`, la pregunta del yacimiento). No toca ningún paso (D1):
+ *  pasa la parada a quien corrige, con el motivo, y sale de REVISAR cuando ese rol
+ *  dice, corrige, contesta o confirma algo de ella (`atender`). La misma revisión
+ *  otra vez, sin atender, no se guarda dos veces. Orden: forma (400), capacidad y
+ *  persona (403), la fila (404), la cadena (409), el motivo y a quién (422) y el
+ *  alcance (422/409). */
 export async function revisarParadaAnh(q: Credencial, id: string, c: CuerpoRevisionAnh): Promise<Resultado<{ parada: ParadaAnh }>> {
-  const cuerpo: CuerpoRevisionAnh = { motivo: c.motivo, ...(c.pedirA !== undefined ? { pedirA: c.pedirA } : {}),
-    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) }
+  const cuerpoDe = (): CuerpoRevisionAnh => ({ motivo: c.motivo, ...(c.pedirA !== undefined ? { pedirA: c.pedirA } : {}),
+    ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true, ids: c.ids ?? [] } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) })
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/revision`, cuerpo, R_CLASIFICACION)
+    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/revision`, cuerpoDe(), R_CLASIFICACION)
     if (!r.ok) return r
     anotarClasificaciones(r.datos.guardadas)
     return { ok: true, parada: r.datos.parada }
   }
+  const forma = revisarForma(c, { motivo: 'texto', pedirA: 'texto?', aplicarAlEvento: 'bool?', aplicarALaCascada: 'bool?', ids: 'textos?', cadena: 'texto?' })
+  if (forma) return { ok: false, error: forma }
+  const cuerpo = cuerpoDe()
   const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!puedeHacer(rol.puede, 'anh:clasificar')) return { ok: false, error: 'Su rol no marca paradas para revisar.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
-  const parada = pedirParadaAnh(id, ctx, clasificacionesAnh)
-  if (!parada) return { ok: false, error: 'Esa parada no está entre las de la ANH: revise el evento y el día.' }
-  if (!camposAsignados(rol, usuarios).some(x => x.id === parada.campoId)) return { ok: false, error: 'Esa parada es de un campo que no tiene asignado.' }
+  const parada = filaDe(id, camposAsignados(rol, usuarios).map(x => x.id), ctx, clasificacionesAnh)
+  if (!parada) return { ok: false, error: NO_ESTA }
   if (c.cadena !== undefined && c.cadena !== cadenaVista(parada.clasificacion)) return { ok: false, error: CAMBIO_LA_PARADA }
   if (!alcanza(c.motivo, MOTIVO_MINIMO)) return { ok: false, error: 'Diga qué está mal (o qué pide): queda con la parada para quien la revisa.' }
+  const tope = revisarTopes(c as unknown as Record<string, unknown>, ['motivo'])
+  if (tope) return { ok: false, error: tope }
   if (c.pedirA !== undefined && !PIDEN_A.includes(c.pedirA))
     return { ok: false, error: 'Una parada se le pide a quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad.' }
   if (c.pedirA === q.rolId) return { ok: false, error: 'Esa revisión le toca a su propio rol: corríjala usted.' }
-  const b: BorradorClasificacion = { ...parada.clasificacion, revision: { motivo: c.motivo.trim(), ...(c.pedirA ? { pedirA: c.pedirA } : {}),
-    por: yo.nombre, porId: yo.id, rol: q.rolId, hora: horaDelPlc() } }
-  return { ok: true, parada: guardarClasificacion(parada, b, c, ctx).parada }
+  const alcance = objetivosDe(parada, cuerpo, ctx, clasificacionesAnh)
+  if ('error' in alcance) return { ok: false, error: alcance.error }
+  const escritos = escribirRevision(parada, alcance.objetivos, { motivo: c.motivo.trim(), ...(c.pedirA ? { pedirA: c.pedirA } : {}),
+    por: yo.nombre, porId: yo.id, rol: q.rolId, hora: horaDelPlc() })
+  return { ok: true, parada: guardar(parada.id, escritos, ctx).parada }
+}
+
+/** El motivo de «2 Algo está mal» por WhatsApp: estructurado, sin texto libre (D2). */
+export const MOTIVO_WHATSAPP = 'Por WhatsApp: «Algo está mal» en lo que contestó'
+
+/** «2 Algo está mal» al cierre de una respuesta por WhatsApp (B-05; U1 §2.6). En
+ *  producción la manda el webhook firmado de Meta; en el demo, el teléfono
+ *  simulado. Es la misma escritura que el botón de la pantalla (`…/revision`):
+ *  no toca ningún paso y deja para revisar las filas de la parada (las de su
+ *  evento o, si la parada es de una bomba o de un servicio, las de su cascada),
+ *  a nombre de quien recibe las alertas de ese campo en ese número. */
+export async function revisarDesdeWhatsapp(c: { evento: string; campoId: string; usuarioId: string }): Promise<Resultado> {
+  if (FUENTE === 'http') return { ok: false, error: WHATSAPP_SOLO_WEBHOOK }
+  const { ctx, usuarios, clasificacionesAnh } = sesion()
+  const u = usuarios.find(x => x.id === c.usuarioId)
+  const malEvento = revisarEvento(c.evento, c.campoId)
+  if (malEvento) return { ok: false, error: malEvento }
+  if (!u || !recibeAlertas(u, c.campoId)) return { ok: false, error: 'Ese número no recibe las alertas de este campo: la respuesta no entra.' }
+  const rol = rolExacto(u.rolId)
+  if (!rol || !puedeHacer(rol.puede, 'anh:clasificar')) return { ok: false, error: 'Su rol no marca paradas para revisar.' }
+  // Las filas de la parada: las de su evento, o las de su cascada si la parada es de una bomba o de un servicio.
+  const deLaParada = filasDeEventos(c.campoId, [c.evento], ctx, clasificacionesAnh)
+  const filas = (deLaParada.length ? deLaParada : filasDeRaiz(c.campoId, c.evento, ctx, clasificacionesAnh)).filter(f => !f.exceso)
+  if (!filas.length) return { ok: false, error: 'Esa parada no tiene filas para la ANH todavía: avísele a su supervisor.' }
+  const eventos = [...new Set(filas.map(f => f.eventoId))]
+  const objetivos = eventos.map(e => ({ clave: e, filas: filas.filter(f => f.eventoId === e) }))
+  const escritos = escribirRevision(filas[0]!, objetivos, { motivo: MOTIVO_WHATSAPP, por: u.nombre, porId: u.id, rol: u.rolId, hora: horaDelPlc() })
+  guardar(filas[0]!.id, escritos, ctx)
+  return { ok: true }
 }
 
 /** La fila confirmada solo en los pasos pedidos: lo demás vuelve a como estaba. */
@@ -793,62 +1142,83 @@ function soloLosPedidos(antes: ParadaAnh, despues: ParadaAnh, pedidos: readonly 
   return conClasificacion(despues, b as BorradorClasificacion)
 }
 
-/** `POST /api/anh/paradas/confirmar { ids, cadena?, pasos? }` → las filas como
+/** `POST /api/anh/paradas/confirmar { ids, cadena, pasos? }` → las filas como
  *  quedaron y, si fueron varias, el lote. Una sola la confirma quien clasifica
  *  (`anh:clasificar`); varias de una vez, quien firma el día (`anh:confirmar`:
  *  supervisión y producción), y tienen que tener la misma cadena completa de 6
- *  pasos (U1 §2.2). Sube a confirmado solo los pasos que el rol avala
- *  (`PASOS_QUE_CONFIRMA`) y que nadie había dicho: el toque del operador no
- *  confirma dónde se trabó. Con «una señal apunta», la causa y el detalle solo
- *  los confirma quien abre o analiza el equipo (`confirmarPasos`). */
+ *  pasos (U1 §2.2). `cadena` es obligatoria (C-06): se confirma lo que se vio, y
+ *  el lote guarda esa. Sube a confirmado solo los pasos que el rol avala
+ *  (`PASOS_QUE_CONFIRMA`) y que nadie había avalado, y lo guarda en cada FILA
+ *  (nunca en su evento): la marca del lote no se copia a otra fila. Un lote que
+ *  no sube ningún paso no se guarda (409, C-19). Con «una señal apunta», la causa
+ *  y el detalle solo los confirma quien abre o analiza el equipo (`confirmarPasos`). */
 export async function confirmarParadasAnh(q: Credencial, c: CuerpoConfirmacion): Promise<Resultado<{ lote?: ConfirmacionLote; paradas: ParadaAnh[] }>> {
-  const ids = [...new Set(c.ids ?? [])]
-  const cuerpo: CuerpoConfirmacion = { ids, ...(c.cadena !== undefined ? { cadena: c.cadena } : {}), ...(c.pasos ? { pasos: c.pasos } : {}) }
   if (FUENTE === 'http') {
+    const cuerpo: CuerpoConfirmacion = { ids: [...new Set(c.ids ?? [])], cadena: c.cadena, ...(c.pasos ? { pasos: c.pasos } : {}) }
     const r = await escribir(q, 'POST', '/anh/paradas/confirmar', cuerpo, R_CONFIRMACION)
     if (!r.ok) return r
     anotarClasificaciones(Object.fromEntries(r.datos.paradas.map(p => [p.id, soloDePersona(p.clasificacion)])))
     if (r.datos.lote) cambiarSesion({ lotesAnh: [...sesion().lotesAnh, r.datos.lote] })
     return { ok: true, paradas: r.datos.paradas, ...(r.datos.lote ? { lote: r.datos.lote } : {}) }
   }
+  // El servidor: la forma del cuerpo antes que las reglas (400, C-11); `cadena` es obligatoria (C-06).
+  const forma = revisarForma(c, { ids: 'textos', cadena: 'texto', pasos: 'textos?' })
+  if (forma) return { ok: false, error: forma }
+  const ids = [...new Set(c.ids)]
   const { ctx, usuarios, clasificacionesAnh, lotesAnh } = sesion()
-  const rol = rolPorId(q.rolId)
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   const enLote = ids.length > 1
   if (enLote ? !puedeHacer(rol.puede, 'anh:confirmar') : !(puedeHacer(rol.puede, 'anh:confirmar') || puedeHacer(rol.puede, 'anh:clasificar')))
     return { ok: false, error: enLote ? 'Confirmar varias de una vez lo hacen supervisión o producción, que firman el día: confírmelas una por una.' : 'Su rol no confirma paradas para la ANH.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
   if (!ids.length) return { ok: false, error: 'No llegó ninguna parada que confirmar.' }
+  if (ids.length > MAXIMO_IDS) return { ok: false, error: `Una petición lleva hasta ${MAXIMO_IDS} filas.` }
+  // Primero el campo de cada id (sin armar filas): una de un campo ajeno o que no existe es 404, sin decir cuál (C-20).
+  const mios = camposAsignados(rol, usuarios).map(x => x.id)
+  const fuera = ids.find(id => id.length > 200 || !mios.includes(campoDeLaFila(id) ?? ''))
+  if (fuera) return { ok: false, error: `La parada ${fuera.slice(0, 80)} no está entre las de sus campos: revise el evento y el día.` }
   const paradas: ParadaAnh[] = []
   for (const id of ids) {
     const p = pedirParadaAnh(id, ctx, clasificacionesAnh)
-    if (!p) return { ok: false, error: `La parada ${id} no está entre las de la ANH: revise el evento y el día.` }
+    if (!p) return { ok: false, error: `La parada ${id} no está entre las de sus campos: revise el evento y el día.` }
     paradas.push(p)
   }
-  const mios = camposAsignados(rol, usuarios).map(x => x.id)
-  if (paradas.some(p => !mios.includes(p.campoId))) return { ok: false, error: 'Alguna de esas paradas es de un campo que no tiene asignado: no se confirmó ninguna.' }
   const pedidos = c.pasos ? PASOS.filter(p => c.pasos!.includes(p)) : undefined
   if (pedidos) { const ajeno = pasosAjenos(q.rolId, pedidos, PASOS_QUE_CONFIRMA, 'confirma'); if (ajeno) return { ok: false, error: ajeno } }
-  if (c.cadena !== undefined) {
-    const cambiaron = paradas.filter(p => cadenaVista(p.clasificacion) !== c.cadena)
-    if (cambiaron.length) return { ok: false, error: cambiaron.length === paradas.length && paradas.length === 1 ? CAMBIO_LA_PARADA
-      : `Mientras las revisaba, alguien cambió ${cambiaron.length === 1 ? 'una de estas paradas' : `${cambiaron.length} de estas paradas`}: vuelva a abrir el grupo.` }
-  }
-  const desconocidos = (c.pasos ?? []).filter(p => !PASOS.includes(p))
-  if (desconocidos.length) return { ok: false, error: `${desconocidos.map(p => `«${p}»`).join(', ')} no ${desconocidos.length === 1 ? 'es un paso' : 'son pasos'} de la clasificación.` }
+  const cambiaron = paradas.filter(p => cadenaVista(p.clasificacion) !== c.cadena)
+  if (cambiaron.length) return { ok: false, error: cambiaron.length === paradas.length && paradas.length === 1 ? CAMBIO_LA_PARADA
+    : `Mientras las revisaba, alguien cambió ${cambiaron.length === 1 ? 'una de estas paradas' : `${cambiaron.length} de estas paradas`}: vuelva a abrir el grupo.` }
+  const desconocidos = (c.pasos ?? []).filter(p => !PASOS.includes(p as PasoAnh))
+  if (desconocidos.length) return { ok: false, error: `${desconocidos.map(p => `«${p.slice(0, 40)}»`).join(', ')} no ${desconocidos.length === 1 ? 'es un paso' : 'son pasos'} de la clasificación.` }
   const hora = horaDelPlc(), quien = { id: yo.id, nombre: yo.nombre }
   let lote: ConfirmacionLote | undefined, confirmadas: ParadaAnh[]
   try {
-    if (enLote) ({ lote, paradas: confirmadas } = confirmarLote(paradas, q.rolId, quien, hora, `LOTE-${lotesAnh.length + 1}`))
+    if (enLote) ({ lote, paradas: confirmadas } = confirmarLote(paradas, q.rolId, quien, hora, `LOTE-${lotesAnh.length + 1}`, c.cadena))
     else confirmadas = [confirmarParada(paradas[0]!, q.rolId, quien, hora)]
   } catch (e) { return { ok: false, error: mensajeDe(e) } }
-  if (pedidos) {
-    confirmadas = confirmadas.map((p, i) => soloLosPedidos(paradas[i]!, p, pedidos))
-    if (lote) { const id = lote.id; lote = { ...lote, pasos: lote.pasos.filter(x => confirmadas.some(p => p.clasificacion[x]?.lote === id)) } }
+  if (pedidos) confirmadas = confirmadas.map((p, i) => soloLosPedidos(paradas[i]!, p, pedidos))
+  // Lo que se guarda: en cada fila, solo los pasos que esta confirmación subió.
+  const n = contadorDe(clasificacionesAnh)
+  const escritos: Escritos = {}
+  confirmadas.forEach((p, i) => {
+    const antes = paradas[i]!.clasificacion, e: Record<string, unknown> = {}
+    for (const x of PASOS) { const d = p.clasificacion[x]; if (d && d !== antes[x] && d.procedencia === 'confirmado') e[x] = { ...d, n: n() } }
+    if (Object.keys(e).length) escritos[p.id] = e as BorradorClasificacion
+  })
+  if (lote) {
+    const id = lote.id
+    const subio = new Set<PasoAnh>()
+    for (const e of Object.values(escritos)) for (const x of PASOS) if (e[x]?.lote === id) subio.add(x)
+    if (!subio.size) return { ok: false, error: 'Ya estaban confirmadas: este lote no sube ningún paso y no se guardó.' }
+    lote = { ...lote, pasos: lote.pasos.filter(x => subio.has(x)) }
   }
   // Confirmar también atiende lo que se le pidió a ese rol («Algo está mal», «Pedir a producción»).
-  confirmadas = confirmadas.map(p => { const b = conRevisionAtendida(p.clasificacion, quien, q.rolId, hora); return b === p.clasificacion ? p : conClasificacion(p, b) })
-  const nuevas = { ...clasificacionesAnh, ...Object.fromEntries(confirmadas.map(p => [p.id, soloDePersona(p.clasificacion)])) }
+  atender(escritos, paradas, clasificacionesAnh, quien, q.rolId, hora)
+  const { clasificacionesAnh: g } = sesion()
+  const nuevas = { ...g }
+  for (const [k, e] of Object.entries(escritos)) nuevas[k] = fusionarGuardado(g[k], e)
   cambiarSesion({ clasificacionesAnh: nuevas, ...(lote ? { lotesAnh: [...lotesAnh, lote] } : {}) })
   return { ok: true, paradas: confirmadas.map(p => pedirParadaAnh(p.id, ctx, nuevas)!), ...(lote ? { lote } : {}) }
 }
@@ -867,11 +1237,17 @@ export async function previsualizarConfiguracion(q: Credencial, c: CuerpoVistaPr
     return { ok: true, impacto: r.datos.impacto }
   }
   const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const rol = rolPorId(q.rolId)
+  const forma = revisarForma(c, { config: 'objeto' }) ?? formaDeConfig(c.config)
+  if (forma) return { ok: false, error: forma }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!rol.puede['config:firmar']) return { ok: false, error: 'La vista previa de la configuración técnica la prepara el administrador de la implementación.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
   const config = normalizarConfig(c.config)
+  // Las mismas reglas de la firma (C-21): una versión que toca metas también pide metas:firmar.
+  if (diferenciasPorGrupo(ctx.config, config).metas.length && !rol.puede['metas:firmar'])
+    return { ok: false, error: 'Las metas, el precio y la regla de cierre los firma el gerente de activo: la vista previa es de lo que usted puede firmar.' }
   const mios = camposAsignados(rol, usuarios).map(x => x.id)
   const tocados = camposTocados(ctx.config, config).filter(id => CAMPOS.some(x => x.id === id))
   const ajenos = tocados.filter(id => !mios.includes(id))
@@ -894,12 +1270,78 @@ export async function importarTopologia(q: Credencial, c: CuerpoTopologiaCsv): P
     return { ok: true, ...r.datos }
   }
   const { usuarios } = sesion()
-  const rol = rolPorId(q.rolId)
+  // Un texto que no es texto no es «un archivo vacío» (C-27): es un 400 en palabras (C-11).
+  const forma = revisarForma(c, { campo: 'texto', texto: 'texto' })
+  if (forma) return { ok: false, error: forma }
+  const rol = rolExacto(q.rolId)
+  if (!rol) return { ok: false, error: SIN_ROL }
   if (!rol.puede['config:firmar']) return { ok: false, error: 'La topología la carga el administrador de la implementación.' }
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
   if (!CAMPOS.some(x => x.id === c.campo)) return { ok: false, error: 'Ese campo no está en el registro de campos.' }
   if (!camposAsignados(rol, usuarios).some(x => x.id === c.campo)) return { ok: false, error: 'Ese campo no lo tiene asignado.' }
-  if (typeof c.texto !== 'string' || !c.texto.trim()) return { ok: false, error: 'El archivo llegó vacío: va una fila por equipo, con «equipo; pozos a los que sirve».' }
-  return { ok: true, ...leerTopologia(c.texto, c.campo, locacionDe(c.campo)) }
+  if (!c.texto.trim()) return { ok: false, error: 'El archivo llegó vacío: va una fila por equipo, con «equipo; pozos a los que sirve».' }
+  // El fin de línea de un Excel de Mac viejo (solo «\r») también parte las filas (C-24).
+  return { ok: true, ...acotarLeida(leerTopologia(c.texto.replace(/\r\n?/g, '\n'), c.campo, locacionDe(c.campo))) }
+}
+
+/** Cuántos hallazgos devuelve una carga (C-12): el resto se cuenta, no se repite. */
+const MAXIMO_HALLAZGOS = 50
+/** Cuántos caracteres de un equipo escrito vuelven en un hallazgo (C-12). */
+const MAXIMO_EQUIPO = 64
+/** Los caracteres de control y de formato (dirección del texto, ancho cero): pintan una línea al revés o esconden letras. */
+const INVISIBLES = /[\p{Cc}\p{Cf}]/gu
+/** Lo que vuelve de una carga, acotado: sin caracteres invisibles (C-24), con el
+ *  equipo escrito recortado y, pasados los 50 hallazgos, uno solo que dice cuántos
+ *  más hay y si alguno bloquea (C-12). Lo leído no cambia. */
+function acotarLeida(t: TopologiaLeida): TopologiaLeida {
+  const limpio = (x: string) => x.replace(INVISIBLES, '')
+  const corto = (x: string) => (x.length > MAXIMO_EQUIPO ? `${x.slice(0, MAXIMO_EQUIPO)}…` : x)
+  const hallazgos = t.hallazgos.map(h => {
+    const equipo = h.equipo === undefined ? undefined : limpio(h.equipo)
+    const texto = h.equipo !== undefined && equipo !== undefined ? limpio(h.texto.split(h.equipo).join(corto(equipo))) : limpio(h.texto)
+    return { ...h, ...(equipo !== undefined ? { equipo: corto(equipo) } : {}), texto }
+  })
+  if (hallazgos.length <= MAXIMO_HALLAZGOS) return { ...t, hallazgos }
+  const resto = hallazgos.slice(MAXIMO_HALLAZGOS)
+  const bloquean = resto.filter(h => h.bloquea).length
+  return { ...t, hallazgos: [...hallazgos.slice(0, MAXIMO_HALLAZGOS), { fila: resto[0]!.fila, bloquea: bloquean > 0,
+    texto: `Y ${resto.length} hallazgos más desde la fila ${resto[0]!.fila}${bloquean ? ` (${bloquean} bloquean)` : ''}: corrija los de arriba y vuelva a cargar el archivo.` }] }
+}
+
+/** La forma de la configuración que llega a firmarse o a previsualizarse (C-11):
+ *  la topología, «Todavía no sé» y las capacidades, lo que se leía sin mirar su
+ *  forma (un texto donde va una lista, un elemento que no es objeto, un número
+ *  donde va el nombre). Lo demás lo revisa `validarConfig` en palabras. */
+function formaDeConfig(x: unknown): string | undefined {
+  const c = x as Record<string, unknown>
+  const lista = (k: string, cada: (e: Record<string, unknown>, ruta: string) => string | undefined) => {
+    const v = c[k]
+    if (v === undefined || v === null) return undefined
+    if (!Array.isArray(v)) return PETICION(`config.${k}`, 'tiene que ser una lista')
+    for (let i = 0; i < v.length; i++) {
+      const e = v[i], ruta = `config.${k}[${i}]`
+      if (!e || typeof e !== 'object' || Array.isArray(e)) return PETICION(ruta, QUE_ES.objeto!)
+      const m = cada(e as Record<string, unknown>, ruta)
+      if (m) return m
+    }
+    return undefined
+  }
+  const texto = (e: Record<string, unknown>, ruta: string, k: string, opcional = false) =>
+    (e[k] === undefined || e[k] === null) && opcional ? undefined : typeof e[k] === 'string' ? undefined : PETICION(`${ruta}.${k}`, QUE_ES.texto!)
+  const numero = (e: Record<string, unknown>, ruta: string, k: string) => (typeof e[k] === 'number' && Number.isFinite(e[k]) ? undefined : PETICION(`${ruta}.${k}`, 'tiene que ser un número'))
+  const capacidad = (e: Record<string, unknown>, ruta: string) => numero(e, ruta, 'bpd') ?? texto(e, ruta, 'fuente')
+  // El alcance y el tramo, de su lista (C-27: uno inventado se decía «(«undefined» → «undefined»)»).
+  const unoDe = (e: Record<string, unknown>, ruta: string, k: string, xs: readonly string[]) =>
+    texto(e, ruta, k) ?? (xs.includes(e[k] as string) ? undefined : PETICION(`${ruta}.${k}`, `tiene que ser ${xs.slice(0, -1).join(', ')} o ${xs.at(-1)}`))
+  return lista('topologia', (e, r) => texto(e, r, 'elemento') ?? unoDe(e, r, 'alcance', ['dedicado', 'compartido', 'frontera', 'tercero'])
+    ?? unoDe(e, r, 'choke', ['pozo', 'planta', 'exportacion']) ?? texto(e, r, 'campoId', true)
+    ?? (e.pozos === undefined || e.pozos === null || (Array.isArray(e.pozos) && e.pozos.every(p => typeof p === 'string')) ? undefined : PETICION(`${r}.pozos`, QUE_ES.textos!)))
+    ?? lista('topologiaPorSaber', (e, r) => texto(e, r, 'elemento') ?? texto(e, r, 'campoId'))
+    ?? lista('capacidades', (e, r) => texto(e, r, 'campoId') ?? texto(e, r, 'explicacionEmpate', true)
+      ?? (['crudo', 'gas', 'afuera', 'mercado', 'tratamiento', 'admision'] as const).reduce<string | undefined>((m, k) => m ?? (e[k] === undefined || e[k] === null ? undefined
+        : typeof e[k] === 'object' && !Array.isArray(e[k]) ? capacidad(e[k] as Record<string, unknown>, `${r}.${k}`) : PETICION(`${r}.${k}`, QUE_ES.objeto!)), undefined)
+      ?? (e.bombas === undefined || e.bombas === null ? undefined : !Array.isArray(e.bombas) ? PETICION(`${r}.bombas`, 'tiene que ser una lista')
+        : (e.bombas as unknown[]).reduce<string | undefined>((m, b, i) => m ?? (!b || typeof b !== 'object' || Array.isArray(b) ? PETICION(`${r}.bombas[${i}]`, QUE_ES.objeto!)
+          : texto(b as Record<string, unknown>, `${r}.bombas[${i}]`, 'equipo') ?? capacidad(b as Record<string, unknown>, `${r}.bombas[${i}]`)), undefined)))
 }

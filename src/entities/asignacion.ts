@@ -13,6 +13,7 @@
 import type { AsignacionPozo } from './libro'
 import { leerMes, leerNumero, leerCampo, celdas, comaAmbigua, partirTexto, nombreMes, diasDelMes } from './plan'
 import { CAMPOS } from './campos'
+import { textoCsv } from '@/shared/lib/csv'
 
 export interface FilaOficial {
   mes: string
@@ -94,10 +95,14 @@ export function leerAsignacion(texto: string, opciones: { permitidos: string[]; 
   return { filas, errores, avisos }
 }
 
-/** La plantilla de un mes y campo: una fila por pozo, con el volumen vacío. */
+/** La plantilla de un mes y campo: una fila por pozo, con el volumen vacío.
+ *  Cada texto pasa por `textoCsv` (C-25): el nombre del campo viene del registro
+ *  del servidor y el pozo de afuera; uno que empiece por «=» o traiga «;» no se
+ *  vuelve fórmula ni parte la fila. */
 export function plantillaAsignacion(mes: string, campoId: string, pozos: string[]): string {
   const nombre = CAMPOS.find(c => c.id === campoId)!.nombre
-  return '﻿' + ['Mes;Campo;Pozo;Crudo asignado bbl;Horas produciendo (opcional)', ...pozos.map(p => `${mes};${nombre};${p};;`)].join('\r\n')
+  return '﻿' + ['Mes;Campo;Pozo;Crudo asignado bbl;Horas produciendo (opcional)',
+    ...pozos.map(p => `${textoCsv(mes)};${textoCsv(nombre)};${textoCsv(p)};;`)].join('\r\n')
 }
 
 export interface Cotejo {
