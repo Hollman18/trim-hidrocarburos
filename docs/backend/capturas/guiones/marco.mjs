@@ -141,9 +141,11 @@ try {
           const marcas = [
             { n: 1, texto: 'Camilo Rueda', exacto: true, dentro: '[role=dialog]' },
             { n: 2, texto: 'Jefe de mantenimiento', exacto: true, dentro: '[role=dialog]' },
-            { n: 3, texto: /^Respondes por que los barriles/ },
-            { n: 4, texto: 'QUÉ HACE', exacto: true },
-            { n: 5, rol: 'button', nombre: /^Siguiente/ },
+            { n: 3, texto: /^Antes: intervenir a tiempo/ },
+            { n: 4, rol: 'img', nombre: /^Qué es TRIM/, dentro: '[role=dialog]', lado: 'der' },
+            { n: 5, texto: '1 Antes', exacto: true, dentro: '[role=dialog]', lado: 'abajo' },
+            { n: 6, rol: 'img', nombre: /^Tres palancas/, dentro: '[role=dialog]', lado: 'der' },
+            { n: 7, rol: 'button', nombre: /^Siguiente/ },
           ]
           await dibujar(p, marcas)
           revisar()
@@ -154,9 +156,9 @@ try {
         await p.getByRole('button', { name: /^Siguiente/ }).click()
         await p.waitForTimeout(400)
         const marcas = rol === 'jefe'
-          ? [{ n: 1, texto: 'SUS PANTALLAS', exacto: true }, { n: 2, texto: 'Qué atacar para bajar el diferido de alto impacto.' },
+          ? [{ n: 1, texto: 'SUS PANTALLAS', exacto: true }, { n: 2, texto: /^Antes: intervenir a tiempo\. Después/ },
              { n: 3, rol: 'button', nombre: /^Bombas/, dentro: '[role=dialog]' }, { n: 4, rol: 'button', nombre: 'Entrar con la lectura activada' }]
-          : [{ n: 1, texto: 'Lo perdido contra la meta, su valor y a qué equipo.' }, { n: 2, texto: 'Qué se pierde ahora y qué va a fallar.' }]
+          : [{ n: 1, texto: 'Lo perdido, el retorno posible y a qué equipo ir.' }, { n: 2, texto: 'Qué se pierde ahora y qué va a fallar.' }]
         await dibujar(p, marcas)
         revisar()
         await recorte(p, `${SALIDA}/marco-intro-${rol}-paso2.png`)

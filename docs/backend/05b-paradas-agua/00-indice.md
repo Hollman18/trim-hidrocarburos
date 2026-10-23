@@ -34,6 +34,15 @@ Todos los números de ejemplo salen de correr el motor con los insumos del demo 
 
 Casos de referencia que comprueban este capítulo (`node scripts/referencia.mjs comprobar`): `referencia/prediccion/{ceiba-P-201B, morichal-P-201B, morichal-MPP-301, guacamayo-P-201B}.json`, `referencia/riesgo/{ceiba, morichal, guacamayo, palmar, zarza, portafolio}.json`, `referencia/salud/bombas-*.json` (traen `veredicto` y `abierta`), `referencia/diferidos/*` (traen `preguntas`).
 
+## Dónde sigue: el modelo choke (capítulo 5E)
+
+Lo que este capítulo calcula por evento, por bomba y por equipo se lee también **por tramo de la tubería** (yacimiento, pozo, planta, afuera) en el capítulo 5E, con las mismas cuentas:
+
+- **El tramo de cada parada** (5E.3) sale de la causa de 5B.2 y 5B.3 (la raíz de la cascada, la bomba que paró antes) y de la topología del campo (5E.1).
+- **El colchón del tanque de agua** que se muestra en la tubería del agua (5E.6) es el de 5B.4 (`colchonDe`, `paradaMedida`, `prediccion`), con la misma cifra única por bomba (89.250 bbl/d en La Ceiba).
+- **«Si falla hoy»** (5E.7) ordena los equipos por bbl/d (`FilaCriticidad.bpd`) en tres grupos (medido, techo, sin dato) y lleva al lado el costo de una falla de 5B.5 (`costoDeBomba` y la cuenta de `riesgoAhora`): no hay una cuenta nueva.
+- **La fila ANH** (pozo × día operacional × causa, 5E.3) parte por día los tramos del libro y su clasificación de seis pasos va en 5E.9.
+
 ## Glosario mínimo del capítulo
 
 | Término | Qué es |

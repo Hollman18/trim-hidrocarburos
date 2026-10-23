@@ -14,14 +14,14 @@ Todas responden el sobre `{ "datos": …, "refs": { … } }`.
 
 | Ruta | Parámetros | Constante | Pantallas que la usan | Fórmulas |
 |---|---|---|---|---|
-| `GET /api/vistas/diferidos` | `campos`, `desde`, `hasta` | `DIFERIDOS` | **Agua (v2)**, **Identificar**, **Diferidos**, **Superficie**, **Electrosumergibles**, **Mantenimiento**, **Planta**, **Portafolio (v2)**, **Producción**, **Regulatorio (v2)**, **Resumen**, **Turno**, `PanelEquipo`, `informe/Exportar`, `resumen/ResumenDirectivo` | 5A |
-| `GET /api/vistas/diferidos/mensual` | `campos` | `DIFERIDOS_MENSUAL` | **Diferidos**, **Portafolio (v2)**, **Producción**, **Regulatorio (v2)**, **Resumen**, `resumen/ResumenDirectivo` | 5A |
+| `GET /api/vistas/diferidos` | `campos`, `desde`, `hasta` | `DIFERIDOS` | **Agua**, **Identificar**, **Diferidos**, **Superficie**, **Electrosumergibles**, **Mantenimiento**, **Planta**, **Portafolio (v2)**, **Producción**, **Regulatorio**, **Resumen**, **Turno**, `PanelEquipo`, `informe/Exportar`, `resumen/ResumenDirectivo` | 5A |
+| `GET /api/vistas/diferidos/mensual` | `campos` | `DIFERIDOS_MENSUAL` | **Diferidos**, **Portafolio (v2)**, **Producción**, **Regulatorio**, **Resumen**, `resumen/ResumenDirectivo` | 5A |
 | `GET /api/vistas/diferidos/base` | `campos`, `desde`, `hasta` | `DIFERIDOS_BASE` | **Diferidos**, **Mantenimiento**, **Portafolio (v2)**, **Resumen**, `resumen/ResumenDirectivo` | 5A |
 | `GET /api/vistas/produccion/diaria` | `campos`, `desde`, `hasta` | `PRODUCCION_DIARIA` | **Producción** | 5A |
 | `GET /api/vistas/potencial-reciente` | `campos` | `POTENCIAL_RECIENTE` | **Configuración** | 5A, 5D |
 | `GET /api/vistas/paradas/por-identificar` | `campos` | `PREGUNTAS` | **Identificar**, **Mantenimiento**, **Mi trabajo**, **Turno**, `PanelEquipo`, `conectores/Integraciones`, `equipo/FichaEjecutiva`, `riesgo/Ahora`, `sap/BloqueSap` | 5B |
 | `GET /api/vistas/paradas/:evento/opciones` | `{ evento: string }` | `OPCIONES_RESPUESTA` | **Identificar** | 5B, 5C |
-| `GET /api/vistas/bombas/prediccion` | `campo`, `equipo` | `PREDICCION` | **Agua (v2)** | 5B |
+| `GET /api/vistas/bombas/prediccion` | `campo`, `equipo` | `PREDICCION` | **Agua** | 5B |
 | `GET /api/vistas/bombas/paradas` | `campo`, `equipo` | `PARADAS_BOMBA` | `bombas/Detalle` | 5B |
 | `GET /api/vistas/bombas/paradas-en-periodo` | `campos`, `desde`, `hasta` | `PARADAS_EN_PERIODO` | **Evidencia (v2)** | 5B |
 | `GET /api/vistas/riesgo` | `campos` | `RIESGO` | **Superficie**, **Mantenimiento**, **Riesgo**, **Mi trabajo**, **Turno**, `equipo/FichaEjecutiva`, `resumen/ResumenDirectivo`, `riesgo/Ahora`, `sap/BloqueSap` | 5B |
@@ -32,9 +32,9 @@ Todas responden el sobre `{ "datos": …, "refs": { … } }`.
 | `GET /api/vistas/asignacion` | `{ campo: string; mes: string }` | `ASIGNACION` | `produccion/AsignacionOficial` | 5A |
 | `GET /api/vistas/predicciones` | `campos` | `PREDICCIONES` | `confiabilidad/Aciertos` | 5C |
 | `GET /api/vistas/relojes` | `campos`, `desde`, `hasta` | `RELOJES` | **Confiabilidad**, `sap/PanelSapMantenimiento` | 5D |
-| `GET /api/vistas/campos/:campo/ahora` | `{ campo: string }` | `CAMPO_AHORA` | **Agua (v2)**, **Configuración**, **Planta** | 5B |
+| `GET /api/vistas/campos/:campo/ahora` | `{ campo: string }` | `CAMPO_AHORA` | **Agua**, **Configuración**, **Planta** | 5B |
 | `GET /api/vistas/equipos/:campo/:equipo` | `campo`, `equipo` | `EQUIPO_HOY` | `PanelEquipo`, `sap/BloqueSap` | 5C |
-| `GET /api/vistas/equipos-hoy` | `campos` | `EQUIPOS_HOY` | **Planta**, **Regulatorio (v2)**, `diferidos/Paretos` | 5C |
+| `GET /api/vistas/equipos-hoy` | `campos` | `EQUIPOS_HOY` | **Planta**, **Regulatorio**, `diferidos/Paretos` | 5C |
 | `GET /api/vistas/equipos/:campo/:equipo/historia` | `campo`, `equipo` | `HISTORIA_EQUIPO` | `PanelEquipo` | 5B |
 | `GET /api/vistas/equipos/:campo/:equipo/ficha` | `PorEquipo & { desde: Date; hasta: Date }` | `FICHA_EQUIPO` | `equipo/FichaEjecutiva` | 5B |
 | `GET /api/vistas/equipos` | `campos` | `FILAS_EQUIPOS` | **Superficie** | 5C |
@@ -56,10 +56,25 @@ Todas responden el sobre `{ "datos": …, "refs": { … } }`.
 | `GET /api/asignacion-oficial` | — | `ASIGNACION_OFICIAL` | _arranque (estado global)_ | 5A |
 | `GET /api/analisis` | — | `ANALISIS` | _arranque (estado global)_ | 5C, 5D |
 | `GET /api/planta/cambios` | — | `CAMBIOS_PLANTA` | _arranque (estado global)_ | 5D |
+| `GET /api/vistas/campos/:campo/tuberia` | `campo`, `desde`, `hasta` | `TUBERIA` | **Producción**, **Planta**, **Diferidos**, **Resumen**, **Turno**, **Configuración**, `choke/Tuberia`, `choke/Campos`, `diferidos/PorTramo`, `resumen/DondeSeTrabo`, `arbol/HoyLimita`, `configuracion/CapacidadesPaso` | 5E.6 |
+| `GET /api/vistas/campos/:campo/choke/serie` | `campo`, `desde`, `hasta` | `SERIE_CHOKE` | **Producción** (`choke/Serie`) | 5E.8 |
+| `GET /api/vistas/campos/:campo/agua` | `campo` | `TUBERIA_AGUA` | **Agua**, **Bombas**, **Turno**, `choke/Agua`, `choke/AguaHoy`, `PanelEquipo`, `arbol/HoyLimita` | 5E.6 |
+| `GET /api/vistas/campos/:campo/capacidades` | `campo` | `CAPACIDADES` | **Configuración** (`configuracion/CapacidadesPaso`) | 5E.2 |
+| `GET /api/vistas/criticidad` | `campos` | `CRITICIDAD` | **Riesgo**, **Bombas**, **Turno**, **Resumen**, `riesgo/SiFallaHoy`, `PanelEquipo`, `resumen/DondeSeTrabo`, `arbol/HoyLimita` | 5E.7 |
+| `GET /api/vistas/choke/reparto` | `campos`, `desde`, `hasta` | `REPARTO_CHOKE` | **Producción**, **Diferidos**, **Resumen**, **Configuración**, `choke/Escalera`, `diferidos/PorTramo`, `resumen/DondeSeTrabo`, `configuracion/CapacidadesPaso` | 5E.4 |
+| `GET /api/vistas/choke/mensual` | `campos` | `REPARTO_CHOKE_MENSUAL` | **Producción**, **Diferidos**, **Resumen**, `choke/Mensual`, `diferidos/MesAMes`, `resumen/ResumenDirectivo` | 5E.8 |
+| `GET /api/vistas/choke/base` | `campos`, `desde`, `hasta` | `BASE_CHOKE` | **Diferidos**, **Resumen** (`resumen/DondeSeTrabo`) | 5E.8 |
+| `GET /api/vistas/choke/arbol` | `campos`, `desde`, `hasta`, `orden` (obligatorio: `gestion`, `circular` o `responsable`) | `ARBOL_CHOKE` | **Producción**, **Regulatorio**, **Diferidos**, **Resumen**, `choke/Ramas`, `choke/ArbolCircular`, `choke/Tuberia`, `diferidos/PorTramo`, `resumen/DondeSeTrabo` | 5E.5 |
+| `GET /api/vistas/topologia` | `campo` | `TOPOLOGIA` | **Configuración** (`configuracion/TopologiaPaso`) | 5E.1 |
+| `GET /api/vistas/topologia/propuestas` | `campo` | `PROPUESTAS_TOPOLOGIA` | **Configuración** (`configuracion/TopologiaPaso`) | 5E.1 |
+| `GET /api/vistas/anh/paradas` | `campos`, `desde`, `hasta` (llevado a días operacionales enteros) | `PARADAS_ANH` | **Identificar**, **Turno**, `arbol/ArbolIdentificar`, `arbol/CierreDeHoy` | 5E.3, 5E.9 |
+| `GET /api/vistas/anh/calidad` | `campos`, `desde`, `hasta` | `CALIDAD_ANH` | **Confiabilidad** (`arbol/Calidad`) | 5E.9 |
 
 **Presentación de `GET /api/vistas/ciclo` (front hecho).** El códec define números y planes; el front **no recalcula**. En Resumen el retorno simulado va **antes** de «MEDIDO · PERÍODO»; chip «simulado»; tres columnas «1 / 2 / 3» sin párrafos bajo cada una; el «por qué» en ⓘ y globos (`Tip`); lista «Ver planes de acción» **plegada** por defecto. En Riesgo, Turno y Mantenimiento: cinturón `CicloCifras` (sin lista de planes). Reglas de copy y accesibilidad: capítulo **11 §11.1b**, **8 §8.13**; cadenas que debe ver el auditor e2e: `e2e/auditoria/rutas.ts` (Resumen gerente). En el demo, `POST /api/planes/:id` aplica sobre la respuesta en sesión (S24 en capítulo 10).
 
 Las rutas con `_arranque_` se piden una vez al abrir la aplicación (sección 2.5) y alimentan el estado global; ninguna pantalla las vuelve a pedir.
+
+> **Cambios del 21 y 22 de octubre de 2026** (commit `30132ea`; capítulo 5E): 13 lecturas y 7 escrituras nuevas del modelo choke y del árbol de seis pasos de la ANH (las del final de la tabla de 7.1 y de 7.4). `POST /api/configuracion` firma además `topologia`, `topologiaPorSaber` y `capacidades` (grupo técnico, `config:firmar`), con las reglas 9 a 11 de `validarConfig`. Las pantallas **Agua** y **Regulatorio** ya no son de v2.
 
 > **Cambios del 8 de octubre de 2026** (commit `cb8cd39`; la forma exacta, en el anexo A y en `contrato.ts`):
 > - `GET /api/vistas/riesgo`: `costoFalla` es ahora lo que costaría **si el equipo falla hoy**, descontando el colchón del tanque (5B, «Costo por falla»); campo nuevo `colchonH` (horas que aguanta hoy el tanque, solo bombas de disposición con tanque); `mdtFuente` lo dice en palabras.
@@ -113,7 +128,7 @@ Todas responden `{ "datos": … }` o el error único. **`por`, `porId`, `hora`, 
 
 | Ruta | Cuerpo | Capacidad | De dónde sale el campo | Responde | 403 · 404 · 409 · 422 propios | Capítulo |
 |---|---|---|---|---|---|---|
-| `POST /api/configuracion` | `{ config, motivo, base }` (`base` = versión sobre la que se editó) | `metas:firmar` (tramos: meta, máximo de diferido, precio, máximo sin causa) y/o `config:firmar` (programa, tanques, respaldos, perfil, membrete); las dos si toca los dos grupos | **cada campo que el cambio toca** (`camposTocados`) | `{ version }` | 409 `version-cambio` si `base` no es la vigente; 422 por las 8 reglas de `validarConfig` (anexo A) | 5D |
+| `POST /api/configuracion` | `{ config, motivo, base }` (`base` = versión sobre la que se editó) | `metas:firmar` (tramos: meta, máximo de diferido, precio, máximo sin causa) y/o `config:firmar` (programa, tanques, respaldos, perfil, membrete, topología del choke y «Todavía no sé», capacidades de los tramos); las dos si toca los dos grupos | **cada campo que el cambio toca** (`camposTocados`) | `{ version }` | 409 `version-cambio` si `base` no es la vigente; 422 por las 11 reglas de `validarConfig` (anexo A; las 9 a 11 son la topología y las capacidades del choke, 5E.1 y 5E.2) | 5D, 5E |
 | `POST /api/usuarios` | `{ invitacion: { nombre, correo, rolId, campos, telefono?, alertas }, motivo }` | `usuarios:administrar` | los campos que se otorgan (nadie otorga lo que no tiene) | `{ usuario, acceso }` (el servidor pone `id`, `desde`, `estado: "invitado"`) | 422 con `errores[]` por caja (`revisarAcceso`): nombre ≥ 3, correo único, rol del producto, ≥ 1 campo, teléfono E.164 único entre no suspendidos, alertas solo con teléfono y en roles con alertas, motivo ≥ 5 | 5D |
 | `PATCH /api/usuarios/:id` | `{ usuario, motivo }` | `usuarios:administrar` | ídem | `{ usuario, acceso }` | 404 si no existe; 403 nadie cambia sus propios campos ni se suspende o quita el rol a sí mismo; 409 si deja la operación sin gerente de activo | 5D |
 | `POST /api/paradas/:evento/respuesta` | `{ evento, campoId, equipo, texto, parte?, modo? }` | `causa:declarar` o `causa:completar` | del evento del PLC | `{ respuesta }` con `canal: "pantalla"` | 403 si el cuerpo trae `canal: "whatsapp"`; 404 evento desconocido; 409 «Ya respondió…» (la primera gana); 422 campo distinto al del evento, parte que no es del equipo, bomba sin parte, modo que no es de la parte, texto libre < 8 | 5B, 5D |
@@ -123,6 +138,13 @@ Todas responden `{ "datos": … }` o el error único. **`por`, `porId`, `hora`, 
 | `POST /api/asignacion-oficial` | `{ filas: [{ mes, campoId, pozo, bbl, horas? }], motivo }` | `asignacion:cargar` | `campoId` de cada fila | `{ filas, carga }` | todo o nada: 403 campo ajeno; 422 mes no cerrado, pozo vacío, `bbl` < 0, `horas` fuera de 0…días×24, sin filas, motivo < 5 | 5A |
 | `POST /api/planta/cambios` | `{ campo, cambio: { tipo: "agregar-miembro"\|"quitar-miembro"\|"agregar-elemento"\|"quitar-elemento", … } }` | `conector:configurar` | `campo` del cuerpo | `{ planta, cambio }` | 404 campo sin esquema; 409/422 id repetido o elemento que no está | 5D |
 | `POST /api/planes/:id` | `{ estado: "aceptado"\|"ejecutado", motivo }` | `planes:decidir` | del plan (`cicloValor` → `campoId`) | `{ decision }` (el servidor pone `por`, `porId`, `fecha`) | 404 si el id no es un plan del ciclo; 409 si ya está en ese estado o se ejecuta sin aceptar; 422 motivo < 5 | 11 |
+| `POST /api/anh/paradas/:id/clasificacion` | `{ pasos, motivo?, aplicarAlEvento?, aplicarALaCascada?, ids?, cadena? }` | `anh:clasificar` y solo los pasos de su rol (`PASOS_QUE_DECLARA`) | del evento del controlador de la fila (id `${evento}@${día}#${n}`); en cascada, todas las filas de `ids` | `{ parada, guardadas }` | 404 fila inexistente **o** de un campo ajeno (lo mismo, C-20); 403 `paso-ajeno`; 409 `cadena-cambio`, `cascada-cambio`, `cambia-a-otra-persona` (sin motivo); 422 `clasificacion-incoherente`, `falta-motivo`, `cascada-sin-ids`, `texto-largo` | 5E.9 |
+| `POST /api/anh/paradas/:id/yacimiento` | `{ evidencia, motivo?, aplicarAlEvento?, cadena? }` | `anh:yacimiento` (producción, confiabilidad) | ídem (nunca la cascada) | `{ parada, guardadas }` | 403 `sin-capacidad`; 404; 409 `cadena-cambio`; 422 | 5E.9 |
+| `POST /api/anh/paradas/:id/respuesta` | `{ pregunta, opcion, aplicarAlEvento?, aplicarALaCascada?, ids?, cadena? }` (el texto exacto del botón) | `anh:clasificar` y el rol que contesta esa pregunta | ídem | `{ parada, guardadas }` | 409 `pregunta-cerrada` (otra persona ya contestó); 422 `pregunta-ajena` (no es de esta parada, u opción que no es suya); 403 `paso-ajeno` | 5E.9 |
+| `POST /api/anh/paradas/:id/revision` | `{ motivo, pedirA?, aplicarAlEvento?, aplicarALaCascada?, ids?, cadena? }` | `anh:clasificar` | ídem | `{ parada, guardadas }` (no toca ningún paso) | 422 `texto-corto` sin motivo; 422 si se pide a quien no revisa o a su propio rol | 5E.9 |
+| `POST /api/anh/paradas/confirmar` | `{ ids, cadena, pasos? }` (`cadena` obligatoria) | `anh:clasificar` (una parada) o `anh:confirmar` (varias, en lote: supervisión y producción) | de cada fila | `{ paradas, lote? }` | 403 `paso-ajeno`; 409 `lote-sin-pasos`; 422 sin `ids` o más de 1.000 | 5E.9 |
+| `POST /api/configuracion/vista-previa` | `{ config, aunConErrores? }` | `config:firmar` | cada campo que el cambio toca (`camposTocados`) | `{ impacto, errores? }`; no guarda nada | 403 campo ajeno; 422 las reglas de `validarConfig` (con `aunConErrores`, el impacto y los errores) | 5E.1 |
+| `POST /api/topologia/importar` | `{ campo, texto }` (CSV o pegado de Excel) | `config:firmar` | `campo` del cuerpo | `TopologiaLeida`: `{ campoId, topologia, porSaber, hallazgos, filas }`; no firma | 404 campo fuera del registro; 403 campo no asignado; 422 archivo vacío; 400 `texto` que no es texto | 5E.1 |
 | `GET /api/webhooks/whatsapp` | `hub.mode`, `hub.verify_token`, `hub.challenge` | token de verificación de Meta | — | `hub.challenge` | 403 si el token no coincide | 5D |
 | `POST /api/webhooks/whatsapp` | lo que manda Meta | firma `X-Hub-Signature-256` (HMAC-SHA256 del cuerpo crudo con el *app secret*) | del evento del mensaje respondido (`context.id`) | **siempre 200** si queda aceptado o descartado | 401 sin firma válida; deduplica por `messages[].id`; persona = E.164 activa, con alertas y con el campo; la primera respuesta gana | 5D |
 
@@ -139,3 +161,6 @@ Están decididos pero no existen ni en el demo ni en el simulador (detalle en el
 | `GET /api/reloj` (o `generadoEn`/`datosHasta` en cada respuesta) | El «ahora» de los datos. |
 | `GET /api/vistas/diferidos/tramos?cursor=` | Paginar los tramos del libro. |
 | (ajustes del variador de cada electrosumergible) | Ver 7.3. |
+| `GET /api/vistas/anh/reparto` y el resto del carril ANH (opciones por fila, cierre del día, conversión del árbol de la operadora, envío del IDP) | P1 §5; 5E·H27. |
+| `Pozo.locacion` en `GET /api/campos/:campo/pozos` | La locación de cada pozo, para el caso de borde del choke (5E·H1, 5E·H23). |
+| La pregunta de campo por WhatsApp | Una plantilla nueva de Meta para las preguntas de la clasificación, su envío y su entrada por el webhook (B-33; 5E·H25). |

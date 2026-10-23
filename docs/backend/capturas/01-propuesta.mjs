@@ -26,7 +26,8 @@ export const CAPTURAS = [
   { archivo: 'cap1-resumen-portafolio', ruta: '#/ger/resumen/ceiba~portafolio/curso', marcas: [
     { n: 1, texto: '2.377', exacto: true },
     { n: 2, texto: /bbl · calculado$/ },
-    { n: 3, texto: /^[\d.]+ bbl\/d$/, i: 0 },
+    // «Durante · crudo en vivo»: lo que se pierde ahora (el ciclo de arriba también dice «bbl/d»).
+    { n: 3, texto: /^[\d.]+ bbl\/d$/, dentro: 'section:has(small:text-is("Durante · crudo en vivo"))' },
     { n: 4, texto: /^(P-201B · La Ceiba|MN-41 · Morichal Norte)$/ },
     { n: 5, rol: 'heading', nombre: 'POR EQUIPO' },
   ] },

@@ -1,6 +1,6 @@
 ## 6C.6 Mi trabajo — «Mi trabajo de hoy» · técnico de mantenimiento
 
-**Para qué.** «Qué está parado o avisa, y qué revisar.» (`src/widgets/Onboarding.tsx:15`).
+**Para qué.** «Qué está parado o avisa, y qué revisar.» (`src/widgets/Onboarding.tsx:16`, `PARA_QUE.trabajo`).
 **Ruta.** `#/tec/trabajo/<campo>/<período>` · **Roles y nivel.** Solo `tec` (operación); es su inicio. **No agrega campos** (sin `agrega`: en portafolio se pide escoger un campo, `SoloCampo`). El período no cambia nada.
 **Lee.** `GET /api/vistas/riesgo?campos`; `GET /api/vistas/paradas/por-identificar?campos`; `GET /api/sap/ordenes?campos` (y avisos, sin uso aquí); `GET /api/mensajes?campos` (los avisos `orden` dirigidos a la persona); el programa de paradas de la configuración vigente; la persona de la sesión (`usePersona`).
 
@@ -15,9 +15,9 @@ Fórmulas: perdiendo / en riesgo → 5B §5; preguntas → 5B §3.2; órdenes de
 | 1 | **equipos parados** | ◆ **1** | filas `perdiendo` **de alto impacto** (P-201B; LC-21 no cuenta: es un pozo sin identificar) | ◆ P1 si > 0; «equipo parado» / «equipos parados» | `riesgo[]` (`estado`, `altoImpacto`) |
 | 2 | Apoyo | «alto impacto · 1.665 bbl/d» | $\sum$ `bblDia` de esas filas | `n0` | `riesgo[].bblDia` |
 | 3 | **por identificar** | ▲ **3** | `contarPorIdentificar(preguntas).porIdentificar` (`Trabajo.tsx:32`): las preguntas con `pide`, hayan arrancado o no (P-201B, LC-21 y LC-08). Es la cuenta única: la misma cifra en Identificar, Mantenimiento, Turno y la franja «Ahora» (antes Identificar y Mantenimiento decían 2) → 5B §3.2 | ▲ P2 si alguna sigue parada (`porIdentificar − arrancaronSinIdentificar > 0`, `Trabajo.tsx:94`) | `pregunta.pide`, `.arrancoSinIdentificar` |
-| 4 | Apoyo | «2 sin arrancar ·» | `porIdentificar − arrancaronSinIdentificar` = 3 − 1 (P-201B y LC-21) | `ApoyoPorIdentificar` (`src/shared/ui/PorIdentificar.tsx:10-19`, `Trabajo.tsx:96`): «{n} sin arrancar» y «■ {m} arrancó/arrancaron sin identificar» (fila 20), las mismas palabras que Turno y Mantenimiento; un tramo en 0 no se escribe | `pregunta.fin` |
+| 4 | Apoyo | «2 sin arrancar ·» | `porIdentificar − arrancaronSinIdentificar` = 3 − 1 (P-201B y LC-21) | `ApoyoPorIdentificar` (`src/shared/ui/PorIdentificar.tsx:9-18`, `Trabajo.tsx:96`): «{n} sin arrancar» y «■ {m} arrancó/arrancaron sin identificar» (fila 20), las mismas palabras que Turno y Mantenimiento; un tramo en 0 no se escribe | `pregunta.fin` |
 | 5 | **equipos avisando** | «1» · «equipo avisando» | filas `en-riesgo` (aquí K-101: un servicio en alarma avisa sin parte, por eso se cuentan equipos y no partes) | «equipo avisando» / «equipos avisando» (`Trabajo.tsx:101`; antes «parte avisando», 6C.9 punto 4, resuelto) | `riesgo[]` |
-| 6 | Pie | chip «ya fuera» | el primero por `horas` (ausente = −1): con horas «el primero cruza en {fmtHoras}»; sin horas: chip fuerte «ya fuera» si es uno solo, «{k} ya fuera» si hay varios (cuenta los que no tienen horas) (`Trabajo.tsx:102-105`) | — | `riesgo[].horas` |
+| 6 | Pie | chip «ya pasó el límite» | el primero por `horas` (ausente = −1): con horas «el primero cruza en {fmtHoras}»; sin horas: chip fuerte «ya pasó el límite» si es uno solo, «{k} ya pasaron el límite» si hay varios (antes «ya fuera», B-42) (cuenta los que no tienen horas) (`Trabajo.tsx:102-105`) | — | `riesgo[].horas` |
 | 7 | PARADOS: tipo y desde | «bomba de reinyección · desde 2 de oct, 03:52» (◆ 1 «P-201B»; extra del panel PARADOS «1», y AVISANDO · QUÉ REVISAR «1»: `parados.length`, `avisan.length`, `Trabajo.tsx:117, 147`) | `TIPO_CAUSA[tipo]` en minúscula + `fechaHora(desde)` | — | `riesgo[].tipo`, `.desde` |
 | 8 | Parte | «parte sin identificar» | `NOMBRE_PARTE[parte]` en minúscula o «parte sin identificar» | — | `riesgo[].parte` |
 | 9 | «no arrancar» | chip | hay una pregunta abierta (`!fin`) del mismo equipo y campo; si no, a la derecha `n0(bblDia)` bbl/d | — | `por-identificar` |

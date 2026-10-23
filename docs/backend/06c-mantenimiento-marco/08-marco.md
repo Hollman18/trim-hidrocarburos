@@ -24,16 +24,16 @@ Fondo: Mantenimiento del jefe en el portafolio, explicada en 6C.3, captura 2 (`j
 
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
-| 1 | Título | «Mantenimiento: lo que hay que atacar» | `PANTALLAS[pantalla].titulo` (`src/app/pantallas.tsx:46-65`) | fijo por pantalla | — |
+| 1 | Título | «Mantenimiento: lo que hay que atacar» | `PANTALLAS[pantalla].titulo` (`src/app/pantallas.tsx:46-68`) | fijo por pantalla | — |
 | 2 | Subtítulo | «Portafolio · 5 campos · 40.750 bbl producidos ayer» | $\sum_{\text{campos}} \text{EstadoCampo.ayer.bbl}$ = 11.105 + 16.685 + 6.611 + 3.186 + 3.163; el «ayer» es el último día completo del punto de medición oficial (`fiscalDeAyer`, 5B §5.4) | campo: «{nombre} · {n0} bbl producidos ayer»; portafolio: «Portafolio · {n} campos · …»; **si algún campo no tiene el fiscal de ayer: «ayer sin fiscal»** (hueco, nunca una suma parcial) | `GET /api/vistas/estado` → `ayer.bbl` |
 | 3 | Sello | «DATOS DE DEMOSTRACIÓN» | `FUENTE = 'demo'`; un botón que abre la nota (captura 3) | en el producto no aparece; en el teléfono se reduce a «Demo» en el subtítulo | `src/shared/api/fuente.ts` |
 | 4 | Período | «Octubre, en curso» | `textoPeriodo` (`Cabecera.tsx:25-34`): en curso → el nombre del calendario («Octubre, en curso»); otro → el nombre de `PERIODOS`; rango → sus fechas («1 de sept a 10 de sept», un solo día: una fecha); si es parcial y no dice «en curso», se agrega «, en curso» con espacio duro | en el teléfono solo el ícono (el período va al subtítulo) | `src/entities/campos.ts:69-75` |
 | 5 | Exportar | botón | solo con `evidencia:exportar` (gerente, producción, supervisor, jefe, confiabilidad, administrador; **no** operador ni técnico) | captura 8 | `rol.puede` |
 | 6 | ¿cómo se lee? | botón | alterna `comoSeLee` (`aria-pressed`) | captura 9 | estado de la aplicación |
-| 7 | Selector de campo | ◆ 1 «Portafolio completo» ▾ (en un campo, su marca: ◆ 1 La Ceiba) | marca = severidad del campo mirado; en portafolio la **peor** de todos (`peorSeveridad`: 1 > 2 > 3 > normal) (`Riel.tsx:58-62`) | se abre solo si el rol tiene más de un campo; texto: «Portafolio completo» o el nombre del campo | `EstadoCampo.severidad` |
+| 7 | Selector de campo | ◆ 1 «Portafolio completo» ▾ (en un campo, su marca: ◆ 1 La Ceiba) | marca = severidad del campo mirado; en portafolio la **peor** de todos (`peorSeveridad`: 1 > 2 > 3 > normal) (`Riel.tsx:59-63`) | se abre solo si el rol tiene más de un campo; texto: «Portafolio completo» o el nombre del campo | `EstadoCampo.severidad` |
 | 8 | Bajo el selector | «5 campos» | portafolio: «{n} campos»; varios: «{cuenca} · 1 de {n}»; uno: «{cuenca}» | — | `GET /api/campos`, `usuarios[].campos` |
 | 9 | Pantallas del rol | Mantenimiento, Diferidos, Equipos, Confiabilidad, Superficie, Riesgo, Identificar | `rol.pantallas` visibles (sin las de v2: agua, evidencia, regulatorio); bombas, electrosumergibles y pozos van en **una** entrada «Pozos y equipos» (o «Equipos» si el rol no tiene Pozos) que lleva a la última subpantalla que el rol abrió y que este campo tenga; si el campo no tiene ninguna, la entrada no sale | la activa con raya azul (`aria-current`) | `src/entities/roles.ts`, `src/app/grupos.ts` |
-| 10 | Entrada de grupo | «Equipos» | `nombreGrupo` (`pantallas.tsx:78-79`) | — | — |
+| 10 | Entrada de grupo | «Equipos» | `nombreGrupo` (`pantallas.tsx:90-91`) | — | — |
 | 11 | Persona | «CR · Camilo Rueda · Jefe de mantenimiento» | la persona del registro con ese rol (`personaDelRol`) | + « · sin acceso activo» si no hay nadie activo con el rol | `GET /api/usuarios` |
 | 12 | Contraer | botón | — | — | — |
 
@@ -57,7 +57,7 @@ Fondo: Mantenimiento del jefe en La Ceiba, explicada en 6C.3, captura 1 (`jefe-m
 | 8 | ⓘ «Rango a la medida» | (globo) | — | «Si el rango llega hasta hoy, el período queda en curso y las cifras son parciales. El volumen se acumula; la tasa en BPDC no.» | — |
 | 9 | Desde | 09/01/2026 | valor inicial 2026-09-01; mínimo `PRIMER_DIA` (2025-10-01), máximo «hasta» | — | `src/app/url.ts:22` |
 | 10 | Hasta | 10/02/2026 | inicial = hoy (`diaIso(AHORA)`); máximo `ULTIMO_DIA` | — | ídem |
-| 11 | Aplicar | botón | `setRango`: se endereza si viene al revés y se recorta a los días con datos; «hasta» es inclusivo (se suma un día, sin pasar de AHORA) | fuera de los datos: «Escoja dos fechas entre el 2025-10-01 y el 2026-10-02: fuera de esos días no hay datos.» (en `role="alert"`, el menú no se cierra); con un rango activo, abajo «Activo: {n} día(s) · {d} a {h}» | `src/app/store.ts:225` |
+| 11 | Aplicar | botón | `setRango`: se endereza si viene al revés y se recorta a los días con datos; «hasta» es inclusivo (se suma un día, sin pasar de AHORA) | fuera de los datos: «Escoja dos fechas entre el 2025-10-01 y el 2026-10-02: fuera de esos días no hay datos.» (en `role="alert"`, el menú no se cierra); con un rango activo, abajo «Activo: {n} día(s) · {d} a {h}» | `src/app/store.ts:270` |
 
 El período viaja en la dirección: `curso`, `cerrado`, `trimestre`, `ytd`, `doce` o `AAAA-MM-DD_AAAA-MM-DD`. El servidor recibe solo `desde` y `hasta` (ISO con zona, `hasta` exclusivo) en cada vista: **lo único que el servidor aporta al calendario es AHORA** (5D §1).
 
@@ -82,7 +82,7 @@ Fondo: Mantenimiento del jefe en La Ceiba (6C.3, captura 1).
 
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
-| 1 | Portafolio | «Portafolio completo» · «5 campos sumados» | se ofrece solo si el rol tiene más de un campo **y** alguna pantalla que suma (`portafolioPermitido`, `store.ts:153-155`) | ✓ si está activo | `usuarios[].campos` |
+| 1 | Portafolio | «Portafolio completo» · «5 campos sumados» | se ofrece solo si el rol tiene más de un campo **y** alguna pantalla que suma (`portafolioPermitido`, `store.ts:179-181`) | ✓ si está activo | `usuarios[].campos` |
 | 2 | Encabezado | «CAMPOS · 5» | campos asignados a la persona del rol (los da el gerente en Accesos), no los de fábrica | — | `GET /api/usuarios` |
 | 3 | Columna | «PRODUCIDO AYER» | — | — | — |
 | 4 | Lo producido ayer | «11.105 bbl» ✓ (La Ceiba; Morichal Norte «16.685 bbl», Guacamayo «6.611 bbl», El Palmar «3.186 bbl», La Zarza fila 7); en la cabecera, «La Ceiba · 11.105 bbl producidos ayer» | `EstadoCampo.ayer.bbl` | `n0` + « bbl»; `null` → «sin fiscal»; ✓ en el campo activo | `GET /api/vistas/estado` |
@@ -128,8 +128,8 @@ Aparece la primera vez que se entra con un rol (marca `localStorage['trim.intro.
 |---|---|---|---|---|---|
 | 1 | Persona | «Camilo Rueda» (con sus iniciales «CR») | la persona del registro con ese rol (si el gerente le pasó el rol a otra, saluda a la nueva) | — | `GET /api/usuarios` |
 | 2 | Rol | «Jefe de mantenimiento» | `rol.nombre` | — | `roles.ts` |
-| 3 | Lo que decide | «Respondes por que los barriles diferidos bajen, no por explicarlos.» | `rol.foco` | uno por rol (tabla de abajo) | `roles.ts:38-104` |
-| 4 | Promesa | «QUÉ HACE · Barriles perdidos por bomba de reinyección y electrosumergible, y por qué parte.» · «POR QUÉ · Al fallar cierran pozos: vigilarlos deja intervenir antes.» · «CÓMO LO PRUEBA · Hora del PLC, evento y causa por barril; conexión de solo lectura.» | fija para todos (`PROMESA`, `Onboarding.tsx:42-46`) | — | — |
+| 3 | Lo que decide | «Respondes por que los barriles diferidos bajen, no por explicarlos.» | `rol.foco` | uno por rol (tabla de abajo) | `roles.ts:45-111` |
+| 4 | Promesa | «QUÉ HACE · Barriles perdidos por bomba de reinyección y electrosumergible, y por qué parte.» · «POR QUÉ · Al fallar cierran pozos: vigilarlos deja intervenir antes.» · «CÓMO LO PRUEBA · Hora del PLC, evento y causa por barril; conexión de solo lectura.» | fija para todos (`PROMESA`, `Onboarding.tsx:44-48`) | — | — |
 | 5 | Siguiente | botón | paso 1 de 2 (dos rayas abajo) | — | — |
 
 ![Marco · introducción · jefe · paso 2](../img/marco-intro-jefe-paso2.png)
@@ -137,7 +137,7 @@ Aparece la primera vez que se entra con un rol (marca `localStorage['trim.intro.
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
 | 1 | Título | «SUS PANTALLAS» | — | — | — |
-| 2 | Para qué | «Mantenimiento · Qué atacar para bajar el diferido de alto impacto.» | `PARA_QUE[pantalla]` (en nivel `decision`, `PARA_QUE_DECISION` si existe) | tabla de abajo | `Onboarding.tsx:12-39` |
+| 2 | Para qué | «Mantenimiento · Qué atacar para bajar el diferido de alto impacto.» | `PARA_QUE[pantalla]` (en nivel `decision`, `PARA_QUE_DECISION` si existe) | tabla de abajo | `Onboarding.tsx:12-41` |
 | 3 | Una pantalla | «Bombas» | aquí van las pantallas una por una (no el grupo «Equipos» del riel) | cada una lleva a su pantalla y cierra | `rol.pantallas` |
 | 4 | Entrar | «Entrar con la lectura activada» | cierra y enciende «¿cómo se lee?» | — | — |
 

@@ -21,7 +21,7 @@ Términos del sector y del producto, en el sentido en que se usan en este docume
 | **Real** | Lo que se produjo: el fiscal. |
 | **Diferido** (barriles diferidos) | Lo que se dejó de producir por un evento (una parada, una frecuencia reducida): potencial − real, repartido evento por evento. Se **calcula**, no se mide. «Diferido» y no «perdido»: el crudo sigue en el yacimiento. |
 | **Inventario entre días** (`residuo`) | Lo que los eventos no explican: potencial − real − diferido. Físicamente, el **inventario del tanque de venta**: el PMO mide lo que se despacha cada día, no lo que producen los pozos ese día. En el mes entero suma 0; en un día suelto o un período que corta meses, no. |
-| **Eficiencia** | Real ÷ potencial. |
+| **Eficiencia** | Real ÷ potencial. En el modelo choke, la **PE** se mide contra el potencial del sistema (ver «Modelo choke»). |
 | **Tolerancia del diferido** | El rango de incertidumbre del diferido calculado (Res. MME 40236, Ec. 22: raíz de la suma de los cuadrados de las incertidumbres de cada término). Se muestra como «5.729–6.734 bbl · calculado». |
 | **Precio neto** (`netbackUsd`) | Precio por barril del crudo en el campo, neto de transporte y descuentos. Lo firma el gerente con la meta. Valoriza los barriles diferidos en USD. |
 
@@ -97,6 +97,49 @@ Términos del sector y del producto, en el sentido en que se usan en este docume
 | **Huella** | SHA-256 de la forma canónica de las cifras de un informe. Si el papel no da la misma huella, fue modificado. |
 | **Nivel de detalle** | Lo que un rol ve: `decision` (gerente), `operacion` (supervisor, operador, técnico), `ingenieria` (producción, mantenimiento, confiabilidad, administración). |
 | **Capacidad** | Un permiso que el servidor revisa en una escritura (`metas:firmar`, `causa:declarar`…). |
+
+## Modelo choke y clasificación ANH
+
+| Término | Qué es |
+|---|---|
+| **Choke · modelo choke** | El campo como una tubería en serie: yacimiento → pozos → planta → afuera. Lo que limita es el tramo más estrecho, y cada parada se trabó en uno de los tramos. Viene de SPE-36848 (BP, 1996); la ANH lo adoptó como el paso 2 de su árbol (`choke_mod`). |
+| **Tramo** (de la tubería) (`ChokeAnh`) | Yacimiento, pozo, planta o afuera (`reservorio`, `pozo`, `planta`, `exportacion`). No confundir con el **tramo del libro** (`Tramo`): un pedazo de tiempo de una parada. Lo que no tiene tramo todavía va «sin identificar» (`sin-asignar`). |
+| **Mercado** | Lo de afuera que no recibe: el terminal, el cliente o la nominación. La NSTA lo pone como quinto tramo; en TRIM es un **subnivel** de afuera. |
+| **Alcance** (`AlcanceElemento`) | A quién sirve un equipo: **dedicado** (a un solo pozo → el pozo), **compartido** (a varios → la planta), **frontera** o **tercero** (la brida de salida, otro dueño → afuera). El tramo sale del alcance: nadie lo escoge. |
+| **Topología** | La lista de equipos de un campo con su alcance y los pozos a los que sirve. La firma el administrador (`Config.topologia`); sin firma, rige la que se deriva del registro. |
+| **«Todavía no sé»** (`Config.topologiaPorSaber`) | La respuesta del administrador cuando no sabe a qué pozos sirve un equipo: el motor no adivina su tramo y cada parada lo pregunta. |
+| **Caso de borde (misma locación)** | Un equipo que sirve a 2 o 3 pozos de una misma locación: va a la planta, marcado, hasta que la operadora confirme la regla. |
+| **Factor de medición** | El sesgo del separador de prueba contra el punto oficial, medido en días sin restricción y firmado por campo. Mientras no se mida, 1. Con él se leen las pruebas para el choke; **nunca** el factor de asignación del mes. |
+| **Tren** (de la planta) | Un carril de la planta: crudo, agua o gas, con su capacidad instalada. Manda el más angosto **medido**, pasado a crudo; el gas sin medir no entra. |
+| **Potencial del sistema** | El menor de los tres potenciales (pozos, planta, afuera): lo más que el campo puede entregar hoy. |
+| **Lo que limita · dominante** | El tramo de menor potencial. Sale de los potenciales, nunca de lo real. |
+| **Holgura** | Lo que le sobra a un tramo sobre el que limita, bbl/d. |
+| **Empate** | Dos tramos iguales al barril. La NSTA pide explicarlo por escrito (`explicacionEmpate`, con la firma de las capacidades). |
+| **Casi iguales** | Dos tramos a menos del 3 % (provisional): lo que se gane en uno lo frena el otro, y no se avisa un cambio de lo que limita. |
+| **Capacidad firmada** | Lo que deja pasar un tramo, firmado con su fuente (placa, prueba, contrato, nominación o estimado). Sin firma, el dato del demo, marcado. |
+| **Escalón** | La clase de pérdida de un barril diferido: desarrollo, desempeño, paradas planeadas, **paradas no planeadas**, capacidad (restricción sin falla) o sin clasificar. |
+| **Cifra del norte** | Lo no planeado (el escalón `disponibilidad-no-planeada`): la única cifra que el producto busca bajar. La misma en todas las vistas. |
+| **Estructural** | Lo que no pasa aunque nada pare: cuando lo que limita no son los pozos, lo que los pozos podían dar de más. Ningún arreglo de equipos lo recupera; solo más capacidad. |
+| **Brecha de las pruebas** | Lo que las pruebas dicen de más que el punto oficial. Sesgo de medición o desempeño de los pozos; no es de ninguna parada. |
+| **PE · eficiencia de producción** | Real ÷ potencial del sistema (NSTA §5.3, ISO/TS 3250). **PE no planeada**: lo no planeado que le costó al campo ÷ potencial del sistema. |
+| **Cabía en la holgura** | Lo diferido de un día en que no limitaban los pozos y que no le costó al campo: el real llegó a lo que dejaba pasar el tramo que limitaba. |
+| **Superado** | Un día en que lo real pasó la capacidad declarada del tramo que debía limitar: la capacidad está corta y hay que revisarla. |
+| **Árbol de pérdidas** | Cada barril diferido del período colgado de su tramo y, dentro, de los pasos de la clasificación; cada nodo suma exacto sus ramas. |
+| **Si falla hoy** (`FilaCriticidad`) | Lo que le costaría al campo, en bbl/d, que un equipo fallara hoy, con el tramo donde se trabaría. Tres grupos: **medido** (con puesto), **techo** (supone cerrar todos sus pozos: «hasta»), **sin dato** (con su porqué). |
+| **Fila ANH · `paradas_pozo`** (`ParadaAnh`) | Lo que se reporta a la ANH: un pozo × un día operacional × una causa. Sale del libro; no se guarda. |
+| **Día operacional** | El día calendario con corte a las 23:59:59, hora de Colombia. Una parada que cruza la medianoche son dos filas. |
+| **Abierta al corte** | Una fila de un pozo que seguía parado a las 23:59:59: termina ahí y lo dice. |
+| **Parcial · disparo · exceso** | Parcial: frecuencia reducida (también es parada). Disparo: electrosumergible que vuelve a arrancar en menos de 24 h. Exceso: lo que siguió cerrado después de la ventana del programa (no planeado). |
+| **Seis pasos** | La clasificación de la Circular 0024: responsable, choke, impacto (diferida o pérdida), planeación, causa N1 y detalle N2. |
+| **N1 · N2** | La causa (20 claves de la Tabla 1: 8 planeadas `P_`, 12 no planeadas `NP_`) y su detalle (117 por versión del catálogo). |
+| **Forma de salida** | Cómo se escribe cada valor en el JSON: `C024-2026` (la circular, por defecto) o `DICC-V3.2` (el Diccionario de Datos). |
+| **Procedencia** | De dónde salió un paso: señal, registro, regla, conversión, programa, o una persona (declarado, confirmado, corregido). |
+| **Origen A/M/C** | El origen de cada campo de la fila: `A` de la señal o el registro, `M` lo que tocó una persona, `C` lo deducido que nadie confirmó. |
+| **Retirado** | Lo que dijo una persona y otra dejó sin efecto, con motivo, porque ya no iba con lo nuevo. No se borra: la fila vuelve a lo que propone TRIM y la historia lo muestra. |
+| **Una señal apunta** | Una causa que sale de un código que puede venir de superficie (GF, PH, UV) o del first-out de un variador: TRIM la propone, pero solo la confirma quien abre o analiza el equipo. |
+| **Revisión** | «Algo está mal» o «Pedir a producción»: no corrige nada; pasa la parada a quien corrige, con el motivo. |
+| **Lote** | Varias filas de paradas distintas confirmadas de un toque por quien firma el día (supervisión o producción). |
+| **`desc_evid`** | La descripción y evidencia de la fila: la arma TRIM solo con lo estructurado; nunca lleva lo que escribió una persona. |
 
 ## Producto y venta
 

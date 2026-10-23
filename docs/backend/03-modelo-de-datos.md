@@ -1,6 +1,6 @@
 # 3. Modelo de datos
 
-Este capítulo es la base de datos del servidor: **qué se guarda, en qué tabla, quién lo escribe, qué endpoint lo lee y qué reglas obliga la base** (no solo el código). Es PostgreSQL 16; TimescaleDB es opcional. El capítulo 4 cuenta cómo llegan los datos del borde a estas tablas; los capítulos 5A a 5D, qué calcula el motor con ellas; el 7, los endpoints.
+Este capítulo es la base de datos del servidor: **qué se guarda, en qué tabla, quién lo escribe, qué endpoint lo lee y qué reglas obliga la base** (no solo el código). Es PostgreSQL 16; TimescaleDB es opcional. El capítulo 4 cuenta cómo llegan los datos del borde a estas tablas; los capítulos 5A a 5E, qué calcula el motor con ellas; el 7, los endpoints.
 
 Todo lo de este capítulo está en la carpeta `sql/`:
 
@@ -8,8 +8,8 @@ Todo lo de este capítulo está en la carpeta `sql/`:
 |---|---|
 | `esquema.sql` | El esquema completo, ejecutable con `psql -v ON_ERROR_STOP=1 -f esquema.sql`. Cada tabla y cada columna tienen su `COMMENT` en español. |
 | `timescale.sql` | Opcional, se corre **después** y solo si la extensión existe: convierte `lectura` en hipertabla con trozos de un mes, compresión y agregados continuos por hora y por día. |
-| `ejemplos.sql` | 9.992 filas **reales del demo** en 72 tablas (sale de `referencia/` y del motor; ninguna inventada). |
-| `pruebas.sql` | 90 pruebas de que las restricciones muerden (78 rechazos y 12 aceptaciones esperadas). |
+| `ejemplos.sql` | 10.566 filas **reales del demo** en 79 tablas (sale de `referencia/` y del motor; ninguna inventada). |
+| `pruebas.sql` | 175 pruebas de que las restricciones muerden (149 rechazos y 26 aceptaciones esperadas). |
 | `cuadres.sql` | Las identidades del motor comprobadas sobre los datos cargados. |
 | `tablas.json` | La especificación para el Excel: grupos, tablas, columnas, filas de ejemplo y relaciones. Coincide 1:1 con `esquema.sql` (lo comprueba `herramientas/comprobar-tablas.mjs`). |
 | `validacion.log` | La corrida de todo lo anterior en un PostgreSQL 16 temporal. |
@@ -59,13 +59,13 @@ Las validaciones que el contrato exige **antes** que la forma (capacidad 403, re
 | [(b) Cadena de datos](#34-b-cadena-de-datos) | Del gateway del borde al tag: se llena sola con el nacimiento de Sparkplug B (NBIRTH/DBIRTH). Da la procedencia de cada número y la banda normal versionada de cada tag. | 12: `gateway`, `inscripcion`, `nacimiento`, `rechazo`, `fuente`, `dispositivo`, `tag`, `historial_tag`, `formula`, `calculo`, `calculo_entrada`, `calibracion` |
 | [(c) Series](#35-c-series) | La lectura de cada tag en el tiempo (tag, instante, valor, calidad), particionada por mes; opcionalmente hipertabla de TimescaleDB. | 1: `lectura` |
 | [(d) Insumos del motor](#36-d-insumos-del-motor) | Lo que el borde entrega y el motor consume (interfaz Insumos): pozos y pruebas, eventos de los controladores, paradas de bombas, caídas de servicios, fiscal diario, metrología, perfiles de bomba, límites y alarmas, y el catálogo de daños de ISO 14224. | 27: `pozo`, `prueba_pozo`, `evento`, `evento_pozo`, `evento_servicio`, `parada_bomba`, `punto_medicion`, `mes_fiscal`, `produccion_fiscal_diaria`, `metrologia_campo`, `banda_regulatoria`, `perfil_bomba`, `perfil_bomba_tag`, `perfil_bomba_pozo`, `alarma_tag`, `ajuste_variador`, `modo_falla`, `mecanismo_falla`, `causa_raiz`, `modo_por_clase`, `clase_catalogo`, `clase_iso_catalogo`, `parte`, `parte_variable`, `parte_modo`, `mapeo_catalogo_sap`, `perfil_bomba_primera_alarma` |
-| [(e) Configuración firmada](#37-e-configuracion-firmada) | Lo único técnico que entra a mano: metas, precio, regla de cierre, perfil, tanques, respaldos, programa y membrete. Cada firma es una versión completa e inmutable. | 7: `version_config`, `membrete`, `perfil_campo`, `tramo_meta`, `tanque`, `respaldo`, `parada_programada` |
-| [(f) Personas](#38-f-personas) | Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO y el rastro de cambios de acceso. | 7: `rol`, `capacidad`, `rol_capacidad`, `usuario`, `usuario_campo`, `identidad_oidc`, `cambio_acceso` |
-| [(g) Lo que entra a mano y WhatsApp](#39-g-lo-que-entra-a-mano-y-whatsapp) | Respuestas de los operarios, análisis de confiabilidad, informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta. | 15: `plantilla_whatsapp`, `prediccion`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `folio_contador`, `informe`, `informe_campo`, `mensaje`, `mensaje_libre`, `estado_mensaje`, `carga_asignacion`, `carga_asignacion_grupo`, `asignacion_oficial`, `cambio_planta` |
+| [(e) Configuración firmada](#37-e-configuracion-firmada) | Lo único técnico que entra a mano: metas, precio, regla de cierre, perfil, tanques, respaldos, programa, membrete y, con el modelo choke, la topología (a qué pozos sirve cada equipo, o «Todavía no sé») y las capacidades de los tramos con su fuente. Cada firma es una versión completa e inmutable. | 11: `version_config`, `membrete`, `perfil_campo`, `tramo_meta`, `tanque`, `respaldo`, `parada_programada`, `topologia`, `topologia_por_saber`, `capacidades_campo`, `capacidad_firmada` |
+| [(f) Personas](#38-f-personas) | Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO, el rastro de cambios de acceso y, para la clasificación ANH, qué pasos dice o confirma cada rol y qué preguntas de campo contesta. | 9: `rol`, `capacidad`, `rol_capacidad`, `usuario`, `usuario_campo`, `identidad_oidc`, `cambio_acceso`, `paso_por_rol`, `contesta_pregunta` |
+| [(g) Lo que entra a mano y WhatsApp](#39-g-lo-que-entra-a-mano-y-whatsapp) | Respuestas de los operarios, análisis de confiabilidad, la clasificación ANH de cada parada (los catálogos de la Circular 0024, lo que dice cada persona paso por paso, las respuestas de campo, las revisiones y los lotes), informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta. | 25: `plantilla_whatsapp`, `prediccion`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `causa_n1`, `causa_n2`, `causa_general`, `pregunta_campo`, `opcion_campo`, `confirmacion_lote`, `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `revision_atendida`, `folio_contador`, `informe`, `informe_campo`, `mensaje`, `mensaje_libre`, `estado_mensaje`, `carga_asignacion`, `carga_asignacion_grupo`, `asignacion_oficial`, `cambio_planta` |
 | [(h) Lo que se lee de SAP PM](#310-h-lo-que-se-lee-de-sap-pm) | Espejo de lo que TRIM necesita de SAP: identidad del equipo, avisos, órdenes con sus horas y repuestos, y stock. TRIM no crea órdenes. | 9: `equipo_sap`, `clase_orden_sap`, `aviso_sap`, `orden_sap`, `confirmacion_sap`, `material_sap`, `repuesto_orden`, `stock_sap`, `repuesto_equipo` |
 | [(i) Precálculo de meses cerrados](#311-i-precalculo-de-meses-cerrados) | Caché verificable del motor para meses cerrados y publicados: libro del mes por campo, factor de asignación, tramos por día y asignación por pozo. | 5: `factor_asignacion_mes`, `libro_mes`, `tramo_diferido`, `asignacion_pozo_mes`, `recalculo_mes` |
 
-**Total: 89 tablas y 9 vistas, 144 claves foráneas.** Las particiones mensuales de `lectura` (`lectura_AAAA_MM`) no se cuentan como tablas.
+**Total: 105 tablas y 11 vistas, 180 claves foráneas.** Las particiones mensuales de `lectura` (`lectura_AAAA_MM`) no se cuentan como tablas.
 
 > **Tabla que el desarrollador del backend agrega.** `decision_plan` (aceptar / ejecutar un plan del ciclo ANTES / DURANTE / DESPUÉS) no está en `esquema.sql` todavía: el demo guarda las decisiones en la sesión del navegador. El SQL, las reglas y el contrato están en el [capítulo 11](11-ciclo-de-valor.md). No entra a este recuento hasta que se agregue al esquema y a `tablas.json`.
 
@@ -75,10 +75,10 @@ flowchart LR
   B --> C["(c) Series<br/>lectura"]
   A --> D["(d) Insumos del motor<br/>eventos · paradas · fiscal · perfiles · límites"]
   B --> D
-  E["(e) Configuración firmada<br/>version_config + tramos, tanques, respaldos, programa"] --> M(("Motor"))
+  E["(e) Configuración firmada<br/>version_config + tramos, tanques, respaldos, programa,<br/>topología y capacidades del choke"] --> M(("Motor"))
   D --> M
   C --> M
-  F["(f) Personas<br/>rol · usuario · cambio_acceso"] --> G["(g) Entra a mano y WhatsApp<br/>respuestas · análisis · informes · mensajes"]
+  F["(f) Personas<br/>rol · usuario · cambio_acceso · pasos por rol"] --> G["(g) Entra a mano y WhatsApp<br/>respuestas · análisis · clasificación ANH · informes · mensajes"]
   G --> M
   H["(h) SAP PM<br/>avisos · órdenes · stock"] <--> G
   M --> I["(i) Precálculo de meses cerrados<br/>libro_mes · tramo_diferido · asignación"]
@@ -143,7 +143,7 @@ Registro de campos de la empresa (tipo Campo, src/entities/tipos.ts). GET /api/c
 - **Reglas:**
   - El catálogo no puede traer un campo que no esté aquí (el arranque se detiene).
   - La configuración firmada solo acepta campos del registro (validarConfig, 422).
-- **La apuntan:** `activo`, `planta_campo`, `gateway`, `inscripcion`, `nacimiento`, `punto_medicion`, `mes_fiscal`, `metrologia_campo`, `perfil_campo`, `tanque`, `respaldo`, `parada_programada`, `usuario_campo`, `stock_sap`, `informe_campo`, `carga_asignacion_grupo`, `cambio_planta`, `recalculo_mes`.
+- **La apuntan:** `activo`, `planta_campo`, `gateway`, `inscripcion`, `nacimiento`, `punto_medicion`, `mes_fiscal`, `metrologia_campo`, `perfil_campo`, `tanque`, `respaldo`, `parada_programada`, `topologia`, `topologia_por_saber`, `capacidades_campo`, `usuario_campo`, `stock_sap`, `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `informe_campo`, `carga_asignacion_grupo`, `cambio_planta`, `recalculo_mes`.
 - **Fila real del demo:** `{"id":"ceiba","nombre":"La Ceiba","cuenca":"Llanos","choke":"Planta","nota":"Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos."}`
 
 #### `activo`
@@ -192,7 +192,7 @@ Cabecera del esquema de planta de un campo: caudales de diseño y los cuatro cue
   - Un campo sin planta no trae planta (hueco), nunca la de otro.
 - **Apunta a:** `campo` por (campo_id) 1:1.
 - **La apuntan:** `planta_elemento`.
-- **Fila real del demo:** `{"campo_id":"ceiba","crudo_bpd":10450,"crudo_cap_bpd":12000,"agua_bpd":224200,"agua_cap_bpd":267750,"gas_bpd":3850,"gas_cap_bpd":4200,"choke_pozos":12500,"choke_planta":11800,"choke_evacuacion":14000,"choke_mercado":15000,"nota":"El agua (95 % de lo que sale d…`
+- **Fila real del demo:** `{"campo_id":"ceiba","crudo_bpd":10450,"crudo_cap_bpd":13000,"agua_bpd":224200,"agua_cap_bpd":267750,"gas_bpd":3850,"gas_cap_bpd":4200,"choke_pozos":12500,"choke_planta":11800,"choke_evacuacion":14000,"choke_mercado":15000,"nota":"El agua (95 % de lo que sale d…`
 
 #### `planta_elemento`
 
@@ -754,7 +754,7 @@ Evento del controlador de un pozo (EventoPozo, src/entities/pozos.ts): variador,
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger evento_pozo_sin_truncate: TRUNCATE]
   - La hora del PLC no se corrige: solo se pone fin a un evento abierto (una vez) y, en una parada, la firma (una vez); no se borra. [trigger evento_pozo_solo_cierre: UPDATE DELETE]
 - **Apunta a:** `pozo` por (campo_id, pozo) N:1; `evento` por (id, clase, campo_id, pozo) 1:1.
-- **La apuntan:** `tramo_diferido`.
+- **La apuntan:** `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `tramo_diferido`.
 - **Fila real del demo:** `{"id":"EP-MN07-260214-32","clase":"pozo","campo_id":"morichal","pozo":"MN-07","inicio":"2026-02-15T04:25:00+00:00","fin":"2026-02-16T04:58:00+00:00","codigo":"HZ","senal":"VSD-MN07 · frecuencia a 47 Hz","hz":47,"recibido":"2026-02-15T04:25:00+00:00"}`
 
 #### `evento_servicio`
@@ -1114,7 +1114,7 @@ catalogo.calendario (Mes de src/entities/libro.ts): desde y hasta del mes (el de
 
 ## 3.7 (e) Configuración firmada
 
-Lo único técnico que entra a mano: metas, precio, regla de cierre, perfil, tanques, respaldos, programa y membrete. Cada firma es una versión completa e inmutable.
+Lo único técnico que entra a mano: metas, precio, regla de cierre, perfil, tanques, respaldos, programa, membrete y, con el modelo choke, la topología (a qué pozos sirve cada equipo, o «Todavía no sé») y las capacidades de los tramos con su fuente. Cada firma es una versión completa e inmutable.
 
 ```mermaid
 erDiagram
@@ -1149,12 +1149,36 @@ erDiagram
     text id PK
     text campo_id FK
   }
+  topologia {
+    integer version PK, FK
+    smallint orden PK
+    text campo_id FK
+  }
+  topologia_por_saber {
+    integer version PK, FK
+    smallint orden PK
+    text campo_id FK
+  }
+  capacidades_campo {
+    integer version PK, FK
+    text campo_id PK, FK
+  }
+  capacidad_firmada {
+    integer version PK, FK
+    text campo_id PK, FK
+    text tramo PK
+    text equipo PK
+  }
   version_config ||--|o membrete : "version"
   version_config ||--o{ perfil_campo : "version"
   perfil_campo ||--o{ tramo_meta : "version, campo_id"
   version_config ||--o{ tanque : "version"
   version_config ||--o{ respaldo : "version"
   version_config ||--o{ parada_programada : "version"
+  version_config ||--o{ topologia : "version"
+  version_config ||--o{ topologia_por_saber : "version"
+  version_config ||--o{ capacidades_campo : "version"
+  capacidades_campo ||--o{ capacidad_firmada : "version, campo_id"
 ```
 
 Fuera del diagrama, las tablas de este grupo apuntan además a: `usuario` (f), `campo` (a).
@@ -1177,7 +1201,7 @@ Una versión firmada de la configuración (Version, src/entities/configuracion.t
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger version_config_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger version_config_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `usuario` por (por_id) N:1.
-- **La apuntan:** `membrete`, `perfil_campo`, `tanque`, `respaldo`, `parada_programada`, `informe`, `factor_asignacion_mes`, `libro_mes`, `tramo_diferido`.
+- **La apuntan:** `membrete`, `perfil_campo`, `tanque`, `respaldo`, `parada_programada`, `topologia`, `topologia_por_saber`, `capacidades_campo`, `informe`, `factor_asignacion_mes`, `libro_mes`, `tramo_diferido`.
 - **Fila real del demo:** `{"version":1,"base":null,"fecha":"2026-09-01T13:00:00+00:00","por_id":"adm","por":"Hermes Leal · administrador de la implementación","motivo":"Arranque de la implementación","cambios":["Configuración inicial: metas por campo, precio neto, tanques de agua, resp…`
 
 #### `membrete`
@@ -1287,9 +1311,89 @@ Programa de paradas aprobado (ParadaProgramada de configuracion.ts). Un evento d
 - **Apunta a:** `campo` por (campo_id) N:1; `version_config` por (version) N:1.
 - **Fila real del demo:** `{"version":1,"id":"PR-2011-260819","orden":0,"campo_id":"ceiba","equipo":"P-201B","desde":"2026-08-19T22:49:23+00:00","hasta":"2026-08-20T14:34:04+00:00","motivo":"Mantenimiento preventivo programado de la bomba"}`
 
+#### `topologia`
+
+Topología del modelo choke firmada (ChokeDeElemento de src/entities/choke.ts; Config.topologia): a qué pozos sirve cada equipo, servicio o alimentador. El tramo de una parada sale de aquí con el criterio de Edinson: dedicado (un solo pozo) = pozo, compartido = planta, frontera y tercero = exportación. Un campo sin filas usa la que se deriva del registro (GET /api/vistas/topologia). Firma config:firmar. No es inmutable hacia atrás: cada clasificación guarda su regla y lo que confirmó una persona no cambia solo.
+
+- **Tipo TS:** ChokeDeElemento (src/entities/choke.ts; Config.topologia).
+- **Quién escribe:** Servidor al firmar (config:firmar), sobre los campos de la persona.
+- **Quién lee:** `GET /api/configuracion/historial`, `POST /api/configuracion`, `GET /api/vistas/topologia`, `POST /api/configuracion/vista-previa`, `POST /api/topologia/importar (lee, no firma)`.
+- **Clave:** (version, orden).
+- **Columnas (8):** `version`*, `orden`*, `campo_id`, `elemento`*, `alcance`*, `choke`*, `pozos`, `caso_borde` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción.
+  - El choke sale del alcance: dedicado → pozo, compartido → planta, frontera y tercero → exportacion (check).
+  - Un dedicado sirve a un solo pozo y un compartido a ninguno o a más de uno; cada pozo es del campo (validarTopologia, 422).
+  - Un campo sin filas usa la topología que se deriva del registro; una fila sin campo vale para todos.
+  - Único: (version, campo_id, elemento).
+  - Cada pozo del elemento es del campo (validarTopologia, 422). [trigger topologia_pozos_del_campo: INSERT]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger topologia_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger topologia_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `campo` por (campo_id) N:1; `version_config` por (version) N:1.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `topologia_por_saber`
+
+Los equipos de los que el administrador contestó «Todavía no sé» a «¿A qué pozos sirve?» (ElementoPorSaber de src/entities/choke.ts; Config.topologiaPorSaber). El motor NO adivina su tramo: sus paradas quedan con el paso 2 en falta y la pregunta «¿Dónde se originó la parada?» (PREGUNTA_ORIGEN), y en «si falla hoy» van sin calcular. Un elemento no puede estar a la vez en topologia del mismo campo (trigger). Firma config:firmar. Solo inserción.
+
+- **Tipo TS:** ElementoPorSaber (src/entities/choke.ts; Config.topologiaPorSaber).
+- **Quién escribe:** Servidor al firmar (config:firmar), sobre los campos de la persona.
+- **Quién lee:** `GET /api/configuracion/historial`, `POST /api/configuracion`, `GET /api/vistas/topologia → porSaber`, `POST /api/topologia/importar (lee «todavía no sé», no firma)`.
+- **Clave:** (version, orden).
+- **Columnas (4):** `version`*, `orden`*, `campo_id`*, `elemento`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción.
+  - El motor no adivina el tramo de sus paradas: queda en falta con su pregunta.
+  - Un equipo no está a la vez en topologia del mismo campo (trigger; validarConfig, 422).
+  - Único: (version, campo_id, elemento).
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger topologia_por_saber_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger topologia_por_saber_solo_insercion: UPDATE DELETE]
+  - El equipo no está a la vez en la topología del mismo campo (validarConfig, 422). [trigger topologia_por_saber_unica: INSERT]
+- **Apunta a:** `campo` por (campo_id) N:1; `version_config` por (version) N:1.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `capacidades_campo`
+
+Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4), que va con la firma. Cada número va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.
+
+- **Tipo TS:** CapacidadesCampo (src/entities/capacidades.ts; Config.capacidades).
+- **Quién escribe:** Servidor al firmar (config:firmar), sobre los campos de la persona.
+- **Quién lee:** `GET /api/configuracion/historial`, `POST /api/configuracion`, `GET /api/vistas/campos/:campo/capacidades`, `POST /api/configuracion/vista-previa`.
+- **Clave:** (version, campo_id).
+- **Columnas (4):** `version`*, `orden`*, `campo_id`*, `explicacion_empate` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción.
+  - Cada día usa las que regían ese día: firmar hoy no cambia un mes cerrado.
+  - Un empate exacto entre dos tramos se explica con la firma (explicacion_empate); sin ella, 422 (capacidadesQueBloquean).
+  - Único: (version, orden).
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidades_campo_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidades_campo_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `campo` por (campo_id) N:1; `version_config` por (version) N:1.
+- **La apuntan:** `capacidad_firmada`.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `capacidad_firmada`
+
+Un número firmado de las capacidades de un campo (CapacidadFirmada de capacidades.ts): bbl/d (el gas en KPC/d) y de dónde sale. El tren de agua no se firma entero: va una fila por bomba (tramo bomba, con su equipo) y TRIM muestra la suma de las que están en servicio. La revisión contra lo que ya pasó (no menos que lo máximo de un día en los últimos 30, el empate explicado) la hace el servidor al firmar (capacidadesQueBloquean, 422). Solo inserción.
+
+- **Tipo TS:** CapacidadFirmada (src/entities/capacidades.ts).
+- **Quién escribe:** Servidor al firmar (config:firmar).
+- **Quién lee:** `POST /api/configuracion`, `GET /api/vistas/campos/:campo/capacidades`.
+- **Clave:** (version, campo_id, tramo, equipo).
+- **Columnas (8):** `version`*, `campo_id`*, `tramo`*, `equipo`*, `orden`*, `bpd`*, `fuente`*, `medido` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción.
+  - Una bomba es del tren de agua del campo; cada número con su fuente (validarCapacidades, 422).
+  - El tren de crudo y afuera no dejan pasar menos de lo máximo que ya pasó en un día en los últimos 30 (revisarCapacidades, 422); un cambio de más del 20 % solo pide confirmar.
+  - capacidad_bomba_del_tren [trigger capacidad_bomba_del_tren: INSERT]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidad_firmada_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidad_firmada_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `capacidades_campo` por (version, campo_id) N:1.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
 ## 3.8 (f) Personas
 
-Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO y el rastro de cambios de acceso.
+Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO, el rastro de cambios de acceso y, para la clasificación ANH, qué pasos dice o confirma cada rol y qué preguntas de campo contesta.
 
 ```mermaid
 erDiagram
@@ -1322,6 +1426,16 @@ erDiagram
     text por_id FK
     text usuario_id FK
   }
+  paso_por_rol {
+    text rol_id PK, FK
+    text paso PK
+    text accion PK
+  }
+  contesta_pregunta {
+    text quien PK
+    text rol_id PK, FK
+  }
+  capacidad |o--o{ capacidad : "incluye"
   capacidad ||--o{ rol_capacidad : "capacidad_id"
   rol ||--o{ rol_capacidad : "rol_id"
   rol ||--o{ usuario : "rol_id"
@@ -1329,25 +1443,27 @@ erDiagram
   usuario ||--o{ identidad_oidc : "usuario_id"
   usuario ||--o{ cambio_acceso : "por_id"
   usuario ||--o{ cambio_acceso : "usuario_id"
+  rol ||--o{ paso_por_rol : "rol_id"
+  rol ||--o{ contesta_pregunta : "rol_id"
 ```
 
 Fuera del diagrama, las tablas de este grupo apuntan además a: `campo` (a).
 
 #### `rol`
 
-Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija el producto: el gerente decide quién tiene cada rol, no qué hace el rol. visible=false son los de la versión 2 (plan, cont, reg), que no se ofrecen.
+Roles del producto (Rol de src/entities/tipos.ts; ROLES de roles.ts). Los fija el producto: el gerente decide quién tiene cada rol, no qué hace el rol. visible=false son los de la versión 2 (plan, cont), que no se ofrecen: ninguna persona tiene uno (trigger de usuario) y ninguna escritura los acepta.
 
 - **Tipo TS:** Rol (src/entities/tipos.ts; ROLES en roles.ts).
 - **Quién escribe:** Producto.
 - **Quién lee:** `GET /api/sesion → rolId, nivel`.
 - **Clave:** (id).
 - **Columnas (9):** `id`*, `nombre`*, `nivel`*, `area`*, `inicio`*, `pantallas`*, `campos_fabrica`, `recibe_alertas`*, `visible`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
-- **La apuntan:** `rol_capacidad`, `usuario`.
-- **Fila real del demo:** `{"id":"adm","nombre":"Administrador de la implementación","nivel":"ingenieria","area":"plataforma","inicio":"configuracion","pantallas":["configuracion","conectores","planta"],"campos_fabrica":null,"recibe_alertas":false,"visible":true}`
+- **La apuntan:** `rol_capacidad`, `usuario`, `paso_por_rol`, `contesta_pregunta`, `confirmacion_lote`, `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `revision_atendida`.
+- **Fila real del demo:** `{"id":"adm","nombre":"Administrador de la implementación","nivel":"ingenieria","area":"plataforma","inicio":"configuracion","pantallas":["configuracion","filosofia","conectores","planta","agua"],"campos_fabrica":null,"recibe_alertas":false,"visible":true}`
 
 #### `capacidad`
 
-Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).
+Las trece capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).
 
 - **Tipo TS:** Capacidad (src/entities/tipos.ts).
 - **Quién escribe:** Producto.
@@ -1356,7 +1472,7 @@ Las diez capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): ca
 - **Columnas (3):** `id`*, `nombre`*, `incluye` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
 - **Apunta a:** `capacidad` por (incluye) N:1.
 - **La apuntan:** `capacidad`, `rol_capacidad`.
-- **Fila real del demo:** `{"id":"asignacion:cargar","nombre":"Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM","incluye":null}`
+- **Fila real del demo:** `{"id":"anh:clasificar","nombre":"Completar o corregir la clasificación de cada parada en el árbol de causas (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde; de ahí salen también el reporte a la ANH y la medición de las …`
 
 #### `rol_capacidad`
 
@@ -1391,8 +1507,8 @@ Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuari
   - Nadie se borra; alertas solo en roles con alertas. [trigger usuario_reglas: INSERT UPDATE DELETE]
   - Nadie se borra; alertas solo en roles con alertas. [trigger usuario_sin_truncate: TRUNCATE]
 - **Apunta a:** `rol` por (rol_id) N:1.
-- **La apuntan:** `inscripcion`, `version_config`, `usuario_campo`, `identidad_oidc`, `cambio_acceso`, `orden_sap`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `informe`, `mensaje`, `mensaje_libre`, `carga_asignacion`, `cambio_planta`.
-- **Fila real del demo:** `{"id":"adm","nombre":"Hermes Leal","correo":"hermes.leal@operadora.example","rol_id":"adm","todos_los_campos":true,"estado":"activo","desde":"2026-09-01","telefono":"+573005550108","alertas":false,"antes_de_suspender":null}`
+- **La apuntan:** `inscripcion`, `version_config`, `usuario_campo`, `identidad_oidc`, `cambio_acceso`, `orden_sap`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `confirmacion_lote`, `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `revision_atendida`, `informe`, `mensaje`, `mensaje_libre`, `carga_asignacion`, `cambio_planta`.
+- **Fila real del demo:** `{"id":"adm","nombre":"Hermes Leal","correo":"hermes.leal@operadora.example","rol_id":"adm","todos_los_campos":true,"estado":"activo","desde":"2026-09-01","telefono":"+573005550109","alertas":false,"antes_de_suspender":null}`
 
 #### `usuario_campo`
 
@@ -1436,6 +1552,34 @@ Rastro de cada cambio de acceso (CambioAcceso de usuarios.ts): quién, cuándo, 
 - **Apunta a:** `usuario` por (por_id) N:1; `usuario` por (usuario_id) N:1.
 - **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
 
+#### `paso_por_rol`
+
+Qué pasos dice (PASOS_QUE_DECLARA) y cuáles confirma (PASOS_QUE_CONFIRMA) cada rol (anh-clasificacion.ts): el operador y el técnico, solo lo de su terreno; supervisión, producción, el jefe y confiabilidad, los seis. Lo revisa el trigger de clasificacion_paso (C-07).
+
+- **Tipo TS:** PASOS_QUE_DECLARA y PASOS_QUE_CONFIRMA (src/entities/anh-clasificacion.ts).
+- **Quién escribe:** Producto.
+- **Quién lee:** `POST /api/anh/paradas/:id/clasificacion (403 en un paso ajeno)`, `POST /api/anh/paradas/confirmar (403 en un paso ajeno)`.
+- **Clave:** (rol_id, paso, accion).
+- **Columnas (3):** `rol_id`*, `paso`*, `accion`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Lo revisa el trigger de clasificacion_paso: confirmado y corregido solo en los pasos del rol; un declarado ajeno solo desde una respuesta de campo (preguntas:campo@1), que no lo avala (C-07).
+- **Apunta a:** `rol` por (rol_id) N:1.
+- **Fila real del demo:** `{"rol_id":"conf","paso":"choke","accion":"confirma"}`
+
+#### `contesta_pregunta`
+
+Qué roles contestan cada grupo de preguntas (ROLES_QUE_CONTESTAN de anh-clasificacion.ts): al operador nunca se le pregunta dónde se trabó, la causa ni el detalle (C-07).
+
+- **Tipo TS:** ROLES_QUE_CONTESTAN (src/entities/anh-clasificacion.ts).
+- **Quién escribe:** Producto.
+- **Quién lee:** `POST /api/anh/paradas/:id/respuesta (403 si el rol no la contesta)`.
+- **Clave:** (quien, rol_id).
+- **Columnas (2):** `quien`*, `rol_id`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Al operador nunca se le pregunta dónde se trabó, la causa ni el detalle; el yacimiento, solo producción y confiabilidad.
+- **Apunta a:** `rol` por (rol_id) N:1.
+- **Fila real del demo:** `{"quien":"campo","rol_id":"conf"}`
+
 **Vistas de este grupo.**
 
 #### `v_usuario`
@@ -1458,7 +1602,7 @@ Capacidades efectivas de cada rol, con lo que cada una incluye (puedeHacer de ti
 
 ## 3.9 (g) Lo que entra a mano y WhatsApp
 
-Respuestas de los operarios, análisis de confiabilidad, informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta.
+Respuestas de los operarios, análisis de confiabilidad, la clasificación ANH de cada parada (los catálogos de la Circular 0024, lo que dice cada persona paso por paso, las respuestas de campo, las revisiones y los lotes), informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta.
 
 ```mermaid
 erDiagram
@@ -1492,6 +1636,64 @@ erDiagram
     text mecanismo FK
     text causa_raiz FK
     text por_id FK
+  }
+  causa_n1 {
+    text clave PK
+  }
+  causa_n2 {
+    text version_catalogo PK
+    text codigo PK
+    text n1 FK
+  }
+  causa_general {
+    text id PK
+  }
+  pregunta_campo {
+    text id PK
+  }
+  opcion_campo {
+    text pregunta PK, FK
+    text texto PK
+  }
+  confirmacion_lote {
+    text id PK
+    text por_id FK
+    text rol_id FK
+  }
+  clasificacion_paso {
+    bigint id PK
+    text evento_id FK
+    text campo_id FK
+    text por_id FK
+    text rol_id FK
+    text lote_id FK
+    text version_catalogo FK
+    text n1_codigo FK
+    text n2_codigo FK
+    text cau_gral_id FK
+  }
+  respuesta_campo {
+    bigint id PK
+    text evento_id FK
+    text campo_id FK
+    text pregunta FK
+    text opcion FK
+    text sigue FK
+    text por_id FK
+    text rol_id FK
+  }
+  revision_parada {
+    bigint id PK
+    text evento_id FK
+    text campo_id FK
+    text pedir_a FK
+    text por_id FK
+    text rol_id FK
+  }
+  revision_atendida {
+    bigint revision_id PK, FK
+    text por_id FK
+    text rol_id FK
   }
   folio_contador {
     smallint anio PK
@@ -1553,6 +1755,16 @@ erDiagram
   }
   respuesta_entrante |o--|o respuesta_parada : "entrante_meta_id"
   respuesta_parada ||--o{ analisis : "evento_id"
+  causa_n1 ||--o{ causa_n2 : "n1"
+  pregunta_campo ||--o{ opcion_campo : "pregunta"
+  causa_general |o--o{ clasificacion_paso : "cau_gral_id"
+  confirmacion_lote |o--o{ clasificacion_paso : "lote_id"
+  causa_n1 |o--o{ clasificacion_paso : "n1_codigo"
+  causa_n2 |o--o{ clasificacion_paso : "version_catalogo, n2_codigo"
+  pregunta_campo ||--o{ respuesta_campo : "pregunta"
+  opcion_campo ||--o{ respuesta_campo : "pregunta, opcion"
+  pregunta_campo |o--o{ respuesta_campo : "sigue"
+  revision_parada ||--|o revision_atendida : "revision_id"
   informe ||--o{ informe_campo : "folio"
   plantilla_whatsapp ||--o{ mensaje : "plantilla"
   prediccion |o--o{ mensaje : "prediccion_id"
@@ -1561,7 +1773,7 @@ erDiagram
   carga_asignacion_grupo ||--o{ asignacion_oficial : "carga_id, mes, campo_id"
 ```
 
-Fuera del diagrama, las tablas de este grupo apuntan además a: `activo` (a), `evento` (d), `parte` (d), `usuario` (f), `modo_falla` (d), `causa_raiz` (d), `mecanismo_falla` (d), `version_config` (e), `campo` (a), `orden_sap` (h).
+Fuera del diagrama, las tablas de este grupo apuntan además a: `activo` (a), `evento` (d), `parte` (d), `usuario` (f), `modo_falla` (d), `causa_raiz` (d), `mecanismo_falla` (d), `rol` (f), `campo` (a), `evento_pozo` (d), `version_config` (e), `orden_sap` (h).
 
 #### `plantilla_whatsapp`
 
@@ -1653,6 +1865,184 @@ Análisis de confiabilidad de una falla declarada (Analisis de src/entities/cata
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger analisis_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger analisis_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `causa_raiz` por (causa_raiz) N:1; `respuesta_parada` por (evento_id) N:1; `mecanismo_falla` por (mecanismo) N:1; `usuario` por (por_id) N:1.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `causa_n1`
+
+Las 20 causas de la Tabla 1 de la Circular 024 (TABLA_1 de src/entities/anh-catalogo.ts): 8 planeadas (P_…) y 12 no planeadas (NP_…). clasificacion_paso.valor del paso n1 tiene que estar aquí (FK, C-07).
+
+- **Tipo TS:** TABLA_1 y ClaveN1 (src/entities/anh-catalogo.ts).
+- **Quién escribe:** Producto (el catálogo de la circular).
+- **Quién lee:** `GET /api/vistas/anh/paradas (los códigos)`.
+- **Clave:** (clave).
+- **Columnas (3):** `clave`*, `planeacion`*, `texto`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Las 20 causas: 8 planeadas (P_…) y 12 no planeadas (NP_…). El paso n1 de clasificacion_paso tiene que estar aquí (FK).
+- **La apuntan:** `causa_n2`, `clasificacion_paso`.
+- **Fila real del demo:** `{"clave":"NP_AUT","planeacion":"no-planeada","texto":"No planeada - Autoridad / Restricción"}`
+
+#### `causa_n2`
+
+Los N2 de cada versión del catálogo (N2_CIRCULAR y VERSIONES_CATALOGO de anh-catalogo.ts): 117 en la circular. clasificacion_paso.valor del paso n2 tiene que estar aquí, en su versión (FK, C-07).
+
+- **Tipo TS:** N2_CIRCULAR y VERSIONES_CATALOGO (src/entities/anh-catalogo.ts).
+- **Quién escribe:** Producto (el catálogo de cada versión).
+- **Quién lee:** `GET /api/vistas/anh/paradas (los códigos)`.
+- **Clave:** (version_catalogo, codigo).
+- **Columnas (4):** `version_catalogo`*, `codigo`*, `n1`*, `texto`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Los N2 de cada versión del catálogo, con su N1 (el prefijo del código). El paso n2 de clasificacion_paso tiene que estar aquí, en su versión (FK).
+- **Apunta a:** `causa_n1` por (n1) N:1.
+- **La apuntan:** `clasificacion_paso`.
+- **Fila real del demo:** `{"version_catalogo":"C024-2026","codigo":"NP_AUT/restriccion-ambiental","n1":"NP_AUT","texto":"Restricción ambiental"}`
+
+#### `causa_general`
+
+Las 18 causas de paro de la Res. 0651 art. 15.1 par. 2 para cau_gral_paro (CAUSAS_GENERALES de anh-catalogo.ts). Lo que dice una persona de la causa general es una de ellas, nunca un texto libre: lo escrito no viaja a la ANH (D2).
+
+- **Tipo TS:** CAUSAS_GENERALES (src/entities/anh-catalogo.ts).
+- **Quién escribe:** Producto (Res. 0651).
+- **Quién lee:** `GET /api/vistas/anh/paradas (cau_gral)`.
+- **Clave:** (id).
+- **Columnas (2):** `id`*, `texto`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Las 18 causas de paro. Lo que dice una persona de la causa general es una de ellas, nunca un texto libre (D2).
+- **La apuntan:** `clasificacion_paso`.
+- **Fila real del demo:** `{"id":"abandono","texto":"abandono"}`
+
+#### `pregunta_campo`
+
+Las preguntas de campo de una parada (IdPregunta y PREGUNTAS_CAMPO de anh-clasificacion.ts) y quién las contesta. Las de la causa, el detalle y el tramo las arma el motor por fila (raiz, detalle, choke): su texto aquí es el genérico.
+
+- **Tipo TS:** IdPregunta y PREGUNTAS_CAMPO (src/entities/anh-clasificacion.ts).
+- **Quién escribe:** Producto.
+- **Quién lee:** `GET /api/vistas/anh/paradas (propuesta.preguntas)`, `POST /api/anh/paradas/:id/respuesta`.
+- **Clave:** (id).
+- **Columnas (3):** `id`*, `quien`*, `texto`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Las preguntas de campo y quién las contesta; las de la causa, el detalle y el tramo las arma el motor por fila.
+- **La apuntan:** `opcion_campo`, `respuesta_campo`.
+- **Fila real del demo:** `{"id":"afecto-clima","quien":"campo","texto":"¿Qué se afectó?"}`
+
+#### `opcion_campo`
+
+Los botones de cada pregunta (OpcionCampo.texto): las fijas y, en las que arma el motor, todas las posibles (las 20 causas en palabras de campo, los 117 detalles, los tramos) con «No sé». respuesta_campo.opcion tiene que estar aquí (FK, C-07).
+
+- **Tipo TS:** OpcionCampo.texto (src/entities/anh-clasificacion.ts).
+- **Quién escribe:** Producto.
+- **Quién lee:** `POST /api/anh/paradas/:id/respuesta (422 si la opción no es de la pregunta)`.
+- **Clave:** (pregunta, texto).
+- **Columnas (2):** `pregunta`*, `texto`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Todos los botones posibles de cada pregunta, con «No sé». respuesta_campo.opcion tiene que estar aquí (FK).
+- **Apunta a:** `pregunta_campo` por (pregunta) N:1.
+- **La apuntan:** `respuesta_campo`.
+- **Fila real del demo:** `{"pregunta":"afecto-clima","texto":"El oleoducto"}`
+
+#### `confirmacion_lote`
+
+Una confirmación en lote (ConfirmacionLote de src/entities/anh-paradas.ts; U1 P-10): qué se vio y qué se confirmó de una vez. POST /api/anh/paradas/confirmar con varias filas de la misma cadena (anh:confirmar: supervisión y producción, que firman el día). Un lote que no sube ningún paso no se guarda (C-19). Solo inserción.
+
+- **Tipo TS:** ConfirmacionLote (src/entities/anh-paradas.ts).
+- **Quién escribe:** Persona activa con anh:confirmar (supervisión y producción), con su rol y con el campo de cada fila.
+- **Quién lee:** `POST /api/anh/paradas/confirmar (varias filas)`.
+- **Clave:** (id).
+- **Columnas (8):** `id`*, `por_id`*, `por`*, `rol_id`*, `hora`*, `paradas`*, `cadena`*, `pasos`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción.
+  - Las filas tienen la misma cadena completa de 6 pasos (422 si no).
+  - cadena es obligatoria y es la que vio la persona: 409 si ya no es la de alguna fila (C-06).
+  - Un lote que no sube ningún paso no se guarda (409; check cardinality > 0, C-19).
+  - Las marcas del lote quedan en cada fila, nunca en su evento: no se copian a otra fila.
+  - Confirma en lote quien tiene anh:confirmar. [trigger confirmacion_lote_reglas: INSERT]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger confirmacion_lote_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger confirmacion_lote_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `usuario` por (por_id) N:1; `rol` por (rol_id) N:1.
+- **La apuntan:** `clasificacion_paso`.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `clasificacion_paso`
+
+Lo que dijo una persona de un paso de la clasificación ANH de una parada (DatoClasificado de src/entities/anh-clasificacion.ts), en una fila (clave = ParadaAnh.id, ${evento}@${día}#${n}) o en un evento (clave = EventoPozo.id: vale para todos sus tramos salvo el de exceso). POST /api/anh/paradas/:id/clasificacion, …/yacimiento, …/respuesta (el paso que la respuesta determina) y POST /api/anh/paradas/confirmar; lo aplica GET /api/vistas/anh/paradas. D1: cada escritura inserta SOLO los pasos que dijo esa persona en esa petición; solo inserción (una corrección es una fila nueva y la anterior queda al lado). En cada fila rige, paso por paso, lo más reciente entre su clave y la de su evento (v_clasificacion_fuente). Coherencia planeada/causa y causa/detalle de lo que rige, revisada al confirmar (trigger diferido).
+
+- **Tipo TS:** DatoClasificado (src/entities/anh-clasificacion.ts) de lo que dijo una persona.
+- **Quién escribe:** Persona activa con anh:clasificar (y anh:confirmar en lote, anh:yacimiento para «En el yacimiento»), con su rol y su campo, solo en los pasos que su rol dice o avala (paso_por_rol).
+- **Quién lee:** `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/yacimiento`, `POST /api/anh/paradas/:id/respuesta (el paso que determina)`, `POST /api/anh/paradas/confirmar`, `GET /api/vistas/anh/paradas (aplicado)`, `GET /api/vistas/anh/calidad`.
+- **Clave:** (id).
+- **Columnas (22):** `id`*, `clave`*, `alcance`*, `evento_id`*, `campo_id`*, `paso`*, `valor`*, `procedencia`*, `regla`, `porque`, `por_id`*, `por`*, `rol_id`*, `hora`*, `recibido`*, `lote_id`, `propuesto`, `version_catalogo`*, `exceso`*, `n1_codigo`, `n2_codigo`, `cau_gral_id` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - D1: cada escritura inserta SOLO los pasos que dijo esa persona en esa petición, en una fila o en un evento («para la cascada»: una por evento de las filas que se vieron).
+  - Solo inserción; en cada fila rige, paso por paso, lo más reciente entre su clave y la de su evento (v_clasificacion_fuente). El exceso del programa solo usa lo suyo.
+  - Lo que propone TRIM no se guarda: se vuelve a proponer con la regla de hoy al leer la fila.
+  - retirado: lo que un cambio dejó incoherente de lo que dijo una persona, con quién y motivo; no rige (vuelve lo de TRIM).
+  - Coherencia bloqueada al confirmar sobre lo que RIGE en cada fila y en el evento: planeada solo con P_…, no planeada solo con NP_…, el detalle es de su causa.
+  - Cambiar lo que ya dijo una persona pide motivo (422 en la fila; 409 si es de otra persona en otra fila o evento); el operador no dice ni confirma dónde se trabó (403).
+  - N1, N2 y la causa general, del catálogo (FK); la clave de una fila con la forma ${evento}@AAAA-MM-DD#n.
+  - «En el yacimiento» solo de producción o confiabilidad y con evidencia; nunca se copia a otro pozo.
+  - Al confirmar: lo vigente de la parada es coherente (planeada con P_…, no planeada con NP_…, el detalle de su causa). [trigger clasificacion_coherente: INSERT, diferido]
+  - El evento es del campo; el rol tiene anh:clasificar (anh:confirmar en lote, anh:yacimiento para «En el yacimiento»); la fila está en su lote. [trigger clasificacion_paso_reglas: INSERT]
+  - clasificacion_paso_respaldada [trigger clasificacion_paso_respaldada: INSERT, diferido]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger clasificacion_paso_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger clasificacion_paso_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `campo` por (campo_id) N:1; `causa_general` por (cau_gral_id) N:1; `evento_pozo` por (evento_id) N:1; `confirmacion_lote` por (lote_id) N:1; `causa_n1` por (n1_codigo) N:1; `usuario` por (por_id) N:1; `rol` por (rol_id) N:1; `causa_n2` por (version_catalogo, n2_codigo) N:1.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `respuesta_campo`
+
+La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clasificacion.ts): lo que una persona contestó a una pregunta abierta («¿Qué lo paró?», «¿De dónde vino el corte?»…). POST /api/anh/paradas/:id/respuesta corre responder(): la respuesta no corrige ni confirma (D1); solo el paso que determina va a clasificacion_paso como declarado por esa persona; aquí queda la respuesta, para seguir la conversación al leer la fila. «No sé» no fija nada: la pregunta sigue abierta y escala a quien revisa. Quién contesta cada pregunta (contesta_pregunta) y sus opciones (opcion_campo) los revisa el trigger. Solo inserción, en el orden de id.
+
+- **Tipo TS:** RespuestaCampo (src/entities/anh-clasificacion.ts; BorradorClasificacion.respuestas).
+- **Quién escribe:** Persona activa con anh:clasificar, con su rol y su campo, si su rol contesta esa pregunta (contesta_pregunta).
+- **Quién lee:** `POST /api/anh/paradas/:id/respuesta`, `GET /api/vistas/anh/paradas (la conversación se sigue al leer la fila)`.
+- **Clave:** (id).
+- **Columnas (16):** `id`*, `clave`*, `alcance`*, `evento_id`*, `campo_id`*, `pregunta`*, `opcion`*, `sigue`, `acota`, `perdida`, `no_se`*, `por_id`*, `por`*, `rol_id`*, `hora`*, `recibido`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción, en el orden de id: es la conversación.
+  - La respuesta no corrige ni confirma (D1): solo el paso que determina va a clasificacion_paso como declarado por esa persona; lo que ya dijo una persona no se toca.
+  - La pregunta y su opción, del catálogo (FK a pregunta_campo y opcion_campo); acota solo pasos.
+  - Una pregunta que otra persona ya contestó es 409; una que no es de la parada, 422; una opción que no es de la pregunta, 422; al operador nunca se le pregunta dónde se trabó (403).
+  - «No sé» no fija nada: la pregunta sigue abierta y escala; repetirlo no se guarda dos veces.
+  - El evento es del campo y el rol tiene anh:clasificar. [trigger respuesta_campo_reglas: INSERT]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_campo_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_campo_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `campo` por (campo_id) N:1; `evento_pozo` por (evento_id) N:1; `usuario` por (por_id) N:1; `pregunta_campo` por (pregunta) N:1; `opcion_campo` por (pregunta, opcion) N:1; `rol` por (rol_id) N:1; `pregunta_campo` por (sigue) N:1.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `revision_parada`
+
+«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.
+
+- **Tipo TS:** RevisionAnh (src/entities/anh-clasificacion.ts; ParadaAnh.revision).
+- **Quién escribe:** Persona con anh:clasificar («Algo está mal»; «Pedir a producción» desde quien revisa).
+- **Quién lee:** `POST /api/anh/paradas/:id/revision`, `GET /api/vistas/anh/paradas`.
+- **Clave:** (id).
+- **Columnas (12):** `id`*, `clave`*, `alcance`*, `evento_id`*, `campo_id`*, `motivo`*, `pedir_a`, `por_id`*, `por`*, `rol_id`*, `hora`*, `recibido`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción; rige la última por clave.
+  - No toca ningún paso (D1): pasa la parada a quien corrige, que la ve en REVISAR.
+  - Motivo de 5 caracteres o más; pedir_a es un rol que revisa y nunca el propio (422).
+  - El evento es del campo y el rol tiene anh:clasificar. [trigger revision_parada_reglas: INSERT]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger revision_parada_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger revision_parada_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `campo` por (campo_id) N:1; `evento_pozo` por (evento_id) N:1; `rol` por (pedir_a) N:1; `usuario` por (por_id) N:1; `rol` por (rol_id) N:1.
+- **La apuntan:** `revision_atendida`.
+- **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
+
+#### `revision_atendida`
+
+Quién atendió una revisión y cuándo (RevisionAnh.atendida): la primera escritura de la parada (clasificación, yacimiento, respuesta o confirmación) de un rol al que le toca. Una por revisión. Solo inserción.
+
+- **Tipo TS:** RevisionAnh.atendida (src/entities/anh-clasificacion.ts).
+- **Quién escribe:** Servidor, con la primera escritura de la parada de un rol al que le toca (conRevisionAtendida).
+- **Quién lee:** `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/yacimiento`, `POST /api/anh/paradas/:id/respuesta`, `POST /api/anh/paradas/confirmar`.
+- **Clave:** (revision_id).
+- **Columnas (6):** `revision_id`*, `por_id`*, `por`*, `rol_id`*, `hora`*, `recibido`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Reglas:**
+  - Solo inserción; una por revisión.
+  - La atiende el rol al que se le pidió o, sin pedir_a, uno que revisa. [trigger revision_atendida_reglas: INSERT]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger revision_atendida_sin_truncate: TRUNCATE]
+  - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger revision_atendida_solo_insercion: UPDATE DELETE]
+- **Apunta a:** `usuario` por (por_id) N:1; `revision_parada` por (revision_id) 1:1; `rol` por (rol_id) N:1.
 - **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
 
 #### `folio_contador`
@@ -1838,6 +2228,31 @@ GET /api/analisis → vigentes: la última versión de cada evento. Las demás s
 - **Tipo TS:** Analisis (vigentes).
 - **Quién escribe:** (vista)
 - **Quién lee:** `GET /api/analisis → vigentes`.
+
+#### `v_clasificacion_vigente`
+
+Lo último que se dijo de cada paso, por clave (fila o evento), también un «retirado». Lo que rige en cada fila, paso por paso, lo dice v_clasificacion_fuente. Lo anterior es la historia («antes: …», U1 §2.7).
+
+- **Columnas:** `id`, `clave`, `alcance`, `evento_id`, `campo_id`, `paso`, `valor`, `procedencia`, `regla`, `porque`, `por_id`, `por`, `rol_id`, `hora`, `recibido`, `lote_id`, `propuesto`, `version_catalogo`, `exceso`, `n1_codigo`, `n2_codigo`, `cau_gral_id`.
+- **Tipo TS:** OpcionesParadas.guardadas (src/entities/anh-paradas.ts).
+- **Quién escribe:** (vista)
+- **Quién lee:** `GET /api/vistas/anh/paradas (lo que se pone encima de lo que propone TRIM)`.
+- **Reglas:**
+  - Lo último que se dijo de cada paso, por clave (fila o evento), también un «retirado». Lo que rige en cada fila, paso por paso: v_clasificacion_fuente.
+
+#### `v_clasificacion_fuente`
+
+Lo que RIGE de lo que dijeron las personas, PASO POR PASO (D1; rigeEnFila de anh-clasificacion.ts y paradasAnh de anh-paradas.ts): en cada fila con algo guardado, lo más reciente (por id) entre su clave y la de su evento; el tramo de exceso del programa, solo lo suyo; y en cada evento (clave = evento_id), lo suyo: lo que heredan sus filas sin nada propio. rige dice dónde está lo que rige (fila o evento). Un paso cuyo último dicho es «retirado» no sale: rige lo que propone TRIM. Un paso que no sale aquí lo propone TRIM al leer la fila.
+
+- **Columnas:** `clave`, `evento_id`, `exceso`, `paso`, `rige`, `id`, `valor`, `procedencia`, `regla`, `porque`, `por_id`, `por`, `rol_id`, `hora`, `lote_id`, `propuesto`, `version_catalogo`.
+- **Tipo TS:** rigeEnFila (src/entities/anh-clasificacion.ts) y OpcionesParadas.guardadas (src/entities/anh-paradas.ts).
+- **Quién escribe:** (vista)
+- **Quién lee:** `GET /api/vistas/anh/paradas (qué rige en cada fila)`.
+- **Reglas:**
+  - Paso por paso, rige lo más reciente entre la fila y su evento (D1).
+  - El tramo de exceso del programa rige con lo suyo y no hereda de su evento.
+  - Un paso cuyo último dicho es «retirado» no sale: rige lo que propone TRIM.
+  - El evento sale con lo suyo: es lo que heredan sus filas sin nada propio.
 
 #### `v_asignacion_oficial`
 
@@ -2098,7 +2513,7 @@ Factor de asignación de un campo en un mes cerrado: FA = R/T con solo los días
   - No se actualiza en sitio: el mes se recalcula entero y se anota en recalculo_mes.
   - No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes. [trigger factor_asignacion_mes_sin_update: UPDATE]
 - **Apunta a:** `mes_fiscal` por (campo_id, mes) 1:1; `version_config` por (version_config) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","real":338662,"teorico":349521.51805555564,"dias_con_dato":30,"dias_sin_dato":0,"fa":0.9689303304815998,"banda":0.14999999999999997,"banda_verificable":true,"dentro":true,"version_config":1,"calculado":"2026-10-09T19:07:0…`
+- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","real":338662,"teorico":349521.51805555564,"dias_con_dato":30,"dias_sin_dato":0,"fa":0.9689303304815998,"banda":0.14999999999999997,"banda_verificable":true,"dentro":true,"version_config":1,"calculado":"2026-10-23T04:20:0…`
 
 #### `libro_mes`
 
@@ -2144,7 +2559,7 @@ Lo que TRIM asigna a cada pozo en un mes cerrado (AsignacionPozo de src/entities
   - Σ asignado = real del campo en el mes.
   - No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes. [trigger asignacion_pozo_mes_sin_update: UPDATE]
 - **Apunta a:** `mes_fiscal` por (campo_id, mes) N:1; `pozo` por (campo_id, pozo) N:1.
-- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","pozo":"LC-11","horas":635.35,"potencial":31765.411954508756,"diferido":3677.2278693078233,"asignado":28088.184085200945,"calculado":"2026-10-09T19:07:03.506705+00:00"}`
+- **Fila real del demo:** `{"campo_id":"ceiba","mes":"2026-09-01","pozo":"LC-11","horas":635.35,"potencial":31765.411954508756,"diferido":3677.2278693078233,"asignado":28088.184085200945,"calculado":"2026-10-23T04:20:01.147345+00:00"}`
 
 #### `recalculo_mes`
 
@@ -2160,7 +2575,7 @@ Bitácora del precálculo: cada vez que se (re)calcula un mes de un campo, por q
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger recalculo_mes_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger recalculo_mes_solo_insercion: UPDATE DELETE]
 - **Apunta a:** `campo` por (campo_id) N:1.
-- **Fila real del demo:** `{"id":1,"campo_id":"ceiba","mes":"2025-10-01","cuando":"2026-10-09T19:07:03.506705+00:00","motivo":"Primer cálculo: carga del ejemplo desde el motor del demo","huella_antes":null,"huella_despues":"5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f10…`
+- **Fila real del demo:** `{"id":1,"campo_id":"ceiba","mes":"2025-10-01","cuando":"2026-10-23T04:20:01.147345+00:00","motivo":"Primer cálculo: carga del ejemplo desde el motor del demo","huella_antes":null,"huella_despues":"5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f10…`
 
 
 ## 3.12 Cómo se rehace el libro de un mes viejo
@@ -2234,9 +2649,10 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 
 `validacion.log` es la corrida completa en un PostgreSQL 16.14 temporal (puerto 5440, creado y borrado por `herramientas/validar.sh`):
 
-- 89 tablas (sin contar 45 particiones de lectura), 9 vistas, 22 funciones, 75 triggers, 177 índices, 532 restricciones (89 PK, 144 FK, 27 únicas, 269 check).
-- ejemplos.sql: 9992 filas en 72 tablas; series sin tag registrado: 0 (todas cargadas en una transacción: los triggers diferidos —configuración coherente, gerente activo, campos de cada persona— corrieron al confirmar).
-- **Restricciones:** 78 rechazos y 12 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
+- 105 tablas (sin contar 45 particiones de lectura), 11 vistas, 34 funciones, 103 triggers, 200 índices, 657 restricciones (105 PK, 180 FK, 30 únicas, 337 check).
+- ejemplos.sql: 10566 filas en 79 tablas; series sin tag registrado: 0 (todas cargadas en una transacción: los triggers diferidos —configuración coherente, gerente activo, campos de cada persona— corrieron al confirmar).
+- **Restricciones:** 149 rechazos y 26 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
+- **Las del modelo choke y la clasificación ANH** (capítulo 5E), entre ellas: un tramo que no sale del alcance → `23514` en `topologia_check`; un dedicado que sirve a dos pozos y un pozo que no es del campo → `23514` (`validarTopologia` en el trigger); el mismo elemento dos veces → `23505`; «Todavía no sé» de un equipo que está en la topología del mismo campo → `23514`; una versión con topología o capacidades en el JSON firmado y sin sus filas → `23514`; una capacidad en cero, sin fuente reconocida o el gas sin decir si se mide → `23514`; planeada con una causa no planeada y un detalle que no es de su causa, también en lo que rige en una fila con lo dicho en su evento (trigger diferido) → `23514`; «En el yacimiento» puesto por el supervisor o sin evidencia → `23514`; lo que propone TRIM no se guarda (procedencia `regla`) → `23514`; «No sé» que abre otra pregunta, una revisión sin motivo o pedida al propio rol → `23514`.
 - **Cuadres** (`cuadres.sql`, todos bien):
   - Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
   - potencial − real = Σ diferidos en los 60 meses: diferencia máxima 0.000000000 bbl
@@ -2249,7 +2665,7 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
   - v_procedencia(ceiba, PDT-1011) = (PDT-1011,calculado,"el tag del que se deriva","Sistema de aire de instrumentos",compresor-aire,f1-compresor-aire,2,15,EPIC-CEIBA-01)
   - v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3.9,3.9,,"API 610, Tabla 8: 3,0 mm/s RMS en la región preferida y 3,9 en la permitida (hasta 3.600 rpm y 300 kW por etapa)","Base maestra de alarmas (ISA-18.2): la firma ingeniería de confiabilidad del cliente")
   - v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
-- **tablas.json:** comparadas 89 tablas y 9 vistas, 796 columnas, 144 relaciones; columnas de tabla sin comentario: 0; tablas.json COINCIDE 1:1 con esquema.sql.
+- **tablas.json:** comparadas 105 tablas y 11 vistas, 942 columnas, 180 relaciones (403 filas de ejemplo en 85 tablas y vistas); columnas de tabla sin comentario: 0; tablas.json COINCIDE 1:1 con esquema.sql.
 - **TimescaleDB:** TimescaleDB NO está instalado en este PostgreSQL (pg_available_extensions no la trae): no se instaló. `timescale.sql` quedó revisado a mano y sin ejecutar.
 - **Transporte:** el cluster temporal escucha por TCP en `127.0.0.1:5440`, sin socket Unix (la ruta del socket en una carpeta temporal puede pasar el máximo de 103 caracteres de macOS); al final, o en cuanto un paso falla, se detiene y su carpeta se borra.
 
@@ -2283,7 +2699,7 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 **Lo que no se pudo probar aquí.**
 
 17. **TimescaleDB no estaba instalado** en la máquina de la validación: `timescale.sql` está revisado a mano, no ejecutado. Usa `by_range` (TimescaleDB 2.13 o más nuevo) y agregados continuos con `time_bucket` en hora de Colombia.
-18. **Tablas sin filas en el demo:** inscripción, rechazos, historial de tags, mapeo a SAP, identidad OIDC, cambios de acceso, confirmaciones de SAP, mensajes entrantes, análisis, informes, estados de mensajes, cargas de asignación y cambios de planta. Se llenan con el uso; `pruebas.sql` escribe en casi todas (y deshace) para probar sus reglas.
+18. **Tablas sin filas en el demo:** inscripción, rechazos, historial de tags, mapeo a SAP, identidad OIDC, cambios de acceso, confirmaciones de SAP, mensajes entrantes, análisis, informes, estados de mensajes, cargas de asignación y cambios de planta; y, del modelo choke y la ANH, la topología firmada, «Todavía no sé», las capacidades firmadas, los lotes, lo dicho paso por paso, las respuestas de campo y las revisiones (nadie firmó ni clasificó nada en el demo: 5E.9). Se llenan con el uso; `pruebas.sql` escribe en casi todas (y deshace) para probar sus reglas.
 
 **Agregado en la verificación V4 (cotejo del modelo contra el contrato).**
 

@@ -1,7 +1,8 @@
 /* Capturas anotadas del capítulo 6A (el libro y la gerencia).
  * Se generan desde la raíz del repositorio con:
  *   npm run pantallazos:doc -- --capturas docs/backend/capturas/06a-libro-gerencia.mjs --puerto 5331 [--solo ger-resumen]
- * Cada marca remite a la fila del mismo número en la tabla de su pantalla. */
+ * Cada marca remite a la fila del mismo número en la tabla de su pantalla. Una marca por texto cae en el primer
+ * elemento visible que lo contenga: si el texto se repite en la pantalla (el choke trajo varios), lleva `i` o `dentro`. */
 
 /** Un globo (Tip / ⓘ) se abre con el ratón encima: el generador lo «toca» (clic = mover el ratón ahí). */
 const globo = sel => ({ sel })
@@ -33,7 +34,7 @@ const RESUMEN = [
     { n: 17, texto: 'máx. 71.300' },
     { n: 18, texto: '2.650 bbl/d' },
     { n: 19, texto: '4 de 87 pozos parados' },
-    { n: 20, texto: 'P-201B · La Ceiba', exacto: true },
+    { n: 20, texto: 'P-201B · La Ceiba', exacto: true, lado: 'der' },
     { n: 21, texto: '6 equipos', exacto: true },
     { n: 22, texto: 'primero MN-07 en 4 h', exacto: true },
     { n: 41, texto: '+ 1 servicio y 1 bomba multifásica en alarma' },
@@ -53,7 +54,12 @@ const RESUMEN = [
     { n: 35, texto: '661', exacto: true },
     { n: 36, texto: '800', exacto: true },
     { n: 37, sel: 'button[aria-expanded] > b', i: 1, caja: 'elemento' },
-    { n: 42, sel: 'button[aria-expanded="false"] svg[class*="chevron"]', i: 0, caja: 'elemento' },
+    { n: 42, sel: 'button[aria-expanded="false"] svg[class*="chevron"]', i: 0, caja: 'elemento', dentro: POR_CAMPO },
+    // Lo nuevo del choke (6D.3): una marca por bloque; aquí solo se dice qué es.
+    { n: 54, texto: 'Por dónde se trabó · lo no planeado por día' },
+    { n: 55, rol: 'button', nombre: 'Por dónde se trabó', exacto: true, lado: 'der' },
+    { n: 56, texto: 'Se trabó sobre todo en la planta: P-201B (bomba de reinyección). 355 bbl todavía sin identificar.' },
+    { n: 58, texto: 'PÉRDIDA', exacto: true },
   ] },
   { archivo: 'ger-resumen-ceiba', ruta: '#/ger/resumen/ceiba/curso', marcas: [
     { n: 1, texto: '11.105 bbl producidos ayer' },
@@ -72,7 +78,7 @@ const RESUMEN = [
     { n: 17, texto: 'máx. 24.800' },
     { n: 18, texto: '1.966 bbl/d' },
     { n: 19, texto: '3 de 18 pozos parados' },
-    { n: 20, texto: 'P-201B', exacto: true, i: 0 },
+    { n: 20, texto: 'P-201B', exacto: true, i: 0, lado: 'der' },
     { n: 21, texto: 'ninguno', exacto: true },
     { n: 22, texto: 'ninguna otra bomba ni electrosumergible avisa' },
     { n: 41, texto: '+ 1 servicio en alarma' },
@@ -84,6 +90,10 @@ const RESUMEN = [
     { n: 32, texto: 'sin identificar', exacto: true },
     { n: 38, texto: 'bbl · 24 %' },
     { n: 30, texto: '118', exacto: true },
+    { n: 54, texto: 'Por dónde se trabó · lo no planeado por día' },
+    { n: 55, rol: 'button', nombre: 'Por dónde se trabó', exacto: true, lado: 'der' },
+    { n: 57, texto: 'DÓNDE SE TRABÓ', exacto: true },
+    { n: 58, texto: 'PÉRDIDA', exacto: true },
   ] },
   { archivo: 'ger-resumen-morichal-trimestre', ruta: '#/ger/resumen/morichal/trimestre', marcas: [
     { n: 2, texto: '✓ PUBLICABLE' },
@@ -99,7 +109,7 @@ const RESUMEN = [
     { n: 17, texto: 'máx. 87.400' },
     { n: 18, texto: '684 bbl/d' },
     { n: 19, texto: '1 de 41 pozos parados' },
-    { n: 20, texto: 'MN-41', exacto: true, i: 0 },
+    { n: 20, texto: 'MN-41', exacto: true, i: 0, lado: 'der' },
     { n: 21, texto: '4 equipos', exacto: true },
     { n: 22, texto: 'primero MN-07 en 4 h', exacto: true },
     { n: 41, texto: '+ 1 bomba multifásica en alarma' },
@@ -113,6 +123,8 @@ const RESUMEN = [
     { n: 30, texto: '16.005', exacto: false },
     { n: 31, texto: 'bbl · 23 %' },
     { n: 32, texto: 'aislamiento del motor y del cable', i: 0 },
+    { n: 54, texto: 'Por dónde se trabó · lo no planeado por día' },
+    { n: 57, texto: 'DÓNDE SE TRABÓ', exacto: true },
   ] },
   // Globos: el texto literal del ⓘ del cierre proyectado y el del rango (nivel decisión).
   { archivo: 'ger-resumen-ceiba-globo-cierre', ruta: '#/ger/resumen/ceiba/curso',
@@ -136,6 +148,8 @@ const RESUMEN = [
     { n: 49, texto: 'bbl · < 1 %' },
     { n: 43, sel: `${EQUIPOS('Morichal Norte')} li:nth-child(3) svg`, caja: 'elemento' },
     { n: 51, rol: 'button', nombre: 'Ir a La Ceiba' },
+    { n: 56, texto: 'Se trabó sobre todo en la planta: P-201B (bomba de reinyección). 355 bbl todavía sin identificar.' },
+    { n: 59, rol: 'button', nombre: 'Ver más de La Ceiba' },
   ] },
   // 12 meses: «sin base de comparación» y Guacamayo abierto entero, con P-201B que falló sin costar crudo.
   { archivo: 'ger-resumen-portafolio-doce', ruta: '#/ger/resumen/ceiba~portafolio/doce',
@@ -159,6 +173,7 @@ const RESUMEN = [
     { n: 25, texto: '0 → 0 bbl/d · —' },
     { n: 26, texto: 'sin dato', exacto: true },
     { n: 27, texto: 'sin órdenes en SAP desde 1 de sept' },
+    { n: 54, texto: 'Por dónde se trabó · lo no planeado por día' },
   ] },
 ]
 
@@ -193,10 +208,14 @@ const DIFERIDOS = [
     { n: 20, texto: 'bomba de reinyección', exacto: true, i: 0, lado: 'abajo' },
     { n: 21, texto: '2 pozos', exacto: true, lado: 'der' },
     { n: 22, texto: '573', exacto: true, i: 0, lado: 'der' },
-    { n: 23, texto: 'sin identificar', exacto: true, i: 0 },
+    // i: 1 — el primero es la leyenda de los tramos del panel «DÓNDE SE TRABÓ» (nuevo), no el chip del Pareto.
+    { n: 23, texto: 'sin identificar', exacto: true, i: 1, lado: 'der' },
     { n: 24, texto: 'Bomba de reinyección', exacto: true },
     { n: 25, texto: '573 bbl · 55 %' },
     { n: 26, texto: 'Sin identificar', exacto: true },
+    // Lo nuevo del choke (6D.4): el mes a mes por tramo y el panel «DÓNDE SE TRABÓ».
+    { n: 65, rol: 'button', nombre: 'Por dónde se trabó', exacto: true, lado: 'der' },
+    { n: 66, texto: 'DÓNDE SE TRABÓ', exacto: true },
   ] },
   { archivo: 'ger-diferidos-ceiba-cerrado', ruta: '#/ger/diferidos/ceiba/cerrado', marcas: [
     { n: 1, texto: '7.716', exacto: true },
@@ -214,6 +233,7 @@ const DIFERIDOS = [
     { n: 14, texto: 'Con parte vigilada' },
     { n: 17, texto: 'Evitable cerrando en orden' },
     { n: 22, texto: '3.677', exacto: true, lado: 'der' },
+    { n: 66, texto: 'DÓNDE SE TRABÓ', exacto: true },
   ] },
   { archivo: 'ger-diferidos-portafolio-doce', ruta: '#/ger/diferidos/ceiba~portafolio/doce', marcas: [
     { n: 1, texto: '483.307', exacto: true },
@@ -234,6 +254,7 @@ const DIFERIDOS = [
     { n: 31, sel: '[role=img][aria-label="Prioridad 3 · aviso"]', i: 2, caja: 'elemento' },
     { n: 28, rol: 'button', nombre: 'ver 92 más' },
     { n: 32, rol: 'button', nombre: 'ver 7 más' },
+    { n: 66, texto: 'DÓNDE SE TRABÓ', exacto: true },
   ] },
   // Ingeniería: encabezado completo, mes a mes apilado, cuadre, factor, palancas, tipos, equipos y partes.
   { archivo: 'prod-diferidos-ceiba', ruta: '#/prod/diferidos/ceiba/curso', marcas: [
@@ -258,6 +279,8 @@ const DIFERIDOS = [
     { n: 50, texto: '78 %', exacto: true },
     { n: 51, texto: 'Ninguna falla con la parte identificada.' },
     { n: 52, texto: '+ 573 bbl sin la parte identificada' },
+    { n: 65, rol: 'button', nombre: 'Por dónde se trabó', exacto: true, lado: 'der' },
+    { n: 67, texto: 'POR DÓNDE SE TRABÓ', exacto: true },
   ] },
   { archivo: 'jefe-diferidos-portafolio', ruta: '#/jefe/diferidos/ceiba~portafolio/curso', marcas: [
     { n: 53, texto: 'máx. 1.267 bbl', lado: 'der' },
@@ -277,6 +300,7 @@ const DIFERIDOS = [
     { n: 13, texto: 'Equipos de alto impacto' },
     { n: 24, texto: 'Electrosumergible', exacto: true },
     { n: 19, sel: '[role=img][aria-label="Prioridad 1 · alarma"]', i: 1, caja: 'elemento' },
+    { n: 67, texto: 'POR DÓNDE SE TRABÓ', exacto: true },
   ] },
   { archivo: 'conf-diferidos-morichal', ruta: '#/conf/diferidos/morichal/curso', marcas: [
     { n: 1, texto: '1.253', exacto: true, i: 0 },
@@ -311,7 +335,7 @@ const PRODUCCION = [
     { n: 2, texto: '16.941', i: 0 },
     { n: 3, sel: '[data-barra]', i: 0, caja: 'elemento' },
     { n: 4, texto: 'meta a la fecha 17.258' },
-    { n: 5, texto: '10.700 bbl/d · eficiencia 94,2 %' },
+    { n: 5, texto: '10.700 bbl/d · 94,2 % del potencial' },
     { n: 6, texto: '17.987', i: 0 },
     { n: 7, texto: '11.360 bbl/d' },
     { n: 8, texto: 'real · 1 de oct' },
@@ -325,17 +349,18 @@ const PRODUCCION = [
     { n: 10, sel: DIARIA, caja: 'elemento' },
     { n: 11, texto: '12,0 k', exacto: true },
     { n: 12, texto: '2 de oct · en curso', lado: 'arriba' },
-    { n: 13, sel: '[data-dia="1"] circle', caja: 'elemento', lado: 'izq' },
-    { n: 14, texto: 'meta firmada', exacto: true },
+    { n: 13, sel: `${DIARIA} [data-dia="1"] circle`, caja: 'elemento', lado: 'izq' },
+    { n: 14, texto: 'meta firmada', exacto: true, lado: 'arriba' },
     { n: 15, texto: 'corte de agua: analizador' },
     { n: 16, texto: 'factor 0,958 · banda ±15 %' },
-    { n: 17, texto: 'FQI-0101 · computador de flujo de la unidad LACT-01' },
+    // i: 1 — el primero es la frase de «LA TUBERÍA DEL CAMPO» («Punto de medición oficial (FQI-0101 …)»); la fila 17 es la de MEDICIÓN OFICIAL.
+    { n: 17, texto: 'FQI-0101 · computador de flujo de la unidad LACT-01', i: 1 },
     { n: 18, sel: FACTOR_VISTO, caja: 'elemento', lado: 'arriba' },
     { n: 19, texto: 'CUADRE DIARIO', exacto: true },
     { n: 20, texto: '2 de oct · 14,0 h' },
     { n: 21, texto: '5.836', i: 0 },
     { n: 22, texto: '6.627', exacto: true },
-    { n: 23, texto: '792', exacto: true },
+    { n: 23, sel: 'td:text-is("792")' },
     { n: 24, texto: '-1', exacto: true },
     { n: 25, texto: '88,1 %', exacto: true },
     { n: 26, texto: '6.358', exacto: true },
@@ -346,12 +371,18 @@ const PRODUCCION = [
     { n: 31, texto: 'Subir un CSV', lado: 'der' },
     { n: 32, texto: 'Motivo de la carga · obligatorio' },
     { n: 64, texto: '254', exacto: true },
+    // Lo nuevo del choke (6D.1): una marca por bloque; aquí solo se dice qué es.
+    { n: 66, texto: 'LA TUBERÍA DEL CAMPO', exacto: true },
+    { n: 67, texto: 'SE TRABÓ EN EL PERÍODO', exacto: true },
+    { n: 68, texto: 'QUÉ LIMITÓ, DÍA POR DÍA', exacto: true },
+    { n: 69, texto: 'LO QUE NO SE PRODUJO, POR TIPO', exacto: true },
+    { n: 70, texto: 'LO PERDIDO POR TRAMO, MES A MES', exacto: true },
   ] },
   { archivo: 'prod-produccion-ceiba-cerrado', ruta: '#/prod/produccion/ceiba/cerrado', marcas: [
     { n: 1, texto: '✓ PUBLICABLE' },
     { n: 2, texto: '338.662', i: 0 },
     { n: 4, texto: 'meta 327.000' },
-    { n: 5, texto: '11.289 bbl/d · eficiencia 97,8 %' },
+    { n: 5, texto: '11.289 bbl/d · 97,8 % del potencial' },
     { n: 6, texto: '346.378', i: 0 },
     { n: 7, texto: '11.546 bbl/d' },
     { n: 16, texto: 'factor 0,969 · banda ±15 %' },
@@ -365,13 +396,14 @@ const PRODUCCION = [
     { n: 36, texto: 'El Palmar · factor fuera de banda' },
     { n: 2, texto: '1.180.973', i: 0 },
     { n: 4, texto: 'meta 1.186.250' },
-    { n: 5, texto: '3.236 bbl/d · eficiencia 98,5 %' },
+    { n: 5, texto: '3.236 bbl/d · 98,5 % del potencial' },
     { n: 6, texto: '1.198.980', i: 0 },
     { n: 9, texto: '3.186', i: 1 },
-    { n: 37, texto: '01 de oct de 2025' },
+    // Sin cero delante (B-25). Dentro de DIARIA: «QUÉ LIMITÓ, DÍA POR DÍA» tiene ejes con fechas parecidas.
+    { n: 37, sel: `${DIARIA} text:text-is("1 de oct de 2025")`, caja: 'elemento' },
     { n: 15, texto: 'corte de agua: laboratorio' },
     { n: 16, texto: 'factor 1,008 · banda ±15 %' },
-    { n: 17, texto: 'LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho' },
+    { n: 17, texto: 'LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho', i: 1 },
     { n: 38, sel: `${FACTOR} rect[fill="var(--p3)"]`, caja: 'elemento' },
     { n: 19, texto: 'CUADRE MENSUAL', exacto: true },
     { n: 39, texto: '81.033', i: 0 },
@@ -383,7 +415,7 @@ const PRODUCCION = [
     { n: 1, texto: 'NO PUBLICABLE', exacto: true },
     { n: 2, texto: '4.069.813', i: 0 },
     { n: 4, texto: 'meta 3.885.354' },
-    { n: 5, texto: '14.822 bbl/d · eficiencia 96,9 %' },
+    { n: 5, texto: '14.822 bbl/d · 96,9 % del potencial' },
     { n: 9, texto: '14.291', i: 1 },
     { n: 15, texto: 'corte de agua: laboratorio' },
     { n: 41, texto: 'CUADRE · MEDICIÓN OFICIAL' },
@@ -398,7 +430,10 @@ const PRODUCCION = [
     { n: 65, texto: 'Prueba estimada:' },
     { n: 11, texto: '18,0 k', exacto: true },
   ] },
-  { archivo: 'prod-produccion-ceiba-globo-dia', ruta: '#/prod/produccion/ceiba/curso', antes: [{ sel: '[data-dia="1"] rect' }],
+  // El gráfico «Día a día» quedó más abajo (después de la tubería y de «Qué limitó, día por día», que usa el mismo
+  // `data-dia`): se toca el de DIARIA y la captura es lo que cabe en pantalla (`completa: false`), porque al agrandar
+  // la ventana el globo se cierra.
+  { archivo: 'prod-produccion-ceiba-globo-dia', ruta: '#/prod/produccion/ceiba/curso', completa: false, antes: [{ sel: `${DIARIA} [data-dia="1"] rect` }],
     marcas: [{ n: 13, sel: '[role=tooltip]', caja: 'elemento' }] },
   { archivo: 'prod-produccion-ceiba-globo-meta', ruta: '#/prod/produccion/ceiba/curso', antes: [{ sel: 'text=meta a la fecha 17.258' }],
     marcas: [{ n: 4, sel: '[role=tooltip]', caja: 'elemento' }] },
@@ -409,7 +444,7 @@ const PERFIL = [
     { n: 1, texto: 'Hermes Leal', exacto: true, dentro: 'main' },
     { n: 2, texto: 'Administrador de la implementación', dentro: 'main' },
     { n: 3, texto: 'hermes.leal@operadora.example' },
-    { n: 4, texto: '+57 300 555 0108' },
+    { n: 4, texto: '+57 300 555 0109' },
     { n: 5, texto: 'Plataforma', exacto: true },
     { n: 6, texto: '5 de 5', exacto: true },
     { n: 7, texto: 'tu foco', exacto: true },
@@ -492,10 +527,10 @@ const CONECTORES = [
   ] },
 ]
 
-/* ── Capturas que necesitan ESCRIBIR (pegar un CSV, editar una meta, un motivo). El generador del
- * repo solo sabe tocar botones; estas se generan con una copia que agrega dos pasos:
- * { sel | rol+nombre, escribir: 'texto' } (rellena una caja) y { sel, elegir: 'valor' } (escoge en una lista).
- * Para generarlas con el del repo hay que agregarle esas dos líneas (ver 07-huecos.md). */
+/* ── Capturas que necesitan ESCRIBIR (pegar un CSV, editar una meta, un motivo). Las saca el mismo
+ * generador del repo: además de tocar botones sabe dos pasos más en `antes`:
+ * { sel | rol+nombre, escribir: 'texto' } (rellena una caja) y { sel, elegir: 'valor' } (escoge en una lista)
+ * (07-huecos.md, punto 19). */
 const CSV_OFICIAL = [
   'Mes;Campo;Pozo;Crudo asignado bbl;Horas',
   '2026-09;La Ceiba;LC-11;33706;635,35', '2026-09;La Ceiba;LC-08;27195;718,38', '2026-09;La Ceiba;LC-16;26018;709,33',
@@ -562,7 +597,7 @@ const CONFIGURACION = [
     { n: 90, texto: 'pueden dar ≈ 17.330 bbl/d' },
   ] },
   { archivo: 'ger-configuracion-accesos', ruta: '#/ger/configuracion/ceiba/curso', antes: [{ rol: 'tab', nombre: 'Usuarios y accesos' }], marcas: [
-    { n: 40, texto: '8 con acceso · 0 invitados · 0 suspendidos' },
+    { n: 40, texto: '9 con acceso · 0 invitados · 0 suspendidos' },
     { n: 41, texto: '· usted', lado: 'der' },
     { n: 42, texto: 'andres.velez@operadora.example' },
     { n: 43, texto: 'Gerente de activo · todos los campos' },
@@ -572,7 +607,8 @@ const CONFIGURACION = [
     { n: 47, rol: 'button', nombre: 'Invitar a una persona' },
     { n: 48, texto: '1 cambio', exacto: true },
     { n: 49, texto: 'Todas las personas iniciales' },
-    { n: 97, texto: 'WhatsApp +57 300 555 0104 · recibe alertas' },
+    // 97: las nueve filas; la marca va en la nueva (Iván Salas, el rol `reg`: sin alertas).
+    { n: 97, texto: 'WhatsApp +57 300 555 0108', exacto: true },
   ] },
   { archivo: 'adm-configuracion-ceiba', ruta: '#/adm/configuracion/ceiba/curso', marcas: [
     { n: 60, rol: 'tab', nombre: 'Configuración técnica' },
@@ -600,6 +636,8 @@ const CONFIGURACION = [
     { n: 93, rol: 'combobox', nombre: 'Equipo', exacto: true },
     { n: 94, texto: 'FQI-0101 · computador de flujo de la unidad LACT-01 · corte de agua: analizador' },
     { n: 95, texto: 'TK-AG-CE · LT-2012', exacto: true },
+    // La pestaña nueva del choke (6D.11).
+    { n: 98, rol: 'tab', nombre: 'Filosofía operacional' },
   ] },
   { archivo: 'adm-configuracion-morichal', ruta: '#/adm/configuracion/morichal/curso', marcas: [
     { n: 66, texto: 'TK-AG-MN · lo vacía P-201B', exacto: false },

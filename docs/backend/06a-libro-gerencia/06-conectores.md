@@ -1,6 +1,6 @@
 # 6A.6 Conectores y tags del campo — administrador de la implementación
 
-**Para qué.** «Bordes conectados y tags sin equipo resuelto.» (`PARA_QUE.conectores`, `src/widgets/Onboarding.tsx:28`).
+**Para qué.** «Bordes conectados y tags sin equipo resuelto.» (`PARA_QUE.conectores`, `src/widgets/Onboarding.tsx:30`).
 **Ruta.** `#/adm/conectores/<campo>/<período>` (el período no cambia nada) · **Roles y nivel.** Solo `adm` (ingeniería) tiene la pantalla; `conector:configurar` habilita inscribir y asociar (sin ella: «Su rol no inscribe bordes: lo hace el administrador.»). `src/pages/Conectores.tsx`, `src/widgets/conectores/Integraciones.tsx`.
 **Lee.**
 
@@ -16,7 +16,7 @@
 
 **Escribe.** `POST /api/inscripcion { campo }`; `POST /api/campos/:campo/tags/:tag/equipo { equipo, origen: "manual" \| "regla" }` (uno por tag; «Aplicar las N» manda uno por cada sugerencia).
 
-El auditor exige ver «SISTEMAS CORPORATIVOS», «trim_que_se_dano», «conectado» y «CATÁLOGOS DE DAÑO», y no «en este demo» (`e2e/auditoria/rutas.ts:79`).
+El auditor exige ver «SISTEMAS CORPORATIVOS», «trim_que_se_dano», «conectado» y «CATÁLOGOS DE DAÑO», y no «en este demo» (`e2e/auditoria/rutas.ts:111`).
 
 ---
 

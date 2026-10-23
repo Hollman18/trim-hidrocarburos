@@ -8,7 +8,7 @@ El repositorio es solo el front. Por dentro tiene tres capas, y la frontera entr
 
 | Capa | Carpeta | Qué es | En producción |
 |---|---|---|---|
-| **Motor** | `src/entities/*.ts` (32 módulos, ≈ 8.200 líneas) | TypeScript puro, sin React: el libro de diferidos, la atribución de causas, el colchón del tanque, la salud de las partes, el vigía, las reglas de escritura, la huella de los informes… | **Lo corre el servidor.** Es la especificación ejecutable de cada número. |
+| **Motor** | `src/entities/*.ts` (46 módulos, ≈ 16.100 líneas) | TypeScript puro, sin React: el libro de diferidos, la atribución de causas, el colchón del tanque, la salud de las partes, el vigía, el modelo choke y la clasificación ANH, las reglas de escritura, la huella de los informes… | **Lo corre el servidor.** Es la especificación ejecutable de cada número. |
 | **Costura** | `src/shared/api/*.ts` | El único lugar por donde la interfaz pide datos. Cada consulta es un *endpoint* tipado de `contrato.ts`; cada escritura, una función de `escrituras.ts`. | Con `VITE_FUENTE=http`, cada consulta es un `GET` y cada escritura un `POST`/`PATCH` al servidor. |
 | **Interfaz** | `src/pages`, `src/widgets`, `src/app`, `src/shared/ui` | Pantallas, paneles y componentes. Solo muestran, ordenan y filtran lo que llega. | Igual. No cambia. |
 
@@ -39,8 +39,8 @@ flowchart LR
 ## 2.2 Lo que el servidor tiene que hacer, en seis bloques
 
 1. **Ingesta y registro de la cadena de datos.** Recibe del borde los eventos de los controladores de pozo, las paradas de las bombas con su primera alarma, las caídas de servicios (energía, aire, compresión…), las series de los tags del historiador y el valor fiscal del día del computador de flujo. Registra la procedencia de cada tag (de qué instrumento sale, por qué gateway, con qué banda normal). Capítulo 4.
-2. **El motor.** Con esos insumos y la configuración firmada calcula las vistas: el libro de diferidos por mes y período, la producción día a día, la predicción de cada bomba, el riesgo, la salud de cada parte, el registro de aciertos del vigía, la asignación por pozo y el ciclo ANTES / DURANTE / DESPUÉS (`escenarios.ts`, capítulo 11). Capítulo 5.
-3. **Las escrituras.** Lo único que entra a mano: la configuración firmada (metas, precio, tanques, respaldos, programa de paradas), los usuarios y accesos, la respuesta del operario sobre una parada, el análisis de causa raíz, el aviso a SAP, el informe con folio, la asignación oficial cargada y los cambios de planta. Cada una con sus reglas de autorización y de forma. Capítulo 5D y anexo A.
+2. **El motor.** Con esos insumos y la configuración firmada calcula las vistas: el libro de diferidos por mes y período, la producción día a día, la predicción de cada bomba, el riesgo, la salud de cada parte, el registro de aciertos del vigía, la asignación por pozo, el ciclo ANTES / DURANTE / DESPUÉS (`escenarios.ts`, capítulo 11) y, con el modelo choke, lo que limita a cada campo, el tramo de cada parada, el reparto por tramo y por escalón, el árbol de pérdidas, las tuberías del campo y del agua, «si falla hoy» y las filas ANH con su propuesta de seis pasos (capítulo 5E). Capítulo 5.
+3. **Las escrituras.** Lo único que entra a mano: la configuración firmada (metas, precio, tanques, respaldos, programa de paradas), los usuarios y accesos, la respuesta del operario sobre una parada, el análisis de causa raíz, el aviso a SAP, el informe con folio, la asignación oficial cargada, los cambios de planta, la topología y las capacidades del choke (dentro de la configuración firmada) y la clasificación ANH de cada parada, que se guarda paso por paso y solo por inserción. Cada una con sus reglas de autorización y de forma. Capítulos 5D y 5E y anexo A.
 4. **WhatsApp.** Enviar con las plantillas aprobadas lo que las reglas disparan (parada, cierre, pregunta de causa, recordatorio a los 30 min, escalamiento a las 2 h, parte que avisa, orden liberada) y recibir por el webhook firmado la respuesta del operario. Capítulo 5D.
 5. **SAP PM.** Leer órdenes, horas confirmadas y repuestos; enviar avisos M1/M2 con la evidencia. **TRIM no crea órdenes en SAP.** Capítulo 5D.
 6. **Sesión e identidad.** El token sale del servicio de identidad del cliente (OIDC/SSO); de él se resuelven la persona, su rol, sus campos y sus capacidades. Nunca de la petición. Sección 2.8.
@@ -50,8 +50,8 @@ flowchart LR
 | | **A. Correr el motor TypeScript en Node** (recomendada para el MVP) | **B. Reescribirlo en otro lenguaje** |
 |---|---|---|
 | Qué se hace | Un servicio Node importa `src/entities/*` tal cual, le instala los insumos leídos de la base (`instalarInsumos`, `src/entities/insumos.ts`) y expone los endpoints con los códecs de `contrato.ts` (`aDTO`). | Se traduce cada fórmula de este documento. |
-| Igualdad de números | Por construcción: es el mismo código. | Hay que probarla: `node scripts/referencia.mjs comparar --base-url=…` contra los 122 casos de `referencia/`. |
-| Riesgo | Bajo. El motor está cubierto por > 250 comprobaciones (`npm run verificar`). | Alto en los bordes (redondeos, zona horaria, meses parciales, eventos que se pisan). |
+| Igualdad de números | Por construcción: es el mismo código. | Hay que probarla: `node scripts/referencia.mjs comparar --base-url=…` contra los 252 casos de `referencia/` (y las 18 escrituras rechazadas con `--escrituras`). |
+| Riesgo | Bajo. El motor está cubierto por 701 comprobaciones (`npm run verificar`: 435 del libro, 128 del árbol, 138 del contrato, más 15 de la costura http). | Alto en los bordes (redondeos, zona horaria, meses parciales, eventos que se pisan). |
 | Costo | Un servicio Node 22. | Semanas por módulo. |
 
 Con cualquiera de las dos, **la prueba es la misma**: los casos de `referencia/` (capítulo 9). Este documento explica cada fórmula para que la opción B sea posible y para que cualquiera pueda auditar un número; no porque haya que reescribir el motor.
@@ -197,3 +197,23 @@ Para que quede claro qué **no** tiene que calcular el servidor:
 - **Las reglas de lo que entra a mano**, *además* del servidor: el front las corre para avisar antes de mandar; el servidor las vuelve a correr y **sus 422 mandan**.
 
 Todo lo que **decide** un número o un permiso lo calcula el servidor.
+
+## 2.11 Los módulos del modelo choke y del árbol de seis pasos
+
+Once módulos del motor (≈ 6.900 líneas de las 16.100) hacen el capítulo 5E. Leen el libro y la causa de la señal; **no cambian** ni el libro, ni la causa, ni la asignación: los parten por tramo y por día y los clasifican.
+
+| Módulo | Líneas | Qué hace | Lee de |
+|---|---:|---|---|
+| `capacidades.ts` | 416 | Las capacidades de los tramos (firmadas o del demo), los trenes de la planta y las reglas de su firma | `configuracion`, `planta` |
+| `choke.ts` | 1.507 | Los cuatro tramos, la topología y su validación, el tramo de cada parada (`chokeDeCausa`), los potenciales y lo que limita, los días de cada campo, los escalones | `capacidades`, `causa-senal`, `libro`, `planta`, `pozos` |
+| `anh-catalogo.ts` | 597 | El catálogo de la Circular 0024 (Tabla 1) y sus dos formas de salida | — |
+| `anh-clasificacion.ts` | 1.543 | La clasificación de seis pasos: procedencia, coherencia, `REGLAS_ANH@2`, preguntas de campo, quién dice y quién confirma, lo que rige en cada fila | `anh-catalogo`, `causa-senal`, `choke` |
+| `anh-paradas.ts` | 393 | Las filas de `paradas_pozo` (pozo × día operacional × causa), la conciliación con el libro, el lote | `anh-clasificacion`, `libro` |
+| `choke-reparto.ts` | 712 | El reparto por tramo y por escalón sobre las filas ANH, la PE, la tubería del campo, la serie, el mes a mes, la línea base | `anh-paradas`, `choke`, `diferido`, `libro` |
+| `choke-arbol.ts` | 340 | El árbol de pérdidas del choke (tres órdenes) y su revisión | `anh-paradas`, `choke-reparto` |
+| `choke-agua.ts` | 353 | La tubería del agua y el colchón (la misma cuenta de `diferido.ts`) | `choke`, `diferido` |
+| `criticidad.ts` | 435 | «Si falla hoy» | `choke`, `diferido`, `salud` |
+| `choke-config.ts` | 415 | Las respuestas de la filosofía operacional, la vista previa del impacto, la carga de la topología por CSV | `choke`, `choke-reparto`, `criticidad`, `anh-clasificacion` |
+| `anh-calidad.ts` | 165 | La calidad de la clasificación | `anh-paradas`, `choke` |
+
+El árbol de pérdidas va en su propio archivo porque lee las filas ANH, que a su vez leen el motor del choke: dentro de `choke.ts` sería una importación circular. Lo que se repite mucho (las filas de cada día, los días de cada campo, las capacidades de una configuración, el tramo de cada causa) se memoriza **una vez por contexto, período y versión de lo guardado** (QA-D7: ningún cálculo de más de 300 ms en el hilo principal). Un servidor que corra el motor (opción A de 2.3) hereda esa memoria; uno que lo reescriba tiene que precalcular por mes cerrado, como el libro.

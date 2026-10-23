@@ -2,7 +2,7 @@
 
 > **En una frase.** TRIM es un producto **global** para **prevenir paradas no planificadas** (y medir las que ocurren) en **electrosumergibles**, **bombas multifásicas** y **bombas de reinyección o disposición de agua**: cadena de custodia del diferido en barriles por equipo y parte, **vigía** antes de la falla, y ciclo **antes · durante · después** desde operación hasta gerencia.
 
-Este capítulo explica el problema físico, la cadena de cálculo que lo resuelve y un caso real del demo de punta a punta. Incluye el alcance **global** del producto y la línea **gemelo digital** de simulación (§1.6, distinta del pitch de TRIM), las **tres palancas** de venta (§1.7) y el encargo al backend (§1.8). Cada paso remite al capítulo donde están sus fórmulas completas.
+Este capítulo explica el problema físico, la cadena de cálculo que lo resuelve, dónde se trabó cada barril con el modelo choke y la cifra del norte (§1.3b) y un caso real del demo de punta a punta. Incluye el alcance **global** del producto y la línea **gemelo digital** de simulación (§1.6, distinta del pitch de TRIM), las **tres palancas** de venta (§1.7) y el encargo al backend (§1.8). Cada paso remite al capítulo donde están sus fórmulas completas.
 
 ## 1.1 Por qué el agua manda
 
@@ -51,6 +51,8 @@ El mismo cálculo responde preguntas distintas según quién mira. Lo que cambia
 | **Operación** (supervisor, operador) | ¿Qué está parado, cuánto aguanta el tanque, qué pozos cierro primero, puedo arrancar? | Lo que se pierde ahora (bbl/d, bbl/h, pozos cerrados), colchón en horas, orden de cierre, «no arrancar hasta identificar» | 5B |
 | **Mantenimiento y confiabilidad** | ¿Qué parte va a fallar, cuándo, y cuánto crudo arriesga? | Vigía (cruce de la alarma en horas, con rango), salud por parte, riesgo por equipo, costo por falla, historia (MTBF, horas fuera) | 5C, 5B |
 | **Aguas abajo** del equipo | ¿A quién afecta? | Los pozos que cierra cada bomba (chip «aguas abajo: todo el campo»), el servicio que paró a todo lo demás | 5B |
+| **Todos, con el modelo choke** | ¿Dónde se trabó lo que no se produjo, qué limita hoy al campo y qué equipo cuesta más si falla hoy? | El tramo de cada barril (yacimiento, pozo, planta, afuera), lo que limita y su holgura, la cifra del norte (lo no planeado) y «si falla hoy» por equipo | 5E |
+| **Cumplimiento regulatorio** | ¿Qué le reporto a la ANH de cada parada y quién lo confirmó? | La clasificación de seis pasos de cada fila de `paradas_pozo` (Circular ANH 0024 de 2026), con lo que propuso TRIM, lo que dijo cada persona y lo que falta | 5E |
 
 ## 1.3 La cadena de cálculo, en siete pasos
 
@@ -121,6 +123,15 @@ con $Q_{\text{hoy}}$ el crudo que se perdería por día, $d_i$ las horas que dur
 
 ### Paso 7 · Cerrar el ciclo
 Las **metas** y el **precio** los firma el gerente, por tramos y con motivo, en versiones que nunca se sobrescriben. El libro de un mes se **publica** solo si el FA está en banda, toda parada tiene causa dentro del máximo firmado, hay fiscal y hay meta. Los **informes** salen con folio y una **huella SHA-256** que calcula el servidor. Las paradas avisan por **WhatsApp** a quien tiene que actuar, y los avisos van a **SAP PM** con su evidencia. → 5A §7, 5D.
+
+## 1.3b Dónde se trabó cada barril: el modelo choke y la cifra del norte
+
+Los siete pasos dicen **cuánto** se dejó de producir y **por qué equipo y qué parte**. El modelo choke agrega **dónde**: el campo es una tubería en serie (yacimiento → pozos → planta → afuera), lo que limita es su tramo más angosto y cada parada se trabó en uno de los tramos. Es el método de SPE-36848 (BP, 1996), el mismo que la ANH adoptó como el paso 2 de la clasificación de paradas que la Circular 0024 de 2026 exige desde el 1 de diciembre de 2026. Con él, el mismo barril sirve para gestionar y para reportar (capítulo 5E):
+
+- **Qué limita hoy.** Lo que dan los pozos según sus pruebas (con un factor de medición firmado, nunca el factor de asignación del mes), el tren más angosto de la planta y lo que deja salir el oleoducto. En La Ceiba, hoy (2-oct-2026, 14:00), limitan los pozos: 11.857 bbl/d, con 1.143 bbl/d de holgura en la planta. Si la planta limitara, abrir más pozos no daría nada (5E.2).
+- **Una sola cifra del norte.** Lo que el producto busca bajar es **lo no planeado**: las paradas por fallas, disparos y terceros, contadas fila por fila con la clasificación vigente. En los 13 meses del demo son **462.267,1 bbl** de 485.684,2 diferidos; la eficiencia de producción es 95,65 % y la no planeada, 2,85 % del potencial del sistema. La misma cifra sale en el reparto, el árbol, el mes a mes y la línea base (5E.4).
+- **Priorizar con «si falla hoy».** Cada equipo ordenado por lo que costaría que fallara hoy, con el tramo donde se trabaría: en La Ceiba, con P-201B parada, las dos bombas hermanas sin instrumento pasan al primer puesto (3.059 bbl/d después de 2 minutos de colchón). Ese orden decide dónde va el vigía, qué ruta predictiva va primero y qué repuesto se pide ya (5E.7).
+- **Clasificar sin inventar.** TRIM propone los seis pasos de la ANH con la señal, la topología y el programa; pregunta en palabras de campo lo que la señal no decide; y una persona confirma. Lo que dice cada persona se guarda paso por paso y no se borra (5E.9).
 
 ## 1.4 Un caso real de punta a punta: P-201B de La Ceiba, 2 de octubre de 2026
 
@@ -301,7 +312,7 @@ Producción: reloj real, LT en vivo, firma al parar persistida, `decision_plan` 
 
 ### MVP vs v2
 
-Con `MVP = true` (`producto.ts`) están apagadas **Agua**, **Evidencia** y **Regulatorio**; el tren de agua ya se ve en Bombas y Planta. v2 amplía pantallas, no sustituye el libro por un simulador 3D.
+Con `MVP = true` (`producto.ts`) está apagada **Evidencia** (y los roles de la planeadora y de abastecimiento). **Agua** se encendió con el modelo choke (21-oct-2026: «La tubería del agua») y **Regulatorio**, con el árbol de pérdidas del choke (22-oct-2026). v2 amplía pantallas, no sustituye el libro por un simulador 3D.
 
 ## 1.7 Las tres palancas comerciales (Antes · Durante · Después)
 
@@ -330,4 +341,5 @@ El **libro** responde «cuánto dejamos de producir» (custodia, firmable). El *
 2. **Guardar** eso y lo que entra a mano, con las reglas de custodia (solo inserción, versiones, quién y cuándo). → Capítulo 3.
 3. **Calcular** las vistas con el motor (capítulo 5) y servirlas por la API (capítulo 7) con la misma forma que el demo.
 4. **Avisar** por WhatsApp y **conversar** con SAP. → Capítulo 5D.
-5. **Probar** que da los mismos números que el demo. → Capítulo 9.
+5. **Repartir por tramo y clasificar para la ANH**: la topología y las capacidades firmadas, el tramo de cada parada, el reparto y el árbol de pérdidas con la cifra única del norte, «si falla hoy», y la clasificación de seis pasos con lo que dice cada persona guardado paso por paso. → Capítulo 5E.
+6. **Probar** que da los mismos números que el demo. → Capítulo 9.
