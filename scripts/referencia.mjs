@@ -28,6 +28,21 @@
  *
  *   node scripts/referencia.mjs comparar --base-url=URL --token=TOKEN   # con sesión (o TRIM_TOKEN)
  *   node scripts/referencia.mjs comparar --base-url=URL --escenario=ID  # los casos de un escenario, ya cargado
+ *   node scripts/referencia.mjs comparar --base-url=URL --escrituras    # las escrituras rechazadas (ESCRIBEN: ver abajo)
+ *
+ * ESCRITURAS (referencia/escrituras/, C-08 punto 3): secuencias de POST del
+ * árbol de paradas de la ANH (`/api/anh/paradas/…`) con el HTTP y el código del
+ * contrato que tiene que dar cada uno (CONTRATO.md, «Las escrituras de la
+ * clasificación ANH», C-22): 403, 404, 409, 422 y 400, y las escrituras
+ * aceptadas (200) que los preparan («el jefe corrige; el supervisor cambia sin
+ * motivo»). En el demo `src/shared/api/escrituras.ts` ES el servidor y da cada
+ * resultado; `comprobar` lo vuelve a correr. Contra una API, `--escrituras`
+ * manda los pasos en orden: las aceptadas ESCRIBEN en ese backend, así que va
+ * contra uno recién cargado con el arranque (sin escrituras, y una sola vez);
+ * cada caso toca filas y eventos que ningún otro toca. El rol de cada paso va en
+ * la cabecera `x-rol` del prototipo y, con sesión, con el token de ese rol:
+ * `--tokens=archivo.json` ({ "sup": "…", "jefe": "…" }, o TRIM_TOKENS) o, si no,
+ * el de `--token`.
  *
  * Además de los casos con la configuración de arranque, hay ESCENARIOS
  * (referencia/insumos/escenarios/): otra configuración firmada (la planta o
@@ -56,6 +71,10 @@ const token = resto.find(a => a.startsWith('--token='))?.slice('--token='.length
 // Los casos de un escenario piden que el backend cargue antes su insumo (insumos/escenarios/<id>.json):
 // `comparar` pide los de arranque y, con --escenario=<id>, solo los de ese escenario.
 const escenarioPedido = resto.find(a => a.startsWith('--escenario='))?.slice('--escenario='.length)
+// Las escrituras rechazadas: con --escrituras, `comparar` manda solo esas (escriben en el backend).
+const conEscrituras = resto.includes('--escrituras')
+const archivoTokens = resto.find(a => a.startsWith('--tokens='))?.slice('--tokens='.length) ?? process.env.TRIM_TOKENS
+const tokensPorRol = archivoTokens ? JSON.parse(readFileSync(archivoTokens, 'utf8')) : {}
 if (!['generar', 'comprobar', 'comparar'].includes(modo) || (modo === 'comparar' && !baseUrl)) {
   console.error('uso: node scripts/referencia.mjs generar | comprobar | comparar --base-url=http://servidor:puerto')
   process.exit(2)
@@ -252,6 +271,136 @@ const MESES_ANH = [
   ['morichal', '2025-12', 'el motor de una bomba de la línea'],
 ]
 
+/* ───── Escrituras rechazadas (C-08, punto 3): el HTTP y el código del contrato ───── */
+
+/** A qué escritura del servidor del demo va cada ruta (`escrituras.ts`). */
+function escribirEnElMotor(M, paso) {
+  const q = { rolId: paso.rol }
+  if (paso.endpoint === '/api/anh/paradas/confirmar') return M.E.confirmarParadasAnh(q, paso.cuerpo)
+  const m = /^\/api\/anh\/paradas\/([^/]+)\/(clasificacion|yacimiento|respuesta|revision)$/.exec(paso.endpoint)
+  if (!m) throw new Error(`escritura sin servidor en el demo: ${paso.endpoint}`)
+  const f = { clasificacion: M.E.clasificarParada, yacimiento: M.E.declararYacimientoAnh, respuesta: M.E.responderPreguntaAnh, revision: M.E.revisarParadaAnh }[m[2]]
+  return f(q, decodeURIComponent(m[1]), paso.cuerpo)
+}
+/** Lo que se compara de una respuesta: el HTTP y, en un rechazo, el código del contrato. */
+const resultadoDe = r => (r.ok ? { estado: 200 } : { estado: r.estado ?? 0, ...(r.codigo ? { codigo: r.codigo } : {}) })
+
+/** Las escrituras de cada caso, armadas con el servidor del demo a partir del
+ *  arranque (sin nada escrito): cada paso se arma con lo que la pantalla vería en
+ *  ese momento (la cadena, las filas de la cascada) y se manda; su resultado es lo
+ *  esperado. Las aceptadas tienen que dar 200 y la última, un rechazo. Cada caso
+ *  toca eventos y raíces que ningún otro toca: contra una API, sin volver al
+ *  arranque entre caso y caso, cada uno empieza donde lo dejaría el demo. */
+async function escriturasDelMotor(M) {
+  const { SES, ARB, CAT2, L, AHORA } = M
+  const foto = { ...SES.sesion() }
+  const cal = L.calendario(), cerrado = cal.filter(L.mesCerrado).at(-1)
+  const ver = id => ARB.pedirParadaAnh(id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
+  const cadena = id => ARB.cadenaVista(ver(id).clasificacion)
+  const historia = c => ARB.pedirParadasAnh({ campos: [c], desde: new Date(cal[0].desde), hasta: AHORA }, foto.ctx, foto.clasificacionesAnh)
+  const ceiba = historia('ceiba').filter(p => !p.exceso)
+  const usados = new Set()
+  const libre = p => !usados.has(p.eventoId) && !usados.has(p.raiz)
+  const tomar = (...ps) => { for (const p of ps) { usados.add(p.eventoId); usados.add(p.raiz) } return ps[0] }
+  const completa = p => ['responsable', 'choke', 'impacto', 'planeacion', 'n1', 'n2'].every(x => p.clasificacion[x])
+  const otroN2 = p => CAT2.N2_CIRCULAR.find(n => n.n1 === p.clasificacion.n1.valor && n.codigo !== p.clasificacion.n2.valor)?.codigo
+  const otroResp = v => (v === 'op-operacion' ? 'op-mantenimiento' : 'op-operacion')
+  const porRaiz = new Map()
+  for (const p of ceiba) if (p.raiz !== p.eventoId) (porRaiz.get(p.raiz) ?? porRaiz.set(p.raiz, []).get(p.raiz)).push(p)
+  const cascada = n => { const [r, fs] = [...porRaiz.entries()].find(([r, fs]) => !usados.has(r) && new Set(fs.map(f => f.eventoId)).size >= n && fs.every(f => libre(f) && completa(f))) ?? []; if (!r) throw new Error(`el demo no trae una cascada de ${n} eventos libre`); tomar(...fs); return fs }
+  const una = (f = () => true) => { const p = ceiba.find(x => libre(x) && x.raiz === x.eventoId && completa(x) && x.estado === 'propuesta' && f(x)); if (!p) throw new Error('el demo no trae una parada libre'); return tomar(p) }
+  const clasif = id => `/api/anh/paradas/${encodeURIComponent(id)}/clasificacion`
+  const ruta = (id, que) => `/api/anh/paradas/${encodeURIComponent(id)}/${que}`
+  // Una fila sola que cada rechazo de forma y de permiso usa (los rechazos no escriben: la comparten).
+  const F = una()
+  const morichal = historia('morichal').find(p => !p.exceso)
+  const R1 = cascada(3), idsR1 = R1.map(p => p.id)
+  const R2 = cascada(2), A2 = R2[0], B2 = R2.find(f => f.eventoId !== A2.eventoId)
+  const K = una(p => !!otroN2(p))
+  const conCorte = ceiba.find(p => libre(p) && p.propuesta.preguntas.some(q => q.id === 'corte'))
+  if (!conCorte) throw new Error('el demo no trae una parada con la pregunta del corte libre')
+  tomar(conCorte)
+  const delMes = ARB.pedirParadasAnh({ campos: ['ceiba'], desde: new Date(cerrado.desde), hasta: new Date(cerrado.hasta) }, foto.ctx, foto.clasificacionesAnh)
+  const lote = [...ARB.gruposPorCadena(delMes.filter(p => libre(p) && !p.exceso)).values()].map(g => g.filter((p, i) => g.findIndex(x => x.raiz === p.raiz) === i)).find(g => g.length >= 2)?.slice(0, 2)
+  if (!lote) throw new Error('el demo no trae dos paradas distintas con la misma cadena libres')
+  tomar(...lote)
+  const C = (id, descripcion, ...pasos) => ({ id, descripcion, pasos })
+  const paso = (rol, endpoint, cuerpo) => () => ({ metodo: 'POST', endpoint, rol, cuerpo: typeof cuerpo === 'function' ? cuerpo() : cuerpo })
+  const definidos = [
+    C('403-sin-capacidad', 'El gerente (sin anh:clasificar) clasifica una parada',
+      paso('ger', clasif(F.id), () => ({ pasos: { impacto: 'diferida' }, cadena: cadena(F.id) }))),
+    C('403-rol-desconocido', 'Un rol que no es del producto (cont, de la versión 2) clasifica una parada (C-14)',
+      paso('cont', clasif(F.id), () => ({ pasos: { impacto: 'diferida' }, cadena: cadena(F.id) }))),
+    C('403-paso-ajeno', 'El operador corrige el detalle (N2): no es de su terreno (PASOS_QUE_DECLARA)',
+      paso('oper', clasif(F.id), () => ({ pasos: { n2: otroN2(ver(F.id)) ?? 'NP_SUB/falla-esp' }, cadena: cadena(F.id) }))),
+    C('403-paso-ajeno-confirmar', 'El operador confirma «Dónde se trabó» (PASOS_QUE_CONFIRMA)',
+      paso('oper', '/api/anh/paradas/confirmar', () => ({ ids: [F.id], cadena: cadena(F.id), pasos: ['choke'] }))),
+    C('403-sin-capacidad-yacimiento', 'El supervisor pone «En el yacimiento» (solo producción y confiabilidad, anh:yacimiento)',
+      paso('sup', ruta(F.id, 'yacimiento'), () => ({ evidencia: 'prueba', cadena: cadena(F.id) }))),
+    C('404-no-encontrado', 'El operador (solo La Ceiba) clasifica una parada de Morichal: la misma respuesta que una que no existe (C-20)',
+      paso('oper', clasif(morichal.id), { pasos: { impacto: 'diferida' } })),
+    C('400-peticion-invalida', 'Un paso con un número donde va un texto (C-11)',
+      paso('sup', clasif(F.id), { pasos: { impacto: 1 } })),
+    C('409-cadena-cambio', 'La cadena que vio la persona ya no es la de la fila',
+      paso('sup', clasif(F.id), { pasos: { impacto: 'diferida' }, cadena: 'otra cadena' })),
+    C('422-clasificacion-incoherente', 'Una causa que no es de las 20 de la circular',
+      paso('sup', clasif(F.id), () => ({ pasos: { n1: 'NP_INVENTADA' }, cadena: cadena(F.id) }))),
+    C('422-cascada-sin-ids', '«Para la cascada» sin las filas que mostró la pantalla',
+      paso('sup', clasif(R1[0].id), () => ({ pasos: { impacto: 'diferida' }, aplicarALaCascada: true, cadena: cadena(R1[0].id) }))),
+    C('409-cascada-cambio', '«Para la cascada» cuando la raíz trae un evento que la pantalla no mostró',
+      paso('sup', clasif(R1[0].id), () => ({ pasos: { impacto: 'diferida' }, aplicarALaCascada: true, ids: idsR1.filter(id => !id.startsWith(`${R1.at(-1).eventoId}@`)), cadena: cadena(R1[0].id) }))),
+    C('409-cambia-a-otra-persona', 'El jefe dice «Quién» de un pozo de la cascada (para su evento, con motivo); el supervisor cambia «Quién» para la cascada desde otro pozo sin motivo',
+      paso('jefe', clasif(B2.id), () => ({ pasos: { responsable: otroResp(ver(B2.id).clasificacion.responsable.valor) }, motivo: 'El equipo es de operación', aplicarAlEvento: true, cadena: cadena(B2.id) })),
+      paso('sup', clasif(A2.id), () => ({ pasos: { responsable: otroResp(ver(B2.id).clasificacion.responsable.valor) }, aplicarALaCascada: true, ids: R2.map(p => p.id), cadena: cadena(A2.id) }))),
+    C('422-falta-motivo', 'El jefe corrige el detalle (para su evento, con motivo); el supervisor cambia «¿Planeada?» sin motivo, y eso retiraría la causa del jefe (C-05)',
+      paso('jefe', clasif(K.id), () => ({ pasos: { n2: otroN2(ver(K.id)) }, motivo: 'Se abrió el equipo: fue otra cosa', aplicarAlEvento: true, cadena: cadena(K.id) })),
+      paso('sup', clasif(K.id), () => ({ pasos: { planeacion: ver(K.id).clasificacion.planeacion.valor === 'planeada' ? 'no-planeada' : 'planeada' }, aplicarAlEvento: true, cadena: cadena(K.id) }))),
+    C('409-pregunta-cerrada', 'El operador contesta «¿De dónde vino el corte?»; el supervisor contesta la misma pregunta después',
+      paso('oper', ruta(conCorte.id, 'respuesta'), () => ({ pregunta: 'corte', opcion: ver(conCorte.id).propuesta.preguntas.find(q => q.id === 'corte').opciones[0].texto, aplicarAlEvento: true, cadena: cadena(conCorte.id) })),
+      paso('sup', ruta(conCorte.id, 'respuesta'), { pregunta: 'corte', opcion: 'Del campo: pórtico, red de media o subestación', aplicarAlEvento: true })),
+    C('422-pregunta-ajena', 'Una pregunta que TRIM no tiene (C-18)',
+      paso('oper', ruta(F.id, 'respuesta'), { pregunta: 'no-existe', opcion: 'Sí' })),
+    C('422-texto-largo', '«Algo está mal» con un motivo de 501 caracteres (C-12)',
+      paso('oper', ruta(F.id, 'revision'), () => ({ motivo: 'x'.repeat(501), cadena: cadena(F.id) }))),
+    C('422-texto-corto', '«Algo está mal» sin decir qué (un motivo de 2 caracteres)',
+      paso('oper', ruta(F.id, 'revision'), () => ({ motivo: 'no', cadena: cadena(F.id) }))),
+    C('409-lote-sin-pasos', 'El supervisor confirma en lote dos paradas con la misma cadena; el mismo lote otra vez no sube ningún paso (C-19)',
+      paso('sup', '/api/anh/paradas/confirmar', () => ({ ids: lote.map(p => p.id), cadena: cadena(lote[0].id) })),
+      paso('sup', '/api/anh/paradas/confirmar', () => ({ ids: lote.map(p => p.id), cadena: cadena(lote[0].id) }))),
+  ]
+  const casos = []
+  try {
+    for (const c of definidos) {
+      SES.cambiarSesion(foto)
+      const pasos = []
+      for (const f of c.pasos) {
+        const x = f()
+        pasos.push({ ...x, esperado: resultadoDe(await escribirEnElMotor(M, x)) })
+      }
+      const malos = pasos.slice(0, -1).filter(x => x.esperado.estado !== 200)
+      if (malos.length || pasos.at(-1).esperado.estado === 200)
+        throw new Error(`escrituras/${c.id}: lo que prepara tiene que pasar y lo último tiene que rechazarse (${pasos.map(x => JSON.stringify(x.esperado)).join(' → ')})`)
+      casos.push({ id: c.id, descripcion: c.descripcion, pasos })
+    }
+  } finally { SES.cambiarSesion(foto) }
+  return casos
+}
+
+/** Vuelve a mandar los pasos guardados al servidor del demo, desde el arranque: lo que da hoy. */
+async function escriturasEnElMotor(M, casos) {
+  const foto = { ...M.SES.sesion() }
+  try {
+    const out = []
+    for (const c of casos) {
+      M.SES.cambiarSesion(foto)
+      const pasos = []
+      for (const x of c.pasos) pasos.push(resultadoDe(await escribirEnElMotor(M, x)))
+      out.push({ id: c.id, pasos })
+    }
+    return out
+  } finally { M.SES.cambiarSesion(foto) }
+}
+
 /* ───── Casos, calculados con el motor ───── */
 
 /** Arranca el motor con los insumos que se le den (o los del demo) y corre el
@@ -280,6 +429,9 @@ async function conMotor(trabajo, insumosDe) {
       PRE: await cargar('/src/shared/api/predicciones.ts'), ESP: await cargar('/src/entities/esp.ts'),
       CIC: await cargar('/src/shared/api/ciclo.ts'), CHK: await cargar('/src/shared/api/choke.ts'), ARB: await cargar('/src/shared/api/arbol.ts'),
       PA: await cargar('/src/entities/anh-paradas.ts'), CL: await cargar('/src/entities/anh-clasificacion.ts'),
+      CAT2: await cargar('/src/entities/anh-catalogo.ts'),
+      // El servidor del demo (las escrituras) y su sesión: para las escrituras rechazadas.
+      SES: await cargar('/src/shared/api/sesion.ts'), E: await cargar('/src/shared/api/escrituras.ts'),
     })
     M.ctx = M.L.contextoInicial()
     return await trabajo(M)
@@ -414,8 +566,11 @@ function casosDe(M, escenarios) {
 
 /** Los casos de referencia/, sin el índice ni los insumos. */
 const leerReferencia = () => readdirSync(DIR, { recursive: true })
-  .filter(f => f.endsWith('.json') && f !== 'indice.json' && !f.startsWith('insumos')).sort()
+  .filter(f => f.endsWith('.json') && f !== 'indice.json' && !f.startsWith('insumos') && !f.startsWith('escrituras')).sort()
   .map(f => JSON.parse(readFileSync(join(DIR, f), 'utf8')))
+/** Las escrituras rechazadas de referencia/escrituras/, en el orden del índice. */
+const leerEscrituras = () => (JSON.parse(readFileSync(join(DIR, 'indice.json'), 'utf8')).escrituras ?? [])
+  .map(e => JSON.parse(readFileSync(join(DIR, 'escrituras', `${e.id}.json`), 'utf8')))
 
 /** Mismo contenido, sin depender del orden entre campos (cada endpoint de
  *  insumo es por campo; el orden DENTRO de cada uno sí se conserva). */
@@ -423,35 +578,40 @@ const canonico = ins => JSON.stringify(Object.fromEntries(Object.entries(JSON.pa
   [k, Array.isArray(v) ? [...v].sort((a, b) => (`${a.campoId}|${a.id ?? a.mes}` < `${b.campoId}|${b.id ?? b.mes}` ? -1 : 1)) : v])))
 
 if (modo === 'generar') {
-  const { casos, insumos } = await conMotor(M => ({ casos: casosDe(M, escenariosDelMotor(M)).casos, insumos: exportarInsumos(M, M.ins) }))
+  const { casos, insumos, escrituras } = await conMotor(async M => ({ casos: casosDe(M, escenariosDelMotor(M)).casos, insumos: exportarInsumos(M, M.ins), escrituras: await escriturasDelMotor(M) }))
   rmSync(DIR, { recursive: true, force: true })
   const escribir = (archivo, x) => { mkdirSync(join(archivo, '..'), { recursive: true }); writeFileSync(archivo, JSON.stringify(x) + '\n') }
   for (const c of casos) escribir(join(DIR, `${c.id}.json`), c)
   for (const i of insumos) escribir(join(DIR_INSUMOS, i.archivo), { endpoint: i.endpoint, respuesta: i.respuesta })
+  for (const e of escrituras) escribir(join(DIR, 'escrituras', `${e.id}.json`), e)
   writeFileSync(join(DIR, 'indice.json'), JSON.stringify({
     generado: 'node scripts/referencia.mjs generar', tolerancia: { relativa: TOL_REL, absoluta: TOL_ABS },
     regla: 'la respuesta contiene lo esperado (sin los campos que van ausentes cuando no aplican); null exige null; los registros cerrados traen sus claves; fechas como instante y con zona; el orden de las listas importa',
     insumos: insumos.map(i => ({ archivo: i.archivo, endpoint: i.endpoint })),
     casos: casos.map(c => ({ id: c.id, endpoint: c.endpoint, descripcion: c.descripcion, ...(c.requiere ? { requiere: c.requiere } : {}), ...(c.escenario ? { escenario: c.escenario } : {}) })),
+    escrituras: escrituras.map(e => ({ id: e.id, descripcion: e.descripcion, esperado: e.pasos.at(-1).esperado })),
   }, null, 1) + '\n')
-  console.log(`${casos.length} casos y ${insumos.length} archivos de insumos en ${DIR}`)
+  console.log(`${casos.length} casos, ${escrituras.length} escrituras rechazadas y ${insumos.length} archivos de insumos en ${DIR}`)
 } else {
   const todos = leerReferencia()
   if (!todos.length) { console.error(`no hay casos en ${DIR}: corra primero «npm run referencia»`); process.exit(1) }
-  // Contra una API, un escenario a la vez (el backend lo carga antes); el motor los calcula todos.
-  const referencia = modo === 'comparar' ? todos.filter(c => (c.escenario ?? undefined) === escenarioPedido) : todos
-  if (modo === 'comparar') {
+  const escrituras = leerEscrituras()
+  // Contra una API, un escenario a la vez (el backend lo carga antes); el motor los calcula todos. Con
+  // --escrituras, solo las escrituras rechazadas: escriben en el backend.
+  const referencia = modo === 'comparar' ? (conEscrituras ? [] : todos.filter(c => (c.escenario ?? undefined) === escenarioPedido)) : todos
+  if (modo === 'comparar' && !conEscrituras) {
     const otros = [...new Set(todos.filter(c => c.escenario && c.escenario !== escenarioPedido).map(c => c.escenario))]
     if (otros.length) console.log(`(${todos.length - referencia.length} casos de ${escenarioPedido ? 'otros escenarios y del arranque' : 'escenarios'} no se piden: cargue el insumo de cada escenario y corra con --escenario=${otros.join(' | ')})`)
+    if (escrituras.length) console.log(`(${escrituras.length} escrituras rechazadas no se mandan: escriben en el backend; córralas con --escrituras contra uno recién cargado con el arranque)`)
     if (escenarioPedido && !referencia.length) { console.error(`no hay casos del escenario «${escenarioPedido}»`); process.exit(2) }
   }
   // `malos`: casos que no coinciden; `aparte`: lo que falla fuera de los casos (deriva de insumos, conteo).
-  let malos = 0, aparte = 0
-  let motor = null
+  let malos = 0, aparte = 0, malasEscrituras = 0
+  let motor = null, escriturasMotor = null
   if (modo === 'comprobar') {
     // Los casos se calculan con los insumos de los ARCHIVOS, como los cargaría
     // un backend; y esos archivos tienen que ser, sin perder nada, los del demo.
-    const r = await conMotor(M => {
+    const r = await conMotor(async M => {
       const deriva = []
       if (canonico(M.ins) !== canonico(M.DEMO)) deriva.push('los insumos de referencia/insumos/ no son los de src/entities/datos/')
       // Los de arranque (catálogo, configuración) y las lecturas de las
@@ -477,7 +637,10 @@ if (modo === 'generar') {
       const sinCaso = filas.filter(f => !filasVistas.has(f) && !SIN_CASO_EN_EL_DEMO.includes(f)), yaTiene = SIN_CASO_EN_EL_DEMO.filter(f => filasVistas.has(f))
       if (sinCaso.length) deriva.push(`estas filas de REGLAS_ANH no tienen ningún caso en referencia/anh: ${sinCaso.join(', ')} (agregue el mes y el campo que las traen en MESES_ANH)`)
       if (yaTiene.length) deriva.push(`estas filas de REGLAS_ANH ya tienen caso y siguen en SIN_CASO_EN_EL_DEMO: ${yaTiene.join(', ')} (sáquelas de la lista)`)
-      return { casos, deriva }
+      // Las escrituras rechazadas: las que arma hoy el servidor del demo, y lo que da hoy con los pasos guardados.
+      const armadas = await escriturasDelMotor(M)
+      const hoy = await escriturasEnElMotor(M, escrituras)
+      return { casos, deriva, armadas, hoy }
     }, insumosDeArchivos)
     for (const d of r.deriva) { console.log(`  ✗ ${d}: regenerar con «npm run referencia»`); aparte++ }
     motor = new Map(r.casos.map(c => [c.id, c]))
@@ -485,6 +648,16 @@ if (modo === 'generar') {
       console.log(`  ✗ el motor arma ${motor.size} casos y la referencia trae ${referencia.length}: regenerar con «npm run referencia»`)
       aparte++
     }
+    // Las mismas escrituras (los pasos, sus cuerpos y lo esperado) que arma el servidor del demo desde el arranque.
+    const sinEsperado = e => JSON.stringify(e.pasos.map(({ esperado: _, ...x }) => x))
+    if (r.armadas.map(e => e.id).join() !== escrituras.map(e => e.id).join()) {
+      console.log(`  ✗ el servidor del demo arma las escrituras ${r.armadas.map(e => e.id).join(', ')} y la referencia trae ${escrituras.map(e => e.id).join(', ') || 'ninguna'}: regenerar con «npm run referencia»`)
+      aparte++
+    } else for (const [i, e] of escrituras.entries()) if (sinEsperado(r.armadas[i]) !== sinEsperado(e)) {
+      console.log(`  ✗ escrituras/${e.id}: el servidor del demo arma otros pasos (otra fila, otra cadena u otro cuerpo): regenerar con «npm run referencia»`)
+      aparte++
+    }
+    escriturasMotor = new Map(r.hoy.map(e => [e.id, e.pasos]))
   }
   for (const caso of referencia) {
     let real
@@ -501,7 +674,33 @@ if (modo === 'generar') {
     const d = diferencias(caso.esperado, real)
     if (d.length) { malos++; console.log(`  ✗ ${caso.id}${caso.requiere ? ` (lee también ${caso.requiere.join(', ')})` : ''}\n      ${d.slice(0, 8).join('\n      ')}`) }
   }
-  console.log(`\n${referencia.length - malos} de ${referencia.length} casos de referencia coinciden${modo === 'comprobar' ? ' con el motor de hoy, calculados con los insumos de referencia/insumos/' : ` en ${baseUrl}`}.`)
+  // Las escrituras: en el demo, lo que da hoy el servidor con los mismos pasos; contra una API, cada paso por HTTP.
+  /** Un POST de una escritura, con el rol del paso (`x-rol` y su token): el HTTP y, en un rechazo, el código. */
+  const mandar = async x => {
+    const t = tokensPorRol[x.rol] ?? token
+    const r = await fetch(new URL(x.endpoint, baseUrl), { method: x.metodo, body: JSON.stringify(x.cuerpo),
+      headers: { accept: 'application/json', 'content-type': 'application/json', 'x-rol': x.rol, ...(t ? { authorization: `Bearer ${t}` } : {}) } })
+    let codigo
+    if (!r.ok) try { codigo = (await r.json())?.error?.codigo } catch { codigo = undefined }
+    return { estado: r.status, ...(codigo ? { codigo } : {}) }
+  }
+  const aMandar = modo === 'comprobar' || conEscrituras ? escrituras : []
+  for (const e of aMandar) {
+    let reales
+    if (escriturasMotor) reales = escriturasMotor.get(e.id)
+    else {
+      reales = []
+      try { for (const x of e.pasos) reales.push(await mandar(x)) } catch (err) { console.log(`  ✗ escrituras/${e.id}: no respondió (${err.message})`); malasEscrituras++; continue }
+    }
+    const d = e.pasos.flatMap((x, i) => {
+      const real = reales?.[i], esp = x.esperado
+      const bien = real && (esp.estado === 200 ? real.estado >= 200 && real.estado < 300 : real.estado === esp.estado && real.codigo === esp.codigo)
+      return bien ? [] : [`paso ${i + 1} (${x.rol}, POST ${x.endpoint.replace('/api/anh/paradas/', '…/')}): se esperaba ${esp.estado}${esp.codigo ? ` ${esp.codigo}` : ''}, llegó ${real ? `${real.estado}${real.codigo ? ` ${real.codigo}` : ''}` : 'nada'}`]
+    })
+    if (d.length) { malasEscrituras++; console.log(`  ✗ escrituras/${e.id}\n      ${d.join('\n      ')}`) }
+  }
+  if (referencia.length) console.log(`\n${referencia.length - malos} de ${referencia.length} casos de referencia coinciden${modo === 'comprobar' ? ' con el motor de hoy, calculados con los insumos de referencia/insumos/' : ` en ${baseUrl}`}.`)
+  if (aMandar.length) console.log(`${referencia.length ? '' : '\n'}${aMandar.length - malasEscrituras} de ${aMandar.length} escrituras rechazadas dan el HTTP y el código del contrato${modo === 'comprobar' ? ' en el servidor del demo' : ` en ${baseUrl}`}.`)
   if (aparte) console.log(`Además, ${aparte} ${aparte === 1 ? 'falla' : 'fallas'} fuera de los casos (arriba).`)
-  if (malos || aparte) process.exit(1)
+  if (malos || malasEscrituras || aparte) process.exit(1)
 }

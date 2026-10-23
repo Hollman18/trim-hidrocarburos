@@ -8,6 +8,8 @@ import {
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
 import { rolPorId } from '@/entities/roles'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { rolEnPapel } from '@/shared/ui/papel'
 import { MOTIVO_MINIMO, alcanza } from '@/entities/reglas'
 import { puedeHacer } from '@/entities/tipos'
 import { Boton, Chip } from '@/shared/ui/primitivas'
@@ -18,7 +20,7 @@ import { Cadena, Falta } from './Cadena'
 import { Preguntas, OPCION } from './Preguntas'
 import { Editor } from './Editor'
 import type { Grupo } from './grupos'
-import { horaCorta, lista, sinReferencias, estadoDeTarjeta, desdeCuando, horasDeFila, paradasYFilas } from './palabras'
+import { horaCorta, lista, pozosEnCorto, sinReferencias, estadoDeTarjeta, desdeCuando, horasDeFila, paradasYFilas } from './palabras'
 
 /* El operador y el técnico (los que no revisan, `ROLES_QUE_CONTESTAN.revisa`)
    contestan lo que vieron, una pregunta a la vez, y avalan solo lo de su
@@ -94,10 +96,10 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
     const completas = filas.filter(f => f.estado === 'confirmada').length
     const quienes = [...new Set(filas.map(f => f.pozo))]
     onHecho(deCampo
-      ? `Listo. Su respuesta en ${lista(quienes)} queda guardada; el supervisor revisa el resto.`
+      ? `Listo. Su respuesta en ${pozosEnCorto(quienes)} queda guardada; el supervisor revisa el resto.`
       : completas === filas.length
-        ? `Listo. ${lista(quienes)} ${filas.length === 1 ? 'queda completa' : `quedan completas (${filas.length} filas)`}${r.lote ? ', en un solo lote' : ''}.`
-        : `Listo: quedó confirmado lo que su rol avala en ${lista(quienes)}. La causa y el detalle los confirma quien abra el equipo: el jefe de mantenimiento o confiabilidad.`)
+        ? `Listo. ${quienes.length <= 3 ? lista(quienes) : `Las paradas de los ${quienes.length} pozos`} ${filas.length === 1 ? 'queda completa' : `quedan completas (${filas.length} filas)`}${r.lote ? ', en un solo lote' : ''}.`
+        : `Listo: quedó confirmado lo que su rol avala en ${pozosEnCorto(quienes)}. La causa y el detalle los confirma quien abra el equipo: el jefe de mantenimiento o confiabilidad.`)
   }
 
   const parcial = p.parcial
@@ -247,8 +249,9 @@ function Revision({ r }: { r: RevisionAnh }) {
   const aQuien = r.pedirA ? `le pidió ${aRol(r.pedirA)}` : 'marcó «Algo está mal»'
   return (
     <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-revision={r.atendida ? 'atendida' : 'abierta'}>
-      {r.por} {aQuien} · {horaCorta(r.hora)}: «{r.motivo}»
-      {r.atendida && <span className="text-[var(--tinta3)]"> · la revisó {r.atendida.por} · {horaCorta(r.atendida.hora)}</span>}
+      {/* Lo que escribió con sus palabras va en la pantalla; en el papel, quién, por su rol (D2). */}
+      <DichoEnPapel papel={`${mayuscula(rolEnPapel(r))} ${aQuien} · ${horaCorta(r.hora)}`}>{r.por} {aQuien} · {horaCorta(r.hora)}: «{r.motivo}»</DichoEnPapel>
+      {r.atendida && <span className="text-[var(--tinta3)]"> · la revisó <DichoEnPapel papel={rolEnPapel(r.atendida)}>{r.atendida.por}</DichoEnPapel> · {horaCorta(r.atendida.hora)}</span>}
     </p>
   )
 }
@@ -280,11 +283,11 @@ function AlgoEstaMal({ g, raiz, cambiar, onCerrar, onHecho }: {
     const r = await revisarAnh(g.primera.id, { motivo: texto, ...(g.cascada ? { aplicarALaCascada: true, ids: raiz.map(f => f.id) } : { aplicarAlEvento: true }), cadena: g.cadena })
     setOcupado(false)
     if (!r.ok) return setError(r.error)
-    onHecho(`Listo: ${lista(quienes)} ${quienes.length === 1 ? 'queda' : 'quedan'} para revisar. Lo ve su supervisor con lo que usted dijo.`)
+    onHecho(`Listo: ${pozosEnCorto(quienes)} ${quienes.length === 1 ? 'queda' : 'quedan'} para revisar. Lo ve su supervisor con lo que usted dijo.`)
     onCerrar()
   }
   return (
-    <form className="no-imprimir mt-2 grid gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5" aria-label={`Algo está mal · ${lista(quienes)}`}
+    <form className="no-imprimir mt-2 grid gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5" aria-label={`Algo está mal · ${pozosEnCorto(quienes)}`}
       onSubmit={e => { e.preventDefault(); void enviar() }}>
       <span className="text-[11.5px] font-semibold">{atajoCambiar ? '¿Qué cambiaría? Lo corrige su supervisor.' : '¿Qué está mal?'}</span>
       <span className="grid gap-1 sm:flex sm:flex-wrap">

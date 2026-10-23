@@ -6,7 +6,8 @@
  *    los que el contrato dice que van AUSENTES cuando no aplican (`colchonH`
  *    ausente = sin colchón, `null` = no se llena; `costoFalla` ausente, no 0;
  *    `cadena` solo en los pasos con valor; la revisión y la evidencia del
- *    yacimiento solo cuando las hay): si lo esperado no los trae, no pueden venir;
+ *    yacimiento solo cuando las hay; `AUSENTES`, abajo): si lo esperado no los
+ *    trae, no pueden venir;
  *  - un `null` esperado exige `null` (ni ausente ni 0);
  *  - los registros cerrados (por tramo, por escalón, por tren…) traen
  *    exactamente las claves esperadas: un tramo de más es una deriva;
@@ -20,8 +21,16 @@ export const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/
 const CON_ZONA = /(?:Z|[+-]\d{2}:\d{2})$/
 export const TOL_REL = 1e-6, TOL_ABS = 0.005
 
-/** Las claves que, si lo esperado no las trae, la respuesta tampoco puede traer (CONTRATO.md: «ausente» dice algo). */
-export const AUSENTES = new Set(['colchonH', 'costoFalla', 'cadena', 'revision', 'evidenciaYacimiento', 'fraseHoy', 'porTipo', 'campoDeGas', 'disponibleHoy', 'textoEstructural'])
+/** Las claves que, si lo esperado no las trae, la respuesta tampoco puede traer (CONTRATO.md: «ausente» dice algo):
+ *  con ellas la pantalla pinta algo que no es cierto. Las de QA-C y F2-B, y las que faltaban (QA-R, C-08):
+ *  - `siParaOtra` (agua): «SI PARA OTRA BOMBA» en lugar del orden de cierre; `sinUna`: «si para una…»;
+ *  - `hz` (filas ANH, pruebas): «parcial: X de Y Hz»;
+ *  - `subio`, `cambioHoy`, `noIntervenir`, `proximoInstrumento`, `sinDato` («Si falla hoy»): una marca o una frase;
+ *  - `techo` (riesgo): «hasta»; `declaradoPor` (riesgo): que el motivo lo escribió una persona;
+ *  - `retiros` (filas ANH): «antes: …, retirado por …»; `declarado` (la causa): la respuesta de una persona;
+ *  - `apunta` («una señal apunta»: quién puede confirmar), `perdida` (proponer una pérdida), `escalada` («No sé»). */
+export const AUSENTES = new Set(['colchonH', 'costoFalla', 'cadena', 'revision', 'evidenciaYacimiento', 'fraseHoy', 'porTipo', 'campoDeGas', 'disponibleHoy', 'textoEstructural',
+  'siParaOtra', 'sinUna', 'hz', 'subio', 'cambioHoy', 'noIntervenir', 'proximoInstrumento', 'sinDato', 'techo', 'declaradoPor', 'retiros', 'declarado', 'apunta', 'perdida', 'escalada'])
 /** Los registros cerrados: un objeto con estas claves trae exactamente las claves esperadas. */
 export const CERRADOS = new Set(['porChoke', 'porEscalon', 'porChokeEscalon', 'porChokeEquipo', 'estructuralPorChoke', 'horasPorDominante', 'noPlaneado', 'porTramo', 'holgura', 'potenciales', 'dominante', 'casiIguales', 'superado'])
 /** Los cerrados cuyos valores también son registros cerrados (cada tramo con sus escalones). */

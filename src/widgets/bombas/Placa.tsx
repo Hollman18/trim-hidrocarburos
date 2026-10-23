@@ -7,6 +7,8 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { Analogico } from '@/shared/ui/Analogico'
 import { Info } from '@/shared/ui/Info'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { causaEnPapel } from '@/shared/ui/papel'
 import { Tip } from '@/shared/ui/Tip'
 import { n0, decimalesDe, plural } from '@/shared/lib/formato'
 import { CLAVE, fmtBbl, fmtRango, fmtHoras, estadoCorto, fraseParteCorta, respaldoAbsorbe } from './comun'
@@ -120,7 +122,7 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
               <span className="block text-[10.5px] text-[var(--tinta3)]">
                 Detenida desde {fechaHora(abierta.inicio)}
                 {/* Sin identificar, la causa la dice «no arrancar» de abajo (y su ⓘ). */}
-                {abierta.causa.parte ? ` · ${NOMBRE_PARTE[abierta.causa.parte].toLowerCase()}` : abierta.pide ? '' : ` · ${abierta.causa.texto.toLowerCase()}`}
+                {abierta.causa.parte ? ` · ${NOMBRE_PARTE[abierta.causa.parte].toLowerCase()}` : abierta.pide ? '' : <DichoEnPapel papel={` · ${causaEnPapel(abierta.causa).toLowerCase()}`}>{` · ${abierta.causa.texto.toLowerCase()}`}</DichoEnPapel>}
               </span>
               {abierta.cargadoA !== eq.id ? (
                 <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">
@@ -141,7 +143,8 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
                   <MarcaPrioridad s={2} tamano={11} />
                   <span><b>No arrancar</b> hasta identificar</span>
                   <Info className={encima} titulo="No arrancar"
-                    texto={`${abierta.causa.texto}. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.`} />
+                    texto={`${abierta.causa.texto}. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.`}
+                    textoEnPapel={`${causaEnPapel(abierta.causa)}. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.`} />
                 </span>
               )}
             </>

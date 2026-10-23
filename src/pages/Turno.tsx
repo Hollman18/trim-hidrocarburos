@@ -5,7 +5,9 @@ import { CicloCifras } from '@/widgets/ciclo/Ciclo'
 import { useMensajes } from '@/shared/api/mensajes'
 import { PASO_CORTO, ORDEN_PASO } from '@/entities/mensajes'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
-import { TIPO_CAUSA, COMO } from '@/entities/causa-senal'
+import { TIPO_CAUSA, COMO, rolDeQuien } from '@/entities/causa-senal'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { causaEnPapel } from '@/shared/ui/papel'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { ESTADO_PARTE } from '@/entities/salud'
 import { campoPorId } from '@/entities/campos'
@@ -21,7 +23,8 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
-import { useEquiposDeHoy } from '@/shared/api/equipos'
+import { useEquiposDeHoy, esServicio } from '@/shared/api/equipos'
+import { siPara, siParaLargo } from '@/shared/ui/costoHoy'
 import { HoyLimita, DondeSeTrabo } from '@/widgets/arbol/HoyLimita'
 import { CierreDeHoy } from '@/widgets/arbol/CierreDeHoy'
 
@@ -70,7 +73,9 @@ export function Turno() {
       const p = h.evento ? todas.find(x => x.id === h.evento) : undefined
       const r = p?.causa.declarado
       const estado = !p ? undefined : r ? `respondió ${r.por}${r.canal === 'whatsapp' ? ' por WhatsApp' : ''}: «${r.texto}»` : 'sin respuesta'
-      return { ...h, pasos: [...h.pasos].sort((a, b) => new Date(a.hora).getTime() - new Date(b.hora).getTime() || a.rango - b.rango), estado }
+      // En el papel, quien respondió por su rol y sin su texto (D2).
+      const estadoPapel = r ? `respondió ${rolDeQuien(r.por)}${r.canal === 'whatsapp' ? ' por WhatsApp' : ''}` : estado
+      return { ...h, pasos: [...h.pasos].sort((a, b) => new Date(a.hora).getTime() - new Date(b.hora).getTime() || a.rango - b.rango), estado, estadoPapel }
     })
     .sort((a, b) => b.pasos.at(-1)!.hora.localeCompare(a.pasos.at(-1)!.hora))
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
@@ -108,6 +113,8 @@ export function Turno() {
   const filaPerdiendo = (r: (typeof perdiendo)[number]) => (
     <Tip key={`${r.campoId}${r.equipo}${r.tipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
       titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
+      // Lo que escribió una persona va en la pantalla; en el papel, quién lo contestó, por su rol (D2).
+      pistaEnPapel={r.declaradoPor ? `Lo contestó ${r.declaradoPor}` : undefined}
       filas={[['Pozos parados', String(r.pozos)], ['Perdiéndose', `${n0(r.bblDia)} bbl/d`],
         ['En el turno', `${n0(r.bblDia * TURNO_H / 24)} bbl`], ...(r.desde ? [['Desde', fechaHora(r.desde)] as [string, string]] : []),
         ...(r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? [['Pozos cerrados desde', fechaHora(r.cierreDesde)] as [string, string]] : [])]}
@@ -144,7 +151,7 @@ export function Turno() {
     <Tip key={`${r.campoId}${r.equipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
       titulo={r.equipo} pista={r.motivo} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
       filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya pasó el límite'],
-        ['Si para', `${n0(r.bblDia)} bbl/d`]]}
+        ['Si para', siParaLargo(r, esServicio(r))]]}
       className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
       <MarcaPrioridad s={prioridadVigilar(r)} tamano={13} />
       <span className="min-w-0 flex-1">
@@ -157,7 +164,8 @@ export function Turno() {
       </span>
       <span className="tabular text-right text-[11px]">
         <b className="block">{r.horas !== undefined ? fmtHoras(r.horas) : 'ya pasó el límite'}</b>
-        <small className="text-[9.5px] text-[var(--tinta3)]">{n0(r.bblDia)} bbl/d</small>
+        {/* Un techo (K-101: si cierran todos sus pozos) se dice «hasta», como en Riesgo y «Si falla hoy». */}
+        <small className="text-[9.5px] text-[var(--tinta3)]" data-si-para>{siPara(r, esServicio(r))}</small>
       </span>
     </Tip>
   )
@@ -172,7 +180,7 @@ export function Turno() {
       ? `${plural(g.length, 'pozo cerrado', 'pozos cerrados')} por ${t.causa.equipo}`
       : `${hora(ini[0]!)} · ${t.pozo.id}${porOtro ? ` · por ${t.causa.equipo}` : ''}`
     return (
-      <Tip key={t.causa.evento ?? t.evento.id} titulo={linea} pista={t.causa.texto} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+      <Tip key={t.causa.evento ?? t.evento.id} titulo={linea} pista={t.causa.texto} pistaEnPapel={causaEnPapel(t.causa)} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
         filas={[...(porOtro ? [['Lo cerró', t.causa.equipo] as [string, string]] : []), ['Barriles', `${n0(bbl)} bbl`], ['Cómo se identificó', como]]}
         className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 print:border-b-0">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2">
@@ -195,7 +203,7 @@ export function Turno() {
       className="border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 print:border-b-0">
       <span className="flex flex-wrap items-center justify-between gap-x-3">
         <span><b>{h.equipo}</b>{donde(h.campoId)}</span>
-        {h.estado && (h.estado === 'sin respuesta' ? <Chip tono="fuerte">sin respuesta</Chip> : <small className="text-[var(--tinta2)]">{h.estado}</small>)}
+        {h.estado && (h.estado === 'sin respuesta' ? <Chip tono="fuerte">sin respuesta</Chip> : <small className="text-[var(--tinta2)]"><DichoEnPapel papel={h.estadoPapel}>{h.estado}</DichoEnPapel></small>)}
       </span>
       <span className="block text-[var(--tinta2)]">
         {h.pasos.map((x, i) => <span key={`${x.hora}${x.que}`}>{i > 0 && ' → '}<span className="tabular">{corta(x.hora)}</span> {x.que}<NoEnviado fallas={x.fallas} /></span>)}

@@ -1,0 +1,1 @@
+{"id":"409-cadena-cambio","descripcion":"La cadena que vio la persona ya no es la de la fila","pasos":[{"metodo":"POST","endpoint":"/api/anh/paradas/EP-LC06-251001-96%402025-10-01%231/clasificacion","rol":"sup","cuerpo":{"pasos":{"impacto":"diferida"},"cadena":"otra cadena"},"esperado":{"estado":409,"codigo":"cadena-cambio"}}]}

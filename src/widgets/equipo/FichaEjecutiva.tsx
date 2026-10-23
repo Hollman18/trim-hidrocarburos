@@ -10,6 +10,7 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { n0, usd, plural } from '@/shared/lib/formato'
+import { siPara } from '@/shared/ui/costoHoy'
 import { fmtHoras, respaldoAbsorbe } from '@/widgets/bombas/comun'
 
 /** Lo que un directivo necesita de un equipo: cómo está, cuánto le ha
@@ -46,7 +47,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     ? `${perdiendo.desde ? `Parada desde ${fechaHora(perdiendo.desde)}` : 'Parada'}${perdiendo.cierreDesde && perdiendo.desde && perdiendo.cierreDesde.getTime() - perdiendo.desde.getTime() > 60_000 ? ` · pozos cerrados desde ${fechaHora(perdiendo.cierreDesde)}` : ''}`
     : cerradoPor ? `Cerrado por ${cerradoPor.equipo}${desdeCierre ? ` desde ${fechaHora(desdeCierre)}` : ''}`
       // Sin nada de eso, el estado ya va en la cabecera de la ficha («… · en servicio»): no se repite.
-      : enRiesgo ? `En marcha · si para, ${n0(enRiesgo.bblDia)} bbl/d` : undefined
+      : enRiesgo ? `En marcha · si para, ${siPara(enRiesgo)}` : undefined
 
   // Qué se está haciendo, en corto; el porqué, en su ⓘ (y en el papel).
   let haciendo: string, porque: string | undefined, noArrancar = false

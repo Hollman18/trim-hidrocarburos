@@ -34,3 +34,20 @@ export const detalleCostoHoy = (r: Costo): string | undefined =>
  *  fallado) y vale menos que la historia propia. Igual en Riesgo y Mantenimiento. */
 export const deFlota = (r: Pick<Riesgo, 'costoDe'>, nivel: NivelDetalle): boolean =>
   nivel === 'ingenieria' && r.costoDe === 'flota'
+
+/** «Si para»: lo que se pierde por día si el equipo para, dicho igual en Riesgo,
+ *  Turno, Mantenimiento y Equipos. Un techo del motor (`Riesgo.techo`: supone que
+ *  se cierra todo lo que produce y depende del equipo) se dice «hasta», como en
+ *  «Si falla hoy», nunca como cifra exacta (D6; QA-R, vecino 1). Un servicio del
+ *  campo sin nada produciendo cierra «todo el campo». */
+export const siPara = (r: Pick<Riesgo, 'bblDia' | 'techo'>, servicio = false): string =>
+  servicio && r.bblDia === 0 ? 'todo el campo' : `${r.techo ? 'hasta ' : ''}${n0(r.bblDia)} bbl/d`
+/** Lo mismo en un globo (y en el papel), con el porqué del techo. */
+export const siParaLargo = (r: Pick<Riesgo, 'bblDia' | 'techo'>, servicio = false): string =>
+  servicio && r.bblDia === 0 ? 'cierra lo que esté produciendo en el campo'
+    : `${siPara(r)}${r.techo ? ' (un techo: si se cierran todos los pozos que dependen de él)' : ''}`
+/** Varias filas sumadas: si alguna es un techo, la suma también («hasta»). */
+export const sumaSiPara = (rs: ReadonlyArray<Pick<Riesgo, 'bblDia' | 'techo'>>): { bblDia: number; techo?: true } => {
+  const bblDia = rs.reduce((a, r) => a + r.bblDia, 0)
+  return rs.some(r => r.techo) ? { bblDia, techo: true } : { bblDia }
+}

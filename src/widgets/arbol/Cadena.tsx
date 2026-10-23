@@ -1,7 +1,9 @@
 import { PASOS, esDePersona, type ParadaAnh, type PasoAnh } from '@/shared/api/arbol'
 import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
-import { ROTULO, PASO_EN_LA_CIRCULAR, INFO_PASO_2, valorEnPalabras, enElReporte } from './palabras'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { rolEnPapel } from '@/shared/ui/papel'
+import { ROTULO, PASO_EN_LA_CIRCULAR, INFO_PASO_2, valorEnPalabras, enElReporte, horaCorta } from './palabras'
 import { marcaDelPaso } from './marcas'
 
 /** El hueco de lo que falta: gris, contorno discontinuo y la palabra (U1 §2.1).
@@ -24,6 +26,8 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
   // explica a la vez quién, la causa y el detalle. Se dice una vez y los demás
   // pasos remiten a ese.
   const marcas = pasos.map(paso => marcaDelPaso(p, paso, !grupo))
+  // En el papel, la persona por su rol y sin lo que escribió con sus palabras (D2).
+  const enPapel = pasos.map(paso => marcaDelPaso(p, paso, !grupo, true))
   return (
     <dl className="grid gap-y-1.5 text-[11.5px]">
       {pasos.map((paso, i) => {
@@ -35,6 +39,9 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
         const marca = antes < i && marcas[i] && d && !esDePersona(d.procedencia)
           ? `${marcas[i]!.slice(0, marcas[i]!.indexOf(':') > 0 ? marcas[i]!.indexOf(':') : undefined)} por la misma razón del paso ${PASOS.indexOf(pasos[antes]!) + 1}`
           : marcas[i]
+        const marcaPapel = d && esDePersona(d.procedencia) ? enPapel[i] : marca
+        // Lo que una persona había dicho y otra retiró con motivo (D1): no rige, pero se ve (QA-R, vecino 8).
+        const retiro = p.retiros?.find(x => x.paso === paso)
         // La bomba de la línea sin su parte: el detalle de la ANH sale igual, pero
         // falta lo que solo dice quien la abre, y se ve (B-11; U2 §9.3).
         const faltaParte = paso === 'n2' && p.propuesta.fila === 'linea-sin-n2' && !p.causa.parte && !!d && !esDePersona(d.procedencia)
@@ -54,7 +61,15 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
                 : <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5"><Falta />{sugerido !== undefined && <span className="text-[10.5px] text-[var(--tinta2)]">TRIM sugiere: {valorEnPalabras(paso, String(sugerido))}</span>}</span>}
             </dd>
             <dd className={cn('min-w-0 break-words pl-[1.125rem] text-[10.5px] md:pl-0', d && esDePersona(d.procedencia) ? 'text-[var(--tinta)]' : 'text-[var(--tinta2)]')}>
-              {marca}
+              {marcaPapel !== marca ? <DichoEnPapel papel={marcaPapel}>{marca}</DichoEnPapel> : marca}
+              {retiro && (
+                <span className="mt-0.5 block text-[var(--tinta2)]" data-retiro={paso}>
+                  antes: {valorEnPalabras(paso, retiro.valor)}, retirado por{' '}
+                  <DichoEnPapel papel={`${rolEnPapel(retiro)} · ${horaCorta(retiro.hora)}`}>
+                    {retiro.por} · {horaCorta(retiro.hora)}{retiro.motivo ? <> porque «{retiro.motivo}»</> : ''}
+                  </DichoEnPapel>
+                </span>
+              )}
               {faltaParte && <span className="mt-0.5 flex flex-wrap items-center gap-x-1"><Falta>falta la parte de {p.causa.equipo}</Falta>la dice quien la abra</span>}
             </dd>
           </div>

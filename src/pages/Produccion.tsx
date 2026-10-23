@@ -25,6 +25,7 @@ import { TuberiaDeCadaCampo } from '@/widgets/choke/Campos'
 import { SerieLimita } from '@/widgets/choke/Serie'
 import { Escalera } from '@/widgets/choke/Escalera'
 import { PorTramoMensual } from '@/widgets/choke/Mensual'
+import { useRepartoChoke } from '@/shared/api/choke'
 
 /** La curva es el hecho; el diferido es la consecuencia. Producción entra por
  *  aquí: cuánto salió por el punto de medición oficial, contra lo que daban
@@ -90,7 +91,9 @@ export function Produccion() {
         <div className="mt-1 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))]">
           <BarraMeta rotulo="producción real" valor={lb.real} unidad="bbl" meta={hayMeta ? lb.meta.produccion : undefined}
             rotuloMeta={hayMeta ? `meta${enCurso ? ' a la fecha' : ''} ${n0(lb.meta.produccion)}` : textoSinMeta(lb.meta, ambito.global)} fuera={hayMeta && lb.real < lb.meta.produccion}
-            apoyo={`${n0(porDia(lb.real))} bbl/d · eficiencia ${n1(lb.pe)} %`}
+            // Lo real sobre el potencial del libro: NO es la eficiencia de producción (esa va en la escalera, D3).
+            apoyo={<span className="inline-flex flex-wrap items-center gap-x-1" data-del-potencial>{n0(porDia(lb.real))} bbl/d · {n1(lb.pe)} % del potencial
+              {ing ? <InfoDelPotencial q={q} /> : <Info titulo="% del potencial" texto={DEL_POTENCIAL} />}</span>}
             tip={{ titulo: 'Real contra la meta', filas: [['Real por día', `${n0(porDia(lb.real))} bbl/d`],
               ...(hayMeta ? [['Meta por día', `${n0(porDia(lb.meta.produccion))} bbl/d`], ['Meta a la fecha', `${n0(lb.meta.produccion)} bbl`],
                 [enCurso ? 'Meta del mes completo' : 'Meta del período', `${n0(lb.meta.produccionTotal)} bbl`]] as Array<[string, string]> : [['Meta', SIN_META] as [string, string]])] }} />
@@ -160,7 +163,7 @@ export function Produccion() {
           <table className="tabular w-full min-w-[620px] text-right text-[11.5px]">
             <thead className="text-[9.5px] text-[var(--tinta3)]">
               <tr><th className="py-1.5 text-left font-normal">{largo ? 'Mes' : 'Día'}</th><th className="font-normal">Real</th><th className="font-normal">Potencial</th>
-                <th className="font-normal">Diferido</th><th className="font-normal">Inventario</th><th className="font-normal">Eficiencia</th><th className="font-normal">Meta</th></tr>
+                <th className="font-normal">Diferido</th><th className="font-normal">Inventario</th><th className="font-normal">Del potencial</th><th className="font-normal">Meta</th></tr>
             </thead>
             <tbody>
               {largo ? meses.map(m => (
@@ -199,6 +202,23 @@ export function Produccion() {
       {ing && <AsignacionOficial campos={ids} />}
     </>
   )
+}
+
+/** Lo real sobre el potencial del libro (las pruebas × el factor de asignación del
+ *  mes): solo descuenta lo que no se produjo por paradas. NO es la eficiencia de
+ *  producción, que tiene otro nombre y otra cuenta (D3; QA-R, vecino 2). */
+const DEL_POTENCIAL = 'Lo real ÷ el potencial de al lado: lo que daban las pruebas de los pozos con el factor de asignación del mes, que las deja medidas como el punto de medición oficial. Por eso solo descuenta lo que no se produjo por paradas.'
+
+/** Para producción, el mismo ⓘ con la diferencia de verdad contra la eficiencia de
+ *  producción de la escalera, con las cifras del período. */
+function InfoDelPotencial({ q }: { q: { campos: string[]; desde: Date; hasta: Date } }) {
+  const b = useRepartoChoke(q)
+  const brecha = Math.round(b.brechaPruebas)
+  const libro = b.potencial > 0 ? (b.real / b.potencial) * 100 : 0
+  const porque = brecha === 0 ? 'en este período las pruebas y el medidor oficial dan lo mismo'
+    : brecha > 0 ? `descuenta además lo que las pruebas dan de más que el medidor oficial (${n0(brecha)} bbl en el período)`
+      : `suma además lo que el medidor oficial da de más que las pruebas (${n0(-brecha)} bbl en el período)`
+  return <Info titulo="% del potencial" texto={`${DEL_POTENCIAL} No es la eficiencia de producción («Lo que no se produjo, por tipo»): esa parte de las pruebas sin el factor y ${porque}. Aquí, ${n1(libro)} % del potencial y ${n1(b.pe)} % de eficiencia de producción.`} />
 }
 
 /** Cifra de la cabecera, con la misma forma que la barra de al lado: rótulo,

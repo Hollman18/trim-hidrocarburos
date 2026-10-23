@@ -106,8 +106,13 @@ const vh = (ctx: Contexto, versiones: Historial | Versiones) => `${versionDe(ctx
  *  reparten por tramo o por planeación leen la fila vigente (QA-A-01; C-09),
  *  así que una escritura las vuelve a pedir. */
 const vhg = (ctx: Contexto, versiones: Historial | Versiones, guardadas: object) => `${vh(ctx, versiones)}.${versionDe(guardadas)}`
-/** Lo guardado de la sesión como lo lee el motor, o nada. */
-const conGuardadas = (guardadas: Record<string, BorradorClasificacion>) => ({ guardadas: guardadasDe(guardadas) })
+/** Lo guardado de la sesión como lo lee el motor. Las cinco vistas que reparten
+ *  por tramo o por planeación lo piden SIN valor por defecto (QA-R, vecino 9):
+ *  quien las llame sin lo guardado obtendría el reparto de «nadie dijo nada» sin
+ *  aviso. Desde JavaScript (los guiones de la referencia, sin escrituras) llega
+ *  `undefined`, y entonces sí es «nadie dijo nada». */
+type Guardadas = Record<string, BorradorClasificacion>
+const conGuardadas = (guardadas: Guardadas | undefined) => ({ guardadas: guardadasDe(guardadas ?? {}) })
 
 /* ─────────────────────────── la tubería del campo ─────────────────────────── */
 
@@ -115,7 +120,7 @@ const conGuardadas = (guardadas: Record<string, BorradorClasificacion>) => ({ gu
  *  cada día del período usa las capacidades que regían ese día, y la tubería
  *  dice quién y cuándo firmó las de hoy. Lo perdido y lo que se pierde ahora
  *  van por el tramo vigente de cada fila (`guardadas`: lo que dijeron las personas). */
-export const pedirTuberia = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): TuberiaCampo =>
+export const pedirTuberia = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): TuberiaCampo =>
   tuberiaCampo(campo, desde, hasta, ctx, versiones, conGuardadas(guardadas))
 export function useTuberia(campo: string, desde: Date, hasta: Date): TuberiaCampo {
   const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
@@ -130,7 +135,7 @@ export interface SerieChoke {
   vueltas: Record<string, number>
 }
 /** `GET /api/vistas/campos/:campo/choke/serie?desde=&hasta=` */
-export const pedirSerieChoke = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): SerieChoke =>
+export const pedirSerieChoke = (campo: string, desde: Date, hasta: Date, ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): SerieChoke =>
   serieChoke([campo], desde, hasta, ctx, versiones, conGuardadas(guardadas))
 export function useSerieChoke(campo: string, desde: Date, hasta: Date): SerieChoke {
   const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
@@ -196,7 +201,7 @@ export function useCriticidad(campos: string[]): VistaCriticidad {
 
 /** `GET /api/vistas/choke/reparto?campos=&desde=&hasta=`: sobre las filas de
  *  la ANH con su clasificación vigente, las mismas del árbol (QA-A-01). */
-export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): BrechaChoke =>
+export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): BrechaChoke =>
   brechaPorChoke(q.campos, q.desde, q.hasta, ctx, versiones, conGuardadas(guardadas))
 export function useRepartoChoke(q: ConsultaPeriodo): BrechaChoke {
   const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
@@ -204,7 +209,7 @@ export function useRepartoChoke(q: ConsultaPeriodo): BrechaChoke {
 }
 
 /** `GET /api/vistas/choke/mensual?campos=` */
-export const pedirRepartoMensual = (campos: string[], ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): MesPorTramo[] =>
+export const pedirRepartoMensual = (campos: string[], ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): MesPorTramo[] =>
   repartoPorMes(campos, ctx, versiones, conGuardadas(guardadas))
 export function useRepartoMensual(campos: string[]): MesPorTramo[] {
   const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
@@ -224,7 +229,7 @@ export function useArbolChoke(q: ConsultaArbol): ArbolChoke {
 }
 
 /** `GET /api/vistas/choke/base?campos=&desde=&hasta=` · undefined sin tres meses publicados antes del período. */
-export const pedirBaseChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones?: Historial, guardadas: Record<string, BorradorClasificacion> = {}): LineaBasePorTramo | undefined =>
+export const pedirBaseChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): LineaBasePorTramo | undefined =>
   lineaBasePorTramo(q.campos, q.desde, q.hasta, ctx, versiones, conGuardadas(guardadas))
 export function useBaseChoke(q: ConsultaPeriodo): LineaBasePorTramo | undefined {
   const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)

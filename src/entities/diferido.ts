@@ -24,7 +24,7 @@ import {
   faDe, crudoAsignado, aguaDePrueba, ordenOptimo, bandaDe, fiscalPromedio, tramosDeEvento, toleranciaDe,
   evitableDeEvento, historialDeEquipo, fiscalDeAyer, perdidaPorFrecuencia, type Tramo, type HistorialEquipo,
 } from './libro'
-import { causaDeParada, causaDeEvento, estadoIdentificacion, ALTO_IMPACTO, type Causa, type Contexto, type TipoCausa } from './causa-senal'
+import { causaDeParada, causaDeEvento, estadoIdentificacion, textoDePersona, rolDeQuien, ALTO_IMPACTO, type Causa, type Contexto, type TipoCausa } from './causa-senal'
 import { senalesDe, proyectable, type Senal } from './vigia'
 import { saludDePartes, motivoDeParte, textoHoras, HORIZONTE_H, type SaludParte, type EstadoParte } from './salud'
 import { saludDeEsp } from './esp'
@@ -442,6 +442,16 @@ export interface Riesgo {
   /** En riesgo por una parte: su estado (fuera de banda o avisa). */
   estadoParte?: EstadoParte
   bblDia: number
+  /** `bblDia` es un TECHO, no una cifra calculada: supone que se cierra todo lo
+   *  que esté produciendo y dependa del equipo (un servicio o un equipo de
+   *  proceso que cuelga de todo el campo). La pantalla lo dice «hasta», como en
+   *  «Si falla hoy» (D6; K-101 de La Ceiba). Ausente en lo calculado: lo que ya
+   *  se pierde, las bombas de la línea y las electrosumergibles. */
+  techo?: true
+  /** `motivo` es lo que respondió una persona con sus palabras (una parada
+   *  declarada): quién, por su rol («el operador de campo»). En el papel va
+   *  «Lo contestó …», nunca el texto ni el nombre (D2). Ausente si `motivo` es de TRIM. */
+  declaradoPor?: string
   pozos: number
   /** Cuándo empezó la causa: la parada de la bomba o del servicio, o el
    *  evento del pozo. */
@@ -559,7 +569,9 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
       const cierre = new Date(e.evento.inicio)
       const alto = ALTO_IMPACTO.includes(c.tipo)
       const r = por.get(k) ?? { campoId, equipo: c.equipo, tipo: c.tipo, estado: 'perdiendo' as const, prioridad: (alto ? 1 : 2) as Severidad, bblDia: 0, pozos: 0,
-        desde: inicioDeCausa(c) ?? cierre, cierreDesde: cierre, parte: c.parte, motivo: c.texto, altoImpacto: alto }
+        desde: inicioDeCausa(c) ?? cierre, cierreDesde: cierre, parte: c.parte, motivo: c.texto,
+        // Lo que escribió una persona con sus palabras se dice en el papel por su rol (D2).
+        ...(textoDePersona(c) ? { declaradoPor: rolDeQuien(c.declarado!.por) } : {}), altoImpacto: alto }
       r.bblDia += crudoAsignado(p) * factor
       r.pozos++
       if (cierre < r.cierreDesde!) r.cierreDesde = cierre
@@ -597,7 +609,8 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
       if (!eq?.instrumentado || !(eq.severidad === 1 || eq.severidad === 2) || eq.aguasAbajo !== 'todo el campo') continue
       if (out.some(r => r.campoId === campoId && r.equipo === id)) continue
       const produciendo = pozosDe(campoId).filter(p => estadoAhora(p).produce).reduce((a, p) => a + crudoAsignado(p), 0)
-      out.push({ campoId, equipo: id, tipo: eq.servicio ?? 'proceso', estado: 'en-riesgo', prioridad: eq.severidad, bblDia: produciendo,
+      // «Se cierra lo que esté produciendo»: un techo, no una cifra calculada (D6), el mismo de «Si falla hoy».
+      out.push({ campoId, equipo: id, tipo: eq.servicio ?? 'proceso', estado: 'en-riesgo', prioridad: eq.severidad, bblDia: produciendo, techo: true,
         pozos: pozosDe(campoId).filter(p => estadoAhora(p).produce).length, altoImpacto: false,
         motivo: `${eq.nombre}: ${eq.estado}. ${eq.lectura}`, accion: eq.intervencion?.accionInmediata })
     }

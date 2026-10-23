@@ -147,7 +147,9 @@
                   "ALTO_IMPACTO",
                   "COMO",
                   "TIPO_CAUSA",
-                  "estadoIdentificacion"
+                  "estadoIdentificacion",
+                  "rolDeQuien",
+                  "textoDePersona"
                 ]
               },
               {

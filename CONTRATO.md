@@ -7,7 +7,7 @@ este documento las resume sin reemplazarlas:
 | Qué | Dónde | Cómo se prueba |
 |---|---|---|
 | La **forma JSON** de cada respuesta (rutas, parámetros, códecs) | [`src/shared/api/contrato.ts`](src/shared/api/contrato.ts) y [`cable.ts`](src/shared/api/cable.ts) | `npm run verificar:contrato` |
-| Las **reglas de cada escritura** (403, 404, 409, 422, en su orden) | [`src/shared/api/escrituras.ts`](src/shared/api/escrituras.ts): en el demo, ese módulo ES el servidor | `npm run verificar` (secciones 6c, 8b, 11, 15 y 16) |
+| Las **reglas de cada escritura** (403, 404, 409, 422, en su orden) | [`src/shared/api/escrituras.ts`](src/shared/api/escrituras.ts): en el demo, ese módulo ES el servidor (y las del árbol de paradas dan su HTTP y su código, C-22) | `npm run verificar` (secciones 6c, 8b, 11, 15 y 16) y `node scripts/referencia.mjs comparar --base-url=… --escrituras` |
 | Los **números** (libro, predicción, salud, riesgo, SAP, aciertos, asignación) | `src/entities/*.ts`; los insumos con que se calculan, en `referencia/insumos/` | `npm run verificar` y `node scripts/referencia.mjs comparar --base-url=…` |
 
 `simulador-api/` (Node + SQLite, sin dependencias) implementa **solo el registro de la cadena
@@ -237,6 +237,11 @@ sea JSON, el front la trata como **«no hay servicio»**, no como una afirmació
 | 422 | `pregunta-ajena` | una pregunta que TRIM no tiene o que no es de esa fila (C-18); una opción que no es de la pregunta |
 | 422 | `cascada-sin-ids` | «para la cascada» sin `ids`, sin la fila de la dirección entre ellos o con una fila de otra raíz |
 
+En el demo `escrituras.ts` ES el servidor y cada rechazo de estas escrituras trae, además del
+mensaje, su HTTP y su código de esta tabla (`Rechazo.estado` y `Rechazo.codigo`); con la fuente
+http, los del servidor. Así `referencia/escrituras/` comprueba que un backend rechaza lo mismo
+con el mismo HTTP y el mismo código (C-08; «Cómo se comprueba un backend»).
+
 Campos extra según el caso: `errores: [{ campo, texto }]` en accesos (`campo` es `nombre`,
 `correo`, `rol`, `campos`, `whatsapp`, `alertas`, `motivo` o `general`: el `ErrorAcceso` de
 `usuarios.ts`); `campo: "descripcion"` en un aviso; `faltas: [ruta]` en un nacimiento mal
@@ -350,7 +355,7 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/bombas/prediccion?campo&equipo` | `Prediccion`: `perfil` por clave; `perdiendo.pozos: [clave]` (una multifásica parada trae los pozos cerrados por ella; una de recobro parada, `{ bblDia: 0, pozos: [] }`); `colchon` con `null` = no se llena (lo que aguantaría si parara **ahora con todo produciendo**); `llenado` (solo una de disposición **ya parada**, con tanque y nivel): `{ aguaEntraBpd, colchon, prioridad }`, el tanque con el agua que **entra** ahora (fórmula en «Predicción», abajo); `colchon.horas: null` = no sube; `orden.pasos[].pozo` y `orden.sinPrueba` por clave |
 | `/vistas/bombas/paradas?campo&equipo` | `ParadaMedida[]` de la más reciente a la más vieja: `inicio`, `fin` ISO, `tramos` como en el libro, `colchon.previsto`. El tanque y el respaldo de `colchon.previsto` son los de la configuración que **regía cuando paró** (`configEn(historial, inicio)`), como en los mensajes: firmar hoy otro respaldo no cambia una parada vieja. Lo mismo en `paradas-en-periodo` y en `abierta` de `/vistas/bombas` |
 | `/vistas/bombas/paradas-en-periodo?campos&desde&hasta` | `ParadaMedida` + `{ horasEnPeriodo, bblEnPeriodo, cruzaBorde }`: solo las que se solapan con el período, recortadas a `[desde, hasta)` con el factor de cada mes. Una parada que cruza el borde no se suma entera a los dos meses |
-| `/vistas/riesgo?campos` | `Riesgo[]` con `desde` y `cierreDesde` ISO; cada item trae `prioridad` (la de la salud de la parte) y `estadoParte`. **`costoFalla` = lo que costaría que el equipo fallara HOY** (fórmula en «Costo si falla hoy», abajo): una sola cuenta en bombas y electrosumergibles, así las filas se suman. `0` en una bomba de recobro o con un respaldo que absorbe toda el agua; **ausente** (no 0) si el equipo no tiene fallas cerradas propias ni, en una electrosumergible, de su flota. `colchonH` (nuevo): en una bomba de disposición con tanque, las horas que aguanta hoy el tanque (una reparación más corta no cuesta crudo); ausente con colchón infinito o sin colchón calculado. `costoDe`: `'propio'` si sale de la historia del equipo, `'flota'` si nunca ha fallado y se estimó con el promedio de su flota en el campo (la pantalla lo marca); no va cuando `costoFalla` es 0 por definición. `mdtFuente` es solo texto para leer («el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque»; en una electrosumergible «20,3 d fuera, el promedio de …»), con las horas en la regla de las pantallas y el colchón **truncado**, nunca redondeado hacia arriba (19,05 h → «19 h»; 18,6 h → «18 h»): la pantalla dice «0 si vuelve antes de 19 h» y tiene que ser cierto. Lo que el equipo **ya costó** por falla es otra cifra (`HistorialEquipo.bblPorFalla`, «le ha costado por falla»). El `motivo` dice «X salió de su banda normal; llega a su alarma en T» o «X ya llegó a su alarma», nunca «fuera de límite»; T con la regla de las pantallas: menos de 48 h en horas enteras («43 h»), si no en días con un decimal («10,9 d»), más de 90 días «más de 3 meses» |
+| `/vistas/riesgo?campos` | `Riesgo[]` con `desde` y `cierreDesde` ISO; cada item trae `prioridad` (la de la salud de la parte) y `estadoParte`. **`costoFalla` = lo que costaría que el equipo fallara HOY** (fórmula en «Costo si falla hoy», abajo): una sola cuenta en bombas y electrosumergibles, así las filas se suman. `0` en una bomba de recobro o con un respaldo que absorbe toda el agua; **ausente** (no 0) si el equipo no tiene fallas cerradas propias ni, en una electrosumergible, de su flota. `colchonH` (nuevo): en una bomba de disposición con tanque, las horas que aguanta hoy el tanque (una reparación más corta no cuesta crudo); ausente con colchón infinito o sin colchón calculado. **`techo: true`**: `bblDia` no es una cifra calculada sino un techo (un servicio o un equipo de proceso que cuelga de todo el campo: «se cierra lo que esté produciendo»); la pantalla lo dice «hasta N», como en «Si falla hoy» (D6; QA-R). Ausente en lo calculado. **`declaradoPor`**: `motivo` es lo que respondió una persona con sus palabras (una parada declarada) y esto es quién, por su rol («el operador de campo»); en el papel va «Lo contestó …», nunca el texto ni el nombre (D2). Ausente si `motivo` es de TRIM. `costoDe`: `'propio'` si sale de la historia del equipo, `'flota'` si nunca ha fallado y se estimó con el promedio de su flota en el campo (la pantalla lo marca); no va cuando `costoFalla` es 0 por definición. `mdtFuente` es solo texto para leer («el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque»; en una electrosumergible «20,3 d fuera, el promedio de …»), con las horas en la regla de las pantallas y el colchón **truncado**, nunca redondeado hacia arriba (19,05 h → «19 h»; 18,6 h → «18 h»): la pantalla dice «0 si vuelve antes de 19 h» y tiene que ser cierto. Lo que el equipo **ya costó** por falla es otra cifra (`HistorialEquipo.bblPorFalla`, «le ha costado por falla»). El `motivo` dice «X salió de su banda normal; llega a su alarma en T» o «X ya llegó a su alarma», nunca «fuera de límite»; T con la regla de las pantallas: menos de 48 h en horas enteras («43 h»), si no en días con un decimal («10,9 d»), más de 90 días «más de 3 meses» |
 | `/vistas/estado?campos` | `EstadoCampo[]`, uno por campo pedido y en ese orden, con `ayer: { fecha: ISO, bbl \| null }` |
 | `/vistas/pozos?campos&desde&hasta` | `FilaPozo[]` con `pozo` y `evento` por clave y `salud?: SaludParte`. `diferidoEsp` = Σ de los tramos del período cuya causa es la electrosumergible del propio pozo (`causa.equipo === pozo` y `tipo === 'electrosumergible'`); sumado en el campo da la fila `electrosumergible` de `porTipo` |
 | `/vistas/pozos/:campo/:pozo?desde&hasta` | `{ fila, tramos, historicos: [{ evento: clave, causa }], senales, partes, historial? }` o `null` |
@@ -758,7 +763,9 @@ se guardó en esta petición, por clave. El alcance:
   clasificación); `aplicarALaCascada`, **cada evento de las filas de `ids`** (las que mostró la
   pantalla, U2 §4.3: «Sí, a los {n}»), una escritura por evento. Si la raíz trae eventos que no
   están en `ids`, `409`: la pantalla tiene que mostrarlos antes. La fila de la dirección va entre
-  los `ids`;
+  los `ids`. Si el período corta la cascada (un rango que deja fuera el día en que cayó la raíz o
+  el siguiente), la pantalla pide las filas de esa ventana por el mismo `GET /api/vistas/anh/paradas`
+  y manda todas: dice «los 18 pozos» aunque el período muestre 4 (QA-R, vecino 12);
 - el tramo de exceso del programa (`exceso`) se guarda solo, en su fila: es otra decisión, no
   planeada, y no hereda de su evento.
 
@@ -853,7 +860,10 @@ del alcance `revision: { motivo, pedirA?, por, porId, rol, hora, n }` (`Revision
 «REVISAR». Queda **atendida** (`revision.atendida: { por, porId, rol, hora }`) cuando ese rol (o,
 sin `pedirA`, supervisión, producción, el jefe o confiabilidad) dice, corrige, contesta o
 confirma algo de la fila. La misma revisión de la misma persona, todavía sin atender, no se
-guarda dos veces. `400` la forma; `403` sin `anh:clasificar`, sin persona o con un rol que no es
+guarda dos veces. **No pisa lo que pidió otra persona** (D1): en otra fila u otro evento del
+alcance donde rige una revisión de OTRA persona sin atender (el jefe le pidió a producción «¿Fue
+el yacimiento?»), esa clave no se escribe y su revisión sigue; la clave de la fila de la dirección
+sí la recibe. `400` la forma; `403` sin `anh:clasificar`, sin persona o con un rol que no es
 del producto; `404` la fila no existe o es de un campo ajeno; `409` `cadena` cambió; `422`
 motivo de menos de 5 caracteres (sin contar lo que no se ve) o de más de 500, `pedirA` que no es
 un rol que revisa, o pedírselo al propio rol; `422`/`409` el alcance de la cascada. «2 Algo está
@@ -1750,9 +1760,25 @@ formas exactas son los tipos TS citados):
    node scripts/referencia.mjs comparar --base-url=http://servidor:8080
    ```
    pide cada `endpoint` (que ya trae `/api/…`) y compara: la respuesta tiene que **contener** lo
-   esperado (puede traer más), los números valen iguales con una diferencia de hasta 1e-6
+   esperado (puede traer más, salvo las claves que dicen algo con solo venir: `AUSENTES` en
+   `scripts/referencia-diferencias.mjs`, como `colchonH`, `revision`, `siParaOtra`, `hz`,
+   `techo` o `retiros`), los números valen iguales con una diferencia de hasta 1e-6
    relativo o 0,005 absoluto, las fechas se comparan como instante y el orden de las listas
-   importa. Sale con 1 si algo no coincide. `npm test` comprueba que los archivos de
+   importa. Sale con 1 si algo no coincide.
+
+   **Las escrituras rechazadas** (`referencia/escrituras/`, C-08): 18 secuencias de POST del
+   árbol de paradas con el HTTP y el código del contrato que tiene que dar cada paso (403, 404,
+   409, 422 y 400, y las aceptadas que los preparan: «el jefe corrige con motivo; el supervisor
+   cambia lo mismo para la cascada sin motivo → 409 `cambia-a-otra-persona`»):
+   ```bash
+   node scripts/referencia.mjs comparar --base-url=http://servidor:8080 --escrituras --tokens=tokens.json
+   ```
+   Las aceptadas **escriben**: va contra un backend recién cargado con el arranque, una vez (cada
+   caso toca filas y eventos que ningún otro toca). El rol de cada paso viaja en `x-rol` y, con
+   sesión, con el token de ese rol (`--tokens`, `{ "sup": "…", "jefe": "…" }`, o `TRIM_TOKENS`;
+   si no, el de `--token`). Un rechazo vale si trae el mismo HTTP y el mismo `error.codigo`. El
+   caso `403-rol-desconocido` manda el rol `cont` (de la versión 2): con sesión necesita el token de
+   una persona con ese rol, porque el backend lee el rol del token y no de `x-rol`. `npm test` comprueba que los archivos de
    `referencia/insumos/` bastan: arma todos los casos con los insumos **leídos de esos
    archivos** (no con los de `src/entities/datos/`) y deben dar lo mismo.
 2. **El front contra el backend.** En `.env.local`: `VITE_FUENTE=http` y
@@ -2085,6 +2111,10 @@ interface Revision { motivo: string; pedirA?: 'sup' | 'prod' | 'jefe' | 'conf'; 
 interface ParadaAnh {
   id: string                        // `${eventoId}@${diaOperacional}#${n}`
   eventoId: string; raiz: string; minutosDesdeRaiz?: number; evidenciaYacimiento?: string; revision?: Revision
+  // Lo que una persona dijo y otra retiró con motivo (`retirado` que rige en la fila): no rige, la fila volvió a lo
+  // que propone TRIM, y la pantalla lo dice en la historia de la parada («antes: …, retirado por … porque …»). El
+  // motivo se queda en TRIM: no va a la ANH ni al papel (D2). Ausente si nada se retiró (QA-R, vecino 8).
+  retiros?: Array<{ paso: Paso; valor: string; por: string; porId: string; rol: string; hora: ISO; motivo?: string }>
   pozo: string; campoId: string; diaOperacional: string; inicio: ISO; fin: ISO
   inicioEvento: ISO                 // cuándo empezó el evento (no el tramo del día): «parada desde el 25 de sept» (B-22)
   hz?: { parada: number; prueba: number }   // código HZ: la frecuencia a la que quedó y la de su prueba («bajó de 52,5 a 39,5 Hz»)

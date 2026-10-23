@@ -106,7 +106,7 @@ export function Regulatorio() {
         <Panel titulo="PRODUCCIÓN DEL PERÍODO">
           <div className="text-[11.5px]">
             {([['Real (punto de medición oficial)', `${n0(lb.real)} bbl`], ['Potencial (pruebas × factor)', `${n0(lb.potencial)} bbl`],
-              ['Diferidos', `${n0(lb.brecha)} bbl ±${n0(lb.tolerancia)}`], ['Eficiencia', `${n1(lb.pe)} %`],
+              ['Diferidos', `${n0(lb.brecha)} bbl ±${n0(lb.tolerancia)}`], ['Del potencial', `${n1(lb.pe)} %`],
               ['Pozos sin prueba', lb.custodia.sinPrueba.map(p => p.id).join(', ') || 'ninguno'],
               ['Pruebas estimadas', lb.custodia.estimados.map(p => p.id).join(', ') || 'ninguna']] as const).map(([k, v]) => (
               <div key={k} className="flex justify-between gap-2 border-b border-[var(--linea2)] py-1.5 last:border-0">

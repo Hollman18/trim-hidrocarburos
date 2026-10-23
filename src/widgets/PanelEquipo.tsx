@@ -13,6 +13,8 @@ import { CadenaDato } from './CadenaDato'
 import { Severidad_, Chip, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { causaEnPapel } from '@/shared/ui/papel'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { Sparkline } from '@/shared/ui/Sparkline'
@@ -229,7 +231,7 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
             {historia && nivel === 'operacion' && historia.eventos[0] && (
               <p className="mt-3 flex flex-wrap items-center gap-x-1 text-[11.5px] text-[var(--tinta2)]">
                 <span>Última parada: <b className="tabular text-[var(--tinta)]">{fechaHora(historia.eventos[0].inicio)}</b>{historia.eventos[0].causa.parte ? ` · ${NOMBRE_PARTE[historia.eventos[0].causa.parte].toLowerCase()}` : ''}</span>
-                <Info titulo="Por qué paró" texto={historia.eventos[0].causa.texto} />
+                <Info titulo="Por qué paró" texto={historia.eventos[0].causa.texto} textoEnPapel={causaEnPapel(historia.eventos[0].causa)} />
               </p>
             )}
             {historia && nivel === 'ingenieria' && <Historia key={eq.id} historia={historia} />}
@@ -282,14 +284,14 @@ function Historia({ historia }: { historia: HistoriaEquipo }) {
     <Tip key={x.id} titulo={`${fechaHora(x.inicio)} · ${plural(x.pozos, 'pozo', 'pozos')}`}
       filas={[[x.fin ? 'Hasta que reabrió el último pozo' : 'Pozos cerrados, sigue', fmtHoras(horasEntre(x.inicio, x.fin ?? AHORA), true)],
         ['Barriles', `${n0(x.bbl)} bbl`], ['Cómo se identificó', COMO[x.causa.como]]]}
-      pista={x.causa.texto} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
+      pista={x.causa.texto} pistaEnPapel={causaEnPapel(x.causa)} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
       className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1 text-[11px] last:border-0 print:border-b-0">
       <span className="min-w-0">
         <b className="tabular">{fechaHora(x.inicio)}</b>
         <span className="text-[var(--tinta3)]"> · {cerrados(x)}</span>
         <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{x.causa.parte ? `${NOMBRE_PARTE[x.causa.parte]} · ${COMO[x.causa.como]}`
           // «Mantenimiento preventivo programado» ya dice «por el programa aprobado».
-          : corto(x.causa.texto) ? `${x.causa.texto}${x.causa.como === 'programa' ? '' : ` · ${COMO[x.causa.como]}`}` : COMO[x.causa.como]}</small>
+          : corto(x.causa.texto) ? <DichoEnPapel papel={`${causaEnPapel(x.causa)} · ${COMO[x.causa.como]}`}>{`${x.causa.texto}${x.causa.como === 'programa' ? '' : ` · ${COMO[x.causa.como]}`}`}</DichoEnPapel> : COMO[x.causa.como]}</small>
       </span>
       <b className="tabular">{n0(x.bbl)} bbl</b>
     </Tip>

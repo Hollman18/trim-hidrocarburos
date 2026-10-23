@@ -27,7 +27,7 @@ import {
   type ClaveN1NoPlaneada, type CodigoN2, type CodigoN2De, type CausaGeneral, type IdVersionCatalogo, type OrigenAnh,
 } from './anh-catalogo'
 import { chokeDeCausa, esDeclaracionDeMercado, porSaberDe, PREGUNTA_ORIGEN, REGLA_CHOKE, type ChokeDeParada } from './choke'
-import type { Causa, Contexto, TipoCausa } from './causa-senal'
+import { rolDeQuien, textoDePersona, type Causa, type Contexto, type TipoCausa } from './causa-senal'
 import type { ParadaProgramada } from './configuracion'
 import type { CAUSAS_POZO } from './mensajes'
 import { NOMBRE_PARTE } from './partes'
@@ -957,11 +957,8 @@ function senalQueApunta(c: Causa, fila: IdFila | 'pendiente'): SenalApunta | und
 /** La versión del armado de `desc_evid`. */
 export const DESC_EVID_ID = 'desc-evid@1'
 
-/** Quien declaró, dicho por su rol («el supervisor»), nunca por su nombre (S1 R-D). */
-function comoRol(por: string): string {
-  const i = por.lastIndexOf(' · ')
-  return i >= 0 ? `el ${por.slice(i + 3).trim()}` : 'una persona del campo'
-}
+/** Quien declaró, dicho por su rol («el supervisor»), nunca por su nombre (S1 R-D): la misma regla del papel. */
+const comoRol = rolDeQuien
 
 /** Lo que dijo quien declaró, solo en lo cerrado (D2): uno de los motivos de
  *  `CAUSAS_POZO` o lo que vio en la parte, del catálogo. Lo que escribió con
@@ -990,7 +987,7 @@ const sinMotivoDelPrograma = (s: string) => s.replace(/^(Programa [^\s:]+): [\s\
 export function causaParaSalir(c: Causa): { que: string[]; evidencia: string[] } {
   const quien = c.declarado?.por
   const sinNombre = (s: string) => (quien ? s.split(quien).join(comoRol(quien)) : s)
-  const que = c.declarado && c.texto === c.declarado.texto ? declaracionCerrada(c)
+  const que = textoDePersona(c) ? declaracionCerrada(c)
     : c.como === 'programa' ? ['Estaba en el programa de paradas firmado'] : [c.texto]
   return { que: que.map(sinNombre), evidencia: c.evidencia.map(s => sinNombre(sinMotivoDelPrograma(s))) }
 }

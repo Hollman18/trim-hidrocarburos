@@ -12,6 +12,7 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
+import { causaEnPapel } from '@/shared/ui/papel'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
@@ -106,7 +107,7 @@ export function Pozos() {
       </td>
       <td className="max-w-[240px]">
         {f.produce && !f.hz ? <span className="text-[var(--tinta3)]">produciendo</span> : (
-          <Tip titulo={f.causa ? TIPO_CAUSA[f.causa.tipo] : 'Evento abierto'} pista={f.causa?.texto}
+          <Tip titulo={f.causa ? TIPO_CAUSA[f.causa.tipo] : 'Evento abierto'} pista={f.causa?.texto} pistaEnPapel={f.causa ? causaEnPapel(f.causa) : undefined}
             filas={f.causa ? [['Se le carga a', f.causa.equipo], ['Código', f.evento?.codigo ?? '—'], ...f.causa.evidencia.slice(0, 2).map((e, i) => [i ? 'Otra señal' : 'Señal', e] as [string, string])] : []}>
             <span className="block truncate">{f.hz ? `a ${n1(f.hz)} Hz · ` : ''}{ahora(f)}</span>
           </Tip>

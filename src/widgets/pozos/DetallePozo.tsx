@@ -15,6 +15,7 @@ import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { Analogico } from '@/shared/ui/Analogico'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
+import { causaEnPapel } from '@/shared/ui/papel'
 import { Tip } from '@/shared/ui/Tip'
 import { n0, n1, decimalesDe, plural } from '@/shared/lib/formato'
 import { BloqueParte } from '@/widgets/bombas/BloqueParte'
@@ -87,7 +88,8 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
               {f.causa.parte && <span>{NOMBRE_PARTE[f.causa.parte].toLowerCase()}</span>}
               {porIdentificar(f.causa, f.evento.fin, porOtro) && <Chip>{porIdentificar(f.causa, f.evento.fin, porOtro)}</Chip>}
               <Info titulo={f.produce ? 'Por qué está frenado' : 'Por qué paró'}
-                texto={`${sinPunto(f.causa.texto)}. Código ${f.evento.codigo} (${CODIGO[f.evento.codigo]}). Se le carga a ${f.causa.equipo} (${COMO[f.causa.como]}).`} />
+                texto={`${sinPunto(f.causa.texto)}. Código ${f.evento.codigo} (${CODIGO[f.evento.codigo]}). Se le carga a ${f.causa.equipo} (${COMO[f.causa.como]}).`}
+                textoEnPapel={`${sinPunto(causaEnPapel(f.causa))}. Código ${f.evento.codigo} (${CODIGO[f.evento.codigo]}). Se le carga a ${f.causa.equipo} (${COMO[f.causa.como]}).`} />
             </span>
           </p>
         )}
@@ -229,7 +231,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
           const plc = new Date(t.evento.inicio)
           const recortado = t.inicio.getTime() > plc.getTime() || (!!t.evento.fin && t.fin.getTime() < Date.parse(t.evento.fin))
           return (
-          <Tip key={t.evento.id} titulo={`${fechaHora(plc)} · ${TIPO_CAUSA[t.causa.tipo]}`} pista={t.causa.texto} imprimir="todo"
+          <Tip key={t.evento.id} titulo={`${fechaHora(plc)} · ${TIPO_CAUSA[t.causa.tipo]}`} pista={t.causa.texto} pistaEnPapel={causaEnPapel(t.causa)} imprimir="todo"
             filas={[['Se le carga a', t.causa.equipo], ['Cómo se identificó', COMO[t.causa.como]], ['Código', `${t.evento.codigo} (${CODIGO[t.evento.codigo]})`],
               ...(recortado ? [['En el período', `${fechaHora(t.inicio)} · ${fmtHoras(t.horas, true)}`] as [string, string]] : [])]}
             claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"

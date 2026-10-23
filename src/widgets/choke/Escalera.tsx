@@ -9,8 +9,20 @@ import { n0, n1 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { CAJA, ESCALON_CAMPO } from './palabras'
 
-const AYUDA_ESCALERA = 'Es la escalera del método choke (NSTA §5.3 y §6.4): cada barril que no se produjo cae en un escalón y en un tramo, y la suma da exacto lo que no se produjo según el libro. Desarrollo es del yacimiento; desempeño, del levantamiento sin optimizar; las paradas, de mantenimiento y confiabilidad; capacidad, de la operación (nominación, despacho). El norte de TRIM vive en las paradas no planeadas.'
-const AYUDA_PE = 'Lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar (el menor de sus tramos, día por día). Es la eficiencia de producción de la NSTA (§5.3) y de la ISO/TS 3250. Si limitan los pozos, es la misma eficiencia de arriba; si limita la planta o afuera, no se cuenta como pérdida lo que no pasa aunque nada pare.'
+const AYUDA_ESCALERA = 'Es la escalera del método choke (NSTA §5.3 y §6.4). Arriba, lo que dan los pozos según sus pruebas; lo que dan de más que el medidor oficial no es de ninguna parada y va aparte, en su renglón. Desde el potencial del libro, cada barril que no se produjo cae en un escalón y en un tramo, y los escalones suman exacto lo que no se produjo según el libro. Desarrollo es del yacimiento; desempeño, del levantamiento sin optimizar; las paradas, de mantenimiento y confiabilidad; capacidad, de la operación (nominación, despacho). El norte de TRIM vive en las paradas no planeadas.'
+const AYUDA_BRECHA_PRUEBAS = 'Lo que las pruebas de los pozos dan de más que el punto de medición oficial en el período: el factor de asignación del mes lo descuenta. No es de ninguna parada (es sesgo de medición o desempeño de los pozos, sin separar mientras el factor de medición sea 1) y no se reparte por tramo.'
+
+/** La eficiencia de producción y en qué se diferencia del «% del potencial» del
+ *  libro (arriba en Producción), con las cifras del período: no son la misma
+ *  aunque limiten los pozos (D3; QA-R, vecino 2). */
+function ayudaPe(b: BrechaChoke): string {
+  const libro = b.potencial > 0 ? (b.real / b.potencial) * 100 : 0
+  const brecha = Math.round(b.brechaPruebas)
+  const diferencia = brecha === 0 ? 'Las pruebas y el medidor oficial dan lo mismo en este período'
+    : brecha > 0 ? `Esta descuenta además lo que las pruebas dan de más que el medidor oficial (${n0(brecha)} bbl en el período)`
+      : `Esta suma además lo que el medidor oficial da de más que las pruebas (${n0(-brecha)} bbl en el período)`
+  return `Lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar: lo que dan los pozos según sus pruebas o, el día que limita la planta o afuera, lo que deja pasar ese tramo (lo que no pasa aunque nada pare no se cuenta como pérdida). Es la eficiencia de producción de la NSTA (§5.3) y de la ISO/TS 3250. No es el «% del potencial» de arriba: ese divide por el potencial del libro, las pruebas con el factor de asignación del mes, que las deja medidas como el punto oficial, y solo descuenta lo que no se produjo por paradas. ${diferencia}: ${n1(b.pe)} % aquí y ${n1(libro)} % del potencial.`
+}
 const AYUDA_NO_PLANEADO = 'Las paradas no planeadas (fallas, disparos, terceros) ÷ lo que el campo podía dejar pasar: la eficiencia no planeada de la NSTA. Es el porcentaje que TRIM busca bajar prediciendo las bombas críticas.'
 const AYUDA_SIN_EXPLICAR = 'Lo que no explica ningún evento: el inventario del tanque de venta entre un día y otro. Se muestra, nunca se reparte. Si pasa del 2,5 % del potencial del período, hay que revisarlo (el umbral de cierre de la NSTA).'
 
@@ -31,15 +43,28 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">{periodo.toLowerCase()}<Info titulo="La escalera" texto={AYUDA_ESCALERA} /></span>}>
       <div data-escalera>
         <div className="grid gap-x-6 gap-y-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
-          <Cifra rotulo="eficiencia de producción" valor={`${n1(b.pe)} %`} ayuda={<Info titulo="Eficiencia de producción" texto={AYUDA_PE} />}
+          <Cifra rotulo="eficiencia de producción" valor={`${n1(b.pe)} %`} ayuda={<Info titulo="Eficiencia de producción" texto={ayudaPe(b)} />}
             pie={`${n0(b.real)} de ${n0(b.potencialSistema)} bbl que el campo podía dejar pasar`} />
           <Cifra rotulo="lo no planeado se llevó" valor={`${n1(b.peNoPlaneada)} %`} ayuda={<Info titulo="Lo no planeado" texto={AYUDA_NO_PLANEADO} />}
             pie={`${n0(b.porEscalon['disponibilidad-no-planeada'])} bbl en paradas no planeadas`} />
         </div>
 
-        <ol className="mt-3 text-[11.5px]" aria-label="De lo que podían dar los pozos a lo que salió">
-          <li className="flex items-baseline justify-between gap-2 border-b border-[var(--linea2)] py-1">
-            <span>Lo que podían dar los pozos <small className="text-[var(--tinta3)]">· pruebas × factor de asignación</small></span>
+        <ol className="mt-3 text-[11.5px]" aria-label="De lo que dan los pozos según sus pruebas a lo que salió">
+          {/* Un solo número del choke: la escalera empieza donde empieza la eficiencia de producción (las pruebas),
+              y lo que las pruebas dan de más que el medidor va en su renglón, antes del potencial del libro (D3). */}
+          <li className="flex items-baseline justify-between gap-2 border-b border-[var(--linea2)] py-1" data-escalon-inicio data-bbl={b.potencialPruebas}>
+            <span>Lo que dan los pozos según sus pruebas</span>
+            <b className="tabular">{n0(b.potencialPruebas)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
+          </li>
+          <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-[var(--linea2)] py-1 pl-3" data-brecha-pruebas data-bbl={b.brechaPruebas}>
+            <span className={cn('flex flex-wrap items-center gap-x-1.5', Math.round(b.brechaPruebas) === 0 && 'text-[var(--tinta3)]')}>
+              {b.brechaPruebas >= 0 ? '− Lo que las pruebas dan de más que el medidor oficial' : '+ Lo que el medidor oficial da de más que las pruebas'}
+              <Info titulo="Las pruebas y el medidor oficial" texto={AYUDA_BRECHA_PRUEBAS} />
+            </span>
+            <b className="tabular text-right">{n0(Math.abs(b.brechaPruebas))}</b>
+          </li>
+          <li className="flex items-baseline justify-between gap-2 border-b border-[var(--linea2)] py-1" data-potencial-libro data-bbl={b.potencial}>
+            <span>= El potencial del libro <small className="text-[var(--tinta3)]">· lo mismo, medido como el punto oficial (pruebas × factor de asignación)</small></span>
             <b className="tabular">{n0(b.potencial)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           </li>
           {filas.map(([e, v]) => (
@@ -47,7 +72,7 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
           ))}
           <Escalon nombre="Sin explicar: el inventario entre días" valor={b.sinExplicar} ancho={ancho(b.sinExplicar)} discontinuo
             ayuda={<Info titulo="Sin explicar" texto={AYUDA_SIN_EXPLICAR} />} aviso={!b.cuadra} />
-          <li className="flex items-baseline justify-between gap-2 py-1 font-semibold">
+          <li className="flex items-baseline justify-between gap-2 py-1 font-semibold" data-escalon-real data-bbl={b.real}>
             <span>= Lo que salió por el punto de medición oficial</span>
             <b className="tabular">{n0(b.real)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           </li>
@@ -60,10 +85,11 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
           </p>
         )}
         <Lectura>
-          Arriba, lo que podían dar los pozos con sus pruebas; abajo, lo que salió por el punto de
-          medición oficial. Cada escalón es una razón distinta de lo que no se produjo, con su barra
-          contra el total. Lo que TRIM ataca son las paradas no planeadas. Lo sin explicar no se
-          reparte: es el inventario del tanque de venta entre un día y otro.
+          Arriba, lo que dan los pozos según sus pruebas; abajo, lo que salió por el punto de
+          medición oficial. Lo que las pruebas dan de más que el medidor va primero y aparte: no es de
+          ninguna parada. Desde el potencial del libro, cada escalón es una razón distinta de lo que no
+          se produjo, con su barra contra el total. Lo que TRIM ataca son las paradas no planeadas. Lo
+          sin explicar no se reparte: es el inventario del tanque de venta entre un día y otro.
         </Lectura>
 
         <div className="mt-2 flex flex-wrap gap-1.5">

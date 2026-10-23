@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { useRol, usePersona } from '@/app/store'
 import {
-  useParadasAnh, CONFIRMAN_EN_LOTE, ROLES_QUE_CONTESTAN, PASOS_QUE_CONFIRMA, esperaRevision, esDePersona,
+  useParadasAnh, useRaicesDeCascadas, CONFIRMAN_EN_LOTE, ROLES_QUE_CONTESTAN, PASOS_QUE_CONFIRMA, esperaRevision, esDePersona,
   type EstadoParadaAnh, type ParadaAnh,
 } from '@/shared/api/arbol'
 import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
@@ -44,12 +44,9 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
   const deCampo = !ROLES_QUE_CONTESTAN.revisa.includes(rol.id)
   const ps = useParadasAnh({ campos, desde, hasta })
   const grupos = useMemo(() => agrupar(ps), [ps])
-  // Las filas de cada raíz que muestra la pantalla: «para la cascada» viajan todas (D1) y su número es el que se dice.
-  const raices = useMemo(() => {
-    const m = new Map<string, ParadaAnh[]>()
-    for (const f of ps) { const k = `${f.campoId}|${f.raiz}`, xs = m.get(k); if (xs) xs.push(f); else m.set(k, [f]) }
-    return m
-  }, [ps])
+  // Las filas de cada raíz: «para la cascada» viajan todas (D1) y su número es el que se dice. Una cascada que
+  // el período corta va entera (las filas de su ventana): si no, la escritura respondía 409 siempre (QA-R, vecino 12).
+  const raices = useRaicesDeCascadas({ campos, desde, hasta }, ps)
   const raizDe = (g: Grupo) => raices.get(`${g.primera.campoId}|${g.primera.raiz}`) ?? g.filas
   // Lo que alguien marcó «Algo está mal» o le pidió a este rol va primero, en «REVISAR» (U1 §2.7).
   const aRevisar = grupos.filter(g => esperaRevision(g.primera.revision, rol.id))

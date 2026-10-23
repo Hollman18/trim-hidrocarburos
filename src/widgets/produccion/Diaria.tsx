@@ -86,7 +86,7 @@ export function Diaria({ dias }: { dias: Dia[] }) {
             pista={p.parcial ? `Parcial: ${n1(p.d.horas)} h. Se muestra como tasa diaria.` : undefined}
             filas={[['Real', p.d.real === null ? 'sin fiscal del punto de medición oficial' : `${n0(p.d.real)} bbl`], ['Potencial', `${n0(p.d.potencial)} bbl`], ['Meta', p.d.meta === null ? SIN_META : `${n0(p.d.meta)} bbl`],
               ['Diferido de los eventos', `${n0(p.d.diferido)} bbl`], ['Inventario entre días', p.d.residuo === null ? '—' : `${n0(p.d.residuo)} bbl`],
-              ['Eficiencia', p.d.real === null || !p.d.potencial ? '—' : `${n1((p.d.real / p.d.potencial) * 100)} %`]]}>
+              ['Del potencial', p.d.real === null || !p.d.potencial ? '—' : `${n1((p.d.real / p.d.potencial) * 100)} %`]]}>
             <rect x={X(i) - (G.x1 - G.x0) / pts.length / 2} y={G.y0} width={(G.x1 - G.x0) / pts.length} height={G.y1 - G.y0} fill="transparent" />
             {p.real === null ? null : p.parcial
               ? <circle cx={X(i)} cy={Y(p.real)} r={3} fill="var(--panel)" stroke="var(--dato-1)" strokeWidth={1.4} />

@@ -107,14 +107,15 @@ try {
     CONFIABILIDAD: p => EQ.pedirConfiabilidad(p.campos, s.ctx),
     BOMBAS: p => EQ.pedirBombas(p.campos, p.desde, p.hasta, s.ctx),
     CICLO: p => CIC.pedirCiclo(p.campos, p.desde, p.hasta, s.ctx, s.versiones, s.planes ?? {}),
-    TUBERIA: p => CHK.pedirTuberia(p.campo, p.desde, p.hasta, s.ctx, s.versiones),
-    SERIE_CHOKE: p => CHK.pedirSerieChoke(p.campo, p.desde, p.hasta, s.ctx, s.versiones),
+    // Las cinco vistas que reparten por tramo o por planeación leen lo que dijeron las personas (QA-A-01; QA-R, vecino 9).
+    TUBERIA: p => CHK.pedirTuberia(p.campo, p.desde, p.hasta, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
+    SERIE_CHOKE: p => CHK.pedirSerieChoke(p.campo, p.desde, p.hasta, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
     TUBERIA_AGUA: p => CHK.pedirTuberiaAgua(p.campo, s.ctx, s.versiones),
     CAPACIDADES: p => CHK.pedirCapacidades(p.campo, s.ctx, s.versiones),
     CRITICIDAD: p => CHK.pedirCriticidad(p.campos, s.ctx),
-    REPARTO_CHOKE: p => CHK.pedirRepartoChoke(p, s.ctx, s.versiones),
-    REPARTO_CHOKE_MENSUAL: p => CHK.pedirRepartoMensual(p.campos, s.ctx, s.versiones),
-    BASE_CHOKE: p => CHK.pedirBaseChoke(p, s.ctx, s.versiones),
+    REPARTO_CHOKE: p => CHK.pedirRepartoChoke(p, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
+    REPARTO_CHOKE_MENSUAL: p => CHK.pedirRepartoMensual(p.campos, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
+    BASE_CHOKE: p => CHK.pedirBaseChoke(p, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
     ARBOL_CHOKE: p => CHK.pedirArbolChoke(p, s.ctx, s.clasificacionesAnh ?? {}),
     TOPOLOGIA: p => CHK.pedirTopologia(p.campo, s.ctx),
     PROPUESTAS_TOPOLOGIA: p => CHK.pedirPropuestasTopologia(p.campo, s.ctx),
@@ -145,6 +146,8 @@ try {
   async function probarDemo() {
     const SES = await cargar('/src/shared/api/sesion.ts')
     const E = await cargar('/src/shared/api/escrituras.ts')
+    // La sesión del arranque, sin nada escrito: la de un backend recién cargado (sección 15).
+    const fotoArranque = { ...SES.sesion() }
 
     console.log('\n=== 1. La sesión con algo escrito (para que cada endpoint traiga datos) ===')
     // Escrituras del demo, cada una con el rol que la puede hacer: así los
@@ -308,6 +311,28 @@ try {
     const repetido = revivirCampos([...CAMPOS, { ...CAMPOS[0] }]), sinNombre = revivirCampos([{ ...CAMPOS[0], nombre: '' }])
     comprobar(/viene dos veces/.test(repetido) && /no trae «nombre»/.test(sinNombre) && revivirCampos(CAMPOS) === '',
       `GET /api/campos se revisa al entrar (${repetido}; ${sinNombre})`)
+    // QA-R, vecino 9: el servidor de prueba aplica lo guardado en las cinco vistas que reparten por tramo o por
+    // planeación, como la costura. La sesión trae la corrección del paso 2 de la sección 1 (el supervisor pone
+    // una parada de septiembre de La Ceiba en la planta): cada vista servida es la que se calcula con lo guardado,
+    // y lo guardado la mueve (sin él daría la de «nadie dijo nada»).
+    {
+      const g = s.clasificacionesAnh, sep = periodos[0], oct = periodos[1]
+      const qm = { campos: ['ceiba'], desde: sep.desde, hasta: sep.hasta }, qt = { campo: 'ceiba', desde: sep.desde, hasta: sep.hasta }
+      const qb = { campos: ['ceiba'], desde: oct.desde, hasta: oct.hasta }
+      const vistas = [
+        ['la tubería', R.TUBERIA(qt), x => CHK.pedirTuberia('ceiba', qt.desde, qt.hasta, s.ctx, s.versiones, x)],
+        ['la serie', R.SERIE_CHOKE(qt), x => CHK.pedirSerieChoke('ceiba', qt.desde, qt.hasta, s.ctx, s.versiones, x)],
+        ['el reparto', R.REPARTO_CHOKE(qm), x => CHK.pedirRepartoChoke(qm, s.ctx, s.versiones, x)],
+        ['el mes a mes', R.REPARTO_CHOKE_MENSUAL({ campos: ['ceiba'] }), x => CHK.pedirRepartoMensual(['ceiba'], s.ctx, s.versiones, x)],
+        ['la línea base (octubre, con septiembre en la base)', R.BASE_CHOKE(qb), x => CHK.pedirBaseChoke(qb, s.ctx, s.versiones, x)],
+      ]
+      const malas = vistas.flatMap(([nombre, servida, calcular]) => {
+        const con = calcular(g), sin = calcular({})
+        return diferencia(servida, con) ? [`${nombre} no es la de lo guardado`] : !diferencia(con, sin) ? [`${nombre}: lo guardado no la mueve`] : []
+      })
+      comprobar(Object.keys(g).length > 0 && !malas.length,
+        `el servidor de prueba aplica lo guardado en la tubería, la serie, el reparto, el mes a mes y la línea base: cada una es la de la costura con lo que dijeron las personas, y la corrección del paso 2 la mueve${malas.length ? ` (${malas.join('; ')})` : ''}`)
+    }
 
     console.log('\n=== 3. Escrituras: cuerpos y respuestas por JSON ===')
     const s2 = SES.sesion()
@@ -896,6 +921,25 @@ try {
         && !g.n1 && g.planeacion?.procedencia === 'corregido' && !b.clasificacion.n1 && !ARB.esDePersona(b.clasificacion.n2?.procedencia ?? 'regla') && b.clasificacion.planeacion?.valor === 'planeada',
         dice: `sin motivo: ${sin.ok ? 'PASÓ y borró la causa del jefe' : 'pide motivo'}; guardado: ${ANC.PASOS.filter(x => g?.[x]).map(x => `${x}·${g[x].procedencia}`).join(', ')}` }
     })
+    await caso('QA-R vecino 8 · el retiro se ve en la fila: el paso que la persona retiró, quién, cuándo y por qué («antes: …, retirado por … porque …»)', async () => {
+      const n2 = await jefeEnB()
+      const con = await E.clasificarParada({ rolId: 'sup' }, B13.id, { pasos: { planeacion: 'planeada' }, motivo: 'Estaba en el programa del mes', aplicarAlEvento: true, cadena: ARB.cadenaVista(fila13(B13.id).clasificacion) })
+      const b = fila13(B13.id), x = b.retiros?.find(y => y.paso === 'n2')
+      const otras = filasC.filter(f => f.eventoId !== B13.eventoId).map(f => fila13(f.id))
+      return { bien: con.ok && x?.valor === n2.valor && x.porId === 'sup' && x.por === 'Nelson Ortiz' && x.rol === 'sup' && x.motivo === 'Estaba en el programa del mes' && !!x.hora
+        && b.clasificacion.n2?.valor !== n2.valor && otras.every(f => !f.retiros),
+        dice: con.ok ? `retiros de ${B13.pozo}: ${JSON.stringify(b.retiros ?? null)?.slice(0, 160)}` : con.error }
+    })
+    await caso('QA-R vecino 6 · «Algo está mal» para la cascada no pisa lo que pidió OTRA persona en otro pozo y nadie atendió: el pedido del jefe a producción sigue', async () => {
+      const pide = await E.revisarParadaAnh({ rolId: 'jefe' }, B13.id, { motivo: '¿Fue el yacimiento? Revise la prueba del pozo', pedirA: 'prod', aplicarAlEvento: true, cadena: ARB.cadenaVista(B13.clasificacion) })
+      if (!pide.ok) throw new Error(pide.error)
+      const rv = await E.revisarParadaAnh({ rolId: 'oper' }, A13.id, { motivo: 'No paró por la energía: lo cerraron para una prueba', aplicarALaCascada: true, ids: idsC, cadena: ARB.cadenaVista(fila13(A13.id).clasificacion) })
+      const a = fila13(A13.id), b = fila13(B13.id)
+      const otras = filasC.filter(f => f.eventoId !== A13.eventoId && f.eventoId !== B13.eventoId).map(f => fila13(f.id))
+      return { bien: rv.ok && b.revision?.porId === 'jefe' && b.revision?.pedirA === 'prod' && /yacimiento/.test(b.revision?.motivo ?? '')
+        && a.revision?.porId === 'oper' && otras.length > 0 && otras.every(f => f.revision?.porId === 'oper'),
+        dice: rv.ok ? `${B13.pozo}: revisión de ${b.revision?.porId} (pedirA ${b.revision?.pedirA ?? '—'}); ${A13.pozo}: ${a.revision?.porId}` : rv.error }
+    })
     await caso('C-06 · confirmar sin «cadena» es 400; el lote guarda la cadena que vio la persona', async () => {
       const grupo = [...ARB.gruposPorCadena(ARB.pedirParadasAnh(mesA, foto13.ctx, foto13.clasificacionesAnh).filter(sinGuardar)).values()].find(g => g.length >= 2)
       const sin = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: [grupo[0].id] })
@@ -1052,6 +1096,59 @@ try {
         dice: r.ok ? `${despues.filter(f => f.revision?.porId === 'oper').length} de ${despues.length} filas para revisar` : r.error }
     })
     volver13()
+
+    console.log('\n=== 15. La referencia de las escrituras rechazadas ve un backend que responde distinto (C-08, punto 3) ===')
+    {
+      // Un backend de prueba que corre las escrituras del demo (el servidor de verdad: escrituras.ts) desde el
+      // arranque, y responde con el HTTP y el código de cada rechazo; con una deriva a la vez. `comparar
+      // --escrituras` le manda los pasos de referencia/escrituras/ en orden, sin volver al arranque entre casos.
+      const { createServer: servidorHttp } = await import('node:http')
+      const fotoAntes = { ...SES.sesion() }
+      const despachar = (rol, ruta, cuerpo) => {
+        const q = { rolId: rol }
+        if (ruta === '/api/anh/paradas/confirmar') return E.confirmarParadasAnh(q, cuerpo)
+        const m = /^\/api\/anh\/paradas\/([^/]+)\/(clasificacion|yacimiento|respuesta|revision)$/.exec(ruta)
+        if (!m) return Promise.resolve({ ok: false, estado: 404, codigo: 'ruta-no-encontrada', error: ruta })
+        return { clasificacion: E.clasificarParada, yacimiento: E.declararYacimientoAnh, respuesta: E.responderPreguntaAnh, revision: E.revisarParadaAnh }[m[2]](q, decodeURIComponent(m[1]), cuerpo)
+      }
+      const DERIVAS = {
+        'ninguna (control)': x => x,
+        'acepta lo que el contrato rechaza (200 en vez de 409/422)': x => (x.estado === 409 || x.estado === 422 ? { estado: 200 } : x),
+        'responde 400 donde va 422 (la forma por la regla)': x => (x.estado === 422 ? { ...x, estado: 400 } : x),
+        'el mismo HTTP con otro código («conflicto» en vez del de C-22)': x => (x.estado === 409 ? { ...x, codigo: 'conflicto' } : x),
+        'responde 404 donde va 403 (no le toca: no dice que no existe)': x => (x.estado === 403 ? { estado: 404, codigo: 'no-encontrado' } : x),
+      }
+      let deriva = DERIVAS['ninguna (control)']
+      const srvE = servidorHttp(async (req, res) => {
+        let cuerpo = ''
+        for await (const t of req) cuerpo += t
+        const r = await despachar(req.headers['x-rol'], req.url, JSON.parse(cuerpo || '{}'))
+        const x = deriva(r.ok ? { estado: 200 } : { estado: r.estado, codigo: r.codigo })
+        res.writeHead(x.estado, { 'content-type': 'application/json' })
+        res.end(JSON.stringify(x.estado < 300 ? { datos: {} } : { error: { codigo: x.codigo, mensaje: r.error ?? '' } }))
+      })
+      await new Promise(r => srvE.listen(0, '127.0.0.1', r))
+      const urlE = `http://127.0.0.1:${srvE.address().port}`
+      const vistas = {}
+      try {
+        for (const [nombre, f] of Object.entries(DERIVAS)) {
+          deriva = f
+          SES.cambiarSesion(fotoArranque)
+          // Otro proceso (el que correría quien comprueba un backend): no comparte la sesión de este.
+          const { spawn } = await import('node:child_process')
+          vistas[nombre] = await new Promise(resolve => {
+            const p = spawn(process.execPath, ['scripts/referencia.mjs', 'comparar', `--base-url=${urlE}`, '--escrituras'], { cwd: RAIZ })
+            let salida = ''
+            p.stdout.on('data', d => { salida += d }); p.stderr.on('data', d => { salida += d })
+            p.on('close', estado => resolve({ estado, linea: (salida.match(/\d+ de \d+ escrituras rechazadas[^\n]*/) ?? [salida.trim().split('\n').at(-1)])[0] }))
+          })
+        }
+      } finally { srvE.close(); SES.cambiarSesion(fotoAntes) }
+      const control = vistas['ninguna (control)']
+      const noVe = Object.entries(vistas).filter(([k, x]) => k !== 'ninguna (control)' && x.estado === 0).map(([k]) => k)
+      comprobar(control.estado === 0 && /^(\d+) de \1 escrituras/.test(control.linea) && noVe.length === 0,
+        `«comparar --escrituras» pasa con el servidor del demo (${control.linea}) y ve las ${Object.keys(DERIVAS).length - 1} derivas: ${Object.entries(vistas).filter(([k]) => k !== 'ninguna (control)').map(([k, x]) => `${k} → ${x.linea}`).join('; ')}${noVe.length ? `; NO VE: ${noVe.join(', ')}` : ''}`)
+    }
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -1191,7 +1288,10 @@ try {
     for (const [estado, error, hacer] of casos) {
       rechazo = { estado, error }
       const r = await hacer()
-      traducidos.push(!r.ok && r.error === error.mensaje)
+      // El HTTP y el código del contrato viajan con el rechazo (C-08) cuando el rechazo es del servidor (el aviso
+      // del operador lo frena antes la pantalla, que ya sabe que su rol no envía avisos: no llega a pedirse).
+      const delServidor = r.estado !== undefined
+      traducidos.push(!r.ok && r.error === error.mensaje && (!delServidor || (r.estado === estado && r.codigo === error.codigo)) && (estado === 403 || delServidor))
     }
     rechazo = { estado: 422, error: { codigo: 'acceso-invalido', mensaje: 'Revise el formulario.', errores: [{ campo: 'correo', texto: 'Ya hay una persona con ese correo.' }] } }
     const acc = await E.invitarUsuario({ rolId: 'ger' }, { invitacion: { nombre: 'X Y Z', correo: 'a@b.co', rolId: 'sup', campos: ['ceiba'], alertas: false }, motivo: 'prueba' })
@@ -1201,7 +1301,7 @@ try {
     const caida = await E.cargarAsignacion({ rolId: 'prod' }, { filas: [], motivo: 'prueba de caída' })
     rechazo = null
     comprobar(traducidos.every(Boolean) && !acc.ok && acc.errores[0]?.campo === 'correo' && !av.ok && av.campo === 'descripcion' && !caida.ok && /No se guardó: falló la base/.test(caida.error),
-      '409, 403 y 422 vuelven como { ok: false, error } con el mensaje del servidor; los errores por caja de un acceso y la caja de un aviso se conservan; un 500 dice que no se guardó')
+      '409, 403 y 422 vuelven como { ok: false, error } con el mensaje, el HTTP y el código del servidor; los errores por caja de un acceso y la caja de un aviso se conservan; un 500 dice que no se guardó')
     const vAntes = SES.sesion().ctx
     const r = await E.responderParada({ rolId: 'oper' }, { evento: 'EV-PRUEBA-HTTP', campoId: 'ceiba', equipo: 'LC-14', texto: 'Se quemó el variador del pozo' })
     const despues = SES.sesion().ctx

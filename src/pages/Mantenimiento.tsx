@@ -22,7 +22,7 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { ParetoPartes, Palancas } from '@/widgets/diferidos/Paretos'
 import { fmtHoras } from '@/widgets/bombas/comun'
-import { costoHoy, colchonCorto, detalleCostoHoy, deFlota } from '@/shared/ui/costoHoy'
+import { costoHoy, colchonCorto, detalleCostoHoy, deFlota, siPara as siParaDe, siParaLargo } from '@/shared/ui/costoHoy'
 
 /** Quien responde por que los barriles diferidos BAJEN. Su balanza aquí es en
  *  barriles y la mide el PLC: lo que se perdió en paradas programadas (estaban
@@ -69,7 +69,8 @@ export function Mantenimiento() {
     // costaría que fallara hoy. Un servicio del campo que ya cayó a 0 bbl/d
     // cierra lo que esté produciendo. La regla de «servicio» es una sola (enAlarma.ts).
     const servicio = esServicio(r)
-    const siPara = servicio && r.bblDia === 0 ? 'todo el campo' : `${n0(r.bblDia)} bbl/d`
+    // Un techo (K-101) se dice «hasta», como en Riesgo y en «Si falla hoy» (QA-R, vecino 1).
+    const siPara = siParaDe(r, servicio)
     const detalle = detalleCostoHoy(r)
     return (
       <div key={`${r.campoId}${r.equipo}`} className="border-b border-[var(--linea2)] py-2 last:border-0">
@@ -78,7 +79,7 @@ export function Mantenimiento() {
           filas={[...(r.parte ? [['Parte', NOMBRE_PARTE[r.parte]] as [string, string]] : []),
             ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya pasó el límite'],
             ...(r.tag ? [['Instrumento', r.tag] as [string, string]] : []),
-            ['Si para', servicio && r.bblDia === 0 ? 'cierra lo que esté produciendo en el campo' : siPara],
+            ['Si para', siParaLargo(r, servicio)],
             ...(r.costoFalla !== undefined ? [['Si falla hoy', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
           className="flex w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)]">
           <MarcaPrioridad s={r.prioridad} tamano={12} className="mt-[2px]" />

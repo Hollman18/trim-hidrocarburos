@@ -64,13 +64,13 @@ function ResumenCampo() {
       <div className="mb-2.5 grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         <Cifra q="producción contra su meta" v={n0(lb.real / dias)} u={hayMeta ? `de ${n0(lb.meta.produccionDia)} bbl/d` : `bbl/d · ${textoSinMeta(lb.meta)}`} alerta={cumple !== undefined && cumple < 100}
           lectura="Lo que midió el punto de medición oficial por día, contra la meta que firmó el gerente. Con la marca cuando está por debajo."
-          pista="La meta de producción es la firmada para el campo; la eficiencia (real sobre potencial) va aparte."
+          pista="La meta de producción es la firmada para el campo; lo real sobre el potencial va aparte."
           filas={[['Real', `${n0(lb.real)} bbl`], ...(hayMeta ? [['Meta a la fecha', `${n0(lb.meta.produccion)} bbl`], ['Meta del período completo', `${n0(lb.meta.produccionTotal)} bbl`]] as Array<[string, string]> : [['Meta', textoSinMeta(lb.meta)] as [string, string]]),
-            ['Cumplimiento', cumple === undefined ? '—' : `${n1(cumple)} %`], ['Eficiencia', `${n1(lb.pe)} %`]]} />
+            ['Cumplimiento', cumple === undefined ? '—' : `${n1(cumple)} %`], ['Del potencial', `${n1(lb.pe)} %`]]} />
         <Cifra q="sin paradas programadas" v={n1(peNoPlan)} u="%"
-          lectura="La eficiencia si solo contaran las fallas. Es la parte que mantenimiento puede mover."
+          lectura="Lo real sobre el potencial si solo contaran las fallas. Es la parte que mantenimiento puede mover."
           pista="Descuenta lo que estaba en el programa aprobado del libro; lo sin identificar cuenta como falla. Es la cuenta del libro, no la de lo no planeado del árbol de causas (que no cuenta lo sin identificar)."
-          filas={[['Eficiencia sin programadas', `${n1(peNoPlan)} %`], ['Programado', `${n0(lb.planeado)} bbl`], ['No programado (libro)', `${n0(lb.noPlaneado)} bbl`]]} />
+          filas={[['Del potencial, sin programadas', `${n1(peNoPlan)} %`], ['Programado', `${n0(lb.planeado)} bbl`], ['No programado (libro)', `${n0(lb.noPlaneado)} bbl`]]} />
         <Cifra q="sin identificar" v={n0(lb.pendiente)} u="bbl" alerta={!lb.publicable && lb.pendiente > 0}
           lectura="Barriles de paradas que ninguna señal explica y nadie ha respondido."
           pista={lb.publicable ? 'El libro del período se puede publicar.' : lb.motivos.map(m => m.texto).join(' ')}

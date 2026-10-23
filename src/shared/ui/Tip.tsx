@@ -19,8 +19,11 @@ export type Fila = [string, string]
  *  uno con el título y las cifras, y el rol de botón si hace algo (si no,
  *  de imagen). El <svg> que los contiene va como `role="group"`, no «img»:
  *  una imagen vuelve mudo todo lo que tiene adentro. */
-export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = false, onTecla, imprimir, claseImpresion, ...rest }: {
+export function Tip({ titulo, filas, pista, pistaEnPapel, children, as, tabIndex, aLaVista = false, onTecla, imprimir, claseImpresion, ...rest }: {
   titulo: string; filas: Fila[]; pista?: string; children: ReactNode
+  /** Lo que va en el papel en lugar de la pista, cuando la pista es lo que una
+   *  persona escribió con sus palabras: en el papel va quién, por su rol (D2). */
+  pistaEnPapel?: string
   as?: ElementType; className?: string; onClick?: () => void
   /** Rol y nombre para el lector cuando la etiqueta no los da sola (un <g> clicable de un dibujo). */
   role?: string; 'aria-label'?: string
@@ -43,7 +46,7 @@ export function Tip({ titulo, filas, pista, children, as, tabIndex, aLaVista = f
   const id = useId()
   const dibujo = as === 'g'
   const resumen = [titulo, ...filas.map(([k, v]) => `${k}: ${v}`)].join('; ')
-  const enPapel = !imprimir || dibujo ? '' : [...(imprimir === 'todo' ? filas.map(([k, v]) => `${k}: ${v}`) : []), pista ?? ''].filter(Boolean).join(' · ')
+  const enPapel = !imprimir || dibujo ? '' : [...(imprimir === 'todo' ? filas.map(([k, v]) => `${k}: ${v}`) : []), pistaEnPapel ?? pista ?? ''].filter(Boolean).join(' · ')
   // Abierto con el ratón (sin foco), Escape también lo cierra (WCAG 1.4.13:
   // descartable), sin cerrar lo de afuera.
   const abierto = pos !== null

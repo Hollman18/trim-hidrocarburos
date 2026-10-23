@@ -10,6 +10,7 @@ import { Panel, Chip } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
 import { n0, plural } from '@/shared/lib/formato'
+import { siParaLargo, sumaSiPara } from '@/shared/ui/costoHoy'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { FOCO_BOMBAS } from '@/shared/config/producto'
 
@@ -36,6 +37,8 @@ interface Fila {
    *  avisa. No se suma con `ahora`: todavía no se pierde nada. «Si falla hoy»
    *  es otra cifra, en bbl (la de Riesgo). */
   siPara: number
+  /** `siPara` es un techo del motor (`Riesgo.techo`): se dice «hasta». */
+  siParaTecho?: true
 }
 
 /** Los equipos de superficie del campo: su estado, cuántas veces han parado
@@ -52,9 +55,12 @@ export function Equipo() {
 
   // «Ahora» es solo lo que ya cuesta: una bomba en marcha con una parte que
   // avisa produce, y su caudal va aparte como «si para», en bbl/d (igual que en Riesgo y Turno).
-  const deEquipo = (f: Pick<Fila, 'campoId' | 'eq'>, estado: 'perdiendo' | 'en-riesgo') => riesgo
-    .filter(r => r.campoId === f.campoId && r.equipo === f.eq.id && r.estado === estado).reduce((a, r) => a + r.bblDia, 0)
-  const filas = lista.map((f): Fila => ({ ...f, campoNombre: campoPorId(f.campoId).nombre, bbl: bblDe(f.eq.id, f.campoId), ahora: deEquipo(f, 'perdiendo'), siPara: deEquipo(f, 'en-riesgo') }))
+  const deEquipo = (f: Pick<Fila, 'campoId' | 'eq'>, estado: 'perdiendo' | 'en-riesgo') => sumaSiPara(riesgo
+    .filter(r => r.campoId === f.campoId && r.equipo === f.eq.id && r.estado === estado))
+  const filas = lista.map((f): Fila => {
+    const si = deEquipo(f, 'en-riesgo')
+    return { ...f, campoNombre: campoPorId(f.campoId).nombre, bbl: bblDe(f.eq.id, f.campoId), ahora: deEquipo(f, 'perdiendo').bblDia, siPara: si.bblDia, ...(si.techo ? { siParaTecho: true as const } : {}) }
+  })
     .sort((a, b) => atencion(a.eq.severidad) - atencion(b.eq.severidad) || b.bbl - a.bbl || b.bblHistoria - a.bblHistoria)
   const foco = filas.filter(f => f.bomba)
   const fuera = filas.filter(f => !f.bomba)
@@ -71,7 +77,7 @@ export function Equipo() {
         ...(f.fallas !== undefined ? [['Fallas propias', String(f.fallas)] as [string, string]] : []),
         ['Entre eventos', f.mtbfDias ? `${n0(f.mtbfDias)} d` : 'menos de dos: no se calcula'],
         ['Perdiéndose ahora', f.ahora ? `${n0(f.ahora)} bbl/d` : '—'],
-        ...(f.siPara ? [['Si para', `${n0(f.siPara)} bbl/d`] as [string, string]] : [])]}
+        ...(f.siPara ? [['Si para', siParaLargo({ bblDia: f.siPara, ...(f.siParaTecho ? { techo: true as const } : {}) })] as [string, string]] : [])]}
       className="flex w-full cursor-pointer items-center gap-3 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)]">
       <MarcaPrioridad s={f.eq.severidad} tamano={13} />
       <span className="min-w-0 flex-[2]">

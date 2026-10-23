@@ -92,14 +92,15 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
                     ? CHOKES_Y_SIN_ASIGNAR.filter(k => (t?.porTramo[k] ?? 0) >= 0.5).map(k => [mayuscula(LARGO_TRAMO[k]), `${n0(t?.porTramo[k] ?? 0)} bbl`] as [string, string])
                     : [['Identificado por señal', `${n0(l.identificado)} bbl`], ['Declarado', `${n0(l.declarado)} bbl`], ['Sin identificar', `${n0(l.pendiente)} bbl`]] as Array<[string, string]>),
                   ['Alto impacto', `${n0(l.altoImpacto)} bbl`],
-                  ['Máximo firmado', hayMeta ? `${n0(l.meta.diferido)} bbl` : textoSinMeta(l.meta, l.porCampo.length > 1)], ['Eficiencia', `${n1(l.pe)} %`],
+                  ['Máximo firmado', hayMeta ? `${n0(l.meta.diferido)} bbl` : textoSinMeta(l.meta, l.porCampo.length > 1)], ['Del potencial', `${n1(l.pe)} %`],
                   ['Cierre', m.parcial ? 'sin publicar' : l.publicable ? 'publicable' : 'no publicable']]}
                 {...(onMes ? { onClick: () => onMes(m) } : {})}>
-                {/* Por tramo, los meses no se atenúan: el gris es el dato y cambiaría de tramo (B-08). El mes
-                    del período va con un contorno y su rótulo en negrilla. */}
-                <g opacity={activo || porDonde ? 1 : 0.42} className={onMes ? 'cursor-pointer' : undefined}>
+                {/* Ningún mes se atenúa, en ninguna de las dos vistas: el gris es el dato (atenuado, el de «por
+                    señal» se leía como el de «declarado», QA-R vecino 4) y cambiaría de tramo (B-08). El mes del
+                    período va con un contorno y su rótulo en negrilla. */}
+                <g className={onMes ? 'cursor-pointer' : undefined}>
                   <rect x={x - (paso - ancho) / 2} y={G.y0 - 8} width={paso} height={G.y1 - G.y0 + 36} fill="transparent" />
-                  {porDonde && activo && l.brecha > 0 && (
+                  {activo && l.brecha > 0 && (
                     <rect x={x - 2.5} y={yTope - 2.5} width={ancho + 5} height={G.y1 - yTope + 2.5} fill="none" stroke="var(--tinta)" strokeWidth={1.4} data-mes-activo />
                   )}
                   {tramos.map(([v, fill], j) => {
@@ -163,9 +164,9 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
         Cada columna es un mes. Abajo, lo que tiene causa probada por una señal (código del controlador,
         primera alarma del PLC, firma o programa); encima, lo que declaró un operario porque la señal no
         alcanzaba; arriba, rayado, lo que nadie ha identificado todavía. La raya es el máximo de diferido
-        que firmó el gerente para ese mes. Los meses del período que está mirando van al frente. Toque o
-        pase el cursor por un mes para ver sus cifras{onMes ? '; un clic lo abre' : ''}.
-        {porTramo && ' «Por dónde se trabó» parte la misma columna entre el yacimiento, los pozos, la planta o estación y afuera, cada uno con su gris y su dibujo (liso, rayas, puntos); lo sin identificar sigue rayado y discontinuo. Ahí el mes del período va con un contorno.'}
+        que firmó el gerente para ese mes. Los meses del período que está mirando van con un contorno y
+        su nombre en negrilla. Toque o pase el cursor por un mes para ver sus cifras{onMes ? '; un clic lo abre' : ''}.
+        {porTramo && ' «Por dónde se trabó» parte la misma columna entre el yacimiento, los pozos, la planta o estación y afuera, cada uno con su gris y su dibujo (liso, rayas, puntos); lo sin identificar sigue rayado y discontinuo.'}
       </Lectura>
     </>
   )

@@ -1,0 +1,1 @@
+{"id":"422-pregunta-ajena","descripcion":"Una pregunta que TRIM no tiene (C-18)","pasos":[{"metodo":"POST","endpoint":"/api/anh/paradas/EP-LC06-251001-96%402025-10-01%231/respuesta","rol":"oper","cuerpo":{"pregunta":"no-existe","opcion":"Sí"},"esperado":{"estado":422,"codigo":"pregunta-ajena"}}]}

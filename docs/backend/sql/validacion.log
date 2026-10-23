@@ -1,4 +1,4 @@
-# Validación del modelo de datos · 2026-10-22 17:33:21 -05
+# Validación del modelo de datos · 2026-10-22 23:19:58 -05
 initdb (PostgreSQL) 16.14 (Homebrew) · psql (PostgreSQL) 16.14 (Homebrew) · node v22.22.3
 
 ## 1. Cluster temporal
@@ -15,7 +15,7 @@ server started
                            15
 (1 row)
 
-105 tablas (sin contar 45 particiones de lectura), 11 vistas, 33 funciones, 102 triggers, 200 índices, 656 restricciones (105 PK, 180 FK, 30 únicas, 337 check)
+105 tablas (sin contar 45 particiones de lectura), 11 vistas, 34 funciones, 103 triggers, 200 índices, 657 restricciones (105 PK, 180 FK, 30 únicas, 337 check)
 
 ## 3. ejemplos.sql (filas reales del demo)
 libros 60 · tramos por día 28 · mensajes 337 · identidades 132 · repuestos 13
@@ -166,7 +166,11 @@ NOTICE:  MUERDE  una persona con un rol de la versión 2 (cont): nadie lo tiene 
 NOTICE:  MUERDE  el operador CONFIRMA «Dónde se trabó»  [23514] el rol oper no confirma el paso choke (EP-LC21-261001-01)
 NOTICE:  MUERDE  el operador CORRIGE el detalle  [23514] el rol oper no dice el paso n2 (EP-LC21-261001-01)
 NOTICE:  MUERDE  el técnico confirma «Quién» (solo confirma la planeación y qué pasó)  [23514] el rol tec no confirma el paso responsable (EP-LC21-261001-01)
-NOTICE:  PASA    el operador deja el tramo por una respuesta de campo (declarado, regla preguntas:campo@1: no avalado)
+NOTICE:  PASA    el operador deja el tramo por una respuesta de campo (declarado, regla preguntas:campo@1: no avalado), con su respuesta en la misma clave y a la misma hora
+NOTICE:  MUERDE  el operador «declara» el detalle (N2) con la regla de una respuesta de campo y ninguna respuesta que lo deje (QA-R, vecino 7)  [23514] el rol oper no dice el paso n2 y ninguna respuesta de campo suya en EP-LC21-261001-01 lo respalda (preguntas:campo@1)
+NOTICE:  MUERDE  el operador pone «afuera» con la regla de una respuesta de campo, sin respuesta (QA-R, vecino 7)  [23514] el rol oper no dice el paso choke y ninguna respuesta de campo suya en EP-LC21-261001-01 lo respalda (preguntas:campo@1)
+NOTICE:  MUERDE  la respuesta que «respalda» el paso es de otra persona o de otra hora (QA-R, vecino 7)  [23514] el rol oper no dice el paso choke y ninguna respuesta de campo suya en EP-LC21-261001-01 lo respalda (preguntas:campo@1)
+NOTICE:  PASA    el supervisor declara un paso que faltaba, de su terreno (la misma regla por defecto): no necesita respuesta
 NOTICE:  MUERDE  respuesta: el operador contesta la pregunta del tramo (la contesta quien revisa)  [23514] el rol oper no contesta la pregunta choke (EP-LC21-261001-01)
 NOTICE:  MUERDE  respuesta: el operador contesta el detalle (lo contesta quien abre el equipo o revisa)  [23514] el rol oper no contesta la pregunta detalle (EP-LC21-261001-01)
 NOTICE:  MUERDE  respuesta: el supervisor contesta «¿Fue el yacimiento?» (solo producción y confiabilidad)  [23514] el rol sup no contesta la pregunta aporte (EP-LC21-261001-01)
@@ -186,14 +190,17 @@ NOTICE:  PASA    lo que el jefe dijo del evento B sigue vigente después de que 
 NOTICE:  PASA    en una fila rige, paso por paso, lo más reciente entre la fila y su evento
 NOTICE:  MUERDE  cambiar «¿Planeada?» sobre la causa que dijo otra persona sin retirarla: lo que rige quedaría incoherente  [23514] la parada EP-LC21-261001-01: «planeada» no va con la causa NP_SUB (planeada solo con P_…, no planeada solo con NP_…)
 NOTICE:  PASA    cambiar «¿Planeada?» retirando la causa de otra persona, con su marca (procedencia retirado) y motivo
-NOTICE:  MUERDE  un retiro sin motivo  [23514] new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check5"
+NOTICE:  MUERDE  un «retirado» de un paso que nadie dijo: no hay nada que retirar (QA-R, vecino 7)  [23514] nadie había dicho n1 = NP_SUB en EP-LC21-261001-01: no hay nada que retirar
+NOTICE:  MUERDE  un paso confirmado en un lote que no confirmó ese paso (QA-R, vecino 7)  [23514] el lote LOTE-QR no confirmó el paso choke (EP-LC21-261001-01@2026-10-01#1)
+NOTICE:  PASA    un «corregido» que vuelve a lo que proponía TRIM sobre la corrección de otra persona (propuesto = valor): lo guarda el servidor (escrituras.ts), así que vale
+NOTICE:  MUERDE  un retiro sin motivo (de lo que sí dijo el jefe: lo que muerde es el motivo)  [23514] sin motivo: new row for relation "clasificacion_paso" violates check constraint "clasificacion_paso_check5"
 NOTICE:  MUERDE  una bomba que no es del tren de agua del campo  [23503] P-999 no es una bomba del tren de agua de ceiba
 NOTICE:  MUERDE  un compartido con un pozo repetido (LC-01, LC-01)  [23514] new row for relation "topologia" violates check constraint "topologia_pozos_check"
 NOTICE:  MUERDE  un pozo que le sirve a otro pozo  [23514] LC-01 es un pozo: solo se sirve a sí mismo (dedicado a LC-01)
 NOTICE:  MUERDE  un pozo como elemento compartido (sus fallas pasarían a la planta)  [23514] LC-01 es un pozo: solo se sirve a sí mismo (dedicado a LC-01)
 NOTICE:  MUERDE  «Todavía no sé» insertado antes que la misma topología  [23514] K-101 (ceiba): está a la vez en la topología y como «Todavía no sé»
 NOTICE:  MUERDE  un equipo para todos los campos y a la vez «Todavía no sé» en La Ceiba  [23514] K-101 (ceiba): está a la vez en la topología y como «Todavía no sé»
-144 rechazos esperados y 24 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
+149 rechazos esperados y 26 aceptaciones esperadas: todas como se esperaba (una sola que no, y la corrida se habría detenido).
 
 ## 5. Cuadres de los datos cargados (cuadres.sql)
 NOTICE:  CUADRA  Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl

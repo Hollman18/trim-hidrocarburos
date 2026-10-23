@@ -11,11 +11,14 @@ import { Tip, type Fila } from './Tip'
  *  (sería un control dentro de otro) ni de un título (el lector oiría la frase
  *  entera como nombre del título). Quien lo contiene en una fila flexible le da
  *  `flex-wrap`: en el papel la nota ocupa su propio renglón (`basis-full`). */
-export function Info({ titulo, texto, filas, rotulo, className, imprimir = true }: {
+export function Info({ titulo, texto, textoEnPapel, filas, rotulo, className, imprimir = true }: {
   /** Título del globo: «Cierre proyectado». */
   titulo: string
   /** La frase completa que salió de la pantalla. */
   texto: string
+  /** Lo que va en el papel en lugar del texto, cuando el texto es lo que una persona
+   *  escribió con sus palabras: en el papel va quién, por su rol (D2). */
+  textoEnPapel?: string
   /** Cifras de apoyo: solo las que la pantalla ya calcula. */
   filas?: Fila[]
   /** Texto visible antes del ícono, dos palabras como mucho («qué hacer»). Sin él, solo el ícono. */
@@ -33,7 +36,7 @@ export function Info({ titulo, texto, filas, rotulo, className, imprimir = true 
         {rotulo && <span className="text-[10.5px] text-[var(--tinta2)] underline decoration-dotted underline-offset-2">{rotulo}</span>}
         <IconoInfo className="size-3 text-[var(--tinta3)]" aria-hidden />
       </Tip>
-      {imprimir && <small className="solo-impresion basis-full font-sans text-[9pt] font-normal normal-case tracking-normal text-[var(--tinta2)]">{titulo}: {texto}</small>}
+      {imprimir && <small className="solo-impresion basis-full font-sans text-[9pt] font-normal normal-case tracking-normal text-[var(--tinta2)]">{titulo}: {textoEnPapel ?? texto}</small>}
     </>
   )
 }

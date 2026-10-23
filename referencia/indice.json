@@ -1589,5 +1589,151 @@
    ],
    "escenario": "correcciones"
   }
+ ],
+ "escrituras": [
+  {
+   "id": "403-sin-capacidad",
+   "descripcion": "El gerente (sin anh:clasificar) clasifica una parada",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "403-rol-desconocido",
+   "descripcion": "Un rol que no es del producto (cont, de la versión 2) clasifica una parada (C-14)",
+   "esperado": {
+    "estado": 403,
+    "codigo": "rol-desconocido"
+   }
+  },
+  {
+   "id": "403-paso-ajeno",
+   "descripcion": "El operador corrige el detalle (N2): no es de su terreno (PASOS_QUE_DECLARA)",
+   "esperado": {
+    "estado": 403,
+    "codigo": "paso-ajeno"
+   }
+  },
+  {
+   "id": "403-paso-ajeno-confirmar",
+   "descripcion": "El operador confirma «Dónde se trabó» (PASOS_QUE_CONFIRMA)",
+   "esperado": {
+    "estado": 403,
+    "codigo": "paso-ajeno"
+   }
+  },
+  {
+   "id": "403-sin-capacidad-yacimiento",
+   "descripcion": "El supervisor pone «En el yacimiento» (solo producción y confiabilidad, anh:yacimiento)",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "404-no-encontrado",
+   "descripcion": "El operador (solo La Ceiba) clasifica una parada de Morichal: la misma respuesta que una que no existe (C-20)",
+   "esperado": {
+    "estado": 404,
+    "codigo": "no-encontrado"
+   }
+  },
+  {
+   "id": "400-peticion-invalida",
+   "descripcion": "Un paso con un número donde va un texto (C-11)",
+   "esperado": {
+    "estado": 400,
+    "codigo": "peticion-invalida"
+   }
+  },
+  {
+   "id": "409-cadena-cambio",
+   "descripcion": "La cadena que vio la persona ya no es la de la fila",
+   "esperado": {
+    "estado": 409,
+    "codigo": "cadena-cambio"
+   }
+  },
+  {
+   "id": "422-clasificacion-incoherente",
+   "descripcion": "Una causa que no es de las 20 de la circular",
+   "esperado": {
+    "estado": 422,
+    "codigo": "clasificacion-incoherente"
+   }
+  },
+  {
+   "id": "422-cascada-sin-ids",
+   "descripcion": "«Para la cascada» sin las filas que mostró la pantalla",
+   "esperado": {
+    "estado": 422,
+    "codigo": "cascada-sin-ids"
+   }
+  },
+  {
+   "id": "409-cascada-cambio",
+   "descripcion": "«Para la cascada» cuando la raíz trae un evento que la pantalla no mostró",
+   "esperado": {
+    "estado": 409,
+    "codigo": "cascada-cambio"
+   }
+  },
+  {
+   "id": "409-cambia-a-otra-persona",
+   "descripcion": "El jefe dice «Quién» de un pozo de la cascada (para su evento, con motivo); el supervisor cambia «Quién» para la cascada desde otro pozo sin motivo",
+   "esperado": {
+    "estado": 409,
+    "codigo": "cambia-a-otra-persona"
+   }
+  },
+  {
+   "id": "422-falta-motivo",
+   "descripcion": "El jefe corrige el detalle (para su evento, con motivo); el supervisor cambia «¿Planeada?» sin motivo, y eso retiraría la causa del jefe (C-05)",
+   "esperado": {
+    "estado": 422,
+    "codigo": "falta-motivo"
+   }
+  },
+  {
+   "id": "409-pregunta-cerrada",
+   "descripcion": "El operador contesta «¿De dónde vino el corte?»; el supervisor contesta la misma pregunta después",
+   "esperado": {
+    "estado": 409,
+    "codigo": "pregunta-cerrada"
+   }
+  },
+  {
+   "id": "422-pregunta-ajena",
+   "descripcion": "Una pregunta que TRIM no tiene (C-18)",
+   "esperado": {
+    "estado": 422,
+    "codigo": "pregunta-ajena"
+   }
+  },
+  {
+   "id": "422-texto-largo",
+   "descripcion": "«Algo está mal» con un motivo de 501 caracteres (C-12)",
+   "esperado": {
+    "estado": 422,
+    "codigo": "texto-largo"
+   }
+  },
+  {
+   "id": "422-texto-corto",
+   "descripcion": "«Algo está mal» sin decir qué (un motivo de 2 caracteres)",
+   "esperado": {
+    "estado": 422,
+    "codigo": "texto-corto"
+   }
+  },
+  {
+   "id": "409-lote-sin-pasos",
+   "descripcion": "El supervisor confirma en lote dos paradas con la misma cadena; el mismo lote otra vez no sube ningún paso (C-19)",
+   "esperado": {
+    "estado": 409,
+    "codigo": "lote-sin-pasos"
+   }
+  }
  ]
 }

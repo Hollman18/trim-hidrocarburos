@@ -1,0 +1,1 @@
+{"id":"422-texto-corto","descripcion":"«Algo está mal» sin decir qué (un motivo de 2 caracteres)","pasos":[{"metodo":"POST","endpoint":"/api/anh/paradas/EP-LC06-251001-96%402025-10-01%231/revision","rol":"oper","cuerpo":{"motivo":"no","cadena":"op-mantenimiento · pozo · diferida · no-planeada · NP_SUB · NP_SUB/falla-esp"},"esperado":{"estado":422,"codigo":"texto-corto"}}]}

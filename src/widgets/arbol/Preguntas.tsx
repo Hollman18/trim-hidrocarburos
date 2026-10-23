@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useApp, usePersona } from '@/app/store'
 import { ROLES_QUE_CONTESTAN, esNoSe, type ParadaAnh, type PreguntaCampo, type OpcionCampo } from '@/shared/api/arbol'
 import { cn } from '@/shared/lib/cn'
-import { OPCION_CHOKE, LINEA_CHOKE, lista, enOrden, textoDePregunta, horaCorta } from './palabras'
+import { OPCION_CHOKE, LINEA_CHOKE, pozosEnCorto, enOrden, textoDePregunta, horaCorta } from './palabras'
 import type { Grupo } from './grupos'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { rolEnPapel } from '@/shared/ui/papel'
 
 /** Botón de una respuesta: en el teléfono, 48 px de alto, para el dedo con guantes (U1 §2.6; B-24). */
 export const OPCION = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-left text-[11.5px] hover:bg-[var(--panel2)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-8 sm:text-[11px]'
@@ -54,7 +56,7 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
   const ids = raiz.map(f => f.id)
   const alcance = g.cascada ? { aplicarALaCascada: true, ids } : { aplicarAlEvento: true }
   const pozosRaiz = [...new Set(raiz.map(f => f.pozo))]
-  const pozos = g.cascada ? lista(pozosRaiz) : lista(g.pozos)
+  const pozos = g.cascada ? pozosEnCorto(pozosRaiz) : pozosEnCorto(g.pozos)
   const contestar = async (x: PreguntaCampo, o: OpcionCampo) => {
     setOcupado(true); setError('')
     const r = await responderAnh(p.id, { pregunta: x.id, opcion: o.texto, ...alcance, cadena: g.cadena })
@@ -85,7 +87,7 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
         <ul className="grid gap-0.5 text-[11.5px]" aria-label="Lo que ya se contestó" data-contestado>
           {dichas.map((r, i) => (
             <li key={`${r.pregunta}${i}`} className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-[var(--tinta2)]">{r.porId === persona.id ? 'Usted contestó' : `${r.por} contestó`}{dichas.length > 1 || !q ? ` a «${textoDePregunta(r.pregunta)}»` : ''}:</span>
+              <span className="text-[var(--tinta2)]">{r.porId === persona.id ? 'Usted contestó' : <DichoEnPapel papel={`${rolEnPapel(r)} contestó`}>{`${r.por} contestó`}</DichoEnPapel>}{dichas.length > 1 || !q ? ` a «${textoDePregunta(r.pregunta)}»` : ''}:</span>
               <b className="font-semibold">{r.opcion}</b>
               <small className="text-[10.5px] text-[var(--tinta3)]">· {horaCorta(r.hora)}</small>
               {onCambiar && r.porId === persona.id && (
@@ -99,7 +101,7 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
       {escalada && revisa && (
         <p className="flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]" data-escalada>
           <span className="rounded-sm border border-dashed border-[var(--tinta3)] px-1.5">sigue abierta</span>
-          {noSupo ? `${noSupo.por} contestó «No sé»` : 'Alguien contestó «No sé»'}{textoEscalada ? ` a «${textoEscalada}»` : ''}: la contesta quien revisa.
+          {noSupo ? <DichoEnPapel papel={`${rolEnPapel(noSupo)} contestó «No sé»`}>{`${noSupo.por} contestó «No sé»`}</DichoEnPapel> : 'Alguien contestó «No sé»'}{textoEscalada ? ` a «${textoEscalada}»` : ''}: la contesta quien revisa.
         </p>
       )}
       {q && (

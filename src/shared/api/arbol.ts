@@ -3,7 +3,7 @@ import { useDato, versionDe } from './consulta'
 import { PARADAS_ANH, CALIDAD_ANH, type ConsultaPeriodo } from './contrato'
 import {
   paradasAnh, inicioDiaCo, gruposPorCadena, CONFIRMAN_EN_LOTE,
-  type ParadaAnh, type ConfirmacionLote, type EstadoParadaAnh,
+  type ParadaAnh, type ConfirmacionLote, type EstadoParadaAnh, type RetiroAnh,
 } from '@/entities/anh-paradas'
 import {
   esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA, PONEN_YACIMIENTO, ATAJO_YACIMIENTO, N1_EN_CAMPO, ROLES_QUE_CONTESTAN,
@@ -54,7 +54,7 @@ export {
   causaParaSalir,
 }
 export type {
-  ParadaAnh, ConfirmacionLote, EstadoParadaAnh, BorradorClasificacion, ClasificacionAnh, DatoClasificado, PorqueChoke, Procedencia,
+  ParadaAnh, ConfirmacionLote, EstadoParadaAnh, RetiroAnh, BorradorClasificacion, ClasificacionAnh, DatoClasificado, PorqueChoke, Procedencia,
   PropuestaAnh, PreguntaCampo, OpcionCampo, AtajoYacimiento, EvidenciaYacimiento, PasoAnh, Responsable, Impacto, Planeacion,
   ClaveN1, CodigoN2, CalidadClasificacion, CalidadPaso, CalidadRegla, CalidadEquipoChoke, RespuestaCampo, RevisionAnh, IdPregunta,
   QuienContesta,
@@ -101,6 +101,35 @@ export function useParadasAnh(q: ConsultaPeriodo): ParadaAnh[] {
   const ctx = useCtx()
   const guardadas = useSesion(s => s.clasificacionesAnh)
   return useDato(PARADAS_ANH, q, `${versionDe(ctx)}.${versionDe(guardadas)}`, () => pedirParadasAnh(q, ctx, guardadas))
+}
+
+/** Las filas de las cascadas que muestra la pantalla, enteras aunque el período
+ *  las corte (QA-R, vecino 12): «para la cascada» viajan TODAS las filas de la
+ *  raíz y el servidor las busca en el día en que cayó la raíz y el siguiente
+ *  (`eventosDeLaCascada`). Si el período deja fuera ese día o el siguiente, la
+ *  pantalla mandaba solo las del período y la escritura respondía 409 siempre. Se
+ *  piden las filas de esa ventana (por el mismo `GET /api/vistas/anh/paradas`) y
+ *  se agrupan por raíz; si el período ya la cubre, es la misma consulta. */
+export function useRaicesDeCascadas(q: ConsultaPeriodo, filas: readonly ParadaAnh[]): ReadonlyMap<string, ParadaAnh[]> {
+  let desde = q.desde.getTime(), hasta = q.hasta.getTime()
+  for (const f of filas) {
+    if (f.raiz === f.eventoId || f.minutosDesdeRaiz === undefined) continue
+    // La raíz cayó minutos antes de que cerrara el pozo; un minuto de margen por el redondeo.
+    const d0 = inicioDiaCo(Date.parse(f.inicioEvento) - (f.minutosDesdeRaiz + 1) * 60_000)
+    desde = Math.min(desde, d0)
+    hasta = Math.max(hasta, Math.min(AHORA.getTime(), d0 + 3 * D))
+  }
+  const todas = useParadasAnh({ campos: q.campos, desde: new Date(desde), hasta: new Date(hasta) })
+  const deCascada = new Set(filas.filter(f => f.raiz !== f.eventoId).map(f => `${f.campoId}|${f.raiz}`))
+  const m = new Map<string, ParadaAnh[]>()
+  for (const f of [...todas, ...filas]) {
+    const k = `${f.campoId}|${f.raiz}`
+    if (!deCascada.has(k) && !filas.includes(f)) continue
+    const xs = m.get(k)
+    if (!xs) m.set(k, [f])
+    else if (!xs.some(x => x.id === f.id)) xs.push(f)
+  }
+  return m
 }
 
 /** `GET /api/vistas/anh/calidad?campos=&desde=&hasta=` */

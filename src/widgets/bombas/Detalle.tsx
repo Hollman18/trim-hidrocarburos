@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { plantillaDe, NO_DA, PAPEL_NOMBRE, TECNOLOGIA_NOMBRE } from '@/entities/bombas'
 import { FUENTE_METODO } from '@/entities/metrologia'
 import { MECANISMOS_ESTADO } from '@/entities/iso14224'
-import { COMO } from '@/entities/causa-senal'
+import { COMO, rolDeQuien } from '@/entities/causa-senal'
 import { fechaHora } from '@/entities/reloj'
 import type { ParadaMedida, Prediccion } from '@/entities/diferido'
 import { useParadas } from '@/shared/api/diferidos'
@@ -16,6 +16,9 @@ import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { Analogico } from '@/shared/ui/Analogico'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { causaEnPapel } from '@/shared/ui/papel'
+import { causaParaSalir } from '@/shared/api/arbol'
 import { Tip } from '@/shared/ui/Tip'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
@@ -452,12 +455,12 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
           <div>
             {/* Sin identificar, la frase repite lo que ya dicen el título y su marca: va en la ⓘ. */}
             {m.pide
-              ? <H5Info info={<Info titulo="Por qué paró" texto={c.texto} />}>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5Info>
-              : <><H5>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5><p className="text-[var(--tinta)]">{c.texto}</p></>}
+              ? <H5Info info={<Info titulo="Por qué paró" texto={c.texto} textoEnPapel={causaEnPapel(c)} />}>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5Info>
+              : <><H5>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5><p className="text-[var(--tinta)]"><DichoEnPapel papel={causaEnPapel(c)}>{c.texto}</DichoEnPapel></p></>}
             <ul className="mt-1 list-disc pl-4 text-[var(--tinta2)]">
-              {c.evidencia.map(e => <li key={e} className="font-mono text-[10.5px]">{e}</li>)}
+              {c.evidencia.map((e, i) => <li key={e} className="font-mono text-[10.5px]"><DichoEnPapel papel={causaParaSalir(c).evidencia[i] ?? e}>{e}</DichoEnPapel></li>)}
             </ul>
-            {c.declarado && <p className="mt-1 text-[10.5px] text-[var(--tinta3)]">Declarado por {c.declarado.por} · {fechaHora(new Date(c.declarado.hora))}</p>}
+            {c.declarado && <p className="mt-1 text-[10.5px] text-[var(--tinta3)]">Declarado por <DichoEnPapel papel={rolDeQuien(c.declarado.por)}>{c.declarado.por}</DichoEnPapel> · {fechaHora(new Date(c.declarado.hora))}</p>}
             {m.colchon && (
               <>
                 <H5>EL TANQUE</H5>

@@ -2722,6 +2722,13 @@ console.log('\n=== 28. «Si falla hoy» para todos los equipos (CHOKE-COMPLETO �
     && sinCifra.every(x => x && x.bpd === null && x.grupo === 'sin-dato' && x.puesto === null) && /colchón del tanque de crudo/.test(sinCifra[0].sinDato) && /colchón del tanque de crudo/.test(sinCifra[1].sinDato) && /a qué pozos cierra/.test(sinCifra[2].sinDato)
     && ce.ranking.filter(x => x.grupo === 'techo').every(x => x.familia === 'servicio' && cerca(x.bpd, produciendo, 1e-12)),
     `los servicios: SE-2 y V-101 «hasta ${f(se2?.bpd)} bbl/d» en el grupo de los techos; K-101 también (${k101?.sinDato}); H-302 cero mientras su respaldo en línea esté bien; LACT-01 y TK-102 sin dato (${sinCifra[0]?.sinDato}); C-401 sin dato (${sinCifra[2]?.sinDato})`)
+  // QA-R, vecino 1 · Un techo es «hasta N» en todas partes: K-101 en Riesgo y Turno («En riesgo», «si para») lleva
+  // la misma cifra que en «Si falla hoy» y el motor la marca como techo; lo calculado (bombas, electrosumergibles,
+  // lo que ya se pierde) no lleva la marca.
+  const k101R = riesgo.find(r => r.campoId === 'ceiba' && r.equipo === 'K-101' && r.estado === 'en-riesgo')
+  comprobar(k101R?.techo === true && cerca(k101R.bblDia, k101?.bpd ?? -1, 1e-9) && riesgo.filter(r => r.techo).every(r => r.estado === 'en-riesgo' && !r.altoImpacto && !B.perfilBomba(r.equipo, r.campoId))
+    && riesgo.filter(r => r.estado === 'perdiendo' || B.perfilBomba(r.equipo, r.campoId) || r.tipo === 'electrosumergible').every(r => r.techo === undefined),
+    `K-101 de La Ceiba en «En riesgo»: ${f(k101R?.bblDia ?? 0)} bbl/d con la marca de techo (la misma cifra de «Si falla hoy»: hasta ${f(k101?.bpd ?? 0)}); lo calculado va sin ella`)
   // Donde K-101 tiene las tres unidades en servicio (3 de 3), cuesta 0 mientras el respaldo esté bien.
   const sanos = TODOS.filter(c => c !== 'zarza' && EQ.equipoEnCampo('K-101', c)?.dispositivos.some(x => x.tag === 'ZI-1011' && x.valor === '3 de 3'))
   const k101Bien = sanos.map(c => CR.criticidadDelCampo(c, ctx0).ranking.find(x => x.equipo === 'K-101')).filter(Boolean)
@@ -3198,6 +3205,18 @@ console.log('\n=== 31. Correcciones del QA (F2-B): todas las vistas sobre las mi
     'un tramo de más en porChoke': [rep, con(rep, y => { y.datos.porChoke.mercado = 1000 })],
     'un escalón de más dentro de un tramo': [rep, con(rep, y => { y.datos.porChokeEscalon.pozo.otro = 1 })],
     'una fila de más en una lista': [{ xs: [1] }, { xs: [1, 2] }],
+    // QA-R (C-08): los campos que F2-C, F2-B y F3 agregaron y que dicen algo con solo venir.
+    '«si para otra bomba» donde no va': [{ campoId: 'palmar' }, { campoId: 'palmar', siParaOtra: { entraBpd: 0, cabeBpd: 0 } }],
+    '«si para una» donde no va': [{ campoId: 'palmar' }, { campoId: 'palmar', sinUna: { bomba: 'P-1' } }],
+    'las frecuencias en una fila sin frecuencia': [{ id: 'x', parcial: false }, { id: 'x', parcial: false, hz: { parada: 0, prueba: 0 } }],
+    '«sube» en un equipo que no subió': [{ equipo: 'LC-01', bpd: 1 }, { equipo: 'LC-01', bpd: 1, subio: { otro: 'P-201B' } }],
+    'una frase de «Si falla hoy» que el motor no dijo': [{ campoId: 'palmar' }, { campoId: 'palmar', cambioHoy: 'Cambió hoy', noIntervenir: 'Ojo', proximoInstrumento: 'X' }],
+    'un «sin dato» donde hay cifra': [{ equipo: 'LC-01', bpd: 1 }, { equipo: 'LC-01', bpd: 1, sinDato: 'falta' }],
+    'un techo donde la cifra es calculada': [{ equipo: 'LC-11', bblDia: 1 }, { equipo: 'LC-11', bblDia: 1, techo: true }],
+    'quien escribió el motivo donde lo escribió TRIM': [{ equipo: 'LC-21', motivo: 'x' }, { equipo: 'LC-21', motivo: 'x', declaradoPor: 'el operador de campo' }],
+    'un retiro que nadie hizo': [{ id: 'x' }, { id: 'x', retiros: [] }],
+    'una respuesta de persona en una causa de TRIM': [{ tipo: 'pendiente' }, { tipo: 'pendiente', declarado: { texto: 'x' } }],
+    '«una señal apunta», «se perdió» o «No sé» que el motor no dijo': [{ estado: 'propuesta' }, { estado: 'propuesta', apunta: { regla: 'x' }, perdida: 'tea', escalada: { pregunta: 'x' } }],
   }
   const noVe = Object.entries(derivas).filter(([, [e, r]]) => diferencias(e, r).length === 0).map(([k]) => k)
   comprobar(noVe.length === 0 && diferencias(rep, rep).length === 0 && diferencias(fila, con(fila, y => { y.inicio = '2026-09-01T08:00:00Z'; y.extra = 1 })).length === 0,

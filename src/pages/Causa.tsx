@@ -28,7 +28,9 @@ import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { useUsuarios } from '@/shared/api/usuarios'
-import { ROLES_QUE_CONTESTAN } from '@/shared/api/arbol'
+import { ROLES_QUE_CONTESTAN, causaParaSalir } from '@/shared/api/arbol'
+import { rolDeQuien } from '@/entities/causa-senal'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
 import { puedeHacer, type Severidad } from '@/entities/tipos'
 
 /** Paradas por identificar: las que ninguna señal explica. Es el único lugar
@@ -275,7 +277,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
   sev: Severidad
   chat: boolean; onChat: () => void
 }) {
-  const persona = usePersona(); const responder = useApp(s => s.responder), abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
+  const persona = usePersona(); const rolActual = useRol(); const responder = useApp(s => s.responder), abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const [texto, setTexto] = useState('')
   const [parte, setParte] = useState<ParteId | ''>('')
   const [modo, setModo] = useState('')
@@ -316,6 +318,9 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
   // Sin ese dato, la evidencia sale completa, como antes.
   const porQueNo = 'porQueNo' in p.causa && typeof p.causa.porQueNo === 'string' && p.causa.porQueNo ? p.causa.porQueNo : undefined
   const lecturas = porQueNo ? p.causa.evidencia.filter(e => e !== porQueNo) : p.causa.evidencia
+  // En el papel, la evidencia con la persona por su rol (D2): «Declarado por el operador de campo».
+  const salir = causaParaSalir(p.causa).evidencia
+  const enPapel = (e: string) => salir[p.causa.evidencia.indexOf(e)] ?? e
 
   return (
     <div className="border-b border-[var(--linea2)] py-3 last:border-0">
@@ -345,7 +350,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
             {porQueNo && <Info rotulo="no alcanzó" titulo="Por qué no alcanzó la señal" texto={porQueNo} />}
           </div>
           <ul className="list-disc pl-4 text-[var(--tinta2)]">
-            {lecturas.map(e => <li key={e} className="font-mono text-[10.5px]">{e}</li>)}
+            {lecturas.map(e => <li key={e} className="font-mono text-[10.5px]">{enPapel(e) === e ? e : <DichoEnPapel papel={enPapel(e)}>{e}</DichoEnPapel>}</li>)}
           </ul>
           {/* La parte sospechosa es una pista: queda a la vista, con la variable que la delata. */}
           {sospechosa && (
@@ -355,7 +360,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
           )}
           {/* Quién lo declaró ya está en la evidencia («Declarado por …»). */}
           {p.causa.declarado && (
-            <p className="mt-1.5 text-[var(--tinta2)]">Respondido tras arrancar: «{p.causa.declarado.texto}»</p>
+            <p className="mt-1.5 text-[var(--tinta2)]">Respondido tras arrancar: <DichoEnPapel papel={`lo contestó ${rolDeQuien(p.causa.declarado.por)}`}>«{p.causa.declarado.texto}»</DichoEnPapel></p>
           )}
         </div>
         {responde && !p.causa.declarado && (
@@ -427,7 +432,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
             </label>
             {error && <p className="text-[11px] text-[var(--tinta)]" role="alert">{error}</p>}
             <Boton variante="principal" type="submit" className="min-h-12 sm:min-h-0">Registrar respuesta</Boton>
-            <small className="text-[10px] text-[var(--tinta3)]">Queda declarado por {persona.nombre} · hora del sistema</small>
+            <small className="text-[10px] text-[var(--tinta3)]">Queda declarado por <DichoEnPapel papel={rolDeQuien(` · ${rolActual.nombre.toLowerCase()}`)}>{persona.nombre}</DichoEnPapel> · hora del sistema</small>
           </form>
         )}
       </div>
@@ -498,7 +503,7 @@ function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; 
           {pasos.map((x, i) => <span key={`${x.hora}${x.que}`}>{i > 0 && ' → '}<span className="whitespace-nowrap"><span className="tabular">{corta(x.hora)}</span> {x.que}</span><NoEnviado fallas={x.fallas} /></span>)}
         </span>
         {r?.canal === 'whatsapp'
-          ? <b className="text-[var(--tinta)]">respondió {r.por} · {corta(r.hora)}: «{r.texto}»</b>
+          ? <b className="text-[var(--tinta)]"><DichoEnPapel papel={`respondió ${rolDeQuien(r.por)} · ${corta(r.hora)}`}>respondió {r.por} · {corta(r.hora)}: «{r.texto}»</DichoEnPapel></b>
           : r ? <span>respondido en pantalla</span> : <Chip tono="fuerte">sin respuesta</Chip>}
       </Tip>
       {persona && (
@@ -506,7 +511,8 @@ function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; 
           <Boton className="mt-1 min-h-12 sm:min-h-0" onClick={onAlternar} aria-expanded={verChat}>
             {verChat ? 'Cerrar el chat' : persona.id === yo.id ? 'Ver mi chat de WhatsApp' : `Ver el chat de ${persona.nombre}`}
           </Boton>
-          {verChat && <div className="mt-2"><Telefono p={p} hilo={hilo} persona={persona} /></div>}
+          {/* El chat es la conversación con sus palabras: no va al papel (D2). */}
+          {verChat && <div className="no-imprimir mt-2"><Telefono p={p} hilo={hilo} persona={persona} /></div>}
         </>
       )}
     </div>
@@ -536,12 +542,12 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
   if (a && !abierto) return (
     <small ref={guardado} tabIndex={-1} className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">
       Análisis: {a.mecanismo} {mecanismoIso(a.mecanismo)?.nombre.toLowerCase()} · causa raíz: {CAUSAS_RAIZ.find(c => c.codigo === a.causaRaiz)?.nombre.toLowerCase()}
-      {a.nota ? ` · «${a.nota}»` : ''} · {a.por}
+      {a.nota && <DichoEnPapel papel="">{` · «${a.nota}»`}</DichoEnPapel>} · <DichoEnPapel papel={rolDeQuien(a.por)}>{a.por}</DichoEnPapel>
       {puede && <button type="button" onClick={() => { setMecanismo(a.mecanismo); setCausaRaiz(a.causaRaiz); setNota(a.nota ?? ''); setAbierto(true) }}
         className="ml-1.5 min-h-10 cursor-pointer underline underline-offset-2 sm:min-h-0">Corregir</button>}
       {anteriores?.map((x, i) => (
         <span key={i} className="block text-[var(--tinta3)]">
-          Antes: {x.mecanismo} · causa raíz {x.causaRaiz}{x.nota ? ` · «${x.nota}»` : ''} · {x.por} · {fechaHora(new Date(x.hora))}
+          Antes: {x.mecanismo} · causa raíz {x.causaRaiz}{x.nota && <DichoEnPapel papel="">{` · «${x.nota}»`}</DichoEnPapel>} · <DichoEnPapel papel={rolDeQuien(x.por)}>{x.por}</DichoEnPapel> · {fechaHora(new Date(x.hora))}
         </span>
       ))}
     </small>
@@ -606,9 +612,12 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
       <span className="min-w-0">
         <b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· {global ? `${campoPorId(p.campoId).nombre} · ` : ''}{fechaHora(p.inicio)}</span>
         <span className="block text-[var(--tinta)]">
-          {nombreParte ? <><b className="font-semibold">{nombreParte}</b>{vio ? ` · ${vio}` : ''}{!generado ? ` · «${r.texto}»` : ''}</> : <>«{r.texto}»</>}
+          {/* Lo que escribió con sus palabras va en la pantalla; en el papel, quién lo contestó, por su rol (D2). */}
+          {nombreParte
+            ? <><b className="font-semibold">{nombreParte}</b>{vio ? ` · ${vio}` : ''}{!generado && <DichoEnPapel papel="">{` · «${r.texto}»`}</DichoEnPapel>}</>
+            : <DichoEnPapel papel={`Lo contestó ${rolDeQuien(r.por)}`}>«{r.texto}»</DichoEnPapel>}
         </span>
-        <small className="block text-[10.5px] text-[var(--tinta3)]">{r.por} · {fechaHora(new Date(r.hora))}{r.canal === 'whatsapp' ? ' · por WhatsApp' : ''}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
+        <small className="block text-[10.5px] text-[var(--tinta3)]"><DichoEnPapel papel={nombreParte ? `Lo contestó ${rolDeQuien(r.por)} · ` : ''}>{r.por} · </DichoEnPapel>{fechaHora(new Date(r.hora))}{r.canal === 'whatsapp' ? ' · por WhatsApp' : ''}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
         {/* Estado como etiqueta; por qué (arrancó en menos de un día), en el ⓘ. */}
         {disparo && (
           <span className="mt-0.5 flex flex-wrap items-center gap-x-1">
@@ -622,7 +631,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
             <Boton variante="chico" className="mt-1 min-h-10 sm:min-h-0" aria-expanded={verChat} onClick={() => setVerChat(v => !v)}>
               {verChat ? 'Cerrar el chat' : quien.id === yo.id ? 'Ver mi chat de WhatsApp' : `Ver el chat de ${quien.nombre}`}
             </Boton>
-            {verChat && <div className="mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>}
+            {verChat && <div className="no-imprimir mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>}
           </>
         )}
       </span>

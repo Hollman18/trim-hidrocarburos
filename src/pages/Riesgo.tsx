@@ -21,7 +21,7 @@ import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
-import { costoHoy, colchonCorto, detalleCostoHoy, deFlota } from '@/shared/ui/costoHoy'
+import { costoHoy, colchonCorto, detalleCostoHoy, deFlota, siPara as siParaDe, siParaLargo, sumaSiPara } from '@/shared/ui/costoHoy'
 
 /** Qué está en riesgo: lo que se está perdiendo ahora y lo que se va a perder
  *  si no se actúa, por equipo, con su horizonte y lo que cuesta. Nada sale de
@@ -46,7 +46,8 @@ export function Riesgo() {
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const porDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
-  const enJuego = enRiesgo.reduce((a, r) => a + r.bblDia, 0)
+  // Si alguna fila es un techo (K-101: «si cierran todos sus pozos»), la suma también: «hasta» (QA-R, vecino 1).
+  const enJuego = sumaSiPara(enRiesgo)
   // La exposición: la suma de lo que costaría cada equipo si fallara HOY
   // (`costoFalla`, una sola cuenta para todas las familias: se puede sumar).
   // Es exactamente la suma de lo que dicen las filas. No es que fallen todos
@@ -89,6 +90,8 @@ export function Riesgo() {
   const filaPerdiendo = (r: FilaRiesgo) => (
     <Tip key={`${r.campoId}${r.equipo}${r.tipo}`} as="button" onClick={() => abrir(r)}
       titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
+      // Lo que escribió una persona va en la pantalla; en el papel, quién lo contestó, por su rol (D2).
+      pistaEnPapel={r.declaradoPor ? `Lo contestó ${r.declaradoPor}` : undefined}
       filas={[['Pozos parados', String(r.pozos)], ['Perdiéndose', `${n0(r.bblDia)} bbl/d`], ['Por hora', `${n0(r.bblDia / 24)} bbl/h`],
         ...(r.desde ? [['Desde', fechaHora(r.desde)] as [string, string]] : []),
         ...(r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? [['Pozos cerrados desde', fechaHora(r.cierreDesde)] as [string, string]] : []),
@@ -114,7 +117,7 @@ export function Riesgo() {
   const filaRiesgo = (r: FilaRiesgo) => {
     const servicio = esServicio(r)
     const tramo = ingenieria ? tramoDe.get(`${r.campoId}|${r.equipo}`) : undefined
-    const siPara = servicio && r.bblDia === 0 ? 'todo el campo' : `${n0(r.bblDia)} bbl/d`
+    const siPara = siParaDe(r, servicio)
     const detalle = detalleCostoHoy(r)
     return (
       <div key={`${r.campoId}${r.equipo}`} className="border-b border-[var(--linea2)] py-2.5 last:border-0">
@@ -122,7 +125,7 @@ export function Riesgo() {
           pista={r.motivo} imprimir="pista"
           filas={[...(r.parte ? [['Parte', NOMBRE_PARTE[r.parte]] as [string, string]] : []),
             ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}${r.rango && entre(r.rango) ? ` (${entre(r.rango)})` : ''}` : 'ya pasó el límite'],
-            ['Si para', servicio && r.bblDia === 0 ? 'cierra lo que esté produciendo en el campo' : `${n0(r.bblDia)} bbl/d`],
+            ['Si para', siParaLargo(r, servicio)],
             ...(r.costoFalla !== undefined ? [['Si falla hoy', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
           className="flex w-full cursor-pointer items-center gap-3 text-left hover:bg-[var(--panel2)]">
           <MarcaPrioridad s={r.prioridad} tamano={13} />
@@ -184,7 +187,7 @@ export function Riesgo() {
         </span>
         <span>
           <small className="block text-[10.5px] text-[var(--tinta3)]">1 · Antes · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
-          <b className="tabular block text-[22px] leading-tight">{n0(enJuego)} <small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d en juego</small></b>
+          <b className="tabular block text-[22px] leading-tight" data-en-juego>{enJuego.techo && <small className="text-[13px] font-normal">hasta </small>}{n0(enJuego.bblDia)} <small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d en juego</small></b>
           <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
             {pieCorto}{enRiesgo.length > 0 && <Info titulo="Exposición" texto={pieCosto} />}
           </small>
@@ -208,7 +211,7 @@ export function Riesgo() {
         uno cargado al equipo que lo apagó. <b>En riesgo</b> son las bombas de la línea y las
         electrosumergibles que producen pero tienen una parte que avisa: lo que se perdería por día si
         paran, y lo que costaría que fallaran hoy con el tiempo fuera que suelen tener (la exposición lo suma).
-        {directivo && ' En puntos de eficiencia: lo perdido sobre el potencial del campo.'}
+        {directivo && ' En puntos del potencial: lo perdido sobre el potencial del campo.'}
         {' '}La lista va ordenada por cuándo cruza su límite: primero lo que ya está fuera. El ⓘ «si falla
         hoy» de cada fila dice de dónde sale la cifra («flota»: el equipo nunca ha fallado y se estimó
         con su flota en el campo). Un servicio del campo no lleva esa cifra: lo que cuesta su caída

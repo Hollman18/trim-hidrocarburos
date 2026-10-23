@@ -84,6 +84,22 @@ export interface Causa {
   declarado?: Respuesta
 }
 
+/** Quien respondió, dicho por su rol («el operador de campo») y nunca por su
+ *  nombre: `Respuesta.por` es «Nombre · rol» (lo pone el servidor). Así lo dice
+ *  todo lo que sale de TRIM: la ANH (`desc_evid`), el papel y el PDF (D2; S1 R-D). */
+export function rolDeQuien(por: string): string {
+  const i = por.lastIndexOf(' · ')
+  if (i < 0) return 'una persona del campo'
+  const rol = por.slice(i + 3).trim()
+  // «la ingeniera de producción», «la planeadora»; «el operador de campo», «el jefe».
+  return `${/^\p{L}+a(?:\s|$)/u.test(rol) ? 'la' : 'el'} ${rol}`
+}
+
+/** ¿El texto de la causa es lo que escribió una persona con sus palabras (la
+ *  respuesta de quien declaró, tal cual)? Ese texto se queda en TRIM: no va a la
+ *  ANH ni a ningún informe o exportación (D2). */
+export const textoDePersona = (c: Pick<Causa, 'texto' | 'declarado'>): boolean => !!c.declarado && c.texto === c.declarado.texto
+
 export interface Contexto {
   config: Config
   /** Respuestas de operarios a paradas sin identificar, por id de evento. */

@@ -2304,9 +2304,19 @@ begin
   if new.lote_id is not null and not exists (select 1 from confirmacion_lote l where l.id = new.lote_id and new.clave = any (l.paradas)) then
     raise exception 'la fila % no está en el lote %', new.clave, new.lote_id using errcode = '23514';
   end if;
+  -- El lote dice qué pasos subió: un paso confirmado en un lote que no lo trae no es de ese lote (QA-R, vecino 7).
+  if new.lote_id is not null and not exists (select 1 from confirmacion_lote l where l.id = new.lote_id and new.paso = any (l.pasos)) then
+    raise exception 'el lote % no confirmó el paso % (%)', new.lote_id, new.paso, new.clave using errcode = '23514';
+  end if;
+  -- Un retiro devuelve a lo que propone TRIM lo que había dicho una persona (D1): sin algo que retirar en
+  -- el evento (el mismo paso con el mismo valor, dicho antes por una persona), no es un retiro (QA-R, vecino 7).
+  if new.procedencia = 'retirado' and not exists (select 1 from clasificacion_paso r where r.evento_id = new.evento_id and r.paso = new.paso
+       and r.valor = new.valor and r.procedencia in ('declarado', 'confirmado', 'corregido')) then
+    raise exception 'nadie había dicho % = % en %: no hay nada que retirar', new.paso, new.valor, new.evento_id using errcode = '23514';
+  end if;
   return new;
 end $$;
-comment on function clasificacion_paso_reglas() is 'Trigger de clasificacion_paso: el evento es del campo; la persona está activa, escribe con su rol y tiene el campo (anh_persona_revisar); el rol tiene la capacidad (anh:clasificar; anh:confirmar en lote; anh:yacimiento para «En el yacimiento»); confirma o dice solo los pasos de su rol (paso_por_rol; un declarado ajeno solo desde una respuesta de campo); la fila está en su lote.';
+comment on function clasificacion_paso_reglas() is 'Trigger de clasificacion_paso: el evento es del campo; la persona está activa, escribe con su rol y tiene el campo (anh_persona_revisar); el rol tiene la capacidad (anh:clasificar; anh:confirmar en lote; anh:yacimiento para «En el yacimiento»); confirma o dice solo los pasos de su rol (paso_por_rol; un declarado ajeno solo desde una respuesta de campo, que respalda clasificacion_paso_respaldada); la fila está en su lote y el lote confirmó ese paso; un retirado retira algo que una persona dijo en el evento.';
 create trigger clasificacion_paso_reglas before insert on clasificacion_paso for each row execute function clasificacion_paso_reglas();
 
 -- La coherencia bloqueada (C24 p.7: la ANH rechaza la transmisión entera):
@@ -2499,6 +2509,25 @@ begin
 end $$;
 comment on function revision_atendida_reglas() is 'Trigger de revision_atendida: la atiende el rol al que se le pidió o, sin pedir_a, uno que revisa (quienRevisa), una persona activa con ese rol y con el campo (C-07).';
 create trigger revision_atendida_reglas before insert on revision_atendida for each row execute function revision_atendida_reglas();
+
+-- Un paso que el rol no dice como suyo solo entra «declarado» por una respuesta de campo (preguntas:campo@1, D1;
+-- B-04): esa respuesta tiene que estar, de la misma persona, en la misma clave y a la misma hora (el toque que la
+-- dio). Se revisa al confirmar la transacción: el servidor guarda la respuesta y el paso que determina juntos, en
+-- cualquier orden (QA-R, vecino 7). Lo que el rol sí dice como suyo, con esa regla, es una declaración directa.
+create or replace function clasificacion_paso_respaldada() returns trigger language plpgsql as $$
+begin
+  if exists (select 1 from paso_por_rol x where x.rol_id = new.rol_id and x.paso = new.paso and x.accion = 'declara') then
+    return null;
+  end if;
+  if not exists (select 1 from respuesta_campo r where r.clave = new.clave and r.evento_id = new.evento_id and r.por_id = new.por_id
+       and r.hora = new.hora and not r.no_se) then
+    raise exception 'el rol % no dice el paso % y ninguna respuesta de campo suya en % lo respalda (preguntas:campo@1)', new.rol_id, new.paso, new.clave using errcode = '23514';
+  end if;
+  return null;
+end $$;
+comment on function clasificacion_paso_respaldada() is 'Al confirmar la transacción: un paso «declarado» con la regla de una respuesta de campo (preguntas:campo@1) que el rol no dice como suyo (paso_por_rol) tiene detrás una respuesta_campo de la misma persona, en la misma clave y a la misma hora, que no es «No sé». Sin ella, cualquier rol diría cualquier paso con solo escribir esa regla (QA-R, vecino 7).';
+create constraint trigger clasificacion_paso_respaldada after insert on clasificacion_paso deferrable initially deferred
+  for each row when (new.procedencia = 'declarado' and new.regla = 'preguntas:campo@1') execute function clasificacion_paso_respaldada();
 
 create trigger respuesta_campo_solo_insercion before update or delete on respuesta_campo for each row execute function solo_insercion();
 create trigger respuesta_campo_sin_truncate before truncate on respuesta_campo for each statement execute function solo_insercion();

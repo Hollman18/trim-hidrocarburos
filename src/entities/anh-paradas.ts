@@ -86,6 +86,11 @@ export interface ParadaAnh {
   /** «Algo está mal» o «Pedir a producción» (P1 §1.5; U1 §2.7): la parada espera a
    *  quien revisa; con `atendida`, ya la miró. */
   revision?: RevisionAnh
+  /** Lo que una persona había dicho y otra retiró con motivo (D1, procedencia
+   *  `retirado`): no rige, la fila volvió a lo que propone TRIM, pero se ve en la
+   *  historia de la parada («antes: …, retirado por … porque …»). Uno por paso, el
+   *  que rige en la fila. Ausente si nada se retiró. */
+  retiros?: RetiroAnh[]
   pozo: string
   campoId: string
   diaOperacional: string
@@ -126,6 +131,30 @@ export interface ParadaAnh {
   /** La propuesta de TRIM para este tramo: opciones cerradas, preguntas y sugerencias de lo que falta. */
   propuesta: PropuestaAnh
   versionCatalogo: IdVersionCatalogo
+}
+
+/** Un paso que una persona retiró con motivo: el valor que dejó de regir, quién lo
+ *  retiró, cuándo y por qué (el motivo se queda en TRIM: no va a la ANH ni al papel, D2). */
+export interface RetiroAnh {
+  paso: PasoAnh
+  /** El valor retirado, en código interno (el que había dicho otra persona). */
+  valor: string
+  por: string
+  porId: string
+  rol: string
+  hora: string
+  motivo?: string
+}
+
+/** Los retiros que rigen en una fila (lo más reciente de cada paso es un `retirado`). */
+function retirosDe(g: BorradorClasificacion | undefined): RetiroAnh[] {
+  if (!g) return []
+  return PASOS.flatMap(paso => {
+    const d = g[paso]
+    if (d?.procedencia !== 'retirado' || !d.por || !d.porId || !d.rol || !d.hora) return []
+    const motivo = typeof d.porque === 'string' ? d.porque : undefined
+    return [{ paso, valor: String(d.valor), por: d.por, porId: d.porId, rol: d.rol, hora: d.hora, ...(motivo ? { motivo } : {}) }]
+  })
 }
 
 export interface OpcionesParadas extends OpcionesPropuesta {
@@ -250,9 +279,11 @@ export function paradasAnh(campoIds: string[], desde: Date, hasta: Date, ctx: Co
         if (guardada) propuesta = aplicarGuardada(propuesta, guardada)
         const clasificacion = propuesta.clasificacion ?? propuesta.borrador
         const evidencia = clasificacion.choke?.valor === 'reservorio' ? clasificacion.choke.porque?.evidencia : undefined
+        const retiros = retirosDe(guardada)
         out.push({
           id, eventoId: ev.id, raiz, ...(minutos !== undefined ? { minutosDesdeRaiz: minutos } : {}),
-          ...(evidencia ? { evidenciaYacimiento: evidencia } : {}), ...(clasificacion.revision ? { revision: clasificacion.revision } : {}), pozo: ev.pozo, campoId,
+          ...(evidencia ? { evidenciaYacimiento: evidencia } : {}), ...(clasificacion.revision ? { revision: clasificacion.revision } : {}),
+          ...(retiros.length ? { retiros } : {}), pozo: ev.pozo, campoId,
           diaOperacional: diaOperacional(pz.a), inicio: isoCo(pz.a), inicioEvento: isoCo(ms(ev.inicio)), fin: isoCo(fin),
           abiertaAlCorte: abierta, diaEnCurso: finDia > ahora,
           fraccion, parcial: ev.codigo === 'HZ', ...(ev.codigo === 'HZ' && ev.hz && hzPrueba ? { hz: { parada: ev.hz, prueba: hzPrueba } } : {}),

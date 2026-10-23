@@ -71,7 +71,7 @@ export function Portafolio() {
                 ['Perdiéndose ahora', e ? `${n0(e.perdiendoBpd)} bbl/d` : '—'],
                 ['Pozos parados', e ? `${e.parados} de ${e.pozos}` : '—'],
                 ['Producción del período', `${n0(real)} bbl/d`], ['Meta de producción', sinMeta ? SIN_META : `${n0(meta)} bbl/d`],
-                ['Máximo de diferido', sinMeta ? SIN_META : `${n0(f.metaDiferido / dias)} bbl/d`], ['Eficiencia', `${n1(f.pe)} %`],
+                ['Máximo de diferido', sinMeta ? SIN_META : `${n0(f.metaDiferido / dias)} bbl/d`], ['Del potencial', `${n1(f.pe)} %`],
                 ['Diferidos', `${n0(f.brecha)} bbl`], ['Alto impacto', `${n0(f.altoImpacto)} bbl`],
                 ['Sin identificar', `${n0(f.pendiente)} bbl`]]}
               className={cn('flex w-full cursor-pointer items-center gap-3 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)]',

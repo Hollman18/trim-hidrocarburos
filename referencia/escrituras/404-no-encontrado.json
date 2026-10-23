@@ -1,0 +1,1 @@
+{"id":"404-no-encontrado","descripcion":"El operador (solo La Ceiba) clasifica una parada de Morichal: la misma respuesta que una que no existe (C-20)","pasos":[{"metodo":"POST","endpoint":"/api/anh/paradas/EP-MN38-251001-06%402025-10-01%231/clasificacion","rol":"oper","cuerpo":{"pasos":{"impacto":"diferida"}},"esperado":{"estado":404,"codigo":"no-encontrado"}}]}

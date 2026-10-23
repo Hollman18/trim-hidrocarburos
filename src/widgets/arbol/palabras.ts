@@ -110,6 +110,9 @@ export const sinReferencias = (s: string) =>
 
 /** Una lista dicha: «LC-16 y LC-07», «LC-02, LC-05 y LC-09». */
 export const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+/** Unos pozos dichos en un aviso: hasta tres por su nombre («LC-07 y LC-16»);
+ *  más, cuántos («los 41 pozos»). Un aviso que nombra 41 pozos no se lee (QA-R, vecino 10). */
+export const pozosEnCorto = (xs: readonly string[]) => (xs.length <= 3 ? lista(xs) : `los ${xs.length} pozos`)
 
 
 /* ─────────────── una pregunta a la vez y lo que ya se contestó (B-23, B-04) ─────────────── */

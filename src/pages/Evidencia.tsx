@@ -3,6 +3,8 @@ import { useApp, useAmbito, useRol, useRango } from '@/app/store'
 import { useParadasDeBombas } from '@/shared/api/diferidos'
 import { causaParaSalir } from '@/shared/api/arbol'
 import { COMO } from '@/entities/causa-senal'
+import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
+import { causaEnPapel } from '@/shared/ui/papel'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
 import { fechaHora } from '@/entities/reloj'
@@ -73,8 +75,8 @@ export function Evidencia() {
             className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-left text-[11.5px] last:border-0 hover:bg-[var(--panel2)]">
             <span className="min-w-0">
               <b>{m.evento.equipo}</b><span className="text-[var(--tinta3)]">{ambito.global ? ` · ${campoPorId(m.evento.campoId).nombre}` : ''} · {fechaHora(m.inicio)} → {m.abierto ? 'abierta' : fechaHora(m.fin)} · {fmtHoras(m.horasParada, true)}{m.cruzaBorde ? ` · ${fmtHoras(m.horasEnPeriodo, true)} en el período` : ''}</span>
-              <span className="block text-[var(--tinta2)]">{m.causa.parte ? `${NOMBRE_PARTE[m.causa.parte]} · ` : ''}{m.causa.texto} <span className="text-[var(--tinta3)]">({COMO[m.causa.como]})</span></span>
-              <small className="font-mono block truncate text-[10px] text-[var(--tinta3)]">{m.causa.evidencia[0]}</small>
+              <span className="block text-[var(--tinta2)]">{m.causa.parte ? `${NOMBRE_PARTE[m.causa.parte]} · ` : ''}<DichoEnPapel papel={causaEnPapel(m.causa)}>{m.causa.texto}</DichoEnPapel> <span className="text-[var(--tinta3)]">({COMO[m.causa.como]})</span></span>
+              <small className="font-mono block truncate text-[10px] text-[var(--tinta3)]"><DichoEnPapel papel={causaParaSalir(m.causa).evidencia[0]}>{m.causa.evidencia[0]}</DichoEnPapel></small>
             </span>
             <span className="tabular text-right">
               <b className="block">{n0(m.bbl)} bbl</b>

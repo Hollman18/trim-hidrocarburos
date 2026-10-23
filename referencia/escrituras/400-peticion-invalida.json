@@ -1,0 +1,1 @@
+{"id":"400-peticion-invalida","descripcion":"Un paso con un número donde va un texto (C-11)","pasos":[{"metodo":"POST","endpoint":"/api/anh/paradas/EP-LC06-251001-96%402025-10-01%231/clasificacion","rol":"sup","cuerpo":{"pasos":{"impacto":1}},"esperado":{"estado":400,"codigo":"peticion-invalida"}}]}
