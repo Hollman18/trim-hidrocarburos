@@ -283,7 +283,7 @@ const CASOS = [
     extra: p => igual(p.opciones.n1, ['NP_SUP', 'NP_ENINT', 'NP_INS', 'NP_CTRL']) && p.preguntas.some(q => q.id === 'raiz' && q.opciones.length === 5) && !!p.hueco },
   { fila: 'compresion', id: 'EP-MN07-260214-32', como: 'real', espera: { n1: 'NP_PROC', n2: 'NP_PROC/capacidad-compresion-transferencia-gas-limitada' }, faltan: [], extra: p => p.perdida === 'tea' },
   { fila: 'evacuacion', id: 'EP-GU03-251017-59', como: 'real', espera: { impacto: 'diferida', planeacion: 'no-planeada' }, faltan: ['responsable', 'choke', 'n1', 'n2'],
-    extra: p => p.sugerido.choke === 'planta' && igual(p.opciones.choke, ['planta', 'exportacion']) && p.preguntas[0]?.id === 'tanques' },
+    extra: p => p.sugerido.choke === 'planta' && igual(p.opciones.choke, ['planta', 'exportacion']) && p.preguntas[0]?.id === 'oleoducto' },
   { fila: 'proceso', id: 'EP-PA04-251120-97', como: 'real', espera: { responsable: 'op-operacion', n2: 'NP_PROC/capacidad-tratamiento-agua-crudo-limitada' }, faltan: [],
     extra: p => igual(p.alternativas, ['NP_INS/falla-transmisor-de-nivel']) },
   { fila: 'tratamiento', id: 'EP-LC08-251007-36', como: 'real', espera: { responsable: 'op-operacion', n2: 'NP_PROC/capacidad-tratamiento-agua-crudo-limitada' }, faltan: [], extra: p => p.perdida === 'rechazo' },
@@ -481,8 +481,9 @@ comprobar(!!chUl.pregunta && pUl.borrador.choke.porque.pregunta === chUl.pregunt
   'la pregunta del motor del choke viaja con la propuesta (baja carga UL), sin frenar la cadena')
 const evq = tramo('EP-GU03-251017-59'), pEv = proponer(evq), chEv = CH.chokeDeCausa(evq.causa, evq.pozo.campoId, ctx0)
 comprobar(!pEv.borrador.choke && pEv.sugerido.choke === chEv.choke && pEv.porqueChoke?.pregunta === chEv.pregunta && pEv.porqueChoke?.elemento === 'LACT-01'
-  && igual(pEv.preguntas[0].opciones.slice(0, 2).map(o => o.texto), ['La planta no recibe (agua o proceso)', 'El tanque de crudo está lleno']),
-  'tanques llenos: el choke queda en falta, con lo del motor del choke como sugerencia y las dos opciones cerradas de U2 §4.4')
+  && pEv.preguntas[0]?.id === 'oleoducto' && pEv.preguntas[0].quien === 'campo' && igual(pEv.preguntas[0].opciones.map(o => o.texto), ['Sí, recibía', 'No, no recibía', 'No sé'])
+  && !pEv.preguntas.some(q => q.id === 'tanques'),
+  'tanques llenos (B-31): la señal ya dice que el tanque de crudo se llenó, así que la pregunta va directa, «¿El oleoducto o el cliente estaba recibiendo?»; el choke queda en falta, con lo del motor del choke como sugerencia (U2 §4.2)')
 const corr = A.declararPaso(pRod.borrador, 'choke', 'pozo', NELSON, 'sup', HORA)
 comprobar(corr.choke.procedencia === 'corregido' && corr.choke.propuesto === 'planta' && corr.choke.porque.persona === 'Nelson Ortiz' && corr.choke.porque.elemento === 'P-201B',
   'si una persona lo corrige, el porqué guarda quién fue y el elemento, con lo propuesto al lado')
@@ -529,13 +530,14 @@ try { A.responder(conDetalle, 'detalle', 0, JAIRO, 'oper', HORA) } catch (e) { e
 comprobar(deCausa.length > 0 && deCausa.every(q => q.quien === 'causa') && !A.ROLES_QUE_CONTESTAN.causa.includes('oper') && A.ROLES_QUE_CONTESTAN.causa.includes('tec')
   && eDetalle instanceof A.ErrorClasificacion && /nunca se le piden la causa ni el detalle/.test(eDetalle.message),
   `«¿Qué falló primero?» y «¿Qué fue, exactamente?» (${f0(deCausa.length)} en el demo) los contesta el técnico que abre el equipo o quien revisa, nunca el operador`)
-const r3 = A.responder(pEv, 'tanques', 1, JAIRO, 'oper', HORA), r4 = A.responder(r3, 'oleoducto', 1, JAIRO, 'oper', HORA)
+const r4 = A.responder(pEv, 'oleoducto', 1, JAIRO, 'oper', HORA)
 comprobar(r4.borrador.choke.valor === 'exportacion' && r4.borrador.choke.procedencia === 'declarado' && r4.borrador.choke.rol === 'oper' && r4.borrador.choke.porque.persona === 'Jairo Peña'
   && !A.avalado(r4.borrador, 'choke') && r4.borrador.responsable.valor === 'ext-transportador'
   && r4.borrador.n1.valor === 'NP_TRANSP' && A.origenesDe(r4.borrador).choke === 'C' && r4.borrador.planeacion.procedencia === 'regla'
   && K.PASOS.every(x => r4.borrador[x]?.procedencia !== 'confirmado')
-  && igual(r4.faltan, ['n2']) && r4.preguntas.some(q => q.id === 'detalle' && q.opciones.length === 5) && r4.borrador.respuestas?.length === 2,
-  'el operador contesta hechos («el tanque de crudo está lleno», «no recibía»): afuera queda dicho por él, con su nombre en el porqué, pero no avalado (origen C); «¿Planeada?», que TRIM ya proponía igual, sigue siendo de TRIM: una respuesta no «confirma» nada (D1; B-04)')
+  && igual(r4.faltan, ['n2']) && r4.preguntas.some(q => q.id === 'detalle' && q.opciones.length === 5) && r4.borrador.respuestas?.length === 1
+  && pEv.sugerido.n2 === 'NP_PROC/tanques-llenos-capacidad-limitada' && r4.sugerido.n2 === undefined && r4.sugerido.n1 === undefined,
+  'el operador contesta un hecho («no recibía»): afuera queda dicho por él, con su nombre en el porqué, pero no avalado (origen C); «¿Planeada?», que TRIM ya proponía igual, sigue siendo de TRIM: una respuesta no «confirma» nada (D1; B-04); y el detalle ya no sugiere «tanques llenos», que es de la planta (B-31)')
 const uv = proponer(tramo('EP-LC07-251006-04')), rUv = A.responder(uv, 'corte', 1, JAIRO, 'oper', HORA)
 comprobar(rUv.borrador.choke.valor === 'planta' && rUv.borrador.choke.procedencia === 'declarado' && !A.avalado(rUv.borrador, 'choke') && !rUv.borrador.choke.porque.pregunta
   && rUv.borrador.choke.porque.persona === 'Jairo Peña' && !rUv.preguntas.some(q => q.pasos.includes('choke')) && rUv.preguntas.some(q => q.id === 'detalle'),

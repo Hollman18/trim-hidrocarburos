@@ -236,7 +236,7 @@ function equiposDe(a: Acumulado): Record<ChokeOSinAsignar, EquipoBbl[]> {
   return Object.fromEntries(CHOKES_Y_SIN_ASIGNAR.map(k => [k, [...a.equipos[k]].map(([equipo, tipos]): EquipoBbl => {
     const bbl = [...tipos.values()].reduce((x, y) => x + y, 0)
     const porTipo = [...tipos].filter(([, v]) => v > 0).map(([tipo, v]) => ({ tipo, bbl: v })).sort((x, y) => y.bbl - x.bbl || x.tipo.localeCompare(y.tipo))
-    return { equipo, bbl, ...(porTipo.length > 1 ? { porTipo } : {}) }
+    return { equipo, bbl, tipo: porTipo[0]?.tipo ?? [...tipos.keys()][0]!, ...(porTipo.length > 1 ? { porTipo } : {}) }
   }).filter(x => x.bbl > 0).sort((x, y) => y.bbl - x.bbl || (x.equipo < y.equipo ? -1 : 1))])) as Record<ChokeOSinAsignar, EquipoBbl[]>
 }
 
@@ -556,8 +556,10 @@ export function tuberiaCampo(campoId: string, desde: Date, hasta: Date, ctx: Con
   const sinTramoBbl = b.porChoke['sin-asignar']
   const mayor = ORDEN_CHOKE.reduce((a, k) => (b.porChoke[k] > b.porChoke[a] ? k : a), 'pozo' as ChokeAnh)
   const pct = (x: number) => Math.round((x / b.diferido) * 100)
+  // La frase del gerente (U2 §9.2; B-13): dónde se trabó sobre todo, con los equipos y su familia en
+  // palabras de campo, y lo que todavía no tiene causa en barriles.
   const fraseGerente = b.diferido <= 0 ? `Nada se trabó en ${nombre} en el período.`
-    : `${nombre}: ${pct(b.porChoke[mayor])} % ${DONDE_PERIODO[mayor]}${b.porChokeEquipo[mayor].length ? ` (${b.porChokeEquipo[mayor].slice(0, 2).map(x => x.equipo).join(', ')})` : ''}${sinTramoBbl > 0 ? `; ${pct(sinTramoBbl)} % sin identificar` : ''}`
+    : `Se trabó ${pct(b.porChoke[mayor]) >= 100 ? '' : 'sobre todo '}${DONDE_PERIODO[mayor]}${b.porChokeEquipo[mayor].length ? `: ${conFamilia(b.porChokeEquipo[mayor].slice(0, 2), mayor)}` : ''}.${sinTramoBbl >= 0.5 ? ` ${n0(sinTramoBbl)} bbl todavía sin identificar.` : ''}`
   const medidor = medidorDe(campoId)
   const pasaHoyBpd = caudalesAhora(campoId).crudo
   const perdiendoAhoraBpd = ahoraPorTramo.reduce((a, x) => a + x.bpd, 0)
@@ -571,6 +573,27 @@ export function tuberiaCampo(campoId: string, desde: Date, hasta: Date, ctx: Con
     capacidades: capacidadesDeLaTuberia(p, versiones), ...(medidor ? { medidor } : {}),
     textoCorto: p.textoCorto, frase: p.texto, ...(fraseHoy ? { fraseHoy } : {}), fraseGerente,
   }
+}
+
+/** La familia de un equipo en la frase del gerente, por la causa que más le cargó
+ *  (U1 §1.1: «nombre corto y familia»): singular y plural. La baja tensión de un
+ *  solo pozo se dice así, no «energía eléctrica» (U2 §4.4, caso 8). */
+const FAMILIA: Record<TipoCausa, [string, string]> = {
+  reinyeccion: ['bomba de reinyección', 'bombas de reinyección'], transporte: ['bomba multifásica', 'bombas multifásicas'],
+  electrosumergible: ['electrosumergible', 'electrosumergibles'], levantamiento: ['bombeo mecánico', 'bombeo mecánico'],
+  energia: ['energía eléctrica', 'energía eléctrica'], aire: ['aire de instrumentos', 'aire de instrumentos'],
+  compresion: ['compresor de gas', 'compresores de gas'], evacuacion: ['despacho del crudo', 'despacho del crudo'],
+  proceso: ['separador', 'separadores'], tratamiento: ['tratamiento de crudo', 'tratamiento de crudo'],
+  programada: ['parada programada', 'paradas programadas'], declarada: ['según el operario', 'según el operario'],
+  pendiente: ['sin identificar', 'sin identificar'],
+}
+const familia = (t: TipoCausa, tramo: ChokeAnh, varios: boolean) =>
+  t === 'energia' && tramo === 'pozo' ? 'baja tensión' : FAMILIA[t][varios ? 1 : 0]
+/** «LC-11 y LC-04 (electrosumergibles)»; «P-201B (bomba de reinyección) y V-101 (separador)». */
+function conFamilia(eqs: readonly EquipoBbl[], tramo: ChokeAnh): string {
+  const mismo = eqs.every(e => e.tipo === eqs[0]!.tipo)
+  const y = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+  return mismo ? `${y(eqs.map(e => e.equipo))} (${familia(eqs[0]!.tipo, tramo, eqs.length > 1)})` : y(eqs.map(e => `${e.equipo} (${familia(e.tipo, tramo, false)})`))
 }
 
 /* ───────────────────────── mes a mes y contra la línea base ───────────────────────── */

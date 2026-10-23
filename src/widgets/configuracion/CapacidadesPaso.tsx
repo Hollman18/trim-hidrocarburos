@@ -10,7 +10,7 @@ import { AHORA, fechaCorta, fechaHora } from '@/entities/reloj'
 import { Panel, Boton, Hueco, Chip } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
-import { DatoInvalido } from '@/shared/ui/Prioridad'
+import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { EtiquetaFalta, Limita, MarcaFalta } from './marcas'
@@ -82,7 +82,7 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
       </p>
       {tub.campoDeGas && (
         <div className="mb-2.5"><Hueco>
-          {campoNombre} es un campo de gas. La tubería del gas todavía no está: el gas tiene «una tolerancia diferente» (Edinson) y falta definir cómo se mide su potencial.
+          {campoNombre} es un campo de gas. La tubería del gas todavía no está: el gas tiene una tolerancia diferente y falta definir cómo se mide su potencial.
         </Hueco></div>
       )}
       {sinEsquema && (
@@ -291,13 +291,15 @@ function Escribir({ nombre, unidad, rige, fuenteRige, escrita, puede, onEscribir
   )
 }
 
-/** Lo que encontró la revisión: lo que bloquea (morado, círculo punteado: un dato
- *  que no corresponde), lo que pide confirmar o falta (gris discontinuo). */
+/** Lo que encontró la revisión (B-30). Lo que bloquea lleva la marca de aviso y
+ *  la palabra al comienzo, «Bloquea la firma:»; lo que pide confirmar o falta, el
+ *  círculo gris discontinuo y «Revise:». El morado es solo de «sin comunicación» y
+ *  «dato inválido» (U1 §9.2): aquí no va. Nunca solo color: forma y palabra. */
 function Regla({ h }: { h: HallazgoCapacidad }) {
   return (
-    <li className="flex items-start gap-1.5">
-      <span className="mt-[3px] shrink-0">{h.bloquea ? <DatoInvalido etiqueta="Bloquea la firma" tamano={12} /> : <MarcaFalta etiqueta="Revisar" />}</span>
-      <span className="min-w-0 break-words">{h.texto}</span>
+    <li className="flex items-start gap-1.5" data-bloquea={h.bloquea || undefined}>
+      <span className="mt-[3px] shrink-0">{h.bloquea ? <MarcaPrioridad s={3} tamano={12} decorativa /> : <MarcaFalta decorativa />}</span>
+      <span className="min-w-0 break-words"><b className="font-semibold">{h.bloquea ? 'Bloquea la firma:' : 'Revise:'}</b> {h.texto}</span>
     </li>
   )
 }

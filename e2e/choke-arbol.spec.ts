@@ -22,21 +22,33 @@ const CODIGO_ANH = /\b(?:NP|P)_[A-Z]{2,}/
 const cerca = (a: number, b: number) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b))
 
 /** Una rama como la pinta la pantalla. */
-interface Rama { nodo: string; valor: string; bbl: number; noPlaneada: number; visible: boolean; hijos: Rama[] }
+interface Rama { nodo: string; valor: string; bbl: number; noPlaneada: number; visible: boolean; hijos: Rama[]
+  /** Un eslabón de una cadena de un solo hijo: va en el renglón de su cabeza (B-34). */
+  enCadena?: boolean }
 
-/** Las ramas que cuelgan de un contenedor, con las que cuelgan de cada una. */
+/** Las ramas que cuelgan de un contenedor, con las que cuelgan de cada una. Una
+ *  rama de un solo hijo va en un renglón (B-34): sus eslabones van marcados con
+ *  `data-nodo-cadena`, y aquí se vuelven a anidar para leer el árbol entero. */
 const ramas = (page: Page, sel: string) => page.evaluate((s): Rama[] | null => {
   const raiz = document.querySelector(s)
   if (!raiz) return null
-  const leer = (ul: Element | null): Rama[] => (ul ? [...ul.children].filter(li => li.matches('li[data-nodo]')).map(li => ({
-    nodo: li.getAttribute('data-nodo') ?? '', valor: li.getAttribute('data-valor') ?? '',
-    bbl: Number(li.getAttribute('data-bbl')), noPlaneada: Number(li.getAttribute('data-no-planeada')),
-    visible: (li as HTMLElement).offsetParent !== null, hijos: leer(li.querySelector(':scope > ul')),
-  })) : [])
+  const leer = (ul: Element | null): Rama[] => (ul ? [...ul.children].filter(li => li.matches('li[data-nodo]')).map(li => {
+    const visible = (li as HTMLElement).offsetParent !== null
+    const de = (e: Element, k: string) => ({ nodo: e.getAttribute(k) ?? '', valor: e.getAttribute('data-valor') ?? '',
+      bbl: Number(e.getAttribute('data-bbl')), noPlaneada: Number(e.getAttribute('data-no-planeada')) })
+    const eslabones = [...li.querySelectorAll(':scope > div [data-nodo-cadena]')].map(e => de(e, 'data-nodo-cadena'))
+    const cadena = eslabones.length ? eslabones : [de(li, 'data-nodo')]
+    let abajo = leer(li.querySelector(':scope > ul'))
+    cadena.forEach((x, i) => { if (i > 0) Object.assign(x, { enCadena: true }) })
+    for (const x of [...cadena].reverse()) abajo = [{ ...x, visible, hijos: abajo }]
+    return abajo[0]!
+  }) : [])
   return leer(raiz.querySelector(':scope > ul'))
 }, sel)
 
 const todas = (rs: Rama[]): Rama[] => rs.flatMap(r => [r, ...todas(r.hijos)])
+/** Lo que cuelga de una rama y se pliega con ella: debajo del último eslabón de su renglón. */
+const plegado = (r: Rama): Rama[] => (r.hijos.length === 1 && r.hijos[0]!.enCadena ? plegado(r.hijos[0]!) : r.hijos)
 /** Las ramas que no suman lo que cuelga de ellas. */
 const sinCuadre = (rs: Rama[]): string[] => rs.flatMap(r => [
   ...(r.hijos.length && !cerca(r.hijos.reduce((a, h) => a + h.bbl, 0), r.bbl) ? [`${r.nodo} ${r.valor}`] : []), ...sinCuadre(r.hijos)])
@@ -75,8 +87,13 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
     f.ok(camino(rs).join(' → ') === 'planeacion → n1 → n2 → equipo', `planeada o no → causa → detalle → equipo (${camino(rs).join(' → ')})`)
     f.ok(todas(rs).every(r => r.visible), 'abierto, todo se ve: causas, detalles y equipos')
     const texto = (await caja.innerText()).replace(/\s+/g, ' ')
-    f.ok(/No planeada/.test(texto) && texto.includes('La planta no recibe (agua o proceso)') && texto.includes('Parada estación/bombeo afecta pozos'),
+    // B-27: la causa con el mismo nombre que en Identificar (el de la Tabla 1).
+    f.ok(/No planeada/.test(texto) && texto.includes('No planeada - Proceso / Facilidades') && texto.includes('Parada estación/bombeo afecta pozos'),
       'la causa y el detalle, en palabras')
+    // B-34: una rama de un solo hijo va en un renglón, con los barriles una vez.
+    const renglones = await caja.locator('li[data-cadena-larga]').count()
+    const cifras = texto.match(/\b573 bbl/g)?.length ?? 0
+    f.ok(renglones === 1 && cifras === 1, `la cadena de un solo equipo va en un renglón, sin repetir «573 bbl» en cada nivel (${renglones} renglón, ${cifras} vez)`)
     // Safari junta lo que el lector oye aparte («bbl,100 %»): se compara sin depender de ese espacio.
     f.ok(/P-201B · bomba de reinyección · sin parte 573 bbl, ?100 % ?del tramo/.test(texto), `el equipo, su parte y lo que pesa en el tramo: «${texto.slice(0, 200)}»`)
     f.ok(!CODIGO_ANH.test(texto) && !/choke/i.test(texto), 'producción no ve códigos de la ANH ni «choke»')
@@ -98,7 +115,7 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
     f.ok(cerca(suma, tramo) && sinCuadre(rs).length === 0, `las ramas del pozo suman el tramo (${suma.toFixed(1)} = ${tramo.toFixed(1)} bbl) y cada una las suyas`)
     f.ok(n1.length >= 2 && n1.every((x, i) => i === 0 || x.bbl <= n1[i - 1]!.bbl || x.valor === 'falta'), `las causas van de más a menos barriles (${n1.map(x => `${x.valor} ${x.bbl.toFixed(0)}`).join(', ')})`)
     const texto = (await f.page.locator('[data-ramas="pozo"]').innerText()).replace(/\s+/g, ' ')
-    f.ok(texto.includes('Falló algo dentro del pozo') && texto.includes('Falla ESP') && texto.includes('LC-11 · electrosumergible · parte: Aislamiento del motor y del cable'),
+    f.ok(texto.includes('No planeada - Mecánica subsuelo') && texto.includes('Falla ESP') && texto.includes('LC-11 · electrosumergible · parte: Aislamiento del motor y del cable'),
       'la causa mayor, su detalle y cada electrosumergible con su parte')
     f.ok(/Falta el detalle/.test(texto), 'lo que falta va en su rama, «Falta el detalle», sin repartirse')
   })
@@ -114,8 +131,20 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
   f.cerrar()
 })
 
+/** B-13: cada campo dice en dos renglones dónde se trabó; lo demás va plegado en «Ver más de {campo}». Lo abre todo. */
+const abrirVerMas = async (page: Page) => {
+  const boton = page.getByRole('button', { name: /^Ver más de / })
+  for (let i = 0; i < 10 && await boton.count(); i++) await boton.first().click()
+}
+
 test('el gerente ve lo no planeado de cada tramo, con la cifra de la barra y sin códigos ni «choke»', async ({ flujo: f }) => {
   await f.abrir('/#/ger/resumen/ceiba~portafolio/cerrado')
+  await f.esperarTexto('dónde se trabó')
+  // Dos renglones por campo: la barra con la parte de cada tramo y la frase; lo demás, plegado (B-13).
+  const frases = await f.page.locator('main [data-frase-gerente]').allInnerTexts()
+  f.ok(frases.length === 5 && frases.every(x => /^(Se trabó|Nada se trabó)/.test(x.trim())), `una frase por campo, que empieza por «Se trabó…» (${frases[0]})`)
+  await expect(f.page.locator('main [data-ver-mas]').first()).toBeHidden()
+  await abrirVerMas(f.page)
   await f.esperarTexto('lo no planeado de cada tramo')
   const bloques = await f.page.evaluate(() => [...document.querySelectorAll('main [data-donde-se-trabo]')].map(b => ({
     campo: b.getAttribute('data-donde-se-trabo') ?? '',
@@ -145,6 +174,8 @@ test('el gerente ve lo no planeado de cada tramo, con la cifra de la barra y sin
 
   await test.step('Octubre en Diferidos: lo sin identificar no se cuenta como planeado ni como no planeado', async () => {
     await f.ir('#/ger/diferidos/ceiba/curso')
+    await f.esperarTexto('dónde se trabó')
+    await abrirVerMas(f.page)
     await f.esperarTexto('lo no planeado de cada tramo')
     const sin = await f.page.locator('[data-tramo-no-planeado="sin-asignar"]').first()
     f.ok(Number(await sin.getAttribute('data-no-planeada')) === 0 && /sin saber si fue planeado/.test(await sin.innerText()),
@@ -183,7 +214,8 @@ test('regulatorio ve el árbol en el orden de la circular, con la cadena de cada
   // Un paso se cierra y se abre con su botón.
   const primero = caja.locator('button[aria-expanded]').first()
   await primero.click()
-  f.ok(await primero.getAttribute('aria-expanded') === 'false' && (await ramas(f.page, '[data-arbol-circular]'))?.[0]?.hijos.every(h => !h.visible) === true,
+  const cerrada = (await ramas(f.page, '[data-arbol-circular]'))?.[0]
+  f.ok(await primero.getAttribute('aria-expanded') === 'false' && !!cerrada && plegado(cerrada).length > 0 && plegado(cerrada).every(h => !h.visible),
     'un toque cierra el paso y lo que cuelga de él deja de verse')
   await primero.click()
   f.ok(await primero.getAttribute('aria-expanded') === 'true', 'y otro lo vuelve a abrir')

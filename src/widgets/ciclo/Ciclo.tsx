@@ -19,7 +19,7 @@ import { fmtHoras } from '@/widgets/bombas/comun'
 const FASES: FaseCiclo[] = ['antes', 'durante', 'despues']
 const ORDEN_FASE: Record<FaseCiclo, string> = { antes: '1', durante: '2', despues: '3' }
 
-const NOTA_SIMULADO = 'Cifra simulada: sale del motor de TRIM (colchón, orden de cierre, historia de fallas). No entra al libro ni a un informe firmado. El LLM no produce estos números.'
+const NOTA_SIMULADO = 'Cifra simulada: sale del motor de TRIM (colchón, orden de cierre, historia de fallas). No entra al libro ni a un informe firmado. Esta cifra la calcula TRIM con reglas fijas.'
 
 const AYUDA_RETORNO = `Antes + Durante + Después. ${NOTA_SIMULADO} El libro del período mide lo ya perdido.`
 
@@ -145,7 +145,7 @@ function DesplegablePlanes({ abierto, onToggle, n, children }: {
   return (
     <div>
       <button type="button" onClick={onToggle} aria-expanded={abierto}
-        className="flex w-full cursor-pointer items-center gap-2 rounded py-2 pr-1 text-left hover:bg-[var(--panel2)]">
+        className="no-imprimir flex w-full cursor-pointer items-center gap-2 rounded py-2 pr-1 text-left hover:bg-[var(--panel2)]">
         <ChevronDown className={cn('size-4 shrink-0 text-[var(--tinta3)] transition-transform', abierto && 'rotate-180')} />
         <span className="min-w-0 flex-1 text-[12px] font-medium text-[var(--tinta)]">
           {abierto ? 'Ocultar planes' : 'Ver planes de acción'}
@@ -154,7 +154,8 @@ function DesplegablePlanes({ abierto, onToggle, n, children }: {
           {n}
         </span>
       </button>
-      {abierto && <div className="pb-1">{children}</div>}
+      {/* En el papel lo plegado sale desplegado (B-51). */}
+      <div className={cn('pb-1', !abierto && 'hidden print:block')} data-planes>{children}</div>
     </div>
   )
 }

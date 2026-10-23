@@ -16,7 +16,7 @@ import { MarcaPrioridad, DatoInvalido } from '@/shared/ui/Prioridad'
 import { formatoFecha } from '@/shared/lib/fecha'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { fmtHoras } from '@/widgets/bombas/comun'
+import { fmtHoras, textoColchon } from '@/widgets/bombas/comun'
 import { TEXTO, ESTADO_TRAMO, sinFirma, mayuscula, lista } from './palabras'
 
 const HORA = formatoFecha({ hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' })
@@ -24,7 +24,7 @@ const PALABRA = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', '
 const cuantas = (n: number) => PALABRA[n] ?? n0(n)
 
 const AYUDA_TUBERIA = 'Es el modelo choke del agua: el agua de los pozos pasa por el tratamiento, el tanque y las bombas de reinyección hasta los pozos inyectores. El tramo más angosto dice «limita»; el tanque no tiene caudal: es el colchón que da tiempo cuando para una bomba. Cada capacidad se dice también en crudo, con el crudo que trae cada barril de agua según las pruebas.'
-const AYUDA_ACUATOSOS = '«Hay que parar los pozos acuatosos, los pozos que más producen agua» (Edinson). TRIM los ordena por el crudo que dan por cada barril de agua: primero los que menos crudo pierden.'
+const AYUDA_ACUATOSOS = '«Hay que parar los pozos acuatosos, los que más producen agua»: es la regla de operación del campo. TRIM los ordena por el crudo que dan por cada barril de agua: primero los que menos crudo pierden.'
 
 /** «LA TUBERÍA DEL AGUA» (U2 §5 y §9.6): ¿cuánta agua entra, cuánta se puede
  *  sacar, cuánto aguanta el tanque y qué pasa si para una bomba? Cinco tramos
@@ -53,15 +53,16 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
         </small>
         <Lectura>
           De izquierda a derecha, el camino del agua. Cada tramo dice cuánta agua deja pasar por día y,
-          debajo, cuánto crudo es eso. El más angosto dice «limita». El tanque no deja pasar: guarda, y
-          su nivel dice cuánto aguanta si para una bomba. Gris es normal; el color solo sale en una
-          bomba con alarma. Lo punteado no está en el esquema o no tiene instrumento.
+          debajo, cuánto crudo es eso. Si la salida no alcanza para el agua que entra, el tramo más
+          angosto dice «limita»; si alcanza, cada tramo dice cuánta agua más cabe. El tanque no deja
+          pasar: guarda, y su nivel dice cuánto aguanta si para una bomba. Gris es normal; el color solo
+          sale en una bomba con alarma. Lo discontinuo falta: no está en el esquema o no tiene instrumento.
         </Lectura>
 
         <div role="group" aria-label={resumenAgua(a, nombre, caudales.agua)} data-dibujo="agua"
           className="grid gap-x-5 gap-y-2 md:[grid-template-columns:minmax(0,1fr)_minmax(0,.8fr)_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] print:[grid-template-columns:minmax(0,1fr)_minmax(0,.8fr)_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] print:[&_.solo-impresion]:hidden!">
           {a.tramos.map((x, i) => (
-            <Tramo key={x.tramo} x={x} primero={i === 0} angosto={a.angosto === x.tramo}>
+            <Tramo key={x.tramo} x={x} primero={i === 0} angosto={a.limita && a.angosto === x.tramo}>
               {x.tramo === 'producida' && (
                 <small className="block text-[10.5px] leading-snug text-[var(--tinta2)]">
                   con todos los pozos produciendo
@@ -85,7 +86,7 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
         <dl className="solo-impresion mt-2 text-[9pt] text-[var(--tinta2)]">
           <div><dt className="inline font-semibold">La tubería del agua: </dt><dd className="inline">{AYUDA_TUBERIA}</dd></div>
           {a.tramos.filter(x => x.sinDato).map(x => <div key={x.tramo}><dt className="inline font-semibold">{NOMBRE_TRAMO_AGUA[x.tramo]}: </dt><dd className="inline">{x.sinDato}</dd></div>)}
-          {a.angosto && <div><dt className="inline font-semibold">Limita: </dt><dd className="inline">{TEXTO.limita}</dd></div>}
+          {a.limita && <div><dt className="inline font-semibold">Limita: </dt><dd className="inline">{TEXTO.limita}</dd></div>}
         </dl>
       </div>
     </Panel>
@@ -100,13 +101,15 @@ function resumenAgua(a: TuberiaAgua, nombre: string, entraHoy: number): string {
   return [
     `Tubería del agua de ${nombre}.`,
     `Entran ${n0(a.aguaBpd)} barriles de agua por día con todos los pozos produciendo; hoy, ${n0(entraHoy)}.`,
-    ...a.tramos.filter(x => x.tramo !== 'producida' && x.tramo !== 'tanques').map(x => `${NOMBRE_TRAMO_AGUA[x.tramo]}: ${x.potencialBpd === null ? 'sin dato' : `${n0(x.potencialBpd)}`}${a.angosto === x.tramo ? ', limita' : ''}.`),
+    ...a.tramos.filter(x => x.tramo !== 'producida' && x.tramo !== 'tanques').map(x => `${NOMBRE_TRAMO_AGUA[x.tramo]}: ${x.potencialBpd === null ? 'sin dato' : `${n0(x.potencialBpd)}`}${a.limita && a.angosto === x.tramo ? ', limita' : x.casiIgual ? ', casi igual a otro tramo' : ''}.`),
     tk ? `${tk.nombre}: ${tk.nivelPct === undefined ? 'sin nivel' : `al ${n1(tk.nivelPct)} %`}, alto-alto ${n0(tk.altoAlto * 100)} %.` : '',
     bombas?.disponibleHoy ? `${mayuscula(bombas.disponibleHoy.texto)}.` : '',
   ].filter(Boolean).join(' ')
 }
 
-/** Un tramo del agua: su rótulo, su número (o «sin dato», discontinuo), lo que es en crudo y lo que le sobra. */
+/** Un tramo del agua: su rótulo, su número (o «sin dato», discontinuo), lo que es en crudo y cuánta agua más cabe.
+ *  «◄ limita» solo si la salida no alcanza para lo que entra (`TuberiaAgua.limita`, B-18); dos tramos
+ *  casi iguales llevan el contorno doble discontinuo (U2 §2.3, B-16). */
 function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero: boolean; angosto: boolean; children?: React.ReactNode }) {
   const conNumero = x.potencialBpd !== null
   // Cada tramo dice de dónde sale su número (el motor: `estado` y `fuente`); un número sin firmar lleva la advertencia en él mismo.
@@ -119,10 +122,12 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
     <div className="relative min-w-0">
     {!primero && <span aria-hidden className="absolute -left-[15px] top-1/2 hidden -translate-y-1/2 text-[12px] text-[var(--tinta3)] md:block print:block">→</span>}
     <section aria-label={NOMBRE_TRAMO_AGUA[x.tramo]} data-tramo-agua={x.tramo} data-limita={angosto ? '' : undefined}
+      data-casi-igual={x.casiIgual ? '' : undefined}
       className={cn('h-full min-w-0 rounded-[3px] px-2.5 py-2',
         sinDato ? 'border border-dashed border-[var(--tinta3)]'
           : angosto ? 'border-[4px] border-double border-[var(--tinta)] bg-[var(--panel2)]'
-            : 'border border-[var(--linea)] bg-[var(--panel2)]')}>
+            : x.casiIgual ? 'border-[3px] border-dashed border-[var(--tinta)] bg-[var(--panel2)]'
+              : 'border border-[var(--linea)] bg-[var(--panel2)]')}>
       <h3 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{NOMBRE_TRAMO_AGUA[x.tramo].toUpperCase()}</h3>
       {!esTanque && (
         conNumero ? (
@@ -131,7 +136,8 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
               {n0(x.potencialBpd!)}<small className="ml-0.5 text-[10.5px] font-normal text-[var(--tinta3)]">bbl/d</small>
             </b>
             {x.crudoBpd !== null && <small className="block text-[10.5px] text-[var(--tinta3)]">≈ <span className="tabular">{n0(x.crudoBpd)}</span> de crudo</small>}
-            {x.holguraBpd !== null && <small className="block text-[10.5px] text-[var(--tinta2)]">le sobran <span className="tabular">{n0(x.holguraBpd)}</span></small>}
+            {/* En el agua se mide contra lo que entra: «cabe más», no «le sobran», que en la tubería del campo es contra lo que limita (B-16). */}
+            {x.holguraBpd !== null && <small className="block text-[10.5px] text-[var(--tinta2)]">{x.holguraBpd >= 0 ? <>cabe más: <span className="tabular">{n0(x.holguraBpd)}</span></> : <>le faltan <span className="tabular">{n0(-x.holguraBpd)}</span></>}</small>}
             <small className="block text-[10.5px] text-[var(--tinta3)]" title={x.fuente} data-estado={x.estado}>{sinFirmar ? '┄ ' : ''}{ESTADO_TRAMO[x.estado]}</small>
           </>
         ) : (
@@ -226,7 +232,8 @@ function Bomba({ b, s }: { b: BombaDelTren; s: Severidad }) {
   return (
     <li className="flex flex-wrap items-center gap-x-1.5" data-bomba={b.id} data-marcha={b.marcha}>
       {b.marcha === 'parada' ? (s > 0 ? <MarcaPrioridad s={s} tamano={12} /> : <Parada />)
-        : b.marcha === 'sin-lectura' ? <i aria-hidden className="inline-block h-2.5 w-2.5 rounded-full border border-dashed border-[var(--tinta3)]" />
+        // Sin instrumento es un dato que falta: el hueco discontinuo de «falta», no el círculo de «sin comunicación» (B-44).
+        : b.marcha === 'sin-lectura' ? <i aria-hidden className="inline-block h-2.5 w-3.5 rounded-[1px] border border-dashed border-[var(--tinta3)]" />
           : <MarcaPrioridad s={s} tamano={12} />}
       <b className="font-mono text-[11px]">{b.id}</b>
       {b.marcha === 'parada'
@@ -294,7 +301,27 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
         </div>
       )}
 
-      {orden && orden.pasos.length > 0 && (
+      {/* Con una bomba ya parada, el orden que importa es el de la que sigue en riesgo: si para OTRA (B-01). */}
+      {a.siParaOtra && a.siParaOtra.pasos.length > 0 && (
+        <div className={fila} data-orden data-orden-si-para-otra>
+          <span className={rotulo}>SI PARA OTRA BOMBA</span>
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-x-1">
+              con {lista(a.siParaOtra.enMarcha)} solas, cerrar primero los más acuatosos para quitar <b className="tabular">{n0(a.siParaOtra.aguaSinSalidaBpd)}</b> bbl/d de agua:<Info titulo="Los más acuatosos" texto={AYUDA_ACUATOSOS} />
+            </span>
+            <span className="block">
+              {a.siParaOtra.pasos.map((p, i) => (
+                <span key={p.pozo}>{i > 0 ? ' · ' : ''}<b className="font-mono">{p.pozo}</b>{p.fraccion >= 0.999
+                  ? <> (<span className="tabular">{n0(p.crudoPorAgua * 1000)}</span>{i === 0 ? ' de crudo por cada 1.000 de agua' : ''})</>
+                  : <> al <span className="tabular">{n0(p.fraccion * 100)} %</span></>}</span>
+              ))}
+            </span>
+            <span className="block text-[var(--tinta2)]">→ se pierden <b className="tabular text-[var(--tinta)]">{n0(a.siParaOtra.crudoBpd)}</b> bbl/d de crudo; parejo, <span className="tabular">{n0(a.siParaOtra.crudoParejoBpd)}</span>{a.siParaOtra.colchonH !== undefined ? <> · después de {textoColchon(a.siParaOtra.colchonH)} de colchón</> : ''}</span>
+          </span>
+        </div>
+      )}
+
+      {!a.siParaOtra && orden && orden.pasos.length > 0 && (
         <div className={fila} data-orden>
           <span className={rotulo}>SI PARA UNA BOMBA</span>
           <span className="min-w-0 flex-1">
@@ -319,7 +346,7 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
           <ol className="min-w-0 flex-1 list-decimal space-y-0.5 pl-4">
             <li>
               {!reserva && <b>No hay bomba de sobra. </b>}
-              {mayuscula(`con ${enServicio.length === 1 ? 'su bomba' : `las ${cuantas(enServicio.length)}`}`)} sobran <span className="tabular">{n0(a.sobraBpd)}</span> bbl/d; si para una, faltan <span className="tabular">{n0(sinUna.aguaSinSalidaBpd)}</span>.
+              {mayuscula(`con ${enServicio.length === 1 ? 'su bomba' : `las ${cuantas(enServicio.length)}`}`)} cabe más agua: <span className="tabular">{n0(a.sobraBpd)}</span> bbl/d; si para una, faltan <span className="tabular">{n0(sinUna.aguaSinSalidaBpd)}</span>.
             </li>
             {tk?.colchon && historia.mdtH !== undefined && (
               <li>

@@ -1143,10 +1143,12 @@ function soloLosPedidos(antes: ParadaAnh, despues: ParadaAnh, pedidos: readonly 
 }
 
 /** `POST /api/anh/paradas/confirmar { ids, cadena, pasos? }` → las filas como
- *  quedaron y, si fueron varias, el lote. Una sola la confirma quien clasifica
- *  (`anh:clasificar`); varias de una vez, quien firma el día (`anh:confirmar`:
- *  supervisión y producción), y tienen que tener la misma cadena completa de 6
- *  pasos (U1 §2.2). `cadena` es obligatoria (C-06): se confirma lo que se vio, y
+ *  quedaron y, si fueron varias, el lote. Las filas de UNA parada (una raíz: los
+ *  días de un pozo o los pozos de una cascada) las confirma de un toque quien
+ *  clasifica (`anh:clasificar`), sin lote (B-07: es una sola decisión); filas de
+ *  paradas distintas, solo quien firma el día (`anh:confirmar`: supervisión y
+ *  producción), y con él varias filas van siempre en lote. Todas tienen que tener
+ *  la misma cadena (U1 §2.2). `cadena` es obligatoria (C-06): se confirma lo que se vio, y
  *  el lote guarda esa. Sube a confirmado solo los pasos que el rol avala
  *  (`PASOS_QUE_CONFIRMA`) y que nadie había avalado, y lo guarda en cada FILA
  *  (nunca en su evento): la marca del lote no se copia a otra fila. Un lote que
@@ -1168,9 +1170,13 @@ export async function confirmarParadasAnh(q: Credencial, c: CuerpoConfirmacion):
   const { ctx, usuarios, clasificacionesAnh, lotesAnh } = sesion()
   const rol = rolExacto(q.rolId)
   if (!rol) return { ok: false, error: SIN_ROL }
-  const enLote = ids.length > 1
-  if (enLote ? !puedeHacer(rol.puede, 'anh:confirmar') : !(puedeHacer(rol.puede, 'anh:confirmar') || puedeHacer(rol.puede, 'anh:clasificar')))
-    return { ok: false, error: enLote ? 'Confirmar varias de una vez lo hacen supervisión o producción, que firman el día: confírmelas una por una.' : 'Su rol no confirma paradas para la ANH.' }
+  const firmaElDia = puedeHacer(rol.puede, 'anh:confirmar')
+  if (!(firmaElDia || puedeHacer(rol.puede, 'anh:clasificar'))) return { ok: false, error: 'Su rol no confirma paradas para la ANH.' }
+  // Varias filas de UNA parada (una raíz: los días de un pozo o los pozos de una
+  // cascada) son una sola decisión (Unicidad, C24 p.5): las confirma de un toque
+  // quien clasifica, sin lote (B-07). Un lote (filas de paradas distintas con la
+  // misma cadena) es de quien firma el día. Cuál es cuál se sabe con las filas.
+  const LOTE_AJENO = 'Confirmar varias paradas de una vez lo hacen supervisión o producción, que firman el día: confírmelas una por una.'
   const yo = personaDelRol(usuarios, q.rolId)
   if (!yo) return { ok: false, error: SIN_PERSONA }
   if (!ids.length) return { ok: false, error: 'No llegó ninguna parada que confirmar.' }
@@ -1185,6 +1191,10 @@ export async function confirmarParadasAnh(q: Credencial, c: CuerpoConfirmacion):
     if (!p) return { ok: false, error: `La parada ${id} no está entre las de sus campos: revise el evento y el día.` }
     paradas.push(p)
   }
+  const unaParada = new Set(paradas.map(p => `${p.campoId}|${p.raiz}`)).size === 1
+  if (ids.length > 1 && !unaParada && !firmaElDia) return { ok: false, error: LOTE_AJENO }
+  // Lote solo entre paradas distintas, o cuando quien confirma firma el día (sup y prod: «en lote»).
+  const enLote = ids.length > 1 && firmaElDia
   const pedidos = c.pasos ? PASOS.filter(p => c.pasos!.includes(p)) : undefined
   if (pedidos) { const ajeno = pasosAjenos(q.rolId, pedidos, PASOS_QUE_CONFIRMA, 'confirma'); if (ajeno) return { ok: false, error: ajeno } }
   const cambiaron = paradas.filter(p => cadenaVista(p.clasificacion) !== c.cadena)
@@ -1196,7 +1206,7 @@ export async function confirmarParadasAnh(q: Credencial, c: CuerpoConfirmacion):
   let lote: ConfirmacionLote | undefined, confirmadas: ParadaAnh[]
   try {
     if (enLote) ({ lote, paradas: confirmadas } = confirmarLote(paradas, q.rolId, quien, hora, `LOTE-${lotesAnh.length + 1}`, c.cadena))
-    else confirmadas = [confirmarParada(paradas[0]!, q.rolId, quien, hora)]
+    else confirmadas = paradas.map(p => confirmarParada(p, q.rolId, quien, hora))
   } catch (e) { return { ok: false, error: mensajeDe(e) } }
   if (pedidos) confirmadas = confirmadas.map((p, i) => soloLosPedidos(paradas[i]!, p, pedidos))
   // Lo que se guarda: en cada fila, solo los pasos que esta confirmación subió.
@@ -1230,14 +1240,14 @@ export async function confirmarParadasAnh(q: Credencial, c: CuerpoConfirmacion):
  *  falla hoy» y cuántas paradas cambiarían de tramo, con las ya confirmadas
  *  aparte. No guarda nada. Las mismas reglas de la firma: `config:firmar`, los
  *  campos que toca entre los de la persona (403) y `validarConfig` (422). */
-export async function previsualizarConfiguracion(q: Credencial, c: CuerpoVistaPrevia): Promise<Resultado<{ impacto: ImpactoConfig }>> {
+export async function previsualizarConfiguracion(q: Credencial, c: CuerpoVistaPrevia): Promise<Resultado<{ impacto: ImpactoConfig; errores?: string[] }>> {
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', '/configuracion/vista-previa', { config: c.config }, R_VISTA_PREVIA)
+    const r = await escribir(q, 'POST', '/configuracion/vista-previa', { config: c.config, ...(c.aunConErrores ? { aunConErrores: true } : {}) }, R_VISTA_PREVIA)
     if (!r.ok) return r
-    return { ok: true, impacto: r.datos.impacto }
+    return { ok: true, impacto: r.datos.impacto, ...(r.datos.errores?.length ? { errores: r.datos.errores } : {}) }
   }
   const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const forma = revisarForma(c, { config: 'objeto' }) ?? formaDeConfig(c.config)
+  const forma = revisarForma(c, { config: 'objeto', aunConErrores: 'bool?' }) ?? formaDeConfig(c.config)
   if (forma) return { ok: false, error: forma }
   const rol = rolExacto(q.rolId)
   if (!rol) return { ok: false, error: SIN_ROL }
@@ -1252,11 +1262,15 @@ export async function previsualizarConfiguracion(q: Credencial, c: CuerpoVistaPr
   const tocados = camposTocados(ctx.config, config).filter(id => CAMPOS.some(x => x.id === id))
   const ajenos = tocados.filter(id => !mios.includes(id))
   if (ajenos.length) return { ok: false, error: `No tiene asignado ${ajenos.map(id => campoPorId(id).nombre).join(', ')}: lo de ese campo lo firma quien lo tenga.` }
-  const errores = validarConfig(config, ctx.config, `${diaIso(AHORA).slice(0, 8)}01`, AHORA.getTime())
-  if (errores.length) return { ok: false, error: errores.join(' ') }
-  const capacidades = capacidadesQueBloquean(ctx.config, config, ctx, sesion().versiones)
-  if (capacidades.length) return { ok: false, error: capacidades.join(' ') }
-  return { ok: true, impacto: impactoConfig(ctx, config, tocados, guardadasDe(clasificacionesAnh)) }
+  const reglas = validarConfig(config, ctx.config, `${diaIso(AHORA).slice(0, 8)}01`, AHORA.getTime())
+  const errores = reglas.length ? reglas : capacidadesQueBloquean(ctx.config, config, ctx, sesion().versiones)
+  if (errores.length && !c.aunConErrores) return { ok: false, error: errores.join(' ') }
+  // Con errores, el impacto se muestra igual («borrador con errores: así quedaría», B-53),
+  // salvo que el borrador ni siquiera se deje calcular: entonces, solo los errores (422).
+  let impacto: ImpactoConfig
+  try { impacto = impactoConfig(ctx, config, tocados, guardadasDe(clasificacionesAnh)) }
+  catch (e) { if (errores.length) return { ok: false, error: errores.join(' ') }; throw e }
+  return { ok: true, impacto, ...(errores.length ? { errores } : {}) }
 }
 
 /** `POST /api/topologia/importar { campo, texto }` → la topología leída de un CSV

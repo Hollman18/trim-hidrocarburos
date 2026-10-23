@@ -60,7 +60,10 @@ export interface CalidadEquipoChoke {
   campoId: string
   /** El elemento donde se originó la parada (la raíz de la cascada). */
   equipo: string
+  /** Filas del reporte (`paradas_pozo`): una parada de dos pozos o de dos días son dos filas. */
   paradas: number
+  /** Paradas (eventos distintos) detrás de esas filas: «MN-41 · 1 parada (2 filas)» (B-47). */
+  eventos: number
   corregidas: number
   pctCorregido: number
   cambiadoA: Partial<Record<ChokeAnh, number>>
@@ -75,7 +78,7 @@ export interface CalidadClasificacion {
   chokePorEquipo: CalidadEquipoChoke[]
   /** Equipos sin topología: su parada tomó el tramo de la regla por tipo de
    *  causa (`ChokeDeParada.fuente === 'regla'`). Se le mandan al administrador. */
-  sinTopologia: Array<{ campoId: string; equipo: string; paradas: number }>
+  sinTopologia: Array<{ campoId: string; equipo: string; paradas: number; eventos: number }>
 }
 
 const pct = (a: number, b: number) => (b > 0 ? (a / b) * 100 : null)
@@ -114,7 +117,14 @@ export function calidadClasificacion(ps: readonly ParadaAnh[], ctx: Contexto): C
 
   const reglas = new Map<string, CalidadRegla>()
   const equipos = new Map<string, CalidadEquipoChoke>()
-  const sinTopo = new Map<string, { campoId: string; equipo: string; paradas: number }>()
+  const sinTopo = new Map<string, { campoId: string; equipo: string; paradas: number; eventos: number }>()
+  // Los eventos distintos de cada equipo: una parada puede dar varias filas (B-47).
+  const eventosDe = new Map<string, Set<string>>()
+  const contar = (k: string, eventoId: string) => {
+    const s = eventosDe.get(k) ?? new Set<string>()
+    s.add(eventoId); eventosDe.set(k, s)
+    return s.size
+  }
   for (const p of ps) {
     for (const paso of PASOS) {
       const d = p.clasificacion[paso]
@@ -128,8 +138,9 @@ export function calidadClasificacion(ps: readonly ParadaAnh[], ctx: Contexto): C
     const ch = p.clasificacion.choke
     if (ch && propusoTrim(ch)) {
       const equipo = ch.porque?.elemento ?? p.causa.equipo, k = `${p.campoId}|${equipo}`
-      const e = equipos.get(k) ?? { campoId: p.campoId, equipo, paradas: 0, corregidas: 0, pctCorregido: 0, cambiadoA: {} }
+      const e = equipos.get(k) ?? { campoId: p.campoId, equipo, paradas: 0, eventos: 0, corregidas: 0, pctCorregido: 0, cambiadoA: {} }
       e.paradas++
+      e.eventos = contar(`choke|${k}`, p.eventoId)
       if (cambioATrim(ch)) { e.corregidas++; e.cambiadoA[ch.valor] = (e.cambiadoA[ch.valor] ?? 0) + 1 }
       equipos.set(k, e)
     }
@@ -138,8 +149,9 @@ export function calidadClasificacion(ps: readonly ParadaAnh[], ctx: Contexto): C
       const x = chokeDeCausa(p.causa, p.campoId, ctx)
       if (x?.fuente === 'regla') {
         const equipo = x.elemento ?? p.causa.equipo, k = `${p.campoId}|${equipo}`
-        const s = sinTopo.get(k) ?? { campoId: p.campoId, equipo, paradas: 0 }
+        const s = sinTopo.get(k) ?? { campoId: p.campoId, equipo, paradas: 0, eventos: 0 }
         s.paradas++
+        s.eventos = contar(`topo|${k}`, p.eventoId)
         sinTopo.set(k, s)
       }
     }

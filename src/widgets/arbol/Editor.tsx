@@ -8,6 +8,7 @@ import { CLAVES_N1, planeacionDeN1, n1DeCodigo, n2DeN1 } from '@/entities/anh-ca
 import { MOTIVO_MINIMO, alcanza } from '@/entities/reglas'
 import type { ChokeAnh } from '@/shared/api/choke'
 import { Boton } from '@/shared/ui/primitivas'
+import { HojaInferior } from '@/shared/ui/HojaInferior'
 import { cn } from '@/shared/lib/cn'
 import { OPCION } from './Preguntas'
 import { marcaDelPaso } from './marcas'
@@ -17,7 +18,7 @@ import {
 import type { Grupo } from './grupos'
 
 const MARCADA = 'border-acento bg-acento-f shadow-[inset_0_0_0_1px_var(--acento)]'
-const CAMPO = 'min-h-10 w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-8'
+const CAMPO = 'min-h-12 w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-8'
 /** Lo que se le pide a producción con «Pedir a producción», para que lo lea con la parada. */
 const PIDE_YACIMIENTO = '¿Fue el yacimiento? Revise la prueba del pozo, el corte de agua o la presión de fondo.'
 
@@ -31,10 +32,16 @@ type Valores = Partial<Record<PasoAnh, string>>
  *    combinación cruzada no se puede armar (C24 p.7). Si se cambia la
  *    planeación, la causa de la otra se borra y se pide de nuevo.
  *  - Lo que falta empieza en lo que TRIM sugiere (una preselección).
- *  - Si cambia lo que ya dijo una persona, el motivo es obligatorio.
- *  - En una cascada: «¿Aplica a los {n} pozos de esta parada?». */
-export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
+ *  - Si cambia lo que ya dijo una persona, el motivo es obligatorio; también si
+ *    el servidor dice que cambia lo que dijo OTRA persona en otra fila (409) o
+ *    que retira algo (422): entonces se pide el motivo y se vuelve a guardar.
+ *  - En una cascada: «¿Aplica a los {n} pozos de esta parada?», con los pozos de
+ *    TODA la raíz que muestra la pantalla, que van en `ids` (D1).
+ *  - En el teléfono se abre como hoja desde abajo (U1 §2.6; B-46). */
+export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
   g: Grupo; rolId: string; pasos: readonly PasoAnh[]; titulo: string
+  /** Las filas de la raíz que muestra la pantalla (todas, no solo las de este grupo). */
+  raiz: readonly ParadaAnh[]
   onCerrar: () => void; onHecho: (texto: string) => void
 }) {
   const p = g.primera
@@ -52,6 +59,8 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
   const [otroMotivo, setOtroMotivo] = useState('')
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
+  // El servidor dijo que esto cambia o retira lo que dijo otra persona: hay que decir por qué (D1).
+  const [pideMotivo, setPideMotivo] = useState(false)
 
   const ponerYac = PONEN_YACIMIENTO.includes(rolId)
   const soloChoke = pasos.length === 1 && pasos[0] === 'choke'
@@ -94,7 +103,7 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
   const cambios = PASOS.filter(x => !!valores[x] && valores[x] !== actual(x))
   const yac = valores.choke === 'reservorio'
   const evidenciaFinal = evidencia === 'otra' ? otraEvidencia.trim() : evidencia
-  const tocaAPersona = cambios.some(x => { const d = p.clasificacion[x]; return !!d && esDePersona(d.procedencia) })
+  const tocaAPersona = pideMotivo || cambios.some(x => { const d = p.clasificacion[x]; return !!d && esDePersona(d.procedencia) })
   const motivoFinal = motivo === 'otra' ? otroMotivo.trim() : motivo
   // La coherencia, por si algo llegara armado de otro modo: no se manda nada cruzado (C24 p.7).
   const planFinal = (valores.planeacion || actual('planeacion')) as Planeacion | undefined
@@ -108,21 +117,27 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
         : yac && !evidenciaFinal ? 'Diga qué lo muestra.'
           : tocaAPersona && !alcanza(motivoFinal, MOTIVO_MINIMO) ? 'Diga por qué lo cambia: ya lo había dicho una persona.' : ''
 
-  const cascada = g.cascada && g.pozos.length > 1
+  // La cascada: los pozos de TODA la raíz que muestra la pantalla, no solo los de este grupo (D1).
+  const pozosRaiz = [...new Set(raiz.map(f => f.pozo))]
+  const cascada = g.cascada && pozosRaiz.length > 1
+  const n = pozosRaiz.length
+  const idsRaiz = raiz.map(f => f.id)
   // «En el yacimiento» es de cada pozo (su roca, su fluido): no se extiende a la cascada.
   const soloAEf = yac && cascada ? soloA ?? g.pozos[0]! : soloA
-  const filaDe = (pozo: string | null) => (pozo ? g.filas.find(f => f.pozo === pozo) ?? p : p)
+  const filaDe = (pozo: string | null) => (pozo ? g.filas.find(f => f.pozo === pozo) ?? raiz.find(f => f.pozo === pozo) ?? p : p)
+  // Un 409 por lo que dijo otra persona o un 422 por lo que se retira: se pide el motivo (D1).
+  const conMotivo = (e: string) => /motivo|diga por qué/i.test(e)
   const guardar = async () => {
     if (falta) return setError(falta)
     setOcupado(true); setError('')
     const fila: ParadaAnh = filaDe(soloAEf)
-    const alcance = cascada && !soloAEf ? { aplicarALaCascada: true } : { aplicarAlEvento: true }
+    const alcance = cascada && !soloAEf ? { aplicarALaCascada: true, ids: idsRaiz } : { aplicarAlEvento: true }
     const r = yac
       ? await yacimientoAnh(fila.id, { evidencia: evidenciaFinal, ...(tocaAPersona ? { motivo: motivoFinal } : {}), aplicarAlEvento: true, cadena: cadenaVista(fila.clasificacion) })
       : await clasificarAnh(fila.id, { pasos: Object.fromEntries(cambios.map(x => [x, valores[x]!])), ...(tocaAPersona ? { motivo: motivoFinal } : {}), ...alcance, cadena: cadenaVista(fila.clasificacion) })
     setOcupado(false)
-    if (!r.ok) return setError(r.error)
-    const a = cascada && !soloAEf ? `los ${g.pozos.length} pozos` : soloAEf ?? g.pozos.join(', ')
+    if (!r.ok) { if (!tocaAPersona && conMotivo(r.error)) setPideMotivo(true); return setError(r.error) }
+    const a = cascada && !soloAEf ? `los ${n} pozos` : soloAEf ?? g.pozos.join(', ')
     onHecho(`Guardado en ${a}: ${cambios.map(x => `${ROTULO[x]} → ${valorEnPalabras(x, valores[x]!)}`).join(' · ')}.`)
     onCerrar()
   }
@@ -131,10 +146,10 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
   const pedir = async () => {
     if (!alcanza(pedido, MOTIVO_MINIMO)) return setError('Diga qué le pide a producción.')
     setOcupado(true); setError('')
-    const r = await revisarAnh(p.id, { motivo: pedido.trim(), pedirA: 'prod', ...(cascada ? { aplicarALaCascada: true } : { aplicarAlEvento: true }), cadena: g.cadena })
+    const r = await revisarAnh(p.id, { motivo: pedido.trim(), pedirA: 'prod', ...(cascada ? { aplicarALaCascada: true, ids: idsRaiz } : { aplicarAlEvento: true }), cadena: g.cadena })
     setOcupado(false)
     if (!r.ok) return setError(r.error)
-    onHecho(`Listo: se le pidió a producción que revise ${cascada ? `los ${g.pozos.length} pozos` : g.pozos.join(', ')}. La parada le aparece en «Revisar».`)
+    onHecho(`Listo: se le pidió a producción que revise ${cascada ? `los ${n} pozos` : g.pozos.join(', ')}. La parada le aparece en «Revisar».`)
     onCerrar()
   }
 
@@ -155,7 +170,8 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
   )
 
   return (
-    <form className="no-imprimir mt-2 grid gap-2.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5" aria-label={titulo}
+    <HojaInferior titulo={titulo} onCerrar={onCerrar}>
+    <form className="no-imprimir mt-2 grid gap-2.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5 max-sm:mt-0" aria-label={titulo}
       onSubmit={e => { e.preventDefault(); void guardar() }}>
       <b className="text-[12px]">{titulo}</b>
       {visibles.map(x => (
@@ -173,7 +189,8 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
                 <div className="grid gap-1" data-pedir-a="prod">
                   <small className="text-[10.5px] text-[var(--tinta2)]">¿Fue el yacimiento? Lo pone producción o confiabilidad, con lo que lo muestra: la prueba del pozo, el corte de agua o la presión de fondo.</small>
                   <span className="flex flex-wrap items-center gap-1">
-                    <input value={pedido} onChange={e => { setPedido(e.target.value); setError('') }} className={cn(CAMPO, 'sm:flex-1')} aria-label="Lo que le pide a producción" />
+                    {/* Dos renglones: el pedido se lee entero también en el teléfono (B-46). */}
+                    <textarea value={pedido} rows={2} onChange={e => { setPedido(e.target.value); setError('') }} className={cn(CAMPO, 'resize-y sm:flex-1')} aria-label="Lo que le pide a producción" />
                     <button type="button" disabled={ocupado} onClick={() => void pedir()} className={OPCION}>Pedir a producción</button>
                   </span>
                 </div>
@@ -211,10 +228,10 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
         </div>
       )}
       {cascada && (
-        <div role="group" aria-label={yac ? '¿A qué pozo?' : `¿Aplica a los ${g.pozos.length} pozos de esta parada?`} className="grid gap-1">
-          <span className="text-[11.5px] font-semibold">{yac ? '¿A qué pozo? «En el yacimiento» se pone pozo por pozo.' : `¿Aplica a los ${g.pozos.length} pozos de esta parada?`}</span>
+        <div role="group" aria-label={yac ? '¿A qué pozo?' : `¿Aplica a los ${n} pozos de esta parada?`} className="grid gap-1">
+          <span className="text-[11.5px] font-semibold">{yac ? '¿A qué pozo? «En el yacimiento» se pone pozo por pozo.' : `¿Aplica a los ${n} pozos de esta parada?`}</span>
           <span className="flex flex-wrap gap-1">
-            {!yac && <button type="button" aria-pressed={!soloAEf} onClick={() => setSoloA(null)} className={cn(OPCION, !soloAEf && MARCADA)}>Sí, a los {g.pozos.length}</button>}
+            {!yac && <button type="button" aria-pressed={!soloAEf} onClick={() => setSoloA(null)} className={cn(OPCION, !soloAEf && MARCADA)}>Sí, a los {n}</button>}
             {g.pozos.length <= 3
               ? g.pozos.map(z => <button key={z} type="button" aria-pressed={soloAEf === z} onClick={() => setSoloA(z)} className={cn(OPCION, soloAEf === z && MARCADA)}>Solo a {z}</button>)
               : <select value={soloAEf ?? ''} onChange={e => setSoloA(e.target.value || null)} className={cn(CAMPO, 'sm:w-auto')} aria-label="Solo a un pozo">
@@ -226,7 +243,7 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
       )}
       {tocaAPersona && (
         <div role="group" aria-label="¿Por qué lo cambia?" className="grid gap-1">
-          <span className="text-[11.5px] font-semibold">¿Por qué lo cambia? <small className="font-normal text-[var(--tinta2)]">(ya lo había dicho una persona)</small></span>
+          <span className="text-[11.5px] font-semibold">¿Por qué lo cambia? <small className="font-normal text-[var(--tinta2)]">({pideMotivo ? 'cambia lo que dijo otra persona' : 'ya lo había dicho una persona'})</small></span>
           <span className="flex flex-wrap gap-1">
             {MOTIVOS.map(m => <button key={m} type="button" aria-pressed={motivo === m} onClick={() => { setMotivo(m); setError('') }} className={cn(OPCION, motivo === m && MARCADA)}>{m}</button>)}
             <button type="button" aria-pressed={motivo === 'otra'} onClick={() => setMotivo('otra')} className={cn(OPCION, motivo === 'otra' && MARCADA)}>Otra razón…</button>
@@ -241,5 +258,6 @@ export function Editor({ g, rolId, pasos, titulo, onCerrar, onHecho }: {
       </span>
       {falta && cambios.length > 0 && <small className="text-[10.5px] text-[var(--tinta2)]">{falta}</small>}
     </form>
+    </HojaInferior>
   )
 }

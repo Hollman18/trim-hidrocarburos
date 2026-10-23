@@ -26,6 +26,9 @@ import { BloqueSap } from '@/widgets/sap/BloqueSap'
 import { ExportarFicha } from '@/widgets/informe/Exportar'
 import { useModal } from '@/shared/ui/foco'
 import { puedeHacer, type Dispositivo } from '@/entities/tipos'
+import { useTuberiaAgua, useCriticidad } from '@/shared/api/choke'
+import { AguaHoy } from '@/widgets/choke/AguaHoy'
+import { SiFallaHoyFicha } from '@/widgets/riesgo/SiFallaHoy'
 
 
 /** La ficha de un equipo flota sobre la pantalla. Siempre está montada (App),
@@ -58,6 +61,10 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   const idTitulo = useId()
   // La historia que dejó el PLC: lo que se le cargó y, en una bomba, sus fallas por parte.
   const historia = useHistoriaEquipo(campoId, eq && eq.clase !== 'pozo' ? eq.id : null)
+  // Una bomba de reinyección parada: lo que pasa hoy lo dice el motor (B-17), no la frase fija del registro.
+  const agua = useTuberiaAgua(campoId)
+  const delTren = agua.tramos.find(x => x.tramo === 'bombas')?.bombas?.find(b => b.id === equipoAbierto)
+  const paradaDelTren = delTren?.papel === 'disposicion' && delTren.marcha === 'parada'
 
   useEffect(() => { setCadenaTag(null) }, [equipoAbierto])
 
@@ -65,7 +72,8 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   // En operación solo se muestra lo que está fuera de banda: lo demás no pide nada.
   // Un instrumento sin lectura (`valor: null`) tampoco es normal: es un dato inválido.
   const visibles = nivel === 'operacion' ? disp.filter(d => d.estado !== 'normal' || d.valor === null) : disp
-  if (!eq) return null
+  // Un equipo sin registro propio (P-201A y P-201C, sin instrumento): una ficha mínima con lo que sí se sabe (B-37).
+  if (!eq) return delTren ? <FichaMinima campoId={campoId} equipo={equipoAbierto} /> : null
   // «Fuera de banda» cuenta solo lo que el instrumento reporta fuera; un
   // instrumento sin señal es un dato inválido, no un valor fuera, y se cuenta aparte.
   const sinSenalN = visibles.filter(sinLectura).length, fueraN = visibles.length - sinSenalN
@@ -174,8 +182,11 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
                 <Chip>aguas abajo: {eq.aguasAbajo}</Chip>
                 {nivel === 'ingenieria' && <Info rotulo="norma" titulo="Norma" texto={eq.norma} />}
               </div>
-              {/* El diagnóstico del equipo, en una frase: es lo que dice por qué está como está. */}
-              <p className="mt-2 text-[12px] leading-relaxed">{eq.lectura}</p>
+              {/* El diagnóstico del equipo, en una frase: es lo que dice por qué está como está. Una bomba de
+                  reinyección parada lo dice con la tubería del agua de hoy, que arma el motor (B-17). */}
+              {!paradaDelTren && <p className="mt-2 text-[12px] leading-relaxed">{eq.lectura}</p>}
+              {nivel === 'ingenieria' && <SiFallaHoyFicha campoId={campoId} equipo={eq.id} className="mt-2" />}
+              <AguaHoy campoId={campoId} bomba={eq.id} className="mt-2.5" />
               <dl className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11.5px]">
                 {nivel === 'ingenieria' && <><dt className="text-[var(--tinta3)]">Modo de falla</dt><dd className="m-0">{eq.modoFalla}</dd></>}
                 <dt className="text-[var(--tinta3)]">Diferido · {rango.nombre.toLowerCase()}</dt>
@@ -309,5 +320,46 @@ function Historia({ historia }: { historia: HistoriaEquipo }) {
         </>
       )}
     </>
+  )
+}
+
+/** La ficha de un equipo que no tiene registro propio en TRIM (P-201A y P-201C:
+ *  bombas del tren de agua sin instrumento). No se inventa lo que no hay: se
+ *  dice que no tiene instrumento, cuánto costaría si falla hoy y la tubería del
+ *  agua de hoy (B-37, B-01). */
+function FichaMinima({ campoId, equipo }: { campoId: string; equipo: string }) {
+  const abrirEquipo = useApp(s => s.abrirEquipo)
+  const campo = useCampo()
+  const nivel = useNivel()
+  const crit = useCriticidad([campoId])
+  const fila = crit.ranking.find(f => f.equipo === equipo && f.campoId === campoId)
+  const dialogo = useModal<HTMLDivElement>(() => abrirEquipo(null), equipo)
+  const idTitulo = useId()
+  return (
+    <div ref={dialogo} tabIndex={-1} className="fixed inset-0 z-[120] flex outline-none" role="dialog" aria-modal="true" aria-labelledby={idTitulo} data-panel-equipo data-ficha-minima={equipo}>
+      <div aria-hidden onClick={() => abrirEquipo(null)} className="no-imprimir flex-1 cursor-default bg-black/35" />
+      <aside className="flex w-full flex-col overflow-hidden border-l border-[var(--linea)] bg-[var(--superficie)] shadow-[var(--sombra2)] sm:w-[min(560px,80vw)]">
+        <header className="flex items-start gap-2 border-b border-[var(--linea)] bg-[var(--panel)] px-3 py-2.5">
+          <div className="min-w-0 flex-1">
+            <span className="font-mono text-[11px] text-[var(--tinta3)]">{equipo}</span>
+            <h2 id={idTitulo} className="block text-[14px] font-bold leading-tight">{fila?.nombre ?? equipo}</h2>
+            <small className="block text-[10.5px] text-[var(--tinta3)]">Tren de agua · {campo.nombre}</small>
+          </div>
+          <button onClick={() => abrirEquipo(null)} aria-label="Cerrar"
+            className="no-imprimir min-h-12 cursor-pointer rounded border border-[var(--linea)] bg-[var(--panel)] p-1.5 hover:bg-[var(--elevado)] sm:min-h-0">
+            <X className="size-3.5" />
+          </button>
+        </header>
+        <div className="flex-1 overflow-y-auto p-3 text-[12px]">
+          <Hueco>
+            <span className="flex flex-wrap items-center gap-x-1">
+              <b>Sin instrumento</b>: TRIM no ve si está en marcha; se supone que sí. No tiene historia propia de fallas.
+            </span>
+          </Hueco>
+          {nivel !== 'decision' && <SiFallaHoyFicha campoId={campoId} equipo={equipo} className="mt-2.5" />}
+          <AguaHoy campoId={campoId} bomba={equipo} className="mt-2.5" />
+        </div>
+      </aside>
+    </div>
   )
 }

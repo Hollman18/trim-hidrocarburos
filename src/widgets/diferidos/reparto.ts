@@ -18,12 +18,27 @@ export const LARGO_TRAMO: Record<ChokeOSinAsignar, string> = {
 
 /** Rayado de «sin identificar»: el mismo de los Paretos. */
 export const RAYADO = 'repeating-linear-gradient(45deg, var(--tinta3), var(--tinta3) 2px, transparent 2px, transparent 4px)'
-/** El relleno de cada tramo: grises, del más oscuro al más claro en el orden
- *  de la tubería (ISA-101: el tramo que más pesa no es una alarma). El
- *  yacimiento va en la tinta, para no confundirse con los pozos (█ y ▓ de U2
- *  §9.2); lo sin identificar, rayado. */
+/** El relleno de cada tramo: gris Y dibujo propio, para que dos tramos vecinos
+ *  se separen también en blanco y negro y en el papel (B-35; U2 §7.5): el
+ *  yacimiento liso en la tinta (█), los pozos lisos (▓), la planta con rayas
+ *  horizontales (▒), afuera con puntos (░) y lo sin identificar rayado en
+ *  diagonal, claro y con borde discontinuo. Son los mismos dibujos de la franja
+ *  «Qué limitó» y de todas las barras por tramo (B-09). Afuera va en `--dato-3`,
+ *  no en `--dato-4`, que contra el panel no llegaba a 3:1 (WCAG 1.4.11). En SVG,
+ *  los mismos dibujos van en `PatronesTramo` (tramos.tsx). */
 export const RELLENO: Record<ChokeOSinAsignar, string> = {
-  reservorio: 'var(--tinta)', pozo: 'var(--dato-2)', planta: 'var(--dato-4)', exportacion: 'var(--dato-5)', 'sin-asignar': RAYADO,
+  reservorio: 'var(--tinta)',
+  pozo: 'var(--dato-2)',
+  planta: 'repeating-linear-gradient(0deg, var(--panel) 0 1px, var(--dato-3) 1px 4px)',
+  exportacion: 'radial-gradient(circle, var(--panel) 0 0.9px, transparent 1.3px) 0 0 / 4px 4px, var(--dato-3)',
+  'sin-asignar': RAYADO,
+}
+/** El relleno SVG de un tramo, con los dibujos de `PatronesTramo` (tramos.tsx) del mismo `id`. */
+export const rellenoSvg = (k: ChokeOSinAsignar, id: string): string =>
+  k === 'reservorio' ? 'var(--tinta)' : k === 'pozo' ? 'var(--dato-2)' : k === 'planta' ? `url(#pl-${id})` : k === 'exportacion' ? `url(#af-${id})` : `url(#sin-${id})`
+/** El nombre del dibujo de cada tramo, para el lector y para la leyenda impresa. */
+export const DIBUJO_TRAMO: Record<ChokeOSinAsignar, string> = {
+  reservorio: 'liso oscuro', pozo: 'liso', planta: 'rayas', exportacion: 'puntos', 'sin-asignar': 'rayado y discontinuo',
 }
 
 /** Los tramos que tienen barriles, en el orden fijo. Un tramo en cero va solo

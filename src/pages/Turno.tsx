@@ -21,6 +21,7 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
+import { useEquiposDeHoy } from '@/shared/api/equipos'
 import { HoyLimita, DondeSeTrabo } from '@/widgets/arbol/HoyLimita'
 import { CierreDeHoy } from '@/widgets/arbol/CierreDeHoy'
 
@@ -46,7 +47,8 @@ export function Turno() {
   const preguntas = todas.filter(p => p.pide)
   // La cuenta única de «por identificar» (Turno, Mi trabajo, Identificar, Mantenimiento).
   const pi = contarPorIdentificar(todas)
-  const sinArrancar = pi.porIdentificar - pi.arrancaronSinIdentificar
+  // La marca de un equipo es la de hoy, en todas partes (B-20): la urgencia de identificar va en el texto.
+  const hoy = useEquiposDeHoy(ids)
   const enviados = useMensajes(ids).filter(m => new Date(m.hora).getTime() >= inicioTurno.getTime())
   const nombre = (id: string) => usuarios.find(x => x.id === id)?.nombre ?? id
   // Todo lo de este panel y del de paradas nuevas es de las últimas 12 h: basta la hora.
@@ -75,6 +77,8 @@ export function Turno() {
   // Lo que ya está fuera de límite (sin horas) va primero, como en Riesgo y Mantenimiento.
   const vigilar = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const porDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
+  // El equipo que más pesa en lo que se pierde ahora: lleva la marca que el total no lleva (B-40).
+  const causaMayor = [...perdiendo].sort((a, b) => Number(b.altoImpacto) - Number(a.altoImpacto) || b.bblDia - a.bblDia)[0]
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
   // El operador no ve el modelo del tramo (U2 §3.1): contesta lo que vio.
   const veTramo = rol.id !== 'oper' && rol.id !== 'tec'
@@ -128,7 +132,7 @@ export function Turno() {
 
   const filaPregunta = (p: (typeof preguntas)[number]) => (
     <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
-      <MarcaPrioridad s={!p.fin ? 2 : 3} tamano={12} />
+      <MarcaPrioridad s={hoy(p.equipo, p.campoId)?.severidad ?? 0} tamano={12} />
       <span className="min-w-0 flex-1">
         <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span>
       </span>
@@ -139,7 +143,7 @@ export function Turno() {
   const filaVigilar = (r: (typeof vigilar)[number]) => (
     <Tip key={`${r.campoId}${r.equipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
       titulo={r.equipo} pista={r.motivo} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
-      filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
+      filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya pasó el límite'],
         ['Si para', `${n0(r.bblDia)} bbl/d`]]}
       className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
       <MarcaPrioridad s={prioridadVigilar(r)} tamano={13} />
@@ -152,7 +156,7 @@ export function Turno() {
         </span>
       </span>
       <span className="tabular text-right text-[11px]">
-        <b className="block">{r.horas !== undefined ? fmtHoras(r.horas) : 'ya fuera'}</b>
+        <b className="block">{r.horas !== undefined ? fmtHoras(r.horas) : 'ya pasó el límite'}</b>
         <small className="text-[9.5px] text-[var(--tinta3)]">{n0(r.bblDia)} bbl/d</small>
       </span>
     </Tip>
@@ -214,14 +218,16 @@ export function Turno() {
           <small className={apoyo}>si nada cambia</small>
         </Tip>
         <span>
-          <b className={cifra}>
-            {perdiendo.length > 0 && <MarcaPrioridad s={perdiendo.some(r => r.altoImpacto) ? 1 : 2} tamano={14} />}{n0(porDia)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d</small>
-          </b>
+          {/* Un total no es una alarma: la marca va en el equipo que lo causa (B-40; U2 §0, principio 4). */}
+          <b className={cifra}>{n0(porDia)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
           <small className={rotulo}>perdiéndose ahora</small>
-          <small className={apoyo}>{plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}</small>
+          <small className={apoyo}>
+            {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
+            {causaMayor && <span className="inline-flex items-center gap-1"> · <MarcaPrioridad s={causaMayor.altoImpacto ? 1 : 2} tamano={11} />{causaMayor.equipo}</span>}
+          </small>
         </span>
         <span>
-          <b className={cifra}>{sinArrancar > 0 && <MarcaPrioridad s={2} tamano={14} />}{pi.porIdentificar}</b>
+          <b className={cifra}>{pi.porIdentificar}</b>
           <small className={rotulo}>por identificar</small>
           <ApoyoPorIdentificar pi={pi} />
         </span>

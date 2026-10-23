@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp, useRol, usePersona } from '@/app/store'
 import { useParadasAnh, gruposPorCadena, esperaAQuienAbre, CONFIRMAN_EN_LOTE, PASOS, type ParadaAnh } from '@/shared/api/arbol'
+import { usePreguntas } from '@/shared/api/diferidos'
 import { campoPorId } from '@/entities/campos'
 import { AHORA } from '@/entities/reloj'
 import { puedeHacer } from '@/entities/tipos'
 import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { diaIso, n0, plural } from '@/shared/lib/formato'
-import { ESTADO, horaCorta, lista, valorEnPalabras } from './palabras'
+import { ESTADO, horaCorta, lista, valorEnPalabras, cuantasParadas } from './palabras'
 import { Falta } from './Cadena'
 
 /** Un lote: las paradas propuestas con la misma cadena de 6 pasos, y sus raíces. */
@@ -35,6 +36,8 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
   const setPantalla = useApp(s => s.setPantalla), confirmarAnh = useApp(s => s.confirmarAnh)
   const hoy = diaIso(AHORA)
   const ps = useParadasAnh({ campos, desde: new Date(`${hoy}T00:00:00-05:00`), hasta: AHORA }).filter(p => p.diaOperacional === hoy)
+  // Lo que lleva cada parada desde que paró (el libro): una parada de ayer también costó ayer (B-21).
+  const preguntas = usePreguntas(campos)
   const firma = CONFIRMAN_EN_LOTE.includes(rol.id) && puedeHacer(rol.puede, 'anh:confirmar') && !persona.sinAcceso
   const completas = ps.filter(p => p.estado === 'confirmada')
   // Lo que espera a quien abre el equipo (la causa que una señal solo apunta) no entra en un lote (P1 §2.1).
@@ -62,11 +65,11 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
     setOcupado(false)
     if (!r.ok) return setError(r.error)
     const listas = r.paradas.filter(p => p.estado === 'confirmada').length
-    setAviso(`Listo: ${plural(r.paradas.length, 'parada confirmada', 'paradas confirmadas')} de un toque${r.lote ? ` (lote ${r.lote.id})` : ''}${listas === r.paradas.length ? '; quedan completas para el reporte.' : '; la causa de algunas la confirma quien abra el equipo.'}`)
+    setAviso(`Listo: ${plural(r.paradas.length, 'parada confirmada', 'paradas confirmadas')} de un toque${r.lote ? ', en un solo lote' : ''}${listas === r.paradas.length ? '; quedan completas para el reporte.' : '; la causa de algunas la confirma quien abra el equipo.'}`)
   }
 
   return (
-    <Panel className="mb-2.5" titulo="CIERRE DE HOY · PARADAS POR CONFIRMAR" extra={`${ps.length} · ${completas.length} ${completas.length === 1 ? 'completa' : 'completas'}`}>
+    <Panel className="mb-2.5" titulo="CIERRE DE HOY · PARADAS POR CONFIRMAR" extra={`${cuantasParadas(ps)} · ${cuantasParadas(completas)} ${cuantasParadas(completas) === 1 ? 'completa' : 'completas'}`}>
       <Lectura>
         Las paradas de hoy, cada una con sus 6 pasos del árbol de causas. Las que TRIM propuso con la misma
         cadena se confirman de un toque por grupo; la raíz de cada grupo queda a la vista para no cargarle
@@ -74,8 +77,8 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
         miden las paradas no planeadas, y el reporte a la ANH sale mañana antes de las 07:00.
       </Lectura>
       <p className="mb-2 text-[11.5px]">
-        <b className="tabular">{plural(ps.length, 'parada', 'paradas')}</b> hoy · {completas.length} {completas.length === 1 ? 'completa' : 'completas'}
-        {ps.length > completas.length && <> · <b>faltan {ps.length - completas.length}</b></>} · el reporte sale mañana antes de las 07:00
+        <b className="tabular">{plural(cuantasParadas(ps), 'parada', 'paradas')}</b> hoy · {cuantasParadas(completas)} {cuantasParadas(completas) === 1 ? 'completa' : 'completas'}
+        {cuantasParadas(ps) > cuantasParadas(completas) && <> · <b>faltan {cuantasParadas(ps) - cuantasParadas(completas)}</b></>} · el reporte sale mañana antes de las 07:00
       </p>
       {aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">{aviso}</p>}
       {ps.length === 0 && <Hueco>Hoy no ha parado ningún pozo: no hay nada que cerrar.</Hueco>}
@@ -113,13 +116,20 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
         { xs: esperan, que: 'esperan a quien abra el equipo: la causa y el detalle los confirma el jefe de mantenimiento o confiabilidad' },
         { xs: faltaDato, que: ESTADO['por-precisar'] },
         { xs: sinCausa, que: ESTADO.pendiente },
-      ].filter(x => x.xs.length > 0).map(x => (
-        <p key={x.que} className="mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px]">
-          <Falta>{x.xs.length}</Falta>
-          <span>{x.que}: <b>{nombresDe(x.xs)}</b> <span className="text-[var(--tinta3)]">· {n0(x.xs.reduce((a, p) => a + p.diferidaTrimBbl, 0))} bbl</span></span>
-          {identificar && <Boton variante="chico" className="min-h-10 sm:min-h-6" onClick={() => setPantalla('causa')}>Responder en Identificar</Boton>}
-        </p>
-      ))}
+      ].filter(x => x.xs.length > 0).map(x => {
+        // Cuenta paradas, no filas; los barriles de hoy y, si la parada viene de antes, lo que lleva desde que paró (B-21).
+        const n = cuantasParadas(x.xs)
+        const deHoy = x.xs.reduce((a, p) => a + p.diferidaTrimBbl, 0)
+        const eventos = [...new Set(x.xs.map(p => p.eventoId))]
+        const total = eventos.every(e => preguntas.some(q => q.id === e)) ? eventos.reduce((a, e) => a + (preguntas.find(q => q.id === e)?.bbl ?? 0), 0) : undefined
+        return (
+          <p key={x.que} className="mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px]" data-falta-hoy={x.que}>
+            <Falta>{plural(n, 'parada', 'paradas')}</Falta>
+            <span>{x.que}: <b>{nombresDe(x.xs)}</b> <span className="text-[var(--tinta3)]">· {n0(deHoy)} bbl hoy{total !== undefined && Math.round(total) > Math.round(deHoy) ? ` (${n0(total)} desde que pararon)` : ''}</span></span>
+            {identificar && <Boton variante="chico" className="min-h-12 sm:min-h-6" onClick={() => setPantalla('causa')}>Responder en Identificar</Boton>}
+          </p>
+        )
+      })}
     </Panel>
   )
 }

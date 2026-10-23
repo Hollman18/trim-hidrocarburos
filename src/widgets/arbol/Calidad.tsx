@@ -10,9 +10,13 @@ import { VISIBLES } from '@/shared/ui/listaCorta'
 import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { ROTULO, INFO_METODO, valorEnPalabras } from './palabras'
+import { periodoEnFrase } from '@/widgets/choke/palabras'
 
 const TITULO = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 const pct = (v: number | null) => (v === null ? '—' : `${n0(v)} %`)
+/** «1 parada (2 filas)»: el motor cuenta las filas del reporte y las paradas detrás (B-47). */
+const paradasYFilasDe = (e: { paradas: number; eventos: number }) =>
+  `${plural(e.eventos, 'parada', 'paradas')}${e.paradas !== e.eventos ? ` (${plural(e.paradas, 'fila', 'filas')})` : ''}`
 
 /** Una barra de 0 a 100 %, gris (no es una alarma), con la cifra al lado y en su nombre accesible. */
 function Barra({ valor, nombre, grande }: { valor: number | null; nombre: string; grande?: boolean }) {
@@ -80,7 +84,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
     <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap items-baseline gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
       <b className="font-mono">{e.equipo}</b>
       <span className="text-[10.5px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
-      <span className="tabular">{plural(e.paradas, 'parada', 'paradas')} · {e.corregidas} corregidas{e.paradas ? ` · ${n0(e.pctCorregido)} %` : ''}</span>
+      <span className="tabular" data-paradas={e.eventos} data-filas={e.paradas}>{paradasYFilasDe(e)} · {e.corregidas} {e.corregidas === 1 ? 'corregida' : 'corregidas'}{e.paradas ? ` · ${n0(e.pctCorregido)} %` : ''}</span>
       {e.corregidas > 0 && <span className="text-[10.5px] text-[var(--tinta2)]">a: {cambios('choke', e.cambiadoA)}</span>}
     </li>
   )
@@ -123,7 +127,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
 
       <h3 className={TITULO}>LAS REGLAS QUE MÁS SE CORRIGEN</h3>
       {corregidas.length === 0
-        ? <p className="mb-2.5 text-[11.5px] text-[var(--tinta2)]">Nadie corrigió una propuesta de TRIM en {periodo}{c.porPaso.some(x => x.avaladas > 0) ? '' : ': todavía nadie ha revisado estas paradas'}.</p>
+        ? <p className="mb-2.5 text-[11.5px] text-[var(--tinta2)]">Nadie corrigió una propuesta de TRIM en {periodoEnFrase(periodo)}{c.porPaso.some(x => x.avaladas > 0) ? '' : ': todavía nadie ha revisado estas paradas'}.</p>
         : (
           <>
             <ul className="mb-1 text-[11.5px]">{reglas.map(filaRegla)}</ul>
@@ -134,7 +138,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
 
       <h3 className={`${TITULO} mt-1.5`}>EL PASO 2 POR EQUIPO</h3>
       {equipos.length === 0
-        ? <p className="mb-2.5 text-[11.5px] text-[var(--tinta2)]">Ninguna parada con el paso 2 propuesto en {periodo}.</p>
+        ? <p className="mb-2.5 text-[11.5px] text-[var(--tinta2)]">Ninguna parada con el paso 2 propuesto en {periodoEnFrase(periodo)}.</p>
         : (
           <>
             <ul className="mb-1 text-[11.5px]">{eqs.map(filaEquipo)}</ul>
@@ -153,7 +157,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
               {c.sinTopologia.map(e => (
                 <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
                   <b className="font-mono">{e.equipo}</b><span className="text-[10.5px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
-                  <span className="tabular">{plural(e.paradas, 'parada', 'paradas')}</span>
+                  <span className="tabular">{paradasYFilasDe(e)}</span>
                 </li>
               ))}
             </ul>

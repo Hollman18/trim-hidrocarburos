@@ -441,7 +441,9 @@ export const PREGUNTAS_CAMPO: Readonly<Record<Exclude<IdPregunta, 'raiz' | 'deta
   tanques: {
     // Las dos opciones cerradas de U2 §4.4 (caso 3) cuando el tramo depende del
     // tanque: el agua de disposición nunca sale de la batería (P1 §3.4); el
-    // crudo depende de si el oleoducto o el cliente recibía (P1 §3.3).
+    // crudo depende de si el oleoducto o el cliente recibía (P1 §3.3). Es para
+    // una señal de tanque que no dice cuál se llenó: cuando ya dice que fue el de
+    // crudo (la fila «evacuacion»), la pregunta va directa al oleoducto (B-31).
     id: 'tanques', texto: '¿Qué lo paró?', quien: 'campo', fuente: 'U2 §4.4, caso 3; U1 §2.4, Pregunta 1',
     pasos: ['responsable', 'choke', 'n1', 'n2'],
     opciones: [
@@ -656,7 +658,7 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
       cuando: 'Bombeo mecánico parado por su controlador (OL o UL)',
       propone: { ...MANT, n1: 'NP_SUP' }, chokeEsperado: 'pozo',
       opciones: { n2: todos('NP_SUP') }, sugiere: { n2: 'NP_SUP/falla-sistema-de-levantamiento-artificial' }, preguntas: ['detalle'],
-      hueco: 'La varilla y la bomba de subsuelo no tienen causa propia en la Tabla 1: lo más cercano es «Falla Sistema de Levantamiento Artificial» (pregunta para Edinson, P1 §8)',
+      hueco: 'La varilla y la bomba de subsuelo no tienen causa propia en la Tabla 1: lo más cercano es «Falla Sistema de Levantamiento Artificial», mientras la ANH no diga otra cosa',
       porque: 'El controlador del bombeo mecánico paró la unidad', fuente: 'P1 §2.1, fila 3; R2 §3.3' },
     { id: 'linea-rodamientos', tipos: LINEA, cuando: 'Bomba de la línea (reinyección o multifásica) con la parte rodamientos',
       propone: { ...MANT, n1: 'NP_SUP', n2: 'NP_SUP/falla-rodamiento-cojinete-bearing-box' }, chokeEsperado: 'planta', opciones: {}, preguntas: [],
@@ -698,7 +700,7 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
       propone: { ...MANT }, chokeEsperado: 'planta',
       opciones: { n1: ['NP_SUP', 'NP_ENINT', 'NP_INS', 'NP_CTRL'], n2: ['NP_SUP/falla-motor-superficie', ...todos('NP_ENINT', 'NP_INS', 'NP_CTRL')] },
       preguntas: ['raiz', 'detalle'],
-      hueco: 'La Tabla 1 no tiene causa para los servicios industriales (aire de instrumentos): se escoge por lo que falló primero (R2 §3.3; pregunta para Edinson)',
+      hueco: 'La Tabla 1 no tiene causa para los servicios industriales (aire de instrumentos): se escoge por lo que falló primero (R2 §3.3)',
       porque: 'Cayó el aire de instrumentos, que les sirve a varios pozos', fuente: 'P1 §2.1, fila 13; R2 §3.3' },
     { id: 'compresion', tipos: ['compresion'], cuando: 'Se detuvo el compresor de gas',
       propone: { ...MANT, n1: 'NP_PROC', n2: 'NP_PROC/capacidad-compresion-transferencia-gas-limitada' }, chokeEsperado: 'planta', opciones: {}, preguntas: [],
@@ -709,7 +711,9 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
       opciones: { responsable: ['op-operacion', 'ext-transportador'], choke: ['planta', 'exportacion'], n1: ['NP_PROC', 'NP_TRANSP'],
         n2: ['NP_PROC/tanques-llenos-capacidad-limitada', ...todos('NP_TRANSP')] },
       sugiere: { responsable: 'op-operacion', n1: 'NP_PROC', n2: 'NP_PROC/tanques-llenos-capacidad-limitada' },
-      preguntas: ['tanques', 'detalle'], chokeEnFalta: true,
+      // La señal ya dice que se llenó el tanque de CRUDO (o se limitó el despacho): la pregunta va
+      // directa, «¿El oleoducto o el cliente estaba recibiendo?» (U2 §4.2 y §4.4, caso 3; B-31).
+      preguntas: ['oleoducto', 'detalle'], chokeEnFalta: true,
       porque: 'Se llenó el tanque de crudo o se limitó el despacho de la batería', fuente: 'P1 §2.1, fila 15; §3.3; U2 §4.4 caso 3' },
     { id: 'proceso', tipos: ['proceso'], cuando: 'El separador cerró la entrada',
       propone: { ...OPER, n1: 'NP_PROC', n2: 'NP_PROC/capacidad-tratamiento-agua-crudo-limitada' }, chokeEsperado: 'planta', opciones: {}, preguntas: [],
@@ -1031,7 +1035,13 @@ export function proponerClasificacion(causa: Causa, campoId: string, ctx: Contex
   const fila = FILA_POR_ID.get(id)!
   const chip = id === 'declarada-chip' ? CHIPS_ANH[chipDe(causa)!] : undefined
   const regla = `${REGLAS_ANH_ID}#${id}`
-  const porque = chip?.porque ?? fila.porque
+  // La bomba de la línea sin causa exacta en la Tabla 1: el porqué nombra la bomba
+  // y lo que falta (B-11), en vez de remitir a una descripción que no está a la vista.
+  const porque = chip?.porque ?? (id === 'linea-sin-n2'
+    ? causa.parte
+      ? `La falla es de la bomba ${causa.equipo} (${NOMBRE_PARTE[causa.parte].toLowerCase()}): la tabla de la ANH no tiene una causa exacta para esa parte`
+      : `La falla es de la bomba ${causa.equipo}; la parte la dice quien la abra`
+    : fila.porque)
   const propone: Partial<ValoresPasos> = { ...(chip?.propone ?? fila.propone) }
   const pr = programaDeCausa(causa, campoId, ctx)
   if (id === 'linea-variador') propone.n2 = claseFirstOut(causa, op) === 'mcc' ? 'NP_ENINT/falla-mcc-switchgear' : 'NP_ENINT/falla-vsd'
@@ -1141,6 +1151,9 @@ function evaluar(p: PropuestaAnh): PropuestaAnh {
   const problemas = faltan.length ? [] : problemasDeClasificacion(b)
   const sugerido: Partial<ValoresPasos> = {}
   for (const [k, v] of Object.entries(p.sugerido)) if (faltan.includes(k as PasoAnh)) Object.assign(sugerido, { [k]: v })
+  // Una sugerencia que ya no va con lo que hay se quita (B-31): el detalle de otra causa, la causa de otra planeación.
+  if (sugerido.n2 && n1 && n1DeCodigo(sugerido.n2) !== n1) delete sugerido.n2
+  if (sugerido.n1 && b.planeacion && planeacionDeN1(sugerido.n1) !== b.planeacion.valor) delete sugerido.n1
   const salida: PropuestaAnh = { ...p, estado: estadoDe(b, p.causaPendiente), faltan, opciones: o, sugerido, preguntas, problemas }
   if (!faltan.length && !problemas.length) salida.clasificacion = clasificar(b)
   else delete salida.clasificacion

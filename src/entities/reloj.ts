@@ -13,10 +13,11 @@ export const horasEntre = (desde: Date, hasta: Date) =>
    la mitad del tiempo de las pantallas. El texto sale igual. Los de mes
    abreviado pasan por `formatoFecha`: el mismo texto en todos los navegadores. */
 const ZONA = 'America/Bogota'
-const FMT_FECHA_HORA = formatoFecha({ day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: ZONA })
-const FMT_FECHA_HORA_ANIO = formatoFecha({ day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', year: 'numeric', hour12: false, timeZone: ZONA })
-const FMT_FECHA = formatoFecha({ day: '2-digit', month: 'short', timeZone: ZONA })
-const FMT_FECHA_ANIO = formatoFecha({ day: '2-digit', month: 'short', year: 'numeric', timeZone: ZONA })
+// El día, sin cero delante (B-25): con el año, '2-digit' escribía «03 de nov de 2025».
+const FMT_FECHA_HORA = formatoFecha({ day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: ZONA })
+const FMT_FECHA_HORA_ANIO = formatoFecha({ day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: 'numeric', hour12: false, timeZone: ZONA })
+const FMT_FECHA = formatoFecha({ day: 'numeric', month: 'short', timeZone: ZONA })
+const FMT_FECHA_ANIO = formatoFecha({ day: 'numeric', month: 'short', year: 'numeric', timeZone: ZONA })
 const FMT_LARGA = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: ZONA })
 
 /** El año de un instante en Colombia (UTC−5, sin horario de verano). El del

@@ -7,8 +7,8 @@ import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
 import { n0, n1 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { Muestra } from './tramos'
-import { LARGO_TRAMO, RELLENO, mayuscula } from './reparto'
+import { Muestra, PatronesTramo } from './tramos'
+import { LARGO_TRAMO, mayuscula, rellenoSvg } from './reparto'
 
 /** Redondea hacia arriba a un tope «limpio» para el eje: 1, 2 o 5 por una
  *  potencia de diez. */
@@ -50,7 +50,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
     <>
       {porTramo && (
         <div role="group" aria-label="Cómo se parte cada mes" className="no-imprimir mb-1.5 flex flex-wrap gap-1">
-          {([['como', 'Cómo se identificó'], ['tramo', 'Por dónde se trabó']] as const).map(([v, t]) => (
+          {([['como', 'Por cómo se identificó'], ['tramo', 'Por dónde se trabó']] as const).map(([v, t]) => (
             <button key={v} type="button" aria-pressed={vista === v} onClick={() => setVista(v)}
               className={cn('min-h-6 cursor-pointer rounded border px-2.5 py-[2px] text-[11px]',
                 vista === v ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
@@ -62,12 +62,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
       <div ref={alFinal} className="overflow-x-auto">
         <svg viewBox={`0 0 ${W} 206`} className="block h-auto w-full min-w-[560px]" role="group"
           aria-label={`Barriles diferidos mes a mes${porDonde ? ', por dónde se trabó' : ''}, de ${serie[0]?.nombre} a ${serie.at(-1)?.nombre}`}>
-          <defs>
-            <pattern id={`sin-${id}`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <rect width="5" height="5" fill="var(--panel)" />
-              <line x1="0" y1="0" x2="0" y2="5" stroke="var(--tinta3)" strokeWidth="1.6" />
-            </pattern>
-          </defs>
+          <defs><PatronesTramo id={id} /></defs>
           {marcas.map(v => (
             <g key={v}>
               <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.8} />
@@ -80,7 +75,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
             // Por dónde se trabó: los tramos de abajo arriba en el orden de la tubería; lo sin identificar, rayado y encima.
             const t = deMes.get(m.mes)
             const tramos: Array<[number, string]> = porDonde
-              ? CHOKES_Y_SIN_ASIGNAR.map(k => [k === 'sin-asignar' ? Math.max(0, t?.porTramo[k] ?? 0) : t?.porTramo[k] ?? 0, k === 'sin-asignar' ? `url(#sin-${id})` : RELLENO[k]])
+              ? CHOKES_Y_SIN_ASIGNAR.map(k => [k === 'sin-asignar' ? Math.max(0, t?.porTramo[k] ?? 0) : t?.porTramo[k] ?? 0, rellenoSvg(k, id)])
               : [[l.identificado, 'var(--dato-1)'], [l.declarado, 'var(--dato-3)'], [Math.max(0, l.pendiente), `url(#sin-${id})`]]
             const rayado = tramos.length - 1
             let base = 0
@@ -100,8 +95,13 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
                   ['Máximo firmado', hayMeta ? `${n0(l.meta.diferido)} bbl` : textoSinMeta(l.meta, l.porCampo.length > 1)], ['Eficiencia', `${n1(l.pe)} %`],
                   ['Cierre', m.parcial ? 'sin publicar' : l.publicable ? 'publicable' : 'no publicable']]}
                 {...(onMes ? { onClick: () => onMes(m) } : {})}>
-                <g opacity={activo ? 1 : 0.42} className={onMes ? 'cursor-pointer' : undefined}>
+                {/* Por tramo, los meses no se atenúan: el gris es el dato y cambiaría de tramo (B-08). El mes
+                    del período va con un contorno y su rótulo en negrilla. */}
+                <g opacity={activo || porDonde ? 1 : 0.42} className={onMes ? 'cursor-pointer' : undefined}>
                   <rect x={x - (paso - ancho) / 2} y={G.y0 - 8} width={paso} height={G.y1 - G.y0 + 36} fill="transparent" />
+                  {porDonde && activo && l.brecha > 0 && (
+                    <rect x={x - 2.5} y={yTope - 2.5} width={ancho + 5} height={G.y1 - yTope + 2.5} fill="none" stroke="var(--tinta)" strokeWidth={1.4} data-mes-activo />
+                  )}
                   {tramos.map(([v, fill], j) => {
                     if (v <= 0) return null
                     const y1 = Y(base), y0 = Y(base + v)
@@ -160,12 +160,12 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
         </span>
       </div>
       <Lectura>
-        Cada columna es un mes. Lo oscuro tiene causa probada por una señal (código del controlador,
-        primera alarma del PLC, firma o programa); lo gris claro lo declaró un operario porque la
-        señal no alcanzaba; lo rayado nadie lo ha identificado todavía. La raya es el máximo de
-        diferido que firmó el gerente para ese mes. Los meses del período que está mirando van al
-        frente. Toque o pase el cursor por un mes para ver sus cifras{onMes ? '; un clic lo abre' : ''}.
-        {porTramo && ' «Por dónde se trabó» parte la misma columna entre el yacimiento, los pozos, la planta o estación y afuera; lo sin identificar sigue rayado.'}
+        Cada columna es un mes. Abajo, lo que tiene causa probada por una señal (código del controlador,
+        primera alarma del PLC, firma o programa); encima, lo que declaró un operario porque la señal no
+        alcanzaba; arriba, rayado, lo que nadie ha identificado todavía. La raya es el máximo de diferido
+        que firmó el gerente para ese mes. Los meses del período que está mirando van al frente. Toque o
+        pase el cursor por un mes para ver sus cifras{onMes ? '; un clic lo abre' : ''}.
+        {porTramo && ' «Por dónde se trabó» parte la misma columna entre el yacimiento, los pozos, la planta o estación y afuera, cada uno con su gris y su dibujo (liso, rayas, puntos); lo sin identificar sigue rayado y discontinuo. Ahí el mes del período va con un contorno.'}
       </Lectura>
     </>
   )

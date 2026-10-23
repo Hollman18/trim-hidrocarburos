@@ -2379,7 +2379,7 @@ console.log('\n=== 22. Modelo choke: los cuatro tramos, la topología y «¿Dón
   const marcada = CH.marcarCasosBorde(CH.topologiaDe('morichal', ctx0), TOPO.locacionDemo('morichal')).filter(e => e.casoBorde)
   comprobar(marcada.map(e => `${e.elemento}:${e.casoBorde}:${e.choke}`).join() === 'MPP-301:misma-locacion:planta'
     && CH.casoBordeDe({ alcance: 'compartido', pozos: ['MN-07', 'MN-18', 'MN-33', 'MN-01'] }, TOPO.locacionDemo('morichal')) === undefined
-    && CH.casoBordeDe({ alcance: 'compartido', pozos: ['LC-12', 'LC-14'] }, TOPO.locacionDemo('ceiba')) === undefined && /Edinson/.test(CH.EXPLICA_CASO_BORDE),
+    && CH.casoBordeDe({ alcance: 'compartido', pozos: ['LC-12', 'LC-14'] }, TOPO.locacionDemo('ceiba')) === undefined && /^Falta confirmar con la operadora/.test(CH.EXPLICA_CASO_BORDE) && !/Edinson/.test(CH.EXPLICA_CASO_BORDE),
     'caso de borde: MPP-301 sirve a los 3 pozos del clúster norte (una sola locación) y queda marcado, sin dejar de ir a la planta; sin la locación de los pozos (el resto del demo) no se marca nada')
   // Coordinador, punto 8 · Las propuestas de topología, con evidencia y conflictos.
   const prC = CH.propuestasTopologia('ceiba', ctx0), prM = CH.propuestasTopologia('morichal', ctx0)
@@ -2575,7 +2575,9 @@ console.log('\n=== 25. La tubería del campo, mes a mes y antes → con TRIM (U2
     && RP.tuberiaCampo('morichal', oct.desde, oct.hasta, ctx0).fraseHoy === undefined,
     `con P-201B parada, «${tu.frase}» se completa con lo de hoy: «${tu.fraseHoy}»`)
   const tuS = RP.tuberiaCampo('ceiba', sep.desde, sep.hasta, ctx0), tuZ = RP.tuberiaCampo('zarza', oct.desde, oct.hasta, ctx0)
-  comprobar(tuS.fraseGerente === 'La Ceiba: 87 % en los pozos (LC-11, LC-04)' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
+  // B-13: la frase dice dónde se trabó y qué equipos, con su familia; lo sin identificar, aparte.
+  comprobar(tuS.fraseGerente === 'Se trabó sobre todo en los pozos: LC-11 y LC-04 (electrosumergibles).'
+    && tu.fraseGerente === 'Se trabó sobre todo en la planta: P-201B (bomba de reinyección). 355 bbl todavía sin identificar.' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
     `la frase del gerente sale hecha del motor: «${tuS.fraseGerente}»; octubre: «${tu.fraseGerente}»; La Zarza, estado de campo de gas`)
   // Mes a mes por tramo: el mismo total del libro cada mes.
   const rm = RP.repartoPorMes(TODOS, ctx0), sm = L.serieMensual(TODOS, ctx0)
@@ -2872,6 +2874,14 @@ console.log('\n=== 29. Tanda 4: el mercado, «Todavía no sé», las capacidades
     && ag.tramos.find(x => x.tramo === 'producida').estado === 'pruebas' && ag.tramos.find(x => x.tramo === 'bombas').estado === 'demo' && ag.tramos.find(x => x.tramo === 'tratamiento').estado === 'sin-dato'
     && ag.tramos.every(x => !codigo.test(x.fuente)),
     `la tubería del agua dice el estado de cada tramo y lo que está casi igual: las bombas y los inyectores de La Ceiba (${ag.casiIguales?.join(' y ')}); cada fuente en palabras`)
+  // B-01 · Con P-201B parada, «si para otra bomba ahora» es la misma cuenta del «si falla hoy» de las hermanas:
+  // lo que entra menos lo que toman las que quedarían, el colchón del tanque y el orden de cierre de TRIM.
+  const spo = ag.siParaOtra, critA = CR.criticidadDelCampo('ceiba', ctx0).ranking.find(x => x.equipo === 'P-201A')
+  comprobar(spo && spo.enMarcha.join() === 'P-201A,P-201C' && spo.bomba === 'P-201A' && cerca(spo.entraBpd, D.caudalesAhora('ceiba').agua, 1e-12)
+    && cerca(spo.aguaSinSalidaBpd, spo.entraBpd - (spo.cabenBpd - 89250), 1e-9) && critA && cerca(spo.crudoBpd, critA.bpd, 1e-9) && cerca(spo.colchonH, critA.colchonH, 1e-9)
+    && spo.pasos.length > 0 && spo.pasos[0].pozo === 'LC-02' && spo.crudoParejoBpd > spo.crudoBpd
+    && ['morichal', 'guacamayo', 'palmar', 'zarza'].every(c => AG.tuberiaAgua(c, ctx0, V0).siParaOtra === undefined),
+    `si para otra bomba de reinyección ahora (P-201B ya parada): ${f(spo?.aguaSinSalidaBpd)} bbl/d de agua sin salida, ${(spo?.colchonH * 60).toFixed(0)} min de colchón y ${f(spo?.crudoBpd)} bbl/d de crudo cerrando primero los más acuatosos (parejo, ${f(spo?.crudoParejoBpd)}): lo mismo que el «si falla hoy» de P-201A; sin una bomba parada no se calcula`)
 
   // Un servicio ya caído dice lo de ahora, no «si cae hoy»; un medidor sin dato dice desde cuándo (mundo de prueba).
   const w = await createServer({ root: RAIZ, configFile: false, resolve: { alias: { '@': `${RAIZ}src` } }, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
@@ -3080,7 +3090,7 @@ console.log('\n=== 31. Correcciones del QA (F2-B): todas las vistas sobre las mi
   const g1 = new Map([[lc11.eventoId, corregida]])
   const v0 = vistas(['ceiba'], sep, undefined), v1 = vistas(['ceiba'], sep, g1)
   comprobar(v0.iguales && v1.iguales && delEvento > 3000 && cerca(v1.b.porChoke.pozo, v0.b.porChoke.pozo - delEvento, 1e-9) && cerca(v1.b.porChoke.planta, v0.b.porChoke.planta + delEvento, 1e-9)
-    && cerca(v1.b.diferido, v0.b.diferido, 1e-12) && v1.t.fraseGerente === 'La Ceiba: 61 % en la planta (LC-11, P-201B)' && v0.t.fraseGerente === 'La Ceiba: 87 % en los pozos (LC-11, LC-04)',
+    && cerca(v1.b.diferido, v0.b.diferido, 1e-12) && v1.t.fraseGerente === 'Se trabó sobre todo en la planta: LC-11 (electrosumergible) y P-201B (bomba de reinyección).' && v0.t.fraseGerente === 'Se trabó sobre todo en los pozos: LC-11 y LC-04 (electrosumergibles).',
     `QA-A-01 · corregir el paso 2 de LC-11 (${f(delEvento)} bbl) mueve a la vez el árbol, el reparto, la tubería, la serie y el mes a mes: pozos ${f(v0.b.porChoke.pozo)} → ${f(v1.b.porChoke.pozo)}, planta ${f(v0.b.porChoke.planta)} → ${f(v1.b.porChoke.planta)}; el gerente lee «${v1.t.fraseGerente}»`)
   // 2. Y el paso 4: el jefe dice que esa parada fue planeada (C-09): sale de lo no planeado en todas las vistas.
   const planeada = CL.declararPaso(corregida, 'planeacion', 'planeada', { id: 'u-jefe', nombre: 'Jefe' }, 'jefe', HORA)

@@ -69,8 +69,8 @@ function ResumenCampo() {
             ['Cumplimiento', cumple === undefined ? '—' : `${n1(cumple)} %`], ['Eficiencia', `${n1(lb.pe)} %`]]} />
         <Cifra q="sin paradas programadas" v={n1(peNoPlan)} u="%"
           lectura="La eficiencia si solo contaran las fallas. Es la parte que mantenimiento puede mover."
-          pista="Descuenta lo que estaba en el programa aprobado; lo sin identificar cuenta como falla."
-          filas={[['Eficiencia sin programadas', `${n1(peNoPlan)} %`], ['Programado', `${n0(lb.planeado)} bbl`], ['No planeado', `${n0(lb.noPlaneado)} bbl`]]} />
+          pista="Descuenta lo que estaba en el programa aprobado del libro; lo sin identificar cuenta como falla. Es la cuenta del libro, no la de lo no planeado del árbol de causas (que no cuenta lo sin identificar)."
+          filas={[['Eficiencia sin programadas', `${n1(peNoPlan)} %`], ['Programado', `${n0(lb.planeado)} bbl`], ['No programado (libro)', `${n0(lb.noPlaneado)} bbl`]]} />
         <Cifra q="sin identificar" v={n0(lb.pendiente)} u="bbl" alerta={!lb.publicable && lb.pendiente > 0}
           lectura="Barriles de paradas que ninguna señal explica y nadie ha respondido."
           pista={lb.publicable ? 'El libro del período se puede publicar.' : lb.motivos.map(m => m.texto).join(' ')}

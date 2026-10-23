@@ -34,7 +34,7 @@ import { pozosDe, pruebaEn, NIVEL_AHORA } from './pozos'
 import { perfilBomba, paradasDe } from './bombas'
 import { respaldoDe } from './configuracion'
 import { aguaDePrueba } from './libro'
-import { prediccion, paradaMedida, aguaQueMueve, type Versiones } from './diferido'
+import { prediccion, paradaMedida, aguaQueMueve, ordenDeCierre, caudalesAhora, type Versiones } from './diferido'
 import { n0, PARAMETROS_CHOKE, factorMedicion, listaY, mayuscula, type EstadoTramo } from './choke'
 import { CAMPOS_DE_GAS } from './planta'
 import { campoPorId } from './campos'
@@ -164,11 +164,36 @@ export interface TuberiaAgua {
    *  y el crudo que se pierde en el orden de TRIM y parejo, como los calcula
    *  diferido.ts (`prediccion`). Si ya está parada, también lo que se está perdiendo. */
   sinUna?: { bomba: string; papel: 'disposicion' | 'recobro'; aguaSinSalidaBpd: number; crudoBpd: number; crudoParejoBpd: number; colchonH?: number; parada: boolean; desde?: Date; perdiendoBpd?: number }
+  /** Con una bomba del tren ya parada: lo de hoy y lo que pasa si para OTRA de
+   *  las que quedan (B-01; U2 §9.6, «LA TUBERÍA DEL AGUA, HOY»). Lo que entra
+   *  ahora, lo que caben las que siguen en marcha y, si para la mayor de ellas,
+   *  el agua sin salida, el colchón con el nivel de ahora y el orden de cierre
+   *  de TRIM (`ordenDeCierre`): la misma cuenta del «si falla hoy» de sus
+   *  hermanas (`criticidad.ts`). Ausente con todas en marcha. */
+  siParaOtra?: SiParaOtra
   /** Tramos sin dato en el demo: no se inventan. */
   sinDato: TramoAgua[]
   /** Las frases del panel, sin teoría (U2 §5.3). */
   frases: string[]
   texto: string
+}
+
+/** Con una bomba ya parada, lo que pasa si para otra (B-01). */
+export interface SiParaOtra {
+  /** Las que siguen en marcha (las sin instrumento se suponen en marcha). */
+  enMarcha: string[]
+  /** Lo que entra ahora y lo que caben las que siguen en marcha, bbl/d de agua. */
+  entraBpd: number
+  cabenBpd: number
+  /** La que se supone que para (la de más capacidad de las que siguen). */
+  bomba: string
+  aguaSinSalidaBpd: number
+  /** Horas hasta el alto-alto con el nivel de ahora (sin nivel, ausente). */
+  colchonH?: number
+  /** El orden de cierre: primero los que menos crudo pierden por barril de agua. */
+  pasos: Array<{ pozo: string; fraccion: number; crudoPorAgua: number }>
+  crudoBpd: number
+  crudoParejoBpd: number
 }
 
 /** «1,8 h» bajo 10 h; «19 h»; «3,2 d». */
@@ -274,6 +299,25 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
     ...(pr.parada ? { desde: new Date(pr.parada.inicio) } : {}), ...(pr.perdiendo ? { perdiendoBpd: pr.perdiendo.bblDia } : {}),
   } : undefined
 
+  // Con una bomba ya parada: si para otra de las que quedan (B-01). La misma
+  // cuenta del «si falla hoy» de las hermanas (criticidad.ts, `deHermana`): lo que
+  // entra ahora, menos lo que toman las que quedarían; agotado el colchón, se
+  // cierra en el orden de TRIM. Una sin instrumento se supone en marcha.
+  const enMarcha = enServicio.filter(b => b.marcha !== 'parada')
+  const siParaOtra: SiParaOtra | undefined = paradas.length && enMarcha.length ? (() => {
+    const entraBpd = caudalesAhora(campoId).agua
+    const cabenBpd = enMarcha.reduce((a, b) => a + b.capacidadBpd, 0)
+    const mayor = enMarcha.reduce((a, b) => (b.capacidadBpd > a.capacidadBpd ? b : a))
+    const aguaSinSalidaBpd = Math.max(0, entraBpd - (cabenBpd - mayor.capacidadBpd))
+    const o = aguaSinSalidaBpd > 0 ? ordenDeCierre(campoId, aguaSinSalidaBpd, t) : undefined
+    const tk = ctx.config.tanques.find(x => x.campoId === campoId)
+    const nivel = tk && Object.hasOwn(NIVEL_AHORA, tk.id) ? NIVEL_AHORA[tk.id] : undefined
+    const colchonH = tk && nivel && aguaSinSalidaBpd > 0 ? Math.max(0, (tk.altoAlto - nivel.pct / 100) * tk.capacidadBbl) / (aguaSinSalidaBpd / 24) : undefined
+    return { enMarcha: enMarcha.map(b => b.id), entraBpd, cabenBpd, bomba: mayor.id, aguaSinSalidaBpd, ...(colchonH !== undefined ? { colchonH } : {}),
+      pasos: (o?.pasos ?? []).map(x => ({ pozo: x.pozo.id, fraccion: x.fraccion, crudoPorAgua: x.crudoPorAgua })),
+      crudoBpd: o?.crudoBpd ?? 0, crudoParejoBpd: o?.crudoParejoBpd ?? 0 }
+  })() : undefined
+
   // Las frases del panel (U2 §5.3 y §5.5), sin teoría.
   const frases: string[] = []
   const cuantas = enServicio.length === 1 ? 'Con su bomba' : `Con las ${PALABRA[enServicio.length] ?? n0(enServicio.length)} bombas`
@@ -304,6 +348,6 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
   return {
     campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, campoDeGas, tramos, tratamientoBpd, admisionInyectoresBpd,
     dominante: menor.tramo, limita, ...(angosto ? { angosto: angosto.tramo } : {}), casiIguales, empate, faltanParaDecir, sobraBpd, faltaBpd, crudoQueFrenaBpd: faltaBpd * crudoPorAgua,
-    ...(sinUna ? { sinUna } : {}), sinDato: tramos.filter(x => x.sinDato).map(x => x.tramo), frases, texto: frases.join(' '),
+    ...(sinUna ? { sinUna } : {}), ...(siParaOtra ? { siParaOtra } : {}), sinDato: tramos.filter(x => x.sinDato).map(x => x.tramo), frases, texto: frases.join(' '),
   }
 }

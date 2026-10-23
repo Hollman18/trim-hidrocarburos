@@ -1,5 +1,5 @@
 import { esDePersona, type ParadaAnh, type PasoAnh, type PorqueChoke } from '@/shared/api/arbol'
-import { valorEnPalabras, marcaDePersona, marcaDeTrim, sinReferencias } from './palabras'
+import { valorEnPalabras, marcaDePersona, marcaDeTrim, sinReferencias, deducidoDeRespuesta, horaCorta } from './palabras'
 
 /** Lo que falta preguntar del paso 2, en corto: la pregunta de campo que lo
  *  resuelve si está abierta («¿De dónde vino el corte?»); si no, la del motor
@@ -30,6 +30,12 @@ export function marcaDelPaso(p: ParadaAnh, paso: PasoAnh, cascada = true): strin
     if (paso !== 'choke') return ''
     if (p.estado === 'pendiente') return 'Hasta que alguien diga qué pasó, no se sabe dónde se trabó'
     return porqueDelTramo(p, p.propuesta.porqueChoke, { pregunta: true, cascada })
+  }
+  // Lo que TRIM dedujo de lo que contestó una persona en el campo: la persona no
+  // lo escogió (el operador nunca escoge el tramo, U2 §3.2), así que no «lo dijo» (B-04).
+  if (deducidoDeRespuesta(paso, d)) {
+    const cuando = horaCorta(d.hora)
+    return `TRIM lo dedujo de lo que contestó ${d.por ?? 'una persona'}${cuando ? ` · ${cuando}` : ''}`
   }
   if (esDePersona(d.procedencia)) {
     const quien = marcaDePersona(d.procedencia, d.por, d.hora, d.lote)

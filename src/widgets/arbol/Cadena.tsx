@@ -33,8 +33,11 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
         const valor = d ? valorEnPalabras(paso, String(d.valor)) : undefined
         const antes = marcas.findIndex(m => m === marcas[i])
         const marca = antes < i && marcas[i] && d && !esDePersona(d.procedencia)
-          ? `${marcas[i]!.slice(0, marcas[i]!.indexOf(':') > 0 ? marcas[i]!.indexOf(':') : undefined)}: la misma razón del paso ${PASOS.indexOf(pasos[antes]!) + 1}`
+          ? `${marcas[i]!.slice(0, marcas[i]!.indexOf(':') > 0 ? marcas[i]!.indexOf(':') : undefined)} por la misma razón del paso ${PASOS.indexOf(pasos[antes]!) + 1}`
           : marcas[i]
+        // La bomba de la línea sin su parte: el detalle de la ANH sale igual, pero
+        // falta lo que solo dice quien la abre, y se ve (B-11; U2 §9.3).
+        const faltaParte = paso === 'n2' && p.propuesta.fila === 'linea-sin-n2' && !p.causa.parte && !!d && !esDePersona(d.procedencia)
         const info = `${PASO_EN_LA_CIRCULAR[paso]}.${codigos && d ? ` En el reporte: ${enElReporte(paso, String(d.valor))}.` : ''}`
         return (
           <div key={paso} data-paso={paso}
@@ -52,6 +55,7 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
             </dd>
             <dd className={cn('min-w-0 break-words pl-[1.125rem] text-[10.5px] md:pl-0', d && esDePersona(d.procedencia) ? 'text-[var(--tinta)]' : 'text-[var(--tinta2)]')}>
               {marca}
+              {faltaParte && <span className="mt-0.5 flex flex-wrap items-center gap-x-1"><Falta>falta la parte de {p.causa.equipo}</Falta>la dice quien la abra</span>}
             </dd>
           </div>
         )

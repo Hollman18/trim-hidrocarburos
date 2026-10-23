@@ -121,7 +121,7 @@ trece (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts
 | `sap:aviso` | `POST /api/sap/avisos` |
 | `asignacion:cargar` | `POST /api/asignacion-oficial` (producción: la reemplaza quien la reporta, no cualquiera con el campo) |
 | `planes:decidir` | `POST /api/planes/:id` (aceptar o marcar ejecutado un plan del ciclo ANTES / DURANTE / DESPUÉS; supervisor, jefe de mantenimiento, confiabilidad) |
-| `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/respuesta`, `POST /api/anh/paradas/:id/revision` y `POST /api/anh/paradas/confirmar` con una sola parada (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`, y contesta solo sus preguntas, `ROLES_QUE_CONTESTAN`) |
+| `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/respuesta`, `POST /api/anh/paradas/:id/revision` y `POST /api/anh/paradas/confirmar` con una sola parada, aunque traiga varias filas de la misma raíz (los días de un pozo o los pozos de una cascada: B-07) (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`, y contesta solo sus preguntas, `ROLES_QUE_CONTESTAN`) |
 | `anh:confirmar` | `POST /api/anh/paradas/confirmar` con varias paradas de la misma cadena, en lote (quien firma el día: supervisor y producción) |
 | `anh:yacimiento` | `POST /api/anh/paradas/:id/yacimiento` («En el yacimiento» en el paso 2, con su evidencia: producción y confiabilidad) |
 
@@ -369,7 +369,7 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/ciclo?campos&desde&hasta` | `CicloValor`: tramos `antes`, `durante` (con `bblDia`), `despues`; `retornoBbl`; `valorUsd?`; cada `PlanAccion` con `simulado: true`, `bbl`, `supuestos[]`, `estado?` (ausente = propuesto). Cifras **simuladas**: no entran al libro. Fórmulas en el capítulo 11. El servidor aplica `POST /api/planes/:id` sobre cada `id`. **Presentación (front hecho):** Resumen muestra el retorno primero y el libro después; planes plegados («Ver planes de acción»); copy largo solo en globos — capítulos 11 y 8 §8.13 |
 | `/vistas/campos/:campo/tuberia?desde&hasta` | `TuberiaCampo` (`choke.ts`; «La tubería del campo», U2 §2): `desde` y `hasta` ISO; `tramos[]` en el orden de la tubería (`reservorio`, `pozo`, `planta`, `exportacion`), cada uno `{ tramo, nombre, explica, potencialBpd, fuente, estado, holguraBpd, limita, casiIgual, trenes?, disponibleHoy?, subniveles?, perdiendoAhoraBpd, perdidoBbl, equiposTop }` (`potencialBpd` y `holguraBpd` en `null` = sin dato; `estado`: `pruebas`, `demo`, `firmado`, `sin-firmar` o `sin-dato`); `limita` (`pozos`, `planta`, `exportacion`, o `null` sin tubería de crudo), `casiIguales`, `umbral`, `empate`, `pasaHoyBpd`, `perdiendoAhora[]` `{ tramo, bpd, equipo, pozos, listaPozos, desde (ISO) }` (`tramo: null` = sin identificar; `desde`: el primero de sus pozos que paró), `perdiendoAhoraBpd` y `sinTramoAhoraBpd` (Σ de lo anterior, y lo que no tiene tramo todavía), `perdidoPeriodo[]` por tramo con sus `equiposTop`, `sinTramoBbl` y `sinTramoEquipos` («sin identificar», que no es un tramo), `diferido`, `campoDeGas`, `textoCorto`, `frase`, `fraseGerente`; `capacidades: { estado: firmadas | demo | parte, firma?: { version, fecha, por }, texto }` (quién y cuándo firmó las de hoy); `medidor?: { medidor, estado: en-linea | sin-comunicacion, desde? (ISO), ultimoDia?: { dia (ISO), bbl }, texto }` (el punto de medición oficial). En la planta, `trenQueLimita` (`crudo`, `agua` o `gas`: el menor de los trenes medidos) y `disponibleHoy?: { valor, unidad: "bbl/d de crudo", agua: { valor, de }, equipo, texto }` (lo que queda hoy con un equipo parado, en crudo y el agua de donde sale; el tramo no se angosta); en los pozos, `pruebaMasVieja?: { pozo, fecha (ISO), dias, texto }`; en afuera, `subniveles[]` con su `estado`. Cada `fuente` va **en palabras**, nunca un nombre del código. Cada día del período usa las capacidades que regían ese día. **Cuadres:** Σ `perdidoPeriodo` + `sinTramoBbl` = `diferido` = el de `/vistas/diferidos` del período; con los pozos limitando, el potencial de los pozos − `pasaHoyBpd` = Σ `perdiendoAhora`. Un tren sin medir (el gas) no entra en el mínimo de la planta. Reemplaza a `/vistas/campos/:campo/choke` de P1 §5.2 |
 | `/vistas/campos/:campo/choke/serie?desde&hasta` | `{ dias, cambios, vueltas }`: cada día (`dia` ISO) con `horas`, `real` (`null` sin fiscal), `potencial`, `potencialSistema`, `estructural`, `diferido`, `residuo`, `porChoke`, `porEscalon` y, por campo, `dominante`, `casiIguales`, `potenciales` y `superado` (el real pasó la capacidad declarada). `cambios[]` `{ campoId, dia (ISO), de, a, valorBpd, texto }`: el aviso «Cambió lo que limita», solo cuando el tramo nuevo gana por más del umbral de «casi iguales» y lo sostiene `diasParaCambio` días seguidos (`PARAMETROS_CHOKE`, `choke.parametros@1`). `vueltas` cuenta los cambios sin ese filtro. Cada día suma lo mismo que el libro de ese día |
-| `/vistas/campos/:campo/agua` | `TuberiaAgua` (`choke-agua.ts`; «La tubería del agua», U2 §5): `t` (ms), `aguaBpd`, `crudoBpd`, `crudoPorAgua`; `tramos[]` (`producida`, `tratamiento`, `tanques`, `bombas`, `inyectores`) con `potencialBpd` (`null` = sin dato, o el tanque, que es colchón y no caudal), `crudoBpd`, `holguraBpd`, `sinDato?`, `fuente`, `tanques[]` con `colchon?` `{ horas, rango, nivelPct, cuando, bomba, evento?, aguaSinSalidaBpd }` (`horas: null` = no se llena; `cuando`: `al-parar` o `si-para-ahora`) y `bombas[]` `{ id, capacidadBpd, placaBpd, papel, reserva, nota?, instrumentada, marcha, mueveBpd?, respaldoLibreBpd? }`; `tratamientoBpd` y `admisionInyectoresBpd` (`null` = sin dato), `dominante`, `limita`, `angosto?`, `sobraBpd`, `faltaBpd`, `crudoQueFrenaBpd`, `sinUna?` (con `desde` ISO y `colchonH`, `null` = no se llena), `sinDato`, `frases`, `texto`. Cada tramo trae además `estado` (`pruebas`, `demo`, `firmado`, `sin-dato`) y `casiIgual`; `casiIguales` (o `null`) son los tramos de la disposición a menos del umbral del más angosto. La capacidad de cada bomba es UNA cifra (la de la predicción y el colchón); la placa va de referencia; cada bomba trae `estado`, `fuente` y, si se firmó, `fuenteFirmada` |
+| `/vistas/campos/:campo/agua` | `TuberiaAgua` (`choke-agua.ts`; «La tubería del agua», U2 §5): `t` (ms), `aguaBpd`, `crudoBpd`, `crudoPorAgua`; `tramos[]` (`producida`, `tratamiento`, `tanques`, `bombas`, `inyectores`) con `potencialBpd` (`null` = sin dato, o el tanque, que es colchón y no caudal), `crudoBpd`, `holguraBpd`, `sinDato?`, `fuente`, `tanques[]` con `colchon?` `{ horas, rango, nivelPct, cuando, bomba, evento?, aguaSinSalidaBpd }` (`horas: null` = no se llena; `cuando`: `al-parar` o `si-para-ahora`) y `bombas[]` `{ id, capacidadBpd, placaBpd, papel, reserva, nota?, instrumentada, marcha, mueveBpd?, respaldoLibreBpd? }`; `tratamientoBpd` y `admisionInyectoresBpd` (`null` = sin dato), `dominante`, `limita`, `angosto?`, `sobraBpd`, `faltaBpd`, `crudoQueFrenaBpd`, `sinUna?` (con `desde` ISO y `colchonH`, `null` = no se llena), `siParaOtra?` (con una bomba ya parada, si para otra de las que quedan: lo que entra, lo que cabe, el agua sin salida, el colchón, el orden de cierre y el crudo que se pierde; la misma cuenta del «si falla hoy» de las hermanas), `sinDato`, `frases`, `texto`. Cada tramo trae además `estado` (`pruebas`, `demo`, `firmado`, `sin-dato`) y `casiIgual`; `casiIguales` (o `null`) son los tramos de la disposición a menos del umbral del más angosto. La capacidad de cada bomba es UNA cifra (la de la predicción y el colchón); la placa va de referencia; cada bomba trae `estado`, `fuente` y, si se firmó, `fuenteFirmada` |
 | `/vistas/campos/:campo/capacidades` | `VistaCapacidades` (`vistaCapacidades`, `choke.ts`; U2 §8.4): `vigentes` (`CapacidadesVigentes`: `crudo`, `agua`, `bombas[]`, `gas` con `medido`, `afuera`, `mercado`, `tratamiento`, `admision`, cada uno `{ tramo, valor \| null, unidad, estado: firmado \| demo \| sin-dato, fuente (en palabras), fuenteFirmada? }`; `firmadas`; `explicacionEmpate?`), `firma?` (`{ version, fecha, por }` de la versión desde la que rigen), `entrada` (lo que la revisión necesita: `vigentes`, `maximoCrudo?: { bpd, dia (ISO) }` lo máximo que pasó en un día por el punto oficial en los últimos 30, `pozosBpd`, `aguaPozosBpd`, `conGas`, `caudalesGas`) y `hallazgos[]` `{ tramo, equipo?, texto, bloquea }` de lo que rige. La pantalla revisa lo que se va a firmar con `revisarCapacidades` y esta `entrada`; el servidor lo vuelve a revisar al firmar |
 | `/vistas/criticidad?campos` | `{ ranking, campos }` («Si falla hoy», `criticidad.ts`, U2 §6): `ranking` = `FilaCriticidad[]` de todos los campos pedidos, de mayor a menor bbl/d si falla hoy, sin lo ya parado: `{ campoId, equipo, nombre, familia, tramo, alcance, servidos, bpd, colchonH?, costoFalla?, costoDe?, mdtFuente?, vigilado, sinDato?, subio?, estimacion, parado, perdiendoBpd?, puesto, porque }` (`bpd: null` = sin dato; `subio: { desde (ISO), porque, otro }`; `colchonH: null` = no se llena; `puesto`: 1 + cuántos de su campo cuestan más, los que cuestan lo mismo lo comparten, `null` sin dato o ya parado; `porque` de lo ya parado dice lo de ahora: «está caído: se pierden N bbl/d ahora»). `campos[]`, en el orden pedido: `{ campoId, parados, sinCalcular, cambioHoy?, proximoInstrumento?, noIntervenir?, avisosTrabajo, desembotellar? }`: lo que decide cada rol con la lista (U2 §6.4: dónde va el próximo instrumento, no intervenir hoy lo que vale más), `avisosTrabajo[]` `{ campoId, tarea, equipo, desde, hasta (ISO), motivo, porque, texto }` (un trabajo del programa firmado sobre un equipo que hoy vale más) y la frase del desembotellamiento (U2 §6.5: «otra bomba de agua no sube la producción: evita que una falla cierre pozos; cada falla cuesta X bbl»). En una bomba con instrumento, `costoFalla` es exactamente el de `/vistas/riesgo` |
 | `/vistas/choke/reparto?campos&desde&hasta` | `BrechaChoke` (`brechaPorChoke`, CHOKE-COMPLETO §6–§8): `desde`, `hasta` ISO, `potencial`, `real`, `brecha`, `diferido`, `porChoke` y `porEscalon` (con `sin-asignar` y `sin-clasificar`), `porChokeEscalon`, `porChokeEquipo`, `sinExplicar`, `cuadra`, `porConfirmar`, `estructural`, `estructuralPorChoke`, `potencialSistema`, `brechaSistema`, `pe`, `peNoPlaneada`, `dominante`, `horasPorDominante`, `superado[]` (`dia` ISO), `porCampo[]` con lo mismo por campo, `texto`, `textoEstructural?`. **Identidad exacta:** potencial − real (del libro) = Σ por tramo + sin explicar = Σ por escalón + sin explicar, y Σ por tramo = el diferido de `/vistas/diferidos` del mismo período |
@@ -705,7 +705,10 @@ porTramo: [{ de, a, paradas }] }` (`confirmadas`: las que ya dijo o confirmó un
 cambian solas) y `texto[]`, los renglones que pinta la pantalla. No guarda nada. Las mismas
 reglas de la firma, en el mismo orden: `config:firmar` y persona activa (`403`), los campos
 tocados entre los de la persona (`403`), `validarConfig` (`422`) y la revisión de las
-capacidades que cambian (`422`, la regla 11 de la firma). La topología no mueve barriles: el
+capacidades que cambian (`422`, la regla 11 de la firma). Con `aunConErrores: true` en el cuerpo, esos
+dos `422` no cortan la vista previa: responde `200` con `{ impacto, errores[] }` (lo que todavía impide
+firmar) y la pantalla lo muestra como «borrador con errores: así quedaría» (B-53); si el borrador ni
+siquiera se deja calcular, sigue el `422`. Los `403` y la forma del cuerpo no cambian. La topología no mueve barriles: el
 libro es el mismo con las dos versiones; las capacidades sí cambian lo que limita y «si falla
 hoy», y la vista previa lo dice.
 
@@ -721,8 +724,8 @@ salida) o «todavía no sé». Un encabezado que empieza por «equipo» o «elem
 alcance y el tramo que salen del número de pozos; `porSaber`, los equipos contestados «todavía
 no sé»; `hallazgos[]` `{ fila, equipo?, texto, bloquea }`. La plantilla que descarga la pantalla
 (`plantillaTopologia`) usa las mismas palabras: descargarla y subirla sin cambios da lo mismo. Bloquea: equipo
-vacío o que TRIM no tiene en el registro del campo, equipo repetido, sin pozos o con un pozo que
-no es del campo. Avisa sin bloquear: el caso de borde (2 o 3 pozos de una misma locación). **No
+vacío o que TRIM no tiene en el registro del campo, equipo repetido, sin pozos, con un pozo que
+no es del campo, o un pozo que sirve a otro (un pozo solo se sirve a sí mismo, lo mismo que la firma: C-13). Avisa sin bloquear: el caso de borde (2 o 3 pozos de una misma locación). **No
 firma:** lo leído va al borrador de la configuración y se firma con `POST /api/configuracion`.
 `config:firmar` y el campo entre los de la persona (`403`); campo que no está en el registro
 (`404`); texto vacío (`422`).
@@ -794,10 +797,13 @@ arriba.
 ### `POST /api/anh/paradas/confirmar`
 
 Cuerpo `{ ids, cadena, pasos? }` → `{ paradas: ParadaAnh[], lote?: ConfirmacionLote }`. **`cadena`
-es obligatoria** (`400` sin ella, C-06): se confirma lo que la persona vio. Una sola fila la
-confirma quien tiene `anh:clasificar`; varias de una vez, solo quien tiene `anh:confirmar`
-(supervisión y producción, que firman el día), y tienen que tener la misma cadena completa de 6
-pasos (`422` si no: «confírmelas por grupo»). La confirmación es **por paso** (P1 §1.3): sube a
+es obligatoria** (`400` sin ella, C-06): se confirma lo que la persona vio. Una sola parada la
+confirma quien tiene `anh:clasificar`, también cuando son varias filas de **la misma raíz**
+(`campoId` + `raiz`: los días de un pozo o los pozos de una cascada son una sola decisión, C24
+p. 5; B-07): van sin lote, fila por fila. Filas de paradas distintas son un lote, y un lote es
+solo de quien tiene `anh:confirmar` (supervisión y producción, que firman el día; `403` para los
+demás: «confírmelas una por una»); quien firma el día confirma en lote también las de una sola
+raíz. Todas tienen que tener la misma cadena completa de 6 pasos (`422` si no: «confírmelas por grupo»). La confirmación es **por paso** (P1 §1.3): sube a
 `confirmado` solo los pasos que el rol avala (`PASOS_QUE_CONFIRMA`) y que nadie había avalado, y
 se guarda **en cada fila, nunca en su evento** (la marca del lote no se copia a otra fila). El
 toque del operador confirma «¿Planeada?» y «Qué pasó», y dónde se trabó sigue siendo propuesta de
@@ -1890,7 +1896,9 @@ type Tramo = 'reservorio' | 'pozo' | 'planta' | 'exportacion'      // el paso 2 
 type Limita = 'pozos' | 'planta' | 'exportacion'                    // lo que limita al campo
 type Escalon = 'desarrollo' | 'desempeno' | 'disponibilidad-planeada' | 'disponibilidad-no-planeada' | 'capacidad' | 'sin-clasificar'
 type Alcance = 'dedicado' | 'compartido' | 'frontera' | 'tercero'
-interface EquipoBbl { equipo: string; bbl: number }
+type TipoCausa = 'reinyeccion' | 'transporte' | 'electrosumergible' | 'levantamiento' | 'energia' | 'aire' | 'compresion'
+  | 'evacuacion' | 'proceso' | 'tratamiento' | 'programada' | 'declarada' | 'pendiente'   // Causa.tipo (causa-senal.ts)
+interface EquipoBbl { equipo: string; bbl: number; tipo: TipoCausa; porTipo?: Array<{ tipo: TipoCausa; bbl: number }> }   // tipo: el de la causa con más barriles; la pantalla dice la familia («P-201B (bomba de reinyección)», B-13)
 
 // GET /api/vistas/campos/:campo/tuberia?desde&hasta
 interface TuberiaCampo {
@@ -1911,11 +1919,14 @@ interface TuberiaCampo {
   pasaHoyBpd: number
   perdiendoAhora: Array<{ tramo: Tramo | null; bpd: number; equipo: string; pozos: number; listaPozos: string[]; desde: ISO }>
   perdiendoAhoraBpd: number; sinTramoAhoraBpd: number
+  brechaPruebasBpd: number   // el cuadre de U2 §2.2 con las pruebas (D3): potencial de los pozos − pasaHoyBpd − perdiendoAhoraBpd
   perdidoPeriodo: Array<{ tramo: Tramo; bbl: number; equiposTop: EquipoBbl[] }>
   sinTramoBbl: number; sinTramoEquipos: EquipoBbl[]; diferido: number; campoDeGas: boolean
   capacidades: { estado: 'firmadas' | 'demo' | 'parte'; firma?: { version: number; fecha: string; por: string }; texto: string }
   medidor?: { medidor: string; estado: 'en-linea' | 'sin-comunicacion'; desde?: ISO; ultimoDia?: { dia: ISO; bbl: number }; texto: string }
-  textoCorto: string; frase: string; fraseGerente: string
+  textoCorto: string; frase: string
+  fraseHoy?: string        // con un equipo parado que angosta hoy la planta: lo que eso deja pasar («Hoy, con P-201B parada, …»)
+  fraseGerente: string     // «Se trabó sobre todo en la planta: P-201B (bomba de reinyección). 355 bbl todavía sin identificar.» (B-13)
 }
 
 // GET /api/vistas/campos/:campo/choke/serie?desde&hasta
@@ -1950,6 +1961,11 @@ interface TuberiaAgua {
   dominante: string; limita: boolean; angosto?: string; casiIguales: string[] | null; sobraBpd: number; faltaBpd: number; crudoQueFrenaBpd: number
   sinUna?: { bomba: string; papel: 'disposicion' | 'recobro'; aguaSinSalidaBpd: number; crudoBpd: number; crudoParejoBpd: number
     colchonH?: number | null; parada: boolean; desde?: ISO; perdiendoBpd?: number }
+  // Con una bomba de la línea ya parada: si para otra de las que quedan (B-01). La misma cuenta del «si falla
+  // hoy» de las hermanas (criticidad.ts): lo que entra ahora menos lo que toman las que quedarían, el colchón
+  // del tanque al nivel de ahora y el orden de cierre de TRIM (los pozos más acuatosos primero).
+  siParaOtra?: { enMarcha: string[]; entraBpd: number; cabenBpd: number; bomba: string; aguaSinSalidaBpd: number; colchonH?: number
+    pasos: Array<{ pozo: string; fraccion: number; crudoPorAgua: number }>; crudoBpd: number; crudoParejoBpd: number }
   sinDato: string[]; frases: string[]; texto: string
 }
 
@@ -2070,6 +2086,8 @@ interface ParadaAnh {
   id: string                        // `${eventoId}@${diaOperacional}#${n}`
   eventoId: string; raiz: string; minutosDesdeRaiz?: number; evidenciaYacimiento?: string; revision?: Revision
   pozo: string; campoId: string; diaOperacional: string; inicio: ISO; fin: ISO
+  inicioEvento: ISO                 // cuándo empezó el evento (no el tramo del día): «parada desde el 25 de sept» (B-22)
+  hz?: { parada: number; prueba: number }   // código HZ: la frecuencia a la que quedó y la de su prueba («bajó de 52,5 a 39,5 Hz»)
   abiertaAlCorte: boolean; diaEnCurso: boolean; fraccion: number; parcial: boolean; disparo: boolean; exceso: boolean
   tramo: { n: number; m: number | null }; horas: number; diferidaTrimBbl: number
   causa: Causa                      // la de TRIM, tal cual (ver «Causa de cada evento»)
@@ -2095,8 +2113,9 @@ interface CalidadClasificacion {
   porPaso: Array<{ paso: Paso; paradas: number; propuestas: number; avaladas: number; corregidas: number; declaradas: number; enFalta: number
     pctConfirmado: number | null; pctCorregido: number | null }>
   porRegla: Array<{ paso: Paso; regla: string; propuestas: number; corregidas: number; pctCorregido: number; cambiadoA: Record<string, number> }>
-  chokePorEquipo: Array<{ campoId: string; equipo: string; paradas: number; corregidas: number; pctCorregido: number; cambiadoA: Partial<Record<Tramo, number>> }>
-  sinTopologia: Array<{ campoId: string; equipo: string; paradas: number }>
+  // paradas = filas del reporte; eventos = las paradas detrás («MN-41 · 1 parada (2 filas)», B-47)
+  chokePorEquipo: Array<{ campoId: string; equipo: string; paradas: number; eventos: number; corregidas: number; pctCorregido: number; cambiadoA: Partial<Record<Tramo, number>> }>
+  sinTopologia: Array<{ campoId: string; equipo: string; paradas: number; eventos: number }>
 }
 
 // POST /api/anh/paradas/:id/clasificacion · POST /api/anh/paradas/:id/yacimiento
@@ -2107,7 +2126,7 @@ type RespuestaClasificacion = { parada: ParadaAnh; guardadas: Record<string, Cla
 type CuerpoConfirmacion = { ids: string[]; cadena: string; pasos?: Paso[] }   // cadena: la que vio la persona (obligatoria)
 type RespuestaConfirmacion = { paradas: ParadaAnh[]; lote?: { id: string; porId: string; por: string; hora: ISO; paradas: string[]; cadena: string; pasos: Paso[] } }
 // POST /api/configuracion/vista-previa
-type CuerpoVistaPrevia = { config: Config }
+type CuerpoVistaPrevia = { config: Config; aunConErrores?: boolean }   // aunConErrores: 200 con { impacto, errores[] } en vez de 422 (B-53)
 type RespuestaVistaPrevia = { impacto: { desde: ISO; hasta: ISO; campos: Array<{
   campoId: string; limitaAntes: Limita | null; limitaDespues: Limita | null
   criticidad: Array<{ equipo: string; nombre: string; antes: number | null; despues: number | null; tramoAntes: Tramo | null; tramoDespues: Tramo | null }>

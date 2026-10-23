@@ -66,10 +66,29 @@ function Hermanas({ hijos, id, oculta = false, className, ...c }: Comun & { hijo
   )
 }
 
-/** Una rama: su paso, sus barriles, su parte y lo que cuelga de ella. */
-function Rama({ n, oculta = false, ...c }: Comun & { n: NodoArbol; oculta?: boolean }) {
+/** Las ramas de un solo hijo, una tras otra (B-34): «No planeada → La planta no
+ *  recibe → Parada estación… → P-201B» llevan los mismos barriles, y repetir la
+ *  cifra en cada nivel no dice nada. Se dicen en un renglón. La cadena para en un
+ *  equipo (sus partes van con él) y en lo que falta (se ve aparte). */
+function cadenaDe(n: NodoArbol): NodoArbol[] {
+  const xs = [n]
+  let x = n
+  while (x.hijos.length === 1 && x.dimension !== 'equipo' && x.hijos[0]!.dimension !== 'parte' && !esRamaQueFalta(x.hijos[0]!.valor) && x.filas > 0) {
+    x = x.hijos[0]!
+    xs.push(x)
+  }
+  return xs
+}
+
+/** Una rama: su paso, sus barriles, su parte y lo que cuelga de ella. Si tiene un
+ *  solo hijo, la cadena entera va en su renglón y los barriles una vez (B-34): cada
+ *  eslabón sigue marcado (`data-nodo-cadena`) con su paso y sus barriles. */
+function Rama({ n: cabeza, oculta = false, ...c }: Comun & { n: NodoArbol; oculta?: boolean }) {
   const id = useId()
   const [abierta, setAbierta] = useState(c.profundidad < c.abiertas)
+  const cadena = cadenaDe(cabeza)
+  // El último eslabón es el que tiene lo que cuelga (o nada).
+  const n = cadena.at(-1)!
   const esEquipo = n.dimension === 'equipo'
   // Un equipo con una sola parte la lleva en su renglón; con varias, debajo y siempre a la vista.
   const unaParte = esEquipo && n.hijos.length === 1 ? n.hijos[0] : undefined
@@ -77,23 +96,31 @@ function Rama({ n, oculta = false, ...c }: Comun & { n: NodoArbol; oculta?: bool
   const falta = esRamaQueFalta(n.valor)
   const vacia = n.filas === 0
   const pct = c.base > 0 ? (n.bbl / c.base) * 100 : 0
-  const paso = PASO_DE_NIVEL[n.dimension as keyof typeof PASO_DE_NIVEL]
-  const campo = CAMPO_ANH[n.dimension as keyof typeof CAMPO_ANH]
+  const codigoDe = (m: NodoArbol) => {
+    const k = CAMPO_ANH[m.dimension as keyof typeof CAMPO_ANH]
+    return c.codigos === 'vista' && m.cadena && k ? (
+      <span className="ml-1.5 break-words rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1 font-mono text-[10px] leading-snug text-[var(--tinta)] [box-decoration-break:clone]" data-cadena={k}>
+        <span className="text-[var(--tinta3)]">{k}</span> {m.cadena}
+      </span>
+    ) : null
+  }
   const contenido = (
     <>
       <span className={cn('min-w-0 flex-1 break-words', (falta || vacia) && 'text-[var(--tinta3)]', n.dimension === 'parte' && 'text-[var(--tinta2)]')}>
+        {/* Los eslabones de arriba de la cadena, cada uno con su paso y sus barriles en sus datos. */}
+        {cadena.slice(0, -1).map(m => (
+          <span key={`${m.dimension}:${m.valor}`} data-nodo-cadena={m.dimension} data-valor={m.valor} data-bbl={m.bbl} data-no-planeada={m.noPlaneadaBbl}>
+            {m.texto}{codigoDe(m)}<span aria-hidden className="text-[var(--tinta3)]"> · </span>
+          </span>
+        ))}
         {falta && <i aria-hidden className="mr-1 inline-block h-2 w-2.5 translate-y-[1px] rounded-[1px] border border-dashed border-[var(--tinta3)]" />}
-        {n.texto}
+        <span {...(cadena.length > 1 ? { 'data-nodo-cadena': n.dimension, 'data-valor': n.valor, 'data-bbl': n.bbl, 'data-no-planeada': n.noPlaneadaBbl } : {})}>{n.texto}</span>
         {unaParte && (
           <span className="text-[var(--tinta2)]" data-nodo="parte" data-valor={unaParte.valor}>
             {' · '}{esRamaQueFalta(unaParte.valor) ? unaParte.texto.toLowerCase() : `parte: ${unaParte.texto}`}
           </span>
         )}
-        {c.codigos === 'vista' && n.cadena && campo && (
-          <span className="ml-1.5 break-words rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1 font-mono text-[10px] leading-snug text-[var(--tinta)] [box-decoration-break:clone]" data-cadena={campo}>
-            <span className="text-[var(--tinta3)]">{campo}</span> {n.cadena}
-          </span>
-        )}
+        {codigoDe(n)}
       </span>
       {/* Lo que oye el lector: «573 bbl, 100 % del tramo» (sin los espacios se leía «573100 %»). */}
       <span className="tabular shrink-0 text-right">
@@ -106,9 +133,11 @@ function Rama({ n, oculta = false, ...c }: Comun & { n: NodoArbol; oculta?: bool
     </>
   )
   return (
-    <li data-nodo={n.dimension} data-valor={n.valor} data-bbl={n.bbl} data-no-planeada={n.noPlaneadaBbl}
+    <li data-nodo={cabeza.dimension} data-valor={cabeza.valor} data-bbl={cabeza.bbl} data-no-planeada={cabeza.noPlaneadaBbl}
+      data-cadena-larga={cadena.length > 1 ? cadena.length : undefined}
       className={cn('py-px', oculta && 'hidden print:block')}>
-      <div className="flex items-baseline gap-1">
+      {/* flex-wrap: en el papel, la nota de un ⓘ va en su renglón y no aplasta el texto de la rama (B-10). */}
+      <div className="flex flex-wrap items-baseline gap-x-1">
         {plegable ? (
           <button type="button" aria-expanded={abierta} aria-controls={id} onClick={() => setAbierta(a => !a)}
             className="flex min-h-6 min-w-0 flex-1 cursor-pointer items-baseline gap-1.5 rounded-sm py-0.5 text-left hover:bg-[var(--panel2)]">
@@ -121,10 +150,12 @@ function Rama({ n, oculta = false, ...c }: Comun & { n: NodoArbol; oculta?: bool
             {contenido}
           </div>
         )}
-        {c.codigos === 'info' && n.cadena && paso && campo && (
-          <Info titulo={`Para la ANH · ${campo}`} texto={`${PASO_CIRCULAR[paso]}: «${n.cadena}»`} />
-        )}
-        {vacia && n.dimension === 'impacto' && <Info titulo="Pérdida" texto={EXPLICA_PERDIDA} />}
+        {c.codigos === 'info' && cadena.map(m => {
+          const pm = PASO_DE_NIVEL[m.dimension as keyof typeof PASO_DE_NIVEL], km = CAMPO_ANH[m.dimension as keyof typeof CAMPO_ANH]
+          return m.cadena && pm && km ? <Info key={`${m.dimension}:${m.valor}`} titulo={`Para la ANH · ${km}`} texto={`${PASO_CIRCULAR[pm]}: «${m.cadena}»`} /> : null
+        })}
+        {/* Se repite en cada tramo: en el papel va una sola vez, al final del árbol (B-10). */}
+        {vacia && n.dimension === 'impacto' && <Info titulo="Pérdida" texto={EXPLICA_PERDIDA} imprimir={false} />}
       </div>
       {plegable && <Hermanas id={id} hijos={n.hijos} oculta={!abierta} {...c} profundidad={c.profundidad + 1} />}
       {esEquipo && !unaParte && n.hijos.length > 0 && <Hermanas hijos={n.hijos} {...c} profundidad={c.profundidad + 1} />}

@@ -12,14 +12,16 @@ import { Panel, Boton } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { BOTON, GRUPO, ORDEN_GRUPO, NOMBRE_ESTADO, type EstadoEquipo } from './topologia'
+import { BOTON, GRUPO, ORDEN_GRUPO, NOMBRE_ESTADO, EXPLICA_FILTROS, esClaveInterna, type EstadoEquipo } from './topologia'
 import { MarcaEstado, MarcaFalta, EtiquetaFalta } from './marcas'
 import { CargaTopologia } from './CargaTopologia'
 
 /** Un equipo de la lista, con lo que rige, lo contestado y lo que TRIM propone. */
 interface Equipo {
   id: string
-  /** Lo que dice el registro después del id («electrosumergible», «Separador trifásico»). */
+  /** Cómo se nombra en pantalla: el tag («V-101») o, si el equipo no tiene tag, su nombre («Manifold de producción»; B-29). */
+  rotulo: string
+  /** Lo que dice el registro después del tag («electrosumergible», «Separador trifásico»). */
   detalle: string
   grupo: ClaseElemento | 'otro'
   /** Lo que rige hoy (firmado o deducido del registro); null si no está en la topología. */
@@ -76,8 +78,10 @@ function armarEquipos(v: TopologiaVigente, ps: readonly PropuestaVista[], b: Top
     const queda = respuesta ? respuesta.elemento : e
     const estado: EstadoEquipo = respuesta ? 'contestado' : (v.firmada && e) || ps0 ? 'firmado' : props.length ? 'propuesta' : 'sin-responder'
     const nombre = e?.nombre ?? nuevo?.nombre ?? ps0?.nombre ?? id
-    const detalle = nombre.startsWith(id) ? nombre.slice(id.length).replace(/^\s*·\s*/, '') : nombre
-    return { id, detalle, grupo: e?.clase ?? nuevo?.clase ?? ps0?.clase ?? 'otro', vigente: e, deducido: nuevo, porSaber: !!ps0,
+    // Sin tag, la clave interna no se muestra: el equipo se llama por su nombre (B-29).
+    const clave = esClaveInterna(id)
+    const detalle = clave ? '' : nombre.startsWith(id) ? nombre.slice(id.length).replace(/^\s*·\s*/, '') : nombre
+    return { id, rotulo: clave ? nombre : id, detalle, grupo: e?.clase ?? nuevo?.clase ?? ps0?.clase ?? 'otro', vigente: e, deducido: nuevo, porSaber: !!ps0,
       ...(respuesta ? { respuesta } : {}), queda, propuestas: props,
       ...(conflicto ? { conflicto } : {}), estado, borde: !!queda?.casoBorde || (!respuesta && (props.some(p => p.casoBorde) || !!nuevo?.casoBorde)) }
   }).sort((a, b) => orden(a.grupo) - orden(b.grupo))
@@ -130,7 +134,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
     .filter(x => x.lista.length > 0)
 
   const filtros = (
-    <div role="group" aria-label="Filtrar los equipos" className="flex flex-wrap gap-1">
+    <div role="group" aria-label="Filtrar los equipos" className="flex flex-wrap items-center gap-1">
       {ORDEN_FILTRO.map(f => {
         const n = equipos.filter(e => enFiltro(f, e)).length
         return (
@@ -141,6 +145,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
           </button>
         )
       })}
+      <Info titulo="Sin responder y propuestas de TRIM" texto={EXPLICA_FILTROS} />
     </div>
   )
   const botonCarga = puede && (
@@ -173,7 +178,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
               <span className="sr-only">Ir a otro equipo</span>
               <select value={actual?.id ?? ''} onChange={e => setElegido(e.target.value)} aria-label="Ir a otro equipo"
                 className="max-w-[11rem] rounded border border-[var(--linea)] bg-[var(--panel2)] px-1.5 py-1 text-[11.5px]">
-                {visibles.map(e => <option key={e.id} value={e.id}>{e.id} · {NOMBRE_ESTADO[e.estado]}</option>)}
+                {visibles.map(e => <option key={e.id} value={e.id}>{e.rotulo} · {NOMBRE_ESTADO[e.estado]}</option>)}
               </select>
             </label>
           </div>
@@ -244,11 +249,15 @@ function Renglon({ equipo: e, todos, elegido, onElegir }: { equipo: Equipo; todo
       <span className="mt-[3px]"><MarcaEstado estado={e.estado} /></span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-1.5">
-          <b>{e.id}</b>
+          <b>{e.rotulo}</b>
           {e.detalle && <span className="min-w-0 break-words text-[10.5px] text-[var(--tinta3)]">{e.detalle}</span>}
           <span className="ml-auto text-[10px] text-[var(--tinta3)]">{e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}</span>
         </span>
-        <span className="block break-words text-[10.5px] text-[var(--tinta2)]">{renglonDe(e.queda, e.respuesta?.r ?? (e.porSaber ? 'no-se' : undefined), todos)}</span>
+        <span className="block break-words text-[10.5px] text-[var(--tinta2)]">
+          {/* Lo que nadie contestó todavía es lo que TRIM deduce, y se dice (B-49). */}
+          {e.queda && (e.estado === 'sin-responder' || e.estado === 'propuesta') && 'TRIM deduce: '}
+          {renglonDe(e.queda, e.respuesta?.r ?? (e.porSaber ? 'no-se' : undefined), todos)}
+        </span>
         {e.borde && <EtiquetaFalta className="mt-0.5">caso de borde: misma locación</EtiquetaFalta>}
       </span>
     </button>
@@ -287,16 +296,21 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
   onSiguiente?: () => void
 }) {
   const idBase = useId()
-  // Lo que se ve marcado: lo contestado en el borrador, lo firmado «Todavía no sé», o lo que TRIM ya tiene; un equipo sin nada, ninguna.
+  // Lo que se ve marcado: lo contestado en el borrador o lo firmado (también «Todavía no sé»).
+  // Lo que TRIM deduce y nadie contestó no se marca: va al lado, «propuesta de TRIM, sin aceptar» (B-49).
   const tiene = loQueTiene(e)
+  const firmado = e.estado === 'firmado'
   const contestado: { r: Respuesta | null; pozos: string[] } = e.respuesta ? { r: e.respuesta.r, pozos: [...(e.respuesta.elemento?.pozos ?? [])] }
-    : e.porSaber ? { r: 'no-se', pozos: [] } : tiene ? respuestaDe(tiene, todos) : { r: null, pozos: [] }
+    : e.porSaber ? { r: 'no-se', pozos: [] } : tiene && firmado ? respuestaDe(tiene, todos) : { r: null, pozos: [] }
+  const sugerida = !e.respuesta && !e.porSaber && !firmado && tiene ? respuestaDe(tiene, todos) : null
   // Solo mientras «A varios pozos» no tiene los dos pozos: lo demás se lee del
   // borrador. Una respuesta a medias saca la anterior del borrador; si llega una
   // (el lote, la carga por CSV), manda la que llegó.
   const [aMedias, setAMedias] = useState<{ r: Respuesta | null; pozos: string[] } | null>(null)
   const sel = aMedias && !e.respuesta ? aMedias : contestado
   const propio = todos.includes(e.id) ? e.id : undefined
+  // Un pozo solo se sirve a sí mismo (C-13): su única respuesta es él mismo, sin escoger.
+  const respuestas: readonly Respuesta[] = propio ? ['uno'] : RESPUESTAS_TOPOLOGIA
   const completa = (r: Respuesta | null, pozos: readonly string[]) => r !== null && (r !== 'varios' || pozos.length >= 2) && (r !== 'uno' || pozos.length === 1)
   const elemento = (r: Respuesta, pozos: readonly string[]) => elementoDeRespuesta(e.id, campoId, r, pozos, todos, locacion)
   const contestar = (r: Respuesta, pozos: string[]) => {
@@ -318,24 +332,33 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
   const listo = completa(sel.r, sel.pozos)
   const deduce = listo && sel.r ? elemento(sel.r, sel.pozos) : null
   const { candidatos, conflictos } = candidatosDe(e, todos)
-  const nombre = `${e.id}${e.detalle ? ` · ${e.detalle}` : ''}`
+  const nombre = `${e.rotulo}${e.detalle ? ` · ${e.detalle}` : ''}`
 
   return (
     <Panel titulo={nombre.toUpperCase()} extra={e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}>
       <fieldset className="min-w-0">
         <legend className="mb-1.5 text-[13px] font-semibold">¿A qué pozos sirve este equipo?</legend>
         <div className="grid gap-1">
-          {RESPUESTAS_TOPOLOGIA.map(r => (
+          {respuestas.map(r => {
+            // Lo que TRIM deduce, sin marcar: borde discontinuo (lo que falta) y la palabra (B-49).
+            const propuesta = sel.r === null && sugerida?.r === r
+            return (
             <div key={r}>
               <label className={cn('flex min-h-9 cursor-pointer items-start gap-2 rounded border px-2 py-1.5 text-[12px]',
-                sel.r === r ? 'border-[var(--tinta)] bg-[var(--elevado)] font-semibold' : 'border-[var(--linea2)] hover:bg-[var(--panel2)]')}>
+                sel.r === r ? 'border-[var(--tinta)] bg-[var(--elevado)] font-semibold'
+                  : propuesta ? 'border-dashed border-[var(--tinta3)] hover:bg-[var(--panel2)]' : 'border-[var(--linea2)] hover:bg-[var(--panel2)]')}>
                 <input type="radio" name={`${idBase}-respuesta`} value={r} checked={sel.r === r} disabled={!puede} onChange={() => escoger(r)} className="mt-0.5 shrink-0" />
                 <span className="min-w-0">
-                  {BOTON[r].texto}
+                  {BOTON[r].texto}{propio && r === 'uno' && `: ${propio}`}
                   {BOTON[r].aclara && <small className="block font-normal text-[10.5px] text-[var(--tinta2)]">{BOTON[r].aclara}</small>}
+                  {propuesta && (
+                    <small className="mt-0.5 block w-fit rounded-sm border border-dashed border-[var(--tinta3)] px-1 font-normal text-[10px] text-[var(--tinta2)]" data-propuesta-sin-aceptar>
+                      propuesta de TRIM, sin aceptar{(r === 'uno' || r === 'varios') && !propio && sugerida.pozos.length ? `: ${sugerida.pozos.length > 3 ? plural(sugerida.pozos.length, 'pozo', 'pozos') : sugerida.pozos.join(', ')}` : ''}
+                    </small>
+                  )}
                 </span>
               </label>
-              {r === 'uno' && sel.r === 'uno' && (
+              {r === 'uno' && sel.r === 'uno' && !propio && (
                 <label className="ml-6 mt-1 flex flex-wrap items-center gap-1.5 text-[11.5px]">
                   <span className="text-[var(--tinta2)]">El pozo</span>
                   <select value={sel.pozos[0] ?? ''} disabled={!puede} onChange={x => contestar('uno', [x.target.value])} aria-label={`Pozo al que sirve ${e.id}`}
@@ -346,7 +369,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
               )}
               {r === 'varios' && sel.r === 'varios' && (
                 <fieldset className="ml-6 mt-1 min-w-0">
-                  <legend className="mb-0.5 text-[11px] text-[var(--tinta2)]">Los pozos a los que sirve {e.id} · {plural(sel.pozos.length, 'escogido', 'escogidos')}</legend>
+                  <legend className="mb-0.5 text-[11px] text-[var(--tinta2)]">Los pozos a los que sirve {e.rotulo} · {plural(sel.pozos.length, 'escogido', 'escogidos')}</legend>
                   <div className="grid gap-x-2 [grid-template-columns:repeat(auto-fill,minmax(5.2rem,1fr))]">
                     {todos.map(p => (
                       <label key={p} className="flex min-h-7 cursor-pointer items-center gap-1 text-[11.5px]">
@@ -357,13 +380,17 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
                 </fieldset>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
+        {propio && <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-pozo-propio>Es un pozo: solo se sirve a sí mismo. El tramo de sus paradas no se escoge: es «En el pozo».</p>}
       </fieldset>
 
       <div aria-live="polite" className="mt-2 rounded border-l-2 border-[var(--tinta)] bg-[var(--panel2)] px-2 py-1.5 text-[12px]">
         {listo && sel.r ? <>→ {fraseDe(sel.r, deduce, todos)}</>
-          : sel.r === null ? <>Nadie lo ha contestado: {renglonDe(null, undefined, todos)}.</>
+          : sel.r === null ? (sugerida
+            ? <>Nadie lo ha contestado. Lo del borde discontinuo es lo que TRIM deduce: acéptelo abajo o escoja otra respuesta.</>
+            : <>Nadie lo ha contestado: {renglonDe(null, undefined, todos)}.</>)
             : <>Escoja al menos dos pozos. Si sirve a uno solo, es «A un solo pozo».</>}
       </div>
       {deduce?.casoBorde && <CasoBorde className="mt-1.5" />}
@@ -463,7 +490,7 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
       <p className="mt-1 text-[var(--tinta2)]">→ {frase}</p>
       {elemento?.casoBorde && <CasoBorde className="mt-1" />}
       <div className="mt-1 flex flex-wrap gap-1.5">
-        {puede && !firmado && <Boton type="button" variante="chico" onClick={onAceptar} aria-label={`Aceptar para ${e.id}: ${frase}`}>Aceptar</Boton>}
+        {puede && !firmado && <Boton type="button" variante="chico" onClick={onAceptar} aria-label={`Aceptar para ${e.rotulo}: ${frase}`}>Aceptar</Boton>}
         {caidas.length > 1 && (
           <Boton type="button" variante="chico" aria-expanded={abierta} aria-controls={idEvidencia} onClick={() => setAbierta(v => !v)}>
             {abierta ? 'Ocultar las caídas' : `Ver las ${caidas.length} caídas`}

@@ -6,7 +6,7 @@ import { PlanesDe } from '@/widgets/ciclo/Ciclo'
 import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { useMensajes } from '@/shared/api/mensajes'
-import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
+import { pedirCatalogoDeDanos, useEquiposDeHoy } from '@/shared/api/equipos'
 import { CAUSAS_POZO, NO_FUE_ESP_CORTO, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
 import { Telefono } from '@/widgets/whatsapp/Telefono'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
@@ -28,7 +28,8 @@ import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { useUsuarios } from '@/shared/api/usuarios'
-import { puedeHacer } from '@/entities/tipos'
+import { ROLES_QUE_CONTESTAN } from '@/shared/api/arbol'
+import { puedeHacer, type Severidad } from '@/entities/tipos'
 
 /** Paradas por identificar: las que ninguna señal explica. Es el único lugar
  *  donde una persona escribe algo que entra al libro, y entra marcado como
@@ -56,6 +57,13 @@ export function Causa() {
   // las que siguen paradas («no arrancar») y las que arrancaron sin
   // identificar (no conformidades, con las que se respondieron tarde).
   const pi = contarPorIdentificar(preguntas)
+  // La marca de un equipo es la de hoy, la misma en todas partes (B-20): la urgencia de identificar va en el texto «no arrancar».
+  const hoy = useEquiposDeHoy(ids)
+  const marca = (p: Pregunta): Severidad => hoy(p.equipo, p.campoId)?.severidad ?? 0
+  // El chat que alguien abrió sigue abierto cuando la respuesta llega: el cierre
+  // «Así queda lo que usted contestó» sale en el mismo chat (B-05; U1 §2.6).
+  const [chats, setChats] = useState<ReadonlySet<string>>(() => new Set())
+  const alternarChat = (id: string) => setChats(c => { const n = new Set(c); if (n.has(id)) n.delete(id); else n.add(id); return n })
   const piden = preguntas.filter(p => p.pide)
   const pendientes = piden.filter(p => !p.arrancoSinIdentificar)
   const noConformes = preguntas.filter(p => p.arrancoSinIdentificar)
@@ -88,6 +96,8 @@ export function Causa() {
   const partesPendientes = piden.filter(p => p.sobre === 'bomba').length
   // Quien opera llega a responder: lo pendiente va primero.
   const opera = rol.nivel === 'operacion'
+  // El operador y el técnico: UNA lista «POR CONTESTAR», una tarjeta por parada (B-02; U1 §2.7).
+  const deCampo = !ROLES_QUE_CONTESTAN.revisa.includes(rol.id)
   // Quien no puede responder (o el rol sin nadie con acceso) lo lee una vez, aquí, y no en cada tarjeta.
   const responde = puede && !persona.sinAcceso
   const hayTarjetas = pendientes.length + noConformes.length > 0
@@ -124,36 +134,86 @@ export function Causa() {
           <small className={apoyo}>{n0(lb.declarado)} bbl · sin identificar {n0(lb.pendiente)} bbl ({n1(pct(lb.pendiente))} %)</small>
         </span>
         <span>
-          <b className={cifra}>{parados.length > 0 && <MarcaPrioridad s={2} tamano={15} />}{pi.porIdentificar}</b>
+          {/* Un total no es una alarma: sin marca de color (B-40). La marca va en cada equipo, abajo. */}
+          <b className={cifra}>{pi.porIdentificar}</b>
           {/* Esta cifra no es del período: cuenta todo lo que sigue sin identificar. */}
           <small className={rotulo}>por identificar · histórico</small>
           <small className={apoyo}>{plural(pi.porIdentificar - partesPendientes, 'pozo', 'pozos')} · {plural(partesPendientes, 'bomba', 'bombas')} · {parados.length} sin arrancar</small>
         </span>
         <span>
-          <b className={cifra}>{noConformes.length > 0 && <MarcaPrioridad s={3} tamano={14} />}{noConformes.length}</b>
+          <b className={cifra}>{noConformes.length}</b>
           <small className={rotulo}>no conformidades</small>
           <small className={apoyo}>arrancaron sin identificar</small>
         </span>
       </Tip>
   )
 
+  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} sev={marca(p)}
+    chat={chats.has(p.id)} onChat={() => alternarChat(p.id)} />
+  // Lo que se acaba de responder por WhatsApp con el chat abierto: sigue en su lugar, con el chat y su cierre.
+  const conChat = recien.filter(p => chats.has(p.id))
+  const respondidas = conChat.map(p => <RespondidaConChat key={`r-${p.id}`} p={p} hilo={hilo(p)} onCerrar={() => alternarChat(p.id)} />)
+  const avisoRespondido = recien.length > 0 && (
+    <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">
+      Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
+    </p>
+  )
+  const regla = (
+    <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[12px] shadow-[var(--sombra)]">
+      <span><b>No arrancar</b> hasta identificar el daño</span>
+      <span className="text-[var(--tinta2)]"><span className="hidden sm:inline">· </span>si arranca antes: no conformidad</span>
+      <Info titulo="Regla de operación" texto={REGLA} />
+      {hayTarjetas && !puede && <span className="basis-full text-[11px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
+      {porResponder && puede && persona.sinAcceso && (
+        <span className="flex basis-full flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
+          Nadie con acceso activo tiene este rol.
+          <Info titulo="Sin persona con acceso" texto="La respuesta la da una persona con acceso, no un rol." />
+        </span>
+      )}
+    </div>
+  )
+  const declaradasPanel = (
+    <Panel titulo="DECLARADAS" extra={<>{declaradas.length}<span className="sr-only"> {declaradas.length === 1 ? 'declarada' : 'declaradas'}</span>{sinAnalisis.length ? ` · ${sinAnalisis.length} sin análisis` : ''}</>}>
+      <Lectura>
+        Lo que respondió la gente de campo. Entra al libro como «declarado», separado de lo que
+        probó una señal, y se puede auditar: quién, cuándo y si fue antes o después de arrancar.
+        Primero las que esperan el análisis de confiabilidad.
+      </Lectura>
+      {declaradas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna todavía.</p>}
+      {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}
+      {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}</div>}
+      <VerMas ocultas={listaDeclaradas.ocultas} abierto={listaDeclaradas.abierto} onAlternar={listaDeclaradas.alternar} />
+    </Panel>
+  )
+
+  // El operador y el técnico: una sola lista, lo que pregunta el libro primero
+  // (la regla de «no arrancar» es del libro) y después lo que pregunta el árbol,
+  // sin repetir una parada (B-02). Los indicadores del período, al final y plegados (B-54).
+  if (deCampo) {
+    const delLibro = [...pendientes, ...noConformes.filter(p => !p.causa.declarado)]
+    return (
+      <>
+        {regla}
+        {planesIdentificar.length > 0 && <PlanesDe planes={planesIdentificar} className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-1 shadow-[var(--sombra)]" />}
+        {/* Otro rol es otra lente: lo que estaba abierto no pasa de un rol a otro. */}
+        <ArbolIdentificar key={rol.id} campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} periodo={rango.nombre}
+          nAntes={delLibro.length} excluir={new Set(delLibro.map(p => p.id))}
+          antes={<>{avisoRespondido}{respondidas}{delLibro.map(tarjeta)}</>} />
+        {declaradasPanel}
+        <details className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)] print:open:block" data-indicadores>
+          <summary className="flex min-h-12 cursor-pointer items-center px-3 text-[11.5px] text-[var(--tinta2)] sm:min-h-9">Cómo va la identificación del período</summary>
+          <div className="px-3 pb-3">{cabecera}</div>
+        </details>
+      </>
+    )
+  }
+
   return (
     <>
       {!opera && cabecera}
 
       {/* La regla de operación: «no arrancar» a la vista; el procedimiento completo, en el ⓘ. */}
-      <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[12px] shadow-[var(--sombra)]">
-        <span><b>No arrancar</b> hasta identificar el daño</span>
-        <span className="text-[var(--tinta2)]"><span className="hidden sm:inline">· </span>si arranca antes: no conformidad</span>
-        <Info titulo="Regla de operación" texto={REGLA} />
-        {hayTarjetas && !puede && <span className="basis-full text-[11px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
-        {porResponder && puede && persona.sinAcceso && (
-          <span className="flex basis-full flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
-            Nadie con acceso activo tiene este rol.
-            <Info titulo="Sin persona con acceso" texto="La respuesta la da una persona con acceso, no un rol." />
-          </span>
-        )}
-      </div>
+      {regla}
 
       {planesIdentificar.length > 0 && <PlanesDe planes={planesIdentificar} className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-1 shadow-[var(--sombra)]" />}
 
@@ -165,13 +225,10 @@ export function Causa() {
           las que más han fallado en ese equipo) son una pista, no una respuesta. Toque o pase el cursor por
           la línea de WhatsApp para ver a quién le llegó cada mensaje.
         </Lectura>
-        {recien.length > 0 && (
-          <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">
-            Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
-          </p>
-        )}
-        {pendientes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
-        {pendientes.map(p => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} />)}
+        {avisoRespondido}
+        {respondidas}
+        {pendientes.length === 0 && conChat.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
+        {pendientes.map(tarjeta)}
       </Panel>
 
       {opera && cabecera}
@@ -184,28 +241,40 @@ export function Causa() {
       {/* «Arrancaron sin identificar» ya lo dice la cifra de arriba; aquí, cuántas. */}
       <Panel className="mb-2.5" titulo="NO CONFORMIDADES" extra={<>{noConformes.length}<span className="sr-only"> {noConformes.length === 1 ? 'no conformidad' : 'no conformidades'}</span></>}>
         {noConformes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
-        {noConformes.map(p => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} />)}
+        {noConformes.map(tarjeta)}
       </Panel>
 
-      <Panel titulo="DECLARADAS" extra={<>{declaradas.length}<span className="sr-only"> {declaradas.length === 1 ? 'declarada' : 'declaradas'}</span>{sinAnalisis.length ? ` · ${sinAnalisis.length} sin análisis` : ''}</>}>
-        <Lectura>
-          Lo que respondió la gente de campo. Entra al libro como «declarado», separado de lo que
-          probó una señal, y se puede auditar: quién, cuándo y si fue antes o después de arrancar.
-          Primero las que esperan el análisis de confiabilidad.
-        </Lectura>
-        {declaradas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna todavía.</p>}
-        {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}
-        {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}</div>}
-        <VerMas ocultas={listaDeclaradas.ocultas} abierto={listaDeclaradas.abierto} onAlternar={listaDeclaradas.alternar} />
-      </Panel>
+      {declaradasPanel}
     </>
+  )
+}
+
+/** Lo que se acaba de responder por WhatsApp con el chat abierto: el chat sigue
+ *  abierto con el cierre «Así queda lo que usted contestó» (B-05), hasta que la
+ *  persona lo cierra. La parada ya está en «Declaradas». */
+function RespondidaConChat({ p, hilo, onCerrar }: { p: Pregunta; hilo: Mensaje[]; onCerrar: () => void }) {
+  const usuarios = useUsuarios()
+  const r = p.causa.declarado
+  const quien = r?.canal === 'whatsapp' ? usuarios.find(u => u.id === r.porId) : undefined
+  if (!quien) return null
+  return (
+    <div className="border-b border-[var(--linea2)] py-3 last:border-0" data-respondida={p.id}>
+      <p className="text-[12px]"><b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· respondido por WhatsApp</span></p>
+      <div className="mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>
+      <Boton className="mt-1.5 min-h-12 sm:min-h-0" onClick={onCerrar}>Cerrar el chat</Boton>
+    </div>
   )
 }
 
 /** Una parada por identificar: qué dijeron las señales, el formulario para
  *  decir qué se dañó (parte y lo que se vio, del catálogo de la clase de
  *  equipo) y el hilo de WhatsApp por el que también se responde. */
-function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; responde: boolean; hilo: Mensaje[] }) {
+function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
+  p: Pregunta; global: boolean; responde: boolean; hilo: Mensaje[]
+  /** La marca de hoy del equipo (B-20): la misma de «Pasando ahora». */
+  sev: Severidad
+  chat: boolean; onChat: () => void
+}) {
   const persona = usePersona(); const responder = useApp(s => s.responder), abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const [texto, setTexto] = useState('')
   const [parte, setParte] = useState<ParteId | ''>('')
@@ -251,7 +320,7 @@ function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; 
   return (
     <div className="border-b border-[var(--linea2)] py-3 last:border-0">
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
-        <MarcaPrioridad s={p.arrancoSinIdentificar ? 3 : !p.fin ? 2 : 3} tamano={14} className="mt-[2px]" />
+        <MarcaPrioridad s={sev} tamano={14} className="mt-[2px]" />
         <span className="min-w-0 flex-1">
           <button onClick={() => { setCampo(p.campoId); abrirEquipo(p.equipo) }} className="cursor-pointer text-left">
             <b className="text-[13px] underline-offset-2 hover:underline">{p.equipo}</b>
@@ -265,6 +334,7 @@ function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; 
         {/* «no conformidad» no va como etiqueta: la tarjeta ya está en ese panel. */}
         <span className="flex flex-wrap gap-1">
           {!p.fin && <Chip tono="fuerte">no arrancar</Chip>}
+          {p.arrancoSinIdentificar && <Chip>arrancó sin identificar</Chip>}
           <Chip>{n0(p.bbl)} bbl</Chip>
         </span>
       </div>
@@ -310,7 +380,7 @@ function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; 
                     </>
                   )}
                   <select id={`parte-${p.id}`} value={parte} onChange={e => escoger(e.target.value as ParteId | '')}
-                    className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[12px] sm:min-h-0">
+                    className="min-h-12 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[12px] sm:min-h-0">
                     <option value="">{sugeridas?.conEvidencia ? 'O escoja cualquier parte…' : 'Escoja la parte…'}</option>
                     {cat!.partes.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                   </select>
@@ -339,7 +409,7 @@ function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; 
               </>
             ) : (
               <>
-                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-10 justify-self-start text-[10.5px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes</button>}
+                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-12 justify-self-start text-[10.5px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes</button>}
                 <span className="flex flex-wrap gap-1">
                   {CAUSAS_POZO.map(f => (
                     <button type="button" key={f} onClick={() => { setTexto(f); setError('') }} aria-pressed={texto === f}
@@ -356,12 +426,12 @@ function Tarjeta({ p, global, responde, hilo }: { p: Pregunta; global: boolean; 
                 className="resize-y rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[12px]" />
             </label>
             {error && <p className="text-[11px] text-[var(--tinta)]" role="alert">{error}</p>}
-            <Boton variante="principal" type="submit" className="min-h-10 sm:min-h-0">Registrar respuesta</Boton>
+            <Boton variante="principal" type="submit" className="min-h-12 sm:min-h-0">Registrar respuesta</Boton>
             <small className="text-[10px] text-[var(--tinta3)]">Queda declarado por {persona.nombre} · hora del sistema</small>
           </form>
         )}
       </div>
-      <HiloWhatsapp p={p} hilo={hilo} />
+      <HiloWhatsapp p={p} hilo={hilo} abierto={chat} onAlternar={onChat} />
     </div>
   )
 }
@@ -380,17 +450,16 @@ const noFueEsp = NO_FUE_ESP_CORTO
 /** El rótulo de cada paso de la respuesta: se lee como instrucción, no como pie. */
 const PASO_CLS = 'text-[12px] font-semibold text-[var(--tinta)]'
 
-/** Botón de opción: en el teléfono, alto de dedo; la marcada, con el color de selección. */
-const CHIP = 'min-h-10 cursor-pointer rounded-sm border border-[var(--linea)] px-1.5 py-0.5 text-[10.5px] hover:bg-[var(--panel2)] sm:min-h-0'
+/** Botón de opción: en el teléfono, 48 px de alto, para el dedo con guantes (U1 §2.6; B-24); la marcada, con el color de selección. */
+const CHIP = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] px-1.5 py-0.5 text-[11px] hover:bg-[var(--panel2)] sm:min-h-0 sm:text-[10.5px]'
 const SELECCION = 'border-acento bg-acento-f text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--acento)]'
 
 
 /** El hilo de WhatsApp de la parada en una línea (qué se mandó, a quién, y si
  *  respondieron), y a un clic el chat de quien recibió la pregunta, como lo ve
  *  en su teléfono: desde ahí se responde. */
-function HiloWhatsapp({ p, hilo }: { p: Pregunta; hilo: Mensaje[] }) {
+function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; hilo: Mensaje[]; abierto: boolean; onAlternar: () => void }) {
   const usuarios = useUsuarios(); const yo = usePersona()
-  const [verChat, setVerChat] = useState(false)
   const r = p.causa.declarado
   const orden = [...hilo].reverse()
   const primero = orden.find(m => m.regla === 'causa' && !m.insistencia && !m.noEnviado)
@@ -434,7 +503,7 @@ function HiloWhatsapp({ p, hilo }: { p: Pregunta; hilo: Mensaje[] }) {
       </Tip>
       {persona && (
         <>
-          <Boton className="mt-1 min-h-10 sm:min-h-0" onClick={() => setVerChat(!verChat)} aria-expanded={verChat}>
+          <Boton className="mt-1 min-h-12 sm:min-h-0" onClick={onAlternar} aria-expanded={verChat}>
             {verChat ? 'Cerrar el chat' : persona.id === yo.id ? 'Ver mi chat de WhatsApp' : `Ver el chat de ${persona.nombre}`}
           </Boton>
           {verChat && <div className="mt-2"><Telefono p={p} hilo={hilo} persona={persona} /></div>}
@@ -521,7 +590,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
   const r = p.causa.declarado!
   // Lo que se respondió por WhatsApp se puede volver a ver en el chat, donde quien
   // respondió avala lo que contestó (U1 §2.6, corregido por S1 U1-2).
-  const usuarios = useUsuarios()
+  const usuarios = useUsuarios(); const yo = usePersona()
   const [verChat, setVerChat] = useState(false)
   const quien = r.canal === 'whatsapp' ? usuarios.find(u => u.id === r.porId) : undefined
   const cat = pedirCatalogoDeDanos(p.campoId, p.equipo)
@@ -551,7 +620,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
         {quien && hilo.length > 0 && (
           <>
             <Boton variante="chico" className="mt-1 min-h-10 sm:min-h-0" aria-expanded={verChat} onClick={() => setVerChat(v => !v)}>
-              {verChat ? 'Cerrar el chat' : `Ver el chat de ${quien.nombre}`}
+              {verChat ? 'Cerrar el chat' : quien.id === yo.id ? 'Ver mi chat de WhatsApp' : `Ver el chat de ${quien.nombre}`}
             </Boton>
             {verChat && <div className="mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>}
           </>

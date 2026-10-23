@@ -78,7 +78,10 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
             <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
               <b className="text-[12.5px]">{f.equipo}<span className="font-normal text-[var(--tinta3)]">{donde}</span></b>
               <Chip tono={alto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[f.tipo].toLowerCase()}</Chip>
-              {f.pozos > 1 && <span className="text-[10.5px] text-[var(--tinta3)]">{f.pozos} pozos</span>}
+              {/* Una baja tensión que tumbó un solo pozo cada vez no es una caída del alimentador: se dice así (B-12). */}
+              {f.pozos > 1 && (f.tipo === 'energia' && f.eventos === f.pozos
+                ? <span className="text-[10.5px] text-[var(--tinta3)]" data-un-pozo-por-parada>{f.eventos} paradas de un solo pozo</span>
+                : <span className="text-[10.5px] text-[var(--tinta3)]">{f.pozos} pozos</span>)}
               {parteTop && <span className="text-[10.5px] text-[var(--tinta2)]">{NOMBRE_PARTE[parteTop.parte].toLowerCase()}</span>}
             </span>
             <span className="mt-1 block h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]">

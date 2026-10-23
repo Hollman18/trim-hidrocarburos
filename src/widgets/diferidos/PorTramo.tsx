@@ -1,11 +1,12 @@
 import { useId, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { useRol } from '@/app/store'
+import { useRol, useRango } from '@/app/store'
 import {
   useRepartoChoke, useArbolChoke, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_ESCALON,
   type EscalonOSinClasificar, type ChokeOSinAsignar, type EquipoBbl, type NodoArbol,
 } from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
+import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { Boton } from '@/shared/ui/primitivas'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { Info } from '@/shared/ui/Info'
@@ -16,19 +17,12 @@ import { cn } from '@/shared/lib/cn'
 import { BarraTramos, LeyendaTramos, Muestra } from './tramos'
 import { LARGO_TRAMO, leidoReparto, mayuscula, textoReparto } from './reparto'
 import { Ramas } from '@/widgets/choke/Ramas'
-import { codigosDelRol, type VerCodigos } from '@/widgets/choke/palabras'
+import { codigosDelRol, periodoEnFrase, ESCALON_CAMPO, type VerCodigos } from '@/widgets/choke/palabras'
 
-/** Lo que no se produjo, dicho por escalón con palabras de campo (U2 §1.4):
- *  el nombre técnico de la escalera (NSTA §5.3 y §6.4) va en el globo, nunca
- *  en el rótulo. El norte de TRIM vive en lo no planeado. */
-const ESCALON: Record<EscalonOSinClasificar, string> = {
-  'disponibilidad-no-planeada': 'Paradas no planeadas: fallas, disparos y terceros',
-  'disponibilidad-planeada': 'Paradas planeadas: mantenimiento, pruebas y trabajos de pozo',
-  desempeno: 'Frecuencia bajada: el levantamiento sin optimizar',
-  capacidad: 'Restricción sin falla: nominación o despacho',
-  desarrollo: 'El yacimiento y los proyectos',
-  'sin-clasificar': 'Sin clasificar: lo decide una persona',
-}
+/** Lo que no se produjo, dicho por escalón con palabras de campo (U2 §1.4): las
+ *  mismas de Producción (`ESCALON_CAMPO`, B-26); el nombre técnico de la escalera
+ *  (NSTA §5.3 y §6.4) va en el globo, nunca en el rótulo. El norte de TRIM vive en lo no planeado. */
+const ESCALON = ESCALON_CAMPO
 /** El orden de la lista: primero lo que TRIM tiene que bajar; el resto, en el de la escalera. */
 const ORDEN_ESCALON: EscalonOSinClasificar[] = ['disponibilidad-no-planeada', ...ESCALONES.filter(e => e !== 'disponibilidad-no-planeada')]
 
@@ -48,6 +42,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
   const b = useRepartoChoke({ campos, desde, hasta })
   const arbol = useArbolChoke({ campos, desde, hasta, orden: 'gestion' })
   const codigos = codigosDelRol(useRol().id)
+  const rango = useRango()
   const [cruce, setCruce] = useState(false)
   const idCruce = useId()
   const total = b.diferido
@@ -73,7 +68,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
           dónde sale.
         </Lectura>
         {total < 0.5
-          ? <p className="text-[12px] text-[var(--tinta2)]">Nada se trabó en el período.</p>
+          ? <p className="text-[12px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(rango.nombre)}.</p>
           : (
             <>
               <BarraTramos valores={b.porChoke} leido={`Dónde se trabó en el período: ${leidoReparto(b.porChoke, b.diferido)}, el diferido del libro.`} alto="h-3.5" className="mt-1" />
@@ -195,7 +190,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
             </div>
           </div>
         )}
-        <LeyendaTramos className="mt-2.5" />
+        {total >= 0.5 && <LeyendaTramos className="mt-2.5" />}
       </div>
     </section>
   )
@@ -236,8 +231,13 @@ function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: 
         {sin && <Info titulo="Sin identificar" texto="Paradas que todavía no tienen causa: hasta que alguien diga qué pasó, no se sabe dónde se trabó. No se reparten entre los tramos." />}
       </div>
       {eq.length > 0 && (
-        <small className="tabular block pl-[38px] text-[10.5px] text-[var(--tinta2)]">
-          {eq.slice(0, 3).map(x => `${x.equipo} ${n0(x.bbl)}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}
+        <small className="tabular flex flex-wrap items-center gap-x-1 pl-[38px] text-[10.5px] text-[var(--tinta2)]">
+          <span>{eq.slice(0, 3).map(x => `${x.equipo} ${n0(x.bbl)}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}</span>
+          {/* Un equipo con barriles de dos causas (la electrosumergible de LC-04 y su baja tensión) lo dice: si no, la cifra
+              no cuadra con «POR EQUIPO», donde cada parte va con quien se la carga (B-12). */}
+          {eq.slice(0, 3).filter(x => (x.porTipo?.length ?? 0) > 1).map(x => (
+            <Info key={x.equipo} titulo={`${x.equipo} · ${n0(x.bbl)} bbl`} texto={`${x.porTipo!.map(t => `${n0(t.bbl)} de ${TIPO_CAUSA[t.tipo].toLowerCase()}`).join(' y ')}. En «Por equipo» cada parte va con el equipo al que se le carga.`} />
+          ))}
         </small>
       )}
       {sin && v >= 0.5 && onIdentificar && <Boton variante="chico" className="ml-[38px] mt-1 min-h-6" onClick={onIdentificar}>Identificar</Boton>}

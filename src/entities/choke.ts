@@ -248,7 +248,7 @@ export function validarTopologia(t: readonly ChokeDeElemento[], esPozoDe: (campo
 }
 
 /** El ⓘ del caso de borde (U2 §8.6). */
-export const EXPLICA_CASO_BORDE = 'Falta que Edinson confirme si un transformador que alimenta 2 o 3 pozos de una misma locación va al pozo o a la planta. Hoy va a la planta, porque sirve a varios. Si la regla cambia, todos los equipos con esta etiqueta cambian juntos, con vista previa y firma.'
+export const EXPLICA_CASO_BORDE = 'Falta confirmar con la operadora si un transformador que alimenta 2 o 3 pozos de una misma locación va al pozo o a la planta. Hoy va a la planta, porque sirve a varios. Si la regla cambia, todos los equipos con esta etiqueta cambian juntos, con vista previa y firma.'
 
 /** El caso de borde de CHOKE-COMPLETO §16: un equipo compartido por 2 o 3
  *  pozos de la MISMA locación. La regla dice planta, porque sirve a varios, y
@@ -959,7 +959,7 @@ export function potencialesDelCampo(campoId: string, t: number, ctx: Contexto, v
     ...comun, planta: null, exportacion: null, sistema: null, dominante: null, empate: false, empatados: [], casiIguales: null,
     holgura: { pozos: null, planta: null, exportacion: null }, trenes: [], mercadoBajo: false, campoDeGas, sinDato, texto, textoCorto })
   if (tr.sinTuberia === 'gas') return sinTuberia(true, [],
-    `${nombre} es un campo de gas. La tubería del gas todavía no está: el gas tiene «una tolerancia diferente» (Edinson) y falta definir cómo se mide su potencial.`,
+    `${nombre} es un campo de gas. La tubería del gas todavía no está: el gas tiene una tolerancia diferente y falta definir cómo se mide su potencial.`,
     'Campo de gas: su tubería todavía no está')
   if (tr.sinTuberia === 'sin-esquema') return sinTuberia(false, ['planta', 'exportacion'], `${nombre} no tiene esquema de planta registrado: sin él no se sabe qué limita.`,
     'Sin esquema de planta: no se sabe qué limita')
@@ -1165,7 +1165,9 @@ export function escalonesDe(t: Tramo, ch: ChokeDeParada | null, ctx: Contexto): 
 /** Un equipo con lo que se perdió por él. Si sus barriles vienen de causas de
  *  distinto tipo (LC-04: su electrosumergible y una baja tensión que lo tumbó
  *  solo a él), `porTipo` las dice, de mayor a menor (B-12). */
-export interface EquipoBbl { equipo: string; bbl: number; porTipo?: Array<{ tipo: TipoCausa; bbl: number }> }
+/** Un equipo y lo que pesó en un tramo. `tipo`: la causa que más barriles le
+ *  cargó (su familia en la frase del gerente, B-13); `porTipo`, si fueron más de una (B-12). */
+export interface EquipoBbl { equipo: string; bbl: number; tipo: TipoCausa; porTipo?: Array<{ tipo: TipoCausa; bbl: number }> }
 
 /** La brecha de un campo (o del conjunto) repartida por choke y por escalón. */
 export interface BrechaCampoChoke {

@@ -11,12 +11,15 @@ import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { n0, plural } from '@/shared/lib/formato'
+import { esClaveInterna } from './topologia'
 
 /** «los pozos», «la planta o estación», «afuera». */
 const sujeto = (k: ChokeCampo | null) => (k === null ? 'sin tubería de crudo' : NOMBRE_CHOKE_CAMPO[k].split(':')[0]!.toLowerCase())
 /** «En el pozo», «En la planta o estación», «Afuera», «En el yacimiento». */
 const tramoNombre = (k: ChokeAnh | null) => (k === null ? 'sin tramo' : NOMBRE_CHOKE[k].split(':')[0]!)
 const bpd = (v: number | null) => (v === null ? 'sin dato' : `${n0(v)} bbl/d`)
+/** «K-101 · Sistema de aire de instrumentos»: el tag delante del nombre; sin tag, solo el nombre (B-29). */
+const nombreDe = (x: { equipo: string; nombre: string }) => (x.nombre.startsWith(x.equipo) || esClaveInterna(x.equipo) ? x.nombre : `${x.equipo} · ${x.nombre}`)
 
 /** Lo que el borrador lleva de la topología de un campo. */
 export interface ResumenTopologia { campoId: string; contestados: number; faltan: number }
@@ -44,19 +47,21 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
   const rolId = useApp(s => s.rolId), previsualizarConfig = useApp(s => s.previsualizarConfig)
   const hayCambios = puede && conCambios
   // La respuesta dice para qué borrador y qué rol se pidió: mientras no sea la de lo que se ve, está «calculando».
-  const [vista, setVista] = useState<{ para: Config | null; rol: string; impacto?: ImpactoConfig; error?: string }>({ para: null, rol: rolId })
+  const [vista, setVista] = useState<{ para: Config | null; rol: string; impacto?: ImpactoConfig; errores?: string[]; error?: string }>({ para: null, rol: rolId })
   useEffect(() => {
     if (!hayCambios) return
     // Si el borrador cambia mientras llega la respuesta, la vieja no pisa a la nueva.
     let vigente = true
     void previsualizarConfig(propuesta).then(r => {
-      if (vigente) setVista(r.ok ? { para: propuesta, rol: rolId, impacto: r.impacto } : { para: propuesta, rol: rolId, error: r.error })
+      if (vigente) setVista(r.ok ? { para: propuesta, rol: rolId, impacto: r.impacto, ...(r.errores ? { errores: r.errores } : {}) } : { para: propuesta, rol: rolId, error: r.error })
     })
     return () => { vigente = false }
   }, [propuesta, hayCambios, rolId, previsualizarConfig])
   const pidiendo = hayCambios && (vista.para !== propuesta || vista.rol !== rolId)
   const impacto = hayCambios && !pidiendo ? vista.impacto : undefined
   const error = hayCambios && !pidiendo ? vista.error : undefined
+  // Lo que todavía impide firmar: el impacto se muestra igual, marcado como borrador con errores (B-53).
+  const errores = impacto ? vista.errores ?? [] : []
 
   const conTopologia = resumen.filter(x => x.contestados > 0)
   return (
@@ -91,6 +96,12 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
         {puede && !hayCambios && <p className="text-[12px] text-[var(--tinta2)]">No hay cambios en el borrador: conteste en el paso 1, o cambie el respaldo o los tanques en la configuración técnica.</p>}
         {pidiendo && <p role="status" className="text-[12px] text-[var(--tinta2)]">Calculando lo que cambia…</p>}
         {error && <p role="alert" className="rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[12px] font-semibold">{error}</p>}
+        {errores.length > 0 && (
+          <div role="alert" className="mb-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[12px]" data-borrador-con-errores>
+            <p className="font-semibold">Borrador con errores: así quedaría. No se puede firmar hasta corregir esto:</p>
+            <ul className="mt-0.5 list-disc pl-4">{errores.map(x => <li key={x}>{x}</li>)}</ul>
+          </div>
+        )}
         {impacto && (
           impacto.campos.length === 0
             ? <p className="text-[12px] text-[var(--tinta2)]">Lo que cambia no toca a ningún campo: no cambia qué limita, ni «si falla hoy», ni dónde se trabó ninguna parada.</p>
@@ -124,7 +135,7 @@ function DeUnCampo({ c, desde }: { c: ImpactoCampo; desde: Date }) {
             <ul className="grid gap-0.5">
               {c.criticidad.map(x => (
                 <li key={x.equipo}>
-                  <b>{x.nombre}</b>: {bpd(x.antes)} → {bpd(x.despues)}
+                  <b>{nombreDe(x)}</b>: {bpd(x.antes)} → {bpd(x.despues)}
                   {x.tramoAntes !== x.tramoDespues && (
                     <span className="text-[var(--tinta2)]"> · se trabaría {x.tramoDespues ? dondeTramo(x.tramoDespues) : 'sin tramo'} (antes {x.tramoAntes ? dondeTramo(x.tramoAntes) : 'sin tramo'})</span>
                   )}

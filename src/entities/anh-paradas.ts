@@ -91,6 +91,11 @@ export interface ParadaAnh {
   diaOperacional: string
   /** Hora de Colombia con su zona; en el JSON va como la escribe `horaAnh`. */
   inicio: string
+  /** Cuándo empezó el EVENTO, hora de Colombia con su zona: la fila puede ser de
+   *  un día después (tramo 2 de un evento que cruzó la medianoche). Solo
+   *  lectura, no viaja a la ANH: con ella la pantalla dice «parada desde el 25
+   *  de sept, 06:40» y no el comienzo del período (B-22). */
+  inicioEvento: string
   /** Nunca vacío: si seguía parada al corte, las 23:59:59 de su día. */
   fin: string
   abiertaAlCorte: boolean
@@ -100,6 +105,9 @@ export interface ParadaAnh {
   fraccion: number
   /** Frecuencia reducida (código HZ): parada parcial. */
   parcial: boolean
+  /** Parcial con las dos frecuencias conocidas: a cuánto quedó y la de su prueba
+   *  (Hz). La fila dice «parcial: 39,5 de 60 Hz» (U2 §4.4, caso 4; B-22). */
+  hz?: { parada: number; prueba: number }
   /** Disparo de electrosumergible que volvió a arrancar en menos de 24 h. */
   disparo: boolean
   /** Lo que siguió cerrado después de la ventana del programa firmado. */
@@ -245,9 +253,10 @@ export function paradasAnh(campoIds: string[], desde: Date, hasta: Date, ctx: Co
         out.push({
           id, eventoId: ev.id, raiz, ...(minutos !== undefined ? { minutosDesdeRaiz: minutos } : {}),
           ...(evidencia ? { evidenciaYacimiento: evidencia } : {}), ...(clasificacion.revision ? { revision: clasificacion.revision } : {}), pozo: ev.pozo, campoId,
-          diaOperacional: diaOperacional(pz.a), inicio: isoCo(pz.a), fin: isoCo(fin),
+          diaOperacional: diaOperacional(pz.a), inicio: isoCo(pz.a), inicioEvento: isoCo(ms(ev.inicio)), fin: isoCo(fin),
           abiertaAlCorte: abierta, diaEnCurso: finDia > ahora,
-          fraccion, parcial: ev.codigo === 'HZ', disparo, exceso: pz.exceso,
+          fraccion, parcial: ev.codigo === 'HZ', ...(ev.codigo === 'HZ' && ev.hz && hzPrueba ? { hz: { parada: ev.hz, prueba: hzPrueba } } : {}),
+          disparo, exceso: pz.exceso,
           tramo: { n, m }, horas, diferidaTrimBbl: bbl, causa, clasificacion,
           estado: propuesta.estado, faltan: propuesta.faltan, propuesta, versionCatalogo: version,
         })

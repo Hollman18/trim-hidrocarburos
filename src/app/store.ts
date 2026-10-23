@@ -4,7 +4,7 @@ import { rangoDePeriodo } from '@/entities/diferido'
 import { rolPorId, ROL_INICIAL } from '@/entities/roles'
 import { CAMPOS, periodoPorId, campoPorId } from '@/entities/campos'
 import type { Periodo, IdPeriodo } from '@/entities/tipos'
-import { leerHash, escribirHash, rangoValido, pantallaDelRol, PRIMER_DIA, ULTIMO_DIA } from './url'
+import { leerHash, escribirHash, rangoValido, pantallaDelRol, PRIMER_DIA, ULTIMO_DIA, type DeLaDireccion } from './url'
 import { pantallaVisible } from '@/shared/config/producto'
 import { PANTALLAS } from '@/app/pantallas'
 import type { Elemento, Miembro, CambioPlanta, Tren } from '@/entities/planta'
@@ -46,6 +46,9 @@ interface Estado {
   onboarding: string | null
   equipoAbierto: string | null
   equipoExpandido: boolean
+  /** Una dirección que pedía un campo o el portafolio que la persona no tiene:
+   *  se abre lo suyo y se dice (B-38). Vale mientras la vista sea la de `clave`. */
+  avisoCampo: { texto: string; clave: string } | null
   /* Lo que es del servidor NO vive aquí: la configuración firmada, las
      respuestas, los accesos, los avisos enviados, los informes emitidos, la
      asignación oficial, los análisis, el esquema de planta y las decisiones
@@ -184,6 +187,15 @@ export function portafolioPermitido(rol: Rol, usuarios: readonly PersonaVisible[
 const camposDelRegistro = (usuarios: readonly PersonaVisible[]) => (rolId: string) => personaDelRol(usuarios, rolId)?.campos ?? rolPorId(rolId).campos
 const inicial = leerHash(camposDelRegistro(sesion().usuarios), ROL_INICIAL)
 const rolInicial = rolPorId(inicial.rolId ?? ROL_INICIAL)
+/** La vista que se está viendo: el aviso de una dirección vale solo para ella. */
+export const claveDeVista = (s: Pick<Estado, 'rolId' | 'pantalla' | 'campoId' | 'alcance'>) => `${s.rolId}|${s.pantalla}|${s.campoId}|${s.alcance}`
+/** «Usted no tiene asignado el campo La Zarza: le mostramos La Ceiba.» (B-38). */
+function avisoDeDireccion(c: DeLaDireccion, s: Pick<Estado, 'rolId' | 'pantalla' | 'campoId' | 'alcance'>): Estado['avisoCampo'] {
+  const visto = campoPorId(s.campoId).nombre
+  const texto = c.campoAjeno && c.campoAjeno !== s.campoId ? `Usted no tiene asignado el campo ${campoPorId(c.campoAjeno).nombre}: le mostramos ${visto}.`
+    : c.alcance === 'portafolio' && s.alcance !== 'portafolio' ? `Usted no tiene asignado el portafolio: le mostramos ${visto}.` : null
+  return texto ? { texto, clave: claveDeVista(s) } : null
+}
 /** «portafolio» era una pantalla y ahora es un alcance. Una dirección vieja
  *  o una pestaña abierta desde antes aterrizan donde corresponde. */
 const migrar = (p: string | undefined) => (p === 'portafolio' ? rolInicial.inicio : p)
@@ -202,6 +214,7 @@ export const useApp = create<Estado>((set, get) => ({
   onboarding: vistoOnboarding(rolInicial.id) ? null : rolInicial.id,
   equipoAbierto: inicial.equipoAbierto ?? null,
   equipoExpandido: false,
+  avisoCampo: null,
 
   firmarConfig: (config, motivo, base) => E.firmarConfiguracion(quien(), { config, motivo, base }),
   enviarAviso: a => E.enviarAviso(quien(), a),
@@ -237,7 +250,8 @@ export const useApp = create<Estado>((set, get) => ({
   yacimientoAnh: (id, c) => E.declararYacimientoAnh(quien(), id, c),
   responderAnh: (id, c) => E.responderPreguntaAnh(quien(), id, c),
   revisarAnh: (id, c) => E.revisarParadaAnh(quien(), id, c),
-  previsualizarConfig: config => E.previsualizarConfiguracion(quien(), { config }),
+  // La pantalla pide el impacto también con errores: los muestra al lado, sin firmar nada (B-53).
+  previsualizarConfig: config => E.previsualizarConfiguracion(quien(), { config, aunConErrores: true }),
   importarTopologia: (campo, texto) => E.importarTopologia(quien(), { campo, texto }),
 
   // Un campo que la persona no tiene no se abre, venga de donde venga. Al
@@ -311,6 +325,8 @@ export const useApp = create<Estado>((set, get) => ({
   agregarElemento: (campo, tren, elemento) => E.cambiarPlanta(quien(), campo, { tipo: 'agregar-elemento', tren, elemento }),
   quitarElemento: (campo, tren, id) => E.cambiarPlanta(quien(), campo, { tipo: 'quitar-elemento', tren, id }),
 }))
+// La dirección con la que se abrió la aplicación también se dice (B-38).
+useApp.setState({ avisoCampo: avisoDeDireccion(inicial, useApp.getState()) })
 
 /** Con qué rol se actúa: el que se está viendo (en producción, el del token). */
 const quien = (): E.Credencial => ({ rolId: useApp.getState().rolId })
@@ -413,6 +429,8 @@ function aplicarDireccion() {
   if (c.rango && (c.rango.desde !== s.rango?.desde || c.rango.hasta !== s.rango?.hasta)) s.setRango(c.rango.desde, c.rango.hasta)
   else if (c.periodoId && c.periodoId !== 'medida' && c.periodoId !== s.periodoId) s.setPeriodo(c.periodoId)
   if ((c.equipoAbierto ?? null) !== ahora().equipoAbierto) ahora().abrirEquipo(c.equipoAbierto ?? null)
+  // Un campo o un portafolio que la persona no tiene no se abre, y se dice (B-38).
+  useApp.setState({ avisoCampo: avisoDeDireccion(c, ahora()) })
   // Lo que la dirección pedía y no se pudo (un campo ajeno, un rol que no
   // existe) no se queda escrito: la dirección dice lo que de verdad se ve.
   escribirHash(aDireccion(ahora()))

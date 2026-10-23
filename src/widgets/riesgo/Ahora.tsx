@@ -33,18 +33,19 @@ export function Ahora({ campos, global, onRiesgo, onIdentificar }: {
   return (
     <div className="mb-2.5">
       <div className={clase}>
-        <Bloque onClick={onRiesgo} s={alto > 0 ? 1 : porDia > 0 ? 2 : 0}
+        {/* Los totales no llevan marca de alarma: la lleva el equipo que los causa, en el pie (B-40). */}
+        <Bloque onClick={onRiesgo} s={perd[0] ? (perd[0].altoImpacto ? 1 : 2) : 0}
           rotulo={`Perdiéndose ahora · ${fechaHora(AHORA)}`}
           valor={porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}
           pie={perd[0] ? `${perd[0].equipo}${donde(perd[0].campoId)} · ${TIPO_CAUSA[perd[0].tipo].toLowerCase()} · ${n0(perd[0].bblDia)} bbl/d${alto > 0 ? ` · ${n0(alto)} de alto impacto` : ''}` : 'todos los pozos produciendo'} />
-        <Bloque onClick={onRiesgo} s={enRiesgo.length ? 3 : 0}
+        <Bloque onClick={onRiesgo} s={proxima || enRiesgo[0] ? 3 : 0}
           rotulo={`En riesgo · ${enRiesgo.length} ${enRiesgo.length === 1 ? 'equipo' : 'equipos'} de alto impacto`}
           valor={enRiesgo.length ? `${n0(enRiesgo.reduce((a, r) => a + r.bblDia, 0))} bbl/d` : 'ninguno'}
           // Sin nada en riesgo, la frase del Resumen del gerente para lo mismo.
           pie={proxima ? `primero ${proxima.equipo}${donde(proxima.campoId)} · ${proxima.parte ? NOMBRE_PARTE[proxima.parte].toLowerCase() : ''} en ${fmtHoras(proxima.horas!)}` : enRiesgo[0] ? `${enRiesgo[0].equipo}: ${enRiesgo[0].motivo}`
             : perd.some(r => r.altoImpacto) ? 'ninguna otra bomba ni electrosumergible avisa' : 'ninguna bomba ni electrosumergible avisa'}
           aparte={otros && `+ ${otros.texto}`} />
-        <Bloque onClick={onIdentificar} s={sinArrancar ? 2 : pi.porIdentificar ? 3 : 0}
+        <Bloque onClick={onIdentificar} s={0}
           rotulo="Paradas por identificar"
           valor={pi.porIdentificar ? String(pi.porIdentificar) : 'ninguna'}
           pie={sinArrancar ? `${sinArrancar} ${sinArrancar === 1 ? 'equipo detenido' : 'equipos detenidos'}: no arrancar hasta identificar el daño` : pi.porIdentificar ? 'arrancaron sin identificar: no conformidad' : 'todas las paradas tienen causa'} />
@@ -61,6 +62,7 @@ export function Ahora({ campos, global, onRiesgo, onIdentificar }: {
 }
 
 function Bloque({ s, rotulo, valor, pie, aparte, onClick }: {
+  /** La marca del equipo que nombra el pie (no del total, B-40); 0 sin marca. */
   s: 0 | 1 | 2 | 3; rotulo: string; valor: string; pie: string
   /** Un renglón propio que no se corta (lo que no entra en la cifra). */
   aparte?: string
@@ -69,10 +71,10 @@ function Bloque({ s, rotulo, valor, pie, aparte, onClick }: {
   const cuerpo = (
     <>
       <small className="block text-[10.5px] text-[var(--tinta3)]">{rotulo}</small>
-      <b className="tabular flex items-center gap-1.5 text-[18px] leading-tight">
-        {s > 0 && <MarcaPrioridad s={s} tamano={14} />}{valor}
-      </b>
-      <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{pie}</small>
+      <b className="tabular block text-[18px] leading-tight">{valor}</b>
+      <small className="flex min-w-0 items-center gap-1 text-[10.5px] text-[var(--tinta2)]">
+        {s > 0 && <MarcaPrioridad s={s} tamano={11} />}<span className="truncate">{pie}</span>
+      </small>
       {aparte && <small className="block text-[10.5px] text-[var(--tinta2)]">{aparte}</small>}
     </>
   )

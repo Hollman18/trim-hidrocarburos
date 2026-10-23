@@ -70,7 +70,7 @@ export function Trabajo() {
             <small className="block text-[11px] text-[var(--tinta2)]">{r.parte ? NOMBRE_PARTE[r.parte].toLowerCase() : ''}{r.tag ? <>{r.parte ? ' · ' : ''}<span className="font-mono">{r.tag}</span></> : ''}</small>
           </span>
           <span className="tabular shrink-0 text-right text-[11px]">
-            {r.horas !== undefined ? <><span className="sr-only">cruza su límite en </span><b>{fmtHoras(r.horas)}</b></> : <Chip tono="fuerte">ya fuera</Chip>}
+            {r.horas !== undefined ? <><span className="sr-only">cruza su límite en </span><b>{fmtHoras(r.horas)}</b></> : <Chip tono="fuerte">ya pasó el límite</Chip>}
           </span>
         </button>
         {/* Si ya hay una orden suya para ese equipo, lo que hay que hacer está en la orden: no se repite. */}
@@ -101,8 +101,8 @@ export function Trabajo() {
           <small className={rotulo}>{avisan.length === 1 ? 'equipo avisando' : 'equipos avisando'}</small>
           {avisan[0] && (avisan[0].horas !== undefined
             ? <small className={apoyo}>el primero cruza en {fmtHoras(avisan[0].horas)}</small>
-            // Con varios, se dice cuántos están fuera: «3 equipos avisando [ya fuera]» parecería que los tres.
-            : <small className={apoyo}><Chip tono="fuerte">{avisan.length === 1 ? 'ya fuera' : `${avisan.filter(r => r.horas === undefined).length} ya fuera`}</Chip></small>)}
+            // Con varios, se dice cuántos están fuera: «3 equipos avisando [ya pasó el límite]» parecería que los tres.
+            : <small className={apoyo}><Chip tono="fuerte">{avisan.length === 1 ? 'ya pasó el límite' : `${avisan.filter(r => r.horas === undefined).length} ya pasaron el límite`}</Chip></small>)}
         </span>
       </div>
 

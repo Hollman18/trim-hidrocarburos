@@ -83,7 +83,7 @@ export function PorCampo({ lb, campos, desde, hasta, onAbrir, onCampo }: {
           sinCosto={lb.sinCosto.filter(x => x.campoId === c.campoId)}
           hoy={equipoHoy} onAbrir={onAbrir} onCampo={onCampo} />
       ))}
-      <LeyendaTramos className="mt-2" />
+      {lb.diferido >= 0.5 && <LeyendaTramos className="mt-2" />}
       <LineaPerdida className="mt-2.5 border-t border-[var(--linea2)] pt-2" />
     </section>
   )

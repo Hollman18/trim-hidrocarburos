@@ -7,7 +7,7 @@ import {
 } from '@/entities/anh-paradas'
 import {
   esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA, PONEN_YACIMIENTO, ATAJO_YACIMIENTO, N1_EN_CAMPO, ROLES_QUE_CONTESTAN,
-  CONFIRMAN_LO_QUE_APUNTA, NOMBRE_FILA, nombreDeRegla, esperaAQuienAbre, esNoSe, quienRevisa, esperaRevision, causaParaSalir,
+  CONFIRMAN_LO_QUE_APUNTA, PREGUNTAS_CAMPO, NOMBRE_FILA, nombreDeRegla, esperaAQuienAbre, esNoSe, quienRevisa, esperaRevision, causaParaSalir,
   type BorradorClasificacion, type ClasificacionAnh, type DatoClasificado, type PorqueChoke, type Procedencia, type PropuestaAnh,
   type PreguntaCampo, type OpcionCampo, type AtajoYacimiento, type EvidenciaYacimiento, type RespuestaCampo, type RevisionAnh,
   type IdPregunta, type QuienContesta,
@@ -41,6 +41,8 @@ import type { Contexto } from '@/entities/causa-senal'
 export {
   PASOS, PASO_CAMPO, PASO_CIRCULAR, RESPONSABLES, CHOKES, IMPACTOS, PLANEACIONES, ETIQUETA_RESPONSABLE, ETIQUETA_CHOKE,
   ETIQUETA_IMPACTO, ETIQUETA_PLANEACION, textoN1, textoN2, N1_EN_CAMPO, ATAJO_YACIMIENTO,
+  // Las preguntas de campo con su texto: la tarjeta repite lo que contestó cada persona (B-04, B-23).
+  PREGUNTAS_CAMPO,
   PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA, PONEN_YACIMIENTO, CONFIRMAN_EN_LOTE, ROLES_QUE_CONTESTAN, esDePersona, gruposPorCadena,
   // Las reglas del árbol que las pantallas dicen y no copian: quién confirma la
   // causa que una señal solo apunta (el jefe de mantenimiento y confiabilidad,

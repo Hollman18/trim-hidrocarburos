@@ -25,14 +25,22 @@ import { Rango } from '@/widgets/diferidos/Rango'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { alFinal } from '@/shared/ui/alFinal'
 import { cn } from '@/shared/lib/cn'
-import { Muestra } from '@/widgets/diferidos/tramos'
-import { RELLENO, LARGO_TRAMO, mayuscula } from '@/widgets/diferidos/reparto'
+import { Muestra, PatronesTramo } from '@/widgets/diferidos/tramos'
+import { LARGO_TRAMO, mayuscula, rellenoSvg } from '@/widgets/diferidos/reparto'
+import { formatoFecha } from '@/shared/lib/fecha'
 import { otrosEnAlarma } from './enAlarma'
 import { PorCampo } from './PorCampo'
 import { PanelDondeSeTrabo, AntesConTrimPorTramo } from './DondeSeTrabo'
 
 const D = 86_400_000
 /** Un cambio en %: con signo, salvo que redondee a cero («0 %», nunca «−0 %»). */
+const MES_CORTO = formatoFecha({ month: 'short', timeZone: 'America/Bogota' })
+/** «jun a ago»: los tres meses antes de que entrara TRIM, como los escribe la base por tramo (B-50). */
+const mesesAntes = (inicio: Date) => {
+  const co = new Date(inicio.getTime() - 5 * 3_600_000)
+  const mes = (k: number) => MES_CORTO.format(new Date(Date.UTC(co.getUTCFullYear(), co.getUTCMonth() + k, 15, 12)))
+  return `${mes(-3)} a ${mes(-1)}`
+}
 const signo = (v: number) => { const r = Math.round(v * 100); return `${r > 0 ? '+' : r < 0 ? '−' : ''}${n0(Math.abs(r))} %` }
 
 /** El resumen del directivo: cinco respuestas y nada más. Cuánto no se
@@ -85,7 +93,7 @@ export function ResumenDirectivo() {
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
 
   const otrosTip: Array<[string, string]> = (otros?.filas ?? []).map(r => [`${r.equipo}${ambito.global ? ` · ${campoPorId(r.campoId).nombre}` : ''}`, TIPO_CAUSA[r.tipo]])
-  const pieRiesgo = proxima ? `primero ${proxima.equipo} en ${fmtHoras(proxima.horas!)}` : enRiesgo[0] ? `${enRiesgo[0].equipo} ya fuera`
+  const pieRiesgo = proxima ? `primero ${proxima.equipo} en ${fmtHoras(proxima.horas!)}` : enRiesgo[0] ? `${enRiesgo[0].equipo} ya pasó el límite`
     : perdiendo.some(r => r.altoImpacto) ? 'ninguna otra bomba ni electrosumergible avisa' : 'ninguna bomba ni electrosumergible avisa'
   // Sin `truncate`: a 1.280 px con un campo se cortaba y el número de servicios no se veía.
   // Lo que no es de alto impacto va en su renglón, que no se corta.
@@ -176,15 +184,17 @@ export function ResumenDirectivo() {
       <section className="mb-2.5 grid items-center gap-x-6 gap-y-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-4 py-3 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
         <span className="min-w-0">
           <small className="block text-[10.5px] text-[var(--tinta3)]">Durante · crudo en vivo</small>
-          <b className="tabular flex items-center gap-1.5 text-[18px] leading-tight">
-            {porDia > 0 && <MarcaPrioridad s={perdiendo.some(r => r.altoImpacto) ? 1 : 2} tamano={14} />}{porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}
-          </b>
+          {/* Un total no lleva marca de alarma: la lleva el equipo que lo causa, en «Causa mayor» (B-40). */}
+          <b className="tabular block text-[18px] leading-tight">{porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}</b>
           <small className="block text-[10.5px] text-[var(--tinta2)]">{porDia > 0 ? `${parados} de ${pozos} pozos parados` : 'todos los pozos produciendo'}</small>
         </span>
         {porDia > 0 && (
           <span className="min-w-0">
             <small className="block text-[10.5px] text-[var(--tinta3)]">Causa mayor</small>
-            <b className="block truncate text-[15px] leading-tight">{perdiendo[0]!.equipo}{ambito.global ? ` · ${campoPorId(perdiendo[0]!.campoId).nombre}` : ''}</b>
+            <b className="flex min-w-0 items-center gap-1.5 text-[15px] leading-tight">
+              <MarcaPrioridad s={perdiendo[0]!.altoImpacto ? 1 : 2} tamano={14} />
+              <span className="truncate">{perdiendo[0]!.equipo}{ambito.global ? ` · ${campoPorId(perdiendo[0]!.campoId).nombre}` : ''}</span>
+            </b>
             <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{TIPO_CAUSA[perdiendo[0]!.tipo].toLowerCase()}</small>
           </span>
         )}
@@ -199,7 +209,8 @@ export function ResumenDirectivo() {
           <b className="tabular block text-[26px] leading-none">{n0(altoPct)} %</b>
           <small className="block text-[11.5px] text-[var(--tinta2)]">del diferido · reinyección y electrosumergibles</small>
           <p className="mt-2 text-[11px] text-[var(--tinta2)]">
-            <span className="flex flex-wrap items-center gap-x-1">Alto impacto · tendencia (3 meses previos → con TRIM)
+            {/* La misma base escrita igual que «Por dónde se trabó» (B-50). */}
+            <span className="flex flex-wrap items-center gap-x-1">Alto impacto · tendencia ({mesesAntes(inicio)} → con TRIM, desde el {fechaCorta(inicio)})
               <Info titulo="Tendencia histórica" texto={`Alto impacto por día desde que entró TRIM (${fechaCorta(inicio)}) contra los tres meses antes. Es una comparación histórica, no la fase Antes del retorno posible.`} />
             </span>
             <b className="tabular block text-[13px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
@@ -271,7 +282,7 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
   porTramo?: MesPorTramo[]
 }) {
   const [vista, setVista] = useState<'equipo' | 'tramo'>('equipo')
-  const rayado = `rayado-${useId().replace(/:/g, '')}`
+  const idp = useId().replace(/:/g, '')
   const deMes = new Map((porTramo ?? []).map(t => [t.mes, t]))
   const porDonde = vista === 'tramo' && porTramo !== undefined
   const W = 520, G = { x0: 8, x1: 512, y0: 18, y1: 96 }
@@ -303,12 +314,7 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
     <div ref={alFinal} className="mt-2 overflow-x-auto">
       <svg viewBox={`0 0 ${W} 118`} className="block h-auto w-full min-w-[420px]" role="group"
         aria-label={porDonde ? 'Diferido por día de cada mes, por dónde se trabó, contra su máximo firmado' : 'Diferido por día de cada mes contra su máximo firmado'}>
-        <defs>
-          <pattern id={rayado} width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="4" height="4" fill="var(--panel)" />
-            <line x1="0" y1="0" x2="0" y2="4" stroke="var(--tinta3)" strokeWidth="1.5" />
-          </pattern>
-        </defs>
+        <defs><PatronesTramo id={idp} /></defs>
         {pts.map((p, i) => {
           const x = G.x0 + paso * i + (paso - ancho) / 2
           const activo = p.m.desde < hasta && p.m.hasta > desde
@@ -329,7 +335,7 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
                     const y1 = Y(base), y0 = Y(base + v)
                     base += v
                     const sin = k === 'sin-asignar'
-                    return <rect key={k} x={x} y={y0} width={ancho} height={Math.max(0.5, y1 - y0)} fill={sin ? `url(#${rayado})` : RELLENO[k]}
+                    return <rect key={k} x={x} y={y0} width={ancho} height={Math.max(0.5, y1 - y0)} fill={rellenoSvg(k, idp)}
                       stroke={sin ? 'var(--tinta3)' : 'var(--panel)'} strokeWidth={sin ? 0.8 : 0.6} strokeDasharray={sin ? '2 1.5' : undefined} />
                   })
                   : (

@@ -7,13 +7,16 @@ import { test } from './apoyo.ts'
 import { detectar } from './auditoria/detector.ts'
 
 const RUTA = '/#/adm/configuracion/ceiba/curso'
-const CSV_MALO = 'equipo;pozos a los que sirve\nLC-11;LC-11 LC-12\nXX-99;LC-01\nSE-2;todos'
+const CSV_MALO = 'equipo;pozos a los que sirve\nK-101;LC-11 LC-12\nXX-99;LC-01\nSE-2;todos'
 
 /** El administrador abre «Filosofía operacional» en Configuración. */
 async function abrirFilosofia(page: Page) {
   await page.getByRole('tab', { name: 'Filosofía operacional' }).click()
   await expect(page.getByRole('heading', { name: 'Filosofía operacional · La Ceiba' })).toBeVisible()
 }
+
+/** El renglón de un equipo en la lista del escritorio. */
+const renglon = (page: Page, equipo: string) => page.getByRole('button', { name: new RegExp(`^${equipo} `) })
 
 /** Escoge un equipo: en el escritorio, de la lista; en el teléfono, del selector «Ir a otro equipo». */
 async function escoger(page: Page, equipo: string) {
@@ -22,19 +25,21 @@ async function escoger(page: Page, equipo: string) {
   else await page.getByRole('button', { name: new RegExp(`^${equipo} `) }).click()
 }
 
-/** «A varios pozos»: el levantamiento de LC-11 (su electrosumergible, su
- *  variador y su transformador, que hoy son solo del pozo) pasa a servir a LC-11
- *  y LC-12. El demo no tiene transformadores de pozo sueltos (U2 §8.6): el de
- *  LC-11 va dentro de su levantamiento, dedicado al pozo. */
-async function transformadorDeVarios(page: Page) {
-  await escoger(page, 'LC-11')
+/** Un equipo que TRIM cree de todo el campo y el administrador dice que es de un
+ *  solo pozo: K-101 (el aire de instrumentos) solo para LC-11. Sus paradas pasan
+ *  de la planta o estación al pozo. Un pozo no se escoge: solo se sirve a sí
+ *  mismo (C-13), así que la prueba usa un equipo de la planta. */
+async function deUnSoloPozo(page: Page) {
+  await escoger(page, 'K-101')
   const pregunta = page.getByRole('group', { name: '¿A qué pozos sirve este equipo?' })
-  await expect(pregunta.getByRole('radio', { name: 'A un solo pozo' }), 'hoy LC-11 es dedicado: le sirve a un solo pozo').toBeChecked()
-  await pregunta.getByRole('radio', { name: 'A varios pozos' }).check()
-  await pregunta.getByRole('checkbox', { name: 'LC-12', exact: true }).check()
+  // B-49: lo que TRIM deduce no se ve marcado mientras nadie lo acepte: va al lado, «propuesta de TRIM, sin aceptar».
+  await expect(pregunta.getByRole('radio', { name: /^A todo el campo/ }), 'nadie lo ha contestado: nada marcado').not.toBeChecked()
+  await expect(pregunta.locator('[data-propuesta-sin-aceptar]')).toContainText('propuesta de TRIM, sin aceptar')
+  await pregunta.getByRole('radio', { name: /^A un solo pozo/ }).check()
+  await page.getByLabel('Pozo al que sirve K-101').selectOption('LC-11')
 }
 
-test('adm: el transformador de un pozo que sirve a varios pasa sus paradas del pozo a la planta o estación', async ({ flujo: f }) => {
+test('adm: un equipo de la planta que sirve a un solo pozo pasa sus paradas de la planta o estación al pozo', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir(RUTA)
   await abrirFilosofia(page)
@@ -42,18 +47,33 @@ test('adm: el transformador de un pozo que sirve a varios pasa sus paradas del p
   f.ok(t.includes('modelo choke') && /Sin responder \d+/.test(t) && /Propuestas de TRIM \d+/.test(t) && t.includes('Todos 36'),
     'la página dice «modelo choke» de segundo y filtra lo que falta, lo que propone TRIM y todo (36 equipos)')
   f.ok(!/\b(dedicado|compartido|frontera|tercero)\b/.test(t), 'el administrador no ve los nombres internos del alcance: ve botones y frases')
+  // B-29: sin tag, el equipo se llama por su nombre, nunca por la clave del esquema.
+  const nombres = (await page.locator('main button[aria-pressed] b').allInnerTexts()).map(x => x.trim())
+  f.ok(['Manifold de producción', 'Depurador de gas', 'Tea / quemador', 'Tanque de agua'].every(x => nombres.includes(x))
+    && !nombres.some(x => ['manifold', 'depurador', 'tea', 'tanqueAgua', 'gasventa', 'oleoducto', 'inyeccion'].includes(x)),
+    `los equipos sin tag van con su nombre, no con la clave interna (${nombres.filter(x => !/\d/.test(x)).join(', ')})`)
+  // B-49: lo que nadie contestó dice que es lo que TRIM deduce, y el ⓘ de los filtros dice en qué se diferencian.
+  f.ok(t.includes('TRIM deduce: sirve solo a LC-01 → se traba en el pozo'), 'un renglón sin responder dice «TRIM deduce: …»')
+  await expect(page.getByRole('img', { name: /^Sin responder y propuestas de TRIM: / })).toHaveCount(1)
+  // C-13: un pozo solo se sirve a sí mismo: su única respuesta es él, sin escoger.
+  await escoger(page, 'LC-11')
+  const pozo = page.getByRole('group', { name: '¿A qué pozos sirve este equipo?' })
+  await expect(pozo.getByRole('radio')).toHaveCount(1)
+  await expect(pozo.getByRole('radio', { name: /^A un solo pozo: LC-11/ })).toHaveCount(1)
+  await expect(pozo.locator('[data-pozo-propio]')).toContainText('Es un pozo: solo se sirve a sí mismo.')
 
-  await transformadorDeVarios(page)
-  await f.esperarTexto('Si para, se traba en la planta o estación: sirve a 2 pozos.')
-  t = await f.texto()
-  f.ok(t.includes('sirve a LC-11 y LC-12 → se traba en la planta') && t.includes('en el borrador'), 'la lista dice lo que deduce TRIM y que está en el borrador')
+  await deUnSoloPozo(page)
+  await f.esperarTexto('Si para, se traba en el pozo: es solo de LC-11.')
+  const k101 = await renglon(page, 'K-101').innerText()
+  f.ok(k101.includes('sirve solo a LC-11 → se traba en el pozo') && k101.includes('en el borrador') && !k101.includes('TRIM deduce'),
+    `la lista dice lo contestado y que está en el borrador (${k101.replace(/\n/g, ' · ')})`)
 
   await page.getByRole('button', { name: '3 Ver el impacto y firmar' }).click()
-  await f.esperarTexto('pasan de «En el pozo» a «En la planta o estación»')
+  await f.esperarTexto('pasan de «En la planta o estación» a «En el pozo»')
   t = await f.texto()
   f.ok(/\d+ paradas cambiarían de tramo desde el 1 de jul/.test(t), 'la vista previa cuenta las paradas de los últimos meses que cambian de tramo')
-  f.ok(/\b[1-9]\d* pasan de «En el pozo» a «En la planta o estación»/.test(t), 'y dice que pasan de «En el pozo» a «En la planta o estación»')
-  f.ok(t.includes('LC-11 · electrosumergible') && t.includes('se trabaría en la planta o estación (antes en el pozo)'), '«si falla hoy» dice dónde se trabaría LC-11 ahora')
+  f.ok(/\b[1-9]\d* pasan de «En la planta o estación» a «En el pozo»/.test(t), 'y dice que pasan de «En la planta o estación» a «En el pozo»')
+  f.ok(/K-101[^\n]*se trabaría en el pozo \(antes en la planta o estación\)/.test(t), '«si falla hoy» dice dónde se trabaría K-101 ahora')
   f.ok(t.includes('los pozos → los pozos (no cambia)'), 'qué limita hoy no cambia')
   f.ok(t.includes('no cambia: la topología no mueve barriles'), 'y el libro no cambia')
   f.ok(t.includes('Ninguna la había confirmado una persona') || t.includes('que ya confirmó una persona no cambian solas'), 'dice qué pasa con las ya confirmadas')
@@ -88,13 +108,18 @@ test('un CSV con una fila mala dice el hallazgo de esa fila y no pasa nada al bo
   await page.getByRole('button', { name: 'Revisar', exact: true }).click()
   await f.esperarTexto('Fila 2: MN-07 no es un pozo de La Ceiba.')
 
+  // Un pozo que sirve a otro tampoco (C-13): lo mismo que la firma, dicho en su fila.
+  await caja.fill('equipo;pozos a los que sirve\nLC-11;LC-11 LC-12')
+  await page.getByRole('button', { name: 'Revisar', exact: true }).click()
+  await f.esperarTexto('Fila 2: LC-11 es un pozo: solo se sirve a sí mismo')
+
   // Corregido, pasa al borrador y la lista lo muestra.
-  await caja.fill('equipo;pozos a los que sirve\nLC-11;LC-11 LC-12\nSE-2;todos')
+  await caja.fill('equipo;pozos a los que sirve\nK-101;LC-11 LC-12\nSE-2;todos')
   await page.getByRole('button', { name: 'Revisar', exact: true }).click()
   await page.getByRole('button', { name: 'Pasar 2 equipos al borrador' }).click()
   await f.esperarTexto('2 equipos pasaron al borrador')
   t = await f.texto()
-  f.ok(t.includes('sirve a LC-11 y LC-12 → se traba en la planta'), 'LC-11 queda en el borrador sirviendo a LC-11 y LC-12')
+  f.ok(t.includes('sirve a LC-11 y LC-12 → se traba en la planta'), 'K-101 queda en el borrador sirviendo a LC-11 y LC-12')
   f.cerrar()
 })
 
@@ -102,7 +127,7 @@ test('firmar la filosofía operacional exige motivo y deja la versión con la to
   const { page } = f
   await f.abrir(RUTA)
   await abrirFilosofia(page)
-  await transformadorDeVarios(page)
+  await deUnSoloPozo(page)
 
   // Con lo demás sin contestar no se firma: TRIM propone, pero no firma nada solo.
   await page.getByRole('button', { name: '3 Ver el impacto y firmar' }).click()
@@ -136,7 +161,29 @@ test('firmar la filosofía operacional exige motivo y deja la versión con la to
   f.ok(t.includes('«Topología revisada en campo con el jefe de planta»') && t.includes('Hermes Leal · administrador de la implementación'), 'con el motivo y quién firmó')
   await page.getByRole('button', { name: '1 Equipos y pozos' }).click()
   await f.esperarTexto('Todos 36')
-  f.ok((await f.texto()).includes('sirve a LC-11 y LC-12 → se traba en la planta') && /Sin responder 0/.test(await f.texto()), 'firmada, LC-11 sirve a LC-11 y LC-12 y no queda nada sin responder')
+  f.ok((await renglon(page, 'K-101').innerText()).includes('sirve solo a LC-11 → se traba en el pozo') && /Sin responder 0/.test(await f.texto()), 'firmada, K-101 sirve solo a LC-11 y no queda nada sin responder')
+  f.cerrar()
+})
+
+test('capacidades: lo que bloquea la firma lo dice con la marca de aviso y la palabra, y el paso 3 muestra el impacto aunque haya errores', async ({ flujo: f }) => {
+  const { page } = f
+  await f.abrir(RUTA)
+  await abrirFilosofia(page)
+  await page.getByRole('button', { name: '2 Capacidades' }).click()
+  await page.getByLabel('Tren de crudo, bbl/d de crudo').fill('5000')
+  const revision = page.locator('main section').filter({ has: page.getByText('REVISIÓN CON LAS REGLAS DE LA FIRMA', { exact: true }) })
+  await expect(revision.locator('[data-bloquea]').first()).toContainText('Bloquea la firma:')
+  const reglas = await revision.locator('li').allInnerTexts()
+  // B-30: el morado es solo de «sin comunicación» y «dato inválido»; bloquear o no se dice con palabra y forma.
+  f.ok(reglas.length > 0 && reglas.every(x => /(Bloquea la firma|Revise):/.test(x)), `cada hallazgo empieza por «Bloquea la firma:» o «Revise:» (${reglas.length})`)
+  await expect(revision.getByRole('img', { name: 'Bloquea la firma' })).toHaveCount(0)
+  // B-53: con errores, «SI FIRMA ESTA VERSIÓN» dice igual lo que cambiaría, marcado como borrador con errores.
+  await page.getByRole('button', { name: /^3 Ver el impacto/ }).first().click()
+  const errores = page.locator('main [data-borrador-con-errores]')
+  await expect(errores).toContainText('Borrador con errores: así quedaría. No se puede firmar hasta corregir esto:')
+  await expect(errores).toContainText('Tren de crudo de La Ceiba')
+  await expect(page.getByRole('region', { name: 'Lo que cambia en La Ceiba' })).toContainText('Qué limita hoy')
+  await expect(page.getByRole('button', { name: /^Firmar como/ })).toBeDisabled()
   f.cerrar()
 })
 
@@ -159,9 +206,9 @@ for (const ancho of [390, 320, 1280, 1512]) {
       f.ok(telefono ? (await f.texto()).includes('Equipo 1 de 36 · borrador') : (await f.texto()).includes('EQUIPOS · 36'),
         telefono ? 'en el teléfono va una pregunta por pantalla' : 'en el escritorio, la lista de los 36 equipos al lado de la pregunta')
       await revisar('paso 1')
-      await transformadorDeVarios(page)
-      await f.esperarTexto('Si para, se traba en la planta o estación: sirve a 2 pozos.')
-      await revisar('paso 1 · a varios pozos')
+      await deUnSoloPozo(page)
+      await f.esperarTexto('Si para, se traba en el pozo: es solo de LC-11.')
+      await revisar('paso 1 · a un solo pozo')
       await escoger(page, 'K-101')
       await page.getByRole('button', { name: /^Ver las \d+ caídas/ }).click()
       await revisar('paso 1 · propuesta con sus caídas')
@@ -174,7 +221,7 @@ for (const ancho of [390, 320, 1280, 1512]) {
       await f.esperarTexto('REVISIÓN CON LAS REGLAS DE LA FIRMA')
       await revisar('paso 2')
       await page.getByRole('button', { name: '3 Ver el impacto y firmar' }).click()
-      await f.esperarTexto('pasan de «En el pozo»')
+      await f.esperarTexto('pasan de «En la planta o estación»')
       const t = await f.texto()
       f.ok(telefono ? t.includes('La firma se hace en el escritorio') && !t.includes('FIRMAR LA VERSIÓN') : t.includes('FIRMAR LA VERSIÓN'),
         telefono ? 'en el teléfono la firma se hace en el escritorio (U2 §8.7)' : 'en el escritorio la firma va debajo de la vista previa')

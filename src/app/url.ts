@@ -54,9 +54,12 @@ export function rangoValido(a: string, b: string): { desde: string; hasta: strin
  *  rol que se está viendo: si la dirección no trae un rol válido, la pantalla
  *  y el campo se validan contra ESE rol, no contra el de arranque (antes un
  *  «#//produccion/palmar» le abría al operador una pantalla y un campo ajenos). */
-export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id => rolPorId(id).campos, rolActual?: string): Partial<Contexto> => {
+/** Lo que se lee de la dirección: el contexto que se puede abrir y, aparte,
+ *  el campo del registro que pedía y la persona no tiene (se dice: B-38). */
+export type DeLaDireccion = Partial<Contexto> & { campoAjeno?: string }
+export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id => rolPorId(id).campos, rolActual?: string): DeLaDireccion => {
   const [rolId, pantalla, campoId, periodoId, equipo] = location.hash.replace(/^#\/?/, '').split('/')
-  const ctx: Partial<Contexto> = {}
+  const ctx: DeLaDireccion = {}
   // Solo roles del producto: un enlace viejo a un rol de v2 (plan, cont, reg)
   // dejaba guardado un rol que la cabecera mostraba como producción y con el
   // que nadie podía firmar ni exportar.
@@ -76,6 +79,7 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
   const asignado = (id: string) =>
     campos === 'todos' ? CAMPOS.some(c => c.id === id) : campos.includes(id)
   if (soloCampo && asignado(soloCampo)) ctx.campoId = soloCampo
+  else if (soloCampo && CAMPOS.some(c => c.id === soloCampo)) ctx.campoAjeno = soloCampo
   // Solo un período de la cabecera: otro texto no se cambia por «mes en curso», se ignora y la dirección se reescribe con el que se ve.
   if (periodoId && esIdPeriodo(periodoId)) ctx.periodoId = periodoId
   const r = periodoId?.match(RANGO)

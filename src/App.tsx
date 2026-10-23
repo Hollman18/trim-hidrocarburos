@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { ComoSeLee } from '@/shared/ui/comoSeLee'
 import { cn } from '@/shared/lib/cn'
-import { useApp, useRol } from '@/app/store'
+import { useApp, useRol, claveDeVista } from '@/app/store'
 import { PANTALLAS } from '@/app/pantallas'
 import { Pendiente } from '@/pages/Pendiente'
 import { SoloCampo } from '@/pages/SoloCampo'
@@ -30,6 +30,15 @@ const esEscritorio = () => matchMedia(ESCRITORIO).matches
  *  `role="status"`: el lector de pantalla anuncia que está cargando.
  *  `data-cargando`: las pruebas de navegador esperan a que no quede ninguno. */
 const CARGANDO = <p role="status" data-cargando="" className="p-3 text-[12px] text-[var(--tinta3)]">Cargando…</p>
+
+/** Una dirección compartida que pedía un campo (o el portafolio) que la persona
+ *  no tiene abre lo suyo y lo dice, mientras no se mueva de esa vista (B-38). */
+function AvisoDeDireccion() {
+  const aviso = useApp(s => s.avisoCampo)
+  const clave = useApp(claveDeVista)
+  if (!aviso || aviso.clave !== clave) return null
+  return <p role="status" className="no-imprimir mb-2.5 rounded border border-dashed border-[var(--tinta3)] px-2.5 py-1.5 text-[12px] text-[var(--tinta2)]" data-aviso-campo>{aviso.texto}</p>
+}
 
 export default function App() {
   const pantalla = useApp(s => s.pantalla)
@@ -89,6 +98,7 @@ export default function App() {
           <Suspense fallback={CARGANDO}><Cabecera onMenu={() => setNav(true)} /></Suspense>
         </LimiteDeError>
         <div className="vista flex-1 overflow-y-auto p-2.5 sm:p-3">
+          <AvisoDeDireccion />
           <Subpantallas />
           {sinSub
             ? <Hueco>{sinPerfil.length

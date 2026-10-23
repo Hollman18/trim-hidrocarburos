@@ -166,6 +166,12 @@ const pruebaAntes = (pozo: Pozo, t: number) => {
 const FMT_HORA = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' })
 const hora = (d: Date) => FMT_HORA.format(d)
 const bbl = (n: number) => Math.round(n).toLocaleString('es-CO')
+/** El respaldo firmado, dicho por quién es: lo que va antes de la primera coma
+ *  o de los dos puntos, sin lo que va entre paréntesis («P-201A y P-201C en
+ *  paralelo»). Las cifras (lo libre, lo que deja el cabezal) no van al operador
+ *  por WhatsApp (B-05): están en la pantalla. */
+export const respaldoCorto = (detalle: string) =>
+  (detalle.split(/[,:;]/)[0] ?? detalle).replace(/\s*\([^)]*\)/g, '').trim() || detalle
 
 /** La opción abierta: la persona escribe lo que encontró. */
 export const OTRA: Opcion = { clave: '0', texto: 'Otra cosa: escríbala' }
@@ -277,11 +283,14 @@ export function mensajesDe(a: {
         // Lo que pasa si una bomba no arranca depende de su respaldo declarado:
         // sin respaldo se cierran pozos; con uno que toma todo su caudal, no.
         const respaldo = esp ? undefined : respaldoDe(cfg, c, equipo)
+        // Al operador, el respaldo por su nombre y nada más: las cifras del
+        // cabezal de disposición son de ingeniería y van en la pantalla (B-05).
+        const quien = respaldo ? respaldoCorto(respaldo.detalle) : ''
         const consecuenciaBomba = !respaldo || !(respaldo.libreBpd > 0)
           ? 'Si no arranca a tiempo, hay que cerrar los pozos que dependen de ella.'
           : capacidad !== undefined && respaldo.libreBpd >= capacidad
-            ? `Tiene respaldo (${respaldo.detalle}): toma todo su caudal y no hay que cerrar pozos.`
-            : `Tiene respaldo (${respaldo.detalle}), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos.`
+            ? `Tiene respaldo (${quien}): toma todo su caudal y no hay que cerrar pozos.`
+            : `Tiene respaldo (${quien}), pero no para todo su caudal: si no arranca a tiempo, puede haber que cerrar pozos.`
         const prueba = pozo ? pruebaAntes(pozo, t0) : undefined
         const parametros = { equipo, campo: nombre(c), hora: hora(e.inicio),
           consecuencia: !esp ? consecuenciaBomba

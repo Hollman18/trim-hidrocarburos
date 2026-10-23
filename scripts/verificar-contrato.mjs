@@ -617,13 +617,14 @@ try {
       && !('topologia' in CONF.normalizarConfig({ ...base10, topologia: [] })) && Object.keys(normal.topologia[0]).sort().join() === 'alcance,choke,elemento,pozos',
       `una topología con un dedicado de dos pozos, un campo sin registrar, un tramo que no sale del alcance o un pozo ajeno no se firma (${errs.length} reglas); un elemento sin campo toca todos los campos; vacía, con null o con lo que trae la vista (nombre, clase) se normaliza a la forma firmada`)
     // i. La carga por CSV: lo que bloquea, por fila; el caso de borde avisa sin bloquear.
-    const csv = await E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: 'equipo,pozos\nSE-2,todos\nNO-EXISTE,LC-01\nP-201B,"LC-16, LC-07"\np-201b,LC-01\nK-101,LC-99\nV-101,\n' })
+    const csv = await E.importarTopologia({ rolId: 'adm' }, { campo: 'ceiba', texto: 'equipo,pozos\nSE-2,todos\nNO-EXISTE,LC-01\nP-201B,"LC-16, LC-07"\np-201b,LC-01\nK-101,LC-99\nV-101,\nLC-11,LC-11 LC-12\nLC-12,LC-12\n' })
     const bloquean = csv.hallazgos?.filter(h => h.bloquea).map(h => h.fila).join()
     const mpp = escritas.importar.hallazgos.find(h => h.equipo === 'MPP-301')
-    comprobar(csv.ok && bloquean === '3,5,6,7' && csv.topologia.map(e => `${e.elemento}:${e.alcance}:${e.pozos.length}`).join() === `SE-2:compartido:${MED.pedirPozosDelCampo('ceiba').length},P-201B:compartido:2`
-      && csv.filas === 6 && escritas.importar.topologia.find(e => e.elemento === 'MPP-301')?.casoBorde === 'misma-locacion' && mpp && !mpp.bloquea
+    const pozoAjeno = csv.hallazgos?.find(h => h.fila === 8)
+    comprobar(csv.ok && bloquean === '3,5,6,7,8' && csv.topologia.map(e => `${e.elemento}:${e.alcance}:${e.pozos.length}`).join() === `SE-2:compartido:${MED.pedirPozosDelCampo('ceiba').length},P-201B:compartido:2,LC-12:dedicado:1`
+      && /LC-11 es un pozo: solo se sirve a sí mismo/.test(pozoAjeno?.texto ?? '') && csv.filas === 8 && escritas.importar.topologia.find(e => e.elemento === 'MPP-301')?.casoBorde === 'misma-locacion' && mpp && !mpp.bloquea
       && !(await E.importarTopologia({ rolId: 'sup' }, { campo: 'ceiba', texto: 'SE-2;todos' })).ok,
-      `el CSV dice por fila lo que bloquea (filas ${bloquean}: equipo que no existe, repetido, pozo ajeno, sin pozos) y el caso de borde de MPP-301 avisa sin bloquear («${mpp?.texto.slice(0, 70)}…»); solo el administrador la carga`)
+      `el CSV dice por fila lo que bloquea (filas ${bloquean}: equipo que no existe, repetido, pozo ajeno, sin pozos, un pozo que sirve a otro: C-13) y el caso de borde de MPP-301 avisa sin bloquear («${mpp?.texto.slice(0, 70)}…»); solo el administrador la carga`)
     // j. Las rutas nuevas están en CONTRATO.md.
     const nuevas = ['TUBERIA', 'SERIE_CHOKE', 'TUBERIA_AGUA', 'CAPACIDADES', 'CRITICIDAD', 'REPARTO_CHOKE', 'REPARTO_CHOKE_MENSUAL', 'BASE_CHOKE', 'ARBOL_CHOKE', 'TOPOLOGIA', 'PROPUESTAS_TOPOLOGIA', 'PARADAS_ANH', 'CALIDAD_ANH']
       .map(n => `\`${C[n].ruta}`)
@@ -719,6 +720,12 @@ try {
     const menos = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 5000, fuente: 'placa' } }), motivo: 'prueba de capacidades', base: base11().base })
     const empata = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', afuera: { bpd: 13000, fuente: 'contrato' } }), motivo: 'prueba de capacidades', base: base11().base })
     const previa = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 12000, fuente: 'prueba' } }) })
+    // B-53: con errores, la vista previa dice el impacto igual si se pide `aunConErrores`; sin pedirlo, 422 como la firma.
+    const previaMala = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 5000, fuente: 'placa' } }) })
+    const previaAun = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 5000, fuente: 'placa' } }), aunConErrores: true })
+    comprobar(!previaMala.ok && /menos de lo que ya pasó/.test(previaMala.error) && previaAun.ok && previaAun.impacto.campos[0]?.campoId === 'ceiba'
+      && previaAun.errores?.some(x => /menos de lo que ya pasó/.test(x)) && !(previa.ok && previa.errores),
+      `la vista previa de un borrador con errores: sin «aunConErrores», 422 como la firma; con él, el impacto y los errores al lado («${previaAun.errores?.[0]?.slice(0, 60)}…»), y sin errores no trae la lista`)
     const firma11 = await E.firmarConfiguracion({ rolId: 'adm' }, { config: conCap({ campoId: 'ceiba', crudo: { bpd: 12000, fuente: 'prueba' } }), motivo: 'capacidades de La Ceiba de prueba', base: base11().base })
     const despues11 = CHK.pedirCapacidades('ceiba', SES.sesion().ctx, SES.sesion().versiones)
     const tub11 = CHK.pedirTuberia('ceiba', new Date(cal.at(-1).desde), AHORA, SES.sesion().ctx, SES.sesion().versiones)
@@ -895,6 +902,18 @@ try {
       const vista = ARB.cadenaVista(grupo[0].clasificacion)
       const lote = await E.confirmarParadasAnh({ rolId: 'prod' }, { ids: grupo.map(p => p.id), cadena: vista })
       return { bien: !sin.ok && /«cadena» falta/.test(sin.error) && lote.ok && lote.lote?.cadena === vista, dice: sin.ok ? 'confirmó sin ver' : sin.error.slice(0, 70) }
+    })
+    await caso(`B-07 · el jefe confirma de un toque las filas de UNA parada (la cascada de ${raiz13}), sin lote; con filas de otra parada sigue siendo un lote, que es de quien firma el día`, async () => {
+      const vista = ARB.cadenaVista(fila13(idsC[0]).clasificacion)
+      const mismas = idsC.map(fila13).filter(f => ARB.cadenaVista(f.clasificacion) === vista).map(f => f.id)
+      const una = await E.confirmarParadasAnh({ rolId: 'jefe' }, { ids: mismas, cadena: vista })
+      const confirmadas = una.ok ? una.paradas.filter(p => ANC.PASOS.some(x => p.clasificacion[x]?.procedencia === 'confirmado')).length : 0
+      volver13()
+      const otra = hist13.find(p => p.raiz !== raiz13 && p.campoId === A13.campoId)
+      const dos = await E.confirmarParadasAnh({ rolId: 'jefe' }, { ids: [mismas[0], otra.id], cadena: vista })
+      return { bien: mismas.length >= 2 && una.ok && !una.lote && una.paradas.length === mismas.length && confirmadas === mismas.length
+        && !dos.ok && /lo hacen supervisión o producción/.test(dos.error),
+        dice: una.ok ? `${confirmadas} de ${mismas.length} filas confirmadas sin lote; con otra parada: ${dos.ok ? 'PASÓ' : dos.error.slice(0, 60)}` : una.error }
     })
     await caso('B-04 · contestar una pregunta deja «declarado» solo el paso que determina: ningún paso sale «confirmado» por una respuesta', async () => {
       const p = hist13.find(x => sinGuardar(x) && x.propuesta.preguntas.some(q => q.id === 'corte') && x.clasificacion.planeacion?.procedencia === 'regla')

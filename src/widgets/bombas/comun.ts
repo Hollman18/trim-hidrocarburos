@@ -15,6 +15,10 @@ const n1 = (v: number) => v.toLocaleString('es-CO', { minimumFractionDigits: 1, 
 export const fmtHoras = (h: number, precisa = false) =>
   precisa && h <= HORIZONTE_H && h < 48 ? `${n1(h)} h` : textoHoras(h)
 
+/** El colchón dicho para leerlo de un vistazo: menos de una hora, en minutos
+ *  («2 min», nunca «0,0 h»); de ahí en adelante, como `fmtHoras`. */
+export const textoColchon = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} min` : fmtHoras(h, true))
+
 /** Disposición cuyo respaldo absorbe toda el agua (colchón infinito): parar
  *  no cierra pozos. La misma condición que usa el motor para el costo. */
 export const respaldoAbsorbe = (pr: Prediccion) => pr.perfil.papel === 'disposicion' && pr.aguaSinSalidaBpd <= 0

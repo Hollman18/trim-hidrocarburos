@@ -35,15 +35,18 @@ test('el supervisor confirma una parada deducida en un toque: la cascada de P-20
   f.cerrar()
 })
 
-test('el operador contesta hechos y nunca escoge el tramo, la causa ni el detalle: lo que TRIM deduce queda dicho por él y lo avala su supervisor', async ({ flujo: f }) => {
+test('el operador contesta hechos, una pregunta a la vez, y nunca escoge el tramo, la causa ni el detalle: lo que TRIM deduce de su respuesta lo avala su supervisor', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
-  const panel = arbol(f.page)
-  await expect(panel.getByRole('heading', { level: 2 })).toHaveText('POR CONTESTAR · ÁRBOL DE CAUSAS')
-  const botones = (await panel.locator('button').allInnerTexts()).map(b => b.trim())
-  const prohibidos = ['En el pozo', 'En la planta o estación', 'Afuera', 'En el yacimiento', 'Corregir', 'Completar', 'Falla transformador', 'No planeada -', 'Planeada -']
+  // Una sola lista (B-02): lo que pregunta el libro y lo del árbol, juntos; sin las secciones de quien revisa.
+  const panel = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'POR CONTESTAR', exact: true }) })
+  await expect(panel).toContainText('Conteste aquí, una pregunta a la vez. Lo técnico lo revisa su supervisor.')
+  await expect(f.page.locator('main [data-seccion]')).toHaveCount(0)
+  const tarjetas = f.page.locator('main article[data-parada-anh]')
+  const botones = (await tarjetas.locator('button').allInnerTexts()).map(b => b.trim())
+  const prohibidos = ['En el pozo', 'En la planta o estación', 'Afuera', 'En el yacimiento', 'Corregir', 'Completar', 'Confirmar', 'Falla transformador', 'No planeada -', 'Planeada -']
   const vistos = botones.filter(b => prohibidos.some(x => b.startsWith(x)))
-  f.ok(vistos.length === 0, `ningún botón para escoger el tramo, la causa o el detalle (${vistos.join(' | ')})`)
-  f.ok(await panel.locator('select, [role="radio"], [role="radiogroup"]').count() === 0, 'ninguna lista ni opción del tramo, la causa o el detalle')
+  f.ok(vistos.length === 0, `ningún botón para escoger el tramo, la causa o el detalle, ni para confirmar sin haber contestado (${vistos.join(' | ')})`)
+  f.ok(await tarjetas.locator('select, [role="radio"], [role="radiogroup"]').count() === 0, 'ninguna lista ni opción del tramo, la causa o el detalle')
   const lc05 = tarjeta(f.page, 'LC-05')
   // «¿De dónde vino el corte?» se contesta en el campo: es un hecho, en palabras de campo (U1 §2.4).
   const corte = lc05.getByRole('group', { name: '¿De dónde vino el corte?' })
@@ -51,24 +54,27 @@ test('el operador contesta hechos y nunca escoge el tramo, la causa ni el detall
     === 'Del proveedor: la red de la empresa de energía | Del campo: pórtico, red de media o subestación | De este pozo: su transformador, su variador o su cable | No sé',
   'al operador se le pregunta de dónde vino el corte, con sus respuestas en palabras de campo')
   f.ok(!(await lc05.innerText()).includes('¿Qué fue, exactamente?'), 'el detalle de la tabla de la ANH no se le pregunta')
-  // Su toque confirma lo suyo: «¿estaba programado?» y «¿se perdió algo?».
-  await lc05.getByRole('button', { name: 'Confirmar lo que contesté' }).click()
-  await expect(f.page.getByRole('status').filter({ hasText: 'Su respuesta en LC-05 queda guardada' })).toBeVisible()
-  await expect(lc05).toContainText('confirmó Jairo Peña')
-  // Contesta el corte: lo que TRIM deduce de su respuesta queda dicho por él, con él en el porqué.
+  // Antes de contestar no se le pide avalar nada (B-03).
+  await expect(lc05.getByRole('button', { name: 'Sí, así fue' })).toHaveCount(0)
+  // Contesta el corte: lo que contestó queda arriba de la tarjeta (B-04) y lo que TRIM deduce de eso lo dice así.
   await lc05.getByRole('button', { name: 'De este pozo: su transformador, su variador o su cable' }).click()
   await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en LC-05' })).toContainText('«De este pozo: su transformador, su variador o su cable»')
+  await expect(lc05.locator('[data-contestado]')).toContainText('Usted contestó')
+  await expect(lc05.locator('[data-contestado]')).toContainText('De este pozo: su transformador, su variador o su cable')
   await lc05.getByRole('button', { name: /^Lo técnico/ }).click()
-  await expect(lc05.locator('[data-paso="choke"]')).toContainText('dijo Jairo Peña')
-  await expect(lc05.locator('[data-paso="choke"]')).toContainText('TRIM lo dedujo de lo que contestó Jairo Peña en el campo')
+  await expect(lc05.locator('[data-paso="choke"]')).toContainText('TRIM lo dedujo de lo que contestó Jairo Peña')
   // La causa que deja su respuesta es la misma que TRIM proponía: sigue siendo de TRIM, por confirmar.
   await expect(lc05.locator('[data-paso="n1"]')).toContainText('TRIM lo dedujo')
-  // El supervisor ve lo mismo: lo del operador confirmado; el tramo y la causa dichos por él, por avalar; el detalle, en falta.
+  // Ahora sí: «¿Está bien?» con lo de su terreno, en palabras, y un toque (B-03).
+  const estaBien = lc05.getByRole('group', { name: '¿Está bien lo que queda de lo suyo?' })
+  await estaBien.getByRole('button', { name: 'Sí, así fue' }).click()
+  await expect(f.page.getByRole('status').filter({ hasText: 'Su respuesta en LC-05 queda guardada' })).toBeVisible()
+  // El supervisor ve lo mismo: lo del operador confirmado; el tramo, deducido de su respuesta, por avalar; el detalle, en falta.
   await f.ir('#/sup/causa/ceiba/curso')
   const sup = tarjeta(f.page, 'LC-05')
   await expect(sup.locator('[data-paso="planeacion"]')).toContainText('confirmó Jairo Peña')
   await expect(sup.locator('[data-paso="impacto"]')).toContainText('confirmó Jairo Peña')
-  await expect(sup.locator('[data-paso="choke"]')).toContainText('dijo Jairo Peña')
+  await expect(sup.locator('[data-paso="choke"]')).toContainText('TRIM lo dedujo de lo que contestó Jairo Peña')
   await expect(sup).toHaveAttribute('data-estado', 'por-precisar')
   f.cerrar()
 })
@@ -102,39 +108,43 @@ test('la combinación planeada con una causa no planeada no se puede armar ni en
   f.cerrar()
 })
 
-test('tanques llenos: TRIM pregunta si el oleoducto o el cliente estaba recibiendo', async ({ flujo: f }) => {
+test('tanques llenos: la pregunta va directa, «¿El oleoducto o el cliente estaba recibiendo?», con la nota del evento al lado', async ({ flujo: f }) => {
   // Guacamayo, 17-oct-2025: LACT-01 limitó el despacho; la nota dice «nominación del oleoducto».
   await f.abrir('/#/conf/causa/guacamayo/2025-10-17_2025-10-17')
-  const primeraTarjeta = f.page.locator('main article[data-parada-anh]').filter({ has: f.page.getByRole('group', { name: '¿Qué lo paró?' }) }).first()
+  const pregunta = '¿El oleoducto o el cliente estaba recibiendo?'
+  const primeraTarjeta = f.page.locator('main article[data-parada-anh]').filter({ has: f.page.getByRole('group', { name: pregunta }) }).first()
   // La tarjeta por su fila: al contestar, la pregunta se cierra y la siguiente llega con la vista.
   const t = f.page.locator(`main article[data-parada-anh="${await primeraTarjeta.getAttribute('data-parada-anh')}"]`)
   await expect(t.locator('[data-paso="choke"]')).toContainText('TRIM sugiere: En la planta o estación')
-  await expect(t.locator('[data-paso="choke"]')).toContainText('falta: «¿El oleoducto o el cliente estaba recibiendo?»')
-  const primera = t.getByRole('group', { name: '¿Qué lo paró?' })
-  f.ok((await primera.getByRole('button').allInnerTexts()).map(x => x.trim()).join(' | ') === 'La planta no recibe (agua o proceso) | El tanque de crudo está lleno | No sé',
-    'la primera pregunta: el agua no es el crudo (U2 §4.4, caso 3)')
-  await primera.getByRole('button', { name: 'El tanque de crudo está lleno' }).click()
-  await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en' })).toContainText('«El tanque de crudo está lleno»')
-  const segunda = t.getByRole('group', { name: '¿El oleoducto o el cliente estaba recibiendo?' })
-  await expect(segunda).toBeVisible()
-  f.ok((await segunda.getByRole('button').allInnerTexts()).map(x => x.split('\n')[0]!.trim()).join(' | ') === 'Sí, recibía | No, no recibía | No sé',
-    'la segunda pregunta: ¿el oleoducto o el cliente estaba recibiendo?')
-  await segunda.getByRole('button', { name: /^No, no recibía/ }).click()
+  await expect(t.locator('[data-paso="choke"]')).toContainText(`falta: «${pregunta}»`)
+  // B-31: la señal ya dice que el tanque de crudo se llenó: lo que falta es lo que se pregunta, con la nota al lado.
+  const g = t.getByRole('group', { name: pregunta })
+  f.ok((await g.getByRole('button').allInnerTexts()).map(x => x.split('\n')[0]!.trim()).join(' | ') === 'Sí, recibía | No, no recibía | No sé',
+    'la pregunta es la que la tarjeta dice que falta, con sus tres respuestas')
+  await expect(g.locator('[data-nota-evento]')).toHaveText('Nota del evento: «Tanque de crudo alto: despacho limitado por la nominación del oleoducto»')
+  await expect(t.getByRole('group', { name: '¿Qué lo paró?' })).toHaveCount(0)
+  await g.getByRole('button', { name: /^No, no recibía/ }).click()
   await expect(f.page.getByRole('status').filter({ hasText: 'Guardado en' })).toContainText('«No, no recibía»')
-  const despues = f.page.locator('main article[data-parada-anh] [data-paso="choke"]').filter({ hasText: 'Afuera: oleoducto, transportador o cliente' }).first()
-  await expect(despues).toContainText('dijo Edwin Maestre')
+  await expect(t.locator('[data-paso="choke"]')).toContainText('Afuera: oleoducto, transportador o cliente')
+  await expect(t.locator('[data-paso="choke"]')).toContainText('dijo Edwin Maestre')
+  // Con la causa en el transporte, el detalle ya no sugiere «tanques llenos», que es de la planta.
+  await expect(t.locator('[data-paso="n2"]')).not.toContainText('Tanques llenos')
+  await expect(t.getByRole('group', { name: '¿Qué fue, exactamente?' })).toContainText('Restricción nominación/entrega')
   f.cerrar()
 })
 
-test('Turno: «Hoy limita» separa lo que limita, lo más frágil y lo que más cuesta, y el supervisor confirma en lote una cascada', async ({ flujo: f }) => {
+test('Turno: «Hoy limita» dice en dos líneas qué limita hoy y lo más frágil, y el supervisor confirma en lote una cascada', async ({ flujo: f }) => {
   await f.abrir('/#/sup/turno/ceiba/curso')
   const hoy = f.page.locator('main [data-hoy-limita="ceiba"]')
   const linea = await hoy.innerText()
-  f.ok(/Qué limita hoy al campo\s*◄\s*limita · los pozos ·\s*11\.360 bbl\/d/.test(linea), `qué limita hoy: los pozos, en gris con doble contorno y «◄ limita» (${linea.slice(0, 90)})`)
+  f.ok(/Qué limita hoy al campo\s*◄\s*limita · los pozos ·\s*[\d.]+ bbl\/d/.test(linea), `qué limita hoy: los pozos, en gris con doble contorno y «◄ limita» (${linea.slice(0, 90)})`)
   const borde = await hoy.getByLabel(/^Limita: los pozos/).evaluate(e => getComputedStyle(e).borderStyle)
   f.ok(borde === 'double', `«limita» lleva doble contorno, no color (${borde})`)
-  f.ok(/Lo más frágil[\s\S]*el agua[\s\S]*P-201A y P-201C subieron/.test(linea), 'lo más frágil: el agua, con las hermanas de P-201B que suben y no tienen instrumento')
-  f.ok(/Lo que más cuesta si falla hoy/.test(linea), 'lo que más cuesta si falla hoy, en su propia línea')
+  // B-14: con P-201B parada, al lado de lo que limita va lo de hoy.
+  await expect(hoy.locator('[data-frase-hoy]')).toContainText(/^Hoy, con P-201B parada, el agua de la planta deja pasar [\d.]+ bbl\/d/)
+  // B-19: dos líneas. Lo más frágil, el agua, con las hermanas sin instrumento; sin la lista de «lo que más cuesta».
+  await expect(hoy.locator('[data-fragil]')).toHaveText('el agua. Si para otra bomba de reinyección hay que cerrar pozos, y P-201A y P-201C no tienen instrumento: TRIM no verá venir su falla.')
+  f.ok(!/Lo que más cuesta/.test(linea), '«Hoy limita» son dos líneas: sin «lo que más cuesta si falla hoy» (B-19)')
   await expect(f.page.locator('main').getByText('en la planta', { exact: true })).toBeVisible()
   const cierre = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'CIERRE DE HOY · PARADAS POR CONFIRMAR' }) })
   await expect(cierre).toContainText('4 paradas hoy · 0 completas · faltan 4')
@@ -142,7 +152,8 @@ test('Turno: «Hoy limita» separa lo que limita, lo más frágil y lo que más 
   await expect(lote).toContainText('LC-07 y LC-16')
   // Un toque por grupo.
   await lote.getByRole('button', { name: 'Confirmar las 2' }).click()
-  await expect(cierre.getByRole('status')).toContainText('2 paradas confirmadas de un toque (lote LOTE-1); quedan completas para el reporte.')
+  await expect(cierre.getByRole('status')).toContainText('2 paradas confirmadas de un toque, en un solo lote; quedan completas para el reporte.')
+  f.ok(!/LOTE-\d/.test(await cierre.innerText()), 'el aviso no dice el código interno del lote (B-29)')
   await expect(cierre).toContainText('4 paradas hoy · 2 completas · faltan 2')
   await expect(cierre.locator('[data-lote]')).toHaveCount(0)
   f.cerrar()
@@ -170,17 +181,16 @@ test('«En el yacimiento»: solo producción y confiabilidad, diciendo qué lo m
   f.cerrar()
 })
 
-test('WhatsApp: el operador avala solo lo que contestó; lo técnico sigue para su supervisor', async ({ flujo: f }) => {
+test('WhatsApp: el operador avala solo lo que contestó, en el mismo chat; lo técnico sigue para su supervisor', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
   // El primero es el de P-201B, la pregunta más reciente («por identificar · sin arrancar»).
   await f.page.getByRole('button', { name: 'Ver mi chat de WhatsApp' }).first().click()
   const chat = f.page.getByRole('group', { name: /^Chat de WhatsApp de / })
   await chat.getByRole('button', { name: /^1\s*Sello mecánico/ }).click()
   await chat.getByRole('button', { name: /^1\s*Fuga hacia afuera/ }).click()
-  await expect(chat).toHaveCount(0)
-  // En «Declaradas», el mismo chat cierra con lo que contestó y nada más.
-  await f.page.getByRole('button', { name: 'Ver el chat de Jairo Peña' }).click()
-  const cierre = f.page.getByRole('group', { name: /^Chat de WhatsApp de / })
+  // B-05: el chat no se cierra al contestar: el cierre «Así queda…» llega en el mismo hilo.
+  const cierre = chat
+  await expect(cierre).toHaveCount(1)
   await expect(cierre).toContainText('Así queda lo que usted contestó: P-201B, sello mecánico: fuga hacia afuera. El resto del reporte lo revisa su supervisor.')
   const dice = await cierre.innerText()
   f.ok(!/se trabó|En la planta|No planeada|Parada estación|choke/i.test(dice), 'el mensaje de cierre no le muestra el tramo, la causa ni el detalle')

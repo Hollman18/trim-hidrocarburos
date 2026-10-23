@@ -47,11 +47,10 @@
 import { NOMBRE_CHOKE, type EscalonOSinClasificar } from './choke'
 import { paradasAnh, type ParadaAnh, type OpcionesParadas } from './anh-paradas'
 import { filasDelChoke, tramoVigente, escalonDeFila, elementoDeFila, bblEnPeriodo, filaEnPeriodo } from './choke-reparto'
-import { N1_EN_CAMPO } from './anh-clasificacion'
 import {
   VERSIONES_CATALOGO, VERSION_POR_DEFECTO, ETIQUETA_RESPONSABLE, ETIQUETA_IMPACTO, ETIQUETA_PLANEACION,
-  equivalente, esCodigoN2Conocido, textoN2,
-  type IdVersionCatalogo, type PasoAnh, type CodigoN2,
+  equivalente, esCodigoN2Conocido, textoN2, textoN1, CLAVES_N1,
+  type IdVersionCatalogo, type PasoAnh, type CodigoN2, type ClaveN1,
 } from './anh-catalogo'
 import { NOMBRE_PARTE } from './partes'
 import { TIPO_CAUSA, type Contexto, type TipoCausa } from './causa-senal'
@@ -211,7 +210,8 @@ function textoDe(nivel: NivelArbol, v: string, fs: readonly FilaArbol[]): string
     case 'responsable': return propio(ETIQUETA_RESPONSABLE, v) ?? v
     case 'impacto': return v === 'perdida' ? TEXTO_PERDIDA : propio(ETIQUETA_IMPACTO, v) ?? v
     case 'planeacion': return propio(ETIQUETA_PLANEACION, v) ?? v
-    case 'n1': return propio(N1_EN_CAMPO, v) ?? v
+    // La causa con el MISMO nombre de la cadena de Identificar y del editor (B-27): el de la Tabla 1.
+    case 'n1': return (CLAVES_N1 as readonly string[]).includes(v) ? textoN1(v as ClaveN1) : v
     case 'n2': return esCodigoN2Conocido(v) ? textoN2(v) : v
     case 'equipo': {
       const t = tipoMayor(fs)

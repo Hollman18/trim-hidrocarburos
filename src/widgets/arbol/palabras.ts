@@ -1,10 +1,12 @@
 import {
-  PASO_CAMPO, PASO_CIRCULAR, ETIQUETA_RESPONSABLE, ETIQUETA_IMPACTO, ETIQUETA_PLANEACION, ETIQUETA_CHOKE, textoN1, textoN2,
+  PASO_CAMPO, PASO_CIRCULAR, ETIQUETA_RESPONSABLE, ETIQUETA_IMPACTO, ETIQUETA_PLANEACION, ETIQUETA_CHOKE, PASOS_QUE_DECLARA, PREGUNTAS_CAMPO, textoN1, textoN2,
   type PasoAnh, type EstadoParadaAnh, type Procedencia, type Responsable, type Impacto, type Planeacion, type ClaveN1, type CodigoN2,
+  type ParadaAnh, type PreguntaCampo, type RespuestaCampo, type DatoClasificado,
 } from '@/shared/api/arbol'
 import { NOMBRE_CHOKE, RESUMEN_TRAMO, type ChokeAnh } from '@/shared/api/choke'
-import { AHORA, fechaHora } from '@/entities/reloj'
-import { diaIso } from '@/shared/lib/formato'
+import { AHORA, fechaCorta, fechaHora } from '@/entities/reloj'
+import { formatoFecha } from '@/shared/lib/fecha'
+import { diaIso, plural } from '@/shared/lib/formato'
 
 /** LAS PALABRAS DEL ÁRBOL DE 6 PASOS EN PANTALLA (U1 §2, U2 §1.5).
  *
@@ -108,3 +110,72 @@ export const sinReferencias = (s: string) =>
 
 /** Una lista dicha: «LC-16 y LC-07», «LC-02, LC-05 y LC-09». */
 export const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+
+
+/* ─────────────── una pregunta a la vez y lo que ya se contestó (B-23, B-04) ─────────────── */
+
+/** El orden en que se hacen las preguntas de una parada: primero la que sigue
+ *  a lo último que se contestó (aparece en el lugar de la contestada, B-23);
+ *  después, la de campo antes que la técnica, y «¿Fue el yacimiento?» antes
+ *  que «¿Qué fue, exactamente?» (B-32). */
+const RANGO_PREGUNTA: Record<string, number> = {
+  'que-lo-paro': 0, tanques: 0, oleoducto: 1, corte: 1, nominacion: 1, 'afecto-clima': 1, 'afecto-orden-publico': 1, trabajo: 1,
+  aporte: 2, 'evidencia-yacimiento': 3, raiz: 4, detalle: 5, choke: 6, programado: 7, 'se-perdio': 8,
+}
+export function enOrden(qs: readonly PreguntaCampo[], respuestas: readonly RespuestaCampo[] | undefined): PreguntaCampo[] {
+  const siguen = new Set((respuestas ?? []).filter(r => !r.noSe && r.sigue).map(r => r.sigue!))
+  return [...qs].sort((a, b) => Number(siguen.has(b.id)) - Number(siguen.has(a.id)) || (RANGO_PREGUNTA[a.id] ?? 9) - (RANGO_PREGUNTA[b.id] ?? 9))
+}
+
+/** El texto de la pregunta que alguien contestó, para repetirlo en la tarjeta. */
+export function textoDePregunta(id: string): string {
+  if (Object.hasOwn(PREGUNTAS_CAMPO, id)) return PREGUNTAS_CAMPO[id as keyof typeof PREGUNTAS_CAMPO].texto
+  return id === 'raiz' ? '¿Qué falló primero?' : id === 'detalle' ? '¿Qué fue, exactamente?' : id === 'choke' ? '¿Dónde se trabó?' : id
+}
+
+/** Un paso que quedó a nombre de quien contestó una pregunta de campo pero que
+ *  NO es de su terreno (el tramo que sale de «Del campo: pórtico…»): lo dedujo
+ *  TRIM de su respuesta; la persona nunca lo escogió (B-04; U2 §3.2). Un paso
+ *  fuera de `PASOS_QUE_DECLARA` de su rol solo puede venir de una respuesta. */
+export function deducidoDeRespuesta(paso: PasoAnh, d: DatoClasificado<unknown, unknown> | undefined): boolean {
+  if (!d || d.procedencia !== 'declarado' || !d.rol) return false
+  const suyos = Object.hasOwn(PASOS_QUE_DECLARA, d.rol) ? PASOS_QUE_DECLARA[d.rol]! : []
+  return !suyos.includes(paso)
+}
+
+/* ─────────────── fechas y cuentas de la tarjeta (B-21, B-22, B-25) ─────────────── */
+
+const HORA_CO = formatoFecha({ hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' })
+/** «05:46», hora de Colombia. */
+export const horaDe = (iso: string) => HORA_CO.format(new Date(iso))
+/** «2 de oct», el día operacional de una fila (nunca «2026-10-02»). */
+export const diaDe = (dia: string) => fechaCorta(new Date(`${dia}T12:00:00-05:00`))
+/** Una fila del reporte en palabras: «2 de oct · 05:46 a 23:59 (sigue al cierre del día)». */
+export const horasDeFila = (f: Pick<ParadaAnh, 'diaOperacional' | 'inicio' | 'fin' | 'abiertaAlCorte'>) =>
+  `${diaDe(f.diaOperacional)} · ${horaDe(f.inicio)} a ${horaDe(f.fin)}${f.abiertaAlCorte ? ' (sigue al cierre del día)' : ''}`
+
+/** Cuántas paradas son unas filas: una por evento de pozo (los días de un mismo
+ *  pozo son una parada; los pozos de una cascada, una cada uno) (B-21). */
+export const cuantasParadas = (filas: readonly Pick<ParadaAnh, 'eventoId'>[]) => new Set(filas.map(f => f.eventoId)).size
+/** «2 paradas (4 filas del reporte)»; si son las mismas, «2 paradas». */
+export const paradasYFilas = (filas: readonly Pick<ParadaAnh, 'eventoId'>[]) => {
+  const n = cuantasParadas(filas)
+  return `${plural(n, 'parada', 'paradas')}${filas.length !== n ? ` (${plural(filas.length, 'fila', 'filas')} del reporte)` : ''}`
+}
+
+/** El estado de una tarjeta: «falta un dato» si falta uno; «faltan 4 pasos» si faltan más (B-21). */
+export const estadoDeTarjeta = (estado: EstadoParadaAnh, faltan: number) =>
+  estado === 'por-precisar' && faltan > 1 ? `faltan ${faltan} pasos` : ESTADO[estado]
+
+/** Desde cuándo, dicho con la fecha del evento (B-22): «parada desde el 25 de
+ *  sept, 06:40 (en este período, desde el 1 de oct)», «con la frecuencia bajada
+ *  desde el 15 de abr, 02:10», «cerraron 2 de oct, 05:43». */
+export function desdeCuando(filas: readonly Pick<ParadaAnh, 'inicio' | 'inicioEvento' | 'parcial'>[], varios: boolean): string {
+  const ev = filas.reduce((a, f) => (f.inicioEvento < a ? f.inicioEvento : a), filas[0]!.inicioEvento)
+  const primera = filas.reduce((a, f) => (f.inicio < a ? f.inicio : a), filas[0]!.inicio)
+  const antes = Date.parse(ev) < Date.parse(primera) - 60_000
+  const cuando = fechaHora(new Date(ev))
+  if (filas.some(f => f.parcial)) return `con la frecuencia bajada desde el ${cuando}${antes ? ` (en este período, desde el ${fechaCorta(new Date(primera))})` : ''}`
+  if (antes) return `${varios ? 'paradas' : 'parada'} desde el ${cuando} (en este período, desde el ${fechaCorta(new Date(primera))})`
+  return `${varios ? 'cerraron' : 'cerró'} ${horaCorta(ev)}`
+}

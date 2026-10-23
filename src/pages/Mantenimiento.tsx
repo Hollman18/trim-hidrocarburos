@@ -41,7 +41,6 @@ export function Mantenimiento() {
   // «Por identificar» con la cuenta única (la misma de Turno, Mi trabajo e
   // Identificar): las que piden respuesta; de esas, las que ya arrancaron.
   const pi = contarPorIdentificar(preguntas)
-  const sinArrancar = pi.porIdentificar - pi.arrancaronSinIdentificar
   const pendientes = preguntas.filter(p => p.pide && !p.arrancoSinIdentificar)
   // El panel de abajo es de lo que TODAVÍA no tiene causa. Una parada que arrancó
   // sin identificar y se respondió después sigue siendo no conforme, pero ya no
@@ -77,7 +76,7 @@ export function Mantenimiento() {
         <Tip as="button" onClick={() => { setCampo(r.campoId); abrirEquipo(r.equipo, false) }}
           titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
           filas={[...(r.parte ? [['Parte', NOMBRE_PARTE[r.parte]] as [string, string]] : []),
-            ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya fuera'],
+            ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya pasó el límite'],
             ...(r.tag ? [['Instrumento', r.tag] as [string, string]] : []),
             ['Si para', servicio && r.bblDia === 0 ? 'cierra lo que esté produciendo en el campo' : siPara],
             ...(r.costoFalla !== undefined ? [['Si falla hoy', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
@@ -91,7 +90,7 @@ export function Mantenimiento() {
             <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-[var(--tinta2)]">
               {r.horas !== undefined
                 ? <span>{r.parte ? `${NOMBRE_PARTE[r.parte].toLowerCase()} · ` : ''}cruza en {fmtHoras(r.horas)}</span>
-                : <>{r.parte && <span>{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}<Chip tono="fuerte">ya fuera</Chip></>}
+                : <>{r.parte && <span>{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}<Chip tono="fuerte">ya pasó el límite</Chip></>}
               {!r.parte && r.tag && <span className="font-mono text-[10.5px]">{r.tag}</span>}
             </span>
           </span>
@@ -147,7 +146,7 @@ export function Mantenimiento() {
         {/* El <div> deja la nota impresa del globo en la misma celda de la grilla. */}
         <div className="min-w-0"><Tip titulo="Programado y no programado"
           pista="Lo programado estaba en el programa de paradas aprobado; lo demás son fallas o restricciones. La mide el PLC."
-          filas={[['Programado', `${n0(lb.planeado)} bbl`], ['No programado', `${n0(lb.noPlaneado)} bbl`],
+          filas={[['Programado', `${n0(lb.planeado)} bbl`], ['No programado (libro)', `${n0(lb.noPlaneado)} bbl`],
             ['De alto impacto', `${n0(lb.altoImpacto)} bbl`], ['Con la parte vigilada', `${n0(lb.anticipable)} bbl`]]}
           imprimir="pista" className="block min-w-0">
           <small className={rotulo}>del diferido, programado</small>
@@ -155,12 +154,13 @@ export function Mantenimiento() {
           <span aria-hidden className="mt-1.5 block h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
             <i className="block h-full bg-[var(--dato-2)]" style={{ width: `${planPct}%` }} />
           </span>
-          <small className={apoyo}>{n0(lb.planeado)} bbl · {n0(lb.noPlaneado)} bbl no programado</small>
+          <small className={apoyo}>{n0(lb.planeado)} bbl · {n0(lb.noPlaneado)} bbl no programado (libro)</small>
         </Tip></div>
         <span>
           <small className={rotulo}>por identificar</small>
           {/* ▲ como en Turno, Mi trabajo e Identificar: alguna sigue parada («no arrancar»). */}
-          <b className="tabular flex items-center gap-1.5 text-[20px] leading-none">{sinArrancar > 0 && <MarcaPrioridad s={2} tamano={14} />}{pi.porIdentificar}</b>
+          {/* Un total no lleva marca de alarma (B-40): la urgencia la dice «no arrancar» en cada equipo. */}
+          <b className="tabular flex items-center gap-1.5 text-[20px] leading-none">{pi.porIdentificar}</b>
           <ApoyoPorIdentificar pi={pi} />
         </span>
       </div>

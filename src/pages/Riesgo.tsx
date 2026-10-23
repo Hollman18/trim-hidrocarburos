@@ -121,7 +121,7 @@ export function Riesgo() {
         <Tip as="button" onClick={() => abrir(r)} titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`}
           pista={r.motivo} imprimir="pista"
           filas={[...(r.parte ? [['Parte', NOMBRE_PARTE[r.parte]] as [string, string]] : []),
-            ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}${r.rango && entre(r.rango) ? ` (${entre(r.rango)})` : ''}` : 'ya fuera'],
+            ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}${r.rango && entre(r.rango) ? ` (${entre(r.rango)})` : ''}` : 'ya pasó el límite'],
             ['Si para', servicio && r.bblDia === 0 ? 'cierra lo que esté produciendo en el campo' : `${n0(r.bblDia)} bbl/d`],
             ...(r.costoFalla !== undefined ? [['Si falla hoy', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
           className="flex w-full cursor-pointer items-center gap-3 text-left hover:bg-[var(--panel2)]">
@@ -140,7 +140,7 @@ export function Riesgo() {
             {tramo && <small className="block text-[10.5px] text-[var(--tinta3)]" data-se-trabaria={tramo}>se trabaría {DONDE_CHOKE[tramo]}</small>}
           </span>
           <span className={columna}>
-            <b className="block text-[13px] leading-tight"><span className="sr-only">cruza en </span>{r.horas !== undefined ? fmtHoras(r.horas) : 'ya fuera'}</b>
+            <b className="block text-[13px] leading-tight"><span className="sr-only">cruza en </span>{r.horas !== undefined ? fmtHoras(r.horas) : 'ya pasó el límite'}</b>
             {r.rango && <small className="text-[9.5px] text-[var(--tinta3)]">{entre(r.rango)}</small>}
           </span>
           <span className={columna}>
@@ -173,10 +173,14 @@ export function Riesgo() {
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         <span>
           <small className="block text-[10.5px] text-[var(--tinta3)]">2 · Durante</small>
+          {/* Un total no lleva marca de alarma: la lleva el equipo que lo causa (B-40). */}
           <b className="tabular flex items-center gap-1.5 text-[30px] leading-none">
-            {perdiendo.some(r => r.altoImpacto) && <MarcaPrioridad s={1} tamano={18} />}{n0(porDia)}<small className="text-[12px] font-normal text-[var(--tinta3)]">bbl/d</small>
+            {n0(porDia)}<small className="text-[12px] font-normal text-[var(--tinta3)]">bbl/d</small>
           </b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">{n1(potencial ? (porDia / potencial) * 100 : 0)} % del potencial · {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}</small>
+          <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+            {n1(potencial ? (porDia / potencial) * 100 : 0)} % del potencial · {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
+            {perdiendo[0] && <span className="inline-flex items-center gap-1"> · <MarcaPrioridad s={perdiendo[0].altoImpacto ? 1 : 2} tamano={11} />{perdiendo[0].equipo}</span>}
+          </small>
         </span>
         <span>
           <small className="block text-[10.5px] text-[var(--tinta3)]">1 · Antes · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
@@ -192,7 +196,7 @@ export function Riesgo() {
               <b className="block truncate text-[15px] leading-tight">{enRiesgo[0].equipo}{donde(enRiesgo[0].campoId)}</b>
               <small className="flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]">
                 {enRiesgo[0].parte && <span>{NOMBRE_PARTE[enRiesgo[0].parte]}</span>}
-                {enRiesgo[0].horas !== undefined ? <span>cruza en {fmtHoras(enRiesgo[0].horas)}</span> : <Chip tono="fuerte">ya fuera</Chip>}
+                {enRiesgo[0].horas !== undefined ? <span>cruza en {fmtHoras(enRiesgo[0].horas)}</span> : <Chip tono="fuerte">ya pasó el límite</Chip>}
               </small>
             </>
           ) : <b className="block text-[15px] text-[var(--tinta3)]">ninguno</b>}

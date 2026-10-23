@@ -11,7 +11,7 @@ import { Tip, type Fila } from './Tip'
  *  (sería un control dentro de otro) ni de un título (el lector oiría la frase
  *  entera como nombre del título). Quien lo contiene en una fila flexible le da
  *  `flex-wrap`: en el papel la nota ocupa su propio renglón (`basis-full`). */
-export function Info({ titulo, texto, filas, rotulo, className }: {
+export function Info({ titulo, texto, filas, rotulo, className, imprimir = true }: {
   /** Título del globo: «Cierre proyectado». */
   titulo: string
   /** La frase completa que salió de la pantalla. */
@@ -21,6 +21,9 @@ export function Info({ titulo, texto, filas, rotulo, className }: {
   /** Texto visible antes del ícono, dos palabras como mucho («qué hacer»). Sin él, solo el ícono. */
   rotulo?: string
   className?: string
+  /** false: la nota no se imprime aquí porque quien la contiene la escribe UNA vez al final
+   *  (un ⓘ que se repite en cada rama, o uno en una cabecera angosta; B-10). */
+  imprimir?: boolean
 }) {
   return (
     <>
@@ -30,7 +33,7 @@ export function Info({ titulo, texto, filas, rotulo, className }: {
         {rotulo && <span className="text-[10.5px] text-[var(--tinta2)] underline decoration-dotted underline-offset-2">{rotulo}</span>}
         <IconoInfo className="size-3 text-[var(--tinta3)]" aria-hidden />
       </Tip>
-      <small className="solo-impresion basis-full font-sans text-[9pt] font-normal normal-case tracking-normal text-[var(--tinta2)]">{titulo}: {texto}</small>
+      {imprimir && <small className="solo-impresion basis-full font-sans text-[9pt] font-normal normal-case tracking-normal text-[var(--tinta2)]">{titulo}: {texto}</small>}
     </>
   )
 }

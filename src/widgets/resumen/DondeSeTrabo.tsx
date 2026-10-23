@@ -1,8 +1,12 @@
+import { useId, useState } from 'react'
+import { ChevronRight } from 'lucide-react'
 import {
   useTuberia, useRepartoChoke, useBaseChoke, useCriticidad, useArbolChoke, CHOKES_Y_SIN_ASIGNAR,
-  type ChokeOSinAsignar, type EquipoBbl,
+  type ChokeOSinAsignar, type EquipoBbl, type EscalonOSinClasificar,
 } from '@/shared/api/choke'
 import { campoPorId } from '@/entities/campos'
+import { useRango } from '@/app/store'
+import { periodoEnFrase } from '@/widgets/choke/palabras'
 import { fechaCorta } from '@/entities/reloj'
 import { Info } from '@/shared/ui/Info'
 import { Chip } from '@/shared/ui/primitivas'
@@ -20,11 +24,14 @@ import { LARGO_TRAMO, leidoReparto, textoReparto } from '@/widgets/diferidos/rep
 
 const D = 86_400_000
 
-/** Dónde se trabó un campo en el período: la barra por tramo (con «sin
- *  identificar» aparte), sus barriles, la frase del motor y lo que hay que
- *  saber para no leerla mal (lo que espera a una persona, el inventario entre
- *  días). El total es el diferido del libro: la misma cifra de «POR CAMPO»,
- *  de Diferidos y de la tubería (U2 §0, principio 6). */
+/** Dónde se trabó un campo en el período, en DOS renglones (B-13; U2 §9.2): la
+ *  barra por tramo con su palabra y su parte encima de cada segmento, y la frase
+ *  que arma el motor (el tramo mayor y los equipos que más pesan, con su
+ *  familia). Lo demás (los barriles de cada tramo, lo no planeado, lo que espera
+ *  a una persona, el inventario entre días y lo que se gana desembotellando) va
+ *  plegado en «Ver más de {campo}»; en el papel, desplegado. El total es el
+ *  diferido del libro: la misma cifra de «POR CAMPO», de Diferidos y de la
+ *  tubería (U2 §0, principio 6). */
 export function DondeSeTraboCampo({ campoId, desde, hasta, className }: {
   campoId: string; desde: Date; hasta: Date; className?: string
 }) {
@@ -32,47 +39,65 @@ export function DondeSeTraboCampo({ campoId, desde, hasta, className }: {
   const b = useRepartoChoke({ campos: [campoId], desde, hasta })
   // Lo que se gana desembotellando (U2 §6.5): qué da producir más y qué da otra bomba de agua. Lo dice el motor.
   const mas = useCriticidad([campoId]).campos[0]?.desembotellar
+  const rango = useRango()
+  const [abierto, setAbierto] = useState(false)
+  const idMas = useId()
   const nombre = campoPorId(campoId).nombre
   const v = b.porChoke
   const nada = b.diferido < 0.5
   // Lo que no es de ningún tramo (potencial − real − Σ de los eventos): el período corta meses.
   const inventario = Math.round(b.sinExplicar)
+  const hayMas = !nada || inventario !== 0 || !!mas
   return (
     <div className={cn('min-w-0', className)} data-donde-se-trabo={campoId} data-total={b.diferido}>
-      {!nada && <BarraTramos valores={v} leido={`Dónde se trabó ${nombre} en el período: ${leidoReparto(v, b.diferido)}, el diferido del libro.`} />}
-      {(!nada || inventario !== 0) && (
-        <p className="tabular mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
-          {!nada && <span>{textoReparto(v)} bbl</span>}
-          {b.porConfirmar >= 0.5 && (
-            <>
-              <span className="text-[var(--tinta3)]">· {n0(b.porConfirmar)} por confirmar</span>
-              <Info titulo="Por confirmar" texto={`TRIM propuso dónde se trabó en ${n0(b.porConfirmar)} bbl, pero falta un dato que solo sabe una persona del campo (por ejemplo, de dónde vino un corte de energía). Mientras tanto cuentan donde los puso TRIM.`} />
-            </>
-          )}
-          {inventario !== 0 && (
-            <>
-              <span className="text-[var(--tinta3)]">· {inventario > 0 ? '+' : '−'}{n0(Math.abs(inventario))} de inventario entre días</span>
-              <Info titulo="Inventario entre días" texto="El período corta meses: el tanque de venta guarda de un día para otro. No es de ningún tramo y no se reparte; en el mes entero da cero." />
-            </>
-          )}
-        </p>
+      {!nada && <BarraTramos valores={v} conParte leido={`Dónde se trabó ${nombre} en el período: ${leidoReparto(v, b.diferido)}, el diferido del libro.`} />}
+      {/* Sin barriles, el período en palabras: «Nada se trabó en octubre (en curso).» (B-39; U2 §1.5). */}
+      <p className="mt-0.5 text-[11.5px] leading-snug" data-frase-gerente>{nada ? `Nada se trabó en ${periodoEnFrase(rango.nombre)}.` : t.fraseGerente}</p>
+      {hayMas && (
+        <>
+          <button type="button" aria-expanded={abierto} aria-controls={idMas} onClick={() => setAbierto(x => !x)}
+            className="no-imprimir mt-0.5 flex min-h-12 cursor-pointer items-center gap-1 text-[11px] text-[var(--tinta2)] hover:text-[var(--tinta)] sm:min-h-6">
+            <ChevronRight aria-hidden size={13} className={cn('shrink-0 transition-transform', abierto && 'rotate-90')} />
+            {abierto ? `Ver menos de ${nombre}` : `Ver más de ${nombre}`}
+          </button>
+          <div id={idMas} className={cn('pl-4', !abierto && 'hidden print:block')} data-ver-mas={campoId}>
+            {(!nada || inventario !== 0) && (
+              <p className="tabular flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
+                {!nada && <span>{textoReparto(v)} bbl</span>}
+                {b.porConfirmar >= 0.5 && (
+                  <>
+                    <span className="text-[var(--tinta3)]">· {n0(b.porConfirmar)} bbl con el tramo sin confirmar</span>
+                    <Info titulo="Con el tramo sin confirmar" texto={`TRIM propuso dónde se trabó en ${n0(b.porConfirmar)} bbl, pero falta un dato que solo sabe una persona del campo (por ejemplo, de dónde vino un corte de energía). Mientras tanto cuentan donde los puso TRIM.`} />
+                  </>
+                )}
+                {inventario !== 0 && (
+                  <>
+                    <span className="text-[var(--tinta3)]">· {inventario > 0 ? '+' : '−'}{n0(Math.abs(inventario))} de inventario entre días</span>
+                    <Info titulo="Inventario entre días" texto="El período corta meses: el tanque de venta guarda de un día para otro. No es de ningún tramo y no se reparte; en el mes entero da cero." />
+                  </>
+                )}
+              </p>
+            )}
+            {!nada && <NoPlaneadoPorTramo campoId={campoId} desde={desde} hasta={hasta} equipos={b.porChokeEquipo} escalones={b.porChokeEscalon} />}
+            {mas && <p className="text-[10.5px] leading-snug text-[var(--tinta3)]">{mas}</p>}
+          </div>
+        </>
       )}
-      <p className="text-[11.5px] leading-snug">{t.fraseGerente}</p>
-      {!nada && <NoPlaneadoPorTramo campoId={campoId} desde={desde} hasta={hasta} equipos={b.porChokeEquipo} />}
-      {mas && <p className="text-[10.5px] leading-snug text-[var(--tinta3)]">{mas}</p>}
     </div>
   )
 }
 
 /** Lo NO planeado de cada tramo, en barriles y en su parte del tramo: el
- *  indicador del norte (bajar las paradas que nadie programó). Sale del árbol
- *  de pérdidas del choke (`useArbolChoke`, orden de gestión: su primer nivel es
- *  el mismo reparto por tramo de la barra). Para el gerente, sin códigos ni
- *  causas: el tramo, planeado o no, y los equipos que más pesan. Lo que todavía
- *  no tiene causa no se sabe si fue planeado: se dice así, no se cuenta como
- *  planeado ni como no planeado. */
-function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos }: {
+ *  indicador del norte (bajar las paradas que nadie programó). Es la cifra única
+ *  del motor (D4): el escalón `disponibilidad-no-planeada` de cada tramo
+ *  (`porChokeEscalon` del reparto), el mismo del árbol, del mes a mes y de la
+ *  línea base. Para el gerente, sin códigos ni causas: el tramo, planeado o no y
+ *  los equipos que más pesan. Lo que no tiene causa no se sabe si fue planeado
+ *  (`sin-clasificar`): se dice así. Lo que no se produjo sin una falla
+ *  (nominación, frecuencia bajada, el yacimiento) va aparte: no es planeado ni no planeado. */
+function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos, escalones }: {
   campoId: string; desde: Date; hasta: Date; equipos: Partial<Record<ChokeOSinAsignar, EquipoBbl[]>>
+  escalones: Record<ChokeOSinAsignar, Record<EscalonOSinClasificar, number>>
 }) {
   const arbol = useArbolChoke({ campos: [campoId], desde, hasta, orden: 'gestion' })
   const tramos = arbol.raiz.hijos.filter(h => h.bbl >= 0.5)
@@ -83,26 +108,28 @@ function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos }: {
     <div className="mt-1" data-no-planeado={campoId}>
       <p className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
         <span>lo no planeado de cada tramo</span>
-        <Info titulo="Lo no planeado" texto="Las paradas que nadie programó: fallas, disparos y terceros. Es lo que TRIM tiene que bajar. Lo que todavía no tiene causa no se sabe si fue planeado: va aparte, sin contarse como planeado ni como no planeado." />
+        <Info titulo="Lo no planeado" texto="Las paradas que nadie programó: fallas, disparos y terceros. Es lo que TRIM tiene que bajar. Lo que todavía no tiene causa no se sabe si fue planeado: va aparte, sin contarse como planeado ni como no planeado. Lo que no se produjo sin una falla (una nominación, la frecuencia bajada, el yacimiento) tampoco es una parada." />
       </p>
       <ul className="text-[11px]">
         {[...tramos].sort((a, b) => orden(a.valor) - orden(b.valor)).map(t => {
           const k = t.valor as ChokeOSinAsignar
-          const pct = t.bbl > 0 ? (t.noPlaneadaBbl / t.bbl) * 100 : 0
-          const planeado = t.hijos.find(h => h.valor === 'planeada')?.bbl ?? 0
-          const sinSaber = t.bbl - t.noPlaneadaBbl - planeado
-          const eqs = (equipos[k] ?? []).slice(0, 2).map(e => e.equipo)
+          const e = escalones[k]
+          const noPlaneado = e['disponibilidad-no-planeada'], planeado = e['disponibilidad-planeada'], sinSaber = e['sin-clasificar']
+          const sinFalla = e.capacidad + e.desempeno + e.desarrollo
+          const pct = t.bbl > 0 ? (noPlaneado / t.bbl) * 100 : 0
+          const eqs = (equipos[k] ?? []).slice(0, 2).map(x => x.equipo)
           return (
             <li key={k} className="flex flex-wrap items-baseline gap-x-1.5 border-b border-[var(--linea2)] py-0.5 last:border-0"
-              data-tramo-no-planeado={k} data-bbl={t.bbl} data-no-planeada={t.noPlaneadaBbl}>
+              data-tramo-no-planeado={k} data-bbl={t.bbl} data-no-planeada={noPlaneado}>
               <span className="text-[var(--tinta2)]">{LARGO_TRAMO[k]}</span>
               <span className="tabular">{n0(t.bbl)} bbl</span>
               <span className="text-[var(--tinta3)]">·</span>
-              {t.noPlaneadaBbl >= 0.5
-                ? <b className="tabular font-semibold">no planeado {n0(t.noPlaneadaBbl)} ({pctParte(pct)})</b>
+              {noPlaneado >= 0.5
+                ? <b className="tabular font-semibold">no planeado {n0(noPlaneado)} ({pctParte(pct)})</b>
                 : <span className="text-[var(--tinta2)]">{sinSaber >= 0.5 ? 'sin saber si fue planeado' : 'nada no planeado'}</span>}
-              {t.noPlaneadaBbl >= 0.5 && planeado >= 0.5 && <span className="tabular text-[var(--tinta2)]">· planeado {n0(planeado)}</span>}
-              {t.noPlaneadaBbl >= 0.5 && sinSaber >= 0.5 && <span className="tabular text-[var(--tinta3)]">· {n0(sinSaber)} sin saber</span>}
+              {noPlaneado >= 0.5 && planeado >= 0.5 && <span className="tabular text-[var(--tinta2)]">· planeado {n0(planeado)}</span>}
+              {noPlaneado >= 0.5 && sinSaber >= 0.5 && <span className="tabular text-[var(--tinta3)]">· {n0(sinSaber)} bbl sin saber si fueron planeados</span>}
+              {sinFalla >= 0.5 && <span className="tabular text-[var(--tinta3)]">· {n0(sinFalla)} bbl sin una falla</span>}
               {eqs.length > 0 && <span className="min-w-0 text-[var(--tinta3)]">· {eqs.join(', ')}</span>}
             </li>
           )
@@ -131,6 +158,8 @@ export function LineaPerdida({ className }: { className?: string }) {
 export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, className }: {
   campos: string[]; desde: Date; hasta: Date; conPerdida?: boolean; className?: string
 }) {
+  // Sin ninguna barra, la leyenda no tiene qué explicar (B-39).
+  const total = useRepartoChoke({ campos, desde, hasta }).diferido
   const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   return (
     <section id="por-donde-se-trabo" className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]', className)}>
@@ -149,7 +178,7 @@ export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, cl
           </div>
         ))}
       </div>
-      <LeyendaTramos className="mt-2.5" />
+      {total >= 0.5 && <LeyendaTramos className="mt-2.5" />}
       {conPerdida && <LineaPerdida className="mt-2.5 border-t border-[var(--linea2)] pt-2" />}
     </section>
   )
@@ -173,7 +202,7 @@ export function AntesConTrimPorTramo({ campos, desde, hasta }: { campos: string[
   return (
     <div className="mt-2.5" data-antes-con-trim="">
       <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-[var(--tinta2)]">
-        <span>Por dónde se trabó · lo no planeado por día ({base.base.nombre} → con TRIM)</span>
+        <span>Por dónde se trabó · lo no planeado por día ({base.base.nombre} → con TRIM, desde el {fechaCorta(base.periodo.desde)})</span>
         <Info titulo="Antes → con TRIM, por tramo"
           texto={`Lo no planeado por día de cada tramo: antes de TRIM (${base.base.nombre}, los tres meses publicados antes del ${fechaCorta(base.periodo.desde)}) y con TRIM (desde el ${fechaCorta(base.periodo.desde)}). Van las dos flechas, la que baja y la que sube: un solo porcentaje escondería dónde está el trabajo pendiente.${corta ? ' Un mes es poco para afirmar una mejora: la comparación vale cuando haya tres meses.' : ''}`} />
         {corta && <Chip>muestra corta</Chip>}

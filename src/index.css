@@ -142,10 +142,10 @@ body{
    equipo se detuvo, la línea se queda quieta y se apaga: el esquema no
    puede seguir «fluyendo» cuando el proceso está parado.            */
 /* ISA-101 reserva el movimiento para lo anormal: una línea con flujo normal
-   no se anima. Lo único que parpadea es la alarma de prioridad 1. */
+   no se anima. Y nada parpadea (U1 §9.3, B-41): TRIM no tiene reconocimiento
+   de alarmas, así que un latido no tendría cómo apagarse. La alarma de
+   prioridad 1 lleva un anillo quieto alrededor, además de su marca. */
 .detenido{opacity:.3}
-@keyframes latir{0%,100%{opacity:.9}50%{opacity:.15}}
-.latido{animation:latir 1.7s ease-in-out infinite}
 .nodo{cursor:pointer}
 .nodo:focus-visible{outline:none}
 .nodo:focus-visible .marco,.nodo:hover .marco{stroke:var(--acento); stroke-width:2}

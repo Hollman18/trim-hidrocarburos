@@ -6,7 +6,9 @@ import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
 import { alFinal } from '@/shared/ui/alFinal'
 import { n0, n1 } from '@/shared/lib/formato'
-import { DONDE, TONO } from './palabras'
+import { DONDE } from './palabras'
+import { Muestra, PatronesTramo } from '@/widgets/diferidos/tramos'
+import { rellenoSvg } from '@/widgets/diferidos/reparto'
 
 /** Un tope «limpio» para el eje (el mismo de «Mes a mes» de Diferidos). */
 function tope(v: number) {
@@ -41,12 +43,7 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
         <div ref={alFinal} className="overflow-x-auto">
           <svg viewBox={`0 0 ${W} 206`} className="block h-auto w-full min-w-[560px]" role="group"
             aria-label={`Lo que se perdió cada mes, por dónde se trabó, de ${corto.get(meses[0]?.mes ?? '')?.nombre ?? ''} a ${corto.get(meses.at(-1)?.mes ?? '')?.nombre ?? ''}`}>
-            <defs>
-              <pattern id={`sin-${id}`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <rect width="5" height="5" fill="var(--panel)" />
-                <line x1="0" y1="0" x2="0" y2="5" stroke="var(--tinta3)" strokeWidth="1.6" />
-              </pattern>
-            </defs>
+            <defs><PatronesTramo id={id} /></defs>
             {[0, techo / 2, techo].map(v => (
               <g key={v}>
                 <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.8} />
@@ -68,13 +65,15 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
               }
               return (
                 <Tip key={m.mes} as="g" titulo={nombre?.nombre ?? m.mes} pista={m.parcial ? 'Mes en curso: cifras parciales.' : 'Mes cerrado'}
-                  filas={[['Se trabaron', `${n0(m.diferido)} bbl`],
+                  filas={[['No se produjeron', `${n0(m.diferido)} bbl`],
                     ...ORDEN_CHOKE.map((t): [string, string] => [DONDE[t], `${n0(m.porTramo[t])} bbl · no planeado ${n0(m.noPlaneado[t])}`]),
                     ['sin identificar', `${n0(m.porTramo['sin-asignar'])} bbl`]]}>
-                  <g opacity={activo ? 1 : 0.62}>
+                  {/* Sin atenuar los otros meses: el gris es el dato (B-08). El mes del período, con contorno. */}
+                  <g>
                     <rect x={x - (paso - ancho) / 2} y={G.y0 - 8} width={paso} height={G.y1 - G.y0 + 36} fill="transparent" />
-                    {ORDEN_CHOKE.map(t => capa(m.porTramo[t], TONO[t], t))}
-                    {capa(m.porTramo['sin-asignar'], `url(#sin-${id})`, 'sin', true)}
+                    {ORDEN_CHOKE.map(t => capa(m.porTramo[t], rellenoSvg(t, id), t))}
+                    {capa(m.porTramo['sin-asignar'], rellenoSvg('sin-asignar', id), 'sin', true)}
+                    {activo && m.diferido > 0 && <rect x={x - 2.5} y={Y(Math.max(0, m.diferido)) - 2.5} width={ancho + 5} height={G.y1 - Y(Math.max(0, m.diferido)) + 2.5} fill="none" stroke="var(--tinta)" strokeWidth={1.4} data-mes-activo />}
                     {m.parcial && <rect x={x} y={Y(Math.max(0, m.diferido))} width={ancho} height={G.y1 - Y(Math.max(0, m.diferido))} fill="none" stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="3 2" />}
                     <text x={x + ancho / 2} y={Y(Math.max(0, m.diferido)) - 5} fontSize={9} textAnchor="middle" fill="var(--tinta2)" className="tabular">{k(m.diferido)}</text>
                     <text x={x + ancho / 2} y={G.y1 + 14} fontSize={9.5} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta3)'} fontWeight={activo ? 600 : 400} className="font-cond">
@@ -92,16 +91,15 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
         {/* La leyenda es de texto, con las cuatro palabras de los tramos (U2 §7.4). */}
         <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
           {ORDEN_CHOKE.map(t => (
-            <span key={t} className="inline-flex items-center gap-1.5"><i aria-hidden className="inline-block size-2.5" style={{ background: TONO[t] }} />{DONDE[t]}</span>
+            <span key={t} className="inline-flex items-center gap-1.5"><Muestra k={t} />{DONDE[t]}</span>
           ))}
-          <span className="inline-flex items-center gap-1.5">
-            <svg width="10" height="10" aria-hidden><rect x="0.5" y="0.5" width="9" height="9" fill={`url(#sin-${id})`} stroke="var(--tinta3)" strokeDasharray="2 1.5" /></svg>sin identificar
-          </span>
+          <span className="inline-flex items-center gap-1.5"><Muestra k="sin-asignar" />sin identificar</span>
         </div>
         <Lectura>
-          Cada columna es un mes: lo que se perdió, apilado por el tramo donde se trabó, del más oscuro (el
-          yacimiento) al más claro (afuera); lo rayado todavía no tiene causa y no se reparte. La cifra de
-          arriba es el diferido del libro de ese mes. Los meses del período van al frente.
+          Cada columna es un mes: lo que no se produjo, apilado por el tramo donde se trabó, cada uno con su
+          gris y su dibujo (el yacimiento liso oscuro, los pozos lisos, la planta con rayas, afuera con
+          puntos); lo rayado y discontinuo todavía no tiene causa y no se reparte. La cifra de arriba es el
+          diferido del libro de ese mes. Los meses del período llevan un contorno.
         </Lectura>
         {/* En el papel, los mismos números en una tabla. */}
         <div className="solo-impresion mt-2">

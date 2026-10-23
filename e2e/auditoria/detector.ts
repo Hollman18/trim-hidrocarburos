@@ -58,6 +58,9 @@ export function detectar(): Hallazgo[] {
     if (r.width < 2 || r.height < 2) continue
     const cs = getComputedStyle(el)
     if (cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) continue
+    // Lo de un <details> cerrado no se pinta, pero el navegador le da caja al medirlo:
+    // sin esto, un botón plegado «pisaba» al que se ve en su lugar.
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) continue
     if (el.closest('[role=tooltip]')) continue
     // hojas de texto para buscar encimados
     const textoPropio = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent?.trim())

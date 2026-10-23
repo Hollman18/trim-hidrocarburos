@@ -71,7 +71,7 @@ export function SiFallaHoy({ campos, global, rol, onAbrir }: {
         </Lectura>
         {v.campos.map(c => (
           <CampoSiFalla key={c.campoId} c={c} filas={v.ranking.filter(f => f.campoId === c.campoId)}
-            global={global} rol={rol} sev={sev} abrible={(f: FilaCriticidad) => !!hoy(f.equipo, f.campoId)} onAbrir={onAbrir} />
+            global={global} rol={rol} sev={sev} abrible={(f: FilaCriticidad) => !!hoy(f.equipo, f.campoId) || f.familia === 'bomba'} onAbrir={onAbrir} />
         ))}
       </div>
     </section>
@@ -86,32 +86,38 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
   onAbrir: (campoId: string, equipo: string) => void
 }) {
   const nombre = campoPorId(c.campoId).nombre
+  // Tres grupos que no se ordenan juntos (D6; B-06): lo medido, con su puesto; los
+  // techos («hasta»: suponen que se cierra todo lo que depende del equipo); y lo que
+  // no tiene cifra, con lo que falta. Un techo nunca empata con una cifra calculada.
+  const medidos = filas.filter(f => f.grupo === 'medido')
+  const techos = filas.filter(f => f.grupo === 'techo')
+  const sinCifra = filas.filter(f => f.grupo === 'sin-dato')
   // Cinco a la vista, sin partir un empate: si el quinto comparte puesto con los que siguen, van todos.
-  const quinto = filas[VISIBLES - 1]
-  const corte = quinto ? filas.findIndex((f, i) => i >= VISIBLES && f.puesto !== quinto.puesto) : -1
+  const quinto = medidos[VISIBLES - 1]
+  const corte = quinto ? medidos.findIndex((f, i) => i >= VISIBLES && f.puesto !== quinto.puesto) : -1
   // Siempre a la vista: lo que subió por otro equipo parado y lo que está en alarma (ISA-18.2: una alarma no se tapa).
-  const lista_ = useVerMas(filas, { n: corte === -1 ? (quinto ? filas.length : VISIBLES) : corte, prioridad: f => (f.subio || sev(f) === 1 ? 1 : 2) })
+  const lista_ = useVerMas(medidos, { n: corte === -1 ? (quinto ? medidos.length : VISIBLES) : corte, prioridad: f => (f.subio || sev(f) === 1 ? 1 : 2) })
   const raices = c.parados.filter(esRaiz), pozosParados = c.parados.filter(f => !esRaiz(f))
-  const estimados = filas.some(f => f.estimacion && (f.bpd ?? 0) > 0)
   const rejilla = cn('grid items-baseline gap-x-2 gap-y-0.5',
     'grid-cols-[1.75rem_minmax(0,1fr)_auto] [grid-template-areas:"n_e_c"_"._t_t"_"._x_x"]',
     'lg:grid-cols-[1.75rem_minmax(0,1.5fr)_minmax(0,1.15fr)_7.5rem_5.5rem_6.5rem_8rem] lg:[grid-template-areas:"n_e_t_c_d_f_v"]')
+  const subtitulo = 'mt-2 border-b border-[var(--linea2)] pb-1 text-[10.5px] font-semibold text-[var(--tinta2)]'
 
   const fila = (f: FilaCriticidad, oculta: boolean) => {
     const s = sev(f)
     const p = f.puesto
     const otro = nombreSinId(f)
     const donde = `${DONDE_CHOKE[f.tramo]}${f.tramo === 'planta' && f.servidos > 0 ? ` · ${plural(f.servidos, 'pozo', 'pozos')}` : ''}`
-    const cifra = f.bpd === null ? 'sin dato' : f.estimacion && f.bpd > 0 ? `hasta ${n0(f.bpd)}` : n0(f.bpd)
+    const cifra = f.bpd === null ? 'sin dato' : f.grupo === 'techo' && f.bpd > 0 ? `hasta ${n0(f.bpd)}` : n0(f.bpd)
     const despues = f.colchonH !== undefined ? colchon(f.colchonH)
       : f.bpd === null || f.bpd === 0 ? '—' : f.familia === 'bomba' && f.sinDato ? 'sin dato' : 'sin colchón'
-    const leido = `${p === null ? '' : `Puesto ${p}. `}${f.equipo}${otro ? `, ${otro}` : ''}: si falla hoy, ${f.bpd === null ? 'sin dato' : `${cifra} barriles por día`}; se trabaría ${donde}; ${f.colchonH !== undefined ? `después de ${colchon(f.colchonH)} de colchón` : despues === '—' ? (f.bpd === 0 ? 'no cierra pozos' : 'sin dato del colchón') : despues}; ${f.costoFalla !== undefined ? `una falla, unos ${n0(f.costoFalla)} barriles` : 'sin cifra de una falla'}; ${f.vigilado ? 'lo vigila TRIM' : 'sin instrumento'}${f.subio ? '. Subió hoy' : ''}`
+    const leido = `${p === null ? '' : `Puesto ${p}. `}${f.equipo}${otro ? `, ${otro}` : ''}: si falla hoy, ${f.bpd === null ? `sin dato${f.sinDato ? `: ${f.sinDato}` : ''}` : `${cifra} barriles por día`}; se trabaría ${donde}; ${f.colchonH !== undefined ? `después de ${colchon(f.colchonH)} de colchón` : despues === '—' ? (f.bpd === 0 ? 'no cierra pozos' : 'sin dato del colchón') : despues}; ${f.costoFalla !== undefined ? `una falla, unos ${n0(f.costoFalla)} barriles` : 'sin cifra de una falla'}; ${f.vigilado ? 'lo vigila TRIM' : 'sin instrumento'}${s > 0 ? `, con una alarma de prioridad ${s}` : ''}${f.subio ? '. Subió hoy' : ''}`
     const pista = [f.porque, f.sinDato, f.costoFalla !== undefined && f.mdtFuente ? `Una falla: ${f.mdtFuente}` : ''].filter(Boolean).join('. ')
     const cuerpo = (
       <>
         <span className="tabular text-[12px] text-[var(--tinta3)] [grid-area:n]">{p ?? '┄'}</span>
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 [grid-area:e]">
-          <span className="inline-flex shrink-0 items-center gap-1.5 self-center"><MarcaPrioridad s={s} tamano={12} /><b className="text-[12.5px]">{f.equipo}</b></span>
+          <b className="text-[12.5px]">{f.equipo}</b>
           {otro && <span className="min-w-0 text-[11px] text-[var(--tinta2)]">{otro}</span>}
           {f.subio && <Chip tono="fuerte">sube</Chip>}
         </span>
@@ -123,14 +129,19 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
         </span>
         {/* En el teléfono, colchón, falla y vigía en una línea con «·»; en el escritorio, cada uno en su columna. */}
         <span className="flex flex-wrap gap-x-1 text-[11px] text-[var(--tinta2)] [grid-area:x] lg:contents">
-          <span className="tabular lg:text-right lg:[grid-area:d]">{despues}{f.colchonH !== undefined && <span className="lg:hidden"> de colchón</span>}</span>
-          <span className={cn('tabular lg:text-right lg:[grid-area:f]', f.costoFalla === undefined && 'hidden lg:inline')}>
-            {f.costoFalla !== undefined ? <><span aria-hidden className="lg:hidden">· </span><span className="lg:hidden">una falla </span>≈ {n0(f.costoFalla)} bbl{f.costoDe === 'flota' && <small className="block text-[9.5px] text-[var(--tinta3)] max-lg:inline max-lg:pl-1">flota</small>}</> : '—'}
-          </span>
-          <span className="lg:text-right lg:[grid-area:v]">
+          {f.bpd === null && f.sinDato
+            ? <span className="lg:[grid-area:d] lg:col-span-2">{f.sinDato}</span>
+            : <>
+              <span className="tabular lg:text-right lg:[grid-area:d]">{despues}{f.colchonH !== undefined && <span className="lg:hidden"> de colchón</span>}</span>
+              <span className={cn('tabular lg:text-right lg:[grid-area:f]', f.costoFalla === undefined && 'hidden lg:inline')}>
+                {f.costoFalla !== undefined ? <><span aria-hidden className="lg:hidden">· </span><span className="lg:hidden">una falla </span>≈ {n0(f.costoFalla)} bbl{f.costoDe === 'flota' && <small className="block text-[9.5px] text-[var(--tinta3)] max-lg:inline max-lg:pl-1">flota</small>}</> : '—'}
+              </span>
+            </>}
+          {/* La marca de alarma del equipo va en «¿Lo vigila TRIM?» (B-43; U2 §9.5): pegada al puesto se leía como otro puesto. */}
+          <span className="inline-flex items-center gap-1 lg:justify-end lg:[grid-area:v]">
             <span aria-hidden className="lg:hidden">· </span>
             {f.vigilado
-              ? <><span className="lg:hidden">vigilado</span><span className="hidden lg:inline">sí</span></>
+              ? <><span className="lg:hidden">vigilado</span><span className="hidden lg:inline">sí</span>{s > 0 && <> · <MarcaPrioridad s={s} tamano={11} /></>}</>
               : <span className="whitespace-nowrap rounded-sm border border-dashed border-[var(--tinta3)] px-1 text-[10.5px] text-[var(--tinta3)]">sin instrumento</span>}
           </span>
         </span>
@@ -140,7 +151,7 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
       filas: [['Si falla hoy', f.bpd === null ? 'sin dato' : `${cifra} bbl/d`], ['Se trabaría', donde], ['Después de', despues],
         ['Una falla', f.costoFalla !== undefined ? `≈ ${n0(f.costoFalla)} bbl` : 'sin cifra'], ['¿Lo vigila TRIM?', f.vigilado ? 'sí' : 'sin instrumento']] as Array<[string, string]>,
       ...(f.subio || f.sinDato ? { imprimir: 'pista' as const } : {}),
-      'data-fila-critica': f.equipo, 'data-campo': f.campoId, 'data-bpd': f.bpd ?? '', 'data-costo': f.costoFalla ?? '' }
+      'data-fila-critica': f.equipo, 'data-campo': f.campoId, 'data-bpd': f.bpd ?? '', 'data-costo': f.costoFalla ?? '', 'data-grupo': f.grupo }
     return (
       <div key={`${f.campoId}:${f.equipo}`} className={cn('border-b border-[var(--linea2)] last:border-0', oculta && 'solo-impresion')}>
         {abrible(f)
@@ -181,34 +192,71 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
         </p>
       ))}
 
-      {filas.length === 0
-        ? <p className="text-[11.5px] text-[var(--tinta2)]">Ningún equipo de {nombre} tiene con qué medir su falla.</p>
-        : (
-          <>
-            <div aria-hidden className={cn(rejilla, 'hidden border-b border-[var(--linea2)] pb-1 text-[10px] text-[var(--tinta3)] lg:grid')}>
-              <span className="[grid-area:n]">#</span><span className="[grid-area:e]">Equipo</span><span className="[grid-area:t]">Se trabaría en</span>
-              <span className="text-right [grid-area:c]">Si falla hoy</span><span className="text-right [grid-area:d]">Después de</span>
-              <span className="text-right [grid-area:f]">Una falla ≈</span><span className="text-right [grid-area:v]">¿Lo vigila TRIM?</span>
-            </div>
-            {filas.map(f => fila(f, lista_.resto.includes(f)))}
-            <VerMas ocultas={lista_.ocultas} abierto={lista_.abierto} onAlternar={lista_.alternar} />
-          </>
-        )}
-      {(estimados || c.sinCalcular.length > 0) && (
-        <div className="mt-1.5 grid gap-0.5 text-[10.5px] text-[var(--tinta3)]">
-          {estimados && <p>«hasta»: es un techo, supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque de crudo.</p>}
-          {c.sinCalcular.length > 0 && (
-            <p className="flex flex-wrap items-center gap-x-1" data-sin-calcular="">
-              <span className="rounded-sm border border-dashed border-[var(--tinta3)] px-1">sin dato</span>
-              <span>{lista(c.sinCalcular.map(x => x.nombre))}.</span>
-              {/* Un solo motivo se dice; varios, cada uno con su elemento en el ⓘ. */}
-              {c.sinCalcular.every(x => x.motivo === c.sinCalcular[0]!.motivo)
-                ? <span>{c.sinCalcular[0]!.motivo}.</span>
-                : <Info titulo="Sin dato" texto={c.sinCalcular.map(x => `${x.nombre}: ${x.motivo}`).join('. ')} />}
-            </p>
+      {/* Un campo de gas: lo que cuesta una falla en gas todavía no se calcula, y se dice así (B-18). */}
+      {c.campoDeGas ? <p className="text-[11.5px] text-[var(--tinta2)]" data-campo-de-gas>{c.campoDeGas}</p>
+        : filas.length === 0
+          ? <p className="text-[11.5px] text-[var(--tinta2)]">Ningún equipo de {nombre} tiene con qué medir su falla.</p>
+          : (
+            <>
+              <div aria-hidden className={cn(rejilla, 'hidden border-b border-[var(--linea2)] pb-1 text-[10px] text-[var(--tinta3)] lg:grid')}>
+                <span className="[grid-area:n]">#</span><span className="[grid-area:e]">Equipo</span><span className="[grid-area:t]">Se trabaría en</span>
+                <span className="text-right [grid-area:c]">Si falla hoy</span><span className="text-right [grid-area:d]">Después de</span>
+                <span className="text-right [grid-area:f]">Una falla ≈</span><span className="text-right [grid-area:v]">¿Lo vigila TRIM?</span>
+              </div>
+              <div data-grupo-si-falla="medido">
+                {medidos.map(f => fila(f, lista_.resto.includes(f)))}
+                <VerMas ocultas={lista_.ocultas} abierto={lista_.abierto} onAlternar={lista_.alternar} />
+              </div>
+              {techos.length > 0 && (
+                <div data-grupo-si-falla="techo">
+                  <h4 className={subtitulo}>Sin cifra todavía · techo si cierran todos sus pozos</h4>
+                  {techos.map(f => fila(f, false))}
+                  <p className="mt-0.5 text-[10.5px] text-[var(--tinta3)]">«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.</p>
+                </div>
+              )}
+              {sinCifra.length > 0 && (
+                <div data-grupo-si-falla="sin-dato">
+                  <h4 className={subtitulo}>Sin dato · lo que falta para calcularlos</h4>
+                  {sinCifra.map(f => fila(f, false))}
+                </div>
+              )}
+            </>
           )}
-        </div>
+      {c.sinCalcular.length > 0 && !c.campoDeGas && (
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]" data-sin-calcular="">
+          <span className="rounded-sm border border-dashed border-[var(--tinta3)] px-1">sin dato</span>
+          <span>{lista(c.sinCalcular.map(x => x.nombre))}.</span>
+          {/* Un solo motivo se dice; varios, cada uno con su elemento en el ⓘ. */}
+          {c.sinCalcular.every(x => x.motivo === c.sinCalcular[0]!.motivo)
+            ? <span>{c.sinCalcular[0]!.motivo}.</span>
+            : <Info titulo="Sin dato" texto={c.sinCalcular.map(x => `${x.nombre}: ${x.motivo}`).join('. ')} />}
+        </p>
       )}
     </div>
+  )
+}
+
+/** «Si falla hoy» de UN equipo, para su ficha (U2 §1.2 y §1.5; B-37): cuánto
+ *  dejaría de sacar el campo, dónde se trabaría, su puesto en la lista y, si
+ *  subió porque otro está parado, por qué. Sin puesto si es un techo o no tiene
+ *  cifra: no se ordena con lo medido. Lo dice el motor (`useCriticidad`). */
+export function SiFallaHoyFicha({ campoId, equipo, className }: { campoId: string; equipo: string; className?: string }) {
+  const v = useCriticidad([campoId])
+  const c = v.campos.find(x => x.campoId === campoId)
+  const f = [...v.ranking, ...(c?.parados ?? [])].find(x => x.equipo === equipo && x.campoId === campoId)
+  if (!f) return null
+  const donde = `${DONDE_CHOKE[f.tramo]}${f.tramo === 'planta' && f.servidos > 0 ? ` (${plural(f.servidos, 'pozo', 'pozos')})` : ''}`
+  const cifra = f.parado ? `ya está parado: se pierden ${n0(f.perdiendoBpd ?? 0)} bbl/d ahora`
+    : c?.campoDeGas ? c.campoDeGas
+      : f.bpd === null ? `sin dato${f.sinDato ? `: ${f.sinDato.replace(/\.$/, '')}` : ''}`
+        : f.grupo === 'techo' ? `hasta ${n0(f.bpd)} bbl/d (un techo: supone que se cierran todos sus pozos)`
+          : f.bpd === 0 ? 'no cierra pozos' : `${n0(f.bpd)} bbl/d${f.colchonH !== undefined ? ` después de ${colchon(f.colchonH)} de colchón` : ''}`
+  return (
+    <p className={cn('text-[11.5px] leading-snug', className)} data-si-falla-ficha={equipo}>
+      <b className="font-semibold">Si falla hoy:</b> {cifra}
+      {!f.parado && !c?.campoDeGas && <> · se trabaría {donde}{f.puesto !== null ? ` · puesto ${f.puesto} de lo que más cuesta` : ''}</>}
+      {f.subio && <span className="block text-[var(--tinta2)]">{f.subio.porque}.</span>}
+      {!f.vigilado && <span className="block text-[var(--tinta2)]">Sin instrumento: TRIM no ve venir su falla.</span>}
+    </p>
   )
 }

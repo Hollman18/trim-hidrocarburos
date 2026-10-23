@@ -304,6 +304,7 @@ type TanqueDelTren = NonNullable<TramoTuberiaAgua['tanques']>[number]
 const tuberiaAgua = obj<TuberiaAgua>()({
   tramos: lista(obj<TramoTuberiaAgua>()({ tanques: opc(lista(obj<TanqueDelTren>()({ colchon: opc(colchonAgua) }))) })),
   sinUna: opc(obj<NonNullable<TuberiaAgua['sinUna']>>()({ desde: opc(fecha), colchonH: horasOpcionales })),
+  siParaOtra: opc(obj<NonNullable<TuberiaAgua['siParaOtra']>>()({ colchonH: horasOpcionales })),
 })
 const filaCriticidad = obj<FilaCriticidad>()({ colchonH: horasOpcionales, subio: opc(obj<NonNullable<FilaCriticidad['subio']>>()({ desde: fecha })) })
 const avisoTrabajo = obj<AvisoTrabajoCritico>()({ desde: fecha, hasta: fecha })
@@ -630,8 +631,10 @@ export type RolQueRevisa = 'sup' | 'prod' | 'jefe' | 'conf'
  *  (D1): pasa la parada a quien corrige, con el motivo. Queda atendida cuando
  *  ese rol dice, corrige o confirma algo de ella. */
 export interface CuerpoRevisionAnh { motivo: string; pedirA?: RolQueRevisa; aplicarAlEvento?: boolean; aplicarALaCascada?: boolean; ids?: string[]; cadena?: string }
-/** `POST /configuracion/vista-previa`: la configuración que se va a firmar, sin firmarla. */
-export interface CuerpoVistaPrevia { config: Config }
+/** `POST /configuracion/vista-previa`: la configuración que se va a firmar, sin
+ *  firmarla. Con `aunConErrores`, lo que haría fallar la firma no corta la vista
+ *  previa: va en `errores` al lado del impacto (B-53, «borrador con errores: así quedaría»). */
+export interface CuerpoVistaPrevia { config: Config; aunConErrores?: boolean }
 /** `POST /topologia/importar`: un CSV o un pegado de Excel, «equipo; pozos a los que sirve». */
 export interface CuerpoTopologiaCsv { campo: string; texto: string }
 
@@ -643,8 +646,9 @@ export interface CuerpoTopologiaCsv { campo: string; texto: string }
 export const R_CLASIFICACION = obj<{ parada: ParadaAnh; guardadas: Record<string, BorradorClasificacion> }>()({ parada: paradaAnh, guardadas: dic(borradorAnh) })
 /** `POST /anh/paradas/confirmar` → las filas como quedaron y, si fue en lote, el lote. */
 export const R_CONFIRMACION = obj<{ lote?: ConfirmacionLote; paradas: ParadaAnh[] }>()({ paradas: lista(paradaAnh) })
-/** `POST /configuracion/vista-previa` → lo que cambiaría en cada campo tocado. */
-export const R_VISTA_PREVIA = obj<{ impacto: ImpactoConfig }>()({ impacto: obj<ImpactoConfig>()({ desde: fecha, hasta: fecha }) })
+/** `POST /configuracion/vista-previa` → lo que cambiaría en cada campo tocado
+ *  y, si se pidió `aunConErrores`, lo que todavía impide firmar. */
+export const R_VISTA_PREVIA = obj<{ impacto: ImpactoConfig; errores?: string[] }>()({ impacto: obj<ImpactoConfig>()({ desde: fecha, hasta: fecha }) })
 /** `POST /topologia/importar` → la topología leída y lo que se encontró por fila. */
 export const R_TOPOLOGIA_CSV = tal<TopologiaLeida>()
 

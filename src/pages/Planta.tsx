@@ -400,7 +400,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                 filas={filas} className={clicable ? 'nodo' : undefined}
                 onClick={clicPozos ? () => setPantalla('pozos') : clicable ? () => abrir(eq!.id) : undefined}>
                 <g transform={`translate(${n.x},${n.y})`} ref={(el: SVGGElement | null) => { if (el) refs.current.set(n.id, el) }}>
-                  {sev === 1 && <circle cx={0} cy={0} r={46} fill="none" stroke="var(--p1)" strokeWidth={2} className="latido" />}
+                  {sev === 1 && <circle cx={0} cy={0} r={46} fill="none" stroke="var(--p1)" strokeWidth={2} data-anillo-alarma />}
                   {destacado === n.id && <rect x={-64} y={-48} width={128} height={96} rx={11} fill="none" stroke="var(--acento)" strokeWidth={2.4} strokeDasharray="7 5" />}
                   {!proceso && (
                     <rect className="marco" x={-58} y={-42} width={116} height={84} rx={8}

@@ -7,9 +7,9 @@ import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { desplazable } from '@/shared/ui/alFinal'
 import { n0, n1 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { CAJA } from './palabras'
+import { CAJA, ESCALON_CAMPO } from './palabras'
 
-const AYUDA_ESCALERA = 'Es la escalera del método choke (NSTA §5.3 y §6.4; patente US 8,195,401): cada barril que no se produjo cae en un escalón y en un tramo, y la suma da exacto lo que no se produjo según el libro. Desarrollo es del yacimiento; desempeño, del levantamiento sin optimizar; las paradas, de mantenimiento y confiabilidad; capacidad, de la operación (nominación, despacho). El norte de TRIM vive en las paradas no planeadas.'
+const AYUDA_ESCALERA = 'Es la escalera del método choke (NSTA §5.3 y §6.4): cada barril que no se produjo cae en un escalón y en un tramo, y la suma da exacto lo que no se produjo según el libro. Desarrollo es del yacimiento; desempeño, del levantamiento sin optimizar; las paradas, de mantenimiento y confiabilidad; capacidad, de la operación (nominación, despacho). El norte de TRIM vive en las paradas no planeadas.'
 const AYUDA_PE = 'Lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar (el menor de sus tramos, día por día). Es la eficiencia de producción de la NSTA (§5.3) y de la ISO/TS 3250. Si limitan los pozos, es la misma eficiencia de arriba; si limita la planta o afuera, no se cuenta como pérdida lo que no pasa aunque nada pare.'
 const AYUDA_NO_PLANEADO = 'Las paradas no planeadas (fallas, disparos, terceros) ÷ lo que el campo podía dejar pasar: la eficiencia no planeada de la NSTA. Es el porcentaje que TRIM busca bajar prediciendo las bombas críticas.'
 const AYUDA_SIN_EXPLICAR = 'Lo que no explica ningún evento: el inventario del tanque de venta entre un día y otro. Se muestra, nunca se reparte. Si pasa del 2,5 % del potencial del período, hay que revisarlo (el umbral de cierre de la NSTA).'
@@ -27,7 +27,7 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
   const ancho = (v: number) => `${Math.min(100, (Math.abs(v) / escala) * 100)}%`
 
   return (
-    <Panel className="mb-2.5 print:break-inside-avoid" titulo="LO QUE NO SE PRODUJO, POR ESCALÓN"
+    <Panel className="mb-2.5 print:break-inside-avoid" titulo="LO QUE NO SE PRODUJO, POR TIPO"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">{periodo.toLowerCase()}<Info titulo="La escalera" texto={AYUDA_ESCALERA} /></span>}>
       <div data-escalera>
         <div className="grid gap-x-6 gap-y-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
@@ -43,7 +43,7 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
             <b className="tabular">{n0(b.potencial)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           </li>
           {filas.map(([e, v]) => (
-            <Escalon key={e} nombre={NOMBRE_ESCALON[e]} valor={v} ancho={ancho(v)} norte={e === 'disponibilidad-no-planeada'} />
+            <Escalon key={e} nombre={ESCALON_CAMPO[e]} tecnico={NOMBRE_ESCALON[e]} valor={v} ancho={ancho(v)} norte={e === 'disponibilidad-no-planeada'} />
           ))}
           <Escalon nombre="Sin explicar: el inventario entre días" valor={b.sinExplicar} ancho={ancho(b.sinExplicar)} discontinuo
             ayuda={<Info titulo="Sin explicar" texto={AYUDA_SIN_EXPLICAR} />} aviso={!b.cuadra} />
@@ -88,15 +88,15 @@ function Cifra({ rotulo, valor, ayuda, pie }: { rotulo: string; valor: string; a
 
 /** Un escalón: su nombre, su barra contra lo que no se produjo y su cifra.
  *  El de las paradas no planeadas lleva su palabra («lo que TRIM baja»), en gris: no es una alarma. */
-function Escalon({ nombre, valor, ancho, norte, discontinuo, ayuda, aviso }: {
-  nombre: string; valor: number; ancho: string; norte?: boolean; discontinuo?: boolean; ayuda?: React.ReactNode; aviso?: boolean
+function Escalon({ nombre, tecnico, valor, ancho, norte, discontinuo, ayuda, aviso }: {
+  nombre: string; tecnico?: string; valor: number; ancho: string; norte?: boolean; discontinuo?: boolean; ayuda?: React.ReactNode; aviso?: boolean
 }) {
   const cero = Math.round(valor) === 0
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-[var(--linea2)] py-1 pl-3 sm:grid-cols-[minmax(0,1.3fr)_minmax(60px,1fr)_auto]"
       data-escalon={nombre} data-bbl={valor}>
       <span className={cn('flex flex-wrap items-center gap-x-1.5', cero && 'text-[var(--tinta3)]', norte && !cero && 'font-semibold')}>
-        − {nombre}{ayuda}
+        − {nombre}{ayuda}{tecnico && <Info titulo={nombre} texto={`En la escalera de la NSTA: ${tecnico}.`} />}
         {norte && <span className="font-cond rounded-sm border border-[var(--tinta2)] px-1 text-[9.5px] font-semibold tracking-[.05em] text-[var(--tinta)]">LO QUE TRIM BAJA</span>}
       </span>
       <span aria-hidden className="relative hidden h-2 overflow-hidden rounded-sm bg-[var(--panel2)] sm:block">
@@ -121,7 +121,7 @@ function PorTramo({ b }: { b: BrechaChoke }) {
         <tbody>
           {ESCALONES.map(e => (
             <tr key={e} className="border-t border-[var(--linea2)]">
-              <td className="py-1 pr-2 text-left">{NOMBRE_ESCALON[e]}</td>
+              <td className="py-1 pr-2 text-left">{ESCALON_CAMPO[e]}</td>
               {columnas.map(k => <td key={k} className={cn('py-1 pr-2 text-right', Math.round(b.porChokeEscalon[k][e]) === 0 && 'text-[var(--tinta3)]')}>{n0(b.porChokeEscalon[k][e])}</td>)}
               <td className="py-1 text-right font-semibold">{n0(b.porEscalon[e])}</td>
             </tr>

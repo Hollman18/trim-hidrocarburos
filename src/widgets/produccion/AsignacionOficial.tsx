@@ -84,7 +84,9 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
         lo que queda para la prueba o el factor. Es un cotejo: no cambia el libro.
       </Lectura>
 
-      <div className="mt-2 flex flex-wrap items-end gap-2 text-[11.5px]">
+      {/* En el papel no va el formulario (B-28): sus campos salían vacíos. Va el campo y el mes, y el cotejo. */}
+      <p className="solo-impresion mt-2 text-[11px]">{nombre} · {nombreMes(mes)}</p>
+      <div className="no-imprimir mt-2 flex flex-wrap items-end gap-2 text-[11.5px]">
         {campos.length > 1 && (
           <label className="grid gap-0.5">
             <span className="text-[10.5px] text-[var(--tinta2)]">Campo</span>
@@ -109,7 +111,7 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
           <SubirCsv onTexto={t => void revisar(t)} onError={m => { setErrores([m]); setHecho(null) }} />
         </>}
       </div>
-      {puede ? <>
+      {puede ? <div className="no-imprimir">
         {/* El motivo va antes de cargar: un CSV subido se carga en seguida y reemplaza la oficial del mes. */}
         <div className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
           <label htmlFor={idMotivo}>Motivo de la carga · obligatorio</label>
@@ -123,7 +125,7 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
           placeholder={'O pegue de Excel: mes, campo, pozo, crudo (bbl), horas.\n2026-09  La Ceiba  LC-11  28088  635,4'}
           className="mt-2 w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
         <Boton className="mt-1" onClick={() => void revisar(texto)} disabled={!texto.trim()}>Cotejar</Boton>
-      </> : <div className="mt-2"><Hueco>Solo lectura: la carga producción.</Hueco></div>}
+      </div> : <div className="no-imprimir mt-2"><Hueco>Solo lectura: la carga producción.</Hueco></div>}
       {errores.length > 0 && (
         <ul id={idErrores} role="alert" className="mt-1.5 list-disc pl-4 text-[11.5px] text-[var(--tinta)]">{errores.slice(0, 10).map(e => <li key={e}>{e}</li>)}
           {errores.length > 10 && <li>y {errores.length - 10} más.</li>}</ul>

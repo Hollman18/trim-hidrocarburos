@@ -103,11 +103,18 @@ test('gerente: dónde se trabó cada campo suma el diferido del libro, sin códi
 test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta lo mismo que en su ficha', async ({ flujo: f }) => {
   /** Las filas de la lista de un campo, en el orden en que se ven (las de «ver más» también están: van al papel). */
   const filas = (campo: string) => f.page.evaluate(c => [...document.querySelectorAll(`main [data-si-falla="${c}"] [data-fila-critica]`)].map(e => ({
-    equipo: e.getAttribute('data-fila-critica') ?? '', bpd: e.getAttribute('data-bpd') ?? '', costo: e.getAttribute('data-costo') ?? '', texto: (e as HTMLElement).innerText,
+    equipo: e.getAttribute('data-fila-critica') ?? '', grupo: e.getAttribute('data-grupo') ?? '', bpd: e.getAttribute('data-bpd') ?? '', costo: e.getAttribute('data-costo') ?? '', texto: (e as HTMLElement).innerText,
   })), campo)
-  const ordenada = (xs: Array<{ bpd: string }>) => {
-    const v = xs.map(x => (x.bpd === '' ? -1 : Number(x.bpd)))
-    return v.every((x, i) => i === 0 || x <= v[i - 1]!)
+  /** D6 (B-06): tres grupos en su orden (lo medido, con puesto; los techos; lo que no tiene dato) y,
+   *  dentro de cada uno, de mayor a menor. Un techo no se compara con una cifra medida. */
+  const GRUPOS = ['medido', 'techo', 'sin-dato']
+  const ordenada = (xs: Array<{ bpd: string; grupo: string }>) => {
+    const g = xs.map(x => GRUPOS.indexOf(x.grupo))
+    if (g.some(i => i < 0) || !g.every((x, i) => i === 0 || x >= g[i - 1]!)) return false
+    return GRUPOS.every(k => {
+      const v = xs.filter(x => x.grupo === k).map(x => (x.bpd === '' ? -1 : Number(x.bpd)))
+      return v.every((x, i) => i === 0 || x <= v[i - 1]!)
+    })
   }
   /** Abre la ficha de P-201B en Bombas y devuelve su texto. */
   const ficha = async (campo: string) => {
@@ -123,8 +130,11 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
     await f.esperarTexto('SI FALLA HOY')
     const xs = await filas('ceiba')
     f.ok(xs.length >= 20, `la lista trae todos los equipos del campo (${xs.length})`)
-    f.ok(ordenada(xs), 'de mayor a menor por lo que el campo deja de sacar por día')
+    f.ok(ordenada(xs), 'en tres grupos (lo medido, los techos, sin dato) y, en cada uno, de mayor a menor por lo que el campo deja de sacar por día')
     f.ok(['K-101', 'SE-2', 'P-201A', 'P-201C', 'LC-11'].every(e => xs.some(x => x.equipo === e)), 'con servicios, bombas y pozos')
+    // D6: los servicios sin cifra propia van en el grupo de los techos («hasta …»), sin puesto; LACT-01 sin dato.
+    f.ok(['K-101', 'SE-2'].every(e => xs.find(x => x.equipo === e)?.grupo === 'techo') && xs.find(x => x.equipo === 'LACT-01')?.grupo === 'sin-dato'
+      && xs.filter(x => x.grupo === 'techo').every(x => /hasta\s*[\d.]+\s*bbl\/d/.test(x.texto)), 'los techos dicen «hasta …» y van aparte de lo medido')
     f.ok(!xs.some(x => x.equipo === 'P-201B'), 'P-201B, que ya está parada, no entra en la lista: va arriba, aparte')
     const t = await f.texto()
     f.ok(t.includes('modelo choke') && /Cambió hoy: P-201A y P-201C subieron al puesto \d+/.test(t), 'confiabilidad ve «modelo choke» y la línea «Cambió hoy»')

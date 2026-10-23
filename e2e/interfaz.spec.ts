@@ -120,7 +120,7 @@ test('las tuberías del dibujo de Planta no son paradas de Tab; el tren de agua 
 test.describe('390 px', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true })
 
-  test('el último toque del chat de WhatsApp deja el foco en el aviso «Respondido»', async ({ flujo: f }) => {
+  test('el último toque del chat de WhatsApp deja el foco en el aviso «Respondido», con el chat abierto', async ({ flujo: f }) => {
     await f.abrir('/#/oper/causa/ceiba/curso')
     f.ok(await f.clic('Ver mi chat de WhatsApp'), 'abre su chat de WhatsApp')
     const chat = f.page.getByRole('group', { name: /^Chat de WhatsApp de / })
@@ -131,7 +131,8 @@ test.describe('390 px', () => {
     await expect(vio, 'TRIM pregunta qué vio').toBeVisible()
     f.ok(await vio.evaluate(b => b === document.activeElement), 'el paso intermedio deja el foco en la primera respuesta nueva')
     await f.page.keyboard.press('Enter')
-    await expect(chat, 'la respuesta cierra la conversación y la tarjeta sale de «por identificar»').toHaveCount(0)
+    // B-05: el chat no se cierra al contestar: el cierre «Así queda…» llega en el mismo hilo, y la tarjeta sale de «Por contestar».
+    await expect(chat, 'el chat sigue abierto, con el cierre en el mismo hilo').toContainText('Así queda lo que usted contestó')
     const donde = await f.page.evaluate(() => {
       const a = document.activeElement
       return a === document.body ? 'BODY' : `${a?.getAttribute('role')}: ${a?.textContent ?? ''}`

@@ -1,10 +1,11 @@
-import { useArbolChoke, NIVELES_ARBOL, NOMBRE_NIVEL, CAMPO_ANH, type NivelArbol } from '@/shared/api/choke'
+import { useArbolChoke, NIVELES_ARBOL, NOMBRE_NIVEL, CAMPO_ANH, EXPLICA_PERDIDA, type NivelArbol } from '@/shared/api/choke'
 import { useLibro } from '@/shared/api/diferidos'
 import { Panel } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
 import { n0, pctParte } from '@/shared/lib/formato'
 import { Ramas } from './Ramas'
+import { periodoEnFrase } from './palabras'
 
 /** Cómo se dice cada forma de salida (la versión del catálogo de la ANH). */
 const FORMA: Record<string, string> = {
@@ -32,7 +33,7 @@ export function ArbolCircular({ campoId, desde, hasta, periodo }: { campoId: str
   const confirmado = r.bbl > 0 ? (r.confirmadoBbl / r.bbl) * 100 : 0
   return (
     <Panel className="mb-2.5 print:break-inside-auto" titulo="ÁRBOL DE CAUSAS · COMO LA CIRCULAR"
-      extra={<span className="inline-flex items-center gap-1">modelo choke<Info titulo="Modelo choke" texto={QUE_ES_EL_CHOKE} /></span>}>
+      extra={<span className="inline-flex items-center gap-1">modelo choke<Info titulo="Modelo choke" texto={QUE_ES_EL_CHOKE} imprimir={false} /></span>}>
       <div data-arbol-circular={campoId} data-orden={arbol.orden} data-bbl={r.bbl} data-filas={r.filas}>
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[12px]">
           <b className="tabular text-[15px]">{n0(r.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
@@ -55,11 +56,16 @@ export function ArbolCircular({ campoId, desde, hasta, periodo }: { campoId: str
           un paso para cerrarlo o abrirlo; en el papel sale entero.
         </Lectura>
         {r.filas === 0
-          ? <p className="mt-2 text-[12px] text-[var(--tinta2)]">Nada se trabó en el período ({periodo.toLowerCase()}): no hay filas de paradas_pozo.</p>
+          ? <p className="mt-2 text-[12px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(periodo)}: no hay filas de paradas_pozo.</p>
           : <Ramas nodo={r} base={r.bbl} codigos="vista" abiertas={niveles.length} rotuloBase="del período" className="mt-2 max-w-[860px]" />}
         <p className="tabular mt-1.5 flex max-w-[860px] flex-wrap items-baseline justify-between gap-x-2 border-t border-[var(--linea2)] pt-1 text-[11.5px]" data-cuadre-libro={lb.diferido}>
           <span>= el diferido del libro (Σ de las paradas del período)</span><b>{n0(lb.diferido)} bbl</b>
         </p>
+        {/* En el papel no hay globos: lo que dicen los ⓘ que se repiten va una vez, aquí (B-10). */}
+        <dl className="solo-impresion mt-2 max-w-[860px] text-[9pt] text-[var(--tinta2)]">
+          <div><dt className="inline font-semibold">Pérdida: </dt><dd className="inline">{EXPLICA_PERDIDA}</dd></div>
+          <div><dt className="inline font-semibold">Modelo choke: </dt><dd className="inline">{QUE_ES_EL_CHOKE}</dd></div>
+        </dl>
       </div>
     </Panel>
   )

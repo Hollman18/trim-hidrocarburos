@@ -11,14 +11,16 @@ import { alFinal } from '@/shared/ui/alFinal'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
-import { ABREV, SUJETO, VERBO, DONDE, CAJA, TONO, TRAMO_DE, mayuscula, lista } from './palabras'
+import { ABREV, SUJETO, VERBO, DONDE, CAJA, TRAMO_DE, mayuscula, lista } from './palabras'
+import { Muestra, PatronesTramo } from '@/widgets/diferidos/tramos'
+import { rellenoSvg } from '@/widgets/diferidos/reparto'
 
 const pct = (u: number) => n1(u * 100).replace(/,0$/, '')
-const AYUDA_AVISO = `TRIM avisa «Cambió lo que limita» solo si el tramo nuevo gana por más del ${pct(PARAMETROS_CHOKE.umbralCasiIguales)} % y lo sostiene ${PARAMETROS_CHOKE.diasParaCambio} días seguidos. Mientras dos tramos están a menos de esa diferencia, están «casi iguales» y no se avisa: un aviso por cada vuelta sería ruido. El umbral y los días son de producto y se validan con Edinson.`
+const AYUDA_AVISO = `TRIM avisa «Cambió lo que limita» solo si el tramo nuevo gana por más del ${pct(PARAMETROS_CHOKE.umbralCasiIguales)} % y lo sostiene ${PARAMETROS_CHOKE.diasParaCambio} días seguidos. Mientras dos tramos están a menos de esa diferencia, están «casi iguales» y no se avisa: un aviso por cada vuelta sería ruido. El umbral y los días los fija TRIM; se pueden ajustar.`
 
-/** El patrón de cada tramo en la franja: gris de distinta luminancia y un
- *  dibujo propio, para que se lea también en blanco y negro (U2 §7.5). */
-const PATRON: Record<ChokeCampo, string> = { pozos: 'liso', planta: 'rayas', exportacion: 'puntos' }
+/* El dibujo de cada tramo es el mismo en la franja y en las barras de abajo
+   (gris y dibujo: liso, rayas, puntos; `PatronesTramo`), para que una sola
+   leyenda diga lo que se pinta en los dos y se lea en blanco y negro (U2 §7.5; B-09). */
 const PASADO: Record<ChokeCampo, string> = { pozos: 'limitaron', planta: 'limitó', exportacion: 'limitó' }
 
 /** «QUÉ LIMITÓ, DÍA POR DÍA» (U2 §7.1–7.2): una celda por día con lo que
@@ -89,17 +91,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
           <div ref={alFinal} className="hidden overflow-x-auto md:block print:block">
             <svg ref={dibujo} viewBox={`0 0 ${W} 178`} className="block h-auto w-full min-w-[540px]" role="group"
               aria-label={`Qué limitó cada día en ${nombre}, ${dias.length === 1 ? 'un día' : `${dias.length} días`}: ${tramos.length ? lista(tramos.map(k => SUJETO[k])) : 'sin dato'}. Debajo, lo que se perdió cada día por tramo. Con las flechas se pasa de un día a otro.`}>
-              <defs>
-                <pattern id={`rayas-${id}`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                  <rect width="5" height="5" fill={TONO.planta} /><line x1="0" y1="0" x2="0" y2="5" stroke="var(--panel)" strokeWidth="1.4" />
-                </pattern>
-                <pattern id={`puntos-${id}`} width="5" height="5" patternUnits="userSpaceOnUse">
-                  <rect width="5" height="5" fill={TONO.exportacion} /><circle cx="2.5" cy="2.5" r="1" fill="var(--panel)" />
-                </pattern>
-                <pattern id={`sin-${id}`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                  <rect width="5" height="5" fill="var(--panel)" /><line x1="0" y1="0" x2="0" y2="5" stroke="var(--tinta3)" strokeWidth="1.2" />
-                </pattern>
-              </defs>
+              <defs><PatronesTramo id={id} /></defs>
               <text x={G.x0 - 6} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3} fontSize={9} textAnchor="end" fill="var(--tinta3)">limitó</text>
               <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={9} textAnchor="end" fill="var(--tinta3)" className="tabular">{n0(tope)}</text>
               <text x={G.x0 - 6} y={BARRAS.y1} fontSize={9} textAnchor="end" fill="var(--tinta3)">0</text>
@@ -109,7 +101,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                 const k = d.dominante[campoId]
                 const casiDe = d.casiIguales[campoId]
                 const otro = casiDe?.find(c => c !== k)
-                const relleno = (c: ChokeCampo) => (PATRON[c] === 'liso' ? TONO[TRAMO_DE[c]] : `url(#${PATRON[c]}-${id})`)
+                const relleno = (c: ChokeCampo) => rellenoSvg(TRAMO_DE[c], id)
                 let base = 0
                 return (
                   <Tip key={d.dia.getTime()} as="g" data-dia={i} tabIndex={i === activo ? 0 : -1} onTecla={e => mover(e, i)}
@@ -146,11 +138,11 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                       if (v < 0.5) return null
                       const y1 = Y(base), y0 = Y(base + v)
                       base += v
-                      return <rect key={t} x={x + paso * 0.18} y={y0} width={paso * 0.64} height={Math.max(0.6, y1 - y0)} fill={TONO[t]} />
+                      return <rect key={t} x={x + paso * 0.18} y={y0} width={paso * 0.64} height={Math.max(0.6, y1 - y0)} fill={rellenoSvg(t, id)} />
                     })}
                     {d.porChoke['sin-asignar'] >= 0.5 && (() => {
                       const y1 = Y(base), y0 = Y(base + d.porChoke['sin-asignar'])
-                      return <rect x={x + paso * 0.18} y={y0} width={paso * 0.64} height={Math.max(0.6, y1 - y0)} fill={`url(#sin-${id})`} stroke="var(--tinta3)" strokeWidth={0.8} strokeDasharray="2 1.5" />
+                      return <rect x={x + paso * 0.18} y={y0} width={paso * 0.64} height={Math.max(0.6, y1 - y0)} fill={rellenoSvg('sin-asignar', id)} stroke="var(--tinta3)" strokeWidth={0.8} strokeDasharray="2 1.5" />
                     })()}
                     {/* Las marcas regulares le ceden el sitio a la del último día, que va pegada al borde. */}
                     {(i === dias.length - 1 || (i % cada === 0 && dias.length - 1 - i >= Math.ceil(cada * 0.8))) && (
@@ -163,12 +155,13 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
             </svg>
           </div>
         )}
-        <div className="hidden md:block print:block"><Leyenda id={id} /></div>
+        <div className="hidden md:block print:block"><Leyenda /></div>
         <Lectura>
           Arriba, una celda por día con lo que limitó: «Po» los pozos, «Pl» la planta, «Af» afuera. Un día
-          «casi iguales» lleva la celda partida con los dos. Debajo, lo que se perdió cada día por tramo;
-          lo rayado y discontinuo todavía no tiene causa. Toque o pase el cursor por un día para ver sus
-          cifras; con el teclado, las flechas pasan de un día a otro.
+          «casi iguales» lleva la celda partida con los dos. Debajo, lo que se perdió cada día por tramo,
+          con el mismo dibujo de arriba: la leyenda vale para los dos. Lo rayado y discontinuo todavía no
+          tiene causa. Toque o pase el cursor por un día para ver sus cifras; con el teclado, las flechas
+          pasan de un día a otro.
         </Lectura>
         {/* En el papel, debajo de la franja va la tabla, si cabe en una hoja. */}
         {dias.length > 0 && dias.length <= 62 && <div className="solo-impresion mt-2"><TablaDias dias={dias} campoId={campoId} /></div>}
@@ -209,19 +202,16 @@ function Semanas({ dias, campoId }: { dias: DiaChoke[]; campoId: string }) {
   )
 }
 
-function Leyenda({ id }: { id: string }) {
+/** Una leyenda para la franja y las barras: el mismo dibujo en las dos (B-09). */
+function Leyenda() {
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]" data-leyenda-serie>
+      <span className="text-[var(--tinta3)]">Franja y barras:</span>
+      <span className="inline-flex items-center gap-1.5"><Muestra k="reservorio" />{DONDE.reservorio} <span className="text-[var(--tinta3)]">(solo barras)</span></span>
       {ORDEN_CHOKE_CAMPO.map(c => (
-        <span key={c} className="inline-flex items-center gap-1.5">
-          <svg width="12" height="10" aria-hidden><rect width="12" height="10" fill={PATRON[c] === 'liso' ? TONO[TRAMO_DE[c]] : `url(#${PATRON[c]}-${id})`} /></svg>
-          {ABREV[c]} · {SUJETO[c]}
-        </span>
+        <span key={c} className="inline-flex items-center gap-1.5"><Muestra k={TRAMO_DE[c]} />{ABREV[c]} · {DONDE[TRAMO_DE[c]]}</span>
       ))}
-      <span className="inline-flex items-center gap-1.5">
-        <svg width="12" height="10" aria-hidden><rect x="0.5" y="0.5" width="11" height="9" fill={`url(#sin-${id})`} stroke="var(--tinta3)" strokeDasharray="2 1.5" /></svg>
-        sin identificar
-      </span>
+      <span className="inline-flex items-center gap-1.5"><Muestra k="sin-asignar" />sin identificar</span>
     </div>
   )
 }

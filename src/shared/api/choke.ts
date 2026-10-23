@@ -27,7 +27,7 @@ import {
 } from '@/entities/choke'
 import {
   tuberiaAgua, ORDEN_AGUA, NOMBRE_TRAMO_AGUA,
-  type TuberiaAgua, type TramoTuberiaAgua, type TramoAgua, type BombaDelTren, type ColchonAgua,
+  type TuberiaAgua, type TramoTuberiaAgua, type TramoAgua, type BombaDelTren, type ColchonAgua, type SiParaOtra,
 } from '@/entities/choke-agua'
 import {
   criticidad, criticidadDelCampo,
@@ -90,7 +90,7 @@ export type {
   ChokeAnh, ChokeCampo, ChokeOSinAsignar, EscalonBrecha, EscalonOSinClasificar, AlcanceElemento, ChokeDeElemento, ClaseElemento,
   PropuestaTopologia, TuberiaCampo, TramoTuberia, TrenTuberia, TrenPlanta, EstadoTramo, BrechaChoke, BrechaCampoChoke, EquipoBbl,
   MesPorTramo, LineaBasePorTramo, AntesYDespues, DiaChoke, CambioDominante, PerdiendoAhora, CapacidadesDeLaTuberia, MedidorDelCampo,
-  TuberiaAgua, TramoTuberiaAgua, TramoAgua, BombaDelTren, ColchonAgua, FilaCriticidad, FamiliaCriticidad, AvisoTrabajoCritico,
+  TuberiaAgua, TramoTuberiaAgua, TramoAgua, BombaDelTren, ColchonAgua, SiParaOtra, FilaCriticidad, FamiliaCriticidad, AvisoTrabajoCritico,
   ImpactoConfig, ImpactoCampo, CambioCriticidad, CambioDeTramo, TopologiaLeida, HallazgoTopologia,
   RespuestaTopologia, RespuestaEquipo, TopologiaEnBorrador, VistaCapacidades,
   FuenteCapacidad, CapacidadFirmada, CapacidadesCampo, CapacidadVigente, BombaVigente, CapacidadesVigentes, TramoCapacidad,

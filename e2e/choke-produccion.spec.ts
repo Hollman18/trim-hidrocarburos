@@ -125,17 +125,26 @@ test('La tubería del agua de La Ceiba: sus tres bombas y el colchón', async ({
   f.ok(bombas.map(([b]) => b).join(',') === 'P-201A,P-201B,P-201C', `las tres bombas: ${bombas.map(([b, m]) => `${b} ${m}`).join(', ')}`)
   f.ok(bombas.find(([b]) => b === 'P-201B')?.[1] === 'parada', 'P-201B está parada')
   const t = await f.texto()
-  f.ok(/Con las tres bombas, al agua le sobran [\d.]+ bbl\/d\./.test(t), 'el colchón, primera frase: con las tres bombas, al agua le sobran…')
+  // En el agua se mide contra lo que entra: «cabe más agua», no «le sobran» (B-16; F2-B).
+  f.ok(/Con las tres bombas, cabe más agua: [\d.]+ bbl\/d/.test(t), 'el colchón, primera frase: con las tres bombas, cabe más agua…')
   f.ok(/Cerrando primero los más acuatosos se pierden [\d.]+ bbl\/d de crudo; cerrando parejo, [\d.]+\./.test(t), 'y lo que cuesta cerrar primero los más acuatosos')
   f.ok(/aguantaba\s+1,8 h/.test(t) && t.includes('alto-alto 90 %'), 'el tanque: alto-alto 90 % y lo que aguantó al parar P-201B (1,8 h)')
   f.ok(t.includes('POR QUÉ ES CRÍTICA') && t.includes('No hay bomba de sobra'), 'por qué la bomba de reinyección es crítica, sin teoría')
   f.ok(t.includes('TRATAMIENTO DE AGUA') && /TRATAMIENTO DE AGUA\s+sin dato/.test(t), 'el tratamiento, que el demo no tiene, dice «sin dato»')
-  const lim = await f.page.evaluate(() => {
-    const e = document.querySelector<HTMLElement>('[data-tuberia-agua] [data-limita]')
-    return e ? { tramo: e.dataset.tramoAgua, borde: getComputedStyle(e).borderTopColor, estilo: getComputedStyle(e).borderTopStyle } : null
-  })
+  // B-16: el agua de La Ceiba no limita (cabe más): «◄ limita» no sale; las bombas y los inyectores, iguales
+  // al barril, van con su marca de «casi iguales» (borde discontinuo grueso), sin rojo.
+  const marcas = await f.page.evaluate(() => ({
+    limita: document.querySelectorAll('[data-tuberia-agua] [data-limita]').length,
+    casi: [...document.querySelectorAll<HTMLElement>('[data-tuberia-agua] section[data-casi-igual]')].map(e => ({ tramo: e.dataset.tramoAgua, estilo: getComputedStyle(e).borderTopStyle, borde: getComputedStyle(e).borderTopColor })),
+  }))
   const rojo = await colorDe(f, '--p1')
-  f.ok(lim?.tramo === 'inyectores' && lim.estilo === 'double' && lim.borde !== rojo, `en el agua limitan los inyectores, con doble contorno y sin rojo (${JSON.stringify(lim)})`)
+  f.ok(marcas.limita === 0, `el agua no limita, así que no lleva «◄ limita» (${marcas.limita})`)
+  f.ok(marcas.casi.map(x => x.tramo).join() === 'bombas,inyectores' && marcas.casi.every(x => x.estilo === 'dashed' && x.borde !== rojo),
+    `las bombas y los inyectores, casi iguales: borde discontinuo y sin rojo (${JSON.stringify(marcas.casi)})`)
+  // B-01: con P-201B parada, el orden que importa es el de la que sigue en riesgo: si para otra bomba.
+  const otra = await f.page.locator('[data-orden-si-para-otra]').innerText()
+  f.ok(/SI PARA OTRA BOMBA\s+con P-201A y P-201C solas, cerrar primero los más acuatosos/.test(otra) && /se pierden [\d.]+ bbl\/d de crudo; parejo, [\d.]+ · después de \d+ min de colchón/.test(otra),
+    `si para otra bomba ahora: el orden de cierre, lo que se pierde y el colchón en minutos («${otra.replace(/\s+/g, ' ').slice(0, 160)}…»)`)
   f.cerrar()
 })
 

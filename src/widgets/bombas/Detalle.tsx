@@ -26,6 +26,7 @@ import { Proyeccion } from './Proyeccion'
 import { fmtBbl, fmtRango, fmtTol, fmtComponente, fmtHoras, textoPronostico, pronosticoCorto, tanqueAbierto, fraseParteCorta, respaldoAbsorbe } from './comun'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { BloqueParte } from './BloqueParte'
+import { AguaHoy } from '@/widgets/choke/AguaHoy'
 import type { SaludParte } from '@/entities/salud'
 import type { BombaVista } from './vista'
 import type { NivelDetalle, Severidad } from '@/entities/tipos'
@@ -127,6 +128,9 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
           )}
         </div>
       </div>
+
+      {/* La bomba de reinyección: la tubería del agua de hoy, el colchón y en qué orden cerrar si para otra (B-01; U2 §5.6). */}
+      {perfil.papel === 'disposicion' && <AguaHoy campoId={campoId} bomba={eq.id} className="mb-2.5" />}
 
       {planes.length > 0 && (
         <div className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 shadow-[var(--sombra)]">

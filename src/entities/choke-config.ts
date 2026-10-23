@@ -400,10 +400,14 @@ export function leerTopologia(texto: string, campoId: string, locacionDe?: (pozo
       servidos = [...new Set(escritos.map(p => pozoPorClave.get(p.toUpperCase())!))].sort()
       alcance = alcancePorPozos(servidos)
     }
+    // Un pozo solo se sirve a sí mismo (C-13): lo que la firma rechaza, la carga lo dice en su fila.
+    if (pozoPorClave.has(equipo.toUpperCase()) && !(alcance === 'dedicado' && servidos.length === 1 && servidos[0] === equipo)) {
+      bloquea(`Fila ${fila}: ${equipo} es un pozo: solo se sirve a sí mismo (escriba «${equipo}» en sus pozos).`, equipo); return
+    }
     const e: ChokeDeElemento = { elemento: equipo, choke: chokeDeAlcance(alcance), alcance, pozos: servidos, campoId }
     const borde = locacionDe ? casoBordeDe(e, locacionDe) : undefined
     if (borde) hallazgos.push({ fila, equipo, bloquea: false,
-      texto: `Fila ${fila}: ${equipo} sirve a ${servidos.length} pozos de una misma locación (${lista(servidos)}): va a la planta, y queda marcado como caso de borde hasta que Edinson confirme la regla.` })
+      texto: `Fila ${fila}: ${equipo} sirve a ${servidos.length} pozos de una misma locación (${lista(servidos)}): va a la planta, y queda marcado como caso de borde hasta que se confirme la regla con la operadora.` })
     topologia.push(borde ? { ...e, casoBorde: borde } : e)
   })
   if (!filas) hallazgos.push({ fila: 1, texto: 'El archivo no trae ninguna fila: va una por equipo, con «equipo; pozos a los que sirve».', bloquea: true })
