@@ -234,6 +234,10 @@ function escenariosDelMotor(M) {
       versiones: [firma(1, DESDE_SIEMPRE, [{ campoId: 'ceiba', crudo: { bpd: 11500, fuente: 'prueba' } }], 'Tren de crudo medido'), firma(2, '2026-05-01T00:00:00-05:00', [{ campoId: 'ceiba', crudo: { bpd: 13500, fuente: 'placa' } }], 'Ampliación del tren de crudo')] },
     { id: 'empate', descripcion: 'La planta y afuera de La Ceiba en 11.000 cada uno, con su explicación: un empate al barril en lo que limita',
       versiones: [firma(1, DESDE_SIEMPRE, [{ campoId: 'ceiba', crudo: { bpd: 11000, fuente: 'prueba' }, afuera: { bpd: 11000, fuente: 'contrato' }, explicacionEmpate: 'El oleoducto se dimensionó con el tren de crudo' }], 'Empate al barril')] },
+    // D3 (5E·H9, 5E·H30): el factor de medición firmado, lo que TRIM propone en Guacamayo y El Palmar, desde el comienzo.
+    { id: 'factor-de-medicion', descripcion: 'El factor de medición firmado desde el comienzo en Guacamayo y en El Palmar, con lo que TRIM propone (la mediana de lo real ÷ las pruebas en los días sin paradas de los últimos 90): los pozos se leen con él y la eficiencia de septiembre se puede creer',
+      versiones: [firma(1, DESDE_SIEMPRE, ['guacamayo', 'palmar'].map(c => { const p = M.CHK.pedirCapacidades(c, ctx, [v0]).factorMedicionPropuesto; return { campoId: c, factorMedicion: { valor: p.valor, porque: p.texto } } }),
+        'El factor de medición de Guacamayo y El Palmar')] },
     { id: 'correcciones', descripcion: 'Lo que dijeron las personas: el supervisor pone LC-11 (septiembre) en la planta; confiabilidad contesta que el oleoducto no recibía (tanque de crudo de Guacamayo, octubre de 2025); el jefe dice que la falla de LC-04 (septiembre) fue planeada; producción pone MN-23 en el yacimiento con la prueba del pozo; confiabilidad confirma los 6 pasos de una parada de P-201B (octubre)',
       guardadas: Object.fromEntries(dicho.map(([k, b]) => [k, ARB.soloDePersona(b)])) },
   ]
@@ -502,6 +506,17 @@ function casosDe(M, escenarios) {
     casos.push(caso(`choke-arbol/${c}-${mes}-gestion`, `El árbol de pérdidas del choke de ${c}, ${mes} (${por}), en el orden de gestión`, C.ARBOL_CHOKE, { ...q, orden: 'gestion' }, CHK.pedirArbolChoke({ ...q, orden: 'gestion' }, ctx, {})))
   }
   for (const p of ARB.pedirParadasAnh({ campos: todos, ...rango(ultimo) }, ctx, {})) filasVistas.add(p.propuesta.fila)
+  // 5E·H37: el umbral de cierre de la NSTA (lo sin explicar ≤ 2,5 % del potencial, `cuadra`) puesto a prueba. En un
+  // mes entero lo sin explicar es 0; en un día no: es el inventario del tanque de venta (La Ceiba, 22-sep: 88 bbl,
+  // 0,8 %). En dos horas de ese día, con P-201B parada, pasa el 2,5 %: el fiscal es diario, lo real se reparte
+  // parejo por hora y lo diferido de esas horas no. Los escenarios no sirven aquí: lo sin explicar sale del libro.
+  for (const [id, descripcion, desde, hasta] of [
+    ['reparto-ceiba-2026-09-22', 'Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre (un día): lo sin explicar no es 0, es el inventario del tanque de venta, y cuadra', '2026-09-22T00:00:00-05:00', '2026-09-23T00:00:00-05:00'],
+    ['reparto-ceiba-2026-09-22-12a14', 'Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre de 12:00 a 14:00, con P-201B parada: lo sin explicar pasa el 2,5 % del potencial (no cuadra), porque el fiscal es diario', '2026-09-22T12:00:00-05:00', '2026-09-22T14:00:00-05:00'],
+  ]) {
+    const q = { campos: ['ceiba'], desde: new Date(desde), hasta: new Date(hasta) }
+    casos.push(caso(`choke/${id}`, descripcion, C.REPARTO_CHOKE, q, CHK.pedirRepartoChoke(q, ctx)))
+  }
   // La locación de los pozos (el caso de borde de la topología) no tiene endpoint: los casos que la leen lo dicen.
   const conLocacion = c => (ins.pozos.some(p => p.campoId === c && M.LOC(c)(p.id)) ? [`insumos/${c}/locaciones.json`] : undefined)
   for (const c of todos) {
@@ -530,7 +545,7 @@ function casosDe(M, escenarios) {
   const deEsc = (e, id, descripcion, ep, p, valor) => ({ ...caso(id, descripcion, ep, p, valor, [`insumos/escenarios/${e.id}.json`]), escenario: e.id })
   const mes = x => rango(L.calendario().find(m => m.mes === x))
   const h13 = { desde: new Date(L.calendario()[0].desde), hasta: M.AHORA }
-  for (const id of ['capacidades-de-antes', 'cambio-de-limita', 'empate']) {
+  for (const id of ['capacidades-de-antes', 'cambio-de-limita', 'empate', 'factor-de-medicion']) {
     // Una referencia generada antes de los escenarios no los trae: sus casos no se arman y el conteo pide regenerar.
     const e = esc[id], v = e?.versiones
     if (!e || !v?.length) continue
@@ -538,10 +553,14 @@ function casosDe(M, escenarios) {
     const tub = (c, r) => deEsc(e, `escenarios/${id}/tuberia-${c}`, `${e.descripcion}. La tubería de ${c}`, C.TUBERIA, { campo: c, ...r }, CHK.pedirTuberia(c, r.desde, r.hasta, cx, v))
     const serie = (c, r, cual) => deEsc(e, `escenarios/${id}/serie-${c}-${cual}`, `${e.descripcion}. Qué limitó cada día en ${c} (${cual}), con lo estructural y el aviso de cambio`, C.SERIE_CHOKE, { campo: c, ...r }, CHK.pedirSerieChoke(c, r.desde, r.hasta, cx, v))
     const reparto = (cs, r, cual) => deEsc(e, `escenarios/${id}/reparto-${cs.join('+')}-${cual}`, `${e.descripcion}. Lo perdido por tramo y por escalón en ${cs.join(' y ')} (${cual}), con lo estructural, lo que cabía en la holgura y la eficiencia`, C.REPARTO_CHOKE, { campos: cs, ...r }, CHK.pedirRepartoChoke({ campos: cs, ...r }, cx, v))
+    const capacidades = c => deEsc(e, `escenarios/${id}/capacidades-${c}`, `${e.descripcion}. Las capacidades de ${c} y su revisión`, C.CAPACIDADES, { campo: c }, CHK.pedirCapacidades(c, cx, v))
     if (id === 'capacidades-de-antes') {
       casos.push(reparto(['ceiba', 'guacamayo'], h13, '13-meses'), serie('ceiba', mes('2026-03'), '2026-03'), serie('guacamayo', mes('2026-03'), '2026-03'), tub('ceiba', mes('2026-09')), tub('guacamayo', mes('2026-09')))
-      for (const c of ['ceiba', 'guacamayo']) casos.push(deEsc(e, `escenarios/${id}/capacidades-${c}`, `${e.descripcion}. Las capacidades de ${c} y su revisión`, C.CAPACIDADES, { campo: c }, CHK.pedirCapacidades(c, cx, v)))
+      for (const c of ['ceiba', 'guacamayo']) casos.push(capacidades(c))
     } else if (id === 'cambio-de-limita') casos.push(serie('ceiba', { desde: mes('2026-04').desde, hasta: mes('2026-05').hasta }, '2026-04-a-2026-05'), tub('ceiba', mes('2026-10')))
+    // Con el factor firmado: los pozos se leen con él (la tubería), la eficiencia de septiembre se puede creer
+    // (el reparto) y la vista dice quién lo firmó y lo que TRIM propone (las capacidades).
+    else if (id === 'factor-de-medicion') casos.push(reparto(['guacamayo', 'palmar'], mes('2026-09'), '2026-09'), tub('guacamayo', mes('2026-09')), capacidades('guacamayo'))
     else casos.push(tub('ceiba', mes('2026-10')), serie('ceiba', mes('2026-09'), '2026-09'), reparto(['ceiba'], mes('2026-09'), '2026-09'))
   }
   const ec = esc.correcciones
@@ -637,6 +656,11 @@ if (modo === 'generar') {
       const sinCaso = filas.filter(f => !filasVistas.has(f) && !SIN_CASO_EN_EL_DEMO.includes(f)), yaTiene = SIN_CASO_EN_EL_DEMO.filter(f => filasVistas.has(f))
       if (sinCaso.length) deriva.push(`estas filas de REGLAS_ANH no tienen ningún caso en referencia/anh: ${sinCaso.join(', ')} (agregue el mes y el campo que las traen en MESES_ANH)`)
       if (yaTiene.length) deriva.push(`estas filas de REGLAS_ANH ya tienen caso y siguen en SIN_CASO_EN_EL_DEMO: ${yaTiene.join(', ')} (sáquelas de la lista)`)
+      // 5E·H37: el umbral de cierre de la NSTA tiene sus casos en la referencia que lee un backend: uno del reparto
+      // con lo sin explicar distinto de cero y que cuadra, y uno que pasa el 2,5 % (`cuadra: false`).
+      const repartos = todos.filter(c => c.endpoint.startsWith('/api/vistas/choke/reparto?')).map(c => c.esperado.datos)
+      if (!repartos.some(d => Math.abs(d.sinExplicar) >= 0.5 && d.cuadra)) deriva.push('ningún caso del reparto trae lo sin explicar distinto de cero (5E·H37)')
+      if (!repartos.some(d => d.cuadra === false)) deriva.push('ningún caso del reparto pasa el umbral de cierre de la NSTA, 2,5 % del potencial (`cuadra: false`; 5E·H37)')
       // Las escrituras rechazadas: las que arma hoy el servidor del demo, y lo que da hoy con los pasos guardados.
       const armadas = await escriturasDelMotor(M)
       const hoy = await escriturasEnElMotor(M, escrituras)

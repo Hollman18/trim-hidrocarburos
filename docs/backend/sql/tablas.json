@@ -7092,7 +7092,7 @@
      "unico": null,
      "check": "CHECK ((jsonb_typeof(config) = 'object'::text))",
      "defecto": null,
-     "descripcion": "La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si los trae, topologia, topologiaPorSaber y capacidades); precio sin configurar = ausente; una lista vacía no viaja.",
+     "descripcion": "La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si los trae, topologia, topologiaPorSaber y capacidades, con su factorMedicion); precio sin configurar = ausente; una lista vacía no viaja.",
      "ejemplo": "{\"campos\":{\"ceiba\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":10900,\"diferidoMaxBpd\":800,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"zarza\":{\"metas\":[{\"desde\":\"2025-10-01\",\"produccionBpd\":3050,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":false}},\"palmar\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":3250,\"diferidoMaxBpd\":50,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"no\",\"bombas\":true,\"electrosumergibles\":false}},\"morichal\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":16700,\"diferidoMaxBpd\":950,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"venta\",\"bombas\":true,\"electrosumergibles\":true}},\"guacamayo\":{\"metas\":[{\"desde\":\"2025-10-01\",\"netbackUsd\":48,\"produccionBpd\":6300,\"diferidoMaxBpd\":450,\"criterioSinCausa\":2}],\"perfil\":{\"gas\":\"consumo\",\"bombas\":true,\"electrosumergibles\":true}}},\"empresa\":\"Operadora de demostración\",\"tanques\":[{\"id\":\"TK-AG-CE\",\"aforo\":\"Certificado de aforo TK-AG-CE · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de La Ceiba\",\"campoId\":\"ceiba\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":30000},{\"id\":\"TK-AG-MN\",\"aforo\":\"Certificado de aforo TK-AG-MN · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nombre\":\"Tanque de agua de Morichal Norte\",\"campoId\":\"morichal\",\"altoAlto\":0.9,\"tagNivel\":\"LT-2012\",\"capacidadBbl\":60000},{\"id\":\"TK-AG-GU\",\"aforo\":\"Certificado de aforo TK-AG-GU · tabla de 1 cm\",\"bomba\":\"P-201B\",\"nom… [recortado para el Excel: 4193 caracteres]"
     }
    ],
@@ -8103,7 +8103,7 @@
    "nombre": "capacidades_campo",
    "grupo": "e",
    "clase": "tabla",
-   "descripcion": "Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4), que va con la firma. Cada número va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.",
+   "descripcion": "Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4) y el factor de medición de los pozos (QA-D3), que van con la firma. Cada número de capacidad va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.",
    "tipoTS": "CapacidadesCampo (src/entities/capacidades.ts; Config.capacidades)",
    "endpoints": [
     "GET /api/configuracion/historial",
@@ -8116,6 +8116,7 @@
     "Solo inserción.",
     "Cada día usa las que regían ese día: firmar hoy no cambia un mes cerrado.",
     "Un empate exacto entre dos tramos se explica con la firma (explicacion_empate); sin ella, 422 (capacidadesQueBloquean).",
+    "El factor de medición (factor_medicion, QA-D3) va con su porqué, entre 0,5 y 1,5; nunca en un campo de gas (validarCapacidades, 422). Sin él rige 1: lo que propone TRIM no rige sin firma.",
     "Único: (version, orden).",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidades_campo_sin_truncate: TRUNCATE]",
     "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidades_campo_solo_insercion: UPDATE DELETE]"
@@ -8167,6 +8168,30 @@
      "check": "CHECK (((explicacion_empate IS NULL) OR (btrim(explicacion_empate) <> ''::text)))",
      "defecto": null,
      "descripcion": "Por qué dos tramos (pozos, planta, afuera) dan exactamente lo mismo. La pide la revisión de la firma (revisarCapacidades) solo si hay un empate exacto.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "factor_medicion",
+     "tipo": "numeric",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((factor_medicion IS NULL) = (factor_medicion_porque IS NULL))) · CHECK (((factor_medicion IS NULL) OR ((factor_medicion >= 0.5) AND (factor_medicion <= 1.5))))",
+     "defecto": null,
+     "descripcion": "El factor de medición firmado (Config.capacidades[].factorMedicion.valor, QA-D3): por cuánto se multiplican las pruebas de los pozos para leerlas como el punto oficial, en lo que limita y en la eficiencia de producción. Entre 0,5 y 1,5. Sin él rige 1; lo que propone TRIM (factorMedicionPropuesto, la mediana de lo real ÷ las pruebas en los días sin paradas) nunca rige sin firma. En un campo de gas no se firma (validarCapacidades, 422: la eficiencia de crudo no aplica). Quién y cuándo, la versión.",
+     "ejemplo": null
+    },
+    {
+     "nombre": "factor_medicion_porque",
+     "tipo": "text",
+     "nulo": true,
+     "pk": false,
+     "fk": null,
+     "unico": null,
+     "check": "CHECK (((factor_medicion IS NULL) = (factor_medicion_porque IS NULL))) · CHECK (((factor_medicion_porque IS NULL) OR (\"trim\".alcanza(factor_medicion_porque, 5) AND (char_length(factor_medicion_porque) <= 500))))",
+     "defecto": null,
+     "descripcion": "Por qué ese factor, en palabras (factorMedicion.porque): 5 caracteres o más que se vean, 500 a lo sumo. Va si y solo si va el factor.",
      "ejemplo": null
     }
    ],
@@ -14274,7 +14299,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-23T04:20:01.147345+00:00"
+     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
     }
    ],
    "filas": [
@@ -14290,7 +14315,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -14304,7 +14329,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "morichal",
@@ -14318,7 +14343,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "palmar",
@@ -14332,7 +14357,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "zarza",
@@ -14346,7 +14371,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     }
    ]
   },
@@ -14945,7 +14970,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-23T04:20:01.147345+00:00"
+     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
     }
    ],
    "filas": [
@@ -15121,7 +15146,7 @@
      "eventos": 18,
      "huella_cifras": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -15254,7 +15279,7 @@
      "eventos": 11,
      "huella_cifras": "ed542826fa682035e79cb219d14b4c54a27cc7c262f0b887d70ae3512459e800",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "morichal",
@@ -15325,7 +15350,7 @@
      "eventos": 31,
      "huella_cifras": "190cb266ba2594a2c185be30cfd7e7bad4d7bce844013f88ff09f73007458480",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "palmar",
@@ -15400,7 +15425,7 @@
      "eventos": 8,
      "huella_cifras": "c632efa5ec1c89e44223cf0d3a9736f74675237e50136524aa0383dfa75b7d73",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "zarza",
@@ -15461,7 +15486,7 @@
      "eventos": 1,
      "huella_cifras": "c7c447654ee2ccce3c562f23385b1e104894df7699354cc438d1633cc6105408",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     }
    ]
   },
@@ -15768,7 +15793,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-23T04:20:01.147345+00:00"
+     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
     }
    ],
    "filas": [
@@ -15796,7 +15821,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -15822,7 +15847,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -15848,7 +15873,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -15874,7 +15899,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -15900,7 +15925,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     }
    ]
   },
@@ -16013,7 +16038,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-23T04:20:01.147345+00:00"
+     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
     }
    ],
    "filas": [
@@ -16025,7 +16050,7 @@
      "potencial": 31765.411954508756,
      "diferido": 3677.2278693078233,
      "asignado": 28088.184085200945,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16035,7 +16060,7 @@
      "potencial": 27256.010196447387,
      "diferido": 60.829984442262884,
      "asignado": 27195.180212005136,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16045,7 +16070,7 @@
      "potencial": 26475.05235007924,
      "diferido": 756.7615028375318,
      "asignado": 25718.29084724172,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16055,7 +16080,7 @@
      "potencial": 24552.694574403755,
      "diferido": 0,
      "asignado": 24552.694574403766,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16065,7 +16090,7 @@
      "potencial": 24111.8312740346,
      "diferido": 94.61066382524777,
      "asignado": 24017.220610209362,
-     "calculado": "2026-10-23T04:20:01.147345+00:00"
+     "calculado": "2026-10-25T17:04:53.242327+00:00"
     }
    ]
   },
@@ -16132,7 +16157,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Hora del recálculo.",
-     "ejemplo": "2026-10-23T04:20:01.147345+00:00"
+     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
     },
     {
      "nombre": "motivo",
@@ -16176,7 +16201,7 @@
      "id": 1,
      "campo_id": "ceiba",
      "mes": "2025-10-01",
-     "cuando": "2026-10-23T04:20:01.147345+00:00",
+     "cuando": "2026-10-25T17:04:53.242327+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
@@ -16185,7 +16210,7 @@
      "id": 2,
      "campo_id": "ceiba",
      "mes": "2025-11-01",
-     "cuando": "2026-10-23T04:20:01.147345+00:00",
+     "cuando": "2026-10-25T17:04:53.242327+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "80979dd8e5f4057b805ffe6baaf7d5e097704223acb7ad94498bec69f2d8aebe"
@@ -16194,7 +16219,7 @@
      "id": 3,
      "campo_id": "ceiba",
      "mes": "2025-12-01",
-     "cuando": "2026-10-23T04:20:01.147345+00:00",
+     "cuando": "2026-10-25T17:04:53.242327+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "3ee3116ec3bc84c4293321d097291669814f0af8cfa69fdeb7ff9233b5f63916"
@@ -16203,7 +16228,7 @@
      "id": 4,
      "campo_id": "ceiba",
      "mes": "2026-01-01",
-     "cuando": "2026-10-23T04:20:01.147345+00:00",
+     "cuando": "2026-10-25T17:04:53.242327+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "753d300b99414f01cc760a56987a7be0cb75f02cf6ed36bb72949f39b071cd8b"
@@ -16212,7 +16237,7 @@
      "id": 5,
      "campo_id": "ceiba",
      "mes": "2026-02-01",
-     "cuando": "2026-10-23T04:20:01.147345+00:00",
+     "cuando": "2026-10-25T17:04:53.242327+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "6d35fb973add65cb0de0726e56b94e4bb27a6df08ae0208f889f0930c6a12b13"

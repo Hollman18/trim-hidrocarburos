@@ -121,7 +121,7 @@ donde `desdeMinimo` = primer día del mes en curso en Colombia (`${diaIso(AHORA)
 
 **Qué texto se muestra según el valor.** Al firmar bien, arriba de las pestañas: «✓ Firmada la **versión {n}** · «{motivo}»» con ⓘ «Desde cuándo rige: Cada cambio rige desde la fecha que lleva; desde ahí las pantallas se miden contra él.» El editor se reinicia sobre la versión nueva. Un error del servidor aparece debajo del motivo (`role="alert"`); si falta el motivo, el foco va a su caja. Mientras `validarConfig` tenga errores, el botón «Firmar como …» está deshabilitado y arriba se lista «CORRIJA ANTES DE FIRMAR» con cada mensaje. Si nadie con acceso activo tiene el rol: hueco «Nadie con acceso activo tiene este rol.» (ⓘ «No hay quién firme: Firma una persona con acceso, no un rol. Los accesos los da el gerente de activo.»).
 
-**Quién lo calcula y por dónde viaja.** Servidor. `POST /api/configuracion { config, motivo, base }` → `{ datos: { version: Version } }` (códec `R_FIRMA`, `contrato.ts:331`; el códec pasa la configuración por `normalizarConfig`). El front corre `diferenciasPorGrupo` y `validarConfig` **antes** para avisar; **los 422 del servidor mandan**.
+**Quién lo calcula y por dónde viaja.** Servidor. `POST /api/configuracion { config, motivo, base }` → `{ datos: { version: Version } }` (códec `R_FIRMA`, `contrato.ts:332`; el códec pasa la configuración por `normalizarConfig`). El front corre `diferenciasPorGrupo` y `validarConfig` **antes** para avisar; **los 422 del servidor mandan**.
 
 **Referencia.** `src/shared/api/escrituras.ts:89-123`; `CONTRATO.md` · «`POST /api/configuracion`»; `verificar-libro`, secciones 6c/8b/11/15/16 (comprobaciones de escritura).
 

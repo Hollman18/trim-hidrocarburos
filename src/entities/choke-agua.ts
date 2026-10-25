@@ -206,7 +206,7 @@ const PALABRA = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', '
  *  con los de `ctx`. */
 export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versiones): TuberiaAgua {
   const t = AHORA.getTime()
-  const fm = factorMedicion(campoId)
+  const fm = factorMedicion(campoId, ctx.config)
   const campoDeGas = CAMPOS_DE_GAS.includes(campoId)
   let agua = 0, crudo = 0
   for (const p of pozosDe(campoId)) if (p.pruebas.length) { agua += aguaDePrueba(p, t); crudo += (pruebaEn(p, t)?.crudoBpd ?? 0) * fm }

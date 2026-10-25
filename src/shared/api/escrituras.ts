@@ -1379,6 +1379,10 @@ function formaDeConfig(x: unknown): string | undefined {
     ?? (e.pozos === undefined || e.pozos === null || (Array.isArray(e.pozos) && e.pozos.every(p => typeof p === 'string')) ? undefined : PETICION(`${r}.pozos`, QUE_ES.textos!)))
     ?? lista('topologiaPorSaber', (e, r) => texto(e, r, 'elemento') ?? texto(e, r, 'campoId'))
     ?? lista('capacidades', (e, r) => texto(e, r, 'campoId') ?? texto(e, r, 'explicacionEmpate', true)
+      // El factor de medición (D3): un número y su porqué en palabras.
+      ?? (e.factorMedicion === undefined || e.factorMedicion === null ? undefined
+        : typeof e.factorMedicion !== 'object' || Array.isArray(e.factorMedicion) ? PETICION(`${r}.factorMedicion`, QUE_ES.objeto!)
+          : numero(e.factorMedicion as Record<string, unknown>, `${r}.factorMedicion`, 'valor') ?? texto(e.factorMedicion as Record<string, unknown>, `${r}.factorMedicion`, 'porque'))
       ?? (['crudo', 'gas', 'afuera', 'mercado', 'tratamiento', 'admision'] as const).reduce<string | undefined>((m, k) => m ?? (e[k] === undefined || e[k] === null ? undefined
         : typeof e[k] === 'object' && !Array.isArray(e[k]) ? capacidad(e[k] as Record<string, unknown>, `${r}.${k}`) : PETICION(`${r}.${k}`, QUE_ES.objeto!)), undefined)
       ?? (e.bombas === undefined || e.bombas === null ? undefined : !Array.isArray(e.bombas) ? PETICION(`${r}.bombas`, 'tiene que ser una lista')

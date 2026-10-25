@@ -51,7 +51,7 @@ Hay cuatro familias de hechos que entran:
 
 **Casos borde.**
 - `fin: null` → abierto; para el cálculo el intervalo se corta en `AHORA` (`libro.ts:128`, `diferido.ts:376`).
-- **Eventos que se pisan en el mismo pozo**: el servidor los normaliza para que cada hora se cobre una vez (`intervalosEfectivos`, `libro.ts:118-140`): se ordenan con los paros antes que los `HZ`, y entre iguales el que empezó primero; a cada evento se le quita lo ya cubierto por los anteriores. En el demo **no hay ningún solape** (comprobado: 0 pares que se pisen), así que la regla no cambia ningún número del demo; el backend real sí la necesita (CONTRATO.md:856-860 pide escoger entre normalizar o rechazar en la ingesta).
+- **Eventos que se pisan en el mismo pozo**: el servidor los normaliza para que cada hora se cobre una vez (`intervalosEfectivos`, `libro.ts:118-140`): se ordenan con los paros antes que los `HZ`, y entre iguales el que empezó primero; a cada evento se le quita lo ya cubierto por los anteriores. En el demo **no hay ningún solape** (comprobado: 0 pares que se pisen), así que la regla no cambia ningún número del demo; el backend real sí la necesita (CONTRATO.md:866-870 pide escoger entre normalizar o rechazar en la ingesta).
 - Un evento de un pozo que no está en `GET …/pozos` se ignora (`libro.ts:323`).
 
 **Quién lo calcula y por dónde viaja.** Insumo del servidor. Hacia el front viaja dentro de `Tramo.evento` (por clave en `refs.eventos`), `FilaPozo.evento`, `DetallePozo.historicos[].evento`.
@@ -125,7 +125,7 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 
 **Qué es.** Una parada (o pérdida de caudal) de una bomba de la línea, registrada por su PLC.
 
-**Campos** (`bombas.ts:281-304`; CONTRATO.md:869-885):
+**Campos** (`bombas.ts:281-304`; CONTRATO.md:879-895):
 
 | Campo | Significado | Unidad | De dónde sale |
 |---|---|---|---|
@@ -137,7 +137,7 @@ Si falta cualquiera de las dos frecuencias, $f = 1$ (se cobra como cerrado) y el
 | `firma` | `{ parte, tag?, texto }`: la parte que **las señales** señalaban en el instante de parar | — | **la decide el backend al registrar la parada** y se guarda con el evento |
 | `nivelAlParar` | `{ tag, pct }`: nivel del tanque de agua en el instante de parar | % | transmisor `LT-…` |
 
-**Qué viene del PLC y qué se deduce.** Del PLC: horas, `perdida`, `senal`, `primeraAlarma`, `nivelAlParar`. **La parte que falló nunca viene escrita a mano**: se deduce de la primera alarma (si es un disparo de esa máquina) o de la `firma`. La `firma` es una deducción del backend **congelada en el momento de parar**: no cambia cuando la parada se cierra ni cuando las lecturas vuelven a banda (CONTRATO.md:882-883). El front, si no viene, la calcula una sola vez con la primera lectura que ve de la parada **abierta** y la recuerda por id (`firmaAlParar`, `causa-senal.ts:167-178`); una parada que llega **ya cerrada y sin firma** no se reconstruye.
+**Qué viene del PLC y qué se deduce.** Del PLC: horas, `perdida`, `senal`, `primeraAlarma`, `nivelAlParar`. **La parte que falló nunca viene escrita a mano**: se deduce de la primera alarma (si es un disparo de esa máquina) o de la `firma`. La `firma` es una deducción del backend **congelada en el momento de parar**: no cambia cuando la parada se cierra ni cuando las lecturas vuelven a banda (CONTRATO.md:892-893). El front, si no viene, la calcula una sola vez con la primera lectura que ve de la parada **abierta** y la recuerda por id (`firmaAlParar`, `causa-senal.ts:167-178`); una parada que llega **ya cerrada y sin firma** no se reconstruye.
 
 **Ejemplo con los datos del demo.** De las 36 paradas: 27 traen `primeraAlarma`, **ninguna trae `firma`** (el demo nunca la manda), 3 tienen `perdida < 1` (MPP-301 dos veces con 0,36, Guacamayo P-201B una con 0,43) y 27 traen `nivelAlParar`. La parada abierta de La Ceiba:
 

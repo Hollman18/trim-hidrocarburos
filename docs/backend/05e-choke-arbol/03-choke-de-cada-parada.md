@@ -2,7 +2,7 @@
 
 Cada parada del libro lleva el tramo donde **se originó** (el paso 2 del árbol de la ANH), con su porqué en palabras de campo. TRIM lo **propone** con la topología (5E.1) y la causa de la señal (5B.2, 5B.3); lo **confirma una persona** (5E.9). Este archivo cubre la regla (`chokeDeCausa`), sus casos (cascada, baja tensión de un solo pozo, mercado, tanque lleno, evacuación, declaraciones, programadas) y la fila ANH donde vive (pozo × día operacional × causa, con parciales, disparos, exceso y abiertas al corte).
 
-Funciones: `chokeDeCausa(causa, campoId, ctx)` (`src/entities/choke.ts:567-577`), que memoriza por contexto, causa y campo y llama a `deducirChoke` (`:678-784`); `chokeDeTramo(t, ctx)` (`:583`) para un tramo del libro; `paradasAnh` (`src/entities/anh-paradas.ts:219-299`) para las filas. La regla tiene versión: **`choke.topologia@3`** (`REGLA_CHOKE`, `choke.ts:512`), y cada propuesta la lleva (`DatoClasificado.regla`): lo ya clasificado conserva la suya.
+Funciones: `chokeDeCausa(causa, campoId, ctx)` (`src/entities/choke.ts:576-586`), que memoriza por contexto, causa y campo y llama a `deducirChoke` (`:687-793`); `chokeDeTramo(t, ctx)` (`:592`) para un tramo del libro; `paradasAnh` (`src/entities/anh-paradas.ts:219-299`) para las filas. La regla tiene versión: **`choke.topologia@3`** (`REGLA_CHOKE`, `choke.ts:521`), y cada propuesta la lleva (`DatoClasificado.regla`): lo ya clasificado conserva la suya.
 
 Datos de los ejemplos: el demo, `AHORA = 2026-10-02T14:00-05:00`; «13 meses» es del 1-oct-2025 al 2-oct-2026 14:00.
 
@@ -10,15 +10,15 @@ Datos de los ejemplos: el demo, `AHORA = 2026-10-02T14:00-05:00`; «13 meses» e
 
 ### El tramo de una parada y su porqué
 
-**Qué es.** `ChokeDeParada` (`choke.ts:515-537`): `choke`; `porque` (la frase); `elemento` (la raíz de la cascada o el propio pozo); `servidos` (a cuántos pozos sirve ese elemento); `pregunta` (un dato que solo sabe una persona: la propuesta no pasa a confirmada sola); `alcance`; `subnivel: 'mercado'`; `fuente` (`firmada` si el elemento está en la topología firmada, `derivada` si en la del registro, `regla` si no está y el tramo sale del tipo de causa); `regla`. `null` cuando la señal no lo decide: sin causa, o el equipo está «por saber».
+**Qué es.** `ChokeDeParada` (`choke.ts:524-546`): `choke`; `porque` (la frase); `elemento` (la raíz de la cascada o el propio pozo); `servidos` (a cuántos pozos sirve ese elemento); `pregunta` (un dato que solo sabe una persona: la propuesta no pasa a confirmada sola); `alcance`; `subnivel: 'mercado'`; `fuente` (`firmada` si el elemento está en la topología firmada, `derivada` si en la del registro, `regla` si no está y el tramo sale del tipo de causa); `regla`. `null` cuando la señal no lo decide: sin causa, o el equipo está «por saber».
 
 **Fórmula (las reglas, en orden).**
 
 1. **Manda el origen.** `Causa.equipo` ya es la raíz de la cascada (el servicio que cayó, la bomba que paró antes, el propio pozo): todas las paradas de una cascada llevan el tramo de su raíz.
-2. **Dedicado o compartido, según la topología** (5E.1). Para la baja tensión (`UV`), el alimentador del pozo. **Regla @2**: si la baja tensión tumbó **un solo pozo** de su alimentador en la ventana de cascada (15 min, la misma de `causa-senal.ts`; `cortesDe`, `choke.ts:647-676`), se propone **el pozo** y se pregunta de dónde vino el corte; si tumbó varios, la planta.
-3. **Reinyección, multifásica, aire, compresión, separación, tratamiento → planta** (compartidas). **Evacuación → planta**, salvo que el elemento sea de un tercero; sin ese dato se propone planta y se pregunta «¿El oleoducto o el cliente estaba recibiendo?» (`PREGUNTA_OLEODUCTO`, `:541`). **La energía nunca es «afuera»**: la de afuera se materializa en el sistema eléctrico del campo; quién la cortó es el responsable, otro paso.
+2. **Dedicado o compartido, según la topología** (5E.1). Para la baja tensión (`UV`), el alimentador del pozo. **Regla @2**: si la baja tensión tumbó **un solo pozo** de su alimentador en la ventana de cascada (15 min, la misma de `causa-senal.ts`; `cortesDe`, `choke.ts:656-685`), se propone **el pozo** y se pregunta de dónde vino el corte; si tumbó varios, la planta.
+3. **Reinyección, multifásica, aire, compresión, separación, tratamiento → planta** (compartidas). **Evacuación → planta**, salvo que el elemento sea de un tercero; sin ese dato se propone planta y se pregunta «¿El oleoducto o el cliente estaba recibiendo?» (`PREGUNTA_OLEODUCTO`, `:550`). **La energía nunca es «afuera»**: la de afuera se materializa en el sistema eléctrico del campo; quién la cortó es el responsable, otro paso.
 4. **Programada → el tramo del elemento intervenido** (workover y pruebas → pozo).
-5. **Declarada → lo que declaró la persona**: uno de los cuatro motivos cerrados (`CHIPS`, `:589-598`) o, en texto libre, la topología como propuesta y la pregunta. **Regla @3**: la declaración que nombra al comprador (o cliente, o transportador) **y** la nominación es afuera, en el mercado (`esDeclaracionDeMercado`, `:615-620`: dos expresiones cerradas, no una lectura del texto).
+5. **Declarada → lo que declaró la persona**: uno de los cuatro motivos cerrados (`CHIPS`, `:598-607`) o, en texto libre, la topología como propuesta y la pregunta. **Regla @3**: la declaración que nombra al comprador (o cliente, o transportador) **y** la nominación es afuera, en el mercado (`esDeclaracionDeMercado`, `:624-629`: dos expresiones cerradas, no una lectura del texto).
 6. **Pendiente → `null`.** El yacimiento nunca sale de una señal. **Regla @3**: un equipo «por saber» → `null` (5E.1).
 
 Una parada **parcial** lleva el tramo de su causa: lo que cambia es su escalón (5E.4).
@@ -36,7 +36,7 @@ Por fuente: 1.203 de la topología derivada y 6 de la regla (las declaraciones d
 
 **Quién lo calcula.** Servidor. Al operador **nunca se le pide el tramo**: lo confirman supervisión, producción, el jefe o confiabilidad (5E.9).
 
-**Referencia.** `src/entities/choke.ts:512-784`; `referencia/anh/paradas-*.json` (paso 2 de cada fila, con `porqueChoke`).
+**Referencia.** `src/entities/choke.ts:521-793`; `referencia/anh/paradas-*.json` (paso 2 de cada fila, con `porqueChoke`).
 
 ---
 
@@ -48,7 +48,7 @@ Por fuente: 1.203 de la topología derivada y 6 de la regla (las declaraciones d
 
 **Qué texto.** Pozo: «{pozo} tiene su propia electrosumergible: la falla queda en el pozo» / «… su propio bombeo mecánico …»; en la topología firmada como compartido: «{pozo} está en la topología firmada como compartido: queda en la planta».
 
-**Referencia.** `src/entities/choke.ts:726-736`.
+**Referencia.** `src/entities/choke.ts:735-745`.
 
 ---
 
@@ -65,9 +65,9 @@ Por fuente: 1.203 de la topología derivada y 6 de la regla (las declaraciones d
 
 La misma caída de K-101 paró P-201B (`EV-2011-260128`, 16:20 → 23:51, «Paró porque presión baja del aire de instrumentos»): la bomba también es parte de la cascada, y su raíz es K-101.
 
-**Qué texto.** `{equipo} {verbo} {N pozos}: si {para|cae}, se frenan {varios | los 2 | los 3}`. El verbo sale del tipo (`VERBO`, `choke.ts:633-637`): «mueve el agua de», «lleva la producción de», «alimenta», «le da aire de instrumentos a», «comprime el gas de», «separa lo que llega de», «trata el crudo de», «despacha el crudo de»; una bomba con perfil, del papel: «lleva la producción de» (transporte), «inyecta el agua de» (recobro), «mueve el agua de». Un servicio «cae»; una máquina «para».
+**Qué texto.** `{equipo} {verbo} {N pozos}: si {para|cae}, se frenan {varios | los 2 | los 3}`. El verbo sale del tipo (`VERBO`, `choke.ts:642-646`): «mueve el agua de», «lleva la producción de», «alimenta», «le da aire de instrumentos a», «comprime el gas de», «separa lo que llega de», «trata el crudo de», «despacha el crudo de»; una bomba con perfil, del papel: «lleva la producción de» (transporte), «inyecta el agua de» (recobro), «mueve el agua de». Un servicio «cae»; una máquina «para».
 
-**Referencia.** `src/entities/choke.ts:628-646, 765-783`; `src/entities/causa-senal.ts` (la ventana de cascada); `referencia/anh/paradas-morichal-2025-12.json`, `paradas-ceiba-2025-10.json`.
+**Referencia.** `src/entities/choke.ts:637-655, 774-792`; `src/entities/causa-senal.ts` (la ventana de cascada); `referencia/anh/paradas-morichal-2025-12.json`, `paradas-ceiba-2025-10.json`.
 
 ---
 
@@ -77,7 +77,7 @@ La misma caída de K-101 paró P-201B (`EV-2011-260128`, 16:20 → 23:51, «Par�
 
 **Ejemplo con los datos del demo.** La Ceiba, hoy: P-201B paró el 2-oct a las 03:52 y el tanque de agua se llenó; LC-16 cerró a las 05:43 (111 min después) y LC-07 a las 05:46 (114 min): «P-201B mueve el agua de 18 pozos: el pozo se cerró porque el tanque de agua se llenó con P-201B parada (paró el 2 de oct, 03:52), así que se trabó en la planta». Morichal, MN-07: «MPP-301 lleva la producción de 3 pozos: el pozo paró porque MPP-301 dejó de moverle la producción (paró el 3 de nov de 2025, 21:04), así que se trabó en la planta». Programada de la bomba (LC-16, P-201B): «Parada programada de P-201B, que mueve el agua de 18 pozos: queda en la planta».
 
-**Referencia.** `src/entities/choke.ts:765-783`; `referencia/anh/paradas-ceiba-2026-10.json`.
+**Referencia.** `src/entities/choke.ts:774-792`; `referencia/anh/paradas-ceiba-2026-10.json`.
 
 ---
 
@@ -85,11 +85,11 @@ La misma caída de K-101 paró P-201B (`EV-2011-260128`, 16:20 → 23:51, «Par�
 
 **Qué es.** Un `UV` del variador de un pozo, sin servicio caído ni bomba parada, que no arrastró a ningún otro pozo del alimentador en 15 minutos. Si el pórtico hubiera fallado, habrían caído todos sus pozos (como en las caídas de SE-2 en Morichal). Se propone **el pozo** y se le pregunta al operador **un hecho**, nunca el tramo.
 
-**Ejemplo con los datos del demo.** LC-05, `EP-LC05-261001-95`, 1-oct-2026 09:16 → 12:45 (3,483 h, 117,921 bbl): «La baja tensión tumbó solo a LC-05: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo» + `PREGUNTA_ENERGIA` (`choke.ts:539`): «¿De dónde vino el corte: de afuera (el proveedor), del campo (pórtico, red de media o subestación) o de este pozo (su transformador, su variador o su cable)?». En 13 meses son 104 tramos de energía con el pozo como tramo.
+**Ejemplo con los datos del demo.** LC-05, `EP-LC05-261001-95`, 1-oct-2026 09:16 → 12:45 (3,483 h, 117,921 bbl): «La baja tensión tumbó solo a LC-05: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo» + `PREGUNTA_ENERGIA` (`choke.ts:548`): «¿De dónde vino el corte: de afuera (el proveedor), del campo (pórtico, red de media o subestación) o de este pozo (su transformador, su variador o su cable)?». En 13 meses son 104 tramos de energía con el pozo como tramo.
 
 **Casos borde.** Si el `UV` tumbó varios a la vez sin servicio caído: «La baja tensión tumbó N pozos de {alimentador} a la vez ({lista}): se propone la planta» (no ocurre en el demo). Sin corte identificado: «{alimentador} alimenta N pozos: si cae, se frenan varios».
 
-**Referencia.** `src/entities/choke.ts:747-764`; `referencia/anh/paradas-ceiba-2026-10.json` (fila de LC-05).
+**Referencia.** `src/entities/choke.ts:756-773`; `referencia/anh/paradas-ceiba-2026-10.json` (fila de LC-05).
 
 ---
 
@@ -99,13 +99,13 @@ La misma caída de K-101 paró P-201B (`EV-2011-260128`, 16:20 → 23:51, «Par�
 
 **Ejemplo con los datos del demo.** Guacamayo, GU-03 por LACT-01: «LACT-01 es de la planta y despacha el crudo de 12 pozos: si el oleoducto o el cliente no recibía, es afuera» + «¿El oleoducto o el cliente estaba recibiendo?». La respuesta de campo «No, no recibía» la pasa a afuera (5E.5, 5E.9).
 
-**Referencia.** `src/entities/choke.ts:737-746`; `referencia/anh/paradas-guacamayo-2025-10.json`.
+**Referencia.** `src/entities/choke.ts:746-755`; `referencia/anh/paradas-guacamayo-2025-10.json`.
 
 ---
 
 ### Lo que declaró una persona
 
-**Qué es.** Un cierre que el operario declaró. Cuatro motivos cerrados (`CHIPS`, `choke.ts:589-598`) dicen el tramo y el escalón; el mercado se reconoce por dos palabras; lo demás es texto libre y **TRIM no lo interpreta**.
+**Qué es.** Un cierre que el operario declaró. Cuatro motivos cerrados (`CHIPS`, `choke.ts:598-607`) dicen el tramo y el escalón; el mercado se reconoce por dos palabras; lo demás es texto libre y **TRIM no lo interpreta**.
 
 **Qué texto.**
 
@@ -120,9 +120,9 @@ La misma caída de K-101 paró P-201B (`EV-2011-260128`, 16:20 → 23:51, «Par�
 
 **Ejemplo con los datos del demo.** La Zarza: 6 declaraciones de mercado en 13 meses (ZA-01 dos veces, ZA-03 dos, ZA-04, ZA-06), 2.272,9 bbl; ZA-06 pone 302,6 bbl en septiembre de 2026: «Nelson Ortiz dijo «El comprador nominó menos gas: se cerró el pozo»: el comprador no recibió todo, así que es afuera, en el mercado» (`alcance: tercero`, `fuente: regla`). Texto libre: LC-06 («Lo declaró el operario con sus palabras…»); MN-22, `EP-MN22-260930-03` («Fuga en la línea de flujo del pozo: se cerró para repararla», escrito a mano y no como motivo cerrado): dos filas, 106,5 bbl el 30-sep y 86,3 bbl el 1-oct, con la propuesta del pozo y la pregunta.
 
-**Casos borde.** La regla del mercado es cerrada sobre dos expresiones (`MERCADO_QUIEN`, `MERCADO_QUE`, `choke.ts:609-611`), con cuidado con la «ó» (que en JavaScript no es letra para `\b`). Cualquier otra declaración libre sigue sin interpretarse.
+**Casos borde.** La regla del mercado es cerrada sobre dos expresiones (`MERCADO_QUIEN`, `MERCADO_QUE`, `choke.ts:618-620`), con cuidado con la «ó» (que en JavaScript no es letra para `\b`). Cualquier otra declaración libre sigue sin interpretarse.
 
-**Referencia.** `src/entities/choke.ts:585-624, 702-717`; `referencia/anh/paradas-zarza-2026-09.json`.
+**Referencia.** `src/entities/choke.ts:594-633, 711-726`; `referencia/anh/paradas-zarza-2026-09.json`.
 
 ---
 
@@ -132,7 +132,7 @@ La misma caída de K-101 paró P-201B (`EV-2011-260128`, 16:20 → 23:51, «Par�
 
 **Ejemplo con los datos del demo.** 14 tramos programados en 13 meses: LC-19, «Parada programada en LC-19 (prueba o intervención del pozo): queda en el pozo»; P-201B (LC-16): «Parada programada de P-201B, que mueve el agua de 18 pozos: queda en la planta». Lo que siguió cerrado **después** de la ventana del programa es otra fila, no planeada (exceso, abajo).
 
-**Referencia.** `src/entities/choke.ts:718-725`.
+**Referencia.** `src/entities/choke.ts:727-734`.
 
 ---
 

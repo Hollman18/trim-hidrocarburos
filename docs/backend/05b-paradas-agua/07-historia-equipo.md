@@ -94,7 +94,7 @@ En Morichal P-201B, una falla no costó crudo (`260103` succión, 3,7 h contra 5
 
 **Quién lo calcula y por dónde viaja.** Servidor. `HistorialEquipo` viaja en `GET /api/vistas/equipos/:campo/:equipo/historia` (`bomba`), `/ficha` (`hist`), `/vistas/bombas` (`veredicto.historial`, `veredicto.porFalla`), `/vistas/confiabilidad` (`h`), `/vistas/pozos/:campo/:pozo` (`historial`), `/vistas/electrosumergibles`. Fechas ISO; `fin` `null` si abierta; `porParte[].ultima` ISO.
 
-**Referencia.** `libro.ts:1117-1299`; CONTRATO.md:1148-1155; casos `referencia/salud/bombas-*.json` y `referencia/salud/pozos-*.json`.
+**Referencia.** `libro.ts:1117-1299`; CONTRATO.md:1158-1165; casos `referencia/salud/bombas-*.json` y `referencia/salud/pozos-*.json`.
 
 ---
 

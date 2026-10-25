@@ -6,8 +6,8 @@ Un backend está terminado cuando **el front, apuntado a él, muestra exactament
 
 `referencia/` trae, para los cinco campos del demo, **lo que entra** y **lo que tiene que salir**:
 
-- **36 archivos de insumos** (`referencia/insumos/`, listados en `referencia/indice.json` → `insumos[]`). Cada uno es `{ "endpoint", "respuesta" }` con la forma de los endpoints de insumo (capítulo 7.3): pozos y pruebas, eventos de los controladores, caídas de servicios, paradas de cada bomba, fiscal día a día, registro de campos, catálogo, configuración de arranque y respuestas; además, la locación de los pozos de Morichal (`morichal/locaciones.json`, sin endpoint todavía: 5E·H23) y los cuatro escenarios del choke (`escenarios/*.json`: lo que cambia sobre el arranque). Con ellos se carga la base de pruebas **sin leer TypeScript**.
-- **252 casos** (`referencia/<familia>/*.json`, listados en `indice.json` → `casos[]`). Cada caso es `{ id, descripcion, endpoint, esperado }`:
+- **37 archivos de insumos** (`referencia/insumos/`, listados en `referencia/indice.json` → `insumos[]`). Cada uno es `{ "endpoint", "respuesta" }` con la forma de los endpoints de insumo (capítulo 7.3): pozos y pruebas, eventos de los controladores, caídas de servicios, paradas de cada bomba, fiscal día a día, registro de campos, catálogo, configuración de arranque y respuestas; además, la locación de los pozos de Morichal (`morichal/locaciones.json`, sin endpoint todavía: 5E·H23) y los cuatro escenarios del choke (`escenarios/*.json`: lo que cambia sobre el arranque). Con ellos se carga la base de pruebas **sin leer TypeScript**.
+- **257 casos** (`referencia/<familia>/*.json`, listados en `indice.json` → `casos[]`). Cada caso es `{ id, descripcion, endpoint, esperado }`:
 
 | Familia | Casos | Qué prueba | Capítulo |
 |---|---|---|---|
@@ -21,11 +21,11 @@ Un backend está terminado cuando **el front, apuntado a él, muestra exactament
 | `aciertos` | 6 | el registro de predicciones del vigía y las fallas | 5C |
 | `sap` | 12 | avisos y órdenes de SAP | 5D |
 | `asignacion` | 60 | la asignación por pozo de cada mes cerrado | 5A |
-| `choke` | 49 | la topología y sus propuestas, las capacidades, la tubería, la serie, el reparto, el mes a mes, la línea base y «si falla hoy», por campo y del portafolio | 5E |
+| `choke` | 51 | la topología y sus propuestas, las capacidades (con el factor de medición que propone TRIM), la tubería, la serie, el reparto (con si la eficiencia se puede creer), el mes a mes, la línea base y «si falla hoy», por campo y del portafolio; y dos del reparto que ponen a prueba el umbral de cierre: un día con lo sin explicar distinto de cero y dos horas que no cuadran (5E·H37) | 5E |
 | `anh` | 20 | las filas de `paradas_pozo` con su propuesta de seis pasos (14) y la calidad de la clasificación (6) | 5E |
 | `choke-arbol` | 26 | el árbol de pérdidas en sus tres órdenes, por campo, del portafolio y de meses viejos | 5E |
 | `agua-choke` | 5 | la tubería del agua de cada campo | 5E |
-| `escenarios` | 30 | lo mismo con otros datos: las capacidades de antes (7), un cambio de lo que limita (2), un empate (3) y las correcciones de las personas sobre la clasificación (18) | 5E |
+| `escenarios` | 33 | lo mismo con otros datos: las capacidades de antes (7), un cambio de lo que limita (2), un empate (3), el factor de medición firmado en Guacamayo y El Palmar (3) y las correcciones de las personas sobre la clasificación (18) | 5E |
 
 Con los insumos cargados en su servidor:
 
@@ -70,7 +70,7 @@ corre los flujos de navegador y el **auditor** (`e2e/auditor.spec.ts`): recorre 
 npm run verificar:contrato
 ```
 
-prueba que cada endpoint de `contrato.ts` vuelve igual después de pasar por JSON (`revivir(JSON.parse(JSON.stringify(aDTO(x)))) = x`) y que la fuente http, contra un servidor de prueba, traduce 403/409/422 al mismo `{ ok: false, error }`. Hoy: **138 de 138 comprobaciones**, más **15 de 15** de la costura http de punta a punta (H1 a H5: el arranque, las consultas, un error del servidor, las escrituras rechazadas y el choke y el árbol por el servidor); sus secciones 10 a 15 son las del choke y la clasificación ANH (lo que el contrato rechaza, la respuesta de campo, el árbol de pérdidas, lo guardado paso por paso, permisos y topes, y que `--escrituras` vea un servidor que responde distinto). **Es la especificación ejecutable de lo que su servidor tiene que producir**: si duda de la forma de un campo, el `aDTO` de su códec es la respuesta.
+prueba que cada endpoint de `contrato.ts` vuelve igual después de pasar por JSON (`revivir(JSON.parse(JSON.stringify(aDTO(x)))) = x`) y que la fuente http, contra un servidor de prueba, traduce 403/409/422 al mismo `{ ok: false, error }`. Hoy: **141 de 141 comprobaciones**, más **15 de 15** de la costura http de punta a punta (H1 a H5: el arranque, las consultas, un error del servidor, las escrituras rechazadas y el choke y el árbol por el servidor); sus secciones 10 a 15 son las del choke y la clasificación ANH (lo que el contrato rechaza, la respuesta de campo, el árbol de pérdidas, lo guardado paso por paso, permisos y topes, y que `--escrituras` vea un servidor que responde distinto). **Es la especificación ejecutable de lo que su servidor tiene que producir**: si duda de la forma de un campo, el `aDTO` de su códec es la respuesta.
 
 ## 9.4 Las reglas, en TypeScript
 
@@ -78,7 +78,7 @@ prueba que cada endpoint de `contrato.ts` vuelve igual después de pasar por JSO
 npm run verificar
 ```
 
-corre `tsc -b`, el linter, `scripts/verificar-libro.mjs`, `scripts/verificar-arbol.mjs` y el contrato. `verificar-libro` hace **435 comprobaciones** del motor, de las reglas de escritura y del simulador (el número crece con cada corrección; el script imprime «N de N comprobaciones bien»). Sus secciones, que sirven de lista de lo que el motor garantiza:
+corre `tsc -b`, el linter, `scripts/verificar-libro.mjs`, `scripts/verificar-arbol.mjs` y el contrato. `verificar-libro` hace **450 comprobaciones** del motor, de las reglas de escritura y del simulador (el número crece con cada corrección; el script imprime «N de N comprobaciones bien»). Sus secciones, que sirven de lista de lo que el motor garantiza:
 
 | Sección | Qué garantiza |
 |---|---|
@@ -145,7 +145,7 @@ Además de los casos, estas igualdades **tienen que valer para cualquier dato**,
 
 Su backend se puede entregar cuando:
 
-- [ ] `node scripts/referencia.mjs comparar --base-url=…` sale con 0 (252 de 252, incluidos los 6 de `referencia/ciclo/` y los 30 de los escenarios, cada uno con su escenario cargado), y con `--escrituras` da 18 de 18.
+- [ ] `node scripts/referencia.mjs comparar --base-url=…` sale con 0 (257 de 257, incluidos los 6 de `referencia/ciclo/` y los 33 de los escenarios, cada uno con su escenario cargado), y con `--escrituras` da 18 de 18.
 - [ ] El front con `VITE_FUENTE=http` arranca (los diez GET del arranque responden) y `npm run e2e -- --project=dev` pasa.
 - [ ] En Resumen gerente (`#/ger/resumen/…/curso`), con la lista de planes **plegada**, aparecen «bbl · retorno», chips Antes / Durante / Después / simulado, «Ver planes de acción» y «MEDIDO»; **no** el copy largo de un plan en cuerpo visible (capítulo 11 §11.1b; `e2e/auditoria/rutas.ts`).
 - [ ] `GET /api/vistas/ciclo` y `POST /api/planes/:id` cumplen el capítulo 11 (estado persistido, no en la sesión del navegador).

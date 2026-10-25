@@ -30,7 +30,7 @@ import { paradasAnh, inicioDiaCo, type ParadaAnh } from './anh-paradas'
 import { avalado, esDePersona, type BorradorClasificacion } from './anh-clasificacion'
 import { planeacionDeN1, n1DeCodigo, type CodigoN2 } from './anh-catalogo'
 import {
-  chokeDeCausa, escalonDeCausa, diasDelCampo, potencialesDelCampo, n0, mayuscula, ceros, listaY, SUJETO, TREN_FRASE, TREN_NOMBRE, DONDE_PERIODO,
+  chokeDeCausa, escalonDeCausa, diasDelCampo, potencialesDelCampo, factorMedicionPropuesto, factorMedicionDe, n0, mayuscula, ceros, listaY, SUJETO, TREN_FRASE, TREN_NOMBRE, DONDE_PERIODO,
   ORDEN_CHOKE, ORDEN_CHOKE_CAMPO, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_CHOKE, EXPLICA_TRAMO, PARAMETROS_CHOKE, elementoDe, porSaberDelCampo,
   type ChokeAnh, type ChokeCampo, type ChokeOSinAsignar, type EscalonOSinClasificar, type Historial, type DiaCampo,
   type BrechaCampoChoke, type BrechaChoke, type EquipoBbl, type EficienciaProduccion, type TuberiaCampo, type TramoTuberia, type PerdiendoAhora,
@@ -42,8 +42,8 @@ import { caudalesAhora, type Riesgo } from './diferido'
 import { pozosDe, estadoAhora, pruebaEn, origenPmo } from './pozos'
 import { causaDeEvento, type Contexto, type TipoCausa } from './causa-senal'
 import { perfilBomba, paradasDe } from './bombas'
-import { CAMPO_PLANTA } from './planta'
-import { firmaDeCapacidades, type CapacidadesVigentes } from './capacidades'
+import { CAMPO_PLANTA, CAMPOS_DE_GAS } from './planta'
+import { firmaDeCapacidades, firmaDeFactorMedicion, cifraFactor, type CapacidadesVigentes } from './capacidades'
 import { campoPorId } from './campos'
 import { AHORA, fechaCorta } from './reloj'
 
@@ -269,19 +269,21 @@ export function brechaPorChoke(campoIds: string[], desde: Date, hasta: Date, ctx
     if (f.escalon === 'disponibilidad-no-planeada') dd.noPlaneada += f.bbl
     x.porDia.set(f.dia, dd)
   }
-  const porCampo = campoIds.map(c => cifras(c, porCampoAcc.get(c)!))
+  const conMotivo = campoIds.map(c => cifras(c, porCampoAcc.get(c)!, ctx, versiones))
+  const porCampo = conMotivo.map(x => x.cifras)
   const suma = (k: 'potencial' | 'real' | 'potencialPruebas' | 'cabiaEnHolgura' | 'noPlaneadaSistema') => porCampo.reduce((a, x) => a + x[k], 0)
   const estructuralPorChoke = ceros(ORDEN_CHOKE_CAMPO), horasPorDominante = ceros(ORDEN_CHOKE_CAMPO)
   for (const x of porCampo) for (const k of ORDEN_CHOKE_CAMPO) { estructuralPorChoke[k] += x.estructuralPorChoke[k]; horasPorDominante[k] += x.horasPorDominante[k] }
-  const { campoId: _, superado: __, ...todo } = armar('', suma('potencial'), suma('real'), suma('potencialPruebas'), total, estructuralPorChoke, horasPorDominante,
+  const { campoId: _, superado: __, ...cuentas } = armar('', suma('potencial'), suma('real'), suma('potencialPruebas'), total, estructuralPorChoke, horasPorDominante,
     suma('cabiaEnHolgura'), suma('noPlaneadaSistema'), [])
+  const todo = { ...cuentas, ...peDelConjunto(conMotivo) }
   const superado = porCampo.flatMap(x => x.superado.map(s => ({ campoId: x.campoId, ...s }))).sort((a, b) => a.dia.getTime() - b.dia.getTime())
   const quien = campoIds.length === 1 ? campoPorId(campoIds[0]!).nombre : 'El conjunto de campos'
   const mayor = ORDEN_CHOKE.reduce((a, k) => (todo.porChoke[k] > todo.porChoke[a] ? k : a), 'pozo' as ChokeAnh)
   const texto = todo.diferido > 0 && todo.porChoke[mayor] > 0
     ? `${quien} se trabó sobre todo ${DONDE_PERIODO[mayor]}: ${n0(todo.porChoke[mayor])} bbl de ${n0(todo.diferido)}`
     : `${quien} no tuvo paradas que costaran crudo en el período`
-  const textoEstructural = textoDeEstructural(todo.estructural, estructuralPorChoke, superado)
+  const textoEstructural = textoDeEstructural(porCampo, campoIds.length > 1, superado)
   return { ...todo, desde, hasta, porChokeEscalon: total.cruce, porCampo, superado, texto, ...(textoEstructural ? { textoEstructural } : {}) }
 }
 
@@ -290,9 +292,11 @@ export function brechaPorChoke(campoIds: string[], desde: Date, hasta: Date, ctx
  *  limitaban (QA-A-06). En esos días el campo perdió, contra lo que dejaba
  *  pasar el tramo que limitaba, solo lo que el real quedó por debajo; si las
  *  paradas del día suman más, el resto cabía en la holgura y no le costó nada.
- *  Ese resto sale de la PE no planeada en la misma proporción, para que la PE
- *  y la PE no planeada no pasen juntas del 100 %. */
-function cifras(campoId: string, x: CampoDelPeriodo): BrechaCampoChoke {
+ *  Ese resto sale de la PE no planeada en la misma proporción. Con eso la PE y
+ *  la PE no planeada no pasan juntas del 100 % mientras las pruebas no den
+ *  menos de lo que midió el punto oficial; si dan menos, sí pasan, y sin el
+ *  factor de medición firmado la PE no se puede creer (`peDeCampo`, 5E·H30). */
+function cifras(campoId: string, x: CampoDelPeriodo, ctx: Contexto, versiones?: Historial): { cifras: BrechaCampoChoke; motivo?: MotivoPe } {
   const estructuralPorChoke = ceros(ORDEN_CHOKE_CAMPO), horasPorDominante = ceros(ORDEN_CHOKE_CAMPO)
   let potencial = 0, real = 0, potencialPruebas = 0, cabiaEnHolgura = 0, npEnHolgura = 0
   for (const d of x.dias) {
@@ -307,14 +311,25 @@ function cifras(campoId: string, x: CampoDelPeriodo): BrechaCampoChoke {
     npEnHolgura += filas.noPlaneada * (1 - k)
   }
   const superado = x.dias.filter(d => d.superado).map(d => ({ dia: new Date(d.dia), choke: d.superado!.choke, capacidad: d.superado!.capacidad, real: d.real }))
-  return armar(campoId, potencial, real, potencialPruebas, x.acc, estructuralPorChoke, horasPorDominante, cabiaEnHolgura,
+  const c = armar(campoId, potencial, real, potencialPruebas, x.acc, estructuralPorChoke, horasPorDominante, cabiaEnHolgura,
     x.acc.porEscalon['disponibilidad-no-planeada'] - npEnHolgura, superado)
+  const pe = peDeCampo(campoId, c, x.dias, ctx, versiones)
+  return { cifras: { ...c, ...pe.cifras }, ...(pe.motivo ? { motivo: pe.motivo } : {}) }
 }
+
+/** Las cuentas de un campo o del conjunto, sin la PE (la ponen `peDeCampo` y `peDelConjunto`). */
+type SinPe = Omit<BrechaCampoChoke, 'realPe' | 'potencialPe' | 'pe' | 'peNoPlaneada' | 'peCreible' | 'textoPe'>
+/** Lo que se dice de la PE. */
+type CifrasPe = Pick<BrechaCampoChoke, 'realPe' | 'potencialPe' | 'pe' | 'peNoPlaneada' | 'peCreible' | 'textoPe'>
+/** Por qué la PE de un campo no se puede creer: es de gas, las pruebas dan
+ *  menos de lo que midió el punto oficial sin el factor firmado, o lo que salió
+ *  pasa lo que dan las pruebas (la PE pasaría de 100 %). */
+type MotivoPe = 'gas' | 'sin-factor' | 'pasa'
 
 /** Las cifras de un campo (o del conjunto) a partir de lo acumulado. */
 function armar(campoId: string, potencial: number, real: number, potencialPruebas: number, a: Acumulado,
   estructuralPorChoke: Record<ChokeCampo, number>, horasPorDominante: Record<ChokeCampo, number>,
-  cabiaEnHolgura: number, noPlaneadaSistema: number, superado: BrechaCampoChoke['superado']): BrechaCampoChoke {
+  cabiaEnHolgura: number, noPlaneadaSistema: number, superado: BrechaCampoChoke['superado']): SinPe {
   const brecha = potencial - real
   const sumaChoke = CHOKES_Y_SIN_ASIGNAR.reduce((x, k) => x + a.porChoke[k], 0)
   const sinExplicar = brecha - sumaChoke
@@ -327,19 +342,78 @@ function armar(campoId: string, potencial: number, real: number, potencialPrueba
     cuadra: Math.abs(sinExplicar) <= 0.025 * Math.abs(potencial) + 1e-9, porConfirmar: a.porConfirmar,
     potencialPruebas, brechaPruebas: potencialPruebas - potencial,
     estructural, estructuralPorChoke, potencialSistema, brechaSistema: potencialSistema - real, cabiaEnHolgura, noPlaneadaSistema,
-    pe: potencialSistema > 0 ? (real / potencialSistema) * 100 : 0,
-    peNoPlaneada: potencialSistema > 0 ? (noPlaneadaSistema / potencialSistema) * 100 : 0,
     dominante, horasPorDominante, superado,
   }
 }
 
-/** La brecha estructural dicha en palabras, o por qué no se separó. */
-function textoDeEstructural(estructural: number, porChoke: Record<ChokeCampo, number>, superado: BrechaChoke['superado']): string | undefined {
+/** La PE y la PE no planeada con lo que entra en ellas, en %. */
+const cuentaPe = (realPe: number, potencialPe: number, noPlaneada: number) => ({
+  realPe, potencialPe, pe: potencialPe > 0 ? (realPe / potencialPe) * 100 : 0, peNoPlaneada: potencialPe > 0 ? (noPlaneada / potencialPe) * 100 : 0,
+})
+
+/** La PE de un campo y si se puede creer (D3; 5E·H9, 5E·H30):
+ *  - en un campo de gas la eficiencia de crudo no aplica: no entra (0) y se dice;
+ *  - si el factor de medición no estaba firmado algún día del período y las
+ *    pruebas dan menos de lo que midió el punto oficial (la brecha de las
+ *    pruebas es negativa: lo real, con lo que se perdió, pasa lo que dan las
+ *    pruebas), el potencial del sistema queda corto: la PE no se puede creer
+ *    hasta firmar el factor, y se dice lo que TRIM propone;
+ *  - con el factor firmado se cree, salvo que la PE misma pase de 100 %: ese
+ *    número no se muestra nunca.
+ *  NUNCA usa la propuesta sin firmar: solo la dice. */
+function peDeCampo(campoId: string, c: SinPe, dias: readonly DiaCampo[], ctx: Contexto, versiones?: Historial): { cifras: CifrasPe; motivo?: MotivoPe } {
+  if (CAMPOS_DE_GAS.includes(campoId))
+    return { cifras: { ...cuentaPe(0, 0, 0), peCreible: false, textoPe: `${campoPorId(campoId).nombre} es un campo de gas: la eficiencia de crudo no aplica.` }, motivo: 'gas' }
+  const cuenta = cuentaPe(c.real, c.potencialSistema, c.noPlaneadaSistema)
+  const firmado = dias.length > 0 && dias.every(d => d.factorFirmado)
+  // «Las pruebas dan menos»: al barril, como la escalera dice «+ lo que el medidor oficial da de más».
+  const cortas = !firmado && Math.round(c.brechaPruebas) < 0
+  const pasa = cuenta.pe > 100 + 1e-9
+  if (!cortas && !pasa) return { cifras: { ...cuenta, peCreible: true } }
+  const propone = factorMedicionPropuesto(campoId, ctx, versiones).resumen
+  const ultimo = dias.at(-1)
+  // Firmado DESPUÉS de esos días: cada día se mide con la configuración de su medianoche (QA-A-14), así que
+  // firmar hoy no cambia un mes cerrado. Se dice desde cuándo rige (la primera medianoche desde la firma), no «hasta firmarlo».
+  const hoy = versiones?.length ? versiones.at(-1)!.config : ctx.config
+  const firmaHoy = cortas && factorMedicionDe(hoy, campoId).estado === 'firmado' && versiones?.length ? firmaDeFactorMedicion(versiones, campoId) : undefined
+  const rigeDesde = firmaHoy ? Math.ceil((Date.parse(firmaHoy.fecha) - inicioDiaCo(Date.parse(firmaHoy.fecha))) / D) * D + inicioDiaCo(Date.parse(firmaHoy.fecha)) : undefined
+  const textoPe = firmaHoy && rigeDesde !== undefined
+    ? `Las pruebas dan menos de lo que midió el punto oficial y en estos días el factor de medición todavía no estaba firmado: la eficiencia no se puede creer. El firmado (${cifraFactor(factorMedicionDe(hoy, campoId).valor)}) rige desde el ${fechaCorta(new Date(rigeDesde))}.`
+    : cortas ? `Las pruebas dan menos de lo que midió el punto oficial: la eficiencia no se puede creer hasta firmar el factor de medición. ${propone}`
+      : firmado && ultimo ? `Lo que salió pasa lo que dan las pruebas con el factor de medición firmado (${cifraFactor(ultimo.factorMedicion)}): la eficiencia no se puede creer hasta revisarlo. ${propone}`
+        : `Lo que salió pasa lo que dan las pruebas: la eficiencia no se puede creer hasta firmar el factor de medición. ${propone}`
+  return { cifras: { ...cuenta, peCreible: false, textoPe }, motivo: cortas ? 'sin-factor' : 'pasa' }
+}
+
+/** La PE del conjunto: la de sus campos de crudo (en uno de gas la eficiencia
+ *  de crudo no aplica y no entra). Se cree si se cree la de cada uno de ellos;
+ *  si no, se dice cuáles y por qué (cada campo trae su `textoPe`, con lo que
+ *  TRIM propone). Con un solo campo, la de ese campo. */
+function peDelConjunto(xs: ReadonlyArray<{ cifras: BrechaCampoChoke; motivo?: MotivoPe }>): CifrasPe {
+  if (xs.length === 1) { const { realPe, potencialPe, pe, peNoPlaneada, peCreible, textoPe } = xs[0]!.cifras; return { realPe, potencialPe, pe, peNoPlaneada, peCreible, ...(textoPe ? { textoPe } : {}) } }
+  const nombres = (ys: typeof xs) => listaY(ys.map(y => campoPorId(y.cifras.campoId).nombre))
+  const gas = xs.filter(x => x.motivo === 'gas'), crudo = xs.filter(x => x.motivo !== 'gas')
+  const cuenta = cuentaPe(crudo.reduce((a, x) => a + x.cifras.realPe, 0), crudo.reduce((a, x) => a + x.cifras.potencialPe, 0), crudo.reduce((a, x) => a + x.cifras.noPlaneadaSistema, 0))
+  const sinGas = gas.length ? `Sin ${nombres(gas)}: en un campo de gas la eficiencia de crudo no aplica.` : ''
+  if (!crudo.length) return { ...cuenta, peCreible: false, textoPe: `${nombres(gas)} ${gas.length === 1 ? 'es un campo' : 'son campos'} de gas: la eficiencia de crudo no aplica.` }
+  const sinFactor = crudo.filter(x => x.motivo === 'sin-factor'), pasan = crudo.filter(x => x.motivo === 'pasa')
+  if (!sinFactor.length && !pasan.length && cuenta.pe <= 100 + 1e-9) return { ...cuenta, peCreible: true, ...(sinGas ? { textoPe: sinGas } : {}) }
+  const por = [
+    sinFactor.length ? `en ${nombres(sinFactor)} las pruebas dan menos de lo que midió el punto oficial y falta firmar su factor de medición` : '',
+    pasan.length ? `en ${nombres(pasan)} lo que salió pasa lo que dan las pruebas con su factor de medición` : '',
+  ].filter(Boolean)
+  return { ...cuenta, peCreible: false,
+    textoPe: `La eficiencia del conjunto no se puede creer${por.length ? `: ${por.join('; ')}` : ': lo que salió pasa lo que dan las pruebas'}.${sinGas ? ` ${sinGas}` : ''}` }
+}
+
+/** La brecha estructural dicha en palabras, una frase por campo y tramo con su
+ *  cifra (5E·H31: antes, el total en el tramo mayor), o por qué no se separó. */
+function textoDeEstructural(porCampo: ReadonlyArray<Pick<BrechaCampoChoke, 'campoId' | 'estructuralPorChoke'>>, varios: boolean, superado: BrechaChoke['superado']): string | undefined {
   const partes: string[] = []
-  if (estructural >= 0.5) {
-    const k = ORDEN_CHOKE_CAMPO.reduce((a, x) => (porChoke[x] > porChoke[a] ? x : a), 'planta' as ChokeCampo)
-    partes.push(`${mayuscula(SUJETO[k])} no deja pasar todo lo que pueden dar los pozos: ${n0(estructural)} bbl de lo que no se produjo son de ahí, aunque nada pare. Ningún arreglo de equipos los recupera; solo más capacidad.`)
-  }
+  // Con varios campos, cada frase dice el suyo: «En La Ceiba, la planta no deja pasar…».
+  const frases = porCampo.flatMap(x => ORDEN_CHOKE_CAMPO.filter(k => x.estructuralPorChoke[k] >= 0.5).map(k =>
+    `${varios ? `En ${campoPorId(x.campoId).nombre}, ${SUJETO[k]}` : mayuscula(SUJETO[k])} no deja pasar todo lo que pueden dar los pozos: ${n0(x.estructuralPorChoke[k])} bbl de lo que no se produjo son de ahí, aunque nada pare.`))
+  if (frases.length) partes.push(`${frases.join(' ')} Ningún arreglo de equipos los recupera; solo más capacidad.`)
   if (superado.length) {
     // Por campo y tramo: «La Ceiba, la planta: 16 días».
     const por = new Map<string, number>()
@@ -350,11 +424,12 @@ function textoDeEstructural(estructural: number, porChoke: Record<ChokeCampo, nu
   return partes.length ? partes.join(' ') : undefined
 }
 
-/** PE y PE no planeada por campo y período: la misma cuenta de `brechaPorChoke`. */
+/** PE y PE no planeada por campo y período: la misma cuenta de `brechaPorChoke`, con si se pueden creer. */
 export function eficienciaProduccion(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial, op: OpcionesReparto = {}): { porCampo: EficienciaProduccion[]; total: EficienciaProduccion } {
   const b = brechaPorChoke(campoIds, desde, hasta, ctx, versiones, op)
-  const de = (x: Pick<BrechaCampoChoke, 'real' | 'potencialSistema' | 'pe' | 'peNoPlaneada' | 'dominante'>) =>
-    ({ real: x.real, potencialSistema: x.potencialSistema, pe: x.pe, peNoPlaneada: x.peNoPlaneada, dominante: x.dominante })
+  const de = (x: Pick<BrechaCampoChoke, 'real' | 'potencialSistema' | 'realPe' | 'potencialPe' | 'pe' | 'peNoPlaneada' | 'peCreible' | 'textoPe' | 'dominante'>): EficienciaProduccion =>
+    ({ real: x.real, potencialSistema: x.potencialSistema, realPe: x.realPe, potencialPe: x.potencialPe, pe: x.pe, peNoPlaneada: x.peNoPlaneada,
+      peCreible: x.peCreible, ...(x.textoPe ? { textoPe: x.textoPe } : {}), dominante: x.dominante })
   return { porCampo: b.porCampo.map(x => ({ campoId: x.campoId, ...de(x) })), total: de(b) }
 }
 
@@ -508,7 +583,7 @@ function capacidadesDeLaTuberia(p: PotencialesCampo, versiones?: Historial): Cap
 }
 
 /** De dónde sale lo que pueden dar los pozos, en palabras (el ⓘ de «Los pozos», D3). */
-const fuentePozos = (p: PotencialesCampo) => `La suma de lo que dan los pozos con su prueba vigente${p.factorMedicion === 1 ? '' : ` × el factor de medición firmado (${p.factorMedicion.toLocaleString('es-CO')})`}. No lleva el factor de asignación del mes: ese sale de lo que ya pasó por la planta y escondería lo que la limita. El libro sí lo usa para valorar lo diferido (unos ${n0(p.pozosAsignado)} bbl/d hoy): son dos preguntas distintas`
+const fuentePozos = (p: PotencialesCampo) => `La suma de lo que dan los pozos con su prueba vigente${p.factorFirmado ? ` × el factor de medición firmado (${cifraFactor(p.factorMedicion)})` : ''}. No lleva el factor de asignación del mes: ese sale de lo que ya pasó por la planta y escondería lo que la limita. El libro sí lo usa para valorar lo diferido (unos ${n0(p.pozosAsignado)} bbl/d hoy): son dos preguntas distintas`
 
 /** La tubería de un campo para las vistas, en una sola lectura (U2 §11.1):
  *  los tramos de hoy con lo que limita, lo que pasa ahora, lo que se está
@@ -642,8 +717,10 @@ export function lineaBasePorTramo(campoIds: string[], desde: Date, hasta: Date, 
  *  suma lo mismo que el libro de ese día y los días suman la brecha del
  *  período (`brechaPorChoke`). El aviso de cambio respeta el umbral y la
  *  persistencia (PARAMETROS_CHOKE); `vueltas` cuenta, por campo, los cambios
- *  del dominante sin ese filtro (U2 §7.1: sin él, La Ceiba cambiaría siete
- *  veces en trece meses). */
+ *  del dominante sin ese filtro: los que el aviso calla porque dos tramos
+ *  estaban casi iguales (U2 §7.1). Cuántas son depende de las capacidades que
+ *  rijan; los casos de `referencia/choke/serie-*` y `referencia/escenarios/`
+ *  dicen las de cada uno (5E·H34). */
 export function serieChoke(campoIds: string[], desde: Date, hasta: Date, ctx: Contexto, versiones?: Historial, op: OpcionesReparto = {}): { dias: DiaChoke[]; cambios: CambioDominante[]; vueltas: Record<string, number> } {
   const d0 = desde.getTime(), hh = Math.min(hasta.getTime(), ahora)
   const dias = new Map<number, DiaChoke>()

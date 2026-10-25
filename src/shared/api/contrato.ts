@@ -35,7 +35,7 @@ import type { DatosDeCatalogo, CatalogoDeCampo } from './catalogo'
 import type { CicloValor, PlanAccion, TramoCiclo, DecisionPlan } from '@/entities/escenarios'
 import type {
   TuberiaCampo, TramoTuberia, PerdiendoAhora, MedidorDelCampo, BrechaChoke, BrechaCampoChoke, MesPorTramo, LineaBasePorTramo, DiaChoke,
-  CambioDominante, VistaCapacidades,
+  CambioDominante, VistaCapacidades, PropuestaFactorMedicion,
 } from '@/entities/choke'
 import type { EntradaRevision } from '@/entities/capacidades'
 import type { TuberiaAgua, TramoTuberiaAgua, ColchonAgua } from '@/entities/choke-agua'
@@ -314,6 +314,7 @@ const vistaCriticidad = obj<VistaCriticidad>()({
 })
 const vistaCapacidadesCodec = obj<VistaCapacidades>()({
   entrada: obj<EntradaRevision>()({ maximoCrudo: opc(obj<NonNullable<EntradaRevision['maximoCrudo']>>()({ dia: fecha })) }),
+  factorMedicionPropuesto: obj<PropuestaFactorMedicion>()({ desde: fecha, hasta: fecha }),
 })
 const brechaChoke = obj<BrechaChoke>()({
   desde: fecha, hasta: fecha, superado: lista(obj<BrechaChoke['superado'][number]>()({ dia: fecha })),
@@ -336,8 +337,9 @@ export const SERIE_CHOKE = get<CampoPeriodo>()('/vistas/campos/:campo/choke/seri
  *  tanques → bombas de reinyección → inyectores, con el colchón (U2 §5). */
 export const TUBERIA_AGUA = get<PorCampo>()('/vistas/campos/:campo/agua', tuberiaAgua)
 /** Lo que deja pasar cada tramo del campo hoy (firmado o del demo, con su
- *  fuente en palabras), quién y cuándo lo firmó y lo que la revisión de la firma
- *  necesita del pasado: lo máximo que pasó en un día en los últimos 30 (U2 §8.4).
+ *  fuente en palabras), quién y cuándo lo firmó, lo que la revisión de la firma
+ *  necesita del pasado (lo máximo que pasó en un día en los últimos 30, U2 §8.4)
+ *  y el factor de medición: el que rige, quién lo firmó y lo que TRIM propone (D3).
  *  Se escriben con la configuración (`Config.capacidades`, `POST /api/configuracion`). */
 export const CAPACIDADES = get<PorCampo>()('/vistas/campos/:campo/capacidades', vistaCapacidadesCodec)
 /** «Si falla hoy»: todos los equipos de los campos de mayor a menor, y por campo
@@ -345,7 +347,8 @@ export const CAPACIDADES = get<PorCampo>()('/vistas/campos/:campo/capacidades', 
  *  decide cada rol con la lista y la frase del desembotellamiento (U2 §6). */
 export const CRITICIDAD = get<PorCampos>()('/vistas/criticidad', vistaCriticidad)
 /** La brecha del libro del período repartida por tramo y por escalón, con la
- *  eficiencia de producción (PE y PE no planeada), por campo y en conjunto.
+ *  eficiencia de producción (PE y PE no planeada) y si se puede creer
+ *  (`peCreible`, `textoPe`), por campo y en conjunto.
  *  Suma exacto: potencial − real = Σ por tramo + sin explicar. */
 export const REPARTO_CHOKE = get<ConsultaPeriodo>()('/vistas/choke/reparto', brechaChoke)
 /** Lo perdido por tramo cada mes del calendario, con el mismo total de cada mes del libro (U2 §7.4). */

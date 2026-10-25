@@ -2,7 +2,7 @@
 
 Lo que le costaría al campo que cada uno de sus equipos fallara **hoy**, con el tramo donde se trabaría, de mayor a menor. Ese orden decide dónde va el vigía, qué rutas predictivas van primero y qué repuesto se pide ya (CHOKE-COMPLETO §10; U2 §6). **No hay una cuenta nueva**: son las mismas de siempre (`diferido.ts`, `riesgoAhora`), para que un mismo número sea igual en todas partes.
 
-Función: `criticidadDelCampo(campoId, ctx)` (`src/entities/criticidad.ts:315-380`) → `CriticidadDelCampo` (`:118-143`); varios campos: `criticidad(campoIds, ctx)` (`:434-435`). Ruta: `GET /api/vistas/criticidad?campos=` (`pedirCriticidad`, `src/shared/api/choke.ts:184`) → `{ ranking, campos }`. Pantallas: Riesgo → «Si falla hoy» (`widgets/riesgo/SiFallaHoy.tsx`), Bombas, el panel del equipo, el resumen del gerente y «Qué limita hoy» (`widgets/arbol/HoyLimita.tsx`).
+Función: `criticidadDelCampo(campoId, ctx)` (`src/entities/criticidad.ts:326-391`) → `CriticidadDelCampo` (`:118-143`); varios campos: `criticidad(campoIds, ctx)` (`:445-446`). Ruta: `GET /api/vistas/criticidad?campos=` (`pedirCriticidad`, `src/shared/api/choke.ts:188`) → `{ ranking, campos }`. Pantallas: Riesgo → «Si falla hoy» (`widgets/riesgo/SiFallaHoy.tsx`), Bombas, el panel del equipo, el resumen del gerente y «Qué limita hoy» (`widgets/arbol/HoyLimita.tsx`).
 
 Datos: el demo, ahora = 2-oct-2026 14:00.
 
@@ -12,7 +12,7 @@ Datos: el demo, ahora = 2-oct-2026 14:00.
 
 **Qué es.** `FilaCriticidad` (`criticidad.ts:54-103`): `equipo`, `nombre`, `familia` (`bomba`, `electrosumergible`, `bombeo-mecanico`, `pozo`, `servicio`), `tramo` y `alcance` (de la topología), `servidos`, **`bpd`** (el crudo por día que el campo deja de sacar si falla hoy, una vez agotado el colchón: el criterio del orden; `null` sin dato), `colchonH`, `costoFalla` (barriles de una falla típica) con `costoDe` (`propio` o `flota`) y `mdtFuente`, `vigilado` (TRIM lee sus instrumentos), `sinDato` (lo que falta, o por qué es techo), `subio`, `estimacion`, **`grupo`**, `parado`, `perdiendoBpd`, **`puesto`** y `porque`.
 
-**Fórmula (orden, `orden`, `:428-432`).** Tres listas (QA-D6), en este orden:
+**Fórmula (orden, `orden`, `:439-443`).** Tres listas (QA-D6), en este orden:
 
 1. **`medido`**: las cifras calculadas, de mayor a menor `bpd`; a igual cifra, el de menos colchón (sin colchón cuenta 0); luego el costo de una falla y el código. **Puesto** = 1 + cuántos medidos cuestan más (los que cuestan lo mismo lo comparten).
 2. **`techo`**: lo que supone cerrar todos sus pozos («hasta»), aparte y después, **sin puesto** (no corre el puesto de lo medido).
@@ -22,7 +22,7 @@ Lo que **ya está parado** no entra a la lista: va en `parados` («Perdiéndose 
 
 **Ejemplo con los datos del demo.** Portafolio: 130 filas (95 medidas, 9 techos, 26 sin dato). Los primeros: El Palmar P-201B 3.277 bbl/d (puesto 1); La Ceiba P-201A y P-201C 3.059 (puesto 1, comparten); Guacamayo P-201A 2.136 (1); Morichal MPP-301 1.600 (1); La Ceiba LC-11 1.031 (3).
 
-**Referencia.** `src/entities/criticidad.ts:51-143, 424-435`; `referencia/choke/criticidad-{campo}.json` y `criticidad-portafolio.json`.
+**Referencia.** `src/entities/criticidad.ts:51-143, 435-446`; `referencia/choke/criticidad-{campo}.json` y `criticidad-portafolio.json`.
 
 ---
 
@@ -38,7 +38,7 @@ Lo que **ya está parado** no entra a la lista: va en `parados` («Perdiéndose 
 | Servicios (subestación, aire, separador, tratador) | la regla de `riesgoAhora`, «se cierra lo que esté produciendo», con los pozos que dependen de ellos según la topología: **un techo**, marcado | `deServicio`, `:284-309` |
 | Servicio **con respaldo declarado** | **0 mientras el respaldo esté bien**; si su lectura dice que el respaldo ya está en uso (K-101 con 2 de 3 unidades), vuelve al techo | `respaldoHoy`, `:268-274` |
 | Evacuación (tanque de crudo, LACT) y compresor | **sin dato** con su porqué, hasta tener el colchón del tanque de crudo o los pozos que cierra el compresor | — |
-| Campo de gas | sin cifras: lo que cuesta una falla en gas todavía no se calcula | — |
+| Campo de gas | sin cifras: lo que cuesta una falla en gas todavía no se calcula. Su porqué **no dice barriles de crudo** (5E·H36): lo que tenía una cifra dice «Si {equipo} falla hoy: sin dato. {campo} es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.»; lo que ya no la tenía queda igual; sin «sube» | `deGas`, `:311-320` |
 
 **Referencia.** `src/entities/criticidad.ts:1-41, 144-309`.
 
@@ -84,7 +84,7 @@ Lo que **ya está parado** no entra a la lista: va en `parados` («Perdiéndose 
 - **Morichal Norte**: MPP-301 1.600 bbl/d (1; «Si falla MPP-301 hoy, se frenan 3 pozos que mueve: 1.600 bbl/d»); P-201B 783 (2; «Si falla P-201B hoy, el campo pierde 783 bbl/d después de 10 h de colchón», costo 1.235); sus seis hermanas 783 (3, comparten; «quedan 40.389 bbl/d de agua sin salida»); techos SE-2 y V-101 hasta 16.920 (40 pozos que producen); H-302 y K-101, 0. Parado: MN-41, 684.
 - **Guacamayo**: P-201A 2.136 (1; 5,7 h de colchón; «… La reserva no se cuenta: solo está declarada para otra bomba»); P-201B (recobro) 0: «P-201B inyecta para recobro: si falla hoy no cierra pozos; baja la presión del yacimiento en semanas»; P-201C (reserva) 0: «P-201C es de reserva (…): si falla hoy no cierra pozos».
 - **El Palmar**: P-201B 3.277 (1): «Si P-201B falla hoy, quedan 13.192 bbl/d de agua sin salida: el campo pierde 3.277 bbl/d» · «Sin tanque de agua firmado o sin su nivel: no se sabe cuánto aguanta».
-- **La Zarza** (gas): todo sin dato, con «La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.»; ZA-09: «ZA-09 no tiene prueba: no se le inventa caudal».
+- **La Zarza** (gas): todo sin dato, con «La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.»; el porqué de cada fila, sin barriles de crudo: «Si ZA-01 falla hoy: sin dato. La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.» (igual P-201B, SE-2, V-101 y ZA-02 a ZA-08; antes decía «Si ZA-01 falla hoy, se pierden sus 479 bbl/d» y «Si P-201B falla hoy, … el campo pierde 3.159 bbl/d», 5E·H36); los que no tenían cifra siguen igual: ZA-09 «ZA-09 no tiene prueba: no se le inventa caudal», K-101 «… no cierra pozos mientras el respaldo esté bien», C-401, LACT-01 y TK-102 «Si … falla hoy: sin dato. Falta …».
 
 **Referencia.** `referencia/choke/criticidad-{morichal,guacamayo,palmar,zarza}.json`.
 
@@ -92,7 +92,7 @@ Lo que **ya está parado** no entra a la lista: va en `parados` («Perdiéndose 
 
 ### Lo que se decide con la lista
 
-**Qué es.** Las frases que hacen la lista dinámica y accionable (U2 §6.4): `cambioHoy`, `noIntervenir` (lo decide el jefe), `proximoInstrumento` (lo decide confiabilidad: el primero de la lista que TRIM no ve venir), `desembotellar` (`desembotellarDe`, `:405-422`) y `avisosTrabajo` (`avisosDeTrabajo`, `:385-396`: un trabajo del programa firmado sobre un equipo que hoy vale más porque otro está parado; proponer el plan es otra escritura, que no está en esta versión).
+**Qué es.** Las frases que hacen la lista dinámica y accionable (U2 §6.4): `cambioHoy`, `noIntervenir` (lo decide el jefe), `proximoInstrumento` (lo decide confiabilidad: el primero de la lista que TRIM no ve venir), `desembotellar` (`desembotellarDe`, `:416-433`) y `avisosTrabajo` (`avisosDeTrabajo`, `:396-407`: un trabajo del programa firmado sobre un equipo que hoy vale más porque otro está parado; proponer el plan es otra escritura, que no está en esta versión).
 
 **Qué texto (corridos, La Ceiba).**
 
@@ -104,4 +104,4 @@ Lo que **ya está parado** no entra a la lista: va en `parados` («Perdiéndose 
 
 **Quién lo calcula.** Servidor.
 
-**Referencia.** `src/entities/criticidad.ts:104-143, 385-422`.
+**Referencia.** `src/entities/criticidad.ts:104-143, 396-433`.

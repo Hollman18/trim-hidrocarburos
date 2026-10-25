@@ -2,7 +2,7 @@
 
 Dos vistas de lectura que ponen juntos los potenciales de hoy (5E.2), lo que se está perdiendo ahora y lo que se perdió en el período (5E.4): **la tubería del campo** (crudo: yacimiento → pozos → planta → afuera) y **la tubería del agua** (agua de los pozos → tratamiento → tanques → bombas de reinyección → inyectores), con el **colchón** de los tanques. En un campo de 92–97 % de agua, el agua decide más paradas que el crudo: «In a field such as Magnus or Ula the Gross Potential is very dependent on water injection capacity, and a separate choke model can be used to model injection performance» (SPE-36848).
 
-Funciones: `tuberiaCampo(campoId, desde, hasta, ctx, versiones?, op?)` (`src/entities/choke-reparto.ts:522-576`) → `TuberiaCampo` (`src/entities/choke.ts:1336-1382`); `tuberiaAgua(campoId, ctx, versiones?)` (`src/entities/choke-agua.ts:207-353`) → `TuberiaAgua` (`:126-181`). Rutas: `GET /api/vistas/campos/:campo/tuberia?desde=&hasta=` (`pedirTuberia`, `src/shared/api/choke.ts:123`) y `GET /api/vistas/campos/:campo/agua` (`pedirTuberiaAgua`, `:149`; es la foto de ahora, sin período). Pantallas: Producción → «La tubería del campo» (`widgets/choke/Tuberia.tsx`, `widgets/choke/Campos.tsx`); Agua → «La tubería del agua» (`widgets/choke/Agua.tsx`; su versión corta de hoy, `widgets/choke/AguaHoy.tsx`, va en Bombas y en el panel del equipo); «Qué limita hoy» en Turno e Identificar (`widgets/arbol/HoyLimita.tsx`).
+Funciones: `tuberiaCampo(campoId, desde, hasta, ctx, versiones?, op?)` (`src/entities/choke-reparto.ts:597-651`) → `TuberiaCampo` (`src/entities/choke.ts:1472-1518`); `tuberiaAgua(campoId, ctx, versiones?)` (`src/entities/choke-agua.ts:207-353`) → `TuberiaAgua` (`:126-181`). Rutas: `GET /api/vistas/campos/:campo/tuberia?desde=&hasta=` (`pedirTuberia`, `src/shared/api/choke.ts:126`) y `GET /api/vistas/campos/:campo/agua` (`pedirTuberiaAgua`, `:152`; es la foto de ahora, sin período). Pantallas: Producción → «La tubería del campo» (`widgets/choke/Tuberia.tsx`, `widgets/choke/Campos.tsx`); Agua → «La tubería del agua» (`widgets/choke/Agua.tsx`; su versión corta de hoy, `widgets/choke/AguaHoy.tsx`, va en Bombas y en el panel del equipo); «Qué limita hoy» en Turno e Identificar (`widgets/arbol/HoyLimita.tsx`).
 
 Datos: el demo, ahora = 2-oct-2026 14:00; el período de la tubería del campo es octubre en curso salvo que se diga otro.
 
@@ -10,7 +10,7 @@ Datos: el demo, ahora = 2-oct-2026 14:00; el período de la tubería del campo e
 
 ### Los tramos de la tubería del campo
 
-**Qué es.** Un `TramoTuberia` por tramo (`choke.ts:1269-1303`), en el orden de la tubería: `potencialBpd` (5E.2; `null` en el yacimiento, que va con los pozos), `fuente` en palabras, `estado` (`pruebas`, `demo`, `firmado`, `sin-firmar`, `sin-dato`), `holguraBpd`, `limita`, `casiIgual`, `trenes` y `trenQueLimita` (la planta por dentro), `subniveles` (afuera por dentro: el oleoducto y el cliente), `pruebaMasVieja`, `disponibleHoy` (lo que queda hoy con un equipo parado), `perdiendoAhoraBpd`, `perdidoBbl` y `equiposTop`.
+**Qué es.** Un `TramoTuberia` por tramo (`choke.ts:1405-1439`), en el orden de la tubería: `potencialBpd` (5E.2; `null` en el yacimiento, que va con los pozos), `fuente` en palabras, `estado` (`pruebas`, `demo`, `firmado`, `sin-firmar`, `sin-dato`), `holguraBpd`, `limita`, `casiIgual`, `trenes` y `trenQueLimita` (la planta por dentro), `subniveles` (afuera por dentro: el oleoducto y el cliente), `pruebaMasVieja`, `disponibleHoy` (lo que queda hoy con un equipo parado), `perdiendoAhoraBpd`, `perdidoBbl` y `equiposTop`.
 
 **Ejemplo con los datos del demo** (La Ceiba):
 
@@ -24,11 +24,11 @@ Datos: el demo, ahora = 2-oct-2026 14:00; el período de la tubería del campo e
 **Qué texto (las fuentes y los ⓘ, corridos).**
 
 - Yacimiento: «El yacimiento no tiene un número propio: lo que puede dar se mide con las pruebas de los pozos».
-- Pozos: «La suma de lo que dan los pozos con su prueba vigente. No lleva el factor de asignación del mes: ese sale de lo que ya pasó por la planta y escondería lo que la limita. El libro sí lo usa para valorar lo diferido (unos 11.360 bbl/d hoy): son dos preguntas distintas» (`fuentePozos`, `choke-reparto.ts:511`; con un factor de medición firmado agrega «× el factor de medición firmado (N)»). Prueba más vieja: «la prueba más vieja es de hace 36 días (LC-01, 27 de ago)».
-- Planta: «El más angosto de sus trenes medidos: el tren de crudo. La capacidad del tren de crudo en el esquema de planta: dato del demo, sin firmar. El agua se pasa a crudo con el corte de las pruebas; el gas no se mide en esta fase». Hoy, con P-201B parada (`disponibleHoy`, `aguaDisponibleHoy`, `choke-reparto.ts:436-453`): «hoy, sin P-201B: 178.500 de 267.750 bbl/d de agua, unos 9.445 bbl/d de crudo; ya entran 174.033 de agua». El tramo **no se angosta**: su alto sigue siendo la capacidad instalada (NSTA p. 29); esto solo dice cuánto queda mientras dura la parada.
+- Pozos: «La suma de lo que dan los pozos con su prueba vigente. No lleva el factor de asignación del mes: ese sale de lo que ya pasó por la planta y escondería lo que la limita. El libro sí lo usa para valorar lo diferido (unos 11.360 bbl/d hoy): son dos preguntas distintas» (`fuentePozos`, `choke-reparto.ts:586`; con el factor de medición firmado agrega «× el factor de medición firmado (1,004)», con tres decimales, y la cifra de los pozos es la de las pruebas × ese factor: 5E.2). Prueba más vieja: «la prueba más vieja es de hace 36 días (LC-01, 27 de ago)».
+- Planta: «El más angosto de sus trenes medidos: el tren de crudo. La capacidad del tren de crudo en el esquema de planta: dato del demo, sin firmar. El agua se pasa a crudo con el corte de las pruebas; el gas no se mide en esta fase». Hoy, con P-201B parada (`disponibleHoy`, `aguaDisponibleHoy`, `choke-reparto.ts:511-528`): «hoy, sin P-201B: 178.500 de 267.750 bbl/d de agua, unos 9.445 bbl/d de crudo; ya entran 174.033 de agua». El tramo **no se angosta**: su alto sigue siendo la capacidad instalada (NSTA p. 29); esto solo dice cuánto queda mientras dura la parada.
 - Afuera: subniveles «El oleoducto o el transportador» 14.000 y «El terminal o el cliente (mercado)» 15.000 («… Es un subnivel de afuera: no baja lo que puede pasar afuera»).
 
-**Referencia.** `src/entities/choke-reparto.ts:436-576`; `referencia/choke/tuberia-{campo}-2026-09.json`.
+**Referencia.** `src/entities/choke-reparto.ts:511-651`; `referencia/choke/tuberia-{campo}-2026-09.json`.
 
 ---
 
@@ -40,21 +40,21 @@ $$
 \text{pozos (pruebas)} - \text{pasa hoy} - \text{perdiéndose ahora} = \text{brecha de las pruebas hoy}
 $$
 
-`pasaHoyBpd` = el crudo que sale ahora (`caudalesAhora`, valorado como el libro). `perdiendoAhora` = por tramo y equipo (`PerdiendoAhora`, `choke.ts:1304-1316`), pozo por pozo con la cuenta de `riesgoAhora` (el crudo asignado, o la parte que no da a frecuencia reducida), con **el tramo de la clasificación vigente de su fila de hoy** (lo que corrigió una persona mueve también lo de ahora; `perdiendoPorTramo`, `choke-reparto.ts:385-404`). `null` = sin identificar.
+`pasaHoyBpd` = el crudo que sale ahora (`caudalesAhora`, valorado como el libro). `perdiendoAhora` = por tramo y equipo (`PerdiendoAhora`, `choke.ts:1440-1452`), pozo por pozo con la cuenta de `riesgoAhora` (el crudo asignado, o la parte que no da a frecuencia reducida), con **el tramo de la clasificación vigente de su fila de hoy** (lo que corrigió una persona mueve también lo de ahora; `perdiendoPorTramo`, `choke-reparto.ts:460-479`). `null` = sin identificar.
 
-**Ejemplo con los datos del demo** (La Ceiba): pasa hoy **9.394** bbl/d; se pierden ahora **1.966**: en la planta P-201B 1.665 (LC-07 y LC-16, desde las 05:43) y sin identificar LC-21 301 (desde el 1-oct 18:20); brecha de las pruebas hoy: $11.857 - 9.394 - 1.966 = 497$ (= 11.857 de las pruebas − 11.360 asignados). El medidor (`medidorDe`, `:484-497`): «Punto de medición oficial (FQI-0101 · computador de flujo de la unidad LACT-01): en línea; el último día completo dio 11.105 bbl» (1-oct). Sin el dato de ayer: «Sin comunicación con el punto de medición oficial (…) desde el {día}: lo real de esos días queda sin dato».
+**Ejemplo con los datos del demo** (La Ceiba): pasa hoy **9.394** bbl/d; se pierden ahora **1.966**: en la planta P-201B 1.665 (LC-07 y LC-16, desde las 05:43) y sin identificar LC-21 301 (desde el 1-oct 18:20); brecha de las pruebas hoy: $11.857 - 9.394 - 1.966 = 497$ (= 11.857 de las pruebas − 11.360 asignados). El medidor (`medidorDe`, `:559-572`): «Punto de medición oficial (FQI-0101 · computador de flujo de la unidad LACT-01): en línea; el último día completo dio 11.105 bbl» (1-oct). Sin el dato de ayer: «Sin comunicación con el punto de medición oficial (…) desde el {día}: lo real de esos días queda sin dato».
 
-**Qué texto (`fraseHoy`, `fraseDeHoy`, `:459-465`).** Cuando un equipo parado deja el agua de la planta por debajo de lo que pueden dar los pozos: «Hoy, con P-201B parada, el agua de la planta deja pasar 178.500 bbl/d y ya entran 174.033: lo que den de más los pozos pasa solo hasta unos 236 bbl/d de crudo, hasta que vuelva.» Si ya no cabe nada: «Hoy no: con {equipo} parada, el agua de la planta está llena (entran N de M bbl/d). Lo que den de más los pozos no pasa hasta que vuelva.»
+**Qué texto (`fraseHoy`, `fraseDeHoy`, `:534-540`).** Cuando un equipo parado deja el agua de la planta por debajo de lo que pueden dar los pozos: «Hoy, con P-201B parada, el agua de la planta deja pasar 178.500 bbl/d y ya entran 174.033: lo que den de más los pozos pasa solo hasta unos 236 bbl/d de crudo, hasta que vuelva.» Si ya no cabe nada: «Hoy no: con {equipo} parada, el agua de la planta está llena (entran N de M bbl/d). Lo que den de más los pozos no pasa hasta que vuelva.»
 
-**Referencia.** `src/entities/choke-reparto.ts:361-465`.
+**Referencia.** `src/entities/choke-reparto.ts:436-540`.
 
 ---
 
 ### Lo que se perdió en el período y la frase del gerente
 
-**Qué es.** `perdidoPeriodo` (por tramo, con los 3 equipos que más pesan) y `sinTramoBbl`, con **el mismo total del libro** (reparto por tramo + sin identificar = diferido, U2 §0, principio 6). `capacidades`: «capacidades firmadas el {día} por {persona}», «capacidades: unas firmadas …, otras del demo, sin firmar» o «capacidades del demo, sin firmar» (`capacidadesDeLaTuberia`, `:500-508`).
+**Qué es.** `perdidoPeriodo` (por tramo, con los 3 equipos que más pesan) y `sinTramoBbl`, con **el mismo total del libro** (reparto por tramo + sin identificar = diferido, U2 §0, principio 6). `capacidades`: «capacidades firmadas el {día} por {persona}», «capacidades: unas firmadas …, otras del demo, sin firmar» o «capacidades del demo, sin firmar» (`capacidadesDeLaTuberia`, `:575-583`).
 
-**Qué texto (`fraseGerente`, `:561-562`).** «Se trabó {sobre todo, si no es el 100 %} {en los pozos | en la planta | afuera (…)}: {los 2 equipos que más pesan} ({familia}).» + «N bbl todavía sin identificar.» si hay; sin diferido: «Nada se trabó en {campo} en el período.» La familia sale del tipo de causa que más le cargó al equipo (`FAMILIA`, `:581-589`); la baja tensión de un solo pozo se dice «baja tensión».
+**Qué texto (`fraseGerente`, `:636-637`).** «Se trabó {sobre todo, si no es el 100 %} {en los pozos | en la planta | afuera (…)}: {los 2 equipos que más pesan} ({familia}).» + «N bbl todavía sin identificar.» si hay; sin diferido: «Nada se trabó en {campo} en el período.» La familia sale del tipo de causa que más le cargó al equipo (`FAMILIA`, `:656-664`); la baja tensión de un solo pozo se dice «baja tensión».
 
 **Ejemplo con los datos del demo.**
 
@@ -70,7 +70,7 @@ $$
 
 **Quién lo calcula.** Servidor: todo `TuberiaCampo` en una sola lectura.
 
-**Referencia.** `src/entities/choke-reparto.ts:500-599`.
+**Referencia.** `src/entities/choke-reparto.ts:575-674`.
 
 ---
 

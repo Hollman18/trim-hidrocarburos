@@ -373,11 +373,11 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/bombas?campos&desde&hasta` | `BombaVista[]` con `perfil` por clave, más `veredicto`, `abierta`, `senales` y `partes` (la salud llega aquí y en `sospechosa` de las opciones; ya no hay `/vistas/bombas/salud`) |
 | `/vistas/ciclo?campos&desde&hasta` | `CicloValor`: tramos `antes`, `durante` (con `bblDia`), `despues`; `retornoBbl`; `valorUsd?`; cada `PlanAccion` con `simulado: true`, `bbl`, `supuestos[]`, `estado?` (ausente = propuesto). Cifras **simuladas**: no entran al libro. Fórmulas en el capítulo 11. El servidor aplica `POST /api/planes/:id` sobre cada `id`. **Presentación (front hecho):** Resumen muestra el retorno primero y el libro después; planes plegados («Ver planes de acción»); copy largo solo en globos — capítulos 11 y 8 §8.13 |
 | `/vistas/campos/:campo/tuberia?desde&hasta` | `TuberiaCampo` (`choke.ts`; «La tubería del campo», U2 §2): `desde` y `hasta` ISO; `tramos[]` en el orden de la tubería (`reservorio`, `pozo`, `planta`, `exportacion`), cada uno `{ tramo, nombre, explica, potencialBpd, fuente, estado, holguraBpd, limita, casiIgual, trenes?, disponibleHoy?, subniveles?, perdiendoAhoraBpd, perdidoBbl, equiposTop }` (`potencialBpd` y `holguraBpd` en `null` = sin dato; `estado`: `pruebas`, `demo`, `firmado`, `sin-firmar` o `sin-dato`); `limita` (`pozos`, `planta`, `exportacion`, o `null` sin tubería de crudo), `casiIguales`, `umbral`, `empate`, `pasaHoyBpd`, `perdiendoAhora[]` `{ tramo, bpd, equipo, pozos, listaPozos, desde (ISO) }` (`tramo: null` = sin identificar; `desde`: el primero de sus pozos que paró), `perdiendoAhoraBpd` y `sinTramoAhoraBpd` (Σ de lo anterior, y lo que no tiene tramo todavía), `perdidoPeriodo[]` por tramo con sus `equiposTop`, `sinTramoBbl` y `sinTramoEquipos` («sin identificar», que no es un tramo), `diferido`, `campoDeGas`, `textoCorto`, `frase`, `fraseGerente`; `capacidades: { estado: firmadas | demo | parte, firma?: { version, fecha, por }, texto }` (quién y cuándo firmó las de hoy); `medidor?: { medidor, estado: en-linea | sin-comunicacion, desde? (ISO), ultimoDia?: { dia (ISO), bbl }, texto }` (el punto de medición oficial). En la planta, `trenQueLimita` (`crudo`, `agua` o `gas`: el menor de los trenes medidos) y `disponibleHoy?: { valor, unidad: "bbl/d de crudo", agua: { valor, de }, equipo, texto }` (lo que queda hoy con un equipo parado, en crudo y el agua de donde sale; el tramo no se angosta); en los pozos, `pruebaMasVieja?: { pozo, fecha (ISO), dias, texto }`; en afuera, `subniveles[]` con su `estado`. Cada `fuente` va **en palabras**, nunca un nombre del código. Cada día del período usa las capacidades que regían ese día. **Cuadres:** Σ `perdidoPeriodo` + `sinTramoBbl` = `diferido` = el de `/vistas/diferidos` del período; con los pozos limitando, el potencial de los pozos − `pasaHoyBpd` = Σ `perdiendoAhora`. Un tren sin medir (el gas) no entra en el mínimo de la planta. Reemplaza a `/vistas/campos/:campo/choke` de P1 §5.2 |
-| `/vistas/campos/:campo/choke/serie?desde&hasta` | `{ dias, cambios, vueltas }`: cada día (`dia` ISO) con `horas`, `real` (`null` sin fiscal), `potencial`, `potencialSistema`, `estructural`, `diferido`, `residuo`, `porChoke`, `porEscalon` y, por campo, `dominante`, `casiIguales`, `potenciales` y `superado` (el real pasó la capacidad declarada). `cambios[]` `{ campoId, dia (ISO), de, a, valorBpd, texto }`: el aviso «Cambió lo que limita», solo cuando el tramo nuevo gana por más del umbral de «casi iguales» y lo sostiene `diasParaCambio` días seguidos (`PARAMETROS_CHOKE`, `choke.parametros@1`). `vueltas` cuenta los cambios sin ese filtro. Cada día suma lo mismo que el libro de ese día |
+| `/vistas/campos/:campo/choke/serie?desde&hasta` | `{ dias, cambios, vueltas }`: cada día (`dia` ISO) con `horas`, `real` (`null` sin fiscal), `potencial`, `potencialSistema`, `estructural`, `diferido`, `residuo`, `porChoke`, `porEscalon` y, por campo, `dominante`, `casiIguales`, `potenciales` y `superado` (el real pasó la capacidad declarada). `cambios[]` `{ campoId, dia (ISO), de, a, valorBpd, texto }`: el aviso «Cambió lo que limita», solo cuando el tramo nuevo gana por más del umbral de «casi iguales» y lo sostiene `diasParaCambio` días seguidos (`PARAMETROS_CHOKE`, `choke.parametros@3`). `vueltas` cuenta los cambios sin ese filtro. Cada día suma lo mismo que el libro de ese día |
 | `/vistas/campos/:campo/agua` | `TuberiaAgua` (`choke-agua.ts`; «La tubería del agua», U2 §5): `t` (ms), `aguaBpd`, `crudoBpd`, `crudoPorAgua`; `tramos[]` (`producida`, `tratamiento`, `tanques`, `bombas`, `inyectores`) con `potencialBpd` (`null` = sin dato, o el tanque, que es colchón y no caudal), `crudoBpd`, `holguraBpd`, `sinDato?`, `fuente`, `tanques[]` con `colchon?` `{ horas, rango, nivelPct, cuando, bomba, evento?, aguaSinSalidaBpd }` (`horas: null` = no se llena; `cuando`: `al-parar` o `si-para-ahora`) y `bombas[]` `{ id, capacidadBpd, placaBpd, papel, reserva, nota?, instrumentada, marcha, mueveBpd?, respaldoLibreBpd? }`; `tratamientoBpd` y `admisionInyectoresBpd` (`null` = sin dato), `dominante`, `limita`, `angosto?`, `sobraBpd`, `faltaBpd`, `crudoQueFrenaBpd`, `sinUna?` (con `desde` ISO y `colchonH`, `null` = no se llena), `siParaOtra?` (con una bomba ya parada, si para otra de las que quedan: lo que entra, lo que cabe, el agua sin salida, el colchón, el orden de cierre y el crudo que se pierde; la misma cuenta del «si falla hoy» de las hermanas), `sinDato`, `frases`, `texto`. Cada tramo trae además `estado` (`pruebas`, `demo`, `firmado`, `sin-dato`) y `casiIgual`; `casiIguales` (o `null`) son los tramos de la disposición a menos del umbral del más angosto. La capacidad de cada bomba es UNA cifra (la de la predicción y el colchón); la placa va de referencia; cada bomba trae `estado`, `fuente` y, si se firmó, `fuenteFirmada` |
-| `/vistas/campos/:campo/capacidades` | `VistaCapacidades` (`vistaCapacidades`, `choke.ts`; U2 §8.4): `vigentes` (`CapacidadesVigentes`: `crudo`, `agua`, `bombas[]`, `gas` con `medido`, `afuera`, `mercado`, `tratamiento`, `admision`, cada uno `{ tramo, valor \| null, unidad, estado: firmado \| demo \| sin-dato, fuente (en palabras), fuenteFirmada? }`; `firmadas`; `explicacionEmpate?`), `firma?` (`{ version, fecha, por }` de la versión desde la que rigen), `entrada` (lo que la revisión necesita: `vigentes`, `maximoCrudo?: { bpd, dia (ISO) }` lo máximo que pasó en un día por el punto oficial en los últimos 30, `pozosBpd`, `aguaPozosBpd`, `conGas`, `caudalesGas`) y `hallazgos[]` `{ tramo, equipo?, texto, bloquea }` de lo que rige. La pantalla revisa lo que se va a firmar con `revisarCapacidades` y esta `entrada`; el servidor lo vuelve a revisar al firmar |
+| `/vistas/campos/:campo/capacidades` | `VistaCapacidades` (`vistaCapacidades`, `choke.ts`; U2 §8.4): `vigentes` (`CapacidadesVigentes`: `crudo`, `agua`, `bombas[]`, `gas` con `medido`, `afuera`, `mercado`, `tratamiento`, `admision`, cada uno `{ tramo, valor \| null, unidad, estado: firmado \| demo \| sin-dato, fuente (en palabras), fuenteFirmada? }`; `firmadas`; `explicacionEmpate?`), `firma?` (`{ version, fecha, por }` de la versión desde la que rigen), `entrada` (lo que la revisión necesita: `vigentes`, `maximoCrudo?: { bpd, dia (ISO) }` lo máximo que pasó en un día por el punto oficial en los últimos 30, `pozosBpd` (con el factor de medición que rige), `aguaPozosBpd`, `conGas`, `caudalesGas`, `factorMedicionPropuesto?: { valor, dias }`) y `hallazgos[]` `{ tramo, equipo?, texto, bloquea }` de lo que rige (`tramo: factor` es el factor de medición). El factor de medición (QA-D3): el que rige en `vigentes.factorMedicion` (`{ valor, estado: firmado \| sin-firmar, porque? }`; sin firma, 1), quién lo firmó en `firmaFactor?` (`{ version, fecha, por }`) y lo que TRIM propone en `factorMedicionPropuesto` (`{ campoId, valor?, dias, desde (ISO), hasta (ISO), texto, resumen }`: la mediana de lo real ÷ las pruebas en los días completos sin paradas y con los pozos limitando de los 90 antes de hoy; sin `valor` con menos de 7 días o en un campo de gas). La pantalla revisa lo que se va a firmar con `revisarCapacidades` y esta `entrada`; el servidor lo vuelve a revisar al firmar |
 | `/vistas/criticidad?campos` | `{ ranking, campos }` («Si falla hoy», `criticidad.ts`, U2 §6): `ranking` = `FilaCriticidad[]` de todos los campos pedidos, de mayor a menor bbl/d si falla hoy, sin lo ya parado: `{ campoId, equipo, nombre, familia, tramo, alcance, servidos, bpd, colchonH?, costoFalla?, costoDe?, mdtFuente?, vigilado, sinDato?, subio?, estimacion, parado, perdiendoBpd?, puesto, porque }` (`bpd: null` = sin dato; `subio: { desde (ISO), porque, otro }`; `colchonH: null` = no se llena; `puesto`: 1 + cuántos de su campo cuestan más, los que cuestan lo mismo lo comparten, `null` sin dato o ya parado; `porque` de lo ya parado dice lo de ahora: «está caído: se pierden N bbl/d ahora»). `campos[]`, en el orden pedido: `{ campoId, parados, sinCalcular, cambioHoy?, proximoInstrumento?, noIntervenir?, avisosTrabajo, desembotellar? }`: lo que decide cada rol con la lista (U2 §6.4: dónde va el próximo instrumento, no intervenir hoy lo que vale más), `avisosTrabajo[]` `{ campoId, tarea, equipo, desde, hasta (ISO), motivo, porque, texto }` (un trabajo del programa firmado sobre un equipo que hoy vale más) y la frase del desembotellamiento (U2 §6.5: «otra bomba de agua no sube la producción: evita que una falla cierre pozos; cada falla cuesta X bbl»). En una bomba con instrumento, `costoFalla` es exactamente el de `/vistas/riesgo` |
-| `/vistas/choke/reparto?campos&desde&hasta` | `BrechaChoke` (`brechaPorChoke`, CHOKE-COMPLETO §6–§8): `desde`, `hasta` ISO, `potencial`, `real`, `brecha`, `diferido`, `porChoke` y `porEscalon` (con `sin-asignar` y `sin-clasificar`), `porChokeEscalon`, `porChokeEquipo`, `sinExplicar`, `cuadra`, `porConfirmar`, `estructural`, `estructuralPorChoke`, `potencialSistema`, `brechaSistema`, `pe`, `peNoPlaneada`, `dominante`, `horasPorDominante`, `superado[]` (`dia` ISO), `porCampo[]` con lo mismo por campo, `texto`, `textoEstructural?`. **Identidad exacta:** potencial − real (del libro) = Σ por tramo + sin explicar = Σ por escalón + sin explicar, y Σ por tramo = el diferido de `/vistas/diferidos` del mismo período |
+| `/vistas/choke/reparto?campos&desde&hasta` | `BrechaChoke` (`brechaPorChoke`, CHOKE-COMPLETO §6–§8): `desde`, `hasta` ISO, `potencial`, `real`, `brecha`, `diferido`, `porChoke` y `porEscalon` (con `sin-asignar` y `sin-clasificar`), `porChokeEscalon`, `porChokeEquipo`, `sinExplicar`, `cuadra`, `porConfirmar`, `estructural`, `estructuralPorChoke`, `potencialSistema`, `brechaSistema`, `realPe`, `potencialPe`, `pe`, `peNoPlaneada`, `peCreible`, `textoPe?`, `dominante`, `horasPorDominante`, `superado[]` (`dia` ISO), `porCampo[]` con lo mismo por campo, `texto`, `textoEstructural?`. `pe` = 100 · `realPe` ÷ `potencialPe`: lo real y el potencial del sistema de los campos de crudo (en un campo de gas, 0: la eficiencia de crudo no aplica). Con `peCreible: false` la pantalla dice `textoPe` y nunca el número (QA-D3). **Identidad exacta:** potencial − real (del libro) = Σ por tramo + sin explicar = Σ por escalón + sin explicar, y Σ por tramo = el diferido de `/vistas/diferidos` del mismo período |
 | `/vistas/choke/mensual?campos` | `MesPorTramo[]`: cada mes del calendario (`desde`, `hasta` ISO, `parcial`) con `porTramo`, `noPlaneado` y `diferido`, el mismo de cada mes de `/vistas/diferidos/mensual` |
 | `/vistas/choke/base?campos&desde&hasta` | `LineaBasePorTramo` o `null` sin tres meses publicados antes del período: `base` y `periodo` (`desde`, `hasta` ISO), `noPlaneado` y `diferido` por tramo (`{ baseDia, periodoDia, cambio }`, `cambio: null` sin base), `texto`. La misma base de `/vistas/diferidos/base` |
 | `/vistas/choke/arbol?campos&desde&hasta&orden` | `ArbolChoke` (`arbolDelChoke`, `choke-arbol.ts`; «el árbol de pérdidas del choke», el modelo expandido de SPE-36848): `orden` (`gestion`, `circular` o `responsable`; obligatorio), `niveles` (los de ese orden), `desde`, `hasta` ISO, `campos`, `version` (la forma de salida de las cadenas: `C024-2026` por defecto), `regla` (`choke.arbol@1`) y `raiz`. Cada nodo `{ dimension, valor, texto, cadena?, bbl, filas, eventos, confirmadoBbl, noPlaneadaBbl, hijos }`: `dimension` es el nivel (`raiz`, `tramo`, `responsable`, `impacto`, `planeacion`, `n1`, `n2`, `equipo`, `parte`); `valor` el código interno (`planta`, `no-planeada`, `NP_SUB`, `NP_SUB/falla-esp`, `op-mantenimiento`, `P-201B`, `sello`), `falta` si el paso falta y, en el tramo, `sin-asignar` («sin identificar»); `texto` en palabras de campo; `cadena` lo que viaja a la ANH en la forma de salida (`choke_mod`, `resp_par`, `dif_perd`, `pla_no_plan`, `cau_niv1`, `cau_niv2`), solo en los pasos con valor; `filas` y `eventos`, las filas de `/vistas/anh/paradas` y sus eventos; `confirmadoBbl`, los barriles con los 6 pasos avalados por una persona (estado `confirmada`); `noPlaneadaBbl`, los de las paradas no planeadas. Los niveles: `gestion` = tramo → planeada o no → causa → detalle → equipo → parte; `circular` = responsable → tramo → diferida o pérdida → planeada o no → causa → detalle (C24 p. 5); `responsable` = responsable → tramo → causa → equipo. Con la clasificación **vigente** de cada fila: lo que dijeron las personas encima de lo que propone TRIM; el tramo de una fila cuyo paso 2 espera una respuesta (el tanque de crudo: «¿el oleoducto recibía?») es el que propone el motor del choke, como en la tubería. Un paso que falta va en su rama `falta` y **nunca se reparte**. En el paso 3 la rama `perdida` siempre está, hoy vacía (`bbl: 0`, `filas: 0`): TRIM todavía no registra pérdidas. **Hijos de más a menos barriles; `falta` y `sin-asignar` al final.** **Cuadres:** cada nodo = Σ de sus hijos (barriles, filas, confirmado y no planeado); la raíz = el diferido de `/vistas/diferidos` del período (Σ `diferidaTrimBbl`); el primer nivel de `gestion` = `porChoke` de `/vistas/choke/reparto`, tramo por tramo, mientras nadie haya corregido el paso 2 (el reparto sale de la regla del motor y todavía no lee lo que corrigen las personas; el árbol sí: una corrección mueve esos barriles de tramo); Σ por causa = la conciliación por N1 de las filas; las hojas suman las filas. Al entrar, el front revisa el árbol con la misma regla (`revisarArbol`) y rechaza el que no cuadra, diciendo dónde. Es un cálculo sobre las filas de la ANH: **no tiene tabla ni vista SQL propia** |
@@ -453,7 +453,8 @@ cambios[], config }`. `base` es la versión sobre la que se editó. La configura
                    "bombas":[{ "equipo":"P-201A", "bpd":89250, "fuente":"placa" }],
                    "gas":{ "bpd":2400, "fuente":"placa", "medido":false },
                    "afuera":{ "bpd":14000, "fuente":"contrato" }, "mercado":{ "bpd":15000, "fuente":"nominacion" },
-                   "explicacionEmpate":"…" }] }
+                   "explicacionEmpate":"…",
+                   "factorMedicion":{ "valor":0.966, "porque":"La mediana de lo que midió el punto oficial ÷ lo que dan las pruebas en 42 días sin paradas…" } }] }
 ```
 
 `topologiaPorSaber` (opcional) son los equipos de los que el administrador contestó «Todavía
@@ -471,7 +472,14 @@ gas en KPC/d) y con su `fuente`: `placa`, `prueba`, `contrato`, `nominacion` o `
 no se firma sigue con el dato del demo, marcado (`estado: demo`). **Cada día usa las que regían
 ese día** (`configEn` del historial): firmar hoy no cambia un mes cerrado. `explicacionEmpate`
 explica por escrito un empate exacto entre dos tramos (NSTA §5.4): va con la firma, no hay
-otro endpoint para eso.
+otro endpoint para eso. `factorMedicion` (`{ valor, porque }`, QA-D3) es el factor con que se
+leen las pruebas de los pozos para lo que limita y la eficiencia de producción: el sesgo del
+separador de prueba contra el punto oficial. Se firma aquí, con su porqué en palabras; quién y
+cuándo los dice la versión que lo firmó. Sin él rige **1**. TRIM propone uno
+(`factorMedicionPropuesto` en `GET /api/vistas/campos/:campo/capacidades`: la mediana de lo real ÷
+lo que dan las pruebas en los días completos sin paradas y con los pozos limitando de los 90 antes
+de hoy, si son 7 o más), pero **la propuesta nunca rige sin firma**. Como lo demás, cada día se
+mide con el factor de la configuración de su medianoche.
 
 `topologia` (opcional) es la del modelo choke: a qué pozos sirve cada equipo, servicio o
 alimentador (`ChokeDeElemento`, `choke.ts`). Un campo que no trae ninguna entrada usa la que
@@ -516,13 +524,15 @@ vuelve ausente (`normalizarConfig`).
      registrado, una vez, y no a la vez contestado en `topologia`.
   10. Capacidades, la forma (`validarCapacidades`): el campo está registrado y va una vez;
      cada número > 0 y ≤ 10.000.000 con su fuente; cada bomba es del tren de agua del campo y va
-     una vez; el gas dice si se mide.
+     una vez; el gas dice si se mide; el factor de medición, entre 0,5 y 1,5, con su porqué (5
+     caracteres o más, 500 a lo sumo) y nunca en un campo de gas (la eficiencia de crudo no aplica).
   11. Capacidades, contra lo que ya pasó (`capacidadesQueBloquean` → `revisarCapacidades`, solo
      en los campos cuyas capacidades cambian con esta firma): el tren de crudo y afuera no
      pueden dejar pasar menos de lo máximo que ya pasó en un día por el punto oficial en los
      últimos 30 días; un empate exacto entre los pozos, la planta y afuera necesita
      `explicacionEmpate` (5 caracteres o más). Un cambio de más del 20 % frente a lo vigente
-     solo pide confirmar (no bloquea). La pantalla corre las mismas reglas mientras se escribe.
+     solo pide confirmar (no bloquea), y un factor de medición que se aleja más de 0,02 de lo que
+     TRIM propone, también. La pantalla corre las mismas reglas mientras se escribe.
 
 El historial (`cambios`) dice la topología en palabras: la primera vez que un campo la firma,
 un renglón («Topología de La Ceiba: se firma con 36 elementos; antes regía la que TRIM deriva
@@ -1366,8 +1376,8 @@ producción o confiabilidad con su evidencia. Una parada sin causa no tiene tram
 «sin identificar»).
 
 **Lo que limita** (`potencialesDelCampo`): pozos = Σ prueba vigente de los pozos con prueba ×
-el factor de medición fijo y firmado del campo (`PARAMETROS_CHOKE.factorMedicion`, 1 si no se
-firmó), NUNCA el factor de asignación del mes: ese sale de lo que ya pasó por la planta y
+el factor de medición firmado del campo (`Config.capacidades[].factorMedicion`; 1 si no se
+firmó: lo que propone TRIM no rige), NUNCA el factor de asignación del mes: ese sale de lo que ya pasó por la planta y
 escondería lo que la planta limita (QA-A-02, decisión D3). El libro sigue valorando el diferido con
 su factor de asignación: son dos preguntas distintas («cuánto pudo dar el pozo» frente a «cuánto se
 asigna»); planta = el menor de los
@@ -1388,7 +1398,14 @@ sin clasificar), y la identidad es exacta: potencial − real = Σ por tramo + s
 indicador del norte es UNA sola cifra**: el escalón `disponibilidad-no-planeada` (D4); todas las
 vistas la leen. Lo sin identificar nunca cuenta como no planeado. `Libro.noPlaneado` es otra
 cosa: lo «no programado (libro)». Si el tramo no se sabe, el escalón sale de la causa (D5). Si lo que limita no son los pozos, la parte estructural (pozos − sistema) se
-separa y se dice, nunca se suma aparte. PE = real ÷ potencial del sistema.
+separa y se dice (una frase por campo y tramo, con su cifra), nunca se suma aparte. PE = real ÷
+potencial del sistema, de los campos donde aplica: en un campo de gas la eficiencia de crudo no
+aplica (`pe` 0) y el conjunto es el de sus campos de crudo (`realPe`, `potencialPe`). **La PE
+no siempre se puede creer** (`peCreible`): no en un campo de gas; no cuando el factor de medición
+no estaba firmado y las pruebas dan menos de lo que midió el punto oficial (la brecha de las
+pruebas es negativa: el potencial del sistema queda corto y PE + PE no planeada pasa de 100 %);
+y no cuando la PE misma pasaría de 100 %. Entonces `textoPe` dice por qué, con lo que TRIM
+propone del factor, y la pantalla **nunca** muestra el número. Con el factor firmado se cree.
 
 **El árbol de pérdidas del choke** (`arbolDelChoke`, `choke-arbol.ts`, regla `choke.arbol@1`):
 el «modelo choke expandido» de SPE-36848, que abre cada tramo «down to at least another level e.g.
@@ -1701,7 +1718,7 @@ formas exactas son los tipos TS citados):
 | `revision_parada` | `id` (consecutivo, `RevisionAnh.n`) | `RevisionAnh`: motivo, a quién se le pide, quién y cuándo, por fila o por evento | solo se inserta; rige la más reciente entre la fila y su evento; no toca ningún paso |
 | `revision_atendida` | `revision_id` | `RevisionAnh.atendida`: quién la atendió y cuándo | una por revisión; la atiende el rol al que se le pidió o uno que revisa |
 | `topologia` · `topologia_por_saber` | (`version`, `orden`) | `ChokeDeElemento` y `ElementoPorSaber` (`choke.ts`) de cada versión firmada | dentro de `version_config`; un pozo solo se sirve a sí mismo; un equipo no está a la vez contestado y «Todavía no sé»; sin pozos repetidos |
-| `capacidades_campo` · `capacidad_firmada` | (`version`, `campo_id`) · (`version`, `campo_id`, `tramo`, `equipo`) | `CapacidadesCampo` y `CapacidadFirmada` (`capacidades.ts`) | dentro de `version_config`; la bomba es del tren de agua del campo |
+| `capacidades_campo` · `capacidad_firmada` | (`version`, `campo_id`) · (`version`, `campo_id`, `tramo`, `equipo`) | `CapacidadesCampo` y `CapacidadFirmada` (`capacidades.ts`); el factor de medición y su porqué en `capacidades_campo` | dentro de `version_config`; la bomba es del tren de agua del campo; el factor, entre 0,5 y 1,5 y con su porqué, nunca en un campo de gas |
 | `causa_n1` · `causa_n2` · `causa_general` · `paso_por_rol` · `pregunta_campo` · `contesta_pregunta` · `opcion_campo` | sus claves | los catálogos que cierran lo que se escribe (`anh-catalogo.ts`, `anh-clasificacion.ts`) | del producto: salen del motor |
 
 ---
@@ -1883,8 +1900,10 @@ El teléfono simulado de Identificar es del demo: con la fuente http no manda na
   su fuente y su fecha): hoy son datos del demo en el esquema de planta (`caudales.*Cap` y
   `chokes`), sin firmar. Lo que pide la regla de U2 §8.4 —una capacidad no puede ser menor que
   lo que ya pasó por el tramo— se cumplió a mano en el demo (21-oct-2026: La Ceiba 12.000 →
-  13.000 en el tren de crudo; Guacamayo 6.800 → 7.500 afuera y 7.400 → 7.500 en crudo); con las
-  capacidades firmadas, la firma lo tiene que revisar.
+  13.000 en el tren de crudo; Guacamayo 6.800 → 7.500 afuera y 7.400 → 8.000 en el tren de crudo:
+  el 21-oct se subió a 7.500 y el 22, a 8.000, porque con 7.500 empataba al barril con afuera,
+  `planta.ts`); con las capacidades firmadas, la firma lo tiene que revisar. El factor de medición
+  ya se firma (`Config.capacidades[].factorMedicion`); ningún campo del demo lo tiene firmado.
 - **El campo ajeno en las vistas** (C-16): `403 sin-permiso` con una dirección que pide un campo
   que la persona no tiene. Sin sesión, el demo no lo puede probar.
 - **Las preguntas de campo por WhatsApp** (B-33): la plantilla de Meta para la pregunta de la
@@ -2015,18 +2034,23 @@ type FuenteCapacidad = 'placa' | 'prueba' | 'contrato' | 'nominacion' | 'estimad
 interface CapacidadFirmada { bpd: number; fuente: FuenteCapacidad }
 interface CapacidadesCampo { campoId: string; crudo?: CapacidadFirmada; bombas?: Array<CapacidadFirmada & { equipo: string }>
   gas?: CapacidadFirmada & { medido: boolean }; afuera?: CapacidadFirmada; mercado?: CapacidadFirmada; tratamiento?: CapacidadFirmada
-  admision?: CapacidadFirmada; explicacionEmpate?: string }
+  admision?: CapacidadFirmada; explicacionEmpate?: string
+  factorMedicion?: { valor: number; porque: string } }   // QA-D3: 0,5 a 1,5, con su porqué; sin él rige 1
 interface CapacidadVigente { tramo: 'crudo' | 'agua' | 'gas' | 'afuera' | 'mercado' | 'tratamiento' | 'admision'; valor: number | null
   unidad: 'bbl/d de crudo' | 'bbl/d de agua' | 'KPC/d de gas'; estado: 'firmado' | 'demo' | 'sin-dato'; fuente: string; fuenteFirmada?: FuenteCapacidad }
 interface CapacidadesVigentes { campoId: string; firmadas: boolean; crudo: CapacidadVigente; agua: CapacidadVigente
   bombas: Array<{ equipo: string; valor: number; placa: number; papel: 'disposicion' | 'recobro'; reserva: boolean; nota?: string
     estado: 'firmado' | 'demo'; fuente: string; fuenteFirmada?: FuenteCapacidad }>
   gas: CapacidadVigente & { medido: boolean }; afuera: CapacidadVigente; mercado: CapacidadVigente; tratamiento: CapacidadVigente
-  admision: CapacidadVigente; explicacionEmpate?: string }
+  admision: CapacidadVigente; explicacionEmpate?: string
+  factorMedicion: { valor: number; estado: 'firmado' | 'sin-firmar'; porque?: string } }
 interface VistaCapacidades {
   campoId: string; vigentes: CapacidadesVigentes; firma?: { version: number; fecha: string; por: string }
+  firmaFactor?: { version: number; fecha: string; por: string }   // quién firmó el factor de medición que rige, y cuándo
+  // Lo que TRIM propone (nunca rige sin firma): la mediana de lo real ÷ las pruebas en los días sin paradas con los pozos limitando.
+  factorMedicionPropuesto: { campoId: string; valor?: number; dias: number; desde: ISO; hasta: ISO; texto: string; resumen: string }
   entrada: { campoId: string; vigentes: CapacidadesVigentes; maximoCrudo?: { bpd: number; dia: ISO }; pozosBpd: number; aguaPozosBpd: number
-    conGas: boolean; caudalesGas: { crudo: number; gas: number } }
+    conGas: boolean; caudalesGas: { crudo: number; gas: number }; factorMedicionPropuesto?: { valor: number; dias: number } }
   hallazgos: Array<{ tramo: string; equipo?: string; texto: string; bloquea: boolean }>
 }
 
@@ -2037,7 +2061,10 @@ interface CifrasChoke {
   porChokeEquipo: Record<Tramo | 'sin-asignar', EquipoBbl[]>
   sinExplicar: number; cuadra: boolean; porConfirmar: number
   estructural: number; estructuralPorChoke: Record<Limita, number>; potencialSistema: number; brechaSistema: number
-  pe: number; peNoPlaneada: number; dominante: Limita | null; horasPorDominante: Record<Limita, number>
+  realPe: number; potencialPe: number   // lo que entra en la PE: los campos de crudo (en uno de gas, 0)
+  pe: number; peNoPlaneada: number
+  peCreible: boolean; textoPe?: string  // sin ella, la frase y nunca el número (QA-D3)
+  dominante: Limita | null; horasPorDominante: Record<Limita, number>
 }
 interface BrechaChoke extends CifrasChoke {
   desde: ISO; hasta: ISO

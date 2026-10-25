@@ -2424,7 +2424,7 @@ console.log('\n=== 23. Qué limita hoy: potenciales, gas sin medir, «casi igual
   // Producción (prueba × factor del mes) sigue aparte, en `pozosAsignado`: el libro valora con ella.
   // C1, paso 1: afuera de Guacamayo es 7.500 (antes 6.800, por debajo de los 7.440 que ya salieron).
   const sumaPruebas = c => P.pozosDe(c).filter(w => w.pruebas.length).reduce((a, w) => a + (P.pruebaEn(w, ahoraC)?.crudoBpd ?? 0), 0)
-  comprobar(pots.every(p => cerca(p.pozos, sumaPruebas(p.campoId) * CH.factorMedicion(p.campoId), 1e-12) && p.factorMedicion === 1
+  comprobar(pots.every(p => cerca(p.pozos, sumaPruebas(p.campoId) * CH.factorMedicion(p.campoId, ctx0.config), 1e-12) && p.factorMedicion === 1 && !p.factorFirmado
       && cerca(p.pozosAsignado, D.estadoCampo(p.campoId, ctx0).potencialBpd, 1e-9)) && CH.PARAMETROS_CHOKE.factorMedicion === 1
     && Math.round(pc('ceiba').pozos) === 11857 && Math.round(pc('ceiba').pozosAsignado) === 11360
     && Math.round(pc('guacamayo').pozos) === 6828 && pc('guacamayo').exportacion === 7500 && pc('guacamayo').dominante === 'pozos',
@@ -2529,18 +2529,24 @@ console.log('\n=== 24. Lo que se perdió, por tramo y por escalón, con el total
   // QA-A-06 · Contra el potencial del sistema la identidad también es exacta, por campo y en el conjunto:
   // potencial del sistema − real = Σ por tramo + sin explicar + brecha de las pruebas − estructural. Y lo que
   // cabía en la holgura de los pozos (días en que limitaba otro tramo) sale de la PE no planeada: PE + PE no
-  // planeada no pasa del 100 % en ningún campo.
+  // planeada no pasa del 100 % en ningún campo cuyas pruebas no den menos que el punto oficial (si dan menos y el
+  // factor de medición no está firmado, la PE no se puede creer: sección 32, 5E·H30).
   const idSistema = x => cerca(x.brechaSistema, CH.CHOKES_Y_SIN_ASIGNAR.reduce((a, k) => a + x.porChoke[k], 0) + x.sinExplicar + x.brechaPruebas - x.estructural, 1e-9)
   comprobar(idSistema(b12a) && b12a.porCampo.every(idSistema) && b12a.cabiaEnHolgura > 0 && b12a.cabiaEnHolgura <= b12a.diferido
     && b12a.porCampo.every(x => (x.brechaPruebas < 0 || x.pe + x.peNoPlaneada <= 100 + 1e-9) && x.noPlaneadaSistema <= x.porEscalon['disponibilidad-no-planeada'] + 1e-9 && x.noPlaneadaSistema >= 0)
     && b12a.noPlaneadaSistema < b12a.porEscalon['disponibilidad-no-planeada'] && idSistema(b12) && b12.porCampo.every(idSistema),
     `contra el potencial del sistema la identidad cuadra exacta (potencial del sistema − real = Σ por tramo + sin explicar + brecha de las pruebas − estructural) y, con la planta y afuera limitando, ${f(b12a.cabiaEnHolgura)} bbl cabían en la holgura de los pozos: no costaron nada y salen de la PE no planeada (${b12a.porCampo.filter(x => x.dominante !== 'pozos' && x.dominante).map(x => `${x.campoId}: PE ${x.pe.toFixed(1)} % + no planeada ${x.peNoPlaneada.toFixed(2)} %`).join('; ')})`)
   // §8 · PE = real ÷ potencial del sistema; PE no planeada = disponibilidad no planeada ÷ potencial del sistema.
+  // En un campo de gas la eficiencia de crudo no aplica (5E·H30): va en 0 y el conjunto es el de sus campos de crudo.
   const bs = RP.brechaPorChoke(TODOS, sep.desde, sep.hasta, ctx0), ef = RP.eficienciaProduccion(TODOS, sep.desde, sep.hasta, ctx0)
-  comprobar(cerca(bs.pe, bs.real / bs.potencialSistema * 100, 1e-12) && cerca(bs.peNoPlaneada, bs.porEscalon['disponibilidad-no-planeada'] / bs.potencialSistema * 100, 1e-12)
-    && ef.porCampo.every(x => { const c = bs.porCampo.find(y => y.campoId === x.campoId); return cerca(x.pe, c.real / c.potencialSistema * 100, 1e-12) && cerca(x.peNoPlaneada, c.porEscalon['disponibilidad-no-planeada'] / c.potencialSistema * 100, 1e-12) })
-    && cerca(ef.total.pe, bs.pe, 1e-12),
-    `PE y PE no planeada por campo y período: septiembre ${bs.pe.toFixed(1)} % y ${bs.peNoPlaneada.toFixed(2)} % (${ef.porCampo.map(x => `${x.campoId} ${x.pe.toFixed(1)} %`).join(', ')})`)
+  const deCrudo = bs.porCampo.filter(x => !PT.CAMPOS_DE_GAS.includes(x.campoId)), sumaDe = k => deCrudo.reduce((a, x) => a + x[k], 0)
+  comprobar(cerca(bs.pe, sumaDe('real') / sumaDe('potencialSistema') * 100, 1e-12) && cerca(bs.peNoPlaneada, sumaDe('noPlaneadaSistema') / sumaDe('potencialSistema') * 100, 1e-12)
+    && cerca(bs.realPe, sumaDe('real'), 1e-12) && cerca(bs.potencialPe, sumaDe('potencialSistema'), 1e-12)
+    && ef.porCampo.every(x => { const c = bs.porCampo.find(y => y.campoId === x.campoId)
+      return PT.CAMPOS_DE_GAS.includes(x.campoId) ? x.pe === 0 && x.peNoPlaneada === 0 && !x.peCreible
+        : cerca(x.pe, c.real / c.potencialSistema * 100, 1e-12) && cerca(x.peNoPlaneada, c.porEscalon['disponibilidad-no-planeada'] / c.potencialSistema * 100, 1e-12) })
+    && cerca(ef.total.pe, bs.pe, 1e-12) && ef.total.peCreible === bs.peCreible,
+    `PE y PE no planeada por campo y período: septiembre ${bs.pe.toFixed(1)} % y ${bs.peNoPlaneada.toFixed(2)} % en los campos de crudo (${ef.porCampo.map(x => `${x.campoId} ${x.pe.toFixed(1)} %`).join(', ')})`)
 }
 
 console.log('\n=== 25. La tubería del campo, mes a mes y antes → con TRIM (U2 §2, §7.3–§7.4, §11.1) ===')
@@ -3226,6 +3232,141 @@ console.log('\n=== 31. Correcciones del QA (F2-B): todas las vistas sobre las mi
   const lc04 = RP.brechaPorChoke(['ceiba'], sep.desde, sep.hasta, ctx0).porChokeEquipo.pozo.find(x => x.equipo === 'LC-04')
   comprobar(lc04 && lc04.porTipo?.length === 2 && lc04.porTipo[0].tipo === 'electrosumergible' && lc04.porTipo[1].tipo === 'energia' && cerca(lc04.porTipo.reduce((x, y) => x + y.bbl, 0), lc04.bbl, 1e-9),
     `LC-04 en septiembre: ${f(lc04?.bbl ?? 0)} bbl «en el pozo», de ellos ${lc04?.porTipo?.map(x => `${f(x.bbl)} de ${x.tipo}`).join(' y ')}`)
+}
+
+console.log('\n=== 32. Correcciones del documento del backend (F4): el factor de medición, la eficiencia que no se puede creer y las frases (5E·H9, 5E·H30 a 5E·H37) ===')
+{
+  const CH = await v.ssrLoadModule('/src/entities/choke.ts')
+  const RP = await v.ssrLoadModule('/src/entities/choke-reparto.ts')
+  const CR = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const CAP = await v.ssrLoadModule('/src/entities/capacidades.ts')
+  const PA = await v.ssrLoadModule('/src/entities/anh-paradas.ts')
+  const { readFileSync } = await import('node:fs')
+  const ahora = R.AHORA.getTime(), DIA = 86_400_000
+  const sep = D.rangoDePeriodo('cerrado'), oct = D.rangoDePeriodo('curso')
+  const h13 = { desde: new Date(L.calendario()[0].desde), hasta: R.AHORA }
+  const crudo = TODOS.filter(c => !PT.CAMPOS_DE_GAS.includes(c))
+
+  // 5E·H9 · TRIM propone el factor de medición: la mediana de lo real ÷ las pruebas (sin factor) en los días completos
+  // sin paradas y con los pozos limitando de los 90 antes de hoy. Aquí se rehace con el libro día por día y las pruebas.
+  const hoy = PA.inicioDiaCo(ahora), desde90 = hoy - 90 * DIA
+  const esperado = c => {
+    const conPrueba = P.pozosDe(c).filter(w => w.pruebas.length)
+    const r = L.porDia([c], new Date(desde90), new Date(hoy), ctx0)
+      .filter(d => d.real !== null && d.horas >= 24 - 1e-9 && d.diferido <= 1e-9 && CH.potencialesDelCampo(c, d.dia.getTime(), ctx0).dominante === 'pozos')
+      .map(d => d.real / conPrueba.reduce((a, w) => a + (P.pruebaEn(w, d.dia.getTime())?.crudoBpd ?? 0), 0)).sort((a, b) => a - b)
+    const m = r.length >> 1
+    return { dias: r.length, valor: r.length ? Math.round((r.length % 2 ? r[m] : (r[m - 1] + r[m]) / 2) * 1000) / 1000 : undefined }
+  }
+  const props = Object.fromEntries(TODOS.map(c => [c, CH.factorMedicionPropuesto(c, ctx0)]))
+  comprobar(crudo.every(c => { const e = esperado(c); return props[c].valor === e.valor && props[c].dias === e.dias && e.dias >= 7 })
+      && props.ceiba.valor === 0.966 && props.ceiba.dias === 42 && props.guacamayo.valor === 1.004 && props.guacamayo.dias === 24 && props.palmar.valor === 0.998 && props.palmar.dias === 80
+      && props.morichal.valor === 0.961 && props.morichal.dias === 9 && props.zarza.valor === undefined && /campo de gas/.test(props.zarza.texto)
+      && props.ceiba.desde.getTime() === desde90 && props.ceiba.hasta.getTime() === hoy && CH.PARAMETROS_CHOKE.ventanaFactorDias === 90 && CH.PARAMETROS_CHOKE.minimoDiasFactor === 7
+      && /^La mediana de lo que midió el punto oficial ÷ lo que dan las pruebas en 42 días sin paradas y con los pozos limitando, del 4 de jul al 1 de oct: el punto oficial mide 3,4 % menos que las pruebas\.$/.test(props.ceiba.texto),
+    `5E·H9 · TRIM propone el factor de medición con los días sin paradas en que limitan los pozos (del ${R.fechaCorta(props.ceiba.desde)} al ${R.fechaCorta(new Date(hoy - DIA))}): ${crudo.map(c => `${c} ${props[c].valor} en ${props[c].dias} días`).join(', ')}; La Zarza, de gas, no («${props.zarza.texto}»)`)
+  const corto = CH.factorMedicionPropuesto('morichal', ctx0, undefined, { dias: 30 })
+  comprobar(corto.valor === undefined && corto.dias < 7 && /hacen falta 7/.test(corto.texto) && /^TRIM todavía no lo propone/.test(corto.resumen),
+    `con menos de 7 días que sirvan no propone: Morichal en 30 días tiene ${corto.dias} («${corto.resumen}»)`)
+
+  // D3 · El motor usa el factor FIRMADO (con las capacidades) o, sin firma, 1: nunca la propuesta sin firmar.
+  const sumaPruebas = c => P.pozosDe(c).filter(w => w.pruebas.length).reduce((a, w) => a + (P.pruebaEn(w, ahora)?.crudoBpd ?? 0), 0)
+  const cfgF = pares => ({ ...ctx0.config, capacidades: pares.map(([c, valor]) => ({ campoId: c, factorMedicion: { valor, porque: `Medido con el separador de prueba de ${c}` } })) })
+  const ctxGu = { ...ctx0, config: cfgF([['guacamayo', props.guacamayo.valor]]) }
+  const gu0 = CH.potencialesDelCampo('guacamayo', ahora, ctx0), gu1 = CH.potencialesDelCampo('guacamayo', ahora, ctxGu)
+  comprobar(cerca(gu0.pozos, sumaPruebas('guacamayo'), 1e-12) && gu0.factorMedicion === 1 && !gu0.factorFirmado
+      && cerca(gu1.pozos, sumaPruebas('guacamayo') * 1.004, 1e-12) && gu1.factorMedicion === 1.004 && gu1.factorFirmado
+      && CH.factorMedicionDe(ctx0.config, 'guacamayo').estado === 'sin-firmar' && CH.factorMedicionDe(ctxGu.config, 'guacamayo').estado === 'firmado'
+      && /× el factor de medición firmado \(1,004\)/.test(RP.tuberiaCampo('guacamayo', sep.desde, sep.hasta, ctxGu).tramos.find(x => x.tramo === 'pozo').fuente),
+    `el motor lee las pruebas con el factor firmado o, sin firma, con 1, nunca con la propuesta: Guacamayo ${f(gu0.pozos)} bbl/d sin firma (TRIM propone ${props.guacamayo.valor}) y ${f(gu1.pozos)} con 1,004 firmado`)
+  // Con el historial, cada día con el factor que regía en su medianoche: firmado el 15-sep a mediodía, rige desde el 16.
+  const vGu = [C.versionInicial(), { version: 2, fecha: '2026-09-15T12:00:00-05:00', por: 'Prueba · administrador', motivo: 'prueba', cambios: [], config: ctxGu.config }]
+  const diasGu = CH.diasDelCampo('guacamayo', sep.desde.getTime(), sep.hasta.getTime(), ctxGu, vGu)
+  const deDia = d => diasGu.find(x => new Date(x.dia).toISOString().startsWith(d))
+  comprobar(deDia('2026-09-15').factorMedicion === 1 && !deDia('2026-09-15').factorFirmado && deDia('2026-09-16').factorMedicion === 1.004 && deDia('2026-09-16').factorFirmado
+      && cerca(deDia('2026-09-16').potencialPruebas, CH.diasDelCampo('guacamayo', sep.desde.getTime(), sep.hasta.getTime(), ctx0).find(x => x.dia === deDia('2026-09-16').dia).potencialPruebas * 1.004, 1e-12),
+    'con el historial cada día usa el factor que regía en su medianoche: firmado el 15-sep a mediodía, el 15 sigue con 1 y el 16 ya va con 1,004')
+
+  // 5E·H30 · La PE: sin el factor firmado y con las pruebas por debajo de lo que midió el punto oficial, no se puede creer.
+  const bSep = RP.brechaPorChoke(TODOS, sep.desde, sep.hasta, ctx0), cSep = id => bSep.porCampo.find(x => x.campoId === id)
+  const plantilla = c => `Las pruebas dan menos de lo que midió el punto oficial: la eficiencia no se puede creer hasta firmar el factor de medición. TRIM propone ${CAP.cifraFactor(props[c].valor)}, medido en ${props[c].dias} días sin paradas.`
+  comprobar(['guacamayo', 'palmar'].every(c => !cSep(c).peCreible && cSep(c).brechaPruebas < 0 && cSep(c).textoPe === plantilla(c) && cSep(c).pe + cSep(c).peNoPlaneada > 100)
+      && ['ceiba', 'morichal'].every(c => cSep(c).peCreible && cSep(c).textoPe === undefined && cSep(c).pe + cSep(c).peNoPlaneada <= 100)
+      && !cSep('zarza').peCreible && cSep('zarza').textoPe === 'La Zarza es un campo de gas: la eficiencia de crudo no aplica.' && cSep('zarza').pe === 0 && cSep('zarza').potencialPe === 0,
+    `septiembre: Guacamayo y El Palmar no se pueden creer («${cSep('guacamayo').textoPe}»); La Ceiba y Morichal sí (${cSep('ceiba').pe.toFixed(2)} y ${cSep('morichal').pe.toFixed(2)} %); «${cSep('zarza').textoPe}»`)
+  comprobar(!bSep.peCreible && /^La eficiencia del conjunto no se puede creer: en Guacamayo y El Palmar las pruebas dan menos de lo que midió el punto oficial y falta firmar su factor de medición\./.test(bSep.textoPe)
+      && /Sin La Zarza: en un campo de gas la eficiencia de crudo no aplica\.$/.test(bSep.textoPe)
+      && cerca(bSep.potencialPe, bSep.porCampo.filter(x => x.campoId !== 'zarza').reduce((a, x) => a + x.potencialSistema, 0), 1e-12),
+    `el conjunto no se puede creer si no se puede la de uno de sus campos de crudo, y La Zarza no entra: «${bSep.textoPe}»`)
+  // NUNCA un número sobre 100 %: lo que se puede creer no pasa de 100, y lo que no, dice por qué.
+  const sobre = []
+  for (const [nombre, r] of [['septiembre', sep], ['octubre', oct], ['13 meses', h13]]) for (const ids of [...TODOS.map(c => [c]), TODOS, ['ceiba', 'palmar']]) {
+    const b = RP.brechaPorChoke(ids, r.desde, r.hasta, ctx0)
+    for (const x of [b, ...b.porCampo]) if (x.peCreible ? x.pe > 100 + 1e-9 : !x.textoPe) sobre.push(`${nombre} ${ids.join('+')} ${x.campoId ?? ''}`)
+  }
+  comprobar(sobre.length === 0, `ninguna eficiencia que se pueda creer pasa de 100 %, y la que no se puede creer dice por qué (3 períodos × 7 alcances, cada campo y el conjunto)${sobre.length ? `: ${sobre.join(', ')}` : ''}`)
+  // Con el factor firmado se puede creer; con uno que deja la PE sobre 100 %, no; firmado después del período, tampoco, y lo dice.
+  const bF = RP.brechaPorChoke(['guacamayo', 'palmar'], sep.desde, sep.hasta, { ...ctx0, config: cfgF([['guacamayo', props.guacamayo.valor], ['palmar', props.palmar.valor]]) })
+  const bBajo = RP.brechaPorChoke(['guacamayo'], sep.desde, sep.hasta, { ...ctx0, config: cfgF([['guacamayo', 0.95]]) })
+  const bTarde = RP.brechaPorChoke(['guacamayo'], sep.desde, sep.hasta, ctxGu, vGu)
+  comprobar(bF.peCreible && bF.porCampo.every(x => x.peCreible && x.textoPe === undefined && x.pe <= 100) && cerca(bF.porCampo[0].potencialPruebas, cSep('guacamayo').potencialPruebas * 1.004, 1e-9)
+      && !bBajo.peCreible && bBajo.pe > 100 && /^Lo que salió pasa lo que dan las pruebas con el factor de medición firmado \(0,950\): la eficiencia no se puede creer hasta revisarlo\. TRIM propone 1,004/.test(bBajo.textoPe)
+      && !bTarde.peCreible && /y en estos días el factor de medición todavía no estaba firmado: la eficiencia no se puede creer\. El firmado \(1,004\) rige desde el 16 de sept\.$/.test(bTarde.textoPe),
+    `con el factor firmado se cree (septiembre: Guacamayo ${bF.porCampo[0].pe.toFixed(1)} %, El Palmar ${bF.porCampo[1].pe.toFixed(1)} %; PE + no planeada ${(bF.porCampo[0].pe + bF.porCampo[0].peNoPlaneada).toFixed(1)} y ${(bF.porCampo[1].pe + bF.porCampo[1].peNoPlaneada).toFixed(1)} %: lo asume la firma); con 0,950 la PE daría ${bBajo.pe.toFixed(1)} % y no se cree; firmado a mitad de mes: «${bTarde.textoPe}»`)
+  // La firma: dentro de las capacidades, con quién (la versión), cuándo y por qué; la revisión y la forma.
+  const vistaGu = CH.vistaCapacidades('guacamayo', ctx0, V0)
+  const revF = fm => CAP.revisarCapacidades({ campoId: 'guacamayo', factorMedicion: fm }, vistaGu.entrada)
+  const lejos = revF({ valor: 1.05, porque: 'Medido con el separador nuevo' }), fuera = revF({ valor: 2, porque: 'Medido con el separador nuevo' })
+  const sinPorque = revF({ valor: 1.004, porque: ' ' }), igual = revF({ valor: 1.004, porque: props.guacamayo.texto })
+  const deGas = CAP.revisarCapacidades({ campoId: 'zarza', factorMedicion: { valor: 1.01, porque: 'Medido con el separador' } }, CH.vistaCapacidades('zarza', ctx0, V0).entrada)
+  comprobar(lejos.some(h => h.tramo === 'factor' && !h.bloquea && h.texto === 'Factor de medición: usted escribe 1,050 y TRIM mide 1,004 en 24 días sin paradas. ¿Es correcto?') && !lejos.some(h => h.tramo === 'factor' && h.bloquea)
+      && fuera.some(h => h.tramo === 'factor' && h.bloquea && /entre 0,5 y 1,5/.test(h.texto)) && sinPorque.some(h => h.tramo === 'factor' && h.bloquea && /diga por qué/.test(h.texto))
+      && !igual.some(h => h.tramo === 'factor') && deGas.some(h => h.tramo === 'factor' && h.bloquea && /campo de gas/.test(h.texto))
+      && vistaGu.vigentes.factorMedicion.estado === 'sin-firmar' && vistaGu.vigentes.factorMedicion.valor === 1 && !vistaGu.firmaFactor && vistaGu.factorMedicionPropuesto.valor === 1.004 && vistaGu.entrada.factorMedicionPropuesto?.valor === 1.004,
+    `la revisión del factor: lejos de lo que TRIM mide pide confirmar sin bloquear («${lejos.find(h => h.tramo === 'factor')?.texto}»); fuera de 0,5–1,5, sin porqué o en un campo de gas, bloquea`)
+  const malasF = CAP.validarCapacidades([{ campoId: 'guacamayo', factorMedicion: { valor: 0, porque: 'x' } }, { campoId: 'zarza', factorMedicion: { valor: 1.01, porque: 'Medido con el separador' } }])
+  const cfgN = C.normalizarConfig({ ...ctx0.config, capacidades: [{ campoId: 'guacamayo', factorMedicion: { valor: 1.004, porque: '  Medido en 24 días sin paradas  ' } }] })
+  const vFirm = [C.versionInicial(), { version: 2, fecha: '2026-10-02T14:00:00-05:00', por: 'Hermes Leal · administrador de la implementación', motivo: 'prueba', cambios: [], config: cfgN }]
+  comprobar(malasF.some(e => /^Factor de medición de Guacamayo: escriba un número entre 0,5 y 1,5/.test(e)) && malasF.some(e => /^Factor de medición de Guacamayo: diga por qué/.test(e)) && malasF.some(e => /^Factor de medición de La Zarza: en un campo de gas/.test(e))
+      && cfgN.capacidades[0].factorMedicion.porque === 'Medido en 24 días sin paradas' && C.validarConfig(cfgN, ctx0.config, '2026-10-01', ahora).length === 0
+      && C.diferencias(ctx0.config, cfgN).includes('Capacidades de Guacamayo (se firman por primera vez): factor de medición 1,004 («Medido en 24 días sin paradas»)')
+      && C.camposTocados(ctx0.config, cfgN).join() === 'guacamayo' && CAP.firmaDeFactorMedicion(vFirm, 'guacamayo')?.version === 2 && CAP.firmaDeFactorMedicion(V0, 'guacamayo') === undefined
+      && CH.vistaCapacidades('guacamayo', { ...ctx0, config: cfgN }, vFirm).firmaFactor?.por === 'Hermes Leal · administrador de la implementación',
+    'el factor se firma dentro de las capacidades, con quién y cuándo (la versión) y por qué: se valida (entre 0,5 y 1,5, con su porqué, nunca en un campo de gas), se normaliza, el historial lo dice en palabras y toca su campo')
+
+  // 5E·H31 · Lo estructural, una frase por campo y tramo con su cifra (antes, el total en el tramo mayor).
+  const bAntes = conCapacidadesDeAntes(c => RP.brechaPorChoke(['ceiba', 'guacamayo'], h13.desde, h13.hasta, c))
+  const soloCe = conCapacidadesDeAntes(c => RP.brechaPorChoke(['ceiba'], h13.desde, h13.hasta, c))
+  const ceA = bAntes.porCampo.find(x => x.campoId === 'ceiba'), guA = bAntes.porCampo.find(x => x.campoId === 'guacamayo')
+  const cifrasTexto = [...(bAntes.textoEstructural ?? '').matchAll(/: ([\d.]+) bbl de lo que no se produjo/g)].map(m => Number(m[1].replace(/\./g, '')))
+  comprobar(bAntes.textoEstructural.includes(`En La Ceiba, la planta no deja pasar todo lo que pueden dar los pozos: ${f(ceA.estructuralPorChoke.planta)} bbl de lo que no se produjo son de ahí, aunque nada pare.`)
+      && bAntes.textoEstructural.includes(`En Guacamayo, afuera no deja pasar todo lo que pueden dar los pozos: ${f(guA.estructuralPorChoke.exportacion)} bbl de lo que no se produjo son de ahí, aunque nada pare.`)
+      && cifrasTexto.length === 2 && Math.abs(cifrasTexto.reduce((a, x) => a + x, 0) - bAntes.estructural) <= 1 && !bAntes.textoEstructural.includes(`${f(bAntes.estructural)} bbl`)
+      && soloCe.textoEstructural.startsWith(`La planta no deja pasar todo lo que pueden dar los pozos: ${f(soloCe.estructural)} bbl de lo que no se produjo son de ahí, aunque nada pare. Ningún arreglo de equipos los recupera; solo más capacidad.`),
+    `5E·H31 · lo estructural va por campo y tramo, cada uno con su cifra: «${bAntes.textoEstructural.slice(0, 260)}…»`)
+  // 5E·H32 · El empate en singular: «se toma el tramo de los pozos», no «se toma los pozos».
+  const empPozos = CH.dominanteDe({ pozos: 3400.4, planta: 3400, exportacion: 4100 }), empPlanta = CH.dominanteDe({ pozos: 12000, planta: 11000, exportacion: 11000 })
+  comprobar(/se toma el tramo de los pozos, el primero de la tubería\.$/.test(empPozos.explicacion) && !/se toma los /.test(empPozos.explicacion) && /se toma el tramo de la planta, el primero de la tubería\.$/.test(empPlanta.explicacion),
+    `5E·H32 · el empate dice «se toma el tramo de …»: «${empPozos.explicacion}»`)
+  // 5E·H34 y el comentario de la PE (5E·H30): los comentarios no dicen cifras ni reglas que el motor no sostiene.
+  const fuenteReparto = readFileSync(new URL('../src/entities/choke-reparto.ts', import.meta.url), 'utf8'), fuenteChoke = readFileSync(new URL('../src/entities/choke.ts', import.meta.url), 'utf8')
+  // El comentario en una sola línea, sin los « * » de cada renglón: «siete\n *  veces» es «siete veces».
+  const docSerie = (/\/\*\*((?:(?!\*\/)[^])*)\*\/\s*export function serieChoke/.exec(fuenteReparto)?.[1] ?? '').replace(/\s*\n\s*\*\s*/g, ' ')
+  const vueltasHoy = RP.serieChoke(['ceiba'], h13.desde, h13.hasta, ctx0).vueltas.ceiba, vueltasAntes = conCapacidadesDeAntes(c => RP.serieChoke(['ceiba'], h13.desde, h13.hasta, c)).vueltas.ceiba
+  comprobar(docSerie.length > 100 && !/\b(una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|\d+) veces\b/.test(docSerie) && !/nunca pasa de 100/.test(fuenteChoke),
+    `5E·H34 · el comentario de serieChoke no da una cifra de vueltas (La Ceiba da ${vueltasHoy} en 13 meses con el demo y ${vueltasAntes} con las capacidades de antes), y el de la PE ya no dice que nunca pasa de 100 %`)
+  // 5E·H36 · En un campo de gas «si falla hoy» va sin cifra y su porqué no dice barriles de crudo.
+  const za = CR.criticidadDelCampo('zarza', ctx0)
+  const conCifraAntes = ['P-201B', 'SE-2', 'V-101', 'ZA-01', 'ZA-08']
+  comprobar(za.ranking.length > 0 && za.ranking.every(x => x.bpd === null && x.grupo === 'sin-dato' && !/bbl/.test(x.porque) && !x.subio)
+      && conCifraAntes.every(e => za.ranking.find(x => x.equipo === e)?.porque === `Si ${e} falla hoy: sin dato. La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.`)
+      && za.ranking.find(x => x.equipo === 'ZA-09')?.porque === 'ZA-09 no tiene prueba: no se le inventa caudal',
+    `5E·H36 · en La Zarza (gas) ninguna fila de «si falla hoy» dice barriles de crudo: «${za.ranking.find(x => x.equipo === 'ZA-01')?.porque}»`)
+  // 5E·H37 · El umbral de cierre de la NSTA, puesto a prueba: un día con lo sin explicar distinto de cero y dos horas que no cuadran.
+  const dia22 = RP.brechaPorChoke(['ceiba'], new Date('2026-09-22T00:00:00-05:00'), new Date('2026-09-23T00:00:00-05:00'), ctx0)
+  const horas22 = RP.brechaPorChoke(['ceiba'], new Date('2026-09-22T12:00:00-05:00'), new Date('2026-09-22T14:00:00-05:00'), ctx0)
+  comprobar(Math.abs(dia22.sinExplicar - 88.441) < 0.001 && dia22.cuadra && Math.abs(horas22.sinExplicar) > 0.025 * horas22.potencial && !horas22.cuadra,
+    `5E·H37 · el 22-sep La Ceiba deja ${dia22.sinExplicar.toFixed(1)} bbl sin explicar (${(dia22.sinExplicar / dia22.potencial * 100).toFixed(2)} %, cuadra); de 12:00 a 14:00, con P-201B parada, ${horas22.sinExplicar.toFixed(1)} (${(horas22.sinExplicar / horas22.potencial * 100).toFixed(1)} %, no cuadra)`)
 }
 
 await v.close()

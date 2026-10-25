@@ -57,7 +57,7 @@ El auditor (`e2e/auditoria/rutas.ts`) exige, entre otras cosas: en `#/ger/diferi
 | `GET /api/catalogo` | `calendario`, `campos[c].medicion: { origen, banda, metrologia }` | Calendario, banda, Medición oficial | `catalogo.ts:78` | `insumos/arranque/catalogo.json` |
 | `GET /api/configuracion/historial` (arranque) | versiones firmadas | metas, precio, criterio (`metaEn`, `precioEn`, `criterioEn`) | `configuracion.ts` | `insumos/arranque/configuracion-historial.json` |
 
-Insumos del servidor (no los pide ninguna pantalla): `…/pozos`, `…/pozos/eventos`, `…/servicios/eventos`, `…/bombas/:equipo/paradas`, `…/produccion-diaria`, `…/metrologia` (`CONTRATO.md:836-924`; `referencia/insumos/<campo>/`).
+Insumos del servidor (no los pide ninguna pantalla): `…/pozos`, `…/pozos/eventos`, `…/servicios/eventos`, `…/bombas/:equipo/paradas`, `…/produccion-diaria`, `…/metrologia` (`CONTRATO.md:846-934`; `referencia/insumos/<campo>/`).
 
 **Reglas del cable para el libro** (`src/shared/api/contrato.ts:147-160`): fechas ISO con zona (`desde`, `hasta`, `tramos[].inicio/fin`, `preguntas[].inicio/fin` o `null`, `sinFiscal[].dias[]`); pozos y eventos por clave en `refs.pozos` (`campo/pozo`) y `refs.eventos` (id); `custodia.sinPrueba` y `estimados` como claves de pozo; `valorUsd` ausente si no hay precio; `real` y `residuo` del día `null` si no hay fiscal. La serie mensual no trae `tramos`, `porPozo`, `preguntas` ni `custodia` (con cinco campos pesaba 2 MB).
 

@@ -104,6 +104,14 @@ const A_CAPTURAS = [
     { n: 15, texto: /tienen el tramo como propuesta de TRIM/, lado: 'der' },
     { n: 16, rol: 'button', nombre: 'Ver por tramo', lado: 'der' },
   ] },
+  // 5E·H30: El Palmar en septiembre. Las pruebas dan menos de lo que midió el punto oficial y el factor de medición no
+  // está firmado: la eficiencia no se puede creer, y la escalera dice por qué en lugar del número.
+  { archivo: '06d-prod-produccion-palmar-cerrado-escalera', ruta: '#/prod/produccion/palmar/cerrado', elemento: A_ESCALERA, marcas: [
+    { n: 18, sel: '[data-pe-no-creible] > span', lado: 'der' },
+    { n: 19, rol: 'img', nombre: /^Eficiencia de producción:/, lado: 'der' },
+    { n: 20, texto: 'en paradas no planeadas; el porcentaje sale con la eficiencia', exacto: true, lado: 'der' },
+    { n: 8, sel: '[data-brecha-pruebas] > span', lado: 'der' },
+  ] },
   { archivo: '06d-prod-produccion-ceiba-portramo', ruta: '#/prod/produccion/ceiba/curso', elemento: A_ESCALERA,
     antes: [{ nombre: 'Ver por tramo' }], marcas: [
       { n: 1, rol: 'button', nombre: 'Ocultar por tramo', lado: 'der' },
@@ -1075,6 +1083,13 @@ const K_CAPTURAS = [
     { n: 69, texto: 'lo real nunca pasó la capacidad del tramo que limitaba cada día' },
     { n: 70, rol: 'button', nombre: 'Ir a la configuración técnica' },
     { n: 71, rol: 'button', nombre: 'Siguiente: ver el impacto y firmar' },
+    // El factor de medición de los pozos (D3; 5E·H9): lo que rige, lo que TRIM propone y lo que se firma.
+    { n: 111, texto: 'EL FACTOR DE MEDICIÓN DE LOS POZOS', exacto: true },
+    { n: 112, sel: '[data-factor-rige]', caja: 'elemento' },
+    { n: 113, sel: '[data-factor-propuesto]', caja: 'elemento' },
+    { n: 114, rol: 'spinbutton', nombre: 'Factor de medición', exacto: true, caja: 'elemento' },
+    { n: 115, rol: 'textbox', nombre: '¿Por qué? De dónde sale el número', caja: 'elemento', lado: 'der' },
+    { n: 116, rol: 'checkbox', nombre: /^Firmar este factor de medición/, caja: 'elemento' },
   ] },
 
   /* ───────────── 6D.11 En el teléfono y en solo lectura ───────────── */
@@ -1096,6 +1111,14 @@ const K_CAPTURAS = [
 
 /* Las que cambian el borrador antes de capturar: contestar, escribir, firmar. */
 const K_ESCRITAS = [
+  // El factor de medición de El Palmar en el borrador, escrito lejos de lo que TRIM mide (5E·H9).
+  { archivo: '06d-adm-filosofia-palmar-factor', ruta: '#/adm/filosofia/palmar/curso', elemento: 'main',
+    antes: [K_PASO2, { rol: 'checkbox', nombre: /^Firmar este factor de medición/ }, { rol: 'spinbutton', nombre: 'Factor de medición', exacto: true, escribir: '1.02' }], marcas: [
+      { n: 4, texto: 'borrador · 1 cambio sin firmar' },
+      { n: 116, rol: 'checkbox', nombre: /^Firmar este factor de medición/, caja: 'elemento' },
+      { n: 114, rol: 'spinbutton', nombre: 'Factor de medición', exacto: true, caja: 'elemento' },
+      { n: 117, texto: /Factor de medición: usted escribe 1,020 y TRIM mide 0,998/, dentro: '[data-factor-medicion]', lado: 'der' },
+    ] },
   { archivo: '06d-adm-filosofia-ceiba-capacidades-5000', ruta: K_RUTA, antes: [...K_LISTA, K_PASO2, K_CRUDO_5000], marcas: [
     { n: 4, texto: 'borrador · 1 cambio sin firmar' },
     { n: 72, sel: 'input[aria-label="Tren de crudo, bbl/d de crudo"]', caja: 'elemento' },

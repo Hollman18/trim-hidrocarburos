@@ -36,9 +36,10 @@ import {
 import { perfilBomba, paradaPorId, PAPEL_NOMBRE } from './bombas'
 import { CAMPO_PLANTA, CAMPOS_DE_GAS, type Elemento, type Simbolo } from './planta'
 import {
-  capacidadesDe, firmaDeCapacidades, trenesDePlanta, trenMenor, revisarCapacidades, capacidadesFirmadas,
+  capacidadesDe, firmaDeCapacidades, firmaDeFactorMedicion, trenesDePlanta, trenMenor, revisarCapacidades, capacidadesFirmadas, cifraFactor,
+  FACTOR_MEDICION_SIN_FIRMA,
   type TrenTuberia, type TrenPlanta, type CapacidadesVigentes, type FirmaCapacidades,
-  type HallazgoCapacidad, type EntradaRevision,
+  type HallazgoCapacidad, type EntradaRevision, type FactorMedicionVigente,
 } from './capacidades'
 import { porDia, tramosEntre, tramosDeEvento, crudoAsignado, aguaDePrueba, calendario, type Tramo, type Dia } from './libro'
 import { EQUIPOS, equipoEnCampo } from './equipos'
@@ -181,19 +182,27 @@ export const NOMBRE_ESCALON: Record<EscalonOSinClasificar, string> = {
  *    regulatorio del factor, no el error de las pruebas (U2 §0, principio 7);
  *  - `diasParaCambio`: días seguidos que el tramo nuevo tiene que limitar,
  *    fuera de «casi iguales», para avisar «Cambió lo que limita» (U2 §7.2);
- *  - `factorMedicion`: el factor fijo con que se leen las pruebas de los pozos
- *    para lo que limita (D3; QA-A-02): el sesgo del separador de prueba contra
- *    el punto oficial, medido en días sin restricción. Mientras no se mida y se
- *    firme por campo, 1. NUNCA el factor de asignación del mes: ese sale de lo
- *    que ya pasó por la planta y escondería lo que la limita. La @2 (22-oct) lo agregó. */
-export const PARAMETROS_CHOKE = { version: 'choke.parametros@2', umbralCasiIguales: 0.03, diasParaCambio: 3, factorMedicion: 1 } as const
+ *  - `factorMedicion`: el factor con que se leen las pruebas de los pozos para
+ *    lo que limita y la PE cuando el campo no lo tiene firmado (D3; QA-A-02): 1.
+ *    El de cada campo se firma con sus capacidades (`Config.capacidades[].factorMedicion`):
+ *    el sesgo del separador de prueba contra el punto oficial. NUNCA el factor
+ *    de asignación del mes: ese sale de lo que ya pasó por la planta y
+ *    escondería lo que la limita. La @2 (22-oct) lo agregó;
+ *  - `ventanaFactorDias` y `minimoDiasFactor`: con qué días TRIM propone el
+ *    factor de medición de un campo (`factorMedicionPropuesto`): los días
+ *    completos sin paradas y con los pozos limitando de los últimos 90, y al
+ *    menos 7 de ellos. La @3 (23-oct; 5E·H9, 5E·H30) los agregó. */
+export const PARAMETROS_CHOKE = {
+  version: 'choke.parametros@3', umbralCasiIguales: 0.03, diasParaCambio: 3, factorMedicion: FACTOR_MEDICION_SIN_FIRMA,
+  ventanaFactorDias: 90, minimoDiasFactor: 7,
+} as const
 
-/** Los factores de medición medidos y firmados por campo. Vacío: ningún campo
- *  lo tiene todavía y rige el de `PARAMETROS_CHOKE` (1). */
-const FACTOR_MEDICION_FIRMADO: Readonly<Record<string, number>> = {}
-/** El factor de medición de un campo (D3): el firmado o, sin firma, 1. */
-export const factorMedicion = (campoId: string): number =>
-  (Object.hasOwn(FACTOR_MEDICION_FIRMADO, campoId) ? FACTOR_MEDICION_FIRMADO[campoId]! : PARAMETROS_CHOKE.factorMedicion)
+/** El factor de medición que rige en un campo con una configuración (D3): el
+ *  firmado (`Config.capacidades[].factorMedicion`) o, sin firma, 1. Lo que
+ *  propone TRIM (`factorMedicionPropuesto`) nunca rige sin firma. */
+export const factorMedicionDe = (config: Config, campoId: string): FactorMedicionVigente => capacidadesEn(config, campoId).factorMedicion
+/** Solo el número (1 sin firma). */
+export const factorMedicion = (campoId: string, config: Config): number => factorMedicionDe(config, campoId).valor
 
 /* ───────────────────────── el alcance decide el choke ───────────────────────── */
 
@@ -829,8 +838,9 @@ export function dominanteDe(p: Record<ChokeCampo, number>, umbral: number = PARA
   const cerca = sistema > 0 ? ORDEN_CHOKE_CAMPO.filter(k => (p[k] - sistema) / sistema < umbral) : []
   const base = { sistema, dominante, empatados, casiIguales: cerca.length > 1 ? cerca : null, umbral, holgura }
   if (empatados.length < 2) return { ...base, empate: false }
+  // «se toma el tramo de los pozos, el primero»: el sujeto es el tramo, en singular (5E·H32: «se toma los pozos»).
   return { ...base, empate: true,
-    explicacion: `${mayuscula(empatados.map(k => SUJETO[k]).join(' y '))} dan lo mismo, ${n0(sistema)} bbl/d: la NSTA (§5.4) pide explicarlo por escrito. Ampliar uno solo no da un barril más; se toma ${SUJETO[dominante]}, el primero de la tubería.` }
+    explicacion: `${mayuscula(empatados.map(k => SUJETO[k]).join(' y '))} dan lo mismo, ${n0(sistema)} bbl/d: la NSTA (§5.4) pide explicarlo por escrito. Ampliar uno solo no da un barril más; se toma el tramo de ${SUJETO[dominante]}, el primero de la tubería.` }
 }
 
 /** Los potenciales de un campo en un instante, en bbl/d de crudo. */
@@ -851,6 +861,8 @@ export interface PotencialesCampo {
   pozosAsignado: number
   /** El factor de medición con que se leyeron las pruebas (1 mientras no se firme). */
   factorMedicion: number
+  /** El factor de medición está firmado en la configuración que regía en `t`. */
+  factorFirmado: boolean
   /** El menor de los trenes MEDIDOS en crudo, con la capacidad instalada: no
    *  baja por una parada (NSTA p. 29). Null: sin tren medido, sin esquema o
    *  campo de gas. */
@@ -912,10 +924,10 @@ function capacidadesEn(config: Config, campoId: string): CapacidadesVigentes {
   return c
 }
 
-/** Lo que dan los pozos según sus pruebas (× el factor de medición) y su agua,
- *  bbl/d, en el instante `t` (D3). Un pozo sin prueba no entra: no se le inventa caudal. */
-function pruebasDelCampo(campoId: string, t: number): { pozos: number; agua: number } {
-  const fm = factorMedicion(campoId)
+/** Lo que dan los pozos según sus pruebas (× el factor de medición `fm`, el
+ *  firmado de la configuración que rige en `t`, o 1) y su agua, bbl/d, en el
+ *  instante `t` (D3). Un pozo sin prueba no entra: no se le inventa caudal. */
+function pruebasDelCampo(campoId: string, t: number, fm: number): { pozos: number; agua: number } {
   let pozos = 0, agua = 0
   for (const p of pozosDe(campoId)) if (p.pruebas.length) { pozos += (pruebaEn(p, t)?.crudoBpd ?? 0) * fm; agua += aguaDePrueba(p, t) }
   return { pozos, agua }
@@ -948,13 +960,15 @@ function tramosDelCampo(campoId: string, config: Config, pozos: number, agua: nu
  *  menos del umbral están «casi iguales». Un campo de gas no tiene tubería de
  *  crudo: se dice y no se da holgura. */
 export function potencialesDelCampo(campoId: string, t: number, ctx: Contexto, versiones?: Historial): PotencialesCampo {
-  const { pozos, agua } = pruebasDelCampo(campoId, t)
+  const config = configDe(ctx, t, versiones)
+  const fm = factorMedicionDe(config, campoId)
+  const { pozos, agua } = pruebasDelCampo(campoId, t, fm.valor)
   let pozosAsignado = 0
   for (const p of pozosDe(campoId)) if (p.pruebas.length) pozosAsignado += crudoAsignado(p, t)
   const umbral = PARAMETROS_CHOKE.umbralCasiIguales
   const nombre = campoPorId(campoId).nombre
-  const tr = tramosDelCampo(campoId, configDe(ctx, t, versiones), pozos, agua)
-  const comun = { campoId, t, pozos, pozosAsignado, factorMedicion: factorMedicion(campoId), agua, crudoPorAgua: agua > 0 ? pozos / agua : 0, umbral, capacidades: tr.capacidades }
+  const tr = tramosDelCampo(campoId, config, pozos, agua)
+  const comun = { campoId, t, pozos, pozosAsignado, factorMedicion: fm.valor, factorFirmado: fm.estado === 'firmado', agua, crudoPorAgua: agua > 0 ? pozos / agua : 0, umbral, capacidades: tr.capacidades }
   const sinTuberia = (campoDeGas: boolean, sinDato: ChokeCampo[], texto: string, textoCorto: string): PotencialesCampo => ({
     ...comun, planta: null, exportacion: null, sistema: null, dominante: null, empate: false, empatados: [], casiIguales: null,
     holgura: { pozos: null, planta: null, exportacion: null }, trenes: [], mercadoBajo: false, campoDeGas, sinDato, texto, textoCorto })
@@ -1012,6 +1026,10 @@ export interface DiaCampo {
   residuo: number
   /** Lo que dan los pozos según sus pruebas × el factor de medición, en las horas del día, bbl (D3). */
   potencialPruebas: number
+  /** El factor de medición con que se leyeron las pruebas ese día (el de la
+   *  configuración de su medianoche) y si estaba firmado (D3). */
+  factorMedicion: number
+  factorFirmado: boolean
   /** Los potenciales del día, bbl/d: los pozos (pruebas), la planta y afuera del comienzo del día, y el tren que manda en la planta. */
   tasas: { pozos: number; planta: number | null; exportacion: number | null; tren?: TrenPlanta }
   /** Potencial del sistema del día, bbl: el menor de los tres en las horas del
@@ -1040,10 +1058,13 @@ export interface DiaCampo {
 function diaCampoDe(campoId: string, x: Dia, ctx: Contexto, versiones?: Historial): DiaCampo | undefined {
   if (x.real === null || x.horas <= 0) return undefined
   const f = x.horas / 24, t = x.dia.getTime()
-  const { pozos, agua } = pruebasDelCampo(campoId, t)
-  const tr = tramosDelCampo(campoId, configDe(ctx, t, versiones), pozos, agua)
+  const config = configDe(ctx, t, versiones)
+  const fm = factorMedicionDe(config, campoId)
+  const { pozos, agua } = pruebasDelCampo(campoId, t, fm.valor)
+  const tr = tramosDelCampo(campoId, config, pozos, agua)
   const potencialPruebas = pozos * f
   const base = { dia: t, horas: x.horas, real: x.real, potencial: x.potencial, diferido: x.diferido, residuo: x.residuo ?? 0, potencialPruebas,
+    factorMedicion: fm.valor, factorFirmado: fm.estado === 'firmado',
     tasas: { pozos, planta: tr.planta, exportacion: tr.exportacion, ...(tr.menor ? { tren: tr.menor.tren } : {}) } }
   // Sin tubería de crudo no hay qué limite ni brecha estructural.
   if (tr.sinTuberia) return { ...base, sistema: potencialPruebas, estructural: 0, dominante: null, empate: false, casiIguales: null }
@@ -1092,6 +1113,94 @@ export function diasDelCampo(campoId: string, d0: number, hh: number, ctx: Conte
     }
   }
   return out
+}
+
+/* ───────────────────────── el factor de medición que propone TRIM ───────────────────────── */
+
+/** Lo que TRIM propone del factor de medición de un campo (D3; 5E·H9, 5E·H30):
+ *  el número con que habría que leer las pruebas para que digan lo que mide el
+ *  punto oficial. Nunca rige solo: rige el firmado o, sin firma, 1. */
+export interface PropuestaFactorMedicion {
+  campoId: string
+  /** La mediana, con tres decimales. Ausente: TRIM no lo propone (menos de
+   *  `minimoDiasFactor` días que sirvan, o un campo de gas). */
+  valor?: number
+  /** Los días que sirvieron: completos, con el dato del punto oficial, sin
+   *  paradas (nada diferido) y con los pozos limitando. */
+  dias: number
+  /** La ventana: los `ventanaFactorDias` días completos antes de hoy, de `desde` a `hasta` (sin incluirlo). */
+  desde: Date
+  hasta: Date
+  /** El porqué en palabras: lo que se prellena para firmarlo. */
+  texto: string
+  /** Lo mismo en una frase, para decirlo junto a la eficiencia: «TRIM propone 1,006, medido en 23 días sin paradas.» */
+  resumen: string
+}
+
+/** El comienzo del día operacional (la medianoche de Colombia) de un instante. */
+const inicioDia = (t: number) => Math.floor((t - 5 * H) / D) * D + 5 * H
+/** «3,4 %»: un factor como lo que el punto oficial mide de más o de menos. */
+const pctFactor = (v: number) => `${(Math.abs(v - 1) * 100).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`
+/** «ningún día», «un día», «23 días». */
+const diasTexto = (n: number) => (n === 0 ? 'ningún día' : n === 1 ? 'un día' : `${n0(n)} días`)
+
+/* Una vez por contexto, historial y campo: no depende del período que se pida. */
+const PROPUESTAS = new WeakMap<Contexto, WeakMap<Historial, Map<string, PropuestaFactorMedicion>>>()
+
+/** El factor de medición que TRIM propone para un campo (D3; 5E·H9): la
+ *  MEDIANA de lo real ÷ lo que dan las pruebas vigentes (sin factor) en los
+ *  días completos de los `ventanaFactorDias` antes de hoy en que no hubo
+ *  paradas (el libro no difirió nada) y limitaban los pozos (no la planta ni
+ *  afuera; un día superado tampoco). Esos días todo lo que dieron los pozos
+ *  pasó por el punto oficial: lo real ÷ las pruebas es el sesgo del separador
+ *  de prueba. La mediana, y no el promedio, para que el inventario de un día
+ *  no la mueva. Con menos de `minimoDiasFactor` días no se propone, y en un
+ *  campo de gas tampoco (la eficiencia de crudo no aplica). Es una PROPUESTA:
+ *  la pantalla la prellena para firmarla con las capacidades, y el motor no
+ *  la usa sin firma. `op` cambia la ventana o el mínimo (para probarlos). */
+export function factorMedicionPropuesto(campoId: string, ctx: Contexto, versiones?: Historial, op: { dias?: number; minimo?: number } = {}): PropuestaFactorMedicion {
+  const v = versiones?.length ? versiones : SIN_HISTORIAL
+  const porDefecto = op.dias === undefined && op.minimo === undefined
+  let memo: Map<string, PropuestaFactorMedicion> | undefined
+  if (porDefecto) {
+    let porV = PROPUESTAS.get(ctx)
+    if (!porV) PROPUESTAS.set(ctx, porV = new WeakMap())
+    memo = porV.get(v)
+    if (!memo) porV.set(v, memo = new Map())
+    const ya = memo.get(campoId)
+    if (ya) return ya
+  }
+  const ventana = op.dias ?? PARAMETROS_CHOKE.ventanaFactorDias, minimo = op.minimo ?? PARAMETROS_CHOKE.minimoDiasFactor
+  const hasta = inicioDia(ahora), desde = hasta - ventana * D
+  const cuando = `del ${fechaCorta(new Date(desde))} al ${fechaCorta(new Date(hasta - D))}`
+  const nombre = campoPorId(campoId).nombre
+  const base = { campoId, desde: new Date(desde), hasta: new Date(hasta) }
+  let r: PropuestaFactorMedicion
+  if (CAMPOS_DE_GAS.includes(campoId)) r = { ...base, dias: 0, texto: `${nombre} es un campo de gas: la eficiencia de crudo no aplica y TRIM no propone el factor de medición.`,
+    resumen: 'En un campo de gas TRIM no propone el factor de medición.' }
+  else {
+    const ratios: number[] = []
+    for (const e of diasCompletos(campoId, ctx, v)) {
+      const d = e.x
+      if (e.dia < desde || e.dia >= hasta || !d) continue
+      if (d.horas < 24 - 1e-9 || d.diferido > 1e-9 || d.dominante !== 'pozos' || d.superado || !(d.potencialPruebas > 0)) continue
+      // Lo real ÷ las pruebas SIN el factor que rigiera ese día: la propuesta no depende de lo ya firmado.
+      ratios.push(d.real * d.factorMedicion / d.potencialPruebas)
+    }
+    ratios.sort((a, b) => a - b)
+    const n = ratios.length, mitad = n >> 1
+    if (n < minimo) r = { ...base, dias: n, texto: `En los ${ventana} días antes de hoy (${cuando}) hubo ${diasTexto(n)} sin paradas y con los pozos limitando: hacen falta ${minimo} para proponer el factor de medición. Mientras no se firme, rige 1.`,
+      resumen: `TRIM todavía no lo propone: en los ${ventana} días antes de hoy hubo ${diasTexto(n)} sin paradas y con los pozos limitando, y hacen falta ${minimo}.` }
+    else {
+      const mediana = n % 2 ? ratios[mitad]! : (ratios[mitad - 1]! + ratios[mitad]!) / 2
+      const valor = Math.round(mediana * 1000) / 1000
+      const dice = valor > 1 ? `el punto oficial mide ${pctFactor(valor)} más que las pruebas` : valor < 1 ? `el punto oficial mide ${pctFactor(valor)} menos que las pruebas` : 'el punto oficial y las pruebas miden lo mismo'
+      r = { ...base, valor, dias: n, texto: `La mediana de lo que midió el punto oficial ÷ lo que dan las pruebas en ${n0(n)} días sin paradas y con los pozos limitando, ${cuando}: ${dice}.`,
+        resumen: `TRIM propone ${cifraFactor(valor)}, medido en ${diasTexto(n)} sin paradas.` }
+    }
+  }
+  memo?.set(campoId, r)
+  return r
 }
 
 /* ───────────────────────── el escalón de cada barril ───────────────────────── */
@@ -1218,11 +1327,32 @@ export interface BrechaCampoChoke {
    *  planeado que le costó al campo, la base de la PE no planeada. Con los pozos
    *  limitando (todo el demo) es el mismo escalón, la cifra del norte (D4). */
   noPlaneadaSistema: number
-  /** Eficiencia de producción, %: real ÷ potencial del sistema (NSTA §5.3, ISO/TS 3250). */
+  /** Lo que entra en la PE: lo real y el potencial del sistema de los campos
+   *  donde la eficiencia de crudo aplica. En un campo de crudo, `real` y
+   *  `potencialSistema`; en un campo de gas, 0 y 0 (no aplica); en el conjunto,
+   *  la suma de sus campos de crudo. */
+  realPe: number
+  potencialPe: number
+  /** Eficiencia de producción, %: real ÷ potencial del sistema (NSTA §5.3, ISO/TS
+   *  3250), con `realPe` y `potencialPe`. Sin potencial (un campo de gas), 0. */
   pe: number
   /** Lo no planeado que le costó al campo ÷ potencial del sistema, %: lo que el
-   *  norte busca bajar. PE + PE no planeada nunca pasa de 100 % por lo que cupo en la holgura. */
+   *  norte busca bajar (de los mismos campos que la PE). Lo que cabía en la
+   *  holgura ya salió de aquí; aun así, PE + PE no planeada PASA de 100 % si las
+   *  pruebas (× el factor de medición) dan menos de lo que midió el punto
+   *  oficial: el potencial del sistema queda corto (5E·H30). Por eso `peCreible`. */
   peNoPlaneada: number
+  /** ¿Se puede creer la PE? No: en un campo de gas (la eficiencia de crudo no
+   *  aplica); cuando el factor de medición no está firmado y las pruebas dan
+   *  menos de lo que midió el punto oficial (la brecha de las pruebas es
+   *  negativa: lo real, con lo que se perdió, pasa lo que dan las pruebas); y
+   *  cuando la PE misma pasaría de 100 %. Sin ella, la pantalla dice `textoPe`
+   *  y NUNCA un número de PE (D3; 5E·H9, 5E·H30). */
+  peCreible: boolean
+  /** Por qué no se puede creer, en palabras, con lo que TRIM propone del
+   *  factor de medición; en un conjunto que se puede creer, los campos de gas
+   *  que no entran. Ausente si no hay nada que decir. */
+  textoPe?: string
   /** El tramo que más horas limitó en el período (null sin tubería de crudo), y las horas de cada uno. */
   dominante: ChokeCampo | null
   horasPorDominante: Record<ChokeCampo, number>
@@ -1251,10 +1381,16 @@ export interface EficienciaProduccion {
   campoId?: string
   real: number
   potencialSistema: number
+  /** Lo que entra en la PE (`BrechaCampoChoke.realPe` y `potencialPe`). */
+  realPe: number
+  potencialPe: number
   /** Real ÷ potencial del sistema, %. */
   pe: number
   /** Lo no planeado que le costó al campo ÷ potencial del sistema, %. */
   peNoPlaneada: number
+  /** ¿Se puede creer? Sin ella, `textoPe` y nunca el número (`BrechaCampoChoke.peCreible`). */
+  peCreible: boolean
+  textoPe?: string
   /** El tramo que más horas limitó (null sin tubería de crudo). */
   dominante: ChokeCampo | null
 }
@@ -1400,6 +1536,10 @@ export interface VistaCapacidades {
   campoId: string
   vigentes: CapacidadesVigentes
   firma?: FirmaCapacidades
+  /** Quién firmó el factor de medición que rige y cuándo (la versión desde la que rige). Sin firma, ausente: rige 1. */
+  firmaFactor?: FirmaCapacidades
+  /** Lo que TRIM propone del factor de medición (D3; 5E·H9): se prellena en el paso 2 y se firma con lo demás. */
+  factorMedicionPropuesto: PropuestaFactorMedicion
   entrada: EntradaRevision
   hallazgos: HallazgoCapacidad[]
 }
@@ -1407,10 +1547,14 @@ export function vistaCapacidades(campoId: string, ctx: Contexto, versiones?: His
   const p = potencialesDelCampo(campoId, ahora, ctx, versiones)
   const pl = Object.hasOwn(CAMPO_PLANTA, campoId) ? CAMPO_PLANTA[campoId] : undefined
   const maximo = maximoCrudoDiario(campoId, ctx)
+  const propuesto = factorMedicionPropuesto(campoId, ctx, versiones)
   const entrada: EntradaRevision = { campoId, vigentes: p.capacidades, ...(maximo ? { maximoCrudo: maximo } : {}), pozosBpd: p.pozos, aguaPozosBpd: p.agua,
-    conGas: perfilDe(ctx.config, campoId).gas !== 'no', caudalesGas: { crudo: pl?.caudales.crudo ?? 0, gas: pl?.caudales.gas ?? 0 } }
+    conGas: perfilDe(ctx.config, campoId).gas !== 'no', caudalesGas: { crudo: pl?.caudales.crudo ?? 0, gas: pl?.caudales.gas ?? 0 },
+    ...(propuesto.valor !== undefined ? { factorMedicionPropuesto: { valor: propuesto.valor, dias: propuesto.dias } } : {}) }
   const firma = versiones?.length ? firmaDeCapacidades(versiones, campoId) : undefined
-  return { campoId, vigentes: p.capacidades, ...(firma ? { firma } : {}), entrada, hallazgos: revisarCapacidades(capacidadesFirmadas(ctx.config, campoId), entrada) }
+  const firmaFactor = versiones?.length ? firmaDeFactorMedicion(versiones, campoId) : undefined
+  return { campoId, vigentes: p.capacidades, ...(firma ? { firma } : {}), ...(firmaFactor ? { firmaFactor } : {}), factorMedicionPropuesto: propuesto,
+    entrada, hallazgos: revisarCapacidades(capacidadesFirmadas(ctx.config, campoId), entrada) }
 }
 
 /** Lo que no deja firmar unas capacidades (U2 §8.4): lo que bloquea de

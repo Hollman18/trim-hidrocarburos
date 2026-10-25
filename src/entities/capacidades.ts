@@ -19,14 +19,18 @@
  *  - un tramo no puede dejar pasar menos de lo que ya pasó por él (el máximo
  *    diario de los últimos 30 días del punto oficial);
  *  - dos potenciales iguales al barril se explican por escrito (NSTA §5.4): la
- *    explicación va dentro de la misma firma (`explicacionEmpate`).
+ *    explicación va dentro de la misma firma (`explicacionEmpate`);
+ *  - el factor de medición de los pozos (D3; 5E·H9) también se firma aquí, con
+ *    su porqué: el que TRIM propone (`factorMedicionPropuesto`, choke.ts) nunca
+ *    rige solo. Sin firma rige 1.
  *  Este módulo no lee el libro: lo que necesita del pasado (el máximo diario,
- *  el potencial de los pozos) entra por parámetro (`EntradaRevision`); lo arma
- *  `vistaCapacidades` en choke.ts. Así la pantalla puede revisar lo que se va a
- *  firmar con la misma regla que el servidor (el front avisa, el servidor decide). */
-import { CAMPO_PLANTA, TREN_AGUA, GAS_MEDIDO_EN, trenesEnCrudo } from './planta'
+ *  el potencial de los pozos, la propuesta del factor) entra por parámetro
+ *  (`EntradaRevision`); lo arma `vistaCapacidades` en choke.ts. Así la pantalla
+ *  puede revisar lo que se va a firmar con la misma regla que el servidor (el
+ *  front avisa, el servidor decide). */
+import { CAMPO_PLANTA, TREN_AGUA, GAS_MEDIDO_EN, CAMPOS_DE_GAS, trenesEnCrudo } from './planta'
 import { CAMPOS } from './campos'
-import { MOTIVO_MINIMO, TOPE_BPD, alcanza } from './reglas'
+import { MOTIVO_MINIMO, TEXTO_MAXIMO, TOPE_BPD, alcanza } from './reglas'
 import { fechaCorta } from './reloj'
 import type { Version } from './configuracion'
 
@@ -42,6 +46,19 @@ export const NOMBRE_FUENTE_CAPACIDAD: Record<FuenteCapacidad, string> = {
 
 /** Un número firmado: bbl/d (KPC/d en el gas) y de dónde sale. */
 export interface CapacidadFirmada { bpd: number; fuente: FuenteCapacidad }
+
+/** El factor de medición firmado de un campo (D3; 5E·H9): con cuánto se
+ *  multiplican las pruebas de los pozos para leerlas como el punto oficial
+ *  (el sesgo del separador de prueba). Quién y cuándo los dice la versión que
+ *  lo firmó (`firmaDeFactorMedicion`); el porqué va aquí, en palabras. */
+export interface FactorMedicionFirmado { valor: number; porque: string }
+/** Sin firma rige 1: las pruebas como vienen. NUNCA el que propone TRIM sin firmar. */
+export const FACTOR_MEDICION_SIN_FIRMA = 1
+/** Lo que se puede firmar: fuera de esto es un error de dedo (las pruebas no
+ *  miden la mitad ni el doble del punto oficial). */
+export const TOPE_FACTOR_MEDICION = { minimo: 0.5, maximo: 1.5 } as const
+/** Lo que se aleja de lo que TRIM mide más que esto pide confirmar, sin bloquear. */
+export const DISTANCIA_FACTOR_PROPUESTO = 0.02
 
 /** Las capacidades firmadas de un campo (`Config.capacidades`). Cada tramo es
  *  opcional: el que no viene sigue con el dato del demo. */
@@ -63,6 +80,8 @@ export interface CapacidadesCampo {
   admision?: CapacidadFirmada
   /** Por qué dos tramos dan exactamente lo mismo, si es así (NSTA §5.4). Va con la firma. */
   explicacionEmpate?: string
+  /** El factor de medición de los pozos, con su porqué (D3). Sin él rige 1. */
+  factorMedicion?: FactorMedicionFirmado
 }
 
 /** Los tramos que se firman. `agua` es el tren entero: lo que dejan pasar sus bombas. */
@@ -112,10 +131,18 @@ export interface BombaVigente {
   fuenteFirmada?: FuenteCapacidad
 }
 
+/** El factor de medición que rige en un campo: el firmado o, sin firma, 1. */
+export interface FactorMedicionVigente {
+  valor: number
+  estado: 'firmado' | 'sin-firmar'
+  /** El porqué firmado. */
+  porque?: string
+}
+
 /** Todas las capacidades que rigen en un campo. */
 export interface CapacidadesVigentes {
   campoId: string
-  /** Alguna capacidad del campo está firmada. */
+  /** Alguna capacidad del campo está firmada (o su factor de medición). */
   firmadas: boolean
   crudo: CapacidadVigente
   /** El tren de agua: lo menor entre la suma de sus bombas en servicio, la admisión y el tratamiento. */
@@ -127,6 +154,8 @@ export interface CapacidadesVigentes {
   tratamiento: CapacidadVigente
   admision: CapacidadVigente
   explicacionEmpate?: string
+  /** Con cuánto se leen las pruebas de los pozos para lo que limita y la PE (D3). */
+  factorMedicion: FactorMedicionVigente
 }
 
 const SIN_FIRMAR = 'dato del demo, sin firmar'
@@ -175,10 +204,15 @@ export function capacidadesDe(c: { capacidades?: readonly CapacidadesCampo[] }, 
     : { tramo: 'agua', valor: valorAgua, unidad: 'bbl/d de agua',
       estado: entran.length && entran.every(e => e === 'firmado') ? 'firmado' : 'demo',
       fuente: `${tope.length ? `Lo que ${tope[0]!.tramo === 'admision' ? 'admiten los inyectores' : 'deja el tratamiento'}, menos que la suma de las bombas en servicio` : 'La suma de las bombas en servicio (la de reserva no suma)'}${entran.every(e => e === 'firmado') && entran.length ? ' · firmada' : `: ${SIN_FIRMAR}`}` }
+  // El factor de medición: el firmado o, sin firma, 1 (D3). Lo que propone TRIM no rige.
+  const factorMedicion: FactorMedicionVigente = f?.factorMedicion
+    ? { valor: f.factorMedicion.valor, estado: 'firmado', porque: f.factorMedicion.porque }
+    : { valor: FACTOR_MEDICION_SIN_FIRMA, estado: 'sin-firmar' }
   return {
-    campoId, firmadas: !!f && (!!f.crudo || !!f.afuera || !!f.mercado || !!f.gas || !!f.tratamiento || !!f.admision || !!f.bombas?.length),
+    campoId, firmadas: !!f && (!!f.crudo || !!f.afuera || !!f.mercado || !!f.gas || !!f.tratamiento || !!f.admision || !!f.bombas?.length || !!f.factorMedicion),
     crudo, agua, bombas, gas, afuera, mercado, tratamiento, admision,
     ...(f?.explicacionEmpate ? { explicacionEmpate: f.explicacionEmpate } : {}),
+    factorMedicion,
   }
 }
 
@@ -187,6 +221,19 @@ export function capacidadesDe(c: { capacidades?: readonly CapacidadesCampo[] }, 
 export interface FirmaCapacidades { version: number; fecha: string; por: string }
 export function firmaDeCapacidades(versiones: ReadonlyArray<Pick<Version, 'version' | 'fecha' | 'por' | 'config'>>, campoId: string): FirmaCapacidades | undefined {
   const clave = (v: Pick<Version, 'config'>) => JSON.stringify(capacidadesFirmadas(v.config, campoId) ?? null)
+  const ultima = versiones.at(-1)
+  if (!ultima || clave(ultima) === 'null') return undefined
+  const k = clave(ultima)
+  let i = versiones.length - 1
+  while (i > 0 && clave(versiones[i - 1]!) === k) i--
+  const v = versiones[i]!
+  return { version: v.version, fecha: v.fecha, por: v.por }
+}
+
+/** Quién firmó el factor de medición que rige en un campo y cuándo: la versión
+ *  desde la que rige el de hoy (D3). Undefined si nunca se firmó (rige 1). */
+export function firmaDeFactorMedicion(versiones: ReadonlyArray<Pick<Version, 'version' | 'fecha' | 'por' | 'config'>>, campoId: string): FirmaCapacidades | undefined {
+  const clave = (v: Pick<Version, 'config'>) => JSON.stringify(capacidadesFirmadas(v.config, campoId)?.factorMedicion ?? null)
   const ultima = versiones.at(-1)
   if (!ultima || clave(ultima) === 'null') return undefined
   const k = clave(ultima)
@@ -249,8 +296,9 @@ export const CAMBIO_GRANDE = 0.2
 
 /** Algo que se encontró al revisar las capacidades. Lo que bloquea no deja firmar. */
 export interface HallazgoCapacidad {
-  /** El tramo (o `bomba`, con su equipo; o `empate`, entre dos tramos). */
-  tramo: TramoCapacidad | 'bomba' | 'empate' | 'fuentes'
+  /** El tramo (o `bomba`, con su equipo; o `empate`, entre dos tramos; o
+   *  `factor`, el factor de medición de los pozos). */
+  tramo: TramoCapacidad | 'bomba' | 'empate' | 'fuentes' | 'factor'
   equipo?: string
   texto: string
   bloquea: boolean
@@ -263,15 +311,24 @@ export interface EntradaRevision {
   vigentes: CapacidadesVigentes
   /** Lo máximo que pasó en un día por los tramos de crudo (el punto oficial) en los últimos 30 días. */
   maximoCrudo?: { bpd: number; dia: Date }
-  /** El potencial de los pozos hoy (bbl/d de crudo) y su agua (bbl/d de agua): para pasar el agua a crudo y para el empate. */
+  /** El potencial de los pozos hoy (bbl/d de crudo, con el factor de medición
+   *  que rige) y su agua (bbl/d de agua): para pasar el agua a crudo y para el empate. */
   pozosBpd: number
   aguaPozosBpd: number
   /** El campo tiene tren de gas (perfil firmado), y la relación crudo/gas del esquema. */
   conGas: boolean
   caudalesGas: { crudo: number; gas: number }
+  /** Lo que TRIM mide del factor de medición (`factorMedicionPropuesto`,
+   *  choke.ts): un factor que se aleja de esto pide confirmar. Ausente si TRIM no lo propone. */
+  factorMedicionPropuesto?: { valor: number; dias: number }
 }
 
 const cifra = (v: number) => v.toLocaleString('es-CO', { maximumFractionDigits: 0 })
+/** Un factor con tres decimales y coma, como el factor de asignación: «1,006». */
+export const cifraFactor = (v: number) => v.toLocaleString('es-CO', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+const factorDentro = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= TOPE_FACTOR_MEDICION.minimo && v <= TOPE_FACTOR_MEDICION.maximo
+const TEXTO_TOPE_FACTOR = `escriba un número entre ${TOPE_FACTOR_MEDICION.minimo.toLocaleString('es-CO')} y ${TOPE_FACTOR_MEDICION.maximo.toLocaleString('es-CO')} (1 es que las pruebas miden lo mismo que el punto oficial)`
+const TEXTO_GAS_FACTOR = 'en un campo de gas la eficiencia de crudo no aplica: no se firma'
 const lista = (xs: readonly string[], y = 'y') => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${y} ${xs.at(-1)}`)
 /** «placa del equipo, prueba de capacidad, … o estimado de ingeniería». */
 const FUENTES_EN_PALABRAS = lista(FUENTES_CAPACIDAD.map(f => NOMBRE_FUENTE_CAPACIDAD[f].toLowerCase()), 'o')
@@ -322,8 +379,9 @@ export function revisarCapacidades(prop: CapacidadesCampo | undefined, e: Entrad
       out.push({ tramo: k, bloquea: firmando && !!prop?.[k], texto: `${NOMBRE_CAPACIDAD[k]}: por este tramo ya pasaron ${cifra(m.bpd)} bbl/d de crudo el ${fechaCorta(m.dia)}, y ${escrito}: no puede dejar pasar menos de lo que ya pasó. Revise el número o la unidad.` })
     }
   }
-  // 3. Un empate exacto entre dos tramos se explica por escrito (NSTA §5.4).
-  const p = potencialesCon(nuevas, e)
+  // 3. Un empate exacto entre dos tramos se explica por escrito (NSTA §5.4). Los pozos, con el factor
+  // de medición que quedaría (`pozosBpd` viene con el que rige hoy).
+  const p = potencialesCon(nuevas, { ...e, pozosBpd: e.pozosBpd * nuevas.factorMedicion.valor / (v.factorMedicion?.valor || FACTOR_MEDICION_SIN_FIRMA) })
   const pares = (['pozos', 'planta', 'afuera'] as const).flatMap((a, i, ks) => ks.slice(i + 1).flatMap(b => {
     const x = p[a], y = p[b]
     return x !== null && y !== null && Math.round(x) === Math.round(y) ? [{ a, b, valor: x }] : []
@@ -337,6 +395,20 @@ export function revisarCapacidades(prop: CapacidadesCampo | undefined, e: Entrad
   const delDemo = [nuevas.crudo, nuevas.agua, nuevas.afuera, nuevas.mercado, nuevas.gas, nuevas.tratamiento, nuevas.admision].filter(x => x.estado === 'demo')
   if (delDemo.length) out.push({ tramo: 'fuentes', bloquea: false,
     texto: `Sin firmar, con el dato del demo: ${lista(delDemo.map(x => NOMBRE_CAPACIDAD[x.tramo].split(':')[0]!.toLowerCase()))}. Al firmarlas, cada una dirá de dónde sale: ${FUENTES_EN_PALABRAS}.` })
+  // 5. El factor de medición (D3): entre los topes y con su porqué; en un campo de gas no se firma. Si se
+  // aleja de lo que TRIM mide en los días sin paradas, se pide confirmar, sin bloquear.
+  const fm = prop?.factorMedicion
+  if (fm) {
+    if (CAMPOS_DE_GAS.includes(e.campoId)) out.push({ tramo: 'factor', bloquea: true, texto: `Factor de medición: ${TEXTO_GAS_FACTOR}.` })
+    else {
+      if (!factorDentro(fm.valor)) out.push({ tramo: 'factor', bloquea: true, texto: `Factor de medición: ${TEXTO_TOPE_FACTOR}.` })
+      if (!alcanza(fm.porque, MOTIVO_MINIMO)) out.push({ tramo: 'factor', bloquea: true, texto: 'Factor de medición: diga por qué, de dónde sale el número.' })
+      else if (fm.porque.length > TEXTO_MAXIMO) out.push({ tramo: 'factor', bloquea: true, texto: `Factor de medición: el porqué pasa de ${TEXTO_MAXIMO} caracteres: dígalo en una frase.` })
+      const pr = e.factorMedicionPropuesto
+      if (pr && factorDentro(fm.valor) && Math.abs(fm.valor - pr.valor) > DISTANCIA_FACTOR_PROPUESTO + 1e-9)
+        out.push({ tramo: 'factor', bloquea: false, texto: `Factor de medición: usted escribe ${cifraFactor(fm.valor)} y TRIM mide ${cifraFactor(pr.valor)} en ${pr.dias} días sin paradas. ¿Es correcto?` })
+    }
+  }
   return out
 }
 
@@ -359,6 +431,14 @@ export function validarCapacidades(caps: readonly CapacidadesCampo[] | undefined
     vistos.add(c.campoId)
     for (const k of ['crudo', 'afuera', 'mercado', 'tratamiento', 'admision', 'gas'] as const) numero(`${NOMBRE_CAPACIDAD[k]} de ${n}`, c[k])
     if (c.gas && typeof c.gas.medido !== 'boolean') e.push(`Tren de gas de ${n}: diga si se mide o no.`)
+    // El factor de medición (D3): entre los topes, con su porqué, y nunca en un campo de gas.
+    const fm = c.factorMedicion
+    if (fm) {
+      if (CAMPOS_DE_GAS.includes(c.campoId)) e.push(`Factor de medición de ${n}: ${TEXTO_GAS_FACTOR}.`)
+      if (!factorDentro(fm.valor)) e.push(`Factor de medición de ${n}: ${TEXTO_TOPE_FACTOR}.`)
+      if (!alcanza(fm.porque, MOTIVO_MINIMO)) e.push(`Factor de medición de ${n}: diga por qué, de dónde sale el número.`)
+      else if (fm.porque.length > TEXTO_MAXIMO) e.push(`Factor de medición de ${n}: el porqué pasa de ${TEXTO_MAXIMO} caracteres.`)
+    }
     const tren = Object.hasOwn(TREN_AGUA, c.campoId) ? TREN_AGUA[c.campoId]! : undefined
     const bombas = new Set<string>()
     for (const b of c.bombas ?? []) {
@@ -384,6 +464,8 @@ export function normalizarCapacidades(caps: readonly CapacidadesCampo[] | undefi
     if (bombas.length) r.bombas = bombas
     const ex = c.explicacionEmpate?.trim()
     if (ex) r.explicacionEmpate = ex
+    // El factor de medición: el número y su porqué, sin lo que no se ve en los bordes.
+    if (c.factorMedicion != null) r.factorMedicion = { valor: c.factorMedicion.valor, porque: typeof c.factorMedicion.porque === 'string' ? c.factorMedicion.porque.trim() : c.factorMedicion.porque }
     return Object.keys(r).length > 1 ? [r] : []
   })
   return out.length ? out : undefined
@@ -411,6 +493,11 @@ export function diferenciasCapacidades(a: CapacidadesCampo | undefined, b: Capac
     partes.push(!y ? `bomba ${id}: se quitó la firmada` : `bomba ${id} ${x ? `${dice(x, 'bbl/d de agua')} → ` : ''}${dice(y, 'bbl/d de agua')}`)
   }
   if ((a?.explicacionEmpate ?? '') !== (b.explicacionEmpate ?? '')) partes.push(b.explicacionEmpate ? `explicación del empate: «${b.explicacionEmpate}»` : 'se quitó la explicación del empate')
+  // El factor de medición, con su porqué: quién y cuándo los dice la versión.
+  const fa = a?.factorMedicion, fb = b.factorMedicion
+  if (fa?.valor !== fb?.valor || (fa?.porque ?? '') !== (fb?.porque ?? ''))
+    partes.push(!fb ? `factor de medición: se quitó el firmado (${cifraFactor(fa!.valor)}); rige 1`
+      : `factor de medición ${fa ? `${cifraFactor(fa.valor)} → ` : ''}${cifraFactor(fb.valor)} («${fb.porque}»)`)
   if (!partes.length) return []
   return [`Capacidades de ${nombreCampo}${a ? '' : ' (se firman por primera vez)'}: ${partes.join('; ')}`]
 }

@@ -2,7 +2,7 @@
 
 SPE-36848 abre cada tramo de la tubería en niveles más bajos, «down to at least another level e.g. ESP failure». En la ANH esos niveles son los pasos del árbol de Edinson: responsable, diferida o pérdida, planeada o no, causa N1 y detalle N2 («esto está copiado del modelo choque», [26:48]). El árbol de pérdidas cuelga **cada barril diferido del período** de un tramo y, dentro de él, de todo el árbol; **cada nodo suma exacto lo que tiene debajo**.
 
-Función: `arbolDelChoke(campoIds, desde, hasta, ctx, op?)` (`src/entities/choke-arbol.ts:279-290`), que arma con `armar` (`:245-271`) → `ArbolChoke` (`:152-163`). Regla: **`choke.arbol@1`** (`REGLA_ARBOL`, `:119`). Ruta: `GET /api/vistas/choke/arbol?campos=&desde=&hasta=&orden=` (`pedirArbolChoke`, `src/shared/api/choke.ts:223`; `orden` obligatorio). Pantallas: Producción → «Ramas» y el árbol circular (`widgets/choke/Ramas.tsx`, `widgets/choke/ArbolCircular.tsx`); Diferidos → «Por tramo»; Resumen del gerente.
+Función: `arbolDelChoke(campoIds, desde, hasta, ctx, op?)` (`src/entities/choke-arbol.ts:279-290`), que arma con `armar` (`:245-271`) → `ArbolChoke` (`:152-163`). Regla: **`choke.arbol@1`** (`REGLA_ARBOL`, `:119`). Ruta: `GET /api/vistas/choke/arbol?campos=&desde=&hasta=&orden=` (`pedirArbolChoke`, `src/shared/api/choke.ts:227`; `orden` obligatorio). Pantallas: Producción → «Ramas» y el árbol circular (`widgets/choke/Ramas.tsx`, `widgets/choke/ArbolCircular.tsx`); Diferidos → «Por tramo»; Resumen del gerente.
 
 Datos de los ejemplos: el demo, `AHORA = 2026-10-02T14:00-05:00`.
 

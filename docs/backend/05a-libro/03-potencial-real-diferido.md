@@ -192,7 +192,7 @@ porque $\text{Real}_m = R_m = \text{FA}_m\,T_m$ y $T_m = \sum q\,(H_d - P_{p,d})
 2. Un evento en un día **sin fiscal**: su diferido está en los tramos pero el día no entra en potencial ni real. Residuo = −(diferido de ese día).
 3. $P_{p,d} > H_d$ (más horas perdidas que horas del día, por datos malos): el `max(0, …)` del teórico rompe la igualdad.
 
-**Quién lo comprueba.** El backend tiene que cumplirla (`CONTRATO.md:1069-1072`); la referencia la trae implícita (`brecha`, `diferido`, `residuo` de `referencia/diferidos/*.json`).
+**Quién lo comprueba.** El backend tiene que cumplirla (`CONTRATO.md:1079-1082`); la referencia la trae implícita (`brecha`, `diferido`, `residuo` de `referencia/diferidos/*.json`).
 
 ---
 

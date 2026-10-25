@@ -23,7 +23,7 @@ import {
   type ChokeDeElemento, type ClaseElemento, type PropuestaTopologia, type TuberiaCampo, type TramoTuberia, type TrenTuberia,
   type TrenPlanta, type EstadoTramo, type BrechaChoke, type BrechaCampoChoke, type EquipoBbl, type MesPorTramo,
   type LineaBasePorTramo, type AntesYDespues, type DiaChoke, type CambioDominante, type Historial, type VistaCapacidades,
-  type PerdiendoAhora, type CapacidadesDeLaTuberia, type MedidorDelCampo,
+  type PerdiendoAhora, type CapacidadesDeLaTuberia, type MedidorDelCampo, type PropuestaFactorMedicion,
 } from '@/entities/choke'
 import {
   tuberiaAgua, ORDEN_AGUA, NOMBRE_TRAMO_AGUA,
@@ -34,9 +34,10 @@ import {
   type FilaCriticidad, type CriticidadDelCampo, type FamiliaCriticidad, type AvisoTrabajoCritico,
 } from '@/entities/criticidad'
 import {
-  FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, revisarCapacidades,
+  FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, TOPE_FACTOR_MEDICION, revisarCapacidades, cifraFactor,
   type FuenteCapacidad, type CapacidadFirmada, type CapacidadesCampo, type CapacidadVigente, type BombaVigente, type CapacidadesVigentes,
   type TramoCapacidad, type EstadoCapacidad, type HallazgoCapacidad, type FirmaCapacidades, type EntradaRevision,
+  type FactorMedicionFirmado, type FactorMedicionVigente,
 } from '@/entities/capacidades'
 import {
   RESPUESTAS_TOPOLOGIA, elementoDeRespuesta, respuestaDe, respuestaDePozos, fraseDe, renglonDe, dondeTramo, dondeCorto,
@@ -71,7 +72,9 @@ import type { Versiones } from '@/entities/diferido'
 export {
   ORDEN_CHOKE, ORDEN_CHOKE_CAMPO, CHOKES_Y_SIN_ASIGNAR, ESCALONES, NOMBRE_CHOKE, EXPLICA_TRAMO, RESUMEN_TRAMO, DONDE_CHOKE,
   NOMBRE_CHOKE_CAMPO, SUBNIVEL_MERCADO, NOMBRE_ALCANCE, NOMBRE_ESCALON, PARAMETROS_CHOKE, EXPLICA_CASO_BORDE, ORDEN_AGUA, NOMBRE_TRAMO_AGUA,
-  PREGUNTA_ORIGEN, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, RESPUESTAS_TOPOLOGIA,
+  PREGUNTA_ORIGEN, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD, NOMBRE_CAPACIDAD, UNIDAD_CAPACIDAD, RESPUESTAS_TOPOLOGIA, TOPE_FACTOR_MEDICION,
+  // El factor de medición con tres decimales y coma, como el factor de asignación.
+  cifraFactor,
   // Las palabras del árbol de pérdidas del choke: sus órdenes y niveles, lo
   // que falta, la rama vacía de la pérdida y el campo de la ANH de cada paso.
   ORDENES_ARBOL, NIVELES_ARBOL, NOMBRE_ORDEN, NOMBRE_NIVEL, PASO_DE_NIVEL, CAMPO_ANH, FALTA, SIN_ASIGNAR, TEXTO_FALTA, TEXTO_PERDIDA,
@@ -94,7 +97,7 @@ export type {
   ImpactoConfig, ImpactoCampo, CambioCriticidad, CambioDeTramo, TopologiaLeida, HallazgoTopologia,
   RespuestaTopologia, RespuestaEquipo, TopologiaEnBorrador, VistaCapacidades,
   FuenteCapacidad, CapacidadFirmada, CapacidadesCampo, CapacidadVigente, BombaVigente, CapacidadesVigentes, TramoCapacidad,
-  EstadoCapacidad, HallazgoCapacidad, FirmaCapacidades, EntradaRevision,
+  EstadoCapacidad, HallazgoCapacidad, FirmaCapacidades, EntradaRevision, FactorMedicionFirmado, FactorMedicionVigente, PropuestaFactorMedicion,
   ArbolChoke, NodoArbol, OrdenArbol, NivelArbol, DimensionArbol, ConsultaArbol,
 }
 
@@ -157,9 +160,10 @@ export function useTuberiaAgua(campo: string): TuberiaAgua {
 
 /** `GET /api/vistas/campos/:campo/capacidades`: lo que deja pasar cada tramo
  *  hoy (firmado o del demo, con su fuente en palabras), quién y cuándo firmó, lo
- *  que la revisión necesita del pasado (lo máximo que pasó en un día) y lo que
- *  la revisión encuentra en lo que rige (U2 §8.4). Se escriben y se firman con
- *  la configuración (`POST /api/configuracion`, `Config.capacidades`). */
+ *  que la revisión necesita del pasado (lo máximo que pasó en un día), lo que
+ *  la revisión encuentra en lo que rige (U2 §8.4) y el factor de medición: el
+ *  que rige, quién lo firmó y lo que TRIM propone (D3; 5E·H9). Se escriben y se
+ *  firman con la configuración (`POST /api/configuracion`, `Config.capacidades`). */
 export const pedirCapacidades = (campo: string, ctx: Contexto, versiones?: Historial): VistaCapacidades => vistaCapacidades(campo, ctx, versiones)
 export function useCapacidades(campo: string): VistaCapacidades {
   const ctx = useCtx(), versiones = useVersiones()

@@ -28,7 +28,8 @@ const esAngosto = () => matchMedia(ANGOSTO).matches
  *   1. Equipos y pozos: una sola pregunta por equipo, «¿A qué pozos sirve?»;
  *      TRIM deduce el tramo y propone lo que ya sabe, con su porqué.
  *   2. Capacidades: lo que deja pasar cada tramo, escrito con su fuente y
- *      revisado con las reglas de la firma (`Config.capacidades`).
+ *      revisado con las reglas de la firma (`Config.capacidades`), y el factor
+ *      de medición de los pozos, prellenado con lo que propone TRIM (D3).
  *   3. Ver el impacto y firmar: la vista previa y la firma de la versión.
  *  La prepara y la firma el administrador (`config:firmar`); producción y
  *  confiabilidad la leen. Lo contestado y lo escrito viven en el borrador de la

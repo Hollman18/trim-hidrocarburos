@@ -1354,17 +1354,18 @@ Los equipos de los que el administrador contestó «Todavía no sé» a «¿A qu
 
 #### `capacidades_campo`
 
-Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4), que va con la firma. Cada número va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.
+Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4) y el factor de medición de los pozos (QA-D3), que van con la firma. Cada número de capacidad va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.
 
 - **Tipo TS:** CapacidadesCampo (src/entities/capacidades.ts; Config.capacidades).
 - **Quién escribe:** Servidor al firmar (config:firmar), sobre los campos de la persona.
 - **Quién lee:** `GET /api/configuracion/historial`, `POST /api/configuracion`, `GET /api/vistas/campos/:campo/capacidades`, `POST /api/configuracion/vista-previa`.
 - **Clave:** (version, campo_id).
-- **Columnas (4):** `version`*, `orden`*, `campo_id`*, `explicacion_empate` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Columnas (6):** `version`*, `orden`*, `campo_id`*, `explicacion_empate`, `factor_medicion`, `factor_medicion_porque` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
 - **Reglas:**
   - Solo inserción.
   - Cada día usa las que regían ese día: firmar hoy no cambia un mes cerrado.
   - Un empate exacto entre dos tramos se explica con la firma (explicacion_empate); sin ella, 422 (capacidadesQueBloquean).
+  - El factor de medición (factor_medicion, QA-D3) va con su porqué, entre 0,5 y 1,5; nunca en un campo de gas (validarCapacidades, 422). Sin él rige 1: lo que propone TRIM no rige sin firma.
   - Único: (version, orden).
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidades_campo_sin_truncate: TRUNCATE]
   - Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger capacidades_campo_solo_insercion: UPDATE DELETE]
@@ -2649,10 +2650,10 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 
 `validacion.log` es la corrida completa en un PostgreSQL 16.14 temporal (puerto 5440, creado y borrado por `herramientas/validar.sh`):
 
-- 105 tablas (sin contar 45 particiones de lectura), 11 vistas, 34 funciones, 103 triggers, 200 índices, 657 restricciones (105 PK, 180 FK, 30 únicas, 337 check).
+- 105 tablas (sin contar 45 particiones de lectura), 11 vistas, 34 funciones, 103 triggers, 200 índices, 660 restricciones (105 PK, 180 FK, 30 únicas, 340 check).
 - ejemplos.sql: 10566 filas en 79 tablas; series sin tag registrado: 0 (todas cargadas en una transacción: los triggers diferidos —configuración coherente, gerente activo, campos de cada persona— corrieron al confirmar).
-- **Restricciones:** 149 rechazos y 26 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
-- **Las del modelo choke y la clasificación ANH** (capítulo 5E), entre ellas: un tramo que no sale del alcance → `23514` en `topologia_check`; un dedicado que sirve a dos pozos y un pozo que no es del campo → `23514` (`validarTopologia` en el trigger); el mismo elemento dos veces → `23505`; «Todavía no sé» de un equipo que está en la topología del mismo campo → `23514`; una versión con topología o capacidades en el JSON firmado y sin sus filas → `23514`; una capacidad en cero, sin fuente reconocida o el gas sin decir si se mide → `23514`; planeada con una causa no planeada y un detalle que no es de su causa, también en lo que rige en una fila con lo dicho en su evento (trigger diferido) → `23514`; «En el yacimiento» puesto por el supervisor o sin evidencia → `23514`; lo que propone TRIM no se guarda (procedencia `regla`) → `23514`; «No sé» que abre otra pregunta, una revisión sin motivo o pedida al propio rol → `23514`.
+- **Restricciones:** 152 rechazos y 27 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
+- **Las del modelo choke y la clasificación ANH** (capítulo 5E), entre ellas: un tramo que no sale del alcance → `23514` en `topologia_check`; un dedicado que sirve a dos pozos y un pozo que no es del campo → `23514` (`validarTopologia` en el trigger); el mismo elemento dos veces → `23505`; «Todavía no sé» de un equipo que está en la topología del mismo campo → `23514`; una versión con topología o capacidades en el JSON firmado y sin sus filas → `23514`; una capacidad en cero, sin fuente reconocida o el gas sin decir si se mide → `23514`; un factor de medición fuera de 0,5 a 1,5, sin su porqué o con un porqué que no dice nada → `23514` (y una versión con el factor firmado da su JSON); planeada con una causa no planeada y un detalle que no es de su causa, también en lo que rige en una fila con lo dicho en su evento (trigger diferido) → `23514`; «En el yacimiento» puesto por el supervisor o sin evidencia → `23514`; lo que propone TRIM no se guarda (procedencia `regla`) → `23514`; «No sé» que abre otra pregunta, una revisión sin motivo o pedida al propio rol → `23514`.
 - **Cuadres** (`cuadres.sql`, todos bien):
   - Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
   - potencial − real = Σ diferidos en los 60 meses: diferencia máxima 0.000000000 bbl
@@ -2665,7 +2666,7 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
   - v_procedencia(ceiba, PDT-1011) = (PDT-1011,calculado,"el tag del que se deriva","Sistema de aire de instrumentos",compresor-aire,f1-compresor-aire,2,15,EPIC-CEIBA-01)
   - v_limite_tag(ceiba, VI-2011) = (ceiba,VI-2011,P-201B,"< 3,9",,3.9,3.9,,"API 610, Tabla 8: 3,0 mm/s RMS en la región preferida y 3,9 en la permitida (hasta 3.600 rpm y 300 kW por etapa)","Base maestra de alarmas (ISA-18.2): la firma ingeniería de confiabilidad del cliente")
   - v_calendario: 13 meses, 12 publicados en todos los campos (octubre de 2026 en curso)
-- **tablas.json:** comparadas 105 tablas y 11 vistas, 942 columnas, 180 relaciones (403 filas de ejemplo en 85 tablas y vistas); columnas de tabla sin comentario: 0; tablas.json COINCIDE 1:1 con esquema.sql.
+- **tablas.json:** comparadas 105 tablas y 11 vistas, 944 columnas, 180 relaciones (403 filas de ejemplo en 85 tablas y vistas); columnas de tabla sin comentario: 0; tablas.json COINCIDE 1:1 con esquema.sql.
 - **TimescaleDB:** TimescaleDB NO está instalado en este PostgreSQL (pg_available_extensions no la trae): no se instaló. `timescale.sql` quedó revisado a mano y sin ejecutar.
 - **Transporte:** el cluster temporal escucha por TCP en `127.0.0.1:5440`, sin socket Unix (la ruta del socket en una carpeta temporal puede pasar el máximo de 103 caracteres de macOS); al final, o en cuanto un paso falla, se detiene y su carpeta se borra.
 

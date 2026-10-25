@@ -243,7 +243,7 @@ Dicho en palabras: lo que la bomba movía es su parte del agua que entraba (la m
 | Agua quitada cerrando pozos ≥ lo que la parada dejó sin salida | `horas: null`, prioridad 0 |
 | Más de 90 días hasta el alto-alto | prioridad 0 (gris) |
 
-**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/bombas/prediccion?campo&equipo` → `Prediccion.llenado?` = `{ aguaEntraBpd, colchon, prioridad }`; `colchon.horas` y `colchon.rango` viajan como `null` si no sube (`horasSinFin`, `contrato.ts:173`). CONTRATO.md:306 y «Predicción» (`CONTRATO.md:1109-1126`).
+**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/bombas/prediccion?campo&equipo` → `Prediccion.llenado?` = `{ aguaEntraBpd, colchon, prioridad }`; `colchon.horas` y `colchon.rango` viajan como `null` si no sube (`horasSinFin`, `contrato.ts:173`). CONTRATO.md:306 y «Predicción» (`CONTRATO.md:1119-1136`).
 
 **Referencia.** `diferido.ts:178-207`, `:254-283`; casos `referencia/prediccion/ceiba-P-201B.json` y `referencia/salud/bombas-ceiba-2026-09.json` (traen `llenado`); `verificar-libro.mjs` §19 (1).
 
@@ -475,4 +475,4 @@ La de La Ceiba del 25-mar (`260325`) da 0: con K-101 caído solo producían los 
 
 **Casos borde.** Ningún tramo con bbl → 0. Tramos a frecuencia reducida entran con su factor. El evitable de una parada **abierta** es parcial (crece mientras siga abierta).
 
-**Referencia.** `libro.ts:906-965`; CONTRATO.md:1066-1070.
+**Referencia.** `libro.ts:906-965`; CONTRATO.md:1076-1080.

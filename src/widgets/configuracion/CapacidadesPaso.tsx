@@ -1,9 +1,10 @@
-import { useId, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { useRango } from '@/app/store'
 import {
-  useTuberia, useCapacidades, useRepartoChoke, revisarCapacidades, NOMBRE_CHOKE_CAMPO, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD,
+  useTuberia, useCapacidades, useRepartoChoke, revisarCapacidades, cifraFactor, NOMBRE_CHOKE_CAMPO, FUENTES_CAPACIDAD, NOMBRE_FUENTE_CAPACIDAD,
+  TOPE_FACTOR_MEDICION,
   type TramoTuberia, type TrenTuberia, type ChokeCampo, type CapacidadesCampo, type CapacidadFirmada, type CapacidadVigente,
-  type FuenteCapacidad, type HallazgoCapacidad, type BombaVigente,
+  type FuenteCapacidad, type HallazgoCapacidad, type BombaVigente, type VistaCapacidades, type FactorMedicionFirmado,
 } from '@/shared/api/choke'
 import { pedirInicioDeHistoria } from '@/shared/api/calendario'
 import { AHORA, fechaCorta, fechaHora } from '@/entities/reloj'
@@ -24,7 +25,9 @@ const CAJA = 'min-h-8 w-full min-w-0 rounded border border-[var(--linea)] bg-[va
  *  (`Config.capacidades`) y se firma en el paso 3 con lo demás; las reglas de la
  *  firma (`revisarCapacidades`, las mismas del servidor) se revisan aquí mientras
  *  se escribe. El paso a crudo nunca se escribe: lo calcula TRIM con el corte de
- *  agua de las pruebas. Quien no firma (producción, confiabilidad) lo lee. */
+ *  agua de las pruebas. Debajo, el factor de medición de los pozos (D3): lo que
+ *  propone TRIM va prellenado y se firma con lo demás (`FactorMedicion`). Quien
+ *  no firma (producción, confiabilidad) lo lee. */
 export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCambio, onTecnica }: {
   campoId: string; campoNombre: string
   /** Lo escribe quien firma la configuración técnica (`config:firmar`). */
@@ -69,11 +72,11 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
   return (
     <>
       <Lectura>
-        Cada tramo deja pasar como mucho su capacidad por día. La de los pozos sale de sus pruebas y no se escribe.
-        La de la planta es la del más angosto de sus trenes medidos, y la de afuera, la del oleoducto o el
-        transportador. El tren de agua no se escribe entero: se escribe cada bomba con su límite y TRIM muestra la
-        suma. Cada número va con su fuente; lo que no se escriba sigue con el dato del demo, marcado así. Lo escrito
-        queda en el borrador y se firma en el paso 3.
+        Cada tramo deja pasar como mucho su capacidad por día. La de los pozos sale de sus pruebas y no se escribe:
+        se firma solo el factor de medición con que se leen. La de la planta es la del más angosto de sus trenes
+        medidos, y la de afuera, la del oleoducto o el transportador. El tren de agua no se escribe entero: se
+        escribe cada bomba con su límite y TRIM muestra la suma. Cada número va con su fuente; lo que no se escriba
+        sigue con el dato del demo, marcado así. Lo escrito queda en el borrador y se firma en el paso 3.
       </Lectura>
       <p className="mb-2 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-[var(--tinta2)]" data-firma-capacidades>
         {vista.firma
@@ -97,7 +100,10 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
       <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))]">
         <Panel titulo="LOS POZOS" extra={pozos?.limita ? <Limita /> : undefined}>
           <Cifra valor={vista.entrada.pozosBpd} unidad="bbl/d de crudo" limita={!!pozos?.limita} />
-          <p className="mt-1 text-[11px] text-[var(--tinta2)]">Sale de las pruebas de los pozos: no se escribe.{pozos?.pruebaMasVieja ? ` ${pozos.pruebaMasVieja.texto[0]!.toUpperCase()}${pozos.pruebaMasVieja.texto.slice(1)}.` : ''}</p>
+          <p className="mt-1 text-[11px] text-[var(--tinta2)]">
+            Sale de las pruebas de los pozos{v.factorMedicion.estado === 'firmado' ? ` × el factor de medición firmado (${cifraFactor(v.factorMedicion.valor)})` : ''}: no se escribe.
+            {pozos?.pruebaMasVieja ? ` ${pozos.pruebaMasVieja.texto[0]!.toUpperCase()}${pozos.pruebaMasVieja.texto.slice(1)}.` : ''}
+          </p>
         </Panel>
 
         <Panel titulo="LA PLANTA O ESTACIÓN" extra={planta?.limita ? <Limita /> : undefined}>
@@ -150,6 +156,9 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
         </Panel>
       </div>
 
+      <FactorMedicion vista={vista} campoNombre={campoNombre} puede={puede} escrito={propuesta?.factorMedicion} campoDeGas={tub.campoDeGas}
+        hallazgos={deTramo('factor')} onEscribir={x => conCambio({ factorMedicion: x })} />
+
       {hayEmpate && (
         <Panel className="mt-2.5" titulo="EXPLICAR EL EMPATE" extra={campoNombre}>
           <label htmlFor={idEmpate} className="mb-0.5 block text-[11px] text-[var(--tinta2)]">
@@ -185,6 +194,71 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
         </Hueco>
       </div>
     </>
+  )
+}
+
+/** El factor de medición de los pozos (D3; 5E·H9): con cuánto se leen las
+ *  pruebas para que digan lo que mide el punto oficial. Lo que TRIM propone
+ *  (la mediana de los días sin paradas, del motor) va prellenado con su porqué;
+ *  va en la firma cuando se marca «Firmar este factor» o se cambia la cifra o el
+ *  porqué, y se firma en el paso 3 con lo demás. Sin firma rige 1: el motor no
+ *  usa la propuesta. En un campo de gas no se ofrece: la eficiencia de crudo no aplica. */
+function FactorMedicion({ vista, campoNombre, puede, escrito, campoDeGas, hallazgos, onEscribir }: {
+  vista: VistaCapacidades; campoNombre: string; puede: boolean
+  /** Lo que el borrador lleva del factor de este campo (lo firmado, con lo escrito encima). */
+  escrito: FactorMedicionFirmado | undefined
+  campoDeGas: boolean; hallazgos: HallazgoCapacidad[]
+  onEscribir: (x: FactorMedicionFirmado | undefined) => void
+}) {
+  const rige = vista.vigentes.factorMedicion, firma = vista.firmaFactor, pr = vista.factorMedicionPropuesto
+  // Prellenado con lo que propone TRIM; lo que se escriba queda aquí aunque se quite de la firma.
+  const [cifra, setCifra] = useState(() => String(escrito?.valor ?? pr.valor ?? ''))
+  const [porque, setPorque] = useState(() => escrito?.porque ?? (pr.valor !== undefined ? pr.texto : ''))
+  const enFirma = !!escrito
+  const numero = (t: string) => (t.trim() === '' ? NaN : Number(t.replace(',', '.')))
+  const idCifra = useId(), idPorque = useId()
+  return (
+    <Panel className="mt-2.5" titulo="EL FACTOR DE MEDICIÓN DE LOS POZOS" extra={campoNombre}>
+      <div data-factor-medicion>
+        <Lectura>
+          Las pruebas de los pozos se miden con el separador de prueba; lo real, con el punto de medición oficial. El
+          factor de medición dice por cuánto hay que multiplicar las pruebas para que digan lo que mide el punto
+          oficial. Con él se calcula lo que dan los pozos, lo que limita y la eficiencia de producción. Sin firma rige 1.
+        </Lectura>
+        {/* En línea y con sus espacios: el lector de pantalla lee «Rige 1,000 sin firmar las pruebas como vienen», no todo pegado. */}
+        <p className="text-[11.5px] leading-relaxed" data-factor-rige>
+          <b className="font-semibold">Rige {cifraFactor(rige.valor)}</b>{' '}
+          {rige.estado === 'firmado'
+            ? <>{firma ? `· firmado en la versión ${firma.version} el ${fechaHora(new Date(firma.fecha))} por ${firma.por}` : '· firmado'}{rige.porque ? `: «${rige.porque}»` : ''}</>
+            : <><EtiquetaFalta>sin firmar</EtiquetaFalta> <span className="text-[var(--tinta2)]">las pruebas como vienen</span></>}
+        </p>
+        <div className="mt-1.5 rounded border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[11.5px]" data-factor-propuesto>
+          <p>
+            <b className="font-semibold">{pr.valor !== undefined ? <>TRIM propone <span className="tabular">{cifraFactor(pr.valor)}</span></> : 'TRIM no lo propone'}</b>{' '}
+            <span className="text-[10.5px] text-[var(--tinta3)]">propuesta de TRIM, sin firmar: no rige hasta que se firme</span>
+          </p>
+          <p className="mt-0.5 text-[var(--tinta2)]">{pr.texto}</p>
+        </div>
+        {puede && !campoDeGas && (
+          <div className="mt-1.5 grid gap-1.5">
+            <div className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] items-start gap-1.5">
+              <label htmlFor={idCifra} className="text-[11px] text-[var(--tinta2)]">Factor de medición</label>
+              <label htmlFor={idPorque} className="text-[11px] text-[var(--tinta2)]">¿Por qué? De dónde sale el número</label>
+              <input id={idCifra} type="number" min={TOPE_FACTOR_MEDICION.minimo} max={TOPE_FACTOR_MEDICION.maximo} step={0.001} value={cifra} placeholder="1"
+                onChange={e => { setCifra(e.target.value); onEscribir({ valor: numero(e.target.value), porque }) }} className={cn(CAJA, 'tabular')} />
+              <textarea id={idPorque} rows={2} value={porque}
+                onChange={e => { setPorque(e.target.value); onEscribir({ valor: numero(cifra), porque: e.target.value }) }} className={cn(CAJA, 'resize-y')} />
+            </div>
+            <label className="flex items-center gap-1.5 text-[11.5px]">
+              <input type="checkbox" checked={enFirma} onChange={e => onEscribir(e.target.checked ? { valor: numero(cifra), porque } : undefined)} />
+              Firmar este factor de medición
+              <Info titulo="Firmar el factor" texto="Marcado, el factor va en el borrador y se firma en el paso 3 con las capacidades. Sin marcar, rige el que ya está firmado o, sin firma, 1: TRIM no usa su propuesta sola." />
+            </label>
+          </div>
+        )}
+        {hallazgos.length > 0 && <ul className="mt-1 grid gap-0.5 text-[11px]">{hallazgos.map(h => <Regla key={h.texto} h={h} />)}</ul>}
+      </div>
+    </Panel>
   )
 }
 

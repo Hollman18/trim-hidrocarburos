@@ -45,7 +45,7 @@ Resumen: 27 paradas con primera alarma (24 propias → parte; 3 ajenas → servi
 
 **Casos borde.**
 - **Bomba sin perfil en el campo**: `perfil` es `undefined` → reglas 2, 3 y 5 no aplican (sin catálogo no hay parte), `tipo = 'reinyeccion'`.
-- **Firma calculada en el front**: es memoria de proceso (`FIRMAS`, `causa-senal.ts:167`), no persiste. **El backend real debe guardar `firma` con el evento al registrar la parada** (CONTRATO.md:882-883); si no, una parada que se cierra antes de que alguien la mire se queda sin firma para siempre.
+- **Firma calculada en el front**: es memoria de proceso (`FIRMAS`, `causa-senal.ts:167`), no persiste. **El backend real debe guardar `firma` con el evento al registrar la parada** (CONTRATO.md:892-893); si no, una parada que se cierra antes de que alguien la mire se queda sin firma para siempre.
 - La regla 4 usa solo la hora de **inicio** del servicio (no su cascada). Si dos servicios caen a ±15 min de la parada, gana el que cayó primero; en empate, el de id menor (comparación de texto por código). No depende del orden de la lista: en el mundo de prueba de `verificar-libro` §18, la parada `EV-PRUEBA-SV` de Guacamayo (09:00) entre `SV-PRUEBA-BOMBA-1` (08:50) y `SV-PRUEBA-BOMBA-2` (09:10) es de la `-1`, llegue primero cual llegue.
 
 ## 3.2 ¿Pide respuesta? ¿Arrancó sin identificar? (`estadoIdentificacion`)
@@ -110,7 +110,7 @@ Ojo: los pozos que cerró una bomba **sin parte identificada** (`reinyeccion`, `
 
 **Quién lo calcula y por dónde viaja.** Servidor. `Pregunta[]` en `GET /api/vistas/paradas/por-identificar` y en `Libro.preguntas`; `ParadaMedida.pide` / `.arrancoSinIdentificar` en `GET /api/vistas/bombas/paradas` y en `BombaVista.abierta`.
 
-**Referencia.** `causa-senal.ts:338`, `libro.ts:883`, `CONTRATO.md:1033-1034`; casos `referencia/diferidos/*.json` (campo `preguntas`).
+**Referencia.** `causa-senal.ts:338`, `libro.ts:883`, `CONTRATO.md:1043-1044`; casos `referencia/diferidos/*.json` (campo `preguntas`).
 
 ### La cuenta única de «por identificar» (`contarPorIdentificar`)
 
@@ -165,4 +165,4 @@ $$
 
 **Qué texto se muestra.** Ficha ejecutiva, «Cada cuánto falla»: con fallas, «N falla(s) · una cada N días»; sin fallas pero con disparos, «No ha fallado · N disparos que volvieron a arrancar»; sin nada, «No ha fallado» (`FichaEjecutiva.tsx:96-100`). MN-07 → «No ha fallado · 5 disparos que volvieron a arrancar».
 
-**Referencia.** `libro.ts:447-455`, `libro.ts:1274-1279`; CONTRATO.md:1150-1151.
+**Referencia.** `libro.ts:447-455`, `libro.ts:1274-1279`; CONTRATO.md:1160-1161.

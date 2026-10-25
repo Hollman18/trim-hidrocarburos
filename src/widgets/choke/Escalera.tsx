@@ -24,6 +24,9 @@ function ayudaPe(b: BrechaChoke): string {
   return `Lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar: lo que dan los pozos según sus pruebas o, el día que limita la planta o afuera, lo que deja pasar ese tramo (lo que no pasa aunque nada pare no se cuenta como pérdida). Es la eficiencia de producción de la NSTA (§5.3) y de la ISO/TS 3250. No es el «% del potencial» de arriba: ese divide por el potencial del libro, las pruebas con el factor de asignación del mes, que las deja medidas como el punto oficial, y solo descuenta lo que no se produjo por paradas. ${diferencia}: ${n1(b.pe)} % aquí y ${n1(libro)} % del potencial.`
 }
 const AYUDA_NO_PLANEADO = 'Las paradas no planeadas (fallas, disparos, terceros) ÷ lo que el campo podía dejar pasar: la eficiencia no planeada de la NSTA. Es el porcentaje que TRIM busca bajar prediciendo las bombas críticas.'
+/** Cuando la eficiencia no se puede creer (D3; 5E·H30), su ⓘ dice qué es y por qué no va el número. */
+const AYUDA_PE_NO_CREIBLE = 'La eficiencia de producción es lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar según las pruebas de los pozos (NSTA §5.3, ISO/TS 3250). Si las pruebas dan menos de lo que midió el punto oficial, ese potencial queda corto y la cuenta pasaría de lo posible; por eso TRIM no da el número hasta que se firme el factor de medición del campo («Filosofía operacional», paso 2). En un campo de gas, la eficiencia de crudo no aplica.'
+const AYUDA_NO_PLANEADO_BBL = 'Las paradas no planeadas (fallas, disparos, terceros), en barriles: es lo que TRIM busca bajar. Su porcentaje se divide por lo mismo que la eficiencia de producción, y sale cuando esa se pueda creer.'
 const AYUDA_SIN_EXPLICAR = 'Lo que no explica ningún evento: el inventario del tanque de venta entre un día y otro. Se muestra, nunca se reparte. Si pasa del 2,5 % del potencial del período, hay que revisarlo (el umbral de cierre de la NSTA).'
 
 /** De lo que podían dar los pozos a lo que salió, escalón por escalón
@@ -42,12 +45,27 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
     <Panel className="mb-2.5 print:break-inside-avoid" titulo="LO QUE NO SE PRODUJO, POR TIPO"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">{periodo.toLowerCase()}<Info titulo="La escalera" texto={AYUDA_ESCALERA} /></span>}>
       <div data-escalera>
+        {/* La eficiencia solo con número si se puede creer (D3; 5E·H30): si no, la frase del motor y lo no planeado en barriles. */}
         <div className="grid gap-x-6 gap-y-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
-          <Cifra rotulo="eficiencia de producción" valor={`${n1(b.pe)} %`} ayuda={<Info titulo="Eficiencia de producción" texto={ayudaPe(b)} />}
-            pie={`${n0(b.real)} de ${n0(b.potencialSistema)} bbl que el campo podía dejar pasar`} />
-          <Cifra rotulo="lo no planeado se llevó" valor={`${n1(b.peNoPlaneada)} %`} ayuda={<Info titulo="Lo no planeado" texto={AYUDA_NO_PLANEADO} />}
-            pie={`${n0(b.porEscalon['disponibilidad-no-planeada'])} bbl en paradas no planeadas`} />
+          {b.peCreible ? (
+            <>
+              <Cifra rotulo="eficiencia de producción" valor={`${n1(b.pe)} %`} ayuda={<Info titulo="Eficiencia de producción" texto={ayudaPe(b)} />}
+                pie={`${n0(b.realPe)} de ${n0(b.potencialPe)} bbl que ${campos.length > 1 ? 'los campos podían' : 'el campo podía'} dejar pasar`} />
+              <Cifra rotulo="lo no planeado se llevó" valor={`${n1(b.peNoPlaneada)} %`} ayuda={<Info titulo="Lo no planeado" texto={AYUDA_NO_PLANEADO} />}
+                pie={`${n0(b.porEscalon['disponibilidad-no-planeada'])} bbl en paradas no planeadas`} />
+            </>
+          ) : (
+            <>
+              <span className="min-w-0" data-pe-no-creible>
+                <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">eficiencia de producción<Info titulo="Eficiencia de producción" texto={AYUDA_PE_NO_CREIBLE} /></small>
+                <span className="mt-0.5 block rounded border border-dashed border-[var(--tinta3)] px-2 py-1 text-[11.5px] leading-snug">{b.textoPe}</span>
+              </span>
+              <Cifra rotulo="lo no planeado se llevó" valor={`${n0(b.porEscalon['disponibilidad-no-planeada'])} bbl`} ayuda={<Info titulo="Lo no planeado" texto={AYUDA_NO_PLANEADO_BBL} />}
+                pie="en paradas no planeadas; el porcentaje sale con la eficiencia" />
+            </>
+          )}
         </div>
+        {b.peCreible && b.textoPe && <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-nota-pe>{b.textoPe}</p>}
 
         <ol className="mt-3 text-[11.5px]" aria-label="De lo que dan los pozos según sus pruebas a lo que salió">
           {/* Un solo número del choke: la escalera empieza donde empieza la eficiencia de producción (las pruebas),

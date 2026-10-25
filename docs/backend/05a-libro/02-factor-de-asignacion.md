@@ -24,7 +24,7 @@ $$
 | $hz_e$ | frecuencia a la que quedó el pozo | Hz | `eventos[].hz` (`GET …/pozos/eventos`) |
 | $hz_{\text{prueba}}$ | frecuencia de la prueba vigente ese día | Hz | `pruebas[].hz` |
 
-**Eventos que se pisan** (`intervalosEfectivos`, `src/entities/libro.ts:118-140`): por pozo, se ordenan primero los paros y después los HZ, y entre iguales el que empezó antes (y luego por id). Cada evento cobra solo lo que no cubrió uno anterior en ese orden. Un paro manda sobre un HZ; entre dos paros, gana el primero. Así una hora del pozo se cobra una vez y la identidad potencial − real = Σ diferidos sigue exacta. El contrato pide escoger entre esto o que la ingesta rechace los solapes (`CONTRATO.md:858-861`); el motor del demo hace lo primero.
+**Eventos que se pisan** (`intervalosEfectivos`, `src/entities/libro.ts:118-140`): por pozo, se ordenan primero los paros y después los HZ, y entre iguales el que empezó antes (y luego por id). Cada evento cobra solo lo que no cubrió uno anterior en ese orden. Un paro manda sobre un HZ; entre dos paros, gana el primero. Así una hora del pozo se cobra una vez y la identidad potencial − real = Σ diferidos sigue exacta. El contrato pide escoger entre esto o que la ingesta rechace los solapes (`CONTRATO.md:868-871`); el motor del demo hace lo primero.
 
 **Ejemplo con los datos del demo.** LC-16, 22-sep: el evento `EP-LC16-260922-71` (código LSHH, cerrado por la parada de P-201B) va del 22-sep 11:41 al 23-sep 02:26. En el día 22 cobra 12,317 h con $f = 1$; en el 23, 2,433 h. HZ: MN-07 de Morichal, evento `EP-MN07-260214-32` del 14-feb 23:25 al 15-feb 23:58 a 47 Hz con prueba a 59 Hz: $f = 1 - 47/59 = 0{,}2034$ (el motor guarda `factor: 0,203`).
 
@@ -188,7 +188,7 @@ Escenario corrido con el motor (El Palmar con `api: null`, septiembre): $b = 0{,
 
 **Quién lo calcula.** Servidor (`bandaDe`, cacheado por campo). Viaja en `GET /api/catalogo` → `campos[campo].medicion.banda` (`{ valor, fuente, verificable }`, `src/shared/api/catalogo.ts:24-33`) y dentro de cada `FilaFA.banda` del libro.
 
-**Referencia.** `src/entities/metrologia.ts:20-59`; `src/entities/libro.ts:228-274`; `CONTRATO.md:911-916`.
+**Referencia.** `src/entities/metrologia.ts:20-59`; `src/entities/libro.ts:228-274`; `CONTRATO.md:921-926`.
 
 ---
 

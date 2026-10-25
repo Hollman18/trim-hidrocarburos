@@ -518,6 +518,20 @@ try {
     const sinArchivo = archivos.filter(a => !existsSync(`${RAIZ}${a.s}`))
     comprobar(nombrados.length > 5 && faltan.length === 0 && sinArchivo.length === 0 && 'test' in scripts && 'e2e' in scripts,
       `los ${nombrados.length} «npm run …» y ${archivos.length} «node …» de README, CONTRATO y .env.example existen${[...faltan, ...sinArchivo].map(n => `; ${n.d}: ${n.s}`).join('')}`)
+    // 5E·H33: una vista de SQL que cita un comentario de src/ existe en esquema.sql (`rigeEnFila` citaba
+    // `v_clasificacion_rige`, que no existe: es `v_clasificacion_fuente`).
+    const esquemaSql = leerTexto('docs/backend/sql/esquema.sql')
+    const vistasSql = new Set([...esquemaSql.matchAll(/create (?:or replace )?view (v_\w+)/g)].map(m => m[1]))
+    const vistasCitadas = readdirSync(`${RAIZ}src`, { recursive: true }).filter(f => /\.tsx?$/.test(f))
+      .flatMap(f => [...leerTexto(`src/${f}`).matchAll(/`(v_\w+)`/g)].map(m => ({ f, vista: m[1] })))
+    const sinVista = vistasCitadas.filter(x => !vistasSql.has(x.vista))
+    comprobar(vistasSql.size > 5 && vistasCitadas.length > 0 && sinVista.length === 0,
+      `las ${vistasCitadas.length} vistas de SQL que citan los comentarios de src/ existen en esquema.sql${sinVista.map(x => `; ${x.f}: ${x.vista}`).join('')}`)
+    // 5E·H35: lo que CONTRATO.md dice del tren de crudo de Guacamayo es lo que trae el demo (8.000, con 7.500 empataba con afuera).
+    const PT = await cargar('/src/entities/planta.ts')
+    const crudoGu = /Guacamayo 6\.800 → 7\.500 afuera y 7\.400 → ([\d.]+) en el tren de crudo/.exec(contratoMd)?.[1]
+    comprobar(crudoGu !== undefined && Number(crudoGu.replace(/\./g, '')) === PT.CAMPO_PLANTA.guacamayo.caudales.crudoCap,
+      `CONTRATO.md dice el tren de crudo de Guacamayo que trae el demo: ${crudoGu ?? 'no lo dice'} (el demo, ${PT.CAMPO_PLANTA.guacamayo.caudales.crudoCap.toLocaleString('es-CO')})`)
 
     console.log('\n=== 10. El choke y el árbol de paradas: lo que el contrato rechaza y lo que calcula ===')
     const CONF = await cargar('/src/entities/configuracion.ts'), CHO = await cargar('/src/entities/choke.ts'), ANC = await cargar('/src/entities/anh-catalogo.ts')
@@ -759,6 +773,30 @@ try {
       && firma11.ok && SES.sesion().versiones.at(-1).cambios.some(x => /^Capacidades de La Ceiba \(se firman por primera vez\): tren de crudo 12\.000/.test(x))
       && despues11.vigentes.crudo.estado === 'firmado' && despues11.firma?.version === firma11.version && tub11.capacidades.estado === 'parte' && /firmadas el/.test(tub11.capacidades.texto),
       `las capacidades se firman con la configuración: menos de lo que ya pasó o un empate sin explicar no se firman (422: «${menos.error?.slice(0, 70)}…»), con las mismas reglas en la vista previa; firmadas, la vista y la tubería dicen quién y cuándo («${tub11.capacidades.texto}»)`)
+    // d. El factor de medición se firma con las capacidades (D3; 5E·H9), con su porqué: fuera de 0,5–1,5, sin porqué o en
+    // un campo de gas no se firma (422); con otra forma, 400. Firmado, la vista dice quién y cuándo, y un mes cerrado no
+    // cambia: cada día se mide con la configuración de su medianoche. Lo firmado aquí no se queda para lo que sigue.
+    const fotoF = { ...SES.sesion() }
+    const propGu = CHK.pedirCapacidades('guacamayo', SES.sesion().ctx, SES.sesion().versiones).factorMedicionPropuesto
+    const conFactor = (campoId, factorMedicion) => ({ ...base11().config, capacidades: [...(base11().config.capacidades ?? []).filter(x => x.campoId !== campoId), { campoId, factorMedicion }] })
+    const firmarF = (campoId, fm) => E.firmarConfiguracion({ rolId: 'adm' }, { config: conFactor(campoId, fm), motivo: 'factor de medición de prueba', base: base11().base })
+    const fFuera = await firmarF('guacamayo', { valor: 2, porque: propGu.texto }), fSinPorque = await firmarF('guacamayo', { valor: 1.004, porque: '' })
+    const fGas = await firmarF('zarza', { valor: 1.01, porque: 'Medido con el separador de prueba' }), fForma = await firmarF('guacamayo', { valor: '1,004', porque: propGu.texto })
+    const fPrevia = await E.previsualizarConfiguracion({ rolId: 'adm' }, { config: conFactor('guacamayo', { valor: 2, porque: propGu.texto }) })
+    const fBien = await firmarF('guacamayo', { valor: propGu.valor, porque: propGu.texto })
+    const capGu = CHK.pedirCapacidades('guacamayo', SES.sesion().ctx, SES.sesion().versiones)
+    const septiembre = { campos: ['guacamayo'], desde: new Date(cal.at(-2).desde), hasta: new Date(cal.at(-2).hasta) }
+    const repGu = CHK.pedirRepartoChoke(septiembre, SES.sesion().ctx, SES.sesion().versiones, SES.sesion().clasificacionesAnh)
+    const tubGu = CHK.pedirTuberia('guacamayo', septiembre.desde, septiembre.hasta, SES.sesion().ctx, SES.sesion().versiones, SES.sesion().clasificacionesAnh)
+    comprobar(propGu.valor === 1.004 && !fFuera.ok && /Factor de medición de Guacamayo: escriba un número entre 0,5 y 1,5/.test(fFuera.error) && !fSinPorque.ok && /diga por qué/.test(fSinPorque.error)
+      && !fGas.ok && /Factor de medición de La Zarza: en un campo de gas/.test(fGas.error) && !fForma.ok && /forma del contrato.*factorMedicion\.valor.*tiene que ser un número/.test(fForma.error)
+      && !fPrevia.ok && /entre 0,5 y 1,5/.test(fPrevia.error)
+      && fBien.ok && SES.sesion().versiones.at(-1).cambios.some(x => x.startsWith('Capacidades de Guacamayo (se firman por primera vez): factor de medición 1,004 («La mediana de lo que midió'))
+      && capGu.vigentes.factorMedicion.estado === 'firmado' && capGu.vigentes.factorMedicion.valor === 1.004 && capGu.firmaFactor?.version === fBien.version
+      && /× el factor de medición firmado \(1,004\)/.test(tubGu.tramos.find(x => x.tramo === 'pozo').fuente)
+      && !repGu.peCreible && /El firmado \(1,004\) rige desde el 3 de oct\.$/.test(repGu.textoPe ?? ''),
+      `el factor de medición se firma con las capacidades: fuera de 0,5–1,5 («${fFuera.error?.slice(0, 70)}…»), sin porqué o en un campo de gas no se firma, y con otra forma es la forma del contrato; firmado, la vista dice quién y cuándo, los pozos de hoy se leen con él y septiembre, cerrado, sigue sin poderse creer: «${repGu.textoPe}»`)
+    SES.cambiarSesion(fotoF)
 
     console.log('\n=== 12. El árbol de pérdidas del choke (GET /api/vistas/choke/arbol) ===')
     // a. Lo que guardaron las personas en esta sesión (la corrección, el lote y el yacimiento de la sección 1) llega al árbol.

@@ -308,6 +308,17 @@ function deServicio(e: ChokeDeElemento, base: Base, ctx: Contexto): FilaCriticid
     porque: caido ? caidoTexto : `Si ${e.elemento} cae hoy, se frenan los ${produciendo.length} pozos que producen y dependen de él: hasta ${n0(bbl)} bbl/d, desde el primer minuto` }
 }
 
+/** Una fila de un campo de gas: sin cifra (B-18), y su porqué tampoco dice
+ *  barriles de crudo (5E·H36: «Si ZA-01 falla hoy, se pierden sus 479 bbl/d»).
+ *  La que tenía una cifra dice que no la hay y por qué; la que ya no la tenía
+ *  («no cierra pozos», «no tiene prueba») queda como estaba. Sin «sube»: su
+ *  porqué es una cifra de crudo. */
+function deGas(x: FilaCriticidad, gas: string): FilaCriticidad {
+  const { subio: _, ...sinSubir } = x
+  return { ...sinSubir, bpd: null, grupo: 'sin-dato', estimacion: false, sinDato: gas,
+    porque: x.bpd !== null && x.bpd > 0 ? `Si ${x.equipo} falla hoy: sin dato. ${gas}` : x.porque }
+}
+
 /* Se pide por cada pantalla de confiabilidad: una vez por contexto y campo. */
 const MEMO = new WeakMap<Contexto, Map<string, CriticidadDelCampo>>()
 
@@ -348,7 +359,7 @@ export function criticidadDelCampo(campoId: string, ctx: Contexto): CriticidadDe
   // Un campo de gas: lo que cuesta una falla en gas todavía no se calcula (B-18;
   // PLAN-MAESTRO §3, solo crudo). Sin cifras: el condensado no se ordena con el crudo.
   const gas = CAMPOS_DE_GAS.includes(campoId) ? `${campoPorId(campoId).nombre} es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.` : undefined
-  const enLista = filas.filter(x => !x.parado).map((x): FilaCriticidad => (gas ? { ...x, bpd: null, grupo: 'sin-dato', estimacion: false, sinDato: gas } : x)).sort(orden)
+  const enLista = filas.filter(x => !x.parado).map((x): FilaCriticidad => (gas ? deGas(x, gas) : x)).sort(orden)
   // El puesto, solo en lo medido: los que cuestan lo mismo lo comparten (1 + cuántos medidos cuestan más).
   const medidos = enLista.filter(x => x.grupo === 'medido' && x.bpd !== null)
   const puestoDe = (x: FilaCriticidad) => (x.grupo !== 'medido' || x.bpd === null ? null : 1 + medidos.filter(y => y.bpd! > x.bpd!).length)

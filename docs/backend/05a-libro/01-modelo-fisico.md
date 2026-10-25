@@ -82,7 +82,7 @@ Desde el 9-oct los cortes del demo son los de los campos colombianos (La Ceiba 9
 
 **Dónde se ve.** En la ficha de cada pozo (otro capítulo). En el libro, a través del potencial y del diferido; en la cadena de custodia del Cuadre («Prueba estimada: LC-17»).
 
-**Forma del insumo** (`GET /api/campos/:campo/pozos`, `CONTRATO.md:842-849`):
+**Forma del insumo** (`GET /api/campos/:campo/pozos`, `CONTRATO.md:852-859`):
 
 | Campo | Significado | Unidad |
 |---|---|---|
@@ -127,7 +127,7 @@ El libro la pide **por pozo y por día** (al inicio del día, `crudo(p, dia)` en
 
 **Dónde se ve.** «Real medido» en el Cuadre y el encabezado de Diferidos; «producción real» en Producción; la curva sólida de «Día a día»; el panel «MEDICIÓN OFICIAL» de Producción (ingeniería) con la fuente: «FQI-0101 · computador de flujo de la unidad LACT-01».
 
-**Forma del insumo** (`GET /api/campos/:campo/produccion-diaria?desde=&hasta=`, `CONTRATO.md:887-894`):
+**Forma del insumo** (`GET /api/campos/:campo/produccion-diaria?desde=&hasta=`, `CONTRATO.md:897-904`):
 
 ```json
 { "origen": { "fuente": "FQI-0101 · computador de flujo de la unidad LACT-01", "bsw": "analizador|laboratorio" },

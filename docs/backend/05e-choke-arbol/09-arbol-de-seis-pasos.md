@@ -148,12 +148,12 @@ Con «una señal apunta», la causa y el detalle **solo los confirman el jefe de
 
 ### Lo que dice una persona se guarda por paso (QA-D1)
 
-**Qué es.** Lo que el servidor guarda de la clasificación es **solo lo que dijo una persona, paso por paso, solo por inserción**; las filas ANH no se guardan (salen del libro cada vez) y lo que propone TRIM se vuelve a proponer con la regla de hoy (`docs/backend/sql/esquema.sql:2080-2095`).
+**Qué es.** Lo que el servidor guarda de la clasificación es **solo lo que dijo una persona, paso por paso, solo por inserción**; las filas ANH no se guardan (salen del libro cada vez) y lo que propone TRIM se vuelve a proponer con la regla de hoy (`docs/backend/sql/esquema.sql:2088-2103`).
 
 **Reglas.**
 
 - **Una escritura guarda solo los pasos que esta persona dijo en esta petición**, con su nombre y su hora. El alcance es **la fila** (clave `ParadaAnh.id`), **el evento** (clave `EventoPozo.id`, todos sus días; `aplicarAlEvento`) o **la cascada** (`aplicarALaCascada` + `ids`: una escritura por evento de la cascada, **solo en los eventos de las filas que mostró la pantalla**). Si la raíz trae más eventos de los que se vieron: 409 `cascada-cambio` («Mientras la revisaba, la cascada de {raíz} cambió: son N pozos y la pantalla mostró M (falta …). Vuelva a abrirla para verlos todos.»); sin `ids` o con filas de otra cascada: 422 `cascada-sin-ids`.
-- **Lo que rige en una fila, paso por paso** (`rigeEnFila`, `anh-clasificacion.ts:1417-1437`; vista `v_clasificacion_fuente`, `esquema.sql:3170-3182`): lo más reciente (el consecutivo `n`) entre lo dicho en la fila y lo dicho en su evento; en un empate, la fila. Sin nada, lo que propone TRIM. **El tramo de exceso del programa solo usa lo suyo** (es otra decisión, no planeada).
+- **Lo que rige en una fila, paso por paso** (`rigeEnFila`, `anh-clasificacion.ts:1417-1437`; vista `v_clasificacion_fuente`, `esquema.sql:3178-3190`): lo más reciente (el consecutivo `n`) entre lo dicho en la fila y lo dicho en su evento; en un empate, la fila. Sin nada, lo que propone TRIM. **El tramo de exceso del programa solo usa lo suyo** (es otra decisión, no planeada).
 - **Si la escritura cambiaría lo que dijo otra persona en otra fila o evento: 409 `cambia-a-otra-persona`**, diciendo cuáles, salvo que traiga motivo (5 caracteres o más, `MOTIVO_MINIMO`, `src/entities/reglas.ts:9`); con motivo, queda como corrección. Texto: «Esto cambia lo que dijo otra persona en otra fila: …. Para cambiarlo, diga por qué (un motivo de 5 caracteres o más).»
 - **Cuando un cambio invalida lo que dijo otra persona** (p. ej. «¿Planeada?» deja incoherente su causa), no desaparece nada: se pide motivo (422 `falta-motivo`: «Falta el motivo: esto retira «Causa», que ya había dicho una persona (vuelve a lo que propone TRIM).») y el paso invalidado queda **`retirado`** (quién y motivo), que lo devuelve a lo que propone TRIM. La fila muestra la historia («antes: …, retirado por … porque …»; `RetiroAnh`, `anh-paradas.ts:138-159`).
 - **La revisión y la respuesta de campo nunca tocan pasos**, salvo el paso que la respuesta determina.
@@ -165,7 +165,7 @@ Con «una señal apunta», la causa y el detalle **solo los confirman el jefe de
 - `422-falta-motivo`: el jefe corrige el detalle de LC-09 (`EP-LC09-251018-21`) a `NP_SUB/falla-pcp` con motivo «Se abrió el equipo: fue otra cosa» → 200; el supervisor cambia «¿Planeada?» a planeada sin motivo, lo que retiraría la causa del jefe → **422** `falta-motivo`.
 - `403-paso-ajeno`: el operador corrige el detalle de LC-06 → **403** `paso-ajeno` («Su rol no dice «Detalle»: lo dice …»).
 
-**Quién lo calcula.** Servidor: inserta en `clasificacion_paso` y revisa la coherencia de lo que rige al confirmar la transacción (`clasificacion_coherente()`, `esquema.sql:2324-2354`).
+**Quién lo calcula.** Servidor: inserta en `clasificacion_paso` y revisa la coherencia de lo que rige al confirmar la transacción (`clasificacion_coherente()`, `esquema.sql:2332-2362`).
 
 **Referencia.** `src/shared/api/escrituras.ts:640-881`; `docs/plan-circular-24/CORRECCIONES-QA.md` (D1); `CONTRATO.md` · «Clasificación ANH (Circular 024)».
 

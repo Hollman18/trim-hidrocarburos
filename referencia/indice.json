@@ -147,6 +147,10 @@
    "endpoint": "/api/configuracion/historial"
   },
   {
+   "archivo": "escenarios/factor-de-medicion.json",
+   "endpoint": "/api/configuracion/historial"
+  },
+  {
    "archivo": "escenarios/correcciones.json",
    "endpoint": null
   }
@@ -783,6 +787,16 @@
    "id": "choke-arbol/morichal-2025-12-gestion",
    "endpoint": "/api/vistas/choke/arbol?campos=morichal&desde=2025-12-01T00%3A00%3A00.000-05%3A00&hasta=2026-01-01T00%3A00%3A00.000-05%3A00&orden=gestion",
    "descripcion": "El árbol de pérdidas del choke de morichal, 2025-12 (el motor de una bomba de la línea), en el orden de gestión"
+  },
+  {
+   "id": "choke/reparto-ceiba-2026-09-22",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-22T00%3A00%3A00.000-05%3A00&hasta=2026-09-23T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre (un día): lo sin explicar no es 0, es el inventario del tanque de venta, y cuadra"
+  },
+  {
+   "id": "choke/reparto-ceiba-2026-09-22-12a14",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-22T12%3A00%3A00.000-05%3A00&hasta=2026-09-22T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre de 12:00 a 14:00, con P-201B parada: lo sin explicar pasa el 2,5 % del potencial (no cuadra), porque el fiscal es diario"
   },
   {
    "id": "salud/bombas-ceiba-2026-09",
@@ -1426,6 +1440,33 @@
     "insumos/escenarios/empate.json"
    ],
    "escenario": "empate"
+  },
+  {
+   "id": "escenarios/factor-de-medicion/reparto-guacamayo+palmar-2026-09",
+   "endpoint": "/api/vistas/choke/reparto?campos=guacamayo%2Cpalmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El factor de medición firmado desde el comienzo en Guacamayo y en El Palmar, con lo que TRIM propone (la mediana de lo real ÷ las pruebas en los días sin paradas de los últimos 90): los pozos se leen con él y la eficiencia de septiembre se puede creer. Lo perdido por tramo y por escalón en guacamayo y palmar (2026-09), con lo estructural, lo que cabía en la holgura y la eficiencia",
+   "requiere": [
+    "insumos/escenarios/factor-de-medicion.json"
+   ],
+   "escenario": "factor-de-medicion"
+  },
+  {
+   "id": "escenarios/factor-de-medicion/tuberia-guacamayo",
+   "endpoint": "/api/vistas/campos/guacamayo/tuberia?desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El factor de medición firmado desde el comienzo en Guacamayo y en El Palmar, con lo que TRIM propone (la mediana de lo real ÷ las pruebas en los días sin paradas de los últimos 90): los pozos se leen con él y la eficiencia de septiembre se puede creer. La tubería de guacamayo",
+   "requiere": [
+    "insumos/escenarios/factor-de-medicion.json"
+   ],
+   "escenario": "factor-de-medicion"
+  },
+  {
+   "id": "escenarios/factor-de-medicion/capacidades-guacamayo",
+   "endpoint": "/api/vistas/campos/guacamayo/capacidades",
+   "descripcion": "El factor de medición firmado desde el comienzo en Guacamayo y en El Palmar, con lo que TRIM propone (la mediana de lo real ÷ las pruebas en los días sin paradas de los últimos 90): los pozos se leen con él y la eficiencia de septiembre se puede creer. Las capacidades de guacamayo y su revisión",
+   "requiere": [
+    "insumos/escenarios/factor-de-medicion.json"
+   ],
+   "escenario": "factor-de-medicion"
   },
   {
    "id": "escenarios/correcciones/paradas-ceiba-2026-09",

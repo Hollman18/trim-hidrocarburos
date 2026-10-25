@@ -182,7 +182,7 @@ Por qué $\max(0, d_i - h)$: mientras la bomba esté parada menos que el colchó
 
 **Lo que ya costó (no es esta cifra).** `HistorialEquipo.bblPorFalla` (promedio de los barriles de sus fallas cerradas, con los ceros de las que absorbió el tanque) se rotula siempre «le ha costado por falla»: Detalle de la bomba («Le ha costado por falla»), placa de P-201B de Morichal («· le ha costado 2.765 bbl por falla»), ficha ejecutiva de P-201B de La Ceiba («le ha costado 4.593 bbl por falla, en promedio»), panel del equipo y Confiabilidad (columna «le ha costado / por falla»). Cap. 7.
 
-**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/riesgo?campos` → `Riesgo.costoFalla?` (bbl), `colchonH?` (h, solo finito), `mdtFuente?` (texto) y `costoDe?` (`'propio'` | `'flota'`); son números y textos: el códec no cambia. Fórmula en CONTRATO.md «Costo si falla hoy» (`CONTRATO.md:1128-1148`).
+**Quién lo calcula y por dónde viaja.** Servidor. `GET /api/vistas/riesgo?campos` → `Riesgo.costoFalla?` (bbl), `colchonH?` (h, solo finito), `mdtFuente?` (texto) y `costoDe?` (`'propio'` | `'flota'`); son números y textos: el códec no cambia. Fórmula en CONTRATO.md «Costo si falla hoy» (`CONTRATO.md:1138-1158`).
 
 **Referencia.** `diferido.ts:462-481` (tipo), `:507-522` (`costoDeBomba`), `:589`, `:612-621`; `src/shared/ui/costoHoy.ts`; casos `referencia/riesgo/{morichal,guacamayo,portafolio}.json`; `verificar-libro.mjs` §18 (1) y §19 (5).
 

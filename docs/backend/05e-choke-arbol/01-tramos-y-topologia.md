@@ -4,7 +4,7 @@ El modelo choke ve el campo como **una tubería en serie**: el yacimiento entreg
 
 Este archivo cubre las palabras de los tramos, el criterio único que decide el tramo de cada equipo (la topología), cómo se deriva del registro, cómo la propone TRIM, cómo se contesta y se firma, y el «Todavía no sé». Lo que cada tramo **da** (sus potenciales) va en 5E.2; el tramo de **cada parada**, en 5E.3.
 
-Rutas: `GET /api/vistas/topologia?campo=` (`pedirTopologia`, `src/shared/api/choke.ts:265`) y `GET /api/vistas/topologia/propuestas?campo=` (`pedirPropuestasTopologia`, `:288`); lo firmado viaja en `POST /api/configuracion` (`Config.topologia` y `Config.topologiaPorSaber`, `src/entities/configuracion.ts:119-128`), con `POST /api/configuracion/vista-previa` (`src/shared/api/escrituras.ts:1264-1305`) y `POST /api/topologia/importar` (`:1306`).
+Rutas: `GET /api/vistas/topologia?campo=` (`pedirTopologia`, `src/shared/api/choke.ts:269`) y `GET /api/vistas/topologia/propuestas?campo=` (`pedirPropuestasTopologia`, `:292`); lo firmado viaja en `POST /api/configuracion` (`Config.topologia` y `Config.topologiaPorSaber`, `src/entities/configuracion.ts:119-128`), con `POST /api/configuracion/vista-previa` (`src/shared/api/escrituras.ts:1264-1305`) y `POST /api/topologia/importar` (`:1306`).
 
 **Dos sentidos de «tramo».** En este capítulo «tramo» es siempre un tramo de la **tubería** (yacimiento, pozo, planta, afuera). El libro (5A) llama «tramo» a un pedazo de tiempo de una parada (`Tramo`, `diferido.ts`); aquí ese se llama **fila** cuando es la fila ANH (pozo × día × causa, 5E.9) o **tramo del libro** cuando hace falta distinguirlo.
 
@@ -12,13 +12,13 @@ Rutas: `GET /api/vistas/topologia?campo=` (`pedirTopologia`, `src/shared/api/cho
 
 ### Los cuatro tramos y sus palabras
 
-**Qué es.** Los valores del paso 2 de la ANH (`ChokeAnh`, `src/entities/choke.ts:63`): `reservorio`, `pozo`, `planta`, `exportacion`, en el orden de la tubería (`ORDEN_CHOKE`, `:116`). Para **lo que limita** a un campo hay tres (`ChokeCampo`, `:67`): `pozos` (incluye el yacimiento, como la NSTA), `planta` y `exportacion`. «Mercado» **no es un quinto valor**: es un subnivel de exportación (`subnivel: 'mercado'`, `SUBNIVEL_MERCADO`, `:160`). Lo que no tiene tramo todavía es `sin-asignar` (`CHOKES_Y_SIN_ASIGNAR`, `:118`).
+**Qué es.** Los valores del paso 2 de la ANH (`ChokeAnh`, `src/entities/choke.ts:64`): `reservorio`, `pozo`, `planta`, `exportacion`, en el orden de la tubería (`ORDEN_CHOKE`, `:117`). Para **lo que limita** a un campo hay tres (`ChokeCampo`, `:68`): `pozos` (incluye el yacimiento, como la NSTA), `planta` y `exportacion`. «Mercado» **no es un quinto valor**: es un subnivel de exportación (`subnivel: 'mercado'`, `SUBNIVEL_MERCADO`, `:161`). Lo que no tiene tramo todavía es `sin-asignar` (`CHOKES_Y_SIN_ASIGNAR`, `:119`).
 
 **Dónde se ve.** En toda pantalla que dice dónde se trabó algo: la tubería del campo, el reparto, el árbol, Identificar, «si falla hoy», la topología de Configuración.
 
 **Qué texto.**
 
-| Valor | `NOMBRE_CHOKE` (`:124`) | `EXPLICA_TRAMO` (`:131`, el ⓘ corto) | `DONDE_CHOKE` (`:145`, en frase) |
+| Valor | `NOMBRE_CHOKE` (`:125`) | `EXPLICA_TRAMO` (`:132`, el ⓘ corto) | `DONDE_CHOKE` (`:146`, en frase) |
 |---|---|---|---|
 | `reservorio` | «En el yacimiento» | «La roca o el fluido, no un equipo» | «en el yacimiento» |
 | `pozo` | «En el pozo» | «Solo afectó a este pozo» | «en el pozo» |
@@ -26,28 +26,28 @@ Rutas: `GET /api/vistas/topologia?campo=` (`pedirTopologia`, `src/shared/api/cho
 | `exportacion` | «Afuera: oleoducto, transportador o cliente» | «Fuera de la batería» | «afuera (oleoducto, transportador o cliente)» |
 | `sin-asignar` | — | — | «sin identificar todavía» |
 
-`RESUMEN_TRAMO` (`:138`) es el ⓘ largo: «El problema fue de la roca o del fluido, no de un equipo: el pozo no tenía qué dar.» · «Solo afectó a este pozo: su bomba de fondo, su varilla, su cabeza, su línea o lo eléctrico que es solo suyo.» · «Afectó a varios pozos: lo compartido, desde el cabezal de producción hasta la salida de la batería, y los servicios del campo.» · «Fuera de la batería: el oleoducto, el transportador o el cliente no recibieron.» Para lo que limita, `NOMBRE_CHOKE_CAMPO` (`:154`): «Los pozos», «La planta o estación», «Afuera: oleoducto, transportador o cliente». El subnivel: «Mercado: el terminal o el cliente no recibe, o la nominación».
+`RESUMEN_TRAMO` (`:139`) es el ⓘ largo: «El problema fue de la roca o del fluido, no de un equipo: el pozo no tenía qué dar.» · «Solo afectó a este pozo: su bomba de fondo, su varilla, su cabeza, su línea o lo eléctrico que es solo suyo.» · «Afectó a varios pozos: lo compartido, desde el cabezal de producción hasta la salida de la batería, y los servicios del campo.» · «Fuera de la batería: el oleoducto, el transportador o el cliente no recibieron.» Para lo que limita, `NOMBRE_CHOKE_CAMPO` (`:155`): «Los pozos», «La planta o estación», «Afuera: oleoducto, transportador o cliente». El subnivel: «Mercado: el terminal o el cliente no recibe, o la nominación».
 
 **Quién lo calcula.** Son constantes del producto; el servidor devuelve los códigos y el front pone las palabras. Si el servidor genera textos (mensajes, informes), usa estas mismas.
 
-**Referencia.** `src/entities/choke.ts:58-175`; `src/entities/anh-catalogo.ts:280` (`ETIQUETA_CHOKE`, las palabras de la Circular).
+**Referencia.** `src/entities/choke.ts:59-176`; `src/entities/anh-catalogo.ts:280` (`ETIQUETA_CHOKE`, las palabras de la Circular).
 
 ---
 
 ### El criterio único: el alcance decide el tramo
 
-**Qué es.** El tramo de un equipo **no lo escoge nadie**: sale de **a quién sirve** (su alcance, `AlcanceElemento`, `choke.ts:81`). Es el criterio de Edinson Romero en la sesión con la operadora («esto está copiado del modelo choque», [26:48]): lo que es de un solo pozo es el pozo; lo que comparten varios es la planta; lo que está en el límite de la batería o es de otro dueño es afuera. Un solo criterio, sin opción NSTA, para que los campos se puedan comparar (CHOKE-COMPLETO §2).
+**Qué es.** El tramo de un equipo **no lo escoge nadie**: sale de **a quién sirve** (su alcance, `AlcanceElemento`, `choke.ts:82`). Es el criterio de Edinson Romero en la sesión con la operadora («esto está copiado del modelo choque», [26:48]): lo que es de un solo pozo es el pozo; lo que comparten varios es la planta; lo que está en el límite de la batería o es de otro dueño es afuera. Un solo criterio, sin opción NSTA, para que los campos se puedan comparar (CHOKE-COMPLETO §2).
 
-**Fórmula.** `chokeDeAlcance` (`choke.ts:203-211`):
+**Fórmula.** `chokeDeAlcance` (`choke.ts:212-220`):
 
-| Alcance | `NOMBRE_ALCANCE` (`:161`) | Ejemplos | Tramo |
+| Alcance | `NOMBRE_ALCANCE` (`:162`) | Ejemplos | Tramo |
 |---|---|---|---|
 | `dedicado` | «Le sirve a un solo pozo» | la bomba de fondo, el variador, el transformador, la línea de flujo de un pozo | `pozo` |
 | `compartido` | «Le sirve a varios pozos» | pórtico, red de media, separador, bombas de agua, multifásica de un clúster, aire, compresor | `planta` |
 | `frontera` | «El límite de la batería hacia afuera» | la brida de salida, el punto de entrega | `exportacion` |
 | `tercero` | «De otro dueño, más allá de la batería» | oleoducto, transportador, cliente | `exportacion` |
 
-Dentro de la batería el alcance sale del **número de pozos servidos** (`alcancePorPozos`, `:214`): uno, dedicado; dos o más, compartido. **El yacimiento nunca sale de un equipo**: solo lo pone una persona (5E.9, `declararYacimiento`). **La energía que entra no es frontera**: la acometida sirve a varios pozos y es compartida (la restricción se materializa en el sistema eléctrico del campo); quién la cortó (el proveedor o el campo) es el responsable, otro paso del árbol.
+Dentro de la batería el alcance sale del **número de pozos servidos** (`alcancePorPozos`, `:223`): uno, dedicado; dos o más, compartido. **El yacimiento nunca sale de un equipo**: solo lo pone una persona (5E.9, `declararYacimiento`). **La energía que entra no es frontera**: la acometida sirve a varios pozos y es compartida (la restricción se materializa en el sistema eléctrico del campo); quién la cortó (el proveedor o el campo) es el responsable, otro paso del árbol.
 
 **Ejemplo con los datos del demo.** La Ceiba (18 pozos): P-201B (bomba de agua) sirve a los 18 → compartido → planta; LC-14 (su levantamiento) → dedicado → pozo; el oleoducto → tercero → afuera. Morichal: MPP-301 (multifásica) sirve a MN-07, MN-18 y MN-33 → compartido → planta.
 
@@ -55,15 +55,15 @@ Dentro de la batería el alcance sale del **número de pozos servidos** (`alcanc
 
 **Quién lo calcula.** Servidor (y el front, para la frase inmediata). El `choke` se guarda solo para la auditoría.
 
-**Referencia.** `src/entities/choke.ts:197-219`; `CONTRATO.md` · «Configuración» (`topologia`: «el `choke` se guarda para la auditoría, pero **sale del alcance**»).
+**Referencia.** `src/entities/choke.ts:206-228`; `CONTRATO.md` · «Configuración» (`topologia`: «el `choke` se guarda para la auditoría, pero **sale del alcance**»).
 
 ---
 
 ### La topología que rige en un campo
 
-**Qué es.** La lista de elementos del campo con su alcance y sus pozos (`ChokeDeElemento`, `choke.ts:84-103`: `elemento`, `choke`, `alcance`, `pozos?`, `campoId?`, `casoBorde?`). Rige **la firmada** (`Config.topologia`) si trae alguna entrada para el campo; si no, **la que se deriva del registro** (`topologiaDe`, `:403`; `topologiaFirmada`, `:405`). Una topología firmada **manda entera**: un campo la estrena completa (abajo, «la primera firma»). Una entrada firmada sin `campoId` vale para todos los campos.
+**Qué es.** La lista de elementos del campo con su alcance y sus pozos (`ChokeDeElemento`, `choke.ts:85-104`: `elemento`, `choke`, `alcance`, `pozos?`, `campoId?`, `casoBorde?`). Rige **la firmada** (`Config.topologia`) si trae alguna entrada para el campo; si no, **la que se deriva del registro** (`topologiaDe`, `:412`; `topologiaFirmada`, `:414`). Una topología firmada **manda entera**: un campo la estrena completa (abajo, «la primera firma»). Una entrada firmada sin `campoId` vale para todos los campos.
 
-**Fórmula (la derivada, `topologiaDerivada`, `choke.ts:321-358`).** Sin escribir nada a mano, con lo que el motor ya tiene:
+**Fórmula (la derivada, `topologiaDerivada`, `choke.ts:330-367`).** Sin escribir nada a mano, con lo que el motor ya tiene:
 
 1. cada pozo es dedicado a sí mismo (su levantamiento);
 2. las bombas de la línea sirven a los pozos de su perfil (`bombas.ts`: MPP-301 → MN-07, MN-18, MN-33); las de agua, a todos los pozos del campo (toda el agua pasa por ellas);
@@ -89,13 +89,13 @@ En La Ceiba, P-201A, P-201B, SE-2, K-101, V-101, LACT-01, TK-102, C-401 y H-302 
 
 **Quién lo calcula.** Servidor: `GET /api/vistas/topologia?campo=` → `{ campoId, firmada, elementos, porSaber, sinResponder }` (`CONTRATO.md`, vistas; tipo en el Anexo A, `// GET /api/vistas/topologia?campo`).
 
-**Referencia.** `src/entities/choke.ts:273-420`; `referencia/choke/topologia-{ceiba,morichal,guacamayo,palmar,zarza}.json`.
+**Referencia.** `src/entities/choke.ts:282-429`; `referencia/choke/topologia-{ceiba,morichal,guacamayo,palmar,zarza}.json`.
 
 ---
 
 ### El caso de borde: un equipo de la misma locación
 
-**Qué es.** Un equipo compartido por **2 o 3 pozos de una misma locación** (`casoBordeDe`, `choke.ts:260-266`). La regla dice planta (sirve a varios) y el administrador no puede escoger otra cosa; se marca `casoBorde: 'misma-locacion'` para que, el día que la operadora conteste (pregunta abierta, 5E.11), se vea cuántos equipos y paradas cambian.
+**Qué es.** Un equipo compartido por **2 o 3 pozos de una misma locación** (`casoBordeDe`, `choke.ts:269-275`). La regla dice planta (sirve a varios) y el administrador no puede escoger otra cosa; se marca `casoBorde: 'misma-locacion'` para que, el día que la operadora conteste (pregunta abierta, 5E.11), se vea cuántos equipos y paradas cambian.
 
 **Ejemplo con los datos del demo.** Morichal: MPP-301 → MN-07, MN-18 y MN-33, los tres del «Clúster norte» (`LOCACIONES_DEMO`, `src/entities/datos/topologia.ts:19-27`). Cargado por CSV: «Fila 2: MPP-301 sirve a 3 pozos de una misma locación (MN-07, MN-18 y MN-33): va a la planta, y queda marcado como caso de borde hasta que se confirme la regla con la operadora.» (aviso, no bloquea).
 
@@ -103,13 +103,13 @@ En La Ceiba, P-201A, P-201B, SE-2, K-101, V-101, LACT-01, TK-102, C-401 y H-302 
 
 **Casos borde.** La locación de cada pozo **no está en `Pozo`**: la da quien llama (en el demo, la costura pasa `locacionDemo`). El servidor necesita ese dato del registro (5E.11).
 
-**Referencia.** `src/entities/choke.ts:251-271`; `referencia/choke/topologia-morichal.json`.
+**Referencia.** `src/entities/choke.ts:260-280`; `referencia/choke/topologia-morichal.json`.
 
 ---
 
 ### Lo que TRIM propone de la topología
 
-**Qué es.** Para que el administrador **confirme y no escriba**, TRIM propone la topología con lo que ya sabe (`propuestasTopologia`, `choke.ts:457-511`), con cuatro fuentes y su evidencia: de qué **alimentador** cuelga cada pozo, qué pozos mueve cada **bomba**, qué pozos cerraron en cada **cascada** de un servicio (la regla de `causa-senal.ts`) y lo que dice el **registro** de cada equipo. Lo que no cuadra va como `conflicto`. **Nunca se firma sola.**
+**Qué es.** Para que el administrador **confirme y no escriba**, TRIM propone la topología con lo que ya sabe (`propuestasTopologia`, `choke.ts:466-520`), con cuatro fuentes y su evidencia: de qué **alimentador** cuelga cada pozo, qué pozos mueve cada **bomba**, qué pozos cerraron en cada **cascada** de un servicio (la regla de `causa-senal.ts`) y lo que dice el **registro** de cada equipo. Lo que no cuadra va como `conflicto`. **Nunca se firma sola.**
 
 **Ejemplo con los datos del demo** (`porque` tal como sale):
 
@@ -128,7 +128,7 @@ La de V-101 trae `pozos: []`: el registro dice un número que no cuadra con el e
 
 **Quién lo calcula.** Servidor: `GET /api/vistas/topologia/propuestas?campo=` → `[{ elemento, pozos, porque, fuente, evidencia, conflicto?, casoBorde? }]`.
 
-**Referencia.** `src/entities/choke.ts:436-511`; `referencia/choke/propuestas-{campo}.json`.
+**Referencia.** `src/entities/choke.ts:445-520`; `referencia/choke/propuestas-{campo}.json`.
 
 ---
 
@@ -154,21 +154,21 @@ La de V-101 trae `pozos: []`: el registro dice un número que no cuadra con el e
 
 ### «Todavía no sé»: el motor no adivina
 
-**Qué es.** Un equipo del que el administrador contestó «Todavía no sé» se firma en `Config.topologiaPorSaber` (`ElementoPorSaber`, `choke.ts:105`). **El motor no adivina su tramo**, ni por el tipo de falla: `deducirChoke` devuelve `null` (`choke.ts:685`) y el paso 2 de sus paradas queda en falta con su porqué y la pregunta `PREGUNTA_ORIGEN` (`porSaberDe`, `:426-434`), que contesta quien revisa, nunca el operador. En «si falla hoy» el equipo va sin cifra (5E.7).
+**Qué es.** Un equipo del que el administrador contestó «Todavía no sé» se firma en `Config.topologiaPorSaber` (`ElementoPorSaber`, `choke.ts:106`). **El motor no adivina su tramo**, ni por el tipo de falla: `deducirChoke` devuelve `null` (`choke.ts:694`) y el paso 2 de sus paradas queda en falta con su porqué y la pregunta `PREGUNTA_ORIGEN` (`porSaberDe`, `:435-443`), que contesta quien revisa, nunca el operador. En «si falla hoy» el equipo va sin cifra (5E.7).
 
 **Ejemplo con los datos del demo.** Con K-101 de La Ceiba por saber, en los 13 meses del demo (1-oct-2025 → 2-oct-2026 14:00): 105 tramos del libro, 17.277 bbl, pasan a **sin tramo**; siguen en el escalón de paradas no planeadas (el escalón sale de la causa, 5E.4, QA-D5). Porqué: «Falta saber a qué pozos sirve K-101: el administrador contestó «Todavía no sé» y TRIM no lo adivina».
 
 **Casos borde.** Un equipo no puede estar a la vez en `topologia` y en `topologiaPorSaber` del mismo campo (422). Contestado de otra forma, deja de estar por saber.
 
-**Referencia.** `src/entities/choke.ts:410-434`; `CONTRATO.md` · «Configuración» (`topologiaPorSaber`).
+**Referencia.** `src/entities/choke.ts:419-443`; `CONTRATO.md` · «Configuración» (`topologiaPorSaber`).
 
 ---
 
 ### La primera firma y la validación
 
-**Qué es.** La topología es **técnica**: la firma el administrador (`config:firmar`) con `POST /api/configuracion`. Un campo que estrena su topología **la firma completa**: cada equipo tiene que tener respuesta (contestada o aceptada por tipo); TRIM propone, no firma nada solo (`pendientesDe`, `faltanParaFirmar`, `choke-config.ts:172-185`). Con una firmada, cambia solo lo contestado, y un equipo nuevo del registro espera su respuesta (`sinResponderDe`, `choke.ts:415-420`) sin trabar la firma de lo demás; mientras tanto su tramo sale de la regla por tipo de causa. `conTopologia` (`choke-config.ts:143-170`) pone el borrador encima de la configuración.
+**Qué es.** La topología es **técnica**: la firma el administrador (`config:firmar`) con `POST /api/configuracion`. Un campo que estrena su topología **la firma completa**: cada equipo tiene que tener respuesta (contestada o aceptada por tipo); TRIM propone, no firma nada solo (`pendientesDe`, `faltanParaFirmar`, `choke-config.ts:172-185`). Con una firmada, cambia solo lo contestado, y un equipo nuevo del registro espera su respuesta (`sinResponderDe`, `choke.ts:424-429`) sin trabar la firma de lo demás; mientras tanto su tramo sale de la regla por tipo de causa. `conTopologia` (`choke-config.ts:143-170`) pone el borrador encima de la configuración.
 
-**Reglas (422, `validarTopologia`, `choke.ts:231-249`; regla 9 de la firma).** Textos corridos:
+**Reglas (422, `validarTopologia`, `choke.ts:240-258`; regla 9 de la firma).** Textos corridos:
 
 - «P-201B (ceiba): el choke guardado («En el pozo») no es el que sale de su alcance («Le sirve a varios pozos» → «En la planta o estación»).»
 - «TR-1 (ceiba): es dedicado, así que le sirve a un solo pozo (tiene 2).»

@@ -383,6 +383,29 @@ select pg_temp.pasa('una versión con «Todavía no sé» y capacidades: el JSON
         (2, 'ceiba', 'bomba', 'P-201A', 0, 89250, 'placa', null), (2, 'ceiba', 'bomba', 'P-201B', 1, 89250, 'placa', null);
       set constraints all immediate;
     end $x$ $s$);
+-- El factor de medición de los pozos (Config.capacidades[].factorMedicion, QA-D3): entre 0,5 y 1,5 y con su porqué.
+select pg_temp.muerde('un factor de medición fuera de 0,5 a 1,5',
+  $s$insert into capacidades_campo (version, orden, campo_id, factor_medicion, factor_medicion_porque) values (1, 0, 'guacamayo', 2, 'Medido con el separador de prueba')$s$, '23514');
+select pg_temp.muerde('un factor de medición sin su porqué',
+  $s$insert into capacidades_campo (version, orden, campo_id, factor_medicion) values (1, 0, 'guacamayo', 1.004)$s$, '23514');
+select pg_temp.muerde('un porqué del factor de medición que no dice nada',
+  $s$insert into capacidades_campo (version, orden, campo_id, factor_medicion, factor_medicion_porque) values (1, 0, 'guacamayo', 1.004, '   ')$s$, '23514');
+select pg_temp.pasa('una versión con el factor de medición firmado: el JSON firmado = lo normalizado',
+  $s$do $x$ begin
+      insert into version_config (version, base, fecha, por_id, por, motivo, cambios, config)
+        select 2, 1, now(), 'adm', por, 'Factor de medición de Guacamayo', '{"Capacidades de Guacamayo (se firman por primera vez)"}',
+          config || '{"capacidades":[{"campoId":"guacamayo","factorMedicion":{"valor":1.004,"porque":"La mediana de lo real ÷ las pruebas en 24 días sin paradas"}}]}'::jsonb
+        from version_config where version = 1;
+      insert into membrete select 2, empresa from membrete where version = 1;
+      insert into perfil_campo select 2, campo_id, gas, bombas, electrosumergibles from perfil_campo where version = 1;
+      insert into tramo_meta select 2, campo_id, desde, produccion_bpd, diferido_max_bpd, netback_usd, criterio_sin_causa from tramo_meta where version = 1;
+      insert into tanque select 2, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo from tanque where version = 1;
+      insert into respaldo select 2, campo_id, equipo, orden, libre_bpd, detalle from respaldo where version = 1;
+      insert into parada_programada select 2, id, orden, campo_id, equipo, desde, hasta, motivo from parada_programada where version = 1;
+      insert into capacidades_campo (version, orden, campo_id, factor_medicion, factor_medicion_porque)
+        values (2, 0, 'guacamayo', 1.004, 'La mediana de lo real ÷ las pruebas en 24 días sin paradas');
+      set constraints all immediate;
+    end $x$ $s$);
 select pg_temp.muerde('una versión con capacidades en el JSON firmado y sin sus filas',
   $s$do $x$ begin
       insert into version_config (version, base, fecha, por_id, por, motivo, cambios, config)

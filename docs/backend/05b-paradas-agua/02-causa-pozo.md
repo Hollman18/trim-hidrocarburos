@@ -221,4 +221,4 @@ La causa se memoriza por **contexto** = (configuración firmada vigente, respues
 | Detalle de una parada de bomba | «POR QUÉ PARÓ · <COMO en mayúsculas>», `texto`, y la lista `evidencia` en monoespaciada (`Detalle.tsx:436-444`) |
 | Historia del equipo (panel, ingeniería) | `<Parte> · <COMO>` o el texto si tiene ≤ 6 palabras (`PanelEquipo.tsx:279-281`) |
 
-**Referencia.** `src/entities/causa-senal.ts:1-322`; `CONTRATO.md:1001-1041`; los libros de `referencia/diferidos/*.json` traen la causa de cada tramo.
+**Referencia.** `src/entities/causa-senal.ts:1-322`; `CONTRATO.md:1011-1051`; los libros de `referencia/diferidos/*.json` traen la causa de cada tramo.

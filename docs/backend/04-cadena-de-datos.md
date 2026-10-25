@@ -286,7 +286,7 @@ $$
 
 donde $\prec$ es ese orden (un paro manda sobre un `HZ`: con el pozo cerrado no hay frecuencia que reducir; entre dos del mismo tipo, el que empezó primero). El estado actual de un pozo con un paro y un `HZ` abiertos a la vez es el paro (`estadoAhora`, `src/entities/pozos.ts:167`).
 
-**Las dos opciones del contrato** (CONTRATO.md:860-863 y «Pendiente del lado del servidor»):
+**Las dos opciones del contrato** (CONTRATO.md:870-873 y «Pendiente del lado del servidor»):
 
 | | Normalizar (lo que hace el motor) | Rechazar en la ingesta |
 |---|---|---|

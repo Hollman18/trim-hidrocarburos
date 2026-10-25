@@ -1187,7 +1187,7 @@ comment on column version_config.por_id is 'Id de la persona que firmó (del tok
 comment on column version_config.por is 'Firma para leer: «Nombre · rol».';
 comment on column version_config.motivo is 'Por qué se cambió: 5 caracteres o más.';
 comment on column version_config.cambios is 'Lo que cambió dicho para leer (diferencias de configuracion.ts), metas primero.';
-comment on column version_config.config is 'La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si los trae, topologia, topologiaPorSaber y capacidades); precio sin configurar = ausente; una lista vacía no viaja.';
+comment on column version_config.config is 'La Config completa como se firmó (empresa, campos{metas, perfil}, tanques, respaldos, programa y, si los trae, topologia, topologiaPorSaber y capacidades, con su factorMedicion); precio sin configurar = ausente; una lista vacía no viaja.';
 
 create table membrete (
   version  integer primary key references version_config(version),
@@ -1380,14 +1380,20 @@ create table capacidades_campo (
   orden               smallint not null,
   campo_id            text not null references campo(id),
   explicacion_empate  text check (explicacion_empate is null or btrim(explicacion_empate) <> ''),
+  factor_medicion     numeric check (factor_medicion is null or (factor_medicion >= 0.5 and factor_medicion <= 1.5)),
+  factor_medicion_porque text check (factor_medicion_porque is null or (alcanza(factor_medicion_porque, 5) and char_length(factor_medicion_porque) <= 500)),
   primary key (version, campo_id),
-  unique (version, orden)
+  unique (version, orden),
+  -- El factor de medición va con su porqué, o ninguno de los dos.
+  check ((factor_medicion is null) = (factor_medicion_porque is null))
 );
-comment on table capacidades_campo is 'Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4), que va con la firma. Cada número va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.';
+comment on table capacidades_campo is 'Las capacidades firmadas de un campo en una versión (CapacidadesCampo de src/entities/capacidades.ts; Config.capacidades), con la explicación de un empate exacto entre dos tramos (NSTA §5.4) y el factor de medición de los pozos (QA-D3), que van con la firma. Cada número de capacidad va en capacidad_firmada; lo que no se firma sigue con el dato del demo, marcado. Cada día usa las que regían ese día (version_en). Firma config:firmar. Solo inserción.';
 comment on column capacidades_campo.version is 'Versión.';
 comment on column capacidades_campo.orden is 'Lugar del campo en la lista firmada.';
 comment on column capacidades_campo.campo_id is 'Campo (registrado, una vez por versión).';
 comment on column capacidades_campo.explicacion_empate is 'Por qué dos tramos (pozos, planta, afuera) dan exactamente lo mismo. La pide la revisión de la firma (revisarCapacidades) solo si hay un empate exacto.';
+comment on column capacidades_campo.factor_medicion is 'El factor de medición firmado (Config.capacidades[].factorMedicion.valor, QA-D3): por cuánto se multiplican las pruebas de los pozos para leerlas como el punto oficial, en lo que limita y en la eficiencia de producción. Entre 0,5 y 1,5. Sin él rige 1; lo que propone TRIM (factorMedicionPropuesto, la mediana de lo real ÷ las pruebas en los días sin paradas) nunca rige sin firma. En un campo de gas no se firma (validarCapacidades, 422: la eficiencia de crudo no aplica). Quién y cuándo, la versión.';
+comment on column capacidades_campo.factor_medicion_porque is 'Por qué ese factor, en palabras (factorMedicion.porque): 5 caracteres o más que se vean, 500 a lo sumo. Va si y solo si va el factor.';
 
 create table capacidad_firmada (
   version   integer not null,
@@ -1472,10 +1478,12 @@ create or replace function config_json(v integer) returns jsonb language sql sta
               || coalesce((select jsonb_build_object('bombas', jsonb_agg(jsonb_build_object('equipo', cf.equipo, 'bpd', cf.bpd, 'fuente', cf.fuente) order by cf.orden))
                    from capacidad_firmada cf where cf.version = v and cf.campo_id = cc.campo_id and cf.tramo = 'bomba' having count(*) > 0), '{}'::jsonb)
               || case when cc.explicacion_empate is null then '{}'::jsonb else jsonb_build_object('explicacionEmpate', cc.explicacion_empate) end
+              || case when cc.factor_medicion is null then '{}'::jsonb
+                   else jsonb_build_object('factorMedicion', jsonb_build_object('valor', cc.factor_medicion, 'porque', cc.factor_medicion_porque)) end
             order by cc.orden) from capacidades_campo cc where cc.version = v))
        else '{}'::jsonb end
 $$;
-comment on function config_json(integer) is 'Rearma la Config de una versión desde membrete, perfil_campo, tramo_meta, tanque, respaldo, parada_programada, topologia, topologia_por_saber, capacidades_campo y capacidad_firmada (fechas del programa en ISO de Colombia con milisegundos; la topología, «Todavía no sé» y las capacidades solo si la versión trae alguna fila).';
+comment on function config_json(integer) is 'Rearma la Config de una versión desde membrete, perfil_campo, tramo_meta, tanque, respaldo, parada_programada, topologia, topologia_por_saber, capacidades_campo (con la explicación del empate y el factor de medición) y capacidad_firmada (fechas del programa en ISO de Colombia con milisegundos; la topología, «Todavía no sé» y las capacidades solo si la versión trae alguna fila).';
 
 -- El JSON firmado con las fechas del programa escritas igual que config_json
 -- y el precio sin configurar como ausente (normalizarConfig).

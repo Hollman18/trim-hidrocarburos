@@ -39,4 +39,4 @@ Lo que no se pudo resolver leyendo el código, lo que parece inconsistente y lo 
 ### Lo que la referencia no cubre
 
 20. No hay caso en `referencia/` para `GET /api/vistas/diferidos/base`, `GET /api/vistas/potencial-reciente`, el libro y el día a día del **mes en curso**, ni para un período que corte meses (residuo ≠ 0). Los números de este capítulo para esos casos salen de correr el motor; un backend no tiene contra qué compararlos por HTTP. Conviene agregar al menos: `diferidos/<campo>-curso`, `diferidos/<campo>-2026-09-15_2026-10-02`, `base/<campo>-curso` y `potencial-reciente/portafolio`.
-21. **Eventos que se pisan.** El contrato pide escoger entre normalizar (lo que hace el motor) o rechazar en la ingesta (`CONTRATO.md:858-861`). Hasta que se escoja, un backend que rechace dará otros números en los mismos datos.
+21. **Eventos que se pisan.** El contrato pide escoger entre normalizar (lo que hace el motor) o rechazar en la ingesta (`CONTRATO.md:868-871`). Hasta que se escoja, un backend que rechace dará otros números en los mismos datos.

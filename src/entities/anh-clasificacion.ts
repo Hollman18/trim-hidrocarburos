@@ -1413,7 +1413,7 @@ const consecutivo = (d: { n?: number } | undefined) => d?.n ?? 0
  *  y la fila vuelve a lo que propone TRIM. El tramo de exceso del programa solo
  *  usa lo suyo: quien llama no le pasa el evento. La conversación junta las dos
  *  en el orden en que se dijo; la revisión que rige es la más reciente. Es la
- *  misma regla de `v_clasificacion_rige` (esquema.sql). */
+ *  misma regla de la vista `v_clasificacion_fuente` (esquema.sql). */
 export function rigeEnFila(fila: BorradorClasificacion | undefined, evento: BorradorClasificacion | undefined): BorradorClasificacion | undefined {
   if (!fila || !evento) return fila ?? evento
   const r: Record<string, unknown> = {}

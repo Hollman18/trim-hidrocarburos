@@ -218,7 +218,10 @@ function InfoDelPotencial({ q }: { q: { campos: string[]; desde: Date; hasta: Da
   const porque = brecha === 0 ? 'en este período las pruebas y el medidor oficial dan lo mismo'
     : brecha > 0 ? `descuenta además lo que las pruebas dan de más que el medidor oficial (${n0(brecha)} bbl en el período)`
       : `suma además lo que el medidor oficial da de más que las pruebas (${n0(-brecha)} bbl en el período)`
-  return <Info titulo="% del potencial" texto={`${DEL_POTENCIAL} No es la eficiencia de producción («Lo que no se produjo, por tipo»): esa parte de las pruebas sin el factor y ${porque}. Aquí, ${n1(libro)} % del potencial y ${n1(b.pe)} % de eficiencia de producción.`} />
+  // La eficiencia que no se puede creer no se dice en número, tampoco aquí (D3; 5E·H30).
+  const aqui = b.peCreible ? `Aquí, ${n1(libro)} % del potencial y ${n1(b.pe)} % de eficiencia de producción.`
+    : `Aquí, ${n1(libro)} % del potencial; la eficiencia de producción del período no se puede creer: ${b.textoPe ?? ''}`
+  return <Info titulo="% del potencial" texto={`${DEL_POTENCIAL} No es la eficiencia de producción («Lo que no se produjo, por tipo»): esa parte de las pruebas sin el factor y ${porque}. ${aqui}`} />
 }
 
 /** Cifra de la cabecera, con la misma forma que la barra de al lado: rótulo,
