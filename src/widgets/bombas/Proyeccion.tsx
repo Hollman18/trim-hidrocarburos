@@ -41,8 +41,8 @@ export function Proyeccion({ s }: { s: Senal }) {
       {lim !== undefined && (
         <>
           <line x1={G.x0} x2={G.x1} y1={Y(lim)} y2={Y(lim)} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="5 3" />
-          <text x={G.x1 + 8} y={Y(lim) - 2} fontSize={10} fill="var(--tinta2)">límite</text>
-          <text x={G.x1 + 8} y={Y(lim) + 10} fontSize={10.5} fontWeight={600} fill="var(--tinta)" className="tabular">
+          <text x={G.x1 + 8} y={Y(lim) - 2} fontSize={12} fill="var(--tinta2)">límite</text>
+          <text x={G.x1 + 8} y={Y(lim) + 10} fontSize={12} fontWeight={600} fill="var(--tinta)" className="tabular">
             {lim.toLocaleString('es-CO')} {s.unidad}
           </text>
         </>
@@ -62,7 +62,7 @@ export function Proyeccion({ s }: { s: Senal }) {
             fill="var(--tinta2)" opacity={0.5} rx={1.5} />
           {enHorizonte && (
             <text x={Math.min(X(tCruce), G.x1 - 4)} y={Y(lim) + (Y(lim) > (G.y0 + G.y1) / 2 ? -9 : 18)}
-              fontSize={10.5} fontWeight={600} textAnchor="end" fill="var(--tinta)" className="tabular">
+              fontSize={12} fontWeight={600} textAnchor="end" fill="var(--tinta)" className="tabular">
               en {dias(p.horas)} d
             </text>
           )}
@@ -70,18 +70,18 @@ export function Proyeccion({ s }: { s: Senal }) {
       )}
       {/* eje del tiempo */}
       <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea2)" strokeWidth={0.8} />
-      <text x={G.x0} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta3)">hace {dias(ahora)} d</text>
+      <text x={G.x0} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta3)">hace {dias(ahora)} d</text>
       {cruza && G.x1 - X(ahora) < 46 ? (
         // Un cruce muy cerca de hoy dejaba «hoy» encima de «+0,2 d»: van juntos, al final del eje.
-        <text x={G.x1} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta3)" textAnchor="end">
+        <text x={G.x1} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta3)" textAnchor="end">
           <tspan fill="var(--tinta2)" fontWeight={600}>hoy</tspan> · +{dias(finT - ahora)} d
         </text>
       ) : (
         <>
-          <text x={X(ahora)} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta2)" fontWeight={600}
+          <text x={X(ahora)} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta2)" fontWeight={600}
             textAnchor={cruza ? 'middle' : 'end'}>hoy</text>
           {cruza && (
-            <text x={G.x1} y={G.y1 + 16} fontSize={9.5} fill="var(--tinta3)" textAnchor="end">
+            <text x={G.x1} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta3)" textAnchor="end">
               +{dias(finT - ahora)} d
             </text>
           )}

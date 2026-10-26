@@ -85,19 +85,19 @@ export function Mantenimiento() {
           <MarcaPrioridad s={r.prioridad} tamano={12} className="mt-[2px]" />
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-baseline gap-x-2">
-              <b className="text-[12.5px]">{r.equipo}{donde(r.campoId)}</b>
+              <b className="text-[15px]">{r.equipo}{donde(r.campoId)}</b>
               <Chip>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>
             </span>
-            <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-[var(--tinta2)]">
+            <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">
               {r.horas !== undefined
                 ? <span>{r.parte ? `${NOMBRE_PARTE[r.parte].toLowerCase()} · ` : ''}cruza en {fmtHoras(r.horas)}</span>
                 : <>{r.parte && <span>{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}<Chip tono="fuerte">ya pasó el límite</Chip></>}
-              {!r.parte && r.tag && <span className="font-mono text-[10.5px]">{r.tag}</span>}
+              {!r.parte && r.tag && <span className="font-mono text-[13px]">{r.tag}</span>}
             </span>
           </span>
           <span className={columna}>
-            <b className="block text-[13px] leading-tight"><span className="sr-only">si para </span>{siPara}</b>
-            <small className="block text-[9.5px] leading-snug text-[var(--tinta3)]">
+            <b className="block text-[15px] leading-tight"><span className="sr-only">si para </span>{siPara}</b>
+            <small className="block text-[12px] leading-snug text-[var(--tinta3)]">
               {costoHoy(r) ?? (servicio ? '' : 'sin historia')}
               {colchonCorto(r) && <span className="block">{colchonCorto(r)}</span>}
               {/* La misma marca que en Riesgo: estimado con la flota del campo. */}
@@ -116,7 +116,7 @@ export function Mantenimiento() {
   }
 
   const filaSin = (p: (typeof sinIdentificar)[number]) => (
-    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
+    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
       <MarcaPrioridad s={p.arrancoSinIdentificar ? 3 : !p.fin ? 2 : 3} tamano={11} />
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2">
         <span><b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span></span>
@@ -126,8 +126,8 @@ export function Mantenimiento() {
     </div>
   )
 
-  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
-  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
+  const rotulo = 'block text-[13px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[13px] text-[var(--tinta2)]'
   const columna = 'tabular w-[96px] shrink-0 text-right'
 
   return (
@@ -136,7 +136,7 @@ export function Mantenimiento() {
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
         <span>
           <small className={rotulo}>fallas de alto impacto</small>
-          <b className="tabular block text-[36px] leading-none">{n0(fallasAlto)}<small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
+          <b className="tabular block text-[36px] leading-none">{n0(fallasAlto)}<small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">bbl</small></b>
           {/* Su desglose (parte vigilada, sin instrumento, sin identificar) está a la vista en «Dónde bajarlo». */}
         </span>
         {/* Sin meta firmada en algún campo no hay máximo: se dice, sin raya ni marca. */}
@@ -174,11 +174,11 @@ export function Mantenimiento() {
         toque o pase el cursor por una fila para ver el porqué.
       </Lectura>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Panel titulo="1 · Intervenir" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
-          {riesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
+          {riesgo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
           {riesgo.length > 0 && (
-            <div className="flex gap-3 pb-1 text-[10px] text-[var(--tinta3)]" aria-hidden>
+            <div className="flex gap-3 pb-1 text-[12px] text-[var(--tinta3)]" aria-hidden>
               <span className="flex-1" /><span className={columna}>si para</span>
             </div>
           )}
@@ -191,7 +191,7 @@ export function Mantenimiento() {
         <Palancas lb={lb} base={base} conMaximo={false} />
       </div>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <ParetoPartes lb={lb} onIr={irA('confiabilidad') ?? irA('bombas')} />
 
         <Panel titulo="PROGRAMA DE PARADAS" extra="firmado">
@@ -199,12 +199,12 @@ export function Mantenimiento() {
             Lo que está aquí cuenta como programado, no como falla. Se cambia en la configuración, con
             firma: así una falla no se puede volver programada después.
           </Lectura>
-          {proximas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada programado de aquí en adelante.</p>}
+          {proximas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada programado de aquí en adelante.</p>}
           {proximas.map(p => (
-            <div key={p.id} className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
+            <div key={p.id} className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
               <span className="min-w-0"><b>{p.equipo}</b>{ambito.global ? <span className="text-[var(--tinta3)]"> · {campoPorId(p.campoId).nombre}</span> : ''}
-                <small className="block text-[10.5px] text-[var(--tinta2)]">{p.motivo}</small></span>
-              <span className="tabular text-right text-[10.5px] text-[var(--tinta2)]">{fechaHora(new Date(p.desde))}<br />a {fechaHora(new Date(p.hasta))}</span>
+                <small className="block text-[13px] text-[var(--tinta2)]">{p.motivo}</small></span>
+              <span className="tabular text-right text-[13px] text-[var(--tinta2)]">{fechaHora(new Date(p.desde))}<br />a {fechaHora(new Date(p.hasta))}</span>
             </div>
           ))}
         </Panel>
@@ -222,12 +222,12 @@ export function Mantenimiento() {
       {(sinIdentificar.length > 0 || respondidasTarde.length > 0) && (
         <Panel className="mt-2.5" titulo="PARADAS POR IDENTIFICAR">
           <Lectura>Sin la parte que falló no hay de qué aprender: el vigía no sabe qué mirar la próxima vez.</Lectura>
-          {sinIdentificar.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
+          {sinIdentificar.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaSin.visibles.map(filaSin)}
           {listaSin.resto.length > 0 && <div className="solo-impresion">{listaSin.resto.map(filaSin)}</div>}
           <VerMas ocultas={listaSin.ocultas} abierto={listaSin.abierto} onAlternar={listaSin.alternar} />
           {respondidasTarde.length > 0 && (
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
               {respondidasTarde.length} más, {respondidasTarde.length === 1 ? 'respondida' : 'respondidas'} después de arrancar
               <Info titulo="Respondidas después de arrancar" texto={`${plural(respondidasTarde.length, 'parada más arrancó', 'paradas más arrancaron')} sin identificar y se ${respondidasTarde.length === 1 ? 'respondió' : 'respondieron'} después de arrancar: ya ${respondidasTarde.length === 1 ? 'tiene' : 'tienen'} causa, pero ${respondidasTarde.length === 1 ? 'queda' : 'quedan'} como no ${respondidasTarde.length === 1 ? 'conformidad' : 'conformidades'} (en Identificar).`} />
             </p>

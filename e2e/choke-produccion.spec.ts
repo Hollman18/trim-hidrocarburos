@@ -114,8 +114,9 @@ test('La Zarza muestra el estado de campo de gas', async ({ flujo: f }) => {
 test('La tubería del agua de La Ceiba: sus tres bombas y el colchón', async ({ flujo: f }) => {
   await f.abrir('/#/prod/planta/ceiba/curso')
   await f.esperarTexto('LA TUBERÍA DEL CAMPO')
-  const menu = await f.page.evaluate(() => [...document.querySelectorAll('nav button[aria-current]')].map(b => b.textContent?.trim()))
-  f.ok(menu.includes('Agua'), `producción tiene «Agua» en su menú (${menu.join(' · ')})`)
+  // C1 (experiencia v2): Agua es una subpantalla de La planta viva, listada en el panel debajo de su puerta.
+  const menu = await f.page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Navegación"] [data-subpantallas] button')].map(b => b.textContent?.trim() || b.getAttribute('aria-label')))
+  f.ok(menu.includes('Agua'), `producción tiene «Agua» en su menú (La planta viva · ${menu.join(' · ')})`)
   // Desde la planta por dentro (el carril del agua) se llega a la tubería del agua (U2 §5.7).
   f.ok(await f.clic('Ver la tubería del agua'), 'el carril del agua lleva a la tubería del agua')
   await f.esperarTexto('LA TUBERÍA DEL AGUA')

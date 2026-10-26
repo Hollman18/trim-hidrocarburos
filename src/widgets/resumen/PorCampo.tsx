@@ -56,7 +56,7 @@ export function PorCampo({ lb, campos, desde, hasta, onAbrir, onCampo }: {
   // El estado de hoy de los equipos (para la marca), un pedido por lote.
   const equipoHoy = useEquiposDeHoy(campos)
   const dias = Math.max(1 / 24, lb.meta.dias)
-  const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   // Las cuatro columnas: en el teléfono, nombre y total arriba y las dos barras debajo;
   // en uno angosto (menos de 380 px) cada barra en su renglón: lado a lado no cabían sus cifras.
   const rejilla = 'grid grid-cols-2 items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(110px,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_64px]'
@@ -72,7 +72,7 @@ export function PorCampo({ lb, campos, desde, hasta, onAbrir, onCampo }: {
         del campo entre el yacimiento, los pozos, la planta o estación y afuera; lo que nadie ha
         identificado va aparte, rayado. Suma lo mismo que la cifra del campo.
       </Lectura>
-      <div className={`${rejilla} pb-1 text-[10px] text-[var(--tinta3)]`} aria-hidden>
+      <div className={`${rejilla} pb-1 text-[12px] text-[var(--tinta3)]`} aria-hidden>
         <span className={`col-start-1 row-start-2 sm:col-start-2 sm:row-start-1 ${angosto.prod}`}>producción / meta · bbl/d</span>
         <span className={`col-start-2 row-start-2 sm:col-start-3 sm:row-start-1 ${angosto.dif}`}>diferido / máx. · bbl/d</span>
         <span className="col-start-2 row-start-1 justify-self-end sm:col-start-4">bbl diferidos</span>
@@ -113,7 +113,7 @@ function Campo({ c, dias, rejilla, angosto, desde, hasta, filas, sinCosto, hoy, 
     // entero saltaba de hoja (47 equipos de Morichal en 12 meses no caben en una).
     <div data-partible className="border-b border-[var(--linea2)] last:border-0">
       <button aria-expanded={abierto} aria-controls={id} onClick={() => setAbierto(v => !v)}
-        className={`${rejilla} w-full cursor-pointer py-1.5 text-left text-[12.5px] hover:bg-[var(--panel2)] print:break-after-avoid`}>
+        className={`${rejilla} w-full cursor-pointer py-1.5 text-left text-[15px] hover:bg-[var(--panel2)] print:break-after-avoid`}>
         <span className="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5">
           <ChevronRight aria-hidden size={14} className={cn('no-imprimir shrink-0 text-[var(--tinta3)] transition-transform', abierto && 'rotate-90')} />
           <span className="truncate">{nombre}</span>
@@ -131,14 +131,14 @@ function Campo({ c, dias, rejilla, angosto, desde, hasta, filas, sinCosto, hoy, 
       </button>
       {/* Dónde se trabó: siempre a la vista, debajo de las barras del campo y en sus mismas columnas. */}
       <div className={cn(rejilla, 'items-start pb-2')}>
-        <small className="col-start-1 row-start-1 text-[10.5px] text-[var(--tinta3)] sm:pl-5">dónde se trabó</small>
+        <small className="col-start-1 row-start-1 text-[13px] text-[var(--tinta3)] sm:pl-5">dónde se trabó</small>
         <DondeSeTraboCampo campoId={c.campoId} desde={desde} hasta={hasta}
           className="col-span-2 col-start-1 row-start-2 sm:col-span-2 sm:col-start-2 sm:row-start-1" />
       </div>
       {/* Plegado en la pantalla; en el papel, desplegado. */}
       <div id={id} className={cn('pb-2 pl-5', !abierto && 'hidden print:block')}>
         {renglones.length === 0
-          ? <p className="py-1 text-[11.5px] text-[var(--tinta2)]">Ningún equipo con diferido.</p>
+          ? <p className="py-1 text-[14px] text-[var(--tinta2)]">Ningún equipo con diferido.</p>
           : (
             <ul aria-label={`Equipos de ${nombre}`}>
               {renglones.map(f => {
@@ -153,13 +153,13 @@ function Campo({ c, dias, rejilla, angosto, desde, hasta, filas, sinCosto, hoy, 
                       className="flex w-full cursor-pointer items-center gap-2.5 py-1.5 text-left hover:bg-[var(--panel2)]">
                       <MarcaPrioridad s={s} tamano={12} decorativa />
                       <span className="min-w-0 flex-1">
-                        <b className="block text-[12.5px] leading-tight">{f.equipo}</b>
-                        <small className="block text-[10.5px] text-[var(--tinta2)]">{tipo} · {f.veces}{f.bbl === undefined && ' · no costó crudo'}</small>
+                        <b className="block text-[15px] leading-tight">{f.equipo}</b>
+                        <small className="block text-[13px] text-[var(--tinta2)]">{tipo} · {f.veces}{f.bbl === undefined && ' · no costó crudo'}</small>
                       </span>
                       {f.bbl !== undefined && (
                         <span className="tabular shrink-0 text-right">
-                          <b className="block text-[13px] leading-tight">{n0(f.bbl)}</b>
-                          <small className="text-[10px] text-[var(--tinta3)]">bbl · {pctParte(pct)}</small>
+                          <b className="block text-[15px] leading-tight">{n0(f.bbl)}</b>
+                          <small className="text-[12px] text-[var(--tinta3)]">bbl · {pctParte(pct)}</small>
                         </span>
                       )}
                     </button>

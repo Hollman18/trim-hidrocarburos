@@ -21,8 +21,8 @@ export function SoloCampo() {
             className="flex cursor-pointer items-center gap-2.5 rounded border border-[var(--linea)] bg-[var(--panel2)] px-3 py-2.5 text-left hover:border-[var(--tinta2)] hover:bg-[var(--panel)]">
             <MarcaPrioridad s={e?.severidad ?? 0} tamano={13} />
             <span className="min-w-0 flex-1">
-              <b className="block truncate text-[12.5px]">{c.nombre}</b>
-              <small className="block text-[10.5px] text-[var(--tinta3)]">
+              <b className="block truncate text-[15px]">{c.nombre}</b>
+              <small className="block text-[13px] text-[var(--tinta3)]">
                 {c.cuenca} · {e?.ayer.bbl === null || e?.ayer.bbl === undefined ? 'sin fiscal' : `${n0(e.ayer.bbl)} bbl último día`} · {plural(e?.parados ?? 0, 'pozo parado', 'pozos parados')}
               </small>
             </span>

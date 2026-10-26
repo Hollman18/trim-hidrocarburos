@@ -49,7 +49,7 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
   // Cinco a la vista y «ver N más»; lo que se esconde sale en el papel. Una falsa alarma
   // nunca queda escondida: un historial que a la vista solo muestra aciertos maquilla al vigía.
   const listaVencidas = useVerMas(vencidas, { prioridad: p => (p.calificacion === 'falsa-alarma' ? 1 : 3) })
-  const columna = 'tabular text-right text-[10.5px] text-[var(--tinta2)]'
+  const columna = 'tabular text-right text-[13px] text-[var(--tinta2)]'
 
   /** Una predicción vencida en una línea: cuándo avisó → en qué quedó. Las dos
    *  fechas a la vista; el «antes de fallar» / «sin falla» lo dice la etiqueta. */
@@ -58,10 +58,10 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
     const dias = p.calificacion === 'acierto' ? (new Date(p.falla!.inicio).getTime() - new Date(p.emitida).getTime()) / D : undefined
     return (
       <button key={p.id} onClick={() => onAbrir(p.campoId, p.equipo)}
-        className={`${oculta ? 'hidden print:grid' : 'grid'} w-full cursor-pointer grid-cols-[1fr_auto] items-start gap-x-3 border-b border-[var(--linea2)] py-1.5 text-left text-[11.5px] last:border-0 hover:bg-[var(--panel2)]`}>
+        className={`${oculta ? 'hidden print:grid' : 'grid'} w-full cursor-pointer grid-cols-[1fr_auto] items-start gap-x-3 border-b border-[var(--linea2)] py-1.5 text-left text-[14px] last:border-0 hover:bg-[var(--panel2)]`}>
         <span className="min-w-0">
           <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)}</span> · {parte(p.parte)}
-          <small className="block text-[10.5px] text-[var(--tinta2)]">
+          <small className="block text-[13px] text-[var(--tinta2)]">
             avisó {fh(p.emitida)} → {p.calificacion === 'acierto'
               ? `falló ${fh(p.falla!.inicio)}`
               : p.calificacion === 'intervenida' ? `orden ${o?.numero ?? 'predictiva'} cerrada ${fh(p.intervencion!)}`
@@ -105,16 +105,16 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
 
       <div className="mt-3 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
         <div>
-          <h5 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE ANUNCIÓ Y EN QUÉ QUEDÓ · {vencidas.length}</h5>
-          {vencidas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna predicción ha vencido todavía.</p>}
+          <h5 className="font-cond mb-1 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE ANUNCIÓ Y EN QUÉ QUEDÓ · {vencidas.length}</h5>
+          {vencidas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna predicción ha vencido todavía.</p>}
           {/* Todas en su orden de fecha: las que «ver N más» esconde, solo en el papel (y ahí, en su lugar). */}
           {vencidas.map(p => filaVencida(p, listaVencidas.resto.includes(p)))}
           <VerMas ocultas={listaVencidas.ocultas} abierto={listaVencidas.abierto} onAlternar={listaVencidas.alternar} />
-          <h5 className="font-cond mb-1 mt-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE NO ANUNCIÓ · {plural(escapadas.length + vistas.filter(f => f.visibilidad !== 'vigilada').length, 'FALLA', 'FALLAS')}</h5>
+          <h5 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE NO ANUNCIÓ · {plural(escapadas.length + vistas.filter(f => f.visibilidad !== 'vigilada').length, 'FALLA', 'FALLAS')}</h5>
           {escapadas.length > 0 && (
-            <div className="border-b border-[var(--linea2)] py-1.5 text-[11.5px]">
+            <div className="border-b border-[var(--linea2)] py-1.5 text-[14px]">
               <span className="flex justify-between gap-3"><span>Se le escaparon: tenían instrumento</span><b className="tabular">{escapadas.length}</b></span>
-              <ul className="mt-0.5 grid gap-0.5 text-[10.5px] text-[var(--tinta2)]">
+              <ul className="mt-0.5 grid gap-0.5 text-[13px] text-[var(--tinta2)]">
                 {escapadas.map(f => (
                   <li key={f.falla.id}>
                     <button onClick={() => onAbrir(f.campoId, f.equipo)} className="min-h-10 cursor-pointer py-1 text-left hover:underline sm:min-h-8">
@@ -129,9 +129,9 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
             const fs = vistas.filter(f => f.visibilidad === v)
             if (!fs.length) return null
             return (
-              <div key={v} className="border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
+              <div key={v} className="border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
                 <span className="flex justify-between gap-3"><span>{NOMBRE_VISIBILIDAD[v]}</span><b className="tabular">{fs.length}</b></span>
-                <ul className="mt-0.5 grid gap-0.5 text-[10.5px] text-[var(--tinta2)]">
+                <ul className="mt-0.5 grid gap-0.5 text-[13px] text-[var(--tinta2)]">
                   {fs.map(f => (
                     <li key={f.falla.id}>
                       <button onClick={() => onAbrir(f.campoId, f.equipo)} className="min-h-10 cursor-pointer py-1 text-left hover:underline sm:min-h-8">
@@ -144,23 +144,23 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
               </div>
             )
           })}
-          {escapadas.length + vistas.filter(f => f.visibilidad !== 'vigilada').length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna falla sin anunciar desde la puesta en marcha.</p>}
+          {escapadas.length + vistas.filter(f => f.visibilidad !== 'vigilada').length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna falla sin anunciar desde la puesta en marcha.</p>}
         </div>
 
         <div>
-          <h5 className="font-cond mb-1 flex justify-between gap-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
+          <h5 className="font-cond mb-1 flex justify-between gap-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
             <span>EN SEGUIMIENTO · {seguimiento.length}</span>
             {seguimiento.length > 0 && <span aria-hidden className="font-sans font-normal normal-case tracking-normal">cruzaría el límite</span>}
           </h5>
-          {seguimiento.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada en seguimiento.</p>}
+          {seguimiento.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada en seguimiento.</p>}
           {seguimiento.map(p => (
             // La columna se rotula una vez arriba (aria-hidden); el lector oye el rótulo en cada fila.
             <button key={p.id} onClick={() => onAbrir(p.campoId, p.equipo)}
               aria-label={`${p.equipo}${donde(p.campoId)} · ${parte(p.parte)}${p.tag ? ` · ${p.tag}` : ''} · cruzaría el límite ${ventana(p.desde, p.hasta)}`}
-              className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-x-3 border-b border-[var(--linea2)] py-1.5 text-left text-[11.5px] last:border-0 hover:bg-[var(--panel2)]">
+              className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-x-3 border-b border-[var(--linea2)] py-1.5 text-left text-[14px] last:border-0 hover:bg-[var(--panel2)]">
               <span className="min-w-0">
                 <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)}</span> · {parte(p.parte)}
-                {p.tag && <small className="block font-mono text-[10px] text-[var(--tinta3)]">{p.tag}</small>}
+                {p.tag && <small className="block font-mono text-[12px] text-[var(--tinta3)]">{p.tag}</small>}
               </span>
               <small className={columna}>{ventana(p.desde, p.hasta)}</small>
             </button>
@@ -178,15 +178,15 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
 function Cifra({ rotulo, valor, pie, parte, nota }: { rotulo: string; valor: string; pie: string; parte?: number; nota?: ReactNode }) {
   return (
     <span className="min-w-0">
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{rotulo}</small>
+      <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
       <b className="tabular block text-[24px] leading-none">{valor}</b>
       {parte !== undefined && (
         <span aria-hidden className="mt-1 block h-1.5 max-w-[140px] overflow-hidden rounded-sm bg-[var(--panel2)]">
           <i className="block h-full bg-[var(--dato-2)]" style={{ width: `${Math.min(1, parte) * 100}%` }} />
         </span>
       )}
-      <small className="block text-[10.5px] text-[var(--tinta2)]">{pie}</small>
-      {nota && <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">{nota}</small>}
+      <small className="block text-[13px] text-[var(--tinta2)]">{pie}</small>
+      {nota && <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">{nota}</small>}
     </span>
   )
 }

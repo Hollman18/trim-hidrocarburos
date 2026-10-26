@@ -31,11 +31,11 @@ export function AguaHoy({ campoId, bomba, className }: { campoId: string; bomba:
   // Para quien opera, las frases del colchón; la del empate de las capacidades es de ingeniería (está en Agua).
   const frases = a.frases.filter(f => !/exactamente lo mismo|casi iguales/.test(f))
   const veAgua = rol.pantallas.includes('agua') && pantallaVisible('agua')
-  const rotulo = 'font-cond w-[64px] shrink-0 text-[10px] font-semibold tracking-[.08em] text-[var(--tinta3)]'
+  const rotulo = 'font-cond w-[64px] shrink-0 text-[12px] font-semibold tracking-[.08em] text-[var(--tinta3)]'
   return (
     <section aria-label="La tubería del agua, hoy" data-agua-hoy={campoId}
-      className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[12px] shadow-[var(--sombra)]', className)}>
-      <h3 className="font-cond mb-1.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LA TUBERÍA DEL AGUA, HOY</h3>
+      className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[14px] shadow-[var(--sombra)]', className)}>
+      <h3 className="font-cond mb-1.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LA TUBERÍA DEL AGUA, HOY</h3>
       {o && (
         <div className="grid gap-0.5" data-hoy-agua>
           <p className="flex items-baseline gap-2"><span className={rotulo}>ENTRA</span><b className="tabular">{n0(o.entraBpd)}</b><small className="text-[var(--tinta3)]">bbl/d de agua</small></p>

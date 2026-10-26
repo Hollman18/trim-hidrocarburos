@@ -9,7 +9,7 @@ import { AHORA, fechaCorta, fechaHora } from '@/entities/reloj'
 import { puedeHacer } from '@/entities/tipos'
 import type { Severidad } from '@/entities/tipos'
 import { pantallaVisible } from '@/shared/config/producto'
-import { Panel, Boton, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Boton, Hueco, Enlace } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
@@ -69,7 +69,7 @@ export function TuberiaDelCampo({ campoId, desde, hasta, periodo, onUbicarPlanta
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">qué limita hoy al campo<Info titulo="Lo que limita" texto={TEXTO.limita} /></span>}>
       <div data-tuberia={campoId}>
         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <small className="text-[10.5px] text-[var(--tinta3)]">
+          <small className="text-[13px] text-[var(--tinta3)]">
             <span className="solo-impresion">{nombre} · {periodo} · </span>
             potenciales con las pruebas vigentes al {fechaCorta(AHORA)} · {sinTuberia ? 'sin tubería de crudo' : t.capacidades.texto}
             {t.medidor && <span className="block" data-medidor={t.medidor.estado}>{t.medidor.texto}</span>}
@@ -95,9 +95,9 @@ export function TuberiaDelCampo({ campoId, desde, hasta, periodo, onUbicarPlanta
               <DePie t={t} pozos={pozos} marca={marca} abierto={abierto} onTramo={k => setAbierto(a => (a === k ? null : k))}
                 onAgua={ir('agua')} nombre={nombre} />
               <FaltaCapacidad t={t} />
-              <p className="mt-3 text-[13px] font-medium leading-snug" data-frase>{t.frase}</p>
+              <p className="mt-3 text-[15px] font-medium leading-snug" data-frase>{t.frase}</p>
               {/* Cuando un equipo parado deja la planta por debajo de lo que dan los pozos, hoy no es como siempre (B-14). */}
-              {t.fraseHoy && <p className="mt-1 text-[12.5px] leading-snug" data-frase-hoy>{t.fraseHoy}</p>}
+              {t.fraseHoy && <p className="mt-1 text-[15px] leading-snug" data-frase-hoy>{t.fraseHoy}</p>}
             </div>
             {tabla && <div className="mt-2.5"><Tabla t={t} pozos={pozos} periodo={periodo} titulo={tituloTabla} /></div>}
             {abierto && (
@@ -139,7 +139,7 @@ type Marca = (equipo: string) => Severidad
 function Limita({ x, conInfo = true }: { x: TramoTuberia; conInfo?: boolean }) {
   if (!x.limita && !x.casiIgual) return null
   return (
-    <span className="inline-flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold text-[var(--tinta)]" data-limita-marca={x.limita ? '' : undefined}>
+    <span className="inline-flex flex-wrap items-center gap-x-1.5 text-[13px] font-semibold text-[var(--tinta)]" data-limita-marca={x.limita ? '' : undefined}>
       {x.limita && <span className="font-cond tracking-[.08em]">◄ LIMITA</span>}
       {x.casiIgual && <span className="font-cond font-normal tracking-[.06em] text-[var(--tinta2)]">casi iguales</span>}
       {conInfo && x.limita && <Info titulo="Lo que limita" texto={TEXTO.limita} />}
@@ -149,10 +149,10 @@ function Limita({ x, conInfo = true }: { x: TramoTuberia; conInfo?: boolean }) {
 
 /** El número de un tramo: si nadie lo firmó, la advertencia va en el número (subrayado discontinuo). */
 function Numero({ x, grande = true }: { x: TramoTuberia; grande?: boolean }) {
-  if (x.potencialBpd === null) return <span className="text-[11px] text-[var(--tinta3)]">sin dato</span>
+  if (x.potencialBpd === null) return <span className="text-[13px] text-[var(--tinta3)]">sin dato</span>
   return (
-    <b className={cn('tabular leading-tight', grande ? 'text-[15px]' : 'text-[12.5px]', sinFirma(x.estado) && 'underline decoration-dashed decoration-[var(--tinta3)] underline-offset-[3px]')}>
-      {n0(x.potencialBpd)}<small className="ml-0.5 text-[10.5px] font-normal text-[var(--tinta3)]">bbl/d</small>
+    <b className={cn('tabular leading-tight', grande ? 'text-[15px]' : 'text-[15px]', sinFirma(x.estado) && 'underline decoration-dashed decoration-[var(--tinta3)] underline-offset-[3px]')}>
+      {n0(x.potencialBpd)}<small className="ml-0.5 text-[13px] font-normal text-[var(--tinta3)]">bbl/d</small>
     </b>
   )
 }
@@ -164,7 +164,7 @@ const esElMenor = (x: TramoTuberia, tr: TrenTuberia) => x.trenQueLimita === tr.t
 function Carriles({ x, onAgua }: { x: TramoTuberia; onAgua?: () => void }) {
   if (!x.trenes?.length) return null
   return (
-    <ul className="mt-1 space-y-0.5 text-[10.5px] leading-snug text-[var(--tinta2)]" aria-label="La planta por dentro">
+    <ul className="mt-1 space-y-0.5 text-[13px] leading-snug text-[var(--tinta2)]" aria-label="La planta por dentro">
       {x.trenes.map(tr => (
         <li key={tr.tren} className="flex flex-wrap items-center gap-x-1">
           {!tr.medido ? (
@@ -183,7 +183,7 @@ function Carriles({ x, onAgua }: { x: TramoTuberia; onAgua?: () => void }) {
             </span>
           )}
           {tr.tren === 'agua' && onAgua && (
-            <button onClick={onAgua} className="no-imprimir cursor-pointer text-[10.5px] text-[var(--tinta)] underline decoration-dotted underline-offset-2 hover:decoration-solid">
+            <button onClick={onAgua} className="no-imprimir cursor-pointer text-[13px] text-[var(--tinta)] underline decoration-dotted underline-offset-2 hover:decoration-solid">
               Ver la tubería del agua
             </button>
           )}
@@ -207,7 +207,7 @@ function EquiposEnAlarma({ t, k, marca }: { t: TuberiaCampo; k: ChokeAnh; marca:
     <span className="inline-flex flex-wrap items-center gap-x-2">
       {eqs.map(p => (
         <span key={p.equipo} className="inline-flex items-center gap-1 font-sans normal-case tracking-normal text-[var(--tinta)]">
-          <MarcaPrioridad s={marca(p.equipo)} tamano={12} /><b className="text-[11px]">{p.equipo}</b>
+          <MarcaPrioridad s={marca(p.equipo)} tamano={12} /><b className="text-[13px]">{p.equipo}</b>
         </span>
       ))}
     </span>
@@ -275,8 +275,10 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
   const px = (v: number) => Math.max(2, Math.round((v / tope) * ALTO))
   const pozo = t.tramos.find(x => x.tramo === 'pozo')
   const sinTramoAhora = t.sinTramoAhoraBpd
-  const rejilla = 'grid gap-x-4 [grid-template-columns:minmax(64px,.5fr)_repeat(3,minmax(0,1fr))_minmax(104px,.72fr)]'
-  const titulo = 'font-cond flex min-h-[28px] flex-wrap items-end gap-x-2 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  // «Sin identificar» lleva su cifra, lo que se pierde ahora, los equipos y «Identificar»: con la letra de B
+  // no cabía en 104 px (a 768 px se salía el botón y el recuadro tapaba su rótulo).
+  const rejilla = 'grid gap-x-4 [grid-template-columns:minmax(64px,.5fr)_repeat(3,minmax(0,1fr))_minmax(132px,.85fr)]'
+  const titulo = 'font-cond flex min-h-[28px] flex-wrap items-end gap-x-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 
   return (
     <div className="hidden md:block print:block print:[&_.solo-impresion]:hidden!">
@@ -297,8 +299,8 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
           const alto = x.tramo === 'reservorio' ? px(pozo?.potencialBpd ?? tope) : conNumero ? px(x.potencialBpd!) : ALTO
           const oscuro = conNumero ? Math.max(0, Math.min(alto, px(t.pasaHoyBpd)) - BORDE[tipo]) : 0
           return (
-            <span key={`t-${x.tramo}`} className="relative flex items-end" style={{ height: ALTO + 6 }}>
-              {i > 0 && <span aria-hidden className="absolute -left-3.5 text-[11px] leading-none text-[var(--tinta3)]" style={{ bottom: Math.max(2, px(t.pasaHoyBpd) / 2 - 6) }}>→</span>}
+            <span key={`t-${x.tramo}`} className="relative flex items-end self-end" style={{ height: ALTO + 6 }}>
+              {i > 0 && <span aria-hidden className="absolute -left-3.5 text-[13px] leading-none text-[var(--tinta3)]" style={{ bottom: Math.max(2, px(t.pasaHoyBpd) / 2 - 6) }}>→</span>}
               <button ref={el => { botones.current[i] = el }} onKeyDown={e => alPulsar(e, i)} onClick={() => onTramo(x.tramo)}
                 aria-expanded={abierto === x.tramo} aria-label={leidoDe(x, pozos)} data-tramo={x.tramo}
                 data-limita={x.limita ? '' : undefined} data-casi={x.casiIgual ? '' : undefined}
@@ -316,27 +318,27 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
                   <span aria-hidden data-hoy-linea className="absolute inset-x-0 border-t-2 border-dashed border-[var(--tinta)]"
                     style={{ bottom: Math.max(0, Math.min(alto, px(x.disponibleHoy.valor)) - BORDE[tipo]) }} />
                 )}
-                {tipo === 'sinDato' && <span className="absolute inset-0 grid place-items-center text-[11px] text-[var(--tinta3)]">sin dato</span>}
+                {tipo === 'sinDato' && <span className="absolute inset-0 grid place-items-center text-[13px] text-[var(--tinta3)]">sin dato</span>}
               </button>
               {x.tramo === 'exportacion' && (
-                <span aria-hidden className="ml-1 shrink-0 whitespace-nowrap text-[10.5px] text-[var(--tinta3)]" style={{ marginBottom: Math.max(0, px(t.pasaHoyBpd) / 2 - 7) }}>→ venta</span>
+                <span aria-hidden className="ml-1 shrink-0 whitespace-nowrap text-[13px] text-[var(--tinta3)]" style={{ marginBottom: Math.max(0, px(t.pasaHoyBpd) / 2 - 7) }}>→ venta</span>
               )}
             </span>
           )
         })}
         {/* «Sin identificar» no es un tramo: es lo que todavía no se sabe. Va aparte y no se reparte. */}
-        <span className="flex items-end border-l border-dashed border-[var(--tinta3)] pl-3" style={{ height: ALTO + 6 }}>
-          <span className="block w-full rounded-[3px] border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[10.5px] leading-snug text-[var(--tinta2)]" data-sin-identificar>
-            <span className="flex flex-wrap items-center gap-x-1"><b className="tabular text-[13px] text-[var(--tinta)]">{n0(t.sinTramoBbl)}</b> bbl en el período<Info titulo="Sin identificar" texto={TEXTO.sinIdentificar} /></span>
+        <span className="flex items-end border-l border-dashed border-[var(--tinta3)] pl-3" style={{ minHeight: ALTO + 6 }}>
+          <span className="block w-full rounded-[3px] border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[13px] leading-snug text-[var(--tinta2)]" data-sin-identificar>
+            <span className="flex flex-wrap items-center gap-x-1"><b className="tabular text-[15px] text-[var(--tinta)]">{n0(t.sinTramoBbl)}</b> bbl en el período<Info titulo="Sin identificar" texto={TEXTO.sinIdentificar} /></span>
             {sinTramoAhora > 0 && <span className="block"><span className="tabular">{n0(sinTramoAhora)}</span> bbl/d perdiéndose ahora</span>}
             {t.sinTramoEquipos.length > 0 && <span className="block truncate">{t.sinTramoEquipos.slice(0, 3).map(e => e.equipo).join(' · ')}</span>}
-            {onIdentificar && t.sinTramoBbl + sinTramoAhora > 0 && <Boton variante="chico" className="mt-1" onClick={onIdentificar}>Identificar</Boton>}
+            {onIdentificar && t.sinTramoBbl + sinTramoAhora > 0 && <Enlace className="mt-1 text-[14px]" onClick={onIdentificar}>Identificar</Enlace>}
           </span>
         </span>
 
         {/* Debajo de cada caja: su número, si limita, lo que le sobra y la planta por dentro. */}
         {t.tramos.map(x => (
-          <span key={`n-${x.tramo}`} className="min-w-0 pt-1.5 text-[11px] leading-snug">
+          <span key={`n-${x.tramo}`} className="min-w-0 pt-1.5 text-[13px] leading-snug">
             {x.tramo === 'reservorio' ? (
               <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">va con los pozos<Info titulo="El yacimiento" texto={TEXTO.yacimiento} /></span>
             ) : (
@@ -347,10 +349,10 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
                   <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">le sobran <span className="tabular">{n0(x.holguraBpd)}</span><Info titulo="Le sobran" texto={TEXTO.sobran} /></span>
                 )}
                 {/* D3: de dónde sale lo que dan los pozos (las pruebas, sin el factor del mes) va en su ⓘ. */}
-                <small className="block text-[10.5px] text-[var(--tinta3)]">{x.tramo === 'pozo' ? <span className="inline-flex flex-wrap items-center gap-x-1">{ESTADO_TRAMO[x.estado]}<Info titulo="Lo que dan los pozos" texto={x.fuente} imprimir={false} /></span> : sinFirma(x.estado) ? <span className="inline-flex items-center gap-1"><i aria-hidden className="inline-block h-0 w-3 border-t border-dashed border-[var(--tinta3)]" />{ESTADO_TRAMO[x.estado]}</span> : ESTADO_TRAMO[x.estado]}</small>
+                <small className="block text-[13px] text-[var(--tinta3)]">{x.tramo === 'pozo' ? <span className="inline-flex flex-wrap items-center gap-x-1">{ESTADO_TRAMO[x.estado]}<Info titulo="Lo que dan los pozos" texto={x.fuente} imprimir={false} /></span> : sinFirma(x.estado) ? <span className="inline-flex items-center gap-1"><i aria-hidden className="inline-block h-0 w-3 border-t border-dashed border-[var(--tinta3)]" />{ESTADO_TRAMO[x.estado]}</span> : ESTADO_TRAMO[x.estado]}</small>
                 {x.tramo === 'planta' && <Carriles x={x} onAgua={onAgua} />}
                 {x.tramo === 'exportacion' && x.subniveles && (
-                  <ul className="mt-1 text-[10.5px] text-[var(--tinta2)]">
+                  <ul className="mt-1 text-[13px] text-[var(--tinta2)]">
                     {x.subniveles.map(s => <li key={s.nombre}>{s.nombre}: <span className="tabular">{n0(s.potencialBpd)}</span></li>)}
                   </ul>
                 )}
@@ -387,7 +389,7 @@ function DePie({ t, pozos, marca, abierto, onTramo, onAgua, nombre }: {
             <button ref={el => { botones.current[i] = el }} onKeyDown={e => alPulsar(e, i)} onClick={() => onTramo(x.tramo)}
               aria-expanded={abierto === x.tramo} aria-label={leidoDe(x, pozos)} data-tramo={x.tramo} data-limita={x.limita ? '' : undefined}
               className="block w-full cursor-pointer text-left">
-              <span className="font-cond flex flex-wrap items-center gap-x-2 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
+              <span className="font-cond flex flex-wrap items-center gap-x-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
                 <span>{CAJA[x.tramo].toUpperCase()}{x.tramo === 'pozo' && pozos ? ` · ${pozos}` : ''}</span>
                 <EquiposEnAlarma t={t} k={x.tramo} marca={marca} />
                 {(x.limita || x.casiIgual) && <span className="ml-auto text-[var(--tinta)]">{x.limita ? '◄ LIMITA' : ''}{x.casiIgual ? `${x.limita ? ' · ' : ''}casi iguales` : ''}</span>}
@@ -406,21 +408,21 @@ function DePie({ t, pozos, marca, abierto, onTramo, onAgua, nombre }: {
                     )}
                   </span>
                 </span>
-                <span className="w-[70px] shrink-0 text-right">{x.tramo === 'reservorio' ? '' : <Numero x={x} grande={false} />}</span>
+                <span className="w-[90px] shrink-0 whitespace-nowrap text-right">{x.tramo === 'reservorio' ? '' : <Numero x={x} grande={false} />}</span>
               </span>
             </button>
             {x.tramo === 'reservorio' && (
-              <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">va con los pozos<Info titulo="El yacimiento" texto={TEXTO.yacimiento} /></small>
+              <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">va con los pozos<Info titulo="El yacimiento" texto={TEXTO.yacimiento} /></small>
             )}
             {x.tramo !== 'reservorio' && conNumero && (
-              <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] leading-snug text-[var(--tinta2)]">
+              <small className="flex flex-wrap items-center gap-x-1 text-[13px] leading-snug text-[var(--tinta2)]">
                 {[x.holguraBpd !== null && !x.limita ? `le sobran ${n0(x.holguraBpd)}` : '', x.tramo === 'pozo' ? ESTADO_TRAMO[x.estado] : sinFirma(x.estado) ? `┄ ${ESTADO_TRAMO[x.estado]}` : ESTADO_TRAMO[x.estado]].filter(Boolean).join(' · ')}
                 {x.limita && <Info titulo="Lo que limita" texto={TEXTO.limita} />}
               </small>
             )}
             {x.tramo === 'planta' && <Carriles x={x} onAgua={onAgua} />}
             {x.tramo === 'exportacion' && x.subniveles && (
-              <small className="block text-[10.5px] text-[var(--tinta2)]">{x.subniveles.map(s => `${s.nombre}: ${n0(s.potencialBpd)}`).join(' · ')}</small>
+              <small className="block text-[13px] text-[var(--tinta2)]">{x.subniveles.map(s => `${s.nombre}: ${n0(s.potencialBpd)}`).join(' · ')}</small>
             )}
           </div>
         )
@@ -436,9 +438,9 @@ function Detalle({ x, t, pozos, onCerrar, onAgua, onUbicar }: {
 }) {
   const ahora = t.perdiendoAhora.filter(p => p.tramo === x.tramo)
   return (
-    <section aria-label={`Detalle: ${CAJA[x.tramo]}`} className="mt-2 rounded-sm border border-[var(--linea)] bg-[var(--panel2)] px-3 py-2 text-[11.5px] print:mt-1.5 print:break-inside-avoid">
+    <section aria-label={`Detalle: ${CAJA[x.tramo]}`} className="mt-2 rounded-sm border border-[var(--linea)] bg-[var(--panel2)] px-3 py-2 text-[14px] print:mt-1.5 print:break-inside-avoid">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <b className="text-[12.5px]">{CAJA[x.tramo]}{x.tramo === 'pozo' && pozos ? ` · ${plural(pozos, 'pozo', 'pozos')}` : ''}</b>
+        <b className="text-[15px]">{CAJA[x.tramo]}{x.tramo === 'pozo' && pozos ? ` · ${plural(pozos, 'pozo', 'pozos')}` : ''}</b>
         {onCerrar && <Boton variante="chico" onClick={onCerrar}>Cerrar</Boton>}
       </div>
       <p className="text-[var(--tinta2)]">{x.explica}</p>
@@ -468,7 +470,7 @@ function Detalle({ x, t, pozos, onCerrar, onAgua, onUbicar }: {
 function FaltaCapacidad({ t }: { t: TuberiaCampo }) {
   const faltan = t.tramos.filter(x => x.estado === 'sin-dato' && FALTA_CAPACIDAD[x.tramo]).map(x => FALTA_CAPACIDAD[x.tramo]!)
   if (!faltan.length) return null
-  return <p className="mt-2 text-[11.5px] text-[var(--tinta2)]">No se puede decir qué limita: falta la capacidad de {lista(faltan)}. La firma el administrador.</p>
+  return <p className="mt-2 text-[14px] text-[var(--tinta2)]">No se puede decir qué limita: falta la capacidad de {lista(faltan)}. La firma el administrador.</p>
 }
 
 /* ───────────────────────── las tres filas de abajo ───────────────────────── */
@@ -479,8 +481,8 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
 }) {
   const perdiendo = t.perdiendoAhoraBpd
   const pozosT = t.tramos.find(x => x.tramo === 'pozo')
-  const rotulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
-  const fila = 'flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--linea2)] py-1.5 text-[12px]'
+  const rotulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const fila = 'flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--linea2)] py-1.5 text-[14px]'
   return (
     <div className="mt-2">
       {!sinTuberia && (
@@ -491,14 +493,14 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
       )}
       {!sinTuberia && (
         <div className="border-t border-[var(--linea2)] py-1.5" data-perdiendo>
-          <div className="flex flex-wrap items-center gap-x-2 text-[12px]">
+          <div className="flex flex-wrap items-center gap-x-2 text-[14px]">
             <span className={rotulo}>PERDIÉNDOSE AHORA</span>
             <b className="tabular ml-auto">{n0(perdiendo)} <small className="font-normal text-[var(--tinta3)]">bbl/d</small></b>
           </div>
-          {t.perdiendoAhora.length === 0 && <p className="text-[11.5px] text-[var(--tinta2)]">Nada: todos los pozos con prueba están produciendo.</p>}
+          {t.perdiendoAhora.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada: todos los pozos con prueba están produciendo.</p>}
           {/* El cuadre de hoy (U2 §2.2, D3): las pruebas, lo que pasa y lo que se pierde, y lo que queda entre las pruebas y el medidor. */}
           {pozosT?.potencialBpd != null && Math.abs(t.brechaPruebasBpd) >= 0.5 && (
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]" data-cuadre-hoy={t.brechaPruebasBpd}>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]" data-cuadre-hoy={t.brechaPruebasBpd}>
               <span>
                 Los pozos dan <span className="tabular">{n0(pozosT.potencialBpd)}</span> según sus pruebas: pasan <span className="tabular">{n0(t.pasaHoyBpd)}</span>, se pierden <span className="tabular">{n0(perdiendo)}</span>
                 {t.brechaPruebasBpd > 0
@@ -512,7 +514,7 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
             {t.perdiendoAhora.map(p => {
               const s = p.tramo ? marca(p.equipo) : 0
               return (
-                <li key={`${p.tramo}|${p.equipo}`} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 py-0.5 pl-3 text-[11.5px]">
+                <li key={`${p.tramo}|${p.equipo}`} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 py-0.5 pl-3 text-[14px]">
                   {p.tramo === null
                     ? <i aria-hidden className="inline-block h-2.5 w-3 rounded-[1px] border border-dashed border-[var(--tinta3)]" />
                     : <i aria-hidden className="inline-block h-2.5 w-3 rounded-[1px]" style={{ background: RELLENO[p.tramo] }} />}
@@ -546,7 +548,7 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
 export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: TuberiaCampo; periodo: string; onPorTramo?: () => void; encabezado?: boolean }) {
   const arbol = useArbolChoke({ campos: [t.campoId], desde: t.desde, hasta: t.hasta, orden: 'gestion' })
   const codigos = codigosDelRol(useRol().id)
-  const rotulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const rotulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   const equipos = (xs: Array<{ equipo: string; bbl: number }>, conBbl: boolean) => xs.length
     ? ` (${xs.slice(0, 3).map(e => (conBbl ? `${e.equipo} ${n0(e.bbl)}` : e.equipo)).join(' · ')})` : ''
   const renglon = (clave: string, dondeTxt: string, bbl: number, eqs: string, discontinuo: boolean, tono?: string): ReactNode => (
@@ -556,20 +558,20 @@ export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: Tube
   return (
     <div className="border-t border-[var(--linea2)] py-1.5" data-se-trabo data-total={t.diferido}>
       {encabezado && (
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
           <span className={rotulo}>SE TRABÓ EN EL PERÍODO</span>
-          <span className="text-[11px] text-[var(--tinta3)]">{periodo}</span>
+          <span className="text-[13px] text-[var(--tinta3)]">{periodo}</span>
           <b className="tabular ml-auto">{n0(t.diferido)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           {onPorTramo && t.diferido > 0 && <Boton variante="chico" onClick={onPorTramo}>Ver por dónde se trabó</Boton>}
         </div>
       )}
-      {t.diferido <= 0 ? <p className="text-[11.5px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(periodo)}.</p> : (
+      {t.diferido <= 0 ? <p className="text-[14px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(periodo)}.</p> : (
         <>
           <ul className="pl-1">
             {t.perdidoPeriodo.map(p => renglon(p.tramo, DONDE[p.tramo], p.bbl, equipos(p.equiposTop, false), false, RELLENO[p.tramo]))}
             {renglon('sin-asignar', 'sin identificar', t.sinTramoBbl, equipos(t.sinTramoEquipos, true), true)}
           </ul>
-          <p className="no-imprimir mt-0.5 pl-1 text-[10.5px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>
+          <p className="no-imprimir mt-0.5 pl-1 text-[13px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>
         </>
       )}
     </div>
@@ -597,7 +599,7 @@ function RenglonTramo({ clave, dondeTxt, bbl, eqs, discontinuo, tono, nodo, codi
     </>
   )
   return (
-    <li className="py-0.5 text-[11.5px]" data-tramo-periodo={clave} data-bbl={bbl}>
+    <li className="py-0.5 text-[14px]" data-tramo-periodo={clave} data-bbl={bbl}>
       <div className="flex flex-wrap items-baseline gap-x-2">
         {conRamas ? (
           <button type="button" aria-expanded={abierto} aria-controls={id} onClick={() => setAbierto(a => !a)}
@@ -629,9 +631,9 @@ function Tabla({ t, pozos, periodo, titulo }: { t: TuberiaCampo; pozos: number; 
   const th = 'py-1 pr-2 text-left font-normal'
   return (
     <div className="overflow-x-auto" {...desplazable('La tubería del campo como tabla')}>
-      <table className="tabular w-full min-w-[640px] text-[11px]">
-        <caption ref={titulo} tabIndex={titulo ? -1 : undefined} className="pb-1 text-left text-[10.5px] text-[var(--tinta3)] outline-none focus-visible:outline-2 focus-visible:outline-[var(--acento)]">La tubería del campo, en números · se trabó: {periodoEnFrase(periodo)}</caption>
-        <thead className="text-[9.5px] text-[var(--tinta3)]">
+      <table className="tabular w-full min-w-[640px] text-[13px]">
+        <caption ref={titulo} tabIndex={titulo ? -1 : undefined} className="pb-1 text-left text-[13px] text-[var(--tinta3)] outline-none focus-visible:outline-2 focus-visible:outline-[var(--acento)]">La tubería del campo, en números · se trabó: {periodoEnFrase(periodo)}</caption>
+        <thead className="text-[12px] text-[var(--tinta3)]">
           <tr>
             <th className={th}>Tramo</th><th className={cn(th, 'text-right')}>Lo que puede dejar pasar · bbl/d</th><th className={th}>De dónde sale</th>
             <th className={cn(th, 'text-right')}>Le sobran · bbl/d</th><th className={cn(th, 'text-right')}>Perdiéndose ahora · bbl/d</th><th className={cn(th, 'text-right')}>Se trabó · bbl</th>
@@ -642,14 +644,14 @@ function Tabla({ t, pozos, periodo, titulo }: { t: TuberiaCampo; pozos: number; 
             <tr key={x.tramo} className="border-t border-[var(--linea2)] align-top">
               <td className="py-1 pr-2">{CAJA[x.tramo]}{x.tramo === 'pozo' && pozos ? ` (${pozos})` : ''}{x.limita ? ' ◄ limita' : ''}{x.casiIgual ? ' · casi iguales' : ''}</td>
               <td className="py-1 pr-2 text-right">{x.tramo === 'reservorio' ? 'va con los pozos' : x.potencialBpd === null ? 'sin dato' : `${n0(x.potencialBpd)}${sinFirma(x.estado) ? ' · sin firmar' : ''}`}</td>
-              <td className="max-w-[260px] py-1 pr-2 text-[10.5px] text-[var(--tinta2)]">{x.fuente}</td>
+              <td className="max-w-[260px] py-1 pr-2 text-[13px] text-[var(--tinta2)]">{x.fuente}</td>
               <td className="py-1 pr-2 text-right">{x.holguraBpd === null || x.limita ? '—' : n0(x.holguraBpd)}</td>
               <td className="py-1 pr-2 text-right">{n0(x.perdiendoAhoraBpd)}</td>
               <td className="py-1 text-right">{n0(x.perdidoBbl)}</td>
             </tr>
           ))}
           <tr className="border-t border-[var(--linea2)]">
-            <td className="py-1 pr-2">┄ Sin identificar</td><td className="py-1 pr-2 text-right">—</td><td className="py-1 pr-2 text-[10.5px] text-[var(--tinta2)]">no es un tramo: lo que todavía no tiene causa</td>
+            <td className="py-1 pr-2">┄ Sin identificar</td><td className="py-1 pr-2 text-right">—</td><td className="py-1 pr-2 text-[13px] text-[var(--tinta2)]">no es un tramo: lo que todavía no tiene causa</td>
             <td className="py-1 pr-2 text-right">—</td><td className="py-1 pr-2 text-right">{n0(sinTramoAhora)}</td><td className="py-1 text-right">{n0(t.sinTramoBbl)}</td>
           </tr>
           <tr className="border-t-2 border-[var(--linea)] font-semibold">
@@ -657,7 +659,7 @@ function Tabla({ t, pozos, periodo, titulo }: { t: TuberiaCampo; pozos: number; 
             <td className="py-1 pr-2 text-right">{n0(perdiendo)}</td><td className="py-1 text-right">{n0(t.diferido)}</td>
           </tr>
           {pozosT?.potencialBpd != null && Math.abs(t.brechaPruebasBpd) >= 0.5 && (
-            <tr className="border-t border-[var(--linea2)] text-[10.5px] text-[var(--tinta2)]" data-cuadre-tabla>
+            <tr className="border-t border-[var(--linea2)] text-[13px] text-[var(--tinta2)]" data-cuadre-tabla>
               <td className="py-1 pr-2" colSpan={6}>
                 Cuadre de hoy: los pozos {n0(pozosT.potencialBpd)} − pasa hoy {n0(t.pasaHoyBpd)} − perdiéndose ahora {n0(perdiendo)} = {n0(t.brechaPruebasBpd)} bbl/d
                 {t.brechaPruebasBpd > 0 ? ' que las pruebas dan de más que el medidor oficial' : ' (el medidor oficial mide más que las pruebas)'}

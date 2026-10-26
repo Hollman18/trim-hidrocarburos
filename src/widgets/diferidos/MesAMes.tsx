@@ -40,6 +40,9 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
   const W = 720, G = { x0: 54, x1: 712, y0: 22, y1: 168 }
   const n = serie.length
   const paso = (G.x1 - G.x0) / n
+  // La cifra de cada mes cabe en su columna: con muchos meses (el portafolio, doce meses o más) baja hasta 9,
+  // como antes; con pocos, va a 11. Más grande, dos cifras vecinas se montaban (auditor, Firefox).
+  const letraCifra = Math.max(9, Math.min(11, paso / 3.2))
   const ancho = Math.min(34, paso * 0.58)
   const techo = tope(Math.max(...serie.map(m => Math.max(m.libro.brecha, conMeta(m.libro.meta) ? m.libro.meta.diferido : 0))) * 1.12)
   const Y = (v: number) => G.y1 - (v / techo) * (G.y1 - G.y0)
@@ -52,8 +55,8 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
         <div role="group" aria-label="Cómo se parte cada mes" className="no-imprimir mb-1.5 flex flex-wrap gap-1">
           {([['como', 'Por cómo se identificó'], ['tramo', 'Por dónde se trabó']] as const).map(([v, t]) => (
             <button key={v} type="button" aria-pressed={vista === v} onClick={() => setVista(v)}
-              className={cn('min-h-6 cursor-pointer rounded border px-2.5 py-[2px] text-[11px]',
-                vista === v ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+              className={cn('min-h-6 cursor-pointer rounded-full border px-2.5 py-[2px] text-[13px]',
+                vista === v ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
               {t}
             </button>
           ))}
@@ -66,7 +69,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
           {marcas.map(v => (
             <g key={v}>
               <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.8} />
-              <text x={G.x0 - 6} y={Y(v) + 3} fontSize={9.5} textAnchor="end" fill="var(--tinta3)" className="tabular">{k(v)}</text>
+              <text x={G.x0 - 6} y={Y(v) + 3} fontSize={11.5} textAnchor="end" fill="var(--tinta3)" className="tabular">{k(v)}</text>
             </g>
           ))}
           {serie.map((m, i) => {
@@ -122,17 +125,17 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
                       <title>Pasó el máximo de diferido firmado</title>
                     </rect>
                   )}
-                  <text x={x + ancho / 2} y={yTope - (sobre && !m.parcial ? 19 : 5)} fontSize={9} textAnchor="middle"
+                  <text x={x + ancho / 2} y={yTope - (sobre && !m.parcial ? 19 : 5)} fontSize={letraCifra} textAnchor="middle"
                     fill="var(--tinta2)" className="tabular">{k(l.brecha)}</text>
-                  <text x={x + ancho / 2} y={G.y1 + 14} fontSize={9.5} textAnchor="middle"
+                  <text x={x + ancho / 2} y={G.y1 + 14} fontSize={11.5} textAnchor="middle"
                     fill={activo ? 'var(--tinta)' : 'var(--tinta3)'} fontWeight={activo ? 600 : 400} className="font-cond">
                     {m.corto.toUpperCase()}
                   </text>
                   {(i === 0 || m.mes.endsWith('-01')) && (
-                    <text x={x + ancho / 2} y={G.y1 + 26} fontSize={8.5} textAnchor="middle" fill="var(--tinta3)">{m.mes.slice(0, 4)}</text>
+                    <text x={x + ancho / 2} y={G.y1 + 26} fontSize={10.5} textAnchor="middle" fill="var(--tinta3)">{m.mes.slice(0, 4)}</text>
                   )}
                   {m.parcial && (
-                    <text x={x + ancho / 2} y={G.y1 + 26} fontSize={8.5} textAnchor="middle" fill="var(--tinta3)">en curso</text>
+                    <text x={x + ancho / 2} y={G.y1 + 26} fontSize={10.5} textAnchor="middle" fill="var(--tinta3)">en curso</text>
                   )}
                 </g>
               </Tip>
@@ -141,7 +144,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
           <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" strokeWidth={1} />
         </svg>
       </div>
-      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
         {porDonde
           ? CHOKES_Y_SIN_ASIGNAR.map(k => <span key={k} className="inline-flex items-center gap-1.5"><Muestra k={k} />{LARGO_TRAMO[k]}</span>)
           : (

@@ -70,7 +70,7 @@ export function Diaria({ dias }: { dias: Dia[] }) {
         {marcas.map(v => (
           <g key={v}>
             <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.7} />
-            <text x={G.x0 - 6} y={Y(v) + 3} fontSize={9} textAnchor="end" fill="var(--tinta3)" className="tabular">{v >= 1000 ? `${n1(v / 1000)} k` : n0(v)}</text>
+            <text x={G.x0 - 6} y={Y(v) + 3} fontSize={11} textAnchor="end" fill="var(--tinta3)" className="tabular">{v >= 1000 ? `${n1(v / 1000)} k` : n0(v)}</text>
           </g>
         ))}
         {huecos.map((h, k) => <polygon key={k} points={h} fill="var(--panel2)" stroke="none" />)}
@@ -92,7 +92,8 @@ export function Diaria({ dias }: { dias: Dia[] }) {
               ? <circle cx={X(i)} cy={Y(p.real)} r={3} fill="var(--panel)" stroke="var(--dato-1)" strokeWidth={1.4} />
               : pts.length <= 45 && <circle cx={X(i)} cy={Y(p.real)} r={1.8} fill="var(--dato-1)" />}
             {conMarca(p, i) && (
-              <text x={X(i)} y={G.y1 + 14} fontSize={9.5} textAnchor={i === pts.length - 1 ? 'end' : 'middle'} fill="var(--tinta2)">{etiqueta(p)}</text>
+              // El primer día arranca en el eje (no centrado): centrado se montaba sobre la cifra de abajo del eje vertical.
+              <text x={X(i)} y={G.y1 + 17} fontSize={11.5} textAnchor={i === pts.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'} fill="var(--tinta2)">{etiqueta(p)}</text>
             )}
           </Tip>
         ))}
@@ -100,7 +101,7 @@ export function Diaria({ dias }: { dias: Dia[] }) {
       </svg>
     </div>
       {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba. */}
-      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato-1)" strokeWidth="2" /></svg>real medido</span>
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta2)" strokeWidth="1.2" strokeDasharray="5 3" /></svg>potencial</span>
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta3)" strokeWidth="1" strokeDasharray="2 3" /></svg>meta firmada</span>

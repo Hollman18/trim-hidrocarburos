@@ -139,8 +139,8 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
         const n = equipos.filter(e => enFiltro(f, e)).length
         return (
           <button key={f} type="button" aria-pressed={filtro === f} onClick={() => { setFiltro(f); setElegido(null) }}
-            className={cn('min-h-7 cursor-pointer rounded border px-2.5 py-1 text-[11.5px]',
-              filtro === f ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+            className={cn('min-h-7 cursor-pointer rounded-full border px-2.5 py-1 text-[14px]',
+              filtro === f ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
             {FILTRO[f]} <span className="tabular">{n}</span>
           </button>
         )
@@ -158,7 +158,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
       elementos={equipos.flatMap(e => (e.queda ? [e.queda] : []))}
       porSaber={equipos.filter(e => (e.respuesta ? e.respuesta.r === 'no-se' : e.porSaber)).map(e => e.id)} />
   )
-  const vacio = <p className="text-[12px] text-[var(--tinta2)]">Nada en «{FILTRO[filtro]}». <button type="button" className="cursor-pointer underline" onClick={() => setFiltro('todos')}>Ver todos</button></p>
+  const vacio = <p className="text-[14px] text-[var(--tinta2)]">Nada en «{FILTRO[filtro]}». <button type="button" className="cursor-pointer underline" onClick={() => setFiltro('todos')}>Ver todos</button></p>
   const pregunta = actual && (
     <Pregunta key={actual.id} equipo={actual} campoId={campoId} todos={todos} locacion={locacion} onResponder={responder} puede={puede}
       onSiguiente={visibles.length > 1 ? () => mover(1) : undefined} />
@@ -171,13 +171,13 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
       {!visibles.length ? vacio : (
         <>
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-            <p className="text-[11.5px] text-[var(--tinta2)]" aria-live="polite">
+            <p className="text-[14px] text-[var(--tinta2)]" aria-live="polite">
               Equipo {posicion < 0 ? '—' : posicion + 1} de {visibles.length} · borrador
             </p>
-            <label className="flex min-w-0 items-center gap-1 text-[11px] text-[var(--tinta2)]">
+            <label className="flex min-w-0 items-center gap-1 text-[13px] text-[var(--tinta2)]">
               <span className="sr-only">Ir a otro equipo</span>
               <select value={actual?.id ?? ''} onChange={e => setElegido(e.target.value)} aria-label="Ir a otro equipo"
-                className="max-w-[11rem] rounded border border-[var(--linea)] bg-[var(--panel2)] px-1.5 py-1 text-[11.5px]">
+                className="max-w-[11rem] rounded border border-[var(--linea)] bg-[var(--panel2)] px-1.5 py-1 text-[14px]">
                 {visibles.map(e => <option key={e.id} value={e.id}>{e.rotulo} · {NOMBRE_ESTADO[e.estado]}</option>)}
               </select>
             </label>
@@ -190,7 +190,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
         </>
       )}
       {puede && <details className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)]">
-        <summary className="cursor-pointer px-3 py-2 text-[12px] font-semibold">Aceptar lo que TRIM dedujo, por tipo de equipo</summary>
+        <summary className="cursor-pointer px-3 py-2 text-[14px] font-semibold">Aceptar lo que TRIM dedujo, por tipo de equipo</summary>
         <AceptarPorTipo equipos={equipos} onAceptar={aceptarGrupo} />
       </details>}
     </>
@@ -207,7 +207,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
               {grupos.map(({ g, lista, aceptables }) => (
                 <section key={g} aria-label={GRUPO[g]} className="mb-2 last:mb-0">
                   <header className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-b border-[var(--linea2)] pb-0.5">
-                    <h3 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{GRUPO[g].toUpperCase()} · {lista.length}</h3>
+                    <h3 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{GRUPO[g].toUpperCase()} · {lista.length}</h3>
                     {puede && aceptables > 0 && (
                       <Boton type="button" variante="chico" onClick={() => aceptarGrupo(g)}
                         aria-label={`Aceptar lo que TRIM dedujo para ${plural(aceptables, 'equipo', 'equipos')} de «${GRUPO[g]}»`}>
@@ -244,16 +244,16 @@ function Renglon({ equipo: e, todos, elegido, onElegir }: { equipo: Equipo; todo
   }, [elegido])
   return (
     <button ref={ref} type="button" onClick={onElegir} aria-pressed={elegido}
-      className={cn('flex w-full cursor-pointer items-start gap-1.5 rounded border px-1.5 py-1 text-left text-[11.5px]',
+      className={cn('flex w-full cursor-pointer items-start gap-1.5 rounded border px-1.5 py-1 text-left text-[14px]',
         elegido ? 'border-[var(--tinta)] bg-[var(--elevado)]' : 'border-transparent hover:bg-[var(--panel2)]')}>
       <span className="mt-[3px]"><MarcaEstado estado={e.estado} /></span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-1.5">
           <b>{e.rotulo}</b>
-          {e.detalle && <span className="min-w-0 break-words text-[10.5px] text-[var(--tinta3)]">{e.detalle}</span>}
-          <span className="ml-auto text-[10px] text-[var(--tinta3)]">{e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}</span>
+          {e.detalle && <span className="min-w-0 break-words text-[13px] text-[var(--tinta3)]">{e.detalle}</span>}
+          <span className="ml-auto text-[12px] text-[var(--tinta3)]">{e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}</span>
         </span>
-        <span className="block break-words text-[10.5px] text-[var(--tinta2)]">
+        <span className="block break-words text-[13px] text-[var(--tinta2)]">
           {/* Lo que nadie contestó todavía es lo que TRIM deduce, y se dice (B-49). */}
           {e.queda && (e.estado === 'sin-responder' || e.estado === 'propuesta') && 'TRIM deduce: '}
           {renglonDe(e.queda, e.respuesta?.r ?? (e.porSaber ? 'no-se' : undefined), todos)}
@@ -267,11 +267,11 @@ function Renglon({ equipo: e, todos, elegido, onElegir }: { equipo: Equipo; todo
 /** «Aceptar» por tipo de equipo, con cuántos acepta cada toque (U2 §8.3). */
 function AceptarPorTipo({ equipos, onAceptar }: { equipos: Equipo[]; onAceptar: (g: Equipo['grupo']) => void }) {
   const grupos = ORDEN_GRUPO.map(g => ({ g, n: equipos.filter(e => e.grupo === g && aceptable(e)).length })).filter(x => x.n > 0)
-  if (!grupos.length) return <p className="px-3 pb-2.5 text-[11.5px] text-[var(--tinta2)]">No queda nada que aceptar en lote: lo que falta lo decide usted, equipo por equipo.</p>
+  if (!grupos.length) return <p className="px-3 pb-2.5 text-[14px] text-[var(--tinta2)]">No queda nada que aceptar en lote: lo que falta lo decide usted, equipo por equipo.</p>
   return (
     <ul className="grid gap-1 px-3 pb-2.5">
       {grupos.map(({ g, n }) => (
-        <li key={g} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-[var(--linea2)] py-1 text-[11.5px] last:border-0">
+        <li key={g} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-[var(--linea2)] py-1 text-[14px] last:border-0">
           <span className="min-w-0">{GRUPO[g]}</span>
           <Boton type="button" variante="chico" onClick={() => onAceptar(g)}
             aria-label={`Aceptar lo que TRIM dedujo para ${plural(n, 'equipo', 'equipos')} de «${GRUPO[g]}»`}>
@@ -279,7 +279,7 @@ function AceptarPorTipo({ equipos, onAceptar }: { equipos: Equipo[]; onAceptar: 
           </Boton>
         </li>
       ))}
-      <li className="pt-0.5 text-[10.5px] text-[var(--tinta3)]">Lo que tiene dos fuentes que no cuadran no entra en el lote: se contesta uno por uno.</li>
+      <li className="pt-0.5 text-[13px] text-[var(--tinta3)]">Lo que tiene dos fuentes que no cuadran no entra en el lote: se contesta uno por uno.</li>
     </ul>
   )
 }
@@ -337,42 +337,42 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
   return (
     <Panel titulo={nombre.toUpperCase()} extra={e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}>
       <fieldset className="min-w-0">
-        <legend className="mb-1.5 text-[13px] font-semibold">¿A qué pozos sirve este equipo?</legend>
+        <legend className="mb-1.5 text-[15px] font-semibold">¿A qué pozos sirve este equipo?</legend>
         <div className="grid gap-1">
           {respuestas.map(r => {
             // Lo que TRIM deduce, sin marcar: borde discontinuo (lo que falta) y la palabra (B-49).
             const propuesta = sel.r === null && sugerida?.r === r
             return (
             <div key={r}>
-              <label className={cn('flex min-h-9 cursor-pointer items-start gap-2 rounded border px-2 py-1.5 text-[12px]',
+              <label className={cn('flex min-h-9 cursor-pointer items-start gap-2 rounded border px-2 py-1.5 text-[14px]',
                 sel.r === r ? 'border-[var(--tinta)] bg-[var(--elevado)] font-semibold'
                   : propuesta ? 'border-dashed border-[var(--tinta3)] hover:bg-[var(--panel2)]' : 'border-[var(--linea2)] hover:bg-[var(--panel2)]')}>
                 <input type="radio" name={`${idBase}-respuesta`} value={r} checked={sel.r === r} disabled={!puede} onChange={() => escoger(r)} className="mt-0.5 shrink-0" />
                 <span className="min-w-0">
                   {BOTON[r].texto}{propio && r === 'uno' && `: ${propio}`}
-                  {BOTON[r].aclara && <small className="block font-normal text-[10.5px] text-[var(--tinta2)]">{BOTON[r].aclara}</small>}
+                  {BOTON[r].aclara && <small className="block font-normal text-[13px] text-[var(--tinta2)]">{BOTON[r].aclara}</small>}
                   {propuesta && (
-                    <small className="mt-0.5 block w-fit rounded-sm border border-dashed border-[var(--tinta3)] px-1 font-normal text-[10px] text-[var(--tinta2)]" data-propuesta-sin-aceptar>
+                    <small className="mt-0.5 block w-fit rounded-sm border border-dashed border-[var(--tinta3)] px-1 font-normal text-[12px] text-[var(--tinta2)]" data-propuesta-sin-aceptar>
                       propuesta de TRIM, sin aceptar{(r === 'uno' || r === 'varios') && !propio && sugerida.pozos.length ? `: ${sugerida.pozos.length > 3 ? plural(sugerida.pozos.length, 'pozo', 'pozos') : sugerida.pozos.join(', ')}` : ''}
                     </small>
                   )}
                 </span>
               </label>
               {r === 'uno' && sel.r === 'uno' && !propio && (
-                <label className="ml-6 mt-1 flex flex-wrap items-center gap-1.5 text-[11.5px]">
+                <label className="ml-6 mt-1 flex flex-wrap items-center gap-1.5 text-[14px]">
                   <span className="text-[var(--tinta2)]">El pozo</span>
                   <select value={sel.pozos[0] ?? ''} disabled={!puede} onChange={x => contestar('uno', [x.target.value])} aria-label={`Pozo al que sirve ${e.id}`}
-                    className="rounded border border-[var(--linea)] bg-[var(--panel2)] px-1.5 py-1 text-[12px]">
+                    className="rounded border border-[var(--linea)] bg-[var(--panel2)] px-1.5 py-1 text-[14px]">
                     {todos.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </label>
               )}
               {r === 'varios' && sel.r === 'varios' && (
                 <fieldset className="ml-6 mt-1 min-w-0">
-                  <legend className="mb-0.5 text-[11px] text-[var(--tinta2)]">Los pozos a los que sirve {e.rotulo} · {plural(sel.pozos.length, 'escogido', 'escogidos')}</legend>
+                  <legend className="mb-0.5 text-[13px] text-[var(--tinta2)]">Los pozos a los que sirve {e.rotulo} · {plural(sel.pozos.length, 'escogido', 'escogidos')}</legend>
                   <div className="grid gap-x-2 [grid-template-columns:repeat(auto-fill,minmax(5.2rem,1fr))]">
                     {todos.map(p => (
-                      <label key={p} className="flex min-h-7 cursor-pointer items-center gap-1 text-[11.5px]">
+                      <label key={p} className="flex min-h-7 cursor-pointer items-center gap-1 text-[14px]">
                         <input type="checkbox" checked={sel.pozos.includes(p)} disabled={!puede} onChange={() => alternarPozo(p)} />{p}
                       </label>
                     ))}
@@ -383,10 +383,10 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
             )
           })}
         </div>
-        {propio && <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-pozo-propio>Es un pozo: solo se sirve a sí mismo. El tramo de sus paradas no se escoge: es «En el pozo».</p>}
+        {propio && <p className="mt-1 text-[13px] text-[var(--tinta2)]" data-pozo-propio>Es un pozo: solo se sirve a sí mismo. El tramo de sus paradas no se escoge: es «En el pozo».</p>}
       </fieldset>
 
-      <div aria-live="polite" className="mt-2 rounded border-l-2 border-[var(--tinta)] bg-[var(--panel2)] px-2 py-1.5 text-[12px]">
+      <div aria-live="polite" className="mt-2 rounded border-l-2 border-[var(--tinta)] bg-[var(--panel2)] px-2 py-1.5 text-[14px]">
         {listo && sel.r ? <>→ {fraseDe(sel.r, deduce, todos)}</>
           : sel.r === null ? (sugerida
             ? <>Nadie lo ha contestado. Lo del borde discontinuo es lo que TRIM deduce: acéptelo abajo o escoja otra respuesta.</>
@@ -395,7 +395,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
       </div>
       {deduce?.casoBorde && <CasoBorde className="mt-1.5" />}
       {puede && e.respuesta && (
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--tinta2)]">
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[var(--tinta2)]">
           <span>En el borrador: falta firmar (paso 3).</span>
           <Boton type="button" variante="chico" onClick={() => { setAMedias(null); onResponder({ [e.id]: null }) }}>
             <Undo2 className="mr-1 inline size-3" />Volver a lo que regía
@@ -406,7 +406,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
       {(candidatos.length > 0 || conflictos.length > 0) && (
         <div className="mt-2.5 grid gap-1.5">
           {conflictos.map((p, i) => (
-            <p key={`conflicto-${i}`} className="flex items-start gap-1.5 rounded border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[11.5px]">
+            <p key={`conflicto-${i}`} className="flex items-start gap-1.5 rounded border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[14px]">
               <span className="mt-[3px]"><MarcaFalta etiqueta="Falta decidir" /></span>
               <span><b>Dos fuentes no cuadran.</b> {p.conflicto ?? p.porque} <span className="text-[var(--tinta2)]">Lo decide usted: acepte lo de abajo o conteste arriba.</span></span>
             </p>
@@ -472,8 +472,8 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
   const caidas = c.propuestas.filter(p => p.fuente === 'cascadas').flatMap(p => p.evidencia)
   const frase = fraseDe(c.r, elemento, todos)
   return (
-    <div className={cn('rounded border px-2 py-1.5 text-[11.5px]', c.propuestas.length ? 'border-[var(--linea2)] bg-[var(--panel2)]' : 'border-dashed border-[var(--tinta3)]')}>
-      <p className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
+    <div className={cn('rounded border px-2 py-1.5 text-[14px]', c.propuestas.length ? 'border-[var(--linea2)] bg-[var(--panel2)]' : 'border-dashed border-[var(--tinta3)]')}>
+      <p className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
         {c.propuestas.length ? 'PROPUESTA DE TRIM' : firmado ? 'LO QUE ESTÁ FIRMADO' : 'LO QUE TRIM DEDUJO DEL REGISTRO'}
       </p>
       <ul className="mt-0.5 grid gap-1">
@@ -481,8 +481,8 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
         {c.deducido && <li>Es un equipo nuevo del registro que la versión firmada no trae: así lo deduce TRIM. Mientras nadie lo conteste, sus paradas toman el tramo de la regla por tipo de falla.</li>}
         {c.propuestas.map((p, i) => (
           <li key={`${p.fuente}-${i}`}>
-            {p.porque} <span className="text-[10.5px] text-[var(--tinta3)]">· {FUENTE[p.fuente]}</span>
-            {p.fuente !== 'cascadas' && p.evidencia.length > 0 && <span className="block text-[10.5px] text-[var(--tinta2)]">{p.evidencia.join(' · ')}</span>}
+            {p.porque} <span className="text-[13px] text-[var(--tinta3)]">· {FUENTE[p.fuente]}</span>
+            {p.fuente !== 'cascadas' && p.evidencia.length > 0 && <span className="block text-[13px] text-[var(--tinta2)]">{p.evidencia.join(' · ')}</span>}
             {p.conflicto && <span className="mt-0.5 flex items-start gap-1.5"><span className="mt-[3px]"><MarcaFalta etiqueta="Falta decidir" /></span><span><b>Dos fuentes no cuadran.</b> {p.conflicto}</span></span>}
           </li>
         ))}
@@ -497,8 +497,8 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
           </Boton>
         )}
       </div>
-      {caidas.length > 1 && abierta && <ul id={idEvidencia} className="mt-1 list-disc pl-4 text-[10.5px] text-[var(--tinta2)]">{caidas.map((x, i) => <li key={i}>{x}</li>)}</ul>}
-      {caidas.length === 1 && <p className="mt-0.5 text-[10.5px] text-[var(--tinta2)]">{caidas[0]}</p>}
+      {caidas.length > 1 && abierta && <ul id={idEvidencia} className="mt-1 list-disc pl-4 text-[13px] text-[var(--tinta2)]">{caidas.map((x, i) => <li key={i}>{x}</li>)}</ul>}
+      {caidas.length === 1 && <p className="mt-0.5 text-[13px] text-[var(--tinta2)]">{caidas[0]}</p>}
     </div>
   )
 }

@@ -47,7 +47,7 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
     <Panel className="mb-2.5 print:break-inside-avoid" titulo="LA TUBERÍA DEL AGUA"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">hoy, {fechaHora(AHORA)}<Info titulo="La tubería del agua" texto={AYUDA_TUBERIA} /></span>}>
       <div data-tuberia-agua={campoId}>
-        <small className="mb-1.5 block text-[10.5px] text-[var(--tinta3)]">
+        <small className="mb-1.5 block text-[13px] text-[var(--tinta3)]">
           <span className="solo-impresion">{nombre} · {periodo} · </span>
           agua de las pruebas vigentes · cada capacidad dice de dónde sale: firmada o dato del demo, sin firmar
         </small>
@@ -64,7 +64,7 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
           {a.tramos.map((x, i) => (
             <Tramo key={x.tramo} x={x} primero={i === 0} angosto={a.limita && a.angosto === x.tramo}>
               {x.tramo === 'producida' && (
-                <small className="block text-[10.5px] leading-snug text-[var(--tinta2)]">
+                <small className="block text-[13px] leading-snug text-[var(--tinta2)]">
                   con todos los pozos produciendo
                   <span className="block">hoy <b className="tabular font-semibold text-[var(--tinta)]">{n0(caudales.agua)}</b>{estado && estado.parados > 0 ? ` · ${plural(estado.parados, 'pozo parado', 'pozos parados')}` : ''}</span>
                   <span className="block">corte de agua hoy <span className="tabular">{n1(corte)} %</span></span>
@@ -77,7 +77,7 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
         </div>
 
         {/* El colchón, sin teoría: las frases del motor (U2 §5.3). */}
-        <ul className="mt-3 space-y-0.5 border-t border-[var(--linea2)] pt-2 text-[12.5px] font-medium leading-snug" data-frases-agua>
+        <ul className="mt-3 space-y-0.5 border-t border-[var(--linea2)] pt-2 text-[15px] font-medium leading-snug" data-frases-agua>
           {a.frases.map(f => <li key={f}>{f}</li>)}
         </ul>
 
@@ -120,7 +120,7 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
   return (
     // La flecha va fuera de la tarjeta del tramo: entre un tramo y el siguiente.
     <div className="relative min-w-0">
-    {!primero && <span aria-hidden className="absolute -left-[15px] top-1/2 hidden -translate-y-1/2 text-[12px] text-[var(--tinta3)] md:block print:block">→</span>}
+    {!primero && <span aria-hidden className="absolute -left-[15px] top-1/2 hidden -translate-y-1/2 text-[14px] text-[var(--tinta3)] md:block print:block">→</span>}
     <section aria-label={NOMBRE_TRAMO_AGUA[x.tramo]} data-tramo-agua={x.tramo} data-limita={angosto ? '' : undefined}
       data-casi-igual={x.casiIgual ? '' : undefined}
       className={cn('h-full min-w-0 rounded-[3px] px-2.5 py-2',
@@ -128,26 +128,26 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
           : angosto ? 'border-[4px] border-double border-[var(--tinta)] bg-[var(--panel2)]'
             : x.casiIgual ? 'border-[3px] border-dashed border-[var(--tinta)] bg-[var(--panel2)]'
               : 'border border-[var(--linea)] bg-[var(--panel2)]')}>
-      <h3 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{NOMBRE_TRAMO_AGUA[x.tramo].toUpperCase()}</h3>
+      <h3 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{NOMBRE_TRAMO_AGUA[x.tramo].toUpperCase()}</h3>
       {!esTanque && (
         conNumero ? (
           <>
             <b className={cn('tabular block text-[16px] leading-tight', sinFirmar && 'underline decoration-dashed decoration-[var(--tinta3)] underline-offset-[3px]')}>
-              {n0(x.potencialBpd!)}<small className="ml-0.5 text-[10.5px] font-normal text-[var(--tinta3)]">bbl/d</small>
+              {n0(x.potencialBpd!)}<small className="ml-0.5 text-[13px] font-normal text-[var(--tinta3)]">bbl/d</small>
             </b>
-            {x.crudoBpd !== null && <small className="block text-[10.5px] text-[var(--tinta3)]">≈ <span className="tabular">{n0(x.crudoBpd)}</span> de crudo</small>}
+            {x.crudoBpd !== null && <small className="block text-[13px] text-[var(--tinta3)]">≈ <span className="tabular">{n0(x.crudoBpd)}</span> de crudo</small>}
             {/* En el agua se mide contra lo que entra: «cabe más», no «le sobran», que en la tubería del campo es contra lo que limita (B-16). */}
-            {x.holguraBpd !== null && <small className="block text-[10.5px] text-[var(--tinta2)]">{x.holguraBpd >= 0 ? <>cabe más: <span className="tabular">{n0(x.holguraBpd)}</span></> : <>le faltan <span className="tabular">{n0(-x.holguraBpd)}</span></>}</small>}
-            <small className="block text-[10.5px] text-[var(--tinta3)]" title={x.fuente} data-estado={x.estado}>{sinFirmar ? '┄ ' : ''}{ESTADO_TRAMO[x.estado]}</small>
+            {x.holguraBpd !== null && <small className="block text-[13px] text-[var(--tinta2)]">{x.holguraBpd >= 0 ? <>cabe más: <span className="tabular">{n0(x.holguraBpd)}</span></> : <>le faltan <span className="tabular">{n0(-x.holguraBpd)}</span></>}</small>}
+            <small className="block text-[13px] text-[var(--tinta3)]" title={x.fuente} data-estado={x.estado}>{sinFirmar ? '┄ ' : ''}{ESTADO_TRAMO[x.estado]}</small>
           </>
         ) : (
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta3)]">
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
             sin dato<Info titulo={NOMBRE_TRAMO_AGUA[x.tramo]} texto={x.sinDato ?? 'El demo no trae esta capacidad.'} />
           </span>
         )
       )}
       {(angosto || x.casiIgual) && (
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold" data-limita-marca={angosto ? '' : undefined}>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] font-semibold" data-limita-marca={angosto ? '' : undefined}>
           {angosto && <span className="font-cond tracking-[.08em]">◄ LIMITA</span>}
           {x.casiIgual && <span className="font-cond font-normal tracking-[.06em] text-[var(--tinta2)]" data-casi-igual>casi iguales</span>}
           {angosto && <Info titulo="Lo que limita el agua" texto={TEXTO.limita} />}
@@ -155,7 +155,7 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
       )}
       {children}
       {x.disponibleHoy && (
-        <small className="mt-1 flex items-center gap-1 text-[10.5px] text-[var(--tinta2)]" data-hoy>
+        <small className="mt-1 flex items-center gap-1 text-[13px] text-[var(--tinta2)]" data-hoy>
           <i aria-hidden className="inline-block h-0 w-3 shrink-0 border-t border-dotted border-[var(--tinta2)]" />{x.disponibleHoy.texto}
         </small>
       )}
@@ -167,7 +167,7 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
 /** El tanque como recipiente: su nivel, la raya del alto-alto y su colchón. Un
  *  tanque firmado sin lectura es un dato que no se puede creer: morado y «---». */
 function Tanques({ x, niveles }: { x: TramoTuberiaAgua; niveles: Record<string, { tag: string; pct: number; hora?: string }> }) {
-  if (!x.tanques?.length) return <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta3)]">sin tanque firmado<Info titulo="Tanque de agua" texto={x.sinDato ?? 'El campo no tiene tanque de agua firmado en la configuración.'} /></span>
+  if (!x.tanques?.length) return <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">sin tanque firmado<Info titulo="Tanque de agua" texto={x.sinDato ?? 'El campo no tiene tanque de agua firmado en la configuración.'} /></span>
   return (
     <>
       {x.tanques.map(t => {
@@ -176,13 +176,13 @@ function Tanques({ x, niveles }: { x: TramoTuberiaAgua; niveles: Record<string, 
         const alto = t.altoAlto * 100
         return (
           <div key={t.id} className="mt-0.5" data-tanque={t.id}>
-            <small className="block text-[10.5px] text-[var(--tinta2)]">{t.id} · <span className="tabular">{n0(t.capacidadBbl)}</span> bbl</small>
+            <small className="block text-[13px] text-[var(--tinta2)]">{t.id} · <span className="tabular">{n0(t.capacidadBbl)}</span> bbl</small>
             <div className="mt-1 flex items-end gap-2">
               <span aria-hidden className="relative block h-[72px] w-14 shrink-0 overflow-hidden rounded-b-[6px] rounded-t-[2px] border-2 border-[var(--tinta3)] bg-[var(--panel)]">
                 {pct !== undefined && <i className="absolute inset-x-0 bottom-0 block bg-[var(--dato-3)]" style={{ height: `${Math.min(100, pct)}%` }} />}
                 <i className="absolute inset-x-0 block border-t-2 border-dashed border-[var(--tinta)]" style={{ bottom: `${alto}%` }} />
               </span>
-              <span className="min-w-0 text-[10.5px] leading-snug">
+              <span className="min-w-0 text-[13px] leading-snug">
                 {pct === undefined
                   ? <span className="flex items-center gap-1 text-[var(--tinta2)]"><DatoInvalido etiqueta="Sin comunicación con el nivel" />Sin comunicación · ---</span>
                   : <b className="tabular block text-[15px] leading-tight">{n1(pct)} %</b>}
@@ -191,13 +191,13 @@ function Tanques({ x, niveles }: { x: TramoTuberiaAgua; niveles: Record<string, 
               </span>
             </div>
             {t.colchon ? (
-              <small className="mt-1 block text-[10.5px] leading-snug text-[var(--tinta2)]">
+              <small className="mt-1 block text-[13px] leading-snug text-[var(--tinta2)]">
                 {t.colchon.cuando === 'al-parar'
                   ? <>al parar {t.colchon.bomba} estaba al <span className="tabular">{n1(t.colchon.nivelPct)} %</span>: aguantaba <b className="tabular font-semibold text-[var(--tinta)]">{fmtHoras(t.colchon.horas, true)}</b></>
                   : <>si para {t.colchon.bomba} ahora, aguanta <b className="tabular font-semibold text-[var(--tinta)]">{fmtHoras(t.colchon.horas, true)}</b></>}
                 <span className="text-[var(--tinta3)]"> ({fmtHoras(t.colchon.rango[0], true)} a {fmtHoras(t.colchon.rango[1], true)})</span>
               </small>
-            ) : t.sinColchon && <small className="mt-1 block text-[10.5px] leading-snug text-[var(--tinta2)]">{t.sinColchon}</small>}
+            ) : t.sinColchon && <small className="mt-1 block text-[13px] leading-snug text-[var(--tinta2)]">{t.sinColchon}</small>}
           </div>
         )
       })}
@@ -213,11 +213,11 @@ function Bombas({ x, marca }: { x: TramoTuberiaAgua; marca: (equipo: string) => 
   const placa = new Set(enServicio.map(b => b.placaBpd)), cap = new Set(enServicio.map(b => b.capacidadBpd))
   return (
     <>
-      <ul className="mt-1 space-y-0.5 text-[11px]" aria-label="Las bombas del tren">
+      <ul className="mt-1 space-y-0.5 text-[13px]" aria-label="Las bombas del tren">
         {bs.map(b => <Bomba key={b.id} b={b} s={marca(b.id)} />)}
       </ul>
       {enServicio.length > 1 && placa.size === 1 && cap.size === 1 && (
-        <small className="mt-1 block text-[10.5px] leading-snug text-[var(--tinta3)]">
+        <small className="mt-1 block text-[13px] leading-snug text-[var(--tinta3)]">
           {n0(enServicio.length)} × {n0(enServicio[0]!.placaBpd)} de placa{enServicio[0]!.capacidadBpd !== enServicio[0]!.placaBpd ? ` · el cabezal las deja en ${n0(enServicio[0]!.capacidadBpd)}` : ''}
         </small>
       )}
@@ -235,13 +235,13 @@ function Bomba({ b, s }: { b: BombaDelTren; s: Severidad }) {
         // Sin instrumento es un dato que falta: el hueco discontinuo de «falta», no el círculo de «sin comunicación» (B-44).
         : b.marcha === 'sin-lectura' ? <i aria-hidden className="inline-block h-2.5 w-3.5 rounded-[1px] border border-dashed border-[var(--tinta3)]" />
           : <MarcaPrioridad s={s} tamano={12} />}
-      <b className="font-mono text-[11px]">{b.id}</b>
+      <b className="font-mono text-[13px]">{b.id}</b>
       {b.marcha === 'parada'
-        ? <b className="font-cond text-[10.5px] tracking-[.06em]">PARADA</b>
+        ? <b className="font-cond text-[13px] tracking-[.06em]">PARADA</b>
         : <span className="tabular text-[var(--tinta2)]">{n0(b.capacidadBpd)}</span>}
-      {b.marcha === 'sin-lectura' && <span className="text-[10.5px] text-[var(--tinta3)]">┄ sin instrumento</span>}
-      {b.reserva && <span className="text-[10.5px] text-[var(--tinta3)]">· de reserva</span>}
-      {b.papel === 'recobro' && <span className="text-[10.5px] text-[var(--tinta3)]">· recobro</span>}
+      {b.marcha === 'sin-lectura' && <span className="text-[13px] text-[var(--tinta3)]">┄ sin instrumento</span>}
+      {b.reserva && <span className="text-[13px] text-[var(--tinta3)]">· de reserva</span>}
+      {b.papel === 'recobro' && <span className="text-[13px] text-[var(--tinta3)]">· recobro</span>}
     </li>
   )
 }
@@ -264,8 +264,8 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
   const hermanas = (bombas?.bombas ?? []).filter(b => b.id !== perfil.equipo && !b.reserva).map(b => b.id)
   const enServicio = (bombas?.bombas ?? []).filter(b => !b.reserva)
   const reserva = (bombas?.bombas ?? []).some(b => b.reserva)
-  const rotulo = 'font-cond w-full shrink-0 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)] sm:w-[150px]'
-  const fila = 'flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-t border-[var(--linea2)] py-1.5 text-[11.5px] leading-snug'
+  const rotulo = 'font-cond w-full shrink-0 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)] sm:w-[150px]'
+  const fila = 'flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-t border-[var(--linea2)] py-1.5 text-[14px] leading-snug'
   const s = marca(perfil.equipo)
   const llenado = pr?.llenado
   const disposicion = sinUna.papel === 'disposicion' && sinUna.aguaSinSalidaBpd > 0

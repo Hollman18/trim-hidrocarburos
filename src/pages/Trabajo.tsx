@@ -48,11 +48,11 @@ export function Trabajo() {
   const listaAvisan = useVerMas(avisan, { prioridad: r => r.prioridad })
   const ordenMia = (r: (typeof avisan)[number]) => mias.find(o => o.campoId === r.campoId && o.equipo === r.equipo)
   const sinArrancar = pi.porIdentificar - pi.arrancaronSinIdentificar
-  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
-  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
+  const rotulo = 'block text-[13px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[13px] text-[var(--tinta2)]'
 
   const filaPregunta = (p: (typeof preguntas)[number]) => (
-    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
+    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
       <MarcaPrioridad s={!p.fin ? 2 : 3} tamano={11} />
       <span className="min-w-0 flex-1"><b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span></span>
       {!p.fin ? <Chip tono="fuerte">no arrancar</Chip> : <Chip>arrancó sin identificar</Chip>}
@@ -66,18 +66,18 @@ export function Trabajo() {
         <button onClick={() => abrir(r.campoId, r.equipo)} className="flex min-h-10 w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)] sm:min-h-0">
           <MarcaPrioridad s={r.prioridad} tamano={12} className="mt-[2px]" />
           <span className="min-w-0 flex-1">
-            <b className="text-[12.5px]">{r.equipo}{donde(r.campoId)}</b>
-            <small className="block text-[11px] text-[var(--tinta2)]">{r.parte ? NOMBRE_PARTE[r.parte].toLowerCase() : ''}{r.tag ? <>{r.parte ? ' · ' : ''}<span className="font-mono">{r.tag}</span></> : ''}</small>
+            <b className="text-[15px]">{r.equipo}{donde(r.campoId)}</b>
+            <small className="block text-[13px] text-[var(--tinta2)]">{r.parte ? NOMBRE_PARTE[r.parte].toLowerCase() : ''}{r.tag ? <>{r.parte ? ' · ' : ''}<span className="font-mono">{r.tag}</span></> : ''}</small>
           </span>
-          <span className="tabular shrink-0 text-right text-[11px]">
+          <span className="tabular shrink-0 text-right text-[13px]">
             {r.horas !== undefined ? <><span className="sr-only">cruza su límite en </span><b>{fmtHoras(r.horas)}</b></> : <Chip tono="fuerte">ya pasó el límite</Chip>}
           </span>
         </button>
         {/* Si ya hay una orden suya para ese equipo, lo que hay que hacer está en la orden: no se repite. */}
         {o
-          ? <p className="mt-0.5 pl-[22px] text-[10.5px] text-[var(--tinta2)]">Orden {o.numero} liberada a su nombre: vea «Órdenes en SAP».</p>
+          ? <p className="mt-0.5 pl-[22px] text-[13px] text-[var(--tinta2)]">Orden {o.numero} liberada a su nombre: vea «Órdenes en SAP».</p>
           // Es la instrucción del técnico (trae el aviso de seguridad): va escrita, no detrás de un ⓘ.
-          : r.accion && <p className="mt-0.5 pl-[22px] text-[11px] text-[var(--tinta2)]">{r.accion}</p>}
+          : r.accion && <p className="mt-0.5 pl-[22px] text-[13px] text-[var(--tinta2)]">{r.accion}</p>}
       </div>
     )
   }
@@ -113,9 +113,9 @@ export function Trabajo() {
         cerca de su límite. En las órdenes de otros puestos, toque «qué hacer» para ver la tarea.
       </Lectura>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(310px,1fr))]">
+      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))]">
         <Panel titulo="PARADOS" extra={`${parados.length}`}>
-          {parados.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo de alto impacto parado.</p>}
+          {parados.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo de alto impacto parado.</p>}
           {parados.map(r => {
             const p = preguntas.find(x => x.equipo === r.equipo && x.campoId === r.campoId && !x.fin)
             return (
@@ -123,11 +123,11 @@ export function Trabajo() {
                 <button onClick={() => abrir(r.campoId, r.equipo)} className="flex min-h-10 w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)] sm:min-h-0">
                   <MarcaPrioridad s={1} tamano={12} className="mt-[2px]" />
                   <span className="min-w-0 flex-1">
-                    <b className="text-[12.5px]">{r.equipo}{donde(r.campoId)}</b>
-                    <small className="block text-[11px] text-[var(--tinta2)]">{TIPO_CAUSA[r.tipo].toLowerCase()}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}</small>
-                    <small className="block text-[11px] text-[var(--tinta2)]">{r.parte ? NOMBRE_PARTE[r.parte].toLowerCase() : 'parte sin identificar'}</small>
+                    <b className="text-[15px]">{r.equipo}{donde(r.campoId)}</b>
+                    <small className="block text-[13px] text-[var(--tinta2)]">{TIPO_CAUSA[r.tipo].toLowerCase()}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}</small>
+                    <small className="block text-[13px] text-[var(--tinta2)]">{r.parte ? NOMBRE_PARTE[r.parte].toLowerCase() : 'parte sin identificar'}</small>
                   </span>
-                  {p ? <Chip tono="fuerte">no arrancar</Chip> : <span className="tabular text-[11px]">{n0(r.bblDia)} bbl/d</span>}
+                  {p ? <Chip tono="fuerte">no arrancar</Chip> : <span className="tabular text-[13px]">{n0(r.bblDia)} bbl/d</span>}
                 </button>
               </div>
             )
@@ -135,7 +135,7 @@ export function Trabajo() {
         </Panel>
 
         <Panel titulo="PARADAS POR IDENTIFICAR" extra={`${pi.porIdentificar}`}>
-          {preguntas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
+          {preguntas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
           <VerMas ocultas={listaPreguntas.ocultas} abierto={listaPreguntas.abierto} onAlternar={listaPreguntas.alternar} />
@@ -145,7 +145,7 @@ export function Trabajo() {
         </Panel>
 
         <Panel titulo="AVISANDO · QUÉ REVISAR" extra={`${avisan.length}`}>
-          {avisan.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
+          {avisan.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
           {listaAvisan.visibles.map(filaAvisa)}
           {listaAvisan.resto.length > 0 && <div className="solo-impresion">{listaAvisan.resto.map(filaAvisa)}</div>}
           <VerMas ocultas={listaAvisan.ocultas} abierto={listaAvisan.abierto} onAlternar={listaAvisan.alternar} />
@@ -156,18 +156,18 @@ export function Trabajo() {
             Las crea y las libera el planeador en SAP; TRIM no las escribe. Cuando SAP libera una a su
             nombre, TRIM le avisa por WhatsApp. Se notifican y se cierran en SAP.
           </Lectura>
-          {abiertas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Sin órdenes abiertas.</p>}
+          {abiertas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Sin órdenes abiertas.</p>}
           {mias.map(o => <Orden key={o.numero} o={o} donde={donde(o.campoId)} mia aviso={notificadas.get(o.numero)} onAbrir={() => abrir(o.campoId, o.equipo)} />)}
-          {mias.length > 0 && otras.length > 0 && <h5 className="font-cond mt-2.5 mb-0.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">DE OTROS PUESTOS</h5>}
+          {mias.length > 0 && otras.length > 0 && <h5 className="font-cond mt-2.5 mb-0.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">DE OTROS PUESTOS</h5>}
           {otras.map(o => <Orden key={o.numero} o={o} donde={donde(o.campoId)} onAbrir={() => abrir(o.campoId, o.equipo)} />)}
         </Panel>
 
         <Panel titulo="PARADAS PROGRAMADAS" extra="aprobadas">
-          {programa.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada programado de aquí en adelante.</p>}
+          {programa.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada programado de aquí en adelante.</p>}
           {programa.map(p => (
-            <div key={p.id} className="border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
+            <div key={p.id} className="border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
               <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(new Date(p.desde))} a {fechaHora(new Date(p.hasta))}</span>
-              <small className="block text-[10.5px] text-[var(--tinta2)]">{p.motivo}</small>
+              <small className="block text-[13px] text-[var(--tinta2)]">{p.motivo}</small>
             </div>
           ))}
         </Panel>
@@ -180,20 +180,20 @@ export function Trabajo() {
  *  con qué repuestos reservados. */
 function Orden({ o, donde, mia, aviso, onAbrir }: { o: OrdenSap; donde: string; mia?: boolean; aviso?: { hora: string; noEnviado?: string }; onAbrir: () => void }) {
   return (
-    <div className="border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+    <div className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
       <button onClick={onAbrir} className="flex min-h-10 w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)] sm:min-h-0">
         <span className="min-w-0 flex-1">
-          <b className="text-[12.5px]">{o.equipo}{donde}</b> <span className="font-mono text-[10.5px] text-[var(--tinta3)]">{o.numero}</span>
+          <b className="text-[15px]">{o.equipo}{donde}</b> <span className="font-mono text-[13px] text-[var(--tinta3)]">{o.numero}</span>
           {/* Su orden: la tarea va escrita, es lo que tiene que hacer (y trae las condiciones de seguridad). */}
-          {mia && o.descripcion && <small className="block text-[11.5px] text-[var(--tinta)]">{o.descripcion}</small>}
-          <small className="block text-[10.5px] text-[var(--tinta3)]">
+          {mia && o.descripcion && <small className="block text-[14px] text-[var(--tinta)]">{o.descripcion}</small>}
+          <small className="block text-[13px] text-[var(--tinta3)]">
             {NOMBRE_CLASE[o.clase]} · prioridad {o.prioridad} · {o.liberada ? `liberada ${fechaHora(new Date(o.liberada))}` : `creada ${fechaHora(new Date(o.creada))}`} · {mia ? 'a su nombre' : `puesto ${o.puesto}`}
           </small>
-          {o.repuestos.length > 0 && <small className="block text-[10.5px] text-[var(--tinta2)]">Repuestos reservados: {o.repuestos.map(r => `${r.cantidad} × ${r.descripcion}`).join(', ')}</small>}
+          {o.repuestos.length > 0 && <small className="block text-[13px] text-[var(--tinta2)]">Repuestos reservados: {o.repuestos.map(r => `${r.cantidad} × ${r.descripcion}`).join(', ')}</small>}
           {/* Si el aviso no salió (un dato de SAP que no cabía en la plantilla), se dice: nadie le avisó. */}
           {aviso && (aviso.noEnviado
-            ? <small className="flex items-baseline gap-1 text-[10.5px] text-[var(--tinta)]"><DatoInvalido etiqueta="Aviso no enviado" tamano={10} />TRIM no pudo avisarle por WhatsApp ({fechaHora(new Date(aviso.hora))}): {aviso.noEnviado}</small>
-            : <small className="block text-[10.5px] text-[var(--tinta2)]">TRIM le avisó por WhatsApp · {fechaHora(new Date(aviso.hora))}</small>)}
+            ? <small className="flex items-baseline gap-1 text-[13px] text-[var(--tinta)]"><DatoInvalido etiqueta="Aviso no enviado" tamano={10} />TRIM no pudo avisarle por WhatsApp ({fechaHora(new Date(aviso.hora))}): {aviso.noEnviado}</small>
+            : <small className="block text-[13px] text-[var(--tinta2)]">TRIM le avisó por WhatsApp · {fechaHora(new Date(aviso.hora))}</small>)}
         </span>
         <Chip>{NOMBRE_ESTADO_ORDEN[o.estado]}</Chip>
       </button>

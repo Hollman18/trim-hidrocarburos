@@ -32,7 +32,7 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
         o, si la señal no alcanza, la que declara el operario. Toque o pase el cursor por un ⓘ para
         ver de dónde sale cada cifra.
       </Lectura>
-      <dl className="grid grid-cols-[1fr_auto] gap-x-4 text-[12px]">
+      <dl className="grid grid-cols-[1fr_auto] gap-x-4 text-[14px]">
         <Fila k="Potencial" v={n0(lb.potencial)} info={<Info titulo="Potencial" texto={`${FUENTE_POTENCIAL}.`} />} />
         <Fila k="− Real medido" v={n0(lb.real)} info={<Info titulo="Real medido" texto={`${FUENTE_REAL}.`} />} />
         <Fila k="= No producido" v={n0(lb.brecha)} fuerte />
@@ -50,27 +50,27 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
       </dl>
 
       <div className="mb-1 mt-3 flex flex-wrap items-center gap-x-1">
-        <h3 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">FACTOR DE ASIGNACIÓN</h3>
+        <h3 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">FACTOR DE ASIGNACIÓN</h3>
         <Info titulo="Factor de asignación" texto="Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar." />
       </div>
       {faRaros.length === 0
-        ? <p className="text-[11.5px] text-[var(--tinta2)]">{plural(lb.fa.length, 'mes-campo', 'meses-campo')} · <Chip>dentro de banda</Chip></p>
+        ? <p className="text-[14px] text-[var(--tinta2)]">{plural(lb.fa.length, 'mes-campo', 'meses-campo')} · <Chip>dentro de banda</Chip></p>
         : faRaros.map(({ f, estado }) => (
-          <p key={`${f.campoId}${f.mes}`} className="flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-[var(--tinta2)]">
+          <p key={`${f.campoId}${f.mes}`} className="flex flex-wrap items-center gap-x-1.5 text-[14px] text-[var(--tinta2)]">
             <FueraDeMeta si={estado === 'fuera'} tamano={10} />
             <span>{campoPorId(f.campoId).nombre} · {f.mes} · <b className="tabular text-[var(--tinta)]">{n3(f.fa)}</b></span>
             {estado === 'fuera' ? <Chip tono="fuerte">fuera de ±{n0(f.banda * 100)} %</Chip> : <Chip>banda sin verificar</Chip>}
           </p>
         ))}
       {lb.aproximado > 0 && (
-        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
           <span className="tabular">{n0(lb.aproximado)} bbl aproximados · frecuencia reducida</span>
           <Info titulo="Frecuencia reducida" texto="Pozos a frecuencia reducida: se calculan con la ley de afinidad (caudal proporcional a la frecuencia) y quedan fuera de la tolerancia." />
         </p>
       )}
 
-      <h3 className="font-cond mb-1 mt-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CADENA DE CUSTODIA</h3>
-      <ul className="grid gap-1 text-[11px] text-[var(--tinta2)]">
+      <h3 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CADENA DE CUSTODIA</h3>
+      <ul className="grid gap-1 text-[13px] text-[var(--tinta2)]">
         {lb.custodia.sinPrueba.length > 0 && (
           <li className="flex flex-wrap items-center gap-x-1.5"><FueraDeMeta si tamano={10} />
             <span><b className="text-[var(--tinta)]">Sin prueba:</b> {lb.custodia.sinPrueba.map(p => p.id).join(', ')}</span>

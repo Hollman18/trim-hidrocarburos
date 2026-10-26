@@ -125,9 +125,9 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
       className="border-b border-[var(--linea2)] py-3 first:pt-1 last:border-0 last:pb-1">
       <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <span className="min-w-0">
-          <b id={`${id}-t`} className="text-[13px]">{pozos}</b>
-          <span className="text-[11px] text-[var(--tinta3)]"> · {desdeCuando(g.filas, g.pozos.length > 1)} · {que}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">
+          <b id={`${id}-t`} className="text-[15px]">{pozos}</b>
+          <span className="text-[13px] text-[var(--tinta3)]"> · {desdeCuando(g.filas, g.pozos.length > 1)} · {que}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
+          <small className="block text-[13px] text-[var(--tinta2)]">
             {n0(g.bbl)} bbl diferidos{g.filas.length > 1 ? ` · ${paradasYFilas(g.filas)}` : ''}
             {p.tramo.m !== 1 && g.filas.length === 1 ? ` · tramo ${p.tramo.n}${p.tramo.m ? ` de ${p.tramo.m}` : ''}` : ''}
           </small>
@@ -138,7 +138,7 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
       {p.revision && <Revision r={p.revision} />}
 
       {g.cascada && (
-        <p className="mt-1 text-[11px] text-[var(--tinta2)]">
+        <p className="mt-1 text-[13px] text-[var(--tinta2)]">
           {g.pozos.length > 4
             ? <>{g.pozos.length} pozos · una sola raíz: <b className="text-[var(--tinta)]">{p.causa.equipo}</b></>
             : <>Una sola raíz, <b className="text-[var(--tinta)]">{p.causa.equipo}</b>: {g.filas.filter((f, i, xs) => xs.findIndex(y => y.pozo === f.pozo) === i).map(f => `${f.pozo} cerró a los ${f.minutosDesdeRaiz ?? 0} min`).join(' · ')}</>}
@@ -147,9 +147,9 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
       )}
 
       {deCampo ? (
-        <div className="mt-1.5 grid gap-1.5 text-[11.5px]">
+        <div className="mt-1.5 grid gap-1.5 text-[14px]">
           <button type="button" aria-expanded={verTecnico} aria-controls={`${id}-tec`} onClick={() => setVerTecnico(v => !v)}
-            className="no-imprimir flex min-h-12 cursor-pointer items-center gap-1 text-left text-[11px] text-[var(--tinta2)] sm:min-h-0">
+            className="no-imprimir flex min-h-12 cursor-pointer items-center gap-1 text-left text-[13px] text-[var(--tinta2)] sm:min-h-0">
             <ChevronRight aria-hidden size={14} className={cn('shrink-0 transition-transform', verTecnico && 'rotate-90')} />
             Lo técnico (dónde se trabó, la causa y el detalle) lo propone TRIM; lo confirma su supervisor
           </button>
@@ -160,24 +160,24 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
       ) : (
         g.estado === 'pendiente' && p.faltan.length === 6
           // Sin causa faltan los 6: se dice en una línea, sin seis huecos iguales (U2 §4.2).
-          ? <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px] text-[var(--tinta2)]"><Falta>faltan los 6 pasos</Falta>Hasta que alguien diga qué pasó, no se sabe quién, dónde se trabó ni la causa.</p>
+          ? <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px] text-[var(--tinta2)]"><Falta>faltan los 6 pasos</Falta>Hasta que alguien diga qué pasó, no se sabe quién, dónde se trabó ni la causa.</p>
           : <div className="mt-2"><Cadena p={p} codigos={codigos} grupo={g.pozos.length > 1} /></div>
       )}
       {/* Sin causa y sin una pregunta a la vista, la cadena la propone TRIM con lo que diga quien estuvo en el pozo (U2 §4.2). */}
       {g.estado === 'pendiente' && !(puede && lePreguntan) && (
-        <p className="mt-1.5 text-[10.5px] text-[var(--tinta2)]">
+        <p className="mt-1.5 text-[13px] text-[var(--tinta2)]">
           Lo que encontró se registra arriba, en «Por identificar» (o en «No conformidades», si ya arrancó): con eso TRIM propone los 6 pasos.
         </p>
       )}
 
       {revisa && g.estado !== 'confirmada' && p.clasificacion.apunta && (
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
           <Info titulo="Una señal apunta, no prueba" texto={sinReferencias(p.clasificacion.apunta.porque)} />
         </p>
       )}
       {revisa && p.propuesta.hueco && (
-        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           <Chip>sin causa exacta en la ANH</Chip><Info titulo="Sin causa exacta en la ANH" texto={sinReferencias(p.propuesta.hueco)} />
         </p>
       )}
@@ -187,12 +187,12 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
       {/* El operador avala lo de su terreno solo DESPUÉS de contestar, y se le pregunta en palabras (B-03). */}
       {puede && deCampo && contesto && !lePreguntan && suyoPorConfirmar.length > 0 && (
         <div role="group" aria-label="¿Está bien lo que queda de lo suyo?" className="no-imprimir mt-2 grid gap-1" data-esta-bien>
-          <span className="text-[12px] font-semibold">¿Está bien? {mayuscula(suyoPorConfirmar.map(x => DE_SU_TERRENO[x]?.[String(p.clasificacion[x]!.valor)] ?? '').filter(Boolean).join(' y '))}</span>
+          <span className="text-[14px] font-semibold">¿Está bien? {mayuscula(suyoPorConfirmar.map(x => DE_SU_TERRENO[x]?.[String(p.clasificacion[x]!.valor)] ?? '').filter(Boolean).join(' y '))}</span>
           <span className="flex flex-wrap gap-1.5">
             <button type="button" disabled={ocupado} className={cn(OPCION, 'font-semibold')} onClick={() => void enviar(g.filas.map(f => f.id), suyoPorConfirmar)}>Sí, así fue</button>
             {!(p.revision && !p.revision.atendida) && <button type="button" disabled={ocupado} className={OPCION} aria-expanded={editor === 'mal'} onClick={() => abrirMal()}>Algo está mal</button>}
           </span>
-          <small className="text-[10.5px] text-[var(--tinta3)]">El resto lo revisa su supervisor.</small>
+          <small className="text-[13px] text-[var(--tinta3)]">El resto lo revisa su supervisor.</small>
         </div>
       )}
 
@@ -213,11 +213,11 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
             </>
           )}
           {revisa && confirmable && (
-            <small className="basis-full text-[10px] text-[var(--tinta3)]">Queda confirmado por {persona.nombre} · hora del sistema.</small>
+            <small className="basis-full text-[12px] text-[var(--tinta3)]">Queda confirmado por {persona.nombre} · hora del sistema.</small>
           )}
         </div>
       )}
-      {!puede && revisa && persona.sinAcceso && <p className="mt-2 text-[10.5px] text-[var(--tinta2)]">Nadie con acceso activo tiene este rol: confirma una persona, no un rol.</p>}
+      {!puede && revisa && persona.sinAcceso && <p className="mt-2 text-[13px] text-[var(--tinta2)]">Nadie con acceso activo tiene este rol: confirma una persona, no un rol.</p>}
 
       {editor === 'mal' && <AlgoEstaMal g={g} raiz={raiz} cambiar={cambiar} onCerrar={() => setEditor(null)} onHecho={onHecho} />}
       {editor && editor !== 'mal' && (
@@ -226,16 +226,16 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
           titulo={editor === 'choke' ? `¿Dónde se trabó? · ${pozos}` : editor === 'faltan' ? `Lo que falta · ${pozos}` : `Corregir un paso · ${pozos}`}
           onCerrar={() => setEditor(null)} onHecho={onHecho} />
       )}
-      {error && <p role="alert" className="mt-1.5 text-[11px] text-[var(--tinta)]">{error}</p>}
+      {error && <p role="alert" className="mt-1.5 text-[13px] text-[var(--tinta)]">{error}</p>}
 
       {g.filas.length > 1 && (
         <div className="mt-2">
           <button type="button" aria-expanded={verFilas} aria-controls={`${id}-filas`} onClick={() => setVerFilas(v => !v)}
-            className="no-imprimir flex min-h-12 cursor-pointer items-center gap-1 text-[11px] text-[var(--tinta2)] sm:min-h-0">
+            className="no-imprimir flex min-h-12 cursor-pointer items-center gap-1 text-[13px] text-[var(--tinta2)] sm:min-h-0">
             <ChevronRight aria-hidden size={14} className={cn('shrink-0 transition-transform', verFilas && 'rotate-90')} />
             Ver las {g.filas.length} filas del reporte
           </button>
-          <ul id={`${id}-filas`} data-partible className={cn('mt-1 grid gap-0.5 pl-5 text-[11px]', !verFilas && 'hidden print:grid')} aria-label={`Filas de ${pozos}`}>
+          <ul id={`${id}-filas`} data-partible className={cn('mt-1 grid gap-0.5 pl-5 text-[13px]', !verFilas && 'hidden print:grid')} aria-label={`Filas de ${pozos}`}>
             {g.filas.map(f => <Fila key={f.id} f={f} />)}
           </ul>
         </div>
@@ -248,7 +248,7 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
 function Revision({ r }: { r: RevisionAnh }) {
   const aQuien = r.pedirA ? `le pidió ${aRol(r.pedirA)}` : 'marcó «Algo está mal»'
   return (
-    <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-revision={r.atendida ? 'atendida' : 'abierta'}>
+    <p className="mt-1 text-[13px] text-[var(--tinta2)]" data-revision={r.atendida ? 'atendida' : 'abierta'}>
       {/* Lo que escribió con sus palabras va en la pantalla; en el papel, quién, por su rol (D2). */}
       <DichoEnPapel papel={`${mayuscula(rolEnPapel(r))} ${aQuien} · ${horaCorta(r.hora)}`}>{r.por} {aQuien} · {horaCorta(r.hora)}: «{r.motivo}»</DichoEnPapel>
       {r.atendida && <span className="text-[var(--tinta3)]"> · la revisó <DichoEnPapel papel={rolEnPapel(r.atendida)}>{r.atendida.por}</DichoEnPapel> · {horaCorta(r.atendida.hora)}</span>}
@@ -289,17 +289,17 @@ function AlgoEstaMal({ g, raiz, cambiar, onCerrar, onHecho }: {
   return (
     <form className="no-imprimir mt-2 grid gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5" aria-label={`Algo está mal · ${pozosEnCorto(quienes)}`}
       onSubmit={e => { e.preventDefault(); void enviar() }}>
-      <span className="text-[11.5px] font-semibold">{atajoCambiar ? '¿Qué cambiaría? Lo corrige su supervisor.' : '¿Qué está mal?'}</span>
+      <span className="text-[14px] font-semibold">{atajoCambiar ? '¿Qué cambiaría? Lo corrige su supervisor.' : '¿Qué está mal?'}</span>
       <span className="grid gap-1 sm:flex sm:flex-wrap">
         {[...(atajoCambiar ? [atajoCambiar] : []), ...ATAJOS_MAL].map(a => (
           <button key={a} type="button" aria-pressed={atajo === a} onClick={() => { setAtajo(atajo === a ? null : a); setError('') }}
             className={cn(OPCION, atajo === a && 'border-acento bg-acento-f shadow-[inset_0_0_0_1px_var(--acento)]')}>{a}</button>
         ))}
       </span>
-      <label htmlFor={idMotivo} className="text-[10.5px] text-[var(--tinta2)]">{atajo ? 'Algo más (opcional)' : 'Otra cosa'}</label>
+      <label htmlFor={idMotivo} className="text-[13px] text-[var(--tinta2)]">{atajo ? 'Algo más (opcional)' : 'Otra cosa'}</label>
       <textarea id={idMotivo} value={motivo} rows={2} onChange={e => { setMotivo(e.target.value); setError('') }}
-        className="min-h-12 w-full rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px]" placeholder="Ej.: el pozo no paró por la energía, lo cerraron para una prueba" />
-      {error && <p role="alert" className="text-[11px] text-[var(--tinta)]">{error}</p>}
+        className="min-h-12 w-full rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px]" placeholder="Ej.: el pozo no paró por la energía, lo cerraron para una prueba" />
+      {error && <p role="alert" className="text-[13px] text-[var(--tinta)]">{error}</p>}
       <span className="flex flex-wrap gap-1.5">
         <button type="submit" disabled={ocupado} className={cn(OPCION, 'font-semibold')}>Enviar a revisar</button>
         <button type="button" onClick={onCerrar} className={OPCION}>Cancelar</button>

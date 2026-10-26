@@ -76,20 +76,20 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
           <MarcaPrioridad s={s} tamano={13} />
           <span className="min-w-0 flex-1">
             <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-              <b className="text-[12.5px]">{f.equipo}<span className="font-normal text-[var(--tinta3)]">{donde}</span></b>
+              <b className="text-[15px]">{f.equipo}<span className="font-normal text-[var(--tinta3)]">{donde}</span></b>
               <Chip tono={alto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[f.tipo].toLowerCase()}</Chip>
               {/* Una baja tensión que tumbó un solo pozo cada vez no es una caída del alimentador: se dice así (B-12). */}
               {f.pozos > 1 && (f.tipo === 'energia' && f.eventos === f.pozos
-                ? <span className="text-[10.5px] text-[var(--tinta3)]" data-un-pozo-por-parada>{f.eventos} paradas de un solo pozo</span>
-                : <span className="text-[10.5px] text-[var(--tinta3)]">{f.pozos} pozos</span>)}
-              {parteTop && <span className="text-[10.5px] text-[var(--tinta2)]">{NOMBRE_PARTE[parteTop.parte].toLowerCase()}</span>}
+                ? <span className="text-[13px] text-[var(--tinta3)]" data-un-pozo-por-parada>{f.eventos} paradas de un solo pozo</span>
+                : <span className="text-[13px] text-[var(--tinta3)]">{f.pozos} pozos</span>)}
+              {parteTop && <span className="text-[13px] text-[var(--tinta2)]">{NOMBRE_PARTE[parteTop.parte].toLowerCase()}</span>}
             </span>
             <span className="mt-1 block h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]">
               <i className="block h-full" style={{ width: `${(f.bbl / primero) * 100}%`, background: alto ? 'var(--dato-1)' : 'var(--dato-5)' }} />
             </span>
           </span>
           <b className={`${columnaBbl} text-[15px] leading-tight`}>{n0(f.bbl)}</b>
-          {!simple && <span className={`${columnaAcum} text-[12px]`}>{n0(pAcum)} %</span>}
+          {!simple && <span className={`${columnaAcum} text-[14px]`}>{n0(pAcum)} %</span>}
         </Tip>
       </div>
     )
@@ -104,9 +104,9 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
         del equipo{simple ? '' : ', su tolerancia'} y cuánto se lleva la parte; un clic lo abre.
         {!simple && ' El acumulado dice cuánto explican los primeros.'}
       </Lectura>
-      {filas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada diferido.</p>}
+      {filas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada diferido.</p>}
       {filas.length > 0 && (
-        <div className="flex gap-3 pb-1 text-[10px] text-[var(--tinta3)]" aria-hidden>
+        <div className="flex gap-3 pb-1 text-[12px] text-[var(--tinta3)]" aria-hidden>
           <span className="w-[13px] shrink-0" /><span className="flex-1" />
           <span className={columnaBbl}>bbl</span>
           {!simple && <span className={columnaAcum}>acumulado</span>}
@@ -142,8 +142,8 @@ export function ParetoPartes({ lb, onIr }: { lb: Libro; onIr?: () => void }) {
           ...p.equipos.slice(0, 3).map(e => [`${e.equipo} · ${campoPorId(e.campoId).nombre}`, `${n0(e.bbl)} bbl`] as [string, string])]}>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-baseline gap-x-2">
-            <b className="text-[12.5px]">{NOMBRE_PARTE[p.parte]}</b>
-            <span className="text-[10.5px] text-[var(--tinta3)]">
+            <b className="text-[15px]">{NOMBRE_PARTE[p.parte]}</b>
+            <span className="text-[13px] text-[var(--tinta3)]">
               {FAMILIA[p.familia]} · {p.fallas ? plural(p.fallas, 'falla', 'fallas') : 'sin fallas'}{p.disparos ? ` · ${plural(p.disparos, 'disparo', 'disparos')}` : ''}
             </span>
           </span>
@@ -153,7 +153,7 @@ export function ParetoPartes({ lb, onIr }: { lb: Libro; onIr?: () => void }) {
         </span>
         <span className="tabular w-[78px] shrink-0 text-right">
           <b className="block text-[15px] leading-tight">{n0(p.bbl)}</b>
-          <small className="text-[9.5px] text-[var(--tinta3)]">bbl · {pctParte(total ? (p.bbl / total) * 100 : 0)}</small>
+          <small className="text-[12px] text-[var(--tinta3)]">bbl · {pctParte(total ? (p.bbl / total) * 100 : 0)}</small>
         </span>
       </Tip>
     </div>
@@ -166,11 +166,11 @@ export function ParetoPartes({ lb, onIr }: { lb: Libro; onIr?: () => void }) {
         vigilar para que el número baje: si el sello se lleva la mitad, el sello va primero. Una
         parada que el tanque absorbió es igual una falla: cuenta con sus horas fuera y 0 bbl.
       </Lectura>
-      {lb.porParte.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna falla con la parte identificada.</p>}
+      {lb.porParte.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna falla con la parte identificada.</p>}
       {lb.porParte.map(p => fila(p, lista.resto.includes(p)))}
       <VerMas ocultas={lista.ocultas} abierto={lista.abierto} onAlternar={lista.alternar} />
       {lb.sinParte > 0 && (
-        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
           <span className="tabular">+ {n0(lb.sinParte)} bbl sin la parte identificada</span>
           <Info titulo="Sin la parte identificada" texto="Barriles de equipos de alto impacto cuya parada no dejó primera alarma ni firma. Están en «paradas por identificar»." />
         </p>
@@ -188,7 +188,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
     const alto = ALTO_IMPACTO.includes(t.tipo)
     return (
       <div key={t.tipo} className={`${FILA} py-1.5 ${oculta ? 'solo-impresion' : ''}`}>
-        <div className="flex justify-between gap-2 text-[11.5px]">
+        <div className="flex justify-between gap-2 text-[14px]">
           <span className={alto ? 'font-semibold' : ''}>{TIPO_CAUSA[t.tipo]}</span>
           <span className="tabular shrink-0">{n0(t.bbl)} bbl · {pctParte(lb.diferido ? (t.bbl / lb.diferido) * 100 : 0)}</span>
         </div>
@@ -206,7 +206,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
         Qué familia de equipos o servicios se lleva el diferido. En oscuro y en negrita, los de alto
         impacto (bombas de reinyección y electrosumergibles); rayado, lo que nadie ha identificado.
       </Lectura>
-      {lb.porTipo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada diferido.</p>}
+      {lb.porTipo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada diferido.</p>}
       {lb.porTipo.map(t => fila(t, lista.resto.includes(t)))}
       <VerMas ocultas={lista.ocultas} abierto={lista.abierto} onAlternar={lista.alternar} />
     </Panel>
@@ -241,7 +241,7 @@ export function Palancas({ lb, base, conMaximo = false }: { lb: Libro; base?: Li
         por orden de cierre se gana sin tocar ningún equipo. Las tres filas de la parte son de los
         equipos de alto impacto. Toque o pase el cursor por una fila para ver qué cuenta.
       </Lectura>
-      <div className="text-[12px]">
+      <div className="text-[14px]">
         {filas.map(f => {
           const pct = lb.diferido ? pctParte((f.v / lb.diferido) * 100) : ''
           return (
@@ -250,7 +250,7 @@ export function Palancas({ lb, base, conMaximo = false }: { lb: Libro; base?: Li
                 imprimir="pista" className="flex items-baseline justify-between gap-4 py-1.5">
                 <span className={f.fuerte ? 'font-semibold' : 'pl-3'}>{f.k}</span>
                 <span className={`tabular shrink-0 text-right ${f.fuerte ? 'text-[15px] font-bold' : 'font-semibold'}`}>
-                  {n0(f.v)}<span className="sr-only"> bbl</span>{' '}<small className="text-[9.5px] font-normal text-[var(--tinta3)]">{pct}</small>
+                  {n0(f.v)}<span className="sr-only"> bbl</span>{' '}<small className="text-[12px] font-normal text-[var(--tinta3)]">{pct}</small>
                 </span>
               </Tip>
             </div>

@@ -1,0 +1,38 @@
+import { useApp, useRol } from '@/app/store'
+import type { Frase, Destino } from '@/shared/api/hoy'
+import type { CondicionFranja } from '@/shared/api/condiciones'
+
+/** La misma frase, en una línea de texto (para el nombre accesible). */
+export const enLinea = (f?: Frase) => (f ?? []).map(x => (typeof x === 'string' ? x : x.b)).join('')
+
+/** La palabra de la condición, al lado de su marca (X5 §5.6: siempre con la palabra en listas y fichas). */
+export const PALABRA: Record<CondicionFranja, string> = {
+  interlock: 'Interlock', alarma: 'Alarma', atencion: 'Atención', aviso: 'Aviso', 'sin-comunicacion': 'Sin comunicación',
+}
+
+/** «Plan simulado: volver antes de 39 h (2.072 bbl), y 2 planes más»: lo del ciclo que toca este equipo. */
+export const resumenPlanes = (ps: readonly string[]) =>
+  ps.length === 1 ? ps[0]! : `${ps[0]!}, y ${ps.length - 1} ${ps.length === 2 ? 'plan más' : 'planes más'}`
+
+/** Lleva a un lugar del producto: la pantalla que el rol tiene para eso (la primera
+ *  que le toque de la lista), o la ficha del equipo. */
+export function useIr() {
+  const rol = useRol()
+  const setPantalla = useApp(s => s.setPantalla), setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo)
+  const ir = (ps: string[]) => setPantalla(ps.find(p => rol.pantallas.includes(p)) ?? ps[0]!)
+  return (d: Destino) => {
+    switch (d.a) {
+      case 'equipo': setCampo(d.campoId); abrirEquipo(d.equipo); return
+      case 'paradas': return ir(['causa'])
+      case 'planta': return ir(['plantaViva', 'planta', 'resumen'])
+      case 'agua': return ir(['agua', 'plantaViva', 'bombas'])
+      case 'turno': return ir(['turno'])
+      case 'asignacion': return ir(['produccion'])
+      case 'metas': return ir(['configuracion'])
+      case 'planes': return ir(['mantenimiento', 'causa', 'turno'])
+    }
+  }
+}
+
+/** La vibración corta al registrar una respuesta (X5 §3.5: 10 ms, nunca por una alarma). */
+export const vibrar = () => { try { navigator.vibrate?.(10) } catch { /* el navegador no la deja */ } }

@@ -21,9 +21,9 @@ const Cifra = ({ q, v, u, filas, pista, alerta, lectura }: {
   <Tip titulo={q} filas={filas} pista={pista}
     className="rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2.5 shadow-[var(--sombra)]">
     <b className="tabular block text-[22px] leading-none">
-      <FueraDeMeta si={alerta} />{v}{u && <span className="ml-1 text-[11px] font-medium text-[var(--tinta3)]">{u}</span>}
+      <FueraDeMeta si={alerta} />{v}{u && <span className="ml-1 text-[13px] font-medium text-[var(--tinta3)]">{u}</span>}
     </b>
-    <small className="mt-0.5 block text-[10.5px] text-[var(--tinta3)]">{q}</small>
+    <small className="mt-0.5 block text-[13px] text-[var(--tinta3)]">{q}</small>
     {lectura && <Lectura>{lectura}</Lectura>}
   </Tip>
 )
@@ -80,7 +80,7 @@ function ResumenCampo() {
           filas={[['Evitable', `${n0(lb.evitablePorOrden)} bbl`], ['Del diferido', `${n1(lb.diferido ? (lb.evitablePorOrden / lb.diferido) * 100 : 0)} %`]]} />
       </div>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Panel titulo="DIFERIDO MES A MES" extra="clic en un mes para verlo">
           <MesAMes serie={serie} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />

@@ -73,7 +73,7 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
       </Lectura>
       {conTopologia.length > 0 && (
         <Panel className="mb-2.5" titulo="LA TOPOLOGÍA EN ESTE BORRADOR">
-          <ul className="grid gap-1.5 text-[12px]">
+          <ul className="grid gap-1.5 text-[14px]">
             {conTopologia.map(x => {
               const nombre = campoPorId(x.campoId).nombre
               return (
@@ -92,19 +92,19 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
         </Panel>
       )}
       <Panel className="mb-2.5" titulo="SI FIRMA ESTA VERSIÓN" extra="rige desde la firma">
-        {!puede && <p className="text-[12px] text-[var(--tinta2)]">La vista previa y la firma las hace el administrador de la implementación, sobre su borrador.</p>}
-        {puede && !hayCambios && <p className="text-[12px] text-[var(--tinta2)]">No hay cambios en el borrador: conteste en el paso 1, o cambie el respaldo o los tanques en la configuración técnica.</p>}
-        {pidiendo && <p role="status" className="text-[12px] text-[var(--tinta2)]">Calculando lo que cambia…</p>}
-        {error && <p role="alert" className="rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[12px] font-semibold">{error}</p>}
+        {!puede && <p className="text-[14px] text-[var(--tinta2)]">La vista previa y la firma las hace el administrador de la implementación, sobre su borrador.</p>}
+        {puede && !hayCambios && <p className="text-[14px] text-[var(--tinta2)]">No hay cambios en el borrador: conteste en el paso 1, o cambie el respaldo o los tanques en la configuración técnica.</p>}
+        {pidiendo && <p role="status" className="text-[14px] text-[var(--tinta2)]">Calculando lo que cambia…</p>}
+        {error && <p role="alert" className="rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[14px] font-semibold">{error}</p>}
         {errores.length > 0 && (
-          <div role="alert" className="mb-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[12px]" data-borrador-con-errores>
+          <div role="alert" className="mb-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[14px]" data-borrador-con-errores>
             <p className="font-semibold">Borrador con errores: así quedaría. No se puede firmar hasta corregir esto:</p>
             <ul className="mt-0.5 list-disc pl-4">{errores.map(x => <li key={x}>{x}</li>)}</ul>
           </div>
         )}
         {impacto && (
           impacto.campos.length === 0
-            ? <p className="text-[12px] text-[var(--tinta2)]">Lo que cambia no toca a ningún campo: no cambia qué limita, ni «si falla hoy», ni dónde se trabó ninguna parada.</p>
+            ? <p className="text-[14px] text-[var(--tinta2)]">Lo que cambia no toca a ningún campo: no cambia qué limita, ni «si falla hoy», ni dónde se trabó ninguna parada.</p>
             : impacto.campos.map(c => <DeUnCampo key={c.campoId} c={c} desde={impacto.desde} />)
         )}
       </Panel>
@@ -123,8 +123,8 @@ function DeUnCampo({ c, desde }: { c: ImpactoCampo; desde: Date }) {
   const libro = c.texto.find(t => t.startsWith('El libro'))
   return (
     <section aria-label={`Lo que cambia en ${nombre}`} className="border-b border-[var(--linea2)] py-2 first:pt-0 last:border-0 last:pb-0">
-      <h3 className="font-cond mb-1 text-[10.5px] font-semibold tracking-[.11em]">{nombre.toUpperCase()}</h3>
-      <dl className="grid gap-x-3 gap-y-1.5 text-[12px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
+      <h3 className="font-cond mb-1 text-[13px] font-semibold tracking-[.11em]">{nombre.toUpperCase()}</h3>
+      <dl className="grid gap-x-3 gap-y-1.5 text-[14px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
         <dt className="text-[var(--tinta2)]">Qué limita hoy</dt>
         <dd>{sujeto(c.limitaAntes)} → {sujeto(c.limitaDespues)}{c.limitaAntes === c.limitaDespues && <span className="text-[var(--tinta2)]"> (no cambia)</span>}</dd>
 
@@ -157,7 +157,7 @@ function DeUnCampo({ c, desde }: { c: ImpactoCampo; desde: Date }) {
                   </li>
                 ))}
               </ul>
-              <p className="mt-0.5 text-[11.5px] text-[var(--tinta2)]">
+              <p className="mt-0.5 text-[14px] text-[var(--tinta2)]">
                 {p.confirmadas === 0
                   ? 'Ninguna la había confirmado una persona: toman el tramo nuevo al firmar.'
                   : p.confirmadas === 1

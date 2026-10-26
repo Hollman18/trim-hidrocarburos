@@ -18,7 +18,7 @@ import {
 import type { Grupo } from './grupos'
 
 const MARCADA = 'border-acento bg-acento-f shadow-[inset_0_0_0_1px_var(--acento)]'
-const CAMPO = 'min-h-12 w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-8'
+const CAMPO = 'min-h-12 w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px] sm:min-h-8'
 /** Lo que se le pide a producción con «Pedir a producción», para que lo lea con la parada. */
 const PIDE_YACIMIENTO = '¿Fue el yacimiento? Revise la prueba del pozo, el corte de agua o la presión de fondo.'
 
@@ -157,7 +157,7 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
     <span className="flex flex-wrap gap-1">
       {opciones.map(v => (
         <button key={v} type="button" role="radio" aria-checked={valores[x] === v} onClick={() => poner(x, v)} className={cn(OPCION, valores[x] === v && MARCADA)}>
-          {texto(v)}{linea && <small className="block text-[10px] text-[var(--tinta3)]">{linea(v)}</small>}
+          {texto(v)}{linea && <small className="block text-[12px] text-[var(--tinta3)]">{linea(v)}</small>}
         </button>
       ))}
     </span>
@@ -173,10 +173,10 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
     <HojaInferior titulo={titulo} onCerrar={onCerrar}>
     <form className="no-imprimir mt-2 grid gap-2.5 rounded border border-[var(--linea)] bg-[var(--panel2)] p-2.5 max-sm:mt-0" aria-label={titulo}
       onSubmit={e => { e.preventDefault(); void guardar() }}>
-      <b className="text-[12px]">{titulo}</b>
+      <b className="text-[14px]">{titulo}</b>
       {visibles.map(x => (
         <div key={x} className="grid gap-1" data-editar={x}>
-          <span className="flex flex-wrap items-baseline gap-x-2 text-[11.5px] font-semibold">
+          <span className="flex flex-wrap items-baseline gap-x-2 text-[14px] font-semibold">
             {ROTULO[x]}
             {actual(x) !== undefined
               ? <small className="font-normal text-[var(--tinta2)]">Ahora: {valorEnPalabras(x, actual(x)!)} · {marcaDelPaso(p, x, g.pozos.length <= 1)}</small>
@@ -187,7 +187,7 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
               {radios<ChokeAnh>('choke', opcionesChoke, c => OPCION_CHOKE[c], c => LINEA_CHOKE[c])}
               {!ponerYac && (
                 <div className="grid gap-1" data-pedir-a="prod">
-                  <small className="text-[10.5px] text-[var(--tinta2)]">¿Fue el yacimiento? Lo pone producción o confiabilidad, con lo que lo muestra: la prueba del pozo, el corte de agua o la presión de fondo.</small>
+                  <small className="text-[13px] text-[var(--tinta2)]">¿Fue el yacimiento? Lo pone producción o confiabilidad, con lo que lo muestra: la prueba del pozo, el corte de agua o la presión de fondo.</small>
                   <span className="flex flex-wrap items-center gap-1">
                     {/* Dos renglones: el pedido se lee entero también en el teléfono (B-46). */}
                     <textarea value={pedido} rows={2} onChange={e => { setPedido(e.target.value); setError('') }} className={cn(CAMPO, 'resize-y sm:flex-1')} aria-label="Lo que le pide a producción" />
@@ -197,7 +197,7 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
               )}
               {yac && (
                 <div role="group" aria-label="¿Qué lo muestra?" className="grid gap-1 border-l-2 border-[var(--linea)] pl-2">
-                  <span className="text-[11.5px] font-semibold">¿Qué lo muestra?</span>
+                  <span className="text-[14px] font-semibold">¿Qué lo muestra?</span>
                   <span className="flex flex-wrap gap-1">
                     {EVIDENCIAS.map(e => <button key={e.clave} type="button" aria-pressed={evidencia === e.clave} onClick={() => { setEvidencia(e.clave); setError('') }} className={cn(OPCION, evidencia === e.clave && MARCADA)}>{e.texto}</button>)}
                     <button type="button" aria-pressed={evidencia === 'otra'} onClick={() => setEvidencia('otra')} className={cn(OPCION, evidencia === 'otra' && MARCADA)}>Otra…</button>
@@ -216,10 +216,10 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
           {x === 'n2' && lista('n2', opcionesN2, v => valorEnPalabras('n2', v), n1 ? 'Escoja el detalle…' : 'Escoja primero la causa')}
         </div>
       ))}
-      {aviso && <p role="status" className="text-[11px] text-[var(--tinta)]">{aviso}</p>}
+      {aviso && <p role="status" className="text-[13px] text-[var(--tinta)]">{aviso}</p>}
       {visibles.includes('responsable') && valores.responsable === 'ext-transportador' && (valores.choke ?? actual('choke')) !== 'exportacion' && (
         // U2 §1.5: cuando cambia quién, se pregunta; nunca se cambia solo.
-        <div role="group" aria-label="¿Cambiamos también dónde se trabó?" className="grid gap-1 text-[11px]">
+        <div role="group" aria-label="¿Cambiamos también dónde se trabó?" className="grid gap-1 text-[13px]">
           <span>Cambió quién: ahora es {ETIQUETA_RESPONSABLE['ext-transportador']}. ¿Cambiamos también dónde se trabó a «Afuera»?</span>
           <span className="flex flex-wrap gap-1">
             <button type="button" className={OPCION} onClick={() => poner('choke', 'exportacion')}>Sí</button>
@@ -229,7 +229,7 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
       )}
       {cascada && (
         <div role="group" aria-label={yac ? '¿A qué pozo?' : `¿Aplica a los ${n} pozos de esta parada?`} className="grid gap-1">
-          <span className="text-[11.5px] font-semibold">{yac ? '¿A qué pozo? «En el yacimiento» se pone pozo por pozo.' : `¿Aplica a los ${n} pozos de esta parada?`}</span>
+          <span className="text-[14px] font-semibold">{yac ? '¿A qué pozo? «En el yacimiento» se pone pozo por pozo.' : `¿Aplica a los ${n} pozos de esta parada?`}</span>
           <span className="flex flex-wrap gap-1">
             {!yac && <button type="button" aria-pressed={!soloAEf} onClick={() => setSoloA(null)} className={cn(OPCION, !soloAEf && MARCADA)}>Sí, a los {n}</button>}
             {g.pozos.length <= 3
@@ -243,7 +243,7 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
       )}
       {tocaAPersona && (
         <div role="group" aria-label="¿Por qué lo cambia?" className="grid gap-1">
-          <span className="text-[11.5px] font-semibold">¿Por qué lo cambia? <small className="font-normal text-[var(--tinta2)]">({pideMotivo ? 'cambia lo que dijo otra persona' : 'ya lo había dicho una persona'})</small></span>
+          <span className="text-[14px] font-semibold">¿Por qué lo cambia? <small className="font-normal text-[var(--tinta2)]">({pideMotivo ? 'cambia lo que dijo otra persona' : 'ya lo había dicho una persona'})</small></span>
           <span className="flex flex-wrap gap-1">
             {MOTIVOS.map(m => <button key={m} type="button" aria-pressed={motivo === m} onClick={() => { setMotivo(m); setError('') }} className={cn(OPCION, motivo === m && MARCADA)}>{m}</button>)}
             <button type="button" aria-pressed={motivo === 'otra'} onClick={() => setMotivo('otra')} className={cn(OPCION, motivo === 'otra' && MARCADA)}>Otra razón…</button>
@@ -251,12 +251,12 @@ export function Editor({ g, rolId, pasos, titulo, raiz, onCerrar, onHecho }: {
           {motivo === 'otra' && <input value={otroMotivo} onChange={e => setOtroMotivo(e.target.value)} className={CAMPO} aria-label="Otra razón" placeholder="Ej.: el pórtico sí cayó: lo vio el electricista" />}
         </div>
       )}
-      {error && <p role="alert" className="text-[11px] text-[var(--tinta)]">{error}</p>}
+      {error && <p role="alert" className="text-[13px] text-[var(--tinta)]">{error}</p>}
       <span className="flex flex-wrap gap-1.5">
         <Boton variante="principal" type="submit" disabled={ocupado || !!falta} className="min-h-10 sm:min-h-0">Guardar</Boton>
         <Boton type="button" onClick={onCerrar} className="min-h-10 sm:min-h-0">Cancelar</Boton>
       </span>
-      {falta && cambios.length > 0 && <small className="text-[10.5px] text-[var(--tinta2)]">{falta}</small>}
+      {falta && cambios.length > 0 && <small className="text-[13px] text-[var(--tinta2)]">{falta}</small>}
     </form>
     </HojaInferior>
   )

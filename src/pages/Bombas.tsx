@@ -48,44 +48,44 @@ export function Bombas() {
     <>
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Perdiéndose ahora</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">Perdiéndose ahora</small>
           {/* Un total no es una alarma: va en tinta y la marca va en la bomba que lo causa (B-40; U1 §9.3). */}
           <b className="tabular block text-[30px] leading-none">
-            {n0(porHora * 24)}<span className="ml-1 text-[12px] font-normal text-[var(--tinta3)]">bbl/d</span>
+            {n0(porHora * 24)}<span className="ml-1 text-[14px] font-normal text-[var(--tinta3)]">bbl/d</span>
           </b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">
+          <small className="block text-[13px] text-[var(--tinta2)]">
             {costando.length ? `${plural(costando.length, 'bomba detenida', 'bombas detenidas')} · ${plural(costando.reduce((a, b) => a + b.veredicto!.prediccion.perdiendo!.pozos.length, 0), 'pozo cerrado', 'pozos cerrados')}${nivel === 'operacion' ? ` · ${n0(porHora)} bbl/h` : ''} · ${fechaHora(AHORA)}` : 'ningún pozo cerrado por una bomba'}
           </small>
           {costando.length > 0 && sevPerdida > 0 && (
-            <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+            <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
               {costando.map(b => <span key={b.clave} className="inline-flex items-center gap-1"><MarcaPrioridad s={b.eq.severidad} tamano={11} />{b.eq.id}</span>)}
             </small>
           )}
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Diferido que causaron</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">Diferido que causaron</small>
           <b className="tabular block text-[22px] leading-tight">{fmtBbl(medido)}</b>
-          <small className="tabular block text-[10.5px] text-[var(--tinta2)]">
+          <small className="tabular block text-[13px] text-[var(--tinta2)]">
             {medido <= 0 ? 'sin paradas con costo' : nivel === 'ingenieria' ? `${fmtRango(medidoRango)} · calculado` : 'calculado'}
           </small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Próxima en fallar</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">Próxima en fallar</small>
           {proxima ? (
             <>
               <b className="block truncate text-[14px] leading-tight">{proxima.b.eq.id} · {proxima.p.parte.nombre}</b>
-              <small className="tabular block text-[11px] text-[var(--tinta2)]">
+              <small className="tabular block text-[13px] text-[var(--tinta2)]">
                 {ambito.global ? `${proxima.b.campo.nombre} · ` : ''}{proxima.p.primera!.senal.plantilla.nombre.toLowerCase()} · {pronosticoCorto(proxima.p.primera!.senal.pronostico)}
               </small>
             </>
           ) : <b className="block text-[14px] text-[var(--tinta3)]">ninguna</b>}
           {/* Las que no tienen instrumento no se pueden predecir: se dice de cuáles es la cuenta. */}
-          <small className="block text-[10.5px] text-[var(--tinta3)]">de las que tienen instrumento</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">de las que tienen instrumento</small>
         </span>
         <span className="text-right">
           {/* El ámbito ya lo dice la cabecera: aquí, cuántas son y cuántas no tienen perfil. */}
           <b className="tabular block text-[22px] leading-none">{bombas.length}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">
+          <small className="text-[13px] text-[var(--tinta3)]">
             {bombas.length === 1 ? 'bomba con instrumento' : 'bombas con instrumento'}{sinPerfil ? ` · ${sinPerfil} sin perfil` : ''}
           </small>
         </span>
@@ -103,14 +103,14 @@ export function Bombas() {
         menos cuesta. Las ⓘ dicen el porqué.
       </Lectura>
 
-      <div className="mt-2.5 grid items-stretch gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]">
+      <div className="mt-2.5 grid items-stretch gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr))]">
         {bombas.map(b => (
           <Placa key={b.clave} b={b} global={ambito.global} nivel={nivel} onAbrir={() => setAbierta(b.clave)} />
         ))}
       </div>
 
       {bombas.length === 0 && (
-        <p className="mt-3 text-[12px] text-[var(--tinta2)]">
+        <p className="mt-3 text-[14px] text-[var(--tinta2)]">
           Sin bombas multifásicas ni de inyección instrumentadas.
         </p>
       )}
@@ -118,7 +118,7 @@ export function Bombas() {
       {/* Las bombas del tren de agua sin instrumento también están (B-01): hoy pueden ser las que sacan toda el agua. */}
       {ambito.campos.map(c => <SinInstrumento key={c.id} campoId={c.id} global={ambito.global} />)}
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta3)]" aria-label="Prioridades">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta3)]" aria-label="Prioridades">
         {([1, 2, 3, 0] as const).map(s => (
           <span key={s} className="inline-flex items-center gap-1.5">
             <MarcaPrioridad s={s} tamano={12} />
@@ -146,23 +146,23 @@ function SinInstrumento({ campoId, global }: { campoId: string; global: boolean 
   return (
     <section className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)]" data-sin-instrumento={campoId} aria-label="Bombas sin instrumento">
       <header className="flex items-center justify-between gap-2 border-b border-[var(--linea2)] px-3 py-[7px]">
-        <h2 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SIN INSTRUMENTO{global ? ` · ${campoPorId(campoId).nombre}` : ''}</h2>
-        <span className="font-cond text-[10px] tracking-[.08em] text-[var(--tinta3)]">{sin.length === 1 ? '1 bomba' : `${sin.length} bombas`}</span>
+        <h2 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SIN INSTRUMENTO{global ? ` · ${campoPorId(campoId).nombre}` : ''}</h2>
+        <span className="font-cond text-[12px] tracking-[.08em] text-[var(--tinta3)]">{sin.length === 1 ? '1 bomba' : `${sin.length} bombas`}</span>
       </header>
       <div className="grid gap-0 p-3">
         {sin.map(b => {
           const f = crit.ranking.find(x => x.equipo === b.id && x.campoId === campoId)
           return (
-            <div key={b.id} data-bomba-sin-instrumento={b.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
+            <div key={b.id} data-bomba-sin-instrumento={b.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-x-1.5">
                   <i aria-hidden className="inline-block h-2.5 w-3.5 rounded-[1px] border border-dashed border-[var(--tinta3)]" />
-                  <b>{b.id}</b><span className="text-[11px] text-[var(--tinta2)]">· bomba de {b.papel === 'recobro' ? 'recobro' : 'reinyección'}</span>
+                  <b>{b.id}</b><span className="text-[13px] text-[var(--tinta2)]">· bomba de {b.papel === 'recobro' ? 'recobro' : 'reinyección'}</span>
                   <Chip>┄ sin instrumento</Chip>
                 </span>
-                <small className="block text-[11px] text-[var(--tinta2)]">Se supone en marcha · {n0(b.capacidadBpd)} bbl/d de agua</small>
+                <small className="block text-[13px] text-[var(--tinta2)]">Se supone en marcha · {n0(b.capacidadBpd)} bbl/d de agua</small>
                 {f && f.bpd !== null && (
-                  <small className="block text-[11px]">Si falla hoy: <b className="tabular">{n0(f.bpd)} bbl/d</b>{f.colchonH !== undefined ? ` después de ${colchon(f.colchonH)} de colchón` : ''}{f.subio ? ` · sube porque ${f.subio.otro} está parada` : ''}</small>
+                  <small className="block text-[13px]">Si falla hoy: <b className="tabular">{n0(f.bpd)} bbl/d</b>{f.colchonH !== undefined ? ` después de ${colchon(f.colchonH)} de colchón` : ''}{f.subio ? ` · sube porque ${f.subio.otro} está parada` : ''}</small>
                 )}
               </span>
               <Boton variante="chico" className="min-h-12 sm:min-h-0" onClick={() => { setCampo(campoId); abrirEquipo(b.id, false) }} aria-label={`Abrir ${b.id}`}>Abrir</Boton>

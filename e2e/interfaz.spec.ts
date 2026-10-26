@@ -267,10 +267,12 @@ for (const ancho of [390, 320]) {
     await page.setViewportSize({ width: ancho, height: 860 })
     await page.addInitScript(() => localStorage.setItem('trim.intro.ger', '1'))
     await page.goto('/#/ger/resumen/ceiba~portafolio/curso')
-    // La cabecera va fuera de <main>; «en curso» lleva espacio duro (\s lo incluye).
-    const linea = page.locator('header p').filter({ hasText: /en\s+curso/ }).filter({ visible: true }).first()
-    await expect(linea).toContainText(/Demo[\s\S]*·\s*.*,\s+en\s+curso/)
-    expect(await linea.evaluate(e => e.scrollWidth <= e.clientWidth + 1), 'el renglón del período no se corta').toBe(true)
+    // C1 (experiencia v2): el período va en su píldora de la cabecera, con su texto entero también en
+    // el teléfono, y la marca de demostración al lado de las migas. «en curso» lleva espacio duro (\s lo incluye).
+    const periodo = page.locator('header button[aria-label^="Período"]').filter({ visible: true }).first()
+    await expect(periodo).toContainText(/,\s+en\s+curso/)
+    expect(await periodo.evaluate(e => e.scrollWidth <= e.clientWidth + 1 && e.getBoundingClientRect().right <= innerWidth + 1), 'el período no se corta ni se sale').toBe(true)
+    await expect(page.locator('header').first()).toContainText(/DEMO/)
   })
 }
 

@@ -37,9 +37,11 @@ export function BarraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, apoy
   const conBarra = meta !== undefined && meta > 0
   const ancho = conBarra ? Math.min(1.25, valor / meta) / 1.25 : 0
   const barra = conBarra && (
-    <span aria-hidden data-barra="" className="relative block h-2 min-w-[32px] overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
-      <i data-relleno="" className="block h-full bg-[var(--dato-2)]" style={{ width: `${ancho * 100}%` }} />
-      <i data-raya="" className="absolute -inset-y-[2px] left-[80%] w-[2px] bg-[var(--tinta)]" />
+    // La barra contra la meta de A en estilo B (X5 §5.4, Few): pista de 10 px, la barra en
+    // `--dato1` y la meta como una raya vertical de 3 px en tinta, que sobresale de la pista.
+    <span aria-hidden data-barra="" className="relative block h-2.5 min-w-[32px] rounded-full bg-[var(--pista)]">
+      <i data-relleno="" className="block h-full rounded-full bg-[var(--dato1)]" style={{ width: `${ancho * 100}%` }} />
+      <i data-raya="" className="absolute -inset-y-[5px] left-[80%] w-[3px] -translate-x-1/2 rounded-[2px] bg-[var(--tinta)]" />
     </span>
   )
 
@@ -50,27 +52,27 @@ export function BarraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, apoy
     // empieza y termina donde la de la fila de arriba y la raya cae en el mismo lugar.
     return (
       <span role={ocultarRotulo ? 'img' : undefined} aria-label={ocultarRotulo ? leido : undefined}
-        className={`tabular grid min-w-0 items-center gap-x-1.5 text-[12px] ${ocultarRotulo ? 'grid-cols-[4.25rem_minmax(32px,1fr)_2.75rem]' : 'grid-cols-[auto_minmax(32px,1fr)_auto]'}`}>
+        className={`tabular grid min-w-0 items-center gap-x-1.5 text-[14px] ${ocultarRotulo ? 'grid-cols-[4.75rem_minmax(32px,1fr)_3.25rem]' : 'grid-cols-[auto_minmax(32px,1fr)_auto]'}`}>
         <span className={`inline-flex items-center ${ocultarRotulo ? 'justify-end' : ''}`}>
           {!ocultarRotulo && <span className="mr-1 text-[var(--tinta3)]">{rotulo}</span>}
           <FueraDeMeta si={fuera} tamano={11} />{formato(valor)}
         </span>
         {barra || <span />}
-        <small className="text-[10.5px] text-[var(--tinta3)]">{rotuloMeta}</small>
+        <small className="text-[13px] text-[var(--tinta3)]">{rotuloMeta}</small>
       </span>
     )
   }
 
   const cuerpo = (
     <>
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{rotulo}</small>
-      <b className="tabular flex items-center text-[20px] leading-none">
+      <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
+      <b className="tabular flex items-center text-[22px] font-bold leading-none">
         <FueraDeMeta si={fuera} tamano={12} />{formato(valor)}
-        <small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">{unidad}</small>
+        <small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">{unidad}</small>
       </b>
       {barra && <span className="mt-1.5 block">{barra}</span>}
-      {rotuloMeta && <small className="tabular mt-0.5 block text-right text-[10.5px] text-[var(--tinta3)]">{rotuloMeta}</small>}
-      {apoyo && <small className="block text-[10.5px] text-[var(--tinta2)]">{apoyo}</small>}
+      {rotuloMeta && <small className="tabular mt-0.5 block text-right text-[13px] text-[var(--tinta3)]">{rotuloMeta}</small>}
+      {apoyo && <small className="block text-[13px] text-[var(--tinta2)]">{apoyo}</small>}
     </>
   )
   return tip

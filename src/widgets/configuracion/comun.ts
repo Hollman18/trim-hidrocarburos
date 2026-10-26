@@ -2,7 +2,7 @@
 import type { TramoMeta } from '@/entities/configuracion'
 import { formatoFecha } from '@/shared/lib/fecha'
 
-export const cajaNumero = 'tabular w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-right text-[12px] outline-none focus:border-acento disabled:opacity-70'
+export const cajaNumero = 'tabular w-full min-w-0 rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-right text-[14px] outline-none focus:border-acento disabled:opacity-70'
 /** Una casilla con un valor que no se puede firmar se marca donde está, no solo abajo. */
 export const cajaMala = 'border-2 border-[var(--tinta)]'
 /** «1 oct 2026» de un día AAAA-MM-DD, en hora de Colombia. */

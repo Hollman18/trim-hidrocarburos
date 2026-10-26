@@ -58,7 +58,7 @@ export function Esp() {
   )
 
   if (!flota.length) return (
-    <Panel titulo="ELECTROSUMERGIBLES"><p className="text-[12px] text-[var(--tinta2)]">{ambito.titulo} no tiene pozos con electrosumergible.</p></Panel>
+    <Panel titulo="ELECTROSUMERGIBLES"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene pozos con electrosumergible.</p></Panel>
   )
 
   const enFalla = flota.filter(x => !x.fila.produce && x.fila.causa?.tipo === 'electrosumergible')
@@ -86,7 +86,7 @@ export function Esp() {
         <td className="py-1.5">
           {/* El botón da el foco y el Enter al teclado; su clic sube a la fila, que es la que abre. */}
           <span className="flex items-center gap-1.5"><MarcaPrioridad s={sevPozo(f)} tamano={11} /><button type="button" aria-label={`Abrir ${f.pozo.id}`} className="cursor-pointer rounded-sm font-mono font-bold">{f.pozo.id}</button></span>
-          <small className="block text-[10px] text-[var(--tinta3)]">{ambito.global ? `${campoPorId(f.pozo.campoId).nombre}` : ''}{f.prueba?.hz ? `${ambito.global ? ' · ' : ''}${n1(f.hz ?? f.prueba.hz)} Hz` : ''}</small>
+          <small className="block text-[12px] text-[var(--tinta3)]">{ambito.global ? `${campoPorId(f.pozo.campoId).nombre}` : ''}{f.prueba?.hz ? `${ambito.global ? ' · ' : ''}${n1(f.hz ?? f.prueba.hz)} Hz` : ''}</small>
         </td>
         <td className="max-w-[340px]">
           {parado && cerradoPorOtro(f) ? (
@@ -154,23 +154,23 @@ export function Esp() {
               : peor && (peor.estado === 'fuera' || peor.estado === 'avisa') ? `${peor.parte.nombre.toLowerCase()} · ${ESTADO_PARTE[peor.estado]}` : 'en marcha'
             return (
               <button key={`m${f.pozo.campoId}${f.pozo.id}`} onClick={() => abrirFila(f.pozo.campoId, f.pozo.id)}
-                className="grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[var(--linea2)] py-2 text-left text-[12px] last:border-0">
+                className="grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[var(--linea2)] py-2 text-left text-[14px] last:border-0">
                 <MarcaPrioridad s={sevPozo(f)} tamano={11} />
                 <span className="min-w-0">
                   <b className="font-mono">{f.pozo.id}</b>{ambito.global ? <span className="text-[var(--tinta3)]"> · {campoPorId(f.pozo.campoId).nombre}</span> : ''}
-                  <small className="block truncate text-[11px] text-[var(--tinta2)]">{texto}</small>
+                  <small className="block truncate text-[13px] text-[var(--tinta2)]">{texto}</small>
                 </span>
                 <span className="tabular text-right">
                   <b className="block">{n0(f.crudoBpd)} <small className="font-normal text-[var(--tinta3)]">bbl/d</small></b>
-                  <small className="text-[10px] text-[var(--tinta3)]">{n0(f.diferidoEsp)} bbl por su ESP</small>
+                  <small className="text-[12px] text-[var(--tinta3)]">{n0(f.diferidoEsp)} bbl por su ESP</small>
                 </span>
               </button>
             )
           })}
         </div>
         <div className="hidden overflow-x-auto sm:block">
-          <table className={cn('tabular w-full text-left text-[11.5px]', ing ? 'min-w-[760px]' : 'min-w-[520px]')}>
-            <thead className="text-[9.5px] text-[var(--tinta3)]">
+          <table className={cn('tabular w-full text-left text-[14px]', ing ? 'min-w-[760px]' : 'min-w-[520px]')}>
+            <thead className="text-[12px] text-[var(--tinta3)]">
               <tr>
                 <th className="py-1.5 font-normal">Pozo</th>
                 <th className="font-normal">Ahora</th>
@@ -196,9 +196,9 @@ function Cifra({ rotulo, valor, pie, alerta, info }: { rotulo: string; valor: st
   return (
     <span className="min-w-0">
       {/* El ⓘ va junto al rótulo, nunca dentro de un título; en el papel su nota ocupa su renglón. */}
-      <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">{rotulo}{info && <Info titulo={info.titulo} texto={info.texto} />}</small>
+      <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">{rotulo}{info && <Info titulo={info.titulo} texto={info.texto} />}</small>
       <b className={cn('tabular flex items-center gap-1.5 text-[20px] leading-tight')}>{alerta && <MarcaPrioridad s={1} tamano={14} />}{valor}</b>
-      <small className="block text-[10.5px] leading-snug text-[var(--tinta2)]">{pie}</small>
+      <small className="block text-[13px] leading-snug text-[var(--tinta2)]">{pie}</small>
     </span>
   )
 }

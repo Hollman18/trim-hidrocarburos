@@ -5,7 +5,7 @@ import { n0 } from '@/shared/lib/formato'
 import { Falta } from './Cadena'
 import { lista } from './palabras'
 
-const ROTULO = 'text-[10.5px] text-[var(--tinta3)]'
+const ROTULO = 'text-[13px] text-[var(--tinta3)]'
 
 /** «Hoy limita»: las dos líneas del supervisor en Turno (U2 §2.4 y §3.1; B-19).
  *  Separa dos preguntas que en el demo no tienen la misma respuesta (U2 §0,
@@ -45,8 +45,8 @@ function HoyLimitaCampo({ campoId, desde, hasta, conNombre, ranking }: {
   const fila = 'grid gap-x-3 gap-y-0.5 sm:grid-cols-[10.5rem_minmax(0,1fr)] sm:items-baseline'
 
   return (
-    <div className="grid gap-1.5 text-[11.5px]" data-hoy-limita={campoId}>
-      {conNombre && <b className="text-[12px]">{campoPorId(campoId).nombre}</b>}
+    <div className="grid gap-1.5 text-[14px]" data-hoy-limita={campoId}>
+      {conNombre && <b className="text-[14px]">{campoPorId(campoId).nombre}</b>}
       <div className={fila}>
         <span className={ROTULO}>Qué limita hoy al campo</span>
         {t.limita && limita?.potencialBpd != null ? (
@@ -56,10 +56,10 @@ function HoyLimitaCampo({ campoId, desde, hasta, conNombre, ranking }: {
               <span aria-hidden>◄</span> limita · {NOMBRE_CHOKE_CAMPO[t.limita].toLowerCase()} · <span className="tabular">{n0(limita.potencialBpd)} bbl/d</span>
             </span>
             {/* Hoy, si un equipo parado deja la planta llena, se dice eso (B-14): es lo que vale en el turno. */}
-            <small className="text-[10.5px] text-[var(--tinta2)]" data-frase-hoy={t.fraseHoy ? '' : undefined}>{t.fraseHoy ?? t.frase}</small>
+            <small className="text-[13px] text-[var(--tinta2)]" data-frase-hoy={t.fraseHoy ? '' : undefined}>{t.fraseHoy ?? t.frase}</small>
             <Info titulo="Limita" texto="El tramo más angosto. No es una alarma: todo campo tiene uno. TRIM lo calcula con las pruebas de los pozos y las capacidades firmadas; nadie lo escribe a mano." />
           </span>
-        ) : <span className="flex flex-wrap items-center gap-1.5"><Falta>sin dato</Falta><small className="text-[10.5px] text-[var(--tinta2)]">{t.textoCorto}</small></span>}
+        ) : <span className="flex flex-wrap items-center gap-1.5"><Falta>sin dato</Falta><small className="text-[13px] text-[var(--tinta2)]">{t.textoCorto}</small></span>}
       </div>
       {fragil && (
         <div className={fila}>
@@ -82,6 +82,6 @@ export function DondeSeTrabo({ campoId, equipo, desde, hasta }: { campoId: strin
   const x = t.perdiendoAhora.find(y => y.equipo === equipo)
   if (!x) return null
   return x.tramo
-    ? <span className="font-cond inline-flex items-center rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1.5 text-[10px] font-semibold tracking-[.05em] text-[var(--tinta3)]">{DONDE_CHOKE[x.tramo]}</span>
-    : <Falta className="text-[10px]">dónde: {DONDE_CHOKE['sin-asignar']}</Falta>
+    ? <span className="font-cond inline-flex items-center rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1.5 text-[12px] font-semibold tracking-[.05em] text-[var(--tinta3)]">{DONDE_CHOKE[x.tramo]}</span>
+    : <Falta className="text-[12px]">dónde: {DONDE_CHOKE['sin-asignar']}</Falta>
 }

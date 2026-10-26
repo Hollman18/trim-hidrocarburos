@@ -9,7 +9,7 @@ import { marcaDelPaso } from './marcas'
 /** El hueco de lo que falta: gris, contorno discontinuo y la palabra (U1 §2.1).
  *  Nunca morado: no es un dato malo, es una respuesta que falta (S1 U1-3). */
 export function Falta({ children = 'falta', className }: { children?: React.ReactNode; className?: string }) {
-  return <span className={cn('inline-flex items-center rounded-sm border border-dashed border-[var(--tinta3)] px-1.5 text-[10.5px] leading-[1.5] text-[var(--tinta2)]', className)}>{children}</span>
+  return <span className={cn('inline-flex items-center rounded-sm border border-dashed border-[var(--tinta3)] px-1.5 text-[13px] leading-[1.5] text-[var(--tinta2)]', className)}>{children}</span>
 }
 
 /** Los 6 pasos de una parada en el orden de la circular (U1 §2.1; U2 §4.1):
@@ -29,7 +29,7 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
   // En el papel, la persona por su rol y sin lo que escribió con sus palabras (D2).
   const enPapel = pasos.map(paso => marcaDelPaso(p, paso, !grupo, true))
   return (
-    <dl className="grid gap-y-1.5 text-[11.5px]">
+    <dl className="grid gap-y-1.5 text-[14px]">
       {pasos.map((paso, i) => {
         const n = PASOS.indexOf(paso) + 1
         const d = p.clasificacion[paso]
@@ -58,9 +58,9 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
             <dd className="min-w-0 pl-[1.125rem] md:pl-0">
               {valor !== undefined
                 ? <b className="font-semibold text-[var(--tinta)]">{valor}</b>
-                : <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5"><Falta />{sugerido !== undefined && <span className="text-[10.5px] text-[var(--tinta2)]">TRIM sugiere: {valorEnPalabras(paso, String(sugerido))}</span>}</span>}
+                : <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5"><Falta />{sugerido !== undefined && <span className="text-[13px] text-[var(--tinta2)]">TRIM sugiere: {valorEnPalabras(paso, String(sugerido))}</span>}</span>}
             </dd>
-            <dd className={cn('min-w-0 break-words pl-[1.125rem] text-[10.5px] md:pl-0', d && esDePersona(d.procedencia) ? 'text-[var(--tinta)]' : 'text-[var(--tinta2)]')}>
+            <dd className={cn('min-w-0 break-words pl-[1.125rem] text-[13px] md:pl-0', d && esDePersona(d.procedencia) ? 'text-[var(--tinta)]' : 'text-[var(--tinta2)]')}>
               {marcaPapel !== marca ? <DichoEnPapel papel={marcaPapel}>{marca}</DichoEnPapel> : marca}
               {retiro && (
                 <span className="mt-0.5 block text-[var(--tinta2)]" data-retiro={paso}>

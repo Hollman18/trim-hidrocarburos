@@ -85,7 +85,7 @@ export function Produccion() {
       <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
           {/* El ámbito y el período ya los dice la cabecera (también en el teléfono); la cabecera no sale en el papel, y aquí quedan para el papel. */}
-          <small className="text-[11px] tracking-[.04em] text-[var(--tinta3)] hidden print:block">{ambito.titulo.toUpperCase()} · {rango.nombre.toUpperCase()}</small>
+          <small className="text-[13px] tracking-[.04em] text-[var(--tinta3)] hidden print:block">{ambito.titulo.toUpperCase()} · {rango.nombre.toUpperCase()}</small>
           <SelloPublicacion lb={lb} className="ml-auto" />
         </div>
         <div className="mt-1 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))]">
@@ -127,7 +127,7 @@ export function Produccion() {
       {ing && <Escalera campos={ids} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />}
       {ing && <PorTramoMensual campos={ids} desde={rango.desde} hasta={rango.hasta} />}
 
-      {ing && <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      {ing && <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Panel titulo="MEDICIÓN OFICIAL">
           <Lectura>
             De dónde sale lo real. Lo real no lo escribe nadie: lo entrega el computador de flujo (o los
@@ -138,7 +138,7 @@ export function Produccion() {
             const medicion = pedirMedicionOficial(c), o = medicion.origen
             const mesActual = lb.fa.filter(f => f.campoId === c).at(-1)
             return (
-              <div key={c} className="border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+              <div key={c} className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <b>{campoPorId(c).nombre}</b>
                   <span className="flex flex-wrap gap-1">
@@ -146,7 +146,7 @@ export function Produccion() {
                     {mesActual && <Chip>factor {n3(mesActual.fa)} · banda ±{n0(medicion.banda.valor * 100)} %</Chip>}
                   </span>
                 </div>
-                <small className="font-mono block text-[10.5px] text-[var(--tinta2)]">{o?.fuente ?? 'Sin punto de medición configurado'}</small>
+                <small className="font-mono block text-[13px] text-[var(--tinta2)]">{o?.fuente ?? 'Sin punto de medición configurado'}</small>
               </div>
             )
           })}
@@ -160,8 +160,8 @@ export function Produccion() {
 
       {ing && <Panel titulo={largo ? 'CUADRE MENSUAL' : 'CUADRE DIARIO'}>
         <div {...desplazable('Cuadre del período')} className="overflow-x-auto">
-          <table className="tabular w-full min-w-[620px] text-right text-[11.5px]">
-            <thead className="text-[9.5px] text-[var(--tinta3)]">
+          <table className="tabular w-full min-w-[620px] text-right text-[14px]">
+            <thead className="text-[12px] text-[var(--tinta3)]">
               <tr><th className="py-1.5 text-left font-normal">{largo ? 'Mes' : 'Día'}</th><th className="font-normal">Real</th><th className="font-normal">Potencial</th>
                 <th className="font-normal">Diferido</th><th className="font-normal">Inventario</th><th className="font-normal">Del potencial</th><th className="font-normal">Meta</th></tr>
             </thead>
@@ -229,11 +229,11 @@ function InfoDelPotencial({ q }: { q: { campos: string[]; desde: Date; hasta: Da
 function Cifra({ rotulo, valor, unidad, pie }: { rotulo: string; valor: string; unidad?: string; pie?: ReactNode }) {
   return (
     <span className="min-w-0">
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{rotulo}</small>
+      <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
       <b className="tabular block text-[20px] leading-none">
-        {valor}{unidad && <small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">{unidad}</small>}
+        {valor}{unidad && <small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">{unidad}</small>}
       </b>
-      {pie && <small className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[10.5px] leading-snug text-[var(--tinta2)]">{pie}</small>}
+      {pie && <small className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[13px] leading-snug text-[var(--tinta2)]">{pie}</small>}
     </span>
   )
 }

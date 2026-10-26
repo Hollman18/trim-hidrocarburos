@@ -25,7 +25,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
   const pregunta = usePreguntas([campoId]).find(p => p.equipo === equipo && p.pide && !p.fin)
   // La ficha y su historia: toda la que hay, del libro (la misma cuenta que el Pareto).
   const ficha = useFichaEquipo(campoId, equipo, rango.desde, rango.hasta)
-  if (!ficha) return <p className="text-[12px] text-[var(--tinta2)]">Este equipo no está en {campoPorId(campoId).nombre}.</p>
+  if (!ficha) return <p className="text-[14px] text-[var(--tinta2)]">Este equipo no está en {campoPorId(campoId).nombre}.</p>
   const { eq, periodo, historia, hist, veces, prediccion: pr, cerradoPor, desdeCierre } = ficha
 
   const perdiendo = riesgo.find(r => r.estado === 'perdiendo')
@@ -79,12 +79,12 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
 
   return (
     // El nombre del equipo ya va en la cabecera de la ficha.
-    <div className="grid gap-3 text-[12.5px]">
+    <div className="grid gap-3 text-[15px]">
       {(cifra || estado) && <div className="flex items-start gap-2.5">
         <MarcaPrioridad s={eq.severidad} tamano={16} className="mt-[3px]" />
         <span className="min-w-0">
-          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[11px] font-normal text-[var(--tinta3)]">perdiéndose</small></b>}
-          {estado && <span className="block text-[11.5px] text-[var(--tinta2)]">{estado}</span>}
+          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[13px] font-normal text-[var(--tinta3)]">perdiéndose</small></b>}
+          {estado && <span className="block text-[14px] text-[var(--tinta2)]">{estado}</span>}
         </span>
       </div>}
 
@@ -123,13 +123,13 @@ const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 function Renglon({ k, v, pie, info, chip }: { k: string; v: string; pie?: string; info?: string; chip?: string }) {
   return (
     <div className="border-t border-[var(--linea2)] pt-2">
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{k}</small>
+      <small className="block text-[13px] text-[var(--tinta3)]">{k}</small>
       <span className="flex flex-wrap items-center gap-x-1.5">
         <span>{v}</span>
         {chip && <Chip tono="fuerte">{chip}</Chip>}
         {info && <Info titulo={k} texto={info} />}
       </span>
-      {pie && <small className="block text-[10.5px] text-[var(--tinta2)]">{pie}</small>}
+      {pie && <small className="block text-[13px] text-[var(--tinta2)]">{pie}</small>}
     </div>
   )
 }

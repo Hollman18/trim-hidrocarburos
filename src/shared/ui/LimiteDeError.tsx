@@ -19,8 +19,8 @@ type Props = {
 }
 type Estado = { error: Error | null; clave: string }
 
-const CAJA = 'rounded border border-dashed border-[var(--linea)] bg-[var(--panel2)] p-4 text-[12.5px] text-[var(--tinta2)]'
-const BOTON = 'mt-2 mr-1.5 min-h-10 cursor-pointer rounded border border-[var(--linea)] bg-[var(--panel)] px-2.5 py-1 text-[12px] hover:bg-[var(--elevado)] sm:min-h-0'
+const CAJA = 'rounded-[16px] border-[1.5px] border-dashed border-[var(--linea)] bg-[var(--panel2)] p-4 text-[15px] text-[var(--tinta2)]'
+const BOTON = 'mt-2 mr-1.5 min-h-10 cursor-pointer rounded-full bg-[var(--panel)] px-4 py-1.5 text-[15px] font-semibold text-[var(--tinta)] shadow-[inset_0_0_0_1.5px_var(--linea)] hover:bg-[var(--elevado)]'
 
 /** Si una pantalla falla al dibujarse, se dice y se ofrece volver, en vez de
  *  dejar la aplicación en blanco. El error queda en la consola para quien lo

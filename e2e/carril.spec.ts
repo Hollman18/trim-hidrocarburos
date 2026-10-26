@@ -177,25 +177,43 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   })
 
   await test.step('Perfiles: cada rol ve las pantallas que su decisión exige', async () => {
-    const menu = () => page.evaluate(() => [...document.querySelectorAll('nav button[aria-current]')].map(b => b.textContent.trim()).filter(Boolean))
+    // C1 (experiencia v2): el menú es el panel lateral, con las puertas del rol y, debajo de la
+    // puerta abierta, sus subpantallas; lo que el rol tiene fuera de sus puertas va en el menú de la
+    // persona. Se recorre todo: cada puerta, sus subpantallas y ese menú. Lo que cada rol alcanza es
+    // lo mismo que antes (con La planta viva y Hoy), y lo que no le toca sigue sin estar.
+    const alcanza = async () => {
+      const nav = 'nav[aria-label="Navegación"]'
+      const puertas = await page.locator(`${nav} [role=group][aria-label="Puertas"] > div > button`).count()
+      const vistas = new Set<string>()
+      for (let i = 0; i < puertas; i++) {
+        const puerta = page.locator(`${nav} [role=group][aria-label="Puertas"] > div > button`).nth(i)
+        vistas.add((await puerta.innerText()).split('\n')[0]!.trim())
+        await puerta.click(); await f.esperar(350)
+        for (const x of await page.locator(`${nav} [data-subpantallas] button`).evaluateAll(bs => bs.map(b => b.textContent?.trim() || b.getAttribute('aria-label') || ''))) vistas.add(x)
+      }
+      await page.locator(`${nav} button[aria-label*=" · "]`).first().click(); await f.esperar(250)
+      for (const x of await page.locator('[role=group][aria-label="Mi perfil"] > div > button').evaluateAll(bs => bs.map(b => b.textContent?.trim() ?? ''))) vistas.add(x)
+      await page.keyboard.press('Escape')
+      return [...vistas].filter(Boolean)
+    }
     for (const [ruta, debe, noDebe] of [
-      ['#/ger/resumen/ceiba/curso', ['Resumen', 'Diferidos', 'Producción', 'Riesgo', 'Configuración'], ['Equipos', 'Pozos y equipos', 'Turno']],
-      ['#/prod/produccion/ceiba/curso', ['Producción', 'Diferidos', 'Pozos y equipos', 'Identificar', 'Planta'], ['Turno', 'Riesgo']],
-      ['#/sup/bombas/ceiba/curso', ['Pozos y equipos', 'Turno', 'Identificar'], ['Riesgo', 'Planta']],
-      ['#/oper/bombas/ceiba/curso', ['Equipos', 'Identificar', 'Turno'], ['Riesgo', 'Planta']],
-      ['#/jefe/mantenimiento/ceiba/curso', ['Mantenimiento', 'Diferidos', 'Equipos', 'Superficie', 'Confiabilidad', 'Riesgo', 'Identificar'], ['Equipo']],
-      ['#/conf/bombas/morichal/curso', ['Equipos', 'Superficie', 'Confiabilidad', 'Diferidos', 'Riesgo', 'Identificar', 'Planta'], ['Equipo']],
-      ['#/tec/trabajo/ceiba/curso', ['Mi trabajo', 'Equipos', 'Identificar'], ['Riesgo', 'Planta']],
-      ['#/adm/configuracion/ceiba/curso', ['Configuración', 'Conectores', 'Planta'], ['Resumen']],
+      ['#/ger/resumen/ceiba/curso', ['La planta viva', 'Resumen', 'Riesgo', 'Resultados', 'Diferidos', 'Producción', 'Metas y accesos'], ['Equipos', 'Pozos', 'Bombas', 'Turno']],
+      ['#/prod/produccion/ceiba/curso', ['Hoy', 'La planta viva', 'Producción', 'Diferidos', 'Pozos', 'Electrosumergibles', 'Identificar', 'Planta', 'Agua', 'Configuración'], ['Turno', 'Riesgo']],
+      ['#/sup/bombas/ceiba/curso', ['Hoy', 'Bombas', 'Electrosumergibles', 'Pozos', 'Turno', 'Identificar'], ['Riesgo', 'Planta']],
+      ['#/oper/bombas/ceiba/curso', ['Hoy', 'Equipos', 'Bombas', 'Identificar', 'Turno'], ['Riesgo', 'Planta']],
+      ['#/jefe/mantenimiento/ceiba/curso', ['Hoy', 'Mantenimiento', 'Diferidos', 'Bombas', 'Superficie', 'Confiabilidad', 'Riesgo', 'Identificar'], ['Planta']],
+      ['#/conf/bombas/morichal/curso', ['Hoy', 'Bombas', 'Superficie', 'Confiabilidad', 'Diferidos', 'Riesgo', 'Identificar', 'Planta', 'Agua', 'Configuración'], ['Turno', 'Mantenimiento']],
+      ['#/tec/trabajo/ceiba/curso', ['Hoy', 'Mi trabajo', 'Bombas', 'Identificar'], ['Riesgo', 'Planta']],
+      ['#/adm/configuracion/ceiba/curso', ['Configurar', 'Configuración', 'Conectores', 'La planta viva', 'Planta', 'Agua'], ['Resumen']],
     ] as const) {
       await f.ir(ruta); await f.esperar(300)
-      const m = await menu()
+      const m = await alcanza()
       const faltan = debe.filter(x => !m.includes(x)), sobran = noDebe.filter(x => m.includes(x))
-      f.ok(!faltan.length && !sobran.length, `${ruta.split('/')[1]}: menú ${m.join(' · ')}${faltan.length ? ' · FALTA ' + faltan.join(', ') : ''}${sobran.length ? ' · SOBRA ' + sobran.join(', ') : ''}`)
+      f.ok(!faltan.length && !sobran.length, `${ruta.split('/')[1]}: alcanza ${m.join(' · ')}${faltan.length ? ' · FALTA ' + faltan.join(', ') : ''}${sobran.length ? ' · SOBRA ' + sobran.join(', ') : ''}`)
     }
     await f.ir('#/sup/riesgo/ceiba/curso'); await f.esperar(300)
     const h = await f.hash()
-    f.ok(h.includes('/sup/bombas/'), `una dirección vieja a una pantalla quitada lleva al inicio del rol (${h})`)
+    f.ok(h.includes('/sup/hoy/'), `una dirección vieja a una pantalla quitada lleva al inicio del rol, su Hoy (${h})`)
     await f.ir('#/ger/riesgo/ceiba/curso'); await f.esperar(400)
     f.ok(await f.clicQueContenga('P-201B'), 'el gerente abre P-201B desde Riesgo')
     await f.esperar(500)

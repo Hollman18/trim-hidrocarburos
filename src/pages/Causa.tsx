@@ -115,8 +115,8 @@ export function Causa() {
   const listaDeclaradas = useVerMas(declaradasEnOrden, { prioridad: p => (sinAnalisis.includes(p) || recien.includes(p) || vistas.has(p.id) ? 1 : 3) })
 
   const cifra = 'tabular flex items-center gap-1.5 text-[22px] leading-tight'
-  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
-  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
+  const rotulo = 'block text-[13px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[13px] text-[var(--tinta2)]'
   const cabecera = (
       <Tip titulo="Identificación del período"
         pista="Cuánto del diferido tiene causa probada por una señal, cuánto declaró un operario y cuánto falta."
@@ -156,18 +156,18 @@ export function Causa() {
   const conChat = recien.filter(p => chats.has(p.id))
   const respondidas = conChat.map(p => <RespondidaConChat key={`r-${p.id}`} p={p} hilo={hilo(p)} onCerrar={() => alternarChat(p.id)} />)
   const avisoRespondido = recien.length > 0 && (
-    <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">
+    <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[14px] text-[var(--tinta2)]">
       Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
     </p>
   )
   const regla = (
-    <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[12px] shadow-[var(--sombra)]">
+    <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[14px] shadow-[var(--sombra)]">
       <span><b>No arrancar</b> hasta identificar el daño</span>
       <span className="text-[var(--tinta2)]"><span className="hidden sm:inline">· </span>si arranca antes: no conformidad</span>
       <Info titulo="Regla de operación" texto={REGLA} />
-      {hayTarjetas && !puede && <span className="basis-full text-[11px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
+      {hayTarjetas && !puede && <span className="basis-full text-[13px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
       {porResponder && puede && persona.sinAcceso && (
-        <span className="flex basis-full flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
+        <span className="flex basis-full flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           Nadie con acceso activo tiene este rol.
           <Info titulo="Sin persona con acceso" texto="La respuesta la da una persona con acceso, no un rol." />
         </span>
@@ -181,7 +181,7 @@ export function Causa() {
         probó una señal, y se puede auditar: quién, cuándo y si fue antes o después de arrancar.
         Primero las que esperan el análisis de confiabilidad.
       </Lectura>
-      {declaradas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna todavía.</p>}
+      {declaradas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna todavía.</p>}
       {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}
       {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}</div>}
       <VerMas ocultas={listaDeclaradas.ocultas} abierto={listaDeclaradas.abierto} onAlternar={listaDeclaradas.alternar} />
@@ -203,7 +203,7 @@ export function Causa() {
           antes={<>{avisoRespondido}{respondidas}{delLibro.map(tarjeta)}</>} />
         {declaradasPanel}
         <details className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)] print:open:block" data-indicadores>
-          <summary className="flex min-h-12 cursor-pointer items-center px-3 text-[11.5px] text-[var(--tinta2)] sm:min-h-9">Cómo va la identificación del período</summary>
+          <summary className="flex min-h-12 cursor-pointer items-center px-3 text-[14px] text-[var(--tinta2)] sm:min-h-9">Cómo va la identificación del período</summary>
           <div className="px-3 pb-3">{cabecera}</div>
         </details>
       </>
@@ -229,7 +229,7 @@ export function Causa() {
         </Lectura>
         {avisoRespondido}
         {respondidas}
-        {pendientes.length === 0 && conChat.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
+        {pendientes.length === 0 && conChat.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna.</p>}
         {pendientes.map(tarjeta)}
       </Panel>
 
@@ -242,7 +242,7 @@ export function Causa() {
 
       {/* «Arrancaron sin identificar» ya lo dice la cifra de arriba; aquí, cuántas. */}
       <Panel className="mb-2.5" titulo="NO CONFORMIDADES" extra={<>{noConformes.length}<span className="sr-only"> {noConformes.length === 1 ? 'no conformidad' : 'no conformidades'}</span></>}>
-        {noConformes.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna.</p>}
+        {noConformes.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna.</p>}
         {noConformes.map(tarjeta)}
       </Panel>
 
@@ -261,7 +261,7 @@ function RespondidaConChat({ p, hilo, onCerrar }: { p: Pregunta; hilo: Mensaje[]
   if (!quien) return null
   return (
     <div className="border-b border-[var(--linea2)] py-3 last:border-0" data-respondida={p.id}>
-      <p className="text-[12px]"><b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· respondido por WhatsApp</span></p>
+      <p className="text-[14px]"><b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· respondido por WhatsApp</span></p>
       <div className="mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>
       <Boton className="mt-1.5 min-h-12 sm:min-h-0" onClick={onCerrar}>Cerrar el chat</Boton>
     </div>
@@ -328,11 +328,11 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
         <MarcaPrioridad s={sev} tamano={14} className="mt-[2px]" />
         <span className="min-w-0 flex-1">
           <button onClick={() => { setCampo(p.campoId); abrirEquipo(p.equipo) }} className="cursor-pointer text-left">
-            <b className="text-[13px] underline-offset-2 hover:underline">{p.equipo}</b>
+            <b className="text-[15px] underline-offset-2 hover:underline">{p.equipo}</b>
           </button>
-          <span className="text-[11px] text-[var(--tinta3)]"> · {p.sobre === 'bomba' ? 'bomba de la línea' : 'pozo'}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
+          <span className="text-[13px] text-[var(--tinta3)]"> · {p.sobre === 'bomba' ? 'bomba de la línea' : 'pozo'}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
           {/* Sigue parado: lo dice «no arrancar»; aquí, desde cuándo. */}
-          <small className="block text-[11px] text-[var(--tinta2)]">
+          <small className="block text-[13px] text-[var(--tinta2)]">
             Paró {fechaHora(p.inicio)} · {p.fin ? `arrancó ${fechaHora(p.fin)} (${fmtHoras(horas, true)})` : `hace ${fmtHoras(horas, true)}`}
           </small>
         </span>
@@ -343,14 +343,14 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
           <Chip>{n0(p.bbl)} bbl</Chip>
         </span>
       </div>
-      <div className="mt-2 grid gap-3 text-[11px] [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
+      <div className="mt-2 grid gap-3 text-[13px] [grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-x-1">
-            <h5 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEÑAL</h5>
+            <h5 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEÑAL</h5>
             {porQueNo && <Info rotulo="no alcanzó" titulo="Por qué no alcanzó la señal" texto={porQueNo} />}
           </div>
           <ul className="list-disc pl-4 text-[var(--tinta2)]">
-            {lecturas.map(e => <li key={e} className="font-mono text-[10.5px]">{enPapel(e) === e ? e : <DichoEnPapel papel={enPapel(e)}>{e}</DichoEnPapel>}</li>)}
+            {lecturas.map(e => <li key={e} className="font-mono text-[13px]">{enPapel(e) === e ? e : <DichoEnPapel papel={enPapel(e)}>{e}</DichoEnPapel>}</li>)}
           </ul>
           {/* La parte sospechosa es una pista: queda a la vista, con la variable que la delata. */}
           {sospechosa && (
@@ -365,7 +365,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
         </div>
         {responde && !p.causa.declarado && (
           <form className="grid gap-1.5" onSubmit={e => { e.preventDefault(); enviar() }}>
-            <h5 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{conPartes ? 'QUÉ SE DAÑÓ' : 'POR QUÉ PARÓ'}</h5>
+            <h5 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{conPartes ? 'QUÉ SE DAÑÓ' : 'POR QUÉ PARÓ'}</h5>
             {conPartes ? (
               <>
                 <span className="grid gap-1">
@@ -373,7 +373,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
                   {sugeridas?.conEvidencia && (
                     <>
                       {/* «Pista»: lo que sugiere, no lo que pasó. La fuente se dice porque no es lo mismo una señal que la historia. */}
-                      <small className="text-[10.5px] text-[var(--tinta2)]">Pista · {deLaSenal ? 'señal e historia' : 'historia del equipo'}</small>
+                      <small className="text-[13px] text-[var(--tinta2)]">Pista · {deLaSenal ? 'señal e historia' : 'historia del equipo'}</small>
                       <span className="flex flex-wrap gap-1">
                         {sugeridas.opciones.filter(o => o.parte).map(o => (
                           <button type="button" key={o.clave} onClick={() => escoger(o.parte!)} aria-pressed={parte === o.parte}
@@ -385,7 +385,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
                     </>
                   )}
                   <select id={`parte-${p.id}`} value={parte} onChange={e => escoger(e.target.value as ParteId | '')}
-                    className="min-h-12 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[12px] sm:min-h-0">
+                    className="min-h-12 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[14px] sm:min-h-0">
                     <option value="">{sugeridas?.conEvidencia ? 'O escoja cualquier parte…' : 'Escoja la parte…'}</option>
                     {cat!.partes.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                   </select>
@@ -414,7 +414,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
               </>
             ) : (
               <>
-                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-12 justify-self-start text-[10.5px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes</button>}
+                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-12 justify-self-start text-[13px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes</button>}
                 <span className="flex flex-wrap gap-1">
                   {CAUSAS_POZO.map(f => (
                     <button type="button" key={f} onClick={() => { setTexto(f); setError('') }} aria-pressed={texto === f}
@@ -425,14 +425,14 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
             )}
             <label className="grid gap-0.5">
               {/* Escogió «Otra cosa»: el campo pasa a obligatorio (el porqué está en el botón marcado). */}
-              <span className="text-[10.5px] text-[var(--tinta2)]">{!conPartes ? 'Qué encontró' : modo === MODO_OTRO ? 'Qué vio (obligatorio)' : 'Qué encontró (opcional)'}</span>
+              <span className="text-[13px] text-[var(--tinta2)]">{!conPartes ? 'Qué encontró' : modo === MODO_OTRO ? 'Qué vio (obligatorio)' : 'Qué encontró (opcional)'}</span>
               <textarea value={texto} onChange={e => { setTexto(e.target.value); setError('') }} rows={2}
                 placeholder={conPartes ? (esp ? 'Ej.: el motor dio a tierra al megger' : 'Ej.: sello con fuga por el lado de acople; se cambió') : 'Ej.: se cerró para cambiar la válvula de la cabeza'}
-                className="resize-y rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[12px]" />
+                className="resize-y rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[14px]" />
             </label>
-            {error && <p className="text-[11px] text-[var(--tinta)]" role="alert">{error}</p>}
+            {error && <p className="text-[13px] text-[var(--tinta)]" role="alert">{error}</p>}
             <Boton variante="principal" type="submit" className="min-h-12 sm:min-h-0">Registrar respuesta</Boton>
-            <small className="text-[10px] text-[var(--tinta3)]">Queda declarado por <DichoEnPapel papel={rolDeQuien(` · ${rolActual.nombre.toLowerCase()}`)}>{persona.nombre}</DichoEnPapel> · hora del sistema</small>
+            <small className="text-[12px] text-[var(--tinta3)]">Queda declarado por <DichoEnPapel papel={rolDeQuien(` · ${rolActual.nombre.toLowerCase()}`)}>{persona.nombre}</DichoEnPapel> · hora del sistema</small>
           </form>
         )}
       </div>
@@ -453,10 +453,10 @@ function pista(o: { porque?: string; veces?: number; total?: number }): string {
 const noFueEsp = NO_FUE_ESP_CORTO
 
 /** El rótulo de cada paso de la respuesta: se lee como instrucción, no como pie. */
-const PASO_CLS = 'text-[12px] font-semibold text-[var(--tinta)]'
+const PASO_CLS = 'text-[14px] font-semibold text-[var(--tinta)]'
 
 /** Botón de opción: en el teléfono, 48 px de alto, para el dedo con guantes (U1 §2.6; B-24); la marcada, con el color de selección. */
-const CHIP = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] px-1.5 py-0.5 text-[11px] hover:bg-[var(--panel2)] sm:min-h-0 sm:text-[10.5px]'
+const CHIP = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] px-1.5 py-0.5 text-[13px] hover:bg-[var(--panel2)] sm:min-h-0 sm:text-[13px]'
 const SELECCION = 'border-acento bg-acento-f text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--acento)]'
 
 
@@ -484,7 +484,7 @@ function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; 
   // Si la pregunta se armó pero no salió, no es que nadie tenga WhatsApp: se muestra el hilo con su motivo.
   // Que nadie la recibe es un hueco: corto a la vista, el porqué en el ⓘ (y en el papel).
   if (!primero && !orden.some(m => m.regla === 'causa' && m.noEnviado)) return (
-    <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+    <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
       WhatsApp: sin destinatario
       <Info titulo="Sin destinatario" texto="Nadie de este campo tiene número con las alertas encendidas; la pregunta está solo en esta pantalla." />
     </p>
@@ -494,8 +494,8 @@ function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; 
   // Como en Turno: una línea con la hora y el paso; a quién le llegó cada uno,
   // en el globo y en el papel. Lo que no se envió sigue a la vista, con su motivo.
   return (
-    <div className="mt-2.5 border-t border-dashed border-[var(--linea2)] pt-2 text-[11px]">
-      <h5 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">WHATSAPP</h5>
+    <div className="mt-2.5 border-t border-dashed border-[var(--linea2)] pt-2 text-[13px]">
+      <h5 className="font-cond mb-1 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">WHATSAPP</h5>
       <Tip titulo={`WhatsApp · ${p.equipo}`} filas={pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
         imprimir="todo" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--tinta2)]">
         <span>
@@ -540,7 +540,7 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
   useEffect(() => { if (enfocar && guardado.current) { guardado.current.focus(); setEnfocar(false) } }, [enfocar, a, abierto])
 
   if (a && !abierto) return (
-    <small ref={guardado} tabIndex={-1} className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">
+    <small ref={guardado} tabIndex={-1} className="mt-0.5 block text-[13px] text-[var(--tinta2)]">
       Análisis: {a.mecanismo} {mecanismoIso(a.mecanismo)?.nombre.toLowerCase()} · causa raíz: {CAUSAS_RAIZ.find(c => c.codigo === a.causaRaiz)?.nombre.toLowerCase()}
       {a.nota && <DichoEnPapel papel="">{` · «${a.nota}»`}</DichoEnPapel>} · <DichoEnPapel papel={rolDeQuien(a.por)}>{a.por}</DichoEnPapel>
       {puede && <button type="button" onClick={() => { setMecanismo(a.mecanismo); setCausaRaiz(a.causaRaiz); setNota(a.nota ?? ''); setAbierto(true) }}
@@ -563,8 +563,8 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
     <form className="mt-1.5 grid gap-1.5 rounded border border-[var(--linea2)] bg-[var(--panel2)] p-2"
       onSubmit={async e => { e.preventDefault(); const r = await completar(evento, { mecanismo, causaRaiz, nota }); if (!r.ok) setError(r.error); else { setAbierto(false); setEnfocar(true) } }}>
       <div className="grid gap-1.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))]">
-        <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Mecanismo · ISO 14224 B.2</span>
-          <select value={mecanismo} onChange={e => { setMecanismo(e.target.value); setError('') }} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-0">
+        <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Mecanismo · ISO 14224 B.2</span>
+          <select value={mecanismo} onChange={e => { setMecanismo(e.target.value); setError('') }} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px] sm:min-h-0">
             <option value="">Escoja el mecanismo…</option>
             {MECANISMOS_POR_FAMILIA.map(f => (
               <optgroup key={f.familia} label={f.familia}>
@@ -572,16 +572,16 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
               </optgroup>
             ))}
           </select></label>
-        <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Causa raíz · B.3</span>
-          <select value={causaRaiz} onChange={e => { setCausaRaiz(e.target.value); setError('') }} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-0">
+        <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Causa raíz · B.3</span>
+          <select value={causaRaiz} onChange={e => { setCausaRaiz(e.target.value); setError('') }} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px] sm:min-h-0">
             <option value="">Escoja la causa…</option>
             {CAUSAS_RAIZ.map(c => <option key={c.codigo} value={c.codigo}>{c.codigo} · {c.nombre}</option>)}
           </select></label>
       </div>
-      <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Nota (opcional)</span>
-        <input value={nota} onChange={e => setNota(e.target.value)} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px] sm:min-h-0"
+      <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Nota (opcional)</span>
+        <input value={nota} onChange={e => setNota(e.target.value)} className="min-h-10 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px] sm:min-h-0"
           placeholder="Ej.: arena en la succión; el filtro no se cambió a tiempo" /></label>
-      {error && <p className="text-[11px] text-[var(--tinta)]" role="alert">{error}</p>}
+      {error && <p className="text-[13px] text-[var(--tinta)]" role="alert">{error}</p>}
       <span className="flex flex-wrap gap-1.5">
         <Boton variante="principal" type="submit" className="min-h-10 sm:min-h-0">Guardar el análisis</Boton>
         <Boton type="button" className="min-h-10 sm:min-h-0" onClick={() => setAbierto(false)}>Cancelar</Boton>
@@ -608,7 +608,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
   const horas = p.fin ? horasEntre(p.inicio, p.fin) : undefined
   const disparo = cat?.clase === 'bomba-electrosumergible' && !!p.causa.parte && horas !== undefined && horas < 24
   return (
-    <div data-declarada={p.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+    <div data-declarada={p.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
       <span className="min-w-0">
         <b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· {global ? `${campoPorId(p.campoId).nombre} · ` : ''}{fechaHora(p.inicio)}</span>
         <span className="block text-[var(--tinta)]">
@@ -617,7 +617,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
             ? <><b className="font-semibold">{nombreParte}</b>{vio ? ` · ${vio}` : ''}{!generado && <DichoEnPapel papel="">{` · «${r.texto}»`}</DichoEnPapel>}</>
             : <DichoEnPapel papel={`Lo contestó ${rolDeQuien(r.por)}`}>«{r.texto}»</DichoEnPapel>}
         </span>
-        <small className="block text-[10.5px] text-[var(--tinta3)]"><DichoEnPapel papel={nombreParte ? `Lo contestó ${rolDeQuien(r.por)} · ` : ''}>{r.por} · </DichoEnPapel>{fechaHora(new Date(r.hora))}{r.canal === 'whatsapp' ? ' · por WhatsApp' : ''}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
+        <small className="block text-[13px] text-[var(--tinta3)]"><DichoEnPapel papel={nombreParte ? `Lo contestó ${rolDeQuien(r.por)} · ` : ''}>{r.por} · </DichoEnPapel>{fechaHora(new Date(r.hora))}{r.canal === 'whatsapp' ? ' · por WhatsApp' : ''}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
         {/* Estado como etiqueta; por qué (arrancó en menos de un día), en el ⓘ. */}
         {disparo && (
           <span className="mt-0.5 flex flex-wrap items-center gap-x-1">

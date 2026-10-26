@@ -123,22 +123,22 @@ export function Turno() {
       <MarcaPrioridad s={r.altoImpacto ? 1 : 2} tamano={13} />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-2">
-          <b className="text-[12.5px] leading-tight">{r.equipo}{donde(r.campoId)}</b>
+          <b className="text-[15px] leading-tight">{r.equipo}{donde(r.campoId)}</b>
           <Chip tono={r.altoImpacto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>
           {veTramo && <DondeSeTrabo campoId={r.campoId} equipo={r.equipo} desde={inicioTurno} hasta={AHORA} />}
-          {r.parte && <span className="text-[10.5px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
+          {r.parte && <span className="text-[13px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
         </span>
-        <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{plural(r.pozos, 'pozo', 'pozos')}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}</small>
+        <small className="block truncate text-[13px] text-[var(--tinta3)]">{plural(r.pozos, 'pozo', 'pozos')}{r.desde ? ` · desde ${fechaHora(r.desde)}` : ''}</small>
       </span>
       <span className="tabular text-right">
         <b className="block text-[14px] leading-tight">{n0(r.bblDia)}</b>
-        <small className="text-[9.5px] text-[var(--tinta3)]">bbl/d</small>
+        <small className="text-[12px] text-[var(--tinta3)]">bbl/d</small>
       </span>
     </Tip>
   )
 
   const filaPregunta = (p: (typeof preguntas)[number]) => (
-    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
+    <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
       <MarcaPrioridad s={hoy(p.equipo, p.campoId)?.severidad ?? 0} tamano={12} />
       <span className="min-w-0 flex-1">
         <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span>
@@ -155,17 +155,17 @@ export function Turno() {
       className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
       <MarcaPrioridad s={prioridadVigilar(r)} tamano={13} />
       <span className="min-w-0 flex-1">
-        <b className="block truncate text-[12px]">{r.equipo}{donde(r.campoId)}</b>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]">
+        <b className="block truncate text-[14px]">{r.equipo}{donde(r.campoId)}</b>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">
           {r.parte
             ? <>{NOMBRE_PARTE[r.parte].toLowerCase()}{r.estadoParte && <Chip tono={r.estadoParte === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[r.estadoParte]}</Chip>}</>
             : <Chip>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>}
         </span>
       </span>
-      <span className="tabular text-right text-[11px]">
+      <span className="tabular text-right text-[13px]">
         <b className="block">{r.horas !== undefined ? fmtHoras(r.horas) : 'ya pasó el límite'}</b>
         {/* Un techo (K-101: si cierran todos sus pozos) se dice «hasta», como en Riesgo y «Si falla hoy». */}
-        <small className="text-[9.5px] text-[var(--tinta3)]" data-si-para>{siPara(r, esServicio(r))}</small>
+        <small className="text-[12px] text-[var(--tinta3)]" data-si-para>{siPara(r, esServicio(r))}</small>
       </span>
     </Tip>
   )
@@ -182,7 +182,7 @@ export function Turno() {
     return (
       <Tip key={t.causa.evento ?? t.evento.id} titulo={linea} pista={t.causa.texto} pistaEnPapel={causaEnPapel(t.causa)} imprimir="pista" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
         filas={[...(porOtro ? [['Lo cerró', t.causa.equipo] as [string, string]] : []), ['Barriles', `${n0(bbl)} bbl`], ['Cómo se identificó', como]]}
-        className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 print:border-b-0">
+        className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0 print:border-b-0">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2">
           {g.length > 1 ? (
             <span><b>{plural(g.length, 'pozo cerrado', 'pozos cerrados')}</b> por <b>{t.causa.equipo}</b>{donde(t.pozo.campoId)}
@@ -200,7 +200,7 @@ export function Turno() {
   const filaHilo = (h: (typeof hilos)[number]) => (
     <Tip key={h.clave} titulo={h.equipo} filas={h.pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
       imprimir="todo" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
-      className="border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 print:border-b-0">
+      className="border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0 print:border-b-0">
       <span className="flex flex-wrap items-center justify-between gap-x-3">
         <span><b>{h.equipo}</b>{donde(h.campoId)}</span>
         {h.estado && (h.estado === 'sin respuesta' ? <Chip tono="fuerte">sin respuesta</Chip> : <small className="text-[var(--tinta2)]"><DichoEnPapel papel={h.estadoPapel}>{h.estado}</DichoEnPapel></small>)}
@@ -212,8 +212,8 @@ export function Turno() {
   )
 
   const cifra = 'tabular flex items-center gap-1.5 text-[20px] leading-none'
-  const rotulo = 'block text-[10.5px] text-[var(--tinta3)]'
-  const apoyo = 'block text-[10.5px] text-[var(--tinta2)]'
+  const rotulo = 'block text-[13px] text-[var(--tinta3)]'
+  const apoyo = 'block text-[13px] text-[var(--tinta2)]'
 
   return (
     <>
@@ -221,13 +221,13 @@ export function Turno() {
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         <Tip titulo="Turno que entra" pista={`Lo que se pierde ahora, sostenido las ${TURNO_H} horas del turno.`}
           filas={[['Perdiéndose ahora', `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]} className="block">
-          <b className="tabular block text-[36px] leading-none">{n0(porDia * TURNO_H / 24)}<small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
+          <b className="tabular block text-[36px] leading-none">{n0(porDia * TURNO_H / 24)}<small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">bbl</small></b>
           <small className={rotulo}>se pierden · turno que entra</small>
           <small className={apoyo}>si nada cambia</small>
         </Tip>
         <span>
           {/* Un total no es una alarma: la marca va en el equipo que lo causa (B-40; U2 §0, principio 4). */}
-          <b className={cifra}>{n0(porDia)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
+          <b className={cifra}>{n0(porDia)}<small className="text-[13px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
           <small className={rotulo}>perdiéndose ahora</small>
           <small className={apoyo}>
             {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
@@ -240,7 +240,7 @@ export function Turno() {
           <ApoyoPorIdentificar pi={pi} />
         </span>
         <span>
-          <b className={cifra}>{n0(lb.diferido)}<small className="text-[11px] font-normal text-[var(--tinta3)]">bbl</small></b>
+          <b className={cifra}>{n0(lb.diferido)}<small className="text-[13px] font-normal text-[var(--tinta3)]">bbl</small></b>
           <small className={rotulo}>diferidos · {TURNO_H} h</small>
         </span>
       </div>
@@ -257,16 +257,16 @@ export function Turno() {
       {veTramo && <div className="mt-2.5"><HoyLimita campos={ids} desde={inicioTurno} hasta={AHORA} /></div>}
       <div className={veTramo ? '' : 'mt-2.5'}><CierreDeHoy key={rol.id} campos={ids} global={ambito.global} /></div>
 
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
         <Panel titulo="2 · Pasando ahora" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
-          {perdiendo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
+          {perdiendo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
           {listaPerdiendo.visibles.map(filaPerdiendo)}
           {listaPerdiendo.resto.length > 0 && <div className="solo-impresion">{listaPerdiendo.resto.map(filaPerdiendo)}</div>}
           <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
         </Panel>
 
         <Panel titulo="2 · Identificar" extra={`${pi.porIdentificar}`}>
-          {preguntas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
+          {preguntas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
           <VerMas ocultas={listaPreguntas.ocultas} abierto={listaPreguntas.abierto} onAlternar={listaPreguntas.alternar} />
@@ -280,7 +280,7 @@ export function Turno() {
         </Panel>
 
         <Panel titulo="1 · Vigilar" extra={plural(vigilar.length, 'equipo', 'equipos')}>
-          {vigilar.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
+          {vigilar.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
           {listaVigilar.visibles.map(filaVigilar)}
           {listaVigilar.resto.length > 0 && <div className="solo-impresion">{listaVigilar.resto.map(filaVigilar)}</div>}
           <VerMas ocultas={listaVigilar.ocultas} abierto={listaVigilar.abierto} onAlternar={listaVigilar.alternar} />
@@ -288,7 +288,7 @@ export function Turno() {
       </div>
 
       <Panel className="mt-2.5" titulo="PARADAS NUEVAS" extra={`${TURNO_H} h · ${plural(grupos.length, 'causa', 'causas')}`}>
-        {grupos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún pozo paró.</p>}
+        {grupos.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún pozo paró.</p>}
         {listaGrupos.visibles.map(filaGrupo)}
         {listaGrupos.resto.length > 0 && <div className="solo-impresion">{listaGrupos.resto.map(filaGrupo)}</div>}
         <VerMas ocultas={listaGrupos.ocultas} abierto={listaGrupos.abierto} onAlternar={listaGrupos.alternar} />
@@ -301,7 +301,7 @@ export function Turno() {
           30 min y al supervisor a las 2 h; parte por cruzar su límite a confiabilidad y mantenimiento;
           orden liberada en SAP al técnico.
         </Lectura>
-        {hilos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">TRIM no mandó nada.</p>}
+        {hilos.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">TRIM no mandó nada.</p>}
         {listaHilos.visibles.map(filaHilo)}
         {listaHilos.resto.length > 0 && <div className="solo-impresion">{listaHilos.resto.map(filaHilo)}</div>}
         <VerMas ocultas={listaHilos.ocultas} abierto={listaHilos.abierto} onAlternar={listaHilos.alternar} />

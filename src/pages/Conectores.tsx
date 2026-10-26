@@ -86,7 +86,7 @@ export function Conectores() {
   // SAP y WhatsApp no dependen del registro de los bordes: se muestran aunque este no responda.
   const sistemas = <Integraciones campoId={campoId} />
   if (error) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><Hueco>No se pudo consultar el registro: {error}.</Hueco></Panel></>
-  if (!datos) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><p className="text-[12px] text-[var(--tinta3)]">Consultando…</p></Panel></>
+  if (!datos) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><p className="text-[14px] text-[var(--tinta3)]">Consultando…</p></Panel></>
 
   const { inv, pend } = datos
   const conSugerencia = pend.filter(t => sugerir(t.tag, inv.equipos))
@@ -121,13 +121,13 @@ export function Conectores() {
           <div key={g.id} className="flex flex-wrap items-center gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
             <Plug className="size-4 shrink-0 text-[var(--tinta3)]" />
             <span className="min-w-0 flex-1">
-              <b className="block font-mono text-[12px]">{g.id}</b>
-              <small className="block text-[10.5px] text-[var(--tinta3)]">
+              <b className="block font-mono text-[14px]">{g.id}</b>
+              <small className="block text-[13px] text-[var(--tinta3)]">
                 {g.modelo} · serie {g.serie} · firmware {g.firmware} · enlace {g.enlace} · buffer {g.buffer_h} h
               </small>
             </span>
             <Chip>{g.tags} tags</Chip>
-            <span className="tabular w-[120px] text-right text-[11px] text-[var(--tinta2)]">
+            <span className="tabular w-[120px] text-right text-[13px] text-[var(--tinta2)]">
               reportó {hace(g.ultimo_visto)}
             </span>
           </div>
@@ -139,9 +139,9 @@ export function Conectores() {
             </Boton>
             {codigo && (
               <div className="mt-2 rounded border border-[var(--tinta2)] bg-[var(--panel)] p-2.5">
-                <small className="block text-[10.5px] text-[var(--tinta3)]">Código para {campoPorId(codigo.campo).nombre}</small>
+                <small className="block text-[13px] text-[var(--tinta3)]">Código para {campoPorId(codigo.campo).nombre}</small>
                 <b className="font-mono text-[18px] tracking-[.12em] text-[var(--tinta)]">{codigo.codigo}</b>
-                <p className="mt-1 text-[11.5px] text-[var(--tinta2)]">
+                <p className="mt-1 text-[14px] text-[var(--tinta2)]">
                   {codigo.instruccion} Vence en {codigo.expiraEn}.
                 </p>
               </div>
@@ -157,14 +157,14 @@ export function Conectores() {
 
       <Panel titulo="TAGS POR ASOCIAR">
         {pend.length === 0 ? (
-          <p className="text-[12px] text-[var(--tinta2)]">
+          <p className="text-[14px] text-[var(--tinta2)]">
             Los {inv.tags.total} tags tienen equipo.
           </p>
         ) : (
           <>
             {puede && conSugerencia.length > 0 && (
               <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2.5 py-2">
-                <span className="flex-1 text-[11.5px]">
+                <span className="flex-1 text-[14px]">
                   {conSugerencia.length} de {pend.length} con sugerencia
                 </span>
                 <Boton variante="principal" disabled={ocupado} onClick={() => aplicarTodas(conSugerencia)}>
@@ -194,14 +194,14 @@ function FilaPendiente({ t, equipos, puede, ocupado, onAsociar }: {
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
       <span className="min-w-[190px] flex-1">
-        <b className="block font-mono text-[12px]">{t.tag}</b>
-        <small className="block text-[10.5px] text-[var(--tinta3)]">
+        <b className="block font-mono text-[14px]">{t.tag}</b>
+        <small className="block text-[13px] text-[var(--tinta3)]">
           {t.tipo}{t.unidad ? ` · ${t.unidad}` : ''} · {t.protocolo} · cada {cadencia(t.cadencia_s)} · {t.gateway_id}
         </small>
       </span>
       {s && (
         // Por qué se sugiere (la nomenclatura del tag) va en el ⓘ y en el papel.
-        <span className="flex min-w-[160px] flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
+        <span className="flex min-w-[160px] flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           <Chip tono={s.confianza === 'alta' ? 'fuerte' : 'neutro'}>sugerido {s.codigo}</Chip>
           <Info titulo={`Sugerido ${s.codigo}`} texto={`Por nomenclatura: ${s.razon}.`} />
         </span>
@@ -210,7 +210,7 @@ function FilaPendiente({ t, equipos, puede, ocupado, onAsociar }: {
         <span className="flex min-w-0 max-w-full items-center gap-1.5">
           {/* Un select toma el ancho de su opción más larga: en el teléfono se recorta, no se sale. */}
           <select value={elegido} onChange={e => setElegido(e.target.value)} aria-label={`Equipo de ${t.tag}`}
-            className={cn('min-w-0 max-w-[240px] rounded border bg-[var(--panel2)] px-1.5 py-[4px] text-[11.5px] outline-none focus:border-acento',
+            className={cn('min-w-0 max-w-[240px] rounded border bg-[var(--panel2)] px-1.5 py-[4px] text-[14px] outline-none focus:border-acento',
               elegido ? 'border-[var(--linea)]' : 'border-dashed border-[var(--linea)]')}>
             <option value="">sin asociar</option>
             {equipos.map(e => <option key={e.codigo} value={e.codigo}>{e.codigo} · {e.nombre}</option>)}

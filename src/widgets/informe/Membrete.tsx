@@ -24,19 +24,19 @@ export function Membrete() {
   // El folio va también al pie de CADA página: una hoja suelta sigue diciendo de qué informe es.
   const pie = inf ? `Folio ${inf.folio} · ${empresa} · lo producido se mide; lo diferido se calcula` : 'SIN FOLIO · no sirve como respaldo'
   return (
-    <header className="solo-impresion mb-3 border-b-2 border-[var(--tinta)] pb-2 text-[10.5px]">
+    <header className="solo-impresion mb-3 border-b-2 border-[var(--tinta)] pb-2 text-[13px]">
       <style>{`@media print { @page { @bottom-left { content: ${JSON.stringify(pie)}; }${demo ? ' @top-center { content: "DATOS DE DEMOSTRACIÓN"; font-size: 8pt; font-weight: 600; letter-spacing: .06em; }' : ''} } }`}</style>
       <div className="flex items-start justify-between gap-4">
         <span>
           <b className="block text-[16px] leading-tight">{empresa}</b>
-          <b className="block text-[12.5px]">{inf?.titulo ?? 'Impresión sin folio'}</b>
+          <b className="block text-[15px]">{inf?.titulo ?? 'Impresión sin folio'}</b>
           <span className="block">{inf?.alcance ?? ambito.titulo} · {inf?.periodo ?? periodoDelInforme(rango, parcial)}</span>
         </span>
         <span className="text-right">
-          <span className="block text-[10px] tracking-[.1em]">TRIM · HIDROCARBUROS</span>
-          <b className="block text-[13px]">{inf ? `Folio ${inf.folio}` : 'SIN FOLIO'}</b>
-          {demo && <b className="block text-[11px] tracking-[.06em]">DATOS DE DEMOSTRACIÓN</b>}
-          {inf && inf.estado !== 'publicable' && <b className="block text-[11px] tracking-[.06em]">{inf.estado === 'provisional' ? 'PROVISIONAL · MES EN CURSO' : 'NO PUBLICABLE TODAVÍA'}</b>}
+          <span className="block text-[12px] tracking-[.1em]">TRIM · HIDROCARBUROS</span>
+          <b className="block text-[15px]">{inf ? `Folio ${inf.folio}` : 'SIN FOLIO'}</b>
+          {demo && <b className="block text-[13px] tracking-[.06em]">DATOS DE DEMOSTRACIÓN</b>}
+          {inf && inf.estado !== 'publicable' && <b className="block text-[13px] tracking-[.06em]">{inf.estado === 'provisional' ? 'PROVISIONAL · MES EN CURSO' : 'NO PUBLICABLE TODAVÍA'}</b>}
           <span className="block">{inf ? `Generado el ${fechaHoraLarga(new Date(inf.fecha))}` : 'no sirve como respaldo'}</span>
         </span>
       </div>
@@ -59,7 +59,7 @@ export function PieInforme() {
  *  verificar-libro lo pueda dibujar con un informe y leer lo que promete. */
 export function PieDelInforme({ inf }: { inf: Informe | null }) {
   return (
-    <footer className="solo-impresion mt-4 border-t border-[var(--tinta)] pt-2 text-[9.5px] leading-relaxed">
+    <footer className="solo-impresion mt-4 border-t border-[var(--tinta)] pt-2 text-[12px] leading-relaxed">
       <p><b>Nota de cálculo.</b> {NOTA_DE_CALCULO}</p>
       {inf
         ? <>

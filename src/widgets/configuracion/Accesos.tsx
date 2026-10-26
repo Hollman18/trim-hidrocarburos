@@ -13,7 +13,7 @@ import { useVerMas } from '@/shared/ui/listaCorta'
 import { plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 
-const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento'
+const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento'
 /** Marca del formulario de invitación abierto: no es un id de persona. */
 const INVITAR = 'invitar'
 /** El orden del formulario: al fallar, el foco va al primer campo con error. */
@@ -40,13 +40,13 @@ export function Accesos({ puede }: { puede: boolean }) {
   // El historial, el más reciente primero: cinco a la vista y «ver N más»; en el papel, todo.
   const historial = useVerMas([...accesos].reverse())
   const cambio = (a: typeof accesos[number]) => (
-    <li key={a.id} className="border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+    <li key={a.id} className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
       <div className="flex flex-wrap items-baseline gap-x-2">
         <b>{a.usuario}</b>
-        <span className="text-[10.5px] text-[var(--tinta3)]">{fechaHora(new Date(a.fecha))} · {a.por}</span>
+        <span className="text-[13px] text-[var(--tinta3)]">{fechaHora(new Date(a.fecha))} · {a.por}</span>
       </div>
       <p className="text-[var(--tinta2)]">«{a.motivo}»</p>
-      <ul className="list-disc pl-4 text-[10.5px] text-[var(--tinta3)]">{a.cambios.map(c => <li key={c}>{c}</li>)}</ul>
+      <ul className="list-disc pl-4 text-[13px] text-[var(--tinta3)]">{a.cambios.map(c => <li key={c}>{c}</li>)}</ul>
     </li>
   )
 
@@ -66,10 +66,10 @@ export function Accesos({ puede }: { puede: boolean }) {
             <li key={u.id} className="border-b border-[var(--linea2)] py-2 last:border-0">
               <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
                 <span className="min-w-0 flex-1">
-                  <b className={cn('block text-[12.5px]', u.estado === 'suspendido' && 'text-[var(--tinta3)] line-through')}>{u.nombre}{u.id === yo && <span className="font-normal text-[var(--tinta3)]"> · usted</span>}</b>
-                  {esCompleta(u) && <small className="block truncate font-mono text-[10px] text-[var(--tinta3)]">{u.correo}</small>}
-                  <small className="block text-[11px] text-[var(--tinta2)]">{rolPorId(u.rolId).nombre} · {nombreCampos(u.campos)}</small>
-                  <small className="block text-[10.5px] text-[var(--tinta3)]">{u.telefono ? `WhatsApp ${telefonoLegible(u.telefono)}` : 'sin WhatsApp'}{u.alertas ? ' · recibe alertas' : ''}</small>
+                  <b className={cn('block text-[15px]', u.estado === 'suspendido' && 'text-[var(--tinta3)] line-through')}>{u.nombre}{u.id === yo && <span className="font-normal text-[var(--tinta3)]"> · usted</span>}</b>
+                  {esCompleta(u) && <small className="block truncate font-mono text-[12px] text-[var(--tinta3)]">{u.correo}</small>}
+                  <small className="block text-[13px] text-[var(--tinta2)]">{rolPorId(u.rolId).nombre} · {nombreCampos(u.campos)}</small>
+                  <small className="block text-[13px] text-[var(--tinta3)]">{u.telefono ? `WhatsApp ${telefonoLegible(u.telefono)}` : 'sin WhatsApp'}{u.alertas ? ' · recibe alertas' : ''}</small>
                 </span>
                 <span className="flex shrink-0 items-center gap-1.5">
                   {u.estado !== 'activo' && <Chip tono={u.estado === 'suspendido' ? 'fuerte' : 'neutro'}>{ESTADO_NOMBRE[u.estado]}</Chip>}
@@ -82,7 +82,7 @@ export function Accesos({ puede }: { puede: boolean }) {
         </ul>
 
         {puede && (abierto === nuevo.id
-          ? <div className="mt-2 border-t border-[var(--linea)] pt-2"><b className="text-[12px]">Invitar a una persona</b><Formulario base={nuevo} nuevo alcance={alcance} onListo={() => setAbierto(null)} /></div>
+          ? <div className="mt-2 border-t border-[var(--linea)] pt-2"><b className="text-[14px]">Invitar a una persona</b><Formulario base={nuevo} nuevo alcance={alcance} onListo={() => setAbierto(null)} /></div>
           : <Boton variante="principal" className="mt-2 w-full" onClick={() => setAbierto(nuevo.id)}><UserPlus className="mr-1 inline size-3.5" />Invitar a una persona</Boton>)}
       </Panel>
 
@@ -116,7 +116,7 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
   const de = (c: CampoAcceso) => errores.filter(e => e.campo === c)
   const invalido = (c: CampoAcceso) => de(c).length ? { 'aria-invalid': true, 'aria-describedby': idError(c) } : {}
   const mensaje = (c: CampoAcceso) => de(c).length > 0 && (
-    <ul id={idError(c)} className="list-disc pl-4 text-[11.5px] text-[var(--tinta)]">{de(c).map(e => <li key={e.texto}>{e.texto}</li>)}</ul>
+    <ul id={idError(c)} className="list-disc pl-4 text-[14px] text-[var(--tinta)]">{de(c).map(e => <li key={e.texto}>{e.texto}</li>)}</ul>
   )
   const todos = u.campos === 'todos'
   const marcados = todos ? [] : (u.campos as string[])
@@ -141,27 +141,27 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
       }}>
       {nuevo && (
         <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))]">
-          <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Nombre completo</span>
+          <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Nombre completo</span>
             <input id={idCaja('nombre')} {...invalido('nombre')} value={u.nombre} onChange={e => cambiar({ nombre: e.target.value })} className={campoInput} autoComplete="off" />
             {mensaje('nombre')}</label>
-          <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Correo de la empresa</span>
+          <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Correo de la empresa</span>
             <input id={idCaja('correo')} {...invalido('correo')} type="email" value={u.correo} onChange={e => cambiar({ correo: e.target.value })} className={campoInput} autoComplete="off" />
             {mensaje('correo')}</label>
         </div>
       )}
-      <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Rol</span>
+      <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Rol</span>
         <select id={idCaja('rol')} {...invalido('rol')} value={u.rolId} disabled={propio} onChange={e => cambiar({ rolId: e.target.value, alertas: ROLES_CON_ALERTAS.includes(e.target.value) && u.alertas, ...(nuevo && e.target.value ? { campos: rolPorId(e.target.value).campos } : {}) })} className={cn(campoInput, 'disabled:opacity-70')}>
           {nuevo && <option value="">Escoja un rol</option>}
           {ROLES_VISIBLES.map(r => <option key={r.id} value={r.id}>{r.nombre} · {NIVEL[r.nivel]}</option>)}
         </select>
-        {propio && <small className="text-[10px] text-[var(--tinta3)]">Su propio rol y su acceso los cambia otro gerente de activo.</small>}
+        {propio && <small className="text-[12px] text-[var(--tinta3)]">Su propio rol y su acceso los cambia otro gerente de activo.</small>}
         {mensaje('rol')}
       </label>
       {/* Sus propios campos también los cambia otro gerente: en su fila no se tocan. */}
       <fieldset className="grid gap-1 disabled:opacity-70" disabled={propio} {...(de('campos').length ? { 'aria-describedby': idError('campos') } : {})}>
-        <legend className="mb-0.5 text-[10.5px] text-[var(--tinta2)]">Campos que ve</legend>
+        <legend className="mb-0.5 text-[13px] text-[var(--tinta2)]">Campos que ve</legend>
         {puedeTodos && (
-          <label className="flex min-h-8 items-center gap-1.5 text-[12px]">
+          <label className="flex min-h-8 items-center gap-1.5 text-[14px]">
             <input id={idCaja('campos')} type="checkbox" className="size-4" checked={todos} onChange={e => cambiar({ campos: e.target.checked ? 'todos' : visibles.map(c => c.id) })} />
             Todos los campos, también los futuros
           </label>
@@ -169,7 +169,7 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
         {!todos && (
           <span className={cn('flex flex-wrap gap-x-3 gap-y-1', puedeTodos && 'pl-5')}>
             {visibles.map((c, i) => (
-              <label key={c.id} className="flex min-h-8 items-center gap-1.5 text-[12px]">
+              <label key={c.id} className="flex min-h-8 items-center gap-1.5 text-[14px]">
                 <input type="checkbox" className="size-4" checked={marcados.includes(c.id)} {...(!puedeTodos && i === 0 ? { id: idCaja('campos') } : {})}
                   onChange={e => cambiar({ campos: e.target.checked ? [...marcados, c.id] : marcados.filter(x => x !== c.id) })} />
                 {c.nombre}
@@ -180,29 +180,29 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
         {mensaje('campos')}
       </fieldset>
       <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))]">
-        <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">WhatsApp para alertas</span>
+        <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">WhatsApp para alertas</span>
           <input id={idCaja('whatsapp')} {...invalido('whatsapp')} value={u.telefono ?? ''} onChange={e => cambiar({ telefono: e.target.value })} className={campoInput} placeholder="300 123 4567 o +57 300 123 4567" inputMode="tel" autoComplete="off" />
           {mensaje('whatsapp')}</label>
-        <label className={cn('flex min-h-8 items-start gap-1.5 self-end pb-1.5 text-[12px]', !conAlertas && 'text-[var(--tinta3)]')}>
+        <label className={cn('flex min-h-8 items-start gap-1.5 self-end pb-1.5 text-[14px]', !conAlertas && 'text-[var(--tinta3)]')}>
           <input id={idCaja('alertas')} {...invalido('alertas')} type="checkbox" className="mt-0.5 size-4 shrink-0" checked={u.alertas} disabled={!conAlertas} onChange={e => cambiar({ alertas: e.target.checked })} />
           <span>{conAlertas ? <>Recibe por WhatsApp: {ALERTAS_DEL_ROL[u.rolId]}</> : u.rolId ? 'Este rol no recibe alertas por WhatsApp' : 'Escoja el rol para ver qué alertas recibe'}
             {mensaje('alertas')}</span>
         </label>
       </div>
       {!nuevo && !propio && (
-        <label className="flex min-h-8 items-center gap-1.5 text-[12px]">
+        <label className="flex min-h-8 items-center gap-1.5 text-[14px]">
           <input type="checkbox" className="size-4" checked={u.estado === 'suspendido'}
             // Solo se dice si queda suspendida: al quitar la suspensión, el servidor la devuelve al estado de antes (quien nunca entró sigue invitado).
             onChange={e => cambiar({ estado: e.target.checked ? 'suspendido' : base.estado === 'suspendido' ? (base.antesDeSuspender ?? 'activo') : base.estado })} />
           Suspender el acceso · lo firmado sigue a su nombre
         </label>
       )}
-      <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Motivo · obligatorio</span>
+      <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Motivo · obligatorio</span>
         <input id={idCaja('motivo')} {...invalido('motivo')} value={motivo} onChange={e => { setMotivo(e.target.value); setErrores([]) }} className={campoInput}
           placeholder={nuevo ? 'Ej.: nuevo supervisor de La Ceiba desde octubre' : 'Ej.: pasa a cubrir también Morichal Norte'} />
         {mensaje('motivo')}</label>
       {/* Lo que no es de una caja (dejaría la operación sin gerente, sin cambios…) se anuncia al aparecer. */}
-      {de('general').length > 0 && <ul id={idError('general')} className="list-disc pl-4 text-[11.5px] text-[var(--tinta)]" role="alert">{de('general').map(e => <li key={e.texto}>{e.texto}</li>)}</ul>}
+      {de('general').length > 0 && <ul id={idError('general')} className="list-disc pl-4 text-[14px] text-[var(--tinta)]" role="alert">{de('general').map(e => <li key={e.texto}>{e.texto}</li>)}</ul>}
       <span className="flex flex-wrap gap-1.5">
         <Boton variante="principal" type="submit">{nuevo ? 'Enviar la invitación' : 'Guardar el cambio'}</Boton>
         <Boton type="button" onClick={onListo}>Cancelar</Boton>

@@ -40,7 +40,7 @@ export function Confiabilidad() {
   // Cinco a la vista y «ver N más»; en el papel salen todas (la tabla no tiene alarmas que esconder).
   const listaMalos = useVerMas(malos)
 
-  if (!equipos.length) return <Panel titulo="CONFIABILIDAD"><p className="text-[12px] text-[var(--tinta2)]">{ambito.titulo} no tiene equipos de alto impacto.</p></Panel>
+  if (!equipos.length) return <Panel titulo="CONFIABILIDAD"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene equipos de alto impacto.</p></Panel>
 
   const dias = equipos[0]!.h.dias
   const flota = (f: Familia) => {
@@ -79,17 +79,17 @@ export function Confiabilidad() {
               filas={[['Equipos', String(x.n)], ['Fallas', String(x.fallas)], ['Disparos', String(x.disparos)],
                 ['Tiempo fuera promedio', x.mdt ? fmtHoras(x.mdt, true) : '—'], ['Barriles en la historia', `${n0(x.bbl)} bbl`]]}
               className="min-w-0">
-              <small className="block text-[10.5px] text-[var(--tinta3)]">{FAMILIA[f]} · {x.n}</small>
+              <small className="block text-[13px] text-[var(--tinta3)]">{FAMILIA[f]} · {x.n}</small>
               <b className="tabular block text-[26px] leading-none">{x.mtbf ? `${n0(x.mtbf)} d` : '—'}</b>
-              <small className="block text-[10.5px] text-[var(--tinta3)]">entre fallas</small>
-              <small className="block text-[10.5px] text-[var(--tinta2)]">{plural(x.fallas, 'falla', 'fallas')}{x.mdt ? ` · ${fmtHoras(x.mdt, true)} fuera` : ''}</small>
+              <small className="block text-[13px] text-[var(--tinta3)]">entre fallas</small>
+              <small className="block text-[13px] text-[var(--tinta2)]">{plural(x.fallas, 'falla', 'fallas')}{x.mdt ? ` · ${fmtHoras(x.mdt, true)} fuera` : ''}</small>
             </Tip><small className="solo-impresion text-[9pt] text-[var(--tinta2)]">{plural(x.disparos, 'disparo', 'disparos')} · {n0(x.bbl)} bbl en la historia</small></div>
           )
         })}
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Historia</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">Historia</small>
           <b className="tabular block text-[26px] leading-none">{n0(dias / 30.4)} meses</b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">eventos del PLC</small>
+          <small className="block text-[13px] text-[var(--tinta2)]">eventos del PLC</small>
         </span>
       </div>
 
@@ -107,14 +107,14 @@ export function Confiabilidad() {
       }} />
 
       <Panel className="mt-2.5" titulo="REPARACIÓN ACTIVA Y ESPERA" extra={reloj ? `promedio · ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
-        {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[12px] text-[var(--tinta2)]">Sin fallas cerradas con orden en SAP.</p>}
+        {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[14px] text-[var(--tinta2)]">Sin fallas cerradas con orden en SAP.</p>}
       </Panel>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <Panel titulo="LOS MÁS COSTOSOS" extra="bbl · toda la historia">
           <div className="overflow-x-auto">
-            <table className="tabular w-full text-left text-[11.5px]">
-              <thead className="text-[9.5px] text-[var(--tinta3)]">
+            <table className="tabular w-full text-left text-[14px]">
+              <thead className="text-[12px] text-[var(--tinta3)]">
                 <tr><th className="py-1 font-normal">Equipo</th><th className="text-right font-normal">Fallas</th><th className="hidden text-right font-normal sm:table-cell">Entre fallas</th>
                   <th className="hidden text-right font-normal sm:table-cell">Fuera</th><th className="pl-3 font-normal">Parte</th>
                   {/* Lo que YA le costó cada falla (histórico): «si falla hoy» es la cifra de Riesgo. */}
@@ -127,7 +127,7 @@ export function Confiabilidad() {
                     className={`cursor-pointer border-t border-[var(--linea2)] hover:bg-[var(--panel2)] ${listaMalos.resto.includes(e) ? 'hidden print:table-row' : ''}`}>
                     {/* El botón da el foco y el Enter al teclado; su clic sube a la fila,
                         que es la que abre (así el ratón abre desde cualquier celda). */}
-                    <td className="py-1.5"><button type="button" aria-label={`Abrir ${e.equipo}`} className="cursor-pointer rounded-sm font-mono font-bold">{e.equipo}</button><small className="block text-[10px] text-[var(--tinta3)]">{UNA[e.familia]}{ambito.global ? ` · ${campoPorId(e.campoId).nombre}` : ''}</small></td>
+                    <td className="py-1.5"><button type="button" aria-label={`Abrir ${e.equipo}`} className="cursor-pointer rounded-sm font-mono font-bold">{e.equipo}</button><small className="block text-[12px] text-[var(--tinta3)]">{UNA[e.familia]}{ambito.global ? ` · ${campoPorId(e.campoId).nombre}` : ''}</small></td>
                     <td className="text-right">{e.h.fallas}{e.h.disparos ? <small className="text-[var(--tinta3)]"> +{e.h.disparos}</small> : ''}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mtbfDias ? `${n0(e.h.mtbfDias)} d` : '—'}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mdtH ? fmtHoras(e.h.mdtH, true) : '—'}</td>
@@ -151,26 +151,26 @@ export function Confiabilidad() {
             const partes = partesDe(f === 'electrosumergible' ? 'electrosumergible' : f)
             return (
               <div key={f} className="mb-3 last:mb-0">
-                <h4 className="font-cond mb-1 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{FAMILIA[f].toUpperCase()} · {plural(total, 'FALLA', 'FALLAS')} CON PARTE</h4>
+                <h4 className="font-cond mb-1 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{FAMILIA[f].toUpperCase()} · {plural(total, 'FALLA', 'FALLAS')} CON PARTE</h4>
                 {partes.filter(p => cuenta.get(p.id)).sort((a, b) => (cuenta.get(b.id) ?? 0) - (cuenta.get(a.id) ?? 0)).map(p => (
                   // La referencia publicada, en un ⓘ junto a la parte: a la vista queda que hay
                   // contra qué compararla, y en el papel sale escrita con su fuente.
                   <div key={p.id} className="mb-1.5">
-                    <div className="flex items-start justify-between gap-2 text-[11.5px]">
+                    <div className="flex items-start justify-between gap-2 text-[14px]">
                       <span className="flex min-w-0 flex-wrap items-center gap-x-1">{p.nombre}<Info titulo={`Referencia · ${p.nombre}`} texto={`${p.peso.texto}. ${p.peso.fuente}.`} /></span>
                       <span className="tabular shrink-0">{cuenta.get(p.id)} · {n0(((cuenta.get(p.id) ?? 0) / total) * 100)} %</span>
                     </div>
                     <div aria-hidden className="mt-0.5 h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]"><i className="block h-full bg-[var(--dato-1)]" style={{ width: `${((cuenta.get(p.id) ?? 0) / total) * 100}%` }} /></div>
                   </div>
                 ))}
-                {total === 0 && <p className="text-[11.5px] text-[var(--tinta2)]">Ninguna falla con la parte identificada.</p>}
+                {total === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna falla con la parte identificada.</p>}
               </div>
             )
           })}
         </Panel>
       </div>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <Panel titulo="FALLAS POR MES" extra="sin disparos">
           <div {...desplazable('Fallas por mes')} className="overflow-x-auto">
             <svg viewBox="0 0 520 150" className="block h-auto w-full min-w-[420px]" role="img" aria-label="Fallas de equipos de alto impacto por mes">
@@ -185,14 +185,14 @@ export function Confiabilidad() {
                       y -= hgt
                       return v > 0 ? <rect key={f} x={xx + w * 0.2} y={y} width={w * 0.6} height={hgt} fill={`var(--dato-${j + 1})`}><title>{`${x.m.mes} · ${FAMILIA[f]}: ${v}`}</title></rect> : null
                     })}
-                    <text x={xx + w / 2} y={136} fontSize={9} textAnchor="middle" fill="var(--tinta3)" className="font-cond">{x.m.mes.slice(5)}</text>
+                    <text x={xx + w / 2} y={138} fontSize={16} textAnchor="middle" fill="var(--tinta3)" className="font-cond">{x.m.mes.slice(5)}</text>
                   </g>
                 )
               })}
               <line x1={10} x2={514} y1={120} y2={120} stroke="var(--linea)" />
             </svg>
           </div>
-          <div className="mt-1 flex flex-wrap gap-3 text-[10.5px] text-[var(--tinta2)]">
+          <div className="mt-1 flex flex-wrap gap-3 text-[13px] text-[var(--tinta2)]">
             {familias.map((f, j) => <span key={f} className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5" style={{ background: `var(--dato-${j + 1})` }} />{FAMILIA[f].toLowerCase()}</span>)}
           </div>
         </Panel>
@@ -205,7 +205,7 @@ export function Confiabilidad() {
           </Lectura>
           {porComo.map(([c, n]) => (
             <div key={c} className="mb-1.5">
-              <div className="flex justify-between text-[11.5px]"><span>{COMO[c]}</span><span className="tabular">{n} · {n0(fallas.length ? (n / fallas.length) * 100 : 0)} %</span></div>
+              <div className="flex justify-between text-[14px]"><span>{COMO[c]}</span><span className="tabular">{n} · {n0(fallas.length ? (n / fallas.length) * 100 : 0)} %</span></div>
               <div className="mt-0.5 h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]">
                 <i className="block h-full" style={{ width: `${fallas.length ? (n / fallas.length) * 100 : 0}%`, background: c === 'ninguno' ? 'repeating-linear-gradient(45deg, var(--tinta3), var(--tinta3) 2px, transparent 2px, transparent 4px)' : c === 'declarado' ? 'var(--dato-3)' : 'var(--dato-1)' }} />
               </div>

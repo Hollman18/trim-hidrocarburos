@@ -18,9 +18,9 @@ function Hoja({ titulo, onCerrar, children }: { titulo: string; onCerrar: () => 
   return (
     <div className="fixed inset-0 z-[110] flex flex-col justify-end" data-hoja-inferior>
       {/* El fondo cierra con el dedo; con teclado, Escape o «Cancelar» de la hoja. */}
-      <div aria-hidden onClick={onCerrar} className="no-imprimir flex-1 bg-black/35" />
+      <div aria-hidden onClick={onCerrar} className="no-imprimir flex-1 bg-[rgb(10_12_16/.40)]" />
       <div ref={dialogo} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titulo}
-        className="max-h-[90dvh] w-full overflow-y-auto rounded-t-lg border-t border-[var(--linea)] bg-[var(--panel)] p-1 shadow-[var(--sombra2)] outline-none">
+        className="max-h-[90dvh] w-full overflow-y-auto rounded-t-[20px] bg-[var(--panel)] p-2 shadow-[var(--sombra-flota)] outline-none">
         {children}
       </div>
     </div>

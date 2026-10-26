@@ -85,19 +85,19 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
       </Lectura>
 
       {/* En el papel no va el formulario (B-28): sus campos salían vacíos. Va el campo y el mes, y el cotejo. */}
-      <p className="solo-impresion mt-2 text-[11px]">{nombre} · {nombreMes(mes)}</p>
-      <div className="no-imprimir mt-2 flex flex-wrap items-end gap-2 text-[11.5px]">
+      <p className="solo-impresion mt-2 text-[13px]">{nombre} · {nombreMes(mes)}</p>
+      <div className="no-imprimir mt-2 flex flex-wrap items-end gap-2 text-[14px]">
         {campos.length > 1 && (
           <label className="grid gap-0.5">
-            <span className="text-[10.5px] text-[var(--tinta2)]">Campo</span>
-            <select value={campoId} onChange={e => setElegido(e.target.value)} className="rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px]">
+            <span className="text-[13px] text-[var(--tinta2)]">Campo</span>
+            <select value={campoId} onChange={e => setElegido(e.target.value)} className="rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px]">
               {campos.map(c => <option key={c} value={c}>{campoPorId(c).nombre}</option>)}
             </select>
           </label>
         )}
         <label className="grid gap-0.5">
-          <span className="text-[10.5px] text-[var(--tinta2)]">Mes</span>
-          <select value={mes} onChange={e => setMes(e.target.value)} className="rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[12px]">
+          <span className="text-[13px] text-[var(--tinta2)]">Mes</span>
+          <select value={mes} onChange={e => setMes(e.target.value)} className="rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-[14px]">
             {[...cerrados].reverse().map(m => <option key={m} value={m}>{nombreMes(m)}</option>)}
           </select>
         </label>
@@ -113,33 +113,33 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
       </div>
       {puede ? <div className="no-imprimir">
         {/* El motivo va antes de cargar: un CSV subido se carga en seguida y reemplaza la oficial del mes. */}
-        <div className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+        <div className="mt-2 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           <label htmlFor={idMotivo}>Motivo de la carga · obligatorio</label>
           <Info titulo="Motivo de la carga" texto="Queda en el rastro con su nombre y la hora." />
         </div>
         <input id={idMotivo} value={motivo} onChange={e => { setMotivo(e.target.value); setErrores([]); setHecho(null) }} aria-label="Motivo de la carga"
           placeholder="Ej.: asignación de septiembre reportada a la ANH"
-          className="mt-0.5 w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento" />
+          className="mt-0.5 w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento" />
         <textarea value={texto} onChange={e => { setTexto(e.target.value); setErrores([]); setHecho(null) }} rows={3} aria-label="Filas de la asignación oficial"
           aria-invalid={errores.length > 0} aria-describedby={errores.length > 0 ? idErrores : undefined}
           placeholder={'O pegue de Excel: mes, campo, pozo, crudo (bbl), horas.\n2026-09  La Ceiba  LC-11  28088  635,4'}
-          className="mt-2 w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
+          className="mt-2 w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[14px] outline-none focus:border-acento" />
         <Boton className="mt-1" onClick={() => void revisar(texto)} disabled={!texto.trim()}>Cotejar</Boton>
       </div> : <div className="no-imprimir mt-2"><Hueco>Solo lectura: la carga producción.</Hueco></div>}
       {errores.length > 0 && (
-        <ul id={idErrores} role="alert" className="mt-1.5 list-disc pl-4 text-[11.5px] text-[var(--tinta)]">{errores.slice(0, 10).map(e => <li key={e}>{e}</li>)}
+        <ul id={idErrores} role="alert" className="mt-1.5 list-disc pl-4 text-[14px] text-[var(--tinta)]">{errores.slice(0, 10).map(e => <li key={e}>{e}</li>)}
           {errores.length > 10 && <li>y {errores.length - 10} más.</li>}</ul>
       )}
-      {hecho && <p role="status" className="mt-1.5 text-[11.5px] text-[var(--tinta2)]">{hecho}</p>}
+      {hecho && <p role="status" className="mt-1.5 text-[14px] text-[var(--tinta2)]">{hecho}</p>}
 
       {!r ? (
-        <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-[var(--tinta2)]">
+        <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 text-[14px] text-[var(--tinta2)]">
           <Chip>sin cargar</Chip>
           <span className="tabular">TRIM asigna {n0(trim.reduce((a, t) => a + t.asignado, 0))} bbl · {plural(trim.length, 'pozo', 'pozos')}</span>
           <Info titulo={`${nombre} · ${nombreMes(mes)}`} texto="Sin asignación oficial cargada. Lo que asigna TRIM es lo que midió el punto de medición oficial." />
         </p>
       ) : (
-        <div className="mt-2.5 text-[11.5px]">
+        <div className="mt-2.5 text-[14px]">
           {vigente && (
             <p className="mb-1 text-[var(--tinta2)]">
               Cargada el {fechaHora(new Date(vigente.fecha))} por {vigente.por}: «{vigente.motivo}»
@@ -162,14 +162,14 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
             <p className="mt-1 flex items-start gap-1.5 text-[var(--tinta)]">
               <FueraDeMeta si tamano={11} />
               <span>Faltan {plural(faltan.length, `pozo de ${nombre}`, `pozos de ${nombre}`)} en lo que se cargó (TRIM les asigna {n0(faltan.reduce((a, f) => a + (f.trim ?? 0), 0))} bbl): ¿está completo el archivo?
-                <small className="block text-[10.5px] text-[var(--tinta2)]">{faltan.map(f => f.pozo).join(', ')}</small></span>
+                <small className="block text-[13px] text-[var(--tinta2)]">{faltan.map(f => f.pozo).join(', ')}</small></span>
             </p>
           )}
           <div className="mt-2 grid gap-x-6 gap-y-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-            <span><small className="block text-[10.5px] text-[var(--tinta3)]">oficial</small><b className="tabular text-[18px]">{n0(r.totalOficial)} bbl</b></span>
-            <span><small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">TRIM<Info titulo="TRIM" texto="Lo que midió el punto de medición oficial en el mes, repartido por prueba × factor × horas." /></small><b className="tabular text-[18px]">{n0(r.totalTrim)} bbl</b></span>
-            <span><small className="block text-[10.5px] text-[var(--tinta3)]">fuera de banda · ±{n0(banda * 100)} %</small>
-              <b className="tabular flex items-center gap-1.5 text-[18px]">{fuera.length > 0 && <FueraDeMeta si tamano={12} />}{fuera.length} <small className="text-[11px] font-normal text-[var(--tinta3)]">de {plural(comparables.length, 'pozo cotejado', 'pozos cotejados')}</small></b></span>
+            <span><small className="block text-[13px] text-[var(--tinta3)]">oficial</small><b className="tabular text-[18px]">{n0(r.totalOficial)} bbl</b></span>
+            <span><small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">TRIM<Info titulo="TRIM" texto="Lo que midió el punto de medición oficial en el mes, repartido por prueba × factor × horas." /></small><b className="tabular text-[18px]">{n0(r.totalTrim)} bbl</b></span>
+            <span><small className="block text-[13px] text-[var(--tinta3)]">fuera de banda · ±{n0(banda * 100)} %</small>
+              <b className="tabular flex items-center gap-1.5 text-[18px]">{fuera.length > 0 && <FueraDeMeta si tamano={12} />}{fuera.length} <small className="text-[13px] font-normal text-[var(--tinta3)]">de {plural(comparables.length, 'pozo cotejado', 'pozos cotejados')}</small></b></span>
           </div>
           {Math.abs(delta) >= 1 && (
             <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">
@@ -179,8 +179,8 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
           )}
           {comparables.length > 0 && (
             <div {...desplazable('Cotejo pozo por pozo')} className="mt-2 overflow-x-auto">
-              <table className="tabular w-full text-right text-[11.5px]">
-                <thead className="text-[9.5px] text-[var(--tinta3)]">
+              <table className="tabular w-full text-right text-[14px]">
+                <thead className="text-[12px] text-[var(--tinta3)]">
                   <tr><th className="py-1.5 pr-3 text-left font-normal">Pozo</th><th className="px-2 font-normal">Oficial</th><th className="px-2 font-normal">TRIM</th>
                     <th className="px-2 font-normal">Diferencia</th><th className="pl-2 font-normal">Horas oficial · PLC</th></tr>
                 </thead>
@@ -209,14 +209,14 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
         </div>
       )}
       {cargas.length > 0 && (
-        <details className="mt-2.5 text-[11px]">
+        <details className="mt-2.5 text-[13px]">
           <summary className="cursor-pointer text-[var(--tinta2)]">Rastro de las cargas · {plural(cargas.length, 'carga', 'cargas')}</summary>
           <ul className="mt-1">
             {[...cargas].reverse().map(c => (
               <li key={c.id} className="border-b border-[var(--linea2)] py-1.5 last:border-0">
                 <span className="text-[var(--tinta3)]">{fechaHora(new Date(c.fecha))} · {c.por}</span>
                 <span className="block text-[var(--tinta2)]">«{c.motivo}»</span>
-                <span className="block text-[10.5px] text-[var(--tinta3)]">{c.grupos.map(g => `${nombreMes(g.mes)} · ${campoPorId(g.campoId).nombre}: ${plural(g.pozos, 'pozo', 'pozos')}${g.reemplazados ? ` (reemplazó ${g.reemplazados})` : ''}`).join(' · ')}</span>
+                <span className="block text-[13px] text-[var(--tinta3)]">{c.grupos.map(g => `${nombreMes(g.mes)} · ${campoPorId(g.campoId).nombre}: ${plural(g.pozos, 'pozo', 'pozos')}${g.reemplazados ? ` (reemplazó ${g.reemplazados})` : ''}`).join(' · ')}</span>
               </li>
             ))}
           </ul>

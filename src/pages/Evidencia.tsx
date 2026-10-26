@@ -48,12 +48,12 @@ export function Evidencia() {
         className="mb-2.5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
         <span>
           <b className="tabular block text-[40px] leading-none">{n0(horas)}</b>
-          <small className="text-[11.5px] text-[var(--tinta3)]">horas fuera de servicio de las bombas · hora del PLC · {rango.nombre}</small>
+          <small className="text-[14px] text-[var(--tinta3)]">horas fuera de servicio de las bombas · hora del PLC · {rango.nombre}</small>
         </span>
         <span className="h-10 w-px bg-[var(--linea)]" />
         <span>
           <b className="tabular block text-[20px] leading-none">{n0(barriles)}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">bbl de sus propias paradas</small>
+          <small className="text-[13px] text-[var(--tinta3)]">bbl de sus propias paradas</small>
         </span>
         <span className="ml-auto">
           {rol.puede['evidencia:exportar'] && paradas.length > 0 && (
@@ -69,18 +69,18 @@ export function Evidencia() {
       </Lectura>
 
       <Panel className="mt-2.5" titulo="PARADAS DE LAS BOMBAS DE LA LÍNEA" extra={`${paradas.length} en el período`}>
-        {paradas.length === 0 && <p className="text-[12.5px] text-[var(--tinta2)]">{ambito.titulo} no tiene paradas de bombas en este período.</p>}
+        {paradas.length === 0 && <p className="text-[15px] text-[var(--tinta2)]">{ambito.titulo} no tiene paradas de bombas en este período.</p>}
         {paradas.map(m => (
           <button key={m.evento.id} onClick={() => { setCampo(m.evento.campoId); abrirEquipo(m.evento.equipo, false) }}
-            className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-left text-[11.5px] last:border-0 hover:bg-[var(--panel2)]">
+            className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-3 border-b border-[var(--linea2)] py-2 text-left text-[14px] last:border-0 hover:bg-[var(--panel2)]">
             <span className="min-w-0">
               <b>{m.evento.equipo}</b><span className="text-[var(--tinta3)]">{ambito.global ? ` · ${campoPorId(m.evento.campoId).nombre}` : ''} · {fechaHora(m.inicio)} → {m.abierto ? 'abierta' : fechaHora(m.fin)} · {fmtHoras(m.horasParada, true)}{m.cruzaBorde ? ` · ${fmtHoras(m.horasEnPeriodo, true)} en el período` : ''}</span>
               <span className="block text-[var(--tinta2)]">{m.causa.parte ? `${NOMBRE_PARTE[m.causa.parte]} · ` : ''}<DichoEnPapel papel={causaEnPapel(m.causa)}>{m.causa.texto}</DichoEnPapel> <span className="text-[var(--tinta3)]">({COMO[m.causa.como]})</span></span>
-              <small className="font-mono block truncate text-[10px] text-[var(--tinta3)]"><DichoEnPapel papel={causaParaSalir(m.causa).evidencia[0]}>{m.causa.evidencia[0]}</DichoEnPapel></small>
+              <small className="font-mono block truncate text-[12px] text-[var(--tinta3)]"><DichoEnPapel papel={causaParaSalir(m.causa).evidencia[0]}>{m.causa.evidencia[0]}</DichoEnPapel></small>
             </span>
             <span className="tabular text-right">
               <b className="block">{n0(m.bbl)} bbl</b>
-              {m.cruzaBorde && <small className="block text-[10px] text-[var(--tinta3)]">{n0(m.bblEnPeriodo)} en el período</small>}
+              {m.cruzaBorde && <small className="block text-[12px] text-[var(--tinta3)]">{n0(m.bblEnPeriodo)} en el período</small>}
               <span className="flex flex-wrap justify-end gap-1">
                 {m.cargadoA !== m.evento.equipo && <Chip>de {m.cargadoA}</Chip>}
                 {m.arrancoSinIdentificar && <Chip tono="fuerte">no conformidad</Chip>}

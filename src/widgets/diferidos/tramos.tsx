@@ -45,7 +45,7 @@ export function Muestra({ k, tamano = 10 }: { k: ChokeOSinAsignar; tamano?: numb
 /** La leyenda de las barras de tramos, con las cinco palabras (U2 §9.2). */
 export function LeyendaTramos({ className, extra }: { className?: string; extra?: ReactNode }) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[10.5px] text-[var(--tinta2)]', className)} data-leyenda-tramos>
+    <div className={cn('flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[13px] text-[var(--tinta2)]', className)} data-leyenda-tramos>
       {CHOKES_Y_SIN_ASIGNAR.map(k => (
         <span key={k} className="inline-flex items-center gap-1.5"><Muestra k={k} />{LARGO_TRAMO[k]}</span>
       ))}
@@ -87,7 +87,7 @@ export function BarraTramos({ valores, leido, alto = 'h-3', palabras = true, con
         // Sin `shrink-0`: el píxel de cada separación se lo quitan los segmentos, nada se sale de la barra.
         <div aria-hidden className="flex gap-px pb-0.5">
           {ks.map(k => (
-            <span key={k} className="block min-w-0 truncate text-[10px] leading-tight text-[var(--tinta2)]" style={{ width: `${parte(k)}%` }}>
+            <span key={k} className="block min-w-0 truncate text-[12px] leading-tight text-[var(--tinta2)]" style={{ width: `${parte(k)}%` }}>
               {parte(k) >= umbral ? palabra(k) : ''}
             </span>
           ))}
@@ -103,7 +103,7 @@ export function BarraTramos({ valores, leido, alto = 'h-3', palabras = true, con
           ))}
       </div>
       {palabras && sinLugar.length > 0 && (
-        <span aria-hidden className="mt-0.5 flex flex-wrap gap-x-2 text-[10px] leading-tight text-[var(--tinta2)]">
+        <span aria-hidden className="mt-0.5 flex flex-wrap gap-x-2 text-[12px] leading-tight text-[var(--tinta2)]">
           {sinLugar.map(k => <span key={k} className="inline-flex items-center gap-1"><Muestra k={k} tamano={8} />{palabra(k)}</span>)}
         </span>
       )}

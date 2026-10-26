@@ -28,11 +28,11 @@ export function PanelSapMantenimiento() {
   const abiertas = ordenes.filter(o => o.estado !== 'TECO')
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
   const donde = (c: string) => (ambito.global ? ` · ${campoPorId(c).nombre}` : '')
-  const fila = 'flex w-full cursor-pointer items-start gap-2 border-b border-[var(--linea2)] py-1.5 text-left text-[11.5px] last:border-0 hover:bg-[var(--panel2)]'
+  const fila = 'flex w-full cursor-pointer items-start gap-2 border-b border-[var(--linea2)] py-1.5 text-left text-[14px] last:border-0 hover:bg-[var(--panel2)]'
   const impresion = 'border-b border-[var(--linea2)] pb-1.5 last:border-0'
 
   return (
-    <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+    <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
       {/* El período ya lo dice la cabecera: el panel no lo repite. */}
       <Panel titulo="HORAS EN SAP">
         <Lectura>
@@ -43,7 +43,7 @@ export function PanelSapMantenimiento() {
         </Lectura>
         {horas.porcentaje === undefined ? (
           // Dato que falta: corto a la vista, y el porqué y qué hacer en el ⓘ (sale en el papel).
-          <p className="flex flex-wrap items-center gap-x-1 text-[12px] text-[var(--tinta2)]">
+          <p className="flex flex-wrap items-center gap-x-1 text-[14px] text-[var(--tinta2)]">
             Sin órdenes cerradas en el período
             <Info titulo="Sin órdenes cerradas" texto={`No hay órdenes cerradas en ${rango.nombre.toLowerCase()}. Escoja un período cerrado (el mes anterior, por ejemplo) para ver las horas.`} />
           </p>
@@ -52,23 +52,23 @@ export function PanelSapMantenimiento() {
             <p className="flex flex-wrap items-baseline justify-between gap-x-2">
               <span className="flex flex-wrap items-baseline gap-x-1.5">
                 <b className="tabular text-[24px] leading-none">{n0(horas.porcentaje)} %</b>
-                <span className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">preventivo o predictivo
+                <span className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">preventivo o predictivo
                   <Info titulo="Mantenimiento proactivo" texto="De las horas confirmadas en las órdenes de SAP cerradas en el período, las de preventivo o predictivo (antes de que falle) contra las de correctivo (porque falló). Si el proactivo no sube, las fallas no bajan." />
                 </span>
               </span>
-              <small className="text-[10.5px] text-[var(--tinta3)]">sin meta configurada</small>
+              <small className="text-[13px] text-[var(--tinta3)]">sin meta configurada</small>
             </p>
             <div aria-hidden className="mt-1.5 flex h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
               <i className="block h-full bg-[var(--dato-1)]" style={{ width: `${horas.porcentaje}%` }} />
             </div>
-            <p className="tabular mt-1 text-[10.5px] text-[var(--tinta2)]">
+            <p className="tabular mt-1 text-[13px] text-[var(--tinta2)]">
               {n1(horas.proactivo)} h proactivas · {n1(horas.correctivo)} h correctivas · {plural(horas.ordenes, 'orden', 'órdenes')}
             </p>
           </>
         )}
         {reloj && (
           <>
-            <h3 className="font-cond mb-1 mt-3 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">TRES RELOJES · PROMEDIO DE {plural(reloj.fallas, 'FALLA', 'FALLAS')}</h3>
+            <h3 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">TRES RELOJES · PROMEDIO DE {plural(reloj.fallas, 'FALLA', 'FALLAS')}</h3>
             <TresRelojes reloj={reloj} />
           </>
         )}
@@ -80,7 +80,7 @@ export function PanelSapMantenimiento() {
           envió y todavía no tiene orden. Órdenes: las abiertas, con su estado y su técnico. Toque o pase
           el cursor por una fila para ver la descripción.
         </Lectura>
-        {sinOrden.length + abiertas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada abierto en SAP.</p>}
+        {sinOrden.length + abiertas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada abierto en SAP.</p>}
         {sinOrden.map(a => {
           const h = horasEntre(new Date(a.creado), AHORA)
           return (
@@ -89,7 +89,7 @@ export function PanelSapMantenimiento() {
               filas={[['Enviado hace', fmtHoras(h)], ['Orden', 'sin orden todavía']]} className={`${fila} ${a.descripcion ? 'print:border-b-0' : ''}`}>
               <FueraDeMeta si={a.prioridad === 1 && h > 4} tamano={10} />
               <span className="min-w-0 flex-1"><b>Aviso {a.numero}</b> · {a.equipo}{donde(a.campoId)}
-                <small className="flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]">hace {fmtHoras(h)}<Chip>sin orden</Chip></small></span>
+                <small className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">hace {fmtHoras(h)}<Chip>sin orden</Chip></small></span>
             </Tip>
           )
         })}
@@ -102,7 +102,7 @@ export function PanelSapMantenimiento() {
                 ...(o.liberada ? [['Liberada', fechaCorta(new Date(o.liberada))] as [string, string]] : []), ['A cargo', quien]]}
               className={`${fila} ${o.descripcion ? 'print:border-b-0' : ''}`}>
               <span className="min-w-0 flex-1"><b>Orden {o.numero}</b> · {NOMBRE_CLASE[o.clase]} · {o.equipo}{donde(o.campoId)}
-                <small className="block text-[10.5px] text-[var(--tinta2)]">{o.liberada ? `${o.estado === 'REL' ? '' : 'liberada '}${fechaCorta(new Date(o.liberada))} · ` : ''}{quien}</small></span>
+                <small className="block text-[13px] text-[var(--tinta2)]">{o.liberada ? `${o.estado === 'REL' ? '' : 'liberada '}${fechaCorta(new Date(o.liberada))} · ` : ''}{quien}</small></span>
               <Chip>{NOMBRE_ESTADO_ORDEN[o.estado]}</Chip>
             </Tip>
           )

@@ -19,6 +19,16 @@ export const RUTAS = [
   ...R('adm', ['configuracion', 'filosofia', 'conectores', 'planta', 'perfil'], ['ceiba', 'morichal']),
   // Cumplimiento regulatorio (encendido con el árbol de pérdidas del choke): el árbol en el orden de la circular.
   ...R('reg', ['regulatorio'], ['ceiba', 'morichal']),
+  // C1 · Experiencia v2: La planta viva y Hoy en cada rol que las tiene (la dirección usa la ruta «planta-viva»).
+  ...R('ger', ['planta-viva'], ['ceiba', 'ceiba~portafolio']),
+  ...R('prod', ['planta-viva', 'hoy'], ['ceiba']),
+  ...R('sup', ['hoy', 'planta-viva'], ['ceiba']),
+  ...R('oper', ['hoy', 'planta-viva'], ['ceiba']),
+  ...R('tec', ['hoy', 'planta-viva'], ['ceiba']),
+  ...R('jefe', ['hoy', 'planta-viva'], ['ceiba']),
+  ...R('conf', ['hoy', 'planta-viva'], ['morichal']),
+  ...R('reg', ['planta-viva'], ['ceiba']),
+  ...R('adm', ['planta-viva'], ['ceiba']),
   // estados que se abren con un clic o desde la URL: bomba, pozo, servicio
   '#/sup/bombas/ceiba/curso/P-201B', '#/jefe/riesgo/ceiba/curso/P-201B', '#/conf/confiabilidad/morichal/curso/MPP-301',
   '#/prod/pozos/ceiba/curso/LC-21', '#/prod/pozos/morichal/curso/LC-14', '#/jefe/esp/morichal/curso/MN-07',

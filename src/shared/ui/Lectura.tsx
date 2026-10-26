@@ -8,7 +8,7 @@ export function Lectura({ children }: { children: React.ReactNode }) {
   const activo = useContext(ComoSeLee)
   if (!activo) return null
   return (
-    <p className="mt-1 rounded-sm border-l-2 border-[var(--tinta3)] bg-[var(--panel2)] px-2 py-1 text-[10.5px] leading-relaxed text-[var(--tinta2)]">
+    <p className="mt-1.5 rounded-[12px] bg-[var(--panel2)] px-3 py-2 text-[14px] leading-relaxed text-[var(--tinta2)]">
       {children}
     </p>
   )

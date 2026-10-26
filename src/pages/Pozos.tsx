@@ -103,7 +103,7 @@ export function Pozos() {
           <MarcaPrioridad s={sevPozo(f)} tamano={11} />
           <button type="button" aria-label={`Abrir ${f.pozo.id}`} className="cursor-pointer rounded-sm font-mono font-bold">{f.pozo.id}</button>
         </span>
-        {sub(f) && <small className="block text-[10px] text-[var(--tinta3)]">{sub(f)}</small>}
+        {sub(f) && <small className="block text-[12px] text-[var(--tinta3)]">{sub(f)}</small>}
       </td>
       <td className="max-w-[240px]">
         {f.produce && !f.hz ? <span className="text-[var(--tinta3)]">produciendo</span> : (
@@ -126,7 +126,7 @@ export function Pozos() {
       {conEsp && <td className="max-w-[220px]">{f.salud ? (anormal(f.salud.estado)
         ? <span className="flex min-w-0 items-center gap-1.5"><span className="truncate">{f.salud.parte.nombre.toLowerCase()}</span><Chip tono={f.salud.estado === 'avisa' ? 'neutro' : 'fuerte'}>{ESTADO_PARTE[f.salud.estado]}</Chip></span>
         : <span className="text-[var(--tinta3)]">{ESTADO_PARTE[f.salud.estado]}</span>) : <span className="text-[var(--tinta3)]">—</span>}</td>}
-      <td className="text-right"><b>{n0(f.diferido)}</b><small className="block text-[9.5px] text-[var(--tinta3)]">{plural(f.eventos, 'evento', 'eventos')}</small></td>
+      <td className="text-right"><b>{n0(f.diferido)}</b><small className="block text-[12px] text-[var(--tinta3)]">{plural(f.eventos, 'evento', 'eventos')}</small></td>
     </tr>
   )
 
@@ -155,7 +155,7 @@ export function Pozos() {
       <div className="mb-2 mt-2.5 flex flex-wrap gap-1.5" role="group" aria-label="Filtrar pozos">
         {FILTROS.filter(([id]) => (ing || id !== 'custodia') && (conEsp || id !== 'aviso')).map(([id, nombre]) => (
           <button key={id} type="button" aria-pressed={efectivo === id} onClick={() => setFiltro(id)}
-            className={cn('cursor-pointer rounded border px-2.5 py-1 text-[11.5px]', efectivo === id
+            className={cn('cursor-pointer rounded border px-2.5 py-1 text-[14px]', efectivo === id
               ? 'border-[var(--tinta)] bg-[var(--tinta)] text-[var(--superficie)]' : 'border-[var(--linea)] bg-[var(--panel)] hover:bg-[var(--elevado)]')}>
             {nombre}{id === 'parados' ? ` · ${parados.length + frenados.length}` : id === 'aviso' ? ` · ${aviso.length}` : id === 'custodia' ? ` · ${sinPrueba.length + estimados.length}` : ''}
           </button>
@@ -167,24 +167,24 @@ export function Pozos() {
         <div className="grid gap-1.5 sm:hidden">
           {lista.visibles.map(f => (
             <button key={`m${f.pozo.campoId}${f.pozo.id}`} onClick={() => setAbierto({ campo: f.pozo.campoId, pozo: f.pozo.id })}
-              className="grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[var(--linea2)] py-2 text-left text-[12px] last:border-0">
+              className="grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[var(--linea2)] py-2 text-left text-[14px] last:border-0">
               <MarcaPrioridad s={sevPozo(f)} tamano={11} />
               <span className="min-w-0">
                 <b className="font-mono">{f.pozo.id}</b>{ambito.global ? <span className="text-[var(--tinta3)]"> · {campoPorId(f.pozo.campoId).nombre}</span> : ''}
-                <small className="block truncate text-[11px] text-[var(--tinta2)]">
+                <small className="block truncate text-[13px] text-[var(--tinta2)]">
                   {f.produce && !f.hz ? 'produciendo' : <>{f.hz ? `a ${n1(f.hz)} Hz · ` : ''}{ahora(f)}</>}
                 </small>
               </span>
               <span className="tabular text-right">
                 <b className="block">{f.pozo.pruebas.length ? n0(f.crudoBpd) : '—'} <small className="font-normal text-[var(--tinta3)]">bbl/d</small></b>
-                <small className="text-[10px] text-[var(--tinta3)]">{n0(f.diferido)} bbl diferidos</small>
+                <small className="text-[12px] text-[var(--tinta3)]">{n0(f.diferido)} bbl diferidos</small>
               </span>
             </button>
           ))}
         </div>
         <div className="hidden overflow-x-auto sm:block">
-          <table className="tabular w-full min-w-[760px] text-left text-[11.5px] [&_td]:px-2 [&_th]:px-2">
-            <thead className="text-[9.5px] text-[var(--tinta3)]">
+          <table className="tabular w-full min-w-[760px] text-left text-[14px] [&_td]:px-2 [&_th]:px-2">
+            <thead className="text-[12px] text-[var(--tinta3)]">
               <tr>
                 <th className="py-1.5 font-normal">Pozo</th>
                 <th className="font-normal">Ahora</th>
@@ -210,10 +210,10 @@ function Cifra({ rotulo, valor, pie, prioridad = 0, info }: { rotulo: string; va
   return (
     <span className="min-w-0">
       {/* El ⓘ va junto al rótulo, nunca dentro de un título; en el papel su nota ocupa su renglón. */}
-      <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">{rotulo}{info && <Info titulo={info.titulo} texto={info.texto} />}</small>
-      {/* ISA-101: el color de alarma va siempre con su forma, y solo en prioridad 1. */}
-      <b className={cn('tabular flex items-center gap-1.5 text-[20px] leading-tight', prioridad === 1 && 'text-[var(--p1)]')}>{prioridad > 0 && <MarcaPrioridad s={prioridad} tamano={14} />}{valor}</b>
-      {pie && <small className="block text-[10.5px] leading-snug text-[var(--tinta2)]">{pie}</small>}
+      <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">{rotulo}{info && <Info titulo={info.titulo} texto={info.texto} />}</small>
+      {/* ISA-101: el texto nunca se pinta; la condición la dice la marca a su izquierda (X2 B5). */}
+      <b className="tabular flex items-center gap-1.5 text-[20px] leading-tight">{prioridad > 0 && <MarcaPrioridad s={prioridad} tamano={14} />}{valor}</b>
+      {pie && <small className="block text-[13px] leading-snug text-[var(--tinta2)]">{pie}</small>}
     </span>
   )
 }

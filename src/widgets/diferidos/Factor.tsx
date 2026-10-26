@@ -18,7 +18,8 @@ import { estadoFactor } from './publicacion'
  *  Como las demás gráficas de meses, arranca en el mes más reciente. */
 export function Factor({ serie, campoId, desde, hasta }: { serie: MesResumen[]; campoId: string; desde: Date; hasta: Date }) {
   const banda = useMedicionOficial(campoId).banda
-  const W = 720, G = { x0: 46, x1: 712, y0: 14, y1: 128 }
+  // Va en media tarjeta: dibujada a ese ancho, sus rótulos no bajan de 12 px (X5 §3.4).
+  const W = 440, G = { x0: 46, x1: 432, y0: 14, y1: 128 }
   const lo = Math.min(0.75, 1 - banda.valor - 0.05), hi = Math.max(1.25, 1 + banda.valor + 0.05)
   const Y = (v: number) => G.y1 - ((Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * (G.y1 - G.y0)
   const paso = (G.x1 - G.x0) / Math.max(1, serie.length)
@@ -29,14 +30,14 @@ export function Factor({ serie, campoId, desde, hasta }: { serie: MesResumen[]; 
   return (
     <>
       <div ref={alFinal} className="overflow-x-auto">
-        <svg viewBox={`0 0 ${W} 150`} className="block h-auto w-full min-w-[520px]" role="group"
+        <svg viewBox={`0 0 ${W} 150`} className="block h-auto w-full min-w-[400px]" role="group"
           aria-label={`Factor de asignación de ${campoPorId(campoId).nombre}, mes a mes, contra su banda de ±${n0(banda.valor * 100)} %`}>
           <rect x={G.x0} y={Y(1 + banda.valor)} width={G.x1 - G.x0} height={Y(1 - banda.valor) - Y(1 + banda.valor)} fill="var(--panel2)" />
           {marcas.map(v => (
             <g key={v}>
               <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke={v === 1 ? 'var(--tinta3)' : 'var(--linea2)'} strokeWidth={v === 1 ? 1 : 0.7}
                 strokeDasharray={v === 1 ? '4 3' : undefined} />
-              <text x={G.x0 - 6} y={Y(v) + 3} fontSize={9} textAnchor="end" fill="var(--tinta3)" className="tabular">{n2(v)}</text>
+              <text x={G.x0 - 6} y={Y(v) + 3} fontSize={11} textAnchor="end" fill="var(--tinta3)" className="tabular">{n2(v)}</text>
             </g>
           ))}
           <polyline fill="none" stroke="var(--tinta2)" strokeWidth={1.2}
@@ -57,7 +58,7 @@ export function Factor({ serie, campoId, desde, hasta }: { serie: MesResumen[]; 
                     ? <rect x={X(i) - 4} y={Y(f.fa) - 4} width={8} height={8} rx={0.8} fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} />
                     : <circle cx={X(i)} cy={Y(f.fa)} r={3.6} fill="var(--panel)" stroke="var(--tinta)" strokeWidth={1.4}
                       strokeDasharray={estado === 'sin-verificar' ? '2 1.6' : undefined} />}
-                  <text x={X(i)} y={G.y1 + 14} fontSize={9.5} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta3)'}
+                  <text x={X(i)} y={G.y1 + 14} fontSize={11.5} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta3)'}
                     fontWeight={activo ? 600 : 400} className="font-cond">{m.corto.toUpperCase()}</text>
                 </g>
               </Tip>

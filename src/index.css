@@ -49,88 +49,171 @@
   --color-p1: var(--p1);
   --color-p2: var(--p2);
   --color-p3: var(--p3);
-  --color-p4: var(--p4);
+  --color-interlock: var(--interlock);
+  --color-sincom: var(--sincom);
   --color-invalido: var(--invalido);
   --color-p1f: var(--p1-f);
   --color-p2f: var(--p2-f);
   --color-p3f: var(--p3-f);
-  --color-p4f: var(--p4-f);
   --color-eq-off: var(--eq-off);
   --color-eq-on: var(--eq-on);
   --color-eq-sin: var(--eq-sin);
   --color-eq-trazo: var(--eq-trazo);
   --color-acento: var(--acento);
   --color-acento-f: var(--acento-f);
+  /* La marca y la mano (X5 §3.1): el panel, la banda del teléfono, el botón
+     principal, lo seleccionado y el foco. Nunca un dato. */
+  --color-marca: var(--marca);
+  --color-marca-tenue: var(--marca-tenue);
+  --color-marca-suave: var(--marca-suave);
+  --color-primario: var(--primario);
+  --color-primario-sobre: var(--primario-sobre);
+  --color-foco: var(--foco);
+  /* Los grises de los datos y de la tubería (X5 §3.2). */
+  --color-dato1: var(--dato1);
+  --color-dato3: var(--dato3);
+  --color-pista: var(--pista);
+  --color-banda: var(--banda);
+  --color-rayado: var(--rayado);
+  --color-tubo-vacio: var(--tubo-vacio);
+  --color-roca: var(--roca);
 }
 
-/* ───────────── Tokens semánticos ─────────────
-   Práctica de High Performance HMI: fondo neutro de baja saturación,
-   el color se reserva para la condición anormal.
-   index.html estampa data-theme ya resuelto (claro|oscuro) antes de pintar,
-   así que aquí hay UN solo juego de valores por tema y no tres.
-   Contraste (WCAG 2.2; scripts/verificar-libro.mjs lo recalcula): todo texto
-   --tinta, --tinta2 y --tinta3 da al menos 4,5:1 sobre los cinco fondos
-   (suelo, superficie, panel, panel2, elevado) en los dos temas, porque el
-   texto secundario va en 10 px. Las formas de prioridad dan al menos 3:1
-   (WCAG 1.4.11) sobre los paneles; el cuadrado amarillo no lo logra con
-   ningún amarillo que siga siendo amarillo, así que lleva trazo oscuro.
-   En oscuro el rojo es salmón (#ff8a80): un rojo saturado no pasa de
-   2,5:1 sobre un panel gris medio, y una alarma que no se ve no avisa.
-   */
+/* ───────────── Tokens semánticos (X5 §3, la paleta de X2 §4) ─────────────
+   Práctica de High Performance HMI: fondo neutro de baja saturación, el color
+   se reserva para la condición anormal. Claro = «papel» (el de B, cálido) y
+   oscuro = «noche» (gris muy oscuro, nunca negro). index.html estampa
+   data-theme ya resuelto (claro|oscuro) antes de pintar, así que aquí hay UN
+   solo juego de valores por tema.
+   Contraste (WCAG 2.2; scripts/verificar-libro.mjs lo recalcula de este
+   archivo): --tinta, --tinta2 y --tinta3 dan al menos 4,5:1 sobre los cinco
+   fondos (suelo, superficie, panel, panel2, elevado) en los dos temas.
+   ESTADO, un color por significado (X2 §4.1):
+   · rojo (--interlock) SOLO para el interlock: candado;
+   · naranja (--p1) la alarma, prioridad 1: rombo «1»;
+   · amarillo con trazo oscuro (--p2, --p3) la atención (triángulo «2») y el
+     aviso (cuadrado «3»): ningún amarillo que siga siendo amarillo llega a 3:1
+     sobre un fondo claro, así que su silueta la da el trazo (--marca-trazo);
+   · morado (--sincom) «no le crea a este número»: sin comunicación (círculo
+     punteado) y dato inválido (el mismo círculo con raya).
+   Ningún estado es azul: el índigo de la marca es el marco y la mano. */
 :root{
   color-scheme: light;
-  --suelo:#c9c9c7; --superficie:#d6d5d2; --panel:#eceae7; --panel2:#e2e0dd; --elevado:#f4f3f0;
-  --tinta:#1f2328; --tinta2:#3e444b; --tinta3:#4d535a;
-  --linea:#b4b3b0; --linea2:#c8c7c4;
-  --eq-off:#b0b0b0; --eq-on:#f2f2f2; --eq-sin:#8e8e8e; --eq-trazo:#5c6066; --eq-alto:#fafaf9;
-  /* Estado · nunca decorativo */
-  --p1:#b71c1c; --p2:#bf4000; --p3:#f9a825; --p4:#0d5bb5; --invalido:#8420a3;
-  --p1-f:#f2dcdc; --p2-f:#f5e2d4; --p3-f:#f6eed4; --p4-f:#dae4f0;
-  /* El número dentro de la forma: blanco sobre el color saturado del claro,
-     oscuro sobre los tonos claros del tema oscuro. El cuadrado P3 lleva
-     siempre número y trazo oscuros. */
+  --suelo:#efede8; --superficie:#f6f5f1; --panel:#fcfbf8; --panel2:#f3f1ec; --elevado:#ffffff;
+  --tinta:#15171a; --tinta2:#464b52; --tinta3:#5b6168;
+  --linea:#dcd9d2; --linea2:#e8e5df;
+  /* Marca e interacción (X5 §3.1). */
+  --marca:#142d88; --marca-sobre:#ffffff; --marca-tenue:#c9d1f0; --marca-suave:#e8ebf6;
+  --primario:#142d88; --primario-sobre:#ffffff; --foco:#142d88;
+  /* Estado · nunca decorativo (X2 §4.4). */
+  --interlock:#8b1a1a; --p1:#bf4000; --p2:#f9a825; --p3:#f9a825; --sincom:#8420a3;
+  --interlock-f:#f0dada; --p1-f:#f5e2d4; --p2-f:#f6eed4; --p3-f:#f6eed4; --sincom-f:#f0e3f4;
+  /* El número dentro de la forma: blanco en el rombo naranja del claro, oscuro
+     en los tonos claros del oscuro. El amarillo lleva siempre número y trazo oscuros. */
   --marca-num:#ffffff; --marca-trazo:#1f2328;
-  /* Acento de marca sobre el panel: la tinta de marca, legible en claro. */
-  --acento:#12287a; --acento-f:#12287a1a;
+  /* Equipos, por brillo (X2 §4.3): en marcha claro, parado oscuro; sin dato, sin relleno. */
+  --eq-marcha:#ffffff; --eq-parado:#5b6168;
+  --eq-off:#b0b0b0; --eq-on:#f2f2f2; --eq-sin:#8e8e8e; --eq-trazo:#5c6066; --eq-alto:#fafaf9;
+  /* Los grises de los datos y de la tubería (X5 §3.2). */
+  --dato1:#3a3f45; --dato3:#7a8087; --rayado:#464b52;
+  --pared:#7a8087; --agua:#7a8087; --flujo:#7a8087;
+  --tubo-vacio:#e9e6df; --roca:#dcd8cf; --pista:#e2dfd8; --banda:#cdccca;
   /* ISA-101: el dato normal NO lleva color. La rampa es de grises, del más
      oscuro (lo que manda) al más claro. El color queda para lo anormal. */
-  --dato-1:#3c4148; --dato-2:#535960; --dato-3:#6a7077; --dato-4:#868b92; --dato-5:#a3a8ad;
+  --dato-1:#3a3f45; --dato-2:#535960; --dato-3:#6a7077; --dato-4:#7a8087; --dato-5:#a3a8ad;
   /* Corrientes del proceso: también gris. El fluido se distingue por el
      trazo de la línea y su etiqueta, nunca por el color (planta.tsx). */
   --f-multi:#4f545b; --f-crudo:#3c4148; --f-gas:#6a7077; --f-agua:#5d6269;
   --f-elec:#7a7f86; --f-aire:#8a8f95;
-  --sombra:0 1px 2px rgb(31 35 40 / .09);
-  --sombra2:0 10px 34px rgb(31 35 40 / .22);
+  /* Las tarjetas no llevan sombra: se separan por el tono (B). Solo lo que
+     flota (un menú, una hoja, el panel abierto en el teléfono) la lleva. */
+  --sombra:none;
+  --sombra-flota:0 10px 28px rgb(21 23 26 / .14), 0 1px 3px rgb(21 23 26 / .10);
+  --sombra2:var(--sombra-flota);
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
-  --suelo:#34373a; --superficie:#3c4044; --panel:#474b4f; --panel2:#414549; --elevado:#51565a;
-  --tinta:#eaeae8; --tinta2:#d8dadc; --tinta3:#c8cbce;
-  --linea:#5a5e62; --linea2:#4e5256;
-  --eq-off:#6b6e71; --eq-on:#c9cbcd; --eq-sin:#808487; --eq-trazo:#aaadb0; --eq-alto:#dfe1e3;
-  --p1:#ff8a80; --p2:#ffab40; --p3:#ffd54f; --p4:#90caf9; --invalido:#e1a6ea;
-  --p1-f:#472a2a; --p2-f:#473425; --p3-f:#433d25; --p4-f:#283848;
+  --suelo:#1a1d21; --superficie:#202328; --panel:#262a2f; --panel2:#23272c; --elevado:#2e3238;
+  --tinta:#f3f4f5; --tinta2:#c8cdd3; --tinta3:#a3aab2;
+  --linea:#383d44; --linea2:#2e3238;
+  --marca:#142d88; --marca-sobre:#ffffff; --marca-tenue:#c9d1f0; --marca-suave:#1d2440;
+  --primario:#f3f4f5; --primario-sobre:#15171a; --foco:#f3f4f5;
+  --interlock:#ff8080; --p1:#ffb347; --p2:#fff176; --p3:#fff176; --sincom:#c99cff;
+  --interlock-f:#4a2a2a; --p1-f:#473425; --p2-f:#433d25; --p3-f:#433d25; --sincom-f:#3b3149;
   --marca-num:#1f2328; --marca-trazo:#1f2328;
-  --acento:#b5d3e9; --acento-f:#b5d3e926;
-  --dato-1:#e3e5e7; --dato-2:#c9ccd0; --dato-3:#afb3b7; --dato-4:#959a9e; --dato-5:#7d8186;
+  --eq-marcha:#d9dde1; --eq-parado:#0d0f11;
+  --eq-off:#6b6e71; --eq-on:#c9cbcd; --eq-sin:#808487; --eq-trazo:#aaadb0; --eq-alto:#dfe1e3;
+  --dato1:#d9dde1; --dato3:#878e96; --rayado:#c8cdd3;
+  --pared:#878e96; --agua:#878e96; --flujo:#9aa1a8;
+  --tubo-vacio:#2d3237; --roca:#32373d; --pista:#33383e; --banda:#5d6165;
+  --dato-1:#d9dde1; --dato-2:#c2c7cd; --dato-3:#a3aab2; --dato-4:#878e96; --dato-5:#6f767e;
   --f-multi:#c4c7cb; --f-crudo:#dfe1e4; --f-gas:#a9adb1; --f-agua:#b8bcc0;
   --f-elec:#9ea2a6; --f-aire:#8f9397;
-  --sombra:0 1px 2px rgb(0 0 0 / .3);
-  --sombra2:0 10px 34px rgb(0 0 0 / .45);
+  --sombra:none;
+  --sombra-flota:0 10px 28px rgb(0 0 0 / .45), 0 1px 3px rgb(0 0 0 / .35);
+  --sombra2:var(--sombra-flota);
+}
+/* Alias que no tienen color propio: lo que hoy usa --invalido es el morado de
+   «no le crea a este número»; --acento es la mano (el foco y lo seleccionado). */
+:root{
+  --invalido:var(--sincom);
+  --acento:var(--foco); --acento-f:var(--marca-suave);
+  --marca-capa:rgb(255 255 255 / .14);
+  /* Movimiento (X5 §3.5): el cursor y el foco, 120 ms; la navegación, 200 ms o menos. */
+  --curva:cubic-bezier(.2, 0, 0, 1);
 }
 
 html,body,#root{height:100%}
 body{
   margin:0; background:var(--suelo); color:var(--tinta);
-  font-family:var(--font-sans); font-size:13px; line-height:1.45;
+  /* La base del cuerpo es la de B (X5 §3.4): 16 px. Todas las cifras, tabulares:
+     las de Air por defecto son proporcionales y una columna no se alinea. */
+  font-family:var(--font-sans); font-size:16px; line-height:1.45;
+  font-variant-numeric:tabular-nums;
   -webkit-font-smoothing:antialiased;
 }
 *{box-sizing:border-box}
-:focus-visible{outline:2px solid var(--acento); outline-offset:1px}
+:focus-visible{outline:2px solid var(--foco); outline-offset:2px}
 .tabular{font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
 }
+
+/* Las píldoras blancas del panel y de la banda (el campo, la insignia) son
+   superficie clara en los dos temas: llevan la paleta de estado clara, para que
+   el rombo naranja no pierda contraste sobre el blanco (X5 §3.3). */
+.blanca{
+  --p1:#bf4000; --p2:#f9a825; --p3:#f9a825; --interlock:#8b1a1a; --sincom:#8420a3;
+  --marca-num:#ffffff; --marca-trazo:#1f2328; --tinta:#15171a; --tinta2:#464b52; --tinta3:#5b6168;
+}
+
+/* Nada mide menos de 12 px (X5 §3.4): un <small> sin tamaño propio (el 80 % del
+   navegador) no baja de ahí. En la capa base: el tamaño que le dé una clase manda. */
+@layer base{ small{ font-size:max(12px, 80%) } sub, sup{ font-size:max(12px, 75%) } }
+
+/* Las tarjetas que las pantallas de antes arman a mano (`rounded border
+   bg-[var(--panel)]`) heredan la tarjeta de B (X5 §5.2) mientras las tandas 2 y
+   3 las redibujan: radio 20, sin borde ni sombra, separadas del papel por el
+   tono. Una tarjeta dentro de otra no puede separarse por un tono que es el
+   mismo: va en --panel2, como los pozos dentro de una tarjeta de B. */
+.vista :is(section, div, details, article).rounded.border.bg-\[var\(--panel\)\]{ border-color:transparent; border-radius:20px }
+.vista .bg-\[var\(--panel\)\] :is(section, div, details, article).rounded.border.bg-\[var\(--panel\)\]{
+  background:var(--panel2); border-radius:14px }
+
+/* El operador en el teléfono contesta de a una pregunta (imagen 5; X5 §5.8): la
+   pregunta va en la banda índigo, pegada a la del ☰, y la franja debajo de ella
+   (la pinta la vista de Hoy). La cabecera de la vista no se interpone. */
+@media (max-width: 639.98px){
+  .vista:has([data-operador="pregunta"]){ padding-top:0 }
+  .vista:has([data-operador="pregunta"]) [data-cabecera]{ display:none }
+}
+
+/* El panel lateral en el teléfono entra desde la izquierda en 200 ms (X5 §4.2);
+   con «menos movimiento», aparece sin moverse (la regla de arriba). */
+@keyframes entra-izquierda{ from{ transform:translateX(-100%) } to{ transform:none } }
+@keyframes aparece{ from{ opacity:0 } to{ opacity:1 } }
+.entra-izquierda{ animation:entra-izquierda 200ms var(--curva) both }
+.aparece{ animation:aparece 200ms var(--curva) both }
 
 /* El wordmark tiene dos archivos: el claro se usa sobre fondo oscuro. */
 .dark-show{display:none}

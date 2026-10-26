@@ -36,7 +36,7 @@ export function Ramas({ nodo, base, codigos = 'no', abiertas = 3, rotuloBase = '
   className?: string
 }) {
   return <Hermanas id={id} hijos={nodo.hijos} base={base} codigos={codigos} abiertas={abiertas} profundidad={0} rotuloBase={rotuloBase}
-    className={cn('text-[11.5px]', className)} />
+    className={cn('text-[14px]', className)} />
 }
 
 interface Comun { base: number; codigos: VerCodigos; abiertas: number; profundidad: number; rotuloBase: string }
@@ -57,7 +57,7 @@ function Hermanas({ hijos, id, oculta = false, className, ...c }: Comun & { hijo
       {corta && (
         <li className="no-imprimir">
           <button type="button" aria-expanded={false} aria-controls={idLista} onClick={() => setTodas(true)}
-            className="ml-[18px] min-h-6 cursor-pointer py-0.5 text-left text-[11px] text-[var(--tinta2)] underline decoration-dotted underline-offset-2 hover:text-[var(--tinta)]">
+            className="ml-[18px] min-h-6 cursor-pointer py-0.5 text-left text-[13px] text-[var(--tinta2)] underline decoration-dotted underline-offset-2 hover:text-[var(--tinta)]">
             Ver {resto.length} más ({n0(resto.reduce((a, n) => a + n.bbl, 0))} bbl)
           </button>
         </li>
@@ -99,7 +99,7 @@ function Rama({ n: cabeza, oculta = false, ...c }: Comun & { n: NodoArbol; ocult
   const codigoDe = (m: NodoArbol) => {
     const k = CAMPO_ANH[m.dimension as keyof typeof CAMPO_ANH]
     return c.codigos === 'vista' && m.cadena && k ? (
-      <span className="ml-1.5 break-words rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1 font-mono text-[10px] leading-snug text-[var(--tinta)] [box-decoration-break:clone]" data-cadena={k}>
+      <span className="ml-1.5 break-words rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1 font-mono text-[12px] leading-snug text-[var(--tinta)] [box-decoration-break:clone]" data-cadena={k}>
         <span className="text-[var(--tinta3)]">{k}</span> {m.cadena}
       </span>
     ) : null
@@ -124,9 +124,9 @@ function Rama({ n: cabeza, oculta = false, ...c }: Comun & { n: NodoArbol; ocult
       </span>
       {/* Lo que oye el lector: «573 bbl, 100 % del tramo» (sin los espacios se leía «573100 %»). */}
       <span className="tabular shrink-0 text-right">
-        <b className={cn('text-[12px]', vacia && 'font-normal text-[var(--tinta3)]')}>{n0(n.bbl)}</b>{' '}
+        <b className={cn('text-[14px]', vacia && 'font-normal text-[var(--tinta3)]')}>{n0(n.bbl)}</b>{' '}
         <span className="sr-only">bbl{vacia ? '' : ','}</span>{' '}
-        <small className="inline-block w-[38px] text-[10px] text-[var(--tinta3)]">
+        <small className="inline-block w-[38px] text-[12px] text-[var(--tinta3)]">
           {vacia ? '' : <>{pctParte(pct)}{' '}<span className="sr-only">{c.rotuloBase}</span></>}
         </small>
       </span>

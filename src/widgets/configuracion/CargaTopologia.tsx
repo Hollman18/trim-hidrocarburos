@@ -69,12 +69,12 @@ export function CargaTopologia({ campoId, campoNombre, elementos, porSaber, todo
         <Boton onClick={descargar}><Download className="mr-1 inline size-3.5" />Descargar la plantilla</Boton>
         <SubirCsv onTexto={t => { setTexto(t); void revisar(t) }} onError={m => { setLeida(null); setHecho(null); setError(m) }} />
       </div>
-      <label htmlFor={idTexto} className="mb-0.5 block text-[10.5px] text-[var(--tinta2)]">O pegue las filas copiadas de Excel</label>
+      <label htmlFor={idTexto} className="mb-0.5 block text-[13px] text-[var(--tinta2)]">O pegue las filas copiadas de Excel</label>
       <textarea id={idTexto} value={texto} rows={4}
         onChange={e => { setTexto(e.target.value); setLeida(null); setHecho(null); setError(null) }}
         aria-invalid={bloquean.length > 0 || !!error} aria-describedby={bloquean.length || error ? idHallazgos : undefined}
         placeholder={'equipo;pozos a los que sirve\nSE-2;todos\nMPP-301;MN-07 MN-18 MN-33'}
-        className="w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
+        className="w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[14px] outline-none focus:border-acento" />
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         <Boton onClick={() => void revisar()} disabled={!texto.trim() || revisando}>{revisando ? 'Revisando…' : 'Revisar'}</Boton>
         {leida && listos > 0 && (
@@ -85,7 +85,7 @@ export function CargaTopologia({ campoId, campoNombre, elementos, porSaber, todo
         )}
       </div>
       {leida && (
-        <div className="mt-2 text-[11.5px]">
+        <div className="mt-2 text-[14px]">
           <p className="text-[var(--tinta2)]">
             {plural(leida.filas, 'fila leída', 'filas leídas')}: {plural(listos, 'equipo listo', 'equipos listos')}
             {bloquean.length ? `, ${plural(bloquean.length, 'fila bloquea', 'filas bloquean')}` : ''}.
@@ -100,8 +100,8 @@ export function CargaTopologia({ campoId, campoNombre, elementos, porSaber, todo
           {avisos.length > 0 && <ul className="mt-1 grid gap-1">{avisos.map(h => <Hallazgo key={`${h.fila}-${h.texto}`} h={h} />)}</ul>}
         </div>
       )}
-      {error && <p id={idHallazgos} role="alert" className="mt-2 text-[11.5px] font-semibold">{error}</p>}
-      {hecho && <p role="status" className="mt-2 text-[11.5px] text-[var(--tinta2)]">{hecho}</p>}
+      {error && <p id={idHallazgos} role="alert" className="mt-2 text-[14px] font-semibold">{error}</p>}
+      {hecho && <p role="status" className="mt-2 text-[14px] text-[var(--tinta2)]">{hecho}</p>}
     </Panel>
   )
 }

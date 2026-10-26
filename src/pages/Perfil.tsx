@@ -44,10 +44,10 @@ const Fila = ({ etiqueta, children, pie, info }: {
   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
     <span className="min-w-[8.5rem] flex-1">
       <span className="flex flex-wrap items-center gap-x-1">
-        <b className="text-[12.5px] font-medium">{etiqueta}</b>
+        <b className="text-[15px] font-medium">{etiqueta}</b>
         {info && <Info titulo={etiqueta} texto={info} />}
       </span>
-      {pie && <small className="block text-[10.5px] text-[var(--tinta3)]">{pie}</small>}
+      {pie && <small className="block text-[13px] text-[var(--tinta3)]">{pie}</small>}
     </span>
     {children}
   </div>
@@ -67,7 +67,7 @@ export function Perfil() {
   const { concedidas, negadas } = permisosDelRol(rol.puede)
 
   return (
-    <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(310px,1fr))] items-start">
+    <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))] items-start">
       <Panel titulo="IDENTIDAD" className="lg:col-span-1">
         <div className="flex items-center gap-3">
           <span className="font-cond grid size-12 shrink-0 place-items-center rounded bg-marca-1 text-lg font-semibold text-white">
@@ -75,11 +75,11 @@ export function Perfil() {
           </span>
           <span className="min-w-0">
             <b className="block text-[15px] leading-tight">{persona.nombre}</b>
-            <small className="flex flex-wrap items-center gap-x-1 text-[11.5px] text-[var(--tinta2)]">
+            <small className="flex flex-wrap items-center gap-x-1 text-[14px] text-[var(--tinta2)]">
               {rol.nombre}
               <Info titulo="Rol activo" texto="Se cambia desde el menú de perfil, abajo a la izquierda." />
             </small>
-            <small className="block font-mono text-[10.5px] text-[var(--tinta3)]">
+            <small className="block font-mono text-[13px] text-[var(--tinta3)]">
               {persona.correo ?? 'sin correo registrado'}
             </small>
           </span>
@@ -87,8 +87,8 @@ export function Perfil() {
         <div className="mt-3">
           <Fila etiqueta="WhatsApp" info="Del registro de usuarios: lo cambia el gerente de activo en Accesos.">
             {yo?.telefono?.trim()
-              ? <span className="tabular font-mono text-[11.5px]">{telefonoLegible(yo.telefono)}</span>
-              : <span className="text-[11.5px] text-[var(--tinta3)]">sin número registrado</span>}
+              ? <span className="tabular font-mono text-[14px]">{telefonoLegible(yo.telefono)}</span>
+              : <span className="text-[14px] text-[var(--tinta3)]">sin número registrado</span>}
           </Fila>
           <Fila etiqueta="Área" info="Cómo cuelga en el organigrama.">
             <Chip>{AREAS.find(a => a.id === rol.area)?.nombre}</Chip>
@@ -99,7 +99,7 @@ export function Perfil() {
             </span>
           </Fila>
         </div>
-        <p className="mt-2 text-[11px]"><Info rotulo="tu foco" titulo="Tu foco" texto={rol.foco} /></p>
+        <p className="mt-2 text-[13px]"><Info rotulo="tu foco" titulo="Tu foco" texto={rol.foco} /></p>
       </Panel>
 
       {/* Lo que de verdad le llega: la regla de mensajes del rol y el registro de
@@ -119,7 +119,7 @@ export function Perfil() {
             </Chip>
           </Fila>
         )}
-        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
           Las cambia el gerente de activo
           <Info titulo="Quién las cambia" texto="Encenderlas, apagarlas o cambiar el número lo hace el gerente de activo en Accesos, con su motivo." />
         </p>
@@ -129,8 +129,8 @@ export function Perfil() {
         <div className="flex gap-1.5">
           {TEMAS.map(({ id, nombre, Icono }) => (
             <button key={id} onClick={() => setTema(id)} aria-pressed={tema === id}
-              className={cn('flex flex-1 cursor-pointer flex-col items-center gap-1.5 rounded border px-2 py-3 text-[11px]',
-                tema === id ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold text-[var(--tinta)]'
+              className={cn('flex flex-1 cursor-pointer flex-col items-center gap-1.5 rounded-[14px] border px-2 py-3 text-[13px]',
+                tema === id ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]'
                   : 'border-[var(--linea2)] hover:bg-[var(--panel2)]')}>
               <Icono className="size-4" /> {nombre}
             </button>
@@ -170,7 +170,7 @@ function Permiso({ k, si }: { k: Capacidad; si: boolean }) {
     <span><span className="sr-only">{si ? 'Puede: ' : 'No puede: '}</span>
       {corto === completo ? corto : <><span className="print:hidden">{corto}</span><span className="hidden print:inline">{completo}</span></>}</span>
   </>
-  const clase = cn('flex items-center gap-2 py-[7px] text-[12px]', !si && 'text-[var(--tinta3)]')
+  const clase = cn('flex items-center gap-2 py-[7px] text-[14px]', !si && 'text-[var(--tinta3)]')
   // La raya va en la envoltura: así queda debajo de la nota impresa y no entre la fila y su nota.
   return (
     <div className="border-b border-[var(--linea2)] last:border-0">

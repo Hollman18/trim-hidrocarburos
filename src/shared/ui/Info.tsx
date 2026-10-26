@@ -33,7 +33,7 @@ export function Info({ titulo, texto, textoEnPapel, filas, rotulo, className, im
       <Tip as="span" role="img" aria-label={`${titulo}: ${texto}`} titulo={titulo} filas={filas ?? []} pista={texto}
         // En el teléfono, un blanco de toque de 24 px (WCAG 2.5.8); en la pantalla grande, del tamaño del ícono.
         className={cn('no-imprimir inline-flex min-h-6 min-w-6 cursor-help items-center justify-center gap-0.5 align-[-2px] sm:min-h-0 sm:min-w-0', className)}>
-        {rotulo && <span className="text-[10.5px] text-[var(--tinta2)] underline decoration-dotted underline-offset-2">{rotulo}</span>}
+        {rotulo && <span className="text-[13px] text-[var(--tinta2)] underline decoration-dotted underline-offset-2">{rotulo}</span>}
         <IconoInfo className="size-3 text-[var(--tinta3)]" aria-hidden />
       </Tip>
       {imprimir && <small className="solo-impresion basis-full font-sans text-[9pt] font-normal normal-case tracking-normal text-[var(--tinta2)]">{titulo}: {textoEnPapel ?? texto}</small>}

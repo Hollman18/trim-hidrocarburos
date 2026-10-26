@@ -43,7 +43,7 @@ export function Encabezado({ lb, base, nombrePeriodo, ambito, simple = false }: 
     <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
       <div className="flex flex-wrap items-start justify-between gap-2">
         {/* El período y el ámbito ya los dice la cabecera (también en el teléfono); la cabecera no sale en el papel, y aquí quedan para el papel. */}
-        <small className="text-[11px] tracking-[.04em] text-[var(--tinta3)] hidden print:block">{ambito.toUpperCase()} · {nombrePeriodo.toUpperCase()}</small>
+        <small className="text-[13px] tracking-[.04em] text-[var(--tinta3)] hidden print:block">{ambito.toUpperCase()} · {nombrePeriodo.toUpperCase()}</small>
         <SelloPublicacion lb={lb} className="ml-auto" />
       </div>
       <div className="mt-1 flex flex-wrap items-start gap-x-8 gap-y-3">
@@ -58,23 +58,23 @@ export function Encabezado({ lb, base, nombrePeriodo, ambito, simple = false }: 
               ['Período', nombrePeriodo], ['Cierre', provisional ? 'provisional' : 'publicado']]}
             className="block">
             <b className="tabular block text-[40px] leading-none">{n0(lb.brecha)}</b>
-            <small className="block text-[11.5px] text-[var(--tinta2)]">barriles diferidos</small>
+            <small className="block text-[14px] text-[var(--tinta2)]">barriles diferidos</small>
           </Tip>
           <Rango lb={lb} corto className="block min-h-6 sm:min-h-0" />
-          {!simple && <small className="tabular block text-[11px] text-[var(--tinta2)]">{n0(lb.pendiente)} sin identificar</small>}
+          {!simple && <small className="tabular block text-[13px] text-[var(--tinta2)]">{n0(lb.pendiente)} sin identificar</small>}
         </span>
         <span className="flex min-w-[min(100%,280px)] flex-1 flex-wrap items-start gap-x-8 gap-y-3">
           <span className="min-w-[120px]">
             {/* Un hueco de precio nunca se calla: corto a la vista y entero en el ⓘ (y en el papel). «falta precio en»
                 y no «sin»: el campo puede tener precio una parte del período, y esos días sí cuentan. */}
-            <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+            <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
               {!parcial ? 'valor' : sinPrecio.length ? `valor · falta precio en ${sinPrecio.join(', ')}` : `valor · ${lb.valorCampos.con} de ${lb.valorCampos.total} campos`}
               {!dinero && <Info titulo="Sin precio" texto="Falta el precio neto en la configuración." />}
               {parcial && <Info titulo="Valor" texto={`${lb.valorCampos.con} de ${lb.valorCampos.total} campos con precio en todo el período${sinPrecio.length ? `; sin contar los días sin precio de ${sinPrecio.join(', ')}` : ''}.`} />}
             </small>
             <b className="tabular block text-[20px] leading-none">
               {dinero ? dinero.valor : 'sin precio'}
-              {dinero && <span className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">{dinero.unidad}</span>}
+              {dinero && <span className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">{dinero.unidad}</span>}
             </b>
           </span>
           <span className="min-w-[min(100%,200px)] flex-1 sm:max-w-[340px]">

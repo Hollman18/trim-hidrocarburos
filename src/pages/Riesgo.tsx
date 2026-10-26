@@ -85,7 +85,8 @@ export function Riesgo() {
 
   const listaPerdiendo = useVerMas(perdiendo, { prioridad: r => (r.altoImpacto ? 1 : 2) })
   const listaRiesgo = useVerMas(enRiesgo, { prioridad: r => r.prioridad })
-  const columna = 'tabular w-[96px] shrink-0 text-right'
+  // En el teléfono las dos columnas ceden ancho: con la letra de B, la píldora del tipo no cabía al lado (390 px).
+  const columna = 'tabular w-[78px] shrink-0 text-right sm:w-[96px]'
 
   const filaPerdiendo = (r: FilaRiesgo) => (
     <Tip key={`${r.campoId}${r.equipo}${r.tipo}`} as="button" onClick={() => abrir(r)}
@@ -101,15 +102,15 @@ export function Riesgo() {
       <MarcaPrioridad s={r.altoImpacto ? 1 : 2} tamano={13} />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-2">
-          <b className="text-[12.5px]">{r.equipo}{donde(r.campoId)}</b>
+          <b className="text-[15px]">{r.equipo}{donde(r.campoId)}</b>
           <Chip tono={r.altoImpacto ? 'fuerte' : 'neutro'}>{etiqueta(r.tipo)}</Chip>
-          {r.parte && <span className="text-[10.5px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
+          {r.parte && <span className="text-[13px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
         </span>
-        {r.desde && <small className="block truncate text-[10.5px] text-[var(--tinta3)]">desde {fechaHora(r.desde)}</small>}
+        {r.desde && <small className="block truncate text-[13px] text-[var(--tinta3)]">desde {fechaHora(r.desde)}</small>}
       </span>
       <span className="tabular w-[88px] shrink-0 text-right">
         <b className="block text-[15px] leading-tight">{n0(r.bblDia)}</b>
-        <small className="text-[9.5px] text-[var(--tinta3)]">bbl/d · {plural(r.pozos, 'pozo', 'pozos')}</small>
+        <small className="text-[12px] text-[var(--tinta3)]">bbl/d · {plural(r.pozos, 'pozo', 'pozos')}</small>
       </span>
     </Tip>
   )
@@ -127,31 +128,31 @@ export function Riesgo() {
             ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}${r.rango && entre(r.rango) ? ` (${entre(r.rango)})` : ''}` : 'ya pasó el límite'],
             ['Si para', siParaLargo(r, servicio)],
             ...(r.costoFalla !== undefined ? [['Si falla hoy', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
-          className="flex w-full cursor-pointer items-center gap-3 text-left hover:bg-[var(--panel2)]">
-          <MarcaPrioridad s={r.prioridad} tamano={13} />
+          className="flex w-full cursor-pointer items-center gap-2 text-left hover:bg-[var(--panel2)] sm:gap-3">
+          <MarcaPrioridad s={r.prioridad} tamano={14} />
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-baseline gap-x-2">
-              <b className="text-[12.5px]">{r.equipo}{donde(r.campoId)}</b>
+              <b className="text-[15px]">{r.equipo}{donde(r.campoId)}</b>
               <Chip>{etiqueta(r.tipo)}</Chip>
             </span>
             {r.parte && (
-              <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-[var(--tinta2)]">
+              <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">
                 {NOMBRE_PARTE[r.parte].toLowerCase()}
                 {r.estadoParte && <Chip tono={r.estadoParte === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[r.estadoParte]}</Chip>}
               </span>
             )}
-            {tramo && <small className="block text-[10.5px] text-[var(--tinta3)]" data-se-trabaria={tramo}>se trabaría {DONDE_CHOKE[tramo]}</small>}
+            {tramo && <small className="block text-[13px] text-[var(--tinta3)]" data-se-trabaria={tramo}>se trabaría {DONDE_CHOKE[tramo]}</small>}
           </span>
           <span className={columna}>
-            <b className="block text-[13px] leading-tight"><span className="sr-only">cruza en </span>{r.horas !== undefined ? fmtHoras(r.horas) : 'ya pasó el límite'}</b>
-            {r.rango && <small className="text-[9.5px] text-[var(--tinta3)]">{entre(r.rango)}</small>}
+            <b className="block text-[15px] leading-tight"><span className="sr-only">cruza en </span>{r.horas !== undefined ? fmtHoras(r.horas) : 'ya pasó el límite'}</b>
+            {r.rango && <small className="text-[12px] text-[var(--tinta3)]">{entre(r.rango)}</small>}
           </span>
           <span className={columna}>
             {/* Se decide por lo que es el equipo, no por si es de alto impacto: la
                 multifásica no es de alto impacto, pero cierra solo sus pozos y
                 lleva su «si falla hoy», que también entra en la exposición. */}
-            <b className="block text-[13px] leading-tight"><span className="sr-only">si para </span>{siPara}</b>
-            <small className="block text-[9.5px] leading-snug text-[var(--tinta3)]">
+            <b className="block text-[15px] leading-tight"><span className="sr-only">si para </span>{siPara}</b>
+            <small className="block text-[12px] leading-snug text-[var(--tinta3)]">
               {costoHoy(r) ?? (servicio ? '' : 'sin historia')}
               {/* Con tanque: una reparación más corta que el colchón de hoy no cuesta crudo. */}
               {colchonCorto(r) && <span className="block">{colchonCorto(r)}</span>}
@@ -175,29 +176,29 @@ export function Riesgo() {
       <CicloCifras ciclo={ciclo} onIr={p => setPantalla(p)} />
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">2 · Durante</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">2 · Durante</small>
           {/* Un total no lleva marca de alarma: la lleva el equipo que lo causa (B-40). */}
           <b className="tabular flex items-center gap-1.5 text-[30px] leading-none">
-            {n0(porDia)}<small className="text-[12px] font-normal text-[var(--tinta3)]">bbl/d</small>
+            {n0(porDia)}<small className="text-[14px] font-normal text-[var(--tinta3)]">bbl/d</small>
           </b>
-          <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+          <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
             {n1(potencial ? (porDia / potencial) * 100 : 0)} % del potencial · {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
             {perdiendo[0] && <span className="inline-flex items-center gap-1"> · <MarcaPrioridad s={perdiendo[0].altoImpacto ? 1 : 2} tamano={11} />{perdiendo[0].equipo}</span>}
           </small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">1 · Antes · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
-          <b className="tabular block text-[22px] leading-tight" data-en-juego>{enJuego.techo && <small className="text-[13px] font-normal">hasta </small>}{n0(enJuego.bblDia)} <small className="text-[11px] font-normal text-[var(--tinta3)]">bbl/d en juego</small></b>
-          <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+          <small className="block text-[13px] text-[var(--tinta3)]">1 · Antes · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
+          <b className="tabular block text-[22px] leading-tight" data-en-juego>{enJuego.techo && <small className="text-[15px] font-normal">hasta </small>}{n0(enJuego.bblDia)} <small className="text-[13px] font-normal text-[var(--tinta3)]">bbl/d en juego</small></b>
+          <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
             {pieCorto}{enRiesgo.length > 0 && <Info titulo="Exposición" texto={pieCosto} />}
           </small>
         </span>
         <span>
-          <small className="block text-[10.5px] text-[var(--tinta3)]">El más cercano</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">El más cercano</small>
           {enRiesgo[0] ? (
             <>
               <b className="block truncate text-[15px] leading-tight">{enRiesgo[0].equipo}{donde(enRiesgo[0].campoId)}</b>
-              <small className="flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]">
+              <small className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">
                 {enRiesgo[0].parte && <span>{NOMBRE_PARTE[enRiesgo[0].parte]}</span>}
                 {enRiesgo[0].horas !== undefined ? <span>cruza en {fmtHoras(enRiesgo[0].horas)}</span> : <Chip tono="fuerte">ya pasó el límite</Chip>}
               </small>
@@ -219,7 +220,7 @@ export function Riesgo() {
       </Lectura>
 
       <Panel className="mt-2.5" titulo="PERDIÉNDOSE AHORA" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada'}>
-        {perdiendo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
+        {perdiendo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
         {listaPerdiendo.visibles.map(filaPerdiendo)}
         {listaPerdiendo.resto.length > 0 && <div className="solo-impresion">{listaPerdiendo.resto.map(filaPerdiendo)}</div>}
         <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
@@ -233,9 +234,9 @@ export function Riesgo() {
             ver «Si falla hoy»
           </button>
         )}>
-        {enRiesgo.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
+        {enRiesgo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
         {enRiesgo.length > 0 && (
-          <div className="flex gap-3 pb-1 text-[10px] text-[var(--tinta3)]" aria-hidden>
+          <div className="flex gap-2 pb-1 text-[12px] text-[var(--tinta3)] sm:gap-3" aria-hidden>
             <span className="flex-1" /><span className={columna}>cruza en</span><span className={columna}>si para</span>
           </div>
         )}

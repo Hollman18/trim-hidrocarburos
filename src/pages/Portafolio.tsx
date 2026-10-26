@@ -78,10 +78,10 @@ export function Portafolio() {
                 c.id === campoId && 'bg-[var(--panel2)]')}>
               <MarcaPrioridad s={e?.severidad ?? 0} tamano={13} />
               <span className="min-w-0 flex-[2]">
-                <b className="block truncate text-[13px] leading-tight">
+                <b className="block truncate text-[15px] leading-tight">
                   {c.nombre}{i === 0 && <> <Chip tono="fuerte">más diferido</Chip></>}
                 </b>
-                <small className="block text-[10.5px] text-[var(--tinta3)]">
+                <small className="block text-[13px] text-[var(--tinta3)]">
                   {c.cuenca}{e ? ` · ${e.ayer.bbl === null ? 'sin fiscal' : `${n0(e.ayer.bbl)} bbl`} el último día · ${e.parados} de ${e.pozos} pozos parados` : ''}
                 </small>
               </span>
@@ -91,29 +91,29 @@ export function Portafolio() {
                   {!sinMeta && <i className="block h-full bg-[var(--dato-2)]" style={{ width: `${ancho * 100}%` }} />}
                   {!sinMeta && <i className="absolute -inset-y-[2px] left-[80%] w-[2px] bg-[var(--tinta)]" />}
                 </span>
-                <small className="tabular mt-0.5 block text-[10px] text-[var(--tinta3)]">
+                <small className="tabular mt-0.5 block text-[12px] text-[var(--tinta3)]">
                   {sinMeta ? <>{n0(real)} bbl/d · {SIN_META}</> : <><FueraDeMeta si={real < meta} tamano={11} />{n0(real)} de {n0(meta)} bbl/d</>}
                 </small>
               </span>
               <span className="tabular w-[84px] shrink-0 text-right">
                 <b className="block text-[16px] leading-tight">{n0(f.brecha)}</b>
-                <small className="text-[9.5px] text-[var(--tinta3)]">bbl · {n0(lb.brecha ? (f.brecha / lb.brecha) * 100 : 0)} %</small>
+                <small className="text-[12px] text-[var(--tinta3)]">bbl · {n0(lb.brecha ? (f.brecha / lb.brecha) * 100 : 0)} %</small>
               </span>
               <span className="tabular hidden w-[70px] shrink-0 text-right md:block">
-                <b className="block text-[13px] leading-tight">{n0(f.diferido ? (f.altoImpacto / f.diferido) * 100 : 0)} %</b>
-                <small className="text-[9.5px] text-[var(--tinta3)]">alto impacto</small>
+                <b className="block text-[15px] leading-tight">{n0(f.diferido ? (f.altoImpacto / f.diferido) * 100 : 0)} %</b>
+                <small className="text-[12px] text-[var(--tinta3)]">alto impacto</small>
               </span>
             </Tip>
           )
         })}
       </Panel>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Palancas lb={lb} base={base} />
         <ParetoTipos lb={lb} />
       </div>
 
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <ParetoEquipos lb={lb} global max={8} onAbrir={(c, eq) => { setCampo(c); abrirEquipo(eq) }} onVerTodo={irA('diferidos')} />
         <ParetoPartes lb={lb} onIr={irA('bombas')} />
       </div>

@@ -37,15 +37,15 @@ function Fila({ campoId, desde, hasta }: { campoId: string; desde: Date; hasta: 
         <ChevronRight aria-hidden size={14} className="no-imprimir mt-0.5 shrink-0 text-[var(--tinta3)]" />
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-baseline gap-x-2">
-            <b className="text-[12.5px]">{nombre}</b>
-            <span className="text-[12px]">{t.textoCorto}</span>
+            <b className="text-[15px]">{nombre}</b>
+            <span className="text-[14px]">{t.textoCorto}</span>
           </span>
-          {!t.campoDeGas && t.limita !== null && <small className="block text-[11px] leading-snug text-[var(--tinta2)]">{t.frase}</small>}
+          {!t.campoDeGas && t.limita !== null && <small className="block text-[13px] leading-snug text-[var(--tinta2)]">{t.frase}</small>}
         </span>
         <span className="tabular shrink-0 text-right leading-tight">
-          <b className="block text-[13px]">{n0(t.diferido)}</b>
+          <b className="block text-[15px]">{n0(t.diferido)}</b>
           {/* Lo que no se produjo, no lo que «se trabó»: el barril es lo que se perdió (B-45). */}
-          <small className="text-[10px] text-[var(--tinta3)]" data-no-se-produjeron>bbl no se produjeron</small>
+          <small className="text-[12px] text-[var(--tinta3)]" data-no-se-produjeron>bbl no se produjeron</small>
         </span>
       </button>
     </li>

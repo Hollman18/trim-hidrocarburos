@@ -67,7 +67,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
     <Panel className="mb-2.5" titulo="QUÉ LIMITÓ, DÍA POR DÍA" extra={periodo.toLowerCase()}>
       <div data-serie>
         {/* El aviso: no pide nada urgente; va en gris, con su campana y su texto. */}
-        <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1 text-[12px]" data-aviso={s.cambios.length ? 'cambio' : 'sin-cambios'}>
+        <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1 text-[14px]" data-aviso={s.cambios.length ? 'cambio' : 'sin-cambios'}>
           <Bell aria-hidden className="mt-0.5 size-3.5 shrink-0 text-[var(--tinta3)]" />
           <span className="min-w-0 flex-1">
             {s.cambios.length ? (
@@ -76,7 +76,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
               <>
                 <span className="block">{dias.length ? sinCambios : 'Sin días con dato en el período.'}</span>
                 {vueltas > 0 && (
-                  <small className="block text-[11px] text-[var(--tinta2)]">
+                  <small className="block text-[13px] text-[var(--tinta2)]">
                     Lo que limita se turnó {vueltas === 1 ? 'una vez' : `${n0(vueltas)} veces`} entre tramos casi iguales: ninguna vuelta pasó del {pct(PARAMETROS_CHOKE.umbralCasiIguales)} % por {PARAMETROS_CHOKE.diasParaCambio} días seguidos, y por eso no hubo aviso.
                   </small>
                 )}
@@ -92,9 +92,9 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
             <svg ref={dibujo} viewBox={`0 0 ${W} 178`} className="block h-auto w-full min-w-[540px]" role="group"
               aria-label={`Qué limitó cada día en ${nombre}, ${dias.length === 1 ? 'un día' : `${dias.length} días`}: ${tramos.length ? lista(tramos.map(k => SUJETO[k])) : 'sin dato'}. Debajo, lo que se perdió cada día por tramo. Con las flechas se pasa de un día a otro.`}>
               <defs><PatronesTramo id={id} /></defs>
-              <text x={G.x0 - 6} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3} fontSize={9} textAnchor="end" fill="var(--tinta3)">limitó</text>
-              <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={9} textAnchor="end" fill="var(--tinta3)" className="tabular">{n0(tope)}</text>
-              <text x={G.x0 - 6} y={BARRAS.y1} fontSize={9} textAnchor="end" fill="var(--tinta3)">0</text>
+              <text x={G.x0 - 6} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3} fontSize={11} textAnchor="end" fill="var(--tinta3)">limitó</text>
+              <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={11} textAnchor="end" fill="var(--tinta3)" className="tabular">{n0(tope)}</text>
+              <text x={G.x0 - 6} y={BARRAS.y1} fontSize={11} textAnchor="end" fill="var(--tinta3)">0</text>
               <line x1={G.x0} x2={G.x1} y1={BARRAS.y1} y2={BARRAS.y1} stroke="var(--linea)" />
               {dias.map((d, i) => {
                 const x = G.x0 + paso * i
@@ -127,7 +127,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                     {k && conTexto && (
                       <g>
                         <rect x={x + paso / 2 - 9} y={(FRANJA.y0 + FRANJA.y1) / 2 - 7} width={18} height={13} rx={2} fill="var(--panel)" />
-                        <text x={x + paso / 2} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3.5} fontSize={9.5} textAnchor="middle" fill="var(--tinta)" className="font-cond">
+                        <text x={x + paso / 2} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3.5} fontSize={11.5} textAnchor="middle" fill="var(--tinta)" className="font-cond">
                           {otro ? `${ABREV[k]}·${ABREV[otro]}` : ABREV[k]}
                         </text>
                       </g>
@@ -146,7 +146,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                     })()}
                     {/* Las marcas regulares le ceden el sitio a la del último día, que va pegada al borde. */}
                     {(i === dias.length - 1 || (i % cada === 0 && dias.length - 1 - i >= Math.ceil(cada * 0.8))) && (
-                      <text x={i === dias.length - 1 && dias.length > 1 ? x + paso : x + paso / 2} y={BARRAS.y1 + 13} fontSize={9.5}
+                      <text x={i === dias.length - 1 && dias.length > 1 ? x + paso : x + paso / 2} y={BARRAS.y1 + 13} fontSize={11.5}
                         textAnchor={i === dias.length - 1 && dias.length > 1 ? 'end' : 'middle'} fill="var(--tinta2)">{fechaCorta(d.dia)}</text>
                     )}
                   </Tip>
@@ -189,10 +189,10 @@ function Semanas({ dias, campoId }: { dias: DiaChoke[]; campoId: string }) {
   }
   return (
     <div className="md:hidden print:hidden">
-      <ul className="text-[12px]" aria-label="Qué limitó, semana por semana">
+      <ul className="text-[14px]" aria-label="Qué limitó, semana por semana">
         {lista.visibles.map(([k, ds]) => (
           <li key={k} className="border-b border-[var(--linea2)] py-1.5 last:border-0">
-            <b className="font-cond block text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEMANA DEL {fechaCorta(new Date(k)).toUpperCase()}</b>
+            <b className="font-cond block text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEMANA DEL {fechaCorta(new Date(k)).toUpperCase()}</b>
             <span>{texto(ds)}</span>
           </li>
         ))}
@@ -205,7 +205,7 @@ function Semanas({ dias, campoId }: { dias: DiaChoke[]; campoId: string }) {
 /** Una leyenda para la franja y las barras: el mismo dibujo en las dos (B-09). */
 function Leyenda() {
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]" data-leyenda-serie>
+    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]" data-leyenda-serie>
       <span className="text-[var(--tinta3)]">Franja y barras:</span>
       <span className="inline-flex items-center gap-1.5"><Muestra k="reservorio" />{DONDE.reservorio} <span className="text-[var(--tinta3)]">(solo barras)</span></span>
       {ORDEN_CHOKE_CAMPO.map(c => (

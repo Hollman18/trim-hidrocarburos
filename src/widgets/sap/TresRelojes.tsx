@@ -22,7 +22,7 @@ export function TresRelojes({ reloj }: { reloj: Relojes }) {
   const muestra = (fondo: string) => <i aria-hidden className="mr-1.5 inline-block size-2 align-[1px]" style={{ background: fondo }} />
   return (
     <>
-      <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11.5px]">
+      <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[14px]">
         <dt>{muestra(ACTIVA)}Reparación activa</dt><dd className="tabular m-0 text-right">{h(reloj.activaH)}</dd>
         <dt>{muestra(ESPERA)}Espera</dt><dd className="tabular m-0 text-right font-semibold">{h(reloj.esperaH)}</dd>
         <dt className="flex flex-wrap items-center gap-x-1">Indisponibilidad total
@@ -39,7 +39,7 @@ export function TresRelojes({ reloj }: { reloj: Relojes }) {
       )}
       {/* Lo que no entra en el promedio se cuenta: si no, el promedio parecería de todas. */}
       {reloj.excluidas > 0 && (
-        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta2)]">
+        <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           {reloj.excluidas} {reloj.excluidas === 1 ? 'orden fuera' : 'órdenes fuera'} del promedio
           <Info titulo="Fuera del promedio" texto={`Promedio de ${reloj.fallas} ${reloj.fallas === 1 ? 'falla cerrada' : 'fallas cerradas'}; ${reloj.excluidas} ${reloj.excluidas === 1 ? 'orden correctiva cerrada no tiene' : 'órdenes correctivas cerradas no tienen'} la parada del PLC que las respalde y no entran.`} />
         </p>

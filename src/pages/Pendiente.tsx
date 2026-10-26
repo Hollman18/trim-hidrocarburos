@@ -9,7 +9,7 @@ export const Pendiente = () => {
   const p = PANTALLAS[pantalla]
   return (
     <Panel titulo="PENDIENTE DE PORTAR">
-      <p className="text-[13px]">
+      <p className="text-[15px]">
         <b>{p?.titulo}</b>: validada en el prototipo, falta portarla.
       </p>
       <Cita>Mientras tanto: Riesgo y Diferidos.</Cita>

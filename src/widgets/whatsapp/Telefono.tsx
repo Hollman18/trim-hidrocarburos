@@ -139,25 +139,25 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
     <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-[26px] border-[6px] border-[var(--tinta)] bg-[var(--panel)] shadow-[var(--sombra)]" role="group"
       aria-label={`Chat de WhatsApp de ${persona.nombre}`}>
       <div className="flex items-center gap-2 border-b border-[var(--linea)] bg-[var(--panel2)] px-3 py-2">
-        <span className="grid size-7 place-items-center rounded-full border border-[var(--linea)] bg-[var(--panel)] text-[11px] font-semibold">T</span>
+        <span className="grid size-7 place-items-center rounded-full border border-[var(--linea)] bg-[var(--panel)] text-[13px] font-semibold">T</span>
         {/* Como en WhatsApp: «verificada» es la insignia junto al nombre (el lector la oye
             escrita). Así el segundo renglón alcanza para el número, que antes se cortaba. */}
         <span className="min-w-0 flex-1 leading-tight">
           <span className="flex min-w-0 items-center gap-1">
-            <b className="truncate text-[12px]">TRIM · {campoPorId(p.campoId).nombre}</b>
+            <b className="truncate text-[14px]">TRIM · {campoPorId(p.campoId).nombre}</b>
             <span title="cuenta de empresa verificada" className="inline-flex shrink-0"><BadgeCheck className="size-3 text-[var(--tinta3)]" aria-hidden /></span>
             <span className="sr-only">cuenta de empresa verificada</span>
           </span>
-          <small className="block truncate text-[10px] text-[var(--tinta3)]">a {persona.nombre} · {persona.telefono ? telefonoLegible(persona.telefono) : 'sin número'}</small>
+          <small className="block truncate text-[12px] text-[var(--tinta3)]">a {persona.nombre} · {persona.telefono ? telefonoLegible(persona.telefono) : 'sin número'}</small>
         </span>
       </div>
       {/* Enfocable: el historial se desplaza y con teclado tiene que poder recorrerse. */}
       <div ref={chat} tabIndex={0} role="log" aria-live="polite" aria-label="Conversación" className="grid max-h-[380px] content-start gap-1.5 overflow-y-auto bg-[var(--panel2)] px-2.5 py-2.5">
         {burbujas.map((b, i) => (
-          <div key={i} className={cn('max-w-[85%] whitespace-pre-line rounded-lg border px-2 py-1.5 text-[11px] leading-snug',
+          <div key={i} className={cn('max-w-[85%] whitespace-pre-line rounded-lg border px-2 py-1.5 text-[13px] leading-snug',
             b.de === 'trim' ? 'justify-self-start rounded-tl-sm border-[var(--linea)] bg-[var(--panel)]' : 'justify-self-end rounded-tr-sm border-[var(--linea)] bg-[var(--elevado)] text-[var(--tinta)]')}>
             {b.texto}
-            <small className="mt-0.5 block text-right text-[10px] text-[var(--tinta3)]">{hora(b.hora)}</small>
+            <small className="mt-0.5 block text-right text-[12px] text-[var(--tinta3)]">{hora(b.hora)}</small>
           </div>
         ))}
       </div>
@@ -166,7 +166,7 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
           {rapidas.map(x => (
             <button key={x.clave + x.texto} type="button"
               onClick={e => { focoEnRapidas.current = e.currentTarget === document.activeElement; x.hacer() }}
-              className="min-h-10 cursor-pointer rounded-md border border-[var(--linea)] px-2 py-1.5 text-left text-[11.5px] hover:bg-[var(--panel2)] focus-visible:border-acento sm:min-h-8">
+              className="min-h-10 cursor-pointer rounded-md border border-[var(--linea)] px-2 py-1.5 text-left text-[14px] hover:bg-[var(--panel2)] focus-visible:border-acento sm:min-h-8">
               <b className="tabular mr-1.5">{x.clave}</b>{x.texto}
             </button>
           ))}
@@ -176,8 +176,8 @@ export function Telefono({ p, hilo, persona }: { p: Pregunta; hilo: Mensaje[]; p
         <form className="flex gap-1 border-t border-[var(--linea)] bg-[var(--panel)] p-2"
           onSubmit={e => { e.preventDefault(); if (escrito.trim()) { escribir(escrito.trim()); setEscrito('') } }}>
           <input value={escrito} onChange={e => setEscrito(e.target.value)} aria-label="Escribir la respuesta" placeholder="Escriba qué encontró"
-            className="min-h-10 min-w-0 flex-1 rounded-full border border-[var(--linea)] bg-[var(--panel2)] px-3 text-[11.5px] sm:min-h-8" />
-          <button type="submit" className="min-h-10 cursor-pointer rounded-full border border-[var(--linea)] px-3 text-[11.5px] hover:bg-[var(--panel2)] sm:min-h-8">Enviar</button>
+            className="min-h-10 min-w-0 flex-1 rounded-full border border-[var(--linea)] bg-[var(--panel2)] px-3 text-[14px] sm:min-h-8" />
+          <button type="submit" className="min-h-10 cursor-pointer rounded-full border border-[var(--linea)] px-3 text-[14px] hover:bg-[var(--panel2)] sm:min-h-8">Enviar</button>
         </form>
       )}
     </div>

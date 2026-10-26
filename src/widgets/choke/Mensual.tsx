@@ -32,6 +32,9 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
   const W = 720, G = { x0: 54, x1: 712, y0: 22, y1: 168 }
   const n = Math.max(1, meses.length)
   const paso = (G.x1 - G.x0) / n
+  // La cifra de cada mes cabe en su columna: con muchos meses (el portafolio, doce meses o más) baja hasta 9,
+  // como antes; con pocos, va a 11. Más grande, dos cifras vecinas se montaban (auditor, Firefox).
+  const letraCifra = Math.max(9, Math.min(11, paso / 3.2))
   const ancho = Math.min(34, paso * 0.58)
   const techo = tope(Math.max(...meses.map(m => m.diferido), 0) * 1.12)
   const Y = (v: number) => G.y1 - (v / techo) * (G.y1 - G.y0)
@@ -47,7 +50,7 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
             {[0, techo / 2, techo].map(v => (
               <g key={v}>
                 <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.8} />
-                <text x={G.x0 - 6} y={Y(v) + 3} fontSize={9.5} textAnchor="end" fill="var(--tinta3)" className="tabular">{k(v)}</text>
+                <text x={G.x0 - 6} y={Y(v) + 3} fontSize={11.5} textAnchor="end" fill="var(--tinta3)" className="tabular">{k(v)}</text>
               </g>
             ))}
             {meses.map((m, i) => {
@@ -75,12 +78,12 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
                     {capa(m.porTramo['sin-asignar'], rellenoSvg('sin-asignar', id), 'sin', true)}
                     {activo && m.diferido > 0 && <rect x={x - 2.5} y={Y(Math.max(0, m.diferido)) - 2.5} width={ancho + 5} height={G.y1 - Y(Math.max(0, m.diferido)) + 2.5} fill="none" stroke="var(--tinta)" strokeWidth={1.4} data-mes-activo />}
                     {m.parcial && <rect x={x} y={Y(Math.max(0, m.diferido))} width={ancho} height={G.y1 - Y(Math.max(0, m.diferido))} fill="none" stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="3 2" />}
-                    <text x={x + ancho / 2} y={Y(Math.max(0, m.diferido)) - 5} fontSize={9} textAnchor="middle" fill="var(--tinta2)" className="tabular">{k(m.diferido)}</text>
-                    <text x={x + ancho / 2} y={G.y1 + 14} fontSize={9.5} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta3)'} fontWeight={activo ? 600 : 400} className="font-cond">
+                    <text x={x + ancho / 2} y={Y(Math.max(0, m.diferido)) - 5} fontSize={letraCifra} textAnchor="middle" fill="var(--tinta2)" className="tabular">{k(m.diferido)}</text>
+                    <text x={x + ancho / 2} y={G.y1 + 14} fontSize={11.5} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta3)'} fontWeight={activo ? 600 : 400} className="font-cond">
                       {(nombre?.corto ?? m.mes.slice(5)).toUpperCase()}
                     </text>
-                    {(i === 0 || m.mes.endsWith('-01')) && <text x={x + ancho / 2} y={G.y1 + 26} fontSize={8.5} textAnchor="middle" fill="var(--tinta3)">{m.mes.slice(0, 4)}</text>}
-                    {m.parcial && <text x={x + ancho / 2} y={G.y1 + 26} fontSize={8.5} textAnchor="middle" fill="var(--tinta3)">en curso</text>}
+                    {(i === 0 || m.mes.endsWith('-01')) && <text x={x + ancho / 2} y={G.y1 + 26} fontSize={10.5} textAnchor="middle" fill="var(--tinta3)">{m.mes.slice(0, 4)}</text>}
+                    {m.parcial && <text x={x + ancho / 2} y={G.y1 + 26} fontSize={10.5} textAnchor="middle" fill="var(--tinta3)">en curso</text>}
                   </g>
                 </Tip>
               )
@@ -89,7 +92,7 @@ export function PorTramoMensual({ campos, desde, hasta }: { campos: string[]; de
           </svg>
         </div>
         {/* La leyenda es de texto, con las cuatro palabras de los tramos (U2 §7.4). */}
-        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
           {ORDEN_CHOKE.map(t => (
             <span key={t} className="inline-flex items-center gap-1.5"><Muestra k={t} />{DONDE[t]}</span>
           ))}

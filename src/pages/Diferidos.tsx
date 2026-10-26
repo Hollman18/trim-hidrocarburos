@@ -74,7 +74,7 @@ export function Diferidos() {
           onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
       </Panel>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Cuadre lb={lb} onIdentificar={irA('causa')} />
         {ambito.global ? (
           <Panel titulo="POR CAMPO" extra="bbl">
@@ -97,7 +97,7 @@ export function Diferidos() {
                     ['Por señal', `${n0(f.identificado)} bbl`], ['Declarado', `${n0(f.declarado)} bbl`], ['Sin identificar', `${n0(f.pendiente)} bbl`],
                     ['Alto impacto', `${n0(f.altoImpacto)} bbl`], ['Máximo firmado', maximo], ['Publicable', bloqueado ? 'no' : 'sí']]}
                   className="mb-2 block w-full cursor-pointer text-left">
-                  <div className="flex justify-between gap-2 text-[11.5px]">
+                  <div className="flex justify-between gap-2 text-[14px]">
                     <span className="min-w-0 truncate">{c.nombre} <span className="text-[var(--tinta3)]">· <FueraDeMeta si={sobreMax} tamano={11} />{f.sinMeta ? SIN_META : `máx. ${n0(f.metaDiferido)} bbl`}</span></span>
                     <span className="tabular shrink-0"><FueraDeMeta si={bloqueado} tamano={10} />{n0(f.brecha)}<span className="sr-only"> bbl diferidos</span></span>
                   </div>
@@ -117,7 +117,7 @@ export function Diferidos() {
         )}
       </div>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Palancas lb={lb} base={base} />
         <ParetoTipos lb={lb} />
       </div>
@@ -127,7 +127,7 @@ export function Diferidos() {
         <PorTramo campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} onIdentificar={irA('causa')} />
       </div>
 
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <ParetoEquipos lb={lb} global={ambito.global} onAbrir={abrir} />
         <ParetoPartes lb={lb} onIr={irA('bombas')} />
       </div>

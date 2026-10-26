@@ -37,7 +37,7 @@ export function SelloPublicacion({ lb, className }: { lb: Libro; className?: str
         : pub.estado === 'provisional' ? <Chip>PROVISIONAL</Chip>
           : <><FueraDeMeta si tamano={11} /><Chip tono="fuerte">NO PUBLICABLE</Chip></>}
       {motivos.length > 0 && (
-        <span className="no-imprimir basis-full text-right text-[10.5px] leading-snug text-[var(--tinta2)]">
+        <span className="no-imprimir basis-full text-right text-[13px] leading-snug text-[var(--tinta2)]">
           {motivos.map(m => <span key={m} className="block">{m}</span>)}
         </span>
       )}

@@ -238,6 +238,14 @@
                 ]
               },
               {
+                "name": "@/entities/condiciones",
+                "allowTypeImports": true,
+                "message": "C1 · Del motor (condiciones) las pantallas solo importan nombres de presentación. La franja se pide a la costura: useFranja de src/shared/api/condiciones.ts.",
+                "allowImportNames": [
+                  "ORDEN_FRANJA"
+                ]
+              },
+              {
                 "name": "@/entities/criticidad",
                 "allowTypeImports": true,
                 "message": "Del motor (criticidad) las pantallas y el estado de la aplicación solo importan nombres y reglas de presentación. Los datos del servidor se piden a la costura: src/shared/api/choke.ts."
@@ -409,6 +417,16 @@
                 ]
               },
               {
+                "name": "@/entities/planta-viva",
+                "allowTypeImports": true,
+                "message": "Del motor (planta-viva) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/plantaViva.ts."
+              },
+              {
+                "name": "@/entities/hoy",
+                "allowTypeImports": true,
+                "message": "Del motor (hoy) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/hoy.ts."
+              },
+              {
                 "name": "@/shared/api/diferidos",
                 "importNames": [
                   "pedirLibro",
@@ -446,6 +464,13 @@
                   "pedirBombas"
                 ],
                 "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/condiciones",
+                "importNames": [
+                  "pedirFranja"
+                ],
+                "message": "C1 · Las pantallas no llaman la respuesta del demo de la franja: se lee con useFranja (src/shared/api/condiciones.ts)."
               },
               {
                 "name": "@/shared/api/sap",
@@ -520,6 +545,20 @@
                   "pedirCifrasInforme"
                 ],
                 "message": "Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*` de lo calculado): con la fuente http eso saltaría al servidor. Se lee con el gancho `use*` de la costura (caché de consulta.ts), o fuera del dibujo con `traer*`. Ver la regla en shared/api/diferidos.ts."
+              },
+              {
+                "name": "@/shared/api/plantaViva",
+                "importNames": [
+                  "pedirPlantaViva"
+                ],
+                "message": "Las pantallas no llaman la respuesta del demo (pedirPlantaViva): con la fuente http eso saltaría al servidor. Se lee con usePlantaViva (src/shared/api/plantaViva.ts)."
+              },
+              {
+                "name": "@/shared/api/hoy",
+                "importNames": [
+                  "pedirHoy"
+                ],
+                "message": "Las pantallas no llaman la respuesta del demo (pedirHoy): con la fuente http eso saltaría al servidor. Se lee con useHoy (src/shared/api/hoy.ts)."
               }
             ],
             "patterns": [

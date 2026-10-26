@@ -50,14 +50,14 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
   const inventario = Math.round(b.sinExplicar)
   const tramosCruce = CHOKES_Y_SIN_ASIGNAR.filter(k => b.porChoke[k] >= 0.5)
   const escalonesCruce = ORDEN_ESCALON.filter(e => b.porEscalon[e] >= 0.5)
-  const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   const fila = 'border-b border-[var(--linea2)] py-1.5 last:border-0'
 
   return (
     <section id="por-donde-se-trabo" className="rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)]">
       <header className="flex items-center justify-between gap-2 border-b border-[var(--linea2)] px-3 py-[7px]">
         <h2 className={titulo}>POR DÓNDE SE TRABÓ</h2>
-        <span className="font-cond text-[10px] tracking-[.08em] text-[var(--tinta3)]">bbl · el diferido del libro</span>
+        <span className="font-cond text-[12px] tracking-[.08em] text-[var(--tinta3)]">bbl · el diferido del libro</span>
       </header>
       <div className="p-3">
         <Lectura>
@@ -68,11 +68,11 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
           dónde sale.
         </Lectura>
         {total < 0.5
-          ? <p className="text-[12px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(rango.nombre)}.</p>
+          ? <p className="text-[14px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(rango.nombre)}.</p>
           : (
             <>
               <BarraTramos valores={b.porChoke} leido={`Dónde se trabó en el período: ${leidoReparto(b.porChoke, b.diferido)}, el diferido del libro.`} alto="h-3.5" className="mt-1" />
-              <p className="mt-1 text-[12px] leading-snug">{b.texto}</p>
+              <p className="mt-1 text-[14px] leading-snug">{b.texto}</p>
             </>
           )}
 
@@ -83,17 +83,17 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
               <TramoConRamas key={k} k={k} v={b.porChoke[k]} eq={b.porChokeEquipo[k]} parte={parte} fila={fila}
                 nodo={arbol.raiz.hijos.find(h => h.valor === k)} codigos={codigos} onIdentificar={onIdentificar} />
             ))}
-            <p className="tabular mt-1 flex flex-wrap items-baseline justify-between gap-x-2 text-[12px]">
-              <span>= el diferido del libro</span><b className="text-[13px]" data-total-tramos={total}>{n0(total)} bbl</b>
+            <p className="tabular mt-1 flex flex-wrap items-baseline justify-between gap-x-2 text-[14px]">
+              <span>= el diferido del libro</span><b className="text-[15px]" data-total-tramos={total}>{n0(total)} bbl</b>
             </p>
-            {total >= 0.5 && <p className="no-imprimir text-[10.5px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>}
+            {total >= 0.5 && <p className="no-imprimir text-[13px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>}
           </div>
 
           <div className="min-w-0" data-por-escalon="">
             <h3 className={`${titulo} mb-0.5 flex flex-wrap items-center gap-x-1`}>
               <span>POR QUÉ NO SE PRODUJO</span>
             </h3>
-            <p className="mb-0.5 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+            <p className="mb-0.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
               <span>el mismo total, por escalón</span>
               <Info titulo="Por qué no se produjo"
                 texto="Es la escalera de la NSTA (§5.3 y §6.4): desarrollo (el yacimiento y los proyectos), desempeño (levantamiento sin optimizar), disponibilidad planeada y no planeada, y capacidad (restricción sin falla). Cada barril va a un tramo y a un escalón. El norte de TRIM vive en la disponibilidad no planeada: las paradas que nadie programó." />
@@ -105,13 +105,13 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
                 <Tip key={e} titulo={ESCALON[e]} pista={`En la escalera de la NSTA: ${NOMBRE_ESCALON[e]}.`}
                   filas={[['Barriles', `${n0(v)} bbl`], ...(total > 0 ? [['Del diferido', parte(v)] as [string, string]] : []),
                     ...tramosCruce.filter(k => b.porChokeEscalon[k][e] >= 0.5).map(k => [mayuscula(LARGO_TRAMO[k]), `${n0(b.porChokeEscalon[k][e])} bbl`] as [string, string])]}
-                  aLaVista className={cn(fila, 'flex items-baseline gap-2 text-[12px]', v < 0.5 && 'text-[var(--tinta3)]')}>
+                  aLaVista className={cn(fila, 'flex items-baseline gap-2 text-[14px]', v < 0.5 && 'text-[var(--tinta3)]')}>
                   <span className={cn('min-w-0 flex-1', norte && 'font-semibold')}>
                     {ESCALON[e]}
-                    {norte && <small className="block text-[10px] font-normal text-[var(--tinta2)]">lo que TRIM tiene que bajar</small>}
+                    {norte && <small className="block text-[12px] font-normal text-[var(--tinta2)]">lo que TRIM tiene que bajar</small>}
                   </span>
-                  <b className="tabular shrink-0 text-[13px]" data-escalon={e} data-bbl={v}>{n0(v)}</b>
-                  <small className="tabular w-[42px] shrink-0 text-right text-[10px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
+                  <b className="tabular shrink-0 text-[15px]" data-escalon={e} data-bbl={v}>{n0(v)}</b>
+                  <small className="tabular w-[42px] shrink-0 text-right text-[12px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
                 </Tip>
               )
             })}
@@ -119,7 +119,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
         </div>
 
         {(b.porConfirmar >= 0.5 || inventario !== 0 || b.textoEstructural) && (
-          <div className="mt-2 grid gap-1 text-[11px] text-[var(--tinta2)]">
+          <div className="mt-2 grid gap-1 text-[13px] text-[var(--tinta2)]">
             {b.porConfirmar >= 0.5 && (
               <p className="flex flex-wrap items-center gap-x-1">
                 <span className="tabular">{n0(b.porConfirmar)} bbl con dónde se trabó por confirmar</span>
@@ -145,14 +145,14 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
               return (
                 <div key={c.campoId} data-partible className={cn(fila, 'grid items-center gap-x-3 gap-y-0.5 sm:grid-cols-[minmax(110px,1fr)_minmax(0,2.4fr)_64px]')}
                   data-donde-se-trabo={c.campoId} data-total={c.diferido}>
-                  <span className="min-w-0 truncate text-[12px]">{nombre}</span>
+                  <span className="min-w-0 truncate text-[14px]">{nombre}</span>
                   <span className="min-w-0">
                     {c.diferido >= 0.5
                       ? <BarraTramos valores={c.porChoke} leido={`${nombre}: ${leidoReparto(c.porChoke, c.diferido)}.`} alto="h-2" palabras={false} />
-                      : <small className="text-[10.5px] text-[var(--tinta3)]">nada se trabó</small>}
-                    {c.diferido >= 0.5 && <small className="tabular block text-[10.5px] text-[var(--tinta2)]">{textoReparto(c.porChoke)}</small>}
+                      : <small className="text-[13px] text-[var(--tinta3)]">nada se trabó</small>}
+                    {c.diferido >= 0.5 && <small className="tabular block text-[13px] text-[var(--tinta2)]">{textoReparto(c.porChoke)}</small>}
                   </span>
-                  <b className="tabular text-[12.5px] sm:text-right">{n0(c.diferido)}<span className="sr-only"> bbl</span></b>
+                  <b className="tabular text-[15px] sm:text-right">{n0(c.diferido)}<span className="sr-only"> bbl</span></b>
                 </div>
               )
             })}
@@ -162,16 +162,16 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
         {tramosCruce.length > 0 && escalonesCruce.length > 0 && (
           <div className="mt-2.5">
             <button type="button" aria-expanded={cruce} aria-controls={idCruce} onClick={() => setCruce(x => !x)}
-              className="no-imprimir flex min-h-6 cursor-pointer items-center gap-1 text-[11px] text-[var(--tinta2)] hover:text-[var(--tinta)]">
+              className="no-imprimir flex min-h-6 cursor-pointer items-center gap-1 text-[13px] text-[var(--tinta2)] hover:text-[var(--tinta)]">
               <ChevronRight aria-hidden size={13} className={cn('transition-transform', cruce && 'rotate-90')} />
               Cada tramo por qué no se produjo
             </button>
             {/* Plegado en la pantalla; en el papel, desplegado. */}
             <div id={idCruce} className={cn('mt-1 overflow-x-auto', !cruce && 'hidden print:block')}>
               <h3 className={`${titulo} mb-1 hidden print:block`}>CADA TRAMO POR QUÉ NO SE PRODUJO</h3>
-              <table className="tabular w-full min-w-[420px] border-collapse text-[11px]">
+              <table className="tabular w-full min-w-[420px] border-collapse text-[13px]">
                 <thead>
-                  <tr className="text-[10px] text-[var(--tinta3)]">
+                  <tr className="text-[12px] text-[var(--tinta3)]">
                     <th scope="col" className="py-1 pr-2 text-left font-normal">bbl</th>
                     {escalonesCruce.map(e => <th key={e} scope="col" className="px-1.5 py-1 text-right font-normal">{ESCALON[e].split(':')[0]}</th>)}
                     <th scope="col" className="py-1 pl-1.5 text-right font-normal">Total</th>
@@ -211,13 +211,13 @@ function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: 
     <>
       <Muestra k={k} />
       <span className={cn('min-w-0 flex-1', !sin && v >= 0.5 && 'font-medium')}>{mayuscula(LARGO_TRAMO[k])}</span>
-      <b className="tabular shrink-0 text-[13px]" data-tramo={k} data-bbl={v}>{n0(v)}</b>
-      <small className="tabular w-[42px] shrink-0 text-right text-[10px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
+      <b className="tabular shrink-0 text-[15px]" data-tramo={k} data-bbl={v}>{n0(v)}</b>
+      <small className="tabular w-[42px] shrink-0 text-right text-[12px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
     </>
   )
   return (
     <div className={cn(fila, v < 0.5 && 'text-[var(--tinta3)]')} data-tramo-fila={k}>
-      <div className="flex items-baseline gap-1 text-[12px]">
+      <div className="flex items-baseline gap-1 text-[14px]">
         {conRamas ? (
           <button type="button" aria-expanded={abierto} aria-controls={id} onClick={() => setAbierto(a => !a)}
             className="flex min-h-6 min-w-0 flex-1 cursor-pointer items-baseline gap-2 rounded-sm text-left hover:bg-[var(--panel2)]">
@@ -231,7 +231,7 @@ function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: 
         {sin && <Info titulo="Sin identificar" texto="Paradas que todavía no tienen causa: hasta que alguien diga qué pasó, no se sabe dónde se trabó. No se reparten entre los tramos." />}
       </div>
       {eq.length > 0 && (
-        <small className="tabular flex flex-wrap items-center gap-x-1 pl-[38px] text-[10.5px] text-[var(--tinta2)]">
+        <small className="tabular flex flex-wrap items-center gap-x-1 pl-[38px] text-[13px] text-[var(--tinta2)]">
           <span>{eq.slice(0, 3).map(x => `${x.equipo} ${n0(x.bbl)}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}</span>
           {/* Un equipo con barriles de dos causas (la electrosumergible de LC-04 y su baja tensión) lo dice: si no, la cifra
               no cuadra con «POR EQUIPO», donde cada parte va con quien se la carga (B-12). */}

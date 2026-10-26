@@ -89,7 +89,7 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
           aria-describedby={mal ? regla : undefined}
           value={Number.isNaN(v) ? '' : v} className={cn(cajaNumero, mal && cajaMala)}
           onChange={ev => onEditar(campoId, { [k]: ev.target.value === '' ? NaN : Number(ev.target.value) })} />
-        {mal && <small id={regla} className="mt-0.5 block text-right text-[10px] leading-tight text-[var(--tinta)]">{REGLA_CAJA[k]}</small>}
+        {mal && <small id={regla} className="mt-0.5 block text-right text-[12px] leading-tight text-[var(--tinta)]">{REGLA_CAJA[k]}</small>}
       </>
     )
   }
@@ -105,8 +105,8 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
         rige su meta.
       </Lectura>
 
-      <div role="table" aria-label="Metas por campo" className="text-[12px]">
-        <div role="row" className={cn(columnas, 'items-end border-b border-[var(--linea)] pb-1 text-[10px] text-[var(--tinta3)]')}>
+      <div role="table" aria-label="Metas por campo" className="text-[14px]">
+        <div role="row" className={cn(columnas, 'items-end border-b border-[var(--linea)] pb-1 text-[12px] text-[var(--tinta3)]')}>
           <span role="columnheader">Campo</span>
           <span role="columnheader" className="text-right">Producción, bbl/d</span>
           <span role="columnheader" className="text-right">Máx. de diferido, bbl/d</span>
@@ -126,7 +126,7 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
                     {/* La señal de que el nombre tiene globo (la fecha está ahí). */}
                     {fechas.length > 0 && <IconoInfo aria-hidden className="no-imprimir size-3 shrink-0 text-[var(--tinta3)]" />}
                   </span>
-                  <small className="block text-[10px] leading-tight text-[var(--tinta3)]">
+                  <small className="block text-[12px] leading-tight text-[var(--tinta3)]">
                     {cambiado
                       ? (vig ? <>antes {n0(antes.produccionBpd)} · máx. {n0(antes.diferidoMaxBpd)} bbl/d</> : <>antes {SIN_META}</>)
                       : <>pueden dar ≈ {n0(pot)} bbl/d{vig ? '' : ` · ${SIN_META}`}</>}
@@ -143,8 +143,8 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
         ))}
         <div role="row" className={cn(columnas, 'pt-2')}>
           <span role="cell" className="min-w-0">
-            <b className="block text-[13px]">Meta global</b>
-            <small className="block text-[10px] leading-tight text-[var(--tinta3)]">
+            <b className="block text-[15px]">Meta global</b>
+            <small className="block text-[12px] leading-tight text-[var(--tinta3)]">
               suma de {campos.length} campos{sinMeta ? ` · ${sinMeta} ${SIN_META}` : ''} · pueden dar ≈ {n0(tot.pot)} bbl/d
             </small>
           </span>
@@ -155,7 +155,7 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
       </div>
 
       {/* El ⓘ va en línea con el texto (no como hermano flexible): en el teléfono no queda solo en su renglón. */}
-      <p className="mt-2 text-[11.5px] text-[var(--tinta2)]">
+      <p className="mt-2 text-[14px] text-[var(--tinta2)]">
         Total de {MES[m - 1]} de {y}:{' '}
         {mes.sinMeta ? <b className="text-[var(--tinta)]">sin total: {SIN_META} en algún campo</b> : <>
           producción <b className="tabular text-[var(--tinta)]">{cifra(mes.prod)} bbl</b> ·
@@ -166,19 +166,19 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
       </p>
 
       {avisos.length > 0 && (
-        <ul className="mt-2 grid gap-1 text-[11.5px] text-[var(--tinta)]">
+        <ul className="mt-2 grid gap-1 text-[14px] text-[var(--tinta)]">
           {avisos.map(([a, cifras]) => (
             <li key={a} className="flex items-start gap-1.5"><FueraDeMeta si tamano={11} /><span>{a}<Info className="ml-1" titulo="Detalle" texto={cifras} /></span></li>
           ))}
         </ul>
       )}
       {programadas.length > 0 && programadas.length <= 3 && (
-        <p className="mt-2 text-[11px] text-[var(--tinta2)]">
+        <p className="mt-2 text-[13px] text-[var(--tinta2)]">
           Firmadas para después: {programadas.map(({ c, x }) => `${c.nombre} desde el ${fechaDia(x.desde)} (producción ${n0(x.produccionBpd)} · máx. ${n0(x.diferidoMaxBpd)} bbl/d)`).join('; ')}.
         </p>
       )}
       {programadas.length > 3 && (
-        <p className="mt-2 text-[11px] text-[var(--tinta2)]">
+        <p className="mt-2 text-[13px] text-[var(--tinta2)]">
           Plan firmado hasta el {fechaDia(programadas.map(p => p.x.desde).sort().at(-1)!)}: véalo en «Plan mes a mes».
         </p>
       )}

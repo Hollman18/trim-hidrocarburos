@@ -30,7 +30,7 @@ import {
 } from '@/shared/api/choke'
 import { useSesion, useVersiones, usePlantas } from '@/shared/api/sesion'
 
-const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[12px] outline-none focus:border-acento disabled:opacity-70'
+const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento disabled:opacity-70'
 
 type Pestana = 'metas' | 'accesos' | 'tecnica' | 'filosofia'
 const PESTANA: Record<Pestana, string> = {
@@ -97,7 +97,7 @@ function ConPestanas() {
   return (
     <>
       {firmada && (
-        <p role="status" className="mb-2.5 flex flex-wrap items-center gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[12px]">
+        <p role="status" className="mb-2.5 flex flex-wrap items-center gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[14px]">
           <Check className="size-3.5 shrink-0" />
           <span>Firmada la <b>versión {firmada.version}</b> · «{firmada.motivo}»</span>
           <Info titulo="Desde cuándo rige" texto="Cada cambio rige desde la fecha que lleva; desde ahí las pantallas se miden contra él." />
@@ -107,8 +107,8 @@ function ConPestanas() {
         {pestanas.map((p, i) => (
           <button key={p} id={idPestana(p)} role="tab" aria-selected={actual === p} aria-controls={idPanel}
             tabIndex={actual === p ? 0 : -1} onKeyDown={e => moverCon(e, i)} onClick={() => irA(p)}
-            className={cn('cursor-pointer rounded border px-3 py-1.5 text-[12px]',
-              actual === p ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+            className={cn('cursor-pointer rounded-full border px-3 py-1.5 text-[14px]',
+              actual === p ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
             {PESTANA[p]}
           </button>
         ))}
@@ -255,7 +255,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
 
   const firma = (
     <Panel className="mb-2.5" titulo="FIRMAR LA VERSIÓN" extra={cambios.length ? `${plural(cambios.length, 'cambio', 'cambios')} en el borrador` : 'sin cambios'}>
-      {cambios.length === 0 ? <p className="text-[12px] text-[var(--tinta2)]">No hay nada que firmar.</p> : (
+      {cambios.length === 0 ? <p className="text-[14px] text-[var(--tinta2)]">No hay nada que firmar.</p> : (
         <>
           {/* La lista la arma el motor (diferenciasPorGrupo): cada cambio con su fecha. */}
           {grupos.metas.length > 0 && <Grupo titulo="Metas, precio y publicación · firma el gerente de activo" lista={grupos.metas} />}
@@ -264,8 +264,8 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       )}
       {errores.length > 0 && (
         <div role="alert" className="mb-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5">
-          <p className="font-cond text-[10px] font-semibold tracking-[.11em]">CORRIJA ANTES DE FIRMAR</p>
-          <ul className="list-disc pl-4 text-[11.5px] text-[var(--tinta)]">{errores.map(e => <li key={e}>{e}</li>)}</ul>
+          <p className="font-cond text-[12px] font-semibold tracking-[.11em]">CORRIJA ANTES DE FIRMAR</p>
+          <ul className="list-disc pl-4 text-[14px] text-[var(--tinta)]">{errores.map(e => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
       {cambios.length > 0 && (puedeMetas || puedeTecnica) && persona.sinAcceso && (
@@ -279,13 +279,13 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       {cambios.length > 0 && (puedeMetas || puedeTecnica) && !persona.sinAcceso && (
         <form className="grid gap-1.5" onSubmit={e => { e.preventDefault(); void firmar() }}>
           <label className="grid gap-0.5">
-            <span className="text-[10.5px] text-[var(--tinta2)]">Motivo · obligatorio</span>
+            <span className="text-[13px] text-[var(--tinta2)]">Motivo · obligatorio</span>
             <input id={idMotivo} value={motivo} onChange={e => { setMotivo(e.target.value); setMensaje(null) }} className={campoInput}
               aria-invalid={!!mensaje && !alcanza(motivo, MOTIVO_MINIMO)} aria-describedby={mensaje ? idMensaje : undefined}
               placeholder={pestana === 'filosofia' ? 'Ej.: topología revisada en campo con el jefe de planta'
                 : Object.keys(plan).length ? 'Ej.: presupuesto 2027 aprobado por la junta' : grupos.metas.length ? 'Ej.: metas acordadas en el comité de producción de octubre' : 'Ej.: nuevo certificado de aforo del tanque'} />
           </label>
-          {mensaje && <p id={idMensaje} className="text-[11.5px] text-[var(--tinta)]" role="alert">{mensaje}</p>}
+          {mensaje && <p id={idMensaje} className="text-[14px] text-[var(--tinta)]" role="alert">{mensaje}</p>}
           <span className="flex flex-wrap gap-1.5">
             <Boton variante="principal" type="submit" disabled={errores.length > 0}><PenLine className="mr-1 inline size-3.5" />Firmar como {persona.nombre}</Boton>
             <Boton type="button" onClick={descartar}>Descartar</Boton>
@@ -308,8 +308,8 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
     <div role="group" aria-label="Cómo se fijan las metas" className="mb-2.5 flex flex-wrap items-center gap-1">
       {([['vigente', 'Meta vigente'], ['plan', 'Plan mes a mes']] as const).map(([m, t]) => (
         <button key={m} type="button" aria-pressed={modo === m} onClick={() => setModo(m)}
-          className={cn('cursor-pointer rounded border px-3 py-1 text-[11.5px]',
-            modo === m ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+          className={cn('cursor-pointer rounded-full border px-3 py-1 text-[14px]',
+            modo === m ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
           {t}
         </button>
       ))}
@@ -340,18 +340,18 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       {selectorModo}
       {puedeMetas && (
         <Panel className="mb-2.5" titulo="DESDE CUÁNDO RIGE">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
             <label className="flex items-center gap-2">
               <span>Desde el</span>
               <input type="date" value={desde} min={desdeMin} onChange={e => { if (e.target.value) { setDesde(e.target.value); setMensaje(null) } }}
                 aria-label="Día desde el que rigen los cambios"
                 aria-invalid={desde < desdeMin} aria-describedby={desde < desdeMin ? idFechaMala : undefined}
-                className="rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[4px] text-[12px] outline-none focus:border-acento" />
+                className="rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[4px] text-[14px] outline-none focus:border-acento" />
             </label>
             <b>{fechaDia(desde)}</b>
             {/* Lo que pasa con el día escogido: los días ya corridos se vuelven a medir con lo nuevo. */}
             {desde >= desdeMin && (
-              <span className="text-[11px] text-[var(--tinta2)]">
+              <span className="text-[13px] text-[var(--tinta2)]">
                 {desde <= hoy
                   ? <>Incluye {diasEntre(desde, hoy) + 1} {diasEntre(desde, hoy) === 0 ? 'día ya corrido (hoy)' : 'días ya corridos'}</>
                   : <>Empieza en {diasEntre(hoy, desde)} {diasEntre(hoy, desde) === 1 ? 'día' : 'días'}</>}
@@ -359,7 +359,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
             )}
             <Info titulo="Desde cuándo rige"
               texto={`${desde < desdeMin ? '' : desde <= hoy ? 'Lo que va del mes se medirá con lo nuevo. ' : 'Hasta entonces rige lo que está firmado. '}Una sola fecha para toda la firma. No puede ser antes del ${fechaDia(desdeMin)}: lo de un mes cerrado no se reescribe.`} />
-            {desde < desdeMin && <b id={idFechaMala} role="alert" className="basis-full text-[11px]">Esa fecha es de un mes cerrado: escoja el {fechaDia(desdeMin)} o después.</b>}
+            {desde < desdeMin && <b id={idFechaMala} role="alert" className="basis-full text-[13px]">Esa fecha es de un mes cerrado: escoja el {fechaDia(desdeMin)} o después.</b>}
           </div>
         </Panel>
       )}
@@ -374,7 +374,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
           dice cuánto puede quedar sin causa identificada para cerrar el libro del mes. Los dos llevan fecha,
           como las metas: cambiarlos no toca los meses cerrados.
         </Lectura>
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(76px,108px)_minmax(76px,108px)] items-end gap-x-2 border-b border-[var(--linea)] pb-1 text-[10px] text-[var(--tinta3)]">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(76px,108px)_minmax(76px,108px)] items-end gap-x-2 border-b border-[var(--linea)] pb-1 text-[12px] text-[var(--tinta3)]">
           <span>Campo</span><span className="text-right">Precio neto, USD/bbl</span><span className="text-right">Máx. % sin causa</span>
         </div>
         {campos.map(c => {
@@ -386,9 +386,9 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
           return (
             <div key={c.id} className="grid grid-cols-[minmax(0,1fr)_minmax(76px,108px)_minmax(76px,108px)] items-center gap-x-2 border-b border-[var(--linea2)] py-1.5 last:border-0">
               <span className="min-w-0">
-                <b className="block truncate text-[12px]">{c.nombre}</b>
-                {cambiado && <small className="block text-[10px] text-[var(--tinta3)]">antes {sinMeta ? SIN_META : <>{b.netbackUsd ?? 'sin precio'}{b.netbackUsd !== undefined ? ' USD/bbl' : ''} · {b.criterioSinCausa} %</>}</small>}
-                {!cambiado && sinMeta && <small className="block text-[10px] text-[var(--tinta3)]">{SIN_META}</small>}
+                <b className="block truncate text-[14px]">{c.nombre}</b>
+                {cambiado && <small className="block text-[12px] text-[var(--tinta3)]">antes {sinMeta ? SIN_META : <>{b.netbackUsd ?? 'sin precio'}{b.netbackUsd !== undefined ? ' USD/bbl' : ''} · {b.criterioSinCausa} %</>}</small>}
+                {!cambiado && sinMeta && <small className="block text-[12px] text-[var(--tinta3)]">{SIN_META}</small>}
               </span>
               <input type="number" step={0.5} min={0} disabled={!puedeMetas} aria-label={`Precio neto de ${c.nombre}, USD/bbl`} placeholder="sin precio"
                 aria-invalid={precioMalo} value={v.netbackUsd ?? ''} className={cn(cajaNumero, precioMalo && cajaMala)}
@@ -431,12 +431,12 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
           onCambio={v => cambiar(c => { c.empresa = v })} />
       </Panel>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Panel titulo="TANQUES DE AGUA">
           {borrador.tanques.filter(t => t.campoId === campoId).map(t => (
             <div key={t.id} className="mb-2 border-b border-[var(--linea2)] pb-2 last:mb-0 last:border-0">
-              <b className="block text-[12px]">{t.nombre}</b>
-              <small className="font-mono block text-[10px] text-[var(--tinta3)]">{t.id} · lo vacía {t.bomba} · nivel ahora {(nv => (nv ? `${n1(nv.pct)} %` : 'sin lectura'))(Object.hasOwn(niveles, t.id) ? niveles[t.id] : undefined)}</small>
+              <b className="block text-[14px]">{t.nombre}</b>
+              <small className="font-mono block text-[12px] text-[var(--tinta3)]">{t.id} · lo vacía {t.bomba} · nivel ahora {(nv => (nv ? `${n1(nv.pct)} %` : 'sin lectura'))(Object.hasOwn(niveles, t.id) ? niveles[t.id] : undefined)}</small>
               <div className="mt-1.5 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(130px,1fr))]">
                 <Numero rotulo="Capacidad" sufijo="bbl" valor={t.capacidadBbl} paso={100} min={100} max={500000} disabled={!puedeTecnica}
                   onCambio={v => cambiar(c => { c.tanques.find(x => x.id === t.id)!.capacidadBbl = v })} />
@@ -450,7 +450,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
             </div>
           ))}
           {!borrador.tanques.some(t => t.campoId === campoId) && (
-            <p className="flex flex-wrap items-center gap-x-1 text-[12px] text-[var(--tinta2)]">
+            <p className="flex flex-wrap items-center gap-x-1 text-[14px] text-[var(--tinta2)]">
               Sin tanque de agua configurado.
               <Info titulo="Sin tanque de agua" texto={`${campo.nombre} no tiene tanque de agua configurado: su bomba no cierra pozos por nivel.`} />
             </p>
@@ -460,15 +460,15 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
         <Panel titulo="RESPALDO DE BOMBAS">
           {!pedirPerfilesBomba(campoId).length && (
             // «con perfil»: Perfil del campo también cuenta las bombas registradas sin perfil; sin esa palabra, la pantalla se contradice.
-            <p className="text-[12px] text-[var(--tinta2)]">Ninguna bomba con perfil: no hay respaldo que declarar.</p>
+            <p className="text-[14px] text-[var(--tinta2)]">Ninguna bomba con perfil: no hay respaldo que declarar.</p>
           )}
           {pedirPerfilesBomba(campoId).map(p => {
             const id = p.equipo
             const r = borrador.respaldos.find(x => x.campoId === campoId && x.equipo === id)
             return (
               <div key={id} className="mb-2 border-b border-[var(--linea2)] pb-2 last:mb-0 last:border-0">
-                <b className="block text-[12px]">{pedirRegistroDeEquipos(campoId).find(e => e.id === id)?.nombre ?? id}</b>
-                <small className="block text-[10.5px] text-[var(--tinta3)]">{id} · {PAPEL_NOMBRE[p.papel]} · capacidad {n0(p.capacidadBpd)} bbl/d{p.pozos ? ` · pozos ${p.pozos.join(', ')}` : ''}</small>
+                <b className="block text-[14px]">{pedirRegistroDeEquipos(campoId).find(e => e.id === id)?.nombre ?? id}</b>
+                <small className="block text-[13px] text-[var(--tinta3)]">{id} · {PAPEL_NOMBRE[p.papel]} · capacidad {n0(p.capacidadBpd)} bbl/d{p.pozos ? ` · pozos ${p.pozos.join(', ')}` : ''}</small>
                 <div className="mt-1.5 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
                   <Numero rotulo="Capacidad libre" sufijo="bbl/d" valor={r?.libreBpd ?? 0} paso={100} min={0} max={p.capacidadBpd * 2} disabled={!puedeTecnica}
                     onCambio={v => cambiar(c => {
@@ -488,18 +488,18 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
 
       {firmaVisible && firma}
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         {historial}
         <Fuentes campoId={campoId} niveles={borrador.tanques.filter(t => t.campoId === campoId).map(t => `${t.id} · ${t.tagNivel}`)}
           onConectores={rol.pantallas.includes('conectores') ? () => setPantalla('conectores') : undefined} />
       </div>
 
       <details className="group">
-        <summary className="mb-2 flex cursor-pointer list-none items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[12px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
+        <summary className="mb-2 flex cursor-pointer list-none items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[14px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
           <b className="flex-1">Esquema de planta</b>
           {/* Con el modelo choke el esquema sí cambia algo: de él sale a qué pozos sirve cada equipo (U2 §8.5 y §12, punto 7). */}
-          <span className="text-[10.5px] text-[var(--tinta3)]">de él TRIM deduce a qué pozos sirve cada equipo</span>
-          <span className="text-[10px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
+          <span className="text-[13px] text-[var(--tinta3)]">de él TRIM deduce a qué pozos sirve cada equipo</span>
+          <span className="text-[12px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
         </summary>
         <Esquema puede={rol.puede['conector:configurar']} conGas={perfilDe(borrador, campoId).gas !== 'no'} />
       </details>
@@ -532,9 +532,9 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
     perfil.bombas && bombas === 0 && ['No hay bombas de la línea registradas', vacia],
   ] as Array<false | [string, string]>).filter((x): x is [string, string] => !!x)
   const casilla = (k: 'bombas' | 'electrosumergibles', rotulo: string, cuantos: string) => (
-    <label className="flex items-start gap-2 py-1 text-[12px]">
+    <label className="flex items-start gap-2 py-1 text-[14px]">
       <input type="checkbox" className="mt-0.5" checked={perfil[k]} disabled={!puede} onChange={e => onCambio({ [k]: e.target.checked })} />
-      <span>{rotulo}<small className="block text-[10.5px] text-[var(--tinta3)]">{cuantos}</small></span>
+      <span>{rotulo}<small className="block text-[13px] text-[var(--tinta3)]">{cuantos}</small></span>
     </label>
   )
   return (
@@ -547,13 +547,13 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
       </Lectura>
       <div className="grid max-w-[340px] gap-0.5">
         <label className="grid gap-0.5">
-          <span className="text-[10.5px] text-[var(--tinta2)]">Destino principal del gas</span>
+          <span className="text-[13px] text-[var(--tinta2)]">Destino principal del gas</span>
           <select value={perfil.gas} disabled={!puede} onChange={e => onCambio({ gas: e.target.value as DestinoGas })} className={campoInput}>
             {(Object.keys(NOMBRE_GAS) as DestinoGas[]).map(g => <option key={g} value={g}>{NOMBRE_GAS[g][0]!.toUpperCase() + NOMBRE_GAS[g].slice(1)}</option>)}
           </select>
         </label>
         {/* Fuera de la etiqueta: el ⓘ no entra en el nombre de la lista. */}
-        <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+        <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
           {enGas ? `${plural(enGas, 'elemento', 'elementos')} en el tren de gas` : 'sin elementos en el tren de gas'}
           <Info titulo="Gas" texto="El tren de gas es el del esquema de planta. El gas no se mide en esta fase." />
         </small>
@@ -563,7 +563,7 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
         {casilla('electrosumergibles', 'Electrosumergibles', plural(esp, 'pozo registrado', 'pozos registrados'))}
       </div>
       {avisos.length > 0 && (
-        <ul className="mt-2 grid gap-1 text-[11.5px] text-[var(--tinta)]">
+        <ul className="mt-2 grid gap-1 text-[14px] text-[var(--tinta)]">
           {avisos.map(([a, porque]) => (
             <li key={a} className="flex items-start gap-1.5"><FueraDeMeta si tamano={11} /><span>{a}<Info className="ml-1" titulo="Qué pasa" texto={porque} /></span></li>
           ))}
@@ -576,8 +576,8 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
 function Grupo({ titulo, lista }: { titulo: string; lista: string[] }) {
   return (
     <div className="mb-2">
-      <p className="font-cond mb-0.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{titulo.toUpperCase()}</p>
-      <ul className="list-disc pl-4 text-[11.5px] text-[var(--tinta2)]">{lista.map(c => <li key={c}>{c}</li>)}</ul>
+      <p className="font-cond mb-0.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{titulo.toUpperCase()}</p>
+      <ul className="list-disc pl-4 text-[14px] text-[var(--tinta2)]">{lista.map(c => <li key={c}>{c}</li>)}</ul>
     </div>
   )
 }
@@ -588,13 +588,13 @@ function Historial({ versiones }: { versiones: ReturnType<typeof useVersiones> }
   const lista = [...versiones].reverse()
   const corta = useVerMas(lista)
   const fila = (v: typeof lista[number]) => (
-    <div key={v.version} className="border-b border-[var(--linea2)] py-2 text-[11.5px] last:border-0">
+    <div key={v.version} className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
       <div className="flex flex-wrap items-baseline gap-x-2">
         <b>Versión {v.version}</b>{v === lista[0] && <Chip tono="fuerte">vigente</Chip>}
-        <span className="text-[10.5px] text-[var(--tinta3)]">{fechaHora(new Date(v.fecha))} · {v.por}</span>
+        <span className="text-[13px] text-[var(--tinta3)]">{fechaHora(new Date(v.fecha))} · {v.por}</span>
       </div>
       <p className="text-[var(--tinta2)]">«{v.motivo}»</p>
-      <ul className="list-disc pl-4 text-[10.5px] text-[var(--tinta3)]">{v.cambios.map(c => <li key={c}>{c}</li>)}</ul>
+      <ul className="list-disc pl-4 text-[13px] text-[var(--tinta3)]">{v.cambios.map(c => <li key={c}>{c}</li>)}</ul>
     </div>
   )
   return (
@@ -631,9 +631,9 @@ function Programa({ borrador, campoId, puede, onCambio }: {
   // (las que todavía se pueden quitar, también las recién agregadas) nunca se esconden.
   const corta = useVerMas(lista, { prioridad: p => (empezo(p) ? 2 : 1) })
   const fila = (p: ParadaProgramada) => (
-    <div key={p.id} className="flex items-start gap-2 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
-      <span className="min-w-0 flex-1"><b>{p.equipo}</b> <span className="text-[10.5px] text-[var(--tinta3)]">{fechaHora(new Date(p.desde))} a {fechaHora(new Date(p.hasta))}</span>
-        <small className="block text-[10.5px] text-[var(--tinta2)]">{p.motivo}</small></span>
+    <div key={p.id} className="flex items-start gap-2 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
+      <span className="min-w-0 flex-1"><b>{p.equipo}</b> <span className="text-[13px] text-[var(--tinta3)]">{fechaHora(new Date(p.desde))} a {fechaHora(new Date(p.hasta))}</span>
+        <small className="block text-[13px] text-[var(--tinta2)]">{p.motivo}</small></span>
       {puede && (
         <button onClick={() => onCambio(c => { c.programa = c.programa.filter(x => x.id !== p.id) })} aria-label={`Quitar la parada de ${p.equipo}${empezo(p) ? ': ya empezó, no se puede quitar del programa' : ''}`}
           disabled={empezo(p)} title={empezo(p) ? 'Ya empezó: no se puede quitar del programa' : undefined}
@@ -651,15 +651,15 @@ function Programa({ borrador, campoId, puede, onCambio }: {
       <VerMas ocultas={corta.ocultas} abierto={corta.abierto} onAlternar={corta.alternar} />
       {puede && (
         <div className="mt-2 grid gap-1.5 border-t border-[var(--linea2)] pt-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))]">
-          <label className="grid gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Equipo</span>
+          <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Equipo</span>
             <select value={nuevo.equipo} onChange={e => setNuevo(n => ({ ...n, equipo: e.target.value }))} className={campoInput}>
               {opciones.map(o => <option key={o} value={o}>{o}</option>)}
             </select></label>
-          <label className="grid min-w-0 gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Desde</span>
+          <label className="grid min-w-0 gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Desde</span>
             <input type="datetime-local" value={nuevo.desde} min={ahoraLocal} onChange={e => setNuevo(n => ({ ...n, desde: e.target.value }))} className={cn(campoInput, 'min-w-0')} /></label>
-          <label className="grid min-w-0 gap-0.5"><span className="text-[10.5px] text-[var(--tinta2)]">Hasta</span>
+          <label className="grid min-w-0 gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Hasta</span>
             <input type="datetime-local" value={nuevo.hasta} min={nuevo.desde || ahoraLocal} onChange={e => setNuevo(n => ({ ...n, hasta: e.target.value }))} className={cn(campoInput, 'min-w-0')} /></label>
-          <label className="grid gap-0.5 [grid-column:1/-1]"><span className="text-[10.5px] text-[var(--tinta2)]">Motivo</span>
+          <label className="grid gap-0.5 [grid-column:1/-1]"><span className="text-[13px] text-[var(--tinta2)]">Motivo</span>
             <input value={nuevo.motivo} onChange={e => setNuevo(n => ({ ...n, motivo: e.target.value }))} className={campoInput} placeholder="Ej.: cambio de sello programado" /></label>
           <Boton variante="principal" className="[grid-column:1/-1]" onClick={agregar}
             disabled={!nuevo.equipo || !nuevo.desde || !nuevo.hasta || !alcanza(nuevo.motivo, MOTIVO_MINIMO)}><Plus className="mr-1 inline size-3" />Agregar al borrador</Boton>
@@ -688,7 +688,7 @@ function Fuentes({ campoId, niveles, onConectores }: { campoId: string; niveles:
     <Panel titulo="NO SE CONFIGURA" extra="sale de los equipos">
       <Lectura>Esto no se escribe en ningún formulario: lo entrega cada equipo con su tag. Si una fuente falta, la pantalla lo dice como hueco de custodia.</Lectura>
       {filas.map(([k, v]) => (
-        <div key={k} className={cn('grid grid-cols-[minmax(0,150px)_1fr] gap-3 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0')}>
+        <div key={k} className={cn('grid grid-cols-[minmax(0,150px)_1fr] gap-3 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0')}>
           <b>{k}</b><span className="text-[var(--tinta2)]">{v}</span>
         </div>
       ))}
@@ -704,14 +704,14 @@ function Numero({ rotulo, sufijo, valor, paso, min, max, ayuda, disabled, vacio,
   const malo = valor !== undefined && !(valor >= min && valor <= max)
   return (
     <label className="mb-2 grid gap-0.5 last:mb-0">
-      <span className="text-[10.5px] text-[var(--tinta2)]">{rotulo}</span>
+      <span className="text-[13px] text-[var(--tinta2)]">{rotulo}</span>
       <span className="flex items-center gap-1.5">
         <input type="number" step={paso} min={min} max={max} disabled={disabled} value={valor === undefined || Number.isNaN(valor) ? '' : valor}
           placeholder={vacio ? 'sin configurar' : undefined}
           aria-invalid={malo} onChange={e => onCambio(e.target.value === '' ? NaN : Number(e.target.value))} className={cn(campoInput, 'tabular max-w-[140px]', malo && cajaMala)} />
-        <span className="text-[10.5px] text-[var(--tinta3)]">{sufijo}</span>
+        <span className="text-[13px] text-[var(--tinta3)]">{sufijo}</span>
       </span>
-      {ayuda && <small className="text-[10px] leading-snug text-[var(--tinta3)]">{ayuda}</small>}
+      {ayuda && <small className="text-[12px] leading-snug text-[var(--tinta3)]">{ayuda}</small>}
     </label>
   )
 }
@@ -719,7 +719,7 @@ function Numero({ rotulo, sufijo, valor, paso, min, max, ayuda, disabled, vacio,
 function Texto({ rotulo, valor, disabled, onCambio }: { rotulo: string; valor: string; disabled?: boolean; onCambio: (v: string) => void }) {
   return (
     <label className="mt-1.5 grid gap-0.5">
-      <span className="text-[10.5px] text-[var(--tinta2)]">{rotulo}</span>
+      <span className="text-[13px] text-[var(--tinta2)]">{rotulo}</span>
       <input value={valor} disabled={disabled} onChange={e => onCambio(e.target.value)} className={campoInput} />
     </label>
   )

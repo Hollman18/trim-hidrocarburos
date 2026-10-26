@@ -661,3 +661,42 @@ export type LibroDTO = DTO<typeof DIFERIDOS.codec>
 export type RespuestaDe<E> = E extends Endpoint<infer _P, infer _T, infer J> ? Respuesta<J> : never
 /** El dominio que entrega un endpoint. */
 export type DatoDe<E> = E extends Endpoint<infer _P, infer T, infer _J> ? T : never
+
+/* ───────────────────── C2 · La planta viva ───────────────────── */
+// C2 · La planta viva (X4 §4; pedido 1 de §4.11). Las fechas que viajan son
+// cuatro: el período, la hora de los datos y el «desde que entró TRIM». Lo demás
+// es JSON puro: las frases las arma el motor y las cifras van sin redondear.
+import type { VistaPlantaViva, ConsultaPlantaViva } from '@/entities/planta-viva'
+
+const vistaPlantaViva = obj<VistaPlantaViva>()({
+  desde: fecha, hasta: fecha, ahora: fecha,
+  bajando: nulo(obj<NonNullable<VistaPlantaViva['bajando']>>()({ desde: fecha })),
+})
+/** «La planta viva» por campo (o todos los campos) y por momento: la frase y la
+ *  cifra de cada momento, los tramos con su valor, el tramo marcado, el primer
+ *  equipo, la rama del agua, «sin identificar», la venta contra la meta, lo que
+ *  se puede mover (simulado) y las cifras de A (este mes, la producción, por
+ *  equipo, mes a mes y «¿está bajando?»). Cuadres: Durante, Σ tramos + sin
+ *  identificar = la cifra; Después, = el diferido de `/vistas/diferidos`. */
+export const PLANTA_VIVA = get<ConsultaPlantaViva>()('/vistas/planta-viva', vistaPlantaViva)
+
+/* ───────────────────── C3 · Hoy ───────────────────── */
+// C3 · Hoy (X4 §3.3 y §3.4): las tareas de un rol en unos campos, en su orden,
+// con la cifra y la frase de su inicio. Todo es JSON puro (las horas van en ISO
+// con zona, como texto): viaja tal cual. Y «Deshacer» de lo que se confirmó o se
+// dijo de una parada: una escritura nueva, por inserción (D1).
+
+/** `GET /api/vistas/hoy?rol=&campos=`: `rol` es el de la persona (con el servidor, el del token). */
+export interface ConsultaHoy { rol: string; campos: string[] }
+/** Hoy del rol: el inicio (cifra y frase), los bloqueos «No arrancar», las tarjetas
+ *  en orden (hora, barriles, lo demás, avisos), la insignia, lo hecho hoy y, al lado,
+ *  «Su campo, ahora», el turno en WhatsApp y el diferido del turno. */
+export const HOY = get<ConsultaHoy>()('/vistas/hoy', tal<import('@/entities/hoy').VistaHoy>())
+/** `POST /anh/paradas/deshacer { ids, n }`: devuelve a lo que propone TRIM, con
+ *  procedencia `retirado` y el motivo «deshecho por quien contestó», los pasos con
+ *  esos consecutivos (`n`) en esas filas. Solo lo que dijo quien deshace, y solo si
+ *  todavía es lo que rige (409 si alguien dijo otra cosa después). Nada se borra:
+ *  la confirmación (y su lote) queda en la historia. */
+export interface CuerpoDeshacerAnh { ids: string[]; n: number[] }
+/** `POST /anh/paradas/deshacer` → las filas como quedaron y lo que se guardó, por clave (los retiros). */
+export const R_DESHACER = obj<{ paradas: ParadaAnh[]; guardadas: Record<string, BorradorClasificacion> }>()({ paradas: lista(paradaAnh), guardadas: dic(borradorAnh) })

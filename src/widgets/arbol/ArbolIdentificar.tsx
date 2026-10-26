@@ -15,7 +15,7 @@ import { TarjetaParada } from './Tarjeta'
 import { agrupar, type Grupo } from './grupos'
 import { ESTADO, SECCION, ORDEN_SECCIONES, INFO_METODO, cuantasParadas, paradasYFilas, lista } from './palabras'
 
-const TITULO = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+const TITULO = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 
 /** Identificar · la cadena de 6 pasos de cada parada para la ANH (U1 §2; U2
  *  §4 y §9.3), en el orden de la circular: quién → ¿dónde se trabó? → qué
@@ -61,7 +61,7 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
     const foco = document.activeElement
     if (!foco || foco === document.body || !foco.isConnected) avisoRef.current?.focus()
   }, [aviso])
-  const avisoVista = aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">{aviso}</p>
+  const avisoVista = aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[14px] text-[var(--tinta2)]">{aviso}</p>
 
   if (deCampo) {
     // Lo que le toca al operador: una pregunta abierta para su rol, o lo suyo por avalar después de contestar.
@@ -75,7 +75,7 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
     return (
       <Panel className="mb-2.5" titulo="POR CONTESTAR"
         extra={<>{plural(cuantasParadas(suyas.flatMap(g => g.filas)) + nAntes, 'parada', 'paradas')}<span className="sr-only"> por contestar en {periodo}</span></>}>
-        <p className="mb-2 text-[12px] font-semibold text-[var(--tinta)]">Conteste aquí, una pregunta a la vez. Lo técnico lo revisa su supervisor.</p>
+        <p className="mb-2 text-[14px] font-semibold text-[var(--tinta)]">Conteste aquí, una pregunta a la vez. Lo técnico lo revisa su supervisor.</p>
         {avisoVista}
         <div data-por-contestar>
           {antes}
@@ -99,7 +99,7 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
           ? 'Una cascada (varios pozos, una sola raíz) se confirma de un toque, y queda en un lote.'
           : 'Una parada se confirma de un toque, también una cascada (varios pozos, una sola raíz) o una de varios días.'}
       </Lectura>
-      <p className="mb-2 flex flex-wrap items-center gap-x-1.5 text-[11px] text-[var(--tinta2)]">
+      <p className="mb-2 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">
         {resumen ? `Paradas: ${resumen}` : `Ninguna parada en ${periodo}.`}
         <Info rotulo="¿qué método es?" titulo="¿Qué método es?" texto={INFO_METODO} />
       </p>
@@ -118,11 +118,11 @@ function YaDeducidas({ grupos }: { grupos: Grupo[] }) {
   return (
     <div className="mt-2 border-t border-[var(--linea2)] pt-2" data-ya-deducidas>
       <button type="button" aria-expanded={abierto} onClick={() => setAbierto(v => !v)}
-        className="no-imprimir flex min-h-12 cursor-pointer items-center gap-1 text-left text-[11.5px] text-[var(--tinta2)] sm:min-h-0">
+        className="no-imprimir flex min-h-12 cursor-pointer items-center gap-1 text-left text-[14px] text-[var(--tinta2)] sm:min-h-0">
         <ChevronRight aria-hidden size={14} className={cn('shrink-0 transition-transform', abierto && 'rotate-90')} />
         Estas ya las dedujo TRIM: no tiene que hacer nada · {plural(cuantasParadas(filas), 'parada', 'paradas')}
       </button>
-      <ul className={cn('mt-1 grid gap-0.5 pl-5 text-[11px] text-[var(--tinta2)]', !abierto && 'hidden print:grid')}>
+      <ul className={cn('mt-1 grid gap-0.5 pl-5 text-[13px] text-[var(--tinta2)]', !abierto && 'hidden print:grid')}>
         {grupos.map(g => <li key={g.clave}>{lista(g.pozos)}{g.cascada ? ` · por ${g.primera.causa.equipo}` : ''} · {ESTADO[g.estado]}; lo revisa su supervisor</li>)}
       </ul>
     </div>

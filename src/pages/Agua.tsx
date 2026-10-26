@@ -29,7 +29,7 @@ export function Agua() {
       </Lectura>
       {perfil && pr && (
         <Panel className="mt-2.5" titulo="LA BOMBA DE REINYECCIÓN" extra={pr.metodo}>
-          <ul className="list-disc pl-4 text-[11.5px] text-[var(--tinta2)]">{pr.supuestos.map(s => <li key={s}>{s}</li>)}</ul>
+          <ul className="list-disc pl-4 text-[14px] text-[var(--tinta2)]">{pr.supuestos.map(s => <li key={s}>{s}</li>)}</ul>
         </Panel>
       )}
     </>

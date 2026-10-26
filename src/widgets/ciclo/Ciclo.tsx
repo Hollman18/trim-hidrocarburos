@@ -56,23 +56,23 @@ function CeldaFase({ f, ciclo, grande, onAbrir, onIr, ocultarEquipo }: {
   const cuerpo = (
     <>
       <span className="flex items-baseline justify-between gap-2">
-        <span className="font-cond text-[11px] font-semibold tracking-wide text-[var(--tinta3)]">
+        <span className="font-cond text-[13px] font-semibold tracking-wide text-[var(--tinta3)]">
           <span className="mr-1 tabular text-[var(--marca-1)]">{ORDEN_FASE[f]}</span>{NOMBRE_FASE[f]}
         </span>
-        {t.equipos > 0 && <span className="tabular text-[10px] text-[var(--tinta3)]">{t.equipos}</span>}
+        {t.equipos > 0 && <span className="tabular text-[12px] text-[var(--tinta3)]">{t.equipos}</span>}
       </span>
       <b className={`tabular mt-1 block leading-none ${grande ? 'text-[28px]' : 'text-[20px]'}`}>
-        {n0(t.bbl)}<small className="ml-1 text-[11px] font-normal text-[var(--tinta3)]">bbl</small>
+        {n0(t.bbl)}<small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">bbl</small>
       </b>
       {f === 'durante' && ciclo.durante.bblDia > 0 && (
-        <small className="tabular block text-[10px] text-[var(--tinta2)]">{n0(ciclo.durante.bblDia)} bbl/d</small>
+        <small className="tabular block text-[12px] text-[var(--tinta2)]">{n0(ciclo.durante.bblDia)} bbl/d</small>
       )}
       <span className="mt-2 block h-1 overflow-hidden rounded-sm bg-[var(--panel2)]" aria-hidden>
         <i className="block h-full bg-[var(--dato-1)] transition-[width]" style={{ width: `${pct}%` }} />
       </span>
       {primero && onAbrir && !ocultarEquipo && (
         <button type="button" onClick={e => { e.stopPropagation(); onAbrir(primero.campoId, primero.equipo) }}
-          className="mt-1.5 block w-full cursor-pointer truncate text-left text-[11px] text-[var(--tinta2)] hover:text-[var(--tinta)] hover:underline">
+          className="mt-1.5 block w-full cursor-pointer truncate text-left text-[13px] text-[var(--tinta2)] hover:text-[var(--tinta)] hover:underline">
           {primero.equipo}
         </button>
       )}
@@ -110,8 +110,8 @@ export function BloqueCiclo({ ciclo, onAbrir, onIr, compacto = false }: {
         <span className="flex flex-wrap items-end gap-x-2 gap-y-1">
           <b className="tabular text-[40px] leading-none">{n0(ciclo.retornoBbl)}</b>
           <span className="pb-1">
-            <small className="block text-[11px] text-[var(--tinta3)]">bbl · retorno</small>
-            {dineroRetorno && <small className="tabular block text-[12px] text-[var(--tinta2)]">{dineroRetorno}</small>}
+            <small className="block text-[13px] text-[var(--tinta3)]">bbl · retorno</small>
+            {dineroRetorno && <small className="tabular block text-[14px] text-[var(--tinta2)]">{dineroRetorno}</small>}
           </span>
           <Info titulo="Tres palancas" texto={AYUDA_RETORNO} rotulo="ⓘ" className="pb-1.5" />
         </span>
@@ -147,10 +147,10 @@ function DesplegablePlanes({ abierto, onToggle, n, children }: {
       <button type="button" onClick={onToggle} aria-expanded={abierto}
         className="no-imprimir flex w-full cursor-pointer items-center gap-2 rounded py-2 pr-1 text-left hover:bg-[var(--panel2)]">
         <ChevronDown className={cn('size-4 shrink-0 text-[var(--tinta3)] transition-transform', abierto && 'rotate-180')} />
-        <span className="min-w-0 flex-1 text-[12px] font-medium text-[var(--tinta)]">
+        <span className="min-w-0 flex-1 text-[14px] font-medium text-[var(--tinta)]">
           {abierto ? 'Ocultar planes' : 'Ver planes de acción'}
         </span>
-        <span className="font-cond shrink-0 rounded bg-[var(--panel2)] px-2 py-0.5 text-[10px] font-semibold tabular tracking-wide text-[var(--tinta2)]">
+        <span className="font-cond shrink-0 rounded bg-[var(--panel2)] px-2 py-0.5 text-[12px] font-semibold tabular tracking-wide text-[var(--tinta2)]">
           {n}
         </span>
       </button>
@@ -207,7 +207,7 @@ function PlanFila({ plan: p, onAbrir }: {
   return (
     <div className="border-b border-[var(--linea2)] py-1.5 last:border-0">
       <Tip as="div" titulo={p.titulo} filas={filasTip} pista={p.accion} imprimir="pista"
-        className="flex items-center gap-2 text-[11.5px]">
+        className="flex items-center gap-2 text-[14px]">
         <span className="flex min-w-0 flex-1 items-baseline gap-x-1.5">
           <Chip tono={p.fase === 'durante' ? 'fuerte' : 'neutro'}>{ORDEN_FASE[p.fase]}</Chip>
           {onAbrir ? (
@@ -218,7 +218,7 @@ function PlanFila({ plan: p, onAbrir }: {
         </span>
         <span className="tabular shrink-0 text-right leading-tight">
           <b className="block text-[14px]">{p.bbl > 0 ? n0(p.bbl) : '—'}</b>
-          {p.horas !== undefined && <small className="block text-[10px] text-[var(--tinta3)]">{fmtHoras(p.horas, true)}</small>}
+          {p.horas !== undefined && <small className="block text-[12px] text-[var(--tinta3)]">{fmtHoras(p.horas, true)}</small>}
         </span>
       </Tip>
       {puede && estado !== 'ejecutado' && (
@@ -231,7 +231,7 @@ function PlanFila({ plan: p, onAbrir }: {
           )}
         </span>
       )}
-      {error && <p className="mt-1 text-[11px] text-[var(--tinta2)]">{error}</p>}
+      {error && <p className="mt-1 text-[13px] text-[var(--tinta2)]">{error}</p>}
     </div>
   )
 }
@@ -246,8 +246,8 @@ export function CicloCifras({ ciclo, onIr }: {
     <div className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2.5 shadow-[var(--sombra)]">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <b className="tabular text-[24px] leading-none">{n0(ciclo.retornoBbl)}</b>
-        <small className="text-[11px] text-[var(--tinta3)]">bbl</small>
-        {dineroRetorno && <small className="tabular text-[11px] text-[var(--tinta2)]">{dineroRetorno}</small>}
+        <small className="text-[13px] text-[var(--tinta3)]">bbl</small>
+        {dineroRetorno && <small className="tabular text-[13px] text-[var(--tinta2)]">{dineroRetorno}</small>}
         <Info titulo="Retorno" texto={AYUDA_RETORNO} />
         <span className="ml-auto flex gap-1">
           {FASES.map(f => <Chip key={f}>{NOMBRE_FASE[f]}</Chip>)}

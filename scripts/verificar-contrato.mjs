@@ -70,6 +70,9 @@ try {
   const CAT = await cargar('/src/shared/api/catalogo.ts')
   const CIC = await cargar('/src/shared/api/ciclo.ts')
   const CHK = await cargar('/src/shared/api/choke.ts')
+  const PVA = await cargar('/src/shared/api/plantaViva.ts') // C2 · La planta viva
+  const HOYA = await cargar('/src/shared/api/hoy.ts') // C3 · Hoy
+  const ROLES_HOY = (await cargar('/src/entities/roles.ts')).ROLES_VISIBLES.map(r => r.id) // C3 · Hoy
   const ARB = await cargar('/src/shared/api/arbol.ts')
   // La locación de los pozos del demo (el caso de borde del choke) entra por fuente.ts, como en el navegador.
   F.instalarLocaciones((await cargar('/src/entities/datos/topologia.ts')).locacionDemo)
@@ -136,6 +139,10 @@ try {
     ASIGNACION_OFICIAL: () => ({ filas: s.asignacionOficial, cargas: s.cargasAsignacion }),
     ANALISIS: () => ({ vigentes: s.analisis, anteriores: s.analisisAnteriores }),
     CAMBIOS_PLANTA: () => s.cambiosPlanta,
+    // C2 · La planta viva: lee lo que dijeron las personas (el tramo vigente de cada parada), como la tubería.
+    PLANTA_VIVA: p => PVA.pedirPlantaViva(p, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
+    // C3 · Hoy: las tareas de un rol, con lo que dijeron las personas encima (el árbol, las respuestas, los planes).
+    HOY: p => HOYA.pedirHoy(p, s),
   })
   const ENDPOINTS = Object.entries(C).filter(([, x]) => x && typeof x === 'object' && x.metodo === 'GET')
 
@@ -249,6 +256,10 @@ try {
       SAP_EQUIPOS: TODOS.map(campo => ({ campo })), SAP_EQUIPO: bombas,
       LISTA_CAMPOS: [{}], CATALOGO: [{}], CONFIGURACION_HISTORIAL: [{}], RESPUESTAS: [{}], USUARIOS: [{}], ACCESOS: [{}], INFORMES: [{}],
       ASIGNACION_OFICIAL: [{}], ANALISIS: [{}], CAMBIOS_PLANTA: [{}],
+      // C2 · La planta viva: cada campo y todos, en los tres períodos y los tres momentos.
+      PLANTA_VIVA: conPeriodo().flatMap(q => ['antes', 'durante', 'despues'].map(momento => ({ ...q, momento }))),
+      // C3 · Hoy: cada rol del producto, en cada campo y en todos.
+      HOY: ROLES_HOY.flatMap(rol => grupos.map(campos => ({ rol, campos }))),
     }
     const sinCasos = ENDPOINTS.map(([n]) => n).filter(n => !casos[n]?.length || !R[n])
     comprobar(sinCasos.length === 0, `cada endpoint de contrato.ts tiene su respuesta del demo y sus casos (${ENDPOINTS.length} endpoints${sinCasos.length ? `; faltan: ${sinCasos.join(', ')}` : ''})`)
@@ -364,7 +375,8 @@ try {
       'POST /paradas/:evento/respuesta', 'POST /analisis/:evento', 'POST /planta/cambios', 'POST /planes/:id',
       'POST /anh/paradas/:id/clasificacion', 'POST /anh/paradas/:id/yacimiento', 'POST /anh/paradas/confirmar',
       'POST /anh/paradas/:id/respuesta', 'POST /anh/paradas/:id/revision',
-      'POST /configuracion/vista-previa', 'POST /topologia/importar']
+      'POST /configuracion/vista-previa', 'POST /topologia/importar',
+      'POST /anh/paradas/deshacer'] // C3 · Hoy: «Deshacer»
     const repetidas = rutas.filter((r, i) => rutas.indexOf(r) !== i)
     // Dos rutas chocan si un mismo camino puede caer en las dos: mismo método,
     // mismo número de tramos y en cada tramo el mismo literal o un :parámetro.
@@ -1187,6 +1199,190 @@ try {
       comprobar(control.estado === 0 && /^(\d+) de \1 escrituras/.test(control.linea) && noVe.length === 0,
         `«comparar --escrituras» pasa con el servidor del demo (${control.linea}) y ve las ${Object.keys(DERIVAS).length - 1} derivas: ${Object.entries(vistas).filter(([k]) => k !== 'ninguna (control)').map(([k, x]) => `${k} → ${x.linea}`).join('; ')}${noVe.length ? `; NO VE: ${noVe.join(', ')}` : ''}`)
     }
+
+    // C2 · La planta viva
+    console.log('\n=== C2. La planta viva (GET /api/vistas/planta-viva): una lectura con las mismas cifras de las vistas de donde salen ===')
+    {
+      const s = SES.sesion(), R = responder(s)
+      const { AHORA } = await cargar('/src/entities/reloj.ts'), { PUESTA_EN_MARCHA } = await cargar('/src/entities/configuracion.ts')
+      const casi = (a, b) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b))
+      const cal = L.calendario(), curso = cal.at(-1)
+      const q = { campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+      const d = R.PLANTA_VIVA({ ...q, momento: 'durante' }), a = R.PLANTA_VIVA({ ...q, momento: 'antes' }), p = R.PLANTA_VIVA({ ...q, momento: 'despues' })
+      const tub = R.TUBERIA({ campo: 'ceiba', desde: q.desde, hasta: q.hasta }), lb = R.DIFERIDOS(q), ci = R.CICLO(q)
+      const est = R.ESTADO({ campos: ['ceiba'] })[0], ri = R.RIESGO({ campos: ['ceiba'] }), serie = R.DIFERIDOS_MENSUAL({ campos: ['ceiba'] })
+      const base = R.BASE_CHOKE({ campos: ['ceiba'], desde: new Date(`${PUESTA_EN_MARCHA}T00:00:00-05:00`), hasta: AHORA })
+      const suma = (v, x) => v.planta.tramos.reduce((t, y) => t + y.valor, 0) + (v.planta.sinIdentificar?.valor ?? 0) - x
+      comprobar(casi(suma(d, 0), d.cifras.durante.valor) && casi(d.cifras.durante.valor, tub.perdiendoAhoraBpd) && casi(d.cifras.durante.valor, est.perdiendoBpd)
+          && casi(suma(p, 0), lb.diferido) && casi(p.cifras.despues.valor, lb.diferido) && casi(p.esteMes.bbl, lb.diferido)
+          && d.planta.tramos.every(t => casi(t.valor, tub.tramos.find(y => y.tramo === t.tramo).perdiendoAhoraBpd))
+          && p.planta.tramos.every(t => casi(t.valor, tub.tramos.find(y => y.tramo === t.tramo).perdidoBbl)) && casi(p.planta.sinIdentificar?.valor ?? 0, tub.sinTramoBbl),
+        `los cuadres con lo escrito en la sesión: Durante, Σ tramos + sin identificar = ${Math.round(d.cifras.durante.valor)} bbl/d = /vistas/estado y la tubería; Después, = ${Math.round(lb.diferido)} bbl = /vistas/diferidos`)
+      comprobar(casi(d.mover.totalBbl, ci.retornoBbl) && ['antes', 'durante', 'despues'].every(m => casi(d.mover.porMomento[m], ci[m].bbl))
+          && d.porEquipo.every((x, i) => casi(x.bbl, lb.porEquipo[i].bbl) && x.equipo === lb.porEquipo[i].equipo)
+          && d.mesAMes.meses.length === serie.length && d.mesAMes.meses.every((m, i) => m.mes === serie[i].mes && casi(m.totalBpd, serie[i].libro.diferido / Math.max(1 / 24, serie[i].libro.meta.dias)))
+          && d.bajando.filas.every(f => casi(f.antesBpd, base.noPlaneado[f.tramo].baseDia) && casi(f.ahoraBpd, base.noPlaneado[f.tramo].periodoDia))
+          && a.cifras.antes.valor === ri.filter(r => r.estado === 'en-riesgo').length && d.porEquipo.every(x => x.prioridad === (ri.find(r => r.equipo === x.equipo)?.prioridad ?? 0)),
+        'lo que se puede mover es el ciclo (/vistas/ciclo), por equipo el Pareto del libro, mes a mes la serie (/vistas/diferidos/mensual), ¿está bajando? la base por tramo (/vistas/choke/base) y Antes el conteo de /vistas/riesgo')
+      // Por el cable: las fechas vuelven fechas y las frases, las mismas.
+      const j = JSON.parse(JSON.stringify(K.aRespuesta(C.PLANTA_VIVA.codec, d)))
+      const y = K.deRespuesta(C.PLANTA_VIVA.codec, j)
+      comprobar(typeof j.datos.desde === 'string' && j.datos.desde.endsWith('-05:00') && y.desde instanceof Date && y.ahora instanceof Date && y.bajando.desde instanceof Date
+          && y.cifras.durante.fraseCorta === d.cifras.durante.fraseCorta && !diferencia(d, y),
+        `por JSON: «${y.cifras.durante.fraseCorta}» y las fechas con su zona (${j.datos.desde})`)
+      const url = C.urlDe(C.PLANTA_VIVA, { ...q, momento: 'durante' })
+      let malo = ''
+      try { R.PLANTA_VIVA({ ...q, momento: 'ayer' }) } catch (e) { malo = e.message }
+      comprobar(url.startsWith('/vistas/planta-viva?campos=ceiba&desde=') && url.includes('&momento=durante') && /«ayer» no es un momento/.test(malo),
+        `la ruta es ${url.split('?')[0]}?campos&desde&hasta&momento (${url.slice(0, 60)}…), y un momento que no es antes, durante ni despues se rechaza («${malo}»)`)
+      // Todos los campos: la cifra es la suma de las filas (un nombre, una cifra).
+      const t = R.PLANTA_VIVA({ campos: TODOS, desde: q.desde, hasta: q.hasta, momento: 'durante' }), estT = R.ESTADO({ campos: TODOS })
+      comprobar(t.planta === null && t.filas.length === TODOS.length && casi(t.filas.reduce((x, f) => x + f.valor, 0), t.cifras.durante.valor)
+          && casi(t.cifras.durante.valor, estT.reduce((x, e) => x + e.perdiendoBpd, 0)) && t.filas.every((f, i, fs) => i === 0 || fs[i - 1].valor >= f.valor),
+        `todos los campos: ${Math.round(t.cifras.durante.valor)} bbl/d = la suma de las filas = Σ /vistas/estado, de la que más pesa a la que menos`)
+    }
+
+    // C3 · Hoy
+    console.log('\n=== C3. Hoy (GET /api/vistas/hoy) y «Deshacer» (POST /api/anh/paradas/deshacer) ===')
+    {
+      const fotoAntesC3 = { ...SES.sesion() }
+      // Desde la sesión del arranque: lo que escribieron las secciones de arriba no cambia lo que se prueba.
+      SES.cambiarSesion(fotoArranque)
+      try {
+        const { ROLES_VISIBLES } = await cargar('/src/entities/roles.ts')
+        const { puedeHacer } = await cargar('/src/entities/tipos.ts')
+        const { camposAsignados } = await cargar('/src/entities/usuarios.ts')
+        const { CAUSAS_POZO } = await cargar('/src/entities/mensajes.ts')
+        const MH = await cargar('/src/entities/hoy.ts')
+        const ver = (rol, campos = ['ceiba']) => HOYA.pedirHoy({ rol, campos }, SES.sesion())
+        const linea = f => (f ?? []).map(x => (typeof x === 'string' ? x : x.b)).join('')
+
+        // 1. El supervisor de La Ceiba (imagen 3a; X4 §3.4 y §5.5).
+        const sup = ver('sup')
+        const [tc, tk, to, tf] = sup.tareas
+        comprobar(sup.inicio.frase === 'Se dejan de producir 1.966 bbl/d. Le faltan 4 paradas por confirmar: el reporte sale mañana antes de las 07:00.'
+          && sup.inicio.cifra === '1.966' && sup.inicio.unidad === 'barriles por día' && sup.inicio.remate === 'se dejan de producir en La Ceiba.',
+          `la cifra y la frase del supervisor: «${sup.inicio.frase}»`)
+        comprobar(sup.tareas.map(t => t.titulo).join(' | ') === 'Confirmar 2 paradas iguales | Conseguir la causa de 2 paradas | Seguir la orden de K-101 | Lo más frágil: el agua.'
+          && sup.tareas.map(t => t.grupo).join() === 'hora,barriles,barriles,aviso' && sup.insignia === 3,
+          `el orden: lo que tiene hora, los barriles en juego (lo que se pierde ahora y después lo que se perdería si para) y al final lo que solo informa; la insignia cuenta ${sup.insignia}, sin el aviso (${sup.tareas.map(t => `${t.grupo}: ${t.titulo}`).join(' · ')})`)
+        comprobar(sup.bloqueos.length === 1 && sup.bloqueos[0].texto === 'No arrancar P-201B ni LC-21 hasta identificar qué se dañó' && sup.bloqueos[0].sub === 'Si arranca antes, queda como no conformidad.',
+          `lo que dice «no» va como franja, no como tarjeta: «${sup.bloqueos[0]?.texto}»`)
+        comprobar(tc.donde.equipo === 'P-201B' && tc.donde.marca === 'alarma' && tc.donde.texto === 'cerró LC-07 y LC-16 · 05:43'
+          && linea(tc.porque) === 'TRIM las dedujo: en la planta, no planeada. Falta su confirmación.' && tc.accion.tipo === 'confirmar' && tc.accion.texto === 'Confirmar las 2'
+          && tc.accion.ids.length === 2 && tc.ver.texto === 'Ver una por una' && tc.capacidad === 'anh:confirmar' && tc.limite === '2026-10-03T07:00:00-05:00',
+          'la tarjeta: verbo + qué, P-201B con SU marca (la de la franja), por qué importa, «Confirmar las 2» y «Ver una por una»; la hora límite es el reporte de mañana a las 07:00')
+        comprobar(tk.donde.equipo === 'LC-21' && tk.donde.marca === 'atencion' && tk.donde.texto === 'lleva 19,7 h sin causa; se escaló a las 20:20'
+          && linea(tk.porque) === 'LC-08 arrancó a la 01:10 sin identificar · 219 bbl hoy, 355 desde que pararon' && tk.accion.texto === 'Responder yo' && tk.preguntas.length === 2,
+          `lo igual va junto: «${tk.titulo}» (${tk.donde.equipo} ${tk.donde.texto}; ${linea(tk.porque)})`)
+        comprobar(to.donde.texto === 'aire de instrumentos · ya pasó el límite' && linea(to.porque) === 'Si para, hasta 9.394 bbl/d. Orden 40012056, liberada a Óscar Daza a las 09:10.' && to.capacidad === 'sap:aviso',
+          `la orden de SAP de lo que ya pasó el límite: «${linea(to.porque)}»`)
+        comprobar(!tf.pide && !tf.capacidad && linea(tf.porque) === 'Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.',
+          `«Lo más frágil» solo informa: va al final y no suma a la insignia («${linea(tf.porque)}»)`)
+        comprobar(sup.whatsapp.mensajes === 8 && sup.whatsapp.hilos.some(h => h.equipo === 'P-201B' && h.pasos === '03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado' && linea(h.estado) === 'sin respuesta')
+          && sup.turno.horas === 12 && Math.round(sup.turno.diferidoBbl) === 723 && sup.entregarTurno
+          && sup.campo.frases.map(linea).join(' ') === 'En la planta no pasan 1.665 bbl/d; limitan los pozos. Tanque de agua 89,6 %: no sube, P-201A y P-201C toman lo que entra.'
+          && sup.campo.tramos.map(t => `${t.rotulo}${t.trabado ? '*' : ''}`).join() === 'pozos,planta*,salida',
+          'al lado: el turno en WhatsApp (8 mensajes en 12 h), el diferido del turno (723 bbl) y «Su campo, ahora» con el tramo trabado')
+
+        // 2. El operador: una pregunta por pantalla (imagen 5; U1 §2.4).
+        const op = ver('oper'), qs = op.tareas.flatMap(t => t.preguntas ?? [])
+        const [q1, q2] = qs
+        comprobar(op.inicio.frase === 'Tiene 4 preguntas. Empiece por P-201B: está parada y no se puede arrancar.' && op.insignia === 4 && qs.map(q => q.equipo).join() === 'P-201B,LC-21,LC-05,LC-08',
+          `el operador: «${op.inicio.frase}» (${qs.map(q => q.equipo).join(', ')})`)
+        comprobar(q1.texto === '¿Qué parte se dañó?' && q1.contexto === 'P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h' && q1.pista === 'Lo que más le ha fallado a esta bomba:'
+          && q1.opciones.map(o => `${o.texto}${o.dato ? ` · ${o.dato}` : ''}`).join(' / ') === 'Sello mecánico · 5 de sus 8 fallas / Rodamientos y cámara de empuje · 3 de sus 8 fallas / Otra parte · escoja de la lista / Todavía no sé · se la vuelven a preguntar en la próxima ronda'
+          && q1.opciones[0].modos.length > 0 && q1.tramo.rotulo === 'planta · agua' && q1.marca === 'alarma' && q1.bloqueo.texto === 'No la arranque hasta decir qué se dañó' && q1.libro.evento,
+          'la primera: P-201B, «¿Qué parte se dañó?», lo que más le ha fallado (5 y 3 de sus 8 fallas), «Otra parte», «Todavía no sé» y la planta · agua marcada')
+        comprobar(q2.texto === '¿Por qué paró?' && q2.contexto === 'LC-21 · pozo · paró el 1 de oct a las 18:20, hace 19,7 h' && q2.tramo.rotulo === 'pozos' && q2.bloqueo.texto === 'No lo arranque hasta decir qué pasó'
+          && q2.opciones.slice(0, -1).map(o => o.valor).join() === CAUSAS_POZO.join() && q2.opciones[2].texto === 'Orden de producción' && q2.opciones[2].dato === 'nominación o restricción del comprador',
+          'la segunda: LC-21, «¿Por qué paró?», con las causas del pozo del libro')
+        comprobar(qs.every(q => q.opciones.at(-1).tipo === 'no-se' && q.opciones.at(-1).texto === 'Todavía no sé') && qs[2].via === 'anh' && qs[2].opciones.at(-1).valor === 'No sé' && qs[2].anh.aplicarAlEvento,
+          'siempre «Todavía no sé» (en el árbol se guarda «No sé» y escala a quien revisa); la del árbol lleva su fila, su cadena y su alcance (D1)')
+
+        // 3. El técnico y el jefe de mantenimiento (X4 §3.4).
+        const tec = ver('tec'), jefe = ver('jefe')
+        comprobar(/^Le tocan \d+ cosas hoy\. Primero P-201B: diga qué encontró\.$/.test(tec.inicio.frase) && tec.tareas.some(t => t.tipo === 'orden' && t.donde.equipo === 'K-101' && linea(t.porque).includes('liberada a su nombre')),
+          `el técnico: «${tec.inicio.frase}», con su orden de K-101 una sola vez`)
+        comprobar(jefe.inicio.frase === 'De 8,1 días que dura una falla, 7,7 son espera. El vigía anunció 3 de 3 fallas.' && jefe.inicio.cifra === '7,7 de 8,1'
+          && jefe.tareas.some(t => t.titulo === 'Ojo: no intervenir hoy.' && !t.pide && linea(t.porque).startsWith('P-201A y P-201C valen más')),
+          `el jefe de mantenimiento: «${jefe.inicio.frase}», y «Ojo: no intervenir» como aviso`)
+        const vacio = ver('jefe', ['palmar'])
+        comprobar(vacio.vacio === 'Nada pendiente. El campo está normal.' && vacio.insignia === 0 && !vacio.bloqueos.length, `el vacío: «${vacio.vacio}»`)
+
+        // 4. Cada rol ve solo lo que su capacidad le deja hacer.
+        const malos = []
+        let vistasHoy = 0
+        for (const r of ROLES_VISIBLES) for (const campos of [...TODOS.map(c => [c]), TODOS]) {
+          const h = ver(r.id, campos); vistasHoy++
+          const suyos = camposAsignados(r, SES.sesion().usuarios).map(c => c.id)
+          for (const t of h.tareas) {
+            if (t.capacidad && !puedeHacer(r.puede, t.capacidad)) malos.push(`${r.id}: «${t.titulo}» pide ${t.capacidad}`)
+            if (!t.capacidad && t.pide && !(t.tipo === 'orden' && r.id === 'tec')) malos.push(`${r.id}: «${t.titulo}» pide algo sin la capacidad que lo autoriza`)
+            if (t.accion?.tipo === 'confirmar' && !puedeHacer(r.puede, 'anh:confirmar')) malos.push(`${r.id}: confirma en lote sin anh:confirmar`)
+            if (t.preguntas?.some(q => q.via === 'libro') && !puedeHacer(r.puede, 'causa:declarar')) malos.push(`${r.id}: contesta al libro sin causa:declarar`)
+            if (t.preguntas?.some(q => q.via === 'anh') && !puedeHacer(r.puede, 'anh:clasificar')) malos.push(`${r.id}: contesta al árbol sin anh:clasificar`)
+            if (!suyos.includes(t.campoId)) malos.push(`${r.id}: una tarea de ${t.campoId}, que no tiene asignado`)
+          }
+          if (h.bloqueos.length && !puedeHacer(r.puede, 'causa:declarar')) malos.push(`${r.id}: la franja «No arrancar» sin poder decir qué se dañó`)
+          if (h.insignia !== h.tareas.filter(t => t.pide).length || h.tareas.some(t => t.grupo === 'aviso' && t.pide)) malos.push(`${r.id}: la insignia no es lo que pide una acción`)
+        }
+        const ger = ver('ger', TODOS), prodH = ver('prod')
+        comprobar(malos.length === 0 && ger.tareas.every(t => t.tipo === 'metas') && !prodH.tareas.some(t => t.tipo === 'conseguir-causa' || t.tipo === 'contestar') && !op.tareas.some(t => t.tipo === 'confirmar'),
+          `cada tarea va con la capacidad de roles.ts que la autoriza, solo en los campos de la persona, y la insignia cuenta lo que pide una acción (${vistasHoy} vistas${malos.length ? `; ${malos.slice(0, 5).join('; ')}` : ''})`)
+
+        // 5. El orden, con tareas armadas a mano (falla sin la regla de X4 §3.3).
+        const T = (id, grupo, x = {}) => ({ id, tipo: 'aviso', campoId: 'ceiba', pide: grupo !== 'aviso', grupo, titulo: id, ...x })
+        const ord = MH.ordenar([T('a', 'aviso'), T('d2', 'demas', { desde: '2026-10-02T05:00:00-05:00' }), T('b-si', 'barriles', { bblSiPara: 9000 }),
+          T('d1', 'demas', { desde: '2026-10-01T05:00:00-05:00' }), T('b-ahora', 'barriles', { bblAhora: 300 }), T('h2', 'hora', { limite: '2026-10-04T07:00:00-05:00' }),
+          T('h1', 'hora', { limite: '2026-10-03T07:00:00-05:00' })]).map(t => t.id).join()
+        comprobar(ord === 'h1,h2,b-ahora,b-si,d1,d2,a', `el orden: hora (la más cercana), barriles (lo de ahora antes que lo que se perdería), lo demás por antigüedad y los avisos al final (${ord})`)
+
+        // 6. D7: menos de 300 ms por rol, en un campo y en todos.
+        const tiempos = []
+        for (const r of ROLES_HOY) for (const campos of [['ceiba'], TODOS]) { const t0 = performance.now(); ver(r, campos); tiempos.push([`${r}${campos.length > 1 ? ' (todos)' : ''}`, performance.now() - t0]) }
+        const lento = tiempos.reduce((a, b) => (b[1] > a[1] ? b : a))
+        comprobar(lento[1] < 300, `Hoy se calcula en menos de 300 ms con cada rol (D7; el más lento, ${lento[0]}: ${lento[1].toFixed(0)} ms)`)
+
+        // 7. «Deshacer» (D1): una escritura nueva, por inserción, que devuelve los pasos a lo que propone TRIM.
+        const c0 = ver('sup').tareas.find(t => t.tipo === 'confirmar')
+        const rc = await E.confirmarParadasAnh({ rolId: 'sup' }, { ids: c0.accion.ids, cadena: c0.accion.cadena })
+        const ns = [...new Set(rc.paradas.flatMap(p => ARB.PASOS.map(x => p.clasificacion[x]).filter(d => d?.lote === rc.lote?.id && d.porId === 'sup').map(d => d.n)))]
+        const tras = ver('sup')
+        comprobar(rc.ok && ns.length === 12 && !tras.tareas.some(t => t.tipo === 'confirmar') && tras.insignia === 2 && tras.hechas.length === 1 && tras.hechas[0].detalle === 'las 2 paradas de P-201B'
+          && tras.inicio.frase.includes('Le faltan 2 paradas por confirmar'),
+          `«Confirmar las 2» la saca de la lista y pasa a «Hecho hoy (1) · ${tras.hechas[0]?.detalle}»`)
+        const ajeno = await E.deshacerAnh({ rolId: 'prod' }, { ids: c0.accion.ids, n: ns })
+        const sinCap = await E.deshacerAnh({ rolId: 'ger' }, { ids: c0.accion.ids, n: ns })
+        const forma = await E.deshacerAnh({ rolId: 'sup' }, { ids: c0.accion.ids, n: ['x'] })
+        const sinIds = await E.deshacerAnh({ rolId: 'sup' }, { n: ns })
+        const otroCampo = ARB.pedirParadasAnh({ campos: ['morichal'], desde: new Date('2026-10-01T00:00:00-05:00'), hasta: new Date('2026-10-02T14:00:00-05:00') }, SES.sesion().ctx, SES.sesion().clasificacionesAnh)[0]
+        const ajenoCampo = otroCampo ? await E.deshacerAnh({ rolId: 'sup' }, { ids: [otroCampo.id], n: ns }) : { estado: 404 }
+        comprobar(ajeno.estado === 403 && ajeno.codigo === 'ajeno' && sinCap.estado === 403 && sinCap.codigo === 'sin-capacidad' && forma.estado === 400 && sinIds.estado === 400 && ajenoCampo.estado === 404,
+          `solo deshace quien lo dijo (producción: ${ajeno.estado}), con capacidad (gerente: ${sinCap.estado}), con la forma del contrato (400) y en sus campos (404)`)
+        const n0 = Math.max(...ns)
+        const rd = await E.deshacerAnh({ rolId: 'sup' }, { ids: c0.accion.ids, n: ns })
+        const g = SES.sesion().clasificacionesAnh
+        const retirados = c0.accion.ids.flatMap(id => ARB.PASOS.map(x => g[id]?.[x])).filter(Boolean)
+        const despues = ver('sup')
+        comprobar(rd.ok && rd.paradas.every(p => p.estado === 'propuesta' && p.retiros?.length === 6 && p.retiros.every(x => x.motivo === MH.MOTIVO_DESHACER && x.porId === 'sup'))
+          && retirados.length === 12 && retirados.every(d => d.procedencia === 'retirado' && d.n > n0 && d.porque === 'deshecho por quien contestó' && d.valor !== undefined)
+          && SES.sesion().lotesAnh.some(l => l.id === rc.lote.id)
+          && despues.tareas[0].tipo === 'confirmar' && despues.insignia === 3 && despues.hechas.length === 0,
+          'deshacer escribe un paso nuevo «retirado» (con el valor, quién, la hora y «deshecho por quien contestó», con un consecutivo mayor) que rige: la parada vuelve a lo que propone TRIM, el lote queda en la historia y la tarjeta vuelve a Hoy')
+        const otraVez = await E.deshacerAnh({ rolId: 'sup' }, { ids: c0.accion.ids, n: ns })
+        const rc2 = await E.confirmarParadasAnh({ rolId: 'sup' }, { ids: c0.accion.ids, cadena: c0.accion.cadena })
+        comprobar(otraVez.estado === 409 && otraVez.codigo === 'ya-cambio' && rc2.ok && rc2.lote.id !== rc.lote.id,
+          `lo ya deshecho no se deshace dos veces (409) y se puede volver a confirmar (${rc2.lote?.id})`)
+        const vueltaD = diferencia({ paradas: rd.paradas, guardadas: g }, K.deRespuesta(C.R_DESHACER, JSON.parse(JSON.stringify(K.aRespuesta(C.R_DESHACER, { paradas: rd.paradas, guardadas: g })))))
+        comprobar(!vueltaD, `la respuesta de «Deshacer» vuelve igual por JSON${vueltaD ? `: ${vueltaD}` : ''}`)
+
+        // 8. Por el cable: la vista es JSON puro y la ruta lleva rol y campos.
+        const url = C.urlDe(C.HOY, { rol: 'sup', campos: ['ceiba'] })
+        const vueltaH = diferencia(sup, K.deRespuesta(C.HOY.codec, JSON.parse(JSON.stringify(K.aRespuesta(C.HOY.codec, sup)))))
+        comprobar(url === '/vistas/hoy?campos=ceiba&rol=sup' && !vueltaH, `GET ${url} vuelve igual por JSON${vueltaH ? `: ${vueltaH}` : ''}`)
+      } finally { SES.cambiarSesion(fotoAntesC3) }
+    }
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -1388,6 +1584,27 @@ try {
       && cuerpos.slice(nC).every(x => !['por', 'porId', 'hora', 'procedencia', 'rol'].some(k => k in x.cuerpo))
       && !rr.ok && /cambie primero/.test(rr.error) && !rp.ok && /no confirma «Dónde se trabó»/.test(rp.error),
       'las escrituras del árbol (también la respuesta de campo y la revisión) y de la topología van a su ruta sin por, hora ni procedencia (las pone el servidor), lo aceptado se copia a la sesión, y el 422 y el 403 llegan con sus palabras')
+
+    // C3 · Hoy: la vista llega por GET y «Deshacer» va a su ruta solo con las filas y los consecutivos.
+    {
+      const qh = { rol: 'sup', campos: ['ceiba'] }
+      const nG = pedidos.length
+      const hoyH = await consulta.traer(C.HOY, qh, 'c3', noCalcular)
+      const f0 = globalThis.fetch, vistosD = []
+      globalThis.fetch = async (url, init = {}) => {
+        const u = new URL(url, 'http://servidor')
+        if (u.pathname !== '/api/anh/paradas/deshacer') return f0(url, init)
+        const cuerpo = JSON.parse(init.body)
+        vistosD.push({ cuerpo, rol: init.headers?.['x-rol'] ?? new Headers(init.headers).get('x-rol') })
+        const paradas = cuerpo.ids.map(id => ARB.pedirParadaAnh(id, srv.ctx, {}))
+        return new Response(JSON.stringify(K.aRespuesta(C.R_DESHACER, { paradas, guardadas: Object.fromEntries(cuerpo.ids.map(id => [id, {}])) })), { status: 200, headers: { 'content-type': 'application/json' } })
+      }
+      let rdH
+      try { rdH = await E.deshacerAnh({ rolId: 'sup' }, { ids: [filaH.id, filaH.id], n: [7, 7, 8] }) } finally { globalThis.fetch = f0 }
+      comprobar(pedidos.length === nG + 1 && pedidos.at(-1).startsWith('GET /api/vistas/hoy?campos=ceiba&rol=sup') && !diferencia(hoyH, R.HOY(qh))
+        && rdH.ok && rdH.paradas[0].id === filaH.id && vistosD.length === 1 && JSON.stringify(vistosD[0].cuerpo) === JSON.stringify({ ids: [filaH.id], n: [7, 8] }),
+        `Hoy llega por GET y es lo que calcula el motor; «Deshacer» va a POST /api/anh/paradas/deshacer sin repetir filas ni consecutivos, sin por, hora ni procedencia (${JSON.stringify(vistosD[0]?.cuerpo ?? {}).slice(0, 80)})`)
+    }
 
     console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones http bien.`)
   }

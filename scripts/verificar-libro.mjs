@@ -1032,6 +1032,7 @@ const ST = await v.ssrLoadModule('/src/app/store.ts')
 ST.iniciarApp()
 const SES = await v.ssrLoadModule('/src/shared/api/sesion.ts')
 const URLM = await v.ssrLoadModule('/src/app/url.ts')
+const PANT = await v.ssrLoadModule('/src/app/pantallas.tsx')
 const CSV = await v.ssrLoadModule('/src/shared/lib/csv.ts')
 const CARGA = await v.ssrLoadModule('/src/shared/lib/carga.ts')
 // La configuración, las respuestas y los accesos viven en la sesión (shared/api/sesion.ts).
@@ -1044,7 +1045,8 @@ nav.hash = '#/cont/resumen/ceiba/curso'
 comprobar(URLM.leerHash(undefined, 'ger').rolId === undefined, 'una dirección con un rol de v2 (cont) no trae rol')
 nav.hash = '#//produccion/palmar/curso'
 const sinRol = URLM.leerHash(undefined, 'oper')
-comprobar(sinRol.pantalla === 'bombas' && sinRol.campoId === undefined, `sin rol en la dirección se valida contra el rol que se ve: el operador no abre Producción ni El Palmar (${JSON.stringify(sinRol)})`)
+// C1 (25-oct): el operador abre en su Hoy (X4 §3.4); la pantalla ajena lleva a su inicio, sea cual sea.
+comprobar(sinRol.pantalla === ROL.rolPorId('oper').inicio && sinRol.campoId === undefined, `sin rol en la dirección se valida contra el rol que se ve: el operador no abre Producción ni El Palmar (${JSON.stringify(sinRol)})`)
 nav.hash = '#/x/bombas/palmar/curso'
 comprobar(URLM.leerHash(undefined, 'sup').campoId === undefined, 'con un rol inválido, el supervisor (solo La Ceiba) no abre El Palmar')
 nav.hash = '#/ger/perfil/ceiba/curso'
@@ -1055,7 +1057,7 @@ ir('#/cont/resumen/ceiba/curso')
 comprobar(est().rolId === 'ger' && nav.hash.startsWith('#/ger/'), `pegar un enlace con un rol de v2 no deja guardado un rol fantasma (rol ${est().rolId}, dirección ${nav.hash})`)
 est().setRol('oper'); ir('#/oper/bombas/ceiba/curso')
 ir('#//produccion/palmar/curso')
-comprobar(est().rolId === 'oper' && est().pantalla === 'bombas' && est().campoId === 'ceiba', `operador con «#//produccion/palmar»: sigue en sus bombas de La Ceiba (${est().pantalla}, ${est().campoId})`)
+comprobar(est().rolId === 'oper' && est().pantalla === ROL.rolPorId('oper').inicio && est().campoId === 'ceiba', `operador con «#//produccion/palmar»: sigue en lo suyo de La Ceiba (${est().pantalla}, ${est().campoId})`)
 est().setRol('ger'); ir('#/ger/resumen/ceiba~portafolio/curso')
 ir('#/ger/resumen/zarza~portafolio/curso')
 comprobar(est().alcance === 'portafolio' && est().campoId === 'zarza' && nav.hash === '#/ger/resumen/zarza~portafolio/curso', `pegar un portafolio sobre otro portafolio lo conserva (${nav.hash})`)
@@ -1066,7 +1068,9 @@ ir('#/ger/perfil/ceiba/curso')
 comprobar(est().pantalla === 'perfil', 'atrás/adelante a «Mi perfil» lo vuelve a abrir')
 
 est().setRol('ger'); est().setAlcance('portafolio'); est().setRol('adm')
-comprobar(est().alcance === 'campo', 'el administrador (ninguna pantalla suma campos) no queda en portafolio')
+// C1 (25-oct): La planta viva suma campos y el administrador la tiene: puede ver todos sus campos, solo por ella.
+const sumanAdm = ROL.rolPorId('adm').pantallas.filter(x => PANT.PANTALLAS[x]?.agrega)
+comprobar(est().alcance === 'portafolio' && sumanAdm.join() === 'plantaViva', `el administrador queda en «Todos mis campos» solo porque La planta viva suma campos (${sumanAdm.join(', ')})`)
 est().setRol('tec'); est().setAlcance('portafolio')
 comprobar(est().alcance === 'campo', 'el técnico (un solo campo) no queda en portafolio')
 est().setRol('prod'); est().setCampo('ceiba'); est().redirigir('pozos', 'aviso de prueba'); est().setCampo('palmar')
@@ -1299,16 +1303,22 @@ const FONDOS = ['suelo', 'superficie', 'panel', 'panel2', 'elevado']
 const textoMalo = [], formaMala = [], chipMalo = []
 for (const [t, k] of Object.entries(temas)) {
   for (const tx of ['tinta', 'tinta2', 'tinta3']) for (const f of FONDOS) if (razon(k[tx], k[f]) < 4.5) textoMalo.push(`${t} ${tx}/${f} ${razon(k[tx], k[f]).toFixed(2)}`)
-  // Las formas de prioridad van sobre los paneles y la superficie (no sobre el suelo).
-  for (const fo of ['p1', 'p2', 'p4', 'invalido']) for (const f of ['superficie', 'panel', 'panel2', 'elevado']) if (razon(k[fo], k[f]) < 3) formaMala.push(`${t} ${fo}/${f} ${razon(k[fo], k[f]).toFixed(2)}`)
-  for (const s of ['p1', 'p2', 'p3', 'p4']) if (razon(k.tinta, k[`${s}-f`]) < 4.5) chipMalo.push(`${t} tinta/${s}-f`)
+  // Las formas de estado van sobre los paneles y la superficie (no sobre el suelo).
+  // C1 · Identidad (25-oct): la paleta de X2 §4 — rojo solo el interlock, naranja la
+  // alarma (1), amarillo con trazo la atención (2) y el aviso (3), morado «no le crea».
+  for (const fo of ['interlock', 'p1', 'sincom']) for (const f of ['superficie', 'panel', 'panel2', 'elevado']) if (razon(k[fo], k[f]) < 3) formaMala.push(`${t} ${fo}/${f} ${razon(k[fo], k[f]).toFixed(2)}`)
+  for (const s of ['interlock', 'p1', 'p2', 'p3', 'sincom']) if (razon(k.tinta, k[`${s}-f`]) < 4.5) chipMalo.push(`${t} tinta/${s}-f`)
   // El número dentro de la forma, contra el color de la forma (3:1, es parte del gráfico).
-  for (const s of ['p1', 'p2', 'p4']) if (razon(k['marca-num'], k[s]) < 3) formaMala.push(`${t} número/${s} ${razon(k['marca-num'], k[s]).toFixed(2)}`)
+  if (razon(k['marca-num'], k.p1) < 3) formaMala.push(`${t} número/p1 ${razon(k['marca-num'], k.p1).toFixed(2)}`)
+  // El amarillo (atención y aviso) lleva trazo y número oscuros: los dos dan 3:1 contra el amarillo.
+  for (const s of ['p2', 'p3']) if (razon(k['marca-trazo'], k[s]) < 3) formaMala.push(`${t} trazo/${s} ${razon(k['marca-trazo'], k[s]).toFixed(2)}`)
+  // Ningún estado es azul (X2 §4.1): el --p4 de antes ya no existe.
+  if ('p4' in k) formaMala.push(`${t} --p4 sigue definido`)
 }
 comprobar(textoMalo.length === 0, `todo texto en tinta, tinta2 y tinta3 da 4,5:1 sobre los cinco fondos, en claro y en oscuro${textoMalo.length ? ': ' + textoMalo.join('; ') : ''}`)
-comprobar(formaMala.length === 0, `las formas de prioridad 1, 2, 4 y el dato inválido dan 3:1 sobre los paneles, y el número de adentro se lee${formaMala.length ? ': ' + formaMala.join('; ') : ''}`)
-comprobar(chipMalo.length === 0 && razon(temas.claro.p3, temas.claro.panel) < 3 && razon(temas.claro['marca-trazo'], temas.claro.p3) >= 3,
-  'el texto de las etiquetas de prioridad va en tinta sobre su fondo, y el cuadrado amarillo (1,6:1 contra el panel) lleva trazo oscuro')
+comprobar(formaMala.length === 0, `el interlock, la alarma y «sin comunicación» dan 3:1 sobre los paneles, el número de adentro se lee, el amarillo lleva trazo que se ve y ningún estado es azul${formaMala.length ? ': ' + formaMala.join('; ') : ''}`)
+comprobar(chipMalo.length === 0 && razon(temas.claro.p2, temas.claro.panel) < 3 && razon(temas.claro.p3, temas.claro.panel) < 3 && temas.claro.p1 !== temas.claro.interlock,
+  'el texto de las etiquetas de estado va en tinta sobre su fondo; el triángulo y el cuadrado amarillos (menos de 3:1 contra el panel) llevan trazo oscuro, y la alarma no es el rojo del interlock')
 
 // Las marcas: el cuadrado P3 lleva trazo; la etiqueta no repite la prioridad al lector.
 const PR = await v.ssrLoadModule('/src/shared/ui/Prioridad.tsx'), PRIM = await v.ssrLoadModule('/src/shared/ui/primitivas.tsx')
@@ -3367,6 +3377,145 @@ console.log('\n=== 32. Correcciones del documento del backend (F4): el factor de
   const horas22 = RP.brechaPorChoke(['ceiba'], new Date('2026-09-22T12:00:00-05:00'), new Date('2026-09-22T14:00:00-05:00'), ctx0)
   comprobar(Math.abs(dia22.sinExplicar - 88.441) < 0.001 && dia22.cuadra && Math.abs(horas22.sinExplicar) > 0.025 * horas22.potencial && !horas22.cuadra,
     `5E·H37 · el 22-sep La Ceiba deja ${dia22.sinExplicar.toFixed(1)} bbl sin explicar (${(dia22.sinExplicar / dia22.potencial * 100).toFixed(2)} %, cuadra); de 12:00 a 14:00, con P-201B parada, ${horas22.sinExplicar.toFixed(1)} (${(horas22.sinExplicar / horas22.potencial * 100).toFixed(1)} %, no cuadra)`)
+}
+
+// C1 · Identidad y armazón: la franja de condiciones de la cabecera (X2 §3.5, X5 §5.6).
+console.log('\n=== C1. La franja de condiciones: una marca por equipo, contada por el motor ===')
+{
+  const FR = await v.ssrLoadModule('/src/entities/condiciones.ts')
+  const EVF = await v.ssrLoadModule('/src/entities/equipo-vivo.ts')
+  const ctxF = L.contextoInicial()
+  const ids = (fr, c) => fr.equipos.filter(e => e.condicion === c).map(e => e.equipo).sort().join(' ')
+  const t0 = performance.now()
+  const ce = FR.franja(['ceiba'], ctxF)
+  const msCe = performance.now() - t0
+  // La Ceiba, con las cifras del demo (imagen 1): ◆ 2 alarmas · ▲ 2 en atención · ■ 1 aviso · 0 sin comunicación.
+  comprobar(ce.cuentas.alarma === 2 && ce.cuentas.atencion === 2 && ce.cuentas.aviso === 1 && ce.cuentas['sin-comunicacion'] === 0 && ce.cuentas.interlock === 0
+      && ids(ce, 'alarma') === 'K-101 P-201B' && ids(ce, 'atencion') === 'LC-21 TK-102' && ids(ce, 'aviso') === 'H-302',
+    `La Ceiba: ${ce.cuentas.alarma} alarmas (${ids(ce, 'alarma')}), ${ce.cuentas.atencion} en atención (${ids(ce, 'atencion')}), ${ce.cuentas.aviso} aviso (${ids(ce, 'aviso')}), 0 sin comunicación`)
+  // Todos los campos (imagen 2): 4 · 8 · 2 · 0. Cada equipo cuenta en su campo: la P-201B de Morichal no es la de La Ceiba.
+  const todos = FR.franja(TODOS, ctxF)
+  comprobar(todos.cuentas.alarma === 4 && todos.cuentas.atencion === 8 && todos.cuentas.aviso === 2 && todos.cuentas['sin-comunicacion'] === 0
+      && todos.equipos.filter(e => e.equipo === 'P-201B').map(e => `${e.campoId}:${e.condicion}`).sort().join() === 'ceiba:alarma,morichal:atencion',
+    `todos los campos: ${todos.cuentas.alarma} alarmas · ${todos.cuentas.atencion} en atención · ${todos.cuentas.aviso} avisos · ${todos.cuentas['sin-comunicacion']} sin comunicación`)
+  // Una sola marca por equipo, la más grave: MPP-301 es aviso en su estado y atención en Riesgo → atención, una vez.
+  const mo = FR.franja(['morichal'], ctxF)
+  const mpp = mo.equipos.filter(e => e.equipo === 'MPP-301')
+  const repetidos = todos.equipos.filter((e, i) => todos.equipos.findIndex(x => x.campoId === e.campoId && x.equipo === e.equipo) !== i)
+  comprobar(EVF.equipoVivo('MPP-301', 'morichal', ctxF)?.severidad === 3 && mpp.length === 1 && mpp[0].condicion === 'atencion' && repetidos.length === 0,
+    `una marca por equipo, la más grave de su estado y de Riesgo (MPP-301: aviso en su estado, atención en Riesgo → atención); ningún equipo se cuenta dos veces`)
+  // La cuenta es el largo de su lista, en el orden de la franja, y la suma de los campos es la del portafolio.
+  const sumaCampos = TODOS.map(c => FR.franja([c], ctxF)).reduce((a, x) => a + x.equipos.length, 0)
+  const enOrden = todos.equipos.every((e, i) => i === 0 || FR.ORDEN_FRANJA.indexOf(todos.equipos[i - 1].condicion) <= FR.ORDEN_FRANJA.indexOf(e.condicion))
+  comprobar(FR.ORDEN_FRANJA.every(c => todos.cuentas[c] === todos.equipos.filter(e => e.condicion === c).length) && sumaCampos === todos.equipos.length && enOrden
+      && ce.equipos[0].equipo === 'P-201B' && ce.equipos[0].bblDia > 1600,
+    `cada cuenta es el largo de su lista, de la más grave a la más leve, y primero lo que más deja de producir (P-201B, ${f(ce.equipos[0].bblDia)} bbl/d)`)
+  // «Sin comunicación» es el medidor oficial sin el dato del último día: sin él, el computador de flujo sale morado.
+  const fiscal = EVF.equipoVivo(Object.keys(EQ.EQUIPOS).find(id => EQ.EQUIPOS[id].fiscal), 'ceiba', ctxF)
+  const sinDato = { ...fiscal, dispositivos: fiscal.dispositivos.map(d => d.tag === fiscal.fiscal ? { ...d, valor: null, estado: 'sin señal' } : d) }
+  const conCorte = FR.franjaDe([{ campoId: 'ceiba', equipos: [sinDato], riesgo: [] }])
+  const termografia = FR.franjaDe([{ campoId: 'ceiba', equipos: [EVF.equipoVivo('SE-2', 'ceiba', ctxF)], riesgo: [] }])
+  comprobar(conCorte.cuentas['sin-comunicacion'] === 1 && conCorte.equipos[0].equipo === fiscal.id && termografia.cuentas['sin-comunicacion'] === 0,
+    `sin el dato del último día, ${fiscal.id} sale «sin comunicación»; la termografía por campaña de SE-2 (sin lectura) no`)
+  comprobar(msCe < 300, `la franja de La Ceiba se calcula en ${msCe.toFixed(0)} ms (menos de 300)`)
+}
+
+
+// C2 · La planta viva (X4 §4): los cuadres que no se rompen, las frases del motor y cada
+// cifra igual a la de la pantalla de donde sale hoy (Resumen, Diferidos, Riesgo, el ciclo, la tubería).
+console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen hoy ===')
+{
+  const PV = await v.ssrLoadModule('/src/entities/planta-viva.ts')
+  const RPV = await v.ssrLoadModule('/src/entities/choke-reparto.ts')
+  const ESV = await v.ssrLoadModule('/src/entities/escenarios.ts')
+  const CRV = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const CFV = await v.ssrLoadModule('/src/entities/configuracion.ts')
+  const curso = D.rangoDePeriodo('curso')
+  const q = (campos, momento) => ({ campos, momento, desde: curso.desde, hasta: curso.hasta })
+  // D7: la primera lectura de todos los campos, menos de 300 ms; cambiar de momento no recalcula.
+  let t0 = performance.now()
+  const todosD = PV.plantaViva(q(TODOS, 'durante'), ctx0, V0)
+  const msPrimera = performance.now() - t0
+  t0 = performance.now()
+  const todosA = PV.plantaViva(q(TODOS, 'antes'), ctx0, V0), todosP = PV.plantaViva(q(TODOS, 'despues'), ctx0, V0)
+  const msMomentos = performance.now() - t0
+  comprobar(msPrimera < 300 && msMomentos < 30 && PV.plantaViva(q(TODOS, 'durante'), ctx0, V0) === todosD,
+    `D7 · todos los campos en ${msPrimera.toFixed(0)} ms (menos de 300); los otros dos momentos en ${msMomentos.toFixed(1)} ms, y la misma consulta devuelve lo guardado`)
+
+  const ceD = PV.plantaViva(q(['ceiba'], 'durante'), ctx0, V0), ceA = PV.plantaViva(q(['ceiba'], 'antes'), ctx0, V0), ceP = PV.plantaViva(q(['ceiba'], 'despues'), ctx0, V0)
+  const tub = RPV.tuberiaCampo('ceiba', curso.desde, curso.hasta, ctx0, V0)
+  const est = D.estadoCampo('ceiba', ctx0)
+  const lb = L.libro(['ceiba'], curso.desde, curso.hasta, ctx0)
+  const tr = (v, k) => v.planta.tramos.find(t => t.tramo === k)
+  // Durante: 1.665 + 301 = 1.966, el total del campo (un nombre, una cifra: nunca 1.665).
+  const sumaD = ceD.planta.tramos.reduce((a, t) => a + t.valor, 0) + (ceD.planta.sinIdentificar?.valor ?? 0)
+  comprobar(f(tr(ceD, 'planta').valor) === '1.665' && f(ceD.planta.sinIdentificar.valor) === '301' && f(ceD.cifras.durante.valor) === '1.966'
+      && cerca(sumaD, ceD.cifras.durante.valor) && cerca(ceD.cifras.durante.valor, tub.perdiendoAhoraBpd) && cerca(ceD.cifras.durante.valor, est.perdiendoBpd),
+    `Durante · 1.665 + 301 = 1.966 = lo que se deja de producir ahora en Resumen y en la tubería (${f(sumaD)}; ${f(est.perdiendoBpd)})`)
+  // Después: 118 + 573 + 355 = 1.046 = el diferido del libro.
+  const sumaP = ceP.planta.tramos.reduce((a, t) => a + t.valor, 0) + (ceP.planta.sinIdentificar?.valor ?? 0)
+  comprobar(f(tr(ceP, 'pozo').valor) === '118' && f(tr(ceP, 'planta').valor) === '573' && f(ceP.planta.sinIdentificar.valor) === '355'
+      && cerca(sumaP, lb.diferido) && cerca(ceP.cifras.despues.valor, lb.diferido) && f(lb.diferido) === '1.046' && cerca(ceP.esteMes.bbl, lb.diferido),
+    `Después · 118 + 573 + 355 = 1.046 = el diferido del libro de octubre (${f(sumaP)})`)
+  // Un nombre, una cifra: «se dejan de producir» es el total de cada campo y de todos (2.650 = 1.966 + 684).
+  const sumaFilas = todosD.filas.reduce((a, x) => a + x.valor, 0)
+  comprobar(f(todosD.cifras.durante.valor) === '2.650' && cerca(sumaFilas, todosD.cifras.durante.valor)
+      && todosD.filas.map(x => x.campoId).join() === 'ceiba,morichal,guacamayo,palmar,zarza' && todosD.filas.every(x => cerca(x.valor, D.estadoCampo(x.campoId, ctx0).perdiendoBpd))
+      && /^Ahora mismo, en sus 5 campos$/.test(todosD.cifras.durante.previo) && todosD.cifras.durante.explica === 'Lo que más pesa: la bomba de agua P-201B, en La Ceiba. Hay 4 de 87 pozos parados.',
+    `todos los campos · 2.650 bbl/d = la suma de las filas, de la que más pesa a la que menos; cada fila es el total de su campo («${todosD.cifras.durante.explica}»)`)
+  // Las frases del motor: la de ahora (la de la imagen aprobada) y la de lo que viene.
+  const corta = ceD.cifras.durante.fraseCorta
+  comprobar(ceD.cifras.durante.frase === 'se dejan de producir en La Ceiba.'
+      && ceD.cifras.durante.explica === 'La bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.'
+      && corta === 'Se dejan de producir 1.966 bbl/d: P-201B (bomba de agua) paró a las 03:52 y cerró LC-07 y LC-16.' && corta.split(/\s+/).length <= 20
+      && ceD.planta.ariaLabel.startsWith(corta),
+    `la frase de ahora: «${corta}» (${corta.split(/\s+/).length} palabras; es el nombre accesible de la tubería)`)
+  comprobar(ceA.cifras.antes.valor === 1 && ceA.cifras.antes.unidad === 'equipo avisa' && ceA.cifras.antes.frase === 'K-101 (aire de instrumentos) ya pasó el límite.'
+      && todosA.cifras.antes.valor === 8 && todosA.cifras.antes.fraseCorta === '8 equipos avisan; el más cercano, K-101 (La Ceiba), ya pasó el límite.'
+      && todosA.cifras.antes.valor === D.riesgoAhora(TODOS, ctx0).filter(r => r.estado === 'en-riesgo').length
+      && Object.values(ceD.cifras).every(c => c.fraseCorta.split(/\s+/).length <= 20 && c.frase.length > 0),
+    `la frase de lo que viene: un conteo y un nombre, nunca una suma de techos («${todosA.cifras.antes.fraseCorta}»); las tres frases cortas, 20 palabras o menos`)
+  // Un tramo marcado por momento, el de más barriles: Durante y Después la planta; Antes la planta (K-101).
+  const marcados = [ceA, ceD, ceP].map(x => x.planta.tramos.filter(t => t.marcado).map(t => t.tramo).join())
+  comprobar(marcados.join('|') === 'planta|planta|planta' && tr(ceD, 'planta').angostoBpd === 9445 && tr(ceD, 'pozo').limita && !tr(ceD, 'planta').limita
+      && ceD.cifras.durante.primerEquipo?.equipo === 'P-201B' && ceA.cifras.antes.primerEquipo?.equipo === 'K-101' && ceP.cifras.despues.primerEquipo?.equipo === 'P-201B',
+    `un tramo marcado por momento (${marcados.join(' · ')}); la planta se angosta hasta 9.445 bbl/d (lo que deja pasar sin P-201B); limitan los pozos`)
+  // La rama del agua, «sin identificar», la venta y la pérdida.
+  const r = ceD.planta.ramal
+  comprobar(r.hay && r.tanque.nivelPct === 89.6 && r.tanque.altoAltoPct === 90 && f(r.entraBpd) === '174.033' && r.bombas.map(b => `${b.id}:${b.estado}`).join() === 'P-201A:sin-instrumento,P-201B:parada,P-201C:sin-instrumento'
+      && ceD.planta.sinIdentificar.titulo === 'LC-21 · 301 bbl/d' && f(ceD.planta.venta.valor) === '9.394' && ceD.planta.venta.metaTexto === 'meta 10.900'
+      && f(ceA.planta.venta.valor) === '293.287' && ceA.planta.venta.metaTexto === 'meta 337.900' && f(ceP.planta.venta.valor) === '16.941'
+      && ceD.perdida === 'Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.',
+    'la rama del agua (tanque 89,6 % · alto-alto 90 % · entran 174.033 bbl/d · P-201B parada, las otras dos sin instrumento), LC-21 aparte, la venta contra la meta en cada momento y la pérdida aparte')
+  // Las cifras de A, iguales a las de donde salen hoy.
+  const c = ESV.cicloValor(['ceiba'], curso.desde, curso.hasta, ctx0, V0)
+  const serie = L.serieMensual(['ceiba'], ctx0)
+  const base = RPV.lineaBasePorTramo(['ceiba'], new Date(`${CFV.PUESTA_EN_MARCHA}T00:00:00-05:00`), R.AHORA, ctx0, V0)
+  const m = ceD.mesAMes.meses
+  comprobar(f(ceD.mover.totalBbl) === '2.133' && cerca(ceD.mover.porMomento.durante, c.durante.bbl) && f(ceD.mover.porMomento.antes) === '0' && f(ceD.mover.porMomento.despues) === '30'
+      && ceD.porEquipo.map(x => `${x.equipo} ${f(x.bbl)} ${f(x.pct)}`).join(', ') === 'P-201B 573 55, LC-21 247 24, SE-2 118 11, LC-08 109 10'
+      && ceD.porEquipo[0].prioridad === 1 && ceD.porEquipo[1].prioridad === 2 && ceD.porEquipo.every((x, i) => cerca(x.bbl, lb.porEquipo[i].bbl))
+      && m.length === 13 && m.length === serie.length && f(m[0].totalBpd) === '544' && f(m[0].altoBpd) === '421' && m[4].sobre && f(m[4].totalBpd) === '834'
+      && m.filter(x => x.sobre).length === 1 && m[12].enCurso && f(ceD.mesAMes.actualBpd) === '661' && f(ceD.mesAMes.maximoBpd) === '800'
+      && ceD.bajando.filas.map(x => `${x.tramo} ${f(x.antesBpd)}→${f(x.ahoraBpd)}`).join(', ') === 'planta 268→51, pozo 122→215'
+      && cerca(ceD.bajando.filas[0].antesBpd, base.noPlaneado.planta.baseDia) && /muestra corta$/.test(ceD.bajando.nota)
+      && f(ceD.produccion.realBpd) === '10.700' && ceD.produccion.metaBpd === 10900 && ceD.produccion.bajoMeta
+      && ceD.esteMes.rango.map(f).join('–') === '889–1.203' && ceD.esteMes.nota === 'P-201B, más de la mitad · 355 sin causa',
+    'las cifras de A: lo que se puede mover (el ciclo: 0 · 2.102 · 30 = 2.133, simulado), el diferido por equipo (el Pareto del libro), los 13 meses contra el máximo (febrero 834 pasa 800; octubre 661), ¿está bajando? (268 → 51 en la planta, 122 → 215 en los pozos), la producción 10.700 de 10.900 y el rango 889–1.203')
+  // La hoja del tramo: el árbol en el orden de gestión, sin códigos; para producir más.
+  const planta = tr(ceD, 'planta')
+  comprobar(planta.porque.map(x => `${x.texto} ${f(x.bbl)}`).join(', ') === 'No planeada 573, Planeada 0, Sin saber si fue planeada 0'
+      && planta.porque.flatMap(x => x.detalle).every(d => !/\b(?:NP|P)_[A-Z]/.test(d)) && planta.equipos.map(e => e.equipo).join() === 'P-201B,K-101,P-201A,P-201C'
+      && planta.frase === 'P-201B (bomba de agua) está parada desde las 03:52 y obligó a cerrar LC-07 y LC-16.'
+      && ceD.planta.paraProducirMas === CRV.criticidadDelCampo('ceiba', ctx0).desembotellar && planta.desdeTrim?.texto.includes('268 → 51'),
+    `la hoja de la planta: «${planta.frase}», sus equipos (P-201B, K-101, P-201A y P-201C), ¿por qué? sin códigos (${planta.porque[0].detalle.join(' | ')}) y para producir más`)
+  // Los estados (X4 §4.10): campo de gas, nada parado, comienzo de mes.
+  const za = PV.plantaViva(q(['zarza'], 'durante'), ctx0, V0), gu = PV.plantaViva(q(['guacamayo'], 'durante'), ctx0, V0)
+  comprobar(za.planta.campoDeGas && za.planta.textoGas === 'La Zarza es un campo de gas: su tubería todavía no está.'
+      && gu.cifras.durante.valor === 0 && gu.cifras.durante.explica === 'Guacamayo produce sin paradas ahora.' && !gu.planta.tramos.some(t => t.marcado)
+      && ceP.cifras.despues.explica.endsWith('Septiembre cerró en 7.716 bbl.') && ceP.esteMes.anterior?.bbl > 7715,
+    'los estados: La Zarza es de gas (su tubería todavía no está), Guacamayo produce sin paradas (nada marcado) y a comienzo de mes Después dice el mes anterior cerrado (septiembre, 7.716 bbl)')
+  void todosP
 }
 
 await v.close()

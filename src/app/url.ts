@@ -26,6 +26,14 @@ export const PRIMER_DIA = diaIso(pedirInicioDeHistoria()), ULTIMO_DIA = diaIso(A
  *  «Mi perfil» no sobrevivía a recargar ni a atrás/adelante. */
 export const PANTALLAS_COMUNES = ['perfil']
 
+/** La pantalla de un tramo de la dirección: su `ruta` («planta-viva») o su id
+ *  («plantaViva», el de siempre: así las direcciones de antes y las que se
+ *  escribieron con el id siguen abriendo). */
+export const pantallaDeRuta = (tramo: string): string =>
+  Object.keys(PANTALLAS).find(id => PANTALLAS[id]!.ruta === tramo) ?? tramo
+/** El tramo de la dirección de una pantalla: su `ruta`, o el id si no tiene. */
+export const rutaDe = (pantalla: string): string => PANTALLAS[pantalla]?.ruta ?? pantalla
+
 /** ¿Puede este rol abrir esta pantalla? Una regla para la dirección, el
  *  estado y la vista: la pantalla existe, es del producto (no de v2) y es del
  *  rol o de todos. */
@@ -58,7 +66,8 @@ export function rangoValido(a: string, b: string): { desde: string; hasta: strin
  *  el campo del registro que pedía y la persona no tiene (se dice: B-38). */
 export type DeLaDireccion = Partial<Contexto> & { campoAjeno?: string }
 export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id => rolPorId(id).campos, rolActual?: string): DeLaDireccion => {
-  const [rolId, pantalla, campoId, periodoId, equipo] = location.hash.replace(/^#\/?/, '').split('/')
+  const [rolId, tramo, campoId, periodoId, equipo] = location.hash.replace(/^#\/?/, '').split('/')
+  const pantalla = tramo === undefined ? undefined : tramo && pantallaDeRuta(tramo)
   const ctx: DeLaDireccion = {}
   // Solo roles del producto: un enlace viejo a un rol de v2 (plan, cont, reg)
   // dejaba guardado un rol que la cabecera mostraba como producción y con el
@@ -98,7 +107,7 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
  *  equipo, no. */
 export const escribirHash = (c: Contexto, nuevaEntrada = false) => {
   const periodo = c.rango ? `${c.rango.desde}_${c.rango.hasta}` : c.periodoId
-  const nuevo = `#/${c.rolId}/${c.pantalla}/${c.campoId}${c.alcance === 'portafolio' ? '~portafolio' : ''}/${periodo}`
+  const nuevo = `#/${c.rolId}/${rutaDe(c.pantalla)}/${c.campoId}${c.alcance === 'portafolio' ? '~portafolio' : ''}/${periodo}`
     + (c.equipoAbierto ? `/${c.equipoAbierto}` : '')
   if (location.hash === nuevo) return
   if (nuevaEntrada) history.pushState(null, '', nuevo)

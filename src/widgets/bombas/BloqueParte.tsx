@@ -12,7 +12,7 @@ import { Proyeccion } from './Proyeccion'
 import { fmtBbl, fmtHoras, pronosticoCorto, fraseParteCorta } from './comun'
 
 const H5 = ({ children }: { children: React.ReactNode }) =>
-  <h5 className="font-cond mb-1 mt-2 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)] first:mt-0">{children}</h5>
+  <h5 className="font-cond mb-1 mt-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)] first:mt-0">{children}</h5>
 
 const PAPEL: Record<PapelVariable, string> = { avisa: 'anuncia', causa: 'la daña', confirma: 'confirma' }
 
@@ -35,32 +35,32 @@ export function BloqueParte({ sp, h }: { sp: SaludParte; h?: HistorialParte }) {
         className="grid w-full cursor-pointer grid-cols-[auto_1fr_auto_auto] items-center gap-2.5 py-2.5 text-left hover:bg-[var(--panel2)]">
         <MarcaPrioridad s={sp.prioridad} tamano={14} />
         <span className="min-w-0">
-          <b className="block text-[12.5px] leading-tight">{sp.parte.nombre}</b>
-          {frase && <small className="tabular block truncate text-[10.5px] text-[var(--tinta2)]">{frase}</small>}
+          <b className="block text-[15px] leading-tight">{sp.parte.nombre}</b>
+          {frase && <small className="tabular block truncate text-[13px] text-[var(--tinta2)]">{frase}</small>}
         </span>
         <span className="text-right">
           <Chip tono={sp.estado === 'fallo' || sp.estado === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[sp.estado]}</Chip>
-          {h && <small className="tabular mt-0.5 hidden text-[10px] text-[var(--tinta3)] sm:block">{h.fallas} {h.fallas === 1 ? 'falla' : 'fallas'} · {n0(h.bbl)} bbl</small>}
+          {h && <small className="tabular mt-0.5 hidden text-[12px] text-[var(--tinta3)] sm:block">{h.fallas} {h.fallas === 1 ? 'falla' : 'fallas'} · {n0(h.bbl)} bbl</small>}
         </span>
         <ChevronDown className={cn('size-4 text-[var(--tinta3)] transition-transform', abierta && 'rotate-180')} />
       </button>
       {abierta && (
         <div className="pb-3 pl-1">
           {sp.primera && <div className="mb-2"><Proyeccion s={sp.primera.senal} /></div>}
-          <div className="grid gap-3 text-[11px] [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]">
+          <div className="grid gap-3 text-[13px] [grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr))]">
             <div>
               <H5>QUÉ LA ANUNCIA</H5>
               {senales.map(x => (
                 <div key={x.tag} className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1 last:border-0">
                   <span className="min-w-0">
-                    {x.nombre} <span className="text-[10px] text-[var(--tinta3)]">· {PAPEL[x.papel]}</span>
-                    <small className="font-mono block text-[9.5px] text-[var(--tinta3)]">{x.tag}{x.pron ? ` · ${x.pron}` : ''}</small>
+                    {x.nombre} <span className="text-[12px] text-[var(--tinta3)]">· {PAPEL[x.papel]}</span>
+                    <small className="font-mono block text-[12px] text-[var(--tinta3)]">{x.tag}{x.pron ? ` · ${x.pron}` : ''}</small>
                   </span>
                   <span className={cn('tabular shrink-0 text-right', x.valor === 'sin señal' && 'text-[var(--invalido)]')}>{x.valor}</span>
                 </div>
               ))}
               {sp.faltan.length > 0 && (
-                <p className="mt-1.5 text-[10.5px] text-[var(--tinta2)]">
+                <p className="mt-1.5 text-[13px] text-[var(--tinta2)]">
                   Falta instrumentar: {sp.faltan.map(pl => `${pl.nombre.toLowerCase()} (${pl.isa})`).join(', ')}.
                 </p>
               )}

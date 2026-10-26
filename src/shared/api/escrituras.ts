@@ -7,6 +7,9 @@ import {
   type CuerpoClasificacion, type CuerpoConfirmacion, type CuerpoYacimiento, type CuerpoVistaPrevia, type CuerpoTopologiaCsv,
   type CuerpoRespuestaAnh, type CuerpoRevisionAnh,
 } from './contrato'
+// C3 · Hoy: «Deshacer» (al final del archivo).
+import { R_DESHACER, type CuerpoDeshacerAnh } from './contrato'
+import { MOTIVO_DESHACER } from '@/entities/hoy'
 import { pedirParadaAnh, eventosDeLaCascada, filasDeEventos, filasDeRaiz, campoDeLaFila, partesDelId, soloDePersona, cadenaVista, guardadasDe } from './arbol'
 import {
   declararPaso, declararYacimiento, responder, conRevisionAtendida, quienRevisa, esNoSe, ErrorClasificacion, esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA,
@@ -1388,4 +1391,71 @@ function formaDeConfig(x: unknown): string | undefined {
       ?? (e.bombas === undefined || e.bombas === null ? undefined : !Array.isArray(e.bombas) ? PETICION(`${r}.bombas`, 'tiene que ser una lista')
         : (e.bombas as unknown[]).reduce<string | undefined>((m, b, i) => m ?? (!b || typeof b !== 'object' || Array.isArray(b) ? PETICION(`${r}.bombas[${i}]`, QUE_ES.objeto!)
           : texto(b as Record<string, unknown>, `${r}.bombas[${i}]`, 'equipo') ?? capacidad(b as Record<string, unknown>, `${r}.bombas[${i}]`)), undefined)))
+}
+
+/* ─────────────────────────── C3 · Hoy: «Deshacer» ─────────────────────────── */
+
+/** `POST /api/anh/paradas/deshacer { ids, n }` → las filas como quedaron y lo
+ *  guardado. «Deshacer» de lo que se acaba de confirmar o decir en una parada
+ *  desde Hoy (X4 §5.5; X5 §5.7), con D1: nada se borra. Es una escritura NUEVA,
+ *  por inserción: cada paso con un consecutivo de `n` vuelve a lo que propone
+ *  TRIM con procedencia `retirado`, el valor retirado, quién, la hora y el motivo
+ *  «deshecho por quien contestó», en la misma clave (fila o evento) donde estaba;
+ *  como es lo más reciente, rige (`rigeEnFila`). La confirmación y su lote quedan
+ *  en la historia. Solo deshace quien lo dijo (403) y solo lo que todavía rige
+ *  (409: alguien dijo otra cosa después, o ya se deshizo). Orden: la forma (400),
+ *  el rol, su capacidad y la persona (403), las filas (404), cada consecutivo (409
+ *  si no rige en esas filas; 403 si es de otra persona). */
+export async function deshacerAnh(q: Credencial, c: CuerpoDeshacerAnh): Promise<Resultado<{ paradas: ParadaAnh[] }>> {
+  if (FUENTE === 'http') {
+    const cuerpo: CuerpoDeshacerAnh = { ids: [...new Set(c.ids ?? [])], n: [...new Set(c.n ?? [])] }
+    const r = await escribir(q, 'POST', '/anh/paradas/deshacer', cuerpo, R_DESHACER)
+    if (!r.ok) return r
+    anotarClasificaciones(r.datos.guardadas)
+    return { ok: true, paradas: r.datos.paradas }
+  }
+  const forma = revisarForma(c, { ids: 'textos' })
+  if (forma) return rechazo(400, 'peticion-invalida', forma)
+  const ns = (c as { n?: unknown }).n
+  if (!Array.isArray(ns) || !ns.length || !ns.every(x => Number.isInteger(x) && (x as number) > 0))
+    return rechazo(400, 'peticion-invalida', PETICION('n', 'tiene que ser una lista de consecutivos (enteros mayores que cero)'))
+  const ids = [...new Set(c.ids)], consecutivos = [...new Set(ns as number[])]
+  const { ctx, usuarios, clasificacionesAnh } = sesion()
+  const rol = rolExacto(q.rolId)
+  if (!rol) return rechazo(403, 'rol-desconocido', SIN_ROL)
+  if (!(puedeHacer(rol.puede, 'anh:clasificar') || puedeHacer(rol.puede, 'anh:confirmar'))) return rechazo(403, 'sin-capacidad', 'Su rol no dice nada de las paradas: no tiene qué deshacer.')
+  const yo = personaDelRol(usuarios, q.rolId)
+  if (!yo) return rechazo(403, 'sin-persona', SIN_PERSONA)
+  if (!ids.length) return rechazo(422, 'peticion-invalida', 'No llegó ninguna parada.')
+  if (ids.length > MAXIMO_IDS || consecutivos.length > MAXIMO_IDS * PASOS.length) return rechazo(422, 'peticion-invalida', `Una petición lleva hasta ${MAXIMO_IDS} filas.`)
+  const mios = camposAsignados(rol, usuarios).map(x => x.id)
+  const filas: ParadaAnh[] = []
+  for (const id of ids) {
+    const f = filaDe(id, mios, ctx, clasificacionesAnh)
+    if (!f) return rechazo(404, 'no-encontrado', NO_ESTA)
+    filas.push(f)
+  }
+  // Cada consecutivo: el paso que rige con él en alguna de las filas, y la clave donde está guardado.
+  const hora = horaDelPlc(), contar = contadorDe(clasificacionesAnh)
+  const escritos: Escritos = {}
+  for (const n of consecutivos) {
+    let hallado = false
+    for (const f of filas) for (const x of PASOS) {
+      const d = f.clasificacion[x]
+      if (d?.n !== n) continue
+      if (!esDePersona(d.procedencia)) continue
+      if (d.porId !== yo.id) return rechazo(403, 'ajeno', `Lo que dijo ${d.por ?? 'otra persona'} lo deshace esa persona; para cambiarlo, corríjalo con su motivo.`)
+      const clave = [f.id, f.eventoId].find(k => clasificacionesAnh[k]?.[x]?.n === n)
+      if (!clave) continue
+      hallado = true
+      if (escritos[clave]?.[x]) continue
+      escritos[clave] = { ...escritos[clave], [x]: { valor: d.valor, procedencia: 'retirado', por: yo.nombre, porId: yo.id, rol: q.rolId, hora, porque: MOTIVO_DESHACER, n: contar() } } as BorradorClasificacion
+    }
+    if (!hallado) return rechazo(409, 'ya-cambio', 'Lo que quería deshacer ya no rige: alguien dijo otra cosa después, o ya se deshizo. Vuelva a abrir la parada.')
+  }
+  const { clasificacionesAnh: g } = sesion()
+  const nuevas = { ...g }
+  for (const [k, e] of Object.entries(escritos)) nuevas[k] = fusionarGuardado(g[k], e)
+  cambiarSesion({ clasificacionesAnh: nuevas })
+  return { ok: true, paradas: filas.map(f => pedirParadaAnh(f.id, ctx, nuevas)!) }
 }

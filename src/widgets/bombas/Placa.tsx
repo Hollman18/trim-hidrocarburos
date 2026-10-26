@@ -50,19 +50,19 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
       <div className="flex items-start gap-2">
         <MarcaPrioridad s={eq.severidad} tamano={16} className="mt-[1px]" />
         <span className="min-w-0 flex-1">
-          <b id={idNombre} className="line-clamp-2 block text-[13px] leading-tight">{eq.nombre}</b>
-          <small className="font-mono block truncate text-[10px] text-[var(--tinta3)]">
+          <b id={idNombre} className="line-clamp-2 block text-[15px] leading-tight">{eq.nombre}</b>
+          <small className="font-mono block truncate text-[12px] text-[var(--tinta3)]">
             {eq.id}{global ? ` · ${b.campo.nombre}` : ''}
           </small>
         </span>
         <Chip>{tipoNombre(perfil)}</Chip>
       </div>
-      <p className="mt-1 text-[11px] text-[var(--tinta2)]">
+      <p className="mt-1 text-[13px] text-[var(--tinta2)]">
         {eq.estado}{perfil ? ` · ${PAPEL_NOMBRE[perfil.papel].toLowerCase()}` : ''}
       </p>
 
       {perfil && nivel === 'operacion' && filas.length === 0 && (
-        <p className="mt-2.5 text-[11px] text-[var(--tinta3)]">Instrumentos en banda.</p>
+        <p className="mt-2.5 text-[13px] text-[var(--tinta3)]">Instrumentos en banda.</p>
       )}
       {perfil ? (
         <div className="mt-2.5 grid gap-2.5">
@@ -70,9 +70,9 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
             <Analogico key={pl.id} nombre={pl.nombre} valor={s.valor} unidad={s.unidad} normal={s.normal}
               alarma={s.alarma} decimales={decimalesDe(s.serie?.valores, s.valor)} estado={DE_ESTADO[s.estado] ?? undefined} />
           ) : (
-            <div key={pl.id} className="flex items-baseline justify-between gap-2 border-b border-dashed border-[var(--linea2)] pb-1.5 text-[11px]">
+            <div key={pl.id} className="flex items-baseline justify-between gap-2 border-b border-dashed border-[var(--linea2)] pb-1.5 text-[13px]">
               <span className="text-[var(--tinta2)]">{pl.nombre}</span>
-              <span className="shrink-0 text-[10px] text-[var(--tinta3)]">no instrumentada</span>
+              <span className="shrink-0 text-[12px] text-[var(--tinta3)]">no instrumentada</span>
             </div>
           ))}
         </div>
@@ -89,25 +89,25 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
 
       {perfil && (avisan.length > 0 || resto.length > 0) && (
         <div className="mt-2.5">
-          <h4 className="font-cond mb-0.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{nivel === 'operacion' ? 'PARTES QUE AVISAN' : 'PARTES'}</h4>
+          <h4 className="font-cond mb-0.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{nivel === 'operacion' ? 'PARTES QUE AVISAN' : 'PARTES'}</h4>
           {avisan.map(sp => (
-            <div key={sp.parte.id} className="py-[3px] text-[11px]">
+            <div key={sp.parte.id} className="py-[3px] text-[13px]">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-1.5">
                   <MarcaPrioridad s={sp.prioridad} tamano={11} />
                   {sp === peor && !abierta ? <b className="truncate">{sp.parte.nombre}</b> : <span className="truncate">{sp.parte.nombre}</span>}
                 </span>
-                <span className="tabular shrink-0 text-[10.5px] text-[var(--tinta2)]">{estadoCorto(sp)}</span>
+                <span className="tabular shrink-0 text-[13px] text-[var(--tinta2)]">{estadoCorto(sp)}</span>
               </div>
               {/* La que más preocupa dice qué variable lo anuncia y cuándo (antes iba repetida al pie). */}
               {sp === peor && !abierta && fraseParteCorta(sp) && (
-                <small className="tabular block pl-[17px] text-[10.5px] text-[var(--tinta2)]">{fraseParteCorta(sp)}</small>
+                <small className="tabular block pl-[17px] text-[13px] text-[var(--tinta2)]">{fraseParteCorta(sp)}</small>
               )}
             </div>
           ))}
           {resto.length > 0 && (
             <Tip titulo={restoDetenidas ? 'Partes · bomba detenida' : 'Partes estables'} filas={resto.map(sp => [sp.parte.nombre, estadoCorto(sp)])}
-              imprimir="todo" className={`${encima} flex min-h-6 w-fit items-center gap-1.5 py-[3px] text-[10.5px] text-[var(--tinta3)] sm:min-h-0`}>
+              imprimir="todo" className={`${encima} flex min-h-6 w-fit items-center gap-1.5 py-[3px] text-[13px] text-[var(--tinta3)] sm:min-h-0`}>
               <MarcaPrioridad s={0} tamano={11} />
               {plural(resto.length, 'parte', 'partes')} {restoDetenidas ? 'con la bomba detenida' : resto.length === 1 ? 'estable' : 'estables'}
             </Tip>
@@ -116,10 +116,10 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
       )}
 
       {perfil && (
-        <div className="mt-auto border-t border-[var(--linea2)] pt-2 text-[11px]">
+        <div className="mt-auto border-t border-[var(--linea2)] pt-2 text-[13px]">
           {abierta ? (
             <>
-              <span className="block text-[10.5px] text-[var(--tinta3)]">
+              <span className="block text-[13px] text-[var(--tinta3)]">
                 Detenida desde {fechaHora(abierta.inicio)}
                 {/* Sin identificar, la causa la dice «no arrancar» de abajo (y su ⓘ). */}
                 {abierta.causa.parte ? ` · ${NOMBRE_PARTE[abierta.causa.parte].toLowerCase()}` : abierta.pide ? '' : <DichoEnPapel papel={` · ${causaEnPapel(abierta.causa).toLowerCase()}`}>{` · ${abierta.causa.texto.toLowerCase()}`}</DichoEnPapel>}
@@ -133,13 +133,13 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
                 <span className="flex flex-wrap items-baseline gap-x-2">
                   {/* La prioridad la dice la forma de la tarjeta: la cifra va en tinta (ISA-101). */}
                   <b className="tabular text-[17px]">{fmtBbl(abierta.bbl)}</b>
-                  <span className="tabular text-[10.5px] text-[var(--tinta2)]">
+                  <span className="tabular text-[13px] text-[var(--tinta2)]">
                     {abierta.bbl > 0 ? `${fmtRango(abierta.rango)} · calculado · ` : ''}{pr?.perdiendo ? `${n0(pr.perdiendo.bblDia / 24)} bbl/h · ${plural(pr.perdiendo.pozos.length, 'pozo cerrado', 'pozos cerrados')}` : 'el tanque todavía absorbe'}
                   </span>
                 </span>
               )}
               {abierta.pide && (
-                <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta)]">
+                <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta)]">
                   <MarcaPrioridad s={2} tamano={11} />
                   <span><b>No arrancar</b> hasta identificar</span>
                   <Info className={encima} titulo="No arrancar"
@@ -153,7 +153,7 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
             <span className="block text-[var(--tinta3)]">Ninguna parte avisa.</span>
           ) : null}
           {pr && !abierta && (
-            <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+            <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
               {!pr.inmediato ? <>
                   <span>si se para: no cierra pozos hoy</span>
                   <Info className={encima} titulo="Si se para" texto="No cierra pozos hoy. Baja el soporte de presión." />
@@ -174,7 +174,7 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
             </p>
           )}
           {ve && nivel === 'ingenieria' && ve.historial.fallas > 0 && (
-            <p className="tabular mt-0.5 text-[10.5px] text-[var(--tinta3)]">
+            <p className="tabular mt-0.5 text-[13px] text-[var(--tinta3)]">
               {plural(ve.historial.fallas, 'falla', 'fallas')} en {n0(ve.historial.dias / 30.4)} meses{ve.historial.mtbfDias ? ` · cada ${n0(ve.historial.mtbfDias)} d` : ''}
               {ve.historial.mdtH ? ` · ${fmtHoras(ve.historial.mdtH, true)} fuera` : ''}
               {/* Lo que YA costó (histórico); «si falla hoy» es la cifra de Riesgo. */}

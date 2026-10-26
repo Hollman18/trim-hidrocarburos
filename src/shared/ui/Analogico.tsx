@@ -49,7 +49,9 @@ export function Analogico({
   const enAlarma = valor !== null && !!alarma &&
     ((alarma.alta !== undefined && valor >= alarma.alta) || (alarma.baja !== undefined && valor <= alarma.baja))
   const s: Severidad = estado ?? (enAlarma ? 1 : fuera ? 2 : 0)
-  const tinta = s ? `var(--p${s})` : 'var(--tinta)'
+  // El texto y el puntero nunca se pintan (X2 B5, C1; X5 §5.4): van en tinta, y la
+  // condición la dice la marca a su izquierda. En amarillo, el valor no se leía (1,7:1).
+  const tinta = 'var(--tinta)'
   const limites = finitos([alarma?.baja, alarma?.alta])
 
   const textoBanda = normal
@@ -62,17 +64,17 @@ export function Analogico({
   return (
     <div className={cn('analogico', className)}>
       <div className="analogico-rejilla">
-        <span className="a-nombre text-[11px] leading-snug text-[var(--tinta2)]">
+        <span className="a-nombre text-[13px] leading-snug text-[var(--tinta2)]">
           {nombre !== undefined && <span className="block">{nombre}</span>}
-          {sub && <small className="font-mono block text-[9.5px] text-[var(--tinta3)]">{sub}</small>}
+          {sub && <small className="font-mono block text-[12px] text-[var(--tinta3)]">{sub}</small>}
         </span>
         <span className="a-valor flex items-center gap-1 whitespace-nowrap">
-          {s > 0 && <MarcaPrioridad s={s} tamano={11} />}
+          {s > 0 && <MarcaPrioridad s={s} tamano={14} />}
           {valor === null
-            ? <span className="text-[10.5px] text-[var(--invalido)]">sin señal</span>
+            ? <span className="text-[13px] text-[var(--invalido)]">sin señal</span>
             : (
-              <b className="tabular text-[12.5px] leading-none" style={{ color: s ? tinta : undefined }}>
-                {fmt(valor)}<span className="ml-0.5 text-[10px] font-normal text-[var(--tinta3)]">{unidad}</span>
+              <b className="tabular text-[15px] leading-none">
+                {fmt(valor)}<span className="ml-0.5 text-[12px] font-normal text-[var(--tinta3)]">{unidad}</span>
               </b>
             )}
         </span>
@@ -98,7 +100,7 @@ export function Analogico({
       </div>
 
       {detalle && (textoBanda || textoLimite) && (
-        <div className="tabular mt-0.5 flex flex-wrap justify-between gap-x-3 text-[9.5px] text-[var(--tinta3)]">
+        <div className="tabular mt-0.5 flex flex-wrap justify-between gap-x-3 text-[12px] text-[var(--tinta3)]">
           <span>{textoBanda}</span>
           <span>{textoLimite}</span>
         </div>

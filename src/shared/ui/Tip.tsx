@@ -85,18 +85,18 @@ export function Tip({ titulo, filas, pista, pistaEnPapel, children, as, tabIndex
       {enPapel && <small className={`solo-impresion text-[9pt] text-[var(--tinta2)] ${claseImpresion ?? ''}`}>{enPapel}</small>}
       {pos && createPortal(
         <div role="tooltip" id={id}
-          className="pointer-events-none fixed z-[200] max-w-[280px] rounded border border-[var(--linea)] bg-[var(--elevado)] px-3 py-2.5 text-[11.5px] leading-relaxed shadow-[var(--sombra2)]"
+          className="pointer-events-none fixed z-[200] max-w-[300px] rounded-[14px] bg-[var(--elevado)] px-3.5 py-3 text-[14px] leading-relaxed shadow-[var(--sombra-flota)]"
           style={{ left: Math.min(pos.x + 14, innerWidth - 300), top: Math.min(pos.y + 14, innerHeight - 190) }}>
-          <b className="mb-1 block text-[12.5px]">{titulo}</b>
+          <b className="mb-1 block text-[15px]">{titulo}</b>
           <dl className="grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5">
             {filas.map(([k, v]) => (
               <div key={k} className="contents">
-                <dt className="text-[10.5px] text-[var(--tinta3)]">{k}</dt>
-                <dd className="tabular m-0 text-right text-[11px]">{v}</dd>
+                <dt className="text-[13px] text-[var(--tinta3)]">{k}</dt>
+                <dd className="tabular m-0 text-right text-[13px]">{v}</dd>
               </div>
             ))}
           </dl>
-          {pista && <p className="mt-1.5 border-t border-[var(--linea2)] pt-1.5 text-[10px] text-[var(--tinta3)]">{pista}</p>}
+          {pista && <p className="mt-1.5 border-t border-[var(--linea2)] pt-1.5 text-[12px] text-[var(--tinta3)]">{pista}</p>}
         </div>, document.body)}
     </>
   )

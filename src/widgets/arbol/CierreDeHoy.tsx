@@ -76,22 +76,22 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
         a una raíz lo que fue de otra. Lo que alguien cambió sale del grupo solo. Con lo confirmado se
         miden las paradas no planeadas, y el reporte a la ANH sale mañana antes de las 07:00.
       </Lectura>
-      <p className="mb-2 text-[11.5px]">
+      <p className="mb-2 text-[14px]">
         <b className="tabular">{plural(cuantasParadas(ps), 'parada', 'paradas')}</b> hoy · {cuantasParadas(completas)} {cuantasParadas(completas) === 1 ? 'completa' : 'completas'}
         {cuantasParadas(ps) > cuantasParadas(completas) && <> · <b>faltan {cuantasParadas(ps) - cuantasParadas(completas)}</b></>} · el reporte sale mañana antes de las 07:00
       </p>
-      {aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[11.5px] text-[var(--tinta2)]">{aviso}</p>}
+      {aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[14px] text-[var(--tinta2)]">{aviso}</p>}
       {ps.length === 0 && <Hueco>Hoy no ha parado ningún pozo: no hay nada que cerrar.</Hueco>}
 
       {lotes.map(l => {
         const p = l.filas[0]!
         return (
           <div key={l.cadena} data-lote className="mb-2 rounded border border-[var(--linea2)] p-2.5">
-            <b className="text-[12px]">{l.filas.length === 1 ? '1 propuesta' : `${l.filas.length} iguales`}</b>
-            <span className="text-[11px] text-[var(--tinta2)]"> · TRIM {l.filas.length === 1 ? 'la dedujo' : 'las dedujo'} · {ESTADO.propuesta}</span>
+            <b className="text-[14px]">{l.filas.length === 1 ? '1 propuesta' : `${l.filas.length} iguales`}</b>
+            <span className="text-[13px] text-[var(--tinta2)]"> · TRIM {l.filas.length === 1 ? 'la dedujo' : 'las dedujo'} · {ESTADO.propuesta}</span>
             {/* La cadena completa: lo que se confirma (sin códigos). */}
-            <p className="mt-0.5 text-[11px] text-[var(--tinta)]">{PASOS.map(x => valorEnPalabras(x, String(p.clasificacion[x]!.valor))).join(' · ')}</p>
-            <ul className="mt-1 grid gap-0.5 text-[11px] text-[var(--tinta2)]" aria-label="Raíces del grupo">
+            <p className="mt-0.5 text-[13px] text-[var(--tinta)]">{PASOS.map(x => valorEnPalabras(x, String(p.clasificacion[x]!.valor))).join(' · ')}</p>
+            <ul className="mt-1 grid gap-0.5 text-[13px] text-[var(--tinta2)]" aria-label="Raíces del grupo">
               {l.raices.map(r => (
                 <li key={r.raiz}>
                   {r.pozos.length > 1 || r.equipo !== r.pozos[0] ? <>por <b className="text-[var(--tinta)]">{r.equipo}</b>: </> : null}
@@ -104,13 +104,13 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
                 ? <Boton variante="principal" disabled={ocupado} className="min-h-10 sm:min-h-0" onClick={() => void confirmarLote(l)}>
                     {l.filas.length === 1 ? 'Confirmar' : `Confirmar las ${l.filas.length}`}
                   </Boton>
-                : <small className="text-[10.5px] text-[var(--tinta2)]">Lo confirma supervisión o producción, que firman el día.</small>}
+                : <small className="text-[13px] text-[var(--tinta2)]">Lo confirma supervisión o producción, que firman el día.</small>}
               {identificar && <Boton disabled={ocupado} className="min-h-10 sm:min-h-0" onClick={() => setPantalla('causa')}>Ver una por una</Boton>}
             </span>
           </div>
         )
       })}
-      {error && <p role="alert" className="mb-2 text-[11px] text-[var(--tinta)]">{error}</p>}
+      {error && <p role="alert" className="mb-2 text-[13px] text-[var(--tinta)]">{error}</p>}
 
       {[
         { xs: esperan, que: 'esperan a quien abra el equipo: la causa y el detalle los confirma el jefe de mantenimiento o confiabilidad' },
@@ -123,7 +123,7 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
         const eventos = [...new Set(x.xs.map(p => p.eventoId))]
         const total = eventos.every(e => preguntas.some(q => q.id === e)) ? eventos.reduce((a, e) => a + (preguntas.find(q => q.id === e)?.bbl ?? 0), 0) : undefined
         return (
-          <p key={x.que} className="mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px]" data-falta-hoy={x.que}>
+          <p key={x.que} className="mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px]" data-falta-hoy={x.que}>
             <Falta>{plural(n, 'parada', 'paradas')}</Falta>
             <span>{x.que}: <b>{nombresDe(x.xs)}</b> <span className="text-[var(--tinta3)]">· {n0(deHoy)} bbl hoy{total !== undefined && Math.round(total) > Math.round(deHoy) ? ` (${n0(total)} desde que pararon)` : ''}</span></span>
             {identificar && <Boton variante="chico" className="min-h-12 sm:min-h-6" onClick={() => setPantalla('causa')}>Responder en Identificar</Boton>}

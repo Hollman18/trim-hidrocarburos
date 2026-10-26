@@ -8,8 +8,8 @@ import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
 import { rolEnPapel } from '@/shared/ui/papel'
 
 /** Botón de una respuesta: en el teléfono, 48 px de alto, para el dedo con guantes (U1 §2.6; B-24). */
-export const OPCION = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-left text-[11.5px] hover:bg-[var(--panel2)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-8 sm:text-[11px]'
-const ROTULO_PREGUNTA = 'text-[12px] font-semibold text-[var(--tinta)]'
+export const OPCION = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-left text-[14px] hover:bg-[var(--panel2)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-8 sm:text-[13px]'
+const ROTULO_PREGUNTA = 'text-[14px] font-semibold text-[var(--tinta)]'
 /** En el teléfono se ven cinco respuestas y «Más opciones…» (U1 §2.4); «No sé» siempre. */
 const A_LA_VISTA = 5
 
@@ -84,22 +84,22 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
   return (
     <div className="mt-2 grid gap-2 border-t border-dashed border-[var(--linea2)] pt-2" data-preguntas>
       {dichas.length > 0 && (
-        <ul className="grid gap-0.5 text-[11.5px]" aria-label="Lo que ya se contestó" data-contestado>
+        <ul className="grid gap-0.5 text-[14px]" aria-label="Lo que ya se contestó" data-contestado>
           {dichas.map((r, i) => (
             <li key={`${r.pregunta}${i}`} className="flex flex-wrap items-baseline gap-x-1.5">
               <span className="text-[var(--tinta2)]">{r.porId === persona.id ? 'Usted contestó' : <DichoEnPapel papel={`${rolEnPapel(r)} contestó`}>{`${r.por} contestó`}</DichoEnPapel>}{dichas.length > 1 || !q ? ` a «${textoDePregunta(r.pregunta)}»` : ''}:</span>
               <b className="font-semibold">{r.opcion}</b>
-              <small className="text-[10.5px] text-[var(--tinta3)]">· {horaCorta(r.hora)}</small>
+              <small className="text-[13px] text-[var(--tinta3)]">· {horaCorta(r.hora)}</small>
               {onCambiar && r.porId === persona.id && (
                 <button type="button" onClick={() => onCambiar(textoDePregunta(r.pregunta))}
-                  className="no-imprimir min-h-12 cursor-pointer text-[11px] text-[var(--tinta)] underline underline-offset-2 sm:min-h-0">Cambiar</button>
+                  className="no-imprimir min-h-12 cursor-pointer text-[13px] text-[var(--tinta)] underline underline-offset-2 sm:min-h-0">Cambiar</button>
               )}
             </li>
           ))}
         </ul>
       )}
       {escalada && revisa && (
-        <p className="flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta2)]" data-escalada>
+        <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]" data-escalada>
           <span className="rounded-sm border border-dashed border-[var(--tinta3)] px-1.5">sigue abierta</span>
           {noSupo ? <DichoEnPapel papel={`${rolEnPapel(noSupo)} contestó «No sé»`}>{`${noSupo.por} contestó «No sé»`}</DichoEnPapel> : 'Alguien contestó «No sé»'}{textoEscalada ? ` a «${textoEscalada}»` : ''}: la contesta quien revisa.
         </p>
@@ -109,7 +109,7 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
           <span className={ROTULO_PREGUNTA}>{q.texto}</span>
           {/* Al lado de la pregunta del oleoducto, la nota del evento: ayuda a contestar, no decide (U2 §4.4, caso 3; B-31). */}
           {q.id === 'oleoducto' && p.causa.tipo === 'evacuacion' && p.causa.texto && (
-            <small className="text-[11px] text-[var(--tinta2)]" data-nota-evento>Nota del evento: «{p.causa.texto}»</small>
+            <small className="text-[13px] text-[var(--tinta2)]" data-nota-evento>Nota del evento: «{p.causa.texto}»</small>
           )}
           <span className="grid gap-1 sm:flex sm:flex-wrap">
             {q.opciones.map((o, i) => {
@@ -118,7 +118,7 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
               const escondida = muchas && !todas && i >= A_LA_VISTA && !esNoSe(o)
               return (
                 <button key={o.texto} type="button" disabled={ocupado} onClick={() => void contestar(q, o)} className={cn(OPCION, escondida && 'max-sm:hidden')}>
-                  {textoDe(q, o)}{linea && <small className="block text-[10px] text-[var(--tinta3)]">{linea}</small>}
+                  {textoDe(q, o)}{linea && <small className="block text-[12px] text-[var(--tinta3)]">{linea}</small>}
                 </button>
               )
             })}
@@ -128,16 +128,16 @@ export function Preguntas({ g, rolId, raiz, onHecho, onCambiar }: {
           </span>
           {q.id === 'evidencia-yacimiento' && (
             <form className="flex flex-wrap items-center gap-1" onSubmit={e => { e.preventDefault(); if (otra.trim()) void conNota(otra.trim()) }}>
-              <label className="flex min-w-0 flex-1 items-center gap-1 text-[10.5px] text-[var(--tinta2)]">Otra:
-                <input value={otra} onChange={e => setOtra(e.target.value)} className="min-h-12 min-w-0 flex-1 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 text-[11.5px] sm:min-h-8" placeholder="Ej.: la prueba de presión del 30-sep" />
+              <label className="flex min-w-0 flex-1 items-center gap-1 text-[13px] text-[var(--tinta2)]">Otra:
+                <input value={otra} onChange={e => setOtra(e.target.value)} className="min-h-12 min-w-0 flex-1 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 text-[14px] sm:min-h-8" placeholder="Ej.: la prueba de presión del 30-sep" />
               </label>
               <button type="submit" disabled={ocupado || !otra.trim()} className={cn(OPCION)}>Guardar</button>
             </form>
           )}
-          {abiertas.length > 1 && <small className="text-[10.5px] text-[var(--tinta3)]">Después, {abiertas.length === 2 ? 'una pregunta más' : `${abiertas.length - 1} preguntas más`}.</small>}
+          {abiertas.length > 1 && <small className="text-[13px] text-[var(--tinta3)]">Después, {abiertas.length === 2 ? 'una pregunta más' : `${abiertas.length - 1} preguntas más`}.</small>}
         </div>
       )}
-      {error && <p role="alert" className="text-[11px] text-[var(--tinta)]">{error}</p>}
+      {error && <p role="alert" className="text-[13px] text-[var(--tinta)]">{error}</p>}
     </div>
   )
 }

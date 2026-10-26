@@ -56,7 +56,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
 
   const volver = (
     <button onClick={onVolver}
-      className="mb-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[12px] text-[var(--tinta2)] hover:text-[var(--tinta)]">
+      className="mb-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[14px] text-[var(--tinta2)] hover:text-[var(--tinta)]">
       <ArrowLeft className="size-3.5" /> Estación de bombas
     </button>
   )
@@ -94,7 +94,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
           <MarcaPrioridad s={eq.severidad} tamano={18} className="mt-0.5" />
           <span className="min-w-0 flex-1">
             <b className="block text-[16px] leading-tight [text-wrap:balance]">{eq.nombre}</b>
-            <small className="font-mono text-[10.5px] text-[var(--tinta3)]">
+            <small className="font-mono text-[13px] text-[var(--tinta3)]">
               {eq.id} · {b.campo.nombre} · {TECNOLOGIA_NOMBRE[perfil.tecnologia]}
             </small>
           </span>
@@ -103,7 +103,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
             <Chip>{pr.respaldoLibreBpd > 0 ? `respaldo ${n0(pr.respaldoLibreBpd)} bbl/d` : 'sin respaldo'}</Chip>
           </span>
         </div>
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[12px] text-[var(--tinta2)]">
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[14px] text-[var(--tinta2)]">
           {eq.estado}
           {ing && <Info rotulo="norma" titulo="Norma" texto={perfil.norma} />}
         </p>
@@ -144,7 +144,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
       {abierta?.pide && (
         <div className="mb-2.5 flex flex-wrap items-center gap-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 shadow-[var(--sombra)]">
           <MarcaPrioridad s={2} tamano={16} />
-          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 text-[12px]">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 text-[14px]">
             <b>No arrancar hasta identificar el daño</b>
             <Info titulo="No arrancar"
               texto="La parada no dejó primera alarma ni una firma clara en las señales. Quien la revise tiene que decir qué parte se dañó. TRIM no bloquea el PLC: es la regla de operación, y si arranca sin identificar queda como no conformidad." />
@@ -177,7 +177,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
         ))}
       </Panel>}
 
-      {ing && <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+      {ing && <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <Panel titulo="VARIABLES" extra={`${plantilla.length - faltan.length} de ${plantilla.length} instrumentadas`}>
           {plantilla.filter(pl => perfil.tags[pl.id]).map(pl => {
             const s = senales.find(x => x.plantilla.id === pl.id)
@@ -188,9 +188,9 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
                     valor={s.valor} unidad={s.unidad} normal={s.normal} alarma={s.alarma}
                     decimales={decimalesDe(s.serie?.valores, s.valor)} estado={DE_ESTADO[s.estado] ?? undefined} />
                 ) : (
-                  <div className="flex items-baseline justify-between gap-2 text-[11.5px]">
+                  <div className="flex items-baseline justify-between gap-2 text-[14px]">
                     <span>{pl.nombre}</span>
-                    <span className="text-[10.5px] text-[var(--tinta3)]">sin lectura numérica</span>
+                    <span className="text-[13px] text-[var(--tinta3)]">sin lectura numérica</span>
                   </div>
                 )}
               </div>
@@ -199,13 +199,13 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
           {faltan.length > 0 && (
             <>
               <div className="mb-1 mt-3 flex flex-wrap items-center gap-x-1">
-                <h4 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">FALTA INSTRUMENTAR</h4>
+                <h4 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">FALTA INSTRUMENTAR</h4>
                 <Info titulo="Falta instrumentar" texto="Lo que pide la norma y esta bomba no tiene. Toque o pase el cursor por cada una para ver dónde iría." />
               </div>
               {faltan.map(pl => (
                 <Tip key={pl.id} titulo={`${pl.isa} · ${pl.nombre}`} filas={[['Dónde', pl.donde]]} imprimir="todo" claseImpresion={NOTA_FILA}
-                  className="flex items-center gap-2 border-b border-dashed border-[var(--linea2)] py-1 text-[11px] last:border-0 print:border-b-0">
-                  <span className="font-mono w-[34px] shrink-0 text-[10px] text-[var(--tinta3)]">{pl.isa}</span>
+                  className="flex items-center gap-2 border-b border-dashed border-[var(--linea2)] py-1 text-[13px] last:border-0 print:border-b-0">
+                  <span className="font-mono w-[34px] shrink-0 text-[12px] text-[var(--tinta3)]">{pl.isa}</span>
                   <span className="min-w-0 flex-1 truncate text-[var(--tinta2)]">{pl.nombre}</span>
                 </Tip>
               ))}
@@ -223,12 +223,12 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
           {vigia.map(s => (
             <div key={s.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <b className="text-[12px]">{s.plantilla.nombre}</b>
-                <span className="font-mono text-[10px] text-[var(--tinta3)]">
+                <b className="text-[14px]">{s.plantilla.nombre}</b>
+                <span className="font-mono text-[12px] text-[var(--tinta3)]">
                   ISO 14224 {s.mecanismo!.codigo} · {s.mecanismo!.nombre}
                 </span>
               </div>
-              <p className={cn('flex flex-wrap items-center gap-x-1 text-[11.5px]', s.pronostico.tipo === 'cruza' ? 'text-[var(--tinta)]' : 'text-[var(--tinta3)]')}>
+              <p className={cn('flex flex-wrap items-center gap-x-1 text-[14px]', s.pronostico.tipo === 'cruza' ? 'text-[var(--tinta)]' : 'text-[var(--tinta3)]')}>
                 {s.limite && s.pronostico.tipo === 'cruza'
                   ? <span>Llega a <b className="tabular">{s.limite.valor.toLocaleString('es-CO')} {s.unidad}</b> {pronosticoCorto(s.pronostico)}</span>
                   : <span>{s.limite && <>Límite <b className="tabular">{s.limite.valor.toLocaleString('es-CO')} {s.unidad}</b> · </>}
@@ -250,7 +250,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
       </div>}
 
       <Panel className="mt-2.5" titulo={ing ? 'PARADAS DEL PLC' : 'ÚLTIMAS PARADAS'} extra={plural(paradas.length, 'parada', 'paradas')}>
-        {paradas.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Sin paradas registradas.</p>}
+        {paradas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Sin paradas registradas.</p>}
         {listaParadas.visibles.map((m, i) => <Parada key={m.evento.id} m={m} equipo={eq.id} simple={!ing} abiertaDeInicio={i === 0} />)}
         {listaParadas.resto.length > 0 && (
           <div className="solo-impresion">
@@ -258,13 +258,13 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
           </div>
         )}
         <VerMas ocultas={listaParadas.ocultas} abierto={listaParadas.abierto} onAlternar={listaParadas.alternar} />
-        {ing && <p className="mt-2 flex flex-wrap items-center text-[10px] text-[var(--tinta3)]"><Info rotulo="tolerancia" titulo="Método de la tolerancia" texto={FUENTE_METODO} /></p>}
+        {ing && <p className="mt-2 flex flex-wrap items-center text-[12px] text-[var(--tinta3)]"><Info rotulo="tolerancia" titulo="Método de la tolerancia" texto={FUENTE_METODO} /></p>}
       </Panel>
 
       {ing && <Panel className="mt-2.5" titulo="PUNTOS CIEGOS">
         <Lectura>Lo que esta bomba no dice de sí misma, y de dónde sale. La ⓘ dice por qué.</Lectura>
         {NO_DA[perfil.subtipo].map(x => (
-          <div key={x.que} className="grid grid-cols-[minmax(0,140px)_1fr] gap-3 border-b border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0">
+          <div key={x.que} className="grid grid-cols-[minmax(0,140px)_1fr] gap-3 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
             <b>{x.que}</b>
             <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">
               <span>sale de {x.deDonde.charAt(0).toLowerCase() + x.deDonde.slice(1)}</span>
@@ -272,7 +272,7 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
             </span>
           </div>
         ))}
-        <p className="mt-2 flex flex-wrap items-center text-[10px] text-[var(--tinta3)]"><Info rotulo="mecanismos" titulo="Mecanismos" texto={MECANISMOS_ESTADO} /></p>
+        <p className="mt-2 flex flex-wrap items-center text-[12px] text-[var(--tinta3)]"><Info rotulo="mecanismos" titulo="Mecanismos" texto={MECANISMOS_ESTADO} /></p>
       </Panel>}
     </>
   )
@@ -284,20 +284,20 @@ export function Detalle({ b, nivel = 'ingenieria', onVolver }: {
 function Cifra({ rotulo, valor, pie, prioridad = 0 }: { rotulo: string; valor: string; pie: string; prioridad?: Severidad }) {
   return (
     <span className="min-w-0">
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{rotulo}</small>
+      <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
       <b className="tabular flex items-center gap-1.5 text-[20px] leading-tight">{prioridad > 0 && <MarcaPrioridad s={prioridad} tamano={14} />}{valor}</b>
-      <small className="tabular block text-[10.5px] leading-snug text-[var(--tinta2)]">{pie}</small>
+      <small className="tabular block text-[13px] leading-snug text-[var(--tinta2)]">{pie}</small>
     </span>
   )
 }
 
 const H5 = ({ children }: { children: React.ReactNode }) =>
-  <h5 className="font-cond mb-1 mt-2 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)] first:mt-0">{children}</h5>
+  <h5 className="font-cond mb-1 mt-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)] first:mt-0">{children}</h5>
 
 /** Un título de bloque con su ⓘ al lado (nunca adentro: el lector oiría la frase como nombre). */
 const H5Info = ({ children, info }: { children: React.ReactNode; info: React.ReactNode }) => (
   <div className="mb-1 mt-2 flex flex-wrap items-center gap-x-1 first:mt-0">
-    <h5 className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{children}</h5>
+    <h5 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{children}</h5>
     {info}
   </div>
 )
@@ -323,10 +323,10 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
   return (
     <Panel className="mt-2.5" titulo={pr.parada ? 'MIENTRAS ESTÉ PARADA' : 'SI SE PARA AHORA'}
       extra={pr.colchon ? `${pr.colchon.tanque.id} · ${pr.colchon.nivel.tag} ${n1(pr.colchon.nivel.pct)} %` : undefined}>
-      {pr.parada && <p className="mb-2 text-[12px] text-[var(--tinta2)]">Parada desde {fechaHora(new Date(pr.parada.inicio))}</p>}
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
+      {pr.parada && <p className="mb-2 text-[14px] text-[var(--tinta2)]">Parada desde {fechaHora(new Date(pr.parada.inicio))}</p>}
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]">
         {pr.colchon && !pr.parada && (
-          <div className="text-[11.5px]">
+          <div className="text-[14px]">
             <H5>COLCHÓN DEL TANQUE</H5>
             <BarraMeta tamano="chica" rotulo={`nivel ${pr.colchon.nivel.tag}`} valor={pr.colchon.nivel.pct} unidad="%"
               formato={v => `${n1(v)} %`} meta={pr.colchon.tanque.altoAlto * 100} tipoMeta="máximo"
@@ -345,11 +345,11 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
           </div>
         )}
         {pr.perdiendo && pr.perdiendo.pozos.length > 0 && (
-          <div className="min-w-0 text-[11px]">
+          <div className="min-w-0 text-[13px]">
             <H5Info info={<Info titulo="Al arrancar" texto={`Se pierden ${n0(pr.perdiendo.bblDia)} bbl/d mientras siga parada. Al arrancar, los pozos vuelven a producir a medida que el tanque baja.`} />}>
               POZOS QUE CERRÓ · {pr.perdiendo.pozos.length}
             </H5Info>
-            <p className="text-[11.5px] text-[var(--tinta2)]">
+            <p className="text-[14px] text-[var(--tinta2)]">
               {cerrados.visibles.map(w => w.id).join(', ')}
               {cerrados.resto.length > 0 && <span className="hidden print:inline">, {cerrados.resto.map(w => w.id).join(', ')}</span>}
             </p>
@@ -357,11 +357,11 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
           </div>
         )}
         {!pr.parada && o && o.pasos.length > 0 && (
-          <div className="min-w-0 text-[11px]">
+          <div className="min-w-0 text-[13px]">
             <H5Info info={<Info titulo="Orden de cierre" texto="Menos crudo por barril de agua primero." />}>ORDEN DE CIERRE</H5Info>
             <div {...desplazable('En qué orden cerrar los pozos')} className="overflow-x-auto">
               <table className="tabular w-full min-w-[360px] text-left">
-                <thead className="text-[9.5px] text-[var(--tinta3)]">
+                <thead className="text-[12px] text-[var(--tinta3)]">
                   <tr><th className="py-1 font-normal">#</th><th className="font-normal">Pozo</th><th className="text-right font-normal">Crudo bbl/d</th>
                     <th className="text-right font-normal">Agua bbl/d</th><th className="text-right font-normal">Crudo/agua</th><th className="text-right font-normal">Cierre</th></tr>
                 </thead>
@@ -372,15 +372,15 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
               </table>
             </div>
             <VerMas ocultas={pasos.ocultas} abierto={pasos.abierto} onAlternar={pasos.alternar} />
-            {o.pasos.length > 12 && <small className="block text-[10px] text-[var(--tinta3)]">y {o.pasos.length - 12} pozos más: se cierra todo el campo.</small>}
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[11.5px]">
+            {o.pasos.length > 12 && <small className="block text-[12px] text-[var(--tinta3)]">y {o.pasos.length - 12} pozos más: se cierra todo el campo.</small>}
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[14px]">
               <span>pierde <b>{n0(o.crudoBpd)} bbl/d</b> en este orden{o.ahorroBpd > 1 && <> · <b>{n0(o.ahorroBpd)} bbl/d menos</b> que parejo</>}</span>
               {o.ahorroBpd > 1 && <Info titulo="Parejo" texto={`Cerrando parejo (la misma fracción a todos) serían ${n0(o.crudoParejoBpd)} bbl/d.`} />}
             </p>
           </div>
         )}
         {!o && pr.perfil.papel === 'transporte' && (
-          <div className="text-[11px]">
+          <div className="text-[13px]">
             <H5>POZOS QUE PASAN POR ELLA</H5>
             <ul className="list-disc pl-4 text-[var(--tinta2)]">{pr.supuestos.slice(0, -1).map(s => <li key={s}>{s}</li>)}</ul>
           </div>
@@ -388,7 +388,7 @@ function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) 
       </div>
       {/* Parada, el método solo repite «Parada desde…» y «POZOS QUE CERRÓ»: no va. */}
       {(!pr.parada || !simple) && (
-        <p className="mt-2 flex flex-wrap items-center gap-x-3 text-[10.5px]">
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 text-[13px]">
           {!pr.parada && <Info rotulo="método" titulo="Cómo se calcula" texto={`${pr.metodo}.`} />}
           {!simple && <Info rotulo="supuestos" titulo="Supuestos" texto={pr.supuestos.join(' · ')} />}
         </p>
@@ -423,44 +423,44 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
     <div className="border-b border-[var(--linea2)] last:border-0">
       <button onClick={() => setAbierta(v => !v)} aria-expanded={abierta}
         className="grid w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-3 py-2 text-left hover:bg-[var(--panel2)] sm:grid-cols-[150px_1fr_auto_auto]">
-        <span className="tabular text-[11.5px]">
+        <span className="tabular text-[14px]">
           <b className="block">{fechaHora(m.inicio)}</b>
           {/* De la parada de la bomba a su arranque. La ficha cuenta otra duración
               (hasta que reabrió el último pozo): por eso cada una dice cuál es. */}
-          <small className="text-[10px] text-[var(--tinta3)]">{m.abierto ? 'abierta' : `hasta ${fechaHora(m.fin)}`} · bomba parada {fmtHoras(m.horasParada, true)}</small>
+          <small className="text-[12px] text-[var(--tinta3)]">{m.abierto ? 'abierta' : `hasta ${fechaHora(m.fin)}`} · bomba parada {fmtHoras(m.horasParada, true)}</small>
         </span>
-        <span className="hidden min-w-0 text-[11px] text-[var(--tinta2)] sm:block">
+        <span className="hidden min-w-0 text-[13px] text-[var(--tinta2)] sm:block">
           {/* Sin identificar, la causa la dice su marca («por identificar», «arrancó sin identificar»); la frase, abierta. */}
           {c.parte ? <b className="text-[var(--tinta)]">{NOMBRE_PARTE[c.parte]}</b> : !m.pide ? <span>{c.texto}</span> : null}
           {/* Cada pieza lleva su « · » delante, salvo la primera que se ve. */}
           {[
             // «Mantenimiento preventivo programado…» ya dice «por el programa aprobado».
-            !m.pide && !(c.como === 'programa' && !c.parte) && <span key="como" className="text-[10.5px] text-[var(--tinta3)]">{COMO[c.como]}</span>,
-            !propia && <span key="carga" className="text-[10.5px] text-[var(--tinta)]">se carga a {m.cargadoA}</span>,
-            c.tipo === 'programada' && c.como !== 'programa' && <span key="prog" className="text-[10.5px] text-[var(--tinta3)]">programada</span>,
-            colchon && <span key="colchon" className="text-[10.5px]">{colchon}</span>,
+            !m.pide && !(c.como === 'programa' && !c.parte) && <span key="como" className="text-[13px] text-[var(--tinta3)]">{COMO[c.como]}</span>,
+            !propia && <span key="carga" className="text-[13px] text-[var(--tinta)]">se carga a {m.cargadoA}</span>,
+            c.tipo === 'programada' && c.como !== 'programa' && <span key="prog" className="text-[13px] text-[var(--tinta3)]">programada</span>,
+            colchon && <span key="colchon" className="text-[13px]">{colchon}</span>,
           ].filter(Boolean).map((x, i) => <span key={i}>{i > 0 || c.parte || !m.pide ? ' · ' : ''}{x}</span>)}
-          {m.arrancoSinIdentificar && <span className="ml-1 inline-flex items-center gap-1 text-[10.5px] text-[var(--tinta)]"><MarcaPrioridad s={3} tamano={10} />arrancó sin identificar</span>}
-          {m.pide && !m.arrancoSinIdentificar && <span className="ml-1 inline-flex items-center gap-1 text-[10.5px] text-[var(--tinta)]"><MarcaPrioridad s={2} tamano={10} />por identificar</span>}
+          {m.arrancoSinIdentificar && <span className="ml-1 inline-flex items-center gap-1 text-[13px] text-[var(--tinta)]"><MarcaPrioridad s={3} tamano={10} />arrancó sin identificar</span>}
+          {m.pide && !m.arrancoSinIdentificar && <span className="ml-1 inline-flex items-center gap-1 text-[13px] text-[var(--tinta)]"><MarcaPrioridad s={2} tamano={10} />por identificar</span>}
         </span>
         <span className="tabular text-right">
           {/* La parada abierta ya lleva su forma en la bomba y en «Perdiéndose ahora»: la cifra, en tinta. */}
           <b className="block text-[15px]">{fmtBbl(m.bbl)}</b>
-          <small className="text-[10px] text-[var(--tinta3)]">{m.bbl <= 0 ? 'no costó crudo' : simple ? plural(m.pozos, 'pozo cerrado', 'pozos cerrados') : `${fmtRango(m.rango)} · ${fmtTol(m.tolerancia)}`}</small>
+          <small className="text-[12px] text-[var(--tinta3)]">{m.bbl <= 0 ? 'no costó crudo' : simple ? plural(m.pozos, 'pozo cerrado', 'pozos cerrados') : `${fmtRango(m.rango)} · ${fmtTol(m.tolerancia)}`}</small>
         </span>
         <ChevronDown className={cn('size-4 text-[var(--tinta3)] transition-transform', abierta && 'rotate-180')} />
       </button>
       {abierta && (
-        <div className="grid gap-3 pb-3 pl-1 text-[11px] [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
+        <div className="grid gap-3 pb-3 pl-1 text-[13px] [grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]">
           <div>
             {/* Sin identificar, la frase repite lo que ya dicen el título y su marca: va en la ⓘ. */}
             {m.pide
               ? <H5Info info={<Info titulo="Por qué paró" texto={c.texto} textoEnPapel={causaEnPapel(c)} />}>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5Info>
               : <><H5>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5><p className="text-[var(--tinta)]"><DichoEnPapel papel={causaEnPapel(c)}>{c.texto}</DichoEnPapel></p></>}
             <ul className="mt-1 list-disc pl-4 text-[var(--tinta2)]">
-              {c.evidencia.map((e, i) => <li key={e} className="font-mono text-[10.5px]"><DichoEnPapel papel={causaParaSalir(c).evidencia[i] ?? e}>{e}</DichoEnPapel></li>)}
+              {c.evidencia.map((e, i) => <li key={e} className="font-mono text-[13px]"><DichoEnPapel papel={causaParaSalir(c).evidencia[i] ?? e}>{e}</DichoEnPapel></li>)}
             </ul>
-            {c.declarado && <p className="mt-1 text-[10.5px] text-[var(--tinta3)]">Declarado por <DichoEnPapel papel={rolDeQuien(c.declarado.por)}>{c.declarado.por}</DichoEnPapel> · {fechaHora(new Date(c.declarado.hora))}</p>}
+            {c.declarado && <p className="mt-1 text-[13px] text-[var(--tinta3)]">Declarado por <DichoEnPapel papel={rolDeQuien(c.declarado.por)}>{c.declarado.por}</DichoEnPapel> · {fechaHora(new Date(c.declarado.hora))}</p>}
             {m.colchon && (
               <>
                 <H5>EL TANQUE</H5>
@@ -489,7 +489,7 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
               </p>
             )}
             {m.aproximado > 0 && (
-              <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+              <p className="mt-1 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
                 <span>{n0(m.aproximado)} bbl aproximados</span>
                 <Info titulo="Aproximados" texto={`${n0(m.aproximado)} bbl de pozos a frecuencia reducida: aproximados por ley de afinidad, fuera de la tolerancia.`} />
               </p>
@@ -509,22 +509,22 @@ function PartesOperacion({ partes, senales }: { partes: SaludParte[]; senales: B
   return (
     <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
       <Panel titulo="PARTES QUE AVISAN" extra={avisan.length ? `${avisan.length}` : undefined}>
-        {avisan.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Ninguna avisa.</p>}
+        {avisan.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna avisa.</p>}
         {avisan.map(sp => (
-          <div key={sp.parte.id} className="border-b border-[var(--linea2)] py-2 text-[12px] last:border-0">
+          <div key={sp.parte.id} className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
             <span className="flex flex-wrap items-center gap-2">
               <MarcaPrioridad s={sp.prioridad} tamano={12} />
               <b>{sp.parte.nombre}</b>
               <Chip tono={sp.estado === 'avisa' ? 'neutro' : 'fuerte'}>{ESTADO_PARTE[sp.estado]}</Chip>
             </span>
-            <small className="tabular mt-0.5 block text-[11px] text-[var(--tinta2)]">{fraseParteCorta(sp)}</small>
+            <small className="tabular mt-0.5 block text-[13px] text-[var(--tinta2)]">{fraseParteCorta(sp)}</small>
             {/* Operación ejecuta la acción: va escrita, no detrás de un ⓘ. */}
-            <small className="mt-0.5 block text-[11px] text-[var(--tinta)]"><b>Qué hacer:</b> {sp.parte.accion}</small>
+            <small className="mt-0.5 block text-[13px] text-[var(--tinta)]"><b>Qué hacer:</b> {sp.parte.accion}</small>
           </div>
         ))}
       </Panel>
       <Panel titulo="FUERA DE BANDA" extra={fuera.length ? `${fuera.length}` : undefined}>
-        {fuera.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todo en banda.</p>}
+        {fuera.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todo en banda.</p>}
         {fuera.map(x => (
           <div key={x.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
             <Analogico detalle nombre={x.plantilla.nombre} sub={x.tag} valor={x.valor} unidad={x.unidad} normal={x.normal}

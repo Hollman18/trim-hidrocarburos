@@ -52,17 +52,17 @@ export function DondeSeTraboCampo({ campoId, desde, hasta, className }: {
     <div className={cn('min-w-0', className)} data-donde-se-trabo={campoId} data-total={b.diferido}>
       {!nada && <BarraTramos valores={v} conParte leido={`Dónde se trabó ${nombre} en el período: ${leidoReparto(v, b.diferido)}, el diferido del libro.`} />}
       {/* Sin barriles, el período en palabras: «Nada se trabó en octubre (en curso).» (B-39; U2 §1.5). */}
-      <p className="mt-0.5 text-[11.5px] leading-snug" data-frase-gerente>{nada ? `Nada se trabó en ${periodoEnFrase(rango.nombre)}.` : t.fraseGerente}</p>
+      <p className="mt-0.5 text-[14px] leading-snug" data-frase-gerente>{nada ? `Nada se trabó en ${periodoEnFrase(rango.nombre)}.` : t.fraseGerente}</p>
       {hayMas && (
         <>
           <button type="button" aria-expanded={abierto} aria-controls={idMas} onClick={() => setAbierto(x => !x)}
-            className="no-imprimir mt-0.5 flex min-h-12 cursor-pointer items-center gap-1 text-[11px] text-[var(--tinta2)] hover:text-[var(--tinta)] sm:min-h-6">
+            className="no-imprimir mt-0.5 flex min-h-12 cursor-pointer items-center gap-1 text-[13px] text-[var(--tinta2)] hover:text-[var(--tinta)] sm:min-h-6">
             <ChevronRight aria-hidden size={13} className={cn('shrink-0 transition-transform', abierto && 'rotate-90')} />
             {abierto ? `Ver menos de ${nombre}` : `Ver más de ${nombre}`}
           </button>
           <div id={idMas} className={cn('pl-4', !abierto && 'hidden print:block')} data-ver-mas={campoId}>
             {(!nada || inventario !== 0) && (
-              <p className="tabular flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">
+              <p className="tabular flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
                 {!nada && <span>{textoReparto(v)} bbl</span>}
                 {b.porConfirmar >= 0.5 && (
                   <>
@@ -79,7 +79,7 @@ export function DondeSeTraboCampo({ campoId, desde, hasta, className }: {
               </p>
             )}
             {!nada && <NoPlaneadoPorTramo campoId={campoId} desde={desde} hasta={hasta} equipos={b.porChokeEquipo} escalones={b.porChokeEscalon} />}
-            {mas && <p className="text-[10.5px] leading-snug text-[var(--tinta3)]">{mas}</p>}
+            {mas && <p className="text-[13px] leading-snug text-[var(--tinta3)]">{mas}</p>}
           </div>
         </>
       )}
@@ -106,11 +106,11 @@ function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos, escalones }: {
   const orden = (k: string) => CHOKES_Y_SIN_ASIGNAR.indexOf(k as ChokeOSinAsignar)
   return (
     <div className="mt-1" data-no-planeado={campoId}>
-      <p className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+      <p className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
         <span>lo no planeado de cada tramo</span>
         <Info titulo="Lo no planeado" texto="Las paradas que nadie programó: fallas, disparos y terceros. Es lo que TRIM tiene que bajar. Lo que todavía no tiene causa no se sabe si fue planeado: va aparte, sin contarse como planeado ni como no planeado. Lo que no se produjo sin una falla (una nominación, la frecuencia bajada, el yacimiento) tampoco es una parada." />
       </p>
-      <ul className="text-[11px]">
+      <ul className="text-[13px]">
         {[...tramos].sort((a, b) => orden(a.valor) - orden(b.valor)).map(t => {
           const k = t.valor as ChokeOSinAsignar
           const e = escalones[k]
@@ -143,8 +143,8 @@ function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos, escalones }: {
  *  TRIM todavía no registra eventos de pérdida: este es su estado vacío. */
 export function LineaPerdida({ className }: { className?: string }) {
   return (
-    <p data-perdida="" className={cn('flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-[var(--tinta2)]', className)}>
-      <span className="font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">PÉRDIDA</span>
+    <p data-perdida="" className={cn('flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] text-[var(--tinta2)]', className)}>
+      <span className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">PÉRDIDA</span>
       <span>· lo que salió y no se vendió:</span>
       <span className="text-[var(--tinta3)]">sin eventos registrados en el período</span>
       <Info titulo="Pérdida" texto="Lo producido que no se vendió: pitera, derrame o tea. Va aparte y nunca se suma a los barriles diferidos: son dos cifras distintas. Cuando TRIM registre pérdidas, van aquí, campo por campo." />
@@ -160,7 +160,7 @@ export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, cl
 }) {
   // Sin ninguna barra, la leyenda no tiene qué explicar (B-39).
   const total = useRepartoChoke({ campos, desde, hasta }).diferido
-  const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
   return (
     <section id="por-donde-se-trabo" className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]', className)}>
       <h3 className={titulo}>DÓNDE SE TRABÓ</h3>
@@ -173,7 +173,7 @@ export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, cl
       <div className="mt-1.5 grid gap-3">
         {campos.map(c => (
           <div key={c} data-partible className="min-w-0 border-b border-[var(--linea2)] pb-2.5 last:border-0 last:pb-0">
-            {campos.length > 1 && <b className="mb-1 block text-[12.5px]">{campoPorId(c).nombre}</b>}
+            {campos.length > 1 && <b className="mb-1 block text-[15px]">{campoPorId(c).nombre}</b>}
             <DondeSeTraboCampo campoId={c} desde={desde} hasta={hasta} />
           </div>
         ))}
@@ -190,7 +190,7 @@ export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, cl
  *  TRIM lleva la marca de muestra corta: un mes no afirma una mejora. */
 export function AntesConTrimPorTramo({ campos, desde, hasta }: { campos: string[]; desde: Date; hasta: Date }) {
   const base = useBaseChoke({ campos, desde, hasta })
-  if (!base) return <p className="mt-2 text-[11px] text-[var(--tinta3)]">Por dónde se trabó: sin tres meses publicados antes de TRIM con qué comparar.</p>
+  if (!base) return <p className="mt-2 text-[13px] text-[var(--tinta3)]">Por dónde se trabó: sin tres meses publicados antes de TRIM con qué comparar.</p>
   const filas = CHOKES_Y_SIN_ASIGNAR.filter(k => Math.max(base.noPlaneado[k].baseDia, base.noPlaneado[k].periodoDia) >= 0.5)
   const dias = (Math.min(base.periodo.hasta.getTime(), hasta.getTime()) - base.periodo.desde.getTime()) / D
   const corta = dias < 90
@@ -201,29 +201,29 @@ export function AntesConTrimPorTramo({ campos, desde, hasta }: { campos: string[
   }
   return (
     <div className="mt-2.5" data-antes-con-trim="">
-      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-[var(--tinta2)]">
+      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] text-[var(--tinta2)]">
         <span>Por dónde se trabó · lo no planeado por día ({base.base.nombre} → con TRIM, desde el {fechaCorta(base.periodo.desde)})</span>
         <Info titulo="Antes → con TRIM, por tramo"
           texto={`Lo no planeado por día de cada tramo: antes de TRIM (${base.base.nombre}, los tres meses publicados antes del ${fechaCorta(base.periodo.desde)}) y con TRIM (desde el ${fechaCorta(base.periodo.desde)}). Van las dos flechas, la que baja y la que sube: un solo porcentaje escondería dónde está el trabajo pendiente.${corta ? ' Un mes es poco para afirmar una mejora: la comparación vale cuando haya tres meses.' : ''}`} />
         {corta && <Chip>muestra corta</Chip>}
       </p>
       {filas.length === 0
-        ? <p className="text-[11px] text-[var(--tinta3)]">Nada no planeado en los dos períodos.</p>
+        ? <p className="text-[13px] text-[var(--tinta3)]">Nada no planeado en los dos períodos.</p>
         : (
-          <dl className="mt-0.5 grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-3 text-[11.5px]">
+          <dl className="mt-0.5 grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-3 text-[14px]">
             {filas.map(k => {
               const x = base.noPlaneado[k], f = flecha(x.cambio)
               return (
                 <div key={k} className="contents">
                   <dt className="min-w-0 truncate text-[var(--tinta2)]">{LARGO_TRAMO[k]}</dt>
-                  <dd className="tabular m-0 text-right">{n0(x.baseDia)} → <b>{n0(x.periodoDia)}</b> <small className="text-[10px] text-[var(--tinta3)]">bbl/d</small></dd>
-                  <dd className="tabular m-0 text-right text-[11px] text-[var(--tinta2)]"><span aria-hidden>{f.t}</span><span className="sr-only">{f.l}</span></dd>
+                  <dd className="tabular m-0 text-right">{n0(x.baseDia)} → <b>{n0(x.periodoDia)}</b> <small className="text-[12px] text-[var(--tinta3)]">bbl/d</small></dd>
+                  <dd className="tabular m-0 text-right text-[13px] text-[var(--tinta2)]"><span aria-hidden>{f.t}</span><span className="sr-only">{f.l}</span></dd>
                 </div>
               )
             })}
           </dl>
         )}
-      <p className="mt-0.5 text-[11px] text-[var(--tinta2)]">{base.texto}</p>
+      <p className="mt-0.5 text-[13px] text-[var(--tinta2)]">{base.texto}</p>
     </div>
   )
 }

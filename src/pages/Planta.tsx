@@ -245,16 +245,16 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
     <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
       <b className="tabular text-[24px] leading-none">{capturan.length} de {total}</b>
       <Casillas con={capturan.length} total={total} />
-      <span className="text-[12px] text-[var(--tinta2)]">equipos con datos</span>
+      <span className="text-[14px] text-[var(--tinta2)]">equipos con datos</span>
       {/* El ⓘ va pegado a su rótulo: en el teléfono no puede quedar al comienzo de otro renglón. */}
       {pozos > 0 && (
-        <span className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] text-[var(--tinta2)] print:flex-wrap print:whitespace-normal">
+        <span className="inline-flex items-center gap-1 whitespace-nowrap text-[14px] text-[var(--tinta2)] print:flex-wrap print:whitespace-normal">
           + {plural(pozos, 'pozo', 'pozos')}
           <Info titulo="Pozos" texto={`Además de ${total === 1 ? 'el' : 'los'} ${plural(total, 'equipo', 'equipos')}: ${plural(pozos, 'pozo', 'pozos')}, cada uno con su controlador.`} />
         </span>
       )}
       {/* En el teléfono el dibujo va cerrado: el destino del gas (su salvedad, «no tiene tren de gas») se dice aquí. */}
-      {estrecho && <span className="text-[12px] text-[var(--tinta2)]">{NOMBRE_GAS[perfil.gas]}</span>}
+      {estrecho && <span className="text-[14px] text-[var(--tinta2)]">{NOMBRE_GAS[perfil.gas]}</span>}
       {!estrecho && <Boton variante="chico" className="sm:ml-auto" onClick={verTuberia}>Ver la tubería</Boton>}
       <Info className={estrecho ? 'sm:ml-auto' : undefined} rotulo="la planta" titulo="Nota de planta" texto={cfg.nota} />
     </div>
@@ -262,7 +262,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
 
   // La leyenda completa va a «¿cómo se lee?» y al papel (en el papel no hay globos ni interruptor).
   const leyenda = (
-    <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+    <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
       <span className="inline-flex items-center gap-1.5"><i className="inline-block h-3 w-4 rounded-sm border border-[var(--linea)] bg-[var(--panel)]" />captura datos</span>
       <span className="inline-flex items-center gap-1.5"><i className="inline-block h-3 w-4 rounded-sm border border-dashed border-[var(--tinta3)]" />configurado, sin datos</span>
       <span className="inline-flex items-center gap-1.5"><i className="inline-block h-3 w-4" />sin caja: proceso o límite de batería</span>
@@ -449,8 +449,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           // Lo normal no se escribe («en marcha»): el lector oye el estado entero.
           <button onClick={() => abrir(f.abrir!)} className="min-w-0 flex-1 cursor-pointer text-left hover:underline"
             aria-label={`${nombre}: ${[f.estado, f.lectura, bbl > 0 ? `${n0(bbl)} bbl diferidos` : ''].filter(Boolean).join(' · ')}`}>
-            <b className="block truncate text-[12.5px] leading-tight">{nombre}</b>
-            <small className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-[var(--tinta3)]">
+            <b className="block truncate text-[15px] leading-tight">{nombre}</b>
+            <small className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta3)]">
               {/* Si se escribe es porque es anormal: siempre con el mismo énfasis. */}
               {corto && <Chip tono="fuerte">{corto}</Chip>}
               {f.lectura && <span className="tabular">{f.lectura}</span>}
@@ -459,14 +459,14 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           </button>
         ) : (
           <span className="min-w-0 flex-1">
-            <b className="block truncate text-[12.5px] leading-tight">{f.id} · {f.etiqueta}</b>
+            <b className="block truncate text-[15px] leading-tight">{f.id} · {f.etiqueta}</b>
             {f.nivel ? (
               <span className="mt-0.5 block max-w-[320px]">
                 <BarraMeta tamano="chica" rotulo="nivel" valor={f.nivel.pct} unidad="%" formato={v => `${n1(v)} %`}
                   meta={f.nivel.altoAlto} tipoMeta="máximo" rotuloMeta={`alto-alto ${n0(f.nivel.altoAlto)} %`} />
-                {f.aviso && <small className="block text-[10.5px] text-[var(--tinta2)]">{f.aviso}</small>}
+                {f.aviso && <small className="block text-[13px] text-[var(--tinta2)]">{f.aviso}</small>}
               </span>
-            ) : <small className="block truncate text-[10.5px] text-[var(--tinta3)]">{f.estado}</small>}
+            ) : <small className="block truncate text-[13px] text-[var(--tinta3)]">{f.estado}</small>}
           </span>
         )}
         {ubicarBoton(f)}
@@ -478,7 +478,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const filaSinDatos = (f: Fila) => (
     <div key={f.id} className="flex items-center gap-2 border-b border-[var(--linea2)] py-2 last:border-0">
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5">
-        <b className="truncate text-[12.5px] leading-tight text-[var(--tinta2)]">{f.eq && !f.etiqueta.startsWith(f.eq.id) ? `${f.eq.id} · ` : ''}{f.etiqueta}</b>
+        <b className="truncate text-[15px] leading-tight text-[var(--tinta2)]">{f.eq && !f.etiqueta.startsWith(f.eq.id) ? `${f.eq.id} · ` : ''}{f.etiqueta}</b>
         <Chip>{f.estado}</Chip>
       </span>
       {ubicarBoton(f)}
@@ -496,7 +496,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
 
       <Panel titulo="CONFIGURADOS SIN DATOS" extra={sinDatos.length ? plural(sinDatos.length, 'equipo', 'equipos') : 'ninguno'}>
         <Lectura>Están en el registro del campo, pero todavía no dan datos: es lo que falta por instrumentar. «Sin señal»: su instrumento está declarado y no da señal. «Sin instrumento»: falta montarlo y declarar su tag.</Lectura>
-        {sinDatos.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Todo lo configurado captura datos.</p>}
+        {sinDatos.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todo lo configurado captura datos.</p>}
         {listaSinDatos.visibles.map(filaSinDatos)}
         {listaSinDatos.resto.length > 0 && <div className="solo-impresion">{listaSinDatos.resto.map(filaSinDatos)}</div>}
         <VerMas ocultas={listaSinDatos.ocultas} abierto={listaSinDatos.abierto} onAlternar={listaSinDatos.alternar} />
@@ -516,9 +516,9 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           (el tanque en alto-alto también: se ubica en el dibujo, no tiene ficha). Sus nombres van
           en la lista de abajo (una fila en alarma nunca se esconde) y en el papel. */}
       {enAlarma.length > 0 && (
-        <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded border border-[var(--p1)] bg-[var(--p1-f)] px-3 py-2">
+        <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[16px] bg-[var(--panel)] px-4 py-3">
           <MarcaPrioridad s={1} tamano={18} />
-          <b className="min-w-0 flex-1 text-[13px] leading-tight text-[var(--p1)]">
+          <b className="min-w-0 flex-1 text-[15px] leading-tight">
             {/* El período lo dicen la cabecera y el membrete del papel. */}
             {enAlarma.length} {enAlarma.length === 1 ? 'detenido o en alarma' : 'detenidos o en alarma'} · <span className="tabular">{n0(bblAlarma)}</span> bbl diferidos
           </b>
@@ -557,14 +557,14 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                   filas={[['Caudal ahora', `${n0(v)} ${u}`],
                     ['Capacidad', fuera > 0 ? `${n0(cap)} ${u} sin ${equipoReiny} (detenida); ${n0(cap + fuera)} con todo el tren` : `${n0(cap)} ${u}`],
                     ['Uso', `${n1(pct)} %`], ['Holgura', `${n0(cap - v)} ${u}`]]}>
-                  <div className="flex justify-between text-[11.5px]">
+                  <div className="flex justify-between text-[14px]">
                     <span>{nombre}</span>
                     <span className={cn('tabular', pct > 90 && 'font-semibold')}><FueraDeMeta si={pct > 90} tamano={11} />{n1(pct)} %</span>
                   </div>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
                     <i className="block h-full" style={{ width: `${Math.min(pct, 100)}%`, background: COLOR[c] }} />
                   </div>
-                  <small className="tabular text-[10px] text-[var(--tinta3)]">{n0(v)} de {n0(cap)} {u}{fuera > 0 ? ` · sin ${equipoReiny}, detenida` : ''}</small>
+                  <small className="tabular text-[12px] text-[var(--tinta3)]">{n0(v)} de {n0(cap)} {u}{fuera > 0 ? ` · sin ${equipoReiny}, detenida` : ''}</small>
                 </Tip>
               )
             })}
@@ -585,11 +585,11 @@ function Desplegable({ titulo, imprimir, children }: { titulo: string; imprimir?
   return (
     <div className="mb-2.5">
       <button onClick={() => setAbierto(v => !v)} aria-expanded={abierto}
-        className="no-imprimir mb-2 flex w-full cursor-pointer items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-left text-[12px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
+        className="no-imprimir mb-2 flex w-full cursor-pointer items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-left text-[14px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
         <b className="flex-1">{titulo}</b>
-        <span className={cn('text-[10px] text-[var(--tinta3)]', abierto && 'rotate-180')}>▾</span>
+        <span className={cn('text-[12px] text-[var(--tinta3)]', abierto && 'rotate-180')}>▾</span>
       </button>
-      {imprimir && <b className="solo-impresion mb-1 text-[11px]">{titulo}</b>}
+      {imprimir && <b className="solo-impresion mb-1 text-[13px]">{titulo}</b>}
       {abierto ? children : imprimir && <div className="solo-impresion">{children}</div>}
     </div>
   )

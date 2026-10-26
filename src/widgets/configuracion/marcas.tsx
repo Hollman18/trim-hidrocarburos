@@ -44,7 +44,7 @@ export function MarcaEstado({ estado }: { estado: EstadoEquipo }) {
 /** Una etiqueta de lo que falta: gris, borde discontinuo, con su palabra. */
 export function EtiquetaFalta({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <span className={cn('inline-flex max-w-full items-center gap-1 rounded-sm border border-dashed border-[var(--tinta3)] px-1.5 py-px text-[10.5px] leading-snug text-[var(--tinta2)]', className)}>
+    <span className={cn('inline-flex max-w-full items-center gap-1 rounded-sm border border-dashed border-[var(--tinta3)] px-1.5 py-px text-[13px] leading-snug text-[var(--tinta2)]', className)}>
       {children}
     </span>
   )
@@ -54,7 +54,7 @@ export function EtiquetaFalta({ children, className }: { children: ReactNode; cl
  *  gris, con doble contorno y la palabra. */
 export function Limita() {
   return (
-    <span className="font-cond inline-flex items-center rounded-sm border-[3px] border-double border-[var(--tinta)] px-1 text-[10px] font-semibold tracking-[.05em] text-[var(--tinta)]">
+    <span className="font-cond inline-flex items-center rounded-sm border-[3px] border-double border-[var(--tinta)] px-1 text-[12px] font-semibold tracking-[.05em] text-[var(--tinta)]">
       ◄ limita
     </span>
   )

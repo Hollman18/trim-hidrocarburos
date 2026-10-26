@@ -50,7 +50,8 @@ export function Sparkline({ serie, limite, alto = 28, ancho = 150, prioridad }: 
         if (!s) return <circle cx={cx} cy={cy} r={2.4} fill="var(--dato-1)" />
         const f = `var(--p${s})`
         return s === 1 ? <path d={`M${cx} ${cy - 4.6} L${cx + 4.6} ${cy} L${cx} ${cy + 4.6} L${cx - 4.6} ${cy} Z`} fill={f} />
-          : s === 2 ? <path d={`M${cx} ${cy - 4.6} L${cx + 4.8} ${cy + 3.6} L${cx - 4.8} ${cy + 3.6} Z`} fill={f} />
+          // El triángulo y el cuadrado amarillos no se distinguen del panel sin trazo (1,7:1): llevan el borde oscuro de MarcaPrioridad.
+          : s === 2 ? <path d={`M${cx} ${cy - 4.6} L${cx + 4.8} ${cy + 3.6} L${cx - 4.8} ${cy + 3.6} Z`} fill={f} stroke="var(--marca-trazo)" strokeWidth={1} strokeLinejoin="round" />
           // El amarillo no se distingue del panel sin trazo (1,6:1): lleva el borde oscuro de MarcaPrioridad.
           : <rect x={cx - 3.8} y={cy - 3.8} width={7.6} height={7.6} rx={0.8} fill={f} stroke="var(--marca-trazo)" strokeWidth={1} />
       })()}

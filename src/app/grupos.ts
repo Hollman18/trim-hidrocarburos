@@ -11,8 +11,8 @@ export const hayEquipo = (pantalla: string, perfiles: PerfilCampo[]) =>
     : pantalla === 'esp' ? perfiles.some(p => p.electrosumergibles)
       : true
 
-/** Las subpantallas de un grupo que se ofrecen ahora: las que el rol tiene y
- *  el campo (o alguno del portafolio) tiene configuradas, en el orden del rol. */
+/** Las subpantallas de una puerta que se ofrecen ahora: las que el rol tiene y
+ *  el campo (o alguno del portafolio) tiene configuradas, en el orden de la puerta. */
 export function useSubpantallas(grupo: string | undefined): string[] {
   const rol = useRol(); const ambito = useAmbito()
   const config = useSesion(s => s.ctx.config)
@@ -45,3 +45,4 @@ export const recordarSub = (rolId: string, pantalla: string) => {
 export const ultimaSub = (rolId: string, grupo: string): string | null => {
   try { return localStorage.getItem(clave(rolId, grupo)) } catch { return null }
 }
+

@@ -99,13 +99,13 @@ export function ResumenDirectivo() {
   // Lo que no es de alto impacto va en su renglón, que no se corta.
   const enRiesgoCelda = (
     <>
-      <small className="block text-[10.5px] text-[var(--tinta3)]">En riesgo · alto impacto</small>
+      <small className="block text-[13px] text-[var(--tinta3)]">En riesgo · alto impacto</small>
       <b className="tabular block text-[15px] leading-tight">{enRiesgo.length ? plural(enRiesgo.length, 'equipo', 'equipos') : 'ninguno'}</b>
-      <small className="block text-[10.5px] text-[var(--tinta2)]">{pieRiesgo}</small>
-      {otros && <small className="block text-[10.5px] text-[var(--tinta2)]">+ {otros.texto}</small>}
+      <small className="block text-[13px] text-[var(--tinta2)]">{pieRiesgo}</small>
+      {otros && <small className="block text-[13px] text-[var(--tinta2)]">+ {otros.texto}</small>}
     </>
   )
-  const titulo = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 
   return (
     <>
@@ -125,12 +125,12 @@ export function ResumenDirectivo() {
         <div className="mt-1.5 flex flex-wrap items-end gap-x-8 gap-y-2">
           <span>
             <b className="tabular block text-[44px] leading-none">{n0(lb.brecha)}</b>
-            <small className="text-[12px] text-[var(--tinta2)]">barriles diferidos</small>
+            <small className="text-[14px] text-[var(--tinta2)]">barriles diferidos</small>
             <Rango lb={lb} corto />
           </span>
           <span className="pb-1">
             <b className="tabular block text-[22px] leading-none">{dinero ? `${dinero.valor} ${dinero.unidad}` : 'sin precio'}</b>
-            <small className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta3)]">
+            <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
               {dinero && sinPrecio.length ? `valor · falta precio en ${sinPrecio.join(', ')}` : 'valor'}
               {!dinero && <Info titulo="Sin precio" texto="Falta el precio neto en la configuración." />}
               {dinero && sinPrecio.length > 0 && <Info titulo="Valor" texto={`Sin contar los días sin precio de ${sinPrecio.join(', ')}.`} />}
@@ -183,19 +183,19 @@ export function ResumenDirectivo() {
 
       <section className="mb-2.5 grid items-center gap-x-6 gap-y-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-4 py-3 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))]">
         <span className="min-w-0">
-          <small className="block text-[10.5px] text-[var(--tinta3)]">Durante · crudo en vivo</small>
+          <small className="block text-[13px] text-[var(--tinta3)]">Durante · crudo en vivo</small>
           {/* Un total no lleva marca de alarma: la lleva el equipo que lo causa, en «Causa mayor» (B-40). */}
           <b className="tabular block text-[18px] leading-tight">{porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}</b>
-          <small className="block text-[10.5px] text-[var(--tinta2)]">{porDia > 0 ? `${parados} de ${pozos} pozos parados` : 'todos los pozos produciendo'}</small>
+          <small className="block text-[13px] text-[var(--tinta2)]">{porDia > 0 ? `${parados} de ${pozos} pozos parados` : 'todos los pozos produciendo'}</small>
         </span>
         {porDia > 0 && (
           <span className="min-w-0">
-            <small className="block text-[10.5px] text-[var(--tinta3)]">Causa mayor</small>
+            <small className="block text-[13px] text-[var(--tinta3)]">Causa mayor</small>
             <b className="flex min-w-0 items-center gap-1.5 text-[15px] leading-tight">
               <MarcaPrioridad s={perdiendo[0]!.altoImpacto ? 1 : 2} tamano={14} />
               <span className="truncate">{perdiendo[0]!.equipo}{ambito.global ? ` · ${campoPorId(perdiendo[0]!.campoId).nombre}` : ''}</span>
             </b>
-            <small className="block truncate text-[10.5px] text-[var(--tinta2)]">{TIPO_CAUSA[perdiendo[0]!.tipo].toLowerCase()}</small>
+            <small className="block truncate text-[13px] text-[var(--tinta2)]">{TIPO_CAUSA[perdiendo[0]!.tipo].toLowerCase()}</small>
           </span>
         )}
         {otros
@@ -207,13 +207,13 @@ export function ResumenDirectivo() {
       <div className="mb-2.5 grid items-stretch gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
         <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
           <b className="tabular block text-[26px] leading-none">{n0(altoPct)} %</b>
-          <small className="block text-[11.5px] text-[var(--tinta2)]">del diferido · reinyección y electrosumergibles</small>
-          <p className="mt-2 text-[11px] text-[var(--tinta2)]">
+          <small className="block text-[14px] text-[var(--tinta2)]">del diferido · reinyección y electrosumergibles</small>
+          <p className="mt-2 text-[13px] text-[var(--tinta2)]">
             {/* La misma base escrita igual que «Por dónde se trabó» (B-50). */}
             <span className="flex flex-wrap items-center gap-x-1">Alto impacto · tendencia ({mesesAntes(inicio)} → con TRIM, desde el {fechaCorta(inicio)})
               <Info titulo="Tendencia histórica" texto={`Alto impacto por día desde que entró TRIM (${fechaCorta(inicio)}) contra los tres meses antes. Es una comparación histórica, no la fase Antes del retorno posible.`} />
             </span>
-            <b className="tabular block text-[13px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
+            <b className="tabular block text-[15px] text-[var(--tinta)]">{n0(altoAntes)} → {n0(altoDespues)} bbl/d · {altoAntes > 0 ? signo((altoDespues - altoAntes) / altoAntes) : '—'}</b>
           </p>
           {/* La misma comparación abierta por tramo, con las dos flechas (U2 §7.3). */}
           <AntesConTrimPorTramo campos={ids} desde={inicio} hasta={AHORA} />
@@ -221,7 +221,7 @@ export function ResumenDirectivo() {
             {/* Sin órdenes no hay porcentaje: se dice, no se borra el bloque. */}
             <p className="flex flex-wrap items-baseline gap-x-1.5">
               <b className="tabular text-[18px] leading-none">{horas.porcentaje !== undefined ? `${n0(horas.porcentaje)} %` : 'sin dato'}</b>
-              <span className="flex flex-wrap items-center gap-x-1 text-[11px] text-[var(--tinta2)]">mantenimiento proactivo
+              <span className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">mantenimiento proactivo
                 <Info titulo="Mantenimiento proactivo" texto={`Horas preventivas o predictivas en SAP desde que entró TRIM (${fechaCorta(inicio)}). Si no sube, las fallas no bajan.`} />
               </span>
             </p>
@@ -230,9 +230,9 @@ export function ResumenDirectivo() {
                 <div className="mt-1 flex h-2 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]" aria-hidden>
                   <i className="block h-full bg-[var(--dato-1)]" style={{ width: `${horas.porcentaje}%` }} />
                 </div>
-                <small className="tabular mt-0.5 block text-[10.5px] text-[var(--tinta2)]">{n1(horas.proactivo)} h proactivas · {n1(horas.correctivo)} h correctivas</small>
+                <small className="tabular mt-0.5 block text-[13px] text-[var(--tinta2)]">{n1(horas.proactivo)} h proactivas · {n1(horas.correctivo)} h correctivas</small>
               </>
-            ) : <small className="mt-0.5 block text-[10.5px] text-[var(--tinta2)]">sin órdenes en SAP desde {fechaCorta(inicio)}</small>}
+            ) : <small className="mt-0.5 block text-[13px] text-[var(--tinta2)]">sin órdenes en SAP desde {fechaCorta(inicio)}</small>}
           </div>
           <Tendencia serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(diaIso(m.desde), diaIso(new Date(m.hasta.getTime() - 1)))} />
@@ -246,18 +246,18 @@ export function ResumenDirectivo() {
 
         <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
           <h3 className={`${titulo} mb-2`}>POR EQUIPO</h3>
-          {top.length === 0 && <p className="text-[12px] text-[var(--tinta2)]">Nada diferido.</p>}
+          {top.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada diferido.</p>}
           {top.map(f => (
             <button key={`${f.campoId}${f.equipo}${f.tipo}`} onClick={() => abrir(f.campoId, f.equipo)}
               className="grid w-full cursor-pointer grid-cols-[1fr_auto] items-baseline gap-3 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)]">
               <span className="min-w-0">
-                <b className="text-[13px]">{f.equipo}</b>
-                <span className="text-[11.5px] text-[var(--tinta3)]">{ambito.global ? ` · ${campoPorId(f.campoId).nombre}` : ''}</span>
-                <small className="block text-[11px] text-[var(--tinta2)]">{f.partes[0] ? NOMBRE_PARTE[f.partes[0].parte].toLowerCase() : TIPO_CAUSA[f.tipo].toLowerCase()}</small>
+                <b className="text-[15px]">{f.equipo}</b>
+                <span className="text-[14px] text-[var(--tinta3)]">{ambito.global ? ` · ${campoPorId(f.campoId).nombre}` : ''}</span>
+                <small className="block text-[13px] text-[var(--tinta2)]">{f.partes[0] ? NOMBRE_PARTE[f.partes[0].parte].toLowerCase() : TIPO_CAUSA[f.tipo].toLowerCase()}</small>
               </span>
               <span className="tabular text-right">
                 <b className="block text-[15px] leading-tight">{n0(f.bbl)}</b>
-                <small className="text-[10px] text-[var(--tinta3)]">bbl · {n0(lb.diferido ? (f.bbl / lb.diferido) * 100 : 0)} %</small>
+                <small className="text-[12px] text-[var(--tinta3)]">bbl · {n0(lb.diferido ? (f.bbl / lb.diferido) * 100 : 0)} %</small>
               </span>
             </button>
           ))}
@@ -298,14 +298,18 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
   const Y = (v: number) => G.y1 - (v / techo) * (G.y1 - G.y0)
   const paso = (G.x1 - G.x0) / Math.max(1, pts.length)
   const ancho = paso * 0.6
+  // La cifra de cada mes del período: con un mes, grande; con varios (doce meses, el año), lo que
+  // quepa en su columna, para que dos vecinas no se monten (auditor, Firefox).
+  const activos = pts.filter(p => p.m.desde < hasta && p.m.hasta > desde).length
+  const letraCifra = activos > 1 ? Math.max(10.5, Math.min(14, paso / 3.5)) : 14
   return (
     <>
     {porTramo && (
       <div role="group" aria-label="Cómo se parte cada mes" className="no-imprimir mt-2 flex flex-wrap gap-1">
         {([['equipo', 'Por equipo'], ['tramo', 'Por dónde se trabó']] as const).map(([v, t]) => (
           <button key={v} type="button" aria-pressed={vista === v} onClick={() => setVista(v)}
-            className={cn('min-h-6 cursor-pointer rounded border px-2.5 py-[2px] text-[11px]',
-              vista === v ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+            className={cn('min-h-6 cursor-pointer rounded-full border px-2.5 py-[2px] text-[13px]',
+              vista === v ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
             {t}
           </button>
         ))}
@@ -348,8 +352,8 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
                 {activo && <rect x={x - 2} y={Y(p.total) - 2} width={ancho + 4} height={G.y1 - Y(p.total) + 2} fill="none" stroke="var(--tinta)" strokeWidth={1.2} />}
                 {p.max !== undefined && <line x1={x - 3} x2={x + ancho + 3} y1={Y(p.max)} y2={Y(p.max)} stroke="var(--tinta)" strokeWidth={1.3} strokeDasharray="3 2" />}
                 {p.sobre && <rect x={x + ancho / 2 - 3.5} y={Math.min(Y(p.total), Y(p.max ?? 0)) - 12} width={7} height={7} rx={0.8} fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1}><title>Pasó el máximo de diferido firmado</title></rect>}
-                {activo && <text x={x + ancho / 2} y={Math.min(Y(p.total), Y(p.max ?? 0)) - (p.sobre ? 16 : 5)} fontSize={10.5} textAnchor="middle" fill="var(--tinta)" className="tabular">{n0(p.total)}</text>}
-                <text x={x + ancho / 2} y={G.y1 + 14} fontSize={11} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta2)'} fontWeight={activo ? 600 : 400} className="font-cond">{p.m.corto.toUpperCase()}</text>
+                {activo && <text x={x + ancho / 2} y={Math.min(Y(p.total), Y(p.max ?? 0)) - (p.sobre ? 16 : 5)} fontSize={letraCifra} textAnchor="middle" fill="var(--tinta)" className="tabular">{n0(p.total)}</text>}
+                <text x={x + ancho / 2} y={G.y1 + 14} fontSize={14.5} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta2)'} fontWeight={activo ? 600 : 400} className="font-cond">{p.m.corto.toUpperCase()}</text>
               </g>
             </Tip>
           )
@@ -359,7 +363,7 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
     </div>
       {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba.
           La unidad va aquí y no en el dibujo: arriba a la izquierda la pisaba la cifra de la barra más alta. */}
-      <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-[var(--tinta2)]">
+      <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
         <span className="text-[var(--tinta3)]">bbl/d</span>
         {porDonde
           ? CHOKES_Y_SIN_ASIGNAR.map(k => <span key={k} className="inline-flex items-center gap-1.5"><Muestra k={k} />{LARGO_TRAMO[k]}</span>)

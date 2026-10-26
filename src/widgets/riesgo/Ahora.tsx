@@ -70,12 +70,12 @@ function Bloque({ s, rotulo, valor, pie, aparte, onClick }: {
 }) {
   const cuerpo = (
     <>
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{rotulo}</small>
+      <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
       <b className="tabular block text-[18px] leading-tight">{valor}</b>
-      <small className="flex min-w-0 items-center gap-1 text-[10.5px] text-[var(--tinta2)]">
+      <small className="flex min-w-0 items-center gap-1 text-[13px] text-[var(--tinta2)]">
         {s > 0 && <MarcaPrioridad s={s} tamano={11} />}<span className="truncate">{pie}</span>
       </small>
-      {aparte && <small className="block text-[10.5px] text-[var(--tinta2)]">{aparte}</small>}
+      {aparte && <small className="block text-[13px] text-[var(--tinta2)]">{aparte}</small>}
     </>
   )
   return onClick

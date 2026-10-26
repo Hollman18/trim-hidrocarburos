@@ -68,16 +68,16 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
         <div role="group" aria-label="Campo del plan" className="mb-2 flex flex-wrap gap-1">
           {[{ id: 'total', nombre: 'Suma de los campos' }, ...campos].map(c => (
             <button key={c.id} aria-pressed={vista === c.id} onClick={() => setVista(c.id)}
-              className={cn('cursor-pointer rounded border px-2.5 py-1 text-[11.5px]',
-                vista === c.id ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+              className={cn('cursor-pointer rounded-full border px-2.5 py-1 text-[14px]',
+                vista === c.id ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
               {c.nombre}
             </button>
           ))}
         </div>
 
         <div {...desplazable('Plan mes a mes')} className="overflow-x-auto">
-          <table className="tabular w-full min-w-[560px] text-[12px]">
-            <thead className="text-[10px] text-[var(--tinta3)]">
+          <table className="tabular w-full min-w-[560px] text-[14px]">
+            <thead className="text-[12px] text-[var(--tinta3)]">
               <tr className="border-b border-[var(--linea)]">
                 <th className="py-1 text-left font-normal">Mes</th>
                 <th className="text-right font-normal">Producción, bbl/d</th>
@@ -111,7 +111,7 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
                         value={x === undefined || Number.isNaN(x) ? '' : x} placeholder={k === 'netbackUsd' ? 'sin precio' : undefined}
                         className={cn(cajaNumero, !suyo && 'text-[var(--tinta3)]', malo && cajaMala)}
                         onChange={e => onEditar(vista, mes, { [k]: e.target.value === '' ? (k === 'netbackUsd' ? undefined : NaN) : Number(e.target.value) })} />
-                      {malo && <small id={regla} className="mt-0.5 block text-right text-[10px] leading-tight text-[var(--tinta)]">{REGLA_CAJA[k]}</small>}
+                      {malo && <small id={regla} className="mt-0.5 block text-right text-[12px] leading-tight text-[var(--tinta)]">{REGLA_CAJA[k]}</small>}
                     </>
                   )
                 }
@@ -120,7 +120,7 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
                   <tr key={mes} className="border-b border-[var(--linea2)]">
                     <td className="py-1.5">
                       <span className={cn(suyo ? 'font-semibold' : 'text-[var(--tinta3)]')}>{corto(mes)}</span>
-                      <small className="block text-[10px] text-[var(--tinta3)]">{mes === mesActual ? 'en curso · ' : ''}{suyo ? 'cifra propia' : 'hereda'}</small>
+                      <small className="block text-[12px] text-[var(--tinta3)]">{mes === mesActual ? 'en curso · ' : ''}{suyo ? 'cifra propia' : 'hereda'}</small>
                     </td>
                     <td className="w-[110px] pl-2">{caja('produccionBpd', v.produccionBpd, `Producción de ${nombre} en ${nombreMes(mes)}, bbl/d`, !(v.produccionBpd > 0))}</td>
                     <td className="w-[110px] pl-2">{caja('diferidoMaxBpd', v.diferidoMaxBpd, `Máximo de diferido de ${nombre} en ${nombreMes(mes)}, bbl/d`, !(v.diferidoMaxBpd >= 0))}</td>
@@ -132,9 +132,9 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
             </tbody>
           </table>
         </div>
-        <p className="mt-1 text-[10.5px] text-[var(--tinta3)] sm:hidden">Desplace a la derecha: precio y total del mes.</p>
+        <p className="mt-1 text-[13px] text-[var(--tinta3)] sm:hidden">Desplace a la derecha: precio y total del mes.</p>
         {seAcaba && (
-          <p className="mt-2 flex items-start gap-1.5 text-[11.5px]">
+          <p className="mt-2 flex items-start gap-1.5 text-[14px]">
             <FueraDeMeta si tamano={11} />
             <span>El plan llega hasta {nombreMes(finPlan!)}: falta el presupuesto siguiente.
               <Info className="ml-1" titulo="El plan se acaba"
@@ -193,7 +193,7 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <Boton onClick={descargar}><Download className="mr-1 inline size-3.5" />Descargar la plantilla</Boton>
         <SubirCsv onTexto={t => { setTexto(t); revisar(t) }} onError={m => { setRevision(null); setHecho(null); setErrorArchivo(m) }} />
-        <span className="flex items-center gap-3 text-[11.5px]">
+        <span className="flex items-center gap-3 text-[14px]">
           <span className="text-[var(--tinta2)]">Cifras en</span>
           <label className="flex min-h-6 items-center gap-1"><input type="radio" name="unidad-plan" checked={!enBblMes} onChange={() => { setEnBblMes(false); setRevision(null) }} />bbl/d</label>
           <label className="flex min-h-6 items-center gap-1"><input type="radio" name="unidad-plan" checked={enBblMes} onChange={() => { setEnBblMes(true); setRevision(null) }} />bbl del mes</label>
@@ -202,7 +202,7 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
       <textarea value={texto} onChange={e => { setTexto(e.target.value); setRevision(null); setHecho(null); setErrorArchivo(null) }} rows={5} aria-label="Filas del presupuesto"
         aria-invalid={hayError} aria-describedby={hayError ? idErrores : undefined}
         placeholder={'Pegue aquí las filas copiadas de Excel. Por ejemplo:\n2026-11\tLa Ceiba\t11200\t750\t48'}
-        className="w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[11.5px] outline-none focus:border-acento" />
+        className="w-full resize-y rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-1.5 font-mono text-[14px] outline-none focus:border-acento" />
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         <Boton onClick={() => revisar()} disabled={!texto.trim()}>Revisar</Boton>
         {revision && revision.filas.length > 0 && (
@@ -218,7 +218,7 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
         )}
       </div>
       {revision && (
-        <div className="mt-2 text-[11.5px]">
+        <div className="mt-2 text-[14px]">
           {revision.filas.length > 0 && (
             <p className="text-[var(--tinta2)]">
               Listas: {plural(revision.filas.length, 'fila', 'filas')} de {[...new Set(revision.filas.map(f => campos.find(c => c.id === f.campoId)?.nombre))].join(', ')},
@@ -238,8 +238,8 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
           {revision.filas.length === 0 && revision.errores.length === 0 && <p className="text-[var(--tinta2)]">No se encontraron filas.</p>}
         </div>
       )}
-      {errorArchivo && <p id={idErrores} role="alert" className="mt-2 text-[11.5px] text-[var(--tinta)]">{errorArchivo}</p>}
-      {hecho && <p role="status" className="mt-2 text-[11.5px] text-[var(--tinta2)]">{hecho}</p>}
+      {errorArchivo && <p id={idErrores} role="alert" className="mt-2 text-[14px] text-[var(--tinta)]">{errorArchivo}</p>}
+      {hecho && <p role="status" className="mt-2 text-[14px] text-[var(--tinta2)]">{hecho}</p>}
     </Panel>
   )
 }

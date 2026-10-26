@@ -35,12 +35,12 @@ export function ArbolCircular({ campoId, desde, hasta, periodo }: { campoId: str
     <Panel className="mb-2.5 print:break-inside-auto" titulo="ÁRBOL DE CAUSAS · COMO LA CIRCULAR"
       extra={<span className="inline-flex items-center gap-1">modelo choke<Info titulo="Modelo choke" texto={QUE_ES_EL_CHOKE} imprimir={false} /></span>}>
       <div data-arbol-circular={campoId} data-orden={arbol.orden} data-bbl={r.bbl} data-filas={r.filas}>
-        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[12px]">
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[14px]">
           <b className="tabular text-[15px]">{n0(r.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           <span className="tabular text-[var(--tinta2)]">{n0(r.filas)} {r.filas === 1 ? 'fila' : 'filas'} de paradas_pozo · {n0(r.eventos)} {r.eventos === 1 ? 'parada' : 'paradas'}</span>
           <span className="tabular text-[var(--tinta2)]">{n0(r.confirmadoBbl)} bbl con los 6 pasos confirmados ({pctParte(confirmado)})</span>
         </p>
-        <ol className="mt-1 flex flex-wrap items-baseline gap-x-1 text-[10.5px] text-[var(--tinta3)]" aria-label="El orden de la circular">
+        <ol className="mt-1 flex flex-wrap items-baseline gap-x-1 text-[13px] text-[var(--tinta3)]" aria-label="El orden de la circular">
           {niveles.map((n, i) => (
             <li key={n} className="inline-flex items-baseline gap-1">
               {i > 0 && <span aria-hidden>→</span>}
@@ -56,9 +56,9 @@ export function ArbolCircular({ campoId, desde, hasta, periodo }: { campoId: str
           un paso para cerrarlo o abrirlo; en el papel sale entero.
         </Lectura>
         {r.filas === 0
-          ? <p className="mt-2 text-[12px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(periodo)}: no hay filas de paradas_pozo.</p>
+          ? <p className="mt-2 text-[14px] text-[var(--tinta2)]">Nada se trabó en {periodoEnFrase(periodo)}: no hay filas de paradas_pozo.</p>
           : <Ramas nodo={r} base={r.bbl} codigos="vista" abiertas={niveles.length} rotuloBase="del período" className="mt-2 max-w-[860px]" />}
-        <p className="tabular mt-1.5 flex max-w-[860px] flex-wrap items-baseline justify-between gap-x-2 border-t border-[var(--linea2)] pt-1 text-[11.5px]" data-cuadre-libro={lb.diferido}>
+        <p className="tabular mt-1.5 flex max-w-[860px] flex-wrap items-baseline justify-between gap-x-2 border-t border-[var(--linea2)] pt-1 text-[14px]" data-cuadre-libro={lb.diferido}>
           <span>= el diferido del libro (Σ de las paradas del período)</span><b>{n0(lb.diferido)} bbl</b>
         </p>
         {/* En el papel no hay globos: lo que dicen los ⓘ que se repiten va una vez, aquí (B-10). */}

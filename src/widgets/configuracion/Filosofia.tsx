@@ -72,19 +72,19 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, onCapaci
       <header className="mb-2 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
         <div className="min-w-0">
           <h2 className="text-[15px] font-semibold leading-tight">Filosofía operacional · {campo.nombre}</h2>
-          <p className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">
+          <p className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
             modelo choke <Info titulo="Modelo choke" texto={EXPLICA_MODELO_CHOKE} />
           </p>
         </div>
-        <p className="text-[11px] text-[var(--tinta2)]">borrador · {cambios ? plural(cambios, 'cambio sin firmar', 'cambios sin firmar') : 'sin cambios'}</p>
+        <p className="text-[13px] text-[var(--tinta2)]">borrador · {cambios ? plural(cambios, 'cambio sin firmar', 'cambios sin firmar') : 'sin cambios'}</p>
       </header>
       <nav aria-label="Pasos de la filosofía operacional" className="mb-2.5">
         <ol className="flex flex-wrap gap-1">
           {PASOS.map(([n, t]) => (
             <li key={n}>
               <button type="button" aria-current={paso === n ? 'step' : undefined} onClick={() => ir(n)}
-                className={cn('min-h-8 cursor-pointer rounded border px-2.5 py-1 text-left text-[12px]',
-                  paso === n ? 'border-[var(--tinta)] bg-[var(--panel)] font-semibold' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
+                className={cn('min-h-8 cursor-pointer rounded-full border px-2.5 py-1 text-left text-[14px]',
+                  paso === n ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
                 <span className="tabular">{n}</span> {t}
               </button>
             </li>
@@ -98,7 +98,7 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, onCapaci
         no se sabe, se dice: TRIM no lo adivina. TRIM propone lo que ya sabe y usted lo confirma. Nada rige hasta que
         se firma.
       </Lectura>
-      <h3 id={`paso-filosofia-${paso}`} tabIndex={-1} className="mb-1.5 mt-1 text-[13px] font-semibold outline-none">
+      <h3 id={`paso-filosofia-${paso}`} tabIndex={-1} className="mb-1.5 mt-1 text-[15px] font-semibold outline-none">
         Paso {paso} · {nombrePaso}
       </h3>
       {!puede && (

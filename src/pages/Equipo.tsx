@@ -81,8 +81,8 @@ export function Equipo() {
       className="flex w-full cursor-pointer items-center gap-3 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)]">
       <MarcaPrioridad s={f.eq.severidad} tamano={13} />
       <span className="min-w-0 flex-[2]">
-        <b className="block truncate text-[12.5px] leading-tight">{f.eq.nombre}</b>
-        <small className="font-mono block truncate text-[10px] text-[var(--tinta3)]">{f.eq.id} · {ambito.global ? f.campoNombre : f.eq.sistema} · {f.eq.estado}</small>
+        <b className="block truncate text-[15px] leading-tight">{f.eq.nombre}</b>
+        <small className="font-mono block truncate text-[12px] text-[var(--tinta3)]">{f.eq.id} · {ambito.global ? f.campoNombre : f.eq.sistema} · {f.eq.estado}</small>
       </span>
       <span className="hidden gap-1 sm:flex">
         <Chip>{f.eq.criticidad}/5</Chip>
@@ -90,21 +90,21 @@ export function Equipo() {
       </span>
       {/* Las unidades van una vez, en el encabezado de cada columna; el lector las oye en la celda. */}
       <span className="tabular w-[70px] shrink-0 text-right">
-        <b className="block text-[13px] leading-tight"><span className="sr-only">{f.fallas !== undefined ? 'entre fallas ' : 'entre eventos '}</span>{f.mtbfDias ? `${n0(f.mtbfDias)} d` : '—'}</b>
-        <small className="text-[9.5px] text-[var(--tinta3)]">{f.fallas !== undefined ? plural(f.fallas, 'falla', 'fallas') : plural(f.eventos, 'evento', 'eventos')}</small>
+        <b className="block text-[15px] leading-tight"><span className="sr-only">{f.fallas !== undefined ? 'entre fallas ' : 'entre eventos '}</span>{f.mtbfDias ? `${n0(f.mtbfDias)} d` : '—'}</b>
+        <small className="text-[12px] text-[var(--tinta3)]">{f.fallas !== undefined ? plural(f.fallas, 'falla', 'fallas') : plural(f.eventos, 'evento', 'eventos')}</small>
       </span>
       <span className="tabular w-[76px] shrink-0 text-right">
         <b className="block text-[15px] leading-tight">{n0(f.bbl)}<span className="sr-only"> bbl del período</span></b>
       </span>
       <span className="tabular hidden w-[64px] shrink-0 text-right md:block">
-        <b className="block text-[13px] leading-tight">{f.ahora ? n0(f.ahora) : '—'}<span className="sr-only"> bbl/d perdiéndose</span></b>
+        <b className="block text-[15px] leading-tight">{f.ahora ? n0(f.ahora) : '—'}<span className="sr-only"> bbl/d perdiéndose</span></b>
       </span>
     </Tip>
   )
 
   // Encabezado de las columnas: el rótulo una vez, no en cada fila. Para el lector va en cada celda.
   const encabezado = (
-    <div className="flex gap-3 pb-1 text-[9.5px] text-[var(--tinta3)]" aria-hidden>
+    <div className="flex gap-3 pb-1 text-[12px] text-[var(--tinta3)]" aria-hidden>
       <span className="flex-1" />
       <span className="w-[70px] shrink-0 text-right">cada cuánto</span>
       <span className="w-[76px] shrink-0 text-right">bbl del período</span>
@@ -117,16 +117,16 @@ export function Equipo() {
       <div className="mb-2.5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
         <span>
           <b className="tabular block text-[40px] leading-none">{filas.length}</b>
-          <small className="text-[11.5px] text-[var(--tinta3)]">equipos instrumentados</small>
+          <small className="text-[14px] text-[var(--tinta3)]">equipos instrumentados</small>
         </span>
         <span className="h-10 w-px bg-[var(--linea)]" />
         <span>
           <b className="tabular block text-[20px] leading-none">{sinRespaldo.length}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">sin respaldo</small>
+          <small className="text-[13px] text-[var(--tinta3)]">sin respaldo</small>
         </span>
         <span>
           <b className="tabular block text-[20px] leading-none">{filas.filter(f => f.eq.severidad > 0).length}</b>
-          <small className="text-[10.5px] text-[var(--tinta3)]">con condición anormal</small>
+          <small className="text-[13px] text-[var(--tinta3)]">con condición anormal</small>
         </span>
       </div>
 
@@ -145,11 +145,11 @@ export function Equipo() {
         {(FOCO_BOMBAS ? foco : filas).map(fila)}
         {FOCO_BOMBAS && fuera.length > 0 && (
           <details className="group mt-1 border-t border-[var(--linea2)]">
-            <summary className="flex cursor-pointer list-none items-center gap-3 py-2.5 text-[12px] text-[var(--tinta2)] hover:bg-[var(--panel2)]">
+            <summary className="flex cursor-pointer list-none items-center gap-3 py-2.5 text-[14px] text-[var(--tinta2)] hover:bg-[var(--panel2)]">
               <MarcaPrioridad s={peorFuera} tamano={13} />
               <span className="flex-1"><b className="text-[var(--tinta)]">Servicios y proceso · {fuera.length}</b></span>
-              <span className="tabular text-[11px] text-[var(--tinta3)]">{n0(fuera.reduce((a, f) => a + f.bbl, 0))} bbl del período</span>
-              <span className="text-[10px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
+              <span className="tabular text-[13px] text-[var(--tinta3)]">{n0(fuera.reduce((a, f) => a + f.bbl, 0))} bbl del período</span>
+              <span className="text-[12px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
             </summary>
             {encabezado}
             {fuera.map(fila)}

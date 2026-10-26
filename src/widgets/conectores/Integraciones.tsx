@@ -47,8 +47,8 @@ export function Integraciones({ campoId }: { campoId: string }) {
   const plantillas = useVerMas(Object.entries(PLANTILLAS))
   const plantilla = ([regla, t]: [string, { nombre: string; cuerpo: string }]) => (
     <div key={regla} className="border-b border-[var(--linea2)] py-1 last:border-0">
-      <span className="block font-mono text-[10.5px]">{t.nombre}</span>
-      <small className="block text-[10.5px] text-[var(--tinta3)]">{t.cuerpo}</small>
+      <span className="block font-mono text-[13px]">{t.nombre}</span>
+      <small className="block text-[13px] text-[var(--tinta3)]">{t.cuerpo}</small>
     </div>
   )
 
@@ -61,9 +61,9 @@ export function Integraciones({ campoId }: { campoId: string }) {
         recibe la respuesta. La flecha dice en qué sentido viaja cada dato.
       </Lectura>
       <div className="mt-2 grid items-start gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
-        <section className="rounded border border-[var(--linea2)] p-3 text-[11.5px]" aria-label="SAP">
+        <section className="rounded border border-[var(--linea2)] p-3 text-[14px]" aria-label="SAP">
           <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-            <b className="text-[13px]">SAP S/4HANA · Mantenimiento (PM)</b><Chip>conectado</Chip>
+            <b className="text-[15px]">SAP S/4HANA · Mantenimiento (PM)</b><Chip>conectado</Chip>
           </header>
           <Fila titulo="TRIM → SAP · avisos" valor={`${deTrim} en total`}
             info="Con su evidencia, desde la puesta en marcha: M1 solicitud (una parte avisa) · M2 avería (el equipo paró)." />
@@ -74,7 +74,7 @@ export function Integraciones({ campoId }: { campoId: string }) {
             info="Los críticos: stock de libre utilización en la bodega del campo." />
           <Fila titulo="PLC ↔ SAP · equipos" valor={`${flota.length} de ${flota.length}`}
             info={`Los de alto impacto, asociados entre el PLC y SAP.${ejemplo ? ` Por ejemplo: ${ejemplo.equipo} → equipo ${ejemplo.equipoSap} · ${ejemplo.ubicacion}.` : ''}`} />
-          <h4 className="font-cond mb-1 mt-2.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CATÁLOGOS DE DAÑO</h4>
+          <h4 className="font-cond mb-1 mt-2.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CATÁLOGOS DE DAÑO</h4>
           {clases.length === 0 && <p className="text-[var(--tinta2)]">Este campo no tiene equipos de alto impacto.</p>}
           {clases.map(c => (
             <p key={c.clase} className="flex flex-wrap justify-between gap-x-3 border-b border-[var(--linea2)] py-1 last:border-0">
@@ -84,9 +84,9 @@ export function Integraciones({ campoId }: { campoId: string }) {
           ))}
         </section>
 
-        <section className="rounded border border-[var(--linea2)] p-3 text-[11.5px]" aria-label="WhatsApp">
+        <section className="rounded border border-[var(--linea2)] p-3 text-[14px]" aria-label="WhatsApp">
           <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-            <b className="text-[13px]">WhatsApp Business</b><Chip>conectado</Chip>
+            <b className="text-[15px]">WhatsApp Business</b><Chip>conectado</Chip>
           </header>
           <Fila titulo="Número" valor={NUMERO_OPERACION} pie="verificado por Meta" />
           <Fila titulo="Respuestas hoy" valor={`${respuestas} · webhook activo`} info="Un número del 0 al 9, o el texto con «0»." />
@@ -94,7 +94,7 @@ export function Integraciones({ campoId }: { campoId: string }) {
             <span className="inline-flex flex-wrap items-baseline gap-x-1">{' · '}<DatoInvalido etiqueta="Mensajes no enviados" tamano={10} />{plural(sinEnviar, 'sin enviar', 'sin enviar')}
               <Info titulo="Sin enviar" texto="Un dato no cabía en su plantilla." /></span>
           )}</>} pie={`${plural(conAlertas, 'persona recibe', 'personas reciben')} alertas`} />
-          <h4 className="font-cond mb-1 mt-2.5 text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]">PLANTILLAS APROBADAS · UTILIDAD</h4>
+          <h4 className="font-cond mb-1 mt-2.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">PLANTILLAS APROBADAS · UTILIDAD</h4>
           {plantillas.visibles.map(plantilla)}
           {plantillas.resto.length > 0 && <div className="solo-impresion">{plantillas.resto.map(plantilla)}</div>}
           <VerMas ocultas={plantillas.ocultas} abierto={plantillas.abierto} onAlternar={plantillas.alternar} />
@@ -115,7 +115,7 @@ function Fila({ titulo, valor, pie, info }: { titulo: string; valor: ReactNode; 
         <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">{titulo}{info && <Info titulo={mayuscula(titulo.split(' · ').at(-1)!)} texto={info} />}</span>
         <b className="tabular">{valor}</b>
       </span>
-      {pie && <small className="block text-[10.5px] text-[var(--tinta3)]">{pie}</small>}
+      {pie && <small className="block text-[13px] text-[var(--tinta3)]">{pie}</small>}
     </div>
   )
 }

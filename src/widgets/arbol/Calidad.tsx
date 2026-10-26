@@ -12,7 +12,7 @@ import { cn } from '@/shared/lib/cn'
 import { ROTULO, INFO_METODO, valorEnPalabras } from './palabras'
 import { periodoEnFrase } from '@/widgets/choke/palabras'
 
-const TITULO = 'font-cond text-[10px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+const TITULO = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
 const pct = (v: number | null) => (v === null ? '—' : `${n0(v)} %`)
 /** «1 parada (2 filas)»: el motor cuenta las filas del reporte y las paradas detrás (B-47). */
 const paradasYFilasDe = (e: { paradas: number; eventos: number }) =>
@@ -26,7 +26,7 @@ function Barra({ valor, nombre, grande }: { valor: number | null; nombre: string
         className={cn('block min-w-0 flex-1 overflow-hidden rounded-sm bg-[var(--panel2)] ring-1 ring-inset ring-[var(--linea2)]', grande ? 'h-2.5' : 'h-1.5')}>
         {valor !== null && <i className="block h-full bg-[var(--dato-1)]" style={{ width: `${Math.max(0, Math.min(100, valor))}%` }} />}
       </span>
-      <b className={cn('tabular shrink-0 text-right', grande ? 'w-14 text-[18px] leading-none' : 'w-10 text-[11.5px]')}>{pct(valor)}</b>
+      <b className={cn('tabular shrink-0 text-right', grande ? 'w-14 text-[18px] leading-none' : 'w-10 text-[14px]')}>{pct(valor)}</b>
     </span>
   )
 }
@@ -60,32 +60,32 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
   const restoEq = verEquipos ? [] : equipos.slice(VISIBLES)
 
   const filaPaso = (x: CalidadPaso) => (
-    <div key={x.paso} className="grid gap-x-3 gap-y-0.5 border-b border-dashed border-[var(--linea2)] py-1.5 text-[11.5px] last:border-0 sm:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_6.5rem] sm:items-center">
+    <div key={x.paso} className="grid gap-x-3 gap-y-0.5 border-b border-dashed border-[var(--linea2)] py-1.5 text-[14px] last:border-0 sm:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_6.5rem] sm:items-center">
       <span className="font-semibold text-[var(--tinta2)]">{ROTULO[x.paso]}</span>
-      <span className="grid gap-0.5"><small className="text-[10px] text-[var(--tinta3)] sm:hidden">confirmado</small><Barra valor={x.pctConfirmado} nombre={`${ROTULO[x.paso]}, confirmado por una persona`} /></span>
-      <span className="grid gap-0.5"><small className="text-[10px] text-[var(--tinta3)] sm:hidden">corregido</small><Barra valor={x.pctCorregido} nombre={`${ROTULO[x.paso]}, corregido por una persona`} /></span>
-      <small className="tabular text-[10.5px] text-[var(--tinta2)]">{x.enFalta ? `${x.enFalta} en falta` : 'nada en falta'}</small>
+      <span className="grid gap-0.5"><small className="text-[12px] text-[var(--tinta3)] sm:hidden">confirmado</small><Barra valor={x.pctConfirmado} nombre={`${ROTULO[x.paso]}, confirmado por una persona`} /></span>
+      <span className="grid gap-0.5"><small className="text-[12px] text-[var(--tinta3)] sm:hidden">corregido</small><Barra valor={x.pctCorregido} nombre={`${ROTULO[x.paso]}, corregido por una persona`} /></span>
+      <small className="tabular text-[13px] text-[var(--tinta2)]">{x.enFalta ? `${x.enFalta} en falta` : 'nada en falta'}</small>
     </div>
   )
   const filaRegla = (r: (typeof corregidas)[number]) => (
     <li key={`${r.paso}|${r.regla}`} className="grid gap-x-3 gap-y-0.5 border-b border-dashed border-[var(--linea2)] py-1.5 last:border-0 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.2fr)] sm:items-baseline">
       <span className="flex min-w-0 flex-wrap items-center gap-x-1">
         <b className="font-semibold">{nombreDeRegla(r.regla)}</b>
-        <span className="text-[10.5px] text-[var(--tinta3)]">· {ROTULO[r.paso]}</span>
+        <span className="text-[13px] text-[var(--tinta3)]">· {ROTULO[r.paso]}</span>
         <Info titulo="La regla" texto={`${r.regla}: la regla de TRIM que propuso el paso «${ROTULO[r.paso]}».`} />
       </span>
       <span className="tabular" aria-label={`${r.corregidas} de ${r.propuestas} propuestas corregidas, ${n0(r.pctCorregido)} %`}>
         <b>{r.corregidas}</b> de {r.propuestas} corregidas · {n0(r.pctCorregido)} %
       </span>
-      <span className="text-[10.5px] text-[var(--tinta2)]">a: {cambios(r.paso, r.cambiadoA)}</span>
+      <span className="text-[13px] text-[var(--tinta2)]">a: {cambios(r.paso, r.cambiadoA)}</span>
     </li>
   )
   const filaEquipo = (e: (typeof equipos)[number]) => (
     <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap items-baseline gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
       <b className="font-mono">{e.equipo}</b>
-      <span className="text-[10.5px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
+      <span className="text-[13px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
       <span className="tabular" data-paradas={e.eventos} data-filas={e.paradas}>{paradasYFilasDe(e)} · {e.corregidas} {e.corregidas === 1 ? 'corregida' : 'corregidas'}{e.paradas ? ` · ${n0(e.pctCorregido)} %` : ''}</span>
-      {e.corregidas > 0 && <span className="text-[10.5px] text-[var(--tinta2)]">a: {cambios('choke', e.cambiadoA)}</span>}
+      {e.corregidas > 0 && <span className="text-[13px] text-[var(--tinta2)]">a: {cambios('choke', e.cambiadoA)}</span>}
     </li>
   )
 
@@ -100,63 +100,63 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
         // El paso 2 destacado: contorno más grueso, sin color (no es una alarma).
         <section aria-label="¿Dónde se trabó?: calidad" className="mb-2.5 rounded border-2 border-[var(--tinta3)] p-2.5">
           <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3">
-            <h3 className="text-[12.5px] font-semibold">Paso 2 · ¿Dónde se trabó?</h3>
+            <h3 className="text-[15px] font-semibold">Paso 2 · ¿Dónde se trabó?</h3>
             {conRotulo
-              ? <small className="flex items-center gap-1 text-[10.5px] text-[var(--tinta3)]">modelo choke <Info titulo="Modelo choke" texto={INFO_METODO} /></small>
+              ? <small className="flex items-center gap-1 text-[13px] text-[var(--tinta3)]">modelo choke <Info titulo="Modelo choke" texto={INFO_METODO} /></small>
               : <Info rotulo="¿qué método es?" titulo="¿Qué método es?" texto={INFO_METODO} />}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <span className="grid gap-0.5">
-              <small className="text-[10.5px] text-[var(--tinta3)]">confirmado por una persona</small>
+              <small className="text-[13px] text-[var(--tinta3)]">confirmado por una persona</small>
               <Barra grande valor={paso2.pctConfirmado} nombre="¿Dónde se trabó?, confirmado por una persona" />
-              <small className="tabular text-[10.5px] text-[var(--tinta2)]">{paso2.avaladas} de {paso2.paradas} filas</small>
+              <small className="tabular text-[13px] text-[var(--tinta2)]">{paso2.avaladas} de {paso2.paradas} filas</small>
             </span>
             <span className="grid gap-0.5">
-              <small className="text-[10.5px] text-[var(--tinta3)]">corregido: cuánto se equivoca la regla</small>
+              <small className="text-[13px] text-[var(--tinta3)]">corregido: cuánto se equivoca la regla</small>
               <Barra grande valor={paso2.pctCorregido} nombre="¿Dónde se trabó?, corregido por una persona" />
-              <small className="tabular text-[10.5px] text-[var(--tinta2)]">{paso2.corregidas} de {paso2.propuestas} propuestas{paso2.enFalta ? ` · ${paso2.enFalta} en falta` : ''}{paso2.declaradas ? ` · ${paso2.declaradas} las dijo una persona sin propuesta` : ''}</small>
+              <small className="tabular text-[13px] text-[var(--tinta2)]">{paso2.corregidas} de {paso2.propuestas} propuestas{paso2.enFalta ? ` · ${paso2.enFalta} en falta` : ''}{paso2.declaradas ? ` · ${paso2.declaradas} las dijo una persona sin propuesta` : ''}</small>
             </span>
           </div>
         </section>
       )}
       <h3 className={TITULO}>LOS DEMÁS PASOS</h3>
-      <div className="mb-1 hidden gap-x-3 text-[10px] text-[var(--tinta3)] sm:grid sm:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_6.5rem]" aria-hidden>
+      <div className="mb-1 hidden gap-x-3 text-[12px] text-[var(--tinta3)] sm:grid sm:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_6.5rem]" aria-hidden>
         <span /><span>confirmado</span><span>corregido</span><span />
       </div>
       <div className="mb-2.5">{otros.map(filaPaso)}</div>
 
       <h3 className={TITULO}>LAS REGLAS QUE MÁS SE CORRIGEN</h3>
       {corregidas.length === 0
-        ? <p className="mb-2.5 text-[11.5px] text-[var(--tinta2)]">Nadie corrigió una propuesta de TRIM en {periodoEnFrase(periodo)}{c.porPaso.some(x => x.avaladas > 0) ? '' : ': todavía nadie ha revisado estas paradas'}.</p>
+        ? <p className="mb-2.5 text-[14px] text-[var(--tinta2)]">Nadie corrigió una propuesta de TRIM en {periodoEnFrase(periodo)}{c.porPaso.some(x => x.avaladas > 0) ? '' : ': todavía nadie ha revisado estas paradas'}.</p>
         : (
           <>
-            <ul className="mb-1 text-[11.5px]">{reglas.map(filaRegla)}</ul>
-            {restoReglas.length > 0 && <ul className="solo-impresion text-[11.5px]">{restoReglas.map(filaRegla)}</ul>}
+            <ul className="mb-1 text-[14px]">{reglas.map(filaRegla)}</ul>
+            {restoReglas.length > 0 && <ul className="solo-impresion text-[14px]">{restoReglas.map(filaRegla)}</ul>}
             {(restoReglas.length > 0 || verReglas) && <Boton variante="chico" className="mb-2.5 min-h-10 sm:min-h-6" aria-expanded={verReglas} onClick={() => setVerReglas(v => !v)}>{verReglas ? 'ver menos' : `ver las otras ${restoReglas.length}`}</Boton>}
           </>
         )}
 
       <h3 className={`${TITULO} mt-1.5`}>EL PASO 2 POR EQUIPO</h3>
       {equipos.length === 0
-        ? <p className="mb-2.5 text-[11.5px] text-[var(--tinta2)]">Ninguna parada con el paso 2 propuesto en {periodoEnFrase(periodo)}.</p>
+        ? <p className="mb-2.5 text-[14px] text-[var(--tinta2)]">Ninguna parada con el paso 2 propuesto en {periodoEnFrase(periodo)}.</p>
         : (
           <>
-            <ul className="mb-1 text-[11.5px]">{eqs.map(filaEquipo)}</ul>
-            {restoEq.length > 0 && <ul className="solo-impresion text-[11.5px]">{restoEq.map(filaEquipo)}</ul>}
+            <ul className="mb-1 text-[14px]">{eqs.map(filaEquipo)}</ul>
+            {restoEq.length > 0 && <ul className="solo-impresion text-[14px]">{restoEq.map(filaEquipo)}</ul>}
             {(restoEq.length > 0 || verEquipos) && <Boton variante="chico" className="mb-2.5 min-h-10 sm:min-h-6" aria-expanded={verEquipos} onClick={() => setVerEquipos(v => !v)}>{verEquipos ? 'ver menos' : `ver los otros ${restoEq.length}`}</Boton>}
           </>
         )}
 
       <h3 className={`${TITULO} mt-1.5`}>EQUIPOS SIN TOPOLOGÍA</h3>
       {c.sinTopologia.length === 0
-        ? <p className="text-[11.5px] text-[var(--tinta2)]">Todos los equipos de estas paradas dicen a qué pozos sirven.</p>
+        ? <p className="text-[14px] text-[var(--tinta2)]">Todos los equipos de estas paradas dicen a qué pozos sirven.</p>
         : (
           <>
-            <p className="mb-1 text-[11px] text-[var(--tinta2)]">Sus paradas tomaron el tramo de la regla por tipo de causa: pídale al administrador que diga a qué pozos sirven (Configuración).</p>
-            <ul className="text-[11.5px]">
+            <p className="mb-1 text-[13px] text-[var(--tinta2)]">Sus paradas tomaron el tramo de la regla por tipo de causa: pídale al administrador que diga a qué pozos sirven (Configuración).</p>
+            <ul className="text-[14px]">
               {c.sinTopologia.map(e => (
                 <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
-                  <b className="font-mono">{e.equipo}</b><span className="text-[10.5px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
+                  <b className="font-mono">{e.equipo}</b><span className="text-[13px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
                   <span className="tabular">{paradasYFilasDe(e)}</span>
                 </li>
               ))}

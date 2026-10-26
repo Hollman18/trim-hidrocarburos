@@ -57,17 +57,17 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
           ) : (
             <>
               <span className="min-w-0" data-pe-no-creible>
-                <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">eficiencia de producción<Info titulo="Eficiencia de producción" texto={AYUDA_PE_NO_CREIBLE} /></small>
-                <span className="mt-0.5 block rounded border border-dashed border-[var(--tinta3)] px-2 py-1 text-[11.5px] leading-snug">{b.textoPe}</span>
+                <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">eficiencia de producción<Info titulo="Eficiencia de producción" texto={AYUDA_PE_NO_CREIBLE} /></small>
+                <span className="mt-0.5 block rounded border border-dashed border-[var(--tinta3)] px-2 py-1 text-[14px] leading-snug">{b.textoPe}</span>
               </span>
               <Cifra rotulo="lo no planeado se llevó" valor={`${n0(b.porEscalon['disponibilidad-no-planeada'])} bbl`} ayuda={<Info titulo="Lo no planeado" texto={AYUDA_NO_PLANEADO_BBL} />}
                 pie="en paradas no planeadas; el porcentaje sale con la eficiencia" />
             </>
           )}
         </div>
-        {b.peCreible && b.textoPe && <p className="mt-1 text-[11px] text-[var(--tinta2)]" data-nota-pe>{b.textoPe}</p>}
+        {b.peCreible && b.textoPe && <p className="mt-1 text-[13px] text-[var(--tinta2)]" data-nota-pe>{b.textoPe}</p>}
 
-        <ol className="mt-3 text-[11.5px]" aria-label="De lo que dan los pozos según sus pruebas a lo que salió">
+        <ol className="mt-3 text-[14px]" aria-label="De lo que dan los pozos según sus pruebas a lo que salió">
           {/* Un solo número del choke: la escalera empieza donde empieza la eficiencia de producción (las pruebas),
               y lo que las pruebas dan de más que el medidor va en su renglón, antes del potencial del libro (D3). */}
           <li className="flex items-baseline justify-between gap-2 border-b border-[var(--linea2)] py-1" data-escalon-inicio data-bbl={b.potencialPruebas}>
@@ -95,10 +95,10 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
             <b className="tabular">{n0(b.real)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           </li>
         </ol>
-        {!b.cuadra && <p className="mt-1 text-[11.5px]"><FueraDeMeta si />Lo sin explicar pasa del 2,5 % del potencial: hay que revisarlo antes de cerrar el mes.</p>}
-        {b.estructural >= 0.5 && b.textoEstructural && <p className="mt-1.5 text-[11.5px] text-[var(--tinta2)]">{b.textoEstructural}</p>}
+        {!b.cuadra && <p className="mt-1 text-[14px]"><FueraDeMeta si />Lo sin explicar pasa del 2,5 % del potencial: hay que revisarlo antes de cerrar el mes.</p>}
+        {b.estructural >= 0.5 && b.textoEstructural && <p className="mt-1.5 text-[14px] text-[var(--tinta2)]">{b.textoEstructural}</p>}
         {b.porConfirmar >= 0.5 && (
-          <p className="mt-1 text-[11px] text-[var(--tinta2)]">
+          <p className="mt-1 text-[13px] text-[var(--tinta2)]">
             <span className="tabular">{n0(b.porConfirmar)}</span> bbl tienen el tramo como propuesta de TRIM: falta que una persona conteste la pregunta que lo decide.
           </p>
         )}
@@ -123,9 +123,9 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
 function Cifra({ rotulo, valor, ayuda, pie }: { rotulo: string; valor: string; ayuda: React.ReactNode; pie: string }) {
   return (
     <span className="min-w-0">
-      <small className="flex flex-wrap items-center gap-x-1 text-[10.5px] text-[var(--tinta3)]">{rotulo}{ayuda}</small>
+      <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">{rotulo}{ayuda}</small>
       <b className="tabular block text-[20px] leading-none">{valor}</b>
-      <small className="tabular mt-0.5 block text-[10.5px] text-[var(--tinta2)]">{pie}</small>
+      <small className="tabular mt-0.5 block text-[13px] text-[var(--tinta2)]">{pie}</small>
     </span>
   )
 }
@@ -141,7 +141,7 @@ function Escalon({ nombre, tecnico, valor, ancho, norte, discontinuo, ayuda, avi
       data-escalon={nombre} data-bbl={valor}>
       <span className={cn('flex flex-wrap items-center gap-x-1.5', cero && 'text-[var(--tinta3)]', norte && !cero && 'font-semibold')}>
         − {nombre}{ayuda}{tecnico && <Info titulo={nombre} texto={`En la escalera de la NSTA: ${tecnico}.`} />}
-        {norte && <span className="font-cond rounded-sm border border-[var(--tinta2)] px-1 text-[9.5px] font-semibold tracking-[.05em] text-[var(--tinta)]">LO QUE TRIM BAJA</span>}
+        {norte && <span className="font-cond rounded-sm border border-[var(--tinta2)] px-1 text-[12px] font-semibold tracking-[.05em] text-[var(--tinta)]">LO QUE TRIM BAJA</span>}
       </span>
       <span aria-hidden className="relative hidden h-2 overflow-hidden rounded-sm bg-[var(--panel2)] sm:block">
         {!cero && <i className={cn('absolute inset-y-0 left-0 block', discontinuo ? 'border border-dashed border-[var(--tinta3)]' : norte ? 'bg-[var(--dato-1)]' : 'bg-[var(--dato-3)]')} style={{ width: ancho }} />}
@@ -157,9 +157,9 @@ function PorTramo({ b }: { b: BrechaChoke }) {
   const nombre = (k: (typeof columnas)[number]) => (k === 'sin-asignar' ? 'Sin identificar' : CAJA[k])
   return (
     <div className="mt-2 overflow-x-auto" {...desplazable('Lo que no se produjo por tramo y escalón')}>
-      <table className="tabular w-full min-w-[560px] text-[11px]">
-        <caption className="pb-1 text-left text-[10.5px] text-[var(--tinta3)]">Por tramo y escalón · bbl</caption>
-        <thead className="text-[9.5px] text-[var(--tinta3)]">
+      <table className="tabular w-full min-w-[560px] text-[13px]">
+        <caption className="pb-1 text-left text-[13px] text-[var(--tinta3)]">Por tramo y escalón · bbl</caption>
+        <thead className="text-[12px] text-[var(--tinta3)]">
           <tr><th className="py-1 pr-2 text-left font-normal">Escalón</th>{columnas.map(k => <th key={k} className="py-1 pr-2 text-right font-normal">{nombre(k)}</th>)}<th className="py-1 text-right font-normal">Total</th></tr>
         </thead>
         <tbody>
