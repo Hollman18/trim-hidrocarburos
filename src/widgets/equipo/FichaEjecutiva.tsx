@@ -83,7 +83,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
       {(cifra || estado) && <div className="flex items-start gap-2.5">
         <MarcaPrioridad s={eq.severidad} tamano={16} className="mt-[3px]" />
         <span className="min-w-0">
-          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[13px] font-normal text-[var(--tinta3)]">perdiéndose</small></b>}
+          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[13px] font-normal text-[var(--tinta3)]">se dejan de producir</small></b>}
           {estado && <span className="block text-[14px] text-[var(--tinta2)]">{estado}</span>}
         </span>
       </div>}

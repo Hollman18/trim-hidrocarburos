@@ -81,7 +81,7 @@ function ResumenCampo() {
       </div>
 
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        <Panel titulo="DIFERIDO MES A MES" extra="clic en un mes para verlo">
+        <Panel titulo="Diferido mes a mes" extra="clic en un mes para verlo">
           <MesAMes serie={serie} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
         </Panel>

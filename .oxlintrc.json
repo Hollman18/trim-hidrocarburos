@@ -427,6 +427,16 @@
                 "message": "Del motor (hoy) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/hoy.ts."
               },
               {
+                "name": "@/entities/equipos-tecnico",
+                "allowTypeImports": true,
+                "message": "Del motor (equipos-tecnico) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/equiposTecnico.ts."
+              },
+              {
+                "name": "@/entities/resultados",
+                "allowTypeImports": true,
+                "message": "Del motor (resultados) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/resultados.ts."
+              },
+              {
                 "name": "@/shared/api/diferidos",
                 "importNames": [
                   "pedirLibro",
@@ -559,6 +569,21 @@
                   "pedirHoy"
                 ],
                 "message": "Las pantallas no llaman la respuesta del demo (pedirHoy): con la fuente http eso saltaría al servidor. Se lee con useHoy (src/shared/api/hoy.ts)."
+              },
+              {
+                "name": "@/shared/api/equiposTecnico",
+                "importNames": [
+                  "pedirListaEquipos",
+                  "pedirNivelEquipo"
+                ],
+                "message": "Las pantallas no llaman la respuesta del demo (pedirListaEquipos, pedirNivelEquipo): con la fuente http eso saltaría al servidor. Se lee con useListaEquipos y useNivelEquipo (src/shared/api/equiposTecnico.ts)."
+              },
+              {
+                "name": "@/shared/api/resultados",
+                "importNames": [
+                  "pedirResultados"
+                ],
+                "message": "Las pantallas no llaman la respuesta del demo (pedirResultados): con la fuente http eso saltaría al servidor. Se lee con el gancho use* de src/shared/api/resultados.ts."
               }
             ],
             "patterns": [

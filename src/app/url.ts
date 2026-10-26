@@ -34,6 +34,16 @@ export const pantallaDeRuta = (tramo: string): string =>
 /** El tramo de la dirección de una pantalla: su `ruta`, o el id si no tiene. */
 export const rutaDe = (pantalla: string): string => PANTALLAS[pantalla]?.ruta ?? pantalla
 
+/** C5 · Las pantallas que se fundieron en otra (X4 §3.6 y §3.8): quien ya no las
+ *  tiene y tiene la nueva, llega a la nueva. El Resumen del gerente vive en La
+ *  planta viva (y en Resultados); sus Diferidos y su Producción, en Resultados;
+ *  Riesgo, en La planta viva (Durante y Antes; `#/ger/riesgo/…` → La planta viva).
+ *  Un enlace viejo («#/ger/diferidos/ceiba/cerrado») sigue abriendo. */
+export const FUSIONADA_EN: Readonly<Record<string, string>> = { resumen: 'plantaViva', diferidos: 'resultados', produccion: 'resultados', riesgo: 'plantaViva' }
+/** La pantalla que abre una dirección para un rol: ella misma, o aquella en que se fundió. */
+export const pantallaQueAbre = (rol: Pick<Rol, 'pantallas'>, p: string): string | undefined =>
+  pantallaDelRol(rol, p) ? p : Object.hasOwn(FUSIONADA_EN, p) && pantallaDelRol(rol, FUSIONADA_EN[p]!) ? FUSIONADA_EN[p] : undefined
+
 /** ¿Puede este rol abrir esta pantalla? Una regla para la dirección, el
  *  estado y la vista: la pantalla existe, es del producto (no de v2) y es del
  *  rol o de todos. */
@@ -65,8 +75,23 @@ export function rangoValido(a: string, b: string): { desde: string; hasta: strin
 /** Lo que se lee de la dirección: el contexto que se puede abrir y, aparte,
  *  el campo del registro que pedía y la persona no tiene (se dice: B-38). */
 export type DeLaDireccion = Partial<Contexto> & { campoAjeno?: string }
+
+/** C4 · Equipos: ¿este rol abre el nivel 3 técnico (una vista entera, no el panel
+ *  flotante)? Los roles técnicos que tienen Equipos; el gerente sigue con su ficha
+ *  ejecutiva en el panel (X4 §3.7, «Ficha del equipo»). */
+export const abreNivel3 = (rol: Pick<Rol, 'nivel' | 'pantallas'>) =>
+  rol.nivel !== 'decision' && rol.pantallas.includes('equipos') && pantallaVisible('equipos')
+/** C4 · El nivel 4 (diagnóstico) va en la dirección del equipo: «…/P-201B/diagnostico» (X4 §5.1). */
+export const DIAGNOSTICO = 'diagnostico'
+
 export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id => rolPorId(id).campos, rolActual?: string): DeLaDireccion => {
-  const [rolId, tramo, campoId, periodoId, equipo] = location.hash.replace(/^#\/?/, '').split('/')
+  const tramos = location.hash.replace(/^#\/?/, '').split('/')
+  const [rolId, tramo, campoId] = tramos
+  // C4 · Equipos va sin período (X4 §3.8): #/<rol>/equipos/<campo>[/<equipo>[/diagnostico]].
+  // Si trae un período en su lugar de siempre, también se lee.
+  const sinPeriodo = !!tramo && pantallaDeRuta(tramo) === 'equipos' && !!tramos[3] && !esIdPeriodo(tramos[3]) && !RANGO.test(tramos[3])
+  const periodoId = sinPeriodo ? undefined : tramos[3]
+  const [equipo, nivel4] = tramos.slice(sinPeriodo ? 3 : 4)
   const pantalla = tramo === undefined ? undefined : tramo && pantallaDeRuta(tramo)
   const ctx: DeLaDireccion = {}
   // Solo roles del producto: un enlace viejo a un rol de v2 (plan, cont, reg)
@@ -77,7 +102,7 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
   // «portafolio» ya no es pantalla; se deja pasar para que el estado lo
   // traduzca a alcance y las direcciones viejas sigan sirviendo.
   if (pantalla === 'portafolio') ctx.pantalla = 'portafolio'
-  else if (pantalla && pantallaDelRol(rol, pantalla)) ctx.pantalla = pantalla
+  else if (pantalla && pantallaQueAbre(rol, pantalla)) ctx.pantalla = pantallaQueAbre(rol, pantalla)
   // Una pantalla que el rol no tiene (o que ya no existe) lleva a su inicio,
   // igual al cargar que con la aplicación abierta.
   else if (pantalla) ctx.pantalla = rol.inicio
@@ -95,6 +120,13 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
   const rango = r ? rangoValido(r[1]!, r[2]!) : undefined
   if (rango) { ctx.rango = rango; ctx.periodoId = 'medida' }
   if (equipo) ctx.equipoAbierto = equipo
+  // C4 · Toda dirección con un equipo abre su nivel 3 a un rol técnico: la de antes
+  // (#/sup/bombas/ceiba/curso/P-201B) pasa a la nueva (#/sup/equipos/ceiba/P-201B), y
+  // «/diagnostico» abre su nivel 4. El gerente sigue abriendo su ficha en el panel.
+  if (equipo && ctx.pantalla && ctx.pantalla !== 'portafolio' && abreNivel3(rol)) {
+    ctx.pantalla = 'equipos'
+    if (nivel4 === DIAGNOSTICO) ctx.equipoAbierto = `${equipo}/${DIAGNOSTICO}`
+  }
   // Una dirección con un solo campo es ese campo: sin esto, un enlace
   // compartido dejaba la vista en el portafolio que se estaba mirando antes.
   if (location.hash.includes('~portafolio') || ctx.pantalla === 'portafolio') ctx.alcance = 'portafolio'
@@ -107,7 +139,8 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
  *  equipo, no. */
 export const escribirHash = (c: Contexto, nuevaEntrada = false) => {
   const periodo = c.rango ? `${c.rango.desde}_${c.rango.hasta}` : c.periodoId
-  const nuevo = `#/${c.rolId}/${rutaDe(c.pantalla)}/${c.campoId}${c.alcance === 'portafolio' ? '~portafolio' : ''}/${periodo}`
+  // C4 · Equipos es «ahora»: su dirección no lleva período (X4 §3.8).
+  const nuevo = `#/${c.rolId}/${rutaDe(c.pantalla)}/${c.campoId}${c.alcance === 'portafolio' ? '~portafolio' : ''}${c.pantalla === 'equipos' ? '' : `/${periodo}`}`
     + (c.equipoAbierto ? `/${c.equipoAbierto}` : '')
   if (location.hash === nuevo) return
   if (nuevaEntrada) history.pushState(null, '', nuevo)

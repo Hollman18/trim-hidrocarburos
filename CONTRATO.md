@@ -2410,3 +2410,147 @@ borra:
 
 Respuesta (`R_DESHACER`): `{ paradas: ParadaAnh[]; guardadas: Record<string, BorradorClasificacion> }`: las
 filas como quedaron y lo que se guardó por clave (los retiros), que el front copia a su sesión.
+
+## C4 · Equipos
+
+Bombas, Electrosumergibles, Pozos y Superficie se funden en **Equipos** (X4 §3.6): una lista de todos los
+equipos de los campos y, al abrir uno, su **nivel 3** técnico (X4 §5; la imagen 4 de `docs/experiencia-v2`).
+El servidor corre `listaEquipos` y `nivelEquipo` (`src/entities/equipos-tecnico.ts`) con la configuración
+firmada y su historial; en el demo responde el motor en el navegador. Todo es JSON puro (las horas en ISO
+con zona; las frases las arma el motor). Las pantallas leen `useListaEquipos` y `useNivelEquipo`
+(`src/shared/api/equiposTecnico.ts`).
+
+### `GET /api/vistas/lista-equipos?campos=`
+
+`VistaEquipos`: `filas` (una por equipo), `cuentas` (por filtro de estado, por tipo y por tren), `cambioHoy`
+(«Cambió hoy: …» de cada campo), `sinRegistro` (lo del esquema de planta sin equipo registrado) y `vigia`
+(«¿Le creo al vigía?»: aciertos, juzgadas, falsas alarmas, intervenidas y en seguimiento desde la puesta en
+marcha, con su frase).
+
+Cada fila (`FilaEquipoTecnico`) junta lo que ya calculan otras vistas, sin cifra nueva:
+
+| Campo | De dónde sale |
+|---|---|
+| `condicion` | la franja de condiciones (`/vistas/equipos-hoy` + `/vistas/riesgo`, `franjaDe`): una marca por equipo, la misma en todas partes |
+| `parado`, `vigila`, `cifra` | «Si falla hoy» (`/vistas/criticidad`): lo parado lleva lo que **se deja de producir** (bbl/d); lo demás, «si falla hoy» (bbl/d; `techo` = «hasta»; `null` = sin dato) |
+| `palabra` | el estado de hoy, la parada abierta («parada desde hoy, 03:52») o la fila de Riesgo («ya pasó el límite», «filtro de entrada · alarma en 5,2 d») |
+| `familia`, `tipo`, `tipos`, `tren` | el catálogo del campo: «bomba de agua», «electrosumergible» (también es pozo), «aire de instrumentos»; trenes `pozos`, `recoleccion`, `crudo`, `agua`, `gas`, `servicios` |
+| `filtros` | `parados`, `avisan` (en marcha con condición), `sin-instrumento` y siempre `todos` |
+
+**El orden:** por estado (la condición, de la más grave a ninguna; dentro de ella, lo parado primero) y,
+dentro de cada estado, por «Si falla hoy»: lo medido de mayor a menor, después los techos y al final lo que
+no tiene cifra (D6). Lo parado, por lo que ya deja de producir.
+
+### `GET /api/vistas/equipos/:campo/:equipo/tecnico`
+
+`VistaNivel3`, o `null` si el campo no tiene ese equipo. Las bombas del tren de agua sin instrumento
+(P-201A, P-201C) responden con lo que se sabe (`registrado: false`): sin cifra, sin señales, con su esquema.
+
+| Campo | Qué es |
+|---|---|
+| `previo`, `cifra` | «Alarma · parada desde hoy, 03:52 · hace 10,1 h»; lo que se deja de producir por él ahora, medido (en marcha, 0), con su frase («cerró LC-07 y LC-16») |
+| `bloqueo`, `pregunta` | «No arrancar hasta identificar qué se dañó» con una pregunta abierta y el equipo parado; `pregunta.sobre` dice si es la parte (bomba) o el porqué (pozo) |
+| `vecinos` | el anterior y el siguiente del mismo tren, en el orden de la planta |
+| `senales`, `plegadas`, `discretas` | cada señal numérica con `escala` fija, `banda` (`null` del lado abierto), `alarmas`, `limite` («normal > 10 · alarma 8»), la `serie` de la ventana y su `condicion` (solo con el equipo en marcha); `gris` con el equipo parado (X2 B9). Con más de 8, las que están en banda van en `plegadas`. Los interruptores, en `discretas` |
+| `sinDisparo` | el motor no trae el disparo de cada protección ni el rango del instrumento (X2 §7, pedido 4): no se dibujan y se dice |
+| `esquemaAgua`, `mientras` | el tanque, las bombas del tren (instrumentada o no, en marcha, parada o sin lectura), las burbujas PI/PDI/FI de la que se mira; con ella parada, lo que entra, lo que caben las demás y el orden de cierre si para otra (`/vistas/campos/:campo/agua`, `siParaOtra`) |
+| `tendencias` | las señales con tendencia real (pendiente mayor que dos errores estándar) en los días antes de parar —sin el día anterior, que ya trae la parada— o en la ventana si está en marcha; las que más cambiaron, como mucho tres; con el modo de falla registrado |
+| `historia`, `repuestos` | las fallas propias (bombas y electrosumergibles) o los eventos con pozos cerrados, cada cuánto, horas fuera, barriles por falla, por parte y las dos últimas; los repuestos críticos bajo su mínimo (con lo que viene en camino) |
+| `diagnostico` | hay nivel 4: salud por parte, vigía, paradas del PLC, instrumentos con su cadena, historia del PLC y SAP (las vistas de siempre) |
+
+**La escala fija** (X2 §5.1, punto 1): del rango declarado del instrumento cuando el motor lo tenga; hasta
+entonces, de cero (o del límite menor menos un margen) al mayor entre los límites y las lecturas de la
+ventana, más 20 %; en porcentaje, de 0 a 100. No depende del valor de ahora ni del orden de las lecturas.
+
+### La dirección
+
+`#/<rol>/equipos/<campo>[/<equipo>[/diagnostico]]`, sin período (X4 §3.8). Toda dirección de antes con un
+equipo abre su nivel 3 a un rol técnico (`#/sup/bombas/ceiba/curso/P-201B` → `#/sup/equipos/ceiba/P-201B`);
+el gerente sigue abriendo la ficha ejecutiva en el panel. Es del front (`src/app/url.ts`): el backend no la ve.
+
+## C5 · Resultados
+
+`GET /api/vistas/resultados?rol&campos&desde&hasta` (`RESULTADOS` en `contrato.ts`; motor
+`src/entities/resultados.ts`; costura `src/shared/api/resultados.ts`). El inicio de la puerta Resultados
+(X4 §4.8): «¿Está bajando?». Lo que pasó en el período, para un rol, en una sola lectura.
+
+- `rol`: el de la persona (con sesión, el del token; un `rol` que no es el suyo es 403). Decide qué partes
+  van y en qué orden (`secciones`); las cifras son las mismas para todos.
+- `desde` y `hasta`: **el período vive aquí** (X4 §3.1, regla 8). Las pantallas de «ahora» no lo llevan.
+- El servidor la calcula con la configuración firmada, su historial y lo que dijeron las personas en la
+  clasificación, como `/vistas/planta-viva`. No calcula nada nuevo: junta la planta viva del momento
+  «después» (el diferido, su rango y su nota, la producción por día, los 13 meses, por equipo, «¿está
+  bajando?» por tramo, lo que se puede mover), el `libro` (meta, cierre, por campo, publicación), lo perdido
+  por tramo de cada mes (`repartoPorMes`), el estado de cada campo ahora (el cierre proyectado), las órdenes
+  de SAP (`horasPorClase`, el mantenimiento proactivo) y, para jefe, confiabilidad y planeación, los tres
+  relojes y el registro del vigía (los de `/vistas/relojes` y `/vistas/predicciones`).
+- D7: menos de 300 ms (todos los campos, 15 ms con lo de la planta viva ya calculado); el motor la guarda por
+  contexto, historial, guardadas, rol, campos y período.
+
+**Cuadres que no se rompen** (los prueban `verificar-libro.mjs` y `verificar-contrato.mjs`, sección C5):
+- **La cifra grande** (`cifra.valor`) = el `diferido` de `/vistas/diferidos` del período = `cifras.despues.valor`
+  y `esteMes.bbl` de `/vistas/planta-viva` (La Ceiba, octubre: 1.046 bbl), contra `cifra.maximo` = la
+  `meta.diferido` del libro (lo que va del período: 1.267). Calculada, nunca simulada.
+- **Lo simulado nunca es la cifra grande** (X4 §3.1, regla 7): `ciclo` es `/vistas/ciclo` (`antes`, `durante`,
+  `despues` y su suma, 2.133 en La Ceiba), con «simulado» en cada `momentos[].texto`.
+- **Mes a mes:** `mesAMes.meses` son los de La planta viva; en cada uno, Σ `porTramo` = `totalBpd` (lo de
+  `/vistas/choke/mensual`, en bbl/d con los días del libro del mes). `desdeDia` y `hastaDia` abren el mes como período.
+- **Cierre proyectado** (mes en curso): lo que va + (`potencialBpd` − `perdiendoBpd`) de `/vistas/estado` por
+  los días que faltan; el diferido, lo que va + `perdiendoBpd` por los días que faltan. Mes cerrado: el total.
+- **Por equipo:** el Pareto del libro (hasta seis), con la marca de hoy de `/vistas/riesgo`.
+
+**Un nombre, una cifra** (X4 §1.3.3; pedido 3 de §4.11). `NOMBRE_CIFRA` y `cifrasDeUnNombre` (motor) son la
+única definición; la costura la lee de `/vistas/riesgo` y `/vistas/estado`, sin endpoint nuevo:
+
+| Rótulo | Qué es | La Ceiba / todos [demo] |
+|---|---|---|
+| «Se deja de producir ahora» | el total de los campos (Σ `perdiendoBpd`), todas las causas | 1.966 / 2.650 bbl/d |
+| «por bombas paradas» | lo de las bombas de la línea (reinyección y multifásicas) | 1.665 |
+| «Lo que dan los pozos» | según sus pruebas (la tubería, el tramo de los pozos) | 11.857 bbl/d |
+| «Potencial del libro» | las pruebas × el factor de asignación del mes | 11.360 bbl/d |
+| «Equipos que avisan» | Antes: el conteo de los `en-riesgo`, uno por equipo | 1 / 8 |
+| «Exposición si fallan hoy» | Σ `costoFalla` de los que avisan (estimado) | 45.262 bbl (todos) |
+| «Retorno posible del ciclo» | Antes + Durante + Después, **simulado**: solo en Resultados | 45.233 bbl (todos) |
+
+```ts
+type Seccion = 'produccion' | 'bajando' | 'mesAMes' | 'porEquipo' | 'porCampo' | 'publicar'
+  | 'mantenimiento' | 'confiabilidad' | 'dondeSeTrabo' | 'dondeBajarlo' | 'tipos' | 'diaADia' | 'ciclo'
+interface VistaResultados {
+  rol: string; campos: string[]; alcance: 'campo' | 'portafolio'
+  desde: Date; hasta: Date; ahora: Date                      // ISO con zona
+  periodo: string; enCurso: boolean                           // «octubre, en curso»
+  secciones: Seccion[]                                        // lo que ve el rol, en su orden
+  cifra: { previo: string; valor: number; unidad: string; frase: string; explica: string; fraseCorta: string
+    maximo: number | null; sobreMaximo: boolean; rango: [number, number]; valorUsd: number | null; sinPrecio: string[]
+    primerEquipo: { campoId: string; equipo: string } | null }
+  publicar: { estado: 'publicable' | 'provisional' | 'bloqueado'; texto: string; motivos: string[] }
+  produccion: { realBpd: number; metaBpd: number | null; bajoMeta: boolean; diferidoBpd: number; maximoBpd: number | null
+    sobreMaximo: boolean; sinMeta: string | null; totales: { titulo: string; texto: string }
+    cierre: { titulo: string; proyectado: boolean; produccion: number; metaProduccion: number | null; bajoMeta: boolean
+      diferido: number; maximoDiferido: number | null; sobreMaximo: boolean; explica: string } }
+  bajando: null | { desde: Date; base: string; nota: string
+    filas: Array<{ tramo: ChokeAnh; nombre: string; antesBpd: number; ahoraBpd: number; cambio: number | null; texto: string }>
+    altoImpacto: { antesBpd: number; ahoraBpd: number; cambio: number | null; texto: string } }
+  proactivo: { porcentaje: number | null; proactivoH: number; correctivoH: number; texto: string }
+  mesAMes: { meses: Array<MesDiferido & { enPeriodo: boolean; desdeDia: string; hastaDia: string
+    porTramo: Record<ChokeAnh | 'sin-asignar', number> }>; actualBpd: number | null; nombreActual: string; maximoBpd: number | null; aria: string }
+  porEquipo: { filas: Array<FilaEquipoDiferido & { campo: string }>; total: number }
+  ciclo: { totalBbl: number; momentos: Array<{ momento: Momento; nombre: string; lema: string; bbl: number; texto: string
+    plan: { campoId: string; equipo: string } | null }> }
+  mantenimiento: null | { frase: string; fallas: number; totalH: number | null; activaH: number | null; esperaH: number | null
+    programadoBbl: number; noProgramadoBbl: number; altoImpactoBbl: number }
+  confiabilidad: null | { frase: string; aciertos: number; falsas: number; intervenidas: number; seguimiento: number
+    tasa: number | null; anticipoDias: number | null; anunciadas: number; vigiladas: number }
+  perdida: string                                             // la pérdida va aparte y nunca se suma
+}
+```
+
+**Qué ve cada rol** (`secciones`): el gerente, `produccion · bajando · mesAMes · porEquipo · (porCampo con
+varios campos | dondeSeTrabo con uno) · dondeBajarlo · tipos · diaADia · ciclo` (lo que eran su Resumen, sus
+Diferidos y su Producción, X4 §3.6); producción, con «¿Se puede publicar?» después de la producción;
+jefe y planeación, `mantenimiento` primero; confiabilidad, `confiabilidad` primero; regulatorio,
+`publicar · produccion · mesAMes · porEquipo`, sin nada simulado. `mantenimiento` y `confiabilidad` son
+`null` en los roles que no los ven.
+
+**Las direcciones** (`src/app/url.ts`, `FUSIONADA_EN`; del front): `#/ger/resumen/…` abre La planta viva, y
+`#/ger/diferidos/…` y `#/ger/produccion/…`, Resultados con el mismo campo y período.

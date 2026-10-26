@@ -8,6 +8,7 @@ import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
 import { alFinal } from '@/shared/ui/alFinal'
+import { useAnchoDibujo } from '@/widgets/resultados/ancho'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
@@ -40,7 +41,9 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
   const vueltas = s.vueltas[campoId] ?? 0
 
   // El dibujo: la franja de lo que limitó y, debajo, lo perdido por día.
-  const W = 720, G = { x0: 44, x1: 712 }, FRANJA = { y0: 8, y1: 40 }, BARRAS = { y0: 54, y1: 150 }
+  // C5 · Se dibuja al ancho de verdad (una unidad = un px): sus rótulos no bajan de 12 px (X3 §5.5).
+  const [medir, W] = useAnchoDibujo(540, 720)
+  const G = { x0: 48, x1: W - 8 }, FRANJA = { y0: 8, y1: 40 }, BARRAS = { y0: 54, y1: 150 }
   const paso = dias.length ? (G.x1 - G.x0) / dias.length : 0
   const tope = Math.max(1, ...dias.map(d => Object.values(d.porChoke).reduce((a, v) => a + Math.max(0, v), 0)))
   const Y = (v: number) => BARRAS.y1 - (v / tope) * (BARRAS.y1 - BARRAS.y0)
@@ -64,7 +67,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
     : 'Sin avisos: lo que limita no cambió de forma sostenida en el período.'
 
   return (
-    <Panel className="mb-2.5" titulo="QUÉ LIMITÓ, DÍA POR DÍA" extra={periodo.toLowerCase()}>
+    <Panel className="mb-2.5" titulo="Qué limitó, día por día" extra={periodo.toLowerCase()}>
       <div data-serie>
         {/* El aviso: no pide nada urgente; va en gris, con su campana y su texto. */}
         <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1 text-[14px]" data-aviso={s.cambios.length ? 'cambio' : 'sin-cambios'}>
@@ -88,13 +91,13 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
 
         {dias.length > 0 && <Semanas dias={dias} campoId={campoId} />}
         {dias.length > 0 && (
-          <div ref={alFinal} className="hidden overflow-x-auto md:block print:block">
-            <svg ref={dibujo} viewBox={`0 0 ${W} 178`} className="block h-auto w-full min-w-[540px]" role="group"
+          <div ref={medir} className="hidden md:block print:block"><div ref={alFinal} className="overflow-x-auto">
+            <svg ref={dibujo} width={W} height={178} viewBox={`0 0 ${W} 178`} className="block" role="group"
               aria-label={`Qué limitó cada día en ${nombre}, ${dias.length === 1 ? 'un día' : `${dias.length} días`}: ${tramos.length ? lista(tramos.map(k => SUJETO[k])) : 'sin dato'}. Debajo, lo que se perdió cada día por tramo. Con las flechas se pasa de un día a otro.`}>
               <defs><PatronesTramo id={id} /></defs>
-              <text x={G.x0 - 6} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3} fontSize={11} textAnchor="end" fill="var(--tinta3)">limitó</text>
-              <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={11} textAnchor="end" fill="var(--tinta3)" className="tabular">{n0(tope)}</text>
-              <text x={G.x0 - 6} y={BARRAS.y1} fontSize={11} textAnchor="end" fill="var(--tinta3)">0</text>
+              <text x={G.x0 - 6} y={(FRANJA.y0 + FRANJA.y1) / 2 + 4} fontSize={12} textAnchor="end" fill="var(--tinta3)">limitó</text>
+              <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={12} textAnchor="end" fill="var(--tinta3)" className="tabular">{n0(tope)}</text>
+              <text x={G.x0 - 6} y={BARRAS.y1} fontSize={12} textAnchor="end" fill="var(--tinta3)">0</text>
               <line x1={G.x0} x2={G.x1} y1={BARRAS.y1} y2={BARRAS.y1} stroke="var(--linea)" />
               {dias.map((d, i) => {
                 const x = G.x0 + paso * i
@@ -127,7 +130,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                     {k && conTexto && (
                       <g>
                         <rect x={x + paso / 2 - 9} y={(FRANJA.y0 + FRANJA.y1) / 2 - 7} width={18} height={13} rx={2} fill="var(--panel)" />
-                        <text x={x + paso / 2} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3.5} fontSize={11.5} textAnchor="middle" fill="var(--tinta)" className="font-cond">
+                        <text x={x + paso / 2} y={(FRANJA.y0 + FRANJA.y1) / 2 + 3.5} fontSize={12} textAnchor="middle" fill="var(--tinta)" className="font-cond">
                           {otro ? `${ABREV[k]}·${ABREV[otro]}` : ABREV[k]}
                         </text>
                       </g>
@@ -146,14 +149,14 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                     })()}
                     {/* Las marcas regulares le ceden el sitio a la del último día, que va pegada al borde. */}
                     {(i === dias.length - 1 || (i % cada === 0 && dias.length - 1 - i >= Math.ceil(cada * 0.8))) && (
-                      <text x={i === dias.length - 1 && dias.length > 1 ? x + paso : x + paso / 2} y={BARRAS.y1 + 13} fontSize={11.5}
+                      <text x={i === dias.length - 1 && dias.length > 1 ? x + paso : x + paso / 2} y={BARRAS.y1 + 15} fontSize={12}
                         textAnchor={i === dias.length - 1 && dias.length > 1 ? 'end' : 'middle'} fill="var(--tinta2)">{fechaCorta(d.dia)}</text>
                     )}
                   </Tip>
                 )
               })}
             </svg>
-          </div>
+          </div></div>
         )}
         <div className="hidden md:block print:block"><Leyenda /></div>
         <Lectura>
@@ -192,7 +195,7 @@ function Semanas({ dias, campoId }: { dias: DiaChoke[]; campoId: string }) {
       <ul className="text-[14px]" aria-label="Qué limitó, semana por semana">
         {lista.visibles.map(([k, ds]) => (
           <li key={k} className="border-b border-[var(--linea2)] py-1.5 last:border-0">
-            <b className="font-cond block text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEMANA DEL {fechaCorta(new Date(k)).toUpperCase()}</b>
+            <b className="block text-[15px] font-semibold text-[var(--tinta)]">Semana del {fechaCorta(new Date(k))}</b>
             <span>{texto(ds)}</span>
           </li>
         ))}

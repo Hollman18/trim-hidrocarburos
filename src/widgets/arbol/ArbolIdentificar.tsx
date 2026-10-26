@@ -15,7 +15,7 @@ import { TarjetaParada } from './Tarjeta'
 import { agrupar, type Grupo } from './grupos'
 import { ESTADO, SECCION, ORDEN_SECCIONES, INFO_METODO, cuantasParadas, paradasYFilas, lista } from './palabras'
 
-const TITULO = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+const TITULO = 'text-[15px] font-semibold text-[var(--tinta)]'
 
 /** Identificar · la cadena de 6 pasos de cada parada para la ANH (U1 §2; U2
  *  §4 y §9.3), en el orden de la circular: quién → ¿dónde se trabó? → qué
@@ -73,7 +73,7 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
     const suyas = grupos.filter(g => g.estado !== 'confirmada' && !esperaElLibro(g) && (lePreguntan(g) || leFaltaAvalar(g)))
     const deducidas = grupos.filter(g => g.estado !== 'confirmada' && !esperaElLibro(g) && !suyas.includes(g))
     return (
-      <Panel className="mb-2.5" titulo="POR CONTESTAR"
+      <Panel className="mb-2.5" titulo="Por contestar"
         extra={<>{plural(cuantasParadas(suyas.flatMap(g => g.filas)) + nAntes, 'parada', 'paradas')}<span className="sr-only"> por contestar en {periodo}</span></>}>
         <p className="mb-2 text-[14px] font-semibold text-[var(--tinta)]">Conteste aquí, una pregunta a la vez. Lo técnico lo revisa su supervisor.</p>
         {avisoVista}
@@ -89,7 +89,7 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
 
   const resumen = ORDEN_SECCIONES.filter(e => filasDe(e).length > 0).map(e => `${ESTADO[e]} ${cuantasParadas(filasDe(e))}`).join(' · ')
   return (
-    <Panel className="mb-2.5" titulo="LA CADENA DE CADA PARADA · ÁRBOL DE CAUSAS"
+    <Panel className="mb-2.5" titulo="La cadena de cada parada · árbol de causas"
       extra={<>{paradasYFilas(ps)}<span className="sr-only"> del árbol de causas en {periodo}</span></>}>
       <Lectura>
         Cada parada se clasifica en 6 pasos, el mismo árbol de la Circular 024 de la ANH: quién, dónde
@@ -105,7 +105,7 @@ export function ArbolIdentificar({ campos, desde, hasta, global, periodo, antes,
       </p>
       {avisoVista}
       {ps.length === 0 && <Hueco>Ninguna parada de pozo en {periodo}: no hay nada que reportar.</Hueco>}
-      <Seccion titulo="REVISAR" clave="revisar" grupos={aRevisar} global={global} raizDe={raizDe} onHecho={setAviso} />
+      <Seccion titulo="Revisar" clave="revisar" grupos={aRevisar} global={global} raizDe={raizDe} onHecho={setAviso} />
       {ORDEN_SECCIONES.map(e => <Seccion key={e} titulo={SECCION[e]} clave={e} plegada={e === 'confirmada'} grupos={por(e)} global={global} raizDe={raizDe} onHecho={setAviso} />)}
     </Panel>
   )

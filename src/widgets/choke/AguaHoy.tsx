@@ -31,18 +31,18 @@ export function AguaHoy({ campoId, bomba, className }: { campoId: string; bomba:
   // Para quien opera, las frases del colchón; la del empate de las capacidades es de ingeniería (está en Agua).
   const frases = a.frases.filter(f => !/exactamente lo mismo|casi iguales/.test(f))
   const veAgua = rol.pantallas.includes('agua') && pantallaVisible('agua')
-  const rotulo = 'font-cond w-[64px] shrink-0 text-[12px] font-semibold tracking-[.08em] text-[var(--tinta3)]'
+  const rotulo = 'w-[64px] shrink-0 text-[14px] font-semibold text-[var(--tinta2)]'
   return (
     <section aria-label="La tubería del agua, hoy" data-agua-hoy={campoId}
       className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[14px] shadow-[var(--sombra)]', className)}>
-      <h3 className="font-cond mb-1.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LA TUBERÍA DEL AGUA, HOY</h3>
+      <h3 className="mb-1.5 text-[15px] font-semibold text-[var(--tinta)]">La tubería del agua, hoy</h3>
       {o && (
         <div className="grid gap-0.5" data-hoy-agua>
-          <p className="flex items-baseline gap-2"><span className={rotulo}>ENTRA</span><b className="tabular">{n0(o.entraBpd)}</b><small className="text-[var(--tinta3)]">bbl/d de agua</small></p>
-          <p className="flex flex-wrap items-baseline gap-x-2"><span className={rotulo}>CABEN</span><b className="tabular">{n0(o.cabenBpd)}</b><small className="text-[var(--tinta3)]">({o.enMarcha.join(' + ')})</small></p>
+          <p className="flex items-baseline gap-2"><span className={rotulo}>Entra</span><b className="tabular">{n0(o.entraBpd)}</b><small className="text-[var(--tinta3)]">bbl/d de agua</small></p>
+          <p className="flex flex-wrap items-baseline gap-x-2"><span className={rotulo}>Caben</span><b className="tabular">{n0(o.cabenBpd)}</b><small className="text-[var(--tinta3)]">({o.enMarcha.join(' + ')})</small></p>
           {tk && tk.nivelPct !== undefined && (
             <div className="flex flex-wrap items-center gap-x-2">
-              <span className={rotulo}>TANQUE</span>
+              <span className={rotulo}>Tanque</span>
               <b className="tabular">{n1(tk.nivelPct)} %</b>
               <span aria-hidden className="relative inline-block h-2.5 w-28 overflow-hidden rounded-sm border border-[var(--tinta3)] bg-[var(--panel2)]">
                 <i className="absolute inset-y-0 left-0 block bg-[var(--dato-3)]" style={{ width: `${Math.min(100, tk.nivelPct)}%` }} />

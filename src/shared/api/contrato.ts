@@ -700,3 +700,40 @@ export const HOY = get<ConsultaHoy>()('/vistas/hoy', tal<import('@/entities/hoy'
 export interface CuerpoDeshacerAnh { ids: string[]; n: number[] }
 /** `POST /anh/paradas/deshacer` → las filas como quedaron y lo que se guardó, por clave (los retiros). */
 export const R_DESHACER = obj<{ paradas: ParadaAnh[]; guardadas: Record<string, BorradorClasificacion> }>()({ paradas: lista(paradaAnh), guardadas: dic(borradorAnh) })
+
+/* ───────────────────── C5 · Resultados ───────────────────── */
+// C5 · Resultados (X4 §4.8): lo que pasó en el período y si está bajando, para un
+// rol. Las fechas que viajan son cuatro: el período, la hora de los datos y el
+// «desde que entró TRIM». Lo demás es JSON puro: las frases las arma el motor y
+// las cifras van sin redondear; los días de cada mes van como texto («2026-10-01»).
+import type { VistaResultados, ConsultaResultados } from '@/entities/resultados'
+
+const vistaResultados = obj<VistaResultados>()({
+  desde: fecha, hasta: fecha, ahora: fecha,
+  bajando: nulo(obj<NonNullable<VistaResultados['bajando']>>()({ desde: fecha })),
+})
+/** Resultados de un rol en unos campos y un período: la cifra grande (el diferido
+ *  contra el máximo firmado), ¿se puede publicar?, la producción contra la meta y
+ *  el cierre, «¿está bajando?» por tramo y de alto impacto, el mantenimiento
+ *  proactivo, el mes a mes con su parte por tramo, por equipo, por campo, el ciclo
+ *  (simulado, por momento) y, según el rol, mantenimiento y confiabilidad. Cuadres:
+ *  la cifra = el diferido de `/vistas/diferidos` = «Después» de `/vistas/planta-viva`;
+ *  cada mes, Σ por tramo = su diferido por día. */
+export const RESULTADOS = get<ConsultaResultados>()('/vistas/resultados', vistaResultados)
+
+/* ───────────────────── C4 · Equipos ───────────────────── */
+// C4 · Equipos y nivel técnico (X4 §3.6, §3.7 y §5): la lista de todos los equipos
+// de los campos (bombas, electrosumergibles, pozos y servicios), en su orden y con
+// sus filtros, y el nivel 3 de un equipo (la imagen 4). Todo es JSON puro: las horas
+// van en ISO con zona y las frases las arma el motor (entities/equipos-tecnico.ts).
+
+/** La lista de Equipos: cada equipo con su marca (la de la franja), su familia, la
+ *  palabra de su condición, su cifra («se deja de producir» o «si falla hoy»), «¿Lo
+ *  vigila TRIM?» y los filtros donde entra; las cuentas de cada filtro, «Cambió hoy»,
+ *  lo del esquema sin equipo registrado y el acierto del vigía. */
+export const LISTA_EQUIPOS = get<PorCampos>()('/vistas/lista-equipos', tal<import('@/entities/equipos-tecnico').VistaEquipos>())
+/** El nivel 3 de un equipo: la cifra y su frase, el bloqueo, sus señales con escala
+ *  fija, banda y alarma, el esquema de su tren de agua, «Mientras esté parada», los
+ *  días antes de parar, su historia, los repuestos que faltan y sus vecinos del tren.
+ *  `null`: el campo no tiene ese equipo. */
+export const NIVEL_EQUIPO = get<PorEquipo>()('/vistas/equipos/:campo/:equipo/tecnico', oNada(tal<import('@/entities/equipos-tecnico').VistaNivel3>()))

@@ -106,7 +106,7 @@ test('Identificar · operador: lo que pregunta va primero; los indicadores, pleg
 test('Producción: la tubería dice lo de hoy, la escalera se llama por tipo y la lista de campos dice lo que no se produjo (B-14, B-15, B-26, B-28, B-36, B-45, B-09)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/prod/produccion/ceiba/curso')
-  await f.esperarTexto('LA TUBERÍA DEL CAMPO')
+  await f.esperarTexto('La tubería del campo')
   // B-14: con P-201B parada, la frase de hoy y una raya discontinua dentro de la planta, en los dos dibujos.
   await expect(page.locator('main [data-frase-hoy]').first()).toContainText(/^Hoy, con P-201B parada, el agua de la planta deja pasar/)
   f.ok(await page.locator('main [data-hoy-linea]').count() === 2, 'la raya de lo que pasa hoy va dentro de la planta en el dibujo acostado y en el de pie')
@@ -138,7 +138,7 @@ test('Producción: la tubería dice lo de hoy, la escalera se llama por tipo y l
   f.ok(!INTERNAS.test(conInfo), `los ⓘ de Producción no dicen palabras internas (${conInfo.match(INTERNAS)?.[0] ?? 'ninguna'})`)
   // B-26: la escalera se llama por tipo; B-09: una sola leyenda para la franja y las barras.
   const t = await f.texto()
-  f.ok(t.includes('LO QUE NO SE PRODUJO, POR TIPO') && !t.includes('POR ESCALÓN'), 'la escalera: «LO QUE NO SE PRODUJO, POR TIPO»')
+  f.ok(t.includes('Lo que no se produjo, por tipo') && !t.includes('Por escalón'), 'la escalera: «LO QUE NO SE PRODUJO, POR TIPO»')
   await expect(page.locator('main [data-leyenda-serie]')).toHaveCount(1)
   // B-15: la lectura dice «relleno» y «vacío», no «oscuro» (en el tema oscuro sería al revés).
   await page.getByRole('button', { name: /cómo se lee/i }).first().click()
@@ -146,7 +146,7 @@ test('Producción: la tubería dice lo de hoy, la escalera se llama por tipo y l
   f.ok(!(await f.texto()).includes('lo oscuro es lo que pasa ahora'), 'sin «lo oscuro es lo que pasa ahora»')
   // B-45: con todos los campos, cada fila dice los barriles que no se produjeron.
   await f.ir('#/prod/produccion/ceiba~portafolio/curso')
-  await f.esperarTexto('LA TUBERÍA DE CADA CAMPO')
+  await f.esperarTexto('La tubería de cada campo')
   f.ok(await page.locator('main [data-no-se-produjeron]').count() >= 2 && !(await f.texto()).includes('se trabaron'), '«bbl no se produjeron», no «se trabaron»')
   f.cerrar()
 })
@@ -160,34 +160,36 @@ test('Bombas y agua: las dos sin instrumento salen en la lista, con su ficha, y 
   f.ok((await sin.locator('[data-bomba-sin-instrumento]').evaluateAll(es => es.map(e => e.getAttribute('data-bomba-sin-instrumento')))).join() === 'P-201A,P-201C',
     'las dos hermanas de P-201B sin instrumento')
   await expect(sin.locator('[data-bomba-sin-instrumento="P-201A"]')).toContainText(/Si falla hoy: [\d.]+ bbl\/d después de \d+ min de colchón/)
+  // C4: la ficha de un equipo, para un rol técnico, es su nivel 3 (una vista entera): P-201A, sin instrumento,
+  // dice lo que se sabe y lo que pasa hoy con el agua mientras P-201B esté parada.
   await sin.locator('[data-bomba-sin-instrumento="P-201A"]').getByRole('button', { name: 'Abrir' }).click()
-  const minima = page.locator('[data-ficha-minima]')
-  await expect(minima).toContainText('Sin instrumento')
-  await expect(minima).toContainText('LA TUBERÍA DEL AGUA, HOY')
-  await page.keyboard.press('Escape')
-  // B-01 y B-17: la ficha de P-201B dice lo que pasa hoy con el agua y qué cerrar si para otra.
+  const minima = page.locator('main [data-nivel3="P-201A"]')
+  await expect(minima).toContainText('sin instrumento')
+  await expect(minima.locator('[data-mientras]')).toContainText('Mientras P-201B esté parada')
+  await page.goBack()
+  // B-01 y B-17: el nivel 3 de P-201B dice lo que pasa hoy con el agua y qué cerrar si para otra.
   await page.locator('main article', { hasText: 'P-201B' }).locator('button[aria-label^="Abrir el detalle de"]').first().click()
-  const hoy = page.locator('main [data-agua-hoy]')
-  await expect(hoy).toContainText('LA TUBERÍA DEL AGUA, HOY')
+  const hoy = page.locator('main [data-nivel3="P-201B"] [data-mientras]')
+  await expect(hoy).toContainText('Mientras esté parada')
   await expect(hoy).toContainText('El nivel no sube: P-201A y P-201C toman lo que entra.')
   await expect(hoy.locator('[data-orden-si-para-otra]')).toContainText(/Si para otra bomba ahora, cierre primero los más acuatosos/)
   // B-44: en el agua, «sin instrumento» tiene su forma (no la de «sin comunicación») y su palabra.
   await f.ir('#/prod/agua/ceiba/curso')
-  await f.esperarTexto('LA TUBERÍA DEL AGUA')
+  await f.esperarTexto('La tubería del agua')
   const marcas = await page.locator('[data-tuberia-agua] [data-bomba]').allInnerTexts()
   f.ok(marcas.filter(x => x.includes('┄ sin instrumento')).length === 2, `«┄ sin instrumento» en P-201A y P-201C (${marcas.length} bombas)`)
   // B-37: la ficha del equipo, para ingeniería, dice cuánto vale hoy y dónde se trabaría; P-201A, sin instrumento, también tiene la suya.
   await f.ir('#/jefe/riesgo/ceiba/curso/K-101')
   await expect(page.locator('[data-si-falla-ficha="K-101"]')).toContainText(/Si falla hoy: hasta [\d.]+ bbl\/d .* · se trabaría en la planta \(18 pozos\)/)
   await f.ir('#/jefe/riesgo/ceiba/curso/P-201A')
-  await expect(page.locator('[data-ficha-minima] [data-si-falla-ficha="P-201A"]')).toContainText(/puesto 1 de lo que más cuesta/)
+  await expect(page.locator('main [data-nivel3="P-201A"] [data-si-falla-ficha="P-201A"]')).toContainText(/puesto 1 de lo que más cuesta/)
   f.cerrar()
 })
 
 test('Riesgo y mantenimiento: «ya pasó el límite», la marca en su columna, el campo de gas y «No programado (libro)» (B-18, B-40, B-42, B-43, D4)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/jefe/riesgo/ceiba/curso')
-  await f.esperarTexto('SI FALLA HOY')
+  await f.esperarTexto('Si falla hoy')
   const t = await f.texto()
   // B-42: K-101 está en marcha: «ya pasó el límite», no «ya fuera».
   f.ok(t.includes('ya pasó el límite') && !t.includes('ya fuera'), '«ya pasó el límite» en lugar de «ya fuera»')
@@ -197,10 +199,11 @@ test('Riesgo y mantenimiento: «ya pasó el límite», la marca en su columna, e
     return { puesto: celdas[0]?.querySelectorAll('svg[role=img]').length ?? 0, texto: e.textContent ?? '' }
   }))
   f.ok(puestos.length > 0 && puestos.every(p => p.puesto === 0), 'ninguna marca de alarma pegada al puesto')
-  // B-40: la cifra de «Durante» es un total: sin marca; la marca va con P-201B, que lo causa.
-  const durante = page.locator('main span').filter({ has: page.getByText('2 · Durante', { exact: true }) }).first()
-  f.ok(await durante.locator('b svg[role=img]').count() === 0 && /P-201B/.test(await durante.innerText()) && await durante.locator('small svg[role=img]').count() === 1,
-    'el total de «Durante» sin marca; la marca, al lado de P-201B')
+  // B-40: lo que se deja de producir ahora es un total: sin marca; la marca va con P-201B, que lo causa (C5: sin «2 · Durante»).
+  const durante = page.locator('main [data-se-deja-de-producir]').first()
+  f.ok(await durante.locator('b svg[role=img]').count() === 0 && /P-201B/.test(await durante.innerText()) && await durante.locator('small svg[role=img]').count() === 1
+      && /^Se deja de producir ahora/.test(await durante.innerText()) && !(await f.texto()).includes('2 · Durante'),
+    'el total («Se deja de producir ahora») sin marca; la marca, al lado de P-201B')
   // B-18: un campo de gas lo dice en una frase, sin una lista de ceros.
   await f.ir('#/jefe/riesgo/zarza/curso')
   await expect(page.locator('main [data-campo-de-gas]')).toHaveText('La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.')
@@ -210,9 +213,10 @@ test('Riesgo y mantenimiento: «ya pasó el límite», la marca en su columna, e
   await expect(page.getByRole('tooltip')).toContainText('No programado (libro)')
   // B-40: los totales no llevan marca de prioridad: la marca va en el equipo que los causa.
   await f.ir('#/sup/turno/ceiba/curso')
-  await f.esperarTexto('perdiéndose ahora')
+  // C5 · Un nombre, una cifra (X4 §1.3.3): el total se llama «se deja de producir ahora».
+  await f.esperarTexto('se deja de producir ahora')
   const marcas = await page.locator('main').evaluate(m => {
-    const total = [...m.querySelectorAll('span')].find(e => /perdiéndose ahora/.test(e.textContent ?? '') && (e.textContent ?? '').length < 120)
+    const total = [...m.querySelectorAll('span')].find(e => /se deja de producir ahora/.test(e.textContent ?? '') && (e.textContent ?? '').length < 120)
     return total ? [...total.querySelectorAll('svg[role=img]')].map(s => (s.parentElement?.textContent ?? '').trim()) : null
   })
   f.ok(!!marcas && marcas.length > 0 && marcas.every(x => /P-201B/.test(x)), `la marca va con el equipo que lo causa, no con el total (${JSON.stringify(marcas)})`)
@@ -226,15 +230,16 @@ test('Riesgo y mantenimiento: «ya pasó el límite», la marca en su columna, e
 
 test('Gerente: la misma base escrita igual, el papel con los planes desplegados y «Nada se trabó» sin leyenda (B-39, B-50, B-51, B-08)', async ({ flujo: f }) => {
   const { page } = f
-  await f.abrir('/#/ger/resumen/ceiba/curso')
-  await f.esperarTexto('DÓNDE SE TRABÓ')
-  // B-50: la base de comparación, escrita igual en los dos renglones.
+  // C5: el Resumen del gerente se fundió en Resultados (X4 §3.6).
+  await f.abrir('/#/ger/resultados/ceiba/curso')
+  await f.esperarTexto('Dónde se trabó')
+  // B-50: la base de comparación, escrita igual: una sola vez, en «¿Está bajando?», con lo de alto impacto debajo.
   const t = await f.texto()
-  const bases = t.match(/\(jun a ago → con TRIM, desde el 1 de sept\)/g) ?? []
-  f.ok(bases.length >= 2, `«(jun a ago → con TRIM, desde el 1 de sept)» en la tendencia y en lo no planeado (${bases.length})`)
-  // B-29: el ⓘ del retorno ya no dice «LLM»: «Esta cifra la calcula TRIM con reglas fijas».
+  const bases = t.match(/1 de sept, frente a jun a ago/g) ?? []
+  f.ok(bases.length === 1 && /Lo de alto impacto[^\n]*: [\d.]+ → [\d.]+ bbl\/d/.test(t), `«1 de sept, frente a jun a ago», una vez, con lo de alto impacto debajo (${bases.length})`)
+  // B-29: los ⓘ no dicen «LLM» ni palabras internas.
   const conInfo = await todoElTexto(page)
-  f.ok(!INTERNAS.test(conInfo), `el Resumen y sus ⓘ no dicen palabras internas (${conInfo.match(INTERNAS)?.[0] ?? 'ninguna'})`)
+  f.ok(!INTERNAS.test(conInfo), `Resultados y sus ⓘ no dicen palabras internas (${conInfo.match(INTERNAS)?.[0] ?? 'ninguna'})`)
   // B-51: en el papel, los planes de acción salen desplegados y el botón no.
   await page.emulateMedia({ media: 'print' })
   const papel = await f.textoPagina()
@@ -251,7 +256,7 @@ test('Gerente: la misma base escrita igual, el papel con los planes desplegados 
   const conDibujo = ['planta', 'exportacion', 'sin-asignar'].filter(k => k in rellenos)
   f.ok(conDibujo.includes('planta') && conDibujo.every(k => /gradient/.test(rellenos[k] ?? '')), `la planta (y afuera y lo sin identificar, si están) llevan dibujo, no solo gris (${conDibujo.join(', ')})`)
   // B-39: un campo sin nada trabado lo dice con su período y sin una leyenda que no corresponde a ninguna barra.
-  await f.ir('#/ger/resumen/zarza/curso')
+  await f.ir('#/ger/resultados/zarza/curso')
   await f.esperarTexto('Nada se trabó en octubre (en curso).')
   f.ok(await page.locator('main [data-leyenda-tramos]').count() === 0, 'sin la leyenda de los tramos cuando no hay barra que leer')
   f.cerrar()
@@ -269,12 +274,12 @@ test('Una dirección a un campo que la persona no tiene lo dice, y el esquema de
   f.ok(!INTERNAS.test(await todoElTexto(page)), 'La Zarza (campo de gas) sin «(Edinson)»')
   // B-41: nada parpadea en el esquema de planta: la alarma lleva un anillo quieto.
   await f.ir('#/prod/planta/ceiba/curso')
-  await f.esperarTexto('LA TUBERÍA DEL CAMPO')
+  await f.esperarTexto('La tubería del campo')
   const animados = await page.evaluate(() => [...document.querySelectorAll('main *')].filter(e => getComputedStyle(e).animationName !== 'none').length)
   f.ok(animados === 0 && await page.locator('main [data-anillo-alarma]').count() > 0, `ningún elemento animado (${animados}); el anillo de P-201B, quieto`)
   // B-47 y B-45: Calidad cuenta paradas con sus filas aparte y dice el período en palabras.
   await f.ir('#/conf/confiabilidad/morichal/curso')
-  await f.esperarTexto('CALIDAD DE LA CLASIFICACIÓN')
+  await f.esperarTexto('Calidad de la clasificación')
   const calidad = await f.texto()
   f.ok(/MN-41\s+1 parada \(2 filas\) · 0 corregidas/.test(calidad), '«MN-41 · 1 parada (2 filas)», no «2 paradas»')
   f.ok(calidad.includes('en octubre (en curso)') && !calidad.includes('en Octubre, en curso'), 'el período en palabras: «en octubre (en curso)»')
@@ -284,7 +289,7 @@ test('Una dirección a un campo que la persona no tiene lo dice, y el esquema de
 test('Regulatorio en el papel: el árbol de la circular se lee renglón por renglón y los ⓘ que se repiten van una vez al final (B-10)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/reg/regulatorio/morichal/cerrado')
-  await f.esperarTexto('ÁRBOL DE CAUSAS · COMO LA CIRCULAR')
+  await f.esperarTexto('Árbol de causas · como la circular')
   await page.emulateMedia({ media: 'print' })
   const arbol = page.locator('[data-arbol-circular]')
   const texto = await arbol.innerText()

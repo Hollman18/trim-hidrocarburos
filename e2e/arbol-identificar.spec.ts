@@ -38,7 +38,7 @@ test('el supervisor confirma una parada deducida en un toque: la cascada de P-20
 test('el operador contesta hechos, una pregunta a la vez, y nunca escoge el tramo, la causa ni el detalle: lo que TRIM deduce de su respuesta lo avala su supervisor', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
   // Una sola lista (B-02): lo que pregunta el libro y lo del árbol, juntos; sin las secciones de quien revisa.
-  const panel = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'POR CONTESTAR', exact: true }) })
+  const panel = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'Por contestar', exact: true }) })
   await expect(panel).toContainText('Conteste aquí, una pregunta a la vez. Lo técnico lo revisa su supervisor.')
   await expect(f.page.locator('main [data-seccion]')).toHaveCount(0)
   const tarjetas = f.page.locator('main article[data-parada-anh]')
@@ -146,7 +146,7 @@ test('Turno: «Hoy limita» dice en dos líneas qué limita hoy y lo más frági
   await expect(hoy.locator('[data-fragil]')).toHaveText('el agua. Si para otra bomba de reinyección hay que cerrar pozos, y P-201A y P-201C no tienen instrumento: TRIM no verá venir su falla.')
   f.ok(!/Lo que más cuesta/.test(linea), '«Hoy limita» son dos líneas: sin «lo que más cuesta si falla hoy» (B-19)')
   await expect(f.page.locator('main').getByText('en la planta', { exact: true })).toBeVisible()
-  const cierre = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'CIERRE DE HOY · PARADAS POR CONFIRMAR' }) })
+  const cierre = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'Cierre de hoy · paradas por confirmar' }) })
   await expect(cierre).toContainText('4 paradas hoy · 0 completas · faltan 4')
   const lote = cierre.locator('[data-lote]').filter({ hasText: 'por P-201B' })
   await expect(lote).toContainText('LC-07 y LC-16')

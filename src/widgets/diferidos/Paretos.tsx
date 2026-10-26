@@ -96,7 +96,7 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
   }
 
   return (
-    <Panel titulo="POR EQUIPO" extra={plural(lb.porEquipo.length, 'equipo', 'equipos')}>
+    <Panel titulo="Por equipo" extra={plural(lb.porEquipo.length, 'equipo', 'equipos')}>
       <Lectura>
         Ordenado por <b>barriles</b>, no por número de paradas. Un pozo cerrado porque la bomba de
         reinyección paró se le carga a la bomba, no al pozo. Se ven los cinco primeros y toda fila de
@@ -159,7 +159,7 @@ export function ParetoPartes({ lb, onIr }: { lb: Libro; onIr?: () => void }) {
     </div>
   )
   return (
-    <Panel titulo="POR PARTE" extra="bombas y electrosumergibles">
+    <Panel titulo="Por parte" extra="bombas y electrosumergibles">
       <Lectura>
         Las fallas por la parte que falló (el ítem mantenible de ISO 14224), con la parte que dice la
         primera alarma del PLC, el código del variador o la firma de las señales. Es lo que hay que
@@ -201,7 +201,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
     )
   }
   return (
-    <Panel titulo="TIPO DE CAUSA">
+    <Panel titulo="Tipo de causa">
       <Lectura>
         Qué familia de equipos o servicios se lleva el diferido. En oscuro y en negrita, los de alto
         impacto (bombas de reinyección y electrosumergibles); rayado, lo que nadie ha identificado.
@@ -234,7 +234,7 @@ export function Palancas({ lb, base, conMaximo = false }: { lb: Libro; base?: Li
   const hayMeta = conMeta(lb.meta)
   const difDia = lb.brecha / Math.max(1 / 24, lb.meta.dias)
   return (
-    <Panel titulo="DÓNDE BAJARLO" extra="bbl · % del diferido">
+    <Panel titulo="Dónde bajarlo" extra="bbl · % del diferido">
       <Lectura>
         No todo el diferido se puede atacar igual. Lo de alto impacto con la parte vigilada es lo
         que el vigía puede anticipar; lo que no tiene instrumento dice qué instrumentar; lo evitable

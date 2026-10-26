@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp, useAmbito, useRol, useRango, usePersona } from '@/app/store'
 import { useLibro, usePreguntas, useCtx, useOpcionesRespuesta, contarPorIdentificar } from '@/shared/api/diferidos'
-import { useCiclo } from '@/shared/api/ciclo'
-import { PlanesDe } from '@/widgets/ciclo/Ciclo'
 import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { useMensajes } from '@/shared/api/mensajes'
@@ -47,8 +45,6 @@ export function Causa() {
   const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const persona = usePersona()
   const ids = ambito.campos.map(c => c.id)
   const lb = useLibro({ campos: ids, desde: rango.desde, hasta: rango.hasta })
-  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
-  const planesIdentificar = ciclo.durante.planes.filter(p => p.id.endsWith(':identificar'))
   const preguntas = usePreguntas(ids)
   const mensajes = useMensajes(ids)
   const hilo = (p: Pregunta) => mensajes.filter(m => m.evento === p.id)
@@ -175,7 +171,7 @@ export function Causa() {
     </div>
   )
   const declaradasPanel = (
-    <Panel titulo="DECLARADAS" extra={<>{declaradas.length}<span className="sr-only"> {declaradas.length === 1 ? 'declarada' : 'declaradas'}</span>{sinAnalisis.length ? ` · ${sinAnalisis.length} sin análisis` : ''}</>}>
+    <Panel titulo="Declaradas" extra={<>{declaradas.length}<span className="sr-only"> {declaradas.length === 1 ? 'declarada' : 'declaradas'}</span>{sinAnalisis.length ? ` · ${sinAnalisis.length} sin análisis` : ''}</>}>
       <Lectura>
         Lo que respondió la gente de campo. Entra al libro como «declarado», separado de lo que
         probó una señal, y se puede auditar: quién, cuándo y si fue antes o después de arrancar.
@@ -196,7 +192,6 @@ export function Causa() {
     return (
       <>
         {regla}
-        {planesIdentificar.length > 0 && <PlanesDe planes={planesIdentificar} className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-1 shadow-[var(--sombra)]" />}
         {/* Otro rol es otra lente: lo que estaba abierto no pasa de un rol a otro. */}
         <ArbolIdentificar key={rol.id} campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} periodo={rango.nombre}
           nAntes={delLibro.length} excluir={new Set(delLibro.map(p => p.id))}
@@ -217,10 +212,8 @@ export function Causa() {
       {/* La regla de operación: «no arrancar» a la vista; el procedimiento completo, en el ⓘ. */}
       {regla}
 
-      {planesIdentificar.length > 0 && <PlanesDe planes={planesIdentificar} className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-1 shadow-[var(--sombra)]" />}
-
-      {/* Las que siguen paradas; las que ya arrancaron sin identificar van en NO CONFORMIDADES. */}
-      <Panel className="mb-2.5" titulo="POR IDENTIFICAR · SIN ARRANCAR" extra={<>{pendientes.length}<span className="sr-only"> sin arrancar</span></>}>
+      {/* Las que siguen paradas; las que ya arrancaron sin identificar van en «No conformidades». */}
+      <Panel className="mb-2.5" titulo="Por identificar · sin arrancar" extra={<>{pendientes.length}<span className="sr-only"> sin arrancar</span></>}>
         <Lectura>
           Cada una trae lo que dijo su señal; el ⓘ junto a «señal» dice por qué no alcanzó. Responde quien
           revisó el equipo o estuvo en el pozo. Las pistas (la parte que estaba fuera de límite al parar, o
@@ -241,7 +234,7 @@ export function Causa() {
       <ArbolIdentificar key={rol.id} campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} periodo={rango.nombre} />
 
       {/* «Arrancaron sin identificar» ya lo dice la cifra de arriba; aquí, cuántas. */}
-      <Panel className="mb-2.5" titulo="NO CONFORMIDADES" extra={<>{noConformes.length}<span className="sr-only"> {noConformes.length === 1 ? 'no conformidad' : 'no conformidades'}</span></>}>
+      <Panel className="mb-2.5" titulo="No conformidades" extra={<>{noConformes.length}<span className="sr-only"> {noConformes.length === 1 ? 'no conformidad' : 'no conformidades'}</span></>}>
         {noConformes.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna.</p>}
         {noConformes.map(tarjeta)}
       </Panel>
@@ -346,7 +339,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
       <div className="mt-2 grid gap-3 text-[13px] [grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-x-1">
-            <h5 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SEÑAL</h5>
+            <h5 className="text-[15px] font-semibold text-[var(--tinta)]">Señal</h5>
             {porQueNo && <Info rotulo="no alcanzó" titulo="Por qué no alcanzó la señal" texto={porQueNo} />}
           </div>
           <ul className="list-disc pl-4 text-[var(--tinta2)]">
@@ -365,7 +358,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
         </div>
         {responde && !p.causa.declarado && (
           <form className="grid gap-1.5" onSubmit={e => { e.preventDefault(); enviar() }}>
-            <h5 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{conPartes ? 'QUÉ SE DAÑÓ' : 'POR QUÉ PARÓ'}</h5>
+            <h5 className="text-[15px] font-semibold text-[var(--tinta)]">{conPartes ? 'Qué se dañó' : 'Por qué paró'}</h5>
             {conPartes ? (
               <>
                 <span className="grid gap-1">
@@ -495,7 +488,7 @@ function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; 
   // en el globo y en el papel. Lo que no se envió sigue a la vista, con su motivo.
   return (
     <div className="mt-2.5 border-t border-dashed border-[var(--linea2)] pt-2 text-[13px]">
-      <h5 className="font-cond mb-1 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">WHATSAPP</h5>
+      <h5 className="mb-1 text-[15px] font-semibold text-[var(--tinta)]">WhatsApp</h5>
       <Tip titulo={`WhatsApp · ${p.equipo}`} filas={pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
         imprimir="todo" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--tinta2)]">
         <span>

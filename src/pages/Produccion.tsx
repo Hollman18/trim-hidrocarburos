@@ -16,7 +16,6 @@ import { useVerMas, VISIBLES } from '@/shared/ui/listaCorta'
 import { n0, n1, n3 } from '@/shared/lib/formato'
 import { Diaria } from '@/widgets/produccion/Diaria'
 import { Factor } from '@/widgets/diferidos/Factor'
-import { Cuadre } from '@/widgets/diferidos/Cuadre'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { AsignacionOficial } from '@/widgets/produccion/AsignacionOficial'
 import { desplazable } from '@/shared/ui/alFinal'
@@ -24,7 +23,6 @@ import { TuberiaDelCampo } from '@/widgets/choke/Tuberia'
 import { TuberiaDeCadaCampo } from '@/widgets/choke/Campos'
 import { SerieLimita } from '@/widgets/choke/Serie'
 import { Escalera } from '@/widgets/choke/Escalera'
-import { PorTramoMensual } from '@/widgets/choke/Mensual'
 import { useRepartoChoke } from '@/shared/api/choke'
 
 /** La curva es el hecho; el diferido es la consecuencia. Producción entra por
@@ -97,7 +95,7 @@ export function Produccion() {
             tip={{ titulo: 'Real contra la meta', filas: [['Real por día', `${n0(porDia(lb.real))} bbl/d`],
               ...(hayMeta ? [['Meta por día', `${n0(porDia(lb.meta.produccion))} bbl/d`], ['Meta a la fecha', `${n0(lb.meta.produccion)} bbl`],
                 [enCurso ? 'Meta del mes completo' : 'Meta del período', `${n0(lb.meta.produccionTotal)} bbl`]] as Array<[string, string]> : [['Meta', SIN_META] as [string, string]])] }} />
-          <Cifra rotulo="potencial" valor={n0(lb.potencial)} unidad="bbl"
+          <Cifra rotulo="potencial del libro" valor={n0(lb.potencial)} unidad="bbl"
             pie={<>{n0(porDia(lb.potencial))} bbl/d<Info titulo="Potencial" texto={ing ? 'Pruebas de los pozos × factor de asignación.' : 'Lo que los pozos podían dar.'} /></>} />
           <Cifra rotulo={`real · ${fechaAyer ? fechaCorta(fechaAyer) : 'último día'}`} valor={ayer === null ? '—' : n0(ayer)} unidad={ayer === null ? undefined : 'bbl'}
             pie={ayer === null ? <>sin fiscal<Info titulo="Último día completo" texto="Falta el fiscal del último día en algún campo: la suma no está completa." /></> : undefined} />
@@ -113,7 +111,7 @@ export function Produccion() {
           </>
         ))}
 
-      <Panel className="mb-2.5" titulo="DÍA A DÍA" extra="bbl/d">
+      <Panel className="mb-2.5" titulo="Día a día" extra="bbl/d">
         <Diaria dias={dias} />
         <Lectura>
           La curva sólida es lo que midió el punto de medición oficial cada día; la discontinua, lo
@@ -125,10 +123,10 @@ export function Produccion() {
       </Panel>
 
       {ing && <Escalera campos={ids} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />}
-      {ing && <PorTramoMensual campos={ids} desde={rango.desde} hasta={rango.hasta} />}
+      {/* C5 · «Lo perdido por tramo, mes a mes» vive una sola vez: en Resultados (mes a mes, «Por dónde se trabó») y en Diferidos (X4 §3.7). */}
 
       {ing && <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        <Panel titulo="MEDICIÓN OFICIAL">
+        <Panel titulo="Medición oficial">
           <Lectura>
             De dónde sale lo real. Lo real no lo escribe nadie: lo entrega el computador de flujo (o los
             medidores automáticos de tanque) del punto de medición oficial. El corte de agua puede venir de un analizador en
@@ -151,14 +149,15 @@ export function Produccion() {
             )
           })}
         </Panel>
-        {ambito.global ? <Cuadre lb={lb} /> : (
-          <Panel titulo="FACTOR DE ASIGNACIÓN" extra="contra su banda">
+        {/* C5 · El cuadre del libro y la custodia viven en Diferidos («¿Se puede publicar?»): aquí, una vez, la medición y el factor. */}
+        {!ambito.global && (
+          <Panel titulo="Factor de asignación" extra="contra su banda">
             <Factor serie={serie} campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} />
           </Panel>
         )}
       </div>}
 
-      {ing && <Panel titulo={largo ? 'CUADRE MENSUAL' : 'CUADRE DIARIO'}>
+      {ing && <Panel titulo={largo ? '¿Cuadra? Mes por mes' : '¿Cuadra? Día por día'}>
         <div {...desplazable('Cuadre del período')} className="overflow-x-auto">
           <table className="tabular w-full min-w-[620px] text-right text-[14px]">
             <thead className="text-[12px] text-[var(--tinta3)]">

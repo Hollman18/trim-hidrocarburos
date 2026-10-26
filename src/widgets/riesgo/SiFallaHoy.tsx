@@ -45,11 +45,11 @@ export function SiFallaHoy({ campos, global, rol, onAbrir }: {
   const v = useCriticidad(campos)
   const hoy = useEquiposDeHoy(campos)
   const sev = (f: FilaCriticidad): Severidad => hoy(f.equipo, f.campoId)?.severidad ?? 0
-  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'text-[15px] font-semibold text-[var(--tinta)]'
   return (
     <section id="si-falla-hoy" tabIndex={-1} className="mt-2.5 scroll-mt-4 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)] outline-none">
       <header className="flex flex-wrap items-center justify-between gap-x-2 border-b border-[var(--linea2)] px-3 py-[7px]">
-        <h2 className={titulo}>SI FALLA HOY</h2>
+        <h2 className={titulo}>Si falla hoy</h2>
         <span className="font-cond text-[12px] tracking-[.08em] text-[var(--tinta3)]">de lo que más le quita al campo por día a lo que menos</span>
       </header>
       <div className="p-3">
@@ -173,7 +173,7 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
       ))}
       {pozosParados.length > 0 && (
         <p className="mb-1 pl-[19px] text-[13px] text-[var(--tinta2)]">
-          {raices.length ? 'También parados' : 'Parados'}: {lista(pozosParados.map(f => f.equipo))} · van en «Perdiéndose ahora», no en la lista.
+          {raices.length ? 'También parados' : 'Parados'}: {lista(pozosParados.map(f => f.equipo))} · van en «Se deja de producir ahora», no en la lista.
         </p>
       )}
       {c.cambioHoy && <p className="mb-1 text-[14px]" data-cambio-hoy="">{c.cambioHoy}</p>}

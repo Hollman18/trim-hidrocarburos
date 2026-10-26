@@ -58,3 +58,56 @@ export function Sparkline({ serie, limite, alto = 28, ancho = 150, prioridad }: 
     </svg>
   )
 }
+
+/** C4 · La minitendencia del nivel 3 (X5 §5.4; X2 §5.3): las lecturas de la
+ *  ventana (12 días) sobre la MISMA escala fija del indicador, la banda normal
+ *  sombreada y el último punto. La línea en gris de dato; un hueco corta la línea.
+ *  Sin texto adentro: se puede dibujar más chica sin bajar de 12 px. */
+export function Minitendencia({ serie, escala, banda, ancho = 80, alto = 32, gris = false }: {
+  serie: ReadonlyArray<number | null>; escala: [number, number]; banda: [number | null, number | null] | null
+  ancho?: number; alto?: number; gris?: boolean
+}) {
+  if (serie.filter(v => v !== null).length < 2) return null
+  const [e0, e1] = escala
+  const x = (i: number) => 3 + (i / (serie.length - 1)) * (ancho - 8)
+  const y = (v: number) => alto - 4 - ((Math.min(Math.max(v, e0), e1) - e0) / (e1 - e0 || 1)) * (alto - 8)
+  const b0 = banda?.[0] ?? e0, b1 = banda?.[1] ?? e1
+  const iUlt = serie.reduce<number>((a, v, i) => (v !== null ? i : a), -1)
+  const color = gris ? 'var(--tinta3)' : 'var(--dato1)'
+  return (
+    <svg width={ancho} height={alto} viewBox={`0 0 ${ancho} ${alto}`} aria-hidden className="block shrink-0">
+      {banda && <rect x={2} y={y(b1)} width={ancho - 4} height={Math.max(y(b0) - y(b1), 1)} fill="var(--banda)" opacity={0.55} />}
+      <path d={trazoConHuecos(serie, x, y)} fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" />
+      {iUlt >= 0 && <circle cx={x(iUlt)} cy={y(serie[iUlt]!)} r={3} fill={color} />}
+    </svg>
+  )
+}
+
+/** C4 · La tendencia grande (X5 §5.4: «gráficas chicas iguales, una por variable»;
+ *  X2 §5.3): la banda, la alarma en discontinuo, la escala fija que no cambia y el
+ *  último punto. Los rótulos (la ventana escrita y los valores) van fuera del
+ *  dibujo, en HTML: así el dibujo se estira sin que su letra baje de 12 px. */
+export function TendenciaFija({ serie, escala, banda, alarmas, alto = 64 }: {
+  serie: ReadonlyArray<number | null>; escala: [number, number]; banda: [number | null, number | null] | null
+  alarmas: readonly number[]; alto?: number
+}) {
+  const A = 300
+  const [e0, e1] = escala
+  const x = (i: number) => 2 + (i / Math.max(1, serie.length - 1)) * (A - 6)
+  const y = (v: number) => alto - 3 - ((Math.min(Math.max(v, e0), e1) - e0) / (e1 - e0 || 1)) * (alto - 8)
+  const b0 = banda?.[0] ?? e0, b1 = banda?.[1] ?? e1
+  const iUlt = serie.reduce<number>((a, v, i) => (v !== null ? i : a), -1)
+  return (
+    <div className="relative" aria-hidden>
+      <svg viewBox={`0 0 ${A} ${alto}`} preserveAspectRatio="none" className="block w-full" style={{ height: alto }}>
+        {banda && <rect x={2} y={y(b1)} width={A - 4} height={Math.max(y(b0) - y(b1), 1)} fill="var(--banda)" opacity={0.55} />}
+        {alarmas.map(a => <line key={a} x1={2} x2={A - 2} y1={y(a)} y2={y(a)} stroke="var(--tinta2)" strokeWidth={1.3} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" data-alarma />)}
+        <line x1={2} x2={A - 2} y1={alto - 1} y2={alto - 1} stroke="var(--linea)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+        <path d={trazoConHuecos(serie, x, y)} fill="none" stroke="var(--dato1)" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      </svg>
+      {/* El último punto, en HTML: estirado con el dibujo se volvería un óvalo. */}
+      {iUlt >= 0 && <i className="absolute block size-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--dato1)]"
+        style={{ left: `${(x(iUlt) / A) * 100}%`, top: y(serie[iUlt]!) }} />}
+    </div>
+  )
+}

@@ -76,7 +76,7 @@ export function AsignacionOficial({ campos }: { campos: string[] }) {
   ])
 
   return (
-    <Panel className="mt-2.5" titulo="CUADRE · ASIGNACIÓN OFICIAL" extra="mes cerrado">
+    <Panel className="mt-2.5" titulo="Cuadre · asignación oficial" extra="mes cerrado">
       <Lectura>
         TRIM asigna con el mismo método que la asignación oficial: lo que midió el punto de medición
         oficial, repartido por prueba × factor × horas que cada pozo estuvo abierto (las horas, del

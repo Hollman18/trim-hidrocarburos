@@ -5,6 +5,7 @@ import { fechaCorta } from '@/entities/reloj'
 import { Tip } from '@/shared/ui/Tip'
 import { n0, n1 } from '@/shared/lib/formato'
 import { alFinal } from '@/shared/ui/alFinal'
+import { useAnchoDibujo } from '@/widgets/resultados/ancho'
 
 /** Escala con números redondos: el eje tiene que poder leerse. */
 function escala(lo: number, hi: number): [number, number, number] {
@@ -25,7 +26,9 @@ export function Diaria({ dias }: { dias: Dia[] }) {
   const pts = dias.map(d => ({ d, real: d.real === null ? null : tasa(d, d.real), pot: tasa(d, d.potencial), meta: d.meta === null ? null : tasa(d, d.meta), parcial: d.horas < 23.99 }))
   const bajos = pts.flatMap(p => [p.real, p.meta].filter((v): v is number => v !== null))
   const [lo, hi, paso] = escala(Math.min(...(bajos.length ? bajos : pts.map(p => p.pot))) * 0.97, Math.max(...pts.map(p => p.pot)) * 1.02)
-  const W = 720, G = { x0: 56, x1: 690, y0: 12, y1: 168 }
+  // C5 · Se dibuja al ancho de verdad (una unidad = un px): sus rótulos no bajan de 12 px (X3 §5.5).
+  const [medir, W] = useAnchoDibujo(540, 720)
+  const G = { x0: 56, x1: W - 30, y0: 12, y1: 168 }
   const X = (i: number) => G.x0 + (pts.length > 1 ? (i / (pts.length - 1)) * (G.x1 - G.x0) : (G.x1 - G.x0) / 2)
   const Y = (v: number) => G.y1 - ((v - lo) / (hi - lo)) * (G.y1 - G.y0)
   const linea = (f: (p: typeof pts[number]) => number) => pts.map((p, i) => `${X(i)},${Y(f(p))}`).join(' ')
@@ -39,8 +42,8 @@ export function Diaria({ dias }: { dias: Dia[] }) {
   const marcas: number[] = []
   for (let v = lo; v <= hi + 1e-9; v += paso) marcas.push(v)
   // Las fechas de otro año llevan el año y ocupan el triple: el espaciado sale
-  // del largo real de cada marca (9,5 de fuente ≈ 5,4 por carácter), no de un número fijo.
-  const ancho = (t: string) => t.length * 5.4
+  // del largo real de cada marca (12 de fuente ≈ 6,6 por carácter), no de un número fijo.
+  const ancho = (t: string) => t.length * 6.6
   const etiqueta = (p: typeof pts[number]) => `${fechaCorta(p.d.dia)}${p.parcial ? ' · en curso' : ''}`
   const caben = Math.max(1, Math.floor((G.x1 - G.x0) / (Math.max(...pts.map(p => ancho(fechaCorta(p.d.dia)))) + 14)))
   const cada = Math.max(1, Math.ceil(pts.length / caben))
@@ -64,13 +67,13 @@ export function Diaria({ dias }: { dias: Dia[] }) {
 
   return (
     <>
-    <div ref={alFinal} className="overflow-x-auto">
-      <svg ref={dibujo} viewBox={`0 0 ${W} 196`} className="block h-auto w-full min-w-[540px]" role="group"
+    <div ref={medir}><div ref={alFinal} className="overflow-x-auto">
+      <svg ref={dibujo} width={W} height={196} viewBox={`0 0 ${W} 196`} className="block" role="group"
         aria-label={`Producción diaria contra potencial y meta, ${pts.length} días. Con las flechas se pasa de un día a otro.`}>
         {marcas.map(v => (
           <g key={v}>
             <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.7} />
-            <text x={G.x0 - 6} y={Y(v) + 3} fontSize={11} textAnchor="end" fill="var(--tinta3)" className="tabular">{v >= 1000 ? `${n1(v / 1000)} k` : n0(v)}</text>
+            <text x={G.x0 - 6} y={Y(v) + 4} fontSize={12} textAnchor="end" fill="var(--tinta3)" className="tabular">{v >= 1000 ? `${n1(v / 1000)} k` : n0(v)}</text>
           </g>
         ))}
         {huecos.map((h, k) => <polygon key={k} points={h} fill="var(--panel2)" stroke="none" />)}
@@ -93,13 +96,13 @@ export function Diaria({ dias }: { dias: Dia[] }) {
               : pts.length <= 45 && <circle cx={X(i)} cy={Y(p.real)} r={1.8} fill="var(--dato-1)" />}
             {conMarca(p, i) && (
               // El primer día arranca en el eje (no centrado): centrado se montaba sobre la cifra de abajo del eje vertical.
-              <text x={X(i)} y={G.y1 + 17} fontSize={11.5} textAnchor={i === pts.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'} fill="var(--tinta2)">{etiqueta(p)}</text>
+              <text x={X(i)} y={G.y1 + 17} fontSize={12} textAnchor={i === pts.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'} fill="var(--tinta2)">{etiqueta(p)}</text>
             )}
           </Tip>
         ))}
         <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" />
       </svg>
-    </div>
+    </div></div>
       {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba. */}
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato-1)" strokeWidth="2" /></svg>real medido</span>

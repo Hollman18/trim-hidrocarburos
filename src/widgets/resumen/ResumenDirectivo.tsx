@@ -2,8 +2,6 @@ import { useId, useState } from 'react'
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
 import { useLibro, useSerie, useBase, useRiesgo, useEstadoCampos } from '@/shared/api/diferidos'
 import { useRepartoMensual, CHOKES_Y_SIN_ASIGNAR, type MesPorTramo } from '@/shared/api/choke'
-import { useCiclo } from '@/shared/api/ciclo'
-import { BloqueCiclo } from '@/widgets/ciclo/Ciclo'
 import { useHorasMantenimiento } from '@/shared/api/sap'
 import type { MesResumen } from '@/shared/api/diferidos'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
@@ -24,6 +22,7 @@ import { fmtHoras } from '@/widgets/bombas/comun'
 import { Rango } from '@/widgets/diferidos/Rango'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { alFinal } from '@/shared/ui/alFinal'
+import { useAnchoDibujo } from '@/widgets/resultados/ancho'
 import { cn } from '@/shared/lib/cn'
 import { Muestra, PatronesTramo } from '@/widgets/diferidos/tramos'
 import { LARGO_TRAMO, mayuscula, rellenoSvg } from '@/widgets/diferidos/reparto'
@@ -58,7 +57,6 @@ export function ResumenDirectivo() {
   const porTramo = useRepartoMensual(ids)
   const base = useBase(q)
   const riesgo = useRiesgo(ids)
-  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo' && r.altoImpacto)
   // Lo demás en alarma, por lo que es: un servicio (la regla de Riesgo) no es la multifásica.
@@ -105,16 +103,15 @@ export function ResumenDirectivo() {
       {otros && <small className="block text-[13px] text-[var(--tinta2)]">+ {otros.texto}</small>}
     </>
   )
-  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'text-[15px] font-semibold text-[var(--tinta)]'
 
   return (
     <>
-      {/* Palancas primero; la lista de planes va plegada dentro de BloqueCiclo. */}
-      <BloqueCiclo ciclo={ciclo} onAbrir={abrir} onIr={p => setPantalla(p)} />
+      {/* C5: el ciclo ya no es la cifra de arriba (X4 §3.6). Este resumen ya no se ofrece: lo suyo está en La planta viva y en Resultados. */}
 
       <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
         <h3 className={`${titulo} mb-2 flex flex-wrap items-center gap-x-1`}>
-          MEDIDO · PERÍODO
+          Lo medido en el período
           <Info titulo="Medido vs simulado" texto="Arriba: retorno posible (simulado, no entra al libro). Aquí: barriles diferidos del período (custodia medida y calculada)." />
         </h3>
         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -139,7 +136,7 @@ export function ResumenDirectivo() {
         </div>
         <div className="mt-3 grid gap-x-8 gap-y-3 border-t border-[var(--linea2)] pt-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))]">
           <div className="grid content-start gap-2.5">
-            <h3 className={titulo}>PROMEDIO DIARIO</h3>
+            <h3 className={titulo}>Promedio diario</h3>
             <BarraMeta rotulo="producción" valor={realDia} unidad="bbl/d" meta={hayMeta ? lb.meta.produccionDia : undefined}
               rotuloMeta={hayMeta ? `meta ${n0(lb.meta.produccionDia)}` : sinMeta} fuera={bajoMeta}
               tip={{ titulo: 'Producción', filas: [[enCurso ? 'A la fecha' : 'Del período', hayMeta ? `${n0(lb.real)} de ${n0(lb.meta.produccion)} bbl` : `${n0(lb.real)} bbl`],
@@ -152,7 +149,7 @@ export function ResumenDirectivo() {
           </div>
           <div className="grid content-start gap-2.5">
             <div className="flex flex-wrap items-center gap-x-1">
-              <h3 className={titulo}>{enCurso ? 'CIERRE PROYECTADO' : 'TOTAL DEL PERÍODO'}</h3>
+              <h3 className={titulo}>{enCurso ? 'Cierre proyectado' : 'Total del período'}</h3>
               {enCurso && <Info titulo="Cierre proyectado" texto={`Si todo sigue como está ahora: lo que va del mes más el ritmo de hoy hasta el último día (${n0(lb.meta.diasTotal)} días).`} />}
             </div>
             {enCurso ? (
@@ -245,7 +242,7 @@ export function ResumenDirectivo() {
         </section>
 
         <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
-          <h3 className={`${titulo} mb-2`}>POR EQUIPO</h3>
+          <h3 className={`${titulo} mb-2`}>Por equipo</h3>
           {top.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada diferido.</p>}
           {top.map(f => (
             <button key={`${f.campoId}${f.equipo}${f.tipo}`} onClick={() => abrir(f.campoId, f.equipo)}
@@ -285,7 +282,9 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
   const idp = useId().replace(/:/g, '')
   const deMes = new Map((porTramo ?? []).map(t => [t.mes, t]))
   const porDonde = vista === 'tramo' && porTramo !== undefined
-  const W = 520, G = { x0: 8, x1: 512, y0: 18, y1: 96 }
+  // C5 · Se dibuja al ancho de verdad (una unidad = un px): sus rótulos no bajan de 12 px (X3 §5.5).
+  const [medir, W] = useAnchoDibujo(420, 520)
+  const G = { x0: 8, x1: W - 8, y0: 18, y1: 96 }
   const pts = serie.map(m => {
     const d = Math.max(1 / 24, (Math.min(m.hasta.getTime(), AHORA.getTime()) - m.desde.getTime()) / D)
     // Un mes con algún campo sin meta firmada no tiene máximo: sin raya ni marca.
@@ -301,7 +300,7 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
   // La cifra de cada mes del período: con un mes, grande; con varios (doce meses, el año), lo que
   // quepa en su columna, para que dos vecinas no se monten (auditor, Firefox).
   const activos = pts.filter(p => p.m.desde < hasta && p.m.hasta > desde).length
-  const letraCifra = activos > 1 ? Math.max(10.5, Math.min(14, paso / 3.5)) : 14
+  const letraCifra = activos > 1 ? Math.max(12, Math.min(14, paso / 3.5)) : 14
   return (
     <>
     {porTramo && (
@@ -315,8 +314,8 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
         ))}
       </div>
     )}
-    <div ref={alFinal} className="mt-2 overflow-x-auto">
-      <svg viewBox={`0 0 ${W} 118`} className="block h-auto w-full min-w-[420px]" role="group"
+    <div ref={medir} className="mt-2"><div ref={alFinal} className="overflow-x-auto">
+      <svg width={W} height={118} viewBox={`0 0 ${W} 118`} className="block" role="group"
         aria-label={porDonde ? 'Diferido por día de cada mes, por dónde se trabó, contra su máximo firmado' : 'Diferido por día de cada mes contra su máximo firmado'}>
         <defs><PatronesTramo id={idp} /></defs>
         {pts.map((p, i) => {
@@ -360,7 +359,7 @@ export function Tendencia({ serie, desde, hasta, onMes, porTramo }: {
         })}
         <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" />
       </svg>
-    </div>
+    </div></div>
       {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba.
           La unidad va aquí y no en el dibujo: arriba a la izquierda la pisaba la cifra de la barra más alta. */}
       <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">

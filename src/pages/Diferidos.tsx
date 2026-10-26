@@ -7,7 +7,6 @@ import { useRepartoMensual } from '@/shared/api/choke'
 import { Encabezado } from '@/widgets/diferidos/Encabezado'
 import { MesAMes } from '@/widgets/diferidos/MesAMes'
 import { Cuadre } from '@/widgets/diferidos/Cuadre'
-import { Factor } from '@/widgets/diferidos/Factor'
 import { campoPublicable } from '@/widgets/diferidos/publicacion'
 import { ParetoEquipos, ParetoPartes, ParetoTipos, Palancas } from '@/widgets/diferidos/Paretos'
 import { PorTramo } from '@/widgets/diferidos/PorTramo'
@@ -45,7 +44,7 @@ export function Diferidos() {
     <>
       <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} simple />
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
-        <Panel titulo="MES A MES">
+        <Panel titulo="Mes a mes">
           <Tendencia serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
             onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
           <Lectura>
@@ -69,7 +68,7 @@ export function Diferidos() {
     <>
       <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} />
 
-      <Panel className="mb-2.5" titulo="MES A MES">
+      <Panel className="mb-2.5" titulo="Mes a mes">
         <MesAMes serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
           onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
       </Panel>
@@ -77,7 +76,7 @@ export function Diferidos() {
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Cuadre lb={lb} onIdentificar={irA('causa')} />
         {ambito.global ? (
-          <Panel titulo="POR CAMPO" extra="bbl">
+          <Panel titulo="Por campo" extra="bbl">
             <Lectura>
               Cada campo con su diferido, el máximo que firmó el gerente para el período y cuánto tiene
               causa probada (la barra: por señal, declarado y, rayado, sin identificar). El cuadrado junto
@@ -111,14 +110,14 @@ export function Diferidos() {
             })}
           </Panel>
         ) : (
-          <Panel titulo="FACTOR DE ASIGNACIÓN" extra="contra su banda">
-            <Factor serie={serie} campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} />
-          </Panel>
+          // C5 · Un panel, una vez (X4 §3.6, punto 5): el factor de asignación mes a mes vive en
+          // Producción («¿Cuadra?»); aquí su estado va dentro de «¿Se puede publicar?».
+          <Palancas lb={lb} base={base} />
         )}
       </div>
 
       <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        <Palancas lb={lb} base={base} />
+        {ambito.global && <Palancas lb={lb} base={base} />}
         <ParetoTipos lb={lb} />
       </div>
 

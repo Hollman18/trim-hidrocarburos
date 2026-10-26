@@ -24,11 +24,11 @@ test('metas firmadas y accesos', async ({ flujo: f }) => {
     await f.clic('Firmar como'); await f.esperar(500)
     t = await f.texto()
     f.ok(t.includes('Versión 2') && t.includes('Comité de producción de octubre') && t.includes('Andrés Vélez · gerente de activo'), 'queda la versión 2, con motivo y quién firmó')
-    await f.ir('#/ger/resumen/ceiba~portafolio/curso')
+    await f.ir('#/ger/resultados/ceiba~portafolio/curso')
     // La pantalla se carga al abrirla: se espera su contenido, no un tiempo fijo.
-    await f.esperarTexto('POR EQUIPO')
+    await f.esperarTexto('Diferido por equipo')
     t = await f.texto()
-    f.ok(t.includes('meta 40.500'), 'el resumen del gerente ya mide contra 40.500')
+    f.ok(t.includes('meta 40.500'), 'los resultados del gerente ya miden contra 40.500')
     f.ok(t.includes('1.255.500'), 'y el total del mes es 40.500 × 31 = 1.255.500 bbl')
   })
 

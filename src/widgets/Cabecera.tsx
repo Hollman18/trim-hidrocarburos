@@ -11,7 +11,7 @@ import { diaIso } from '@/shared/lib/formato'
 import { formatoFecha } from '@/shared/lib/fecha'
 import { AHORA, fechaCorta } from '@/entities/reloj'
 import { Exportar } from '@/widgets/informe/Exportar'
-import { PRIMER_DIA, ULTIMO_DIA } from '@/app/url'
+import { PRIMER_DIA, ULTIMO_DIA, abreNivel3 } from '@/app/url'
 import { useDesplegable } from '@/shared/ui/foco'
 import { useUsuarios } from '@/shared/api/usuarios'
 import { Franja } from './Franja'
@@ -111,7 +111,7 @@ function SelectorPeriodo() {
 /** Una sola marca para toda la aplicación: los campos son ficticios (calibrados con fuentes
  *  publicadas) y SAP y WhatsApp se muestran como conectados. Cada pantalla, sin notas de demo.
  *  Solo en el demo (X4 §3.5). */
-function MarcaDemo() {
+export function MarcaDemo() {
   const [abierto, setAbierto] = useState(false)
   return (
     <span>
@@ -143,6 +143,10 @@ export function Cabecera() {
   // La puerta va en las migas cuando la pantalla no es la primera de ella: «La Ceiba › Equipos».
   const conPuerta = puerta && GRUPOS[puerta]!.miembros[0] !== pantalla ? GRUPOS[puerta]!.corto : null
   const hora = `hoy, ${fechaCorta(AHORA)} · datos de las ${HORA.format(AHORA)}`
+  // C4 · El nivel 3 técnico trae su propia cabecera (las migas hasta el equipo, sus
+  // vecinos, el tag y la franja; X4 §5.3): esta no se pinta encima.
+  const equipoAbierto = useApp(s => s.equipoAbierto)
+  if (pantalla === 'equipos' && equipoAbierto && abreNivel3(rol)) return null
 
   return (
     <header data-cabecera className="no-imprimir mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 sm:mb-5">

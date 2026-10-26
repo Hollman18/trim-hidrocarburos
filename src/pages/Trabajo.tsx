@@ -114,7 +114,7 @@ export function Trabajo() {
       </Lectura>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))]">
-        <Panel titulo="PARADOS" extra={`${parados.length}`}>
+        <Panel titulo="Parados" extra={`${parados.length}`}>
           {parados.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo de alto impacto parado.</p>}
           {parados.map(r => {
             const p = preguntas.find(x => x.equipo === r.equipo && x.campoId === r.campoId && !x.fin)
@@ -134,7 +134,7 @@ export function Trabajo() {
           })}
         </Panel>
 
-        <Panel titulo="PARADAS POR IDENTIFICAR" extra={`${pi.porIdentificar}`}>
+        <Panel titulo="Paradas por identificar" extra={`${pi.porIdentificar}`}>
           {preguntas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
@@ -144,25 +144,25 @@ export function Trabajo() {
             : <Hueco>Su rol no responde paradas.</Hueco>)}
         </Panel>
 
-        <Panel titulo="AVISANDO · QUÉ REVISAR" extra={`${avisan.length}`}>
+        <Panel titulo="Avisando · qué revisar" extra={`${avisan.length}`}>
           {avisan.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
           {listaAvisan.visibles.map(filaAvisa)}
           {listaAvisan.resto.length > 0 && <div className="solo-impresion">{listaAvisan.resto.map(filaAvisa)}</div>}
           <VerMas ocultas={listaAvisan.ocultas} abierto={listaAvisan.abierto} onAlternar={listaAvisan.alternar} />
         </Panel>
 
-        <Panel titulo="ÓRDENES EN SAP" extra={mias.length ? `${mias.length} a su nombre` : `${abiertas.length} abiertas`}>
+        <Panel titulo="Órdenes en SAP" extra={mias.length ? `${mias.length} a su nombre` : `${abiertas.length} abiertas`}>
           <Lectura>
             Las crea y las libera el planeador en SAP; TRIM no las escribe. Cuando SAP libera una a su
             nombre, TRIM le avisa por WhatsApp. Se notifican y se cierran en SAP.
           </Lectura>
           {abiertas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Sin órdenes abiertas.</p>}
           {mias.map(o => <Orden key={o.numero} o={o} donde={donde(o.campoId)} mia aviso={notificadas.get(o.numero)} onAbrir={() => abrir(o.campoId, o.equipo)} />)}
-          {mias.length > 0 && otras.length > 0 && <h5 className="font-cond mt-2.5 mb-0.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">DE OTROS PUESTOS</h5>}
+          {mias.length > 0 && otras.length > 0 && <h5 className="mt-2.5 mb-0.5 text-[15px] font-semibold text-[var(--tinta)]">De otros puestos</h5>}
           {otras.map(o => <Orden key={o.numero} o={o} donde={donde(o.campoId)} onAbrir={() => abrir(o.campoId, o.equipo)} />)}
         </Panel>
 
-        <Panel titulo="PARADAS PROGRAMADAS" extra="aprobadas">
+        <Panel titulo="Paradas programadas" extra="aprobadas">
           {programa.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada programado de aquí en adelante.</p>}
           {programa.map(p => (
             <div key={p.id} className="border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">

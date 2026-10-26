@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAmbito, useRango, useNivel } from '@/app/store'
+import { useApp, useAmbito, useRango, useNivel } from '@/app/store'
 import { perfilDe } from '@/entities/configuracion'
 import { usePozos } from '@/shared/api/diferidos'
 import { LEVANTAMIENTO_NOMBRE } from '@/entities/pozos'
@@ -17,7 +17,6 @@ import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { DetallePozo } from '@/widgets/pozos/DetallePozo'
 import { sevPozo, sevOrden, cerradoPorOtro } from '@/widgets/pozos/estado'
 import type { FilaPozo } from '@/shared/api/diferidos'
 import { useSesion } from '@/shared/api/sesion'
@@ -36,14 +35,10 @@ export function Pozos() {
   // ve qué produce cada pozo y qué lo tiene parado.
   const ing = useNivel() === 'ingenieria'
   const [filtro, setFiltro] = useState<Filtro>('todos')
-  const [abierto, setAbierto] = useState<{ campo: string; pozo: string } | null>(null)
-  const ids = ambito.campos.map(c => c.id).join(',')
+  // C4 · Un pozo abre su nivel 3 (X4 §5.3: «un equipo en cualquier lista abre su N3»), con las migas armadas.
+  const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo)
+  const abrirPozo = (campo: string, pozo: string) => { setCampo(campo); abrirEquipo(pozo) }
   const filas = usePozos(ambito.campos.map(c => c.id), rango.desde, rango.hasta)
-  // La pantalla no se vuelve a montar al cambiar de campo: el pozo abierto se
-  // cierra aquí, al dibujar, para no pintar un pozo de otro campo bajo la
-  // cabecera del nuevo (el patrón de React para ajustar estado cuando cambia una prop).
-  const [ambitoDelAbierto, setAmbitoDelAbierto] = useState(ids)
-  if (ambitoDelAbierto !== ids) { setAmbitoDelAbierto(ids); setAbierto(null) }
 
   const parados = filas.filter(f => !f.produce)
   const frenados = filas.filter(f => f.produce && f.hz)
@@ -76,11 +71,6 @@ export function Pozos() {
   // equipo (gris). Lo que queda va primero también en el papel.
   const lista = useVerMas(ordenadas, { prioridad: f => (sevPozo(f) > 0 || salvedad(f) ? 1 : 9) })
 
-  if (abierto) return (
-    <DetallePozo campoId={abierto.campo} pozoId={abierto.pozo} desde={rango.desde} hasta={rango.hasta}
-      nombrePeriodo={rango.nombre} volverA="Pozos" onVolver={() => setAbierto(null)} />
-  )
-
   const completos = filas.length - sinPrueba.length - estimados.length
   const pieCustodia = [...(estimados.length ? [plural(estimados.length, 'estimada', 'estimadas')] : []),
     ...(sinPrueba.length ? [`${sinPrueba.length} sin prueba`] : [])].join(' · ') || 'todos con separador'
@@ -95,7 +85,7 @@ export function Pozos() {
   const anormal = (e: string) => e === 'fuera' || e === 'avisa' || e === 'fallo'
 
   const filaTabla = (f: FilaPozo) => (
-    <tr key={`${f.pozo.campoId}${f.pozo.id}`} onClick={() => setAbierto({ campo: f.pozo.campoId, pozo: f.pozo.id })}
+    <tr key={`${f.pozo.campoId}${f.pozo.id}`} onClick={() => abrirPozo(f.pozo.campoId, f.pozo.id)}
       className="cursor-pointer border-t border-[var(--linea2)] hover:bg-[var(--panel2)]">
       <td className="py-1.5">
         {/* El botón da el foco y el Enter al teclado; su clic sube a la fila, que es la que abre. */}
@@ -136,7 +126,7 @@ export function Pozos() {
         <Cifra rotulo="Pozos" valor={`${filas.length - parados.length} de ${filas.length}`} pie={`produciendo · ${plural(frenados.length, 'frenado', 'frenados')}`} />
         <Cifra rotulo="Potencial ahora" valor={`${n0(potencial)} bbl/d`}
           info={{ titulo: 'Potencial ahora', texto: 'La prueba vigente de cada pozo por el factor de asignación del mes.' }} />
-        <Cifra rotulo="Perdiéndose ahora" valor={`${n0(perdiendo)} bbl/d`} prioridad={perdiendo > 0 ? sevPerdida : 0}
+        <Cifra rotulo="Se deja de producir ahora" valor={`${n0(perdiendo)} bbl/d`} prioridad={perdiendo > 0 ? sevPerdida : 0}
           pie={parados.length ? plural(parados.length, 'pozo parado', 'pozos parados') : 'ninguno parado'} />
         {ing && <Cifra rotulo="Custodia completa" valor={`${completos} de ${filas.length}`} pie={pieCustodia}
           info={{ titulo: 'Custodia completa', texto: 'Pozos con prueba del separador de prueba. Una estimada sale de la electrosumergible, no de un separador. Un pozo sin prueba no tiene a quién asignarle su crudo: sube el factor del campo y su diferido no se puede calcular.' }} />}
@@ -166,7 +156,7 @@ export function Pozos() {
         {/* En el teléfono, una tarjeta por pozo. */}
         <div className="grid gap-1.5 sm:hidden">
           {lista.visibles.map(f => (
-            <button key={`m${f.pozo.campoId}${f.pozo.id}`} onClick={() => setAbierto({ campo: f.pozo.campoId, pozo: f.pozo.id })}
+            <button key={`m${f.pozo.campoId}${f.pozo.id}`} onClick={() => abrirPozo(f.pozo.campoId, f.pozo.id)}
               className="grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[var(--linea2)] py-2 text-left text-[14px] last:border-0">
               <MarcaPrioridad s={sevPozo(f)} tamano={11} />
               <span className="min-w-0">

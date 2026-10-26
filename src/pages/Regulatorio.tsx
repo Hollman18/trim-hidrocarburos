@@ -66,7 +66,7 @@ export function Regulatorio() {
       <ArbolCircular campoId={campoId} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
 
       <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr))]">
-        <Panel titulo="PUNTOS DE MEDICIÓN OFICIAL" extra={`${pmos.length} en ${campo.nombre}`}>
+        <Panel titulo="Puntos de medición oficial" extra={`${pmos.length} en ${campo.nombre}`}>
           <p className="mb-1.5 text-[13px] text-[var(--tinta2)]">{medicion.origen?.fuente ?? 'sin punto de medición'} · corte de agua: {medicion.origen?.bsw ?? 'sin dato'}</p>
           {pmos.map(p => (
             <Tip key={p.pmo} as={p.eq ? 'button' : 'div'} onClick={p.eq ? () => abrirEquipo(p.eq!.id, false) : undefined}
@@ -78,7 +78,7 @@ export function Regulatorio() {
               <span className="font-mono text-[13px] text-[var(--tinta3)]">{p.eq?.id ?? 'sin instrumentar'}</span>
             </Tip>
           ))}
-          <h4 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CALIBRACIÓN DECLARADA</h4>
+          <h4 className="mb-1 mt-3 text-[15px] font-semibold text-[var(--tinta)]">Calibración declarada</h4>
           {conCalibracion.length === 0 && <p className="text-[14px] text-[var(--tinta3)]">Ningún instrumento de custodia tiene calibración declarada en este campo.</p>}
           {conCalibracion.map(c => (
             <Tip key={c.d.tag} titulo={`${c.d.tag} · ${c.d.tipo}`} pista={c.d.calibracion}
@@ -89,7 +89,7 @@ export function Regulatorio() {
           ))}
         </Panel>
 
-        <Panel titulo="TAMBIÉN EN PRODML" extra="ReasonLost · Energistics">
+        <Panel titulo="También en PRODML" extra="ReasonLost · Energistics">
           <Lectura>El mismo diferido del árbol de arriba, en las casillas del estándar PRODML. Lo declarado o sin identificar no tiene casilla hasta que alguien lo clasifique.</Lectura>
           {porCategoria.map(({ c, bbl }) => (
             <div key={c.id} className="flex items-baseline justify-between gap-2 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
@@ -103,7 +103,7 @@ export function Regulatorio() {
           </div>
         </Panel>
 
-        <Panel titulo="PRODUCCIÓN DEL PERÍODO">
+        <Panel titulo="Producción del período">
           <div className="text-[14px]">
             {([['Real (punto de medición oficial)', `${n0(lb.real)} bbl`], ['Potencial (pruebas × factor)', `${n0(lb.potencial)} bbl`],
               ['Diferidos', `${n0(lb.brecha)} bbl ±${n0(lb.tolerancia)}`], ['Del potencial', `${n1(lb.pe)} %`],

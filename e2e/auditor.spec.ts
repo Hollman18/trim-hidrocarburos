@@ -41,9 +41,22 @@ test('autoprueba: el detector ve lo que se sale y lo que se pisa', async ({ page
     b.innerHTML = '<span style="position:absolute;left:0">PISADO-UNO</span><span style="position:absolute;left:10px">PISADO-DOS</span>'
     m.prepend(b); m.prepend(a)
   })
-  const prueba = JSON.stringify(await page.evaluate(detectar))
+  // C5 · La regla de X3 §5.5: un texto de SVG que se sale de su dibujo (cortado), uno que el viewBox
+  // encoge por debajo de 12 px, y la excepción: el número de una marca de prioridad (14 × 14).
+  await page.locator('main').evaluate(m => {
+    const d = document.createElement('div'); d.style.cssText = 'width:220px'
+    d.innerHTML = '<svg width="200" height="40" viewBox="0 0 200 40"><text x="150" y="20" font-size="14">SVG-CORTADO-AFUERA</text></svg>'
+      + '<svg width="100" height="20" viewBox="0 0 400 80"><text x="10" y="40" font-size="14">SVG-CHICO</text></svg>'
+      + '<svg width="14" height="14" viewBox="0 0 14 14"><text x="7" y="10" font-size="7.8">9</text></svg>'
+    m.prepend(d)
+  })
+  const hallazgos = await page.evaluate(detectar)
+  const prueba = JSON.stringify(hallazgos)
   expect.soft(prueba, 'el detector ve lo que se sale de su tarjeta').toContain('VALOR-QUE-SE-SALE')
   expect.soft(prueba, 'el detector ve dos textos que se pisan').toContain('PISADO-UNO')
+  expect.soft(hallazgos.some(h => h[0] === 'recortado' && h[1].includes('SVG-CORTADO-AFUERA')), 'el detector ve el texto de un SVG que se sale de su dibujo').toBe(true)
+  expect.soft(hallazgos.some(h => h[0] === 'chico' && h[1].includes('SVG-CHICO') && h[2] < 6), 'el detector ve el texto de un SVG que queda de menos de 12 px (14 de un dibujo a la cuarta: 3,5 px)').toBe(true)
+  expect.soft(hallazgos.some(h => h[1].includes('«9»')), 'el número de una marca de prioridad no cuenta').toBe(false)
 })
 
 test('cada aserción de lo que ve un rol cae en una ruta que se recorre', () => {
@@ -122,7 +135,7 @@ for (const ancho of ANCHOS) {
         }
       }
 
-      const orden = { pantalla: 0, sale: 1, recortado: 2, encimado: 3 }
+      const orden = { pantalla: 0, sale: 1, recortado: 2, encimado: 3, chico: 4 }
       const lista = [...hallazgos.entries()]
         .sort((a, b) => orden[a[1].tipo] - orden[b[1].tipo] || b[1].donde.size - a[1].donde.size)
         .map(([clave, x]) => `[${x.tipo}] máx ${x.max}  ${clave}  · en ${x.donde.size}: ${[...x.donde].slice(0, 4).join(' · ')}${x.donde.size > 4 ? ' …' : ''}`)

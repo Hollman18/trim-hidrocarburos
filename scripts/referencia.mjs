@@ -436,6 +436,10 @@ async function conMotor(trabajo, insumosDe) {
       CAT2: await cargar('/src/entities/anh-catalogo.ts'),
       // El servidor del demo (las escrituras) y su sesión: para las escrituras rechazadas.
       SES: await cargar('/src/shared/api/sesion.ts'), E: await cargar('/src/shared/api/escrituras.ts'),
+      // C5 · Las vistas nuevas de la experiencia v2: La planta viva (C2), Hoy (C3) y Resultados (C5).
+      PVA: await cargar('/src/shared/api/plantaViva.ts'), HOYA: await cargar('/src/shared/api/hoy.ts'),
+      RSA: await cargar('/src/shared/api/resultados.ts'), USR: await cargar('/src/entities/usuarios.ts'),
+      EQT: await cargar('/src/shared/api/equiposTecnico.ts'), // C4 · Equipos (la lista y el nivel 3)
     })
     M.ctx = M.L.contextoInicial()
     return await trabajo(M)
@@ -538,6 +542,34 @@ function casosDe(M, escenarios) {
     casos.push(caso(`agua-choke/${c}`, `La tubería del agua de ${c} a esta hora`, C.TUBERIA_AGUA, { campo: c }, CHK.pedirTuberiaAgua(c, ctx, [CONF.versionInicial()])))
     // Lo que rige en las capacidades, lo que la revisión necesita del pasado y lo que encuentra (C-29).
     casos.push(caso(`choke/capacidades-${c}`, `Las capacidades de ${c}: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión`, C.CAPACIDADES, { campo: c }, CHK.pedirCapacidades(c, ctx, [CONF.versionInicial()])))
+  }
+  // C5 · Las vistas nuevas de la experiencia v2, con la configuración de arranque y sin nada dicho por una persona:
+  // La planta viva por momento (C2), Hoy por rol (C3), lo de hoy de cada equipo (de donde sale la franja de
+  // condiciones de la cabecera, C1, junto con /vistas/riesgo) y Resultados por rol (C5).
+  {
+    const v0 = [CONF.versionInicial()]
+    const sesionHoy = { ctx, versiones: v0, usuarios: M.USR.USUARIOS_INICIALES }
+    for (const grupo of [['ceiba'], ['morichal'], todos]) {
+      const nombre = grupo.length === 1 ? grupo[0] : 'portafolio'
+      const q = { campos: grupo, ...rango(ultimo) }
+      for (const momento of ['antes', 'durante', 'despues'])
+        casos.push(caso(`planta-viva/${nombre}-${ultimo.mes}-${momento}`, `La planta viva de ${nombre} en el momento «${momento}», con ${ultimo.mes} como período`, C.PLANTA_VIVA, { ...q, momento },
+          M.PVA.pedirPlantaViva({ ...q, momento }, ctx, v0, {}), conEsp(grupo)))
+      casos.push(caso(`franja/equipos-hoy-${nombre}`, `Lo de hoy de cada equipo de ${nombre} (con /vistas/riesgo, la franja de condiciones de la cabecera)`, C.EQUIPOS_HOY, { campos: grupo }, EQ.pedirEquiposDeHoy(grupo, ctx)))
+      for (const rol of ['sup', 'oper', 'tec', 'jefe', 'conf', 'prod'])
+        casos.push(caso(`hoy/${rol}-${nombre}`, `Hoy del rol ${rol} en ${nombre}: sus tareas en su orden, su cifra y su frase`, C.HOY, { rol, campos: grupo },
+          M.HOYA.pedirHoy({ rol, campos: grupo }, sesionHoy), conEsp(grupo)))
+      casos.push(caso(`equipos/lista-${nombre}`, `La lista de Equipos de ${nombre} (C4): cada equipo con su condición, «¿Lo vigila TRIM?» y su cifra, en su orden`, C.LISTA_EQUIPOS, { campos: grupo },
+        M.EQT.pedirListaEquipos(grupo, ctx, v0), conEsp(grupo)))
+      for (const rol of ['ger', 'prod', 'jefe', 'conf', 'reg'])
+        casos.push(caso(`resultados/${rol}-${nombre}-${ultimo.mes}`, `Resultados del rol ${rol} en ${nombre}, ${ultimo.mes}: la cifra contra el máximo, el mes a mes y lo de su rol`, C.RESULTADOS, { ...q, rol },
+          M.RSA.pedirResultados({ ...q, rol }, { ctx, versiones: v0 }), conEsp(grupo)))
+    }
+    // El nivel 3 de los equipos que la imagen 4 y las pruebas miran (C4): una bomba parada, sus hermanas sin
+    // instrumento, una en marcha, un servicio, una electrosumergible y un pozo.
+    for (const [c, e] of [['ceiba', 'P-201B'], ['ceiba', 'P-201A'], ['morichal', 'P-201B'], ['ceiba', 'K-101'], ['morichal', 'MN-07'], ['ceiba', 'LC-21']])
+      casos.push(caso(`equipos/nivel3-${c}-${e}`, `El nivel 3 de ${e} en ${c} (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia`, C.NIVEL_EQUIPO, { campo: c, equipo: e },
+        M.EQT.pedirNivelEquipo(c, e, ctx, v0) ?? null, conEsp([c])))
   }
   // Los escenarios (QA-A-07; C-29; C-08 punto 4): la misma cuenta con otra configuración firmada o con lo que
   // dijeron las personas. El contexto de un escenario de configuración es su última versión, como en un backend.

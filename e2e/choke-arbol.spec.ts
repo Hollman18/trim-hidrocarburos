@@ -67,7 +67,7 @@ const todoElTexto = (page: Page) => page.evaluate(() => {
 
 test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y equipos, y las ramas suman el tramo', async ({ flujo: f }) => {
   await f.abrir('/#/prod/produccion/ceiba/curso')
-  await f.esperarTexto('SE TRABÓ EN EL PERÍODO')
+  await f.esperarTexto('Se trabó en el período')
 
   await test.step('Octubre: el tramo de la planta se abre con un toque y sus ramas suman el tramo', async () => {
     const fila = f.page.locator('[data-se-trabo] [data-tramo-periodo="planta"]')
@@ -105,7 +105,7 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
 
   await test.step('Septiembre: el pozo se abre hasta la parte de cada electrosumergible', async () => {
     await f.ir('#/prod/produccion/ceiba/cerrado')
-    await f.esperarTexto('SE TRABÓ EN EL PERÍODO')
+    await f.esperarTexto('Se trabó en el período')
     const fila = f.page.locator('[data-se-trabo] [data-tramo-periodo="pozo"]')
     const tramo = Number(await fila.getAttribute('data-bbl'))
     await fila.locator(':scope > div > button[aria-expanded]').click()
@@ -138,7 +138,8 @@ const abrirVerMas = async (page: Page) => {
 }
 
 test('el gerente ve lo no planeado de cada tramo, con la cifra de la barra y sin códigos ni «choke»', async ({ flujo: f }) => {
-  await f.abrir('/#/ger/resumen/ceiba~portafolio/cerrado')
+  // C5: el Resumen del gerente se fundió en Resultados («Por campo» trae el «dónde se trabó» de cada campo).
+  await f.abrir('/#/ger/resultados/ceiba~portafolio/cerrado')
   await f.esperarTexto('dónde se trabó')
   // Dos renglones por campo: la barra con la parte de cada tramo y la frase; lo demás, plegado (B-13).
   const frases = await f.page.locator('main [data-frase-gerente]').allInnerTexts()
@@ -172,8 +173,8 @@ test('el gerente ve lo no planeado de cada tramo, con la cifra de la barra y sin
   f.ok(!CODIGO_ANH.test(papel) && !/choke/i.test(papel) && papel.includes('lo no planeado de cada tramo'), 'tampoco en el papel, donde también sale lo no planeado')
   await f.page.emulateMedia({ media: 'screen' })
 
-  await test.step('Octubre en Diferidos: lo sin identificar no se cuenta como planeado ni como no planeado', async () => {
-    await f.ir('#/ger/diferidos/ceiba/curso')
+  await test.step('Octubre en Resultados: lo sin identificar no se cuenta como planeado ni como no planeado', async () => {
+    await f.ir('#/ger/resultados/ceiba/curso')
     await f.esperarTexto('dónde se trabó')
     await abrirVerMas(f.page)
     await f.esperarTexto('lo no planeado de cada tramo')
@@ -181,14 +182,14 @@ test('el gerente ve lo no planeado de cada tramo, con la cifra de la barra y sin
     f.ok(Number(await sin.getAttribute('data-no-planeada')) === 0 && /sin saber si fue planeado/.test(await sin.innerText()),
       `lo sin identificar dice «sin saber si fue planeado» («${(await sin.innerText()).replace(/\s+/g, ' ')}»)`)
     const todoD = await todoElTexto(f.page)
-    f.ok(!CODIGO_ANH.test(todoD) && !/choke/i.test(todoD), 'Diferidos del gerente: sin códigos ni «choke»')
+    f.ok(!CODIGO_ANH.test(todoD) && !/choke/i.test(todoD), 'Resultados del gerente: sin códigos ni «choke»')
   })
   f.cerrar()
 })
 
 test('regulatorio ve el árbol en el orden de la circular, con la cadena de cada paso y el cuadre con el libro', async ({ flujo: f }) => {
   await f.abrir('/#/reg/regulatorio/ceiba/cerrado')
-  await f.esperarTexto('ÁRBOL DE CAUSAS · COMO LA CIRCULAR')
+  await f.esperarTexto('Árbol de causas · como la circular')
   f.ok((await f.hash()).startsWith('#/reg/regulatorio/ceiba'), `cumplimiento regulatorio entra a su pantalla (${await f.hash()})`)
   const caja = f.page.locator('[data-arbol-circular]')
   const raiz = Number(await caja.getAttribute('data-bbl'))
@@ -207,7 +208,7 @@ test('regulatorio ve el árbol en el orden de la circular, con la cadena de cada
     `la rama de la pérdida está en cada tramo (${perdidas.length}), vacía y diciendo por qué`)
   const prodml = await f.page.evaluate(() => {
     const arbol = document.querySelector('[data-arbol-circular]')
-    const panel = [...document.querySelectorAll('main h2')].find(h => h.textContent?.trim() === 'TAMBIÉN EN PRODML')
+    const panel = [...document.querySelectorAll('main h2')].find(h => h.textContent?.trim() === 'También en PRODML')
     return !!arbol && !!panel && !!(arbol.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING)
   })
   f.ok(prodml, 'el árbol va primero; las casillas de PRODML, debajo, como «también en PRODML»')
@@ -237,7 +238,7 @@ test.describe('teléfono', () => {
       ['#/prod/produccion/ceiba/cerrado', '[data-se-trabo] [data-tramo-periodo="pozo"] button'],
       ['#/prod/produccion/ceiba/curso', '[data-se-trabo] [data-tramo-periodo="planta"] button'],
       ['#/conf/diferidos/morichal/cerrado', '[data-tramo-fila="planta"] button'],
-      ['#/ger/resumen/ceiba~portafolio/cerrado', ''],
+      ['#/ger/resultados/ceiba~portafolio/cerrado', ''],
       ['#/reg/regulatorio/ceiba/curso', ''],
       ['#/reg/regulatorio/morichal/cerrado', ''],
     ] as const) {

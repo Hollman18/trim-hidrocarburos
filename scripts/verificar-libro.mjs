@@ -1058,12 +1058,21 @@ comprobar(est().rolId === 'ger' && nav.hash.startsWith('#/ger/'), `pegar un enla
 est().setRol('oper'); ir('#/oper/bombas/ceiba/curso')
 ir('#//produccion/palmar/curso')
 comprobar(est().rolId === 'oper' && est().pantalla === ROL.rolPorId('oper').inicio && est().campoId === 'ceiba', `operador con «#//produccion/palmar»: sigue en lo suyo de La Ceiba (${est().pantalla}, ${est().campoId})`)
-est().setRol('ger'); ir('#/ger/resumen/ceiba~portafolio/curso')
-ir('#/ger/resumen/zarza~portafolio/curso')
-comprobar(est().alcance === 'portafolio' && est().campoId === 'zarza' && nav.hash === '#/ger/resumen/zarza~portafolio/curso', `pegar un portafolio sobre otro portafolio lo conserva (${nav.hash})`)
-ir('#/ger/resumen/ceiba/curso/P-201B')
-ir('#/ger/diferidos/ceiba/curso/P-201B')
-comprobar(est().pantalla === 'diferidos' && est().equipoAbierto === 'P-201B', `cambiar de pantalla por la dirección con el mismo equipo lo deja abierto (${nav.hash})`)
+// C5 (25-oct): el Resumen y los Diferidos del gerente se fundieron en La planta viva y Resultados (X4 §3.6);
+// lo mismo se prueba con Resultados, que también suma campos, y sus direcciones viejas abren la nueva.
+est().setRol('ger'); ir('#/ger/resultados/ceiba~portafolio/curso')
+ir('#/ger/resultados/zarza~portafolio/curso')
+comprobar(est().alcance === 'portafolio' && est().campoId === 'zarza' && nav.hash === '#/ger/resultados/zarza~portafolio/curso', `pegar un portafolio sobre otro portafolio lo conserva (${nav.hash})`)
+ir('#/ger/resultados/ceiba/curso/P-201B')
+ir('#/ger/planta-viva/ceiba/curso/P-201B')
+comprobar(est().pantalla === 'plantaViva' && est().equipoAbierto === 'P-201B', `cambiar de pantalla por la dirección con el mismo equipo lo deja abierto (${nav.hash})`)
+ir('#/ger/diferidos/ceiba/cerrado')
+const fusionDif = est().pantalla
+ir('#/ger/riesgo/ceiba/curso')
+const fusionRiesgo = est().pantalla
+ir('#/ger/resumen/ceiba/curso')
+comprobar(fusionDif === 'resultados' && fusionRiesgo === 'plantaViva' && est().pantalla === 'plantaViva' && nav.hash.startsWith('#/ger/planta-viva/ceiba/'),
+  `las direcciones viejas del gerente abren donde se fundieron: Diferidos → ${fusionDif}, Riesgo → ${fusionRiesgo}, Resumen → ${est().pantalla} (${nav.hash})`)
 ir('#/ger/perfil/ceiba/curso')
 comprobar(est().pantalla === 'perfil', 'atrás/adelante a «Mi perfil» lo vuelve a abrir')
 
@@ -2176,7 +2185,7 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
     `la serie mensual trae sinCosto en ${serieS.length} meses (${serieS.map(x => x.mes).join(', ')})`)
 
   // 2, 6 y 7. Rótulos, cuentas y papel.
-  const pantallas = ['src/pages/Esp.tsx', 'src/pages/Equipo.tsx', 'src/widgets/riesgo/Ahora.tsx', 'src/pages/Riesgo.tsx', 'src/pages/Mantenimiento.tsx', 'src/pages/Turno.tsx', 'src/widgets/equipo/FichaEjecutiva.tsx']
+  const pantallas = ['src/pages/Esp.tsx', 'src/widgets/equipos/Lista.tsx', 'src/widgets/riesgo/Ahora.tsx', 'src/pages/Riesgo.tsx', 'src/pages/Mantenimiento.tsx', 'src/pages/Turno.tsx', 'src/widgets/equipo/FichaEjecutiva.tsx']
   const siFallaBpd = pantallas.filter(rel => /bbl\/d si fallan?\b|[Ee]n juego si falla|por día si fallan?\b/.test(fuente(rel)))
   comprobar(!siFallaBpd.length, `los bbl/d se rotulan «si para» o «en juego», nunca «si falla(n)» (que es la cifra en bbl de hoy)${siFallaBpd.length ? `: ${siFallaBpd.join(', ')}` : ''}`)
   const ahoraTxt = sinComentarios(fuente('src/widgets/riesgo/Ahora.tsx')), mantTxt = sinComentarios(fuente('src/pages/Mantenimiento.tsx'))
@@ -3516,6 +3525,230 @@ console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen h
       && ceP.cifras.despues.explica.endsWith('Septiembre cerró en 7.716 bbl.') && ceP.esteMes.anterior?.bbl > 7715,
     'los estados: La Zarza es de gas (su tubería todavía no está), Guacamayo produce sin paradas (nada marcado) y a comienzo de mes Después dice el mes anterior cerrado (septiembre, 7.716 bbl)')
   void todosP
+}
+
+// C5 · Resultados (X4 §4.8) y «un nombre, una cifra» (X4 §1.3.3, §3.1 regla 4; pedido 3 de §4.11): cada rótulo
+// con UNA definición, la cifra grande de Resultados igual a la del libro y a la de La planta viva, lo simulado
+// nunca como cifra grande, cada rol lo suyo, y en las pantallas de C5 ni «Perdiéndose ahora» ni los 1·2·3 del ciclo.
+console.log('\n=== C5. Resultados y un nombre, una cifra ===')
+{
+  const RS = await v.ssrLoadModule('/src/entities/resultados.ts')
+  const PV = await v.ssrLoadModule('/src/entities/planta-viva.ts')
+  const RPV = await v.ssrLoadModule('/src/entities/choke-reparto.ts')
+  const ESV = await v.ssrLoadModule('/src/entities/escenarios.ts')
+  const { readFileSync, readdirSync, statSync } = await import('node:fs')
+  const curso = D.rangoDePeriodo('curso'), cerrado = D.rangoDePeriodo('cerrado')
+  const qPV = (campos, momento) => ({ campos, momento, desde: curso.desde, hasta: curso.hasta })
+  const unNombre = cs => { const ri = D.riesgoAhora(cs, ctx0); return RS.cifrasDeUnNombre(ri, cs.map(c => D.estadoCampo(c, ctx0))) }
+  const ce = unNombre(['ceiba']), todos = unNombre(TODOS)
+
+  // 1. «Se deja de producir ahora» es el total del campo (1.966); lo de las bombas, «por bombas paradas» (1.665).
+  const tub = RPV.tuberiaCampo('ceiba', curso.desde, curso.hasta, ctx0, V0)
+  const p201 = D.prediccion(B.perfilBomba('P-201B', 'ceiba'), ctx0)
+  comprobar(f(ce.ahoraBpd) === '1.966' && cerca(ce.ahoraBpd, tub.perdiendoAhoraBpd) && f(ce.porBombasBpd) === '1.665' && cerca(ce.porBombasBpd, p201.perdiendo?.bblDia ?? 0)
+      && RS.NOMBRE_CIFRA.ahora === 'Se deja de producir ahora' && RS.NOMBRE_CIFRA.porBombas === 'por bombas paradas'
+      && cerca(PV.plantaViva(qPV(['ceiba'], 'durante'), ctx0, V0).cifras.durante.valor, ce.ahoraBpd),
+    `«${RS.NOMBRE_CIFRA.ahora}» es el total del campo (${f(ce.ahoraBpd)} bbl/d = la tubería = La planta viva) y lo de P-201B se llama «${RS.NOMBRE_CIFRA.porBombas}» (${f(ce.porBombasBpd)})`)
+  // 2. «Durante» de todos los campos: un solo total (2.650), no el del ciclo de alto impacto (2.349 bbl/d, que ya no lleva ese nombre).
+  const cic = ESV.cicloValor(TODOS, curso.desde, curso.hasta, ctx0, V0)
+  comprobar(f(todos.ahoraBpd) === '2.650' && cerca(todos.ahoraBpd, PV.plantaViva(qPV(TODOS, 'durante'), ctx0, V0).cifras.durante.valor) && f(cic.durante.bblDia) !== f(todos.ahoraBpd),
+    `«Durante» en todos los campos es ${f(todos.ahoraBpd)} bbl/d; los ${f(cic.durante.bblDia)} bbl/d del ciclo (solo lo de alto impacto) no se muestran con ese nombre`)
+  // 3. «Antes» es un conteo, uno solo para todo el producto: los equipos que avisan (8), no los 6 de alto impacto.
+  const riT = D.riesgoAhora(TODOS, ctx0)
+  comprobar(todos.avisan === 8 && todos.avisan === PV.plantaViva(qPV(TODOS, 'antes'), ctx0, V0).cifras.antes.valor && riT.filter(r => r.estado === 'en-riesgo' && r.altoImpacto).length === 6
+      && ce.avisan === 1 && ce.primero?.equipo === 'K-101' && todos.primero?.equipo === 'K-101' && RS.NOMBRE_CIFRA.avisan === 'Equipos que avisan',
+    `«${RS.NOMBRE_CIFRA.avisan}»: ${todos.avisan} en todos los campos (el mismo de La planta viva; de alto impacto son 6, y no se llaman igual) y 1 en La Ceiba, el más cercano K-101`)
+  // 4. La exposición: la suma de lo que costaría cada uno que avisa si fallara hoy (45.262), distinta del retorno simulado (45.233), con otro nombre.
+  comprobar(f(todos.exposicionBbl) === '45.262' && f(cic.retornoBbl) === '45.233' && RS.NOMBRE_CIFRA.exposicion !== RS.NOMBRE_CIFRA.retorno && todos.sinExposicion === 1,
+    `«${RS.NOMBRE_CIFRA.exposicion}» ≈ ${f(todos.exposicionBbl)} bbl (estimado; ${todos.sinExposicion} sin esa cifra) y «${RS.NOMBRE_CIFRA.retorno}» ${f(cic.retornoBbl)} bbl (simulado): dos cifras, dos nombres`)
+  // 5. Lo que dan los pozos: según sus pruebas (la tubería, 11.857) no es el potencial del libro (con el factor del mes, 11.360).
+  const pozosT = tub.tramos.find(t => t.tramo === 'pozo')
+  comprobar(f(pozosT.potencialBpd) === '11.857' && f(D.estadoCampo('ceiba', ctx0).potencialBpd) === '11.360' && RS.NOMBRE_CIFRA.pozos !== RS.NOMBRE_CIFRA.potencial,
+    `«${RS.NOMBRE_CIFRA.pozos}» (${f(pozosT.potencialBpd)} bbl/d, según sus pruebas) y «${RS.NOMBRE_CIFRA.potencial}» (${f(D.estadoCampo('ceiba', ctx0).potencialBpd)}, con el factor de asignación): dos preguntas, dos nombres`)
+  // 6. El supuesto del plan de un equipo dice de quién es (antes «Perdiéndose ahora 1665 bbl/d.», el nombre del total).
+  const cc = ESV.cicloValor(['ceiba'], curso.desde, curso.hasta, ctx0, V0)
+  const sup = cc.durante.planes.find(x => x.id === 'durante:ceiba:P-201B:mttr')?.supuestos ?? []
+  comprobar(sup[0] === 'Por P-201B se dejan de producir ahora 1665 bbl/d.' && !JSON.stringify(ESV.cicloValor(TODOS, curso.desde, curso.hasta, ctx0, V0)).includes('Perdiéndose'),
+    `el plan de P-201B dice «${sup[0]}», y ningún plan del ciclo dice «Perdiéndose»`)
+
+  // 7. Resultados: la cifra grande es el diferido del libro = «Después» y «Este mes» de La planta viva, contra el máximo firmado.
+  const ordenes = SAP.historiaSap(ctx0).ordenes
+  let t0 = performance.now()
+  const rt = RS.resultados({ rol: 'ger', campos: TODOS, desde: curso.desde, hasta: curso.hasta }, ctx0, V0, { ordenes })
+  const ms = performance.now() - t0
+  const rc = RS.resultados({ rol: 'ger', campos: ['ceiba'], desde: curso.desde, hasta: curso.hasta }, ctx0, V0, { ordenes })
+  const lb = L.libro(['ceiba'], curso.desde, curso.hasta, ctx0), pvP = PV.plantaViva(qPV(['ceiba'], 'despues'), ctx0, V0)
+  comprobar(ms < 300 && f(rc.cifra.valor) === '1.046' && cerca(rc.cifra.valor, lb.diferido) && cerca(rc.cifra.valor, pvP.cifras.despues.valor) && cerca(rc.cifra.valor, pvP.esteMes.bbl)
+      && f(rc.cifra.maximo) === '1.267' && !rc.cifra.sobreMaximo && rc.cifra.frase === 'no se produjeron en La Ceiba.'
+      && rc.cifra.explica === 'El máximo firmado para lo que va de octubre es 1.267 bbl: va 221 por debajo. P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.'
+      && rc.cifra.fraseCorta.split(/\s+/).length <= 20 && rc.cifra.previo === 'Lo que pasó · octubre, en curso' && rc.cifra.primerEquipo?.equipo === 'P-201B'
+      && f(rt.cifra.valor) === '2.377',
+    `la cifra grande: ${f(rc.cifra.valor)} bbl «${rc.cifra.frase}» (el libro, «Después» y «Este mes»), contra el máximo de ${f(rc.cifra.maximo)}; todos los campos ${f(rt.cifra.valor)} en ${ms.toFixed(0)} ms (D7)`)
+  // 8. La producción contra la meta y el cierre proyectado: lo que va más el ritmo de hoy hasta el último día.
+  const p = rc.produccion, est = D.estadoCampo('ceiba', ctx0)
+  const cierre = lb.real + (est.potencialBpd - est.perdiendoBpd) * (lb.meta.diasTotal - lb.meta.dias)
+  comprobar(f(p.realBpd) === '10.700' && p.metaBpd === 10900 && p.bajoMeta && p.cierre.proyectado && cerca(p.cierre.produccion, cierre) && p.cierre.metaProduccion === lb.meta.produccionTotal
+      && cerca(p.cierre.diferido, lb.diferido + est.perdiendoBpd * (lb.meta.diasTotal - lb.meta.dias)) && p.cierre.sobreMaximo,
+    `la producción ${f(p.realBpd)} de ${f(p.metaBpd)} bbl/d, y el cierre proyectado de octubre: ${f(p.cierre.produccion)} de ${f(p.cierre.metaProduccion)} bbl; diferido ${f(p.cierre.diferido)} contra ${f(p.cierre.maximoDiferido)}`)
+  // 9. ¿Está bajando?, lo de alto impacto y el mantenimiento proactivo; el mes a mes con su parte por tramo.
+  const m = rc.mesAMes.meses
+  comprobar(rc.bajando.filas.map(x => `${x.tramo} ${f(x.antesBpd)}→${f(x.ahoraBpd)}`).join(', ') === 'planta 268→51, pozo 122→215'
+      && f(rc.bajando.altoImpacto.antesBpd) === '310' && f(rc.bajando.altoImpacto.ahoraBpd) === '255' && rc.bajando.altoImpacto.texto.endsWith('−18 %')
+      && f(rc.proactivo.porcentaje) === '14' && rc.proactivo.proactivoH === 4 && rc.proactivo.correctivoH === 24
+      && m.length === 13 && m.every(x => cerca(Object.values(x.porTramo).reduce((a, y) => a + y, 0), x.totalBpd) || x.totalBpd < 0.5)
+      && m.filter(x => x.enPeriodo).map(x => x.mes).join() === '2026-10' && m[12].desdeDia === '2026-10-01' && m[11].hastaDia === '2026-09-30' && m[4].sobre,
+    `¿está bajando? (planta 268 → 51, pozos 122 → 215; alto impacto 310 → 255, −18 %), proactivo 14 %, y los 13 meses partidos por tramo sin perder un barril (octubre en el período)`)
+  // 10. Lo simulado nunca es la cifra grande: el ciclo va en su tarjeta, por momento, con «simulado».
+  comprobar(f(rc.ciclo.totalBbl) === '2.133' && rc.ciclo.momentos.map(x => f(x.bbl)).join(' · ') === '0 · 2.102 · 30' && rc.ciclo.momentos.every(x => /simulado/.test(x.texto))
+      && !cerca(rc.cifra.valor, rc.ciclo.totalBbl) && !Object.values(rc.cifra).some(x => typeof x === 'string' && /simulad/.test(x)),
+    `el retorno posible del ciclo, ${f(rc.ciclo.totalBbl)} bbl (0 · 2.102 · 30), va aparte con «simulado» en cada línea; la cifra grande no lo dice ni lo es`)
+  // 11. Cada rol lo suyo (X4 §4.8; jefe y confiabilidad: mantenimiento y confiabilidad).
+  const de = rol => RS.resultados({ rol, campos: ['ceiba'], desde: curso.desde, hasta: curso.hasta }, ctx0, V0, {
+    ordenes, relojes: { fallas: 3, totalH: 194, activaH: 9, esperaH: 185 }, vigia: { aciertos: 3, falsas: 1, intervenidas: 2, seguimiento: 1, anticipoDias: 4.2, anunciadas: 3, vigiladas: 3 } })
+  const jefe = de('jefe'), conf = de('conf'), reg = de('reg'), prod = de('prod'), ger = de('ger')
+  comprobar(ger.secciones.join() === 'produccion,bajando,mesAMes,porEquipo,dondeSeTrabo,dondeBajarlo,tipos,diaADia,ciclo' && ger.mantenimiento === null && ger.confiabilidad === null
+      && rt.secciones.join() === 'produccion,bajando,mesAMes,porEquipo,porCampo,dondeBajarlo,tipos,diaADia,ciclo'
+      && jefe.secciones[0] === 'mantenimiento' && jefe.mantenimiento.frase === 'De 8,1 días que dura una falla, 7,7 son espera (repuesto, permisos, cuadrilla).'
+      && conf.secciones[0] === 'confiabilidad' && conf.confiabilidad.tasa === 75 && /acertó 3 veces de 4/.test(conf.confiabilidad.frase)
+      && reg.secciones[0] === 'publicar' && !reg.secciones.includes('ciclo') && reg.publicar.estado === 'provisional' && prod.secciones.slice(0, 2).join() === 'produccion,publicar',
+    `cada rol lo suyo: gerente (lo que eran su Resumen, sus Diferidos y su Producción), jefe «${jefe.mantenimiento.frase}», confiabilidad «${conf.confiabilidad.frase}», regulatorio con «¿Se puede publicar?» primero`)
+  // 12. Un mes cerrado: el total del período (sin proyección) y su sello.
+  const rcc = RS.resultados({ rol: 'ger', campos: ['ceiba'], desde: cerrado.desde, hasta: cerrado.hasta }, ctx0, V0, { ordenes })
+  comprobar(!rcc.enCurso && rcc.produccion.cierre.titulo === 'Total del período' && f(rcc.cifra.valor) === '7.716' && rcc.publicar.estado === 'publicable' && rcc.cifra.previo === 'Lo que pasó · septiembre',
+    `septiembre: ${f(rcc.cifra.valor)} bbl, el total del período y «se puede publicar»`)
+
+  // 13. En las pantallas de C5: ni «Perdiéndose ahora», ni los dígitos 1·2·3 del ciclo, ni títulos de panel en MAYÚSCULAS.
+  const RAIZ_SRC = `${RAIZ}src/`
+  const archivos = ['pages/Resultados.tsx', 'pages/Diferidos.tsx', 'pages/Produccion.tsx', 'pages/Confiabilidad.tsx', 'pages/Mantenimiento.tsx', 'pages/Resumen.tsx', 'pages/Riesgo.tsx', 'pages/Turno.tsx', 'pages/Trabajo.tsx', 'pages/Causa.tsx', 'pages/Regulatorio.tsx']
+  for (const d of ['resultados', 'diferidos', 'produccion', 'confiabilidad', 'ciclo', 'resumen', 'riesgo', 'choke', 'arbol'])
+    for (const x of readdirSync(`${RAIZ_SRC}widgets/${d}`)) if (statSync(`${RAIZ_SRC}widgets/${d}/${x}`).isFile()) archivos.push(`widgets/${d}/${x}`)
+  const fuenteDe = a => readFileSync(`${RAIZ_SRC}${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
+  const perdiendo = archivos.filter(a => /Perdiéndose|PERDIÉNDOSE|perdiéndose/.test(fuenteDe(a)))
+  const ciclo = fuenteDe('widgets/ciclo/Ciclo.tsx')
+  const enMayus = t => /[A-ZÁÉÍÓÚÑ]{4,}/.test(t) && t === t.toUpperCase() && !/^[A-Z]{2,}[-/]?\d*$/.test(t)
+  const mayus = archivos.flatMap(a => [...[...fuenteDe(a).matchAll(/titulo[=:]\s*["']([^"']+)["']/g)].map(x => x[1]),
+    ...[...fuenteDe(a).matchAll(/>\s*([A-ZÁÉÍÓÚÑ¿][A-ZÁÉÍÓÚÑ ·,¿?]{5,})\s*</g)].map(x => x[1].trim())].filter(enMayus).map(t => `${a}: ${t}`))
+  comprobar(perdiendo.length === 0 && !/ORDEN_FASE|antes: '1', durante: '2', despues: '3'/.test(ciclo) && mayus.length === 0,
+    `en las ${archivos.length} pantallas y widgets de C5 no queda «Perdiéndose ahora» (${perdiendo.join(', ') || 'ninguno'}), el ciclo no numera sus momentos y ningún título de panel va en mayúsculas (${mayus.slice(0, 4).join(' · ') || 'ninguno'})`)
+}
+
+// C4 · Equipos y nivel técnico (X4 §3.6, §3.7 y §5; la imagen 4): la lista de todos los equipos en su
+// orden y con sus filtros, y el nivel 3 de P-201B con las cifras del demo. Y las direcciones (X4 §3.8).
+console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P-201B como la imagen 4; las direcciones ===')
+{
+  const ET = await v.ssrLoadModule('/src/entities/equipos-tecnico.ts')
+  const FRC = await v.ssrLoadModule('/src/entities/condiciones.ts')
+  const CRC = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const ctx = L.contextoInicial()
+  let t0 = performance.now()
+  const ce = ET.listaEquipos(['ceiba'], ctx, V0)
+  const msLista = performance.now() - t0
+  const ids = fs => fs.map(x => x.equipo).join(' ')
+  // El orden: por estado (la marca, de la más grave a ninguna; lo parado primero) y por «Si falla hoy».
+  comprobar(ids(ce.filas.slice(0, 9)) === 'P-201B K-101 LC-21 TK-102 H-302 LC-16 LC-07 P-201A P-201C'
+      && ce.filas.slice(9).filter(f => !f.parado && f.cifra.valor !== null && !f.cifra.techo).every((f, i, xs) => i === 0 || xs[i - 1].cifra.valor >= f.cifra.valor)
+      && ids(ce.filas.slice(-4)) === 'SE-2 V-101 C-401 LACT-01' && ce.filas.at(-4).cifra.techo && ce.filas.at(-1).cifra.valor === null,
+    `La Ceiba, en su orden: ${ids(ce.filas.slice(0, 9))} …; lo medido de mayor a menor, después los techos («hasta»: SE-2, V-101) y al final lo que no tiene cifra (C-401, LACT-01)`)
+  // Una marca por equipo: la de la franja, en cada campo y en todos.
+  const todos = ET.listaEquipos(TODOS, ctx, V0)
+  const marcasIguales = TODOS.every(c => { const fr = FRC.franja([c], ctx); return todos.filas.filter(f => f.campoId === c).every(f => (fr.equipos.find(e => e.equipo === f.equipo)?.condicion ?? null) === (f.condicion ?? null)) })
+  comprobar(marcasIguales && todos.filas.filter(f => f.condicion).length === FRC.franja(TODOS, ctx).equipos.length,
+    `la marca de cada fila es la de la franja, en cada campo (${todos.filas.filter(f => f.condicion).length} con marca en los cinco campos) y ningún equipo sin marca la lleva`)
+  // Los filtros: parados, avisan, sin instrumento y todos; por tipo (una electrosumergible también es pozo) y por tren.
+  const en = k => ids(ce.filas.filter(f => f.filtros.includes(k)))
+  comprobar(en('parados') === 'P-201B LC-21 LC-16 LC-07' && en('avisan') === 'K-101 TK-102 H-302' && en('sin-instrumento') === 'LC-21 P-201A P-201C LC-19 LC-03'
+      && ce.cuentas.estado.todos === 28 && ce.cuentas.tipo.bomba === 3 && ce.cuentas.tipo.electrosumergible === 15 && ce.cuentas.tipo.pozo === 18 && ce.cuentas.tipo.superficie === 7
+      && ce.cuentas.tren.agua === 3 && ce.cuentas.tren.pozos === 18 && ce.cuentas.tren.servicios === 2
+      && ce.filas.find(f => f.equipo === 'P-201A').vigilaTexto === 'no: sin instrumento' && ce.filas.find(f => f.equipo === 'P-201B').vigilaTexto === 'sí · 8 señales',
+    `los filtros: parados (${en('parados')}), avisan (${en('avisan')}), sin instrumento (${en('sin-instrumento')}); 3 bombas, 15 electrosumergibles que también son pozos (18), 7 de servicios y proceso; «¿Lo vigila TRIM?»`)
+  // Lo que decía Superficie de cada equipo y la lista no puede perder: los que no tienen respaldo (los pozos no lo llevan).
+  comprobar(ids(ce.filas.filter(f => f.sinRespaldo)) === 'SE-2 V-101 C-401 LACT-01' && !ce.filas.some(f => f.sinRespaldo && f.tipos.includes('pozo')),
+    `sin respaldo, como lo marcaba Superficie: ${ids(ce.filas.filter(f => f.sinRespaldo))}`)
+  // La palabra y la cifra de cada fila (X5 §5.5), y «Cambió hoy».
+  const fila = id => ce.filas.find(f => f.equipo === id)
+  comprobar(fila('P-201B').palabra === 'parada desde hoy, 03:52' && f(fila('P-201B').cifra.valor) === '1.665' && fila('P-201B').cifra.que === 'se deja de producir'
+      && fila('K-101').palabra === 'ya pasó el límite' && fila('K-101').cifra.techo && f(fila('K-101').cifra.valor) === '9.394'
+      && fila('LC-21').palabra === 'parado sin causa desde el 1 de oct, 18:20' && fila('LC-16').palabra === 'cerrado por P-201B'
+      && f(fila('P-201A').cifra.valor) === '3.059' && fila('P-201A').cifra.detalle === 'después de 2 min de colchón' && fila('P-201A').sube === 'sube porque P-201B está parada'
+      && fila('P-201B').familia === 'bomba de agua' && fila('K-101').familia === 'aire de instrumentos' && fila('LC-21').familia === 'pozo · bombeo mecánico'
+      && ce.cambioHoy[0] === CRC.criticidadDelCampo('ceiba', ctx).cambioHoy,
+    `cada fila: «${fila('P-201B').palabra}» 1.665 se deja de producir; K-101 «ya pasó el límite», hasta 9.394 si falla hoy; P-201A 3.059 después de 2 min, «${fila('P-201A').sube}»`)
+  const vg = ET.aciertoVigia(['ceiba', 'morichal', 'guacamayo'], ctx)
+  comprobar(vg.aciertos === 5 && vg.juzgadas === 7 && vg.falsas === 2 && vg.intervenidas === 5 && /^¿Le creo al vigía\? Desde el 1 de sept: acertó 5 de 7 avisos/.test(vg.frase),
+    `el acierto del vigía para confiabilidad, en una línea: «${vg.frase}»`)
+
+  // El nivel 3 de P-201B, con las cifras de la imagen 4.
+  t0 = performance.now()
+  const n = ET.nivelEquipo('ceiba', 'P-201B', ctx, V0)
+  const msN3 = performance.now() - t0
+  const sen = tag => n.senales.find(x => x.tag === tag)
+  comprobar(n.previo === 'Alarma · parada desde hoy, 03:52 · hace 10,1 h' && f(n.cifra.valor) === '1.665' && n.cifra.frase === 'se dejan de producir: cerró LC-07 y LC-16.'
+      && n.bloqueo?.texto === 'No arrancar hasta identificar qué se dañó' && n.bloqueo.sub === 'Si arranca antes, queda como no conformidad.' && n.pregunta?.sobre === 'bomba'
+      && n.vecinos.anterior === 'P-201A' && n.vecinos.siguiente === 'P-201C' && n.tren === 'agua'
+      && n.subtitulo === 'bomba multietapa de transferencia de agua · tratamiento de agua · criticidad 5 de 5',
+    `la cabecera y la cifra: «${n.previo}», 1.665 «${n.cifra.frase}», «${n.bloqueo?.texto}», y sus vecinos del tren (‹ ${n.vecinos.anterior} · ${n.vecinos.siguiente} ›)`)
+  // Sus señales: las 7 con indicador y el interruptor; parada: en gris y sin marca (X2 B9). Escala fija, banda y alarma.
+  comprobar(n.senales.length === 7 && n.plegadas.length === 0 && n.discretas.map(d => `${d.tag} ${d.valor}`).join() === 'LSH-2013 sin fuga'
+      && n.senales.every(x => x.gris && !x.condicion) && sen('PI-2010').limite === 'normal > 10 · alarma 8' && sen('FI-2011').limite === 'normal 66.800 – 89.250'
+      && sen('TI-2011').limite === 'normal < 85 · alarma 85' && sen('VI-2011').limite === 'normal < 3,9 · alarma 3,9' && sen('LT-2012').escala.join() === '0,100'
+      && n.senales.every(x => x.escala[0] <= Math.min(...x.alarmas, x.banda?.[0] ?? Infinity) && x.escala[1] >= Math.max(...x.alarmas, x.banda?.[1] ?? -Infinity) && x.serie.length === 12)
+      && n.sinDisparo,
+    'sus señales: 7 con su indicador y la fuga del sello en palabras; paradas, en gris y sin marca; la escala de cada una cubre su banda y su alarma (y el % va de 0 a 100); «falta el disparo» se dice')
+  // La escala no depende del valor de ahora: con la bomba en otro punto de la misma ventana, es la misma.
+  const pi = sen('PI-2010')
+  comprobar(ET.escalaDe('psi', [10, Infinity], [8], pi.serie).join() === pi.escala.join() && ET.escalaDe('psi', [10, Infinity], [8], [...pi.serie.slice(0, -1), 12]).join() !== pi.escala.join()
+      && ET.escalaDe('psi', [10, Infinity], [8], [...pi.serie.slice(0, -1), 12, 18.2]).join() === ET.escalaDe('psi', [10, Infinity], [8], [18.2, ...pi.serie.slice(0, -1), 12]).join(),
+    `la escala de PI-2010 (${pi.escala.map(x => x.toLocaleString('es-CO')).join(' a ')} psi) sale de los límites y la ventana, no del orden ni del valor de ahora`)
+  // El tren de agua, «mientras esté parada», los días antes de parar, la historia y los repuestos.
+  const e = n.esquemaAgua, m = n.mientras
+  comprobar(e.tanque.nivelPct === 89.6 && e.tanque.altoAltoPct === 90 && e.bombas.map(b => `${b.id}:${b.marcha}:${b.instrumentada ? 'i' : 's'}`).join() === 'P-201A:sin-lectura:s,P-201B:parada:i,P-201C:sin-lectura:s'
+      && e.instrumentos.map(i => `${i.letras} ${i.valor}`).join(', ') === 'PI 18.2, PDI 0, FI 0' && f(e.entraBpd) === '174.033' && e.toman.join() === 'P-201A,P-201C',
+    'en su tren de agua: el tanque al 89,6 % (alto-alto 90 %), P-201B parada y las otras dos sin instrumento, PI 18,2 · PDI 0 · FI 0, entran 174.033 bbl/d y las toman P-201A y P-201C')
+  comprobar(f(m.entraBpd) === '174.033' && f(m.cabenBpd) === '178.500' && m.tanquePct === 89.6 && m.frase === 'El nivel no sube: P-201A y P-201C toman lo que entra.'
+      && m.pasos.map(x => `${x.pozo}${x.fraccion < 0.999 ? ` ${f(x.fraccion * 100)}` : ''}`).join(' · ') === 'LC-02 · LC-10 · LC-01 · LC-17 · LC-14 · LC-06 25 · LC-09 25 · LC-11 20'
+      && f(m.crudoBpd) === '3.059' && f(m.parejoBpd) === '4.577' && m.colchon === '2 min',
+    'mientras esté parada: entran 174.033, caben 178.500, el tanque al 89,6 %; si para otra, LC-02 · LC-10 · LC-01 · LC-17 · LC-14 · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 %: 3.059 bbl/d después de 2 min (parejo, 4.577)')
+  const h = n.historia
+  comprobar(n.tendencias.titulo === 'Los 12 días antes de parar' && n.tendencias.series.slice(0, 2).map(x => x.tag).join() === 'TI-2011,II-2011' && n.tendencias.series.length <= 3
+      && n.tendencias.modoFalla === 'Lubricación de cojinete'
+      && h.fallas === 9 && f(h.cadaDias) === '41' && h.fueraH.toFixed(1) === '40.0' && f(h.bblPorFalla) === '4.593' && h.porParte.map(x => `${x.parte} ${x.fallas}`).join(' · ') === 'Sello mecánico 5 · Rodamientos 3'
+      && h.ultimas.map(u => `${u.dia} ${u.que} ${f(u.bbl)}`).join(' | ') === '22 de sept rodamientos 1.041 | 9 de ago sello mecánico 3.806'
+      && n.repuestos.map(r => `${r.descripcion}${r.llega ? ` ${r.llega}` : ` ${r.plazoDias} d`}${r.aviso ? ' ■3' : ''}`).join(' | ') === 'Kit de sello mecánico llega 1 el 9 de oct | Impulsor y anillos de desgaste 45 d ■3',
+    `los días antes de parar (${n.tendencias.series.map(x => x.tag).join(', ')}: lo que se movió), su historia (9 fallas, una cada 41 d, 40,0 h fuera, 4.593 bbl por falla; 22 de sept rodamientos 1.041 · 9 de ago sello 3.806) y los repuestos que faltan`)
+  // Sin instrumento, en marcha con muchas señales, y lo que no existe.
+  const a = ET.nivelEquipo('ceiba', 'P-201A', ctx, V0), mpp = ET.nivelEquipo('morichal', 'MPP-301', ctx, V0)
+  comprobar(!a.registrado && !a.cifra && !a.vigila && a.senales.length === 0 && a.esquemaAgua && a.vecinos.siguiente === 'P-201B' && !a.vecinos.anterior && !a.diagnostico
+      && a.mientras?.titulo === 'Mientras P-201B esté parada' && n.mientras.titulo === 'Mientras esté parada'
+      && mpp.senales.length === 4 && mpp.plegadas.length === 12 && mpp.senales.find(x => x.tag === 'PDT-3011').condicion === 'atencion' && mpp.cifra.valor === 0
+      && ET.resumenPlegadas(mpp.plegadas) === '12 señales más: 6 temperaturas, 4 presiones, 1 de vibración y 1 de corriente · todas en banda'
+      && mpp.tendencias.titulo === 'Los últimos 12 días' && mpp.tendencias.series[0].tag === 'PDT-3011'
+      && ET.nivelEquipo('ceiba', 'NO-EXISTE', ctx, V0) === undefined,
+    `P-201A sin instrumento (lo que se sabe, su esquema y «Mientras P-201B esté parada», sin cifra ni diagnóstico); MPP-301 en marcha: 4 señales abiertas (la de atención con su marca) y «${ET.resumenPlegadas(mpp.plegadas)}»; un equipo que no existe, nada`)
+  comprobar(msLista < 300 && msN3 < 300, `D7: la lista de La Ceiba en ${msLista.toFixed(0)} ms y el nivel 3 en ${msN3.toFixed(0)} ms (menos de 300)`)
+
+  // Las direcciones (X4 §3.8): Equipos sin período, las de antes abren el nivel 3, el nivel 4 con «/diagnostico».
+  const URLC = await v.ssrLoadModule('/src/app/url.ts')
+  const ROLC = await v.ssrLoadModule('/src/entities/roles.ts')
+  const navC = { hash: '' }
+  Object.defineProperty(globalThis, 'location', { value: { get hash() { return navC.hash } }, configurable: true, writable: true })
+  Object.defineProperty(globalThis, 'history', { value: { pushState: (_e, _t, u) => { navC.hash = u }, replaceState: (_e, _t, u) => { navC.hash = u } }, configurable: true, writable: true })
+  const lee = (h, rol) => { navC.hash = h; return URLC.leerHash(undefined, rol) }
+  const viejo = lee('#/sup/bombas/ceiba/curso/P-201B'), nuevo = lee('#/sup/equipos/ceiba/P-201B'), diag = lee('#/conf/equipos/ceiba/P-201B/diagnostico')
+  const conPer = lee('#/conf/equipos/ceiba/curso/P-201B'), ger = lee('#/ger/riesgo/ceiba/curso/P-201B'), gerEq = lee('#/ger/equipos/ceiba/P-201B/diagnostico'), lista = lee('#/conf/equipos/ceiba')
+  const pozoProd = lee('#/prod/pozos/ceiba/curso/LC-16')
+  URLC.escribirHash({ rolId: 'conf', pantalla: 'equipos', campoId: 'ceiba', periodoId: 'curso', alcance: 'campo', equipoAbierto: 'P-201B', rango: null })
+  const escrito = navC.hash
+  URLC.escribirHash({ rolId: 'conf', pantalla: 'equipos', campoId: 'ceiba', periodoId: 'curso', alcance: 'campo', equipoAbierto: 'P-201B/diagnostico', rango: null })
+  const escritoDiag = navC.hash
+  comprobar(viejo.pantalla === 'equipos' && viejo.equipoAbierto === 'P-201B' && viejo.periodoId === 'curso' && nuevo.pantalla === 'equipos' && nuevo.equipoAbierto === 'P-201B' && nuevo.periodoId === undefined
+      && diag.equipoAbierto === 'P-201B/diagnostico' && conPer.equipoAbierto === 'P-201B' && conPer.periodoId === 'curso' && lista.pantalla === 'equipos' && lista.equipoAbierto === undefined
+      // C5 (26-oct): el Riesgo del gerente se fundió en La planta viva: su dirección abre ahí, con su ficha.
+      && ger.pantalla === 'plantaViva' && ger.equipoAbierto === 'P-201B' && gerEq.pantalla === 'equipos' && gerEq.equipoAbierto === 'P-201B' && pozoProd.pantalla === 'equipos' && pozoProd.equipoAbierto === 'LC-16'
+      && escrito === '#/conf/equipos/ceiba/P-201B' && escritoDiag === '#/conf/equipos/ceiba/P-201B/diagnostico',
+    `las direcciones: #/sup/bombas/ceiba/curso/P-201B abre su nivel 3 (#/sup/equipos/ceiba/P-201B), «/diagnostico» el 4, la de producción a un pozo también; el gerente sigue con su ficha (${ger.pantalla} + P-201B); Equipos se escribe sin período (${escrito})`)
+  comprobar(ROLC.rolPorId('conf').inicio === 'equipos' && URLC.abreNivel3(ROLC.rolPorId('conf')) && !URLC.abreNivel3(ROLC.rolPorId('ger')) && !URLC.abreNivel3(ROLC.rolPorId('adm'))
+      && ['prod', 'sup', 'oper', 'jefe', 'conf', 'plan', 'tec'].every(r => URLC.abreNivel3(ROLC.rolPorId(r)) || !ROLC.rolPorId(r).pantallas.includes('equipos')),
+    'confiabilidad abre en Equipos; los roles técnicos abren el nivel 3 como vista; el gerente y el administrador, el panel')
 }
 
 await v.close()

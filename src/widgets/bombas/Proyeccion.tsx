@@ -14,7 +14,8 @@ export function Proyeccion({ s }: { s: Senal }) {
   const ultimo = ultimaLectura(serie)
   if (!t || !serie || conLectura(serie).length < 2 || ultimo === undefined) return null
   const W = 520, H = 112
-  const G = { x0: 6, x1: 428, y0: 12, y1: 82 }
+  // El último sexto, para el rótulo del límite (a 12 px cabe «1.650 rpm» también en el teléfono).
+  const G = { x0: 6, x1: 410, y0: 12, y1: 82 }
   // El tiempo sale de la serie (su paso), igual que en el ajuste: «hoy» es su último lugar.
   const ahora = t.finH
   const p = s.pronostico
@@ -34,59 +35,61 @@ export function Proyeccion({ s }: { s: Senal }) {
   const tCruce = cruza ? ahora + Math.min(p.horas, TOPE_H) : undefined
   const enHorizonte = cruza && p.horas <= TOPE_H
 
+  // C4 · Los rótulos van en HTML sobre el dibujo (X5 §3.4: nada bajo 12 px): el dibujo se estira a lo
+  // ancho que tenga y su letra no se encoge con él. Las x en porcentaje del ancho; las y, en píxeles.
+  const pct = (x: number) => `${(x / W) * 100}%`
+  const rotulo = 'pointer-events-none absolute whitespace-nowrap text-[12px] leading-none'
+  const cercaDeHoy = cruza && G.x1 - X(ahora) < 46
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img"
+    <div className="relative" style={{ height: H }} role="img"
       aria-label={`Tendencia de ${s.plantilla.nombre}${cruza ? `: cruza el límite en ${dias(p.horas)} días` : ''}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 block h-full w-full" aria-hidden>
+        {lim !== undefined && <line x1={G.x0} x2={G.x1} y1={Y(lim)} y2={Y(lim)} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="5 3" vectorEffect="non-scaling-stroke" />}
+        {/* hoy */}
+        <line x1={X(ahora)} x2={X(ahora)} y1={G.y0 - 4} y2={G.y1} stroke="var(--linea)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+        {/* lo medido */}
+        <path d={linea} fill="none" stroke="var(--dato-1)" strokeWidth={1.8} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        {/* la recta prolongada hasta el cruce, y el rango sobre el límite */}
+        {cruza && lim !== undefined && tCruce !== undefined && (
+          <>
+            <line x1={X(ahora)} y1={Y(ajustado(ahora))} x2={X(tCruce)} y2={Y(ajustado(tCruce))}
+              stroke="var(--tinta3)" strokeWidth={1.4} strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
+            <rect x={X(ahora + p.rango[0])} y={Y(lim) - 3.5}
+              width={Math.max(3, X(Math.min(ahora + p.rango[1], finT)) - X(ahora + p.rango[0]))} height={7}
+              fill="var(--tinta2)" opacity={0.5} rx={1.5} />
+          </>
+        )}
+        {/* eje del tiempo */}
+        <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea2)" strokeWidth={0.8} vectorEffect="non-scaling-stroke" />
+      </svg>
+      {/* el último punto, en HTML: estirado con el dibujo sería un óvalo */}
+      <i aria-hidden className="absolute block size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--dato-1)]"
+        style={{ left: pct(X(serie.valores.lastIndexOf(ultimo) * serie.pasoH)), top: Y(ultimo) }} />
       {/* el límite, con su valor escrito al final de la línea */}
       {lim !== undefined && (
-        <>
-          <line x1={G.x0} x2={G.x1} y1={Y(lim)} y2={Y(lim)} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="5 3" />
-          <text x={G.x1 + 8} y={Y(lim) - 2} fontSize={12} fill="var(--tinta2)">límite</text>
-          <text x={G.x1 + 8} y={Y(lim) + 10} fontSize={12} fontWeight={600} fill="var(--tinta)" className="tabular">
-            {lim.toLocaleString('es-CO')} {s.unidad}
-          </text>
-        </>
+        <span aria-hidden className={`${rotulo} text-[var(--tinta2)]`} style={{ left: pct(G.x1 + 8), top: Y(lim) - 14 }}>
+          límite<b className="tabular mt-0.5 block font-semibold text-[var(--tinta)]">{lim.toLocaleString('es-CO')} {s.unidad}</b>
+        </span>
       )}
-      {/* hoy */}
-      <line x1={X(ahora)} x2={X(ahora)} y1={G.y0 - 4} y2={G.y1} stroke="var(--linea)" strokeWidth={1} />
-      {/* lo medido */}
-      <path d={linea} fill="none" stroke="var(--dato-1)" strokeWidth={1.8} strokeLinejoin="round" />
-      <circle cx={X(serie.valores.lastIndexOf(ultimo) * serie.pasoH)} cy={Y(ultimo)} r={3} fill="var(--dato-1)" />
-      {/* la recta prolongada hasta el cruce, y el rango sobre el límite */}
-      {cruza && lim !== undefined && tCruce !== undefined && (
-        <>
-          <line x1={X(ahora)} y1={Y(ajustado(ahora))} x2={X(tCruce)} y2={Y(ajustado(tCruce))}
-            stroke="var(--tinta3)" strokeWidth={1.4} strokeDasharray="3 2" />
-          <rect x={X(ahora + p.rango[0])} y={Y(lim) - 3.5}
-            width={Math.max(3, X(Math.min(ahora + p.rango[1], finT)) - X(ahora + p.rango[0]))} height={7}
-            fill="var(--tinta2)" opacity={0.5} rx={1.5} />
-          {enHorizonte && (
-            <text x={Math.min(X(tCruce), G.x1 - 4)} y={Y(lim) + (Y(lim) > (G.y0 + G.y1) / 2 ? -9 : 18)}
-              fontSize={12} fontWeight={600} textAnchor="end" fill="var(--tinta)" className="tabular">
-              en {dias(p.horas)} d
-            </text>
-          )}
-        </>
+      {cruza && lim !== undefined && tCruce !== undefined && enHorizonte && (
+        <span aria-hidden className={`${rotulo} tabular -translate-x-full font-semibold text-[var(--tinta)]`}
+          style={{ left: pct(Math.min(X(tCruce), G.x1 - 4)), top: Y(lim) + (Y(lim) > (G.y0 + G.y1) / 2 ? -21 : 7) }}>
+          en {dias(p.horas)} d
+        </span>
       )}
-      {/* eje del tiempo */}
-      <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea2)" strokeWidth={0.8} />
-      <text x={G.x0} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta3)">hace {dias(ahora)} d</text>
-      {cruza && G.x1 - X(ahora) < 46 ? (
+      <span aria-hidden className={`${rotulo} text-[var(--tinta3)]`} style={{ left: pct(G.x0), top: G.y1 + 6 }}>hace {dias(ahora)} d</span>
+      {cercaDeHoy ? (
         // Un cruce muy cerca de hoy dejaba «hoy» encima de «+0,2 d»: van juntos, al final del eje.
-        <text x={G.x1} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta3)" textAnchor="end">
-          <tspan fill="var(--tinta2)" fontWeight={600}>hoy</tspan> · +{dias(finT - ahora)} d
-        </text>
+        <span aria-hidden className={`${rotulo} -translate-x-full text-[var(--tinta3)]`} style={{ left: pct(G.x1), top: G.y1 + 6 }}>
+          <b className="font-semibold text-[var(--tinta2)]">hoy</b> · +{dias(finT - ahora)} d
+        </span>
       ) : (
         <>
-          <text x={X(ahora)} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta2)" fontWeight={600}
-            textAnchor={cruza ? 'middle' : 'end'}>hoy</text>
-          {cruza && (
-            <text x={G.x1} y={G.y1 + 16} fontSize={11.5} fill="var(--tinta3)" textAnchor="end">
-              +{dias(finT - ahora)} d
-            </text>
-          )}
+          <span aria-hidden className={`${rotulo} font-semibold text-[var(--tinta2)] ${cruza ? '-translate-x-1/2' : '-translate-x-full'}`} style={{ left: pct(X(ahora)), top: G.y1 + 6 }}>hoy</span>
+          {cruza && <span aria-hidden className={`${rotulo} -translate-x-full text-[var(--tinta3)]`} style={{ left: pct(G.x1), top: G.y1 + 6 }}>+{dias(finT - ahora)} d</span>}
         </>
       )}
-    </svg>
+    </div>
   )
 }

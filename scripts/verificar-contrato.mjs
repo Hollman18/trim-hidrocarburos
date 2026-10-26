@@ -72,6 +72,8 @@ try {
   const CHK = await cargar('/src/shared/api/choke.ts')
   const PVA = await cargar('/src/shared/api/plantaViva.ts') // C2 · La planta viva
   const HOYA = await cargar('/src/shared/api/hoy.ts') // C3 · Hoy
+  const RSA = await cargar('/src/shared/api/resultados.ts') // C5 · Resultados
+  const EQT = await cargar('/src/shared/api/equiposTecnico.ts') // C4 · Equipos
   const ROLES_HOY = (await cargar('/src/entities/roles.ts')).ROLES_VISIBLES.map(r => r.id) // C3 · Hoy
   const ARB = await cargar('/src/shared/api/arbol.ts')
   // La locación de los pozos del demo (el caso de borde del choke) entra por fuente.ts, como en el navegador.
@@ -143,6 +145,11 @@ try {
     PLANTA_VIVA: p => PVA.pedirPlantaViva(p, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
     // C3 · Hoy: las tareas de un rol, con lo que dijeron las personas encima (el árbol, las respuestas, los planes).
     HOY: p => HOYA.pedirHoy(p, s),
+    // C5 · Resultados: lo del período de un rol, con lo que dijeron las personas encima (el tramo vigente de cada parada).
+    RESULTADOS: p => RSA.pedirResultados(p, s),
+    // C4 · Equipos: la lista de todos los equipos y el nivel 3 de cada uno, con el historial firmado (el colchón de la parada abierta).
+    LISTA_EQUIPOS: p => EQT.pedirListaEquipos(p.campos, s.ctx, s.versiones),
+    NIVEL_EQUIPO: p => EQT.pedirNivelEquipo(p.campo, p.equipo, s.ctx, s.versiones),
   })
   const ENDPOINTS = Object.entries(C).filter(([, x]) => x && typeof x === 'object' && x.metodo === 'GET')
 
@@ -260,6 +267,13 @@ try {
       PLANTA_VIVA: conPeriodo().flatMap(q => ['antes', 'durante', 'despues'].map(momento => ({ ...q, momento }))),
       // C3 · Hoy: cada rol del producto, en cada campo y en todos.
       HOY: ROLES_HOY.flatMap(rol => grupos.map(campos => ({ rol, campos }))),
+      // C5 · Resultados: el gerente y producción en cada campo, en todos y en los tres períodos; jefe, confiabilidad y regulatorio, en uno y en todos.
+      RESULTADOS: [...['ger', 'prod'].flatMap(rol => conPeriodo().map(q => ({ ...q, rol }))),
+        ...['jefe', 'conf', 'reg'].flatMap(rol => [['ceiba'], TODOS].flatMap(campos => periodos.slice(0, 2).map(p => ({ rol, campos, desde: p.desde, hasta: p.hasta }))))],
+      // C4 · Equipos: cada campo y todos; el nivel 3 de cada equipo registrado, de cada pozo, de las bombas sin instrumento y uno que no existe.
+      LISTA_EQUIPOS: porCampos(),
+      NIVEL_EQUIPO: [...equipos, ...TODOS.flatMap(campo => (CHK.pedirTuberiaAgua(campo, s.ctx).tramos.find(t => t.tramo === 'bombas')?.bombas ?? [])
+        .filter(b => !b.instrumentada).map(b => ({ campo, equipo: b.id }))), { campo: 'ceiba', equipo: 'NO-EXISTE' }],
     }
     const sinCasos = ENDPOINTS.map(([n]) => n).filter(n => !casos[n]?.length || !R[n])
     comprobar(sinCasos.length === 0, `cada endpoint de contrato.ts tiene su respuesta del demo y sus casos (${ENDPOINTS.length} endpoints${sinCasos.length ? `; faltan: ${sinCasos.join(', ')}` : ''})`)
@@ -1383,6 +1397,90 @@ try {
         comprobar(url === '/vistas/hoy?campos=ceiba&rol=sup' && !vueltaH, `GET ${url} vuelve igual por JSON${vueltaH ? `: ${vueltaH}` : ''}`)
       } finally { SES.cambiarSesion(fotoAntesC3) }
     }
+
+    // C5 · Resultados
+    console.log('\n=== C5. Resultados (GET /api/vistas/resultados): las cifras de las vistas de donde salen, y cada rol lo suyo ===')
+    {
+      const s = SES.sesion(), R = responder(s)
+      const casi = (a, b) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b))
+      const cal = L.calendario(), curso = cal.at(-1), cerrado = cal.filter(L.mesCerrado).at(-1)
+      const q = { campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+      const ger = R.RESULTADOS({ ...q, rol: 'ger' }), pv = R.PLANTA_VIVA({ ...q, momento: 'despues' }), lb = R.DIFERIDOS(q)
+      const mensual = R.REPARTO_CHOKE_MENSUAL({ campos: ['ceiba'] }), ci = R.CICLO(q), ordenes = R.SAP_ORDENES({ campos: ['ceiba'] })
+      // 1. La cifra grande = el diferido del libro = «Después» y «Este mes» de La planta viva; el rango y el valor, los mismos.
+      comprobar(casi(ger.cifra.valor, lb.diferido) && casi(ger.cifra.valor, pv.cifras.despues.valor) && casi(ger.cifra.valor, pv.esteMes.bbl)
+          && ger.cifra.rango.every((x, i) => casi(x, pv.esteMes.rango[i])) && casi(ger.cifra.valorUsd, lb.valorUsd) && casi(ger.cifra.maximo, lb.meta.diferido)
+          && ger.cifra.sobreMaximo === (lb.diferido > lb.meta.diferido),
+        `la cifra grande es el diferido de /vistas/diferidos (${Math.round(ger.cifra.valor)} bbl) = «Después» de /vistas/planta-viva, contra el máximo firmado a la fecha (${Math.round(ger.cifra.maximo)})`)
+      // 2. Mes a mes: los 13 meses de La planta viva; cada mes, Σ por tramo = su diferido por día (/vistas/choke/mensual).
+      const porMes = new Map(mensual.map(m => [m.mes, m]))
+      comprobar(ger.mesAMes.meses.length === pv.mesAMes.meses.length && ger.mesAMes.meses.every((m, i) => m.mes === pv.mesAMes.meses[i].mes && casi(m.totalBpd, pv.mesAMes.meses[i].totalBpd))
+          && ger.mesAMes.meses.every(m => porMes.has(m.mes) && (porMes.get(m.mes).diferido < 0.5 || casi(Object.values(m.porTramo).reduce((a, x) => a + x, 0), m.totalBpd)))
+          && ger.mesAMes.meses.filter(m => m.enPeriodo).map(m => m.mes).join() === curso.mes,
+        `mes a mes: los ${ger.mesAMes.meses.length} meses de La planta viva, cada uno partido por tramo sin perder un barril; en el período, solo ${curso.mes}`)
+      // 3. Lo simulado: el ciclo de /vistas/ciclo, por momento, y nunca la cifra grande.
+      comprobar(casi(ger.ciclo.totalBbl, ci.retornoBbl) && ger.ciclo.momentos.every(m => casi(m.bbl, ci[m.momento].bbl) && /simulado/.test(m.texto))
+          && !casi(ger.cifra.valor, ger.ciclo.totalBbl),
+        `el retorno posible del ciclo es /vistas/ciclo (${Math.round(ger.ciclo.totalBbl)} bbl), cada momento con «simulado» en su línea, y no es la cifra grande`)
+      // 4. El mantenimiento proactivo: las horas de /sap/ordenes desde que entró TRIM.
+      const { horasPorClase } = await cargar('/src/entities/sap.ts'), { PUESTA_EN_MARCHA } = await cargar('/src/entities/configuracion.ts'), { AHORA } = await cargar('/src/entities/reloj.ts')
+      const h = horasPorClase(ordenes, new Date(`${PUESTA_EN_MARCHA}T00:00:00-05:00`), AHORA)
+      comprobar(ger.proactivo.porcentaje === (h.porcentaje ?? null) && ger.proactivo.proactivoH === h.proactivo,
+        `el mantenimiento proactivo sale de las órdenes de SAP: ${Math.round(ger.proactivo.porcentaje ?? 0)} % (${ger.proactivo.texto})`)
+      // 5. Cada rol lo suyo: el gerente sin el detalle técnico; jefe y confiabilidad con su tarjeta; regulatorio con la publicación.
+      const jefe = R.RESULTADOS({ ...q, rol: 'jefe' }), conf = R.RESULTADOS({ ...q, rol: 'conf' }), reg = R.RESULTADOS({ ...q, rol: 'reg' }), prod = R.RESULTADOS({ ...q, rol: 'prod' })
+      const rel = R.RELOJES({ campos: ['ceiba'], desde: new Date(cal[0].desde), hasta: AHORA })
+      comprobar(ger.secciones.includes('dondeBajarlo') && ger.secciones.includes('diaADia') && !ger.secciones.includes('publicar') && ger.mantenimiento === null && ger.confiabilidad === null
+          && jefe.secciones[0] === 'mantenimiento' && jefe.mantenimiento && casi(jefe.mantenimiento.totalH ?? 0, rel?.totalH ?? 0) && jefe.confiabilidad !== null
+          && conf.secciones[0] === 'confiabilidad' && conf.confiabilidad !== null && reg.secciones[0] === 'publicar' && !reg.secciones.includes('ciclo')
+          && prod.secciones.includes('publicar') && [ger, jefe, conf, reg, prod].every(x => casi(x.cifra.valor, ger.cifra.valor)),
+        `cada rol lo suyo, con la misma cifra: gerente ${ger.secciones.join(' · ')}; jefe ${jefe.secciones.join(' · ')}; confiabilidad ${conf.secciones.join(' · ')}; regulatorio ${reg.secciones.join(' · ')}`)
+      // 6. Todos los campos: la cifra es la del libro de todos; «Por campo» (con su «dónde se trabó») reemplaza al panel de un campo.
+      const t = R.RESULTADOS({ campos: TODOS, desde: q.desde, hasta: q.hasta, rol: 'ger' }), lbT = R.DIFERIDOS({ campos: TODOS, desde: q.desde, hasta: q.hasta })
+      comprobar(t.alcance === 'portafolio' && casi(t.cifra.valor, lbT.diferido) && casi(t.cifra.valor, lbT.porCampo.reduce((a, c) => a + c.diferido, 0))
+          && t.secciones.includes('porCampo') && !t.secciones.includes('dondeSeTrabo') && ger.secciones.includes('dondeSeTrabo') && !ger.secciones.includes('porCampo')
+          && t.porEquipo.filas.every(e => e.campo.length > 0),
+        `todos los campos: ${Math.round(t.cifra.valor)} bbl = Σ por campo del libro; «Por campo» trae dónde se trabó cada uno (una vez)`)
+      // 7. Un mes cerrado: el total del período (sin proyección) y su sello.
+      const qc = { campos: ['ceiba'], desde: new Date(cerrado.desde), hasta: new Date(cerrado.hasta), rol: 'ger' }
+      const c = R.RESULTADOS(qc), lbc = R.DIFERIDOS(qc)
+      comprobar(!c.enCurso && !c.produccion.cierre.proyectado && c.produccion.cierre.titulo === 'Total del período' && casi(c.produccion.cierre.produccion, lbc.real)
+          && c.publicar.estado === (lbc.publicable ? 'publicable' : 'bloqueado') && casi(c.cifra.valor, lbc.diferido),
+        `un mes cerrado (${cerrado.mes}): el total del período, sin proyección, y el sello «${c.publicar.estado}»`)
+      // 8. Por el cable: las fechas vuelven fechas y la ruta lleva rol, campos y período.
+      const j = JSON.parse(JSON.stringify(K.aRespuesta(C.RESULTADOS.codec, ger)))
+      const y = K.deRespuesta(C.RESULTADOS.codec, j)
+      const url = C.urlDe(C.RESULTADOS, { ...q, rol: 'ger' })
+      comprobar(y.desde instanceof Date && y.ahora instanceof Date && (y.bajando === null || y.bajando.desde instanceof Date) && !diferencia(ger, y)
+          && url.startsWith('/vistas/resultados?campos=ceiba&desde=') && url.endsWith('&rol=ger'),
+        `GET ${url.slice(0, 48)}… vuelve igual por JSON, con las fechas y su zona (${j.datos.desde})`)
+    }
+
+    // C4 · Equipos
+    console.log('\n=== C4. Equipos (GET /api/vistas/lista-equipos) y el nivel 3 (GET /api/vistas/equipos/:campo/:equipo/tecnico) ===')
+    {
+      const s = SES.sesion(), R = responder(s)
+      const casi = (a, b) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b))
+      const lista = R.LISTA_EQUIPOS({ campos: ['ceiba'] }), todos = R.LISTA_EQUIPOS({ campos: TODOS })
+      const fr = (await cargar('/src/shared/api/condiciones.ts')).pedirFranja(['ceiba'], s.ctx)
+      const ri = R.RIESGO({ campos: ['ceiba'] }), crit = R.CRITICIDAD({ campos: ['ceiba'] })
+      const n3 = R.NIVEL_EQUIPO({ campo: 'ceiba', equipo: 'P-201B' }), agua = R.TUBERIA_AGUA({ campo: 'ceiba' })
+      const p201b = lista.filas.find(f => f.equipo === 'P-201B')
+      // Las mismas cifras que las vistas de donde salen: la marca de la franja, lo que se pierde en Riesgo, «Si falla hoy».
+      comprobar(lista.filas.every(f => (fr.equipos.find(e => e.equipo === f.equipo)?.condicion ?? null) === (f.condicion ?? null))
+          && casi(p201b.cifra.valor, ri.find(r => r.equipo === 'P-201B' && r.estado === 'perdiendo').bblDia) && casi(n3.cifra.valor, p201b.cifra.valor)
+          && lista.filas.filter(f => !f.parado && f.cifra.valor !== null).every(f => casi(f.cifra.valor, crit.ranking.find(x => x.equipo === f.equipo).bpd))
+          && casi(n3.mientras.crudoBpd, agua.siParaOtra.crudoBpd) && n3.mientras.entraBpd === agua.siParaOtra.entraBpd,
+        `la lista y el nivel 3 dicen lo mismo que la franja, /vistas/riesgo (P-201B: ${Math.round(p201b.cifra.valor)} bbl/d), /vistas/criticidad («si falla hoy» de cada fila) y /vistas/campos/:campo/agua (si para otra: ${Math.round(n3.mientras.crudoBpd)} bbl/d)`)
+      comprobar(todos.filas.length === TODOS.reduce((x, c) => x + R.LISTA_EQUIPOS({ campos: [c] }).filas.length, 0) && todos.cuentas.estado.todos === todos.filas.length,
+        `todos los campos: ${todos.filas.length} equipos = la suma de cada campo; ${todos.cuentas.estado.parados} parados, ${todos.cuentas.estado.avisan} avisan, ${todos.cuentas.estado['sin-instrumento']} sin instrumento`)
+      // Por el cable: JSON puro, la misma vista; la ruta lleva el campo y el equipo.
+      const vuelta = (ep, x) => diferencia(x, K.deRespuesta(ep.codec, JSON.parse(JSON.stringify(K.aRespuesta(ep.codec, x)))))
+      const url = C.urlDe(C.NIVEL_EQUIPO, { campo: 'ceiba', equipo: 'P-201B' })
+      comprobar(!vuelta(C.LISTA_EQUIPOS, lista) && !vuelta(C.NIVEL_EQUIPO, n3) && R.NIVEL_EQUIPO({ campo: 'ceiba', equipo: 'NO-EXISTE' }) === undefined
+          && url === '/vistas/equipos/ceiba/P-201B/tecnico' && C.urlDe(C.LISTA_EQUIPOS, { campos: ['ceiba'] }) === '/vistas/lista-equipos?campos=ceiba',
+        `GET ${url} y /vistas/lista-equipos vuelven iguales por JSON; un equipo que el campo no tiene responde null`)
+    }
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -1604,6 +1702,17 @@ try {
       comprobar(pedidos.length === nG + 1 && pedidos.at(-1).startsWith('GET /api/vistas/hoy?campos=ceiba&rol=sup') && !diferencia(hoyH, R.HOY(qh))
         && rdH.ok && rdH.paradas[0].id === filaH.id && vistosD.length === 1 && JSON.stringify(vistosD[0].cuerpo) === JSON.stringify({ ids: [filaH.id], n: [7, 8] }),
         `Hoy llega por GET y es lo que calcula el motor; «Deshacer» va a POST /api/anh/paradas/deshacer sin repetir filas ni consecutivos, sin por, hora ni procedencia (${JSON.stringify(vistosD[0]?.cuerpo ?? {}).slice(0, 80)})`)
+    }
+
+    // C5 · Resultados: la vista llega por GET con el rol, los campos y el período, y es lo que calcula el motor.
+    {
+      const cal = L.calendario(), curso = cal.at(-1)
+      const qr = { rol: 'jefe', campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+      const nG = pedidos.length
+      const rH = await consulta.traer(C.RESULTADOS, qr, 'c5', noCalcular)
+      comprobar(pedidos.length === nG + 1 && pedidos.at(-1).startsWith('GET /api/vistas/resultados?campos=ceiba&desde=') && pedidos.at(-1).includes('&rol=jefe')
+        && rH.desde instanceof Date && !diferencia(rH, R.RESULTADOS(qr)) && rH.secciones[0] === 'mantenimiento',
+        `Resultados llega por GET (${pedidos.at(-1)?.slice(0, 60)}…) y es lo que calcula el motor, con lo del jefe primero`)
     }
 
     console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones http bien.`)

@@ -3,7 +3,7 @@ import { plantillaDe, PAPEL_NOMBRE } from '@/entities/bombas'
 import { fechaHora, AHORA } from '@/entities/reloj'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { Chip, Hueco } from '@/shared/ui/primitivas'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { MarcaPrioridad, MarcaCondicion } from '@/shared/ui/Prioridad'
 import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { Analogico } from '@/shared/ui/Analogico'
 import { Info } from '@/shared/ui/Info'
@@ -67,7 +67,8 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
       {perfil ? (
         <div className="mt-2.5 grid gap-2.5">
           {filas.map(({ pl, s }) => s ? (
-            <Analogico key={pl.id} nombre={pl.nombre} valor={s.valor} unidad={s.unidad} normal={s.normal}
+            // Con la bomba detenida, una sola marca (la de la bomba) y sus variables en gris (X2 B9).
+            <Analogico key={pl.id} nombre={pl.nombre} valor={s.valor} unidad={s.unidad} normal={s.normal} gris={eq.marcha === 'detenido'}
               alarma={s.alarma} decimales={decimalesDe(s.serie?.valores, s.valor)} estado={DE_ESTADO[s.estado] ?? undefined} />
           ) : (
             <div key={pl.id} className="flex items-baseline justify-between gap-2 border-b border-dashed border-[var(--linea2)] pb-1.5 text-[13px]">
@@ -139,8 +140,9 @@ export function Placa({ b, global, nivel = 'ingenieria', onAbrir }: { b: BombaVi
                 </span>
               )}
               {abierta.pide && (
-                <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta)]">
-                  <MarcaPrioridad s={2} tamano={11} />
+                // «No arrancar» es un bloqueo de procedimiento, no una prioridad: franja en tinta con ⊘ (X5 §5.6).
+                <span className="mt-1.5 flex flex-wrap items-center gap-x-1.5 rounded-[10px] px-2 py-1 text-[14px] text-[var(--tinta)] shadow-[inset_0_0_0_2px_var(--tinta)]" data-bloqueo>
+                  <MarcaCondicion c="bloqueo" tamano={14} decorativa />
                   <span><b>No arrancar</b> hasta identificar</span>
                   <Info className={encima} titulo="No arrancar"
                     texto={`${abierta.causa.texto}. Sin identificar qué se dañó: no arrancar hasta que quien la revise lo registre.`}

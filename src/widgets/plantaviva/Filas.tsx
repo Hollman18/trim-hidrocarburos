@@ -18,7 +18,7 @@ export function Filas({ v }: { v: VistaPlantaViva }) {
   const escala = Math.max(1, (p.metaBpd ?? p.realBpd) * 1.25, p.realBpd)
   return (
     <section aria-label="Lo del período" className="min-w-0 rounded-[20px] bg-[var(--panel)] px-4 py-1 sm:px-7 sm:py-1.5">
-      <Fila onClick={ir('diferidos')} datos={{ 'data-este-mes': m.bbl }}
+      <Fila onClick={ir('diferidos') ?? ir('resultados')} datos={{ 'data-este-mes': m.bbl }}
         izquierda={<>
           <p className="flex items-center gap-[7px] text-[15px] font-medium text-[var(--tinta2)]">{m.titulo}</p>
           <p className="mt-px flex flex-wrap items-baseline gap-x-2">
@@ -29,7 +29,7 @@ export function Filas({ v }: { v: VistaPlantaViva }) {
         derecha={<p className="text-[14px] leading-[1.45] text-[var(--tinta2)]">
           calculado, entre {n0(m.rango[0])} y {n0(m.rango[1])}{m.nota && <><br />{m.nota}</>}
         </p>} />
-      <Fila onClick={ir('produccion')} datos={{ 'data-produccion': p.realBpd }}
+      <Fila onClick={ir('produccion') ?? ir('resultados')} datos={{ 'data-produccion': p.realBpd }}
         izquierda={<>
           <p className="flex items-center gap-[7px] text-[15px] font-medium text-[var(--tinta2)]">
             {p.bajoMeta && <MarcaPrioridad s={3} tamano={15} decorativa />}

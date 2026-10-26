@@ -35,7 +35,7 @@ export function Ahora({ campos, global, onRiesgo, onIdentificar }: {
       <div className={clase}>
         {/* Los totales no llevan marca de alarma: la lleva el equipo que los causa, en el pie (B-40). */}
         <Bloque onClick={onRiesgo} s={perd[0] ? (perd[0].altoImpacto ? 1 : 2) : 0}
-          rotulo={`Perdiéndose ahora · ${fechaHora(AHORA)}`}
+          rotulo={`Se deja de producir ahora · ${fechaHora(AHORA)}`}
           valor={porDia > 0 ? `${n0(porDia)} bbl/d` : 'nada'}
           pie={perd[0] ? `${perd[0].equipo}${donde(perd[0].campoId)} · ${TIPO_CAUSA[perd[0].tipo].toLowerCase()} · ${n0(perd[0].bblDia)} bbl/d${alto > 0 ? ` · ${n0(alto)} de alto impacto` : ''}` : 'todos los pozos produciendo'} />
         <Bloque onClick={onRiesgo} s={proxima || enRiesgo[0] ? 3 : 0}
@@ -51,7 +51,7 @@ export function Ahora({ campos, global, onRiesgo, onIdentificar }: {
           pie={sinArrancar ? `${sinArrancar} ${sinArrancar === 1 ? 'equipo detenido' : 'equipos detenidos'}: no arrancar hasta identificar el daño` : pi.porIdentificar ? 'arrancaron sin identificar: no conformidad' : 'todas las paradas tienen causa'} />
       </div>
       <Lectura>
-        Perdiéndose ahora es el crudo que no sale de los pozos apagados en este momento, cada uno
+        Se deja de producir ahora: el crudo que no sale de los pozos apagados en este momento, cada uno
         cargado a lo que lo apagó. En riesgo son las bombas de reinyección y electrosumergibles que
         producen pero tienen una parte avisando: lo que se perdería por día si paran. Las paradas
         por identificar son las que ninguna señal explica: el equipo no se arranca hasta que quien lo revise

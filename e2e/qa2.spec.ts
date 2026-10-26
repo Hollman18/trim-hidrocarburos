@@ -10,7 +10,8 @@ test('atrás tras una redirección y meses que heredan', async ({ flujo: f }) =>
     const llego = await f.hash()
     await f.page.evaluate(() => history.back()); await f.esperar(900)
     const volvio = await f.hash()
-    f.ok(llego.includes('/pozos/palmar') && volvio.includes('/pozos/ceiba'), `«atrás» sale de la redirección (${llego} → ${volvio})`)
+    // C4: Equipos es la primera de su puerta: una subpantalla que el campo no tiene lleva a ella.
+    f.ok((llego.includes('/equipos/palmar') || llego.includes('/pozos/palmar')) && volvio.includes('/pozos/ceiba'), `«atrás» sale de la redirección (${llego} → ${volvio})`)
   })
 
   await test.step('Meses que heredan', async () => {

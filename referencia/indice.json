@@ -1334,6 +1334,459 @@
    "descripcion": "Las capacidades de zarza: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
   },
   {
+   "id": "planta-viva/ceiba-2026-09-antes",
+   "endpoint": "/api/vistas/planta-viva?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=antes",
+   "descripcion": "La planta viva de ceiba en el momento «antes», con 2026-09 como período",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/ceiba-2026-09-durante",
+   "endpoint": "/api/vistas/planta-viva?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=durante",
+   "descripcion": "La planta viva de ceiba en el momento «durante», con 2026-09 como período",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/ceiba-2026-09-despues",
+   "endpoint": "/api/vistas/planta-viva?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=despues",
+   "descripcion": "La planta viva de ceiba en el momento «despues», con 2026-09 como período",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "franja/equipos-hoy-ceiba",
+   "endpoint": "/api/vistas/equipos-hoy?campos=ceiba",
+   "descripcion": "Lo de hoy de cada equipo de ceiba (con /vistas/riesgo, la franja de condiciones de la cabecera)"
+  },
+  {
+   "id": "hoy/sup-ceiba",
+   "endpoint": "/api/vistas/hoy?campos=ceiba&rol=sup",
+   "descripcion": "Hoy del rol sup en ceiba: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/oper-ceiba",
+   "endpoint": "/api/vistas/hoy?campos=ceiba&rol=oper",
+   "descripcion": "Hoy del rol oper en ceiba: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/tec-ceiba",
+   "endpoint": "/api/vistas/hoy?campos=ceiba&rol=tec",
+   "descripcion": "Hoy del rol tec en ceiba: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/jefe-ceiba",
+   "endpoint": "/api/vistas/hoy?campos=ceiba&rol=jefe",
+   "descripcion": "Hoy del rol jefe en ceiba: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/conf-ceiba",
+   "endpoint": "/api/vistas/hoy?campos=ceiba&rol=conf",
+   "descripcion": "Hoy del rol conf en ceiba: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/prod-ceiba",
+   "endpoint": "/api/vistas/hoy?campos=ceiba&rol=prod",
+   "descripcion": "Hoy del rol prod en ceiba: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/lista-ceiba",
+   "endpoint": "/api/vistas/lista-equipos?campos=ceiba",
+   "descripcion": "La lista de Equipos de ceiba (C4): cada equipo con su condición, «¿Lo vigila TRIM?» y su cifra, en su orden",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/ger-ceiba-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=ger",
+   "descripcion": "Resultados del rol ger en ceiba, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/prod-ceiba-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=prod",
+   "descripcion": "Resultados del rol prod en ceiba, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/jefe-ceiba-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=jefe",
+   "descripcion": "Resultados del rol jefe en ceiba, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/conf-ceiba-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=conf",
+   "descripcion": "Resultados del rol conf en ceiba, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/reg-ceiba-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=reg",
+   "descripcion": "Resultados del rol reg en ceiba, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/morichal-2026-09-antes",
+   "endpoint": "/api/vistas/planta-viva?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=antes",
+   "descripcion": "La planta viva de morichal en el momento «antes», con 2026-09 como período",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/morichal-2026-09-durante",
+   "endpoint": "/api/vistas/planta-viva?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=durante",
+   "descripcion": "La planta viva de morichal en el momento «durante», con 2026-09 como período",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/morichal-2026-09-despues",
+   "endpoint": "/api/vistas/planta-viva?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=despues",
+   "descripcion": "La planta viva de morichal en el momento «despues», con 2026-09 como período",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "franja/equipos-hoy-morichal",
+   "endpoint": "/api/vistas/equipos-hoy?campos=morichal",
+   "descripcion": "Lo de hoy de cada equipo de morichal (con /vistas/riesgo, la franja de condiciones de la cabecera)"
+  },
+  {
+   "id": "hoy/sup-morichal",
+   "endpoint": "/api/vistas/hoy?campos=morichal&rol=sup",
+   "descripcion": "Hoy del rol sup en morichal: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/oper-morichal",
+   "endpoint": "/api/vistas/hoy?campos=morichal&rol=oper",
+   "descripcion": "Hoy del rol oper en morichal: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/tec-morichal",
+   "endpoint": "/api/vistas/hoy?campos=morichal&rol=tec",
+   "descripcion": "Hoy del rol tec en morichal: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/jefe-morichal",
+   "endpoint": "/api/vistas/hoy?campos=morichal&rol=jefe",
+   "descripcion": "Hoy del rol jefe en morichal: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/conf-morichal",
+   "endpoint": "/api/vistas/hoy?campos=morichal&rol=conf",
+   "descripcion": "Hoy del rol conf en morichal: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/prod-morichal",
+   "endpoint": "/api/vistas/hoy?campos=morichal&rol=prod",
+   "descripcion": "Hoy del rol prod en morichal: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/lista-morichal",
+   "endpoint": "/api/vistas/lista-equipos?campos=morichal",
+   "descripcion": "La lista de Equipos de morichal (C4): cada equipo con su condición, «¿Lo vigila TRIM?» y su cifra, en su orden",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/ger-morichal-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=ger",
+   "descripcion": "Resultados del rol ger en morichal, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/prod-morichal-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=prod",
+   "descripcion": "Resultados del rol prod en morichal, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/jefe-morichal-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=jefe",
+   "descripcion": "Resultados del rol jefe en morichal, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/conf-morichal-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=conf",
+   "descripcion": "Resultados del rol conf en morichal, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/reg-morichal-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=reg",
+   "descripcion": "Resultados del rol reg en morichal, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/portafolio-2026-09-antes",
+   "endpoint": "/api/vistas/planta-viva?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=antes",
+   "descripcion": "La planta viva de portafolio en el momento «antes», con 2026-09 como período",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/portafolio-2026-09-durante",
+   "endpoint": "/api/vistas/planta-viva?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=durante",
+   "descripcion": "La planta viva de portafolio en el momento «durante», con 2026-09 como período",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "planta-viva/portafolio-2026-09-despues",
+   "endpoint": "/api/vistas/planta-viva?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&momento=despues",
+   "descripcion": "La planta viva de portafolio en el momento «despues», con 2026-09 como período",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "franja/equipos-hoy-portafolio",
+   "endpoint": "/api/vistas/equipos-hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Lo de hoy de cada equipo de portafolio (con /vistas/riesgo, la franja de condiciones de la cabecera)"
+  },
+  {
+   "id": "hoy/sup-portafolio",
+   "endpoint": "/api/vistas/hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&rol=sup",
+   "descripcion": "Hoy del rol sup en portafolio: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/oper-portafolio",
+   "endpoint": "/api/vistas/hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&rol=oper",
+   "descripcion": "Hoy del rol oper en portafolio: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/tec-portafolio",
+   "endpoint": "/api/vistas/hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&rol=tec",
+   "descripcion": "Hoy del rol tec en portafolio: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/jefe-portafolio",
+   "endpoint": "/api/vistas/hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&rol=jefe",
+   "descripcion": "Hoy del rol jefe en portafolio: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/conf-portafolio",
+   "endpoint": "/api/vistas/hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&rol=conf",
+   "descripcion": "Hoy del rol conf en portafolio: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "hoy/prod-portafolio",
+   "endpoint": "/api/vistas/hoy?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&rol=prod",
+   "descripcion": "Hoy del rol prod en portafolio: sus tareas en su orden, su cifra y su frase",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/lista-portafolio",
+   "endpoint": "/api/vistas/lista-equipos?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "La lista de Equipos de portafolio (C4): cada equipo con su condición, «¿Lo vigila TRIM?» y su cifra, en su orden",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/ger-portafolio-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=ger",
+   "descripcion": "Resultados del rol ger en portafolio, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/prod-portafolio-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=prod",
+   "descripcion": "Resultados del rol prod en portafolio, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/jefe-portafolio-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=jefe",
+   "descripcion": "Resultados del rol jefe en portafolio, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/conf-portafolio-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=conf",
+   "descripcion": "Resultados del rol conf en portafolio, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "resultados/reg-portafolio-2026-09",
+   "endpoint": "/api/vistas/resultados?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&rol=reg",
+   "descripcion": "Resultados del rol reg en portafolio, 2026-09: la cifra contra el máximo, el mes a mes y lo de su rol",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/nivel3-ceiba-P-201B",
+   "endpoint": "/api/vistas/equipos/ceiba/P-201B/tecnico",
+   "descripcion": "El nivel 3 de P-201B en ceiba (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/nivel3-ceiba-P-201A",
+   "endpoint": "/api/vistas/equipos/ceiba/P-201A/tecnico",
+   "descripcion": "El nivel 3 de P-201A en ceiba (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/nivel3-morichal-P-201B",
+   "endpoint": "/api/vistas/equipos/morichal/P-201B/tecnico",
+   "descripcion": "El nivel 3 de P-201B en morichal (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/nivel3-ceiba-K-101",
+   "endpoint": "/api/vistas/equipos/ceiba/K-101/tecnico",
+   "descripcion": "El nivel 3 de K-101 en ceiba (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/nivel3-morichal-MN-07",
+   "endpoint": "/api/vistas/equipos/morichal/MN-07/tecnico",
+   "descripcion": "El nivel 3 de MN-07 en morichal (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "equipos/nivel3-ceiba-LC-21",
+   "endpoint": "/api/vistas/equipos/ceiba/LC-21/tecnico",
+   "descripcion": "El nivel 3 de LC-21 en ceiba (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
    "id": "escenarios/capacidades-de-antes/reparto-ceiba+guacamayo-13-meses",
    "endpoint": "/api/vistas/choke/reparto?campos=ceiba%2Cguacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
    "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Lo perdido por tramo y por escalón en ceiba y guacamayo (13-meses), con lo estructural, lo que cabía en la holgura y la eficiencia",

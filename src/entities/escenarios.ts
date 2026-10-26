@@ -169,7 +169,8 @@ function planesDurante(campoIds: string[], ctx: Contexto, versiones: Versiones):
         accion: `Reparar y arrancar: cada hora que sigue parada cuesta ${Math.round(r.bblDia / 24)} bbl. Su promedio fuera es ${textoHoras(mdt, true)}.`,
         bbl, horas: ahorroH > 0 ? ahorroH : undefined,
         supuestos: [
-          `Perdiéndose ahora ${Math.round(r.bblDia)} bbl/d.`,
+          // C5 · Un nombre, una cifra (X4 §1.3.3): lo de un equipo lleva su nombre, nunca el del total del campo.
+          `Por ${r.equipo} se dejan de producir ahora ${Math.round(r.bblDia)} bbl/d.`,
           `Lleva ${textoHoras(horasParada, true)} parado.`,
           `Sus fallas cerradas duran ${textoHoras(mdt, true)} en promedio (${h.fallasCerradas} ${h.fallasCerradas === 1 ? 'falla' : 'fallas'}).`,
           ahorroH > 0

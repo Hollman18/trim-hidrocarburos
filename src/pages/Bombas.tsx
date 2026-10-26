@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useApp, useAmbito, useRango, useNivel } from '@/app/store'
 import { useTuberiaAgua, useCriticidad } from '@/shared/api/choke'
 import { Boton, Chip } from '@/shared/ui/primitivas'
@@ -9,7 +8,6 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { n0, plural } from '@/shared/lib/formato'
 import { useBombas } from '@/shared/api/equipos'
 import { Placa } from '@/widgets/bombas/Placa'
-import { Detalle } from '@/widgets/bombas/Detalle'
 import { fmtBbl, fmtRango, fmtHoras, pronosticoCorto } from '@/widgets/bombas/comun'
 
 /** La estación de bombas: el nivel 2 de ISA-101. Las bombas multifásicas y
@@ -18,12 +16,12 @@ import { fmtBbl, fmtRango, fmtHoras, pronosticoCorto } from '@/widgets/bombas/co
 export function Bombas() {
   const ambito = useAmbito()
   const rango = useRango(); const nivel = useNivel()
-  const [abierta, setAbierta] = useState<string | null>(null)
+  const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo)
 
   const bombas = useBombas(ambito.campos.map(c => c.id), rango.desde, rango.hasta)
-
-  const sel = bombas.find(b => b.clave === abierta)
-  if (sel) return <Detalle b={sel} nivel={nivel} onVolver={() => setAbierta(null)} />
+  // C4 · Una placa abre el nivel 3 de su bomba (X4 §5.3): la vista entera, con su
+  // diagnóstico (el nivel 4) detrás de «Ver el diagnóstico». Antes era un detalle aquí mismo.
+  const abrir = (campoId: string, equipo: string) => { setCampo(campoId); abrirEquipo(equipo) }
 
   // Lo que se está perdiendo AHORA: pozos cerrados por bombas detenidas.
   const costando = bombas.filter(b => b.veredicto?.prediccion.perdiendo?.bblDia)
@@ -48,7 +46,7 @@ export function Bombas() {
     <>
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
         <span>
-          <small className="block text-[13px] text-[var(--tinta3)]">Perdiéndose ahora</small>
+          <small className="block text-[13px] text-[var(--tinta2)]">Se deja de producir ahora, por bombas paradas</small>
           {/* Un total no es una alarma: va en tinta y la marca va en la bomba que lo causa (B-40; U1 §9.3). */}
           <b className="tabular block text-[30px] leading-none">
             {n0(porHora * 24)}<span className="ml-1 text-[14px] font-normal text-[var(--tinta3)]">bbl/d</span>
@@ -92,7 +90,7 @@ export function Bombas() {
       </div>
 
       <Lectura>
-        <b>Perdiéndose ahora</b> es el crudo de los pozos que están cerrados porque una bomba de
+        <b>Se deja de producir ahora</b> es el crudo de los pozos que están cerrados porque una bomba de
         la línea está detenida, pozo por pozo con su prueba, a la hora de referencia. <b>Diferido que
         causaron</b> es lo que ya se perdió en el período por paradas de estas bombas (se le carga a
         la bomba que paró), con su rango de tolerancia: es calculado, no medido. <b>Próxima en
@@ -105,7 +103,7 @@ export function Bombas() {
 
       <div className="mt-2.5 grid items-stretch gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr))]">
         {bombas.map(b => (
-          <Placa key={b.clave} b={b} global={ambito.global} nivel={nivel} onAbrir={() => setAbierta(b.clave)} />
+          <Placa key={b.clave} b={b} global={ambito.global} nivel={nivel} onAbrir={() => abrir(b.campo.id, b.eq.id)} />
         ))}
       </div>
 

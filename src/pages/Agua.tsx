@@ -1,7 +1,7 @@
 import { useApp, useRango } from '@/app/store'
 import { usePrediccion } from '@/shared/api/diferidos'
 import { pedirPerfilesBomba } from '@/shared/api/equipos'
-import { Panel } from '@/shared/ui/primitivas'
+import { Panel, Enlace } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { TuberiaDelAgua } from '@/widgets/choke/Agua'
 
@@ -13,7 +13,7 @@ import { TuberiaDelAgua } from '@/widgets/choke/Agua'
  *  tanque configurado; lo que el demo no tiene va «sin dato». */
 export function Agua() {
   const rango = useRango()
-  const campoId = useApp(s => s.campoId)
+  const campoId = useApp(s => s.campoId), abrirEquipo = useApp(s => s.abrirEquipo)
   // La bomba de reinyección del campo la dice su perfil en el registro, no un
   // id fijo: un cliente con otra numeración la ve igual.
   const perfil = pedirPerfilesBomba(campoId).find(p => p.subtipo === 'inyeccion')
@@ -28,8 +28,10 @@ export function Agua() {
         que cerrar pozos, primero los más acuatosos. Por eso la bomba de reinyección es de alto impacto.
       </Lectura>
       {perfil && pr && (
-        <Panel className="mt-2.5" titulo="LA BOMBA DE REINYECCIÓN" extra={pr.metodo}>
-          <ul className="list-disc pl-4 text-[14px] text-[var(--tinta2)]">{pr.supuestos.map(s => <li key={s}>{s}</li>)}</ul>
+        <Panel className="mt-2.5" titulo="La bomba de reinyección" extra={pr.metodo}>
+          <ul className="list-disc pl-4 text-[15px] text-[var(--tinta2)]">{pr.supuestos.map(s => <li key={s}>{s}</li>)}</ul>
+          {/* C4 · Bajar es tocar (X4 §5.3): del tren (nivel 2) a la bomba (nivel 3). */}
+          <Enlace className="mt-2" onClick={() => abrirEquipo(perfil.equipo)}>Ver {perfil.equipo}</Enlace>
         </Panel>
       )}
     </>

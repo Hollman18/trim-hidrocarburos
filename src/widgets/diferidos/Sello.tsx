@@ -33,9 +33,9 @@ export function SelloPublicacion({ lb, className }: { lb: Libro; className?: str
       imprimir={pub.estado === 'bloqueado' ? 'pista' : undefined} claseImpresion="basis-full"
       // En el teléfono, un blanco de toque de 24 px (WCAG 2.5.8), como el ⓘ.
       className={cn('inline-flex min-h-6 flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5 sm:min-h-0', className)}>
-      {pub.estado === 'publicable' ? <Chip>✓ PUBLICABLE</Chip>
-        : pub.estado === 'provisional' ? <Chip>PROVISIONAL</Chip>
-          : <><FueraDeMeta si tamano={11} /><Chip tono="fuerte">NO PUBLICABLE</Chip></>}
+      {pub.estado === 'publicable' ? <Chip>✓ se puede publicar</Chip>
+        : pub.estado === 'provisional' ? <Chip>provisional</Chip>
+          : <><FueraDeMeta si tamano={11} /><Chip tono="fuerte">no se puede publicar</Chip></>}
       {motivos.length > 0 && (
         <span className="no-imprimir basis-full text-right text-[13px] leading-snug text-[var(--tinta2)]">
           {motivos.map(m => <span key={m} className="block">{m}</span>)}

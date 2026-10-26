@@ -1,7 +1,6 @@
 import { useApp, useAmbito, useRol } from '@/app/store'
 import { useLibro, useRiesgo, usePreguntas, contarPorIdentificar } from '@/shared/api/diferidos'
-import { useCiclo } from '@/shared/api/ciclo'
-import { CicloCifras } from '@/widgets/ciclo/Ciclo'
+import { useCifrasDeUnNombre, NOMBRE_CIFRA } from '@/shared/api/resultados'
 import { useMensajes } from '@/shared/api/mensajes'
 import { PASO_CORTO, ORDEN_PASO } from '@/entities/mensajes'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
@@ -45,7 +44,8 @@ export function Turno() {
   const inicioTurno = new Date(AHORA.getTime() - TURNO_H * 3_600_000)
   const lb = useLibro({ campos: ids, desde: inicioTurno, hasta: AHORA })
   const riesgo = useRiesgo(ids)
-  const ciclo = useCiclo(ids, inicioTurno, AHORA)
+  // «Se deja de producir ahora» es siempre el total del campo (X4 §1.3.3): la regla del motor.
+  const uno = useCifrasDeUnNombre(ids)
   const todas = usePreguntas(ids)
   const preguntas = todas.filter(p => p.pide)
   // La cuenta única de «por identificar» (Turno, Mi trabajo, Identificar, Mantenimiento).
@@ -81,7 +81,7 @@ export function Turno() {
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   // Lo que ya está fuera de límite (sin horas) va primero, como en Riesgo y Mantenimiento.
   const vigilar = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
-  const porDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
+  const porDia = uno.ahoraBpd
   // El equipo que más pesa en lo que se pierde ahora: lleva la marca que el total no lleva (B-40).
   const causaMayor = [...perdiendo].sort((a, b) => Number(b.altoImpacto) - Number(a.altoImpacto) || b.bblDia - a.bblDia)[0]
   const abrir = (c: string, eq: string) => { setCampo(c); abrirEquipo(eq, false) }
@@ -115,7 +115,7 @@ export function Turno() {
       titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
       // Lo que escribió una persona va en la pantalla; en el papel, quién lo contestó, por su rol (D2).
       pistaEnPapel={r.declaradoPor ? `Lo contestó ${r.declaradoPor}` : undefined}
-      filas={[['Pozos parados', String(r.pozos)], ['Perdiéndose', `${n0(r.bblDia)} bbl/d`],
+      filas={[['Pozos parados', String(r.pozos)], [`Por ${r.equipo} se dejan de producir`, `${n0(r.bblDia)} bbl/d`],
         ['En el turno', `${n0(r.bblDia * TURNO_H / 24)} bbl`], ...(r.desde ? [['Desde', fechaHora(r.desde)] as [string, string]] : []),
         ...(r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? [['Pozos cerrados desde', fechaHora(r.cierreDesde)] as [string, string]] : [])]}
       imprimir="todo" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
@@ -217,18 +217,18 @@ export function Turno() {
 
   return (
     <>
-      <CicloCifras ciclo={ciclo} onIr={p => setPantalla(p)} />
+      {/* El bloque del ciclo ya no va aquí (X4 §3.7): lo simulado del turno está en Hoy y en La planta viva. */}
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-        <Tip titulo="Turno que entra" pista={`Lo que se pierde ahora, sostenido las ${TURNO_H} horas del turno.`}
-          filas={[['Perdiéndose ahora', `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]} className="block">
+        <Tip titulo="Turno que entra" pista={`Lo que se deja de producir ahora, sostenido las ${TURNO_H} horas del turno.`}
+          filas={[[NOMBRE_CIFRA.ahora, `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]} className="block">
           <b className="tabular block text-[36px] leading-none">{n0(porDia * TURNO_H / 24)}<small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">bbl</small></b>
-          <small className={rotulo}>se pierden · turno que entra</small>
+          <small className={rotulo}>se dejarían de producir · turno que entra</small>
           <small className={apoyo}>si nada cambia</small>
         </Tip>
         <span>
           {/* Un total no es una alarma: la marca va en el equipo que lo causa (B-40; U2 §0, principio 4). */}
           <b className={cifra}>{n0(porDia)}<small className="text-[13px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
-          <small className={rotulo}>perdiéndose ahora</small>
+          <small className={rotulo}>se deja de producir ahora</small>
           <small className={apoyo}>
             {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
             {causaMayor && <span className="inline-flex items-center gap-1"> · <MarcaPrioridad s={causaMayor.altoImpacto ? 1 : 2} tamano={11} />{causaMayor.equipo}</span>}
@@ -248,7 +248,7 @@ export function Turno() {
       <Lectura>
         Lo que deja el turno que sale y lo que recibe el que entra. Las cifras salen de los
         controladores de los pozos y del vigía; para entregar no hay que escribir nada, salvo
-        responder las paradas que ninguna señal explica. Turno que entra: lo que se pierde ahora,
+        responder las paradas que ninguna señal explica. Turno que entra: lo que se deja de producir ahora,
         sostenido las {TURNO_H} horas, si nada cambia. Toque o pase el cursor por un hilo de WhatsApp para
         ver a quién le llegó cada mensaje; lo que no se envió se marca en la fila.
       </Lectura>
@@ -258,14 +258,14 @@ export function Turno() {
       <div className={veTramo ? '' : 'mt-2.5'}><CierreDeHoy key={rol.id} campos={ids} global={ambito.global} /></div>
 
       <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
-        <Panel titulo="2 · Pasando ahora" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
+        <Panel titulo="Parado ahora" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada parado'}>
           {perdiendo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
           {listaPerdiendo.visibles.map(filaPerdiendo)}
           {listaPerdiendo.resto.length > 0 && <div className="solo-impresion">{listaPerdiendo.resto.map(filaPerdiendo)}</div>}
           <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
         </Panel>
 
-        <Panel titulo="2 · Identificar" extra={`${pi.porIdentificar}`}>
+        <Panel titulo="Por identificar" extra={`${pi.porIdentificar}`}>
           {preguntas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaPreguntas.visibles.map(filaPregunta)}
           {listaPreguntas.resto.length > 0 && <div className="solo-impresion">{listaPreguntas.resto.map(filaPregunta)}</div>}
@@ -279,7 +279,7 @@ export function Turno() {
           ) : preguntas.length > 0 && <Hueco>Lo responde quien estuvo en el equipo.</Hueco>}
         </Panel>
 
-        <Panel titulo="1 · Vigilar" extra={plural(vigilar.length, 'equipo', 'equipos')}>
+        <Panel titulo="Por vigilar" extra={plural(vigilar.length, 'equipo', 'equipos')}>
           {vigilar.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna parte va hacia su límite.</p>}
           {listaVigilar.visibles.map(filaVigilar)}
           {listaVigilar.resto.length > 0 && <div className="solo-impresion">{listaVigilar.resto.map(filaVigilar)}</div>}
@@ -287,13 +287,13 @@ export function Turno() {
         </Panel>
       </div>
 
-      <Panel className="mt-2.5" titulo="PARADAS NUEVAS" extra={`${TURNO_H} h · ${plural(grupos.length, 'causa', 'causas')}`}>
+      <Panel className="mt-2.5" titulo="Paradas nuevas" extra={`${TURNO_H} h · ${plural(grupos.length, 'causa', 'causas')}`}>
         {grupos.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún pozo paró.</p>}
         {listaGrupos.visibles.map(filaGrupo)}
         {listaGrupos.resto.length > 0 && <div className="solo-impresion">{listaGrupos.resto.map(filaGrupo)}</div>}
         <VerMas ocultas={listaGrupos.ocultas} abierto={listaGrupos.abierto} onAlternar={listaGrupos.alternar} />
       </Panel>
-      <Panel className="mt-2.5" titulo="WHATSAPP DEL TURNO"
+      <Panel className="mt-2.5" titulo="WhatsApp del turno"
         extra={`${plural(enviados.length - sinEnviar, 'mensaje', 'mensajes')}${sinEnviar ? ` · ${plural(sinEnviar, 'sin enviar', 'sin enviar')}` : ''}`}>
         <Lectura>
           A quién le avisó TRIM y cuándo, con las reglas fijas del producto: parada de un equipo de

@@ -22,7 +22,8 @@ const Turno = pantalla(() => import('@/pages/Turno'), 'Turno')
 const Trabajo = pantalla(() => import('@/pages/Trabajo'), 'Trabajo')
 const Mantenimiento = pantalla(() => import('@/pages/Mantenimiento'), 'Mantenimiento')
 const Causa = pantalla(() => import('@/pages/Causa'), 'Causa')
-const Equipo = pantalla(() => import('@/pages/Equipo'), 'Equipo')
+// C4 · «Superficie» se fundió en Equipos (X4 §3.6): su dirección abre Equipos con el filtro de servicios y proceso.
+const Equipo = pantalla(() => import('@/pages/Equipos'), 'EquiposDeSuperficie')
 const Confiabilidad = pantalla(() => import('@/pages/Confiabilidad'), 'Confiabilidad')
 const Evidencia = pantalla(() => import('@/pages/Evidencia'), 'Evidencia')
 const Regulatorio = pantalla(() => import('@/pages/Regulatorio'), 'Regulatorio')
@@ -31,6 +32,9 @@ const Esp = pantalla(() => import('@/pages/Esp'), 'Esp')
 // C2 y C3 (experiencia v2): La planta viva del gerente y Hoy, lo que a cada rol le toca.
 const PlantaViva = pantalla(() => import('@/pages/PlantaViva'), 'PlantaViva')
 const Hoy = pantalla(() => import('@/pages/Hoy'), 'Hoy')
+// C4 y C5 (experiencia v2): Equipos en un solo lugar y Resultados del período.
+const Equipos = pantalla(() => import('@/pages/Equipos'), 'Equipos')
+const Resultados = pantalla(() => import('@/pages/Resultados'), 'Resultados')
 
 export interface Pantalla {
   corto: string
@@ -57,6 +61,8 @@ export const PANTALLAS: Record<string, Pantalla> = {
   // La experiencia v2: la vista del gerente se llama «La planta viva» (lo decidió el dueño).
   plantaViva:   { corto: 'La planta viva', titulo: 'La planta viva',             ruta: 'planta-viva', agrega: true, ahora: true, sinExportar: true, icono: IconoPlanta, Vista: PlantaViva },
   hoy:          { corto: 'Hoy',           titulo: 'Hoy',                         ruta: 'hoy', agrega: true, ahora: true, sinExportar: true, icono: ListChecks,         Vista: Hoy },
+  equipos:      { corto: 'Equipos',       titulo: 'Equipos',                     ruta: 'equipos', agrega: true, ahora: true, icono: Gauge,              Vista: Equipos },
+  resultados:   { corto: 'Resultados',    titulo: 'Resultados',                  ruta: 'resultados', agrega: true,                      icono: ChartColumn,        Vista: Resultados },
   bombas:       { corto: 'Bombas',        titulo: 'Bombas de la línea', ruta: 'bombas', agrega: true, icono: Fan,                Vista: Bombas },
   esp:          { corto: 'Electrosumergibles', titulo: 'Electrosumergibles', ruta: 'esp', agrega: true, icono: Zap,               Vista: Esp },
   produccion:   { corto: 'Producción',    titulo: 'Producción contra plan',      ruta: 'produccion', agrega: true,   icono: TrendingUp,         Vista: Produccion },
@@ -66,11 +72,12 @@ export const PANTALLAS: Record<string, Pantalla> = {
   mantenimiento:{ corto: 'Mantenimiento', titulo: 'Mantenimiento: lo que hay que atacar',    ruta: 'mantenimiento', agrega: true, icono: Scale3d,            Vista: Mantenimiento },
   resumen:      { corto: 'Resumen',       titulo: 'Resumen del activo',          ruta: 'resumen', agrega: true,                         icono: Gauge,              Vista: Resumen },
   diferidos:    { corto: 'Diferidos',     titulo: 'Libro de diferidos',          ruta: 'diferidos', agrega: true,                       icono: Activity,           Vista: Diferidos },
-  riesgo:       { corto: 'Riesgo',        titulo: 'Qué está en riesgo',          ruta: 'riesgo', agrega: true,                          icono: TriangleAlert,      Vista: Riesgo },
+  // C5: Riesgo ya no lee el período (sin el bloque del ciclo): es «ahora» (X4 §3.1, regla 8).
+  riesgo:       { corto: 'Riesgo',        titulo: 'Qué está en riesgo',          ruta: 'riesgo', agrega: true, ahora: true,             icono: TriangleAlert,      Vista: Riesgo },
   perfil:       { corto: 'Mi perfil',     titulo: 'Mi perfil',                   ruta: 'perfil', ahora: true,                          icono: UserRound,          Vista: Perfil },
   planta:       { corto: 'Planta',        titulo: 'Planta',                      ruta: 'planta',                          icono: Network,            Vista: Planta },
   causa:        { corto: 'Identificar',   titulo: 'Paradas por identificar',     ruta: 'causa', agrega: true,             icono: MessageSquareText,  Vista: Causa },
-  equipo:       { corto: 'Superficie',    titulo: 'Equipos de superficie',          ruta: 'equipo', agrega: true,                          icono: Wrench,             Vista: Equipo },
+  equipo:       { corto: 'Servicios y proceso', titulo: 'Equipos',                ruta: 'equipo', agrega: true, ahora: true,             icono: Wrench,             Vista: Equipo },
   agua:         { corto: 'Agua',          titulo: 'Agua y almacenamiento',       ruta: 'agua',                            icono: Droplets,           Vista: Agua },
   confiabilidad:{ corto: 'Confiabilidad', titulo: 'Confiabilidad',               ruta: 'confiabilidad', agrega: true,                   icono: Activity,           Vista: Confiabilidad },
   evidencia:    { corto: 'Evidencia',     titulo: 'Evidencia de parada',         ruta: 'evidencia', agrega: true,                       icono: Scale,              Vista: Evidencia },
@@ -85,7 +92,7 @@ export const PANTALLAS: Record<string, Pantalla> = {
 /** Pantallas que viven DENTRO de otra: tienen dirección propia, pero en el
  *  menú y en la introducción va la de afuera (la filosofía operacional es una
  *  pestaña de Configuración con su propio enlace). */
-export const DENTRO_DE: Readonly<Record<string, string>> = { filosofia: 'configuracion' }
+export const DENTRO_DE: Readonly<Record<string, string>> = { filosofia: 'configuracion', equipo: 'equipos' }
 /** ¿Va como entrada propia en el menú y en la introducción? */
 export const enElMenu = (id: string) => !Object.hasOwn(DENTRO_DE, id)
 /** La entrada del menú que se marca para una pantalla: ella misma, o la de afuera. */
@@ -101,9 +108,10 @@ export const entradaDe = (id: string) => (Object.hasOwn(DENTRO_DE, id) ? DENTRO_
 export interface Puerta { corto: string; icono: ComponentType<{ className?: string }>; miembros: string[] }
 export const GRUPOS: Record<string, Puerta> = {
   hoy:        { corto: 'Hoy',            icono: ListChecks,        miembros: ['hoy', 'causa', 'turno', 'trabajo'] },
-  plantaViva: { corto: 'La planta viva', icono: IconoPlanta,       miembros: ['plantaViva', 'resumen', 'planta', 'agua', 'riesgo'] },
-  equipos:    { corto: 'Equipos',        icono: Gauge,             miembros: ['bombas', 'esp', 'pozos', 'equipo'] },
-  resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['diferidos', 'produccion', 'confiabilidad', 'mantenimiento'] },
+  // C5: el Resumen del gerente ya no se ofrece (cada panel tiene su lugar: X4 §3.7); su dirección abre La planta viva.
+  plantaViva: { corto: 'La planta viva', icono: IconoPlanta,       miembros: ['plantaViva', 'planta', 'agua', 'riesgo'] },
+  equipos:    { corto: 'Equipos',        icono: Gauge,             miembros: ['equipos', 'bombas', 'esp', 'pozos', 'equipo'] },
+  resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['resultados', 'diferidos', 'produccion', 'confiabilidad', 'mantenimiento'] },
   reporte:    { corto: 'Reporte',        icono: FileCheck2,        miembros: ['regulatorio'] },
   configurar: { corto: 'Configurar',     icono: SlidersHorizontal, miembros: ['configuracion', 'filosofia', 'conectores'] },
   paradas:    { corto: 'Paradas y evidencia', icono: LayoutDashboard, miembros: ['evidencia'] },

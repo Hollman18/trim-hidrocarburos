@@ -56,7 +56,7 @@ export function PorCampo({ lb, campos, desde, hasta, onAbrir, onCampo }: {
   // El estado de hoy de los equipos (para la marca), un pedido por lote.
   const equipoHoy = useEquiposDeHoy(campos)
   const dias = Math.max(1 / 24, lb.meta.dias)
-  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'text-[15px] font-semibold text-[var(--tinta)]'
   // Las cuatro columnas: en el teléfono, nombre y total arriba y las dos barras debajo;
   // en uno angosto (menos de 380 px) cada barra en su renglón: lado a lado no cabían sus cifras.
   const rejilla = 'grid grid-cols-2 items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(110px,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_64px]'
@@ -64,7 +64,7 @@ export function PorCampo({ lb, campos, desde, hasta, onAbrir, onCampo }: {
 
   return (
     <section className="rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
-      <h3 className={`${titulo} mb-1`}>POR CAMPO</h3>
+      <h3 className={`${titulo} mb-1`}>Por campo</h3>
       <Lectura>
         Toque un campo para ver sus equipos, de más a menos barriles: cuántas veces fallaron (un
         disparo no es falla) y su parte del diferido del campo; al final, los que fallaron sin costar

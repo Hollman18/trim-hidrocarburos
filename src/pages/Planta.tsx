@@ -41,6 +41,19 @@ const SEV_COLOR = ['transparent', 'var(--p1)', 'var(--p2)', 'var(--p3)']
 const SOLO_PROCESO: Simbolo[] = ['salida', 'manifold', 'tea', 'inyeccion', 'pozos']
 /** El dibujo nunca se encoge más que esto: por debajo, la letra no se lee. */
 const ESCALA_MINIMA = 0.7
+/** C4 · La letra del esquema, en unidades del dibujo: como el dibujo nunca baja de
+ *  `ESCALA_MINIMA`, 17,5 unidades nunca son menos de 12 px (X5 §3.4; antes iba de 9 a 10,5 px a 1440). */
+const LETRA = 17.5, LETRA_NOMBRE = 18
+/** El nombre de un equipo del esquema en renglones de 18 caracteres o menos; dos como mucho. */
+const partirNombre = (t: string): string[] => {
+  if (t.length <= 18) return [t]
+  const palabras = t.split(' ')
+  let a = ''
+  while (palabras.length && (a ? `${a} ${palabras[0]}` : palabras[0]!).length <= 18) a = a ? `${a} ${palabras.shift()}` : palabras.shift()!
+  if (!a) return [`${t.slice(0, 17)}…`]
+  const b = palabras.join(' ')
+  return b ? [a, b.length > 18 ? `${b.slice(0, 17)}…` : b] : [a]
+}
 /** ISA-18.2: lo que anticipa una alarma no se tapa. El tanque de agua (la restricción
  *  del tren de agua: lleno, se cierran los pozos) sube a la vista desde estos puntos
  *  por debajo de su alto-alto (90 % → 80 %), o en cualquier nivel si la bomba de
@@ -48,7 +61,8 @@ const ESCALA_MINIMA = 0.7
  *  sino del llenado que calcula el motor (`tanqueSev`). */
 const MARGEN_TANQUE = 10
 /** Un pie más largo pisa al vecino (las cajas van cada 150 unidades). */
-const PIE_MAX = 24
+// C4 · Con la letra de 12 px, 20 caracteres de pie caben entre dos equipos y dentro del dibujo.
+const PIE_MAX = 20
 const recortar = (t: string) => (t.length > PIE_MAX ? `${t.slice(0, PIE_MAX - 1)}…` : t)
 
 /** Un equipo captura datos si está instrumentado y al menos un dispositivo
@@ -226,16 +240,10 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
     gas: 'gas sin medición',
     agua: `${n0(cfg.caudales.agua)} bbl/d de agua`,
   }
-  // El caudal de cada corriente se rotula en su tubería más a la derecha que
-  // sigue con flujo: una que sale de un equipo detenido lleva «SIN FLUJO» en
-  // vez del rótulo, y el caudal de la corriente no puede quedar solo en el
-  // tooltip (las tuberías no reciben el foco: lo suyo tiene que verse).
-  const rotulada = new Set<string>()
-  for (const c of ['multi', 'crudo', 'gas', 'agua'] as Corriente[]) {
-    const dela = plano.lineas.filter(l => l.corriente === c && !detenido(l.deId))
-    const borde = dela.reduce<typeof dela[number] | undefined>((mejor, l) => (!mejor || l.medio[0] > mejor.medio[0] ? l : mejor), undefined)
-    if (borde) rotulada.add(borde.id)
-  }
+  // C4 · El caudal de cada corriente va en un renglón sobre el dibujo, con la muestra
+  // de su trazo: dentro del dibujo, con la letra de 12 px, el rótulo era más ancho que
+  // el hueco entre dos equipos y los tapaba. Una tubería que sale de un equipo
+  // detenido sigue diciendo «sin flujo» en su lugar.
   const corrientes = (['multi', 'crudo', 'gas', 'agua'] as Corriente[]).filter(c => plano.lineas.some(l => l.corriente === c))
   const total = capturan.length + sinDatos.length
 
@@ -280,6 +288,15 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const dibujo = (
     <Panel className="mb-2.5 min-w-0" titulo="ESQUEMA DE PLANTA" extra={NOMBRE_GAS[perfil.gas]}>
       {!estrecho && cobertura}
+      <p className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] text-[var(--tinta2)]" data-caudales>
+        <span className="font-semibold text-[var(--tinta)]">Ahora:</span>
+        {corrientes.map(c => (
+          <span key={c} className="inline-flex items-center gap-1.5 tabular">
+            <svg width={22} height={6} aria-hidden><line x1={1} x2={21} y1={3} y2={3} stroke={COLOR[c]} strokeWidth={TRAZO[c].ancho} strokeDasharray={TRAZO[c].patron} /></svg>
+            {caudal[c]}
+          </span>
+        ))}
+      </p>
       <Lectura>
         Gris es normal; el color aparece solo donde hay condición anormal, siempre con su forma. Lo que captura
         datos va lleno; lo configurado que todavía no da datos va punteado: es lo que falta por instrumentar.
@@ -297,16 +314,12 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           // Un grupo, no una imagen: adentro hay equipos que se abren con el teclado, y un
           // role="img" los volvía mudos para el lector aunque recibieran el foco.
           role="group" aria-label={`Planta de ${campo.nombre}: ${capturan.length} de ${plural(total, 'equipo', 'equipos')} capturando datos.`}>
-          <defs>
-            <filter id="sombraNodo" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="1" stdDeviation="1.4" floodOpacity="0.16" />
-            </filter>
-          </defs>
 
           {plano.bandas.map(b => (
             <g key={b.titulo}>
               <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={10} fill={COLOR[b.corriente]} opacity={0.07} />
-              <text x={b.x0 + 12} y={b.y0 + 18} fontSize={13} className="font-cond" fill="var(--tinta2)" letterSpacing=".12em">{b.titulo.toUpperCase()}</text>
+              {/* C4 · Toda letra del esquema mide 12 px o más a 1440 (el dibujo nunca baja de 0,7: 17,5 unidades). */}
+              <text x={b.x0 + 12} y={b.y0 + 24} fontSize={LETRA} fontWeight={600} fill="var(--tinta2)">{b.titulo}</text>
             </g>
           ))}
 
@@ -314,10 +327,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
             const quieta = detenido(l.deId) || detenido(l.aId)
             const sinSalida = detenido(l.deId)
             const sevSalida: Severidad = sinSalida ? estado.get(l.deId)?.severidad ?? 0 : 0
-            const rot = rotulada.has(l.id) ? caudal[l.corriente] : undefined
-            const [mx, my] = l.medio
             const [sx, sy] = l.inicio
-            const anchoRot = rot ? rot.length * 7.6 + 18 : 0
             return (
               // Lo que dice el tooltip de una tubería ya está dibujado (la línea, el
               // rótulo del caudal de su corriente, el «SIN FLUJO»): no es parada de Tab.
@@ -329,20 +339,14 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                 <path d={l.d} fill="none" stroke={COLOR[l.corriente]} strokeWidth={5} opacity={quieta ? 0.12 : 0.22} strokeLinejoin="round" />
                 <path d={l.d} fill="none" stroke={COLOR[l.corriente]} strokeWidth={TRAZO[l.corriente].ancho}
                   strokeDasharray={TRAZO[l.corriente].patron} strokeLinejoin="round" className={cn(quieta && 'detenido')} />
-                {rot && !sinSalida && (
-                  <>
-                    <rect x={mx - anchoRot / 2} y={my - 12} width={anchoRot} height={23} rx={4} fill="var(--panel)" stroke="var(--linea2)" strokeWidth={0.9} />
-                    <text x={mx} y={my + 4.5} fontSize={13} textAnchor="middle" fill="var(--tinta2)" className="tabular">{rot}</text>
-                  </>
-                )}
                 {sinSalida && (
                   // ISA-101: el texto en tinta (en rojo oscuro no llegaba a 4,5:1 a 13 px)
                   // y el color solo en la forma, con la prioridad del equipo que paró.
                   <>
-                    <rect x={sx - 48} y={sy - 11} width={96} height={21} rx={4} fill="var(--panel)"
+                    <rect x={sx - 64} y={sy - 15} width={128} height={30} rx={6} fill="var(--panel)"
                       stroke={sevSalida ? `var(--p${sevSalida})` : 'var(--linea)'} strokeWidth={0.9} />
-                    {sevSalida > 0 && <g transform={`translate(${sx - 43},${sy - 6.5})`}><MarcaPrioridad s={sevSalida} tamano={13} decorativa /></g>}
-                    <text x={sevSalida ? sx + 8 : sx} y={sy + 4} fontSize={13} textAnchor="middle" fill="var(--tinta)" className="font-cond" letterSpacing=".06em">SIN FLUJO</text>
+                    {sevSalida > 0 && <g transform={`translate(${sx - 58},${sy - 8})`}><MarcaPrioridad s={sevSalida} tamano={16} decorativa /></g>}
+                    <text x={sevSalida ? sx + 10 : sx} y={sy + 6} fontSize={LETRA} fontWeight={600} textAnchor="middle" fill="var(--tinta)">sin flujo</text>
                   </>
                 )}
               </Tip>
@@ -389,6 +393,9 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                   // «sin instrumentar» (lo monta así el esquema del administrador) no es un tipo.
                   : proceso ? [['Tipo', pieProceso && pieProceso !== 'sin instrumentar' ? pieProceso : 'proceso o límite de batería'], ['Datos', 'no tiene instrumento propio']]
                     : [['Datos', 'configurado, sin datos todavía'], ['Qué falta', n.id === 'tanqueAgua' && tanque ? `que su transmisor de nivel (${tanque.tagNivel}) dé señal` : eq ? 'que su instrumento dé señal' : 'montar el instrumento y declarar su tag']]
+            // El nombre en uno o dos renglones de 18 caracteres: con la letra de 12 px, uno de 26 pisaba al vecino.
+            const renglones = partirNombre(n.etiqueta)
+            const yPie = renglones.length > 1 ? 103 : 82
             const clicPozos = esPozos && verPozos
             const clicable = clicPozos || (!esPozos && !esTanqueAgua && !!(vivo && eq))
             return (
@@ -403,25 +410,29 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                   {sev === 1 && <circle cx={0} cy={0} r={46} fill="none" stroke="var(--p1)" strokeWidth={2} data-anillo-alarma />}
                   {destacado === n.id && <rect x={-64} y={-48} width={128} height={96} rx={11} fill="none" stroke="var(--acento)" strokeWidth={2.4} strokeDasharray="7 5" />}
                   {!proceso && (
-                    <rect className="marco" x={-58} y={-42} width={116} height={84} rx={8}
-                      fill={sev ? `var(--p${sev}-f)` : 'var(--panel)'} opacity={vivo ? 1 : 0.7}
-                      stroke={sev ? SEV_COLOR[sev] : vivo ? 'var(--linea)' : 'var(--tinta3)'} strokeWidth={sev ? 2 : vivo ? 1.2 : 1.1}
-                      strokeDasharray={vivo ? undefined : '5 4'} filter={vivo ? 'url(#sombraNodo)' : undefined} />
+                    // C4 · ISA-101 (X5 §6.5; X2 §5.4): la caja no se tiñe y no lleva sombra. El equipo se ve por
+                    // su brillo: en marcha, claro; detenido, más oscuro y con contorno de 2 px; sin datos, sin
+                    // relleno y discontinuo. La condición va en la marca, el borde y (prioridad 1) el anillo.
+                    <rect className="marco" x={-58} y={-42} width={116} height={84} rx={8} data-marcha={vivo && eq ? eq.marcha : 'sin-dato'}
+                      fill={!vivo ? 'none' : eq?.marcha === 'detenido' ? 'var(--banda)' : 'var(--eq-marcha)'}
+                      stroke={sev ? SEV_COLOR[sev] : eq?.marcha === 'detenido' && vivo ? 'var(--tinta)' : vivo ? 'var(--linea)' : 'var(--tinta3)'}
+                      strokeWidth={sev || (vivo && eq?.marcha === 'detenido') ? 2 : vivo ? 1.2 : 1.1}
+                      strokeDasharray={vivo ? undefined : '5 4'} />
                   )}
                   <g opacity={vivo ? 1 : proceso ? 0.5 : 0.45}><Glifo simbolo={n.simbolo} nivel={nivelV} fluido={n.fluido} /></g>
                   {sev > 0 && <g transform="translate(-54,-38)"><MarcaPrioridad s={sev} tamano={16} /></g>}
                   {n.pmo && (
                     <g transform="translate(34,-32)">
-                      <rect x={-22} y={-9} width={44} height={16} rx={3} fill="var(--panel2)" stroke="var(--linea)" strokeWidth={0.8} />
-                      <text y={3} fontSize={10} textAnchor="middle" fill="var(--tinta2)" className="font-cond">{n.pmo}</text>
+                      <rect x={-34} y={-14} width={68} height={26} rx={4} fill="var(--panel2)" stroke="var(--linea)" strokeWidth={0.8} />
+                      <text y={5} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)" className="font-cond">{n.pmo}</text>
                     </g>
                   )}
                   {/* El texto va a contraste completo aunque el equipo no dé datos: eso es lo que hay que leer. */}
-                  <text y={60} fontSize={15} textAnchor="middle" fill={proceso ? 'var(--tinta2)' : 'var(--tinta)'} fontWeight={proceso ? 400 : 600}>
-                    {n.etiqueta.length > 26 ? `${n.etiqueta.slice(0, 25)}…` : n.etiqueta}
+                  <text y={62} fontSize={LETRA_NOMBRE} textAnchor="middle" fill={proceso ? 'var(--tinta2)' : 'var(--tinta)'} fontWeight={proceso ? 400 : 600}>
+                    {renglones.map((r, i) => <tspan key={i} x={0} dy={i ? 21 : 0}>{r}</tspan>)}
                   </text>
-                  {pie && <text y={76} fontSize={12.5} textAnchor="middle" fill="var(--tinta2)" className="font-mono">{pie}</text>}
-                  {pieProceso && <text y={76} fontSize={12.5} textAnchor="middle" fill="var(--tinta2)" className="solo-impresion font-mono">{pieProceso}</text>}
+                  {pie && <text y={yPie} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)" className="font-mono">{pie}</text>}
+                  {pieProceso && <text y={yPie} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)" className="solo-impresion font-mono">{pieProceso}</text>}
                 </g>
               </Tip>
             )

@@ -14,6 +14,8 @@ const foco = (page: Page) => page.evaluate(() => {
 // Sin marcar la introducción como vista: un rol nuevo que entra por un enlace
 // compartido con equipo abre la introducción y la ficha a la vez. Antes cada
 // una volvía `inert` a la otra y la aplicación no respondía (ni «Cerrar»).
+// C4: a un rol técnico el equipo se le abre en su nivel 3 (una vista, no un panel);
+// la ficha flotante es la ejecutiva del gerente: es la que se apila con la introducción.
 for (const ancho of [390, 1280]) {
   base.describe(`${ancho} px`, () => {
     base.use({ viewport: { width: ancho, height: 860 }, isMobile: ancho < 600 })
@@ -21,7 +23,7 @@ for (const ancho of [390, 1280]) {
     base('la introducción y la ficha abiertas a la vez: se usa y se cierra todo', async ({ page }) => {
       const errores: string[] = []
       page.on('pageerror', e => errores.push(e.message))
-      await page.goto('/#/sup/bombas/ceiba/curso/P-201B')
+      await page.goto('/#/ger/equipos/ceiba/P-201B')
       const intro = page.locator('[role=dialog][aria-label="Introducción"]')
       const ficha = page.locator('[data-panel-equipo]')
       await expect(intro, 'la introducción del rol nuevo se abre').toBeVisible()
@@ -55,7 +57,7 @@ for (const ancho of [390, 1280]) {
 }
 
 base('con los dos abiertos, Escape cierra el de arriba y después el de abajo', async ({ page }) => {
-  await page.goto('/#/sup/bombas/ceiba/curso/P-201B')
+  await page.goto('/#/ger/equipos/ceiba/P-201B')
   const intro = page.locator('[role=dialog][aria-label="Introducción"]')
   const ficha = page.locator('[data-panel-equipo]')
   await expect(intro).toBeVisible(); await expect(ficha).toBeVisible()
@@ -71,7 +73,9 @@ base('con los dos abiertos, Escape cierra el de arriba y después el de abajo', 
 
 test('el foco no se pierde cuando la ficha cambia de equipo', async ({ flujo: f }) => {
   // LC-16 lo cerró la bomba: su detalle enlaza a P-201B dentro de la misma ficha.
-  await f.abrir('/#/prod/pozos/ceiba/curso/LC-16')
+  // C4: la ficha flotante con el detalle técnico queda para quien no tiene Equipos (el administrador);
+  // producción abre el nivel 3 (e2e/equipos.spec.ts prueba el mismo enlace allí).
+  await f.abrir('/#/adm/planta/ceiba/curso/LC-16')
   const ficha = f.page.locator('[data-panel-equipo]')
   await expect(ficha).toBeVisible()
   const ver = ficha.getByRole('button', { name: 'Ver P-201B' })
@@ -99,7 +103,7 @@ test('las tuberías del dibujo de Planta no son paradas de Tab; el tren de agua 
       const [r, g, b] = (c.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number).map(x => x / 255).map(q => (q <= 0.03928 ? q / 12.92 : ((q + 0.055) / 1.055) ** 2.4))
       return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!
     }
-    return [...document.querySelectorAll('main svg text')].filter(t => t.textContent === 'SIN FLUJO').map(t => {
+    return [...document.querySelectorAll('main svg text')].filter(t => t.textContent === 'sin flujo').map(t => {
       const caja = t.parentElement!.querySelector('rect:not([fill=transparent])')!
       const [a, b] = [lum(getComputedStyle(t).fill), lum(getComputedStyle(caja).fill)].sort((x, y) => y - x)
       return { razon: (a! + 0.05) / (b! + 0.05), forma: !!t.parentElement!.querySelector('svg path, svg rect') }
@@ -145,14 +149,15 @@ test.describe('390 px', () => {
 // Menos texto: la producción y el diferido se leen como barra contra la meta.
 // Las aserciones de texto del auditor pasan aunque falte la barra (no tiene
 // texto): aquí se cuentan las barras y se mira que cada una tenga su raya.
-test('el resumen del gerente mide contra la meta con barras', async ({ flujo: f }) => {
-  await f.abrir('/#/ger/resumen/ceiba~portafolio/curso')
+// C5: el Resumen del gerente se fundió en Resultados (X4 §3.6): las mismas barras, en la cifra y en «Por campo».
+test('los resultados del gerente miden contra la meta con barras', async ({ flujo: f }) => {
+  await f.abrir('/#/ger/resultados/ceiba~portafolio/curso')
   const barras = await f.page.evaluate(() => [...document.querySelectorAll('main [data-barra]')].map(b => ({
     raya: !!b.querySelector('[data-raya]'),
     relleno: (b.querySelector('[data-relleno]') as HTMLElement | null)?.getBoundingClientRect().width ?? -1,
   })))
   // 2 del promedio diario + 2 del cierre proyectado + 2 por cada uno de los 5 campos.
-  f.ok(barras.length === 14, `14 barras en el resumen del portafolio (${barras.length})`)
+  f.ok(barras.length === 14, `14 barras en los resultados del portafolio (${barras.length})`)
   f.ok(barras.every(b => b.raya && b.relleno >= 0), 'cada barra tiene su raya de meta y su relleno')
   f.ok((barras[0]?.relleno ?? 0) > 0, 'la producción del día llena su barra')
   f.cerrar()
@@ -164,23 +169,23 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   await f.abrir('/#/jefe/riesgo/ceiba~portafolio/curso')
   await f.page.emulateMedia({ media: 'print' })
   let t = await f.textoPagina()
-  f.ok(t.includes('Qué hacer · K-101:') && t.includes('Exposición:') && t.includes('Si falla hoy · '), 'Riesgo: el «qué hacer», el costo y su origen salen escritos')
+  f.ok(t.includes('Qué hacer · K-101:') && t.includes('Exposición si fallan hoy:') && t.includes('Si falla hoy · '), 'Riesgo: el «qué hacer», el costo y su origen salen escritos')
   f.ok(t.includes('MPP-301') && !t.includes('ver 2 más'), 'Riesgo: las filas que «ver 2 más» esconde salen en el papel, y el botón no')
   f.ok(/salió de su banda normal|ya llegó a su alarma/.test(t), 'Riesgo: el porqué de cada fila (su globo) sale escrito')
   await f.page.emulateMedia({ media: 'screen' })
-  await f.ir('#/ger/resumen/ceiba~portafolio/curso')
+  await f.ir('#/ger/resultados/ceiba~portafolio/curso')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
-  f.ok(t.includes('Cierre proyectado: Si todo sigue') && t.includes('Valor: Sin contar'), 'Resumen: los ⓘ salen escritos')
-  f.ok(/A la fecha: [\d.]+ de [\d.]+ bbl/.test(t), 'Resumen: los totales a la fecha, que protege el folio, salen en el papel')
+  f.ok(t.includes('Cierre proyectado: Si todo sigue') && t.includes('Valor: Sin contar'), 'Resultados: los ⓘ salen escritos')
+  f.ok(/A la fecha: [\d.]+ de [\d.]+ bbl/.test(t), 'Resultados: los totales a la fecha, que protege el folio, salen en el papel')
   await f.page.emulateMedia({ media: 'screen' })
   // «POR CAMPO» sale desplegado en el papel: los equipos de cada campo, con su parte del campo
   // («< 1 %», nunca «0 %») y, al final, los que fallaron sin costar crudo (P-201B de Guacamayo).
-  await f.ir('#/ger/resumen/ceiba~portafolio/doce')
+  await f.ir('#/ger/resultados/ceiba~portafolio/doce')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
-  f.ok(/MN-41[\s\S]{0,80}bbl · \d+ %/.test(t) && t.includes('bbl · < 1 %') && !/bbl · 0 %/.test(t), 'Resumen: POR CAMPO sale desplegado, y lo menor de 1 % se dice «< 1 %»')
-  f.ok(/P-201B\s+bomba de reinyección · 5 fallas · no costó crudo/.test(t), 'Resumen: el equipo que falló sin costar crudo sale al final de su campo')
+  f.ok(/MN-41[\s\S]{0,80}bbl · \d+ %/.test(t) && t.includes('bbl · < 1 %') && !/bbl · 0 %/.test(t), 'Resultados: «Por campo» sale desplegado, y lo menor de 1 % se dice «< 1 %»')
+  f.ok(/P-201B\s+bomba de reinyección · 5 fallas · no costó crudo/.test(t), 'Resultados: el equipo que falló sin costar crudo sale al final de su campo')
   await f.page.emulateMedia({ media: 'screen' })
   await f.ir('#/sup/turno/ceiba/curso')
   await f.page.emulateMedia({ media: 'print' })
@@ -202,10 +207,10 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
 
   // Diferidos del portafolio, 12 meses: el motivo de «no publicable» y todos los equipos van al papel.
   await f.page.emulateMedia({ media: 'screen' })
-  await f.ir('#/ger/diferidos/ceiba~portafolio/doce')
+  await f.ir('#/ger/resultados/ceiba~portafolio/doce')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
-  f.ok(t.includes('Todavía no se puede publicar') && !/ver \d+ más/.test(t), 'Diferidos: por qué no se puede publicar y todas las filas, sin el botón')
+  f.ok(t.includes('Todavía no se puede publicar') && !/ver \d+ más/.test(t), 'Resultados: por qué no se puede publicar y todas las filas, sin el botón')
 
   // Conectores, metas y permisos: lo que quedó en un ⓘ, un globo o detrás de «ver N más».
   await f.page.emulateMedia({ media: 'screen' })
@@ -233,7 +238,7 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
 
   // El papel de la demostración lo dice (también sin folio, con su período).
   await f.page.emulateMedia({ media: 'screen' })
-  await f.ir('#/ger/resumen/ceiba~portafolio/curso')
+  await f.ir('#/ger/resultados/ceiba~portafolio/curso')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
   f.ok(t.includes('DATOS DE DEMOSTRACIÓN'), 'el membrete marca los datos de demostración')
@@ -244,7 +249,7 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
 
 // Un período parcial lo dice en la cabecera (ya no existe el chip «PERÍODO EN CURSO»).
 test('año a la fecha: la cabecera dice que está en curso', async ({ flujo: f }) => {
-  await f.abrir('/#/ger/resumen/ceiba~portafolio/ytd')
+  await f.abrir('/#/ger/resultados/ceiba~portafolio/ytd')
   // «en curso» lleva espacio duro (no se parte en el teléfono): se compara normalizado.
   const etiqueta = (await f.page.locator('header button[aria-label^="Período"]').first().getAttribute('aria-label'))?.replace(/\u00a0/g, ' ')
   f.ok(etiqueta === 'Período: Año a la fecha, en curso', `el botón dice «en curso» (${etiqueta})`)
@@ -266,7 +271,7 @@ for (const ancho of [390, 320]) {
   base(`teléfono ${ancho} px: la cabecera dice el período sin cortarlo`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: 860 })
     await page.addInitScript(() => localStorage.setItem('trim.intro.ger', '1'))
-    await page.goto('/#/ger/resumen/ceiba~portafolio/curso')
+    await page.goto('/#/ger/resultados/ceiba~portafolio/curso')
     // C1 (experiencia v2): el período va en su píldora de la cabecera, con su texto entero también en
     // el teléfono, y la marca de demostración al lado de las migas. «en curso» lleva espacio duro (\s lo incluye).
     const periodo = page.locator('header button[aria-label^="Período"]').filter({ visible: true }).first()

@@ -77,7 +77,7 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
   }
 
   return (
-    <Panel className="mt-2.5" titulo="¿ACIERTA EL VIGÍA?" extra={`1 · Antes · ${fechaCorta(inicio)}`}>
+    <Panel className="mt-2.5" titulo="¿Acierta el vigía?" extra={`desde el ${fechaCorta(inicio)}`}>
       <Lectura>
         Cada predicción se califica al vencer su ventana: acierto si esa parte falló; intervenida si
         se le hizo mantenimiento antes (es lo que se busca, pero no prueba que iba a fallar y no
@@ -105,12 +105,12 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
 
       <div className="mt-3 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
         <div>
-          <h5 className="font-cond mb-1 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE ANUNCIÓ Y EN QUÉ QUEDÓ · {vencidas.length}</h5>
+          <h5 className="mb-1 text-[15px] font-semibold text-[var(--tinta)]">Lo que anunció y en qué quedó · {vencidas.length}</h5>
           {vencidas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna predicción ha vencido todavía.</p>}
           {/* Todas en su orden de fecha: las que «ver N más» esconde, solo en el papel (y ahí, en su lugar). */}
           {vencidas.map(p => filaVencida(p, listaVencidas.resto.includes(p)))}
           <VerMas ocultas={listaVencidas.ocultas} abierto={listaVencidas.abierto} onAlternar={listaVencidas.alternar} />
-          <h5 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">LO QUE NO ANUNCIÓ · {plural(escapadas.length + vistas.filter(f => f.visibilidad !== 'vigilada').length, 'FALLA', 'FALLAS')}</h5>
+          <h5 className="mb-1 mt-3 text-[15px] font-semibold text-[var(--tinta)]">Lo que no anunció · {plural(escapadas.length + vistas.filter(f => f.visibilidad !== 'vigilada').length, 'falla', 'fallas')}</h5>
           {escapadas.length > 0 && (
             <div className="border-b border-[var(--linea2)] py-1.5 text-[14px]">
               <span className="flex justify-between gap-3"><span>Se le escaparon: tenían instrumento</span><b className="tabular">{escapadas.length}</b></span>
@@ -148,8 +148,8 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
         </div>
 
         <div>
-          <h5 className="font-cond mb-1 flex justify-between gap-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-            <span>EN SEGUIMIENTO · {seguimiento.length}</span>
+          <h5 className="mb-1 flex justify-between gap-3 text-[15px] font-semibold text-[var(--tinta)]">
+            <span>En seguimiento · {seguimiento.length}</span>
             {seguimiento.length > 0 && <span aria-hidden className="font-sans font-normal normal-case tracking-normal">cruzaría el límite</span>}
           </h5>
           {seguimiento.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada en seguimiento.</p>}

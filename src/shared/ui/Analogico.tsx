@@ -14,7 +14,7 @@ import { cn } from '@/shared/lib/cn'
  *  que el valor se saliera de la tarjeta. El valor nunca se recorta: si falta
  *  espacio, es el nombre el que baja de renglón. */
 export function Analogico({
-  valor, unidad, normal, alarma, decimales = 1, estado, nombre, sub, detalle = false, className,
+  valor, unidad, normal, alarma, decimales = 1, estado, nombre, sub, detalle = false, gris = false, className,
 }: {
   valor: number | null
   unidad: string
@@ -31,6 +31,8 @@ export function Analogico({
   sub?: ReactNode
   /** Con detalle, debajo de la barra se escriben la banda y el límite. */
   detalle?: boolean
+  /** C4 · El equipo está parado: puntero y valor en gris y sin marca propia (X2 B9). */
+  gris?: boolean
   className?: string
 }) {
   const fmt = (v: number) => v.toLocaleString('es-CO', { minimumFractionDigits: decimales, maximumFractionDigits: decimales })
@@ -48,10 +50,10 @@ export function Analogico({
   const fuera = valor !== null && !!normal && (valor < normal[0] || valor > normal[1])
   const enAlarma = valor !== null && !!alarma &&
     ((alarma.alta !== undefined && valor >= alarma.alta) || (alarma.baja !== undefined && valor <= alarma.baja))
-  const s: Severidad = estado ?? (enAlarma ? 1 : fuera ? 2 : 0)
+  const s: Severidad = gris ? 0 : estado ?? (enAlarma ? 1 : fuera ? 2 : 0)
   // El texto y el puntero nunca se pintan (X2 B5, C1; X5 §5.4): van en tinta, y la
   // condición la dice la marca a su izquierda. En amarillo, el valor no se leía (1,7:1).
-  const tinta = 'var(--tinta)'
+  const tinta = gris ? 'var(--tinta3)' : 'var(--tinta)'
   const limites = finitos([alarma?.baja, alarma?.alta])
 
   const textoBanda = normal
@@ -73,7 +75,7 @@ export function Analogico({
           {valor === null
             ? <span className="text-[13px] text-[var(--invalido)]">sin señal</span>
             : (
-              <b className="tabular text-[15px] leading-none">
+              <b className={cn('tabular text-[15px] leading-none', gris && 'font-semibold text-[var(--tinta2)]')}>
                 {fmt(valor)}<span className="ml-0.5 text-[12px] font-normal text-[var(--tinta3)]">{unidad}</span>
               </b>
             )}
@@ -108,5 +110,53 @@ export function Analogico({
       </div>
       </div>
     </div>
+  )
+}
+
+/** C4 · El indicador analógico de alto desempeño del nivel 3 (X2 §5.1; X5 §5.4;
+ *  la imagen 4, `indicadores.js`). A diferencia de `Analogico`, la escala la da el
+ *  motor y es FIJA por instrumento: no depende del valor de ahora (X2 B7), así el
+ *  puntero se lee por su lugar. Sin texto adentro: si no cabe, se dibuja más chico sin perder la proporción.
+ *   · la pista en `--pista`; la banda normal en `--banda` con una raya en
+ *     `--tinta3` en cada extremo cerrado;
+ *   · el límite de alarma, una raya de 2,4 px en tinta;
+ *   · el puntero en tinta (un triángulo con su línea); en gris si el equipo está
+ *     parado (X2 B9); fuera de la escala, en el borde con su flecha;
+ *   · sin lectura, la escala va discontinua en morado y sin puntero (X2 §5.1, punto 6).
+ *  Los extremos de la escala no se rotulan y no se dibuja disparo: el motor
+ *  todavía no los trae (X2 §7, pedido 4). */
+export function IndicadorFijo({ escala, banda, alarmas, valor, gris = false, fuera, etiqueta, className }: {
+  escala: [number, number]
+  /** Banda normal; null del lado abierto. */
+  banda: [number | null, number | null] | null
+  alarmas: readonly number[]
+  valor: number | null
+  gris?: boolean
+  fuera?: 'abajo' | 'arriba'
+  /** El nombre accesible: «Presión de succión, 18,2 psi; normal > 10; alarma 8». */
+  etiqueta: string
+  className?: string
+}) {
+  const A = 156, y = 22
+  const [e0, e1] = escala
+  const X = (v: number) => 6 + ((Math.min(Math.max(v, e0), e1) - e0) / (e1 - e0 || 1)) * (A - 12)
+  const b0 = banda?.[0] ?? e0, b1 = banda?.[1] ?? e1
+  const tinta = gris ? 'var(--tinta3)' : 'var(--tinta)'
+  const xp = valor === null ? 0 : X(valor)
+  return (
+    <svg width={A} height={32} viewBox={`0 0 ${A} 32`} role="img" aria-label={etiqueta} className={cn('block h-auto max-w-full', className)}>
+      <rect x={6} y={y - 3} width={A - 12} height={6} rx={3} fill="var(--pista)"
+        {...(valor === null ? { fill: 'none', stroke: 'var(--sincom)', strokeDasharray: '3 3', strokeWidth: 1.2 } : {})} />
+      {banda && valor !== null && <rect x={X(b0)} y={y - 6} width={Math.max(X(b1) - X(b0), 1)} height={12} rx={3} fill="var(--banda)" />}
+      {banda && valor !== null && banda[0] !== null && <line x1={X(b0)} x2={X(b0)} y1={y - 8} y2={y + 8} stroke="var(--tinta3)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />}
+      {banda && valor !== null && banda[1] !== null && <line x1={X(b1)} x2={X(b1)} y1={y - 8} y2={y + 8} stroke="var(--tinta3)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />}
+      {alarmas.map(a => <line key={a} x1={X(a)} x2={X(a)} y1={y - 10} y2={y + 10} stroke="var(--tinta)" strokeWidth={2.4} vectorEffect="non-scaling-stroke" data-alarma />)}
+      {valor !== null && (fuera
+        ? <path d={fuera === 'abajo' ? `M2 ${y - 7} L10 ${y - 12} L10 ${y - 2} Z` : `M${A - 2} ${y - 7} L${A - 10} ${y - 12} L${A - 10} ${y - 2} Z`} fill={tinta} data-fuera={fuera} />
+        : <g data-puntero>
+          <path d={`M${xp - 6} 4 L${xp + 6} 4 L${xp} 13 Z`} fill={tinta} />
+          <line x1={xp} x2={xp} y1={12} y2={y + 6} stroke={tinta} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        </g>)}
+    </svg>
   )
 }

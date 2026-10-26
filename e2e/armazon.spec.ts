@@ -11,10 +11,12 @@ const puertas = (f: { page: import('@playwright/test').Page }) => f.page.evaluat
 test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ninguna pestaña', async ({ flujo: f }) => {
   await test.step('Cada rol ve sus puertas, en el orden fijo, y abre en su respuesta', async () => {
     const casos: Array<[string, string, string[]]> = [
-      ['ger', 'planta-viva', ['La planta viva', 'Resultados']],
+      // C4: el gerente tiene su Equipos (la versión ejecutiva) y confiabilidad abre en Equipos (X4 §3.4).
+      ['ger', 'planta-viva', ['La planta viva', 'Equipos', 'Resultados']],
+      ['conf', 'equipos', ['Hoy', 'La planta viva', 'Equipos', 'Resultados']],
       ['sup', 'hoy', ['Hoy', 'La planta viva', 'Equipos']],
       ['prod', 'planta-viva', ['Hoy', 'La planta viva', 'Equipos', 'Resultados']],
-      ['reg', 'regulatorio', ['Reporte', 'La planta viva']],
+      ['reg', 'regulatorio', ['Reporte', 'La planta viva', 'Resultados']], // C5: su Resultados (lo anotó C4 al correr esta prueba)
       ['adm', 'configuracion', ['Configurar', 'La planta viva']],
     ]
     for (const [rol, inicio, esperadas] of casos) {
@@ -28,7 +30,7 @@ test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ning
   await test.step('Las subpantallas van en el panel, debajo de su puerta; arriba no hay pestañas', async () => {
     await f.abrir('/#/sup/bombas/ceiba/curso')
     const subs = await f.page.evaluate(() => [...document.querySelectorAll('nav [data-subpantallas] button')].map(b => b.textContent?.trim()))
-    f.ok(subs.join(',') === 'Bombas,Electrosumergibles,Pozos', `Equipos del supervisor, adentro del panel: ${subs.join(', ')}`)
+    f.ok(subs.join(',') === 'Equipos,Bombas,Electrosumergibles,Pozos', `Equipos del supervisor, adentro del panel: ${subs.join(', ')}`)
     const arriba = await f.page.evaluate(() => document.querySelectorAll('main [data-subpantallas], main > [role=tablist], header [role=tablist]').length)
     f.ok(arriba === 0, 'ninguna barra de subpantallas en el contenido ni en la cabecera')
     f.ok((await f.hash()).startsWith('#/sup/bombas/ceiba/'), 'la dirección de antes (#/sup/bombas/…) sigue abriendo')

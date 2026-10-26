@@ -19,7 +19,7 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
     f.ok(!tabs.includes('Electrosumergibles') && tabs.includes('Bombas'), `sin esa familia, «Pozos y equipos» de La Ceiba ya no ofrece Electrosumergibles (${tabs})`)
     await f.ir('#/sup/esp/ceiba/curso'); await f.esperar(400)
     const h = await f.hash()
-    f.ok(h.includes('/bombas/') || h.includes('/pozos/'), 'una dirección a Electrosumergibles de La Ceiba cae en otra subpantalla')
+    f.ok(h.includes('/equipos/') || h.includes('/bombas/') || h.includes('/pozos/'), 'una dirección a Electrosumergibles de La Ceiba cae en otra subpantalla (C4: Equipos es la primera)')
     // Guacamayo sin gas: el administrador lo cambia y firma.
     await f.ir('#/adm/configuracion/guacamayo/curso'); await f.esperar(400)
     // Antes esta comprobación terminaba en «|| true» y no podía fallar.
@@ -29,7 +29,7 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
     await f.clic('Firmar como'); await f.esperar(500)
     await f.ir('#/adm/planta/guacamayo/curso'); await f.esperar(500)
     t = await f.texto()
-    f.ok(!t.includes('TREN DE GAS') && t.includes('no tiene tren de gas'), 'la planta de Guacamayo ya no dibuja tren de gas')
+    f.ok(!t.includes('Tren de gas') && t.includes('no tiene tren de gas'), 'la planta de Guacamayo ya no dibuja tren de gas (C4: el rótulo del tren va en minúsculas, como B)')
   })
 
   await test.step('Plan mes a mes', async () => {

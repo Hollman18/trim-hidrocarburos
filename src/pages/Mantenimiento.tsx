@@ -1,8 +1,6 @@
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
 import { esServicio } from '@/shared/api/equipos'
 import { useLibro, useBase, useRiesgo, usePreguntas, useCtx, contarPorIdentificar } from '@/shared/api/diferidos'
-import { useCiclo } from '@/shared/api/ciclo'
-import { CicloCifras, PlanesDe } from '@/widgets/ciclo/Ciclo'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
@@ -35,7 +33,6 @@ export function Mantenimiento() {
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
   const lb = useLibro(q)
   const base = useBase(q)
-  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
   const riesgo = useRiesgo(ids).filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
   const preguntas = usePreguntas(ids)
   // «Por identificar» con la cuenta única (la misma de Turno, Mi trabajo e
@@ -132,7 +129,7 @@ export function Mantenimiento() {
 
   return (
     <>
-      <CicloCifras ciclo={ciclo} onIr={p => { if (rol.pantallas.includes(p)) setPantalla(p) }} />
+      {/* Sin el bloque del ciclo arriba (X4 §3.7): lo simulado va en Resultados y los planes, como tarjetas de Hoy. */}
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
         <span>
           <small className={rotulo}>fallas de alto impacto</small>
@@ -175,7 +172,7 @@ export function Mantenimiento() {
       </Lectura>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        <Panel titulo="1 · Intervenir" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
+        <Panel titulo="Intervenir ya" extra={plural(riesgo.length, 'equipo avisando', 'equipos avisando')}>
           {riesgo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ningún equipo avisa.</p>}
           {riesgo.length > 0 && (
             <div className="flex gap-3 pb-1 text-[12px] text-[var(--tinta3)]" aria-hidden>
@@ -194,7 +191,7 @@ export function Mantenimiento() {
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <ParetoPartes lb={lb} onIr={irA('confiabilidad') ?? irA('bombas')} />
 
-        <Panel titulo="PROGRAMA DE PARADAS" extra="firmado">
+        <Panel titulo="Programa de paradas" extra="firmado">
           <Lectura>
             Lo que está aquí cuenta como programado, no como falla. Se cambia en la configuración, con
             firma: así una falla no se puede volver programada después.
@@ -212,15 +209,10 @@ export function Mantenimiento() {
 
       <PanelSapMantenimiento />
 
-      {(ciclo.despues.planes.length > 0 || ciclo.antes.planes.length > 0 || ciclo.durante.planes.length > 0) && (
-        <PlanesDe
-          className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-1 shadow-[var(--sombra)]"
-          planes={[...ciclo.durante.planes, ...ciclo.antes.planes, ...ciclo.despues.planes]}
-          onAbrir={(c, eq) => { setCampo(c); abrirEquipo(eq, false) }} />
-      )}
+      {/* Los planes de acción ya no van en un acordeón aquí (X4 §3.6): quien decide los tiene como tarjetas de Hoy, y cada equipo en su ficha. */}
 
       {(sinIdentificar.length > 0 || respondidasTarde.length > 0) && (
-        <Panel className="mt-2.5" titulo="PARADAS POR IDENTIFICAR">
+        <Panel className="mt-2.5" titulo="Paradas por identificar">
           <Lectura>Sin la parte que falló no hay de qué aprender: el vigía no sabe qué mirar la próxima vez.</Lectura>
           {sinIdentificar.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todas las paradas tienen causa.</p>}
           {listaSin.visibles.map(filaSin)}

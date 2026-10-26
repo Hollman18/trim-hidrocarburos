@@ -40,7 +40,7 @@ export function Confiabilidad() {
   // Cinco a la vista y «ver N más»; en el papel salen todas (la tabla no tiene alarmas que esconder).
   const listaMalos = useVerMas(malos)
 
-  if (!equipos.length) return <Panel titulo="CONFIABILIDAD"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene equipos de alto impacto.</p></Panel>
+  if (!equipos.length) return <Panel titulo="Confiabilidad"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene equipos de alto impacto.</p></Panel>
 
   const dias = equipos[0]!.h.dias
   const flota = (f: Familia) => {
@@ -106,12 +106,12 @@ export function Confiabilidad() {
         if (e) abrir(e)
       }} />
 
-      <Panel className="mt-2.5" titulo="REPARACIÓN ACTIVA Y ESPERA" extra={reloj ? `promedio · ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
+      <Panel className="mt-2.5" titulo="Reparación activa y espera" extra={reloj ? `promedio · ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
         {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[14px] text-[var(--tinta2)]">Sin fallas cerradas con orden en SAP.</p>}
       </Panel>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
-        <Panel titulo="LOS MÁS COSTOSOS" extra="bbl · toda la historia">
+        <Panel titulo="Los más costosos" extra="bbl · toda la historia">
           <div className="overflow-x-auto">
             <table className="tabular w-full text-left text-[14px]">
               <thead className="text-[12px] text-[var(--tinta3)]">
@@ -142,7 +142,7 @@ export function Confiabilidad() {
           <VerMas ocultas={listaMalos.ocultas} abierto={listaMalos.abierto} onAlternar={listaMalos.alternar} />
         </Panel>
 
-        <Panel titulo="DE QUÉ FALLAN" extra="contra la referencia">
+        <Panel titulo="De qué fallan" extra="contra la referencia">
           {familias.map(f => {
             const es = equipos.filter(e => e.familia === f)
             const cuenta = new Map<ParteId, number>()
@@ -151,7 +151,7 @@ export function Confiabilidad() {
             const partes = partesDe(f === 'electrosumergible' ? 'electrosumergible' : f)
             return (
               <div key={f} className="mb-3 last:mb-0">
-                <h4 className="font-cond mb-1 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{FAMILIA[f].toUpperCase()} · {plural(total, 'FALLA', 'FALLAS')} CON PARTE</h4>
+                <h4 className="mb-1 text-[15px] font-semibold text-[var(--tinta)]">{FAMILIA[f]} · {plural(total, 'falla', 'fallas')} con parte</h4>
                 {partes.filter(p => cuenta.get(p.id)).sort((a, b) => (cuenta.get(b.id) ?? 0) - (cuenta.get(a.id) ?? 0)).map(p => (
                   // La referencia publicada, en un ⓘ junto a la parte: a la vista queda que hay
                   // contra qué compararla, y en el papel sale escrita con su fuente.
@@ -171,7 +171,7 @@ export function Confiabilidad() {
       </div>
 
       <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
-        <Panel titulo="FALLAS POR MES" extra="sin disparos">
+        <Panel titulo="Fallas por mes" extra="sin disparos">
           <div {...desplazable('Fallas por mes')} className="overflow-x-auto">
             <svg viewBox="0 0 520 150" className="block h-auto w-full min-w-[420px]" role="img" aria-label="Fallas de equipos de alto impacto por mes">
               {meses.map((x, i) => {
@@ -197,7 +197,7 @@ export function Confiabilidad() {
           </div>
         </Panel>
 
-        <Panel titulo="CALIDAD DEL REGISTRO" extra="ISO 14224: parte por falla">
+        <Panel titulo="Calidad del registro" extra="ISO 14224: parte por falla">
           <Lectura>
             Cómo se supo qué parte falló. Lo que dice una señal (primera alarma, código del variador) o
             la firma de las señales es evidencia; lo declarado depende de quien respondió; lo que no

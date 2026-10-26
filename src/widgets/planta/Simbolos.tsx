@@ -50,7 +50,8 @@ const Separador = () => (
     <line x1={-36} y1={6} x2={36} y2={6} stroke={T} strokeWidth={1.1} strokeDasharray="4 3" opacity={0.8} />
     <line x1={-36} y1={-4} x2={36} y2={-4} stroke={T} strokeWidth={1} opacity={0.45} />
     <circle cx={20} cy={1} r={7} fill="none" stroke={T} strokeWidth={1.1} />
-    <text x={20} y={4.5} fontSize={7.5} textAnchor="middle" fill={T} className="font-cond">LI</text>
+    {/* El transmisor de nivel: la burbuja de ISA-5.1 con su raya (montado en tablero), dibujada y no escrita: una letra de 7 unidades no se lee (X5 §3.4). */}
+    <line x1={13} y1={1} x2={27} y2={1} stroke={T} strokeWidth={1} />
     <line x1={-14} y1={-19} x2={-14} y2={-28} stroke={T} strokeWidth={1.5} />
     <line x1={10} y1={19} x2={10} y2={28} stroke={T} strokeWidth={1.5} />
   </g>
@@ -100,7 +101,8 @@ const Medicion = () => (
   <g>
     <rect x={-40} y={-20} width={80} height={40} rx={4} fill={F} stroke={T} strokeWidth={1.5} />
     <circle cx={-16} cy={0} r={12} fill={A} stroke={T} strokeWidth={1.3} />
-    <text x={-16} y={4} fontSize={11} textAnchor="middle" fill={T} className="font-cond">M</text>
+    {/* «M», dibujada (no texto): la letra del medidor no baja de los 12 px que pide X5 §3.4 porque no es letra. */}
+    <path d="M-21,5 V-5 L-16,1 L-11,-5 V5" fill="none" stroke={T} strokeWidth={1.4} strokeLinejoin="round" strokeLinecap="round" />
     <path d="M6,-10 a11,11 0 1,1 0,20" fill="none" stroke={T} strokeWidth={1.3} />
     <Valvula x={24} y={0} r={5} />
     <line x1={-40} y1={0} x2={-52} y2={0} stroke={T} strokeWidth={1.8} />
@@ -114,7 +116,8 @@ const Compresor = () => (
     <circle cx={-8} cy={0} r={8} fill={A} stroke={T} strokeWidth={1.2} />
     <path d="M-8,-8 v16 M-16,0 h16" stroke={T} strokeWidth={1} opacity={0.7} />
     <rect x={16} y={-13} width={22} height={26} rx={3} fill={A} stroke={T} strokeWidth={1.3} />
-    <text x={27} y={4} fontSize={9} textAnchor="middle" fill={T} className="font-cond">M</text>
+    {/* El motor del compresor: «M» dibujada, no escrita. */}
+    <path d="M23,4 V-4 L27,1 L31,-4 V4" fill="none" stroke={T} strokeWidth={1.3} strokeLinejoin="round" strokeLinecap="round" />
     <line x1={-30} y1={0} x2={-44} y2={0} stroke={T} strokeWidth={1.8} />
   </g>
 )

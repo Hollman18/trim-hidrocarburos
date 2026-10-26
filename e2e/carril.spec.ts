@@ -11,7 +11,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   await test.step('Identificar: causas sugeridas y el hilo de WhatsApp', async () => {
     t = await f.texto()
     // B-02: el operador tiene una sola lista, «Por contestar»: lo del libro y lo del árbol, juntos.
-    f.ok((await cifra('POR CONTESTAR')).startsWith('4 paradas'), 'antes de responder: 4 paradas por contestar')
+    f.ok((await cifra('Por contestar')).startsWith('4 paradas'), 'antes de responder: 4 paradas por contestar')
     f.ok(t.includes('Pista · historia del equipo') && /· \d+ de \d+ fallas?/.test(t), 'la bomba trae las sugeridas de su historia, con su porqué (fallas anteriores)')
     f.ok(!t.includes('señal e historia'), 'no se le atribuye a la señal lo que viene de la historia')
     f.ok(await f.clic('Sello mecánico'), 'se puede escoger la sugerida con un toque')
@@ -25,11 +25,11 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
       return b ? b.getBoundingClientRect().height : 0
     })
     f.ok(alto >= 18, `la sugerida tiene un alto usable en escritorio (${Math.round(alto)} px; en el teléfono, 40)`)
-    const linea = await page.evaluate(() => ([...document.querySelectorAll('h5')].find(h => h.textContent === 'WHATSAPP')?.nextElementSibling as HTMLElement | null)?.innerText ?? '')
+    const linea = await page.evaluate(() => ([...document.querySelectorAll('h5')].find(h => h.textContent === 'WhatsApp')?.nextElementSibling as HTMLElement | null)?.innerText ?? '')
     // El tanque aguanta 1,8 h (P-201A y P-201C toman parte del agua): los pozos se empiezan a cerrar antes del escalado.
     f.ok(/^03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado\s+sin respuesta$/.test(linea), `el hilo en una línea, en orden (${linea})`)
     // A quién le llegó cada paso ya no va en la línea: está en el globo y sale escrito en el papel.
-    const papel = await page.evaluate(() => ([...document.querySelectorAll('h5')].find(h => h.textContent === 'WHATSAPP')?.nextElementSibling?.nextElementSibling)?.textContent ?? '')
+    const papel = await page.evaluate(() => ([...document.querySelectorAll('h5')].find(h => h.textContent === 'WhatsApp')?.nextElementSibling?.nextElementSibling)?.textContent ?? '')
     f.ok(/03:53 pregunta: Jairo Peña · 04:22 recordatorio: Jairo Peña · 05:44 pozos cerrándose: Jairo Peña, Nelson Ortiz · 05:52 escalado: Nelson Ortiz/.test(papel), 'a quién le llegó cada paso: en el globo y en el papel')
     t = await f.texto()
     f.ok(t.includes('DATOS DE DEMOSTRACIÓN') && !t.includes('Demo · simular') && !t.includes('en este demo'), 'una sola marca de demostración en la cabecera; ninguna nota de demo en la pantalla')
@@ -63,7 +63,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     f.ok(await f.clic('1Fuga hacia afuera'), 'escoge lo que vio: segundo toque')
     await f.esperar(500)
     t = await f.texto()
-    f.ok((await cifra('POR CONTESTAR')).startsWith('3 paradas'), 'P-201B sale de lo que tiene por contestar (quedan 3 de 4)')
+    f.ok((await cifra('Por contestar')).startsWith('3 paradas'), 'P-201B sale de lo que tiene por contestar (quedan 3 de 4)')
     f.ok(t.includes('Sello mecánico · fuga hacia afuera') && !t.includes('vio: fuga hacia afuera') && t.includes('por WhatsApp'), 'queda en DECLARADAS dicho una vez: parte · lo que vio, por WhatsApp')
     f.ok(t.includes('Respondido: P-201B (por WhatsApp') && t.includes('Pasó a «Declaradas»'), 'y se confirma arriba: respondido y a dónde pasó')
   })
@@ -105,19 +105,19 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   await test.step('Turno: el registro por hilo', async () => {
     await f.ir('#/sup/turno/ceiba/curso'); await f.esperar(400)
     t = await f.texto()
-    f.ok(t.includes('WHATSAPP DEL TURNO') && /respondió Jairo Peña[^\n]*por WhatsApp: «Sello mecánico: fuga hacia afuera»/.test(t), 'Turno muestra el hilo de P-201B con la respuesta')
+    f.ok(t.includes('WhatsApp del turno') && /respondió Jairo Peña[^\n]*por WhatsApp: «Sello mecánico: fuga hacia afuera»/.test(t), 'Turno muestra el hilo de P-201B con la respuesta')
     f.ok(t.includes('pozos cerrándose') && t.includes('escalado') && t.includes('orden liberada en SAP'), 'cada paso con su nombre: pozos cerrándose, escalado, orden liberada')
     // Con un título que falte, indexOf da −1 y la comparación pasaba sin comprobar nada.
-    const nuevas = t.indexOf('PARADAS NUEVAS'), registro = t.indexOf('WHATSAPP DEL TURNO')
+    const nuevas = t.indexOf('Paradas nuevas'), registro = t.indexOf('WhatsApp del turno')
     f.ok(nuevas >= 0 && registro > nuevas, 'el registro va después de las paradas nuevas del turno')
   })
 
   await test.step('Mi trabajo: órdenes de SAP del técnico', async () => {
     await f.ir('#/tec/trabajo/ceiba/curso'); await f.esperar(400)
     t = await f.texto()
-    f.ok(t.includes('ÓRDENES EN SAP') && t.includes('40012056') && t.includes('a su nombre') && t.includes('TRIM le avisó por WhatsApp'), 'el técnico ve su orden liberada y el aviso de WhatsApp')
+    f.ok(t.includes('Órdenes en SAP') && t.includes('40012056') && t.includes('a su nombre') && t.includes('TRIM le avisó por WhatsApp'), 'el técnico ve su orden liberada y el aviso de WhatsApp')
     const marcasEnOrdenes = await page.evaluate(() => {
-      const h = [...document.querySelectorAll('*')].find(e => e.children.length === 0 && e.textContent.trim() === 'ÓRDENES EN SAP')
+      const h = [...document.querySelectorAll('*')].find(e => e.children.length === 0 && e.textContent.trim() === 'Órdenes en SAP')
       const panel = h?.closest('section') ?? h?.parentElement?.parentElement?.parentElement
       return panel ? panel.querySelectorAll('svg[role="img"]').length : -1
     })
@@ -128,7 +128,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   await test.step('Confiabilidad: ¿acierta el vigía?', async () => {
     await f.ir('#/conf/confiabilidad/morichal/curso'); await f.esperar(500)
     t = await f.texto()
-    f.ok(t.includes('¿ACIERTA EL VIGÍA?') && t.includes('LO QUE ANUNCIÓ Y EN QUÉ QUEDÓ') && /Fallas anticipadas\s*\d+ de \d+/.test(t) && /Anticipación\s*[\d,]+ d/.test(t), 'el historial de aciertos poblado: tasa, fallas anticipadas y anticipación')
+    f.ok(t.includes('¿Acierta el vigía?') && t.includes('Lo que anunció y en qué quedó') && /Fallas anticipadas\s*\d+ de \d+/.test(t) && /Anticipación\s*[\d,]+ d/.test(t), 'el historial de aciertos poblado: tasa, fallas anticipadas y anticipación')
     f.ok(t.includes('Se le escaparon') && t.includes('falsa alarma') && t.includes('intervenida antes'), 'realista: se le escaparon fallas, tuvo falsas alarmas y predicciones intervenidas')
     f.ok(!t.includes('no se afirma') && !t.includes('sin registro anterior'), 'ya no habla de que no hay registro')
     f.ok(/En seguimiento\s*4/.test(t), 'Morichal: cuatro predicciones en seguimiento')
@@ -197,12 +197,14 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
       return [...vistas].filter(Boolean)
     }
     for (const [ruta, debe, noDebe] of [
-      ['#/ger/resumen/ceiba/curso', ['La planta viva', 'Resumen', 'Riesgo', 'Resultados', 'Diferidos', 'Producción', 'Metas y accesos'], ['Equipos', 'Pozos', 'Bombas', 'Turno']],
-      ['#/prod/produccion/ceiba/curso', ['Hoy', 'La planta viva', 'Producción', 'Diferidos', 'Pozos', 'Electrosumergibles', 'Identificar', 'Planta', 'Agua', 'Configuración'], ['Turno', 'Riesgo']],
+      // C5: el Resumen, los Diferidos y la Producción del gerente se fundieron en La planta viva y Resultados (X4 §3.6).
+      ['#/ger/resultados/ceiba/curso', ['La planta viva', 'Equipos', 'Resultados', 'Metas y accesos'], ['Resumen', 'Riesgo', 'Diferidos', 'Producción', 'Pozos', 'Bombas', 'Turno']],
+      ['#/prod/produccion/ceiba/curso', ['Hoy', 'La planta viva', 'Resultados', 'Producción', 'Diferidos', 'Pozos', 'Electrosumergibles', 'Identificar', 'Planta', 'Agua', 'Configuración'], ['Turno', 'Riesgo']],
       ['#/sup/bombas/ceiba/curso', ['Hoy', 'Bombas', 'Electrosumergibles', 'Pozos', 'Turno', 'Identificar'], ['Riesgo', 'Planta']],
       ['#/oper/bombas/ceiba/curso', ['Hoy', 'Equipos', 'Bombas', 'Identificar', 'Turno'], ['Riesgo', 'Planta']],
-      ['#/jefe/mantenimiento/ceiba/curso', ['Hoy', 'Mantenimiento', 'Diferidos', 'Bombas', 'Superficie', 'Confiabilidad', 'Riesgo', 'Identificar'], ['Planta']],
-      ['#/conf/bombas/morichal/curso', ['Hoy', 'Bombas', 'Superficie', 'Confiabilidad', 'Diferidos', 'Riesgo', 'Identificar', 'Planta', 'Agua', 'Configuración'], ['Turno', 'Mantenimiento']],
+      // C4: «Superficie» se fundió en Equipos (X4 §3.6): ya no se ofrece en el menú; su dirección abre Equipos.
+      ['#/jefe/mantenimiento/ceiba/curso', ['Hoy', 'Resultados', 'Mantenimiento', 'Diferidos', 'Equipos', 'Bombas', 'Confiabilidad', 'Riesgo', 'Identificar'], ['Planta', 'Superficie']],
+      ['#/conf/bombas/morichal/curso', ['Hoy', 'Resultados', 'Equipos', 'Bombas', 'Confiabilidad', 'Diferidos', 'Riesgo', 'Identificar', 'Planta', 'Agua', 'Configuración'], ['Turno', 'Mantenimiento', 'Superficie']],
       ['#/tec/trabajo/ceiba/curso', ['Hoy', 'Mi trabajo', 'Bombas', 'Identificar'], ['Riesgo', 'Planta']],
       ['#/adm/configuracion/ceiba/curso', ['Configurar', 'Configuración', 'Conectores', 'La planta viva', 'Planta', 'Agua'], ['Resumen']],
     ] as const) {
@@ -211,27 +213,32 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
       const faltan = debe.filter(x => !m.includes(x)), sobran = noDebe.filter(x => m.includes(x))
       f.ok(!faltan.length && !sobran.length, `${ruta.split('/')[1]}: alcanza ${m.join(' · ')}${faltan.length ? ' · FALTA ' + faltan.join(', ') : ''}${sobran.length ? ' · SOBRA ' + sobran.join(', ') : ''}`)
     }
-    await f.ir('#/sup/riesgo/ceiba/curso'); await f.esperar(300)
+    // C5: Riesgo se fundió en La planta viva (X4 §3.6, punto 2): la de una pantalla quitada sin fusión lleva al inicio.
+    await f.ir('#/sup/resultados/ceiba/curso'); await f.esperar(300)
     const h = await f.hash()
     f.ok(h.includes('/sup/hoy/'), `una dirección vieja a una pantalla quitada lleva al inicio del rol, su Hoy (${h})`)
     await f.ir('#/ger/riesgo/ceiba/curso'); await f.esperar(400)
-    f.ok(await f.clicQueContenga('P-201B'), 'el gerente abre P-201B desde Riesgo')
+    f.ok((await f.hash()).startsWith('#/ger/planta-viva/ceiba/'), `la dirección vieja del Riesgo del gerente abre La planta viva (${await f.hash()})`)
+    f.ok(await f.clicQueContenga('P-201B bomba de agua'), 'el gerente abre P-201B desde La planta viva (su fila en «Diferido por equipo»)')
     await f.esperar(500)
     t = await f.textoPagina()
-    f.ok(t.includes('Le ha costado'), 'y ve su ficha ejecutiva sin tener «Equipos» en el menú')
+    f.ok(t.includes('Le ha costado'), 'y ve su ficha ejecutiva (el panel: el gerente no abre el nivel técnico)')
     await f.ir('#/prod/diferidos/ceiba/curso'); await f.esperar(500)
     f.ok(await f.clicQueContenga('P-201B'), 'producción abre P-201B desde «a qué equipo se le cargan»')
     await f.esperar(500)
+    // C4: producción la abre en su nivel 3 (una vista entera) y su historia del PLC y SAP están en el diagnóstico (nivel 4).
+    f.ok(await f.page.locator('main [data-nivel3="P-201B"]').count() === 1 && (await f.hash()).includes('/prod/equipos/ceiba/P-201B'), `producción abre el nivel 3 de P-201B (${await f.hash()})`)
+    await f.page.locator('main [data-ver-diagnostico]').click(); await f.esperar(500)
     t = await f.textoPagina()
     f.ok(t.includes('HISTORIA DEL PLC') && /\d+ eventos? con pozos cerrados · [\d.]+ bbl/.test(t) && t.includes('SAP · MANTENIMIENTO'), 'y ve lo que se le cargó a la bomba, su historia del PLC y SAP, sin tener «Bombas» en el menú')
     await f.ir('#/conf/confiabilidad/morichal/curso'); await f.esperar(500)
     t = await f.texto()
-    f.ok(t.includes('REPARACIÓN ACTIVA Y ESPERA') && t.includes('Reparación activa') && t.includes('Espera'), 'confiabilidad tiene los tres relojes en su pantalla')
-    await f.ir('#/ger/resumen/ceiba/curso'); await f.esperar(500)
+    f.ok(t.includes('Reparación activa y espera') && t.includes('Reparación activa') && t.includes('Espera'), 'confiabilidad tiene los tres relojes en su pantalla')
+    await f.ir('#/ger/resultados/ceiba/curso'); await f.esperar(500)
     t = await f.texto()
     // La cifra tiene que ser un renglón propio justo antes del rótulo: con «\s*» suelto
     // tomaba el «+125 %» del renglón de arriba aunque faltara el porcentaje.
-    f.ok(/(?:^|\n)\d+ %\s*\n\s*mantenimiento proactivo/i.test(t), 'el gerente ve el porcentaje de mantenimiento proactivo en su Resumen')
+    f.ok(/(?:^|\n)\d+ %\s*\n\s*mantenimiento proactivo/i.test(t), 'el gerente ve el porcentaje de mantenimiento proactivo en su Resultados')
   })
 
   await test.step('Accesos: el registro de lo enviado no se reescribe', async () => {

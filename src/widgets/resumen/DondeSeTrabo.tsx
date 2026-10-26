@@ -144,7 +144,7 @@ function NoPlaneadoPorTramo({ campoId, desde, hasta, equipos, escalones }: {
 export function LineaPerdida({ className }: { className?: string }) {
   return (
     <p data-perdida="" className={cn('flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] text-[var(--tinta2)]', className)}>
-      <span className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">PÉRDIDA</span>
+      <span className="text-[15px] font-semibold text-[var(--tinta)]">Pérdida</span>
       <span>· lo que salió y no se vendió:</span>
       <span className="text-[var(--tinta3)]">sin eventos registrados en el período</span>
       <Info titulo="Pérdida" texto="Lo producido que no se vendió: pitera, derrame o tea. Va aparte y nunca se suma a los barriles diferidos: son dos cifras distintas. Cuando TRIM registre pérdidas, van aquí, campo por campo." />
@@ -160,10 +160,10 @@ export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, cl
 }) {
   // Sin ninguna barra, la leyenda no tiene qué explicar (B-39).
   const total = useRepartoChoke({ campos, desde, hasta }).diferido
-  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'text-[15px] font-semibold text-[var(--tinta)]'
   return (
     <section id="por-donde-se-trabo" className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]', className)}>
-      <h3 className={titulo}>DÓNDE SE TRABÓ</h3>
+      <h3 className={titulo}>Dónde se trabó</h3>
       <Lectura>
         En qué parte del campo empezó lo que costó barriles en el período: en el yacimiento, en los
         pozos, en la planta o estación, o afuera (oleoducto, transportador o cliente). Lo que nadie ha

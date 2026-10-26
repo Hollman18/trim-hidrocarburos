@@ -69,7 +69,7 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
   }
 
   return (
-    <Panel className="mb-2.5" titulo="CIERRE DE HOY · PARADAS POR CONFIRMAR" extra={`${cuantasParadas(ps)} · ${cuantasParadas(completas)} ${cuantasParadas(completas) === 1 ? 'completa' : 'completas'}`}>
+    <Panel className="mb-2.5" titulo="Cierre de hoy · paradas por confirmar" extra={`${cuantasParadas(ps)} · ${cuantasParadas(completas)} ${cuantasParadas(completas) === 1 ? 'completa' : 'completas'}`}>
       <Lectura>
         Las paradas de hoy, cada una con sus 6 pasos del árbol de causas. Las que TRIM propuso con la misma
         cadena se confirman de un toque por grupo; la raíz de cada grupo queda a la vista para no cargarle

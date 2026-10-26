@@ -22,7 +22,7 @@ const colorDe = (f: Flujo, token: string) => f.page.evaluate(t => {
 
 test('La Ceiba: la tubería del campo, lo que limita sin rojo, lo que le sobra y lo perdido por tramo', async ({ flujo: f }) => {
   await f.abrir('/#/prod/produccion/ceiba/curso')
-  await f.esperarTexto('LA TUBERÍA DEL CAMPO')
+  await f.esperarTexto('La tubería del campo')
   const rojo = await colorDe(f, '--p1'), naranja = await colorDe(f, '--p2'), tinta = await colorDe(f, '--tinta')
 
   await test.step('Lo que limita: doble contorno en la tinta, la palabra «limita» y ningún rojo', async () => {
@@ -60,7 +60,7 @@ test('La Ceiba: la tubería del campo, lo que limita sin rojo, lo que le sobra y
     const frase = await f.page.locator('[data-frase]').first().textContent() ?? ''
     f.ok(frase.includes(`A la planta le sobran ${miles(sobran)} bbl/d`), `la frase de abajo lo dice: «${frase}»`)
     const t = await f.texto()
-    f.ok(t.includes('PASA HOY') && t.includes('PERDIÉNDOSE AHORA'), 'debajo, lo que pasa hoy y lo que se pierde ahora')
+    f.ok(t.includes('Pasa hoy') && t.includes('Se deja de producir ahora'), 'debajo, lo que pasa hoy y lo que se pierde ahora')
   })
 
   await test.step('Lo perdido por tramo suma el diferido del período, el mismo del libro', async () => {
@@ -104,7 +104,7 @@ test('La Ceiba: la tubería del campo, lo que limita sin rojo, lo que le sobra y
 
 test('La Zarza muestra el estado de campo de gas', async ({ flujo: f }) => {
   await f.abrir('/#/adm/planta/zarza/curso')
-  await f.esperarTexto('LA TUBERÍA DEL CAMPO')
+  await f.esperarTexto('La tubería del campo')
   const t = await f.texto()
   f.ok(t.includes('La Zarza es un campo de gas. La tubería del gas todavía no está'), 'dice que es un campo de gas y que su tubería todavía no está')
   f.ok(await f.page.locator('[data-dibujo]').count() === 0, 'no dibuja una tubería de crudo para un campo de gas')
@@ -113,13 +113,13 @@ test('La Zarza muestra el estado de campo de gas', async ({ flujo: f }) => {
 
 test('La tubería del agua de La Ceiba: sus tres bombas y el colchón', async ({ flujo: f }) => {
   await f.abrir('/#/prod/planta/ceiba/curso')
-  await f.esperarTexto('LA TUBERÍA DEL CAMPO')
+  await f.esperarTexto('La tubería del campo')
   // C1 (experiencia v2): Agua es una subpantalla de La planta viva, listada en el panel debajo de su puerta.
   const menu = await f.page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Navegación"] [data-subpantallas] button')].map(b => b.textContent?.trim() || b.getAttribute('aria-label')))
   f.ok(menu.includes('Agua'), `producción tiene «Agua» en su menú (La planta viva · ${menu.join(' · ')})`)
   // Desde la planta por dentro (el carril del agua) se llega a la tubería del agua (U2 §5.7).
   f.ok(await f.clic('Ver la tubería del agua'), 'el carril del agua lleva a la tubería del agua')
-  await f.esperarTexto('LA TUBERÍA DEL AGUA')
+  await f.esperarTexto('La tubería del agua')
   f.ok((await f.hash()).startsWith('#/prod/agua/ceiba'), `y abre la pantalla Agua (${await f.hash()})`)
 
   const bombas = await f.page.locator('[data-bomba]').evaluateAll(es => es.map(e => [e.getAttribute('data-bomba'), e.getAttribute('data-marcha')]))
@@ -130,8 +130,8 @@ test('La tubería del agua de La Ceiba: sus tres bombas y el colchón', async ({
   f.ok(/Con las tres bombas, cabe más agua: [\d.]+ bbl\/d/.test(t), 'el colchón, primera frase: con las tres bombas, cabe más agua…')
   f.ok(/Cerrando primero los más acuatosos se pierden [\d.]+ bbl\/d de crudo; cerrando parejo, [\d.]+\./.test(t), 'y lo que cuesta cerrar primero los más acuatosos')
   f.ok(/aguantaba\s+1,8 h/.test(t) && t.includes('alto-alto 90 %'), 'el tanque: alto-alto 90 % y lo que aguantó al parar P-201B (1,8 h)')
-  f.ok(t.includes('POR QUÉ ES CRÍTICA') && t.includes('No hay bomba de sobra'), 'por qué la bomba de reinyección es crítica, sin teoría')
-  f.ok(t.includes('TRATAMIENTO DE AGUA') && /TRATAMIENTO DE AGUA\s+sin dato/.test(t), 'el tratamiento, que el demo no tiene, dice «sin dato»')
+  f.ok(t.includes('Por qué es crítica') && t.includes('No hay bomba de sobra'), 'por qué la bomba de reinyección es crítica, sin teoría')
+  f.ok(t.includes('Tratamiento de agua') && /Tratamiento de agua\s+sin dato/.test(t), 'el tratamiento, que el demo no tiene, dice «sin dato»')
   // B-16: el agua de La Ceiba no limita (cabe más): «◄ limita» no sale; las bombas y los inyectores, iguales
   // al barril, van con su marca de «casi iguales» (borde discontinuo grueso), sin rojo.
   const marcas = await f.page.evaluate(() => ({
@@ -144,7 +144,7 @@ test('La tubería del agua de La Ceiba: sus tres bombas y el colchón', async ({
     `las bombas y los inyectores, casi iguales: borde discontinuo y sin rojo (${JSON.stringify(marcas.casi)})`)
   // B-01: con P-201B parada, el orden que importa es el de la que sigue en riesgo: si para otra bomba.
   const otra = await f.page.locator('[data-orden-si-para-otra]').innerText()
-  f.ok(/SI PARA OTRA BOMBA\s+con P-201A y P-201C solas, cerrar primero los más acuatosos/.test(otra) && /se pierden [\d.]+ bbl\/d de crudo; parejo, [\d.]+ · después de \d+ min de colchón/.test(otra),
+  f.ok(/Si para otra bomba\s+con P-201A y P-201C solas, cerrar primero los más acuatosos/.test(otra) && /se pierden [\d.]+ bbl\/d de crudo; parejo, [\d.]+ · después de \d+ min de colchón/.test(otra),
     `si para otra bomba ahora: el orden de cierre, lo que se pierde y el colchón en minutos («${otra.replace(/\s+/g, ' ').slice(0, 160)}…»)`)
   f.cerrar()
 })

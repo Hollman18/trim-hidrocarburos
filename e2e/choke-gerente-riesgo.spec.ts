@@ -37,8 +37,9 @@ const todoElTexto = (page: Page) => page.evaluate(() => {
 test('gerente: dónde se trabó cada campo suma el diferido del libro, sin códigos ni «choke»', async ({ flujo: f }) => {
   let primero = true
   for (const periodo of ['cerrado', 'curso'] as const) {
-    await test.step(`Resumen del portafolio · ${periodo}`, async () => {
-      const ruta = `#/ger/resumen/ceiba~portafolio/${periodo}`
+    // C5: el Resumen del gerente se fundió en Resultados («Por campo», con su «dónde se trabó»).
+    await test.step(`Resultados del portafolio · ${periodo}`, async () => {
+      const ruta = `#/ger/resultados/ceiba~portafolio/${periodo}`
       if (primero) await f.abrir(`/${ruta}`); else await f.ir(ruta)
       primero = false
       await f.esperarTexto('dónde se trabó')
@@ -57,7 +58,7 @@ test('gerente: dónde se trabó cada campo suma el diferido del libro, sin códi
         f.ok(b.texto.trim().length > 0 && (b.total < 0.5 ? /Nada se trabó/.test(b.texto) : /%/.test(b.texto)), `${periodo} · ${b.campo}: lleva la frase del motor`)
       }
       const t = await f.texto()
-      f.ok(t.includes('PÉRDIDA') && t.includes('lo que salió y no se vendió'), `${periodo}: la pérdida va aparte`)
+      f.ok(t.includes('Pérdida') && t.includes('lo que salió y no se vendió'), `${periodo}: la pérdida va aparte`)
       f.ok(/en los pozos/.test(t) && /en la planta o estación/.test(t) && /sin identificar/.test(t), `${periodo}: la leyenda dice los tramos con palabras de campo`)
       const todo = await todoElTexto(f.page)
       f.ok(!CODIGO_ANH.test(todo), `${periodo}: sin códigos de la ANH en la pantalla${todo.match(CODIGO_ANH)?.[0] ? ` (${todo.match(CODIGO_ANH)?.[0]})` : ''}`)
@@ -74,25 +75,25 @@ test('gerente: dónde se trabó cada campo suma el diferido del libro, sin códi
     })
   }
 
-  await test.step('La misma cifra en Diferidos (U2 §0, principio 6)', async () => {
-    const enResumen = (await bloques(f.page)).find(b => b.campo === 'ceiba')?.total ?? NaN
-    await f.ir('#/ger/diferidos/ceiba/curso')
-    await f.esperarTexto('DÓNDE SE TRABÓ')
+  await test.step('La misma cifra en Resultados de un campo (U2 §0, principio 6)', async () => {
+    const enPortafolio = (await bloques(f.page)).find(b => b.campo === 'ceiba')?.total ?? NaN
+    await f.ir('#/ger/resultados/ceiba/curso')
+    await f.esperarTexto('Dónde se trabó')
     const t = await f.texto()
-    const encabezado = num(t.match(/([\d.]+)\s*\n\s*barriles diferidos/)?.[1] ?? 'NaN')
-    const enDiferidos = (await bloques(f.page)).find(b => b.campo === 'ceiba')?.total ?? NaN
-    f.ok(Math.abs(enDiferidos - enResumen) < 1e-6 && Math.abs(Math.round(enDiferidos) - encabezado) <= 1,
-      `La Ceiba, octubre: ${Math.round(enResumen)} bbl en el Resumen, ${Math.round(enDiferidos)} en «Dónde se trabó» de Diferidos y ${encabezado} arriba`)
-    f.ok(await f.clic('Por dónde se trabó'), 'Diferidos del gerente: el mes a mes se puede ver por dónde se trabó')
+    const cifra = num(t.match(/([\d.]+)\s*\n\s*barriles\s*\n/)?.[1] ?? 'NaN')
+    const enCampo = (await bloques(f.page)).find(b => b.campo === 'ceiba')?.total ?? NaN
+    f.ok(Math.abs(enCampo - enPortafolio) < 1e-6 && Math.abs(Math.round(enCampo) - cifra) <= 1,
+      `La Ceiba, octubre: ${Math.round(enPortafolio)} bbl en «Por campo», ${Math.round(enCampo)} en «Dónde se trabó» y ${cifra} en la cifra grande`)
+    f.ok(await f.clic('Por dónde se trabó'), 'Resultados del gerente: el mes a mes se puede ver por dónde se trabó')
     const todo = await todoElTexto(f.page)
-    f.ok(!CODIGO_ANH.test(todo) && !/choke/i.test(todo), 'Diferidos del gerente: sin códigos ni «choke»')
+    f.ok(!CODIGO_ANH.test(todo) && !/choke/i.test(todo), 'Resultados del gerente: sin códigos ni «choke»')
   })
 
   await test.step('Antes → con TRIM por tramo y el mes a mes por tramo (U2 §7.3 y §7.4)', async () => {
-    await f.ir('#/ger/resumen/ceiba/curso')
-    await f.esperarTexto('DÓNDE SE TRABÓ')
+    await f.ir('#/ger/resultados/ceiba/curso')
+    await f.esperarTexto('Dónde se trabó')
     const t = await f.texto()
-    f.ok(/Por dónde se trabó · lo no planeado por día/.test(t) && /[↑↓]/.test(t), 'el antes → con TRIM se abre por tramo, con sus flechas')
+    f.ok(/¿Está bajando\? Desde que entró TRIM/.test(t) && /Lo no planeado por día/.test(t) && /baja \d+ %/.test(t) && /sube \d+ %/.test(t), 'el antes → con TRIM se abre por tramo, con las dos flechas: la que baja y la que sube')
     f.ok(await f.clic('Por dónde se trabó'), 'el mes a mes del gerente cambia a «Por dónde se trabó»')
     const svg = await f.page.evaluate(() => [...document.querySelectorAll('main svg[role=group]')].some(s => (s.getAttribute('aria-label') ?? '').includes('por dónde se trabó')))
     f.ok(svg, 'y la gráfica dice que está partida por dónde se trabó')
@@ -116,18 +117,20 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
       return v.every((x, i) => i === 0 || x <= v[i - 1]!)
     })
   }
-  /** Abre la ficha de P-201B en Bombas y devuelve su texto. */
+  /** Abre P-201B desde su placa en Bombas y devuelve el texto de su nivel 3 (C4: la ficha técnica es una vista). */
   const ficha = async (campo: string) => {
     await f.ir(`#/conf/bombas/${campo}/curso`)
     const placa = f.page.locator('article', { hasText: 'P-201B' }).locator('button[aria-label^="Abrir el detalle de"]').first()
     await placa.click()
-    await f.esperarTexto('Le ha costado por falla')
-    return f.texto()
+    const n3 = f.page.locator('main [data-nivel3="P-201B"]')
+    await n3.waitFor()
+    await f.esperarTexto('Su historia')
+    return n3.innerText()
   }
 
   await test.step('Confiabilidad · La Ceiba (P-201B parada)', async () => {
     await f.abrir('/#/conf/riesgo/ceiba/curso')
-    await f.esperarTexto('SI FALLA HOY')
+    await f.esperarTexto('Si falla hoy')
     const xs = await filas('ceiba')
     f.ok(xs.length >= 20, `la lista trae todos los equipos del campo (${xs.length})`)
     f.ok(ordenada(xs), 'en tres grupos (lo medido, los techos, sin dato) y, en cada uno, de mayor a menor por lo que el campo deja de sacar por día')
@@ -149,14 +152,14 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
     })
     const enLista = Math.round(parada.perdiendo).toLocaleString('es-CO')
     f.ok(parada.texto.includes(`${enLista} bbl/d`), `el renglón de P-201B dice lo que se pierde ahora: ${enLista} bbl/d`)
-    const tf = await ficha('ceiba')
-    const enFicha = tf.match(/Perdiéndose ahora[\s\S]{0,20}?([\d.]+) bbl\/d/)?.[1]
-    f.ok(enFicha === enLista, `la ficha de P-201B dice lo mismo (${enFicha} y ${enLista} bbl/d)`)
+    await ficha('ceiba')
+    const enFicha = (await f.page.locator('main [data-heroe-equipo] [data-cifra]').innerText()).trim()
+    f.ok(enFicha === enLista, `el nivel 3 de P-201B dice lo mismo (${enFicha} y ${enLista} bbl/d)`)
   })
 
   await test.step('Confiabilidad · Morichal Norte (P-201B en marcha)', async () => {
     await f.ir('#/conf/riesgo/morichal/curso')
-    await f.esperarTexto('SI FALLA HOY')
+    await f.esperarTexto('Si falla hoy')
     const xs = await filas('morichal')
     f.ok(ordenada(xs), 'Morichal: de mayor a menor')
     const p = xs.find(x => x.equipo === 'P-201B')
@@ -165,20 +168,23 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
     f.ok(!!p && p.texto.includes(`${bpd} bbl/d`) && p.texto.includes(`≈ ${costo} bbl`), `la fila de P-201B: ${bpd} bbl/d si falla hoy, una falla ≈ ${costo} bbl`)
     // La misma cifra de «En riesgo», en la misma pantalla.
     const t = await f.texto()
-    const enRiesgo = t.slice(t.indexOf('EN RIESGO'), t.indexOf('SI FALLA HOY'))
+    // El panel «Equipos que avisan» (el segundo: el primero es el rótulo de su conteo, arriba) hasta el título de «Si falla hoy».
+    const ini = t.indexOf('Equipos que avisan', t.indexOf('Se deja de producir ahora, por causa'))
+    const enRiesgo = t.slice(ini, t.search(/\nSi falla hoy\n/) > ini ? t.search(/\nSi falla hoy\n/) : undefined)
     const deEnRiesgo = enRiesgo.match(/P-201B[\s\S]*?≈ ([\d.]+) bbl si falla hoy/)?.[1]
-    f.ok(deEnRiesgo === costo, `«En riesgo» dice lo mismo de una falla de P-201B (${deEnRiesgo} y ${costo} bbl)`)
-    f.ok(/P-201B[\s\S]{0,200}?se trabaría en la planta/.test(enRiesgo), '«En riesgo» dice dónde se trabaría')
+    f.ok(deEnRiesgo === costo, `«Equipos que avisan» dice lo mismo de una falla de P-201B (${deEnRiesgo} y ${costo} bbl)`)
+    f.ok(/P-201B[\s\S]{0,200}?se trabaría en la planta/.test(enRiesgo), '«Equipos que avisan» dice dónde se trabaría')
     const colchonFila = p?.texto.match(/(\d+(?:,\d)?) h/)?.[1]
     const tf = await ficha('morichal')
-    const m = tf.match(/Si se para ahora[\s\S]{0,10}?([\d.]+) bbl\/d[\s\S]{0,10}?tras ([\d,]+) h de colchón/)
-    f.ok(m?.[1] === bpd, `la ficha de P-201B dice lo mismo si se para ahora (${m?.[1]} y ${bpd} bbl/d)`)
+    const m = tf.match(/Si falla hoy:\s*([\d.]+) bbl\/d después de ([\d,]+) h de colchón/)
+    const o = tf.match(/pierde ([\d.]+) bbl\/d en este orden/)
+    f.ok(m?.[1] === bpd && o?.[1] === bpd, `el nivel 3 de P-201B dice lo mismo si falla hoy y si se para ahora (${m?.[1]}, ${o?.[1]} y ${bpd} bbl/d)`)
     f.ok(m?.[2] === colchonFila, `y el mismo colchón (${m?.[2]} h y ${colchonFila} h)`)
   })
 
   await test.step('Jefe de mantenimiento · La Ceiba', async () => {
     await f.ir('#/jefe/riesgo/ceiba/curso')
-    await f.esperarTexto('SI FALLA HOY')
+    await f.esperarTexto('Si falla hoy')
     const xs = await filas('ceiba')
     f.ok(xs.length >= 20 && ordenada(xs), `el jefe ve la misma lista, de mayor a menor (${xs.length})`)
     const t = await f.texto()
@@ -187,10 +193,11 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
   })
 
   await test.step('El gerente no ve la lista (U2 §3.1)', async () => {
+    // C5: su Riesgo se fundió en La planta viva (Durante y Antes) y Equipos (X4 §3.6, punto 2).
     await f.ir('#/ger/riesgo/ceiba/curso')
-    await f.esperarTexto('EN RIESGO')
+    await f.esperarTexto('se dejan de producir en La Ceiba.')
     const t = await f.texto()
-    f.ok(!t.includes('SI FALLA HOY') && !/choke/i.test(t), 'en el Riesgo del gerente no está «Si falla hoy» ni «choke»')
+    f.ok((await f.hash()).startsWith('#/ger/planta-viva/') && !t.includes('Si falla hoy') && !/choke/i.test(t), 'la dirección del Riesgo del gerente abre La planta viva, sin «Si falla hoy» ni «choke»')
   })
   f.cerrar()
 })
@@ -207,9 +214,8 @@ test.describe('teléfono', () => {
     }
     let primero = true
     for (const [ruta, clic] of [
-      ['#/ger/resumen/ceiba~portafolio/curso', 'Por dónde se trabó'],
-      ['#/ger/resumen/ceiba/cerrado', ''],
-      ['#/ger/diferidos/ceiba~portafolio/curso', 'Por dónde se trabó'],
+      ['#/ger/resultados/ceiba~portafolio/curso', 'Por dónde se trabó'],
+      ['#/ger/resultados/ceiba/cerrado', 'Por dónde se trabó'],
       ['#/conf/riesgo/ceiba/curso', 'ver «Si falla hoy»'],
       ['#/jefe/riesgo/ceiba~portafolio/curso', ''],
       ['#/prod/diferidos/ceiba~portafolio/curso', 'Por dónde se trabó'],

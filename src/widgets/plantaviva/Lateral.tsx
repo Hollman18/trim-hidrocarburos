@@ -115,7 +115,7 @@ export function MesAMesYBajando({ v, className }: { v: VistaPlantaViva; classNam
               {m.sobre && <MarcaSvg x={x + an / 2 - 6} y={Math.min(yT, Y(m.maximoBpd ?? 0)) - 15} s={3} t={12} />}
               {m.enCurso && <rect x={x - 2.5} y={yT - 2.5} width={an + 5} height={G.y1 - yT + 2.5} rx={4} fill="none" stroke="var(--tinta)" strokeWidth={1.3} strokeDasharray="3 2" />}
               {(i % 3 === 0 || ult) && (
-                <text x={x + an / 2} y={G.y1 + 15} textAnchor="middle" className="font-cond" fontWeight={ult ? 700 : 500} fontSize={12}
+                <text x={ult ? Math.min(W - 2, x + an) : x + an / 2} y={G.y1 + 15} textAnchor={ult ? 'end' : 'middle'} className="font-cond" fontWeight={ult ? 700 : 500} fontSize={12}
                   fill={ult ? 'var(--tinta)' : 'var(--tinta2)'}>{m.rotulo}</text>
               )}
               <title>{`${m.nombre}: ${n0(m.totalBpd)} bbl/d, de alto impacto ${n0(m.altoBpd)}${m.maximoBpd !== null ? ` · máximo ${n0(m.maximoBpd)}` : ''}`}</title>

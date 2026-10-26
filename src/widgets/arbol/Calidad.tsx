@@ -12,7 +12,7 @@ import { cn } from '@/shared/lib/cn'
 import { ROTULO, INFO_METODO, valorEnPalabras } from './palabras'
 import { periodoEnFrase } from '@/widgets/choke/palabras'
 
-const TITULO = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+const TITULO = 'text-[15px] font-semibold text-[var(--tinta)]'
 const pct = (v: number | null) => (v === null ? '—' : `${n0(v)} %`)
 /** «1 parada (2 filas)»: el motor cuenta las filas del reporte y las paradas detrás (B-47). */
 const paradasYFilasDe = (e: { paradas: number; eventos: number }) =>
@@ -90,7 +90,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
   )
 
   return (
-    <Panel className="mt-2.5" titulo="CALIDAD DE LA CLASIFICACIÓN" extra={`${plural(c.paradas, 'fila', 'filas')} · ${periodo}`}>
+    <Panel className="mt-2.5" titulo="Calidad de la clasificación" extra={`${plural(c.paradas, 'fila', 'filas')} · ${periodo}`}>
       <Lectura>
         Cuánto de lo que propone TRIM miró una persona (confirmado) y cuánto cambió (corregido), paso por
         paso. El paso 2, dónde se trabó, va aparte: si se corrige mucho, la topología o la regla está mal.
@@ -119,13 +119,13 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
           </div>
         </section>
       )}
-      <h3 className={TITULO}>LOS DEMÁS PASOS</h3>
+      <h3 className={TITULO}>Los demás pasos</h3>
       <div className="mb-1 hidden gap-x-3 text-[12px] text-[var(--tinta3)] sm:grid sm:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_6.5rem]" aria-hidden>
         <span /><span>confirmado</span><span>corregido</span><span />
       </div>
       <div className="mb-2.5">{otros.map(filaPaso)}</div>
 
-      <h3 className={TITULO}>LAS REGLAS QUE MÁS SE CORRIGEN</h3>
+      <h3 className={TITULO}>Las reglas que más se corrigen</h3>
       {corregidas.length === 0
         ? <p className="mb-2.5 text-[14px] text-[var(--tinta2)]">Nadie corrigió una propuesta de TRIM en {periodoEnFrase(periodo)}{c.porPaso.some(x => x.avaladas > 0) ? '' : ': todavía nadie ha revisado estas paradas'}.</p>
         : (
@@ -136,7 +136,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
           </>
         )}
 
-      <h3 className={`${TITULO} mt-1.5`}>EL PASO 2 POR EQUIPO</h3>
+      <h3 className={`${TITULO} mt-1.5`}>El paso 2 por equipo</h3>
       {equipos.length === 0
         ? <p className="mb-2.5 text-[14px] text-[var(--tinta2)]">Ninguna parada con el paso 2 propuesto en {periodoEnFrase(periodo)}.</p>
         : (
@@ -147,7 +147,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
           </>
         )}
 
-      <h3 className={`${TITULO} mt-1.5`}>EQUIPOS SIN TOPOLOGÍA</h3>
+      <h3 className={`${TITULO} mt-1.5`}>Equipos sin topología</h3>
       {c.sinTopologia.length === 0
         ? <p className="text-[14px] text-[var(--tinta2)]">Todos los equipos de estas paradas dicen a qué pozos sirven.</p>
         : (

@@ -32,7 +32,7 @@ export function ArbolCircular({ campoId, desde, hasta, periodo }: { campoId: str
   const niveles: readonly NivelArbol[] = NIVELES_ARBOL.circular
   const confirmado = r.bbl > 0 ? (r.confirmadoBbl / r.bbl) * 100 : 0
   return (
-    <Panel className="mb-2.5 print:break-inside-auto" titulo="ÁRBOL DE CAUSAS · COMO LA CIRCULAR"
+    <Panel className="mb-2.5 print:break-inside-auto" titulo="Árbol de causas · como la circular"
       extra={<span className="inline-flex items-center gap-1">modelo choke<Info titulo="Modelo choke" texto={QUE_ES_EL_CHOKE} imprimir={false} /></span>}>
       <div data-arbol-circular={campoId} data-orden={arbol.orden} data-bbl={r.bbl} data-filas={r.filas}>
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[14px]">

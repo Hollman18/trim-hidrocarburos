@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useAmbito, useRango, useNivel } from '@/app/store'
+import { useApp, useAmbito, useRango, useNivel } from '@/app/store'
 import { useFlotaEsp, useLibro } from '@/shared/api/diferidos'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { ESTADO_PARTE } from '@/entities/salud'
@@ -15,7 +14,6 @@ import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { DetallePozo } from '@/widgets/pozos/DetallePozo'
 import { sevPozo, cerradoPorOtro } from '@/widgets/pozos/estado'
 import { fraseParte, fraseParteCorta, fmtHoras } from '@/widgets/bombas/comun'
 import type { FilaEsp } from '@/shared/api/diferidos'
@@ -27,15 +25,11 @@ export function Esp() {
   const ambito = useAmbito(); const rango = useRango(); const nivel = useNivel()
   const ing = nivel === 'ingenieria'
   const ids = ambito.campos.map(c => c.id)
+  // C4 · Un pozo abre su nivel 3 (X4 §5.3: «un equipo en cualquier lista abre su N3»), con las migas armadas.
+  const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo)
+  const abrirPozo = (campo: string, pozo: string) => { setCampo(campo); abrirEquipo(pozo) }
   const flota = useFlotaEsp(ids, rango.desde, rango.hasta)
   const lb = useLibro({ campos: ids, desde: rango.desde, hasta: rango.hasta })
-  const [abierto, setAbierto] = useState<{ campo: string; pozo: string } | null>(null)
-  // La pantalla no se vuelve a montar al cambiar de campo: el pozo abierto se
-  // cierra aquí, al dibujar, para no pintar un pozo de otro campo bajo la
-  // cabecera del nuevo (el patrón de React para ajustar estado cuando cambia una prop).
-  const claveAmbito = ids.join(',')
-  const [ambitoDelAbierto, setAmbitoDelAbierto] = useState(claveAmbito)
-  if (ambitoDelAbierto !== claveAmbito) { setAmbitoDelAbierto(claveAmbito); setAbierto(null) }
 
   const primera = (x: FilaEsp) => x.partes.find(p => p.primera)?.primera?.senal.pronostico.horas ?? Infinity
   // Primero lo que falló por sí mismo; lo cerrado por otro equipo es
@@ -52,11 +46,6 @@ export function Esp() {
   const filas = [...flota].sort((a, b) => +queda(b) - +queda(a) || orden(a) - orden(b) || primera(a) - primera(b) || b.fila.crudoBpd - a.fila.crudoBpd)
   const lista = useVerMas(filas, { prioridad: x => (queda(x) ? 1 : 9) })
 
-  if (abierto) return (
-    <DetallePozo campoId={abierto.campo} pozoId={abierto.pozo} desde={rango.desde} hasta={rango.hasta}
-      nombrePeriodo={rango.nombre} volverA="Electrosumergibles" onVolver={() => setAbierto(null)} />
-  )
-
   if (!flota.length) return (
     <Panel titulo="ELECTROSUMERGIBLES"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene pozos con electrosumergible.</p></Panel>
   )
@@ -72,7 +61,7 @@ export function Esp() {
   const diferidoEsp = lb.porTipo.find(t => t.tipo === 'electrosumergible')?.bbl ?? 0
   const partesEsp = lb.porParte.filter(p => p.familia === 'electrosumergible')
 
-  const abrirFila = (campo: string, pozo: string) => setAbierto({ campo, pozo })
+  const abrirFila = (campo: string, pozo: string) => abrirPozo(campo, pozo)
   const algunaParada = flota.some(x => !x.fila.produce)
   const avisa = (e?: string) => e === 'fuera' || e === 'avisa'
 
@@ -118,7 +107,7 @@ export function Esp() {
     <>
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
         <Cifra rotulo="En falla ahora" valor={`${enFalla.length} de ${flota.length}`} alerta={enFalla.length > 0}
-          pie={enFalla.length ? `${n0(perdiendo)} bbl/d perdiéndose` : algunaParada ? 'las paradas, por otra causa' : 'todas produciendo'} />
+          pie={enFalla.length ? `${n0(perdiendo)} bbl/d se dejan de producir` : algunaParada ? 'las paradas, por otra causa' : 'todas produciendo'} />
         <Cifra rotulo="Con aviso" valor={String(avisan.length)}
           pie={avisan.length ? `${n0(enJuego)} bbl/d en juego` : 'ninguna parte avisa'} />
         {/* Todo lo que se les carga a ellas en el período: fallas y disparos (el

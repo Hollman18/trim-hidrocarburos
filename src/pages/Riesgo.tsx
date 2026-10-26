@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
-import { useApp, useAmbito, useRol, useRango } from '@/app/store'
+import { useApp, useAmbito, useRol } from '@/app/store'
 import { esServicio } from '@/shared/api/equipos'
 import { useRiesgo, useEstadoCampos } from '@/shared/api/diferidos'
 import { useCriticidad, DONDE_CHOKE } from '@/shared/api/choke'
-import { useCiclo } from '@/shared/api/ciclo'
-import { CicloCifras } from '@/widgets/ciclo/Ciclo'
+import { useCifrasDeUnNombre, NOMBRE_CIFRA } from '@/shared/api/resultados'
 import { SiFallaHoy } from '@/widgets/riesgo/SiFallaHoy'
 import { TIPO_CAUSA, type TipoCausa } from '@/entities/causa-senal'
 import { NOMBRE_PARTE } from '@/entities/partes'
@@ -33,11 +32,12 @@ import { costoHoy, colchonCorto, detalleCostoHoy, deFlota, siPara as siParaDe, s
  *  hoy, y en cada fila de «En riesgo», dónde se trabaría. El gerente no ve la
  *  lista (U2 §3.1): ve los equipos en riesgo. */
 export function Riesgo() {
-  const ambito = useAmbito(); const rol = useRol(); const rango = useRango()
-  const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo), setPantalla = useApp(s => s.setPantalla)
+  const ambito = useAmbito(); const rol = useRol()
+  const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const ids = ambito.campos.map(c => c.id)
   const riesgo = useRiesgo(ids)
-  const ciclo = useCiclo(ids, rango.desde, rango.hasta)
+  // «Un nombre, una cifra» (X4 §1.3.3): el total que se deja de producir, los equipos que avisan y la exposición, con la regla del motor.
+  const uno = useCifrasDeUnNombre(ids)
   const estados = useEstadoCampos(ids)
   const ingenieria = rol.nivel === 'ingenieria'
   // Dónde se trabaría cada equipo si falla: el tramo de la topología, el mismo de «Si falla hoy».
@@ -45,7 +45,7 @@ export function Riesgo() {
   const tramoDe = useMemo(() => new Map([...crit.ranking, ...crit.campos.flatMap(c => c.parados)].map(f => [`${f.campoId}|${f.equipo}`, f.tramo])), [crit])
   const perdiendo = riesgo.filter(r => r.estado === 'perdiendo')
   const enRiesgo = riesgo.filter(r => r.estado === 'en-riesgo').sort((a, b) => (a.horas ?? -1) - (b.horas ?? -1))
-  const porDia = perdiendo.reduce((a, r) => a + r.bblDia, 0)
+  const porDia = uno.ahoraBpd
   // Si alguna fila es un techo (K-101: «si cierran todos sus pozos»), la suma también: «hasta» (QA-R, vecino 1).
   const enJuego = sumaSiPara(enRiesgo)
   // La exposición: la suma de lo que costaría cada equipo si fallara HOY
@@ -53,7 +53,7 @@ export function Riesgo() {
   // Es exactamente la suma de lo que dicen las filas. No es que fallen todos
   // a la vez: es cuánto hay expuesto, equipo por equipo.
   const conCosto = enRiesgo.filter(r => r.costoFalla !== undefined)
-  const costo = conCosto.reduce((a, r) => a + r.costoFalla!, 0)
+  const costo = uno.exposicionBbl
   // Por qué falta la cifra, con su motivo real: nada en riesgo, servicios (lo
   // que cuesta su caída depende de cuánto dure) o equipos sin historia de
   // fallas con que estimarla.
@@ -71,7 +71,7 @@ export function Riesgo() {
   // Lo que se ve debajo de la cifra: la exposición y sus salvedades, en corto.
   // La frase completa (pieCosto) queda en el ⓘ y en el papel.
   const pieCorto = !enRiesgo.length ? 'nada en riesgo'
-    : conCosto.length ? [`≈ ${n0(costo)} bbl de exposición`, ...(sinHistoria.length ? [`${sinHistoria.length} sin historia`] : []),
+    : conCosto.length ? [`≈ ${n0(costo)} bbl de exposición si fallan hoy`, ...(sinHistoria.length ? [`${sinHistoria.length} sin historia`] : []),
       ...(servicios.length ? [`sin ${plural(servicios.length, 'servicio', 'servicios')}`] : [])].join(' · ')
     : !sinHistoria.length ? 'solo servicios del campo'
     : 'sin historia para estimar'
@@ -93,7 +93,7 @@ export function Riesgo() {
       titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
       // Lo que escribió una persona va en la pantalla; en el papel, quién lo contestó, por su rol (D2).
       pistaEnPapel={r.declaradoPor ? `Lo contestó ${r.declaradoPor}` : undefined}
-      filas={[['Pozos parados', String(r.pozos)], ['Perdiéndose', `${n0(r.bblDia)} bbl/d`], ['Por hora', `${n0(r.bblDia / 24)} bbl/h`],
+      filas={[['Pozos parados', String(r.pozos)], [`Por ${r.equipo} se dejan de producir`, `${n0(r.bblDia)} bbl/d`], ['Por hora', `${n0(r.bblDia / 24)} bbl/h`],
         ...(r.desde ? [['Desde', fechaHora(r.desde)] as [string, string]] : []),
         ...(r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? [['Pozos cerrados desde', fechaHora(r.cierreDesde)] as [string, string]] : []),
         ...(directivo && potencial ? [['Del potencial', `${n1((r.bblDia / potencial) * 100)} %`] as [string, string]] : [])]}
@@ -173,10 +173,10 @@ export function Riesgo() {
 
   return (
     <>
-      <CicloCifras ciclo={ciclo} onIr={p => setPantalla(p)} />
+      {/* Sin el bloque del ciclo arriba (X4 §3.6): lo simulado vive en La planta viva y en Resultados. */}
       <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
-        <span>
-          <small className="block text-[13px] text-[var(--tinta3)]">2 · Durante</small>
+        <span data-se-deja-de-producir={porDia}>
+          <small className="block text-[14px] text-[var(--tinta2)]">{NOMBRE_CIFRA.ahora}</small>
           {/* Un total no lleva marca de alarma: la lleva el equipo que lo causa (B-40). */}
           <b className="tabular flex items-center gap-1.5 text-[30px] leading-none">
             {n0(porDia)}<small className="text-[14px] font-normal text-[var(--tinta3)]">bbl/d</small>
@@ -186,11 +186,13 @@ export function Riesgo() {
             {perdiendo[0] && <span className="inline-flex items-center gap-1"> · <MarcaPrioridad s={perdiendo[0].altoImpacto ? 1 : 2} tamano={11} />{perdiendo[0].equipo}</span>}
           </small>
         </span>
-        <span>
-          <small className="block text-[13px] text-[var(--tinta3)]">1 · Antes · {plural(enRiesgo.length, 'equipo', 'equipos')}</small>
-          <b className="tabular block text-[22px] leading-tight" data-en-juego>{enJuego.techo && <small className="text-[15px] font-normal">hasta </small>}{n0(enJuego.bblDia)} <small className="text-[13px] font-normal text-[var(--tinta3)]">bbl/d en juego</small></b>
+        <span data-avisan={uno.avisan}>
+          {/* Antes es un conteo y un nombre (X4 §4.4, regla 3); lo que está en juego y la exposición van debajo, con su nombre. */}
+          <small className="block text-[14px] text-[var(--tinta2)]">{NOMBRE_CIFRA.avisan}</small>
+          <b className="tabular block text-[30px] leading-none">{uno.avisan}</b>
+          <small className="block text-[13px] text-[var(--tinta2)] tabular-nums" data-en-juego>si paran, {enJuego.techo ? 'hasta ' : ''}{n0(enJuego.bblDia)} bbl/d en juego</small>
           <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
-            {pieCorto}{enRiesgo.length > 0 && <Info titulo="Exposición" texto={pieCosto} />}
+            {pieCorto}{enRiesgo.length > 0 && <Info titulo={NOMBRE_CIFRA.exposicion} texto={pieCosto} />}
           </small>
         </span>
         <span>
@@ -208,10 +210,10 @@ export function Riesgo() {
       </div>
 
       <Lectura>
-        <b>Perdiéndose ahora</b> es el crudo de los pozos que están apagados en este momento, cada
-        uno cargado al equipo que lo apagó. <b>En riesgo</b> son las bombas de la línea y las
-        electrosumergibles que producen pero tienen una parte que avisa: lo que se perdería por día si
-        paran, y lo que costaría que fallaran hoy con el tiempo fuera que suelen tener (la exposición lo suma).
+        <b>Se deja de producir ahora</b> es el crudo de todos los pozos que están apagados en este momento, cada
+        uno cargado al equipo que lo apagó. <b>Los equipos que avisan</b> son las bombas de la línea y las
+        electrosumergibles que producen pero tienen una parte que avisa: lo que se dejaría de producir por día si
+        paran, y lo que costaría que fallaran hoy con el tiempo fuera que suelen tener (la exposición si fallan hoy lo suma: es un estimado, no el retorno simulado del ciclo).
         {directivo && ' En puntos del potencial: lo perdido sobre el potencial del campo.'}
         {' '}La lista va ordenada por cuándo cruza su límite: primero lo que ya está fuera. El ⓘ «si falla
         hoy» de cada fila dice de dónde sale la cifra («flota»: el equipo nunca ha fallado y se estimó
@@ -219,14 +221,14 @@ export function Riesgo() {
         depende de cuánto dure.
       </Lectura>
 
-      <Panel className="mt-2.5" titulo="PERDIÉNDOSE AHORA" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada'}>
+      <Panel className="mt-2.5" titulo="Se deja de producir ahora, por causa" extra={perdiendo.length ? plural(perdiendo.length, 'causa', 'causas') : 'nada'}>
         {perdiendo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todos los pozos produciendo.</p>}
         {listaPerdiendo.visibles.map(filaPerdiendo)}
         {listaPerdiendo.resto.length > 0 && <div className="solo-impresion">{listaPerdiendo.resto.map(filaPerdiendo)}</div>}
         <VerMas ocultas={listaPerdiendo.ocultas} abierto={listaPerdiendo.abierto} onAlternar={listaPerdiendo.alternar} />
       </Panel>
 
-      <Panel className="mt-2.5" titulo="EN RIESGO"
+      <Panel className="mt-2.5" titulo="Equipos que avisan"
         extra={ingenieria && (
           // Al lado, en la misma pantalla: lleva a la lista completa y le pasa el foco.
           <button type="button" className="no-imprimir min-h-6 cursor-pointer tracking-normal underline decoration-dotted underline-offset-2 hover:text-[var(--tinta)]"

@@ -10,7 +10,7 @@ import { NOMBRE_PARTE } from '@/entities/partes'
 import { DISPARO_MAX_H } from '@/entities/libro'
 import { fechaHora, fechaCorta } from '@/entities/reloj'
 import { Panel, Chip, Hueco, Boton } from '@/shared/ui/primitivas'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { MarcaPrioridad, MarcaCondicion } from '@/shared/ui/Prioridad'
 import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { Analogico } from '@/shared/ui/Analogico'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -28,7 +28,9 @@ import { desplazable } from '@/shared/ui/alFinal'
  *  caudal (cadena de custodia), qué le costó cada evento y, si tiene
  *  electrosumergible, la salud de cada parte y su historia de fallas. */
 export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volverA, onVolver }: {
-  campoId: string; pozoId: string; desde: Date; hasta: Date; nombrePeriodo: string; volverA: string; onVolver: () => void
+  campoId: string; pozoId: string; desde: Date; hasta: Date; nombrePeriodo: string
+  /** Sin él, no hay «volver»: en el nivel 3 se sube por las migas (C4). */
+  volverA?: string; onVolver?: () => void
 }) {
   const rol = useRol(); const setPantalla = useApp(s => s.setPantalla), abrirEquipo = useApp(s => s.abrirEquipo)
   // Operación: estado, causa, partes que avisan y eventos. Ingeniería: además
@@ -36,7 +38,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
   const ing = useNivel() === 'ingenieria'
   const det = usePozo(campoId, pozoId, desde, hasta)
 
-  const volver = (
+  const volver = volverA && onVolver && (
     <button onClick={onVolver} className="mb-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[14px] text-[var(--tinta2)] hover:text-[var(--tinta)]">
       <ArrowLeft className="size-3.5" /> {volverA}
     </button>
@@ -110,11 +112,12 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
         </div>
       </div>
 
-      {ident?.pide && !f.evento?.fin && !porOtro && (
-        <div className="mb-2.5 flex flex-wrap items-center gap-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 shadow-[var(--sombra)]">
-          <MarcaPrioridad s={2} tamano={16} />
+      {ident?.pide && !f.evento?.fin && !porOtro && volverA && (
+        // «No arrancar» es un bloqueo de procedimiento: franja en tinta con ⊘, nunca amarilla (X5 §5.6).
+        <div className="mb-2.5 flex flex-wrap items-center gap-3 rounded-[16px] bg-[var(--panel)] p-3 shadow-[inset_0_0_0_2px_var(--tinta)]" data-bloqueo>
+          <MarcaCondicion c="bloqueo" tamano={20} decorativa />
           {/* «Ninguna señal lo explica» lo dice la etiqueta «sin identificar» de arriba. */}
-          <span className="min-w-0 flex-1 text-[14px]"><b>No arrancar hasta identificar por qué paró.</b></span>
+          <span className="min-w-0 flex-1 text-[16px]"><b>No arrancar hasta identificar por qué paró.</b></span>
           {rol.pantallas.includes('causa') && <Boton variante="principal" onClick={() => setPantalla('causa')}>Identificar</Boton>}
         </div>
       )}

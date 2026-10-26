@@ -65,7 +65,7 @@ export function TuberiaDelCampo({ campoId, desde, hasta, periodo, onUbicarPlanta
   return (
     // En el papel no se impide partir el panel entero (dejaba una hoja en blanco y se partía igual):
     // el dibujo con su frase y la tabla con su pie no se parten; lo demás puede ir a la hoja siguiente (B-28).
-    <Panel className={cn('mb-2.5', className)} titulo="LA TUBERÍA DEL CAMPO"
+    <Panel className={cn('mb-2.5', className)} titulo="La tubería del campo"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">qué limita hoy al campo<Info titulo="Lo que limita" texto={TEXTO.limita} /></span>}>
       <div data-tuberia={campoId}>
         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -140,7 +140,7 @@ function Limita({ x, conInfo = true }: { x: TramoTuberia; conInfo?: boolean }) {
   if (!x.limita && !x.casiIgual) return null
   return (
     <span className="inline-flex flex-wrap items-center gap-x-1.5 text-[13px] font-semibold text-[var(--tinta)]" data-limita-marca={x.limita ? '' : undefined}>
-      {x.limita && <span className="font-cond tracking-[.08em]">◄ LIMITA</span>}
+      {x.limita && <span className="font-semibold">◄ limita</span>}
       {x.casiIgual && <span className="font-cond font-normal tracking-[.06em] text-[var(--tinta2)]">casi iguales</span>}
       {conInfo && x.limita && <Info titulo="Lo que limita" texto={TEXTO.limita} />}
     </span>
@@ -227,7 +227,7 @@ function resumenDe(t: TuberiaCampo, nombre: string): string {
     ...otros.map(x => x.potencialBpd === null ? `${CAJA[x.tramo]}: sin dato.`
       : `${CAJA[x.tramo]}: ${n0(x.potencialBpd)}${x.holguraBpd !== null ? `, le sobran ${n0(x.holguraBpd)}` : ''}${sinFirma(x.estado) ? ', sin firmar' : ''}.`),
     `Pasa hoy: ${n0(t.pasaHoyBpd)}.`,
-    `Perdiéndose ahora: ${n0(perdiendo)}${t.perdiendoAhora.length ? `, de ellos ${lista(t.perdiendoAhora.map(p => p.tramo
+    `Se deja de producir ahora: ${n0(perdiendo)}${t.perdiendoAhora.length ? `, de ellos ${lista(t.perdiendoAhora.map(p => p.tramo
       ? `${n0(p.bpd)} ${DONDE[p.tramo]} por ${p.equipo}` : `${n0(p.bpd)} sin identificar, ${p.equipo}`))}` : ''}.`,
   ].filter(Boolean).join(' ')
 }
@@ -252,7 +252,7 @@ const leidoDe = (x: TramoTuberia, pozos: number) => [
   x.tramo === 'reservorio' ? 'va con los pozos' : x.potencialBpd === null ? 'sin dato' : `${n0(x.potencialBpd)} barriles por día${sinFirma(x.estado) ? ', sin firmar' : ''}`,
   x.limita ? 'limita' : '', x.casiIgual ? 'casi iguales' : '',
   x.holguraBpd !== null && !x.limita && x.tramo !== 'reservorio' ? `le sobran ${n0(x.holguraBpd)}` : '',
-  x.perdiendoAhoraBpd > 0 ? `perdiéndose ahora ${n0(x.perdiendoAhoraBpd)}` : '',
+  x.perdiendoAhoraBpd > 0 ? `no pasan ahora ${n0(x.perdiendoAhoraBpd)}` : '',
   `se trabó en el período ${n0(x.perdidoBbl)} barriles`,
 ].filter(Boolean).join(', ') + '. Abre su detalle.'
 
@@ -278,7 +278,7 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
   // «Sin identificar» lleva su cifra, lo que se pierde ahora, los equipos y «Identificar»: con la letra de B
   // no cabía en 104 px (a 768 px se salía el botón y el recuadro tapaba su rótulo).
   const rejilla = 'grid gap-x-4 [grid-template-columns:minmax(64px,.5fr)_repeat(3,minmax(0,1fr))_minmax(132px,.85fr)]'
-  const titulo = 'font-cond flex min-h-[28px] flex-wrap items-end gap-x-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'flex min-h-[28px] flex-wrap items-end gap-x-2 text-[15px] font-semibold text-[var(--tinta)]'
 
   return (
     <div className="hidden md:block print:block print:[&_.solo-impresion]:hidden!">
@@ -286,11 +286,11 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
         {/* Los rótulos */}
         {t.tramos.map(x => (
           <span key={`r-${x.tramo}`} className={titulo}>
-            <span>{CAJA[x.tramo].toUpperCase()}{x.tramo === 'pozo' && pozos ? ` · ${pozos}` : ''}</span>
+            <span>{CAJA[x.tramo]}{x.tramo === 'pozo' && pozos ? ` · ${pozos}` : ''}</span>
             <EquiposEnAlarma t={t} k={x.tramo} marca={marca} />
           </span>
         ))}
-        <span className={cn(titulo, 'border-l border-dashed border-[var(--tinta3)] pl-3')}>SIN IDENTIFICAR</span>
+        <span className={cn(titulo, 'border-l border-dashed border-[var(--tinta3)] pl-3')}>Sin identificar</span>
 
         {/* El tubo: cada caja tan alta como lo que deja pasar; lo oscuro, lo que pasa hoy. */}
         {t.tramos.map((x, i) => {
@@ -330,7 +330,7 @@ function Acostada({ t, pozos, marca, abierto, onTramo, onIdentificar, onAgua, no
         <span className="flex items-end border-l border-dashed border-[var(--tinta3)] pl-3" style={{ minHeight: ALTO + 6 }}>
           <span className="block w-full rounded-[3px] border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[13px] leading-snug text-[var(--tinta2)]" data-sin-identificar>
             <span className="flex flex-wrap items-center gap-x-1"><b className="tabular text-[15px] text-[var(--tinta)]">{n0(t.sinTramoBbl)}</b> bbl en el período<Info titulo="Sin identificar" texto={TEXTO.sinIdentificar} /></span>
-            {sinTramoAhora > 0 && <span className="block"><span className="tabular">{n0(sinTramoAhora)}</span> bbl/d perdiéndose ahora</span>}
+            {sinTramoAhora > 0 && <span className="block"><span className="tabular">{n0(sinTramoAhora)}</span> bbl/d sin identificar, ahora</span>}
             {t.sinTramoEquipos.length > 0 && <span className="block truncate">{t.sinTramoEquipos.slice(0, 3).map(e => e.equipo).join(' · ')}</span>}
             {onIdentificar && t.sinTramoBbl + sinTramoAhora > 0 && <Enlace className="mt-1 text-[14px]" onClick={onIdentificar}>Identificar</Enlace>}
           </span>
@@ -389,10 +389,10 @@ function DePie({ t, pozos, marca, abierto, onTramo, onAgua, nombre }: {
             <button ref={el => { botones.current[i] = el }} onKeyDown={e => alPulsar(e, i)} onClick={() => onTramo(x.tramo)}
               aria-expanded={abierto === x.tramo} aria-label={leidoDe(x, pozos)} data-tramo={x.tramo} data-limita={x.limita ? '' : undefined}
               className="block w-full cursor-pointer text-left">
-              <span className="font-cond flex flex-wrap items-center gap-x-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-                <span>{CAJA[x.tramo].toUpperCase()}{x.tramo === 'pozo' && pozos ? ` · ${pozos}` : ''}</span>
+              <span className="flex flex-wrap items-center gap-x-2 text-[15px] font-semibold text-[var(--tinta)]">
+                <span>{CAJA[x.tramo]}{x.tramo === 'pozo' && pozos ? ` · ${pozos}` : ''}</span>
                 <EquiposEnAlarma t={t} k={x.tramo} marca={marca} />
-                {(x.limita || x.casiIgual) && <span className="ml-auto text-[var(--tinta)]">{x.limita ? '◄ LIMITA' : ''}{x.casiIgual ? `${x.limita ? ' · ' : ''}casi iguales` : ''}</span>}
+                {(x.limita || x.casiIgual) && <span className="ml-auto text-[var(--tinta)]">{x.limita ? '◄ limita' : ''}{x.casiIgual ? `${x.limita ? ' · ' : ''}casi iguales` : ''}</span>}
               </span>
               <span className="mt-1 flex items-center gap-2">
                 <span className="relative h-4 flex-1">
@@ -451,7 +451,7 @@ function Detalle({ x, t, pozos, onCerrar, onAgua, onUbicar }: {
         {x.pruebaMasVieja && <><dt className="text-[var(--tinta3)]">Las pruebas</dt><dd>{x.pruebaMasVieja.texto}</dd></>}
         {x.holguraBpd !== null && !x.limita && x.tramo !== 'reservorio' && <><dt className="text-[var(--tinta3)]">Le sobran</dt><dd className="tabular">{n0(x.holguraBpd)} bbl/d</dd></>}
         {x.limita && <><dt className="text-[var(--tinta3)]">Lo que limita</dt><dd>es el tramo más angosto hoy: el tope del campo</dd></>}
-        <dt className="text-[var(--tinta3)]">Perdiéndose ahora</dt>
+        <dt className="text-[var(--tinta3)]">No pasa ahora</dt>
         <dd className="tabular">{ahora.length ? ahora.map(p => `${p.equipo} ${n0(p.bpd)} bbl/d (${p.listaPozos.length <= 3 ? lista(p.listaPozos) : plural(p.pozos, 'pozo', 'pozos')}, desde ${fechaHora(p.desde)})`).join(' · ') : 'nada'}</dd>
         <dt className="text-[var(--tinta3)]">Se trabó en el período</dt>
         <dd className="tabular">{n0(x.perdidoBbl)} bbl{x.equiposTop.length ? ` · ${x.equiposTop.map(e => `${e.equipo} ${n0(e.bbl)}`).join(' · ')}` : ''}</dd>
@@ -481,20 +481,20 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
 }) {
   const perdiendo = t.perdiendoAhoraBpd
   const pozosT = t.tramos.find(x => x.tramo === 'pozo')
-  const rotulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const rotulo = 'text-[15px] font-semibold text-[var(--tinta)]'
   const fila = 'flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--linea2)] py-1.5 text-[14px]'
   return (
     <div className="mt-2">
       {!sinTuberia && (
         <div className={fila}>
-          <span className="inline-flex items-center gap-1.5"><i aria-hidden className="inline-block size-2.5 bg-[var(--dato-2)]" /><span className={rotulo}>PASA HOY</span></span>
+          <span className="inline-flex items-center gap-1.5"><i aria-hidden className="inline-block size-2.5 bg-[var(--dato-2)]" /><span className={rotulo}>Pasa hoy</span></span>
           <b className="tabular ml-auto">{n0(t.pasaHoyBpd)} <small className="font-normal text-[var(--tinta3)]">bbl/d</small></b>
         </div>
       )}
       {!sinTuberia && (
         <div className="border-t border-[var(--linea2)] py-1.5" data-perdiendo>
           <div className="flex flex-wrap items-center gap-x-2 text-[14px]">
-            <span className={rotulo}>PERDIÉNDOSE AHORA</span>
+            <span className={rotulo}>Se deja de producir ahora</span>
             <b className="tabular ml-auto">{n0(perdiendo)} <small className="font-normal text-[var(--tinta3)]">bbl/d</small></b>
           </div>
           {t.perdiendoAhora.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada: todos los pozos con prueba están produciendo.</p>}
@@ -548,7 +548,7 @@ function Abajo({ t, marca, sinTuberia, periodo, onAbrir, onIdentificar, onPorTra
 export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: TuberiaCampo; periodo: string; onPorTramo?: () => void; encabezado?: boolean }) {
   const arbol = useArbolChoke({ campos: [t.campoId], desde: t.desde, hasta: t.hasta, orden: 'gestion' })
   const codigos = codigosDelRol(useRol().id)
-  const rotulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const rotulo = 'text-[15px] font-semibold text-[var(--tinta)]'
   const equipos = (xs: Array<{ equipo: string; bbl: number }>, conBbl: boolean) => xs.length
     ? ` (${xs.slice(0, 3).map(e => (conBbl ? `${e.equipo} ${n0(e.bbl)}` : e.equipo)).join(' · ')})` : ''
   const renglon = (clave: string, dondeTxt: string, bbl: number, eqs: string, discontinuo: boolean, tono?: string): ReactNode => (
@@ -559,7 +559,7 @@ export function SeTrabo({ t, periodo, onPorTramo, encabezado = true }: { t: Tube
     <div className="border-t border-[var(--linea2)] py-1.5" data-se-trabo data-total={t.diferido}>
       {encabezado && (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
-          <span className={rotulo}>SE TRABÓ EN EL PERÍODO</span>
+          <span className={rotulo}>Se trabó en el período</span>
           <span className="text-[13px] text-[var(--tinta3)]">{periodo}</span>
           <b className="tabular ml-auto">{n0(t.diferido)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
           {onPorTramo && t.diferido > 0 && <Boton variante="chico" onClick={onPorTramo}>Ver por dónde se trabó</Boton>}
@@ -636,7 +636,7 @@ function Tabla({ t, pozos, periodo, titulo }: { t: TuberiaCampo; pozos: number; 
         <thead className="text-[12px] text-[var(--tinta3)]">
           <tr>
             <th className={th}>Tramo</th><th className={cn(th, 'text-right')}>Lo que puede dejar pasar · bbl/d</th><th className={th}>De dónde sale</th>
-            <th className={cn(th, 'text-right')}>Le sobran · bbl/d</th><th className={cn(th, 'text-right')}>Perdiéndose ahora · bbl/d</th><th className={cn(th, 'text-right')}>Se trabó · bbl</th>
+            <th className={cn(th, 'text-right')}>Le sobran · bbl/d</th><th className={cn(th, 'text-right')}>No pasa ahora · bbl/d</th><th className={cn(th, 'text-right')}>Se trabó · bbl</th>
           </tr>
         </thead>
         <tbody>
@@ -661,7 +661,7 @@ function Tabla({ t, pozos, periodo, titulo }: { t: TuberiaCampo; pozos: number; 
           {pozosT?.potencialBpd != null && Math.abs(t.brechaPruebasBpd) >= 0.5 && (
             <tr className="border-t border-[var(--linea2)] text-[13px] text-[var(--tinta2)]" data-cuadre-tabla>
               <td className="py-1 pr-2" colSpan={6}>
-                Cuadre de hoy: los pozos {n0(pozosT.potencialBpd)} − pasa hoy {n0(t.pasaHoyBpd)} − perdiéndose ahora {n0(perdiendo)} = {n0(t.brechaPruebasBpd)} bbl/d
+                Cuadre de hoy: los pozos {n0(pozosT.potencialBpd)} − pasa hoy {n0(t.pasaHoyBpd)} − se deja de producir ahora {n0(perdiendo)} = {n0(t.brechaPruebasBpd)} bbl/d
                 {t.brechaPruebasBpd > 0 ? ' que las pruebas dan de más que el medidor oficial' : ' (el medidor oficial mide más que las pruebas)'}
               </td>
             </tr>

@@ -9,8 +9,10 @@ import { Info } from '@/shared/ui/Info'
 import { n0, n1, n3, plural } from '@/shared/lib/formato'
 import { estadoFactor } from './publicacion'
 
-/** El cuadre del período contra la medición oficial y la cadena de custodia
- *  de cada número. Lo que no se puede probar se muestra, no se reparte: cada
+/** «¿Se puede publicar?» (X4 §3.7): el cuadre del período contra la medición
+ *  oficial y la cadena de custodia de cada número. El factor de asignación mes a
+ *  mes vive una sola vez, en Producción («¿Cuadra?»); aquí va solo si está en su
+ *  banda, porque decide la publicación (C5). Lo que no se puede probar se muestra, no se reparte: cada
  *  hueco (sin prueba, prueba estimada, corte de agua de laboratorio, factor
  *  fuera de banda) queda a la vista en corto, con su porqué en el ⓘ. Si el
  *  libro se puede publicar lo dice el sello de arriba de cada pantalla
@@ -25,7 +27,7 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
   const custodiaCompleta = lb.custodia.sinPrueba.length + lb.custodia.estimados.length + lb.custodia.bswLaboratorio.length === 0
 
   return (
-    <Panel titulo="CUADRE · MEDICIÓN OFICIAL">
+    <Panel titulo="¿Se puede publicar? Cuadre y custodia">
       <Lectura>
         Potencial menos lo medido es lo que no se produjo. La suma de los eventos de los pozos tiene
         que dar lo mismo: en un mes entero, da exacto. Cada evento trae su causa: la de una señal
@@ -50,8 +52,8 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
       </dl>
 
       <div className="mb-1 mt-3 flex flex-wrap items-center gap-x-1">
-        <h3 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">FACTOR DE ASIGNACIÓN</h3>
-        <Info titulo="Factor de asignación" texto="Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar." />
+        <h3 className="text-[15px] font-semibold text-[var(--tinta)]">¿El factor está en su banda?</h3>
+        <Info titulo="El factor de asignación, contra su banda" texto="Banda de la Res. 40236, Fig. 10.2. Fuera de banda: revisar pruebas y medición antes de publicar." />
       </div>
       {faRaros.length === 0
         ? <p className="text-[14px] text-[var(--tinta2)]">{plural(lb.fa.length, 'mes-campo', 'meses-campo')} · <Chip>dentro de banda</Chip></p>
@@ -69,7 +71,7 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
         </p>
       )}
 
-      <h3 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CADENA DE CUSTODIA</h3>
+      <h3 className="mb-1 mt-3 text-[15px] font-semibold text-[var(--tinta)]">Cadena de custodia</h3>
       <ul className="grid gap-1 text-[13px] text-[var(--tinta2)]">
         {lb.custodia.sinPrueba.length > 0 && (
           <li className="flex flex-wrap items-center gap-x-1.5"><FueraDeMeta si tamano={10} />

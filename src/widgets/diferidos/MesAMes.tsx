@@ -9,6 +9,7 @@ import { n0, n1 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Muestra, PatronesTramo } from './tramos'
 import { LARGO_TRAMO, mayuscula, rellenoSvg } from './reparto'
+import { useAnchoDibujo } from '@/widgets/resultados/ancho'
 
 /** Redondea hacia arriba a un tope «limpio» para el eje: 1, 2 o 5 por una
  *  potencia de diez. */
@@ -37,12 +38,14 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
   const [vista, setVista] = useState<'como' | 'tramo'>('como')
   const deMes = new Map((porTramo ?? []).map(t => [t.mes, t]))
   const porDonde = vista === 'tramo' && porTramo !== undefined
-  const W = 720, G = { x0: 54, x1: 712, y0: 22, y1: 168 }
+  // C5 · Se dibuja al ancho de verdad (una unidad = un px): ningún rótulo baja de 12 px (X3 §5.5; X5 §3.4).
+  // Por debajo de 560 px la gráfica se desplaza de lado.
+  const [medir, W] = useAnchoDibujo(560, 720)
+  const G = { x0: 54, x1: W - 8, y0: 22, y1: 168 }
   const n = serie.length
   const paso = (G.x1 - G.x0) / n
-  // La cifra de cada mes cabe en su columna: con muchos meses (el portafolio, doce meses o más) baja hasta 9,
-  // como antes; con pocos, va a 11. Más grande, dos cifras vecinas se montaban (auditor, Firefox).
-  const letraCifra = Math.max(9, Math.min(11, paso / 3.2))
+  // La cifra de cada mes va a 12 px; si la columna no le da lugar (menos de 44 px), solo la del período.
+  const conCifra = (activo: boolean) => activo || paso >= 44
   const ancho = Math.min(34, paso * 0.58)
   const techo = tope(Math.max(...serie.map(m => Math.max(m.libro.brecha, conMeta(m.libro.meta) ? m.libro.meta.diferido : 0))) * 1.12)
   const Y = (v: number) => G.y1 - (v / techo) * (G.y1 - G.y0)
@@ -62,14 +65,14 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
           ))}
         </div>
       )}
-      <div ref={alFinal} className="overflow-x-auto">
-        <svg viewBox={`0 0 ${W} 206`} className="block h-auto w-full min-w-[560px]" role="group"
+      <div ref={medir}><div ref={alFinal} className="overflow-x-auto">
+        <svg width={W} height={206} viewBox={`0 0 ${W} 206`} className="block" role="group"
           aria-label={`Barriles diferidos mes a mes${porDonde ? ', por dónde se trabó' : ''}, de ${serie[0]?.nombre} a ${serie.at(-1)?.nombre}`}>
           <defs><PatronesTramo id={id} /></defs>
           {marcas.map(v => (
             <g key={v}>
               <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.8} />
-              <text x={G.x0 - 6} y={Y(v) + 3} fontSize={11.5} textAnchor="end" fill="var(--tinta3)" className="tabular">{k(v)}</text>
+              <text x={G.x0 - 6} y={Y(v) + 4} fontSize={12} textAnchor="end" fill="var(--tinta3)" className="tabular">{k(v)}</text>
             </g>
           ))}
           {serie.map((m, i) => {
@@ -125,17 +128,17 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
                       <title>Pasó el máximo de diferido firmado</title>
                     </rect>
                   )}
-                  <text x={x + ancho / 2} y={yTope - (sobre && !m.parcial ? 19 : 5)} fontSize={letraCifra} textAnchor="middle"
-                    fill="var(--tinta2)" className="tabular">{k(l.brecha)}</text>
-                  <text x={x + ancho / 2} y={G.y1 + 14} fontSize={11.5} textAnchor="middle"
+                  {conCifra(activo) && <text x={Math.min(x + ancho / 2, W - 2 - 3.6 * k(l.brecha).length)} y={yTope - (sobre && !m.parcial ? 19 : 5)} fontSize={12} textAnchor="middle"
+                    fill="var(--tinta2)" className="tabular">{k(l.brecha)}</text>}
+                  <text x={x + ancho / 2} y={G.y1 + 14} fontSize={12} textAnchor="middle"
                     fill={activo ? 'var(--tinta)' : 'var(--tinta3)'} fontWeight={activo ? 600 : 400} className="font-cond">
                     {m.corto.toUpperCase()}
                   </text>
                   {(i === 0 || m.mes.endsWith('-01')) && (
-                    <text x={x + ancho / 2} y={G.y1 + 26} fontSize={10.5} textAnchor="middle" fill="var(--tinta3)">{m.mes.slice(0, 4)}</text>
+                    <text x={Math.max(x + ancho / 2, G.x0 + 14)} y={G.y1 + 27} fontSize={12} textAnchor="middle" fill="var(--tinta3)">{m.mes.slice(0, 4)}</text>
                   )}
                   {m.parcial && (
-                    <text x={x + ancho / 2} y={G.y1 + 26} fontSize={10.5} textAnchor="middle" fill="var(--tinta3)">en curso</text>
+                    <text x={Math.min(x + ancho / 2, W - 26)} y={G.y1 + 27} fontSize={12} textAnchor="middle" fill="var(--tinta3)">en curso</text>
                   )}
                 </g>
               </Tip>
@@ -143,7 +146,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
           })}
           <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea)" strokeWidth={1} />
         </svg>
-      </div>
+      </div></div>
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
         {porDonde
           ? CHOKES_Y_SIN_ASIGNAR.map(k => <span key={k} className="inline-flex items-center gap-1.5"><Muestra k={k} />{LARGO_TRAMO[k]}</span>)

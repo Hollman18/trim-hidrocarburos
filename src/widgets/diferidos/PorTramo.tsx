@@ -50,13 +50,13 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
   const inventario = Math.round(b.sinExplicar)
   const tramosCruce = CHOKES_Y_SIN_ASIGNAR.filter(k => b.porChoke[k] >= 0.5)
   const escalonesCruce = ORDEN_ESCALON.filter(e => b.porEscalon[e] >= 0.5)
-  const titulo = 'font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+  const titulo = 'text-[15px] font-semibold text-[var(--tinta)]'
   const fila = 'border-b border-[var(--linea2)] py-1.5 last:border-0'
 
   return (
     <section id="por-donde-se-trabo" className="rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)]">
       <header className="flex items-center justify-between gap-2 border-b border-[var(--linea2)] px-3 py-[7px]">
-        <h2 className={titulo}>POR DÓNDE SE TRABÓ</h2>
+        <h2 className={titulo}>Por dónde se trabó</h2>
         <span className="font-cond text-[12px] tracking-[.08em] text-[var(--tinta3)]">bbl · el diferido del libro</span>
       </header>
       <div className="p-3">
@@ -78,7 +78,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
 
         <div className="mt-2.5 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))]">
           <div className="min-w-0" data-por-tramo="">
-            <h3 className={`${titulo} mb-0.5`}>POR TRAMO</h3>
+            <h3 className={`${titulo} mb-0.5`}>Por tramo</h3>
             {CHOKES_Y_SIN_ASIGNAR.map(k => (
               <TramoConRamas key={k} k={k} v={b.porChoke[k]} eq={b.porChokeEquipo[k]} parte={parte} fila={fila}
                 nodo={arbol.raiz.hijos.find(h => h.valor === k)} codigos={codigos} onIdentificar={onIdentificar} />
@@ -91,7 +91,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
 
           <div className="min-w-0" data-por-escalon="">
             <h3 className={`${titulo} mb-0.5 flex flex-wrap items-center gap-x-1`}>
-              <span>POR QUÉ NO SE PRODUJO</span>
+              <span>Por qué no se produjo</span>
             </h3>
             <p className="mb-0.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
               <span>el mismo total, por escalón</span>
@@ -139,7 +139,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
 
         {global && b.porCampo.length > 1 && (
           <div className="mt-3 border-t border-[var(--linea2)] pt-2">
-            <h3 className={`${titulo} mb-1`}>POR CAMPO</h3>
+            <h3 className={`${titulo} mb-1`}>Por campo</h3>
             {b.porCampo.map(c => {
               const nombre = campoPorId(c.campoId).nombre
               return (
@@ -168,7 +168,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
             </button>
             {/* Plegado en la pantalla; en el papel, desplegado. */}
             <div id={idCruce} className={cn('mt-1 overflow-x-auto', !cruce && 'hidden print:block')}>
-              <h3 className={`${titulo} mb-1 hidden print:block`}>CADA TRAMO POR QUÉ NO SE PRODUJO</h3>
+              <h3 className={`${titulo} mb-1 hidden print:block`}>Por qué no se produjo, tramo por tramo</h3>
               <table className="tabular w-full min-w-[420px] border-collapse text-[13px]">
                 <thead>
                   <tr className="text-[12px] text-[var(--tinta3)]">

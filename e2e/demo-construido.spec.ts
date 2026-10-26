@@ -11,10 +11,10 @@ test('el demo construido carga cada pantalla', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
   for (const [ruta, debe] of [
     ['#/oper/causa/ceiba/curso', 'Ver mi chat de WhatsApp'],
-    ['#/conf/confiabilidad/morichal/curso', 'LO QUE ANUNCIÓ Y EN QUÉ QUEDÓ'],
+    ['#/conf/confiabilidad/morichal/curso', 'Lo que anunció y en qué quedó'],
     ['#/adm/conectores/ceiba/curso', 'SISTEMAS CORPORATIVOS'],
-    ['#/prod/produccion/ceiba/curso', 'CUADRE · ASIGNACIÓN OFICIAL'],
-    ['#/ger/resumen/ceiba~portafolio/curso', 'barriles diferidos'],
+    ['#/prod/produccion/ceiba/curso', 'Cuadre · asignación oficial'],
+    ['#/ger/resultados/ceiba~portafolio/curso', 'no se produjeron en sus 5 campos'],
   ] as const) {
     await f.ir(ruta); await f.esperar(900)
     const t = await f.texto()
