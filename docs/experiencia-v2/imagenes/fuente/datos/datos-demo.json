@@ -1,0 +1,97 @@
+{
+  "_que_es": "Cifras del demo usadas en las imágenes de X5. Leídas el 25-oct-2026 en el servidor de desarrollo (http://localhost:5173), mismos datos que el demo de 4173. Reloj del demo: 2-oct-2026, 14:00. Cada bloque dice la ruta donde se leyó.",
+  "gerente_portafolio": {
+    "_ruta": "#/ger/resumen/ceiba~portafolio/curso y #/ger/riesgo/ceiba~portafolio/curso",
+    "persona": "Andrés Vélez · Gerente de activo",
+    "se_dejan_de_producir_ahora_bbl_d": 2650,
+    "pozos_parados": "4 de 87",
+    "por_campo_ahora": [
+      { "campo": "La Ceiba", "bbl_d": 1966, "tramo": "planta", "equipo": "P-201B", "familia": "bomba de agua (reinyección)", "marca": "p1" },
+      { "campo": "Morichal Norte", "bbl_d": 684, "tramo": "pozos", "equipo": "MN-41", "familia": "electrosumergible", "detalle": "aislamiento del motor y del cable, desde 25 de sept, 06:40", "marca": "p1" },
+      { "campo": "Guacamayo", "bbl_d": 0, "antes": "GU-07 (electrosumergible) ya pasó el límite" },
+      { "campo": "El Palmar", "bbl_d": 0 },
+      { "campo": "La Zarza", "bbl_d": 0, "nota": "campo de gas" }
+    ],
+    "diferido_periodo_bbl": 2377,
+    "por_campo_periodo_bbl": { "Morichal Norte": 1253, "La Ceiba": 1046, "El Palmar": 77, "La Zarza": 0, "Guacamayo": 0 },
+    "ciclo_simulado": { "total": 45233, "antes": 42017, "durante": 2102, "despues": 1114 },
+    "condiciones_por_equipo": {
+      "_como": "Una marca por equipo, de Planta (#/adm/planta/<campo>/curso) y Riesgo (#/jefe/riesgo/<campo>/curso). MPP-301 sale ■3 en Planta y ▲2 en Riesgo: se toma ▲2, como X4 §5.4.",
+      "alarma_p1": ["P-201B (La Ceiba)", "K-101 (La Ceiba)", "MN-41 (Morichal)", "GU-07 (Guacamayo)"],
+      "atencion_p2": ["LC-21 (La Ceiba)", "TK-102 (La Ceiba)", "MN-07", "MN-18", "P-201B (Morichal)", "MPP-301", "MN-27", "GU-04 (Guacamayo)"],
+      "aviso_p3": ["H-302 (La Ceiba)", "SE-2 (Morichal)"],
+      "sin_comunicacion": []
+    }
+  },
+  "la_ceiba": {
+    "_ruta": "#/ger/resumen/ceiba/curso, #/prod/planta/ceiba/curso, #/prod/produccion/ceiba/curso, #/ger/riesgo/ceiba/curso",
+    "producidos_ayer_bbl": 11105,
+    "ahora": { "no_pasan_bbl_d": 1966, "planta_p201b_bbl_d": 1665, "lc21_sin_identificar_bbl_d": 301, "pasa_hoy_bbl_d": 9394, "pozos": 18, "pozos_parados": 3, "p201b_paro": "2 de oct, 03:52", "pozos_cerrados": "LC-07 y LC-16, desde 05:43", "lc21_desde": "1 de oct, 18:20" },
+    "capacidades_bbl_d": { "pozos_limita": 11857, "planta": 13000, "afuera": 14000, "le_sobran_planta": 1143, "le_sobran_afuera": 2143, "medicion_de_mas": 497 },
+    "agua": { "entra_bbl_d": 174033, "caben_bbl_d": 178500, "tanque_pct": 89.6, "alto_alto_pct": 90, "bombas": "P-201A y P-201C sin instrumento, se suponen en marcha (89.250 bbl/d cada una); P-201B parada", "frase": "El nivel no sube: P-201A y P-201C toman lo que entra." },
+    "gas": "sin medir",
+    "despues_octubre_bbl": { "total": 1046, "pozos_LC05": 118, "planta_P201B": 573, "afuera": 0, "sin_identificar": 355, "LC21": 247, "LC08": 109, "valor_usd": "50 mil", "septiembre_cerrado": 7716 },
+    "antes": { "K101": "aire de instrumentos, ya pasó el límite; si para, hasta 9.394 bbl/d", "P201A_P201C": "sin instrumento; si falla hoy 3.059 bbl/d después de 2 min de colchón", "pozos": "nada avisa" },
+    "venta": { "sale_hoy_bbl_d": 9394, "meta_dia_bbl_d": 10900, "producido_a_la_fecha_bbl": 16941, "meta_a_la_fecha_bbl": 17258, "cierre_proyectado_bbl": 293287, "meta_mes_bbl": 337900, "diferido_proyectado_bbl": 58880, "maximo_mes_bbl": 24800 },
+    "promedio_octubre": { "produccion_bbl_d": 10700, "meta_bbl_d": 10900, "diferido_bbl_d": 661, "maximo_bbl_d": 800 },
+    "ciclo_simulado_bbl": { "total": 2133, "antes": 0, "durante": 2102, "despues": 30 },
+    "desde_trim_1_sep": { "planta": [268, 51, "baja 81 %"], "pozos": [122, 215, "sube 76 %"], "alto_impacto": [310, 255, "-18 %"], "nota": "muestra corta; base jun a ago" },
+    "perdida": "sin eventos registrados en el período",
+    "diferido_por_dia_mes_a_mes": {
+      "_ruta": "aria-label de la gráfica de #/ger/resumen/ceiba/curso",
+      "maximo_firmado_bbl_d": 800,
+      "meses": [
+        ["oct 2025", 544, 421], ["nov", 249, 160], ["dic", 207, 202], ["ene 2026", 173, 24], ["feb", 834, 834], ["mar", 549, 406],
+        ["abr", 336, 278], ["may", 434, 431], ["jun", 384, 310], ["jul", 563, 476], ["ago", 275, 145], ["sep", 257, 249], ["oct 2026 (en curso)", 661, 362]
+      ],
+      "_columnas": "mes, diferido bbl/d, de alto impacto bbl/d"
+    },
+    "franja": { "alarma_p1": ["P-201B", "K-101"], "atencion_p2": ["LC-21", "TK-102"], "aviso_p3": ["H-302"], "sin_comunicacion": 0 }
+  },
+  "supervisor_turno": {
+    "_ruta": "#/sup/turno/ceiba/curso, #/oper/causa/ceiba/curso, #/tec/trabajo/ceiba/curso",
+    "persona": "Nelson Ortiz · Supervisor de operaciones",
+    "paradas_por_confirmar": "4 paradas hoy · 0 completas · faltan 4 · el reporte sale mañana antes de las 07:00",
+    "iguales": "2 iguales, TRIM las dedujo: por P-201B, LC-07 y LC-16, desde 05:43 → Confirmar las 2 / Ver una por una",
+    "sin_causa": "LC-08 y LC-21 · 219 bbl hoy (355 desde que pararon)",
+    "lc21_whatsapp": "18:21 pregunta → 18:50 recordatorio → 20:20 escalado · sin respuesta",
+    "lc08": "paró 1 de oct 22:15, arrancó 2 de oct 01:10: arrancó sin identificar",
+    "p201b_whatsapp": "03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado · sin respuesta",
+    "k101": "aire de instrumentos, ya pasó el límite, hasta 9.394 bbl/d; orden 40012056 liberada a Óscar Daza el 2 de oct, 09:10 (predictivo, prioridad 2)",
+    "fragil": "el agua: si para otra bomba de reinyección hay que cerrar pozos; P-201A y P-201C no tienen instrumento",
+    "orden_de_cierre": "LC-02 · LC-10 · LC-01 · LC-17 · LC-14 · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 % → 3.059 bbl/d después de 2 min de colchón (parejo, 4.577)",
+    "diferido_turno_12h_bbl": 723,
+    "whatsapp_turno_mensajes": 8,
+    "limita": "los pozos, 11.857 bbl/d; con P-201B parada lo de más pasa solo hasta unos 236 bbl/d de crudo"
+  },
+  "operador": {
+    "_ruta": "#/oper/causa/ceiba/curso",
+    "persona": "Jairo Peña · Operador de campo",
+    "por_contestar": 4,
+    "p201b": { "pregunta": "¿Qué parte se dañó? (parte de la bomba)", "paro": "2 de oct, 03:52 · hace 10,1 h", "bbl": 573, "pista": ["Sello mecánico · 5 de 8 fallas", "Rodamientos y cámara de empuje · 3 de 8 fallas"], "otras": ["Succión y filtro de entrada", "Impulsores y desgaste interno", "Motor eléctrico"], "regla": "No arrancar hasta identificar el daño · si arranca antes: no conformidad" },
+    "lc21": { "pregunta": "¿Por qué paró?", "paro": "1 de oct, 18:20 · hace 19,7 h", "bbl": 247, "opciones": ["Cierre para prueba o intervención del pozo", "Fuga o daño en la línea de flujo", "Orden de producción: nominación o restricción del comprador", "Falla del controlador o de un instrumento del pozo"] }
+  },
+  "p201b_tecnico": {
+    "_ruta": "#/conf/bombas/ceiba/curso/P-201B y src/entities/equipos.ts, src/entities/limites.ts (lectura)",
+    "persona": "Edwin Maestre · Ingeniero de confiabilidad",
+    "nombre": "Bomba multietapa de transferencia de agua · Tratamiento de agua · criticidad 5/5",
+    "estado": "detenida desde 2 de oct, 03:52 · 10,1 h · cerró LC-07 y LC-16 · 1.665 bbl/d",
+    "senales_12_dias": {
+      "_nota": "Doce valores diarios que terminan el 2 de oct (21-sep → 2-oct)",
+      "PI-2010 Presión de succión psi": { "valor": 18.2, "normal": "> 10", "alarma_baja": 8, "serie": [12.1, 12.0, 12.2, 12.1, 11.9, 12.0, 12.1, 11.8, 11.9, 12.0, 13.4, 18.2] },
+      "FI-2011 Caudal bbl/d": { "valor": 0, "normal": "66.800 – 89.250", "serie": [74220, 74190, 74250, 74200, 74180, 74230, 74210, 74190, 74200, 74160, 63070, 0] },
+      "II-2011 Corriente del motor A": { "valor": 0, "normal": "320 – 445", "serie": [398, 402, 408, 405, 412, 419, 425, 432, 436, 429, 378, 0] },
+      "TI-2011 Temperatura de cojinete °C": { "valor": 41, "normal": "< 85", "alarma_alta": 85, "serie": [38, 39, 39, 40, 40, 41, 42, 43, 44, 45, 43, 41] },
+      "PDI-2011 Presión de descarga psi": { "valor": 0, "normal": "180 – 240", "serie": [214, 212, 215, 211, 210, 208, 205, 201, 198, 194, 160, 0] },
+      "VI-2011 Vibración global mm/s": { "valor": 0, "normal": "< 3,9", "alarma_alta": 3.9, "serie": [2.2, 2.1, 2.2, 2.3, 2.2, 2.1, 2.2, 2.2, 2.3, 2.2, 2.4, 0] },
+      "LSH-2013 Fuga del sello": { "valor": "sin fuga", "discreta": true },
+      "LT-2012 Nivel del tanque de agua %": { "valor": 89.6, "normal": "> 15", "alarma_baja": 15, "serie": [77.8, 77.1, 78.4, 76.9, 77.6, 77.2, 78.3, 77.9, 76.8, 77.4, 78.7, 89.6] }
+    },
+    "historia": "9 fallas en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 4.593 bbl por falla · sello mecánico 5 · rodamientos 3 · 10 eventos con pozos cerrados · 38.838 bbl",
+    "paradas": [["2 de oct, 03:52", "sigue · 10,1 h", "sin identificar", 573], ["22 de sept, 10:05", "16,6 h", "Rodamientos · por señal", 1041], ["19 de ago, 18:19", "18,2 h", "Mantenimiento preventivo programado", 1523], ["9 de ago, 21:14", "41,0 h", "Sello mecánico · por señal", 3806], ["27 de jul, 19:10", "2,9 d", "Sello mecánico · por señal", 7453]],
+    "modo_de_falla": "Lubricación de cojinete",
+    "repuestos": ["Kit de sello mecánico · 0 en bodega (mín. 1) · llega 1 el 9 de oct", "Juego de rodamientos · 2 en bodega (mín. 1)", "■3 Impulsor y anillos de desgaste · 0 en bodega (mín. 1) · pedirlo: 45 días"],
+    "sap": "equipo 10759915 · CO-CEI-BAT1-AGU-P-201B · sin aviso ni orden abiertos · parado, SAP no lo sabe",
+    "falta_en_el_motor": "rango del instrumento y umbral de disparo (X2 §7, pedido 4): la escala de los indicadores se dibuja sin rótulos de extremo y sin disparo"
+  }
+}

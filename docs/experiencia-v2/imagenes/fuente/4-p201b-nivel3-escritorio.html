@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>P-201B · nivel 3 · escritorio</title>
+<link rel="stylesheet" href="sistema.css">
+<style>
+.principal{padding:20px 28px 20px;display:flex;flex-direction:column;gap:14px}
+.vecinos{display:inline-flex;align-items:center;gap:10px;margin-left:14px;font:500 14px Air;color:var(--tinta2)}
+.vecinos span{display:inline-flex;align-items:center;gap:2px;padding:3px 10px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--linea)}
+.cabeza{padding:18px 26px;display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center}
+.cabeza .heroe{font-size:54px}
+.cabeza .heroe small{font-size:20px}
+.cabeza .frase{font-size:19px;margin-top:4px}
+.cabeza .der{display:flex;flex-direction:column;gap:10px;align-items:stretch;max-width:430px}
+.cabeza .bloqueo{font-size:15px;padding:10px 14px}
+.cabeza .bloqueo small{font-size:14px}
+.tres{display:grid;grid-template-columns:528px 400px 1fr;gap:16px;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.t{padding:16px 20px}
+.t h3{margin:0;font:600 16px Air;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.t h3 span{font:400 13px Air;color:var(--tinta2)}
+.senal{display:grid;grid-template-columns:138px 156px 1fr;gap:4px 12px;align-items:center;padding:7px 0;border-top:1px solid var(--linea2)}
+.senal .n{font:500 14px/1.25 Air}
+.senal .n small{display:block;font:500 12px AirC;letter-spacing:.03em;color:var(--tinta2)}
+.senal .val{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.senal .val b{font:700 16px Air;min-width:72px;text-align:right;color:var(--tinta2);white-space:nowrap}
+.senal .val b small{font:400 12px Air;color:var(--tinta3)}
+.senal .lim{grid-column:2;font:400 12px Air;color:var(--tinta3);margin-top:-4px}
+.nota{font:400 13px/1.45 Air;color:var(--tinta2);margin-top:6px}
+.dato3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.dato3 div{font:400 13px Air;color:var(--tinta2)}
+.dato3 b{display:block;font:700 18px Air;color:var(--tinta)}
+.orden{font:400 14px/1.5 Air;color:var(--tinta2);margin-top:10px;padding-top:10px;border-top:1px solid var(--linea2)}
+.orden b{color:var(--tinta);font-weight:600}
+.hist{font:400 14px/1.45 Air;color:var(--tinta2)}
+.hist b{color:var(--tinta);font-weight:600}
+.parada{display:grid;grid-template-columns:96px 1fr auto;gap:8px;font:400 13px Air;color:var(--tinta2);padding:5px 0;border-top:1px solid var(--linea2)}
+.parada b{color:var(--tinta);font-weight:600}
+.rep{display:flex;gap:6px;align-items:baseline;font:400 13px/1.4 Air;color:var(--tinta2);padding:3px 0}
+.rep b{color:var(--tinta);font-weight:600}
+</style></head>
+<body>
+<div class="app plegado">
+  <aside class="riel" aria-label="Navegación">
+    <div class="iso"><img src="../../../../public/brand/logo_256.png" alt="trim"></div>
+    <div class="campo" title="La Ceiba"><span data-mk="p1" data-t="14"></span>LC</div>
+    <nav>
+      <div class="puerta"><span data-ic="hoy"></span>Hoy<span class="insignia">2</span></div>
+      <div class="puerta"><span data-ic="planta"></span>La planta viva</div>
+      <div class="puerta activa"><span data-ic="equipos"></span>Equipos</div>
+      <div class="puerta"><span data-ic="resultados"></span>Resultados</div>
+    </nav>
+    <div class="pie">
+      <div class="ayuda"><span data-ic="ayuda" data-t="20"></span></div>
+      <div class="persona"><span class="avatar">EM</span><span style="color:var(--marca-tenue);display:flex" data-ic="desplegar" data-t="20"></span></div>
+    </div>
+  </aside>
+
+  <main class="principal">
+    <header class="cabecera">
+      <div>
+        <div class="migas">La Ceiba <span data-ic="derecha" data-t="14"></span> Agua <span data-ic="derecha" data-t="14"></span> <b>P-201B</b>
+          <span class="vecinos"><span><span data-ic="izquierda" data-t="14"></span>P-201A</span><span>P-201C<span data-ic="derecha" data-t="14"></span></span></span></div>
+        <h1 class="titulo">P-201B <small>bomba multietapa de transferencia de agua · tratamiento de agua · criticidad 5 de 5</small></h1>
+      </div>
+      <div class="franja" aria-label="Condiciones de La Ceiba">
+        <span class="cuenta"><span data-mk="p1"></span><b>2</b> alarmas</span>
+        <span class="cuenta"><span data-mk="p2"></span><b>2</b> en atención</span>
+        <span class="cuenta"><span data-mk="p3"></span><b>1</b> aviso</span>
+        <span class="cuenta cero"><span data-mk="sincom"></span><b>0</b> sin comunicación</span>
+      </div>
+    </header>
+
+    <section class="tarjeta cabeza">
+      <div>
+        <div class="previo"><span data-mk="p1"></span>Alarma · parada desde hoy, 03:52 · hace 10,1 h</div>
+        <div class="heroe">1.665<small>barriles por día</small></div>
+        <p class="frase">se dejan de producir: cerró LC-07 y LC-16.</p>
+      </div>
+      <div></div>
+      <div class="der">
+        <div class="bloqueo"><span data-mk="bloqueo" data-t="20"></span><span>No arrancar hasta identificar qué se dañó<small>Si arranca antes, queda como no conformidad.</small></span></div>
+        <div class="acciones" style="justify-content:flex-end"><span class="boton">Crear aviso en SAP</span><span class="boton principal">Diga qué se dañó</span></div>
+      </div>
+    </section>
+
+    <div class="tres">
+      <section class="tarjeta t">
+        <h3>Sus señales <span>tendencia de 12 días · parada: en gris y sin marca</span></h3>
+        <div id="senales" style="margin-top:8px"></div>
+        <p class="nota">La banda gris es lo normal; la raya oscura, el límite de alarma. La escala de cada señal es fija. Falta el disparo de cada protección: el sistema todavía no lo trae.</p>
+      </section>
+
+      <div class="col">
+        <section class="tarjeta t">
+          <h3>En su tren de agua <span>discontinuo: sin instrumento</span></h3>
+          <svg id="tren" width="360" height="242" viewBox="0 0 360 242" style="display:block;margin-top:10px" role="img"
+            aria-label="El tanque de agua al 89,6 por ciento alimenta tres bombas en paralelo: P-201B parada, P-201A y P-201C sin instrumento. Succión 18,2 psi; descarga y caudal en cero."></svg>
+        </section>
+        <section class="tarjeta t" style="flex:1">
+          <h3>Mientras esté parada</h3>
+          <div class="dato3"><div>Entra<b>174.033</b>bbl/d de agua</div><div>Caben<b>178.500</b>P-201A + P-201C</div><div>Tanque<b>89,6 %</b>alto-alto 90 %</div></div>
+          <div class="nota" style="font-size:14px;margin-top:10px">El nivel no sube: <span class="nb">P-201A</span> y <span class="nb">P-201C</span> toman lo que entra.</div>
+          <div class="orden"><b>Si para otra bomba ahora</b>, cierre primero los más acuatosos: LC-02 · LC-10 · LC-01 · LC-17 · LC-14 · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 %. Dejan de producirse <b>3.059 bbl/d</b> después de 2 min de colchón (parejo, 4.577).</div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="tarjeta t">
+          <h3>Los 12 días antes de parar</h3>
+          <div class="sub" style="margin-top:8px;font-weight:600;color:var(--tinta)">Temperatura de cojinete · °C</div>
+          <svg id="g1" width="300" height="72" viewBox="0 0 300 72" style="display:block"></svg>
+          <div class="sub" style="margin-top:6px;font-weight:600;color:var(--tinta)">Corriente del motor · A</div>
+          <svg id="g2" width="300" height="72" viewBox="0 0 300 72" style="display:block"></svg>
+          <p class="nota">Modo de falla registrado: lubricación de cojinete. Una señal apunta, no prueba: la causa la confirma quien abre la bomba.</p>
+        </section>
+        <section class="tarjeta t" style="flex:1">
+          <h3>Su historia <span>12 meses</span></h3>
+          <div class="hist" style="margin-top:6px"><b>9 fallas</b>, una cada 41 d, 40,0 h fuera cada vez. Le ha costado <b>4.593 bbl</b> por falla. Sello mecánico 5 · rodamientos 3.</div>
+          <div style="margin-top:6px">
+            <div class="parada"><span>22 de sept</span><span>rodamientos</span><b>1.041 bbl</b></div>
+            <div class="parada"><span>9 de ago</span><span>sello mecánico</span><b>3.806 bbl</b></div>
+          </div>
+          <div style="margin-top:6px">
+            <div class="rep"><b>Kit de sello</b> 0 en bodega · llega 1 el 9 de oct</div>
+            <div class="rep"><span data-mk="p3" data-t="14"></span>Aviso · <b>impulsor y anillos</b> 0 en bodega · pedirlo: 45 días</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="marcas.js"></script>
+<script src="tuberia.js"></script>
+<script src="indicadores.js"></script>
+<script>
+pintar()
+// las 8 señales de P-201B (equipos.ts y limites.ts del demo), en lecturas diarias del 21 de sept al 2 de oct
+const S = [
+  ['Presión de succión', 'PI-2010', 18.2, 'psi', [0, 30], [10, null], 8, [12.1, 12.0, 12.2, 12.1, 11.9, 12.0, 12.1, 11.8, 11.9, 12.0, 13.4, 18.2], 'normal > 10 · alarma 8', '18,2'],
+  ['Caudal', 'FI-2011', 0, 'bbl/d', [0, 100000], [66800, 89250], null, [74220, 74190, 74250, 74200, 74180, 74230, 74210, 74190, 74200, 74160, 63070, 0], 'normal 66.800 – 89.250', '0'],
+  ['Corriente del motor', 'II-2011', 0, 'A', [0, 500], [320, 445], null, [398, 402, 408, 405, 412, 419, 425, 432, 436, 429, 378, 0], 'normal 320 – 445', '0'],
+  ['Presión de descarga', 'PDI-2011', 0, 'psi', [0, 300], [180, 240], null, [214, 212, 215, 211, 210, 208, 205, 201, 198, 194, 160, 0], 'normal 180 – 240', '0'],
+  ['Temperatura de cojinete', 'TI-2011', 41, '°C', [0, 100], [null, 85], 85, [38, 39, 39, 40, 40, 41, 42, 43, 44, 45, 43, 41], 'normal < 85 · alarma 85', '41'],
+  ['Vibración global', 'VI-2011', 0, 'mm/s', [0, 6], [null, 3.9], 3.9, [2.2, 2.1, 2.2, 2.3, 2.2, 2.1, 2.2, 2.2, 2.3, 2.2, 2.4, 0], 'normal < 3,9 · alarma 3,9', '0,0'],
+  ['Nivel del tanque', 'LT-2012', 89.6, '%', [0, 100], [15, null], 15, [77.8, 77.1, 78.4, 76.9, 77.6, 77.2, 78.3, 77.9, 76.8, 77.4, 78.7, 89.6], 'normal > 15 · alarma 15', '89,6'],
+]
+const cont = document.getElementById('senales')
+for (const [nom, tag, v, u, esc, banda, alarma, serie, lim, txt] of S) {
+  const f = document.createElement('div'); f.className = 'senal'
+  f.innerHTML = `<span class="n">${nom}<small>${tag}</small></span><svg width="156" height="32" viewBox="0 0 156 32"></svg>
+    <span class="val"><svg width="80" height="32" viewBox="0 0 80 32"></svg><b>${txt} <small>${u}</small></b></span><span class="lim">${lim}</span>`
+  cont.appendChild(f)
+  const [a, m] = f.querySelectorAll('svg')
+  analogico(a, { ancho: 156, escala: esc, banda, alarma, valor: v, parada: true })
+  minitendencia(m, { ancho: 80, alto: 32, serie, banda, escala: [Math.min(esc[0], ...serie), Math.max(esc[1] * .0 + Math.max(...serie, banda[1] ?? 0) * 1.08, 1)] })
+}
+const d = document.createElement('div'); d.className = 'senal'
+d.innerHTML = '<span class="n">Fuga del sello<small>LSH-2013</small></span><span class="sub">interruptor: no lleva gráfica</span><span class="val"><b style="min-width:auto">sin fuga</b></span>'
+cont.appendChild(d)
+trenAgua(document.getElementById('tren'))
+tendencia(document.getElementById('g1'), { ancho: 300, alto: 72, serie: S[4][7], banda: [null, 85], escala: [0, 100], alarma: 85 })
+tendencia(document.getElementById('g2'), { ancho: 300, alto: 72, serie: S[2][7], banda: [320, 445], escala: [0, 500] })
+</script>
+</body></html>

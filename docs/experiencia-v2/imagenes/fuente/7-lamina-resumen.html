@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>La mezcla · lámina resumen</title>
+<link rel="stylesheet" href="sistema.css">
+<style>
+body{background:#e4e1da}
+.hoja{padding:34px 40px 30px;display:flex;flex-direction:column;gap:22px}
+.hoja header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.hoja h1{margin:0;font:700 30px Air;color:#15171a;letter-spacing:-.01em}
+.hoja header p{margin:4px 0 0;font:400 16px Air;color:#464b52;max-width:900px}
+.marcas{display:flex;gap:16px;font:400 14px Air;color:#464b52;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.marcas span{display:inline-flex;align-items:center;gap:6px}
+.fila{display:flex;gap:28px;justify-content:space-between;align-items:flex-start}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figure img{display:block;border-radius:14px;box-shadow:0 1px 2px rgb(0 0 0 / .12),0 8px 22px rgb(0 0 0 / .12);background:#fff}
+figcaption{font:600 15px Air;color:#15171a}
+figcaption small{font:400 14px Air;color:#464b52;margin-left:6px}
+</style></head>
+<body>
+<div class="hoja">
+  <header>
+    <div>
+      <h1>TRIM · la mezcla: el diseño de B, la tubería de C y los gráficos de A</h1>
+      <p>Datos del demo, La Ceiba, 2 de octubre a las 14:00. El panel azul va al costado; en el teléfono se abre con el menú. Lo normal en gris; el color solo marca lo que pide algo, siempre con su forma y su palabra.</p>
+    </div>
+    <div class="marcas">
+      <span><span data-mk="interlock"></span>interlock</span>
+      <span><span data-mk="p1"></span>alarma</span>
+      <span><span data-mk="p2"></span>atención</span>
+      <span><span data-mk="p3"></span>aviso</span>
+      <span><span data-mk="sincom"></span>sin comunicación</span>
+      <span><span data-mk="bloqueo"></span>no arrancar</span>
+    </div>
+  </header>
+  <div class="fila">
+    <figure><img src="../1-planta-viva-escritorio-claro.png" width="748" height="467" alt="La planta viva, escritorio, tema claro"><figcaption>1 · La planta viva<small>gerente · escritorio</small></figcaption></figure>
+    <figure><img src="../6-planta-viva-escritorio-oscuro.png" width="748" height="467" alt="La planta viva, escritorio, tema oscuro"><figcaption>6 · La planta viva, tema oscuro<small>gris muy oscuro, nunca negro</small></figcaption></figure>
+  </div>
+  <div class="fila">
+    <figure><img src="../3a-hoy-supervisor-escritorio.png" width="748" height="467" alt="Hoy del supervisor, escritorio"><figcaption>3 · «Hoy» del supervisor<small>escritorio</small></figcaption></figure>
+    <figure><img src="../4-p201b-nivel3-escritorio.png" width="748" height="467" alt="P-201B, nivel técnico"><figcaption>4 · P-201B, nivel técnico<small>señales, indicadores y tendencia · panel plegado</small></figcaption></figure>
+  </div>
+  <div class="fila">
+    <figure><img src="../2-planta-viva-telefono.png" width="590" height="434" alt="La planta viva en el teléfono"><figcaption>2 · La planta viva<small>teléfono, con el panel abierto</small></figcaption></figure>
+    <figure><img src="../3b-hoy-supervisor-telefono.png" width="410" height="434" alt="Hoy del supervisor en el teléfono"><figcaption>3 · «Hoy» del supervisor<small>teléfono</small></figcaption></figure>
+    <figure><img src="../5-operador-por-contestar-telefono.png" width="410" height="434" alt="El operador, por contestar"><figcaption>5 · El operador, «Por contestar»<small>una pregunta a la vez</small></figcaption></figure>
+  </div>
+</div>
+<script src="marcas.js"></script>
+<script>pintar()</script>
+</body></html>

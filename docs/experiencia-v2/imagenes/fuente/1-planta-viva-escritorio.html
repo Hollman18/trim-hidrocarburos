@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>La planta viva · La Ceiba · escritorio</title>
+<link rel="stylesheet" href="sistema.css">
+<style>
+.principal{padding:22px 32px 22px;display:flex;flex-direction:column;gap:16px}
+.cuerpo{display:grid;grid-template-columns:1fr 352px;gap:20px;min-height:0;flex:1}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.heroe-tarjeta{padding:24px 28px 18px}
+.heroe{font-size:68px}
+.explica{max-width:660px;font-size:17px;margin-top:6px}
+.frase{margin-top:8px}
+.tuberia-cab{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--linea2)}
+.tuberia-cab .rotulo{color:var(--tinta)}
+.dibujo{display:block;margin-top:12px}
+.filas{padding:6px 28px}
+.fila{display:grid;grid-template-columns:1fr 260px 20px;align-items:center;gap:20px;padding:13px 0;border-top:1px solid var(--linea2)}
+.fila:first-child{border-top:0}
+.fila .q{font:500 15px Air;color:var(--tinta2);display:flex;align-items:center;gap:7px}
+.fila .v{display:flex;align-items:baseline;gap:8px;margin-top:1px}
+.fila .v b{font:700 24px Air;letter-spacing:-.01em}
+.fila .v span{font:400 15px Air;color:var(--tinta2)}
+.chev{color:var(--tinta3);display:flex}
+.mini{padding:16px 22px}
+.mini .cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mini .cab h3{margin:0;font:600 15px Air;color:var(--tinta)}
+.fases{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.fase{border-top:3px solid var(--pista);padding-top:7px;font:400 14px Air;color:var(--tinta2)}
+.fase b{display:block;font:700 18px Air;color:var(--tinta)}
+.fase.activa{border-top-color:var(--primario)}
+.equipo{display:grid;grid-template-columns:18px 1fr auto;gap:2px 8px;align-items:center;padding:6px 0;border-top:1px solid var(--linea2)}
+.equipo:first-of-type{border-top:0}
+.equipo .id{font:700 15px AirC;letter-spacing:.02em}
+.equipo .que{font:400 13px Air;color:var(--tinta2)}
+.equipo .n{font:700 15px Air;text-align:right}
+.equipo .n small{display:block;font:400 13px Air;color:var(--tinta2)}
+.equipo .barra{grid-column:2 / 4;height:5px;border-radius:999px;background:var(--pista);position:relative}
+.equipo .barra i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--dato1)}
+.ley{display:flex;gap:12px;flex-wrap:wrap;font:400 13px Air;color:var(--tinta2);margin-top:6px}
+.ley span{display:inline-flex;align-items:center;gap:5px}
+.ley i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.desde{margin-top:14px;padding-top:12px;border-top:1px solid var(--linea2);display:flex;flex-direction:column;gap:4px}
+.desde .q{font:600 15px Air;color:var(--tinta);margin-bottom:2px}
+.desde .d{display:grid;grid-template-columns:96px auto 1fr;gap:8px;align-items:baseline;font:400 14px Air;color:var(--tinta2)}
+.desde .d b{font:700 17px Air;color:var(--tinta)}
+</style></head>
+<body>
+<div class="app">
+  <aside class="riel" aria-label="Navegación">
+    <img class="logo" src="../../../../public/brand/logo_trim_light.png" alt="trim">
+    <div class="campo"><span data-mk="p1" data-t="16"></span>La Ceiba<span class="chev" data-ic="abajo" data-t="18"></span></div>
+    <nav>
+      <div class="puerta activa"><span data-ic="planta"></span>La planta viva</div>
+      <div class="puerta"><span data-ic="equipos"></span>Equipos</div>
+      <div class="puerta"><span data-ic="resultados"></span>Resultados</div>
+    </nav>
+    <div class="pie">
+      <div class="ayuda"><span data-ic="ayuda" data-t="20"></span>¿Cómo se lee?</div>
+      <div class="persona"><span class="avatar">AV</span><span><b>Andrés Vélez</b><small>Gerente de activo</small></span><span class="plegar" data-ic="plegar" data-t="20" title="Plegar el panel"></span></div>
+    </div>
+  </aside>
+
+  <main class="principal">
+    <header class="cabecera">
+      <div>
+        <div class="migas">Todos mis campos <span data-ic="derecha" data-t="14"></span> <b>La Ceiba</b></div>
+        <h1 class="titulo">La planta viva <small>hoy, 2 de oct · datos de las 14:00</small></h1>
+      </div>
+      <div class="franja" aria-label="Condiciones de La Ceiba">
+        <span class="cuenta"><span data-mk="p1"></span><b>2</b> alarmas</span>
+        <span class="cuenta"><span data-mk="p2"></span><b>2</b> en atención</span>
+        <span class="cuenta"><span data-mk="p3"></span><b>1</b> aviso</span>
+        <span class="cuenta cero"><span data-mk="sincom"></span><b>0</b> sin comunicación</span>
+      </div>
+    </header>
+
+    <div class="cuerpo">
+      <div class="col">
+        <section class="tarjeta heroe-tarjeta">
+          <div class="previo">Ahora mismo</div>
+          <div class="heroe">1.966<small>barriles por día</small></div>
+          <p class="frase">se dejan de producir en La Ceiba.</p>
+          <p class="explica">La bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.</p>
+          <div class="acciones" style="margin-top:14px">
+            <span class="boton principal">Ver qué se está haciendo</span>
+            <span class="boton">Compartir el informe</span>
+          </div>
+          <div class="tuberia-cab">
+            <h3 class="rotulo">Dónde se trabó</h3>
+            <div class="momentos" aria-label="Momento">
+              <span class="momento">Antes <small>lo que viene</small></span>
+              <span class="momento activo">Durante <small>ahora</small></span>
+              <span class="momento">Después <small>lo que pasó</small></span>
+            </div>
+          </div>
+          <svg id="dibujo" class="dibujo" width="708" height="228" viewBox="0 0 708 228" role="group"
+            aria-label="Se dejan de producir 1.966 barriles por día: 1.665 en la planta, porque la bomba de agua P-201B está parada, y 301 de LC-21, sin identificar. Limitan los pozos."></svg>
+        </section>
+
+        <section class="tarjeta filas">
+          <div class="fila">
+            <div><div class="q">Este mes</div><div class="v"><b>1.046</b><span>barriles diferidos · 50 mil USD</span></div></div>
+            <div class="sub">calculado, entre 889 y 1.203<br>P-201B, más de la mitad · 355 sin causa</div><span class="chev" data-ic="derecha" data-t="20"></span>
+          </div>
+          <div class="fila">
+            <div><div class="q"><span data-mk="p3" data-t="15"></span>Aviso · producción por día, bajo la meta</div><div class="v"><b>10.700</b><span>de 10.900 bbl/d</span></div></div>
+            <div class="bala"><i style="width:78.5%"></i><b style="left:80%"></b></div><span class="chev" data-ic="derecha" data-t="20"></span>
+          </div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="tarjeta mini">
+          <div class="cab"><h3>Lo que todavía se puede mover</h3><span class="calidad">simulado</span></div>
+          <div class="v" style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><b style="font:700 26px Air">2.133</b><span class="sub">bbl en el ciclo</span></div>
+          <div class="fases">
+            <div class="fase">Antes<b>0</b></div>
+            <div class="fase activa">Durante<b>2.102</b></div>
+            <div class="fase">Después<b>30</b></div>
+          </div>
+          <div style="margin-top:12px"><span class="enlace">Ver el plan <span data-ic="derecha" data-t="14"></span></span></div>
+        </section>
+
+        <section class="tarjeta mini">
+          <div class="cab"><h3>Diferido por equipo</h3><span class="sub">octubre · calculado</span></div>
+          <div style="margin-top:6px">
+            <div class="equipo"><span data-mk="p1" data-t="15"></span><span><span class="id">P-201B</span> <span class="que">bomba de agua · alarma</span></span><span class="n">573<small>55 %</small></span><span class="barra"><i style="width:55%"></i></span></div>
+            <div class="equipo"><span data-mk="p2" data-t="15"></span><span><span class="id">LC-21</span> <span class="que">sin identificar · atención</span></span><span class="n">247<small>24 %</small></span><span class="barra"><i style="width:24%"></i></span></div>
+            <div class="equipo"><span></span><span><span class="id">SE-2</span> <span class="que">energía eléctrica</span></span><span class="n">118<small>11 %</small></span><span class="barra"><i style="width:11%"></i></span></div>
+            <div class="equipo"><span></span><span><span class="id">LC-08</span> <span class="que">sin identificar</span></span><span class="n">109<small>10 %</small></span><span class="barra"><i style="width:10%"></i></span></div>
+          </div>
+        </section>
+
+        <section class="tarjeta mini" style="flex:1">
+          <div class="cab"><h3>Diferido por día, mes a mes</h3><span class="sub">octubre: <b style="color:var(--tinta)">661</b> bbl/d</span></div>
+          <svg id="barras" width="308" height="98" viewBox="0 0 308 98" style="margin-top:8px;display:block" role="img"
+            aria-label="Diferido por día de octubre de 2025 a octubre de 2026 contra el máximo firmado de 800 bbl/d. Solo febrero lo pasó, con 834. Octubre va en 661."></svg>
+          <div class="ley">
+            <span><i style="background:var(--dato1)"></i>alto impacto</span>
+            <span><i style="background:var(--dato3)"></i>lo demás</span>
+            <span><svg width="16" height="6"><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" stroke-width="1.6" stroke-dasharray="4 2.5"/></svg>máximo 800</span>
+          </div>
+          <div class="desde">
+            <div class="q">¿Está bajando? Desde que entró TRIM</div>
+            <div class="d"><span>en la planta</span><b>268 → 51</b><span>bbl/d · baja 81 %</span></div>
+            <div class="d"><span>en los pozos</span><b>122 → 215</b><span>bbl/d · sube 76 %</span></div>
+            <div class="sub">1 de sept, frente a jun a ago · muestra corta</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="marcas.js"></script>
+<script src="tuberia.js"></script>
+<script>
+pintar()
+tuberiaCampo(document.getElementById("dibujo"), { ancho: 708 })
+barrasMes(document.getElementById('barras'), { ancho: 308, alto: 98 })
+</script>
+</body></html>

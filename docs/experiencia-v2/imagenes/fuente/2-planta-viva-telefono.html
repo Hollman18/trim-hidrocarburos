@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>La planta viva · teléfono</title>
+<link rel="stylesheet" href="sistema.css">
+<style>
+.lamina{padding:30px 48px 26px}
+.tel-banda .menu{display:flex;color:#fff;position:relative}
+.tel-banda .izq{display:flex;align-items:center;gap:12px}
+.cab-tel{display:flex;align-items:baseline;justify-content:space-between}
+.cab-tel h2{margin:0;font:700 21px Air;letter-spacing:-.01em}
+.cab-tel span{font:400 13px Air;color:var(--tinta2)}
+.franja-tel{display:flex;gap:6px;flex-wrap:nowrap}
+.franja-tel .cuenta{height:30px;padding:0 9px 0 8px;font-size:13px;gap:5px}
+.t-heroe{border-radius:18px;padding:16px 18px}
+.t-heroe .previo{font-size:14px}
+.t-heroe .heroe{font-size:52px;gap:10px;margin-top:2px}
+.t-heroe .heroe small{font-size:18px}
+.t-heroe .frase{font-size:19px;margin-top:6px}
+.t-heroe .explica{font-size:16px;margin-top:6px}
+.mom-tel{display:grid;grid-template-columns:repeat(3,1fr);padding:4px;border-radius:999px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--linea)}
+.mom-tel span{text-align:center;padding:8px 0;border-radius:999px;font:600 15px Air}
+.mom-tel span.activo{background:var(--primario);color:var(--primario-sobre)}
+.campos{border-radius:18px;padding:4px 16px}
+.cfila{padding:9px 0;border-top:1px solid var(--linea2);display:grid;grid-template-columns:1fr auto 16px;gap:2px 8px;align-items:center}
+.cfila:first-child{border-top:0}
+.cfila .n{font:600 16px Air;grid-column:1;grid-row:1}
+.cfila .v{font:700 16px Air;text-align:right;grid-column:2;grid-row:1;white-space:nowrap}
+.cfila .v small{font:400 13px Air;color:var(--tinta2)}
+.cfila svg.mini{grid-column:1 / 4;display:block;margin-top:4px}
+.cfila .s{grid-column:1 / 4;font:400 13px Air;color:var(--tinta2);display:flex;align-items:center;gap:5px}
+.cfila .chev{color:var(--tinta3);display:flex;grid-column:3;grid-row:1}
+.migas-tel{font:500 14px Air;color:var(--tinta2);display:flex;align-items:center;gap:2px}
+.velo{position:absolute;inset:0;background:rgb(10 12 16 / .42)}
+.cajon{position:absolute;top:0;bottom:0;left:0;width:328px;background:var(--marca);color:#fff;display:flex;flex-direction:column;padding:22px 16px 28px;box-shadow:var(--sombra-flota)}
+.cajon .logo{height:18px;margin:4px 8px 22px;align-self:flex-start}
+.cajon .cerrar{position:absolute;top:20px;right:16px;color:var(--marca-tenue);font:400 26px/1 Air}
+.mover-tel{border:1.5px dashed var(--tinta3);border-radius:14px;padding:10px 14px;font:400 14px/1.5 Air;color:var(--tinta2)}
+.mover-tel b{color:var(--tinta)}
+</style></head>
+<body>
+<div class="lamina">
+  <div>
+    <h1>La planta viva, en el teléfono</h1>
+    <p class="nota">El mismo diseño de B. El panel azul del escritorio se abre aquí con el botón de menú, desde la izquierda; no hay barra abajo ni pestañas arriba.</p>
+  </div>
+  <div class="telefonos">
+    <div>
+      <div class="telefono" id="t1">
+        <div class="tel-banda"><div class="fila">
+          <div class="izq"><span class="menu" data-ic="menu" data-t="24"></span><img class="logo" src="../../../../public/brand/logo_trim_light.png" alt="trim"></div>
+          <span class="campo"><span data-mk="p1" data-t="14"></span>Todos mis campos<span data-ic="abajo" data-t="16"></span></span>
+          <span class="yo">AV</span>
+        </div></div>
+        <div class="tel-cuerpo">
+          <div class="cab-tel"><h2>La planta viva</h2><span>hoy, 2 de oct · 14:00</span></div>
+          <div class="franja-tel">
+            <span class="cuenta"><span data-mk="p1" data-t="14"></span><b>4</b> alarmas</span>
+            <span class="cuenta"><span data-mk="p2" data-t="14"></span><b>8</b> atención</span>
+            <span class="cuenta"><span data-mk="p3" data-t="14"></span><b>2</b> avisos</span>
+            <span class="cuenta cero"><span data-mk="sincom" data-t="14"></span><b>0</b></span>
+          </div>
+          <section class="tarjeta t-heroe">
+            <div class="previo">Ahora mismo, en sus 5 campos</div>
+            <div class="heroe">2.650<small>barriles por día</small></div>
+            <p class="frase">se dejan de producir.</p>
+            <p class="explica">Lo que más pesa: la bomba de agua P-201B, en La Ceiba. Hay 4 de 87 pozos parados.</p>
+          </section>
+          <div class="mom-tel"><span>Antes</span><span class="activo">Durante</span><span>Después</span></div>
+          <section class="tarjeta campos">
+            <div class="cfila"><span class="n">La Ceiba</span><span class="v">1.966 <small>bbl/d</small></span><span class="chev" data-ic="derecha" data-t="16"></span>
+              <svg class="mini" data-mini="1" width="320" height="24" viewBox="0 0 320 24"></svg>
+              <span class="s"><span data-mk="p1" data-t="14"></span>alarma · en la planta, P-201B (bomba de agua)</span></div>
+            <div class="cfila"><span class="n">Morichal Norte</span><span class="v">684 <small>bbl/d</small></span><span class="chev" data-ic="derecha" data-t="16"></span>
+              <svg class="mini" data-mini="0" width="320" height="24" viewBox="0 0 320 24"></svg>
+              <span class="s"><span data-mk="p1" data-t="14"></span>alarma · en los pozos, MN-41 (electrosumergible)</span></div>
+            <div class="cfila"><span class="n">Guacamayo</span><span class="v">0 <small>bbl/d</small></span><span class="chev" data-ic="derecha" data-t="16"></span></div>
+            <div class="cfila"><span class="n">El Palmar</span><span class="v">0 <small>bbl/d</small></span><span class="chev" data-ic="derecha" data-t="16"></span></div>
+            <div class="cfila"><span class="n">La Zarza</span><span class="v">0 <small>bbl/d</small></span><span class="chev" data-ic="derecha" data-t="16"></span><span class="s">campo de gas: su tubería todavía no está</span></div>
+          </section>
+          <div class="mover-tel">Lo que todavía se puede mover ahora: <b>≈ 2.102 bbl</b> <span class="calidad">simulado</span> · <span class="enlace">Ver el plan ›</span></div>
+        </div>
+      </div>
+      <div class="pie-tel">Todos mis campos<small>el inicio del gerente: una fila por campo, con su tubería en chico</small></div>
+    </div>
+
+    <div>
+      <div class="telefono">
+        <div class="tel-banda"><div class="fila">
+          <div class="izq"><span class="menu" data-ic="menu" data-t="24"></span><img class="logo" src="../../../../public/brand/logo_trim_light.png" alt="trim"></div>
+          <span class="campo"><span data-mk="p1" data-t="14"></span>La Ceiba<span data-ic="abajo" data-t="16"></span></span>
+          <span class="yo">AV</span>
+        </div></div>
+        <div class="tel-cuerpo">
+          <div class="migas-tel"><span data-ic="izquierda" data-t="16"></span>Todos mis campos</div>
+          <div class="franja-tel">
+            <span class="cuenta"><span data-mk="p1" data-t="14"></span><b>2</b> alarmas</span>
+            <span class="cuenta"><span data-mk="p2" data-t="14"></span><b>2</b> atención</span>
+            <span class="cuenta"><span data-mk="p3" data-t="14"></span><b>1</b> aviso</span>
+            <span class="cuenta cero"><span data-mk="sincom" data-t="14"></span><b>0</b></span>
+          </div>
+          <section class="tarjeta t-heroe" style="padding-bottom:14px">
+            <div class="previo">Ahora mismo</div>
+            <div class="heroe" style="font-size:48px">1.966<small>barriles por día</small></div>
+            <p class="frase">se dejan de producir en La Ceiba.</p>
+            <div class="mom-tel" style="margin-top:14px"><span>Antes</span><span class="activo">Durante</span><span>Después</span></div>
+            <svg id="pie" width="326" height="454" viewBox="0 0 326 454" style="display:block;margin-top:14px" role="group"
+              aria-label="La tubería de La Ceiba, de pie: se trabó en la planta, donde no pasan 1.665 barriles por día porque la bomba de agua P-201B está parada."></svg>
+          </section>
+        </div>
+      </div>
+      <div class="pie-tel">La Ceiba<small>la misma tubería del escritorio, de pie</small></div>
+    </div>
+
+    <div>
+      <div class="telefono" id="t3"></div>
+      <div class="pie-tel">El panel, abierto con el menú<small>las mismas puertas del escritorio, en el mismo orden</small></div>
+    </div>
+  </div>
+</div>
+<script src="marcas.js"></script>
+<script src="tuberia.js"></script>
+<script>
+IC.menu = t => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-label="Menú"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`
+// el tercer teléfono es el primero con el panel abierto encima
+const t3 = document.getElementById('t3')
+t3.innerHTML = document.getElementById('t1').innerHTML + `
+  <div class="velo"></div>
+  <aside class="cajon" aria-label="Navegación">
+    <img class="logo" src="../../../../public/brand/logo_trim_light.png" alt="trim">
+    <span class="cerrar" aria-label="Cerrar">×</span>
+    <div class="riel" style="background:none;padding:0;flex:1">
+      <div class="campo"><span data-mk="p1" data-t="16"></span>Todos mis campos<span class="chev" data-ic="abajo" data-t="18"></span></div>
+      <nav>
+        <div class="puerta activa"><span data-ic="planta"></span>La planta viva</div>
+        <div class="puerta"><span data-ic="equipos"></span>Equipos</div>
+        <div class="puerta"><span data-ic="resultados"></span>Resultados</div>
+      </nav>
+      <div class="pie">
+        <div class="ayuda"><span data-ic="ayuda" data-t="20"></span>¿Cómo se lee?</div>
+        <div class="persona"><span class="avatar">AV</span><span><b>Andrés Vélez</b><small>Gerente de activo</small></span></div>
+      </div>
+    </div>
+  </aside>`
+pintar()
+for (const s of document.querySelectorAll('svg[data-mini]')) miniTuberia(s, { ancho: 320, donde: +s.dataset.mini })
+tuberiaDePie(document.getElementById('pie'), { ancho: 326 })
+</script>
+</body></html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Por contestar · operador · teléfono</title>
+<link rel="stylesheet" href="sistema.css">
+<style>
+.lamina{padding:30px 48px 26px}
+.tel-banda{padding:18px 18px 22px}
+.tel-banda .izq{display:flex;align-items:center;gap:22px}
+.tel-banda .menu{display:flex;position:relative;color:#fff}
+.tel-banda .menu i{position:absolute;top:-9px;right:-13px;background:#fff;color:#15171a;font:700 12px/20px Air;font-style:normal;min-width:20px;height:20px;border-radius:999px;text-align:center;padding:0 5px}
+.tel-banda .paso{font:500 15px Air;color:var(--marca-tenue)}
+.tel-banda .ctx{font:500 15px/1.35 Air;color:var(--marca-tenue);margin-top:18px}
+.tel-banda h2{margin:6px 0 0;font:700 27px/1.2 Air;letter-spacing:-.01em}
+.franja-tel{display:flex;gap:6px}
+.franja-tel .cuenta{height:30px;padding:0 9px 0 8px;font-size:13px;gap:5px}
+.bloqueo{font-size:18px;padding:12px 14px}
+.bloqueo small{font-size:15px}
+.donde{display:flex;flex-direction:column;gap:2px}
+.donde .sub{font-size:14px}
+.pista{font:500 15px Air;color:var(--tinta2);margin-top:2px}
+.op{background:var(--panel);border-radius:18px;padding:13px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:64px;box-shadow:inset 0 0 0 1.5px var(--linea)}
+.op b{display:block;font:600 18px/1.25 Air}
+.op small{display:block;font:400 15px Air;color:var(--tinta2);margin-top:2px}
+.op .r{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--tinta3);flex-shrink:0}
+.op .chev{color:var(--tinta3);display:flex}
+.extra{display:flex;align-items:center;gap:8px;font:600 15px Air;color:var(--tinta)}
+.pie-op{font:400 14px Air;color:var(--tinta2);text-align:center}
+.sig{display:flex;justify-content:space-between;align-items:center;font:600 15px Air;padding:0 2px}
+.aviso-hecho{position:absolute;left:16px;right:16px;bottom:24px;background:#15171a;color:#fff;border-radius:16px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:500 15px/1.3 Air;box-shadow:var(--sombra-flota)}
+.aviso-hecho b{font:700 15px Air;color:#c9d1f0;white-space:nowrap}
+</style></head>
+<body>
+<div class="lamina">
+  <div>
+    <h1>El operador en el teléfono: «Por contestar»</h1>
+    <p class="nota">Una pregunta a la vez. Contestar es un toque; si se equivoca, «Deshacer». Lo técnico lo confirma su supervisor.</p>
+  </div>
+  <div class="telefonos">
+    <div>
+      <div class="telefono">
+        <div class="tel-banda">
+          <div class="fila">
+            <div class="izq"><span class="menu" data-ic="menu" data-t="24"><i>4</i></span><img class="logo" src="../../../../public/brand/logo_trim_light.png" alt="trim"></div>
+            <span class="paso">Pregunta 1 de 4</span>
+          </div>
+          <div class="ctx">P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h</div>
+          <h2>¿Qué parte se dañó?</h2>
+        </div>
+        <div class="tel-cuerpo">
+          <div class="franja-tel">
+            <span class="cuenta"><span data-mk="p1" data-t="14"></span><b>2</b> alarmas</span>
+            <span class="cuenta"><span data-mk="p2" data-t="14"></span><b>2</b> atención</span>
+            <span class="cuenta"><span data-mk="p3" data-t="14"></span><b>1</b> aviso</span>
+            <span class="cuenta cero"><span data-mk="sincom" data-t="14"></span><b>0</b></span>
+          </div>
+          <div class="bloqueo"><span data-mk="bloqueo" data-t="22"></span><span>No la arranque hasta decir qué se dañó<small>Si arranca antes, queda como no conformidad.</small></span></div>
+          <div class="donde">
+            <svg class="mini" data-mini="1" width="358" height="24" viewBox="0 0 358 24"></svg>
+            <div style="display:grid;grid-template-columns:34% 37% 1fr;font:400 13px Air;color:var(--tinta2)"><span>pozos</span><span style="color:var(--tinta);font-weight:700;display:flex;align-items:center;gap:4px"><span data-mk="p1" data-t="13"></span>planta · agua</span><span>salida</span></div>
+          </div>
+          <div class="pista">Lo que más le ha fallado a esta bomba:</div>
+          <div class="op"><span><b>Sello mecánico</b><small>5 de sus 8 fallas</small></span><span class="r"></span></div>
+          <div class="op"><span><b>Rodamientos y cámara de empuje</b><small>3 de sus 8 fallas</small></span><span class="r"></span></div>
+          <div class="op"><span><b>Otra parte</b><small>escoja de la lista</small></span><span class="chev" data-ic="derecha" data-t="20"></span></div>
+          <div class="op"><span><b>Todavía no sé</b><small>se la vuelven a preguntar en la próxima ronda</small></span><span class="r"></span></div>
+          <div class="extra"><span data-ic="camara" data-t="20"></span>Lo que encontró, o una foto (si quiere)</div>
+          <div class="pie-op">Un toque y queda a nombre de Jairo Peña, con la hora del sistema.</div>
+        </div>
+      </div>
+      <div class="pie-tel">La primera de 4<small>la banda dice cuál y dónde; abajo, solo las opciones</small></div>
+    </div>
+
+    <div>
+      <div class="telefono">
+        <div class="tel-banda">
+          <div class="fila">
+            <div class="izq"><span class="menu" data-ic="menu" data-t="24"><i>3</i></span><img class="logo" src="../../../../public/brand/logo_trim_light.png" alt="trim"></div>
+            <span class="paso">Pregunta 2 de 4</span>
+          </div>
+          <div class="ctx">LC-21 · pozo · paró el 1 de oct a las 18:20, hace 19,7 h</div>
+          <h2>¿Por qué paró?</h2>
+        </div>
+        <div class="tel-cuerpo">
+          <div class="franja-tel">
+            <span class="cuenta"><span data-mk="p1" data-t="14"></span><b>2</b> alarmas</span>
+            <span class="cuenta"><span data-mk="p2" data-t="14"></span><b>2</b> atención</span>
+            <span class="cuenta"><span data-mk="p3" data-t="14"></span><b>1</b> aviso</span>
+            <span class="cuenta cero"><span data-mk="sincom" data-t="14"></span><b>0</b></span>
+          </div>
+          <div class="bloqueo"><span data-mk="bloqueo" data-t="22"></span><span>No lo arranque hasta decir qué pasó</span></div>
+          <div class="donde">
+            <svg class="mini" data-mini="0" width="358" height="24" viewBox="0 0 358 24"></svg>
+            <div style="display:grid;grid-template-columns:34% 37% 1fr;font:400 13px Air;color:var(--tinta2)"><span style="color:var(--tinta);font-weight:700;display:flex;align-items:center;gap:4px"><span data-mk="p2" data-t="13"></span>pozos</span><span>planta</span><span>salida</span></div>
+          </div>
+          <div class="op"><span><b>Cierre para prueba o intervención del pozo</b></span><span class="r"></span></div>
+          <div class="op"><span><b>Fuga o daño en la línea de flujo</b></span><span class="r"></span></div>
+          <div class="op"><span><b>Orden de producción</b><small>nominación o restricción del comprador</small></span><span class="r"></span></div>
+          <div class="op"><span><b>Falla del controlador o de un instrumento del pozo</b></span><span class="r"></span></div>
+          <div class="op"><span><b>Todavía no sé</b></span><span class="r"></span></div>
+        </div>
+        <div class="aviso-hecho"><span>Registrado: sello mecánico en P-201B</span><b>Deshacer</b></div>
+      </div>
+      <div class="pie-tel">Contestó con un toque<small>queda registrada, con «Deshacer», y llega la siguiente</small></div>
+    </div>
+  </div>
+</div>
+<script src="marcas.js"></script>
+<script src="tuberia.js"></script>
+<script>
+IC.menu = t => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-label="Menú"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`
+for (const el of document.querySelectorAll('[data-ic="menu"]')) { const i = el.innerHTML; el.innerHTML = IC.menu(24) + i; el.removeAttribute('data-ic') }
+pintar()
+for (const s of document.querySelectorAll('svg[data-mini]')) miniTuberia(s, { ancho: 358, donde: +s.dataset.mini })
+</script>
+</body></html>

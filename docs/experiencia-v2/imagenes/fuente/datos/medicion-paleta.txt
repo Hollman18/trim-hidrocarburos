@@ -1,0 +1,64 @@
+
+### papel
+texto tinta #15171a: mínimo 15,35 AA
+texto tinta2 #464b52: mínimo 7,51 AA
+texto tinta3 #5b6168: mínimo 5,35 AA
+gráfico flujo (dato-1) #3a3f45: mínimo 9,08 ≥ 3:1
+gráfico pared del tubo y «lo demás» (dato-3) #7a8087: mínimo 3,41 ≥ 3:1
+gráfico rayado (tinta2) #464b52: mínimo 7,51 ≥ 3:1
+gráfico agua #7a8087: mínimo 3,41 ≥ 3:1
+estado interlock #8b1a1a: mínimo 7,94 ≥ 3:1
+estado alarma #bf4000: mínimo 4,55 ≥ 3:1
+estado atención y aviso #f9a825: mínimo 1,68 → lleva trazo #1f2328: 13,50
+estado sin comunicación #8420a3: mínimo 6,61 ≥ 3:1
+separación ΔOK×100 (normal · protan · deutan · tritan; ≥ 10 se separa a simple vista):
+  interlock – alarma: 13,81 · 13,44 · 13,96 · 12,78
+  interlock – atención y aviso: 39,50 · 42,14 · 38,46 · 34,79
+  interlock – sin comunicación: 21,24 · 22,77 · 21,02 · 11,13
+  alarma – atención y aviso: 26,29 · 28,82 · 24,57 · 23,94
+  alarma – sin comunicación: 26,20 · 25,15 · 26,74 · 16,49
+  atención y aviso – sin comunicación: 44,72 · 43,48 · 44,92 · 32,12
+  índigo de marca contra cada estado (normal/deutan): interlock 27,16/23,86 · alarma 36,11/33,88 · atención y aviso 54,38/54,70 · sin comunicación 19,85/11,02
+
+### noche
+texto tinta #f3f4f5: mínimo 11,70 AA
+texto tinta2 #c8cdd3: mínimo 8,06 AA
+texto tinta3 #a3aab2: mínimo 5,49 AA
+gráfico flujo (dato-1) #d9dde1: mínimo 9,44 ≥ 3:1
+gráfico pared del tubo y «lo demás» (dato-3) #878e96: mínimo 3,89 ≥ 3:1
+gráfico rayado (tinta2) #c8cdd3: mínimo 8,06 ≥ 3:1
+gráfico agua #878e96: mínimo 3,89 ≥ 3:1
+estado interlock #ff8080: mínimo 5,31 ≥ 3:1
+estado alarma #ffb347: mínimo 7,24 ≥ 3:1
+estado atención y aviso #fff176: mínimo 11,10 ≥ 3:1
+estado sin comunicación #c99cff: mínimo 5,94 ≥ 3:1
+separación ΔOK×100 (normal · protan · deutan · tritan; ≥ 10 se separa a simple vista):
+  interlock – alarma: 15,07 · 15,10 · 10,84 · 10,46
+  interlock – atención y aviso: 28,02 · 28,23 · 20,32 · 26,17
+  interlock – sin comunicación: 18,93 · 17,83 · 18,49 · 16,33
+  alarma – atención y aviso: 14,69 · 15,31 · 11,41 · 15,80
+  alarma – sin comunicación: 26,80 · 26,54 · 26,91 · 10,43
+  atención y aviso – sin comunicación: 33,30 · 32,20 · 31,21 · 17,40
+  índigo de marca contra cada estado (normal/deutan): interlock 47,59/46,13 · alarma 56,12/56,49 · atención y aviso 66,75/66,14 · sin comunicación 43,58/41,53
+
+### pares propios de la mezcla
+blanco sobre el índigo (riel, banda, botón): 11,93 pasa
+rótulo inactivo del riel #c9d1f0 sobre índigo: 7,87 pasa
+rótulo activo blanco sobre la capa activa #354a99: 8,11 pasa
+insignia: tinta sobre blanco: 17,96 pasa
+fila seleccionada (papel): tinta sobre #e8ebf6: 15,09 pasa
+fila seleccionada (noche): tinta sobre #1d2440: 13,83 pasa
+foco (papel): índigo sobre panel: 11,53 pasa
+foco (noche): tinta sobre panel: 13,11 pasa
+botón principal (noche): #15171a sobre #f3f4f5: 16,31 pasa
+rótulo del momento activo (papel): #c9d1f0 sobre índigo: 7,87 pasa
+rótulo del momento activo (noche): #464b52 sobre #f3f4f5: 7,98 pasa
+raya de los extremos de la banda (tinta3) sobre panel: 6,05 pasa
+equipo en marcha #ffffff contra parado #5b6168: 6,26 pasa
+equipo parado #5b6168 sobre el lienzo panel2: 5,55 pasa
+(noche) equipo en marcha #d9dde1 contra parado #0d0f11: 14,06 pasa
+barra dato-1 contra su pista #e2dfd8: 7,98 pasa
+tinta sobre el tinte de alarma #f5e2d4: 14,29 pasa
+tinta sobre el tinte amarillo #f6eed4: 15,48 pasa
+
+Fallas: 0

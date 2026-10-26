@@ -1,0 +1,162 @@
+/* X5 · Sistema de diseño de la mezcla (B que prevalece, la tubería de C, los gráficos de A).
+   Prototipo para mirar: no es código del producto. Fuente Air del repositorio.
+   Tokens medidos en datos/medicion-paleta.txt. */
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Regular.woff2);font-weight:400}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Medium.woff2);font-weight:500}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Semibold.woff2);font-weight:600}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Bold.woff2);font-weight:700}
+@font-face{font-family:AirC;src:url(../../../../public/fonts/AirCondensed-Medium.woff2);font-weight:500}
+@font-face{font-family:AirC;src:url(../../../../public/fonts/AirCondensed-Semibold.woff2);font-weight:600}
+@font-face{font-family:AirC;src:url(../../../../public/fonts/AirCondensed-Bold.woff2);font-weight:700}
+
+/* ───────────── Tokens · Papel (claro, por defecto) ───────────── */
+:root{
+  --suelo:#efede8; --superficie:#f6f5f1; --panel:#fcfbf8; --panel2:#f3f1ec; --elevado:#ffffff;
+  --linea:#dcd9d2; --linea2:#e8e5df;
+  --tinta:#15171a; --tinta2:#464b52; --tinta3:#5b6168;
+  --dato1:#3a3f45; --dato3:#7a8087; --pista:#e2dfd8; --tubo-vacio:#e9e6df; --banda:#cdccca;
+  --flujo:#7a8087; --pared:#7a8087; --rayado:#464b52; --agua:#7a8087; --roca:#dcd8cf;
+  --marca:#142d88; --marca-sobre:#ffffff; --marca-tenue:#c9d1f0; --marca-capa:rgb(255 255 255 / .14);
+  --marca-suave:#e8ebf6; --primario:#142d88; --primario-sobre:#ffffff; --foco:#142d88;
+  --interlock:#8b1a1a; --interlock-f:#f0dada;
+  --p1:#bf4000; --p1-f:#f5e2d4;
+  --p2:#f9a825; --p2-f:#f6eed4;
+  --p3:#f9a825; --p3-f:#f6eed4;
+  --sincom:#8420a3; --sincom-f:#f0e3f4;
+  --marca-num:#ffffff; --marca-trazo:#1f2328;
+  --eq-marcha:#ffffff; --eq-parado:#5b6168; --eq-trazo:#5c6066;
+  --sombra-flota:0 10px 28px rgb(21 23 26 / .14), 0 1px 3px rgb(21 23 26 / .10);
+}
+/* ───────────── Tokens · Noche (gris muy oscuro, nunca negro) ───────────── */
+[data-tema="oscuro"]{
+  --suelo:#1a1d21; --superficie:#202328; --panel:#262a2f; --panel2:#23272c; --elevado:#2e3238;
+  --linea:#383d44; --linea2:#2e3238;
+  --tinta:#f3f4f5; --tinta2:#c8cdd3; --tinta3:#a3aab2;
+  --dato1:#d9dde1; --dato3:#878e96; --pista:#33383e; --tubo-vacio:#2d3237; --banda:#5d6165;
+  --flujo:#9aa1a8; --pared:#878e96; --rayado:#c8cdd3; --agua:#878e96; --roca:#32373d;
+  --marca:#142d88; --marca-sobre:#ffffff; --marca-tenue:#c9d1f0; --marca-capa:rgb(255 255 255 / .14);
+  --marca-suave:#1d2440; --primario:#f3f4f5; --primario-sobre:#15171a; --foco:#f3f4f5;
+  --interlock:#ff8080; --interlock-f:#4a2a2a;
+  --p1:#ffb347; --p1-f:#473425;
+  --p2:#fff176; --p2-f:#433d25;
+  --p3:#fff176; --p3-f:#433d25;
+  --sincom:#c99cff; --sincom-f:#3b3149;
+  --marca-num:#1f2328; --marca-trazo:#1f2328;
+  --eq-marcha:#d9dde1; --eq-parado:#0d0f11; --eq-trazo:#c8cdd3;
+  --sombra-flota:0 10px 28px rgb(0 0 0 / .45), 0 1px 3px rgb(0 0 0 / .35);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--suelo);color:var(--tinta);font-family:Air,system-ui,sans-serif;font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.c{font-family:AirC,Air,sans-serif}
+svg text{font-family:Air,sans-serif}
+.mk{display:inline-block;vertical-align:-3px;flex-shrink:0;overflow:visible}
+
+/* ───────────── Riel lateral: la banda índigo de B, de costado ───────────── */
+.app{display:grid;grid-template-columns:240px 1fr;height:100vh;overflow:hidden}
+.app.plegado{grid-template-columns:88px 1fr}
+.riel{background:var(--marca);color:#fff;display:flex;flex-direction:column;padding:24px 16px 18px;gap:4px;position:relative}
+.riel .logo{height:21px;width:auto;margin:2px 10px 22px;display:block;align-self:flex-start}
+.riel .campo{display:flex;align-items:center;gap:10px;background:#fff;color:#15171a;border-radius:999px;padding:9px 14px;font:600 15px Air;margin-bottom:18px}
+.riel .campo .chev{margin-left:auto;color:#5b6168;display:flex}
+.riel .puerta{display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:14px;color:var(--marca-tenue);font:500 16px Air}
+.riel .puerta.activa{background:var(--marca-capa);color:#fff;font-weight:600}
+.riel .insignia{margin-left:auto;background:#fff;color:#15171a;font:700 13px Air;min-width:24px;height:24px;border-radius:999px;display:grid;place-items:center;padding:0 7px}
+.riel .pie{margin-top:auto;display:flex;flex-direction:column;gap:4px}
+.riel .ayuda{display:flex;align-items:center;gap:14px;padding:10px 14px;color:var(--marca-tenue);font:500 15px Air}
+.riel .persona{display:flex;align-items:center;gap:12px;padding:14px 8px 2px;border-top:1px solid rgb(255 255 255 / .16);margin-top:6px}
+.riel .avatar{width:38px;height:38px;border-radius:50%;background:var(--marca-capa);display:grid;place-items:center;font:600 14px Air;color:#fff;flex-shrink:0}
+.riel .persona b{display:block;font:600 15px/1.2 Air;color:#fff}
+.riel .persona small{display:block;font:400 13px/1.3 Air;color:var(--marca-tenue)}
+.riel .persona .plegar{margin-left:auto;color:var(--marca-tenue);display:flex}
+.app.plegado .riel{padding:20px 12px 18px;align-items:center}
+.app.plegado .riel .iso{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;margin-bottom:16px}
+.app.plegado .riel .iso img{width:30px}
+.app.plegado .riel .campo{width:60px;height:40px;padding:0;justify-content:center;gap:4px;font-size:13px;margin-bottom:16px}
+.app.plegado .riel .puerta{flex-direction:column;gap:4px;padding:10px 2px 8px;width:66px;font-size:12px;text-align:center;position:relative}
+.app.plegado .riel .insignia{position:absolute;top:3px;right:6px;min-width:20px;height:20px;font-size:12px;margin:0;padding:0 5px}
+.app.plegado .riel .ayuda{padding:10px;justify-content:center}
+.app.plegado .riel .persona{flex-direction:column;gap:10px;padding:14px 0 0}
+
+.principal{min-width:0;overflow:hidden}
+
+/* ───────────── Cabecera del contenido ───────────── */
+.cabecera{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.migas{display:flex;align-items:center;gap:8px;font:500 14px Air;color:var(--tinta2)}
+.migas b{color:var(--tinta);font-weight:600}
+.titulo{font:700 26px/1.15 Air;letter-spacing:-.01em;margin:3px 0 0;display:flex;align-items:baseline;gap:12px}
+.titulo small{font:400 15px Air;color:var(--tinta2);letter-spacing:0}
+.franja{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cuenta{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 11px;border-radius:999px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--linea);font:500 14px Air;white-space:nowrap}
+.cuenta b{font-weight:700}
+.cuenta.cero{color:var(--tinta2)}
+
+/* ───────────── Tarjetas ───────────── */
+.tarjeta{background:var(--panel);border-radius:20px;padding:22px 26px;min-width:0}
+.rotulo{margin:0;font:600 15px Air;color:var(--tinta2)}
+.sub{font:400 14px Air;color:var(--tinta2)}
+
+/* ───────────── La cifra principal con su frase (B) ───────────── */
+.previo{font:500 15px Air;color:var(--tinta2);display:flex;align-items:center;gap:8px}
+.heroe{display:flex;align-items:baseline;gap:14px;margin:4px 0 0;font:700 80px/0.95 Air;letter-spacing:-.03em}
+.heroe small{font:500 24px Air;letter-spacing:0;color:var(--tinta2)}
+.frase{font:500 22px/1.35 Air;margin:10px 0 0}
+.explica{font:400 18px/1.5 Air;color:var(--tinta2);margin:8px 0 0}
+.explica b{color:var(--tinta);font-weight:600}
+
+/* ───────────── Botones, enlaces y calidad del dato ───────────── */
+.acciones{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.boton{display:inline-flex;align-items:center;gap:8px;font:600 16px Air;padding:12px 22px;border-radius:999px;color:var(--tinta);box-shadow:inset 0 0 0 1.5px var(--linea);white-space:nowrap}
+.boton.principal{background:var(--primario);color:var(--primario-sobre);box-shadow:none}
+.boton.chico{font-size:15px;padding:9px 16px}
+.enlace{font:600 15px Air;color:var(--tinta);display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+.calidad{display:inline-flex;align-items:center;font:500 14px/1.3 Air;color:var(--tinta2);border:1.5px dashed var(--tinta3);border-radius:999px;padding:0 9px;white-space:nowrap}
+
+/* ───────────── Antes · Durante · Después ───────────── */
+.momentos{display:inline-grid;grid-auto-flow:column;gap:4px;padding:4px;border-radius:999px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--linea)}
+.momento{display:flex;align-items:baseline;gap:6px;padding:8px 15px;border-radius:999px;font:600 15px Air;white-space:nowrap}
+.momento small{font:400 14px Air;color:var(--tinta2)}
+.momento.activo{background:var(--primario);color:var(--primario-sobre)}
+.momento.activo small{color:var(--marca-tenue)}
+[data-tema="oscuro"] .momento.activo small{color:#464b52}
+
+/* ───────────── Barra contra la meta (bullet de Few) ───────────── */
+.bala{position:relative;height:10px;border-radius:999px;background:var(--pista)}
+.bala i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--dato1)}
+.bala b{position:absolute;top:-5px;bottom:-5px;width:3px;border-radius:2px;background:var(--tinta)}
+
+/* ───────────── Bloqueo de procedimiento: tinta, nunca color ───────────── */
+.bloqueo{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border-radius:16px;padding:13px 16px;box-shadow:inset 0 0 0 2px var(--tinta);font:600 16px/1.35 Air}
+.bloqueo small{display:block;font:400 15px/1.35 Air;color:var(--tinta2);margin-top:2px}
+
+/* ───────────── Teléfono (390 × 844) ───────────── */
+.telefono{width:390px;height:844px;border-radius:44px;overflow:hidden;background:var(--suelo);display:flex;flex-direction:column;position:relative;flex-shrink:0;
+  box-shadow:0 0 0 9px #111316,0 0 0 10px #30343a,0 24px 50px rgb(0 0 0 / .25)}
+.tel-banda{background:var(--marca);color:#fff;padding:18px 18px 18px}
+.tel-banda .fila{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tel-banda .logo{height:15px;display:block}
+.tel-banda .campo{display:inline-flex;align-items:center;gap:7px;background:#fff;color:#15171a;border-radius:999px;padding:6px 12px;font:600 14px Air}
+.tel-banda .yo{width:34px;height:34px;border-radius:50%;background:var(--marca-capa);display:grid;place-items:center;font:600 13px Air}
+.tel-banda .tenue{color:var(--marca-tenue)}
+.tel-cuerpo{flex:1;overflow:hidden;padding:14px 16px 0;display:flex;flex-direction:column;gap:12px}
+.pestanas{display:grid;grid-template-columns:repeat(var(--n,3),1fr);background:var(--elevado);border-top:1px solid var(--linea);padding:8px 8px 24px}
+.pestana{display:flex;flex-direction:column;align-items:center;gap:3px;font:500 13px Air;color:var(--tinta2);position:relative}
+.pestana .ic{width:60px;height:32px;border-radius:999px;display:grid;place-items:center}
+.pestana.activa{color:var(--tinta);font-weight:700}
+.pestana.activa .ic{background:var(--marca-suave);color:var(--marca)}
+[data-tema="oscuro"] .pestana.activa .ic{color:#c9d1f0}
+.pestana .insignia{position:absolute;top:-3px;left:calc(50% + 8px);background:var(--tinta);color:var(--elevado);font:700 12px Air;min-width:20px;height:20px;border-radius:999px;display:grid;place-items:center;padding:0 6px}
+
+/* lámina de presentación (fondo y rótulos alrededor de los teléfonos) */
+.lamina{background:#e4e1da;min-height:100vh;padding:36px 48px;display:flex;flex-direction:column;gap:22px}
+.lamina h1{margin:0;font:700 26px Air;color:#15171a}
+.lamina p.nota{margin:0;font:400 16px Air;color:#464b52}
+.lamina .telefonos{display:flex;gap:64px;justify-content:center;align-items:flex-start}
+.lamina .pie-tel{font:600 16px Air;color:#15171a;text-align:center;margin-top:22px}
+.lamina .pie-tel small{display:block;font:400 14px Air;color:#464b52;margin-top:2px}
+
+/* Las píldoras blancas del riel y de la banda son superficie clara en los dos temas: llevan la paleta de estado clara. */
+.riel .campo,.tel-banda .campo,.blanca{--p1:#bf4000;--p2:#f9a825;--p3:#f9a825;--interlock:#8b1a1a;--sincom:#8420a3;--marca-num:#ffffff;--marca-trazo:#1f2328;--tinta:#15171a;--tinta3:#5b6168}
+.nb{white-space:nowrap}

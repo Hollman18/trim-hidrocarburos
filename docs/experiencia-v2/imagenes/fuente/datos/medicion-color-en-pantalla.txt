@@ -1,0 +1,9 @@
+/Users/hollman/trim-hidrocarburos/docs/experiencia-v2/imagenes/fuente/scripts/medir-color.py:23: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  for px in im.getdata():
+1-planta-viva-escritorio-claro.png · estado 0.08 % · índigo 17.4 % · otro 0.00 %
+6-planta-viva-escritorio-oscuro.png · estado 0.07 % · índigo 16.0 % · otro 0.00 %
+2-planta-viva-telefono.png · estado 0.07 % · índigo 20.9 % · otro 0.00 %
+3a-hoy-supervisor-escritorio.png · estado 0.06 % · índigo 16.8 % · otro 0.00 %
+3b-hoy-supervisor-telefono.png · estado 0.08 % · índigo 4.7 % · otro 0.00 %
+4-p201b-nivel3-escritorio.png · estado 0.06 % · índigo 6.5 % · otro 0.00 %
+5-operador-por-contestar-telefono.png · estado 0.07 % · índigo 10.7 % · otro 0.00 %
