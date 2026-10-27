@@ -1,40 +1,33 @@
 @import "tailwindcss";
 
-/* ───────────────────────── Tipografía de marca ─────────────────────────
-   WOFF2: las mismas tablas de la TTF original, comprimidas sin pérdida
-   (≈55 KB cada cara contra ≈220 KB). En la red de un campo la fuente
-   tardaba más que toda la aplicación. El navegador solo baja las caras que
-   la página usa; el peso Light no se usa y no se declara. */
-@font-face{font-family:Air;src:url(/fonts/Air-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:Air;src:url(/fonts/Air-Medium.woff2) format('woff2');font-weight:500;font-display:swap}
-@font-face{font-family:Air;src:url(/fonts/Air-Semibold.woff2) format('woff2');font-weight:600;font-display:swap}
-@font-face{font-family:Air;src:url(/fonts/Air-Bold.woff2) format('woff2');font-weight:700;font-display:swap}
-@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Medium.woff2) format('woff2');font-weight:500;font-display:swap}
-@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Semibold.woff2) format('woff2');font-weight:600;font-display:swap}
-@font-face{font-family:"Air Condensed";src:url(/fonts/AirCondensed-Bold.woff2) format('woff2');font-weight:700;font-display:swap}
+/* ───────────────────────── Tipografía (v3, decisión 5) ─────────────────────────
+   IBM Plex Sans, Plex Sans Condensed y Plex Mono: SIL Open Font License 1.1
+   (public/fonts/IBM-Plex-OFL.txt). Son los WOFF2 SIN MODIFICAR de la publicación
+   de IBM (github.com/IBM/plex, @ibm/plex-sans 1.1.0, plex-sans-condensed 2.0.0 y
+   plex-mono 2.5.0), en sus cortes oficiales: «Latin1» (todo el español) y «Pi»
+   (flechas, ≥, ≤, el espacio fino). El navegador baja cada corte solo si la página
+   usa un carácter de su rango. Plex trae las cifras tabulares por defecto
+   («1111111» y «0000000» miden lo mismo; direcciones.md §2.3). Air ya no se usa. */
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-Regular-Latin1.woff2) format('woff2');font-weight:400;font-display:swap;unicode-range:U+0000,U+000D,U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2013-2014,U+2018-201A,U+201C-201E,U+2020-2022,U+2026,U+2030,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+FB01-FB02}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-Medium-Latin1.woff2) format('woff2');font-weight:500;font-display:swap;unicode-range:U+0000,U+000D,U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2013-2014,U+2018-201A,U+201C-201E,U+2020-2022,U+2026,U+2030,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+FB01-FB02}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-SemiBold-Latin1.woff2) format('woff2');font-weight:600;font-display:swap;unicode-range:U+0000,U+000D,U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2013-2014,U+2018-201A,U+201C-201E,U+2020-2022,U+2026,U+2030,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+FB01-FB02}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-Bold-Latin1.woff2) format('woff2');font-weight:700 800;font-display:swap;unicode-range:U+0000,U+000D,U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2013-2014,U+2018-201A,U+201C-201E,U+2020-2022,U+2026,U+2030,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+FB01-FB02}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-Regular-Pi.woff2) format('woff2');font-weight:400;font-display:swap;unicode-range:U+2000-200D,U+2015,U+202F,U+2032-2033,U+2070,U+2074-2079,U+2080-2089,U+2190-2199,U+2202,U+2206,U+2211,U+2215,U+221E,U+2248,U+2260,U+2264-2265,U+25CA,U+2713}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-Medium-Pi.woff2) format('woff2');font-weight:500;font-display:swap;unicode-range:U+2000-200D,U+2015,U+202F,U+2032-2033,U+2070,U+2074-2079,U+2080-2089,U+2190-2199,U+2202,U+2206,U+2211,U+2215,U+221E,U+2248,U+2260,U+2264-2265,U+25CA,U+2713}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-SemiBold-Pi.woff2) format('woff2');font-weight:600;font-display:swap;unicode-range:U+2000-200D,U+2015,U+202F,U+2032-2033,U+2070,U+2074-2079,U+2080-2089,U+2190-2199,U+2202,U+2206,U+2211,U+2215,U+221E,U+2248,U+2260,U+2264-2265,U+25CA,U+2713}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/IBMPlexSans-Bold-Pi.woff2) format('woff2');font-weight:700 800;font-display:swap;unicode-range:U+2000-200D,U+2015,U+202F,U+2032-2033,U+2070,U+2074-2079,U+2080-2089,U+2190-2199,U+2202,U+2206,U+2211,U+2215,U+221E,U+2248,U+2260,U+2264-2265,U+25CA,U+2713}
+@font-face{font-family:"IBM Plex Sans Condensed";src:url(/fonts/IBMPlexSansCondensed-Medium-Latin1.woff2) format('woff2');font-weight:400 500;font-display:swap}
+@font-face{font-family:"IBM Plex Sans Condensed";src:url(/fonts/IBMPlexSansCondensed-SemiBold-Latin1.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:"IBM Plex Sans Condensed";src:url(/fonts/IBMPlexSansCondensed-Bold-Latin1.woff2) format('woff2');font-weight:700 800;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(/fonts/IBMPlexMono-Regular-Latin1.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(/fonts/IBMPlexMono-Medium-Latin1.woff2) format('woff2');font-weight:500 700;font-display:swap}
 
-/* `static` obliga a emitir TODA la rampa de marca aunque una escala solo se
-   use desde una plantilla de JS: Tailwind v4 poda las variables que no ve
-   escritas literalmente en el código, y las barras quedaban sin color. */
 @theme static {
-  --font-sans: Air, ui-sans-serif, system-ui, sans-serif;
-  --font-cond: "Air Condensed", Air, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
-
-  /* Marca · valores fijos extraídos del wordmark oficial. No cambian con el tema. */
-  --color-marca-1: #12287a;  /* índigo */
-  --color-marca-2: #231e74;
-  --color-marca-3: #36126e;  /* violeta profundo */
-  --color-marca-4: #4d2473;  /* ciruela */
-  --color-marca-5: #51588a;  /* azul grisáceo */
-  --color-marca-6: #5691a8;
-  --color-marca-7: #50a5a9;  /* turquesa */
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-cond: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-/* @theme inline es obligatorio para lo semántico: apunta a variables que el
-   tema redefine. Declarado directo en @theme, Tailwind congela el valor claro
-   y el modo oscuro no cambiaría nada. */
 @theme inline {
   --color-suelo: var(--suelo);
   --color-superficie: var(--superficie);
@@ -61,6 +54,14 @@
   --color-eq-trazo: var(--eq-trazo);
   --color-acento: var(--acento);
   --color-acento-f: var(--acento-f);
+  /* El panel lateral (v3, decisión 5): claro, en grises cálidos, como la v1. */
+  --color-nav: var(--nav);
+  --color-nav-tinta: var(--nav-tinta);
+  --color-nav-tinta2: var(--nav-tinta2);
+  --color-nav-activo: var(--nav-activo);
+  --color-nav-linea: var(--nav-linea);
+  --color-acento-sobre: var(--acento-sobre);
+  --color-acento-suave: var(--acento-suave);
   /* La marca y la mano (X5 §3.1): el panel, la banda del teléfono, el botón
      principal, lo seleccionado y el foco. Nunca un dato. */
   --color-marca: var(--marca);
@@ -79,16 +80,23 @@
   --color-roca: var(--roca);
 }
 
-/* ───────────── Tokens semánticos (X5 §3, la paleta de X2 §4) ─────────────
-   Práctica de High Performance HMI: fondo neutro de baja saturación, el color
-   se reserva para la condición anormal. Claro = «papel» (el de B, cálido) y
-   oscuro = «noche» (gris muy oscuro, nunca negro). index.html estampa
-   data-theme ya resuelto (claro|oscuro) antes de pintar, así que aquí hay UN
-   solo juego de valores por tema.
-   Contraste (WCAG 2.2; scripts/verificar-libro.mjs lo recalcula de este
-   archivo): --tinta, --tinta2 y --tinta3 dan al menos 4,5:1 sobre los cinco
-   fondos (suelo, superficie, panel, panel2, elevado) en los dos temas.
-   ESTADO, un color por significado (X2 §4.1):
+/* ───────────── Tokens semánticos (v3, decisión 5; la paleta de estado de X2 §4) ─────────────
+   D1 Grafito con los colores cálidos de la v1 (cde8214) y SIN la barra negra:
+   · neutros cálidos de la familia de la v1 (#c9c9c7 · #d6d5d2 · #eceae7 · #f4f3f0),
+     más claros y más limpios: el gris tiene un dejo cálido, apenas (no crema);
+   · el panel lateral es CLARO, en el gris cálido de --superficie, con su borde, la
+     entrada activa en --panel y la raya de 3 px del acento a la izquierda (`--nav*`);
+   · UN acento sobrio, petróleo, solo para la mano: el botón principal, lo
+     seleccionado y el foco. El índigo #142d88 salió (con protanopía quedaba a 6,2
+     del morado de «sin comunicación»).
+   Se mide con docs/experiencia-v3/herramientas/medir-final.mjs, que lee ESTE archivo
+   (lo que se ve es lo que se midió; medicion-final.txt). scripts/verificar-libro.mjs
+   recalcula además el contraste del texto y de las formas en los dos temas.
+   · --tinta, --tinta2 y --tinta3: 4,5:1 o más sobre los cinco fondos (suelo,
+     superficie, panel, panel2, elevado), en los dos temas.
+   · El acento contra cada color de estado: 10 o más en OKLab×100, con visión normal,
+     protanopía, deuteranopía y tritanopía (Machado 2009).
+   ESTADO, un color por significado (X2 §4.1), SIN CAMBIOS:
    · rojo (--interlock) SOLO para el interlock: candado;
    · naranja (--p1) la alarma, prioridad 1: rombo «1»;
    · amarillo con trazo oscuro (--p2, --p3) la atención (triángulo «2») y el
@@ -96,15 +104,21 @@
      sobre un fondo claro, así que su silueta la da el trazo (--marca-trazo);
    · morado (--sincom) «no le crea a este número»: sin comunicación (círculo
      punteado) y dato inválido (el mismo círculo con raya).
-   Ningún estado es azul: el índigo de la marca es el marco y la mano. */
+   Ningún estado es petróleo: el acento es la mano, nunca un dato. */
 :root{
   color-scheme: light;
-  --suelo:#efede8; --superficie:#f6f5f1; --panel:#fcfbf8; --panel2:#f3f1ec; --elevado:#ffffff;
-  --tinta:#15171a; --tinta2:#464b52; --tinta3:#5b6168;
-  --linea:#dcd9d2; --linea2:#e8e5df;
-  /* Marca e interacción (X5 §3.1). */
-  --marca:#142d88; --marca-sobre:#ffffff; --marca-tenue:#c9d1f0; --marca-suave:#e8ebf6;
-  --primario:#142d88; --primario-sobre:#ffffff; --foco:#142d88;
+  --suelo:#e8e6e2; --superficie:#dfddd8; --panel:#f6f5f2; --panel2:#eeece8; --elevado:#fcfbf9;
+  --tinta:#1c1e21; --tinta2:#45484d; --tinta3:#595c61;
+  --linea:#d3d0ca; --linea2:#e3e0db;
+  /* El panel lateral y la banda del teléfono: claros, en el gris cálido de la v1. */
+  --nav:#dfddd8; --nav-linea:#c9c6bf; --nav-tinta:#1c1e21; --nav-tinta2:#45484d; --nav-activo:#f6f5f2; --nav-hover:#e9e7e3;
+  /* La mano (el botón principal, lo seleccionado y el foco): petróleo sobrio. */
+  --acento:#2c7371; --acento-sobre:#ffffff; --acento-suave:#d8e7e4;
+  --primario:#2c7371; --primario-sobre:#ffffff; --foco:#2c7371;
+  /* --marca: lo que todavía pinta un bloque de color con letra blanca (el avatar de
+     Perfil, la pregunta del operador, «Saltar al contenido»). Es el acento del claro,
+     igual en los dos temas, para que la letra blanca siempre se lea (5,5:1). */
+  --marca:#2c7371; --marca-sobre:#ffffff; --marca-tenue:#e3f1ef; --marca-suave:#d8e7e4;
   /* Estado · nunca decorativo (X2 §4.4). */
   --interlock:#8b1a1a; --p1:#bf4000; --p2:#f9a825; --p3:#f9a825; --sincom:#8420a3;
   --interlock-f:#f0dada; --p1-f:#f5e2d4; --p2-f:#f6eed4; --p3-f:#f6eed4; --sincom-f:#f0e3f4;
@@ -112,50 +126,50 @@
      en los tonos claros del oscuro. El amarillo lleva siempre número y trazo oscuros. */
   --marca-num:#ffffff; --marca-trazo:#1f2328;
   /* Equipos, por brillo (X2 §4.3): en marcha claro, parado oscuro; sin dato, sin relleno. */
-  --eq-marcha:#ffffff; --eq-parado:#5b6168;
-  --eq-off:#b0b0b0; --eq-on:#f2f2f2; --eq-sin:#8e8e8e; --eq-trazo:#5c6066; --eq-alto:#fafaf9;
-  /* Los grises de los datos y de la tubería (X5 §3.2). */
-  --dato1:#3a3f45; --dato3:#7a8087; --rayado:#464b52;
-  --pared:#7a8087; --agua:#7a8087; --flujo:#7a8087;
-  --tubo-vacio:#e9e6df; --roca:#dcd8cf; --pista:#e2dfd8; --banda:#cdccca;
+  --eq-marcha:#ffffff; --eq-parado:#56595e;
+  --eq-off:#b0aeaa; --eq-on:#f3f2ef; --eq-sin:#8e8c88; --eq-trazo:#56595e; --eq-alto:#fbfaf8;
+  /* Los grises de los datos y de la tubería (X5 §3.2), en la misma familia cálida. */
+  --dato1:#34373b; --dato3:#717479; --rayado:#45484d;
+  --pared:#717479; --agua:#717479; --flujo:#717479;
+  --tubo-vacio:#e6e3de; --roca:#d9d5ce; --pista:#dedbd6; --banda:#cdcac4;
   /* ISA-101: el dato normal NO lleva color. La rampa es de grises, del más
      oscuro (lo que manda) al más claro. El color queda para lo anormal. */
-  --dato-1:#3a3f45; --dato-2:#535960; --dato-3:#6a7077; --dato-4:#7a8087; --dato-5:#a3a8ad;
+  --dato-1:#34373b; --dato-2:#4f5257; --dato-3:#65686d; --dato-4:#76797e; --dato-5:#a2a3a4;
   /* Corrientes del proceso: también gris. El fluido se distingue por el
      trazo de la línea y su etiqueta, nunca por el color (planta.tsx). */
-  --f-multi:#4f545b; --f-crudo:#3c4148; --f-gas:#6a7077; --f-agua:#5d6269;
-  --f-elec:#7a7f86; --f-aire:#8a8f95;
-  /* Las tarjetas no llevan sombra: se separan por el tono (B). Solo lo que
+  --f-multi:#4c4f54; --f-crudo:#383b40; --f-gas:#65686d; --f-agua:#5a5d62;
+  --f-elec:#76797e; --f-aire:#86888c;
+  /* Las tarjetas no llevan sombra: se separan por el tono. Solo lo que
      flota (un menú, una hoja, el panel abierto en el teléfono) la lleva. */
   --sombra:none;
-  --sombra-flota:0 10px 28px rgb(21 23 26 / .14), 0 1px 3px rgb(21 23 26 / .10);
+  --sombra-flota:0 10px 28px rgb(28 30 33 / .14), 0 1px 3px rgb(28 30 33 / .10);
   --sombra2:var(--sombra-flota);
-  /* F1 · El aviso de abajo («Registrado… · Deshacer», X5 §5.7): en papel, oscuro
-     sobre claro; en noche, claro sobre oscuro, como el botón principal de la
-     imagen 6. «Deshacer» va en la mano: índigo tenue sobre la tinta, índigo
-     sobre el claro (UI-09). */
-  --aviso:var(--tinta); --aviso-sobre:var(--suelo); --aviso-accion:var(--marca-tenue);
+  /* El aviso de abajo («Registrado… · Deshacer»): en el claro, oscuro sobre claro, y
+     «Deshacer» en el acento de la noche, que se lee sobre la tinta (UI-09). */
+  --aviso:var(--tinta); --aviso-sobre:var(--suelo); --aviso-accion:#a9dad6;
   /* El velo detrás de lo que flota (el panel del teléfono, una hoja, la introducción): uno solo (UI-10). */
-  --velo:rgb(10 12 16 / .40);
+  --velo:rgb(20 19 17 / .38);
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
-  --suelo:#1a1d21; --superficie:#202328; --panel:#262a2f; --panel2:#23272c; --elevado:#2e3238;
-  --tinta:#f3f4f5; --tinta2:#c8cdd3; --tinta3:#a3aab2;
-  --linea:#383d44; --linea2:#2e3238;
-  --marca:#142d88; --marca-sobre:#ffffff; --marca-tenue:#c9d1f0; --marca-suave:#1d2440;
-  --primario:#f3f4f5; --primario-sobre:#15171a; --foco:#f3f4f5;
+  --suelo:#1c1b19; --superficie:#232220; --panel:#2a2927; --panel2:#262523; --elevado:#312f2d;
+  --tinta:#f2f1ee; --tinta2:#c9c6c0; --tinta3:#a6a39d;
+  --linea:#3b3936; --linea2:#302e2c;
+  --nav:#232220; --nav-linea:#353330; --nav-tinta:#f2f1ee; --nav-tinta2:#c9c6c0; --nav-activo:#33312e; --nav-hover:#2b2a27;
+  --acento:#a9dad6; --acento-sobre:#1c1b19; --acento-suave:#213836;
+  --primario:#a9dad6; --primario-sobre:#1c1b19; --foco:#a9dad6;
+  --marca:#2c7371; --marca-sobre:#ffffff; --marca-tenue:#e3f1ef; --marca-suave:#213836;
   --interlock:#ff8080; --p1:#ffb347; --p2:#fff176; --p3:#fff176; --sincom:#c99cff;
   --interlock-f:#4a2a2a; --p1-f:#473425; --p2-f:#433d25; --p3-f:#433d25; --sincom-f:#3b3149;
   --marca-num:#1f2328; --marca-trazo:#1f2328;
-  --eq-marcha:#d9dde1; --eq-parado:#0d0f11;
-  --eq-off:#6b6e71; --eq-on:#c9cbcd; --eq-sin:#808487; --eq-trazo:#aaadb0; --eq-alto:#dfe1e3;
-  --dato1:#d9dde1; --dato3:#878e96; --rayado:#c8cdd3;
-  --pared:#878e96; --agua:#878e96; --flujo:#9aa1a8;
-  --tubo-vacio:#2d3237; --roca:#32373d; --pista:#33383e; --banda:#5d6165;
-  --dato-1:#d9dde1; --dato-2:#c2c7cd; --dato-3:#a3aab2; --dato-4:#878e96; --dato-5:#6f767e;
-  --f-multi:#c4c7cb; --f-crudo:#dfe1e4; --f-gas:#a9adb1; --f-agua:#b8bcc0;
-  --f-elec:#9ea2a6; --f-aire:#8f9397;
+  --eq-marcha:#d8d6d2; --eq-parado:#0f0e0d;
+  --eq-off:#6d6b67; --eq-on:#cbc9c5; --eq-sin:#83817c; --eq-trazo:#a9a6a0; --eq-alto:#e0ded9;
+  --dato1:#d8d6d2; --dato3:#8a8781; --rayado:#c9c6c0;
+  --pared:#8a8781; --agua:#8a8781; --flujo:#9d9a94;
+  --tubo-vacio:#302e2b; --roca:#363431; --pista:#353330; --banda:#5b5955;
+  --dato-1:#d8d6d2; --dato-2:#c2bfba; --dato-3:#a6a39d; --dato-4:#8a8781; --dato-5:#72706b;
+  --f-multi:#c6c3be; --f-crudo:#e0ded9; --f-gas:#aba8a3; --f-agua:#bab7b2;
+  --f-elec:#a09d98; --f-aire:#918e89;
   --sombra:none;
   --sombra-flota:0 10px 28px rgb(0 0 0 / .45), 0 1px 3px rgb(0 0 0 / .35);
   --sombra2:var(--sombra-flota);
@@ -163,10 +177,10 @@
   --velo:rgb(0 0 0 / .45);
 }
 /* Alias que no tienen color propio: lo que hoy usa --invalido es el morado de
-   «no le crea a este número»; --acento es la mano (el foco y lo seleccionado). */
+   «no le crea a este número»; --acento-f es el fondo de lo seleccionado. */
 :root{
   --invalido:var(--sincom);
-  --acento:var(--foco); --acento-f:var(--marca-suave);
+  --acento-f:var(--acento-suave);
   --marca-capa:rgb(255 255 255 / .14);
   /* Movimiento (X5 §3.5): el cursor y el foco, 120 ms; la navegación, 200 ms o menos. */
   --curva:cubic-bezier(.2, 0, 0, 1);
@@ -175,17 +189,17 @@
 html,body,#root{height:100%}
 body{
   margin:0; background:var(--suelo); color:var(--tinta);
-  /* La base del cuerpo es la de B (X5 §3.4): 16 px. Todas las cifras, tabulares:
-     las de Air por defecto son proporcionales y una columna no se alinea. */
+  /* La base del cuerpo es la de B (X5 §3.4): 16 px. Todas las cifras, tabulares
+     (Plex ya las trae así; se pide igual, por si cae a la letra del sistema). */
   font-family:var(--font-sans); font-size:16px; line-height:1.45;
   font-variant-numeric:tabular-nums;
   -webkit-font-smoothing:antialiased;
 }
 *{box-sizing:border-box}
 :focus-visible{outline:2px solid var(--foco); outline-offset:2px}
-/* F1 · A1: sobre el índigo (el panel, la banda del teléfono, la banda de la
-   pregunta del operador) el anillo índigo no se ve (1:1): ahí va blanco
-   (--marca-sobre, 11,9:1 sobre --marca), en los dos temas (X5 §3.1). */
+/* F1 · A1: sobre un bloque en --marca (la banda de la pregunta del operador) el
+   anillo del acento no se ve (1:1): ahí va blanco (--marca-sobre, 5,5:1). El panel
+   lateral y la banda del teléfono ya son claros: llevan el anillo de siempre. */
 .sobre-marca :focus-visible, .sobre-marca:focus-visible{ outline-color:var(--marca-sobre) }
 /* Lo que recibe el foco por código y no es un control (el título de la vista, la pregunta
    que entra, la tarjeta que quedó en su lugar: A2, A13, A14) no lleva anillo: el lector lo
@@ -211,8 +225,8 @@ body{
    líneas se oscurecen y el anillo del foco engrosa. Los colores de estado NO
    cambian: su separación con daltonismo (X5 §6.14; C7 ≥ 10) se midió con estos. */
 @media (prefers-contrast: more){
-  :root:not([data-theme="dark"]){ --tinta2:#2f3338; --tinta3:#3d4248; --linea:#a9a59c; --linea2:#c4c0b8 }
-  :root[data-theme="dark"]{ --tinta2:#e1e4e8; --tinta3:#c8cdd3; --linea:#6b717a; --linea2:#4a5058 }
+  :root:not([data-theme="dark"]){ --tinta2:#303236; --tinta3:#3e4146; --linea:#a8a49d; --linea2:#c3bfb8; --nav-tinta2:#303236; --nav-linea:#a8a49d }
+  :root[data-theme="dark"]{ --tinta2:#e3e1dc; --tinta3:#cbc8c2; --linea:#6d6a65; --linea2:#4c4a46; --nav-tinta2:#e3e1dc; --nav-linea:#6d6a65 }
   :focus-visible{ outline-width:3px }
 }
 /* Colores forzados (Windows, alto contraste): el sistema pinta todo; que el
@@ -223,29 +237,26 @@ body{
   svg{ forced-color-adjust:auto }
 }
 
-/* Las píldoras blancas del panel y de la banda (el campo, la insignia) son
-   superficie clara en los dos temas: llevan la paleta de estado clara, para que
-   el rombo naranja no pierda contraste sobre el blanco (X5 §3.3). */
-.blanca{
-  --p1:#bf4000; --p2:#f9a825; --p3:#f9a825; --interlock:#8b1a1a; --sincom:#8420a3;
-  --marca-num:#ffffff; --marca-trazo:#1f2328; --tinta:#15171a; --tinta2:#464b52; --tinta3:#5b6168;
-}
+/* «Pregunta 1 de 4» del operador (la pone widgets/hoy/Operador.tsx) entra en la
+   banda del teléfono, que ahora es clara: va en la tinta del panel, no en el
+   tono claro que tenía sobre el índigo. */
+#banda-paso [data-paso]{ color:var(--nav-tinta2) }
 
 /* Nada mide menos de 12 px (X5 §3.4): un <small> sin tamaño propio (el 80 % del
    navegador) no baja de ahí. En la capa base: el tamaño que le dé una clase manda. */
 @layer base{ small{ font-size:max(12px, 80%) } sub, sup{ font-size:max(12px, 75%) } }
 
 /* Las tarjetas que las pantallas de antes arman a mano (`rounded border
-   bg-[var(--panel)]`) heredan la tarjeta de B (X5 §5.2) mientras las tandas 2 y
-   3 las redibujan: radio 20, sin borde ni sombra, separadas del papel por el
-   tono. Una tarjeta dentro de otra no puede separarse por un tono que es el
-   mismo: va en --panel2, como los pozos dentro de una tarjeta de B. */
-.vista :is(section, div, details, article).rounded.border.bg-\[var\(--panel\)\]{ border-color:transparent; border-radius:20px }
+   bg-[var(--panel)]`) heredan el bloque de D1 (v3) mientras la tanda B las
+   redibuja: radio 10, sin borde ni sombra, separadas del papel por el tono. Un
+   bloque dentro de otro no puede separarse por un tono que es el mismo: va en
+   --panel2, con radio 8. */
+.vista :is(section, div, details, article).rounded.border.bg-\[var\(--panel\)\]{ border-color:transparent; border-radius:10px }
 .vista .bg-\[var\(--panel\)\] :is(section, div, details, article).rounded.border.bg-\[var\(--panel\)\]{
-  background:var(--panel2); border-radius:14px }
+  background:var(--panel2); border-radius:8px }
 
 /* El operador en el teléfono contesta de a una pregunta (imagen 5; X5 §5.8): la
-   pregunta va en la banda índigo, pegada a la del ☰, y la franja debajo de ella
+   pregunta va en su banda, pegada a la del ☰, y la franja debajo de ella
    (la pinta la vista de Hoy). La cabecera de la vista no se interpone. */
 @media (max-width: 639.98px){
   .vista:has([data-operador="pregunta"]){ padding-top:0 }
@@ -259,6 +270,10 @@ body{
 .entra-izquierda{ animation:entra-izquierda 200ms var(--curva) both }
 .aparece{ animation:aparece 200ms var(--curva) both }
 
+/* El isotipo (un PNG índigo de la marca) se pinta en la tinta del tema: negro en
+   el claro y claro en la noche. El color de la interfaz es el acento, no el índigo. */
+.iso-tinta{ filter:brightness(0) opacity(.88) }
+:root[data-theme="dark"] .iso-tinta{ filter:brightness(0) invert(.94) }
 /* El wordmark tiene dos archivos: el claro se usa sobre fondo oscuro. */
 .dark-show{display:none}
 :root[data-theme="dark"] .dark-hide{display:none}

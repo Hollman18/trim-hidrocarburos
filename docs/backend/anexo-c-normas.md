@@ -50,7 +50,7 @@ El campo `choke` del registro de campos (`Campo.choke`, «Pozos», «Planta», �
 | Norma | Para qué se usa | Dónde |
 |---|---|---|
 | **ISO 8601** | Fechas con zona en todo el cable | `src/shared/api/cable.ts` (2.9) |
-| **E.164** (UIT) | Formato de los teléfonos de WhatsApp: se guardan, viajan y se comparan así | `src/entities/usuarios.ts` (5D) |
+| **E.164** (UIT) | Formato de los teléfonos de WhatsApp: se guardan, viajan y se comparan así (**RETIRADO (27-oct-2026)**) | `src/entities/usuarios.ts` (5D) |
 | **Sparkplug B** sobre **MQTT** (Eclipse) | Certificado de nacimiento del borde y transporte de los datos del campo | `simulador-api/`, registro de la cadena (4) |
 | **SHA-256** (FIPS 180-4) | Huella de los informes | `src/entities/informe.ts` (5D) |
-| **Meta WhatsApp Cloud API**: plantillas de categoría utilidad, ventana de 24 h, webhook con `X-Hub-Signature-256` | Mensajes que inicia la empresa y respuestas | `src/entities/mensajes.ts`, anexo A «WhatsApp» (5D) |
+| **Meta WhatsApp Cloud API**: plantillas de categoría utilidad, ventana de 24 h, webhook con `X-Hub-Signature-256` | Mensajes que inicia la empresa y respuestas (**RETIRADO (27-oct-2026)**) | `src/entities/mensajes.ts`, anexo A «WhatsApp» (5D) |

@@ -1,9 +1,9 @@
 /* Arma tablas.json (la especificación para el Excel) leyendo el catálogo de la
    base cargada con esquema.sql + ejemplos.sql, más herramientas/metadatos.mjs.
    Uso: node armar-tablas.mjs <base> <salida.json>          (psql en 127.0.0.1:5440) */
-import { consulta, SQL_CATALOGO } from './catalogo.mjs'
+import { consulta, SQL_CATALOGO, conMarca } from './catalogo.mjs'
 import { writeFileSync } from 'node:fs'
-import { GRUPOS, TABLAS } from './metadatos.mjs'
+import { GRUPOS, TABLAS, RETIRADAS } from './metadatos.mjs'
 
 const [BASE, SALIDA] = process.argv.slice(2)
 if (!BASE || !SALIDA) throw new Error('uso: node armar-tablas.mjs <base> <salida.json>')
@@ -12,14 +12,14 @@ const FUNCION_REGLA = {
   solo_insercion: 'Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001).',
   evento_solo_cierre: 'La hora del PLC no se corrige: solo se pone fin a un evento abierto (una vez) y, en una parada, la firma (una vez); no se borra.',
   tag_reglas: 'Solo su gateway lo vuelve a declarar; un nacimiento no deshace un mapeo manual o por regla.',
-  usuario_reglas: 'Nadie se borra; alertas solo en roles con alertas.',
+  usuario_reglas: 'Nadie se borra. RETIRADO (27-oct-2026): alertas solo en roles con alertas.',
   usuario_coherente: 'Al confirmar: queda un gerente activo y cada persona tiene «todos» o al menos un campo.',
   version_config_coherente: 'Al confirmar: todo campo trae un tramo y el JSON firmado = la forma normalizada.',
   respuesta_parada_reglas: 'Solo eventos de pozo o de bomba; el modo es de la parte (u OTH).',
   analisis_reglas: 'Exige respuesta con parte; versiones consecutivas.',
   prediccion_califica: 'Lo emitido no cambia; la calificación se agrega una vez; no se borra.',
-  mensaje_solo_meta_id: 'Solo inserción; el id de Meta se pone una vez.',
-  estado_mensaje_de_saliente: 'El id de Meta es de un mensaje o de un mensaje_libre registrado (hace de clave foránea a las dos).',
+  mensaje_solo_meta_id: 'RETIRADO (27-oct-2026): solo inserción; el id de Meta se pone una vez.',
+  estado_mensaje_de_saliente: 'RETIRADO (27-oct-2026): el id de Meta es de un mensaje o de un mensaje_libre registrado (hace de clave foránea a las dos).',
   planta_id_unico: 'Un id no se repite entre elementos y miembros del campo.',
   precalculo_no_se_actualiza: 'No se actualiza en sitio: el mes se recalcula (borrar e insertar) y se anota en recalculo_mes.',
   topologia_pozos_del_campo: 'Cada pozo del elemento es del campo (validarTopologia, 422).',
@@ -90,7 +90,7 @@ const tablas = cat.map(t => {
       nombre: c.nombre, tipo: c.tipo + (c.generada ? ' (generada)' : ''), nulo: c.nulo, pk: pk.includes(c.nombre),
       fk: fks.length ? fks.map(k => `${k.hacia}.${k.hacia_columnas[k.columnas.indexOf(c.nombre)]}`).join(' · ') : null,
       unico: uns.length ? uns.map(k => k.columnas.length === 1 ? 'único' : `único con (${k.columnas.join(', ')})`).join(' · ') : null,
-      check: chk.length ? chk.map(k => k.definicion).join(' · ') : null,
+      check: chk.length ? chk.map(k => conMarca(k.definicion)).join(' · ') : null,
       defecto: c.defecto ?? null,
       descripcion: c.comentario,
       ejemplo: ej === undefined ? null : ej,
@@ -115,5 +115,19 @@ const tablas = cat.map(t => {
 })
 const sobran = Object.keys(TABLAS).filter(n => !cat.some(t => t.nombre === n))
 if (sobran.length) throw new Error(`metadatos.mjs describe tablas que no existen: ${sobran.join(', ')}`)
-writeFileSync(SALIDA, JSON.stringify({ generado: 'herramientas/armar-tablas.mjs desde la base cargada con esquema.sql + ejemplos.sql', grupos: GRUPOS, tablas, relaciones }, null, 1))
+// RETIRADO (27-oct-2026): toda línea de tablas.json que nombra WhatsApp lleva la palabra RETIRADO.
+// Una tabla retirada va entera en una línea (su descripción empieza con la marca); una columna o una
+// relación que nombra el canal y no traería la marca en esa línea, también.
+const sinMarca = o => JSON.stringify(o, null, 1).split('\n').some(l => /whatsapp/i.test(l) && !l.includes('RETIRADO'))
+const enUnaLinea = []
+const plegar = o => { enUnaLinea.push(JSON.stringify(o)); return `@@una-linea-${enUnaLinea.length - 1}@@` }
+const salida = {
+  generado: 'herramientas/armar-tablas.mjs desde la base cargada con esquema.sql + ejemplos.sql', grupos: GRUPOS,
+  tablas: tablas.map(t => RETIRADAS.includes(t.nombre) ? plegar(t) : { ...t, columnas: t.columnas.map(c => sinMarca(c) ? plegar(c) : c) }),
+  relaciones: relaciones.map(r => sinMarca(r) ? plegar(r) : r),
+}
+const texto = JSON.stringify(salida, null, 1).replace(/"@@una-linea-(\d+)@@"/g, (_, i) => enUnaLinea[+i])
+const malas = texto.split('\n').filter(l => /whatsapp/i.test(l) && !l.includes('RETIRADO'))
+if (malas.length) throw new Error(`tablas.json: ${malas.length} línea(s) nombran WhatsApp sin la marca RETIRADO: ${malas[0].slice(0, 160)}`)
+writeFileSync(SALIDA, texto)
 console.log(`tablas.json: ${tablas.filter(t => t.clase === 'tabla').length} tablas, ${tablas.filter(t => t.clase === 'vista').length} vistas, ${relaciones.length} relaciones, ${tablas.reduce((a, t) => a + t.filas.length, 0)} filas de ejemplo`)

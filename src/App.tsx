@@ -18,12 +18,12 @@ import { useSubpantallas, useSinPerfil } from '@/app/grupos'
 import { PUERTAS_DEL_ROL, tituloDe } from '@/app/pantallas'
 import { grupoDe } from '@/app/pantallas'
 import { Hueco } from '@/shared/ui/primitivas'
-import { WordmarkBlanco } from '@/shared/brand/Logo'
+import { Wordmark } from '@/shared/brand/Logo'
 import { useModal } from '@/shared/ui/foco'
 import { RANURA_PASO } from '@/shared/ui/ranura'
 
 /** El panel fijo solo existe desde la anchura de escritorio (lg de Tailwind).
- *  Debajo, la banda índigo con el ☰ abre el mismo panel desde la izquierda
+ *  Debajo, la banda clara con el ☰ abre el mismo panel desde la izquierda
  *  (X5 §4.2): tener los dos montados repetía todas sus cuentas con uno invisible. */
 const ESCRITORIO = '(min-width: 1024px)'
 const suscribirAncho = (cb: () => void) => { const m = matchMedia(ESCRITORIO); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb) }
@@ -53,7 +53,7 @@ const recordarPlegado = (rolId: string, plegado: boolean) => {
 const CARGANDO = <p role="status" data-cargando="" className="p-3 text-[14px] text-[var(--tinta2)]">Cargando…</p>
 /** Mientras llega la cabecera, su mismo alto (A20): lo de abajo no salta al llegar. */
 const CARGANDO_CABECERA = <p role="status" data-cargando="" className="mb-4 min-h-[52px] p-0 text-[14px] text-[var(--tinta2)] sm:mb-5 lg:min-h-[78px]"><span className="sr-only">Cargando…</span></p>
-const CARGANDO_PANEL = <p role="status" data-cargando="" className="p-4 text-[14px] text-[var(--marca-tenue)]">Cargando…</p>
+const CARGANDO_PANEL = <p role="status" data-cargando="" className="p-4 text-[14px] text-[var(--nav-tinta2)]">Cargando…</p>
 
 /** Una dirección compartida que pedía un campo (o el portafolio) que la persona
  *  no tiene abre lo suyo y lo dice, mientras no se mueva de esa vista (B-38). */
@@ -64,21 +64,22 @@ function AvisoDeDireccion() {
   return <p role="status" className="no-imprimir mb-3 rounded-[14px] border-[1.5px] border-dashed border-[var(--tinta3)] px-3.5 py-2 text-[14px] text-[var(--tinta2)]" data-aviso-campo>{aviso.texto}</p>
 }
 
-/** La banda índigo del teléfono (X5 §4.2): el ☰ con la insignia de Hoy, el
- *  logo, el campo en su píldora blanca y la persona. Sin barra inferior. */
+/** La banda del teléfono (v3, decisión 5): clara, en el gris cálido del panel,
+ *  con su borde abajo; el ☰ con la insignia de Hoy, el logo, el campo en su
+ *  píldora y la persona. Sin barra inferior (decisión 4). */
 function BandaTelefono({ onMenu }: { onMenu: () => void }) {
   const rol = useRol()
   // El ☰ lleva la insignia de Hoy: así se sabe que hay algo sin abrir el panel.
   const conHoy = (PUERTAS_DEL_ROL[rol.id] ?? []).includes('hoy') && rol.pantallas.includes('hoy')
   return (
-    <div data-banda className="sobre-marca no-imprimir flex min-h-16 shrink-0 items-center gap-2.5 bg-[var(--marca)] px-4 py-3 text-white lg:hidden">
+    <div data-banda className="no-imprimir flex min-h-16 shrink-0 items-center gap-2.5 border-b border-[var(--nav-linea)] bg-[var(--nav)] px-4 py-3 text-[var(--nav-tinta)] lg:hidden">
       <button onClick={onMenu}
-        className="toque relative -ml-1.5 grid size-10 shrink-0 cursor-pointer place-items-center rounded-full hover:bg-white/[.10]">
+        className="toque relative -ml-1.5 grid size-10 shrink-0 cursor-pointer place-items-center rounded-full hover:bg-[var(--nav-hover)]">
         <Menu aria-hidden className="size-6" />
         <span className="sr-only">Abrir la navegación</span>
         {conHoy && <InsigniaHoy variante="menu" />}
       </button>
-      <span className="shrink-0 max-[359px]:hidden"><WordmarkBlanco className="h-[15px]" /></span>
+      <span className="shrink-0 max-[359px]:hidden"><Wordmark className="h-[15px]" /></span>
       <span data-banda-campo className="flex min-w-0 flex-1 justify-center"><SelectorCampo variante="banda" /></span>
       <span data-banda-persona className="contents"><MenuPerfil variante="banda" /></span>
       {/* UI-21 (imagen 5): con la pregunta del operador, «Pregunta 1 de 4» va aquí, en la
@@ -89,7 +90,7 @@ function BandaTelefono({ onMenu }: { onMenu: () => void }) {
   )
 }
 
-/** El panel abierto en el teléfono: el mismo panel azul, desde la izquierda, al
+/** El panel abierto en el teléfono: el mismo panel claro, desde la izquierda, al
  *  84 % del ancho, con la pantalla detrás oscurecida al 40 %. Se cierra tocando
  *  afuera, deslizando a la izquierda, con Escape o al escoger una puerta. */
 function PanelTelefono({ onCerrar }: { onCerrar: () => void }) {
@@ -102,7 +103,7 @@ function PanelTelefono({ onCerrar }: { onCerrar: () => void }) {
       <div ref={dialogo} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Navegación"
         onTouchStart={e => { toque.current = e.touches[0]?.clientX ?? null }}
         onTouchMove={e => { const x0 = toque.current, x = e.touches[0]?.clientX; if (x0 !== null && x !== undefined && x0 - x > 60) { toque.current = null; onCerrar() } }}
-        className="entra-izquierda sobre-marca absolute inset-y-0 left-0 w-[84%] max-w-[360px] shadow-[var(--sombra-flota)] outline-none">
+        className="entra-izquierda absolute inset-y-0 left-0 w-[84%] max-w-[360px] shadow-[var(--sombra-flota)] outline-none">
         <Suspense fallback={CARGANDO_PANEL}><Riel onCerrar={onCerrar} /></Suspense>
       </div>
     </div>

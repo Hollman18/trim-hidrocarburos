@@ -49,7 +49,7 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
   const quien = `${persona.nombre} · ${rol.nombre}`
 
   const avatar = (
-    <span className={cn('grid shrink-0 place-items-center rounded-full bg-[var(--marca-capa)] font-semibold text-white',
+    <span className={cn('grid shrink-0 place-items-center rounded-full bg-[var(--panel)] font-semibold text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--nav-linea)]',
       variante === 'banda' ? 'size-[34px] text-[13px]' : 'size-[38px] text-[14px]')}>{persona.iniciales}</span>
   )
 
@@ -58,26 +58,26 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
       {/* Cada vez que se abre, empieza en el menú y no en la lista de roles de la vez anterior. */}
       <button {...propsBoton} onClick={() => { setVista('menu'); setAbierto(v => !v) }}
         aria-label={quien} title={variante === 'panel' ? undefined : quien}
-        className={cn('flex cursor-pointer items-center rounded-[14px] text-left text-white',
-          variante === 'panel' ? 'min-w-0 flex-1 gap-3 px-1.5 py-1.5 hover:bg-white/[.08]' : 'toque rounded-full p-0.5 hover:bg-white/[.10]')}>
+        className={cn('flex cursor-pointer items-center rounded-[10px] text-left text-[var(--nav-tinta)]',
+          variante === 'panel' ? 'min-w-0 flex-1 gap-3 px-1.5 py-1.5 hover:bg-[var(--nav-hover)]' : 'toque rounded-full p-0.5 hover:bg-[var(--nav-hover)]')}>
         {avatar}
         {variante === 'panel' && (
           <span className="min-w-0 flex-1">
             <b className="block truncate text-[15px] font-semibold leading-tight">{persona.nombre}</b>
-            <small className="block text-[13px] leading-snug text-[var(--marca-tenue)]">{rol.nombre}{persona.sinAcceso ? ' · sin acceso activo' : ''}</small>
+            <small className="block text-[13px] leading-snug text-[var(--nav-tinta2)]">{rol.nombre}{persona.sinAcceso ? ' · sin acceso activo' : ''}</small>
           </span>
         )}
       </button>
       {variante === 'panel' && onPlegar && (
         <button onClick={onPlegar} aria-label="Plegar el panel" title="Plegar el panel ( [ )"
-          className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white">
+          className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]">
           <PanelLeftClose className="size-5" />
         </button>
       )}
 
       {abierto && (
         <div id={id} role="group" aria-label="Mi perfil"
-          className={cn('absolute z-[130] w-[284px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[16px] bg-[var(--elevado)] text-[var(--tinta)] shadow-[var(--sombra-flota)]',
+          className={cn('absolute z-[130] w-[284px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[10px] bg-[var(--elevado)] text-[var(--tinta)] shadow-[var(--sombra-flota)]',
             variante === 'panel' && 'bottom-[calc(100%+8px)] left-0',
             variante === 'plegado' && 'bottom-0 left-[calc(100%+14px)]',
             variante === 'banda' && 'right-0 top-[calc(100%+10px)]')}>
@@ -92,25 +92,25 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
               </div>
               <div className="p-1.5">
                 <button onClick={() => { setPantalla('perfil'); setAbierto(false) }} aria-current={pantalla === 'perfil' ? 'page' : undefined}
-                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
+                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
                   <UserRound className="size-[18px] text-[var(--tinta2)]" /> Mi perfil
                 </button>
                 {fuera.map(p => {
                   const I = PANTALLAS[p]!.icono
                   return (
                     <button key={p} onClick={() => { setPantalla(p); setAbierto(false) }} aria-current={pantalla === p ? 'page' : undefined}
-                      className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
                       <I className="size-[18px] text-[var(--tinta2)]" /> {nombreFuera(rol.id, p)}
                     </button>
                   )
                 })}
                 {/* Las señas van sobre el inicio de verdad del rol (X4 §6.2): se pasa a él y se abren. */}
                 <button onClick={() => { setPantalla(rol.inicio); abrirOnboarding(); setAbierto(false) }}
-                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
+                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
                   <BookOpen className="size-[18px] text-[var(--tinta2)]" /> Introducción
                 </button>
                 <button onClick={() => setVista('roles')}
-                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
+                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
                   <ArrowLeft className="size-[18px] rotate-180 text-[var(--tinta2)]" />
                   <span className="flex-1">Cambiar de rol</span>
                   <ChevronRight className="size-4 text-[var(--tinta3)]" />
@@ -119,10 +119,10 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
               <div className="border-t border-[var(--linea2)] p-3">
                 <p className="px-0.5 pb-2 text-[13px] font-semibold text-[var(--tinta2)]">Apariencia</p>
                 {/* El escogido va como lo seleccionado de B: el aro y el tono de la mano. */}
-                <div className="grid grid-cols-3 gap-1 rounded-full bg-[var(--panel2)] p-1 shadow-[inset_0_0_0_1px_var(--linea)]">
+                <div className="grid grid-cols-3 gap-1 rounded-[8px] bg-[var(--panel2)] p-1 shadow-[inset_0_0_0_1px_var(--linea)]">
                   {TEMAS.map(({ id, nombre, Icono }) => (
                     <button key={id} onClick={() => setTema(id)} aria-pressed={tema === id}
-                      className={cn('flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-1 py-1.5 text-[13px]',
+                      className={cn('flex cursor-pointer items-center justify-center gap-1.5 rounded-[6px] px-1 py-1.5 text-[13px]',
                         tema === id ? 'bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'text-[var(--tinta)] hover:bg-[var(--panel)]')}>
                       <Icono className="size-3.5" /> {nombre}
                     </button>
@@ -147,8 +147,8 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
                     <div className={cn(area.id !== 'direccion' && 'ml-3 border-l border-[var(--linea2)] pl-1')}>
                       {area.roles.map(r => (
                         <button key={r.id} onClick={() => { setRol(r.id); setAbierto(false) }} aria-current={r.id === rol.id ? 'true' : undefined}
-                          className={cn('w-full cursor-pointer rounded-[12px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]',
-                            r.id === rol.id && 'bg-[var(--marca-suave)] font-semibold')}>
+                          className={cn('w-full cursor-pointer rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]',
+                            r.id === rol.id && 'bg-[var(--acento-suave)] font-semibold shadow-[inset_3px_0_0_var(--acento)]')}>
                           {r.nombre}
                           <span className="block text-[13px] font-normal text-[var(--tinta2)]">
                             {personaDelRol(usuarios, r.id)?.nombre ?? 'nadie asignado'}

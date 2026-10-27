@@ -70,7 +70,7 @@ Fondo: Mantenimiento del jefe en La Ceiba (6C.3, captura 1).
 | # | Lo que se ve | En la captura | Cómo se calcula | Texto según el valor | Viene de |
 |---|---|---|---|---|---|
 | 1 | Nota | «Cinco campos ficticios, calibrados con fuentes publicadas.» | fija | — | `Cabecera.tsx:88` |
-| 2 | Nota | «SAP y WhatsApp, simulados: ver el contrato con el backend.» | fija | — | `Cabecera.tsx:89` |
+| 2 | Nota | «SAP y WhatsApp, simulados: ver el contrato con el backend.» (WhatsApp: **RETIRADO (27-oct-2026)**; queda SAP) | fija | — | `Cabecera.tsx:89` |
 
 En el papel del demo el sello sale en el membrete y arriba de **cada** hoja (`@page @top-center`, `Membrete.tsx:21-28`). Con `VITE_FUENTE=http` (el producto) no aparece en ningún lado.
 

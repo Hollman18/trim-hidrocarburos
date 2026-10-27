@@ -35,7 +35,6 @@ const PANTALLAS = [
   // El detalle de una bomba es su nivel 3 (C4): la dirección de antes (`#/sup/bombas/…/P-201B`) abre aquí.
   { archivo: 'ficha-bomba-parada', ruta: '#/sup/equipos/ceiba/P-201B' },
   { archivo: 'turno', ruta: '#/sup/turno/ceiba/curso' },
-  { archivo: 'whatsapp-operario', ruta: '#/oper/causa/ceiba/curso', boton: 'Ver mi chat de WhatsApp', elemento: /^Chat de WhatsApp de / },
   { archivo: 'confiabilidad', ruta: '#/conf/confiabilidad/morichal/curso' },
   // Mi trabajo se fundió en Hoy (F1, P-trabajo-1): las órdenes de SAP del técnico son tarjetas de su Hoy.
   { archivo: 'ordenes-sap-tecnico', ruta: '#/tec/hoy/ceiba/curso' },

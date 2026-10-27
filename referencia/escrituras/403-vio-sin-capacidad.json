@@ -1,0 +1,1 @@
+{"id":"403-vio-sin-capacidad","descripcion":"El gerente (sin causa:declarar) dice lo que vio","pasos":[{"metodo":"POST","endpoint":"/api/paradas/EV-2011-1002/vio","rol":"ger","cuerpo":{"modo":"ELP"},"esperado":{"estado":403,"codigo":"sin-capacidad"}}]}

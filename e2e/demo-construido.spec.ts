@@ -10,7 +10,7 @@ test('el demo construido carga cada pantalla', async ({ flujo: f }) => {
   f.page.on('console', m => { if (m.type() === 'error') f.errores.push(`console.error ${m.text().slice(0, 160)}`) })
   await f.abrir('/#/oper/causa/ceiba/curso')
   for (const [ruta, debe] of [
-    ['#/oper/causa/ceiba/curso', 'Ver mi chat de WhatsApp'],
+    ['#/oper/causa/ceiba/curso', 'No arrancar hasta identificar el daño'],
     // F2 (P-conf-1): «Lo que anunció y en qué quedó» va detrás de «Ver lo que anunció»; a la vista, su línea.
     ['#/conf/confiabilidad/morichal/curso', '¿Le creo al vigía?'],
     ['#/adm/conectores/ceiba/curso', 'Sistemas corporativos'],

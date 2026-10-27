@@ -247,7 +247,7 @@ El evento se **abre** en la transición (marcha → paro, o frecuencia de operac
 
 Un disparo que no es de esa máquina (`PAL-1011` del aire de instrumentos en `EV-2011-260128`, `52-SE2` de la subestación en Morichal) se guarda tal cual como primera alarma: el motor no lo usa para la parte y busca el servicio caído a ±15 min (capítulo 5B).
 
-**Ejemplos del demo.** `EV-2011-0809` (La Ceiba): paró el 9-ago-2026 a las 21:14 con primera alarma LSH-2013 «fuga de sello detectada» y el tanque al 77,3 %; arrancó el 11-ago a las 07:59:36. `EV-2011-1002`: paró el 2-oct-2026 a las 03:52:18, sin primera alarma ni firma, con el tanque al 78,7 %, y sigue parada: por eso es «sin identificar» y sale la pregunta de WhatsApp. `EV-3016-260310` (MPP-301, Morichal): `perdida` 0,36 del 10 al 13-mar-2026. De las 36 paradas del demo, 27 traen primera alarma y **ninguna** trae firma (el demo nunca la manda: el backend real sí).
+**Ejemplos del demo.** `EV-2011-0809` (La Ceiba): paró el 9-ago-2026 a las 21:14 con primera alarma LSH-2013 «fuga de sello detectada» y el tanque al 77,3 %; arrancó el 11-ago a las 07:59:36. `EV-2011-1002`: paró el 2-oct-2026 a las 03:52:18, sin primera alarma ni firma, con el tanque al 78,7 %, y sigue parada: por eso es «sin identificar» y sale la pregunta (por WhatsApp: **RETIRADO (27-oct-2026)**; hoy, la pregunta de Hoy). `EV-3016-260310` (MPP-301, Morichal): `perdida` 0,36 del 10 al 13-mar-2026. De las 36 paradas del demo, 27 traen primera alarma y **ninguna** trae firma (el demo nunca la manda: el backend real sí).
 
 ### 4.7.3 Caídas de servicios (`EventoServicio`, `GET /api/campos/:campo/servicios/eventos`)
 
@@ -317,7 +317,7 @@ El contrato no fija latencias; estas son las del diseño del producto, con su fu
 
 | Qué | Objetivo | Por qué |
 |---|---|---|
-| Del paro de una bomba o de una electrosumergible al WhatsApp de la parada | ≤ 1 min | El registro de mensajes del demo pone la hora de cada aviso de parada a 1 min del inicio del evento (`aLas(t) = t + 60 s`, `src/entities/mensajes.ts:254`). Exige que el evento viaje del PLC al servidor en segundos: por la fuente primaria, no por el historiador comprimido. |
+| Del paro de una bomba o de una electrosumergible al WhatsApp de la parada (**RETIRADO (27-oct-2026)**; el mismo plazo vale para la tarjeta de la parada en Hoy) | ≤ 1 min | El registro de mensajes del demo pone la hora de cada aviso de parada a 1 min del inicio del evento (`aLas(t) = t + 60 s`, `src/entities/mensajes.ts:254`). Exige que el evento viaje del PLC al servidor en segundos: por la fuente primaria, no por el historiador comprimido. |
 | Recordatorio y escalamiento de «¿qué se dañó?» | 30 min y 2 h | Reglas fijas de `mensajes.ts`. |
 | Del cambio de una lectura a la pantalla (vigía, salud) | minutos | El vigía trabaja con tendencias de días; la cadencia del PI (47 s) es más que suficiente. |
 | Del cierre del día al fiscal en la base | horas | El registro diario del computador de flujo; el libro del día solo se publica con el mes. |
@@ -332,7 +332,7 @@ Lo que pasa cuando el enlace del campo (Starlink en el demo) se cae:
 1. **El gateway sigue leyendo** el PLC y guarda en su cola local (`buffer_h` = 48 h en el demo). El broker publica su `NDEATH` (el testamento MQTT): la ingesta marca sus dispositivos fuera de línea. Las pantallas siguen mostrando el último dato con su hora; el vigía no proyecta con una serie que dejó de llegar (capítulo 5C).
 2. **Al volver**, el gateway renace (`NBIRTH`/`DBIRTH`: el nacimiento no deshace mapeos) y vacía la cola en orden, con las métricas marcadas como históricas. La ingesta las guarda con su `instante` real (no el de llegada).
 3. **Los eventos que llegan tarde** se guardan con la hora del PLC. Lo que el motor calcula sobre ese período cambia: el libro del mes en curso se recalcula en vivo; si el mes ya estaba cerrado y publicado, el precálculo se rehace y queda en `recalculo_mes` con la huella antes y después (capítulo 3).
-4. **Los mensajes de WhatsApp de eventos que llegaron tarde.** Un aviso de «paró» que se manda horas después del paro ya no sirve para cerrar pozos a tiempo. El contrato no lo dice; propuesta en Huecos: mandar igual el aviso con la hora real de la parada en el texto (la plantilla ya la lleva: `{hora}`) y marcarlo como tardío en el registro.
+4. **RETIRADO (27-oct-2026)** **Los mensajes de WhatsApp de eventos que llegaron tarde.** Un aviso de «paró» que se manda horas después del paro ya no sirve para cerrar pozos a tiempo. El contrato no lo dice; propuesta en Huecos: mandar igual el aviso con la hora real de la parada en el texto (la plantilla ya la lleva: `{hora}`) y marcarlo como tardío en el registro.
 5. **Si la caída dura más que la cola**, lo perdido queda como hueco (sin filas; `null` en la serie; un día fiscal sin dato si el computador de flujo tampoco lo guardó). Nunca se interpola. Los computadores de flujo guardan su propio archivo de varios días: el fiscal se recupera de ahí, y por eso conviene leerlo por su protocolo propio y no solo del PI.
 
 ## 4.12 Huecos y dudas

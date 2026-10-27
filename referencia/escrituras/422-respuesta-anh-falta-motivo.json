@@ -1,0 +1,1 @@
+{"id":"422-respuesta-anh-falta-motivo","descripcion":"Un rechazo de la ANH sin su motivo de la lista","pasos":[{"metodo":"POST","endpoint":"/api/anh/respuestas","rol":"reg","cuerpo":{"campoId":"ceiba","dia":"2026-10-01","estado":"rechazado","recibida":"2026-10-02T07:20:00-05:00"},"esperado":{"estado":422,"codigo":"falta-motivo"}}]}

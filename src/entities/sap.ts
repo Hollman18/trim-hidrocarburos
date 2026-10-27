@@ -88,6 +88,9 @@ export interface OrdenSap {
   repuestos: RepuestoOrden[]
   /** Para una correctiva: la parada del PLC que atendió (y su indisponibilidad total). */
   evento?: string
+  /** A3 · El cierre en el teléfono (`POST /api/sap/ordenes/:numero/cierre`), si el
+   *  técnico la cerró desde TRIM. AGREGADO: ausente en lo que viene de SAP. */
+  cierre?: import('./orden-cierre').CierreOrden
 }
 
 export interface Repuesto {

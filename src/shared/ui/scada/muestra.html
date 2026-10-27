@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kit SCADA · muestra</title>
+    <!-- Solo para desarrollo: `npx vite`, y abrir /src/shared/ui/scada/muestra.html (con ?noche para el tema oscuro).
+         No entra al build (vite construye solo index.html). -->
+    <script>if (location.search.includes('noche')) document.documentElement.setAttribute('data-theme', 'dark')</script>
+  </head>
+  <body>
+    <div id="muestra"></div>
+    <script type="module" src="./entrada.tsx"></script>
+  </body>
+</html>

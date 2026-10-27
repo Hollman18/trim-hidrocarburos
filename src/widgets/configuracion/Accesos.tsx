@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { Lock, UserPlus } from 'lucide-react'
 import { ROLES_VISIBLES, rolPorId } from '@/entities/roles'
 import { CAMPOS } from '@/entities/campos'
-import { ESTADO_NOMBRE, nombreCampos, personaDelRol, ROLES_CON_ALERTAS, ALERTAS_DEL_ROL, telefonoLegible, type Usuario, type ErrorAcceso, type CampoAcceso } from '@/entities/usuarios'
+import { ESTADO_NOMBRE, nombreCampos, personaDelRol, type Usuario, type Invitacion, type ErrorAcceso, type CampoAcceso } from '@/entities/usuarios'
 import { useApp } from '@/app/store'
 import { fechaHora } from '@/entities/reloj'
 import { useUsuarios, useRegistroDeAccesos, useAccesos, esCompleta } from '@/shared/api/usuarios'
@@ -17,7 +17,7 @@ const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2
 /** Marca del formulario de invitación abierto: no es un id de persona. */
 const INVITAR = 'invitar'
 /** El orden del formulario: al fallar, el foco va al primer campo con error. */
-const ORDEN: CampoAcceso[] = ['nombre', 'correo', 'rol', 'campos', 'whatsapp', 'alertas', 'motivo', 'general']
+const ORDEN: CampoAcceso[] = ['nombre', 'correo', 'rol', 'campos', 'motivo', 'general']
 const NIVEL = { decision: 'resumen para decidir', operacion: 'lo de operar', ingenieria: 'todo el detalle' } as const
 
 /** Quién entra, con qué rol y a qué campos. Lo administra el gerente de
@@ -36,7 +36,10 @@ export function Accesos({ puede }: { puede: boolean }) {
   const cuenta = (e: Usuario['estado']) => usuarios.filter(u => u.estado === e).length
   // Sin rol ni campos escogidos de antemano: invitar con el rol equivocado es fácil si ya viene puesto.
   // El id, el día y el estado no los pone el front: los da el servidor al invitar (`POST /api/usuarios`).
-  const nuevo: Usuario = { id: INVITAR, nombre: '', correo: '', rolId: '', campos: [], estado: 'invitado', desde: '', telefono: '', alertas: false }
+  // Sin el canal de mensajes (experiencia v3): nadie recibe alertas fuera de TRIM. Va por una variable, no por
+  // un literal, para que no dependa de si el contrato todavía lleva el campo `alertas` (A1 lo retira).
+  const vacio = { id: INVITAR, nombre: '', correo: '', rolId: '', campos: [], estado: 'invitado' as const, desde: '', alertas: false }
+  const nuevo: Usuario = vacio
   // El historial, el más reciente primero: cinco a la vista y «ver N más»; en el papel, todo.
   const historial = useVerMas([...accesos].reverse())
   const cambio = (a: typeof accesos[number]) => (
@@ -69,7 +72,6 @@ export function Accesos({ puede }: { puede: boolean }) {
                   <b className={cn('block text-[15px]', u.estado === 'suspendido' && 'text-[var(--tinta3)] line-through')}>{u.nombre}{u.id === yo && <span className="font-normal text-[var(--tinta3)]"> · usted</span>}</b>
                   {esCompleta(u) && <small className="block break-all text-[13px] text-[var(--tinta2)]">{u.correo}</small>}
                   <small className="block text-[13px] text-[var(--tinta2)]">{rolPorId(u.rolId).nombre} · {nombreCampos(u.campos)}</small>
-                  <small className="block text-[13px] text-[var(--tinta3)]">{u.telefono ? `WhatsApp ${telefonoLegible(u.telefono)}` : 'sin WhatsApp'}{u.alertas ? ' · recibe alertas' : ''}</small>
                 </span>
                 <span className="flex shrink-0 items-center gap-1.5">
                   {u.estado !== 'activo' && <Chip tono={u.estado === 'suspendido' ? 'fuerte' : 'neutro'}>{ESTADO_NOMBRE[u.estado]}</Chip>}
@@ -96,6 +98,14 @@ export function Accesos({ puede }: { puede: boolean }) {
   )
 }
 
+/** Lo que se manda al invitar: los datos de la persona (el id, el día y el estado los pone el
+ *  servidor). Sin el canal de mensajes no hay número ni alertas: va por una variable para no depender de si el
+ *  contrato todavía lleva `alertas` (A1 lo retira). */
+const invitacionDe = (u: Usuario): Invitacion => {
+  const datos = { nombre: u.nombre, correo: u.correo, rolId: u.rolId, campos: u.campos, alertas: false }
+  return datos
+}
+
 /** Invitar o cambiar a una persona. Los mismos campos, el mismo motivo
  *  obligatorio y las mismas reglas que el servidor. */
 function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; nuevo?: boolean
@@ -105,8 +115,7 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
   alcance: Usuario['campos']; onListo: () => void }) {
   // Las escrituras son acciones del estado: esperan la respuesta del servidor (o del demo, con sus mismas reglas).
   const guardar = useApp(s => s.guardarUsuario); const invitar = useApp(s => s.invitarUsuario)
-  // El número se edita como se lee («+57 300 123 4567»); al guardar vuelve a E.164 (escrituras.ts), así no cuenta como cambio.
-  const [u, setU] = useState<Usuario>(() => (base.telefono ? { ...base, telefono: telefonoLegible(base.telefono) } : base))
+  const [u, setU] = useState<Usuario>(base)
   const [motivo, setMotivo] = useState('')
   const [errores, setErrores] = useState<ErrorAcceso[]>([])
   // Cada error va junto a su caja: la caja queda inválida y lo describe (WCAG 3.3.1).
@@ -124,14 +133,13 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
   const puedeTodos = alcance === 'todos' || base.campos === 'todos'
   const visibles = CAMPOS.filter(c => alcance === 'todos' || alcance.includes(c.id) || (base.campos !== 'todos' && base.campos.includes(c.id)))
   const cambiar = (p: Partial<Usuario>) => { setU(x => ({ ...x, ...p })); setErrores([]) }
-  const conAlertas = ROLES_CON_ALERTAS.includes(u.rolId)
 
   return (
     <form className="mt-2 grid gap-2 rounded border border-[var(--linea2)] bg-[var(--panel2)] p-2.5"
       onSubmit={async e => {
         e.preventDefault()
         const r = await (nuevo
-          ? invitar({ nombre: u.nombre, correo: u.correo, rolId: u.rolId, campos: u.campos, telefono: u.telefono, alertas: u.alertas }, motivo)
+          ? invitar(invitacionDe(u), motivo)
           : guardar(u, motivo))
         if (r.ok) return onListo()
         setErrores(r.errores)
@@ -150,7 +158,7 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
         </div>
       )}
       <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">Rol</span>
-        <select id={idCaja('rol')} {...invalido('rol')} value={u.rolId} disabled={propio} onChange={e => cambiar({ rolId: e.target.value, alertas: ROLES_CON_ALERTAS.includes(e.target.value) && u.alertas, ...(nuevo && e.target.value ? { campos: rolPorId(e.target.value).campos } : {}) })} className={cn(campoInput, 'disabled:opacity-70')}>
+        <select id={idCaja('rol')} {...invalido('rol')} value={u.rolId} disabled={propio} onChange={e => cambiar({ rolId: e.target.value, ...(nuevo && e.target.value ? { campos: rolPorId(e.target.value).campos } : {}) })} className={cn(campoInput, 'disabled:opacity-70')}>
           {nuevo && <option value="">Escoja un rol</option>}
           {ROLES_VISIBLES.map(r => <option key={r.id} value={r.id}>{r.nombre} · {NIVEL[r.nivel]}</option>)}
         </select>
@@ -179,16 +187,6 @@ function Formulario({ base, nuevo, propio, alcance, onListo }: { base: Usuario; 
         )}
         {mensaje('campos')}
       </fieldset>
-      <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))]">
-        <label className="grid gap-0.5"><span className="text-[13px] text-[var(--tinta2)]">WhatsApp para alertas</span>
-          <input id={idCaja('whatsapp')} {...invalido('whatsapp')} value={u.telefono ?? ''} onChange={e => cambiar({ telefono: e.target.value })} className={campoInput} placeholder="300 123 4567 o +57 300 123 4567" inputMode="tel" autoComplete="off" />
-          {mensaje('whatsapp')}</label>
-        <label className={cn('flex min-h-8 items-start gap-1.5 self-end pb-1.5 text-[14px]', !conAlertas && 'text-[var(--tinta3)]')}>
-          <input id={idCaja('alertas')} {...invalido('alertas')} type="checkbox" className="mt-0.5 size-4 shrink-0" checked={u.alertas} disabled={!conAlertas} onChange={e => cambiar({ alertas: e.target.checked })} />
-          <span>{conAlertas ? <>Recibe por WhatsApp: {ALERTAS_DEL_ROL[u.rolId]}</> : u.rolId ? 'Este rol no recibe alertas por WhatsApp' : 'Escoja el rol para ver qué alertas recibe'}
-            {mensaje('alertas')}</span>
-        </label>
-      </div>
       {!nuevo && !propio && (
         <label className="flex min-h-8 items-center gap-1.5 text-[14px]">
           <input type="checkbox" className="size-4" checked={u.estado === 'suspendido'}

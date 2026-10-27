@@ -1,56 +1,49 @@
 # Cambios del contrato desde la versión 1
 
-> **BORRADOR** (M3, 27-oct-2026). Todavía no lo aprobó el dueño (puerta de §10, punto 4b, del prompt de la experiencia v3).
+> **27-oct-2026 · A1 (experiencia v3).** El dueño aprobó las decisiones (`docs/experiencia-v3/CONSTRUCCION.md`): rige el SQL de v1, WhatsApp sale y lo nuevo va al lado. Este documento ya no es un borrador: dice lo que quedó hecho.
 >
-> - **Línea base:** la versión 1, commit **`cde8214`** («TRIM Hidrocarburos: front para entregar al backend», 7-oct-2026). Es la que tomó el desarrollador del backend.
-> - **Comparado contra:** `HEAD` = **`9378717`** (27-oct-2026). Son 15 commits que tocaron el contrato o la referencia.
+> - **Línea base:** la versión 1, commit **`cde8214`** («TRIM Hidrocarburos: front para entregar al backend», 7-oct-2026). Es la que tomó el desarrollador del backend. Su foto está en [`linea-base/v1.json`](linea-base/v1.json) y su referencia, tal cual, en [`linea-base/v1/referencia/`](linea-base/v1/referencia/).
 > - **La regla:** «al lado, nunca encima». Lo que existe no se renombra, no se borra y no cambia de significado. Lo nuevo se agrega al lado. Lo que sale se marca RETIRADO.
-> - **Qué se comparó, campo por campo:**
->   - `CONTRATO.md`;
->   - `src/shared/api/contrato.ts` (rutas y códecs) y los tipos del motor que viajan;
->   - `src/shared/api/escrituras.ts` (las reglas de cada escritura);
->   - `referencia/`: los 89 archivos que ya existían en v1, comparados clave por clave, tipo por tipo y texto por texto, también commit por commit;
->   - el SQL: el de v1 (`simulador-api/esquema.sql`, que no cambió) contra el nuevo (`docs/backend/sql/esquema.sql`).
+> - **El registro para la máquina:** [`cambios-contrato.json`](cambios-contrato.json): una entrada por cambio, con su fecha, su commit, su motivo, su reemplazo y si quedó compatible (`resuelto`).
+> - **La prueba:** `npm run verificar:contrato`, sección «A1» (§8). Si alguien rompe el contrato sin registrarlo, falla y dice qué rompió.
 > - **Cómo repetir la medición:** §7.
 
 ---
 
 ## 1. Para el desarrollador, en una tabla corta
 
-**«¿Lo usa lo necesario?»** sale de [`docs/experiencia-v3/necesario-por-rol.md`](../experiencia-v3/necesario-por-rol.md) y [`borrado.md`](../experiencia-v3/borrado.md) (M1, 27-oct). Hay tres respuestas:
-- **AGREGAR AHORA:** lo usa lo necesario de algún rol (lo que ve, tiene o hace).
-- **PARA DESPUÉS:** lo usa solo un escalón de la escalera de algún rol.
-- **YA NO CONSTRUIR:** no lo usa nadie. Incluye lo RETIRADO (WhatsApp) y lo que solo usaba una pantalla que sale: Turno, la pantalla Evidencia del rol cont, Identificar como pantalla, Diferidos, Bombas y Electrosumergibles como pantallas, y el resumen viejo del gerente.
-  - Lo de v1 que cae aquí **no se borra del contrato** (§3.1): queda «no prioritario».
-  - Si usted ya lo hizo, déjelo.
+**Lo que usted tiene que hacer, en orden.** «Resuelto» dice cómo quedó cada cambio frente a v1:
+- **al lado:** volvió a ser compatible con v1; si usted construyó v1, sigue valiendo;
+- **compatible:** lo que v1 manda sigue valiendo, no hay que hacer nada;
+- **registrado:** no se puede deshacer sin romper la v2 (una corrección de cálculo, un texto): hay que adoptarlo.
+
+| # | Qué | Tipo · resuelto | Qué hacer | ¿lo usa lo necesario? |
+|---|---|---|---|---|
+| R1–R8 | **WhatsApp completo:** `GET /api/mensajes`, el webhook, el envío por Meta y las plantillas, el teléfono y las alertas de cada persona, el `canal` de la respuesta y sus tablas del SQL nuevo | **RETIRADO** (27-oct-2026) | **No construirlo.** Si ya lo hizo, puede quitarlo cuando quiera. Acepte e ignore `telefono` y `alertas` en `/api/usuarios`, sin un `422` por ellos: el front nunca manda `telefono` y manda `alertas: false` (v1 la pide) (§3) | **YA NO CONSTRUIR** |
+| C1 | `Riesgo.costoFalla` había cambiado de significado | CAMBIADO · **al lado** | Nada si construyó v1: `costoFalla` volvió a su significado de v1. Agregue **`costoFallaHoy`** (opcional), la cifra «si falla hoy» que pinta el front (§4.1) | **YA NO CONSTRUIR** el de v1; `costoFallaHoy`, cuando haga `/vistas/riesgo` |
+| C2 | Dispositivo sin lectura: `valor: "—"` → `null` | CAMBIADO · **al lado** | Nada: el front acepta los dos. Un backend nuevo manda `null` (§4.1) | **AGREGAR AHORA** (nivel 4 de conf) |
+| C5–C8 | Reglas de cálculo (el colchón de una parada vieja, el cierre parcial de una ESP, `fallo` en la ESP, la evidencia de la cascada) | CAMBIADO · registrado | Ajustar el motor del servidor: son correcciones del QA (§4.2) | **AGREGAR AHORA** |
+| C9–C11 | Textos: «bomba de reinyección» → «bomba de agua»; las horas de `motivo` y de `mdtFuente` | CAMBIADO · registrado | Cambiar las frases del servidor (§4.3) | **AGREGAR AHORA** (C9); C10 y C11 son de `/vistas/riesgo` |
+| C12 | `peticion-invalida` en las 9 escrituras de v1 | CAMBIADO · **al lado** | `400` o `422`: los dos valen en las escrituras de v1 (§4.4) | **AGREGAR AHORA** |
+| C13, C16 | `403 rol-desconocido`; motivo ≤ 500 en la configuración | CAMBIADO · registrado | Adoptarlos (seguridad y un tope al texto libre) (§4.4) | **AGREGAR AHORA** |
+| C18 | Datos del demo regenerados (`e5a195f`) | CAMBIADO · **al lado** | Para comparar contra v1: `--referencia=docs/backend/linea-base/v1/referencia` (§4.5) | — |
+| C19, Q1–Q5 | SQL de la cadena: 9 tablas con otra forma en el SQL nuevo | CAMBIADO · **al lado** | **Rige el SQL de v1** (`simulador-api/esquema.sql`, sin cambios). `docs/backend/sql/v1-cadena.sql` da sus tablas y columnas desde el modelo nuevo (§4.6) | **AGREGAR AHORA** (adm: tags sin equipo) |
+| C3, C4, C14, C15, C17 | Compatibles | CAMBIADO · compatible | Nada obligatorio (§4.7) | **AGREGAR AHORA** (C3 y C4 son insumos) |
+| A3-1 | `POST /api/paradas/:evento/respuesta`: `modo` pasa a opcional con `parte` («Contestar» en 1 toque) | CAMBIADO · registrado | Aceptar la parte sin `modo`. **Ojo:** un backend de v1 responde `422` hasta que lo adopte; es la única regla de v1 que se relaja (§9.2) | **AGREGAR AHORA** (oper y tec) |
+| E1–E29 | 29 endpoints nuevos de la v2 | **AGREGADO** | 23 ahora, 3 después y 3 no (§1.1, §5) | ver §1.1 |
+| M1–M8, A2, A3 | Lo que faltaba en el motor, **ya construido**: pérdidas, balance, jornada, efectividad, fallas por mes (A2); cierre de la orden, respuesta de la ANH, conversión del árbol, 5 tramos (A3); `porConfirmar` y el estado de la configuración (A1) | **AGREGADO** | Construir lo de **AGREGAR AHORA**, con su caso en `referencia/` (§9.2, §9.3 y §9.4) | **AGREGAR AHORA** |
+| F1–F17 | Campos, capacidades y códigos nuevos | **AGREGADO** | §5.3. F3, F9, F10 y F11 ya están escritos en `CONTRATO.md` («A1») | ver §5.3 |
 
 **Las cuentas, endpoint por endpoint** (el detalle de cada uno está en §1.1):
 
 | | AGREGAR AHORA | PARA DESPUÉS | YA NO CONSTRUIR | Total |
 |---|---|---|---|---|
-| Las 50 de v1 (41 lecturas + 9 escrituras) | **35** (27 + 8) | **5** (5 + 0) | **10** (9 + 1): 1 RETIRADO y 9 «no prioritario» | 50 |
-| Las 29 nuevas desde v1 (20 lecturas + 9 escrituras) | **23** (15 + 8) | **3** (2 + 1) | **3** (3 + 0) | 29 |
-| **Las 79 del código** | **58** | **8** | **13** | **79** |
-| Lo que falta en el motor (§9): las 7 piezas de M1, más 1 encontrada al cruzar | **9 endpoints nuevos** y 4 campos opcionales en lo que ya existe | — | — | 9 |
+| Las 50 de v1 (41 lecturas + 9 escrituras) | **35** (27 + 8) | **5** (5 + 0) | **10** (9 + 1): 1 RETIRADO (`GET /mensajes`) y 9 «no prioritario» | 50 |
+| Las 29 de la v2 (20 lecturas + 9 escrituras) | **23** (15 + 8) | **3** (2 + 1) | **3** (3 + 0) | 29 |
+| Las 13 de la v3 (A1, A2 y A3: 8 lecturas + 5 escrituras) | **13** | — | — | 13 |
+| **En el código hoy:** 68 lecturas en `contrato.ts` y 23 escrituras (22 en `escrituras.ts` y `POST /perdidas`) | **71** | **8** | **12** | **91** |
 
-Hay además 2 rutas que solo están en `CONTRATO.md`: `GET` y `POST /api/webhooks/whatsapp`. Son **YA NO CONSTRUIR** (RETIRADO). Las de la cadena de datos y los insumos están al final de §1.1.
-
-**Lo que usted tiene que hacer, en orden:**
-
-| # | Qué | Tipo | Qué hacer | ¿lo usa lo necesario? |
-|---|---|---|---|---|
-| R | **WhatsApp completo:**<br>• `GET /api/mensajes`;<br>• `GET` y `POST /api/webhooks/whatsapp`;<br>• el envío por Meta y las 10 plantillas;<br>• el teléfono y las alertas de cada persona;<br>• el `canal` de la respuesta | **RETIRADO** (propuesto) | **No construirlo.** Si ya lo hizo, puede quitarlo cuando quiera. Mientras tanto, acepte e ignore `telefono` y `alertas` en `/api/usuarios`; no los rechace (§3). | **YA NO CONSTRUIR** |
-| C2 | Dispositivo sin lectura en `/vistas/equipos/:campo/:equipo`: `valor: "—"` → `null` | **CAMBIADO**: rompe | Propuesta: el front acepta los dos; un backend nuevo manda `null` (§4.1) | **AGREGAR AHORA** (nivel 4 de conf) |
-| C5 a C8 | Reglas de cálculo:<br>• el colchón de una parada vieja;<br>• el cierre parcial de una ESP;<br>• `fallo` en la ESP;<br>• la evidencia de la cascada | **CAMBIADO**: cálculo | Ajustar el motor del servidor (§4.2) | **AGREGAR AHORA**: orden de cierre de sup y oper; nivel 3 y 4; «Ver una por una» |
-| C9 | «bomba de reinyección» → «bomba de agua» en la causa | **CAMBIADO**: texto | Cambiar la frase (§4.3) | **AGREGAR AHORA** |
-| C12, C13, C16 | Errores de las escrituras de v1 (`400` primero, `403 rol-desconocido`, motivo ≤ 500) | **CAMBIADO**: HTTP | §4.4 | **AGREGAR AHORA** (las escrituras se usan) |
-| C18 | Datos del demo regenerados (`e5a195f`) | **CAMBIADO**: datos | Recargar los insumos de `HEAD`; la referencia de v1 queda aparte (§4.5) | — |
-| C19, Q1 a Q5 | SQL: las 9 tablas de la cadena, reestructuradas en el esquema nuevo | **CAMBIADO / QUITADO** | Si usted construyó `simulador-api/esquema.sql`, sigue valiendo (§4.6) | **AGREGAR AHORA** (adm: tags sin equipo) |
-| C1, C10, C11 | `Riesgo.costoFalla` cambió de significado, y sus textos `motivo` y `mdtFuente` | **CAMBIADO**: rompe y texto | Propuesta: `costoFalla` vuelve a v1 y lo nuevo va al lado como `costoFallaHoy` (§4.1) | **YA NO CONSTRUIR**:<br>• lo necesario no pinta `costoFalla` ni esos textos;<br>• «Si falla hoy» llega por `/vistas/lista-equipos`;<br>• `/vistas/riesgo` solo lo usa la ficha ejecutiva del gerente, que no muestra esa cifra.<br>**Por eso C1 deja de ser urgente**: con devolverle su significado de v1 basta. |
-| C3, C4, C14, C15, C17 | Compatibles: `null` en `SerieTag.valor` y `EventoServicio.fin`, `campos` sin repetir, parámetros de las vistas y referencia más estricta | **CAMBIADO**: compatible | Nada obligatorio (§4.7) | **AGREGAR AHORA** (C3 y C4 son insumos y señales del nivel 3) |
-| E1 a E29 | 29 endpoints nuevos | **AGREGADO** | 23 ahora, 3 después y 3 no (§1.1, §5) | ver §1.1 |
-| F1 a F17 | Campos, capacidades y códigos nuevos | **AGREGADO** | §5.3 | ver §5.3 |
-| M1 a M8 | **Lo que falta en el motor** (pérdidas, cierre de la orden, respuesta de la ANH, conversión del árbol, 5 tramos, paradas por confirmar, fallas por mes y estado de la configuración) | **AGREGADO** (propuesto) | Construir cuando el motor lo calcule; mientras tanto, la pantalla dice «sin registro» (§9) | **AGREGAR AHORA** |
+Hay además 2 rutas que solo estaban en `CONTRATO.md`: `GET` y `POST /api/webhooks/whatsapp`. Son **YA NO CONSTRUIR** (RETIRADO). Las de la cadena de datos y los insumos están al final de §1.1.
 
 ### 1.1 Cada endpoint, uno por uno
 
@@ -134,7 +127,7 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | E12 `GET /vistas/topologia/propuestas` | **AGREGAR AHORA** | adm: confirmar los 36, no escribirlos |
 | E13 `GET /vistas/anh/paradas` | **AGREGAR AHORA** | prod, sup y reg: la cadena de cada parada («Ver una por una») |
 | E14 `GET /vistas/anh/calidad` | **AGREGAR AHORA** | conf: «clasificación confirmada 0 de 7» |
-| E15 `GET /vistas/anh/reporte` | **AGREGAR AHORA** | reg: su número principal. **Falta su caso en la referencia.** |
+| E15 `GET /vistas/anh/reporte` | **AGREGAR AHORA** | reg: su número principal (6 casos en `referencia/anh/reporte-*`) |
 | E16 `GET /vistas/planta-viva` | **AGREGAR AHORA** | ger (número principal) y prod (`tecnica`) |
 | E17 `GET /vistas/hoy` | **AGREGAR AHORA** | sup, oper, tec y jefe (sin `whatsapp`: R6) |
 | E18 `GET /vistas/resultados` | **AGREGAR AHORA** | ger (cierre proyectado, diferido del mes) y prod (¿cuadra?) |
@@ -155,7 +148,22 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | E28 `POST /configuracion/vista-previa` | **AGREGAR AHORA** | adm: el impacto antes de firmar (`ImpactoPaso`) |
 | E29 `POST /topologia/importar` | **AGREGAR AHORA** | adm: cargar la topología pegada de Excel (`CargaTopologia`) |
 
-**Fuera de `contrato.ts`** (en `CONTRATO.md` y `simulador-api/`; no entran en las 79):
+**Las 13 de la v3** (A1, A2 y A3, 27-oct-2026; el detalle en §9.2, §9.3 y §9.4)
+
+| Endpoint | ¿lo usa lo necesario? | Quién |
+|---|---|---|
+| `GET /vistas/configuracion/estado` (M8, A1) | **AGREGAR AHORA** | adm: su número principal |
+| `GET /vistas/balance` (A2-1) | **AGREGAR AHORA** | ger, prod, sup, reg, jefe y conf: producido · diferido · perdido |
+| `GET /vistas/perdidas` y `POST /perdidas` (M1, A2) | **AGREGAR AHORA** | oper, sup y prod registran; los roles clave la ven |
+| `GET /vistas/jornada` (A2-2) | **AGREGAR AHORA** | sup |
+| `GET /vistas/efectividad` (A2-3) | **AGREGAR AHORA** | ger y prod |
+| `GET /vistas/fallas/mensual` (M7, A2) | **AGREGAR AHORA** | jefe |
+| `POST /paradas/:evento/vio` (A3-1) | **AGREGAR AHORA** | oper y tec |
+| `POST /sap/ordenes/:numero/cierre` (M2, A3) | **AGREGAR AHORA** | tec |
+| `POST /anh/respuestas` y `GET /vistas/anh/respuestas` (M3, A3) | **AGREGAR AHORA** | reg |
+| `POST /anh/conversion/importar` y `GET /vistas/anh/conversion` (M4, A3) | **AGREGAR AHORA** | adm |
+
+**Fuera de `contrato.ts`** (en `CONTRATO.md` y `simulador-api/`; no entran en las 91):
 
 | Endpoint | ¿lo usa lo necesario? | Quién |
 |---|---|---|
@@ -171,12 +179,12 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 
 | | Rutas (endpoints) | Campos, códigos, reglas, textos y datos | SQL | Total |
 |---|---|---|---|---|
-| **AGREGADO** | 29: de 50 a 79 en el código (20 `GET` + 9 `POST`) | 15 | 2 (el esquema nuevo con 104 tablas y 11 vistas; columnas nuevas en `v_procedencia`) | **46** |
-| **CAMBIADO** | 0 rutas | 18: **2 rompen la forma o el significado** (C1, C2), 3 son textos, 4 son reglas de cálculo, 3 son errores o permisos, 1 son datos del demo y 5 son compatibles | 1 (C19: 9 tablas reestructuradas) | **19** |
-| **QUITADO** | **0**: ninguna ruta ni ningún campo de una respuesta | 0 | 5, solo en el SQL nuevo frente al de v1, todos con reemplazo (Q1 a Q5) | **5** |
-| **RETIRADO** (propuesto) | 3 (`GET /api/mensajes`, `GET` y `POST /api/webhooks/whatsapp`) | 6 grupos de campos y reglas de WhatsApp | 5 tablas y 5 columnas del SQL nuevo | — |
+| **AGREGADO** | 42: 29 de la v2 (20 `GET` + 9 `POST`) y 13 de la v3 (8 `GET` + 5 `POST`) | los de la v2 (F1 a F17) y los de la v3 (`costoFallaHoy`, `porConfirmar`, `tramos` de los relojes, `respuestaAnh`, `cierre` de la orden, dos de la configuración y 3 capacidades) | el esquema nuevo (104 tablas y 11 vistas), columnas nuevas en `v_procedencia` y `v1-cadena.sql` | — |
+| **CAMBIADO** | 0 rutas | 19 de v1 (C1 a C19): **resueltos al lado** C1, C2, C12, C18 y C19 (con Q1 a Q5); **compatibles** C3, C4, C14, C15 y C17; **registrados** C5 a C11, C13 y C16. Y uno de la v3 que relaja una regla de v1: A3-1 | C19 y Q1 a Q5: rige el SQL de v1 | **20** |
+| **QUITADO** | **0** | 0 | **0**: lo que el SQL nuevo no tenía de v1 lo da `v1-cadena.sql` (Q1 a Q5) | **0** |
+| **RETIRADO** | 3 (`GET /api/mensajes`, `GET` y `POST /api/webhooks/whatsapp`) | 6 grupos de campos y reglas de WhatsApp (R3 a R7) | 5 tablas y 6 columnas o restricciones del SQL nuevo (R8) | — |
 
-**Sobre las rutas:** el código de v1 tiene 41 lecturas en `contrato.ts` y 9 escrituras en `escrituras.ts`; el de `HEAD`, 61 y 18. El conteo de 49 → 78 que se midió antes cuenta igual los 29 nuevos. Ninguna ruta se renombró ni se borró.
+**Sobre las rutas:** el código de v1 tiene 41 lecturas en `contrato.ts` y 9 escrituras en `escrituras.ts`; el de hoy, 68 y 23 (22 en `escrituras.ts` y `POST /perdidas` en `perdidas.ts`). Ninguna ruta se renombró ni se borró: `GET /mensajes` salió del código y queda en `RETIRADAS` (`contrato.ts`) y en `CONTRATO.md`, marcada RETIRADO.
 
 **Sobre los campos que «faltan» en la referencia:** 59 claves de v1 ya no aparecen en la referencia de `HEAD`, todas de `riesgo/` y `salud/`. Todas son de datos, no de forma: con el agua real ya no hay un riesgo «perdiendo» ni una parte «sin señal» en esos casos. Se comprobó commit por commit: solo `e5a195f` (los datos) las quita.
 
@@ -202,20 +210,23 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 
 ---
 
-## 3. RETIRADO: WhatsApp (propuesto el 27-oct-2026)
+## 3. RETIRADO: WhatsApp (27-oct-2026)
 
 **Motivo:** el dueño decidió quitar el canal de WhatsApp. **El backend no lo construye.** Lo que tenía valor queda dentro de TRIM, en pantalla: [`docs/experiencia-v3/whatsapp.md`](../experiencia-v3/whatsapp.md).
 
-**Cómo se retira:**
-- Nada se borra de golpe.
-- `CONTRATO.md` y `docs/backend/sql/` marcan cada pieza «RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye», con su reemplazo.
-- El front deja de usarlo.
+**Cómo quedó retirado (hecho el 27-oct-2026):**
+- Nada se borró del contrato.
+- `CONTRATO.md` marca cada pieza «RETIRADO (27-oct-2026)», con su motivo y su reemplazo: la sección «RETIRADO · WhatsApp: el carril caliente», el webhook, los usuarios, la respuesta, los pendientes y Hoy.
+- `src/shared/api/contrato.ts` lista en **`RETIRADAS`** lo que v1 declaraba ahí o en los tipos que viajan (R1, R3 y R4), con su fecha, su motivo y su reemplazo. `MENSAJES` ya no se exporta.
+- `docs/backend/sql/` marca cada tabla y columna (R8) con un bloque `-- RETIRADO (27-oct-2026): …` y su `comment on … is 'RETIRADO …'`; esas tablas quedan sin filas en `ejemplos.sql`. Regla: toda línea que nombra el canal dice RETIRADO. `validar.sh` y `verificar-contrato` lo comprueban.
+- El front dejó de usarlo: `entities/mensajes.ts` y `shared/api/mensajes.ts` se borraron; lo que se seguía usando (`causasSugeridas`, `CAUSAS_POZO`, `NO_FUE_ESP_CORTO`, `Opcion`) se mudó a `entities/causas-sugeridas.ts`, sin cambiar lo que calcula. `grep -ri whatsapp src` = 0.
+- El reporte a la ANH no cambió: al regenerar `referencia/`, ningún archivo de `referencia/anh/` cambió.
 
 | # | Qué | Estaba en v1 | Reemplazo dentro de TRIM | Qué hace el backend |
 |---|---|---|---|---|
 | R1 | `GET /api/mensajes?campos` → `Mensaje[]`: el registro de lo enviado, con las reglas parada, cierre, causa, recordatorio, escalamiento, parte y orden, y las 10 plantillas de Meta | sí | Las tarjetas e insignias de `/vistas/hoy` y la franja «No arrancar» | No construir. Si existe, puede responder `[]` o `404` mientras la quita. El front ya no la pide. |
 | R2 | `GET /api/webhooks/whatsapp` (verificación de Meta) y `POST /api/webhooks/whatsapp` (respuestas firmadas con HMAC, deduplicación, persona por E.164, «0» con texto, `context.id`) | sí | `POST /api/paradas/:evento/respuesta` (pantalla) | No construir |
-| R3 | En `Usuario` y `CuerpoInvitacion`: `telefono` (E.164) y `alertas`. Las reglas 422 del teléfono (forma E.164, único entre no suspendidos, alertas solo con teléfono y solo en sup, oper, tec, conf y jefe). `ErrorAcceso.campo` = `whatsapp` \| `alertas`. `GET /api/usuarios` entrega `telefono` solo de quien recibe alertas. | sí | — (sin canal no hace falta el número) | **Aceptar e ignorar** `telefono` y `alertas` si llegan, sin un 422 por ellos. No volver a mandarlos. El número es un dato personal que deja de hacer falta. |
+| R3 | En `Usuario` y `CuerpoInvitacion`: `telefono` (E.164) y `alertas`. Las reglas 422 del teléfono (forma E.164, único entre no suspendidos, alertas solo con teléfono y solo en sup, oper, tec, conf y jefe). `ErrorAcceso.campo` = `whatsapp` \| `alertas`. `GET /api/usuarios` entrega `telefono` solo de quien recibe alertas. | sí | — (sin canal no hace falta el número) | **Aceptar e ignorar** `telefono` y `alertas` si llegan, sin un 422 por ellos. No volver a mandarlos. El número es un dato personal que deja de hacer falta. **El front** nunca manda `telefono` y, en `POST` y `PATCH /usuarios`, manda `alertas: false`: v1 la pide en el cuerpo y así un backend de v1 no se rompe. |
 | R4 | `Respuesta.canal` (`'whatsapp' \| 'pantalla'`) y el `403` de `POST /paradas/:evento/respuesta` cuando el cuerpo trae `canal: "whatsapp"` | sí | Toda respuesta es de pantalla | Puede seguir poniendo `canal: "pantalla"` (el front no lo lee) u omitirlo. El 403 deja de importar. |
 | R5 | «2 Algo está mal» por WhatsApp (`revisarDesdeWhatsapp`), con el motivo fijo «Por WhatsApp: …» | no (es de después de v1) | `POST /api/anh/paradas/:id/revision` (el botón «Algo está mal») | No construir |
 | R6 | En `/vistas/hoy`:<br>• `VistaHoy.whatsapp` y `EntregaTurno.whatsapp`;<br>• los sufijos «; se escaló a las HH:MM», « · le llegó por WhatsApp a las …» y el rótulo «Ver el chat». | no (vista nueva) | Lo demás de Hoy; el rótulo pasa a «Ver la parada» | No construir esos campos ni esas frases |
@@ -229,15 +240,16 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 
 `Opcion.clave` («1», «2», «0») queda; la pantalla no la usa.
 
-**La referencia:**
+**La referencia** (regenerada a propósito el 27-oct-2026):
 - `/api/mensajes` no tiene caso;
-- los 8 casos de `referencia/hoy/` que traen `whatsapp`, «se escaló» o «Ver el chat», y los 2 de `referencia/ciclo/` con «(pantalla Identificar o WhatsApp)», se regeneran a propósito al construir.
+- los casos de `referencia/hoy/` ya no traen `whatsapp` ni «se escaló»; «Ver el chat» pasó a «Ver la parada» y «se la vuelven a preguntar en la próxima ronda» a «la pregunta sigue en Hoy»;
+- los 2 de `referencia/ciclo/` dicen «Registrar la parte dañada en la pantalla («Contestar» en Hoy)».
 
 ---
 
 ## 4. CAMBIADO, en detalle, y cómo dejarlo «al lado»
 
-### 4.1 Lo que rompe la forma o el significado
+### 4.1 Lo que rompía la forma o el significado (los dos, resueltos al lado)
 
 **C1 · `Riesgo.costoFalla` (`GET /api/vistas/riesgo`) cambió de significado.** Commit `cb8cd39`.
 
@@ -248,25 +260,23 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | Ejemplo: P-201B de Morichal | **3.364,6** bbl | **2.086** bbl |
 | `mdtFuente` | «el promedio de sus 8 fallas cerradas (el tanque absorbe una parte)» | «el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque» |
 
-**Propuesta (al lado):**
-- `GET /api/vistas/riesgo` vuelve a mandar `costoFalla` con el significado de v1.
-- Se agrega **`costoFallaHoy`** (opcional) con el nuevo, junto a `colchonH` y `costoDe`, que ya son nuevos.
-- El front lee `costoFallaHoy`.
-- `/vistas/criticidad` (nueva) usa `costoFallaHoy` con la misma cifra.
-
-**Alternativa:** `GET /api/v2/vistas/riesgo`, con el significado nuevo, al lado de la de v1.
-
-En los dos casos hay que regenerar `referencia/riesgo/*` a propósito.
+**Hecho (al lado, 27-oct-2026):**
+- `GET /api/vistas/riesgo` volvió a mandar `costoFalla` con el significado de v1: en una bomba, `bblPorFalla` (P-201B de Morichal: **2.765** bbl con los datos de hoy); en una electrosumergible, la misma cuenta de antes.
+- **`costoFallaHoy`** (AGREGADO, opcional) trae lo nuevo, junto a `colchonH` y `costoDe`, que ya eran nuevos (P-201B de Morichal: **1.235** bbl). `mdtFuente` dice de dónde sale `costoFallaHoy` (C11).
+- El front lee `costoFallaHoy` (`costoHoy.ts`, «En riesgo», Mantenimiento, el ciclo y Resultados).
+- `/vistas/criticidad` (nueva) sigue con su `FilaCriticidad.costoFalla`: es la misma cifra que `Riesgo.costoFallaHoy` (`verificar-libro` lo compara).
+- `referencia/riesgo/*` se regeneró a propósito; `costoFallaHoy` entró en `AUSENTES` (`referencia-diferencias.mjs`): ausente, no 0, cuando no aplica.
+- Prueba: `verificar-libro` («C1 · al lado») y `verificar-contrato` («A1», C1).
 
 **C2 · El dispositivo sin lectura.** `EquipoVivo.dispositivos[].valor` en `/vistas/equipos/:campo/:equipo` y `/vistas/equipos-hoy`.
 - **v1:** `valor: "—"`, `unidad: ""` y estado «sin señal» (`equipo-vivo.ts`).
 - **HEAD:** `valor: null`. Un texto ahora se lee como una lectura discreta: un `"—"` saldría como el valor de un interruptor.
 
-**Propuesta (al lado):** el front acepta `"—"` como sinónimo de `null`, lector tolerante en el códec. Un backend nuevo manda `null`. Las dos formas quedan válidas en `CONTRATO.md`.
+**Hecho (al lado, 27-oct-2026):** el códec del dispositivo (`contrato.ts`, `SIN_LECTURA_V1`) lee `"—"` como `null`. Un backend nuevo manda `null`; las dos formas quedan válidas en `CONTRATO.md`. Prueba: `verificar-contrato` («A1», C2: el mismo equipo con `"—"` y con `null` entra igual).
 
 ### 4.2 Reglas de cálculo que cambiaron (cambian números de la referencia de v1)
 
-Son correcciones del QA y de la revisión. Tener dos motores no tiene sentido, así que se registran con su antes y después. **Decisión del coordinador:** o se aceptan como «corrección» (el backend las adopta), o cada una lleva su versión de regla.
+Son correcciones del QA y de la revisión. Tener dos motores no tiene sentido, así que se registran con su antes y después. **Quedaron registradas como corrección** (`resuelto: registrado` en `cambios-contrato.json`): el backend las adopta; no hay una versión de cada regla.
 
 | # | Qué | v1 | HEAD | Commit |
 |---|---|---|---|---|
@@ -283,13 +293,13 @@ Son correcciones del QA y de la revisión. Tener dos motores no tiene sentido, a
 | C10 | `Riesgo.motivo` | «…llega a su alarma en **N h**» (siempre en horas: «124 h», «262 h») | «…llega a su alarma en **T**», con la regla de las pantallas:<br>• menos de 48 h, en horas enteras («43 h»);<br>• si no, en días con un decimal («5,2 d», «10,9 d»);<br>• más de 90 días, «más de 3 meses». | `cb8cd39` |
 | C11 | `Riesgo.mdtFuente` | «el promedio de sus N fallas cerradas (el tanque absorbe una parte)» · «20 días fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)» | «el promedio de sus N fallas cerradas, sin las H h que aguanta hoy el tanque» (H truncado, nunca redondeado hacia arriba) · «17,4 d fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)» | `cb8cd39` |
 
-**Qué hacer:** cambiar las frases del servidor. Al lado no aplica, porque la referencia compara el texto entero. Cada cambio futuro de texto va en esta tabla con el viejo y el nuevo (regla 3.1.4).
+**Qué hacer:** cambiar las frases del servidor. Al lado no aplica, porque la referencia compara el texto entero. Cada cambio futuro de texto va en esta tabla con el viejo y el nuevo (regla 3.1.4), y en `cambios-contrato.json` (objeto `texto`, con la plantilla vieja): la prueba de la línea base falla si un texto que exigía la referencia de v1 cambia sin su entrada.
 
 ### 4.4 Errores y permisos en las escrituras de v1
 
-| # | Qué | v1 | HEAD | Propuesta al lado |
+| # | Qué | v1 | HEAD | Cómo quedó |
 |---|---|---|---|---|
-| C12 | Cuerpo con un campo de otra forma (C-11) | `422 peticion-invalida`, revisado de **último** («forma (422)») | `400 peticion-invalida`, revisado **primero**, antes de cualquier regla | En las 9 escrituras de v1, **`400` o `422`** con `peticion-invalida` (el front decide por el código). `400` obligatorio solo en las escrituras nuevas de `/anh/paradas/…`, que tienen su caso en `referencia/escrituras/400-peticion-invalida.json`. Corregir también la fila 422 de la tabla «Error único» de `CONTRATO.md`, que todavía dice «La forma o una regla del dominio». |
+| C12 | Cuerpo con un campo de otra forma (C-11) | `422 peticion-invalida`, revisado de **último** («forma (422)») | `400 peticion-invalida`, revisado **primero**, antes de cualquier regla | En las 9 escrituras de v1, **`400` o `422`** con `peticion-invalida` (el front decide por el código). `400` obligatorio solo en las escrituras nuevas de `/anh/paradas/…`, que tienen su caso en `referencia/escrituras/400-peticion-invalida.json`. **Hecho:** la fila 422 de «Error único» de `CONTRATO.md` lo dice así. |
 | C13 | Rol que no es del producto (C-14) | Sin regla. El demo le prestaba al rol desconocido las capacidades de `prod`. | `403 rol-desconocido` en toda escritura. Hoy `plan` y `cont` (roles de v2) no escriben; en v1 podían `POST /informes` con `evidencia:exportar`. | Se queda: es seguridad. Cuando `plan` y `cont` vuelvan, vuelven con sus capacidades. |
 | C16 | `POST /configuracion` | Motivo de 5 caracteres o más | Además, a lo sumo 500 caracteres (C-12) → 422. Cambia el texto del rechazo cuando lo firmado es técnico («Falta el motivo: diga por qué cambia la configuración técnica…»). Las reglas 9 a 11 (topología y capacidades) solo aplican si llegan esos campos nuevos. | Se queda |
 
@@ -305,13 +315,13 @@ Son correcciones del QA y de la revisión. Tener dos motores no tiene sentido, a
 
 **No es un cambio del contrato, pero rompe la comparación.**
 
-**Propuesta (al lado):** guardar la referencia de v1 tal cual, al lado de la de hoy, en `docs/backend/linea-base/v1/referencia/` (sale de `git show cde8214:referencia/…`). Así se puede comparar un backend contra v1 y contra `HEAD`:
+**Hecho (al lado, 27-oct-2026):** la referencia de v1 está tal cual, al lado de la de hoy, en [`linea-base/v1/referencia/`](linea-base/v1/referencia/) (sale de `git archive cde8214 referencia`, con `node scripts/linea-base.mjs generar --desde=cde8214`). Así se puede comparar un backend contra v1 y contra hoy:
 
 ```bash
 node scripts/referencia.mjs comparar --base-url=… --referencia=docs/backend/linea-base/v1/referencia
 ```
 
-La opción `--referencia` todavía no existe.
+(`--referencia=` es nueva; `REFERENCIA_DIR=` hace lo mismo.) La regla de comparación es la de hoy (C17).
 
 ### 4.6 SQL: dos esquemas para la cadena de datos (C19, Q1 a Q5)
 
@@ -338,13 +348,12 @@ Ese archivo **no cambió**.
 
 `v_procedencia` conserva todas sus columnas de v1 y agrega `dispositivo`, `alarma_alta`, `alarma_baja` y `alarma_fuente`. Solo `tag_id` pasa de texto a número.
 
-**La contradicción que hay hoy:** `CONTRATO.md` (línea 33) sigue diciendo que el SQL es `simulador-api/esquema.sql`, y `docs/backend/README.md` dice que es `sql/esquema.sql`.
-
-**Propuesta (al lado):**
-1. `CONTRATO.md` dice las dos cosas:
-   - el esquema de la cadena de **v1 sigue valiendo** (lo que manda es la forma JSON de `/api/campos/:campo/tags/:tag/procedencia` y `/inventario`, que no cambió);
-   - `docs/backend/sql/esquema.sql` es la **versión 2** del modelo, opcional para esas 9 tablas y necesaria para todo lo demás.
-2. `docs/backend/sql/` agrega un `v1-cadena.sql` con vistas de compatibilidad (`v1_equipo`, `v1_tag` y `v1_fuente`) que devuelven las columnas de v1 desde el modelo nuevo. Así lo que el desarrollador ya escribió contra v1 lee igual.
+**Hecho (al lado, 27-oct-2026): rige el SQL de v1.**
+1. `CONTRATO.md` (arriba, «La versión 1 y lo que cambió») y `docs/backend/README.md` dicen lo mismo:
+   - el esquema de la cadena de **v1 rige** (`simulador-api/esquema.sql`, sin cambios; lo que manda es la forma JSON de `/api/campos/:campo/tags/:tag/procedencia` y `/inventario`, que no cambió);
+   - `docs/backend/sql/esquema.sql` es **AGREGADO**, al lado: la versión 2 del modelo, opcional para esas tablas y necesaria para todo lo demás.
+2. [`sql/v1-cadena.sql`](sql/v1-cadena.sql) crea el esquema **`v1`** con una vista por cada tabla de v1 y su `v_procedencia`, con los **mismos nombres y las mismas columnas en el mismo orden** (`v1.campo`, `v1.gateway`, `v1.fuente`, `v1.equipo`, `v1.tag`, `v1.formula`, `v1.calibracion`, `v1.historial_tag`, `v1.rechazo`, `v1.semilla` vacía y `v1.v_procedencia` con sus 32 columnas), leídas del modelo nuevo. Con `set search_path = v1`, lo que el desarrollador escribió contra v1 lee igual. Q1 a Q5 dejan de ser «quitados»: cada columna de v1 tiene su vista.
+3. Pruebas: `validar.sh` corre `v1-cadena.sql` en PostgreSQL 16 con los ejemplos cargados y `herramientas/comprobar-v1.mjs` compara nombres, orden y tipos con `simulador-api/esquema.sql`; `verificar-contrato` («A1», línea base 7) comprueba, sin PostgreSQL, las tablas y columnas de v1 y el orden de las columnas de cada vista `v1.*`.
 
 ### 4.7 Compatibles (lo que usted ya manda sigue valiendo)
 
@@ -386,7 +395,7 @@ Todo es opcional para un backend de v1: una pantalla que no lo recibe dice «sin
 | E12 | `/vistas/topologia/propuestas?campo` | Lo que TRIM propone de la topología | 5 | `f4dd5bb` | **AGREGAR AHORA** |
 | E13 | `/vistas/anh/paradas?campos&desde&hasta` | Filas de la ANH (pozo × día × causa) con su clasificación | 18 | `f4dd5bb` | **AGREGAR AHORA** |
 | E14 | `/vistas/anh/calidad?campos&desde&hasta` | % confirmado y % corregido por paso | 7 | `f4dd5bb` | **AGREGAR AHORA** |
-| E15 | `/vistas/anh/reporte?campos&desde&hasta` | ¿Se puede publicar?, paradas sin causa y quién las debe | **0: falta su caso** | `ed559e4` | **AGREGAR AHORA** |
+| E15 | `/vistas/anh/reporte?campos&desde&hasta` | ¿Se puede publicar?, paradas sin causa y quién las debe | 6 (`anh/reporte-*`, A1) | `ed559e4` | **AGREGAR AHORA** |
 | E16 | `/vistas/planta-viva?campos&desde&hasta&momento` | La planta viva por momento | 9 | `1b14930` | **AGREGAR AHORA** |
 | E17 | `/vistas/hoy?rol&campos` | Las tareas de Hoy por rol. Sin `whatsapp` (R6). | 18 | `1b14930` | **AGREGAR AHORA** |
 | E18 | `/vistas/resultados?campos&desde&hasta&rol` | Resultados por rol | 15 | `5aaa7f2` | **AGREGAR AHORA** |
@@ -458,8 +467,9 @@ E14 GET /api/vistas/anh/calidad?campos=ceiba&desde=…&hasta=…
      "porRegla":[{ paso, regla, propuestas, corregidas, pctCorregido, cambiadoA }, "… 18 más"],"chokePorEquipo":[…],"sinTopologia":[]}
 
 E15 GET /api/vistas/anh/reporte?campos=ceiba&desde=…&hasta=…
-    (sin caso en referencia/; la forma es VistaReporteAnh de src/entities/regulatorio.ts y CONTRATO.md «F2 · Regulatorio».
-     Falta agregar su caso antes de pedírsela al backend.)
+    {"campos":["ceiba"],"periodo":"septiembre","estado":"publicable","titulo":"Se puede publicar",
+     "cifra":{"valor":0,"unidad":"paradas sin causa","frase":"Se puede publicar: cuadra con la medición oficial y ninguna parada está sin causa.", …}, …}
+    (referencia/anh/reporte-ceiba-2026-09.json)
 
 E16 GET /api/vistas/planta-viva?campos=ceiba&desde=…&hasta=…&momento=antes
     {"campos":["ceiba"],"alcance":"campo","momento":"antes","desde":"…","hasta":"…","ahora":"2026-10-02T14:00:00.000-05:00","periodo":"septiembre",
@@ -568,16 +578,16 @@ E29 POST /api/topologia/importar
 | F16 | SQL | `docs/backend/sql/` (104 tablas, 11 vistas, ejemplos, pruebas y cuadres), salvo lo de §4.6 y lo retirado en R8 | sí | `8700292` y siguientes | **AGREGAR AHORA lo que respalda lo de arriba; lo de R8, YA NO** |
 | F17 | `v_procedencia` | `dispositivo`, `alarma_alta`, `alarma_baja` y `alarma_fuente` | sí | `8700292` | **PARA DESPUÉS (procedencia)** |
 
-**Para el coordinador:**
-- F3, F9, F10 y F11 viajan y están en la referencia, pero **no están escritos en `CONTRATO.md`**. Hay que agregarlos ahí antes de pedírselos al backend.
-- E15 no tiene caso en la referencia.
+**Hecho (A1, 27-oct-2026):**
+- F3, F9, F10 y F11 ya están escritos en `CONTRATO.md` («A1 · Compatibilidad con la versión 1», «Campos que ya viajaban…»).
+- E15 tiene sus 6 casos: `referencia/anh/reporte-<campo o portafolio>-2026-09.json`.
 
 ---
 
 ## 6. QUITADO
 
-- **En la API: nada.** Ninguna ruta, ningún campo de una respuesta, ningún código de error y ninguna capacidad de v1 se quitó.
-- **En el SQL:** 5 piezas del esquema de v1 no están en el esquema nuevo, todas con su reemplazo (Q1 a Q5, §4.6). El esquema de v1 sigue en el repositorio, sin cambios.
+- **En la API: nada.** Ninguna ruta, ningún campo de una respuesta, ningún código de error y ninguna capacidad de v1 se quitó. Lo que salió está RETIRADO (§3), no quitado.
+- **En el SQL: nada.** Las 5 piezas del esquema de v1 que el esquema nuevo no tenía (Q1 a Q5) las da el esquema `v1` de `v1-cadena.sql` (§4.6). El esquema de v1 sigue en el repositorio, sin cambios, y rige.
 
 ---
 
@@ -592,63 +602,69 @@ git diff cde8214 HEAD -- CONTRATO.md src/shared/api/contrato.ts src/shared/api/e
 # referencia: 89 archivos de v1 que cambiaron, clave por clave, tipo, texto y número; y commit por commit
 #   (script de comparación en el borrador de M3; ver §8: es la base de la prueba)
 # SQL: columnas de cada tabla de simulador-api/esquema.sql contra docs/backend/sql/esquema.sql
+# la foto de v1 (una vez) y la prueba contra ella
+node scripts/linea-base.mjs generar --desde=cde8214   # docs/backend/linea-base/v1.json y v1/referencia/
+npm run verificar:contrato                            # sección «A1»
+zsh docs/backend/sql/herramientas/validar.sh .        # el esquema v1 de v1-cadena.sql en PostgreSQL 16
 ```
 
 ---
 
 ## 8. La prueba: `verificar-contrato` contra la línea base
 
-> Solo el diseño. No está implementada.
+> **Hecha (27-oct-2026).** `npm run verificar:contrato`, sección «A1 · Contrato v1». Lo que difiere del diseño está en §8.4.
 
-**Qué asegura:** todo endpoint, campo, código, texto exigido y tabla de `cde8214` sigue existiendo igual, o está registrado en este documento como CAMBIADO o RETIRADO, con su reemplazo. Si alguien rompe el contrato sin registrarlo, la prueba falla y dice qué rompió.
+**Qué asegura:** todo endpoint, campo, código, texto exigido y tabla de `cde8214` sigue existiendo igual, o está registrado como CAMBIADO o RETIRADO, con su reemplazo. Si alguien rompe el contrato sin registrarlo, la prueba falla y dice qué rompió.
 
-### 8.1 Dos archivos nuevos, al lado
+### 8.1 Los archivos, al lado
 
-1. **`docs/backend/linea-base/v1.json`**, la foto de v1. Se genera **una vez** con `scripts/linea-base.mjs --desde=cde8214` (lee con `git show`) y se guarda en el repositorio, para que la prueba no dependa del historial de git. Contiene:
-   - `rutas`: cada `GET` de `contrato.ts` (ruta, parámetros y el nombre de la constante) y cada escritura de `escrituras.ts` (método y ruta), más las del texto de `CONTRATO.md` que el código no declara (`/api/webhooks/whatsapp`, `/api/inscripcion`, `/api/ingesta/nacimiento`, `/api/campos/:campo/tags/…`);
-   - `formas`: por cada caso de `referencia/` de v1, cada ruta de clave con su tipo JSON (`datos.tramos[].causa.texto: string`), con las claves de diccionario normalizadas (`refs.eventos.{k}`);
-   - `opcionales`: los campos que v1 documenta como «?» o «ausente si…»;
-   - `codigos`: los códigos de error de la tabla «Error único» de v1, con su HTTP;
+1. **[`linea-base/v1.json`](linea-base/v1.json)**, la foto de v1, generada **una vez** con `node scripts/linea-base.mjs generar --desde=cde8214` (lee con `git show` y `git archive`) y guardada en el repositorio: la prueba no depende del historial de git. Trae:
+   - `rutas`: los 41 `GET` de `contrato.ts` (ruta y constante), las 9 escrituras de `escrituras.ts` y las rutas que nombra `CONTRATO.md` (98 en total, contando las repetidas entre orígenes);
+   - `formas`: por endpoint, cada ruta de clave de los casos de la referencia de v1 con su tipo JSON (`$.datos[].costoFalla: number`), con las claves de diccionario normalizadas (`$.refs.eventos.{k}`): 1.529 claves en 11 endpoints;
+   - `textos`: los 621 textos del motor que la referencia de v1 exigía, como plantilla (los ids de equipo son `ID` y los números `#`);
+   - `campos`: los campos de primer nivel, y si son opcionales, de los 78 tipos que viajan (los que nombran `contrato.ts` o `escrituras.ts`), por archivo (`entities/pozos.ts:Respuesta`);
+   - `codigos`: los 20 códigos de la tabla «Error único» de v1, con su HTTP;
    - `capacidades`: las 9 de v1 y el reparto por rol;
-   - `textos`: las rutas de texto que arma el motor y que la referencia exige (`causa.texto`, `motivo`, `mdtFuente`, `evidencia[]`, `accion`, `metodo`, `supuestos[]`, `frase*`), con su valor en v1;
-   - `sql`: las tablas y columnas de `simulador-api/esquema.sql` con su tipo, y las columnas de `v_procedencia`.
-2. **`docs/backend/cambios-contrato.json`**, el registro legible por la máquina. Es el gemelo de las tablas de este documento: una entrada por cambio, con:
-   - `{ id, tipo: AGREGADO | CAMBIADO | RETIRADO | VERSION, objeto: ruta | campo | codigo | texto | sql, clave, fecha, commit, motivo, reemplazo? }`.
-   
-   Ejemplos:
-   - `{ "id":"C1", "tipo":"CAMBIADO", "objeto":"campo", "clave":"/vistas/riesgo datos[].costoFalla", "reemplazo":"costoFallaHoy" }`;
-   - `{ "id":"R1", "tipo":"RETIRADO", "objeto":"ruta", "clave":"GET /api/mensajes", "fecha":"2026-10-27", "motivo":"el dueño decidió quitar el canal de WhatsApp: el backend no lo construye" }`.
+   - `sql`: las tablas y columnas de `simulador-api/esquema.sql` con su tipo, y las 32 columnas de `v_procedencia`.
+2. **[`linea-base/v1/referencia/`](linea-base/v1/referencia/)**: la referencia de v1 tal cual (C18).
+3. **[`cambios-contrato.json`](cambios-contrato.json)**, el registro legible por la máquina, gemelo de las tablas de este documento: una entrada por cambio, `{ id, tipo: AGREGADO | CAMBIADO | RETIRADO | VERSION, objeto, clave, fecha, commit, motivo, reemplazo, resuelto?, efecto?, viejo?, enContratoTs? }`. Ejemplos:
+   - `{ "id": "C1", "tipo": "CAMBIADO", "objeto": "campo", "clave": "/vistas/riesgo $.datos[].costoFalla", "resuelto": "al lado", "reemplazo": "costoFalla vuelve a su significado de v1 …; lo nuevo va al lado en costoFallaHoy" }`;
+   - `{ "id": "R1", "tipo": "RETIRADO", "objeto": "ruta", "clave": "GET /mensajes", "fecha": "2026-10-27", "motivo": "el dueño decidió quitar el canal de WhatsApp: el backend no lo construye", "enContratoTs": "GET /mensajes" }`;
+   - los textos llevan la plantilla vieja en la clave: `/vistas/riesgo $.datos[].motivo «… llega a su alarma en # h»` (C10).
 
-   `CAMBIOS-CONTRATO.md` se puede generar o revisar contra este archivo.
+### 8.2 Las comprobaciones
 
-### 8.2 Las comprobaciones (una sección nueva al final de `scripts/verificar-contrato.mjs`)
+`scripts/linea-base.mjs` (`comprobarLineaBase`), llamada desde `verificar-contrato`:
 
 | # | Comprueba | Falla si… |
 |---|---|---|
-| 1 | Cada ruta de `v1.json` existe en `contrato.ts`, en `escrituras.ts` o en `CONTRATO.md` | falta y no hay entrada RETIRADO o VERSION con esa clave (y, si es VERSION, la ruta nueva tiene que existir) |
-| 2 | **Forma:** se vuelven a correr los casos de v1 con el motor de hoy **y los insumos de v1** (`docs/backend/linea-base/v1/referencia/insumos`, con `instalarInsumos`, como hace `referencia.mjs comprobar`). Cada ruta de clave de `formas` existe con el mismo tipo, y una opcional puede faltar. **Así los cambios de datos (C18) no se confunden con cambios del contrato.** | una clave falta o cambia de tipo y no hay entrada CAMBIADO o RETIRADO con su clave |
-| 3 | **Textos:** en esa misma corrida, cada valor de `textos` es igual al de v1 | un texto cambió sin entrada CAMBIADO con el texto viejo y el nuevo |
-| 4 | **Números:** en esa misma corrida, los números de los casos de v1 valen lo mismo, con la tolerancia de `indice.json` | cambió un número sin entrada CAMBIADO de cálculo (C5 a C8) que nombre ese caso y esa clave |
-| 5 | Cada código de `codigos` sigue en la tabla «Error único» de `CONTRATO.md` con su HTTP | falta o cambió de HTTP sin entrada (C12 la tiene) |
+| 1 | Cada ruta de v1 existe hoy en su mismo origen (`contrato.ts`, `escrituras.ts` o `CONTRATO.md`) | falta y no hay entrada RETIRADO o VERSION con esa clave (y, si es VERSION, la ruta nueva tiene que existir) |
+| 2 | **Forma:** cada clave de `formas` existe hoy con su tipo en algún caso del mismo endpoint de `referencia/` (que `npm test` ata al motor de hoy: `referencia.mjs comprobar`) | una clave falta o cambia de tipo sin entrada CAMBIADO o RETIRADO |
+| 3 | **Textos:** cada plantilla de `textos` sigue en la referencia de hoy, en la misma ruta del mismo endpoint. **Campos:** cada campo de los tipos que viajan sigue, y uno opcional en v1 no se vuelve obligatorio | un texto cambió sin entrada CAMBIADO con el viejo; un campo o un tipo se fue sin entrada |
+| 5 | Cada código de `codigos` sigue en «Error único» de `CONTRATO.md` con su HTTP | falta o cambió de HTTP sin entrada |
 | 6 | Las 9 capacidades siguen y ningún rol visible pierde una | se quitó una sin entrada |
-| 7 | **SQL:** cada tabla y columna de `sql` existe en `simulador-api/esquema.sql`. Si el registro dice que rige el esquema nuevo, la comprobación se hace en `docs/backend/sql/esquema.sql` o en sus vistas `v1_*`, con el mismo tipo o uno registrado. | falta o cambió sin entrada (C19, Q1 a Q5) |
-| 8 | **Lo RETIRADO** sigue en `CONTRATO.md` y en el SQL con la marca «RETIRADO (fecha)», su motivo y su reemplazo, y el front no lo usa (`grep` en `src` de la constante, por ejemplo `MENSAJES`) | se borró del todo, falta la marca o el front lo sigue usando |
-| 9 | **WhatsApp** (§6.5 del prompt): `grep -ri whatsapp src e2e` = 0, y en `CONTRATO.md` y `docs/backend/sql/` cada mención está en un bloque marcado RETIRADO | aparece fuera de eso |
-| 10 | El registro está sano: cada entrada CAMBIADO o RETIRADO tiene fecha, commit (o «pendiente»), motivo y reemplazo (o «ninguno, no se construye»), y no hay dos entradas con la misma clave | falta un dato |
+| 7 | **SQL de v1:** cada tabla y columna sigue en `simulador-api/esquema.sql` con su tipo, y el esquema `v1` de `v1-cadena.sql` da cada tabla y `v_procedencia` con las columnas de v1 **en su orden** | falta, cambió o cambió de orden sin entrada |
+| 8 | **Lo RETIRADO** sigue en `CONTRATO.md` con la marca (en la línea o en el título de su sección), está en `RETIRADAS` de `contrato.ts` cuando v1 lo declaraba ahí, y el front no usa su constante | se borró del todo, falta la marca o el front lo sigue usando |
+| 9 | **WhatsApp** (§6.5 del prompt): 0 en `src`; en `e2e`, solo guardas de que no vuelve (`!t.includes('WhatsApp')`, `toHaveCount(0)`, las listas `no:` del auditor); en `CONTRATO.md` y en `docs/backend/sql/`, cada mención junto a la marca RETIRADO | aparece fuera de eso |
+| 10 | El registro está sano: cada entrada con id, objeto, clave, fecha, commit (o «pendiente»), motivo y, salvo AGREGADO, reemplazo; sin dos entradas con la misma clave | falta un dato |
+
+Además, en la misma sección: C1, C2, M6, M8 y `RETIRADAS` con sus datos (§9.4).
 
 ### 8.3 Cómo se prueba la prueba
 
-La prueba tiene que fallar sin el registro. En `verificar-contrato` se corren tres mutaciones en memoria (no en disco):
-- quitar una clave de `formas`;
-- cambiar un texto;
-- borrar una ruta de la lista de hoy.
+En `verificar-contrato` se corren mutaciones en memoria (no en disco), y cada una tiene que dar FALLA sin su entrada y pasar con ella:
+- quitar una clave de la forma (`/vistas/riesgo $.datos[].bblDia`);
+- cambiar un texto (el primero de v1 que sigue igual hoy);
+- borrar una ruta (`GET /vistas/riesgo` de `contrato.ts`);
+- y nombrar el canal en una pantalla: una falla más en la comprobación 9.
 
-Las tres tienen que dar FALLA. Las mismas tres, con su entrada en el registro, tienen que pasar.
+### 8.4 Lo que no asegura (dicho para no prometer de más)
 
-### 8.4 Lo que no puede asegurar (dicho para no prometer de más)
-
-- **La comprobación 2 usa los insumos de v1 sobre el motor de hoy.** Si el motor de hoy exige un insumo que v1 no tenía (por ejemplo, la topología o las capacidades), el caso corre con el «sin firmar» o el derivado del registro. Eso hay que confirmarlo caso por caso la primera vez. Si no se puede, ese caso se marca «solo forma» en `v1.json`.
-- **No ve campos opcionales de v1 que ningún caso de la referencia trae.** Para esos manda la lista `opcionales`, sacada a mano de `CONTRATO.md` de v1.
+- **Los números de v1 no se comparan (la comprobación 4 del diseño no se hizo).** Para hacerlo había que correr los casos de v1 con el motor de hoy y los insumos de v1; pero el catálogo, la configuración, la topología y la locación de los pozos los da el código de hoy, no los insumos (C18 los cambió), y la mezcla daría números que no son ni de v1 ni de hoy. Los números se aseguran contra la referencia de hoy (`npm test`), y las correcciones de cálculo están registradas (C5 a C8).
+- **La forma se compara por endpoint, contra la referencia de hoy** (la unión de sus casos), no caso por caso con los insumos de v1: por eso las 59 claves de `riesgo/` y `salud/` que con los datos de hoy no salen en el mismo caso sí están en otro caso del mismo endpoint, y no cuentan como cambio de forma.
+- **Los textos se comparan como plantilla** (sin ids ni números). Un texto de v1 que hoy sale con otros datos (otro tag, otro respaldo) cuenta como cambio y queda registrado como C18; los cambios de redacción, como C9, C10 y C11.
+- **No ve campos que ningún caso de la referencia trae ni tipos que no son `interface`** (por ejemplo `Invitacion`, que es un `Pick`): para esos manda el registro (R3) y `CONTRATO.md`.
+- **El orden exacto de las columnas en PostgreSQL** lo prueba `validar.sh` (`comprobar-v1.mjs`); `verificar-contrato` lee el texto de `v1-cadena.sql`.
 
 ---
 
@@ -671,9 +687,9 @@ Ninguna toca lo de v1. Todas son **AGREGAR AHORA**, porque las usa lo necesario,
 | M3 | **La respuesta de la ANH** y lo que queda de la hora para corregir | reg (apoyo 3); ger, escalón 1 | `POST /api/anh/respuestas` y `GET /api/vistas/anh/respuestas?campos&desde&hasta`. Además, el campo opcional `respuestaAnh` en `GET /vistas/anh/reporte`. | nueva: `anh:enviar` (reg) | Cómo llega la respuesta de la ANH: a mano o por su canal. Por decidir. |
 | M4 | **Convertir el árbol de la operadora** al de la ANH | adm | `POST /api/anh/conversion/importar` (lee, no firma) y `GET /api/vistas/anh/conversion?campo`. Se firma con `POST /configuracion`, con el campo opcional nuevo `Config.conversionAnh`. | `config:firmar` (la de v1) | El árbol de cada operadora. Hoy solo existe la procedencia `conversion` en `entities/anh-clasificacion.ts`. |
 | M5 | **El tiempo fuera en sus 5 tramos:** detección, administrativo, logística, reparación y arranque | jefe (TIENE) | Campo opcional `tramos` en `GET /vistas/relojes` (v1). Hoy trae `totalH`, `activaH` y `esperaH`. | la de la vista | Las horas de SAP (aviso, orden liberada, confirmaciones y TECO) y el cierre en el teléfono (M2). PM §1 dice: «El PLC más el cierre de la orden en el teléfono». Un tramo sin su marca va `null`. |
-| M6 | **Las paradas por confirmar como número**, con la hora límite | sup (número principal) y prod (apoyo 1) | Campo opcional `porConfirmar` en `GET /vistas/hoy` | — | Nada nuevo: es la cuenta `faltan` que `inicioDe` (`entities/hoy.ts`) ya hace para el supervisor. Hoy viaja solo dentro de la frase. |
+| M6 | **Las paradas por confirmar como número**, con la hora límite | sup (número principal) y prod (apoyo 1) | Campo opcional `porConfirmar` en `GET /vistas/hoy` | — | **Construido (A1, §9.4).** Es la cuenta que `inicioDe` (`entities/hoy.ts`) ya hacía para la frase del supervisor. |
 | M7 | **Las fallas por mes** de los equipos críticos, en el motor | jefe (apoyo 2); es el primer indicador del norte (PM §1) | `GET /api/vistas/fallas/mensual?campos` | — | `historialDeEquipo().eventos`. Hoy la cuenta por mes la hace la pantalla (`pages/Confiabilidad.tsx`, «Fallas por mes»), y eso va contra la regla «el motor calcula». |
-| M8 | **El estado de la configuración** («3 de 6 pasos listos»), encontrado al cruzar | adm (número principal) | `GET /api/vistas/configuracion/estado?campo` | — | `estadoConfiguracion()` (`entities/choke-config.ts`) existe, pero hoy la llama la pantalla (`pages/Configuracion.tsx:354`). Con la fuente http no tiene endpoint. |
+| M8 | **El estado de la configuración** («3 de 6 pasos listos»), encontrado al cruzar | adm (número principal) | `GET /api/vistas/configuracion/estado?campo` | — | **Construido (A1, §9.4)** con `estadoConfiguracion()` (`entities/choke-config.ts`); la pantalla lo lee con `useEstadoConfiguracion` (B2 la cambia). |
 
 **Cuentas:** 9 endpoints nuevos (M1: 2, M2: 1, M3: 2, M4: 2, M7: 1, M8: 1) y 4 campos opcionales (M3 `respuestaAnh`, M4 `Config.conversionAnh`, M5 `tramos`, M6 `porConfirmar`).
 
@@ -728,7 +744,7 @@ M8  GET /api/vistas/configuracion/estado?campo=ceiba
     (la forma es EstadoConfiguracion de entities/choke-config.ts, tal cual)
 ```
 
-**Para la prueba (§8):** cada M entra en `cambios-contrato.json` como AGREGADO cuando se construya, con su caso en `referencia/`. Mientras no exista, la prueba no lo exige.
+**Para la prueba (§8):** cada M ya construida está en `cambios-contrato.json` como AGREGADO (M1 a M8, y A2-1, A2-2, A2-3 y A3-1), con su caso en `referencia/`. Lo construido: §9.2 (A3), §9.3 (A2) y §9.4 (A1).
 
 **No entra aquí** (está en la escalera o en roles apagados, no en lo necesario):
 - el programa del técnico y su cumplimiento;
@@ -738,3 +754,174 @@ M8  GET /api/vistas/configuracion/estado?campo=ceiba
 - el historial de envíos a la ANH;
 - «¿alcanza?» y pedir el repuesto (plan, apagada);
 - las paradas de un tercero (cont, que sale).
+
+### 9.2 A3 · Lo construido: M2 a M5 y «Contestar» en 1 toque (27-oct-2026)
+
+**AGREGADO al lado.** Nada de v1 cambia de forma; la única regla que se relaja es la de A3-1 (abajo). Lo de §9.1 era
+la propuesta; esto es lo que quedó, con su prueba (`verificar-contrato`, sección «A3 · Las acciones que faltan» y la
+H de A3 con la fuente http) y su caso en `referencia/`. El detalle, en `CONTRATO.md`, «A3 · Las acciones que faltan».
+
+| # | Qué | Ruta o campo (AGREGADO) | Capacidad | Rechazos (código) | Caso en `referencia/` | ¿lo usa lo necesario? |
+|---|---|---|---|---|---|---|
+| A3-1 | **«Contestar» en 1 toque** (oper y tec): la parte se guarda sola; lo que vio es la pregunta siguiente, opcional | `POST /api/paradas/:evento/vio` `{ modo, texto? }` → `{ respuesta }` (con `modo` y `vio: { por, porId, hora, texto? }`); en `POST /api/paradas/:evento/respuesta`, `modo` pasa a opcional con `parte` | `causa:declarar` | 400; 403 `rol-desconocido`, `sin-capacidad`, `sin-permiso`; 404 `no-encontrado`; 409 `ya-dicho`; 422 `sin-parte`, `modo-ajeno`, `texto-corto`, `texto-largo` | `escrituras/400-vio-…` a `422-vio-modo-ajeno` (6) | **AGREGAR AHORA** (oper y tec, acción principal). **Ojo:** un backend de v1 responde 422 a la parte sin modo hasta que adopte esto: es la única regla de v1 que se relaja |
+| M2 | **Cerrar la orden en el teléfono** (tec) | `POST /api/sap/ordenes/:numero/cierre` → `{ orden, cierre }`; campo opcional `cierre` (y estado `CNF`, horas sumadas) en `GET /api/sap/ordenes` | `orden:cerrar` (nueva, tec) | 400; 403 `sin-capacidad`, `sin-permiso`, `ajena`; 404; 409 `ya-cerrada`, `sin-liberar`; 422 `actividad-ajena`, `parte-ajena`, `modo-ajeno`, `horas-invalidas`, `lectura-ajena` | `escrituras/400-cierre-…` a `422-cierre-horas-invalidas` (7) | **AGREGAR AHORA**. Por decidir: cómo viaja a SAP PM (confirmación y TECO) |
+| M3 | **La respuesta de la ANH y la hora para corregir** (reg) | `POST /api/anh/respuestas` → `{ respuesta }`; `GET /api/vistas/anh/respuestas?campos&desde&hasta`; campo opcional `respuestaAnh` en `GET /api/vistas/anh/reporte` | `anh:enviar` (nueva, reg) | 400; 403; 404 `campo-desconocido`; 409 `ya-aceptada`, `hora-anterior`; 422 `falta-motivo`, `motivo-ajeno`, `estado-invalido`, `dia-invalido`, `hora-invalida`, `folio-ajeno` | `anh/respuestas-ceiba-2026-10` (vacía) y `escrituras/…-respuesta-anh-…` (5) | **AGREGAR AHORA**. A mano por ahora; los motivos son las reglas de rechazo de P1 §4.2 (NO VERIFICADO que la ANH use esas palabras) |
+| M4 | **La conversión del árbol de la operadora** (adm), solo lo necesario | `POST /api/anh/conversion/importar` → `{ campoId, conversion, hallazgos, filas }` (no firma); `GET /api/vistas/anh/conversion?campo`; campo opcional `Config.conversionAnh` en `POST /api/configuracion` | `config:firmar` (la de v1) | 400; 403; 404 `campo-desconocido`; 422 `archivo-vacio` | `anh/conversion-ceiba` (vacía) y `escrituras/…-conversion-…` (4) | **AGREGAR AHORA**. Por decidir: aplicarla a las paradas (el evento no trae el código de la operadora) |
+| M5 | **El tiempo fuera en sus 5 tramos** (jefe) | campo opcional `tramos` en `GET /vistas/relojes`: `{ deteccionH, administrativoH, logisticaH, reparacionH, arranqueH (número o null), sinDatoH, fallas, conCierre }` | la de la vista | — | `sap/relojes-ceiba-historia` y `sap/relojes-portafolio-historia` | **AGREGAR AHORA** (jefe, TIENE) |
+
+**Capacidades nuevas** (de 14 a 16): `orden:cerrar` (tec) y `anh:enviar` (reg). Ningún rol pierde una.
+
+**Ejemplos** (los rechazos salen tal cual de `referencia/escrituras/`):
+
+```text
+A3-1 POST /api/paradas/EV-2011-1002/respuesta        (x-rol: oper)
+     { "evento": "EV-2011-1002", "campoId": "ceiba", "equipo": "P-201B", "texto": "", "parte": "sello" }
+     → 200 { "respuesta": { "texto": "Sello mecánico", "parte": "sello", "por": "Jairo Peña · operador de campo", "porId": "oper",
+                            "canal": "pantalla", "hora": "2026-10-02T14:00:00-05:00" } }          (1 toque: la parada queda identificada)
+     POST /api/paradas/EV-2011-1002/vio        (x-rol: tec)
+     { "modo": "ELP" }
+     → 200 { "respuesta": { …lo mismo, "modo": "ELP", "vio": { "por": "Óscar Daza · técnico de mantenimiento", "porId": "tec", "hora": "…" } } }
+     otra vez → 409 ya-dicho        (referencia/escrituras/409-vio-ya-dicho.json)
+
+M2   POST /api/sap/ordenes/40012056/cierre        (x-rol: tec)
+     { "actividad": "ajuste", "lecturas": [{ "tag": "PT-1011", "valor": 118 }],
+       "inicio": "2026-10-02T10:00:00-05:00", "fin": "2026-10-02T12:30:00-05:00" }
+     → 200 { "orden": { "numero": "40012056", "equipo": "K-101", "estado": "CNF", "horasReales": 2.5, "cierre": { … } },
+             "cierre": { "orden": "40012056", "actividad": "ajuste", "lecturas": [{ "tag": "PT-1011", "valor": 118, "unidad": "psi" }],
+                         "inicio": "…", "fin": "…", "horas": 2.5, "por": "Óscar Daza · técnico de mantenimiento", "porId": "tec", "hora": "…" } }
+     con "parte": "sello" (K-101 no tiene catálogo) → 422 parte-ajena        (referencia/escrituras/422-cierre-parte-ajena.json)
+
+M3   POST /api/anh/respuestas        (x-rol: reg)
+     { "campoId": "ceiba", "dia": "2026-10-01", "estado": "rechazado", "motivo": "V-07", "recibida": "2026-10-02T13:30:00-05:00" }
+     → 200 { "respuesta": { …, "n": 1, "limiteCorreccion": "2026-10-02T14:30:00-05:00", "por": "Iván Salas · cumplimiento regulatorio", … } }
+     GET /api/vistas/anh/reporte?campos=ceiba&… → además "respuestaAnh": { "dia": "2026-10-01", "estado": "rechazado", "motivo": "V-07",
+         "motivoTexto": "El detalle no es de su causa", "limiteCorreccion": "2026-10-02T14:30:00-05:00", "quedanMin": 30, "vencida": false, … }
+     sin respuestas: "respuestaAnh" no viene (la pantalla dice «ANH: sin respuesta registrada»)
+
+M4   POST /api/anh/conversion/importar        (x-rol: adm)
+     { "campo": "ceiba", "texto": "Código;Descripción;N1;N2\nOP-101;Rodamiento;NP_SUP;Falla rodamiento/cojinete (bearing box)\nOP-103;Otra cosa;;\n" }
+     → 200 { "campoId": "ceiba", "conversion": [{ "codigo": "OP-101", "n1": "NP_SUP", "n2": "NP_SUP/falla-rodamiento-cojinete-bearing-box", … },
+             { "codigo": "OP-103", "descripcion": "Otra cosa", … }], "hallazgos": [{ "fila": 3, "codigo": "OP-103", "texto": "OP-103 queda sin equivalencia…", "bloquea": false }], "filas": 2 }
+     POST /api/configuracion { "config": { …, "conversionAnh": [ …lo de arriba… ] }, "motivo": "…", "base": 1 }   → la versión firmada
+     GET /api/vistas/anh/conversion?campo=ceiba → { "vigente": [ … ], "sinEquivalencia": [{ "codigo": "OP-103", "falta": "n1" }], "total": 2, "conEquivalencia": 1, "firma": { "version": 2, … } }
+
+M5   GET /api/vistas/relojes?campos=ceiba&desde=2025-10-01…&hasta=2026-10-02… → además
+     "tramos": { "deteccionH": 0.40, "administrativoH": 1.60, "logisticaH": null, "reparacionH": 8, "arranqueH": null,
+                 "sinDatoH": 183.64, "fallas": 14, "conCierre": 0 }        (referencia/sap/relojes-ceiba-historia.json)
+     Σ de los tramos con dato + sinDatoH = totalH. Con el cierre en el teléfono de una correctiva, su reparación es la del teléfono
+     y la logística y el arranque dejan de ser null.
+```
+
+**Para `cambios-contrato.json` (§8.1):** A3-1, M2, M3, M4 y M5 entran como AGREGADO con estas claves y la fecha 2026-10-27.
+A3-1 lleva además la nota de la regla relajada (`modo` opcional con `parte`).
+
+### 9.3 A2 · Lo construido: el balance del choke, las pérdidas (M1), la jornada, «¿Está funcionando?» y las fallas por mes (M7) (27-oct-2026)
+
+**AGREGADO al lado.** Nada de v1 cambia. Es lo que el dueño volvió a pedir (`CONSTRUCCION.md`): producido · diferido ·
+perdido para los roles clave, por tramo y con la trazabilidad de sus causas. Lo de §9.1 (M1, M7) era la propuesta; esto
+es lo que quedó, con sus pruebas (`verificar-libro` y `verificar-contrato`, secciones «A2», también con la fuente http)
+y sus casos en `referencia/`. El detalle, en `CONTRATO.md`, «A2 · El balance del choke…».
+
+**Un cambio frente a la propuesta de §9.1 (M1):** sin registros, la vista de pérdidas manda `bbl: null` y
+`estado: 'sin-registro'`, **no** `bbl: 0`. Que nadie haya registrado una pérdida no prueba que no se perdió nada.
+
+| # | Qué | Ruta o campo (AGREGADO) | Capacidad | Rechazos (código) | Casos en `referencia/` | ¿lo usa lo necesario? |
+|---|---|---|---|---|---|---|
+| A2-1 | **El balance del choke**: producido · diferido · perdido por campo y por tramo (yacimiento, pozos, planta, salida, sin identificar), lado a lado y nunca sumados, con el árbol de cada tramo (diferida → planeada → N1 → N2 → paradas con quién dijo qué; pérdida → tipo → registros) | `GET /api/vistas/balance?campos&desde&hasta` o `?campos&jornada=actual\|anterior` | la de la vista | — | `balance/` (6): La Ceiba y el portafolio en septiembre y octubre, La Ceiba en la jornada actual y la anterior | **AGREGAR AHORA** (ger, prod, sup, reg, jefe y conf) |
+| M1 | **El registro de pérdidas** (pitera, derrame, tea, venteo, rechazo), por inserción y corregible con motivo (D1) | `POST /api/perdidas` → `{ perdida }`; `GET /api/vistas/perdidas?campos&desde&hasta` | `perdidas:registrar` (nueva: oper, sup y prod) | 400 `peticion-invalida`; 403 `rol-desconocido`, `sin-capacidad`, `sin-persona`, `campo-ajeno`; 404 `campo-desconocido`, `perdida-desconocida`; 409 `ya-corregida`; 422 `tipo-desconocido`, `tramo-desconocido`, `sin-donde`, `texto-largo`, `hora-invalida`, `en-el-futuro`, `fin-antes-de-inicio`, `volumen-invalido`, `sin-volumen`, `fuente-desconocida`, `sin-como`, `retirar-sin-corrige`, `falta-motivo` | `perdidas/` (4, vacías: el demo no inventa pérdidas) y `escrituras/…-perdida-…` (8) | **AGREGAR AHORA**. Por decidir con la operadora: cómo se estima cada tipo (TRIM no inventa una fórmula: la persona dice el volumen y cómo lo estimó) |
+| A2-2 | **La jornada del supervisor** («Mi turno» y la entrega de turno) | `GET /api/vistas/jornada?campo&jornada=actual\|anterior`; campo opcional `Config.campos[campo].turnos` (`["06:00","18:00"]`) en `POST /api/configuracion` | `config:firmar` (la de v1) para el cambio de turno | 422 de `validarConfig` (hora que no es HH:MM, repetida, más de 4) | `jornada/` (4): La Ceiba y Morichal, jornada actual y anterior | **AGREGAR AHORA** (sup). Sin firma rige 06:00 y 18:00, y se dice |
+| A2-3 | **«¿Está funcionando?»**: antes de TRIM, este mes contra la meta, lo ganado; por tramo | `GET /api/vistas/efectividad?campos`; campo opcional `Config.campos[campo].metas[].reduccionPct` en `POST /api/configuracion` | `metas:firmar` (la de v1) para la meta de reducción | 422 de `validarConfig` (fuera de 0 a 100 %) | `efectividad/` (2) | **AGREGAR AHORA** (ger y prod; Resultados) |
+| M7 | **Las fallas por mes** de los equipos críticos, en el motor | `GET /api/vistas/fallas/mensual?campos` | la de la vista | — | `fallas/` (2) | **AGREGAR AHORA** (jefe, apoyo 2) |
+
+**Capacidad nueva** (de 13 a 14): `perdidas:registrar` (oper, sup y prod). Ningún rol pierde una.
+
+**Ejemplos** (del demo: La Ceiba, 2-oct-2026 a las 14:00; los rechazos salen tal cual de `referencia/escrituras/`):
+
+```text
+A2-1 GET /api/vistas/balance?campos=ceiba&desde=2026-10-01T00:00:00.000-05:00&hasta=2026-10-02T14:00:00.000-05:00
+     → { "total": { "producido": { "exacto": 16941, "entero": 16941 }, "diferido": { "exacto": 1046.03, "entero": 1046 },
+                    "perdido": null, "potencial": { "exacto": 17987.03, "entero": 17987 }, "sinExplicar": 0, "gasKpc": null, "sinFiscal": [],
+                    "porTramo": [{ "tramo": "reservorio", "nombre": "Yacimiento", "diferido": { …, "entero": 0 }, "perdido": null },
+                                 { "tramo": "pozo", "nombre": "Pozos", "diferido": { …, "entero": 118 }, "perdido": null },
+                                 { "tramo": "planta", "nombre": "Planta", "diferido": { …, "entero": 573 }, "perdido": null },
+                                 { "tramo": "exportacion", "nombre": "Salida", … "entero": 0 … },
+                                 { "tramo": "sin-asignar", "nombre": "Sin identificar", "diferido": { …, "entero": 355 }, "perdido": null }] },
+         "arbol": [{ "tramo": "planta", "diferida": { "nivel": "impacto", "valor": "diferida", "bblEntero": 573,
+                     "hijos": [{ "nivel": "planeacion", "valor": "no-planeada", "hijos": [ …N1 → N2 → «paradas»: [{ "eventoId", "pozo", "bblEntero", "dijeron": [] }] ] }] },
+                     "perdida": null }, "… 4 más"],
+         "frase": "La Ceiba, octubre: produjo 16.941 bbl · quedaron diferidos 1.046 bbl · perdido: sin registro." }
+     Cuadres: diferido = /vistas/diferidos = la raíz de /vistas/choke/arbol; cada tramo = el primer nivel del orden gestion;
+     potencial = producido + diferido; potencial del libro = producido + diferido + sinExplicar; el perdido nunca entra.
+
+M1   POST /api/perdidas        (x-rol: oper)
+     { "campoId": "ceiba", "tipo": "pitera", "tramo": "pozo", "donde": "Línea de flujo de LC-07",
+       "inicio": "2026-10-02T09:10:00-05:00", "fin": "2026-10-02T09:40:00-05:00",
+       "volumen": { "bbl": 3.5, "fuente": "estimado", "como": "Charco de 3 × 2 m, de unos 2 cm" } }
+     → 200 { "perdida": { "id": "PER-ceiba-0001", "n": 1, …lo mismo, "por": "Jairo Peña · operador de campo", "porId": "oper",
+                          "rol": "oper", "hora": "2026-10-02T14:00:00-05:00" } }
+     corregir (x-rol: sup): { …, "corrige": "PER-ceiba-0001", "motivo": "Se aforó el tanque: eran 5 bbl", "volumen": { "bbl": 5, "fuente": "medido", … } }
+     → 200 { "perdida": { "id": "PER-ceiba-0002", "corrige": "PER-ceiba-0001", … } }; corregir otra vez la 0001 → 409 ya-corregida
+     con x-rol: tec → 403 sin-capacidad          (referencia/escrituras/403-perdida-sin-capacidad.json)
+     GET /api/vistas/perdidas?campos=ceiba&desde=…&hasta=…   (sin registros)
+     → { "estado": "sin-registro", "bbl": null, "bblEntero": null, "gasKpc": null, "porTipo": [], "porTramo": [], "filas": [], "retiradas": [],
+         "texto": "Sin registro de pérdidas en el período", … }
+
+A2-2 GET /api/vistas/jornada?campo=ceiba&jornada=actual
+     → { "jornada": { "desde": "2026-10-02T06:00:00.000-05:00", "hasta": "2026-10-02T18:00:00.000-05:00", "nombre": "De 06:00 a 18:00 del 2 de oct",
+                      "turnos": ["06:00", "18:00"], "firmada": false, "enCurso": true },
+         "porConfirmar": 3, "diferido": { "exacto": 655.34, "entero": 655 }, "perdido": null,
+         "paradas": [{ "pozo": "LC-21", "inicio": "2026-10-01T18:20:00-05:00", "fin": null, "cuando": "Venía del 1 de oct, 18:20 · sigue",
+                       "tramo": "sin-asignar", "cadena": [ …6 pasos con quién dijo cada uno… ], "estado": "pendiente", "bblEntero": 100, … }, "… 2 más"],
+         "nota": "Horario por defecto, sin firmar: cambio de turno a las 06:00 y 18:00." }
+
+A2-3 GET /api/vistas/efectividad?campos=ceiba,morichal,guacamayo,palmar,zarza
+     → { "base": { "nombre": "jun a ago", "firmada": false, "fuente": "Los tres meses publicados antes de que entrara TRIM (jun a ago): …" },
+         "antes": { "noPlaneadoDia": { "entero": 1381 }, "fallasMes": 5 }, "esteMes": { "mes": "2026-10", "noPlaneadoDia": { "entero": 1222 }, "fallas": 1, "parcial": true },
+         "meta": null, "cumple": { "noPlaneado": null, "fallas": null },
+         "ganado": { "bbl": { "entero": 9520 }, "dias": 31.6, "fallasAnticipadas": 5, "intervenidas": 5, "juzgadas": 7 },
+         "porTramo": [{ "tramo": "planta", "antesDia": { "entero": 561 }, "ahoraDia": { "entero": 362 }, "ganadoBbl": { "entero": 7984 }, … }, …],
+         "notas": ["Sin meta de reducción firmada en La Ceiba, …", "Muestra corta: TRIM lleva 32 días.", "Octubre va en curso: …"] }
+
+M7   GET /api/vistas/fallas/mensual?campos=ceiba
+     → [ …, { "mes": "2026-10", "nombre": "octubre", "parcial": true, "fallas": 1, "disparos": 0,
+              "porFamilia": { "inyeccion": 1, "multifasica": 0, "electrosumergible": 0 }, "porTramo": { "planta": 1, … },
+              "porEquipo": [{ "campoId": "ceiba", "equipo": "P-201B", "familia": "inyeccion", "tramo": "planta", "fallas": 1, "disparos": 0 }] } ]
+```
+
+**SQL (por decidir con el backend):** el registro de pérdidas pide una tabla por inserción (`perdida`: id, n, campo,
+tipo, tramo, donde, evento, inicio, fin, bbl, gas_kpc, fuente, como, por, rol, hora, corrige, motivo, retirada) con la
+regla «la que rige es la que nadie corrigió», como `clasificacion_paso`. No está en `docs/backend/sql/` todavía.
+
+**Para `cambios-contrato.json` (§8.1):** A2-1, M1, A2-2, A2-3 y M7 entran como AGREGADO con estas claves y la fecha 2026-10-27.
+M1 lleva además la nota del `null` (sin registro), que cambia la propuesta de §9.1.
+
+### 9.4 A1 · Lo construido: M6 y M8, y lo de v1 (27-oct-2026)
+
+**AGREGADO al lado.** Nada de v1 cambia de forma. Pruebas: `verificar-contrato`, sección «A1 · Contrato v1» (también recorre las dos en la ida y vuelta por JSON de la sección 2); casos en `referencia/`. El detalle, en `CONTRATO.md`, «A1 · Compatibilidad con la versión 1».
+
+| # | Qué | Ruta o campo (AGREGADO) | Capacidad | Casos en `referencia/` | ¿lo usa lo necesario? |
+|---|---|---|---|---|---|
+| M6 | **Las paradas por confirmar como número**, con la hora límite | campo opcional `porConfirmar: { n, limite }` en `GET /api/vistas/hoy` (solo `rol=sup` y `rol=prod`) | la de la vista | `hoy/sup-*` y `hoy/prod-*` | **AGREGAR AHORA** (sup, número principal; prod, apoyo 1) |
+| M8 | **El estado de la configuración** («3 de 6 pasos listos») | `GET /api/vistas/configuracion/estado?campo` → `EstadoConfiguracion` | la de la vista (403 con un campo ajeno, 404 con uno que no existe) | `configuracion/estado-<campo>` (5) | **AGREGAR AHORA** (adm, número principal) |
+| C1 | **Si falla hoy**, al lado de lo de v1 | campo opcional `costoFallaHoy` en `GET /api/vistas/riesgo` | la de la vista | `riesgo/*` | lo pinta el front; `/vistas/riesgo` es de la ficha del gerente |
+
+**Ejemplos** (del demo, La Ceiba, 2-oct-2026 a las 14:00):
+
+```text
+M6  GET /api/vistas/hoy?campos=ceiba&rol=sup → además
+    "porConfirmar": { "n": 4, "limite": "2026-10-03T07:00:00-05:00" }
+    (la misma cuenta de la frase: «Le faltan 4 paradas por confirmar: el reporte sale mañana antes de las 07:00.»)
+
+M8  GET /api/vistas/configuracion/estado?campo=ceiba
+    → { "campoId": "ceiba", "listos": 3, "total": 6,
+        "pasos": [{ "paso": "perfil", "nombre": "Perfil del campo", "listo": true, "detalle": "firmado", "corto": "firmado", "firma": "administrador" }, "… 5 más"],
+        "siguiente": "topologia", "falta": "Falta firmar a qué pozos sirve cada equipo.",
+        "frase": "La Ceiba: 3 de 6 pasos listos. Falta firmar a qué pozos sirve cada equipo." }
+
+C1  GET /api/vistas/riesgo?campos=morichal → la fila de P-201B:
+    { …, "costoFalla": 2764.68, "costoFallaHoy": 1234.65, "colchonH": 10.05, "costoDe": "propio",
+      "mdtFuente": "el promedio de sus 8 fallas cerradas, sin las 10 h que aguanta hoy el tanque" }
+```
+
+**WhatsApp fuera del motor** (§3): `entities/mensajes.ts` y `shared/api/mensajes.ts` se borraron; lo que se usaba se mudó a `entities/causas-sugeridas.ts`. Salió de `entities/hoy.ts`, `usuarios.ts`, `pozos.ts`, `escenarios.ts`, `roles.ts`, `reglas.ts`, `shared/config/region.ts`, `shared/api/escrituras.ts` y `contrato.ts`. Las pruebas de WhatsApp de `verificar-libro` y `verificar-contrato` se borraron; las de las causas sugeridas se quedaron.
+

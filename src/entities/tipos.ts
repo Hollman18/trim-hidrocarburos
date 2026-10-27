@@ -178,6 +178,12 @@ export type Capacidad =
   | 'anh:confirmar'
   /** Poner «En el yacimiento» en el paso 2 de una parada, con su evidencia (producción y confiabilidad). */
   | 'anh:yacimiento'
+  /** A2 · Registrar una pérdida (pitera, derrame, tea, venteo o rechazo) con su volumen, y corregirla con motivo (oper, sup y prod). */
+  | 'perdidas:registrar'
+  /** A3 · Cerrar una orden de SAP en el teléfono: qué hizo, la parte, las lecturas y las horas (el técnico). */
+  | 'orden:cerrar'
+  /** A3 · Registrar la respuesta de la ANH al reporte diario (aceptado o rechazado, con su motivo y la hora): regulatorio. */
+  | 'anh:enviar'
 
 export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'causa:declarar': 'Responder qué se dañó cuando la señal no lo explica',
@@ -193,6 +199,11 @@ export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'anh:clasificar': 'Completar o corregir la clasificación de cada parada en el árbol de causas (quién, dónde se trabó, qué pasó, si era planeada y la causa), en lo que su rol responde; de ahí salen también el reporte a la ANH y la medición de las paradas no planificadas',
   'anh:confirmar': 'Confirmar de una vez las paradas del día que tienen la misma cadena propuesta por TRIM',
   'anh:yacimiento': 'Decir que una parada fue del yacimiento, con lo que lo muestra (la prueba del pozo, el corte de agua o la presión de fondo)',
+  // A2 · Las pérdidas.
+  'perdidas:registrar': 'Registrar una pérdida (pitera, derrame, tea, venteo o rechazo) con su volumen y cómo se estimó, y corregirla con motivo',
+  // A3 · Las acciones que faltan.
+  'orden:cerrar': 'Cerrar en el teléfono una orden de SAP que tiene a su nombre: qué hizo, qué parte se reparó, las lecturas de arranque y las horas del trabajo',
+  'anh:enviar': 'Registrar la respuesta de la ANH al reporte diario: aceptado o rechazado, con su motivo de la lista y la hora en que llegó (desde ahí corre la hora para corregir)',
 }
 
 /** Lo que una capacidad ya trae de otra. Con `causa:completar` también se

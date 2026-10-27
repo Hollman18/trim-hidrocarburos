@@ -2,7 +2,8 @@
 # Validación de punta a punta del modelo de datos en un cluster temporal de
 # PostgreSQL 16: crea el cluster, corre esquema.sql, carga ejemplos.sql, prueba
 # que las restricciones muerden, comprueba los cuadres, arma y compara
-# tablas.json, mira si hay TimescaleDB, y al final detiene el cluster y borra su
+# tablas.json, corre v1-cadena.sql y lo compara con simulador-api/esquema.sql
+# (el SQL de la v1, que rige), mira si hay TimescaleDB, y al final detiene el cluster y borra su
 # carpeta. Todo lo que pasa va a validacion.log; un error detiene la corrida.
 # Uso: herramientas/validar.sh <raiz del proyecto>
 set -e
@@ -78,9 +79,21 @@ echo
 echo "## 6. tablas.json contra esquema.sql"
 node $M/herramientas/armar-tablas.mjs trim_prueba $M/tablas.json
 node $M/herramientas/comprobar-tablas.mjs trim_vacia $M/tablas.json
+echo "La marca RETIRADO (27-oct-2026) del canal de WhatsApp: toda línea que lo nombra lleva la palabra RETIRADO."
+for f in esquema.sql ejemplos.sql pruebas.sql tablas.json; do
+  n=$(grep -i whatsapp $M/$f | grep -c -v RETIRADO || true)
+  echo "  $f: $(grep -c -i whatsapp $M/$f || true) líneas lo nombran; sin la marca: $n"
+  (( n == 0 )) || { echo "falta la marca RETIRADO en $f"; exit 1 }
+done
 
 echo
-echo "## 7. TimescaleDB"
+echo "## 7. v1-cadena.sql: la cadena de la v1 leída del modelo nuevo"
+echo "Rige simulador-api/esquema.sql (v1). v1-cadena.sql crea el esquema v1 con sus tablas y v_procedencia como vistas sobre trim."
+$P -d trim_prueba -q -f $M/v1-cadena.sql
+node $M/herramientas/comprobar-v1.mjs $RAIZ trim_prueba
+
+echo
+echo "## 8. TimescaleDB"
 if [[ "$($P -d trim_prueba -At -c "select count(*) from pg_available_extensions where name = 'timescaledb'")" == 0 ]]; then
   echo "TimescaleDB NO está instalado en este PostgreSQL (pg_available_extensions no la trae): no se instaló."
   echo "timescale.sql queda revisado a mano y SIN ejecutar; la base funciona con las particiones nativas mensuales de lectura."
@@ -90,7 +103,7 @@ else
 fi
 
 echo
-echo "## 8. Cierre"
+echo "## 9. Cierre"
 $BIN/pg_ctl -D $PGD -m fast -w stop
 rm -rf $PGD
 rm -rf $S

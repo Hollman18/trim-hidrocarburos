@@ -15,14 +15,15 @@ const anillo = (page: Page) => page.evaluate(() => {
 })
 
 test.describe('armazón', () => {
-  test('A1 · en el tema claro, el foco del teclado se ve sobre el panel índigo (anillo blanco)', async ({ flujo: f }) => {
+  // Experiencia v3 (decisión 5): el panel es claro; el anillo es el del acento, que se ve sobre él (4,1:1).
+  test('A1 · en el tema claro, el foco del teclado se ve sobre el panel (anillo del acento)', async ({ flujo: f }) => {
     const { page } = f
     await page.setViewportSize({ width: 1440, height: 900 })
     await f.abrir('/#/ger/planta-viva/ceiba/curso')
     let a = await anillo(page)
     for (let i = 0; i < 8 && !a?.enNav; i++) { await tab(page); a = await anillo(page) }
     f.ok(!!a?.enNav, 'el foco llega al panel con Tab')
-    f.ok(a?.color === 'rgb(255, 255, 255)' && a.estilo !== 'none', `el anillo es blanco sobre el índigo (${a?.color}, ${a?.estilo})`)
+    f.ok(a?.color === 'rgb(44, 115, 113)' && a.estilo !== 'none', `el anillo va en el acento sobre el panel claro (${a?.color}, ${a?.estilo})`)
     f.cerrar()
   })
 
@@ -215,15 +216,15 @@ test.describe('lo común', () => {
     await page.goto('/#/sup/hoy/ceiba/curso')
     await page.waitForSelector('main [data-inicio]')
     const v = (n: string) => page.evaluate(x => getComputedStyle(document.querySelector('[data-aviso-hoy]')!).getPropertyValue(x).trim(), n)
-    expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-aviso-hoy]')!).backgroundColor), 'el aviso en la noche es claro').toBe('rgb(243, 244, 245)')
-    expect(await v('--aviso-accion')).toBe('#142d88')
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-aviso-hoy]')!).backgroundColor), 'el aviso en la noche es claro').toBe('rgb(242, 241, 238)')
+    expect(await v('--aviso-accion')).toBe('#2c7371')
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).accentColor), 'las casillas, en la mano').not.toBe('auto')
     await page.emulateMedia({ media: 'print' })
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'el papel, en claro').toBe('light')
     // A21: en el papel un título no queda al pie de la hoja sin lo suyo.
     expect(await page.evaluate(() => getComputedStyle(document.querySelector('main h2')!).breakAfter), 'un título no se separa de lo que sigue').toBe('avoid')
     await page.emulateMedia({ media: 'screen', contrast: 'more' })
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--tinta2').trim()), 'más contraste: la tinta secundaria sube').toBe('#e1e4e8')
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--tinta2').trim()), 'más contraste: la tinta secundaria sube').toBe('#e3e1dc')
   })
 
   test('A4 · al cerrar la hoja de un tramo con Escape, el foco vuelve al tramo (un <g> del dibujo)', async ({ flujo: f }) => {
@@ -374,7 +375,7 @@ test.describe('Turno, Mi trabajo e Identificar', () => {
     const { page } = f
     await f.abrir('/#/tec/trabajo/ceiba/curso')
     f.ok((await f.hash()).startsWith('#/tec/hoy/'), 'la dirección de Mi trabajo abre Hoy del técnico')
-    await expect(page.locator('main [data-tarea="orden"]').filter({ hasText: 'K-101' })).toContainText('le llegó por WhatsApp')
+    await expect(page.locator('main [data-tarea="orden"]').filter({ hasText: 'K-101' })).toContainText('40012056')
     await f.abrir('/#/sup/turno/ceiba/curso')
     f.ok(await page.locator('main [role=img][aria-label="Normal"]').count() === 0, 'un equipo sin condición (LC-08) va sin marca, no con un punto «normal»')
     const t = await page.locator('main').innerText()

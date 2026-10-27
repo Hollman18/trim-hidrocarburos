@@ -28,7 +28,7 @@ Todos los valores son del demo con `AHORA = 2026-10-02T14:00-05:00`, período «
 | 5B §1–3 | eventos, causa de un pozo, causa de una bomba, «pide» y «arrancó sin identificar» |
 | 5C §1–4 | serie y límites, vigía y pronóstico, salud por parte y sus frases, electrosumergibles |
 | 5A §3–4, §8 | tramo, diferido, tolerancia y rango «calculado», Paretos |
-| 5D §5, §6 | WhatsApp (registro de mensajes), SAP PM (aviso, órdenes, repuestos, identidad) |
+| 5D §5, §6 | WhatsApp (registro de mensajes; **RETIRADO (27-oct-2026)**), SAP PM (aviso, órdenes, repuestos, identidad) |
 | 5E | `05e-choke-arbol/`: el modelo choke y el árbol de 6 pasos (los tramos, sus potenciales, dónde se trabó cada parada, la tubería del agua, «Si falla hoy», el árbol de la circular) |
 | 8 | reglas globales: `n0`/`n1`, `fmtHoras`, prioridades ISA-101, `BarraMeta`, `Analogico`, «ver N más», ⓘ |
 

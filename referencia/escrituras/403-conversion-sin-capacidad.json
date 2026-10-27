@@ -1,0 +1,1 @@
+{"id":"403-conversion-sin-capacidad","descripcion":"Producción (sin config:firmar) carga la conversión del árbol","pasos":[{"metodo":"POST","endpoint":"/api/anh/conversion/importar","rol":"prod","cuerpo":{"campo":"ceiba","texto":"OP-1;Falla;NP_SUB;Falla ESP"},"esperado":{"estado":403,"codigo":"sin-capacidad"}}]}

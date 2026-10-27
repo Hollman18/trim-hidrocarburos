@@ -27,7 +27,7 @@ flowchart LR
     MOT --> API["API REST<br/>/api/…"]
     ESC["Escrituras con reglas<br/>(403/404/409/422)"] --> DB
     API --> ESC
-    MOT --> WA["WhatsApp<br/>Cloud API"]
+    MOT --> WA["WhatsApp<br/>Cloud API<br/>(RETIRADO 27-oct-2026)"]
     MOT --> SAP["SAP PM<br/>(avisos M1/M2)"]
   end
   GW --> ING
@@ -41,7 +41,7 @@ flowchart LR
 1. **Ingesta y registro de la cadena de datos.** Recibe del borde los eventos de los controladores de pozo, las paradas de las bombas con su primera alarma, las caídas de servicios (energía, aire, compresión…), las series de los tags del historiador y el valor fiscal del día del computador de flujo. Registra la procedencia de cada tag (de qué instrumento sale, por qué gateway, con qué banda normal). Capítulo 4.
 2. **El motor.** Con esos insumos y la configuración firmada calcula las vistas: el libro de diferidos por mes y período, la producción día a día, la predicción de cada bomba, el riesgo, la salud de cada parte, el registro de aciertos del vigía, la asignación por pozo, el ciclo ANTES / DURANTE / DESPUÉS (`escenarios.ts`, capítulo 11) y, con el modelo choke, lo que limita a cada campo, el tramo de cada parada, el reparto por tramo y por escalón, el árbol de pérdidas, las tuberías del campo y del agua, «si falla hoy» y las filas ANH con su propuesta de seis pasos (capítulo 5E). Capítulo 5.
 3. **Las escrituras.** Lo único que entra a mano: la configuración firmada (metas, precio, tanques, respaldos, programa de paradas), los usuarios y accesos, la respuesta del operario sobre una parada, el análisis de causa raíz, el aviso a SAP, el informe con folio, la asignación oficial cargada, los cambios de planta, la topología y las capacidades del choke (dentro de la configuración firmada) y la clasificación ANH de cada parada, que se guarda paso por paso y solo por inserción. Cada una con sus reglas de autorización y de forma. Capítulos 5D y 5E y anexo A.
-4. **WhatsApp.** Enviar con las plantillas aprobadas lo que las reglas disparan (parada, cierre, pregunta de causa, recordatorio a los 30 min, escalamiento a las 2 h, parte que avisa, orden liberada) y recibir por el webhook firmado la respuesta del operario. Capítulo 5D.
+4. **RETIRADO (27-oct-2026)** **WhatsApp.** No se construye; reemplazo: la pregunta y los avisos en Hoy, dentro de TRIM. Era: enviar con las plantillas aprobadas lo que las reglas disparan (parada, cierre, pregunta de causa, recordatorio a los 30 min, escalamiento a las 2 h, parte que avisa, orden liberada) y recibir por el webhook firmado la respuesta del operario. Capítulo 5D.
 5. **SAP PM.** Leer órdenes, horas confirmadas y repuestos; enviar avisos M1/M2 con la evidencia. **TRIM no crea órdenes en SAP.** Capítulo 5D.
 6. **Sesión e identidad.** El token sale del servicio de identidad del cliente (OIDC/SSO); de él se resuelven la persona, su rol, sus campos y sus capacidades. Nunca de la petición. Sección 2.8.
 

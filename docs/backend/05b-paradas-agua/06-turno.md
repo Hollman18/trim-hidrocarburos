@@ -113,7 +113,9 @@ $$
 
 ---
 
-### WhatsApp del turno
+### WhatsApp del turno · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** Lo que importa del turno (qué paró y qué falta) queda en Hoy y en la entrega de turno, en pantalla y PDF.
 
 Los mensajes con `hora ≥ AHORA − 12 h`, agrupados en hilos por evento (o por orden, o por regla y equipo). Es del capítulo de WhatsApp; aquí solo se nota que el estado del hilo sale de la pregunta del evento: «respondió <por> (por WhatsApp): «<texto>»» o chip «sin respuesta».
 

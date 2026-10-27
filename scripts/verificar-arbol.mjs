@@ -255,7 +255,7 @@ const e7 = lanza(() => A.declararPaso(espOL.borrador, 'n1', 'P_WO', NELSON, 'sup
 comprobar(e7 instanceof A.ErrorClasificacion && /cambie primero/.test(e7.message), 'escoger una N1 de la otra planeación se rechaza: hay que cambiar primero «¿Planeada?»')
 
 console.log('\n=== 4. REGLAS_ANH v1: una comprobación por fila, con un caso del demo ===')
-/** El evento real LC-21 (sin causa) contestado con un motivo cerrado, como lo guarda la pantalla o WhatsApp. */
+/** El evento real LC-21 (sin causa) contestado con un motivo cerrado, como lo guarda la pantalla. */
 const ctxChip = texto => ({ config: ctx0.config, respuestas: { 'EP-LC21-261001-01': { texto, por: 'Jairo Peña · operador de campo', porId: 'u-oper', hora: '2026-10-02T14:00:00-05:00' } } })
 const ctxFrontera = { config: { ...ctx0.config, topologia: [{ elemento: 'SE-2', choke: 'exportacion', alcance: 'frontera', campoId: 'morichal' }] }, respuestas: {} }
 const CASOS = [
@@ -621,11 +621,11 @@ aparte('«La planta no recibe», contestado por el supervisor, deja el tramo y l
     && K.PASOS.every(x => b[x]?.procedencia !== 'confirmado' && b[x]?.procedencia !== 'corregido'), dice: `«Quién»: ${b.responsable.valor} · ${b.responsable.porId} · ${b.responsable.procedencia}` }
 })
 // d. D2 (C-04): `desc_evid` solo con lo estructurado: el texto libre de quien respondió no viaja, aunque nombre a dos personas.
-aparte('desc_evid se arma solo con lo estructurado (D2): «Lo encontró Jairo Peña con Nelson Ortiz…» (pantalla) y «Revisó el pozo Jairo…» (WhatsApp) se quedan en TRIM', () => {
+aparte('desc_evid se arma solo con lo estructurado (D2): «Lo encontró Jairo Peña con Nelson Ortiz…» y «Revisó el pozo Jairo…», con canal o sin él, se quedan en TRIM', () => {
   const enDia = (ev, ctx) => { const t = tramo(ev); const d0 = P.inicioDiaCo(t.inicio.getTime()); return P.paradasAnh([t.pozo.campoId], new Date(d0), new Date(d0 + D), ctx).filter(p => p.eventoId === ev) }
   const conTexto = (texto, canal) => ({ ...ctx0, respuestas: { ...ctx0.respuestas, 'EP-LC21-261001-01': { texto, por: 'Jairo Peña · operador de campo', porId: 'oper', canal, hora: '2026-10-01T09:00:00-05:00' } } })
   const filas = [...enDia('EP-LC21-261001-01', conTexto('Lo encontró Jairo Peña con Nelson Ortiz: se quemó el cable de potencia', 'pantalla')),
-    ...enDia('EP-LC21-261001-01', conTexto('Revisó el pozo Jairo y no tenía energía', 'whatsapp'))]
+    ...enDia('EP-LC21-261001-01', conTexto('Revisó el pozo Jairo y no tenía energía', undefined))]
   const vetadas = ['Jairo', 'Nelson', 'Peña', 'Ortiz', 'cable de potencia', 'no tenía energía']
   const malas = filas.filter(p => p.causa.tipo !== 'declarada' || vetadas.some(n => p.clasificacion.descEvid.valor.includes(n)) || !/Declarado por el operador de campo/.test(p.clasificacion.descEvid.valor))
   return { bien: filas.length >= 2 && !malas.length, dice: `viaja «${(malas[0] ?? filas[0])?.clasificacion.descEvid.valor.slice(0, 110)}»` }

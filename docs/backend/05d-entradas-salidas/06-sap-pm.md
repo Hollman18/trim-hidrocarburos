@@ -207,7 +207,7 @@ Extra «ahora · {n} aviso(s) · {n} orden(es)»; avisos abiertos **sin orden** 
 
 ### Mi trabajo (técnico)
 
-«ÓRDENES EN SAP» (extra «{n} a su nombre» o «{n} abiertas»): las de estado REL, PCNF o CRTD; primero las suyas (con la descripción escrita y «TRIM le avisó por WhatsApp · {fechaHora}»), después las demás. Texto: «Las crea y las libera el planeador en SAP; TRIM no las escribe. Cuando SAP libera una a su nombre, TRIM le avisa por WhatsApp. Se notifican y se cierran en SAP.». Si un equipo que avisa ya tiene una orden suya: «Orden {n} liberada a su nombre: vea «Órdenes en SAP».».
+«ÓRDENES EN SAP» (extra «{n} a su nombre» o «{n} abiertas»): las de estado REL, PCNF o CRTD; primero las suyas (con la descripción escrita y «TRIM le avisó por WhatsApp · {fechaHora}», **RETIRADO (27-oct-2026)**), después las demás. Texto: «Las crea y las libera el planeador en SAP; TRIM no las escribe. Cuando SAP libera una a su nombre, TRIM le avisa por WhatsApp. Se notifican y se cierran en SAP.» (lo de WhatsApp: **RETIRADO (27-oct-2026)**; la orden se ve en su Hoy). Si un equipo que avisa ya tiene una orden suya: «Orden {n} liberada a su nombre: vea «Órdenes en SAP».».
 
 ### Conectores → «SISTEMAS CORPORATIVOS» (administrador)
 

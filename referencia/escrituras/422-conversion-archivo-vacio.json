@@ -1,0 +1,1 @@
+{"id":"422-conversion-archivo-vacio","descripcion":"La conversión del árbol con el archivo vacío","pasos":[{"metodo":"POST","endpoint":"/api/anh/conversion/importar","rol":"adm","cuerpo":{"campo":"ceiba","texto":"  "},"esperado":{"estado":422,"codigo":"archivo-vacio"}}]}

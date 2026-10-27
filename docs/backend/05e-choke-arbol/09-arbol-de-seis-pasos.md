@@ -183,7 +183,7 @@ Con «una señal apunta», la causa y el detalle **solo los confirman el jefe de
 
 ### La revisión: «Algo está mal» y «Pedir a producción»
 
-**Qué es.** `RevisionAnh` (`anh-clasificacion.ts:176-193`): **no corrige nada**; pasa la parada a quien corrige, con el motivo. Sin `pedirA`, a quien revisa (supervisión, producción, el jefe, confiabilidad); con `pedirA: 'prod'`, la pregunta del yacimiento. Sale de «REVISAR» cuando ese rol dice, corrige, contesta o confirma algo de ella (`conRevisionAtendida`, `:1462-1467`; `quienRevisa`, `esperaRevision`, `:1468-1471`). Rige la más reciente; la misma revisión sin atender no se guarda dos veces. Por WhatsApp, «2 Algo está mal» es la misma escritura, con el motivo estructurado (QA-D2; `revisarDesdeWhatsapp`, `escrituras.ts:1140-1158`).
+**Qué es.** `RevisionAnh` (`anh-clasificacion.ts:176-193`): **no corrige nada**; pasa la parada a quien corrige, con el motivo. Sin `pedirA`, a quien revisa (supervisión, producción, el jefe, confiabilidad); con `pedirA: 'prod'`, la pregunta del yacimiento. Sale de «REVISAR» cuando ese rol dice, corrige, contesta o confirma algo de ella (`conRevisionAtendida`, `:1462-1467`; `quienRevisa`, `esperaRevision`, `:1468-1471`). Rige la más reciente; la misma revisión sin atender no se guarda dos veces. Por WhatsApp (**RETIRADO (27-oct-2026)**; queda el botón «Algo está mal»), «2 Algo está mal» es la misma escritura, con el motivo estructurado (QA-D2; `revisarDesdeWhatsapp`, `escrituras.ts:1140-1158`).
 
 **Qué texto (422).** «Diga qué está mal (o qué pide): queda con la parada para quien la revisa.» (`texto-corto`) · «Una parada se le pide a quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad.» · «Esa revisión le toca a su propio rol: corríjala usted.»
 

@@ -19,7 +19,7 @@ Lo que no cuadra entre pantallas, lo que el demo simplifica y lo que el backend 
 10. **SAP simulado**: órdenes, avisos y horas salen del PLC con una regla fija; la reparación activa es `min(duración, 8 h)`, por eso los tres relojes dan «8 h» de activa en todos los alcances (5D §6). La orden `40012056` de K-101 y su aviso M1 son una acción armada a mano (el número sale de la regla: con las PM03 de las intervenciones del vigía pasó de 40012053 a 40012056).
 11. **Registro de predicciones**: lo anterior a hoy sale de una regla del demo (5C §5); las cifras de «¿ACIERTA EL VIGÍA?» dependen de ese registro.
 12. **Respuestas, análisis y cambios de planta viven en la sesión del navegador** (se pierden al recargar). En producción los guarda el servidor (`POST /api/paradas/:evento/respuesta`, `POST /api/analisis/:evento`, `POST /api/planta/cambios`) y vuelven en `GET /api/paradas/respuestas`, `GET /api/analisis`, `GET /api/planta/cambios`.
-13. **El chat de WhatsApp es un teléfono simulado** y responder ahí llama al webhook dentro del navegador (5D §5). En producción el chat no existe en la pantalla: la respuesta llega por el webhook de Meta.
+13. **RETIRADO (27-oct-2026)** (el chat sale del front). **El chat de WhatsApp es un teléfono simulado** y responder ahí llama al webhook dentro del navegador (5D §5). En producción el chat no existe en la pantalla: la respuesta llega por el webhook de Meta.
 14. **Cambiar de rol** (menú de la persona) es del demo; en producción la identidad sale del token (`GET /api/sesion`, que falta).
 15. **Ningún dato del demo ejercita** la pista «señal e historia», la «Sospechosa», un aviso SAP abierto sin orden (■ si prioridad 1 y > 4 h), un mensaje no enviado (◌), un período con relojes «excluidos», ni una declarada con parte (el análisis de confiabilidad solo aparece después de responder en la sesión, captura 9 de Identificar).
 
@@ -33,7 +33,7 @@ Lo que no cuadra entre pantallas, lo que el demo simplifica y lo que el backend 
 21. **Umbral fijo de 90 % en «Capacidad por tren»** (`Planta.tsx:556-562`): no es configuración firmada.
 22. **Confiabilidad no usa el período** de la cabecera (toda la historia y desde la puesta en marcha), aunque la cabecera lo muestre; cada panel lo dice en su extra, salvo las tarjetas de familia.
 23. **El CSV lo arma el navegador** con el libro que vuelve a pedir (`src/widgets/informe/Exportar.tsx:58-77`); el servidor solo registra el folio y la huella de las cifras. Si el CSV es evidencia, conviene que lo genere el servidor con el mismo libro con que calculó la huella.
-24. **La hora del chat simulado usa `toLocaleTimeString`** (`src/widgets/whatsapp/Telefono.tsx:13`) en vez de los formateadores fijos (`formatoFecha`), que el resto del front usa para que todos los navegadores digan lo mismo.
+24. **RETIRADO (27-oct-2026)** (el chat sale del front). **La hora del chat simulado usa `toLocaleTimeString`** (`src/widgets/whatsapp/Telefono.tsx:13`) en vez de los formateadores fijos (`formatoFecha`), que el resto del front usa para que todos los navegadores digan lo mismo.
 25. **Riesgo ignora el período, pero el globo «Del potencial» del gerente divide por el potencial de ahora** (`EstadoCampo.potencialBpd`, todos los pozos), no por el del período: en La Ceiba da 14,7 % para P-201B (1.665 de 11.360 bbl/d). Es coherente con «ahora», pero conviene decirlo en el globo.
 
 ### D. Hallados al verificar las capturas (V3, 8-oct-2026)

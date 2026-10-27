@@ -1,4 +1,4 @@
-import type { CampoAhoraHoy, WhatsappHoy } from '@/shared/api/hoy'
+import type { CampoAhoraHoy } from '@/shared/api/hoy'
 import { n0 } from '@/shared/lib/formato'
 import { Enlace } from '@/shared/ui/primitivas'
 import { cn } from '@/shared/lib/cn'
@@ -42,31 +42,13 @@ export function SuCampo({ c }: { c: CampoAhoraHoy }) {
   )
 }
 
-/** «El turno en WhatsApp»: un hilo por parada u orden de las últimas 12 h. */
-export function TurnoWhatsapp({ w }: { w: WhatsappHoy }) {
-  return (
-    <section className={tarjeta} data-whatsapp aria-label="El turno en WhatsApp">
-      <h2 className={cabeza}>El turno en WhatsApp <span className="text-[13px] font-normal text-[var(--tinta2)]">{w.mensajes === 1 ? '1 mensaje' : `${w.mensajes} mensajes`}</span></h2>
-      {w.hilos.length === 0 && <p className="mt-2 text-[14px] text-[var(--tinta2)]">TRIM no mandó nada en el turno.</p>}
-      <div className="mt-1.5">
-        {w.hilos.map(h => (
-          <div key={`${h.equipo}${h.pasos}`} className="grid grid-cols-[auto_1fr] gap-x-2.5 border-t border-[var(--linea2)] py-2 text-[14px] leading-[1.4] text-[var(--tinta2)] first:border-t-0">
-            <b className="font-cond text-[15px] font-bold tracking-[.02em] text-[var(--tinta)]">{h.equipo}</b>
-            <span>{h.pasos}{h.estado && <> · <Texto f={h.estado} /></>}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 /** «Diferido de su turno», las últimas 12 h. */
 export function DiferidoTurno({ horas, bbl }: { horas: number; bbl: number }) {
   return (
     <section className={tarjeta} data-diferido-turno aria-label="Diferido de su turno">
       <h2 className={cabeza}>Diferido de su turno <span className="text-[13px] font-normal text-[var(--tinta2)]">últimas {horas} h</span></h2>
       <p className="mt-1.5 flex items-baseline gap-2"><b className="tabular text-[24px] font-bold">{n0(bbl)}</b><span className="text-[14px] text-[var(--tinta2)]">barriles</span></p>
-      <p className="mt-2.5 text-[14px] leading-[1.45] text-[var(--tinta2)]">«Entregar turno» abre la entrega del turno: lo que paró, lo que quedó pendiente y el WhatsApp del turno.</p>
+      <p className="mt-2.5 text-[14px] leading-[1.45] text-[var(--tinta2)]">«Entregar turno» abre la entrega del turno: lo que paró, lo que quedó pendiente y lo hecho.</p>
     </section>
   )
 }

@@ -122,24 +122,20 @@ test('las tuberías del dibujo de Planta no son paradas de Tab; el tren de agua 
 test.describe('390 px', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true })
 
-  test('el último toque del chat de WhatsApp deja el foco en el aviso «Respondido», con el chat abierto', async ({ flujo: f }) => {
+  // Experiencia v3: sin el canal de mensajes. El último toque es «Contestar», en la pantalla.
+  test('el último toque de «Contestar» deja el foco en el aviso «Respondido»', async ({ flujo: f }) => {
     await f.abrir('/#/oper/causa/ceiba/curso')
-    f.ok(await f.clic('Ver mi chat de WhatsApp'), 'abre su chat de WhatsApp')
-    const chat = f.page.getByRole('group', { name: /^Chat de WhatsApp de / })
-    await expect(chat).toBeVisible()
-    // Con el teclado, como en el hallazgo: foco en la respuesta y Enter.
-    await chat.getByRole('button', { name: /^1\s*Sello mecánico/ }).focus(); await f.page.keyboard.press('Enter')
-    const vio = chat.getByRole('button', { name: /^1\s*Fuga hacia afuera/ })
-    await expect(vio, 'TRIM pregunta qué vio').toBeVisible()
-    f.ok(await vio.evaluate(b => b === document.activeElement), 'el paso intermedio deja el foco en la primera respuesta nueva')
+    f.ok(await f.clic('Sello mecánico'), 'escoge la parte sugerida')
+    f.ok(await f.clic('Fuga hacia afuera'), 'y lo que vio')
+    // Con el teclado, como en el hallazgo: foco en «Contestar» y Enter.
+    await f.page.locator('main form').filter({ has: f.page.getByRole('button', { name: 'Contestar' }) }).first().getByRole('button', { name: 'Contestar' }).focus()
     await f.page.keyboard.press('Enter')
-    // B-05: el chat no se cierra al contestar: el cierre «Así queda…» llega en el mismo hilo, y la tarjeta sale de «Por contestar».
-    await expect(chat, 'el chat sigue abierto, con el cierre en el mismo hilo').toContainText('Así queda lo que usted contestó')
+    await expect(f.page.getByRole('status').filter({ hasText: 'Respondido: P-201B' })).toBeVisible()
     const donde = await f.page.evaluate(() => {
       const a = document.activeElement
       return a === document.body ? 'BODY' : `${a?.getAttribute('role')}: ${a?.textContent ?? ''}`
     })
-    f.ok(/^status: Respondido: P-201B \(por WhatsApp/.test(donde), `el foco queda en el aviso de la respuesta, que sigue en la página (${donde})`)
+    f.ok(/^status: Respondido: P-201B \(\d\d:\d\d\)/.test(donde), `el foco queda en el aviso de la respuesta, que sigue en la página (${donde})`)
     f.cerrar()
   })
 })
@@ -192,7 +188,7 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   await f.ir('#/sup/turno/ceiba/curso')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
-  f.ok(t.includes('Jairo Peña') && t.includes('Se cerró porque'), 'Turno: a quién le llegó cada WhatsApp y la causa de las paradas nuevas salen escritos')
+  f.ok(t.includes('Se cerró porque') && !t.includes('WhatsApp'), 'Turno: la causa de las paradas nuevas sale escrita')
 
   // Identificar: «ver N más» esconde declaradas en la pantalla y en el papel salen todas.
   await f.page.emulateMedia({ media: 'screen' })
@@ -204,8 +200,8 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
   f.ok(await declaradas() === total && !/ver \d+ más/.test(t), 'Identificar: en el papel salen todas las declaradas, y el botón no')
-  f.ok(t.includes('Regla de operación: Un pozo o una bomba') && /pregunta: Jairo Peña/.test(t) && t.includes('Sin destinatario: Nadie de este campo')
-    && t.includes('Por qué no alcanzó la señal:'), 'Identificar: la regla, a quién le llegó cada WhatsApp, el hueco de WhatsApp y el porqué de la señal salen escritos')
+  f.ok(t.includes('Regla de operación: Un pozo o una bomba') && t.includes('Por qué no alcanzó la señal:') && !t.includes('WhatsApp'),
+    'Identificar: la regla y el porqué de la señal salen escritos')
 
   // Diferidos del portafolio, 12 meses: el motivo de «no publicable» y todos los equipos van al papel.
   await f.page.emulateMedia({ media: 'screen' })
@@ -219,7 +215,7 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   await f.ir('#/adm/conectores/ceiba/curso')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
-  f.ok(t.includes('trim_orden_liberada') && t.includes('Avisos a SAP: Con su evidencia') && !/ver \d+ más/.test(t), 'Conectores: la plantilla escondida y el ⓘ de los avisos salen en el papel')
+  f.ok(t.includes('Avisos a SAP: Con su evidencia') && !/ver \d+ más/.test(t), 'Conectores: el ⓘ de los avisos sale en el papel')
   await f.page.emulateMedia({ media: 'screen' })
   await f.ir('#/ger/configuracion/ceiba/curso')
   await f.page.emulateMedia({ media: 'print' })

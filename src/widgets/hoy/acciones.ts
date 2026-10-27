@@ -31,15 +31,14 @@ export function useEscribir() {
 /** Contestar desde Hoy: un toque y sale el aviso con «Deshacer». La respuesta se
  *  sostiene mientras dura el aviso (y se guarda en el navegador) y después se
  *  escribe; el aviso no dice «Registrado» hasta que se escribió (P-08). «Todavía no
- *  sé» en el libro no escribe nada: la pregunta queda abierta y vuelve en la
- *  próxima ronda de WhatsApp. */
+ *  sé» en el libro no escribe nada: la pregunta queda abierta y sigue en Hoy. */
 export function useResponder(envio: Envio) {
   const rolId = useApp(s => s.rolId)
   return (q: PreguntaHoy, r: RespuestaHoy) => {
     vibrar()
     if (q.via === 'libro' && q.libro) {
       const l = q.libro
-      if (r.via === 'no-se') return envio.registrar({ id: q.id, texto: `${q.equipo} queda abierta: se la vuelven a preguntar en la próxima ronda.`, local: true })
+      if (r.via === 'no-se') return envio.registrar({ id: q.id, texto: `${q.equipo} queda abierta: la pregunta sigue en Hoy.`, local: true })
       if (r.via !== 'libro') return
       const dicho = `${r.dicho} en ${q.equipo}`
       return envio.registrar({ id: q.id, texto: `Se registra en 5 s: ${dicho}`, escrito: `Registrado: ${dicho}`,

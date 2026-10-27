@@ -1,0 +1,1 @@
+{"id":"403-cierre-sin-capacidad","descripcion":"El operador (sin orden:cerrar) cierra una orden","pasos":[{"metodo":"POST","endpoint":"/api/sap/ordenes/40012056/cierre","rol":"oper","cuerpo":{"actividad":"ajuste","inicio":"2026-10-02T10:00:00-05:00","fin":"2026-10-02T12:00:00-05:00"},"esperado":{"estado":403,"codigo":"sin-capacidad"}}]}

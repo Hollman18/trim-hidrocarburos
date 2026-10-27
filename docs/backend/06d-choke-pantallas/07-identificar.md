@@ -5,7 +5,7 @@
 
 Fórmulas: la fila (pozo × día operacional × causa), la raíz y la cascada, `inicioEvento`, las filas abiertas al corte y los retiros → 5E §9; la propuesta de TRIM (`REGLAS_ANH`, `proponerClasificacion`), quién declara y quién confirma cada paso (`PASOS_QUE_DECLARA`, `PASOS_QUE_CONFIRMA`), las preguntas de campo y los estados → 5E §9; el paso 2 y su porqué (`chokeDeCausa`) → 5E §3 y 5E §1; cuánto de esto confirmó o corrigió una persona → 6D.9 y 5E §9.
 
-Lo demás de Identificar está en 6C.2 y no se repite aquí: la regla «no arrancar», la cabecera de cifras, «POR IDENTIFICAR · SIN ARRANCAR» con los formularios «QUÉ SE DAÑÓ» y «POR QUÉ PARÓ», NO CONFORMIDADES, DECLARADAS y el hilo de WhatsApp de cada pregunta (el chat, en 6D.8). Este panel va después de lo que no se arranca: para supervisión, entre la cabecera de cifras y NO CONFORMIDADES; para ingeniería, entre «POR IDENTIFICAR · SIN ARRANCAR» y NO CONFORMIDADES (`src/pages/Causa.tsx:213-251`). Para el operador y el técnico la pantalla es otra (captura 4).
+Lo demás de Identificar está en 6C.2 y no se repite aquí: la regla «no arrancar», la cabecera de cifras, «POR IDENTIFICAR · SIN ARRANCAR» con los formularios «QUÉ SE DAÑÓ» y «POR QUÉ PARÓ», NO CONFORMIDADES, DECLARADAS y el hilo de WhatsApp de cada pregunta (el chat, en 6D.8; **RETIRADO (27-oct-2026)**). Este panel va después de lo que no se arranca: para supervisión, entre la cabecera de cifras y NO CONFORMIDADES; para ingeniería, entre «POR IDENTIFICAR · SIN ARRANCAR» y NO CONFORMIDADES (`src/pages/Causa.tsx:213-251`). Para el operador y el técnico la pantalla es otra (captura 4).
 
 Lo que hay que llevarse:
 
@@ -104,7 +104,7 @@ El operador y el técnico (los que no revisan: `ROLES_QUE_CONTESTAN.revisa`) tie
 | 7 | Lo técnico, plegado | «Lo técnico (dónde se trabó, la causa y el detalle) lo propone TRIM; lo confirma su supervisor» | al tocarlo: quién, dónde se trabó, la causa y el detalle (no «qué pasó» ni «¿planeada?», que son de su terreno) (`Tarjeta.tsx:149-159`; U2 §4.5) | en el papel sale abierto (`print:block`) | `clasificacion` |
 | 8 | La pregunta | «¿De dónde vino el corte?» y sus 4 respuestas | la misma de la captura 1 (fila 24), sin «Después, una pregunta más.»: el detalle (`quien: causa`) no se le pregunta al operador | al operador solo le salen las de `campo` (`ROLES_QUE_CONTESTAN.campo`): nunca «dónde se trabó», «en la planta», «afuera» ni «yacimiento» como opciones, ni listas o radios de la causa o el detalle (U2 §4.5; e2e `arbol-identificar.spec.ts:38-56`) | `propuesta.preguntas[].quien` |
 | 9 | Algo está mal | «Algo está mal» | puede decirlo antes de contestar (captura 6). «Sí, así fue» no sale todavía: solo después de contestar (B-03; `Tarjeta.tsx:199-204`) | — | — |
-| 10 | El chat | «Ver mi chat de WhatsApp» | el chat de la pregunta de P-201B: 6D.8 | — | — |
+| 10 | El chat (**RETIRADO (27-oct-2026)**) | «Ver mi chat de WhatsApp» | el chat de la pregunta de P-201B: 6D.8 | — | — |
 | 11 | Lo declarado | «DECLARADAS» | 6C.2 | — | — |
 | 12 | Los indicadores, al final | «Cómo va la identificación del período» | la cabecera de cifras de 6C.2 (% por señal, declarado, por identificar, no conformidades), plegada y después de lo que tiene que contestar (B-54; `Causa.tsx:205-208`) | en el papel sale abierta (`print:open:block`) | `GET /api/vistas/diferidos` |
 
@@ -261,7 +261,7 @@ El generador no imprime: esto se lee del código y de la e2e (`CORRECCIONES-F3.m
   - la revisión: «El operador de campo marcó «Algo está mal» · 14:00», sin el motivo, y quién la atendió por su rol (`Tarjeta.tsx:251-256`);
   - quién contestó y quién dijo «No sé»: «el operador de campo contestó» (lo de la persona de la sesión sigue «Usted contestó») (`Preguntas.tsx:90, 104`);
   - el retiro: «retirado por el supervisor de operaciones · 14:00», sin el «porque» (`Cadena.tsx:68-70`; captura 14).
-- **El chat de WhatsApp no se imprime** (`Causa.tsx:514-515`): es la conversación con sus palabras (6D.8).
+- **RETIRADO (27-oct-2026)** **El chat de WhatsApp no se imprime** (`Causa.tsx:514-515`): es la conversación con sus palabras (6D.8).
 
 Lo que va a la ANH sigue otra regla, la misma del papel: lo estructurado, con la persona por su rol, nunca el texto libre (CONTRATO.md, «Clasificación ANH», `desc_evid`; 5E §9).
 

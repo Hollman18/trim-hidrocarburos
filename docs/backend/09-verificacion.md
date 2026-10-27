@@ -89,7 +89,7 @@ corre `tsc -b`, el linter, `scripts/verificar-libro.mjs`, `scripts/verificar-arb
 | 5 | Preguntas y no conformidades |
 | 6, 6b–6f | Lo que entra a mano cambia el cálculo como debe: metas (la global es la suma), accesos, plan mes a mes, perfil de cada campo, sin meta firmada |
 | 7 | Historia de fallas |
-| 8, 8b | SAP, WhatsApp, aciertos y asignación oficial; huella, firma, accesos y mensajes |
+| 8, 8b | SAP, WhatsApp (**RETIRADO (27-oct-2026)**), aciertos y asignación oficial; huella, firma, accesos y mensajes |
 | 9 | Reglas de causa y del motor |
 | 10 | Datos que faltan, se pisan o no cuadran (un mundo de prueba con huecos a propósito) |
 | 11 | Estado, dirección y costura |
@@ -155,5 +155,5 @@ Su backend se puede entregar cuando:
 - [ ] La topología y las capacidades del choke se firman con `POST /api/configuracion` y sus reglas 9 a 11 (5E.1, 5E.2).
 - [ ] Las identidades de 9.5 valen en los meses cerrados de los datos reales del cliente.
 - [ ] Los informes se registran con folio consecutivo y la huella la calcula el servidor (no el navegador).
-- [ ] El webhook de WhatsApp rechaza sin firma válida, deduplica y resuelve el evento por `context.id`.
+- [ ] El webhook de WhatsApp rechaza sin firma válida, deduplica y resuelve el evento por `context.id`. **RETIRADO (27-oct-2026)**: no se verifica (R2).
 - [ ] Las fechas viajan con zona; los opcionales ausentes se omiten; el precio sin configurar nunca vale 0.

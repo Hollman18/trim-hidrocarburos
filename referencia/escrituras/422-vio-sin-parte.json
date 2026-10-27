@@ -1,0 +1,1 @@
+{"id":"422-vio-sin-parte","descripcion":"«Lo que vio» de una parada que nadie ha contestado: va con la parte","pasos":[{"metodo":"POST","endpoint":"/api/paradas/EP-LC21-261001-01/vio","rol":"oper","cuerpo":{"modo":"ELP"},"esperado":{"estado":422,"codigo":"sin-parte"}}]}

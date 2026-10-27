@@ -7,6 +7,10 @@ export function consulta(base, sql) {
   return JSON.parse(r.stdout.trim() || 'null')
 }
 
+// RETIRADO (27-oct-2026): un check que nombra el canal de WhatsApp (respuesta_parada.canal y
+// entrante_meta_id) lleva la marca en tablas.json, igual en armar-tablas y en comprobar-tablas.
+export const conMarca = t => t && /whatsapp/i.test(t) && !t.includes('RETIRADO') ? `RETIRADO (27-oct-2026): ${t}` : t
+
 export const SQL_CATALOGO = `
 with rel as (
   select c.oid, c.relname, c.relkind from pg_class c

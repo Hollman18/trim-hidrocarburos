@@ -1,6 +1,6 @@
-// C1 · Identidad y armazón (experiencia v2): el panel lateral azul con las
+// C1 · Identidad y armazón: el panel lateral (claro desde la experiencia v3, decisión 5) con las
 // puertas de cada rol y sus subpantallas adentro, ninguna pestaña horizontal,
-// la cabecera con la franja de condiciones y, en el teléfono, la banda índigo
+// la cabecera con la franja de condiciones y, en el teléfono, la banda clara
 // con el ☰ que abre el mismo panel desde la izquierda (X5 §4; CONSTRUCCION.md).
 import { test } from './apoyo.ts'
 
@@ -73,7 +73,7 @@ test('la franja de condiciones: la cuenta del motor y su lista', async ({ flujo:
 
 test.describe('en el teléfono', () => {
   test.use({ viewport: { width: 390, height: 844 } })
-  test('390 px: la banda índigo y el mismo panel, desde la izquierda; sin barra abajo', async ({ flujo: f }) => {
+  test('390 px: la banda y el mismo panel, desde la izquierda; sin barra abajo', async ({ flujo: f }) => {
     await f.abrir('/#/sup/hoy/ceiba/curso')
     const panelFijo = await f.page.evaluate(() => !!document.querySelector('aside') && getComputedStyle(document.querySelector('aside')!).display !== 'none')
     f.ok(!panelFijo, 'en el teléfono no queda el panel fijo')

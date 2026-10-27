@@ -1,0 +1,1 @@
+{"id":"400-vio-peticion-invalida","descripcion":"«Lo que vio» con un número donde va el modo","pasos":[{"metodo":"POST","endpoint":"/api/paradas/EV-2011-1002/vio","rol":"oper","cuerpo":{"modo":1},"esperado":{"estado":400,"codigo":"peticion-invalida"}}]}

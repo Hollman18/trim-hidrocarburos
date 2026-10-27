@@ -1,6 +1,6 @@
 # 5D.1 · Reloj y calendario
 
-Todo lo que este capítulo describe (una firma, un mensaje de WhatsApp, un folio, una orden de SAP) lleva una hora. Antes de cualquier regla hay que fijar **qué es «ahora»**, **qué es un día** y **qué es un mes**, porque las reglas de escritura («un mes cerrado no se reescribe», «una parada solo se programa antes de empezar», «el recordatorio sale a los 30 min») se evalúan contra ese reloj.
+Todo lo que este capítulo describe (una firma, un mensaje de WhatsApp [**RETIRADO (27-oct-2026)**], un folio, una orden de SAP) lleva una hora. Antes de cualquier regla hay que fijar **qué es «ahora»**, **qué es un día** y **qué es un mes**, porque las reglas de escritura («un mes cerrado no se reescribe», «una parada solo se programa antes de empezar», «el recordatorio sale a los 30 min») se evalúan contra ese reloj.
 
 Código: `src/entities/reloj.ts` (67 líneas), `src/entities/campos.ts:63-85` (los períodos de la cabecera), `src/entities/libro.ts:56-80` y `:607` (calendario de meses y medianoche), `src/entities/configuracion.ts:210` (`diaCo`), `src/entities/diferido.ts:704` (`rangoDePeriodo`).
 

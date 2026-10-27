@@ -1,8 +1,10 @@
 /* Vuelca a JSON lo que el motor del demo sabe y que no está en referencia/
-   (librerías, usuarios, mensajes, SAP, libro por mes y tramos por día), para
-   cargar filas REALES en el esquema. Los imports «bare» solo resuelven dentro
-   del proyecto: validar.sh lo copia a scripts/.doc-E-filas.mjs, lo corre y lo
-   borra. Uso (desde la raíz del proyecto): node scripts/.doc-E-filas.mjs <salida.json> */
+   (librerías, usuarios, SAP, libro por mes y tramos por día), para cargar filas
+   REALES en el esquema. RETIRADO (27-oct-2026): el canal de WhatsApp se quitó;
+   este volcado ya no carga src/entities/mensajes.ts ni src/shared/api/mensajes.ts
+   y de los usuarios toma solo los campos que siguen (sin teléfono ni alertas).
+   Los imports «bare» solo resuelven dentro del proyecto: validar.sh lo copia a
+   scripts/.doc-E-filas.mjs, lo corre y lo borra. Uso (desde la raíz del proyecto): node scripts/.doc-E-filas.mjs <salida.json> */
 import { createServer } from 'vite'
 import { fileURLToPath } from 'node:url'
 import { writeFileSync } from 'node:fs'
@@ -19,7 +21,6 @@ try {
   const T = await v.ssrLoadModule('/src/entities/tipos.ts')
   const R = await v.ssrLoadModule('/src/entities/roles.ts')
   const U = await v.ssrLoadModule('/src/entities/usuarios.ts')
-  const M = await v.ssrLoadModule('/src/entities/mensajes.ts')
   const ISO = await v.ssrLoadModule('/src/entities/iso14224.ts')
   const CAT = await v.ssrLoadModule('/src/entities/catalogo.ts')
   const PA = await v.ssrLoadModule('/src/entities/partes.ts')
@@ -29,7 +30,6 @@ try {
   const FL = await v.ssrLoadModule('/src/entities/flota.ts')
   const I = await v.ssrLoadModule('/src/entities/informe.ts')
   const P = await v.ssrLoadModule('/src/entities/pozos.ts')
-  const MS = await v.ssrLoadModule('/src/shared/api/mensajes.ts')
   const ANC = await v.ssrLoadModule('/src/entities/anh-catalogo.ts')
   const ANH = await v.ssrLoadModule('/src/entities/anh-clasificacion.ts')
   const CHO = await v.ssrLoadModule('/src/entities/choke.ts')
@@ -78,8 +78,6 @@ try {
       for (const r of SAP.repuestosDe(c, e)) repuestos.push(r)
   }
 
-  const mensajes = MS.pedirMensajes(CAMPOS)
-
   // El catálogo de la clasificación ANH que cierra lo que se escribe (C-07):
   // las causas de cada versión, las 18 generales, qué paso dice o confirma cada
   // rol y las preguntas de campo con quién las contesta y todos sus botones (los
@@ -104,11 +102,14 @@ try {
       ...['pozo', 'planta', 'exportacion'].map(c => ({ pregunta: 'choke', texto: ANC.ETIQUETA_CHOKE[c] })), { pregunta: 'choke', texto: NO_SE }],
   }
 
+  // De cada persona, solo lo que sigue en el registro (lista explícita: lo retirado no viaja).
+  const usuarios = U.USUARIOS_INICIALES.map(u => ({ id: u.id, nombre: u.nombre, correo: u.correo, rolId: u.rolId, campos: u.campos,
+    estado: u.estado, desde: u.desde, antesDeSuspender: u.antesDeSuspender ?? null }))
+
   writeFileSync(SALIDA, JSON.stringify({
-    flota, roles, capacidadNombre: T.CAPACIDAD_NOMBRE, usuarios: U.USUARIOS_INICIALES, rolesConAlertas: U.ROLES_CON_ALERTAS,
-    plantillas: M.PLANTILLAS, modos: ISO.MODOS, mecanismos: ISO.MECANISMOS, causasRaiz: ISO.CAUSAS_RAIZ, modosPorClase: ISO.MODOS_POR_CLASE,
+    flota, roles, capacidadNombre: T.CAPACIDAD_NOMBRE, usuarios, modos: ISO.MODOS, mecanismos: ISO.MECANISMOS, causasRaiz: ISO.CAUSAS_RAIZ, modosPorClase: ISO.MODOS_POR_CLASE,
     modoEnCampo: CAT.MODO_EN_CAMPO, mecanismoSugerido: CAT.MECANISMO_SUGERIDO, nombreClase: CAT.NOMBRE_CLASE_EQUIPO, partes,
-    metrologia: ME.METROLOGIA_CAMPO, planta: PL.CAMPO_PLANTA, identidad, repuestos, mensajes, libros, tramosDia, faSep, anh,
+    metrologia: ME.METROLOGIA_CAMPO, planta: PL.CAMPO_PLANTA, identidad, repuestos, libros, tramosDia, faSep, anh,
   }, null, 1))
-  console.log(`libros ${libros.length} · tramos por día ${tramosDia.length} · mensajes ${mensajes.length} · identidades ${identidad.length} · repuestos ${repuestos.length}`)
+  console.log(`libros ${libros.length} · tramos por día ${tramosDia.length} · identidades ${identidad.length} · repuestos ${repuestos.length}`)
 } finally { await v.close() }

@@ -80,6 +80,19 @@ export interface Sesion {
   clasificacionesAnh: Record<string, BorradorClasificacion>
   /** Las confirmaciones en lote, de la más vieja a la más nueva (qué se vio y qué se confirmó de una vez). */
   lotesAnh: ConfirmacionLote[]
+  /** A3 · Los cierres de órdenes en el teléfono (`POST /api/sap/ordenes/:numero/cierre`), por
+   *  inserción. El servidor los aplica al responder `GET /api/sap/ordenes` y `/vistas/relojes`.
+   *  Opcional: ausente = ninguno. */
+  cierresOrden?: import('@/entities/orden-cierre').CierreOrden[]
+  /** A3 · Las respuestas de la ANH registradas a mano (`POST /api/anh/respuestas`), por
+   *  inserción. El servidor las aplica en `/vistas/anh/respuestas` y `/vistas/anh/reporte`.
+   *  Opcional: ausente = ninguna. */
+  respuestasAnh?: import('@/entities/anh-respuestas').RespuestaAnh[]
+  /** A2 · El registro de pérdidas (`POST /api/perdidas`), por inserción: las correcciones y los
+   *  retiros son registros nuevos que nombran el que corrigen. El servidor lo aplica en
+   *  `/vistas/perdidas`, `/vistas/balance` y `/vistas/jornada`. Opcional: ausente = ninguno
+   *  (las vistas dicen «sin registro», nunca 0). En el demo arranca vacío: no se inventan pérdidas. */
+  perdidas?: import('@/entities/perdidas').RegistroPerdida[]
 }
 
 let instalada: Sesion | undefined

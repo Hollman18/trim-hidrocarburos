@@ -18,6 +18,7 @@ import { validarTopologia, topologiaDerivada, chokeDeAlcance, NOMBRE_ALCANCE, DO
 import { EQUIPOS, equipoEnCampo } from './equipos'
 import { pozoDe } from './pozos'
 import { validarCapacidades, normalizarCapacidades, diferenciasCapacidades, capacidadesFirmadas, type CapacidadesCampo } from './capacidades'
+import { validarConversion, normalizarConversion, diferenciasConversion, type FilaConversionAnh } from './anh-conversion' // A3
 import { formatoFecha } from '@/shared/lib/fecha'
 
 /** Un tramo de lo que fija el gerente de activo para un campo: rige desde su
@@ -42,15 +43,23 @@ export interface TramoMeta {
   /** Máximo de barriles sin causa identificada, % del potencial, para poder
    *  publicar el libro del período. */
   criterioSinCausa: number
+  /** A2 · «¿Está funcionando?» (necesario-por-rol §0d): cuánto, en %, se
+   *  compromete a bajar frente a la línea base (antes de TRIM) lo no planeado
+   *  por día y las fallas de los equipos críticos al mes. Opcional: sin ella, la
+   *  tarjeta dice «sin meta de reducción firmada» (`efectividad.ts`). La firma el
+   *  gerente con las demás metas. */
+  reduccionPct?: number
 }
 
 /** Un precio que llega como `null` (convención del contrato para «sin dato») es un precio sin configurar. */
 const precio = (t: TramoMeta) => (typeof t.netbackUsd === 'number' ? t.netbackUsd : undefined)
+/** A2 · La meta de reducción, con la misma regla del precio: `null` es «sin meta de reducción». */
+export const reduccionDe = (t: TramoMeta) => (typeof t.reduccionPct === 'number' ? t.reduccionPct : undefined)
 
 /** Dos tramos dicen lo mismo. */
 export const mismoTramo = (a: TramoMeta, b: TramoMeta) =>
   a.produccionBpd === b.produccionBpd && a.diferidoMaxBpd === b.diferidoMaxBpd
-  && precio(a) === precio(b) && a.criterioSinCausa === b.criterioSinCausa
+  && precio(a) === precio(b) && a.criterioSinCausa === b.criterioSinCausa && reduccionDe(a) === reduccionDe(b)
 
 export interface TanqueAgua {
   id: string
@@ -107,6 +116,25 @@ export interface ConfigCampo {
   /** Tramos de meta, precio y regla de cierre, del más viejo al más nuevo. */
   metas: TramoMeta[]
   perfil: PerfilCampo
+  /** A2 · La jornada (necesario-por-rol §0c): las horas de cambio de turno del
+   *  campo, «HH:MM» en hora de Colombia, de 1 a 4 («06:00» y «18:00»). Opcional:
+   *  sin ellas rige `TURNOS_POR_DEFECTO` y la jornada dice «horario por defecto,
+   *  sin firmar» (`jornada.ts`). Es técnica: la firma el administrador. */
+  turnos?: string[]
+}
+
+/** A2 · Las horas de cambio de turno de un campo que no las tiene firmadas. */
+export const TURNOS_POR_DEFECTO: readonly string[] = ['06:00', '18:00']
+/** A2 · Cuántos cambios de turno caben en un día. */
+export const MAXIMO_TURNOS = 4
+/** A2 · Lo que no está bien en unas horas de cambio de turno (vacío = se pueden firmar). */
+export function validarTurnos(turnos: unknown, nombre: string): string[] {
+  if (!Array.isArray(turnos) || !turnos.length || turnos.length > MAXIMO_TURNOS)
+    return [`${nombre}: el cambio de turno va de 1 a ${MAXIMO_TURNOS} horas («06:00» y «18:00»).`]
+  const e: string[] = []
+  for (const t of turnos) if (typeof t !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) e.push(`${nombre}: «${String(t)}» no es una hora de cambio de turno (HH:MM, de 00:00 a 23:59).`)
+  if (new Set(turnos).size !== turnos.length) e.push(`${nombre}: una hora de cambio de turno está repetida.`)
+  return e
 }
 
 export interface Config {
@@ -130,6 +158,10 @@ export interface Config {
    *  §8.4; capacidades.ts). Opcional: lo que un campo no trae firmado sigue con
    *  el dato del demo y se dice «dato del demo, sin firmar». */
   capacidades?: CapacidadesCampo[]
+  /** A3 · La tabla de equivalencias del árbol de la operadora al de la ANH, por
+   *  campo (anh-conversion.ts). Técnica: la firma el administrador. Opcional:
+   *  ausente, no hay tabla firmada. */
+  conversionAnh?: FilaConversionAnh[]
 }
 
 /** Cada cambio de configuración es una versión firmada. Nunca se sobrescribe:
@@ -231,6 +263,11 @@ const CLAVES_TOPOLOGIA = ['elemento', 'choke', 'alcance', 'pozos', 'campoId', 'c
 export function normalizarConfig(c: Config): Config {
   const n = structuredClone(c)
   for (const cc of Object.values(n.campos)) for (const t of cc.metas) if (typeof t.netbackUsd !== 'number') delete t.netbackUsd
+  // A2 · La meta de reducción y el cambio de turno: `null` (o una lista vacía) es «sin firmar», y no viaja.
+  for (const cc of Object.values(n.campos)) {
+    for (const t of cc.metas) if (typeof t.reduccionPct !== 'number') delete t.reduccionPct
+    if (cc.turnos == null || (Array.isArray(cc.turnos) && !cc.turnos.length)) delete cc.turnos
+  }
   if (n.topologia == null || !n.topologia.length) delete n.topologia
   else n.topologia = n.topologia.map(x => Object.fromEntries(CLAVES_TOPOLOGIA.flatMap(k => (x[k] == null ? [] : [[k, x[k]]]))) as unknown as ChokeDeElemento)
   // «Todavía no sé»: solo el equipo y su campo; una lista vacía no viaja.
@@ -239,6 +276,10 @@ export function normalizarConfig(c: Config): Config {
   const caps = normalizarCapacidades(n.capacidades)
   if (caps) n.capacidades = caps
   else delete n.capacidades
+  // A3 · La conversión del árbol: una tabla vacía no viaja; N1 y N2 en null son ausentes.
+  const conv = normalizarConversion(n.conversionAnh)
+  if (conv) n.conversionAnh = conv
+  else delete n.conversionAnh
   return n
 }
 
@@ -329,7 +370,12 @@ export function diferenciasPorGrupo(a: Config, b: Config): { metas: string[]; te
   if (a.empresa !== b.empresa) tecnica.push(`Empresa del membrete: «${a.empresa}» → «${b.empresa}»`)
   for (const id of Object.keys(b.campos)) {
     const x = a.campos[id], y = b.campos[id]!
-    if (!x) { metas.push(`${nombre(id)}: campo nuevo`); continue }
+    if (!x) {
+      metas.push(`${nombre(id)}: campo nuevo`)
+      // A2 · Un campo nuevo que ya trae su cambio de turno: técnico, también se dice.
+      if (y.turnos?.length) tecnica.push(`${nombre(id)}: cambio de turno ${y.turnos.join(' y ')}`)
+      continue
+    }
     for (const t of y.metas) {
       const v = x.metas.find(m => m.desde === t.desde)
       if (v && mismoTramo(v, t)) continue
@@ -339,6 +385,9 @@ export function diferenciasPorGrupo(a: Config, b: Config): { metas: string[]; te
       if (!antes || antes.diferidoMaxBpd !== t.diferidoMaxBpd) partes.push(`máximo de diferido ${antes ? `${miles(antes.diferidoMaxBpd)} → ` : ''}${miles(t.diferidoMaxBpd)} bbl/d`)
       if (!antes || precio(antes) !== precio(t)) partes.push(`precio neto ${antes ? `${num(precio(antes), ' USD/bbl')} → ` : ''}${num(precio(t), ' USD/bbl')}`)
       if (!antes || antes.criterioSinCausa !== t.criterioSinCausa) partes.push(`máximo sin causa para publicar ${antes ? `${num(antes.criterioSinCausa, ' %')} → ` : ''}${num(t.criterioSinCausa, ' %')}`)
+      // A2 · La meta de reducción frente a la línea base: se dice solo si existe o cambia.
+      if (antes ? reduccionDe(antes) !== reduccionDe(t) : reduccionDe(t) !== undefined)
+        partes.push(`meta de reducción frente a antes de TRIM ${antes ? `${num(reduccionDe(antes), ' %')} → ` : ''}${num(reduccionDe(t), ' %')}`)
       metas.push(`${nombre(id)}, desde el ${fechaDia(t.desde)}: ${partes.join('; ') || 'lo mismo que regía'}`)
     }
     for (const t of x.metas) if (!y.metas.some(m => m.desde === t.desde)) metas.push(`${nombre(id)}: se quitó la meta que regía desde el ${fechaDia(t.desde)}`)
@@ -346,6 +395,9 @@ export function diferenciasPorGrupo(a: Config, b: Config): { metas: string[]; te
     if (x.perfil.gas !== y.perfil.gas) tecnica.push(`${nombre(id)}: ${NOMBRE_GAS[x.perfil.gas]} → ${NOMBRE_GAS[y.perfil.gas]}`)
     if (x.perfil.bombas !== y.perfil.bombas) tecnica.push(`${nombre(id)}: bombas de la línea ${sn(x.perfil.bombas)} → ${sn(y.perfil.bombas)}`)
     if (x.perfil.electrosumergibles !== y.perfil.electrosumergibles) tecnica.push(`${nombre(id)}: electrosumergibles ${sn(x.perfil.electrosumergibles)} → ${sn(y.perfil.electrosumergibles)}`)
+    // A2 · El cambio de turno (la jornada): técnico, lo firma el administrador.
+    const turnos = (c: ConfigCampo) => (c.turnos?.length ? c.turnos.join(' y ') : `el de por defecto (${TURNOS_POR_DEFECTO.join(' y ')})`)
+    if ((x.turnos ?? []).join() !== (y.turnos ?? []).join()) tecnica.push(`${nombre(id)}: cambio de turno ${turnos(x)} → ${turnos(y)}`)
   }
   // Lo que se quita también es un cambio: si no apareciera, se firmaría sin que nadie lo viera.
   for (const id of Object.keys(a.campos)) if (!b.campos[id]) tecnica.push(`${nombre(id)}: se quitó el campo de la configuración (sus metas y su perfil)`)
@@ -425,6 +477,8 @@ export function diferenciasPorGrupo(a: Config, b: Config): { metas: string[]; te
   // Las capacidades de los tramos (U2 §8.4): técnicas, como los tanques y los respaldos.
   for (const id of [...new Set([...(a.capacidades ?? []), ...(b.capacidades ?? [])].map(x => x.campoId))])
     tecnica.push(...diferenciasCapacidades(capacidadesFirmadas(a, id), capacidadesFirmadas(b, id), nombre(id)))
+  // A3 · La conversión del árbol de la operadora: técnica, la firma el administrador.
+  tecnica.push(...diferenciasConversion(a.conversionAnh, b.conversionAnh, nombre))
   return { metas, tecnica }
 }
 
@@ -451,9 +505,10 @@ export function camposTocados(a: Config, b: Config): string[] {
     topologia: (c.topologia ?? []).filter(x => x.campoId === undefined || x.campoId === id),
     topologiaPorSaber: (c.topologiaPorSaber ?? []).filter(x => x.campoId === id),
     capacidades: (c.capacidades ?? []).filter(x => x.campoId === id),
+    conversionAnh: (c.conversionAnh ?? []).filter(x => x.campoId === id), // A3
   })
   const ids = new Set([...Object.keys(a.campos), ...Object.keys(b.campos),
-    ...[a, b].flatMap(c => [...c.tanques, ...c.respaldos, ...c.programa, ...(c.topologiaPorSaber ?? []), ...(c.capacidades ?? [])].map(x => x.campoId)),
+    ...[a, b].flatMap(c => [...c.tanques, ...c.respaldos, ...c.programa, ...(c.topologiaPorSaber ?? []), ...(c.capacidades ?? []), ...(c.conversionAnh ?? [])].map(x => x.campoId)),
     ...[a, b].flatMap(c => (c.topologia ?? []).flatMap(x => (x.campoId === undefined ? [] : [x.campoId])))])
   return [...ids].filter(id => diferencias(de(a, id), de(b, id)).length > 0).sort()
 }
@@ -543,11 +598,15 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
       if (!(t.criterioSinCausa >= 0 && t.criterioSinCausa <= 20)) e.push(`${id}: el máximo sin causa para publicar va entre 0 y 20 %.`)
       // Un precio presente tiene que ser un número entre 0 y el tope (Infinity y NaN no pasan).
       if (t.netbackUsd != null && !(t.netbackUsd >= 0 && t.netbackUsd <= TOPE_PRECIO_USD)) e.push(`${id}: el precio neto va entre 0 y ${cifra(TOPE_PRECIO_USD)} USD/bbl.`)
+      // A2 · La meta de reducción, si viene, es un % entre 0 y 100.
+      if (t.reduccionPct != null && !(typeof t.reduccionPct === 'number' && t.reduccionPct >= 0 && t.reduccionPct <= 100)) e.push(`${id}: la meta de reducción va entre 0 y 100 %.`)
       const v = antes.campos[cid]?.metas.find(m => m.desde === t.desde)
       if ((!v || !mismoTramo(v, t)) && t.desde < desdeMinimo) e.push(`${id}: lo de un mes que ya cerró no se cambia (tiene que regir desde el ${fechaDia(desdeMinimo)} o después).`)
     }
     for (const t of antes.campos[cid]?.metas ?? [])
       if (t.desde < desdeMinimo && !x.metas.some(m => m.desde === t.desde)) e.push(`${id}: no se puede quitar la meta que regía desde el ${fechaDia(t.desde)}: es de un mes cerrado.`)
+    // A2 · El cambio de turno, si viene: de 1 a 4 horas HH:MM sin repetir.
+    if (x.turnos != null) e.push(...validarTurnos(x.turnos, id))
   }
   const idsTanque = new Set<string>(), bombasConTanque = new Set<string>()
   for (const t of c.tanques) {
@@ -607,5 +666,7 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
       e.push(`Topología ${el} (${nombre(x.campoId)}): está contestado y a la vez como «Todavía no sé»: es lo uno o lo otro.`)
   }
   e.push(...validarCapacidades(c.capacidades))
+  // A3 · La conversión del árbol: cada código una vez por campo, y N1 y N2 de la circular.
+  e.push(...validarConversion(c.conversionAnh, conocido, nombre))
   return e
 }

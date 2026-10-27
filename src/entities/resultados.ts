@@ -84,7 +84,7 @@ export interface CifrasDeUnNombre {
   avisan: number
   /** El que avisa más cerca (ya pasó el límite primero, luego el que menos horas tiene). */
   primero: { campoId: string; equipo: string; horas: number | null } | null
-  /** «Exposición si fallan hoy», bbl: Σ `costoFalla` de los que avisan y la tienen. */
+  /** «Exposición si fallan hoy», bbl: Σ `costoFallaHoy` de los que avisan y la tienen. */
   exposicionBbl: number
   /** Cuántos de los que avisan no tienen esa cifra (servicios del campo o sin historia). */
   sinExposicion: number
@@ -102,8 +102,8 @@ export function cifrasDeUnNombre(riesgo: readonly Riesgo[], estados: ReadonlyArr
     porBombasBpd: perdiendo.filter(r => BOMBAS_DE_LA_LINEA.includes(r.tipo)).reduce((a, r) => a + r.bblDia, 0),
     avisan: avisan.length,
     primero: p ? { campoId: p.campoId, equipo: p.equipo, horas: p.horas ?? null } : null,
-    exposicionBbl: avisan.reduce((a, r) => a + (r.costoFalla ?? 0), 0),
-    sinExposicion: avisan.filter(r => r.costoFalla === undefined).length,
+    exposicionBbl: avisan.reduce((a, r) => a + (r.costoFallaHoy ?? 0), 0),
+    sinExposicion: avisan.filter(r => r.costoFallaHoy === undefined).length,
   }
 }
 

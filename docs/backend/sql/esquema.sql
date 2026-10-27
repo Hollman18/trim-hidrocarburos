@@ -18,6 +18,11 @@
 --     (SQLSTATE 23001, «restrict_violation»).
 --   · Cada tabla que corresponde a un tipo TypeScript del motor lo dice en su
 --     comentario (archivo de src/entities/).
+--   · RETIRADO (27-oct-2026): el dueño quitó el canal de WhatsApp (CAMBIOS-CONTRATO.md §3,
+--     R8). Lo de ese canal NO se borró: queda marcado. Cada pieza lleva un
+--     bloque «-- RETIRADO (27-oct-2026): … Reemplazo: …» y su comentario de la
+--     base empieza con «RETIRADO (27-oct-2026)». Regla: toda línea de este
+--     archivo que nombra ese canal lleva también la palabra RETIRADO.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 create schema if not exists trim;
@@ -1269,7 +1274,7 @@ create table respaldo (
   primary key (version, campo_id, equipo),
   unique (version, orden)
 );
-comment on table respaldo is 'Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto fluido libre toma el equipo en paralelo cuando ella para. Uno por (campo, equipo). Cambia el colchón, el orden de cierre y el texto del WhatsApp de la parada. Firma config:firmar.';
+comment on table respaldo is 'Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto fluido libre toma el equipo en paralelo cuando ella para. Uno por (campo, equipo). Cambia el colchón y el orden de cierre (RETIRADO (27-oct-2026): también el texto del WhatsApp de la parada). Firma config:firmar.';
 comment on column respaldo.version is 'Versión.';
 comment on column respaldo.campo_id is 'Campo.';
 comment on column respaldo.equipo is 'Bomba respaldada.';
@@ -1503,7 +1508,7 @@ comment on function config_normalizada(jsonb) is 'El JSON de una Config con las 
 create or replace function version_en(t timestamptz) returns integer language sql stable as $$
   select coalesce((select max(version) from version_config where fecha <= t), (select min(version) from version_config))
 $$;
-comment on function version_en(timestamptz) is 'configEn de configuracion.ts: la versión vigente en t. Con ella se rehace el libro de un mes viejo, se arma cada mensaje de WhatsApp y se juzga cada falla del registro de aciertos.';
+comment on function version_en(timestamptz) is 'configEn de configuracion.ts: la versión vigente en t. Con ella se rehace el libro de un mes viejo, se arma cada mensaje de WhatsApp (RETIRADO (27-oct-2026)) y se juzga cada falla del registro de aciertos.';
 
 create or replace function version_config_coherente() returns trigger language plpgsql as $$
 declare sin_tramo text;
@@ -1558,7 +1563,8 @@ create table rol (
   inicio          text not null,
   pantallas       text[] not null,
   campos_fabrica  text[],
-  recibe_alertas  boolean not null default false,
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hay alertas por rol (ROLES_CON_ALERTAS sale del motor) (R3, R8).
+  recibe_alertas  boolean not null default false,  -- RETIRADO (27-oct-2026)
   visible         boolean not null default true,
   check (inicio = any (pantallas))
 );
@@ -1570,15 +1576,15 @@ comment on column rol.area is 'Área del organigrama.';
 comment on column rol.inicio is 'Pantalla con que entra.';
 comment on column rol.pantallas is 'Pantallas del rol.';
 comment on column rol.campos_fabrica is 'Campos de fábrica del rol (los de una persona salen de usuario_campo). NULL = todos.';
-comment on column rol.recibe_alertas is 'Tiene reglas de WhatsApp (ROLES_CON_ALERTAS: sup, oper, tec, conf, jefe).';
+comment on column rol.recibe_alertas is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hay alertas por rol (ROLES_CON_ALERTAS sale del motor) (R3, R8). Tiene reglas de WhatsApp (ROLES_CON_ALERTAS: sup, oper, tec, conf, jefe).';
 comment on column rol.visible is 'Rol del primer producto (true) o de la versión 2 (false).';
 
 create table capacidad (
-  id       text primary key check (id in ('causa:declarar', 'causa:completar', 'evidencia:exportar', 'conector:configurar', 'config:firmar', 'metas:firmar', 'usuarios:administrar', 'sap:aviso', 'asignacion:cargar', 'planes:decidir', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento')),
+  id       text primary key check (id in ('causa:declarar', 'causa:completar', 'evidencia:exportar', 'conector:configurar', 'config:firmar', 'metas:firmar', 'usuarios:administrar', 'sap:aviso', 'asignacion:cargar', 'planes:decidir', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento', 'perdidas:registrar', 'orden:cerrar', 'anh:enviar')),  -- perdidas:registrar, orden:cerrar y anh:enviar: AGREGADO (27-oct-2026, M1, M2 y M3 de CAMBIOS-CONTRATO.md §9)
   nombre   text not null,
   incluye  text references capacidad(id)
 );
-comment on table capacidad is 'Las trece capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).';
+comment on table capacidad is 'Las dieciséis capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts; perdidas:registrar, orden:cerrar y anh:enviar son AGREGADO del 27-oct-2026, M1 a M3): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).';
 comment on column capacidad.id is 'Id de la capacidad.';
 comment on column capacidad.nombre is 'Qué permite, dicho para leer.';
 comment on column capacidad.incluye is 'Otra capacidad que esta trae consigo (causa:completar incluye causa:declarar: INCLUYE de tipos.ts).';
@@ -1600,15 +1606,22 @@ create table usuario (
   todos_los_campos    boolean not null default false,
   estado              text not null check (estado in ('activo', 'invitado', 'suspendido')),
   desde               date not null,
-  telefono            text check (telefono ~ '^\+[0-9]{8,15}$'),
-  alertas             boolean not null default false,
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número; el backend acepta e ignora telefono si llega, sin un 422 (R3, R8).
+  telefono            text check (telefono ~ '^\+[0-9]{8,15}$'),  -- RETIRADO (27-oct-2026)
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno; el backend acepta e ignora alertas si llega, sin un 422 (R3, R8).
+  alertas             boolean not null default false,  -- RETIRADO (27-oct-2026)
   antes_de_suspender  text check (antes_de_suspender in ('activo', 'invitado')),
   check ((estado = 'suspendido') = (antes_de_suspender is not null)),
-  check (not alertas or telefono is not null)
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno; el backend acepta e ignora alertas si llega, sin un 422 (R3, R8).
+  -- alertas solo con teléfono.
+  check (not alertas or telefono is not null)  -- RETIRADO (27-oct-2026)
 );
 create unique index usuario_correo_unico on usuario (lower(btrim(correo)));
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número; el backend acepta e ignora telefono si llega, sin un 422 (R3, R8).
+-- el número único entre los no suspendidos era la identidad del webhook.
 create unique index usuario_telefono_unico on usuario (telefono) where estado <> 'suspendido';
-comment on table usuario is 'Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuarios, PATCH /api/usuarios/:id. Nadie se borra: quien ya no debe entrar queda suspendido y su nombre sigue en lo que firmó. Correo único en minúsculas; WhatsApp en E.164 único entre los no suspendidos (es la identidad del webhook).';
+comment on index usuario_telefono_unico is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número; el backend acepta e ignora telefono si llega, sin un 422 (R3, R8). Número de WhatsApp único entre los no suspendidos.';
+comment on table usuario is 'Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuarios, PATCH /api/usuarios/:id. Nadie se borra: quien ya no debe entrar queda suspendido y su nombre sigue en lo que firmó. Correo único en minúsculas. RETIRADO (27-oct-2026): el número de WhatsApp en E.164 único entre los no suspendidos (la identidad del webhook) ya no rige: el backend no lo construye.';
 comment on column usuario.id is 'Id que asigna el servidor (u9). Lo lleva el token.';
 comment on column usuario.nombre is 'Nombre completo: 3 caracteres o más.';
 comment on column usuario.correo is 'Correo con forma de correo; único sin distinguir mayúsculas.';
@@ -1616,8 +1629,8 @@ comment on column usuario.rol_id is 'Rol del producto.';
 comment on column usuario.todos_los_campos is 'true = campos "todos" (incluye los que se agreguen después); false = la lista de usuario_campo.';
 comment on column usuario.estado is 'activo, invitado (aún no entra) o suspendido.';
 comment on column usuario.desde is 'Día en que se le dio acceso (reloj del servidor, Colombia).';
-comment on column usuario.telefono is 'WhatsApp en E.164 (+573005550101): así se guarda, viaja y compara. NULL = sin número.';
-comment on column usuario.alertas is 'Recibe las alertas de su rol por WhatsApp (solo con teléfono y en un rol con alertas).';
+comment on column usuario.telefono is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número; el backend acepta e ignora telefono si llega, sin un 422 (R3, R8). WhatsApp en E.164 (+573005550101): así se guarda, viaja y compara. NULL = sin número.';
+comment on column usuario.alertas is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno; el backend acepta e ignora alertas si llega, sin un 422 (R3, R8). Recibe las alertas de su rol por WhatsApp (solo con teléfono y en un rol con alertas).';
 comment on column usuario.antes_de_suspender is 'Lo pone el servidor al suspender: el estado que tenía, al que vuelve al quitar la suspensión.';
 
 create table usuario_campo (
@@ -1659,7 +1672,7 @@ comment on column cambio_acceso.por_id is 'Quién firmó (del token).';
 comment on column cambio_acceso.por is '«Nombre · rol» del firmante.';
 comment on column cambio_acceso.usuario_id is 'Persona a quien se cambió el acceso.';
 comment on column cambio_acceso.usuario is 'Su nombre como quedó (CambioAcceso.usuario).';
-comment on column cambio_acceso.cambios is 'Lo que cambió, para leer (invitado como…, campos: …, WhatsApp: …).';
+comment on column cambio_acceso.cambios is 'Lo que cambió, para leer (invitado como…, campos: …). RETIRADO (27-oct-2026): el renglón «WhatsApp: …» ya no se escribe.';
 comment on column cambio_acceso.motivo is 'Motivo: 5 caracteres o más.';
 
 create or replace function usuario_reglas() returns trigger language plpgsql as $$
@@ -1670,8 +1683,10 @@ begin
   if tg_op = 'DELETE' then
     raise exception 'nadie se borra: suspenda a % en vez de borrarlo', old.id using errcode = '23001';
   end if;
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno; el backend acepta e ignora alertas si llega, sin un 422 (R3, R8).
+  -- la regla de alertas por rol queda escrita y sin uso.
   if new.alertas and not (select recibe_alertas from rol where id = new.rol_id) then
-    raise exception 'el rol % no recibe alertas por WhatsApp', new.rol_id using errcode = '23514';
+    raise exception 'el rol % no recibe alertas por WhatsApp', new.rol_id using errcode = '23514';  -- RETIRADO (27-oct-2026)
   end if;
   -- Un rol de la versión 2 no se le da a nadie (C-14): el servidor no lo trata como otro rol.
   if not (select visible from rol where id = new.rol_id) then
@@ -1679,7 +1694,7 @@ begin
   end if;
   return new;
 end $$;
-comment on function usuario_reglas() is 'Trigger de usuario: no se borra a nadie (ni DELETE ni TRUNCATE), las alertas solo van en roles que las tienen y nadie tiene un rol de la versión 2 (visible = false).';
+comment on function usuario_reglas() is 'Trigger de usuario: no se borra a nadie (ni DELETE ni TRUNCATE) y nadie tiene un rol de la versión 2 (visible = false). RETIRADO (27-oct-2026): la regla «las alertas solo van en roles que las tienen» queda escrita y sin uso; el backend no la construye.';
 create trigger usuario_reglas before insert or update or delete on usuario for each row execute function usuario_reglas();
 create trigger usuario_sin_truncate before truncate on usuario for each statement execute function usuario_reglas();
 
@@ -1811,7 +1826,7 @@ comment on column orden_sap.descripcion is 'Texto corto de la orden.';
 comment on column orden_sap.estado is 'Estado de sistema: CRTD creada, REL liberada, PCNF en ejecución, CNF ejecutada, TECO cerrada.';
 comment on column orden_sap.prioridad is '1 a 4.';
 comment on column orden_sap.creada is 'Creación.';
-comment on column orden_sap.liberada is 'Liberación (dispara el WhatsApp al técnico asignado).';
+comment on column orden_sap.liberada is 'Liberación. RETIRADO (27-oct-2026): ya no dispara el WhatsApp al técnico asignado.';
 comment on column orden_sap.cierre_tecnico is 'Cierre técnico (TECO).';
 comment on column orden_sap.tecnico_id is 'Persona de TRIM asignada (OrdenSap.tecnico: el id del registro de usuarios, resuelto por su correo en SAP). NULL si va a un contratista: solo puesto.';
 comment on column orden_sap.puesto is 'Puesto de trabajo (MEC-CEIBA, MEC-CONTRATISTA).';
@@ -1899,22 +1914,23 @@ create index orden_sap_por_evento on orden_sap (evento_id) where evento_id is no
 create unique index orden_sap_un_aviso on orden_sap (aviso) where aviso is not null;
 
 -- ═══════════════════════════════════════════════════════════════════════════
---  (g) LO QUE ENTRA A MANO (y lo que TRIM envía y recibe por WhatsApp)
+--  (g) LO QUE ENTRA A MANO (lo de WhatsApp queda RETIRADO (27-oct-2026))
 -- ═══════════════════════════════════════════════════════════════════════════
 
-create table plantilla_whatsapp (
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8).
+create table plantilla_whatsapp (  -- RETIRADO (27-oct-2026)
   clave      text primary key check (clave in ('parada', 'paradaEsp', 'cierre', 'causa', 'recordatorio', 'recordatorioArranco', 'escalamiento', 'parte', 'parteSinTag', 'orden')),
   nombre     text not null unique,
   cuerpo     text not null,
   categoria  text not null default 'utilidad',
   idioma     text not null default 'es'
 );
-comment on table plantilla_whatsapp is 'Las diez plantillas aprobadas por Meta (PLANTILLAS de src/entities/mensajes.ts). El mensaje que inicia la empresa tiene que ser una de ellas; el texto de cada mensaje es exactamente su cuerpo con los parámetros.';
-comment on column plantilla_whatsapp.clave is 'Clave interna (NombrePlantilla).';
-comment on column plantilla_whatsapp.nombre is 'Nombre aprobado en Meta (trim_equipo_parado…).';
-comment on column plantilla_whatsapp.cuerpo is 'Cuerpo aprobado con sus variables entre llaves.';
-comment on column plantilla_whatsapp.categoria is 'Categoría de Meta: utilidad.';
-comment on column plantilla_whatsapp.idioma is 'Idioma de la plantilla.';
+comment on table plantilla_whatsapp is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8). Las diez plantillas aprobadas por Meta (PLANTILLAS de src/entities/mensajes.ts). El mensaje que inicia la empresa tiene que ser una de ellas; el texto de cada mensaje es exactamente su cuerpo con los parámetros.';
+comment on column plantilla_whatsapp.clave is 'RETIRADO (27-oct-2026), como su tabla. Clave interna (NombrePlantilla).';
+comment on column plantilla_whatsapp.nombre is 'RETIRADO (27-oct-2026), como su tabla. Nombre aprobado en Meta (trim_equipo_parado…).';
+comment on column plantilla_whatsapp.cuerpo is 'RETIRADO (27-oct-2026), como su tabla. Cuerpo aprobado con sus variables entre llaves.';
+comment on column plantilla_whatsapp.categoria is 'RETIRADO (27-oct-2026), como su tabla. Categoría de Meta: utilidad.';
+comment on column plantilla_whatsapp.idioma is 'RETIRADO (27-oct-2026), como su tabla. Idioma de la plantilla.';
 
 create table prediccion (
   id               text primary key,
@@ -1949,7 +1965,7 @@ comment on column prediccion.familia is 'Familia de la parte.';
 comment on column prediccion.parte is 'Parte que va a fallar.';
 comment on column prediccion.tag is 'Tag cuya tendencia la sostiene (NULL: plantilla parteSinTag).';
 comment on column prediccion.accion is 'Qué hacer (del catálogo de la parte).';
-comment on column prediccion.emitida is 'Cuándo la emitió el vigía (sale el WhatsApp a confiabilidad y jefe de mantenimiento).';
+comment on column prediccion.emitida is 'Cuándo la emitió el vigía. RETIRADO (27-oct-2026): ya no sale el WhatsApp a confiabilidad y jefe de mantenimiento.';
 comment on column prediccion.desde is 'Inicio de la ventana en que cruzaría su límite.';
 comment on column prediccion.hasta is 'Fin de la ventana.';
 comment on column prediccion.calificacion is 'seguimiento mientras la ventana está abierta; luego acierto, intervenida o falsa-alarma.';
@@ -1976,6 +1992,7 @@ comment on function prediccion_califica() is 'Trigger de prediccion: lo emitido 
 create trigger prediccion_califica before update or delete on prediccion for each row execute function prediccion_califica();
 create trigger prediccion_sin_truncate before truncate on prediccion for each statement execute function solo_insercion();
 
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: POST /api/paradas/:evento/respuesta, en pantalla (R2, R8).
 create table respuesta_entrante (
   meta_id           text primary key,
   recibido          timestamptz not null default now(),
@@ -1991,18 +2008,18 @@ create table respuesta_entrante (
   check ((resultado = 'descartada') = (motivo is not null)),
   check (resultado = 'descartada' or (usuario_id is not null and evento_id is not null))
 );
-comment on table respuesta_entrante is 'Mensajes entrantes del webhook de WhatsApp (POST /api/webhooks/whatsapp), ya con la firma X-Hub-Signature-256 válida. La clave primaria es el id de Meta (messages[].id): Meta reintenta y el segundo intento choca (deduplicación). Se guarda aceptado, en curso (un paso del diálogo que pide el siguiente: la parte o lo que vio) o descartado, con el motivo. Solo inserción.';
-comment on column respuesta_entrante.meta_id is 'Id del mensaje entrante en Meta (wamid). Clave de deduplicación.';
-comment on column respuesta_entrante.recibido is 'Hora del servidor.';
-comment on column respuesta_entrante.de_telefono is 'Número que escribe (from), en E.164.';
-comment on column respuesta_entrante.contexto_meta_id is 'context.id: el mensaje saliente que la persona respondió, una plantilla (mensaje.meta_id) o un mensaje libre del diálogo (mensaje_libre.meta_id, que además trae la parte y el modo ya escogidos). El evento se resuelve SOLO por aquí, nunca por «la última pregunta abierta». Sin FK: puede apuntar a cualquiera de las dos tablas o a nada (se descarta).';
-comment on column respuesta_entrante.texto is 'Lo que escribió.';
-comment on column respuesta_entrante.opcion is 'Clave escogida de las opciones de ESE mensaje («1», «0»): de mensaje.opciones si responde a la plantilla, de mensaje_libre.opciones si responde a «¿Qué vio…?», «¿Qué parte?» o «¿Qué fue?».';
-comment on column respuesta_entrante.resultado is 'aceptada (con ella entró la respuesta_parada), en-curso (paso aceptado del diálogo: el servidor contestó con un mensaje_libre que pide lo que falta) o descartada.';
-comment on column respuesta_entrante.motivo is 'Por qué se descartó (número no registrado, ya respondieron, opción inválida, texto corto…).';
-comment on column respuesta_entrante.usuario_id is 'Persona resuelta: activa, con alertas y con el campo de la parada.';
-comment on column respuesta_entrante.evento_id is 'Evento resuelto por el context.id.';
-comment on column respuesta_entrante.payload is 'El cuerpo de Meta (para auditar).';
+comment on table respuesta_entrante is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: POST /api/paradas/:evento/respuesta, en pantalla (R2, R8). Mensajes entrantes del webhook de WhatsApp (POST /api/webhooks/whatsapp), ya con la firma X-Hub-Signature-256 válida. La clave primaria es el id de Meta (messages[].id): Meta reintenta y el segundo intento choca (deduplicación). Se guarda aceptado, en curso (un paso del diálogo que pide el siguiente: la parte o lo que vio) o descartado, con el motivo. Solo inserción.';
+comment on column respuesta_entrante.meta_id is 'RETIRADO (27-oct-2026), como su tabla. Id del mensaje entrante en Meta (wamid). Clave de deduplicación.';
+comment on column respuesta_entrante.recibido is 'RETIRADO (27-oct-2026), como su tabla. Hora del servidor.';
+comment on column respuesta_entrante.de_telefono is 'RETIRADO (27-oct-2026), como su tabla. Número que escribe (from), en E.164.';
+comment on column respuesta_entrante.contexto_meta_id is 'RETIRADO (27-oct-2026), como su tabla. context.id: el mensaje saliente que la persona respondió, una plantilla (mensaje.meta_id) o un mensaje libre del diálogo (mensaje_libre.meta_id, que además trae la parte y el modo ya escogidos). El evento se resuelve SOLO por aquí, nunca por «la última pregunta abierta». Sin FK: puede apuntar a cualquiera de las dos tablas o a nada (se descarta).';
+comment on column respuesta_entrante.texto is 'RETIRADO (27-oct-2026), como su tabla. Lo que escribió.';
+comment on column respuesta_entrante.opcion is 'RETIRADO (27-oct-2026), como su tabla. Clave escogida de las opciones de ESE mensaje («1», «0»): de mensaje.opciones si responde a la plantilla, de mensaje_libre.opciones si responde a «¿Qué vio…?», «¿Qué parte?» o «¿Qué fue?».';
+comment on column respuesta_entrante.resultado is 'RETIRADO (27-oct-2026), como su tabla. aceptada (con ella entró la respuesta_parada), en-curso (paso aceptado del diálogo: el servidor contestó con un mensaje_libre que pide lo que falta) o descartada.';
+comment on column respuesta_entrante.motivo is 'RETIRADO (27-oct-2026), como su tabla. Por qué se descartó (número no registrado, ya respondieron, opción inválida, texto corto…).';
+comment on column respuesta_entrante.usuario_id is 'RETIRADO (27-oct-2026), como su tabla. Persona resuelta: activa, con alertas y con el campo de la parada.';
+comment on column respuesta_entrante.evento_id is 'RETIRADO (27-oct-2026), como su tabla. Evento resuelto por el context.id.';
+comment on column respuesta_entrante.payload is 'RETIRADO (27-oct-2026), como su tabla. El cuerpo de Meta (para auditar).';
 
 create table respuesta_parada (
   evento_id         text primary key references evento(id),
@@ -2013,16 +2030,19 @@ create table respuesta_parada (
   familia           text,
   parte             text,
   modo              text references modo_falla(codigo),
-  canal             text check (canal in ('whatsapp', 'pantalla')),
-  entrante_meta_id  text unique references respuesta_entrante(meta_id),
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: toda respuesta es de pantalla; el backend puede poner canal = pantalla u omitirlo (R4, R8).
+  canal             text check (canal in ('whatsapp', 'pantalla')),  -- RETIRADO (27-oct-2026)
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: toda respuesta entra por POST /api/paradas/:evento/respuesta (R4, R8).
+  entrante_meta_id  text unique references respuesta_entrante(meta_id),  -- RETIRADO (27-oct-2026)
   foreign key (familia, parte) references parte(familia, id),
   check ((familia is null) = (parte is null)),
   check (modo is null or parte is not null),
   check ((parte is not null and coalesce(modo, '') <> 'OTH') or alcanza(texto, 8)),
-  check ((canal = 'whatsapp') = (entrante_meta_id is not null)),
-  check (canal is null or por_id is not null)
+  -- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: toda respuesta es de pantalla; el backend puede poner canal = pantalla u omitirlo (R4, R8).
+  check ((canal = 'whatsapp') = (entrante_meta_id is not null)),  -- RETIRADO (27-oct-2026)
+  check (canal is null or por_id is not null)  -- RETIRADO (27-oct-2026)
 );
-comment on table respuesta_parada is 'Respuesta de un operario a una parada que ninguna señal explica (Respuesta de src/entities/pozos.ts): el único dato del libro que entra a mano, marcado como declarado. POST /api/paradas/:evento/respuesta (pantalla) o webhook (WhatsApp); GET /api/paradas/respuestas. Una por evento: la PRIMERA gana (clave primaria → 409). Solo inserción: no se edita ni se reemplaza.';
+comment on table respuesta_parada is 'Respuesta de un operario a una parada que ninguna señal explica (Respuesta de src/entities/pozos.ts): el único dato del libro que entra a mano, marcado como declarado. POST /api/paradas/:evento/respuesta (pantalla; el webhook de WhatsApp: RETIRADO (27-oct-2026), R2); GET /api/paradas/respuestas. Una por evento: la PRIMERA gana (clave primaria → 409). Solo inserción: no se edita ni se reemplaza.';
 comment on column respuesta_parada.evento_id is 'Evento del PLC (de pozo o de bomba).';
 comment on column respuesta_parada.texto is 'Lo que encontró. Sin parte, o con el modo OTH, 8 caracteres o más.';
 comment on column respuesta_parada.por is '«Nombre · rol» (lo pone el servidor desde el token).';
@@ -2031,8 +2051,8 @@ comment on column respuesta_parada.hora is 'Hora del servidor (si llega después
 comment on column respuesta_parada.familia is 'Familia de la parte.';
 comment on column respuesta_parada.parte is 'En una bomba o una electrosumergible: la parte que se dañó (obligatoria en una bomba de la línea).';
 comment on column respuesta_parada.modo is 'Lo que vio: modo de ISO 14224 de la parte (o OTH).';
-comment on column respuesta_parada.canal is 'whatsapp (solo por el webhook firmado) o pantalla. NULL en respuestas históricas importadas.';
-comment on column respuesta_parada.entrante_meta_id is 'Con canal whatsapp: el mensaje entrante que la completó (el último del diálogo; los pasos anteriores quedan en respuesta_entrante como en-curso y en mensaje_libre).';
+comment on column respuesta_parada.canal is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: toda respuesta es de pantalla; el backend puede poner canal = pantalla u omitirlo (R4, R8). whatsapp (solo por el webhook firmado) o pantalla. NULL en respuestas históricas importadas.';
+comment on column respuesta_parada.entrante_meta_id is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: toda respuesta entra por POST /api/paradas/:evento/respuesta (R4, R8). Con canal whatsapp: el mensaje entrante que la completó (el último del diálogo; los pasos anteriores quedan en respuesta_entrante como en-curso y en mensaje_libre).';
 
 create or replace function respuesta_parada_reglas() returns trigger language plpgsql as $$
 declare c text;
@@ -2445,7 +2465,7 @@ create table revision_parada (
     and substr(clave, char_length(evento_id) + 2) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}#[0-9]+$')),
   check (pedir_a is null or pedir_a <> rol_id)
 );
-comment on table revision_parada is '«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.';
+comment on table revision_parada is '«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision («2 Algo está mal» por WhatsApp: RETIRADO (27-oct-2026), R5). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.';
 comment on column revision_parada.id is 'Consecutivo del servidor (RevisionAnh.n).';
 comment on column revision_parada.clave is 'ParadaAnh.id (alcance fila) o EventoPozo.id (alcance evento).';
 comment on column revision_parada.alcance is 'fila o evento.';
@@ -2623,16 +2643,17 @@ create trigger informe_sin_truncate before truncate on informe for each statemen
 create trigger informe_campo_solo_insercion before update or delete on informe_campo for each row execute function solo_insercion();
 create trigger respuesta_parada_solo_insercion before update or delete on respuesta_parada for each row execute function solo_insercion();
 create trigger respuesta_parada_sin_truncate before truncate on respuesta_parada for each statement execute function solo_insercion();
-create trigger respuesta_entrante_solo_insercion before update or delete on respuesta_entrante for each row execute function solo_insercion();
+create trigger respuesta_entrante_solo_insercion before update or delete on respuesta_entrante for each row execute function solo_insercion();  -- RETIRADO (27-oct-2026): de respuesta_entrante (R8)
 create trigger analisis_solo_insercion before update or delete on analisis for each row execute function solo_insercion();
 create trigger informe_campo_sin_truncate before truncate on informe_campo for each statement execute function solo_insercion();
-create trigger respuesta_entrante_sin_truncate before truncate on respuesta_entrante for each statement execute function solo_insercion();
+create trigger respuesta_entrante_sin_truncate before truncate on respuesta_entrante for each statement execute function solo_insercion();  -- RETIRADO (27-oct-2026): de respuesta_entrante (R8)
 create trigger analisis_sin_truncate before truncate on analisis for each statement execute function solo_insercion();
 
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8).
 create table mensaje (
   id             text primary key,
   regla          text not null check (regla in ('parada', 'cierre', 'causa', 'parte', 'orden')),
-  plantilla      text not null references plantilla_whatsapp(clave),
+  plantilla      text not null references plantilla_whatsapp(clave),  -- RETIRADO (27-oct-2026)
   parametros     jsonb not null check (jsonb_typeof(parametros) = 'object'),
   campo_id       text not null,
   equipo         text not null,
@@ -2655,25 +2676,27 @@ create table mensaje (
   check (regla not in ('parada', 'cierre', 'causa') or evento_id is not null),
   check (insistencia is null or regla = 'causa')
 );
-comment on table mensaje is 'Registro de lo que TRIM manda por WhatsApp (Mensaje de src/entities/mensajes.ts). GET /api/mensajes. Se guarda al intentar enviar y no se reescribe: el que salió trae texto (exactamente la plantilla con sus parámetros) y el que no se pudo armar trae no_enviado (el motivo). Cada mensaje se arma con la versión de la configuración que regía a su hora. Solo inserción, salvo poner una vez el id de Meta.';
-comment on column mensaje.id is 'Id del mensaje (lo pone el servidor).';
-comment on column mensaje.regla is 'parada, cierre, causa, parte u orden.';
-comment on column mensaje.plantilla is 'Plantilla aprobada con que salió.';
-comment on column mensaje.parametros is 'Parámetros de la plantilla {nombre: texto}: ninguno vacío ni con saltos de línea.';
-comment on column mensaje.campo_id is 'Campo.';
-comment on column mensaje.equipo is 'Equipo o pozo del que habla.';
-comment on column mensaje.para_id is 'Persona que lo recibe.';
-comment on column mensaje.telefono is 'Número E.164 al que se mandó (el de la persona en ese momento).';
-comment on column mensaje.hora is 'Hora del envío.';
-comment on column mensaje.texto is 'Lo que se envió (cuerpo de la plantilla con sus parámetros). NULL si no se envió.';
-comment on column mensaje.no_enviado is 'Por qué no se pudo enviar (un parámetro vacío o de varias líneas que Meta rechazaría). No cuenta como avisado.';
-comment on column mensaje.opciones is 'Opciones numeradas de una pregunta: [{clave, texto, parte?, porque?, fuente?, veces?, total?}] (Opcion). La respuesta por WhatsApp escoge una clave de ESTE mensaje.';
-comment on column mensaje.evento_id is 'Evento del PLC del que habla (parada, cierre, pregunta). En el JSON viaja como evento.';
-comment on column mensaje.prediccion_id is 'Con regla parte: la predicción del vigía. En el JSON viaja también como evento.';
-comment on column mensaje.orden is 'Con regla orden: la orden de SAP liberada.';
-comment on column mensaje.insistencia is 'recordatorio (30 min) o escalamiento (2 h) de una pregunta sin respuesta.';
-comment on column mensaje.meta_id is 'Id de Meta del mensaje saliente (wamid). El webhook resuelve el evento con el context.id que lo cita.';
+comment on table mensaje is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8). Registro de lo que TRIM manda por WhatsApp (Mensaje de src/entities/mensajes.ts). GET /api/mensajes. Se guarda al intentar enviar y no se reescribe: el que salió trae texto (exactamente la plantilla con sus parámetros) y el que no se pudo armar trae no_enviado (el motivo). Cada mensaje se arma con la versión de la configuración que regía a su hora. Solo inserción, salvo poner una vez el id de Meta.';
+comment on column mensaje.id is 'RETIRADO (27-oct-2026), como su tabla. Id del mensaje (lo pone el servidor).';
+comment on column mensaje.regla is 'RETIRADO (27-oct-2026), como su tabla. parada, cierre, causa, parte u orden.';
+comment on column mensaje.plantilla is 'RETIRADO (27-oct-2026), como su tabla. Plantilla aprobada con que salió.';
+comment on column mensaje.parametros is 'RETIRADO (27-oct-2026), como su tabla. Parámetros de la plantilla {nombre: texto}: ninguno vacío ni con saltos de línea.';
+comment on column mensaje.campo_id is 'RETIRADO (27-oct-2026), como su tabla. Campo.';
+comment on column mensaje.equipo is 'RETIRADO (27-oct-2026), como su tabla. Equipo o pozo del que habla.';
+comment on column mensaje.para_id is 'RETIRADO (27-oct-2026), como su tabla. Persona que lo recibe.';
+comment on column mensaje.telefono is 'RETIRADO (27-oct-2026), como su tabla. Número E.164 al que se mandó (el de la persona en ese momento).';
+comment on column mensaje.hora is 'RETIRADO (27-oct-2026), como su tabla. Hora del envío.';
+comment on column mensaje.texto is 'RETIRADO (27-oct-2026), como su tabla. Lo que se envió (cuerpo de la plantilla con sus parámetros). NULL si no se envió.';
+comment on column mensaje.no_enviado is 'RETIRADO (27-oct-2026), como su tabla. Por qué no se pudo enviar (un parámetro vacío o de varias líneas que Meta rechazaría). No cuenta como avisado.';
+comment on column mensaje.opciones is 'RETIRADO (27-oct-2026), como su tabla. Opciones numeradas de una pregunta: [{clave, texto, parte?, porque?, fuente?, veces?, total?}] (Opcion). La respuesta por WhatsApp escoge una clave de ESTE mensaje.';
+comment on column mensaje.evento_id is 'RETIRADO (27-oct-2026), como su tabla. Evento del PLC del que habla (parada, cierre, pregunta). En el JSON viaja como evento.';
+comment on column mensaje.prediccion_id is 'RETIRADO (27-oct-2026), como su tabla. Con regla parte: la predicción del vigía. En el JSON viaja también como evento.';
+comment on column mensaje.orden is 'RETIRADO (27-oct-2026), como su tabla. Con regla orden: la orden de SAP liberada.';
+comment on column mensaje.insistencia is 'RETIRADO (27-oct-2026), como su tabla. recordatorio (30 min) o escalamiento (2 h) de una pregunta sin respuesta.';
+comment on column mensaje.meta_id is 'RETIRADO (27-oct-2026), como su tabla. Id de Meta del mensaje saliente (wamid). El webhook resuelve el evento con el context.id que lo cita.';
 
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8).
+-- el trigger que deja poner una vez el id de Meta (lo usa también mensaje_libre).
 create or replace function mensaje_solo_meta_id() returns trigger language plpgsql as $$
 begin
   if tg_op = 'DELETE' or old.meta_id is not null
@@ -2682,10 +2705,11 @@ begin
   end if;
   return new;
 end $$;
-comment on function mensaje_solo_meta_id() is 'Trigger de mensaje: solo inserción; lo único que se permite es poner el id de Meta una vez, cuando la Cloud API lo devuelve.';
+comment on function mensaje_solo_meta_id() is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8). Trigger de mensaje: solo inserción; lo único que se permite es poner el id de Meta una vez, cuando la Cloud API lo devuelve.';
 create trigger mensaje_solo_meta_id before update or delete on mensaje for each row execute function mensaje_solo_meta_id();
 create trigger mensaje_sin_truncate before truncate on mensaje for each statement execute function solo_insercion();
 
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las preguntas en pantalla: POST /api/paradas/:evento/respuesta y POST /api/anh/paradas/:id/revision (R2, R5, R8).
 -- Lo que TRIM contesta dentro de la ventana de 24 h que abre la respuesta de la
 -- persona: no es plantilla (Meta lo permite libre) y no va en el registro de
 -- GET /api/mensajes, pero tiene id de Meta (el siguiente context.id lo cita y
@@ -2714,25 +2738,26 @@ create table mensaje_libre (
   check (tipo <> 'pide-modo' or (parte is not null and modo is null)),
   check (no_enviado is null or meta_id is null)
 );
-comment on table mensaje_libre is 'Mensajes libres que TRIM manda dentro de la ventana de 24 h que abre la respuesta de la persona (CONTRATO.md, «WhatsApp» y «El webhook»; 5D.5): «¿Qué vio en {parte}?», «¿Qué parte?», «¿Qué fue?», «Escriba qué encontró», «Registrado…», «Ya respondió…» y los rechazos («Ese número no recibe las alertas de este campo…»). No son plantillas y no salen en GET /api/mensajes. Guardan el estado del diálogo: la siguiente respuesta cita su meta_id (context.id) y de aquí salen el evento, la parte y el modo ya escogidos y las opciones válidas; la respuesta_parada se inserta solo con el último paso. Solo inserción, salvo poner una vez el id de Meta.';
-comment on column mensaje_libre.id is 'Consecutivo del servidor.';
-comment on column mensaje_libre.entrante_meta_id is 'Mensaje entrante al que contesta (abre la ventana de 24 h de Meta).';
-comment on column mensaje_libre.tipo is 'pide-parte (tras «Otra parte del equipo»), pide-modo (tras escoger una parte), pide-causa (tras «No fue la electrosumergible»), pide-texto (tras «0» o el modo «otro»), registrada, ya-respondida (la primera ganó) o rechazo (número sin alertas del campo, opción inválida, texto corto…).';
-comment on column mensaje_libre.telefono is 'Número E.164 al que se mandó (el from del entrante).';
-comment on column mensaje_libre.usuario_id is 'Persona resuelta por el número. NULL en un rechazo a un número que no es de nadie.';
-comment on column mensaje_libre.evento_id is 'Parada del diálogo (la que resolvió el context.id del entrante). Obligatoria en los pide-*.';
-comment on column mensaje_libre.familia is 'Familia de la parte ya escogida.';
-comment on column mensaje_libre.parte is 'Parte ya escogida en un paso anterior (obligatoria en pide-modo; en pide-texto tras el modo «otro»).';
-comment on column mensaje_libre.modo is 'Modo ya escogido (OTH en el pide-texto que sigue al modo «otro»).';
-comment on column mensaje_libre.opciones is 'Opciones numeradas que ofrece, con la forma de Opcion ([{clave, texto, parte?}…]): la clave de la respuesta siguiente se busca aquí. Solo en pide-parte, pide-modo y pide-causa.';
-comment on column mensaje_libre.texto is 'Lo que se mandó, exacto («TRIM · ¿Qué vio en sello mecánico? Responda con un número.⏎1) …»).';
-comment on column mensaje_libre.hora is 'Hora del envío (dentro de las 24 h del entrante: lo revisa el servidor).';
-comment on column mensaje_libre.meta_id is 'Id de Meta del mensaje (wamid), puesto una vez cuando la Cloud API lo devuelve. Lo cita el context.id de la respuesta siguiente y los statuses[] de entrega.';
-comment on column mensaje_libre.no_enviado is 'Si la Cloud API lo rechazó: el motivo (entonces no hay meta_id).';
+comment on table mensaje_libre is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las preguntas en pantalla: POST /api/paradas/:evento/respuesta y POST /api/anh/paradas/:id/revision (R2, R5, R8). Mensajes libres que TRIM manda dentro de la ventana de 24 h que abre la respuesta de la persona (CONTRATO.md, «WhatsApp» y «El webhook»; 5D.5): «¿Qué vio en {parte}?», «¿Qué parte?», «¿Qué fue?», «Escriba qué encontró», «Registrado…», «Ya respondió…» y los rechazos («Ese número no recibe las alertas de este campo…»). No son plantillas y no salen en GET /api/mensajes. Guardan el estado del diálogo: la siguiente respuesta cita su meta_id (context.id) y de aquí salen el evento, la parte y el modo ya escogidos y las opciones válidas; la respuesta_parada se inserta solo con el último paso. Solo inserción, salvo poner una vez el id de Meta.';
+comment on column mensaje_libre.id is 'RETIRADO (27-oct-2026), como su tabla. Consecutivo del servidor.';
+comment on column mensaje_libre.entrante_meta_id is 'RETIRADO (27-oct-2026), como su tabla. Mensaje entrante al que contesta (abre la ventana de 24 h de Meta).';
+comment on column mensaje_libre.tipo is 'RETIRADO (27-oct-2026), como su tabla. pide-parte (tras «Otra parte del equipo»), pide-modo (tras escoger una parte), pide-causa (tras «No fue la electrosumergible»), pide-texto (tras «0» o el modo «otro»), registrada, ya-respondida (la primera ganó) o rechazo (número sin alertas del campo, opción inválida, texto corto…).';
+comment on column mensaje_libre.telefono is 'RETIRADO (27-oct-2026), como su tabla. Número E.164 al que se mandó (el from del entrante).';
+comment on column mensaje_libre.usuario_id is 'RETIRADO (27-oct-2026), como su tabla. Persona resuelta por el número. NULL en un rechazo a un número que no es de nadie.';
+comment on column mensaje_libre.evento_id is 'RETIRADO (27-oct-2026), como su tabla. Parada del diálogo (la que resolvió el context.id del entrante). Obligatoria en los pide-*.';
+comment on column mensaje_libre.familia is 'RETIRADO (27-oct-2026), como su tabla. Familia de la parte ya escogida.';
+comment on column mensaje_libre.parte is 'RETIRADO (27-oct-2026), como su tabla. Parte ya escogida en un paso anterior (obligatoria en pide-modo; en pide-texto tras el modo «otro»).';
+comment on column mensaje_libre.modo is 'RETIRADO (27-oct-2026), como su tabla. Modo ya escogido (OTH en el pide-texto que sigue al modo «otro»).';
+comment on column mensaje_libre.opciones is 'RETIRADO (27-oct-2026), como su tabla. Opciones numeradas que ofrece, con la forma de Opcion ([{clave, texto, parte?}…]): la clave de la respuesta siguiente se busca aquí. Solo en pide-parte, pide-modo y pide-causa.';
+comment on column mensaje_libre.texto is 'RETIRADO (27-oct-2026), como su tabla. Lo que se mandó, exacto («TRIM · ¿Qué vio en sello mecánico? Responda con un número.⏎1) …»).';
+comment on column mensaje_libre.hora is 'RETIRADO (27-oct-2026), como su tabla. Hora del envío (dentro de las 24 h del entrante: lo revisa el servidor).';
+comment on column mensaje_libre.meta_id is 'RETIRADO (27-oct-2026), como su tabla. Id de Meta del mensaje (wamid), puesto una vez cuando la Cloud API lo devuelve. Lo cita el context.id de la respuesta siguiente y los statuses[] de entrega.';
+comment on column mensaje_libre.no_enviado is 'RETIRADO (27-oct-2026), como su tabla. Si la Cloud API lo rechazó: el motivo (entonces no hay meta_id).';
 create trigger mensaje_libre_solo_meta_id before update or delete on mensaje_libre for each row execute function mensaje_solo_meta_id();
 create trigger mensaje_libre_sin_truncate before truncate on mensaje_libre for each statement execute function solo_insercion();
 create index mensaje_libre_por_entrante on mensaje_libre (entrante_meta_id);
 
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin envíos no hay estados de entrega (R2, R8).
 create table estado_mensaje (
   meta_id  text not null,
   estado   text not null check (estado in ('sent', 'delivered', 'read', 'failed')),
@@ -2741,11 +2766,11 @@ create table estado_mensaje (
   primary key (meta_id, estado, cuando),
   check ((estado = 'failed') = (error is not null))
 );
-comment on table estado_mensaje is 'Estados de entrega que Meta informa por el webhook (statuses[]): enviado, entregado, leído o fallido, de una plantilla (mensaje) o de un mensaje libre del diálogo (mensaje_libre). Se agregan; el mensaje no se toca. Solo inserción.';
-comment on column estado_mensaje.meta_id is 'Mensaje saliente: mensaje.meta_id o mensaje_libre.meta_id (trigger estado_mensaje_de_saliente en vez de FK, porque puede ser de cualquiera de las dos).';
-comment on column estado_mensaje.estado is 'sent, delivered, read o failed.';
-comment on column estado_mensaje.cuando is 'Hora que informa Meta.';
-comment on column estado_mensaje.error is 'Con failed: el error de Meta.';
+comment on table estado_mensaje is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin envíos no hay estados de entrega (R2, R8). Estados de entrega que Meta informa por el webhook (statuses[]): enviado, entregado, leído o fallido, de una plantilla (mensaje) o de un mensaje libre del diálogo (mensaje_libre). Se agregan; el mensaje no se toca. Solo inserción.';
+comment on column estado_mensaje.meta_id is 'RETIRADO (27-oct-2026), como su tabla. Mensaje saliente: mensaje.meta_id o mensaje_libre.meta_id (trigger estado_mensaje_de_saliente en vez de FK, porque puede ser de cualquiera de las dos).';
+comment on column estado_mensaje.estado is 'RETIRADO (27-oct-2026), como su tabla. sent, delivered, read o failed.';
+comment on column estado_mensaje.cuando is 'RETIRADO (27-oct-2026), como su tabla. Hora que informa Meta.';
+comment on column estado_mensaje.error is 'RETIRADO (27-oct-2026), como su tabla. Con failed: el error de Meta.';
 create trigger estado_mensaje_solo_insercion before update or delete on estado_mensaje for each row execute function solo_insercion();
 create trigger estado_mensaje_sin_truncate before truncate on estado_mensaje for each statement execute function solo_insercion();
 create or replace function estado_mensaje_de_saliente() returns trigger language plpgsql as $$
@@ -2755,7 +2780,7 @@ begin
   end if;
   return new;
 end $$;
-comment on function estado_mensaje_de_saliente() is 'Trigger de estado_mensaje: el id de Meta es de un mensaje o de un mensaje libre que TRIM guardó (hace de clave foránea hacia las dos tablas).';
+comment on function estado_mensaje_de_saliente() is 'RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin envíos no hay estados de entrega (R2, R8). Trigger de estado_mensaje: el id de Meta es de un mensaje o de un mensaje libre que TRIM guardó (hace de clave foránea hacia las dos tablas).';
 create trigger estado_mensaje_de_saliente before insert on estado_mensaje for each row execute function estado_mensaje_de_saliente();
 
 create table carga_asignacion (
@@ -2834,11 +2859,11 @@ create trigger cambio_planta_sin_truncate before truncate on cambio_planta for e
 create trigger carga_asignacion_grupo_sin_truncate before truncate on carga_asignacion_grupo for each statement execute function solo_insercion();
 create trigger asignacion_oficial_sin_truncate before truncate on asignacion_oficial for each statement execute function solo_insercion();
 
-create index mensaje_por_campo on mensaje (campo_id, hora desc);
-create index mensaje_por_evento on mensaje (evento_id) where evento_id is not null;
+create index mensaje_por_campo on mensaje (campo_id, hora desc);  -- RETIRADO (27-oct-2026) (R8)
+create index mensaje_por_evento on mensaje (evento_id) where evento_id is not null;  -- RETIRADO (27-oct-2026) (R8)
 create index prediccion_por_campo on prediccion (campo_id, emitida);
 create index informe_campo_por_campo on informe_campo (campo_id);
-create index respuesta_entrante_contexto on respuesta_entrante (contexto_meta_id);
+create index respuesta_entrante_contexto on respuesta_entrante (contexto_meta_id);  -- RETIRADO (27-oct-2026) (R8)
 create index asignacion_oficial_mes on asignacion_oficial (mes, campo_id);
 
 -- ═══════════════════════════════════════════════════════════════════════════

@@ -16,6 +16,23 @@ borde. Lo demás (libro, configuración, usuarios, SAP, mensajes, predicciones, 
 asignación) lo calcula hoy el demo dentro del front, con la misma forma de respuesta que el
 backend tiene que dar. **El simulador no es el servidor de producción.**
 
+> **La versión 1 y lo que cambió: al lado, nunca encima.** La línea base es la **versión 1**
+> (`cde8214`, 7-oct-2026), la que tomó el desarrollador del backend. Lo de v1 no se renombra, no se
+> borra ni cambia de significado: lo nuevo va **al lado** (una ruta nueva, un campo opcional) y lo
+> que sale queda **RETIRADO**, con su fecha, su motivo y su reemplazo. Para el backend, en una tabla
+> corta: [`docs/backend/CAMBIOS-CONTRATO.md`](docs/backend/CAMBIOS-CONTRATO.md). El registro para la
+> máquina es [`docs/backend/cambios-contrato.json`](docs/backend/cambios-contrato.json) y la foto de
+> v1, [`docs/backend/linea-base/v1.json`](docs/backend/linea-base/v1.json) (con su referencia tal
+> cual en `docs/backend/linea-base/v1/referencia/`); `npm run verificar:contrato` («A1») comprueba
+> que todo lo de v1 sigue o está registrado. Lo de A1 en este documento: «A1 · Compatibilidad con la versión 1», al final.
+>
+> **El SQL: rige el de v1**, [`simulador-api/esquema.sql`](simulador-api/esquema.sql) (la cadena de
+> datos; no cambió). [`docs/backend/sql/esquema.sql`](docs/backend/sql/esquema.sql) es **AGREGADO**,
+> al lado: la versión 2 del modelo (PostgreSQL 16), necesaria para todo lo demás y opcional para las
+> tablas de la cadena. [`docs/backend/sql/v1-cadena.sql`](docs/backend/sql/v1-cadena.sql) da las
+> tablas y columnas de v1 desde el modelo nuevo, con sus nombres y en su orden (esquema `v1`): lo que
+> se escribió contra v1 lee igual. Las piezas del canal de mensajes del SQL nuevo quedan marcadas «RETIRADO (27-oct-2026)».
+
 ---
 
 ## Por dónde empezar
@@ -107,7 +124,7 @@ capacidades de la persona real, toda escritura con la suplantación activa respo
 ### Las capacidades
 
 Cada capacidad es un permiso que el servidor revisa en un endpoint (`403` sin ella). Son
-trece (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`):
+dieciséis (las trece de antes, `perdidas:registrar` de A2 y `orden:cerrar` y `anh:enviar` de A3; `Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts`):
 
 | Capacidad | Endpoint |
 |---|---|
@@ -124,6 +141,13 @@ trece (`Capacidad` en `entities/tipos.ts`, reparto por rol en `entities/roles.ts
 | `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/respuesta`, `POST /api/anh/paradas/:id/revision` y `POST /api/anh/paradas/confirmar` con una sola parada, aunque traiga varias filas de la misma raíz (los días de un pozo o los pozos de una cascada: B-07) (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`, y contesta solo sus preguntas, `ROLES_QUE_CONTESTAN`) |
 | `anh:confirmar` | `POST /api/anh/paradas/confirmar` con varias paradas de la misma cadena, en lote (quien firma el día: supervisor y producción) |
 | `anh:yacimiento` | `POST /api/anh/paradas/:id/yacimiento` («En el yacimiento» en el paso 2, con su evidencia: producción y confiabilidad) |
+| `perdidas:registrar` | A2 · `POST /api/perdidas`: registrar una pérdida (pitera, derrame, tea, venteo o rechazo), o corregirla o retirarla con motivo (operador, supervisor y producción) |
+| `orden:cerrar` | A3 · `POST /api/sap/ordenes/:numero/cierre`: cerrar en el teléfono la orden que tiene a su nombre (el técnico) |
+| `anh:enviar` | A3 · `POST /api/anh/respuestas`: registrar la respuesta de la ANH al reporte diario (regulatorio) |
+
+A3 · `POST /api/paradas/:evento/vio` («lo que vio», la pregunta siguiente de «Contestar» en 1 toque) pide
+`causa:declarar`, como la respuesta. `POST /api/anh/conversion/importar` pide `config:firmar`, como la
+topología, y la tabla se firma con `POST /api/configuracion` (`Config.conversionAnh`).
 
 El gerente no tiene ninguna de las tres de la ANH: no ve el detalle técnico. La topología del
 choke la firma `config:firmar` (es configuración técnica): su vista previa y su carga por CSV
@@ -213,7 +237,7 @@ sea JSON, el front la trata como **«no hay servicio»**, no como una afirmació
 | 404 | No existe el recurso o la ruta | `no-encontrado`, `tag-no-registrado`, `campo-desconocido`, `equipo-desconocido`, `ruta-no-encontrada` |
 | 409 | Otro llegó antes (versión, respuesta, aviso abierto, último gerente) | `conflicto`, `version-cambio`, `tag-de-otro-gateway` |
 | 413 | Cuerpo de más de 2 MB | `cuerpo-muy-grande` |
-| 422 | La forma o una regla del dominio | `peticion-invalida` o uno propio (`texto-corto`, `acceso-invalido`, `descripcion-corta`…) |
+| 422 | Una regla del dominio. En las 9 escrituras de v1, un cuerpo con otra forma puede llegar como `400` o como `422` con `peticion-invalida` (C12: el front decide por el código); en las escrituras nuevas, la forma es `400` | `peticion-invalida` o uno propio (`texto-corto`, `acceso-invalido`, `descripcion-corta`…) |
 | 5xx | Lo inesperado: **sin el mensaje interno** (SQL, rutas del servidor) | `interno` |
 
 **Las escrituras de la clasificación ANH** (`/api/anh/paradas/…`) usan estos códigos (C-22):
@@ -243,7 +267,7 @@ http, los del servidor. Así `referencia/escrituras/` comprueba que un backend r
 con el mismo HTTP y el mismo código (C-08; «Cómo se comprueba un backend»).
 
 Campos extra según el caso: `errores: [{ campo, texto }]` en accesos (`campo` es `nombre`,
-`correo`, `rol`, `campos`, `whatsapp`, `alertas`, `motivo` o `general`: el `ErrorAcceso` de
+`correo`, `rol`, `campos`, `motivo` o `general`; `whatsapp` y `alertas` quedaron RETIRADOS (27-oct-2026, R3): el `ErrorAcceso` de
 `usuarios.ts`); `campo: "descripcion"` en un aviso; `faltas: [ruta]` en un nacimiento mal
 formado («dispositivos[1].fuente.reloj es obligatorio»); `tags: [tag]` en
 `tag-de-otro-gateway`.
@@ -355,16 +379,16 @@ tipo del motor. Lo que no se nombra va tal cual.
 | `/vistas/bombas/prediccion?campo&equipo` | `Prediccion`: `perfil` por clave; `perdiendo.pozos: [clave]` (una multifásica parada trae los pozos cerrados por ella; una de recobro parada, `{ bblDia: 0, pozos: [] }`); `colchon` con `null` = no se llena (lo que aguantaría si parara **ahora con todo produciendo**); `llenado` (solo una de disposición **ya parada**, con tanque y nivel): `{ aguaEntraBpd, colchon, prioridad }`, el tanque con el agua que **entra** ahora (fórmula en «Predicción», abajo); `colchon.horas: null` = no sube; `orden.pasos[].pozo` y `orden.sinPrueba` por clave |
 | `/vistas/bombas/paradas?campo&equipo` | `ParadaMedida[]` de la más reciente a la más vieja: `inicio`, `fin` ISO, `tramos` como en el libro, `colchon.previsto`. El tanque y el respaldo de `colchon.previsto` son los de la configuración que **regía cuando paró** (`configEn(historial, inicio)`), como en los mensajes: firmar hoy otro respaldo no cambia una parada vieja. Lo mismo en `paradas-en-periodo` y en `abierta` de `/vistas/bombas` |
 | `/vistas/bombas/paradas-en-periodo?campos&desde&hasta` | `ParadaMedida` + `{ horasEnPeriodo, bblEnPeriodo, cruzaBorde }`: solo las que se solapan con el período, recortadas a `[desde, hasta)` con el factor de cada mes. Una parada que cruza el borde no se suma entera a los dos meses |
-| `/vistas/riesgo?campos` | `Riesgo[]` con `desde` y `cierreDesde` ISO; cada item trae `prioridad` (la de la salud de la parte) y `estadoParte`. **`costoFalla` = lo que costaría que el equipo fallara HOY** (fórmula en «Costo si falla hoy», abajo): una sola cuenta en bombas y electrosumergibles, así las filas se suman. `0` en una bomba de recobro o con un respaldo que absorbe toda el agua; **ausente** (no 0) si el equipo no tiene fallas cerradas propias ni, en una electrosumergible, de su flota. `colchonH` (nuevo): en una bomba de disposición con tanque, las horas que aguanta hoy el tanque (una reparación más corta no cuesta crudo); ausente con colchón infinito o sin colchón calculado. **`techo: true`**: `bblDia` no es una cifra calculada sino un techo (un servicio o un equipo de proceso que cuelga de todo el campo: «se cierra lo que esté produciendo»); la pantalla lo dice «hasta N», como en «Si falla hoy» (D6; QA-R). Ausente en lo calculado. **`declaradoPor`**: `motivo` es lo que respondió una persona con sus palabras (una parada declarada) y esto es quién, por su rol («el operador de campo»); en el papel va «Lo contestó …», nunca el texto ni el nombre (D2). Ausente si `motivo` es de TRIM. `costoDe`: `'propio'` si sale de la historia del equipo, `'flota'` si nunca ha fallado y se estimó con el promedio de su flota en el campo (la pantalla lo marca); no va cuando `costoFalla` es 0 por definición. `mdtFuente` es solo texto para leer («el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque»; en una electrosumergible «20,3 d fuera, el promedio de …»), con las horas en la regla de las pantallas y el colchón **truncado**, nunca redondeado hacia arriba (19,05 h → «19 h»; 18,6 h → «18 h»): la pantalla dice «0 si vuelve antes de 19 h» y tiene que ser cierto. Lo que el equipo **ya costó** por falla es otra cifra (`HistorialEquipo.bblPorFalla`, «le ha costado por falla»). El `motivo` dice «X salió de su banda normal; llega a su alarma en T» o «X ya llegó a su alarma», nunca «fuera de límite»; T con la regla de las pantallas: menos de 48 h en horas enteras («43 h»), si no en días con un decimal («10,9 d»), más de 90 días «más de 3 meses» |
+| `/vistas/riesgo?campos` | `Riesgo[]` con `desde` y `cierreDesde` ISO; cada item trae `prioridad` (la de la salud de la parte) y `estadoParte`. **`costoFalla` tiene su significado de v1** (C1, al lado): en una bomba, lo que el equipo **ya costó** por falla (`HistorialEquipo.bblPorFalla`); en una electrosumergible, crudo × horas fuera promedio / 24; ausente sin fallas cerradas. **`costoFallaHoy` (AGREGADO) = lo que costaría que el equipo fallara HOY** (fórmula en «Costo si falla hoy», abajo), la cifra que pinta el front: una sola cuenta en bombas y electrosumergibles, así las filas se suman. `0` en una bomba de recobro o con un respaldo que absorbe toda el agua; **ausente** (no 0) si el equipo no tiene fallas cerradas propias ni, en una electrosumergible, de su flota. `colchonH` (nuevo): en una bomba de disposición con tanque, las horas que aguanta hoy el tanque (una reparación más corta no cuesta crudo); ausente con colchón infinito o sin colchón calculado. **`techo: true`**: `bblDia` no es una cifra calculada sino un techo (un servicio o un equipo de proceso que cuelga de todo el campo: «se cierra lo que esté produciendo»); la pantalla lo dice «hasta N», como en «Si falla hoy» (D6; QA-R). Ausente en lo calculado. **`declaradoPor`**: `motivo` es lo que respondió una persona con sus palabras (una parada declarada) y esto es quién, por su rol («el operador de campo»); en el papel va «Lo contestó …», nunca el texto ni el nombre (D2). Ausente si `motivo` es de TRIM. `costoDe`: `'propio'` si sale de la historia del equipo, `'flota'` si nunca ha fallado y se estimó con el promedio de su flota en el campo (la pantalla lo marca); no va cuando `costoFallaHoy` es 0 por definición. `mdtFuente` (de dónde sale `costoFallaHoy`; en v1 decía de dónde salía `costoFalla`, C11) es solo texto para leer («el promedio de sus 8 fallas cerradas, sin las 19 h que aguanta hoy el tanque»; en una electrosumergible «20,3 d fuera, el promedio de …»), con las horas en la regla de las pantallas y el colchón **truncado**, nunca redondeado hacia arriba (19,05 h → «19 h»; 18,6 h → «18 h»): la pantalla dice «0 si vuelve antes de 19 h» y tiene que ser cierto. Lo que el equipo **ya costó** por falla es otra cifra (`HistorialEquipo.bblPorFalla`, «le ha costado por falla»). El `motivo` dice «X salió de su banda normal; llega a su alarma en T» o «X ya llegó a su alarma», nunca «fuera de límite»; T con la regla de las pantallas: menos de 48 h en horas enteras («43 h»), si no en días con un decimal («10,9 d»), más de 90 días «más de 3 meses» |
 | `/vistas/estado?campos` | `EstadoCampo[]`, uno por campo pedido y en ese orden, con `ayer: { fecha: ISO, bbl \| null }` |
 | `/vistas/pozos?campos&desde&hasta` | `FilaPozo[]` con `pozo` y `evento` por clave y `salud?: SaludParte`. `diferidoEsp` = Σ de los tramos del período cuya causa es la electrosumergible del propio pozo (`causa.equipo === pozo` y `tipo === 'electrosumergible'`); sumado en el campo da la fila `electrosumergible` de `porTipo` |
 | `/vistas/pozos/:campo/:pozo?desde&hasta` | `{ fila, tramos, historicos: [{ evento: clave, causa }], senales, partes, historial? }` o `null` |
 | `/vistas/electrosumergibles?campos&desde&hasta` | `[{ fila, partes, historial }]` |
 | `/vistas/asignacion?campo&mes` | `AsignacionPozo[]`: lo que TRIM asigna a cada pozo en un mes cerrado |
 | `/vistas/predicciones?campos` | `{ registro: PrediccionVigia[], fallas: [{ …, falla: { inicio: ISO, fin: ISO \| null, … } }] }` |
-| `/vistas/relojes?campos&desde&hasta` | `{ fallas, excluidas, totalH?, activaH?, esperaH? }` o `null`. `excluidas` = órdenes PM01 cerradas sin su parada del PLC; sin ninguna falla cruzada, los promedios van vacíos |
+| `/vistas/relojes?campos&desde&hasta` | `{ fallas, excluidas, totalH?, activaH?, esperaH?, tramos? }` o `null`. `excluidas` = órdenes PM01 cerradas sin su parada del PLC; sin ninguna falla cruzada, los promedios van vacíos. A3 · `tramos` (opcional): el tiempo fuera en sus 5 tramos (ver «A3 · Las acciones que faltan») |
 | `/vistas/campos/:campo/ahora` | `{ caudales: { crudo, agua } (bbl/d), niveles: { idTanque: { tag, pct, hora } } }`. Un tanque sin lectura **no aparece** |
-| `/vistas/equipos/:campo/:equipo` | `EquipoVivo` o `null` (también pozos). Trae `marcha`: `en-marcha`, `detenido`, `cerrado-por-otro` o `sin-lectura`, que es lo que se compara; `estado` es solo texto. Un dispositivo sin lectura (el fiscal sin dato del último día, una señal de fondo de una electrosumergible parada) viaja con `valor: null` y estado `sin señal`, nunca con un texto como `"—"` (un texto es una lectura discreta) |
+| `/vistas/equipos/:campo/:equipo` | `EquipoVivo` o `null` (también pozos). Trae `marcha`: `en-marcha`, `detenido`, `cerrado-por-otro` o `sin-lectura`, que es lo que se compara; `estado` es solo texto. Un dispositivo sin lectura (el fiscal sin dato del último día, una señal de fondo de una electrosumergible parada) viaja con `valor: null` y estado `sin señal`. **C2, al lado:** v1 lo mandaba como `valor: "—"`; el front acepta las dos y lee `"—"` como `null` (un texto sería una lectura discreta). Un backend nuevo manda `null` |
 | `/vistas/equipos-hoy?campos` | `{ campoId: EquipoVivo[] }`: catálogo y pozos |
 | `/vistas/equipos/:campo/:equipo/historia` | `{ eventos: [{ id, inicio: ISO, fin: ISO \| null, bbl, pozos, causa }], bomba?: HistorialEquipo }` |
 | `/vistas/equipos/:campo/:equipo/ficha?desde&hasta` | `FichaEquipo` o `null`, con `desdeHistoria` y `desdeCierre` ISO: los barriles del período y de toda la historia, con su valor en USD (lo calcula el servidor) |
@@ -410,7 +434,7 @@ tiene que responder rápido o una etapa futura del front tiene que precargarlas.
 
 | Ruta | Devuelve |
 |---|---|
-| `GET /api/mensajes?campos` | `Mensaje[]`, del más reciente al más viejo (ver «WhatsApp») |
+| `GET /api/mensajes?campos` | **RETIRADO (27-oct-2026, R1):** el registro de WhatsApp. El backend no lo construye; el front ya no lo pide. Reemplazo: las tarjetas e insignias de `GET /api/vistas/hoy` |
 | `GET /api/sap/avisos?campos` | `AvisoSap[]` completos, con `cerrado: boolean` y `orden?`, incluidos los enviados desde TRIM |
 | `GET /api/sap/ordenes?campos` | `OrdenSap[]`. Las horas por clase de orden las suma el front: ya no hay `/api/sap/horas` |
 | `GET /api/sap/equipos?campo` | `EquipoSap[]` |
@@ -589,10 +613,13 @@ config }`. El front usa `/api/configuracion/historial` (Membrete, Exportar y el 
   "campos":["ceiba"], "estado":"invitado", "desde":"2026-10-02",
   "telefono":"+573005550199", "alertas":true }
 ```
+> **RETIRADO (27-oct-2026), R3: `telefono` y `alertas`.** El dueño decidió quitar el canal de WhatsApp: el backend no lo construye.
+> El front **nunca manda `telefono`** y manda `alertas: false` (v1 la pide en el cuerpo). El servidor **acepta e ignora** los dos si llegan,
+> sin un `422` por ellos, y no los vuelve a mandar (si los manda, el front no los lee). Las reglas del número de abajo quedan RETIRADAS.
 - `POST { invitacion: { nombre, correo, rolId, campos, telefono?, alertas }, motivo }` →
   `{ usuario, acceso: CambioAcceso }`. El servidor asigna `id`, `desde` (el día del reloj del
-  PLC) y `estado: "invitado"`. El historial de la invitación guarda rol, campos, WhatsApp y
-  alertas.
+  PLC) y `estado: "invitado"`. El historial de la invitación guarda rol y campos (el número y las
+  alertas: RETIRADOS, R3).
 - `PATCH { usuario, motivo }` → `{ usuario, acceso }`, solo para personas que existen (`404`).
   Al suspender, el servidor guarda `antesDeSuspender` (`activo` o `invitado`); al quitar la
   suspensión vuelve a ese estado. Nadie se borra: lo que firmó o respondió sigue a su nombre.
@@ -602,14 +629,9 @@ config }`. El front usa `/api/configuracion/historial` (Membrete, Exportar y el 
     fuera de los suyos (lo que la persona ya tenía no se revisa).
   - `409`: el cambio deja la operación sin ningún gerente de activo con acceso.
   - `422`: nombre de 3 caracteres o más; correo con forma de correo y único; rol del producto;
-    al menos un campo; teléfono que, normalizado, es **E.164** (`/^\+\d{8,15}$/`: un celular del
-    país sin indicativo lo recibe, «300 123 4567» → «+573001234567», y uno con indicativo pierde
-    espacios y separadores, «+57 300 123 4567» → «+573001234567»); el teléfono **se guarda, viaja
-    y se compara en E.164**, y la pantalla lo muestra agrupado («+57 300 123 4567»,
-    `telefonoLegible`); es **único entre usuarios no suspendidos** («Ese
-    WhatsApp ya es de …», con restricción `unique` sobre el número normalizado); alertas solo
-    con teléfono y solo en los roles que tienen reglas de WhatsApp (supervisor, operador,
-    técnico, confiabilidad, jefe de mantenimiento: `ROLES_CON_ALERTAS`); motivo de 5 o más.
+    al menos un campo; motivo de 5 o más.
+  - **RETIRADO (27-oct-2026, R3), ya no se aplica:** el teléfono en **E.164** (`/^\+\d{8,15}$/`, «300 123 4567» → «+573001234567»),
+    **único entre usuarios no suspendidos** («Ese WhatsApp ya es de …», RETIRADO), y las alertas solo con teléfono y en los roles con reglas de WhatsApp (`ROLES_CON_ALERTAS`, RETIRADO).
 - `campos` es `"todos"` o una lista; `"todos"` incluye los campos que se agreguen después.
 
 **Quién lee qué.** `GET /api/usuarios` con `usuarios:administrar` devuelve el registro completo.
@@ -619,28 +641,31 @@ campo con quien pregunta (o tienen `"todos"`), y de cada una **la forma mínima*
 
 | Campo | Quien pregunta (su propio registro) | Las demás personas |
 |---|---|---|
-| `id`, `nombre`, `rolId`, `campos`, `estado`, `alertas` | sí | sí: nombres en firmas, órdenes y respuestas; quién ocupa cada rol; a quién le llega cada alerta |
-| `telefono` | sí | **solo si recibe alertas** (activa, con alertas encendidas y en un rol con alertas): el operador ve a quién le llegó la pregunta por WhatsApp (Telefono en Identificar). El del gerente, el de un suspendido o el de quien tiene las alertas apagadas no viaja |
+| `id`, `nombre`, `rolId`, `campos`, `estado` | sí | sí: nombres en firmas, órdenes y respuestas; quién ocupa cada rol |
+| `alertas`, `telefono` | **RETIRADOS (27-oct-2026, R3)**: el front no los lee | **RETIRADOS (27-oct-2026, R3)**: en v1 viajaban para el canal de WhatsApp; ya no hacen falta y no se mandan |
 | `correo`, `desde`, `antesDeSuspender` | sí (Mi perfil muestra su correo) | **no**: ninguna pantalla operativa los usa |
 
-Ninguna regla de esas pantallas cambia con la forma mínima (destinatarios de cada alerta,
-campos asignados, persona de cada rol: `verificar:contrato`, sección 8). Si a quien administra
-le llegara la forma mínima, Accesos lo dice en pantalla en vez de editar sin correo
-(`registroCompleto`). `GET /api/usuarios/historial` sin la capacidad responde `[]`. Mi perfil
-lee el teléfono y las alertas de la persona en `GET /api/usuarios` y no los escribe: los cambia
-el gerente.
+Ninguna regla de esas pantallas cambia con la forma mínima (campos asignados, persona de cada
+rol: `verificar:contrato`, sección 8). Si a quien administra le llegara la forma mínima, Accesos
+lo dice en pantalla en vez de editar sin correo (`registroCompleto`). `GET /api/usuarios/historial`
+sin la capacidad responde `[]`. Mi perfil ya no lee el teléfono ni las alertas (RETIRADOS, R3).
 
 ### `POST /api/paradas/:evento/respuesta` (pantalla)
 
 Cuerpo `{ evento, campoId, equipo, texto, parte?, modo? }` → `{ respuesta }` con `{ texto, por,
 porId, hora, parte?, modo?, canal: "pantalla" }`.
+
+**A3 · «Contestar» en 1 toque:** `modo` es opcional también con `parte`. La parte sola se guarda
+(`texto` = el nombre de la parte) y la parada queda identificada; lo que vio llega después, opcional,
+con `POST /api/paradas/:evento/vio` (ver «A3 · Las acciones que faltan»). Un backend de v1 responde
+`422` a una parte sin modo hasta que adopte esto.
 ```json
 { "evento":"BP-2011-0412", "campoId":"ceiba", "equipo":"P-201B",
   "texto":"Sello con fuga por el lado de acople; se cambió", "parte":"sello", "modo":"ELP" }
 ```
 - `403` sin `causa:declarar` ni `causa:completar`, o si el campo del evento no es de la persona.
-  **También `403` si el cuerpo trae `canal: "whatsapp"`**: una respuesta por WhatsApp solo entra
-  por el webhook firmado (ver «WhatsApp»). El servidor pone `canal: "pantalla"`.
+  **RETIRADO (27-oct-2026, R4):** el `403` por un cuerpo con `canal: "whatsapp"` (la vía del webhook, RETIRADO) deja de importar.
+  Toda respuesta es de pantalla: el servidor puede poner `canal: "pantalla"` u omitirlo; el front no lo lee.
 - `404` si el evento no está en el registro del PLC.
 - `409` «Ya respondió …»: **la primera respuesta gana**, también en pantalla. Una respuesta no
   se edita ni se reemplaza; si hace falta corregirla, es una historia de respuestas que el
@@ -877,7 +902,7 @@ sí la recibe. `400` la forma; `403` sin `anh:clasificar`, sin persona o con un 
 del producto; `404` la fila no existe o es de un campo ajeno; `409` `cadena` cambió; `422`
 motivo de menos de 5 caracteres (sin contar lo que no se ve) o de más de 500, `pedirA` que no es
 un rol que revisa, o pedírselo al propio rol; `422`/`409` el alcance de la cascada. «2 Algo está
-mal» por WhatsApp es esta misma escritura (ver «El webhook de WhatsApp»).
+mal» por WhatsApp era esta misma escritura (RETIRADO, 27-oct-2026, R5: queda el botón de la pantalla).
 
 ---
 
@@ -934,7 +959,13 @@ documento fue modificado.
 
 ---
 
-## WhatsApp: el carril caliente
+## RETIRADO (27-oct-2026) · WhatsApp: el carril caliente
+
+> **RETIRADO (27-oct-2026).** El dueño decidió quitar el canal de WhatsApp: **el backend no lo construye**; si ya lo hizo,
+> puede quitarlo cuando quiera. Se deja escrito (no se borra) para que se sepa qué ya no construir. **Reemplazo dentro de
+> TRIM:** la pregunta «¿qué se dañó?» en Hoy («Contestar»), la tarjeta «Conseguir la causa» con su insignia para el
+> supervisor, la franja «No arrancar», «Algo está mal» (`POST /api/anh/paradas/:id/revision`) y la entrega de turno en
+> pantalla y PDF. Fila por fila: [`docs/backend/CAMBIOS-CONTRATO.md` §3](docs/backend/CAMBIOS-CONTRATO.md) (R1 a R8).
 
 TRIM avisa por WhatsApp a quien tiene que actuar, con reglas fijas del producto (no se
 configuran por persona; `mensajes.ts`):
@@ -979,7 +1010,7 @@ sugerencia (`fuente: 'senal' | 'historia'`).
   en el registro **sin `texto` y con `noEnviado`: el motivo**, y los demás salen. La pantalla lo
   muestra como dato inválido junto al paso del hilo («no se envió a …: …»); no cuenta como avisado.
 
-### El webhook de WhatsApp
+### RETIRADO (27-oct-2026) · El webhook de WhatsApp
 
 Las respuestas por WhatsApp **no entran por el endpoint de la pantalla**. Tienen su ruta, sin
 sesión de persona y autenticada por Meta:
@@ -1012,10 +1043,8 @@ sesión de persona y autenticada por Meta:
 - Lo que una persona escribe por WhatsApp se queda en TRIM: no viaja a la ANH ni a ningún informe
   (D2; `desc_evid` se arma con lo estructurado).
 
-En el demo, el teléfono simulado de Identificar hace de webhook dentro del navegador
-(`recibirWhatsapp` y `revisarDesdeWhatsapp` en `escrituras.ts`, con estas mismas reglas). **Con la fuente http no manda
-nada**: ningún cuerpo del front lleva `canal` ni `por` (los pone el servidor), y una respuesta por
-WhatsApp solo entra por el webhook firmado. El teléfono lo dice en el chat.
+En el demo, el teléfono simulado de Identificar hacía de webhook dentro del navegador. Con el retiro
+se borró del front, junto con sus escrituras del demo.
 
 ---
 
@@ -1501,8 +1530,8 @@ regla: un backend con el esquema da la misma fila que el servidor del demo (C-03
 TRIM sobre la causa, la parte, lo que vio de la lista (el modo del catálogo), uno de los motivos
 cerrados de `CAUSAS_POZO`, el id del programa y la evidencia de las señales, con la persona dicha
 por su rol («Declarado por el operador de campo»). **El texto libre de una persona nunca viaja**:
-ni la respuesta de una parada escrita con sus palabras (por pantalla o por WhatsApp, aunque
-nombre a otras personas), ni el motivo escrito de una parada del programa, ni un motivo o un
+ni la respuesta de una parada escrita con sus palabras (en pantalla; la vía de WhatsApp: RETIRADO el 27-oct-2026), aunque
+nombre a otras personas, ni el motivo escrito de una parada del programa, ni un motivo o un
 porqué. Se queda en TRIM. Una persona no escribe `desc_evid`, y su causa general es una de las
 18 (`causa_general`), nunca un texto libre. Lo mismo en las exportaciones (el CSV de Evidencia:
 `causaParaSalir`).
@@ -1608,7 +1637,9 @@ que hacía falta cerrar ya cerrados (La Ceiba hoy: P-201B parada, 15 de 18 pozos
 por eso. Cuadra con Planta: entran ≈ 174.000 y P-201A y P-201C sacan hasta 178.500 (2 × 89.250). La pantalla (Planta) pinta el tanque con `llenado.prioridad`,
 o P1 si ya está en el alto-alto.
 
-#### Costo si falla hoy (`Riesgo.costoFalla`)
+#### Costo si falla hoy (`Riesgo.costoFallaHoy`)
+
+`Riesgo.costoFalla` conserva su significado de v1 (lo que ya costó por falla; C1). Lo de abajo es `costoFallaHoy`, al lado.
 
 ```
 Q   = crudo por día que se pierde si para hoy: crudoBpd de la predicción (en el orden de cierre);
@@ -1622,7 +1653,7 @@ respaldo que absorbe toda el agua (colchón infinito), o recobro      costo = 0
 multifásica (transporte)        costo = Q × d̄ / 24
 electrosumergible               costo = Q × d̄ / 24; sin fallas propias, d̄ de las electrosumergibles
                                 del campo (costoDe 'flota')
-sin fallas cerradas propias (ni flota)                               costoFalla ausente
+sin fallas cerradas propias (ni flota)                               costoFallaHoy ausente
 ```
 Ejemplos del demo: P-201B de Morichal = 1.670,7 × promedio(max(0, dᵢ − 19,05)) / 24 ≈ **2.086 bbl**;
 MPP-301 ≈ **3.244,5 bbl**. Lo que el equipo ya costó por falla (`bblPorFalla`, 3.364,6 en P-201B de
@@ -1638,8 +1669,8 @@ una falla. Tiempo entre fallas = días de historia ÷ fallas, **solo con dos fal
 la falla abierta). Tiempo fuera (`mdtH`) = promedio de la duración de sus fallas **cerradas**
 (incluye la espera; la reparación activa sale de las órdenes de SAP). Una parada que el tanque
 absorbió cuenta como falla con 0 bbl. `bblPorFalla` = barriles promedio de sus fallas cerradas: lo
-que **le ha costado por falla** (la ficha y Confiabilidad lo rotulan así); no es `costoFalla` de
-Riesgo, que es lo que costaría si fallara hoy.
+que **le ha costado por falla** (la ficha y Confiabilidad lo rotulan así): en una bomba es el
+`costoFalla` de Riesgo (v1); lo que costaría si fallara hoy es `costoFallaHoy`.
 
 ### Salud por parte
 
@@ -1814,8 +1845,8 @@ formas exactas son los tipos TS citados):
    crece con cada corrección; el script imprime el total al final («N de N comprobaciones
    bien»). Cubre, por secciones: identidades de cada mes y campo; portafolio; factor de
    asignación y custodia; colchón de las bombas; preguntas y no conformidades; lo que entra a
-   mano (metas, accesos, plan, perfil); historia de fallas; SAP, WhatsApp, aciertos y asignación
-   oficial; huella, firma y mensajes; reglas de causa; datos que faltan o se pisan; estado,
+   mano (metas, accesos, plan, perfil); historia de fallas; SAP, causas sugeridas, aciertos y asignación
+   oficial; huella y firma; reglas de causa; datos que faltan o se pisan; estado,
    dirección y costura; pantallas; componentes y contraste; el simulador del registro; la
    costura y sus cachés; y que las escrituras se limitan a los campos de la persona. Un backend
    en otro lenguaje no lo corre: lo que tiene que dar está en `referencia/` y en estas reglas.
@@ -1866,15 +1897,13 @@ cambiar en el código antes de producción:
 - **`GET /api/usuarios/historial`** solo con `usuarios:administrar` (hoy el arranque lo pide para
   todos y el servidor responde `[]` sin la capacidad).
 
-El teléfono simulado de Identificar es del demo: con la fuente http no manda nada y lo dice
-(la respuesta por WhatsApp solo entra por el webhook firmado de Meta).
+El teléfono simulado de Identificar salió del front con el canal (RETIRADO el 27-oct-2026: WhatsApp, R1 a R8).
 
 ## Pendiente del lado del servidor
 
 - **Sesión e identidad:** `GET /api/sesion`, el token y el servicio de identidad (inicio y fin de
   sesión, contraseña, sesiones abiertas). Lo que cambia en el front, arriba.
-- **Webhook de WhatsApp** (`/api/webhooks/whatsapp`) y el envío por la Cloud API de Meta con las
-  diez plantillas, guardando el id de cada mensaje saliente.
+- ~~Webhook de WhatsApp y el envío por la Cloud API de Meta~~: **RETIRADO (27-oct-2026, R7)**. Ya no se construye (ver «RETIRADO · WhatsApp: el carril caliente»).
 - **`GET /api/informes/:folio/verificacion`** para terceros.
 - **`GET /api/paradas/:evento`** con `respuestas[]` y `analisis[]` históricos.
 - **Asociar tags por lotes** (`POST /api/campos/:campo/tags/equipo` con `[{ tag, equipo, origen }]`,
@@ -1906,11 +1935,8 @@ El teléfono simulado de Identificar es del demo: con la fuente http no manda na
   ya se firma (`Config.capacidades[].factorMedicion`); ningún campo del demo lo tiene firmado.
 - **El campo ajeno en las vistas** (C-16): `403 sin-permiso` con una dirección que pide un campo
   que la persona no tiene. Sin sesión, el demo no lo puede probar.
-- **Las preguntas de campo por WhatsApp** (B-33): la plantilla de Meta para la pregunta de la
-  clasificación («¿De dónde vino el corte?» con sus opciones numeradas), el registro de mensajes
-  que la manda al operador del campo cuando la fila tiene una pregunta de campo abierta (y la que
-  sigue cuando llega la respuesta), y la entrada del webhook, que usa las reglas de
-  `POST …/respuesta` con la persona del número.
+- ~~Las preguntas de campo por WhatsApp (B-33)~~: **RETIRADO (27-oct-2026, R7)**. Las preguntas del árbol se contestan en pantalla
+  (`POST /api/anh/paradas/:id/respuesta`).
 - **Los artefactos del SQL** (C-23): `ejemplos.sql`, `tablas.json` y `validacion.log` se
   regeneran con `herramientas/validar.sh` en el commit de cierre, sobre el mismo código.
 - **La captura sin señal en la clasificación ANH** (U1 P-9): el cuerpo traería la hora del
@@ -2306,7 +2332,7 @@ con su orden, la cifra y la frase de su inicio. Viaja tal cual (JSON puro: las h
 |---|---|---|---|
 | La franja «No arrancar … hasta identificar qué se dañó» | las paradas del libro sin causa que siguen paradas | quien dice qué se dañó | `causa:declarar` |
 | Contestar qué se dañó o por qué paró (una por parada) | las paradas del libro sin causa | oper, tec | `causa:declarar` |
-| Conseguir la causa de N paradas (juntas; «se escaló a las…» sale de WhatsApp) | las mismas; al supervisor, solo las de pozo (la parte de una bomba es del operador y del técnico) | sup, jefe, conf | `causa:declarar` |
+| Conseguir la causa de N paradas (juntas; «se escaló a las…» de WhatsApp quedó RETIRADO el 27-oct-2026, R6) | las mismas; al supervisor, solo las de pozo (la parte de una bomba es del operador y del técnico) | sup, jefe, conf | `causa:declarar` |
 | Confirmar N paradas iguales (un lote por cadena) | las filas de hoy propuestas, sin revisión pendiente ni «una señal apunta» | sup, prod | `anh:confirmar` |
 | Contestar o precisar una pregunta de campo del árbol | las filas del mes en curso (oper y tec) o de hoy (quien revisa) que no esperan al libro | quien la contesta (`ROLES_QUE_CONTESTAN`) | `anh:clasificar` (`anh:yacimiento` para el yacimiento) |
 | Revisar lo que alguien marcó «Algo está mal» | `ParadaAnh.revision` sin atender que le toca | sup, prod, jefe, conf | `anh:clasificar` |
@@ -2359,11 +2385,12 @@ interface VistaHoy {
   vacio?: string                                         // «Nada pendiente. El campo está normal.»
   entregarTurno: boolean                                 // el supervisor: abre la entrega de turno que ya existe
   campo?: { campoId: string; tramos: Array<{ choke: 'pozo' | 'planta' | 'exportacion'; rotulo: string; limita: boolean; trabado: boolean }>; frases: Trozo[][] }
-  whatsapp?: { mensajes: number; hilos: Array<{ equipo: string; pasos: string; estado?: Trozo[] }> }   // las últimas 12 h
+  // whatsapp?: { mensajes; hilos }: RETIRADO (27-oct-2026, R6). No se construye.
   turno?: { horas: number; diferidoBbl: number }
   // F1 · P-06: la entrega del turno del supervisor, con lo que Hoy ya sabe. Se comparte en PDF (Exportar);
   // la firma espera su escritura, que todavía no está en el contrato.
-  entrega?: { horas: number; titulo: string; paro: Trozo[][]; pendiente: Trozo[][]; hecho: Trozo[][]; whatsapp: Trozo[][]; diferido?: Trozo[] }
+  entrega?: { horas: number; titulo: string; paro: Trozo[][]; pendiente: Trozo[][]; hecho: Trozo[][]; diferido?: Trozo[] }   // entrega.whatsapp: RETIRADO (27-oct-2026, R6)
+  porConfirmar?: { n: number; limite: ISO }              // AGREGADO (M6): sup y prod, ver «A1 · Compatibilidad con la versión 1»
 }
 interface PreguntaHoy {                                  // una pregunta de un toque (X5 §5.8)
   id: string; via: 'libro' | 'anh'; campoId: string; equipo: string; sobre: 'bomba' | 'pozo'; marca?: CondicionFranja
@@ -2412,8 +2439,8 @@ borra:
   reloj del aviso se detiene con el foco o el puntero encima (A3). (El libro guarda una respuesta por parada
   —la primera gana— y la conversación del árbol solo se alarga: deshacer una ya escrita borraría o dejaría la
   pregunta cerrada.)
-- «Todavía no sé» en el libro no escribe nada: la pregunta sigue abierta y vuelve en la próxima ronda de
-  WhatsApp; en el árbol se guarda «No sé» y escala a quien revisa (U1 §2.4).
+- «Todavía no sé» en el libro no escribe nada: la pregunta sigue abierta en Hoy (ronda de WhatsApp: RETIRADO
+  el 27-oct-2026); en el árbol se guarda «No sé» y escala a quien revisa (U1 §2.4).
 
 | Revisión, en este orden | HTTP · `codigo` |
 |---|---|
@@ -2525,7 +2552,7 @@ el gerente sigue abriendo la ficha ejecutiva en el panel. Es del front (`src/app
 | «Lo que dan los pozos» | según sus pruebas (la tubería, el tramo de los pozos) | 11.857 bbl/d |
 | «Potencial del libro» | las pruebas × el factor de asignación del mes | 11.360 bbl/d |
 | «Equipos que avisan» | Antes: el conteo de los `en-riesgo`, uno por equipo | 1 / 8 |
-| «Exposición si fallan hoy» | Σ `costoFalla` de los que avisan (estimado) | 45.262 bbl (todos) |
+| «Exposición si fallan hoy» | Σ `costoFallaHoy` de los que avisan (estimado) | 45.262 bbl (todos) |
 | «Retorno posible del ciclo» | Antes + Durante + Después, **simulado**: solo en Resultados | 45.233 bbl (todos) |
 
 ```ts
@@ -2614,3 +2641,355 @@ tiempo queda?»). Es el inicio de regulatorio (`#/reg/regulatorio/…`). El serv
 
 **El CSV para la ANH** (el libro mes a mes del campo, con el factor de asignación contra su banda y las casillas
 de PRODML) sale de «Exportar», en la cabecera, solo en Regulatorio: es `GET /api/vistas/diferidos/mensual`.
+
+## A2 · El balance del choke, las pérdidas, la jornada y «¿Está funcionando?»
+
+**AGREGADO** (experiencia v3, 27-oct-2026; `docs/experiencia-v3/CONSTRUCCION.md`, «Lo que el dueño volvió a
+pedir», y `necesario-por-rol.md` §0b, §0c y §0d). Nada de v1 cambia: cinco vistas nuevas, una escritura nueva,
+una capacidad nueva (`perdidas:registrar`) y dos campos opcionales de la configuración. Las reglas viven en
+`src/entities/perdidas.ts`, `balance.ts`, `jornada.ts` y `efectividad.ts`; la costura, en
+`src/shared/api/perdidas.ts` y `balance.ts`; los códecs, en la sección `// A2 · Balance` de `contrato.ts`.
+
+**Las reglas de siempre, aquí:**
+- **Diferido no es pérdida.** El diferido sale del libro (lo que no se produjo y se produce después); la pérdida,
+  del registro de pérdidas (lo que ya salió y no se vende). Van **lado a lado y nunca se suman**. El potencial es
+  producido + diferido; el perdido va aparte.
+- **Nada inventado.** Sin registros, la pérdida viaja en `null` («sin registro»), **nunca en 0**: que nadie la haya
+  registrado no prueba que no se perdió nada. Sin un día con dato fiscal, el producido también va en `null`.
+- **Los enteros, una vez** (la regla de redondeo, `redondeo.ts`): cada cifra viaja `{ exacto, entero }`; el entero
+  del diferido de cada fila es el de `enterosDelPeriodo` (LC-08 = 108 en todas partes) y cada nodo suma los de sus
+  filas; el total de varios campos es la suma de sus enteros.
+
+### `GET /api/vistas/balance?campos=&desde=&hasta=` · `?campos=&jornada=actual|anterior`
+
+Producido · diferido · perdido, por campo y por tramo del choke (yacimiento, pozos, planta, salida y lo sin
+identificar), con la trazabilidad de cada número. Lo leen ger, prod, sup, reg, jefe y conf.
+
+- `producido`: lo real del punto de medición oficial (`libro().real`). Los días sin dato fiscal no entran y van en
+  `sinFiscal` (AAAA-MM-DD).
+- `diferido`: Σ de las filas de la ANH del período con la clasificación vigente (lo que dijeron las personas encima
+  de lo que propone TRIM). Es **el mismo** de `/vistas/diferidos` y la raíz de `/vistas/choke/arbol`; el de cada
+  tramo es el primer nivel de su orden `gestion`.
+- `perdido`: Σ del registro de pérdidas que rige en el período (una pérdida cuenta entera donde empezó), por el tramo
+  donde ocurrió; `null` sin registro. El gas (tea, venteo) va en `gasKpc`, nunca en los barriles.
+- `potencial` = producido + diferido (exacto y entero). `sinExplicar` = brecha del libro − diferido (el inventario
+  de los días): se muestra, no se reparte. Cuadre exacto: potencial del libro = producido + diferido + sin explicar.
+- `arbol`: de cada tramo, **la trazabilidad a un toque**: `diferida` → planeada o no → causa N1 → detalle N2 →
+  `paradas` (cada evento con sus filas y **quién dijo qué y cuándo**, `dijeron`: solo lo que dijo una persona; vacío
+  = todo es la propuesta de TRIM); `perdida` → tipo → `perdidas` (los registros que rigen, con su historia), o `null`.
+  Cada nodo suma exacto (y en enteros) lo que tiene debajo; lo que falta va en su rama `falta`, al final.
+- Con `jornada`, cada campo se mide en su jornada (`/vistas/jornada`) y `desde`/`hasta` no se mandan; `jornadas`
+  trae la de cada campo.
+
+```ts
+{
+  campos: string[]; desde: ISO; hasta: ISO
+  jornada: 'actual' | 'anterior' | null; jornadas: Jornada[]
+  periodo: string                                    // «octubre», «1 de jul a 30 de sept», «la jornada de ahora»
+  total: CifrasBalance
+  porCampo: Array<CifrasBalance & { campoId: string; nombre: string; desde: ISO; hasta: ISO }>
+  arbol: Array<{ tramo: ChokeOSinAsignar; nombre: string; diferida: NodoBalance; perdida: NodoBalance | null }>
+  frase: string; explica: string; regla: 'balance@1'
+}
+CifrasBalance = {
+  producido: Cifra | null; diferido: Cifra; perdido: Cifra | null; potencial: Cifra | null   // Cifra = { exacto, entero }
+  sinExplicar: number; gasKpc: number | null; sinFiscal: string[]
+  porTramo: Array<{ tramo: ChokeOSinAsignar; nombre: string; diferido: Cifra; perdido: Cifra | null }>
+}
+NodoBalance = {
+  nivel: 'impacto' | 'planeacion' | 'n1' | 'n2' | 'tipo'; valor: string; texto: string
+  bbl: number; bblEntero: number; eventos: number; hijos: NodoBalance[]
+  paradas?: Array<{ campoId; eventoId; pozo; equipo; inicio: string; fin: string | null; bbl; bblEntero; estado; filas: string[]
+                    dijeron: Array<{ paso; valor; texto; procedencia; por; rol?; hora }> }>
+  perdidas?: PerdidaVigente[]
+}
+```
+
+Ejemplo (el demo; La Ceiba, octubre, sin registro de pérdidas):
+
+```text
+GET /api/vistas/balance?campos=ceiba&desde=2026-10-01T00:00:00.000-05:00&hasta=2026-10-02T14:00:00.000-05:00
+→ { "total": { "producido": { "exacto": 16941, "entero": 16941 }, "diferido": { "exacto": 1046.03, "entero": 1046 },
+               "perdido": null, "potencial": { "exacto": 17987.03, "entero": 17987 }, "sinExplicar": 0, …,
+               "porTramo": [ { "tramo": "reservorio", "diferido": { …, "entero": 0 }, "perdido": null },
+                             { "tramo": "pozo", "diferido": { …, "entero": 118 }, "perdido": null },
+                             { "tramo": "planta", "diferido": { …, "entero": 573 }, "perdido": null }, …,
+                             { "tramo": "sin-asignar", "diferido": { …, "entero": 355 }, "perdido": null } ] },
+    "frase": "La Ceiba, octubre: produjo 16.941 bbl · quedaron diferidos 1.046 bbl · perdido: sin registro.", … }
+```
+
+### `GET /api/vistas/perdidas?campos=&desde=&hasta=` · `POST /api/perdidas`
+
+El registro de pérdidas. **Solo por inserción (D1):** corregir es otra inserción que nombra la versión que corrige
+(`corrige`) con su `motivo`; retirar un registro equivocado también (`retirar: true`). Rige la última versión de cada
+cadena; las anteriores quedan en `historia`. Lo escrito a mano (`volumen.como`, `motivo`) se queda en TRIM: no va a
+la ANH ni a ningún informe (D2).
+
+`POST /api/perdidas` (capacidad `perdidas:registrar`: operador, supervisor y producción):
+
+```ts
+{ campoId: string; tipo: 'pitera' | 'derrame' | 'tea' | 'venteo' | 'rechazo'
+  tramo: 'reservorio' | 'pozo' | 'planta' | 'exportacion'      // dónde ocurrió
+  donde: string                                                // el equipo o el punto (≤ 80)
+  evento?: string                                              // la parada que la acompañó (EventoPozo.id)
+  inicio: string; fin?: string | null                          // ISO con zona; null = sigue
+  volumen: { bbl: number; gasKpc?: number; fuente: 'medido' | 'estimado'; como: string }   // como: 5 a 500 caracteres
+  corrige?: string; motivo?: string; retirar?: boolean }
+→ 200 { "perdida": RegistroPerdida }    // el mismo cuerpo más id («PER-ceiba-0001»), n, por, porId, rol y hora (del servidor)
+```
+
+Los rechazos, en este orden: **400** `peticion-invalida` (la forma); **403** `rol-desconocido`, `sin-capacidad`,
+`sin-persona`, `campo-ajeno`; **404** `campo-desconocido`; **422** `tipo-desconocido`, `tramo-desconocido`, `sin-donde`,
+`texto-largo`, `hora-invalida`, `en-el-futuro`, `fin-antes-de-inicio`, `volumen-invalido`, `sin-volumen` (ni crudo ni
+gas), `fuente-desconocida`, `sin-como`, `retirar-sin-corrige`; **404** `perdida-desconocida` (la que se corrige no es
+de ese campo); **422** `falta-motivo`; **409** `ya-corregida` (alguien la corrigió antes). Rechazada, nada se guarda.
+
+`GET /api/vistas/perdidas`: `{ campos, desde, hasta, estado: 'sin-registro' | 'con-registro', bbl: number | null,
+bblEntero: number | null, gasKpc: number | null, porCampo[], porTipo[], porTramo[], filas: PerdidaVigente[] (las que
+rigen, con historia y bblEntero), retiradas: PerdidaVigente[], texto, explica, regla: 'perdidas@1' }`. Sin registros:
+`estado: 'sin-registro'` y `bbl: null`. **En el demo el registro arranca vacío:** no se inventan pérdidas.
+
+### `GET /api/vistas/jornada?campo=&jornada=actual|anterior`
+
+«Mi turno» del supervisor y su entrega de turno. La jornada va de un cambio de turno al siguiente, con las horas
+del campo (`ConfigCampo.turnos`, firmado por el administrador); sin firma rige el de por defecto (06:00 y 18:00) y
+`nota` lo dice. Trae `jornada` (`desde`, `hasta`, `nombre`, `turnos`, `firmada`, `enCurso`), `porConfirmar` (eventos con
+alguna fila sin confirmar: la misma cuenta del supervisor en Hoy), `diferido` (`{ exacto, entero }`, la raíz de la
+ventana), `perdido` (o `null`), `paradas[]` (las que empezaron, siguen o terminaron en la jornada: `inicio`, `fin` o
+`null` = sigue, `cuando` en palabras, `tramo`, `cadena` de 6 pasos con quién dijo cada uno, `estado`, `bbl` y
+`bblEntero` en la jornada, `filas`) y `frase`.
+
+### `GET /api/vistas/efectividad?campos=`
+
+«¿Está funcionando?», en una tarjeta: **antes de TRIM** (la línea base de «¿Está bajando?»: los tres meses
+publicados antes de la firma de arranque; `base.firmada` es `false` y `base.fuente` lo dice), **este mes contra la
+meta** (lo no planeado por día y las fallas de los equipos críticos del mes, con la meta de reducción firmada al lado)
+y **lo ganado** (barriles que se dejaron de diferir desde el arranque = (base − desde el arranque) × días; las fallas
+que anticipó el vigía). Por tramo, a un toque (`porTramo`). La meta es `TramoMeta.reduccionPct` (opcional, la firma el
+gerente) aplicada a la base de cada campo; sin ella en algún campo, `meta: null` y una nota («Sin meta de reducción
+firmada»). `cumple.fallas` es `null` mientras el mes corre y no pasó la meta.
+
+### `GET /api/vistas/fallas/mensual?campos=`
+
+Las fallas de los equipos críticos (la flota de alto impacto, sin disparos) de cada mes del calendario, por familia,
+por tramo y por equipo: `[{ mes, nombre, desde, hasta, parcial, fallas, disparos, porFamilia, porTramo, porEquipo[] }]`.
+Una falla cuenta en el mes en que empezó. Era la cuenta de la pantalla de Confiabilidad («Fallas por mes»): ahora la
+hace el motor. Demo: La Ceiba, octubre, 1 falla (P-201B, 2-oct), parcial.
+
+### Los dos campos opcionales de la configuración (`POST /api/configuracion`)
+
+- `campos[campo].turnos?: string[]`: las horas de cambio de turno, «HH:MM», de 1 a 4, sin repetir. Técnico: lo firma
+  `config:firmar`. Sin él, el de por defecto.
+- `campos[campo].metas[].reduccionPct?: number`: la meta de reducción frente a antes de TRIM, de 0 a 100 %. Lo firma
+  `metas:firmar`, con las demás metas (lo de un mes cerrado no se cambia: va en un tramo nuevo).
+
+Un backend de v1 que no los conoce los ignora; uno que los manda en `null` es lo mismo que no mandarlos.
+
+## A3 · Las acciones que faltan
+
+**Lo que hace cada rol y hoy no tenía escritura** (experiencia v3, `docs/experiencia-v3/necesario-por-rol.md`;
+`docs/backend/CAMBIOS-CONTRATO.md` §9, M2 a M5). Todo es **AGREGADO al lado**: rutas nuevas y campos opcionales;
+nada de v1 cambia de forma. Las reglas viven en `src/entities/orden-cierre.ts`, `anh-respuestas.ts` y
+`anh-conversion.ts`; el servidor del demo, en `src/shared/api/escrituras.ts` (sección A3). Todo es **por
+inserción** (D1): nada se edita ni se borra, y nada de lo que escribe una persona viaja a la ANH (D2).
+
+Las cuatro escrituras rechazan en este orden, con el HTTP y el código de la tabla (como las del árbol, C-22):
+
+| HTTP | Código | Cuándo |
+|---|---|---|
+| 400 | `peticion-invalida` | el cuerpo no tiene la forma (un número donde va un texto, las lecturas que no son una lista) |
+| 403 | `rol-desconocido`, `sin-capacidad`, `sin-persona` | el rol no es del producto, no tiene la capacidad, o nadie activo lo tiene |
+| 404 | `no-encontrado`, `campo-desconocido` | la parada, la orden o el campo no existen |
+| 403 | `sin-permiso`, `ajena` | el campo no es de la persona; la orden está a nombre de otra persona |
+| 409 | `ya-dicho`, `ya-cerrada`, `sin-liberar`, `ya-aceptada`, `hora-anterior` | otro ya lo dijo, la orden ya está cerrada o sin liberar, el día ya fue aceptado, o llega una respuesta más vieja que la vigente |
+| 422 | `sin-parte`, `modo-ajeno`, `texto-corto`, `texto-largo`, `actividad-ajena`, `parte-ajena`, `horas-invalidas`, `lectura-ajena`, `falta-motivo`, `motivo-ajeno`, `estado-invalido`, `dia-invalido`, `hora-invalida`, `folio-ajeno`, `archivo-vacio` | la regla del dominio (abajo, en cada una) |
+
+Los casos de cada rechazo están en `referencia/escrituras/` (`400-vio-…` a `422-conversion-archivo-vacio`, 22
+secuencias) y se comprueban con `node scripts/referencia.mjs comparar --base-url=… --escrituras`.
+
+### `POST /api/paradas/:evento/vio` («Contestar» en 1 toque: lo que vio)
+
+El operador y el técnico contestan **la parte en un toque** (`POST /api/paradas/:evento/respuesta` sin `modo`);
+lo que vio es **la pregunta siguiente y opcional** («Sello mecánico: ¿qué vio?», con los modos de la parte que ya
+trae la tarjeta de Hoy). Capacidad `causa:declarar`.
+
+```json
+{ "modo": "ELP" }                              // o { "modo": "OTH", "texto": "Se veía aceite en la base" }
+```
+→ `{ respuesta }`: la misma respuesta, con `modo` y `vio: { por, porId, hora, texto? }` (quien dijo lo que vio, que
+puede ser otra persona que la que dijo la parte). La parte, quién la dijo y su hora no cambian.
+- `404 no-encontrado` si la parada no está en el registro del PLC; `403 sin-permiso` si es de otro campo.
+- `409 ya-dicho`: lo que vio se dice una vez.
+- `422 sin-parte` si nadie dijo la parte; `modo-ajeno` si el modo no es de esa parte; `texto-corto` con «Otra cosa»
+  sin decir qué (8 caracteres); `texto-largo` de 500. El texto se queda en TRIM (D2).
+
+### `POST /api/sap/ordenes/:numero/cierre` (cerrar la orden en el teléfono)
+
+El técnico cierra, sin papel, la orden que tiene a su nombre (o sin técnico, de su campo). Capacidad `orden:cerrar`.
+
+```json
+{ "actividad": "cambio", "parte": "sello", "modo": "ELP",
+  "lecturas": [{ "tag": "PT-1011", "valor": 118 }],
+  "inicio": "2026-10-02T10:00:00-05:00", "fin": "2026-10-02T12:30:00-05:00" }
+```
+- `actividad`: `cambio`, `reparacion`, `ajuste`, `inspeccion`, `limpieza` o `lubricacion` (Cambié · Reparé · Ajusté ·
+  Inspeccioné · Limpié · Lubriqué).
+- `parte` (y `modo`, opcional): del catálogo de daños del equipo. Obligatoria si el equipo tiene catálogo; un equipo
+  sin catálogo (K-101) va sin parte. Sin texto libre.
+- `lecturas`: hasta 20, de tags numéricos del equipo; la unidad la pone el servidor.
+- `inicio` y `fin`: las horas del trabajo (t3 y t4 del tiempo fuera).
+
+→ `{ orden, cierre }`: la orden queda `CNF` (ejecutada; el TECO lo da el planeador en SAP), con las horas sumadas a
+`horasReales` y el campo opcional `cierre` (`{ orden, campoId, equipo, actividad, parte?, modo?, lecturas: [{ tag,
+valor, unidad }], inicio, fin, horas, evento?, por, porId, hora }`). `GET /api/sap/ordenes` la trae así desde ahí.
+- `404` la orden no está en SAP; `403 sin-permiso` otro campo; `403 ajena` a nombre de otra persona.
+- `409 ya-cerrada` (`CNF`, `TECO` o con cierre: un cierre no se repite ni se edita); `409 sin-liberar` (`CRTD`).
+- `422 actividad-ajena`, `parte-ajena`, `modo-ajeno`, `horas-invalidas` (fin antes del inicio, después de ahora,
+  antes de liberarse la orden o más de 14 días), `lectura-ajena` (un tag que no es del equipo o sin lectura numérica).
+- **Pendiente del servidor:** cómo viaja a SAP PM (la confirmación y el TECO; la tabla `confirmacion_sap` ya existe).
+
+### El tiempo fuera en sus 5 tramos: `tramos` en `GET /api/vistas/relojes`
+
+Campo **opcional** (AGREGADO). Sobre las mismas fallas del promedio (correctivas cerradas con su parada del PLC), el
+tiempo fuera de cada una se parte con sus marcas: t0 paró (PLC) → t1 aviso en SAP → t2 orden liberada → t3 empezó
+el trabajo → t4 terminó → t5 arrancó (PLC).
+
+```ts
+tramos?: {
+  deteccionH: number | null       // t1 − t0
+  administrativoH: number | null  // t2 − t1
+  logisticaH: number | null       // t3 − t2 (con el cierre en el teléfono)
+  reparacionH: number | null      // t4 − t3 con el cierre; sin él, las horas que confirmó SAP
+  arranqueH: number | null        // t5 − t4 (con el cierre en el teléfono)
+  sinDatoH: number                // lo que ninguna marca explica: nunca se reparte
+  fallas: number; conCierre: number
+}
+```
+- Cada tramo es Σ de lo medido ÷ las fallas; `null` = ninguna falla lo tiene («sin dato»). **Σ de los tramos con dato
+  + `sinDatoH` = `totalH`.** Una marca fuera de orden o fuera de la parada no se usa: su tiempo va a `sinDatoH`.
+- La Ceiba, toda la historia, sin cierres: detección 0,40 h, administrativo 1,60 h, reparación 8 h (SAP), logística y
+  arranque `null`, 183,6 h sin dato (`referencia/sap/relojes-ceiba-historia.json`).
+
+### `POST /api/anh/respuestas` · `GET /api/vistas/anh/respuestas?campos=&desde=&hasta=`
+
+La respuesta de la ANH al reporte de un día, **a mano por ahora** (U1 §6.3). Capacidad `anh:enviar` (regulatorio).
+
+```json
+{ "campoId": "ceiba", "dia": "2026-10-01", "estado": "rechazado", "motivo": "V-07",
+  "recibida": "2026-10-02T13:30:00-05:00", "folio": "INF-2026-0001" }
+```
+→ `{ respuesta }` con `n` (el consecutivo), `limiteCorreccion` en un rechazo (`recibida` + 1 h: la hora para corregir
+de la Res. 0651 art. 15.2), `por`, `porId` y `hora`.
+- `motivo`, solo en un rechazo y obligatorio, de la lista `MOTIVOS_RECHAZO_ANH` (`entities/anh-respuestas.ts`): las
+  reglas de rechazo de la circular que TRIM ya valida (`V-01` a `V-10` y `V-14`, P1 §4.2) y `otro`. La ANH no publica
+  códigos de rechazo: **NO VERIFICADO** que use estas palabras.
+- `404 campo-desconocido`; `403 sin-permiso`; `409 ya-aceptada` (el día ya fue aceptado); `409 hora-anterior` (llegó
+  antes que la vigente); `422 falta-motivo`, `motivo-ajeno`, `estado-invalido`, `dia-invalido`, `hora-invalida` (después
+  de ahora o antes de que cierre el día reportado), `folio-ajeno` (no es un informe de ese campo).
+- Por inserción: rige la más reciente del día; la historia no se borra.
+
+La vista: `{ campos, dias: [{ campoId, dia, estado, motivo?, motivoTexto?, recibida, limiteCorreccion?, quedanMin?,
+vencida?, respuestas, por }], respuestas: RespuestaAnh[], porCorregir }`. `dias`, uno por día con respuesta: primero
+los rechazos con hora por delante (el que vence antes) y después del más reciente al más viejo. `quedanMin` = los
+minutos que quedan para corregir (0 si venció). Sin respuestas: `{ dias: [], respuestas: [], porCorregir: 0 }`.
+
+**`respuestaAnh` en `GET /api/vistas/anh/reporte`** (opcional, AGREGADO): el primero de `dias` en el período del
+reporte. Ausente sin respuestas: la pantalla dice «ANH: sin respuesta registrada».
+
+### `POST /api/anh/conversion/importar` · `GET /api/vistas/anh/conversion?campo=` · `Config.conversionAnh`
+
+La tabla de equivalencias del árbol de la operadora al de la ANH (el pedido central de Edinson), **solo lo necesario**.
+Capacidad `config:firmar` (el administrador).
+
+```json
+{ "campo": "ceiba", "texto": "Código;Descripción;N1;N2\nOP-101;Rodamiento;NP_SUP;Falla rodamiento/cojinete (bearing box)\nOP-103;Otra cosa;;\n" }
+```
+→ `{ campoId, conversion: [{ campoId, codigo, descripcion, n1?, n2? }], hallazgos: [{ fila, codigo?, texto, bloquea }],
+filas }`. **No firma.** Separado por punto y coma, coma o tabulador; la fila de títulos se salta. La N1 va como clave
+(`NP_SUP`) o como su texto; la N2, como código, como el final del código o como su texto. Bloquea: sin código, código
+repetido, una N1 que no es de las 20 o una N2 que no es de su N1. Sin N1 o sin N2 = **sin equivalencia** (no bloquea;
+nunca se le pone una por defecto). Un comodín de la circular («Orden público - Pendiente detalle», «Otro evento
+natural») se avisa. `404 campo-desconocido`, `403 sin-permiso`, `422 archivo-vacio`.
+
+**La firma:** con `POST /api/configuracion`, el campo opcional **`Config.conversionAnh`** (la lista de arriba, de todos
+los campos). Es técnica (`config:firmar`); `validarConfig` revisa lo mismo y el historial dice «Conversión del árbol de
+La Ceiba: se firma con 5 códigos (2 sin equivalencia)». La planeación sale del prefijo de la N1; el choke y el impacto
+nunca salen de esta tabla. `descripcion` se queda en TRIM (D2).
+
+La vista: `{ campoId, vigente: [FilaConversionAnh & { planeacion?, textoN1?, textoN2? }], sinEquivalencia: [{ codigo,
+descripcion, falta: 'n1' | 'n2' }], total, conEquivalencia, firma?: { version, por, fecha } }`. Sin tabla: `vigente`
+vacío y sin `firma`.
+
+**Por decidir:** aplicar la tabla a una parada (la procedencia `conversion` del árbol) espera que el evento traiga el
+código de la operadora. Quedan fuera de lo necesario: el árbol con padres y la herencia por subárbol, `segun-programa`,
+`precisar` y las versiones de la tabla (P1 §1.10 y §2.3).
+
+## A1 · Compatibilidad con la versión 1
+
+Lo de A1 (experiencia v3, 27-oct-2026). Todo va **al lado** de la versión 1 (`cde8214`): nada de v1
+cambia de forma. El detalle y la tabla corta para el backend, en
+[`docs/backend/CAMBIOS-CONTRATO.md`](docs/backend/CAMBIOS-CONTRATO.md).
+
+### `GET /api/vistas/configuracion/estado?campo=` (AGREGADO, M8)
+
+El estado de la configuración de un campo, el número principal del administrador: «3 de 6 pasos
+listos». Lo arma el motor (`estadoConfiguracion`, `entities/choke-config.ts`) con la configuración
+firmada; la pantalla ya no lo calcula. Lo contestado en un borrador sin firmar es de la pantalla y
+no viaja. Todo es JSON puro (`EstadoConfiguracion`):
+
+```json
+{ "campoId": "ceiba", "listos": 3, "total": 6,
+  "pasos": [{ "paso": "perfil", "nombre": "Perfil del campo", "listo": true, "detalle": "firmado", "corto": "firmado", "firma": "administrador" }, "… 5 más"],
+  "siguiente": "topologia", "falta": "Falta firmar a qué pozos sirve cada equipo.",
+  "frase": "La Ceiba: 3 de 6 pasos listos. Falta firmar a qué pozos sirve cada equipo." }
+```
+- `pasos[].paso`: `perfil`, `tanques` (solo si el campo tiene tanques), `topologia`, `capacidades`,
+  `factor` y `metas` (la firma el gerente: `firma: "gerente"`).
+- `siguiente` y `falta`: el primero que falta, en su orden; ausentes con todo listo («Todo firmado.»).
+- `403 sin-permiso` con un campo ajeno; `404 campo-desconocido` con uno que no existe.
+- Casos: `referencia/configuracion/estado-<campo>.json` (uno por campo, con la configuración de arranque).
+
+### `porConfirmar` en `GET /api/vistas/hoy` (AGREGADO, M6)
+
+`porConfirmar?: { n: number; limite: ISO }`, solo para `rol=sup` y `rol=prod`: las paradas del día
+operacional de hoy que faltan por confirmar para el reporte a la ANH (cada evento una vez) y la hora
+límite (mañana a las 07:00, `HORA_REPORTE`). Es la misma cuenta de la frase del inicio del
+supervisor («Le faltan 4 paradas por confirmar: el reporte sale mañana antes de las 07:00»).
+Ausente en los demás roles. Ejemplo (`referencia/hoy/sup-ceiba.json`):
+`"porConfirmar": { "n": 4, "limite": "2026-10-03T07:00:00-05:00" }`.
+
+### `costoFallaHoy` en `GET /api/vistas/riesgo` (AGREGADO, C1) y el dispositivo sin lectura (C2)
+
+- `Riesgo.costoFalla` volvió a su significado de v1; `Riesgo.costoFallaHoy`, opcional, trae lo que
+  costaría que el equipo fallara hoy («Costo si falla hoy», arriba).
+- `EquipoVivo.dispositivos[].valor`: `null` o `"—"` (v1) para un dispositivo sin lectura; el front
+  lee los dos igual.
+
+### Lo RETIRADO
+
+`RETIRADAS` en [`contrato.ts`](src/shared/api/contrato.ts) lista lo que v1 declaraba ahí o en los
+tipos que viajan, con su fecha, su motivo y su reemplazo: `GET /api/mensajes` (R1), `Usuario.telefono`
+y `Usuario.alertas` (R3), el `telefono` y las `alertas` del cuerpo de la invitación (R3) y
+`Respuesta.canal` (R4). Las rutas del webhook (R2) solo estaban en este documento y quedan arriba,
+marcadas RETIRADO. Nada de eso se borró del contrato: el backend no lo construye y, si ya lo hizo,
+lo puede quitar cuando quiera.
+
+### Campos que ya viajaban y no estaban escritos (F3, F9, F10, F11)
+
+| # | Dónde | Campo (opcional para un backend de v1) |
+|---|---|---|
+| F3 | `/vistas/diferidos` y `/vistas/diferidos/mensual` · `porCampo[]` | `realDia`, `diferidoDia`, `metaProduccionDia` y `metaDiferidoDia`: lo mismo que `real`, `diferido`, `metaProduccion` y `metaDiferido`, por día del período; `diferidoDia` con piso en 0 |
+| F9 | `/vistas/pozos` · cada fila | `diferidoEntero` (Σ de los enteros de sus eventos, la regla de redondeo) y `enteroPorEvento: { [evento]: entero }` |
+| F10 | `salud.medidas[].senal` (bombas y pozos) | `tendencia: { pendiente (unidades/h), ordenada, errorPendiente, r2, n, finH, actual, … }`: el ajuste del vigía (`Tendencia`, `entities/vigia.ts`) |
+| F11 | `GET /api/catalogo` · `campos[c].planta.agua[]` | `miembros: [{ id, etiqueta, equipo?, pie? }]`: varios del mismo tipo (pozos, tanques), con su equipo del catálogo si lo tiene |
+
+### Cómo se comprueba
+
+`npm run verificar:contrato`, sección «A1»: C1, C2, M6, M8 y `RETIRADAS`; después la línea base
+(`scripts/linea-base.mjs`): las rutas, la forma y los textos de la referencia de v1, los campos de
+los tipos que viajan, los códigos de «Error único», las capacidades, el SQL de v1 (y el esquema `v1`
+de `v1-cadena.sql`), lo RETIRADO, el canal fuera de `src` y el registro; y la prueba de la prueba
+(quitar una clave, cambiar un texto o borrar una ruta FALLA sin su entrada en
+`docs/backend/cambios-contrato.json`, y pasa con ella). Un backend contra la referencia de v1:
+`REFERENCIA_DIR=docs/backend/linea-base/v1/referencia node scripts/referencia.mjs comparar --base-url=…`
+(o `--referencia=docs/backend/linea-base/v1/referencia`).

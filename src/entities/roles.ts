@@ -6,7 +6,7 @@ import type { Rol, Capacidad } from './tipos'
  *  diferido, firmar el potencial, cambiar criticidad, ajustar el umbral,
  *  cerrar el mes, suplantar) se quitaron: el libro sale de los equipos y no
  *  se edita, y el cambio de rol del menú es del demo, no del producto.
- *   · causa:declarar        POST /api/paradas/:evento/respuesta (pantalla y WhatsApp)
+ *   · causa:declarar        POST /api/paradas/:evento/respuesta (en pantalla)
  *   · causa:completar       POST /api/analisis/:evento, y también POST /api/paradas/:evento/respuesta
  *                           (incluye a causa:declarar: `puedeHacer` en tipos.ts)
  *   · evidencia:exportar    POST /api/informes
@@ -25,12 +25,19 @@ import type { Rol, Capacidad } from './tipos'
  *   · anh:confirmar         POST /api/anh/paradas/confirmar con varias (en lote): sup y prod, quienes
  *                           firman el día (CONFIRMAN_EN_LOTE, anh-paradas.ts)
  *   · anh:yacimiento        POST /api/anh/paradas/:id/yacimiento: prod y conf (PONEN_YACIMIENTO)
- *  El gerente no tiene ninguna de las tres: no ve el detalle técnico (P1 §1.15). */
+ *  El gerente no tiene ninguna de las tres: no ve el detalle técnico (P1 §1.15).
+ *   · perdidas:registrar    A2 · POST /api/perdidas: oper (la ve), sup y prod (necesario-por-rol §4; entities/perdidas.ts)
+ *   · orden:cerrar          A3 · POST /api/sap/ordenes/:numero/cierre: el técnico (necesario-por-rol §8; entities/orden-cierre.ts)
+ *   · anh:enviar            A3 · POST /api/anh/respuestas: regulatorio (necesario-por-rol §10; entities/anh-respuestas.ts)
+ *  A3 · «Lo que vio» (POST /api/paradas/:evento/vio) pide causa:declarar, y la conversión del
+ *  árbol (POST /api/anh/conversion/importar) config:firmar, como la topología. */
 const sin: Record<Capacidad, boolean> = {
   'causa:declarar': false, 'causa:completar': false, 'evidencia:exportar': false,
   'conector:configurar': false, 'config:firmar': false,
   'metas:firmar': false, 'usuarios:administrar': false, 'sap:aviso': false, 'asignacion:cargar': false,
   'planes:decidir': false, 'anh:clasificar': false, 'anh:confirmar': false, 'anh:yacimiento': false,
+  'perdidas:registrar': false,
+  'orden:cerrar': false, 'anh:enviar': false, // A3
 }
 const con = (...ks: Capacidad[]) => ({ ...sin, ...Object.fromEntries(ks.map(k => [k, true])) })
 
@@ -66,19 +73,19 @@ export const ROLES: Rol[] = [
     foco: 'Explicas el mes en barriles: el factor de asignación en banda, la custodia completa y nada sin identificar.',
     area: 'produccion',
     campos: ['ceiba', 'palmar'],
-    puede: con('evidencia:exportar', 'asignacion:cargar', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento') },
+    puede: con('evidencia:exportar', 'asignacion:cargar', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento', 'perdidas:registrar') },
   { id: 'sup', nivel: 'operacion', nombre: 'Supervisor de operaciones', persona: 'Nelson Ortiz', iniciales: 'NO',
     pantallas: ['hoy', 'plantaViva', 'equipos', 'bombas', 'esp', 'turno', 'causa', 'pozos'], inicio: 'hoy', topologia: 'proceso',
     foco: 'Durante: turno, identificar y orden de cierre. Antes: bombas y lo que hay que vigilar. Si una para, cierras en el orden que menos cuesta.',
     area: 'produccion',
     campos: ['ceiba'],
-    puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar', 'anh:confirmar') },
+    puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar', 'anh:confirmar', 'perdidas:registrar') },
   { id: 'oper', nivel: 'operacion', nombre: 'Operador de campo', persona: 'Jairo Peña', iniciales: 'JP',
     pantallas: ['hoy', 'plantaViva', 'equipos', 'bombas', 'esp', 'causa', 'turno'], inicio: 'hoy', topologia: 'proceso',
     foco: 'Cómo están las bombas, a qué equipo vas, y qué se dañó cuando la señal no lo dice.',
     area: 'produccion',
     campos: ['ceiba'],
-    puede: con('causa:declarar', 'sap:aviso', 'anh:clasificar') },
+    puede: con('causa:declarar', 'sap:aviso', 'anh:clasificar', 'perdidas:registrar') },
   { id: 'jefe', nivel: 'ingenieria', nombre: 'Jefe de mantenimiento', persona: 'Camilo Rueda', iniciales: 'CR',
     // K1 · P-10 (X4 §3.6, punto 2): su Riesgo se fundió en Equipos (debajo de la lista, con «Ojo: no conviene
     // intervenirlas hoy» arriba); su dirección abre Equipos (`FUSIONADA_EN_ROL`, url.ts).
@@ -108,7 +115,7 @@ export const ROLES: Rol[] = [
     foco: 'Abres el equipo y dices qué encontraste cuando la señal no lo dice. De ahí aprende el vigía.',
     area: 'mantenimiento',
     campos: ['ceiba'],
-    puede: con('causa:declarar', 'anh:clasificar') },
+    puede: con('causa:declarar', 'anh:clasificar', 'orden:cerrar') },
   { id: 'cont', nivel: 'decision', nombre: 'Abastecimiento y contratos', persona: 'Paula Gómez', iniciales: 'PG',
     pantallas: ['evidencia'], inicio: 'evidencia', topologia: null,
     foco: 'La línea de tiempo viene del PLC: deja de ser acta y pasa a ser evidencia.',
@@ -120,7 +127,7 @@ export const ROLES: Rol[] = [
     foco: 'Cada parada en el árbol de la circular, con lo que va a la ANH, y la medición viva. Nunca la tocamos.',
     area: 'soporte',
     campos: 'todos',
-    puede: con('evidencia:exportar') },
+    puede: con('evidencia:exportar', 'anh:enviar') },
   { id: 'adm', nivel: 'ingenieria', nombre: 'Administrador de la implementación', persona: 'Hermes Leal', iniciales: 'HL',
     pantallas: ['configuracion', 'filosofia', 'conectores', 'plantaViva', 'planta', 'agua'], inicio: 'configuracion', topologia: 'proceso',
     foco: 'Configuras conectores, umbrales, tanques, respaldos y el programa de paradas. Las metas y los accesos los da el gerente de activo.',

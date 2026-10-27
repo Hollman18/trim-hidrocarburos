@@ -55,7 +55,7 @@ function SelectorPeriodo() {
   return (
     <div ref={contenedor} className="relative max-lg:static">
       <button {...propsBoton} aria-label={`Período: ${enVista}`}
-        className="toque inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] px-3.5 text-[14px] font-semibold shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-[var(--panel2)]">
+        className="toque inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-[8px] bg-[var(--panel)] px-3.5 text-[14px] font-semibold shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-[var(--panel2)]">
         <CalendarDays aria-hidden className="size-4 text-[var(--tinta2)]" />
         {/* También en el teléfono, entero: un ícono solo no dice qué período se mira. */}
         <span>{enVista}</span>
@@ -64,11 +64,11 @@ function SelectorPeriodo() {
 
       {abierto && (
         <div id={idPanel} role="group" aria-label="Período de seguimiento"
-          className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[310px] max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-lg:left-0 max-lg:right-auto">
+          className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[310px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-lg:left-0 max-lg:right-auto">
           <p className="px-2.5 pb-1 pt-1.5 text-[13px] font-semibold text-[var(--tinta2)]">Período</p>
           {PERIODOS.map(o => (
             <button key={o.id} onClick={() => { setPeriodo(o.id); setAbierto(false) }} aria-current={!rango && o.id === periodoId}
-              className="flex min-h-11 w-full cursor-pointer items-start gap-2 rounded-[12px] px-2.5 py-1.5 text-left text-[15px] hover:bg-[var(--panel2)]">
+              className="flex min-h-11 w-full cursor-pointer items-start gap-2 rounded-[8px] px-2.5 py-1.5 text-left text-[15px] hover:bg-[var(--panel2)]">
               <span className="flex-1">
                 {o.nombre}
                 <span className="block text-[13px] text-[var(--tinta2)]">{o.detalle}</span>
@@ -93,7 +93,7 @@ function SelectorPeriodo() {
             </div>
             <button onClick={() => { const r = setRango(desde, hasta); if (r.ok) { setErrorRango(null); setAbierto(false) } else setErrorRango(r.error) }}
               aria-label="Aplicar el rango"
-              className="mt-2 min-h-10 w-full cursor-pointer rounded-full bg-[var(--primario)] px-3 py-2 text-[15px] font-semibold text-[var(--primario-sobre)] hover:opacity-90">
+              className="mt-2 min-h-10 w-full cursor-pointer rounded-[8px] bg-[var(--primario)] px-3 py-2 text-[15px] font-semibold text-[var(--primario-sobre)] hover:opacity-90">
               Aplicar
             </button>
             {errorRango && <p id={idError} role="alert" className="mt-1.5 text-[13px] font-semibold text-[var(--tinta)]">{errorRango}</p>}
@@ -110,7 +110,7 @@ function SelectorPeriodo() {
 }
 
 /** Una sola marca para toda la aplicación: los campos son ficticios (calibrados con fuentes
- *  publicadas) y SAP y WhatsApp se muestran como conectados. Cada pantalla, sin notas de demo.
+ *  publicadas) y SAP se muestra como conectado. Cada pantalla, sin notas de demo.
  *  Solo en el demo (X4 §3.5). En frase, a 13 px y sin espaciado (UI-22; X5 §3.4), en la
  *  línea de las migas sin agrandarla (H14). En el teléfono dice «Demo», con su nombre
  *  entero para el lector (A11). Es un desplegable: Escape y un toque afuera lo cierran. */
@@ -123,20 +123,20 @@ export function MarcaDemo() {
         <span aria-hidden className="max-sm:hidden">Datos de demostración</span><span aria-hidden className="sm:hidden">Demo</span>
       </button>
       {abierto && (
-        <span id={id} role="note" className="absolute left-0 top-[calc(100%+6px)] z-[90] w-[260px] max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-3 text-[14px] font-normal text-[var(--tinta2)] shadow-[var(--sombra-flota)]">
+        <span id={id} role="note" className="absolute left-0 top-[calc(100%+6px)] z-[90] w-[260px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-3 text-[14px] font-normal text-[var(--tinta2)] shadow-[var(--sombra-flota)]">
           <span className="block">Cinco campos ficticios, calibrados con fuentes publicadas.</span>
-          <span className="mt-1 block">SAP y WhatsApp, simulados: ver el contrato con el backend.</span>
+          <span className="mt-1 block">SAP, simulado: ver el contrato con el backend.</span>
         </span>
       )}
     </span>
   )
 }
 
-/** La cabecera de cada vista, como en las imágenes de B (X5 §4.1): las migas
+/** La cabecera de cada vista, con la estructura de D1 (v3): las migas
  *  («Todos mis campos › La Ceiba»), el título con la hora de los datos y, a la
  *  derecha, la franja de condiciones. El período y Exportar se quedan donde la
  *  pantalla los usa (X4 §3.5). La navegación ya no vive aquí: es el panel
- *  lateral (y en el teléfono, la banda índigo con el ☰).
+ *  lateral (y en el teléfono, la banda clara con el ☰).
  *
  *  H6 (X2 N2; X5 §6.10): la franja va SIEMPRE en el mismo lugar —la primera
  *  fila, a la derecha, a la altura de las migas— en el nivel 1, el 2 y el 3

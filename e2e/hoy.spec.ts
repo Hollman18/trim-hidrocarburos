@@ -29,16 +29,17 @@ test('Hoy · supervisor: las tarjetas en su orden, la franja «No arrancar» y l
   const conf = page.locator('main [data-tarea="confirmar"]').first()
   await expect(conf).toContainText('Alarma · P-201B cerró LC-07 y LC-16 · 05:43')
   await expect(conf).toContainText('TRIM las dedujo: en la planta, no planeada.')
-  await expect(page.locator('main [data-tarea="conseguir-causa"]')).toContainText('LC-21 lleva 19,7 h sin causa; se escaló a las 20:20')
+  // Experiencia v3: sin el canal de mensajes no hay escalamiento por mensaje («se escaló a las…» sale con él).
+  await expect(page.locator('main [data-tarea="conseguir-causa"]')).toContainText('LC-21 lleva 19,7 h sin causa')
   await expect(page.locator('main [data-tarea="conseguir-causa"]')).toContainText('Entre las 2: 219 bbl hoy · 355 desde que pararon')
   await expect(page.locator('main [data-tarea="orden"]')).toContainText('Orden 40012056, liberada a Óscar Daza a las 09:10.')
   // La insignia cuenta las tarjetas que piden algo: «Lo más frágil» no suma.
   const piden = await page.locator('main [data-tarea][data-pide="true"]').count()
   f.ok(await insignia(page) === 4 && piden === 4, `la insignia es 4 (con «Decidir 3 planes») y son las tarjetas que piden algo (${piden})`)
   await expect(page.locator('main [data-tarea="aviso"]').first()).toHaveAttribute('data-pide', 'false')
-  // Al lado: el campo ahora, el turno en WhatsApp y el diferido del turno.
+  // Al lado: el campo ahora y el diferido del turno; el registro de mensajes del turno ya no está (experiencia v3).
   await expect(page.locator('main [data-su-campo]')).toContainText('En la planta no pasan 1.665 bbl/d; limitan los pozos.')
-  await expect(page.locator('main [data-whatsapp]')).toContainText('8 mensajes')
+  await expect(page.locator('main [data-whatsapp]')).toHaveCount(0)
   await expect(page.locator('main [data-diferido-turno]')).toContainText('723')
   // La puerta de Hoy del panel pinta la misma insignia (C1, `useInsigniaDeHoy`).
   const enPanel = page.locator('nav span', { hasText: 'por hacer en Hoy' })

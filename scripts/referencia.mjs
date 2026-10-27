@@ -10,6 +10,7 @@
  *   node scripts/referencia.mjs generar                     # escribe referencia/ desde el motor
  *   node scripts/referencia.mjs comprobar                   # el motor de hoy contra referencia/ (deriva)
  *   node scripts/referencia.mjs comparar --base-url=URL     # una API contra referencia/
+ *   node scripts/referencia.mjs comparar --base-url=URL --referencia=docs/backend/linea-base/v1/referencia   # contra la de v1
  *
  * referencia/insumos/ trae lo que entra al cálculo con la forma de los
  * endpoints de insumo y de arranque del contrato (cada archivo es
@@ -57,14 +58,16 @@ import { diferencias, TOL_REL, TOL_ABS } from './referencia-diferencias.mjs'
 // (VITE_FUENTE=http) no lo cambia de fuente; Vite respeta lo que ya trae el proceso.
 process.env.VITE_FUENTE = 'demo'
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
-// REFERENCIA_DIR: generar o comprobar en otra carpeta (una prueba en seco, sin tocar referencia/).
-const DIR = process.env.REFERENCIA_DIR ?? join(RAIZ, 'referencia')
-const DIR_INSUMOS = join(DIR, 'insumos')
 const [modo, ...resto] = process.argv.slice(2)
+// REFERENCIA_DIR o --referencia=: generar, comprobar o comparar en otra carpeta (una prueba en seco, sin
+// tocar referencia/, o la referencia de la versión 1: docs/backend/linea-base/v1/referencia, C18).
+const otraReferencia = resto.find(a => a.startsWith('--referencia='))?.slice('--referencia='.length)
+const DIR = otraReferencia ? resolve(otraReferencia) : process.env.REFERENCIA_DIR ?? join(RAIZ, 'referencia')
+const DIR_INSUMOS = join(DIR, 'insumos')
 const baseUrl = resto.find(a => a.startsWith('--base-url='))?.slice('--base-url='.length)
 // Un backend con sesión (CONTRATO.md, «Sesión»): sin credencial, todo da 401.
 const token = resto.find(a => a.startsWith('--token='))?.slice('--token='.length) ?? process.env.TRIM_TOKEN
@@ -281,10 +284,27 @@ const MESES_ANH = [
 function escribirEnElMotor(M, paso) {
   const q = { rolId: paso.rol }
   if (paso.endpoint === '/api/anh/paradas/confirmar') return M.E.confirmarParadasAnh(q, paso.cuerpo)
+  // A3 · Las acciones que faltan: «Contestar» en 1 toque (la parte y lo que vio), el cierre de la
+  // orden, la respuesta de la ANH y la conversión del árbol.
+  const a3 = escribirA3(M, q, paso)
+  if (a3) return a3
+  // A2 · El registro de pérdidas.
+  if (paso.endpoint === '/api/perdidas') return M.PER.registrarPerdida(q, paso.cuerpo)
   const m = /^\/api\/anh\/paradas\/([^/]+)\/(clasificacion|yacimiento|respuesta|revision)$/.exec(paso.endpoint)
   if (!m) throw new Error(`escritura sin servidor en el demo: ${paso.endpoint}`)
   const f = { clasificacion: M.E.clasificarParada, yacimiento: M.E.declararYacimientoAnh, respuesta: M.E.responderPreguntaAnh, revision: M.E.revisarParadaAnh }[m[2]]
   return f(q, decodeURIComponent(m[1]), paso.cuerpo)
+}
+/** A3 · Las escrituras de las acciones que faltan, en el servidor del demo; undefined si la ruta no es de A3. */
+function escribirA3(M, q, paso) {
+  const e = paso.endpoint, c = paso.cuerpo
+  if (e === '/api/anh/respuestas') return M.E.registrarRespuestaAnh(q, c)
+  if (e === '/api/anh/conversion/importar') return M.E.importarConversion(q, c)
+  let m = /^\/api\/paradas\/([^/]+)\/(respuesta|vio)$/.exec(e)
+  if (m) return m[2] === 'vio' ? M.E.responderLoQueVio(q, decodeURIComponent(m[1]), c) : M.E.responderParada(q, c)
+  m = /^\/api\/sap\/ordenes\/([^/]+)\/cierre$/.exec(e)
+  if (m) return M.E.cerrarOrden(q, decodeURIComponent(m[1]), c)
+  return undefined
 }
 /** Lo que se compara de una respuesta: el HTTP y, en un rechazo, el código del contrato. */
 const resultadoDe = r => (r.ok ? { estado: 200 } : { estado: r.estado ?? 0, ...(r.codigo ? { codigo: r.codigo } : {}) })
@@ -297,7 +317,8 @@ const resultadoDe = r => (r.ok ? { estado: 200 } : { estado: r.estado ?? 0, ...(
  *  arranque entre caso y caso, cada uno empieza donde lo dejaría el demo. */
 async function escriturasDelMotor(M) {
   const { SES, ARB, CAT2, L, AHORA } = M
-  const foto = { ...SES.sesion() }
+  // `cambiarSesion` mezcla: lo que el arranque no trae (lo escrito por A2 y A3) se vacía a propósito entre casos y al final.
+  const foto = { cierresOrden: undefined, respuestasAnh: undefined, perdidas: undefined, ...SES.sesion() }
   const cal = L.calendario(), cerrado = cal.filter(L.mesCerrado).at(-1)
   const ver = id => ARB.pedirParadaAnh(id, SES.sesion().ctx, SES.sesion().clasificacionesAnh)
   const cadena = id => ARB.cadenaVista(ver(id).clasificacion)
@@ -371,6 +392,8 @@ async function escriturasDelMotor(M) {
     C('409-lote-sin-pasos', 'El supervisor confirma en lote dos paradas con la misma cadena; el mismo lote otra vez no sube ningún paso (C-19)',
       paso('sup', '/api/anh/paradas/confirmar', () => ({ ids: lote.map(p => p.id), cadena: cadena(lote[0].id) })),
       paso('sup', '/api/anh/paradas/confirmar', () => ({ ids: lote.map(p => p.id), cadena: cadena(lote[0].id) }))),
+    // A3 · Las acciones que faltan (los rechazos de cada escritura nueva, con su HTTP y su código).
+    ...casosA3(M, foto, C, paso),
   ]
   const casos = []
   try {
@@ -390,9 +413,80 @@ async function escriturasDelMotor(M) {
   return casos
 }
 
+/** A3 · Los casos de las escrituras nuevas. Cada uno toca lo suyo: los eventos de la
+ *  parte y lo que vio, la orden de K-101 (solo rechazos: no se cierra), los días de la
+ *  respuesta de la ANH y la carga de la conversión (que no escribe). */
+function casosA3(M, foto, C, paso) {
+  const preguntas = M.DIF.pedirPreguntas(['ceiba'], foto.ctx).filter(p => p.pide)
+  const conCat = p => M.EQ.pedirCatalogoDeDanos(p.campoId, p.equipo)
+  const bomba = preguntas.find(p => p.sobre === 'bomba' && conCat(p)), esp = preguntas.find(p => conCat(p)?.clase === 'bomba-electrosumergible')
+  const sinCat = preguntas.find(p => !conCat(p))
+  if (!bomba || !esp || !sinCat) throw new Error('el demo no trae en La Ceiba una bomba, una electrosumergible y un pozo sin catálogo por identificar')
+  const ordenes = M.SAP.pedirOrdenesSap(M.CAMPOS.map(c => c.id), foto.ctx)
+  const abierta = ordenes.find(o => o.campoId === 'ceiba' && ['REL', 'PCNF'].includes(o.estado) && o.tecnico === 'tec')
+  const cerrada = ordenes.find(o => o.campoId === 'ceiba' && o.estado === 'TECO' && o.tecnico === 'tec')
+  const ajena = ordenes.find(o => o.campoId !== 'ceiba')
+  if (!abierta || !cerrada || !ajena) throw new Error('el demo no trae una orden abierta y una cerrada del técnico en La Ceiba, y una de otro campo')
+  const vio = ev => `/api/paradas/${encodeURIComponent(ev)}/vio`, resp = ev => `/api/paradas/${encodeURIComponent(ev)}/respuesta`
+  const cierre = n => `/api/sap/ordenes/${encodeURIComponent(n)}/cierre`
+  const trabajo = { actividad: 'ajuste', inicio: '2026-10-02T10:00:00-05:00', fin: '2026-10-02T12:00:00-05:00' }
+  const parteDe = p => conCat(p).partes[0].id
+  return [
+    C('400-vio-peticion-invalida', '«Lo que vio» con un número donde va el modo', paso('oper', vio(bomba.id), { modo: 1 })),
+    C('403-vio-sin-capacidad', 'El gerente (sin causa:declarar) dice lo que vio', paso('ger', vio(bomba.id), { modo: 'ELP' })),
+    C('404-vio-no-encontrado', '«Lo que vio» de una parada que no está en el registro del PLC', paso('oper', vio('EV-NO-EXISTE'), { modo: 'ELP' })),
+    C('422-vio-sin-parte', '«Lo que vio» de una parada que nadie ha contestado: va con la parte', paso('oper', vio(sinCat.id), { modo: 'ELP' })),
+    C('409-vio-ya-dicho', 'El operador contesta la parte en 1 toque y lo que vio; el técnico dice otra cosa después: lo que vio se dice una vez (D1)',
+      paso('oper', resp(bomba.id), { evento: bomba.id, campoId: bomba.campoId, equipo: bomba.equipo, texto: '', parte: parteDe(bomba) }),
+      paso('oper', vio(bomba.id), { modo: 'ELP' }),
+      paso('tec', vio(bomba.id), { modo: 'VIB' })),
+    C('422-vio-modo-ajeno', 'El operador contesta la parte de una electrosumergible en 1 toque; lo que vio no es de esa parte',
+      paso('oper', resp(esp.id), { evento: esp.id, campoId: esp.campoId, equipo: esp.equipo, texto: '', parte: parteDe(esp) }),
+      paso('oper', vio(esp.id), { modo: 'NO-EXISTE' })),
+    C('400-cierre-peticion-invalida', 'El cierre con las lecturas en un texto', paso('tec', cierre(abierta.numero), { ...trabajo, lecturas: 'PT-1011=118' })),
+    C('403-cierre-sin-capacidad', 'El operador (sin orden:cerrar) cierra una orden', paso('oper', cierre(abierta.numero), trabajo)),
+    C('404-cierre-no-encontrado', 'El técnico cierra una orden que no está en SAP', paso('tec', cierre('00000000'), trabajo)),
+    C('403-cierre-sin-permiso', 'El técnico (solo La Ceiba) cierra una orden de otro campo', paso('tec', cierre(ajena.numero), trabajo)),
+    C('409-cierre-ya-cerrada', 'El técnico cierra una orden que SAP ya tiene cerrada (TECO)', paso('tec', cierre(cerrada.numero), trabajo)),
+    C('422-cierre-parte-ajena', `El técnico cierra la orden de ${abierta.equipo}, que no tiene partes en el catálogo, con una parte`, paso('tec', cierre(abierta.numero), { ...trabajo, parte: 'sello' })),
+    C('422-cierre-horas-invalidas', 'El técnico cierra con la hora de fin antes de la de inicio', paso('tec', cierre(abierta.numero), { ...trabajo, inicio: trabajo.fin, fin: trabajo.inicio })),
+    C('400-respuesta-anh-peticion-invalida', 'La respuesta de la ANH con un número donde va el estado', paso('reg', '/api/anh/respuestas', { campoId: 'ceiba', dia: '2026-10-01', estado: 1, recibida: '2026-10-02T07:20:00-05:00' })),
+    C('403-respuesta-anh-sin-capacidad', 'Producción (sin anh:enviar) registra la respuesta de la ANH', paso('prod', '/api/anh/respuestas', { campoId: 'ceiba', dia: '2026-10-01', estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00' })),
+    C('404-respuesta-anh-campo-desconocido', 'La respuesta de la ANH de un campo que no está en el registro', paso('reg', '/api/anh/respuestas', { campoId: 'no-existe', dia: '2026-10-01', estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00' })),
+    C('422-respuesta-anh-falta-motivo', 'Un rechazo de la ANH sin su motivo de la lista', paso('reg', '/api/anh/respuestas', { campoId: 'ceiba', dia: '2026-10-01', estado: 'rechazado', recibida: '2026-10-02T07:20:00-05:00' })),
+    C('409-respuesta-anh-ya-aceptada', 'La ANH acepta el reporte de un día; después se registra un rechazo del mismo día',
+      paso('reg', '/api/anh/respuestas', { campoId: 'ceiba', dia: '2026-09-30', estado: 'aceptado', recibida: '2026-10-01T06:50:00-05:00' }),
+      paso('reg', '/api/anh/respuestas', { campoId: 'ceiba', dia: '2026-09-30', estado: 'rechazado', motivo: 'V-07', recibida: '2026-10-01T07:20:00-05:00' })),
+    C('400-conversion-peticion-invalida', 'La conversión del árbol con un número donde va el texto', paso('adm', '/api/anh/conversion/importar', { campo: 'ceiba', texto: 3 })),
+    C('403-conversion-sin-capacidad', 'Producción (sin config:firmar) carga la conversión del árbol', paso('prod', '/api/anh/conversion/importar', { campo: 'ceiba', texto: 'OP-1;Falla;NP_SUB;Falla ESP' })),
+    C('404-conversion-campo-desconocido', 'La conversión del árbol de un campo que no está en el registro', paso('adm', '/api/anh/conversion/importar', { campo: 'no-existe', texto: 'OP-1;Falla;NP_SUB;Falla ESP' })),
+    C('422-conversion-archivo-vacio', 'La conversión del árbol con el archivo vacío', paso('adm', '/api/anh/conversion/importar', { campo: 'ceiba', texto: '  ' })),
+    // A2 · POST /api/perdidas: solo rechazos que no dependen de los ids de otro registro (el consecutivo es del servidor).
+    ...perdidasRechazadas(C, paso),
+  ]
+}
+
+/** A2 · Los rechazos de `POST /api/perdidas`, con el HTTP y el código del contrato (entities/perdidas.ts, `aceptarPerdida`). */
+function perdidasRechazadas(C, paso) {
+  const p = { campoId: 'ceiba', tipo: 'pitera', tramo: 'pozo', donde: 'Línea de flujo de LC-07', inicio: '2026-10-02T09:10:00-05:00', fin: '2026-10-02T09:40:00-05:00',
+    volumen: { bbl: 3.5, fuente: 'estimado', como: 'Charco de 3 × 2 m, de unos 2 cm' } }
+  const r = (rol, cuerpo) => paso(rol, '/api/perdidas', cuerpo)
+  return [
+    C('400-perdida-peticion-invalida', 'Una pérdida con el volumen en texto', r('oper', { ...p, volumen: { ...p.volumen, bbl: '3,5' } })),
+    C('403-perdida-sin-capacidad', 'El técnico (sin perdidas:registrar) registra una pérdida', r('tec', p)),
+    C('403-perdida-campo-ajeno', 'El operador (solo La Ceiba) registra una pérdida en Morichal Norte', r('oper', { ...p, campoId: 'morichal' })),
+    C('404-perdida-campo-desconocido', 'Una pérdida de un campo que no está en el registro', r('oper', { ...p, campoId: 'no-existe' })),
+    C('422-perdida-sin-volumen', 'Una pérdida sin barriles ni gas', r('oper', { ...p, volumen: { ...p.volumen, bbl: 0 } })),
+    C('422-perdida-sin-como', 'Una pérdida sin decir cómo se estimó el volumen', r('oper', { ...p, volumen: { ...p.volumen, como: 'ok' } })),
+    C('422-perdida-en-el-futuro', 'Una pérdida que empieza mañana', r('sup', { ...p, inicio: '2026-10-03T09:10:00-05:00', fin: null })),
+    C('404-perdida-desconocida', 'Corregir una pérdida que no está registrada', r('prod', { ...p, corrige: 'PER-ceiba-9999', motivo: 'Se aforó el tanque' })),
+  ]
+}
+
 /** Vuelve a mandar los pasos guardados al servidor del demo, desde el arranque: lo que da hoy. */
 async function escriturasEnElMotor(M, casos) {
-  const foto = { ...M.SES.sesion() }
+  // `cambiarSesion` mezcla: lo que el arranque no trae (lo escrito por A2 y A3) se vacía a propósito entre casos y al final.
+  const foto = { cierresOrden: undefined, respuestasAnh: undefined, perdidas: undefined, ...M.SES.sesion() }
   try {
     const out = []
     for (const c of casos) {
@@ -440,6 +534,10 @@ async function conMotor(trabajo, insumosDe) {
       PVA: await cargar('/src/shared/api/plantaViva.ts'), HOYA: await cargar('/src/shared/api/hoy.ts'),
       RSA: await cargar('/src/shared/api/resultados.ts'), USR: await cargar('/src/entities/usuarios.ts'),
       EQT: await cargar('/src/shared/api/equiposTecnico.ts'), // C4 · Equipos (la lista y el nivel 3)
+      BAL: await cargar('/src/shared/api/balance.ts'), PER: await cargar('/src/shared/api/perdidas.ts'), // A2 · Balance y pérdidas
+      AC: await cargar('/src/shared/api/acciones.ts'), // A3 · Las acciones que faltan
+      CE: await cargar('/src/shared/api/configuracionEstado.ts'), // A1 · M8: el estado de la configuración
+      RGA: await cargar('/src/shared/api/regulatorio.ts'), // A1 · E15: el reporte a la ANH (no tenía caso)
     })
     M.ctx = M.L.contextoInicial()
     return await trabajo(M)
@@ -490,6 +588,8 @@ function casosDe(M, escenarios) {
     // El árbol de paradas de la ANH: las filas del mes, con su clasificación propuesta, y su calidad (sin nada dicho por una persona).
     casos.push(caso(`anh/paradas-${nombre}-${ultimo.mes}`, `Paradas ANH (paradas_pozo) de ${nombre}, ${ultimo.mes}, con la clasificación que propone TRIM`, C.PARADAS_ANH, q, ARB.pedirParadasAnh(q, ctx, {})))
     casos.push(caso(`anh/calidad-${nombre}-${ultimo.mes}`, `Calidad de la clasificación ANH de ${nombre}, ${ultimo.mes}`, C.CALIDAD_ANH, q, ARB.pedirCalidadAnh(q, ctx, {})))
+    // A1 · E15: el reporte a la ANH del período (¿se puede publicar?, las paradas sin causa, quién las debe y la hora límite), sin nada dicho.
+    casos.push(caso(`anh/reporte-${nombre}-${ultimo.mes}`, `El reporte a la ANH de ${nombre}, ${ultimo.mes}: ¿se puede publicar?, las paradas sin causa y quién las debe`, C.REPORTE_ANH, q, M.RGA.pedirReporteAnh(q, ctx, {})))
     // El árbol de pérdidas del choke: cada barril diferido de su tramo y de los pasos del árbol, en los
     // tres órdenes (con las cadenas de la ANH en la circular), sin nada dicho por una persona.
     for (const [orden, como] of [['gestion', 'de gestión: tramo → planeada o no → causa → detalle → equipo → parte'],
@@ -542,6 +642,23 @@ function casosDe(M, escenarios) {
     casos.push(caso(`agua-choke/${c}`, `La tubería del agua de ${c} a esta hora`, C.TUBERIA_AGUA, { campo: c }, CHK.pedirTuberiaAgua(c, ctx, [CONF.versionInicial()])))
     // Lo que rige en las capacidades, lo que la revisión necesita del pasado y lo que encuentra (C-29).
     casos.push(caso(`choke/capacidades-${c}`, `Las capacidades de ${c}: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión`, C.CAPACIDADES, { campo: c }, CHK.pedirCapacidades(c, ctx, [CONF.versionInicial()])))
+    // A1 · M8: «N de M pasos listos» de la configuración del campo, con la configuración de arranque (nada firmado).
+    casos.push(caso(`configuracion/estado-${c}`, `El estado de la configuración de ${c}: cada paso, listo o no, y lo primero que falta`, C.ESTADO_CONFIGURACION, { campo: c }, M.CE.pedirEstadoConfiguracion(c, ctx)))
+  }
+  // A3 · Las acciones que faltan, con el arranque (sin nada escrito): el tiempo fuera en sus 5 tramos
+  // (`tramos` de /vistas/relojes: detección y administrativo de los avisos y las órdenes, la reparación de
+  // las horas de SAP, la logística y el arranque sin dato hasta el cierre en el teléfono), y la respuesta de
+  // la ANH y la conversión del árbol, vacías (la pantalla dice «sin respuesta registrada» y «sin tabla»).
+  {
+    const historia = { desde: new Date(L.calendario()[0].desde), hasta: new Date(L.calendario().at(-1).hasta) }
+    for (const grupo of [['ceiba'], todos]) {
+      const nombre = grupo.length === 1 ? grupo[0] : 'portafolio'
+      const qh = { campos: grupo, ...historia }
+      casos.push(caso(`sap/relojes-${nombre}-historia`, `Los relojes de las fallas cerradas de ${nombre} en toda la historia, con el tiempo fuera en sus 5 tramos`, C.RELOJES, qh, SAP.pedirRelojes(grupo, qh.desde, qh.hasta, ctx)))
+    }
+    const q = { campos: ['ceiba'], ...rango(L.calendario().at(-1)) }
+    casos.push(caso(`anh/respuestas-ceiba-${L.calendario().at(-1).mes}`, 'Las respuestas de la ANH de La Ceiba en el mes en curso, sin ninguna registrada', C.RESPUESTAS_ANH, q, M.AC.pedirRespuestasAnh(q, [])))
+    casos.push(caso('anh/conversion-ceiba', 'La conversión del árbol de La Ceiba, sin tabla firmada', C.CONVERSION_ANH, { campo: 'ceiba' }, M.AC.pedirConversionAnh('ceiba', ctx, [CONF.versionInicial()])))
   }
   // C5 · Las vistas nuevas de la experiencia v2, con la configuración de arranque y sin nada dicho por una persona:
   // La planta viva por momento (C2), Hoy por rol (C3), lo de hoy de cada equipo (de donde sale la franja de
@@ -570,6 +687,30 @@ function casosDe(M, escenarios) {
     for (const [c, e] of [['ceiba', 'P-201B'], ['ceiba', 'P-201A'], ['morichal', 'P-201B'], ['ceiba', 'K-101'], ['morichal', 'MN-07'], ['ceiba', 'LC-21']])
       casos.push(caso(`equipos/nivel3-${c}-${e}`, `El nivel 3 de ${e} en ${c} (C4): la cifra, el bloqueo, sus señales, su tren de agua y su historia`, C.NIVEL_EQUIPO, { campo: c, equipo: e },
         M.EQT.pedirNivelEquipo(c, e, ctx, v0) ?? null, conEsp([c])))
+  }
+  // A2 · El balance del choke (producido · diferido · perdido, por tramo y con su árbol), el registro de pérdidas
+  // (vacío en el demo: «sin registro», nunca 0), la jornada del supervisor, «¿Está funcionando?» y las fallas por mes.
+  // Con la configuración de arranque, sin nada dicho por una persona y sin pérdidas registradas.
+  {
+    const v0 = [CONF.versionInicial()]
+    const curso = rango(L.calendario().at(-1))
+    for (const [nombre, grupo] of [['ceiba', ['ceiba']], ['portafolio', todos]]) {
+      for (const [mes, r] of [[ultimo.mes, rango(ultimo)], [L.calendario().at(-1).mes, curso]]) {
+        const q = { campos: grupo, ...r }
+        casos.push(caso(`balance/${nombre}-${mes}`, `El balance de ${nombre}, ${mes}: producido · diferido · perdido por tramo, con el árbol de cada tramo`, C.BALANCE, q, M.BAL.pedirBalance(q, ctx, {}, [])))
+        casos.push(caso(`perdidas/${nombre}-${mes}`, `El registro de pérdidas de ${nombre}, ${mes}: sin registro (null, nunca 0)`, C.PERDIDAS, q, M.PER.pedirPerdidas(q, [])))
+      }
+      casos.push(caso(`efectividad/${nombre}`, `«¿Está funcionando?» en ${nombre}: antes de TRIM, este mes contra la meta y lo ganado, por tramo`, C.EFECTIVIDAD, { campos: grupo },
+        M.BAL.pedirEfectividad(grupo, ctx, v0, {}), conEsp(grupo)))
+      casos.push(caso(`fallas/${nombre}`, `Las fallas de los equipos críticos de ${nombre}, mes a mes (sin disparos)`, C.FALLAS_MENSUAL, { campos: grupo }, M.BAL.pedirFallasMensual(grupo, ctx)))
+    }
+    for (const jornada of ['actual', 'anterior']) {
+      casos.push(caso(`balance/ceiba-jornada-${jornada}`, `El balance de La Ceiba en la jornada ${jornada} (el cambio de turno por defecto, 06:00 y 18:00)`, C.BALANCE, { campos: ['ceiba'], jornada },
+        M.BAL.pedirBalance({ campos: ['ceiba'], jornada }, ctx, {}, [])))
+      for (const c of ['ceiba', 'morichal'])
+        casos.push(caso(`jornada/${c}-${jornada}`, `«Mi turno» en ${c}, jornada ${jornada}: las paradas con su hora de inicio y fin, por confirmar y lo diferido`, C.JORNADA, { campo: c, jornada },
+          M.BAL.pedirJornada({ campo: c, jornada }, ctx, {}, [])))
+    }
   }
   // Los escenarios (QA-A-07; C-29; C-08 punto 4): la misma cuenta con otra configuración firmada o con lo que
   // dijeron las personas. El contexto de un escenario de configuración es su última versión, como en un backend.

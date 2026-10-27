@@ -83,7 +83,7 @@ export function Conectores() {
     finally { setOcupado(false) }
   }
 
-  // SAP y WhatsApp no dependen del registro de los bordes: se muestran aunque este no responda.
+  // SAP no depende del registro de los bordes: se muestran aunque este no responda.
   const sistemas = <Integraciones campoId={campoId} />
   // En el demo construido no hay quién sirva el registro: se dice qué es y adónde ir, sin inventar bordes ni tags (A24).
   if (sinServicio) return (

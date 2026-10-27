@@ -30,7 +30,7 @@ Hay cuatro familias de hechos que entran:
 | `codigo` | Código del controlador (tabla abajo) | `CodigoControlador` | PLC |
 | `senal` | Tag y texto para leer, p. ej. `POC-LC21 · código CMD` | texto | PLC |
 | `hz` | Solo con `HZ`: frecuencia a la que quedó | Hz | variador |
-| `respuesta` | (opcional) respuesta de un operario que vino pegada al evento | `Respuesta` | escritura de pantalla/WhatsApp |
+| `respuesta` | (opcional) respuesta de un operario que vino pegada al evento | `Respuesta` | escritura de pantalla (WhatsApp: **RETIRADO (27-oct-2026)**) |
 
 **Códigos del controlador** (`CODIGO`, `pozos.ts:46-57`):
 

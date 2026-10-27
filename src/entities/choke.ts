@@ -27,7 +27,7 @@
  *  «choke»: se dice «¿Dónde se trabó?», «Qué limita hoy» y «Si falla hoy» (U2 §1).
  */
 import type { Causa, Contexto, TipoCausa } from './causa-senal'
-import type { CAUSAS_POZO } from './mensajes'
+import type { CAUSAS_POZO } from './causas-sugeridas'
 import { perfilDe, configEn, type Config, type ParadaProgramada, type Version } from './configuracion'
 import {
   pozoDe, pozosDe, servicioPorId, serviciosDeCampo, eventosDeCampo, pruebaEn,

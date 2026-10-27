@@ -1,0 +1,1 @@
+{"id":"riesgo/zarza","descripcion":"Riesgo de zarza a esta hora (vigía)","endpoint":"/api/vistas/riesgo?campos=zarza","esperado":{"datos":[],"refs":{}}}

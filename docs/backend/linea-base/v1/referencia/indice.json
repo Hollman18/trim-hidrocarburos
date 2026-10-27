@@ -1,0 +1,753 @@
+{
+ "generado": "node scripts/referencia.mjs generar",
+ "tolerancia": {
+  "relativa": 0.000001,
+  "absoluta": 0.005
+ },
+ "regla": "la respuesta contiene lo esperado; fechas como instante; el orden de las listas importa",
+ "insumos": [
+  {
+   "archivo": "arranque/campos.json",
+   "endpoint": "/api/campos"
+  },
+  {
+   "archivo": "arranque/catalogo.json",
+   "endpoint": "/api/catalogo"
+  },
+  {
+   "archivo": "arranque/configuracion-historial.json",
+   "endpoint": "/api/configuracion/historial"
+  },
+  {
+   "archivo": "arranque/paradas-respuestas.json",
+   "endpoint": "/api/paradas/respuestas"
+  },
+  {
+   "archivo": "ceiba/pozos.json",
+   "endpoint": "/api/campos/ceiba/pozos"
+  },
+  {
+   "archivo": "ceiba/pozos-eventos.json",
+   "endpoint": "/api/campos/ceiba/pozos/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "ceiba/servicios-eventos.json",
+   "endpoint": "/api/campos/ceiba/servicios/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "ceiba/produccion-diaria.json",
+   "endpoint": "/api/campos/ceiba/produccion-diaria?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "ceiba/bombas/P-201B-paradas.json",
+   "endpoint": "/api/campos/ceiba/bombas/P-201B/paradas?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "ceiba/electrosumergibles.json",
+   "endpoint": null
+  },
+  {
+   "archivo": "morichal/pozos.json",
+   "endpoint": "/api/campos/morichal/pozos"
+  },
+  {
+   "archivo": "morichal/pozos-eventos.json",
+   "endpoint": "/api/campos/morichal/pozos/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "morichal/servicios-eventos.json",
+   "endpoint": "/api/campos/morichal/servicios/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "morichal/produccion-diaria.json",
+   "endpoint": "/api/campos/morichal/produccion-diaria?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "morichal/bombas/P-201B-paradas.json",
+   "endpoint": "/api/campos/morichal/bombas/P-201B/paradas?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "morichal/bombas/MPP-301-paradas.json",
+   "endpoint": "/api/campos/morichal/bombas/MPP-301/paradas?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "morichal/electrosumergibles.json",
+   "endpoint": null
+  },
+  {
+   "archivo": "guacamayo/pozos.json",
+   "endpoint": "/api/campos/guacamayo/pozos"
+  },
+  {
+   "archivo": "guacamayo/pozos-eventos.json",
+   "endpoint": "/api/campos/guacamayo/pozos/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "guacamayo/servicios-eventos.json",
+   "endpoint": "/api/campos/guacamayo/servicios/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "guacamayo/produccion-diaria.json",
+   "endpoint": "/api/campos/guacamayo/produccion-diaria?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "guacamayo/bombas/P-201B-paradas.json",
+   "endpoint": "/api/campos/guacamayo/bombas/P-201B/paradas?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "guacamayo/electrosumergibles.json",
+   "endpoint": null
+  },
+  {
+   "archivo": "palmar/pozos.json",
+   "endpoint": "/api/campos/palmar/pozos"
+  },
+  {
+   "archivo": "palmar/pozos-eventos.json",
+   "endpoint": "/api/campos/palmar/pozos/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "palmar/servicios-eventos.json",
+   "endpoint": "/api/campos/palmar/servicios/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "palmar/produccion-diaria.json",
+   "endpoint": "/api/campos/palmar/produccion-diaria?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "zarza/pozos.json",
+   "endpoint": "/api/campos/zarza/pozos"
+  },
+  {
+   "archivo": "zarza/pozos-eventos.json",
+   "endpoint": "/api/campos/zarza/pozos/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "zarza/servicios-eventos.json",
+   "endpoint": "/api/campos/zarza/servicios/eventos?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  },
+  {
+   "archivo": "zarza/produccion-diaria.json",
+   "endpoint": "/api/campos/zarza/produccion-diaria?desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00"
+  }
+ ],
+ "casos": [
+  {
+   "id": "diferidos/ceiba-2026-09",
+   "endpoint": "/api/vistas/diferidos?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Libro de ceiba, 2026-09 (último mes cerrado)"
+  },
+  {
+   "id": "mensual/ceiba",
+   "endpoint": "/api/vistas/diferidos/mensual?campos=ceiba",
+   "descripcion": "Serie mensual de ceiba (las cifras de cada mes, sin sus tramos)"
+  },
+  {
+   "id": "diaria/ceiba-2026-09",
+   "endpoint": "/api/vistas/produccion/diaria?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Producción día a día de ceiba, 2026-09"
+  },
+  {
+   "id": "riesgo/ceiba",
+   "endpoint": "/api/vistas/riesgo?campos=ceiba",
+   "descripcion": "Riesgo de ceiba a esta hora (vigía)",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "aciertos/ceiba",
+   "endpoint": "/api/vistas/predicciones?campos=ceiba",
+   "descripcion": "Registro de predicciones y fallas de ceiba (aciertos)",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "sap/avisos-ceiba",
+   "endpoint": "/api/sap/avisos?campos=ceiba",
+   "descripcion": "Avisos SAP de ceiba"
+  },
+  {
+   "id": "sap/ordenes-ceiba",
+   "endpoint": "/api/sap/ordenes?campos=ceiba",
+   "descripcion": "Órdenes SAP de ceiba"
+  },
+  {
+   "id": "diferidos/morichal-2026-09",
+   "endpoint": "/api/vistas/diferidos?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Libro de morichal, 2026-09 (último mes cerrado)"
+  },
+  {
+   "id": "mensual/morichal",
+   "endpoint": "/api/vistas/diferidos/mensual?campos=morichal",
+   "descripcion": "Serie mensual de morichal (las cifras de cada mes, sin sus tramos)"
+  },
+  {
+   "id": "diaria/morichal-2026-09",
+   "endpoint": "/api/vistas/produccion/diaria?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Producción día a día de morichal, 2026-09"
+  },
+  {
+   "id": "riesgo/morichal",
+   "endpoint": "/api/vistas/riesgo?campos=morichal",
+   "descripcion": "Riesgo de morichal a esta hora (vigía)",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "aciertos/morichal",
+   "endpoint": "/api/vistas/predicciones?campos=morichal",
+   "descripcion": "Registro de predicciones y fallas de morichal (aciertos)",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "sap/avisos-morichal",
+   "endpoint": "/api/sap/avisos?campos=morichal",
+   "descripcion": "Avisos SAP de morichal"
+  },
+  {
+   "id": "sap/ordenes-morichal",
+   "endpoint": "/api/sap/ordenes?campos=morichal",
+   "descripcion": "Órdenes SAP de morichal"
+  },
+  {
+   "id": "diferidos/guacamayo-2026-09",
+   "endpoint": "/api/vistas/diferidos?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Libro de guacamayo, 2026-09 (último mes cerrado)"
+  },
+  {
+   "id": "mensual/guacamayo",
+   "endpoint": "/api/vistas/diferidos/mensual?campos=guacamayo",
+   "descripcion": "Serie mensual de guacamayo (las cifras de cada mes, sin sus tramos)"
+  },
+  {
+   "id": "diaria/guacamayo-2026-09",
+   "endpoint": "/api/vistas/produccion/diaria?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Producción día a día de guacamayo, 2026-09"
+  },
+  {
+   "id": "riesgo/guacamayo",
+   "endpoint": "/api/vistas/riesgo?campos=guacamayo",
+   "descripcion": "Riesgo de guacamayo a esta hora (vigía)",
+   "requiere": [
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "aciertos/guacamayo",
+   "endpoint": "/api/vistas/predicciones?campos=guacamayo",
+   "descripcion": "Registro de predicciones y fallas de guacamayo (aciertos)",
+   "requiere": [
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "sap/avisos-guacamayo",
+   "endpoint": "/api/sap/avisos?campos=guacamayo",
+   "descripcion": "Avisos SAP de guacamayo"
+  },
+  {
+   "id": "sap/ordenes-guacamayo",
+   "endpoint": "/api/sap/ordenes?campos=guacamayo",
+   "descripcion": "Órdenes SAP de guacamayo"
+  },
+  {
+   "id": "diferidos/palmar-2026-09",
+   "endpoint": "/api/vistas/diferidos?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Libro de palmar, 2026-09 (último mes cerrado)"
+  },
+  {
+   "id": "mensual/palmar",
+   "endpoint": "/api/vistas/diferidos/mensual?campos=palmar",
+   "descripcion": "Serie mensual de palmar (las cifras de cada mes, sin sus tramos)"
+  },
+  {
+   "id": "diaria/palmar-2026-09",
+   "endpoint": "/api/vistas/produccion/diaria?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Producción día a día de palmar, 2026-09"
+  },
+  {
+   "id": "riesgo/palmar",
+   "endpoint": "/api/vistas/riesgo?campos=palmar",
+   "descripcion": "Riesgo de palmar a esta hora (vigía)"
+  },
+  {
+   "id": "aciertos/palmar",
+   "endpoint": "/api/vistas/predicciones?campos=palmar",
+   "descripcion": "Registro de predicciones y fallas de palmar (aciertos)"
+  },
+  {
+   "id": "sap/avisos-palmar",
+   "endpoint": "/api/sap/avisos?campos=palmar",
+   "descripcion": "Avisos SAP de palmar"
+  },
+  {
+   "id": "sap/ordenes-palmar",
+   "endpoint": "/api/sap/ordenes?campos=palmar",
+   "descripcion": "Órdenes SAP de palmar"
+  },
+  {
+   "id": "diferidos/zarza-2026-09",
+   "endpoint": "/api/vistas/diferidos?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Libro de zarza, 2026-09 (último mes cerrado)"
+  },
+  {
+   "id": "mensual/zarza",
+   "endpoint": "/api/vistas/diferidos/mensual?campos=zarza",
+   "descripcion": "Serie mensual de zarza (las cifras de cada mes, sin sus tramos)"
+  },
+  {
+   "id": "diaria/zarza-2026-09",
+   "endpoint": "/api/vistas/produccion/diaria?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Producción día a día de zarza, 2026-09"
+  },
+  {
+   "id": "riesgo/zarza",
+   "endpoint": "/api/vistas/riesgo?campos=zarza",
+   "descripcion": "Riesgo de zarza a esta hora (vigía)"
+  },
+  {
+   "id": "aciertos/zarza",
+   "endpoint": "/api/vistas/predicciones?campos=zarza",
+   "descripcion": "Registro de predicciones y fallas de zarza (aciertos)"
+  },
+  {
+   "id": "sap/avisos-zarza",
+   "endpoint": "/api/sap/avisos?campos=zarza",
+   "descripcion": "Avisos SAP de zarza"
+  },
+  {
+   "id": "sap/ordenes-zarza",
+   "endpoint": "/api/sap/ordenes?campos=zarza",
+   "descripcion": "Órdenes SAP de zarza"
+  },
+  {
+   "id": "diferidos/portafolio-2026-09",
+   "endpoint": "/api/vistas/diferidos?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Libro de portafolio, 2026-09 (último mes cerrado)"
+  },
+  {
+   "id": "mensual/portafolio",
+   "endpoint": "/api/vistas/diferidos/mensual?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Serie mensual de portafolio (las cifras de cada mes, sin sus tramos)"
+  },
+  {
+   "id": "diaria/portafolio-2026-09",
+   "endpoint": "/api/vistas/produccion/diaria?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Producción día a día de portafolio, 2026-09"
+  },
+  {
+   "id": "riesgo/portafolio",
+   "endpoint": "/api/vistas/riesgo?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Riesgo de portafolio a esta hora (vigía)",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "aciertos/portafolio",
+   "endpoint": "/api/vistas/predicciones?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Registro de predicciones y fallas de portafolio (aciertos)",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "sap/avisos-portafolio",
+   "endpoint": "/api/sap/avisos?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Avisos SAP de portafolio"
+  },
+  {
+   "id": "sap/ordenes-portafolio",
+   "endpoint": "/api/sap/ordenes?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Órdenes SAP de portafolio"
+  },
+  {
+   "id": "salud/bombas-ceiba-2026-09",
+   "endpoint": "/api/vistas/bombas?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Bombas de ceiba con la salud de cada parte, 2026-09"
+  },
+  {
+   "id": "salud/pozos-ceiba-2026-09",
+   "endpoint": "/api/vistas/pozos?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Pozos de ceiba con la salud de su electrosumergible, 2026-09",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "prediccion/ceiba-P-201B",
+   "endpoint": "/api/vistas/bombas/prediccion?campo=ceiba&equipo=P-201B",
+   "descripcion": "Si P-201B de ceiba se para ahora"
+  },
+  {
+   "id": "asignacion/ceiba-2025-10",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2025-10",
+   "descripcion": "Asignación por pozo de ceiba, 2025-10"
+  },
+  {
+   "id": "asignacion/ceiba-2025-11",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2025-11",
+   "descripcion": "Asignación por pozo de ceiba, 2025-11"
+  },
+  {
+   "id": "asignacion/ceiba-2025-12",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2025-12",
+   "descripcion": "Asignación por pozo de ceiba, 2025-12"
+  },
+  {
+   "id": "asignacion/ceiba-2026-01",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-01",
+   "descripcion": "Asignación por pozo de ceiba, 2026-01"
+  },
+  {
+   "id": "asignacion/ceiba-2026-02",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-02",
+   "descripcion": "Asignación por pozo de ceiba, 2026-02"
+  },
+  {
+   "id": "asignacion/ceiba-2026-03",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-03",
+   "descripcion": "Asignación por pozo de ceiba, 2026-03"
+  },
+  {
+   "id": "asignacion/ceiba-2026-04",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-04",
+   "descripcion": "Asignación por pozo de ceiba, 2026-04"
+  },
+  {
+   "id": "asignacion/ceiba-2026-05",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-05",
+   "descripcion": "Asignación por pozo de ceiba, 2026-05"
+  },
+  {
+   "id": "asignacion/ceiba-2026-06",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-06",
+   "descripcion": "Asignación por pozo de ceiba, 2026-06"
+  },
+  {
+   "id": "asignacion/ceiba-2026-07",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-07",
+   "descripcion": "Asignación por pozo de ceiba, 2026-07"
+  },
+  {
+   "id": "asignacion/ceiba-2026-08",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-08",
+   "descripcion": "Asignación por pozo de ceiba, 2026-08"
+  },
+  {
+   "id": "asignacion/ceiba-2026-09",
+   "endpoint": "/api/vistas/asignacion?campo=ceiba&mes=2026-09",
+   "descripcion": "Asignación por pozo de ceiba, 2026-09"
+  },
+  {
+   "id": "salud/bombas-morichal-2026-09",
+   "endpoint": "/api/vistas/bombas?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Bombas de morichal con la salud de cada parte, 2026-09"
+  },
+  {
+   "id": "salud/pozos-morichal-2026-09",
+   "endpoint": "/api/vistas/pozos?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Pozos de morichal con la salud de su electrosumergible, 2026-09",
+   "requiere": [
+    "insumos/morichal/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "prediccion/morichal-P-201B",
+   "endpoint": "/api/vistas/bombas/prediccion?campo=morichal&equipo=P-201B",
+   "descripcion": "Si P-201B de morichal se para ahora"
+  },
+  {
+   "id": "prediccion/morichal-MPP-301",
+   "endpoint": "/api/vistas/bombas/prediccion?campo=morichal&equipo=MPP-301",
+   "descripcion": "Si MPP-301 de morichal se para ahora"
+  },
+  {
+   "id": "asignacion/morichal-2025-10",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2025-10",
+   "descripcion": "Asignación por pozo de morichal, 2025-10"
+  },
+  {
+   "id": "asignacion/morichal-2025-11",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2025-11",
+   "descripcion": "Asignación por pozo de morichal, 2025-11"
+  },
+  {
+   "id": "asignacion/morichal-2025-12",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2025-12",
+   "descripcion": "Asignación por pozo de morichal, 2025-12"
+  },
+  {
+   "id": "asignacion/morichal-2026-01",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-01",
+   "descripcion": "Asignación por pozo de morichal, 2026-01"
+  },
+  {
+   "id": "asignacion/morichal-2026-02",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-02",
+   "descripcion": "Asignación por pozo de morichal, 2026-02"
+  },
+  {
+   "id": "asignacion/morichal-2026-03",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-03",
+   "descripcion": "Asignación por pozo de morichal, 2026-03"
+  },
+  {
+   "id": "asignacion/morichal-2026-04",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-04",
+   "descripcion": "Asignación por pozo de morichal, 2026-04"
+  },
+  {
+   "id": "asignacion/morichal-2026-05",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-05",
+   "descripcion": "Asignación por pozo de morichal, 2026-05"
+  },
+  {
+   "id": "asignacion/morichal-2026-06",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-06",
+   "descripcion": "Asignación por pozo de morichal, 2026-06"
+  },
+  {
+   "id": "asignacion/morichal-2026-07",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-07",
+   "descripcion": "Asignación por pozo de morichal, 2026-07"
+  },
+  {
+   "id": "asignacion/morichal-2026-08",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-08",
+   "descripcion": "Asignación por pozo de morichal, 2026-08"
+  },
+  {
+   "id": "asignacion/morichal-2026-09",
+   "endpoint": "/api/vistas/asignacion?campo=morichal&mes=2026-09",
+   "descripcion": "Asignación por pozo de morichal, 2026-09"
+  },
+  {
+   "id": "salud/bombas-guacamayo-2026-09",
+   "endpoint": "/api/vistas/bombas?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Bombas de guacamayo con la salud de cada parte, 2026-09"
+  },
+  {
+   "id": "salud/pozos-guacamayo-2026-09",
+   "endpoint": "/api/vistas/pozos?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Pozos de guacamayo con la salud de su electrosumergible, 2026-09",
+   "requiere": [
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "prediccion/guacamayo-P-201B",
+   "endpoint": "/api/vistas/bombas/prediccion?campo=guacamayo&equipo=P-201B",
+   "descripcion": "Si P-201B de guacamayo se para ahora"
+  },
+  {
+   "id": "asignacion/guacamayo-2025-10",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2025-10",
+   "descripcion": "Asignación por pozo de guacamayo, 2025-10"
+  },
+  {
+   "id": "asignacion/guacamayo-2025-11",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2025-11",
+   "descripcion": "Asignación por pozo de guacamayo, 2025-11"
+  },
+  {
+   "id": "asignacion/guacamayo-2025-12",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2025-12",
+   "descripcion": "Asignación por pozo de guacamayo, 2025-12"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-01",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-01",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-01"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-02",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-02",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-02"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-03",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-03",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-03"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-04",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-04",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-04"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-05",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-05",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-05"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-06",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-06",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-06"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-07",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-07",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-07"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-08",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-08",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-08"
+  },
+  {
+   "id": "asignacion/guacamayo-2026-09",
+   "endpoint": "/api/vistas/asignacion?campo=guacamayo&mes=2026-09",
+   "descripcion": "Asignación por pozo de guacamayo, 2026-09"
+  },
+  {
+   "id": "salud/bombas-palmar-2026-09",
+   "endpoint": "/api/vistas/bombas?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Bombas de palmar con la salud de cada parte, 2026-09"
+  },
+  {
+   "id": "salud/pozos-palmar-2026-09",
+   "endpoint": "/api/vistas/pozos?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Pozos de palmar con la salud de su electrosumergible, 2026-09"
+  },
+  {
+   "id": "asignacion/palmar-2025-10",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2025-10",
+   "descripcion": "Asignación por pozo de palmar, 2025-10"
+  },
+  {
+   "id": "asignacion/palmar-2025-11",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2025-11",
+   "descripcion": "Asignación por pozo de palmar, 2025-11"
+  },
+  {
+   "id": "asignacion/palmar-2025-12",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2025-12",
+   "descripcion": "Asignación por pozo de palmar, 2025-12"
+  },
+  {
+   "id": "asignacion/palmar-2026-01",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-01",
+   "descripcion": "Asignación por pozo de palmar, 2026-01"
+  },
+  {
+   "id": "asignacion/palmar-2026-02",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-02",
+   "descripcion": "Asignación por pozo de palmar, 2026-02"
+  },
+  {
+   "id": "asignacion/palmar-2026-03",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-03",
+   "descripcion": "Asignación por pozo de palmar, 2026-03"
+  },
+  {
+   "id": "asignacion/palmar-2026-04",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-04",
+   "descripcion": "Asignación por pozo de palmar, 2026-04"
+  },
+  {
+   "id": "asignacion/palmar-2026-05",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-05",
+   "descripcion": "Asignación por pozo de palmar, 2026-05"
+  },
+  {
+   "id": "asignacion/palmar-2026-06",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-06",
+   "descripcion": "Asignación por pozo de palmar, 2026-06"
+  },
+  {
+   "id": "asignacion/palmar-2026-07",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-07",
+   "descripcion": "Asignación por pozo de palmar, 2026-07"
+  },
+  {
+   "id": "asignacion/palmar-2026-08",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-08",
+   "descripcion": "Asignación por pozo de palmar, 2026-08"
+  },
+  {
+   "id": "asignacion/palmar-2026-09",
+   "endpoint": "/api/vistas/asignacion?campo=palmar&mes=2026-09",
+   "descripcion": "Asignación por pozo de palmar, 2026-09"
+  },
+  {
+   "id": "salud/bombas-zarza-2026-09",
+   "endpoint": "/api/vistas/bombas?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Bombas de zarza con la salud de cada parte, 2026-09"
+  },
+  {
+   "id": "salud/pozos-zarza-2026-09",
+   "endpoint": "/api/vistas/pozos?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "Pozos de zarza con la salud de su electrosumergible, 2026-09"
+  },
+  {
+   "id": "asignacion/zarza-2025-10",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2025-10",
+   "descripcion": "Asignación por pozo de zarza, 2025-10"
+  },
+  {
+   "id": "asignacion/zarza-2025-11",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2025-11",
+   "descripcion": "Asignación por pozo de zarza, 2025-11"
+  },
+  {
+   "id": "asignacion/zarza-2025-12",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2025-12",
+   "descripcion": "Asignación por pozo de zarza, 2025-12"
+  },
+  {
+   "id": "asignacion/zarza-2026-01",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-01",
+   "descripcion": "Asignación por pozo de zarza, 2026-01"
+  },
+  {
+   "id": "asignacion/zarza-2026-02",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-02",
+   "descripcion": "Asignación por pozo de zarza, 2026-02"
+  },
+  {
+   "id": "asignacion/zarza-2026-03",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-03",
+   "descripcion": "Asignación por pozo de zarza, 2026-03"
+  },
+  {
+   "id": "asignacion/zarza-2026-04",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-04",
+   "descripcion": "Asignación por pozo de zarza, 2026-04"
+  },
+  {
+   "id": "asignacion/zarza-2026-05",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-05",
+   "descripcion": "Asignación por pozo de zarza, 2026-05"
+  },
+  {
+   "id": "asignacion/zarza-2026-06",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-06",
+   "descripcion": "Asignación por pozo de zarza, 2026-06"
+  },
+  {
+   "id": "asignacion/zarza-2026-07",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-07",
+   "descripcion": "Asignación por pozo de zarza, 2026-07"
+  },
+  {
+   "id": "asignacion/zarza-2026-08",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-08",
+   "descripcion": "Asignación por pozo de zarza, 2026-08"
+  },
+  {
+   "id": "asignacion/zarza-2026-09",
+   "endpoint": "/api/vistas/asignacion?campo=zarza&mes=2026-09",
+   "descripcion": "Asignación por pozo de zarza, 2026-09"
+  }
+ ]
+}

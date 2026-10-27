@@ -16,7 +16,7 @@ Lo que no cuadra en lo que muestran estas pantallas, lo que el front deja fijo y
 
 ## B. Lo que el front deja fijo y tiene que dar el servidor
 
-10. **Conectores · SISTEMAS CORPORATIVOS**: «sincronizado {AHORA − 2 min}», los chips «conectado», «webhook activo», el número «+57 601 555 0100» y «verificado por Meta» son constantes del front (`src/widgets/conectores/Integraciones.tsx:19-20`, `:66`, `:89`, `:91-92`). No hay endpoint que los dé. Propuesta: `GET /api/integraciones` → `{ sap: { conectado, sincronizado }, whatsapp: { numero, verificado, webhook: { activo, ultimo } } }`.
+10. **Conectores · SISTEMAS CORPORATIVOS**: «sincronizado {AHORA − 2 min}», los chips «conectado», «webhook activo», el número «+57 601 555 0100» y «verificado por Meta» son constantes del front (`src/widgets/conectores/Integraciones.tsx:19-20`, `:66`, `:89`, `:91-92`). No hay endpoint que los dé. Propuesta: `GET /api/integraciones` → `{ sap: { conectado, sincronizado }, whatsapp: { numero, verificado, webhook: { activo, ultimo } } }` (la parte `whatsapp`: **RETIRADO (27-oct-2026)**; queda `sap`).
 11. **«SAP → TRIM · horas» no dice de cuándo.** Suma las horas de **todas** las órdenes del campo (`Integraciones.tsx:33`): 132,0 h en La Ceiba son toda la historia, sin período ni «desde». Y «PLC ↔ SAP · equipos 16 de 16» cuenta la flota contra sí misma (`:75`, ya en 5D.6).
 12. **«Antes → con TRIM» y «mantenimiento proactivo» usan fechas fijas del front**: `PUESTA_EN_MARCHA` y tres meses antes (`ResumenDirectivo.tsx:82-87`). El servidor tiene que exponer la fecha de puesta en marcha (hoy sale de la versión 1 de la configuración) para que ese bloque no dependa de una constante.
 

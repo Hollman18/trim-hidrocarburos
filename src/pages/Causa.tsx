@@ -3,15 +3,12 @@ import { useApp, useAmbito, useRol, useRango, usePersona } from '@/app/store'
 import { useLibro, usePreguntas, useCtx, useOpcionesRespuesta, contarPorIdentificar } from '@/shared/api/diferidos'
 import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
-import { useMensajes } from '@/shared/api/mensajes'
 import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
 import { useCondiciones, type CondicionDeEquipo } from '@/shared/api/condiciones'
 import { FAMILIA } from '@/shared/api/plantaViva'
 import { MarcaDeEquipo } from '@/widgets/hoy/comun'
 import { Bloqueo } from '@/widgets/hoy/piezas'
-import { CAUSAS_POZO, NO_FUE_ESP_CORTO, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
-import { Telefono } from '@/widgets/whatsapp/Telefono'
-import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
+import { CAUSAS_POZO, NO_FUE_ESP_CORTO } from '@/entities/causas-sugeridas'
 import { ArbolIdentificar } from '@/widgets/arbol/ArbolIdentificar'
 // H2 (K1): la pregunta con el entero de su parada en el reparto del campo (la de Hoy).
 import type { PreguntaConEntero as Pregunta } from '@/shared/api/diferidos'
@@ -29,7 +26,6 @@ import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { useUsuarios } from '@/shared/api/usuarios'
 import { ROLES_QUE_CONTESTAN, causaParaSalir } from '@/shared/api/arbol'
 import { rolDeQuien } from '@/entities/causa-senal'
 import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
@@ -51,8 +47,6 @@ export function Causa() {
   const ids = ambito.campos.map(c => c.id)
   const lb = useLibro({ campos: ids, desde: rango.desde, hasta: rango.hasta })
   const preguntas = usePreguntas(ids)
-  const mensajes = useMensajes(ids)
-  const hilo = (p: Pregunta) => mensajes.filter(m => m.evento === p.id)
   const puede = puedeHacer(rol.puede, 'causa:declarar')
 
   // «Por identificar» con la cuenta única (Turno, Mi trabajo, Mantenimiento):
@@ -65,10 +59,6 @@ export function Causa() {
   const marca = (p: Pregunta) => condicion(p.campoId, p.equipo)
   // P-causa-1 (X4 §3.6, «se esconde»): una parada abierta a la vez; las demás, en una fila con «›».
   const [abierta, setAbierta] = useState<string | null>(null)
-  // El chat que alguien abrió sigue abierto cuando la respuesta llega: el cierre
-  // «Así queda lo que usted contestó» sale en el mismo chat (B-05; U1 §2.6).
-  const [chats, setChats] = useState<ReadonlySet<string>>(() => new Set())
-  const alternarChat = (id: string) => setChats(c => { const n = new Set(c); if (n.has(id)) n.delete(id); else n.add(id); return n })
   const piden = preguntas.filter(p => p.pide)
   const pendientes = piden.filter(p => !p.arrancoSinIdentificar)
   const noConformes = preguntas.filter(p => p.arrancoSinIdentificar)
@@ -76,7 +66,7 @@ export function Causa() {
   const ctx = useCtx(); const analisis = useAnalisis()
   // Las respondidas en esta sesión: el aviso de que pasaron a «Declaradas».
   const recien = declaradas.filter(p => ctx.respuestas[p.id])
-  // Responder (en pantalla o con el último toque del chat) desmonta la
+  // Responder desmonta la
   // tarjeta, y el botón que tenía el foco se va con ella: el foco caería en
   // <body> y quien usa teclado o lector perdería su lugar justo en el toque
   // que cierra. Pasa al aviso «Respondido», que sigue en la página y dice a
@@ -156,14 +146,11 @@ export function Causa() {
   // La primera que pide respuesta abre sola; tocar otra la abre y cierra la de antes.
   const primeraAbierta = [...pendientes, ...noConformes.filter(x => !x.causa.declarado)][0]?.id
   const abiertaId = abierta ?? primeraAbierta
-  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} cond={marca(p)}
-    chat={chats.has(p.id)} onChat={() => alternarChat(p.id)} abierta={abiertaId === p.id} onAbrir={() => setAbierta(p.id)} />
-  // Lo que se acaba de responder por WhatsApp con el chat abierto: sigue en su lugar, con el chat y su cierre.
-  const conChat = recien.filter(p => chats.has(p.id))
-  const respondidas = conChat.map(p => <RespondidaConChat key={`r-${p.id}`} p={p} hilo={hilo(p)} onCerrar={() => alternarChat(p.id)} />)
+  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} cond={marca(p)}
+    abierta={abiertaId === p.id} onAbrir={() => setAbierta(p.id)} />
   const avisoRespondido = recien.length > 0 && (
     <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[14px] text-[var(--tinta2)]">
-      Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
+      Respondido: {recien.map(p => `${p.equipo} (${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
     </p>
   )
   // UI-05: la misma franja «No arrancar» de Hoy (X5 §5.6): en tinta, con borde de 2 px y el ⊘.
@@ -188,8 +175,8 @@ export function Causa() {
         Primero las que esperan el análisis de confiabilidad.
       </Lectura>
       {declaradas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna todavía.</p>}
-      {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}
-      {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} hilo={hilo(p)} />)}</div>}
+      {listaDeclaradas.visibles.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}
+      {listaDeclaradas.resto.length > 0 && <div className="solo-impresion">{listaDeclaradas.resto.map(p => <Declarada key={p.id} p={p} global={ambito.global} />)}</div>}
       <VerMas ocultas={listaDeclaradas.ocultas} abierto={listaDeclaradas.abierto} onAlternar={listaDeclaradas.alternar} />
     </Panel>
   )
@@ -205,7 +192,7 @@ export function Causa() {
         {/* Otro rol es otra lente: lo que estaba abierto no pasa de un rol a otro. */}
         <ArbolIdentificar key={rol.id} campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} periodo={rango.nombre}
           nAntes={delLibro.length} excluir={new Set(delLibro.map(p => p.id))}
-          antes={<>{avisoRespondido}{respondidas}{delLibro.map(tarjeta)}</>} />
+          antes={<>{avisoRespondido}{delLibro.map(tarjeta)}</>} />
         {declaradasPanel}
         <details className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)] print:open:block" data-indicadores>
           <summary className="flex min-h-12 cursor-pointer items-center px-3 text-[14px] text-[var(--tinta2)] sm:min-h-9">Cómo va la identificación del período</summary>
@@ -227,12 +214,10 @@ export function Causa() {
         <Lectura>
           Cada una trae lo que dijo su señal; el ⓘ junto a «señal» dice por qué no alcanzó. Responde quien
           revisó el equipo o estuvo en el pozo. Las pistas (la parte que estaba fuera de límite al parar, o
-          las que más han fallado en ese equipo) son una pista, no una respuesta. Toque o pase el cursor por
-          la línea de WhatsApp para ver a quién le llegó cada mensaje.
+          las que más han fallado en ese equipo) son una pista, no una respuesta.
         </Lectura>
         {avisoRespondido}
-        {respondidas}
-        {pendientes.length === 0 && conChat.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna.</p>}
+        {pendientes.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna.</p>}
         {pendientes.map(tarjeta)}
       </Panel>
 
@@ -254,31 +239,13 @@ export function Causa() {
   )
 }
 
-/** Lo que se acaba de responder por WhatsApp con el chat abierto: el chat sigue
- *  abierto con el cierre «Así queda lo que usted contestó» (B-05), hasta que la
- *  persona lo cierra. La parada ya está en «Declaradas». */
-function RespondidaConChat({ p, hilo, onCerrar }: { p: Pregunta; hilo: Mensaje[]; onCerrar: () => void }) {
-  const usuarios = useUsuarios()
-  const r = p.causa.declarado
-  const quien = r?.canal === 'whatsapp' ? usuarios.find(u => u.id === r.porId) : undefined
-  if (!quien) return null
-  return (
-    <div className="border-b border-[var(--linea2)] py-3 last:border-0" data-respondida={p.id}>
-      <p className="text-[14px]"><b>{p.equipo}</b> <span className="text-[var(--tinta3)]">· respondido por WhatsApp</span></p>
-      <div className="mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>
-      <Boton className="mt-1.5 min-h-12 sm:min-h-0" onClick={onCerrar}>Cerrar el chat</Boton>
-    </div>
-  )
-}
-
 /** Una parada por identificar: qué dijeron las señales, el formulario para
  *  decir qué se dañó (parte y lo que se vio, del catálogo de la clase de
- *  equipo) y el hilo de WhatsApp por el que también se responde. */
-function Tarjeta({ p, global, responde, hilo, cond, chat, onChat, abierta, onAbrir }: {
-  p: Pregunta; global: boolean; responde: boolean; hilo: Mensaje[]
+ *  equipo). */
+function Tarjeta({ p, global, responde, cond, abierta, onAbrir }: {
+  p: Pregunta; global: boolean; responde: boolean
   /** La condición del equipo, la de la franja (H3): la misma en todas partes. */
   cond?: CondicionDeEquipo
-  chat: boolean; onChat: () => void
   /** P-causa-1: abierta, con su formulario; cerrada, una fila con «›». */
   abierta: boolean; onAbrir: () => void
 }) {
@@ -449,11 +416,10 @@ function Tarjeta({ p, global, responde, hilo, cond, chat, onChat, abierta, onAbr
           </form>
         )}
       </div>
-      <HiloWhatsapp p={p} hilo={hilo} abierto={chat} onAlternar={onChat} />
     </div>
   )
   if (abierta) return cuerpo
-  // Cerrada: una fila con «›» en la pantalla; en el papel, la parada entera (la señal, el WhatsApp y a quién le llegó).
+  // Cerrada: una fila con «›» en la pantalla; en el papel, la parada entera (la señal y lo que se contestó).
   return (
     <>
     <button type="button" onClick={onAbrir} data-parada={p.id} aria-expanded={false}
@@ -491,65 +457,6 @@ const PASO_CLS = 'text-[14px] font-semibold text-[var(--tinta)]'
 const CHIP = 'flex min-h-14 cursor-pointer items-center rounded-[18px] bg-[var(--panel)] px-4 py-2.5 text-left text-[16px] shadow-[inset_0_0_0_1.5px_var(--linea)] transition-colors duration-[120ms] hover:bg-[var(--panel2)] max-sm:min-h-16'
 const SELECCION = 'bg-[var(--marca-suave)] text-[var(--tinta)] shadow-[inset_0_0_0_2px_var(--foco)]'
 
-
-/** El hilo de WhatsApp de la parada en una línea (qué se mandó, a quién, y si
- *  respondieron), y a un clic el chat de quien recibió la pregunta, como lo ve
- *  en su teléfono: desde ahí se responde. */
-function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; hilo: Mensaje[]; abierto: boolean; onAlternar: () => void }) {
-  const usuarios = useUsuarios(); const yo = usePersona()
-  const r = p.causa.declarado
-  const orden = [...hilo].reverse()
-  const primero = orden.find(m => m.regla === 'causa' && !m.insistencia && !m.noEnviado)
-  const nombre = (id: string) => usuarios.find(x => x.id === id)?.nombre ?? id
-  // Un paso por hora y tipo, con todos los que lo recibieron.
-  // Lo que no salió (un parámetro que Meta rechazaría) no cuenta como avisado: va aparte, con su motivo.
-  const corta = (iso: string) => fechaHora(new Date(iso)).replace(/^.*?, /, '')
-  const pasos = [...orden.reduce((mapa, m) => {
-    const tipo = m.insistencia ?? m.regla, k = `${corta(m.hora)}|${tipo}`
-    const x = mapa.get(k) ?? { hora: m.hora, rango: ORDEN_PASO[tipo], que: PASO_CORTO[tipo], para: [] as string[], fallas: [] as Array<{ para: string; motivo: string }> }
-    if (m.noEnviado) x.fallas.push({ para: nombre(m.para), motivo: m.noEnviado })
-    else if (!x.para.includes(nombre(m.para))) x.para.push(nombre(m.para))
-    return mapa.set(k, x)
-  }, new Map<string, { hora: string; rango: number; que: string; para: string[]; fallas: Array<{ para: string; motivo: string }> }>()).values()]
-    .sort((a, b) => new Date(a.hora).getTime() - new Date(b.hora).getTime() || a.rango - b.rango)
-
-  // Si la pregunta se armó pero no salió, no es que nadie tenga WhatsApp: se muestra el hilo con su motivo.
-  // Que nadie la recibe es un hueco: corto a la vista, el porqué en el ⓘ (y en el papel).
-  if (!primero && !orden.some(m => m.regla === 'causa' && m.noEnviado)) return (
-    <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
-      WhatsApp: sin destinatario
-      <Info titulo="Sin destinatario" texto="Nadie de este campo tiene número con las alertas encendidas; la pregunta está solo en esta pantalla." />
-    </p>
-  )
-  const persona = primero && usuarios.find(u => u.id === primero.para)
-
-  // Como en Turno: una línea con la hora y el paso; a quién le llegó cada uno,
-  // en el globo y en el papel. Lo que no se envió sigue a la vista, con su motivo.
-  return (
-    <div className="mt-2.5 border-t border-dashed border-[var(--linea2)] pt-2 text-[13px]">
-      <h3 className="mb-1 text-[15px] font-semibold text-[var(--tinta)]">WhatsApp</h3>
-      <Tip titulo={`WhatsApp · ${p.equipo}`} filas={pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
-        imprimir="todo" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--tinta2)]">
-        <span>
-          {/* La flecha queda fuera del paso sin cortes: el renglón se parte entre pasos, nunca dentro de uno. */}
-          {pasos.map((x, i) => <span key={`${x.hora}${x.que}`}>{i > 0 && ' → '}<span className="whitespace-nowrap"><span className="tabular">{corta(x.hora)}</span> {x.que}</span><NoEnviado fallas={x.fallas} /></span>)}
-        </span>
-        {r?.canal === 'whatsapp'
-          ? <b className="text-[var(--tinta)]"><DichoEnPapel papel={`respondió ${rolDeQuien(r.por)} · ${corta(r.hora)}`}>respondió {r.por} · {corta(r.hora)}: «{r.texto}»</DichoEnPapel></b>
-          : r ? <span>respondido en pantalla</span> : <Chip tono="fuerte">sin respuesta</Chip>}
-      </Tip>
-      {persona && (
-        <>
-          <Boton className="mt-1 min-h-12 sm:min-h-0" onClick={onAlternar} aria-expanded={verChat}>
-            {verChat ? 'Cerrar el chat' : persona.id === yo.id ? 'Ver mi chat de WhatsApp' : `Ver el chat de ${persona.nombre}`}
-          </Boton>
-          {/* El chat es la conversación con sus palabras: no va al papel (D2). */}
-          {verChat && <div className="no-imprimir mt-2"><Telefono p={p} hilo={hilo} persona={persona} /></div>}
-        </>
-      )}
-    </div>
-  )
-}
 
 /** El análisis de una falla declarada: mecanismo (ISO 14224 B.2) y causa raíz
  *  (B.3). La parte y lo que se vio los dijo quien abrió el equipo; esto lo
@@ -624,13 +531,8 @@ function AnalisisDeFalla({ evento, modo }: { evento: string; modo?: string }) {
 
 /** Una respuesta registrada, dicha una sola vez: la parte y lo que vio (o la
  *  causa del pozo), y el texto de quien respondió solo si escribió algo más. */
-function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Mensaje[] }) {
+function Declarada({ p, global }: { p: Pregunta; global: boolean }) {
   const r = p.causa.declarado!
-  // Lo que se respondió por WhatsApp se puede volver a ver en el chat, donde quien
-  // respondió avala lo que contestó (U1 §2.6, corregido por S1 U1-2).
-  const usuarios = useUsuarios(); const yo = usePersona()
-  const [verChat, setVerChat] = useState(false)
-  const quien = r.canal === 'whatsapp' ? usuarios.find(u => u.id === r.porId) : undefined
   const cat = pedirCatalogoDeDanos(p.campoId, p.equipo)
   const parte = p.causa.parte ? cat?.partes.find(x => x.id === p.causa.parte) : undefined
   const nombreParte = parte?.nombre ?? (p.causa.parte ? NOMBRE_PARTE[p.causa.parte] : undefined)
@@ -649,7 +551,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
             ? <><b className="font-semibold">{nombreParte}</b>{vio ? ` · ${vio}` : ''}{!generado && <DichoEnPapel papel="">{` · «${r.texto}»`}</DichoEnPapel>}</>
             : <DichoEnPapel papel={`Lo contestó ${rolDeQuien(r.por)}`}>«{r.texto}»</DichoEnPapel>}
         </span>
-        <small className="block text-[13px] text-[var(--tinta3)]"><DichoEnPapel papel={nombreParte ? `Lo contestó ${rolDeQuien(r.por)} · ` : ''}>{r.por} · </DichoEnPapel>{fechaHora(new Date(r.hora))}{r.canal === 'whatsapp' ? ' · por WhatsApp' : ''}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
+        <small className="block text-[13px] text-[var(--tinta3)]"><DichoEnPapel papel={nombreParte ? `Lo contestó ${rolDeQuien(r.por)} · ` : ''}>{r.por} · </DichoEnPapel>{fechaHora(new Date(r.hora))}{!p.causa.parte && p.sobre === 'bomba' ? ' · sin parte' : ''}</small>
         {/* Estado como etiqueta; por qué (arrancó en menos de un día), en el ⓘ. */}
         {disparo && (
           <span className="mt-0.5 flex flex-wrap items-center gap-x-1">
@@ -658,14 +560,6 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
           </span>
         )}
         {p.causa.parte && <AnalisisDeFalla evento={p.id} modo={r.modo} />}
-        {quien && hilo.length > 0 && (
-          <>
-            <Boton variante="chico" className="mt-1 min-h-10 sm:min-h-0" aria-expanded={verChat} onClick={() => setVerChat(v => !v)}>
-              {verChat ? 'Cerrar el chat' : quien.id === yo.id ? 'Ver mi chat de WhatsApp' : `Ver el chat de ${quien.nombre}`}
-            </Boton>
-            {verChat && <div className="no-imprimir mt-2"><Telefono p={p} hilo={hilo} persona={quien} /></div>}
-          </>
-        )}
       </span>
       <b className="tabular text-right">{n0(p.entero ?? p.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
     </div>

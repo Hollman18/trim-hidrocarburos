@@ -1,0 +1,1 @@
+{"id":"anh/respuestas-ceiba-2026-10","descripcion":"Las respuestas de la ANH de La Ceiba en el mes en curso, sin ninguna registrada","endpoint":"/api/vistas/anh/respuestas?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00","esperado":{"datos":{"campos":["ceiba"],"dias":[],"respuestas":[],"porCorregir":0},"refs":{}}}

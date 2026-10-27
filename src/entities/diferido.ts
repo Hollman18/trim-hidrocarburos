@@ -469,24 +469,32 @@ export interface Riesgo {
   accion?: string
   /** El instrumento que da el aviso. */
   tag?: string
-  /** Barriles que costaría que el equipo fallara HOY: el crudo por día que se
-   *  pierde si para hoy por las horas que duran sus fallas cerradas, sin las
-   *  que aguanta hoy el tanque (bomba de disposición). Una cuenta para todas
-   *  las familias, así las filas se pueden sumar. Recobro, o un respaldo que
-   *  absorbe toda el agua: 0. Sin fallas cerradas propias (ni flota, en una
-   *  electrosumergible): ausente, no 0. Lo que el equipo YA costó por falla
-   *  es otra cifra: `HistorialEquipo.bblPorFalla`. */
+  /** Contrato v1 (`cde8214`), con su significado de v1: barriles que cuesta
+   *  una falla así. Bomba: lo que el equipo YA costó, en promedio, por falla
+   *  (`HistorialEquipo.bblPorFalla`). Electrosumergible: crudo por día × horas
+   *  fuera promedio / 24 (las propias; sin historia propia, las de su flota en
+   *  el campo). Sin fallas cerradas: ausente. Lo que costaría si fallara HOY es
+   *  `costoFallaHoy` (C1, docs/backend/CAMBIOS-CONTRATO.md §4.1). */
   costoFalla?: number
+  /** AGREGADO (C1): barriles que costaría que el equipo fallara HOY: el crudo
+   *  por día que se pierde si para hoy por las horas que duran sus fallas
+   *  cerradas, sin las que aguanta hoy el tanque (bomba de disposición). Una
+   *  cuenta para todas las familias, así las filas se pueden sumar. Recobro, o
+   *  un respaldo que absorbe toda el agua: 0. Sin fallas cerradas propias (ni
+   *  flota, en una electrosumergible): ausente, no 0. Es la cifra que pinta el
+   *  front («Si falla hoy», «le costaría la falla»). */
+  costoFallaHoy?: number
   /** Bomba de disposición con tanque: horas que aguanta hoy el tanque si
    *  para (el colchón de la predicción). Una reparación más corta no cuesta
    *  crudo. Ausente si el respaldo absorbe toda el agua o si no hay colchón
    *  calculado (sin tanque o sin su nivel). */
   colchonH?: number
-  /** De dónde sale `costoFalla`, en palabras (solo para leer). */
+  /** De dónde sale `costoFallaHoy`, en palabras (solo para leer). En v1 decía
+   *  de dónde salía `costoFalla` (C11). */
   mdtFuente?: string
-  /** Con qué historia se estimó `costoFalla`: la del propio equipo o, si nunca
+  /** Con qué historia se estimó `costoFallaHoy`: la del propio equipo o, si nunca
    *  ha fallado, la de su flota en el campo (menos confiable). La pantalla lo
-   *  marca sin leer el texto de `mdtFuente`. Ausente cuando `costoFalla` es 0
+   *  marca sin leer el texto de `mdtFuente`. Ausente cuando `costoFallaHoy` es 0
    *  por definición (recobro, respaldo que absorbe toda el agua). */
   costoDe?: 'propio' | 'flota'
   altoImpacto: boolean
@@ -502,7 +510,12 @@ export function mdtEspDelCampo(campoId: string, ctx: Contexto): number | undefin
 
 const peorParte = (ps: SaludParte[]) => ps.find(s => s.estado === 'fuera' || s.estado === 'avisa')
 
-type CostoFalla = Pick<Riesgo, 'costoFalla' | 'colchonH' | 'mdtFuente' | 'costoDe'>
+/** Lo que costaría que el equipo fallara HOY (`costoFalla` aquí es esa cifra:
+ *  en `Riesgo` viaja como `costoFallaHoy`, C1) y de dónde sale. */
+type CostoFalla = Pick<Riesgo, 'colchonH' | 'mdtFuente' | 'costoDe'> & { costoFalla?: number }
+/** La cuenta de hoy, con el nombre del contrato (`costoFallaHoy`), y la de v1 (`costoFalla`) al lado. */
+const conCostoV1 = ({ costoFalla: hoy, ...resto }: CostoFalla, v1: number | undefined): Pick<Riesgo, 'costoFalla' | 'costoFallaHoy' | 'colchonH' | 'mdtFuente' | 'costoDe'> =>
+  ({ ...resto, ...(hoy !== undefined ? { costoFallaHoy: hoy } : {}), ...(v1 !== undefined ? { costoFalla: v1 } : {}) })
 
 /** Lo que costaría que una bomba de la línea fallara HOY (decisión del dueño,
  *  8-oct-2026). Con Q = el crudo por día que se pierde si para hoy (la
@@ -598,7 +611,8 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
         bblDia: pr.crudoBpd, pozos: pr.orden?.pasos.length ?? (p.pozos?.length ?? 0), parte: sp.parte.id,
         horas: sp.primera?.senal.pronostico.horas, rango: sp.primera?.senal.pronostico.rango, accion: sp.parte.accion,
         tag: sp.primera?.senal.tag ?? sp.fuera[0]?.senal.tag,
-        ...costoDeBomba(p, pr, h),
+        // C1: `costoFalla` con el significado de v1 (lo que ya costó por falla) y `costoFallaHoy` al lado.
+        ...conCostoV1(costoDeBomba(p, pr, h), h.bblPorFalla),
         altoImpacto: p.subtipo !== 'multifasica',
         motivo: motivoDeParte(sp) })
     }
@@ -627,7 +641,8 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
         bblDia: crudoAsignado(p), pozos: 1,
         parte: sp.parte.id, horas: sp.primera?.senal.pronostico.horas, rango: sp.primera?.senal.pronostico.rango, accion: sp.parte.accion,
         tag: sp.primera?.senal.tag ?? sp.fuera[0]?.senal.tag,
-        costoFalla: mdt !== undefined ? crudoAsignado(p) * mdt / 24 : undefined,
+        // En la electrosumergible las dos cifras son la misma cuenta (v1 ya la hacía así).
+        ...(mdt !== undefined ? { costoFalla: crudoAsignado(p) * mdt / 24, costoFallaHoy: crudoAsignado(p) * mdt / 24 } : {}),
         // Las horas con la regla de las pantallas (`textoHoras`): «26,0 d», «30 h»; nunca «1 días».
         mdtFuente: h.mdtH !== undefined ? `${textoHoras(h.mdtH)} fuera, el promedio de ${h.fallasCerradas === 1 ? 'su falla cerrada' : `sus ${h.fallasCerradas} fallas cerradas`}`
           : mdt !== undefined ? `${textoHoras(mdt)} fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)` : undefined,

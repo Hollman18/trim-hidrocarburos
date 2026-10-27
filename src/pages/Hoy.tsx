@@ -5,7 +5,7 @@ import { useTelefono } from '@/shared/ui/telefono'
 import { Boton, Enlace } from '@/shared/ui/primitivas'
 import { Tarjeta } from '@/widgets/hoy/Tarjeta'
 import { Inicio, Bloqueo, Hechas, AvisoDeshacer } from '@/widgets/hoy/piezas'
-import { SuCampo, TurnoWhatsapp, DiferidoTurno } from '@/widgets/hoy/Lateral'
+import { SuCampo, DiferidoTurno } from '@/widgets/hoy/Lateral'
 import { Operador } from '@/widgets/hoy/Operador'
 import { Entrega } from '@/widgets/hoy/Entrega'
 import { useEnvio } from '@/widgets/hoy/envio'
@@ -16,8 +16,7 @@ import { useIr } from '@/widgets/hoy/palabras'
  *  §5.5; X5 §5.1, §5.6-5.8). Todo lo dice el motor (`GET /api/vistas/hoy`):
  *  la cifra con su frase, la franja «No arrancar», las tarjetas en su orden
  *  (lo que tiene hora, los barriles en juego, lo demás y, al final, lo que solo
- *  informa), «Hecho hoy» y, al lado, el campo ahora, el WhatsApp del turno y el
- *  diferido del turno. Contestar o confirmar deja un aviso con «Deshacer». El
+ *  informa), «Hecho hoy» y, al lado, el campo ahora y el diferido del turno. Contestar o confirmar deja un aviso con «Deshacer». El
  *  operador, en el teléfono, contesta de a una pregunta por pantalla.
  *  «Entregar turno» abre la entrega del turno (P-06): en su lugar en el escritorio,
  *  como una hoja que sube en el teléfono. Cuando una tarjeta se va (se confirmó o se
@@ -64,7 +63,7 @@ export function Hoy() {
     </>
   )
 
-  const lado = !!(v.campo || v.whatsapp || v.turno)
+  const lado = !!(v.campo || v.turno)
   const corregir = rol.pantallas.includes('causa') ? () => ir({ a: 'paradas' }) : undefined
   return (
     <>
@@ -91,7 +90,6 @@ export function Hoy() {
         {lado && (
           <aside className="grid content-start gap-[14px] max-sm:hidden" aria-label="Al lado">
             {v.campo && <SuCampo c={v.campo} />}
-            {v.whatsapp && <TurnoWhatsapp w={v.whatsapp} />}
             {v.turno && <DiferidoTurno horas={v.turno.horas} bbl={v.turno.diferidoBbl} />}
           </aside>
         )}

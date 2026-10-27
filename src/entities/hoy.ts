@@ -30,8 +30,7 @@ import type { ParadaAnh } from './anh-paradas'
 import { esperaAQuienAbre, esperaRevision, esNoSe, cadenaDe, ROLES_QUE_CONTESTAN, CONFIRMAN_LO_QUE_APUNTA, type PreguntaCampo } from './anh-clasificacion'
 import { PASOS, ETIQUETA_PLANEACION, type PasoAnh } from './anh-catalogo'
 import type { Riesgo } from './diferido'
-import type { Mensaje, Opcion } from './mensajes'
-import { CAUSAS_POZO, NO_FUE_ESP_CORTO } from './mensajes'
+import { CAUSAS_POZO, NO_FUE_ESP_CORTO, type Opcion } from './causas-sugeridas'
 import type { OrdenSap, AvisoSap } from './sap'
 import type { PlanAccion } from './escenarios'
 import { DONDE_CHOKE, n0, type ChokeAnh, type TuberiaCampo } from './choke'
@@ -80,9 +79,11 @@ export type GrupoHoy = 'hora' | 'barriles' | 'demas' | 'aviso'
 
 /** Una opción de una pregunta de un toque (X5 §5.8). */
 export type OpcionHoy =
-  /** Una parte del equipo, de un toque (imagen 5; P-07). «¿Qué vio en …?» entra como la
-   *  pregunta siguiente (`pregunta`), con sus modos y «Todavía no sé»: el libro recibe la
-   *  parte con lo que se vio (ISO 14224) al contestar esa. */
+  /** Una parte del equipo, de un toque (imagen 5; P-07). A3 · El toque GUARDA la parte en el
+   *  libro (`POST /api/paradas/:evento/respuesta` sin `modo`): la parada queda identificada.
+   *  «¿Qué vio en …?» entra como la pregunta siguiente y OPCIONAL (`pregunta`, con sus
+   *  `modos`): se contesta con `POST /api/paradas/:evento/vio` (el evento es el de `libro`)
+   *  o se deja; «Todavía no sé» ahí no escribe nada. */
   | { tipo: 'parte'; texto: string; dato?: string; parte: ParteId; modos: ModoHoy[]; pregunta: string }
   /** «Otra parte»: la lista entera del catálogo. */
   | { tipo: 'partes'; texto: string; dato?: string; partes: Array<{ parte: ParteId; texto: string; modos: ModoHoy[]; pregunta: string }> }
@@ -196,9 +197,6 @@ export interface CampoAhoraHoy {
   frases: Frase[]
 }
 
-/** «El turno en WhatsApp»: un hilo por parada u orden, de las últimas 12 h. */
-export interface WhatsappHoy { mensajes: number; hilos: Array<{ equipo: string; pasos: string; estado?: Frase }> }
-
 export interface VistaHoy {
   rol: string
   campos: string[]
@@ -214,13 +212,17 @@ export interface VistaHoy {
   /** «Entregar turno» (el supervisor): abre la entrega de turno que ya existe. */
   entregarTurno: boolean
   campo?: CampoAhoraHoy
-  whatsapp?: WhatsappHoy
   turno?: { horas: number; diferidoBbl: number }
   /** F1 · P-06: la entrega del turno (X4 §5.5), para quien lo entrega: lo que paró,
-   *  lo que queda pendiente, lo confirmado y el WhatsApp de las últimas 12 h. Todo
+   *  lo que queda pendiente y lo confirmado. Todo
    *  sale de lo que ya calcula Hoy: nada nuevo. La firma y su escritura esperan su
    *  contrato (una escritura nueva que todavía no existe). */
   entrega?: EntregaTurno
+  /** AGREGADO (M6, docs/backend/CAMBIOS-CONTRATO.md §9): las paradas de hoy que
+   *  faltan por confirmar para el reporte a la ANH, como número, y la hora límite
+   *  (mañana a las `HORA_REPORTE`). Solo sup y prod. Es la misma cuenta de la
+   *  frase del inicio del supervisor («Le faltan 4 paradas por confirmar»). */
+  porConfirmar?: { n: number; limite: string }
 }
 
 /** La entrega del turno (P-06): renglones en palabras de campo, para la hoja y el papel. */
@@ -234,8 +236,6 @@ export interface EntregaTurno {
   pendiente: Frase[]
   /** Lo que se confirmó o se contestó hoy. */
   hecho: Frase[]
-  /** El WhatsApp del turno, un hilo por renglón. */
-  whatsapp: Frase[]
   /** «723 bbl diferidos en las últimas 12 h». */
   diferido?: Frase
 }
@@ -261,7 +261,6 @@ export interface EntradaHoy {
   riesgo: readonly Riesgo[]
   /** La condición de cada equipo, la misma de la franja de la cabecera (`${campo}|${equipo}`). */
   condiciones: Readonly<Record<string, CondicionFranja>>
-  mensajes: readonly Mensaje[]
   ordenes: readonly OrdenSap[]
   avisosSap: readonly AvisoSap[]
   planes: readonly PlanAccion[]
@@ -450,7 +449,7 @@ export function hoy(e: EntradaHoy): VistaHoy {
         partes: resto.map(x => ({ parte: x.id, texto: x.nombre, modos: modos(x.id), pregunta: queVio(x.nombre) })) })
       if (esp) opciones.push({ tipo: 'causas', texto: NO_FUE_ESP_CORTO, dato: 'otra causa del pozo', causas })
     } else for (const c of causas) opciones.push({ tipo: 'texto', ...c })
-    opciones.push({ tipo: 'no-se', texto: 'Todavía no sé', dato: 'se la vuelven a preguntar en la próxima ronda' })
+    opciones.push({ tipo: 'no-se', texto: 'Todavía no sé', dato: 'la pregunta sigue en Hoy' })
     const trabado = e.tuberias[p.campoId]?.perdiendoAhora.find(x => x.equipo === p.equipo)
     const choke = deChoke(trabado?.tramo) ?? (p.sobre === 'pozo' ? 'pozo' : 'planta')
     const rotulo = `${ROTULO_CHOKE[choke]}${p.causa.tipo === 'reinyeccion' ? ' · agua' : ''}`
@@ -467,11 +466,6 @@ export function hoy(e: EntradaHoy): VistaHoy {
     }
   }
 
-  /** Cuándo se le escaló una pregunta al supervisor (el registro de WhatsApp). */
-  const escalada = (p: Pregunta) => {
-    const m = e.mensajes.filter(x => x.evento === p.id && x.insistencia === 'escalamiento').sort((a, b) => ms(a.hora) - ms(b.hora))[0]
-    return m ? ms(m.hora) : undefined
-  }
   const filasHoyDe = (eventos: readonly string[]) => enCampos(e.paradas).filter(f => f.diaOperacional === hoyDia && eventos.includes(f.eventoId))
 
   if (declara) {
@@ -506,7 +500,6 @@ export function hoy(e: EntradaHoy): VistaHoy {
         const enOrden = ordenar(suyas.map(p => ({ id: p.id, tipo: 'conseguir-causa' as const, campoId: c, pide: true, titulo: '', ...ordenDe(p) })))
           .map(t => suyas.find(p => p.id === t.id)!)
         const primera = enOrden[0]!
-        const t0 = primera.inicio.getTime(), esc = escalada(primera)
         const decirUna = (p: Pregunta): string => p.fin
           ? `arrancó ${aLas(p.fin.getTime())} sin identificar`
           : `lleva ${horasDesde(p.inicio.getTime(), e.ahora)} ${p.sobre === 'bomba' ? 'sin saber qué se dañó' : 'sin causa'}`
@@ -521,12 +514,12 @@ export function hoy(e: EntradaHoy): VistaHoy {
         if (deHoy > 0) porque.push({ b: `${n0(deHoy)} bbl hoy` }, Math.round(desdeQueParo) > Math.round(deHoy) ? ` · ${n0(desdeQueParo)} desde que pararon` : '')
         else porque.push(`${n0(desdeQueParo)} bbl desde que pararon`)
         // K2 · En el teléfono, sin las horas que no deciden («arrancó sin identificar», no «a la 01:10»)
-        // ni el acumulado: lo de hoy, entre todas. Lo demás, en «Ver el chat» y en el escritorio.
+        // ni el acumulado: lo de hoy, entre todas. Lo demás, en «Ver la parada» y en el escritorio.
         // («sin causa» también para una bomba: «qué se dañó» ya lo dice la franja de arriba).
         const decirCorta = (p: Pregunta): string => p.fin ? 'arrancó sin identificar' : `lleva ${horasDesde(p.inicio.getTime(), e.ahora)} sin causa`
         const porqueCorto: Frase = []
         // Una sola otra, con lo que le pasa (la imagen 3b: «LC-08 arrancó sin identificar»); con varias, el título ya
-        // las cuenta («de 3 paradas») y sus nombres están en «Ver el chat»: solo lo de hoy, entre todas.
+        // las cuenta («de 3 paradas») y sus nombres están en «Ver la parada»: solo lo de hoy, entre todas.
         if (otras.length === 1) porqueCorto.push({ b: otras[0]!.equipo }, ` ${otras[0]!.fin ? 'arrancó sin identificar' : 'sin causa'}`, ' · ')
         // Con una sola otra, «Entre las 2» (la imagen 3b); con más, el título ya las cuenta: «Entre todas».
         if (suyas.length > 1) porqueCorto.push(otras.length > 1 ? 'Entre todas: ' : `Entre las ${suyas.length}: `)
@@ -536,10 +529,10 @@ export function hoy(e: EntradaHoy): VistaHoy {
           grupo: ahoraBbl > 0 ? 'barriles' : 'demas', ...(ahoraBbl > 0 ? { bblAhora: ahoraBbl } : {}), desde: primera.inicio.toISOString(),
           titulo: suyas.length === 1 ? `Conseguir la causa de ${primera.equipo}` : `Conseguir la causa de ${suyas.length} paradas`,
           donde: { equipo: primera.equipo, ...(marca(c, primera.equipo) ? { marca: marca(c, primera.equipo) } : {}),
-            texto: `${decirUna(primera)}${esc && esc >= t0 ? `; se escaló ${aLas(esc)}` : ''}`, corto: decirCorta(primera) },
+            texto: decirUna(primera), corto: decirCorta(primera) },
           porque, porqueCorto,
           accion: { tipo: 'responder', texto: 'Responder yo' },
-          ver: { texto: 'Ver el chat', destino: { a: 'paradas' } },
+          ver: { texto: 'Ver la parada', destino: { a: 'paradas' } },
           preguntas: enOrden.map(preguntaDelLibro),
         })
       }
@@ -694,11 +687,6 @@ export function hoy(e: EntradaHoy): VistaHoy {
     else if (rol === 'jefe' || rol === 'conf') tareas.push({ ...base, id: `intervenir:${r.campoId}:${r.equipo}`, tipo: 'intervenir', titulo: `Intervenir ${r.equipo}: ya pasó el límite`,
       porque: [...siPara(r), r.accion ?? r.motivo], accion: { tipo: 'ir', texto: 'Crear el aviso', destino: { a: 'equipo', campoId: r.campoId, equipo: r.equipo } } })
   }
-  /** Si TRIM le avisó la orden por WhatsApp (lo que decía Mi trabajo, P-trabajo-1): «· le llegó por WhatsApp a las 09:11». */
-  const porWhatsapp = (o: OrdenSap) => {
-    const m = e.mensajes.find(x => x.regla === 'orden' && x.orden === o.numero && x.para === e.persona?.id)
-    return !m ? '' : m.noEnviado ? ` · no le llegó por WhatsApp: ${m.noEnviado}` : ` · le llegó por WhatsApp ${aLas(ms(m.hora))}`
-  }
   // Las órdenes a nombre de quien mira (el técnico): una tarjeta por orden, sin repetir el equipo.
   if (rol === 'tec' && e.persona) for (const o of abiertas.filter(x => x.tecnico === e.persona!.id)) {
     const r = riesgo.find(x => x.campoId === o.campoId && x.equipo === o.equipo)
@@ -707,8 +695,7 @@ export function hoy(e: EntradaHoy): VistaHoy {
       grupo: r ? 'barriles' : 'demas', ...(r?.estado === 'perdiendo' ? { bblAhora: r.bblDia } : r ? { bblSiPara: r.bblDia } : {}), desde: o.liberada ?? o.creada,
       titulo: `Atender la orden de ${o.equipo}`,
       donde: { equipo: o.equipo, ...(marca(o.campoId, o.equipo) ? { marca: marca(o.campoId, o.equipo) } : {}),
-        // (Entero también en el teléfono: si le llegó o no por WhatsApp no está en ningún otro lugar; P-trabajo-1.)
-        texto: `${r ? `${familiaDe(r)}${r.estado === 'en-riesgo' && r.horas === undefined ? ' · ya pasó el límite' : ''} · ` : ''}orden ${o.numero}${porWhatsapp(o)}` },
+        texto: `${r ? `${familiaDe(r)}${r.estado === 'en-riesgo' && r.horas === undefined ? ' · ya pasó el límite' : ''} · ` : ''}orden ${o.numero}` },
       // Una línea (I-tec-2; X5 §5.7): lo que hay que hacer, la primera oración de la orden. La
       // autonomía, el número, a quién se liberó y cómo se cierra van en la orden («Ver la orden ›»).
       porque: [o.descripcion.split(/(?<=\.)\s/)[0] ?? o.descripcion],
@@ -841,7 +828,6 @@ export function hoy(e: EntradaHoy): VistaHoy {
   const insignia = enOrden.filter(t => t.pide).length
   const vacio = !enOrden.some(t => t.pide) && !bloqueos.length ? `Nada pendiente. ${e.campos.length <= 1 ? 'El campo está normal.' : 'Sus campos están normales.'}` : undefined
   const unCampo = e.campos.length === 1 ? e.campos[0] : undefined
-  const whatsapp = rol === 'sup' || rol === 'oper' ? whatsappDelTurno(e) : undefined
   return {
     rol, campos: e.campos,
     inicio: inicioDe(e, enOrden, filas, hoyDia, bloqueos),
@@ -849,9 +835,10 @@ export function hoy(e: EntradaHoy): VistaHoy {
     ...(vacio ? { vacio } : {}),
     entregarTurno: rol === 'sup',
     ...(unCampo && e.tuberias[unCampo] ? { campo: campoAhora(unCampo, e.tuberias[unCampo]!, e.aguas[unCampo]) } : {}),
-    ...(whatsapp ? { whatsapp } : {}),
     ...(rol === 'sup' && e.diferidoTurnoBbl !== undefined ? { turno: { horas: TURNO_H, diferidoBbl: e.diferidoTurnoBbl } } : {}),
-    ...(rol === 'sup' ? { entrega: entregaDelTurno(e, riesgo, bloqueos, enOrden, hechas, whatsapp) } : {}),
+    ...(rol === 'sup' ? { entrega: entregaDelTurno(e, riesgo, bloqueos, enOrden, hechas) } : {}),
+    // M6 · AGREGADO: el número principal del supervisor (y apoyo de producción), con su hora límite.
+    ...(rol === 'sup' || rol === 'prod' ? { porConfirmar: { n: porConfirmarDe(filas, hoyDia), limite: limiteReporte(hoyDia) } } : {}),
   }
 }
 
@@ -859,9 +846,9 @@ export function hoy(e: EntradaHoy): VistaHoy {
 
 /** F1 · P-06 (X4 §5.5; imagen 3a): lo que el supervisor entrega al turno que entra,
  *  armado con lo que Hoy ya sabe —lo que está parado, la franja, lo que queda por
- *  hacer, lo hecho hoy y el WhatsApp de las últimas 12 h—. Ninguna cifra nueva. */
+ *  hacer y lo hecho hoy—. Ninguna cifra nueva. */
 function entregaDelTurno(e: EntradaHoy, riesgo: readonly Riesgo[], bloqueos: readonly BloqueoHoy[], tareas: readonly TareaHoy[],
-  hechas: readonly HechaHoy[], w: WhatsappHoy | undefined): EntregaTurno {
+  hechas: readonly HechaHoy[]): EntregaTurno {
   const d = new Date(e.ahora - COT)
   const donde = e.campos.length === 1 ? campoPorId(e.campos[0]!).nombre : 'sus campos'
   const paro: Frase[] = [...riesgo].filter(r => r.estado === 'perdiendo').sort((a, b) => b.bblDia - a.bblDia).map(r => [
@@ -873,7 +860,6 @@ function entregaDelTurno(e: EntradaHoy, riesgo: readonly Riesgo[], bloqueos: rea
     paro,
     pendiente: tareas.filter(t => t.pide).map(t => [{ b: t.titulo }, ...(t.donde ? [` · ${t.donde.equipo} ${t.donde.texto}`] : [])]),
     hecho: hechas.map(h => [{ b: h.titulo }, ` · ${h.detalle}`]),
-    whatsapp: (w?.hilos ?? []).map(h => [{ b: h.equipo }, ` ${h.pasos}`, ...(h.estado ? [' · ', ...h.estado] : [])]),
     ...(e.diferidoTurnoBbl !== undefined ? { diferido: [{ b: `${n0(e.diferidoTurnoBbl)} bbl` }, ` diferidos en las últimas ${TURNO_H} h.`] } : {}),
   }
 }
@@ -884,6 +870,12 @@ const PASO_EN_PALABRAS: Record<PasoAnh, string> = {
 
 /* ─────────────────────────────── la cifra y su frase ─────────────────────────────── */
 
+/** M6 · Las paradas del día operacional de hoy que faltan por confirmar para el
+ *  reporte a la ANH: cada evento una vez, aunque tenga varias filas (pozo × causa). */
+function porConfirmarDe(filas: readonly ParadaAnh[], hoyDia: string): number {
+  return new Set(filas.filter(f => f.diaOperacional === hoyDia && f.estado !== 'confirmada').map(f => f.eventoId)).size
+}
+
 /** La cifra y la frase del inicio de cada rol (X4 §3.4), con lo que el motor ya sabe. */
 function inicioDe(e: EntradaHoy, tareas: readonly TareaHoy[], filas: readonly ParadaAnh[], hoyDia: string, bloqueos: readonly BloqueoHoy[]): InicioHoy {
   const rol = e.rol.id
@@ -892,7 +884,7 @@ function inicioDe(e: EntradaHoy, tareas: readonly TareaHoy[], filas: readonly Pa
   if (rol === 'sup') {
     const ahora = e.riesgo.filter(r => r.estado === 'perdiendo' && e.campos.includes(r.campoId)).reduce((a, r) => a + r.bblDia, 0)
     const deHoy = filas.filter(f => f.diaOperacional === hoyDia)
-    const faltan = new Set(deHoy.filter(f => f.estado !== 'confirmada').map(f => f.eventoId)).size
+    const faltan = porConfirmarDe(filas, hoyDia)
     const explica: Frase = faltan
       ? ['Le faltan ', { b: plural(faltan, 'parada por confirmar', 'paradas por confirmar') }, `: el reporte sale mañana antes de las ${HORA_REPORTE}.`]
       : [deHoy.length ? 'Las paradas de hoy ya están confirmadas para el reporte.' : 'Hoy no ha parado ningún pozo: no hay nada que confirmar.']
@@ -992,31 +984,4 @@ function campoAhora(campoId: string, t: TuberiaCampo, a: TuberiaAgua | undefined
       sube === undefined ? '.' : sube ? ': sube; las bombas no alcanzan a tomar lo que entra.' : `: no sube, ${lista(s!.enMarcha)} toman lo que entra.`])
   }
   return { campoId, tramos, frases }
-}
-
-/** «El turno en WhatsApp»: los hilos de las últimas 12 h, uno por parada u orden
- *  (el mismo armado de Turno: cada paso con su hora y, al final, si respondieron). */
-function whatsappDelTurno(e: EntradaHoy): WhatsappHoy {
-  const desde = e.ahora - TURNO_H * H
-  const enviados = e.mensajes.filter(m => e.campos.includes(m.campoId) && ms(m.hora) >= desde && !m.noEnviado)
-  const PASO: Record<string, string> = { parada: 'parado', cierre: 'pozos cerrándose', causa: 'pregunta', parte: 'aviso del vigía', orden: 'orden liberada en SAP', recordatorio: 'recordatorio', escalamiento: 'escalado' }
-  const RANGO_PASO: Record<string, number> = { parada: 0, causa: 1, recordatorio: 2, escalamiento: 3, cierre: 4, parte: 5, orden: 6 }
-  const hilos = new Map<string, { equipo: string; evento?: string; ultima: number; pasos: Array<{ t: number; r: number; que: string }> }>()
-  for (const m of enviados) {
-    const k = `${m.campoId}|${m.evento ?? m.orden ?? `${m.regla}|${m.equipo}`}`
-    const h = hilos.get(k) ?? { equipo: m.equipo, ...(m.evento ? { evento: m.evento } : {}), ultima: 0, pasos: [] }
-    const clave = m.insistencia ?? m.regla
-    const t = ms(m.hora)
-    if (!h.pasos.some(x => x.t === t && x.que === PASO[clave])) h.pasos.push({ t, r: RANGO_PASO[clave] ?? 9, que: PASO[clave] ?? clave })
-    h.ultima = Math.max(h.ultima, t)
-    hilos.set(k, h)
-  }
-  return {
-    mensajes: enviados.length,
-    hilos: [...hilos.values()].sort((a, b) => b.ultima - a.ultima).map(h => {
-      const p = h.evento ? e.preguntas.find(x => x.id === h.evento) : undefined
-      const estado: Frase | undefined = !p ? undefined : p.causa.declarado ? [`respondió ${p.causa.declarado.por.split(' · ')[0]}`] : [{ b: 'sin respuesta' }]
-      return { equipo: h.equipo, pasos: h.pasos.sort((a, b) => a.t - b.t || a.r - b.r).map(x => `${horaCo(x.t)} ${x.que}`).join(' → '), ...(estado ? { estado } : {}) }
-    }),
-  }
 }

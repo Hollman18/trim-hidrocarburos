@@ -34,7 +34,7 @@ export const LEMA_FASE: Record<FaseCiclo, string> = {
 
 /** Qué hay en el producto detrás de cada palanca (pitch comercial). */
 export const PALANCA_PRODUCTO: Record<FaseCiclo, string> = {
-  antes: 'Vigía, riesgo, si falla hoy, colchón del tanque, aciertos del vigía y WhatsApp con ventana.',
+  antes: 'Vigía, riesgo, si falla hoy, colchón del tanque y aciertos del vigía.',
   durante: 'Identificar el daño, MTTR vs reparación, orden TRIM — motor TRIM, etiquetado simulado.',
   despues: 'Paretos por parte, MTBF y costo por falla, libro publicable — no repetir.',
 }
@@ -121,12 +121,12 @@ function tramoDe(planes: PlanAccion[]): TramoCiclo {
 }
 
 /** ANTES: cada equipo de alto impacto que produce y tiene una parte que avisa.
- *  El barril del plan es lo que costaría que fallara HOY (`costoFalla`). */
+ *  El barril del plan es lo que costaría que fallara HOY (`costoFallaHoy`). */
 function planesAntes(campoIds: string[], ctx: Contexto): PlanAccion[] {
   const out: PlanAccion[] = []
   for (const r of riesgoAhora(campoIds, ctx)) {
     if (r.estado !== 'en-riesgo' || !r.altoImpacto) continue
-    const bbl = r.costoFalla ?? 0
+    const bbl = r.costoFallaHoy ?? 0
     const horas = finito(r.horas) ? r.horas : undefined
     out.push(plan({
       ctx, id: `antes:${r.campoId}:${r.equipo}:${r.parte ?? '_'}`, fase: 'antes',
@@ -204,7 +204,7 @@ function planesDurante(campoIds: string[], ctx: Contexto, versiones: Versiones):
           ctx, id: `durante:${r.campoId}:${r.equipo}:identificar`, fase: 'durante',
           campoId: r.campoId, equipo: r.equipo, parte: r.parte,
           titulo: 'Identificar el daño: no arrancar hasta entonces',
-          accion: 'Registrar la parte dañada (pantalla Identificar o WhatsApp). TRIM no escribe en el PLC; arrancar sin identificar queda como no conformidad.',
+          accion: 'Registrar la parte dañada en la pantalla («Contestar» en Hoy). TRIM no escribe en el PLC; arrancar sin identificar queda como no conformidad.',
           bbl: 0, horas: colchonH,
           supuestos: [
             'Ninguna señal explica la parte: el libro no puede cargar el barril a un ítem mantenible.',

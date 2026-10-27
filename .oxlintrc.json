@@ -437,6 +437,51 @@
                 "message": "Del motor (resultados) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/resultados.ts."
               },
               {
+                "name": "@/entities/orden-cierre",
+                "allowTypeImports": true,
+                "message": "A3 · Del motor (orden-cierre) las pantallas y el estado de la aplicación solo importan nombres de presentación. El cierre se escribe con cerrarOrden (shared/api/escrituras.ts) y los 5 tramos llegan en useRelojes (shared/api/sap.ts); los nombres, también en shared/api/acciones.ts.",
+                "allowImportNames": [
+                  "ACTIVIDADES",
+                  "NOMBRE_ACTIVIDAD",
+                  "TRAMOS_TIEMPO_FUERA",
+                  "NOMBRE_TRAMO_TIEMPO_FUERA"
+                ]
+              },
+              {
+                "name": "@/entities/anh-respuestas",
+                "allowTypeImports": true,
+                "message": "A3 · Del motor (anh-respuestas) las pantallas y el estado de la aplicación solo importan nombres de presentación. La respuesta se escribe con registrarRespuestaAnh (shared/api/escrituras.ts) y se lee con useRespuestasAnh (shared/api/acciones.ts) o en useReporteAnh.",
+                "allowImportNames": [
+                  "MOTIVOS_RECHAZO_ANH",
+                  "MINUTOS_PARA_CORREGIR"
+                ]
+              },
+              {
+                "name": "@/entities/anh-conversion",
+                "allowTypeImports": true,
+                "message": "A3 · Del motor (anh-conversion) las pantallas y el estado de la aplicación solo importan tipos. La tabla se carga con importarConversion (shared/api/escrituras.ts), se firma con la configuración y se lee con useConversionAnh (shared/api/acciones.ts)."
+              },
+              {
+                "name": "@/entities/perdidas",
+                "allowTypeImports": true,
+                "message": "A2 · Del motor (perdidas) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/perdidas.ts (las palabras se reexportan ahí)."
+              },
+              {
+                "name": "@/entities/balance",
+                "allowTypeImports": true,
+                "message": "A2 · Del motor (balance) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/balance.ts (las palabras se reexportan ahí)."
+              },
+              {
+                "name": "@/entities/jornada",
+                "allowTypeImports": true,
+                "message": "A2 · Del motor (jornada) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/balance.ts (las palabras se reexportan ahí)."
+              },
+              {
+                "name": "@/entities/efectividad",
+                "allowTypeImports": true,
+                "message": "A2 · Del motor (efectividad) las pantallas y el estado de la aplicación solo importan tipos. Los datos del servidor se piden a la costura: src/shared/api/balance.ts (las palabras se reexportan ahí)."
+              },
+              {
                 "name": "@/shared/api/diferidos",
                 "importNames": [
                   "pedirLibro",
@@ -584,6 +629,23 @@
                   "pedirResultados"
                 ],
                 "message": "Las pantallas no llaman la respuesta del demo (pedirResultados): con la fuente http eso saltaría al servidor. Se lee con el gancho use* de src/shared/api/resultados.ts."
+              },
+              {
+                "name": "@/shared/api/perdidas",
+                "importNames": [
+                  "pedirPerdidas"
+                ],
+                "message": "A2 · Las pantallas y el estado de la aplicación no llaman la respuesta del demo (`pedirPerdidas`): con la fuente http saltaría al servidor. Se lee con `usePerdidas` y se escribe con `registrarPerdida`."
+              },
+              {
+                "name": "@/shared/api/balance",
+                "importNames": [
+                  "pedirBalance",
+                  "pedirJornada",
+                  "pedirEfectividad",
+                  "pedirFallasMensual"
+                ],
+                "message": "A2 · Las pantallas y el estado de la aplicación no llaman las respuestas del demo (`pedir*`): con la fuente http saltarían al servidor. Se leen con `useBalance`, `useJornada`, `useEfectividad` y `useFallasMensual`."
               }
             ],
             "patterns": [

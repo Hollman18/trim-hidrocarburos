@@ -1,5 +1,12 @@
 # 3. Modelo de datos
 
+> **El SQL de la versión 1 rige (decisión del dueño).**
+> - El SQL de v1 es `simulador-api/esquema.sql`: la cadena de datos (10 tablas y la vista `v_procedencia`). Rige y no cambió.
+> - `sql/esquema.sql`, el que describe este capítulo, es **AGREGADO** al lado: la versión 2 del modelo, necesaria para todo lo demás.
+> - `sql/v1-cadena.sql` da las tablas y columnas de v1 desde el modelo nuevo, en el esquema `v1`.
+> - Detalle en [CAMBIOS-CONTRATO.md §4.6](CAMBIOS-CONTRATO.md#46-sql-dos-esquemas-para-la-cadena-de-datos-c19-q1-a-q5).
+> - Lo de WhatsApp de este capítulo (5 tablas y 5 columnas) está **RETIRADO (27-oct-2026)**: no se crea. Ver [CAMBIOS-CONTRATO.md §3](CAMBIOS-CONTRATO.md#3-retirado-whatsapp-propuesto-el-27-oct-2026), R8.
+
 Este capítulo es la base de datos del servidor: **qué se guarda, en qué tabla, quién lo escribe, qué endpoint lo lee y qué reglas obliga la base** (no solo el código). Es PostgreSQL 16; TimescaleDB es opcional. El capítulo 4 cuenta cómo llegan los datos del borde a estas tablas; los capítulos 5A a 5E, qué calcula el motor con ellas; el 7, los endpoints.
 
 Todo lo de este capítulo está en la carpeta `sql/`:
@@ -31,9 +38,9 @@ Todo lo de este capítulo está en la carpeta `sql/`:
 
 **Un dato ausente es NULL, nunca 0.** El fiscal de un día sin dato del computador de flujo (`produccion_fiscal_diaria.bbl`), un precio sin configurar (`tramo_meta.netback_usd`), un °API que el laboratorio no ha reportado (`metrologia_campo.api`), el lado de una alarma que no existe (`alarma_tag.alta`) o un instrumento sin señal (`lectura.valor` con calidad `mala`). Ninguna columna de esas tiene `default 0`.
 
-**Solo inserción.** Un trigger (`solo_insercion`) rechaza `UPDATE`, `DELETE` y `TRUNCATE` con SQLSTATE `23001` en: `version_config` y su forma normalizada (`membrete`, `perfil_campo`, `tramo_meta`, `tanque`, `respaldo`, `parada_programada`), `cambio_acceso`, `mensaje` y `mensaje_libre` (salvo poner una vez el id de Meta), `estado_mensaje`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `informe`, `informe_campo`, `carga_asignacion`, `carga_asignacion_grupo`, `asignacion_oficial`, `cambio_planta`, `historial_tag`, `nacimiento`, `rechazo`, `alarma_tag`, `evento` y `recalculo_mes`. Los eventos del borde (`evento_pozo`, `evento_servicio`, `parada_bomba`) solo admiten **cerrarse** (poner `fin` una vez) y, en una parada, **poner la firma** una vez (`evento_solo_cierre`). Las predicciones solo admiten **agregar la calificación** una vez (`prediccion_califica`). A nadie se le borra del registro de personas (`usuario_reglas`). En todas estas tablas un trigger de sentencia (`<tabla>_sin_truncate`) rechaza también `TRUNCATE`, que no dispara los triggers de fila: sin él, un `TRUNCATE … CASCADE` vaciaría el registro sin pasar por la regla. El precálculo no se corrige en sitio (`precalculo_no_se_actualiza`): un mes se recalcula entero.
+**Solo inserción.** Un trigger (`solo_insercion`) rechaza `UPDATE`, `DELETE` y `TRUNCATE` con SQLSTATE `23001` en: `version_config` y su forma normalizada (`membrete`, `perfil_campo`, `tramo_meta`, `tanque`, `respaldo`, `parada_programada`), `cambio_acceso`, `mensaje` y `mensaje_libre` (salvo poner una vez el id de Meta), `estado_mensaje`, `respuesta_entrante` (estas cuatro, de WhatsApp: **RETIRADO (27-oct-2026)**), `respuesta_parada`, `analisis`, `informe`, `informe_campo`, `carga_asignacion`, `carga_asignacion_grupo`, `asignacion_oficial`, `cambio_planta`, `historial_tag`, `nacimiento`, `rechazo`, `alarma_tag`, `evento` y `recalculo_mes`. Los eventos del borde (`evento_pozo`, `evento_servicio`, `parada_bomba`) solo admiten **cerrarse** (poner `fin` una vez) y, en una parada, **poner la firma** una vez (`evento_solo_cierre`). Las predicciones solo admiten **agregar la calificación** una vez (`prediccion_califica`). A nadie se le borra del registro de personas (`usuario_reglas`). En todas estas tablas un trigger de sentencia (`<tabla>_sin_truncate`) rechaza también `TRUNCATE`, que no dispara los triggers de fila: sin él, un `TRUNCATE … CASCADE` vaciaría el registro sin pasar por la regla. El precálculo no se corrige en sitio (`precalculo_no_se_actualiza`): un mes se recalcula entero.
 
-**Las reglas viven en la base además del código.** Lo que el contrato pide con 409 o 422 y que se puede decir como restricción está en la base: la primera respuesta gana (clave primaria), un aviso abierto por equipo (índice único parcial), el WhatsApp único entre no suspendidos (índice único parcial), los rangos de `validarConfig` (CHECK), el candado optimista de la configuración (`version = base + 1`). Así un segundo cliente, un script de carga o un error del servidor no puede dejar la base en un estado que el contrato prohíbe. Las reglas que dependen de la hora («lo de un mes cerrado no cambia», «una parada solo se programa antes de que empiece») las aplica el servidor con `validarConfig` y su hora; la base no conoce «ahora» al validar.
+**Las reglas viven en la base además del código.** Lo que el contrato pide con 409 o 422 y que se puede decir como restricción está en la base: la primera respuesta gana (clave primaria), un aviso abierto por equipo (índice único parcial), el WhatsApp único entre no suspendidos (índice único parcial; **RETIRADO (27-oct-2026)**), los rangos de `validarConfig` (CHECK), el candado optimista de la configuración (`version = base + 1`). Así un segundo cliente, un script de carga o un error del servidor no puede dejar la base en un estado que el contrato prohíbe. Las reglas que dependen de la hora («lo de un mes cerrado no cambia», «una parada solo se programa antes de que empiece») las aplica el servidor con `validarConfig` y su hora; la base no conoce «ahora» al validar.
 
 **Cómo se traduce un error de la base a HTTP.** El servidor captura el SQLSTATE y responde con el error único del contrato (el `mensaje` en español y sin detalles de SQL):
 
@@ -42,8 +49,8 @@ Todo lo de este capítulo está en la carpeta `sql/`:
 | `23505` en `respuesta_parada_pkey` | segunda respuesta al mismo evento | 409 `conflicto` («Ya respondió …») |
 | `23505` en `aviso_sap_uno_abierto` | segundo aviso abierto del equipo | 409 `conflicto` con el número del abierto |
 | `23505` en `version_config_pkey` | otro firmó sobre la misma base | 409 `version-cambio` |
-| `23505` en `usuario_telefono_unico` / `usuario_correo_unico` | WhatsApp o correo repetido | 422 `acceso-invalido` con `errores[{campo:'whatsapp'|'correo'}]` |
-| `23505` en `respuesta_entrante_pkey` | Meta reintentó el mismo mensaje | 200 al webhook (ya estaba) |
+| `23505` en `usuario_telefono_unico` / `usuario_correo_unico` | WhatsApp o correo repetido (el WhatsApp: **RETIRADO (27-oct-2026)**, R3) | 422 `acceso-invalido` con `errores[{campo:'whatsapp'|'correo'}]` |
+| `23505` en `respuesta_entrante_pkey` | Meta reintentó el mismo mensaje (**RETIRADO (27-oct-2026)**) | 200 al webhook (ya estaba) |
 | `23514` (CHECK o trigger de regla) | un rango o una regla de forma | 422 `peticion-invalida` o el código propio (`texto-corto`, `descripcion-corta`…) |
 | `23514` de `usuario_coherente` (último gerente) | dejar la operación sin gerente activo | 409 `conflicto` |
 | `23503` (clave foránea) | un recurso que no existe (equipo, campo, evento) | 404 o 422 según el endpoint (`equipo-desconocido`, `campo-desconocido`) |
@@ -60,8 +67,8 @@ Las validaciones que el contrato exige **antes** que la forma (capacidad 403, re
 | [(c) Series](#35-c-series) | La lectura de cada tag en el tiempo (tag, instante, valor, calidad), particionada por mes; opcionalmente hipertabla de TimescaleDB. | 1: `lectura` |
 | [(d) Insumos del motor](#36-d-insumos-del-motor) | Lo que el borde entrega y el motor consume (interfaz Insumos): pozos y pruebas, eventos de los controladores, paradas de bombas, caídas de servicios, fiscal diario, metrología, perfiles de bomba, límites y alarmas, y el catálogo de daños de ISO 14224. | 27: `pozo`, `prueba_pozo`, `evento`, `evento_pozo`, `evento_servicio`, `parada_bomba`, `punto_medicion`, `mes_fiscal`, `produccion_fiscal_diaria`, `metrologia_campo`, `banda_regulatoria`, `perfil_bomba`, `perfil_bomba_tag`, `perfil_bomba_pozo`, `alarma_tag`, `ajuste_variador`, `modo_falla`, `mecanismo_falla`, `causa_raiz`, `modo_por_clase`, `clase_catalogo`, `clase_iso_catalogo`, `parte`, `parte_variable`, `parte_modo`, `mapeo_catalogo_sap`, `perfil_bomba_primera_alarma` |
 | [(e) Configuración firmada](#37-e-configuracion-firmada) | Lo único técnico que entra a mano: metas, precio, regla de cierre, perfil, tanques, respaldos, programa, membrete y, con el modelo choke, la topología (a qué pozos sirve cada equipo, o «Todavía no sé») y las capacidades de los tramos con su fuente. Cada firma es una versión completa e inmutable. | 11: `version_config`, `membrete`, `perfil_campo`, `tramo_meta`, `tanque`, `respaldo`, `parada_programada`, `topologia`, `topologia_por_saber`, `capacidades_campo`, `capacidad_firmada` |
-| [(f) Personas](#38-f-personas) | Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO, el rastro de cambios de acceso y, para la clasificación ANH, qué pasos dice o confirma cada rol y qué preguntas de campo contesta. | 9: `rol`, `capacidad`, `rol_capacidad`, `usuario`, `usuario_campo`, `identidad_oidc`, `cambio_acceso`, `paso_por_rol`, `contesta_pregunta` |
-| [(g) Lo que entra a mano y WhatsApp](#39-g-lo-que-entra-a-mano-y-whatsapp) | Respuestas de los operarios, análisis de confiabilidad, la clasificación ANH de cada parada (los catálogos de la Circular 0024, lo que dice cada persona paso por paso, las respuestas de campo, las revisiones y los lotes), informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta. | 25: `plantilla_whatsapp`, `prediccion`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `causa_n1`, `causa_n2`, `causa_general`, `pregunta_campo`, `opcion_campo`, `confirmacion_lote`, `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `revision_atendida`, `folio_contador`, `informe`, `informe_campo`, `mensaje`, `mensaje_libre`, `estado_mensaje`, `carga_asignacion`, `carga_asignacion_grupo`, `asignacion_oficial`, `cambio_planta` |
+| [(f) Personas](#38-f-personas) | Roles y capacidades del producto, usuarios con sus campos y su WhatsApp (**RETIRADO (27-oct-2026)**), la identidad del SSO, el rastro de cambios de acceso y, para la clasificación ANH, qué pasos dice o confirma cada rol y qué preguntas de campo contesta. | 9: `rol`, `capacidad`, `rol_capacidad`, `usuario`, `usuario_campo`, `identidad_oidc`, `cambio_acceso`, `paso_por_rol`, `contesta_pregunta` |
+| [(g) Lo que entra a mano (WhatsApp: RETIRADO, 27-oct-2026)](#39-g-lo-que-entra-a-mano-whatsapp-retirado-27-oct-2026) | Respuestas de los operarios, análisis de confiabilidad, la clasificación ANH de cada parada (los catálogos de la Circular 0024, lo que dice cada persona paso por paso, las respuestas de campo, las revisiones y los lotes), informes con folio, el registro de WhatsApp (saliente y entrante; **RETIRADO (27-oct-2026)**), predicciones del vigía, la asignación oficial cargada y los cambios de planta. | 25: `plantilla_whatsapp`, `prediccion`, `respuesta_entrante`, `respuesta_parada`, `analisis`, `causa_n1`, `causa_n2`, `causa_general`, `pregunta_campo`, `opcion_campo`, `confirmacion_lote`, `clasificacion_paso`, `respuesta_campo`, `revision_parada`, `revision_atendida`, `folio_contador`, `informe`, `informe_campo`, `mensaje`, `mensaje_libre`, `estado_mensaje`, `carga_asignacion`, `carga_asignacion_grupo`, `asignacion_oficial`, `cambio_planta` |
 | [(h) Lo que se lee de SAP PM](#310-h-lo-que-se-lee-de-sap-pm) | Espejo de lo que TRIM necesita de SAP: identidad del equipo, avisos, órdenes con sus horas y repuestos, y stock. TRIM no crea órdenes. | 9: `equipo_sap`, `clase_orden_sap`, `aviso_sap`, `orden_sap`, `confirmacion_sap`, `material_sap`, `repuesto_orden`, `stock_sap`, `repuesto_equipo` |
 | [(i) Precálculo de meses cerrados](#311-i-precalculo-de-meses-cerrados) | Caché verificable del motor para meses cerrados y publicados: libro del mes por campo, factor de asignación, tramos por día y asignación por pozo. | 5: `factor_asignacion_mes`, `libro_mes`, `tramo_diferido`, `asignacion_pozo_mes`, `recalculo_mes` |
 
@@ -78,7 +85,7 @@ flowchart LR
   E["(e) Configuración firmada<br/>version_config + tramos, tanques, respaldos, programa,<br/>topología y capacidades del choke"] --> M(("Motor"))
   D --> M
   C --> M
-  F["(f) Personas<br/>rol · usuario · cambio_acceso · pasos por rol"] --> G["(g) Entra a mano y WhatsApp<br/>respuestas · análisis · clasificación ANH · informes · mensajes"]
+  F["(f) Personas<br/>rol · usuario · cambio_acceso · pasos por rol"] --> G["(g) Entra a mano<br/>(WhatsApp: RETIRADO 27-oct-2026)<br/>respuestas · análisis · clasificación ANH · informes · mensajes"]
   G --> M
   H["(h) SAP PM<br/>avisos · órdenes · stock"] <--> G
   M --> I["(i) Precálculo de meses cerrados<br/>libro_mes · tramo_diferido · asignación"]
@@ -1277,7 +1284,7 @@ Tanque de agua de una bomba de reinyección (TanqueAgua de configuracion.ts), fi
 
 #### `respaldo`
 
-Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto fluido libre toma el equipo en paralelo cuando ella para. Uno por (campo, equipo). Cambia el colchón, el orden de cierre y el texto del WhatsApp de la parada. Firma config:firmar.
+Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto fluido libre toma el equipo en paralelo cuando ella para. Uno por (campo, equipo). Cambia el colchón, el orden de cierre y el texto del WhatsApp de la parada (este último, **RETIRADO (27-oct-2026)**). Firma config:firmar.
 
 - **Tipo TS:** RespaldoBomba (src/entities/configuracion.ts).
 - **Quién escribe:** Servidor al firmar (config:firmar).
@@ -1394,7 +1401,7 @@ Un número firmado de las capacidades de un campo (CapacidadFirmada de capacidad
 
 ## 3.8 (f) Personas
 
-Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO, el rastro de cambios de acceso y, para la clasificación ANH, qué pasos dice o confirma cada rol y qué preguntas de campo contesta.
+Roles y capacidades del producto, usuarios con sus campos y su WhatsApp (**RETIRADO (27-oct-2026)**), la identidad del SSO, el rastro de cambios de acceso y, para la clasificación ANH, qué pasos dice o confirma cada rol y qué preguntas de campo contesta.
 
 ```mermaid
 erDiagram
@@ -1489,7 +1496,7 @@ Reparto de capacidades por rol (Rol.puede de roles.ts). Las capacidades de la se
 
 #### `usuario`
 
-Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuarios, PATCH /api/usuarios/:id. Nadie se borra: quien ya no debe entrar queda suspendido y su nombre sigue en lo que firmó. Correo único en minúsculas; WhatsApp en E.164 único entre los no suspendidos (es la identidad del webhook).
+Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuarios, PATCH /api/usuarios/:id. Nadie se borra: quien ya no debe entrar queda suspendido y su nombre sigue en lo que firmó. Correo único en minúsculas; WhatsApp en E.164 único entre los no suspendidos (es la identidad del webhook). **RETIRADO (27-oct-2026)**: `telefono`, `alertas`, `usuario_telefono_unico` y el trigger de alertas no se crean; si llegan, se aceptan y se ignoran (R3).
 
 - **Tipo TS:** Usuario / PersonaVisible (src/entities/usuarios.ts).
 - **Quién escribe:** Servidor, por quien tiene usuarios:administrar (gerente de activo).
@@ -1601,9 +1608,11 @@ Capacidades efectivas de cada rol, con lo que cada una incluye (puedeHacer de ti
 - **Quién escribe:** (vista)
 - **Quién lee:** `GET /api/sesion → capacidades`.
 
-## 3.9 (g) Lo que entra a mano y WhatsApp
+## 3.9 (g) Lo que entra a mano (WhatsApp: RETIRADO, 27-oct-2026)
 
-Respuestas de los operarios, análisis de confiabilidad, la clasificación ANH de cada parada (los catálogos de la Circular 0024, lo que dice cada persona paso por paso, las respuestas de campo, las revisiones y los lotes), informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta.
+Respuestas de los operarios, análisis de confiabilidad, la clasificación ANH de cada parada (los catálogos de la Circular 0024, lo que dice cada persona paso por paso, las respuestas de campo, las revisiones y los lotes), informes con folio, el registro de WhatsApp (saliente y entrante; **RETIRADO (27-oct-2026)**), predicciones del vigía, la asignación oficial cargada y los cambios de planta.
+
+### Diagrama del grupo (las tablas de WhatsApp: RETIRADO, 27-oct-2026)
 
 ```mermaid
 erDiagram
@@ -1776,7 +1785,9 @@ erDiagram
 
 Fuera del diagrama, las tablas de este grupo apuntan además a: `activo` (a), `evento` (d), `parte` (d), `usuario` (f), `modo_falla` (d), `causa_raiz` (d), `mecanismo_falla` (d), `rol` (f), `campo` (a), `evento_pozo` (d), `version_config` (e), `orden_sap` (h).
 
-#### `plantilla_whatsapp`
+#### `plantilla_whatsapp` · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** No se crea (R8). Sin canal no hay plantillas de Meta.
 
 Las diez plantillas aprobadas por Meta (PLANTILLAS de src/entities/mensajes.ts). El mensaje que inicia la empresa tiene que ser una de ellas; el texto de cada mensaje es exactamente su cuerpo con los parámetros.
 
@@ -1808,7 +1819,9 @@ Registro de predicciones del vigía (PrediccionVigia de src/entities/aciertos.ts
 - **La apuntan:** `mensaje`.
 - **Fila real del demo:** `{"id":"PR-EP-LC04-260926-75","campo_id":"ceiba","equipo":"LC-04","familia":"electrosumergible","parte":"aislamiento","tag":null,"accion":"Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.","emitida":"2026-09…`
 
-#### `respuesta_entrante`
+#### `respuesta_entrante` · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** No se crea (R2, R8). Toda respuesta entra por `POST /api/paradas/:evento/respuesta` (pantalla).
 
 Mensajes entrantes del webhook de WhatsApp (POST /api/webhooks/whatsapp), ya con la firma X-Hub-Signature-256 válida. La clave primaria es el id de Meta (messages[].id): Meta reintenta y el segundo intento choca (deduplicación). Se guarda aceptado, en curso (un paso del diálogo que pide el siguiente: la parte o lo que vio) o descartado, con el motivo. Solo inserción.
 
@@ -1830,16 +1843,16 @@ Mensajes entrantes del webhook de WhatsApp (POST /api/webhooks/whatsapp), ya con
 
 #### `respuesta_parada`
 
-Respuesta de un operario a una parada que ninguna señal explica (Respuesta de src/entities/pozos.ts): el único dato del libro que entra a mano, marcado como declarado. POST /api/paradas/:evento/respuesta (pantalla) o webhook (WhatsApp); GET /api/paradas/respuestas. Una por evento: la PRIMERA gana (clave primaria → 409). Solo inserción: no se edita ni se reemplaza.
+Respuesta de un operario a una parada que ninguna señal explica (Respuesta de src/entities/pozos.ts): el único dato del libro que entra a mano, marcado como declarado. POST /api/paradas/:evento/respuesta (pantalla) o webhook (WhatsApp, **RETIRADO (27-oct-2026)**: toda respuesta es de pantalla); GET /api/paradas/respuestas. Una por evento: la PRIMERA gana (clave primaria → 409). Solo inserción: no se edita ni se reemplaza.
 
 - **Tipo TS:** Respuesta (src/entities/pozos.ts).
-- **Quién escribe:** Persona con causa:declarar o causa:completar (pantalla) o resuelta por el webhook (WhatsApp).
-- **Quién lee:** `POST /api/paradas/:evento/respuesta`, `GET /api/paradas/respuestas`, `POST /api/webhooks/whatsapp`.
+- **Quién escribe:** Persona con causa:declarar o causa:completar (pantalla) o resuelta por el webhook (WhatsApp, **RETIRADO (27-oct-2026)**).
+- **Quién lee:** `POST /api/paradas/:evento/respuesta`, `GET /api/paradas/respuestas`, `POST /api/webhooks/whatsapp` (**RETIRADO (27-oct-2026)**).
 - **Clave:** (evento_id).
-- **Columnas (10):** `evento_id`*, `texto`*, `por`*, `por_id`, `hora`*, `familia`, `parte`, `modo`, `canal`, `entrante_meta_id` (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
+- **Columnas (10):** `evento_id`*, `texto`*, `por`*, `por_id`, `hora`*, `familia`, `parte`, `modo`, `canal`, `entrante_meta_id` (`canal` y `entrante_meta_id`: **RETIRADO (27-oct-2026)**, R4 y R8) (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
 - **Reglas:**
   - La primera gana (409); no se edita ni se reemplaza.
-  - 403 si el cuerpo trae canal whatsapp: eso solo entra por el webhook.
+  - 403 si el cuerpo trae canal whatsapp: eso solo entra por el webhook. **RETIRADO (27-oct-2026)**: el 403 deja de importar (R4).
   - 422: campo del cuerpo distinto al del evento, parte que no es del equipo, bomba sin parte, modo que no es de la parte, texto libre < 8.
   - Si llega después del arranque, la parada es no conformidad.
   - Único: (entrante_meta_id).
@@ -2011,7 +2024,7 @@ La conversación de campo de una parada (RespuestaCampo de src/entities/anh-clas
 
 #### `revision_parada`
 
-«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.
+«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook: **RETIRADO (27-oct-2026)**; queda el botón «Algo está mal» de la pantalla). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.
 
 - **Tipo TS:** RevisionAnh (src/entities/anh-clasificacion.ts; ParadaAnh.revision).
 - **Quién escribe:** Persona con anh:clasificar («Algo está mal»; «Pedir a producción» desde quien revisa).
@@ -2093,7 +2106,9 @@ Campos del informe (ConsultaInforme.campos). GET /api/informes/:folio exige que 
 - **Apunta a:** `campo` por (campo_id) N:1; `informe` por (folio) N:1.
 - **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
 
-#### `mensaje`
+#### `mensaje` · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** No se crea (R1, R8). Reemplazo: las tarjetas e insignias de Hoy y la franja «No arrancar».
 
 Registro de lo que TRIM manda por WhatsApp (Mensaje de src/entities/mensajes.ts). GET /api/mensajes. Se guarda al intentar enviar y no se reescribe: el que salió trae texto (exactamente la plantilla con sus parámetros) y el que no se pudo armar trae no_enviado (el motivo). Cada mensaje se arma con la versión de la configuración que regía a su hora. Solo inserción, salvo poner una vez el id de Meta.
 
@@ -2112,7 +2127,9 @@ Registro de lo que TRIM manda por WhatsApp (Mensaje de src/entities/mensajes.ts)
 - **Apunta a:** `activo` por (campo_id, equipo) N:1; `evento` por (evento_id) N:1; `orden_sap` por (orden) N:1; `usuario` por (para_id) N:1; `plantilla_whatsapp` por (plantilla) N:1; `prediccion` por (prediccion_id) N:1.
 - **Fila real del demo:** `{"id":"causa-EP-LC06-260814-04--oper-2026-08-14T08:31:00.000Z","regla":"causa","plantilla":"causa","parametros":{"campo":"La Ceiba","fecha":"14 de ago, 03:30","equipo":"LC-06","opciones":"1) Aislamiento del motor y del cable · 2) Protector (sello del motor) · …`
 
-#### `mensaje_libre`
+#### `mensaje_libre` · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** No se crea (R8).
 
 Mensajes libres que TRIM manda dentro de la ventana de 24 h que abre la respuesta de la persona (CONTRATO.md, «WhatsApp» y «El webhook»; 5D.5): «¿Qué vio en {parte}?», «¿Qué parte?», «¿Qué fue?», «Escriba qué encontró», «Registrado…», «Ya respondió…» y los rechazos («Ese número no recibe las alertas de este campo…»). No son plantillas y no salen en GET /api/mensajes. Guardan el estado del diálogo: la siguiente respuesta cita su meta_id (context.id) y de aquí salen el evento, la parte y el modo ya escogidos y las opciones válidas; la respuesta_parada se inserta solo con el último paso. Solo inserción, salvo poner una vez el id de Meta.
 
@@ -2131,7 +2148,9 @@ Mensajes libres que TRIM manda dentro de la ventana de 24 h que abre la respuest
 - **Apunta a:** `respuesta_entrante` por (entrante_meta_id) N:1; `evento` por (evento_id) N:1; `parte` por (familia, parte) N:1; `modo_falla` por (modo) N:1; `usuario` por (usuario_id) N:1.
 - **Fila real del demo:** el demo no trae filas de esta tabla (se llena con el uso: ver `pruebas.sql` para ejemplos de escritura).
 
-#### `estado_mensaje`
+#### `estado_mensaje` · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** No se crea (R8).
 
 Estados de entrega que Meta informa por el webhook (statuses[]): enviado, entregado, leído o fallido, de una plantilla (mensaje) o de un mensaje libre del diálogo (mensaje_libre). Se agregan; el mensaje no se toca. Solo inserción.
 
@@ -2382,7 +2401,7 @@ Avisos de mantenimiento de SAP PM (AvisoSap de src/entities/sap.ts): los que TRI
 - **Columnas (16):** `numero`*, `clase_sap`*, `campo_id`*, `equipo`*, `descripcion`*, `estado`*, `prioridad`*, `creada`*, `liberada`, `cierre_tecnico`, `tecnico_id`, `puesto`*, `aviso`, `horas_reales`*, `evento_id`, `actualizado`* (con * = no nula; tipos, checks y descripción de cada una en `tablas.json`).
 - **Reglas:**
   - TRIM no crea órdenes.
-  - Al pasar a REL con técnico asignado sale el WhatsApp trim_orden_liberada.
+  - Al pasar a REL con técnico asignado sale el WhatsApp trim_orden_liberada. **RETIRADO (27-oct-2026)**: el técnico la ve en su Hoy («Atender la orden de X»).
   - Índice único: CREATE UNIQUE INDEX orden_sap_un_aviso ON "trim".orden_sap USING btree (aviso) WHERE (aviso IS NOT NULL).
 - **Apunta a:** `aviso_sap` por (aviso) N:1; `activo` por (campo_id, equipo) N:1; `clase_orden_sap` por (clase_sap) N:1; `evento` por (evento_id) N:1; `usuario` por (tecnico_id) N:1.
 - **La apuntan:** `confirmacion_sap`, `repuesto_orden`, `mensaje`.
@@ -2593,7 +2612,7 @@ $$
 \text{metaEntre}_{v}(m) = \text{metaEntre}_{v'}(m), \qquad \text{precioEn}_{v}(d) = \text{precioEn}_{v'}(d), \qquad \text{programa}_{v} \cap m = \text{programa}_{v'} \cap m
 $$
 
-para todo día $d$ de $m$. Lo que sí puede cambiar con una versión nueva es lo que **no** entra en el libro del mes: el perfil (que decide la vigilancia, no el diferido), los tanques y los respaldos (que deciden la predicción de hoy y el texto de los mensajes nuevos). Por eso el informe guarda la versión con que calculó (`informe.version`) y la huella no cambia aunque después se firme otra. Lo que el servidor **no** debe hacer es rehacer un mes viejo con la versión vigente para los mensajes de WhatsApp ni para el registro de aciertos: esos se arman con la versión que regía **a su hora** (`version_en(mensaje.hora)`, `version_en(falla.inicio)`), porque firmar un respaldo hoy no reescribe la consecuencia que se le anunció a un operador ayer.
+para todo día $d$ de $m$. Lo que sí puede cambiar con una versión nueva es lo que **no** entra en el libro del mes: el perfil (que decide la vigilancia, no el diferido), los tanques y los respaldos (que deciden la predicción de hoy y el texto de los mensajes nuevos). Por eso el informe guarda la versión con que calculó (`informe.version`) y la huella no cambia aunque después se firme otra. Lo que el servidor **no** debe hacer es rehacer un mes viejo con la versión vigente para los mensajes de WhatsApp (**RETIRADO (27-oct-2026)**) ni para el registro de aciertos: esos se arman con la versión que regía **a su hora** (`version_en(mensaje.hora)`, `version_en(falla.inicio)`), porque firmar un respaldo hoy no reescribe la consecuencia que se le anunció a un operador ayer.
 
 **Lo que el motor del demo todavía no fecha.** `bandaDe` (`src/entities/libro.ts:257`) toma el °API **vigente** y la producción del **último** mes publicado para todos los meses: un análisis de °API nuevo cambia la tolerancia de los meses viejos. En el esquema, `metrologia_campo` está versionada (`vigente_desde`) para que el servidor escoja el análisis que regía en el mes; hasta que el motor lo haga, el precálculo congela la banda con que se calculó (`factor_asignacion_mes.banda`). Va en Huecos.
 
@@ -2652,7 +2671,7 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 
 - 105 tablas (sin contar 45 particiones de lectura), 11 vistas, 34 funciones, 103 triggers, 200 índices, 660 restricciones (105 PK, 180 FK, 30 únicas, 340 check).
 - ejemplos.sql: 10566 filas en 79 tablas; series sin tag registrado: 0 (todas cargadas en una transacción: los triggers diferidos —configuración coherente, gerente activo, campos de cada persona— corrieron al confirmar).
-- **Restricciones:** 152 rechazos y 27 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
+- **Restricciones:** 152 rechazos y 27 aceptaciones esperadas, todas como se esperaba (`pruebas.sql`; cada prueba compara el SQLSTATE exacto y aborta la corrida si no coincide). Entre ellas las cinco pedidas: segunda respuesta al mismo evento → `23505` en `respuesta_parada_pkey`; segundo aviso abierto de K-101 en La Ceiba → `23505` en `aviso_sap_uno_abierto`; `UPDATE` a `version_config` → `23001`; WhatsApp `+573005550103` repetido en una persona no suspendida → `23505` en `usuario_telefono_unico` (y se acepta en una suspendida; **RETIRADO (27-oct-2026)** con la columna); tanque con alto-alto 0,99 → `23514` en `tanque_alto_alto_check`.
 - **Las del modelo choke y la clasificación ANH** (capítulo 5E), entre ellas: un tramo que no sale del alcance → `23514` en `topologia_check`; un dedicado que sirve a dos pozos y un pozo que no es del campo → `23514` (`validarTopologia` en el trigger); el mismo elemento dos veces → `23505`; «Todavía no sé» de un equipo que está en la topología del mismo campo → `23514`; una versión con topología o capacidades en el JSON firmado y sin sus filas → `23514`; una capacidad en cero, sin fuente reconocida o el gas sin decir si se mide → `23514`; un factor de medición fuera de 0,5 a 1,5, sin su porqué o con un porqué que no dice nada → `23514` (y una versión con el factor firmado da su JSON); planeada con una causa no planeada y un detalle que no es de su causa, también en lo que rige en una fila con lo dicho en su evento (trigger diferido) → `23514`; «En el yacimiento» puesto por el supervisor o sin evidencia → `23514`; lo que propone TRIM no se guarda (procedencia `regla`) → `23514`; «No sé» que abre otra pregunta, una revisión sin motivo o pedida al propio rol → `23514`.
 - **Cuadres** (`cuadres.sql`, todos bien):
   - Σ asignado por pozo = real del campo en 60 (campo, mes): diferencia máxima 0.000000000 bbl
@@ -2674,7 +2693,7 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 
 **Decisiones que este esquema toma y conviene confirmar.**
 
-1. **`evento_servicio.fin` admite NULL; el tipo TS no.** (Resuelto el 8-oct con la opción (a): `EventoServicio.fin` es `string | null`, `src/entities/pozos.ts:94-105`, y el motor corta la cascada de un servicio abierto en ahora, `src/entities/causa-senal.ts:126`.) `EventoServicio.fin` era `string` y el motor hacía `ms(s.fin)`: un servicio caído **ahora** no tenía cómo viajar. La base lo guarda abierto (es el hecho físico). Hay que escoger cómo lo entrega `GET …/servicios/eventos`: (a) cambiar el tipo a `string | null` y que el motor lo corte en `ahora` como hace con los eventos de pozo; (b) entregarlo con `fin = ahora` (cambia en cada pedido); (c) no entregarlo hasta que cierre (los pozos que caen en su cascada quedan «sin identificar» y sale la pregunta de WhatsApp: es lo peor). Se recomienda (a).
+1. **`evento_servicio.fin` admite NULL; el tipo TS no.** (Resuelto el 8-oct con la opción (a): `EventoServicio.fin` es `string | null`, `src/entities/pozos.ts:94-105`, y el motor corta la cascada de un servicio abierto en ahora, `src/entities/causa-senal.ts:126`.) `EventoServicio.fin` era `string` y el motor hacía `ms(s.fin)`: un servicio caído **ahora** no tenía cómo viajar. La base lo guarda abierto (es el hecho físico). Hay que escoger cómo lo entrega `GET …/servicios/eventos`: (a) cambiar el tipo a `string | null` y que el motor lo corte en `ahora` como hace con los eventos de pozo; (b) entregarlo con `fin = ahora` (cambia en cada pedido); (c) no entregarlo hasta que cierre (los pozos que caen en su cascada quedan «sin identificar» y sale la pregunta de WhatsApp, hoy **RETIRADO (27-oct-2026)** y reemplazada por la pregunta de Hoy: es lo peor). Se recomienda (a).
 2. **Índice de un aviso abierto por equipo.** `aviso_sap_uno_abierto` aplica a todos los avisos, también los que se crean directo en SAP. Si la operadora llega a tener dos avisos abiertos del mismo equipo en SAP, la sincronización choca. Si eso pasa en el cliente, el índice debe quedar `where not cerrado and origen = 'trim'` y el 409 lo revisa el servidor contra todos los abiertos.
 3. **El mensaje separa `evento_id` y `prediccion_id`.** En `Mensaje.evento` (`src/entities/mensajes.ts:97`) viaja el id de la parada **o** el de la predicción (regla `parte`); la base los separa para tener clave foránea en los dos. La API los junta en `evento`. `mensaje.telefono` (el número al que se mandó) no está en el tipo TS y no viaja al front.
 4. **`asignacion_oficial` es de solo inserción con la carga en la clave.** El contrato dice «se reemplaza por (mes, campo)»; aquí las filas de una carga nueva no borran las anteriores: lo que rige es la carga más reciente (`v_asignacion_oficial`). Así el rastro guarda también los valores reemplazados, no solo cuántos fueron.
@@ -2687,7 +2706,7 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 8. **Las señales de las electrosumergibles no son tags.** `referencia/insumos/<campo>/electrosumergibles.json` las nombra `VSD-LC01 · corriente`, `PIT-LC01 · sensor de fondo`: no están en el registro de la cadena (ningún nacimiento las declara) y no tienen endpoint (CONTRATO.md, «Pendiente del lado del servidor»). Por eso `ajuste_variador.tag` es texto y no hay lecturas de electrosumergibles en `lectura`. Cuando el borde las publique, tienen que nacer como tags (`VSD-LC01-II`, por ejemplo) mapeados al pozo (`tag.equipo_codigo` apunta a `activo`, que incluye pozos).
 9. **Las señales que producen los eventos tampoco están registradas.** El paso marcha → paro (`ZS-2011`), el controlador de cada pozo (`VSD-LC14`, `POC-LC21`), el interruptor `52-SE2`, la alarma `PAL-1011` y los interruptores de primera alarma no están en `simulador-api/datos/nacimientos.json`: hoy la procedencia de un evento no se puede mostrar con `v_procedencia`. El backend real debe registrarlos (capítulo 4).
 10. **Calibración sin fecha.** El nacimiento del demo trae `vigenteHasta: "abril de 2027"` (texto). `calibracion.vigente_hasta` es `date` y quedó NULL en los ejemplos: el borde real debe mandar la fecha del certificado.
-11. **Respuestas históricas sin persona ni canal.** Las 9 respuestas pegadas a eventos del demo (`pozos-eventos.json`) traen `texto`, `por` y `hora`, sin `porId` ni `canal`; por eso `respuesta_parada.por_id` y `canal` admiten NULL. Toda respuesta nueva los trae (lo exige un CHECK si el canal es WhatsApp).
+11. **Respuestas históricas sin persona ni canal.** Las 9 respuestas pegadas a eventos del demo (`pozos-eventos.json`) traen `texto`, `por` y `hora`, sin `porId` ni `canal`; por eso `respuesta_parada.por_id` y `canal` admiten NULL. Toda respuesta nueva los trae (lo exige un CHECK si el canal es WhatsApp; el canal: **RETIRADO (27-oct-2026)**).
 12. **Ids del programa.** El contrato recomienda `PR-{campo}-{equipo}-{fecha}`; los del demo son `PR-2011-260819`, `PR-M2011-260217`, `PR-VIG-MN05-260912-bomba` (las órdenes predictivas del vigía)… La base no obliga el formato.
 13. **Horas que el demo no trae.** Para cargar filas reales hubo que fijar horas que el demo no tiene (recepción de eventos, publicación de un mes, firma de la base de alarmas, fecha del análisis de °API): están al pie de `ejemplos.sql` y en `herramientas/cuenta-ejemplos.json`. Ninguna cifra de barriles, ninguna fecha de evento y ningún id se tocaron.
 
@@ -2704,6 +2723,6 @@ $\sqrt{1.157{,}4^2 + 2.330{,}9^2 + 319{,}8^2 + 598{,}5^2 + 15{,}1^2} = 2.689{,}5
 
 **Agregado en la verificación V4 (cotejo del modelo contra el contrato).**
 
-19. **El diálogo de WhatsApp tiene tabla propia (`mensaje_libre`).** El contrato dice que lo que sigue a la respuesta («¿Qué vio en {parte}?», «¿Qué parte?», «Escriba qué encontró», «Registrado…», «Ya respondió…», «no está registrado») va como mensaje libre dentro de la ventana de 24 h, pero no lo nombra en el modelo de lo que se escribe. Sin tabla, la parte escogida en el primer paso no tenía dónde esperar el modo, el `context.id` de la segunda respuesta no tenía a qué mensaje resolverse y los `statuses[]` de esos mensajes chocaban con la clave foránea de `estado_mensaje` hacia `mensaje`. Decisiones: (a) no van en `mensaje`, porque `GET /api/mensajes` es el registro de avisos con plantilla; (b) el paso aceptado que pide lo que falta queda en `respuesta_entrante` como `en-curso` y la `respuesta_parada` entra solo con el último; (c) `estado_mensaje.meta_id` deja la clave foránea y la cambia por un trigger contra las dos tablas. Falta que el contrato diga qué pasa si la persona contesta sin citar el mensaje (sin `context.id`): con la regla actual se descarta.
+19. **RETIRADO (27-oct-2026)** **El diálogo de WhatsApp tiene tabla propia (`mensaje_libre`).** No se construye. El contrato dice que lo que sigue a la respuesta («¿Qué vio en {parte}?», «¿Qué parte?», «Escriba qué encontró», «Registrado…», «Ya respondió…», «no está registrado») va como mensaje libre dentro de la ventana de 24 h, pero no lo nombra en el modelo de lo que se escribe. Sin tabla, la parte escogida en el primer paso no tenía dónde esperar el modo, el `context.id` de la segunda respuesta no tenía a qué mensaje resolverse y los `statuses[]` de esos mensajes chocaban con la clave foránea de `estado_mensaje` hacia `mensaje`. Decisiones: (a) no van en `mensaje`, porque `GET /api/mensajes` es el registro de avisos con plantilla; (b) el paso aceptado que pide lo que falta queda en `respuesta_entrante` como `en-curso` y la `respuesta_parada` entra solo con el último; (c) `estado_mensaje.meta_id` deja la clave foránea y la cambia por un trigger contra las dos tablas. Falta que el contrato diga qué pasa si la persona contesta sin citar el mensaje (sin `context.id`): con la regla actual se descarta.
 20. **`equipo.aguas_abajo` y `equipo.redundancia`.** El catálogo los trae en cada equipo y el riesgo de ahora compara `aguasAbajo === 'todo el campo'`; no tenían columna. En las bombas de la línea van NULL: la API los arma del respaldo firmado (`respaldoEnCampo`).
 21. **Un aviso, a lo más una orden.** `AvisoSap.orden` es un solo número; sale de `orden_sap.aviso` con el índice único `orden_sap_un_aviso` (en SAP, `QMEL-AUFNR` es uno). Si el SAP del cliente asigna varias órdenes a un aviso, hay que quitar el índice y decir cuál viaja en `orden`.

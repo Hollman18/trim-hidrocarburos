@@ -23,7 +23,7 @@ El cliente no compra «un software de mantenimiento». Compra **menos pozos cerr
 
 | Momento | Pregunta del comprador | Por qué importa (física + negocio) | Qué producto TRIM ya tiene |
 |---|---|---|---|
-| **1 · Antes** | «¿Qué puedo evitar antes de que pare?» | Mientras el tanque aguanta, todavía hay ventana para intervenir sin cerrar pozos. Es donde está el **mayor ROI**: cada hora antes de la falla evita el MTTR completo. | Vigía (cruce de alarma), Riesgo (`costoFalla`, colchón), aciertos del vigía, WhatsApp con ventana, salud por parte |
+| **1 · Antes** | «¿Qué puedo evitar antes de que pare?» | Mientras el tanque aguanta, todavía hay ventana para intervenir sin cerrar pozos. Es donde está el **mayor ROI**: cada hora antes de la falla evita el MTTR completo. | Vigía (cruce de alarma), Riesgo (`costoFalla`, colchón), aciertos del vigía, WhatsApp con ventana (**RETIRADO (27-oct-2026)**), salud por parte |
 | **2 · Durante** | «Ya paró: ¿cómo pierdo menos tiempo?» | Cada hora parada cuesta \(Q/24\) barriles. Recuperar antes del MTTR histórico, **identificar el daño antes de arrancar** (regla de operación) y cerrar el agua en el **orden TRIM** son palancas distintas del mismo evento. | Turno, Identificar, orden de cierre simulado (`evitable`), MTTR vs horas ya paradas |
 | **3 · Después** | «¿Cómo no repetimos la misma falla?» | Lo del período ya está en el **libro medido**; aquí se ataca la **parte que más costó** y lo que se habría ahorrado con mejor orden, para la próxima vez. | Paretos por parte, MTBF, costo por falla, libro publicable |
 
@@ -295,7 +295,7 @@ Comprobar a mano (el e2e auditor ya exige los textos):
 ### Después del MVP (no bloquea la conexión del front)
 
 - Informe de planes ejecutados en el período (bbl «perseguidos» vs diferido real): **no restar del libro**. Tablero de gestión, cifra simulada.
-- WhatsApp: avisar el plan ANTES cuando `horas` < 24 h (reusar plantillas de 5D).
+- WhatsApp: avisar el plan ANTES cuando `horas` < 24 h (reusar plantillas de 5D). **RETIRADO (27-oct-2026)**: no se construye.
 - SAP: el plan aceptado **no crea** la orden; el aviso M1/M2 sigue siendo el de hoy (`sap:aviso`).
 
 ### Fuera de este producto (no implementar)

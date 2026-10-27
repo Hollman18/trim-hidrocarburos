@@ -10,7 +10,7 @@ Código: `src/entities/roles.ts` (114 líneas), `src/entities/tipos.ts:119-206`,
 
 `ROLES` declara 11 roles; `ROLES_VISIBLES` deja los **8 del primer producto** (`rolVisible`: con `MVP = true` se ocultan `plan` planeadora, `cont` abastecimiento y `reg` cumplimiento, `src/shared/config/producto.ts:13-17`). Un id de rol que no es del producto cae al rol de arranque `prod` (`rolPorId`, `roles.ts:111-114`; corrido: `rolPorId('plan')` → `prod`).
 
-| id | Rol | Nivel | Persona demo | Pantallas (orden del menú) | Inicio | Campos de fábrica | Capacidades (las que `puedeHacer` concede) | Alertas WhatsApp |
+| id | Rol | Nivel | Persona demo | Pantallas (orden del menú) | Inicio | Campos de fábrica | Capacidades (las que `puedeHacer` concede) | Alertas WhatsApp (**RETIRADO (27-oct-2026)**) |
 |---|---|---|---|---|---|---|---|---|
 | `ger` | Gerente de activo | decision | Andrés Vélez | resumen, diferidos, produccion, riesgo, configuracion | resumen | todos | evidencia:exportar, metas:firmar, usuarios:administrar | no |
 | `prod` | Ingeniera de producción | ingenieria | Marcela Ríos | produccion, diferidos, pozos, esp, causa, planta | produccion | ceiba, palmar | evidencia:exportar, asignacion:cargar | no |
@@ -120,7 +120,9 @@ interface PersonaVisible { id; nombre; rolId; campos; estado; alertas; telefono?
 
 **Referencia.** `src/entities/usuarios.ts:42-93`; `CONTRATO.md` · «Quién lee qué».
 
-### Número de WhatsApp en E.164 (`normalizarTelefono`, `e164`, `telefonoLegible`)
+### Número de WhatsApp en E.164 (`normalizarTelefono`, `e164`, `telefonoLegible`) · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** Sin canal no hace falta el número: el servidor acepta e ignora `telefono` si llega, sin 422 (R3).
 
 **Qué es.** El número es la **identidad de la persona en el canal**: el webhook resuelve el número que respondió a una persona. Se guarda, viaja y se compara en E.164 (`+` y 8-15 dígitos); se muestra agrupado.
 
@@ -183,10 +185,10 @@ Cuerpos: `POST { invitacion: { nombre, correo, rolId, campos, telefono?, alertas
 | `correo` | único, sin distinguir mayúsculas | «Ya hay una persona con ese correo.» | 422 |
 | `rol` | rol del producto (de los 8) | «Escoja un rol.» | 422 |
 | `campos` | lista no vacía | «Escoja al menos un campo.» | 422 |
-| `whatsapp` | si hay teléfono, E.164 `^\+\d{8,15}$` | «El WhatsApp va con indicativo (+57 300 123 4567) o como celular de 10 dígitos (300 123 4567).» | 422 |
-| `whatsapp` | E.164 único entre no suspendidos (si el nuevo estado no es suspendido) | «Ese WhatsApp ya es de {nombre}: cada número es de una sola persona.» | 422 |
-| `whatsapp` | alertas ⇒ teléfono | «Para recibir alertas necesita un número de WhatsApp.» | 422 |
-| `alertas` | alertas ⇒ rol con alertas (`sup`, `oper`, `tec`, `conf`, `jefe`) | «Ese rol no recibe alertas por WhatsApp: quite la marca.» | 422 |
+| `whatsapp` | si hay teléfono, E.164 `^\+\d{8,15}$` | «El WhatsApp va con indicativo (+57 300 123 4567) o como celular de 10 dígitos (300 123 4567).» | 422 · **RETIRADO (27-oct-2026)** (R3) |
+| `whatsapp` | E.164 único entre no suspendidos (si el nuevo estado no es suspendido) | «Ese WhatsApp ya es de {nombre}: cada número es de una sola persona.» | 422 · **RETIRADO (27-oct-2026)** (R3) |
+| `whatsapp` | alertas ⇒ teléfono | «Para recibir alertas necesita un número de WhatsApp.» | 422 · **RETIRADO (27-oct-2026)** (R3) |
+| `alertas` | alertas ⇒ rol con alertas (`sup`, `oper`, `tec`, `conf`, `jefe`) | «Ese rol no recibe alertas por WhatsApp: quite la marca.» | 422 · **RETIRADO (27-oct-2026)** (R3) |
 | `motivo` | ≥ 5 caracteres (`MOTIVO_MINIMO`) | «Falta el motivo: todo cambio de acceso queda escrito con su porqué.» | 422 |
 
 **Ejemplo con los datos del demo.** (Corrido.)
@@ -194,8 +196,8 @@ Cuerpos: `POST { invitacion: { nombre, correo, rolId, campos, telefono?, alertas
 - El gerente cambiándose sus campos a `["ceiba"]` → «Sus propios campos los cambia otro gerente.».
 - Un segundo gerente `u9` con campos `["ceiba"]` dando Morichal al operador → «No puede dar campos que usted no tiene: Morichal Norte.»; dándole «todos» → «No puede dar «todos los campos»: usted no los tiene.».
 - El administrador cambiando el rol del gerente a producción (el demo ni siquiera llega aquí: el administrador no tiene `usuarios:administrar`; con `revisarAcceso` directo) → «Tiene que quedar al menos un gerente de activo con acceso…» → 409.
-- Invitación con nombre «Al», correo de Nelson Ortiz, rol `plan`, sin campos, WhatsApp de Nelson, alertas, motivo «ok» → siete errores: nombre, «Ya hay una persona con ese correo.», «Escoja un rol.», «Escoja al menos un campo.», «Ese WhatsApp ya es de Nelson Ortiz: cada número es de una sola persona.», «Ese rol no recibe alertas por WhatsApp: quite la marca.», motivo.
-- Invitación correcta por el gerente: `{ nombre: "Lucía Prada", correo: "lucia.prada@operadora.example", rolId: "sup", campos: ["ceiba"], telefono: "300 555 0199", alertas: true }`, motivo «Nuevo supervisor de La Ceiba desde octubre» → usuario `{ id: "u9", …, telefono: "+573005550199", estado: "invitado", desde: "2026-10-02" }` y acceso `{ id: 2, fecha: "2026-10-02T14:00:00-05:00", por: "Andrés Vélez · gerente de activo", usuario: "Lucía Prada", cambios: ["invitado como supervisor de operaciones", "campos: La Ceiba", "WhatsApp: +57 300 555 0199", "recibe alertas por WhatsApp"], motivo: "Nuevo supervisor de La Ceiba desde octubre" }`.
+- Invitación con nombre «Al», correo de Nelson Ortiz, rol `plan`, sin campos, WhatsApp de Nelson, alertas, motivo «ok» → siete errores (los dos de WhatsApp y alertas: **RETIRADO (27-oct-2026)**; sin ellos, cinco): nombre, «Ya hay una persona con ese correo.», «Escoja un rol.», «Escoja al menos un campo.», «Ese WhatsApp ya es de Nelson Ortiz: cada número es de una sola persona.», «Ese rol no recibe alertas por WhatsApp: quite la marca.», motivo.
+- Invitación correcta por el gerente (`telefono`, `alertas` y sus renglones de WhatsApp: **RETIRADO (27-oct-2026)**): `{ nombre: "Lucía Prada", correo: "lucia.prada@operadora.example", rolId: "sup", campos: ["ceiba"], telefono: "300 555 0199", alertas: true }`, motivo «Nuevo supervisor de La Ceiba desde octubre» → usuario `{ id: "u9", …, telefono: "+573005550199", estado: "invitado", desde: "2026-10-02" }` y acceso `{ id: 2, fecha: "2026-10-02T14:00:00-05:00", por: "Andrés Vélez · gerente de activo", usuario: "Lucía Prada", cambios: ["invitado como supervisor de operaciones", "campos: La Ceiba", "WhatsApp: +57 300 555 0199", "recibe alertas por WhatsApp"], motivo: "Nuevo supervisor de La Ceiba desde octubre" }`.
 - Suspenderla después («Ya no trabaja en el campo») → `estado: "suspendido"`, `antesDeSuspender: "invitado"`, acceso 3 con `cambios: ["acceso suspendido"]`. Guardar otra vez sin cambios → «No hay cambios que guardar.». PATCH a `u99` → «Esa persona no está en el registro: invítela.».
 - El operador intentando invitar → «Los accesos los da el gerente de activo.».
 
@@ -218,28 +220,30 @@ Corrido: `estadoAlGuardar(Lucía invitada, suspendida)` → `antesDeSuspender: "
 
 | Caso | Renglones (exactos) |
 |---|---|
-| invitación | `invitado como {rol en minúscula}` · `campos: {nombres o "todos los campos"}` · `WhatsApp: {legible o "sin número"}` · (si alertas) `recibe alertas por WhatsApp` |
+| invitación | `invitado como {rol en minúscula}` · `campos: {nombres o "todos los campos"}` · `WhatsApp: {legible o "sin número"}` · (si alertas) `recibe alertas por WhatsApp` (estos dos: **RETIRADO (27-oct-2026)**) |
 | cambio de rol | `rol: {Rol A} → {Rol B}` |
 | cambio de campos | `campos: {A} → {B}` |
 | suspensión / reactivación | `acceso suspendido` · `acceso reactivado` · (otro cambio de estado) `estado: {nombre del estado}` |
-| WhatsApp | `WhatsApp: {A legible} → {B legible}` (se compara el E.164 guardado) |
-| alertas | `recibe alertas por WhatsApp` · `deja de recibir alertas por WhatsApp` |
+| WhatsApp (**RETIRADO (27-oct-2026)**) | `WhatsApp: {A legible} → {B legible}` (se compara el E.164 guardado) |
+| alertas (**RETIRADO (27-oct-2026)**) | `recibe alertas por WhatsApp` · `deja de recibir alertas por WhatsApp` |
 
-Corrido: de Lucía (sup, La Ceiba, +573005550199, alertas) a (oper, La Ceiba + Morichal, suspendida, +573005550200, sin alertas) → `["rol: Supervisor de operaciones → Operador de campo", "campos: La Ceiba → La Ceiba, Morichal Norte", "acceso suspendido", "WhatsApp: +57 300 555 0199 → +57 300 555 0200", "deja de recibir alertas por WhatsApp"]`.
+Corrido (los renglones de WhatsApp y alertas: **RETIRADO (27-oct-2026)**): de Lucía (sup, La Ceiba, +573005550199, alertas) a (oper, La Ceiba + Morichal, suspendida, +573005550200, sin alertas) → `["rol: Supervisor de operaciones → Operador de campo", "campos: La Ceiba → La Ceiba, Morichal Norte", "acceso suspendido", "WhatsApp: +57 300 555 0199 → +57 300 555 0200", "deja de recibir alertas por WhatsApp"]`.
 
 El primer cambio del historial del demo es el de arranque: `{ id: 1, fecha: "2026-09-01T08:00:00-05:00", por: "Hermes Leal · administrador de la implementación", usuario: "Todas las personas iniciales", cambios: ["Andrés Vélez: gerente de activo", …], motivo: "Accesos de arranque de la implementación" }` (`sesion.ts:84-85`).
 
 **Casos borde.**
 - **Nombre y correo no aparecen en `cambiosDeUsuario`.** Un PATCH que solo cambie el correo da «No hay cambios que guardar.»; uno que cambie el correo junto con otra cosa lo guarda **sin dejarlo en el historial**. El formulario de cambio no muestra nombre ni correo (solo la invitación), pero un cliente HTTP sí podría mandarlos. Ver «Huecos y dudas».
-- La forma del formulario: el rol y los campos de **la propia fila** están deshabilitados («Su propio rol y su acceso los cambia otro gerente de activo.»); la casilla «Todos los campos, también los futuros» solo aparece a quien tiene «todos» (o si la persona ya lo tenía); la casilla de alertas solo se habilita en roles con alertas y dice «Recibe por WhatsApp: {ALERTAS_DEL_ROL}»; «Suspender el acceso · lo firmado sigue a su nombre» no aparece en la propia fila. Al fallar, el foco va a la primera caja con error en el orden nombre, correo, rol, campos, whatsapp, alertas, motivo.
+- La forma del formulario: el rol y los campos de **la propia fila** están deshabilitados («Su propio rol y su acceso los cambia otro gerente de activo.»); la casilla «Todos los campos, también los futuros» solo aparece a quien tiene «todos» (o si la persona ya lo tenía); la casilla de alertas solo se habilita en roles con alertas y dice «Recibe por WhatsApp: {ALERTAS_DEL_ROL}» (la casilla: **RETIRADO (27-oct-2026)**); «Suspender el acceso · lo firmado sigue a su nombre» no aparece en la propia fila. Al fallar, el foco va a la primera caja con error en el orden nombre, correo, rol, campos, whatsapp, alertas, motivo (whatsapp y alertas: **RETIRADO (27-oct-2026)**).
 
-**Qué texto se muestra según el valor.** Cada fila: nombre (tachado si suspendido; «· usted» en la propia), correo (solo con registro completo), «{Rol} · {campos}», «WhatsApp {legible}» o «sin WhatsApp», «· recibe alertas»; chip «invitado · aún no entra» o «suspendido» (fuerte). Historial: «{usuario}» · «{fechaHora} · {por}» · «{motivo}» · renglones; cinco visibles y «ver N más».
+**Qué texto se muestra según el valor.** Cada fila: nombre (tachado si suspendido; «· usted» en la propia), correo (solo con registro completo), «{Rol} · {campos}», «WhatsApp {legible}» o «sin WhatsApp», «· recibe alertas» (estos tres: **RETIRADO (27-oct-2026)**); chip «invitado · aún no entra» o «suspendido» (fuerte). Historial: «{usuario}» · «{fechaHora} · {por}» · «{motivo}» · renglones; cinco visibles y «ver N más».
 
 **Quién lo calcula y por dónde viaja.** Servidor. Tablas `usuario` (`unique` sobre correo en minúsculas y sobre el E.164 de los no suspendidos) y `cambio_acceso` (solo se inserta). `GET /api/usuarios/historial` → `CambioAcceso[]` del más viejo al más nuevo.
 
 **Referencia.** `src/entities/usuarios.ts:183-277`; `src/shared/api/escrituras.ts:125-193`; `src/widgets/configuracion/Accesos.tsx`.
 
-### Alertas por rol (`ROLES_CON_ALERTAS`, `ALERTAS_DEL_ROL`, `recibeAlertas`)
+### Alertas por rol (`ROLES_CON_ALERTAS`, `ALERTAS_DEL_ROL`, `recibeAlertas`) · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** Sin canal no hay alertas. Lo que avisaban queda en Hoy: tarjetas, insignias, la pregunta y «Conseguir la causa» del supervisor.
 
 $$ \text{recibeAlertas}(u, c) = u.\text{estado}=\text{activo} \land u.\text{alertas} \land u.\text{telefono} \neq \varnothing \land u.\text{rolId} \in \{\text{sup, oper, tec, conf, jefe}\} \land (c \text{ omitido} \lor u.\text{campos}=\text{todos} \lor c \in u.\text{campos}) $$
 
@@ -267,7 +271,7 @@ Mi perfil, panel «AVISOS»: sin rol con alertas → «Su rol no recibe alertas 
 |---|---|---|---|---|---|---|
 | `POST /api/configuracion` | `metas:firmar` y/o `config:firmar` según los grupos | cada campo de `camposTocados` (el membrete no es de un campo) | — | `version-cambio` | validarConfig, motivo, sin cambios | 5D.2 |
 | `POST /api/usuarios`, `PATCH /api/usuarios/:id` | `usuarios:administrar` | nadie otorga campos que no tiene | PATCH a quien no existe | último gerente | revisarAcceso | 5D.3 |
-| `POST /api/paradas/:evento/respuesta` | `causa:declarar` (o `causa:completar`) | del evento del PLC | «Esa parada no está en el registro del PLC.» | «Ya respondió {por}.» (la primera gana) | «La parada no es de ese campo.» · «Esa parte no es de este equipo.» · «Diga qué parte de la bomba se dañó.» · «Diga qué vio en esa parte.» · «Escriba qué encontró, con al menos una frase corta.» · **403** si el cuerpo trae `canal: "whatsapp"` | 5D.5 |
+| `POST /api/paradas/:evento/respuesta` | `causa:declarar` (o `causa:completar`) | del evento del PLC | «Esa parada no está en el registro del PLC.» | «Ya respondió {por}.» (la primera gana) | «La parada no es de ese campo.» · «Esa parte no es de este equipo.» · «Diga qué parte de la bomba se dañó.» · «Diga qué vio en esa parte.» · «Escriba qué encontró, con al menos una frase corta.» · **403** si el cuerpo trae `canal: "whatsapp"` (**RETIRADO (27-oct-2026)**: el 403 deja de importar, R4) | 5D.5 |
 | `POST /api/analisis/:evento` | `causa:completar` | del evento (el cuerpo no lo trae) | evento inexistente | — (un segundo POST es versión nueva) | «Solo se analiza una falla declarada con su parte.» · «Escoja el mecanismo de falla.» · «Escoja la causa raíz.» | capítulo del libro |
 | `POST /api/sap/avisos` | `sap:aviso` | `campoId` del cuerpo | — | «Ya hay un aviso abierto de {equipo} en SAP: el {número}.» | «Escriba qué pasa, con al menos una frase corta.» (`campo: "descripcion"`) | 5D.6 |
 | `POST /api/informes` | `evidencia:exportar` | `campos` del cuerpo (todos) | — | — | sin campos, campo inexistente, `hasta ≤ desde`, ficha de otro campo | 5D.4 |
@@ -277,7 +281,7 @@ Mi perfil, panel «AVISOS»: sin rol con alertas → «Su rol no recibe alertas 
 | `POST /api/campos/:campo/tags/:tag/equipo` | `conector:configurar` | `:campo` de la ruta (= el del tag) | `tag-no-registrado`, `equipo-desconocido` | — | 400 sin equipo u origen inválido | 5D.8 |
 | `POST /api/inscripcion` | `conector:configurar` | `campo` del cuerpo | `campo-desconocido` | — | — | 5D.8 |
 | `POST /api/ingesta/nacimiento` | certificado de cliente del borde (no sesión de persona) | del certificado | `campo-desconocido` | `tag-de-otro-gateway` | 400 `faltas` · 403 `gateway-de-otro-campo` | 5D.8 |
-| `POST /api/webhooks/whatsapp` | firma de Meta (no sesión) | de la parada del mensaje respondido | — | — | (siempre 200 a Meta; 401 sin firma) | 5D.5 |
+| `POST /api/webhooks/whatsapp` (**RETIRADO (27-oct-2026)**, R2) | firma de Meta (no sesión) | de la parada del mensaje respondido | — | — | (siempre 200 a Meta; 401 sin firma) | 5D.5 |
 
 **El cuerpo de error.** `{ "error": { "codigo": "…", "mensaje": "…" } }`, más `errores: [{ campo, texto }]` en accesos y `campo: "descripcion"` en un aviso. El `mensaje` se muestra **tal cual** (español, sin detalles internos). Un 5xx responde `interno` sin el mensaje interno.
 

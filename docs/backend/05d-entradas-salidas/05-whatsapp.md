@@ -1,4 +1,6 @@
-# 5D.5 · WhatsApp: el carril caliente
+# 5D.5 · WhatsApp: el carril caliente · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026).** El dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo dentro de TRIM: los avisos de parada, de pozos cerrándose y de orden liberada son tarjetas e insignias de **Hoy** (y la franja «No arrancar»); la pregunta «¿qué se dañó?» es **la pregunta de Hoy** y «Contestar» en Identificar (`POST /api/paradas/:evento/respuesta`); el recordatorio y el escalamiento son la tarjeta **«Conseguir la causa»** con la insignia del supervisor; «2 Algo está mal» es el botón **«Algo está mal»** (`POST /api/anh/paradas/:id/revision`); la entrega de turno queda en pantalla y en PDF. Ver [CAMBIOS-CONTRATO.md §3](../CAMBIOS-CONTRATO.md#3-retirado-whatsapp-propuesto-el-27-oct-2026) y [whatsapp.md](../../experiencia-v3/whatsapp.md). Este capítulo queda como histórico.
 
 TRIM avisa por WhatsApp, en minutos, a quien tiene que actuar sobre un equipo de alto impacto, y recibe la respuesta en el mismo hilo: **un toque para decir qué se dañó**. Es lo que convierte una parada «sin identificar» en un dato con parte y modo de falla (ISO 14224), que es lo que el vigía necesita para aprender y lo que hace defendible el libro.
 

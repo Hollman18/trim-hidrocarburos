@@ -3,7 +3,6 @@ import { useDato, versionDe } from './consulta'
 import { HOY, type ConsultaHoy } from './contrato'
 import { pedirPreguntas, pedirOpcionesRespuesta, pedirRiesgo, pedirLibro } from './diferidos'
 import { pedirParadasAnh } from './arbol'
-import { pedirMensajes } from './mensajes'
 import { pedirOrdenesSap, pedirAvisosSap, pedirRelojes } from './sap'
 import { pedirCiclo } from './ciclo'
 import { pedirTuberia, pedirTuberiaAgua, pedirCriticidad } from './choke'
@@ -23,7 +22,7 @@ import { AHORA } from '@/entities/reloj'
 /** C3 · Hoy en la costura: `GET /api/vistas/hoy?rol=&campos=` (CONTRATO.md · «Hoy»).
  *
  *  El servidor junta lo que ya calcula para las demás vistas (el libro, el árbol
- *  de la ANH, el riesgo, la tubería y el agua, «si falla hoy», SAP, WhatsApp, el
+ *  de la ANH, el riesgo, la tubería y el agua, «si falla hoy», SAP, el
  *  ciclo y lo que entra a mano) y el motor (`hoy`, entities/hoy.ts) lo cruza en
  *  las tareas del rol, con su orden, su cifra y su frase. Ninguna cifra nueva:
  *  todas son de esos endpoints. La pantalla lee `useHoy`; nadie en pages/widgets
@@ -32,7 +31,7 @@ import { AHORA } from '@/entities/reloj'
  *  `rol` es el de la persona: el servidor lo toma del token (un `rol` que no es
  *  el suyo es 403). `campos` se recorta a los que la persona tiene asignados. */
 
-export type { VistaHoy, TareaHoy, PreguntaHoy, OpcionHoy, ModoHoy, BloqueoHoy, HechaHoy, InicioHoy, Frase, Trozo, Destino, AccionHoy, CampoAhoraHoy, WhatsappHoy, EntregaTurno } from '@/entities/hoy'
+export type { VistaHoy, TareaHoy, PreguntaHoy, OpcionHoy, ModoHoy, BloqueoHoy, HechaHoy, InicioHoy, Frase, Trozo, Destino, AccionHoy, CampoAhoraHoy, EntregaTurno } from '@/entities/hoy'
 export { DESHACER_MS, MOTIVO_DESHACER, TURNO_H } from '@/entities/hoy'
 
 /** Lo que el servidor tiene de la sesión (lo que entra a mano). Lo que falta vale vacío. */
@@ -70,9 +69,6 @@ export function pedirHoy(q: ConsultaHoy, s: SesionHoy): VistaHoy {
     paradas: pedirParadasAnh({ campos, desde: curso.desde, hasta: AHORA }, ctx, guardadas),
     riesgo: pedirRiesgo(campos, ctx),
     condiciones: Object.fromEntries(franja(campos, ctx).equipos.map(x => [`${x.campoId}|${x.equipo}`, x.condicion])),
-    // El registro de WhatsApp: el hilo del turno (supervisión y operación) y cuándo se escaló una pregunta (quien revisa).
-    // F1 · P-trabajo-1: también el técnico, para saber si su orden le llegó por WhatsApp.
-    mensajes: ['sup', 'oper', 'jefe', 'conf', 'tec'].includes(rol.id) ? pedirMensajes(campos) : [],
     ordenes: pedirOrdenesSap(campos, ctx),
     avisosSap: pedirAvisosSap(campos, ctx, s.avisosEnviados ?? []),
     planes: [...ciclo.antes.planes, ...ciclo.durante.planes, ...ciclo.despues.planes],

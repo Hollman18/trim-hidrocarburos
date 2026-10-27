@@ -6,6 +6,8 @@ import { pedirSerie, type MesResumen } from './diferidos'
 import { reporteAnh, type VistaReporteAnh, type FaltaDeParada } from '@/entities/regulatorio'
 import type { BorradorClasificacion } from '@/entities/anh-clasificacion'
 import type { Contexto } from '@/entities/causa-senal'
+import { vistaRespuestasAnh, respuestaDelReporte, type RespuestaAnh } from '@/entities/anh-respuestas' // A3
+import { AHORA } from '@/entities/reloj'
 
 /** LA COSTURA DEL REPORTE A LA ANH (F2 · P-03; X4 §3.4).
  *
@@ -19,14 +21,20 @@ import type { Contexto } from '@/entities/causa-senal'
 
 export type { VistaReporteAnh, FaltaDeParada }
 
-/** `GET /api/vistas/anh/reporte`: la respuesta del demo, la misma fórmula que el backend. */
-export const pedirReporteAnh = (q: ConsultaPeriodo, ctx: Contexto, guardadas: Record<string, BorradorClasificacion>): VistaReporteAnh =>
-  reporteAnh(q, ctx, { guardadas: guardadasDe(guardadas) })
+/** `GET /api/vistas/anh/reporte`: la respuesta del demo, la misma fórmula que el backend.
+ *  A3: con las respuestas de la ANH registradas, el campo opcional `respuestaAnh`. */
+export function pedirReporteAnh(q: ConsultaPeriodo, ctx: Contexto, guardadas: Record<string, BorradorClasificacion>, respuestas?: readonly RespuestaAnh[]): VistaReporteAnh {
+  const v = reporteAnh(q, ctx, { guardadas: guardadasDe(guardadas) })
+  const r = respuestas?.length ? respuestaDelReporte(vistaRespuestasAnh(respuestas, q, AHORA.getTime())) : undefined
+  return r ? { ...v, respuestaAnh: r } : v
+}
 
+const SIN_RESPUESTAS: RespuestaAnh[] = []
 export function useReporteAnh(q: ConsultaPeriodo): VistaReporteAnh {
   const ctx = useCtx()
   const guardadas = useSesion(s => s.clasificacionesAnh)
-  return useDato(REPORTE_ANH, q, `${versionDe(ctx)}.${versionDe(guardadas)}`, () => pedirReporteAnh(q, ctx, guardadas))
+  const respuestas = useSesion(s => s.respuestasAnh) ?? SIN_RESPUESTAS // A3
+  return useDato(REPORTE_ANH, q, `${versionDe(ctx)}.${versionDe(guardadas)}.${versionDe(respuestas)}`, () => pedirReporteAnh(q, ctx, guardadas, respuestas))
 }
 
 /** El libro mes a mes fuera del dibujo (el CSV para la ANH de «Exportar»): la misma

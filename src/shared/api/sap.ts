@@ -7,6 +7,7 @@ import { historialDeEquipo } from '@/entities/libro'
 import { flotaDe, type Familia } from '@/entities/flota'
 import { catalogoDe, type Catalogo } from '@/entities/catalogo'
 import type { Contexto } from '@/entities/causa-senal'
+import { conCierres, marcasDeOrden, tramosTiempoFuera, type CierreOrden, type MarcasFalla, type TramosTiempoFuera } from '@/entities/orden-cierre' // A3
 
 /** Servicio de SAP. Cada consulta es un endpoint del contrato (CONTRATO.md ·
  *  SAP; formas en contrato.ts): el backend habla con SAP y el front solo con
@@ -26,16 +27,18 @@ export function pedirAvisosSap(campos: string[], ctx: Contexto, enviados: AvisoS
   // Por instante, no por texto: las horas llegan con zonas distintas («Z» y «-05:00»).
   return [...historiaSap(ctx).avisos, ...enviados].filter(a => campos.includes(a.campoId)).sort((a, b) => ms(b.creado) - ms(a.creado))
 }
-/** `GET /api/sap/ordenes?campos=` → de la más reciente a la más vieja. */
-export const pedirOrdenesSap = (campos: string[], ctx: Contexto): OrdenSap[] =>
-  historiaSap(ctx).ordenes.filter(o => campos.includes(o.campoId)).sort((a, b) => ms(b.creada) - ms(a.creada))
+/** `GET /api/sap/ordenes?campos=` → de la más reciente a la más vieja. A3: con los
+ *  cierres en el teléfono encima (`cierre`, estado `CNF` y las horas sumadas). */
+export const pedirOrdenesSap = (campos: string[], ctx: Contexto, cierres?: readonly CierreOrden[]): OrdenSap[] =>
+  conCierres(historiaSap(ctx).ordenes.filter(o => campos.includes(o.campoId)), cierres).sort((a, b) => ms(b.creada) - ms(a.creada))
 
 export function useSap(campos: string[]): { avisos: AvisoSap[]; ordenes: OrdenSap[] } {
   const ctx = useCtx()
   const enviados = useSesion(s => s.avisosEnviados)
+  const cierres = useSesion(s => s.cierresOrden) // A3
   // Los avisos dependen además de lo enviado en la sesión: entra en la versión.
   const avisos = useDato(SAP_AVISOS, { campos }, `${v(ctx)}.${versionDe(enviados)}`, () => pedirAvisosSap(campos, ctx, enviados))
-  const ordenes = useDato(SAP_ORDENES, { campos }, v(ctx), () => pedirOrdenesSap(campos, ctx))
+  const ordenes = useDato(SAP_ORDENES, { campos }, `${v(ctx)}.${versionDe(cierres ?? SIN_CIERRES)}`, () => pedirOrdenesSap(campos, ctx, cierres))
   return useMemo(() => ({ avisos, ordenes }), [avisos, ordenes])
 }
 
@@ -88,23 +91,33 @@ export function useHorasMantenimiento(campos: string[], desde: Date, hasta: Date
   return useMemo(() => horasPorClase(ordenes, new Date(d), new Date(h)), [ordenes, d, h])
 }
 
-export type Relojes = ReturnType<typeof relojes>
+/** A3 · `tramos` (opcional): el tiempo fuera en sus 5 tramos (entities/orden-cierre.ts). */
+export type Relojes = (NonNullable<ReturnType<typeof relojes>> & { tramos?: TramosTiempoFuera }) | undefined
+const SIN_CIERRES: CierreOrden[] = []
 
 /** `GET /api/vistas/relojes?campos=&desde=&hasta=` → los tres relojes de las
  *  fallas cerradas en el período: indisponibilidad (TRIM, del PLC) contra
  *  reparación activa (SAP). Cruza las órdenes con la historia de fallas: es
  *  del servidor. */
-export function pedirRelojes(campos: string[], desde: Date, hasta: Date, ctx: Contexto): Relojes {
+export function pedirRelojes(campos: string[], desde: Date, hasta: Date, ctx: Contexto, cierres?: readonly CierreOrden[]): Relojes {
   const d = desde.getTime(), h = hasta.getTime()
-  const dentro = pedirOrdenesSap(campos, ctx).filter(o => o.cierreTecnico && ms(o.cierreTecnico) >= d && ms(o.cierreTecnico) < h)
-  const horas = new Map<string, number>()
+  const dentro = pedirOrdenesSap(campos, ctx, cierres).filter(o => o.cierreTecnico && ms(o.cierreTecnico) >= d && ms(o.cierreTecnico) < h)
+  const fallas = new Map<string, { inicio: Date; horas: number }>()
   for (const k of new Set(dentro.filter(o => o.evento).map(o => `${o.campoId}|${o.equipo}`))) {
     const [campo, eq] = k.split('|') as [string, string]
-    for (const f of historialDeEquipo(campo, eq, ctx).eventos) horas.set(f.id, f.horas)
+    for (const f of historialDeEquipo(campo, eq, ctx).eventos) fallas.set(f.id, f)
   }
-  return relojes(dentro, ev => horas.get(ev))
+  const r = relojes(dentro, ev => fallas.get(ev)?.horas)
+  if (!r) return r
+  // A3 · Los 5 tramos, sobre las mismas fallas del promedio (correctivas cerradas con su parada del PLC).
+  const avisos = historiaSap(ctx).avisos
+  const marcas: MarcasFalla[] = dentro.filter(o => o.clase === 'PM01' && o.estado === 'TECO' && o.evento)
+    .flatMap(o => { const f = fallas.get(o.evento!); return f && f.horas > 0 ? [marcasDeOrden(o, f, avisos)] : [] })
+  const tramos = tramosTiempoFuera(marcas)
+  return tramos ? { ...r, tramos } : r
 }
 export function useRelojes(campos: string[], desde: Date, hasta: Date): Relojes {
   const ctx = useCtx()
-  return useDato(RELOJES, { campos, desde, hasta }, v(ctx), () => pedirRelojes(campos, desde, hasta, ctx))
+  const cierres = useSesion(s => s.cierresOrden) // A3
+  return useDato(RELOJES, { campos, desde, hasta }, `${v(ctx)}.${versionDe(cierres ?? SIN_CIERRES)}`, () => pedirRelojes(campos, desde, hasta, ctx, cierres))
 }

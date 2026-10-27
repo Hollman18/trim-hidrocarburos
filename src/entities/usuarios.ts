@@ -13,7 +13,6 @@
 import { ROLES_VISIBLES } from './roles'
 import { CAMPOS } from './campos'
 import { MOTIVO_MINIMO, NOMBRE_MINIMO, alcanza } from './reglas'
-import { region } from '@/shared/config/region'
 
 export type EstadoUsuario = 'activo' | 'invitado' | 'suspendido'
 
@@ -27,12 +26,8 @@ export interface Usuario {
   estado: EstadoUsuario
   /** Día en que se le dio acceso, AAAA-MM-DD. */
   desde: string
-  /** Número de WhatsApp para las alertas, en E.164 («+573005550101»): así se
-   *  guarda y así lo resuelve el webhook. La pantalla lo muestra agrupado
-   *  (`telefonoLegible`). Sin él, no le llega nada. */
-  telefono?: string
-  /** Si recibe las alertas de su rol por WhatsApp. */
-  alertas: boolean
+  // `telefono` y `alertas` (v1): RETIRADOS el 27-oct-2026 (R3, docs/backend/CAMBIOS-CONTRATO.md §3).
+  // El canal de mensajes al teléfono salió del producto: si el servidor los manda, no se leen.
   /** Lo pone el servidor al suspender: el estado que tenía. Al quitar la
    *  suspensión vuelve a ese, y no a «activo»: quien nunca entró sigue
    *  invitado. */
@@ -42,11 +37,7 @@ export interface Usuario {
 /** Lo que ve de OTRA persona quien no tiene `usuarios:administrar` en
  *  `GET /api/usuarios` (CONTRATO.md, «Quién lee qué»): lo que una pantalla
  *  operativa usa y nada más. El nombre (firmas, órdenes, respuestas), el rol y
- *  los campos (quién ocupa cada rol, a quién le llega cada alerta), el estado
- *  (un suspendido ya no recibe) y si tiene las alertas encendidas. El WhatsApp,
- *  solo de quien de verdad las recibe: para eso se guarda (el operador ve a
- *  quién le llegó la pregunta y le escribe), y el de los demás no lo usa
- *  ninguna pantalla. El correo, el día del acceso y el estado de antes de una
+ *  los campos (quién ocupa cada rol) y el estado. El correo, el día del acceso y el estado de antes de una
  *  suspensión son del registro: los ve quien lo administra, y cada persona los
  *  suyos (Mi perfil). */
 export interface PersonaVisible {
@@ -55,8 +46,6 @@ export interface PersonaVisible {
   rolId: string
   campos: 'todos' | string[]
   estado: EstadoUsuario
-  alertas: boolean
-  telefono?: string
 }
 
 /** Lo que trae `GET /api/usuarios`: el registro entero con la capacidad, y
@@ -87,14 +76,14 @@ export function registroVisible(usuarios: readonly Usuario[], quien: string, adm
   if (!yo) return []
   const comparte = (u: Usuario) => yo.campos === 'todos' || u.campos === 'todos' || u.campos.some(c => yo.campos.includes(c))
   return usuarios.filter(u => u.id === yo.id || comparte(u)).map((u): PersonaDelRegistro => (u.id === yo.id ? u : {
-    id: u.id, nombre: u.nombre, rolId: u.rolId, campos: u.campos, estado: u.estado, alertas: u.alertas,
-    ...(recibeAlertas(u) && u.telefono ? { telefono: u.telefono } : {}),
+    id: u.id, nombre: u.nombre, rolId: u.rolId, campos: u.campos, estado: u.estado,
   }))
 }
 
 /** Lo que manda el front al invitar (`POST /api/usuarios`): el id, el día y
- *  el estado los pone el servidor, nunca quien llama. */
-export type Invitacion = Pick<Usuario, 'nombre' | 'correo' | 'rolId' | 'campos' | 'telefono' | 'alertas'>
+ *  el estado los pone el servidor, nunca quien llama. `alertas: false` va por la
+ *  línea base v1, que la pide en el cuerpo; el canal se retiró (R3) y nadie la lee. */
+export type Invitacion = Pick<Usuario, 'nombre' | 'correo' | 'rolId' | 'campos'> & { alertas?: boolean }
 
 /** Cada cambio de acceso queda escrito: quién, cuándo, a quién, qué y por qué. */
 export interface CambioAcceso {
@@ -114,65 +103,10 @@ export const ESTADO_NOMBRE: Record<EstadoUsuario, string> = {
 const correoDe = (nombre: string) =>
   `${nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ /g, '.')}@operadora.example`
 
-/** Roles que reciben alertas por WhatsApp: los que actúan sobre el equipo.
- *  Los demás no tienen regla que les mande nada (`mensajes.ts`). */
-export const ROLES_CON_ALERTAS = ['sup', 'oper', 'tec', 'conf', 'jefe']
-
-/** Lo que le llega a cada rol, dicho como lo lee quien lo recibe. Es la regla
- *  de `mensajes.ts` y nada más: lo que aquí se promete, el backend lo copia. */
-export const ALERTAS_DEL_ROL: Record<string, string> = {
-  sup: 'equipo de alto impacto parado, pozos cerrándose por una bomba y «¿qué se dañó?» cuando nadie responde en 2 h (o de una vez, si no hay operador con WhatsApp)',
-  oper: 'equipo de alto impacto parado, pozos cerrándose por una bomba y «¿qué se dañó?» con su recordatorio a los 30 min',
-  tec: 'las órdenes que SAP le libera',
-  conf: 'cada predicción del vigía cuando sale, con su ventana',
-  jefe: 'cada predicción del vigía cuando sale, con su ventana',
-}
-
-/** Si a la persona le llegan las alertas de su rol por WhatsApp (de ese campo, si se dice). */
-export function recibeAlertas(u: PersonaVisible, campoId?: string): boolean {
-  return u.estado === 'activo' && u.alertas && !!u.telefono?.trim() && ROLES_CON_ALERTAS.includes(u.rolId)
-    && (!campoId || u.campos === 'todos' || u.campos.includes(campoId))
-}
-
-/** El número en E.164: «+» y solo dígitos («+573001234567»). Es la identidad
- *  del canal (el webhook resuelve el número a la persona): con él se compara,
- *  nunca con el texto como se escribió. Sin «+» no hay indicativo: undefined. */
-export function e164(t: string | undefined): string | undefined {
-  const s = (t ?? '').trim()
-  if (!s.startsWith('+')) return undefined
-  const d = s.slice(1).replace(/[\s().-]/g, '')
-  return /^\d{8,15}$/.test(d) ? `+${d}` : undefined
-}
-
-/** El número como se GUARDA: E.164, como dice el contrato y como lo resuelve
- *  el webhook. Un celular del país sin indicativo lo recibe («300 123 4567» →
- *  «+573001234567») y uno con indicativo pierde los espacios y separadores
- *  («+57 300 123 4567» → «+573001234567»). Lo que no se puede volver E.164 se
- *  deja como se escribió, para que la regla de forma lo rechace con su
- *  mensaje (nunca se guarda a medias). Vacío sigue vacío: sin número. */
-export function normalizarTelefono(t: string, celular?: { indicativo: string; patron: RegExp }): string {
-  const s = t.trim(), d = s.replace(/[\s().-]/g, '')
-  if (!s) return ''
-  if (celular && celular.patron.test(d)) return `${celular.indicativo}${d}`
-  return e164(s) ?? s
-}
-
-/** El número como se LEE: el celular del país agrupado («+57 300 123 4567»);
- *  otro número, en su E.164 tal cual (no se adivina cómo se agrupa en otro
- *  país). Solo para mostrar: nunca se compara ni se guarda así. */
-export function telefonoLegible(t: string, celular: { indicativo: string; patron: RegExp } | undefined = region.celular): string {
-  const n = e164(t)
-  if (!n) return t
-  const resto = celular && n.startsWith(celular.indicativo) ? n.slice(celular.indicativo.length) : undefined
-  return resto && celular!.patron.test(resto) ? `${celular!.indicativo} ${resto.slice(0, 3)} ${resto.slice(3, 6)} ${resto.slice(6)}` : n
-}
-
-/** Al arrancar la implementación, cada rol del producto tiene su persona. Los
- *  teléfonos son de demostración (el 555 no se asigna a nadie). */
-export const USUARIOS_INICIALES: Usuario[] = ROLES_VISIBLES.map((r, i) => ({
+/** Al arrancar la implementación, cada rol del producto tiene su persona. */
+export const USUARIOS_INICIALES: Usuario[] = ROLES_VISIBLES.map(r => ({
   id: r.id, nombre: r.persona, correo: correoDe(r.persona), rolId: r.id,
   campos: r.campos, estado: 'activo', desde: '2026-09-01',
-  telefono: `+5730055501${String(i + 1).padStart(2, '0')}`, alertas: ROLES_CON_ALERTAS.includes(r.id),
 }))
 
 export const nombreCampos = (c: Usuario['campos']) =>
@@ -196,8 +130,7 @@ export function estadoAlGuardar(antes: Usuario, pedido: Usuario): Usuario {
 /** Lo que queda en el historial al invitar: con qué se le dio el acceso, no
  *  solo el rol. Sin esto no se sabe después a qué campos entró. */
 export function cambiosDeInvitacion(u: Usuario): string[] {
-  return [`invitado como ${rolNombre(u.rolId).toLowerCase()}`, `campos: ${nombreCampos(u.campos)}`,
-    `WhatsApp: ${u.telefono ? telefonoLegible(u.telefono) : 'sin número'}`, ...(u.alertas ? ['recibe alertas por WhatsApp'] : [])]
+  return [`invitado como ${rolNombre(u.rolId).toLowerCase()}`, `campos: ${nombreCampos(u.campos)}`]
 }
 
 export function cambiosDeUsuario(a: Usuario, b: Usuario): string[] {
@@ -205,9 +138,6 @@ export function cambiosDeUsuario(a: Usuario, b: Usuario): string[] {
   if (a.rolId !== b.rolId) out.push(`rol: ${rolNombre(a.rolId)} → ${rolNombre(b.rolId)}`)
   if (nombreCampos(a.campos) !== nombreCampos(b.campos)) out.push(`campos: ${nombreCampos(a.campos)} → ${nombreCampos(b.campos)}`)
   if (a.estado !== b.estado) out.push(b.estado === 'suspendido' ? 'acceso suspendido' : a.estado === 'suspendido' ? 'acceso reactivado' : `estado: ${ESTADO_NOMBRE[b.estado]}`)
-  // Se compara lo guardado (E.164) y se escribe como se lee: el historial lo lee una persona.
-  if ((a.telefono ?? '') !== (b.telefono ?? '')) out.push(`WhatsApp: ${a.telefono ? telefonoLegible(a.telefono) : 'sin número'} → ${b.telefono ? telefonoLegible(b.telefono) : 'sin número'}`)
-  if (a.alertas !== b.alertas) out.push(b.alertas ? 'recibe alertas por WhatsApp' : 'deja de recibir alertas por WhatsApp')
   return out
 }
 
@@ -221,13 +151,13 @@ const activoGerente = (u: Usuario) => u.rolId === 'ger' && u.estado === 'activo'
 /** A qué parte del formulario va cada error: el 422 del servidor lo dice
  *  por campo, y el formulario lo pone junto a su caja (aria-describedby), no
  *  en una lista suelta al final. */
-export type CampoAcceso = 'nombre' | 'correo' | 'rol' | 'campos' | 'whatsapp' | 'alertas' | 'motivo' | 'general'
+export type CampoAcceso = 'nombre' | 'correo' | 'rol' | 'campos' | 'motivo' | 'general'
 export interface ErrorAcceso { campo: CampoAcceso; texto: string }
 
 /** Reglas de un cambio de acceso. `quien` es el id de la persona que firma.
  *  Devuelve los errores (vacío = se puede). Las mismas que el servidor
  *  responde con 403 (otorgar o cambiarse lo que no le toca), 409 (dejaría la
- *  operación sin gerente) o 422 (datos, WhatsApp repetido). */
+ *  operación sin gerente) o 422 (datos). */
 export function revisarAcceso(usuarios: Usuario[], nuevo: Usuario, quien: string, motivo: string): ErrorAcceso[] {
   const e: ErrorAcceso[] = []
   const antes = usuarios.find(u => u.id === nuevo.id)
@@ -237,16 +167,6 @@ export function revisarAcceso(usuarios: Usuario[], nuevo: Usuario, quien: string
     e.push({ campo: 'correo', texto: 'Ya hay una persona con ese correo.' })
   if (!ROLES_VISIBLES.some(r => r.id === nuevo.rolId)) e.push({ campo: 'rol', texto: 'Escoja un rol.' })
   if (nuevo.campos !== 'todos' && nuevo.campos.length === 0) e.push({ campo: 'campos', texto: 'Escoja al menos un campo.' })
-  // Lo que llega ya pasó por `normalizarTelefono`: lo que no quedó en E.164 no tiene forma de número.
-  if (nuevo.telefono && !/^\+\d{8,15}$/.test(nuevo.telefono)) e.push({ campo: 'whatsapp', texto: 'El WhatsApp va con indicativo (+57 300 123 4567) o como celular de 10 dígitos (300 123 4567).' })
-  // El número es la identidad en WhatsApp: con dos personas en el mismo, una
-  // respuesta quedaría a nombre de la equivocada. Se compara en E.164 y entre
-  // quienes pueden recibir (un suspendido ya no recibe ni responde).
-  const tel = e164(nuevo.telefono)
-  const otro = tel && nuevo.estado !== 'suspendido' ? usuarios.find(u => u.id !== nuevo.id && u.estado !== 'suspendido' && e164(u.telefono) === tel) : undefined
-  if (otro) e.push({ campo: 'whatsapp', texto: `Ese WhatsApp ya es de ${otro.nombre}: cada número es de una sola persona.` })
-  if (nuevo.alertas && !nuevo.telefono?.trim()) e.push({ campo: 'whatsapp', texto: 'Para recibir alertas necesita un número de WhatsApp.' })
-  if (nuevo.alertas && !ROLES_CON_ALERTAS.includes(nuevo.rolId)) e.push({ campo: 'alertas', texto: 'Ese rol no recibe alertas por WhatsApp: quite la marca.' })
   if (antes && nuevo.id === quien && (nuevo.estado === 'suspendido' || nuevo.rolId !== antes.rolId))
     e.push({ campo: 'general', texto: 'No puede suspenderse ni quitarse el rol a sí mismo: pídaselo a otro gerente.' })
   // Su propio acceso lo cambia otro: nadie se da (ni se quita) campos a sí mismo.

@@ -183,30 +183,6 @@ test('«En el yacimiento»: solo producción y confiabilidad, diciendo qué lo m
   f.cerrar()
 })
 
-test('WhatsApp: el operador avala solo lo que contestó, en el mismo chat; lo técnico sigue para su supervisor', async ({ flujo: f }) => {
-  await f.abrir('/#/oper/causa/ceiba/curso')
-  // El primero es el de P-201B, la pregunta más reciente («por identificar · sin arrancar»).
-  await f.page.getByRole('button', { name: 'Ver mi chat de WhatsApp' }).first().click()
-  const chat = f.page.getByRole('group', { name: /^Chat de WhatsApp de / })
-  await chat.getByRole('button', { name: /^1\s*Sello mecánico/ }).click()
-  await chat.getByRole('button', { name: /^1\s*Fuga hacia afuera/ }).click()
-  // B-05: el chat no se cierra al contestar: el cierre «Así queda…» llega en el mismo hilo.
-  const cierre = chat
-  await expect(cierre).toHaveCount(1)
-  await expect(cierre).toContainText('Así queda lo que usted contestó: P-201B, sello mecánico: fuga hacia afuera. El resto del reporte lo revisa su supervisor.')
-  const dice = await cierre.innerText()
-  f.ok(!/se trabó|En la planta|No planeada|Parada estación|choke/i.test(dice), 'el mensaje de cierre no le muestra el tramo, la causa ni el detalle')
-  await cierre.getByRole('button', { name: /^1\s*Está bien/ }).click()
-  await expect(cierre).toContainText('Listo. Gracias, Jairo. Su respuesta queda guardada a las 14:00.')
-  // Su «Está bien» no confirma lo técnico de las paradas que cerró P-201B.
-  await f.ir('#/sup/causa/ceiba/curso')
-  const t = tarjeta(f.page, 'LC-07 y LC-16')
-  await expect(t).toHaveAttribute('data-estado', 'propuesta')
-  await expect(t.locator('[data-paso="choke"]')).toContainText('TRIM lo dedujo')
-  await expect(t.locator('[data-paso="n2"]')).toContainText('TRIM lo dedujo')
-  f.cerrar()
-})
-
 test.describe('390 px', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true })
 

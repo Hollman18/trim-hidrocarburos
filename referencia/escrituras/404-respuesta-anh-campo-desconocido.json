@@ -1,0 +1,1 @@
+{"id":"404-respuesta-anh-campo-desconocido","descripcion":"La respuesta de la ANH de un campo que no está en el registro","pasos":[{"metodo":"POST","endpoint":"/api/anh/respuestas","rol":"reg","cuerpo":{"campoId":"no-existe","dia":"2026-10-01","estado":"aceptado","recibida":"2026-10-02T07:20:00-05:00"},"esperado":{"estado":404,"codigo":"campo-desconocido"}}]}

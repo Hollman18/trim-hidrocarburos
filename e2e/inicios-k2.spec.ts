@@ -37,7 +37,6 @@ test.describe('inicios en el teléfono · 390 px', () => {
 
     await page.setViewportSize(ESCRITORIO)
     await expect(page.locator('main [data-tarea="confirmar"]').first()).toContainText('cerró LC-07 y LC-16 · 05:43', { useInnerText: true })
-    await expect(page.locator('main [data-tarea="conseguir-causa"]')).toContainText('se escaló a las 20:20', { useInnerText: true })
     await expect(page.locator('main [data-tarea="conseguir-causa"]')).toContainText('355 desde que pararon', { useInnerText: true })
     await expect(page.locator('main [data-tarea="orden"]')).toContainText('Orden 40012056, liberada a Óscar Daza a las 09:10.', { useInnerText: true })
     f.cerrar()

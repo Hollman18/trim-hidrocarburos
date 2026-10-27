@@ -31,9 +31,9 @@ const NOMBRE_CONDICION: Record<Condicion, string> = {
 
 const DE_SEVERIDAD: Record<Severidad, Condicion> = { 0: 'normal', 1: 'alarma', 2: 'atencion', 3: 'aviso' }
 
-/** El número dentro del rombo, del triángulo y del cuadrado: Air Bold, 7,8 de 14. */
+/** El número dentro del rombo, del triángulo y del cuadrado: Plex Sans Bold, 7,8 de 14. */
 const Numero = ({ n, y, fill }: { n: number; y: number; fill: string }) => (
-  <text x="7" y={y} textAnchor="middle" fontSize="7.8" fontWeight="700" fontFamily="Air, system-ui, sans-serif" fill={fill}>{n}</text>
+  <text x="7" y={y} textAnchor="middle" fontSize="7.8" fontWeight="700" fontFamily="'IBM Plex Sans', system-ui, sans-serif" fill={fill}>{n}</text>
 )
 
 /** El dibujo de cada condición, en 14 × 14 (los trazos de X2 §4.2 y de `marcas.js`). */

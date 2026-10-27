@@ -70,7 +70,7 @@ $$
 |---|---|---|
 | tipo, parte, como, declarado | de la causa | árbol de los caps. 2 y 3 |
 | fin | `fin` del evento de pozo o de la parada de bomba | PLC |
-| $t_{\text{respuesta}}$ | `Respuesta.hora` | escritura (pantalla o WhatsApp), hora del servidor |
+| $t_{\text{respuesta}}$ | `Respuesta.hora` | escritura (pantalla; WhatsApp: **RETIRADO (27-oct-2026)**), hora del servidor |
 
 **Qué es una «pregunta»** (`preguntasDe`, `libro.ts:883-904`). Sobre un rango:
 - **De pozo**: cada tramo cuya causa es `pendiente` o es declarada **sobre el propio evento** (`esDeclarado`: `tipo = 'declarada'`, o `como = 'declarado'` con `causa.evento === evento.id`). `sobre: 'pozo'`, `equipo` = el pozo.

@@ -1,0 +1,1 @@
+{"id":"400-conversion-peticion-invalida","descripcion":"La conversión del árbol con un número donde va el texto","pasos":[{"metodo":"POST","endpoint":"/api/anh/conversion/importar","rol":"adm","cuerpo":{"campo":"ceiba","texto":3},"esperado":{"estado":400,"codigo":"peticion-invalida"}}]}

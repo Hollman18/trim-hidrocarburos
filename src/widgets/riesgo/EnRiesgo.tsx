@@ -59,15 +59,15 @@ export function EnRiesgo({ rol }: { rol: 'conf' | 'jefe' }) {
   const porDia = uno.ahoraBpd
   // Si alguna fila es un techo (K-101: «si cierran todos sus pozos»), la suma también: «hasta» (QA-R, vecino 1).
   const enJuego = sumaSiPara(enRiesgo)
-  // La exposición: la suma de lo que costaría cada equipo si fallara HOY (`costoFalla`,
+  // La exposición: la suma de lo que costaría cada equipo si fallara HOY (`costoFallaHoy`,
   // una sola cuenta para todas las familias: se puede sumar). No es que fallen todos a
   // la vez: es cuánto hay expuesto, equipo por equipo.
-  const conCosto = enRiesgo.filter(r => r.costoFalla !== undefined)
+  const conCosto = enRiesgo.filter(r => r.costoFallaHoy !== undefined)
   const costo = uno.exposicionBbl
   // Por qué falta la cifra, con su motivo real: nada en riesgo, servicios (lo que cuesta
   // su caída depende de cuánto dure) o equipos sin historia de fallas con que estimarla.
-  const servicios = enRiesgo.filter(r => r.costoFalla === undefined && esServicio(r))
-  const sinHistoria = enRiesgo.filter(r => r.costoFalla === undefined && !esServicio(r))
+  const servicios = enRiesgo.filter(r => r.costoFallaHoy === undefined && esServicio(r))
+  const sinHistoria = enRiesgo.filter(r => r.costoFallaHoy === undefined && !esServicio(r))
   const aparte = [
     ...(sinHistoria.length ? [`${plural(sinHistoria.length, 'equipo', 'equipos')} sin historia para estimar`] : []),
     ...(servicios.length ? [`sin contar ${plural(servicios.length, 'servicio del campo', 'servicios del campo')}`] : []),
@@ -134,7 +134,7 @@ export function EnRiesgo({ rol }: { rol: 'conf' | 'jefe' }) {
             ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}${r.rango && entre(r.rango) ? ` (${entre(r.rango)})` : ''}` : 'ya pasó el límite'],
             ['Si para', siParaLargo(r, servicio)],
             // D-2: «Si falla hoy» es una tasa (bbl/d); el costo de una falla, en bbl, lleva su nombre.
-            ...(r.costoFalla !== undefined ? [['Le costaría la falla', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
+            ...(r.costoFallaHoy !== undefined ? [['Le costaría la falla', `≈ ${n0(r.costoFallaHoy)} bbl`] as [string, string]] : [])]}
           className="flex w-full cursor-pointer items-center gap-2 text-left hover:bg-[var(--panel2)] sm:gap-3">
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-center gap-x-2">

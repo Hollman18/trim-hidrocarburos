@@ -1,0 +1,1 @@
+{"id":"400-respuesta-anh-peticion-invalida","descripcion":"La respuesta de la ANH con un número donde va el estado","pasos":[{"metodo":"POST","endpoint":"/api/anh/respuestas","rol":"reg","cuerpo":{"campoId":"ceiba","dia":"2026-10-01","estado":1,"recibida":"2026-10-02T07:20:00-05:00"},"esperado":{"estado":400,"codigo":"peticion-invalida"}}]}

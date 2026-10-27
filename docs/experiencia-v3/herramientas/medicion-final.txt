@@ -1,0 +1,104 @@
+# Experiencia v3 · la paleta final (decisión 5), medida desde src/index.css
+# 2026-10-27 · node docs/experiencia-v3/herramientas/medir-final.mjs
+
+### claro
+fondos: suelo #e8e6e2 · superficie #dfddd8 · panel #f6f5f2 · panel2 #eeece8 · elevado #fcfbf9
+panel lateral: nav #dfddd8 · borde #c9c6bf · activo #f6f5f2 · acento #2c7371
+texto tinta #1c1e21: mínimo 12,31 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #45484d: mínimo 6,76 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #595c61: mínimo 4,95 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #34373b: mínimo 8,81 (≥ 3)
+gráfico dato3 #717479: mínimo 3,46 (≥ 3)
+gráfico eq-trazo #56595e: mínimo 5,18 (≥ 3)
+estado interlock #8b1a1a: mínimo 6,84 (≥ 3)
+estado alarma #bf4000: mínimo 3,92 (≥ 3)
+estado atención y aviso #f9a825: mínimo 1,45 → lleva trazo #1f2328: 11,64
+estado sin comunicación #8420a3: mínimo 5,70 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 13,81 · 13,44 · 13,96 · 12,78
+  interlock – atención y aviso: 39,50 · 42,14 · 38,46 · 34,79
+  interlock – sin comunicación: 21,24 · 22,77 · 21,02 · 11,13
+  alarma – atención y aviso: 26,29 · 28,82 · 24,57 · 23,94
+  alarma – sin comunicación: 26,20 · 25,15 · 26,74 · 16,49
+  atención y aviso – sin comunicación: 44,72 · 43,48 · 44,92 · 32,12
+acento #2c7371 contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 23,69 · 20,62 · 12,62 · 27,30
+  alarma: 24,02 · 12,56 · 14,77 · 30,47
+  atención y aviso: 34,78 · 26,33 · 34,57 · 34,34
+  sin comunicación: 25,14 · 18,20 · 12,47 · 19,29
+  peor caso del acento: 12,47
+  (informativo) contra el gris tinta3 #595c61: 7,68 · 6,07 · 3,65 · 8,96 → lo seleccionado lleva además forma (raya de 3 px o peso 600), nunca solo color
+acento-sobre sobre el acento (botón principal): 5,53 (≥ 4,5)
+foco: acento sobre panel: 5,07 (≥ 3)
+foco: acento sobre suelo: 4,44 (≥ 3)
+foco: acento sobre el panel lateral: 4,07 (≥ 3)
+rótulo activo del panel lateral (nav-tinta sobre nav-activo): 15,32 (≥ 4,5)
+rótulo inactivo del panel lateral (nav-tinta2 sobre nav): 6,76 (≥ 4,5)
+rótulo inactivo con el cursor encima (nav-tinta2 sobre nav-hover): 7,43 (≥ 4,5)
+raya de lo seleccionado en el panel lateral (acento sobre nav): 4,07 (≥ 3)
+raya de lo seleccionado contra la entrada activa (acento sobre nav-activo): 5,07 (≥ 3)
+fila seleccionada: tinta sobre acento-suave: 13,10 (≥ 4,5)
+bloque --marca con letra blanca (marca-sobre sobre marca): 5,53 (≥ 4,5)
+texto tenue sobre --marca (marca-tenue): 4,76 (≥ 4,5)
+equipo en marcha contra parado: 7,03 (≥ 3)
+contorno del equipo sobre panel2: 5,96 (≥ 3)
+puntero (tinta) contra la banda: 10,22 (≥ 3)
+barra dato1 contra su pista: 8,66 (≥ 3)
+tinta sobre el tinte de alarma: 13,29 (≥ 4,5)
+tinta sobre el tinte amarillo: 14,40 (≥ 4,5)
+tinta sobre el tinte morado: 13,52 (≥ 4,5)
+tinta sobre el tinte del interlock: 12,53 (≥ 4,5)
+«Deshacer» del aviso (aviso-accion sobre la tinta): 10,89 (≥ 4,5)
+
+### noche
+fondos: suelo #1c1b19 · superficie #232220 · panel #2a2927 · panel2 #262523 · elevado #312f2d
+panel lateral: nav #232220 · borde #353330 · activo #33312e · acento #a9dad6
+texto tinta #f2f1ee: mínimo 11,80 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #c9c6c0: mínimo 7,82 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #a6a39d: mínimo 5,30 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #d8d6d2: mínimo 9,19 (≥ 3)
+gráfico dato3 #8a8781: mínimo 3,72 (≥ 3)
+gráfico eq-trazo #a9a6a0: mínimo 5,49 (≥ 3)
+estado interlock #ff8080: mínimo 5,49 (≥ 3)
+estado alarma #ffb347: mínimo 7,49 (≥ 3)
+estado atención y aviso #fff176: mínimo 11,49 (≥ 3)
+estado sin comunicación #c99cff: mínimo 6,15 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 15,07 · 15,10 · 10,84 · 10,46
+  interlock – atención y aviso: 28,02 · 28,23 · 20,32 · 26,17
+  interlock – sin comunicación: 18,93 · 17,83 · 18,49 · 16,33
+  alarma – atención y aviso: 14,69 · 15,31 · 11,41 · 15,80
+  alarma – sin comunicación: 26,80 · 26,54 · 26,91 · 10,43
+  atención y aviso – sin comunicación: 33,30 · 32,20 · 31,21 · 17,40
+acento #a9dad6 contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 23,22 · 20,25 · 12,56 · 27,78
+  alarma: 18,12 · 17,24 · 15,92 · 18,75
+  atención y aviso: 17,69 · 16,12 · 17,93 · 12,94
+  sin comunicación: 19,01 · 16,96 · 13,58 · 12,80
+  peor caso del acento: 12,56
+  (informativo) contra el gris tinta3 #a6a39d: 14,71 · 15,81 · 13,55 · 15,34 → lo seleccionado lleva además forma (raya de 3 px o peso 600), nunca solo color
+acento-sobre sobre el acento (botón principal): 11,22 (≥ 4,5)
+foco: acento sobre panel: 9,47 (≥ 3)
+foco: acento sobre suelo: 11,22 (≥ 3)
+foco: acento sobre el panel lateral: 10,36 (≥ 3)
+rótulo activo del panel lateral (nav-tinta sobre nav-activo): 11,48 (≥ 4,5)
+rótulo inactivo del panel lateral (nav-tinta2 sobre nav): 9,33 (≥ 4,5)
+rótulo inactivo con el cursor encima (nav-tinta2 sobre nav-hover): 8,42 (≥ 4,5)
+raya de lo seleccionado en el panel lateral (acento sobre nav): 10,36 (≥ 3)
+raya de lo seleccionado contra la entrada activa (acento sobre nav-activo): 8,45 (≥ 3)
+fila seleccionada: tinta sobre acento-suave: 11,04 (≥ 4,5)
+bloque --marca con letra blanca (marca-sobre sobre marca): 5,53 (≥ 4,5)
+texto tenue sobre --marca (marca-tenue): 4,76 (≥ 4,5)
+equipo en marcha contra parado: 13,29 (≥ 3)
+contorno del equipo sobre panel2: 6,31 (≥ 3)
+puntero (tinta) contra la banda: 6,19 (≥ 3)
+barra dato1 contra su pista: 8,68 (≥ 3)
+tinta sobre el tinte de alarma: 10,41 (≥ 4,5)
+tinta sobre el tinte amarillo: 9,62 (≥ 4,5)
+tinta sobre el tinte morado: 10,80 (≥ 4,5)
+tinta sobre el tinte del interlock: 11,23 (≥ 4,5)
+«Deshacer» del aviso (aviso-accion sobre la tinta): 4,90 (≥ 4,5)
+
+el índigo #142d88 no está en ningún token
+
+Fallas: 0

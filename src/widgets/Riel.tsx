@@ -4,7 +4,7 @@ import { useApp, useCampo, useRol, useCampos, useAmbito, portafolioPermitido } f
 import { perfilDe } from '@/entities/configuracion'
 import { hayEquipo, ultimaSub } from '@/app/grupos'
 import { useInsigniaDeHoy } from '@/shared/api/hoy'
-import { WordmarkBlanco, Isotipo } from '@/shared/brand/Logo'
+import { Wordmark, Isotipo } from '@/shared/brand/Logo'
 import { n0 } from '@/shared/lib/formato'
 import { useEstadoCampos } from '@/shared/api/diferidos'
 import { cn } from '@/shared/lib/cn'
@@ -17,10 +17,16 @@ import { useDesplegable } from '@/shared/ui/foco'
 import { useUsuarios } from '@/shared/api/usuarios'
 import { useSesion } from '@/shared/api/sesion'
 
-/* El panel lateral (X5 §4.1): la banda índigo de B, de costado. Desplegado
-   mide 240 px y plegado 88; en el teléfono es el mismo panel, que abre el ☰
-   desde la izquierda (X5 §4.2). Arriba no queda ninguna pestaña: las
+/* El panel lateral (v3, decisión 5): CLARO, en el gris cálido de la v1, con su
+   borde de 1 px; la entrada activa en --nav-activo con la raya de 3 px del acento a
+   la izquierda y el peso 600 (nunca solo color: WCAG 1.4.1). Sin barra negra.
+   Desplegado mide 240 px y plegado 88; en el teléfono es el mismo panel, que abre
+   el ☰ desde la izquierda (X5 §4.2). Arriba no queda ninguna pestaña: las
    subpantallas de la puerta abierta se listan aquí, debajo de su puerta. */
+
+/** Lo seleccionado en el panel: el fondo claro, la raya del acento y el peso. */
+const ACTIVO = 'bg-[var(--nav-activo)] font-semibold text-[var(--nav-tinta)] shadow-[inset_3px_0_0_var(--acento)]'
+const INACTIVO = 'font-medium text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]'
 
 /** Las iniciales de un campo para la píldora plegada: «La Ceiba» → «LC». */
 const sigla = (nombre: string) => {
@@ -29,9 +35,9 @@ const sigla = (nombre: string) => {
 }
 
 /** El campo que se mira, con la marca de su peor condición, y la lista para
- *  cambiarlo: «Todos mis campos» y cada campo con lo que produjo ayer. Va en
- *  una píldora blanca (la paleta de estado clara: `.blanca`) en el panel y en
- *  la banda del teléfono. */
+ *  cambiarlo: «Todos mis campos» y cada campo con lo que produjo ayer. En el
+ *  panel va en una caja con su rótulo («Campo», como D1); plegado y en la banda
+ *  del teléfono, en una píldora. */
 export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'plegado' | 'banda' }) {
   const campoId = useApp(s => s.campoId), setCampo = useApp(s => s.setCampo), alcance = useApp(s => s.alcance), setAlcance = useApp(s => s.setAlcance)
   const campo = useCampo(); const rol = useRol(); const usuarios = useUsuarios()
@@ -60,24 +66,26 @@ export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'pl
         aria-expanded={varios ? abierto : undefined} aria-controls={varios && abierto ? idMenu : undefined}
         aria-label={`Campo: ${conCondicion}${varios ? '. Cambiar de campo' : ''}`} title={variante === 'plegado' ? conCondicion : undefined}
         data-compacto={variante === 'plegado' ? '' : undefined}
-        className={cn('blanca flex items-center rounded-full bg-white font-semibold text-[#15171a]',
-          varios ? 'cursor-pointer hover:bg-[#f3f1ec]' : 'cursor-default',
-          variante === 'panel' && 'w-full gap-2.5 px-3.5 py-[9px] text-left text-[15px]',
-          variante === 'plegado' && 'h-10 w-[60px] justify-center gap-1 text-[13px]',
-          variante === 'banda' && 'toque min-w-0 max-w-full gap-2 px-3 py-1.5 text-[14px]')}>
+        className={cn('flex items-center bg-[var(--panel)] font-semibold text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--nav-linea)]',
+          varios ? 'cursor-pointer hover:bg-[var(--elevado)]' : 'cursor-default',
+          variante === 'panel' && 'w-full gap-2.5 rounded-[10px] px-3 py-2 text-left text-[15px]',
+          variante === 'plegado' && 'h-10 w-[60px] justify-center gap-1 rounded-full text-[13px]',
+          variante === 'banda' && 'toque min-w-0 max-w-full gap-2 rounded-full px-3 py-1.5 text-[14px]')}>
         <MarcaPrioridad s={estadoVista} tamano={variante === 'panel' ? 16 : 14} />
         {variante === 'plegado'
           ? <span aria-hidden>{enPortafolio ? 'Todos' : sigla(campo.nombre)}</span>
-          : <span className="min-w-0 truncate">{nombre}</span>}
-        {varios && variante !== 'plegado' && <ChevronDown aria-hidden className={cn('ml-auto shrink-0 text-[#5b6168]', variante === 'panel' ? 'size-[18px]' : 'size-4')} />}
+          : variante === 'panel'
+            ? <span className="min-w-0 flex-1"><small aria-hidden className="block text-[13px] font-normal leading-tight text-[var(--tinta2)]">Campo</small><span className="block truncate leading-snug">{nombre}</span></span>
+            : <span className="min-w-0 truncate">{nombre}</span>}
+        {varios && variante !== 'plegado' && <ChevronDown aria-hidden className={cn('ml-auto shrink-0 text-[var(--tinta2)]', variante === 'panel' ? 'size-[18px]' : 'size-4')} />}
       </button>
       {abierto && (
         <div id={idMenu} role="group" aria-label="Escoger campo"
-          className={cn('absolute z-[130] w-[300px] max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-1.5 text-[var(--tinta)] shadow-[var(--sombra-flota)]',
+          className={cn('absolute z-[130] w-[300px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-1.5 text-[var(--tinta)] shadow-[var(--sombra-flota)]',
             variante === 'banda' ? 'left-1/2 top-[calc(100%+8px)] -translate-x-1/2' : variante === 'plegado' ? 'left-[calc(100%+12px)] top-0' : 'inset-x-0 top-[calc(100%+6px)] w-auto')}>
           {ofrecePortafolio && (<>
             <button onClick={() => { setAlcance('portafolio'); setAbierto(false) }} aria-current={alcance === 'portafolio'}
-              className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[12px] px-2.5 py-2 text-left text-[15px] font-semibold hover:bg-[var(--panel2)]">
+              className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-[15px] font-semibold hover:bg-[var(--panel2)]">
               <MarcaPrioridad s={peorSeveridad(campos.map(severidadDe))} tamano={14} />
               <span className="flex-1">Todos mis campos
                 <span className="block text-[13px] font-normal text-[var(--tinta2)]">{campos.length} campos sumados</span>
@@ -95,7 +103,7 @@ export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'pl
             const es = c.id === campoId && alcance === 'campo'
             return (
               <button key={c.id} onClick={() => { setCampo(c.id); setAbierto(false) }} aria-current={es}
-                className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[12px] px-2.5 py-1.5 text-left text-[15px] hover:bg-[var(--panel2)]">
+                className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-1.5 text-left text-[15px] hover:bg-[var(--panel2)]">
                 <MarcaPrioridad s={severidadDe(c)} tamano={14} />
                 <span className="min-w-0 flex-1 font-medium">{c.nombre}
                   <span className="block text-[13px] font-normal text-[var(--tinta2)]">{c.cuenca}</span>
@@ -145,14 +153,14 @@ function usePuertas() {
 }
 
 /** La insignia de Hoy (X4 §3.3, X5 §4.1): cuántas tarjetas piden una acción,
- *  contadas por Hoy (`useInsigniaDeHoy`). Una píldora blanca con número oscuro,
- *  nunca un color de estado. En cero no se pinta. */
+ *  contadas por Hoy (`useInsigniaDeHoy`). Una píldora en tinta con el número
+ *  claro, nunca un color de estado. En cero no se pinta. */
 function CuentaHoy({ variante }: { variante: 'panel' | 'plegado' | 'menu' }) {
   const rol = useRol(); const ambito = useAmbito()
   const n = useInsigniaDeHoy(rol.id, ambito.campos.map(c => c.id))
   if (!n) return null
   return (
-    <span className={cn('blanca grid place-items-center rounded-full bg-white font-bold text-[#15171a]',
+    <span className={cn('grid place-items-center rounded-full bg-[var(--tinta)] font-bold text-[var(--panel)]',
       variante === 'panel' && 'ml-auto h-6 min-w-6 px-[7px] text-[13px]',
       variante === 'plegado' && 'absolute right-1.5 top-[3px] h-5 min-w-5 px-[5px] text-[12px]',
       variante === 'menu' && 'absolute -right-0.5 top-0.5 h-[18px] min-w-[18px] px-1 text-[12px]')}>
@@ -176,15 +184,15 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   const puertas = usePuertas()
 
   if (plegado) return (
-    <nav aria-label="Navegación" className="sobre-marca flex h-full flex-col items-center overflow-y-auto bg-[var(--marca)] px-3 pb-[18px] pt-5 text-white">
-      <span className="mb-4 grid size-11 shrink-0 place-items-center rounded-[12px] bg-white"><Isotipo className="size-[30px]" /></span>
+    <nav aria-label="Navegación" className="flex h-full flex-col items-center overflow-y-auto border-r border-[var(--nav-linea)] bg-[var(--nav)] px-3 pb-[18px] pt-5 text-[var(--nav-tinta)]">
+      <span className="mb-4 grid size-11 shrink-0 place-items-center"><Isotipo className="size-[30px]" /></span>
       <div className="mb-4"><SelectorCampo variante="plegado" /></div>
       <div role="group" aria-label="Puertas" className="flex flex-col items-center gap-1">
         {puertas.map(p => (
           <div key={p.id} className="flex flex-col items-center">
             <button onClick={p.ir} aria-current={p.activo ? 'page' : undefined}
-              className={cn('relative flex w-[66px] cursor-pointer flex-col items-center gap-1 rounded-[14px] px-0.5 pb-2 pt-2.5 text-center text-[12px] leading-tight transition-colors duration-[120ms]',
-                p.activo ? 'bg-[var(--marca-capa)] font-semibold text-white' : 'font-medium text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white')}>
+              className={cn('relative flex w-[66px] cursor-pointer flex-col items-center gap-1 rounded-[10px] px-0.5 pb-2 pt-2.5 text-center text-[12px] leading-tight transition-colors duration-[120ms]',
+                p.activo ? ACTIVO : INACTIVO)}>
               <p.icono className="size-[22px]" />
               {p.corto}
               {p.id === 'hoy' && <InsigniaHoy variante="plegado" />}
@@ -196,8 +204,8 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
               <div role="group" aria-label={p.corto} data-subpantallas className="mt-1 flex flex-col items-center gap-0.5">
                 {p.subs.map(s => (
                   <button key={s.id} onClick={s.ir} aria-current={s.activo ? 'page' : undefined}
-                    className={cn('flex w-[66px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] px-0.5 pb-1.5 pt-1.5 text-center text-[12px] leading-[1.15] hyphens-auto [overflow-wrap:anywhere]',
-                      s.activo ? 'bg-white font-semibold text-[var(--marca)]' : 'font-medium text-[var(--marca-tenue)] hover:bg-white/[.10] hover:text-white')}>
+                    className={cn('flex w-[66px] cursor-pointer flex-col items-center gap-0.5 rounded-[10px] px-0.5 pb-1.5 pt-1.5 text-center text-[12px] leading-[1.15] hyphens-auto [overflow-wrap:anywhere]',
+                      s.activo ? ACTIVO : INACTIVO)}>
                     <s.icono className="size-[18px] shrink-0" />
                     <span className="line-clamp-2">{s.corto}</span>
                   </button>
@@ -209,13 +217,13 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
       </div>
       <div className="mt-auto flex flex-col items-center gap-1 pt-4">
         <button onClick={() => setComoSeLee(!comoSeLee)} aria-pressed={comoSeLee} aria-label="¿Cómo se lee?" title="¿Cómo se lee?"
-          className={cn('grid size-11 cursor-pointer place-items-center rounded-full', comoSeLee ? 'bg-white text-[var(--marca)]' : 'text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white')}>
+          className={cn('grid size-11 cursor-pointer place-items-center rounded-full', comoSeLee ? 'bg-[var(--nav-activo)] text-[var(--nav-tinta)] shadow-[inset_0_0_0_1.5px_var(--acento)]' : 'text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]')}>
           <CircleHelp className="size-[22px]" />
         </button>
-        <div className="mt-1.5 w-full border-t border-white/[.16] pt-3.5"><MenuPerfil variante="plegado" /></div>
+        <div className="mt-1.5 w-full border-t border-[var(--nav-linea)] pt-3.5"><MenuPerfil variante="plegado" /></div>
         {onPlegar && (
           <button onClick={onPlegar} aria-label="Desplegar el panel" title="Desplegar el panel ( [ )"
-            className="mt-1.5 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white">
+            className="mt-1.5 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]">
             <PanelLeftOpen className="size-5" />
           </button>
         )}
@@ -224,12 +232,12 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   )
 
   return (
-    <nav aria-label="Navegación" className="sobre-marca flex h-full flex-col overflow-y-auto bg-[var(--marca)] px-4 pb-[18px] pt-6 text-white">
+    <nav aria-label="Navegación" className="flex h-full flex-col overflow-y-auto border-r border-[var(--nav-linea)] bg-[var(--nav)] px-4 pb-[18px] pt-6 text-[var(--nav-tinta)]">
       <div className="relative mb-[22px] flex items-center">
-        <span className="ml-2.5 mt-0.5 block"><WordmarkBlanco className="h-[21px]" /></span>
+        <span className="ml-2 mt-0.5 block"><Wordmark className="h-[19px]" /></span>
         {onCerrar && (
           <button onClick={onCerrar} aria-label="Cerrar la navegación"
-            className="toque absolute -top-1.5 right-0 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white">
+            className="toque absolute -top-1.5 right-0 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]">
             <X className="size-6" />
           </button>
         )}
@@ -241,19 +249,19 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
         {puertas.map(p => (
           <div key={p.id}>
             <button onClick={() => { p.ir(); onCerrar?.() }} aria-current={p.activo ? 'page' : undefined}
-              className={cn('flex min-h-[46px] w-full cursor-pointer items-center gap-3.5 rounded-[14px] px-3.5 py-[11px] text-left text-[16px] transition-colors duration-[120ms]',
-                p.activo ? 'bg-[var(--marca-capa)] font-semibold text-white' : 'font-medium text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white')}>
+              className={cn('flex min-h-[46px] w-full cursor-pointer items-center gap-3.5 rounded-[10px] px-3.5 py-[11px] text-left text-[16px] transition-colors duration-[120ms]',
+                p.activo ? ACTIVO : INACTIVO)}>
               <p.icono className="size-[22px] shrink-0" />
               {p.corto}
               {p.id === 'hoy' && <InsigniaHoy variante="panel" />}
             </button>
             {/* Las subpantallas de la puerta abierta, dentro del panel y debajo de su puerta. */}
             {p.activo && p.subs.length > 0 && (
-              <div role="group" aria-label={p.corto} data-subpantallas className="mb-1 ml-[23px] mt-1 flex flex-col gap-0.5 border-l border-white/[.20] pl-3">
+              <div role="group" aria-label={p.corto} data-subpantallas className="mb-1 ml-[23px] mt-1 flex flex-col gap-0.5 border-l border-[var(--nav-linea)] pl-3">
                 {p.subs.map(s => (
                   <button key={s.id} onClick={() => { s.ir(); onCerrar?.() }} aria-current={s.activo ? 'page' : undefined}
-                    className={cn('min-h-9 w-full cursor-pointer rounded-[10px] px-2.5 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms] max-sm:min-h-11',
-                      s.activo ? 'bg-white/[.10] font-semibold text-white' : 'text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white')}>
+                    className={cn('min-h-9 w-full cursor-pointer rounded-[8px] px-2.5 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms] max-sm:min-h-11',
+                      s.activo ? ACTIVO : INACTIVO)}>
                     {s.corto}
                   </button>
                 ))}
@@ -265,12 +273,12 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
 
       <div className="mt-auto flex flex-col gap-1 pt-6">
         <button onClick={() => setComoSeLee(!comoSeLee)} aria-pressed={comoSeLee} aria-label="¿Cómo se lee?"
-          className={cn('flex min-h-11 cursor-pointer items-center gap-3.5 rounded-[14px] px-3.5 py-2.5 text-left text-[15px] font-medium transition-colors duration-[120ms]',
-            comoSeLee ? 'bg-[var(--marca-capa)] text-white' : 'text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white')}>
+          className={cn('flex min-h-11 cursor-pointer items-center gap-3.5 rounded-[10px] px-3.5 py-2.5 text-left text-[15px] transition-colors duration-[120ms]',
+            comoSeLee ? ACTIVO : INACTIVO)}>
           <CircleHelp className="size-5 shrink-0" />¿Cómo se lee?
           {comoSeLee && <span className="ml-auto text-[13px] font-normal">activo</span>}
         </button>
-        <div className="mt-1.5 border-t border-white/[.16] pt-3.5"><MenuPerfil variante="panel" onPlegar={onPlegar} /></div>
+        <div className="mt-1.5 border-t border-[var(--nav-linea)] pt-3.5"><MenuPerfil variante="panel" onPlegar={onPlegar} /></div>
       </div>
     </nav>
   )

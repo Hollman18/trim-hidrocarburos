@@ -18,7 +18,7 @@ import {
 } from '@/entities/diferido'
 import { causaDeEvento, cuentaPorIdentificar, type Causa, type Contexto, type PorIdentificar } from '@/entities/causa-senal'
 import { pozosDe, pozoDe, pruebaEn, estadoAhora, eventosDePozo, type Pozo, type Prueba, type EventoPozo } from '@/entities/pozos'
-import { causasSugeridas, type Opcion } from '@/entities/mensajes'
+import { causasSugeridas, type Opcion } from '@/entities/causas-sugeridas'
 import { catalogoDe, type Catalogo } from '@/entities/catalogo'
 import { EQUIPOS } from '@/entities/equipos'
 import type { Senal } from '@/entities/vigia'

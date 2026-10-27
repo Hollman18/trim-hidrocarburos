@@ -1,0 +1,8308 @@
+{
+ "generado": "node scripts/linea-base.mjs generar --desde=cde8214",
+ "commit": "cde8214",
+ "fecha": "2026-10-07",
+ "titulo": "TRIM Hidrocarburos: front para entregar al backend",
+ "rutas": [
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/diferidos",
+   "constante": "DIFERIDOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/diferidos/mensual",
+   "constante": "DIFERIDOS_MENSUAL",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/diferidos/base",
+   "constante": "DIFERIDOS_BASE",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/produccion/diaria",
+   "constante": "PRODUCCION_DIARIA",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/potencial-reciente",
+   "constante": "POTENCIAL_RECIENTE",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/paradas/por-identificar",
+   "constante": "PREGUNTAS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/paradas/:evento/opciones",
+   "constante": "OPCIONES_RESPUESTA",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/bombas/prediccion",
+   "constante": "PREDICCION",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/bombas/paradas",
+   "constante": "PARADAS_BOMBA",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/bombas/paradas-en-periodo",
+   "constante": "PARADAS_EN_PERIODO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/riesgo",
+   "constante": "RIESGO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/estado",
+   "constante": "ESTADO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/pozos",
+   "constante": "POZOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/pozos/:campo/:pozo",
+   "constante": "POZO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/electrosumergibles",
+   "constante": "ELECTROSUMERGIBLES",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/asignacion",
+   "constante": "ASIGNACION",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/predicciones",
+   "constante": "PREDICCIONES",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/relojes",
+   "constante": "RELOJES",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/campos/:campo/ahora",
+   "constante": "CAMPO_AHORA",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/equipos/:campo/:equipo",
+   "constante": "EQUIPO_HOY",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/equipos-hoy",
+   "constante": "EQUIPOS_HOY",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/equipos/:campo/:equipo/historia",
+   "constante": "HISTORIA_EQUIPO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/equipos/:campo/:equipo/ficha",
+   "constante": "FICHA_EQUIPO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/equipos",
+   "constante": "FILAS_EQUIPOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/confiabilidad",
+   "constante": "CONFIABILIDAD",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/bombas",
+   "constante": "BOMBAS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/mensajes",
+   "constante": "MENSAJES",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/avisos",
+   "constante": "SAP_AVISOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/ordenes",
+   "constante": "SAP_ORDENES",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/equipos",
+   "constante": "SAP_EQUIPOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/equipos/:equipo",
+   "constante": "SAP_EQUIPO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos",
+   "constante": "LISTA_CAMPOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/catalogo",
+   "constante": "CATALOGO",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/configuracion/historial",
+   "constante": "CONFIGURACION_HISTORIAL",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/paradas/respuestas",
+   "constante": "RESPUESTAS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/usuarios",
+   "constante": "USUARIOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/usuarios/historial",
+   "constante": "ACCESOS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/informes",
+   "constante": "INFORMES",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/asignacion-oficial",
+   "constante": "ASIGNACION_OFICIAL",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/analisis",
+   "constante": "ANALISIS",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/planta/cambios",
+   "constante": "CAMBIOS_PLANTA",
+   "origen": "contrato.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/configuracion",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "PATCH",
+   "ruta": "/usuarios/:id",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/usuarios",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/sap/avisos",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/informes",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/asignacion-oficial",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/paradas/:evento/respuesta",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/analisis/:evento",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/planta/cambios",
+   "origen": "escrituras.ts"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sesion",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/paradas/:evento/respuesta",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/analisis/:evento",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/informes",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/campos/:campo/tags/:tag/equipo",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/inscripcion",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/planta/cambios",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/configuracion",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/usuarios",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "PATCH",
+   "ruta": "/usuarios/:id",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/usuarios",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/sap/avisos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/asignacion-oficial",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/configuracion/historial",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/catalogo",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/paradas/respuestas",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/usuarios/historial",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/informes",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/asignacion-oficial",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/analisis",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/planta/cambios",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/vistas/diferidos/tramos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/mensajes",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/avisos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/ordenes",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/equipos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/sap/equipos/:equipo",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/configuracion",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/paradas/:evento",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/informes/:folio",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/informes/:folio/verificacion",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/webhooks/whatsapp",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/webhooks/whatsapp",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/tags/:tag/procedencia",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/inventario",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/tags/pendientes",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/ingesta/nacimiento",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/pozos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/pozos/eventos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/servicios/eventos",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/bombas/:equipo/paradas",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/produccion-diaria",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/tanques/:tanque/nivel",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/tags/:tag/serie",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/campos/:campo/metrologia",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "POST",
+   "ruta": "/campos/:campo/tags/equipo",
+   "origen": "CONTRATO.md"
+  },
+  {
+   "metodo": "GET",
+   "ruta": "/reloj",
+   "origen": "CONTRATO.md"
+  }
+ ],
+ "formas": {
+  "/vistas/predicciones": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "object"
+   ],
+   "$.datos.registro": [
+    "array"
+   ],
+   "$.datos.registro[]": [
+    "object"
+   ],
+   "$.datos.registro[].id": [
+    "string"
+   ],
+   "$.datos.registro[].campoId": [
+    "string"
+   ],
+   "$.datos.registro[].equipo": [
+    "string"
+   ],
+   "$.datos.registro[].parte": [
+    "string"
+   ],
+   "$.datos.registro[].accion": [
+    "string"
+   ],
+   "$.datos.registro[].emitida": [
+    "string"
+   ],
+   "$.datos.registro[].desde": [
+    "string"
+   ],
+   "$.datos.registro[].hasta": [
+    "string"
+   ],
+   "$.datos.registro[].intervencion": [
+    "string"
+   ],
+   "$.datos.registro[].calificacion": [
+    "string"
+   ],
+   "$.datos.registro[].falla": [
+    "object"
+   ],
+   "$.datos.registro[].falla.id": [
+    "string"
+   ],
+   "$.datos.registro[].falla.inicio": [
+    "string"
+   ],
+   "$.datos.fallas": [
+    "array"
+   ],
+   "$.datos.fallas[]": [
+    "object"
+   ],
+   "$.datos.fallas[].campoId": [
+    "string"
+   ],
+   "$.datos.fallas[].equipo": [
+    "string"
+   ],
+   "$.datos.fallas[].familia": [
+    "string"
+   ],
+   "$.datos.fallas[].falla": [
+    "object"
+   ],
+   "$.datos.fallas[].falla.id": [
+    "string"
+   ],
+   "$.datos.fallas[].falla.inicio": [
+    "string"
+   ],
+   "$.datos.fallas[].falla.fin": [
+    "null",
+    "string"
+   ],
+   "$.datos.fallas[].falla.horas": [
+    "number"
+   ],
+   "$.datos.fallas[].falla.como": [
+    "string"
+   ],
+   "$.datos.fallas[].falla.bbl": [
+    "number"
+   ],
+   "$.datos.fallas[].falla.disparo": [
+    "boolean"
+   ],
+   "$.datos.fallas[].visibilidad": [
+    "string"
+   ],
+   "$.datos.fallas[].faltan": [
+    "array"
+   ],
+   "$.datos.fallas[].falla.parte": [
+    "string"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.datos.registro[].tag": [
+    "string"
+   ]
+  },
+  "/vistas/asignacion": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].campoId": [
+    "string"
+   ],
+   "$.datos[].pozo": [
+    "string"
+   ],
+   "$.datos[].horas": [
+    "number"
+   ],
+   "$.datos[].potencial": [
+    "number"
+   ],
+   "$.datos[].diferido": [
+    "number"
+   ],
+   "$.datos[].asignado": [
+    "number"
+   ],
+   "$.refs": [
+    "object"
+   ]
+  },
+  "/vistas/produccion/diaria": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].dia": [
+    "string"
+   ],
+   "$.datos[].horas": [
+    "number"
+   ],
+   "$.datos[].real": [
+    "number"
+   ],
+   "$.datos[].faltan": [
+    "array"
+   ],
+   "$.datos[].potencial": [
+    "number"
+   ],
+   "$.datos[].diferido": [
+    "number"
+   ],
+   "$.datos[].residuo": [
+    "number"
+   ],
+   "$.datos[].meta": [
+    "number"
+   ],
+   "$.refs": [
+    "object"
+   ]
+  },
+  "/vistas/diferidos": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "object"
+   ],
+   "$.datos.desde": [
+    "string"
+   ],
+   "$.datos.hasta": [
+    "string"
+   ],
+   "$.datos.tramos": [
+    "array"
+   ],
+   "$.datos.tramos[]": [
+    "object"
+   ],
+   "$.datos.tramos[].evento": [
+    "string"
+   ],
+   "$.datos.tramos[].pozo": [
+    "string"
+   ],
+   "$.datos.tramos[].causa": [
+    "object"
+   ],
+   "$.datos.tramos[].causa.tipo": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.equipo": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.como": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.evento": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.evidencia": [
+    "array"
+   ],
+   "$.datos.tramos[].causa.evidencia[]": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.texto": [
+    "string"
+   ],
+   "$.datos.tramos[].inicio": [
+    "string"
+   ],
+   "$.datos.tramos[].fin": [
+    "string"
+   ],
+   "$.datos.tramos[].abierto": [
+    "boolean"
+   ],
+   "$.datos.tramos[].horas": [
+    "number"
+   ],
+   "$.datos.tramos[].factor": [
+    "number"
+   ],
+   "$.datos.tramos[].bbl": [
+    "number"
+   ],
+   "$.datos.tramos[].aproximado": [
+    "boolean"
+   ],
+   "$.datos.tramos[].sinCustodia": [
+    "boolean"
+   ],
+   "$.datos.tramos[].sinFactor": [
+    "boolean"
+   ],
+   "$.datos.tramos[].sesgo": [
+    "number"
+   ],
+   "$.datos.tramos[].azar": [
+    "number"
+   ],
+   "$.datos.tramos[].causa.parte": [
+    "string"
+   ],
+   "$.datos.real": [
+    "number"
+   ],
+   "$.datos.potencial": [
+    "number"
+   ],
+   "$.datos.brecha": [
+    "number"
+   ],
+   "$.datos.diferido": [
+    "number"
+   ],
+   "$.datos.residuo": [
+    "number"
+   ],
+   "$.datos.tolerancia": [
+    "number"
+   ],
+   "$.datos.aproximado": [
+    "number"
+   ],
+   "$.datos.identificado": [
+    "number"
+   ],
+   "$.datos.declarado": [
+    "number"
+   ],
+   "$.datos.pendiente": [
+    "number"
+   ],
+   "$.datos.planeado": [
+    "number"
+   ],
+   "$.datos.noPlaneado": [
+    "number"
+   ],
+   "$.datos.altoImpacto": [
+    "number"
+   ],
+   "$.datos.anticipable": [
+    "number"
+   ],
+   "$.datos.sinInstrumento": [
+    "number"
+   ],
+   "$.datos.sinParte": [
+    "number"
+   ],
+   "$.datos.evitablePorOrden": [
+    "number"
+   ],
+   "$.datos.porTipo": [
+    "array"
+   ],
+   "$.datos.porTipo[]": [
+    "object"
+   ],
+   "$.datos.porTipo[].tipo": [
+    "string"
+   ],
+   "$.datos.porTipo[].bbl": [
+    "number"
+   ],
+   "$.datos.porEquipo": [
+    "array"
+   ],
+   "$.datos.porEquipo[]": [
+    "object"
+   ],
+   "$.datos.porEquipo[].campoId": [
+    "string"
+   ],
+   "$.datos.porEquipo[].equipo": [
+    "string"
+   ],
+   "$.datos.porEquipo[].tipo": [
+    "string"
+   ],
+   "$.datos.porEquipo[].bbl": [
+    "number"
+   ],
+   "$.datos.porEquipo[].tolerancia": [
+    "number"
+   ],
+   "$.datos.porEquipo[].eventos": [
+    "number"
+   ],
+   "$.datos.porEquipo[].pozos": [
+    "number"
+   ],
+   "$.datos.porEquipo[].partes": [
+    "array"
+   ],
+   "$.datos.porEquipo[].partes[]": [
+    "object"
+   ],
+   "$.datos.porEquipo[].partes[].parte": [
+    "string"
+   ],
+   "$.datos.porEquipo[].partes[].bbl": [
+    "number"
+   ],
+   "$.datos.porParte": [
+    "array"
+   ],
+   "$.datos.porParte[]": [
+    "object"
+   ],
+   "$.datos.porParte[].parte": [
+    "string"
+   ],
+   "$.datos.porParte[].familia": [
+    "string"
+   ],
+   "$.datos.porParte[].bbl": [
+    "number"
+   ],
+   "$.datos.porParte[].fallas": [
+    "number"
+   ],
+   "$.datos.porParte[].disparos": [
+    "number"
+   ],
+   "$.datos.porParte[].horas": [
+    "number"
+   ],
+   "$.datos.porParte[].equipos": [
+    "array"
+   ],
+   "$.datos.porParte[].equipos[]": [
+    "object"
+   ],
+   "$.datos.porParte[].equipos[].campoId": [
+    "string"
+   ],
+   "$.datos.porParte[].equipos[].equipo": [
+    "string"
+   ],
+   "$.datos.porParte[].equipos[].bbl": [
+    "number"
+   ],
+   "$.datos.porPozo": [
+    "array"
+   ],
+   "$.datos.porPozo[]": [
+    "object"
+   ],
+   "$.datos.porPozo[].campoId": [
+    "string"
+   ],
+   "$.datos.porPozo[].pozo": [
+    "string"
+   ],
+   "$.datos.porPozo[].bbl": [
+    "number"
+   ],
+   "$.datos.porPozo[].horas": [
+    "number"
+   ],
+   "$.datos.porPozo[].eventos": [
+    "number"
+   ],
+   "$.datos.porCampo": [
+    "array"
+   ],
+   "$.datos.porCampo[]": [
+    "object"
+   ],
+   "$.datos.porCampo[].campoId": [
+    "string"
+   ],
+   "$.datos.porCampo[].real": [
+    "number"
+   ],
+   "$.datos.porCampo[].potencial": [
+    "number"
+   ],
+   "$.datos.porCampo[].brecha": [
+    "number"
+   ],
+   "$.datos.porCampo[].diferido": [
+    "number"
+   ],
+   "$.datos.porCampo[].identificado": [
+    "number"
+   ],
+   "$.datos.porCampo[].declarado": [
+    "number"
+   ],
+   "$.datos.porCampo[].pendiente": [
+    "number"
+   ],
+   "$.datos.porCampo[].altoImpacto": [
+    "number"
+   ],
+   "$.datos.porCampo[].pe": [
+    "number"
+   ],
+   "$.datos.porCampo[].metaProduccion": [
+    "number"
+   ],
+   "$.datos.porCampo[].metaDiferido": [
+    "number"
+   ],
+   "$.datos.porCampo[].sinMeta": [
+    "boolean"
+   ],
+   "$.datos.fa": [
+    "array"
+   ],
+   "$.datos.fa[]": [
+    "object"
+   ],
+   "$.datos.fa[].campoId": [
+    "string"
+   ],
+   "$.datos.fa[].mes": [
+    "string"
+   ],
+   "$.datos.fa[].fa": [
+    "number"
+   ],
+   "$.datos.fa[].banda": [
+    "number"
+   ],
+   "$.datos.fa[].dentro": [
+    "boolean"
+   ],
+   "$.datos.fa[].publicado": [
+    "boolean"
+   ],
+   "$.datos.custodia": [
+    "object"
+   ],
+   "$.datos.custodia.sinPrueba": [
+    "array"
+   ],
+   "$.datos.custodia.estimados": [
+    "array"
+   ],
+   "$.datos.custodia.estimados[]": [
+    "string"
+   ],
+   "$.datos.custodia.bswLaboratorio": [
+    "array"
+   ],
+   "$.datos.preguntas": [
+    "array"
+   ],
+   "$.datos.pe": [
+    "number"
+   ],
+   "$.datos.meta": [
+    "object"
+   ],
+   "$.datos.meta.produccion": [
+    "number"
+   ],
+   "$.datos.meta.diferido": [
+    "number"
+   ],
+   "$.datos.meta.produccionDia": [
+    "number"
+   ],
+   "$.datos.meta.diferidoDia": [
+    "number"
+   ],
+   "$.datos.meta.produccionTotal": [
+    "number"
+   ],
+   "$.datos.meta.diferidoTotal": [
+    "number"
+   ],
+   "$.datos.meta.dias": [
+    "number"
+   ],
+   "$.datos.meta.diasTotal": [
+    "number"
+   ],
+   "$.datos.meta.sinMeta": [
+    "array"
+   ],
+   "$.datos.valorUsd": [
+    "number"
+   ],
+   "$.datos.valorCampos": [
+    "object"
+   ],
+   "$.datos.valorCampos.con": [
+    "number"
+   ],
+   "$.datos.valorCampos.total": [
+    "number"
+   ],
+   "$.datos.sinPrecio": [
+    "array"
+   ],
+   "$.datos.sinFiscal": [
+    "array"
+   ],
+   "$.datos.sinFactor": [
+    "array"
+   ],
+   "$.datos.publicable": [
+    "boolean"
+   ],
+   "$.datos.motivos": [
+    "array"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.refs.eventos": [
+    "object"
+   ],
+   "$.refs.eventos.{k}": [
+    "object"
+   ],
+   "$.refs.eventos.{k}.id": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.pozo": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.inicio": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.fin": [
+    "null",
+    "string"
+   ],
+   "$.refs.eventos.{k}.codigo": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.senal": [
+    "string"
+   ],
+   "$.refs.pozos": [
+    "object"
+   ],
+   "$.refs.pozos.{k}": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.id": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.levantamiento": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.controlador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.alimentador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.origen": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas": [
+    "array"
+   ],
+   "$.refs.pozos.{k}.pruebas[]": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.pruebas[].fecha": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas[].crudoBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].aguaBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].hz": [
+    "number"
+   ],
+   "$.datos.custodia.bswLaboratorio[]": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.declarado": [
+    "object"
+   ],
+   "$.datos.tramos[].causa.declarado.texto": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.declarado.por": [
+    "string"
+   ],
+   "$.datos.tramos[].causa.declarado.hora": [
+    "string"
+   ],
+   "$.datos.preguntas[]": [
+    "object"
+   ],
+   "$.datos.preguntas[].id": [
+    "string"
+   ],
+   "$.datos.preguntas[].campoId": [
+    "string"
+   ],
+   "$.datos.preguntas[].equipo": [
+    "string"
+   ],
+   "$.datos.preguntas[].sobre": [
+    "string"
+   ],
+   "$.datos.preguntas[].inicio": [
+    "string"
+   ],
+   "$.datos.preguntas[].fin": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa": [
+    "object"
+   ],
+   "$.datos.preguntas[].causa.tipo": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.equipo": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.como": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.evento": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.evidencia": [
+    "array"
+   ],
+   "$.datos.preguntas[].causa.evidencia[]": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.texto": [
+    "string"
+   ],
+   "$.datos.preguntas[].bbl": [
+    "number"
+   ],
+   "$.datos.preguntas[].pide": [
+    "boolean"
+   ],
+   "$.datos.preguntas[].arrancoSinIdentificar": [
+    "boolean"
+   ],
+   "$.datos.preguntas[].causa.declarado": [
+    "object"
+   ],
+   "$.datos.preguntas[].causa.declarado.texto": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.declarado.por": [
+    "string"
+   ],
+   "$.datos.preguntas[].causa.declarado.hora": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.respuesta": [
+    "object"
+   ],
+   "$.refs.eventos.{k}.respuesta.texto": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.respuesta.por": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.respuesta.hora": [
+    "string"
+   ],
+   "$.datos.custodia.sinPrueba[]": [
+    "string"
+   ],
+   "$.datos.sinPrecio[]": [
+    "string"
+   ]
+  },
+  "/vistas/diferidos/mensual": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].mes": [
+    "string"
+   ],
+   "$.datos[].corto": [
+    "string"
+   ],
+   "$.datos[].nombre": [
+    "string"
+   ],
+   "$.datos[].desde": [
+    "string"
+   ],
+   "$.datos[].hasta": [
+    "string"
+   ],
+   "$.datos[].parcial": [
+    "boolean"
+   ],
+   "$.datos[].libro": [
+    "object"
+   ],
+   "$.datos[].libro.desde": [
+    "string"
+   ],
+   "$.datos[].libro.hasta": [
+    "string"
+   ],
+   "$.datos[].libro.real": [
+    "number"
+   ],
+   "$.datos[].libro.potencial": [
+    "number"
+   ],
+   "$.datos[].libro.brecha": [
+    "number"
+   ],
+   "$.datos[].libro.diferido": [
+    "number"
+   ],
+   "$.datos[].libro.residuo": [
+    "number"
+   ],
+   "$.datos[].libro.tolerancia": [
+    "number"
+   ],
+   "$.datos[].libro.aproximado": [
+    "number"
+   ],
+   "$.datos[].libro.identificado": [
+    "number"
+   ],
+   "$.datos[].libro.declarado": [
+    "number"
+   ],
+   "$.datos[].libro.pendiente": [
+    "number"
+   ],
+   "$.datos[].libro.planeado": [
+    "number"
+   ],
+   "$.datos[].libro.noPlaneado": [
+    "number"
+   ],
+   "$.datos[].libro.altoImpacto": [
+    "number"
+   ],
+   "$.datos[].libro.anticipable": [
+    "number"
+   ],
+   "$.datos[].libro.sinInstrumento": [
+    "number"
+   ],
+   "$.datos[].libro.sinParte": [
+    "number"
+   ],
+   "$.datos[].libro.evitablePorOrden": [
+    "number"
+   ],
+   "$.datos[].libro.porTipo": [
+    "array"
+   ],
+   "$.datos[].libro.porTipo[]": [
+    "object"
+   ],
+   "$.datos[].libro.porTipo[].tipo": [
+    "string"
+   ],
+   "$.datos[].libro.porTipo[].bbl": [
+    "number"
+   ],
+   "$.datos[].libro.porEquipo": [
+    "array"
+   ],
+   "$.datos[].libro.porEquipo[]": [
+    "object"
+   ],
+   "$.datos[].libro.porEquipo[].campoId": [
+    "string"
+   ],
+   "$.datos[].libro.porEquipo[].equipo": [
+    "string"
+   ],
+   "$.datos[].libro.porEquipo[].tipo": [
+    "string"
+   ],
+   "$.datos[].libro.porEquipo[].bbl": [
+    "number"
+   ],
+   "$.datos[].libro.porEquipo[].tolerancia": [
+    "number"
+   ],
+   "$.datos[].libro.porEquipo[].eventos": [
+    "number"
+   ],
+   "$.datos[].libro.porEquipo[].pozos": [
+    "number"
+   ],
+   "$.datos[].libro.porEquipo[].partes": [
+    "array"
+   ],
+   "$.datos[].libro.porEquipo[].partes[]": [
+    "object"
+   ],
+   "$.datos[].libro.porEquipo[].partes[].parte": [
+    "string"
+   ],
+   "$.datos[].libro.porEquipo[].partes[].bbl": [
+    "number"
+   ],
+   "$.datos[].libro.porParte": [
+    "array"
+   ],
+   "$.datos[].libro.porParte[]": [
+    "object"
+   ],
+   "$.datos[].libro.porParte[].parte": [
+    "string"
+   ],
+   "$.datos[].libro.porParte[].familia": [
+    "string"
+   ],
+   "$.datos[].libro.porParte[].bbl": [
+    "number"
+   ],
+   "$.datos[].libro.porParte[].fallas": [
+    "number"
+   ],
+   "$.datos[].libro.porParte[].disparos": [
+    "number"
+   ],
+   "$.datos[].libro.porParte[].horas": [
+    "number"
+   ],
+   "$.datos[].libro.porParte[].equipos": [
+    "array"
+   ],
+   "$.datos[].libro.porParte[].equipos[]": [
+    "object"
+   ],
+   "$.datos[].libro.porParte[].equipos[].campoId": [
+    "string"
+   ],
+   "$.datos[].libro.porParte[].equipos[].equipo": [
+    "string"
+   ],
+   "$.datos[].libro.porParte[].equipos[].bbl": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo": [
+    "array"
+   ],
+   "$.datos[].libro.porCampo[]": [
+    "object"
+   ],
+   "$.datos[].libro.porCampo[].campoId": [
+    "string"
+   ],
+   "$.datos[].libro.porCampo[].real": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].potencial": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].brecha": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].diferido": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].identificado": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].declarado": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].pendiente": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].altoImpacto": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].pe": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].metaProduccion": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].metaDiferido": [
+    "number"
+   ],
+   "$.datos[].libro.porCampo[].sinMeta": [
+    "boolean"
+   ],
+   "$.datos[].libro.fa": [
+    "array"
+   ],
+   "$.datos[].libro.fa[]": [
+    "object"
+   ],
+   "$.datos[].libro.fa[].campoId": [
+    "string"
+   ],
+   "$.datos[].libro.fa[].mes": [
+    "string"
+   ],
+   "$.datos[].libro.fa[].fa": [
+    "number"
+   ],
+   "$.datos[].libro.fa[].banda": [
+    "number"
+   ],
+   "$.datos[].libro.fa[].dentro": [
+    "boolean"
+   ],
+   "$.datos[].libro.fa[].publicado": [
+    "boolean"
+   ],
+   "$.datos[].libro.pe": [
+    "number"
+   ],
+   "$.datos[].libro.meta": [
+    "object"
+   ],
+   "$.datos[].libro.meta.produccion": [
+    "number"
+   ],
+   "$.datos[].libro.meta.diferido": [
+    "number"
+   ],
+   "$.datos[].libro.meta.produccionDia": [
+    "number"
+   ],
+   "$.datos[].libro.meta.diferidoDia": [
+    "number"
+   ],
+   "$.datos[].libro.meta.produccionTotal": [
+    "number"
+   ],
+   "$.datos[].libro.meta.diferidoTotal": [
+    "number"
+   ],
+   "$.datos[].libro.meta.dias": [
+    "number"
+   ],
+   "$.datos[].libro.meta.diasTotal": [
+    "number"
+   ],
+   "$.datos[].libro.meta.sinMeta": [
+    "array"
+   ],
+   "$.datos[].libro.valorUsd": [
+    "number"
+   ],
+   "$.datos[].libro.valorCampos": [
+    "object"
+   ],
+   "$.datos[].libro.valorCampos.con": [
+    "number"
+   ],
+   "$.datos[].libro.valorCampos.total": [
+    "number"
+   ],
+   "$.datos[].libro.sinPrecio": [
+    "array"
+   ],
+   "$.datos[].libro.sinFiscal": [
+    "array"
+   ],
+   "$.datos[].libro.sinFactor": [
+    "array"
+   ],
+   "$.datos[].libro.publicable": [
+    "boolean"
+   ],
+   "$.datos[].libro.motivos": [
+    "array"
+   ],
+   "$.datos[].libro.motivos[]": [
+    "object"
+   ],
+   "$.datos[].libro.motivos[].codigo": [
+    "string"
+   ],
+   "$.datos[].libro.motivos[].texto": [
+    "string"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.datos[].libro.motivos[].campoId": [
+    "string"
+   ],
+   "$.datos[].libro.motivos[].mes": [
+    "string"
+   ],
+   "$.datos[].libro.sinPrecio[]": [
+    "string"
+   ]
+  },
+  "/vistas/bombas/prediccion": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "object"
+   ],
+   "$.datos.perfil": [
+    "string"
+   ],
+   "$.datos.parada": [
+    "object"
+   ],
+   "$.datos.parada.id": [
+    "string"
+   ],
+   "$.datos.parada.campoId": [
+    "string"
+   ],
+   "$.datos.parada.equipo": [
+    "string"
+   ],
+   "$.datos.parada.inicio": [
+    "string"
+   ],
+   "$.datos.parada.fin": [
+    "null"
+   ],
+   "$.datos.parada.perdida": [
+    "number"
+   ],
+   "$.datos.parada.senal": [
+    "string"
+   ],
+   "$.datos.parada.nivelAlParar": [
+    "object"
+   ],
+   "$.datos.parada.nivelAlParar.tag": [
+    "string"
+   ],
+   "$.datos.parada.nivelAlParar.pct": [
+    "number"
+   ],
+   "$.datos.respaldoLibreBpd": [
+    "number"
+   ],
+   "$.datos.tolerancia": [
+    "number"
+   ],
+   "$.datos.componentes": [
+    "array"
+   ],
+   "$.datos.componentes[]": [
+    "object"
+   ],
+   "$.datos.componentes[].nombre": [
+    "string"
+   ],
+   "$.datos.componentes[].valor": [
+    "number"
+   ],
+   "$.datos.componentes[].fuente": [
+    "string"
+   ],
+   "$.datos.componentes[].correlado": [
+    "boolean"
+   ],
+   "$.datos.inmediato": [
+    "boolean"
+   ],
+   "$.datos.mueve": [
+    "object"
+   ],
+   "$.datos.mueve.bpd": [
+    "number"
+   ],
+   "$.datos.mueve.medido": [
+    "boolean"
+   ],
+   "$.datos.mueve.fuente": [
+    "string"
+   ],
+   "$.datos.aguaSinSalidaBpd": [
+    "number"
+   ],
+   "$.datos.colchon": [
+    "object"
+   ],
+   "$.datos.colchon.tanque": [
+    "object"
+   ],
+   "$.datos.colchon.tanque.id": [
+    "string"
+   ],
+   "$.datos.colchon.tanque.nombre": [
+    "string"
+   ],
+   "$.datos.colchon.tanque.campoId": [
+    "string"
+   ],
+   "$.datos.colchon.tanque.bomba": [
+    "string"
+   ],
+   "$.datos.colchon.tanque.capacidadBbl": [
+    "number"
+   ],
+   "$.datos.colchon.tanque.altoAlto": [
+    "number"
+   ],
+   "$.datos.colchon.tanque.tagNivel": [
+    "string"
+   ],
+   "$.datos.colchon.tanque.aforo": [
+    "string"
+   ],
+   "$.datos.colchon.nivel": [
+    "object"
+   ],
+   "$.datos.colchon.nivel.tag": [
+    "string"
+   ],
+   "$.datos.colchon.nivel.pct": [
+    "number"
+   ],
+   "$.datos.colchon.nivel.hora": [
+    "string"
+   ],
+   "$.datos.colchon.libreBbl": [
+    "number"
+   ],
+   "$.datos.colchon.aguaSinSalidaBpd": [
+    "number"
+   ],
+   "$.datos.colchon.horas": [
+    "number"
+   ],
+   "$.datos.colchon.rango": [
+    "array"
+   ],
+   "$.datos.colchon.rango[]": [
+    "number"
+   ],
+   "$.datos.colchon.agotado": [
+    "boolean"
+   ],
+   "$.datos.colchon.componentes": [
+    "array"
+   ],
+   "$.datos.colchon.componentes[]": [
+    "object"
+   ],
+   "$.datos.colchon.componentes[].nombre": [
+    "string"
+   ],
+   "$.datos.colchon.componentes[].valor": [
+    "number"
+   ],
+   "$.datos.colchon.componentes[].fuente": [
+    "string"
+   ],
+   "$.datos.colchon.componentes[].correlado": [
+    "boolean"
+   ],
+   "$.datos.orden": [
+    "object"
+   ],
+   "$.datos.orden.aguaAQuitarBpd": [
+    "number"
+   ],
+   "$.datos.orden.pasos": [
+    "array"
+   ],
+   "$.datos.orden.pasos[]": [
+    "object"
+   ],
+   "$.datos.orden.pasos[].pozo": [
+    "string"
+   ],
+   "$.datos.orden.pasos[].crudoBpd": [
+    "number"
+   ],
+   "$.datos.orden.pasos[].aguaBpd": [
+    "number"
+   ],
+   "$.datos.orden.pasos[].fraccion": [
+    "number"
+   ],
+   "$.datos.orden.pasos[].aguaAcumBpd": [
+    "number"
+   ],
+   "$.datos.orden.pasos[].crudoPorAgua": [
+    "number"
+   ],
+   "$.datos.orden.crudoBpd": [
+    "number"
+   ],
+   "$.datos.orden.crudoParejoBpd": [
+    "number"
+   ],
+   "$.datos.orden.ahorroBpd": [
+    "number"
+   ],
+   "$.datos.orden.produciendo": [
+    "number"
+   ],
+   "$.datos.orden.sinPrueba": [
+    "array"
+   ],
+   "$.datos.crudoBpd": [
+    "number"
+   ],
+   "$.datos.crudoParejoBpd": [
+    "number"
+   ],
+   "$.datos.metodo": [
+    "string"
+   ],
+   "$.datos.supuestos": [
+    "array"
+   ],
+   "$.datos.supuestos[]": [
+    "string"
+   ],
+   "$.datos.perdiendo": [
+    "object"
+   ],
+   "$.datos.perdiendo.bblDia": [
+    "number"
+   ],
+   "$.datos.perdiendo.pozos": [
+    "array"
+   ],
+   "$.datos.perdiendo.pozos[]": [
+    "string"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.refs.perfiles": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.subtipo": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tecnologia": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.norma": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.tags.p_succion": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.p_descarga": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.caudal": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.v_bomba": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_empuje": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.fuga_sello": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.corriente": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.nivel_tanque": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.primerasAlarmas": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.primerasAlarmas.{k}": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.papel": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.capacidadBpd": [
+    "number"
+   ],
+   "$.refs.perfiles.{k}.sinBomba": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.sinBomba.fraccion": [
+    "number"
+   ],
+   "$.refs.perfiles.{k}.sinBomba.fuente": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.equipo": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.pozos": [
+    "object"
+   ],
+   "$.refs.pozos.{k}": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.id": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.levantamiento": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.controlador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.alimentador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.origen": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas": [
+    "array"
+   ],
+   "$.refs.pozos.{k}.pruebas[]": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.pruebas[].fecha": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas[].crudoBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].aguaBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].hz": [
+    "number"
+   ],
+   "$.refs.perfiles.{k}.tags.t_succion": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.dp_filtro": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_descarga": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_rod_bomba": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_devanado": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_rod_motor": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.v_motor": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.velocidad": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.p_barrera": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.nivel_barrera": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.p_aceite": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_aceite": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.pozos": [
+    "array"
+   ],
+   "$.refs.perfiles.{k}.pozos[]": [
+    "string"
+   ]
+  },
+  "/vistas/riesgo": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].campoId": [
+    "string"
+   ],
+   "$.datos[].equipo": [
+    "string"
+   ],
+   "$.datos[].tipo": [
+    "string"
+   ],
+   "$.datos[].estado": [
+    "string"
+   ],
+   "$.datos[].prioridad": [
+    "number"
+   ],
+   "$.datos[].bblDia": [
+    "number"
+   ],
+   "$.datos[].pozos": [
+    "number"
+   ],
+   "$.datos[].desde": [
+    "string"
+   ],
+   "$.datos[].cierreDesde": [
+    "string"
+   ],
+   "$.datos[].motivo": [
+    "string"
+   ],
+   "$.datos[].altoImpacto": [
+    "boolean"
+   ],
+   "$.datos[].accion": [
+    "string"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.datos[].parte": [
+    "string"
+   ],
+   "$.datos[].estadoParte": [
+    "string"
+   ],
+   "$.datos[].horas": [
+    "number"
+   ],
+   "$.datos[].rango": [
+    "array"
+   ],
+   "$.datos[].rango[]": [
+    "number"
+   ],
+   "$.datos[].tag": [
+    "string"
+   ],
+   "$.datos[].costoFalla": [
+    "number"
+   ],
+   "$.datos[].mdtFuente": [
+    "string"
+   ]
+  },
+  "/vistas/bombas": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].clave": [
+    "string"
+   ],
+   "$.datos[].campo": [
+    "object"
+   ],
+   "$.datos[].campo.id": [
+    "string"
+   ],
+   "$.datos[].campo.nombre": [
+    "string"
+   ],
+   "$.datos[].campo.cuenca": [
+    "string"
+   ],
+   "$.datos[].campo.choke": [
+    "string"
+   ],
+   "$.datos[].campo.nota": [
+    "string"
+   ],
+   "$.datos[].eq": [
+    "object"
+   ],
+   "$.datos[].eq.id": [
+    "string"
+   ],
+   "$.datos[].eq.nombre": [
+    "string"
+   ],
+   "$.datos[].eq.sistema": [
+    "string"
+   ],
+   "$.datos[].eq.severidad": [
+    "number"
+   ],
+   "$.datos[].eq.marcha": [
+    "string"
+   ],
+   "$.datos[].eq.estado": [
+    "string"
+   ],
+   "$.datos[].eq.criticidad": [
+    "number"
+   ],
+   "$.datos[].eq.aguasAbajo": [
+    "string"
+   ],
+   "$.datos[].eq.redundancia": [
+    "string"
+   ],
+   "$.datos[].eq.modoFalla": [
+    "string"
+   ],
+   "$.datos[].eq.norma": [
+    "string"
+   ],
+   "$.datos[].eq.lectura": [
+    "string"
+   ],
+   "$.datos[].eq.intervencion": [
+    "object"
+   ],
+   "$.datos[].eq.intervencion.ubicacion": [
+    "string"
+   ],
+   "$.datos[].eq.intervencion.accionInmediata": [
+    "string"
+   ],
+   "$.datos[].eq.intervencion.avisarA": [
+    "string"
+   ],
+   "$.datos[].eq.distribucionFalla": [
+    "object"
+   ],
+   "$.datos[].eq.distribucionFalla.reparto": [
+    "array"
+   ],
+   "$.datos[].eq.distribucionFalla.reparto[]": [
+    "array"
+   ],
+   "$.datos[].eq.distribucionFalla.reparto[][]": [
+    "number",
+    "string"
+   ],
+   "$.datos[].eq.distribucionFalla.fuente": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos": [
+    "array"
+   ],
+   "$.datos[].eq.dispositivos[]": [
+    "object"
+   ],
+   "$.datos[].eq.dispositivos[].tag": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].tipo": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].valor": [
+    "number",
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].unidad": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].estado": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].origen": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].limite": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].serie": [
+    "object"
+   ],
+   "$.datos[].eq.dispositivos[].serie.desde": [
+    "string"
+   ],
+   "$.datos[].eq.dispositivos[].serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].eq.dispositivos[].serie.valores": [
+    "array"
+   ],
+   "$.datos[].eq.dispositivos[].serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].eq.instrumentado": [
+    "boolean"
+   ],
+   "$.datos[].perfil": [
+    "string"
+   ],
+   "$.datos[].senales": [
+    "array"
+   ],
+   "$.datos[].senales[]": [
+    "object"
+   ],
+   "$.datos[].senales[].plantilla": [
+    "object"
+   ],
+   "$.datos[].senales[].plantilla.id": [
+    "string"
+   ],
+   "$.datos[].senales[].plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].senales[].plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].senales[].plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].senales[].plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].senales[].plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].senales[].plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].senales[].plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].senales[].tag": [
+    "string"
+   ],
+   "$.datos[].senales[].unidad": [
+    "string"
+   ],
+   "$.datos[].senales[].valor": [
+    "number"
+   ],
+   "$.datos[].senales[].serie": [
+    "object"
+   ],
+   "$.datos[].senales[].serie.desde": [
+    "string"
+   ],
+   "$.datos[].senales[].serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].senales[].serie.valores": [
+    "array"
+   ],
+   "$.datos[].senales[].serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].senales[].origen": [
+    "string"
+   ],
+   "$.datos[].senales[].estado": [
+    "string"
+   ],
+   "$.datos[].senales[].normal": [
+    "array"
+   ],
+   "$.datos[].senales[].normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].senales[].alarma": [
+    "object"
+   ],
+   "$.datos[].senales[].alarma.baja": [
+    "number"
+   ],
+   "$.datos[].senales[].alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].senales[].limite": [
+    "object"
+   ],
+   "$.datos[].senales[].limite.valor": [
+    "number"
+   ],
+   "$.datos[].senales[].limite.sentido": [
+    "string"
+   ],
+   "$.datos[].senales[].mecanismo": [
+    "object"
+   ],
+   "$.datos[].senales[].mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].senales[].mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].senales[].mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].senales[].mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].senales[].pronostico": [
+    "object"
+   ],
+   "$.datos[].senales[].pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].senales[].pronostico.motivo": [
+    "string"
+   ],
+   "$.datos[].senales[].alarma.alta": [
+    "number"
+   ],
+   "$.datos[].veredicto": [
+    "object"
+   ],
+   "$.datos[].veredicto.cruzadas": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.perfil": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.parada.id": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada.campoId": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada.equipo": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada.inicio": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada.fin": [
+    "null"
+   ],
+   "$.datos[].veredicto.prediccion.parada.perdida": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.parada.senal": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada.nivelAlParar": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.parada.nivelAlParar.tag": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.parada.nivelAlParar.pct": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.respaldoLibreBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.tolerancia": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.componentes": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[]": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[].nombre": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[].valor": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[].fuente": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[].correlado": [
+    "boolean"
+   ],
+   "$.datos[].veredicto.prediccion.inmediato": [
+    "boolean"
+   ],
+   "$.datos[].veredicto.prediccion.mueve": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.mueve.bpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.mueve.medido": [
+    "boolean"
+   ],
+   "$.datos[].veredicto.prediccion.mueve.fuente": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.aguaSinSalidaBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.id": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.nombre": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.campoId": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.bomba": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.capacidadBbl": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.altoAlto": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.tagNivel": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.aforo": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.nivel": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.nivel.tag": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.nivel.pct": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.nivel.hora": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.libreBbl": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.aguaSinSalidaBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.horas": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.rango": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.rango[]": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.agotado": [
+    "boolean"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[]": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[].nombre": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[].valor": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[].fuente": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[].correlado": [
+    "boolean"
+   ],
+   "$.datos[].veredicto.prediccion.orden": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.orden.aguaAQuitarBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[]": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[].pozo": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[].crudoBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[].aguaBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[].fraccion": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[].aguaAcumBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.pasos[].crudoPorAgua": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.crudoBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.crudoParejoBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.ahorroBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.produciendo": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.orden.sinPrueba": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.crudoBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.crudoParejoBpd": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.metodo": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.supuestos": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.supuestos[]": [
+    "string"
+   ],
+   "$.datos[].veredicto.prediccion.perdiendo": [
+    "object"
+   ],
+   "$.datos[].veredicto.prediccion.perdiendo.bblDia": [
+    "number"
+   ],
+   "$.datos[].veredicto.prediccion.perdiendo.pozos": [
+    "array"
+   ],
+   "$.datos[].veredicto.prediccion.perdiendo.pozos[]": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial": [
+    "object"
+   ],
+   "$.datos[].veredicto.historial.dias": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.eventos": [
+    "array"
+   ],
+   "$.datos[].veredicto.historial.eventos[]": [
+    "object"
+   ],
+   "$.datos[].veredicto.historial.eventos[].id": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial.eventos[].inicio": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial.eventos[].fin": [
+    "null",
+    "string"
+   ],
+   "$.datos[].veredicto.historial.eventos[].horas": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.eventos[].como": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial.eventos[].bbl": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.eventos[].disparo": [
+    "boolean"
+   ],
+   "$.datos[].veredicto.historial.eventos[].parte": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial.fallas": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.disparos": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte": [
+    "array"
+   ],
+   "$.datos[].veredicto.historial.porParte[]": [
+    "object"
+   ],
+   "$.datos[].veredicto.historial.porParte[].parte": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial.porParte[].fallas": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte[].disparos": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte[].bbl": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte[].mdtH": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte[].mtbfDias": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte[].bblPorFalla": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.porParte[].ultima": [
+    "string"
+   ],
+   "$.datos[].veredicto.historial.mtbfDias": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.mdtH": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.bbl": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.fallasCerradas": [
+    "number"
+   ],
+   "$.datos[].veredicto.historial.bblPorFalla": [
+    "number"
+   ],
+   "$.datos[].veredicto.porFalla": [
+    "number"
+   ],
+   "$.datos[].abierta": [
+    "object"
+   ],
+   "$.datos[].abierta.evento": [
+    "object"
+   ],
+   "$.datos[].abierta.evento.id": [
+    "string"
+   ],
+   "$.datos[].abierta.evento.campoId": [
+    "string"
+   ],
+   "$.datos[].abierta.evento.equipo": [
+    "string"
+   ],
+   "$.datos[].abierta.evento.inicio": [
+    "string"
+   ],
+   "$.datos[].abierta.evento.fin": [
+    "null"
+   ],
+   "$.datos[].abierta.evento.perdida": [
+    "number"
+   ],
+   "$.datos[].abierta.evento.senal": [
+    "string"
+   ],
+   "$.datos[].abierta.evento.nivelAlParar": [
+    "object"
+   ],
+   "$.datos[].abierta.evento.nivelAlParar.tag": [
+    "string"
+   ],
+   "$.datos[].abierta.evento.nivelAlParar.pct": [
+    "number"
+   ],
+   "$.datos[].abierta.causa": [
+    "object"
+   ],
+   "$.datos[].abierta.causa.tipo": [
+    "string"
+   ],
+   "$.datos[].abierta.causa.equipo": [
+    "string"
+   ],
+   "$.datos[].abierta.causa.como": [
+    "string"
+   ],
+   "$.datos[].abierta.causa.evento": [
+    "string"
+   ],
+   "$.datos[].abierta.causa.evidencia": [
+    "array"
+   ],
+   "$.datos[].abierta.causa.evidencia[]": [
+    "string"
+   ],
+   "$.datos[].abierta.causa.texto": [
+    "string"
+   ],
+   "$.datos[].abierta.cargadoA": [
+    "string"
+   ],
+   "$.datos[].abierta.abierto": [
+    "boolean"
+   ],
+   "$.datos[].abierta.inicio": [
+    "string"
+   ],
+   "$.datos[].abierta.fin": [
+    "string"
+   ],
+   "$.datos[].abierta.horasParada": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon": [
+    "object"
+   ],
+   "$.datos[].abierta.colchon.previsto": [
+    "object"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque": [
+    "object"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.id": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.nombre": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.campoId": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.bomba": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.capacidadBbl": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.altoAlto": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.tagNivel": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.aforo": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.nivel": [
+    "object"
+   ],
+   "$.datos[].abierta.colchon.previsto.nivel.tag": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.nivel.pct": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.libreBbl": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.aguaSinSalidaBpd": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.horas": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.rango": [
+    "array"
+   ],
+   "$.datos[].abierta.colchon.previsto.rango[]": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.agotado": [
+    "boolean"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes": [
+    "array"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[]": [
+    "object"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[].nombre": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[].valor": [
+    "number"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[].fuente": [
+    "string"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[].correlado": [
+    "boolean"
+   ],
+   "$.datos[].abierta.colchon.observadoH": [
+    "number"
+   ],
+   "$.datos[].abierta.tramos": [
+    "array"
+   ],
+   "$.datos[].abierta.tramos[]": [
+    "object"
+   ],
+   "$.datos[].abierta.tramos[].evento": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].pozo": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].causa": [
+    "object"
+   ],
+   "$.datos[].abierta.tramos[].causa.tipo": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].causa.equipo": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].causa.como": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].causa.evento": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].causa.evidencia": [
+    "array"
+   ],
+   "$.datos[].abierta.tramos[].causa.evidencia[]": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].causa.texto": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].inicio": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].fin": [
+    "string"
+   ],
+   "$.datos[].abierta.tramos[].abierto": [
+    "boolean"
+   ],
+   "$.datos[].abierta.tramos[].horas": [
+    "number"
+   ],
+   "$.datos[].abierta.tramos[].factor": [
+    "number"
+   ],
+   "$.datos[].abierta.tramos[].bbl": [
+    "number"
+   ],
+   "$.datos[].abierta.tramos[].aproximado": [
+    "boolean"
+   ],
+   "$.datos[].abierta.tramos[].sinCustodia": [
+    "boolean"
+   ],
+   "$.datos[].abierta.tramos[].sinFactor": [
+    "boolean"
+   ],
+   "$.datos[].abierta.tramos[].sesgo": [
+    "number"
+   ],
+   "$.datos[].abierta.tramos[].azar": [
+    "number"
+   ],
+   "$.datos[].abierta.pozos": [
+    "number"
+   ],
+   "$.datos[].abierta.bbl": [
+    "number"
+   ],
+   "$.datos[].abierta.tolerancia": [
+    "number"
+   ],
+   "$.datos[].abierta.rango": [
+    "array"
+   ],
+   "$.datos[].abierta.rango[]": [
+    "number"
+   ],
+   "$.datos[].abierta.aproximado": [
+    "number"
+   ],
+   "$.datos[].abierta.evitable": [
+    "number"
+   ],
+   "$.datos[].abierta.pide": [
+    "boolean"
+   ],
+   "$.datos[].abierta.arrancoSinIdentificar": [
+    "boolean"
+   ],
+   "$.datos[].periodo": [
+    "object"
+   ],
+   "$.datos[].periodo.bbl": [
+    "number"
+   ],
+   "$.datos[].periodo.tolerancia": [
+    "number"
+   ],
+   "$.datos[].periodo.rango": [
+    "array"
+   ],
+   "$.datos[].periodo.rango[]": [
+    "number"
+   ],
+   "$.datos[].periodo.eventos": [
+    "number"
+   ],
+   "$.datos[].partes": [
+    "array"
+   ],
+   "$.datos[].partes[]": [
+    "object"
+   ],
+   "$.datos[].partes[].parte": [
+    "object"
+   ],
+   "$.datos[].partes[].parte.id": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.itemIso": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.peso": [
+    "object"
+   ],
+   "$.datos[].partes[].parte.peso.texto": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.peso.fuente": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.variables": [
+    "array"
+   ],
+   "$.datos[].partes[].parte.variables[]": [
+    "object"
+   ],
+   "$.datos[].partes[].parte.variables[].id": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.variables[].papel": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.modos": [
+    "array"
+   ],
+   "$.datos[].partes[].parte.modos[]": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.anticipacion": [
+    "string"
+   ],
+   "$.datos[].partes[].parte.accion": [
+    "string"
+   ],
+   "$.datos[].partes[].estado": [
+    "string"
+   ],
+   "$.datos[].partes[].prioridad": [
+    "number"
+   ],
+   "$.datos[].partes[].coinciden": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva": [
+    "array"
+   ],
+   "$.datos[].partes[].fuera": [
+    "array"
+   ],
+   "$.datos[].partes[].medidas": [
+    "array"
+   ],
+   "$.datos[].partes[].medidas[]": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.tag": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.unidad": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.serie": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].partes[].medidas[].senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.origen": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.estado": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.normal": [
+    "array"
+   ],
+   "$.datos[].partes[].medidas[].senal.normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.alarma": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.limite": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico.motivo": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].papel": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].partes[].discretas": [
+    "array"
+   ],
+   "$.datos[].partes[].discretas[]": [
+    "object"
+   ],
+   "$.datos[].partes[].discretas[].plantilla": [
+    "object"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.id": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].tag": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].estado": [
+    "string"
+   ],
+   "$.datos[].partes[].discretas[].papel": [
+    "string"
+   ],
+   "$.datos[].partes[].sinSenal": [
+    "array"
+   ],
+   "$.datos[].partes[].faltan": [
+    "array"
+   ],
+   "$.datos[].partes[].faltan[]": [
+    "object"
+   ],
+   "$.datos[].partes[].faltan[].id": [
+    "string"
+   ],
+   "$.datos[].partes[].faltan[].isa": [
+    "string"
+   ],
+   "$.datos[].partes[].faltan[].nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].faltan[].donde": [
+    "string"
+   ],
+   "$.datos[].partes[].faltan[].anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].faltan[].anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].faltan[].anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].faltan[].anuncia.por": [
+    "string"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.refs.perfiles": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.subtipo": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tecnologia": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.norma": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.tags.p_succion": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.p_descarga": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.caudal": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.v_bomba": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_empuje": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.fuga_sello": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.corriente": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.nivel_tanque": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.primerasAlarmas": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.primerasAlarmas.{k}": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.papel": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.capacidadBpd": [
+    "number"
+   ],
+   "$.refs.perfiles.{k}.sinBomba": [
+    "object"
+   ],
+   "$.refs.perfiles.{k}.sinBomba.fraccion": [
+    "number"
+   ],
+   "$.refs.perfiles.{k}.sinBomba.fuente": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.equipo": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.pozos": [
+    "object"
+   ],
+   "$.refs.pozos.{k}": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.id": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.levantamiento": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.controlador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.alimentador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.origen": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas": [
+    "array"
+   ],
+   "$.refs.pozos.{k}.pruebas[]": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.pruebas[].fecha": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas[].crudoBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].aguaBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].hz": [
+    "number"
+   ],
+   "$.refs.eventos": [
+    "object"
+   ],
+   "$.refs.eventos.{k}": [
+    "object"
+   ],
+   "$.refs.eventos.{k}.id": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.pozo": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.inicio": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.fin": [
+    "null"
+   ],
+   "$.refs.eventos.{k}.codigo": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.senal": [
+    "string"
+   ],
+   "$.datos[].senales[].tendencia": [
+    "object"
+   ],
+   "$.datos[].senales[].tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].senales[].tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].senales[].tendencia.n": [
+    "number"
+   ],
+   "$.datos[].senales[].tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].senales[].tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].senales[].tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].senales[].tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].senales[].pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].senales[].pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].senales[].pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.plantilla": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.tag": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.unidad": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.valor": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.serie": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.serie.desde": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.serie.valores": [
+    "array"
+   ],
+   "$.datos[].veredicto.primera.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.origen": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.estado": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.normal": [
+    "array"
+   ],
+   "$.datos[].veredicto.primera.normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].veredicto.primera.alarma": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.limite": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.limite.valor": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.mecanismo": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.tendencia": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.pronostico": [
+    "object"
+   ],
+   "$.datos[].veredicto.primera.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].veredicto.primera.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].veredicto.primera.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.tag": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.unidad": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.serie": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].partes[].lenta.senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.origen": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.estado": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.normal": [
+    "array"
+   ],
+   "$.datos[].partes[].lenta.senal.normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.alarma": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.limite": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].partes[].lenta.senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].partes[].lenta.senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].partes[].lenta.senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].partes[].lenta.papel": [
+    "string"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].veredicto.primera.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].partes[].primera": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.tag": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.unidad": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.serie": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].partes[].primera.senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.origen": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.estado": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.normal": [
+    "array"
+   ],
+   "$.datos[].partes[].primera.senal.normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.alarma": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.limite": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].partes[].primera.senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].partes[].primera.senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].partes[].primera.papel": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[]": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.tag": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.unidad": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.serie": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].partes[].fuera[].senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.origen": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.estado": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.normal": [
+    "array"
+   ],
+   "$.datos[].partes[].fuera[].senal.normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.alarma": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.limite": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].partes[].fuera[].senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].partes[].fuera[].senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].partes[].fuera[].senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].papel": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[]": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tag": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.unidad": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.serie": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.origen": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.estado": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.normal": [
+    "array"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.normal[]": [
+    "null",
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.alarma": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.limite": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].partes[].causaActiva[].papel": [
+    "string"
+   ],
+   "$.datos[].eq.soloEn": [
+    "array"
+   ],
+   "$.datos[].eq.soloEn[]": [
+    "string"
+   ],
+   "$.datos[].partes[].primera.senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].partes[].fuera[].senal.alarma.alta": [
+    "number"
+   ],
+   "$.refs.perfiles.{k}.tags.t_succion": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.dp_filtro": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_descarga": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_rod_bomba": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_devanado": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_rod_motor": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.v_motor": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.velocidad": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.p_barrera": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.nivel_barrera": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.p_aceite": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.tags.t_aceite": [
+    "string"
+   ],
+   "$.refs.perfiles.{k}.pozos": [
+    "array"
+   ],
+   "$.refs.perfiles.{k}.pozos[]": [
+    "string"
+   ]
+  },
+  "/vistas/pozos": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].pozo": [
+    "string"
+   ],
+   "$.datos[].produce": [
+    "boolean"
+   ],
+   "$.datos[].evento": [
+    "string"
+   ],
+   "$.datos[].causa": [
+    "object"
+   ],
+   "$.datos[].causa.tipo": [
+    "string"
+   ],
+   "$.datos[].causa.equipo": [
+    "string"
+   ],
+   "$.datos[].causa.como": [
+    "string"
+   ],
+   "$.datos[].causa.evento": [
+    "string"
+   ],
+   "$.datos[].causa.evidencia": [
+    "array"
+   ],
+   "$.datos[].causa.evidencia[]": [
+    "string"
+   ],
+   "$.datos[].causa.texto": [
+    "string"
+   ],
+   "$.datos[].crudoBpd": [
+    "number"
+   ],
+   "$.datos[].aguaBpd": [
+    "number"
+   ],
+   "$.datos[].prueba": [
+    "object"
+   ],
+   "$.datos[].prueba.fecha": [
+    "string"
+   ],
+   "$.datos[].prueba.crudoBpd": [
+    "number"
+   ],
+   "$.datos[].prueba.aguaBpd": [
+    "number"
+   ],
+   "$.datos[].prueba.hz": [
+    "number"
+   ],
+   "$.datos[].diasDesdePrueba": [
+    "number"
+   ],
+   "$.datos[].diferido": [
+    "number"
+   ],
+   "$.datos[].diferidoEsp": [
+    "number"
+   ],
+   "$.datos[].horasParado": [
+    "number"
+   ],
+   "$.datos[].eventos": [
+    "number"
+   ],
+   "$.datos[].salud": [
+    "object"
+   ],
+   "$.datos[].salud.parte": [
+    "object"
+   ],
+   "$.datos[].salud.parte.id": [
+    "string"
+   ],
+   "$.datos[].salud.parte.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.parte.itemIso": [
+    "string"
+   ],
+   "$.datos[].salud.parte.peso": [
+    "object"
+   ],
+   "$.datos[].salud.parte.peso.texto": [
+    "string"
+   ],
+   "$.datos[].salud.parte.peso.fuente": [
+    "string"
+   ],
+   "$.datos[].salud.parte.variables": [
+    "array"
+   ],
+   "$.datos[].salud.parte.variables[]": [
+    "object"
+   ],
+   "$.datos[].salud.parte.variables[].id": [
+    "string"
+   ],
+   "$.datos[].salud.parte.variables[].papel": [
+    "string"
+   ],
+   "$.datos[].salud.parte.modos": [
+    "array"
+   ],
+   "$.datos[].salud.parte.modos[]": [
+    "string"
+   ],
+   "$.datos[].salud.parte.anticipacion": [
+    "string"
+   ],
+   "$.datos[].salud.parte.accion": [
+    "string"
+   ],
+   "$.datos[].salud.estado": [
+    "string"
+   ],
+   "$.datos[].salud.prioridad": [
+    "number"
+   ],
+   "$.datos[].salud.coinciden": [
+    "number"
+   ],
+   "$.datos[].salud.causaActiva": [
+    "array"
+   ],
+   "$.datos[].salud.fuera": [
+    "array"
+   ],
+   "$.datos[].salud.medidas": [
+    "array"
+   ],
+   "$.datos[].salud.medidas[]": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.tag": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.unidad": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.valor": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.serie": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].salud.medidas[].senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.origen": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.estado": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.normal": [
+    "array"
+   ],
+   "$.datos[].salud.medidas[].senal.normal[]": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.alarma": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.limite": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico.motivo": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].papel": [
+    "string"
+   ],
+   "$.datos[].salud.discretas": [
+    "array"
+   ],
+   "$.datos[].salud.sinSenal": [
+    "array"
+   ],
+   "$.datos[].salud.sinSenal[]": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.tag": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.unidad": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.valor": [
+    "null"
+   ],
+   "$.datos[].salud.sinSenal[].senal.serie": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].salud.sinSenal[].senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].salud.sinSenal[].senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].salud.sinSenal[].senal.origen": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.estado": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.normal": [
+    "array"
+   ],
+   "$.datos[].salud.sinSenal[].senal.normal[]": [
+    "number"
+   ],
+   "$.datos[].salud.sinSenal[].senal.alarma": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].salud.sinSenal[].senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.limite": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].salud.sinSenal[].senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].salud.sinSenal[].senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].senal.pronostico.motivo": [
+    "string"
+   ],
+   "$.datos[].salud.sinSenal[].papel": [
+    "string"
+   ],
+   "$.datos[].salud.faltan": [
+    "array"
+   ],
+   "$.refs": [
+    "object"
+   ],
+   "$.refs.pozos": [
+    "object"
+   ],
+   "$.refs.pozos.{k}": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.id": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.levantamiento": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.controlador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.alimentador": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.origen": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas": [
+    "array"
+   ],
+   "$.refs.pozos.{k}.pruebas[]": [
+    "object"
+   ],
+   "$.refs.pozos.{k}.pruebas[].fecha": [
+    "string"
+   ],
+   "$.refs.pozos.{k}.pruebas[].crudoBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].aguaBpd": [
+    "number"
+   ],
+   "$.refs.pozos.{k}.pruebas[].hz": [
+    "number"
+   ],
+   "$.refs.eventos": [
+    "object"
+   ],
+   "$.refs.eventos.{k}": [
+    "object"
+   ],
+   "$.refs.eventos.{k}.id": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.campoId": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.pozo": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.inicio": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.fin": [
+    "null"
+   ],
+   "$.refs.eventos.{k}.codigo": [
+    "string"
+   ],
+   "$.refs.eventos.{k}.senal": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].salud.primera": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.tag": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.unidad": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.valor": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.serie": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].salud.primera.senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.origen": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.estado": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.normal": [
+    "array"
+   ],
+   "$.datos[].salud.primera.senal.normal[]": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.alarma": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.limite": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].salud.primera.senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].salud.primera.senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].salud.primera.senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].salud.primera.papel": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[]": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.id": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.isa": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.donde": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.anuncia": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.anuncia.mecanismo": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.anuncia.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.anuncia.por": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.tag": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.unidad": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.valor": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.serie": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.serie.desde": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.serie.pasoH": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.serie.valores": [
+    "array"
+   ],
+   "$.datos[].salud.fuera[].senal.serie.valores[]": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.origen": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.estado": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.normal": [
+    "array"
+   ],
+   "$.datos[].salud.fuera[].senal.normal[]": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.alarma": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.alarma.alta": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.alarma.fuente": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.limite": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.limite.valor": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.limite.sentido": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo.codigo": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo.nombre": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo.en": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo.familia": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.pendiente": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.ordenada": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.n": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.finH": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.errorPendiente": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.r2": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.tendencia.actual": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.pronostico": [
+    "object"
+   ],
+   "$.datos[].salud.fuera[].senal.pronostico.tipo": [
+    "string"
+   ],
+   "$.datos[].salud.fuera[].senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].salud.fuera[].senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].papel": [
+    "string"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico.horas": [
+    "number"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico.rango": [
+    "array"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico.rango[]": [
+    "number"
+   ],
+   "$.datos[].causa.parte": [
+    "string"
+   ],
+   "$.datos[].salud.primera.senal.alarma.baja": [
+    "number"
+   ],
+   "$.datos[].salud.fuera[].senal.alarma.baja": [
+    "number"
+   ]
+  },
+  "/sap/avisos": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].numero": [
+    "string"
+   ],
+   "$.datos[].tipo": [
+    "string"
+   ],
+   "$.datos[].campoId": [
+    "string"
+   ],
+   "$.datos[].equipo": [
+    "string"
+   ],
+   "$.datos[].prioridad": [
+    "number"
+   ],
+   "$.datos[].descripcion": [
+    "string"
+   ],
+   "$.datos[].parada": [
+    "boolean"
+   ],
+   "$.datos[].cerrado": [
+    "boolean"
+   ],
+   "$.datos[].evidencia": [
+    "array"
+   ],
+   "$.datos[].evidencia[]": [
+    "string"
+   ],
+   "$.datos[].creado": [
+    "string"
+   ],
+   "$.datos[].creadoPor": [
+    "string"
+   ],
+   "$.datos[].origen": [
+    "string"
+   ],
+   "$.datos[].orden": [
+    "string"
+   ],
+   "$.datos[].parte": [
+    "string"
+   ],
+   "$.datos[].inicioAveria": [
+    "string"
+   ],
+   "$.datos[].evento": [
+    "string"
+   ],
+   "$.refs": [
+    "object"
+   ]
+  },
+  "/sap/ordenes": {
+   "$": [
+    "object"
+   ],
+   "$.datos": [
+    "array"
+   ],
+   "$.datos[]": [
+    "object"
+   ],
+   "$.datos[].numero": [
+    "string"
+   ],
+   "$.datos[].clase": [
+    "string"
+   ],
+   "$.datos[].campoId": [
+    "string"
+   ],
+   "$.datos[].equipo": [
+    "string"
+   ],
+   "$.datos[].prioridad": [
+    "number"
+   ],
+   "$.datos[].descripcion": [
+    "string"
+   ],
+   "$.datos[].estado": [
+    "string"
+   ],
+   "$.datos[].creada": [
+    "string"
+   ],
+   "$.datos[].liberada": [
+    "string"
+   ],
+   "$.datos[].tecnico": [
+    "string"
+   ],
+   "$.datos[].puesto": [
+    "string"
+   ],
+   "$.datos[].aviso": [
+    "string"
+   ],
+   "$.datos[].horasReales": [
+    "number"
+   ],
+   "$.datos[].repuestos": [
+    "array"
+   ],
+   "$.datos[].cierreTecnico": [
+    "string"
+   ],
+   "$.datos[].evento": [
+    "string"
+   ],
+   "$.datos[].repuestos[]": [
+    "object"
+   ],
+   "$.datos[].repuestos[].material": [
+    "string"
+   ],
+   "$.datos[].repuestos[].descripcion": [
+    "string"
+   ],
+   "$.datos[].repuestos[].cantidad": [
+    "number"
+   ],
+   "$.refs": [
+    "object"
+   ]
+  }
+ },
+ "textos": {
+  "/vistas/predicciones": {
+   "$.datos.registro[].accion": [
+    "Bajar la frecuencia o revisar el nivel de fluido antes de que dispare por baja carga.",
+    "Corregir la succión y revisar el plan de sello; tener el cartucho de repuesto en sitio antes de que la fuga crezca.",
+    "Limpiar el filtro o recuperar nivel en el tanque antes de que la bomba dispare por baja succión.",
+    "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+    "Revisar aceite de la cámara de empuje y alineación; programar el cambio con el repuesto en mano.",
+    "Revisar la tendencia de temperatura y planear el cambio antes de que el motor se aterrice.",
+    "Revisar lubricación y alineación; programar el cambio con el repuesto en mano.",
+    "Revisar sólidos y escala; programar tratamiento químico o el cambio de la bomba."
+   ],
+   "$.datos.registro[].tag": [
+    "PIT-MN# · sensor de fondo",
+    "TIT-MN# · sensor de fondo",
+    "VSD-GU# · desbalance de corriente"
+   ]
+  },
+  "/vistas/asignacion": {},
+  "/vistas/produccion/diaria": {},
+  "/vistas/diferidos": {
+   "$.datos.tramos[].causa.evidencia[]": [
+    "Declarado por Jairo Peña · operador de campo · # de sept, #:#",
+    "Declarado por Nelson Ortiz · supervisor · # de sept, #:#",
+    "ID · nivel muy alto en el separador: entrada cerrada",
+    "POC-LC# · código CMD · # de sept, #:#",
+    "POC-PA# · código OL · # de sept, #:#",
+    "POC-PA# · código PSH · # de sept, #:#",
+    "Primera alarma ID · fuga de sello detectada",
+    "Primera alarma ID · nivel bajo del depósito de barrera del sello",
+    "Primera alarma ID · temperatura alta en la cámara de empuje",
+    "VSD-GU# · código GF · # de sept, #:#",
+    "VSD-GU# · código OL · # de ago, #:#",
+    "VSD-GU# · código OL · # de sept, #:#",
+    "VSD-GU# · código PH · # de sept, #:#",
+    "VSD-GU# · código UL · # de sept, #:#",
+    "VSD-LC# · código CMD · # de sept, #:#",
+    "VSD-LC# · código LSHH · # de sept, #:#",
+    "VSD-LC# · código OL · # de sept, #:#",
+    "VSD-LC# · código OT · # de sept, #:#",
+    "VSD-LC# · código PH · # de sept, #:#",
+    "VSD-LC# · código UL · # de sept, #:#",
+    "VSD-LC# · código UV · # de sept, #:#",
+    "VSD-MN# · código CMD · # de sept, #:#",
+    "VSD-MN# · código GF · # de sept, #:#",
+    "VSD-MN# · código LSHH · # de sept, #:#",
+    "VSD-MN# · código OL · # de sept, #:#",
+    "VSD-MN# · código OT · # de sept, #:#",
+    "VSD-MN# · código PH · # de sept, #:#",
+    "VSD-MN# · código PSH · # de sept, #:#",
+    "VSD-MN# · código UL · # de sept, #:#",
+    "VSD-MN# · código UV · # de sept, #:#",
+    "XV-ZA# · código CMD · # de sept, #:#"
+   ],
+   "$.datos.tramos[].causa.texto": [
+    "Baja tensión en el alimentador del pozo",
+    "El comprador nominó menos gas: se cerró el pozo",
+    "El controlador de bombeo paró por sobrecarga",
+    "El variador disparó por baja carga",
+    "El variador disparó por desbalance de fases",
+    "El variador disparó por falla a tierra",
+    "El variador disparó por sobrecarga",
+    "El variador disparó por temperatura alta del motor",
+    "Fuga en la línea de flujo del pozo: se cerró para repararla",
+    "La bomba multifásica que lo mueve estaba parada",
+    "Nivel muy alto en el separador: entrada cerrada",
+    "Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno"
+   ],
+   "$.refs.eventos.{k}.senal": [
+    "POC-LC# · código CMD",
+    "POC-PA# · código OL",
+    "POC-PA# · código PSH",
+    "VSD-GU# · código GF",
+    "VSD-GU# · código OL",
+    "VSD-GU# · código PH",
+    "VSD-GU# · código UL",
+    "VSD-LC# · código CMD",
+    "VSD-LC# · código LSHH",
+    "VSD-LC# · código OL",
+    "VSD-LC# · código OT",
+    "VSD-LC# · código PH",
+    "VSD-LC# · código UL",
+    "VSD-LC# · código UV",
+    "VSD-MN# · código CMD",
+    "VSD-MN# · código GF",
+    "VSD-MN# · código LSHH",
+    "VSD-MN# · código OL",
+    "VSD-MN# · código OT",
+    "VSD-MN# · código PH",
+    "VSD-MN# · código PSH",
+    "VSD-MN# · código UL",
+    "VSD-MN# · código UV",
+    "XV-ZA# · código CMD"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "Estimación desde la electrosumergible VSD-GU#: curva de la bomba, frecuencia y presión de entrada",
+    "Estimación desde la electrosumergible VSD-LC#: curva de la bomba, frecuencia y presión de entrada",
+    "Estimación desde la electrosumergible VSD-MN#: curva de la bomba, frecuencia y presión de entrada",
+    "Separador de prueba automatizado SP-CE# · FT-CE# crudo · FT-CE# agua · AT-CE# corte de agua",
+    "Separador de prueba automatizado SP-GU# · FT-GU# crudo · FT-GU# agua · AT-GU# corte de agua",
+    "Separador de prueba automatizado SP-MN# · FT-MN# crudo · FT-MN# agua · AT-MN# corte de agua",
+    "Separador de prueba automatizado SP-PA# · FT-PA# crudo · FT-PA# agua · AT-PA# corte de agua",
+    "Separador de prueba automatizado SP-ZA# · FT-ZA# crudo · FT-ZA# agua · AT-ZA# corte de agua"
+   ],
+   "$.datos.tramos[].causa.declarado.texto": [
+    "El comprador nominó menos gas: se cerró el pozo",
+    "Fuga en la línea de flujo del pozo: se cerró para repararla"
+   ],
+   "$.datos.tramos[].causa.declarado.por": [
+    "Jairo Peña · operador de campo",
+    "Nelson Ortiz · supervisor"
+   ],
+   "$.datos.preguntas[].causa.evidencia[]": [
+    "Declarado por Jairo Peña · operador de campo · # de sept, #:#",
+    "Declarado por Nelson Ortiz · supervisor · # de sept, #:#",
+    "Sin primera alarma y sin firma: el PLC no dice qué parte falló",
+    "VSD-MN# · código CMD · # de sept, #:#",
+    "XV-ZA# · código CMD · # de sept, #:#"
+   ],
+   "$.datos.preguntas[].causa.texto": [
+    "El comprador nominó menos gas: se cerró el pozo",
+    "Fuga en la línea de flujo del pozo: se cerró para repararla",
+    "Paró sin primera alarma: hay que identificar qué se dañó"
+   ],
+   "$.datos.preguntas[].causa.declarado.texto": [
+    "El comprador nominó menos gas: se cerró el pozo",
+    "Fuga en la línea de flujo del pozo: se cerró para repararla"
+   ],
+   "$.datos.preguntas[].causa.declarado.por": [
+    "Jairo Peña · operador de campo",
+    "Nelson Ortiz · supervisor"
+   ],
+   "$.refs.eventos.{k}.respuesta.texto": [
+    "El comprador nominó menos gas: se cerró el pozo",
+    "Fuga en la línea de flujo del pozo: se cerró para repararla"
+   ],
+   "$.refs.eventos.{k}.respuesta.por": [
+    "Jairo Peña · operador de campo",
+    "Nelson Ortiz · supervisor"
+   ]
+  },
+  "/vistas/diferidos/mensual": {
+   "$.datos[].libro.motivos[].texto": [
+    "El Palmar, abril de #: factor de asignación # fuera de la banda ±# %.",
+    "El período incluye días sin cierre publicado."
+   ]
+  },
+  "/vistas/bombas/prediccion": {
+   "$.datos.componentes[].nombre": [
+    "Aforo del tanque de agua",
+    "Caudal de agua",
+    "Crudo asignado a los pozos"
+   ],
+   "$.datos.componentes[].fuente": [
+    "Incertidumbre del medidor no declarada; se acota con la banda del agua. Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo #: incertidumbre del aforo de un tanque, máximo # % del volumen total"
+   ],
+   "$.datos.mueve.fuente": [
+    "Mediana de ID mientras la bomba trabaja"
+   ],
+   "$.datos.colchon.tanque.nombre": [
+    "Tanque de agua de La Ceiba",
+    "Tanque de agua de Morichal Norte"
+   ],
+   "$.datos.colchon.tanque.aforo": [
+    "Certificado de aforo TK-AG-CE · tabla de # cm",
+    "Certificado de aforo TK-AG-MN · tabla de # cm"
+   ],
+   "$.datos.colchon.componentes[].nombre": [
+    "Aforo del tanque de agua",
+    "Caudal de agua"
+   ],
+   "$.datos.colchon.componentes[].fuente": [
+    "Incertidumbre del medidor no declarada; se acota con la banda del agua. Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo #: incertidumbre del aforo de un tanque, máximo # % del volumen total"
+   ],
+   "$.datos.metodo": [
+    "Crudo de los # pozos que pasan por la bomba: prueba vigente × factor de asignación del mes (#)",
+    "Hay que quitar # bbl/d de agua: se cierran primero los pozos con menos crudo por barril de agua",
+    "Inyección para recobro con salida alterna para el agua: parar no cierra pozos hoy. Baja el soporte de presión del yacimiento y el efecto llega en semanas.",
+    "Parada desde # de oct, #:#: # pozos cerrados por ella"
+   ],
+   "$.datos.supuestos[]": [
+    "Declarado por ingeniería: sin la bomba, la contrapresión de la línea no deja fluir el clúster",
+    "ID: # bbl/d · prueba del #-#-#",
+    "Mediana de ID mientras la bomba trabaja",
+    "Nivel ID: # %",
+    "Pozo de disposición alterno con capacidad para todo el caudal",
+    "Tanque de agua de La Ceiba: # bbl, alto-alto al # % · Certificado de aforo TK-AG-CE · tabla de # cm",
+    "Tanque de agua de Morichal Norte: # bbl, alto-alto al # % · Certificado de aforo TK-AG-MN · tabla de # cm",
+    "Única bomba del tren de agua"
+   ],
+   "$.refs.perfiles.{k}.norma": [
+    "Centrífuga multietapa horizontal · API # (Tabla #)",
+    "Doble tornillo · API # #ª ed. # (Anexos B y G)"
+   ],
+   "$.refs.perfiles.{k}.sinBomba.fuente": [
+    "Declarado por ingeniería: sin la bomba, la contrapresión de la línea no deja fluir el clúster",
+    "El agua no tiene otra salida: los pozos de disposición son su único destino",
+    "El agua tiene salida alterna: la parada no cierra pozos",
+    "Lo que ID no absorbe no tiene otra salida"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "Estimación desde la electrosumergible VSD-LC#: curva de la bomba, frecuencia y presión de entrada",
+    "Separador de prueba automatizado SP-CE# · FT-CE# crudo · FT-CE# agua · AT-CE# corte de agua",
+    "Separador de prueba automatizado SP-MN# · FT-MN# crudo · FT-MN# agua · AT-MN# corte de agua"
+   ]
+  },
+  "/vistas/riesgo": {
+   "$.datos[].motivo": [
+    "Admisión y separador de gas: presión de entrada salió de su banda normal; llega a su alarma en # h",
+    "Aislamiento del motor y del cable: desbalance de corriente entre fases salió de su banda normal; llega a su alarma en # h",
+    "Bomba de fondo (eje y etapas): corriente del motor salió de su banda normal; llega a su alarma en # h",
+    "El variador disparó por desbalance de fases",
+    "El variador disparó por falla a tierra",
+    "Filtro de entrada: caída de presión del filtro salió de su banda normal; llega a su alarma en # h",
+    "Ninguna señal explica por qué paró: hay que identificarlo",
+    "Protector (sello del motor): temperatura del motor salió de su banda normal; llega a su alarma en # h",
+    "Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno",
+    "Sistema de aire de instrumentos: en marcha · degradado. La presión de cabezal cae hace # días. La norma exige recibidor de # a # min de autonomía: hoy quedan # Alimenta cinco sistemas.",
+    "Succión y filtro de entrada: presión de succión salió de su banda normal; llega a su alarma en # h"
+   ],
+   "$.datos[].accion": [
+    "Bajar la frecuencia o revisar el nivel de fluido antes de que dispare por baja carga.",
+    "Limpiar el filtro o recuperar nivel en el tanque antes de que la bomba dispare por baja succión.",
+    "Limpiar o cambiar la canasta del filtro antes del disparo.",
+    "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+    "Revisar la tendencia de temperatura y planear el cambio antes de que el motor se aterrice.",
+    "Revisar sólidos y escala; programar tratamiento químico o el cambio de la bomba.",
+    "Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en # min de autonomía, una parada deja las válvulas en posición segura."
+   ],
+   "$.datos[].tag": [
+    "PIT-MN# · sensor de fondo",
+    "TIT-MN# · sensor de fondo",
+    "VSD-GU# · desbalance de corriente"
+   ],
+   "$.datos[].mdtFuente": [
+    "# días fuera, el promedio de las electrosumergibles del campo (esta no ha fallado)",
+    "el promedio de sus # fallas cerradas (el tanque absorbe una parte)"
+   ]
+  },
+  "/vistas/bombas": {
+   "$.datos[].campo.cuenca": [
+    "Magdalena Medio"
+   ],
+   "$.datos[].campo.nota": [
+    "Campo chico de bombeo mecánico.",
+    "Gas con condensado: lo limita la nominación del comprador.",
+    "La reinyección es para recobro: el agua tiene salida alterna.",
+    "Todos sus pozos con electrosumergible; la reinyección tiene respaldo parcial.",
+    "Tren de agua con una sola bomba de reinyección, sin respaldo."
+   ],
+   "$.datos[].eq.nombre": [
+    "Bomba multietapa de transferencia de agua",
+    "Bomba multifásica de doble tornillo · clúster norte"
+   ],
+   "$.datos[].eq.sistema": [
+    "Recolección multifásica",
+    "Tratamiento de agua"
+   ],
+   "$.datos[].eq.aguasAbajo": [
+    "según la configuración firmada",
+    "sin declarar en este campo"
+   ],
+   "$.datos[].eq.redundancia": [
+    "según la configuración firmada",
+    "sin declarar en este campo"
+   ],
+   "$.datos[].eq.modoFalla": [
+    "Erosión de tornillos y camisa por arena",
+    "Lubricación de cojinete"
+   ],
+   "$.datos[].eq.norma": [
+    "Centrífuga multietapa · API # Tabla #: vibración en la caja de rodamientos.",
+    "Doble tornillo · API # #ª ed. #: Anexo G (instrumentos) y Anexo B (desgaste)."
+   ],
+   "$.datos[].eq.lectura": [
+    "Detenida, el agua no tiene salida: el tanque se llena y hay que cerrar los pozos del campo.",
+    "En marcha y dentro de banda.",
+    "Inyección para recobro: sus paradas no cierran pozos hoy, por eso no difieren barriles en el período. Hoy está dentro de banda.",
+    "La presión de succión bajó # % en # días. Si cruza # psi, el NPSH disponible queda por debajo del que pide la bomba: cavitación. Revisar el nivel del tanque de succión y el filtro.",
+    "Para sostener la misma presión diferencial necesita # % más velocidad que hace # días, y la caída de presión del filtro se duplicó: está entrando arena. Es el círculo que describe API #: más velocidad, más erosión."
+   ],
+   "$.datos[].eq.intervencion.ubicacion": [
+    "Batería # · tren de agua",
+    "Clúster norte · patín de bombeo multifásico"
+   ],
+   "$.datos[].eq.intervencion.accionInmediata": [
+    "Confirmar nivel en los tanques de agua antes de intentar el arranque: si ya están altos, cerrar primero los pozos aguas arriba.",
+    "Revisar y limpiar el filtro canasta de succión. No subir más la velocidad para compensar: la erosión crece con la velocidad."
+   ],
+   "$.datos[].eq.intervencion.avisarA": [
+    "Ingeniería de confiabilidad y supervisor de operaciones",
+    "Supervisor de operaciones e ingeniería de producción"
+   ],
+   "$.datos[].eq.distribucionFalla.fuente": [
+    "Reparto de bombeo en campo Sirte (Libia), # elementos de falla clasificados."
+   ],
+   "$.datos[].eq.dispositivos[].tipo": [
+    "Caída de presión del filtro",
+    "Corriente del motor",
+    "Fuga del sello",
+    "Nivel del depósito de barrera",
+    "Nivel del tanque de agua",
+    "Presión de aceite",
+    "Presión de barrera del sello",
+    "Presión de descarga",
+    "Presión de succión",
+    "Temperatura de aceite",
+    "Temperatura de cojinete",
+    "Temperatura de descarga",
+    "Temperatura de devanado",
+    "Temperatura de rodamiento",
+    "Temperatura de rodamiento del motor",
+    "Temperatura de succión",
+    "Vibración de la bomba",
+    "Vibración del motor",
+    "Vibración global"
+   ],
+   "$.datos[].eq.dispositivos[].valor": [
+    "sin fuga"
+   ],
+   "$.datos[].senales[].plantilla.nombre": [
+    "Caída de presión del filtro",
+    "Nivel del depósito de barrera",
+    "Nivel del tanque de succión",
+    "Presión de aceite",
+    "Presión de barrera del sello",
+    "Presión de descarga",
+    "Presión de succión",
+    "Temperatura de aceite",
+    "Temperatura de descarga",
+    "Temperatura de devanado",
+    "Temperatura de la cámara de empuje",
+    "Temperatura de rodamiento",
+    "Temperatura de rodamiento del motor",
+    "Temperatura de succión",
+    "Vibración del motor"
+   ],
+   "$.datos[].senales[].plantilla.anuncia.por": [
+    "A presión diferencial constante, necesitar más velocidad es perder eficiencia volumétrica: la arena abrió las holguras de tornillos y camisa (API # B.#).",
+    "Con fracción de gas alta, el gas comprimido calienta la bomba si falta líquido de recirculación (SPE #).",
+    "Desbalance, holguras o rodamiento. Límite de campo: API # #",
+    "Desgaste o falta de lubricación del rodamiento.",
+    "El rodamiento de empuje se calienta antes de fallar; con aceite contaminado hay que cambiar la cámara entera.",
+    "El sello mecánico pierde fluido de barrera. Es el componente que más pesa en el MTBF de esta familia.",
+    "Entra arena o sólidos. API # B.# pide alarma de presión diferencial en el filtro de entrada.",
+    "Es lo que sostiene la presión de succión.",
+    "Si cae por debajo de lo que exige el NPSH de la bomba, el agua hierve en el ojo del impulsor: cavitación."
+   ],
+   "$.datos[].senales[].alarma.fuente": [
+    "API # #ª ed. # #: < # mm/s RMS en campo, en caja de rodamientos",
+    "API # Tabla #: # mm/s RMS en la región preferida y # en la permitida (hasta # rpm y # kW por etapa)",
+    "Hoja de datos del fabricante",
+    "Hoja de datos del fabricante · API # B.# pide la alarma",
+    "Hoja de datos del fabricante: NPSH requerido más margen",
+    "Hoja de datos del fabricante: nivel mínimo de succión",
+    "Hoja de datos del sistema de sello (API #)",
+    "Velocidad máxima continua de la hoja de datos (API # Anexo A)"
+   ],
+   "$.datos[].senales[].pronostico.motivo": [
+    "La bomba está detenida: no hay tendencia que proyectar",
+    "La pendiente no supera dos errores estándar: es ruido",
+    "La variable no va hacia el límite"
+   ],
+   "$.datos[].senales[].plantilla.donde": [
+    "Bomba · nota # del Anexo G",
+    "Caja de rodamientos",
+    "Caja de rodamientos de la bomba",
+    "Cámara de empuje",
+    "Filtro canasta doble",
+    "Motor · nota # del Anexo G",
+    "Sistema de sello · API #",
+    "Tanque de agua"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[].nombre": [
+    "Aforo del tanque de agua",
+    "Caudal de agua",
+    "Crudo asignado a los pozos"
+   ],
+   "$.datos[].veredicto.prediccion.componentes[].fuente": [
+    "Incertidumbre del medidor no declarada; se acota con la banda del agua. Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo #: incertidumbre del aforo de un tanque, máximo # % del volumen total"
+   ],
+   "$.datos[].veredicto.prediccion.mueve.fuente": [
+    "Mediana de ID mientras la bomba trabaja"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.nombre": [
+    "Tanque de agua de La Ceiba",
+    "Tanque de agua de Morichal Norte"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.tanque.aforo": [
+    "Certificado de aforo TK-AG-CE · tabla de # cm",
+    "Certificado de aforo TK-AG-MN · tabla de # cm"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[].nombre": [
+    "Aforo del tanque de agua",
+    "Caudal de agua"
+   ],
+   "$.datos[].veredicto.prediccion.colchon.componentes[].fuente": [
+    "Incertidumbre del medidor no declarada; se acota con la banda del agua. Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo #: incertidumbre del aforo de un tanque, máximo # % del volumen total"
+   ],
+   "$.datos[].veredicto.prediccion.metodo": [
+    "Crudo de los # pozos que pasan por la bomba: prueba vigente × factor de asignación del mes (#)",
+    "Hay que quitar # bbl/d de agua: se cierran primero los pozos con menos crudo por barril de agua",
+    "Inyección para recobro con salida alterna para el agua: parar no cierra pozos hoy. Baja el soporte de presión del yacimiento y el efecto llega en semanas.",
+    "Parada desde # de oct, #:#: # pozos cerrados por ella"
+   ],
+   "$.datos[].veredicto.prediccion.supuestos[]": [
+    "Declarado por ingeniería: sin la bomba, la contrapresión de la línea no deja fluir el clúster",
+    "ID: # bbl/d · prueba del #-#-#",
+    "Mediana de ID mientras la bomba trabaja",
+    "Nivel ID: # %",
+    "Pozo de disposición alterno con capacidad para todo el caudal",
+    "Tanque de agua de La Ceiba: # bbl, alto-alto al # % · Certificado de aforo TK-AG-CE · tabla de # cm",
+    "Tanque de agua de Morichal Norte: # bbl, alto-alto al # % · Certificado de aforo TK-AG-MN · tabla de # cm",
+    "Única bomba del tren de agua"
+   ],
+   "$.datos[].abierta.causa.evidencia[]": [
+    "Sin primera alarma y sin firma: el PLC no dice qué parte falló"
+   ],
+   "$.datos[].abierta.causa.texto": [
+    "Paró sin primera alarma: hay que identificar qué se dañó"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.nombre": [
+    "Tanque de agua de La Ceiba"
+   ],
+   "$.datos[].abierta.colchon.previsto.tanque.aforo": [
+    "Certificado de aforo TK-AG-CE · tabla de # cm"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[].nombre": [
+    "Aforo del tanque de agua",
+    "Caudal de agua"
+   ],
+   "$.datos[].abierta.colchon.previsto.componentes[].fuente": [
+    "Incertidumbre del medidor no declarada; se acota con la banda del agua. Res. MME #/# Anexo # Tabla # Figura # · Límites de los factores de campo y de asignación · campo de # bpd o más, banda #–#",
+    "Res. MME #/# Anexo #: incertidumbre del aforo de un tanque, máximo # % del volumen total"
+   ],
+   "$.datos[].abierta.tramos[].causa.evidencia[]": [
+    "POC-LC# · código CMD · # de oct, #:#",
+    "VSD-LC# · código CMD · # de oct, #:#",
+    "VSD-LC# · código LSHH · # de oct, #:#"
+   ],
+   "$.datos[].abierta.tramos[].causa.texto": [
+    "Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno"
+   ],
+   "$.datos[].partes[].parte.nombre": [
+    "Filtro de entrada",
+    "Impulsores y desgaste interno",
+    "Motor eléctrico",
+    "Rodamientos y cámara de empuje",
+    "Sello mecánico",
+    "Sellos mecánicos (cuatro)",
+    "Succión y filtro de entrada"
+   ],
+   "$.datos[].partes[].parte.itemIso": [
+    "Filtro de succión",
+    "Impulsor y anillos de desgaste",
+    "Motor de accionamiento",
+    "Rodamiento axial y radial",
+    "Rodamientos de la bomba",
+    "Rotor de tornillos y camisa",
+    "Sello del eje",
+    "Sistema de lubricación (API #)",
+    "Tubería y filtro de entrada"
+   ],
+   "$.datos[].partes[].parte.peso.texto": [
+    "# % de las fallas de bombas",
+    "# % de las fallas de bombas: el componente que más falla",
+    "API # pide alarma de presión diferencial en el filtro de entrada",
+    "Cuatro sellos por bomba, dos por eje. El sello es el componente que más falla en bombas: # %",
+    "En Palo Azul (Ecuador), la orden de trabajo más frecuente: filtros de succión tapados que apagaban la bomba por baja succión",
+    "En motores grandes fallan más los rodamientos (#–# %) que los devanados (#–# %)",
+    "La arena abre las holguras: la bomba sube la velocidad para sostener el caudal, y la erosión crece con la velocidad",
+    "No para la bomba: le baja la eficiencia y la empuja a fallar por otra parte",
+    "Sin peso publicado: es la causa más común de que fallen los rodamientos"
+   ],
+   "$.datos[].partes[].parte.peso.fuente": [
+    "ABS, Guidance Notes on RCM (#): la tendencia de desempeño «varía mucho»; se mide en el piloto",
+    "Análisis CMD del sistema de reinyección de Palo Azul, Petroamazonas EP (Redalyc)",
+    "Encuestas de confiabilidad de motores de EPRI (≈# motores) y del IEEE (# motores)",
+    "European Sealing Association, ESA-ID-# (#-oct-#): # fallas de bombas en # usuarios",
+    "Pumps & Systems, sellado en bombeo multifásico; European Sealing Association, ESA-ID-# (#-oct-#): # fallas de bombas en # usuarios"
+   ],
+   "$.datos[].partes[].parte.anticipacion": [
+    "De días a semanas: la temperatura de la cámara y la vibración global suben antes de la falla. Leyendo cada minuto se ve la tendencia, no el defecto del rodamiento.",
+    "De días a semanas: temperatura y vibración global suben antes de la falla.",
+    "De horas a días: la caída de presión crece a medida que se tapa.",
+    "De horas a días: la presión de succión baja a medida que el filtro se tapa o el tanque pierde nivel.",
+    "Días: el depósito de barrera pierde nivel antes de que la fuga se vea afuera.",
+    "La fuga avisa cuando ya empezó. Lo que se anticipa es lo que lo daña: el # % de los sellos que fallan antes de tiempo los daña la operación (cavitación, marcha en seco, válvulas cerradas), y eso se ve en la succión y la vibración.",
+    "La temperatura de devanado sube días antes. El aislamiento se prueba fuera de línea: eso no se anticipa con el PLC.",
+    "Semanas a meses. La norma dice que la tendencia de desempeño varía mucho: el plazo real se mide en el piloto.",
+    "Semanas: la velocidad sube a caudal constante. Solo cuenta si la presión diferencial no cambió; si cambió, la subida puede ser del proceso."
+   ],
+   "$.datos[].partes[].parte.accion": [
+    "Corregir la succión y revisar el plan de sello; tener el cartucho de repuesto en sitio antes de que la fuga crezca.",
+    "Limpiar el filtro o recuperar nivel en el tanque antes de que la bomba dispare por baja succión.",
+    "Limpiar o cambiar la canasta del filtro antes del disparo.",
+    "Programar el overhaul en la próxima ventana, comparando contra la curva de fábrica.",
+    "Reponer y vigilar la barrera; cambiar el sello en una ventana programada.",
+    "Revisar aceite de la cámara de empuje y alineación; programar el cambio con el repuesto en mano.",
+    "Revisar el manejo de arena aguas arriba; programar el cambio de tornillos o camisa.",
+    "Revisar lubricación y alineación; programar el cambio con el repuesto en mano.",
+    "Revisar nivel, filtro y enfriador del aceite.",
+    "Revisar ventilación y carga del motor; programar la prueba de aislamiento."
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.nombre": [
+    "Caída de presión del filtro",
+    "Nivel del depósito de barrera",
+    "Nivel del tanque de succión",
+    "Presión de aceite",
+    "Presión de barrera del sello",
+    "Presión de descarga",
+    "Presión de succión",
+    "Temperatura de aceite",
+    "Temperatura de descarga",
+    "Temperatura de devanado",
+    "Temperatura de la cámara de empuje",
+    "Temperatura de rodamiento",
+    "Temperatura de rodamiento del motor",
+    "Vibración del motor"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.anuncia.por": [
+    "A presión diferencial constante, necesitar más velocidad es perder eficiencia volumétrica: la arena abrió las holguras de tornillos y camisa (API # B.#).",
+    "Con fracción de gas alta, el gas comprimido calienta la bomba si falta líquido de recirculación (SPE #).",
+    "Desbalance, holguras o rodamiento. Límite de campo: API # #",
+    "Desgaste o falta de lubricación del rodamiento.",
+    "El rodamiento de empuje se calienta antes de fallar; con aceite contaminado hay que cambiar la cámara entera.",
+    "El sello mecánico pierde fluido de barrera. Es el componente que más pesa en el MTBF de esta familia.",
+    "Entra arena o sólidos. API # B.# pide alarma de presión diferencial en el filtro de entrada.",
+    "Es lo que sostiene la presión de succión.",
+    "Si cae por debajo de lo que exige el NPSH de la bomba, el agua hierve en el ojo del impulsor: cavitación."
+   ],
+   "$.datos[].partes[].medidas[].senal.alarma.fuente": [
+    "API # #ª ed. # #: < # mm/s RMS en campo, en caja de rodamientos",
+    "API # Tabla #: # mm/s RMS en la región preferida y # en la permitida (hasta # rpm y # kW por etapa)",
+    "Hoja de datos del fabricante",
+    "Hoja de datos del fabricante · API # B.# pide la alarma",
+    "Hoja de datos del fabricante: NPSH requerido más margen",
+    "Hoja de datos del fabricante: nivel mínimo de succión",
+    "Hoja de datos del sistema de sello (API #)",
+    "Velocidad máxima continua de la hoja de datos (API # Anexo A)"
+   ],
+   "$.datos[].partes[].medidas[].senal.pronostico.motivo": [
+    "La bomba está detenida: no hay tendencia que proyectar",
+    "La pendiente no supera dos errores estándar: es ruido",
+    "La variable no va hacia el límite"
+   ],
+   "$.datos[].partes[].medidas[].senal.plantilla.donde": [
+    "Bomba · nota # del Anexo G",
+    "Caja de rodamientos",
+    "Caja de rodamientos de la bomba",
+    "Cámara de empuje",
+    "Filtro canasta doble",
+    "Motor · nota # del Anexo G",
+    "Sistema de sello · API #",
+    "Tanque de agua"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.nombre": [
+    "Fuga del sello"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.donde": [
+    "Plan de sello API #"
+   ],
+   "$.datos[].partes[].discretas[].plantilla.anuncia.por": [
+    "Detección de fuga de líquido del sello mecánico."
+   ],
+   "$.datos[].partes[].faltan[].nombre": [
+    "Energía por barril",
+    "Nivel de aceite de la cámara",
+    "Temperatura de devanado"
+   ],
+   "$.datos[].partes[].faltan[].donde": [
+    "Calculada: potencia sobre caudal",
+    "Cámara de empuje"
+   ],
+   "$.datos[].partes[].faltan[].anuncia.por": [
+    "Mover el mismo caudal cuesta más energía: desgaste de impulsores, difusores o rodamientos."
+   ],
+   "$.refs.perfiles.{k}.norma": [
+    "Centrífuga multietapa horizontal · API # (Tabla #)",
+    "Doble tornillo · API # #ª ed. # (Anexos B y G)"
+   ],
+   "$.refs.perfiles.{k}.sinBomba.fuente": [
+    "Declarado por ingeniería: sin la bomba, la contrapresión de la línea no deja fluir el clúster",
+    "El agua no tiene otra salida: los pozos de disposición son su único destino",
+    "El agua tiene salida alterna: la parada no cierra pozos",
+    "Lo que ID no absorbe no tiene otra salida"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "Estimación desde la electrosumergible VSD-LC#: curva de la bomba, frecuencia y presión de entrada",
+    "Separador de prueba automatizado SP-CE# · FT-CE# crudo · FT-CE# agua · AT-CE# corte de agua",
+    "Separador de prueba automatizado SP-MN# · FT-MN# crudo · FT-MN# agua · AT-MN# corte de agua"
+   ],
+   "$.refs.eventos.{k}.senal": [
+    "POC-LC# · código CMD",
+    "VSD-LC# · código CMD",
+    "VSD-LC# · código LSHH"
+   ],
+   "$.datos[].veredicto.primera.plantilla.nombre": [
+    "Caída de presión del filtro",
+    "Presión de succión",
+    "Temperatura de la cámara de empuje"
+   ],
+   "$.datos[].veredicto.primera.plantilla.donde": [
+    "Cámara de empuje",
+    "Filtro canasta doble"
+   ],
+   "$.datos[].veredicto.primera.plantilla.anuncia.por": [
+    "El rodamiento de empuje se calienta antes de fallar; con aceite contaminado hay que cambiar la cámara entera.",
+    "Entra arena o sólidos. API # B.# pide alarma de presión diferencial en el filtro de entrada.",
+    "Si cae por debajo de lo que exige el NPSH de la bomba, el agua hierve en el ojo del impulsor: cavitación."
+   ],
+   "$.datos[].veredicto.primera.alarma.fuente": [
+    "Hoja de datos del fabricante",
+    "Hoja de datos del fabricante · API # B.# pide la alarma",
+    "Hoja de datos del fabricante: NPSH requerido más margen"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.nombre": [
+    "Temperatura de la cámara de empuje"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.donde": [
+    "Cámara de empuje"
+   ],
+   "$.datos[].partes[].lenta.senal.plantilla.anuncia.por": [
+    "El rodamiento de empuje se calienta antes de fallar; con aceite contaminado hay que cambiar la cámara entera."
+   ],
+   "$.datos[].partes[].lenta.senal.alarma.fuente": [
+    "Hoja de datos del fabricante"
+   ],
+   "$.datos[].campo.nombre": [
+    "Morichal Norte"
+   ],
+   "$.datos[].eq.estado": [
+    "en marcha · perdiendo eficiencia",
+    "en marcha · succión cayendo"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.nombre": [
+    "Caída de presión del filtro",
+    "Nivel del depósito de barrera",
+    "Presión de succión"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.anuncia.por": [
+    "A presión diferencial constante, necesitar más velocidad es perder eficiencia volumétrica: la arena abrió las holguras de tornillos y camisa (API # B.#).",
+    "Desbalance, holguras o rodamiento. Límite de campo: API # #",
+    "El sello mecánico pierde fluido de barrera. Es el componente que más pesa en el MTBF de esta familia.",
+    "Entra arena o sólidos. API # B.# pide alarma de presión diferencial en el filtro de entrada.",
+    "Si cae por debajo de lo que exige el NPSH de la bomba, el agua hierve en el ojo del impulsor: cavitación."
+   ],
+   "$.datos[].partes[].primera.senal.alarma.fuente": [
+    "API # #ª ed. # #: < # mm/s RMS en campo, en caja de rodamientos",
+    "Hoja de datos del fabricante · API # B.# pide la alarma",
+    "Hoja de datos del fabricante: NPSH requerido más margen",
+    "Hoja de datos del sistema de sello (API #)",
+    "Velocidad máxima continua de la hoja de datos (API # Anexo A)"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.nombre": [
+    "Caída de presión del filtro",
+    "Presión de succión"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.anuncia.por": [
+    "Entra arena o sólidos. API # B.# pide alarma de presión diferencial en el filtro de entrada.",
+    "Si cae por debajo de lo que exige el NPSH de la bomba, el agua hierve en el ojo del impulsor: cavitación."
+   ],
+   "$.datos[].partes[].fuera[].senal.alarma.fuente": [
+    "Hoja de datos del fabricante · API # B.# pide la alarma",
+    "Hoja de datos del fabricante: NPSH requerido más margen"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.nombre": [
+    "Presión de succión"
+   ],
+   "$.datos[].partes[].causaActiva[].senal.plantilla.anuncia.por": [
+    "Si cae por debajo de lo que exige el NPSH de la bomba, el agua hierve en el ojo del impulsor: cavitación."
+   ],
+   "$.datos[].partes[].causaActiva[].senal.alarma.fuente": [
+    "Hoja de datos del fabricante: NPSH requerido más margen"
+   ],
+   "$.datos[].partes[].primera.senal.plantilla.donde": [
+    "Caja de rodamientos de la bomba",
+    "Filtro canasta doble",
+    "Sistema de sello · API #"
+   ],
+   "$.datos[].partes[].fuera[].senal.plantilla.donde": [
+    "Filtro canasta doble"
+   ]
+  },
+  "/vistas/pozos": {
+   "$.datos[].causa.evidencia[]": [
+    "Ningún servicio caído, ninguna bomba de la línea parada, fuera del programa y sin código de falla",
+    "POC-LC# · código CMD · # de oct, #:#",
+    "VSD-GU# · código GF · # de sept, #:#",
+    "VSD-GU# · código PH · # de sept, #:#",
+    "VSD-LC# · código CMD · # de oct, #:#",
+    "VSD-LC# · código LSHH · # de oct, #:#",
+    "VSD-MN# · código GF · # de sept, #:#"
+   ],
+   "$.datos[].causa.texto": [
+    "El variador disparó por desbalance de fases",
+    "El variador disparó por falla a tierra",
+    "Ninguna señal explica por qué paró: hay que identificarlo",
+    "Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno"
+   ],
+   "$.datos[].salud.parte.nombre": [
+    "Admisión y separador de gas",
+    "Aislamiento del motor y del cable",
+    "Bomba de fondo (eje y etapas)",
+    "Protector (sello del motor)"
+   ],
+   "$.datos[].salud.parte.itemIso": [
+    "Admisión y separador de gas",
+    "Cable de potencia y devanado del motor",
+    "Etapas y eje de la bomba",
+    "Sección sellante"
+   ],
+   "$.datos[].salud.parte.peso.texto": [
+    "Corto a tierra en el fondo: la falla individual más común, # de # (# %)",
+    "Eje pegado # de # (# %) y taponamiento por sólidos # (# %)",
+    "Protector inundado: # de # (# %). Deja entrar fluido al motor y termina en corto",
+    "Separador de gas y admisión: # de # (# %). Bombear gas o en vacío dispara por baja carga"
+   ],
+   "$.datos[].salud.parte.peso.fuente": [
+    "Mahmud, Journal of Energy and Power Technology (#): # fallas de electrosumergibles en # pozos de Libia"
+   ],
+   "$.datos[].salud.parte.anticipacion": [
+    "A frecuencia fija, la corriente sube cuando la bomba se frena por sólidos o roce. La corriente del variador avisa antes que la presión y las temperaturas (Camilleri, SPE #); en un piloto de # bombas, # días antes (JPT, #).",
+    "El desbalance de fases crece a medida que el aislamiento se degrada. La corriente del variador avisa antes que la presión y las temperaturas (Camilleri, SPE #); en un piloto de # bombas, # días antes (JPT, #).",
+    "La presión de entrada baja hacia el punto de burbuja o de bombeo en vacío. Horas a días.",
+    "La temperatura del motor sube cuando el fluido del pozo empieza a entrar. Días a semanas."
+   ],
+   "$.datos[].salud.parte.accion": [
+    "Bajar la frecuencia o revisar el nivel de fluido antes de que dispare por baja carga.",
+    "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
+    "Revisar la tendencia de temperatura y planear el cambio antes de que el motor se aterrice.",
+    "Revisar sólidos y escala; programar tratamiento químico o el cambio de la bomba."
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.nombre": [
+    "Corriente del motor",
+    "Desbalance de corriente entre fases",
+    "Presión de entrada",
+    "Temperatura del motor"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.anuncia.por": [
+    "A frecuencia fija, la bomba se frena por sólidos o roce y la carga sube.",
+    "Cae hacia el punto en que la bomba empieza a manejar gas o a quedarse sin fluido.",
+    "Crece a medida que el aislamiento del motor o del cable se degrada.",
+    "Sube cuando falta enfriamiento o el protector deja entrar fluido."
+   ],
+   "$.datos[].salud.medidas[].senal.origen": [
+    "sensor de fondo",
+    "variador del pozo"
+   ],
+   "$.datos[].salud.medidas[].senal.alarma.fuente": [
+    "Ajuste de protección del variador del pozo (configuración del pozo)"
+   ],
+   "$.datos[].salud.medidas[].senal.pronostico.motivo": [
+    "El pozo está parado: no hay tendencia que proyectar",
+    "La pendiente no supera dos errores estándar: es ruido",
+    "La variable no va hacia el límite"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.nombre": [
+    "Desbalance de corriente entre fases"
+   ],
+   "$.datos[].salud.sinSenal[].senal.plantilla.anuncia.por": [
+    "Crece a medida que el aislamiento del motor o del cable se degrada."
+   ],
+   "$.datos[].salud.sinSenal[].senal.tag": [
+    "VSD-GU# · desbalance de corriente",
+    "VSD-LC# · desbalance de corriente",
+    "VSD-MN# · desbalance de corriente"
+   ],
+   "$.datos[].salud.sinSenal[].senal.origen": [
+    "variador del pozo · sin lectura con el motor parado"
+   ],
+   "$.datos[].salud.sinSenal[].senal.estado": [
+    "sin señal"
+   ],
+   "$.datos[].salud.sinSenal[].senal.alarma.fuente": [
+    "Ajuste de protección del variador del pozo (configuración del pozo)"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo.nombre": [
+    "Falla de tierra o aislamiento"
+   ],
+   "$.datos[].salud.sinSenal[].senal.mecanismo.en": [
+    "Earth / isolation fault"
+   ],
+   "$.datos[].salud.sinSenal[].senal.pronostico.motivo": [
+    "El pozo está parado: no hay tendencia que proyectar"
+   ],
+   "$.refs.pozos.{k}.fuentePrueba": [
+    "Estimación desde la electrosumergible VSD-GU#: curva de la bomba, frecuencia y presión de entrada",
+    "Estimación desde la electrosumergible VSD-LC#: curva de la bomba, frecuencia y presión de entrada",
+    "Estimación desde la electrosumergible VSD-MN#: curva de la bomba, frecuencia y presión de entrada",
+    "Separador de prueba automatizado SP-CE# · FT-CE# crudo · FT-CE# agua · AT-CE# corte de agua",
+    "Separador de prueba automatizado SP-GU# · FT-GU# crudo · FT-GU# agua · AT-GU# corte de agua",
+    "Separador de prueba automatizado SP-MN# · FT-MN# crudo · FT-MN# agua · AT-MN# corte de agua",
+    "Separador de prueba automatizado SP-PA# · FT-PA# crudo · FT-PA# agua · AT-PA# corte de agua",
+    "Separador de prueba automatizado SP-ZA# · FT-ZA# crudo · FT-ZA# agua · AT-ZA# corte de agua"
+   ],
+   "$.refs.eventos.{k}.senal": [
+    "POC-LC# · código CMD",
+    "VSD-GU# · código GF",
+    "VSD-GU# · código PH",
+    "VSD-LC# · código CMD",
+    "VSD-LC# · código LSHH",
+    "VSD-MN# · código GF"
+   ],
+   "$.datos[].salud.medidas[].senal.tag": [
+    "PIT-MN# · sensor de fondo",
+    "TIT-MN# · sensor de fondo",
+    "VSD-GU# · desbalance de corriente",
+    "VSD-MN# · desbalance de corriente"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo.nombre": [
+    "Falla de tierra o aislamiento"
+   ],
+   "$.datos[].salud.medidas[].senal.mecanismo.en": [
+    "Earth / isolation fault"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.nombre": [
+    "Corriente del motor",
+    "Desbalance de corriente entre fases",
+    "Presión de entrada",
+    "Temperatura del motor"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.anuncia.por": [
+    "A frecuencia fija, la bomba se frena por sólidos o roce y la carga sube.",
+    "Cae hacia el punto en que la bomba empieza a manejar gas o a quedarse sin fluido.",
+    "Crece a medida que el aislamiento del motor o del cable se degrada.",
+    "Sube cuando falta enfriamiento o el protector deja entrar fluido."
+   ],
+   "$.datos[].salud.primera.senal.tag": [
+    "PIT-MN# · sensor de fondo",
+    "TIT-MN# · sensor de fondo",
+    "VSD-GU# · desbalance de corriente"
+   ],
+   "$.datos[].salud.primera.senal.origen": [
+    "sensor de fondo",
+    "variador del pozo"
+   ],
+   "$.datos[].salud.primera.senal.alarma.fuente": [
+    "Ajuste de protección del variador del pozo (configuración del pozo)"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo.nombre": [
+    "Falla de tierra o aislamiento"
+   ],
+   "$.datos[].salud.primera.senal.mecanismo.en": [
+    "Earth / isolation fault"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.nombre": [
+    "Corriente del motor",
+    "Desbalance de corriente entre fases",
+    "Presión de entrada",
+    "Temperatura del motor"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.anuncia.por": [
+    "A frecuencia fija, la bomba se frena por sólidos o roce y la carga sube.",
+    "Cae hacia el punto en que la bomba empieza a manejar gas o a quedarse sin fluido.",
+    "Crece a medida que el aislamiento del motor o del cable se degrada.",
+    "Sube cuando falta enfriamiento o el protector deja entrar fluido."
+   ],
+   "$.datos[].salud.fuera[].senal.tag": [
+    "PIT-MN# · sensor de fondo",
+    "TIT-MN# · sensor de fondo",
+    "VSD-GU# · desbalance de corriente"
+   ],
+   "$.datos[].salud.fuera[].senal.origen": [
+    "sensor de fondo",
+    "variador del pozo"
+   ],
+   "$.datos[].salud.fuera[].senal.alarma.fuente": [
+    "Ajuste de protección del variador del pozo (configuración del pozo)"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo.nombre": [
+    "Falla de tierra o aislamiento"
+   ],
+   "$.datos[].salud.fuera[].senal.mecanismo.en": [
+    "Earth / isolation fault"
+   ],
+   "$.datos[].salud.medidas[].senal.plantilla.donde": [
+    "Sensor de fondo"
+   ],
+   "$.datos[].salud.primera.senal.plantilla.donde": [
+    "Sensor de fondo"
+   ],
+   "$.datos[].salud.fuera[].senal.plantilla.donde": [
+    "Sensor de fondo"
+   ]
+  },
+  "/sap/avisos": {
+   "$.datos[].descripcion": [
+    "Admisión y gas: parada de ID",
+    "Aire de instrumentos degradado: presión de cabezal cayendo",
+    "Aislamiento del motor y del cable: parada de ID",
+    "Bomba de fondo: parada de ID",
+    "Desgaste interno: parada de ID",
+    "El vigía anticipa falla: bomba de fondo de ID",
+    "El vigía anticipa falla: rodamientos de ID",
+    "El vigía anticipa falla: sello mecánico de ID",
+    "Lubricación: parada de ID",
+    "Motor eléctrico: parada de ID",
+    "Parada de ID",
+    "Rodamientos: parada de ID",
+    "Sello mecánico: parada de ID",
+    "Succión y filtro de entrada: parada de ID",
+    "Tornillos y holguras: parada de ID"
+   ],
+   "$.datos[].evidencia[]": [
+    "La presión de cabezal cae hace # días. La norma exige recibidor de # a # min de autonomía: hoy quedan # Alimenta cinco sistemas.",
+    "Parada del PLC EP-GU#-#-#",
+    "Parada del PLC EP-LC#-#-#",
+    "Parada del PLC EP-MN#-#-#",
+    "Parada del PLC EV-G#-#",
+    "Parada del PLC EV-M#-#",
+    "Parada del PLC ID-#",
+    "Predicción PR-ceiba-ID-bomba · ventana hasta el # de sept",
+    "Predicción PR-guacamayo-ID-sello · ventana hasta el # de sept",
+    "Predicción PR-morichal-ID-rodamientos · ventana hasta el # de sept"
+   ],
+   "$.datos[].creadoPor": [
+    "Operación, directo en SAP",
+    "TRIM · desde la parada del PLC",
+    "TRIM · el aire cae hace # días",
+    "TRIM · predicción del vigía"
+   ]
+  },
+  "/sap/ordenes": {
+   "$.datos[].descripcion": [
+    "Cambio programado de la bomba de subsuelo",
+    "Corregir la succión y revisar el plan de sello; tener el cartucho de repuesto en sitio antes de que la fuga crezca.",
+    "Mantenimiento preventivo programado de la bomba",
+    "Reparar admisión y gas de ID",
+    "Reparar aislamiento del motor y del cable de ID",
+    "Reparar bomba de fondo de ID",
+    "Reparar desgaste interno de ID",
+    "Reparar lubricación de ID",
+    "Reparar motor eléctrico de ID",
+    "Reparar rodamientos de ID",
+    "Reparar sello mecánico de ID",
+    "Reparar succión y filtro de entrada de ID",
+    "Reparar tornillos y holguras de ID",
+    "Revisar lubricación y alineación; programar el cambio con el repuesto en mano.",
+    "Revisar sólidos y escala; programar tratamiento químico o el cambio de la bomba.",
+    "Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en # min de autonomía, una parada deja las válvulas en posición segura."
+   ],
+   "$.datos[].repuestos[].descripcion": [
+    "Bomba electrosumergible (etapas)",
+    "Cable de potencia y empalme",
+    "Filtro canasta de succión",
+    "Impulsor y anillos de desgaste",
+    "Juego de rodamientos",
+    "Juego de tornillos",
+    "Kit de sello mecánico",
+    "Motor de fondo",
+    "Separador de gas y admisión"
+   ]
+  }
+ },
+ "campos": {
+  "entities/aciertos.ts:FallaVista": {
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "familia": {
+    "opcional": false
+   },
+   "falla": {
+    "opcional": false
+   },
+   "visibilidad": {
+    "opcional": false
+   },
+   "faltan": {
+    "opcional": false
+   }
+  },
+  "entities/asignacion.ts:CargaAsignacion": {
+   "id": {
+    "opcional": false
+   },
+   "fecha": {
+    "opcional": false
+   },
+   "por": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   },
+   "grupos": {
+    "opcional": false
+   }
+  },
+  "entities/asignacion.ts:FilaCargada": {
+   "carga": {
+    "opcional": false
+   }
+  },
+  "entities/asignacion.ts:FilaOficial": {
+   "mes": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "pozo": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "horas": {
+    "opcional": true
+   }
+  },
+  "entities/bombas.ts:Alarma": {
+   "alta": {
+    "opcional": true
+   },
+   "baja": {
+    "opcional": true
+   },
+   "fuente": {
+    "opcional": false
+   }
+  },
+  "entities/catalogo.ts:Analisis": {
+   "mecanismo": {
+    "opcional": false
+   },
+   "causaRaiz": {
+    "opcional": false
+   },
+   "nota": {
+    "opcional": true
+   },
+   "por": {
+    "opcional": false
+   },
+   "hora": {
+    "opcional": false
+   }
+  },
+  "entities/configuracion.ts:Config": {
+   "empresa": {
+    "opcional": false
+   },
+   "campos": {
+    "opcional": false
+   },
+   "tanques": {
+    "opcional": false
+   },
+   "respaldos": {
+    "opcional": false
+   },
+   "programa": {
+    "opcional": false
+   }
+  },
+  "entities/configuracion.ts:Version": {
+   "version": {
+    "opcional": false
+   },
+   "fecha": {
+    "opcional": false
+   },
+   "por": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   },
+   "cambios": {
+    "opcional": false
+   },
+   "config": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:Colchon": {
+   "tanque": {
+    "opcional": false
+   },
+   "nivel": {
+    "opcional": false
+   },
+   "libreBbl": {
+    "opcional": false
+   },
+   "aguaSinSalidaBpd": {
+    "opcional": false
+   },
+   "horas": {
+    "opcional": false
+   },
+   "rango": {
+    "opcional": false
+   },
+   "agotado": {
+    "opcional": false
+   },
+   "componentes": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:EstadoCampo": {
+   "campoId": {
+    "opcional": false
+   },
+   "ayer": {
+    "opcional": false
+   },
+   "potencialBpd": {
+    "opcional": false
+   },
+   "perdiendoBpd": {
+    "opcional": false
+   },
+   "perdiendoAltoBpd": {
+    "opcional": false
+   },
+   "pozos": {
+    "opcional": false
+   },
+   "parados": {
+    "opcional": false
+   },
+   "enRiesgo": {
+    "opcional": false
+   },
+   "severidad": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:OrdenDeCierre": {
+   "aguaAQuitarBpd": {
+    "opcional": false
+   },
+   "pasos": {
+    "opcional": false
+   },
+   "crudoBpd": {
+    "opcional": false
+   },
+   "crudoParejoBpd": {
+    "opcional": false
+   },
+   "ahorroBpd": {
+    "opcional": false
+   },
+   "produciendo": {
+    "opcional": false
+   },
+   "sinPrueba": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:ParadaMedida": {
+   "evento": {
+    "opcional": false
+   },
+   "causa": {
+    "opcional": false
+   },
+   "cargadoA": {
+    "opcional": false
+   },
+   "abierto": {
+    "opcional": false
+   },
+   "inicio": {
+    "opcional": false
+   },
+   "fin": {
+    "opcional": false
+   },
+   "horasParada": {
+    "opcional": false
+   },
+   "colchon": {
+    "opcional": true
+   },
+   "tramos": {
+    "opcional": false
+   },
+   "pozos": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "tolerancia": {
+    "opcional": false
+   },
+   "rango": {
+    "opcional": false
+   },
+   "aproximado": {
+    "opcional": false
+   },
+   "evitable": {
+    "opcional": false
+   },
+   "pide": {
+    "opcional": false
+   },
+   "arrancoSinIdentificar": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:PasoCierre": {
+   "pozo": {
+    "opcional": false
+   },
+   "crudoBpd": {
+    "opcional": false
+   },
+   "aguaBpd": {
+    "opcional": false
+   },
+   "crudoPorAgua": {
+    "opcional": false
+   },
+   "fraccion": {
+    "opcional": false
+   },
+   "aguaAcumBpd": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:Prediccion": {
+   "perfil": {
+    "opcional": false
+   },
+   "inmediato": {
+    "opcional": false
+   },
+   "parada": {
+    "opcional": true
+   },
+   "perdiendo": {
+    "opcional": true
+   },
+   "mueve": {
+    "opcional": true
+   },
+   "respaldoLibreBpd": {
+    "opcional": false
+   },
+   "aguaSinSalidaBpd": {
+    "opcional": false
+   },
+   "colchon": {
+    "opcional": true
+   },
+   "orden": {
+    "opcional": true
+   },
+   "crudoBpd": {
+    "opcional": false
+   },
+   "crudoParejoBpd": {
+    "opcional": false
+   },
+   "tolerancia": {
+    "opcional": false
+   },
+   "componentes": {
+    "opcional": false
+   },
+   "metodo": {
+    "opcional": false
+   },
+   "supuestos": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:Riesgo": {
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "tipo": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "prioridad": {
+    "opcional": false
+   },
+   "estadoParte": {
+    "opcional": true
+   },
+   "bblDia": {
+    "opcional": false
+   },
+   "pozos": {
+    "opcional": false
+   },
+   "desde": {
+    "opcional": true
+   },
+   "cierreDesde": {
+    "opcional": true
+   },
+   "parte": {
+    "opcional": true
+   },
+   "horas": {
+    "opcional": true
+   },
+   "rango": {
+    "opcional": true
+   },
+   "motivo": {
+    "opcional": false
+   },
+   "accion": {
+    "opcional": true
+   },
+   "tag": {
+    "opcional": true
+   },
+   "costoFalla": {
+    "opcional": true
+   },
+   "mdtFuente": {
+    "opcional": true
+   },
+   "altoImpacto": {
+    "opcional": false
+   }
+  },
+  "entities/diferido.ts:Veredicto": {
+   "primera": {
+    "opcional": true
+   },
+   "cruzadas": {
+    "opcional": false
+   },
+   "prediccion": {
+    "opcional": false
+   },
+   "historial": {
+    "opcional": false
+   },
+   "porFalla": {
+    "opcional": true
+   }
+  },
+  "entities/informe.ts:ConsultaInforme": {
+   "formato": {
+    "opcional": false
+   },
+   "titulo": {
+    "opcional": false
+   },
+   "alcance": {
+    "opcional": false
+   },
+   "periodo": {
+    "opcional": false
+   },
+   "campos": {
+    "opcional": false
+   },
+   "desde": {
+    "opcional": false
+   },
+   "hasta": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": true
+   }
+  },
+  "entities/informe.ts:Informe": {
+   "folio": {
+    "opcional": false
+   },
+   "fecha": {
+    "opcional": false
+   },
+   "por": {
+    "opcional": false
+   },
+   "version": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "cifras": {
+    "opcional": false
+   },
+   "huella": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:AsignacionPozo": {
+   "campoId": {
+    "opcional": false
+   },
+   "pozo": {
+    "opcional": false
+   },
+   "horas": {
+    "opcional": false
+   },
+   "potencial": {
+    "opcional": false
+   },
+   "diferido": {
+    "opcional": false
+   },
+   "asignado": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:Dia": {
+   "dia": {
+    "opcional": false
+   },
+   "horas": {
+    "opcional": false
+   },
+   "real": {
+    "opcional": false
+   },
+   "faltan": {
+    "opcional": false
+   },
+   "potencial": {
+    "opcional": false
+   },
+   "diferido": {
+    "opcional": false
+   },
+   "residuo": {
+    "opcional": false
+   },
+   "meta": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:EventoCargado": {
+   "id": {
+    "opcional": false
+   },
+   "inicio": {
+    "opcional": false
+   },
+   "fin": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "pozos": {
+    "opcional": false
+   },
+   "causa": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:FallaEquipo": {
+   "id": {
+    "opcional": false
+   },
+   "inicio": {
+    "opcional": false
+   },
+   "fin": {
+    "opcional": false
+   },
+   "horas": {
+    "opcional": false
+   },
+   "parte": {
+    "opcional": true
+   },
+   "como": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "disparo": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:FilaEquipo": {
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "tipo": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "tolerancia": {
+    "opcional": false
+   },
+   "eventos": {
+    "opcional": false
+   },
+   "pozos": {
+    "opcional": false
+   },
+   "partes": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:HistorialEquipo": {
+   "dias": {
+    "opcional": false
+   },
+   "eventos": {
+    "opcional": false
+   },
+   "fallas": {
+    "opcional": false
+   },
+   "disparos": {
+    "opcional": false
+   },
+   "porParte": {
+    "opcional": false
+   },
+   "mtbfDias": {
+    "opcional": true
+   },
+   "mdtH": {
+    "opcional": true
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "fallasCerradas": {
+    "opcional": false
+   },
+   "bblPorFalla": {
+    "opcional": true
+   }
+  },
+  "entities/libro.ts:HistorialParte": {
+   "parte": {
+    "opcional": false
+   },
+   "fallas": {
+    "opcional": false
+   },
+   "disparos": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "mdtH": {
+    "opcional": true
+   },
+   "mtbfDias": {
+    "opcional": true
+   },
+   "bblPorFalla": {
+    "opcional": true
+   },
+   "ultima": {
+    "opcional": true
+   }
+  },
+  "entities/libro.ts:Libro": {
+   "desde": {
+    "opcional": false
+   },
+   "hasta": {
+    "opcional": false
+   },
+   "tramos": {
+    "opcional": false
+   },
+   "real": {
+    "opcional": false
+   },
+   "potencial": {
+    "opcional": false
+   },
+   "brecha": {
+    "opcional": false
+   },
+   "diferido": {
+    "opcional": false
+   },
+   "residuo": {
+    "opcional": false
+   },
+   "tolerancia": {
+    "opcional": false
+   },
+   "aproximado": {
+    "opcional": false
+   },
+   "identificado": {
+    "opcional": false
+   },
+   "declarado": {
+    "opcional": false
+   },
+   "pendiente": {
+    "opcional": false
+   },
+   "planeado": {
+    "opcional": false
+   },
+   "noPlaneado": {
+    "opcional": false
+   },
+   "altoImpacto": {
+    "opcional": false
+   },
+   "anticipable": {
+    "opcional": false
+   },
+   "sinInstrumento": {
+    "opcional": false
+   },
+   "sinParte": {
+    "opcional": false
+   },
+   "evitablePorOrden": {
+    "opcional": false
+   },
+   "porTipo": {
+    "opcional": false
+   },
+   "porEquipo": {
+    "opcional": false
+   },
+   "porParte": {
+    "opcional": false
+   },
+   "porPozo": {
+    "opcional": false
+   },
+   "porCampo": {
+    "opcional": false
+   },
+   "fa": {
+    "opcional": false
+   },
+   "custodia": {
+    "opcional": false
+   },
+   "preguntas": {
+    "opcional": false
+   },
+   "pe": {
+    "opcional": false
+   },
+   "meta": {
+    "opcional": false
+   },
+   "valorUsd": {
+    "opcional": true
+   },
+   "valorCampos": {
+    "opcional": false
+   },
+   "sinPrecio": {
+    "opcional": false
+   },
+   "sinFiscal": {
+    "opcional": false
+   },
+   "sinFactor": {
+    "opcional": false
+   },
+   "publicable": {
+    "opcional": false
+   },
+   "motivos": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:LineaBase": {
+   "desde": {
+    "opcional": false
+   },
+   "hasta": {
+    "opcional": false
+   },
+   "nombre": {
+    "opcional": false
+   },
+   "baseDia": {
+    "opcional": false
+   },
+   "periodoDia": {
+    "opcional": false
+   },
+   "cambio": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:Pregunta": {
+   "id": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "sobre": {
+    "opcional": false
+   },
+   "inicio": {
+    "opcional": false
+   },
+   "fin": {
+    "opcional": false
+   },
+   "causa": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "pide": {
+    "opcional": false
+   },
+   "arrancoSinIdentificar": {
+    "opcional": false
+   }
+  },
+  "entities/libro.ts:Tramo": {
+   "evento": {
+    "opcional": false
+   },
+   "pozo": {
+    "opcional": false
+   },
+   "causa": {
+    "opcional": false
+   },
+   "inicio": {
+    "opcional": false
+   },
+   "fin": {
+    "opcional": false
+   },
+   "abierto": {
+    "opcional": false
+   },
+   "horas": {
+    "opcional": false
+   },
+   "factor": {
+    "opcional": false
+   },
+   "bbl": {
+    "opcional": false
+   },
+   "aproximado": {
+    "opcional": false
+   },
+   "sinCustodia": {
+    "opcional": false
+   },
+   "sinFactor": {
+    "opcional": false
+   },
+   "sesgo": {
+    "opcional": false
+   },
+   "azar": {
+    "opcional": false
+   }
+  },
+  "entities/limites.ts:LimiteTag": {
+   "tag": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "texto": {
+    "opcional": false
+   },
+   "normal": {
+    "opcional": true
+   },
+   "alarma": {
+    "opcional": true
+   },
+   "firma": {
+    "opcional": false
+   }
+  },
+  "entities/mensajes.ts:Opcion": {
+   "clave": {
+    "opcional": false
+   },
+   "texto": {
+    "opcional": false
+   },
+   "parte": {
+    "opcional": true
+   },
+   "porque": {
+    "opcional": true
+   },
+   "fuente": {
+    "opcional": true
+   }
+  },
+  "entities/planta.ts:CambioPlanta": {
+   "id": {
+    "opcional": false
+   },
+   "fecha": {
+    "opcional": false
+   },
+   "por": {
+    "opcional": false
+   },
+   "campo": {
+    "opcional": false
+   },
+   "cambio": {
+    "opcional": false
+   }
+  },
+  "entities/planta.ts:Caudales": {
+   "crudo": {
+    "opcional": false
+   },
+   "crudoCap": {
+    "opcional": false
+   },
+   "agua": {
+    "opcional": false
+   },
+   "aguaCap": {
+    "opcional": false
+   },
+   "gas": {
+    "opcional": false
+   },
+   "gasCap": {
+    "opcional": false
+   }
+  },
+  "entities/planta.ts:PlantaCampo": {
+   "tronco": {
+    "opcional": false
+   },
+   "gas": {
+    "opcional": false
+   },
+   "crudo": {
+    "opcional": false
+   },
+   "agua": {
+    "opcional": false
+   },
+   "servicios": {
+    "opcional": false
+   },
+   "caudales": {
+    "opcional": false
+   },
+   "chokes": {
+    "opcional": false
+   },
+   "nota": {
+    "opcional": false
+   }
+  },
+  "entities/pozos.ts:EventoPozo": {
+   "id": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "pozo": {
+    "opcional": false
+   },
+   "inicio": {
+    "opcional": false
+   },
+   "fin": {
+    "opcional": false
+   },
+   "codigo": {
+    "opcional": false
+   },
+   "senal": {
+    "opcional": false
+   },
+   "hz": {
+    "opcional": true
+   },
+   "respuesta": {
+    "opcional": true
+   }
+  },
+  "entities/pozos.ts:Pozo": {
+   "id": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "levantamiento": {
+    "opcional": false
+   },
+   "controlador": {
+    "opcional": false
+   },
+   "alimentador": {
+    "opcional": false
+   },
+   "origen": {
+    "opcional": true
+   },
+   "fuentePrueba": {
+    "opcional": true
+   },
+   "pruebas": {
+    "opcional": false
+   }
+  },
+  "entities/pozos.ts:Respuesta": {
+   "texto": {
+    "opcional": false
+   },
+   "por": {
+    "opcional": false
+   },
+   "porId": {
+    "opcional": true
+   },
+   "hora": {
+    "opcional": false
+   },
+   "parte": {
+    "opcional": true
+   },
+   "modo": {
+    "opcional": true
+   },
+   "canal": {
+    "opcional": true
+   }
+  },
+  "entities/salud.ts:SaludParte": {
+   "parte": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "prioridad": {
+    "opcional": false
+   },
+   "primera": {
+    "opcional": true
+   },
+   "coinciden": {
+    "opcional": false
+   },
+   "lenta": {
+    "opcional": true
+   },
+   "causaActiva": {
+    "opcional": false
+   },
+   "fuera": {
+    "opcional": false
+   },
+   "medidas": {
+    "opcional": false
+   },
+   "discretas": {
+    "opcional": false
+   },
+   "sinSenal": {
+    "opcional": false
+   },
+   "faltan": {
+    "opcional": false
+   }
+  },
+  "entities/salud.ts:SenalDeParte": {
+   "senal": {
+    "opcional": false
+   },
+   "papel": {
+    "opcional": false
+   }
+  },
+  "entities/sap.ts:AvisoSap": {
+   "numero": {
+    "opcional": false
+   },
+   "tipo": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "descripcion": {
+    "opcional": false
+   },
+   "prioridad": {
+    "opcional": false
+   },
+   "parte": {
+    "opcional": true
+   },
+   "modo": {
+    "opcional": true
+   },
+   "inicioAveria": {
+    "opcional": true
+   },
+   "parada": {
+    "opcional": false
+   },
+   "evidencia": {
+    "opcional": false
+   },
+   "creado": {
+    "opcional": false
+   },
+   "creadoPor": {
+    "opcional": false
+   },
+   "origen": {
+    "opcional": false
+   },
+   "evento": {
+    "opcional": true
+   },
+   "orden": {
+    "opcional": true
+   },
+   "cerrado": {
+    "opcional": false
+   }
+  },
+  "entities/sap.ts:OrdenSap": {
+   "numero": {
+    "opcional": false
+   },
+   "clase": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "descripcion": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "prioridad": {
+    "opcional": false
+   },
+   "creada": {
+    "opcional": false
+   },
+   "liberada": {
+    "opcional": true
+   },
+   "cierreTecnico": {
+    "opcional": true
+   },
+   "tecnico": {
+    "opcional": true
+   },
+   "puesto": {
+    "opcional": false
+   },
+   "aviso": {
+    "opcional": true
+   },
+   "horasReales": {
+    "opcional": false
+   },
+   "repuestos": {
+    "opcional": false
+   },
+   "evento": {
+    "opcional": true
+   }
+  },
+  "entities/sap.ts:Repuesto": {
+   "material": {
+    "opcional": false
+   },
+   "descripcion": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "equipos": {
+    "opcional": false
+   },
+   "stock": {
+    "opcional": false
+   },
+   "minimo": {
+    "opcional": false
+   },
+   "plazoDias": {
+    "opcional": false
+   },
+   "enTransito": {
+    "opcional": true
+   }
+  },
+  "entities/tipos.ts:Campo": {
+   "id": {
+    "opcional": false
+   },
+   "nombre": {
+    "opcional": false
+   },
+   "cuenca": {
+    "opcional": false
+   },
+   "choke": {
+    "opcional": false
+   },
+   "nota": {
+    "opcional": false
+   },
+   "desconocido": {
+    "opcional": true
+   }
+  },
+  "entities/tipos.ts:Dispositivo": {
+   "tag": {
+    "opcional": false
+   },
+   "tipo": {
+    "opcional": false
+   },
+   "valor": {
+    "opcional": false
+   },
+   "unidad": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "origen": {
+    "opcional": false
+   },
+   "limite": {
+    "opcional": false
+   },
+   "serie": {
+    "opcional": true
+   },
+   "calibracion": {
+    "opcional": true
+   }
+  },
+  "entities/tipos.ts:SerieTag": {
+   "desde": {
+    "opcional": false
+   },
+   "pasoH": {
+    "opcional": false
+   },
+   "valores": {
+    "opcional": false
+   }
+  },
+  "entities/usuarios.ts:CambioAcceso": {
+   "id": {
+    "opcional": false
+   },
+   "fecha": {
+    "opcional": false
+   },
+   "por": {
+    "opcional": false
+   },
+   "usuario": {
+    "opcional": false
+   },
+   "cambios": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   }
+  },
+  "entities/usuarios.ts:ErrorAcceso": {
+   "campo": {
+    "opcional": false
+   },
+   "texto": {
+    "opcional": false
+   }
+  },
+  "entities/usuarios.ts:Usuario": {
+   "id": {
+    "opcional": false
+   },
+   "nombre": {
+    "opcional": false
+   },
+   "correo": {
+    "opcional": false
+   },
+   "rolId": {
+    "opcional": false
+   },
+   "campos": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "desde": {
+    "opcional": false
+   },
+   "telefono": {
+    "opcional": true
+   },
+   "alertas": {
+    "opcional": false
+   },
+   "antesDeSuspender": {
+    "opcional": true
+   }
+  },
+  "entities/vigia.ts:Senal": {
+   "plantilla": {
+    "opcional": false
+   },
+   "tag": {
+    "opcional": false
+   },
+   "unidad": {
+    "opcional": false
+   },
+   "valor": {
+    "opcional": false
+   },
+   "serie": {
+    "opcional": true
+   },
+   "origen": {
+    "opcional": false
+   },
+   "estado": {
+    "opcional": false
+   },
+   "normal": {
+    "opcional": true
+   },
+   "alarma": {
+    "opcional": true
+   },
+   "limite": {
+    "opcional": true
+   },
+   "mecanismo": {
+    "opcional": true
+   },
+   "tendencia": {
+    "opcional": true
+   },
+   "pronostico": {
+    "opcional": false
+   }
+  },
+  "shared/api/cable.ts:Codec": {
+   "aDTO": {
+    "opcional": false
+   },
+   "revivir": {
+    "opcional": false
+   }
+  },
+  "shared/api/cable.ts:Respuesta": {
+   "datos": {
+    "opcional": false
+   },
+   "refs": {
+    "opcional": false
+   }
+  },
+  "shared/api/catalogo.ts:CatalogoDeCampo": {
+   "perfilesBomba": {
+    "opcional": false
+   },
+   "registroEquipos": {
+    "opcional": false
+   },
+   "limites": {
+    "opcional": false
+   },
+   "medicion": {
+    "opcional": false
+   },
+   "pozos": {
+    "opcional": false
+   },
+   "catalogosDanos": {
+    "opcional": false
+   },
+   "planta": {
+    "opcional": true
+   }
+  },
+  "shared/api/catalogo.ts:DatosDeCatalogo": {
+   "calendario": {
+    "opcional": false
+   },
+   "equipos": {
+    "opcional": false
+   },
+   "maquinasBomba": {
+    "opcional": false
+   },
+   "campos": {
+    "opcional": false
+   }
+  },
+  "shared/api/contrato.ts:ConsultaPeriodo": {
+   "campos": {
+    "opcional": false
+   },
+   "desde": {
+    "opcional": false
+   },
+   "hasta": {
+    "opcional": false
+   }
+  },
+  "shared/api/contrato.ts:CuerpoAnalisis": {
+   "evento": {
+    "opcional": false
+   },
+   "mecanismo": {
+    "opcional": false
+   },
+   "causaRaiz": {
+    "opcional": false
+   },
+   "nota": {
+    "opcional": true
+   }
+  },
+  "shared/api/contrato.ts:CuerpoAsignacion": {
+   "filas": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   }
+  },
+  "shared/api/contrato.ts:CuerpoFirma": {
+   "config": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   },
+   "base": {
+    "opcional": false
+   }
+  },
+  "shared/api/contrato.ts:CuerpoInvitacion": {
+   "invitacion": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   }
+  },
+  "shared/api/contrato.ts:CuerpoRespuesta": {
+   "evento": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "texto": {
+    "opcional": false
+   },
+   "parte": {
+    "opcional": true
+   },
+   "modo": {
+    "opcional": true
+   }
+  },
+  "shared/api/contrato.ts:CuerpoUsuario": {
+   "usuario": {
+    "opcional": false
+   },
+   "motivo": {
+    "opcional": false
+   }
+  },
+  "shared/api/contrato.ts:CuerpoWhatsapp": {
+   "evento": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "usuarioId": {
+    "opcional": false
+   },
+   "opcion": {
+    "opcional": false
+   },
+   "texto": {
+    "opcional": true
+   },
+   "modo": {
+    "opcional": true
+   }
+  },
+  "shared/api/contrato.ts:Endpoint": {
+   "metodo": {
+    "opcional": false
+   },
+   "ruta": {
+    "opcional": false
+   },
+   "codec": {
+    "opcional": false
+   },
+   "parametros": {
+    "opcional": true
+   }
+  },
+  "shared/api/diferidos.ts:DetallePozo": {
+   "fila": {
+    "opcional": false
+   },
+   "tramos": {
+    "opcional": false
+   },
+   "historicos": {
+    "opcional": false
+   },
+   "senales": {
+    "opcional": false
+   },
+   "partes": {
+    "opcional": false
+   },
+   "historial": {
+    "opcional": true
+   }
+  },
+  "shared/api/diferidos.ts:FilaEsp": {
+   "fila": {
+    "opcional": false
+   },
+   "partes": {
+    "opcional": false
+   },
+   "historial": {
+    "opcional": false
+   }
+  },
+  "shared/api/diferidos.ts:FilaPozo": {
+   "pozo": {
+    "opcional": false
+   },
+   "produce": {
+    "opcional": false
+   },
+   "hz": {
+    "opcional": true
+   },
+   "evento": {
+    "opcional": true
+   },
+   "causa": {
+    "opcional": true
+   },
+   "crudoBpd": {
+    "opcional": false
+   },
+   "aguaBpd": {
+    "opcional": false
+   },
+   "prueba": {
+    "opcional": true
+   },
+   "diasDesdePrueba": {
+    "opcional": true
+   },
+   "diferido": {
+    "opcional": false
+   },
+   "diferidoEsp": {
+    "opcional": false
+   },
+   "horasParado": {
+    "opcional": false
+   },
+   "eventos": {
+    "opcional": false
+   },
+   "salud": {
+    "opcional": true
+   }
+  },
+  "shared/api/diferidos.ts:MesResumen": {
+   "libro": {
+    "opcional": false
+   }
+  },
+  "shared/api/diferidos.ts:OpcionesRespuesta": {
+   "catalogo": {
+    "opcional": true
+   },
+   "sugeridas": {
+    "opcional": true
+   },
+   "sospechosa": {
+    "opcional": true
+   }
+  },
+  "shared/api/diferidos.ts:ParadaEnPeriodo": {
+   "horasEnPeriodo": {
+    "opcional": false
+   },
+   "bblEnPeriodo": {
+    "opcional": false
+   },
+   "cruzaBorde": {
+    "opcional": false
+   }
+  },
+  "shared/api/equipos.ts:BombaVista": {
+   "clave": {
+    "opcional": false
+   },
+   "campo": {
+    "opcional": false
+   },
+   "eq": {
+    "opcional": false
+   },
+   "perfil": {
+    "opcional": true
+   },
+   "senales": {
+    "opcional": false
+   },
+   "veredicto": {
+    "opcional": true
+   },
+   "abierta": {
+    "opcional": true
+   },
+   "periodo": {
+    "opcional": true
+   },
+   "partes": {
+    "opcional": false
+   }
+  },
+  "shared/api/equipos.ts:EquipoConfiable": {
+   "campoId": {
+    "opcional": false
+   },
+   "equipo": {
+    "opcional": false
+   },
+   "familia": {
+    "opcional": false
+   },
+   "h": {
+    "opcional": false
+   }
+  },
+  "shared/api/equipos.ts:FichaEquipo": {
+   "eq": {
+    "opcional": false
+   },
+   "periodo": {
+    "opcional": false
+   },
+   "historia": {
+    "opcional": false
+   },
+   "desdeHistoria": {
+    "opcional": false
+   },
+   "hist": {
+    "opcional": true
+   },
+   "veces": {
+    "opcional": true
+   },
+   "prediccion": {
+    "opcional": true
+   },
+   "cerradoPor": {
+    "opcional": true
+   },
+   "desdeCierre": {
+    "opcional": true
+   }
+  },
+  "shared/api/equipos.ts:FilaEquipo": {
+   "eq": {
+    "opcional": false
+   },
+   "campoId": {
+    "opcional": false
+   },
+   "bomba": {
+    "opcional": false
+   },
+   "eventos": {
+    "opcional": false
+   },
+   "bblHistoria": {
+    "opcional": false
+   },
+   "fallas": {
+    "opcional": true
+   },
+   "mtbfDias": {
+    "opcional": true
+   }
+  },
+  "shared/api/equipos.ts:HistoriaEquipo": {
+   "eventos": {
+    "opcional": false
+   },
+   "bomba": {
+    "opcional": true
+   }
+  },
+  "shared/api/escrituras.ts:Credencial": {
+   "rolId": {
+    "opcional": false
+   }
+  },
+  "shared/api/medicion.ts:CampoAhora": {
+   "caudales": {
+    "opcional": false
+   },
+   "niveles": {
+    "opcional": false
+   }
+  },
+  "shared/api/predicciones.ts:Predicciones": {
+   "registro": {
+    "opcional": false
+   },
+   "fallas": {
+    "opcional": false
+   }
+  },
+  "shared/api/sap.ts:EquipoSap": {
+   "equipo": {
+    "opcional": false
+   },
+   "familia": {
+    "opcional": false
+   },
+   "identidad": {
+    "opcional": false
+   },
+   "repuestos": {
+    "opcional": false
+   },
+   "catalogo": {
+    "opcional": true
+   }
+  },
+  "shared/api/sap.ts:IdentidadSap": {
+   "equipoSap": {
+    "opcional": false
+   },
+   "ubicacion": {
+    "opcional": false
+   }
+  }
+ },
+ "codigos": [
+  {
+   "http": "400",
+   "codigo": "peticion-invalida"
+  },
+  {
+   "http": "400",
+   "codigo": "url-invalida"
+  },
+  {
+   "http": "401",
+   "codigo": "sin-sesion"
+  },
+  {
+   "http": "403",
+   "codigo": "sin-capacidad"
+  },
+  {
+   "http": "403",
+   "codigo": "sin-permiso"
+  },
+  {
+   "http": "403",
+   "codigo": "gateway-de-otro-campo"
+  },
+  {
+   "http": "404",
+   "codigo": "no-encontrado"
+  },
+  {
+   "http": "404",
+   "codigo": "tag-no-registrado"
+  },
+  {
+   "http": "404",
+   "codigo": "campo-desconocido"
+  },
+  {
+   "http": "404",
+   "codigo": "equipo-desconocido"
+  },
+  {
+   "http": "404",
+   "codigo": "ruta-no-encontrada"
+  },
+  {
+   "http": "409",
+   "codigo": "conflicto"
+  },
+  {
+   "http": "409",
+   "codigo": "version-cambio"
+  },
+  {
+   "http": "409",
+   "codigo": "tag-de-otro-gateway"
+  },
+  {
+   "http": "413",
+   "codigo": "cuerpo-muy-grande"
+  },
+  {
+   "http": "422",
+   "codigo": "peticion-invalida"
+  },
+  {
+   "http": "422",
+   "codigo": "texto-corto"
+  },
+  {
+   "http": "422",
+   "codigo": "acceso-invalido"
+  },
+  {
+   "http": "422",
+   "codigo": "descripcion-corta"
+  },
+  {
+   "http": "5xx",
+   "codigo": "interno"
+  }
+ ],
+ "capacidades": {
+  "lista": [
+   "causa:declarar",
+   "causa:completar",
+   "evidencia:exportar",
+   "conector:configurar",
+   "config:firmar",
+   "metas:firmar",
+   "usuarios:administrar",
+   "sap:aviso",
+   "asignacion:cargar"
+  ],
+  "porRol": {
+   "ger": [
+    "evidencia:exportar",
+    "metas:firmar",
+    "usuarios:administrar"
+   ],
+   "prod": [
+    "evidencia:exportar",
+    "asignacion:cargar"
+   ],
+   "sup": [
+    "causa:declarar",
+    "evidencia:exportar",
+    "sap:aviso"
+   ],
+   "oper": [
+    "causa:declarar",
+    "sap:aviso"
+   ],
+   "jefe": [
+    "causa:completar",
+    "evidencia:exportar",
+    "sap:aviso"
+   ],
+   "conf": [
+    "causa:completar",
+    "evidencia:exportar",
+    "sap:aviso"
+   ],
+   "plan": [
+    "evidencia:exportar"
+   ],
+   "tec": [
+    "causa:declarar"
+   ],
+   "cont": [
+    "evidencia:exportar"
+   ],
+   "reg": [
+    "evidencia:exportar"
+   ],
+   "adm": [
+    "evidencia:exportar",
+    "conector:configurar",
+    "config:firmar"
+   ]
+  }
+ },
+ "sql": {
+  "tablas": {
+   "campo": [
+    {
+     "columna": "id",
+     "tipo": "text"
+    },
+    {
+     "columna": "nombre",
+     "tipo": "text"
+    }
+   ],
+   "gateway": [
+    {
+     "columna": "id",
+     "tipo": "text"
+    },
+    {
+     "columna": "campo_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "modelo",
+     "tipo": "text"
+    },
+    {
+     "columna": "serie",
+     "tipo": "text"
+    },
+    {
+     "columna": "firmware",
+     "tipo": "text"
+    },
+    {
+     "columna": "enlace",
+     "tipo": "text"
+    },
+    {
+     "columna": "buffer_h",
+     "tipo": "integer"
+    },
+    {
+     "columna": "primer_visto",
+     "tipo": "text"
+    },
+    {
+     "columna": "ultimo_visto",
+     "tipo": "text"
+    }
+   ],
+   "fuente": [
+    {
+     "columna": "id",
+     "tipo": "text"
+    },
+    {
+     "columna": "gateway_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "protocolo",
+     "tipo": "text"
+    },
+    {
+     "columna": "endpoint",
+     "tipo": "text"
+    },
+    {
+     "columna": "modo",
+     "tipo": "text"
+    },
+    {
+     "columna": "reloj",
+     "tipo": "text"
+    }
+   ],
+   "equipo": [
+    {
+     "columna": "id",
+     "tipo": "text"
+    },
+    {
+     "columna": "campo_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "codigo",
+     "tipo": "text"
+    },
+    {
+     "columna": "nombre",
+     "tipo": "text"
+    },
+    {
+     "columna": "clase",
+     "tipo": "text"
+    },
+    {
+     "columna": "criticidad",
+     "tipo": "integer"
+    }
+   ],
+   "tag": [
+    {
+     "columna": "id",
+     "tipo": "text"
+    },
+    {
+     "columna": "campo_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "fuente_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "equipo_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "nombre",
+     "tipo": "text"
+    },
+    {
+     "columna": "tipo",
+     "tipo": "text"
+    },
+    {
+     "columna": "unidad",
+     "tipo": "text"
+    },
+    {
+     "columna": "limite_texto",
+     "tipo": "text"
+    },
+    {
+     "columna": "limite_bajo",
+     "tipo": "real"
+    },
+    {
+     "columna": "limite_alto",
+     "tipo": "real"
+    },
+    {
+     "columna": "cadencia_s",
+     "tipo": "real"
+    },
+    {
+     "columna": "clase",
+     "tipo": "text"
+    },
+    {
+     "columna": "origen_mapeo",
+     "tipo": "text"
+    }
+   ],
+   "formula": [
+    {
+     "columna": "id",
+     "tipo": "text"
+    },
+    {
+     "columna": "clase_equipo",
+     "tipo": "text"
+    },
+    {
+     "columna": "tipo_tag",
+     "tipo": "text"
+    },
+    {
+     "columna": "expresion",
+     "tipo": "text"
+    },
+    {
+     "columna": "version",
+     "tipo": "integer"
+    },
+    {
+     "columna": "ventana_min",
+     "tipo": "integer"
+    },
+    {
+     "columna": "activa",
+     "tipo": "integer"
+    }
+   ],
+   "calibracion": [
+    {
+     "columna": "tag_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "vigente_hasta",
+     "tipo": "text"
+    },
+    {
+     "columna": "detalle",
+     "tipo": "text"
+    }
+   ],
+   "historial_tag": [
+    {
+     "columna": "tag_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "reemplazado",
+     "tipo": "text"
+    },
+    {
+     "columna": "gateway_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "tipo",
+     "tipo": "text"
+    },
+    {
+     "columna": "unidad",
+     "tipo": "text"
+    },
+    {
+     "columna": "limite_texto",
+     "tipo": "text"
+    },
+    {
+     "columna": "limite_bajo",
+     "tipo": "real"
+    },
+    {
+     "columna": "limite_alto",
+     "tipo": "real"
+    },
+    {
+     "columna": "cadencia_s",
+     "tipo": "real"
+    },
+    {
+     "columna": "clase",
+     "tipo": "text"
+    },
+    {
+     "columna": "calibracion_hasta",
+     "tipo": "text"
+    },
+    {
+     "columna": "calibracion_detalle",
+     "tipo": "text"
+    }
+   ],
+   "rechazo": [
+    {
+     "columna": "cuando",
+     "tipo": "text"
+    },
+    {
+     "columna": "gateway_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "campo_id",
+     "tipo": "text"
+    },
+    {
+     "columna": "motivo",
+     "tipo": "text"
+    }
+   ],
+   "semilla": [
+    {
+     "columna": "huella",
+     "tipo": "text"
+    }
+   ]
+  },
+  "v_procedencia": [
+   "tag_id",
+   "tag",
+   "tipo",
+   "unidad",
+   "limite_texto",
+   "limite_bajo",
+   "limite_alto",
+   "cadencia_s",
+   "clase_tag",
+   "origen_mapeo",
+   "campo_id",
+   "protocolo",
+   "endpoint",
+   "modo",
+   "reloj",
+   "gateway_id",
+   "gateway_modelo",
+   "gateway_serie",
+   "gateway_firmware",
+   "enlace",
+   "buffer_h",
+   "ultimo_visto",
+   "equipo_codigo",
+   "equipo",
+   "clase_equipo",
+   "criticidad",
+   "formula_id",
+   "formula",
+   "formula_version",
+   "ventana_min",
+   "calibracion_hasta",
+   "calibracion_detalle"
+  ]
+ }
+}

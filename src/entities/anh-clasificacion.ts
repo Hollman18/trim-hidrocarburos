@@ -29,7 +29,7 @@ import {
 import { chokeDeCausa, esDeclaracionDeMercado, porSaberDe, PREGUNTA_ORIGEN, REGLA_CHOKE, type ChokeDeParada } from './choke'
 import { rolDeQuien, textoDePersona, type Causa, type Contexto, type TipoCausa } from './causa-senal'
 import type { ParadaProgramada } from './configuracion'
-import type { CAUSAS_POZO } from './mensajes'
+import type { CAUSAS_POZO } from './causas-sugeridas'
 import { NOMBRE_PARTE } from './partes'
 import { nombreModo, MODO_OTRO } from './catalogo'
 import { CODIGO, eventosPozos, type CodigoControlador } from './pozos'

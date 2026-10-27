@@ -65,7 +65,7 @@ try {
   const EQ = await cargar('/src/shared/api/equipos.ts')
   const SAP = await cargar('/src/shared/api/sap.ts')
   const MED = await cargar('/src/shared/api/medicion.ts')
-  const MSJ = await cargar('/src/shared/api/mensajes.ts')
+  const CFE = await cargar('/src/shared/api/configuracionEstado.ts') // A1 · M8
   const PRE = await cargar('/src/shared/api/predicciones.ts')
   const CAT = await cargar('/src/shared/api/catalogo.ts')
   const CIC = await cargar('/src/shared/api/ciclo.ts')
@@ -75,6 +75,9 @@ try {
   const RSA = await cargar('/src/shared/api/resultados.ts') // C5 · Resultados
   const EQT = await cargar('/src/shared/api/equiposTecnico.ts') // C4 · Equipos
   const RGA = await cargar('/src/shared/api/regulatorio.ts') // F2 · Regulatorio
+  const ACC = await cargar('/src/shared/api/acciones.ts') // A3 · Las acciones que faltan
+  const BAL = await cargar('/src/shared/api/balance.ts') // A2 · Balance
+  const PER = await cargar('/src/shared/api/perdidas.ts') // A2 · Pérdidas
   const ROLES_HOY = (await cargar('/src/entities/roles.ts')).ROLES_VISIBLES.map(r => r.id) // C3 · Hoy
   const ARB = await cargar('/src/shared/api/arbol.ts')
   // La locación de los pozos del demo (el caso de borde del choke) entra por fuente.ts, como en el navegador.
@@ -103,7 +106,7 @@ try {
     ELECTROSUMERGIBLES: p => DIF.pedirFlotaEsp(p.campos, p.desde, p.hasta, s.ctx),
     ASIGNACION: p => L.asignacionPorPozo(p.campo, p.mes, s.ctx),
     PREDICCIONES: p => PRE.pedirPredicciones(p.campos, s.ctx, s.versiones),
-    RELOJES: p => SAP.pedirRelojes(p.campos, p.desde, p.hasta, s.ctx),
+    RELOJES: p => SAP.pedirRelojes(p.campos, p.desde, p.hasta, s.ctx, s.cierresOrden), // A3: con los cierres en el teléfono (los 5 tramos)
     CAMPO_AHORA: p => MED.pedirCampoAhora(p.campo, s.ctx),
     EQUIPO_HOY: p => EQ.pedirEquipo(p.campo, p.equipo, s.ctx),
     EQUIPOS_HOY: p => EQ.pedirEquiposDeHoy(p.campos, s.ctx),
@@ -127,9 +130,10 @@ try {
     PROPUESTAS_TOPOLOGIA: p => CHK.pedirPropuestasTopologia(p.campo, s.ctx),
     PARADAS_ANH: p => ARB.pedirParadasAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
     CALIDAD_ANH: p => ARB.pedirCalidadAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
-    MENSAJES: p => MSJ.pedirMensajes(p.campos),
+    // A1 · M8: el estado de la configuración de un campo (con la configuración firmada).
+    ESTADO_CONFIGURACION: p => CFE.pedirEstadoConfiguracion(p.campo, s.ctx),
     SAP_AVISOS: p => SAP.pedirAvisosSap(p.campos, s.ctx, s.avisosEnviados),
-    SAP_ORDENES: p => SAP.pedirOrdenesSap(p.campos, s.ctx),
+    SAP_ORDENES: p => SAP.pedirOrdenesSap(p.campos, s.ctx, s.cierresOrden), // A3: con los cierres en el teléfono
     SAP_EQUIPOS: p => SAP.pedirEquiposSap(p.campo),
     SAP_EQUIPO: p => SAP.pedirEquipoSap(p.campo, p.equipo),
     LISTA_CAMPOS: () => s.campos ?? CAMPOS,
@@ -152,7 +156,16 @@ try {
     LISTA_EQUIPOS: p => EQT.pedirListaEquipos(p.campos, s.ctx, s.versiones),
     NIVEL_EQUIPO: p => EQT.pedirNivelEquipo(p.campo, p.equipo, s.ctx, s.versiones),
     // F2 · Regulatorio: el reporte a la ANH, con lo que dijeron las personas encima (la clasificación vigente de cada fila).
-    REPORTE_ANH: p => RGA.pedirReporteAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
+    REPORTE_ANH: p => RGA.pedirReporteAnh(p, s.ctx, s.clasificacionesAnh ?? {}, s.respuestasAnh), // A3: con la respuesta de la ANH
+    // A3 · Las acciones que faltan: la respuesta de la ANH y la conversión del árbol.
+    RESPUESTAS_ANH: p => ACC.pedirRespuestasAnh(p, s.respuestasAnh),
+    CONVERSION_ANH: p => ACC.pedirConversionAnh(p.campo, s.ctx, s.versiones),
+    // A2 · Balance: producido · diferido · perdido, la jornada, «¿Está funcionando?» y las fallas por mes, con lo dicho y el registro de pérdidas.
+    BALANCE: p => BAL.pedirBalance(p, s.ctx, s.clasificacionesAnh ?? {}, s.perdidas ?? []),
+    PERDIDAS: p => PER.pedirPerdidas(p, s.perdidas ?? []),
+    JORNADA: p => BAL.pedirJornada(p, s.ctx, s.clasificacionesAnh ?? {}, s.perdidas ?? []),
+    EFECTIVIDAD: p => BAL.pedirEfectividad(p.campos, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
+    FALLAS_MENSUAL: p => BAL.pedirFallasMensual(p.campos, s.ctx),
   })
   const ENDPOINTS = Object.entries(C).filter(([, x]) => x && typeof x === 'object' && x.metodo === 'GET')
 
@@ -178,8 +191,8 @@ try {
       respuesta: await E.responderParada({ rolId: 'oper' }, { evento: bomba.id, campoId: bomba.campoId, equipo: bomba.equipo, texto: '', parte: parte.id, modo: modosDeParte(parte)[0].codigo }),
       analisis: await E.completarAnalisis({ rolId: 'jefe' }, { evento: bomba.id, mecanismo: '1.1', causaRaiz: '3', nota: 'prueba del contrato' }),
       asignacion: await E.cargarAsignacion({ rolId: 'prod' }, { filas: [{ mes: '2026-08', campoId: 'ceiba', pozo: 'LC-14', bbl: 1234.5, horas: 700 }], motivo: 'prueba del contrato' }),
-      // El número llega como lo escribe una persona y se guarda en E.164 (CONTRATO.md · Usuarios).
-      invitacion: await E.invitarUsuario({ rolId: 'ger' }, { invitacion: { nombre: 'Persona de Prueba', correo: 'prueba.contrato@operadora.example', rolId: 'sup', campos: ['ceiba'], telefono: '300 555 0199', alertas: false }, motivo: 'prueba del contrato' }),
+      // R3: un cuerpo de v1 con número y alertas se acepta, y se ignoran (CAMBIOS-CONTRATO.md §3).
+      invitacion: await E.invitarUsuario({ rolId: 'ger' }, { invitacion: { nombre: 'Persona de Prueba', correo: 'prueba.contrato@operadora.example', rolId: 'sup', campos: ['ceiba'], telefono: '300 555 0199', alertas: true }, motivo: 'prueba del contrato' }),
       informe: await E.emitirInforme({ rolId: 'ger' }, { formato: 'csv', titulo: 'Prueba', alcance: 'La Ceiba', periodo: 'septiembre', campos: ['ceiba'], desde: '2026-09-01T00:00:00-05:00', hasta: '2026-10-01T00:00:00-05:00' }),
     }
     // El aviso, a un equipo del supervisor que no tenga ya uno abierto en SAP.
@@ -223,8 +236,8 @@ try {
     const malas = Object.entries(escritas).filter(([, r]) => !r.ok)
     comprobar(malas.length === 0, `las ${Object.keys(escritas).length} escrituras del contrato pasan en el demo con el rol que las puede hacer (${malas.map(([k, r]) => `${k}: ${r.error ?? JSON.stringify(r.errores)}`).join('; ') || 'todas'})`)
     const invitada = SES.sesion().usuarios.find(u => u.id === escritas.invitacion.id)
-    comprobar(invitada?.telefono === '+573005550199' && SES.sesion().accesos.at(-1).cambios.includes('WhatsApp: +57 300 555 0199'),
-      `el WhatsApp invitado como «300 555 0199» se guarda en E.164 (${invitada?.telefono}) y el historial lo escribe como se lee (+57 300 555 0199)`)
+    comprobar(!!invitada && !('telefono' in invitada) && !('alertas' in invitada) && SES.sesion().accesos.at(-1).cambios.every(c => !/\d{3} \d{3}|alertas/.test(c)),
+      `R3: el número y las alertas que trae un cuerpo de v1 se aceptan sin 422 y se ignoran: la persona y el historial quedan sin ellos (${SES.sesion().accesos.at(-1).cambios.join(' · ')})`)
 
     console.log('\n=== 2. Ida y vuelta por JSON, endpoint por endpoint ===')
     const s = SES.sesion()
@@ -262,7 +275,9 @@ try {
       ARBOL_CHOKE: conPeriodo().flatMap(q => ['gestion', 'circular', 'responsable'].map(orden => ({ ...q, orden }))),
       TOPOLOGIA: TODOS.map(campo => ({ campo })), PROPUESTAS_TOPOLOGIA: TODOS.map(campo => ({ campo })),
       PARADAS_ANH: conPeriodo(), CALIDAD_ANH: conPeriodo(),
-      MENSAJES: porCampos(), SAP_AVISOS: porCampos(), SAP_ORDENES: porCampos(),
+      SAP_AVISOS: porCampos(), SAP_ORDENES: porCampos(),
+      // A1 · M8: el estado de la configuración de cada campo.
+      ESTADO_CONFIGURACION: TODOS.map(campo => ({ campo })),
       SAP_EQUIPOS: TODOS.map(campo => ({ campo })), SAP_EQUIPO: bombas,
       LISTA_CAMPOS: [{}], CATALOGO: [{}], CONFIGURACION_HISTORIAL: [{}], RESPUESTAS: [{}], USUARIOS: [{}], ACCESOS: [{}], INFORMES: [{}],
       ASIGNACION_OFICIAL: [{}], ANALISIS: [{}], CAMBIOS_PLANTA: [{}],
@@ -279,6 +294,13 @@ try {
         .filter(b => !b.instrumentada).map(b => ({ campo, equipo: b.id }))), { campo: 'ceiba', equipo: 'NO-EXISTE' }],
       // F2 · Regulatorio: cada campo y todos, en los tres períodos.
       REPORTE_ANH: conPeriodo(),
+      // A3 · Las acciones que faltan: cada campo y todos, en los tres períodos; la conversión, de cada campo.
+      RESPUESTAS_ANH: conPeriodo(), CONVERSION_ANH: TODOS.map(campo => ({ campo })),
+      // A2 · Balance: cada campo y todos, en los tres períodos y en las dos jornadas; la jornada de cada campo; la efectividad y las fallas por mes.
+      BALANCE: [...conPeriodo(), ...grupos.flatMap(campos => ['actual', 'anterior'].map(jornada => ({ campos, jornada })))],
+      PERDIDAS: conPeriodo(),
+      JORNADA: TODOS.flatMap(campo => ['actual', 'anterior'].map(jornada => ({ campo, jornada }))),
+      EFECTIVIDAD: porCampos(), FALLAS_MENSUAL: porCampos(),
     }
     const sinCasos = ENDPOINTS.map(([n]) => n).filter(n => !casos[n]?.length || !R[n])
     comprobar(sinCasos.length === 0, `cada endpoint de contrato.ts tiene su respuesta del demo y sus casos (${ENDPOINTS.length} endpoints${sinCasos.length ? `; faltan: ${sinCasos.join(', ')}` : ''})`)
@@ -395,7 +417,9 @@ try {
       'POST /anh/paradas/:id/clasificacion', 'POST /anh/paradas/:id/yacimiento', 'POST /anh/paradas/confirmar',
       'POST /anh/paradas/:id/respuesta', 'POST /anh/paradas/:id/revision',
       'POST /configuracion/vista-previa', 'POST /topologia/importar',
-      'POST /anh/paradas/deshacer'] // C3 · Hoy: «Deshacer»
+      'POST /anh/paradas/deshacer', // C3 · Hoy: «Deshacer»
+      'POST /perdidas', // A2 · Pérdidas
+      'POST /paradas/:evento/vio', 'POST /sap/ordenes/:numero/cierre', 'POST /anh/respuestas', 'POST /anh/conversion/importar'] // A3 · Acciones
     const repetidas = rutas.filter((r, i) => rutas.indexOf(r) !== i)
     // Dos rutas chocan si un mismo camino puede caer en las dos: mismo método,
     // mismo número de tramos y en cada tramo el mismo literal o un :parámetro.
@@ -407,7 +431,7 @@ try {
       if (a.every((x, k) => x === b[k] || x.startsWith(':') || b[k].startsWith(':'))) choques.push(`${rutas[i]} ↔ ${rutas[j]}`)
     }
     comprobar(repetidas.length === 0 && choques.length === 0, `${rutas.length} rutas sin repetir y sin dos que atiendan el mismo camino${[...repetidas, ...choques].map(x => `; ${x}`).join('')}`)
-    const vistas = ENDPOINTS.filter(([n]) => !['MENSAJES', 'SAP_AVISOS', 'SAP_ORDENES', 'SAP_EQUIPOS', 'SAP_EQUIPO', 'LISTA_CAMPOS', 'CATALOGO', 'CONFIGURACION_HISTORIAL', 'RESPUESTAS', 'USUARIOS', 'ACCESOS', 'INFORMES', 'ASIGNACION_OFICIAL', 'ANALISIS', 'CAMBIOS_PLANTA'].includes(n))
+    const vistas = ENDPOINTS.filter(([n]) => !['SAP_AVISOS', 'SAP_ORDENES', 'SAP_EQUIPOS', 'SAP_EQUIPO', 'LISTA_CAMPOS', 'CATALOGO', 'CONFIGURACION_HISTORIAL', 'RESPUESTAS', 'USUARIOS', 'ACCESOS', 'INFORMES', 'ASIGNACION_OFICIAL', 'ANALISIS', 'CAMBIOS_PLANTA'].includes(n))
     comprobar(vistas.every(([, e]) => e.ruta.startsWith('/vistas/')) && ENDPOINTS.every(([, e]) => !e.ruta.startsWith('/campos/')),
       'lo calculado vive bajo /vistas/ y ninguna consulta de pantalla usa /campos/… (los insumos del borde): la misma ruta no sirve el insumo y la vista')
 
@@ -485,34 +509,29 @@ try {
       `en desarrollo el front pide a la raíz relativa tal cual y a /api (el proxy) cuando es absoluta o no está (${raices.join(', ')})`)
 
     console.log('\n=== 8. GET /api/usuarios sin usuarios:administrar: la forma mínima de cada persona ===')
-    // R32 (#171): quien no administra no recibe el correo, el día del acceso
-    // ni el WhatsApp de quien no recibe alertas. Lo que sí recibe tiene que
-    // bastarle a cada regla que corre en sus pantallas.
+    // R32 (#171): quien no administra no recibe el correo ni el día del acceso.
+    // Lo que sí recibe tiene que bastarle a cada regla que corre en sus pantallas.
+    // R3: el número y las alertas se retiraron: no viajan en la forma mínima.
     const U = await cargar('/src/entities/usuarios.ts')
-    const { destinatarios } = await cargar('/src/entities/mensajes.ts')
-    // Un registro con alguien de otro campo, un gerente sin alertas con número y un suspendido.
+    // Un registro con alguien de otro campo y un suspendido (con el número y las alertas que traería un backend de v1).
     const registro = [...U.USUARIOS_INICIALES,
       { id: 'u90', nombre: 'Persona de Zarza', correo: 'zarza@operadora.example', rolId: 'oper', campos: ['zarza'], estado: 'activo', desde: '2026-09-10', telefono: '+573005550190', alertas: true },
       { id: 'u91', nombre: 'Supervisor Suspendido', correo: 'susp@operadora.example', rolId: 'sup', campos: ['ceiba'], estado: 'suspendido', desde: '2026-09-02', telefono: '+573005550191', alertas: true, antesDeSuspender: 'activo' }]
     const quien = 'oper', yoR = registro.find(u => u.id === quien)
     const vista = U.registroVisible(registro, quien, false)
     const otros = vista.filter(u => u.id !== quien)
-    const PERMITIDAS = ['id', 'nombre', 'rolId', 'campos', 'estado', 'alertas', 'telefono']
+    const PERMITIDAS = ['id', 'nombre', 'rolId', 'campos', 'estado']
     const deMas = otros.flatMap(u => Object.keys(u).filter(k => !PERMITIDAS.includes(k)).map(k => `${u.id}.${k}`))
     const comparte = u => yoR.campos === 'todos' || u.campos === 'todos' || u.campos.some(c => yoR.campos.includes(c))
     comprobar(U.esCompleta(vista.find(u => u.id === quien)) && deMas.length === 0 && otros.every(u => !U.esCompleta(u))
       && vista.length === registro.filter(comparte).length && !vista.some(u => u.id === 'u90'),
       `quien pregunta se ve completo; de los demás (${otros.length}) solo llegan ${PERMITIDAS.join(', ')}${deMas.length ? ` (de más: ${deMas.join(', ')})` : ''}, y solo de quien comparte un campo con él`)
-    const conNumero = otros.filter(u => 'telefono' in u)
-    comprobar(conNumero.every(u => U.recibeAlertas(u)) && conNumero.length === registro.filter(u => u.id !== quien && comparte(u) && U.recibeAlertas(u)).length
-      && !otros.find(u => u.id === 'ger')?.telefono && !otros.find(u => u.id === 'u91')?.telefono,
-      `el WhatsApp solo de quien recibe alertas (${conNumero.length}): ni el del gerente ni el de un suspendido`)
     const ids = xs => xs.map(u => u.id).join()
     const enSusCampos = (yoR.campos === 'todos' ? CAMPOS.map(c => c.id) : yoR.campos)
-    comprobar(enSusCampos.every(c => ids(destinatarios(vista, ['sup', 'oper'], c)) === ids(destinatarios(registro, ['sup', 'oper'], c)))
+    comprobar(enSusCampos.length > 0
       && ids(U.camposAsignados(rolPorId(quien), vista)) === ids(U.camposAsignados(rolPorId(quien), registro))
       && ['sup', 'oper', 'tec'].every(r => U.personaDelRol(vista, r)?.id === U.personaDelRol(registro, r)?.id),
-      'con la forma mínima dan lo mismo que con el registro entero: a quién le llega cada alerta en sus campos, sus campos asignados y la persona de cada rol')
+      'con la forma mínima dan lo mismo que con el registro entero: sus campos asignados y la persona de cada rol')
     let aMedias = ''
     try { U.registroCompleto(vista) } catch (e) { aMedias = e.message }
     comprobar(/sin correo ni día de acceso: con usuarios:administrar el registro llega completo/.test(aMedias) && U.registroCompleto(U.registroVisible(registro, 'ger', true)).length === registro.length,
@@ -1154,16 +1173,6 @@ try {
       return { bien: t.includes(";'=1+1;") && t.includes(';"LC;01";') && !/;=1\+1;/.test(t) && PL.plantillaPlan([{ mes: '2026-08', campoId: 'ceiba', produccionBpd: 1 }]).includes('2026-08;La Ceiba;1'),
         dice: t.split('\r\n').slice(1).join(' | ') }
     })
-    await caso('B-05 · «2 Algo está mal» por WhatsApp deja para revisar las filas de la parada (la misma revisión del botón) y no toca ningún paso', async () => {
-      // Una parada de bomba de La Ceiba que cerró pozos: sus filas son las de la cascada de esa bomba.
-      const raizBomba = hist13.find(f => f.raiz !== f.eventoId && f.raiz.startsWith('EV-') && !f.exceso && sinGuardar(f))?.raiz
-      const antes = hist13.filter(f => f.raiz === raizBomba && !f.exceso)
-      const r = await E.revisarDesdeWhatsapp({ evento: raizBomba, campoId: 'ceiba', usuarioId: 'oper' })
-      const despues = antes.map(f => fila13(f.id))
-      return { bien: r.ok && despues.length > 0 && despues.every(f => f.revision?.porId === 'oper' && f.revision.motivo === E.MOTIVO_WHATSAPP && !f.revision.atendida)
-        && despues.every((f, i) => ANC.PASOS.every(x => f.clasificacion[x]?.valor === antes[i].clasificacion[x]?.valor && f.clasificacion[x]?.procedencia === antes[i].clasificacion[x]?.procedencia)),
-        dice: r.ok ? `${despues.filter(f => f.revision?.porId === 'oper').length} de ${despues.length} filas para revisar` : r.error }
-    })
     volver13()
 
     console.log('\n=== 15. La referencia de las escrituras rechazadas ve un backend que responde distinto (C-08, punto 3) ===')
@@ -1176,6 +1185,13 @@ try {
       const despachar = (rol, ruta, cuerpo) => {
         const q = { rolId: rol }
         if (ruta === '/api/anh/paradas/confirmar') return E.confirmarParadasAnh(q, cuerpo)
+        // A3 · Las escrituras nuevas (la parte y lo que vio, el cierre, la respuesta de la ANH y la conversión).
+        if (ruta === '/api/anh/respuestas') return E.registrarRespuestaAnh(q, cuerpo)
+        if (ruta === '/api/anh/conversion/importar') return E.importarConversion(q, cuerpo)
+        // A2 · El registro de pérdidas.
+        if (ruta === '/api/perdidas') return PER.registrarPerdida(q, cuerpo)
+        const a3 = /^\/api\/paradas\/([^/]+)\/(respuesta|vio)$/.exec(ruta) ?? /^\/api\/sap\/ordenes\/([^/]+)\/(cierre)$/.exec(ruta)
+        if (a3) return a3[2] === 'vio' ? E.responderLoQueVio(q, decodeURIComponent(a3[1]), cuerpo) : a3[2] === 'cierre' ? E.cerrarOrden(q, decodeURIComponent(a3[1]), cuerpo) : E.responderParada(q, cuerpo)
         const m = /^\/api\/anh\/paradas\/([^/]+)\/(clasificacion|yacimiento|respuesta|revision)$/.exec(ruta)
         if (!m) return Promise.resolve({ ok: false, estado: 404, codigo: 'ruta-no-encontrada', error: ruta })
         return { clasificacion: E.clasificarParada, yacimiento: E.declararYacimientoAnh, respuesta: E.responderPreguntaAnh, revision: E.revisarParadaAnh }[m[2]](q, decodeURIComponent(m[1]), cuerpo)
@@ -1202,7 +1218,8 @@ try {
       try {
         for (const [nombre, f] of Object.entries(DERIVAS)) {
           deriva = f
-          SES.cambiarSesion(fotoArranque)
+          // A3: lo que escriben las acciones nuevas (claves opcionales de la sesión) no pasa de una corrida a otra.
+          SES.cambiarSesion({ cierresOrden: undefined, respuestasAnh: undefined, ...fotoArranque })
           // Otro proceso (el que correría quien comprueba un backend): no comparte la sesión de este.
           const { spawn } = await import('node:child_process')
           vistas[nombre] = await new Promise(resolve => {
@@ -1212,7 +1229,7 @@ try {
             p.on('close', estado => resolve({ estado, linea: (salida.match(/\d+ de \d+ escrituras rechazadas[^\n]*/) ?? [salida.trim().split('\n').at(-1)])[0] }))
           })
         }
-      } finally { srvE.close(); SES.cambiarSesion(fotoAntes) }
+      } finally { srvE.close(); SES.cambiarSesion({ cierresOrden: undefined, respuestasAnh: undefined, ...fotoAntes }) }
       const control = vistas['ninguna (control)']
       const noVe = Object.entries(vistas).filter(([k, x]) => k !== 'ninguna (control)' && x.estado === 0).map(([k]) => k)
       comprobar(control.estado === 0 && /^(\d+) de \1 escrituras/.test(control.linea) && noVe.length === 0,
@@ -1271,7 +1288,7 @@ try {
         const { ROLES_VISIBLES } = await cargar('/src/entities/roles.ts')
         const { puedeHacer } = await cargar('/src/entities/tipos.ts')
         const { camposAsignados } = await cargar('/src/entities/usuarios.ts')
-        const { CAUSAS_POZO } = await cargar('/src/entities/mensajes.ts')
+        const { CAUSAS_POZO } = await cargar('/src/entities/causas-sugeridas.ts')
         const MH = await cargar('/src/entities/hoy.ts')
         const ver = (rol, campos = ['ceiba']) => HOYA.pedirHoy({ rol, campos }, SES.sesion())
         const linea = f => (f ?? []).map(x => (typeof x === 'string' ? x : x.b)).join('')
@@ -1292,7 +1309,7 @@ try {
           && linea(tc.porque) === 'TRIM las dedujo: en la planta, no planeada. Falta su confirmación.' && tc.accion.tipo === 'confirmar' && tc.accion.texto === 'Confirmar las 2'
           && tc.accion.ids.length === 2 && tc.ver.texto === 'Ver una por una' && tc.capacidad === 'anh:confirmar' && tc.limite === '2026-10-03T07:00:00-05:00',
           'la tarjeta: verbo + qué, P-201B con SU marca (la de la franja), por qué importa, «Confirmar las 2» y «Ver una por una»; la hora límite es el reporte de mañana a las 07:00')
-        comprobar(tk.donde.equipo === 'LC-21' && tk.donde.marca === 'atencion' && tk.donde.texto === 'lleva 19,7 h sin causa; se escaló a las 20:20'
+        comprobar(tk.donde.equipo === 'LC-21' && tk.donde.marca === 'atencion' && tk.donde.texto === 'lleva 19,7 h sin causa' && tk.ver.texto === 'Ver la parada'
           && linea(tk.porque) === 'LC-08 arrancó a la 01:10 sin identificar · Entre las 2: 219 bbl hoy · 355 desde que pararon' && tk.accion.texto === 'Responder yo' && tk.preguntas.length === 2,
           `lo igual va junto: «${tk.titulo}» (${tk.donde.equipo} ${tk.donde.texto}; ${linea(tk.porque)})`)
         comprobar(to.donde.texto === 'aire de instrumentos · ya pasó el límite' && linea(to.porque) === 'Si para, hasta 9.394 bbl/d. Orden 40012056, liberada a Óscar Daza a las 09:10.' && to.capacidad === 'sap:aviso',
@@ -1305,11 +1322,10 @@ try {
           `K2 · lo corto del supervisor: «${tc.donde.corto}», «${tk.donde.corto} · ${linea(tk.porqueCorto)}», «${linea(to.porqueCorto)}»`)
         comprobar(!tf.pide && !tf.capacidad && linea(tf.porque) === 'Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.',
           `«Lo más frágil» solo informa: va al final y no suma a la insignia («${linea(tf.porque)}»)`)
-        comprobar(sup.whatsapp.mensajes === 8 && sup.whatsapp.hilos.some(h => h.equipo === 'P-201B' && h.pasos === '03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado' && linea(h.estado) === 'sin respuesta')
-          && sup.turno.horas === 12 && Math.round(sup.turno.diferidoBbl) === 723 && sup.entregarTurno
+        comprobar(!('whatsapp' in sup) && sup.turno.horas === 12 && Math.round(sup.turno.diferidoBbl) === 723 && sup.entregarTurno
           && sup.campo.frases.map(linea).join(' ') === 'En la planta no pasan 1.665 bbl/d; limitan los pozos. Tanque de agua 89,6 %: no sube, P-201A y P-201C toman lo que entra.'
           && sup.campo.tramos.map(t => `${t.rotulo}${t.trabado ? '*' : ''}`).join() === 'pozos,planta*,salida',
-          'al lado: el turno en WhatsApp (8 mensajes en 12 h), el diferido del turno (723 bbl) y «Su campo, ahora» con el tramo trabado')
+          'al lado: el diferido del turno (723 bbl) y «Su campo, ahora» con el tramo trabado; el registro de mensajes ya no va (R6)')
 
         // 2. El operador: una pregunta por pantalla (imagen 5; U1 §2.4).
         const op = ver('oper'), qs = op.tareas.flatMap(t => t.preguntas ?? [])
@@ -1317,7 +1333,7 @@ try {
         comprobar(op.inicio.frase === 'Tiene 4 preguntas. Empiece por P-201B: está parada y no se puede arrancar.' && op.insignia === 4 && qs.map(q => q.equipo).join() === 'P-201B,LC-21,LC-05,LC-08',
           `el operador: «${op.inicio.frase}» (${qs.map(q => q.equipo).join(', ')})`)
         comprobar(q1.texto === '¿Qué parte se dañó?' && q1.contexto === 'P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h' && q1.pista === 'Lo que más le ha fallado a esta bomba:'
-          && q1.opciones.map(o => `${o.texto}${o.dato ? ` · ${o.dato}` : ''}`).join(' / ') === 'Sello mecánico · 5 de sus 8 fallas / Rodamientos y cámara de empuje · 3 de sus 8 fallas / Otra parte · escoja de la lista / Todavía no sé · se la vuelven a preguntar en la próxima ronda'
+          && q1.opciones.map(o => `${o.texto}${o.dato ? ` · ${o.dato}` : ''}`).join(' / ') === 'Sello mecánico · 5 de sus 8 fallas / Rodamientos y cámara de empuje · 3 de sus 8 fallas / Otra parte · escoja de la lista / Todavía no sé · la pregunta sigue en Hoy'
           && q1.opciones[0].modos.length > 0 && q1.tramo.rotulo === 'planta · agua' && q1.marca === 'alarma' && q1.bloqueo.texto === 'No la arranque hasta decir qué se dañó' && q1.libro.evento,
           'la primera: P-201B, «¿Qué parte se dañó?», lo que más le ha fallado (5 y 3 de sus 8 fallas), «Otra parte», «Todavía no sé» y la planta · agua marcada')
         // K2 · En la banda del teléfono, el momento en palabras de campo: la hora no decide la respuesta.
@@ -1431,7 +1447,7 @@ try {
             && parte?.pregunta === 'Sello mecánico: ¿qué vio?' && parte.modos.length > 0 && otras?.partes.every(x => x.pregunta === `${x.texto}: ¿qué vio?`),
             `F1 · P-07, I-oper-4: «Diga qué se dañó» y «Contestar», «Sigue parada.» sin repetir la franja, y la parte de un toque con «¿qué vio?» como la pregunta siguiente («${co?.titulo}» · «${linea(co?.porque)}» · «${parte?.pregunta}»)`)
           // K2 · En el teléfono, «Sigue parada» no repite la franja (porqueCorto vacío); el jefe, las otras por su nombre;
-          // la orden del técnico, sin su número ni la hora del WhatsApp (en «Ver la orden ›»).
+          // la orden del técnico, sin su número (en «Ver la orden ›»).
           const kj = j1.tareas.find(t => t.tipo === 'conseguir-causa')
           const bj = j1.bloqueos[0]
           comprobar(Array.isArray(co?.porqueCorto) && co.porqueCorto.length === 0 && kj?.donde.corto === 'lleva 10,1 h sin causa'
@@ -1440,16 +1456,16 @@ try {
             && !('textoCorto' in s1.bloqueos[0]),
             `K2 · lo corto: el operador sin «Sigue parada» en el teléfono; el jefe «${kj?.donde.corto} · ${linea(kj?.porqueCorto)}» y su franja «${bj?.textoCorto}» (el supervisor la conserva entera, imagen 3b)`)
           const ordenTec = t1.tareas.find(t => t.tipo === 'orden' && t.donde?.equipo === 'K-101')
-          comprobar(ordenTec && !('corto' in ordenTec.donde), 'K2 · la orden del técnico va entera también en el teléfono: si le llegó por WhatsApp no está en otro lugar (P-trabajo-1)')
+          comprobar(ordenTec && !('corto' in ordenTec.donde), 'K2 · la orden del técnico va entera también en el teléfono (P-trabajo-1)')
           comprobar(t1.tareas.filter(t => t.tipo === 'contestar' && t.preguntas?.[0]?.via === 'libro').every(t => t.accion?.texto === 'Contestar' && /^Diga (qué se dañó|por qué paró) /.test(t.titulo))
-            && ordenTec?.porque.length === 1 && !/Orden |se notifica|liberada/.test(linea(ordenTec.porque)) && ordenTec.donde.texto.includes('· orden 40012056 · le llegó por WhatsApp a las 09:1'),
+            && ordenTec?.porque.length === 1 && !/Orden |se notifica|liberada/.test(linea(ordenTec.porque)) && ordenTec.donde.texto.endsWith('· orden 40012056'),
             `F1 · I-tec-2, I-tec-3: el técnico contesta con el mismo verbo, y su orden dice en una línea qué hacer (lo demás, en la orden: «${linea(ordenTec?.porque)}» · ${ordenTec?.donde.texto})`)
-          // P-trabajo-1: lo que Mi trabajo tenía propio está en Hoy del técnico (sus órdenes con el aviso de WhatsApp,
+          // P-trabajo-1: lo que Mi trabajo tenía propio está en Hoy del técnico (sus órdenes,
           // lo que vigilar y las órdenes de otros puestos), y la dirección de Mi trabajo abre Hoy.
           const tecTodos = ver('tec', TODOS), { ROLES: TODOS_ROLES } = await cargar('/src/entities/roles.ts'), URL_ = await cargar('/src/app/url.ts')
           const rolTec = TODOS_ROLES.find(r => r.id === 'tec')
           comprobar(!rolTec.pantallas.includes('trabajo') && URL_.pantallaQueAbre(rolTec, 'trabajo') === 'hoy'
-            && tecTodos.tareas.every(t => t.tipo !== 'aviso' || !t.pide) && t1.tareas.some(t => t.tipo === 'orden' && t.donde?.texto.includes('le llegó por WhatsApp')),
+            && tecTodos.tareas.every(t => t.tipo !== 'aviso' || !t.pide) && t1.tareas.some(t => t.tipo === 'orden'),
             `F1 · P-trabajo-1: Mi trabajo se fundió en Hoy del técnico (${t1.tareas.map(t => t.titulo).join(' · ')})`)
           const cj = j1.tareas.find(t => t.tipo === 'conseguir-causa'), ojo = j1.tareas.find(t => t.titulo === 'Ojo: no intervenir hoy.')
           comprobar(!j1.inicio.remate && j1.inicio.ayuda === 'La espera es el repuesto, los permisos o la cuadrilla: no la reparación.' && linea(j1.inicio.explica) === 'El vigía anunció 3 de 3 fallas.'
@@ -1465,9 +1481,9 @@ try {
           comprobar(!!e1 && e1.titulo === 'Entrega de turno · La Ceiba · 2 de oct, 14:00' && e1.horas === 12
             && e1.paro.some(f => linea(f).startsWith('P-201B · bomba de agua · paró hoy a las 03:52 · por P-201B se dejan de producir 1.665 bbl/d'))
             && e1.paro.some(f => linea(f) === 'No arrancar P-201B ni LC-21 hasta identificar qué se dañó.')
-            && e1.pendiente.length === s1.insignia && e1.whatsapp.length === s1.whatsapp.hilos.length && linea(e1.diferido) === '723 bbl diferidos en las últimas 12 h.'
+            && e1.pendiente.length === s1.insignia && !('whatsapp' in e1) && linea(e1.diferido) === '723 bbl diferidos en las últimas 12 h.'
             && !o1.entrega && !j1.entrega,
-            `F1 · P-06: la entrega del turno del supervisor (lo que paró, lo pendiente, lo hecho, el WhatsApp de 12 h y el diferido), armada con lo que Hoy ya sabe (${e1?.paro.map(linea).join(' / ')})`)
+            `F1 · P-06: la entrega del turno del supervisor (lo que paró, lo pendiente, lo hecho y el diferido), armada con lo que Hoy ya sabe (${e1?.paro.map(linea).join(' / ')})`)
           const vuelta9 = diferencia(s1, K.deRespuesta(C.HOY.codec, JSON.parse(JSON.stringify(K.aRespuesta(C.HOY.codec, s1)))))
           comprobar(!vuelta9, `F1 · la vista con la entrega y lo corto del teléfono vuelve igual por JSON${vuelta9 ? `: ${vuelta9}` : ''}`)
         }
@@ -1581,6 +1597,382 @@ try {
       comprobar(!diferencia(rep, K.deRespuesta(C.REPORTE_ANH.codec, j)) && url.startsWith('/vistas/anh/reporte?campos=ceiba&desde=') && rep.paradas.every(p => /T07:00:00-05:00$/.test(p.limite)),
         `GET ${url.slice(0, 44)}… vuelve igual por JSON; la hora límite va con su zona (${rep.paradas[0]?.limite ?? 'sin paradas'})`)
     }
+    // A2 · Balance
+    console.log('\n=== A2 · El balance del choke (GET /api/vistas/balance), las pérdidas (POST /api/perdidas y GET /api/vistas/perdidas), la jornada, «¿Está funcionando?» y las fallas por mes ===')
+    {
+      const cal = L.calendario(), curso = cal.at(-1)
+      // Lo que se escribe aquí (pérdidas y dos firmas) se deshace al final: las secciones que siguen ven la sesión de antes.
+      const fotoA2 = { ...SES.sesion() }
+      const q = { campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+      const casi = (a, b) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b))
+      const vuelve = (ep, x) => diferencia(x, K.deRespuesta(ep.codec, JSON.parse(JSON.stringify(K.aRespuesta(ep.codec, x)))))
+      const R0 = responder(SES.sesion())
+      // a. Sin registro, la pérdida es null («sin registro»), nunca 0: en la vista, en el balance y en la jornada.
+      const v0 = R0.PERDIDAS(q), b0 = R0.BALANCE(q), j0 = R0.JORNADA({ campo: 'ceiba', jornada: 'actual' })
+      comprobar(v0.estado === 'sin-registro' && v0.bbl === null && v0.bblEntero === null && v0.filas.length === 0 && b0.total.perdido === null
+          && b0.total.porTramo.every(t => t.perdido === null) && b0.arbol.every(t => t.perdida === null) && /perdido: sin registro/.test(b0.frase) && j0.perdido === null,
+        `sin registros la pérdida va en null en /vistas/perdidas, /vistas/balance y /vistas/jornada: «${b0.frase}»`)
+      // b. El diferido del balance es el del libro y la raíz del árbol; cada tramo, el primer nivel del orden de gestión;
+      //    el potencial es producido + diferido (exacto y en enteros) y los enteros de los tramos suman el del campo.
+      const lb = R0.DIFERIDOS(q), arb = R0.ARBOL_CHOKE({ ...q, orden: 'gestion' })
+      const t0 = b0.total
+      comprobar(casi(t0.diferido.exacto, lb.diferido) && casi(t0.diferido.exacto, arb.raiz.bbl) && casi(t0.producido.exacto, lb.real)
+          && casi(t0.potencial.exacto, lb.real + lb.diferido) && t0.potencial.entero === t0.producido.entero + t0.diferido.entero
+          && casi(t0.potencial.exacto + t0.sinExplicar, lb.potencial)
+          && t0.porTramo.reduce((a, t) => a + t.diferido.entero, 0) === t0.diferido.entero
+          && b0.arbol.every(t => casi(t.diferida.bbl, arb.raiz.hijos.find(h => h.valor === t.tramo)?.bbl ?? 0) && t.diferida.bblEntero === t0.porTramo.find(x => x.tramo === t.tramo).diferido.entero),
+        `La Ceiba, octubre: produjo ${t0.producido.entero} · diferido ${t0.diferido.entero} (= /vistas/diferidos y la raíz de /vistas/choke/arbol) · potencial ${t0.potencial.entero} = producido + diferido; cada tramo, el primer nivel del árbol`)
+      // c. POST /api/perdidas: las reglas, en orden, con su HTTP y su código; nada se guarda si se rechaza.
+      const cuerpo = { campoId: 'ceiba', tipo: 'pitera', tramo: 'pozo', donde: 'Línea de flujo de LC-07', inicio: '2026-10-02T09:10:00-05:00', fin: '2026-10-02T09:40:00-05:00',
+        volumen: { bbl: 3.5, fuente: 'estimado', como: 'Charco de 3 × 2 m, de unos 2 cm' } }
+      const antes = SES.sesion().perdidas
+      const malos = [
+        ['ger', { ...cuerpo }, 403, 'sin-capacidad'], ['tec', { ...cuerpo }, 403, 'sin-capacidad'], ['oper', { ...cuerpo, campoId: 'morichal' }, 403, 'campo-ajeno'],
+        ['oper', { ...cuerpo, campoId: 'no-existe' }, 404, 'campo-desconocido'], ['oper', { ...cuerpo, volumen: undefined }, 400, 'peticion-invalida'],
+        ['oper', { ...cuerpo, tipo: 'fuga' }, 422, 'tipo-desconocido'], ['oper', { ...cuerpo, volumen: { ...cuerpo.volumen, bbl: 0 } }, 422, 'sin-volumen'],
+        ['oper', { ...cuerpo, inicio: '2026-10-03T09:10:00-05:00', fin: null }, 422, 'en-el-futuro'], ['oper', { ...cuerpo, fin: '2026-10-02T09:00:00-05:00' }, 422, 'fin-antes-de-inicio'],
+        ['oper', { ...cuerpo, volumen: { ...cuerpo.volumen, como: 'ok' } }, 422, 'sin-como'], ['oper', { ...cuerpo, corrige: 'PER-ceiba-9999', motivo: 'no existe' }, 404, 'perdida-desconocida'],
+      ]
+      const rechazos = []
+      for (const [rolId, c, estado, codigo] of malos) {
+        const r = await PER.registrarPerdida({ rolId }, c)
+        if (r.ok || r.estado !== estado || r.codigo !== codigo) rechazos.push(`${rolId} ${codigo}: ${r.ok ? 'PASÓ' : `${r.estado} ${r.codigo}`}`)
+      }
+      comprobar(rechazos.length === 0 && SES.sesion().perdidas === antes, `${malos.length} pedidos que el contrato rechaza, con su HTTP y su código, sin guardar nada${rechazos.length ? `: ${rechazos.join('; ')}` : ''}`)
+      const r1 = await PER.registrarPerdida({ rolId: 'oper' }, cuerpo)
+      const R1 = responder(SES.sesion()), v1 = R1.PERDIDAS(q), b1 = R1.BALANCE(q)
+      comprobar(r1.ok && r1.perdida.por === 'Jairo Peña · operador de campo' && r1.perdida.porId === 'oper' && r1.perdida.inicio === cuerpo.inicio && v1.estado === 'con-registro'
+          && v1.bbl === 3.5 && v1.bblEntero === 4 && v1.porTipo[0].tipo === 'pitera' && v1.porTramo[0].tramo === 'pozo' && b1.total.perdido.entero === 4
+          && b1.total.porTramo.find(t => t.tramo === 'pozo').perdido.entero === 4 && b1.total.porTramo.filter(t => t.tramo !== 'pozo').every(t => t.perdido === null)
+          && b1.total.diferido.exacto === b0.total.diferido.exacto && b1.total.potencial.exacto === b0.total.potencial.exacto
+          && b1.arbol.find(t => t.tramo === 'pozo').perdida.hijos[0].perdidas[0].id === r1.perdida.id,
+        `el operador registra una pitera de 3,5 bbl en el pozo: perdido 4 (el entero), en su tramo y en el árbol; el diferido (${b1.total.diferido.entero}) y el potencial no cambian: nunca se suman`)
+      // d. Corregir es otra inserción con motivo (D1): rige la nueva, la vieja queda en su historia; corregir la vieja otra vez, 409.
+      const corr = { ...cuerpo, corrige: r1.ok ? r1.perdida.id : '', motivo: 'Se aforó el tanque: eran 5 bbl', volumen: { bbl: 5, fuente: 'medido', como: 'Aforo del tanque de recolección' } }
+      const sinMotivo = await PER.registrarPerdida({ rolId: 'sup' }, { ...corr, motivo: '' })
+      const r2 = await PER.registrarPerdida({ rolId: 'sup' }, corr)
+      const otraVez = await PER.registrarPerdida({ rolId: 'prod' }, corr)
+      const R2 = responder(SES.sesion()), v2 = R2.PERDIDAS(q)
+      comprobar(!sinMotivo.ok && sinMotivo.codigo === 'falta-motivo' && r2.ok && !otraVez.ok && otraVez.estado === 409 && otraVez.codigo === 'ya-corregida'
+          && v2.filas.length === 1 && v2.bbl === 5 && v2.filas[0].historia.length === 1 && v2.filas[0].historia[0].id === r1.perdida.id && v2.filas[0].historia[0].volumen.bbl === 3.5
+          && SES.sesion().perdidas.length === 2,
+        `el supervisor corrige con motivo (sin él, 422 falta-motivo): rige ${v2.bbl} bbl y la de 3,5 queda en la historia; corregir la vieja otra vez es 409 ya-corregida`)
+      // e. Con registro, todo vuelve igual por JSON (la vista, el balance, la jornada y la respuesta de la escritura).
+      const malJson = [['PERDIDAS', C.PERDIDAS, v2], ['BALANCE', C.BALANCE, R2.BALANCE(q)], ['BALANCE (jornada)', C.BALANCE, R2.BALANCE({ campos: ['ceiba', 'morichal'], jornada: 'actual' })],
+        ['JORNADA', C.JORNADA, R2.JORNADA({ campo: 'ceiba', jornada: 'actual' })], ['R_PERDIDA', { codec: C.R_PERDIDA }, { perdida: r2.perdida }]]
+        .map(([n, ep, x]) => [n, vuelve(ep, x)]).filter(([, d]) => d)
+      comprobar(malJson.length === 0 && C.urlDe(C.BALANCE, { campos: ['ceiba'], jornada: 'actual' }) === '/vistas/balance?campos=ceiba&jornada=actual',
+        `con registros, /vistas/perdidas, /vistas/balance (por período y por jornada), /vistas/jornada y la respuesta de POST /api/perdidas vuelven iguales por JSON${malJson.map(([n, d]) => `; ${n}: ${d}`).join('')}`)
+      // f. Retirar con motivo: deja de contar (otra vez «sin registro») y se ve como retirada.
+      const r3 = await PER.registrarPerdida({ rolId: 'prod' }, { ...corr, corrige: r2.perdida.id, motivo: 'Era la misma pitera de ayer, ya registrada', retirar: true })
+      const v3 = responder(SES.sesion()).PERDIDAS(q)
+      comprobar(r3.ok && r3.perdida.retirada === true && v3.estado === 'sin-registro' && v3.bbl === null && v3.retiradas.length === 1 && v3.retiradas[0].historia.length === 2,
+        'retirar con motivo es otra inserción: la pérdida deja de contar (la vista vuelve a «sin registro») y queda como retirada, con sus dos versiones')
+      // g. Las fallas por mes: la cuenta que hacía la pantalla de Confiabilidad («Fallas por mes»), ahora en el motor.
+      const fm = R0.FALLAS_MENSUAL({ campos: ['ceiba'] }), conf = R0.CONFIABILIDAD({ campos: ['ceiba'] })
+      const dePantalla = m => conf.reduce((a, e) => a + e.h.eventos.filter(x => !x.disparo && x.inicio.getTime() >= m.desde.getTime() && x.inicio.getTime() < m.hasta.getTime()).length, 0)
+      const oct = fm.at(-1)
+      comprobar(fm.length === cal.length && fm.every(m => m.fallas === dePantalla(m) && m.fallas === Object.values(m.porFamilia).reduce((a, x) => a + x, 0) && m.fallas === Object.values(m.porTramo).reduce((a, x) => a + x, 0))
+          && oct.parcial && oct.fallas === 1 && oct.porEquipo[0].equipo === 'P-201B' && !vuelve(C.FALLAS_MENSUAL, fm),
+        `GET /api/vistas/fallas/mensual da, mes por mes, la misma cuenta de la pantalla de Confiabilidad; octubre en La Ceiba: ${oct.fallas} (${oct.porEquipo.map(e => e.equipo).join(', ')}), parcial`)
+      // h. «¿Está funcionando?»: la base es la de «¿Está bajando?» de la planta viva y lo ganado sale de ella; sin meta de reducción firmada, null.
+      const ef = R0.EFECTIVIDAD({ campos: TODOS }), pv = R0.PLANTA_VIVA({ campos: TODOS, desde: new Date(curso.desde), hasta: new Date(curso.hasta), momento: 'despues' })
+      const planta = ef.porTramo.find(t => t.tramo === 'planta'), flechaPlanta = pv.bajando?.filas.find(f => f.tramo === 'planta')
+      comprobar(ef.meta === null && ef.cumple.noPlaneado === null && ef.notas.some(n => /Sin meta de reducción firmada/.test(n)) && casi(planta.antesDia.exacto, flechaPlanta?.antesBpd ?? -1)
+          && ef.porTramo.reduce((a, t) => a + t.ahoraDia.entero, 0) === ef.esteMes.noPlaneadoDia.entero && ef.ganado.fallasAnticipadas === R0.LISTA_EQUIPOS({ campos: TODOS }).vigia.aciertos
+          && !vuelve(C.EFECTIVIDAD, ef),
+        `«¿Está funcionando?»: antes ${ef.antes.noPlaneadoDia.entero} bbl/d no planeados (planta ${planta.antesDia.entero}, la base de «¿Está bajando?»), este mes ${ef.esteMes.noPlaneadoDia.entero}, se dejaron de diferir ${ef.ganado.bbl.entero} bbl, ${ef.ganado.fallasAnticipadas} fallas anticipadas; sin meta de reducción firmada`)
+      // i. La jornada y la meta de reducción se firman con la configuración: el cambio de turno, el administrador; la meta, el gerente.
+      const sJ = SES.sesion(), confJ = structuredClone(sJ.ctx.config)
+      confJ.campos.ceiba.turnos = ['07:00', '19:00']
+      const gerTurnos = await E.firmarConfiguracion({ rolId: 'ger' }, { config: confJ, motivo: 'turnos de prueba', base: sJ.versiones.at(-1).version })
+      const malTurnos = await E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...confJ, campos: { ...confJ.campos, ceiba: { ...confJ.campos.ceiba, turnos: ['25:00'] } } }, motivo: 'turnos de prueba', base: sJ.versiones.at(-1).version })
+      const admTurnos = await E.firmarConfiguracion({ rolId: 'adm' }, { config: confJ, motivo: 'El campo cambia de turno a las 07:00 y a las 19:00', base: sJ.versiones.at(-1).version })
+      const jJ = responder(SES.sesion()).JORNADA({ campo: 'ceiba', jornada: 'actual' })
+      const confM = structuredClone(SES.sesion().ctx.config)
+      for (const c of Object.keys(confM.campos)) confM.campos[c].metas = [...confM.campos[c].metas, { ...confM.campos[c].metas.at(-1), desde: '2026-10-01', reduccionPct: 20 }]
+      const gerMeta = await E.firmarConfiguracion({ rolId: 'ger' }, { config: confM, motivo: 'Meta de reducción del 20 % frente a antes de TRIM', base: SES.sesion().versiones.at(-1).version })
+      const ef2 = responder(SES.sesion()).EFECTIVIDAD({ campos: TODOS })
+      comprobar(!gerTurnos.ok && admTurnos.ok && !malTurnos.ok && /no es una hora de cambio de turno/.test(malTurnos.error) && admTurnos.cambios.some(x => /cambio de turno el de por defecto \(06:00 y 18:00\) → 07:00 y 19:00/.test(x))
+          && jJ.jornada.firmada && jJ.jornada.nombre === 'De 07:00 a 19:00 del 2 de oct' && !jJ.nota
+          && gerMeta.ok && gerMeta.cambios.some(x => /meta de reducción frente a antes de TRIM sin configurar → 20 %/.test(x)) && ef2.meta?.reduccionPct === 20
+          && casi(ef2.meta.noPlaneadoDia.exacto, ef2.antes.noPlaneadoDia.exacto * 0.8) && typeof ef2.cumple.noPlaneado === 'boolean',
+        `el cambio de turno lo firma el administrador (el gerente no; «25:00» no es hora) y la jornada pasa a «${jJ.jornada.nombre}»; la meta de reducción del 20 % la firma el gerente: meta ${ef2.meta?.noPlaneadoDia.entero} bbl/d no planeados (${ef2.cumple.noPlaneado ? 'cumple' : 'no cumple'})`)
+      // j. Lo nuevo está en CONTRATO.md: las cinco vistas, la escritura y la capacidad.
+      const sinDocA2 = [...['BALANCE', 'PERDIDAS', 'JORNADA', 'EFECTIVIDAD', 'FALLAS_MENSUAL'].map(n => `\`GET /api${C[n].ruta}`), '`POST /api/perdidas`', '`perdidas:registrar`']
+        .filter(r => !leerTexto('CONTRATO.md').includes(r))
+      comprobar(sinDocA2.length === 0, `las cinco vistas de A2, POST /api/perdidas y perdidas:registrar están en CONTRATO.md${sinDocA2.map(r => `; falta ${r}`).join('')}`)
+      SES.cambiarSesion({ ...fotoA2, perdidas: fotoA2.perdidas })
+    }
+
+    // A3 · Las acciones que faltan
+    console.log('\n=== A3 · Las acciones que faltan: «Contestar» en 1 toque, el cierre de la orden, la respuesta de la ANH, la conversión del árbol y los 5 tramos ===')
+    {
+      const OC = await cargar('/src/entities/orden-cierre.ts'), CATA = await cargar('/src/entities/catalogo.ts'), ROLA = await cargar('/src/entities/roles.ts')
+      const fotoA3 = { ...SES.sesion() }
+      /** El HTTP y el código de un resultado, para leerlo. */
+      const res = r => (r.ok ? '200' : `${r.estado ?? '¿sin HTTP?'} ${r.codigo ?? ''}`.trim())
+      /** Los rechazos que no dieron lo esperado, dichos. */
+      const malos = casos => Object.entries(casos).filter(([esp, r]) => res(r) !== esp.split(' · ')[0]).map(([esp, r]) => `${esp}: llegó ${res(r)}${r.error ? ` (${r.error})` : ''}`)
+      const vuelta = (cod, x) => diferencia(x, K.deRespuesta(cod, JSON.parse(JSON.stringify(K.aRespuesta(cod, x)))))
+      try {
+        // Desde el arranque, sin lo que otra sección haya escrito (las claves opcionales de A3 no están en la foto).
+        SES.cambiarSesion({ cierresOrden: undefined, respuestasAnh: undefined, ...fotoArranque })
+
+        // a. «Contestar» en 1 toque (oper y tec): la parte se guarda sola; lo que vio es la pregunta siguiente, opcional.
+        const s0 = SES.sesion()
+        const conCat = p => EQ.pedirCatalogoDeDanos(p.campoId, p.equipo)
+        const porIdentificar = DIF.pedirPreguntas(['ceiba'], s0.ctx).filter(p => p.pide)
+        const bomba = porIdentificar.find(p => p.sobre === 'bomba' && conCat(p)), esp = porIdentificar.find(p => conCat(p)?.clase === 'bomba-electrosumergible')
+        const sinCat = porIdentificar.find(p => !conCat(p)), deOtro = DIF.pedirPreguntas(TODOS, s0.ctx).find(p => p.pide && p.campoId !== 'ceiba')
+        const parte = conCat(bomba).partes[0], modo = CATA.modosDeParte(parte)[0].codigo
+        const hoyAntes = HOYA.pedirHoy({ rol: 'oper', campos: ['ceiba'] }, s0)
+        const toque = await E.responderParada({ rolId: 'oper' }, { evento: bomba.id, campoId: 'ceiba', equipo: bomba.equipo, texto: '', parte: parte.id })
+        const s1 = SES.sesion(), r1 = s1.ctx.respuestas[bomba.id]
+        const hoyDespues = HOYA.pedirHoy({ rol: 'oper', campos: ['ceiba'] }, s1)
+        const enLibro = L.historialDeEquipo('ceiba', bomba.equipo, s1.ctx).eventos.find(e => e.id === bomba.id)
+        const tarjeta = `contestar:ceiba:${bomba.id}`
+        comprobar(toque.ok && r1?.parte === parte.id && r1.modo === undefined && r1.texto === parte.nombre && enLibro?.parte === parte.id
+            && !DIF.pedirPreguntas(['ceiba'], s1.ctx).some(p => p.id === bomba.id && p.pide)
+            && hoyAntes.tareas.some(t => t.id === tarjeta) && !hoyDespues.tareas.some(t => t.id === tarjeta) && hoyDespues.insignia === hoyAntes.insignia - 1,
+          `«Contestar» en 1 toque: «${parte.nombre}» de ${bomba.equipo} se guarda sin lo que vio (${res(toque)}); el libro tiene la parte, sale de por identificar y de Hoy del operador (insignia ${hoyAntes.insignia} → ${hoyDespues.insignia})`)
+        const opcion = hoyAntes.tareas.find(t => t.id === tarjeta)?.preguntas?.[0]?.opciones.find(o => o.tipo === 'parte' || o.tipo === 'partes')
+        comprobar(!!opcion && (opcion.tipo === 'parte' ? opcion.modos.length > 0 && !!opcion.pregunta : opcion.partes.every(x => x.modos.length > 0 && x.pregunta)),
+          `la tarjeta de Hoy trae, con cada parte, la pregunta siguiente y sus modos (lo que vio, opcional): «${opcion?.tipo === 'parte' ? opcion.pregunta : opcion?.partes?.[0]?.pregunta}»`)
+        const vio = await E.responderLoQueVio({ rolId: 'tec' }, bomba.id, { modo })
+        const r2 = SES.sesion().ctx.respuestas[bomba.id]
+        comprobar(vio.ok && r2.modo === modo && r2.vio?.porId === 'tec' && r2.parte === r1.parte && r2.por === r1.por && r2.porId === r1.porId && r2.hora === r1.hora && r2.texto === r1.texto
+            && !vuelta(C.R_VIO, { respuesta: vio.respuesta }),
+          `lo que vio llega después (POST /api/paradas/:evento/vio): «${CATA.nombreModo(modo, parte.id)}» queda a nombre del técnico, y la parte sigue a nombre del operador, con su hora (D1: por inserción); R_VIO vuelve igual por JSON`)
+        await E.responderParada({ rolId: 'oper' }, { evento: esp.id, campoId: 'ceiba', equipo: esp.equipo, texto: '', parte: conCat(esp).partes[0].id })
+        const rechazosVio = {
+          '400 peticion-invalida': await E.responderLoQueVio({ rolId: 'oper' }, bomba.id, { modo: 1 }),
+          '403 rol-desconocido': await E.responderLoQueVio({ rolId: 'cont' }, bomba.id, { modo }),
+          '403 sin-capacidad': await E.responderLoQueVio({ rolId: 'ger' }, bomba.id, { modo }),
+          '404 no-encontrado': await E.responderLoQueVio({ rolId: 'oper' }, 'EV-NO-EXISTE', { modo }),
+          '403 sin-permiso · otro campo': await E.responderLoQueVio({ rolId: 'oper' }, deOtro.id, { modo }),
+          '409 ya-dicho': await E.responderLoQueVio({ rolId: 'oper' }, bomba.id, { modo: CATA.modosDeParte(parte)[1].codigo }),
+          '422 sin-parte': await E.responderLoQueVio({ rolId: 'oper' }, sinCat.id, { modo }),
+          '422 modo-ajeno': await E.responderLoQueVio({ rolId: 'oper' }, esp.id, { modo: 'NO-EXISTE' }),
+          '422 texto-corto · «Otra cosa» sin decir qué': await E.responderLoQueVio({ rolId: 'oper' }, esp.id, { modo: CATA.MODO_OTRO, texto: 'no' }),
+          '422 texto-largo': await E.responderLoQueVio({ rolId: 'oper' }, esp.id, { modo: CATA.MODO_OTRO, texto: 'x'.repeat(501) }),
+        }
+        comprobar(!malos(rechazosVio).length && SES.sesion().ctx.respuestas[esp.id]?.modo === undefined,
+          `POST /api/paradas/:evento/vio rechaza con su HTTP y su código: ${Object.keys(rechazosVio).map(k => k.split(' · ')[0]).join(', ')}, y nada de eso escribe${malos(rechazosVio).map(x => `; ${x}`).join('')}`)
+
+        // b. Cerrar la orden en el teléfono (tec): qué hizo, la parte, las lecturas y las horas; solo por inserción.
+        const sA = SES.sesion()
+        const ordenesCe = SAP.pedirOrdenesSap(['ceiba'], sA.ctx)
+        const abierta = ordenesCe.find(o => ['REL', 'PCNF'].includes(o.estado) && o.tecnico === 'tec'), teco = ordenesCe.find(o => o.estado === 'TECO' && o.tecnico === 'tec')
+        const deOtroCampo = SAP.pedirOrdenesSap(['morichal'], sA.ctx)[0]
+        const numericos = EQ.pedirEquipo('ceiba', abierta.equipo, sA.ctx).dispositivos.filter(d => typeof d.valor === 'number')
+        const texto = EQ.pedirEquipo('ceiba', abierta.equipo, sA.ctx).dispositivos.find(d => typeof d.valor === 'string')
+        const trabajo = { actividad: 'ajuste', inicio: '2026-10-02T10:00:00-05:00', fin: '2026-10-02T12:30:00-05:00' }
+        const cerrar = (rol, numero, extra = {}) => E.cerrarOrden({ rolId: rol }, numero, { ...trabajo, ...extra })
+        const rechazosCierre = {
+          '400 peticion-invalida · lecturas en un texto': await cerrar('tec', abierta.numero, { lecturas: 'PT=1' }),
+          '400 peticion-invalida · una lectura sin número': await cerrar('tec', abierta.numero, { lecturas: [{ tag: numericos[0].tag, valor: '118' }] }),
+          '403 rol-desconocido': await cerrar('cont', abierta.numero),
+          '403 sin-capacidad': await cerrar('oper', abierta.numero),
+          '404 no-encontrado': await cerrar('tec', '00000000'),
+          '403 sin-permiso · otro campo': await cerrar('tec', deOtroCampo.numero),
+          '409 ya-cerrada · TECO en SAP': await cerrar('tec', teco.numero),
+          '422 actividad-ajena': await cerrar('tec', abierta.numero, { actividad: 'bailé' }),
+          '422 parte-ajena · equipo sin catálogo': await cerrar('tec', abierta.numero, { parte: 'sello' }),
+          '422 horas-invalidas · fin antes del inicio': await cerrar('tec', abierta.numero, { inicio: trabajo.fin, fin: trabajo.inicio }),
+          '422 horas-invalidas · termina después de ahora': await cerrar('tec', abierta.numero, { fin: '2026-10-02T15:00:00-05:00' }),
+          '422 horas-invalidas · antes de liberarse': await cerrar('tec', abierta.numero, { inicio: '2026-10-02T08:00:00-05:00' }),
+          '422 lectura-ajena · un tag que no es del equipo': await cerrar('tec', abierta.numero, { lecturas: [{ tag: 'XX-0', valor: 1 }] }),
+          '422 lectura-ajena · un tag sin lectura numérica': await cerrar('tec', abierta.numero, { lecturas: [{ tag: texto?.tag ?? 'XX-1', valor: 1 }] }),
+        }
+        comprobar(!malos(rechazosCierre).length && !(SES.sesion().cierresOrden ?? []).length,
+          `POST /api/sap/ordenes/:numero/cierre rechaza con su HTTP y su código: ${[...new Set(Object.keys(rechazosCierre).map(k => k.split(' · ')[0]))].join(', ')}, y nada de eso escribe${malos(rechazosCierre).map(x => `; ${x}`).join('')}`)
+        const cierre = await cerrar('tec', abierta.numero, { lecturas: [{ tag: numericos[0].tag, valor: 118 }] })
+        const servida = responder(SES.sesion()).SAP_ORDENES({ campos: ['ceiba'] }).find(o => o.numero === abierta.numero)
+        const otraVez = await cerrar('tec', abierta.numero)
+        comprobar(cierre.ok && servida.estado === 'CNF' && Math.abs(servida.horasReales - (abierta.horasReales + 2.5)) < 1e-9 && servida.cierre?.porId === 'tec'
+            && servida.cierre.lecturas[0]?.unidad === numericos[0].unidad && servida.cierre.actividad === 'ajuste' && res(otraVez) === '409 ya-cerrada'
+            && SES.sesion().cierresOrden.length === 1 && !vuelta(C.R_CIERRE, { orden: cierre.orden, cierre: cierre.cierre }),
+          `el técnico cierra la orden ${abierta.numero} de ${abierta.equipo} en el teléfono: GET /api/sap/ordenes la trae ejecutada (CNF), con 2,5 h sumadas y su cierre (${numericos[0].tag} en ${numericos[0].unidad}); la segunda vez, 409 (por inserción); R_CIERRE vuelve igual por JSON`)
+
+        // c. El tiempo fuera en sus 5 tramos (jefe): lo que ya hay, y el tramo «reparación» del cierre.
+        const cal = L.calendario(), hist = { desde: new Date(cal[0].desde), hasta: new Date(cal.at(-1).hasta) }
+        const TR = ['deteccionH', 'administrativoH', 'logisticaH', 'reparacionH', 'arranqueH']
+        const suma = t => TR.reduce((a, k) => a + (t[k] ?? 0), 0) + t.sinDatoH
+        const ctxA = SES.sesion().ctx
+        const rl0 = SAP.pedirRelojes(['ceiba'], hist.desde, hist.hasta, ctxA)
+        const t0 = rl0.tramos
+        comprobar(!!t0 && t0.fallas === rl0.fallas && Math.abs(suma(t0) - rl0.totalH) < 1e-9 && t0.logisticaH === null && t0.arranqueH === null && t0.conCierre === 0
+            && t0.deteccionH > 0 && t0.administrativoH > 0 && t0.reparacionH <= rl0.activaH + 1e-9,
+          `GET /api/vistas/relojes trae «tramos» (La Ceiba, toda la historia, ${t0?.fallas} fallas): detección ${t0?.deteccionH?.toFixed(2)} h y administrativo ${t0?.administrativoH?.toFixed(2)} h (aviso y orden de SAP), reparación ${t0?.reparacionH?.toFixed(1)} h (las horas de SAP); logística y arranque «sin dato» (null) sin el cierre en el teléfono; lo demás, ${t0?.sinDatoH?.toFixed(1)} h sin dato, y la suma es el tiempo fuera`)
+        const avisos = SAP.pedirHistoriaSap(ctxA).avisos
+        const correctiva = ordenesCe.filter(o => o.clase === 'PM01' && o.estado === 'TECO' && o.evento && o.liberada && o.cierreTecnico && Date.parse(o.cierreTecnico) >= hist.desde.getTime())
+          .map(o => ({ o, f: L.historialDeEquipo('ceiba', o.equipo, ctxA).eventos.find(e => e.id === o.evento) }))
+          .find(x => x.f?.fin && x.f.fin.getTime() - Date.parse(x.o.liberada) > 4 * 3_600_000)
+        const t2 = Date.parse(correctiva.o.liberada), t5 = correctiva.f.fin.getTime(), iso = t => `${new Date(t - 5 * 3_600_000).toISOString().slice(0, 19)}-05:00`
+        // Un cierre que el servidor ya tiene de una correctiva que SAP cerró después: t3 y t4 llegan con él.
+        const delTelefono = OC.armarCierre({ actividad: 'cambio', inicio: iso(t2 + (t5 - t2) / 4), fin: iso(t2 + (t5 - t2) / 2) }, correctiva.o, new Map(), { por: 'Óscar Daza · técnico de mantenimiento', porId: 'tec', hora: iso(t5) })
+        const rl1 = SAP.pedirRelojes(['ceiba'], hist.desde, hist.hasta, ctxA, [delTelefono])
+        const deEsa = OC.tramosDeFalla(OC.marcasDeOrden(OC.ordenConCierre(correctiva.o, delTelefono), correctiva.f, avisos))
+        comprobar(rl1.tramos.conCierre === 1 && rl1.fallas === rl0.fallas && Math.abs(rl1.totalH - rl0.totalH) < 1e-9 && Math.abs(suma(rl1.tramos) - rl1.totalH) < 1e-9
+            && rl1.tramos.logisticaH > 0 && rl1.tramos.arranqueH > 0 && rl1.tramos.sinDatoH < t0.sinDatoH && Math.abs(deEsa.tramos.reparacion - delTelefono.horas) < 1e-9,
+          `con el cierre en el teléfono de la orden ${correctiva.o.numero} (${correctiva.o.equipo}), la reparación de esa falla es la del teléfono (${delTelefono.horas.toFixed(1)} h), la logística y el arranque dejan de ser «sin dato» y lo sin dato baja (${t0.sinDatoH.toFixed(1)} → ${rl1.tramos.sinDatoH.toFixed(1)} h); la suma sigue siendo el tiempo fuera`)
+        const H = 3_600_000, desorden = OC.tramosDeFalla({ inicio: 0, totalH: 10, aviso: 5 * H, liberada: 2 * H })
+        comprobar(desorden.tramos.deteccion === 5 && desorden.tramos.administrativo === undefined && desorden.sinDatoH === 5 && OC.tramosTiempoFuera([]) === undefined,
+          'una marca fuera de orden (la orden liberada antes del aviso) no se usa: su tiempo va a «sin dato», nunca se reparte; sin fallas no hay tramos')
+
+        // d. La respuesta de la ANH y la hora para corregir (reg).
+        const curso = cal.at(-1), qo = { campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+        const sinRespuesta = responder(SES.sesion()).REPORTE_ANH(qo)
+        const anh = c => E.registrarRespuestaAnh({ rolId: 'reg' }, { campoId: 'ceiba', dia: '2026-10-01', ...c })
+        const rechazosAnh = {
+          '400 peticion-invalida': await anh({ estado: 1, recibida: '2026-10-02T07:20:00-05:00' }),
+          '403 rol-desconocido': await E.registrarRespuestaAnh({ rolId: 'cont' }, { campoId: 'ceiba', dia: '2026-10-01', estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00' }),
+          '403 sin-capacidad': await E.registrarRespuestaAnh({ rolId: 'prod' }, { campoId: 'ceiba', dia: '2026-10-01', estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00' }),
+          '404 campo-desconocido': await E.registrarRespuestaAnh({ rolId: 'reg' }, { campoId: 'no-existe', dia: '2026-10-01', estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00' }),
+          '422 falta-motivo': await anh({ estado: 'rechazado', recibida: '2026-10-02T07:20:00-05:00' }),
+          '422 motivo-ajeno · fuera de la lista': await anh({ estado: 'rechazado', motivo: 'X-99', recibida: '2026-10-02T07:20:00-05:00' }),
+          '422 motivo-ajeno · aceptado con motivo': await anh({ estado: 'aceptado', motivo: 'V-07', recibida: '2026-10-02T07:20:00-05:00' }),
+          '422 estado-invalido': await anh({ estado: 'pendiente', recibida: '2026-10-02T07:20:00-05:00' }),
+          '422 dia-invalido': await anh({ dia: '2026-02-30', estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00' }),
+          '422 hora-invalida · después de ahora': await anh({ estado: 'aceptado', recibida: '2026-10-02T15:00:00-05:00' }),
+          '422 hora-invalida · antes de que cierre el día': await anh({ estado: 'aceptado', recibida: '2026-10-01T20:00:00-05:00' }),
+          '422 folio-ajeno': await anh({ estado: 'aceptado', recibida: '2026-10-02T07:20:00-05:00', folio: 'INF-0000-0000' }),
+        }
+        comprobar(!malos(rechazosAnh).length && !(SES.sesion().respuestasAnh ?? []).length && !('respuestaAnh' in sinRespuesta),
+          `POST /api/anh/respuestas rechaza con su HTTP y su código: ${[...new Set(Object.keys(rechazosAnh).map(k => k.split(' · ')[0]))].join(', ')}, y nada de eso escribe; sin respuestas, /vistas/anh/reporte no trae «respuestaAnh» (la pantalla dice «sin respuesta registrada»)${malos(rechazosAnh).map(x => `; ${x}`).join('')}`)
+        const rechazo = await anh({ estado: 'rechazado', motivo: 'V-07', recibida: '2026-10-02T13:30:00-05:00' })
+        const vistaR = responder(SES.sesion()).RESPUESTAS_ANH(qo), repR = responder(SES.sesion()).REPORTE_ANH(qo)
+        comprobar(rechazo.ok && rechazo.respuesta.limiteCorreccion === '2026-10-02T14:30:00-05:00' && vistaR.dias[0]?.quedanMin === 30 && vistaR.dias[0].vencida === false && vistaR.porCorregir === 1
+            && repR.respuestaAnh?.quedanMin === 30 && repR.respuestaAnh.motivoTexto === 'El detalle no es de su causa' && !vuelta(C.R_RESPUESTA_DE_LA_ANH, { respuesta: rechazo.respuesta })
+            && !vuelta(C.RESPUESTAS_ANH.codec, vistaR) && !vuelta(C.REPORTE_ANH.codec, repR),
+          `la ANH rechaza el reporte del 1 de oct a las 13:30 (V-07): corrija antes de las 14:30; a las 14:00 quedan ${vistaR.dias[0]?.quedanMin} min, en /vistas/anh/respuestas y en «respuestaAnh» del reporte; todo vuelve igual por JSON`)
+        const anterior = await anh({ estado: 'rechazado', motivo: 'V-05', recibida: '2026-10-02T13:00:00-05:00' })
+        const acepta = await anh({ estado: 'aceptado', recibida: '2026-10-02T13:55:00-05:00' })
+        const despues = await anh({ estado: 'rechazado', motivo: 'V-07', recibida: '2026-10-02T13:58:00-05:00' })
+        await E.registrarRespuestaAnh({ rolId: 'reg' }, { campoId: 'ceiba', dia: '2026-09-30', estado: 'rechazado', motivo: 'V-09', recibida: '2026-10-01T07:20:00-05:00' })
+        const vistaA = responder(SES.sesion()).RESPUESTAS_ANH({ campos: ['ceiba'], desde: new Date(cal.at(-2).desde), hasta: new Date(curso.hasta) })
+        const dia1 = vistaA.dias.find(d => d.dia === '2026-10-01'), dia30 = vistaA.dias.find(d => d.dia === '2026-09-30')
+        comprobar(res(anterior) === '409 hora-anterior' && acepta.ok && res(despues) === '409 ya-aceptada' && dia1?.estado === 'aceptado' && dia1.respuestas === 2
+            && vistaA.respuestas.length === 3 && dia30?.vencida === true && dia30.quedanMin === 0 && vistaA.porCorregir === 0,
+          'por inserción (D1): una respuesta más vieja que la vigente es 409; aceptado después del rechazo rige y la historia guarda las dos; después de aceptado, otro rechazo es 409; un rechazo de ayer ya venció (0 min)')
+
+        // e. La conversión del árbol de la operadora al de la ANH (adm): importar, firmar y ver lo que queda sin equivalencia.
+        const csv = 'Código;Descripción;N1;N2\nOP-101;Rodamiento;NP_SUP;Falla rodamiento/cojinete (bearing box)\nOP-102;Corte de energía;No planeada - Energía externa;corte-energia-proveedor\nOP-103;Otra cosa;;\nOP-104;Mala;NP_XX;yy\nOP-105;Sin detalle;NP_SUB;\nOP-106;Orden público;NP_OPUB;Orden público - Pendiente detalle\n'
+        const leida = await E.importarConversion({ rolId: 'adm' }, { campo: 'ceiba', texto: csv })
+        const bloquean = leida.hallazgos?.filter(h => h.bloquea).map(h => h.codigo) ?? []
+        comprobar(leida.ok && leida.filas === 6 && leida.conversion.length === 5 && bloquean.join() === 'OP-104'
+            && leida.conversion.find(f => f.codigo === 'OP-102')?.n2 === 'NP_ENEXT/corte-energia-proveedor' && leida.hallazgos.some(h => h.codigo === 'OP-106' && !h.bloquea)
+            && !vuelta(C.R_CONVERSION_CSV, (({ ok: _ok, ...x }) => x)(leida)),
+          `POST /api/anh/conversion/importar lee «código; descripción; N1; N2» (la clave, el texto o el final del código): 5 de 6 filas, bloquea la que no es de la circular (${bloquean.join(', ')}), avisa el comodín y deja dos sin equivalencia; no firma`)
+        const rechazosConv = {
+          '400 peticion-invalida': await E.importarConversion({ rolId: 'adm' }, { campo: 'ceiba', texto: 3 }),
+          '403 rol-desconocido': await E.importarConversion({ rolId: 'cont' }, { campo: 'ceiba', texto: csv }),
+          '403 sin-capacidad': await E.importarConversion({ rolId: 'prod' }, { campo: 'ceiba', texto: csv }),
+          '404 campo-desconocido': await E.importarConversion({ rolId: 'adm' }, { campo: 'no-existe', texto: csv }),
+          '422 archivo-vacio': await E.importarConversion({ rolId: 'adm' }, { campo: 'ceiba', texto: ' \n ' }),
+        }
+        comprobar(!malos(rechazosConv).length, `POST /api/anh/conversion/importar rechaza con su HTTP y su código: ${Object.keys(rechazosConv).join(', ')}${malos(rechazosConv).map(x => `; ${x}`).join('')}`)
+        const base = SES.sesion().versiones.at(-1).version
+        const firmaProd = await E.firmarConfiguracion({ rolId: 'prod' }, { config: { ...SES.sesion().ctx.config, conversionAnh: leida.conversion }, motivo: 'tabla de equivalencias', base })
+        const mala = await E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...SES.sesion().ctx.config, conversionAnh: [{ campoId: 'ceiba', codigo: 'OP-9', descripcion: 'x', n1: 'NP_SUB', n2: 'NP_SUP/falla-motor-superficie' }] }, motivo: 'tabla de equivalencias', base })
+        const firma = await E.firmarConfiguracion({ rolId: 'adm' }, { config: { ...SES.sesion().ctx.config, conversionAnh: leida.conversion }, motivo: 'tabla de equivalencias de la operadora', base })
+        const vistaC = responder(SES.sesion()).CONVERSION_ANH({ campo: 'ceiba' }), vacia = responder(SES.sesion()).CONVERSION_ANH({ campo: 'morichal' })
+        const historial = SES.sesion().versiones
+        comprobar(!firmaProd.ok && !mala.ok && /no es un detalle/.test(mala.error) && firma.ok && firma.cambios.includes('Conversión del árbol de La Ceiba: se firma con 5 códigos (2 sin equivalencia)')
+            && vistaC.total === 5 && vistaC.conEquivalencia === 3 && vistaC.sinEquivalencia.map(x => `${x.codigo}:${x.falta}`).join() === 'OP-103:n1,OP-105:n2'
+            && vistaC.firma?.version === firma.version && vistaC.vigente.find(f => f.codigo === 'OP-101')?.planeacion === 'no-planeada'
+            && vacia.total === 0 && !vacia.firma && !vuelta(C.CONVERSION_ANH.codec, vistaC) && !vuelta(C.CONFIGURACION_HISTORIAL.codec, historial),
+          `la tabla se firma con la configuración (Config.conversionAnh, config:firmar: producción no; un detalle de otra causa, tampoco) y GET /api/vistas/anh/conversion la trae: ${vistaC.conEquivalencia} de ${vistaC.total} con equivalencia, sin equivalencia ${vistaC.sinEquivalencia.map(x => x.codigo).join(' y ')}, firmada en la versión ${vistaC.firma?.version}; el historial vuelve igual por JSON`)
+
+        // f. Las capacidades nuevas: cada una la tiene un solo rol.
+        const quien = k => ROLA.ROLES_VISIBLES.filter(r => r.puede[k]).map(r => r.id).join()
+        comprobar(quien('orden:cerrar') === 'tec' && quien('anh:enviar') === 'reg', `orden:cerrar es del técnico (${quien('orden:cerrar')}) y anh:enviar de regulatorio (${quien('anh:enviar')})`)
+
+        // g. Lo nuevo está en CONTRATO.md: las rutas, los campos opcionales y las capacidades.
+        const sinDocA3 = ['`POST /api/paradas/:evento/vio`', '`POST /api/sap/ordenes/:numero/cierre`', '`POST /api/anh/respuestas`', '`GET /api/vistas/anh/respuestas', '`POST /api/anh/conversion/importar`',
+          '`GET /api/vistas/anh/conversion', '`respuestaAnh`', '`tramos`', '`Config.conversionAnh`', '`orden:cerrar`', '`anh:enviar`'].filter(r => !leerTexto('CONTRATO.md').includes(r))
+        comprobar(sinDocA3.length === 0, `las escrituras, las vistas, los campos y las capacidades de A3 están en CONTRATO.md${sinDocA3.map(r => `; falta ${r}`).join('')}`)
+      } finally { SES.cambiarSesion({ cierresOrden: undefined, respuestasAnh: undefined, ...fotoA3 }) }
+    }
+
+    console.log('\n=== A1 · Contrato v1: compatibilidad, lo RETIRADO, los AGREGADOS sin endpoint y la línea base (cde8214) ===')
+    {
+      const sA1 = SES.sesion(), RA1 = responder(sA1)
+      // C1 (al lado): `costoFalla` dice lo de v1 (lo que la bomba ya costó por falla) y `costoFallaHoy`, lo nuevo.
+      const rMo = RA1.RIESGO({ campos: ['morichal'] }).find(r => r.equipo === 'P-201B' && r.estado === 'en-riesgo')
+      const jMo = JSON.parse(JSON.stringify(K.aRespuesta(C.RIESGO.codec, [rMo]))).datos[0]
+      const { historialDeEquipo } = await cargar('/src/entities/libro.ts')
+      const bbl = historialDeEquipo('morichal', 'P-201B', sA1.ctx).bblPorFalla
+      comprobar(!!rMo && jMo.costoFalla === bbl && typeof jMo.costoFallaHoy === 'number' && jMo.costoFallaHoy !== jMo.costoFalla,
+        `C1 · /vistas/riesgo: costoFalla con su significado de v1 (P-201B de Morichal ${Math.round(jMo?.costoFalla ?? 0)} bbl, lo que ya costó por falla) y costoFallaHoy al lado (${Math.round(jMo?.costoFallaHoy ?? 0)} bbl si falla hoy)`)
+      // C2 (al lado): el dispositivo sin lectura de v1 («—») y el de hoy (null) se leen igual.
+      const conLectura = RA1.EQUIPOS_HOY({ campos: ['ceiba'] }).ceiba?.find(e => e.dispositivos.some(d => d.valor === null))
+      const jEq = JSON.parse(JSON.stringify(K.aRespuesta(C.EQUIPO_HOY.codec, conLectura)))
+      const comoV1 = structuredClone(jEq)
+      for (const d of comoV1.datos.dispositivos) if (d.valor === null) d.valor = C.SIN_LECTURA_V1
+      const deV1 = K.deRespuesta(C.EQUIPO_HOY.codec, comoV1), deHoy = K.deRespuesta(C.EQUIPO_HOY.codec, jEq)
+      comprobar(!!conLectura && comoV1.datos.dispositivos.some(d => d.valor === '—') && !diferencia(deV1, deHoy) && deV1.dispositivos.every(d => d.valor !== '—'),
+        `C2 · /vistas/equipos/:campo/:equipo: un dispositivo sin lectura con «—» (v1) entra igual que con null (${conLectura?.id ?? 'sin equipo'})`)
+      // M8 (AGREGADO): el estado de la configuración, del motor.
+      const { estadoConfiguracion } = await cargar('/src/entities/choke-config.ts')
+      const est = RA1.ESTADO_CONFIGURACION({ campo: 'ceiba' })
+      comprobar(C.ESTADO_CONFIGURACION.ruta === '/vistas/configuracion/estado' && C.urlDe(C.ESTADO_CONFIGURACION, { campo: 'ceiba' }) === '/vistas/configuracion/estado?campo=ceiba'
+        && !diferencia(est, estadoConfiguracion('ceiba', sA1.ctx)) && est.total > 0 && est.listos === est.pasos.filter(p => p.listo).length && est.frase.startsWith(`La Ceiba: ${est.listos} de ${est.total} pasos listos.`),
+        `M8 · GET /api/vistas/configuracion/estado?campo=ceiba: «${est.frase}» (el motor; la pantalla ya no lo calcula)`)
+      // M6 (AGREGADO): las paradas por confirmar como número, la misma cuenta de la frase del supervisor.
+      const hoyDe = rol => RA1.HOY({ rol, campos: ['ceiba'] })
+      const sup = hoyDe('sup'), prod = hoyDe('prod')
+      const enFrase = Number(sup.inicio.frase.match(/Le faltan (\d+) parada/)?.[1] ?? 0)
+      comprobar(!!sup.porConfirmar && sup.porConfirmar.n === enFrase && sup.porConfirmar.n > 0 && sup.porConfirmar.limite === '2026-10-03T07:00:00-05:00'
+        && prod.porConfirmar?.n === sup.porConfirmar.n && ['oper', 'jefe', 'conf', 'tec'].every(r => !('porConfirmar' in hoyDe(r))),
+        `M6 · /vistas/hoy: porConfirmar = ${sup.porConfirmar?.n} (la frase dice ${enFrase}), límite ${sup.porConfirmar?.limite}; solo sup y prod`)
+      // RETIRADO: lo de v1 que el front ya no pide queda en `RETIRADAS`, con fecha, motivo y reemplazo.
+      comprobar(!('MENSAJES' in C) && C.RETIRADAS.some(r => r.id === 'R1' && r.clave === 'GET /mensajes') && C.RETIRADAS.every(r => /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) && r.motivo && r.reemplazo),
+        `RETIRADO · contrato.ts ya no exporta MENSAJES y lista ${C.RETIRADAS.length} piezas de v1 en RETIRADAS, cada una con fecha, motivo y reemplazo`)
+
+      // La línea base: la foto de v1 contra lo de hoy, con el registro (CAMBIOS-CONTRATO.md §8).
+      const LB = await import('./linea-base.mjs')
+      const { readFileSync: leerA1 } = await import('node:fs')
+      const ROLA1 = await cargar('/src/entities/roles.ts'), TIPA1 = await cargar('/src/entities/tipos.ts')
+      const capacidades = { lista: Object.keys(TIPA1.CAPACIDAD_NOMBRE), porRol: Object.fromEntries(ROLA1.ROLES.map(r => [r.id, Object.keys(r.puede).filter(k => r.puede[k])])) }
+      const v1 = JSON.parse(leerA1(LB.ARCHIVO_V1, 'utf8')), registro = JSON.parse(leerA1(LB.ARCHIVO_REGISTRO, 'utf8'))
+      const hoyLB = LB.estadoDeHoy({ visibles: ROLA1.ROLES_VISIBLES.map(r => r.id), capacidades })
+      const fallasLB = LB.comprobarLineaBase(v1, registro, hoyLB)
+      const cuenta = o => Object.values(o).reduce((a, x) => a + Object.values(x).flat().length, 0)
+      const QUE = {
+        1: `las ${v1.rutas.length} rutas de v1 (contrato.ts, escrituras.ts y CONTRATO.md) siguen o están RETIRADAS`,
+        2: `la forma: ${cuenta(v1.formas)} claves con su tipo en ${Object.keys(v1.formas).length} endpoints de la referencia de v1`,
+        3: `los ${cuenta(v1.textos)} textos del motor que exigía la referencia de v1 y los campos de ${Object.keys(v1.campos).length} tipos que viajan`,
+        5: `los ${v1.codigos.length} códigos de «Error único» con su HTTP`,
+        6: `las ${v1.capacidades.lista.length} capacidades de v1, y ningún rol visible pierde una`,
+        7: `el SQL de v1 rige: ${Object.keys(v1.sql.tablas).length} tablas en simulador-api/esquema.sql y en el esquema v1 de v1-cadena.sql, con sus columnas en orden`,
+        8: `lo RETIRADO sigue escrito en CONTRATO.md con su marca, está en RETIRADAS y el front no lo usa`,
+        9: 'el canal retirado: 0 en src; en e2e solo guardas de ausencia; en CONTRATO.md y el SQL nuevo, solo con la marca RETIRADO',
+        10: `el registro (docs/backend/cambios-contrato.json, ${registro.entradas.length} entradas): cada una con fecha, commit, motivo y reemplazo, sin claves repetidas`,
+      }
+      for (const [n, que] of Object.entries(QUE)) {
+        const f = fallasLB.filter(x => x.n === Number(n))
+        comprobar(!f.length, `línea base ${n} · ${que}${f.length ? `: ${f.length} sin registrar: ${f.slice(0, 5).map(x => x.texto).join(' · ')}` : ''}`)
+      }
+      // La prueba de la prueba (§8.3): cada mutación FALLA sin su entrada y pasa con ella.
+      const sinUna = (o, ep, ruta) => ({ ...o, [ep]: Object.fromEntries(Object.entries(o[ep]).filter(([r]) => r !== ruta)) })
+      const conEntrada = x => ({ ...registro, entradas: [...registro.entradas, { fecha: '2026-10-27', commit: 'prueba', motivo: 'mutación de la prueba', reemplazo: 'ninguno', ...x }] })
+      const de = (r, h, n) => LB.comprobarLineaBase(v1, r, h).filter(x => x.n === n)
+      const epF = '/vistas/riesgo', rutaF = '$.datos[].bblDia'
+      const mForma = { ...hoyLB, formas: sinUna(hoyLB.formas, epF, rutaF) }
+      const [epT, rutaT, textoT] = Object.entries(v1.textos).flatMap(([ep, rs]) => Object.entries(rs).flatMap(([r, ps]) => ps.filter(p => hoyLB.textos[ep]?.[r]?.includes(p)).map(p => [ep, r, p])))[0]
+      const mTexto = { ...hoyLB, textos: { ...hoyLB.textos, [epT]: { ...hoyLB.textos[epT], [rutaT]: hoyLB.textos[epT][rutaT].filter(p => p !== textoT).concat(`${textoT} (cambiado)`) } } }
+      const mRuta = { ...hoyLB, rutas: hoyLB.rutas.filter(r => !(r.origen === 'contrato.ts' && r.ruta === '/vistas/riesgo')) }
+      const mCanal = { ...hoyLB, src: [...hoyLB.src, { f: 'src/pages/Prueba.tsx', i: 1, l: '// WhatsApp' }] }
+      const mutaciones = [
+        ['quitar una clave de la forma', de(registro, mForma, 2), de(conEntrada({ id: 'MUT', tipo: 'CAMBIADO', objeto: 'campo', clave: `${epF} ${rutaF}` }), mForma, 2)],
+        ['cambiar un texto', de(registro, mTexto, 3), de(conEntrada({ id: 'MUT', tipo: 'CAMBIADO', objeto: 'texto', clave: `${epT} ${rutaT} «${textoT}»` }), mTexto, 3)],
+        ['borrar una ruta', de(registro, mRuta, 1), de(conEntrada({ id: 'MUT', tipo: 'RETIRADO', objeto: 'ruta', clave: 'GET /vistas/riesgo' }), mRuta, 1)],
+      ]
+      comprobar(mutaciones.every(([, sin, con]) => sin.length > 0 && con.length === 0) && de(registro, mCanal, 9).length === de(registro, hoyLB, 9).length + 1,
+        `la prueba de la prueba: ${mutaciones.map(([q, sin, con]) => `${q} → ${sin.length ? 'FALLA' : '¡pasa!'} sin registro, ${con.length ? '¡falla!' : 'pasa'} con él`).join('; ')}; y el canal en una pantalla → FALLA`)
+    }
   }
 
   /* ═══════════════════════════ con la fuente http ═══════════════════════════ */
@@ -1622,6 +2014,27 @@ try {
         // Una escritura aceptada: el servidor devuelve lo que guardó.
         const cuerpo = JSON.parse(init.body)
         cuerpos.push({ camino, cuerpo })
+        // A3 · Las escrituras nuevas: el servidor devuelve lo que guardó (con por, porId y hora suyos).
+        if (/^\/paradas\/[^/]+\/vio$/.test(camino)) {
+          const r = { texto: 'Sello mecánico', por: 'Persona del servidor · operador', porId: 'oper', parte: 'sello', canal: 'pantalla', hora: '2026-10-02T13:00:00-05:00',
+            modo: cuerpo.modo, vio: { por: 'Persona del servidor · técnico', porId: 'tec', hora: '2026-10-02T14:00:00-05:00' } }
+          return json(200, K.aRespuesta(C.R_VIO, { respuesta: r }))
+        }
+        if (/^\/sap\/ordenes\/[^/]+\/cierre$/.test(camino)) {
+          const OC = await cargar('/src/entities/orden-cierre.ts')
+          const o = SAP.pedirOrdenesSap(['ceiba'], srv.ctx).find(x => x.numero === decodeURIComponent(camino.split('/')[3]))
+          if (!o) return json(404, { error: { codigo: 'no-encontrado', mensaje: 'La orden no está en SAP.' } })
+          const cierre = OC.armarCierre(cuerpo, o, new Map(), { por: 'Persona del servidor · técnico', porId: 'tec', hora: '2026-10-02T14:00:00-05:00' })
+          return json(200, K.aRespuesta(C.R_CIERRE, { orden: OC.ordenConCierre(o, cierre), cierre }))
+        }
+        if (camino === '/anh/respuestas') {
+          const RA = await cargar('/src/entities/anh-respuestas.ts')
+          return json(200, K.aRespuesta(C.R_RESPUESTA_DE_LA_ANH, { respuesta: RA.armarRespuestaAnh(cuerpo, 1, { por: 'Persona del servidor · regulatorio', porId: 'reg', hora: '2026-10-02T14:00:00-05:00' }) }))
+        }
+        if (camino === '/anh/conversion/importar') {
+          const CV = await cargar('/src/entities/anh-conversion.ts')
+          return json(200, K.aRespuesta(C.R_CONVERSION_CSV, CV.leerConversion(cuerpo.texto, cuerpo.campo)))
+        }
         if (camino.startsWith('/paradas/')) {
           const r = { texto: cuerpo.texto, por: 'Persona del servidor · operador', porId: 'oper', canal: 'pantalla', hora: '2026-10-02T14:00:00-05:00', ...(cuerpo.parte ? { parte: cuerpo.parte, modo: cuerpo.modo } : {}) }
           return json(200, K.aRespuesta(C.R_RESPUESTA, { respuesta: r }))
@@ -1639,6 +2052,9 @@ try {
         if (camino === '/anh/paradas/confirmar') return json(200, K.aRespuesta(C.R_CONFIRMACION, { paradas: cuerpo.ids.map(id => ARB.pedirParadaAnh(id, srv.ctx, {})) }))
         if (camino === '/configuracion/vista-previa') return json(200, K.aRespuesta(C.R_VISTA_PREVIA, { impacto: IMP.impactoConfig(srv.ctx, cuerpo.config, ['ceiba']) }))
         if (camino === '/topologia/importar') return json(200, K.aRespuesta(C.R_TOPOLOGIA_CSV, IMP.leerTopologia(cuerpo.texto, cuerpo.campo)))
+        // A2 · Pérdidas: el servidor registra (quién y cuándo los pone él) y devuelve el registro.
+        if (camino === '/perdidas') return json(200, K.aRespuesta(C.R_PERDIDA, { perdida: { id: 'PER-ceiba-0001', n: 1, ...cuerpo, fin: cuerpo.fin ?? null,
+          por: 'Persona del servidor · operador de campo', porId: 'oper', rol: 'oper', hora: '2026-10-02T14:00:00-05:00' } }))
         return json(500, { error: { codigo: 'interno', mensaje: 'el servidor de prueba no conoce esa escritura' } })
       }
       for (const [nombre, ep] of ENDPOINTS) {
@@ -1741,11 +2157,10 @@ try {
       'una respuesta aceptada se copia a la sesión como la guardó el servidor (con su «por»), y el contexto nuevo hace que las consultas se pidan de nuevo')
     // R20 (#90): ningún cuerpo lleva canal ni por (los pone el servidor), aunque la pantalla los traiga de más.
     const nPedidos = pedidos.length
-    await E.responderParada({ rolId: 'oper' }, { evento: 'EV-PRUEBA-HTTP-2', campoId: 'ceiba', equipo: 'LC-14', texto: 'Se quemó el variador del pozo', canal: 'whatsapp', por: 'alguien' })
-    const wa = await E.recibirWhatsapp({ evento: 'EV-PRUEBA-HTTP-3', campoId: 'ceiba', equipo: 'LC-14', usuarioId: 'oper', opcion: { clave: '1', texto: 'x' } })
+    await E.responderParada({ rolId: 'oper' }, { evento: 'EV-PRUEBA-HTTP-2', campoId: 'ceiba', equipo: 'LC-14', texto: 'Se quemó el variador del pozo', canal: 'pantalla', por: 'alguien' })
     const conCanal = cuerpos.filter(x => 'canal' in x.cuerpo || 'por' in x.cuerpo || 'porId' in x.cuerpo)
-    comprobar(conCanal.length === 0 && cuerpos.at(-1)?.camino === '/paradas/EV-PRUEBA-HTTP-2/respuesta' && pedidos.length === nPedidos + 1 && !wa.ok && wa.error === E.WHATSAPP_SOLO_WEBHOOK,
-      `con la fuente http ningún POST lleva canal ni por (${cuerpos.length} cuerpos revisados), y el teléfono simulado no manda nada: lo dice (${wa.ok ? 'mandó' : wa.error.slice(0, 50)}…)`)
+    comprobar(conCanal.length === 0 && cuerpos.at(-1)?.camino === '/paradas/EV-PRUEBA-HTTP-2/respuesta' && pedidos.length === nPedidos + 1,
+      `con la fuente http ningún POST lleva canal ni por (${cuerpos.length} cuerpos revisados)`)
 
     console.log('\n=== H5. El choke y el árbol de paradas por el servidor ===')
     const qa = { campos: ['ceiba'], desde: q.desde, hasta: q.hasta }, qt = { campo: 'ceiba', desde: q.desde, hasta: q.hasta }
@@ -1813,6 +2228,49 @@ try {
       comprobar(pedidos.length === nG + 1 && pedidos.at(-1).startsWith('GET /api/vistas/resultados?campos=ceiba&desde=') && pedidos.at(-1).includes('&rol=jefe')
         && rH.desde instanceof Date && !diferencia(rH, R.RESULTADOS(qr)) && rH.secciones[0] === 'mantenimiento',
         `Resultados llega por GET (${pedidos.at(-1)?.slice(0, 60)}…) y es lo que calcula el motor, con lo del jefe primero`)
+    }
+
+    // A2 · Balance: el balance llega por GET y es lo que calcula el motor (sin registro, la pérdida en null); la pérdida va
+    // por POST /api/perdidas sin quién ni cuándo (los pone el servidor) y la sesión guarda lo que él respondió.
+    {
+      const cal = L.calendario(), curso = cal.at(-1)
+      const qb = { campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+      const nG = pedidos.length
+      const bH = await consulta.traer(C.BALANCE, qb, 'a2', noCalcular)
+      const PERh = await cargar('/src/shared/api/perdidas.ts')
+      const nC = cuerpos.length
+      const rP = await PERh.registrarPerdida({ rolId: 'oper' }, { campoId: 'ceiba', tipo: 'derrame', tramo: 'planta', donde: 'TK-AG-CE', inicio: '2026-10-02T10:00:00-05:00',
+        volumen: { bbl: 2, fuente: 'estimado', como: 'Mancha alrededor del tanque' } })
+      comprobar(pedidos[nG]?.startsWith('GET /api/vistas/balance?campos=ceiba&desde=') && bH.desde instanceof Date && !diferencia(bH, R.BALANCE(qb)) && bH.total.perdido === null
+        && rP.ok && cuerpos.length === nC + 1 && cuerpos.at(-1).camino === '/perdidas' && !('por' in cuerpos.at(-1).cuerpo) && SES.sesion().perdidas?.at(-1)?.id === rP.perdida.id,
+        `el balance llega por GET y es lo que calcula el motor; POST /api/perdidas manda solo lo que dice la persona y la sesión guarda el registro del servidor (${rP.ok ? rP.perdida.id : rP.error})`)
+    }
+
+    // A3 · Las acciones que faltan, por el servidor: cada escritura va a su ruta, sin por ni hora, y lo que el
+    // servidor guardó se copia a la sesión; las vistas nuevas llegan por GET.
+    {
+      const EA3 = await cargar('/src/shared/api/escrituras.ts')
+      const nA = pedidos.length
+      const vioH = await EA3.responderLoQueVio({ rolId: 'tec' }, 'EV-PRUEBA-A3', { modo: 'ELP' })
+      const ordenH = SAP.pedirOrdenesSap(['ceiba'], srv.ctx).find(o => o.estado === 'REL')
+      const cierreH = await EA3.cerrarOrden({ rolId: 'tec' }, ordenH.numero, { actividad: 'ajuste', inicio: '2026-10-02T10:00:00-05:00', fin: '2026-10-02T12:00:00-05:00' })
+      const anhH = await EA3.registrarRespuestaAnh({ rolId: 'reg' }, { campoId: 'ceiba', dia: '2026-10-01', estado: 'rechazado', motivo: 'V-07', recibida: '2026-10-02T13:30:00-05:00' })
+      const convH = await EA3.importarConversion({ rolId: 'adm' }, { campo: 'ceiba', texto: 'OP-1;Falla;NP_SUB;Falla ESP' })
+      const sH = SES.sesion()
+      const rutasA3 = pedidos.slice(nA)
+      const cuerposA3 = cuerpos.slice(-4)
+      comprobar(vioH.ok && sH.ctx.respuestas['EV-PRUEBA-A3']?.vio?.porId === 'tec' && cierreH.ok && sH.cierresOrden?.at(-1)?.orden === ordenH.numero && cierreH.orden.estado === 'CNF'
+          && anhH.ok && sH.respuestasAnh?.at(-1)?.limiteCorreccion === '2026-10-02T14:30:00-05:00' && convH.ok && convH.conversion[0]?.n2 === 'NP_SUB/falla-esp'
+          && rutasA3.join() === ['POST /api/paradas/EV-PRUEBA-A3/vio', `POST /api/sap/ordenes/${ordenH.numero}/cierre`, 'POST /api/anh/respuestas', 'POST /api/anh/conversion/importar'].join()
+          && cuerposA3.every(x => !('por' in x.cuerpo) && !('porId' in x.cuerpo) && !('hora' in x.cuerpo)),
+        `las cuatro escrituras de A3 van a su ruta (${rutasA3.map(x => x.split(' ')[1]).join(', ')}), sin por, porId ni hora, y lo que el servidor guardó queda en la sesión`)
+      const qa3 = { campos: ['ceiba'], desde: q.desde, hasta: q.hasta }
+      const nB = pedidos.length
+      const respH = await consulta.traer(C.RESPUESTAS_ANH, qa3, 'a3', noCalcular)
+      const convVH = await consulta.traer(C.CONVERSION_ANH, { campo: 'ceiba' }, 'a3', noCalcular)
+      comprobar(pedidos.length === nB + 2 && pedidos.at(-2).startsWith('GET /api/vistas/anh/respuestas?campos=ceiba&desde=') && pedidos.at(-1) === 'GET /api/vistas/anh/conversion?campo=ceiba'
+          && !diferencia(respH, R.RESPUESTAS_ANH(qa3)) && !diferencia(convVH, R.CONVERSION_ANH({ campo: 'ceiba' })),
+        `/vistas/anh/respuestas y /vistas/anh/conversion llegan por GET y son lo que calcula el motor (${pedidos.at(-1)})`)
     }
 
     console.log(`\n${pruebas - fallos} de ${pruebas} comprobaciones http bien.`)

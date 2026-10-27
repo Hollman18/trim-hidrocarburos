@@ -58,7 +58,7 @@ dicho como lo diría quien lo vio (`nombreModo`, `catalogo.ts:76-90`).
 
 **Palabras de campo** (`MODO_EN_CAMPO`):
 
-| Código | ISO 14224 (B.6) | En pantalla y WhatsApp |
+| Código | ISO 14224 (B.6) | En pantalla y WhatsApp (WhatsApp: **RETIRADO (27-oct-2026)**) |
 |---|---|---|
 | UST | Se paró sola (*spurious stop*) | Se disparó sin daño a la vista |
 | FTS | No arrancó cuando se pidió | No arrancó |
@@ -110,7 +110,7 @@ dicho como lo diría quien lo vio (`nombreModo`, `catalogo.ts:76-90`).
   para prueba o intervención del pozo», «Fuga o daño en la línea de flujo», «Orden de producción:
   nominación o restricción del comprador», «Falla del controlador o de un instrumento del pozo») y
   texto libre.
-- **WhatsApp** (el teléfono del demo; en producción, el webhook): «TRIM · ¿Qué vio en \<parte\>?
+- **RETIRADO (27-oct-2026)** **WhatsApp** (el teléfono del demo; en producción, el webhook): «TRIM · ¿Qué vio en \<parte\>?
   Responda con un número.» y la lista numerada «1) …»; la opción «Otra cosa» pide «TRIM · Escriba qué
   vio.»; en el primer paso, «0» es «Otra cosa: escríbala» (`OTRA`, `mensajes.ts:171`).
 - Aviso SAP (`BloqueSap`): selector «código · nombre» con los modos de la parte.
@@ -122,11 +122,11 @@ dicho como lo diría quien lo vio (`nombreModo`, `catalogo.ts:76-90`).
 | La parte no es del catálogo del equipo | «Esa parte no es de este equipo.» |
 | Bomba de la línea sin parte (en pantalla, la parte es obligatoria; en la ESP no: «no fue ella» es causa de pozo) | «Diga qué parte de la bomba se dañó.» |
 | Con parte, el modo no es de esa parte | «Diga qué vio en esa parte.» |
-| Sin parte, o con modo «Otra cosa», el texto libre tiene menos de **8** caracteres sin los espacios de los bordes (`TEXTO_LIBRE_MINIMO = 8`, `src/entities/reglas.ts:15-18`) | «Escriba qué encontró, con al menos una frase corta.» (pantalla: «Escribió «Otra cosa»: diga qué vio, con al menos una frase corta.»; WhatsApp con «0»: «Con «0» hay que escribir qué encontró, con al menos una frase corta.») |
+| Sin parte, o con modo «Otra cosa», el texto libre tiene menos de **8** caracteres sin los espacios de los bordes (`TEXTO_LIBRE_MINIMO = 8`, `src/entities/reglas.ts:15-18`) | «Escriba qué encontró, con al menos una frase corta.» (pantalla: «Escribió «Otra cosa»: diga qué vio, con al menos una frase corta.»; WhatsApp con «0», **RETIRADO (27-oct-2026)**: «Con «0» hay que escribir qué encontró, con al menos una frase corta.») |
 | Ya respondió alguien (409) | «Ya respondió \<persona\>.» |
 
 **Texto que queda registrado.** Pantalla: el texto libre si lo hay; si no, «\<Parte\>: \<modo en
-palabras de campo, minúscula\>» («Sello mecánico: fuga hacia afuera»). WhatsApp: con «0», el texto;
+palabras de campo, minúscula\>» («Sello mecánico: fuga hacia afuera»). WhatsApp (**RETIRADO (27-oct-2026)**): con «0», el texto;
 con parte y «Otra cosa», «\<opción\>: \<texto\>»; con parte y modo, «\<opción\>: \<modo en
 minúscula\>». Se guarda `{ texto, por, porId, parte?, modo?, canal, hora }`.
 

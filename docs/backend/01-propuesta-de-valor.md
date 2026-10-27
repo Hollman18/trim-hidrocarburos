@@ -96,7 +96,7 @@ Un pozo no para «solo». Cada evento recorre un **árbol de causas**, en orden 
 2. la **bomba de la línea** que le cortó el paso: la multifásica de su clúster, o la de reinyección cuando el tanque llegó al alto-alto (`LSHH`, `CMD`, `HZ`);
 3. el **programa** de paradas firmado;
 4. el **código del controlador** de la electrosumergible (falla a tierra, sobrecarga, baja carga…), que dice la parte;
-5. lo que **declaró el operario** (por pantalla o WhatsApp);
+5. lo que **declaró el operario** en la pantalla (la pregunta de Hoy o Identificar);
 6. **sin identificar**.
 
 Para la parada de una bomba, la parte sale de la **primera alarma** del PLC o de la **firma de señales** al parar. Si ninguna señal la explica, TRIM pregunta al operario y marca **«no arrancar hasta identificar»**. Arrancar sin identificar queda como **no conformidad**. → 5B §2–3.
@@ -122,7 +122,7 @@ $$
 con $Q_{\text{hoy}}$ el crudo que se perdería por día, $d_i$ las horas que duró cada una de sus $n$ fallas cerradas y $h_{\text{colchón}}$ las horas que el tanque aguanta hoy. Las horas que el tanque absorbe no cuestan crudo: **si la bomba vuelve antes de que el tanque se llene, la falla no cuesta nada**. Esa es la meta de reparación que la operación puede perseguir. Y **«¿acierta el vigía?»** registra cada predicción y en qué quedó. → 5C, 5B §5.
 
 ### Paso 7 · Cerrar el ciclo
-Las **metas** y el **precio** los firma el gerente, por tramos y con motivo, en versiones que nunca se sobrescriben. El libro de un mes se **publica** solo si el FA está en banda, toda parada tiene causa dentro del máximo firmado, hay fiscal y hay meta. Los **informes** salen con folio y una **huella SHA-256** que calcula el servidor. Las paradas avisan por **WhatsApp** a quien tiene que actuar, y los avisos van a **SAP PM** con su evidencia. → 5A §7, 5D.
+Las **metas** y el **precio** los firma el gerente, por tramos y con motivo, en versiones que nunca se sobrescriben. El libro de un mes se **publica** solo si el FA está en banda, toda parada tiene causa dentro del máximo firmado, hay fiscal y hay meta. Los **informes** salen con folio y una **huella SHA-256** que calcula el servidor. Las paradas se avisan en **Hoy**, dentro de TRIM, a quien tiene que actuar, y los avisos van a **SAP PM** con su evidencia. → 5A §7, 5D.
 
 ## 1.3b Dónde se trabó cada barril: el modelo choke y la cifra del norte
 
@@ -141,7 +141,7 @@ Todas las cifras salen del motor con los datos del demo (capítulo 5B §4).
 
 | Hora | Qué pasa | Cálculo | Lo que se ve |
 |---|---|---|---|
-| **03:52** | P-201B para (evento `EV-2011-1002`). El tanque está en 78,7 % (LT-2012). | Volumen libre $= (0{,}90 - 0{,}787)\cdot 30.000 = 3.390$ bbl. Agua sin salida $= 74.200 - 30.100 = 44.100$ bbl/d $= 1.837{,}5$ bbl/h. Colchón $= 3.390 / 1.837{,}5 =$ **1,84 h** (1,66–2,03 h). | La placa pasa a ◆ P1 «detenido». WhatsApp al supervisor y al operador: equipo parado, el respaldo no alcanza para todo su caudal. Ninguna señal explica la parte: «No arrancar hasta identificar el daño», y TRIM le pregunta al operador qué se dañó. |
+| **03:52** | P-201B para (evento `EV-2011-1002`). El tanque está en 78,7 % (LT-2012). | Volumen libre $= (0{,}90 - 0{,}787)\cdot 30.000 = 3.390$ bbl. Agua sin salida $= 74.200 - 30.100 = 44.100$ bbl/d $= 1.837{,}5$ bbl/h. Colchón $= 3.390 / 1.837{,}5 =$ **1,84 h** (1,66–2,03 h). | La placa pasa a ◆ P1 «detenido». El respaldo no alcanza para todo su caudal. En el Hoy del supervisor y del operador sale la parada con su insignia. Ninguna señal explica la parte: «No arrancar hasta identificar el daño», y TRIM le pregunta al operador, en su Hoy, qué se dañó. |
 | **05:43** | Primer pozo cerrado: LC-16, por nivel alto-alto (`LSHH`). | El tanque aguantó **1,845 h**: el modelo acertó al minuto. | Fila de la parada: «colchón 1,8 h · aguantó 1,8 h». |
 | **05:46** | Los operarios cierran LC-07. Cierran primero los pozos que más agua dan, como haría un buen operador: con esos dos se quita el agua sin salida. | Crudo de los dos pozos cerrados = **1.665 bbl/d**. En el orden de TRIM (primero los de menos crudo por barril de agua: LC-02, LC-10 y LC-01 enteros, y bajar la frecuencia de LC-17 y LC-07) serían **1.426 bbl/d**: 14 % menos. | Detalle de la bomba: «Orden de cierre»; la parada abierta dice «evitable en orden: 30 bbl» (lo que lleva hasta ahora). |
 | **14:00** (ahora) | La parada sigue abierta. El tanque está quieto en 89,6 %: con los dos pozos cerrados, P-201A y P-201C sacan toda el agua que entra. | Perdiéndose **1.665 bbl/d** $=$ 69 bbl/h. Diferido de la parada $=$ **573 bbl** (487–659, ±15,0 %). | Bombas: «Perdiéndose ahora 1.665 bbl/d · 69 bbl/h · 2 pozos cerrados». Placa: «573 bbl · 487 – 659 · calculado». Planta: el tanque, gris («P-201B detenida: el respaldo toma el agua que entra, el nivel no sube»). |
@@ -231,7 +231,7 @@ El mismo binario sirve **globalmente** mientras el yacimiento encaje en el patr�
 | Física | BSW, tanque, respaldo, orden de cierre, ESP/bombas | Capacidades, tags, esquema de planta |
 | Custodia | Potencial − real = Σ eventos; hueco = no inventar | Banda de asignación, fiscal, publicación (p. ej. Res. 40236 en Colombia) |
 | Moneda y formato | Motor en barriles; UI formatea | Precio neto, locale (`region.ts`) |
-| Integraciones | Patrón borde → MQTT/PI → API | SAP, WhatsApp, historiador del sitio |
+| Integraciones | Patrón borde → MQTT/PI → API | SAP, historiador del sitio |
 
 ```mermaid
 flowchart TB
@@ -306,7 +306,7 @@ Esa línea **no está en el MVP de TRIM** (cap. 11 §«Fuera de este producto»)
 | 7 | Configuración firmada | Tanque, respaldos, metas, precio |
 | 8 | Series vigía | Antes |
 | 9 | Esquema de planta | Planta |
-| 10 | Mensajería + ERP mantenimiento | Operación |
+| 10 | ERP mantenimiento | Operación |
 
 Producción: reloj real, LT en vivo, firma al parar persistida, `decision_plan` (cap. 10 S1–S4, S24). Sin eso el demo enseña; el piloto en campo no cierra.
 
@@ -340,6 +340,6 @@ El **libro** responde «cuánto dejamos de producir» (custodia, firmable). El *
 1. **Recibir del borde**, sin edición manual: los eventos de los controladores de pozo con su código y su hora, las paradas de las bombas con la primera alarma y la firma de señales al parar (en el demo la firma nunca llega; el backend tiene que guardarla al registrar la parada: capítulo 5B, «Huecos»), las caídas de servicios, el fiscal del día, el nivel de los tanques y las series de los tags. → Capítulo 4.
 2. **Guardar** eso y lo que entra a mano, con las reglas de custodia (solo inserción, versiones, quién y cuándo). → Capítulo 3.
 3. **Calcular** las vistas con el motor (capítulo 5) y servirlas por la API (capítulo 7) con la misma forma que el demo.
-4. **Avisar** por WhatsApp y **conversar** con SAP. → Capítulo 5D.
+4. **Avisar** dentro de TRIM (la pregunta y los avisos en Hoy) y **conversar** con SAP. → Capítulo 5D.
 5. **Repartir por tramo y clasificar para la ANH**: la topología y las capacidades firmadas, el tramo de cada parada, el reparto y el árbol de pérdidas con la cifra única del norte, «si falla hoy», y la clasificación de seis pasos con lo que dice cada persona guardado paso por paso. → Capítulo 5E.
 6. **Probar** que da los mismos números que el demo. → Capítulo 9.

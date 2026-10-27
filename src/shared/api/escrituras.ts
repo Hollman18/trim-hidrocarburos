@@ -3,14 +3,26 @@ import { deRespuesta } from './cable'
 import {
   R_FIRMA, R_USUARIO, R_AVISO, R_INFORME, R_ASIGNACION, R_RESPUESTA, R_ANALISIS, R_PLANTA, R_PLAN,
   R_CLASIFICACION, R_CONFIRMACION, R_VISTA_PREVIA, R_TOPOLOGIA_CSV, incoherencias,
-  type CuerpoFirma, type CuerpoUsuario, type CuerpoInvitacion, type CuerpoAviso, type CuerpoRespuesta, type CuerpoWhatsapp, type CuerpoAnalisis, type CuerpoAsignacion,
+  type CuerpoFirma, type CuerpoUsuario, type CuerpoInvitacion, type CuerpoAviso, type CuerpoRespuesta, type CuerpoAnalisis, type CuerpoAsignacion,
   type CuerpoClasificacion, type CuerpoConfirmacion, type CuerpoYacimiento, type CuerpoVistaPrevia, type CuerpoTopologiaCsv,
   type CuerpoRespuestaAnh, type CuerpoRevisionAnh,
 } from './contrato'
 // C3 · Hoy: «Deshacer» (al final del archivo).
 import { R_DESHACER, type CuerpoDeshacerAnh } from './contrato'
+// A3 · Acciones (al final del archivo).
+import {
+  R_VIO, R_CIERRE, R_RESPUESTA_DE_LA_ANH, R_CONVERSION_CSV,
+  type CuerpoVio, type CuerpoCierre, type CuerpoRespuestaDeLaAnh, type CuerpoConversionCsv,
+} from './contrato'
+import { revisarCierre, armarCierre, ordenConCierre, type CierreOrden } from '@/entities/orden-cierre'
+import { revisarRespuestaAnh, armarRespuestaAnh, type RespuestaAnh } from '@/entities/anh-respuestas'
+import { leerConversion, type ConversionLeida } from '@/entities/anh-conversion'
+import { pedirEquipo } from './equipos'
+import type { OrdenSap } from '@/entities/sap'
+import { pedirOrdenesSap } from './sap'
+import type { Capacidad, Rol } from '@/entities/tipos'
 import { MOTIVO_DESHACER } from '@/entities/hoy'
-import { pedirParadaAnh, eventosDeLaCascada, filasDeEventos, filasDeRaiz, campoDeLaFila, partesDelId, soloDePersona, cadenaVista, guardadasDe } from './arbol'
+import { pedirParadaAnh, eventosDeLaCascada, filasDeEventos, campoDeLaFila, partesDelId, soloDePersona, cadenaVista, guardadasDe } from './arbol'
 import {
   declararPaso, declararYacimiento, responder, conRevisionAtendida, quienRevisa, esNoSe, ErrorClasificacion, esDePersona, PASOS_QUE_CONFIRMA, PASOS_QUE_DECLARA,
   ROLES_QUE_CONTESTAN, QUIEN_CONTESTA, PREGUNTAS_CAMPO,
@@ -29,7 +41,7 @@ import { pedirCifrasInforme } from './informes'
 import type { Codec } from './cable'
 import { diferencias, diferenciasPorGrupo, camposTocados, validarConfig, normalizarConfig, type Version } from '@/entities/configuracion'
 import {
-  revisarAcceso, cambiosDeUsuario, cambiosDeInvitacion, estadoAlGuardar, personaDelRol, recibeAlertas, normalizarTelefono, camposAsignados, registroCompleto,
+  revisarAcceso, cambiosDeUsuario, cambiosDeInvitacion, estadoAlGuardar, personaDelRol, camposAsignados, registroCompleto,
   type Usuario, type ErrorAcceso, type CambioAcceso,
 } from '@/entities/usuarios'
 import { rolExacto } from '@/entities/roles'
@@ -39,7 +51,6 @@ import { eventosPozos } from '@/entities/pozos'
 import type { AvisoSap } from '@/entities/sap'
 import type { Informe, ConsultaInforme } from '@/entities/informe'
 import type { FilaOficial, FilaCargada, CargaAsignacion } from '@/entities/asignacion'
-import { OTRA } from '@/entities/mensajes'
 import { nombreModo, modosDeParte, MODO_OTRO, type Analisis } from '@/entities/catalogo'
 import { mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entities/iso14224'
 import { diasDelMes, nombreMes } from '@/entities/plan'
@@ -47,7 +58,6 @@ import { aplicarCambioPlanta, type CambioDePlanta, type CambioPlanta, type Plant
 import type { Respuesta } from '@/entities/pozos'
 import { MOTIVO_MINIMO, TEXTO_LIBRE_MINIMO, TEXTO_MAXIMO, alcanza } from '@/entities/reglas'
 import { AHORA } from '@/entities/reloj'
-import { region } from '@/shared/config/region'
 import { diaIso } from '@/shared/lib/formato'
 import { formatoFecha } from '@/shared/lib/fecha'
 import { puedeHacer } from '@/entities/tipos'
@@ -187,11 +197,23 @@ function anotarAcceso(u: Usuario, acceso: CambioAcceso) {
   cambiarSesion({ usuarios: usuarios.some(x => x.id === u.id) ? usuarios.map(x => (x.id === u.id ? u : x)) : [...usuarios, u], accesos: [...accesos, acceso] })
 }
 
+/** R3 (docs/backend/CAMBIOS-CONTRATO.md §3): el canal de mensajes al teléfono se
+ *  retiró. El servidor (el demo, aquí) acepta e ignora `telefono` y `alertas` si
+ *  llegan: no los guarda ni responde 422 por ellos. */
+function sinCanal<T extends object>(x: T): T {
+  const { telefono: _t, alertas: _a, ...resto } = x as T & { telefono?: unknown; alertas?: unknown }
+  return resto as T
+}
+/** Lo que el front le manda a un servidor (`PATCH` y `POST /usuarios`): sin
+ *  `telefono` nunca, y con `alertas: false`, porque la línea base v1 la pide en el
+ *  cuerpo de la persona (al lado, nunca encima: un backend de v1 no se rompe). */
+const comoV1 = <T extends object>(x: T): T & { alertas: false } => ({ ...sinCanal(x), alertas: false })
+
 /** `PATCH /api/usuarios/:id { usuario, motivo }` → la persona como quedó y el
  *  cambio en el historial. Lo firma quien tenga el rol actual. */
 export async function guardarUsuario(q: Credencial, c: CuerpoUsuario): Promise<ResultadoAcceso> {
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'PATCH', `/usuarios/${encodeURIComponent(c.usuario.id)}`, c, R_USUARIO)
+    const r = await escribir(q, 'PATCH', `/usuarios/${encodeURIComponent(c.usuario.id)}`, { ...c, usuario: comoV1(c.usuario) }, R_USUARIO)
     if (!r.ok) return { ok: false, errores: erroresDe(r) }
     anotarAcceso(r.datos.usuario, r.datos.acceso)
     return { ok: true }
@@ -207,7 +229,7 @@ export async function guardarUsuario(q: Credencial, c: CuerpoUsuario): Promise<R
   const antes = usuarios.find(x => x.id === u.id)
   if (!antes) return { ok: false, errores: [{ campo: 'general', texto: 'Esa persona no está en el registro: invítela.' }] }
   // El estado lo decide el servidor: suspender anota el de antes y reactivar vuelve a ese.
-  const limpio = estadoAlGuardar(antes, { ...u, nombre: u.nombre.trim(), correo: u.correo.trim(), ...(u.telefono !== undefined ? { telefono: normalizarTelefono(u.telefono, region.celular) } : {}) })
+  const limpio = estadoAlGuardar(antes, { ...sinCanal(u), nombre: u.nombre.trim(), correo: u.correo.trim() })
   const errores = revisarAcceso(usuarios, limpio, yo.id, c.motivo)
   if (errores.length) return { ok: false, errores }
   const cambios = cambiosDeUsuario(antes, limpio)
@@ -221,7 +243,7 @@ export async function guardarUsuario(q: Credencial, c: CuerpoUsuario): Promise<R
  *  el día y el estado «invitado» los pone el servidor) y el cambio. */
 export async function invitarUsuario(q: Credencial, c: CuerpoInvitacion): Promise<ResultadoAcceso<{ id: string }>> {
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', '/usuarios', c, R_USUARIO)
+    const r = await escribir(q, 'POST', '/usuarios', { ...c, invitacion: comoV1(c.invitacion) }, R_USUARIO)
     if (!r.ok) return { ok: false, errores: erroresDe(r) }
     anotarAcceso(r.datos.usuario, r.datos.acceso)
     return { ok: true, id: r.datos.usuario.id }
@@ -236,8 +258,7 @@ export async function invitarUsuario(q: Credencial, c: CuerpoInvitacion): Promis
   let n = usuarios.length + 1
   while (usuarios.some(x => x.id === `u${n}`)) n++
   const hora = horaDelPlc()
-  const limpio: Usuario = { ...datos, id: `u${n}`, nombre: datos.nombre.trim(), correo: datos.correo.trim(), estado: 'invitado', desde: hora.slice(0, 10),
-    ...(datos.telefono !== undefined ? { telefono: normalizarTelefono(datos.telefono, region.celular) } : {}) }
+  const limpio: Usuario = { ...sinCanal(datos), id: `u${n}`, nombre: datos.nombre.trim(), correo: datos.correo.trim(), estado: 'invitado', desde: hora.slice(0, 10) }
   const errores = revisarAcceso(usuarios, limpio, yo.id, c.motivo)
   if (errores.length) return { ok: false, errores }
   anotarAcceso(limpio, { id: accesos.length + 1, fecha: hora, por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`,
@@ -420,52 +441,15 @@ export async function responderParada(q: Credencial, c: CuerpoRespuesta, o: { ke
   // En una bomba de la línea, en pantalla, la parte es obligatoria. En una
   // electrosumergible no: «no fue la electrosumergible» es causa de pozo.
   if (!parte && cat && cat.clase !== 'bomba-electrosumergible') return { ok: false, error: 'Diga qué parte de la bomba se dañó.' }
-  if (parte && !(c.modo && modosDeParte(parte).some(m => m.codigo === c.modo))) return { ok: false, error: 'Diga qué vio en esa parte.' }
+  // A3 · «Contestar» en 1 toque: la parte sola se guarda. Lo que vio es la pregunta
+  // siguiente y opcional (`POST /api/paradas/:evento/vio`); si llega aquí, tiene que ser de la parte.
+  if (parte && c.modo !== undefined && !modosDeParte(parte).some(m => m.codigo === c.modo)) return { ok: false, error: 'Lo que vio no es de esa parte.' }
   const libre = c.texto.trim()
   if ((!parte || c.modo === MODO_OTRO) && !alcanza(libre, TEXTO_LIBRE_MINIMO)) return { ok: false, error: 'Escriba qué encontró, con al menos una frase corta.' }
   anotarRespuesta(c.evento, {
-    texto: libre || `${parte!.nombre}: ${nombreModo(c.modo!, parte!.id).toLowerCase()}`,
+    texto: libre || (c.modo !== undefined ? `${parte!.nombre}: ${nombreModo(c.modo, parte!.id).toLowerCase()}` : parte!.nombre),
     por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`, porId: yo.id,
-    ...(parte ? { parte: parte.id, modo: c.modo } : {}), canal: 'pantalla', hora: horaDelPlc(),
-  })
-  return { ok: true }
-}
-
-/** Lo que dice el teléfono simulado cuando la fuente es el servidor. */
-export const WHATSAPP_SOLO_WEBHOOK = 'Con el servidor, una respuesta por WhatsApp solo entra por el webhook firmado de Meta: este teléfono es del demo y no la envía.'
-
-/** La respuesta que llega por WhatsApp. En producción NO la manda el front:
- *  la manda el webhook de WhatsApp al servidor (firmado por Meta) y entra solo
- *  de un número que recibe las alertas de ese campo. El teléfono de la
- *  pantalla la simula en el demo, donde este módulo hace de webhook. Con el
- *  servidor no se manda nada: ningún cuerpo del front lleva `canal` ni `por`
- *  (los pone el servidor), y un POST con `canal: 'whatsapp'` desde el
- *  navegador sería pedirle que le crea. Se dice en el chat, no se calla. */
-export async function recibirWhatsapp(c: CuerpoWhatsapp): Promise<Resultado> {
-  if (FUENTE === 'http') return { ok: false, error: WHATSAPP_SOLO_WEBHOOK }
-  const { ctx, usuarios } = sesion()
-  const u = usuarios.find(x => x.id === c.usuarioId)
-  // El campo es el de la parada, no el que diga el mensaje: el número tiene que recibir las alertas de ESE campo.
-  const malEvento = revisarEvento(c.evento, c.campoId)
-  if (malEvento) return { ok: false, error: malEvento }
-  if (!u || !recibeAlertas(u, c.campoId))
-    return { ok: false, error: 'Ese número no recibe las alertas de este campo: la respuesta no entra.' }
-  const rolDelNumero = rolExacto(u.rolId)
-  if (!rolDelNumero) return { ok: false, error: SIN_ROL }
-  const previa = ctx.respuestas[c.evento]
-  if (previa) return { ok: false, error: `Ya respondió ${previa.por}.` }
-  const libre = (c.texto ?? '').trim()
-  if (c.opcion.clave === OTRA.clave && !alcanza(libre, TEXTO_LIBRE_MINIMO)) return { ok: false, error: 'Con «0» hay que escribir qué encontró, con al menos una frase corta.' }
-  // Con la parte va lo que vio, del catálogo de esa parte: es lo que hace útil la respuesta para el análisis.
-  const parte = c.opcion.parte ? pedirCatalogoDeDanos(c.campoId, c.equipo)?.partes.find(x => x.id === c.opcion.parte) : undefined
-  if (c.opcion.parte && !parte) return { ok: false, error: 'Esa parte no es de este equipo.' }
-  if (parte && !(c.modo && modosDeParte(parte).some(m => m.codigo === c.modo))) return { ok: false, error: 'Diga qué vio en esa parte.' }
-  if (c.modo === MODO_OTRO && !alcanza(libre, TEXTO_LIBRE_MINIMO)) return { ok: false, error: 'Escriba qué vio, con al menos una frase corta.' }
-  anotarRespuesta(c.evento, {
-    texto: c.opcion.clave === OTRA.clave ? libre : parte && c.modo === MODO_OTRO ? `${c.opcion.texto}: ${libre}`
-      : parte && c.modo ? `${c.opcion.texto}: ${nombreModo(c.modo, parte.id).toLowerCase()}` : c.opcion.texto,
-    por: `${u.nombre} · ${rolDelNumero.nombre.toLowerCase()}`, porId: u.id,
-    ...(c.opcion.parte ? { parte: c.opcion.parte, modo: c.modo } : {}), canal: 'whatsapp', hora: horaDelPlc(),
+    ...(parte ? { parte: parte.id, ...(c.modo !== undefined ? { modo: c.modo } : {}) } : {}), canal: 'pantalla', hora: horaDelPlc(),
   })
   return { ok: true }
 }
@@ -1132,35 +1116,6 @@ export async function revisarParadaAnh(q: Credencial, id: string, c: CuerpoRevis
   return { ok: true, parada: guardar(parada.id, escritos, ctx).parada }
 }
 
-/** El motivo de «2 Algo está mal» por WhatsApp: estructurado, sin texto libre (D2). */
-export const MOTIVO_WHATSAPP = 'Por WhatsApp: «Algo está mal» en lo que contestó'
-
-/** «2 Algo está mal» al cierre de una respuesta por WhatsApp (B-05; U1 §2.6). En
- *  producción la manda el webhook firmado de Meta; en el demo, el teléfono
- *  simulado. Es la misma escritura que el botón de la pantalla (`…/revision`):
- *  no toca ningún paso y deja para revisar las filas de la parada (las de su
- *  evento o, si la parada es de una bomba o de un servicio, las de su cascada),
- *  a nombre de quien recibe las alertas de ese campo en ese número. */
-export async function revisarDesdeWhatsapp(c: { evento: string; campoId: string; usuarioId: string }): Promise<Resultado> {
-  if (FUENTE === 'http') return { ok: false, error: WHATSAPP_SOLO_WEBHOOK }
-  const { ctx, usuarios, clasificacionesAnh } = sesion()
-  const u = usuarios.find(x => x.id === c.usuarioId)
-  const malEvento = revisarEvento(c.evento, c.campoId)
-  if (malEvento) return { ok: false, error: malEvento }
-  if (!u || !recibeAlertas(u, c.campoId)) return { ok: false, error: 'Ese número no recibe las alertas de este campo: la respuesta no entra.' }
-  const rol = rolExacto(u.rolId)
-  if (!rol || !puedeHacer(rol.puede, 'anh:clasificar')) return { ok: false, error: 'Su rol no marca paradas para revisar.' }
-  // Las filas de la parada: las de su evento, o las de su cascada si la parada es de una bomba o de un servicio.
-  const deLaParada = filasDeEventos(c.campoId, [c.evento], ctx, clasificacionesAnh)
-  const filas = (deLaParada.length ? deLaParada : filasDeRaiz(c.campoId, c.evento, ctx, clasificacionesAnh)).filter(f => !f.exceso)
-  if (!filas.length) return { ok: false, error: 'Esa parada no tiene filas para la ANH todavía: avísele a su supervisor.' }
-  const eventos = [...new Set(filas.map(f => f.eventoId))]
-  const objetivos = eventos.map(e => ({ clave: e, filas: filas.filter(f => f.eventoId === e) }))
-  const escritos = escribirRevision(filas[0]!, objetivos, { motivo: MOTIVO_WHATSAPP, por: u.nombre, porId: u.id, rol: u.rolId, hora: horaDelPlc() })
-  guardar(filas[0]!.id, escritos, ctx)
-  return { ok: true }
-}
-
 /** La fila confirmada solo en los pasos pedidos: lo demás vuelve a como estaba. */
 function soloLosPedidos(antes: ParadaAnh, despues: ParadaAnh, pedidos: readonly PasoAnh[]): ParadaAnh {
   const b: Record<string, unknown> = { ...despues.clasificacion }
@@ -1459,4 +1414,158 @@ export async function deshacerAnh(q: Credencial, c: CuerpoDeshacerAnh): Promise<
   for (const [k, e] of Object.entries(escritos)) nuevas[k] = fusionarGuardado(g[k], e)
   cambiarSesion({ clasificacionesAnh: nuevas })
   return { ok: true, paradas: filas.map(f => pedirParadaAnh(f.id, ctx, nuevas)!) }
+}
+
+/* ─────────────────────────── A3 · Acciones ─────────────────────────── */
+
+// A3 · Las acciones que faltan (experiencia v3; CAMBIOS-CONTRATO.md §9, M2 a M4, y
+// «Contestar» en 1 toque). Las cuatro rechazan con su HTTP y su código, como las del
+// árbol de paradas (C-22), y en el mismo orden: la forma (400), el rol, la capacidad y
+// la persona (403), lo que no existe (404), lo que no es de sus campos (403), lo que
+// otro ya dijo (409) y las reglas del dominio (422). Todo por inserción (D1): nada se
+// edita ni se borra, y nada de lo que escribe una persona viaja a la ANH (D2).
+
+/** La persona que escribe, con su rol y su capacidad, o el 403 que corresponde. */
+function quienEscribe(q: Credencial, capacidad: Capacidad, sinCapacidad: string):
+  { ok: true; rol: Rol; yo: { id: string; nombre: string }; mios: string[] } | Rechazo {
+  const { usuarios } = sesion()
+  const rol = rolExacto(q.rolId)
+  if (!rol) return rechazo(403, 'rol-desconocido', SIN_ROL)
+  if (!puedeHacer(rol.puede, capacidad)) return rechazo(403, 'sin-capacidad', sinCapacidad)
+  const yo = personaDelRol(usuarios, q.rolId)
+  if (!yo) return rechazo(403, 'sin-persona', SIN_PERSONA)
+  return { ok: true, rol, yo, mios: camposAsignados(rol, usuarios).map(x => x.id) }
+}
+const firmaDe = (rol: Rol, yo: { id: string; nombre: string }) => ({ por: `${yo.nombre} · ${rol.nombre.toLowerCase()}`, porId: yo.id, hora: horaDelPlc() })
+
+/** El equipo de una parada del PLC (la bomba o el pozo). */
+const equipoDelEvento = (evento: string): string | undefined =>
+  eventosBomba().find(e => e.id === evento)?.equipo ?? eventosPozos().find(e => e.id === evento)?.pozo
+
+/** `POST /api/paradas/:evento/vio { modo, texto? }` → la respuesta como quedó. «Contestar»
+ *  en 1 toque: la parte ya se guardó con `POST /api/paradas/:evento/respuesta` (sin `modo`);
+ *  lo que vio es la pregunta siguiente y OPCIONAL. Se dice una vez, por inserción: queda
+ *  `modo` y `vio` (quién, cuándo y, con «Otra cosa», lo que escribió, que no sale de TRIM).
+ *  `capacidad`: `causa:declarar` (la incluye `causa:completar`). */
+export async function responderLoQueVio(q: Credencial, evento: string, c: CuerpoVio, o: { keepalive?: boolean } = {}): Promise<Resultado<{ respuesta: Respuesta }>> {
+  if (FUENTE === 'http') {
+    const r = await escribir(q, 'POST', `/paradas/${encodeURIComponent(evento)}/vio`, { modo: c.modo, ...(c.texto !== undefined ? { texto: c.texto } : {}) }, R_VIO, o)
+    if (!r.ok) return r
+    anotarRespuesta(evento, r.datos.respuesta)
+    return { ok: true, respuesta: r.datos.respuesta }
+  }
+  const forma = revisarForma(c, { modo: 'texto', texto: 'texto?' })
+  if (forma) return rechazo(400, 'peticion-invalida', forma)
+  const w = quienEscribe(q, 'causa:declarar', 'Su rol no responde paradas.')
+  if (!w.ok) return w
+  const campo = campoDelEvento(evento), equipo = equipoDelEvento(evento)
+  if (!campo || !equipo) return rechazo(404, 'no-encontrado', 'Esa parada no está en el registro del PLC.')
+  if (!w.mios.includes(campo)) return rechazo(403, 'sin-permiso', 'Esa parada es de un campo que no tiene asignado.')
+  const previa = sesion().ctx.respuestas[evento]
+  if (!previa?.parte) return rechazo(422, 'sin-parte', 'Primero diga qué parte se dañó: lo que vio va con la parte.')
+  if (previa.modo !== undefined) return rechazo(409, 'ya-dicho', `Lo que vio ya lo dijo ${previa.vio?.por ?? previa.por}.`)
+  const parte = pedirCatalogoDeDanos(campo, equipo)?.partes.find(x => x.id === previa.parte)
+  if (!parte || !modosDeParte(parte).some(m => m.codigo === c.modo)) return rechazo(422, 'modo-ajeno', 'Lo que vio no es de esa parte.')
+  const tope = revisarTopes(c as unknown as Record<string, unknown>, ['texto'])
+  if (tope) return rechazo(422, 'texto-largo', tope)
+  const libre = (c.texto ?? '').trim()
+  if (c.modo === MODO_OTRO && !alcanza(libre, TEXTO_LIBRE_MINIMO)) return rechazo(422, 'texto-corto', 'Escriba qué vio, con al menos una frase corta.')
+  const f = firmaDe(w.rol, w.yo)
+  const respuesta: Respuesta = { ...previa, modo: c.modo, vio: { ...f, ...(c.modo === MODO_OTRO ? { texto: libre } : {}) } }
+  anotarRespuesta(evento, respuesta)
+  return { ok: true, respuesta }
+}
+
+/** `POST /api/sap/ordenes/:numero/cierre` → la orden como quedó y el cierre. Cerrar la
+ *  orden en el teléfono (`orden:cerrar`, el técnico): qué hizo, la parte del catálogo,
+ *  las lecturas y las horas del trabajo. Solo la que está a su nombre (o sin técnico,
+ *  de su campo), liberada y sin cerrar. Las reglas, en `revisarCierre` (orden-cierre.ts). */
+export async function cerrarOrden(q: Credencial, numero: string, c: CuerpoCierre): Promise<Resultado<{ orden: OrdenSap; cierre: CierreOrden }>> {
+  if (FUENTE === 'http') {
+    const r = await escribir(q, 'POST', `/sap/ordenes/${encodeURIComponent(numero)}/cierre`, c, R_CIERRE)
+    if (!r.ok) return r
+    cambiarSesion({ cierresOrden: [...(sesion().cierresOrden ?? []), r.datos.cierre] })
+    return { ok: true, orden: r.datos.orden, cierre: r.datos.cierre }
+  }
+  const forma = revisarForma(c, { actividad: 'texto', parte: 'texto?', modo: 'texto?', inicio: 'texto', fin: 'texto' }) ?? formaDeLecturas((c as { lecturas?: unknown }).lecturas)
+  if (forma) return rechazo(400, 'peticion-invalida', forma)
+  const w = quienEscribe(q, 'orden:cerrar', 'Su rol no cierra órdenes: las cierra el técnico que las tiene a su nombre.')
+  if (!w.ok) return w
+  const { ctx, cierresOrden } = sesion()
+  const o = pedirOrdenesSap(CAMPOS.map(x => x.id), ctx, cierresOrden).find(x => x.numero === numero)
+  if (!o) return rechazo(404, 'no-encontrado', `La orden ${numero} no está en SAP.`)
+  if (!w.mios.includes(o.campoId)) return rechazo(403, 'sin-permiso', 'Esa orden es de un campo que no tiene asignado.')
+  if (o.tecnico && o.tecnico !== w.yo.id) return rechazo(403, 'ajena', `La orden ${numero} está a nombre de otra persona: la cierra quien la tiene.`)
+  const tags = new Map((pedirEquipo(o.campoId, o.equipo, ctx)?.dispositivos ?? []).filter(d => typeof d.valor !== 'string').map(d => [d.tag, d.unidad]))
+  const falla = revisarCierre(c, o, pedirCatalogoDeDanos(o.campoId, o.equipo), tags, AHORA.getTime())
+  if (falla) return rechazo(falla.estado, falla.codigo, falla.error)
+  const cierre = armarCierre(c, o, tags, firmaDe(w.rol, w.yo))
+  cambiarSesion({ cierresOrden: [...(cierresOrden ?? []), cierre] })
+  return { ok: true, orden: ordenConCierre(o, cierre), cierre }
+}
+
+/** Las lecturas del cierre: una lista de `{ tag, valor }` (texto y número), o nada. */
+function formaDeLecturas(x: unknown): string | undefined {
+  if (x === undefined || x === null) return undefined
+  if (!Array.isArray(x)) return PETICION('lecturas', 'tiene que ser una lista')
+  for (const [i, l] of x.entries()) {
+    if (!l || typeof l !== 'object' || Array.isArray(l)) return PETICION(`lecturas[${i}]`, QUE_ES.objeto!)
+    const y = l as Record<string, unknown>
+    if (typeof y.tag !== 'string') return PETICION(`lecturas[${i}].tag`, QUE_ES.texto!)
+    if (typeof y.valor !== 'number') return PETICION(`lecturas[${i}].valor`, 'tiene que ser un número')
+  }
+  return undefined
+}
+
+/** `POST /api/anh/respuestas` → la respuesta guardada. La respuesta de la ANH al reporte
+ *  de un día, registrada a mano por regulatorio (`anh:enviar`): aceptado o rechazado, el
+ *  motivo de la lista y la hora en que llegó. En un rechazo, `limiteCorreccion` = esa
+ *  hora + 1 h. Por inserción: rige la más reciente del día. */
+export async function registrarRespuestaAnh(q: Credencial, c: CuerpoRespuestaDeLaAnh): Promise<Resultado<{ respuesta: RespuestaAnh }>> {
+  if (FUENTE === 'http') {
+    const r = await escribir(q, 'POST', '/anh/respuestas', c, R_RESPUESTA_DE_LA_ANH)
+    if (!r.ok) return r
+    cambiarSesion({ respuestasAnh: [...(sesion().respuestasAnh ?? []), r.datos.respuesta] })
+    return { ok: true, respuesta: r.datos.respuesta }
+  }
+  const forma = revisarForma(c, { campoId: 'texto', dia: 'texto', estado: 'texto', motivo: 'texto?', recibida: 'texto', folio: 'texto?' })
+  if (forma) return rechazo(400, 'peticion-invalida', forma)
+  const w = quienEscribe(q, 'anh:enviar', 'La respuesta de la ANH la registra regulatorio.')
+  if (!w.ok) return w
+  if (!CAMPOS.some(x => x.id === c.campoId)) return rechazo(404, 'campo-desconocido', 'Ese campo no está en el registro de campos.')
+  if (!w.mios.includes(c.campoId)) return rechazo(403, 'sin-permiso', 'Ese campo no lo tiene asignado.')
+  const { respuestasAnh, informes } = sesion()
+  if (c.folio !== undefined && !informes.some(i => i.folio === c.folio && i.campos.includes(c.campoId)))
+    return rechazo(422, 'folio-ajeno', `El folio ${c.folio} no es de un informe de ese campo.`)
+  const previas = respuestasAnh ?? []
+  const falla = revisarRespuestaAnh(c, previas, AHORA.getTime())
+  if (falla) return rechazo(falla.estado, falla.codigo, falla.error)
+  const respuesta = armarRespuestaAnh(c, previas.length + 1, firmaDe(w.rol, w.yo))
+  cambiarSesion({ respuestasAnh: [...previas, respuesta] })
+  return { ok: true, respuesta }
+}
+
+/** `POST /api/anh/conversion/importar { campo, texto }` → la tabla de equivalencias leída
+ *  («código; descripción; N1; N2»), con lo que bloquea por fila. No firma: lo leído va al
+ *  borrador de la configuración y se firma con `POST /api/configuracion`
+ *  (`Config.conversionAnh`). Lo carga el administrador (`config:firmar`). */
+export async function importarConversion(q: Credencial, c: CuerpoConversionCsv): Promise<Resultado<ConversionLeida>> {
+  if (FUENTE === 'http') {
+    const r = await escribir(q, 'POST', '/anh/conversion/importar', { campo: c.campo, texto: c.texto }, R_CONVERSION_CSV)
+    if (!r.ok) return r
+    return { ok: true, ...r.datos }
+  }
+  const forma = revisarForma(c, { campo: 'texto', texto: 'texto' })
+  if (forma) return rechazo(400, 'peticion-invalida', forma)
+  const w = quienEscribe(q, 'config:firmar', 'La conversión del árbol la carga el administrador de la implementación.')
+  if (!w.ok) return w
+  if (!CAMPOS.some(x => x.id === c.campo)) return rechazo(404, 'campo-desconocido', 'Ese campo no está en el registro de campos.')
+  if (!w.mios.includes(c.campo)) return rechazo(403, 'sin-permiso', 'Ese campo no lo tiene asignado.')
+  if (!c.texto.trim()) return rechazo(422, 'archivo-vacio', 'El archivo llegó vacío: va una fila por código, con «código; descripción; causa (N1); detalle (N2)».')
+  const t = leerConversion(c.texto, c.campo)
+  // Acotado como la topología (C-12, C-24): sin caracteres invisibles y, pasados los 50 hallazgos, uno que dice cuántos más.
+  const hallazgos = t.hallazgos.map(h => ({ ...h, texto: h.texto.replace(INVISIBLES, ''), ...(h.codigo !== undefined ? { codigo: h.codigo.replace(INVISIBLES, '') } : {}) }))
+  const resto = hallazgos.slice(MAXIMO_HALLAZGOS), bloquean = resto.filter(h => h.bloquea).length
+  return { ok: true, ...t, hallazgos: resto.length ? [...hallazgos.slice(0, MAXIMO_HALLAZGOS), { fila: resto[0]!.fila, bloquea: bloquean > 0,
+    texto: `Y ${resto.length} hallazgos más desde la fila ${resto[0]!.fila}${bloquean ? ` (${bloquean} bloquean)` : ''}: corrija los de arriba y vuelva a cargar el archivo.` }] : hallazgos }
 }

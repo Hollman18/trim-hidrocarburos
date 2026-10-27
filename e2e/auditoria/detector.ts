@@ -369,7 +369,7 @@ export function detectar(): Hallazgo[] {
   // espaciado (letter-spacing ≥ 0,5 px), que es como se escribían las cabeceras de antes.
   // Basta una palabra gritada de cinco letras o más («SIN CAUSA · 2 paradas»); las siglas y
   // los códigos con guion o cifra («EPIC-CEIBA-02», «P-201B») no cuentan.
-  const SIGLAS = /^(PRODML|SCADA|WHATSAPP|DEMO)$/
+  const SIGLAS = /^(PRODML|SCADA|DEMO)$/
   for (const el of todos) {
     const titulo = /^H[1-6]$/.test(el.tagName) || el.getAttribute('role') === 'heading'
     const propio = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent ?? '').join(' ')

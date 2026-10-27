@@ -63,6 +63,10 @@ export interface VistaReporteAnh {
   paradas: FaltaDeParada[]
   /** Los motivos del libro, en palabras (la ⓘ). */
   motivos: string[]
+  /** A3 · La respuesta de la ANH que rige en el período (un rechazo con hora por delante,
+   *  o la más reciente) y lo que queda de la hora para corregir (entities/anh-respuestas.ts).
+   *  AGREGADO, opcional: ausente si no hay ninguna registrada («ANH: sin respuesta registrada»). */
+  respuestaAnh?: import('./anh-respuestas').DiaRespondido
 }
 
 const FMT_N0 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 })

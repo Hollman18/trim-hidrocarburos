@@ -1,0 +1,1 @@
+{"id":"403-respuesta-anh-sin-capacidad","descripcion":"Producción (sin anh:enviar) registra la respuesta de la ANH","pasos":[{"metodo":"POST","endpoint":"/api/anh/respuestas","rol":"prod","cuerpo":{"campoId":"ceiba","dia":"2026-10-01","estado":"aceptado","recibida":"2026-10-02T07:20:00-05:00"},"esperado":{"estado":403,"codigo":"sin-capacidad"}}]}

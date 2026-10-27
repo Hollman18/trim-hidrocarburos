@@ -1,0 +1,1 @@
+{"id":"404-vio-no-encontrado","descripcion":"«Lo que vio» de una parada que no está en el registro del PLC","pasos":[{"metodo":"POST","endpoint":"/api/paradas/EV-NO-EXISTE/vio","rol":"oper","cuerpo":{"modo":"ELP"},"esperado":{"estado":404,"codigo":"no-encontrado"}}]}

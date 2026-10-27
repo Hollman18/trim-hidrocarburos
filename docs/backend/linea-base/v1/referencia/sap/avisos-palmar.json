@@ -1,0 +1,1 @@
+{"id":"sap/avisos-palmar","descripcion":"Avisos SAP de palmar","endpoint":"/api/sap/avisos?campos=palmar","esperado":{"datos":[],"refs":{}}}

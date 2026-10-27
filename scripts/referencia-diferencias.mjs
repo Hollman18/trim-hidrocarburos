@@ -4,7 +4,7 @@
  *
  *  - la respuesta tiene que CONTENER lo esperado: puede traer más campos, salvo
  *    los que el contrato dice que van AUSENTES cuando no aplican (`colchonH`
- *    ausente = sin colchón, `null` = no se llena; `costoFalla` ausente, no 0;
+ *    ausente = sin colchón, `null` = no se llena; `costoFalla` y `costoFallaHoy` ausentes, no 0;
  *    `cadena` solo en los pasos con valor; la revisión y la evidencia del
  *    yacimiento solo cuando las hay; `AUSENTES`, abajo): si lo esperado no los
  *    trae, no pueden venir;
@@ -29,7 +29,7 @@ export const TOL_REL = 1e-6, TOL_ABS = 0.005
  *  - `techo` (riesgo): «hasta»; `declaradoPor` (riesgo): que el motivo lo escribió una persona;
  *  - `retiros` (filas ANH): «antes: …, retirado por …»; `declarado` (la causa): la respuesta de una persona;
  *  - `apunta` («una señal apunta»: quién puede confirmar), `perdida` (proponer una pérdida), `escalada` («No sé»). */
-export const AUSENTES = new Set(['colchonH', 'costoFalla', 'cadena', 'revision', 'evidenciaYacimiento', 'fraseHoy', 'porTipo', 'campoDeGas', 'disponibleHoy', 'textoEstructural',
+export const AUSENTES = new Set(['colchonH', 'costoFalla', 'costoFallaHoy', 'cadena', 'revision', 'evidenciaYacimiento', 'fraseHoy', 'porTipo', 'campoDeGas', 'disponibleHoy', 'textoEstructural',
   'siParaOtra', 'sinUna', 'hz', 'subio', 'cambioHoy', 'noIntervenir', 'proximoInstrumento', 'sinDato', 'techo', 'declaradoPor', 'retiros', 'declarado', 'apunta', 'perdida', 'escalada'])
 /** Los registros cerrados: un objeto con estas claves trae exactamente las claves esperadas. */
 export const CERRADOS = new Set(['porChoke', 'porEscalon', 'porChokeEscalon', 'porChokeEquipo', 'estructuralPorChoke', 'horasPorDominante', 'noPlaneado', 'porTramo', 'holgura', 'potenciales', 'dominante', 'casiIguales', 'superado'])

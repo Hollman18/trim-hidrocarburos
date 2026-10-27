@@ -36,7 +36,9 @@ Lo que no se pudo resolver leyendo y corriendo el código, o que parece inconsis
 18. **Verificación pública con folio inexistente**: el contrato no dice si es `404` o `{ coincide: false }` (ver 5D.4).
 19. **Redondeo en doble.** La forma canónica exige `floor(v × 100 + 0,5)` en IEEE-754 (corrido: 1,005 → «1.00», mientras que en `Decimal` exacto sale 1,01). Un backend en Java/Python/SQL con decimales exactos tiene que convertir a `double` antes de esta cuenta. Conviene un caso de prueba con 1,005 en `referencia/` (hoy no hay casos de referencia de informes, mensajes ni relojes).
 
-## WhatsApp
+## WhatsApp · RETIRADO (27-oct-2026)
+
+> **RETIRADO (27-oct-2026)** El backend no construye el canal: estos huecos ya no aplican (CAMBIOS-CONTRATO §3).
 
 20. **Variantes que el registro del demo nunca ejercita.** Con las 8 personas iniciales solo La Ceiba tiene supervisor y operador con alertas: las consecuencias «con respaldo parcial» y «con respaldo total» y la plantilla `trim_recordatorio_arranco` no aparecen en `GET /api/mensajes` del demo (se obtuvieron en este capítulo cambiando los campos de dos personas). Conviene agregarlas a la referencia. **(Resuelto en parte el 9-oct: demo con agua real)** Con el respaldo firmado de La Ceiba, la consecuencia «con respaldo parcial» sí sale en el registro del demo (la parada de P-201B del 2-oct, 5D.5); «sin respaldo», «con respaldo total» y `trim_recordatorio_arranco` siguen sin aparecer.
 21. **El tipo `Mensaje` no trae el id de Meta del saliente** (`wamid`), que el webhook necesita para resolver `context.id` (`mensajes.ts:84-109`). El contrato lo pide en la tabla `mensaje`; falta en el tipo y en `GET /api/mensajes` si alguna pantalla lo fuera a usar.

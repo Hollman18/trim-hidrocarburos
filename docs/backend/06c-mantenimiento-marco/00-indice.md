@@ -7,7 +7,7 @@ Datos: el demo (`VITE_FUENTE=demo`), `AHORA = 2026-10-02T14:00-05:00`, período 
 | Archivo | Pantalla | Rutas capturadas | Capturas |
 |---|---|---|---|
 | [01-riesgo.md](01-riesgo.md) | Riesgo (y la franja «Ahora» de Resumen) | `#/jefe/riesgo/ceiba~portafolio/curso` («ver 2 más» cerrado y abierto), `#/ger/riesgo/ceiba/curso` (decisión), `#/conf/riesgo/morichal/curso` | 4 |
-| [02-identificar.md](02-identificar.md) | Identificar (paradas por identificar) | `#/oper/causa/ceiba/curso` (+ el chat de WhatsApp), `#/sup/…`, `#/tec/…`, `#/prod/causa/ceiba/curso`, `#/prod/causa/morichal/cerrado`, `#/jefe/causa/ceiba/curso`, `#/conf/causa/morichal/curso` (+ respuesta y análisis de causa raíz B.2/B.3) | 9 |
+| [02-identificar.md](02-identificar.md) | Identificar (paradas por identificar) | `#/oper/causa/ceiba/curso` (+ el chat de WhatsApp, **RETIRADO (27-oct-2026)**), `#/sup/…`, `#/tec/…`, `#/prod/causa/ceiba/curso`, `#/prod/causa/morichal/cerrado`, `#/jefe/causa/ceiba/curso`, `#/conf/causa/morichal/curso` (+ respuesta y análisis de causa raíz B.2/B.3) | 9 |
 | [03-mantenimiento.md](03-mantenimiento.md) | Mantenimiento | `#/jefe/mantenimiento/ceiba/curso`, `…/ceiba~portafolio/curso`, `…/ceiba/cerrado` (HORAS EN SAP y tres relojes con datos) | 3 |
 | [04-confiabilidad.md](04-confiabilidad.md) | Confiabilidad | `#/conf/confiabilidad/morichal/curso`, `#/jefe/confiabilidad/ceiba~portafolio/curso` | 2 |
 | [05-superficie.md](05-superficie.md) | Superficie (tabla de equipos) | `#/jefe/equipo/ceiba/curso`, `#/conf/equipo/morichal/curso` (servicios desplegados) | 2 |
@@ -36,4 +36,4 @@ Cada uno levanta su propio Vite (`VITE_FUENTE=demo`, puerto estricto: si está o
 **Lo esencial para quien construye el backend.**
 1. Casi todo lo de estas pantallas es **«ahora»** o **«toda la historia»**, no el período: Riesgo, ATACAR AHORA, ABIERTO EN SAP, las preguntas por identificar (que no prescriben), Confiabilidad completa, Mi trabajo y Planta (salvo los «bbl diferidos»). El período solo mueve el libro (identificación, palancas, por parte, bbl del período por equipo) y las horas de SAP.
 2. El servidor manda **filas sin redondear y con su prioridad**; el front ordena (por `horas` con lo ya fuera primero, por severidad y bbl), corta en cinco sin esconder nunca un P1, suma las cabeceras y formatea (8 §8).
-3. Lo que hoy es **simulado** y el backend debe reemplazar: SAP (órdenes, horas, relojes), el registro de predicciones, la severidad/estado/lectura de los equipos del catálogo, el teléfono de WhatsApp, el cambio de rol, y que respuestas, análisis y cambios de planta vivan solo en la sesión del navegador.
+3. Lo que hoy es **simulado** y el backend debe reemplazar: SAP (órdenes, horas, relojes), el registro de predicciones, la severidad/estado/lectura de los equipos del catálogo, el teléfono de WhatsApp (**RETIRADO (27-oct-2026)**: no se reemplaza, sale), el cambio de rol, y que respuestas, análisis y cambios de planta vivan solo en la sesión del navegador.

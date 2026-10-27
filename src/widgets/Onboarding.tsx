@@ -20,7 +20,7 @@ const SENAS: Readonly<Record<string, readonly [string, string, string]>> = {
   sup: ['Lo que se deja de producir ahora en su campo.', 'Lo que le toca, en orden: lo que tiene hora va primero.',
     'Confirme las paradas iguales, o véalas una por una.'],
   oper: ['Esto no se hace hasta contestar.',
-    'Aquí le llegan las preguntas que solo usted puede contestar, una a la vez; las de WhatsApp también.',
+    'Aquí le llegan las preguntas que solo usted puede contestar, una a la vez.',
     'Un toque y listo. Si se equivoca, toque «Deshacer».'],
   tec: ['Lo que le toca hoy, en orden.', 'Lo que usted encuentra le enseña al vigía.', 'Diga qué se dañó en la primera tarjeta.'],
   jefe: ['De cada falla, cuánto es reparar y cuánto es esperar.', 'Lo que hay que intervenir ya.', 'Abra el primer equipo y cree el aviso.'],

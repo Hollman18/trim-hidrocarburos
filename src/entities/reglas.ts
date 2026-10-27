@@ -10,7 +10,7 @@ export const MOTIVO_MINIMO = 5
 /** Caracteres mínimos del nombre de una persona. */
 export const NOMBRE_MINIMO = 3
 /** Caracteres mínimos de un texto libre: lo que encontró quien responde una
- *  parada sin parte (o con «otro» modo, o con «0» en WhatsApp) y la
+ *  parada sin parte (o con «otro» modo) y la
  *  descripción de un aviso a SAP. Una frase corta, no «ok». */
 export const TEXTO_LIBRE_MINIMO = 8
 /** Caracteres máximos de lo que se escribe a mano en una parada (el motivo de

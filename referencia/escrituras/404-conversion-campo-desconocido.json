@@ -1,0 +1,1 @@
+{"id":"404-conversion-campo-desconocido","descripcion":"La conversión del árbol de un campo que no está en el registro","pasos":[{"metodo":"POST","endpoint":"/api/anh/conversion/importar","rol":"adm","cuerpo":{"campo":"no-existe","texto":"OP-1;Falla;NP_SUB;Falla ESP"},"esperado":{"estado":404,"codigo":"campo-desconocido"}}]}

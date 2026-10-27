@@ -70,8 +70,16 @@ export interface Respuesta {
   parte?: ParteId
   /** Lo que vio: modo de falla de ISO 14224 (Table B.6), del catálogo de la parte. */
   modo?: string
-  /** Por dónde llegó: el hilo de WhatsApp o la pantalla de TRIM. */
-  canal?: 'whatsapp' | 'pantalla'
+  /** Por dónde llegó. En v1 tenía otro valor, el del canal de mensajes al teléfono:
+   *  RETIRADO el 27-oct-2026 (R4, docs/backend/CAMBIOS-CONTRATO.md §3). Toda respuesta
+   *  es de pantalla; el servidor puede mandarlo u omitirlo y el front no lo lee. */
+  canal?: 'pantalla'
+  /** A3 · «Contestar» en 1 toque: la parte se guarda sola y lo que vio llega después,
+   *  como pregunta siguiente y opcional (`POST /api/paradas/:evento/vio`). Quién lo dijo
+   *  y cuándo (puede ser otra persona que la que dijo la parte), y lo que escribió si fue
+   *  «Otra cosa» (se queda en TRIM, D2). Ausente: lo que vio llegó con la parte, o nadie
+   *  lo ha dicho. */
+  vio?: { por: string; porId: string; hora: string; texto?: string }
 }
 
 export interface EventoPozo {

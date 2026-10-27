@@ -1,14 +1,15 @@
-// De punta a punta: carril caliente (WhatsApp), SAP, aciertos, asignación oficial y lo que ve cada rol.
+// De punta a punta: identificar en pantalla, SAP, aciertos, asignación oficial y lo que ve cada rol.
+// Experiencia v3: sin el canal de mensajes (experiencia v3, Fase B). Lo que se contestaba en el chat se contesta en la pantalla.
 import { test } from './apoyo.ts'
 
-test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
+test('identificar, SAP, aciertos y perfiles', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
   const page = f.page
   let t = ''
   // La cifra de un panel de Identificar, por su título: no depende de la marca de prioridad que va al lado.
   const cifra = (titulo: string) => page.evaluate(x => [...document.querySelectorAll('main h2')].find(h => h.textContent === x)?.nextElementSibling?.textContent ?? '', titulo)
 
-  await test.step('Identificar: causas sugeridas y el hilo de WhatsApp', async () => {
+  await test.step('Identificar: causas sugeridas y la respuesta en pantalla', async () => {
     t = await f.texto()
     // B-02: el operador tiene una sola lista, «Por contestar»: lo del libro y lo del árbol, juntos.
     f.ok((await cifra('Por contestar')).startsWith('4 paradas'), 'antes de responder: 4 paradas por contestar')
@@ -25,12 +26,6 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
       return b ? b.getBoundingClientRect().height : 0
     })
     f.ok(alto >= 18, `la sugerida tiene un alto usable en escritorio (${Math.round(alto)} px; en el teléfono, 40)`)
-    const linea = await page.evaluate(() => ([...document.querySelectorAll('h3, h5')].find(h => h.textContent === 'WhatsApp')?.nextElementSibling as HTMLElement | null)?.innerText ?? '')
-    // El tanque aguanta 1,8 h (P-201A y P-201C toman parte del agua): los pozos se empiezan a cerrar antes del escalado.
-    f.ok(/^03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado\s+sin respuesta$/.test(linea), `el hilo en una línea, en orden (${linea})`)
-    // A quién le llegó cada paso ya no va en la línea: está en el globo y sale escrito en el papel.
-    const papel = await page.evaluate(() => ([...document.querySelectorAll('h3, h5')].find(h => h.textContent === 'WhatsApp')?.nextElementSibling?.nextElementSibling)?.textContent ?? '')
-    f.ok(/03:53 pregunta: Jairo Peña · 04:22 recordatorio: Jairo Peña · 05:44 pozos cerrándose: Jairo Peña, Nelson Ortiz · 05:52 escalado: Nelson Ortiz/.test(papel), 'a quién le llegó cada paso: en el globo y en el papel')
     t = await f.texto()
     // F1 (UI-22): «Datos de demostración», en frase y en la línea de las migas.
     f.ok(t.includes('Datos de demostración') && !t.includes('Demo · simular') && !t.includes('en este demo'), 'una sola marca de demostración en la cabecera; ninguna nota de demo en la pantalla')
@@ -39,34 +34,13 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     await f.enviar(await f.lista({ valor: 'sello' })); await f.esperar(300)
     t = await f.texto()
     f.ok(t.includes('Escribió «Otra cosa»: diga qué vio'), '«Otra cosa» sin escribir qué vio no entra')
-    f.ok(await f.clic('Ver mi chat de WhatsApp'), 'el operador abre su propio chat de WhatsApp a un clic')
-    await f.esperar(300)
-    t = await f.texto()
-    f.ok(t.includes('cuenta de empresa verificada') && t.includes('Responda con un número') && t.includes('1) Sello mecánico'), 'el teléfono muestra la pregunta tal como le llegó')
-    f.ok(await f.clic('0Otra cosa'), 'responde «0» desde el teléfono')
-    await f.esperar(200)
-    await f.escribir('input[aria-label="Escribir la respuesta"]', 'corto')
-    await f.enviar(await page.$('input[aria-label="Escribir la respuesta"]')); await f.esperar(300)
-    t = await f.texto()
-    f.ok(t.includes('Con «0» hay que escribir qué encontró'), '«0» con un texto muy corto no entra y TRIM lo dice en el chat')
-    f.ok(await f.clic('↩Volver a las opciones'), 'desde el texto se puede volver a las opciones')
-    await f.esperar(200)
-    f.ok(await f.clic('3Otra parte del equipo'), 'pide ver todas las partes de la bomba')
-    await f.esperar(200)
-    t = await f.texto()
-    f.ok(t.includes('¿Qué parte?') && t.includes('Impulsores y desgaste interno'), 'TRIM le manda todas las partes del catálogo')
-    f.ok(await f.clic('↩Escoger otra parte'), 'y puede volver a las opciones')
-    await f.esperar(200)
-    f.ok(await f.clic('1Sello mecánico'), 'escoge la parte: un toque')
-    await f.esperar(300)
-    t = await f.texto()
-    f.ok(t.includes('¿Qué vio en sello mecánico?'), 'TRIM pregunta qué vio, con el catálogo de esa parte')
-    f.ok(await f.clic('1Fuga hacia afuera'), 'escoge lo que vio: segundo toque')
-    await f.esperar(500)
+    f.ok(!t.includes('WhatsApp') && !t.includes('Ver mi chat'), 'ni el hilo ni el chat de WhatsApp: se contesta en la pantalla')
+    f.ok(await f.clic('Fuga hacia afuera'), 'escoge lo que vio en el sello: un toque')
+    await f.enviar(await f.lista({ valor: 'sello' })); await f.esperar(500)
     t = await f.texto()
     f.ok((await cifra('Por contestar')).startsWith('3 paradas'), 'P-201B sale de lo que tiene por contestar (quedan 3 de 4)')
-    f.ok(t.includes('Sello mecánico · fuga hacia afuera') && !t.includes('vio: fuga hacia afuera') && t.includes('por WhatsApp'), 'queda en DECLARADAS dicho una vez: parte · lo que vio, por WhatsApp')
-    f.ok(t.includes('Respondido: P-201B (por WhatsApp') && t.includes('Pasó a «Declaradas»'), 'y se confirma arriba: respondido y a dónde pasó')
+    f.ok(t.includes('Sello mecánico · fuga hacia afuera') && !t.includes('vio: fuga hacia afuera'), 'queda en DECLARADAS dicho una vez: parte · lo que vio')
+    f.ok(/Respondido: P-201B \(\d\d:\d\d\)/.test(t) && t.includes('Pasó a «Declaradas»'), 'y se confirma arriba: respondido y a dónde pasó')
   })
 
   await test.step('Identificar: un pozo con electrosumergible se responde con sus partes', async () => {
@@ -106,23 +80,13 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     f.ok(t.includes('Corregir'), 'y se puede corregir después')
   })
 
-  await test.step('Turno: el registro por hilo', async () => {
-    await f.ir('#/sup/turno/ceiba/curso'); await f.esperar(400)
-    t = await f.texto()
-    f.ok(t.includes('WhatsApp del turno') && /respondió Jairo Peña[^\n]*por WhatsApp: «Sello mecánico: fuga hacia afuera»/.test(t), 'Turno muestra el hilo de P-201B con la respuesta')
-    f.ok(t.includes('pozos cerrándose') && t.includes('escalado') && t.includes('orden liberada en SAP'), 'cada paso con su nombre: pozos cerrándose, escalado, orden liberada')
-    // Con un título que falte, indexOf da −1 y la comparación pasaba sin comprobar nada.
-    const nuevas = t.indexOf('Paradas nuevas'), registro = t.indexOf('WhatsApp del turno')
-    f.ok(nuevas >= 0 && registro > nuevas, 'el registro va después de las paradas nuevas del turno')
-  })
-
   // F1 (P-trabajo-1; X4 §3.6.3 y §3.7): Mi trabajo se fundió en Hoy del técnico; su dirección abre Hoy.
-  await test.step('Hoy del técnico: su orden de SAP, con el aviso de WhatsApp (antes, Mi trabajo)', async () => {
+  await test.step('Hoy del técnico: su orden de SAP (antes, Mi trabajo)', async () => {
     await f.ir('#/tec/trabajo/ceiba/curso'); await f.esperar(400)
     f.ok((await f.hash()).startsWith('#/tec/hoy/'), `la dirección de Mi trabajo abre Hoy (${await f.hash()})`)
     const orden = page.locator('main [data-tarea="orden"]').filter({ hasText: 'K-101' })
     t = await orden.innerText()
-    f.ok(t.includes('40012056') && t.includes('le llegó por WhatsApp') && t.includes('Verificar que las tres unidades'), `el técnico ve su orden, lo que hay que hacer y el aviso de WhatsApp («${t.replace(/\s+/g, ' ').slice(0, 160)}»)`)
+    f.ok(t.includes('40012056') && t.includes('Verificar que las tres unidades'), `el técnico ve su orden y lo que hay que hacer («${t.replace(/\s+/g, ' ').slice(0, 160)}»)`)
     f.ok(await orden.locator('svg[role="img"][aria-label^="Prioridad"]').count() === 0, 'la prioridad de SAP no se dibuja como alarma: la marca es la del equipo')
   })
 
@@ -165,11 +129,11 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     f.ok(/1 de 1 pozo cotejado|de 1 pozo cotejado/.test(t), 'solo se cotejan los pozos que están en las dos')
   })
 
-  await test.step('Conectores: SAP y WhatsApp como conectados', async () => {
+  await test.step('Conectores: SAP como conectado, y nada del canal retirado', async () => {
     await f.ir('#/adm/conectores/ceiba/curso'); await f.esperar(600)
     t = await f.texto()
-    f.ok(t.includes('Sistemas corporativos') && t.includes('SAP S/4HANA') && t.includes('WhatsApp Business') && /conectado/i.test(t), 'Conectores muestra SAP PM y WhatsApp Business conectados')
-    f.ok(t.includes('trim_que_se_dano') && t.includes('Catálogos de daño'), 'con las plantillas aprobadas y los catálogos de daño por clase')
+    f.ok(t.includes('Sistemas corporativos') && t.includes('SAP S/4HANA') && /conectado/i.test(t) && !t.includes('WhatsApp'), 'Conectores muestra SAP PM conectado y nada de WhatsApp')
+    f.ok(t.includes('Catálogos de daño'), 'con los catálogos de daño por clase')
   })
 
   await test.step('Accesos de solo lectura: el administrador ve la forma mínima del contrato', async () => {
@@ -255,7 +219,7 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     f.ok(/(?:^|\n)\d+ %\s*\n\s*mantenimiento proactivo/i.test(t), 'el gerente ve el porcentaje de mantenimiento proactivo en su Resultados')
   })
 
-  await test.step('Accesos: el registro de lo enviado no se reescribe', async () => {
+  await test.step('Accesos: suspender no reescribe lo que la persona contestó', async () => {
     await f.ir('#/ger/configuracion/ceiba/curso'); await f.esperar(400)
     await f.clic('Usuarios y accesos'); await f.esperar(400)
     f.ok(await f.clic('Cambiar el acceso de Jairo Peña'), 'abre el acceso del operador')
@@ -264,9 +228,8 @@ test('carril caliente, SAP, aciertos y perfiles', async ({ flujo: f }) => {
     await f.escribir('input[placeholder^="Ej.: pasa a cubrir"]', 'prueba: deja la operación')
     await f.clic('Guardar el cambio'); await f.esperar(500)
     await f.ir('#/sup/causa/ceiba/curso'); await f.esperar(500)
-    // A quién le llegó cada paso está en el globo y en la nota del papel (textContent la incluye).
-    const todo = await page.evaluate(() => document.querySelector('main')?.textContent ?? '')
-    f.ok(/pregunta: Jairo Peña/.test(todo), 'suspender al operador no borra lo que ya se le mandó: el hilo sigue diciendo a quién fue')
+    const declarada = page.locator('main [data-declarada]').filter({ hasText: 'P-201B' }).first()
+    f.ok(/Jairo Peña/.test(await declarada.innerText()), 'suspender al operador no borra lo que contestó: P-201B sigue a su nombre')
   })
 
   f.cerrar()

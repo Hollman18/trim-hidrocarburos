@@ -17,8 +17,7 @@ function Bloque({ titulo, filas, vacio }: { titulo: string; filas: readonly Fras
 }
 
 /** F1 · P-06 · «Entregar turno» (X4 §5.5; imagen 3a): el resumen que el supervisor
- *  le deja al turno que entra —lo que paró, lo que queda por hacer, lo hecho hoy y el
- *  WhatsApp de las últimas 12 h—, armado por el motor (`entregaDelTurno`), y
+ *  le deja al turno que entra —lo que paró, lo que queda por hacer y lo hecho hoy—, armado por el motor (`entregaDelTurno`), y
  *  «Compartir en PDF» con el membrete, el folio y la huella de siempre. En el
  *  escritorio va en su lugar, arriba de las tarjetas; en el teléfono, como una hoja
  *  que sube. La firma de la entrega espera su contrato (una escritura que todavía no
@@ -35,7 +34,6 @@ export function Entrega({ e, onCerrar }: { e: EntregaTurno; onCerrar: () => void
         <Bloque titulo="Lo que paró" filas={e.paro} vacio="Nada parado en el turno." />
         <Bloque titulo="Lo que queda por hacer" filas={e.pendiente} vacio="Nada pendiente." />
         <Bloque titulo="Hecho hoy" filas={e.hecho} vacio="Nada confirmado ni contestado todavía." />
-        <Bloque titulo="El turno en WhatsApp" filas={e.whatsapp} vacio="TRIM no mandó nada en el turno." />
         {e.diferido && <p className="text-[15px] text-[var(--tinta2)]"><Texto f={e.diferido} /></p>}
         <p className="text-[14px] text-[var(--tinta2)]">La entrega todavía no se firma en TRIM: se comparte en PDF, con su folio.</p>
         <div className="no-imprimir flex flex-wrap items-center gap-3">

@@ -236,6 +236,11 @@
    "descripcion": "Calidad de la clasificación ANH de ceiba, 2026-09"
   },
   {
+   "id": "anh/reporte-ceiba-2026-09",
+   "endpoint": "/api/vistas/anh/reporte?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El reporte a la ANH de ceiba, 2026-09: ¿se puede publicar?, las paradas sin causa y quién las debe"
+  },
+  {
    "id": "choke-arbol/ceiba-2026-09-gestion",
    "endpoint": "/api/vistas/choke/arbol?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
    "descripcion": "El árbol de pérdidas del choke de ceiba, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
@@ -328,6 +333,11 @@
    "id": "anh/calidad-morichal-2026-09",
    "endpoint": "/api/vistas/anh/calidad?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Calidad de la clasificación ANH de morichal, 2026-09"
+  },
+  {
+   "id": "anh/reporte-morichal-2026-09",
+   "endpoint": "/api/vistas/anh/reporte?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El reporte a la ANH de morichal, 2026-09: ¿se puede publicar?, las paradas sin causa y quién las debe"
   },
   {
    "id": "choke-arbol/morichal-2026-09-gestion",
@@ -424,6 +434,11 @@
    "descripcion": "Calidad de la clasificación ANH de guacamayo, 2026-09"
   },
   {
+   "id": "anh/reporte-guacamayo-2026-09",
+   "endpoint": "/api/vistas/anh/reporte?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El reporte a la ANH de guacamayo, 2026-09: ¿se puede publicar?, las paradas sin causa y quién las debe"
+  },
+  {
    "id": "choke-arbol/guacamayo-2026-09-gestion",
    "endpoint": "/api/vistas/choke/arbol?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
    "descripcion": "El árbol de pérdidas del choke de guacamayo, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
@@ -509,6 +524,11 @@
    "descripcion": "Calidad de la clasificación ANH de palmar, 2026-09"
   },
   {
+   "id": "anh/reporte-palmar-2026-09",
+   "endpoint": "/api/vistas/anh/reporte?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El reporte a la ANH de palmar, 2026-09: ¿se puede publicar?, las paradas sin causa y quién las debe"
+  },
+  {
    "id": "choke-arbol/palmar-2026-09-gestion",
    "endpoint": "/api/vistas/choke/arbol?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00&orden=gestion",
    "descripcion": "El árbol de pérdidas del choke de palmar, 2026-09, en el orden de gestión: tramo → planeada o no → causa → detalle → equipo → parte"
@@ -592,6 +612,11 @@
    "id": "anh/calidad-zarza-2026-09",
    "endpoint": "/api/vistas/anh/calidad?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Calidad de la clasificación ANH de zarza, 2026-09"
+  },
+  {
+   "id": "anh/reporte-zarza-2026-09",
+   "endpoint": "/api/vistas/anh/reporte?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El reporte a la ANH de zarza, 2026-09: ¿se puede publicar?, las paradas sin causa y quién las debe"
   },
   {
    "id": "choke-arbol/zarza-2026-09-gestion",
@@ -692,6 +717,11 @@
    "id": "anh/calidad-portafolio-2026-09",
    "endpoint": "/api/vistas/anh/calidad?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Calidad de la clasificación ANH de portafolio, 2026-09"
+  },
+  {
+   "id": "anh/reporte-portafolio-2026-09",
+   "endpoint": "/api/vistas/anh/reporte?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El reporte a la ANH de portafolio, 2026-09: ¿se puede publicar?, las paradas sin causa y quién las debe"
   },
   {
    "id": "choke-arbol/portafolio-2026-09-gestion",
@@ -907,6 +937,11 @@
    "descripcion": "Las capacidades de ceiba: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
   },
   {
+   "id": "configuracion/estado-ceiba",
+   "endpoint": "/api/vistas/configuracion/estado?campo=ceiba",
+   "descripcion": "El estado de la configuración de ceiba: cada paso, listo o no, y lo primero que falta"
+  },
+  {
    "id": "salud/bombas-morichal-2026-09",
    "endpoint": "/api/vistas/bombas?campos=morichal&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de morichal con la salud de cada parte, 2026-09"
@@ -1026,6 +1061,11 @@
    "descripcion": "Las capacidades de morichal: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
   },
   {
+   "id": "configuracion/estado-morichal",
+   "endpoint": "/api/vistas/configuracion/estado?campo=morichal",
+   "descripcion": "El estado de la configuración de morichal: cada paso, listo o no, y lo primero que falta"
+  },
+  {
    "id": "salud/bombas-guacamayo-2026-09",
    "endpoint": "/api/vistas/bombas?campos=guacamayo&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de guacamayo con la salud de cada parte, 2026-09"
@@ -1134,6 +1174,11 @@
    "descripcion": "Las capacidades de guacamayo: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
   },
   {
+   "id": "configuracion/estado-guacamayo",
+   "endpoint": "/api/vistas/configuracion/estado?campo=guacamayo",
+   "descripcion": "El estado de la configuración de guacamayo: cada paso, listo o no, y lo primero que falta"
+  },
+  {
    "id": "salud/bombas-palmar-2026-09",
    "endpoint": "/api/vistas/bombas?campos=palmar&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de palmar con la salud de cada parte, 2026-09"
@@ -1234,6 +1279,11 @@
    "descripcion": "Las capacidades de palmar: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
   },
   {
+   "id": "configuracion/estado-palmar",
+   "endpoint": "/api/vistas/configuracion/estado?campo=palmar",
+   "descripcion": "El estado de la configuración de palmar: cada paso, listo o no, y lo primero que falta"
+  },
+  {
    "id": "salud/bombas-zarza-2026-09",
    "endpoint": "/api/vistas/bombas?campos=zarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "Bombas de zarza con la salud de cada parte, 2026-09"
@@ -1332,6 +1382,31 @@
    "id": "choke/capacidades-zarza",
    "endpoint": "/api/vistas/campos/zarza/capacidades",
    "descripcion": "Las capacidades de zarza: lo que rige (del demo, sin firmar), lo máximo que ya pasó y la revisión"
+  },
+  {
+   "id": "configuracion/estado-zarza",
+   "endpoint": "/api/vistas/configuracion/estado?campo=zarza",
+   "descripcion": "El estado de la configuración de zarza: cada paso, listo o no, y lo primero que falta"
+  },
+  {
+   "id": "sap/relojes-ceiba-historia",
+   "endpoint": "/api/vistas/relojes?campos=ceiba&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Los relojes de las fallas cerradas de ceiba en toda la historia, con el tiempo fuera en sus 5 tramos"
+  },
+  {
+   "id": "sap/relojes-portafolio-historia",
+   "endpoint": "/api/vistas/relojes?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Los relojes de las fallas cerradas de portafolio en toda la historia, con el tiempo fuera en sus 5 tramos"
+  },
+  {
+   "id": "anh/respuestas-ceiba-2026-10",
+   "endpoint": "/api/vistas/anh/respuestas?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "Las respuestas de la ANH de La Ceiba en el mes en curso, sin ninguna registrada"
+  },
+  {
+   "id": "anh/conversion-ceiba",
+   "endpoint": "/api/vistas/anh/conversion?campo=ceiba",
+   "descripcion": "La conversión del árbol de La Ceiba, sin tabla firmada"
   },
   {
    "id": "planta-viva/ceiba-2026-09-antes",
@@ -1787,6 +1862,104 @@
    ]
   },
   {
+   "id": "balance/ceiba-2026-09",
+   "endpoint": "/api/vistas/balance?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El balance de ceiba, 2026-09: producido · diferido · perdido por tramo, con el árbol de cada tramo"
+  },
+  {
+   "id": "perdidas/ceiba-2026-09",
+   "endpoint": "/api/vistas/perdidas?campos=ceiba&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El registro de pérdidas de ceiba, 2026-09: sin registro (null, nunca 0)"
+  },
+  {
+   "id": "balance/ceiba-2026-10",
+   "endpoint": "/api/vistas/balance?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "El balance de ceiba, 2026-10: producido · diferido · perdido por tramo, con el árbol de cada tramo"
+  },
+  {
+   "id": "perdidas/ceiba-2026-10",
+   "endpoint": "/api/vistas/perdidas?campos=ceiba&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "El registro de pérdidas de ceiba, 2026-10: sin registro (null, nunca 0)"
+  },
+  {
+   "id": "efectividad/ceiba",
+   "endpoint": "/api/vistas/efectividad?campos=ceiba",
+   "descripcion": "«¿Está funcionando?» en ceiba: antes de TRIM, este mes contra la meta y lo ganado, por tramo",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "fallas/ceiba",
+   "endpoint": "/api/vistas/fallas/mensual?campos=ceiba",
+   "descripcion": "Las fallas de los equipos críticos de ceiba, mes a mes (sin disparos)"
+  },
+  {
+   "id": "balance/portafolio-2026-09",
+   "endpoint": "/api/vistas/balance?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El balance de portafolio, 2026-09: producido · diferido · perdido por tramo, con el árbol de cada tramo"
+  },
+  {
+   "id": "perdidas/portafolio-2026-09",
+   "endpoint": "/api/vistas/perdidas?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
+   "descripcion": "El registro de pérdidas de portafolio, 2026-09: sin registro (null, nunca 0)"
+  },
+  {
+   "id": "balance/portafolio-2026-10",
+   "endpoint": "/api/vistas/balance?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "El balance de portafolio, 2026-10: producido · diferido · perdido por tramo, con el árbol de cada tramo"
+  },
+  {
+   "id": "perdidas/portafolio-2026-10",
+   "endpoint": "/api/vistas/perdidas?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
+   "descripcion": "El registro de pérdidas de portafolio, 2026-10: sin registro (null, nunca 0)"
+  },
+  {
+   "id": "efectividad/portafolio",
+   "endpoint": "/api/vistas/efectividad?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "«¿Está funcionando?» en portafolio: antes de TRIM, este mes contra la meta y lo ganado, por tramo",
+   "requiere": [
+    "insumos/ceiba/electrosumergibles.json",
+    "insumos/morichal/electrosumergibles.json",
+    "insumos/guacamayo/electrosumergibles.json"
+   ]
+  },
+  {
+   "id": "fallas/portafolio",
+   "endpoint": "/api/vistas/fallas/mensual?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "Las fallas de los equipos críticos de portafolio, mes a mes (sin disparos)"
+  },
+  {
+   "id": "balance/ceiba-jornada-actual",
+   "endpoint": "/api/vistas/balance?campos=ceiba&jornada=actual",
+   "descripcion": "El balance de La Ceiba en la jornada actual (el cambio de turno por defecto, 06:00 y 18:00)"
+  },
+  {
+   "id": "jornada/ceiba-actual",
+   "endpoint": "/api/vistas/jornada?campo=ceiba&jornada=actual",
+   "descripcion": "«Mi turno» en ceiba, jornada actual: las paradas con su hora de inicio y fin, por confirmar y lo diferido"
+  },
+  {
+   "id": "jornada/morichal-actual",
+   "endpoint": "/api/vistas/jornada?campo=morichal&jornada=actual",
+   "descripcion": "«Mi turno» en morichal, jornada actual: las paradas con su hora de inicio y fin, por confirmar y lo diferido"
+  },
+  {
+   "id": "balance/ceiba-jornada-anterior",
+   "endpoint": "/api/vistas/balance?campos=ceiba&jornada=anterior",
+   "descripcion": "El balance de La Ceiba en la jornada anterior (el cambio de turno por defecto, 06:00 y 18:00)"
+  },
+  {
+   "id": "jornada/ceiba-anterior",
+   "endpoint": "/api/vistas/jornada?campo=ceiba&jornada=anterior",
+   "descripcion": "«Mi turno» en ceiba, jornada anterior: las paradas con su hora de inicio y fin, por confirmar y lo diferido"
+  },
+  {
+   "id": "jornada/morichal-anterior",
+   "endpoint": "/api/vistas/jornada?campo=morichal&jornada=anterior",
+   "descripcion": "«Mi turno» en morichal, jornada anterior: las paradas con su hora de inicio y fin, por confirmar y lo diferido"
+  },
+  {
    "id": "escenarios/capacidades-de-antes/reparto-ceiba+guacamayo-13-meses",
    "endpoint": "/api/vistas/choke/reparto?campos=ceiba%2Cguacamayo&desde=2025-10-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-02T14%3A00%3A00.000-05%3A00",
    "descripcion": "Las capacidades que regían antes del 21-oct, firmadas desde el comienzo: el tren de crudo de La Ceiba en 12.000 y, en Guacamayo, el crudo en 7.400 y afuera en 6.800. La planta y afuera limitan, casi iguales a los pozos, con días en que el real pasó la capacidad. Lo perdido por tramo y por escalón en ceiba y guacamayo (13-meses), con lo estructural, lo que cabía en la holgura y la eficiencia",
@@ -2227,6 +2400,246 @@
    "esperado": {
     "estado": 409,
     "codigo": "lote-sin-pasos"
+   }
+  },
+  {
+   "id": "400-vio-peticion-invalida",
+   "descripcion": "«Lo que vio» con un número donde va el modo",
+   "esperado": {
+    "estado": 400,
+    "codigo": "peticion-invalida"
+   }
+  },
+  {
+   "id": "403-vio-sin-capacidad",
+   "descripcion": "El gerente (sin causa:declarar) dice lo que vio",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "404-vio-no-encontrado",
+   "descripcion": "«Lo que vio» de una parada que no está en el registro del PLC",
+   "esperado": {
+    "estado": 404,
+    "codigo": "no-encontrado"
+   }
+  },
+  {
+   "id": "422-vio-sin-parte",
+   "descripcion": "«Lo que vio» de una parada que nadie ha contestado: va con la parte",
+   "esperado": {
+    "estado": 422,
+    "codigo": "sin-parte"
+   }
+  },
+  {
+   "id": "409-vio-ya-dicho",
+   "descripcion": "El operador contesta la parte en 1 toque y lo que vio; el técnico dice otra cosa después: lo que vio se dice una vez (D1)",
+   "esperado": {
+    "estado": 409,
+    "codigo": "ya-dicho"
+   }
+  },
+  {
+   "id": "422-vio-modo-ajeno",
+   "descripcion": "El operador contesta la parte de una electrosumergible en 1 toque; lo que vio no es de esa parte",
+   "esperado": {
+    "estado": 422,
+    "codigo": "modo-ajeno"
+   }
+  },
+  {
+   "id": "400-cierre-peticion-invalida",
+   "descripcion": "El cierre con las lecturas en un texto",
+   "esperado": {
+    "estado": 400,
+    "codigo": "peticion-invalida"
+   }
+  },
+  {
+   "id": "403-cierre-sin-capacidad",
+   "descripcion": "El operador (sin orden:cerrar) cierra una orden",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "404-cierre-no-encontrado",
+   "descripcion": "El técnico cierra una orden que no está en SAP",
+   "esperado": {
+    "estado": 404,
+    "codigo": "no-encontrado"
+   }
+  },
+  {
+   "id": "403-cierre-sin-permiso",
+   "descripcion": "El técnico (solo La Ceiba) cierra una orden de otro campo",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-permiso"
+   }
+  },
+  {
+   "id": "409-cierre-ya-cerrada",
+   "descripcion": "El técnico cierra una orden que SAP ya tiene cerrada (TECO)",
+   "esperado": {
+    "estado": 409,
+    "codigo": "ya-cerrada"
+   }
+  },
+  {
+   "id": "422-cierre-parte-ajena",
+   "descripcion": "El técnico cierra la orden de K-101, que no tiene partes en el catálogo, con una parte",
+   "esperado": {
+    "estado": 422,
+    "codigo": "parte-ajena"
+   }
+  },
+  {
+   "id": "422-cierre-horas-invalidas",
+   "descripcion": "El técnico cierra con la hora de fin antes de la de inicio",
+   "esperado": {
+    "estado": 422,
+    "codigo": "horas-invalidas"
+   }
+  },
+  {
+   "id": "400-respuesta-anh-peticion-invalida",
+   "descripcion": "La respuesta de la ANH con un número donde va el estado",
+   "esperado": {
+    "estado": 400,
+    "codigo": "peticion-invalida"
+   }
+  },
+  {
+   "id": "403-respuesta-anh-sin-capacidad",
+   "descripcion": "Producción (sin anh:enviar) registra la respuesta de la ANH",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "404-respuesta-anh-campo-desconocido",
+   "descripcion": "La respuesta de la ANH de un campo que no está en el registro",
+   "esperado": {
+    "estado": 404,
+    "codigo": "campo-desconocido"
+   }
+  },
+  {
+   "id": "422-respuesta-anh-falta-motivo",
+   "descripcion": "Un rechazo de la ANH sin su motivo de la lista",
+   "esperado": {
+    "estado": 422,
+    "codigo": "falta-motivo"
+   }
+  },
+  {
+   "id": "409-respuesta-anh-ya-aceptada",
+   "descripcion": "La ANH acepta el reporte de un día; después se registra un rechazo del mismo día",
+   "esperado": {
+    "estado": 409,
+    "codigo": "ya-aceptada"
+   }
+  },
+  {
+   "id": "400-conversion-peticion-invalida",
+   "descripcion": "La conversión del árbol con un número donde va el texto",
+   "esperado": {
+    "estado": 400,
+    "codigo": "peticion-invalida"
+   }
+  },
+  {
+   "id": "403-conversion-sin-capacidad",
+   "descripcion": "Producción (sin config:firmar) carga la conversión del árbol",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "404-conversion-campo-desconocido",
+   "descripcion": "La conversión del árbol de un campo que no está en el registro",
+   "esperado": {
+    "estado": 404,
+    "codigo": "campo-desconocido"
+   }
+  },
+  {
+   "id": "422-conversion-archivo-vacio",
+   "descripcion": "La conversión del árbol con el archivo vacío",
+   "esperado": {
+    "estado": 422,
+    "codigo": "archivo-vacio"
+   }
+  },
+  {
+   "id": "400-perdida-peticion-invalida",
+   "descripcion": "Una pérdida con el volumen en texto",
+   "esperado": {
+    "estado": 400,
+    "codigo": "peticion-invalida"
+   }
+  },
+  {
+   "id": "403-perdida-sin-capacidad",
+   "descripcion": "El técnico (sin perdidas:registrar) registra una pérdida",
+   "esperado": {
+    "estado": 403,
+    "codigo": "sin-capacidad"
+   }
+  },
+  {
+   "id": "403-perdida-campo-ajeno",
+   "descripcion": "El operador (solo La Ceiba) registra una pérdida en Morichal Norte",
+   "esperado": {
+    "estado": 403,
+    "codigo": "campo-ajeno"
+   }
+  },
+  {
+   "id": "404-perdida-campo-desconocido",
+   "descripcion": "Una pérdida de un campo que no está en el registro",
+   "esperado": {
+    "estado": 404,
+    "codigo": "campo-desconocido"
+   }
+  },
+  {
+   "id": "422-perdida-sin-volumen",
+   "descripcion": "Una pérdida sin barriles ni gas",
+   "esperado": {
+    "estado": 422,
+    "codigo": "sin-volumen"
+   }
+  },
+  {
+   "id": "422-perdida-sin-como",
+   "descripcion": "Una pérdida sin decir cómo se estimó el volumen",
+   "esperado": {
+    "estado": 422,
+    "codigo": "sin-como"
+   }
+  },
+  {
+   "id": "422-perdida-en-el-futuro",
+   "descripcion": "Una pérdida que empieza mañana",
+   "esperado": {
+    "estado": 422,
+    "codigo": "en-el-futuro"
+   }
+  },
+  {
+   "id": "404-perdida-desconocida",
+   "descripcion": "Corregir una pérdida que no está registrada",
+   "esperado": {
+    "estado": 404,
+    "codigo": "perdida-desconocida"
    }
   }
  ]

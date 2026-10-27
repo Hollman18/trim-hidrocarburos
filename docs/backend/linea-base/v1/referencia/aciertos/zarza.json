@@ -1,0 +1,1 @@
+{"id":"aciertos/zarza","descripcion":"Registro de predicciones y fallas de zarza (aciertos)","endpoint":"/api/vistas/predicciones?campos=zarza","esperado":{"datos":{"registro":[],"fallas":[]},"refs":{}}}

@@ -173,8 +173,8 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: Array<
   // «no arrancar» sigue a la vista (procedimiento); los pozos que cerró P-201B llevan «parte por
   // identificar», no «sin identificar», como si su parada no tuviera causa.
   // F1 (P-05): la cifra de Turno es lo medido, «1.966 bbl/d se dejan de producir ahora»; la proyección, chica.
-  '#/sup/turno/ceiba/curso': { si: ['pozos cerrados por P-201B', 'WhatsApp del turno', 'escalado', 'no arrancar', 'parte por identificar', /se dejan? de producir ahora/i, 'Parado ahora', 'Por vigilar'],
-    no: ['(sin identificar)', 'preguntarle al operario', titulo('Lo que TRIM mandó'), 'erdiéndose', 'bbl · retorno', '2 · Pasando ahora', '1 · Vigilar'] },
+  '#/sup/turno/ceiba/curso': { si: ['pozos cerrados por P-201B', 'no arrancar', 'parte por identificar', /se dejan? de producir ahora/i, 'Parado ahora', 'Por vigilar'],
+    no: ['(sin identificar)', 'preguntarle al operario', titulo('Lo que TRIM mandó'), 'WhatsApp del turno', 'erdiéndose', 'bbl · retorno', '2 · Pasando ahora', '1 · Vigilar'] },
   // El colchón truncado con «antes de» (P-201B de Morichal: 10,05 h → «10 h»); lo viejo no vuelve.
   // C5 · Un nombre, una cifra: «Se deja de producir ahora» (el total), «Equipos que avisan» (el conteo) y la exposición con su nombre; sin el ciclo.
   // D-2 (G-16): lo que costaría cada falla, en bbl, es «le costaría la falla»; «si falla hoy» queda para los bbl/d.
@@ -183,13 +183,13 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: Array<
     no: [titulo('Lo que se puede evitar'), 'ordenado por cuándo', 'Qué hacer:', 'bbl si fallan', 'bbl si falla hoy', 'bbl por falla', '< 10 h', /perdiéndose/i, '1 · Antes', '2 · Durante', 'bbl · retorno'] },
   // La regla de operación va en la franja: sus dos frases (los chips «no arrancar» no las satisfacen).
   // F1 (P-causa-1): una parada abierta a la vez; la de LC-08, con sus partes de electrosumergible, a un toque.
-  '#/oper/causa/ceiba/curso': { si: [/\d\d:\d\d pregunta → \d\d:\d\d recordatorio/, 'Pista · historia del equipo', /· \d+ de \d+ fallas?/, 'Ver mi chat de WhatsApp', 'sin respuesta', 'No arrancar hasta identificar el daño', 'Si arranca antes, queda como no conformidad', 'demo'],
-    no: ['señal e historia', titulo('Lo que dijo la señal'), 'Regla de operación:', 'Demo · simular', 'en este demo'], atras: ['No fue la electrosumergible'] },
+  '#/oper/causa/ceiba/curso': { si: ['Pista · historia del equipo', /· \d+ de \d+ fallas?/, 'No arrancar hasta identificar el daño', 'Si arranca antes, queda como no conformidad', 'demo'],
+    no: ['señal e historia', titulo('Lo que dijo la señal'), 'Regla de operación:', 'Demo · simular', 'en este demo', 'WhatsApp', 'Ver mi chat'], atras: ['No fue la electrosumergible'] },
   '#/oper/causa/ceiba/curso [LC-08]': { si: ['No fue la electrosumergible'], no: [] },
   // Avisan EQUIPOS (un servicio como K-101 avisa sin parte), no «partes».
   // F1 (P-trabajo-1): Mi trabajo se fundió en Hoy; su dirección abre Hoy y la orden liberada de SAP es una
-  // tarjeta con su número, el aviso de WhatsApp y «Ver la orden». Lo que hay que hacer con K-101, una vez.
-  '#/tec/trabajo/ceiba/curso': { si: ['cosas le tocan hoy', 'Atender la orden de K-101', /orden \d{8} · le llegó por WhatsApp a las \d\d:\d\d/, 'Ver la orden', 'Verificar que las tres unidades estén en servicio'],
+  // tarjeta con su número y «Ver la orden» (experiencia v3: sin el aviso por mensaje). Lo que hay que hacer con K-101, una vez.
+  '#/tec/trabajo/ceiba/curso': { si: ['cosas le tocan hoy', 'Atender la orden de K-101', /orden \d{8}/, 'Ver la orden', 'Verificar que las tres unidades estén en servicio'],
     no: ['no está conectado', 'la primera en ya fuera', 'parte avisando'] },
   // F2 (P-conf-1): «¿Le creo al vigía?» en una línea (el nombre de Resultados); lo que anunció, a un toque.
   '#/conf/confiabilidad/morichal/curso': { si: [titulo('Reparación activa y espera'), titulo('¿Le creo al vigía?'), 'Ver lo que anunció', 'Se le escaparon'],

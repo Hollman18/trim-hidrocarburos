@@ -19,8 +19,6 @@ export interface Region {
   condiciones: string
   /** Límites de entrega. Son del contrato o del regulador, nunca del núcleo. */
   limites: Array<{ que: string; valor: string; origen: string }>
-  /** Celular nacional para WhatsApp: si se escribe sin indicativo, se le pone. */
-  celular?: { indicativo: string; patron: RegExp }
 }
 
 export const REGIONES: Record<string, Region> = {
@@ -35,7 +33,6 @@ export const REGIONES: Record<string, Region> = {
   },
   colombia: {
     id: 'colombia', nombre: 'Colombia',
-    celular: { indicativo: '+57', patron: /^3\d{9}$/ },
     tasaCrudo: 'BPDC', tasaAgua: 'BWPD', tasaGas: 'KPCD', volumen: 'bbl',
     condiciones: '14,65 psia · 60 °F',
     limites: [

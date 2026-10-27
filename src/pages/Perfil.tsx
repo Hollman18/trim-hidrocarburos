@@ -2,8 +2,6 @@ import { Monitor, Sun, Moon, Check, X } from 'lucide-react'
 import { useApp, useRol, usePersona, useCampos } from '@/app/store'
 import { CAMPOS } from '@/entities/campos'
 import { CAPACIDAD_NOMBRE, AREAS, permisosDelRol, type Capacidad } from '@/entities/tipos'
-import { personaDelRol, recibeAlertas, ROLES_CON_ALERTAS, ALERTAS_DEL_ROL, telefonoLegible } from '@/entities/usuarios'
-import { useUsuarios } from '@/shared/api/usuarios'
 import { Panel, Chip, Hueco } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { Tip } from '@/shared/ui/Tip'
@@ -34,6 +32,9 @@ const PERMISO_CORTO: Record<Capacidad, string> = {
   'anh:clasificar': 'Clasificar paradas en el árbol de causas',
   'anh:confirmar': 'Confirmar las paradas del día',
   'anh:yacimiento': 'Decir que fue el yacimiento',
+  'perdidas:registrar': 'Registrar pérdidas',
+  'orden:cerrar': 'Cerrar órdenes en el teléfono', // A3
+  'anh:enviar': 'Registrar la respuesta de la ANH', // A3
 }
 
 const Fila = ({ etiqueta, children, pie, info }: {
@@ -54,14 +55,11 @@ const Fila = ({ etiqueta, children, pie, info }: {
 )
 
 /** Mi perfil vive DENTRO del perfil, no como módulo del riel.
- *  Teléfono y alertas se leen del registro de usuarios (el mismo que usa la
- *  regla de WhatsApp) y los cambia el gerente de activo en Accesos: aquí no se
- *  escribe nada que nadie lea. Lo único personal que se cambia es la apariencia. */
+ *  Lo único personal que se cambia es la apariencia: los campos los asigna el
+ *  gerente de activo en Accesos. */
 export function Perfil() {
   const tema = useApp(s => s.tema), setTema = useApp(s => s.setTema), campoId = useApp(s => s.campoId)
   const rol = useRol(); const persona = usePersona(); const mios = useCampos()
-  const yo = personaDelRol(useUsuarios(), rol.id)
-  const conAlertas = ROLES_CON_ALERTAS.includes(rol.id)
   // Como negado va solo lo que no puede hacer: con «completar el análisis»
   // también responde qué se dañó, y negárselo aparte sería falso.
   const { concedidas, negadas } = permisosDelRol(rol.puede)
@@ -85,11 +83,6 @@ export function Perfil() {
           </span>
         </div>
         <div className="mt-3">
-          <Fila etiqueta="WhatsApp" info="Del registro de usuarios: lo cambia el gerente de activo en Accesos.">
-            {yo?.telefono?.trim()
-              ? <span className="tabular text-[15px]">{telefonoLegible(yo.telefono)}</span>
-              : <span className="text-[14px] text-[var(--tinta3)]">sin número registrado</span>}
-          </Fila>
           <Fila etiqueta="Área" info="Cómo cuelga en el organigrama.">
             <Chip>{AREAS.find(a => a.id === rol.area)?.nombre}</Chip>
           </Fila>
@@ -100,29 +93,6 @@ export function Perfil() {
           </Fila>
         </div>
         <p className="mt-2 text-[13px]"><Info rotulo="su foco" titulo="Su foco" texto={rol.foco} /></p>
-      </Panel>
-
-      {/* Lo que de verdad le llega: la regla de mensajes del rol y el registro de
-          la persona. No hay otros canales ni otros avisos que encender. */}
-      <Panel titulo="Avisos">
-        {!conAlertas ? (
-          <Hueco>
-            <span className="flex flex-wrap items-center gap-x-1">
-              Su rol no recibe alertas por WhatsApp.
-              <Info titulo="Sin alertas" texto="Los avisos los decide la regla de su rol: la regla de mensajes solo avisa a quien actúa sobre el equipo." />
-            </span>
-          </Hueco>
-        ) : (
-          <Fila etiqueta="Alertas por WhatsApp" info={`Las decide la regla de su rol: ${ALERTAS_DEL_ROL[rol.id]}.`}>
-            <Chip tono={yo && recibeAlertas(yo) ? 'fuerte' : 'neutro'}>
-              {!yo ? 'sin persona con acceso' : recibeAlertas(yo) ? 'le llegan' : !yo.telefono?.trim() ? 'no le llegan: sin número' : 'apagadas'}
-            </Chip>
-          </Fila>
-        )}
-        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
-          Las cambia el gerente de activo
-          <Info titulo="Quién las cambia" texto="Encenderlas, apagarlas o cambiar el número lo hace el gerente de activo en Accesos, con su motivo." />
-        </p>
       </Panel>
 
       <Panel titulo="Apariencia">

@@ -5,7 +5,7 @@
    que existen. Sale con 1 si algo no coincide.
    Uso: node comprobar-tablas.mjs <base vacía> <tablas.json> */
 import { readFileSync } from 'node:fs'
-import { consulta, SQL_CATALOGO } from './catalogo.mjs'
+import { consulta, SQL_CATALOGO, conMarca } from './catalogo.mjs'
 
 const [BASE, ARCHIVO] = process.argv.slice(2)
 const spec = JSON.parse(readFileSync(ARCHIVO, 'utf8'))
@@ -35,7 +35,8 @@ for (const t of cat) {
     if (t.clase === 'tabla' && !c.comentario) { sinComentario++; mal(`${t.nombre}.${c.nombre}: sin COMMENT ON COLUMN`) }
     const fks = R.filter(k => k.tipo === 'f' && k.columnas.includes(c.nombre)).map(k => `${k.hacia}.${k.hacia_columnas[k.columnas.indexOf(c.nombre)]}`).join(' · ') || null
     const uns = R.filter(k => k.tipo === 'u' && k.columnas.includes(c.nombre)).map(k => k.columnas.length === 1 ? 'único' : `único con (${k.columnas.join(', ')})`).join(' · ') || null
-    const chk = R.filter(k => k.tipo === 'c' && new RegExp(`\\b${c.nombre}\\b`).test(k.definicion)).map(k => k.definicion).join(' · ') || null
+    const chk = R.filter(k => k.tipo === 'c' && new RegExp(`\\b${c.nombre}\\b`).test(k.definicion))
+      .map(k => conMarca(k.definicion)).join(' · ') || null
     const esperado = { tipo: c.tipo + (c.generada ? ' (generada)' : ''), nulo: c.nulo, pk: pk.includes(c.nombre), fk: fks, unico: uns, check: chk, defecto: c.defecto ?? null, descripcion: c.comentario }
     for (const [k, v] of Object.entries(esperado)) if (!igual(e[k], v)) mal(`${t.nombre}.${c.nombre}.${k}: tablas.json dice ${JSON.stringify(e[k])} y la base ${JSON.stringify(v)}`)
   })

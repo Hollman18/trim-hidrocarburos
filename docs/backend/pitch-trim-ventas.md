@@ -121,7 +121,7 @@ Reloj demo: **2 oct 2026, 14:00** (zona configurable).
 | 6 | Series para vigía (I, V, P, T…) | **Antes** |
 | 7 | Configuración firmada (tanque, respaldos) | Colchón |
 | 8 | Esquema de planta | Planta |
-| 9 | WhatsApp + ERP mantenimiento | Ejecutar el plan |
+| 9 | ERP mantenimiento | Ejecutar el plan |
 
 **Solo lectura del borde** — TRIM no escribe al PLC.
 

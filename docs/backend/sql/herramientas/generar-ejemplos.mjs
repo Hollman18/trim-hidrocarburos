@@ -2,7 +2,10 @@
  *   Fuentes: referencia/insumos/ y referencia/<casos>/ (lo que entra y lo que sale
  *   del motor), simulador-api/datos/ (registro de ingeniería y nacimientos del
  *   borde) y herramientas/motor.json (lo que vuelca scripts/.doc-E-filas.mjs:
- *   librerías, usuarios, mensajes, libro por mes y tramos por día).
+ *   librerías, usuarios, libro por mes y tramos por día).
+ *   RETIRADO (27-oct-2026): el dueño quitó el canal de WhatsApp. Sus cinco tablas quedan sin
+ *   filas, usuario.telefono en NULL, usuario.alertas y rol.recibe_alertas en
+ *   false; nada de eso sale ya del motor (CAMBIOS-CONTRATO.md §3, R8).
  *   Nada se inventa: donde el demo no trae un dato que la base exige (una hora de
  *   recepción, la fecha de un análisis), se usa una hora del propio demo y se dice
  *   en CONVENCIONES (va al pie de ejemplos.sql y al capítulo).
@@ -40,7 +43,7 @@ const CONVENCIONES = [
   'prediccion.calificada = el instante que decidió la calificación (inicio de la falla, cierre de la intervención o fin de la ventana).',
   'aviso_sap.creado_por_id = NULL: en el demo los avisos los crea TRIM solo o Operación directo en SAP (regla fija sobre el PLC).',
   'respuesta_parada: las respuestas históricas pegadas a los eventos del demo no traen persona ni canal (por_id y canal NULL).',
-  'mensaje.telefono = el WhatsApp del destinatario en USUARIOS_INICIALES; meta_id NULL (el demo no envía).',
+  'RETIRADO (27-oct-2026): plantilla_whatsapp, mensaje, mensaje_libre, estado_mensaje y respuesta_entrante quedan sin filas; usuario.telefono = NULL, usuario.alertas = false y rol.recibe_alertas = false (el dueño quitó el canal de WhatsApp: el backend no lo construye).',
   'equipo.aguas_abajo y equipo.redundancia = NULL en P-201B y MPP-301 (bombas de la línea): el catálogo del demo dice «según la configuración firmada» o «sin declarar en este campo», que la API arma del respaldo firmado.',
   'libro_mes, factor_asignacion_mes y tramo_diferido salen del motor con la versión 1; T (teórico) = R/FA.',
 ]
@@ -241,7 +244,7 @@ for (const c of IDS) {
 
 // ─── (f) personas
 titulo('rol · capacidad · usuario')
-for (const r of MOTOR.roles) meter('rol', { ...lit({ id: r.id, nombre: r.nombre, nivel: r.nivel, area: r.area, inicio: r.inicio, recibe_alertas: MOTOR.rolesConAlertas.includes(r.id), visible: r.visible }),
+for (const r of MOTOR.roles) meter('rol', { ...lit({ id: r.id, nombre: r.nombre, nivel: r.nivel, area: r.area, inicio: r.inicio, recibe_alertas: false, visible: r.visible }), // recibe_alertas: RETIRADO (27-oct-2026)
   pantallas: arr(r.pantallas), campos_fabrica: r.campos === 'todos' ? 'null' : arr(r.campos) })
 for (const [id, nombre] of Object.entries(MOTOR.capacidadNombre)) if (id !== 'causa:completar') meter('capacidad', lit({ id, nombre, incluye: null }))
 meter('capacidad', lit({ id: 'causa:completar', nombre: MOTOR.capacidadNombre['causa:completar'], incluye: 'causa:declarar' }))
@@ -263,10 +266,9 @@ for (const o of MOTOR.anh.opciones) {
   opcionesVistas.add(k)
   meter('opcion_campo', lit({ pregunta: o.pregunta, texto: o.texto }))
 }
-const USU = Object.fromEntries(MOTOR.usuarios.map(u => [u.id, u]))
 for (const u of MOTOR.usuarios) {
   meter('usuario', lit({ id: u.id, nombre: u.nombre, correo: u.correo, rol_id: u.rolId, todos_los_campos: u.campos === 'todos', estado: u.estado, desde: u.desde,
-    telefono: u.telefono ?? null, alertas: u.alertas, antes_de_suspender: u.antesDeSuspender ?? null }))
+    telefono: null, alertas: false, antes_de_suspender: u.antesDeSuspender ?? null })) // telefono y alertas: RETIRADO (27-oct-2026)
   if (u.campos !== 'todos') for (const c of u.campos) meter('usuario_campo', lit({ usuario_id: u.id, campo_id: c }))
 }
 
@@ -322,24 +324,16 @@ for (const r of stock.values()) {
 }
 for (const x of MOTOR.identidad) if (activos.has(`${x.campoId}|${x.equipo}`)) meter('equipo_sap', lit({ campo_id: x.campoId, equipo: x.equipo, equipo_sap: x.equipoSap, ubicacion: x.ubicacion }))
 
-// ─── (g) WhatsApp y predicciones
-titulo('plantilla_whatsapp · prediccion · mensaje')
-for (const [clave, p] of Object.entries(MOTOR.plantillas)) meter('plantilla_whatsapp', lit({ clave, nombre: p.nombre, cuerpo: p.cuerpo }))
+// ─── (g) predicciones (lo de WhatsApp: RETIRADO (27-oct-2026), sin filas)
+for (const t of ['plantilla_whatsapp', 'mensaje', 'mensaje_libre', 'estado_mensaje', 'respuesta_entrante'])
+  titulo(`${t}: RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Sin filas.`)
+titulo('prediccion')
 const PRED = IDS.flatMap(c => leer(join(REF, 'aciertos', `${c}.json`)).esperado.datos.registro)
-const predIds = new Set()
 for (const p of PRED) {
-  predIds.add(p.id)
   const calificada = p.calificacion === 'acierto' ? p.falla.inicio : p.calificacion === 'intervenida' ? p.intervencion : p.calificacion === 'falsa-alarma' ? p.hasta : null
   meter('prediccion', lit({ id: p.id, campo_id: p.campoId, equipo: p.equipo, familia: p.parte ? familiaDe(p.campoId, p.equipo) : null, parte: p.parte ?? null,
     tag: p.tag ?? null, accion: p.accion ?? null, emitida: p.emitida, desde: p.desde, hasta: p.hasta, calificacion: p.calificacion,
     falla_evento_id: p.falla?.id ?? null, falla_inicio: p.falla?.inicio ?? null, intervencion: p.intervencion ?? null, calificada }))
-}
-for (const m of MOTOR.mensajes) {
-  const pred = m.regla === 'parte'
-  if (pred && !predIds.has(m.evento)) throw new Error(`mensaje ${m.id}: predicción ${m.evento} sin registro`)
-  meter('mensaje', { ...lit({ id: m.id, regla: m.regla, plantilla: m.plantilla, campo_id: m.campoId, equipo: m.equipo, para_id: m.para, telefono: USU[m.para].telefono,
-    hora: m.hora, texto: m.texto ?? null, no_enviado: m.noEnviado ?? null, evento_id: pred ? null : m.evento ?? null, prediccion_id: pred ? m.evento : null,
-    orden: m.orden ?? null, insistencia: m.insistencia ?? null }), parametros: js(m.parametros), opciones: js(m.opciones ?? null) })
 }
 
 // ─── (i) precálculo de meses cerrados y publicados

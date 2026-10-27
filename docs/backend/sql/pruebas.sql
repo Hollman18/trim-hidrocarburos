@@ -4,6 +4,9 @@
 --     si pasa, o falla con otro, la prueba aborta todo (ON_ERROR_STOP).
 --   pasa(nombre, sentencia): la sentencia TIENE que pasar (y se deshace).
 -- SQLSTATE: 23505 único · 23514 check/trigger · 23503 clave foránea · 23001 solo inserción.
+-- RETIRADO (27-oct-2026): las pruebas del canal de WhatsApp (tablas y columnas retiradas, R8) siguen
+--   mientras su DDL siga en esquema.sql: cada una lleva la marca en su nombre y arma sus
+--   propias filas, porque ejemplos.sql ya no carga ninguna.
 set search_path = trim, public;
 \pset tuples_only on
 \pset format unaligned
@@ -39,8 +42,12 @@ select pg_temp.muerde('segundo aviso abierto del mismo equipo (K-101 de La Ceiba
   $$insert into aviso_sap (numero, tipo, campo_id, equipo, descripcion, prioridad, parada, creado, creado_por, origen)
     values ('99999999', 'M1', 'ceiba', 'K-101', 'Presión de cabezal del aire cayendo', 2, false, now(), 'Nelson Ortiz · desde TRIM', 'trim')$$, '23505');
 select pg_temp.muerde('UPDATE a version_config', $$update version_config set motivo = 'Cambio el motivo de la firma' where version = 1$$, '23001');
-select pg_temp.muerde('teléfono repetido de un no suspendido',
-  $$insert into usuario (id, nombre, correo, rol_id, estado, desde, telefono, alertas) values ('u9', 'Lucía Prada', 'lucia.prada@operadora.example', 'sup', 'invitado', '2026-10-02', '+573005550103', true)$$, '23505');
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número (R3, R8). La prueba sigue porque la tabla o la columna sigue en esquema.sql; arma sus propias filas (ejemplos.sql ya no las carga).
+select pg_temp.muerde('RETIRADO (27-oct-2026): teléfono repetido de un no suspendido',
+  $s$do $x$ begin
+      update usuario set telefono = '+573005550103' where id = 'sup';
+      insert into usuario (id, nombre, correo, rol_id, estado, desde, telefono, alertas) values ('u9', 'Lucía Prada', 'lucia.prada@operadora.example', 'sup', 'invitado', '2026-10-02', '+573005550103', false);
+    end $x$ $s$, '23505');
 select pg_temp.muerde('tanque con alto-alto 0,99',
   $$insert into tanque (version, id, orden, nombre, campo_id, bomba, capacidad_bbl, alto_alto, tag_nivel, aforo) values (1, 'TK-PRUEBA', 9, 'Tanque de prueba', 'ceiba', 'P-201B', 30000, 0.99, 'LT-2012', 'Certificado')$$, '23514');
 
@@ -91,14 +98,17 @@ select pg_temp.muerde('motivo de 4 caracteres', $$insert into parada_programada 
 -- ── Personas
 select pg_temp.muerde('correo repetido (otras mayúsculas)',
   $$insert into usuario (id, nombre, correo, rol_id, estado, desde, alertas) values ('u9', 'Otra Persona', 'NELSON.ORTIZ@operadora.example', 'sup', 'invitado', '2026-10-02', false)$$, '23505');
-select pg_temp.pasa('el mismo WhatsApp en una persona suspendida',
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número (R3, R8). La prueba sigue porque la tabla o la columna sigue en esquema.sql; arma sus propias filas (ejemplos.sql ya no las carga).
+select pg_temp.pasa('RETIRADO (27-oct-2026): el mismo WhatsApp en una persona suspendida',
   $s$do $x$ begin
+      update usuario set telefono = '+573005550103' where id = 'sup';
       insert into usuario (id, nombre, correo, rol_id, estado, desde, telefono, alertas, antes_de_suspender) values ('u9', 'Lucía Prada', 'lucia.prada@operadora.example', 'sup', 'suspendido', '2026-10-02', '+573005550103', false, 'invitado');
       insert into usuario_campo values ('u9', 'ceiba');
       set constraints all immediate;
     end $x$ $s$);
-select pg_temp.muerde('teléfono que no es E.164', $$update usuario set telefono = '300 555 0103' where id = 'sup'$$, '23514');
-select pg_temp.muerde('alertas en un rol sin alertas (gerente)', $$update usuario set alertas = true where id = 'ger'$$, '23514');
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno; el backend acepta e ignora telefono y alertas (R3, R8). La prueba sigue porque la tabla o la columna sigue en esquema.sql; arma sus propias filas (ejemplos.sql ya no las carga).
+select pg_temp.muerde('RETIRADO (27-oct-2026): teléfono que no es E.164', $$update usuario set telefono = '300 555 0103' where id = 'sup'$$, '23514');
+select pg_temp.muerde('RETIRADO (27-oct-2026): alertas en un rol sin alertas (gerente)', $$update usuario set telefono = '+573005550199', alertas = true where id = 'ger'$$, '23514');
 select pg_temp.muerde('borrar a una persona', $$delete from usuario where id = 'tec'$$, '23001');
 select pg_temp.muerde('suspender al único gerente activo',
   $s$do $x$ begin update usuario set estado = 'suspendido', antes_de_suspender = 'activo' where id = 'ger'; set constraints all immediate; end $x$ $s$, '23514');
@@ -117,8 +127,9 @@ select pg_temp.muerde('modo que no es de la parte (VIB en el sello)',
   $$insert into respuesta_parada (evento_id, texto, por, por_id, hora, familia, parte, modo, canal) values ('EV-2011-1002', 'Vibraba', 'Jairo Peña · operador', 'oper', now(), 'inyeccion', 'sello', 'VIB', 'pantalla')$$, '23514');
 select pg_temp.pasa('respuesta con parte y modo del catálogo',
   $$insert into respuesta_parada (evento_id, texto, por, por_id, hora, familia, parte, modo, canal) values ('EV-2011-1002', 'Sello con fuga por el lado de acople; se cambió', 'Jairo Peña · operador', 'oper', now(), 'inyeccion', 'sello', 'ELP', 'pantalla')$$);
-select pg_temp.muerde('respuesta por WhatsApp sin su mensaje entrante',
-  $$insert into respuesta_parada (evento_id, texto, por, por_id, hora, familia, parte, modo, canal) values ('EV-2011-1002', 'Sello con fuga', 'Jairo Peña · operador', 'oper', now(), 'inyeccion', 'sello', 'ELP', 'whatsapp')$$, '23514');
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: toda respuesta es de pantalla (R4, R8). La prueba sigue porque la columna canal sigue.
+select pg_temp.muerde('RETIRADO (27-oct-2026): respuesta por WhatsApp sin su mensaje entrante',
+  $$insert into respuesta_parada (evento_id, texto, por, por_id, hora, familia, parte, modo, canal) values ('EV-2011-1002', 'Sello con fuga', 'Jairo Peña · operador', 'oper', now(), 'inyeccion', 'sello', 'ELP', 'whatsapp')$$, '23514');  -- RETIRADO (27-oct-2026)
 select pg_temp.muerde('respuesta a una caída de servicio',
   $$insert into respuesta_parada (evento_id, texto, por, por_id, hora, canal) values ('SV-K-101-260804', 'El compresor se disparó por temperatura', 'Jairo Peña · operador', 'oper', now(), 'pantalla')$$, '23514');
 select pg_temp.muerde('análisis de una respuesta sin parte',
@@ -154,17 +165,31 @@ select pg_temp.muerde('UPDATE a un informe',
 select pg_temp.muerde('folio que no es INF-AAAA-NNNN',
   $$insert into informe (folio, anio, numero, formato, titulo, alcance, periodo, desde, hasta, por, por_id, version, estado, cifras, forma_canonica, huella)
     values ('INF-2026-7', 2026, 7, 'pdf', 'Diferidos', 'La Ceiba', 'sep', '2026-09-01', '2026-10-01', 'x', 'ger', 1, 'publicable', '{}', 'x', repeat('a', 64))$$, '23514');
-select pg_temp.muerde('reescribir el texto de un mensaje enviado', $$update mensaje set texto = 'otro texto' where id = (select min(id) from mensaje)$$, '23001');
-select pg_temp.pasa('poner el id de Meta una vez', $$update mensaje set meta_id = 'wamid.HBgMNTczMDA1NTUwMTA0FQIAERgSQ0E' where id = (select min(id) from mensaje)$$);
-select pg_temp.muerde('cambiar el id de Meta ya puesto',
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar» (R1, R2, R8). La prueba sigue porque la tabla o la columna sigue en esquema.sql; arma sus propias filas (ejemplos.sql ya no las carga).
+-- Una plantilla y un mensaje de prueba (se deshacen con cada prueba).
+create function pg_temp.mensaje_de_prueba() returns void language sql as $$
+  insert into plantilla_whatsapp (clave, nombre, cuerpo) values ('parada', 'trim_equipo_parado', 'TRIM · {equipo} de {campo} paró a las {hora}. {consecuencia}');  -- RETIRADO (27-oct-2026)
+  insert into mensaje (id, regla, plantilla, parametros, campo_id, equipo, para_id, telefono, hora, texto, evento_id)
+    values ('m-prueba', 'parada', 'parada', '{"equipo":"P-201B","campo":"La Ceiba","hora":"08:53","consecuencia":"Revisar el sello."}', 'ceiba', 'P-201B', 'sup', '+573005550103', now(),
+            'TRIM · P-201B de La Ceiba paró a las 08:53. Revisar el sello.', 'EV-2011-1002');
+$$;
+select pg_temp.muerde('RETIRADO (27-oct-2026): reescribir el texto de un mensaje enviado',
+  $s$do $x$ begin perform pg_temp.mensaje_de_prueba(); update mensaje set texto = 'otro texto' where id = 'm-prueba'; end $x$ $s$, '23001');
+select pg_temp.pasa('RETIRADO (27-oct-2026): poner el id de Meta una vez',
+  $s$do $x$ begin perform pg_temp.mensaje_de_prueba(); update mensaje set meta_id = 'wamid.HBgMNTczMDA1NTUwMTA0FQIAERgSQ0E' where id = 'm-prueba'; end $x$ $s$);
+select pg_temp.muerde('RETIRADO (27-oct-2026): cambiar el id de Meta ya puesto',
   $s$do $x$ begin
-      update mensaje set meta_id = 'wamid.A' where id = (select min(id) from mensaje);
-      update mensaje set meta_id = 'wamid.B' where id = (select min(id) from mensaje);
+      perform pg_temp.mensaje_de_prueba();
+      update mensaje set meta_id = 'wamid.A' where id = 'm-prueba';
+      update mensaje set meta_id = 'wamid.B' where id = 'm-prueba';
     end $x$ $s$, '23001');
-select pg_temp.muerde('mensaje con texto y no_enviado a la vez',
-  $$insert into mensaje (id, regla, plantilla, parametros, campo_id, equipo, para_id, telefono, hora, texto, no_enviado, evento_id)
-    values ('m-x', 'parada', 'parada', '{}', 'ceiba', 'P-201B', 'sup', '+573005550103', now(), 'TRIM · …', 'parámetro vacío', 'EV-2011-1002')$$, '23514');
-select pg_temp.muerde('la segunda entrega del mismo mensaje entrante (Meta reintenta)',
+select pg_temp.muerde('RETIRADO (27-oct-2026): mensaje con texto y no_enviado a la vez',
+  $s$do $x$ begin
+      insert into plantilla_whatsapp (clave, nombre, cuerpo) values ('parada', 'trim_equipo_parado', 'TRIM · {equipo} paró.');  -- RETIRADO (27-oct-2026)
+      insert into mensaje (id, regla, plantilla, parametros, campo_id, equipo, para_id, telefono, hora, texto, no_enviado, evento_id)
+        values ('m-x', 'parada', 'parada', '{}', 'ceiba', 'P-201B', 'sup', '+573005550103', now(), 'TRIM · …', 'parámetro vacío', 'EV-2011-1002');
+    end $x$ $s$, '23514');
+select pg_temp.muerde('RETIRADO (27-oct-2026): la segunda entrega del mismo mensaje entrante (Meta reintenta)',
   $s$do $x$ begin
       insert into respuesta_entrante (meta_id, de_telefono, resultado, motivo, payload) values ('wamid.ENTRANTE', '+573005550104', 'descartada', 'sin contexto', '{}');
       insert into respuesta_entrante (meta_id, de_telefono, resultado, motivo, payload) values ('wamid.ENTRANTE', '+573005550104', 'descartada', 'sin contexto', '{}');
@@ -192,10 +217,12 @@ select pg_temp.muerde('id de planta repetido entre elemento y miembro',
 select pg_temp.muerde('recalificar una predicción ya calificada', $$update prediccion set calificacion = 'falsa-alarma', falla_evento_id = null, falla_inicio = null where calificacion = 'acierto'$$, '23001');
 select pg_temp.muerde('acierto sin la falla que lo confirma', $$update prediccion set calificacion = 'acierto', calificada = now() where calificacion = 'seguimiento'$$, '23514');
 
--- ── Verificación V4: diálogo de WhatsApp, SAP, folio por año y TRUNCATE
-select pg_temp.pasa('diálogo por WhatsApp: escoge la parte, TRIM pide el modo, responde y entra la respuesta',
+-- ── Verificación V4: diálogo de WhatsApp (RETIRADO (27-oct-2026)), SAP, folio por año y TRUNCATE
+-- RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: POST /api/paradas/:evento/respuesta, en pantalla (R2, R8). La prueba sigue porque la tabla o la columna sigue en esquema.sql; arma sus propias filas (ejemplos.sql ya no las carga).
+select pg_temp.pasa('RETIRADO (27-oct-2026): diálogo por WhatsApp: escoge la parte, TRIM pide el modo, responde y entra la respuesta',
   $s$do $x$ declare m bigint; begin
-      update mensaje set meta_id = 'wamid.PREGUNTA' where id = 'causa-EV-2011-1002--oper-2026-10-02T08:53:18.000Z';
+      perform pg_temp.mensaje_de_prueba();
+      update mensaje set meta_id = 'wamid.PREGUNTA' where id = 'm-prueba';
       insert into respuesta_entrante (meta_id, de_telefono, contexto_meta_id, opcion, resultado, usuario_id, evento_id, payload)
         values ('wamid.E1', '+573005550104', 'wamid.PREGUNTA', '1', 'en-curso', 'oper', 'EV-2011-1002', '{}');
       insert into mensaje_libre (entrante_meta_id, tipo, telefono, usuario_id, evento_id, familia, parte, opciones, texto)
@@ -207,21 +234,21 @@ select pg_temp.pasa('diálogo por WhatsApp: escoge la parte, TRIM pide el modo, 
       insert into respuesta_entrante (meta_id, de_telefono, contexto_meta_id, opcion, resultado, usuario_id, evento_id, payload)
         values ('wamid.E2', '+573005550104', 'wamid.QUEVIO', '1', 'aceptada', 'oper', 'EV-2011-1002', '{}');
       insert into respuesta_parada (evento_id, texto, por, por_id, hora, familia, parte, modo, canal, entrante_meta_id)
-        values ('EV-2011-1002', 'Sello mecánico: fuga externa de producto', 'Jairo Peña · operador de campo', 'oper', now(), 'inyeccion', 'sello', 'ELP', 'whatsapp', 'wamid.E2');
+        values ('EV-2011-1002', 'Sello mecánico: fuga externa de producto', 'Jairo Peña · operador de campo', 'oper', now(), 'inyeccion', 'sello', 'ELP', 'whatsapp', 'wamid.E2');  -- RETIRADO (27-oct-2026)
     end $x$ $s$);
-select pg_temp.muerde('pedir el modo sin la parte ya escogida',
+select pg_temp.muerde('RETIRADO (27-oct-2026): pedir el modo sin la parte ya escogida',
   $s$do $x$ begin
       insert into respuesta_entrante (meta_id, de_telefono, opcion, resultado, usuario_id, evento_id, payload) values ('wamid.E3', '+573005550104', '1', 'en-curso', 'oper', 'EV-2011-1002', '{}');
       insert into mensaje_libre (entrante_meta_id, tipo, telefono, usuario_id, evento_id, opciones, texto)
         values ('wamid.E3', 'pide-modo', '+573005550104', 'oper', 'EV-2011-1002', '[{"clave":"1","texto":"Fuga externa de producto"}]', 'TRIM · ¿Qué vio? Responda con un número.');
     end $x$ $s$, '23514');
-select pg_temp.muerde('reescribir un mensaje libre ya enviado',
+select pg_temp.muerde('RETIRADO (27-oct-2026): reescribir un mensaje libre ya enviado',
   $s$do $x$ declare m bigint; begin
       insert into respuesta_entrante (meta_id, de_telefono, resultado, motivo, payload) values ('wamid.E4', '+573009999999', 'descartada', 'número no registrado', '{}');
       insert into mensaje_libre (entrante_meta_id, tipo, telefono, texto) values ('wamid.E4', 'rechazo', '+573009999999', 'TRIM · Ese número no recibe las alertas de este campo: la respuesta no entra.') returning id into m;
       update mensaje_libre set texto = 'otro texto' where id = m;
     end $x$ $s$, '23001');
-select pg_temp.muerde('estado de entrega de un saliente que TRIM no registró',
+select pg_temp.muerde('RETIRADO (27-oct-2026): estado de entrega de un saliente que TRIM no registró',
   $$insert into estado_mensaje (meta_id, estado, cuando) values ('wamid.NADIE', 'sent', now())$$, '23503');
 select pg_temp.muerde('orden de SAP con un técnico que no está en el registro',
   $$insert into orden_sap (numero, clase_sap, campo_id, equipo, descripcion, estado, prioridad, creada, tecnico_id, puesto) values ('49999999', 'PM01', 'ceiba', 'P-201B', 'Revisar sello', 'CRTD', 2, now(), 'nadie', 'MEC-CEIBA')$$, '23503');

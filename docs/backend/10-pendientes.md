@@ -4,7 +4,7 @@ Documentar cada número obligó a correr el motor caso por caso, y eso dejó a l
 
 > **Estado al 15 de octubre de 2026.** El dueño del producto decidió D1, D3 y D23, y se corrigieron los defectos marcados ✅ (commit `cb8cd39`: motor, contrato, referencia y pantallas; `verificar-libro` pasó de 284 a 320 comprobaciones). **Ciclo de valor (capítulo 11):** motor, contrato, referencia `referencia/ciclo/`, front (`Ciclo.tsx`) y documentación comercial/técnica alineados; pendiente en producción solo **S24** (`decision_plan` + persistencia del POST planes). Lo demás sigue abierto salvo lo marcado ✅.
 
-> **Estado al 22 de octubre de 2026.** Entraron el modelo choke y el árbol de seis pasos de la ANH (commit `30132ea`; capítulo 5E), con las siete decisiones del QA (QA-D1 a QA-D7, decididas: D27). `verificar-libro` pasó a 450 comprobaciones, `verificar-arbol` hace 128 y `verificar-contrato` 141 (más 15 de la costura http); `referencia/` compara 257 casos y 18 escrituras rechazadas. Quedan abiertas las preguntas a la operadora y a la ANH (5E·H1 a 5E·H22, resumidas en D28 a D33) y lo que falta del servidor (S25 a S29 y 10.4, incluida la plantilla de Meta para las preguntas de campo, **B-33**). Las inconsistencias de F20 se resolvieron el 23-oct (5E·H30 a 5E·H37).
+> **Estado al 22 de octubre de 2026.** Entraron el modelo choke y el árbol de seis pasos de la ANH (commit `30132ea`; capítulo 5E), con las siete decisiones del QA (QA-D1 a QA-D7, decididas: D27). `verificar-libro` pasó a 450 comprobaciones, `verificar-arbol` hace 128 y `verificar-contrato` 141 (más 15 de la costura http); `referencia/` compara 257 casos y 18 escrituras rechazadas. Quedan abiertas las preguntas a la operadora y a la ANH (5E·H1 a 5E·H22, resumidas en D28 a D33) y lo que falta del servidor (S25 a S29 y 10.4, incluida la plantilla de Meta para las preguntas de campo, **B-33**, hoy **RETIRADO (27-oct-2026)**). Las inconsistencias de F20 se resolvieron el 23-oct (5E·H30 a 5E·H37).
 
 **Cómo usarlo.**
 - 10.1 son **preguntas para el dueño del producto**: el backend no las puede adivinar.
@@ -63,7 +63,7 @@ Documentar cada número obligó a correr el motor caso por caso, y eso dejó a l
 | S7 | La base maestra de alarmas es una constante por máquina (solo P-201B y MPP-301) | Tabla por máquina y tag, con fuente, firma y versión | 5C·H15 |
 | S8 | Los ajustes de protección del variador de cada electrosumergible se generan del pozo | Llegan del variador por un endpoint que **todavía no existe** (10.4) | 5C·H14 |
 | S9 | La historia de SAP se deriva del PLC; la reparación activa es ≤ 8 h por construcción | Se lee de SAP (órdenes, confirmaciones, repuestos). No usar los promedios del demo como referencia | 5D·H27 |
-| S10 | El registro de WhatsApp se **recalcula** desde la historia | El servidor **dispara** cada mensaje en su momento (con tareas para el recordatorio a los 30 min y el escalamiento a las 2 h), lo guarda con el id de Meta (`wamid`) y no lo reescribe | 5D·H21, H22 |
+| S10 | **RETIRADO (27-oct-2026)** (R7: sale de la lista). El registro de WhatsApp se **recalcula** desde la historia | El servidor **dispara** cada mensaje en su momento (con tareas para el recordatorio a los 30 min y el escalamiento a las 2 h), lo guarda con el id de Meta (`wamid`) y no lo reescribe | 5D·H21, H22 |
 | S11 | El registro de aciertos del vigía se arma con una regla fija sobre la historia | Cada predicción **se guarda al emitirse** y se califica al vencer | 5C·H26 |
 | S12 | ✅ **Resuelto (8-oct).** El colchón de una parada vieja se recalcula con la configuración de hoy | Usar la versión que regía al inicio de la parada (`configEn`), como ya hacen los mensajes | 5D·H4 |
 | S13 | ✅ **Resuelto (8-oct):** `fin: null` usa el «ahora». Todos los servicios del demo están cerrados | Un servicio todavía caído (`fin` vacío) usa el «ahora» como fin; hoy su cascada no funciona | 5B·H8 |
@@ -73,7 +73,7 @@ Documentar cada número obligó a correr el motor caso por caso, y eso dejó a l
 | S17 | El simulador no revisa el campo asignado al asociar o inscribir, y mide el límite de 2 MB en caracteres | Token, campo asignado, bytes; código de inscripción sin sesgo | 5D·H32 |
 | S18 | La severidad, el estado y la lectura de cada equipo del catálogo están escritos a mano en los datos del demo | Se **derivan** con una regla (propuesta: parada abierta de alto impacto con pozos cerrados → 1; parada sin costo o de otro equipo → 2; si no, la peor parte; en un servicio, el peor dispositivo). Hoy MPP-301 sale P3 en Superficie y P2 en Riesgo | 6B·H1, 6C·H7 |
 | S19 | El límite de cada dispositivo viaja como texto («18.000 – 20.400», «< 3,9») y el front lo vuelve a leer para dibujar la banda | Mandar además la banda numérica (`normal: [a, b]`, `null` del lado abierto), como ya hace `Senal` | 6B·H2 |
-| S20 | El estado de SAP y WhatsApp en Conectores («conectado», «sincronizado», el número, «webhook activo») son constantes del front | Un endpoint `GET /api/integraciones` con el estado real | 6A·H10 |
+| S20 | (WhatsApp: **RETIRADO (27-oct-2026)**, R7; queda solo SAP) El estado de SAP y WhatsApp en Conectores («conectado», «sincronizado», el número, «webhook activo») son constantes del front | Un endpoint `GET /api/integraciones` con el estado real | 6A·H10 |
 | S21 | «Antes → con TRIM» y «mantenimiento proactivo» usan una fecha de puesta en marcha fija del front | El servidor expone la fecha de puesta en marcha de cada campo | 6A·H12 |
 | S22 | Respuestas, análisis y cambios de planta viven en la sesión del navegador (se pierden al recargar) | Los guarda el servidor (capítulo 3) | 6C·H12 |
 | S23 | El CSV de un informe lo arma el navegador con un libro que vuelve a pedir | Si el CSV es evidencia, lo arma el servidor junto con el folio (D19) | 6C·H23, 5D·H17 |
@@ -82,7 +82,7 @@ Documentar cada número obligó a correr el motor caso por caso, y eso dejó a l
 | S26 | Las capacidades de los tramos son datos del demo, sin firmar (el 21-oct se ajustaron a mano para cumplir «no menos de lo que ya pasó») | Firmarlas por campo con su fuente; la firma revisa lo máximo de los últimos 30 días y el empate | 5E.2, 5E·H24 |
 | S27 | La topología de todos los campos es la derivada del registro | Firmarla por campo (la primera firma, completa), con «Todavía no sé» para lo que no se sepa | 5E.1 |
 | S28 | La locación de los pozos (caso de borde) está en `src/entities/datos/topologia.ts` | `Pozo.locacion` en el registro | 5E·H23 |
-| S29 | Las preguntas de campo de la clasificación se contestan solo en pantalla | También por WhatsApp, con una plantilla nueva de Meta (B-33) | 5E·H25, 5D.5 |
+| S29 | **RETIRADO (27-oct-2026)** (R7: sale de la lista). Las preguntas de campo de la clasificación se contestan solo en pantalla | También por WhatsApp, con una plantilla nueva de Meta (B-33). Se quedan en pantalla | 5E·H25, 5D.5 |
 
 ## 10.3 Defectos encontrados en el front y el motor
 
@@ -140,7 +140,7 @@ Ordenados de más a menos grave. «Cambia lo que se ve» quiere decir que un usu
 |---|---|
 | `GET /api/sesion` y el servicio de identidad (OIDC/SSO) | La persona, su rol, sus campos y sus capacidades salen del token (2.8). En el front: leerla al arrancar y quitar «Cambiar de rol» y las cabeceras `x-rol` y `x-capacidades` del prototipo |
 | Endpoint de los ajustes de protección del variador de cada electrosumergible | Banda y alarma de corriente, frecuencia, presión de entrada, temperatura del motor y desbalance |
-| `POST /api/webhooks/whatsapp` real y el envío por la Cloud API de Meta con las 10 plantillas aprobadas | Hoy el teléfono del demo hace de webhook dentro del navegador |
+| **RETIRADO (27-oct-2026)** (R7: no se construye). `POST /api/webhooks/whatsapp` real y el envío por la Cloud API de Meta con las 10 plantillas aprobadas | Hoy el teléfono del demo hace de webhook dentro del navegador |
 | `GET /api/informes/:folio/verificacion` | La comprobación pública de un informe |
 | `GET /api/paradas/:evento` con `respuestas[]` y `analisis[]` | La historia de una parada |
 | `POST /api/campos/:campo/tags/equipo` por lotes | Asociar tags de a muchos |
@@ -150,7 +150,7 @@ Ordenados de más a menos grave. «Cambia lo que se ve» quiere decir que un usu
 | `lectura` como hipertabla de TimescaleDB, particionada por mes | Capítulo 3 |
 | `GET /api/integraciones` y la fecha de puesta en marcha por campo | S20, S21 |
 | Tabla `decision_plan` y los endpoints del ciclo en el servidor de producción (`GET /api/vistas/ciclo`, `POST /api/planes/:id`) | El contrato, las fórmulas y el front ya están. El desarrollador del backend los implementa (capítulo 11, S24) |
-| La plantilla de Meta para las preguntas de campo de la clasificación (**B-33**), su envío al operador del campo cuando la fila tiene una pregunta abierta y su entrada por el webhook con las reglas de `POST …/respuesta` | Contestar desde el campo sin abrir la aplicación (5E·H25) |
+| **RETIRADO (27-oct-2026)** (R7: no se construye). La plantilla de Meta para las preguntas de campo de la clasificación (**B-33**), su envío al operador del campo cuando la fila tiene una pregunta abierta y su entrada por el webhook con las reglas de `POST …/respuesta` | Contestar desde el campo sin abrir la aplicación (5E·H25) |
 | `GET /api/vistas/anh/reparto` y el resto del carril ANH: opciones por fila, cierre del día, conversión del árbol de la operadora, envío del IDP | P1 §5 (5E·H27) |
 | `Pozo.locacion` en `GET /api/campos/:campo/pozos` | El caso de borde del choke (5E·H23) |
 | El registro de pérdidas (lo producido que no se vendió) | Llenar la rama de la pérdida del árbol (5E·H29) |
@@ -163,7 +163,7 @@ Ordenados de más a menos grave. «Cambia lo que se ve» quiere decir que un usu
 - el libro, la línea base y el día a día del **mes en curso**, ni un período que corte meses (residuo ≠ 0);
 - el **potencial reciente**;
 - **informes** (huella), **mensajes** y **relojes**, incluido el caso trampa de redondeo **1,005** (en doble precisión da «1.00»; en decimal exacto, «1.01»);
-- las consecuencias de WhatsApp «con respaldo parcial» y «con respaldo total» y la plantilla `trim_recordatorio_arranco`.
+- las consecuencias de WhatsApp «con respaldo parcial» y «con respaldo total» y la plantilla `trim_recordatorio_arranco` (**RETIRADO (27-oct-2026)**: ya no hace falta cubrirlas).
 - en el choke: una **capacidad firmada** (todas son del demo), una **topología firmada** con «Todavía no sé» (solo la prueba `verificar-libro`, secciones 22 y 29), y un **campo ajeno** en las vistas (403, C-16).
 
 Los números de este documento para esos casos salen de correr el motor; conviene convertirlos en casos de `referencia/` antes de que un backend en otro lenguaje los necesite (5A·H20, 5D·H19, H20).

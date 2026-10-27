@@ -87,7 +87,7 @@ export function Mantenimiento() {
             ...(r.tag ? [['Instrumento', r.tag] as [string, string]] : []),
             ['Si para', siParaLargo(r, servicio)],
             // D-2 · G-16: «Si falla hoy» es una tasa (bbl/d); lo que costaría la falla, en bbl, lleva su nombre.
-            ...(r.costoFalla !== undefined ? [['Le costaría la falla', `≈ ${n0(r.costoFalla)} bbl`] as [string, string]] : [])]}
+            ...(r.costoFallaHoy !== undefined ? [['Le costaría la falla', `≈ ${n0(r.costoFallaHoy)} bbl`] as [string, string]] : [])]}
           className="flex w-full cursor-pointer items-start gap-2.5 text-left hover:bg-[var(--panel2)]">
           <MarcaDelEquipo c={condicionDe(r.campoId, r.equipo)} />
           <span className="min-w-0 flex-1">

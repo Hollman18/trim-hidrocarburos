@@ -1,5 +1,5 @@
-/** Wordmark oficial de Trim. Dos variantes según el tema; el isotipo
- *  solo cuando el riel está colapsado. */
+/** Wordmark oficial de Trim. Dos variantes según el tema: en tinta sobre el
+ *  panel claro y en claro sobre la noche. El isotipo, solo con el panel plegado. */
 export const Wordmark = ({ className = 'h-5' }: { className?: string }) => (
   <>
     <img src="/brand/logo_trim_dark.png" alt="Trim" className={`${className} w-auto dark-hide`} />
@@ -7,14 +7,10 @@ export const Wordmark = ({ className = 'h-5' }: { className?: string }) => (
   </>
 )
 
-/** El wordmark en blanco, sobre el índigo del panel y de la banda del
- *  teléfono (X5 §4): el mismo en los dos temas, porque el índigo no cambia. */
-export const WordmarkBlanco = ({ className = 'h-5' }: { className?: string }) => (
-  <img src="/brand/logo_trim_light.png" alt="Trim" className={`${className} w-auto`} />
-)
-
+/** El isotipo, en la tinta del tema (v3: fuera el índigo de la interfaz). El
+ *  archivo de marca no cambia: se pinta en tinta con un filtro (`.iso-tinta`). */
 export const Isotipo = ({ className = 'h-6 w-6' }: { className?: string }) => (
-  <img src="/brand/logo_256.png" alt="" className={className} />
+  <img src="/brand/logo_256.png" alt="" className={`iso-tinta ${className}`} />
 )
 
 /** El ícono de «La planta viva»: un tubo que se angosta (X5 §4.1, `marcas.js`).

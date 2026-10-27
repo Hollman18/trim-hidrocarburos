@@ -4,18 +4,18 @@ import { cn } from '@/shared/lib/cn'
 import type { Severidad } from '@/entities/tipos'
 import { MarcaPrioridad } from './Prioridad'
 
-/* Las primitivas de B (X5 §5.2): la tarjeta blanca de radio 20, sin borde ni
-   sombra, separada del papel por el tono; los botones de píldora (el principal
-   en índigo, el secundario con un aro fino); las filas de 56 a 64 px con «›».
-   Lo que ya existía las hereda: Panel, Metrica, Chip y Boton son las mismas
-   piezas con el aspecto de B. */
+/* Las primitivas con la estructura de D1 (v3, decisión 5): el bloque en --panel,
+   de radio 10, sin borde ni sombra, separado del papel por el tono; los botones
+   rectos de radio 8 (el principal en el acento petróleo, el secundario con un aro
+   fino); las filas de 56 a 64 px con «›». Lo que ya existía las hereda: Panel,
+   Metrica, Chip y Boton son las mismas piezas con el aspecto nuevo. */
 
-/** La tarjeta de B: `--panel` sobre `--suelo`, radio 20, sin borde ni sombra.
+/** El bloque: `--panel` sobre `--suelo`, radio 10, sin borde ni sombra.
  *  Relleno de 16 en el teléfono y de 22 a 26 en el escritorio. */
 export const Tarjeta = ({ children, className, as: Etiqueta = 'section', ...p }: {
   children: ReactNode; className?: string; as?: 'section' | 'div' | 'article'
 } & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'>) => (
-  <Etiqueta {...p} className={cn('min-w-0 rounded-[20px] bg-[var(--panel)] p-4 sm:px-[24px] sm:py-[20px]', className)}>
+  <Etiqueta {...p} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] p-4 sm:px-[24px] sm:py-[20px]', className)}>
     {children}
   </Etiqueta>
 )
@@ -26,7 +26,7 @@ export const Tarjeta = ({ children, className, as: Etiqueta = 'section', ...p }:
 export const Panel = ({ titulo, extra, children, className }: {
   titulo?: string; extra?: ReactNode; children: ReactNode; className?: string
 }) => (
-  <section className={cn('min-w-0 rounded-[20px] bg-[var(--panel)]', className)}>
+  <section className={cn('min-w-0 rounded-[10px] bg-[var(--panel)]', className)}>
     {titulo && (
       <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pt-4 sm:px-[24px] sm:pt-[18px]">
         <h2 className="text-[16px] font-semibold leading-snug text-[var(--tinta)]">{titulo}</h2>
@@ -84,15 +84,15 @@ export const Calidad = ({ children }: { children: ReactNode }) => (
   </span>
 )
 
-/** Los botones de B son píldoras. El principal va en índigo (`--primario`):
- *  la mano, nunca un dato. El secundario lleva un aro fino. Nunca más de dos
+/** Los botones, rectos de radio 8 (D1). El principal va en el acento
+ *  (`--primario`): la mano, nunca un dato. El secundario lleva un aro fino. Nunca más de dos
  *  juntos (X5 §5.1). */
 export const Boton = ({ children, variante = 'normal', className, ...p }:
   React.ButtonHTMLAttributes<HTMLButtonElement> & { variante?: 'normal' | 'principal' | 'chico' }) => (
   // Un botón es una acción: en el papel no hace nada, así que no se imprime.
   <button {...p} className={cn(
     // `toque`: en el teléfono, 44 × 44 px de blanco aunque se vea más chico (A5).
-    'toque no-imprimir inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full font-semibold transition-colors duration-[120ms] disabled:cursor-not-allowed disabled:opacity-45',
+    'toque no-imprimir inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-[8px] font-semibold transition-colors duration-[120ms] disabled:cursor-not-allowed disabled:opacity-45',
     variante === 'chico' ? 'min-h-8 px-3.5 py-1 text-[14px]' : 'min-h-10 px-[18px] py-2 text-[15px]',
     variante === 'principal'
       ? 'bg-[var(--primario)] text-[var(--primario-sobre)] hover:opacity-90'
@@ -131,7 +131,7 @@ export const Cita = ({ children }: { children: ReactNode }) => (
 
 /** Un hueco: lo que falta o no aplica, con su frase (X5 §5.10). */
 export const Hueco = ({ children }: { children: ReactNode }) => (
-  <div className="rounded-[14px] border-[1.5px] border-dashed border-[var(--linea)] bg-[var(--panel2)] px-4 py-3 text-[14px] text-[var(--tinta2)]">
+  <div className="rounded-[10px] border-[1.5px] border-dashed border-[var(--linea)] bg-[var(--panel2)] px-4 py-3 text-[14px] text-[var(--tinta2)]">
     {children}
   </div>
 )
@@ -142,7 +142,7 @@ export const Hueco = ({ children }: { children: ReactNode }) => (
  *  el archivo (se movió, una carpeta de red, permiso negado) se dice: la
  *  promesa no queda rechazada en la consola con la pantalla igual. */
 export const SubirCsv = ({ onTexto, onError }: { onTexto: (texto: string) => void; onError: (mensaje: string) => void }) => (
-  <label className="no-imprimir inline-flex min-h-10 cursor-pointer items-center rounded-full bg-[var(--panel)] px-[18px] py-2 text-[15px] font-semibold shadow-[inset_0_0_0_1.5px_var(--linea)] hover:bg-[var(--panel2)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--foco)]">
+  <label className="no-imprimir inline-flex min-h-10 cursor-pointer items-center rounded-[8px] bg-[var(--panel)] px-[18px] py-2 text-[15px] font-semibold shadow-[inset_0_0_0_1.5px_var(--linea)] hover:bg-[var(--panel2)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--foco)]">
     <Upload className="mr-1.5 inline size-4" />Subir un CSV
     <input type="file" accept=".csv,.txt,text/csv" className="sr-only"
       onChange={async e => {

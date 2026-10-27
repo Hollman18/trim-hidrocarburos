@@ -112,11 +112,11 @@ Con ≥ 3 meses propios y el último a ≤ 1 mes del en curso: ■ «El plan lle
 | 41 | Propia fila | «Andrés Vélez · usted» | `personaDelRol(usuarios, rolId)` | sesión |
 | 42 | Correo | «andres.velez@operadora.example» | solo con el registro completo (`usuarios:administrar`) — 5D.3 §«Quién lee qué» | `correo` |
 | 43 | Rol y campos | «Gerente de activo · todos los campos» | `rolPorId(rolId).nombre` · `nombreCampos(campos)` («todos los campos» o los nombres separados por coma) | `rolId`, `campos` |
-| 44 · 45 | WhatsApp | «WhatsApp +57 300 555 0101» · «WhatsApp +57 300 555 0103 · recibe alertas» | `telefonoLegible(E.164)` o «sin WhatsApp»; « · recibe alertas» si `alertas` | `telefono`, `alertas` |
+| 44 · 45 | WhatsApp (**RETIRADO (27-oct-2026)**) | «WhatsApp +57 300 555 0101» · «WhatsApp +57 300 555 0103 · recibe alertas» | `telefonoLegible(E.164)` o «sin WhatsApp»; « · recibe alertas» si `alertas` | `telefono`, `alertas` |
 | — | Estado | (ninguno en el demo) | chip «invitado · aún no entra» o «suspendido» (fuerte, nombre tachado) | `estado` |
 | 46 · 47 | «Cambiar» · «Invitar a una persona» | solo con `usuarios:administrar`; el administrador ve «Solo lectura: los da el gerente de activo.» | | |
 | 48 · 49 | HISTORIAL DE ACCESOS | «1 cambio»; «Todas las personas iniciales · 1 de sept, 08:00 · Hermes Leal · administrador de la implementación», «Accesos de arranque de la implementación» y un renglón por persona | del más nuevo al más viejo, cinco y «ver N más» — 5D.3 §«Texto del historial» | `GET /api/usuarios/historial` |
-| 97 | Las nueve filas de USUARIOS Y ACCESOS | Andrés Vélez · usted · Gerente de activo · todos los campos · «WhatsApp +57 300 555 0101»; Marcela Ríos · Ingeniera de producción · La Ceiba, El Palmar · «0102»; Nelson Ortiz · Supervisor de operaciones · «0103 · recibe alertas»; Jairo Peña · Operador de campo · «0104 · recibe alertas»; Camilo Rueda · Jefe de mantenimiento · «0105 · recibe alertas»; Edwin Maestre · Ingeniero de confiabilidad · «0106 · recibe alertas»; Óscar Daza · Técnico de mantenimiento · «0107 · recibe alertas»; Iván Salas · Cumplimiento regulatorio · todos los campos · «0108» (nueva con el rol `reg`: sin alertas); Hermes Leal · Administrador de la implementación · «0109» | igual que las filas 41-45, persona por persona. En el demo los teléfonos salen de `+5730055501` + el orden del rol (`USUARIOS_INICIALES` sobre `ROLES_VISIBLES`, `src/entities/usuarios.ts:172-176`: con el rol `reg` encendido hay una persona más y Hermes Leal pasó de «0108» a «0109») y `alertas` = el rol está en `ROLES_CON_ALERTAS` (sup, oper, tec, conf, jefe; 5D.3 §«Alertas por rol»); en producción, lo que guarde el registro | `GET /api/usuarios` → `[].nombre`, `rolId`, `campos`, `telefono`, `alertas` |
+| 97 | Las nueve filas de USUARIOS Y ACCESOS | Andrés Vélez · usted · Gerente de activo · todos los campos · «WhatsApp +57 300 555 0101» (el número y las alertas: **RETIRADO (27-oct-2026)**); Marcela Ríos · Ingeniera de producción · La Ceiba, El Palmar · «0102»; Nelson Ortiz · Supervisor de operaciones · «0103 · recibe alertas»; Jairo Peña · Operador de campo · «0104 · recibe alertas»; Camilo Rueda · Jefe de mantenimiento · «0105 · recibe alertas»; Edwin Maestre · Ingeniero de confiabilidad · «0106 · recibe alertas»; Óscar Daza · Técnico de mantenimiento · «0107 · recibe alertas»; Iván Salas · Cumplimiento regulatorio · todos los campos · «0108» (nueva con el rol `reg`: sin alertas); Hermes Leal · Administrador de la implementación · «0109» | igual que las filas 41-45, persona por persona. En el demo los teléfonos salen de `+5730055501` + el orden del rol (`USUARIOS_INICIALES` sobre `ROLES_VISIBLES`, `src/entities/usuarios.ts:172-176`: con el rol `reg` encendido hay una persona más y Hermes Leal pasó de «0108» a «0109») y `alertas` = el rol está en `ROLES_CON_ALERTAS` (sup, oper, tec, conf, jefe; 5D.3 §«Alertas por rol»); en producción, lo que guarde el registro | `GET /api/usuarios` → `[].nombre`, `rolId`, `campos`, `telefono`, `alertas` |
 
 Invitar sin llenar bien (correo de Nelson Ortiz, teléfono «12345», sin nombre, rol, campos ni motivo):
 
@@ -128,10 +128,10 @@ Invitar sin llenar bien (correo de Nelson Ortiz, teléfono «12345», sin nombre
 | 56 | «Ya hay una persona con ese correo.» | correo único |
 | 57 | «Escoja un rol.» | rol del producto |
 | 58 | «Escoja al menos un campo.» | ≥ 1 campo |
-| 59 | «El WhatsApp va con indicativo (+57 300 123 4567) o como celular de 10 dígitos (300 123 4567).» | E.164 |
+| 59 | (**RETIRADO (27-oct-2026)**) «El WhatsApp va con indicativo (+57 300 123 4567) o como celular de 10 dígitos (300 123 4567).» | E.164 |
 | 83 | «Falta el motivo: todo cambio de acceso queda escrito con su porqué.» | motivo ≥ 5 |
 
-El foco va a la primera caja con error (orden nombre, correo, rol, campos, whatsapp, alertas, motivo). La casilla de alertas dice «Escoja el rol para ver qué alertas recibe» hasta que se escoja un rol; con un rol sin alertas, «Este rol no recibe alertas por WhatsApp»; con alertas, «Recibe por WhatsApp: *ALERTAS_DEL_ROL*».
+El foco va a la primera caja con error (orden nombre, correo, rol, campos, whatsapp, alertas, motivo; whatsapp y alertas: **RETIRADO (27-oct-2026)**). La casilla de alertas dice «Escoja el rol para ver qué alertas recibe» hasta que se escoja un rol; con un rol sin alertas, «Este rol no recibe alertas por WhatsApp»; con alertas, «Recibe por WhatsApp: *ALERTAS_DEL_ROL*».
 
 ---
 
@@ -179,7 +179,7 @@ Un cambio técnico (gas a «No tiene tren de gas», electrosumergibles apagadas,
 | # | En la captura | Regla |
 |---|---|---|
 | 84 | ■ «4 elementos del tren de gas no se dibujan» + ⓘ «Qué pasa: El esquema los tiene, pero no se dibujan mientras el campo diga que no tiene gas.» | perfil sin gas con elementos en el esquema |
-| 85 | ■ «Los 15 pozos con electrosumergible dejan de vigilarse» + ⓘ «No saldrán sus avisos ni sus predicciones; lo que pierdan se sigue contando en el libro.» | regla de negocio: la familia apagada sale de la vigilancia (riesgo, predicciones, WhatsApp), **no** del libro |
+| 85 | ■ «Los 15 pozos con electrosumergible dejan de vigilarse» + ⓘ «No saldrán sus avisos ni sus predicciones; lo que pierdan se sigue contando en el libro.» | regla de negocio: la familia apagada sale de la vigilancia (riesgo, predicciones, WhatsApp [**RETIRADO (27-oct-2026)**]), **no** del libro |
 | 25 | «4 cambios en el borrador» | `plural(cambios, 'cambio', 'cambios')`: gas, electrosumergibles, capacidad del tanque y respaldo (fila 25 de 6A.4.2) |
 | 86 · 87 · 88 · 89 | «TÉCNICA · FIRMA EL ADMINISTRADOR»: «La Ceiba: gas a venta → no tiene tren de gas», «TK-AG-CE: capacidad 30.000 bbl → 36.000 bbl», «P-201B de La Ceiba: respaldo libre 30.100 bbl/d → 36.100 bbl/d» (y «La Ceiba: electrosumergibles sí → no») | plantillas de 5D §«Lo que cambió entre dos versiones» |
 

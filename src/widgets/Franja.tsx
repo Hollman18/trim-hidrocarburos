@@ -51,7 +51,7 @@ function Cuenta({ c, n, equipos }: { c: CondicionFranja; n: number; equipos: Equ
     <div ref={contenedor} className="relative max-sm:static">
       <button {...propsBoton} disabled={n === 0} aria-label={n ? `${texto}: ver la lista` : sinCom ? `${texto}. ${ALCANCE_SIN_COM}` : texto}
         title={sinCom ? ALCANCE_SIN_COM : undefined}
-        className={cn('toque inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] pl-[11px] pr-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--linea)] max-sm:h-[30px] max-sm:gap-1.5 max-sm:pl-2 max-sm:pr-2.5 max-sm:text-[13px]',
+        className={cn('toque inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[8px] bg-[var(--panel)] pl-[11px] pr-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--linea)] max-sm:h-[30px] max-sm:gap-1.5 max-sm:pl-2 max-sm:pr-2.5 max-sm:text-[13px]',
           n ? 'cursor-pointer text-[var(--tinta)] hover:bg-[var(--panel2)]' : 'cursor-default text-[var(--tinta2)]')}>
         <MarcaCondicion c={MARCA[c]} tamano={14} decorativa />
         <b className="font-bold">{n}</b>
@@ -62,13 +62,13 @@ function Cuenta({ c, n, equipos }: { c: CondicionFranja; n: number; equipos: Equ
       </button>
       {abierto && n > 0 && (
         <div id={id} role="group" aria-label={texto}
-          className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[340px] max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-sm:left-0 max-sm:right-auto">
+          className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[340px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-sm:left-0 max-sm:right-auto">
           <p className="flex items-center gap-2 px-2.5 pb-1 pt-1.5 text-[13px] font-semibold text-[var(--tinta2)]">
             <MarcaCondicion c={MARCA[c]} tamano={14} decorativa />{texto[0]!.toUpperCase() + texto.slice(1)}
           </p>
           {equipos.map(e => (
             <button key={`${e.campoId}|${e.equipo}`} onClick={() => abrir(e)}
-              className="flex min-h-12 w-full cursor-pointer items-start gap-2.5 rounded-[12px] px-2.5 py-2 text-left hover:bg-[var(--panel2)]">
+              className="flex min-h-12 w-full cursor-pointer items-start gap-2.5 rounded-[8px] px-2.5 py-2 text-left hover:bg-[var(--panel2)]">
               <MarcaCondicion c={MARCA[c]} tamano={15} className="mt-0.5" />
               <span className="min-w-0 flex-1">
                 <b className="font-cond text-[15px] font-bold tracking-[.02em]">{e.equipo}</b>
@@ -93,7 +93,7 @@ export function Franja({ className }: { className?: string }) {
   // Una franja que siempre tiene algo pierde valor: vacía, una píldora gris (X5 §5.10).
   if (!total) return (
     <div role="group" aria-label={titulo} className={cn('flex items-center', className)}>
-      <span className="inline-flex h-[34px] items-center rounded-full bg-[var(--panel2)] px-3.5 text-[14px] font-medium text-[var(--tinta2)] shadow-[inset_0_0_0_1px_var(--linea)]">nada anormal</span>
+      <span className="inline-flex h-[34px] items-center rounded-[8px] bg-[var(--panel2)] px-3.5 text-[14px] font-medium text-[var(--tinta2)] shadow-[inset_0_0_0_1px_var(--linea)]">nada anormal</span>
     </div>
   )
   return (

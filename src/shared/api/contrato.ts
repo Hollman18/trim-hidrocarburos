@@ -9,7 +9,6 @@ import type { SaludParte, SenalDeParte, SenalQueCruza } from '@/entities/salud'
 import type { Pozo, EventoPozo, Respuesta as RespuestaParada } from '@/entities/pozos'
 import type { PerfilBomba, Alarma } from '@/entities/bombas'
 import type { ParteId } from '@/entities/partes'
-import type { Opcion, Mensaje } from '@/entities/mensajes'
 import type { FallaVista } from '@/entities/aciertos'
 import type { AvisoSap, OrdenSap } from '@/entities/sap'
 import type { EquipoVivo } from '@/entities/equipo-vivo'
@@ -154,8 +153,17 @@ const serieTag: Codec<SerieTag, SerieTag> = {
 const alarma = obj<Alarma>()({ alta: opc(tal<number>()), baja: opc(tal<number>()) })
 /** Una señal: su banda normal puede estar abierta por un lado («< 85»). */
 const senal = obj<Senal>()({ normal: opc(bandaAbierta), serie: opc(serieTag), alarma: opc(alarma) })
+/** C2 · al lado (docs/backend/CAMBIOS-CONTRATO.md §4.1): el dispositivo sin
+ *  lectura viajaba en v1 como `valor: "—"` y hoy como `null`. Las dos formas
+ *  valen: al entrar, «—» es `null` (un texto se leería como una lectura
+ *  discreta, el valor de un interruptor). Un backend nuevo manda `null`. */
+export const SIN_LECTURA_V1 = '—'
+const valorDispositivo: Codec<Dispositivo['valor'], Dispositivo['valor']> = {
+  aDTO: v => v,
+  revivir: j => (j === SIN_LECTURA_V1 ? null : j),
+}
 /** Un instrumento de un equipo, con su serie revisada. */
-const dispositivo = obj<Dispositivo>()({ serie: opc(serieTag) })
+const dispositivo = obj<Dispositivo>()({ serie: opc(serieTag), valor: valorDispositivo })
 const equipoVivo = obj<EquipoVivo>()({ dispositivos: lista(dispositivo) })
 const senalDeParte = obj<SenalDeParte>()({ senal })
 const saludParte = obj<SaludParte>()({
@@ -478,8 +486,7 @@ export const PARADAS_ANH = get<ConsultaPeriodo>()('/vistas/anh/paradas', lista(p
  *  topología (P1 §2.1; U2 §4.6). */
 export const CALIDAD_ANH = get<ConsultaPeriodo>()('/vistas/anh/calidad', tal<CalidadClasificacion>())
 
-/** Lo que TRIM mandó por WhatsApp: un registro del servidor, del más reciente al más viejo. */
-export const MENSAJES = get<PorCampos>()('/mensajes', tal<Mensaje[]>())
+// `GET /mensajes` (v1): RETIRADO el 27-oct-2026 (R1): ver `RETIRADAS`, al final. El front ya no lo pide.
 export const SAP_AVISOS = get<PorCampos>()('/sap/avisos', tal<AvisoSap[]>())
 export const SAP_ORDENES = get<PorCampos>()('/sap/ordenes', tal<OrdenSap[]>())
 export const SAP_EQUIPOS = get<{ campo: string }>()('/sap/equipos', tal<EquipoSap[]>())
@@ -554,7 +561,6 @@ export interface CuerpoUsuario { usuario: Usuario; motivo: string }
 export interface CuerpoInvitacion { invitacion: Invitacion; motivo: string }
 export type CuerpoAviso = Pick<AvisoSap, 'tipo' | 'campoId' | 'equipo' | 'descripcion' | 'prioridad' | 'parte' | 'modo' | 'inicioAveria' | 'parada' | 'evidencia' | 'evento'>
 export interface CuerpoRespuesta { evento: string; campoId: string; equipo: string; texto: string; parte?: ParteId; modo?: string }
-export interface CuerpoWhatsapp { evento: string; campoId: string; equipo: string; usuarioId: string; opcion: Opcion; texto?: string; modo?: string }
 export interface CuerpoAnalisis { evento: string; mecanismo: string; causaRaiz: string; nota?: string }
 /** Las filas que se cargan y por qué: reemplazar la oficial de un mes sin motivo no deja saber después qué pasó. */
 export interface CuerpoAsignacion { filas: FilaOficial[]; motivo: string }
@@ -690,7 +696,7 @@ export const PLANTA_VIVA = get<ConsultaPlantaViva>()('/vistas/planta-viva', vist
 export interface ConsultaHoy { rol: string; campos: string[] }
 /** Hoy del rol: el inicio (cifra y frase), los bloqueos «No arrancar», las tarjetas
  *  en orden (hora, barriles, lo demás, avisos), la insignia, lo hecho hoy y, al lado,
- *  «Su campo, ahora», el turno en WhatsApp y el diferido del turno. */
+ *  «Su campo, ahora» y el diferido del turno. */
 export const HOY = get<ConsultaHoy>()('/vistas/hoy', tal<import('@/entities/hoy').VistaHoy>())
 /** `POST /anh/paradas/deshacer { ids, n }`: devuelve a lo que propone TRIM, con
  *  procedencia `retirado` y el motivo «deshecho por quien contestó», los pasos con
@@ -750,3 +756,131 @@ export const NIVEL_EQUIPO = get<PorEquipo>()('/vistas/equipos/:campo/:equipo/tec
  *  parada sin causa: sus barriles enteros (Σ = `bblSinCausa`) y exactos, lo que le
  *  falta, quién lo debe (el rol que contesta su primera pregunta) y la hora límite. */
 export const REPORTE_ANH = get<ConsultaPeriodo>()('/vistas/anh/reporte', tal<import('@/entities/regulatorio').VistaReporteAnh>())
+
+/* ───────────────────── A3 · Acciones ───────────────────── */
+// A3 · Las acciones que faltan (experiencia v3; necesario-por-rol.md y
+// CAMBIOS-CONTRATO.md §9: M2 a M5). Todo AGREGADO al lado: rutas nuevas y campos
+// opcionales; nada de v1 cambia de forma. Todo es JSON puro (las horas en ISO con
+// zona, como texto): viaja tal cual. Las reglas, en src/entities/orden-cierre.ts,
+// anh-respuestas.ts y anh-conversion.ts; las escrituras, en escrituras.ts (A3).
+
+/** `POST /api/paradas/:evento/vio { modo, texto? }`: lo que vio en la parte, la pregunta
+ *  siguiente y OPCIONAL de «Contestar» en 1 toque (la parte ya se guardó con
+ *  `POST /api/paradas/:evento/respuesta`, ahora sin `modo`). Por inserción: una vez. */
+export interface CuerpoVio { modo: string; texto?: string }
+/** → la respuesta como quedó: la misma, con `modo` y `vio` (quién y cuándo lo dijo). */
+export const R_VIO = tal<{ respuesta: RespuestaParada }>()
+
+/** `POST /api/sap/ordenes/:numero/cierre`: cerrar la orden en el teléfono (`orden:cerrar`). */
+export type CuerpoCierre = import('@/entities/orden-cierre').CuerpoCierreOrden
+/** → la orden como quedó (estado `CNF`, horas sumadas y `cierre`) y el cierre guardado. */
+export const R_CIERRE = tal<{ orden: OrdenSap; cierre: import('@/entities/orden-cierre').CierreOrden }>()
+
+/** `POST /api/anh/respuestas`: la respuesta de la ANH al reporte de un día (`anh:enviar`). */
+export type CuerpoRespuestaDeLaAnh = import('@/entities/anh-respuestas').CuerpoRespuestaDeLaAnh
+/** → la respuesta guardada (con `n`, `limiteCorreccion` en un rechazo, `por`, `porId` y `hora`). */
+export const R_RESPUESTA_DE_LA_ANH = tal<{ respuesta: import('@/entities/anh-respuestas').RespuestaAnh }>()
+/** `GET /api/vistas/anh/respuestas?campos=&desde=&hasta=`: lo que rige de cada día
+ *  (con lo que queda de la hora para corregir) y la historia, que no se borra. */
+export const RESPUESTAS_ANH = get<ConsultaPeriodo>()('/vistas/anh/respuestas', tal<import('@/entities/anh-respuestas').VistaRespuestasAnh>())
+
+/** `POST /api/anh/conversion/importar { campo, texto }`: la tabla de equivalencias leída de
+ *  un CSV o de un pegado de Excel, con lo que bloquea por fila. No firma: se firma con
+ *  `POST /api/configuracion` (`Config.conversionAnh`, `config:firmar`). */
+export interface CuerpoConversionCsv { campo: string; texto: string }
+export const R_CONVERSION_CSV = tal<import('@/entities/anh-conversion').ConversionLeida>()
+/** `GET /api/vistas/anh/conversion?campo=`: la tabla firmada del campo y lo que queda sin equivalencia. */
+export const CONVERSION_ANH = get<PorCampo>()('/vistas/anh/conversion', tal<import('@/entities/anh-conversion').VistaConversionAnh>())
+
+/* ───────────────────── A2 · Balance ───────────────────── */
+// A2 · El balance del choke, las pérdidas, la jornada y «¿Está funcionando?»
+// (experiencia v3; CONSTRUCCION.md, «Lo que el dueño volvió a pedir»;
+// necesario-por-rol §0b, §0c y §0d; CAMBIOS-CONTRATO.md §9: M1 y M7). Todo AGREGADO
+// al lado: rutas nuevas, nada de v1 cambia. Las fechas que viajan como `Date` son las
+// del período y de cada jornada; lo demás es JSON puro (las horas de las paradas y
+// de las pérdidas, en ISO con zona, como texto). Las reglas, en src/entities/
+// perdidas.ts, balance.ts, jornada.ts y efectividad.ts; la escritura, en
+// shared/api/perdidas.ts (A2). Diferido no es pérdida: van lado a lado, nunca sumados,
+// y sin registro la pérdida viaja en `null`, nunca en 0.
+import type { VistaBalance, ConsultaBalance, CampoDelBalance } from '@/entities/balance'
+import type { Jornada, VistaJornada, CualJornada } from '@/entities/jornada'
+import type { VistaPerdidas, RegistroPerdida, CuerpoPerdida as CuerpoPerdidaMotor } from '@/entities/perdidas'
+import type { VistaEfectividad, MesFallas } from '@/entities/efectividad'
+
+const jornadaCodec = obj<Jornada>()({ desde: fecha, hasta: fecha })
+const vistaBalance = obj<VistaBalance>()({
+  desde: fecha, hasta: fecha, jornadas: lista(jornadaCodec), porCampo: lista(obj<CampoDelBalance>()({ desde: fecha, hasta: fecha })),
+})
+/** `GET /api/vistas/balance?campos=&desde=&hasta=` o `?campos=&jornada=actual|anterior`: producido ·
+ *  diferido · perdido por campo y por tramo (yacimiento, pozos, planta, salida y lo sin
+ *  identificar), con el árbol de cada tramo (diferida → planeada → N1 → N2 → paradas con
+ *  quién dijo qué; pérdida → tipo → registros). Cuadres: el diferido = el de
+ *  `/vistas/diferidos` y la raíz de `/vistas/choke/arbol`; el de cada tramo = el primer
+ *  nivel del orden `gestion`; potencial = producido + diferido; el perdido aparte. */
+export const BALANCE = get<ConsultaBalance>()('/vistas/balance', vistaBalance)
+/** `GET /api/vistas/perdidas?campos=&desde=&hasta=`: el registro de pérdidas del período
+ *  (las que rigen, con su historia), por tipo y por tramo. Sin registros: `bbl: null` y
+ *  `estado: 'sin-registro'`, nunca 0. */
+export const PERDIDAS = get<ConsultaPeriodo>()('/vistas/perdidas', obj<VistaPerdidas>()({ desde: fecha, hasta: fecha }))
+/** `GET /api/vistas/jornada?campo=&jornada=actual|anterior`: la jornada del campo (su
+ *  cambio de turno firmado, o el de por defecto, y se dice), las paradas que empezaron,
+ *  siguen o terminaron en ella con su hora de inicio y fin (o «sigue») y su cadena, y
+ *  arriba las paradas por confirmar y lo diferido (y lo perdido, aparte) en la jornada. */
+export const JORNADA = get<{ campo: string; jornada: CualJornada }>()('/vistas/jornada', obj<VistaJornada>()({ jornada: jornadaCodec }))
+/** `GET /api/vistas/efectividad?campos=`: «¿Está funcionando?»: antes de TRIM (la línea
+ *  base), este mes contra la meta de reducción firmada y lo ganado (barriles que se
+ *  dejaron de diferir desde el arranque y fallas que anticipó el vigía), por tramo. */
+export const EFECTIVIDAD = get<PorCampos>()('/vistas/efectividad', obj<VistaEfectividad>()({
+  desde: fecha, ahora: fecha, base: nulo(obj<NonNullable<VistaEfectividad['base']>>()({ desde: fecha, hasta: fecha })),
+}))
+/** `GET /api/vistas/fallas/mensual?campos=`: las fallas de los equipos críticos (sin
+ *  disparos) de cada mes del calendario, por familia, por tramo y por equipo. Era la
+ *  cuenta de la pantalla de Confiabilidad («Fallas por mes»): ahora la hace el motor. */
+export const FALLAS_MENSUAL = get<PorCampos>()('/vistas/fallas/mensual', lista(obj<MesFallas>()({ desde: fecha, hasta: fecha })))
+/** `POST /api/perdidas`: registrar una pérdida (`perdidas:registrar`), o corregirla o
+ *  retirarla con motivo (`corrige`, `motivo`, `retirar`). Solo por inserción (D1). */
+export type CuerpoPerdida = CuerpoPerdidaMotor
+/** → el registro nuevo, con `id`, `n`, `por`, `porId`, `rol` y `hora` del servidor. */
+export const R_PERDIDA = tal<{ perdida: RegistroPerdida }>()
+
+/* ───────────────────── A1 · Contrato v1 ───────────────────── */
+// A1 · Compatibilidad con la versión 1 (`cde8214`, la que tomó el desarrollador del
+// backend) y los AGREGADOS que no tenían endpoint (docs/backend/CAMBIOS-CONTRATO.md
+// §1 y §9: M6 y M8). Al lado, nunca encima: nada de v1 se renombra ni se borra; lo
+// que sale queda en `RETIRADAS`, con su fecha, su motivo y su reemplazo, y
+// scripts/verificar-contrato.mjs («La línea base v1») lo comprueba contra la foto
+// de v1 (docs/backend/linea-base/v1.json).
+
+/** `GET /api/vistas/configuracion/estado?campo=` (M8): el estado de la configuración de
+ *  un campo, «3 de 6 pasos listos», cada paso listo o no y lo primero que falta. Lo arma
+ *  el motor (`estadoConfiguracion`, entities/choke-config.ts) con la configuración
+ *  firmada; la pantalla ya no lo calcula. Lo contestado en un borrador sin firmar no
+ *  viaja: es de la pantalla. Todo es JSON puro: viaja tal cual. */
+export const ESTADO_CONFIGURACION = get<PorCampo>()('/vistas/configuracion/estado', tal<import('@/entities/choke-config').EstadoConfiguracion>())
+
+/** Lo de la línea base v1 que el front ya no pide ni manda (§3.1 del prompt de la
+ *  experiencia v3): queda en el contrato marcado RETIRADO, el backend no lo construye
+ *  y, si ya lo hizo, lo puede quitar cuando quiera. Aquí va lo que v1 declaraba en
+ *  este archivo y en los tipos que viajan; las rutas que solo estaban en CONTRATO.md
+ *  (el webhook) quedan RETIRADAS allá. El detalle, en CAMBIOS-CONTRATO.md §3. */
+export interface Retirada {
+  /** La fila de CAMBIOS-CONTRATO.md §3. */
+  id: string
+  /** Como la nombra la línea base (docs/backend/linea-base/v1.json): «GET /mensajes», «Usuario.telefono». */
+  clave: string
+  fecha: string
+  motivo: string
+  reemplazo: string
+}
+const CANAL_RETIRADO = 'el dueño decidió quitar el canal de mensajes al teléfono (CAMBIOS-CONTRATO.md §3): el backend no lo construye'
+const SIN_422 = 'ninguno: el backend acepta e ignora el campo si llega (sin 422) y no lo vuelve a mandar'
+export const RETIRADAS: readonly Retirada[] = [
+  { id: 'R1', clave: 'GET /mensajes', fecha: '2026-10-27', motivo: CANAL_RETIRADO,
+    reemplazo: 'las tarjetas e insignias de GET /vistas/hoy y la franja «No arrancar»; si ya existe, puede responder [] o 404' },
+  { id: 'R3', clave: 'Usuario.telefono', fecha: '2026-10-27', motivo: CANAL_RETIRADO, reemplazo: SIN_422 },
+  { id: 'R3', clave: 'Usuario.alertas', fecha: '2026-10-27', motivo: CANAL_RETIRADO, reemplazo: SIN_422 },
+  { id: 'R3', clave: 'CuerpoInvitacion.invitacion.telefono', fecha: '2026-10-27', motivo: CANAL_RETIRADO, reemplazo: SIN_422 },
+  { id: 'R3', clave: 'CuerpoInvitacion.invitacion.alertas', fecha: '2026-10-27', motivo: CANAL_RETIRADO, reemplazo: SIN_422 },
+  { id: 'R4', clave: 'Respuesta.canal', fecha: '2026-10-27', motivo: CANAL_RETIRADO,
+    reemplazo: 'toda respuesta es de pantalla: el backend puede mandar «pantalla» u omitirlo; el front no lo lee' },
+]

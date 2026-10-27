@@ -29,12 +29,12 @@
   {
    "id": "f",
    "nombre": "Personas",
-   "descripcion": "Roles y capacidades del producto, usuarios con sus campos y su WhatsApp, la identidad del SSO y el rastro de cambios de acceso."
+   "descripcion": "Roles y capacidades del producto, usuarios con sus campos (RETIRADO (27-oct-2026): su WhatsApp), la identidad del SSO y el rastro de cambios de acceso."
   },
   {
    "id": "g",
-   "nombre": "Lo que entra a mano y WhatsApp",
-   "descripcion": "Respuestas de los operarios, análisis de confiabilidad, informes con folio, el registro de WhatsApp (saliente y entrante), predicciones del vigía, la asignación oficial cargada y los cambios de planta."
+   "nombre": "Lo que entra a mano",
+   "descripcion": "Respuestas de los operarios, análisis de confiabilidad, informes con folio, el registro de WhatsApp (saliente y entrante: RETIRADO (27-oct-2026)), predicciones del vigía, la asignación oficial cargada y los cambios de planta."
   },
   {
    "id": "h",
@@ -7610,7 +7610,7 @@
    "nombre": "respaldo",
    "grupo": "e",
    "clase": "tabla",
-   "descripcion": "Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto fluido libre toma el equipo en paralelo cuando ella para. Uno por (campo, equipo). Cambia el colchón, el orden de cierre y el texto del WhatsApp de la parada. Firma config:firmar.",
+   "descripcion": "Respaldo de una bomba de la línea (RespaldoBomba de configuracion.ts): cuánto fluido libre toma el equipo en paralelo cuando ella para. Uno por (campo, equipo). Cambia el colchón y el orden de cierre (RETIRADO (27-oct-2026): también el texto del WhatsApp de la parada). Firma config:firmar.",
    "tipoTS": "RespaldoBomba (src/entities/configuracion.ts)",
    "endpoints": [
     "GET /api/configuracion/historial"
@@ -8402,6 +8402,7 @@
       "configuracion",
       "filosofia",
       "conectores",
+      "plantaViva",
       "planta",
       "agua"
      ]
@@ -8431,7 +8432,7 @@
      "unico": null,
      "check": null,
      "defecto": "false",
-     "descripcion": "Tiene reglas de WhatsApp (ROLES_CON_ALERTAS: sup, oper, tec, conf, jefe).",
+     "descripcion": "RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hay alertas por rol (ROLES_CON_ALERTAS sale del motor) (R3, R8). Tiene reglas de WhatsApp (ROLES_CON_ALERTAS: sup, oper, tec, conf, jefe).",
      "ejemplo": false
     },
     {
@@ -8458,6 +8459,7 @@
       "configuracion",
       "filosofia",
       "conectores",
+      "plantaViva",
       "planta",
       "agua"
      ],
@@ -8470,13 +8472,16 @@
      "nombre": "Ingeniero de confiabilidad",
      "nivel": "ingenieria",
      "area": "mantenimiento",
-     "inicio": "bombas",
+     "inicio": "equipos",
      "pantallas": [
+      "equipos",
       "bombas",
       "esp",
+      "hoy",
+      "plantaViva",
+      "resultados",
       "confiabilidad",
       "diferidos",
-      "riesgo",
       "equipo",
       "causa",
       "planta",
@@ -8489,7 +8494,7 @@
       "morichal",
       "guacamayo"
      ],
-     "recibe_alertas": true,
+     "recibe_alertas": false,
      "visible": true
     },
     {
@@ -8510,12 +8515,11 @@
      "nombre": "Gerente de activo",
      "nivel": "decision",
      "area": "direccion",
-     "inicio": "resumen",
+     "inicio": "plantaViva",
      "pantallas": [
-      "resumen",
-      "diferidos",
-      "produccion",
-      "riesgo",
+      "plantaViva",
+      "equipos",
+      "resultados",
       "configuracion"
      ],
      "campos_fabrica": null,
@@ -8527,19 +8531,22 @@
      "nombre": "Jefe de mantenimiento",
      "nivel": "ingenieria",
      "area": "mantenimiento",
-     "inicio": "mantenimiento",
+     "inicio": "hoy",
      "pantallas": [
+      "hoy",
+      "plantaViva",
+      "equipos",
+      "resultados",
       "mantenimiento",
       "diferidos",
       "bombas",
       "esp",
       "confiabilidad",
       "equipo",
-      "riesgo",
       "causa"
      ],
      "campos_fabrica": null,
-     "recibe_alertas": true,
+     "recibe_alertas": false,
      "visible": true
     }
    ]
@@ -8548,7 +8555,7 @@
    "nombre": "capacidad",
    "grupo": "f",
    "clase": "tabla",
-   "descripcion": "Las trece capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).",
+   "descripcion": "Las dieciséis capacidades (Capacidad y CAPACIDAD_NOMBRE de src/entities/tipos.ts; perdidas:registrar, orden:cerrar y anh:enviar son AGREGADO del 27-oct-2026, M1 a M3): cada una es un permiso que el servidor revisa en un endpoint (403 sin ella).",
    "tipoTS": "Capacidad (src/entities/tipos.ts)",
    "endpoints": [
     "GET /api/sesion → capacidades"
@@ -8563,7 +8570,7 @@
      "pk": true,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((id = ANY (ARRAY['causa:declarar'::text, 'causa:completar'::text, 'evidencia:exportar'::text, 'conector:configurar'::text, 'config:firmar'::text, 'metas:firmar'::text, 'usuarios:administrar'::text, 'sap:aviso'::text, 'asignacion:cargar'::text, 'planes:decidir'::text, 'anh:clasificar'::text, 'anh:confirmar'::text, 'anh:yacimiento'::text])))",
+     "check": "CHECK ((id = ANY (ARRAY['causa:declarar'::text, 'causa:completar'::text, 'evidencia:exportar'::text, 'conector:configurar'::text, 'config:firmar'::text, 'metas:firmar'::text, 'usuarios:administrar'::text, 'sap:aviso'::text, 'asignacion:cargar'::text, 'planes:decidir'::text, 'anh:clasificar'::text, 'anh:confirmar'::text, 'anh:yacimiento'::text, 'perdidas:registrar'::text, 'orden:cerrar'::text, 'anh:enviar'::text])))",
      "defecto": null,
      "descripcion": "Id de la capacidad.",
      "ejemplo": "anh:clasificar"
@@ -8590,7 +8597,7 @@
      "check": null,
      "defecto": null,
      "descripcion": "Otra capacidad que esta trae consigo (causa:completar incluye causa:declarar: INCLUYE de tipos.ts).",
-     "ejemplo": "causa:declarar"
+     "ejemplo": null
     }
    ],
    "filas": [
@@ -8605,6 +8612,11 @@
      "incluye": null
     },
     {
+     "id": "anh:enviar",
+     "nombre": "Registrar la respuesta de la ANH al reporte diario: aceptado o rechazado, con su motivo de la lista y la hora en que llegó (desde ahí corre la hora para corregir)",
+     "incluye": null
+    },
+    {
      "id": "anh:yacimiento",
      "nombre": "Decir que una parada fue del yacimiento, con lo que lo muestra (la prueba del pozo, el corte de agua o la presión de fondo)",
      "incluye": null
@@ -8613,11 +8625,6 @@
      "id": "asignacion:cargar",
      "nombre": "Cargar la asignación oficial que reportó la operadora, pozo por pozo, para cotejarla con la de TRIM",
      "incluye": null
-    },
-    {
-     "id": "causa:completar",
-     "nombre": "Completar el análisis de la falla: mecanismo y causa raíz",
-     "incluye": "causa:declarar"
     }
    ]
   },
@@ -8685,7 +8692,7 @@
    "nombre": "usuario",
    "grupo": "f",
    "clase": "tabla",
-   "descripcion": "Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuarios, PATCH /api/usuarios/:id. Nadie se borra: quien ya no debe entrar queda suspendido y su nombre sigue en lo que firmó. Correo único en minúsculas; WhatsApp en E.164 único entre los no suspendidos (es la identidad del webhook).",
+   "descripcion": "Registro de personas (Usuario de src/entities/usuarios.ts). GET/POST /api/usuarios, PATCH /api/usuarios/:id. Nadie se borra: quien ya no debe entrar queda suspendido y su nombre sigue en lo que firmó. Correo único en minúsculas. RETIRADO (27-oct-2026): el número de WhatsApp en E.164 único entre los no suspendidos (la identidad del webhook) ya no rige: el backend no lo construye.",
    "tipoTS": "Usuario / PersonaVisible (src/entities/usuarios.ts)",
    "endpoints": [
     "GET /api/usuarios",
@@ -8703,8 +8710,8 @@
     "Índice único: CREATE UNIQUE INDEX usuario_correo_unico ON \"trim\".usuario USING btree (lower(btrim(correo))).",
     "Índice único: CREATE UNIQUE INDEX usuario_telefono_unico ON \"trim\".usuario USING btree (telefono) WHERE (estado <> 'suspendido'::text).",
     "Al confirmar: queda un gerente activo y cada persona tiene «todos» o al menos un campo. [trigger usuario_coherente: INSERT UPDATE, diferido]",
-    "Nadie se borra; alertas solo en roles con alertas. [trigger usuario_reglas: INSERT UPDATE DELETE]",
-    "Nadie se borra; alertas solo en roles con alertas. [trigger usuario_sin_truncate: TRUNCATE]"
+    "Nadie se borra. RETIRADO (27-oct-2026): alertas solo en roles con alertas. [trigger usuario_reglas: INSERT UPDATE DELETE]",
+    "Nadie se borra. RETIRADO (27-oct-2026): alertas solo en roles con alertas. [trigger usuario_sin_truncate: TRUNCATE]"
    ],
    "columnas": [
     {
@@ -8800,8 +8807,8 @@
      "unico": null,
      "check": "CHECK (((NOT alertas) OR (telefono IS NOT NULL))) · CHECK ((telefono ~ '^\\+[0-9]{8,15}$'::text))",
      "defecto": null,
-     "descripcion": "WhatsApp en E.164 (+573005550101): así se guarda, viaja y compara. NULL = sin número.",
-     "ejemplo": "+573005550109"
+     "descripcion": "RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin canal no hace falta el número; el backend acepta e ignora telefono si llega, sin un 422 (R3, R8). WhatsApp en E.164 (+573005550101): así se guarda, viaja y compara. NULL = sin número.",
+     "ejemplo": null
     },
     {
      "nombre": "alertas",
@@ -8812,7 +8819,7 @@
      "unico": null,
      "check": "CHECK (((NOT alertas) OR (telefono IS NOT NULL)))",
      "defecto": "false",
-     "descripcion": "Recibe las alertas de su rol por WhatsApp (solo con teléfono y en un rol con alertas).",
+     "descripcion": "RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno; el backend acepta e ignora alertas si llega, sin un 422 (R3, R8). Recibe las alertas de su rol por WhatsApp (solo con teléfono y en un rol con alertas).",
      "ejemplo": false
     },
     {
@@ -8837,7 +8844,7 @@
      "todos_los_campos": true,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550109",
+     "telefono": null,
      "alertas": false,
      "antes_de_suspender": null
     },
@@ -8849,8 +8856,8 @@
      "todos_los_campos": false,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550106",
-     "alertas": true,
+     "telefono": null,
+     "alertas": false,
      "antes_de_suspender": null
     },
     {
@@ -8861,7 +8868,7 @@
      "todos_los_campos": true,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550101",
+     "telefono": null,
      "alertas": false,
      "antes_de_suspender": null
     },
@@ -8873,8 +8880,8 @@
      "todos_los_campos": true,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550105",
-     "alertas": true,
+     "telefono": null,
+     "alertas": false,
      "antes_de_suspender": null
     },
     {
@@ -8885,8 +8892,8 @@
      "todos_los_campos": false,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550104",
-     "alertas": true,
+     "telefono": null,
+     "alertas": false,
      "antes_de_suspender": null
     }
    ]
@@ -9117,7 +9124,7 @@
      "unico": null,
      "check": "CHECK ((cardinality(cambios) > 0))",
      "defecto": null,
-     "descripcion": "Lo que cambió, para leer (invitado como…, campos: …, WhatsApp: …).",
+     "descripcion": "Lo que cambió, para leer (invitado como…, campos: …). RETIRADO (27-oct-2026): el renglón «WhatsApp: …» ya no se escribe.",
      "ejemplo": null
     },
     {
@@ -9679,7 +9686,7 @@
    "quienEscribe": "Sincronización con SAP (solo lectura para TRIM).",
    "reglas": [
     "TRIM no crea órdenes.",
-    "Al pasar a REL con técnico asignado sale el WhatsApp trim_orden_liberada.",
+    "RETIRADO (27-oct-2026): al pasar a REL con técnico asignado salía el WhatsApp trim_orden_liberada.",
     "Índice único: CREATE UNIQUE INDEX orden_sap_un_aviso ON \"trim\".orden_sap USING btree (aviso) WHERE (aviso IS NOT NULL)."
    ],
    "columnas": [
@@ -9788,7 +9795,7 @@
      "unico": null,
      "check": "CHECK (((estado = 'CRTD'::text) OR (liberada IS NOT NULL)))",
      "defecto": null,
-     "descripcion": "Liberación (dispara el WhatsApp al técnico asignado).",
+     "descripcion": "Liberación. RETIRADO (27-oct-2026): ya no dispara el WhatsApp al técnico asignado.",
      "ejemplo": "2026-10-02T14:10:00+00:00"
     },
     {
@@ -10451,119 +10458,7 @@
     }
    ]
   },
-  {
-   "nombre": "plantilla_whatsapp",
-   "grupo": "g",
-   "clase": "tabla",
-   "descripcion": "Las diez plantillas aprobadas por Meta (PLANTILLAS de src/entities/mensajes.ts). El mensaje que inicia la empresa tiene que ser una de ellas; el texto de cada mensaje es exactamente su cuerpo con los parámetros.",
-   "tipoTS": "PLANTILLAS (src/entities/mensajes.ts)",
-   "endpoints": [
-    "GET /api/mensajes → plantilla"
-   ],
-   "quienEscribe": "Producto (aprobadas por Meta).",
-   "reglas": [
-    "Único: (nombre)."
-   ],
-   "columnas": [
-    {
-     "nombre": "clave",
-     "tipo": "text",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK ((clave = ANY (ARRAY['parada'::text, 'paradaEsp'::text, 'cierre'::text, 'causa'::text, 'recordatorio'::text, 'recordatorioArranco'::text, 'escalamiento'::text, 'parte'::text, 'parteSinTag'::text, 'orden'::text])))",
-     "defecto": null,
-     "descripcion": "Clave interna (NombrePlantilla).",
-     "ejemplo": "causa"
-    },
-    {
-     "nombre": "nombre",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": "único",
-     "check": null,
-     "defecto": null,
-     "descripcion": "Nombre aprobado en Meta (trim_equipo_parado…).",
-     "ejemplo": "trim_que_se_dano"
-    },
-    {
-     "nombre": "cuerpo",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Cuerpo aprobado con sus variables entre llaves.",
-     "ejemplo": "TRIM · {equipo} de {campo} paró el {fecha}. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.\n{opciones}"
-    },
-    {
-     "nombre": "categoria",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": "'utilidad'::text",
-     "descripcion": "Categoría de Meta: utilidad.",
-     "ejemplo": "utilidad"
-    },
-    {
-     "nombre": "idioma",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": "'es'::text",
-     "descripcion": "Idioma de la plantilla.",
-     "ejemplo": "es"
-    }
-   ],
-   "filas": [
-    {
-     "clave": "causa",
-     "nombre": "trim_que_se_dano",
-     "cuerpo": "TRIM · {equipo} de {campo} paró el {fecha}. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.\n{opciones}",
-     "categoria": "utilidad",
-     "idioma": "es"
-    },
-    {
-     "clave": "cierre",
-     "nombre": "trim_pozos_cerrandose",
-     "cuerpo": "TRIM · Por {equipo} parado se empezaron a cerrar pozos de {campo} a las {hora}.",
-     "categoria": "utilidad",
-     "idioma": "es"
-    },
-    {
-     "clave": "escalamiento",
-     "nombre": "trim_escalado_causa",
-     "cuerpo": "TRIM · Escalado: {equipo} de {campo} paró hace 2 h y nadie ha dicho qué se dañó.\n{opciones}",
-     "categoria": "utilidad",
-     "idioma": "es"
-    },
-    {
-     "clave": "orden",
-     "nombre": "trim_orden_liberada",
-     "cuerpo": "TRIM · SAP liberó la orden {orden} ({clase}, prioridad {prioridad}) para {equipo} de {campo}: {descripcion}",
-     "categoria": "utilidad",
-     "idioma": "es"
-    },
-    {
-     "clave": "parada",
-     "nombre": "trim_equipo_parado",
-     "cuerpo": "TRIM · {equipo} de {campo} paró a las {hora}. {consecuencia}",
-     "categoria": "utilidad",
-     "idioma": "es"
-    }
-   ]
-  },
+  {"nombre":"plantilla_whatsapp","grupo":"g","clase":"tabla","descripcion":"RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8). Las diez plantillas aprobadas por Meta (PLANTILLAS de src/entities/mensajes.ts). El mensaje que inicia la empresa tiene que ser una de ellas; el texto de cada mensaje es exactamente su cuerpo con los parámetros.","tipoTS":"RETIRADO (27-oct-2026): PLANTILLAS (src/entities/mensajes.ts)","endpoints":["RETIRADO (27-oct-2026): GET /api/mensajes → plantilla"],"quienEscribe":"RETIRADO (27-oct-2026): Producto (aprobadas por Meta).","reglas":["Único: (nombre)."],"columnas":[{"nombre":"clave","tipo":"text","nulo":false,"pk":true,"fk":null,"unico":null,"check":"CHECK ((clave = ANY (ARRAY['parada'::text, 'paradaEsp'::text, 'cierre'::text, 'causa'::text, 'recordatorio'::text, 'recordatorioArranco'::text, 'escalamiento'::text, 'parte'::text, 'parteSinTag'::text, 'orden'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Clave interna (NombrePlantilla).","ejemplo":null},{"nombre":"nombre","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":"único","check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Nombre aprobado en Meta (trim_equipo_parado…).","ejemplo":null},{"nombre":"cuerpo","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Cuerpo aprobado con sus variables entre llaves.","ejemplo":null},{"nombre":"categoria","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":"'utilidad'::text","descripcion":"RETIRADO (27-oct-2026), como su tabla. Categoría de Meta: utilidad.","ejemplo":null},{"nombre":"idioma","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":"'es'::text","descripcion":"RETIRADO (27-oct-2026), como su tabla. Idioma de la plantilla.","ejemplo":null}],"filas":[]},
   {
    "nombre": "prediccion",
    "grupo": "g",
@@ -10674,7 +10569,7 @@
      "unico": null,
      "check": null,
      "defecto": null,
-     "descripcion": "Cuándo la emitió el vigía (sale el WhatsApp a confiabilidad y jefe de mantenimiento).",
+     "descripcion": "Cuándo la emitió el vigía. RETIRADO (27-oct-2026): ya no sale el WhatsApp a confiabilidad y jefe de mantenimiento.",
      "ejemplo": "2026-09-22T18:46:00+00:00"
     },
     {
@@ -10850,176 +10745,22 @@
     }
    ]
   },
-  {
-   "nombre": "respuesta_entrante",
-   "grupo": "g",
-   "clase": "tabla",
-   "descripcion": "Mensajes entrantes del webhook de WhatsApp (POST /api/webhooks/whatsapp), ya con la firma X-Hub-Signature-256 válida. La clave primaria es el id de Meta (messages[].id): Meta reintenta y el segundo intento choca (deduplicación). Se guarda aceptado, en curso (un paso del diálogo que pide el siguiente: la parte o lo que vio) o descartado, con el motivo. Solo inserción.",
-   "tipoTS": null,
-   "endpoints": [
-    "POST /api/webhooks/whatsapp"
-   ],
-   "quienEscribe": "Servidor, al recibir el webhook firmado de Meta.",
-   "reglas": [
-    "Firma X-Hub-Signature-256 válida o 401 (no se guarda).",
-    "Dedupe por id de Meta; siempre 200 a Meta.",
-    "El evento sale solo del context.id (de mensaje o de mensaje_libre).",
-    "Un paso del diálogo que pide lo que falta queda en-curso; la respuesta_parada entra con el último.",
-    "Solo inserción.",
-    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_entrante_sin_truncate: TRUNCATE]",
-    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_entrante_solo_insercion: UPDATE DELETE]"
-   ],
-   "columnas": [
-    {
-     "nombre": "meta_id",
-     "tipo": "text",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Id del mensaje entrante en Meta (wamid). Clave de deduplicación.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "recibido",
-     "tipo": "timestamp with time zone",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": "now()",
-     "descripcion": "Hora del servidor.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "de_telefono",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK ((de_telefono ~ '^\\+[0-9]{8,15}$'::text))",
-     "defecto": null,
-     "descripcion": "Número que escribe (from), en E.164.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "contexto_meta_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "context.id: el mensaje saliente que la persona respondió, una plantilla (mensaje.meta_id) o un mensaje libre del diálogo (mensaje_libre.meta_id, que además trae la parte y el modo ya escogidos). El evento se resuelve SOLO por aquí, nunca por «la última pregunta abierta». Sin FK: puede apuntar a cualquiera de las dos tablas o a nada (se descarta).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "texto",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Lo que escribió.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "opcion",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Clave escogida de las opciones de ESE mensaje («1», «0»): de mensaje.opciones si responde a la plantilla, de mensaje_libre.opciones si responde a «¿Qué vio…?», «¿Qué parte?» o «¿Qué fue?».",
-     "ejemplo": null
-    },
-    {
-     "nombre": "resultado",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((resultado = 'descartada'::text) = (motivo IS NOT NULL))) · CHECK (((resultado = 'descartada'::text) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK ((resultado = ANY (ARRAY['aceptada'::text, 'en-curso'::text, 'descartada'::text])))",
-     "defecto": null,
-     "descripcion": "aceptada (con ella entró la respuesta_parada), en-curso (paso aceptado del diálogo: el servidor contestó con un mensaje_libre que pide lo que falta) o descartada.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "motivo",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((resultado = 'descartada'::text) = (motivo IS NOT NULL)))",
-     "defecto": null,
-     "descripcion": "Por qué se descartó (número no registrado, ya respondieron, opción inválida, texto corto…).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "usuario_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "usuario.id",
-     "unico": null,
-     "check": "CHECK (((resultado = 'descartada'::text) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))",
-     "defecto": null,
-     "descripcion": "Persona resuelta: activa, con alertas y con el campo de la parada.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "evento_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "evento.id",
-     "unico": null,
-     "check": "CHECK (((resultado = 'descartada'::text) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))",
-     "defecto": null,
-     "descripcion": "Evento resuelto por el context.id.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "payload",
-     "tipo": "jsonb",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "El cuerpo de Meta (para auditar).",
-     "ejemplo": null
-    }
-   ],
-   "filas": []
-  },
+  {"nombre":"respuesta_entrante","grupo":"g","clase":"tabla","descripcion":"RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: POST /api/paradas/:evento/respuesta, en pantalla (R2, R8). Mensajes entrantes del webhook de WhatsApp (POST /api/webhooks/whatsapp), ya con la firma X-Hub-Signature-256 válida. La clave primaria es el id de Meta (messages[].id): Meta reintenta y el segundo intento choca (deduplicación). Se guarda aceptado, en curso (un paso del diálogo que pide el siguiente: la parte o lo que vio) o descartado, con el motivo. Solo inserción.","tipoTS":null,"endpoints":["RETIRADO (27-oct-2026): POST /api/webhooks/whatsapp"],"quienEscribe":"RETIRADO (27-oct-2026): Servidor, al recibir el webhook firmado de Meta.","reglas":["RETIRADO (27-oct-2026): Firma X-Hub-Signature-256 válida o 401 (no se guarda).","RETIRADO (27-oct-2026): Dedupe por id de Meta; siempre 200 a Meta.","RETIRADO (27-oct-2026): El evento sale solo del context.id (de mensaje o de mensaje_libre).","RETIRADO (27-oct-2026): Un paso del diálogo que pide lo que falta queda en-curso; la respuesta_parada entra con el último.","RETIRADO (27-oct-2026): Solo inserción.","Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_entrante_sin_truncate: TRUNCATE]","Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger respuesta_entrante_solo_insercion: UPDATE DELETE]"],"columnas":[{"nombre":"meta_id","tipo":"text","nulo":false,"pk":true,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Id del mensaje entrante en Meta (wamid). Clave de deduplicación.","ejemplo":null},{"nombre":"recibido","tipo":"timestamp with time zone","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":"now()","descripcion":"RETIRADO (27-oct-2026), como su tabla. Hora del servidor.","ejemplo":null},{"nombre":"de_telefono","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK ((de_telefono ~ '^\\+[0-9]{8,15}$'::text))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Número que escribe (from), en E.164.","ejemplo":null},{"nombre":"contexto_meta_id","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. context.id: el mensaje saliente que la persona respondió, una plantilla (mensaje.meta_id) o un mensaje libre del diálogo (mensaje_libre.meta_id, que además trae la parte y el modo ya escogidos). El evento se resuelve SOLO por aquí, nunca por «la última pregunta abierta». Sin FK: puede apuntar a cualquiera de las dos tablas o a nada (se descarta).","ejemplo":null},{"nombre":"texto","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Lo que escribió.","ejemplo":null},{"nombre":"opcion","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Clave escogida de las opciones de ESE mensaje («1», «0»): de mensaje.opciones si responde a la plantilla, de mensaje_libre.opciones si responde a «¿Qué vio…?», «¿Qué parte?» o «¿Qué fue?».","ejemplo":null},{"nombre":"resultado","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK (((resultado = 'descartada'::text) = (motivo IS NOT NULL))) · CHECK (((resultado = 'descartada'::text) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK ((resultado = ANY (ARRAY['aceptada'::text, 'en-curso'::text, 'descartada'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. aceptada (con ella entró la respuesta_parada), en-curso (paso aceptado del diálogo: el servidor contestó con un mensaje_libre que pide lo que falta) o descartada.","ejemplo":null},{"nombre":"motivo","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((resultado = 'descartada'::text) = (motivo IS NOT NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Por qué se descartó (número no registrado, ya respondieron, opción inválida, texto corto…).","ejemplo":null},{"nombre":"usuario_id","tipo":"text","nulo":true,"pk":false,"fk":"usuario.id","unico":null,"check":"CHECK (((resultado = 'descartada'::text) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Persona resuelta: activa, con alertas y con el campo de la parada.","ejemplo":null},{"nombre":"evento_id","tipo":"text","nulo":true,"pk":false,"fk":"evento.id","unico":null,"check":"CHECK (((resultado = 'descartada'::text) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Evento resuelto por el context.id.","ejemplo":null},{"nombre":"payload","tipo":"jsonb","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. El cuerpo de Meta (para auditar).","ejemplo":null}],"filas":[]},
   {
    "nombre": "respuesta_parada",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "Respuesta de un operario a una parada que ninguna señal explica (Respuesta de src/entities/pozos.ts): el único dato del libro que entra a mano, marcado como declarado. POST /api/paradas/:evento/respuesta (pantalla) o webhook (WhatsApp); GET /api/paradas/respuestas. Una por evento: la PRIMERA gana (clave primaria → 409). Solo inserción: no se edita ni se reemplaza.",
+   "descripcion": "Respuesta de un operario a una parada que ninguna señal explica (Respuesta de src/entities/pozos.ts): el único dato del libro que entra a mano, marcado como declarado. POST /api/paradas/:evento/respuesta (pantalla; el webhook de WhatsApp: RETIRADO (27-oct-2026), R2); GET /api/paradas/respuestas. Una por evento: la PRIMERA gana (clave primaria → 409). Solo inserción: no se edita ni se reemplaza.",
    "tipoTS": "Respuesta (src/entities/pozos.ts)",
    "endpoints": [
     "POST /api/paradas/:evento/respuesta",
     "GET /api/paradas/respuestas",
-    "POST /api/webhooks/whatsapp"
+    "RETIRADO (27-oct-2026): POST /api/webhooks/whatsapp"
    ],
-   "quienEscribe": "Persona con causa:declarar o causa:completar (pantalla) o resuelta por el webhook (WhatsApp).",
+   "quienEscribe": "Persona con causa:declarar o causa:completar (pantalla). RETIRADO (27-oct-2026): resuelta por el webhook (WhatsApp).",
    "reglas": [
     "La primera gana (409); no se edita ni se reemplaza.",
-    "403 si el cuerpo trae canal whatsapp: eso solo entra por el webhook.",
+    "RETIRADO (27-oct-2026): 403 si el cuerpo trae canal whatsapp (eso solo entraba por el webhook).",
     "422: campo del cuerpo distinto al del evento, parte que no es del equipo, bomba sin parte, modo que no es de la parte, texto libre < 8.",
     "Si llega después del arranque, la parada es no conformidad.",
     "Único: (entrante_meta_id).",
@@ -11131,9 +10872,9 @@
      "pk": false,
      "fk": null,
      "unico": null,
-     "check": "CHECK ((canal = ANY (ARRAY['whatsapp'::text, 'pantalla'::text]))) · CHECK (((canal = 'whatsapp'::text) = (entrante_meta_id IS NOT NULL))) · CHECK (((canal IS NULL) OR (por_id IS NOT NULL)))",
+     "check": "RETIRADO (27-oct-2026): CHECK ((canal = ANY (ARRAY['whatsapp'::text, 'pantalla'::text]))) · RETIRADO (27-oct-2026): CHECK (((canal = 'whatsapp'::text) = (entrante_meta_id IS NOT NULL))) · CHECK (((canal IS NULL) OR (por_id IS NOT NULL)))",
      "defecto": null,
-     "descripcion": "whatsapp (solo por el webhook firmado) o pantalla. NULL en respuestas históricas importadas.",
+     "descripcion": "RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: toda respuesta es de pantalla; el backend puede poner canal = pantalla u omitirlo (R4, R8). whatsapp (solo por el webhook firmado) o pantalla. NULL en respuestas históricas importadas.",
      "ejemplo": null
     },
     {
@@ -11143,9 +10884,9 @@
      "pk": false,
      "fk": "respuesta_entrante.meta_id",
      "unico": "único",
-     "check": "CHECK (((canal = 'whatsapp'::text) = (entrante_meta_id IS NOT NULL)))",
+     "check": "RETIRADO (27-oct-2026): CHECK (((canal = 'whatsapp'::text) = (entrante_meta_id IS NOT NULL)))",
      "defecto": null,
-     "descripcion": "Con canal whatsapp: el mensaje entrante que la completó (el último del diálogo; los pasos anteriores quedan en respuesta_entrante como en-curso y en mensaje_libre).",
+     "descripcion": "RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: toda respuesta entra por POST /api/paradas/:evento/respuesta (R4, R8). Con canal whatsapp: el mensaje entrante que la completó (el último del diálogo; los pasos anteriores quedan en respuesta_entrante como en-curso y en mensaje_libre).",
      "ejemplo": null
     }
    ],
@@ -12490,7 +12231,7 @@
    "nombre": "revision_parada",
    "grupo": "g",
    "clase": "tabla",
-   "descripcion": "«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision (y «2 Algo está mal» por WhatsApp, del webhook). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.",
+   "descripcion": "«Algo está mal» o «Pedir a producción» sobre una parada (RevisionAnh de src/entities/anh-clasificacion.ts; ParadaAnh.revision). POST /api/anh/paradas/:id/revision («2 Algo está mal» por WhatsApp: RETIRADO (27-oct-2026), R5). No toca ningún paso (D1): pasa la parada a quien corrige (el rol de pedir_a, o sin él quien revisa: supervisión, producción, el jefe de mantenimiento o confiabilidad), que la ve en «REVISAR» hasta atenderla (revision_atendida). En cada fila rige la más reciente entre la fila y su evento. Solo inserción.",
    "tipoTS": "RevisionAnh (src/entities/anh-clasificacion.ts; ParadaAnh.revision)",
    "endpoints": [
     "POST /api/anh/paradas/:id/revision",
@@ -13084,689 +12825,9 @@
    ],
    "filas": []
   },
-  {
-   "nombre": "mensaje",
-   "grupo": "g",
-   "clase": "tabla",
-   "descripcion": "Registro de lo que TRIM manda por WhatsApp (Mensaje de src/entities/mensajes.ts). GET /api/mensajes. Se guarda al intentar enviar y no se reescribe: el que salió trae texto (exactamente la plantilla con sus parámetros) y el que no se pudo armar trae no_enviado (el motivo). Cada mensaje se arma con la versión de la configuración que regía a su hora. Solo inserción, salvo poner una vez el id de Meta.",
-   "tipoTS": "Mensaje (src/entities/mensajes.ts)",
-   "endpoints": [
-    "GET /api/mensajes?campos"
-   ],
-   "quienEscribe": "Servidor (reglas de mensajes.ts) al enviar por la Cloud API de Meta.",
-   "reglas": [
-    "Se guarda al intentar enviar y no se reescribe; solo se pone una vez el id de Meta.",
-    "Se arma con la configuración que regía a su hora (configEn).",
-    "Un parámetro que no sirve deja ESE mensaje con no_enviado; los demás salen.",
-    "Único: (meta_id).",
-    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger mensaje_sin_truncate: TRUNCATE]",
-    "Solo inserción; el id de Meta se pone una vez. [trigger mensaje_solo_meta_id: UPDATE DELETE]"
-   ],
-   "columnas": [
-    {
-     "nombre": "id",
-     "tipo": "text",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Id del mensaje (lo pone el servidor).",
-     "ejemplo": "causa-EP-LC06-260814-04--oper-2026-08-14T08:31:00.000Z"
-    },
-    {
-     "nombre": "regla",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((regla = 'parte'::text) = (prediccion_id IS NOT NULL))) · CHECK (((regla = 'orden'::text) = (orden IS NOT NULL))) · CHECK (((regla <> ALL (ARRAY['parada'::text, 'cierre'::text, 'causa'::text])) OR (evento_id IS NOT NULL))) · CHECK (((insistencia IS NULL) OR (regla = 'causa'::text))) · CHECK ((regla = ANY (ARRAY['parada'::text, 'cierre'::text, 'causa'::text, 'parte'::text, 'orden'::text])))",
-     "defecto": null,
-     "descripcion": "parada, cierre, causa, parte u orden.",
-     "ejemplo": "causa"
-    },
-    {
-     "nombre": "plantilla",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": "plantilla_whatsapp.clave",
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Plantilla aprobada con que salió.",
-     "ejemplo": "causa"
-    },
-    {
-     "nombre": "parametros",
-     "tipo": "jsonb",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK ((jsonb_typeof(parametros) = 'object'::text))",
-     "defecto": null,
-     "descripcion": "Parámetros de la plantilla {nombre: texto}: ninguno vacío ni con saltos de línea.",
-     "ejemplo": {
-      "campo": "La Ceiba",
-      "fecha": "14 de ago, 03:30",
-      "equipo": "LC-06",
-      "opciones": "1) Aislamiento del motor y del cable · 2) Protector (sello del motor) · 3) Bomba de fondo (eje y etapas) · 4) Admisión y separador de gas · 5) Motor de fondo · 6) No fue la electrosumergible: otra causa del pozo · 0) Otra cosa: escríbala"
-     }
-    },
-    {
-     "nombre": "campo_id",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": "activo.campo_id",
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Campo.",
-     "ejemplo": "ceiba"
-    },
-    {
-     "nombre": "equipo",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": "activo.codigo",
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Equipo o pozo del que habla.",
-     "ejemplo": "LC-06"
-    },
-    {
-     "nombre": "para_id",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": "usuario.id",
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Persona que lo recibe.",
-     "ejemplo": "oper"
-    },
-    {
-     "nombre": "telefono",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK ((telefono ~ '^\\+[0-9]{8,15}$'::text))",
-     "defecto": null,
-     "descripcion": "Número E.164 al que se mandó (el de la persona en ese momento).",
-     "ejemplo": "+573005550104"
-    },
-    {
-     "nombre": "hora",
-     "tipo": "timestamp with time zone",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Hora del envío.",
-     "ejemplo": "2026-08-14T08:31:00+00:00"
-    },
-    {
-     "nombre": "texto",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((texto IS NULL) <> (no_enviado IS NULL)))",
-     "defecto": null,
-     "descripcion": "Lo que se envió (cuerpo de la plantilla con sus parámetros). NULL si no se envió.",
-     "ejemplo": "TRIM · LC-06 de La Ceiba paró el 14 de ago, 03:30. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.\n1) Aislamiento del motor y del cable · 2) Protector (sello del motor) · 3) Bomba de fondo (eje y etapas) · 4) Admisión y separador de gas · 5) Motor de fondo · 6) No fue la electrosumergible: otra causa del pozo · 0) Otra cosa: escríbala"
-    },
-    {
-     "nombre": "no_enviado",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((texto IS NULL) <> (no_enviado IS NULL))) · CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))",
-     "defecto": null,
-     "descripcion": "Por qué no se pudo enviar (un parámetro vacío o de varias líneas que Meta rechazaría). No cuenta como avisado.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "opciones",
-     "tipo": "jsonb",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK ((jsonb_typeof(opciones) = 'array'::text))",
-     "defecto": null,
-     "descripcion": "Opciones numeradas de una pregunta: [{clave, texto, parte?, porque?, fuente?, veces?, total?}] (Opcion). La respuesta por WhatsApp escoge una clave de ESTE mensaje.",
-     "ejemplo": [
-      {
-       "clave": "1",
-       "parte": "aislamiento",
-       "texto": "Aislamiento del motor y del cable"
-      },
-      {
-       "clave": "2",
-       "parte": "protector",
-       "texto": "Protector (sello del motor)"
-      },
-      {
-       "clave": "3",
-       "parte": "bomba",
-       "texto": "Bomba de fondo (eje y etapas)"
-      },
-      {
-       "clave": "4",
-       "parte": "admision",
-       "texto": "Admisión y separador de gas"
-      },
-      {
-       "clave": "5",
-       "parte": "motor",
-       "texto": "Motor de fondo"
-      },
-      {
-       "clave": "6",
-       "texto": "No fue la electrosumergible: otra causa del pozo"
-      },
-      {
-       "clave": "0",
-       "texto": "Otra cosa: escríbala"
-      }
-     ]
-    },
-    {
-     "nombre": "evento_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "evento.id",
-     "unico": null,
-     "check": "CHECK (((regla <> ALL (ARRAY['parada'::text, 'cierre'::text, 'causa'::text])) OR (evento_id IS NOT NULL)))",
-     "defecto": null,
-     "descripcion": "Evento del PLC del que habla (parada, cierre, pregunta). En el JSON viaja como evento.",
-     "ejemplo": "EP-LC06-260814-04"
-    },
-    {
-     "nombre": "prediccion_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "prediccion.id",
-     "unico": null,
-     "check": "CHECK (((regla = 'parte'::text) = (prediccion_id IS NOT NULL)))",
-     "defecto": null,
-     "descripcion": "Con regla parte: la predicción del vigía. En el JSON viaja también como evento.",
-     "ejemplo": "PR-EP-GU09-260913-17"
-    },
-    {
-     "nombre": "orden",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "orden_sap.numero",
-     "unico": null,
-     "check": "CHECK (((regla = 'orden'::text) = (orden IS NOT NULL))) · CHECK ((regla = ANY (ARRAY['parada'::text, 'cierre'::text, 'causa'::text, 'parte'::text, 'orden'::text])))",
-     "defecto": null,
-     "descripcion": "Con regla orden: la orden de SAP liberada.",
-     "ejemplo": "40012002"
-    },
-    {
-     "nombre": "insistencia",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((insistencia IS NULL) OR (regla = 'causa'::text))) · CHECK ((insistencia = ANY (ARRAY['recordatorio'::text, 'escalamiento'::text])))",
-     "defecto": null,
-     "descripcion": "recordatorio (30 min) o escalamiento (2 h) de una pregunta sin respuesta.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "meta_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": "único",
-     "check": "CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))",
-     "defecto": null,
-     "descripcion": "Id de Meta del mensaje saliente (wamid). El webhook resuelve el evento con el context.id que lo cita.",
-     "ejemplo": null
-    }
-   ],
-   "filas": [
-    {
-     "id": "causa-EP-LC06-260814-04--oper-2026-08-14T08:31:00.000Z",
-     "regla": "causa",
-     "plantilla": "causa",
-     "parametros": {
-      "campo": "La Ceiba",
-      "fecha": "14 de ago, 03:30",
-      "equipo": "LC-06",
-      "opciones": "1) Aislamiento del motor y del cable · 2) Protector (sello del motor) · 3) Bomba de fondo (eje y etapas) · 4) Admisión y separador de gas · 5) Motor de fondo · 6) No fue la electrosumergible: otra causa del pozo · 0) Otra cosa: escríbala"
-     },
-     "campo_id": "ceiba",
-     "equipo": "LC-06",
-     "para_id": "oper",
-     "telefono": "+573005550104",
-     "hora": "2026-08-14T08:31:00+00:00",
-     "texto": "TRIM · LC-06 de La Ceiba paró el 14 de ago, 03:30. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número.\n1) Aislamiento del motor y del cable · 2) Protector (sello del motor) · 3) Bomba de fondo (eje y etapas) · 4) Admisión y separador de gas · 5) Motor de fondo · 6) No fue la electrosumergible: otra causa del pozo · 0) Otra cosa: escríbala",
-     "no_enviado": null,
-     "opciones": [
-      {
-       "clave": "1",
-       "parte": "aislamiento",
-       "texto": "Aislamiento del motor y del cable"
-      },
-      {
-       "clave": "2",
-       "parte": "protector",
-       "texto": "Protector (sello del motor)"
-      },
-      {
-       "clave": "3",
-       "parte": "bomba",
-       "texto": "Bomba de fondo (eje y etapas)"
-      },
-      {
-       "clave": "4",
-       "parte": "admision",
-       "texto": "Admisión y separador de gas"
-      },
-      {
-       "clave": "5",
-       "parte": "motor",
-       "texto": "Motor de fondo"
-      },
-      {
-       "clave": "6",
-       "texto": "No fue la electrosumergible: otra causa del pozo"
-      },
-      {
-       "clave": "0",
-       "texto": "Otra cosa: escríbala"
-      }
-     ],
-     "evento_id": "EP-LC06-260814-04",
-     "prediccion_id": null,
-     "orden": null,
-     "insistencia": null,
-     "meta_id": null
-    },
-    {
-     "id": "cierre-EV-2011-0809--oper-2026-08-10T04:19:00.000Z",
-     "regla": "cierre",
-     "plantilla": "cierre",
-     "parametros": {
-      "hora": "23:18",
-      "campo": "La Ceiba",
-      "equipo": "P-201B"
-     },
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "para_id": "oper",
-     "telefono": "+573005550104",
-     "hora": "2026-08-10T04:19:00+00:00",
-     "texto": "TRIM · Por P-201B parado se empezaron a cerrar pozos de La Ceiba a las 23:18.",
-     "no_enviado": null,
-     "opciones": null,
-     "evento_id": "EV-2011-0809",
-     "prediccion_id": null,
-     "orden": null,
-     "insistencia": null,
-     "meta_id": null
-    },
-    {
-     "id": "orden-40012002--tec-2025-10-19T09:03:43.000Z",
-     "regla": "orden",
-     "plantilla": "orden",
-     "parametros": {
-      "campo": "La Ceiba",
-      "clase": "correctivo",
-      "orden": "40012002",
-      "equipo": "P-201B",
-      "prioridad": "1",
-      "descripcion": "Reparar sello mecánico de P-201B"
-     },
-     "campo_id": "ceiba",
-     "equipo": "P-201B",
-     "para_id": "tec",
-     "telefono": "+573005550107",
-     "hora": "2025-10-19T09:03:43+00:00",
-     "texto": "TRIM · SAP liberó la orden 40012002 (correctivo, prioridad 1) para P-201B de La Ceiba: Reparar sello mecánico de P-201B",
-     "no_enviado": null,
-     "opciones": null,
-     "evento_id": null,
-     "prediccion_id": null,
-     "orden": "40012002",
-     "insistencia": null,
-     "meta_id": null
-    },
-    {
-     "id": "parada-EP-LC01-251227-54--oper-2025-12-27T18:14:00.000Z",
-     "regla": "parada",
-     "plantilla": "paradaEsp",
-     "parametros": {
-      "hora": "13:13",
-      "campo": "La Ceiba",
-      "equipo": "LC-01",
-      "consecuencia": "Según su última prueba, el pozo deja de producir unos 401 bbl/d."
-     },
-     "campo_id": "ceiba",
-     "equipo": "LC-01",
-     "para_id": "oper",
-     "telefono": "+573005550104",
-     "hora": "2025-12-27T18:14:00+00:00",
-     "texto": "TRIM · LC-01 de La Ceiba (electrosumergible) paró a las 13:13. Según su última prueba, el pozo deja de producir unos 401 bbl/d.",
-     "no_enviado": null,
-     "opciones": null,
-     "evento_id": "EP-LC01-251227-54",
-     "prediccion_id": null,
-     "orden": null,
-     "insistencia": null,
-     "meta_id": null
-    },
-    {
-     "id": "parte-PR-EP-GU09-260913-17--conf-2026-09-07T22:23:00.000Z",
-     "regla": "parte",
-     "plantilla": "parteSinTag",
-     "parametros": {
-      "campo": "Guacamayo",
-      "desde": "11 de sept, 07:47",
-      "hasta": "16 de sept, 02:59",
-      "parte": "aislamiento del motor y del cable",
-      "accion": "Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
-      "equipo": "GU-09"
-     },
-     "campo_id": "guacamayo",
-     "equipo": "GU-09",
-     "para_id": "conf",
-     "telefono": "+573005550106",
-     "hora": "2026-09-07T22:23:00+00:00",
-     "texto": "TRIM · GU-09 de Guacamayo: el vigía anticipa falla en aislamiento del motor y del cable; cruzaría su límite entre el 11 de sept, 07:47 y el 16 de sept, 02:59. Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.",
-     "no_enviado": null,
-     "opciones": null,
-     "evento_id": null,
-     "prediccion_id": "PR-EP-GU09-260913-17",
-     "orden": null,
-     "insistencia": null,
-     "meta_id": null
-    }
-   ]
-  },
-  {
-   "nombre": "mensaje_libre",
-   "grupo": "g",
-   "clase": "tabla",
-   "descripcion": "Mensajes libres que TRIM manda dentro de la ventana de 24 h que abre la respuesta de la persona (CONTRATO.md, «WhatsApp» y «El webhook»; 5D.5): «¿Qué vio en {parte}?», «¿Qué parte?», «¿Qué fue?», «Escriba qué encontró», «Registrado…», «Ya respondió…» y los rechazos («Ese número no recibe las alertas de este campo…»). No son plantillas y no salen en GET /api/mensajes. Guardan el estado del diálogo: la siguiente respuesta cita su meta_id (context.id) y de aquí salen el evento, la parte y el modo ya escogidos y las opciones válidas; la respuesta_parada se inserta solo con el último paso. Solo inserción, salvo poner una vez el id de Meta.",
-   "tipoTS": null,
-   "endpoints": [
-    "POST /api/webhooks/whatsapp (lo que el servidor contesta)"
-   ],
-   "quienEscribe": "Servidor, al contestar una respuesta por WhatsApp dentro de la ventana de 24 h (no es plantilla).",
-   "reglas": [
-    "No sale en GET /api/mensajes: es el diálogo, no el registro de avisos.",
-    "La siguiente respuesta cita su meta_id: de aquí salen evento, parte y modo ya escogidos y las opciones válidas.",
-    "Dentro de las 24 h del entrante (lo revisa el servidor).",
-    "Solo inserción, salvo poner una vez el id de Meta.",
-    "Único: (meta_id).",
-    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger mensaje_libre_sin_truncate: TRUNCATE]",
-    "Solo inserción; el id de Meta se pone una vez. [trigger mensaje_libre_solo_meta_id: UPDATE DELETE]"
-   ],
-   "columnas": [
-    {
-     "nombre": "id",
-     "tipo": "bigint",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Consecutivo del servidor.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "entrante_meta_id",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": "respuesta_entrante.meta_id",
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Mensaje entrante al que contesta (abre la ventana de 24 h de Meta).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "tipo",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((tipo <> 'pide-modo'::text) OR ((parte IS NOT NULL) AND (modo IS NULL)))) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))",
-     "defecto": null,
-     "descripcion": "pide-parte (tras «Otra parte del equipo»), pide-modo (tras escoger una parte), pide-causa (tras «No fue la electrosumergible»), pide-texto (tras «0» o el modo «otro»), registrada, ya-respondida (la primera ganó) o rechazo (número sin alertas del campo, opción inválida, texto corto…).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "telefono",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK ((telefono ~ '^\\+[0-9]{8,15}$'::text))",
-     "defecto": null,
-     "descripcion": "Número E.164 al que se mandó (el from del entrante).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "usuario_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "usuario.id",
-     "unico": null,
-     "check": "CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))",
-     "defecto": null,
-     "descripcion": "Persona resuelta por el número. NULL en un rechazo a un número que no es de nadie.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "evento_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "evento.id",
-     "unico": null,
-     "check": "CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))",
-     "defecto": null,
-     "descripcion": "Parada del diálogo (la que resolvió el context.id del entrante). Obligatoria en los pide-*.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "familia",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "parte.familia",
-     "unico": null,
-     "check": "CHECK (((familia IS NULL) = (parte IS NULL)))",
-     "defecto": null,
-     "descripcion": "Familia de la parte ya escogida.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "parte",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "parte.id",
-     "unico": null,
-     "check": "CHECK (((familia IS NULL) = (parte IS NULL))) · CHECK (((modo IS NULL) OR (parte IS NOT NULL))) · CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((tipo <> 'pide-modo'::text) OR ((parte IS NOT NULL) AND (modo IS NULL)))) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))",
-     "defecto": null,
-     "descripcion": "Parte ya escogida en un paso anterior (obligatoria en pide-modo; en pide-texto tras el modo «otro»).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "modo",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": "modo_falla.codigo",
-     "unico": null,
-     "check": "CHECK (((modo IS NULL) OR (parte IS NOT NULL))) · CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((tipo <> 'pide-modo'::text) OR ((parte IS NOT NULL) AND (modo IS NULL)))) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))",
-     "defecto": null,
-     "descripcion": "Modo ya escogido (OTH en el pide-texto que sigue al modo «otro»).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "opciones",
-     "tipo": "jsonb",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((jsonb_typeof(opciones) = 'array'::text) AND (jsonb_array_length(opciones) > 0)))",
-     "defecto": null,
-     "descripcion": "Opciones numeradas que ofrece, con la forma de Opcion ([{clave, texto, parte?}…]): la clave de la respuesta siguiente se busca aquí. Solo en pide-parte, pide-modo y pide-causa.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "texto",
-     "tipo": "text",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK ((btrim(texto) <> ''::text)) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))",
-     "defecto": null,
-     "descripcion": "Lo que se mandó, exacto («TRIM · ¿Qué vio en sello mecánico? Responda con un número.⏎1) …»).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "hora",
-     "tipo": "timestamp with time zone",
-     "nulo": false,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": "now()",
-     "descripcion": "Hora del envío (dentro de las 24 h del entrante: lo revisa el servidor).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "meta_id",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": "único",
-     "check": "CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))",
-     "defecto": null,
-     "descripcion": "Id de Meta del mensaje (wamid), puesto una vez cuando la Cloud API lo devuelve. Lo cita el context.id de la respuesta siguiente y los statuses[] de entrega.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "no_enviado",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))",
-     "defecto": null,
-     "descripcion": "Si la Cloud API lo rechazó: el motivo (entonces no hay meta_id).",
-     "ejemplo": null
-    }
-   ],
-   "filas": []
-  },
-  {
-   "nombre": "estado_mensaje",
-   "grupo": "g",
-   "clase": "tabla",
-   "descripcion": "Estados de entrega que Meta informa por el webhook (statuses[]): enviado, entregado, leído o fallido, de una plantilla (mensaje) o de un mensaje libre del diálogo (mensaje_libre). Se agregan; el mensaje no se toca. Solo inserción.",
-   "tipoTS": null,
-   "endpoints": [
-    "POST /api/webhooks/whatsapp (statuses[])"
-   ],
-   "quienEscribe": "Servidor, con los estados que informa Meta.",
-   "reglas": [
-    "Es de un mensaje o de un mensaje_libre registrado.",
-    "Solo inserción.",
-    "El id de Meta es de un mensaje o de un mensaje_libre registrado (hace de clave foránea a las dos). [trigger estado_mensaje_de_saliente: INSERT]",
-    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger estado_mensaje_sin_truncate: TRUNCATE]",
-    "Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger estado_mensaje_solo_insercion: UPDATE DELETE]"
-   ],
-   "columnas": [
-    {
-     "nombre": "meta_id",
-     "tipo": "text",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Mensaje saliente: mensaje.meta_id o mensaje_libre.meta_id (trigger estado_mensaje_de_saliente en vez de FK, porque puede ser de cualquiera de las dos).",
-     "ejemplo": null
-    },
-    {
-     "nombre": "estado",
-     "tipo": "text",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((estado = 'failed'::text) = (error IS NOT NULL))) · CHECK ((estado = ANY (ARRAY['sent'::text, 'delivered'::text, 'read'::text, 'failed'::text])))",
-     "defecto": null,
-     "descripcion": "sent, delivered, read o failed.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "cuando",
-     "tipo": "timestamp with time zone",
-     "nulo": false,
-     "pk": true,
-     "fk": null,
-     "unico": null,
-     "check": null,
-     "defecto": null,
-     "descripcion": "Hora que informa Meta.",
-     "ejemplo": null
-    },
-    {
-     "nombre": "error",
-     "tipo": "text",
-     "nulo": true,
-     "pk": false,
-     "fk": null,
-     "unico": null,
-     "check": "CHECK (((estado = 'failed'::text) = (error IS NOT NULL)))",
-     "defecto": null,
-     "descripcion": "Con failed: el error de Meta.",
-     "ejemplo": null
-    }
-   ],
-   "filas": []
-  },
+  {"nombre":"mensaje","grupo":"g","clase":"tabla","descripcion":"RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las tarjetas e insignias de /vistas/hoy y la franja «No arrancar», en pantalla (R1, R8). Registro de lo que TRIM manda por WhatsApp (Mensaje de src/entities/mensajes.ts). GET /api/mensajes. Se guarda al intentar enviar y no se reescribe: el que salió trae texto (exactamente la plantilla con sus parámetros) y el que no se pudo armar trae no_enviado (el motivo). Cada mensaje se arma con la versión de la configuración que regía a su hora. Solo inserción, salvo poner una vez el id de Meta.","tipoTS":"RETIRADO (27-oct-2026): Mensaje (src/entities/mensajes.ts)","endpoints":["RETIRADO (27-oct-2026): GET /api/mensajes?campos"],"quienEscribe":"RETIRADO (27-oct-2026): Servidor (reglas de mensajes.ts) al enviar por la Cloud API de Meta.","reglas":["RETIRADO (27-oct-2026): Se guarda al intentar enviar y no se reescribe; solo se pone una vez el id de Meta.","RETIRADO (27-oct-2026): Se arma con la configuración que regía a su hora (configEn).","RETIRADO (27-oct-2026): Un parámetro que no sirve deja ESE mensaje con no_enviado; los demás salen.","Único: (meta_id).","Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger mensaje_sin_truncate: TRUNCATE]","RETIRADO (27-oct-2026): solo inserción; el id de Meta se pone una vez. [trigger mensaje_solo_meta_id: UPDATE DELETE]"],"columnas":[{"nombre":"id","tipo":"text","nulo":false,"pk":true,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Id del mensaje (lo pone el servidor).","ejemplo":null},{"nombre":"regla","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK (((regla = 'parte'::text) = (prediccion_id IS NOT NULL))) · CHECK (((regla = 'orden'::text) = (orden IS NOT NULL))) · CHECK (((regla <> ALL (ARRAY['parada'::text, 'cierre'::text, 'causa'::text])) OR (evento_id IS NOT NULL))) · CHECK (((insistencia IS NULL) OR (regla = 'causa'::text))) · CHECK ((regla = ANY (ARRAY['parada'::text, 'cierre'::text, 'causa'::text, 'parte'::text, 'orden'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. parada, cierre, causa, parte u orden.","ejemplo":null},{"nombre":"plantilla","tipo":"text","nulo":false,"pk":false,"fk":"plantilla_whatsapp.clave","unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Plantilla aprobada con que salió.","ejemplo":null},{"nombre":"parametros","tipo":"jsonb","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK ((jsonb_typeof(parametros) = 'object'::text))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Parámetros de la plantilla {nombre: texto}: ninguno vacío ni con saltos de línea.","ejemplo":null},{"nombre":"campo_id","tipo":"text","nulo":false,"pk":false,"fk":"activo.campo_id","unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Campo.","ejemplo":null},{"nombre":"equipo","tipo":"text","nulo":false,"pk":false,"fk":"activo.codigo","unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Equipo o pozo del que habla.","ejemplo":null},{"nombre":"para_id","tipo":"text","nulo":false,"pk":false,"fk":"usuario.id","unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Persona que lo recibe.","ejemplo":null},{"nombre":"telefono","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK ((telefono ~ '^\\+[0-9]{8,15}$'::text))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Número E.164 al que se mandó (el de la persona en ese momento).","ejemplo":null},{"nombre":"hora","tipo":"timestamp with time zone","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Hora del envío.","ejemplo":null},{"nombre":"texto","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((texto IS NULL) <> (no_enviado IS NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Lo que se envió (cuerpo de la plantilla con sus parámetros). NULL si no se envió.","ejemplo":null},{"nombre":"no_enviado","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((texto IS NULL) <> (no_enviado IS NULL))) · CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Por qué no se pudo enviar (un parámetro vacío o de varias líneas que Meta rechazaría). No cuenta como avisado.","ejemplo":null},{"nombre":"opciones","tipo":"jsonb","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK ((jsonb_typeof(opciones) = 'array'::text))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Opciones numeradas de una pregunta: [{clave, texto, parte?, porque?, fuente?, veces?, total?}] (Opcion). La respuesta por WhatsApp escoge una clave de ESTE mensaje.","ejemplo":null},{"nombre":"evento_id","tipo":"text","nulo":true,"pk":false,"fk":"evento.id","unico":null,"check":"CHECK (((regla <> ALL (ARRAY['parada'::text, 'cierre'::text, 'causa'::text])) OR (evento_id IS NOT NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Evento del PLC del que habla (parada, cierre, pregunta). En el JSON viaja como evento.","ejemplo":null},{"nombre":"prediccion_id","tipo":"text","nulo":true,"pk":false,"fk":"prediccion.id","unico":null,"check":"CHECK (((regla = 'parte'::text) = (prediccion_id IS NOT NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Con regla parte: la predicción del vigía. En el JSON viaja también como evento.","ejemplo":null},{"nombre":"orden","tipo":"text","nulo":true,"pk":false,"fk":"orden_sap.numero","unico":null,"check":"CHECK (((regla = 'orden'::text) = (orden IS NOT NULL))) · CHECK ((regla = ANY (ARRAY['parada'::text, 'cierre'::text, 'causa'::text, 'parte'::text, 'orden'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Con regla orden: la orden de SAP liberada.","ejemplo":null},{"nombre":"insistencia","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((insistencia IS NULL) OR (regla = 'causa'::text))) · CHECK ((insistencia = ANY (ARRAY['recordatorio'::text, 'escalamiento'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. recordatorio (30 min) o escalamiento (2 h) de una pregunta sin respuesta.","ejemplo":null},{"nombre":"meta_id","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":"único","check":"CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Id de Meta del mensaje saliente (wamid). El webhook resuelve el evento con el context.id que lo cita.","ejemplo":null}],"filas":[]},
+  {"nombre":"mensaje_libre","grupo":"g","clase":"tabla","descripcion":"RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: las preguntas en pantalla: POST /api/paradas/:evento/respuesta y POST /api/anh/paradas/:id/revision (R2, R5, R8). Mensajes libres que TRIM manda dentro de la ventana de 24 h que abre la respuesta de la persona (CONTRATO.md, «WhatsApp» y «El webhook»; 5D.5): «¿Qué vio en {parte}?», «¿Qué parte?», «¿Qué fue?», «Escriba qué encontró», «Registrado…», «Ya respondió…» y los rechazos («Ese número no recibe las alertas de este campo…»). No son plantillas y no salen en GET /api/mensajes. Guardan el estado del diálogo: la siguiente respuesta cita su meta_id (context.id) y de aquí salen el evento, la parte y el modo ya escogidos y las opciones válidas; la respuesta_parada se inserta solo con el último paso. Solo inserción, salvo poner una vez el id de Meta.","tipoTS":null,"endpoints":["RETIRADO (27-oct-2026): POST /api/webhooks/whatsapp (lo que el servidor contesta)"],"quienEscribe":"RETIRADO (27-oct-2026): Servidor, al contestar una respuesta por WhatsApp dentro de la ventana de 24 h (no es plantilla).","reglas":["RETIRADO (27-oct-2026): No sale en GET /api/mensajes: es el diálogo, no el registro de avisos.","RETIRADO (27-oct-2026): La siguiente respuesta cita su meta_id: de aquí salen evento, parte y modo ya escogidos y las opciones válidas.","RETIRADO (27-oct-2026): Dentro de las 24 h del entrante (lo revisa el servidor).","RETIRADO (27-oct-2026): Solo inserción, salvo poner una vez el id de Meta.","Único: (meta_id).","Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger mensaje_libre_sin_truncate: TRUNCATE]","RETIRADO (27-oct-2026): solo inserción; el id de Meta se pone una vez. [trigger mensaje_libre_solo_meta_id: UPDATE DELETE]"],"columnas":[{"nombre":"id","tipo":"bigint","nulo":false,"pk":true,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Consecutivo del servidor.","ejemplo":null},{"nombre":"entrante_meta_id","tipo":"text","nulo":false,"pk":false,"fk":"respuesta_entrante.meta_id","unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Mensaje entrante al que contesta (abre la ventana de 24 h de Meta).","ejemplo":null},{"nombre":"tipo","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((tipo <> 'pide-modo'::text) OR ((parte IS NOT NULL) AND (modo IS NULL)))) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. pide-parte (tras «Otra parte del equipo»), pide-modo (tras escoger una parte), pide-causa (tras «No fue la electrosumergible»), pide-texto (tras «0» o el modo «otro»), registrada, ya-respondida (la primera ganó) o rechazo (número sin alertas del campo, opción inválida, texto corto…).","ejemplo":null},{"nombre":"telefono","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK ((telefono ~ '^\\+[0-9]{8,15}$'::text))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Número E.164 al que se mandó (el from del entrante).","ejemplo":null},{"nombre":"usuario_id","tipo":"text","nulo":true,"pk":false,"fk":"usuario.id","unico":null,"check":"CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Persona resuelta por el número. NULL en un rechazo a un número que no es de nadie.","ejemplo":null},{"nombre":"evento_id","tipo":"text","nulo":true,"pk":false,"fk":"evento.id","unico":null,"check":"CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL))))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Parada del diálogo (la que resolvió el context.id del entrante). Obligatoria en los pide-*.","ejemplo":null},{"nombre":"familia","tipo":"text","nulo":true,"pk":false,"fk":"parte.familia","unico":null,"check":"CHECK (((familia IS NULL) = (parte IS NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Familia de la parte ya escogida.","ejemplo":null},{"nombre":"parte","tipo":"text","nulo":true,"pk":false,"fk":"parte.id","unico":null,"check":"CHECK (((familia IS NULL) = (parte IS NULL))) · CHECK (((modo IS NULL) OR (parte IS NOT NULL))) · CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((tipo <> 'pide-modo'::text) OR ((parte IS NOT NULL) AND (modo IS NULL)))) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Parte ya escogida en un paso anterior (obligatoria en pide-modo; en pide-texto tras el modo «otro»).","ejemplo":null},{"nombre":"modo","tipo":"text","nulo":true,"pk":false,"fk":"modo_falla.codigo","unico":null,"check":"CHECK (((modo IS NULL) OR (parte IS NOT NULL))) · CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((tipo <> 'pide-modo'::text) OR ((parte IS NOT NULL) AND (modo IS NULL)))) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Modo ya escogido (OTH en el pide-texto que sigue al modo «otro»).","ejemplo":null},{"nombre":"opciones","tipo":"jsonb","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text])) = (opciones IS NOT NULL))) · CHECK (((jsonb_typeof(opciones) = 'array'::text) AND (jsonb_array_length(opciones) > 0)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Opciones numeradas que ofrece, con la forma de Opcion ([{clave, texto, parte?}…]): la clave de la respuesta siguiente se busca aquí. Solo en pide-parte, pide-modo y pide-causa.","ejemplo":null},{"nombre":"texto","tipo":"text","nulo":false,"pk":false,"fk":null,"unico":null,"check":"CHECK (((tipo <> ALL (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text])) OR ((usuario_id IS NOT NULL) AND (evento_id IS NOT NULL)))) · CHECK ((btrim(texto) <> ''::text)) · CHECK ((tipo = ANY (ARRAY['pide-parte'::text, 'pide-modo'::text, 'pide-causa'::text, 'pide-texto'::text, 'registrada'::text, 'ya-respondida'::text, 'rechazo'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Lo que se mandó, exacto («TRIM · ¿Qué vio en sello mecánico? Responda con un número.⏎1) …»).","ejemplo":null},{"nombre":"hora","tipo":"timestamp with time zone","nulo":false,"pk":false,"fk":null,"unico":null,"check":null,"defecto":"now()","descripcion":"RETIRADO (27-oct-2026), como su tabla. Hora del envío (dentro de las 24 h del entrante: lo revisa el servidor).","ejemplo":null},{"nombre":"meta_id","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":"único","check":"CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Id de Meta del mensaje (wamid), puesto una vez cuando la Cloud API lo devuelve. Lo cita el context.id de la respuesta siguiente y los statuses[] de entrega.","ejemplo":null},{"nombre":"no_enviado","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((no_enviado IS NULL) OR (meta_id IS NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Si la Cloud API lo rechazó: el motivo (entonces no hay meta_id).","ejemplo":null}],"filas":[]},
+  {"nombre":"estado_mensaje","grupo":"g","clase":"tabla","descripcion":"RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: sin envíos no hay estados de entrega (R2, R8). Estados de entrega que Meta informa por el webhook (statuses[]): enviado, entregado, leído o fallido, de una plantilla (mensaje) o de un mensaje libre del diálogo (mensaje_libre). Se agregan; el mensaje no se toca. Solo inserción.","tipoTS":null,"endpoints":["RETIRADO (27-oct-2026): POST /api/webhooks/whatsapp (statuses[])"],"quienEscribe":"RETIRADO (27-oct-2026): Servidor, con los estados que informa Meta.","reglas":["RETIRADO (27-oct-2026): Es de un mensaje o de un mensaje_libre registrado.","RETIRADO (27-oct-2026): Solo inserción.","RETIRADO (27-oct-2026): el id de Meta es de un mensaje o de un mensaje_libre registrado (hace de clave foránea a las dos). [trigger estado_mensaje_de_saliente: INSERT]","Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger estado_mensaje_sin_truncate: TRUNCATE]","Solo inserción: UPDATE, DELETE y TRUNCATE rechazados (SQLSTATE 23001). [trigger estado_mensaje_solo_insercion: UPDATE DELETE]"],"columnas":[{"nombre":"meta_id","tipo":"text","nulo":false,"pk":true,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Mensaje saliente: mensaje.meta_id o mensaje_libre.meta_id (trigger estado_mensaje_de_saliente en vez de FK, porque puede ser de cualquiera de las dos).","ejemplo":null},{"nombre":"estado","tipo":"text","nulo":false,"pk":true,"fk":null,"unico":null,"check":"CHECK (((estado = 'failed'::text) = (error IS NOT NULL))) · CHECK ((estado = ANY (ARRAY['sent'::text, 'delivered'::text, 'read'::text, 'failed'::text])))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. sent, delivered, read o failed.","ejemplo":null},{"nombre":"cuando","tipo":"timestamp with time zone","nulo":false,"pk":true,"fk":null,"unico":null,"check":null,"defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Hora que informa Meta.","ejemplo":null},{"nombre":"error","tipo":"text","nulo":true,"pk":false,"fk":null,"unico":null,"check":"CHECK (((estado = 'failed'::text) = (error IS NOT NULL)))","defecto":null,"descripcion":"RETIRADO (27-oct-2026), como su tabla. Con failed: el error de Meta.","ejemplo":null}],"filas":[]},
   {
    "nombre": "carga_asignacion",
    "grupo": "g",
@@ -14299,7 +13360,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
+     "ejemplo": "2026-10-27T16:52:35.676928+00:00"
     }
    ],
    "filas": [
@@ -14315,7 +13376,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -14329,7 +13390,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "morichal",
@@ -14343,7 +13404,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "palmar",
@@ -14357,7 +13418,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "zarza",
@@ -14371,7 +13432,7 @@
      "banda_verificable": true,
      "dentro": true,
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     }
    ]
   },
@@ -14970,7 +14031,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
+     "ejemplo": "2026-10-27T16:52:35.676928+00:00"
     }
    ],
    "filas": [
@@ -15146,7 +14207,7 @@
      "eventos": 18,
      "huella_cifras": "9439920a3b191e5defc44bbf5a02780c01f4c477b4232259de355bd618234cb8",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "guacamayo",
@@ -15279,7 +14340,7 @@
      "eventos": 11,
      "huella_cifras": "ed542826fa682035e79cb219d14b4c54a27cc7c262f0b887d70ae3512459e800",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "morichal",
@@ -15350,7 +14411,7 @@
      "eventos": 31,
      "huella_cifras": "190cb266ba2594a2c185be30cfd7e7bad4d7bce844013f88ff09f73007458480",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "palmar",
@@ -15425,7 +14486,7 @@
      "eventos": 8,
      "huella_cifras": "c632efa5ec1c89e44223cf0d3a9736f74675237e50136524aa0383dfa75b7d73",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "zarza",
@@ -15486,7 +14547,7 @@
      "eventos": 1,
      "huella_cifras": "c7c447654ee2ccce3c562f23385b1e104894df7699354cc438d1633cc6105408",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     }
    ]
   },
@@ -15793,7 +14854,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
+     "ejemplo": "2026-10-27T16:52:35.676928+00:00"
     }
    ],
    "filas": [
@@ -15821,7 +14882,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -15847,7 +14908,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "evento_id": "EP-LC11-260925-40",
@@ -15873,7 +14934,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC11-260925-40",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -15899,7 +14960,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "evento_id": "EP-LC04-260926-75",
@@ -15925,7 +14986,7 @@
      "causa_como": "senal",
      "causa_evento_id": "EP-LC04-260926-75",
      "version_config": 1,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     }
    ]
   },
@@ -16038,7 +15099,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Cuándo se calculó.",
-     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
+     "ejemplo": "2026-10-27T16:52:35.676928+00:00"
     }
    ],
    "filas": [
@@ -16050,7 +15111,7 @@
      "potencial": 31765.411954508756,
      "diferido": 3677.2278693078233,
      "asignado": 28088.184085200945,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16060,7 +15121,7 @@
      "potencial": 27256.010196447387,
      "diferido": 60.829984442262884,
      "asignado": 27195.180212005136,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16070,7 +15131,7 @@
      "potencial": 26475.05235007924,
      "diferido": 756.7615028375318,
      "asignado": 25718.29084724172,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16080,7 +15141,7 @@
      "potencial": 24552.694574403755,
      "diferido": 0,
      "asignado": 24552.694574403766,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "campo_id": "ceiba",
@@ -16090,7 +15151,7 @@
      "potencial": 24111.8312740346,
      "diferido": 94.61066382524777,
      "asignado": 24017.220610209362,
-     "calculado": "2026-10-25T17:04:53.242327+00:00"
+     "calculado": "2026-10-27T16:52:35.676928+00:00"
     }
    ]
   },
@@ -16157,7 +15218,7 @@
      "check": null,
      "defecto": "now()",
      "descripcion": "Hora del recálculo.",
-     "ejemplo": "2026-10-25T17:04:53.242327+00:00"
+     "ejemplo": "2026-10-27T16:52:35.676928+00:00"
     },
     {
      "nombre": "motivo",
@@ -16201,7 +15262,7 @@
      "id": 1,
      "campo_id": "ceiba",
      "mes": "2025-10-01",
-     "cuando": "2026-10-25T17:04:53.242327+00:00",
+     "cuando": "2026-10-27T16:52:35.676928+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "5419eeb481140b47545569f04ef157c614b65495e455f923feaf3d04cbc7f108"
@@ -16210,7 +15271,7 @@
      "id": 2,
      "campo_id": "ceiba",
      "mes": "2025-11-01",
-     "cuando": "2026-10-25T17:04:53.242327+00:00",
+     "cuando": "2026-10-27T16:52:35.676928+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "80979dd8e5f4057b805ffe6baaf7d5e097704223acb7ad94498bec69f2d8aebe"
@@ -16219,7 +15280,7 @@
      "id": 3,
      "campo_id": "ceiba",
      "mes": "2025-12-01",
-     "cuando": "2026-10-25T17:04:53.242327+00:00",
+     "cuando": "2026-10-27T16:52:35.676928+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "3ee3116ec3bc84c4293321d097291669814f0af8cfa69fdeb7ff9233b5f63916"
@@ -16228,7 +15289,7 @@
      "id": 4,
      "campo_id": "ceiba",
      "mes": "2026-01-01",
-     "cuando": "2026-10-25T17:04:53.242327+00:00",
+     "cuando": "2026-10-27T16:52:35.676928+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "753d300b99414f01cc760a56987a7be0cb75f02cf6ed36bb72949f39b071cd8b"
@@ -16237,7 +15298,7 @@
      "id": 5,
      "campo_id": "ceiba",
      "mes": "2026-02-01",
-     "cuando": "2026-10-25T17:04:53.242327+00:00",
+     "cuando": "2026-10-27T16:52:35.676928+00:00",
      "motivo": "Primer cálculo: carga del ejemplo desde el motor del demo",
      "huella_antes": null,
      "huella_despues": "6d35fb973add65cb0de0726e56b94e4bb27a6df08ae0208f889f0930c6a12b13"
@@ -18598,7 +17659,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "+573005550101"
+     "ejemplo": null
     },
     {
      "nombre": "alertas",
@@ -18649,7 +17710,7 @@
      "todos_los_campos": true,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550101",
+     "telefono": null,
      "alertas": false,
      "antes_de_suspender": null,
      "campos": null
@@ -18662,7 +17723,7 @@
      "todos_los_campos": false,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550102",
+     "telefono": null,
      "alertas": false,
      "antes_de_suspender": null,
      "campos": [
@@ -18678,8 +17739,8 @@
      "todos_los_campos": false,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550103",
-     "alertas": true,
+     "telefono": null,
+     "alertas": false,
      "antes_de_suspender": null,
      "campos": [
       "ceiba"
@@ -18693,8 +17754,8 @@
      "todos_los_campos": false,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550104",
-     "alertas": true,
+     "telefono": null,
+     "alertas": false,
      "antes_de_suspender": null,
      "campos": [
       "ceiba"
@@ -18708,8 +17769,8 @@
      "todos_los_campos": true,
      "estado": "activo",
      "desde": "2026-09-01",
-     "telefono": "+573005550105",
-     "alertas": true,
+     "telefono": null,
+     "alertas": false,
      "antes_de_suspender": null,
      "campos": null
     }
@@ -18737,7 +17798,7 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "conf"
+     "ejemplo": "oper"
     },
     {
      "nombre": "capacidad_id",
@@ -18749,29 +17810,29 @@
      "check": null,
      "defecto": null,
      "descripcion": null,
-     "ejemplo": "anh:yacimiento"
+     "ejemplo": "sap:aviso"
     }
    ],
    "filas": [
     {
-     "rol_id": "conf",
-     "capacidad_id": "anh:yacimiento"
-    },
-    {
-     "rol_id": "conf",
-     "capacidad_id": "causa:declarar"
+     "rol_id": "oper",
+     "capacidad_id": "sap:aviso"
     },
     {
      "rol_id": "sup",
-     "capacidad_id": "causa:declarar"
+     "capacidad_id": "perdidas:registrar"
     },
     {
-     "rol_id": "prod",
-     "capacidad_id": "evidencia:exportar"
+     "rol_id": "adm",
+     "capacidad_id": "config:firmar"
     },
     {
-     "rol_id": "conf",
+     "rol_id": "jefe",
      "capacidad_id": "planes:decidir"
+    },
+    {
+     "rol_id": "ger",
+     "capacidad_id": "evidencia:exportar"
     }
    ]
   }
@@ -19621,7 +18682,7 @@
    "desde": "respuesta_entrante.evento_id",
    "hacia": "evento.id",
    "cardinalidad": "N:1",
-   "descripcion": "Evento resuelto por el context.id.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Evento resuelto por el context.id.",
    "restriccion": "respuesta_entrante_evento_id_fkey",
    "diferible": false
   },
@@ -19629,7 +18690,7 @@
    "desde": "respuesta_entrante.usuario_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona resuelta: activa, con alertas y con el campo de la parada.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Persona resuelta: activa, con alertas y con el campo de la parada.",
    "restriccion": "respuesta_entrante_usuario_id_fkey",
    "diferible": false
   },
@@ -19637,7 +18698,7 @@
    "desde": "respuesta_parada.entrante_meta_id",
    "hacia": "respuesta_entrante.meta_id",
    "cardinalidad": "1:1",
-   "descripcion": "Con canal whatsapp: el mensaje entrante que la completó (el último del diálogo; los pasos anteriores quedan en respuesta_entrante como en-curso y en mensaje_libre).",
+   "descripcion": "RETIRADO (27-oct-2026): el dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo: ninguno: toda respuesta entra por POST /api/paradas/:evento/respuesta (R4, R8). Con canal whatsapp: el mensaje entrante que la completó (el último del diálogo; los pasos anteriores quedan en respuesta_entrante como en-curso y en mensaje_libre).",
    "restriccion": "respuesta_parada_entrante_meta_id_fkey",
    "diferible": false
   },
@@ -19981,7 +19042,7 @@
    "desde": "mensaje.campo_id,equipo",
    "hacia": "activo.campo_id,codigo",
    "cardinalidad": "N:1",
-   "descripcion": "Campo.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Campo.",
    "restriccion": "mensaje_campo_id_equipo_fkey",
    "diferible": false
   },
@@ -19989,7 +19050,7 @@
    "desde": "mensaje.evento_id",
    "hacia": "evento.id",
    "cardinalidad": "N:1",
-   "descripcion": "Evento del PLC del que habla (parada, cierre, pregunta). En el JSON viaja como evento.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Evento del PLC del que habla (parada, cierre, pregunta). En el JSON viaja como evento.",
    "restriccion": "mensaje_evento_id_fkey",
    "diferible": false
   },
@@ -19997,7 +19058,7 @@
    "desde": "mensaje.orden",
    "hacia": "orden_sap.numero",
    "cardinalidad": "N:1",
-   "descripcion": "Con regla orden: la orden de SAP liberada.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Con regla orden: la orden de SAP liberada.",
    "restriccion": "mensaje_orden_fkey",
    "diferible": false
   },
@@ -20005,23 +19066,16 @@
    "desde": "mensaje.para_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona que lo recibe.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Persona que lo recibe.",
    "restriccion": "mensaje_para_id_fkey",
    "diferible": false
   },
-  {
-   "desde": "mensaje.plantilla",
-   "hacia": "plantilla_whatsapp.clave",
-   "cardinalidad": "N:1",
-   "descripcion": "Plantilla aprobada con que salió.",
-   "restriccion": "mensaje_plantilla_fkey",
-   "diferible": false
-  },
+  {"desde":"mensaje.plantilla","hacia":"plantilla_whatsapp.clave","cardinalidad":"N:1","descripcion":"RETIRADO (27-oct-2026), como su tabla. Plantilla aprobada con que salió.","restriccion":"mensaje_plantilla_fkey","diferible":false},
   {
    "desde": "mensaje.prediccion_id",
    "hacia": "prediccion.id",
    "cardinalidad": "N:1",
-   "descripcion": "Con regla parte: la predicción del vigía. En el JSON viaja también como evento.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Con regla parte: la predicción del vigía. En el JSON viaja también como evento.",
    "restriccion": "mensaje_prediccion_id_fkey",
    "diferible": false
   },
@@ -20029,7 +19083,7 @@
    "desde": "mensaje_libre.entrante_meta_id",
    "hacia": "respuesta_entrante.meta_id",
    "cardinalidad": "N:1",
-   "descripcion": "Mensaje entrante al que contesta (abre la ventana de 24 h de Meta).",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Mensaje entrante al que contesta (abre la ventana de 24 h de Meta).",
    "restriccion": "mensaje_libre_entrante_meta_id_fkey",
    "diferible": false
   },
@@ -20037,7 +19091,7 @@
    "desde": "mensaje_libre.evento_id",
    "hacia": "evento.id",
    "cardinalidad": "N:1",
-   "descripcion": "Parada del diálogo (la que resolvió el context.id del entrante). Obligatoria en los pide-*.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Parada del diálogo (la que resolvió el context.id del entrante). Obligatoria en los pide-*.",
    "restriccion": "mensaje_libre_evento_id_fkey",
    "diferible": false
   },
@@ -20045,7 +19099,7 @@
    "desde": "mensaje_libre.familia,parte",
    "hacia": "parte.familia,id",
    "cardinalidad": "N:1",
-   "descripcion": "Familia de la parte ya escogida.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Familia de la parte ya escogida.",
    "restriccion": "mensaje_libre_familia_parte_fkey",
    "diferible": false
   },
@@ -20053,7 +19107,7 @@
    "desde": "mensaje_libre.modo",
    "hacia": "modo_falla.codigo",
    "cardinalidad": "N:1",
-   "descripcion": "Modo ya escogido (OTH en el pide-texto que sigue al modo «otro»).",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Modo ya escogido (OTH en el pide-texto que sigue al modo «otro»).",
    "restriccion": "mensaje_libre_modo_fkey",
    "diferible": false
   },
@@ -20061,7 +19115,7 @@
    "desde": "mensaje_libre.usuario_id",
    "hacia": "usuario.id",
    "cardinalidad": "N:1",
-   "descripcion": "Persona resuelta por el número. NULL en un rechazo a un número que no es de nadie.",
+   "descripcion": "RETIRADO (27-oct-2026), como su tabla. Persona resuelta por el número. NULL en un rechazo a un número que no es de nadie.",
    "restriccion": "mensaje_libre_usuario_id_fkey",
    "diferible": false
   },

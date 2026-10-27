@@ -15,7 +15,7 @@ import type { AvisoSap } from '@/entities/sap'
 import { sesion, useSesion } from '@/shared/api/sesion'
 import * as E from '@/shared/api/escrituras'
 import type {
-  CuerpoAviso, CuerpoRespuesta, CuerpoWhatsapp, CuerpoClasificacion, CuerpoConfirmacion, CuerpoYacimiento, CuerpoRespuestaAnh, CuerpoRevisionAnh,
+  CuerpoAviso, CuerpoRespuesta, CuerpoClasificacion, CuerpoConfirmacion, CuerpoYacimiento, CuerpoRespuestaAnh, CuerpoRevisionAnh,
 } from '@/shared/api/contrato'
 import type { FilaOficial } from '@/entities/asignacion'
 import type { Respuesta } from '@/entities/pozos'
@@ -87,16 +87,8 @@ interface Estado {
   setImprimiendo: (i: Informe | null) => void
   /** Respuesta en pantalla a una parada que la señal no explicó
    *  (`POST /api/paradas/:evento/respuesta`). `por`, `hora` y `canal` los pone
-   *  el servidor; con las mismas reglas que WhatsApp: la primera respuesta gana. */
+   *  el servidor; la primera respuesta gana. */
   responder: (r: Omit<CuerpoRespuesta, 'parte'> & { parte?: Respuesta['parte'] }, o?: { keepalive?: boolean }) => Promise<{ ok: true } | { ok: false; error: string; estado?: number }>
-  /** Llega por WhatsApp la respuesta a «¿qué se dañó?» (en producción, el
-   *  webhook de WhatsApp al servidor). Entra solo de un número registrado con
-   *  alertas y con ese campo; la primera respuesta gana. */
-  recibirWhatsapp: (r: CuerpoWhatsapp) => Promise<{ ok: true } | { ok: false; error: string }>
-  /** «2 Algo está mal» al cierre de una respuesta por WhatsApp (B-05): la misma
-   *  escritura que el botón de la pantalla (`…/revision`), a nombre de la persona
-   *  del número. En producción la manda el webhook; con el servidor, el teléfono del demo no la envía. */
-  revisarWhatsapp: (r: { evento: string; campoId: string; usuarioId: string }) => Promise<{ ok: true } | { ok: false; error: string }>
   /** Mecanismo y causa raíz de una falla declarada (`POST /api/analisis/:evento`).
    *  Los completa confiabilidad o el jefe de mantenimiento; la parte y el modo son de quien la vio. */
   completarAnalisis: (evento: string, a: { mecanismo: string; causaRaiz: string; nota?: string }) => Promise<{ ok: true } | { ok: false; error: string }>
@@ -249,8 +241,6 @@ export const useApp = create<Estado>((set, get) => ({
   },
   invitarUsuario: (invitacion, motivo) => E.invitarUsuario(quien(), { invitacion, motivo }),
   responder: (r, o) => E.responderParada(quien(), r, o),
-  recibirWhatsapp: r => E.recibirWhatsapp(r),
-  revisarWhatsapp: r => E.revisarDesdeWhatsapp(r),
   completarAnalisis: (evento, a) => E.completarAnalisis(quien(), { evento, ...a }),
   decidirPlan: (id, estado, motivo) => E.decidirPlan(quien(), { id, estado, motivo }),
   clasificarAnh: (id, c) => E.clasificarParada(quien(), id, c),
