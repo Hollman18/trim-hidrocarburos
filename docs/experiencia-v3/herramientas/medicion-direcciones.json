@@ -1,0 +1,141 @@
+{
+ "_como": "node medir-direcciones.mjs",
+ "fallas": 0,
+ "resumen": {
+  "d1": {
+   "nombre": "Grafito",
+   "claro": {
+    "minimos": {
+     "tinta": 15.19,
+     "tinta2": 7.76,
+     "tinta3": 5.69,
+     "dato1": 9.95,
+     "dato3": 3.69,
+     "eq-trazo": 5.78,
+     "interlock": 7.72,
+     "alarma": 4.42,
+     "atención y aviso": 1.64,
+     "sin comunicación": 6.42
+    },
+    "acento": {
+     "interlock": 11,
+     "alarma": 11.1,
+     "atención y aviso": 29.9,
+     "sin comunicación": 11,
+     "gris (tinta3), informativo": 1.2
+    }
+   },
+   "noche": {
+    "minimos": {
+     "tinta": 11.98,
+     "tinta2": 8.07,
+     "tinta3": 5.47,
+     "dato1": 9.65,
+     "dato3": 3.96,
+     "eq-trazo": 5.82,
+     "interlock": 5.53,
+     "alarma": 7.54,
+     "atención y aviso": 11.58,
+     "sin comunicación": 6.19
+    },
+    "acento": {
+     "interlock": 13.1,
+     "alarma": 17,
+     "atención y aviso": 12.8,
+     "sin comunicación": 12.3,
+     "gris (tinta3), informativo": 12.7
+    }
+   }
+  },
+  "d2": {
+   "nombre": "Consola blanca",
+   "claro": {
+    "minimos": {
+     "tinta": 17.18,
+     "tinta2": 8.09,
+     "tinta3": 5.67,
+     "dato1": 11.55,
+     "dato3": 3.93,
+     "eq-trazo": 5.67,
+     "interlock": 8.44,
+     "alarma": 4.83,
+     "atención y aviso": 1.79,
+     "sin comunicación": 7.02
+    },
+    "acento": {
+     "interlock": 14.3,
+     "alarma": 27.7,
+     "atención y aviso": 56.3,
+     "sin comunicación": 27.8,
+     "gris (tinta3), informativo": 28.6
+    }
+   },
+   "noche": {
+    "minimos": {
+     "tinta": 13.57,
+     "tinta2": 8.91,
+     "tinta3": 5.89,
+     "dato1": 10.76,
+     "dato3": 4.13,
+     "eq-trazo": 6.17,
+     "interlock": 6.15,
+     "alarma": 8.38,
+     "atención y aviso": 12.86,
+     "sin comunicación": 6.88
+    },
+    "acento": {
+     "interlock": 12.9,
+     "alarma": 16.7,
+     "atención y aviso": 11.8,
+     "sin comunicación": 11.4,
+     "gris (tinta3), informativo": 13.6
+    }
+   }
+  },
+  "d3": {
+   "nombre": "Sala",
+   "claro": {
+    "minimos": {
+     "tinta": 15.02,
+     "tinta2": 7.63,
+     "tinta3": 5.59,
+     "dato1": 9.78,
+     "dato3": 3.67,
+     "eq-trazo": 5.68,
+     "interlock": 7.56,
+     "alarma": 4.33,
+     "atención y aviso": 1.6,
+     "sin comunicación": 6.29
+    },
+    "acento": {
+     "interlock": 15,
+     "alarma": 15.2,
+     "atención y aviso": 25.2,
+     "sin comunicación": 11.9,
+     "gris (tinta3), informativo": 6.3
+    }
+   },
+   "noche": {
+    "minimos": {
+     "tinta": 10.9,
+     "tinta2": 7.41,
+     "tinta3": 5.26,
+     "dato1": 8.87,
+     "dato3": 3.88,
+     "eq-trazo": 5.64,
+     "interlock": 5.09,
+     "alarma": 6.94,
+     "atención y aviso": 10.66,
+     "sin comunicación": 5.7
+    },
+    "acento": {
+     "interlock": 12.7,
+     "alarma": 16.6,
+     "atención y aviso": 16,
+     "sin comunicación": 12.8,
+     "gris (tinta3), informativo": 11.4
+    }
+   }
+  }
+ }
+}

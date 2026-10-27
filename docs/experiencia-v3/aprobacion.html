@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRIM v3 · Para aprobar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{--suelo:#eceef0;--panel:#f7f8f9;--tinta:#15171a;--tinta2:#464b52;--tinta3:#5b6168;--linea:#d5d9dd;--acento:#1d6768;--acento-f:#dcebeb;--carbon:#1f2328}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--suelo:#16181b;--panel:#1f2226;--tinta:#f1f3f4;--tinta2:#c6cbd1;--tinta3:#a2a9b1;--linea:#353a40;--acento:#acd7dd;--acento-f:#22383a;--carbon:#0f1113}}
+:root[data-theme="dark"]{--suelo:#16181b;--panel:#1f2226;--tinta:#f1f3f4;--tinta2:#c6cbd1;--tinta3:#a2a9b1;--linea:#353a40;--acento:#acd7dd;--acento-f:#22383a;--carbon:#0f1113}
+*{box-sizing:border-box}
+body{margin:0;background:var(--suelo);color:var(--tinta);font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+header.top{background:var(--carbon);color:#f1f3f4;padding:28px 16px}
+header.top div,main{max-width:1180px;margin:0 auto}
+header.top p{margin:6px 0 0;color:#c6cbd1;max-width:70ch}
+h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+main{padding:24px 16px 64px;display:grid;gap:28px}
+section{background:var(--panel);border-radius:14px;padding:24px}
+h2{margin:0 0 4px;font-size:22px;font-weight:600;text-wrap:balance}
+h2 .n{font-family:"IBM Plex Mono",monospace;color:var(--acento);font-size:15px;margin-right:8px}
+.sub{margin:0 0 16px;color:var(--tinta2);max-width:75ch}
+table{border-collapse:collapse;width:100%;font-size:15px}
+.tabla{overflow-x:auto}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--linea);vertical-align:top}
+th{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--tinta3);font-weight:600}
+td.num{font-weight:700;white-space:nowrap}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.grid.dos{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+figure{margin:0}
+figure img{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--linea);background:#fff}
+figcaption{font-size:14px;color:var(--tinta2);margin-top:6px}
+.decide{border:2px solid var(--acento);background:var(--acento-f);border-radius:12px;padding:16px 18px;margin-top:16px}
+.decide b{color:var(--tinta)}
+ol.decisiones{display:grid;gap:12px;padding-left:22px;margin:0}
+ol.decisiones li{padding-left:4px}
+.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--acento-f);color:var(--tinta);border:1px solid var(--linea)}
+a{color:var(--acento)}
+ul.lista{margin:0;padding-left:20px;display:grid;gap:6px}
+@media (max-width:600px){h1{font-size:24px}section{padding:16px}.grid.dos{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div>
+  <h1>TRIM v3 · Lo que usted aprueba antes de construir</h1>
+  <p>Lo necesario de cada rol, lo que se borra, los flujos que fallan, el diseño sin azul y lo que le toca al backend. Nada se construye hasta su «hazlo».</p>
+</div></header>
+<main>
+
+<section>
+  <h2><span class="n">0</span>Lo necesario de cada rol</h2>
+  <p class="sub">Desde una hoja en blanco: qué ve, qué hace y cuándo. Cada número sale del motor, con las cifras del demo. El detalle por rol está en <code>necesario-por-rol.md</code> y <code>roles/</code>.</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Rol</th><th>Abre en (número principal)</th><th>Acción principal, 1 toque</th><th>Cuándo</th></tr></thead>
+    <tbody>
+      <tr><td>Gerente</td><td class="num">2.650 bbl/d se dejan de producir ahora</td><td>Abrir el equipo que más pesa</td><td>Cada mañana; a fin de mes, metas e informe</td></tr>
+      <tr><td>Producción</td><td class="num">9.394 de 11.857 bbl/d salen hoy</td><td>Confirmar las paradas del día, en lote</td><td>Al empezar el día; a fin de mes, el cuadre</td></tr>
+      <tr><td>Supervisor</td><td class="num">4 paradas por confirmar (antes de las 07:00)</td><td>Confirmar en lote</td><td>Al recibir y entregar turno; si para una bomba</td></tr>
+      <tr><td>Operador</td><td class="num">1 de 4 preguntas</td><td>Contestar qué se dañó</td><td>Cuando le preguntan</td></tr>
+      <tr><td>Jefe de mantenimiento</td><td class="num">1 equipo avisa (K-101)</td><td>Ver o crear la orden</td><td>Cada mañana; en la reunión semanal</td></tr>
+      <tr><td>Confiabilidad</td><td class="num">3.059 bbl/d · el primero de «Si falla hoy»</td><td>Abrir ese equipo</td><td>Cada semana</td></tr>
+      <tr><td>Técnico</td><td class="num">5 cosas le tocan hoy</td><td>Decir qué encontró</td><td>Al empezar el día</td></tr>
+      <tr><td>Regulatorio</td><td class="num">2 paradas sin causa</td><td>Pedir la causa / exportar el reporte</td><td>Cada mañana, antes de las 07:00</td></tr>
+      <tr><td>Administrador</td><td class="num">3 de 6 pasos listos</td><td>Seguir el paso que falta</td><td>Mientras se implementa</td></tr>
+      <tr><td>Planeadora</td><td colspan="3">Sigue apagada: su número y sus acciones no existen en el motor todavía.</td></tr>
+      <tr><td>Abastecimiento</td><td colspan="3"><b>Sale del producto</b>: no baja un barril; el responsable ya está en el árbol de la ANH.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub" style="margin-top:14px">Operador, técnico, regulatorio y administrador quedan con <b>una sola pantalla y sin menú</b>. Hoy hay 29 puertas y 64 pantallas; lo necesario pide 15 puertas.</p>
+  <div class="grid">
+    <figure><img src="imagenes/d1-grafito-sup-telefono-claro.png" alt="Supervisor en el teléfono: 4 paradas por confirmar"><figcaption>Supervisor · teléfono</figcaption></figure>
+    <figure><img src="imagenes/d1-grafito-oper-telefono-claro.png" alt="Operador en el teléfono: 1 de 4 preguntas"><figcaption>Operador · teléfono</figcaption></figure>
+    <figure><img src="imagenes/d1-grafito-jefe-telefono-claro.png" alt="Jefe en el teléfono: 1 equipo avisa"><figcaption>Jefe · teléfono</figcaption></figure>
+    <figure><img src="imagenes/d1-grafito-reg-telefono-claro.png" alt="Regulatorio en el teléfono: 2 paradas sin causa"><figcaption>Regulatorio · teléfono</figcaption></figure>
+  </div>
+  <div class="grid dos" style="margin-top:14px">
+    <figure><img src="imagenes/d1-grafito-prod-escritorio-claro.png" alt="Producción en el escritorio"><figcaption>Producción · escritorio</figcaption></figure>
+    <figure><img src="imagenes/d1-grafito-p201b-escritorio-claro.png" alt="Nivel técnico de P-201B con el kit SCADA"><figcaption>Nivel técnico de P-201B · kit SCADA</figcaption></figure>
+  </div>
+  <div class="decide"><b>Decida:</b> ¿aprueba lo necesario de cada rol? ¿Hasta qué escalón de la escalera se construye en cada uno? (La escalera de cada rol está en <code>necesario-por-rol.md</code>.)</div>
+</section>
+
+<section>
+  <h2><span class="n">1</span>El gerente: ¿con o sin «Antes · Durante · Después»?</h2>
+  <p class="sub">El análisis propone sacarlo de la primera pantalla porque ningún rol decide algo distinto con él. Usted lo pidió en la v2 («el antes, durante y después de ese pipeline»). Por eso no se da por hecho.</p>
+  <div class="grid dos">
+    <figure><img src="imagenes/d1-grafito-ger-escritorio-claro.png" alt="Gerente sin el control de momentos"><figcaption>A · Sin el control (lo que propone el análisis)</figcaption></figure>
+    <figure><img src="imagenes/d1-grafito-ger-momentos-escritorio-claro.png" alt="Gerente con el control de momentos"><figcaption>B · Con el control, sin los números 1·2·3</figcaption></figure>
+  </div>
+  <div class="decide"><b>Decida:</b> A o B.</div>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Lo que se borra</h2>
+  <p class="sub">30 cosas se borran del producto, otras salen de las puertas de un rol y otras se funden. Cerca del 73 % del texto de las puertas sale de la primera capa (parte queda a un toque). Prueba del 10 %: el primer corte borró de más y hubo que devolver 9 cosas. El detalle, con el porqué y quién lo pidió, está en <code>borrado.md</code>.</p>
+  <ul class="lista">
+    <li><b>WhatsApp completo</b>: 19 funciones. Las 9 con valor ya tienen su reemplazo dentro de TRIM (la pregunta en Hoy, el escalamiento como insignia, la entrega de turno en pantalla y PDF). <b>Ojo:</b> se pierde el aviso que llega a alguien que no tiene TRIM abierto.</li>
+    <li><b>La pantalla Turno</b> (repite Hoy), «Su campo, ahora» y «Diferido de su turno».</li>
+    <li><b>Diferidos, Mantenimiento, Bombas y Electrosumergibles como pantallas</b> (quedan como Resultados y filtros de Equipos), y la tubería repetida tres veces.</li>
+    <li><b>«Dónde bajarlo», «Tipo de causa»</b> y el retorno simulado del ciclo en la primera capa.</li>
+    <li><b>La introducción</b>: una pantalla necesaria se entiende sola.</li>
+    <li><b>El rol de abastecimiento</b> y su pantalla Evidencia.</li>
+  </ul>
+  <div class="decide"><b>Decida:</b> ¿aprueba la lista de lo que se borra, incluido WhatsApp y la pérdida del aviso fuera de la app?</div>
+</section>
+
+<section>
+  <h2><span class="n">3</span>Los flujos que fallan hoy</h2>
+  <p class="sub">Investigados en la app de verdad: 41 tareas de los 11 roles, en escritorio y teléfono, con 240 capturas (<code>flujos-que-fallan.md</code>). Los toques de «después» son la propuesta.</p>
+  <div class="tabla"><table>
+    <thead><tr><th>#</th><th>Flujo</th><th>Qué está mal</th><th>Toques</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Decir qué se dañó en P-201B (oper, tec, sup, jefe, conf)</td><td>La misma pregunta en 5 bandejas, con 6 nombres y 2 controles distintos</td><td class="num">3 → 1</td></tr>
+      <tr><td>2</td><td>Decidir los planes (sup, jefe, conf)</td><td>«Ver los planes» abre una pantalla donde no están</td><td class="num">3 + desplazar → 1</td></tr>
+      <tr><td>3</td><td>Entregar el turno (sup, oper)</td><td>El turno vive en 3 lugares; en el teléfono el botón está al fondo</td><td class="num">2 + 2 desplazar → 2</td></tr>
+      <tr><td>4</td><td>Avisar a SAP (sup, oper, jefe, conf)</td><td>TRIM dice «SAP no lo sabe» pero el aviso se crea dentro del equipo</td><td class="num">3 → 1</td></tr>
+      <tr><td>5</td><td>La orden de K-101 (tec, jefe)</td><td>Solo se lee; el técnico no la puede cerrar</td><td class="num">callejón → 1</td></tr>
+      <tr><td>6</td><td>Pedir la causa que falta (reg)</td><td>El número dice quién la debe, pero no hay botón</td><td class="num">imposible → 1</td></tr>
+      <tr><td>7</td><td>Qué atacar primero (conf)</td><td>P-201A aparece 3 veces; el inicio mide 6.300 px en el teléfono</td><td class="num">4–7 desplazar → 0–1</td></tr>
+      <tr><td>8</td><td>Quién está en ello (ger)</td><td>La ficha lo cambia de campo sin avisar; 3 botones abren lo mismo</td><td class="num">5 → 2</td></tr>
+      <tr><td>9</td><td>Confirmar las paradas del día (prod)</td><td>Abre en La planta viva; la tarea está en Hoy</td><td class="num">2 → 1</td></tr>
+      <tr><td>10</td><td>Cambiar de pantalla en el teléfono (todos)</td><td>Todo pasa por el menú ☰</td><td class="num">2 → 1</td></tr>
+    </tbody>
+  </table></div>
+  <div class="decide"><b>Decida:</b> en el teléfono, el análisis y las imágenes proponen una <b>barra abajo</b> para los roles con 2 puertas. Usted había pedido el panel lateral. ¿Barra abajo, o panel lateral (con la mayoría de roles en una sola pantalla, casi no se usa)?</div>
+</section>
+
+<section>
+  <h2><span class="n">4</span>El diseño sin azul</h2>
+  <p class="sub">Tres direcciones, con la misma paleta de estado ISA-101. Las tres pasan las mediciones de contraste y daltonismo. Hallazgo: el índigo de hoy no las pasaba (quedaba a 6,2 del morado de «sin comunicación»).</p>
+  <figure><img src="imagenes/lamina-tres-direcciones.png" alt="Las tres direcciones lado a lado"><figcaption><b>D1 Grafito</b> (recomendada): papel gris frío, panel carbón, acento petróleo y letra IBM Plex (licencia libre). <b>D2 Consola blanca</b>: blanco y línea fina, sin tarjetas. <b>D3 Sala</b>: oscura por defecto, más tipo consola.</figcaption></figure>
+  <figure style="margin-top:14px"><img src="imagenes/lamina-kit-scada.png" alt="El kit SCADA"><figcaption>El kit SCADA: indicador de barra con escala fija y banda normal, tendencia, símbolos de proceso, marca de estado y la cifra. Igual en todas partes.</figcaption></figure>
+  <div class="decide"><b>Decida:</b> D1, D2 o D3.</div>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Lo que le toca a su desarrollador del backend</h2>
+  <p class="sub">Él tiene la versión 1 (7-oct). Todo va «al lado, nunca encima». El detalle, con ejemplos, está en <code>docs/backend/CAMBIOS-CONTRATO.md</code>.</p>
+  <div class="tabla"><table>
+    <thead><tr><th></th><th>Construir ahora</th><th>Para después</th><th>Ya no construir</th></tr></thead>
+    <tbody>
+      <tr><td>Las 50 rutas de la v1</td><td class="num">35</td><td class="num">5</td><td class="num">10</td></tr>
+      <tr><td>Las 29 nuevas de la v2</td><td class="num">23</td><td class="num">3</td><td class="num">3</td></tr>
+      <tr><td><b>Total</b></td><td class="num">58</td><td class="num">8</td><td class="num">13</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="lista" style="margin-top:14px">
+    <li><b>Hay que construir 9 piezas nuevas</b> que lo necesario pide: registrar pérdidas, cerrar la orden en el teléfono, la respuesta de la ANH, convertir el árbol de la operadora, el tiempo fuera en 5 tramos, entre otras. Todas se agregan al lado.</li>
+    <li><b>Desde la v1 hubo 19 cambios que le romperían algo</b> (un campo que cambió de significado, textos, reglas de cálculo y el SQL). En la construcción se arreglan dejándolos compatibles con la v1.</li>
+    <li><b>El SQL:</b> hay dos documentos que dicen cosas distintas sobre cuál rige, el de la v1 o el nuevo.</li>
+  </ul>
+  <div class="decide"><b>Decida:</b> ¿qué SQL rige para su desarrollador: el de la v1 (el que él tiene) con lo nuevo agregado al lado, o el nuevo?</div>
+</section>
+
+<section>
+  <h2>Sus decisiones, en una lista</h2>
+  <ol class="decisiones">
+    <li>¿Aprueba <b>lo necesario de cada rol</b>? ¿Hasta qué escalón se construye?</li>
+    <li>Gerente: <b>A</b> (sin «Antes · Durante · Después») o <b>B</b> (con él).</li>
+    <li>¿Aprueba <b>lo que se borra</b>, incluido WhatsApp?</li>
+    <li>Teléfono: <b>barra abajo</b> o <b>panel lateral</b>.</li>
+    <li>Diseño: <b>D1 Grafito</b>, D2 Consola blanca o D3 Sala.</li>
+    <li>Backend: <b>SQL de la v1 con lo nuevo al lado</b>, o el SQL nuevo.</li>
+  </ol>
+  <p class="sub" style="margin-top:16px">Con sus respuestas y su «hazlo», se construye y se prueba todo.</p>
+</section>
+
+</main>
+</body>
+</html>

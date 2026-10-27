@@ -1,0 +1,236 @@
+
+### d1 · Grafito · claro
+texto tinta #131518: mínimo 15,19 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #43474d: mínimo 7,76 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #565b62: mínimo 5,69 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #33373c: mínimo 9,95 (≥ 3)
+gráfico dato3 #73787f: mínimo 3,69 (≥ 3)
+gráfico eq-trazo #555a60: mínimo 5,78 (≥ 3)
+estado interlock #8b1a1a: mínimo 7,72 (≥ 3)
+estado alarma #bf4000: mínimo 4,42 (≥ 3)
+estado atención y aviso #f9a825: mínimo 1,64 → lleva trazo #1f2328: 13,12
+estado sin comunicación #8420a3: mínimo 6,42 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 13,81 · 13,44 · 13,96 · 12,78
+  interlock – atención y aviso: 39,50 · 42,14 · 38,46 · 34,79
+  interlock – sin comunicación: 21,24 · 22,77 · 21,02 · 11,13
+  alarma – atención y aviso: 26,29 · 28,82 · 24,57 · 23,94
+  alarma – sin comunicación: 26,20 · 25,15 · 26,74 · 16,49
+  atención y aviso – sin comunicación: 44,72 · 43,48 · 44,92 · 32,12
+acento #1d6768 contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 22,45 · 16,92 · 10,95 · 25,86
+  alarma: 25,08 · 11,14 · 17,05 · 30,57
+  atención y aviso: 38,28 · 29,86 · 38,32 · 36,87
+  sin comunicación: 24,45 · 15,96 · 11,03 · 18,10
+  (informativo) contra el gris tinta3 #565b62: 6,47 · 2,39 · 1,20 · 7,08 → lo seleccionado lleva además forma (raya o peso), nunca solo color
+acento-sobre sobre el acento (botón principal): 6,58 (≥ 4,5)
+foco: acento sobre panel: 6,25 (≥ 3)
+foco: acento sobre suelo: 5,46 (≥ 3)
+rótulo activo del panel de navegación: 11,70 (≥ 4,5)
+rótulo inactivo del panel de navegación: 7,66 (≥ 4,5)
+fila seleccionada: tinta sobre acento-suave: 14,91 (≥ 4,5)
+equipo en marcha contra parado: 6,96 (≥ 3)
+contorno del equipo sobre panel2: 6,05 (≥ 3)
+puntero (tinta) contra la banda: 11,79 (≥ 3)
+barra dato1 contra su pista: 9,04 (≥ 3)
+tinta sobre el tinte de alarma: 14,56 (≥ 4,5)
+tinta sobre el tinte amarillo: 15,76 (≥ 4,5)
+tinta sobre el tinte morado: 14,81 (≥ 4,5)
+raya de lo seleccionado en el panel de navegación (nav-marca): 14,68 (≥ 3)
+
+### d1 · Grafito · noche
+texto tinta #f1f2f3: mínimo 11,98 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #c5c9ce: mínimo 8,07 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #a0a6ad: mínimo 5,47 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #d7dbdf: mínimo 9,65 (≥ 3)
+gráfico dato3 #868c94: mínimo 3,96 (≥ 3)
+gráfico eq-trazo #a7abb0: mínimo 5,82 (≥ 3)
+estado interlock #ff8080: mínimo 5,53 (≥ 3)
+estado alarma #ffb347: mínimo 7,54 (≥ 3)
+estado atención y aviso #fff176: mínimo 11,58 (≥ 3)
+estado sin comunicación #c99cff: mínimo 6,19 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 15,07 · 15,10 · 10,84 · 10,46
+  interlock – atención y aviso: 28,02 · 28,23 · 20,32 · 26,17
+  interlock – sin comunicación: 18,93 · 17,83 · 18,49 · 16,33
+  alarma – atención y aviso: 14,69 · 15,31 · 11,41 · 15,80
+  alarma – sin comunicación: 26,80 · 26,54 · 26,91 · 10,43
+  atención y aviso – sin comunicación: 33,30 · 32,20 · 31,21 · 17,40
+acento #acd7dd contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 22,69 · 20,11 · 13,09 · 27,28
+  alarma: 18,60 · 18,10 · 17,00 · 18,29
+  atención y aviso: 18,74 · 17,45 · 19,03 · 12,84
+  sin comunicación: 17,58 · 15,78 · 12,54 · 12,26
+  (informativo) contra el gris tinta3 #a0a6ad: 13,36 · 14,25 · 12,67 · 13,65 → lo seleccionado lleva además forma (raya o peso), nunca solo color
+acento-sobre sobre el acento (botón principal): 11,89 (≥ 4,5)
+foco: acento sobre panel: 9,53 (≥ 3)
+foco: acento sobre suelo: 11,11 (≥ 3)
+rótulo activo del panel de navegación: 13,21 (≥ 4,5)
+rótulo inactivo del panel de navegación: 7,26 (≥ 4,5)
+fila seleccionada: tinta sobre acento-suave: 10,90 (≥ 4,5)
+equipo en marcha contra parado: 13,70 (≥ 3)
+contorno del equipo sobre panel2: 6,73 (≥ 3)
+puntero (tinta) contra la banda: 6,10 (≥ 3)
+barra dato1 contra su pista: 8,71 (≥ 3)
+tinta sobre el tinte de alarma: 10,49 (≥ 4,5)
+tinta sobre el tinte amarillo: 9,69 (≥ 4,5)
+tinta sobre el tinte morado: 10,88 (≥ 4,5)
+raya de lo seleccionado en el panel de navegación (nav-marca): 11,89 (≥ 3)
+
+### d2 · Consola blanca · claro
+texto tinta #0f1113: mínimo 17,18 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #464a50: mínimo 8,09 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #5c6168: mínimo 5,67 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #2f3338: mínimo 11,55 (≥ 3)
+gráfico dato3 #757a81: mínimo 3,93 (≥ 3)
+gráfico eq-trazo #5c6168: mínimo 5,67 (≥ 3)
+estado interlock #8b1a1a: mínimo 8,44 (≥ 3)
+estado alarma #bf4000: mínimo 4,83 (≥ 3)
+estado atención y aviso #f9a825: mínimo 1,79 → lleva trazo #1f2328: 14,35
+estado sin comunicación #8420a3: mínimo 7,02 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 13,81 · 13,44 · 13,96 · 12,78
+  interlock – atención y aviso: 39,50 · 42,14 · 38,46 · 34,79
+  interlock – sin comunicación: 21,24 · 22,77 · 21,02 · 11,13
+  alarma – atención y aviso: 26,29 · 28,82 · 24,57 · 23,94
+  alarma – sin comunicación: 26,20 · 25,15 · 26,74 · 16,49
+  atención y aviso – sin comunicación: 44,72 · 43,48 · 44,92 · 32,12
+acento #15171a contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 26,13 · 14,28 · 24,03 · 29,13
+  alarma: 38,66 · 27,71 · 37,96 · 41,35
+  atención y aviso: 61,15 · 56,31 · 62,32 · 58,98
+  sin comunicación: 33,01 · 27,77 · 28,46 · 28,18
+  (informativo) contra el gris tinta3 #5c6168: 28,69 · 28,84 · 28,64 · 28,66 → lo seleccionado lleva además forma (raya o peso), nunca solo color
+acento-sobre sobre el acento (botón principal): 17,96 (≥ 4,5)
+foco: acento sobre panel: 17,96 (≥ 3)
+foco: acento sobre suelo: 16,59 (≥ 3)
+rótulo activo del panel de navegación: 16,59 (≥ 4,5)
+rótulo inactivo del panel de navegación: 6,24 (≥ 4,5)
+fila seleccionada: tinta sobre acento-suave: 16,27 (≥ 4,5)
+equipo en marcha contra parado: 6,24 (≥ 3)
+contorno del equipo sobre panel2: 5,67 (≥ 3)
+puntero (tinta) contra la banda: 12,97 (≥ 3)
+barra dato1 contra su pista: 10,35 (≥ 3)
+tinta sobre el tinte de alarma: 15,06 (≥ 4,5)
+tinta sobre el tinte amarillo: 16,31 (≥ 4,5)
+tinta sobre el tinte morado: 15,32 (≥ 4,5)
+raya de lo seleccionado en el panel de navegación (nav-marca): 17,96 (≥ 3)
+
+### d2 · Consola blanca · noche
+texto tinta #f4f4f5: mínimo 13,57 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #c6c8cc: mínimo 8,91 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #9fa3a9: mínimo 5,89 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #d9dbde: mínimo 10,76 (≥ 3)
+gráfico dato3 #83878d: mínimo 4,13 (≥ 3)
+gráfico eq-trazo #a3a7ac: mínimo 6,17 (≥ 3)
+estado interlock #ff8080: mínimo 6,15 (≥ 3)
+estado alarma #ffb347: mínimo 8,38 (≥ 3)
+estado atención y aviso #fff176: mínimo 12,86 (≥ 3)
+estado sin comunicación #c99cff: mínimo 6,88 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 15,07 · 15,10 · 10,84 · 10,46
+  interlock – atención y aviso: 28,02 · 28,23 · 20,32 · 26,17
+  interlock – sin comunicación: 18,93 · 17,83 · 18,49 · 16,33
+  alarma – atención y aviso: 14,69 · 15,31 · 11,41 · 15,80
+  alarma – sin comunicación: 26,80 · 26,54 · 26,91 · 10,43
+  atención y aviso – sin comunicación: 33,30 · 32,20 · 31,21 · 17,40
+acento #b4d5db contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 21,84 · 19,75 · 12,91 · 26,13
+  alarma: 17,94 · 17,82 · 16,66 · 17,02
+  atención y aviso: 18,47 · 17,45 · 18,69 · 11,85
+  sin comunicación: 17,11 · 15,63 · 12,85 · 11,37
+  (informativo) contra el gris tinta3 #9fa3a9: 14,01 · 14,85 · 13,56 · 14,16 → lo seleccionado lleva además forma (raya o peso), nunca solo color
+acento-sobre sobre el acento (botón principal): 11,40 (≥ 4,5)
+foco: acento sobre panel: 10,46 (≥ 3)
+foco: acento sobre suelo: 11,40 (≥ 3)
+rótulo activo del panel de navegación: 13,57 (≥ 4,5)
+rótulo inactivo del panel de navegación: 7,00 (≥ 4,5)
+fila seleccionada: tinta sobre acento-suave: 12,00 (≥ 4,5)
+equipo en marcha contra parado: 14,11 (≥ 3)
+contorno del equipo sobre panel2: 7,12 (≥ 3)
+puntero (tinta) contra la banda: 7,15 (≥ 3)
+barra dato1 contra su pista: 9,80 (≥ 3)
+tinta sobre el tinte de alarma: 10,70 (≥ 4,5)
+tinta sobre el tinte amarillo: 9,88 (≥ 4,5)
+tinta sobre el tinte morado: 11,10 (≥ 4,5)
+raya de lo seleccionado en el panel de navegación (nav-marca): 11,40 (≥ 3)
+
+### d3 · Sala · claro
+texto tinta #121417: mínimo 15,02 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #42474d: mínimo 7,63 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #555b62: mínimo 5,59 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #32373c: mínimo 9,78 (≥ 3)
+gráfico dato3 #72777e: mínimo 3,67 (≥ 3)
+gráfico eq-trazo #545a60: mínimo 5,68 (≥ 3)
+estado interlock #8b1a1a: mínimo 7,56 (≥ 3)
+estado alarma #bf4000: mínimo 4,33 (≥ 3)
+estado atención y aviso #f9a825: mínimo 1,60 → lleva trazo #1f2328: 12,86
+estado sin comunicación #8420a3: mínimo 6,29 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 13,81 · 13,44 · 13,96 · 12,78
+  interlock – atención y aviso: 39,50 · 42,14 · 38,46 · 34,79
+  interlock – sin comunicación: 21,24 · 22,77 · 21,02 · 11,13
+  alarma – atención y aviso: 26,29 · 28,82 · 24,57 · 23,94
+  alarma – sin comunicación: 26,20 · 25,15 · 26,74 · 16,49
+  atención y aviso – sin comunicación: 44,72 · 43,48 · 44,92 · 32,12
+acento #017b80 contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 26,37 · 23,47 · 15,00 · 28,82
+  alarma: 25,98 · 15,16 · 15,80 · 30,72
+  atención y aviso: 34,64 · 25,17 · 33,99 · 32,40
+  sin comunicación: 26,25 · 18,79 · 11,91 · 20,70
+  (informativo) contra el gris tinta3 #555b62: 10,27 · 9,06 · 6,26 · 10,94 → lo seleccionado lleva además forma (raya o peso), nunca solo color
+acento-sobre sobre el acento (botón principal): 5,06 (≥ 4,5)
+foco: acento sobre panel: 4,76 (≥ 3)
+foco: acento sobre suelo: 4,12 (≥ 3)
+rótulo activo del panel de navegación: 14,32 (≥ 4,5)
+rótulo inactivo del panel de navegación: 6,46 (≥ 4,5)
+fila seleccionada: tinta sobre acento-suave: 15,05 (≥ 4,5)
+equipo en marcha contra parado: 6,98 (≥ 3)
+contorno del equipo sobre panel2: 6,00 (≥ 3)
+puntero (tinta) contra la banda: 11,78 (≥ 3)
+barra dato1 contra su pista: 8,98 (≥ 3)
+tinta sobre el tinte de alarma: 14,68 (≥ 4,5)
+tinta sobre el tinte amarillo: 15,90 (≥ 4,5)
+tinta sobre el tinte morado: 14,94 (≥ 4,5)
+raya de lo seleccionado en el panel de navegación (nav-marca): 4,76 (≥ 3)
+
+### d3 · Sala · noche
+texto tinta #eef1f3: mínimo 10,90 sobre los 5 fondos (≥ 4,5)
+texto tinta2 #c3c9cf: mínimo 7,41 sobre los 5 fondos (≥ 4,5)
+texto tinta3 #a2aab2: mínimo 5,26 sobre los 5 fondos (≥ 4,5)
+gráfico dato1 #d6dbe0: mínimo 8,87 (≥ 3)
+gráfico dato3 #89919a: mínimo 3,88 (≥ 3)
+gráfico eq-trazo #a9b0b7: mínimo 5,64 (≥ 3)
+estado interlock #ff8080: mínimo 5,09 (≥ 3)
+estado alarma #ffb347: mínimo 6,94 (≥ 3)
+estado atención y aviso #fff176: mínimo 10,66 (≥ 3)
+estado sin comunicación #c99cff: mínimo 5,70 (≥ 3)
+estados entre sí, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock – alarma: 15,07 · 15,10 · 10,84 · 10,46
+  interlock – atención y aviso: 28,02 · 28,23 · 20,32 · 26,17
+  interlock – sin comunicación: 18,93 · 17,83 · 18,49 · 16,33
+  alarma – atención y aviso: 14,69 · 15,31 · 11,41 · 15,80
+  alarma – sin comunicación: 26,80 · 26,54 · 26,91 · 10,43
+  atención y aviso – sin comunicación: 33,30 · 32,20 · 31,21 · 17,40
+acento #8edfd9 contra cada estado, ΔOK×100 (normal · protan · deutan · tritan; ≥ 10):
+  interlock: 25,65 · 20,98 · 12,71 · 31,06
+  alarma: 20,09 · 17,72 · 16,56 · 22,38
+  atención y aviso: 18,74 · 15,96 · 18,72 · 16,24
+  sin comunicación: 20,72 · 17,41 · 12,79 · 15,64
+  (informativo) contra el gris tinta3 #a2aab2: 13,70 · 14,17 · 11,38 · 14,54 → lo seleccionado lleva además forma (raya o peso), nunca solo color
+acento-sobre sobre el acento (botón principal): 11,61 (≥ 4,5)
+foco: acento sobre panel: 9,17 (≥ 3)
+foco: acento sobre suelo: 10,80 (≥ 3)
+rótulo activo del panel de navegación: 12,38 (≥ 4,5)
+rótulo inactivo del panel de navegación: 7,56 (≥ 4,5)
+fila seleccionada: tinta sobre acento-suave: 10,84 (≥ 4,5)
+equipo en marcha contra parado: 13,58 (≥ 3)
+contorno del equipo sobre panel2: 6,68 (≥ 3)
+puntero (tinta) contra la banda: 5,61 (≥ 3)
+barra dato1 contra su pista: 8,11 (≥ 3)
+tinta sobre el tinte de alarma: 10,37 (≥ 4,5)
+tinta sobre el tinte amarillo: 9,58 (≥ 4,5)
+tinta sobre el tinte morado: 10,75 (≥ 4,5)
+raya de lo seleccionado en el panel de navegación (nav-marca): 11,61 (≥ 3)
+
+Fallas: 0

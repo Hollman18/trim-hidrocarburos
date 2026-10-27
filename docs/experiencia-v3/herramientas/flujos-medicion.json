@@ -1,0 +1,4216 @@
+{
+ "medido": "2026-10-27, Vite 5182, Chromium de Playwright; 1440×900 y 390×844 (táctil); contexto nuevo por flujo, introducción saltada",
+ "segundos": "2 + 1,2·toques + 3·pantallas nuevas + 1,5·desplazamientos + 10·escrituras (estimado, modelo KLM simplificado)",
+ "flujos": [
+  {
+   "id": "adm-1-que-falta",
+   "rol": "adm",
+   "tarea": "Ver qué le falta a La Ceiba",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/adm/configuracion/ceiba/curso",
+     "hash": "#/adm/configuracion/ceiba/curso",
+     "h": [
+      "Configurar hoy, 2 de oct · datos de las 14:00",
+      "Estado de la configuración"
+     ],
+     "scrollY": 0,
+     "shot": "adm-1-que-falta-390-01-inicio.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "adm-1-que-falta",
+   "rol": "adm",
+   "tarea": "Ver qué le falta a La Ceiba",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/adm/configuracion/ceiba/curso",
+     "hash": "#/adm/configuracion/ceiba/curso",
+     "h": [
+      "Configurar hoy, 2 de oct · datos de las 14:00",
+      "Estado de la configuración"
+     ],
+     "scrollY": 0,
+     "shot": "adm-1-que-falta-1440-01-inicio.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "adm-2-firmar-topologia",
+   "rol": "adm",
+   "tarea": "Firmar a qué pozos sirve cada equipo (La Ceiba)",
+   "ancho": "1440",
+   "toques": 11,
+   "desplaz": 5,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 26,
+   "pasos": [
+    {
+     "paso": "#/adm/configuracion/ceiba/curso",
+     "hash": "#/adm/configuracion/ceiba/curso",
+     "h": [
+      "Configurar hoy, 2 de oct · datos de las 14:00",
+      "Estado de la configuración"
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "A qué pozos sirve cada equipo",
+     "y": 374,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Filosofía operacional hoy, 2 de oct · datos de las 14:00",
+      "Filosofía operacional · La Ceiba",
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Pozos y su levantamiento · 18",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "Nadie lo ha contestado. Lo del borde discontinuo es lo que TRIM deduce: acéptelo abajo o escoja otra respuesta."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-02-paso1.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 473,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Filosofía operacional hoy, 2 de oct · datos de las 14:00",
+      "Filosofía operacional · La Ceiba",
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Pozos y su levantamiento · 18",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-03-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 772,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Filosofía operacional hoy, 2 de oct · datos de las 14:00",
+      "Filosofía operacional · La Ceiba",
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Servicios del campo · 3",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-04-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 657,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Servicios del campo · 3",
+      "Proceso · 5",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-05-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 470,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Servicios del campo · 3",
+      "Proceso · 5",
+      "Tanques · 3",
+      "Medición y despacho · 1",
+      "Bombas · 3",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-06-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 657,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Servicios del campo · 3",
+      "Proceso · 5",
+      "Tanques · 3",
+      "Medición y despacho · 1",
+      "Bombas · 3",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-07-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 742,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Servicios del campo · 3",
+      "Proceso · 5",
+      "Tanques · 3",
+      "Medición y despacho · 1",
+      "Bombas · 3",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-08-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 564,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Tanques · 3",
+      "Medición y despacho · 1",
+      "Bombas · 3",
+      "Pozos inyectores · 1",
+      "Salidas de la batería · 2",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-09-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "Aceptar lo que TRIM dedujo",
+     "y": 661,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "Tanques · 3",
+      "Medición y despacho · 1",
+      "Bombas · 3",
+      "Pozos inyectores · 1",
+      "Salidas de la batería · 2",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-10-aceptar-grupo.jpg"
+    },
+    {
+     "paso": "3 Ver el impacto y firmar",
+     "y": 0,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Filosofía operacional · La Ceiba",
+      "Paso 3 · Ver el impacto y firmar",
+      "La topología en este borrador",
+      "Si firma esta versión",
+      "La Ceiba",
+      "Firmar la versión",
+      "Versiones firmadas"
+     ],
+     "st": [
+      "Corrija antes de firmar La Ceiba: un equipo queda sin contestar en la filosofía operacional. TRIM propone, pero no firma"
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-11-paso3-bloqueado.jpg"
+    },
+    {
+     "paso": "Ver lo que falta",
+     "y": 279,
+     "hash": "#/adm/filosofia/ceiba/curso",
+     "h": [
+      "Filosofía operacional hoy, 2 de oct · datos de las 14:00",
+      "Filosofía operacional · La Ceiba",
+      "Paso 1 · Equipos y pozos",
+      "Equipos · 36",
+      "LC-01 · electrosumergible"
+     ],
+     "st": [
+      "→ Si para, se traba en el pozo: es solo de LC-01."
+     ],
+     "scrollY": 0,
+     "shot": "adm-2-firmar-topologia-1440-12-sin-responder-0.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "adm-3-tags",
+   "rol": "adm",
+   "tarea": "Asociar los tags sin equipo",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 2,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 12,
+   "pasos": [
+    {
+     "paso": "#/adm/configuracion/ceiba/curso",
+     "hash": "#/adm/configuracion/ceiba/curso",
+     "h": [
+      "Configurar hoy, 2 de oct · datos de las 14:00",
+      "Estado de la configuración"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Conectores",
+     "y": 240,
+     "hash": "#/adm/conectores/ceiba/curso",
+     "h": [
+      "Conectores y tags del campo hoy, 2 de oct · datos de las 14:00",
+      "Sistemas corporativos"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-390-02-conectores.jpg"
+    },
+    {
+     "paso": "mirar: Tags por asociar",
+     "hash": "#/adm/conectores/ceiba/curso",
+     "h": [
+      "Bordes",
+      "Tags por asociar"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-390-03-tags.jpg"
+    },
+    {
+     "paso": "mirar: Aplicar las 3",
+     "hash": "#/adm/conectores/ceiba/curso",
+     "h": [
+      "Bordes",
+      "Tags por asociar"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-390-04-aplicar.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "adm-3-tags",
+   "rol": "adm",
+   "tarea": "Asociar los tags sin equipo",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 1,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 9,
+   "pasos": [
+    {
+     "paso": "#/adm/configuracion/ceiba/curso",
+     "hash": "#/adm/configuracion/ceiba/curso",
+     "h": [
+      "Configurar hoy, 2 de oct · datos de las 14:00",
+      "Estado de la configuración"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Conectores",
+     "y": 215,
+     "hash": "#/adm/conectores/ceiba/curso",
+     "h": [
+      "Conectores y tags del campo hoy, 2 de oct · datos de las 14:00",
+      "Sistemas corporativos",
+      "Bordes conectados",
+      "Tags registrados",
+      "Por asociar",
+      "Equipos del campo"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-1440-02-conectores.jpg"
+    },
+    {
+     "paso": "mirar: Tags por asociar",
+     "hash": "#/adm/conectores/ceiba/curso",
+     "h": [
+      "Bordes conectados",
+      "Tags registrados",
+      "Por asociar",
+      "Equipos del campo",
+      "Bordes",
+      "Tags por asociar"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-1440-03-tags.jpg"
+    },
+    {
+     "paso": "mirar: Aplicar las 3",
+     "hash": "#/adm/conectores/ceiba/curso",
+     "h": [
+      "Bordes conectados",
+      "Tags registrados",
+      "Por asociar",
+      "Equipos del campo",
+      "Bordes",
+      "Tags por asociar"
+     ],
+     "scrollY": 0,
+     "shot": "adm-3-tags-1440-04-aplicar.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "conf-1-atacar-primero",
+   "rol": "conf",
+   "tarea": "Qué atacar primero: abrir P-201A",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/conf/equipos/ceiba",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-1-atacar-primero-390-01-inicio.jpg"
+    },
+    {
+     "paso": "P-201A",
+     "y": 401,
+     "hash": "#/conf/equipos/ceiba/P-201A",
+     "h": [
+      "P-201A bomba de agua · sin instrumento · datos de las 14:00",
+      "Sus señales",
+      "En su tren de agua discontinuo: sin instrumento"
+     ],
+     "scrollY": 0,
+     "shot": "conf-1-atacar-primero-390-02-p201a.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "conf-1-atacar-primero",
+   "rol": "conf",
+   "tarea": "Qué atacar primero: abrir P-201A",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/conf/equipos/ceiba",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-1-atacar-primero-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "P-201A",
+     "y": 265,
+     "hash": "#/conf/equipos/ceiba/P-201A",
+     "h": [
+      "P-201A bomba de agua · sin instrumento · datos de las 14:00",
+      "Sus señales",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras P-201B esté parada"
+     ],
+     "scrollY": 0,
+     "shot": "conf-1-atacar-primero-1440-02-p201a.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "conf-2-vigia",
+   "rol": "conf",
+   "tarea": "¿Le creo al vigía?",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/conf/equipos/ceiba",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-2-vigia-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver el detalle",
+     "y": 659,
+     "hash": "#/conf/confiabilidad/ceiba/curso",
+     "h": [
+      "Confiabilidad hoy, 2 de oct · datos de las 14:00",
+      "¿Le creo al vigía?",
+      "Reparación activa y espera"
+     ],
+     "scrollY": 0,
+     "shot": "conf-2-vigia-390-02-confiabilidad.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "conf-2-vigia",
+   "rol": "conf",
+   "tarea": "¿Le creo al vigía?",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/conf/equipos/ceiba",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-2-vigia-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver el detalle",
+     "y": 525,
+     "hash": "#/conf/confiabilidad/ceiba/curso",
+     "h": [
+      "Confiabilidad hoy, 2 de oct · datos de las 14:00",
+      "¿Le creo al vigía?",
+      "Reparación activa y espera",
+      "Los más costosos",
+      "De qué fallan"
+     ],
+     "scrollY": 0,
+     "shot": "conf-2-vigia-1440-02-confiabilidad.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "conf-3-repetido",
+   "rol": "conf",
+   "tarea": "Bajar por su inicio: P-201A aparece tres veces",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 7,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 13,
+   "pasos": [
+    {
+     "paso": "#/conf/equipos/ceiba",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-3-repetido-390-01-inicio.jpg"
+    },
+    {
+     "paso": "mirar: P-201A",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-3-repetido-390-02-segunda-vez.jpg"
+    },
+    {
+     "paso": "mirar: [aria-label^=\"P-201A, bomba de agua: si falla hoy\"]",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Si falla hoy"
+     ],
+     "scrollY": 0,
+     "shot": "conf-3-repetido-390-03-tercera-vez.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "conf-3-repetido",
+   "rol": "conf",
+   "tarea": "Bajar por su inicio: P-201A aparece tres veces",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 4,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 8,
+   "pasos": [
+    {
+     "paso": "#/conf/equipos/ceiba",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-3-repetido-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "mirar: P-201A",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "conf-3-repetido-1440-02-segunda-vez.jpg"
+    },
+    {
+     "paso": "mirar: [aria-label^=\"P-201A, bomba de agua: si falla hoy\"]",
+     "hash": "#/conf/equipos/ceiba",
+     "h": [
+      "Equipos que avisan",
+      "Si falla hoy"
+     ],
+     "scrollY": 0,
+     "shot": "conf-3-repetido-1440-03-tercera-vez.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "cont-1-evidencia",
+   "rol": "cont",
+   "tarea": "¿Esta parada le toca al contratista?",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/cont/evidencia/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "st": [
+      "El rol «Abastecimiento y contratos» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "cont-1-evidencia-390-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "cont-1-evidencia",
+   "rol": "cont",
+   "tarea": "¿Esta parada le toca al contratista?",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/cont/evidencia/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Si falla hoy",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo"
+     ],
+     "st": [
+      "El rol «Abastecimiento y contratos» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "cont-1-evidencia-1440-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "cont-2-expediente",
+   "rol": "cont",
+   "tarea": "Exportar el expediente de una parada",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/cont/evidencia/ceiba/cerrado",
+     "hash": "#/prod/planta-viva/ceiba/cerrado",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "st": [
+      "El rol «Abastecimiento y contratos» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "cont-2-expediente-390-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "cont-2-expediente",
+   "rol": "cont",
+   "tarea": "Exportar el expediente de una parada",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/cont/evidencia/ceiba/cerrado",
+     "hash": "#/prod/planta-viva/ceiba/cerrado",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Si falla hoy",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo"
+     ],
+     "st": [
+      "El rol «Abastecimiento y contratos» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "cont-2-expediente-1440-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "cont-3-paradas-externas",
+   "rol": "cont",
+   "tarea": "Ver las paradas con responsable externo",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/cont/paradas/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "st": [
+      "El rol «Abastecimiento y contratos» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "cont-3-paradas-externas-390-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "cont-3-paradas-externas",
+   "rol": "cont",
+   "tarea": "Ver las paradas con responsable externo",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/cont/paradas/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Si falla hoy",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo"
+     ],
+     "st": [
+      "El rol «Abastecimiento y contratos» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "cont-3-paradas-externas-1440-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-1-quien-esta-en-ello",
+   "rol": "ger",
+   "tarea": "Ver dónde se trabó y quién está en ello, y volver a sus 5 campos",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 1,
+   "pantallas": 4,
+   "escrituras": 0,
+   "segundos": 16,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-390-01-inicio.jpg"
+    },
+    {
+     "paso": "La Ceiba: 1.966 bbl/d. Abrir el campo",
+     "y": 456,
+     "hash": "#/ger/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-390-02-campo.jpg"
+    },
+    {
+     "paso": "Ver qué se está haciendo",
+     "y": 430,
+     "hash": "#/ger/planta-viva/ceiba/curso/P-201B",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00",
+      "Lo que todavía se puede mover",
+      "Bomba multietapa de transferencia de agua",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "dlg": [
+      "P-201B 1 Alarma Bomba multietapa de transferencia de agua bomba de agua · La Ceiba · detenido 1 1.665 bbl/d se dejan de "
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-390-03-ficha.jpg"
+    },
+    {
+     "paso": "[role=dialog] button[aria-label*=\"Cerrar\"]",
+     "y": 12,
+     "hash": "#/ger/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00",
+      "Lo que todavía se puede mover"
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-390-04-cerrar-ficha.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-1-quien-esta-en-ello",
+   "rol": "ger",
+   "tarea": "Ver dónde se trabó y quién está en ello, y volver a sus 5 campos",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 10,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver qué se está haciendo",
+     "y": 292,
+     "hash": "#/ger/planta-viva/ceiba/curso/P-201B",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes",
+      "Bomba multietapa de transferencia de agua",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "dlg": [
+      "P-201B 1 Alarma Bomba multietapa de transferencia de agua bomba de agua · La Ceiba · detenido 1 1.665 bbl/d se dejan de "
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-1440-02-ficha.jpg"
+    },
+    {
+     "paso": "[role=dialog] button[aria-label*=\"Cerrar\"]",
+     "y": 86,
+     "hash": "#/ger/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-1-quien-esta-en-ello-1440-03-cerrar-ficha.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-2-firmar-metas",
+   "rol": "ger",
+   "tarea": "Firmar las metas del mes",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 2,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 15,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Andrés Vélez · Gerente de activo",
+     "y": 13,
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-390-02-menu.jpg"
+    },
+    {
+     "paso": "Metas y accesos",
+     "y": 199,
+     "hash": "#/ger/configuracion/ceiba~portafolio/curso",
+     "h": [
+      "Metas y accesos hoy, 2 de oct · datos de las 14:00",
+      "Configurar · elija un campo"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-390-03-elija-un-campo.jpg"
+    },
+    {
+     "paso": "button:has-text(\"La Ceiba\"):has-text(\"Llanos\")",
+     "y": 229,
+     "hash": "#/ger/configuracion/ceiba/curso",
+     "h": [
+      "Metas y accesos hoy, 2 de oct · datos de las 14:00",
+      "Metas de los campos",
+      "Desde cuándo rige",
+      "Metas por campo"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-390-04-la-ceiba.jpg"
+    },
+    {
+     "paso": "mirar: Firmar la versión",
+     "hash": "#/ger/configuracion/ceiba/curso",
+     "h": [
+      "Precio y publicación",
+      "Firmar la versión",
+      "Versiones firmadas"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-390-05-firmar.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-2-firmar-metas",
+   "rol": "ger",
+   "tarea": "Firmar las metas del mes",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 1,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 13,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Andrés Vélez · Gerente de activo",
+     "y": 832,
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-1440-02-menu.jpg"
+    },
+    {
+     "paso": "Metas y accesos",
+     "y": 595,
+     "hash": "#/ger/configuracion/ceiba~portafolio/curso",
+     "h": [
+      "Metas y accesos hoy, 2 de oct · datos de las 14:00",
+      "Configurar · elija un campo"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-1440-03-elija-un-campo.jpg"
+    },
+    {
+     "paso": "button:has-text(\"La Ceiba\"):has-text(\"Llanos\")",
+     "y": 146,
+     "hash": "#/ger/configuracion/ceiba/curso",
+     "h": [
+      "Metas y accesos hoy, 2 de oct · datos de las 14:00",
+      "Metas de los campos",
+      "Desde cuándo rige",
+      "Metas por campo",
+      "Precio y publicación"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-1440-04-la-ceiba.jpg"
+    },
+    {
+     "paso": "mirar: Firmar la versión",
+     "hash": "#/ger/configuracion/ceiba/curso",
+     "h": [
+      "Precio y publicación",
+      "Firmar la versión",
+      "Versiones firmadas"
+     ],
+     "scrollY": 0,
+     "shot": "ger-2-firmar-metas-1440-05-firmar.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-3-el-mes",
+   "rol": "ger",
+   "tarea": "¿Está bajando? Ver el mes",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 0,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 12,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-3-el-mes-390-01-inicio.jpg"
+    },
+    {
+     "paso": "button:has-text(\"Después\")",
+     "y": 387,
+     "hash": "#/ger/planta-viva/ceiba~portafolio/despues",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-3-el-mes-390-02-despues.jpg"
+    },
+    {
+     "paso": "Resultados",
+     "y": 244,
+     "hash": "#/ger/resultados/ceiba~portafolio/curso",
+     "h": [
+      "Resultados hoy, 2 de oct · datos de las 14:00",
+      "Promedio por día",
+      "Cierre proyectado proyectado"
+     ],
+     "scrollY": 0,
+     "shot": "ger-3-el-mes-390-03-resultados.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-3-el-mes",
+   "rol": "ger",
+   "tarea": "¿Está bajando? Ver el mes",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 10,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-3-el-mes-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "button:has-text(\"Después\")",
+     "y": 375,
+     "hash": "#/ger/planta-viva/ceiba~portafolio/despues",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-3-el-mes-1440-02-despues.jpg"
+    },
+    {
+     "paso": "Resultados",
+     "y": 227,
+     "hash": "#/ger/resultados/ceiba~portafolio/curso",
+     "h": [
+      "Resultados hoy, 2 de oct · datos de las 14:00",
+      "Promedio por día",
+      "Cierre proyectado proyectado",
+      "Diferido por día, mes a mes",
+      "¿Está bajando? Desde que entró TRIM",
+      "Retorno posible del ciclo"
+     ],
+     "scrollY": 0,
+     "shot": "ger-3-el-mes-1440-03-resultados.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-4-campo-y-equipo",
+   "rol": "ger",
+   "tarea": "Abrir el campo que más deja de producir y su equipo",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 1,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 12,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-4-campo-y-equipo-390-01-inicio.jpg"
+    },
+    {
+     "paso": "La Ceiba: 1.966 bbl/d. Abrir el campo",
+     "y": 456,
+     "hash": "#/ger/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "ger-4-campo-y-equipo-390-02-campo.jpg"
+    },
+    {
+     "paso": "Ver qué se está haciendo",
+     "y": 430,
+     "hash": "#/ger/planta-viva/ceiba/curso/P-201B",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00",
+      "Lo que todavía se puede mover",
+      "Bomba multietapa de transferencia de agua",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "dlg": [
+      "P-201B 1 Alarma Bomba multietapa de transferencia de agua bomba de agua · La Ceiba · detenido 1 1.665 bbl/d se dejan de "
+     ],
+     "scrollY": 0,
+     "shot": "ger-4-campo-y-equipo-390-03-ficha.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "ger-4-campo-y-equipo",
+   "rol": "ger",
+   "tarea": "Abrir el campo que más deja de producir y su equipo",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 10,
+   "pasos": [
+    {
+     "paso": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "hash": "#/ger/planta-viva/ceiba~portafolio/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-4-campo-y-equipo-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "La Ceiba: 1.966 bbl/d. Abrir el campo",
+     "y": 440,
+     "hash": "#/ger/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes"
+     ],
+     "scrollY": 0,
+     "shot": "ger-4-campo-y-equipo-1440-02-campo.jpg"
+    },
+    {
+     "paso": "Ver qué se está haciendo",
+     "y": 317,
+     "hash": "#/ger/planta-viva/ceiba/curso/P-201B",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo",
+      "Diferido por día, mes a mes",
+      "Bomba multietapa de transferencia de agua",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "dlg": [
+      "P-201B 1 Alarma Bomba multietapa de transferencia de agua bomba de agua · La Ceiba · detenido 1 1.665 bbl/d se dejan de "
+     ],
+     "scrollY": 0,
+     "shot": "ger-4-campo-y-equipo-1440-03-ficha.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-1-orden-k101",
+   "rol": "jefe",
+   "tarea": "Seguir la orden de K-101 (ya pasó el límite)",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir planes · simulado"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-1-orden-k101-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver la orden",
+     "y": 757,
+     "hash": "#/jefe/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "Sus señales tendencia de 12 días · escala provisional"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-1-orden-k101-390-02-nivel3.jpg"
+    },
+    {
+     "paso": "Ver la orden en SAP",
+     "y": 538,
+     "hash": "#/jefe/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "SAP · mantenimiento · equipo 10176913 · CO-CEI-BAT1-SRV-K-101"
+     ],
+     "st": [
+      "Orden 40012056 · predictivo · prioridad 2 · liberada el 2 de oct, 09:10 Verificar que las tres unidades estén en servici"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-1-orden-k101-390-03-orden.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-1-orden-k101",
+   "rol": "jefe",
+   "tarea": "Seguir la orden de K-101 (ya pasó el límite)",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-1-orden-k101-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver la orden",
+     "y": 556,
+     "hash": "#/jefe/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "Sus señales tendencia de 12 días · escala provisional",
+      "En su tren: servicios",
+      "Los últimos 12 días",
+      "Su historia 12 meses"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-1-orden-k101-1440-02-nivel3.jpg"
+    },
+    {
+     "paso": "Ver la orden en SAP",
+     "y": 221,
+     "hash": "#/jefe/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "SAP · mantenimiento · equipo 10176913 · CO-CEI-BAT1-SRV-K-101",
+      "Historial SAP · 1",
+      "Sus señales tendencia de 12 días · escala provisional",
+      "En su tren: servicios",
+      "Los últimos 12 días"
+     ],
+     "st": [
+      "Orden 40012056 · predictivo · prioridad 2 · liberada el 2 de oct, 09:10 Verificar que las tres unidades estén en servici"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-1-orden-k101-1440-03-orden.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-2-planes",
+   "rol": "jefe",
+   "tarea": "Decidir los 3 planes de P-201B",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 4,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 18,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir planes · simulado"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver los planes",
+     "y": 609,
+     "hash": "#/jefe/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-390-02-nivel3-sin-planes.jpg"
+    },
+    {
+     "paso": "Ver el diagnóstico",
+     "y": 761,
+     "hash": "#/jefe/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-390-03-nivel4.jpg"
+    },
+    {
+     "paso": "mirar: Planes · lo que todavía se puede mover",
+     "hash": "#/jefe/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-390-04-planes.jpg"
+    },
+    {
+     "paso": "Aceptar",
+     "y": 438,
+     "hash": "#/jefe/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-390-05-aceptado.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-2-planes",
+   "rol": "jefe",
+   "tarea": "Decidir los 3 planes de P-201B",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 1,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 13,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver los planes",
+     "y": 689,
+     "hash": "#/jefe/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras esté parada",
+      "Los 12 días antes de parar",
+      "Su historia 12 meses"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-1440-02-nivel3-sin-planes.jpg"
+    },
+    {
+     "paso": "Ver el diagnóstico",
+     "y": 813,
+     "hash": "#/jefe/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-1440-03-nivel4.jpg"
+    },
+    {
+     "paso": "mirar: Planes · lo que todavía se puede mover",
+     "hash": "#/jefe/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-1440-04-planes.jpg"
+    },
+    {
+     "paso": "Aceptar",
+     "y": 519,
+     "hash": "#/jefe/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-2-planes-1440-05-aceptado.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-3-espera",
+   "rol": "jefe",
+   "tarea": "Ver de dónde sale «7,7 de 8,1 días son espera»",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 10,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-3-espera-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Resultados",
+     "y": 321,
+     "hash": "#/jefe/resultados/ceiba/curso",
+     "h": [
+      "Resultados hoy, 2 de oct · datos de las 14:00",
+      "Diferido por día, mes a mes",
+      "Diferido por equipo",
+      "Mantenimiento",
+      "¿Está bajando? Desde que entró TRIM",
+      "¿Le creo al vigía?"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-3-espera-1440-02-resultados.jpg"
+    },
+    {
+     "paso": "Confiabilidad",
+     "y": 365,
+     "hash": "#/jefe/confiabilidad/ceiba/curso",
+     "h": [
+      "Confiabilidad hoy, 2 de oct · datos de las 14:00",
+      "¿Le creo al vigía?",
+      "Reparación activa y espera",
+      "Los más costosos",
+      "De qué fallan"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-3-espera-1440-03-confiabilidad.jpg"
+    },
+    {
+     "paso": "mirar: Reparación activa y espera",
+     "hash": "#/jefe/confiabilidad/ceiba/curso",
+     "h": [
+      "Confiabilidad hoy, 2 de oct · datos de las 14:00",
+      "¿Le creo al vigía?",
+      "Reparación activa y espera",
+      "Los más costosos",
+      "De qué fallan"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-3-espera-1440-04-espera.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-4-no-intervenir",
+   "rol": "jefe",
+   "tarea": "«Ojo: no intervenir P-201A y P-201C hoy»",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 2,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 13,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir planes · simulado"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-4-no-intervenir-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver P-201A y P-201C",
+     "y": 729,
+     "hash": "#/jefe/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "3 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-4-no-intervenir-390-02-lista.jpg"
+    },
+    {
+     "paso": "P-201A",
+     "y": 337,
+     "hash": "#/jefe/equipos/ceiba/P-201A",
+     "h": [
+      "P-201A bomba de agua · sin instrumento · datos de las 14:00",
+      "Sus señales",
+      "En su tren de agua discontinuo: sin instrumento"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-4-no-intervenir-390-03-p201a.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-4-no-intervenir",
+   "rol": "jefe",
+   "tarea": "«Ojo: no intervenir P-201A y P-201C hoy»",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 10,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-4-no-intervenir-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver P-201A y P-201C",
+     "y": 798,
+     "hash": "#/jefe/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "3 equipos",
+      "Qué está en riesgo"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-4-no-intervenir-1440-02-lista.jpg"
+    },
+    {
+     "paso": "P-201A",
+     "y": 583,
+     "hash": "#/jefe/equipos/ceiba/P-201A",
+     "h": [
+      "P-201A bomba de agua · sin instrumento · datos de las 14:00",
+      "Sus señales",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras P-201B esté parada"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-4-no-intervenir-1440-03-p201a.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-5-responder-yo",
+   "rol": "jefe",
+   "tarea": "Contestar él mismo qué se dañó en P-201B",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir planes · simulado"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Responder yo",
+     "y": 547,
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-390-02-abrir-pregunta.jpg"
+    },
+    {
+     "paso": "Sello mecánico",
+     "y": 699,
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-390-03-parte.jpg"
+    },
+    {
+     "paso": "Fuga hacia afuera",
+     "y": 764,
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 3 paradas"
+     ],
+     "st": [
+      "Se registra en 5 s: sello mecánico (fuga hacia afuera) en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-390-04-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "jefe-5-responder-yo",
+   "rol": "jefe",
+   "tarea": "Contestar él mismo qué se dañó en P-201B",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/jefe/hoy/ceiba/curso",
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Responder yo",
+     "y": 383,
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-1440-02-abrir-pregunta.jpg"
+    },
+    {
+     "paso": "Sello mecánico",
+     "y": 580,
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-1440-03-parte.jpg"
+    },
+    {
+     "paso": "Fuga hacia afuera",
+     "y": 645,
+     "hash": "#/jefe/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 3 paradas",
+      "Su campo, ahora La planta viva"
+     ],
+     "st": [
+      "Se registra en 5 s: sello mecánico (fuga hacia afuera) en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "jefe-5-responder-yo-1440-04-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "oper-1-que-se-dano",
+   "rol": "oper",
+   "tarea": "Contestar qué se dañó en P-201B",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 4,
+   "pasos": [
+    {
+     "paso": "#/oper/hoy/ceiba/curso",
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "¿Qué parte se dañó?"
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Sello mecánico",
+     "y": 433,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Sello mecánico: ¿qué vio?"
+     ],
+     "st": [
+      "Sello mecánico en P-201B: falta qué vio."
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-390-02-parte.jpg"
+    },
+    {
+     "paso": "Fuga hacia afuera",
+     "y": 461,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "¿Por qué paró?"
+     ],
+     "st": [
+      "Se registra en 5 s: sello mecánico (fuga hacia afuera) en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-390-03-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "oper-1-que-se-dano",
+   "rol": "oper",
+   "tarea": "Contestar qué se dañó en P-201B",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/oper/hoy/ceiba/curso",
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Diga por qué paró LC-08",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Contestar",
+     "y": 356,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-1440-02-abrir-pregunta.jpg"
+    },
+    {
+     "paso": "Sello mecánico",
+     "y": 542,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-1440-03-parte.jpg"
+    },
+    {
+     "paso": "Fuga hacia afuera",
+     "y": 607,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga por qué paró LC-21",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Diga por qué paró LC-08",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "st": [
+      "Se registra en 5 s: sello mecánico (fuga hacia afuera) en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "oper-1-que-se-dano-1440-04-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "oper-2-por-que-paro",
+   "rol": "oper",
+   "tarea": "Contestar por qué paró LC-21",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 4,
+   "pasos": [
+    {
+     "paso": "#/oper/hoy/ceiba/curso",
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Diga por qué paró LC-08",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "scrollY": 0,
+     "shot": "oper-2-por-que-paro-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Contestar",
+     "y": 488,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "scrollY": 0,
+     "shot": "oper-2-por-que-paro-1440-02-abrir-pregunta.jpg"
+    },
+    {
+     "paso": "Cierre para prueba o intervención del pozo",
+     "y": 647,
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Diga por qué paró LC-08",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "st": [
+      "Se registra en 5 s: cierre para prueba o intervención del pozo en LC-21"
+     ],
+     "scrollY": 0,
+     "shot": "oper-2-por-que-paro-1440-03-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "oper-3-aviso-sap",
+   "rol": "oper",
+   "tarea": "Avisar a SAP que P-201B está parada",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/oper/hoy/ceiba/curso",
+     "hash": "#/oper/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Diga por qué paró LC-08",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes"
+     ],
+     "scrollY": 0,
+     "shot": "oper-3-aviso-sap-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver P-201B",
+     "y": 416,
+     "hash": "#/oper/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras esté parada",
+      "Los 12 días antes de parar",
+      "Su historia 12 meses"
+     ],
+     "scrollY": 0,
+     "shot": "oper-3-aviso-sap-1440-02-nivel3.jpg"
+    },
+    {
+     "paso": "Crear aviso en SAP",
+     "y": 279,
+     "hash": "#/oper/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "SAP · mantenimiento · equipo 10759915 · CO-CEI-BAT1-AGU-P-201B",
+      "Repuestos críticos",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Los 12 días antes de parar"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "oper-3-aviso-sap-1440-03-panel-sap.jpg"
+    },
+    {
+     "paso": "mirar: Enviar aviso a SAP",
+     "hash": "#/oper/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "SAP · mantenimiento · equipo 10759915 · CO-CEI-BAT1-AGU-P-201B",
+      "Repuestos críticos",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Los 12 días antes de parar"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "oper-3-aviso-sap-1440-04-enviar.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "plan-1-repuesto",
+   "rol": "plan",
+   "tarea": "¿Qué repuesto pido ya?",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/plan/hoy/ceiba/curso",
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Cargar la asignación de septiembre"
+     ],
+     "st": [
+      "El rol «Planeadora de mantenimiento» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "plan-1-repuesto-390-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "plan-1-repuesto",
+   "rol": "plan",
+   "tarea": "¿Qué repuesto pido ya?",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/plan/hoy/ceiba/curso",
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Cargar la asignación de septiembre",
+      "Su campo, ahora La planta viva"
+     ],
+     "st": [
+      "El rol «Planeadora de mantenimiento» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "plan-1-repuesto-1440-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "plan-2-programa",
+   "rol": "plan",
+   "tarea": "¿Qué programo esta semana?",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/plan/resultados/ceiba/curso",
+     "hash": "#/prod/resultados/ceiba/curso",
+     "h": [
+      "Resultados hoy, 2 de oct · datos de las 14:00",
+      "Promedio por día"
+     ],
+     "st": [
+      "El rol «Planeadora de mantenimiento» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "plan-2-programa-390-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "plan-2-programa",
+   "rol": "plan",
+   "tarea": "¿Qué programo esta semana?",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/plan/resultados/ceiba/curso",
+     "hash": "#/prod/resultados/ceiba/curso",
+     "h": [
+      "Resultados hoy, 2 de oct · datos de las 14:00",
+      "Promedio por día",
+      "Cierre proyectado proyectado",
+      "Diferido por día, mes a mes",
+      "¿Se puede publicar?",
+      "¿Está bajando? Desde que entró TRIM",
+      "Retorno posible del ciclo"
+     ],
+     "st": [
+      "El rol «Planeadora de mantenimiento» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "plan-2-programa-1440-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "plan-3-alcanza",
+   "rol": "plan",
+   "tarea": "¿Alcanza el repuesto de P-201B?",
+   "ancho": "390",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/plan/equipos/ceiba/P-201B",
+     "hash": "#/prod/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio"
+     ],
+     "st": [
+      "El rol «Planeadora de mantenimiento» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "plan-3-alcanza-390-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "plan-3-alcanza",
+   "rol": "plan",
+   "tarea": "¿Alcanza el repuesto de P-201B?",
+   "ancho": "1440",
+   "toques": 0,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 2,
+   "pasos": [
+    {
+     "paso": "#/plan/equipos/ceiba/P-201B",
+     "hash": "#/prod/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras esté parada",
+      "Los 12 días antes de parar"
+     ],
+     "st": [
+      "El rol «Planeadora de mantenimiento» todavía no está en esta versión: le mostramos ingeniera de producción."
+     ],
+     "scrollY": 0,
+     "shot": "plan-3-alcanza-1440-01-abre-produccion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "prod-1-confirmar-lote",
+   "rol": "prod",
+   "tarea": "Confirmar las paradas del día en lote",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 1,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 9,
+   "pasos": [
+    {
+     "paso": "#/prod/planta-viva/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "prod-1-confirmar-lote-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver Hoy",
+     "y": 430,
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Cargar la asignación de septiembre"
+     ],
+     "scrollY": 0,
+     "shot": "prod-1-confirmar-lote-390-02-hoy.jpg"
+    },
+    {
+     "paso": "Confirmar las 2",
+     "y": 430,
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Cargar la asignación de septiembre"
+     ],
+     "st": [
+      "Confirmadas LC-07 y LC-16"
+     ],
+     "scrollY": 0,
+     "shot": "prod-1-confirmar-lote-390-03-confirmadas.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "prod-1-confirmar-lote",
+   "rol": "prod",
+   "tarea": "Confirmar las paradas del día en lote",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/prod/planta-viva/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Si falla hoy",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo"
+     ],
+     "scrollY": 0,
+     "shot": "prod-1-confirmar-lote-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver Hoy",
+     "y": 317,
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Cargar la asignación de septiembre",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "prod-1-confirmar-lote-1440-02-hoy.jpg"
+    },
+    {
+     "paso": "Confirmar las 2",
+     "y": 268,
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Cargar la asignación de septiembre",
+      "Su campo, ahora La planta viva"
+     ],
+     "st": [
+      "Confirmadas LC-07 y LC-16"
+     ],
+     "scrollY": 0,
+     "shot": "prod-1-confirmar-lote-1440-03-confirmadas.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "prod-2-asignacion",
+   "rol": "prod",
+   "tarea": "Cargar la asignación oficial de septiembre",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 5,
+   "pantallas": 3,
+   "escrituras": 1,
+   "segundos": 29,
+   "pasos": [
+    {
+     "paso": "#/prod/planta-viva/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver Hoy",
+     "y": 430,
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Cargar la asignación de septiembre"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-390-02-hoy.jpg"
+    },
+    {
+     "paso": "Cargarla",
+     "y": 639,
+     "hash": "#/prod/produccion/ceiba/curso",
+     "h": [
+      "Producción contra plan hoy, 2 de oct · datos de las 14:00",
+      "La tubería del campo"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-390-03-produccion.jpg"
+    },
+    {
+     "paso": "mirar: Cuadre · asignación oficial",
+     "hash": "#/prod/produccion/ceiba/curso",
+     "h": [
+      "Factor de asignación",
+      "¿Cuadra? Día por día",
+      "Cuadre · asignación oficial"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-390-04-formulario.jpg"
+    },
+    {
+     "paso": "escribir",
+     "hash": "#/prod/produccion/ceiba/curso",
+     "h": [
+      "Factor de asignación",
+      "¿Cuadra? Día por día",
+      "Cuadre · asignación oficial"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-390-05-motivo.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "prod-2-asignacion",
+   "rol": "prod",
+   "tarea": "Cargar la asignación oficial de septiembre",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 3,
+   "pantallas": 3,
+   "escrituras": 1,
+   "segundos": 26,
+   "pasos": [
+    {
+     "paso": "#/prod/planta-viva/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Si falla hoy",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver Hoy",
+     "y": 317,
+     "hash": "#/prod/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Cargar la asignación de septiembre",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-1440-02-hoy.jpg"
+    },
+    {
+     "paso": "Cargarla",
+     "y": 438,
+     "hash": "#/prod/produccion/ceiba/curso",
+     "h": [
+      "Producción contra plan hoy, 2 de oct · datos de las 14:00",
+      "La tubería del campo",
+      "Qué limitó, día por día"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-1440-03-produccion.jpg"
+    },
+    {
+     "paso": "mirar: Cuadre · asignación oficial",
+     "hash": "#/prod/produccion/ceiba/curso",
+     "h": [
+      "Medición oficial",
+      "Factor de asignación",
+      "¿Cuadra? Día por día",
+      "Cuadre · asignación oficial"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-1440-04-formulario.jpg"
+    },
+    {
+     "paso": "escribir",
+     "hash": "#/prod/produccion/ceiba/curso",
+     "h": [
+      "Medición oficial",
+      "Factor de asignación",
+      "¿Cuadra? Día por día",
+      "Cuadre · asignación oficial"
+     ],
+     "scrollY": 0,
+     "shot": "prod-2-asignacion-1440-05-motivo.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "prod-3-si-falla-hoy",
+   "rol": "prod",
+   "tarea": "Ver qué limita hoy y abrir el primero de «Si falla hoy»",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 1,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 8,
+   "pasos": [
+    {
+     "paso": "#/prod/planta-viva/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva · hoy, 2 de oct · datos de las 14:00"
+     ],
+     "scrollY": 0,
+     "shot": "prod-3-si-falla-hoy-390-01-inicio.jpg"
+    },
+    {
+     "paso": "P-201A bomba de agua · sin instrumento 3.059 después de 2 min",
+     "y": 416,
+     "hash": "#/prod/equipos/ceiba/P-201A",
+     "h": [
+      "P-201A bomba de agua · sin instrumento · datos de las 14:00",
+      "Sus señales",
+      "En su tren de agua discontinuo: sin instrumento"
+     ],
+     "scrollY": 0,
+     "shot": "prod-3-si-falla-hoy-390-02-p201a.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "prod-3-si-falla-hoy",
+   "rol": "prod",
+   "tarea": "Ver qué limita hoy y abrir el primero de «Si falla hoy»",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/prod/planta-viva/ceiba/curso",
+     "hash": "#/prod/planta-viva/ceiba/curso",
+     "h": [
+      "La planta viva hoy, 2 de oct · datos de las 14:00",
+      "Dónde se trabó",
+      "Si falla hoy",
+      "Lo que todavía se puede mover",
+      "Diferido por equipo"
+     ],
+     "scrollY": 0,
+     "shot": "prod-3-si-falla-hoy-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "P-201A bomba de agua · sin instrumento 3.059 después de 2 min",
+     "y": 138,
+     "hash": "#/prod/equipos/ceiba/P-201A",
+     "h": [
+      "P-201A bomba de agua · sin instrumento · datos de las 14:00",
+      "Sus señales",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras P-201B esté parada"
+     ],
+     "scrollY": 0,
+     "shot": "prod-3-si-falla-hoy-1440-02-p201a.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-1-pedir-causa",
+   "rol": "reg",
+   "tarea": "Pedir la causa de LC-21 a quien la debe",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-1-pedir-causa-390-01-inicio.jpg"
+    },
+    {
+     "paso": "LC-21",
+     "y": 460,
+     "hash": "#/reg/regulatorio/ceiba/curso/LC-21",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial",
+      "Pozo LC-21 · bombeo mecánico",
+      "Pruebas",
+      "Eventos"
+     ],
+     "dlg": [
+      "LC-21 2 Atención Pozo LC-21 · bombeo mecánico pozo · bombeo mecánico · La Ceiba · detenido · parada por orden Cerrar 2 A"
+     ],
+     "scrollY": 0,
+     "shot": "reg-1-pedir-causa-390-02-ficha-sin-accion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-1-pedir-causa",
+   "rol": "reg",
+   "tarea": "Pedir la causa de LC-21 a quien la debe",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-1-pedir-causa-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "LC-21",
+     "y": 308,
+     "hash": "#/reg/regulatorio/ceiba/curso/LC-21",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Pozo LC-21 · bombeo mecánico",
+      "Pruebas",
+      "Eventos"
+     ],
+     "dlg": [
+      "LC-21 2 Atención Pozo LC-21 · bombeo mecánico pozo · bombeo mecánico · La Ceiba · detenido · parada por orden Cerrar 2 A"
+     ],
+     "scrollY": 0,
+     "shot": "reg-1-pedir-causa-1440-02-ficha-sin-accion.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-2-exportar-septiembre",
+   "rol": "reg",
+   "tarea": "Exportar el reporte de septiembre a la ANH (un campo)",
+   "ancho": "390",
+   "toques": 4,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Período: Octubre, en curso",
+     "y": 153,
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-390-02-periodo.jpg"
+    },
+    {
+     "paso": "Septiembre · cerrado",
+     "y": 289,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-390-03-septiembre.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 153,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-390-04-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 353,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-390-05-csv.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-2-exportar-septiembre",
+   "rol": "reg",
+   "tarea": "Exportar el reporte de septiembre a la ANH (un campo)",
+   "ancho": "1440",
+   "toques": 4,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Período: Octubre, en curso",
+     "y": 64,
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-1440-02-periodo.jpg"
+    },
+    {
+     "paso": "Septiembre · cerrado",
+     "y": 199,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-1440-03-septiembre.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 64,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-1440-04-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 264,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-2-exportar-septiembre-1440-05-csv.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-3-todos-los-campos",
+   "rol": "reg",
+   "tarea": "Ver si se puede publicar en sus 5 campos",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-3-todos-los-campos-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Todos mis campos",
+     "y": 80,
+     "hash": "#/reg/regulatorio/ceiba~portafolio/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Reporte al regulador · elija un campo"
+     ],
+     "scrollY": 0,
+     "shot": "reg-3-todos-los-campos-390-02-elija-un-campo.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-3-todos-los-campos",
+   "rol": "reg",
+   "tarea": "Ver si se puede publicar en sus 5 campos",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-3-todos-los-campos-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Todos mis campos",
+     "y": 22,
+     "hash": "#/reg/regulatorio/ceiba~portafolio/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Reporte al regulador · elija un campo"
+     ],
+     "scrollY": 0,
+     "shot": "reg-3-todos-los-campos-1440-02-elija-un-campo.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "reg-4-exportar-5-campos",
+   "rol": "reg",
+   "tarea": "Exportar septiembre a la ANH de sus 5 campos",
+   "ancho": "1440",
+   "toques": 20,
+   "desplaz": 0,
+   "pantallas": 5,
+   "escrituras": 0,
+   "segundos": 38,
+   "pasos": [
+    {
+     "paso": "#/reg/regulatorio/ceiba/curso",
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Período: Octubre, en curso",
+     "y": 64,
+     "hash": "#/reg/regulatorio/ceiba/curso",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-02-periodo.jpg"
+    },
+    {
+     "paso": "Septiembre · cerrado",
+     "y": 199,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-03-septiembre.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 64,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-04-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 264,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-05-csv.jpg"
+    },
+    {
+     "paso": "Campo: ",
+     "y": 69,
+     "hash": "#/reg/regulatorio/ceiba/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-06-selector.jpg"
+    },
+    {
+     "paso": "Morichal Norte",
+     "y": 312,
+     "hash": "#/reg/regulatorio/morichal/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-07-campo.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 64,
+     "hash": "#/reg/regulatorio/morichal/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-08-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 264,
+     "hash": "#/reg/regulatorio/morichal/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-09-csv.jpg"
+    },
+    {
+     "paso": "Campo: ",
+     "y": 69,
+     "hash": "#/reg/regulatorio/morichal/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-10-selector.jpg"
+    },
+    {
+     "paso": "Guacamayo",
+     "y": 387,
+     "hash": "#/reg/regulatorio/guacamayo/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-11-campo.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 64,
+     "hash": "#/reg/regulatorio/guacamayo/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-12-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 264,
+     "hash": "#/reg/regulatorio/guacamayo/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-13-csv.jpg"
+    },
+    {
+     "paso": "Campo: ",
+     "y": 69,
+     "hash": "#/reg/regulatorio/guacamayo/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-14-selector.jpg"
+    },
+    {
+     "paso": "El Palmar",
+     "y": 439,
+     "hash": "#/reg/regulatorio/palmar/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-15-campo.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 64,
+     "hash": "#/reg/regulatorio/palmar/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-16-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 264,
+     "hash": "#/reg/regulatorio/palmar/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-17-csv.jpg"
+    },
+    {
+     "paso": "Campo: ",
+     "y": 69,
+     "hash": "#/reg/regulatorio/palmar/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-18-selector.jpg"
+    },
+    {
+     "paso": "La Zarza",
+     "y": 533,
+     "hash": "#/reg/regulatorio/zarza/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-19-campo.jpg"
+    },
+    {
+     "paso": "Exportar",
+     "y": 64,
+     "hash": "#/reg/regulatorio/zarza/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-20-exportar.jpg"
+    },
+    {
+     "paso": "CSV para la ANH",
+     "y": 264,
+     "hash": "#/reg/regulatorio/zarza/cerrado",
+     "h": [
+      "Reporte al regulador hoy, 2 de oct · datos de las 14:00",
+      "Árbol de causas · como la circular",
+      "Medición oficial"
+     ],
+     "scrollY": 0,
+     "shot": "reg-4-exportar-5-campos-1440-21-csv.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-1-confirmar-lote",
+   "rol": "sup",
+   "tarea": "Confirmar 2 paradas iguales",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 3,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-1-confirmar-lote-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Confirmar las 2",
+     "y": 576,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101"
+     ],
+     "st": [
+      "Confirmadas LC-07 y LC-16"
+     ],
+     "scrollY": 0,
+     "shot": "sup-1-confirmar-lote-390-02-confirmadas.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-1-confirmar-lote",
+   "rol": "sup",
+   "tarea": "Confirmar 2 paradas iguales",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 3,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-1-confirmar-lote-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Confirmar las 2",
+     "y": 437,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "st": [
+      "Confirmadas LC-07 y LC-16"
+     ],
+     "scrollY": 0,
+     "shot": "sup-1-confirmar-lote-1440-02-confirmadas.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-2-causa",
+   "rol": "sup",
+   "tarea": "Conseguir la causa de LC-21 (nadie contestó)",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 1,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-2-causa-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Responder yo",
+     "y": 785,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-2-causa-390-02-responder.jpg"
+    },
+    {
+     "paso": "Cierre para prueba o intervención del pozo",
+     "y": 431,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "st": [
+      "Se registra en 5 s: cierre para prueba o intervención del pozo en LC-21"
+     ],
+     "scrollY": 0,
+     "shot": "sup-2-causa-390-03-respondida.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-2-causa",
+   "rol": "sup",
+   "tarea": "Conseguir la causa de LC-21 (nadie contestó)",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 4,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-2-causa-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Responder yo",
+     "y": 588,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-2-causa-1440-02-responder.jpg"
+    },
+    {
+     "paso": "Cierre para prueba o intervención del pozo",
+     "y": 758,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "st": [
+      "Se registra en 5 s: cierre para prueba o intervención del pozo en LC-21"
+     ],
+     "scrollY": 0,
+     "shot": "sup-2-causa-1440-03-respondida.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-3-entregar-turno",
+   "rol": "sup",
+   "tarea": "Entregar el turno",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 2,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 10,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-3-entregar-turno-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Entregar turno",
+     "y": 764,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Entrega de turno · La Ceiba · 2 de oct, 14:00",
+      "Lo que paró",
+      "Lo que queda por hacer",
+      "Hecho hoy",
+      "El turno en WhatsApp",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir planes · simulado"
+     ],
+     "dlg": [
+      "Entrega de turno · La Ceiba · 2 de oct, 14:00 últimas 12 h Lo que paró P-201B · bomba de agua · paró hoy a las 03:52 · p"
+     ],
+     "scrollY": 0,
+     "shot": "sup-3-entregar-turno-390-02-resumen.jpg"
+    },
+    {
+     "paso": "Compartir en PDF",
+     "y": 781,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Entrega de turno · La Ceiba · 2 de oct, 14:00",
+      "Lo que paró",
+      "Lo que queda por hacer",
+      "Hecho hoy",
+      "El turno en WhatsApp",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir planes · simulado"
+     ],
+     "dlg": [
+      "Entrega de turno · La Ceiba · 2 de oct, 14:00 últimas 12 h Lo que paró P-201B · bomba de agua · paró hoy a las 03:52 · p"
+     ],
+     "scrollY": 0,
+     "shot": "sup-3-entregar-turno-390-03-pdf.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-3-entregar-turno",
+   "rol": "sup",
+   "tarea": "Entregar el turno",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 4,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-3-entregar-turno-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Entregar turno",
+     "y": 248,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Entrega de turno · La Ceiba · 2 de oct, 14:00",
+      "Lo que paró",
+      "Lo que queda por hacer",
+      "Hecho hoy",
+      "El turno en WhatsApp",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "sup-3-entregar-turno-1440-02-resumen.jpg"
+    },
+    {
+     "paso": "Compartir en PDF",
+     "y": 680,
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Entrega de turno · La Ceiba · 2 de oct, 14:00",
+      "Lo que paró",
+      "Lo que queda por hacer",
+      "Hecho hoy",
+      "El turno en WhatsApp",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "sup-3-entregar-turno-1440-03-pdf.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-4-turno-subpantalla",
+   "rol": "sup",
+   "tarea": "Lo mismo, por la subpantalla «Turno» del panel",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-4-turno-subpantalla-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Turno",
+     "y": 215,
+     "hash": "#/sup/turno/ceiba/curso",
+     "h": [
+      "Entrega de turno hoy, 2 de oct · datos de las 14:00",
+      "Cierre de hoy",
+      "Parado ahora",
+      "Por identificar",
+      "Por vigilar"
+     ],
+     "scrollY": 0,
+     "shot": "sup-4-turno-subpantalla-1440-02-turno.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-5-planes",
+   "rol": "sup",
+   "tarea": "Decidir los planes de P-201B",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 3,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 16,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver los planes",
+     "y": 605,
+     "hash": "#/sup/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-390-02-nivel3-sin-planes.jpg"
+    },
+    {
+     "paso": "Ver el diagnóstico",
+     "y": 760,
+     "hash": "#/sup/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-390-03-nivel4.jpg"
+    },
+    {
+     "paso": "mirar: Planes · lo que todavía se puede mover",
+     "hash": "#/sup/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-390-04-planes.jpg"
+    },
+    {
+     "paso": "Aceptar",
+     "y": 438,
+     "hash": "#/sup/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-390-05-aceptado.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-5-planes",
+   "rol": "sup",
+   "tarea": "Decidir los planes de P-201B",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 2,
+   "pantallas": 3,
+   "escrituras": 0,
+   "segundos": 15,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver los planes",
+     "y": 878,
+     "hash": "#/sup/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras esté parada",
+      "Los 12 días antes de parar",
+      "Su historia 12 meses"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-1440-02-nivel3-sin-planes.jpg"
+    },
+    {
+     "paso": "Ver el diagnóstico",
+     "y": 813,
+     "hash": "#/sup/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-1440-03-nivel4.jpg"
+    },
+    {
+     "paso": "mirar: Planes · lo que todavía se puede mover",
+     "hash": "#/sup/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-1440-04-planes.jpg"
+    },
+    {
+     "paso": "Aceptar",
+     "y": 519,
+     "hash": "#/sup/equipos/ceiba/P-201B/diagnostico",
+     "h": [
+      "P-201B · diagnóstico bomba multietapa de transferencia de agua · tratamiento de ",
+      "Cómo está y por qué",
+      "Planes · lo que todavía se puede mover"
+     ],
+     "st": [
+      "Sin aviso ni orden abiertos parado, SAP no lo sabe Enviar aviso a SAP"
+     ],
+     "scrollY": 0,
+     "shot": "sup-5-planes-1440-05-aceptado.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-6-cambiar-de-puerta",
+   "rol": "sup",
+   "tarea": "Pasar de Hoy a Equipos",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-6-cambiar-de-puerta-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Equipos",
+     "y": 342,
+     "hash": "#/sup/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "sup-6-cambiar-de-puerta-390-02-equipos.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-6-cambiar-de-puerta",
+   "rol": "sup",
+   "tarea": "Pasar de Hoy a Equipos",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-6-cambiar-de-puerta-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Equipos",
+     "y": 309,
+     "hash": "#/sup/equipos/ceiba",
+     "h": [
+      "Equipos hoy, 2 de oct · datos de las 14:00",
+      "28 equipos"
+     ],
+     "scrollY": 0,
+     "shot": "sup-6-cambiar-de-puerta-1440-02-equipos.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-7-una-por-una",
+   "rol": "sup",
+   "tarea": "Confirmar una por una (Identificar)",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 1,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 8,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas"
+     ],
+     "scrollY": 0,
+     "shot": "sup-7-una-por-una-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver una por una",
+     "y": 589,
+     "hash": "#/sup/causa/ceiba/curso",
+     "h": [
+      "Paradas por identificar hoy, 2 de oct · datos de las 14:00",
+      "Por identificar · sin arrancar",
+      "Qué se dañó"
+     ],
+     "scrollY": 0,
+     "shot": "sup-7-una-por-una-390-02-identificar.jpg"
+    },
+    {
+     "paso": "mirar: Ver el chat de Jairo Peña",
+     "hash": "#/sup/causa/ceiba/curso",
+     "h": [
+      "WhatsApp"
+     ],
+     "scrollY": 0,
+     "shot": "sup-7-una-por-una-390-03-whatsapp.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "sup-7-una-por-una",
+   "rol": "sup",
+   "tarea": "Confirmar una por una (Identificar)",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/sup/hoy/ceiba/curso",
+     "hash": "#/sup/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Confirmar 2 paradas iguales",
+      "Conseguir la causa de 2 paradas",
+      "Seguir la orden de K-101",
+      "Decidir 3 planes de P-201B · simulado",
+      "Su campo, ahora La planta viva",
+      "El turno en WhatsApp 8 mensajes",
+      "Diferido de su turno últimas 12 h"
+     ],
+     "scrollY": 0,
+     "shot": "sup-7-una-por-una-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver una por una",
+     "y": 505,
+     "hash": "#/sup/causa/ceiba/curso",
+     "h": [
+      "Paradas por identificar hoy, 2 de oct · datos de las 14:00",
+      "Por identificar · sin arrancar",
+      "Qué se dañó",
+      "WhatsApp"
+     ],
+     "scrollY": 0,
+     "shot": "sup-7-una-por-una-1440-02-identificar.jpg"
+    },
+    {
+     "paso": "mirar: Ver el chat de Jairo Peña",
+     "hash": "#/sup/causa/ceiba/curso",
+     "h": [
+      "Paradas por identificar hoy, 2 de oct · datos de las 14:00",
+      "Por identificar · sin arrancar",
+      "Qué se dañó",
+      "WhatsApp"
+     ],
+     "scrollY": 0,
+     "shot": "sup-7-una-por-una-1440-03-whatsapp.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "tec-1-que-se-dano",
+   "rol": "tec",
+   "tarea": "Decir qué se dañó en P-201B",
+   "ancho": "390",
+   "toques": 3,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/tec/hoy/ceiba/curso",
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Contestar",
+     "y": 494,
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Diga qué se dañó en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-390-02-abrir-pregunta.jpg"
+    },
+    {
+     "paso": "Sello mecánico",
+     "y": 646,
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Diga qué se dañó en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-390-03-parte.jpg"
+    },
+    {
+     "paso": "Fuga hacia afuera",
+     "y": 711,
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101",
+      "Contestar «¿De dónde vino el corte?» de LC-05"
+     ],
+     "st": [
+      "Se registra en 5 s: sello mecánico (fuga hacia afuera) en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-390-04-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "tec-1-que-se-dano",
+   "rol": "tec",
+   "tarea": "Decir qué se dañó en P-201B",
+   "ancho": "1440",
+   "toques": 3,
+   "desplaz": 0,
+   "pantallas": 1,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/tec/hoy/ceiba/curso",
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Contestar",
+     "y": 356,
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-1440-02-abrir-pregunta.jpg"
+    },
+    {
+     "paso": "Sello mecánico",
+     "y": 542,
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-1440-03-parte.jpg"
+    },
+    {
+     "paso": "Fuga hacia afuera",
+     "y": 607,
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Diga por qué paró LC-08",
+      "Su campo, ahora La planta viva"
+     ],
+     "st": [
+      "Se registra en 5 s: sello mecánico (fuga hacia afuera) en P-201B"
+     ],
+     "scrollY": 0,
+     "shot": "tec-1-que-se-dano-1440-04-registrada.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "tec-2-orden-k101",
+   "rol": "tec",
+   "tarea": "Atender la orden de K-101",
+   "ancho": "390",
+   "toques": 2,
+   "desplaz": 1,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 9,
+   "pasos": [
+    {
+     "paso": "#/tec/hoy/ceiba/curso",
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101"
+     ],
+     "scrollY": 0,
+     "shot": "tec-2-orden-k101-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver la orden",
+     "y": 443,
+     "hash": "#/tec/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "Sus señales tendencia de 12 días · escala provisional"
+     ],
+     "scrollY": 0,
+     "shot": "tec-2-orden-k101-390-02-nivel3.jpg"
+    },
+    {
+     "paso": "Ver la orden en SAP",
+     "y": 502,
+     "hash": "#/tec/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "SAP · mantenimiento · equipo 10176913 · CO-CEI-BAT1-SRV-K-101"
+     ],
+     "st": [
+      "Orden 40012056 · predictivo · prioridad 2 · liberada el 2 de oct, 09:10 Verificar que las tres unidades estén en servici"
+     ],
+     "scrollY": 0,
+     "shot": "tec-2-orden-k101-390-03-orden.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "tec-2-orden-k101",
+   "rol": "tec",
+   "tarea": "Atender la orden de K-101",
+   "ancho": "1440",
+   "toques": 2,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 7,
+   "pasos": [
+    {
+     "paso": "#/tec/hoy/ceiba/curso",
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "tec-2-orden-k101-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver la orden",
+     "y": 674,
+     "hash": "#/tec/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "Sus señales tendencia de 12 días · escala provisional",
+      "En su tren: servicios",
+      "Los últimos 12 días",
+      "Su historia 12 meses"
+     ],
+     "scrollY": 0,
+     "shot": "tec-2-orden-k101-1440-02-nivel3.jpg"
+    },
+    {
+     "paso": "Ver la orden en SAP",
+     "y": 221,
+     "hash": "#/tec/equipos/ceiba/K-101",
+     "h": [
+      "K-101 sistema de aire de instrumentos · servicios industriales · criticidad 5 de",
+      "SAP · mantenimiento · equipo 10176913 · CO-CEI-BAT1-SRV-K-101",
+      "Sus señales tendencia de 12 días · escala provisional",
+      "En su tren: servicios",
+      "Los últimos 12 días"
+     ],
+     "st": [
+      "Orden 40012056 · predictivo · prioridad 2 · liberada el 2 de oct, 09:10 Verificar que las tres unidades estén en servici"
+     ],
+     "scrollY": 0,
+     "shot": "tec-2-orden-k101-1440-03-orden.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "tec-3-ver-equipo",
+   "rol": "tec",
+   "tarea": "Ver el equipo que le toca",
+   "ancho": "390",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/tec/hoy/ceiba/curso",
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101"
+     ],
+     "scrollY": 0,
+     "shot": "tec-3-ver-equipo-390-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver P-201B",
+     "y": 507,
+     "hash": "#/tec/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio"
+     ],
+     "scrollY": 0,
+     "shot": "tec-3-ver-equipo-390-02-nivel3.jpg"
+    }
+   ],
+   "errores": []
+  },
+  {
+   "id": "tec-3-ver-equipo",
+   "rol": "tec",
+   "tarea": "Ver el equipo que le toca",
+   "ancho": "1440",
+   "toques": 1,
+   "desplaz": 0,
+   "pantallas": 2,
+   "escrituras": 0,
+   "segundos": 6,
+   "pasos": [
+    {
+     "paso": "#/tec/hoy/ceiba/curso",
+     "hash": "#/tec/hoy/ceiba/curso",
+     "h": [
+      "Hoy hoy, 2 de oct · datos de las 14:00",
+      "Diga qué se dañó en P-201B",
+      "Diga por qué paró LC-21",
+      "Atender la orden de K-101",
+      "Contestar «¿De dónde vino el corte?» de LC-05",
+      "Su campo, ahora La planta viva"
+     ],
+     "scrollY": 0,
+     "shot": "tec-3-ver-equipo-1440-01-inicio.jpg"
+    },
+    {
+     "paso": "Ver P-201B",
+     "y": 416,
+     "hash": "#/tec/equipos/ceiba/P-201B",
+     "h": [
+      "P-201B bomba multietapa de transferencia de agua · tratamiento de agua · critici",
+      "Sus señales tendencia de 12 días · parada: en gris y sin marca · escala provisio",
+      "En su tren de agua discontinuo: sin instrumento",
+      "Mientras esté parada",
+      "Los 12 días antes de parar",
+      "Su historia 12 meses"
+     ],
+     "scrollY": 0,
+     "shot": "tec-3-ver-equipo-1440-02-nivel3.jpg"
+    }
+   ],
+   "errores": []
+  }
+ ]
+}
