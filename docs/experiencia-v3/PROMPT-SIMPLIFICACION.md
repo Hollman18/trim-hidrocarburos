@@ -91,6 +91,7 @@ El dueño lo revisa y lo aprueba. Después se crece escalón por escalón, y cad
    - nunca editar mientras corren e2e.
 8. **Español de Colombia, de usted, con palabras de campo.**
 9. **AÑADIR, NO EDITAR: hay un desarrollador de backend trabajando con este código** (§3.1).
+10. **EL CHOKE VA SÍ O SÍ** (el dueño, 27-oct). El modelo choke (SPE-36848; la ANH lo adoptó en las Circulares 003 y 024) es internacional y es la arquitectura con la que se identifican los problemas. De cada falla sale su tramo (yacimiento, pozos, planta o salida) y, en el árbol de 6 pasos, si el barril es **diferido o perdido**. Ninguna simplificación lo quita: cada rol lo ve en la medida que su trabajo pide (`necesario-por-rol.md` §0b). El problema que se resuelve es uno: barriles diferidos y barriles perdidos.
 
 ### 3.1 La regla del backend: al lado, nunca encima
 

@@ -55,6 +55,25 @@
 
 ---
 
+## 0b. El choke en cada rol: obligatorio (el dueño, 27-oct)
+
+**El problema es uno:** barriles **diferidos** (lo que se deja de producir y se produce después) y barriles **perdidos** (lo que salió y no se vende).
+- **El modelo choke** (SPE-36848, BP 1996; la ANH lo adoptó en las Circulares 003 y 024) **va sí o sí:** es internacional y es la arquitectura con la que se identifica dónde está cada problema.
+- **De cada falla** sale su tramo (yacimiento, pozos, planta o salida) y, en el árbol de 6 pasos, si el barril es **diferido o perdido** (paso 3, `dif_perd`). Después vienen si fue planeada y la causa N1 y N2.
+- **Ningún rol pierde esta arquitectura.** Lo que cambia es cuánto de ella ve:
+
+| Rol | Cómo está el choke en lo necesario |
+|---|---|
+| ger | Su número se explica por tramo: la tubería de 4 tramos (o una fila por campo), con **dónde se trabó** (diferido, rayado en su tramo) y la **pérdida en su tramo**, aparte y nunca sumada |
+| prod | Su número principal ES el choke: qué tramo limita hoy. Confirma o corrige **el tramo y si es diferida o pérdida** de cada parada |
+| sup | Confirma en lote la cadena de cada parada: tramo + diferida o pérdida + planeada + causa |
+| oper | Su respuesta llena la causa del árbol. Registrar una pérdida la deja como **PÉRDIDA en su tramo** |
+| jefe | Cada equipo que avisa dice en qué tramo frenaría la producción; las fallas del mes, por tramo |
+| conf | «Si falla hoy» por tramo; corrige clasificaciones (tramo, diferida o pérdida, planeada) |
+| tec | Lo que encontró cierra la causa N1 y N2 de la parada |
+| reg | El árbol de 6 pasos completo, como la circular: quién → tramo → diferida o pérdida → planeada → N1 → N2 |
+| adm | La topología (a qué pozos sirve cada equipo) es la base del choke; la conversión del árbol de la operadora al de la ANH |
+
 ## 1. ger · Gerente de activo
 
 **Su trabajo, en una frase:** que el activo produzca su meta dejando de producir lo menos posible. No hace el trabajo técnico: manda a actuar y firma la meta. Hollman: «El gerente de planta lo que le interesa es barriles no diferidos… con base a su meta… su pantalla… es ir al grano», y «no un detalle técnico» [T 04:00].
