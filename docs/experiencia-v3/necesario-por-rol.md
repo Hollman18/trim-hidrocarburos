@@ -74,6 +74,41 @@
 | reg | El árbol de 6 pasos completo, como la circular: quién → tramo → diferida o pérdida → planeada → N1 → N2 |
 | adm | La topología (a qué pozos sirve cada equipo) es la base del choke; la conversión del árbol de la operadora al de la ANH |
 
+## 0c. La jornada del supervisor (el dueño, 27-oct)
+
+El supervisor necesita ver **en qué jornada (turno y horario) empezó y terminó cada parada**:
+- es la base de su entrega de turno;
+- y es regulatoria: la Circular 024 pide en `paradas_pozo` la hora de inicio y fin de cada parada (`h_ini_paro` y `h_fin_paro`), con el corte del día a las 23:59:59.
+
+**Lo necesario:**
+- en su Hoy, **«Mi turno»**: las paradas que empezaron, siguen o terminaron en su jornada, cada una con su hora de inicio y de fin (o «sigue») y su cadena (tramo, diferida o pérdida);
+- arriba, el número de su turno: **paradas por confirmar** y **barriles diferidos en la jornada**;
+- **«Entregar turno»** deja de ser un escalón y pasa a lo necesario: el resumen de la jornada, en pantalla y en PDF.
+
+**En el motor:** hoy solo existe «las últimas 12 h» (`TURNO_H`, `hoy.ts`). **Falta** la jornada configurable por campo: el horario de cambio de turno (por ejemplo, 06:00 y 18:00) en `Config`, firmado por el administrador, y la vista de paradas por jornada. Se AGREGA al lado: un campo opcional en la configuración y un filtro `jornada` en `/vistas/hoy`.
+
+## 0d. Las metas y el Antes · Durante · Después: ¿está funcionando TRIM? (el dueño, 27-oct)
+
+El dueño quiere comprobar **qué tan efectivo ha sido el sistema**, y para eso hacen falta **metas** y el **antes, durante y después**. Esto corrige la propuesta A-06 (`borrado.md`): no se borra, se simplifica.
+
+**Lo necesario, simple, en una sola tarjeta** («¿Está funcionando?») para el gerente y producción, y en Resultados:
+
+| Antes | Durante | Después |
+|---|---|---|
+| **Antes de TRIM** (línea base firmada): bbl/d diferidos no planeados y fallas de equipos críticos al mes | **Ahora, contra la meta**: los mismos dos números, este mes, con su meta firmada al lado | **Lo que ya se ganó**: barriles que se dejaron de diferir desde que entró TRIM, y las fallas que se anticiparon (las que avisó el vigía) |
+
+- Por tramo del choke, a un toque, para ver dónde bajó y dónde no.
+- **Datos que ya existen:**
+  - la línea base por tramo (`LineaBasePorTramo`, `choke.ts`);
+  - «¿Está bajando?» (`plantaViva().bajando`: planta 561 → 308 bbl/d);
+  - las metas firmadas (`Config.metas`, `configuracion.ts`);
+  - el acierto del vigía (`aciertoVigia`: 3 de 3).
+- **Falta en el motor:**
+  - la **meta de reducción** contra la línea base (hoy las metas son de producción y de diferido del mes, no de cuánto bajar);
+  - la cifra **«barriles que se dejaron de diferir»** (línea base menos lo de ahora, acumulado desde el arranque).
+  - Se AGREGA al lado: un campo opcional en las metas y una vista `/vistas/efectividad`.
+- **El Antes · Durante · Después del ciclo de la falla** (antes de que falle, mientras está parada, después) queda igual: es el que se ve en el equipo que avisa, el que está parado y el que ya se analizó. **No va como control de 3 posiciones en el inicio** (esa es la decisión 2 de la página de aprobación, A o B).
+
 ## 1. ger · Gerente de activo
 
 **Su trabajo, en una frase:** que el activo produzca su meta dejando de producir lo menos posible. No hace el trabajo técnico: manda a actuar y firma la meta. Hollman: «El gerente de planta lo que le interesa es barriles no diferidos… con base a su meta… su pantalla… es ir al grano», y «no un detalle técnico» [T 04:00].
