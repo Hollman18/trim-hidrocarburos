@@ -1,0 +1,17 @@
+{
+ "png": "d1-grafito-sup-escritorio-claro.png",
+ "errores": [],
+ "chicos": [],
+ "salen": [],
+ "pisan": [],
+ "cifras32": [
+  "64px 4"
+ ],
+ "cifras20a31": [
+  "28px 1.966",
+  "28px 2",
+  "28px 2"
+ ],
+ "anchoPagina": 1440,
+ "altoPagina": 900
+}

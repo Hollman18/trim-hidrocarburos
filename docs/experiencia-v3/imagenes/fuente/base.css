@@ -1,0 +1,201 @@
+/* M4 · El armazón de las imágenes de la v3. Los colores salen SOLO de tokens.css (medidos).
+   Retícula de 4 px. Lo que cambia entre direcciones va bajo [data-dir]: la navegación, cómo se
+   separan los bloques (tono, línea o marco) y los radios. */
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--suelo);color:var(--tinta);font-family:var(--f-sans);font-size:15px;line-height:1.4;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+svg text{font-family:var(--f-sans);font-variant-numeric:tabular-nums}
+.mono{font-family:var(--f-mono)}
+.cond{font-family:var(--f-cond)}
+b,strong{font-weight:650}
+
+/* ── Armazón ── */
+.app{display:grid;grid-template-columns:232px 1fr;height:100vh;overflow:hidden}
+.nav{background:var(--nav);color:var(--nav-tinta);display:flex;flex-direction:column;padding:20px 12px;gap:4px;border-right:1px solid var(--nav-linea)}
+.nav__marca{display:flex;align-items:center;gap:10px;padding:4px 12px 20px;font-weight:700;letter-spacing:.14em;font-size:15px}
+.nav__marca i{width:18px;height:18px;border:2px solid var(--nav-tinta);border-radius:3px;display:inline-block;position:relative}
+.nav__marca i::after{content:"";position:absolute;inset:4px 3px auto 3px;height:2px;background:var(--nav-tinta)}
+.nav__campo{margin:0 0 16px;padding:10px 12px;border:1px solid var(--nav-linea);border-radius:6px;font-size:13px;color:var(--nav-tinta2)}
+.nav__campo b{display:block;color:var(--nav-tinta);font-size:14px}
+.nav__item{display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:6px;color:var(--nav-tinta2);font-size:14px;font-weight:500;position:relative}
+.nav__item svg{flex:none}
+.nav__item.activo{background:var(--nav-activo);color:var(--nav-tinta);font-weight:600}
+.nav__item.activo::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--nav-marca)}
+.nav__item .insignia{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:10px;background:var(--nav-tinta);color:var(--nav);font-size:12px;font-weight:700;display:grid;place-items:center}
+.nav__pie{margin-top:auto;padding:12px;font-size:13px;color:var(--nav-tinta2);border-top:1px solid var(--nav-linea)}
+.nav__pie b{color:var(--nav-tinta);display:block;font-size:14px}
+
+.main{overflow:hidden;display:flex;flex-direction:column}
+.cabeza{display:flex;align-items:center;gap:16px;padding:20px 32px 0;min-height:64px}
+.cabeza h1{font-size:20px;font-weight:650;letter-spacing:-.005em}
+.cabeza .cuando{color:var(--tinta2);font-size:14px}
+.cabeza .der{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* La franja de condiciones (X2 §3.5): igual y en el mismo lugar en todo nivel. */
+.franja{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--tinta2)}
+.franja span{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:6px;background:var(--panel);border:1px solid var(--linea2)}
+.franja b{color:var(--tinta);font-size:15px;font-weight:700}
+.franja .cero{opacity:1}
+
+.cuerpo{flex:1;padding:24px 32px 28px;display:grid;gap:24px;align-content:start;overflow:hidden}
+
+/* ── La cifra (kit) ── */
+.kit-cifra__rotulo{font-family:var(--f-cond);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta2)}
+.kit-cifra__fila{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.kit-cifra__fila .mk{align-self:center}
+.kit-cifra__n{font-weight:650;letter-spacing:-.02em;color:var(--tinta);font-variant-numeric:tabular-nums}
+.kit-cifra__u{color:var(--tinta2);font-size:15px;font-weight:500}
+.kit-cifra__nota{color:var(--tinta2);font-size:14px;margin-top:4px}
+.kit-cifra--xl .kit-cifra__n{font-size:64px;line-height:1;letter-spacing:-.035em}
+.kit-cifra--xl .kit-cifra__u{font-size:18px}
+.kit-cifra--xl .kit-cifra__rotulo{font-size:14px}
+.kit-cifra--l .kit-cifra__n{font-size:28px;line-height:1.05}
+.kit-cifra--m .kit-cifra__n{font-size:20px;line-height:1.1}
+.kit-cifra.es-anormal .kit-cifra__n{font-weight:750}
+.kit-cifra.es-parado .kit-cifra__n,.kit-cifra.es-sindato .kit-cifra__n{color:var(--tinta3);font-weight:500}
+.kit-cifra.es-sincom .kit-cifra__n{color:var(--tinta2);font-weight:500}
+
+/* ── Bloques ── */
+.bloque{background:var(--panel);border-radius:8px;padding:20px 24px}
+.rotulo{font-family:var(--f-cond);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta2)}
+.rotulo .ventana{text-transform:none;letter-spacing:0;font-family:var(--f-sans);font-weight:500;color:var(--tinta3);margin-left:6px}
+.titulo-bloque{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+.titulo-bloque .der{margin-left:auto;font-size:13px;color:var(--tinta2)}
+.nota{color:var(--tinta2);font-size:14px}
+.chico{font-size:13px;color:var(--tinta2)}
+.calidad{font-size:12px;color:var(--tinta3);border:1px solid var(--linea);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:500;letter-spacing:.02em;vertical-align:2px}
+
+/* ── Botones: una acción principal por pantalla ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:8px;background:var(--acento);color:var(--acento-sobre);font-weight:600;font-size:15px;border:0;white-space:nowrap}
+.btn2{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:8px;background:transparent;color:var(--tinta);font-weight:600;font-size:15px;border:1px solid var(--linea);white-space:nowrap}
+.enlace{color:var(--tinta);font-weight:600;font-size:14px;text-decoration:underline;text-decoration-color:var(--linea);text-underline-offset:3px}
+
+/* ── El bloqueo de procedimiento: en tinta, nunca en color (X2 §4.2) ── */
+.bloqueo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px;border:1.5px solid var(--tinta);border-radius:8px;background:var(--panel);font-weight:600;font-size:15px}
+.bloqueo small{font-weight:400;color:var(--tinta2);font-size:13px;margin-left:auto}
+
+/* ── Filas (listas) ── */
+.fila{display:grid;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--linea2)}
+.fila:first-child{border-top:0}
+.fila .que{font-weight:600}
+.fila .donde{color:var(--tinta2);font-size:14px}
+.num{font-weight:650;text-align:right;font-variant-numeric:tabular-nums}
+.num small{font-weight:500;color:var(--tinta2);font-size:13px;margin-left:3px}
+
+/* ── Variantes por dirección ── */
+/* D1 Grafito: bloques por tono, radio 8; el panel carbón es la única masa oscura. */
+[data-dir="d1"] .bloque{background:var(--panel)}
+/* D2 Consola blanca: sin tarjetas. Los bloques se separan con línea fina y aire. */
+[data-dir="d2"] .bloque{background:transparent;border-radius:0;padding:20px 0 0;border-top:1px solid var(--linea)}
+[data-dir="d2"] .franja span{background:transparent;border-color:var(--linea)}
+[data-dir="d2"] .btn,[data-dir="d2"] .btn2{border-radius:6px}
+[data-dir="d2"] .kit-cifra__rotulo,[data-dir="d2"] .rotulo{font-family:var(--f-sans);text-transform:none;letter-spacing:0;font-size:14px;font-weight:500}
+/* D3 Sala: barra arriba con la franja, marcos de 1 px y radio 2 (la consola). */
+[data-dir="d3"] .app{grid-template-columns:1fr;grid-template-rows:56px 1fr}
+[data-dir="d3"] .nav{flex-direction:row;align-items:center;padding:0 24px;gap:4px;border-right:0;border-bottom:1px solid var(--nav-linea)}
+[data-dir="d3"] .nav__marca{padding:0 24px 0 0}
+[data-dir="d3"] .nav__campo{margin:0 16px 0 0;padding:6px 10px;border-radius:2px}
+[data-dir="d3"] .nav__campo b{display:inline;margin-right:6px}
+[data-dir="d3"] .nav__item{height:56px;border-radius:0;padding:0 14px}
+[data-dir="d3"] .nav__item.activo{background:transparent}
+[data-dir="d3"] .nav__item.activo::before{left:10px;right:10px;top:auto;bottom:0;width:auto;height:3px;border-radius:2px 2px 0 0}
+[data-dir="d3"] .nav__pie{margin:0 0 0 auto;border:0;padding:0 0 0 16px;display:flex;gap:16px;align-items:center}
+[data-dir="d3"] .nav__pie b{display:inline}
+[data-dir="d3"] .bloque{border:1px solid var(--linea);border-radius:2px;background:var(--panel)}
+[data-dir="d3"] .btn,[data-dir="d3"] .btn2{border-radius:2px}
+[data-dir="d3"] .franja span{border-radius:2px}
+[data-dir="d3"] .bloqueo{border-radius:2px}
+
+/* ── Teléfono ── */
+.tel{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.tel__barra{height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--nav);color:var(--nav-tinta);border-bottom:1px solid var(--nav-linea);flex:none}
+.tel__barra .nav__marca{padding:0;font-size:14px}
+.tel__barra .campo{margin-left:auto;font-size:13px;color:var(--nav-tinta2)}
+.tel__barra .campo b{color:var(--nav-tinta);font-weight:600}
+.tel__cuerpo{flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:16px}
+.tel__accion{flex:none;padding:12px 16px;border-top:1px solid var(--linea2);background:var(--suelo);display:flex;gap:8px}
+.tel__accion .btn{flex:1;height:52px;font-size:16px}
+.tel__accion .btn2{height:52px}
+.tel__tabs{flex:none;height:64px;display:grid;grid-template-columns:repeat(3,1fr);background:var(--nav);border-top:1px solid var(--nav-linea)}
+.tel__tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--nav-tinta2);font-size:12px;font-weight:500;position:relative}
+.tel__tabs a.activo{color:var(--nav-tinta);font-weight:650}
+.tel__tabs a.activo::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 2px 2px;background:var(--nav-marca)}
+.tel .franja{gap:4px;flex-wrap:nowrap}
+.tel .franja span{height:30px;padding:0 8px;font-size:12px;gap:5px}
+.tel .franja b{font-size:14px}
+.tel .bloque{padding:16px}
+[data-dir="d2"] .tel .bloque{padding:16px 0 0}
+.tel .kit-cifra--xl .kit-cifra__n{font-size:56px}
+.bloqueo{flex-wrap:nowrap}
+.bloqueo > span{flex:1 1 auto;min-width:0}
+.bloqueo small{flex:none}
+.bloqueo .mk{flex:none}
+.nav__item{white-space:nowrap}
+[data-dir="d3"] .nav .franja span{background:transparent;border-color:var(--nav-linea);color:var(--nav-tinta)}
+[data-dir="d3"] .nav .franja b{color:var(--nav-tinta)}
+.iniciales{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--nav-linea);font-size:12px;font-weight:650;color:var(--nav-tinta)}
+.kit-cifra--xl .kit-cifra__fila{margin:10px 0 8px}
+.kit-cifra--xl .kit-cifra__nota{margin-top:0}
+
+/* ── v3 · lo necesario: barra arriba para los roles de una sola pantalla (y la dirección Sala) ── */
+.app--arriba{grid-template-columns:1fr;grid-template-rows:56px 1fr}
+.nav--arriba{flex-direction:row;align-items:center;padding:0 24px;gap:4px;border-right:0;border-bottom:1px solid var(--nav-linea)}
+.nav--arriba .nav__marca{padding:0 20px 0 0}
+.nav--arriba .nav__lugar{font-size:14px;font-weight:600;color:var(--nav-tinta);padding-left:16px;border-left:1px solid var(--nav-linea)}
+.nav--arriba .nav__item{height:56px;border-radius:0;padding:0 14px}
+.nav--arriba .nav__item.activo{background:transparent}
+.nav--arriba .nav__item.activo::before{left:10px;right:10px;top:auto;bottom:0;width:auto;height:3px;border-radius:2px 2px 0 0}
+.nav--arriba .nav__pie{margin:0 0 0 auto;border:0;padding:0;display:flex;gap:12px;align-items:center}
+.nav--arriba .franja span{background:transparent;border-color:var(--nav-linea);color:var(--nav-tinta2)}
+.nav--arriba .franja b{color:var(--nav-tinta)}
+.nav .franja .mk{flex:none}
+
+.apoyos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.apoyos--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.apoyos-col{display:grid;gap:18px;border-top:1px solid var(--linea2);padding-top:18px}
+.apoyos-tel{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.apoyos-tel--3{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.apoyos-tel--3 .kit-cifra__nota{font-size:12px}
+.apoyos-tel .kit-cifra__rotulo{font-size:12px}
+[data-dir="d2"] .apoyos{gap:0}
+[data-dir="d2"] .apoyos > .bloque{padding-right:20px}
+.falta-motor{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tinta3)}
+
+/* El control Antes · Durante · Después (variante para el dueño). Sin dígitos 1·2·3: son de las prioridades. */
+.segmentos{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--linea);border-radius:8px;overflow:hidden}
+.seg{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-right:1px solid var(--linea);color:var(--tinta2)}
+.seg:last-child{border-right:0}
+.seg__t{font-size:13px}
+.seg__v{font-size:16px;font-weight:650;color:var(--tinta)}
+.seg__v small{font-size:12px;font-weight:500;color:var(--tinta2)}
+.seg.on{background:var(--acento-suave);box-shadow:inset 0 -3px 0 var(--acento)}
+.seg.on .seg__t{color:var(--tinta);font-weight:600}
+.segmentos--tel .seg{padding:8px 10px}
+.segmentos--tel .seg__t{font-size:12px}
+[data-dir="d3"] .segmentos{border-radius:2px}
+
+/* Tareas */
+.tarea{grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:16px 0}
+.tarea--tel{grid-template-columns:1fr;gap:6px;padding:12px 0}
+.tarea__eq{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tarea__eq .mk{flex:none}
+.tarea__acc{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+
+/* La pregunta de una sola respuesta (operador) */
+.pregunta{display:grid;gap:10px}
+.pregunta__t{font-size:26px;font-weight:650;letter-spacing:-.01em;margin-top:6px}
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.opcion{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:68px;padding:12px 16px;border:1.5px solid var(--tinta);border-radius:10px;background:var(--elevado)}
+.opcion b{font-size:17px;font-weight:650}
+.opcion small{font-size:13px;color:var(--tinta2)}
+.opcion--no{border-color:var(--linea);border-style:dashed}
+.pregunta--tel .pregunta__t{font-size:22px;margin-top:2px}
+.pregunta--tel .opciones{grid-template-columns:1fr;gap:8px}
+.pregunta--tel .opcion{min-height:58px;padding:8px 14px}
+[data-dir="d2"] .opcion{border-radius:6px}
+[data-dir="d3"] .opcion{border-radius:2px}
+
+.ojo{display:flex;align-items:center;gap:10px;padding:12px 16px;border-left:3px solid var(--tinta2);background:var(--panel);font-size:15px}
+.apoyos--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tel__cuerpo > *{flex:none}

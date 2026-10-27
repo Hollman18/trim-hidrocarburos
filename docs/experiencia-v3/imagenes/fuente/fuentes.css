@@ -1,0 +1,16 @@
+/* M4 · Las letras de las tres direcciones, servidas desde el disco (nada de red).
+   IBM Plex y Geist: SIL OFL 1.1 (fuentes/OFL-*.txt). Air: la de la app (public/fonts), licencia NO VERIFICADA (X1 §3.1). */
+@font-face{font-family:"IBM Plex Sans";src:url(fuentes/PlexSans-var.woff2) format('woff2');font-weight:100 700}
+@font-face{font-family:"IBM Plex Sans Condensed";src:url(fuentes/PlexSansCond-500.woff2) format('woff2');font-weight:500}
+@font-face{font-family:"IBM Plex Sans Condensed";src:url(fuentes/PlexSansCond-600.woff2) format('woff2');font-weight:600 700}
+@font-face{font-family:"IBM Plex Mono";src:url(fuentes/PlexMono-400.woff2) format('woff2');font-weight:400}
+@font-face{font-family:"IBM Plex Mono";src:url(fuentes/PlexMono-500.woff2) format('woff2');font-weight:500 700}
+@font-face{font-family:"Geist";src:url(fuentes/Geist-var.woff2) format('woff2');font-weight:100 900}
+@font-face{font-family:"Geist Mono";src:url(fuentes/GeistMono-var.woff2) format('woff2');font-weight:100 900}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Regular.woff2) format('woff2');font-weight:400}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Medium.woff2) format('woff2');font-weight:500}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Semibold.woff2) format('woff2');font-weight:600}
+@font-face{font-family:Air;src:url(../../../../public/fonts/Air-Bold.woff2) format('woff2');font-weight:700}
+@font-face{font-family:"Air Condensed";src:url(../../../../public/fonts/AirCondensed-Medium.woff2) format('woff2');font-weight:500}
+@font-face{font-family:"Air Condensed";src:url(../../../../public/fonts/AirCondensed-Semibold.woff2) format('woff2');font-weight:600}
+@font-face{font-family:"Air Condensed";src:url(../../../../public/fonts/AirCondensed-Bold.woff2) format('woff2');font-weight:700}

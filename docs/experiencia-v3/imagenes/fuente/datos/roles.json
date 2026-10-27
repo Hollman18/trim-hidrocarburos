@@ -1,0 +1,4364 @@
+{
+ "_leido": "2026-10-27T15:32:31.134Z",
+ "_como": "pedirHoy, pedirListaEquipos, pedirReporteAnh, pedirResultados, pedirRelojes, pedirPlantaViva en http://localhost:5183",
+ "ahora": "Fri Oct 02 2026 14:00:00 GMT-0500 (Colombia Standard Time)",
+ "hoy_oper": {
+  "rol": "oper",
+  "campos": [
+   "ceiba"
+  ],
+  "inicio": {
+   "frase": "Tiene 4 preguntas. Empiece por P-201B: está parada y no se puede arrancar.",
+   "cifra": "1 de 4",
+   "unidad": "preguntas",
+   "remate": "Empiece por P-201B: está parada y no se puede arrancar."
+  },
+  "bloqueos": [
+   {
+    "campoId": "ceiba",
+    "equipos": [
+     "P-201B",
+     "LC-21"
+    ],
+    "texto": "No arrancar P-201B ni LC-21 hasta identificar qué se dañó",
+    "sub": "Si arranca antes, queda como no conformidad."
+   }
+  ],
+  "tareas": [
+   {
+    "id": "contestar:ceiba:EV-2011-1002",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "barriles",
+    "bblAhora": 1665.1829227413677,
+    "desde": "2026-10-02T08:52:18.000Z",
+    "titulo": "Diga qué se dañó en P-201B",
+    "donde": {
+     "equipo": "P-201B",
+     "marca": "alarma",
+     "texto": "bomba de agua · paró hoy a las 03:52, hace 10,1 h",
+     "corto": "bomba de agua · paró hoy en la madrugada"
+    },
+    "porque": [
+     "Sigue parada."
+    ],
+    "porqueCorto": [],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver P-201B",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EV-2011-1002",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "P-201B",
+      "sobre": "bomba",
+      "marca": "alarma",
+      "contexto": "P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h",
+      "contextoCorto": "P-201B · bomba de agua · paró hoy en la madrugada",
+      "texto": "¿Qué parte se dañó?",
+      "pista": "Lo que más le ha fallado a esta bomba:",
+      "opciones": [
+       {
+        "tipo": "parte",
+        "texto": "Sello mecánico",
+        "parte": "sello",
+        "modos": [
+         {
+          "codigo": "ELP",
+          "texto": "Fuga hacia afuera"
+         },
+         {
+          "codigo": "INL",
+          "texto": "Fuga interna"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Sello mecánico: ¿qué vio?",
+        "dato": "5 de sus 8 fallas"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Rodamientos y cámara de empuje",
+        "parte": "rodamientos",
+        "modos": [
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "VIB",
+          "texto": "Vibración"
+         },
+         {
+          "codigo": "NOI",
+          "texto": "Ruido"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Rodamientos y cámara de empuje: ¿qué vio?",
+        "dato": "3 de sus 8 fallas"
+       },
+       {
+        "tipo": "partes",
+        "texto": "Otra parte",
+        "dato": "escoja de la lista",
+        "partes": [
+         {
+          "parte": "succion",
+          "texto": "Succión y filtro de entrada",
+          "modos": [
+           {
+            "codigo": "UST",
+            "texto": "Se disparó sin daño a la vista"
+           },
+           {
+            "codigo": "PLU",
+            "texto": "Tapada"
+           },
+           {
+            "codigo": "LOO",
+            "texto": "Bajó el caudal"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Succión y filtro de entrada: ¿qué vio?"
+         },
+         {
+          "parte": "hidraulica",
+          "texto": "Impulsores y desgaste interno",
+          "modos": [
+           {
+            "codigo": "LOO",
+            "texto": "Bajó el caudal"
+           },
+           {
+            "codigo": "PDE",
+            "texto": "Presión o corriente fuera de rango"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Impulsores y desgaste interno: ¿qué vio?"
+         },
+         {
+          "parte": "motor",
+          "texto": "Motor eléctrico",
+          "modos": [
+           {
+            "codigo": "OHE",
+            "texto": "Recalentada"
+           },
+           {
+            "codigo": "UST",
+            "texto": "Se disparó sin daño a la vista"
+           },
+           {
+            "codigo": "FTS",
+            "texto": "No arrancó"
+           },
+           {
+            "codigo": "VIB",
+            "texto": "Vibración"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Motor eléctrico: ¿qué vio?"
+         }
+        ]
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "bloqueo": {
+       "texto": "No la arranque hasta decir qué se dañó",
+       "sub": "Si arranca antes, queda como no conformidad."
+      },
+      "tramo": {
+       "choke": "planta",
+       "rotulo": "planta · agua"
+      },
+      "libro": {
+       "evento": "EV-2011-1002",
+       "campoId": "ceiba",
+       "equipo": "P-201B"
+      }
+     }
+    ]
+   },
+   {
+    "id": "contestar:ceiba:EP-LC21-261001-01",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "barriles",
+    "bblAhora": 300.8443255125371,
+    "desde": "2026-10-01T23:20:00.000Z",
+    "titulo": "Diga por qué paró LC-21",
+    "donde": {
+     "equipo": "LC-21",
+     "marca": "atencion",
+     "texto": "pozo · paró el 1 de oct a las 18:20, hace 19,7 h",
+     "corto": "pozo · paró ayer en la tarde"
+    },
+    "porque": [
+     "Sigue parado."
+    ],
+    "porqueCorto": [],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver LC-21",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "LC-21"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EP-LC21-261001-01",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "LC-21",
+      "sobre": "pozo",
+      "marca": "atencion",
+      "contexto": "LC-21 · pozo · paró el 1 de oct a las 18:20, hace 19,7 h",
+      "contextoCorto": "LC-21 · pozo · paró ayer en la tarde",
+      "texto": "¿Por qué paró?",
+      "opciones": [
+       {
+        "tipo": "texto",
+        "texto": "Cierre para prueba o intervención del pozo",
+        "valor": "Cierre para prueba o intervención del pozo"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Fuga o daño en la línea de flujo",
+        "valor": "Fuga o daño en la línea de flujo"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Orden de producción",
+        "dato": "nominación o restricción del comprador",
+        "valor": "Orden de producción: nominación o restricción del comprador"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Falla del controlador o de un instrumento del pozo",
+        "valor": "Falla del controlador o de un instrumento del pozo"
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "bloqueo": {
+       "texto": "No lo arranque hasta decir qué pasó",
+       "sub": "Si arranca antes, queda como no conformidad."
+      },
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "libro": {
+       "evento": "EP-LC21-261001-01",
+       "campoId": "ceiba",
+       "equipo": "LC-21"
+      }
+     }
+    ]
+   },
+   {
+    "id": "contestar:ceiba:EP-LC05-261001-95",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "anh:clasificar",
+    "pide": true,
+    "grupo": "demas",
+    "desde": "2026-10-01T14:16:00.000Z",
+    "titulo": "Contestar «¿De dónde vino el corte?» de LC-05",
+    "donde": {
+     "equipo": "LC-05",
+     "texto": "pozo · paró el 1 de oct a las 09:16"
+    },
+    "porque": [
+     "Para el reporte a la ANH falta el detalle."
+    ],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver la parada",
+     "destino": {
+      "a": "paradas"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "anh:EP-LC05-261001-95@2026-10-01#1:corte",
+      "via": "anh",
+      "campoId": "ceiba",
+      "equipo": "LC-05",
+      "sobre": "pozo",
+      "contexto": "LC-05 · pozo · paró el 1 de oct a las 09:16",
+      "texto": "¿De dónde vino el corte?",
+      "opciones": [
+       {
+        "tipo": "anh",
+        "texto": "Del proveedor: la red de la empresa de energía",
+        "valor": "Del proveedor: la red de la empresa de energía"
+       },
+       {
+        "tipo": "anh",
+        "texto": "Del campo: pórtico, red de media o subestación",
+        "valor": "Del campo: pórtico, red de media o subestación"
+       },
+       {
+        "tipo": "anh",
+        "texto": "De este pozo: su transformador, su variador o su cable",
+        "valor": "De este pozo: su transformador, su variador o su cable"
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "la pregunta sigue abierta y la ve su supervisor",
+        "valor": "No sé"
+       }
+      ],
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "anh": {
+       "fila": "EP-LC05-261001-95@2026-10-01#1",
+       "pregunta": "corte",
+       "cadena": "op-mantenimiento · pozo · diferida · no-planeada · NP_ENINT · —",
+       "aplicarAlEvento": true
+      }
+     }
+    ]
+   },
+   {
+    "id": "contestar:ceiba:EP-LC08-261001-02",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "demas",
+    "desde": "2026-10-02T03:15:00.000Z",
+    "titulo": "Diga por qué paró LC-08",
+    "donde": {
+     "equipo": "LC-08",
+     "texto": "pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar",
+     "corto": "pozo · arrancó hoy en la madrugada sin identificar"
+    },
+    "porque": [
+     "Arrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó."
+    ],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver LC-08",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "LC-08"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EP-LC08-261001-02",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "LC-08",
+      "sobre": "pozo",
+      "contexto": "LC-08 · pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar",
+      "contextoCorto": "LC-08 · pozo · arrancó hoy en la madrugada sin identificar",
+      "texto": "¿Qué se dañó?",
+      "opciones": [
+       {
+        "tipo": "parte",
+        "texto": "Aislamiento del motor y del cable",
+        "parte": "aislamiento",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "BRD",
+          "texto": "Se quemó o dio a tierra"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Aislamiento del motor y del cable: ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Protector (sello del motor)",
+        "parte": "protector",
+        "modos": [
+         {
+          "codigo": "INL",
+          "texto": "Fuga interna"
+         },
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Protector (sello del motor): ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Bomba de fondo (eje y etapas)",
+        "parte": "bomba",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "LOO",
+          "texto": "Bajó el caudal"
+         },
+         {
+          "codigo": "PLU",
+          "texto": "Tapada"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Bomba de fondo (eje y etapas): ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Admisión y separador de gas",
+        "parte": "admision",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "LOO",
+          "texto": "Bajó el caudal"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Admisión y separador de gas: ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Motor de fondo",
+        "parte": "motor",
+        "modos": [
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Motor de fondo: ¿qué vio?"
+       },
+       {
+        "tipo": "causas",
+        "texto": "No fue la electrosumergible",
+        "dato": "otra causa del pozo",
+        "causas": [
+         {
+          "texto": "Cierre para prueba o intervención del pozo",
+          "valor": "Cierre para prueba o intervención del pozo"
+         },
+         {
+          "texto": "Fuga o daño en la línea de flujo",
+          "valor": "Fuga o daño en la línea de flujo"
+         },
+         {
+          "texto": "Orden de producción",
+          "dato": "nominación o restricción del comprador",
+          "valor": "Orden de producción: nominación o restricción del comprador"
+         },
+         {
+          "texto": "Falla del controlador o de un instrumento del pozo",
+          "valor": "Falla del controlador o de un instrumento del pozo"
+         }
+        ]
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "libro": {
+       "evento": "EP-LC08-261001-02",
+       "campoId": "ceiba",
+       "equipo": "LC-08"
+      }
+     }
+    ]
+   },
+   {
+    "id": "aviso:fragil:ceiba",
+    "tipo": "aviso",
+    "campoId": "ceiba",
+    "pide": false,
+    "grupo": "aviso",
+    "titulo": "Lo más frágil: el agua.",
+    "porque": [
+     "Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min."
+    ],
+    "porqueCorto": [
+     "Si para otra bomba, cierre primero LC-02, LC-10 y LC-01."
+    ],
+    "ver": {
+     "texto": "Ver el orden",
+     "destino": {
+      "a": "agua"
+     }
+    }
+   }
+  ],
+  "insignia": 4,
+  "hechas": [],
+  "entregarTurno": false,
+  "campo": {
+   "campoId": "ceiba",
+   "tramos": [
+    {
+     "choke": "pozo",
+     "rotulo": "pozos",
+     "limita": true,
+     "trabado": false
+    },
+    {
+     "choke": "planta",
+     "rotulo": "planta",
+     "limita": false,
+     "trabado": true
+    },
+    {
+     "choke": "exportacion",
+     "rotulo": "salida",
+     "limita": false,
+     "trabado": false
+    }
+   ],
+   "frases": [
+    [
+     "En la planta no pasan ",
+     {
+      "b": "1.665 bbl/d"
+     },
+     "; limitan los pozos."
+    ],
+    [
+     "Tanque de agua ",
+     {
+      "b": "89,6 %"
+     },
+     ": no sube, P-201A y P-201C toman lo que entra."
+    ]
+   ]
+  },
+  "whatsapp": {
+   "mensajes": 8,
+   "hilos": [
+    {
+     "equipo": "K-101",
+     "pasos": "09:11 orden liberada en SAP"
+    },
+    {
+     "equipo": "P-201B",
+     "pasos": "03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado",
+     "estado": [
+      {
+       "b": "sin respuesta"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "hoy_jefe": {
+  "rol": "jefe",
+  "campos": [
+   "ceiba"
+  ],
+  "inicio": {
+   "frase": "De 8,1 días que dura una falla, 7,7 son espera. El vigía anunció 3 de 3 fallas.",
+   "previo": "De cada falla",
+   "cifra": "7,7 de 8,1",
+   "unidad": "días son espera",
+   "ayuda": "La espera es el repuesto, los permisos o la cuadrilla: no la reparación.",
+   "explica": [
+    "El vigía anunció 3 de 3 fallas."
+   ]
+  },
+  "bloqueos": [
+   {
+    "campoId": "ceiba",
+    "equipos": [
+     "P-201B",
+     "LC-21"
+    ],
+    "texto": "No arrancar P-201B ni LC-21 hasta identificar qué se dañó",
+    "sub": "Si arranca antes, queda como no conformidad.",
+    "textoCorto": "No arrancar P-201B ni LC-21",
+    "subCorto": "Hasta identificar qué se dañó. Si arranca antes, queda como no conformidad."
+   }
+  ],
+  "tareas": [
+   {
+    "id": "conseguir-causa:ceiba",
+    "tipo": "conseguir-causa",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "barriles",
+    "bblAhora": 1966.0272482539049,
+    "desde": "2026-10-02T08:52:18.000Z",
+    "titulo": "Conseguir la causa de 3 paradas",
+    "donde": {
+     "equipo": "P-201B",
+     "marca": "alarma",
+     "texto": "lleva 10,1 h sin saber qué se dañó; se escaló a las 05:52",
+     "corto": "lleva 10,1 h sin causa"
+    },
+    "porque": [
+     {
+      "b": "LC-21"
+     },
+     " lleva 19,7 h sin causa",
+     " · ",
+     {
+      "b": "LC-08"
+     },
+     " arrancó a la 01:10 sin identificar",
+     " · ",
+     "Entre las 3: ",
+     {
+      "b": "219 bbl hoy"
+     },
+     " · 928 desde que pararon"
+    ],
+    "porqueCorto": [
+     "Entre todas: ",
+     {
+      "b": "219 bbl hoy"
+     }
+    ],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Responder yo"
+    },
+    "ver": {
+     "texto": "Ver el chat",
+     "destino": {
+      "a": "paradas"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EV-2011-1002",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "P-201B",
+      "sobre": "bomba",
+      "marca": "alarma",
+      "contexto": "P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h",
+      "contextoCorto": "P-201B · bomba de agua · paró hoy en la madrugada",
+      "texto": "¿Qué parte se dañó?",
+      "pista": "Lo que más le ha fallado a esta bomba:",
+      "opciones": [
+       {
+        "tipo": "parte",
+        "texto": "Sello mecánico",
+        "parte": "sello",
+        "modos": [
+         {
+          "codigo": "ELP",
+          "texto": "Fuga hacia afuera"
+         },
+         {
+          "codigo": "INL",
+          "texto": "Fuga interna"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Sello mecánico: ¿qué vio?",
+        "dato": "5 de sus 8 fallas"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Rodamientos y cámara de empuje",
+        "parte": "rodamientos",
+        "modos": [
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "VIB",
+          "texto": "Vibración"
+         },
+         {
+          "codigo": "NOI",
+          "texto": "Ruido"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Rodamientos y cámara de empuje: ¿qué vio?",
+        "dato": "3 de sus 8 fallas"
+       },
+       {
+        "tipo": "partes",
+        "texto": "Otra parte",
+        "dato": "escoja de la lista",
+        "partes": [
+         {
+          "parte": "succion",
+          "texto": "Succión y filtro de entrada",
+          "modos": [
+           {
+            "codigo": "UST",
+            "texto": "Se disparó sin daño a la vista"
+           },
+           {
+            "codigo": "PLU",
+            "texto": "Tapada"
+           },
+           {
+            "codigo": "LOO",
+            "texto": "Bajó el caudal"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Succión y filtro de entrada: ¿qué vio?"
+         },
+         {
+          "parte": "hidraulica",
+          "texto": "Impulsores y desgaste interno",
+          "modos": [
+           {
+            "codigo": "LOO",
+            "texto": "Bajó el caudal"
+           },
+           {
+            "codigo": "PDE",
+            "texto": "Presión o corriente fuera de rango"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Impulsores y desgaste interno: ¿qué vio?"
+         },
+         {
+          "parte": "motor",
+          "texto": "Motor eléctrico",
+          "modos": [
+           {
+            "codigo": "OHE",
+            "texto": "Recalentada"
+           },
+           {
+            "codigo": "UST",
+            "texto": "Se disparó sin daño a la vista"
+           },
+           {
+            "codigo": "FTS",
+            "texto": "No arrancó"
+           },
+           {
+            "codigo": "VIB",
+            "texto": "Vibración"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Motor eléctrico: ¿qué vio?"
+         }
+        ]
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "bloqueo": {
+       "texto": "No la arranque hasta decir qué se dañó",
+       "sub": "Si arranca antes, queda como no conformidad."
+      },
+      "tramo": {
+       "choke": "planta",
+       "rotulo": "planta · agua"
+      },
+      "libro": {
+       "evento": "EV-2011-1002",
+       "campoId": "ceiba",
+       "equipo": "P-201B"
+      }
+     },
+     {
+      "id": "libro:EP-LC21-261001-01",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "LC-21",
+      "sobre": "pozo",
+      "marca": "atencion",
+      "contexto": "LC-21 · pozo · paró el 1 de oct a las 18:20, hace 19,7 h",
+      "contextoCorto": "LC-21 · pozo · paró ayer en la tarde",
+      "texto": "¿Por qué paró?",
+      "opciones": [
+       {
+        "tipo": "texto",
+        "texto": "Cierre para prueba o intervención del pozo",
+        "valor": "Cierre para prueba o intervención del pozo"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Fuga o daño en la línea de flujo",
+        "valor": "Fuga o daño en la línea de flujo"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Orden de producción",
+        "dato": "nominación o restricción del comprador",
+        "valor": "Orden de producción: nominación o restricción del comprador"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Falla del controlador o de un instrumento del pozo",
+        "valor": "Falla del controlador o de un instrumento del pozo"
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "bloqueo": {
+       "texto": "No lo arranque hasta decir qué pasó",
+       "sub": "Si arranca antes, queda como no conformidad."
+      },
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "libro": {
+       "evento": "EP-LC21-261001-01",
+       "campoId": "ceiba",
+       "equipo": "LC-21"
+      }
+     },
+     {
+      "id": "libro:EP-LC08-261001-02",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "LC-08",
+      "sobre": "pozo",
+      "contexto": "LC-08 · pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar",
+      "contextoCorto": "LC-08 · pozo · arrancó hoy en la madrugada sin identificar",
+      "texto": "¿Qué se dañó?",
+      "opciones": [
+       {
+        "tipo": "parte",
+        "texto": "Aislamiento del motor y del cable",
+        "parte": "aislamiento",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "BRD",
+          "texto": "Se quemó o dio a tierra"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Aislamiento del motor y del cable: ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Protector (sello del motor)",
+        "parte": "protector",
+        "modos": [
+         {
+          "codigo": "INL",
+          "texto": "Fuga interna"
+         },
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Protector (sello del motor): ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Bomba de fondo (eje y etapas)",
+        "parte": "bomba",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "LOO",
+          "texto": "Bajó el caudal"
+         },
+         {
+          "codigo": "PLU",
+          "texto": "Tapada"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Bomba de fondo (eje y etapas): ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Admisión y separador de gas",
+        "parte": "admision",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "LOO",
+          "texto": "Bajó el caudal"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Admisión y separador de gas: ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Motor de fondo",
+        "parte": "motor",
+        "modos": [
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Motor de fondo: ¿qué vio?"
+       },
+       {
+        "tipo": "causas",
+        "texto": "No fue la electrosumergible",
+        "dato": "otra causa del pozo",
+        "causas": [
+         {
+          "texto": "Cierre para prueba o intervención del pozo",
+          "valor": "Cierre para prueba o intervención del pozo"
+         },
+         {
+          "texto": "Fuga o daño en la línea de flujo",
+          "valor": "Fuga o daño en la línea de flujo"
+         },
+         {
+          "texto": "Orden de producción",
+          "dato": "nominación o restricción del comprador",
+          "valor": "Orden de producción: nominación o restricción del comprador"
+         },
+         {
+          "texto": "Falla del controlador o de un instrumento del pozo",
+          "valor": "Falla del controlador o de un instrumento del pozo"
+         }
+        ]
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "libro": {
+       "evento": "EP-LC08-261001-02",
+       "campoId": "ceiba",
+       "equipo": "LC-08"
+      }
+     }
+    ]
+   },
+   {
+    "campoId": "ceiba",
+    "capacidad": "sap:aviso",
+    "pide": true,
+    "grupo": "barriles",
+    "bblSiPara": 9394.199400160593,
+    "donde": {
+     "equipo": "K-101",
+     "marca": "alarma",
+     "texto": "aire de instrumentos · ya pasó el límite"
+    },
+    "id": "orden:ceiba:40012056",
+    "tipo": "orden",
+    "titulo": "Seguir la orden de K-101",
+    "desde": "2026-10-02T09:10:00-05:00",
+    "porque": [
+     "Si para, hasta ",
+     {
+      "b": "9.394 bbl/d"
+     },
+     ". ",
+     "Orden 40012056, liberada a Óscar Daza a las 09:10."
+    ],
+    "porqueCorto": [
+     "Si para, hasta ",
+     {
+      "b": "9.394 bbl/d"
+     },
+     ". "
+    ],
+    "ver": {
+     "texto": "Ver la orden",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "K-101"
+     }
+    }
+   },
+   {
+    "id": "planes:ceiba|P-201B",
+    "tipo": "planes",
+    "campoId": "ceiba",
+    "capacidad": "planes:decidir",
+    "pide": true,
+    "grupo": "demas",
+    "titulo": "Decidir 3 planes de P-201B · simulado",
+    "tituloCorto": "Decidir planes · simulado",
+    "donde": {
+     "equipo": "P-201B",
+     "marca": "alarma",
+     "texto": "volver antes de 39 h"
+    },
+    "porque": [
+     "Simulado: ",
+     {
+      "b": "2.133 bbl"
+     },
+     " que se pueden mover si se ejecutan."
+    ],
+    "ver": {
+     "texto": "Ver los planes",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    }
+   },
+   {
+    "id": "aviso:no-intervenir:ceiba",
+    "tipo": "aviso",
+    "campoId": "ceiba",
+    "pide": false,
+    "grupo": "aviso",
+    "titulo": "Ojo: no intervenir hoy.",
+    "porque": [
+     "P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy."
+    ],
+    "ver": {
+     "texto": "Ver P-201A y P-201C",
+     "destino": {
+      "a": "equipos",
+      "tren": "agua"
+     }
+    }
+   }
+  ],
+  "insignia": 3,
+  "hechas": [],
+  "entregarTurno": false,
+  "campo": {
+   "campoId": "ceiba",
+   "tramos": [
+    {
+     "choke": "pozo",
+     "rotulo": "pozos",
+     "limita": true,
+     "trabado": false
+    },
+    {
+     "choke": "planta",
+     "rotulo": "planta",
+     "limita": false,
+     "trabado": true
+    },
+    {
+     "choke": "exportacion",
+     "rotulo": "salida",
+     "limita": false,
+     "trabado": false
+    }
+   ],
+   "frases": [
+    [
+     "En la planta no pasan ",
+     {
+      "b": "1.665 bbl/d"
+     },
+     "; limitan los pozos."
+    ],
+    [
+     "Tanque de agua ",
+     {
+      "b": "89,6 %"
+     },
+     ": no sube, P-201A y P-201C toman lo que entra."
+    ]
+   ]
+  }
+ },
+ "hoy_prod": {
+  "rol": "prod",
+  "campos": [
+   "ceiba"
+  ],
+  "inicio": {
+   "frase": "Le tocan 2 cosas hoy. Primero confirmar 2 paradas iguales.",
+   "cifra": "2",
+   "unidad": "cosas le tocan hoy",
+   "remate": "Primero confirmar 2 paradas iguales."
+  },
+  "bloqueos": [],
+  "tareas": [
+   {
+    "id": "confirmar:ceiba|op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/parada-estacion-bombeo-afecta-pozos",
+    "tipo": "confirmar",
+    "campoId": "ceiba",
+    "capacidad": "anh:confirmar",
+    "pide": true,
+    "grupo": "hora",
+    "limite": "2026-10-03T07:00:00-05:00",
+    "bblAhora": 1665.1829227413677,
+    "desde": "2026-10-02T10:43:00.000Z",
+    "titulo": "Confirmar 2 paradas iguales",
+    "donde": {
+     "equipo": "P-201B",
+     "marca": "alarma",
+     "texto": "cerró LC-07 y LC-16 · 05:43",
+     "corto": "cerró LC-07 y LC-16"
+    },
+    "porque": [
+     "TRIM las dedujo: ",
+     {
+      "b": "en la planta, no planeada"
+     },
+     ". Falta su confirmación."
+    ],
+    "porqueCorto": [
+     "TRIM las dedujo: ",
+     {
+      "b": "en la planta, no planeada"
+     },
+     "."
+    ],
+    "accion": {
+     "tipo": "confirmar",
+     "texto": "Confirmar las 2",
+     "ids": [
+      "EP-LC07-261002-79@2026-10-02#1",
+      "EP-LC16-261002-78@2026-10-02#1"
+     ],
+     "cadena": "op-mantenimiento · planta · diferida · no-planeada · NP_PROC · NP_PROC/parada-estacion-bombeo-afecta-pozos",
+     "pozos": [
+      "LC-07",
+      "LC-16"
+     ]
+    },
+    "ver": {
+     "texto": "Ver una por una",
+     "destino": {
+      "a": "paradas"
+     }
+    }
+   },
+   {
+    "id": "asignacion:ceiba:2026-09",
+    "tipo": "asignacion",
+    "campoId": "ceiba",
+    "capacidad": "asignacion:cargar",
+    "pide": true,
+    "grupo": "demas",
+    "desde": "2026-09-01T00:00:00-05:00",
+    "titulo": "Cargar la asignación de septiembre",
+    "donde": {
+     "equipo": "La Ceiba",
+     "texto": "sin asignación oficial cargada"
+    },
+    "porque": [
+     "Sin ella, lo que asigna TRIM no se coteja con lo que reportó la operadora."
+    ],
+    "ver": {
+     "texto": "Cargarla",
+     "destino": {
+      "a": "asignacion"
+     }
+    }
+   }
+  ],
+  "insignia": 2,
+  "hechas": [],
+  "entregarTurno": false,
+  "campo": {
+   "campoId": "ceiba",
+   "tramos": [
+    {
+     "choke": "pozo",
+     "rotulo": "pozos",
+     "limita": true,
+     "trabado": false
+    },
+    {
+     "choke": "planta",
+     "rotulo": "planta",
+     "limita": false,
+     "trabado": true
+    },
+    {
+     "choke": "exportacion",
+     "rotulo": "salida",
+     "limita": false,
+     "trabado": false
+    }
+   ],
+   "frases": [
+    [
+     "En la planta no pasan ",
+     {
+      "b": "1.665 bbl/d"
+     },
+     "; limitan los pozos."
+    ],
+    [
+     "Tanque de agua ",
+     {
+      "b": "89,6 %"
+     },
+     ": no sube, P-201A y P-201C toman lo que entra."
+    ]
+   ]
+  }
+ },
+ "hoy_reg": {
+  "rol": "reg",
+  "campos": [
+   "ceiba"
+  ],
+  "inicio": {
+   "frase": "Nada pendiente.",
+   "cifra": "0",
+   "unidad": "cosas por hacer"
+  },
+  "bloqueos": [],
+  "tareas": [],
+  "insignia": 0,
+  "hechas": [],
+  "vacio": "Nada pendiente. El campo está normal.",
+  "entregarTurno": false,
+  "campo": {
+   "campoId": "ceiba",
+   "tramos": [
+    {
+     "choke": "pozo",
+     "rotulo": "pozos",
+     "limita": true,
+     "trabado": false
+    },
+    {
+     "choke": "planta",
+     "rotulo": "planta",
+     "limita": false,
+     "trabado": true
+    },
+    {
+     "choke": "exportacion",
+     "rotulo": "salida",
+     "limita": false,
+     "trabado": false
+    }
+   ],
+   "frases": [
+    [
+     "En la planta no pasan ",
+     {
+      "b": "1.665 bbl/d"
+     },
+     "; limitan los pozos."
+    ],
+    [
+     "Tanque de agua ",
+     {
+      "b": "89,6 %"
+     },
+     ": no sube, P-201A y P-201C toman lo que entra."
+    ]
+   ]
+  }
+ },
+ "hoy_tec": {
+  "rol": "tec",
+  "campos": [
+   "ceiba"
+  ],
+  "inicio": {
+   "frase": "Le tocan 5 cosas hoy. Primero P-201B: diga qué se dañó.",
+   "cifra": "5",
+   "unidad": "cosas le tocan hoy",
+   "remate": "Primero P-201B: diga qué se dañó."
+  },
+  "bloqueos": [
+   {
+    "campoId": "ceiba",
+    "equipos": [
+     "P-201B",
+     "LC-21"
+    ],
+    "texto": "No arrancar P-201B ni LC-21 hasta identificar qué se dañó",
+    "sub": "Si arranca antes, queda como no conformidad."
+   }
+  ],
+  "tareas": [
+   {
+    "id": "contestar:ceiba:EV-2011-1002",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "barriles",
+    "bblAhora": 1665.1829227413677,
+    "desde": "2026-10-02T08:52:18.000Z",
+    "titulo": "Diga qué se dañó en P-201B",
+    "donde": {
+     "equipo": "P-201B",
+     "marca": "alarma",
+     "texto": "bomba de agua · paró hoy a las 03:52, hace 10,1 h",
+     "corto": "bomba de agua · paró hoy en la madrugada"
+    },
+    "porque": [
+     "Sigue parada."
+    ],
+    "porqueCorto": [],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver P-201B",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EV-2011-1002",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "P-201B",
+      "sobre": "bomba",
+      "marca": "alarma",
+      "contexto": "P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h",
+      "contextoCorto": "P-201B · bomba de agua · paró hoy en la madrugada",
+      "texto": "¿Qué parte se dañó?",
+      "pista": "Lo que más le ha fallado a esta bomba:",
+      "opciones": [
+       {
+        "tipo": "parte",
+        "texto": "Sello mecánico",
+        "parte": "sello",
+        "modos": [
+         {
+          "codigo": "ELP",
+          "texto": "Fuga hacia afuera"
+         },
+         {
+          "codigo": "INL",
+          "texto": "Fuga interna"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Sello mecánico: ¿qué vio?",
+        "dato": "5 de sus 8 fallas"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Rodamientos y cámara de empuje",
+        "parte": "rodamientos",
+        "modos": [
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "VIB",
+          "texto": "Vibración"
+         },
+         {
+          "codigo": "NOI",
+          "texto": "Ruido"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Rodamientos y cámara de empuje: ¿qué vio?",
+        "dato": "3 de sus 8 fallas"
+       },
+       {
+        "tipo": "partes",
+        "texto": "Otra parte",
+        "dato": "escoja de la lista",
+        "partes": [
+         {
+          "parte": "succion",
+          "texto": "Succión y filtro de entrada",
+          "modos": [
+           {
+            "codigo": "UST",
+            "texto": "Se disparó sin daño a la vista"
+           },
+           {
+            "codigo": "PLU",
+            "texto": "Tapada"
+           },
+           {
+            "codigo": "LOO",
+            "texto": "Bajó el caudal"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Succión y filtro de entrada: ¿qué vio?"
+         },
+         {
+          "parte": "hidraulica",
+          "texto": "Impulsores y desgaste interno",
+          "modos": [
+           {
+            "codigo": "LOO",
+            "texto": "Bajó el caudal"
+           },
+           {
+            "codigo": "PDE",
+            "texto": "Presión o corriente fuera de rango"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Impulsores y desgaste interno: ¿qué vio?"
+         },
+         {
+          "parte": "motor",
+          "texto": "Motor eléctrico",
+          "modos": [
+           {
+            "codigo": "OHE",
+            "texto": "Recalentada"
+           },
+           {
+            "codigo": "UST",
+            "texto": "Se disparó sin daño a la vista"
+           },
+           {
+            "codigo": "FTS",
+            "texto": "No arrancó"
+           },
+           {
+            "codigo": "VIB",
+            "texto": "Vibración"
+           },
+           {
+            "codigo": "OTH",
+            "texto": "Otra cosa",
+            "escribe": true
+           }
+          ],
+          "pregunta": "Motor eléctrico: ¿qué vio?"
+         }
+        ]
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "bloqueo": {
+       "texto": "No la arranque hasta decir qué se dañó",
+       "sub": "Si arranca antes, queda como no conformidad."
+      },
+      "tramo": {
+       "choke": "planta",
+       "rotulo": "planta · agua"
+      },
+      "libro": {
+       "evento": "EV-2011-1002",
+       "campoId": "ceiba",
+       "equipo": "P-201B"
+      }
+     }
+    ]
+   },
+   {
+    "id": "contestar:ceiba:EP-LC21-261001-01",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "barriles",
+    "bblAhora": 300.8443255125371,
+    "desde": "2026-10-01T23:20:00.000Z",
+    "titulo": "Diga por qué paró LC-21",
+    "donde": {
+     "equipo": "LC-21",
+     "marca": "atencion",
+     "texto": "pozo · paró el 1 de oct a las 18:20, hace 19,7 h",
+     "corto": "pozo · paró ayer en la tarde"
+    },
+    "porque": [
+     "Sigue parado."
+    ],
+    "porqueCorto": [],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver LC-21",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "LC-21"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EP-LC21-261001-01",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "LC-21",
+      "sobre": "pozo",
+      "marca": "atencion",
+      "contexto": "LC-21 · pozo · paró el 1 de oct a las 18:20, hace 19,7 h",
+      "contextoCorto": "LC-21 · pozo · paró ayer en la tarde",
+      "texto": "¿Por qué paró?",
+      "opciones": [
+       {
+        "tipo": "texto",
+        "texto": "Cierre para prueba o intervención del pozo",
+        "valor": "Cierre para prueba o intervención del pozo"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Fuga o daño en la línea de flujo",
+        "valor": "Fuga o daño en la línea de flujo"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Orden de producción",
+        "dato": "nominación o restricción del comprador",
+        "valor": "Orden de producción: nominación o restricción del comprador"
+       },
+       {
+        "tipo": "texto",
+        "texto": "Falla del controlador o de un instrumento del pozo",
+        "valor": "Falla del controlador o de un instrumento del pozo"
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "bloqueo": {
+       "texto": "No lo arranque hasta decir qué pasó",
+       "sub": "Si arranca antes, queda como no conformidad."
+      },
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "libro": {
+       "evento": "EP-LC21-261001-01",
+       "campoId": "ceiba",
+       "equipo": "LC-21"
+      }
+     }
+    ]
+   },
+   {
+    "id": "orden:ceiba:40012056",
+    "tipo": "orden",
+    "campoId": "ceiba",
+    "pide": true,
+    "grupo": "barriles",
+    "bblSiPara": 9394.199400160593,
+    "desde": "2026-10-02T09:10:00-05:00",
+    "titulo": "Atender la orden de K-101",
+    "donde": {
+     "equipo": "K-101",
+     "marca": "alarma",
+     "texto": "aire de instrumentos · ya pasó el límite · orden 40012056 · le llegó por WhatsApp a las 09:11"
+    },
+    "porque": [
+     "Verificar que las tres unidades estén en servicio: hoy hay dos."
+    ],
+    "ver": {
+     "texto": "Ver la orden",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "K-101"
+     }
+    }
+   },
+   {
+    "id": "contestar:ceiba:EP-LC05-261001-95",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "anh:clasificar",
+    "pide": true,
+    "grupo": "demas",
+    "desde": "2026-10-01T14:16:00.000Z",
+    "titulo": "Contestar «¿De dónde vino el corte?» de LC-05",
+    "donde": {
+     "equipo": "LC-05",
+     "texto": "pozo · paró el 1 de oct a las 09:16"
+    },
+    "porque": [
+     "Para el reporte a la ANH falta el detalle."
+    ],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver la parada",
+     "destino": {
+      "a": "paradas"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "anh:EP-LC05-261001-95@2026-10-01#1:corte",
+      "via": "anh",
+      "campoId": "ceiba",
+      "equipo": "LC-05",
+      "sobre": "pozo",
+      "contexto": "LC-05 · pozo · paró el 1 de oct a las 09:16",
+      "texto": "¿De dónde vino el corte?",
+      "opciones": [
+       {
+        "tipo": "anh",
+        "texto": "Del proveedor: la red de la empresa de energía",
+        "valor": "Del proveedor: la red de la empresa de energía"
+       },
+       {
+        "tipo": "anh",
+        "texto": "Del campo: pórtico, red de media o subestación",
+        "valor": "Del campo: pórtico, red de media o subestación"
+       },
+       {
+        "tipo": "anh",
+        "texto": "De este pozo: su transformador, su variador o su cable",
+        "valor": "De este pozo: su transformador, su variador o su cable"
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "la pregunta sigue abierta y la ve su supervisor",
+        "valor": "No sé"
+       }
+      ],
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "anh": {
+       "fila": "EP-LC05-261001-95@2026-10-01#1",
+       "pregunta": "corte",
+       "cadena": "op-mantenimiento · pozo · diferida · no-planeada · NP_ENINT · —",
+       "aplicarAlEvento": true
+      }
+     }
+    ]
+   },
+   {
+    "id": "contestar:ceiba:EP-LC08-261001-02",
+    "tipo": "contestar",
+    "campoId": "ceiba",
+    "capacidad": "causa:declarar",
+    "pide": true,
+    "grupo": "demas",
+    "desde": "2026-10-02T03:15:00.000Z",
+    "titulo": "Diga por qué paró LC-08",
+    "donde": {
+     "equipo": "LC-08",
+     "texto": "pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar",
+     "corto": "pozo · arrancó hoy en la madrugada sin identificar"
+    },
+    "porque": [
+     "Arrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó."
+    ],
+    "accion": {
+     "tipo": "responder",
+     "texto": "Contestar"
+    },
+    "ver": {
+     "texto": "Ver LC-08",
+     "destino": {
+      "a": "equipo",
+      "campoId": "ceiba",
+      "equipo": "LC-08"
+     }
+    },
+    "preguntas": [
+     {
+      "id": "libro:EP-LC08-261001-02",
+      "via": "libro",
+      "campoId": "ceiba",
+      "equipo": "LC-08",
+      "sobre": "pozo",
+      "contexto": "LC-08 · pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar",
+      "contextoCorto": "LC-08 · pozo · arrancó hoy en la madrugada sin identificar",
+      "texto": "¿Qué se dañó?",
+      "opciones": [
+       {
+        "tipo": "parte",
+        "texto": "Aislamiento del motor y del cable",
+        "parte": "aislamiento",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "BRD",
+          "texto": "Se quemó o dio a tierra"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Aislamiento del motor y del cable: ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Protector (sello del motor)",
+        "parte": "protector",
+        "modos": [
+         {
+          "codigo": "INL",
+          "texto": "Fuga interna"
+         },
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Protector (sello del motor): ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Bomba de fondo (eje y etapas)",
+        "parte": "bomba",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "LOO",
+          "texto": "Bajó el caudal"
+         },
+         {
+          "codigo": "PLU",
+          "texto": "Tapada"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Bomba de fondo (eje y etapas): ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Admisión y separador de gas",
+        "parte": "admision",
+        "modos": [
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "LOO",
+          "texto": "Bajó el caudal"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Admisión y separador de gas: ¿qué vio?"
+       },
+       {
+        "tipo": "parte",
+        "texto": "Motor de fondo",
+        "parte": "motor",
+        "modos": [
+         {
+          "codigo": "OHE",
+          "texto": "Recalentada"
+         },
+         {
+          "codigo": "UST",
+          "texto": "Se disparó sin daño a la vista"
+         },
+         {
+          "codigo": "OTH",
+          "texto": "Otra cosa",
+          "escribe": true
+         }
+        ],
+        "pregunta": "Motor de fondo: ¿qué vio?"
+       },
+       {
+        "tipo": "causas",
+        "texto": "No fue la electrosumergible",
+        "dato": "otra causa del pozo",
+        "causas": [
+         {
+          "texto": "Cierre para prueba o intervención del pozo",
+          "valor": "Cierre para prueba o intervención del pozo"
+         },
+         {
+          "texto": "Fuga o daño en la línea de flujo",
+          "valor": "Fuga o daño en la línea de flujo"
+         },
+         {
+          "texto": "Orden de producción",
+          "dato": "nominación o restricción del comprador",
+          "valor": "Orden de producción: nominación o restricción del comprador"
+         },
+         {
+          "texto": "Falla del controlador o de un instrumento del pozo",
+          "valor": "Falla del controlador o de un instrumento del pozo"
+         }
+        ]
+       },
+       {
+        "tipo": "no-se",
+        "texto": "Todavía no sé",
+        "dato": "se la vuelven a preguntar en la próxima ronda"
+       }
+      ],
+      "tramo": {
+       "choke": "pozo",
+       "rotulo": "pozos"
+      },
+      "libro": {
+       "evento": "EP-LC08-261001-02",
+       "campoId": "ceiba",
+       "equipo": "LC-08"
+      }
+     }
+    ]
+   }
+  ],
+  "insignia": 5,
+  "hechas": [],
+  "entregarTurno": false,
+  "campo": {
+   "campoId": "ceiba",
+   "tramos": [
+    {
+     "choke": "pozo",
+     "rotulo": "pozos",
+     "limita": true,
+     "trabado": false
+    },
+    {
+     "choke": "planta",
+     "rotulo": "planta",
+     "limita": false,
+     "trabado": true
+    },
+    {
+     "choke": "exportacion",
+     "rotulo": "salida",
+     "limita": false,
+     "trabado": false
+    }
+   ],
+   "frases": [
+    [
+     "En la planta no pasan ",
+     {
+      "b": "1.665 bbl/d"
+     },
+     "; limitan los pozos."
+    ],
+    [
+     "Tanque de agua ",
+     {
+      "b": "89,6 %"
+     },
+     ": no sube, P-201A y P-201C toman lo que entra."
+    ]
+   ]
+  }
+ },
+ "lista": {
+  "filas": [
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "P-201B",
+    "nombre": "Bomba multietapa de transferencia de agua",
+    "tipo": "bomba",
+    "tipos": [
+     "bomba"
+    ],
+    "tren": "agua",
+    "familia": "bomba de agua",
+    "condicion": "alarma",
+    "parado": true,
+    "vigila": true,
+    "vigilaTexto": "sí · 8 señales",
+    "palabra": "parada desde hoy, 03:52",
+    "cifra": {
+     "valor": 1665,
+     "que": "se deja de producir",
+     "exacto": 1665.1829227413677
+    },
+    "filtros": [
+     "parados",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "K-101",
+    "nombre": "Sistema de aire de instrumentos",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "servicios",
+    "familia": "aire de instrumentos",
+    "condicion": "alarma",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 4 señales",
+    "palabra": "ya pasó el límite",
+    "cifra": {
+     "valor": 9394.199400160593,
+     "que": "si falla hoy",
+     "techo": true
+    },
+    "filtros": [
+     "avisan",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-21",
+    "nombre": "Pozo LC-21 · bombeo mecánico",
+    "tipo": "pozo",
+    "tipos": [
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "pozo · bombeo mecánico",
+    "condicion": "atencion",
+    "parado": true,
+    "vigila": false,
+    "vigilaTexto": "no: solo su controlador",
+    "palabra": "parado sin causa desde el 1 de oct, 18:20",
+    "cifra": {
+     "valor": 301,
+     "que": "se deja de producir",
+     "exacto": 300.8443255125371
+    },
+    "filtros": [
+     "parados",
+     "sin-instrumento",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "TK-102",
+    "nombre": "Tanque de crudo en especificación",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "crudo",
+    "familia": "tanque de crudo",
+    "condicion": "atencion",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 4 señales",
+    "palabra": "en servicio",
+    "cifra": {
+     "valor": null,
+     "que": "si falla hoy",
+     "detalle": "sin dato"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "H-302",
+    "nombre": "Tratador térmico",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "crudo",
+    "familia": "tratamiento de crudo",
+    "condicion": "aviso",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 4 señales",
+    "palabra": "en marcha",
+    "cifra": {
+     "valor": 0,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-16",
+    "nombre": "Pozo LC-16 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": true,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "cerrado por P-201B",
+    "cifra": {
+     "valor": null,
+     "que": "se deja de producir",
+     "dentroDe": {
+      "equipo": "P-201B",
+      "valor": 1665
+     },
+     "detalle": "dentro de los 1.665 de P-201B",
+     "exacto": 868.9993733753859
+    },
+    "filtros": [
+     "parados",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-07",
+    "nombre": "Pozo LC-07 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": true,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "cerrado por P-201B",
+    "cifra": {
+     "valor": null,
+     "que": "se deja de producir",
+     "dentroDe": {
+      "equipo": "P-201B",
+      "valor": 1665
+     },
+     "detalle": "dentro de los 1.665 de P-201B",
+     "exacto": 796.183549365982
+    },
+    "filtros": [
+     "parados",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "P-201A",
+    "nombre": "P-201A · bomba de agua",
+    "tipo": "bomba",
+    "tipos": [
+     "bomba"
+    ],
+    "tren": "agua",
+    "familia": "bomba de agua",
+    "parado": false,
+    "vigila": false,
+    "vigilaTexto": "no: sin instrumento",
+    "palabra": "sin instrumento: se supone en marcha",
+    "sube": "sube porque P-201B está parada",
+    "cifra": {
+     "valor": 3058.604258286438,
+     "que": "si falla hoy",
+     "detalle": "después de 2 min de colchón"
+    },
+    "filtros": [
+     "sin-instrumento",
+     "todos"
+    ],
+    "registrado": false
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "P-201C",
+    "nombre": "P-201C · bomba de agua",
+    "tipo": "bomba",
+    "tipos": [
+     "bomba"
+    ],
+    "tren": "agua",
+    "familia": "bomba de agua",
+    "parado": false,
+    "vigila": false,
+    "vigilaTexto": "no: sin instrumento",
+    "palabra": "sin instrumento: se supone en marcha",
+    "sube": "sube porque P-201B está parada",
+    "cifra": {
+     "valor": 3058.604258286438,
+     "que": "si falla hoy",
+     "detalle": "después de 2 min de colchón"
+    },
+    "filtros": [
+     "sin-instrumento",
+     "todos"
+    ],
+    "registrado": false
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-11",
+    "nombre": "Pozo LC-11 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 1030.9187715015603,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-08",
+    "nombre": "Pozo LC-08 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 892.9519470626898,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-04",
+    "nombre": "Pozo LC-04 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 824.9266377907467,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-05",
+    "nombre": "Pozo LC-05 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 812.4712994733486,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-14",
+    "nombre": "Pozo LC-14 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 782.7701081010918,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-19",
+    "nombre": "Pozo LC-19 · bombeo mecánico",
+    "tipo": "pozo",
+    "tipos": [
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "pozo · bombeo mecánico",
+    "parado": false,
+    "vigila": false,
+    "vigilaTexto": "no: solo su controlador",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 777.979593363631,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "sin-instrumento",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-06",
+    "nombre": "Pozo LC-06 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 691.7503280893369,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-09",
+    "nombre": "Pozo LC-09 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 619.8926070274252,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-17",
+    "nombre": "Pozo LC-17 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 539.4119594380841,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-15",
+    "nombre": "Pozo LC-15 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 470.4285472186488,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-10",
+    "nombre": "Pozo LC-10 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 458.9313118487429,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-12",
+    "nombre": "Pozo LC-12 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 379.4087672068939,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-02",
+    "nombre": "Pozo LC-02 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 378.4506642594018,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-03",
+    "nombre": "Pozo LC-03 · bombeo mecánico",
+    "tipo": "pozo",
+    "tipos": [
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "pozo · bombeo mecánico",
+    "parado": false,
+    "vigila": false,
+    "vigilaTexto": "no: solo su controlador",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 373.660149521941,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "sin-instrumento",
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LC-01",
+    "nombre": "Pozo LC-01 · electrosumergible",
+    "tipo": "electrosumergible",
+    "tipos": [
+     "electrosumergible",
+     "pozo"
+    ],
+    "tren": "pozos",
+    "familia": "electrosumergible",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 6 señales",
+    "palabra": "produciendo",
+    "cifra": {
+     "valor": 360.2467082570508,
+     "que": "si falla hoy"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "SE-2",
+    "nombre": "Pórtico 13,8 kV · subestación 2",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "servicios",
+    "familia": "energía eléctrica",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 3 señales",
+    "palabra": "en servicio",
+    "cifra": {
+     "valor": 9394.199400160593,
+     "que": "si falla hoy",
+     "techo": true
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true,
+    "sinRespaldo": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "V-101",
+    "nombre": "Separador trifásico",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "crudo",
+    "familia": "separador",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 2 señales",
+    "palabra": "en marcha",
+    "cifra": {
+     "valor": 9394.199400160593,
+     "que": "si falla hoy",
+     "techo": true
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true,
+    "sinRespaldo": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "C-401",
+    "nombre": "Compresor de gas",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "gas",
+    "familia": "compresor de gas",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 2 señales",
+    "palabra": "en marcha",
+    "cifra": {
+     "valor": null,
+     "que": "si falla hoy",
+     "detalle": "sin dato"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true,
+    "sinRespaldo": true
+   },
+   {
+    "campoId": "ceiba",
+    "campoNombre": "La Ceiba",
+    "equipo": "LACT-01",
+    "nombre": "Unidad LACT · punto de medición oficial",
+    "tipo": "superficie",
+    "tipos": [
+     "superficie"
+    ],
+    "tren": "crudo",
+    "familia": "medición oficial",
+    "parado": false,
+    "vigila": true,
+    "vigilaTexto": "sí · 3 señales",
+    "palabra": "despachando",
+    "cifra": {
+     "valor": null,
+     "que": "si falla hoy",
+     "detalle": "sin dato"
+    },
+    "filtros": [
+     "todos"
+    ],
+    "registrado": true,
+    "sinRespaldo": true
+   }
+  ],
+  "cuentas": {
+   "estado": {
+    "parados": 4,
+    "avisan": 1,
+    "sin-instrumento": 5,
+    "todos": 28
+   },
+   "tipo": {
+    "bomba": 3,
+    "electrosumergible": 15,
+    "pozo": 18,
+    "superficie": 7
+   },
+   "tren": {
+    "pozos": 18,
+    "recoleccion": 0,
+    "crudo": 4,
+    "agua": 3,
+    "gas": 1,
+    "servicios": 2
+   }
+  },
+  "cambioHoy": [
+   "Cambió hoy: P-201A y P-201C subieron al puesto 1 porque P-201B está parada. Ninguna de las dos tiene instrumento: TRIM no verá venir su falla."
+  ],
+  "sinRegistro": [
+   {
+    "campoId": "ceiba",
+    "nombre": "Manifold de producción"
+   },
+   {
+    "campoId": "ceiba",
+    "nombre": "Depurador de gas"
+   },
+   {
+    "campoId": "ceiba",
+    "nombre": "Tea / quemador"
+   },
+   {
+    "campoId": "ceiba",
+    "nombre": "TK-101 · respaldo"
+   },
+   {
+    "campoId": "ceiba",
+    "nombre": "Tanque de agua"
+   },
+   {
+    "campoId": "ceiba",
+    "nombre": "Pozos inyectores"
+   }
+  ],
+  "vigia": {
+   "aciertos": 3,
+   "juzgadas": 3,
+   "falsas": 0,
+   "intervenidas": 1,
+   "seguimiento": 0,
+   "desde": "2026-09-01T05:00:00.000Z",
+   "frase": "¿Le creo al vigía? Desde que entró TRIM, acertó 3 de 3 avisos."
+  },
+  "primero": {
+   "valor": 3058.604258286438,
+   "detalle": "después de 2 min de colchón",
+   "equipos": [
+    {
+     "campoId": "ceiba",
+     "equipo": "P-201A"
+    },
+    {
+     "campoId": "ceiba",
+     "equipo": "P-201C"
+    }
+   ],
+   "frase": "Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila. Ahí va el próximo instrumento.",
+   "filas": [
+    {
+     "campoId": "ceiba",
+     "campoNombre": "La Ceiba",
+     "equipo": "P-201A",
+     "nombre": "P-201A · bomba de agua",
+     "tipo": "bomba",
+     "tipos": [
+      "bomba"
+     ],
+     "tren": "agua",
+     "familia": "bomba de agua",
+     "parado": false,
+     "vigila": false,
+     "vigilaTexto": "no: sin instrumento",
+     "palabra": "sin instrumento: se supone en marcha",
+     "sube": "sube porque P-201B está parada",
+     "cifra": {
+      "valor": 3058.604258286438,
+      "que": "si falla hoy",
+      "detalle": "después de 2 min de colchón"
+     },
+     "filtros": [
+      "sin-instrumento",
+      "todos"
+     ],
+     "registrado": false
+    },
+    {
+     "campoId": "ceiba",
+     "campoNombre": "La Ceiba",
+     "equipo": "P-201C",
+     "nombre": "P-201C · bomba de agua",
+     "tipo": "bomba",
+     "tipos": [
+      "bomba"
+     ],
+     "tren": "agua",
+     "familia": "bomba de agua",
+     "parado": false,
+     "vigila": false,
+     "vigilaTexto": "no: sin instrumento",
+     "palabra": "sin instrumento: se supone en marcha",
+     "sube": "sube porque P-201B está parada",
+     "cifra": {
+      "valor": 3058.604258286438,
+      "que": "si falla hoy",
+      "detalle": "después de 2 min de colchón"
+     },
+     "filtros": [
+      "sin-instrumento",
+      "todos"
+     ],
+     "registrado": false
+    },
+    {
+     "campoId": "ceiba",
+     "campoNombre": "La Ceiba",
+     "equipo": "LC-11",
+     "nombre": "Pozo LC-11 · electrosumergible",
+     "tipo": "electrosumergible",
+     "tipos": [
+      "electrosumergible",
+      "pozo"
+     ],
+     "tren": "pozos",
+     "familia": "electrosumergible",
+     "parado": false,
+     "vigila": true,
+     "vigilaTexto": "sí · 6 señales",
+     "palabra": "produciendo",
+     "cifra": {
+      "valor": 1030.9187715015603,
+      "que": "si falla hoy"
+     },
+     "filtros": [
+      "todos"
+     ],
+     "registrado": true
+    }
+   ]
+  },
+  "instrumento": [],
+  "noIntervenir": [
+   "Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy."
+  ],
+  "avisosTrabajo": []
+ },
+ "reg": {
+  "campos": [
+   "ceiba"
+  ],
+  "periodo": "octubre",
+  "estado": "provisional",
+  "titulo": "No se puede publicar todavía",
+  "cifra": {
+   "valor": 2,
+   "unidad": "paradas sin causa",
+   "frase": "No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl).",
+   "explica": "Las contesta el operador de campo mañana antes de las 07:00."
+  },
+  "bblSinCausa": 355,
+  "paradas": [
+   {
+    "campoId": "ceiba",
+    "eventoId": "EP-LC21-261001-01",
+    "pozo": "LC-21",
+    "equipo": "LC-21",
+    "filas": [
+     "EP-LC21-261001-01@2026-10-01#1",
+     "EP-LC21-261001-01@2026-10-02#2"
+    ],
+    "faltan": [
+     "responsable",
+     "choke",
+     "impacto",
+     "planeacion",
+     "n1",
+     "n2"
+    ],
+    "pregunta": {
+     "id": "que-lo-paro",
+     "texto": "¿Qué lo paró?",
+     "quien": "campo"
+    },
+    "escalada": false,
+    "ultimoDia": "2026-10-02",
+    "inicioEvento": "2026-10-01T18:20:00-05:00",
+    "abierta": true,
+    "bbl": 247,
+    "exacto": 246.5252111838846,
+    "falta": "faltan todos los pasos",
+    "debe": {
+     "rol": "oper",
+     "nombre": "operador de campo"
+    },
+    "limite": "2026-10-03T07:00:00-05:00",
+    "vencido": false,
+    "cuando": "mañana antes de las 07:00"
+   },
+   {
+    "campoId": "ceiba",
+    "eventoId": "EP-LC08-261001-02",
+    "pozo": "LC-08",
+    "equipo": "LC-08",
+    "filas": [
+     "EP-LC08-261001-02@2026-10-01#1",
+     "EP-LC08-261001-02@2026-10-02#2"
+    ],
+    "faltan": [
+     "responsable",
+     "choke",
+     "impacto",
+     "planeacion",
+     "n1",
+     "n2"
+    ],
+    "pregunta": {
+     "id": "que-lo-paro",
+     "texto": "¿Qué lo paró?",
+     "quien": "campo"
+    },
+    "escalada": false,
+    "ultimoDia": "2026-10-02",
+    "inicioEvento": "2026-10-01T22:15:00-05:00",
+    "abierta": false,
+    "bbl": 108,
+    "exacto": 108.51846578886855,
+    "falta": "faltan todos los pasos",
+    "debe": {
+     "rol": "oper",
+     "nombre": "operador de campo"
+    },
+    "limite": "2026-10-03T07:00:00-05:00",
+    "vencido": false,
+    "cuando": "mañana antes de las 07:00"
+   }
+  ],
+  "motivos": [
+   "El período incluye días sin cierre publicado."
+  ]
+ },
+ "resGer": {
+  "rol": "ger",
+  "campos": [
+   "ceiba",
+   "morichal",
+   "guacamayo",
+   "palmar",
+   "zarza"
+  ],
+  "alcance": "portafolio",
+  "desde": "2026-10-01T05:00:00.000Z",
+  "hasta": "2026-10-02T19:00:00.000Z",
+  "ahora": "2026-10-02T19:00:00.000Z",
+  "periodo": "octubre, en curso",
+  "enCurso": true,
+  "secciones": [
+   "produccion",
+   "bajando",
+   "mesAMes",
+   "porEquipo",
+   "porCampo",
+   "dondeBajarlo",
+   "tipos",
+   "diaADia",
+   "ciclo"
+  ],
+  "cifra": {
+   "previo": "Lo que pasó · octubre, en curso",
+   "valor": 2376.754676242956,
+   "entero": 2376,
+   "unidad": "barriles",
+   "frase": "no se produjeron en sus 5 campos.",
+   "explica": "Va 1.266 bbl por debajo del máximo firmado a la fecha (3.642). MN-41, el 46 % · 355 sin causa. Septiembre cerró en 33.945 bbl.",
+   "fraseCorta": "En octubre no se produjeron 2.376 bbl en sus 5 campos, bajo el máximo firmado.",
+   "maximo": 3641.666666666666,
+   "sobreMaximo": false,
+   "rango": [
+    2131.61735152135,
+    2621.8920009645612
+   ],
+   "valorUsd": 114084.22445966185,
+   "sinPrecio": [
+    "La Zarza"
+   ],
+   "primerEquipo": {
+    "campoId": "morichal",
+    "equipo": "MN-41"
+   }
+  },
+  "publicar": {
+   "estado": "provisional",
+   "texto": "Provisional: el mes está en curso y se publica cuando cierre.",
+   "motivos": []
+  },
+  "produccion": {
+   "realBpd": 40513.89473684211,
+   "metaBpd": 40200,
+   "bajoMeta": false,
+   "diferidoBpd": 1501.1082165744986,
+   "maximoBpd": 2299.9999999999995,
+   "sobreMaximo": false,
+   "sinMeta": null,
+   "totales": {
+    "titulo": "A la fecha",
+    "texto": "64.147 de 63.650 bbl producidos y 2.377 de un máximo de 3.642 bbl diferidos, en 1,6 de 31 días."
+   },
+   "cierre": {
+    "titulo": "Cierre proyectado",
+    "proyectado": true,
+    "produccion": 1222131.4288837465,
+    "metaProduccion": 1246200,
+    "bajoMeta": true,
+    "diferido": 80333.6626721682,
+    "maximoDiferido": 71300,
+    "sobreMaximo": true,
+    "explica": "Si todo sigue como está ahora: lo que va del mes más el ritmo de hoy hasta el último día (31 días)."
+   }
+  },
+  "bajando": {
+   "desde": "2026-09-01T05:00:00.000Z",
+   "base": "jun a ago",
+   "filas": [
+    {
+     "tramo": "planta",
+     "nombre": "en la planta",
+     "antesBpd": 560.9465798584041,
+     "ahoraBpd": 308.1551405312831,
+     "cambio": -0.45065153867402385,
+     "texto": "Desde que entró TRIM, lo que se trabó en la planta bajó: 561 → 308 bbl/d · baja 45 %"
+    },
+    {
+     "tramo": "pozo",
+     "nombre": "en los pozos",
+     "antesBpd": 819.7307312971594,
+     "ahoraBpd": 771.0824861907332,
+     "cambio": -0.05934661621072102,
+     "texto": "Desde que entró TRIM, lo que se trabó en los pozos bajó: 820 → 771 bbl/d · baja 6 %"
+    }
+   ],
+   "nota": "1 de sept, frente a jun a ago · muestra corta",
+   "altoImpacto": {
+    "antesBpd": 1021.096911148417,
+    "ahoraBpd": 837.4783242542038,
+    "cambio": -0.1798248382591808,
+    "texto": "Lo de alto impacto (bombas de agua y electrosumergibles): 1.021 → 837 bbl/d · −18 %"
+   }
+  },
+  "proactivo": {
+   "porcentaje": 20,
+   "proactivoH": 20,
+   "correctivoH": 80,
+   "texto": "20,0 h proactivas · 80,0 h correctivas, desde el 1 de sept"
+  },
+  "mesAMes": {
+   "meses": [
+    {
+     "mes": "2025-10",
+     "rotulo": "OCT 2025",
+     "nombre": "Octubre 2025",
+     "totalBpd": 1534.061241607312,
+     "altoBpd": 836.3769271924382,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2025-10-01",
+     "hastaDia": "2025-10-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 504.7514486349349,
+      "planta": 1029.3097929723772,
+      "exportacion": 0,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2025-11",
+     "rotulo": "NOV",
+     "nombre": "Noviembre 2025",
+     "totalBpd": 1070.1011621111602,
+     "altoBpd": 683.398967683026,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2025-11-01",
+     "hastaDia": "2025-11-30",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 692.6951263001961,
+      "planta": 377.406035810964,
+      "exportacion": 0,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2025-12",
+     "rotulo": "DIC",
+     "nombre": "Diciembre 2025",
+     "totalBpd": 1557.2100200829307,
+     "altoBpd": 779.1925133862757,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2025-12-01",
+     "hastaDia": "2025-12-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 577.6450864630494,
+      "planta": 968.659781291979,
+      "exportacion": 10.905152327902252,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-01",
+     "rotulo": "ENE 2026",
+     "nombre": "Enero 2026",
+     "totalBpd": 591.2185094797265,
+     "altoBpd": 220.89360787430076,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-01-01",
+     "hastaDia": "2026-01-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 425.7514125231519,
+      "planta": 165.4670969565746,
+      "exportacion": 0,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-02",
+     "rotulo": "FEB",
+     "nombre": "Febrero 2026",
+     "totalBpd": 1146.097776877046,
+     "altoBpd": 1051.148462335649,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-02-01",
+     "hastaDia": "2026-02-28",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 1058.9358993247158,
+      "planta": 87.16187755233032,
+      "exportacion": 0,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-03",
+     "rotulo": "MAR",
+     "nombre": "Marzo 2026",
+     "totalBpd": 1723.4408052343863,
+     "altoBpd": 725.0026610819731,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-03-01",
+     "hastaDia": "2026-03-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 456.7762759768869,
+      "planta": 1266.6645292574995,
+      "exportacion": 0,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-04",
+     "rotulo": "ABR",
+     "nombre": "Abril 2026",
+     "totalBpd": 865.100416274521,
+     "altoBpd": 581.5006141354617,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-04-01",
+     "hastaDia": "2026-04-30",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 483.45050541658026,
+      "planta": 354.49606449804793,
+      "exportacion": 27.153846359892707,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-05",
+     "rotulo": "MAY",
+     "nombre": "Mayo 2026",
+     "totalBpd": 1843.5584275716376,
+     "altoBpd": 557.4692856520815,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-05-01",
+     "hastaDia": "2026-05-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 579.5775626264377,
+      "planta": 1263.9808649451998,
+      "exportacion": 0,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-06",
+     "rotulo": "JUN",
+     "nombre": "Junio 2026",
+     "totalBpd": 988.4775369532676,
+     "altoBpd": 697.4873378720156,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-06-01",
+     "hastaDia": "2026-06-30",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 665.1967740387354,
+      "planta": 306.7750699995182,
+      "exportacion": 16.50569291501409,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-07",
+     "rotulo": "JUL",
+     "nombre": "Julio 2026",
+     "totalBpd": 1646.0983383483876,
+     "altoBpd": 1203.7269894630128,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-07-01",
+     "hastaDia": "2026-07-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 761.7310892358624,
+      "planta": 878.0342060480355,
+      "exportacion": 6.333043064489496,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-08",
+     "rotulo": "AGO",
+     "nombre": "Agosto 2026",
+     "totalBpd": 1735.4304803740163,
+     "altoBpd": 1151.6373876174375,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-08-01",
+     "hastaDia": "2026-08-31",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 1046.273933660297,
+      "planta": 685.0880679139849,
+      "exportacion": 4.068478799734411,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-09",
+     "rotulo": "SEP",
+     "nombre": "Septiembre 2026",
+     "totalBpd": 1131.4912655557157,
+     "altoBpd": 826.0763091178683,
+     "maximoBpd": 2300,
+     "sobre": false,
+     "enCurso": false,
+     "enPeriodo": false,
+     "desdeDia": "2026-09-01",
+     "hastaDia": "2026-09-30",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 816.0867158540023,
+      "planta": 305.316861791861,
+      "exportacion": 10.08768790985223,
+      "sin-asignar": 0
+     }
+    },
+    {
+     "mes": "2026-10",
+     "rotulo": "OCT",
+     "nombre": "Octubre 2026",
+     "totalBpd": 1501.1082165744986,
+     "altoBpd": 1053.5165057847714,
+     "maximoBpd": 2299.9999999999995,
+     "sobre": false,
+     "enCurso": true,
+     "enPeriodo": true,
+     "desdeDia": "2026-10-01",
+     "hastaDia": "2026-10-02",
+     "porTramo": {
+      "reservorio": 0,
+      "pozo": 914.9370513134784,
+      "planta": 361.93305348875515,
+      "exportacion": 0,
+      "sin-asignar": 224.23811177226517
+     }
+    }
+   ],
+   "actualBpd": 1501.1082165744986,
+   "nombreActual": "octubre",
+   "maximoBpd": 2299.9999999999995,
+   "aria": "Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (2.300 barriles por día este mes). Ningún mes cerrado lo pasó."
+  },
+  "porEquipo": {
+   "filas": [
+    {
+     "campoId": "morichal",
+     "campo": "Morichal Norte",
+     "equipo": "MN-41",
+     "familia": "electrosumergible",
+     "prioridad": 1,
+     "palabra": "alarma",
+     "bbl": 1083.104407231354,
+     "pct": 45.570727936610865,
+     "bblEntero": 1083,
+     "pctEntero": 46
+    },
+    {
+     "campoId": "ceiba",
+     "campo": "La Ceiba",
+     "equipo": "P-201B",
+     "familia": "bomba de agua",
+     "prioridad": 1,
+     "palabra": "alarma",
+     "bbl": 573.0606680238624,
+     "pct": 24.1110567174617,
+     "bblEntero": 573,
+     "pctEntero": 24
+    },
+    {
+     "campoId": "ceiba",
+     "campo": "La Ceiba",
+     "equipo": "LC-21",
+     "familia": "sin identificar",
+     "prioridad": 2,
+     "palabra": "atención",
+     "bbl": 246.5252111838846,
+     "pct": 10.372345688347533,
+     "bblEntero": 247,
+     "pctEntero": 10
+    },
+    {
+     "campoId": "ceiba",
+     "campo": "La Ceiba",
+     "equipo": "SE-2",
+     "familia": "energía eléctrica",
+     "prioridad": 0,
+     "palabra": "",
+     "bbl": 117.92118165967351,
+     "pct": 4.96143682132465,
+     "bblEntero": 118,
+     "pctEntero": 5
+    },
+    {
+     "campoId": "ceiba",
+     "campo": "La Ceiba",
+     "equipo": "LC-08",
+     "familia": "sin identificar",
+     "prioridad": 0,
+     "palabra": "",
+     "bbl": 108.51846578886855,
+     "pct": 4.565825277365547,
+     "bblEntero": 108,
+     "pctEntero": 5
+    },
+    {
+     "campoId": "morichal",
+     "campo": "Morichal Norte",
+     "equipo": "MN-22",
+     "familia": "según el operario",
+     "prioridad": 0,
+     "palabra": "",
+     "bbl": 86.32270425752417,
+     "pct": 3.6319568494119205,
+     "bblEntero": 86,
+     "pctEntero": 4
+    }
+   ],
+   "total": 9
+  },
+  "ciclo": {
+   "totalBbl": 45232.824149743064,
+   "momentos": [
+    {
+     "momento": "antes",
+     "nombre": "Antes",
+     "lema": "lo que viene",
+     "bbl": 42017.113752115896,
+     "texto": "Si se interviene a tiempo en los 6 de alto impacto, se evitan ≈ 42.017 bbl · simulado",
+     "plan": {
+      "campoId": "guacamayo",
+      "equipo": "GU-04"
+     }
+    },
+    {
+     "momento": "durante",
+     "nombre": "Durante",
+     "lema": "ahora",
+     "bbl": 2102.1927657430356,
+     "texto": "Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado",
+     "plan": {
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    },
+    {
+     "momento": "despues",
+     "nombre": "Después",
+     "lema": "lo que pasó",
+     "bbl": 1113.5176318841334,
+     "texto": "No repetir la parte que más costó: ≈ 1.114 bbl en todos · simulado",
+     "plan": {
+      "campoId": "morichal",
+      "equipo": "MN-41"
+     }
+    }
+   ]
+  },
+  "mantenimiento": null,
+  "confiabilidad": null,
+  "perdida": "Pérdida: nada registrado en octubre"
+ },
+ "relojes": {
+  "fallas": 14,
+  "excluidas": 0,
+  "totalH": 193.63511904761907,
+  "activaH": 8,
+  "esperaH": 185.63511904761907
+ },
+ "pvCeiba": {
+  "campos": [
+   "ceiba"
+  ],
+  "alcance": "campo",
+  "momento": "durante",
+  "desde": "2026-10-01T05:00:00.000Z",
+  "hasta": "2026-10-02T19:00:00.000Z",
+  "ahora": "2026-10-02T19:00:00.000Z",
+  "periodo": "octubre, en curso",
+  "cifras": {
+   "antes": {
+    "momento": "antes",
+    "previo": "Lo que viene",
+    "unidad": "equipo avisa",
+    "valor": 1,
+    "entero": 1,
+    "frase": "K-101 (aire de instrumentos) ya pasó el límite.",
+    "explica": "Si para, se frenan hasta 9.394 bbl/d desde el primer minuto. Las bombas de agua P-201A y P-201C no tienen instrumento: si una falla hoy, 3.059 bbl/d después de 2 min de colchón.",
+    "fraseCorta": "1 equipo avisa en La Ceiba: K-101 ya pasó el límite.",
+    "tramo": "planta",
+    "primerEquipo": {
+     "campoId": "ceiba",
+     "equipo": "K-101"
+    },
+    "simulado": {
+     "bbl": 0,
+     "texto": "Nada que intervenir antes de que falle · simulado",
+     "plan": null
+    }
+   },
+   "durante": {
+    "momento": "durante",
+    "previo": "Ahora mismo",
+    "valor": 1966.0272482539049,
+    "entero": 1966,
+    "unidad": "barriles por día",
+    "frase": "se dejan de producir en La Ceiba.",
+    "explica": "La bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.",
+    "fraseCorta": "Se dejan de producir 1.966 bbl/d: P-201B (bomba de agua) paró a las 03:52 y cerró LC-07 y LC-16.",
+    "tramo": "planta",
+    "primerEquipo": {
+     "campoId": "ceiba",
+     "equipo": "P-201B"
+    },
+    "simulado": {
+     "bbl": 2102.1927657430356,
+     "texto": "Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado",
+     "plan": {
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    }
+   },
+   "despues": {
+    "momento": "despues",
+    "previo": "Lo que pasó · octubre (2 días, en curso)",
+    "valor": 1046.025526656289,
+    "entero": 1046,
+    "unidad": "barriles",
+    "frase": "no se produjeron en La Ceiba.",
+    "explica": "Se trabó sobre todo en la planta: P-201B (bomba de agua). 355 bbl todavía sin identificar. Septiembre cerró en 7.716 bbl.",
+    "fraseCorta": "En octubre no se produjeron 1.046 bbl en La Ceiba: sobre todo P-201B (bomba de agua).",
+    "tramo": "planta",
+    "primerEquipo": {
+     "campoId": "ceiba",
+     "equipo": "P-201B"
+    },
+    "simulado": {
+     "bbl": 30.413224652779483,
+     "texto": "No repetir la parte que más costó: ≈ 30 bbl · simulado",
+     "plan": {
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    }
+   }
+  },
+  "planta": {
+   "campoId": "ceiba",
+   "nombre": "La Ceiba",
+   "campoDeGas": false,
+   "tramos": [
+    {
+     "tramo": "reservorio",
+     "nombre": "Yacimiento",
+     "titulo": [
+      "Yacimiento"
+     ],
+     "marca": null,
+     "linea": [
+      "la roca"
+     ],
+     "valor": 0,
+     "entero": 0,
+     "cabeBpd": null,
+     "sinDato": true,
+     "capacidad": null,
+     "limita": false,
+     "marcado": false,
+     "frase": "Ahora no se deja de producir nada por el yacimiento.",
+     "equipos": [],
+     "porque": [
+      {
+       "texto": "No planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      },
+      {
+       "texto": "Planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      },
+      {
+       "texto": "Sin saber si fue planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      }
+     ]
+    },
+    {
+     "tramo": "pozo",
+     "nombre": "Pozos",
+     "titulo": [
+      "Pozos",
+      " · ",
+      {
+       "b": "◄ limita"
+      },
+      " ⓘ"
+     ],
+     "marca": null,
+     "linea": [
+      "15 de 18 en marcha"
+     ],
+     "valor": 0,
+     "entero": 0,
+     "cabeBpd": 11857,
+     "sinDato": false,
+     "capacidad": null,
+     "limita": true,
+     "marcado": false,
+     "frase": "Ahora no se deja de producir nada por los pozos.",
+     "equipos": [
+      {
+       "campoId": "ceiba",
+       "equipo": "LC-05",
+       "familia": "energía eléctrica",
+       "prioridad": 0,
+       "sinInstrumento": false,
+       "condicion": "se trabó en octubre",
+       "valor": 117.9211816596735,
+       "entero": 118,
+       "techo": false,
+       "texto": "118 bbl"
+      }
+     ],
+     "porque": [
+      {
+       "texto": "No planeada",
+       "bbl": 117.9211816596735,
+       "entero": 118,
+       "detalle": [
+        "falla eléctrica del campo (LC-05, energía eléctrica) · 118 bbl"
+       ]
+      },
+      {
+       "texto": "Planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      },
+      {
+       "texto": "Sin saber si fue planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      }
+     ],
+     "desdeTrim": {
+      "antesBpd": 122.37486893145152,
+      "ahoraBpd": 215.09540717038897,
+      "cambio": 0.7576763027290759,
+      "texto": "Desde que entró TRIM, lo que se trabó en los pozos subió: 122 → 215 bbl/d · sube 76 %"
+     }
+    },
+    {
+     "tramo": "planta",
+     "nombre": "Planta",
+     "titulo": [
+      "Planta"
+     ],
+     "marca": "aquí se trabó",
+     "linea": [
+      "no pasan ",
+      {
+       "b": "1.665 bbl/d"
+      }
+     ],
+     "valor": 1665.1829227413677,
+     "entero": 1665,
+     "cabeBpd": 13000,
+     "sinDato": false,
+     "capacidad": "sin firmar",
+     "limita": false,
+     "marcado": true,
+     "angostoBpd": 9445,
+     "frase": "P-201B (bomba de agua) está parada desde las 03:52 y obligó a cerrar LC-07 y LC-16.",
+     "nota": [
+      "se angostó: con P-201B parada",
+      "el agua solo deja pasar",
+      "236 bbl/d más de crudo"
+     ],
+     "equipos": [
+      {
+       "campoId": "ceiba",
+       "equipo": "P-201B",
+       "familia": "bomba de agua",
+       "prioridad": 1,
+       "sinInstrumento": false,
+       "condicion": "parada",
+       "valor": 1665.1829227413677,
+       "entero": 1665,
+       "techo": false,
+       "texto": "1.665 bbl/d"
+      },
+      {
+       "campoId": "ceiba",
+       "equipo": "K-101",
+       "familia": "aire de instrumentos",
+       "prioridad": 1,
+       "sinInstrumento": false,
+       "condicion": "ya pasó el límite",
+       "valor": 9394.199400160593,
+       "entero": 9394,
+       "techo": true,
+       "texto": "si para, hasta 9.394 bbl/d"
+      },
+      {
+       "campoId": "ceiba",
+       "equipo": "P-201A",
+       "familia": "bomba de agua",
+       "prioridad": 0,
+       "sinInstrumento": true,
+       "condicion": "sin instrumento",
+       "valor": 3058.604258286438,
+       "entero": 3059,
+       "techo": false,
+       "texto": "si falla hoy, 3.059 bbl/d"
+      },
+      {
+       "campoId": "ceiba",
+       "equipo": "P-201C",
+       "familia": "bomba de agua",
+       "prioridad": 0,
+       "sinInstrumento": true,
+       "condicion": "sin instrumento",
+       "valor": 3058.604258286438,
+       "entero": 3059,
+       "techo": false,
+       "texto": "si falla hoy, 3.059 bbl/d"
+      }
+     ],
+     "porque": [
+      {
+       "texto": "No planeada",
+       "bbl": 573.0606680238624,
+       "entero": 573,
+       "detalle": [
+        "falla de la planta (P-201B, bomba de agua) → afectó a varios pozos · 573 bbl"
+       ]
+      },
+      {
+       "texto": "Planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      },
+      {
+       "texto": "Sin saber si fue planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      }
+     ],
+     "desdeTrim": {
+      "antesBpd": 268.3690473560243,
+      "ahoraBpd": 51.090588879162866,
+      "cambio": -0.8096256279086278,
+      "texto": "Desde que entró TRIM, lo que se trabó en la planta bajó: 268 → 51 bbl/d · baja 81 %"
+     }
+    },
+    {
+     "tramo": "exportacion",
+     "nombre": "Salida",
+     "titulo": [
+      "Salida"
+     ],
+     "marca": null,
+     "linea": [
+      "el oleoducto recibe"
+     ],
+     "valor": 0,
+     "entero": 0,
+     "cabeBpd": 14000,
+     "sinDato": false,
+     "capacidad": "sin firmar",
+     "limita": false,
+     "marcado": false,
+     "frase": "Ahora no se deja de producir nada por afuera.",
+     "equipos": [],
+     "porque": [
+      {
+       "texto": "No planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      },
+      {
+       "texto": "Planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      },
+      {
+       "texto": "Sin saber si fue planeada",
+       "bbl": 0,
+       "entero": 0,
+       "detalle": []
+      }
+     ]
+    }
+   ],
+   "pasaBpd": 9394.199400160593,
+   "escalaBpd": 14000,
+   "ramal": {
+    "hay": true,
+    "entraBpd": 174033,
+    "tanque": {
+     "id": "TK-AG-CE",
+     "nivelPct": 89.6,
+     "altoAltoPct": 90
+    },
+    "bombas": [
+     {
+      "id": "P-201A",
+      "prioridad": 0,
+      "estado": "sin-instrumento"
+     },
+     {
+      "id": "P-201B",
+      "prioridad": 1,
+      "estado": "parada"
+     },
+     {
+      "id": "P-201C",
+      "prioridad": 0,
+      "estado": "sin-instrumento"
+     }
+    ],
+    "texto": [
+     {
+      "b": "P-201B parada"
+     },
+     " desde 03:52",
+     " · las otras dos, sin instrumento"
+    ],
+    "resumen": "2 de 3 en marcha · P-201B parada"
+   },
+   "sinIdentificar": {
+    "valor": 300.8443255125371,
+    "entero": 301,
+    "equipos": [
+     "LC-21"
+    ],
+    "titulo": "LC-21 · 301 bbl/d",
+    "linea": "sin identificar · desde el 1 de oct, 18:20",
+    "primerEquipo": "LC-21"
+   },
+   "venta": {
+    "titulo": "Sale hoy",
+    "valor": 9394.199400160593,
+    "unidad": "bbl/d",
+    "metaTexto": "meta 10.900",
+    "bajoMeta": true
+   },
+   "ariaLabel": "Se dejan de producir 1.966 barriles por día: P-201B (bomba de agua) paró a las 03:52 y cerró LC-07 y LC-16. Se marca en la planta. Limitan los pozos.",
+   "limitaSinFirmar": "con una capacidad sin firmar (capacidades del demo, sin firmar)",
+   "paraProducirMas": "En La Ceiba, otra bomba de agua no sube la producción: evita que una falla cierre pozos. Cada falla de P-201B le ha costado en promedio unos 4.593 bbl. Para producir más hay que sacarles más a los pozos: la planta y afuera dejan pasar más.",
+   "pozos": {
+    "total": 18,
+    "enMarcha": 15
+   }
+  },
+  "filas": [],
+  "esteMes": {
+   "titulo": "Este mes",
+   "bbl": 1046.025526656289,
+   "bblEntero": 1046,
+   "rango": [
+    889.1216951502931,
+    1202.9293581622849
+   ],
+   "valorUsd": 50209.22527950183,
+   "nota": "P-201B, más de la mitad · 355 sin causa",
+   "anterior": {
+    "nombre": "septiembre",
+    "bbl": 7716.059192214809
+   },
+   "mesAnterior": {
+    "nombre": "septiembre",
+    "bbl": 7716.059192214809,
+    "bblEntero": 7716
+   }
+  },
+  "produccion": {
+   "realBpd": 10699.578947368422,
+   "metaBpd": 10900,
+   "bajoMeta": true,
+   "texto": "promedio por día, bajo la meta"
+  },
+  "mover": {
+   "totalBbl": 2132.605990395815,
+   "porMomento": {
+    "antes": 0,
+    "durante": 2102.1927657430356,
+    "despues": 30.413224652779483
+   }
+  },
+  "porEquipo": [
+   {
+    "campoId": "ceiba",
+    "equipo": "P-201B",
+    "familia": "bomba de agua",
+    "prioridad": 1,
+    "palabra": "alarma",
+    "bbl": 573.0606680238624,
+    "pct": 54.784577758412865,
+    "bblEntero": 573,
+    "pctEntero": 55
+   },
+   {
+    "campoId": "ceiba",
+    "equipo": "LC-21",
+    "familia": "sin identificar",
+    "prioridad": 2,
+    "palabra": "atención",
+    "bbl": 246.5252111838846,
+    "pct": 23.56780067996273,
+    "bblEntero": 247,
+    "pctEntero": 24
+   },
+   {
+    "campoId": "ceiba",
+    "equipo": "SE-2",
+    "familia": "energía eléctrica",
+    "prioridad": 0,
+    "palabra": "",
+    "bbl": 117.92118165967351,
+    "pct": 11.273260418091207,
+    "bblEntero": 118,
+    "pctEntero": 11
+   },
+   {
+    "campoId": "ceiba",
+    "equipo": "LC-08",
+    "familia": "sin identificar",
+    "prioridad": 0,
+    "palabra": "",
+    "bbl": 108.51846578886855,
+    "pct": 10.3743611435332,
+    "bblEntero": 108,
+    "pctEntero": 10
+   }
+  ],
+  "mesAMes": {
+   "meses": [
+    {
+     "mes": "2025-10",
+     "rotulo": "OCT 2025",
+     "nombre": "Octubre 2025",
+     "totalBpd": 543.6173194841399,
+     "altoBpd": 420.7847739434232,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2025-11",
+     "rotulo": "NOV",
+     "nombre": "Noviembre 2025",
+     "totalBpd": 249.26172520550793,
+     "altoBpd": 160.3395133264695,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2025-12",
+     "rotulo": "DIC",
+     "nombre": "Diciembre 2025",
+     "totalBpd": 207.46052461331473,
+     "altoBpd": 201.59582254708928,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-01",
+     "rotulo": "ENE 2026",
+     "nombre": "Enero 2026",
+     "totalBpd": 172.76643850926615,
+     "altoBpd": 23.730073969489116,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-02",
+     "rotulo": "FEB",
+     "nombre": "Febrero 2026",
+     "totalBpd": 833.8867949372661,
+     "altoBpd": 833.8867949372661,
+     "maximoBpd": 800,
+     "sobre": true,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-03",
+     "rotulo": "MAR",
+     "nombre": "Marzo 2026",
+     "totalBpd": 549.0652213458849,
+     "altoBpd": 406.18165651411414,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-04",
+     "rotulo": "ABR",
+     "nombre": "Abril 2026",
+     "totalBpd": 335.6172363519243,
+     "altoBpd": 277.83295973909793,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-05",
+     "rotulo": "MAY",
+     "nombre": "Mayo 2026",
+     "totalBpd": 433.8837023681892,
+     "altoBpd": 431.447900548036,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-06",
+     "rotulo": "JUN",
+     "nombre": "Junio 2026",
+     "totalBpd": 384.24783843631747,
+     "altoBpd": 310.0751194501085,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-07",
+     "rotulo": "JUL",
+     "nombre": "Julio 2026",
+     "totalBpd": 562.6201811459485,
+     "altoBpd": 475.7040043242384,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-08",
+     "rotulo": "AGO",
+     "nombre": "Agosto 2026",
+     "totalBpd": 274.91559499240725,
+     "altoBpd": 145.45861897230284,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-09",
+     "rotulo": "SEP",
+     "nombre": "Septiembre 2026",
+     "totalBpd": 257.20197307382693,
+     "altoBpd": 249.22052162119897,
+     "maximoBpd": 800,
+     "sobre": false,
+     "enCurso": false
+    },
+    {
+     "mes": "2026-10",
+     "rotulo": "OCT",
+     "nombre": "Octubre 2026",
+     "totalBpd": 660.6477010460773,
+     "altoBpd": 361.9330534887552,
+     "maximoBpd": 800.0000000000001,
+     "sobre": false,
+     "enCurso": true
+    }
+   ],
+   "actualBpd": 660.6477010460773,
+   "nombreActual": "octubre",
+   "maximoBpd": 800.0000000000001,
+   "aria": "Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado de 800 barriles por día. Lo pasaron Febrero 2026 (834 barriles por día). Octubre 2026 va en 661 barriles por día."
+  },
+  "bajando": {
+   "desde": "2026-09-01T05:00:00.000Z",
+   "base": "jun a ago",
+   "filas": [
+    {
+     "tramo": "planta",
+     "nombre": "en la planta",
+     "antesBpd": 268.3690473560243,
+     "ahoraBpd": 51.090588879162866,
+     "cambio": -0.8096256279086278,
+     "texto": "Desde que entró TRIM, lo que se trabó en la planta bajó: 268 → 51 bbl/d · baja 81 %"
+    },
+    {
+     "tramo": "pozo",
+     "nombre": "en los pozos",
+     "antesBpd": 122.37486893145152,
+     "ahoraBpd": 215.09540717038897,
+     "cambio": 0.7576763027290759,
+     "texto": "Desde que entró TRIM, lo que se trabó en los pozos subió: 122 → 215 bbl/d · sube 76 %"
+    }
+   ],
+   "nota": "1 de sept, frente a jun a ago · muestra corta"
+  },
+  "perdida": "Pérdida: nada registrado en octubre",
+  "perdidaExplica": "La pérdida es lo que salió y no se vendió. Va aparte y nunca se suma al diferido (lo que se dejó de producir). Cuando TRIM registre pérdidas, irán como una gota en su tramo.",
+  "tecnica": {
+   "cifra": {
+    "momento": "durante",
+    "previo": "Ahora mismo",
+    "valor": 9394.199400160593,
+    "entero": 9394,
+    "unidad": "barriles por día",
+    "frase": "salen hoy de La Ceiba.",
+    "explica": "Limitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.",
+    "fraseCorta": "Limitan los pozos: a la planta le sobran 1.143 bbl/d. Hoy salen 9.394.",
+    "tramo": "pozo",
+    "primerEquipo": {
+     "campoId": "ceiba",
+     "equipo": "P-201B"
+    },
+    "simulado": {
+     "bbl": 2102.1927657430356,
+     "texto": "Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado",
+     "plan": {
+      "campoId": "ceiba",
+      "equipo": "P-201B"
+     }
+    }
+   },
+   "tramos": [
+    {
+     "tramo": "pozo",
+     "nombre": "Pozos",
+     "cabeBpd": 11857,
+     "sobraBpd": 0,
+     "limita": true,
+     "capacidad": null,
+     "texto": "dan 11.857 bbl/d",
+     "fuente": "La suma de lo que dan los pozos con su prueba vigente. No lleva el factor de asignación del mes: ese sale de lo que ya pasó por la planta y escondería lo que la limita. El libro sí lo usa para valorar lo diferido (unos 11.360 bbl/d hoy): son dos preguntas distintas"
+    },
+    {
+     "tramo": "planta",
+     "nombre": "Planta",
+     "cabeBpd": 13000,
+     "sobraBpd": 1143,
+     "limita": false,
+     "capacidad": "sin firmar",
+     "texto": "caben 13.000 bbl/d · le sobran 1.143",
+     "fuente": "El más angosto de sus trenes medidos: el tren de crudo. La capacidad del tren de crudo en el esquema de planta: dato del demo, sin firmar. El agua se pasa a crudo con el corte de las pruebas; el gas no se mide en esta fase"
+    },
+    {
+     "tramo": "exportacion",
+     "nombre": "Salida",
+     "cabeBpd": 14000,
+     "sobraBpd": 2143,
+     "limita": false,
+     "capacidad": "sin firmar",
+     "texto": "caben 14.000 bbl/d · le sobran 2.143",
+     "fuente": "La capacidad del oleoducto o del transportador en el esquema de planta: dato del demo, sin firmar"
+    }
+   ],
+   "siFallaHoy": [
+    {
+     "campoId": "ceiba",
+     "equipo": "P-201A",
+     "familia": "bomba de agua",
+     "prioridad": 0,
+     "sinInstrumento": true,
+     "bpd": 3058.604258286438,
+     "entero": 3059,
+     "cuando": "después de 2 min",
+     "texto": "3.059 bbl/d después de 2 min"
+    },
+    {
+     "campoId": "ceiba",
+     "equipo": "P-201C",
+     "familia": "bomba de agua",
+     "prioridad": 0,
+     "sinInstrumento": true,
+     "bpd": 3058.604258286438,
+     "entero": 3059,
+     "cuando": "después de 2 min",
+     "texto": "3.059 bbl/d después de 2 min"
+    },
+    {
+     "campoId": "ceiba",
+     "equipo": "LC-11",
+     "familia": "electrosumergible",
+     "prioridad": 0,
+     "sinInstrumento": false,
+     "bpd": 1030.9187715015603,
+     "entero": 1031,
+     "cuando": "sin colchón",
+     "texto": "1.031 bbl/d · sin colchón"
+    }
+   ]
+  },
+  "planes": {
+   "enMarcha": 0,
+   "total": 3,
+   "texto": "0 de 3 planes en marcha"
+  }
+ },
+ "pvAntes": {
+  "antes": {
+   "momento": "antes",
+   "previo": "Lo que viene, en sus 5 campos",
+   "valor": 8,
+   "entero": 8,
+   "unidad": "equipos avisan",
+   "frase": "el más cercano, K-101 (La Ceiba), ya pasó el límite.",
+   "explica": "Aire de instrumentos: si para, hasta 9.394 bbl/d. Avisan también GU-07, MN-07, MN-18 y otros.",
+   "fraseCorta": "8 equipos avisan; el más cercano, K-101 (La Ceiba), ya pasó el límite.",
+   "tramo": "planta",
+   "primerEquipo": {
+    "campoId": "ceiba",
+    "equipo": "K-101"
+   },
+   "simulado": {
+    "bbl": 42017.113752115896,
+    "texto": "Si se interviene a tiempo en los 6 de alto impacto, se evitan ≈ 42.017 bbl · simulado",
+    "plan": {
+     "campoId": "guacamayo",
+     "equipo": "GU-04"
+    }
+   }
+  },
+  "durante": {
+   "momento": "durante",
+   "previo": "Ahora mismo, en sus 5 campos",
+   "valor": 2650.093189663181,
+   "entero": 2650,
+   "unidad": "barriles por día",
+   "frase": "se dejan de producir.",
+   "explica": "Lo que más pesa: la bomba de agua P-201B, en La Ceiba. Hay 4 de 87 pozos parados.",
+   "fraseCorta": "Se dejan de producir 2.650 bbl/d. Lo que más pesa: P-201B (bomba de agua), en La Ceiba.",
+   "tramo": "planta",
+   "primerEquipo": {
+    "campoId": "ceiba",
+    "equipo": "P-201B"
+   },
+   "simulado": {
+    "bbl": 2102.1927657430356,
+    "texto": "Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado",
+    "plan": {
+     "campoId": "ceiba",
+     "equipo": "P-201B"
+    }
+   }
+  },
+  "despues": {
+   "momento": "despues",
+   "previo": "Lo que pasó · octubre (2 días, en curso)",
+   "valor": 2376.754676242956,
+   "entero": 2376,
+   "unidad": "barriles",
+   "frase": "no se produjeron.",
+   "explica": "Lo que más pesó: Morichal Norte (1.253), La Ceiba (1.046) y El Palmar (77). Septiembre cerró en 33.945 bbl.",
+   "fraseCorta": "En octubre no se produjeron 2.376 bbl: sobre todo MN-41 (electrosumergible).",
+   "tramo": null,
+   "primerEquipo": {
+    "campoId": "morichal",
+    "equipo": "MN-41"
+   },
+   "simulado": {
+    "bbl": 1113.5176318841334,
+    "texto": "No repetir la parte que más costó: ≈ 1.114 bbl en todos · simulado",
+    "plan": {
+     "campoId": "morichal",
+     "equipo": "MN-41"
+    }
+   }
+  }
+ }
+}

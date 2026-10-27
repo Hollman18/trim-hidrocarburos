@@ -1,0 +1,353 @@
+[
+ {
+  "html": "fuente/ger.html",
+  "png": "d1-grafito-ger-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-ger-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d1-grafito-ger-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-ger-telefono-claro.json"
+ },
+ {
+  "html": "fuente/sup.html",
+  "png": "d1-grafito-sup-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-sup-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/sup.html",
+  "png": "d1-grafito-sup-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-sup-telefono-claro.json"
+ },
+ {
+  "html": "fuente/oper.html",
+  "png": "d1-grafito-oper-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-oper-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/oper.html",
+  "png": "d1-grafito-oper-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-oper-telefono-claro.json"
+ },
+ {
+  "html": "fuente/jefe.html",
+  "png": "d1-grafito-jefe-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-jefe-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/jefe.html",
+  "png": "d1-grafito-jefe-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-jefe-telefono-claro.json"
+ },
+ {
+  "html": "fuente/p201b.html",
+  "png": "d1-grafito-p201b-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-p201b-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d1-grafito-ger-escritorio-noche.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=noche&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-ger-escritorio-noche.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d2-consola-blanca-ger-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d2&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-ger-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d2-consola-blanca-ger-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d2&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-ger-telefono-claro.json"
+ },
+ {
+  "html": "fuente/sup.html",
+  "png": "d2-consola-blanca-sup-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d2&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-sup-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/sup.html",
+  "png": "d2-consola-blanca-sup-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d2&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-sup-telefono-claro.json"
+ },
+ {
+  "html": "fuente/oper.html",
+  "png": "d2-consola-blanca-oper-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d2&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-oper-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/oper.html",
+  "png": "d2-consola-blanca-oper-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d2&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-oper-telefono-claro.json"
+ },
+ {
+  "html": "fuente/jefe.html",
+  "png": "d2-consola-blanca-jefe-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d2&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-jefe-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/jefe.html",
+  "png": "d2-consola-blanca-jefe-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d2&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-jefe-telefono-claro.json"
+ },
+ {
+  "html": "fuente/p201b.html",
+  "png": "d2-consola-blanca-p201b-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d2&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-p201b-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d2-consola-blanca-ger-escritorio-noche.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d2&tema=noche&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d2-consola-blanca-ger-escritorio-noche.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d3-sala-ger-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d3&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-ger-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d3-sala-ger-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d3&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-ger-telefono-claro.json"
+ },
+ {
+  "html": "fuente/sup.html",
+  "png": "d3-sala-sup-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d3&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-sup-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/sup.html",
+  "png": "d3-sala-sup-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d3&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-sup-telefono-claro.json"
+ },
+ {
+  "html": "fuente/oper.html",
+  "png": "d3-sala-oper-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d3&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-oper-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/oper.html",
+  "png": "d3-sala-oper-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d3&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-oper-telefono-claro.json"
+ },
+ {
+  "html": "fuente/jefe.html",
+  "png": "d3-sala-jefe-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d3&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-jefe-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/jefe.html",
+  "png": "d3-sala-jefe-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d3&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-jefe-telefono-claro.json"
+ },
+ {
+  "html": "fuente/p201b.html",
+  "png": "d3-sala-p201b-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d3&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-p201b-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d3-sala-ger-escritorio-noche.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d3&tema=noche&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d3-sala-ger-escritorio-noche.json"
+ },
+ {
+  "html": "fuente/prod.html",
+  "png": "d1-grafito-prod-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-prod-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/prod.html",
+  "png": "d1-grafito-prod-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-prod-telefono-claro.json"
+ },
+ {
+  "html": "fuente/reg.html",
+  "png": "d1-grafito-reg-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-reg-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/reg.html",
+  "png": "d1-grafito-reg-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-reg-telefono-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d1-grafito-ger-momentos-escritorio-claro.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=claro&vista=escritorio&momentos=1",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-ger-momentos-escritorio-claro.json"
+ },
+ {
+  "html": "fuente/ger.html",
+  "png": "d1-grafito-ger-momentos-telefono-claro.png",
+  "ancho": 390,
+  "alto": 844,
+  "query": "dir=d1&tema=claro&vista=telefono&momentos=1",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-ger-momentos-telefono-claro.json"
+ },
+ {
+  "html": "fuente/p201b.html",
+  "png": "d1-grafito-p201b-escritorio-noche.png",
+  "ancho": 1440,
+  "alto": 900,
+  "query": "dir=d1&tema=noche&vista=escritorio",
+  "completa": false,
+  "revision": "fuente/datos/revision/d1-grafito-p201b-escritorio-noche.json"
+ },
+ {
+  "html": "fuente/kit.html",
+  "png": "lamina-kit-scada.png",
+  "ancho": 1600,
+  "alto": 900,
+  "query": "tema=claro",
+  "completa": true,
+  "revision": "fuente/datos/revision/lamina-kit-scada.json"
+ },
+ {
+  "html": "fuente/comparacion.html",
+  "png": "lamina-tres-direcciones.png",
+  "ancho": 1800,
+  "alto": 900,
+  "query": "",
+  "completa": true,
+  "revision": "fuente/datos/revision/lamina-tres-direcciones.json"
+ }
+]

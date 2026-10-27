@@ -1,0 +1,132 @@
+<!doctype html><html lang="es-CO"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kit SCADA</title>
+<link rel="stylesheet" href="fuentes.css"><link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="base.css">
+<style>
+  body{background:var(--suelo)}
+  .hoja{width:1600px;padding:48px 56px 56px;display:grid;gap:28px}
+  .hoja > header{display:flex;align-items:flex-end;gap:24px;border-bottom:2px solid var(--tinta);padding-bottom:16px}
+  .hoja > header h1{font-size:32px;letter-spacing:-.01em}
+  .hoja > header p{color:var(--tinta2);font-size:15px;margin-left:auto;text-align:right}
+  .sec{background:var(--panel);border-radius:8px;padding:24px 28px}
+  .sec h2{font-family:var(--f-cond);font-size:15px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--tinta);display:flex;gap:12px;align-items:baseline;margin-bottom:16px}
+  .sec h2 span{font-family:var(--f-sans);text-transform:none;letter-spacing:0;font-weight:400;color:var(--tinta2);font-size:14px}
+  .estados{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid var(--linea)}
+  .estados > div{padding:14px 16px 14px 0;border-right:1px solid var(--linea2);display:grid;gap:8px;align-content:start}
+  .estados > div:last-child{border-right:0}
+  .estados .cab{font-family:var(--f-cond);font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tinta2)}
+  .ej{font-size:12px;color:var(--tinta3)}
+  .medidas{font-size:13px;color:var(--tinta2);display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--linea2)}
+  .medidas b{color:var(--tinta)}
+  .nunca{font-size:13px;color:var(--tinta2);margin-top:6px}
+  .nunca b{color:var(--tinta)}
+  .dos{display:grid;grid-template-columns:.8fr 1.2fr;gap:28px}
+  .anat text{font-size:12px;fill:var(--tinta2)}
+  .call{stroke:var(--tinta3);stroke-width:1}
+  .sim{display:grid;grid-template-columns:150px repeat(5,1fr);border-top:1px solid var(--linea)}
+  .sim > div{border-bottom:1px solid var(--linea2);padding:8px 0;display:flex;align-items:center;justify-content:center;min-height:96px}
+  .sim > .nom{justify-content:flex-start;font-weight:600;font-size:14px}
+  .sim > .cab{min-height:0;font-family:var(--f-cond);font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tinta2);padding:10px 0}
+  .marcas{display:grid;grid-template-columns:repeat(5,1fr);gap:12px 24px}
+  .marcas div{display:flex;gap:10px;align-items:center;font-size:14px}
+  .marcas small{display:block;color:var(--tinta2);font-size:12px}
+  .fluidos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 32px}
+  .fluidos div{display:flex;gap:12px;align-items:center;font-size:14px}
+</style>
+<script src="datos/cifras.js"></script><script src="kit.js"></script></head>
+<body><div class="hoja" id="hoja"></div>
+<script>
+document.documentElement.dataset.dir = 'd1'; document.documentElement.dataset.tema = new URLSearchParams(location.search).get('tema') || 'claro'
+const { n, marca, barra, tendencia, bomba, tanque, valvula, separador, pozo, medidor, linea, cifra, area } = KIT
+const P = DEMO.p201b, PI = P.senales.find(s => s.tag === 'PI-2010'), TI = P.senales.find(s => s.tag === 'TI-2011'), PD = P.senales.find(s => s.tag === 'PDI-2011')
+const EST = ['Normal', 'Anormal', 'Sin dato', 'Sin comunicación', 'Parado']
+const ej = '<span class="ej">ejemplo de estado (no es una lectura)</span>'
+
+// Anatomía del indicador, a 2×.
+const anat = () => {
+  const b = barra({ ancho: 360, escala: PI.escala, banda: PI.banda, alarmas: PI.alarmas, disparos: [4], valor: 12 })
+  return `<svg class="anat" width="740" height="150" viewBox="0 0 740 150">
+    <g transform="translate(120 44) scale(1.4)">${b.replace(/<svg[^>]*>/, '').replace('</svg>', '')}</g>
+    <line class="call" x1="128" y1="80" x2="128" y2="122"/><text x="128" y="136" text-anchor="middle">escala fija del instrumento</text>
+    <line class="call" x1="${120 + 1.4 * (4 + 0.5 * 352)}" y1="40" x2="${120 + 1.4 * (4 + 0.5 * 352)}" y2="16"/><text x="${120 + 1.4 * (4 + 0.5 * 352)}" y="12" text-anchor="middle">banda normal (&gt; 10), con raya de extremo</text>
+    <line class="call" x1="${120 + 1.4 * (4 + 0.4 * 352)}" y1="80" x2="${120 + 1.4 * (4 + 0.4 * 352)}" y2="104"/><text x="${120 + 1.4 * (4 + 0.4 * 352)}" y="118" text-anchor="middle">alarma 8 · 2 px</text>
+    <line class="call" x1="${120 + 1.4 * (4 + 0.2 * 352)}" y1="80" x2="${120 + 1.4 * (4 + 0.2 * 352) - 40}" y2="104"/><text x="${120 + 1.4 * (4 + 0.2 * 352) - 40}" y="118" text-anchor="middle">disparo: raya doble</text>
+    <line class="call" x1="${120 + 1.4 * (4 + 0.6 * 352)}" y1="44" x2="${120 + 1.4 * (4 + 0.6 * 352) + 70}" y2="28"/><text x="${120 + 1.4 * (4 + 0.6 * 352) + 74}" y="30">puntero en tinta · 2 px</text>
+    <text x="0" y="78" style="font-size:14px;fill:var(--tinta);font-weight:600">PI-2010</text><text x="0" y="96">succión</text>
+    <text x="738" y="80" text-anchor="end" style="font-size:22px;fill:var(--tinta);font-weight:650">12,0 <tspan style="font-size:13px;fill:var(--tinta2)">psi</tspan></text></svg>`
+}
+const filaB = (o, val, est, nota) => `<div style="display:flex;align-items:center;gap:10px">${barra({ ancho: 170, escala: PI.escala, banda: PI.banda, alarmas: PI.alarmas, ...o })}
+  <span style="font-size:18px;font-weight:${est === 'anormal' ? 750 : est === 'parado' || est === 'sincom' ? 500 : 650};color:${est === 'normal' || est === 'anormal' ? 'var(--tinta)' : 'var(--tinta2)'};display:inline-flex;gap:6px;align-items:center">${est === 'anormal' ? marca('alarma', 16) : est === 'sincom' ? marca('sincom', 16) : est === 'sindato' ? marca('falta', 16) : ''}${val}<small style="font-size:12px;font-weight:500;color:var(--tinta2)">psi</small></span></div><div class="chico">${nota}</div>`
+const tend = o => tendencia({ ancho: 250, alto: 92, escala: TI.escala, banda: TI.banda, alarmas: TI.alarmas, ejeX: ['21 sept', 'hoy'], ...o })
+const sinDato = TI.serie.map((v, i) => i >= 4 && i <= 6 ? null : v)
+const anormal = [70, 71, 73, 74, 76, 78, 80, 82, 84, 86, 88, 91]
+const sincom = TI.serie.map((v, i) => i > 8 ? null : v)
+const tablaSim = () => {
+  const est = ['marcha', 'anormal', 'sininstr', 'sincom', 'parado']
+  const mk = { anormal: 'alarma' }
+  const fila = (nom, f) => `<div class="nom">${nom}</div>` + est.map(e => `<div><svg width="150" height="96" viewBox="0 0 150 96">${f(e)}</svg></div>`).join('')
+  return `<div class="sim"><div class="cab"></div><div class="cab">En marcha · normal</div><div class="cab">Anormal (◆ 1)</div><div class="cab">Sin instrumento</div><div class="cab">Sin comunicación</div><div class="cab">Parado (normal)</div>
+    ${fila('Bomba', e => bomba(66, 46, { estado: e, marca: mk[e] || (e === 'sincom' ? 'sincom' : null) }))}
+    ${fila('Tanque con nivel', e => tanque(52, 22, { w: 40, h: 60, nivel: e === 'sincom' || e === 'sininstr' ? null : 89.6, estado: e === 'sincom' ? 'sincom' : e === 'sininstr' ? 'sindato' : 'marcha', limites: [[90, 'HH']], marca: mk[e] || (e === 'sincom' ? 'sincom' : null) }))}
+    ${fila('Válvula', e => valvula(75, 52, { estado: e === 'parado' || e === 'anormal' ? 'cerrada' : e === 'sincom' ? 'sincom' : 'abierta', marca: mk[e] || (e === 'sincom' ? 'sincom' : null) }))}
+    ${fila('Separador', e => separador(24, 30, { w: 100, h: 36, estado: e === 'sininstr' ? 'sininstr' : e, marca: mk[e] || (e === 'sincom' ? 'sincom' : null) }))}
+    ${fila('Pozo', e => pozo(75, 76, { estado: e === 'sininstr' ? 'sininstr' : e, marca: mk[e] || (e === 'sincom' ? 'sincom' : null) }))}
+    ${fila('Medidor (FI)', e => medidor(50, 48, { letras: 'FI', lazo: '2011', valor: e === 'sininstr' ? '—' : e === 'parado' ? '0' : e === 'anormal' ? '63.070' : '74.200', estado: e === 'sincom' ? 'sincom' : e === 'parado' ? 'parado' : 'normal' }) + (e === 'anormal' ? `<g transform="translate(${18} ${16})">${marca('alarma', 14)}</g>` : ''))}
+  </div>`
+}
+document.getElementById('hoja').innerHTML = `
+<header><div><div class="rotulo">TRIM · experiencia v3 · M4</div><h1>Kit SCADA de alto desempeño</h1></div>
+  <p>Retícula de 4 px · trazos de 1, 1,5 y 2 px · color solo para el estado (paleta de X2)<br>Dirección Grafito, tema claro · valores reales de P-201B salvo donde dice «ejemplo de estado»</p></header>
+
+<section class="sec"><h2>1 · Indicador analógico de barra <span>escala fija por instrumento · banda normal sombreada · límites marcados · puntero y valor en tinta</span></h2>
+  <div style="display:grid;grid-template-columns:760px 1fr;gap:32px;align-items:center">${anat()}
+  <div class="nunca"><b>Lo que nunca hace:</b> pintar el puntero, la barra o el número del color del estado (el color va en la marca, a la izquierda del valor); mover la escala con la lectura; inventar un rango (sin rango firmado dice «escala provisional», y sin ningún límite no se dibuja); poner una marca propia en las señales de un equipo parado.</div></div>
+  <div class="estados">${[
+    filaB({ valor: PI.serie[1] }, n(PI.serie[1], 1), 'normal', 'lectura del 22 de sept · en banda: sin marca'),
+    filaB({ valor: 8.8, estado: 'anormal', cruzo: 8, prioridad: 'alarma' }, '8,8', 'anormal', `bajo la alarma: negrita y ◆ a la izquierda · ${ej}`),
+    filaB({ valor: null, estado: 'sindato' }, '—', 'sindato', 'sin lectura · contorno gris discontinuo, sin puntero'),
+    filaB({ valor: null, estado: 'sincom' }, '---', 'sincom', `sin comunicación desde 14:07 · nunca el último valor · ${ej}`),
+    filaB({ valor: PI.valor, estado: 'parado' }, n(PI.valor, 1), 'parado', 'P-201B parada: gris, banda tenue, sin marca'),
+  ].map((h, i) => `<div><span class="cab">${EST[i]}</span>${h}</div>`).join('')}</div>
+  <div class="medidas"><span><b>Alto</b> 28 px (pista 8)</span><span><b>Ancho</b> 150–240 px; el mismo en equipos gemelos</span><span><b>Puntero</b> 2 px + cabeza de 8</span><span><b>Banda</b> --banda, rayas de extremo 1 px --tinta3</span><span><b>Alarma</b> 2 px --tinta2 (cruzada: color de su prioridad)</span><span><b>Disparo</b> raya doble 1 px</span><span><b>Valor</b> 18 px tabular; unidad 12 px</span></div>
+</section>
+
+<section class="sec"><h2>2 · Tendencia <span>ventana escrita · banda normal · alarma en discontinuo · escala que no cambia sola · hasta 4 trazas, por trazo y no por color</span></h2>
+  <div class="estados">${[
+    [tend({ series: [{ serie: TI.serie }] }), 'TI-2011, temperatura de cojinete · 12 d · real'],
+    [tend({ series: [{ serie: anormal }], cruzo: 85, prioridad: 'alarma' }), `cruza la alarma: la raya toma el color de la prioridad; la línea sigue en tinta · ${ej}`],
+    [tend({ series: [{ serie: sinDato }] }), 'un hueco corta la línea: nunca se une por encima ni se pinta en cero'],
+    [tend({ series: [{ serie: sincom }], sincom: true }), `la línea termina donde se perdió la señal y lleva el círculo punteado · ${ej}`],
+    [tendencia({ id: 'pd', ancho: 250, alto: 92, escala: PD.escala, banda: PD.banda, alarmas: [], ejeX: ['21 sept', 'hoy'], series: [{ serie: PD.serie }], paradaDesde: 10, estado: 'parado' }), 'PDI-2011 · real: la parada se raya y la línea pasa a gris'],
+  ].map(([s, t], i) => `<div><span class="cab">${EST[i]}</span>${s}<span class="chico">${t}</span></div>`).join('')}</div>
+  <div class="medidas"><span><b>Línea</b> 2 px --dato1 (segunda traza 1,6 px)</span><span><b>Trazas</b> continua · discontinua 6-3 · punteada 1,5-3 · guion-punto</span><span><b>Banda</b> --banda al 60 %</span><span><b>Alarma</b> 1,2 px, 5-3</span><span><b>Último punto</b> círculo de 2,6 o la marca</span><span><b>Tamaños</b> placa 110–150 × 30 · ficha ≥ 300 × 56 · nivel 1 ≥ 240 × 64</span><span><b>Medido</b> continuo · <b>simulado</b> discontinuo con su palabra</span></div>
+</section>
+
+<section class="sec"><h2>3 · Símbolos de proceso <span>ISA-5.1 simplificada, 2D: el relleno dice si corre (por brillo), la marca dice qué anda mal, nunca la caja teñida</span></h2>
+  <div class="ej" style="margin:-8px 0 8px">Los estados de la columna «Anormal» son ejemplo de estado; las cifras del medidor son lecturas de FI-2011 del demo (74.200 el 21 de sept, 63.070 el 1 de oct, 0 parada).</div>
+  ${tablaSim()}
+  <div class="medidas"><span><b>Contorno</b> 1,5 px --eq-trazo; anormal 2 px --tinta</span><span><b>En marcha</b> --eq-marcha (más claro que el fondo)</span><span><b>Parado</b> --eq-parado (más oscuro)</span><span><b>Sin dato</b> sin relleno, discontinuo 3-2,5</span><span><b>Anillo</b> 2 px, solo ◆ 1 e interlock</span><span><b>Marca</b> 14 px arriba a la izquierda, fuera del cuerpo</span><span><b>Bomba</b> Ø 32 · tanque 44–72 de ancho · válvula 24 × 14 · burbuja Ø 40</span></div>
+  <div class="nunca"><b>Lo que nunca hace:</b> girar el impulsor, «fluir» la tubería, sombras, brillos, 3D o degradados; teñir el cuerpo del color de la alarma; poner una marca a un pozo cerrado por otro equipo (la lleva el que lo cerró).</div>
+</section>
+
+<div class="dos">
+<section class="sec"><h2>4 · Una línea por fluido <span>por el trazo y el rótulo, nunca por el color · flecha fija de dirección</span></h2>
+  <div class="fluidos">${[['multi', 'Multifásico · 3 px'], ['crudo', 'Crudo · 2,4 px'], ['gas', 'Gas · 2 px, 8-4'], ['agua', 'Agua · 2 px, 2-3'], ['elec', 'Eléctrica · 2 px'], ['aire', 'Aire · 2 px, 6-4']].map(([f, t]) => `<div><svg width="96" height="14">${linea([[2, 7], [94, 7]], f)}</svg>${t}</div>`).join('')}
+  <div><svg width="96" height="14">${linea([[2, 7], [94, 7]], 'crudo', { sinFlujo: true })}</svg>Sin flujo: tenue + «SIN FLUJO»</div></div>
+</section>
+<section class="sec"><h2>5 · Marca de estado <span>forma + número + color + palabra · rojo solo para el interlock</span></h2>
+  <div class="marcas">${[['interlock', 'Interlock', 'candado · rojo'], ['alarma', 'Alarma', 'rombo 1 · naranja'], ['atencion', 'Atención', 'triángulo 2 · amarillo con trazo'], ['aviso', 'Aviso', 'cuadrado 3 · amarillo con trazo'], ['sincom', 'Sin comunicación', 'círculo punteado · morado'], ['invalido', 'Dato inválido', 'círculo con raya · morado'], ['falta', 'Falta', 'contorno discontinuo · gris'], ['sininstr', 'Sin instrumento', 'corchetes · gris'], ['bloqueo', 'No arrancar', 'círculo con barra · tinta'], ['normal', 'Normal', 'punto · gris']].map(([k, t, s]) => `<div>${marca(k, 20)}<span>${t}<small>${s}</small></span></div>`).join('')}</div>
+  <div class="medidas"><span><b>Cuadro</b> 14 × 14; ≥ 12 px en escritorio, ≥ 16 px en el teléfono</span><span><b>Palabra</b> al lado en listas y fichas</span></div>
+</section>
+</div>
+
+<section class="sec"><h2>6 · La cifra <span>número grande tabular · unidad corta · rótulo de 2 a 4 palabras · su calidad y su vigencia</span></h2>
+  <div class="estados">${[
+    cifra({ tam: 'xl', rotulo: 'Se deja de producir', valor: n(DEMO.ger.ahora), unidad: 'bbl/d', nota: 'ahora, 5 campos · real' }),
+    cifra({ tam: 'xl', estado: 'anormal', marca: 'aviso', rotulo: 'Producción por día', valor: n(DEMO.ceiba.produccion.real), unidad: 'bbl/d', nota: `bajo la meta de ${n(DEMO.ceiba.produccion.meta)} · La Ceiba · real` }),
+    cifra({ tam: 'xl', estado: 'sindato', rotulo: 'Pérdida', valor: '—', unidad: '', nota: 'nada registrado en octubre · real' }),
+    cifra({ tam: 'xl', estado: 'sincom', rotulo: 'Caudal FI-2011', valor: '', unidad: 'bbl/d', nota: `sin comunicación desde 14:07 · ${ej}` }),
+    cifra({ tam: 'xl', estado: 'parado', rotulo: 'Caudal FI-2011', valor: '0', unidad: 'bbl/d', nota: 'P-201B parada · real' }),
+  ].map((h, i) => `<div><span class="cab">${EST[i]}</span>${h}</div>`).join('')}</div>
+  <div class="medidas"><span><b>Principal</b> 56–64 px, peso 650, −0,035 em</span><span><b>Apoyo</b> 20–28 px (≤ 4 en la primera vista)</span><span><b>Teléfono, campo</b> ≥ 18 px lo que decide</span><span><b>Rótulo</b> 13–14 px condensada</span><span><b>Nunca en color</b>: la marca va a su izquierda</span><span><b>Lo simulado</b> nunca más grande ni más arriba que lo medido</span></div>
+</section>`
+</script></body></html>

@@ -1,0 +1,70 @@
+<!doctype html><html lang="es-CO" data-dir="d1" data-tema="claro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tres direcciones</title>
+<link rel="stylesheet" href="fuentes.css"><link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="base.css">
+<style>
+  body{background:#e9eaec}
+  .hoja{width:1800px;padding:44px 48px 52px;display:grid;gap:24px}
+  .hoja > header{display:flex;align-items:flex-end;gap:24px;border-bottom:2px solid var(--tinta);padding-bottom:14px}
+  .hoja > header h1{font-size:32px;letter-spacing:-.01em}
+  .hoja > header p{margin-left:auto;text-align:right;color:var(--tinta2);font-size:15px}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .col{background:#f9f9fa;border-radius:8px;padding:22px;display:grid;gap:14px;align-content:start}
+  .col h2{font-size:26px;display:flex;align-items:baseline;gap:10px}
+  .col h2 span{font-size:14px;color:var(--tinta3);font-weight:500;font-family:var(--f-cond);letter-spacing:.06em;text-transform:uppercase}
+  .lema{color:var(--tinta2);font-size:15px;min-height:42px}
+  .letra{display:flex;align-items:baseline;gap:16px;border-top:1px solid var(--linea2);padding-top:12px}
+  .letra b{font-size:40px;letter-spacing:-.03em;font-weight:650}
+  .letra small{font-size:13px;color:var(--tinta2);display:block}
+  .muestras{display:grid;grid-template-columns:64px repeat(6,1fr);gap:4px;align-items:center;font-size:12px;color:var(--tinta2)}
+  .muestras i{display:block;height:34px;border-radius:4px;border:1px solid rgb(0 0 0 / .08)}
+  .muestras em{font-style:normal;text-align:center;font-size:12px}
+  .img{border:1px solid #d4d7db;border-radius:6px;overflow:hidden;display:block;width:100%}
+  .tels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .med{width:100%;border-collapse:collapse;font-size:13px}
+  .med td,.med th{border-top:1px solid var(--linea2);padding:6px 4px;text-align:right}
+  .med th{text-align:left;font-weight:500;color:var(--tinta2)}
+  .med thead th{font-family:var(--f-cond);text-transform:uppercase;letter-spacing:.05em;font-size:12px;text-align:right}
+  .med thead th:first-child{text-align:left}
+  .pro{font-size:14px;display:grid;gap:6px}
+  .pro div{display:grid;grid-template-columns:20px 1fr}
+  .reco{outline:3px solid var(--tinta);outline-offset:-3px}
+  .sello{font-family:var(--f-cond);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--tinta);color:#fff;padding:4px 10px;border-radius:4px;justify-self:start}
+</style>
+<script src="datos/medicion.js"></script></head>
+<body><div class="hoja" id="hoja"></div>
+<script>
+const D = DIRECCIONES.direcciones, M = MEDICION.resumen
+const NOM = { d1: 'grafito', d2: 'consola-blanca', d3: 'sala' }
+const f1 = x => String(x).replace('.', ',')
+const PRO = {
+  d1: [['+', 'Gris claro de sala (ASM, X2 §4.7) y una sola masa oscura, el panel: separa la mano del dato sin gastar color.'], ['+', 'IBM Plex: licencia OFL 1.1 (web y PDF) y cifras tabulares por defecto; la condensada para rótulos y la mono para los tags.'], ['−', 'Con protanopía y deuteranopía el petróleo queda cerca del gris (1,2): lo seleccionado lleva además raya y peso.']],
+  d2: [['+', 'La más «app de consumo»: blanco, línea fina, cero tonos en claro; el acento es la tinta.'], ['−', 'Blanco puro en turnos de 12 h: ASM pide gris, no blanco. Sin tarjetas, el bloque depende de líneas de 1 px que se pierden al sol.'], ['−', 'En noche no puede ser acromático: la tinta #f4f4f5 queda a 4,9 del amarillo con tritanopía; lleva un hielo #b4d5db.']],
+  d3: [['+', 'La más «SCADA»: barra con la franja siempre arriba, marcos de 1 px y radio 2, como una consola.'], ['−', 'Noche como tema principal contradice a ASM y a X2 §4.7: el claro va por defecto en sala, oficina y campo.'], ['−', 'Air: licencia para autohospedaje y PDF NO VERIFICADA (X1 §3.1).']],
+}
+const fila = (k, v) => `<tr><th>${k}</th><td>${f1(v.claro)}</td><td>${f1(v.noche)}</td></tr>`
+document.getElementById('hoja').innerHTML = `
+<header><div><div class="rotulo">TRIM · experiencia v3 · M4</div><h1>Tres direcciones, sin el azul</h1></div>
+  <p>Misma paleta de estado (X2) en las tres · cifras del demo (La Ceiba y 5 campos, 2-oct, 14:00)<br>Medición: WCAG 2.2 sobre 5 fondos y ΔOK×100 con 4 visiones · ${MEDICION.fallas} fallas</p></header>
+<div class="cols">${Object.entries(D).map(([id, d]) => {
+  const n = NOM[id], m = M[id]
+  const sw = t => ['suelo', 'panel', 'tinta', 'nav', 'acento', 'acento-suave'].map(k => `<i style="background:${d[t][k]}" title="${k} ${d[t][k]}"></i>`).join('')
+  const minAc = t => Math.min(...['interlock', 'alarma', 'atención y aviso', 'sin comunicación'].map(k => m[t].acento[k]))
+  return `<section class="col${id === 'd1' ? ' reco' : ''}" data-dir="${id}" data-tema="claro">
+    ${id === 'd1' ? '<span class="sello">Recomendada</span>' : ''}
+    <h2>${d.nombre} <span>${id.toUpperCase()}</span></h2><div class="lema">${d.lema}</div>
+    <div class="letra" style="font-family:'${d.letra.sans}'"><b>2.650</b><span><b style="font-size:18px">${d.letra.sans}</b><small>${id === 'd3' ? 'licencia NO verificada' : 'SIL OFL 1.1 · cifras tabulares'}</small></span></div>
+    <div class="muestras"><span>claro</span>${sw('claro')}<span>noche</span>${sw('noche')}<span></span>${['suelo', 'panel', 'tinta', 'panel nav.', 'acento', 'seleccionado'].map(x => `<em>${x}</em>`).join('')}</div>
+    <img class="img" src="../${id}-${n}-ger-escritorio-claro.png" alt="">
+    <img class="img" src="../${id}-${n}-ger-escritorio-noche.png" alt="">
+    <div class="tels"><img class="img" src="../${id}-${n}-sup-telefono-claro.png" alt=""><img class="img" src="../${id}-${n}-oper-telefono-claro.png" alt=""><img class="img" src="../${id}-${n}-jefe-telefono-claro.png" alt=""></div>
+    <img class="img" src="../${id}-${n}-p201b-escritorio-claro.png" alt="">
+    <table class="med"><thead><tr><th>Medición</th><th>claro</th><th>noche</th></tr></thead><tbody>
+      ${fila('Acento contra el estado más cercano (≥ 10)', { claro: minAc('claro'), noche: minAc('noche') })}
+      ${fila('Texto tinta3, peor fondo (≥ 4,5)', { claro: m.claro.minimos.tinta3, noche: m.noche.minimos.tinta3 })}
+      ${fila('Alarma naranja, peor fondo (≥ 3)', { claro: m.claro.minimos.alarma, noche: m.noche.minimos.alarma })}
+      ${fila('Interlock rojo, peor fondo (≥ 3)', { claro: m.claro.minimos.interlock, noche: m.noche.minimos.interlock })}
+      <tr><th>Acento: claro · noche</th><td><b>${d.claro.acento}</b></td><td><b>${d.noche.acento}</b></td></tr></tbody></table>
+    <div class="pro">${PRO[id].map(([s, t]) => `<div><b>${s}</b><span>${t}</span></div>`).join('')}</div>
+  </section>`
+}).join('')}</div>`
+</script></body></html>
