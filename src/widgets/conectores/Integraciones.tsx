@@ -47,34 +47,34 @@ export function Integraciones({ campoId }: { campoId: string }) {
   const plantillas = useVerMas(Object.entries(PLANTILLAS))
   const plantilla = ([regla, t]: [string, { nombre: string; cuerpo: string }]) => (
     <div key={regla} className="border-b border-[var(--linea2)] py-1 last:border-0">
-      <span className="block font-mono text-[13px]">{t.nombre}</span>
+      <span className="block text-[14px] font-semibold">{t.nombre}</span>
       <small className="block text-[13px] text-[var(--tinta3)]">{t.cuerpo}</small>
     </div>
   )
 
   return (
-    <Panel className="mb-2.5" titulo="SISTEMAS CORPORATIVOS" extra={`sincronizado ${fechaHora(SINCRONIZADO)}`}>
+    <Panel titulo="Sistemas corporativos" extra={`sincronizado ${fechaHora(SINCRONIZADO)}`}>
       <Lectura>
         Además de los bordes que leen los PLC, TRIM habla con dos sistemas de la empresa. A SAP le
         manda los avisos con su evidencia y de SAP lee las órdenes, las horas y los repuestos: las
         órdenes las crea el planeador en SAP, no TRIM. Por WhatsApp avisa a quien tiene que actuar y
-        recibe la respuesta. La flecha dice en qué sentido viaja cada dato.
+        recibe la respuesta.
       </Lectura>
       <div className="mt-2 grid items-start gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))]">
-        <section className="rounded border border-[var(--linea2)] p-3 text-[14px]" aria-label="SAP">
+        <section className="rounded-[16px] bg-[var(--panel2)] p-4 text-[14px]" aria-label="SAP">
           <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
             <b className="text-[15px]">SAP S/4HANA · Mantenimiento (PM)</b><Chip>conectado</Chip>
           </header>
-          <Fila titulo="TRIM → SAP · avisos" valor={`${deTrim} en total`}
+          <Fila titulo="Avisos a SAP" valor={`${deTrim}`}
             info="Con su evidencia, desde la puesta en marcha: M1 solicitud (una parte avisa) · M2 avería (el equipo paró)." />
-          <Fila titulo="SAP → TRIM · órdenes" valor={`${plural(ordenes.length, 'orden', 'órdenes')} · ${plural(abiertas, 'abierta', 'abiertas')}`}
+          <Fila titulo="Órdenes de SAP" valor={`${ordenes.length} · ${plural(abiertas, 'abierta', 'abiertas')}`}
             info="Con su estado: creada, liberada, en ejecución, cerrada." />
-          <Fila titulo="SAP → TRIM · horas" valor={`${n1(horas)} h`} info="Confirmadas: la reparación activa de cada orden." />
-          <Fila titulo="SAP → TRIM · repuestos" valor={plural(materiales, 'material', 'materiales')}
+          <Fila titulo="Horas de SAP" valor={`${n1(horas)} h`} info="Confirmadas: la reparación activa de cada orden." />
+          <Fila titulo="Repuestos de SAP" valor={plural(materiales, 'material', 'materiales')}
             info="Los críticos: stock de libre utilización en la bodega del campo." />
-          <Fila titulo="PLC ↔ SAP · equipos" valor={`${flota.length} de ${flota.length}`}
+          <Fila titulo="Equipos del PLC en SAP" valor={`${flota.length} de ${flota.length}`}
             info={`Los de alto impacto, asociados entre el PLC y SAP.${ejemplo ? ` Por ejemplo: ${ejemplo.equipo} → equipo ${ejemplo.equipoSap} · ${ejemplo.ubicacion}.` : ''}`} />
-          <h4 className="font-cond mb-1 mt-2.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">CATÁLOGOS DE DAÑO</h4>
+          <h4 className="mb-1 mt-3 text-[14px] font-semibold text-[var(--tinta2)]">Catálogos de daño</h4>
           {clases.length === 0 && <p className="text-[var(--tinta2)]">Este campo no tiene equipos de alto impacto.</p>}
           {clases.map(c => (
             <p key={c.clase} className="flex flex-wrap justify-between gap-x-3 border-b border-[var(--linea2)] py-1 last:border-0">
@@ -84,7 +84,7 @@ export function Integraciones({ campoId }: { campoId: string }) {
           ))}
         </section>
 
-        <section className="rounded border border-[var(--linea2)] p-3 text-[14px]" aria-label="WhatsApp">
+        <section className="rounded-[16px] bg-[var(--panel2)] p-4 text-[14px]" aria-label="WhatsApp">
           <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
             <b className="text-[15px]">WhatsApp Business</b><Chip>conectado</Chip>
           </header>
@@ -94,7 +94,7 @@ export function Integraciones({ campoId }: { campoId: string }) {
             <span className="inline-flex flex-wrap items-baseline gap-x-1">{' · '}<DatoInvalido etiqueta="Mensajes no enviados" tamano={10} />{plural(sinEnviar, 'sin enviar', 'sin enviar')}
               <Info titulo="Sin enviar" texto="Un dato no cabía en su plantilla." /></span>
           )}</>} pie={`${plural(conAlertas, 'persona recibe', 'personas reciben')} alertas`} />
-          <h4 className="font-cond mb-1 mt-2.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">PLANTILLAS APROBADAS · UTILIDAD</h4>
+          <h4 className="mb-1 mt-3 text-[14px] font-semibold text-[var(--tinta2)]">Plantillas aprobadas · utilidad</h4>
           {plantillas.visibles.map(plantilla)}
           {plantillas.resto.length > 0 && <div className="solo-impresion">{plantillas.resto.map(plantilla)}</div>}
           <VerMas ocultas={plantillas.ocultas} abierto={plantillas.abierto} onAlternar={plantillas.alternar} />
@@ -104,15 +104,12 @@ export function Integraciones({ campoId }: { campoId: string }) {
   )
 }
 
-const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
-
 /** Una cifra del sistema: el rótulo con su ⓘ (lo que explica, que en el papel sale escrito) y el valor. */
 function Fila({ titulo, valor, pie, info }: { titulo: string; valor: ReactNode; pie?: string; info?: string }) {
   return (
     <div className="border-b border-[var(--linea2)] py-1.5 last:border-0">
       <span className="flex flex-wrap justify-between gap-x-3">
-        {/* El globo se titula con lo último del rótulo («avisos» → «Avisos»): en el papel no repite el rótulo entero. */}
-        <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">{titulo}{info && <Info titulo={mayuscula(titulo.split(' · ').at(-1)!)} texto={info} />}</span>
+        <span className="flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">{titulo}{info && <Info titulo={titulo} texto={info} />}</span>
         <b className="tabular">{valor}</b>
       </span>
       {pie && <small className="block text-[13px] text-[var(--tinta3)]">{pie}</small>}

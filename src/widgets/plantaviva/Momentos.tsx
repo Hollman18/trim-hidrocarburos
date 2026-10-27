@@ -26,10 +26,12 @@ export function Momentos({ valor, onCambio, corto = false, className }: {
         return (
           <button key={m} ref={el => { refs.current[i] = el }} type="button" role="radio" aria-checked={activo} tabIndex={activo ? 0 : -1}
             data-momento={m} onClick={() => onCambio(m)} onKeyDown={e => mover(e, i)}
-            className={cn('flex min-h-[40px] cursor-pointer items-baseline justify-center gap-1.5 whitespace-nowrap rounded-full px-[15px] py-2 text-[15px] font-semibold transition-colors duration-[120ms]',
+            // `toque`: 44 px de blanco sin cambiar lo que se ve (UI-18; WCAG 2.5.8).
+            className={cn('toque flex min-h-[40px] cursor-pointer items-baseline justify-center gap-1.5 whitespace-nowrap rounded-full px-[15px] py-2 text-[15px] font-semibold transition-colors duration-[120ms]',
               activo ? 'bg-[var(--primario)] text-[var(--primario-sobre)]' : 'text-[var(--tinta)] hover:bg-[var(--panel)]')}>
             {NOMBRE_MOMENTO[m]}
-            {!corto && <small className={cn('hidden text-[14px] font-normal sm:inline', activo ? 'text-[var(--marca-tenue)] [:root[data-theme=dark]_&]:text-[#464b52]' : 'text-[var(--tinta2)]')}>{LEMA_MOMENTO[m]}</small>}
+            {/* El lema del escogido, con el token de lo que va sobre el botón principal (UI-10): sin colores escritos a mano. */}
+            {!corto && <small className={cn('hidden text-[14px] font-normal opacity-80 sm:inline', activo ? 'text-[var(--primario-sobre)]' : 'text-[var(--tinta2)]')}>{LEMA_MOMENTO[m]}</small>}
           </button>
         )
       })}

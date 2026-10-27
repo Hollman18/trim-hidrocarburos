@@ -13,8 +13,10 @@ test('Un techo es «hasta N» en Riesgo, Turno y Mantenimiento, como en «Si fal
   const { page } = f
   // «9.394 bbl/d» sin «hasta» delante: el techo de K-101 dicho como cifra exacta.
   const exacta = /(?<!hasta )9\.394 bbl\/d/
+  // K1 · P-10: el Riesgo del jefe vive en su Equipos («Qué está en riesgo», debajo de la lista): la dirección abre ahí.
   await f.abrir('/#/jefe/riesgo/ceiba/curso')
-  await expect(page.locator('main [data-en-juego]')).toContainText('hasta 9.394')
+  f.ok((await f.hash()).startsWith('#/jefe/equipos/ceiba'), `la dirección de Riesgo abre Equipos (${await f.hash()})`)
+  await expect(page.locator('main [data-riesgo] [data-en-juego]')).toContainText('hasta 9.394')
   let t = await f.texto()
   f.ok(t.includes('hasta 9.394 bbl/d') && !exacta.test(t), `Riesgo: «En riesgo» y su cabecera dicen «hasta 9.394 bbl/d» (${t.match(exacta)?.[0] ?? 'ninguna cifra exacta'})`)
   await f.ir('#/sup/turno/ceiba/curso')
@@ -73,10 +75,13 @@ test('D2 en el papel: lo que escribió el operador sale en la pantalla de quien 
   const { page } = f
   const libre = 'ZQX Lo encontró Jairo Peña con Nelson Ortiz: la válvula de la cabeza estaba cerrada'
   await f.abrir('/#/oper/causa/ceiba/curso')
+  // F1 (P-causa-1): una parada abierta a la vez; LC-21 se abre tocando su fila.
+  const filaLc21 = page.locator('main button[data-parada]', { hasText: 'LC-21' })
+  if (await filaLc21.count()) await filaLc21.first().click()
   const form = page.locator('main form').filter({ has: page.getByRole('button', { name: 'Cierre para prueba o intervención del pozo' }) }).first()
   await form.getByRole('button', { name: 'Cierre para prueba o intervención del pozo' }).click()
   await form.locator('textarea').fill(libre)
-  await form.getByRole('button', { name: 'Registrar respuesta' }).click()
+  await form.getByRole('button', { name: 'Contestar' }).click()
   await f.esperarTexto(libre)
   for (const [ruta, que] of [['#/sup/causa/ceiba/curso', 'Identificar'], ['#/sup/turno/ceiba/curso', 'Turno']] as const) {
     await f.ir(ruta)

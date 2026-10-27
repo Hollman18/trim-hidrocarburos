@@ -30,7 +30,8 @@ test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ning
   await test.step('Las subpantallas van en el panel, debajo de su puerta; arriba no hay pestañas', async () => {
     await f.abrir('/#/sup/bombas/ceiba/curso')
     const subs = await f.page.evaluate(() => [...document.querySelectorAll('nav [data-subpantallas] button')].map(b => b.textContent?.trim()))
-    f.ok(subs.join(',') === 'Equipos,Bombas,Electrosumergibles,Pozos', `Equipos del supervisor, adentro del panel: ${subs.join(', ')}`)
+    // F1 (UI-23): la primera subpantalla, que repite el nombre de su puerta, no se lista: la abre la puerta.
+    f.ok(subs.join(',') === 'Bombas,Electrosumergibles,Pozos', `Equipos del supervisor, adentro del panel: ${subs.join(', ')}`)
     const arriba = await f.page.evaluate(() => document.querySelectorAll('main [data-subpantallas], main > [role=tablist], header [role=tablist]').length)
     f.ok(arriba === 0, 'ninguna barra de subpantallas en el contenido ni en la cabecera')
     f.ok((await f.hash()).startsWith('#/sup/bombas/ceiba/'), 'la dirección de antes (#/sup/bombas/…) sigue abriendo')
@@ -54,7 +55,8 @@ test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ning
 })
 
 test('la franja de condiciones: la cuenta del motor y su lista', async ({ flujo: f }) => {
-  const franja = () => f.page.evaluate(() => [...document.querySelectorAll('header [data-franja] button')].map(b => (b.getAttribute('aria-label') ?? '').replace(': ver la lista', '')).join(' · '))
+  // F1 (H13): «sin comunicación» dice su alcance después del punto («TRIM todavía solo sabe…»).
+  const franja = () => f.page.evaluate(() => [...document.querySelectorAll('header [data-franja] button')].map(b => (b.getAttribute('aria-label') ?? '').replace(': ver la lista', '').replace(/\. TRIM todavía.*$/, '')).join(' · '))
   await f.abrir('/#/ger/planta-viva/ceiba/curso')
   const ce = await franja()
   f.ok(ce === '2 alarmas · 2 en atención · 1 aviso · 0 sin comunicación', `La Ceiba: ${ce}`)

@@ -9,3 +9,8 @@ import type { Severidad } from '@/entities/tipos'
  *  identificar sí son fallas (paradas que nadie programó): llevan la del equipo. */
 export const marcaDeFila = (f: Pick<FilaEquipo, 'tipo'>, hoy: Severidad | undefined): Severidad =>
   f.tipo === 'programada' ? 0 : hoy ?? 0
+
+/** La prioridad de la marca que corresponde a la condición de un equipo en la franja (H3: UNA marca por
+ *  equipo en todo el producto, la de `franjaDe`). Sin condición, sin marca; «sin comunicación» no es una prioridad. */
+export const SEVERIDAD_DE_CONDICION: Record<string, Severidad> = { interlock: 1, alarma: 1, atencion: 2, aviso: 3 }
+export const severidadDeCondicion = (c: string | undefined): Severidad => (c ? SEVERIDAD_DE_CONDICION[c] ?? 0 : 0)

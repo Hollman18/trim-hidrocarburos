@@ -1,0 +1,130 @@
+#/prod/esp/palmar/curso
+
+Todos mis campos
+El Palmar
+DATOS DE DEMOSTRACIÓN
+Equipos
+hoy, 2 de oct · datos de las 14:00
+Exportar
+nada anormal
+
+El Palmar no tiene electrosumergibles en su perfil: se abrió equipos.
+
+Parados
+0
+Avisan
+0
+Sin instrumento
+7
+Todos
+14
+Todos los tipos
+Bombas
+1
+Pozos
+7
+Servicios y proceso
+6
+Todos los trenes
+Pozos
+7
+Crudo
+4
+Agua
+1
+Servicios
+2
+Buscar por tag
+14 equipos
+por estado y, dentro de cada uno, por lo que costaría si falla hoy
+¿Lo vigila TRIM?
+ahora o si falla hoy
+P-201B
+bomba de agua
+en marcha
+sí · 8 señales
+3.277bbl/d
+si falla hoy
+PA-06
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+632bbl/d
+si falla hoy
+PA-05
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+567bbl/d
+si falla hoy
+PA-01
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+518bbl/d
+si falla hoy
+PA-02
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+476bbl/d
+si falla hoy
+PA-04
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+460bbl/d
+si falla hoy
+PA-07
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+361bbl/d
+si falla hoy
+PA-03
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+262bbl/d
+si falla hoy
+H-302
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+SE-2
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 3.277bbl/d
+si falla hoy
+V-101
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 3.277bbl/d
+si falla hoy
+LACT-01
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Tanque de agua, Pozos inyectores.

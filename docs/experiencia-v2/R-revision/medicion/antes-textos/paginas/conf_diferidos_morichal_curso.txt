@@ -1,0 +1,210 @@
+#/conf/diferidos/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Resultados
+DATOS DE DEMOSTRACIÓN
+Libro de diferidos
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+provisional
+1.253
+barriles diferidos
+1.065–1.441 bbl · calculado
+0 sin identificar
+valor
+60mil USD
+diferido por día
+792
+bbl/d
+máx. 950
++3 % frente a jul a sep
+Mes a mes
+Por cómo se identificó
+Por dónde se trabó
+0
+25,0 k
+50,0 k
+27,2 k
+OCT
+2025
+12,1 k
+NOV
+23,6 k
+DIC
+956
+ENE
+2026
+2,8 k
+FEB
+31,9 k
+MAR
+9,1 k
+ABR
+40,0 k
+MAY
+14,8 k
+JUN
+26,3 k
+JUL
+29,0 k
+AGO
+15,5 k
+SEP
+1,3 k
+OCT
+en curso
+por señal
+declarado
+sin identificar
+máximo firmado
+pasó el máximo
+¿Se puede publicar? Cuadre y custodia
+Potencial
+27.873
+− Real medido
+26.620
+= No producido
+1.253
+Identificado por señal
+1.167
+Declarado por el operario
+86
+Sin identificar
+0
+¿El factor está en su banda?
+
+1 mes-campo · dentro de banda
+
+Cadena de custodia
+Prueba estimada: MN-11, MN-29
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+1.095
+bbl
+ 87 %
+Con parte vigilada
+1.095
+bbl
+ 87 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+0
+bbl
+ 0 %
+Evitable cerrando en orden
+0
+bbl
+ 0 %
+Tipo de causa
+Electrosumergible
+1.095 bbl · 87 %
+Declarada por el operario
+86 bbl · 7 %
+Energía eléctrica
+72 bbl · 6 %
+Por dónde se trabó
+bbl · el diferido del libro
+pozos
+
+Morichal Norte se trabó sobre todo en los pozos: 1.253 bbl de 1.253
+
+Por tramo
+En el yacimiento
+0
+En los pozos
+1.253
+100 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+MN-41 1.083 · MN-22 90 · MN-31 68 · y 1 más
+En la planta o estación
+0
+Afuera
+0
+Sin identificar
+0
+
+= el diferido del libro
+1.253 bbl
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+Por qué no se produjo
+
+el mismo total, por escalón
+
+Paradas no planeadas: fallas, disparos y terceros
+lo que TRIM tiene que bajar
+1.167
+93 %
+El yacimiento y los proyectos
+0
+Frecuencia bajada: el levantamiento sin optimizar
+0
+Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+0
+Restricción sin falla: nominación o despacho
+0
+Sin identificar: falta que una persona diga qué pasó
+86
+7 %
+
+158 bbl con dónde se trabó por confirmar
+
+Cada tramo por qué no se produjo
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Por equipo
+4 equipos
+bbl
+acumulado
+1
+MN-41
+electrosumergible
+aislamiento del motor y del cable
+1.083
+86 %
+MN-22
+declarada por el operario
+86
+93 %
+3
+SE-2
+energía eléctrica
+2 paradas de un solo pozo
+72
+99 %
+MN-25
+electrosumergible
+bomba de fondo
+12
+100 %
+Por parte
+bombas y electrosumergibles
+Aislamiento del motor y del cable
+electrosumergible · 1 falla
+1.083
+bbl · 99 %
+Bomba de fondo
+electrosumergible · sin fallas · 1 disparo
+12
+bbl · 1 %

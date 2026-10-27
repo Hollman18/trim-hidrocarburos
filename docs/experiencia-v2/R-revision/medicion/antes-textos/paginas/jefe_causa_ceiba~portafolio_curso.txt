@@ -1,0 +1,526 @@
+#/jefe/causa/ceiba~portafolio/curso
+
+Todos mis campos
+Hoy
+DATOS DE DEMOSTRACIÓN
+Paradas por identificar
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+81,4 %
+causa probada por señal
+1.935 de 2.377 bbl diferidos
+3,6 %
+causa declarada
+86 bbl · sin identificar 355 bbl (14,9 %)
+4
+por identificar · histórico
+2 pozos · 2 bombas · 2 sin arrancar
+3
+no conformidades
+arrancaron sin identificar
+No arrancar hasta identificar el daño
+· si arranca antes: no conformidad
+Por identificar · sin arrancar
+2
+sin arrancar
+1
+P-201B · bomba de la línea · La Ceiba
+Paró 2 de oct, 03:52 · hace 10,1 h
+no arrancar
+573 bbl
+Señal
+no alcanzó
+ZS-2011 · marcha → paro · 2 de oct, 03:52
+Qué se dañó
+1 · Parte de la bomba
+Pista · historia del equipo
+Sello mecánico · 5 de 8 fallas
+Rodamientos y cámara de empuje · 3 de 8 fallas
+O escoja cualquier parte…
+Sello mecánico
+Succión y filtro de entrada
+Rodamientos y cámara de empuje
+Impulsores y desgaste interno
+Motor eléctrico
+Qué encontró (opcional)
+Registrar respuesta
+Queda declarado por Camilo Rueda · hora del sistema
+WhatsApp
+03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+2
+LC-21 · pozo · La Ceiba
+Paró 1 de oct, 18:20 · hace 19,7 h
+no arrancar
+247 bbl
+Señal
+no alcanzó
+POC-LC21 · código CMD · 1 de oct, 18:20
+Por qué paró
+Cierre para prueba o intervención del pozo
+Fuga o daño en la línea de flujo
+Orden de producción: nominación o restricción del comprador
+Falla del controlador o de un instrumento del pozo
+Qué encontró
+Registrar respuesta
+Queda declarado por Camilo Rueda · hora del sistema
+WhatsApp
+18:21 pregunta → 18:50 recordatorio → 20:20 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+La cadena de cada parada · árbol de causas
+11 paradas (14 filas del reporte)
+del árbol de causas en Octubre, en curso
+
+Paradas: falta confirmar 4 · falta un dato 5 · sin causa 2
+¿qué método es?
+
+POR CONFIRMAR · 4 paradas (5 filas del reporte)
+MN-41 · parada desde el 25 de sept, 06:40 (en este período, desde el 1 de oct) · electrosumergible · Morichal Norte
+1.083 bbl diferidos · 1 parada (2 filas del reporte)
+falta confirmar
+sigue parado
+2 días
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: MN-41 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+Confirmar esta parada (2 días · 2 filas)
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Camilo Rueda · hora del sistema.
+Ver las 2 filas del reporte
+LC-07 y LC-16 · cerraron 05:43 · por P-201B · La Ceiba
+573 bbl diferidos · 2 paradas
+falta confirmar
+sigue parado
+
+Una sola raíz, P-201B: LC-07 cerró a los 114 min · LC-16 cerró a los 111 min
+
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la bomba P-201B; la parte la dice quien la abra
+2
+¿Dónde se trabó?
+En la planta o estación
+TRIM lo dedujo: P-201B mueve el agua de 18 pozos: el pozo se cerró porque el tanque de agua se llenó con P-201B parada (paró el 2 de oct, 03:52), así que se trabó en la planta
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Proceso / Facilidades
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Parada estación/bombeo afecta pozos
+TRIM lo dedujo por la misma razón del paso 1
+falta la parte de P-201B
+la dice quien la abra
+Confirmar esta parada (2 pozos · 2 filas)
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Camilo Rueda · hora del sistema.
+Ver las 2 filas del reporte
+MN-25 · cerró 08:13 · electrosumergible · Morichal Norte
+12 bbl diferidos
+falta confirmar
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: MN-25 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+Confirmar
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Camilo Rueda · hora del sistema.
+FALTA UN DATO · 5 paradas
+LC-05 · cerró 1 de oct, 09:16 · energía eléctrica · La Ceiba
+118 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a LC-05: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+MN-22 · parada desde el 30 de sept, 16:20 (en este período, desde el 1 de oct) · declarada por el operario · Morichal Norte
+86 bbl diferidos · tramo 2 de 2
+faltan 4 pasos
+1
+Quién
+falta
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: Lo declaró el operario con sus palabras: la propuesta es el pozo y la confirma una persona · falta: «¿Dónde se originó lo que se declaró: en el pozo, en la planta o afuera?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+falta
+5
+Causa
+falta
+6
+Detalle
+falta
+¿Qué lo paró?
+Se dañó un equipo
+Se fue la energía
+Lluvia, rayo, creciente o derrumbe
+Bloqueo, paro, robo o amenaza
+La planta no recibe (agua o proceso)
+El tanque de crudo está lleno
+El oleoducto o el cliente no recibe
+Una autoridad lo ordenó
+Era un trabajo o una prueba programada
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+PA-07 · parada desde el 23 de sept, 17:33 (en este período, desde el 1 de oct) · bombeo mecánico · El Palmar
+77 bbl diferidos · tramo 9 de 9
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: El controlador del bombeo mecánico paró la unidad
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: PA-07 tiene su propio bombeo mecánico: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica superficie
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+TRIM sugiere: Falla Sistema de Levantamiento Artificial
+
+sin causa exacta en la ANH
+
+¿Qué fue, exactamente?
+Falla unidad de bombeo superficie (Componentes)
+Falla rodamiento/cojinete (bearing box)
+Falla caja reductora / lubricación
+Falla Correas / Poleas
+Falla motor superficie
+Falla Sistema de Levantamiento Artificial
+No sé
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+MN-31 · cerró 1 de oct, 06:26 · energía eléctrica · Morichal Norte
+68 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a MN-31: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+MN-22 · cerró 1 de oct, 16:28 · energía eléctrica · Morichal Norte
+4 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a MN-22: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+SIN CAUSA · 2 paradas (4 filas del reporte)
+LC-21 · cerró 1 de oct, 18:20 · sin identificar · La Ceiba
+247 bbl diferidos · 1 parada (2 filas del reporte)
+sin causa
+sigue parado
+2 días
+
+faltan los 6 pasos
+Hasta que alguien diga qué pasó, no se sabe quién, dónde se trabó ni la causa.
+
+¿Qué lo paró?
+Se dañó un equipo
+Se fue la energía
+Lluvia, rayo, creciente o derrumbe
+Bloqueo, paro, robo o amenaza
+La planta no recibe (agua o proceso)
+El tanque de crudo está lleno
+El oleoducto o el cliente no recibe
+Una autoridad lo ordenó
+Era un trabajo o una prueba programada
+No sé
+Después, 2 preguntas más.
+Completar los 6 pasos
+Ver las 2 filas del reporte
+LC-08 · cerró 1 de oct, 22:15 · sin identificar · La Ceiba
+109 bbl diferidos · 1 parada (2 filas del reporte)
+sin causa
+2 días
+
+faltan los 6 pasos
+Hasta que alguien diga qué pasó, no se sabe quién, dónde se trabó ni la causa.
+
+¿Qué lo paró?
+Se dañó un equipo
+Se fue la energía
+Lluvia, rayo, creciente o derrumbe
+Bloqueo, paro, robo o amenaza
+La planta no recibe (agua o proceso)
+El tanque de crudo está lleno
+El oleoducto o el cliente no recibe
+Una autoridad lo ordenó
+Era un trabajo o una prueba programada
+No sé
+Después, 2 preguntas más.
+Completar los 6 pasos
+Ver las 2 filas del reporte
+No conformidades
+3
+no conformidades
+LC-08 · pozo · La Ceiba
+Paró 1 de oct, 22:15 · arrancó 2 de oct, 01:10 (2,9 h)
+arrancó sin identificar
+109 bbl
+Señal
+no alcanzó
+VSD-LC08 · código CMD · 1 de oct, 22:15
+Qué se dañó
+1 · Parte de la electrosumergible
+Escoja la parte…
+Aislamiento del motor y del cable
+Protector (sello del motor)
+Bomba de fondo (eje y etapas)
+Admisión y separador de gas
+Motor de fondo
+No fue la electrosumergible
+Qué encontró (opcional)
+Registrar respuesta
+Queda declarado por Camilo Rueda · hora del sistema
+WhatsApp
+22:16 pregunta → 22:45 recordatorio → 00:15 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+2
+P-201B · bomba de la línea · Morichal Norte
+Paró 24 de sept, 16:51 · arrancó 28 de sept, 06:53 (3,6 d)
+arrancó sin identificar
+3.789 bbl
+Señal
+no alcanzó
+ZS-2011 · marcha → paro · 24 de sept, 16:51
+Qué se dañó
+1 · Parte de la bomba
+Pista · historia del equipo
+Sello mecánico · 5 de 7 fallas
+Succión y filtro de entrada · 1 de 7 fallas
+Motor eléctrico · 1 de 7 fallas
+O escoja cualquier parte…
+Sello mecánico
+Succión y filtro de entrada
+Rodamientos y cámara de empuje
+Impulsores y desgaste interno
+Motor eléctrico
+Qué encontró (opcional)
+Registrar respuesta
+Queda declarado por Camilo Rueda · hora del sistema
+
+WhatsApp: sin destinatario
+
+PA-04 · pozo · El Palmar
+Paró 21 de jun, 13:00 · arrancó 22 de jun, 08:00 (19,0 h)
+arrancó sin identificar
+352 bbl
+Señal
+POC-PA04 · código CMD · 21 de jun, 13:00
+Declarado por Óscar Daza · técnico · 22 de jun, 09:30
+
+Respondido tras arrancar: «Varilla pulida rayada: cierre para cambiarla»
+
+WhatsApp: sin destinatario
+
+Declaradas
+9
+declaradas
+MN-22 · Morichal Norte · 30 de sept, 16:20
+«Fuga en la línea de flujo del pozo: se cerró para repararla»
+Jairo Peña · operador de campo · 30 de sept, 17:02
+193 bbl
+ZA-06 · La Zarza · 1 de sept, 06:34
+«El comprador nominó menos gas: se cerró el pozo»
+Nelson Ortiz · supervisor · 1 de sept, 07:59
+303 bbl
+ZA-04 · La Zarza · 26 de ago, 21:10
+«El comprador nominó menos gas: se cerró el pozo»
+Nelson Ortiz · supervisor · 26 de ago, 21:59
+126 bbl
+LC-06 · La Ceiba · 14 de ago, 03:30
+«Cabeza de pozo con fuga en el prensaestopas: cierre para cambiarlo»
+Nelson Ortiz · supervisor · 14 de ago, 04:10
+237 bbl
+ZA-01 · La Zarza · 5 de jul, 09:32
+«El comprador nominó menos gas: se cerró el pozo»
+Nelson Ortiz · supervisor · 5 de jul, 10:44
+196 bbl
+ver 4 más

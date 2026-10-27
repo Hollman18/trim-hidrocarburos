@@ -1,0 +1,71 @@
+#/tec/bombas/ceiba/curso
+
+La Ceiba
+Equipos
+DATOS DE DEMOSTRACIÓN
+Bombas de la línea
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Se deja de producir ahora, por bombas paradas
+1.665bbl/d
+1 bomba detenida · 2 pozos cerrados · 69 bbl/h · 2 de oct, 14:00
+1
+P-201B
+Diferido que causaron
+573 bbl
+calculado
+Próxima en fallar
+ninguna
+de las que tienen instrumento
+1
+bomba con instrumento
+1
+Bomba multietapa de transferencia de agua
+P-201B
+Reinyección
+
+detenido · disposición de agua
+
+Presión de descarga
+0psi
+Caudal
+0bbl/d
+Corriente
+0A
+Detenida desde 2 de oct, 03:52
+573 bbl
+487 – 659 · calculado · 69 bbl/h · 2 pozos cerrados
+No arrancar hasta identificar
+Hora de referencia 2 de oct, 14:00
+SIN INSTRUMENTO
+2 bombas
+P-201A
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 89.250 bbl/d de agua
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · sube porque P-201B está parada
+Abrir
+P-201C
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 89.250 bbl/d de agua
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · sube porque P-201B está parada
+Abrir
+1
+alarma
+2
+atención
+3
+aviso
+normal

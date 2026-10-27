@@ -17,7 +17,7 @@ const CATALOGO: Record<Exclude<Tren, 'tronco'>, Array<[Simbolo, string]>> = {
         ['tea', 'Tea / quemador'], ['salida', 'Gas a venta']],
   crudo: [['tratador', 'Tratador térmico'], ['tanque', 'Tanque'],
           ['medicion', 'Unidad LACT'], ['salida', 'Oleoducto']],
-  agua: [['bomba', 'Bomba de reinyección'], ['tanque', 'Tanque de agua'],
+  agua: [['bomba', 'Bomba de agua'], ['tanque', 'Tanque de agua'],
          ['inyeccion', 'Pozos inyectores']],
   servicios: [['subestacion', 'Subestación eléctrica'], ['aire', 'Sistema de aire']],
 }
@@ -54,21 +54,21 @@ export function Esquema({ puede, conGas = true }: { puede: boolean
         cada equipo, y con eso dónde se trabó cada parada: se revisa y se firma en «Filosofía operacional».
       </Lectura>
       {error && <p role="alert" className="mt-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5 text-[14px] font-semibold">{error}</p>}
-      <div className="mb-2.5 mt-2 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+      <div className="mb-3 sm:mb-4 mt-2 grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         {grupos.map(g => (
           <Conjunto key={g.id} grupo={g} puede={puede}
             onAgregar={m => agregarMiembro(campoId, g.id, m)}
             onQuitar={id => void hecho(quitarMiembro(campoId, g.id, id))} />
         ))}
       </div>
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+      <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         {TRENES.filter(([tren]) => conGas || tren !== 'gas').map(([tren, titulo]) => (
-          <Panel key={tren} titulo={titulo.toUpperCase()} extra={`${cfg[tren].length} elementos`}>
+          <Panel key={tren} titulo={titulo} extra={`${cfg[tren].length} elementos`}>
             {cfg[tren].map(el => (
               <div key={el.id} className="flex items-center gap-2 border-b border-[var(--linea2)] py-2 last:border-0">
                 <span className="min-w-0 flex-1">
-                  <b className="block truncate text-[14px]">{el.etiqueta}</b>
-                  <small className="font-mono text-[12px] text-[var(--tinta3)]">
+                  <b className="block break-words text-[14px]">{el.etiqueta}</b>
+                  <small className="text-[13px] text-[var(--tinta2)]">
                     {el.equipo ? `${el.equipo} · instrumentado` : 'sin instrumentar'}
                     {el.miembros ? ` · ${el.miembros.length} en el conjunto` : ''}
                   </small>
@@ -87,10 +87,10 @@ export function Esquema({ puede, conGas = true }: { puede: boolean
         ))}
       </div>
       {cambios.length > 0 && (
-        <Panel titulo="CAMBIOS DEL ESQUEMA" extra={`${cambios.length}`}>
+        <Panel titulo="Cambios del esquema" extra={`${cambios.length}`}>
           {[...cambios].reverse().map(c => (
             <p key={c.id} className="border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
-              {c.por} {c.cambio} <small className="font-mono text-[12px] text-[var(--tinta3)]">· {fechaHora(new Date(c.fecha))}</small>
+              {c.por} {c.cambio} <small className="text-[13px] text-[var(--tinta2)]">· {fechaHora(new Date(c.fecha))}</small>
             </p>
           ))}
         </Panel>
@@ -121,15 +121,15 @@ function Conjunto({ grupo, puede, onAgregar, onQuitar }: {
   }
 
   return (
-    <Panel titulo={grupo.etiqueta.toUpperCase()}
+    <Panel titulo={grupo.etiqueta}
       extra={`${(grupo.miembros?.length ?? 0) + (grupo.restantes?.cuantos ?? 0)} configurados`}>
       {grupo.miembros?.map(m => (
         <div key={m.id} className="flex items-center gap-2 border-b border-[var(--linea2)] py-2 last:border-0">
           <span className={cn('size-[7px] shrink-0 rounded-full',
             m.equipo ? 'bg-[var(--tinta3)]' : 'border border-dashed border-[var(--tinta3)]')} />
           <span className="min-w-0 flex-1">
-            <b className="block truncate text-[14px]">{m.etiqueta}</b>
-            <small className="font-mono text-[12px] text-[var(--tinta3)]">
+            <b className="block break-words text-[14px]">{m.etiqueta}</b>
+            <small className="text-[13px] text-[var(--tinta2)]">
               {m.id}{m.equipo ? ` · ${m.equipo}` : ' · sin instrumentar'}{m.pmo ? ` · ${m.pmo}` : ''}
             </small>
           </span>

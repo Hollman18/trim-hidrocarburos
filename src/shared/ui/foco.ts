@@ -18,8 +18,11 @@ function aislar(dialogo: HTMLElement): () => void {
     const padre: HTMLElement | null = nodo.parentElement
     if (!padre) break
     for (const hermano of Array.from<Element>(padre.children)) {
-      // Inerte por otra razón: no es nuestro y no se toca al soltar.
-      if (hermano === nodo || hermano.tagName === 'SCRIPT' || hermano.hasAttribute('inert')) continue
+      // Inerte por otra razón: no es nuestro y no se toca al soltar. El velo del
+      // diálogo (`data-velo`) tampoco: tocarlo es la forma de cerrar con el dedo
+      // (X5 §4.2, UI-02); inerte, el toque caía en él sin hacer nada.
+      // Lo que flota sin ser modal (las señas de la introducción, `data-flotante`) tampoco.
+      if (hermano === nodo || hermano.tagName === 'SCRIPT' || hermano.hasAttribute('inert') || hermano.hasAttribute('data-velo') || hermano.hasAttribute('data-flotante')) continue
       hermano.setAttribute('inert', '')
       tocados.push(hermano)
     }
@@ -101,7 +104,8 @@ export function useModal<T extends HTMLElement>(alEscape?: () => void, contenido
 
   useEffect(() => {
     if (!el) return
-    const antes = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    // Un tramo de la tubería es un <g> (SVGElement): también recibe el foco de vuelta (A4).
+    const antes = document.activeElement instanceof HTMLElement || document.activeElement instanceof SVGElement ? document.activeElement : null
     const capa = apilar(el)
     if (cima() === capa && !el.contains(document.activeElement)) el.focus()
 
@@ -170,6 +174,7 @@ export function useDesplegable() {
 
   const alternar = useCallback(() => setAbierto(v => !v), [])
   /** Lo que lleva el botón que abre: el estado y a qué panel controla. */
-  const propsBoton = { ref: boton, onClick: alternar, 'aria-expanded': abierto, 'aria-controls': id }
+  // `aria-controls` solo mientras el panel existe (A10): apuntar a un id que no está no sirve al lector.
+  const propsBoton = { ref: boton, onClick: alternar, 'aria-expanded': abierto, 'aria-controls': abierto ? id : undefined }
   return { abierto, setAbierto, contenedor, boton, id, propsBoton }
 }

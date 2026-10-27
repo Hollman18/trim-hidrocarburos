@@ -1,4 +1,4 @@
-import { ROLES_VISIBLES, rolPorId } from '@/entities/roles'
+import { ROLES, ROLES_VISIBLES, rolPorId } from '@/entities/roles'
 import { CAMPOS, esIdPeriodo } from '@/entities/campos'
 import { pedirInicioDeHistoria } from '@/shared/api/calendario'
 import { AHORA } from '@/entities/reloj'
@@ -8,8 +8,14 @@ import { PANTALLAS } from '@/app/pantallas'
 import { pantallaVisible } from '@/shared/config/producto'
 
 
+/** F1 · P-18 (X4 §3.8): el momento de La planta viva va en la dirección: «#/ger/planta-viva/ceiba/antes». */
+export type MomentoDireccion = 'antes' | 'durante' | 'despues'
+const MOMENTOS_DIRECCION: readonly string[] = ['antes', 'durante', 'despues']
+
 export interface Contexto {
   rolId: string; pantalla: string; campoId: string; periodoId: IdPeriodo | 'medida'
+  /** El momento de La planta viva (P-18). Solo se escribe en la dirección cuando no es «durante». */
+  momento?: MomentoDireccion
   alcance: 'campo' | 'portafolio'
   equipoAbierto: string | null
   /** Rango escogido a mano: va en la dirección como «2026-09-01_2026-09-10». */
@@ -39,10 +45,22 @@ export const rutaDe = (pantalla: string): string => PANTALLAS[pantalla]?.ruta ??
  *  planta viva (y en Resultados); sus Diferidos y su Producción, en Resultados;
  *  Riesgo, en La planta viva (Durante y Antes; `#/ger/riesgo/…` → La planta viva).
  *  Un enlace viejo («#/ger/diferidos/ceiba/cerrado») sigue abriendo. */
-export const FUSIONADA_EN: Readonly<Record<string, string>> = { resumen: 'plantaViva', diferidos: 'resultados', produccion: 'resultados', riesgo: 'plantaViva' }
-/** La pantalla que abre una dirección para un rol: ella misma, o aquella en que se fundió. */
-export const pantallaQueAbre = (rol: Pick<Rol, 'pantallas'>, p: string): string | undefined =>
-  pantallaDelRol(rol, p) ? p : Object.hasOwn(FUSIONADA_EN, p) && pantallaDelRol(rol, FUSIONADA_EN[p]!) ? FUSIONADA_EN[p] : undefined
+export const FUSIONADA_EN: Readonly<Record<string, string>> = { resumen: 'plantaViva', diferidos: 'resultados', produccion: 'resultados', riesgo: 'plantaViva',
+  // F1 · P-trabajo-1: Mi trabajo del técnico vive en Hoy.
+  trabajo: 'hoy' }
+/** K1 · P-10: una pantalla que se fundió en otra distinta según el rol. El Riesgo del jefe de
+ *  mantenimiento y de confiabilidad vive en su Equipos (debajo de la lista, con lo que cada uno
+ *  decide arriba); el del gerente sigue en La planta viva (`FUSIONADA_EN`). Va antes que la regla de todos. */
+export const FUSIONADA_EN_ROL: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  riesgo: { jefe: 'equipos', conf: 'equipos' },
+}
+/** La pantalla que abre una dirección para un rol: ella misma, o aquella en que se fundió (la de su rol primero). */
+export const pantallaQueAbre = (rol: Pick<Rol, 'pantallas'> & Partial<Pick<Rol, 'id'>>, p: string): string | undefined => {
+  if (pantallaDelRol(rol, p)) return p
+  const delRol = rol.id && Object.hasOwn(FUSIONADA_EN_ROL, p) && Object.hasOwn(FUSIONADA_EN_ROL[p]!, rol.id) ? FUSIONADA_EN_ROL[p]![rol.id] : undefined
+  if (delRol && pantallaDelRol(rol, delRol)) return delRol
+  return Object.hasOwn(FUSIONADA_EN, p) && pantallaDelRol(rol, FUSIONADA_EN[p]!) ? FUSIONADA_EN[p] : undefined
+}
 
 /** ¿Puede este rol abrir esta pantalla? Una regla para la dirección, el
  *  estado y la vista: la pantalla existe, es del producto (no de v2) y es del
@@ -74,7 +92,10 @@ export function rangoValido(a: string, b: string): { desde: string; hasta: strin
  *  «#//produccion/palmar» le abría al operador una pantalla y un campo ajenos). */
 /** Lo que se lee de la dirección: el contexto que se puede abrir y, aparte,
  *  el campo del registro que pedía y la persona no tiene (se dice: B-38). */
-export type DeLaDireccion = Partial<Contexto> & { campoAjeno?: string }
+export type DeLaDireccion = Partial<Contexto> & { campoAjeno?: string
+  /** F1 · P-17: un rol que existe pero no se ofrece en esta versión (plan, cont): se abre el de
+   *  siempre y se dice, como el campo ajeno. */
+  rolAjeno?: string }
 
 /** C4 · Equipos: ¿este rol abre el nivel 3 técnico (una vista entera, no el panel
  *  flotante)? Los roles técnicos que tienen Equipos; el gerente sigue con su ficha
@@ -98,6 +119,7 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
   // dejaba guardado un rol que la cabecera mostraba como producción y con el
   // que nadie podía firmar ni exportar.
   if (rolId && ROLES_VISIBLES.some(r => r.id === rolId)) ctx.rolId = rolId
+  else if (rolId && ROLES.some(r => r.id === rolId)) ctx.rolAjeno = rolId
   const rol = rolPorId(ctx.rolId ?? rolActual ?? '')
   // «portafolio» ya no es pantalla; se deja pasar para que el estado lo
   // traduzca a alcance y las direcciones viejas sigan sirviendo.
@@ -114,8 +136,10 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
     campos === 'todos' ? CAMPOS.some(c => c.id === id) : campos.includes(id)
   if (soloCampo && asignado(soloCampo)) ctx.campoId = soloCampo
   else if (soloCampo && CAMPOS.some(c => c.id === soloCampo)) ctx.campoAjeno = soloCampo
+  // P-18: en La planta viva el lugar del período lleva el momento («antes», «despues»).
+  if (periodoId && MOMENTOS_DIRECCION.includes(periodoId)) ctx.momento = periodoId as MomentoDireccion
   // Solo un período de la cabecera: otro texto no se cambia por «mes en curso», se ignora y la dirección se reescribe con el que se ve.
-  if (periodoId && esIdPeriodo(periodoId)) ctx.periodoId = periodoId
+  else if (periodoId && esIdPeriodo(periodoId)) ctx.periodoId = periodoId
   const r = periodoId?.match(RANGO)
   const rango = r ? rangoValido(r[1]!, r[2]!) : undefined
   if (rango) { ctx.rango = rango; ctx.periodoId = 'medida' }
@@ -140,7 +164,9 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
 export const escribirHash = (c: Contexto, nuevaEntrada = false) => {
   const periodo = c.rango ? `${c.rango.desde}_${c.rango.hasta}` : c.periodoId
   // C4 · Equipos es «ahora»: su dirección no lleva período (X4 §3.8).
-  const nuevo = `#/${c.rolId}/${rutaDe(c.pantalla)}/${c.campoId}${c.alcance === 'portafolio' ? '~portafolio' : ''}${c.pantalla === 'equipos' ? '' : `/${periodo}`}`
+  // P-18: La planta viva lleva su momento en el lugar del período, si no es «durante».
+  const cuarto = c.pantalla === 'plantaViva' && c.momento && c.momento !== 'durante' ? c.momento : periodo
+  const nuevo = `#/${c.rolId}/${rutaDe(c.pantalla)}/${c.campoId}${c.alcance === 'portafolio' ? '~portafolio' : ''}${c.pantalla === 'equipos' ? '' : `/${cuarto}`}`
     + (c.equipoAbierto ? `/${c.equipoAbierto}` : '')
   if (location.hash === nuevo) return
   if (nuevaEntrada) history.pushState(null, '', nuevo)

@@ -6,7 +6,8 @@ import { NOMBRE_PARTE } from '@/entities/partes'
 import { DISPARO_MAX_H } from '@/entities/libro'
 import { campoPorId } from '@/entities/campos'
 import { Panel, Chip } from '@/shared/ui/primitivas'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
+import { PALABRA_CONDICION } from '@/shared/api/equiposTecnico'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
@@ -14,7 +15,7 @@ import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { sevPozo, cerradoPorOtro } from '@/widgets/pozos/estado'
+import { useCondiciones, cerradoPorOtro } from '@/widgets/pozos/estado'
 import { fraseParte, fraseParteCorta, fmtHoras } from '@/widgets/bombas/comun'
 import type { FilaEsp } from '@/shared/api/diferidos'
 
@@ -30,6 +31,11 @@ export function Esp() {
   const abrirPozo = (campo: string, pozo: string) => { setCampo(campo); abrirEquipo(pozo) }
   const flota = useFlotaEsp(ids, rango.desde, rango.hasta)
   const lb = useLibro({ campos: ids, desde: rango.desde, hasta: rango.hasta })
+  // F3 · La marca de cada pozo es la de la franja, con su palabra (H3, H16, H17).
+  const condicionDe = useCondiciones(ids)
+  const cond = (x: FilaEsp['fila']) => condicionDe(x.pozo.campoId, x.pozo.id)
+  const marca = (x: FilaEsp['fila']) => { const c = cond(x); return c ? <MarcaCondicion c={c} tamano={12} decorativa /> : <i aria-hidden className="inline-block w-3" /> }
+  const palabra = (x: FilaEsp['fila']) => { const c = cond(x); return c ? <><b className="font-semibold text-[var(--tinta)]">{PALABRA_CONDICION[c]}</b> · </> : null }
 
   const primera = (x: FilaEsp) => x.partes.find(p => p.primera)?.primera?.senal.pronostico.horas ?? Infinity
   // Primero lo que falló por sí mismo; lo cerrado por otro equipo es
@@ -42,12 +48,12 @@ export function Esp() {
   // Cinco y «ver N más»; ninguna con marca queda escondida (ISA-18.2), ni una
   // que produce sin dato de sus partes (dato inválido). Las que quedan van
   // primero, para que la pantalla y el papel tengan el mismo orden.
-  const queda = (x: FilaEsp) => sevPozo(x.fila) > 0 || (x.fila.produce && x.partes[0]?.estado === 'sin-dato')
+  const queda = (x: FilaEsp) => !!cond(x.fila) || (x.fila.produce && x.partes[0]?.estado === 'sin-dato')
   const filas = [...flota].sort((a, b) => +queda(b) - +queda(a) || orden(a) - orden(b) || primera(a) - primera(b) || b.fila.crudoBpd - a.fila.crudoBpd)
   const lista = useVerMas(filas, { prioridad: x => (queda(x) ? 1 : 9) })
 
   if (!flota.length) return (
-    <Panel titulo="ELECTROSUMERGIBLES"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene pozos con electrosumergible.</p></Panel>
+    <Panel titulo="Electrosumergibles"><p className="text-[14px] text-[var(--tinta2)]">{ambito.titulo} no tiene pozos con electrosumergible.</p></Panel>
   )
 
   const enFalla = flota.filter(x => !x.fila.produce && x.fila.causa?.tipo === 'electrosumergible')
@@ -64,6 +70,11 @@ export function Esp() {
   const abrirFila = (campo: string, pozo: string) => abrirPozo(campo, pozo)
   const algunaParada = flota.some(x => !x.fila.produce)
   const avisa = (e?: string) => e === 'fuera' || e === 'avisa'
+  // P-esp-1: el vacío que enseña. Sin ninguna en falla, se dice cuáles están paradas por otro equipo y por cuál.
+  const porOtro = new Map<string, string[]>()
+  for (const x of flota) if (!x.fila.produce && cerradoPorOtro(x.fila)) porOtro.set(x.fila.causa!.equipo, [...(porOtro.get(x.fila.causa!.equipo) ?? []), x.fila.pozo.id])
+  const yLista = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+  const cerradas = [...porOtro.entries()].map(([eq, ps]) => `${yLista(ps)}, ${ps.length === 1 ? 'cerrada' : 'cerradas'} por ${eq}`).join(' · ')
 
   const filaTabla = (x: FilaEsp) => {
     const f = x.fila
@@ -74,12 +85,12 @@ export function Esp() {
         className="cursor-pointer border-t border-[var(--linea2)] hover:bg-[var(--panel2)]">
         <td className="py-1.5">
           {/* El botón da el foco y el Enter al teclado; su clic sube a la fila, que es la que abre. */}
-          <span className="flex items-center gap-1.5"><MarcaPrioridad s={sevPozo(f)} tamano={11} /><button type="button" aria-label={`Abrir ${f.pozo.id}`} className="cursor-pointer rounded-sm font-mono font-bold">{f.pozo.id}</button></span>
-          <small className="block text-[12px] text-[var(--tinta3)]">{ambito.global ? `${campoPorId(f.pozo.campoId).nombre}` : ''}{f.prueba?.hz ? `${ambito.global ? ' · ' : ''}${n1(f.hz ?? f.prueba.hz)} Hz` : ''}</small>
+          <span className="flex items-center gap-1.5" data-pozo={f.pozo.id} data-condicion={cond(f) ?? ''}>{marca(f)}<button type="button" aria-label={`Abrir ${f.pozo.id}${cond(f) ? `: ${PALABRA_CONDICION[cond(f)!]}` : ''}`} className="font-cond cursor-pointer rounded-sm text-[15px] font-bold tracking-[.02em]">{f.pozo.id}</button></span>
+          <small className="block text-[13px] text-[var(--tinta2)]">{cond(f) ? PALABRA_CONDICION[cond(f)!] : ''}{cond(f) && (ambito.global || f.prueba?.hz) ? ' · ' : ''}{ambito.global ? `${campoPorId(f.pozo.campoId).nombre}` : ''}{f.prueba?.hz ? `${ambito.global ? ' · ' : ''}${n1(f.hz ?? f.prueba.hz)} Hz` : ''}</small>
         </td>
         <td className="max-w-[340px]">
           {parado && cerradoPorOtro(f) ? (
-            <span className="block truncate text-[var(--tinta3)]">cerrado por {f.causa!.equipo}</span>
+            <span className="block truncate text-[var(--tinta2)]">cerrado por {f.causa!.equipo}</span>
           ) : parado ? (
             <span className="block truncate">{f.causa?.tipo === 'pendiente' ? <Chip>sin identificar</Chip>
               : f.causa ? `parado · ${f.causa.parte ? NOMBRE_PARTE[f.causa.parte].toLowerCase() : TIPO_CAUSA[f.causa.tipo].toLowerCase()}` : 'parado'}</span>
@@ -104,10 +115,12 @@ export function Esp() {
   }
 
   return (
-    <>
-      <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
-        <Cifra rotulo="En falla ahora" valor={`${enFalla.length} de ${flota.length}`} alerta={enFalla.length > 0}
-          pie={enFalla.length ? `${n0(perdiendo)} bbl/d se dejan de producir` : algunaParada ? 'las paradas, por otra causa' : 'todas produciendo'} />
+    <div className="grid gap-3 sm:gap-4">
+      <div className="grid gap-x-6 gap-y-3 rounded-[20px] bg-[var(--panel)] p-4 sm:px-6 [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+        {/* La marca va en cada electrosumergible que falla, no en el total (H17). Sin ninguna, el vacío enseña cuáles
+            están paradas por otro equipo (P-esp-1). */}
+        <Cifra rotulo="En falla ahora" valor={enFalla.length ? `${enFalla.length} de ${flota.length}` : 'Ninguna'}
+          pie={enFalla.length ? `${n0(perdiendo)} bbl/d se dejan de producir` : algunaParada && cerradas ? cerradas : 'todas produciendo'} />
         <Cifra rotulo="Con aviso" valor={String(avisan.length)}
           pie={avisan.length ? `${n0(enJuego)} bbl/d en juego` : 'ninguna parte avisa'} />
         {/* Todo lo que se les carga a ellas en el período: fallas y disparos (el
@@ -133,7 +146,7 @@ export function Esp() {
         del pozo. Toque o haga clic en un pozo para abrirlo.
       </Lectura>
 
-      <Panel className="mt-2.5" titulo="FLOTA" extra={flota.length}>
+      <Panel titulo="Flota" extra={flota.length}>
         {/* En el teléfono, una tarjeta por pozo: los barriles a la vista, sin desplazar. */}
         <div className="grid gap-1.5 sm:hidden">
           {lista.visibles.map(x => {
@@ -144,10 +157,10 @@ export function Esp() {
             return (
               <button key={`m${f.pozo.campoId}${f.pozo.id}`} onClick={() => abrirFila(f.pozo.campoId, f.pozo.id)}
                 className="grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[var(--linea2)] py-2 text-left text-[14px] last:border-0">
-                <MarcaPrioridad s={sevPozo(f)} tamano={11} />
+                {marca(f)}
                 <span className="min-w-0">
-                  <b className="font-mono">{f.pozo.id}</b>{ambito.global ? <span className="text-[var(--tinta3)]"> · {campoPorId(f.pozo.campoId).nombre}</span> : ''}
-                  <small className="block truncate text-[13px] text-[var(--tinta2)]">{texto}</small>
+                  <b className="font-cond text-[15px] tracking-[.02em]">{f.pozo.id}</b>{ambito.global ? <span className="text-[var(--tinta2)]"> · {campoPorId(f.pozo.campoId).nombre}</span> : ''}
+                  <small className="block truncate text-[14px] text-[var(--tinta2)]">{palabra(f)}{texto}</small>
                 </span>
                 <span className="tabular text-right">
                   <b className="block">{n0(f.crudoBpd)} <small className="font-normal text-[var(--tinta3)]">bbl/d</small></b>
@@ -177,16 +190,16 @@ export function Esp() {
         </div>
         <VerMas ocultas={lista.ocultas} abierto={lista.abierto} onAlternar={lista.alternar} />
       </Panel>
-    </>
+    </div>
   )
 }
 
-function Cifra({ rotulo, valor, pie, alerta, info }: { rotulo: string; valor: string; pie: string; alerta?: boolean; info?: { titulo: string; texto: string } }) {
+function Cifra({ rotulo, valor, pie, info }: { rotulo: string; valor: string; pie: string; info?: { titulo: string; texto: string } }) {
   return (
-    <span className="min-w-0">
+    <span className="min-w-0" data-cifra={rotulo}>
       {/* El ⓘ va junto al rótulo, nunca dentro de un título; en el papel su nota ocupa su renglón. */}
-      <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">{rotulo}{info && <Info titulo={info.titulo} texto={info.texto} />}</small>
-      <b className={cn('tabular flex items-center gap-1.5 text-[20px] leading-tight')}>{alerta && <MarcaPrioridad s={1} tamano={14} />}{valor}</b>
+      <small className="flex flex-wrap items-center gap-x-1 text-[14px] text-[var(--tinta2)]">{rotulo}{info && <Info titulo={info.titulo} texto={info.texto} />}</small>
+      <b className="tabular flex items-center gap-1.5 text-[20px] leading-tight">{valor}</b>
       <small className="block text-[13px] leading-snug text-[var(--tinta2)]">{pie}</small>
     </span>
   )

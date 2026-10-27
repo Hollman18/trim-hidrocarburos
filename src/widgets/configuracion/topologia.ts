@@ -37,7 +37,7 @@ export const BOTON: Record<RespuestaTopologia, { texto: string; aclara?: string 
 /** Los tipos de equipo, para agrupar la lista y aceptar en lote solo dentro de
  *  un mismo tipo (U2 §8.3). */
 export const GRUPO: Record<ClaseElemento | 'otro', string> = {
-  levantamiento: 'Pozos: su levantamiento', pozo: 'Pozos que fluyen solos', alimentador: 'Alimentadores eléctricos',
+  levantamiento: 'Pozos y su levantamiento', pozo: 'Pozos que fluyen solos', alimentador: 'Alimentadores eléctricos',
   bomba: 'Bombas', proceso: 'Proceso', tanque: 'Tanques', medicion: 'Medición y despacho', servicio: 'Servicios del campo',
   salida: 'Salidas de la batería', inyectores: 'Pozos inyectores', otro: 'Otros equipos',
 }

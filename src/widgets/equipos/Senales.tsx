@@ -1,10 +1,20 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { resumenPlegadas, PALABRA_CONDICION, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
 import { IndicadorFijo } from '@/shared/ui/Analogico'
 import { Minitendencia } from '@/shared/ui/Sparkline'
+import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
 import { TarjetaN3, Marca } from './piezas'
+
+/** I1 · Lo que se dice de la escala mientras el motor no tenga el rango de cada instrumento (H5). */
+export const ESCALA_PROVISIONAL = 'La escala sale de los límites firmados (la banda normal y la alarma), no de las lecturas: no se mueve con el valor de ahora. Es provisional: falta el rango de cada instrumento y el disparo de cada protección; el sistema todavía no los trae. La banda gris es lo normal; la raya oscura, el límite de alarma.'
+
+/** El límite en sus partes («normal 66.800 – 89.250 · alarma 85»): cada parte entera,
+ *  sin partir un rango en dos renglones (UI-13). */
+const Limite = ({ texto }: { texto: string }) => (
+  <>{texto.split(' · ').map((t, i) => <Fragment key={t}>{i ? ' · ' : ''}<span className="whitespace-nowrap">{t}</span></Fragment>)}</>
+)
 
 const valorDe = (s: Pick<SenalNivel3, 'valor' | 'decimales'>) =>
   s.valor === null ? '---' : s.valor.toLocaleString('es-CO', { minimumFractionDigits: s.decimales, maximumFractionDigits: s.decimales })
@@ -23,11 +33,14 @@ function Senal({ s }: { s: SenalNivel3 }) {
         <small className="font-cond mt-0.5 block text-[13px] font-medium tracking-[.03em] text-[var(--tinta2)]">{s.tag}</small>
       </span>
       <span className="col-span-2 row-start-2 @min-[380px]:col-span-1 @min-[380px]:col-start-2 @min-[380px]:row-start-1">
-        <IndicadorFijo escala={s.escala} banda={s.banda} alarmas={s.alarmas} valor={s.valor} gris={s.gris} fuera={s.fuera} etiqueta={etiqueta} />
+        {/* Sin ningún límite declarado no hay escala: no se dibuja ni se inventa (H5; X2 §7.8). */}
+        {s.escala
+          ? <IndicadorFijo escala={s.escala} banda={s.banda} alarmas={s.alarmas} valor={s.valor} gris={s.gris} fuera={s.fuera} etiqueta={etiqueta} />
+          : <span className="text-[13px] text-[var(--tinta2)]" data-sin-escala>no se dibuja</span>}
       </span>
-      <span className="col-span-2 row-start-3 -mt-0.5 text-[13px] text-[var(--tinta2)] @min-[380px]:col-span-1 @min-[380px]:col-start-2 @min-[380px]:row-start-2">{s.limite}</span>
+      <span className="col-span-2 row-start-3 -mt-0.5 text-[13px] text-[var(--tinta2)] @min-[380px]:col-span-1 @min-[380px]:col-start-2 @min-[380px]:row-start-2" data-limite><Limite texto={s.limite} /></span>
       <span className="col-start-2 row-start-1 flex items-center justify-end gap-2 @min-[380px]:col-start-3">
-        <span className="max-[359px]:hidden"><Minitendencia serie={s.serie} escala={s.escala} banda={s.banda} gris={s.gris} /></span>
+        {s.escala && <span className="max-[359px]:hidden"><Minitendencia serie={s.serie} escala={s.escala} banda={s.banda} gris={s.gris} /></span>}
         <span className="flex min-w-[72px] items-center justify-end gap-1.5 whitespace-nowrap">
           {s.condicion && <Marca c={s.condicion} tamano={15} decorativa />}
           <b className={cn('tabular text-[17px] leading-none', s.gris || s.valor === null ? 'font-semibold text-[var(--tinta2)]' : s.condicion ? 'font-bold' : 'font-semibold')} data-valor>
@@ -54,7 +67,9 @@ export function SusSenales({ v }: { v: VistaNivel3 }) {
   )
   const dias = v.senales[0]?.serie.length ?? v.plegadas[0]?.serie.length ?? 12
   return (
-    <TarjetaN3 titulo="Sus señales" extra={`tendencia de ${dias} días${v.parado ? ' · parada: en gris y sin marca' : ''}`} className="@container" data-sus-senales>
+    <TarjetaN3 titulo="Sus señales" className="@container" data-sus-senales
+      extra={<span className="inline-flex flex-wrap items-center gap-x-1">tendencia de {dias} días{v.parado ? ' · parada: en gris y sin marca' : ''}
+        {v.sinDisparo && <> · escala provisional <Info titulo="Escala provisional" texto={ESCALA_PROVISIONAL} /></>}</span>}>
       <div className="mt-2">
         {v.senales.map(s => <Senal key={s.tag} s={s} />)}
         {v.plegadas.length > 0 && (
@@ -78,11 +93,6 @@ export function SusSenales({ v }: { v: VistaNivel3 }) {
           </div>
         ))}
       </div>
-      {v.sinDisparo && (
-        <p className="mt-2 text-[14px] leading-snug text-[var(--tinta2)]">
-          La banda gris es lo normal; la raya oscura, el límite de alarma. La escala de cada señal es fija. Falta el disparo de cada protección: el sistema todavía no lo trae.
-        </p>
-      )}
     </TarjetaN3>
   )
 }

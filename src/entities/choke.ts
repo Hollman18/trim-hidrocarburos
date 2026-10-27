@@ -1371,6 +1371,10 @@ export interface BrechaChoke extends Omit<BrechaCampoChoke, 'campoId' | 'superad
   texto: string
   /** La brecha estructural en palabras, y los días con la capacidad declarada superada. */
   textoEstructural?: string
+  /** F2 · H2: el entero de cada nodo que se muestra (la regla de redondeo, `redondeo.ts`): la raíz de cada
+   *  campo, la suma de las raíces, y cada tramo, escalón y elemento repartido de arriba abajo. Lo pone la vista
+   *  `/vistas/choke/reparto`; los barriles exactos siguen en los campos de siempre. */
+  enteros?: import('./redondeo').EnterosDeReparto
 }
 
 /** «en los pozos», dentro de una frase sobre el período. */

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { ChokeAnh } from '@/entities/choke'
-import { useApp, useAmbito, useRango } from '@/app/store'
+import { useApp, useAmbito, useRango, useRol } from '@/app/store'
 import { PERIODOS } from '@/entities/campos'
-import { usePlantaViva, type Momento, type VistaPlantaViva } from '@/shared/api/plantaViva'
+import { usePlantaViva, conLenteTecnica, type Momento, type VistaPlantaViva, type CifraMomento } from '@/shared/api/plantaViva'
 import { useTelefono } from '@/shared/ui/telefono'
+import { Info } from '@/shared/ui/Info'
 import { CifraGrande, Botones } from '@/widgets/plantaviva/Heroe'
 import { Momentos } from '@/widgets/plantaviva/Momentos'
 import { TuberiaAcostada, TuberiaDePie } from '@/widgets/plantaviva/Tuberia'
@@ -14,6 +15,7 @@ import { HojaTramo } from '@/widgets/plantaviva/HojaTramo'
 import { useAcciones } from '@/widgets/plantaviva/acciones'
 import { Calidad } from '@/widgets/plantaviva/piezas'
 import { n0 } from '@/widgets/plantaviva/cifras'
+import { Capacidades, SiFallaHoy, TablaTramos } from '@/widgets/plantaviva/Tecnica'
 
 /** LA PLANTA VIVA (X4 §4; X5 §5; imágenes 1, 2 y 6 de experiencia-v2).
  *
@@ -28,13 +30,18 @@ import { n0 } from '@/widgets/plantaviva/cifras'
  *  (`GET /api/vistas/planta-viva`). Un tramo (Tab y Enter, o un toque) abre su
  *  hoja; un equipo, su ficha ejecutiva. */
 export function PlantaViva() {
-  const ambito = useAmbito(); const rango = useRango(); const telefono = useTelefono()
-  const [momento, setMomento] = useState<Momento>('durante')
+  const ambito = useAmbito(); const rango = useRango(); const telefono = useTelefono(); const rol = useRol()
+  // El momento vive en el estado y en la dirección (P-18): «#/ger/planta-viva/ceiba/antes» abre en Antes y atrás vuelve.
+  const momento: Momento = useApp(s => s.momento), setMomento = useApp(s => s.setMomento)
   const [abierto, setAbierto] = useState<ChokeAnh | null>(null)
   const campos = ambito.campos.map(c => c.id)
   const v = usePlantaViva({ campos, momento, desde: rango.desde, hasta: rango.hasta })
-  const c = v.cifras[momento]
-  const { pedirCausa } = useAcciones()
+  // La lente técnica (P-01; X4 §3.4): producción abre en SU respuesta, lo que sale hoy y lo que limita.
+  const tecnica = conLenteTecnica(rol.id) ? v.tecnica : null
+  const c: CifraMomento = tecnica && momento === 'durante' ? tecnica.cifra : v.cifras[momento]
+  const { pedirCausa, ir } = useAcciones()
+  const verHoy = tecnica ? ir('hoy') : undefined
+  const segundo = verHoy ? { texto: 'Ver Hoy', onClick: verHoy } : undefined
   const p = v.planta
   const tramo = p && abierto ? p.tramos.find(t => t.tramo === abierto) : undefined
   const sinIdentificar = p?.sinIdentificar?.primerEquipo ? pedirCausa({ campoId: p.campoId, equipo: p.sinIdentificar.primerEquipo }) : undefined
@@ -43,32 +50,41 @@ export function PlantaViva() {
     ? p.campoDeGas
       ? <p className="flex min-h-[180px] items-center justify-center rounded-[14px] border-[1.5px] border-dashed border-[var(--tinta3)] px-4 text-center text-[16px] text-[var(--tinta2)]" data-gas="">{p.textoGas}</p>
       : telefono
-        ? <TuberiaDePie planta={p} momento={momento} onTramo={setAbierto} onSinIdentificar={sinIdentificar} />
+        // K2: con la lente técnica la cifra grande ya es lo que sale hoy; el dibujo no la repite.
+        ? <TuberiaDePie planta={p} momento={momento} onTramo={setAbierto} onSinIdentificar={sinIdentificar}
+          ventaEnLaCifra={!!tecnica && momento === 'durante' && Math.round(p.venta.valor) === c.entero} />
         : <TuberiaAcostada planta={p} momento={momento} onTramo={setAbierto} onSinIdentificar={sinIdentificar} />
     : <Campos v={v} momento={momento} />
 
   return (
-    <div data-planta-viva={v.alcance} data-momento={momento} data-valor={c.valor} className="mx-auto max-w-[1600px]">
+    <div data-planta-viva={v.alcance} data-momento={momento} data-valor={c.valor} data-entero={c.entero} data-lente={tecnica ? 'tecnica' : 'gerente'} className="mx-auto max-w-[1600px]">
       {telefono
-        ? <Telefono v={v} momento={momento} setMomento={setMomento} dibujo={dibujo} />
+        ? <Telefono v={v} c={c} momento={momento} setMomento={setMomento} dibujo={dibujo} tecnica={!!tecnica} segundo={segundo} />
         : (
+          // Desde 1400 px, la columna de la derecha (352 px): la vista cabe en 1440 × 900 (H14; X2 N1). A 1280 no:
+          // la tubería se encogería a 0,82 y sus rótulos bajarían de 12 px (§8.4), que manda sobre el alto.
           <div className="flex flex-col gap-4 min-[1400px]:grid min-[1400px]:grid-cols-[minmax(0,1fr)_352px] min-[1400px]:gap-5">
             <div className="flex min-w-0 flex-col gap-4">
               <section aria-label={v.alcance === 'campo' ? `La planta viva de ${p?.nombre}` : 'La planta viva de sus campos'}
                 className="min-w-0 rounded-[20px] bg-[var(--panel)] px-5 pb-[18px] pt-6 sm:px-7">
                 <CifraGrande c={c} telefono={false} periodo={<PeriodoDespues actual={v.periodo} />} />
-                <Botones c={c} className="mt-3.5" />
+                <Botones c={c} className="mt-3.5" segundo={segundo} />
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--linea2)] pt-3.5">
-                  <h3 className="text-[15px] font-semibold text-[var(--tinta)]">Dónde se trabó</h3>
+                  {/* La pérdida va aparte y nunca se suma: en la ⓘ del título, no en un renglón (H14; X5 §5.10). */}
+                  <h2 className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold text-[var(--tinta)]" data-perdida={v.perdida}>
+                    Dónde se trabó<Info titulo={v.perdida} texto={v.perdidaExplica} />
+                  </h2>
                   <Momentos valor={momento} onCambio={setMomento} />
                 </div>
                 <div className="mt-3">{dibujo}</div>
+                {tecnica && <Capacidades t={tecnica} planta={p} />}
+                {p && !p.campoDeGas && <TablaTramos planta={p} momento={momento} />}
                 {!p && <LineaMover v={v} momento={momento} />}
-                <p className="mt-2 text-[13px] text-[var(--tinta2)]" data-perdida="">{v.perdida}</p>
               </section>
-              <Filas v={v} />
+              <Filas v={v} momento={momento} />
             </div>
             <div className="grid min-w-0 gap-4 md:grid-cols-2 min-[1400px]:flex min-[1400px]:flex-col">
+              {tecnica && <SiFallaHoy t={tecnica} />}
               <Mover v={v} momento={momento} />
               <PorEquipo v={v} />
               <MesAMesYBajando v={v} className="md:col-span-2 min-[1400px]:flex-1" />
@@ -82,8 +98,10 @@ export function PlantaViva() {
 
 /** En el teléfono (X4 §4.7, imagen 2): una columna; la tubería de pie dentro
  *  de la tarjeta de la cifra; «Todos mis campos» con una fila por campo. */
-function Telefono({ v, momento, setMomento, dibujo }: { v: VistaPlantaViva; momento: Momento; setMomento: (m: Momento) => void; dibujo: React.ReactNode }) {
-  const c = v.cifras[momento]
+function Telefono({ v, c, momento, setMomento, dibujo, tecnica, segundo }: {
+  v: VistaPlantaViva; c: CifraMomento; momento: Momento; setMomento: (m: Momento) => void; dibujo: React.ReactNode
+  tecnica: boolean; segundo?: { texto: string; onClick: () => void }
+}) {
   const p = v.planta
   return (
     <div className="flex flex-col gap-3">
@@ -96,8 +114,9 @@ function Telefono({ v, momento, setMomento, dibujo }: { v: VistaPlantaViva; mome
           </section>
           <section aria-label="Qué pasa" className="min-w-0 rounded-[18px] bg-[var(--panel)] px-[18px] py-4">
             <p className="text-[16px] leading-[1.5] text-[var(--tinta2)]" data-explica="">{c.explica}</p>
-            <Botones c={c} className="mt-3" />
+            <Botones c={c} className="mt-3" segundo={segundo} />
           </section>
+          {tecnica && v.tecnica && <SiFallaHoy t={v.tecnica} className="rounded-[18px] px-[18px]" />}
         </>
       ) : (
         <>
@@ -109,11 +128,11 @@ function Telefono({ v, momento, setMomento, dibujo }: { v: VistaPlantaViva; mome
           <LineaMover v={v} momento={momento} telefono />
         </>
       )}
-      <Filas v={v} />
+      <Filas v={v} momento={momento} />
       {p && <Mover v={v} momento={momento} />}
       <PorEquipo v={v} />
       <MesAMesYBajando v={v} />
-      <p className="px-1 text-[13px] text-[var(--tinta2)]" data-perdida="">{v.perdida}</p>
+      <p className="flex flex-wrap items-center gap-1.5 px-1 text-[13px] text-[var(--tinta2)]" data-perdida={v.perdida}>{v.perdida}<Info titulo="Pérdida" texto={v.perdidaExplica} /></p>
     </div>
   )
 }

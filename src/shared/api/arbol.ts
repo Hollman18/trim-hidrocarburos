@@ -21,6 +21,7 @@ import { calidadClasificacion, type CalidadClasificacion, type CalidadPaso, type
 import { eventosPozos, servicioPorId } from '@/entities/pozos'
 import { paradaPorId } from '@/entities/bombas'
 import { AHORA } from '@/entities/reloj'
+import { enterosDelPeriodo } from '@/entities/redondeo'
 import type { Contexto } from '@/entities/causa-senal'
 
 /** LA COSTURA DEL ÁRBOL DE PARADAS DE LA ANH (Circular 024): los 6 pasos de
@@ -94,10 +95,21 @@ export function soloDePersona(b: BorradorClasificacion): BorradorClasificacion {
 /** `GET /api/vistas/anh/paradas?campos=&desde=&hasta=` · los días operacionales
  *  que toca el período, con lo que ya dijeron las personas encima. Un campo
  *  repetido cuenta una vez (C-10: `campos=ceiba,ceiba` duplicaba las filas). */
-export const pedirParadasAnh = (q: ConsultaPeriodo, ctx: Contexto, guardadas: Record<string, BorradorClasificacion>): ParadaAnh[] =>
-  paradasAnh([...new Set(q.campos)], q.desde, q.hasta, ctx, { guardadas: guardadasDe(guardadas) })
+export function pedirParadasAnh(q: ConsultaPeriodo, ctx: Contexto, guardadas: Record<string, BorradorClasificacion>): FilaAnh[] {
+  const campos = [...new Set(q.campos)], op = { guardadas: guardadasDe(guardadas) }
+  const filas = paradasAnh(campos, q.desde, q.hasta, ctx, op)
+  // K1 · H2: el entero de cada fila en el reparto de su campo en el período (`enterosDelPeriodo`, redondeo.ts).
+  const porFila: Record<string, number> = {}
+  for (const c of campos) Object.assign(porFila, enterosDelPeriodo(c, q.desde, q.hasta, ctx, op).porFila)
+  return filas.map(f => (Object.hasOwn(porFila, f.id) ? { ...f, entero: porFila[f.id]! } : f))
+}
 
-export function useParadasAnh(q: ConsultaPeriodo): ParadaAnh[] {
+/** K1 · H2 (pendiente de F1 y F2): la fila de la ANH con su entero en el reparto del campo: la diferida que se ve en
+ *  Identificar suma igual que en Hoy, en Pozos y en el nivel 3 (LC-08 = 108, no 109). Las filas de un evento suman
+ *  el entero del evento. Lo exacto (`diferidaTrimBbl`) es lo que viaja y ordena. */
+export type FilaAnh = ParadaAnh & { entero?: number }
+
+export function useParadasAnh(q: ConsultaPeriodo): FilaAnh[] {
   const ctx = useCtx()
   const guardadas = useSesion(s => s.clasificacionesAnh)
   return useDato(PARADAS_ANH, q, `${versionDe(ctx)}.${versionDe(guardadas)}`, () => pedirParadasAnh(q, ctx, guardadas))

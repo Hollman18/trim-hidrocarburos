@@ -23,7 +23,7 @@
  *    que usa diferido.ts (89.250 en La Ceiba, lo que deja el cabezal de
  *    disposición); la placa (90.000) va solo como referencia. Así el colchón,
  *    la predicción y la tubería dicen lo mismo. La de reserva no suma, y una
- *    parada no baja la capacidad: es pérdida, no menos tubo (NSTA p. 29); lo que
+ *    parada no baja la capacidad: es diferido, no menos tubo (NSTA p. 29); lo que
  *    queda hoy va aparte (`disponibleHoy`).
  *  El tramo con caudal de menor potencial es el que limita el agua. Cada
  *  potencial se dice también en crudo: agua × crudo por barril de agua.
@@ -49,7 +49,8 @@ export const NOMBRE_TRAMO_AGUA: Record<TramoAgua, string> = {
   producida: 'Agua de los pozos',
   tratamiento: 'Tratamiento de agua',
   tanques: 'Tanque de agua',
-  bombas: 'Bombas de reinyección',
+  // P-09 (K1): la familia de campo, «bomba de agua».
+  bombas: 'Bombas de agua',
   inyectores: 'Pozos inyectores (disposición)',
 }
 /** Lo que falta de un tramo sin número, dicho en una frase (B-18). */
@@ -161,8 +162,8 @@ export interface TuberiaAgua {
   faltaBpd: number
   crudoQueFrenaBpd: number
   /** Si para la bomba de la línea de este campo: lo que el respaldo no absorbe
-   *  y el crudo que se pierde en el orden de TRIM y parejo, como los calcula
-   *  diferido.ts (`prediccion`). Si ya está parada, también lo que se está perdiendo. */
+   *  y el crudo que se deja de producir en el orden de TRIM y parejo, como los calcula
+   *  diferido.ts (`prediccion`). Si ya está parada, también lo que ya se deja de producir. */
   sinUna?: { bomba: string; papel: 'disposicion' | 'recobro'; aguaSinSalidaBpd: number; crudoBpd: number; crudoParejoBpd: number; colchonH?: number; parada: boolean; desde?: Date; perdiendoBpd?: number }
   /** Con una bomba del tren ya parada: lo de hoy y lo que pasa si para OTRA de
    *  las que quedan (B-01; U2 §9.6, «LA TUBERÍA DEL AGUA, HOY»). Lo que entra
@@ -176,6 +177,10 @@ export interface TuberiaAgua {
   /** Las frases del panel, sin teoría (U2 §5.3). */
   frases: string[]
   texto: string
+  /** F3 · P-agua-1 (X4 §6.1, «Antes y después», fila de Agua): lo mismo en una frase
+   *  de campo, sin cifras de cálculo («Con las tres bombas, al agua le sobra espacio.
+   *  Si para una, hay que cerrar pozos.»). Las cuentas (`frases`) van a su ⓘ. */
+  fraseCorta: string
 }
 
 /** Con una bomba ya parada, lo que pasa si para otra (B-01). */
@@ -190,7 +195,7 @@ export interface SiParaOtra {
   aguaSinSalidaBpd: number
   /** Horas hasta el alto-alto con el nivel de ahora (sin nivel, ausente). */
   colchonH?: number
-  /** El orden de cierre: primero los que menos crudo pierden por barril de agua. */
+  /** El orden de cierre: primero los que menos crudo dejan de producir por barril de agua. */
   pasos: Array<{ pozo: string; fraccion: number; crudoPorAgua: number }>
   crudoBpd: number
   crudoParejoBpd: number
@@ -341,12 +346,19 @@ export function tuberiaAgua(campoId: string, ctx: Contexto, versiones?: Versione
     // En condicional lo de «si para» y en pasado lo que ya pasó: con los pozos ya cerrados, el nivel no sube (B-17).
     const cerrados = pr?.perdiendo?.pozos.map(w => w.id).sort() ?? []
     frases.push(`Si para una con todos los pozos produciendo, ${llena(sinUna.aguaSinSalidaBpd)}.`)
-    frases.push(`${sinUna.bomba} está parada desde el ${fechaHora(sinUna.desde!)}: ${cerrados.length ? `se ${cerrados.length === 1 ? 'cerró' : 'cerraron'} ${listaY(cerrados)} y ` : ''}se pierden ${n0(sinUna.perdiendoBpd ?? 0)} bbl/d de crudo.`)
+    frases.push(`${sinUna.bomba} está parada desde el ${fechaHora(sinUna.desde!)}: ${cerrados.length ? `se ${cerrados.length === 1 ? 'cerró' : 'cerraron'} ${listaY(cerrados)} y ` : ''}dejan de producirse ${n0(sinUna.perdiendoBpd ?? 0)} bbl/d de crudo.`)
   } else if (sinUna) frases.push(`Si para ${sinUna.bomba}, ${llena(sinUna.aguaSinSalidaBpd)}.`)
   if (sinUna && sinUna.papel === 'disposicion' && sinUna.aguaSinSalidaBpd > 0)
-    frases.push(`Cerrando primero los más acuatosos se pierden ${n0(sinUna.crudoBpd)} bbl/d de crudo; cerrando parejo, ${n0(sinUna.crudoParejoBpd)}.`)
+    frases.push(`Cerrando primero los más acuatosos dejan de producirse ${n0(sinUna.crudoBpd)} bbl/d de crudo; cerrando parejo, ${n0(sinUna.crudoParejoBpd)}.`)
+  // F3 · P-agua-1: la frase de campo; lo de arriba queda para la ⓘ.
+  const cierra = !!sinUna && sinUna.papel === 'disposicion' && sinUna.aguaSinSalidaBpd > 0
+  const fraseCorta = campoDeGas ? frases[0]!
+    : limita ? `El agua limita: frena ${n0(faltaBpd * crudoPorAgua)} bbl/d de crudo.`
+      : menor.tramo !== 'producida' ? `No se puede decir qué limita el agua: falta ${queFalta(faltanParaDecir)}.`
+        : angosto ? `${cuantas}, al agua le sobra espacio.${cierra ? ' Si para una, hay que cerrar pozos.' : ''}`
+          : frases[0]!
   return {
-    campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, campoDeGas, tramos, tratamientoBpd, admisionInyectoresBpd,
+    campoId, t, aguaBpd: agua, crudoBpd: crudo, crudoPorAgua, campoDeGas, tramos, tratamientoBpd, admisionInyectoresBpd, fraseCorta,
     dominante: menor.tramo, limita, ...(angosto ? { angosto: angosto.tramo } : {}), casiIguales, empate, faltanParaDecir, sobraBpd, faltaBpd, crudoQueFrenaBpd: faltaBpd * crudoPorAgua,
     ...(sinUna ? { sinUna } : {}), ...(siParaOtra ? { siParaOtra } : {}), sinDato: tramos.filter(x => x.sinDato).map(x => x.tramo), frases, texto: frases.join(' '),
   }

@@ -31,13 +31,12 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
   return (
     <dl className="grid gap-y-1.5 text-[14px]">
       {pasos.map((paso, i) => {
-        const n = PASOS.indexOf(paso) + 1
         const d = p.clasificacion[paso]
         const sugerido = p.propuesta.sugerido[paso]
         const valor = d ? valorEnPalabras(paso, String(d.valor)) : undefined
         const antes = marcas.findIndex(m => m === marcas[i])
         const marca = antes < i && marcas[i] && d && !esDePersona(d.procedencia)
-          ? `${marcas[i]!.slice(0, marcas[i]!.indexOf(':') > 0 ? marcas[i]!.indexOf(':') : undefined)} por la misma razón del paso ${PASOS.indexOf(pasos[antes]!) + 1}`
+          ? `${marcas[i]!.slice(0, marcas[i]!.indexOf(':') > 0 ? marcas[i]!.indexOf(':') : undefined)} por la misma razón de «${ROTULO[pasos[antes]!].toLowerCase()}»`
           : marcas[i]
         const marcaPapel = d && esDePersona(d.procedencia) ? enPapel[i] : marca
         // Lo que una persona había dicho y otra retiró con motivo (D1): no rige, pero se ve (QA-R, vecino 8).
@@ -50,12 +49,13 @@ export function Cadena({ p, pasos = PASOS, codigos = false, grupo = false }: {
           <div key={paso} data-paso={paso}
             className="grid gap-x-3 gap-y-0.5 border-b border-dashed border-[var(--linea2)] pb-1.5 last:border-0 last:pb-0 md:grid-cols-[minmax(9.5rem,auto)_minmax(0,1fr)_minmax(0,1.2fr)] md:items-baseline">
             <dt className="flex flex-wrap items-center gap-x-1 font-semibold text-[var(--tinta2)]">
-              <span className="tabular inline-block w-3.5 text-[var(--tinta3)]">{n}</span>{ROTULO[paso]}
+              {/* Sin el número del paso (T-10; X4 §6.1.12): los números son de las prioridades. */}
+              {ROTULO[paso]}
               {paso === 'choke'
                 ? <Info titulo="¿Dónde se trabó?" texto={`${INFO_PASO_2}${codigos && d ? ` En el reporte: ${enElReporte(paso, String(d.valor))}.` : ''}`} />
                 : <Info titulo={ROTULO[paso]} texto={info} />}
             </dt>
-            <dd className="min-w-0 pl-[1.125rem] md:pl-0">
+            <dd className="min-w-0">
               {valor !== undefined
                 ? <b className="font-semibold text-[var(--tinta)]">{valor}</b>
                 : <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5"><Falta />{sugerido !== undefined && <span className="text-[13px] text-[var(--tinta2)]">TRIM sugiere: {valorEnPalabras(paso, String(sugerido))}</span>}</span>}

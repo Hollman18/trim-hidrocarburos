@@ -96,7 +96,7 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
   const columnas = 'grid grid-cols-[minmax(0,1fr)_minmax(76px,108px)_minmax(76px,108px)] items-center gap-x-2'
 
   return (
-    <Panel titulo="METAS POR CAMPO" extra={puede ? undefined : 'vigentes hoy'}>
+    <Panel titulo="Metas por campo" extra={puede ? undefined : 'vigentes hoy'}>
       <Lectura>
         Cada campo tiene dos metas: lo que debe producir y lo máximo de diferido que se acepta (lo que se
         deja de producir pudiendo). Van en barriles por día porque los barriles se suman: la meta global
@@ -121,8 +121,8 @@ export function MetasCampos({ vigente, propuesta, campos, desde, puede, potencia
                   ? [...(vig ? [['Lo de antes, desde', fechaDia(vig.desde)] as [string, string]] : []), ['Lo nuevo, desde', fechaDia(desde)]]
                   : vig ? [['Rige desde', fechaDia(vig.desde)]] : []
                 const nombre = <>
-                  <span className="flex min-w-0 items-center gap-1">
-                    <b className="truncate">{c.nombre}</b>
+                  <span className="flex min-w-0 items-start gap-1">
+                    <b className="min-w-0 break-words" data-nombre-campo>{c.nombre}</b>
                     {/* La señal de que el nombre tiene globo (la fecha está ahí). */}
                     {fechas.length > 0 && <IconoInfo aria-hidden className="no-imprimir size-3 shrink-0 text-[var(--tinta3)]" />}
                   </span>

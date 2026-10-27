@@ -84,12 +84,12 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
           : <>Ninguna está firmada todavía: rigen los datos del demo.</>}
       </p>
       {tub.campoDeGas && (
-        <div className="mb-2.5"><Hueco>
+        <div className="mb-3 sm:mb-4"><Hueco>
           {campoNombre} es un campo de gas. La tubería del gas todavía no está: el gas tiene una tolerancia diferente y falta definir cómo se mide su potencial.
         </Hueco></div>
       )}
       {sinEsquema && (
-        <div className="mb-2.5"><Hueco>
+        <div className="mb-3 sm:mb-4"><Hueco>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
             {campoNombre} no tiene esquema de planta registrado: sin él no se sabe qué limita.
             {onTecnica && <Boton type="button" variante="chico" onClick={onTecnica}>Configurar</Boton>}
@@ -97,8 +97,8 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
         </Hueco></div>
       )}
 
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))]">
-        <Panel titulo="LOS POZOS" extra={pozos?.limita ? <Limita /> : undefined}>
+      <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))]">
+        <Panel titulo="Los pozos" extra={pozos?.limita ? <Limita /> : undefined}>
           <Cifra valor={vista.entrada.pozosBpd} unidad="bbl/d de crudo" limita={!!pozos?.limita} />
           <p className="mt-1 text-[13px] text-[var(--tinta2)]">
             Sale de las pruebas de los pozos{v.factorMedicion.estado === 'firmado' ? ` × el factor de medición firmado (${cifraFactor(v.factorMedicion.valor)})` : ''}: no se escribe.
@@ -106,7 +106,7 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
           </p>
         </Panel>
 
-        <Panel titulo="LA PLANTA O ESTACIÓN" extra={planta?.limita ? <Limita /> : undefined}>
+        <Panel titulo="La planta o estación" extra={planta?.limita ? <Limita /> : undefined}>
           <Cifra valor={planta?.potencialBpd ?? null} unidad="bbl/d de crudo" limita={!!planta?.limita}
             pie={planta?.potencialBpd != null ? 'el más angosto de sus trenes medidos' : undefined} />
           <div className="mt-2 grid gap-1.5">
@@ -144,7 +144,7 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
           </div>
         </Panel>
 
-        <Panel titulo="AFUERA" extra={afuera?.limita ? <Limita /> : undefined}>
+        <Panel titulo="Afuera" extra={afuera?.limita ? <Limita /> : undefined}>
           <Cifra valor={afuera?.potencialBpd ?? null} unidad="bbl/d de crudo" limita={!!afuera?.limita}
             pie={afuera?.potencialBpd != null ? 'el oleoducto o el transportador' : undefined} />
           <div className="mt-2 grid gap-1.5">
@@ -160,7 +160,7 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
         hallazgos={deTramo('factor')} onEscribir={x => conCambio({ factorMedicion: x })} />
 
       {hayEmpate && (
-        <Panel className="mt-2.5" titulo="EXPLICAR EL EMPATE" extra={campoNombre}>
+        <Panel className="mt-3 sm:mt-4" titulo="Explicar el empate" extra={campoNombre}>
           <label htmlFor={idEmpate} className="mb-0.5 block text-[13px] text-[var(--tinta2)]">
             Dos tramos que dan exactamente lo mismo se explican por escrito (NSTA §5.4): va con la firma de las capacidades.
           </label>
@@ -170,7 +170,7 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
         </Panel>
       )}
 
-      <Panel className="mt-2.5" titulo="REVISIÓN CON LAS REGLAS DE LA FIRMA" extra={campoNombre}>
+      <Panel className="mt-3 sm:mt-4" titulo="Revisión con las reglas de la firma" extra={campoNombre}>
         {hallazgos.length === 0
           ? <p className="text-[14px] text-[var(--tinta2)]">Todas cumplen las reglas de la firma.</p>
           : <ul className="grid gap-1.5 text-[14px]">{hallazgos.map(h => <Regla key={`${h.tramo}-${h.equipo ?? ''}-${h.texto}`} h={h} />)}</ul>}
@@ -183,7 +183,7 @@ export function CapacidadesPaso({ campoId, campoNombre, puede, propuesta, onCamb
         )}
       </Panel>
 
-      <div className="mt-2.5">
+      <div className="mt-3 sm:mt-4">
         <Hueco>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
             {puede
@@ -218,7 +218,7 @@ function FactorMedicion({ vista, campoNombre, puede, escrito, campoDeGas, hallaz
   const numero = (t: string) => (t.trim() === '' ? NaN : Number(t.replace(',', '.')))
   const idCifra = useId(), idPorque = useId()
   return (
-    <Panel className="mt-2.5" titulo="EL FACTOR DE MEDICIÓN DE LOS POZOS" extra={campoNombre}>
+    <Panel className="mt-3 sm:mt-4" titulo="El factor de medición de los pozos" extra={campoNombre}>
       <div data-factor-medicion>
         <Lectura>
           Las pruebas de los pozos se miden con el separador de prueba; lo real, con el punto de medición oficial. El

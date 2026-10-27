@@ -11,7 +11,8 @@ import type { Familia } from './partes'
 export type { Familia }
 
 export const NOMBRE_FAMILIA: Record<Familia, string> = {
-  inyeccion: 'Bombas de reinyección', multifasica: 'Bombas multifásicas', electrosumergible: 'Electrosumergibles',
+  // P-09 · La familia del motor (`FAMILIA.reinyeccion`): «bomba de agua».
+  inyeccion: 'Bombas de agua', multifasica: 'Bombas multifásicas', electrosumergible: 'Electrosumergibles',
 }
 
 export function flotaDe(campoId: string): Array<{ equipo: string; familia: Familia }> {

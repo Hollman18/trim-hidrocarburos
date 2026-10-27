@@ -1332,8 +1332,9 @@ comprobar(chipMalo.length === 0 && razon(temas.claro.p2, temas.claro.panel) < 3 
 // Las marcas: el cuadrado P3 lleva trazo; la etiqueta no repite la prioridad al lector.
 const PR = await v.ssrLoadModule('/src/shared/ui/Prioridad.tsx'), PRIM = await v.ssrLoadModule('/src/shared/ui/primitivas.tsx')
 const m3 = renderToStaticMarkup(h(PR.MarcaPrioridad, { s: 3 })), chip1 = renderToStaticMarkup(h(PRIM.Severidad_, { s: 1 }))
-comprobar(/stroke="var\(--marca-trazo\)"/.test(m3) && /aria-label="Prioridad 3/.test(m3) && /aria-hidden="true"/.test(chip1) && !/text-\[var\(--p1\)\]/.test(chip1) && chip1.includes('P1 · ALARMA'),
-  'MarcaPrioridad 3 lleva trazo y nombre; la etiqueta «P1 · ALARMA» pinta la forma sin anunciarla dos veces y el texto no va en rojo')
+comprobar(/stroke="var\(--marca-trazo\)"/.test(m3) && /aria-label="Prioridad 3/.test(m3) && /aria-hidden="true"/.test(chip1) && !/text-\[var\(--p1\)\]/.test(chip1) && chip1.includes('P1 · alarma'),
+  // F1 (D-3): la etiqueta en frase, no en MAYÚSCULAS.
+  'MarcaPrioridad 3 lleva trazo y nombre; la etiqueta «P1 · alarma» pinta la forma sin anunciarla dos veces y el texto no va en rojo')
 
 // Tip: alcanzable con teclado y con nombre dentro de un dibujo.
 const TIP = await v.ssrLoadModule('/src/shared/ui/Tip.tsx')
@@ -1362,12 +1363,20 @@ comprobar(PRL.peorSeveridad([0, 3, 1, 2]) === 1 && PRL.peorSeveridad([0, 3, 2]) 
   'la marca del portafolio es la prioridad más urgente de sus campos (1 > 2 > 3 > normal)')
 
 // El detalle de un pozo usa la regla de la lista: un pozo que cerró la bomba es gris.
+// F3 (26-oct, H3 y H17): la regla ya no es de la pantalla (`sevPozo` se fue): la lista de Pozos, la de
+// Electrosumergibles y la ficha del pozo leen la misma condición, la de la franja (`useCondiciones`). Se prueba
+// lo mismo de antes contra esa regla: los que cerró la bomba van sin marca (gris) y con marcha «cerrado por otro»,
+// y cada pozo con marca la tiene porque su estado o su fila de Riesgo la piden (no la inventa nadie).
 const POZ = await v.ssrLoadModule('/src/widgets/pozos/estado.ts'), EV = await v.ssrLoadModule('/src/entities/equipo-vivo.ts')
+const FRPZ = await v.ssrLoadModule('/src/entities/condiciones.ts'), DFPZ = await v.ssrLoadModule('/src/entities/diferido.ts')
 const filas = API.pedirPozos('ceiba', new Date(L.calendario().at(-1).desde), R.AHORA, ctx0)
+const marcaPozo = new Map(FRPZ.franja(['ceiba'], ctx0).equipos.map(e => [e.equipo, e.condicion]))
+const riesgoPozo = DFPZ.riesgoAhora(['ceiba'], ctx0)
 const porBomba = filas.filter(fp => POZ.cerradoPorOtro(fp))
-const distintos = filas.filter(fp => EV.equipoVivo(fp.pozo.id, 'ceiba', ctx0)?.severidad !== POZ.sevPozo(fp)).map(fp => fp.pozo.id)
-comprobar(porBomba.length > 0 && porBomba.every(fp => POZ.sevPozo(fp) === 0 && EV.equipoVivo(fp.pozo.id, 'ceiba', ctx0)?.marcha === 'cerrado-por-otro') && distintos.length === 0,
-  `${porBomba.length} pozos de La Ceiba que cerró la bomba: gris en la lista y en el detalle, con marcha «cerrado por otro»; la ficha y la lista dan la misma prioridad a los ${filas.length}${distintos.length ? ` (difieren ${distintos.join(', ')})` : ''}`)
+const distintos = filas.filter(fp => marcaPozo.has(fp.pozo.id) !== ((EV.equipoVivo(fp.pozo.id, 'ceiba', ctx0)?.severidad ?? 0) > 0 || riesgoPozo.some(r => r.equipo === fp.pozo.id && r.prioridad > 0))).map(fp => fp.pozo.id)
+comprobar(typeof POZ.useCondiciones === 'function' && !('sevPozo' in POZ)
+    && porBomba.length > 0 && porBomba.every(fp => !marcaPozo.has(fp.pozo.id) && EV.equipoVivo(fp.pozo.id, 'ceiba', ctx0)?.marcha === 'cerrado-por-otro') && distintos.length === 0,
+  `${porBomba.length} pozos de La Ceiba que cerró la bomba: gris en la lista y en el detalle (sin marca en la franja), con marcha «cerrado por otro»; la ficha y la lista dan la misma marca, la de la franja, a los ${filas.length}${distintos.length ? ` (difieren ${distintos.join(', ')})` : ''}`)
 
 // Estados por código, no por frase.
 const P201 = EV.equipoVivo('P-201B', 'ceiba', ctx0), P201m = EV.equipoVivo('P-201B', 'morichal', ctx0)
@@ -2185,13 +2194,21 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
     `la serie mensual trae sinCosto en ${serieS.length} meses (${serieS.map(x => x.mes).join(', ')})`)
 
   // 2, 6 y 7. Rótulos, cuentas y papel.
-  const pantallas = ['src/pages/Esp.tsx', 'src/widgets/equipos/Lista.tsx', 'src/widgets/riesgo/Ahora.tsx', 'src/pages/Riesgo.tsx', 'src/pages/Mantenimiento.tsx', 'src/pages/Turno.tsx', 'src/widgets/equipo/FichaEjecutiva.tsx']
+  // F4 · P-21: `widgets/riesgo/Ahora.tsx` (con el Resumen y el Portafolio del gerente) se borra después de la
+  // revisión. Lo que se comprueba de él vale mientras exista; borrado, `tsc -b` ya prueba que nadie lo importa.
+  // «Por campo» se busca donde quede (hoy `widgets/resumen/`, que también se vacía).
+  const { existsSync: existeF4, readdirSync: dirF4 } = await import('node:fs')
+  const existe = rel => existeF4(new URL(`../${rel}`, import.meta.url))
+  const dondeEsta = nombre => ['resumen', 'resultados', 'diferidos'].map(d => `src/widgets/${d}/${nombre}`).find(existe)
+    ?? dirF4(new URL('../src/widgets/', import.meta.url)).map(d => `src/widgets/${d}/${nombre}`).find(existe)
+  const pantallas = ['src/pages/Esp.tsx', 'src/widgets/equipos/Lista.tsx', 'src/widgets/riesgo/Ahora.tsx', 'src/pages/Riesgo.tsx', 'src/pages/Mantenimiento.tsx', 'src/pages/Turno.tsx', 'src/widgets/equipo/FichaEjecutiva.tsx'].filter(existe)
   const siFallaBpd = pantallas.filter(rel => /bbl\/d si fallan?\b|[Ee]n juego si falla|por día si fallan?\b/.test(fuente(rel)))
   comprobar(!siFallaBpd.length, `los bbl/d se rotulan «si para» o «en juego», nunca «si falla(n)» (que es la cifra en bbl de hoy)${siFallaBpd.length ? `: ${siFallaBpd.join(', ')}` : ''}`)
-  const ahoraTxt = sinComentarios(fuente('src/widgets/riesgo/Ahora.tsx')), mantTxt = sinComentarios(fuente('src/pages/Mantenimiento.tsx'))
-  comprobar(/contarPorIdentificar\(usePreguntas\(/.test(ahoraTxt) && !/\.filter\(p => p\.pide\)/.test(ahoraTxt) && !/ninguna parte va hacia su límite/.test(ahoraTxt) && /deFlota\(r, rol\.nivel\)/.test(mantTxt),
-    'Ahora cuenta «por identificar» con contarPorIdentificar y usa la frase del Resumen; Mantenimiento marca «flota» con la misma regla que Riesgo (deFlota)')
-  const css = fuente('src/index.css'), porCampo = fuente('src/widgets/resumen/PorCampo.tsx')
+  const ahoraTxt = existe('src/widgets/riesgo/Ahora.tsx') ? sinComentarios(fuente('src/widgets/riesgo/Ahora.tsx')) : null, mantTxt = sinComentarios(fuente('src/pages/Mantenimiento.tsx'))
+  comprobar((ahoraTxt === null || (/contarPorIdentificar\(usePreguntas\(/.test(ahoraTxt) && !/\.filter\(p => p\.pide\)/.test(ahoraTxt) && !/ninguna parte va hacia su límite/.test(ahoraTxt))) && /deFlota\(r, rol\.nivel\)/.test(mantTxt),
+    `${ahoraTxt === null ? 'Ahora ya no existe (P-21)' : 'Ahora cuenta «por identificar» con contarPorIdentificar y usa la frase del Resumen'}; Mantenimiento marca «flota» con la misma regla que Riesgo (deFlota)`)
+  const rutaPorCampo = dondeEsta('PorCampo.tsx')
+  const css = fuente('src/index.css'), porCampo = rutaPorCampo ? fuente(rutaPorCampo) : ''
   comprobar(/section \.border-b\[data-partible\] \{ break-inside: auto; \}/.test(css) && /<div data-partible className="border-b/.test(porCampo),
     'en el papel, un campo desplegado de «POR CAMPO» se parte entre sus filas (no salta de hoja entero)')
 }
@@ -2602,7 +2619,7 @@ console.log('\n=== 25. La tubería del campo, mes a mes y antes → con TRIM (U2
   const tuS = RP.tuberiaCampo('ceiba', sep.desde, sep.hasta, ctx0), tuZ = RP.tuberiaCampo('zarza', oct.desde, oct.hasta, ctx0)
   // B-13: la frase dice dónde se trabó y qué equipos, con su familia; lo sin identificar, aparte.
   comprobar(tuS.fraseGerente === 'Se trabó sobre todo en los pozos: LC-11 y LC-04 (electrosumergibles).'
-    && tu.fraseGerente === 'Se trabó sobre todo en la planta: P-201B (bomba de reinyección). 355 bbl todavía sin identificar.' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
+    && tu.fraseGerente === 'Se trabó sobre todo en la planta: P-201B (bomba de agua). 355 bbl todavía sin identificar.' && tuZ.campoDeGas && tuZ.limita === null && /campo de gas/.test(tuZ.frase),
     `la frase del gerente sale hecha del motor: «${tuS.fraseGerente}»; octubre: «${tu.fraseGerente}»; La Zarza, estado de campo de gas`)
   // Mes a mes por tramo: el mismo total del libro cada mes.
   const rm = RP.repartoPorMes(TODOS, ctx0), sm = L.serieMensual(TODOS, ctx0)
@@ -2677,13 +2694,15 @@ console.log('\n=== 27. La tubería del agua (CHOKE-COMPLETO §9, U2 §5) ===')
   comprobar(cerca(tr('producida').potencialBpd, agua, 1e-12) && a.tramos.filter(x => x.potencialBpd !== null).every(x => cerca(x.crudoBpd, x.potencialBpd * a.crudoPorAgua, 1e-12))
     && Math.abs(tr('inyectores').crudoBpd - CH.potencialesDelCampo('ceiba', R.AHORA.getTime(), ctx0).trenes.find(t => t.tren === 'agua').enCrudo) <= 0.5
     && a.dominante === 'producida' && !a.limita && a.angosto === 'inyectores' && Math.round(a.sobraBpd) === 43675 && tr('bombas').disponibleHoy?.valor === 178500
-    && a.frases[0] === 'Con las tres bombas, cabe más agua: 43.675 bbl/d (sin contar la capacidad del tratamiento de agua: no tiene dato).' && a.frases.at(-1) === 'Cerrando primero los más acuatosos se pierden 1.426 bbl/d de crudo; cerrando parejo, 2.236.',
+    && a.frases[0] === 'Con las tres bombas, cabe más agua: 43.675 bbl/d (sin contar la capacidad del tratamiento de agua: no tiene dato).' && a.frases.at(-1) === 'Cerrando primero los más acuatosos dejan de producirse 1.426 bbl/d de crudo; cerrando parejo, 2.236.'
+    // F3 · P-agua-1 (X4 §6.1): la misma tubería en una frase de campo, sin las cuentas (van a la ⓘ).
+    && a.fraseCorta === 'Con las tres bombas, al agua le sobra espacio. Si para una, hay que cerrar pozos.',
     `cada tramo en agua y en crudo (con el crudo de las pruebas, D3); con el tren completo el agua no limita, es lo más frágil: ${a.texto}`)
   // B-16 · Las bombas y los inyectores dan lo mismo al barril: se dice como empate, con los dos nombres; «cabe más», no «le sobran».
   // B-17 · Lo de «si para» va en condicional y lo que ya pasó, en pasado: no dice «quedan sin salida» con los pozos ya cerrados.
-  comprobar(a.empate && a.casiIguales?.join() === 'bombas,inyectores' && a.frases[1] === 'Bombas de reinyección y pozos inyectores dan exactamente lo mismo: 267.750 bbl/d. Lo que se gane en uno lo frena el otro; la admisión de los inyectores no está firmada: el demo la deduce del mismo límite del cabezal que deja a cada bomba en su capacidad.'
+  comprobar(a.empate && a.casiIguales?.join() === 'bombas,inyectores' && a.frases[1] === 'Bombas de agua y pozos inyectores dan exactamente lo mismo: 267.750 bbl/d. Lo que se gane en uno lo frena el otro; la admisión de los inyectores no está firmada: el demo la deduce del mismo límite del cabezal que deja a cada bomba en su capacidad.'
     && a.frases.includes('Si para una con todos los pozos produciendo, faltan 44.100 bbl/d de salida: el tanque se llena en 1,8 h y hay que cerrar pozos.')
-    && a.frases.includes('P-201B está parada desde el 2 de oct, 03:52: se cerraron LC-07 y LC-16 y se pierden 1.665 bbl/d de crudo.')
+    && a.frases.includes('P-201B está parada desde el 2 de oct, 03:52: se cerraron LC-07 y LC-16 y dejan de producirse 1.665 bbl/d de crudo.')
     && !/le sobran|quedan [\d.]+ bbl\/d sin salida/.test(a.texto),
     `el agua dice con quién está igual y en qué tiempo: «${a.frases[1]}» · «${a.frases.find(x => x.startsWith('Si para una'))}» · «${a.frases.find(x => x.startsWith('P-201B está parada'))}»`)
   // B-18 · La Zarza es de gas: el agua no se pasa a crudo, y sin la admisión de los inyectores no se dice qué limita.
@@ -2927,7 +2946,7 @@ console.log('\n=== 29. Tanda 4: el mercado, «Todavía no sé», las capacidades
   const wctx = { config: wL.contextoInicial().config, respuestas: {} }
   const caido = wCR.criticidadDelCampo('palmar', wctx).parados.find(x => x.equipo === 'SE-2')
   const tw = wRP.tuberiaCampo('ceiba', new Date('2026-09-01T00:00:00-05:00'), R.AHORA, wctx)
-  comprobar(caido && /^SE-2 está caído: se pierden [\d.]+ bbl\/d ahora$/.test(caido.porque) && tw.medidor?.estado === 'sin-comunicacion' && /desde el 1 de oct/.test(tw.medidor.texto),
+  comprobar(caido && /^SE-2 está caído: se dejan de producir [\d.]+ bbl\/d ahora$/.test(caido.porque) && tw.medidor?.estado === 'sin-comunicacion' && /desde el 1 de oct/.test(tw.medidor.texto),
     `un servicio ya caído lo dice el motor («${caido?.porque}»); un medidor sin el dato del último día, también («${tw.medidor?.texto}»)`)
   await w.close()
 }
@@ -3122,7 +3141,7 @@ console.log('\n=== 31. Correcciones del QA (F2-B): todas las vistas sobre las mi
   const g1 = new Map([[lc11.eventoId, corregida]])
   const v0 = vistas(['ceiba'], sep, undefined), v1 = vistas(['ceiba'], sep, g1)
   comprobar(v0.iguales && v1.iguales && delEvento > 3000 && cerca(v1.b.porChoke.pozo, v0.b.porChoke.pozo - delEvento, 1e-9) && cerca(v1.b.porChoke.planta, v0.b.porChoke.planta + delEvento, 1e-9)
-    && cerca(v1.b.diferido, v0.b.diferido, 1e-12) && v1.t.fraseGerente === 'Se trabó sobre todo en la planta: LC-11 (electrosumergible) y P-201B (bomba de reinyección).' && v0.t.fraseGerente === 'Se trabó sobre todo en los pozos: LC-11 y LC-04 (electrosumergibles).',
+    && cerca(v1.b.diferido, v0.b.diferido, 1e-12) && v1.t.fraseGerente === 'Se trabó sobre todo en la planta: LC-11 (electrosumergible) y P-201B (bomba de agua).' && v0.t.fraseGerente === 'Se trabó sobre todo en los pozos: LC-11 y LC-04 (electrosumergibles).',
     `QA-A-01 · corregir el paso 2 de LC-11 (${f(delEvento)} bbl) mueve a la vez el árbol, el reparto, la tubería, la serie y el mes a mes: pozos ${f(v0.b.porChoke.pozo)} → ${f(v1.b.porChoke.pozo)}, planta ${f(v0.b.porChoke.planta)} → ${f(v1.b.porChoke.planta)}; el gerente lee «${v1.t.fraseGerente}»`)
   // 2. Y el paso 4: el jefe dice que esa parada fue planeada (C-09): sale de lo no planeado en todas las vistas.
   const planeada = CL.declararPaso(corregida, 'planeacion', 'planeada', { id: 'u-jefe', nombre: 'Jefe' }, 'jefe', HORA)
@@ -3477,7 +3496,8 @@ console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen h
   comprobar(ceD.cifras.durante.frase === 'se dejan de producir en La Ceiba.'
       && ceD.cifras.durante.explica === 'La bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.'
       && corta === 'Se dejan de producir 1.966 bbl/d: P-201B (bomba de agua) paró a las 03:52 y cerró LC-07 y LC-16.' && corta.split(/\s+/).length <= 20
-      && ceD.planta.ariaLabel.startsWith(corta),
+      // F2 (26-oct, A16): el nombre accesible es la misma frase con las unidades en palabras.
+      && ceD.planta.ariaLabel.startsWith(corta.replace('bbl/d', 'barriles por día')) && !ceD.planta.ariaLabel.includes('bbl/d'),
     `la frase de ahora: «${corta}» (${corta.split(/\s+/).length} palabras; es el nombre accesible de la tubería)`)
   comprobar(ceA.cifras.antes.valor === 1 && ceA.cifras.antes.unidad === 'equipo avisa' && ceA.cifras.antes.frase === 'K-101 (aire de instrumentos) ya pasó el límite.'
       && todosA.cifras.antes.valor === 8 && todosA.cifras.antes.fraseCorta === '8 equipos avisan; el más cercano, K-101 (La Ceiba), ya pasó el límite.'
@@ -3494,7 +3514,8 @@ console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen h
   comprobar(r.hay && r.tanque.nivelPct === 89.6 && r.tanque.altoAltoPct === 90 && f(r.entraBpd) === '174.033' && r.bombas.map(b => `${b.id}:${b.estado}`).join() === 'P-201A:sin-instrumento,P-201B:parada,P-201C:sin-instrumento'
       && ceD.planta.sinIdentificar.titulo === 'LC-21 · 301 bbl/d' && f(ceD.planta.venta.valor) === '9.394' && ceD.planta.venta.metaTexto === 'meta 10.900'
       && f(ceA.planta.venta.valor) === '293.287' && ceA.planta.venta.metaTexto === 'meta 337.900' && f(ceP.planta.venta.valor) === '16.941'
-      && ceD.perdida === 'Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.',
+      // F2 (26-oct, H14 e I-ger-3): la pérdida en una línea, como la leyenda de X5 §5.10; qué es, en su ⓘ.
+      && ceD.perdida === 'Pérdida: nada registrado en octubre' && /salió y no se vendió/.test(ceD.perdidaExplica) && /nunca se suma/.test(ceD.perdidaExplica),
     'la rama del agua (tanque 89,6 % · alto-alto 90 % · entran 174.033 bbl/d · P-201B parada, las otras dos sin instrumento), LC-21 aparte, la venta contra la meta en cada momento y la pérdida aparte')
   // Las cifras de A, iguales a las de donde salen hoy.
   const c = ESV.cicloValor(['ceiba'], curso.desde, curso.hasta, ctx0, V0)
@@ -3502,7 +3523,8 @@ console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen h
   const base = RPV.lineaBasePorTramo(['ceiba'], new Date(`${CFV.PUESTA_EN_MARCHA}T00:00:00-05:00`), R.AHORA, ctx0, V0)
   const m = ceD.mesAMes.meses
   comprobar(f(ceD.mover.totalBbl) === '2.133' && cerca(ceD.mover.porMomento.durante, c.durante.bbl) && f(ceD.mover.porMomento.antes) === '0' && f(ceD.mover.porMomento.despues) === '30'
-      && ceD.porEquipo.map(x => `${x.equipo} ${f(x.bbl)} ${f(x.pct)}`).join(', ') === 'P-201B 573 55, LC-21 247 24, SE-2 118 11, LC-08 109 10'
+      // F2 (26-oct, H2): lo que se muestra es el entero repartido de la cifra (573 + 247 + 118 + 108 = 1.046; 55 + 24 + 11 + 10 = 100); el exacto sigue en `bbl`.
+      && ceD.porEquipo.map(x => `${x.equipo} ${x.bblEntero} ${x.pctEntero}`).join(', ') === 'P-201B 573 55, LC-21 247 24, SE-2 118 11, LC-08 108 10'
       && ceD.porEquipo[0].prioridad === 1 && ceD.porEquipo[1].prioridad === 2 && ceD.porEquipo.every((x, i) => cerca(x.bbl, lb.porEquipo[i].bbl))
       && m.length === 13 && m.length === serie.length && f(m[0].totalBpd) === '544' && f(m[0].altoBpd) === '421' && m[4].sobre && f(m[4].totalBpd) === '834'
       && m.filter(x => x.sobre).length === 1 && m[12].enCurso && f(ceD.mesAMes.actualBpd) === '661' && f(ceD.mesAMes.maximoBpd) === '800'
@@ -3580,10 +3602,12 @@ console.log('\n=== C5. Resultados y un nombre, una cifra ===')
   const lb = L.libro(['ceiba'], curso.desde, curso.hasta, ctx0), pvP = PV.plantaViva(qPV(['ceiba'], 'despues'), ctx0, V0)
   comprobar(ms < 300 && f(rc.cifra.valor) === '1.046' && cerca(rc.cifra.valor, lb.diferido) && cerca(rc.cifra.valor, pvP.cifras.despues.valor) && cerca(rc.cifra.valor, pvP.esteMes.bbl)
       && f(rc.cifra.maximo) === '1.267' && !rc.cifra.sobreMaximo && rc.cifra.frase === 'no se produjeron en La Ceiba.'
-      && rc.cifra.explica === 'El máximo firmado para lo que va de octubre es 1.267 bbl: va 221 por debajo. P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.'
+      // F2 (26-oct, P-resultados-1): la conclusión primero; la diferencia con enteros (1.267 − 1.046 = 221).
+      && rc.cifra.explica === 'Va 221 bbl por debajo del máximo firmado a la fecha (1.267). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.'
       && rc.cifra.fraseCorta.split(/\s+/).length <= 20 && rc.cifra.previo === 'Lo que pasó · octubre, en curso' && rc.cifra.primerEquipo?.equipo === 'P-201B'
-      && f(rt.cifra.valor) === '2.377',
-    `la cifra grande: ${f(rc.cifra.valor)} bbl «${rc.cifra.frase}» (el libro, «Después» y «Este mes»), contra el máximo de ${f(rc.cifra.maximo)}; todos los campos ${f(rt.cifra.valor)} en ${ms.toFixed(0)} ms (D7)`)
+      // F2 (26-oct, H2): encima de la raíz, la suma de las raíces (1.253 + 1.046 + 77 = 2.376); el exacto, 2.376,75, se conserva.
+      && rt.cifra.entero === 2376 && f(rt.cifra.valor) === '2.377',
+    `la cifra grande: ${f(rc.cifra.valor)} bbl «${rc.cifra.frase}» (el libro, «Después» y «Este mes»), contra el máximo de ${f(rc.cifra.maximo)}; todos los campos ${f(rt.cifra.entero)} en ${ms.toFixed(0)} ms (D7)`)
   // 8. La producción contra la meta y el cierre proyectado: lo que va más el ritmo de hoy hasta el último día.
   const p = rc.produccion, est = D.estadoCampo('ceiba', ctx0)
   const cierre = lb.real + (est.potencialBpd - est.perdiendoBpd) * (lb.meta.diasTotal - lb.meta.dias)
@@ -3619,8 +3643,11 @@ console.log('\n=== C5. Resultados y un nombre, una cifra ===')
 
   // 13. En las pantallas de C5: ni «Perdiéndose ahora», ni los dígitos 1·2·3 del ciclo, ni títulos de panel en MAYÚSCULAS.
   const RAIZ_SRC = `${RAIZ}src/`
-  const archivos = ['pages/Resultados.tsx', 'pages/Diferidos.tsx', 'pages/Produccion.tsx', 'pages/Confiabilidad.tsx', 'pages/Mantenimiento.tsx', 'pages/Resumen.tsx', 'pages/Riesgo.tsx', 'pages/Turno.tsx', 'pages/Trabajo.tsx', 'pages/Causa.tsx', 'pages/Regulatorio.tsx']
-  for (const d of ['resultados', 'diferidos', 'produccion', 'confiabilidad', 'ciclo', 'resumen', 'riesgo', 'choke', 'arbol'])
+  // F4 · P-21: el Resumen y sus widgets se borran después de la revisión; se lee lo que exista.
+  const { existsSync: existeC5 } = await import('node:fs')
+  const archivos = ['pages/Resultados.tsx', 'pages/Diferidos.tsx', 'pages/Produccion.tsx', 'pages/Confiabilidad.tsx', 'pages/Mantenimiento.tsx', 'pages/Riesgo.tsx', 'pages/Turno.tsx', 'pages/Trabajo.tsx', 'pages/Causa.tsx', 'pages/Regulatorio.tsx']
+    .filter(a => existeC5(`${RAIZ_SRC}${a}`))
+  for (const d of ['resultados', 'diferidos', 'produccion', 'confiabilidad', 'ciclo', 'resumen', 'riesgo', 'choke', 'arbol'].filter(d => existeC5(`${RAIZ_SRC}widgets/${d}`)))
     for (const x of readdirSync(`${RAIZ_SRC}widgets/${d}`)) if (statSync(`${RAIZ_SRC}widgets/${d}/${x}`).isFile()) archivos.push(`widgets/${d}/${x}`)
   const fuenteDe = a => readFileSync(`${RAIZ_SRC}${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
   const perdiendo = archivos.filter(a => /Perdiéndose|PERDIÉNDOSE|perdiéndose/.test(fuenteDe(a)))
@@ -3656,7 +3683,8 @@ console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P
     `la marca de cada fila es la de la franja, en cada campo (${todos.filas.filter(f => f.condicion).length} con marca en los cinco campos) y ningún equipo sin marca la lleva`)
   // Los filtros: parados, avisan, sin instrumento y todos; por tipo (una electrosumergible también es pozo) y por tren.
   const en = k => ids(ce.filas.filter(f => f.filtros.includes(k)))
-  comprobar(en('parados') === 'P-201B LC-21 LC-16 LC-07' && en('avisan') === 'K-101 TK-102 H-302' && en('sin-instrumento') === 'LC-21 P-201A P-201C LC-19 LC-03'
+  // F3 · G-15 (por diseño): «Avisan» cuenta lo mismo que «Equipos que avisan» (lo en riesgo): K-101; TK-102 y H-302 siguen con su marca.
+  comprobar(en('parados') === 'P-201B LC-21 LC-16 LC-07' && en('avisan') === 'K-101' && en('sin-instrumento') === 'LC-21 P-201A P-201C LC-19 LC-03'
       && ce.cuentas.estado.todos === 28 && ce.cuentas.tipo.bomba === 3 && ce.cuentas.tipo.electrosumergible === 15 && ce.cuentas.tipo.pozo === 18 && ce.cuentas.tipo.superficie === 7
       && ce.cuentas.tren.agua === 3 && ce.cuentas.tren.pozos === 18 && ce.cuentas.tren.servicios === 2
       && ce.filas.find(f => f.equipo === 'P-201A').vigilaTexto === 'no: sin instrumento' && ce.filas.find(f => f.equipo === 'P-201B').vigilaTexto === 'sí · 8 señales',
@@ -3674,7 +3702,8 @@ console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P
       && ce.cambioHoy[0] === CRC.criticidadDelCampo('ceiba', ctx).cambioHoy,
     `cada fila: «${fila('P-201B').palabra}» 1.665 se deja de producir; K-101 «ya pasó el límite», hasta 9.394 si falla hoy; P-201A 3.059 después de 2 min, «${fila('P-201A').sube}»`)
   const vg = ET.aciertoVigia(['ceiba', 'morichal', 'guacamayo'], ctx)
-  comprobar(vg.aciertos === 5 && vg.juzgadas === 7 && vg.falsas === 2 && vg.intervenidas === 5 && /^¿Le creo al vigía\? Desde el 1 de sept: acertó 5 de 7 avisos/.test(vg.frase),
+  // K2 · Una línea que contesta: «desde que entró TRIM» (el nombre de Resultados), sin fecha ni las intervenidas (van al detalle).
+  comprobar(vg.aciertos === 5 && vg.juzgadas === 7 && vg.falsas === 2 && vg.intervenidas === 5 && vg.frase === '¿Le creo al vigía? Desde que entró TRIM, acertó 5 de 7 avisos.',
     `el acierto del vigía para confiabilidad, en una línea: «${vg.frase}»`)
 
   // El nivel 3 de P-201B, con las cifras de la imagen 4.
@@ -3694,11 +3723,13 @@ console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P
       && n.senales.every(x => x.escala[0] <= Math.min(...x.alarmas, x.banda?.[0] ?? Infinity) && x.escala[1] >= Math.max(...x.alarmas, x.banda?.[1] ?? -Infinity) && x.serie.length === 12)
       && n.sinDisparo,
     'sus señales: 7 con su indicador y la fuga del sello en palabras; paradas, en gris y sin marca; la escala de cada una cubre su banda y su alarma (y el % va de 0 a 100); «falta el disparo» se dice')
-  // La escala no depende del valor de ahora: con la bomba en otro punto de la misma ventana, es la misma.
+  // F3 · H5 (por diseño; X2 I1): la escala sale SOLO de los límites firmados, nunca de las lecturas. Antes esta
+  // prueba exigía lo contrario (que la escala cambiara con la ventana); ahora, la misma señal con otras lecturas
+  // tiene la misma escala, porque las lecturas ni entran: `escalaDe(unidad, banda, alarmas)`.
   const pi = sen('PI-2010')
-  comprobar(ET.escalaDe('psi', [10, Infinity], [8], pi.serie).join() === pi.escala.join() && ET.escalaDe('psi', [10, Infinity], [8], [...pi.serie.slice(0, -1), 12]).join() !== pi.escala.join()
-      && ET.escalaDe('psi', [10, Infinity], [8], [...pi.serie.slice(0, -1), 12, 18.2]).join() === ET.escalaDe('psi', [10, Infinity], [8], [18.2, ...pi.serie.slice(0, -1), 12]).join(),
-    `la escala de PI-2010 (${pi.escala.map(x => x.toLocaleString('es-CO')).join(' a ')} psi) sale de los límites y la ventana, no del orden ni del valor de ahora`)
+  comprobar(ET.escalaDe.length === 3 && ET.escalaDe('psi', [10, Infinity], [8]).join() === pi.escala.join() && pi.escala.join() === '0,20'
+      && n.senales.every(x => ET.escalaDe(x.unidad, [x.banda?.[0] ?? -Infinity, x.banda?.[1] ?? Infinity], x.alarmas)?.join() === x.escala?.join()),
+    `la escala de PI-2010 (${pi.escala.map(x => x.toLocaleString('es-CO')).join(' a ')} psi) sale de sus límites (normal > 10 · alarma 8), no de las lecturas: no se mueve con el valor de ahora`)
   // El tren de agua, «mientras esté parada», los días antes de parar, la historia y los repuestos.
   const e = n.esquemaAgua, m = n.mientras
   comprobar(e.tanque.nivelPct === 89.6 && e.tanque.altoAltoPct === 90 && e.bombas.map(b => `${b.id}:${b.marcha}:${b.instrumentada ? 'i' : 's'}`).join() === 'P-201A:sin-lectura:s,P-201B:parada:i,P-201C:sin-lectura:s'
@@ -3749,6 +3780,650 @@ console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P
   comprobar(ROLC.rolPorId('conf').inicio === 'equipos' && URLC.abreNivel3(ROLC.rolPorId('conf')) && !URLC.abreNivel3(ROLC.rolPorId('ger')) && !URLC.abreNivel3(ROLC.rolPorId('adm'))
       && ['prod', 'sup', 'oper', 'jefe', 'conf', 'plan', 'tec'].every(r => URLC.abreNivel3(ROLC.rolPorId(r)) || !ROLC.rolPorId(r).pantallas.includes('equipos')),
     'confiabilidad abre en Equipos; los roles técnicos abren el nivel 3 como vista; el gerente y el administrador, el panel')
+}
+
+// F3 · Configuración (P-04; X4 §2 y §3.4, adm): el estado de la configuración de un campo, «N de M pasos listos»,
+// DERIVADO de la configuración firmada y de lo contestado en el borrador (pendientesDe). Nada se supone.
+console.log('\n=== F3. Configuración: el estado de cada campo (N de M pasos listos), derivado de lo firmado y del borrador ===')
+{
+  const CC = await v.ssrLoadModule('/src/entities/choke-config.ts')
+  const CHO = await v.ssrLoadModule('/src/entities/choke.ts')
+  const ctx = L.contextoInicial()
+  const t0 = performance.now()
+  const e = CC.estadoConfiguracion('ceiba', ctx)
+  const ms = performance.now() - t0
+  const marca = x => x.pasos.map(p => `${p.paso}:${p.listo ? 'sí' : 'no'}`).join(' ')
+  comprobar(e.listos === 3 && e.total === 6 && e.siguiente === 'topologia' && marca(e) === 'perfil:sí tanques:sí topologia:no capacidades:no factor:no metas:sí'
+      && e.frase === 'La Ceiba: 3 de 6 pasos listos. Falta firmar a qué pozos sirve cada equipo.' && e.falta === 'Falta firmar a qué pozos sirve cada equipo.',
+    `La Ceiba: «${e.frase}» (${marca(e)})`)
+  // Cada paso es su fuente: el perfil firmado, la topología firmada, las capacidades con el dato del demo, el factor, la meta.
+  const paso = (x, k) => x.pasos.find(p => p.paso === k)
+  // K2 · La fila en el teléfono: el estado en una o dos palabras; el detalle entero sigue en `detalle`.
+  comprobar(e.pasos.map(p => p.corto).join(' | ') === 'firmado | completos | sin firmar | sin firmar | sin firmar | firmada por el gerente'
+      && e.pasos.every(p => p.corto.split(' ').length <= 4 && !/\d/.test(p.corto)),
+    `cada paso, corto para el teléfono: ${e.pasos.map(p => `${p.nombre} «${p.corto}»`).join(', ')}`)
+  comprobar(paso(e, 'perfil').listo === C.tienePerfil(ctx.config, 'ceiba') && paso(e, 'topologia').listo === CHO.topologiaFirmada('ceiba', ctx)
+      && paso(e, 'topologia').detalle === `TRIM la deduce del registro: faltan ${CHO.topologiaDe('ceiba', ctx).length} equipos por confirmar y firmar`
+      && paso(e, 'capacidades').detalle.startsWith('dato del demo, sin firmar: tren de crudo, tren de agua, tren de gas, afuera')
+      && paso(e, 'factor').detalle === 'sin firmar: rige 1' && paso(e, 'metas').firma === 'gerente' && paso(e, 'metas').listo === !!C.metaEn(ctx.config, 'ceiba', R.AHORA.getTime()),
+    `cada paso sale de lo firmado: «${paso(e, 'topologia').detalle}», «${paso(e, 'capacidades').detalle}», el factor «${paso(e, 'factor').detalle}», y la meta la firma el gerente`)
+  // Los tanques solo cuentan si el campo los tiene; el tren de gas, si el perfil dice que hay gas.
+  const pal = CC.estadoConfiguracion('palmar', ctx)
+  comprobar(pal.total === 5 && !paso(pal, 'tanques') && !paso(pal, 'capacidades').detalle.includes('tren de gas') && pal.frase.startsWith('El Palmar: 2 de 5 pasos listos.'),
+    `un campo sin tanques ni gas no los pide: «${pal.frase}» («${paso(pal, 'capacidades').detalle}»)`)
+  // Lo contestado en el borrador lo dice la regla de la primera firma (pendientesDe), sin firmar todavía.
+  const base = CHO.topologiaDe('ceiba', ctx)
+  const todosPozos = P.pozosDe('ceiba').map(p => p.id)
+  const respuesta = el => ({ r: CC.respuestaDe(el, todosPozos).r, elemento: el })
+  const unaSola = { ceiba: { base, firmada: false, respuestas: { [base[0].elemento]: respuesta(base[0]) } } }
+  const conBorrador = CC.estadoConfiguracion('ceiba', ctx, unaSola)
+  comprobar(paso(conBorrador, 'topologia').detalle === `en el borrador faltan ${CC.pendientesDe(unaSola.ceiba).length} de ${base.length} equipos por contestar` && conBorrador.listos === 3,
+    `con una respuesta en el borrador: «${paso(conBorrador, 'topologia').detalle}» y nada cambia de listo hasta firmar`)
+  // Al firmar, la cuenta cambia: la topología completa (4 de 6) y después el factor de medición (5 de 6).
+  const todas = { ceiba: { base, firmada: false, respuestas: Object.fromEntries(base.map(el => [el.elemento, respuesta(el)])) } }
+  comprobar(paso(CC.estadoConfiguracion('ceiba', ctx, todas), 'topologia').detalle === 'contestada en el borrador: falta firmarla', 'contestada entera en el borrador: «falta firmarla»')
+  const firmadaTopo = { ...ctx, config: CC.conTopologia(ctx.config, todas) }
+  const e2 = CC.estadoConfiguracion('ceiba', firmadaTopo)
+  const conFactor = { ...firmadaTopo, config: { ...firmadaTopo.config, capacidades: [{ campoId: 'ceiba', factorMedicion: { valor: 0.98, porque: 'prueba de F3' } }] } }
+  const e3 = CC.estadoConfiguracion('ceiba', conFactor)
+  comprobar(e2.listos === 4 && e2.siguiente === 'capacidades' && paso(e2, 'topologia').detalle === 'firmada' && paso(e2, 'topologia').corto === 'firmada' && e3.listos === 5 && e3.siguiente === 'capacidades'
+      && paso(e3, 'factor').detalle === 'firmado: 0,980' && paso(e3, 'factor').corto === 'firmado' && CC.estadoConfiguracion('morichal', conFactor).listos === 3,
+    `al firmar cambia la cuenta: la topología → «${e2.frase}»; el factor → «${e3.frase}» (y los otros campos no cambian)`)
+  // Sin meta firmada falta, pero lo siguiente del administrador sigue siendo lo suyo.
+  const sinMeta = { ...ctx, config: { ...ctx.config, campos: { ...ctx.config.campos, ceiba: { ...ctx.config.campos.ceiba, metas: [] } } } }
+  const e4 = CC.estadoConfiguracion('ceiba', sinMeta)
+  comprobar(e4.listos === 2 && !paso(e4, 'metas').listo && paso(e4, 'metas').detalle === 'sin meta firmada para hoy' && paso(e4, 'metas').corto === 'la firma el gerente' && e4.siguiente === 'topologia',
+    'sin meta firmada, el paso falta y lo firma el gerente; lo siguiente del administrador sigue siendo lo suyo')
+  comprobar(ms < 300, `D7: el estado de La Ceiba en ${ms.toFixed(0)} ms (menos de 300)`)
+}
+
+// F2 · Regulatorio (P-03; X4 §2 y §3.4): el inicio de regulatorio dice qué falta para el reporte a la ANH, quién lo
+// debe y para cuándo. Las paradas sin causa (sin el paso 5) salen de las filas de la ANH, sus barriles con la regla de
+// redondeo (LC-21 247 + LC-08 108 = 355, no 356) y la hora límite del reporte diario; la pantalla ya no lleva los
+// códigos en la primera capa, ni los pasos numerados, ni «se pierde» (T-8, T-10, T-11, P-reg-1, G-5, I-reg-2, UI-17).
+console.log('\n=== F2 · Regulatorio: qué falta para el reporte a la ANH, quién lo debe y para cuándo ===')
+{
+  const RG = await v.ssrLoadModule('/src/entities/regulatorio.ts')
+  const RD = await v.ssrLoadModule('/src/entities/redondeo.ts')
+  const curso = D.rangoDePeriodo('curso'), cerrado = D.rangoDePeriodo('cerrado')
+  let t0 = performance.now()
+  const ce = RG.reporteAnh({ campos: ['ceiba'], desde: curso.desde, hasta: curso.hasta }, ctx0)
+  const ms = performance.now() - t0
+  const en = RD.enterosDelPeriodo('ceiba', curso.desde, curso.hasta, ctx0)
+  const fila = eq => ce.paradas.find(p => p.equipo === eq)
+  comprobar(ce.cifra.valor === 2 && ce.cifra.unidad === 'paradas sin causa' && ce.paradas.map(p => `${p.equipo} ${p.bbl}`).join(', ') === 'LC-21 247, LC-08 108'
+      && ce.bblSinCausa === 355 && ce.bblSinCausa === en.porTramo['sin-asignar'] && f(L.libro(['ceiba'], curso.desde, curso.hasta, ctx0).pendiente) === '355'
+      && fila('LC-08').bbl === en.porEquipo['LC-08'] && Math.abs(fila('LC-08').exacto - 108.52) < 0.01,
+    `La Ceiba, octubre: ${ce.cifra.valor} ${ce.cifra.unidad}, ${ce.paradas.map(p => `${p.equipo} ${p.bbl}`).join(' + ')} = ${ce.bblSinCausa} bbl (el entero de «sin identificar»; LC-08 dice 108 y no 109)`)
+  // K2 · Bajo la cifra grande («2 paradas sin causa») la frase no repite la cuenta, y quién y para cuándo van en una
+  // oración; la pregunta que le llegó al operador sigue en cada parada (`pregunta`), a un toque.
+  comprobar(ce.estado === 'provisional' && ce.cifra.frase === 'No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl).'
+      && !/\b2 paradas\b/.test(ce.cifra.frase)
+      && ce.paradas.every(p => p.faltan.length === 6 && p.falta === 'faltan todos los pasos' && p.debe.rol === 'oper' && p.debe.nombre === 'operador de campo'
+        && p.pregunta?.texto === '¿Qué lo paró?' && p.limite === '2026-10-03T07:00:00-05:00' && !p.vencido && p.cuando === 'mañana antes de las 07:00')
+      && ce.cifra.explica === 'Las contesta el operador de campo mañana antes de las 07:00.',
+    `la frase de X4 §3.4 sin repetir la cifra: «${ce.cifra.frase}» y quién lo debe y para cuándo: «${ce.cifra.explica}»`)
+  // Una parada cuyo último día ya se reportó dice que venció (MN-22 de Morichal, cerrada el 1 de oct); septiembre se puede publicar.
+  const mo = RG.reporteAnh({ campos: ['morichal'], desde: curso.desde, hasta: curso.hasta }, ctx0)
+  const se = RG.reporteAnh({ campos: ['ceiba'], desde: cerrado.desde, hasta: cerrado.hasta }, ctx0)
+  const to = RG.reporteAnh({ campos: TODOS, desde: curso.desde, hasta: curso.hasta }, ctx0)
+  comprobar(mo.paradas.length === 1 && mo.paradas[0].equipo === 'MN-22' && mo.paradas[0].vencido && mo.paradas[0].cuando === 'venció el 2 de oct a las 07:00'
+      && mo.paradas[0].falta === 'falta quién, si fue planeada, la causa y el detalle'
+      && se.estado === 'publicable' && se.titulo === 'Se puede publicar' && se.cifra.valor === 0
+      && to.cifra.valor === 3 && to.bblSinCausa === ce.bblSinCausa + mo.bblSinCausa && ms < 300,
+    `MN-22 (Morichal) «${mo.paradas[0]?.cuando}»; septiembre en La Ceiba «${se.titulo}» sin paradas sin causa; todos los campos ${to.cifra.valor} (${to.bblSinCausa} bbl = la suma de cada campo); D7 en ${ms.toFixed(0)} ms`)
+  // La pantalla: sin los códigos en la primera capa, sin pasos numerados, sin «se pierde», con «Potencial del libro»
+  // y un solo «Exportar» (el CSV para la ANH va en la cabecera).
+  const { readFileSync } = await import('node:fs')
+  const fuente = a => readFileSync(`${RAIZ}src/${a}`, 'utf8')
+  const reg = fuente('pages/Regulatorio.tsx'), arb = fuente('widgets/choke/ArbolCircular.tsx'), exp = fuente('widgets/informe/Exportar.tsx') + fuente('widgets/informe/useExportar.ts')
+  comprobar(reg.includes('useReporteAnh') && !/font-mono|truncate|Exportar CSV|Potencial \(pruebas|descargarCsv/.test(reg) && reg.includes('NOMBRE_CIFRA.potencial')
+      && !/se pierde|\{i \+ 1\}\.|>modelo choke</.test(arb) && /\[&_\[data-cadena\]\]:hidden/.test(arb) && arb.includes('Ver los códigos ANH')
+      && exp.includes('CSV para la ANH') && exp.includes("pantalla === 'regulatorio'"),
+    'la pantalla: la cifra del motor arriba; sin monoespaciada ni calibraciones cortadas; «Potencial del libro»; los códigos detrás de «Ver los códigos ANH»; sin pasos numerados ni «se pierde»; el CSV para la ANH en «Exportar»')
+}
+
+// F3 · Bombas y pozos (fase 4 de la revisión: T-8/H15, G-16, G-5, H3, H5, H12, H17, UI-04 y UI-15). En Bombas,
+// Electrosumergibles, Pozos, Planta, Agua y la ficha ejecutiva: lo diferido no «se pierde» (se deja de producir);
+// «Si falla hoy» no se llama «si se para»; ningún título va en MAYÚSCULAS ni en letra de máquina; la marca de un
+// equipo no la decide la pantalla (la da la franja: una por equipo); y ninguna variable se dibuja con el indicador
+// viejo, cuya escala se movía con la lectura: la escala fija la da el motor. Y el motor la da para cada variable
+// que pinta la placa de una bomba o la ficha de un pozo (el mismo tag), así ninguna queda sin su indicador.
+console.log('\n=== F3 · Bombas y pozos: se deja de producir, «Si falla hoy», títulos en frase, la marca de la franja y la escala del motor ===')
+{
+  const { readFileSync, readdirSync, statSync } = await import('node:fs')
+  const SRC = `${RAIZ}src/`
+  const archivos = ['pages/Bombas.tsx', 'pages/Esp.tsx', 'pages/Pozos.tsx', 'pages/Planta.tsx', 'pages/Agua.tsx', 'widgets/equipo/FichaEjecutiva.tsx']
+  for (const d of ['bombas', 'pozos', 'planta'])
+    for (const x of readdirSync(`${SRC}widgets/${d}`)) if (statSync(`${SRC}widgets/${d}/${x}`).isFile()) archivos.push(`widgets/${d}/${x}`)
+  // Sin los comentarios: lo que se lee en la pantalla es el código, no la nota que explica por qué.
+  const fuente = a => readFileSync(`${SRC}${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(l)).join('\n')
+  const con = re => archivos.filter(a => re.test(fuente(a)))
+  const pierde = con(/\bse pierden?\b|\bpierde\s+[<$\d{]|habrían perdido/i)
+  const seSePara = con(/si se para|SI SE PARA|Si para ahora/)
+  const enMayus = t => /[A-ZÁÉÍÓÚÑ]{4,}/.test(t) && t === t.toUpperCase() && !/^[A-Z]{2,}[-/]?\d*$/.test(t)
+  const mayus = archivos.flatMap(a => [...[...fuente(a).matchAll(/titulo[=:]\s*["'`]([^"'`]+)["'`]/g)].map(x => x[1]),
+    ...[...fuente(a).matchAll(/>\s*([A-ZÁÉÍÓÚÑ¿][A-ZÁÉÍÓÚÑ ·,¿?]{5,})\s*</g)].map(x => x[1].trim())].filter(enMayus).map(t => `${a}: ${t}`))
+  const maquina = con(/font-mono|toUpperCase\(\)\}/)
+  const prioridadDePantalla = con(/MarcaPrioridad s=\{[a-z.]*severidad\}|sevPozo|altoImpacto \? 1 : 2|s=\{1\} tamano=\{14\}/)
+  const viejo = con(/<Analogico\b/)
+  comprobar(pierde.length === 0 && seSePara.length === 0 && mayus.length === 0 && maquina.length === 0 && prioridadDePantalla.length === 0 && viejo.length === 0
+      && con(/Potencial ahora/).length === 0,
+    `en las ${archivos.length} pantallas y widgets: nada «se pierde» (${pierde.join(', ') || 'ninguno'}), ningún «si se para» (${seSePara.join(', ') || 'ninguno'}), ningún título en MAYÚSCULAS (${mayus.slice(0, 3).join(' · ') || 'ninguno'}) ni en letra de máquina (${maquina.join(', ') || 'ninguno'}), ninguna marca de equipo decidida en la pantalla (${prioridadDePantalla.join(', ') || 'ninguna'}), ningún indicador con la escala móvil (${viejo.join(', ') || 'ninguno'}) y «Potencial del libro»`)
+  // El motor da la escala (y el gris y la marca) de cada variable que pinta la placa o la ficha del pozo.
+  const ETF = await v.ssrLoadModule('/src/entities/equipos-tecnico.ts')
+  const APIE = await v.ssrLoadModule('/src/shared/api/equipos.ts')
+  const APID = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+  const FRF = await v.ssrLoadModule('/src/entities/condiciones.ts')
+  const ctx = L.contextoInicial()
+  const cal = L.calendario()[0]
+  const bombas = APIE.pedirBombas(['ceiba', 'morichal'], new Date(cal.desde), new Date(cal.hasta), ctx, V0)
+  const tags = (c, e) => { const n = ETF.nivelEquipo(c, e, ctx, V0); return new Set([...(n?.senales ?? []), ...(n?.plegadas ?? [])].map(s => s.tag)) }
+  const sinEscala = bombas.flatMap(b => b.senales.filter(s => !tags(b.campo.id, b.eq.id).has(s.tag)).map(s => `${b.eq.id}:${s.tag}`))
+  const pozo = APID.pedirPozo('ceiba', 'LC-14', new Date(cal.desde), new Date(cal.hasta), ctx)
+  const sinEscalaPozo = (pozo?.senales ?? []).filter(s => !tags('ceiba', 'LC-14').has(s.tag)).map(s => s.tag)
+  // La marca de cada placa: la de la franja, no la severidad de su estado (MPP-301: ▲ atención, aunque su estado diga aviso).
+  const mpp = bombas.find(b => b.eq.id === 'MPP-301')
+  const deFranja = FRF.franja(['morichal'], ctx).equipos.find(e => e.equipo === 'MPP-301')?.condicion
+  comprobar(bombas.length >= 3 && sinEscala.length === 0 && pozo && sinEscalaPozo.length === 0
+      && ETF.nivelEquipo('morichal', 'MPP-301', ctx, V0).condicion === deFranja && deFranja === 'atencion' && mpp.eq.severidad === 3,
+    `el motor da la escala fija de cada variable de las ${bombas.length} placas (${sinEscala.join(', ') || 'todas'}) y de la ficha de LC-14 (${sinEscalaPozo.join(', ') || 'todas'}); la marca de MPP-301 es la de la franja (${deFranja}), no la de su estado (prioridad ${mpp.eq.severidad})`)
+}
+
+// F2 · Riesgo y agua (fase 4 de la revisión: T-8/G-1/G-2/H15, H3, H16, H17, G-16, T-9/P-planta-2, P-planta-3, G-6,
+// P-agua-1, P-agua-2, H32, P-09, P-riesgo-1, T-10, T-11, A18, H22, UI-04 y UI-15). En Riesgo, «Si falla hoy» y los
+// widgets de la tubería y del agua (`widgets/choke`): lo diferido no «se pierde»; lo que sale hoy se llama «Sale hoy»
+// (como en La planta viva); la marca de cada equipo es la de la franja (una por equipo) y lleva su palabra, y sin
+// condición no hay marca; el costo de una falla no se llama «si falla hoy» (D-2); ni puestos numerados, ni «modelo
+// choke» como rótulo, ni listas numeradas junto a una marca; sin letra de máquina ni condensada; el salto a «Si falla
+// hoy» respeta «reducir movimiento». Y la línea corta de lo que limita sale de las cifras del motor.
+console.log('\n=== F2 · Riesgo y agua: se deja de producir, la marca de la franja, la cuenta detrás de «Ver la cuenta» ===')
+{
+  const { readFileSync } = await import('node:fs')
+  const SRC = `${RAIZ}src/`
+  // K1 · P-10: Riesgo del jefe y de confiabilidad vive en Equipos (`widgets/riesgo/EnRiesgo.tsx`, con su salto en
+  // `ancla.ts`); K1 · P-16: la tubería de antes (`choke/Tuberia.tsx`) se borró. Se lee lo que exista.
+  const { existsSync: existeRie } = await import('node:fs')
+  const archivos = ['widgets/riesgo/EnRiesgo.tsx', 'widgets/riesgo/ancla.ts', 'widgets/riesgo/SiFallaHoy.tsx', 'widgets/riesgo/condicion.ts',
+    ...['Tuberia.tsx', 'Agua.tsx', 'AguaHoy.tsx', 'Serie.tsx', 'Escalera.tsx', 'Ramas.tsx', 'Campos.tsx', 'palabras.ts'].map(x => `widgets/choke/${x}`)]
+    .filter(a => existeRie(`${SRC}${a}`))
+  // Sin los comentarios: lo que se lee en la pantalla es el código, no la nota que explica por qué.
+  const fuente = a => readFileSync(`${SRC}${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(l)).join('\n')
+  const con = (re, xs = archivos) => xs.filter(a => re.test(fuente(a)))
+  const pierde = con(/\bse pierden?\b|\bpierden\b|se perdió|se está perdiendo|dónde se pierde/i)
+  const pasaHoy = con(/[Pp]asa hoy/)
+  // Letra de máquina o condensada en lo que se lee (los meses y las abreviaturas de un eje sí van condensados: Serie).
+  const maquina = con(/font-mono|font-cond|>\s*(PARADA|HOY)\s*</, archivos.filter(a => !a.endsWith('Serie.tsx')))
+  const marcaDePantalla = con(/MarcaPrioridad s=\{(r\.altoImpacto|perdiendo\[0\]\.altoImpacto|r\.prioridad|sev\(f\))|severidad \?\? 0/, ['widgets/riesgo/EnRiesgo.tsx', 'widgets/riesgo/SiFallaHoy.tsx'])
+  const costoComoSiFalla = con(/\['Si falla hoy', `≈|rotulo="si falla hoy"/, ['widgets/riesgo/EnRiesgo.tsx'])
+  const numerados = con(/list-decimal|\[grid-area:n\]|<span>modelo choke<\/span>/)
+  const rd = `${fuente('widgets/riesgo/EnRiesgo.tsx')}\n${fuente('widgets/riesgo/ancla.ts')}`
+  const suave = /behavior: 'smooth'/.test(rd) && !/prefers-reduced-motion/.test(rd)
+  comprobar(pierde.length === 0 && pasaHoy.length === 0 && maquina.length === 0 && marcaDePantalla.length === 0 && costoComoSiFalla.length === 0 && numerados.length === 0 && !suave
+      && /titulo="Por qué"/.test(rd) && !/Se deja de producir ahora, por causa/.test(rd) && /FAMILIA\[/.test(rd),
+    `Riesgo, «Si falla hoy» y los widgets de la tubería y del agua: nada «se pierde» (${pierde.join(', ') || 'ninguno'}), «Sale hoy» y no «Pasa hoy» (${pasaHoy.join(', ') || 'ninguno'}), sin letra de máquina (${maquina.join(', ') || 'ninguno'}), ninguna marca decidida en la pantalla (${marcaDePantalla.join(', ') || 'ninguna'}), el costo de una falla con su nombre (${costoComoSiFalla.join(', ') || 'bien'}), sin puestos ni listas numeradas ni el rótulo «modelo choke» (${numerados.join(', ') || 'ninguno'}), el reparto se llama «Por qué», la familia es la de campo y el salto respeta «reducir movimiento»`)
+
+  // Las palabras de la tubería: la línea corta sale de las cifras del motor; «sin firmar» una vez, lo del demo en su ⓘ.
+  const PAL = await v.ssrLoadModule('/src/widgets/choke/palabras.ts')
+  const RPA = await v.ssrLoadModule('/src/entities/choke-reparto.ts')
+  const FA = await v.ssrLoadModule('/src/shared/lib/formato.ts')
+  const curso = D.rangoDePeriodo('curso')
+  const tub = RPA.tuberiaCampo('ceiba', curso.desde, curso.hasta, ctx0, V0)
+  const hoy = tub.tramos.find(x => x.tramo === 'planta')?.disponibleHoy
+  const corta = PAL.limitaEnCorto(tub.limita, hoy, FA.n0)
+  const textos = Object.values(PAL.TEXTO).join(' ')
+  comprobar(corta === 'Limitan los pozos. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.' && PAL.limitaEnCorto('planta') === 'Limita la planta.'
+      && PAL.ESTADO_TRAMO.demo === 'sin firmar' && !/perd/.test(textos) && /dato del demo/.test(PAL.TEXTO.sinFirmar),
+    `la línea de lo que limita, de las cifras del motor: «${corta}»; «sin firmar» en cada caja y «dato del demo» en su ⓘ; los textos de la tubería no dicen «perder»`)
+
+  // Una marca por equipo: la de la franja (la misma de la cabecera y de Equipos), con su palabra; sin condición, ninguna.
+  const CDR = await v.ssrLoadModule('/src/widgets/riesgo/condicion.ts')
+  const FRR = await v.ssrLoadModule('/src/entities/condiciones.ts')
+  const fr = FRR.franja(['ceiba'], ctx0)
+  const filas = D.riesgoAhora(['ceiba'], ctx0)
+  const conMarca = filas.map(r => `${r.equipo}:${CDR.condicionDe(fr, r.campoId, r.equipo) ?? '—'}`)
+  comprobar(CDR.condicionDe(fr, 'ceiba', 'P-201B') === 'alarma' && CDR.condicionDe(fr, 'ceiba', 'LC-21') === 'atencion' && CDR.condicionDe(fr, 'ceiba', 'LC-14') === undefined
+      && filas.every(r => CDR.condicionDe(fr, r.campoId, r.equipo) === fr.equipos.find(e => e.equipo === r.equipo)?.condicion)
+      && CDR.PALABRA_CONDICION.alarma === 'alarma' && CDR.PALABRA_CONDICION.atencion === 'atención',
+    `cada fila de Riesgo lleva la marca de su equipo en la franja, con su palabra (${conMarca.join(', ')}); un pozo sin condición, sin marca`)
+}
+
+// F2 · Diferidos, mantenimiento y confiabilidad (fase 4 de la revisión: P-mant-1, G-15, G-16, H3, G-5, G-8, P-09,
+// H11, H18, H20, H22, V2-1, P-conf-1, UI-04 y UI-15). Lo programado contra lo que no, en una frase del motor con
+// enteros que suman la raíz (la regla de redondeo); y en el código de esas pantallas, lo que no debe volver.
+console.log('\n=== F2 · Diferidos, mantenimiento y confiabilidad ===')
+{
+  const MT = await v.ssrLoadModule('/src/entities/mantenimiento.ts')
+  const { readFileSync } = await import('node:fs')
+  const curso = D.rangoDePeriodo('curso')
+  const lbC = L.libro(['ceiba'], curso.desde, curso.hasta, ctx0)
+  const pc = MT.programadoDe(lbC)
+  // P-mant-1: el ejemplo literal de X4 §6.1, con la raíz del libro (1.046).
+  comprobar(pc.frase === 'Ninguna parada de este mes estaba programada: los 1.046 bbl fueron fallas o siguen sin identificar.'
+      && pc.diferido === 1046 && pc.programado === 0 && pc.noProgramado === 1046 && pc.pct === 0,
+    `P-mant-1 · La Ceiba, octubre: «${pc.frase}»`)
+  // Con algo programado, las dos partes suman la raíz y el porcentaje cierra con lo no programado.
+  const conProg = []
+  for (const per of ['cerrado', 'trimestre', 'ytd', 'doce']) for (const c of TODOS) {
+    const r = D.rangoDePeriodo(per), lb = L.libro([c], r.desde, r.hasta, ctx0)
+    if (lb.planeado > 0.5 && lb.noPlaneado > 0.5) conProg.push({ per, c, lb, x: MT.programadoDe(lb) })
+  }
+  const malos = conProg.filter(({ lb, x }) => x.programado + x.noProgramado !== x.diferido || x.diferido !== Math.round(lb.diferido)
+    || !x.frase.includes(`${x.programado.toLocaleString('es-CO')} estaban programados (${x.pct} %)`) || !x.frase.startsWith('De los ') || !/del período/.test(x.frase))
+  comprobar(conProg.length > 0 && malos.length === 0,
+    `P-mant-1 · con paradas programadas (${conProg.length} períodos-campo): programado + no programado = la raíz del libro, y la frase lo dice (${conProg[0] ? `«${conProg[0].x.frase}»` : 'ninguno'}${malos.length ? `; mal: ${malos.map(m => `${m.c} ${m.per}`).join(', ')}` : ''})`)
+
+  // En el código de las pantallas: lo que la revisión quitó no vuelve.
+  const fuente = a => readFileSync(`${RAIZ}src/${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(l)).join('\n')
+  const mant = fuente('pages/Mantenimiento.tsx'), conf = fuente('pages/Confiabilidad.tsx'), aci = fuente('widgets/confiabilidad/Aciertos.tsx')
+  const par = fuente('widgets/diferidos/Paretos.tsx'), cua = fuente('widgets/diferidos/Cuadre.tsx'), mes = fuente('widgets/diferidos/MesAMes.tsx'), dia = fuente('widgets/produccion/Diaria.tsx')
+  const dif = fuente('pages/Diferidos.tsx')
+  // La rama de todos los roles (la de «decision» se va con P-21): desde su `return (` a dos espacios.
+  const principal = dif.slice(dif.indexOf('\n  return ('))
+  comprobar(!/\['Si falla hoy', `≈/.test(mant) && /Le costaría la falla/.test(mant) && !/equipo avisando|equipos avisando/.test(mant) && /useCifrasDeUnNombre\(ids\)\.avisan/.test(mant),
+    'G-15 y G-16 · Mantenimiento: «N equipo avisa» con el conteo único de «Equipos que avisan», y el costo de la falla en bbl con su nombre (no «si falla hoy»)')
+  comprobar(!/MarcaPrioridad s=\{(p\.arrancoSinIdentificar|r\.prioridad)/.test(mant) && /useCondiciones\(ids\)/.test(mant),
+    'H3 · Mantenimiento: la marca de cada equipo es la de su condición en la franja, no la de la tarea ni la de la fila de riesgo')
+  comprobar(![mant, conf, aci, principal].some(x => /font-mono|text-\[(3\d|4\d)px\]/.test(x)) && !/text-\[26px\]/.test(conf) && (conf.match(/text-\[24px\]/g) ?? []).length === 1 && !/text-\[24px\]/.test(aci),
+    'UI-15 y H11 · sin letra de máquina ni cifras de 36 o 40 px; en Confiabilidad, a 24 px solo la de cada flota (tres o menos); el vigía a 18')
+  comprobar(!/<Encabezado /.test(principal) && /<Cifra v=\{res\}/.test(principal) && /conMaximo/.test(principal) && /Potencial del libro/.test(cua) && !/No producido/.test(cua) && /= Diferido/.test(cua),
+    'P-diferidos-1, G-5 y G-8 · Diferidos abre con el bloque de la cifra de Resultados; el diferido por día va en «Dónde bajarlo»; «Potencial del libro» y «= Diferido» en el cuadre')
+  comprobar(!/dato-5/.test(par) && /FAMILIA_EQUIPO\[f\.tipo\]/.test(par) && !/máx\. \$/.test(par) && !/<rect[^>]*width=\{7\}/.test(mes) && /MarcaCondicion c="aviso"/.test(mes),
+    'V2-1, P-09, G-10 y H20 · las barras secundarias en --dato3, la familia «bomba de agua», «máximo» sin abreviar y la marca de aviso de verdad sobre el mes que pasó su máximo')
+  comprobar(!/strokeDasharray="5 3"/.test(dia) && !/strokeDasharray="3 3"/.test(dia) && /día en curso/.test(dia) && /potencial del libro/.test(dia),
+    'H18 · en la producción día a día lo discontinuo es solo la meta: el potencial va continuo y claro, y el día en curso, con su punto hueco y su palabra')
+  comprobar(/¿Le creo al vigía\?/.test(aci) && !/¿Acierta el vigía\?/.test(aci) && /Ver lo que anunció/.test(aci) && /data-fallas-por-mes/.test(conf) && /aria-label=\{ariaFallas\}/.test(conf),
+    'P-conf-1 y H22 · «¿Le creo al vigía?» con las dos cifras que contestan y lo demás detrás de «Ver lo que anunció»; «Fallas por mes» con su cifra por mes y su frase')
+}
+
+// F3 · Equipos y el motor de «Si falla hoy» (fase 4 de la revisión: P-02, P-10, G-15, G-1b, H2, H5, T-8/H15 en
+// criticidad.ts y choke-agua.ts, P-agua-1). Cada comprobación falla con el motor de antes.
+console.log('\n=== F3 · Equipos: la respuesta de confiabilidad, «Avisan» = «Equipos que avisan», la lista suma lo que se deja de producir ===')
+{
+  const ET = await v.ssrLoadModule('/src/entities/equipos-tecnico.ts')
+  const RS = await v.ssrLoadModule('/src/entities/resultados.ts')
+  const CR = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const AG = await v.ssrLoadModule('/src/entities/choke-agua.ts')
+  const ctx = L.contextoInicial()
+  const alcances = [...TODOS.map(c => [c]), TODOS]
+  const nombre = cs => (cs.length > 1 ? 'todos' : cs[0])
+  // G-15: el filtro «Avisan» es el mismo conteo de «Equipos que avisan» (NOMBRE_CIFRA), en cada campo y en todos.
+  const avisan = alcances.map(cs => ({ cs, lista: ET.listaEquipos(cs, ctx, V0).cuentas.estado.avisan, cifra: RS.cifrasDeUnNombre(D.riesgoAhora(cs, ctx), cs.map(c => D.estadoCampo(c, ctx))).avisan }))
+  comprobar(avisan.every(x => x.lista === x.cifra) && avisan.find(x => x.cs[0] === 'ceiba').lista === 1,
+    `G-15 · «Avisan» cuenta lo mismo que «Equipos que avisan»: ${avisan.map(x => `${nombre(x.cs)} ${x.lista}/${x.cifra}`).join(', ')}`)
+  // G-1b y H2: las cifras propias de lo parado son enteros que suman la raíz de cada campo (1.665 + 301 = 1.966); un pozo
+  // cerrado por otro equipo no suma aparte: va «dentro de los 1.665 de P-201B». En todos, la suma de las raíces (2.650).
+  const sumas = alcances.map(cs => {
+    const vv = ET.listaEquipos(cs, ctx, V0)
+    const propias = vv.filas.filter(f => f.parado && f.cifra.valor !== null)
+    return { cs, suma: propias.reduce((a, f) => a + f.cifra.valor, 0), raiz: cs.reduce((a, c) => a + Math.round(D.estadoCampo(c, ctx).perdiendoBpd), 0), enteros: propias.every(f => Number.isInteger(f.cifra.valor)) }
+  })
+  const ce = ET.listaEquipos(['ceiba'], ctx, V0), fila = id => ce.filas.find(f => f.equipo === id)
+  comprobar(sumas.every(x => x.suma === x.raiz && x.enteros) && sumas.find(x => x.cs[0] === 'ceiba').suma === 1966 && sumas.at(-1).suma === 2650
+      && fila('LC-16').cifra.valor === null && fila('LC-16').cifra.dentroDe?.equipo === 'P-201B' && fila('LC-16').cifra.detalle === 'dentro de los 1.665 de P-201B'
+      && fila('LC-07').cifra.dentroDe?.valor === 1665 && fila('P-201B').cifra.valor === 1665 && fila('LC-21').cifra.valor === 301,
+    `G-1b y H2 · la columna «se deja de producir» suma la raíz de cada campo, en enteros: ${sumas.map(x => `${nombre(x.cs)} ${f(x.suma)}`).join(', ')}; LC-16 y LC-07, «${fila('LC-16').cifra.detalle}»`)
+  const n3 = ET.nivelEquipo('ceiba', 'P-201B', ctx, V0), lc16 = ET.nivelEquipo('ceiba', 'LC-16', ctx, V0), lc07 = ET.nivelEquipo('ceiba', 'LC-07', ctx, V0)
+  comprobar(n3.cifra.valor === fila('P-201B').cifra.valor && lc16.cifra.valor + lc07.cifra.valor === n3.cifra.valor && Number.isInteger(lc16.cifra.valor),
+    `H2 · el nivel 3 dice el mismo entero que la lista (P-201B ${f(n3.cifra.valor)}), y sus pozos cerrados son partes de él (${f(lc16.cifra.valor)} + ${f(lc07.cifra.valor)})`)
+  // H2 · el diferido del período de cada pozo (Pozos y su detalle en el nivel 3) sale del reparto único del campo:
+  // las filas suman la raíz y LC-08 dice 108, como en La planta viva, Resultados e Identificar (antes, 109 suelto).
+  const DFP = await v.ssrLoadModule('/src/shared/api/diferidos.ts'), RDP = await v.ssrLoadModule('/src/entities/redondeo.ts')
+  const oct0 = new Date('2026-10-01T00:00:00-05:00'), oct1 = new Date('2026-10-31T23:59:59-05:00')
+  const pozosOk = TODOS.map(c => ({ c, suma: DFP.pedirPozos(c, oct0, oct1, ctx).reduce((a, x) => a + x.diferidoEntero, 0), raiz: RDP.enterosDelPeriodo(c, oct0, oct1, ctx).raiz }))
+  const lc08 = DFP.pedirPozos('ceiba', oct0, oct1, ctx).find(x => x.pozo.id === 'LC-08')
+  comprobar(pozosOk.every(x => x.suma === x.raiz) && lc08.diferidoEntero === 108 && Object.values(lc08.enteroPorEvento).reduce((a, x) => a + x, 0) === 108,
+    `H2 · el diferido de cada pozo en octubre, en enteros que suman la raíz (${pozosOk.map(x => `${x.c} ${f(x.suma)}`).join(', ')}); LC-08 = ${lc08.diferidoEntero}`)
+  // P-02: la respuesta de confiabilidad (X4 §3.4): el primero de «Si falla hoy», su frase y los tres primeros.
+  const mo = ET.listaEquipos(['morichal'], ctx, V0)
+  comprobar(f(ce.primero.valor) === '3.059' && ce.primero.detalle === 'después de 2 min de colchón' && ce.primero.equipos.map(e => e.equipo).join() === 'P-201A,P-201C'
+      && ce.primero.frase === 'Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila. Ahí va el próximo instrumento.'
+      && ce.primero.filas.map(x => x.equipo).join(' ') === 'P-201A P-201C LC-11'
+      && mo.primero.frase === 'Ataque primero MPP-301: ya avisa.' && f(mo.primero.valor) === '1.600',
+    `P-02 · La Ceiba: ${f(ce.primero.valor)} bbl/d, «${ce.primero.frase}» (${ce.primero.filas.map(x => x.equipo).join(', ')}); Morichal: «${mo.primero.frase}» (${f(mo.primero.valor)})`)
+  // P-10: «¿Dónde va el próximo instrumento?» no se repite cuando la frase ya lo dice; el jefe ve lo que no conviene intervenir.
+  comprobar(ce.instrumento.length === 0 && mo.instrumento.length === 1 && mo.instrumento[0] === CR.criticidadDelCampo('morichal', ctx).proximoInstrumento
+      && ce.noIntervenir.join() === CR.criticidadDelCampo('ceiba', ctx).noIntervenir && ET.listaEquipos(TODOS, ctx, V0).instrumento.some(t => t.startsWith('La Ceiba: ')),
+    `P-10 · el próximo instrumento arriba de Equipos (Morichal: «${mo.instrumento[0]?.slice(0, 60)}…»; en La Ceiba ya lo dice la frase) y «${ce.noIntervenir[0]}»`)
+  // H5: sin ningún límite declarado no hay escala (no se dibuja); con límites, de ellos solos; las tendencias, siempre con escala.
+  comprobar(ET.escalaDe('psi', undefined, []) === null && ET.escalaDe('psi', [10, Infinity], [8]).join() === '0,20' && ET.escalaDe('bbl/d', [66800, 89250], []).join() === '44350,111700'
+      && ET.escalaDe('°C', [-Infinity, 85], [85]).join() === '0,170' && ET.escalaDe('%', undefined, []).join() === '0,100'
+      && n3.tendencias.series.every(x => Array.isArray(x.escala)),
+    'H5 · la escala sale de los límites firmados (la banda en el tercio del medio); sin límites, ninguna; en %, 0 a 100')
+  // T-8 / H15: lo diferido no «se pierde» en las frases del motor de «Si falla hoy» y del agua, en ningún campo.
+  const pierde = /\bse pierden?\b|\bpierde\s+[\d.]+|\bpierden\b/
+  const frasesCr = TODOS.flatMap(c => { const x = CR.criticidadDelCampo(c, ctx); return [...x.ranking, ...x.parados].flatMap(r => [r.porque, r.subio?.porque ?? '']) })
+  const frasesAg = TODOS.flatMap(c => AG.tuberiaAgua(c, ctx, V0).frases)
+  const malas = [...frasesCr, ...frasesAg].filter(t => pierde.test(t))
+  comprobar(malas.length === 0 && frasesCr.some(t => /se dejan de producir|deja de producir/.test(t)) && frasesAg.some(t => /dejan de producirse/.test(t)),
+    `T-8 · nada «se pierde» en ${frasesCr.length} frases de «Si falla hoy» y ${frasesAg.length} del agua (${malas[0] ?? 'ninguna'})`)
+  // P-agua-1: la frase de campo de cada campo, sin las cuentas.
+  comprobar(AG.tuberiaAgua('guacamayo', ctx, V0).fraseCorta === 'Con las dos bombas, al agua le sobra espacio.' && TODOS.every(c => AG.tuberiaAgua(c, ctx, V0).fraseCorta.length > 0),
+    'P-agua-1 · la tubería del agua en una frase de campo; las cuentas, en su ⓘ')
+}
+
+// F2 · La planta viva y Resultados (fase 4 de la revisión: H2, H1, P-01, P-12, P-13, P-14, G-7, H10, H28, P-19,
+// P-20, A16, I-ger-3, P-resultados-1, P-mant-1 en Resultados). La regla de redondeo (V2): se redondea una vez, en
+// el motor, de arriba abajo; las partes, por mayor residuo; encima de la raíz, la suma de las raíces. Cada
+// comprobación falla sin su arreglo (antes: LC-08 = 109 suelto, 247 + 109 = 356 bajo «355 sin causa», 2.377 contra
+// 2.376 de las filas, la barra de La Zarza llena, producción con la cifra del gerente…).
+console.log('\n=== F2 · La planta viva y Resultados: la regla de redondeo, la lente técnica y las frases ===')
+{
+  const RD = await v.ssrLoadModule('/src/entities/redondeo.ts')
+  const PV = await v.ssrLoadModule('/src/entities/planta-viva.ts')
+  const RS = await v.ssrLoadModule('/src/entities/resultados.ts')
+  const CHA = await v.ssrLoadModule('/src/shared/api/choke.ts')
+  const curso = D.rangoDePeriodo('curso')
+  const q = (campos, momento) => ({ campos, momento, desde: curso.desde, hasta: curso.hasta })
+  const suma = xs => xs.reduce((a, x) => a + x, 0)
+
+  // 1. El reparto por mayor residuo: suma el total, desempata siempre igual y no da negativos.
+  const r1 = RD.repartirEnteros(1046, [{ id: 'P-201B', valor: 573.06 }, { id: 'LC-21', valor: 246.53 }, { id: 'SE-2', valor: 117.92 }, { id: 'LC-08', valor: 108.52 }])
+  const r2 = RD.repartirEnteros(355, [{ id: 'LC-21', valor: 246.525 }, { id: 'LC-08', valor: 108.518 }])
+  const empate = RD.repartirEnteros(3, [{ id: 'b', valor: 1.5 }, { id: 'a', valor: 1.5 }])
+  comprobar(r1.join() === '573,247,118,108' && r2.join() === '247,108' && empate.join() === '1,2' && RD.repartirEnteros(5, [{ id: 'x', valor: -2 }, { id: 'y', valor: 4.6 }]).join() === '0,5'
+      && RD.porcentajesEnteros([{ id: 'a', valor: 573.06 }, { id: 'b', valor: 246.53 }, { id: 'c', valor: 117.92 }, { id: 'd', valor: 108.52 }]).join() === '55,24,11,10',
+    'H2 · el reparto por mayor residuo: 573 + 247 + 118 + 108 = 1.046, 247 + 108 = 355, el empate al id, sin negativos y 55 + 24 + 11 + 10 = 100 %')
+
+  // 2. La Ceiba, octubre: un entero por nodo, el mismo en todas las vistas (LC-08 = 108).
+  const ce = RD.enterosDelPeriodo('ceiba', curso.desde, curso.hasta, ctx0)
+  const ceP = PV.plantaViva(q(['ceiba'], 'despues'), ctx0, V0), ceD = PV.plantaViva(q(['ceiba'], 'durante'), ctx0, V0)
+  const rc = RS.resultados({ rol: 'ger', campos: ['ceiba'], desde: curso.desde, hasta: curso.hasta }, ctx0, V0)
+  const tramosP = ceP.planta.tramos.map(t => t.entero), sinP = ceP.planta.sinIdentificar.entero
+  const lc08 = [ceP.porEquipo.find(e => e.equipo === 'LC-08')?.bblEntero, rc.porEquipo.filas.find(e => e.equipo === 'LC-08')?.bblEntero, ce.porEquipo['LC-08'],
+    ce.porElemento['sin-asignar']['LC-08'], suma(Object.entries(ce.porEvento).filter(([k]) => k.includes('LC08')).map(([, n]) => n))]
+  comprobar(ce.raiz === 1046 && suma(tramosP) + sinP === 1046 && tramosP.join() === '0,118,573,0' && sinP === 355 && ceP.cifras.despues.entero === 1046
+      && ceP.esteMes.bblEntero === 1046 && rc.cifra.entero === 1046 && lc08.every(n => n === 108) && ce.porEquipo['LC-21'] === 247
+      && suma(ceP.porEquipo.map(e => e.bblEntero)) === 1046 && suma(ceP.porEquipo.map(e => e.pctEntero)) === 100
+      && suma(rc.porEquipo.filas.map(e => e.bblEntero)) === 1046 && cerca(ceP.cifras.despues.valor, L.libro(['ceiba'], curso.desde, curso.hasta, ctx0).diferido),
+    `H2 · La Ceiba: 118 + 573 + 355 = 1.046 en la tubería, en «Este mes» y en Resultados; por equipo 573 + 247 + 118 + 108; LC-08 = 108 en las cinco lecturas (${lc08.join(', ')}); el exacto se conserva`)
+  const hoja = ceP.planta.tramos.find(t => t.tramo === 'planta')
+  comprobar(hoja.porque.reduce((a, r) => a + r.entero, 0) === hoja.entero && ceD.planta.tramos.find(t => t.tramo === 'planta').entero + ceD.planta.sinIdentificar.entero === ceD.cifras.durante.entero
+      && ceD.cifras.durante.entero === 1966 && ceD.cifras.durante.explica.includes('1.665 de esos barriles') && ceD.cifras.durante.explica.includes('Los otros 301'),
+    'H2 · las ramas del ¿por qué? suman su tramo, y ahora 1.665 + 301 = 1.966 con las mismas cifras en la frase')
+
+  // 3. Todos los campos: encima de la raíz, la suma de las raíces (2.376), y cada fila con la de su campo.
+  const toP = PV.plantaViva(q(TODOS, 'despues'), ctx0, V0), toD = PV.plantaViva(q(TODOS, 'durante'), ctx0, V0)
+  const rt = RS.resultados({ rol: 'ger', campos: TODOS, desde: curso.desde, hasta: curso.hasta }, ctx0, V0)
+  const pa = PV.plantaViva(q(['palmar'], 'despues'), ctx0, V0)
+  const rep = CHA.pedirRepartoChoke({ campos: TODOS, desde: curso.desde, hasta: curso.hasta }, ctx0, V0, {})
+  comprobar(toP.cifras.despues.entero === 2376 && suma(toP.filas.map(x => x.entero)) === 2376 && toP.esteMes.bblEntero === 2376 && rt.cifra.entero === 2376
+      && toP.filas.find(x => x.campoId === 'palmar').entero === 77 && pa.cifras.despues.entero === 77 && toD.cifras.durante.entero === 2650 && suma(toD.filas.map(x => x.entero)) === 2650
+      && rep.enteros.raiz === 2376 && suma(Object.values(rep.enteros.porTramo)) === 2376 && suma(Object.values(rep.enteros.porEscalon)) === 2376 && f(rep.diferido) === '2.377',
+    'H2 · todos los campos: 2.376 = 1.253 + 1.046 + 77 en la cifra, en las filas, en Resultados y en el reparto de «Por dónde se trabó» (por tramo y por escalón); El Palmar 77 en su fila y en su vista; ahora 2.650')
+
+  // 4. H1: un campo que produjo sobre su potencial no tiene diferido por día (antes: una barra llena).
+  const lbT = L.libro(TODOS, curso.desde, curso.hasta, ctx0)
+  const za = lbT.porCampo.find(c => c.campoId === 'zarza'), gu = lbT.porCampo.find(c => c.campoId === 'guacamayo')
+  comprobar(za.brecha <= 0 && za.diferidoDia === 0 && gu.diferidoDia === 0 && lbT.porCampo.every(c => c.diferidoDia >= 0)
+      && cerca(lbT.porCampo.find(c => c.campoId === 'ceiba').diferidoDia * lbT.meta.dias, lbT.porCampo.find(c => c.campoId === 'ceiba').brecha),
+    'H1 · «Por campo»: lo diferido por día con piso en 0 (La Zarza y Guacamayo, brecha ≤ 0, dan 0); La Ceiba, su brecha entre los días')
+
+  // 5. P-01: la lente técnica de producción (X4 §3.4): lo que sale hoy, lo que limita y los 3 primeros de «Si falla hoy».
+  const t = ceD.tecnica
+  comprobar(PV.conLenteTecnica('prod') && !PV.conLenteTecnica('ger') && t.cifra.entero === 9394 && t.cifra.frase === 'salen hoy de La Ceiba.'
+      && t.cifra.explica === 'Limitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.'
+      && t.cifra.fraseCorta === 'Limitan los pozos: a la planta le sobran 1.143 bbl/d. Hoy salen 9.394.' && t.cifra.fraseCorta.split(/\s+/).length <= 20
+      && t.siFallaHoy.map(x => `${x.equipo} ${x.texto}`).join(' | ') === 'P-201A 3.059 bbl/d después de 2 min | P-201C 3.059 bbl/d después de 2 min | LC-11 1.031 bbl/d · sin colchón'
+      && t.siFallaHoy[0].familia === 'bomba de agua' && t.siFallaHoy[0].sinInstrumento
+      && t.tramos.map(x => x.texto).join(' | ') === 'dan 11.857 bbl/d | caben 13.000 bbl/d · le sobran 1.143 | caben 14.000 bbl/d · le sobran 2.143'
+      && PV.plantaViva(q(TODOS, 'durante'), ctx0, V0).tecnica === null && PV.plantaViva(q(['zarza'], 'durante'), ctx0, V0).tecnica === null,
+    `P-01 · producción: «${f(t.cifra.entero)} barriles por día ${t.cifra.frase}» / «${t.cifra.explica}»; Si falla hoy: ${t.siFallaHoy.map(x => x.equipo).join(', ')}`)
+
+  // 6. P-12, P-13, P-14, G-7, H10, H28: lo que dice la tubería del gerente.
+  const pozoT = ceD.planta.tramos.find(x => x.tramo === 'pozo'), plantaT = ceD.planta.tramos.find(x => x.tramo === 'planta')
+  const zaD = PV.plantaViva(q(['zarza'], 'durante'), ctx0, V0)
+  const ceA = PV.plantaViva(q(['ceiba'], 'antes'), ctx0, V0)
+  comprobar(pozoT.limita && pozoT.titulo.includes(' ⓘ') && /sin firmar/.test(ceD.planta.limitaSinFirmar ?? '') && plantaT.capacidad === 'sin firmar' && pozoT.capacidad === null,
+    `P-12 · «limita» lleva su ⓘ: ${ceD.planta.limitaSinFirmar}`)
+  comprobar(zaD.cifras.durante.unidad === 'barriles por día de crudo' && !/sin paradas/.test(zaD.cifras.durante.explica + zaD.cifras.durante.fraseCorta) && /tubería del gas todavía no está/.test(zaD.cifras.durante.fraseCorta),
+    `P-13 · La Zarza: «0 ${zaD.cifras.durante.unidad} ${zaD.cifras.durante.frase}» / «${zaD.cifras.durante.explica}»`)
+  comprobar(plantaT.nota.join(' ') === 'se angostó: con P-201B parada el agua solo deja pasar 236 bbl/d más de crudo' && !JSON.stringify(ceD).includes('el agua da para'),
+    'P-14 · «el agua solo deja pasar 236 bbl/d más de crudo» (no «da para», que se leía como que sobra)')
+  comprobar(ceD.produccion.texto === 'promedio por día, bajo la meta' && f(ceD.produccion.realBpd) === '10.700',
+    'G-7 · «Promedio por día, bajo la meta · 10.700 de 10.900 bbl/d»: el mismo nombre de Resultados; lo que sale hoy es otra cifra')
+  comprobar(ceA.planta.venta.calidad === 'proyectado' && ceD.planta.venta.calidad === undefined && ceP.planta.venta.calidad === undefined,
+    'H10 · «Al cierre» de Antes lleva su palabra, «proyectado» (y la pantalla, el trazo discontinuo)')
+  comprobar(ceP.planta.ramal.texto[0] === 'ahora: ' && ceD.planta.ramal.texto[0] !== 'ahora: ' && ceP.esteMes.mesAnterior?.nombre === 'septiembre' && ceP.esteMes.mesAnterior.bblEntero === 7716,
+    'H28 · en Después el estado del ramal va dicho como de ahora, y «Este mes» da el mes cerrado de antes (septiembre, 7.716): la cifra grande ya es la del período')
+
+  // 7. P-19: el porqué en palabras del gerente; P-20: «N de M planes en marcha» con las decisiones guardadas.
+  const det = hoja.porque[0].detalle[0]
+  comprobar(det === 'falla de la planta (P-201B, bomba de agua) → afectó a varios pozos · 573 bbl' && !/proceso \/ facilidades|estación\/bombeo/.test(hoja.porque.flatMap(r => r.detalle).join(' ')),
+    `P-19 · la hoja de la planta: «${det}»`)
+  const planes = ceD.planes
+  const cicloCe = (await v.ssrLoadModule('/src/entities/escenarios.ts')).cicloValor(['ceiba'], curso.desde, curso.hasta, ctx0, V0)
+  const plan = [...cicloCe.antes.planes, ...cicloCe.durante.planes, ...cicloCe.despues.planes].find(x => x.bbl > 0).id
+  const conDecision = PV.plantaViva(q(['ceiba'], 'durante'), ctx0, V0, { decisiones: { [plan]: { id: plan, estado: 'aceptado', por: 'Prueba', porId: 'u', fecha: '2026-10-02T10:00:00-05:00', motivo: '' } } })
+  comprobar(planes && planes.enMarcha === 0 && planes.total >= 1 && conDecision.planes.enMarcha === 1 && conDecision.planes.texto === `1 de ${planes.total} ${planes.total === 1 ? 'plan' : 'planes'} en marcha`
+      && conDecision.cifras === ceD.cifras && PV.plantaViva(q(['ceiba'], 'durante'), ctx0, V0) === ceD,
+    `P-20 · «${conDecision.planes.texto}» al aceptar uno (sin decisiones, «${planes.texto}»); lo demás de la vista no se recalcula`)
+
+  // 8. A16 e I-ger-3: los nombres accesibles dicen las unidades en palabras; la pérdida, en una línea.
+  comprobar(!/bbl/.test(ceD.mesAMes.aria) && /barriles por día/.test(ceD.mesAMes.aria) && !/bbl/.test(rc.mesAMes.aria) && /barriles por día/.test(rc.mesAMes.aria) && ceD.planta.ariaLabel.includes('barriles por día'),
+    `A16 · «${ceD.mesAMes.aria.slice(0, 90)}…»`)
+
+  // 9. Resultados del jefe: lo programado en la frase de X4 §6.1, con enteros que suman la cifra (P-mant-1).
+  const rj = RS.resultados({ rol: 'jefe', campos: ['ceiba'], desde: curso.desde, hasta: curso.hasta }, ctx0, V0, { relojes: { fallas: 3, totalH: 194, activaH: 9, esperaH: 185 } })
+  comprobar(rj.mantenimiento.programado.frase === 'Ninguna parada de este mes estaba programada: los 1.046 bbl fueron fallas o siguen sin identificar.'
+      && rj.mantenimiento.programado.bbl + rj.mantenimiento.programado.noBbl === 1046,
+    `P-mant-1 · Resultados del jefe: «${rj.mantenimiento.programado.frase}»`)
+
+  // 10. P-16 y H8: Producción dibuja la MISMA tubería de La planta viva (la lente técnica); la de antes, en cajas, ya no.
+  //     A21: en el papel, la barra de «Dónde se trabó» y su leyenda no se separan de hoja. P-21: el código sin uso se fue.
+  const { readFileSync: leerF2, existsSync: existeF2 } = await import('node:fs')
+  const srcF2 = rel => leerF2(new URL(`../src/${rel}`, import.meta.url), 'utf8')
+  const prodF2 = srcF2('pages/Produccion.tsx'), dondeF2 = srcF2('widgets/resumen/DondeSeTrabo.tsx')
+  comprobar(/<TuberiaTecnica\b/.test(prodF2) && !/TuberiaDelCampo/.test(prodF2) && /data-sin-partir=\{campos\.length === 1/.test(dondeF2) && /print:break-before-avoid/.test(dondeF2)
+      && !['pages/Resumen.tsx', 'pages/Portafolio.tsx', 'widgets/resumen/ResumenDirectivo.tsx', 'widgets/riesgo/Ahora.tsx', 'widgets/resumen/enAlarma.ts', 'widgets/diferidos/Encabezado.tsx'].some(r => existeF2(new URL(`../src/${r}`, import.meta.url)))
+      // K1 · P-10: Riesgo ya no es una pantalla: lo suyo vive en `widgets/riesgo/EnRiesgo.tsx` (Equipos del jefe y de confiabilidad).
+      && !/nivel === 'decision'|useNivel\(\) !== 'decision'|directivo/.test(srcF2('pages/Diferidos.tsx') + prodF2 + srcF2(existeF2(new URL('../src/pages/Riesgo.tsx', import.meta.url)) ? 'pages/Riesgo.tsx' : 'widgets/riesgo/EnRiesgo.tsx')),
+    'P-16 y H8 · Producción con la tubería de La planta viva (lente técnica); A21 · la barra y su leyenda en un bloque en el papel; P-21 · sin el Resumen, el Portafolio, ResumenDirectivo, riesgo/Ahora, enAlarma, el Encabezado viejo ni las ramas «decision»')
+  // UI-10 y UI-18: el lema del momento escogido sale de los tokens (sin un color escrito a mano) y cada opción lleva su blanco de 44 px.
+  const momF2 = srcF2('widgets/plantaviva/Momentos.tsx').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
+  comprobar(!/#[0-9a-f]{3,8}\b/i.test(momF2) && /\btoque\b/.test(momF2) && /var\(--primario-sobre\)/.test(momF2),
+    'UI-10 y UI-18 · Antes · Durante · Después sin colores escritos a mano y con 44 px de blanco en cada opción')
+}
+
+
+// F4 · El glosario como prueba: un nombre, una cifra (PROMPT-REVISION-UX §4 regla 3; X4 §1.3.3; glosario.md,
+// confirmado por V1). Cada nombre del glosario dice UNA cifra en todas las vistas del motor que la traen y
+// va siempre con UNA unidad, también en lo que escriben las pantallas (D-2: «Si falla hoy», en bbl/d). Y los
+// sinónimos que el glosario retiró no vuelven, ni en el motor ni en las pantallas. Las vistas se piden por
+// la costura (`@/shared/api/*`), como las pide la pantalla; los nombres, de `NOMBRE_CIFRA`
+// (`@/shared/api/resultados`), y la cifra de referencia de `cifrasDeUnNombre` (el motor que lo publica).
+console.log('\n=== F4 · El glosario como prueba: un nombre, una cifra y una unidad ===')
+{
+  const SESF = await v.ssrLoadModule('/src/shared/api/sesion.ts')
+  const PVF = await v.ssrLoadModule('/src/shared/api/plantaViva.ts')
+  const HOYF = await v.ssrLoadModule('/src/shared/api/hoy.ts')
+  const RSAF = await v.ssrLoadModule('/src/shared/api/resultados.ts')
+  const EQTF = await v.ssrLoadModule('/src/shared/api/equiposTecnico.ts')
+  const CHKF = await v.ssrLoadModule('/src/shared/api/choke.ts')
+  const RSF = await v.ssrLoadModule('/src/entities/resultados.ts')
+  const REPF = await v.ssrLoadModule('/src/entities/choke-reparto.ts')
+  const { readFileSync, readdirSync, statSync } = await import('node:fs')
+  const s = SESF.sesion(), cursoF = D.rangoDePeriodo('curso')
+  const NC = RSAF.NOMBRE_CIFRA
+  const ALC = { 'La Ceiba': ['ceiba'], 'Morichal Norte': ['morichal'], 'todos': TODOS }
+  const pv = (cs, momento) => PVF.pedirPlantaViva({ campos: cs, momento, desde: cursoF.desde, hasta: cursoF.hasta }, s.ctx, s.versiones)
+  const res = (rol, cs) => RSAF.pedirResultados({ rol, campos: cs, desde: cursoF.desde, hasta: cursoF.hasta }, s)
+  const hoy = (rol, cs) => { try { return HOYF.pedirHoy({ rol, campos: cs }, s) } catch { return null } }
+  const lista = cs => EQTF.pedirListaEquipos(cs, s.ctx, s.versiones)
+  const ent = n => Math.round(n)
+  const num = t => Number(String(t).replace(/\./g, '').replace(',', '.'))
+
+  // 1. Las cifras de un nombre: la misma en cada vista que la trae, en cada alcance.
+  const cifras = []
+  for (const [nombre, cs] of Object.entries(ALC)) {
+    const ref = RSF.cifrasDeUnNombre(D.riesgoAhora(cs, ctx0), cs.map(c => D.estadoCampo(c, ctx0)))
+    const durante = pv(cs, 'durante').cifras.durante, antes = pv(cs, 'antes').cifras.antes
+    const sup = cs.length === 1 ? hoy('sup', cs) : null
+    const tuberia = cs.reduce((a, c) => a + REPF.tuberiaCampo(c, cursoF.desde, cursoF.hasta, ctx0, V0).perdiendoAhoraBpd, 0)
+    const ahora = [['la referencia', ent(ref.ahoraBpd)], ['La planta viva (Durante)', ent(durante.valor)], ['la tubería', ent(tuberia)]]
+    if (sup?.inicio?.cifra && sup.campos.length) ahora.push(['Hoy del supervisor', num(sup.inicio.cifra)])
+    const avisan = [['la referencia', ref.avisan], ['La planta viva (Antes)', antes.valor], ['el filtro de Equipos', lista(cs).cuentas.estado.avisan]]
+    const ciclo = [['La planta viva', ent(pv(cs, 'durante').mover.totalBbl)], ['Resultados', ent(res('ger', cs).ciclo.totalBbl)]]
+    cifras.push({ nombre, filas: [[NC.ahora, ahora, durante.unidad], [NC.avisan, avisan], [NC.retorno, ciclo]] })
+  }
+  const distintas = cifras.flatMap(a => a.filas.filter(([, xs]) => new Set(xs.map(x => x[1])).size > 1).map(([n, xs]) => `${a.nombre} · «${n}»: ${xs.map(x => `${x[0]} ${f(x[1])}`).join(', ')}`))
+  const ce = cifras.find(a => a.nombre === 'La Ceiba').filas, to = cifras.find(a => a.nombre === 'todos').filas
+  comprobar(!distintas.length && ce[0][1][0][1] === 1966 && to[0][1][0][1] === 2650 && ce[1][1][0][1] === 1 && to[1][1][0][1] === 8 && ce[2][1][0][1] === 2133
+      && cifras.every(a => a.filas[0][2] === 'barriles por día'),
+    `«${NC.ahora}» (1.966 · 684 · 2.650 bbl/d), «${NC.avisan}» (1 en La Ceiba, 8 en todos) y «${NC.retorno}» (2.133 en La Ceiba): una cifra en cada vista que la trae${distintas.length ? `; distintas: ${distintas.join(' | ')}` : ''}`)
+
+  // 2. «Si falla hoy» de cada equipo: la misma cifra en el motor de criticidad, la lista de Equipos y La planta viva.
+  const siFalla = new Map()
+  const anota = (c, e, valor, donde) => { const k = `${c}:${e}`; const x = siFalla.get(k) ?? []; x.push([donde, ent(valor)]); siFalla.set(k, x) }
+  for (const c of ['ceiba', 'morichal']) {
+    for (const r of CHKF.pedirCriticidad([c], s.ctx).ranking) if (!r.parado && Number.isFinite(r.bpd)) anota(c, r.equipo, r.bpd, 'criticidad')
+    for (const fl of lista([c]).filas) if (fl.cifra?.que === 'si falla hoy' && Number.isFinite(fl.cifra.valor)) anota(c, fl.equipo, fl.cifra.valor, 'Equipos')
+    const vista = pv([c], 'antes')
+    for (const x of vista.tecnica?.siFallaHoy ?? []) anota(c, x.equipo, x.bpd, 'La planta viva (técnica)')
+    for (const t of vista.planta.tramos) for (const x of t.equipos ?? []) if (/si falla hoy/.test(x.texto ?? '') && Number.isFinite(x.valor ?? x.bpd)) anota(c, x.equipo, x.valor ?? x.bpd, 'La planta viva (tramo)')
+  }
+  const dosCifras = [...siFalla].filter(([, xs]) => xs.length > 1 && new Set(xs.map(x => x[1])).size > 1).map(([k, xs]) => `${k}: ${xs.map(x => `${x[0]} ${f(x[1])}`).join(', ')}`)
+  comprobar(!dosCifras.length && siFalla.get('ceiba:P-201A')?.length > 1 && siFalla.get('ceiba:P-201A').every(x => x[1] === 3059),
+    `«Si falla hoy» dice la misma cifra de cada equipo en criticidad, Equipos y La planta viva (${siFalla.size} equipos; P-201A 3.059 bbl/d)${dosCifras.length ? `; distintas: ${dosCifras.slice(0, 4).join(' | ')}` : ''}`)
+
+  // 3. Una unidad por nombre, en todo lo que dicen las vistas del motor y en lo que escriben las pantallas.
+  //    D-2: «Si falla hoy» es un ritmo (bbl/d); lo que costaría la falla entera es «le costaría la falla» (bbl),
+  //    y su suma, «Exposición si fallan hoy» (bbl).
+  const textosDe = (x, out = []) => { if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) for (const y of x) textosDe(y, out); else if (x && typeof x === 'object') for (const y of Object.values(x)) textosDe(y, out); return out }
+  const vistas = []
+  for (const [nombre, cs] of Object.entries(ALC)) {
+    for (const m of ['antes', 'durante', 'despues']) vistas.push([`La planta viva (${m}, ${nombre})`, pv(cs, m)])
+    for (const r of ['ger', 'prod', 'jefe', 'conf', 'reg']) vistas.push([`Resultados de ${r} (${nombre})`, res(r, cs)])
+    for (const r of ['sup', 'oper', 'tec', 'jefe', 'prod', 'conf']) { const h = hoy(r, cs); if (h) vistas.push([`Hoy de ${r} (${nombre})`, h]) }
+    vistas.push([`Equipos (${nombre})`, lista(cs)], [`Riesgo (${nombre})`, CHKF.pedirCriticidad(cs, s.ctx)])
+  }
+  for (const [c, e] of [['ceiba', 'P-201B'], ['ceiba', 'P-201A'], ['ceiba', 'K-101'], ['morichal', 'MPP-301'], ['morichal', 'P-201B'], ['ceiba', 'LC-21']])
+    vistas.push([`nivel 3 de ${e} (${c})`, EQTF.pedirNivelEquipo(c, e, s.ctx, s.versiones)])
+  const deVistas = vistas.flatMap(([donde, x]) => textosDe(x).map(t => [donde, t]))
+  const RAIZ_SRC = `${RAIZ}src/`
+  const pantallasF4 = []
+  const recorrer = d => { for (const x of readdirSync(d)) { const p = `${d}/${x}`; if (statSync(p).isDirectory()) recorrer(p); else if (/\.tsx?$/.test(x)) pantallasF4.push(p) } }
+  for (const d of ['pages', 'widgets', 'shared/ui', 'shared/lib']) recorrer(`${RAIZ_SRC}${d}`)
+  const sinComentariosF4 = t => t.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => !/^\s*\/\//.test(l)).map(l => l.replace(/\s\/\/ .*$/, '')).join('\n')
+  const dePantallas = pantallasF4.map(p => [p.slice(RAIZ_SRC.length), sinComentariosF4(readFileSync(p, 'utf8'))])
+  const CIFRA = String.raw`(?:≈\s*)?(?:hasta\s+)?(?:[\d.,]+|\$\{[^}]+\})\s*`
+  const UNIDAD = String.raw`(bbl\/d|bbl|barriles por día|barriles)`
+  const unidades = [
+    { nombre: 'si falla hoy', unidad: ['bbl/d', 'barriles por día'], antes: /si (?:una )?falla hoy/i },
+    { nombre: 'le costaría la falla', unidad: ['bbl', 'barriles'], antes: /le costaría la falla/i },
+    { nombre: NC.exposicion, unidad: ['bbl', 'barriles'], antes: /de exposición si fallan hoy|exposición si fallan hoy/i },
+  ].map(u => {
+    const re = [new RegExp(`${CIFRA}${UNIDAD}\\s+(?:·\\s*)?(?:de\\s+)?(?:${u.antes.source})`, 'gi'), new RegExp(`(?:${u.antes.source})[,:]?\\s+${CIFRA}${UNIDAD}`, 'gi')]
+    const vistos = []
+    for (const [donde, t] of [...deVistas, ...dePantallas]) for (const r of re) for (const m of t.matchAll(r)) vistos.push([donde, m[1].toLowerCase(), m[0].replace(/\s+/g, ' ').slice(0, 60)])
+    return { ...u, vistos, malos: vistos.filter(x => !u.unidad.includes(x[1])) }
+  })
+  const malasU = unidades.flatMap(u => u.malos.map(x => `«${u.nombre}» en ${x[1]} (${x[0]}: «${x[2]}»)`))
+  comprobar(!malasU.length && unidades[0].vistos.length > 0,
+    `una unidad por nombre: «si falla hoy» en bbl/d (${unidades[0].vistos.length} veces), «le costaría la falla» y «${NC.exposicion}» en bbl (${unidades[1].vistos.length + unidades[2].vistos.length}), en el motor y en las pantallas${malasU.length ? `; mal: ${[...new Set(malasU)].slice(0, 4).join(' | ')}` : ''}`)
+
+  // 4. Los sinónimos que retiró el glosario (V1) no vuelven, ni en el motor ni en las pantallas.
+  const RETIRADOS = [
+    ['G-5', /Potencial ahora|Potencial \(pruebas × factor\)/, `«${NC.potencial}»`],
+    ['G-7', /producción por día, bajo la meta/i, '«Promedio por día»'],
+    ['G-8', /= No producido/, '«= Diferido»'],
+    ['G-13', /bbl en el ciclo/, `«${NC.retorno}»`],
+    ['G-15', /\bequipos? avisando\b/i, '«equipo avisa»'],
+    ['G-16', /\bsi se para\b/i, '«Si falla hoy»'],
+  ]
+  const vuelven = RETIRADOS.flatMap(([g, re, nuevo]) => [...deVistas, ...dePantallas].filter(([, t]) => re.test(t)).map(([donde]) => `${g} (${nuevo}) en ${donde}`))
+  comprobar(!vuelven.length, `los sinónimos que retiró el glosario no vuelven: «Potencial ahora», «producción por día» (el promedio), «= No producido», «bbl en el ciclo», «equipos avisando», «si se para»${vuelven.length ? `; siguen: ${[...new Set(vuelven)].slice(0, 6).join(' | ')}` : ''}`)
+
+  // 5. P-09 · Una familia por equipo: las bombas del tren de agua de La Ceiba y de Morichal son «bomba de agua»
+  //    en cada vista (el subtítulo largo del nivel 3 es el de la imagen 4 y se queda: no lleva el tag delante).
+  const familias = []
+  for (const [donde, x] of vistas.filter(([d]) => /La Ceiba|Morichal|ceiba|morichal/.test(d)))
+    for (const t of textosDe(x)) for (const m of t.matchAll(/\b(P-201[A-G])\s*(?:·|,|\()\s*(bomba(?: [a-záéíóúñ]+){1,3})/g)) familias.push([donde, m[1], m[2]])
+  const otras = familias.filter(x => !x[2].startsWith('bomba de agua'))
+  comprobar(!otras.length && familias.length > 0,
+    `P-09 · las bombas del tren de agua se llaman «bomba de agua» en las ${familias.length} veces que una vista las nombra${otras.length ? `; distinto: ${[...new Set(otras.map(x => `${x[1]} «${x[2]}» (${x[0]})`))].slice(0, 4).join(' | ')}` : ''}`)
+}
+
+// K1 · El cierre de los pendientes cruzados de la revisión (fase 4): el Riesgo del jefe y de confiabilidad fundido en su
+// Equipos (P-10), Mi trabajo y la tubería de antes fuera del código (G-15, P-16), una familia por equipo (P-09), lo
+// diferido sin «se pierde» en las ⓘ (T-8), el color con su forma o su palabra (H20, «¿Cuadra?», H13.2) y el nivel del
+// título de «Planes» (A15). Lo que se ve lo prueban las e2e (`cierre-k1.spec.ts` y las ajustadas); aquí, las direcciones,
+// el motor y que lo de antes no vuelva.
+console.log('\n=== K1 · Cierre: Riesgo en Equipos, sin Mi trabajo ni la tubería de antes, una familia, T-8 en las ⓘ, color con forma ===')
+{
+  const { existsSync: existeK1, readFileSync: leerK1 } = await import('node:fs')
+  const SRCK = `${RAIZ}src/`
+  const hay = a => existeK1(`${SRCK}${a}`)
+  const fuenteK1 = a => leerK1(`${SRCK}${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(l)).join('\n')
+  const ROLK = await v.ssrLoadModule('/src/entities/roles.ts')
+  const URLK = await v.ssrLoadModule('/src/app/url.ts')
+  const PANK = await v.ssrLoadModule('/src/app/pantallas.tsx')
+  const rol = id => ROLK.ROLES.find(r => r.id === id)
+
+  // 1. P-10: ningún rol tiene Riesgo; la dirección del jefe y de confiabilidad abre su Equipos, la del gerente La planta viva.
+  //    Lo que traía Riesgo vive debajo de la lista de Equipos (`EnRiesgo`), con cada pieza.
+  const enRiesgo = hay('widgets/riesgo/EnRiesgo.tsx') ? fuenteK1('widgets/riesgo/EnRiesgo.tsx') : ''
+  const lista = fuenteK1('widgets/equipos/Lista.tsx')
+  comprobar(!ROLK.ROLES.some(r => r.pantallas.includes('riesgo')) && !PANK.PANTALLAS.riesgo && !hay('pages/Riesgo.tsx')
+      && URLK.pantallaQueAbre(rol('jefe'), 'riesgo') === 'equipos' && URLK.pantallaQueAbre(rol('conf'), 'riesgo') === 'equipos'
+      && URLK.pantallaQueAbre(rol('ger'), 'riesgo') === 'plantaViva'
+      && /\(conf \|\| jefe\) && <EnRiesgo/.test(lista)
+      && ['NOMBRE_CIFRA.ahora', 'NOMBRE_CIFRA.avisan', 'NOMBRE_CIFRA.exposicion', 'en juego', 'cruza en', 'rotulo="qué hacer"', 'costoHoy(r)', 'colchonCorto(r)', 'deFlota(', 'titulo="Por qué"', '<SiFallaHoy'].every(x => enRiesgo.includes(x)),
+    'P-10 · Riesgo se fundió: ningún rol lo tiene; «#/jefe/riesgo» y «#/conf/riesgo» abren Equipos (el gerente, La planta viva) y debajo de la lista va todo lo suyo: lo que se deja de producir, los que avisan, lo que está en juego, la exposición, «cruza en», «qué hacer», lo que le costaría la falla, el colchón, «flota», «Por qué» y «Si falla hoy»')
+
+  // 2. G-15: Mi trabajo ya no existe (se fundió en Hoy) y su dirección abre Hoy; P-16: la tubería de antes tampoco.
+  const usaVieja = ['pages/Planta.tsx', 'pages/Produccion.tsx', 'pages/Causa.tsx'].filter(a => /TuberiaDelCampo|choke\/Tuberia'/.test(fuenteK1(a)))
+  comprobar(!hay('pages/Trabajo.tsx') && !PANK.PANTALLAS.trabajo && !Object.values(PANK.GRUPOS).some(g => g.miembros.includes('trabajo'))
+      && URLK.pantallaQueAbre(rol('tec'), 'trabajo') === 'hoy'
+      && !hay('widgets/choke/Tuberia.tsx') && !usaVieja.length && /<TuberiaTecnica/.test(fuenteK1('pages/Planta.tsx')),
+    `G-15 y P-16 · Mi trabajo y la tubería de antes salieron del código; «#/tec/trabajo» abre Hoy y Planta monta la tubería de La planta viva${usaVieja.length ? `; todavía: ${usaVieja.join(', ')}` : ''}`)
+
+  // 3. P-09: una familia por equipo, la del motor («bomba de agua»), también en el nombre de las hermanas sin instrumento y en Confiabilidad.
+  const CRK = await v.ssrLoadModule('/src/entities/criticidad.ts')
+  const FLK = await v.ssrLoadModule('/src/entities/flota.ts')
+  const PVK = await v.ssrLoadModule('/src/entities/planta-viva.ts')
+  const CSK = await v.ssrLoadModule('/src/entities/causa-senal.ts')
+  const CAK = await v.ssrLoadModule('/src/entities/choke-agua.ts')
+  const hermanas = ['ceiba', 'morichal'].flatMap(c => CRK.criticidadDelCampo(c, ctx0).ranking.filter(x => /^P-201[AC]$/.test(x.equipo)).map(x => x.nombre))
+  // Y el nombre del tipo de causa (Mantenimiento, Pozos, el árbol, los Paretos, «Por campo», el informe), la frase del
+  // gerente y el tramo de la tubería del agua: ninguno dice «reinyección» como familia.
+  const REPK = await v.ssrLoadModule('/src/entities/choke-reparto.ts'), cursoK = D.rangoDePeriodo('curso')
+  const fraseCe = REPK.tuberiaCampo('ceiba', cursoK.desde, cursoK.hasta, ctx0, V0).fraseGerente
+  comprobar(hermanas.length >= 2 && hermanas.every(n => n.endsWith(` · ${PVK.FAMILIA.reinyeccion}`)) && FLK.NOMBRE_FAMILIA.inyeccion === 'Bombas de agua'
+      && CSK.TIPO_CAUSA.reinyeccion.toLowerCase() === PVK.FAMILIA.reinyeccion && CAK.NOMBRE_TRAMO_AGUA.bombas === 'Bombas de agua' && !/reinyecci/.test(fraseCe),
+    `P-09 · una familia: las hermanas sin instrumento («${hermanas[0]}»), Confiabilidad («${FLK.NOMBRE_FAMILIA.inyeccion}»), el tipo de causa («${CSK.TIPO_CAUSA.reinyeccion}»), el agua («${CAK.NOMBRE_TRAMO_AGUA.bombas}») y la frase del gerente («${fraseCe}»)`)
+
+  // 4. T-8: las ⓘ del método (Identificar, Confiabilidad, el árbol de la circular) y la configuración no dicen que lo diferido «se pierde».
+  const ARK = await v.ssrLoadModule('/src/widgets/arbol/palabras.ts')
+  const conPierde = ['widgets/arbol/palabras.ts', 'widgets/choke/ArbolCircular.tsx', 'widgets/riesgo/SiFallaHoy.tsx', 'pages/Configuracion.tsx']
+    .filter(a => /dónde se pierde|lo que pierdan|\bse pierden?\b/.test(fuenteK1(a)))
+  comprobar(/dónde se deja de producir/.test(ARK.INFO_METODO) && !/pierde/.test(ARK.INFO_METODO) && !conPierde.length,
+    `T-8 · «ubicar dónde se deja de producir» en la ⓘ de Identificar y de Confiabilidad; ninguna ⓘ dice «se pierde»${conPierde.length ? ` (${conPierde.join(', ')})` : ''}`)
+
+  // 5. Color con forma y palabra: el mes fuera de banda del factor es la marca de aviso; la celda «Real» de «¿Cuadra?»
+  //    dice «bajo la meta»; el indicador sin lectura no pinta el morado sin su forma (H13.2).
+  const factor = fuenteK1('widgets/diferidos/Factor.tsx'), prodK = fuenteK1('pages/Produccion.tsx'), anal = fuenteK1('shared/ui/Analogico.tsx')
+  comprobar(!/fill="var\(--p3\)"/.test(factor) && /<MarcaCondicion c="aviso"/.test(factor)
+      && !/<FueraDeMeta/.test(prodK) && /bajo la meta/.test(prodK) && !/--sincom/.test(anal)
+      && !/\.analogico\b/.test(leerK1(`${SRCK}index.css`, 'utf8')),
+    'color con forma: el factor fuera de banda lleva el cuadrado «3», «¿Cuadra?» dice «bajo la meta» al lado de su marca y el indicador sin lectura va en gris (y las clases del analógico viejo ya no están)')
+
+  // 6. H2 (pendiente de F1 y F2): Identificar y Mantenimiento leen el entero de cada parada del mes en curso del reparto
+  //    del campo, el mismo de Hoy y Pozos: LC-08 = 108 (exacto 108,5), LC-21 = 247; una parada de antes, sin entero.
+  const DFK = await v.ssrLoadModule('/src/shared/api/diferidos.ts')
+  const psK = DFK.pedirPreguntas(['ceiba'], ctx0), de = e => psK.find(p => p.equipo === e && p.inicio >= cursoK.desde)
+  // Y las tarjetas de Identificar (las filas de la ANH, agrupadas por raíz): sus enteros suman la raíz del campo.
+  const ARBK = await v.ssrLoadModule('/src/shared/api/arbol.ts'), GRK = await v.ssrLoadModule('/src/widgets/arbol/grupos.ts'), RDK = await v.ssrLoadModule('/src/entities/redondeo.ts')
+  const gruposK = GRK.agrupar(ARBK.pedirParadasAnh({ campos: ['ceiba'], desde: cursoK.desde, hasta: cursoK.hasta }, ctx0, {}))
+  const raizK = RDK.enterosDelPeriodo('ceiba', cursoK.desde, cursoK.hasta, ctx0).raiz
+  comprobar(de('LC-08')?.entero === 108 && Math.round(de('LC-08').bbl) === 109 && de('LC-21')?.entero === 247
+      && psK.filter(p => p.inicio < cursoK.desde).every(p => p.entero === undefined)
+      && gruposK.find(g => g.pozos.join() === 'LC-08')?.entero === 108 && gruposK.reduce((a, g) => a + g.entero, 0) === raizK,
+    `H2 · las paradas por identificar del mes en curso con el entero del reparto: LC-08 = ${de('LC-08')?.entero} (exacto ${de('LC-08')?.bbl.toFixed(2)}), LC-21 = ${de('LC-21')?.entero}; las tarjetas de Identificar suman ${gruposK.reduce((a, g) => a + g.entero, 0)} = la raíz (${raizK})`)
+
+  // 7. A15: «Planes» toma el nivel de título de donde va; en el diagnóstico (antes del primer h2), h2.
+  comprobar(/titulo\?: 'h2' \| 'h3'/.test(fuenteK1('widgets/ciclo/Ciclo.tsx')) && /<PlanesDe planes=\{planes\} titulo="h2"/.test(fuenteK1('widgets/bombas/Detalle.tsx')),
+    'A15 · «Planes» va en h2 en el diagnóstico y en h3 dentro de la ficha (como `BloqueSap`)')
 }
 
 await v.close()

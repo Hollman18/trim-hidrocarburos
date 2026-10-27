@@ -9,6 +9,9 @@ import { NOTA_DE_CALCULO } from '@/widgets/diferidos/Rango'
 import { publicacion } from '@/widgets/diferidos/publicacion'
 import { useVersiones, useCtx, useInformes } from '@/shared/api/sesion'
 import { periodoDelInforme } from './periodo'
+import { traerSerieMensual } from '@/shared/api/regulatorio'
+import { descargarCsv } from '@/shared/lib/csv'
+import { filasCsvAnh } from './csvAnh'
 
 /** La lógica de exportar, aparte de dónde está el botón: el menú de la
  *  cabecera exporta la pantalla y la ficha de un equipo se exporta desde su
@@ -73,5 +76,21 @@ export function useExportar() {
     alEntregar?.()
   })
 
-  return { puede: !!rol.puede['evidencia:exportar'], titulo, ocupado, aviso, setAviso, pdf, csv, ultimo: informes.at(-1) }
+  /** El CSV para la ANH (solo en Regulatorio, con un campo): el libro mes a mes con
+   *  el factor de asignación y las casillas de PRODML, el mismo archivo que antes
+   *  daba el botón de su tarjeta (I-reg-2: un solo «Exportar», en la cabecera). */
+  const csvAnh = pantalla === 'regulatorio' && !equipoAbierto && ids.length === 1 ? async (alEntregar?: () => void) => {
+    setOcupado(true); setAviso(null)
+    try {
+      const serie = await traerSerieMensual(ids, ctx)
+      descargarCsv(`libro-${ids[0]}-mensual`, filasCsvAnh(campoPorId(ids[0]!).nombre, serie))
+      alEntregar?.()
+    } catch (e) {
+      setAviso(`No se pudo exportar: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setOcupado(false)
+    }
+  } : undefined
+
+  return { puede: !!rol.puede['evidencia:exportar'], titulo, ocupado, aviso, setAviso, pdf, csv, csvAnh, ultimo: informes.at(-1) }
 }

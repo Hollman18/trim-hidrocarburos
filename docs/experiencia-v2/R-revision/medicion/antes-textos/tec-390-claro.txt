@@ -1,0 +1,33 @@
+5
+La Ceiba
+ÓD
+La Ceiba
+DEMO
+Hoy
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+5
+cosas le tocan hoy
+Primero P-201B: diga qué encontró.
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Diga qué encontró en P-201B
+Alarma
+P-201B
+bomba de agua paró hoy a las 03:52, hace 10,1 h
+Sigue parada: no se arranca hasta decir qué se dañó.
+Registrar qué encontré
+Ver P-201B
+Diga qué encontró en LC-21
+Atención
+LC-21
+pozo paró el 1 de oct a las 18:20, hace 19,7 h
+Sigue parado: no se arranca hasta decir qué pasó.
+Registrar qué encontré
+Ver LC-21

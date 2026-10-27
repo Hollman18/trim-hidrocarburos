@@ -1,0 +1,84 @@
+#/oper/hoy/ceiba/curso
+
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+1 de 4
+preguntas
+
+Empiece por P-201B: está parada y no se puede arrancar.
+
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Contestar qué se dañó en P-201B
+
+1
+Alarma ·
+P-201B
+bomba de agua · paró hoy a las 03:52, hace 10,1 h
+
+Sigue parada: no se arranca hasta decir qué se dañó.
+
+Contestar
+Ver P-201B
+Contestar por qué paró LC-21
+
+2
+Atención ·
+LC-21
+pozo · paró el 1 de oct a las 18:20, hace 19,7 h
+
+Sigue parado: no se arranca hasta decir qué pasó.
+
+Contestar
+Ver LC-21
+Contestar «¿De dónde vino el corte?» de LC-05
+
+LC-05
+pozo · paró el 1 de oct a las 09:16
+
+Para el reporte a la ANH falta el detalle.
+
+Contestar
+Ver la parada
+Contestar por qué paró LC-08
+
+LC-08
+pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar
+
+Arrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.
+
+Contestar
+Ver LC-08
+Lo más frágil: el agua. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.
+Ver el orden
+Su campo, ahora
+La planta viva
+pozos
+planta
+salida
+
+En la planta no pasan 1.665 bbl/d; limitan los pozos.
+
+Tanque de agua 89,6 %: no sube, P-201A y P-201C toman lo que entra.
+
+Abrir La planta viva
+El turno en WhatsApp
+8 mensajes
+K-101
+09:11 orden liberada en SAP
+P-201B
+03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado · sin respuesta

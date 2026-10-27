@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { create } from 'zustand'
 import { rangoDePeriodo } from '@/entities/diferido'
-import { rolPorId, ROL_INICIAL } from '@/entities/roles'
+import { rolPorId, ROL_INICIAL, ROLES } from '@/entities/roles'
 import { CAMPOS, periodoPorId, campoPorId } from '@/entities/campos'
 import type { Periodo, IdPeriodo } from '@/entities/tipos'
-import { leerHash, escribirHash, rangoValido, pantallaDelRol, PRIMER_DIA, ULTIMO_DIA, type DeLaDireccion } from './url'
+import { leerHash, escribirHash, rangoValido, pantallaDelRol, PRIMER_DIA, ULTIMO_DIA, type DeLaDireccion, type MomentoDireccion } from './url'
 import { pantallaVisible } from '@/shared/config/producto'
 import { PANTALLAS } from '@/app/pantallas'
 import type { Elemento, Miembro, CambioPlanta, Tren } from '@/entities/planta'
@@ -33,6 +33,9 @@ interface Estado {
   alcance: 'campo' | 'portafolio'
   /** Un período de la cabecera, o «medida» mientras haya un rango escogido a mano. */
   periodoId: IdPeriodo | 'medida'
+  /** F1 · P-18: el momento de La planta viva (Antes · Durante · Después), que va en la dirección. */
+  momento: MomentoDireccion
+  setMomento: (m: MomentoDireccion) => void
   /** Rango escogido a mano. Manda sobre periodoId mientras exista. */
   rango: { desde: string; hasta: string } | null
   /** Contexto de vista · sí cambia. */
@@ -85,7 +88,7 @@ interface Estado {
   /** Respuesta en pantalla a una parada que la señal no explicó
    *  (`POST /api/paradas/:evento/respuesta`). `por`, `hora` y `canal` los pone
    *  el servidor; con las mismas reglas que WhatsApp: la primera respuesta gana. */
-  responder: (r: Omit<CuerpoRespuesta, 'parte'> & { parte?: Respuesta['parte'] }) => Promise<{ ok: true } | { ok: false; error: string }>
+  responder: (r: Omit<CuerpoRespuesta, 'parte'> & { parte?: Respuesta['parte'] }, o?: { keepalive?: boolean }) => Promise<{ ok: true } | { ok: false; error: string; estado?: number }>
   /** Llega por WhatsApp la respuesta a «¿qué se dañó?» (en producción, el
    *  webhook de WhatsApp al servidor). Entra solo de un número registrado con
    *  alertas y con ese campo; la primera respuesta gana. */
@@ -109,7 +112,7 @@ interface Estado {
   /** «En el yacimiento», con lo que lo muestra (`POST /api/anh/paradas/:id/yacimiento`). */
   yacimientoAnh: (id: string, c: CuerpoYacimiento) => ReturnType<typeof E.declararYacimientoAnh>
   /** La respuesta de campo a una pregunta de la parada (`POST /api/anh/paradas/:id/respuesta`). */
-  responderAnh: (id: string, c: CuerpoRespuestaAnh) => ReturnType<typeof E.responderPreguntaAnh>
+  responderAnh: (id: string, c: CuerpoRespuestaAnh, o?: { keepalive?: boolean }) => ReturnType<typeof E.responderPreguntaAnh>
   /** «Algo está mal» o «Pedir a producción» (`POST /api/anh/paradas/:id/revision`). */
   revisarAnh: (id: string, c: CuerpoRevisionAnh) => ReturnType<typeof E.revisarParadaAnh>
   /** Lo que cambiaría si se firmara el borrador, sin firmarlo (`POST /api/configuracion/vista-previa`). */
@@ -192,7 +195,10 @@ export const claveDeVista = (s: Pick<Estado, 'rolId' | 'pantalla' | 'campoId' | 
 /** «Usted no tiene asignado el campo La Zarza: le mostramos La Ceiba.» (B-38). */
 function avisoDeDireccion(c: DeLaDireccion, s: Pick<Estado, 'rolId' | 'pantalla' | 'campoId' | 'alcance'>): Estado['avisoCampo'] {
   const visto = campoPorId(s.campoId).nombre
-  const texto = c.campoAjeno && c.campoAjeno !== s.campoId ? `Usted no tiene asignado el campo ${campoPorId(c.campoAjeno).nombre}: le mostramos ${visto}.`
+  // P-17: un rol que todavía no se ofrece (la planeadora, abastecimiento) no abre en silencio el de otro.
+  const rol = c.rolAjeno ? ROLES.find(r => r.id === c.rolAjeno) : undefined
+  const texto = rol ? `El rol «${rol.nombre}» todavía no está en esta versión: le mostramos ${rolPorId(s.rolId).nombre.toLowerCase()}.`
+    : c.campoAjeno && c.campoAjeno !== s.campoId ? `Usted no tiene asignado el campo ${campoPorId(c.campoAjeno).nombre}: le mostramos ${visto}.`
     : c.alcance === 'portafolio' && s.alcance !== 'portafolio' ? `Usted no tiene asignado el portafolio: le mostramos ${visto}.` : null
   return texto ? { texto, clave: claveDeVista(s) } : null
 }
@@ -205,6 +211,8 @@ export const useApp = create<Estado>((set, get) => ({
   alcance: (inicial.pantalla === 'portafolio' || inicial.alcance === 'portafolio') && portafolioPermitido(rolInicial, sesion().usuarios) ? 'portafolio' : 'campo',
   periodoId: inicial.periodoId ?? 'curso',
   rango: inicial.rango ?? null,
+  momento: inicial.momento ?? 'durante',
+  setMomento: m => set({ momento: m }),
   rolId: rolInicial.id,
   pantalla: migrar(inicial.pantalla) ?? rolInicial.inicio,
 
@@ -240,7 +248,7 @@ export const useApp = create<Estado>((set, get) => ({
     return r
   },
   invitarUsuario: (invitacion, motivo) => E.invitarUsuario(quien(), { invitacion, motivo }),
-  responder: r => E.responderParada(quien(), r),
+  responder: (r, o) => E.responderParada(quien(), r, o),
   recibirWhatsapp: r => E.recibirWhatsapp(r),
   revisarWhatsapp: r => E.revisarDesdeWhatsapp(r),
   completarAnalisis: (evento, a) => E.completarAnalisis(quien(), { evento, ...a }),
@@ -248,7 +256,7 @@ export const useApp = create<Estado>((set, get) => ({
   clasificarAnh: (id, c) => E.clasificarParada(quien(), id, c),
   confirmarAnh: c => E.confirmarParadasAnh(quien(), c),
   yacimientoAnh: (id, c) => E.declararYacimientoAnh(quien(), id, c),
-  responderAnh: (id, c) => E.responderPreguntaAnh(quien(), id, c),
+  responderAnh: (id, c, o) => E.responderPreguntaAnh(quien(), id, c, o),
   revisarAnh: (id, c) => E.revisarParadaAnh(quien(), id, c),
   // La pantalla pide el impacto también con errores: los muestra al lado, sin firmar nada (B-53).
   previsualizarConfig: config => E.previsualizarConfiguracion(quien(), { config, aunConErrores: true }),
@@ -429,6 +437,8 @@ function aplicarDireccion() {
   if (c.rango && (c.rango.desde !== s.rango?.desde || c.rango.hasta !== s.rango?.hasta)) s.setRango(c.rango.desde, c.rango.hasta)
   else if (c.periodoId && c.periodoId !== 'medida' && c.periodoId !== s.periodoId) s.setPeriodo(c.periodoId)
   if ((c.equipoAbierto ?? null) !== ahora().equipoAbierto) ahora().abrirEquipo(c.equipoAbierto ?? null)
+  // P-18: atrás y adelante también cambian el momento de La planta viva.
+  if (ahora().pantalla === 'plantaViva' && (c.momento ?? 'durante') !== ahora().momento) ahora().setMomento(c.momento ?? 'durante')
   // Un campo o un portafolio que la persona no tiene no se abre, y se dice (B-38).
   useApp.setState({ avisoCampo: avisoDeDireccion(c, ahora()) })
   // Lo que la dirección pedía y no se pudo (un campo ajeno, un rol que no
@@ -439,7 +449,7 @@ function aplicarDireccion() {
 /** La dirección refleja el contexto, para poder compartir la vista. */
 const aDireccion = (s: Estado) => ({
   rolId: s.rolId, pantalla: s.pantalla, campoId: s.campoId, alcance: s.alcance,
-  periodoId: s.periodoId, equipoAbierto: s.equipoAbierto, rango: s.rango,
+  periodoId: s.periodoId, equipoAbierto: s.equipoAbierto, rango: s.rango, momento: s.momento,
 })
 
 /** Lo que el estado de la aplicación hace sobre el navegador: oyentes de
@@ -456,7 +466,8 @@ export function iniciarApp(): void {
   aplicarTema(useApp.getState().tema)
   // El papel es claro: al imprimir se estampa el tema claro y al terminar se
   // vuelve al que había.
-  addEventListener('beforeprint', () => document.documentElement.setAttribute('data-theme', 'light'))
+  // También `color-scheme` (A8): con el tema oscuro, los controles nativos y el pie impreso salían en oscuro.
+  addEventListener('beforeprint', () => { const r = document.documentElement; r.setAttribute('data-theme', 'light'); r.style.colorScheme = 'light' })
   addEventListener('afterprint', () => { aplicarTema(useApp.getState().tema); useApp.getState().setImprimiendo(null) })
   // En «sistema» hay que seguir al sistema también DESPUÉS de cargar.
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {

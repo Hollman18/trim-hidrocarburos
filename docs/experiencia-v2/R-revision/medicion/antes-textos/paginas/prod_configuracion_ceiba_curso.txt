@@ -1,0 +1,87 @@
+#/prod/configuracion/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Metas, accesos y configuración
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Filosofía operacional
+Configuración técnica
+Metas de los campos
+Solo lectura: lo prepara y lo firma el administrador de la implementación.
+PERFIL DEL CAMPO
+Destino principal del gas
+No tiene tren de gas
+Gas a tea
+Gas para consumo propio
+Gas a venta
+4 elementos en el tren de gas
+Bombas de la línea
+1 bomba registrada
+Electrosumergibles
+15 pozos registrados
+MEMBRETE DEL INFORME
+todos los campos
+Nombre de la empresa
+TANQUES DE AGUA
+Tanque de agua de La Ceiba
+TK-AG-CE · lo vacía P-201B · nivel ahora 89,6 %
+Capacidad
+bbl
+Alto-alto
+%
+Transmisor de nivel
+Certificado de aforo
+RESPALDO DE BOMBAS
+Bomba multietapa de transferencia de agua
+P-201B · Disposición de agua · capacidad 89.250 bbl/d
+Capacidad libre
+bbl/d
+Qué es el respaldo
+PARADAS PROGRAMADAS
+2
+P-201B 19 de ago, 17:49 a 20 de ago, 09:34
+Mantenimiento preventivo programado de la bomba
+LC-19 22 de ene, 23:51 a 23 de ene, 17:50
+Cambio programado de la bomba de subsuelo
+VERSIONES FIRMADAS
+1
+Versión 1
+vigente
+1 de sept, 08:00 · Hermes Leal · administrador de la implementación
+
+«Arranque de la implementación»
+
+Configuración inicial: metas por campo, precio neto, tanques de agua, respaldos de bombas y programa de paradas
+NO SE CONFIGURA
+sale de los equipos
+Producción
+FQI-0101 · computador de flujo de la unidad LACT-01 · corte de agua: analizador
+Estado de pozos
+15 variadores · 3 controladores de bombeo · 0 válvulas de cabeza
+Pruebas de pozo
+17 con separador · 1 estimadas desde la electrosumergible · 0 sin prueba
+Nivel de tanques
+TK-AG-CE · LT-2012
+Paradas de bombas
+PLC · primera alarma (first-out)
+Límites de electrosumergibles
+Protecciones del variador de cada pozo
+Banda de asignación
+±15 % · crudo de 19,4 °API (Análisis de laboratorio del crudo en especificación, PMO-02)
+Esquema de planta
+de él TRIM deduce a qué pozos sirve cada equipo
+▾

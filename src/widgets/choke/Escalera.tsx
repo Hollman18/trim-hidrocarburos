@@ -21,7 +21,7 @@ function ayudaPe(b: BrechaChoke): string {
   const diferencia = brecha === 0 ? 'Las pruebas y el medidor oficial dan lo mismo en este período'
     : brecha > 0 ? `Esta descuenta además lo que las pruebas dan de más que el medidor oficial (${n0(brecha)} bbl en el período)`
       : `Esta suma además lo que el medidor oficial da de más que las pruebas (${n0(-brecha)} bbl en el período)`
-  return `Lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar: lo que dan los pozos según sus pruebas o, el día que limita la planta o afuera, lo que deja pasar ese tramo (lo que no pasa aunque nada pare no se cuenta como pérdida). Es la eficiencia de producción de la NSTA (§5.3) y de la ISO/TS 3250. No es el «% del potencial» de arriba: ese divide por el potencial del libro, las pruebas con el factor de asignación del mes, que las deja medidas como el punto oficial, y solo descuenta lo que no se produjo por paradas. ${diferencia}: ${n1(b.pe)} % aquí y ${n1(libro)} % del potencial.`
+  return `Lo que salió por el punto de medición oficial ÷ lo que el campo podía dejar pasar: lo que dan los pozos según sus pruebas o, el día que limita la planta o afuera, lo que deja pasar ese tramo (lo que no pasa aunque nada pare no se cuenta como diferido). Es la eficiencia de producción de la NSTA (§5.3) y de la ISO/TS 3250. No es el «% del potencial» de arriba: ese divide por el potencial del libro, las pruebas con el factor de asignación del mes, que las deja medidas como el punto oficial, y solo descuenta lo que no se produjo por paradas. ${diferencia}: ${n1(b.pe)} % aquí y ${n1(libro)} % del potencial.`
 }
 const AYUDA_NO_PLANEADO = 'Las paradas no planeadas (fallas, disparos, terceros) ÷ lo que el campo podía dejar pasar: la eficiencia no planeada de la NSTA. Es el porcentaje que TRIM busca bajar prediciendo las bombas críticas.'
 /** Cuando la eficiencia no se puede creer (D3; 5E·H30), su ⓘ dice qué es y por qué no va el número. */
@@ -42,7 +42,7 @@ export function Escalera({ campos, desde, hasta, periodo }: { campos: string[]; 
   const ancho = (v: number) => `${Math.min(100, (Math.abs(v) / escala) * 100)}%`
 
   return (
-    <Panel className="mb-2.5 print:break-inside-avoid" titulo="Lo que no se produjo, por tipo"
+    <Panel className="mb-3 sm:mb-4 print:break-inside-avoid" titulo="Lo que no se produjo, por tipo"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">{periodo.toLowerCase()}<Info titulo="La escalera" texto={AYUDA_ESCALERA} /></span>}>
       <div data-escalera>
         {/* La eficiencia solo con número si se puede creer (D3; 5E·H30): si no, la frase del motor y lo no planeado en barriles. */}
@@ -141,7 +141,7 @@ function Escalon({ nombre, tecnico, valor, ancho, norte, discontinuo, ayuda, avi
       data-escalon={nombre} data-bbl={valor}>
       <span className={cn('flex flex-wrap items-center gap-x-1.5', cero && 'text-[var(--tinta3)]', norte && !cero && 'font-semibold')}>
         − {nombre}{ayuda}{tecnico && <Info titulo={nombre} texto={`En la escalera de la NSTA: ${tecnico}.`} />}
-        {norte && <span className="font-cond rounded-sm border border-[var(--tinta2)] px-1 text-[12px] font-semibold tracking-[.05em] text-[var(--tinta)]">Lo que TRIM baja</span>}
+        {norte && <span className="rounded-full border border-[var(--tinta2)] px-1.5 text-[12px] font-semibold text-[var(--tinta)]">Lo que TRIM baja</span>}
       </span>
       <span aria-hidden className="relative hidden h-2 overflow-hidden rounded-sm bg-[var(--panel2)] sm:block">
         {!cero && <i className={cn('absolute inset-y-0 left-0 block', discontinuo ? 'border border-dashed border-[var(--tinta3)]' : norte ? 'bg-[var(--dato-1)]' : 'bg-[var(--dato-3)]')} style={{ width: ancho }} />}

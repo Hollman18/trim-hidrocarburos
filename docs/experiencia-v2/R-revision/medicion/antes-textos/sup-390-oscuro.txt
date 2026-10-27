@@ -1,0 +1,36 @@
+3
+La Ceiba
+NO
+La Ceiba
+DEMO
+Hoy
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Ahora mismo
+1.966
+barriles por día
+se dejan de producir en La Ceiba.
+Le faltan
+4 paradas por confirmar
+el reporte sale mañana antes de las 07:00.
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Confirmar 2 paradas iguales
+Alarma
+P-201B
+cerró LC-07 y LC-16 05:43
+TRIM las dedujo:
+en la planta, no planeada
+Falta su confirmación.
+Plan simulado: volver antes de 39 h (2.072 bbl), y 2 planes más
+Confirmar las 2
+Ver una por una
+Conseguir la causa de 2 paradas
+Atención
+LC-21

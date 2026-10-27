@@ -1,6 +1,7 @@
 import { useApp, useRol } from '@/app/store'
 import type { Frase, Destino } from '@/shared/api/hoy'
 import type { CondicionFranja } from '@/shared/api/condiciones'
+import { useFiltrosEquipos } from '@/widgets/equipos/filtros'
 
 /** La misma frase, en una línea de texto (para el nombre accesible). */
 export const enLinea = (f?: Frase) => (f ?? []).map(x => (typeof x === 'string' ? x : x.b)).join('')
@@ -9,10 +10,6 @@ export const enLinea = (f?: Frase) => (f ?? []).map(x => (typeof x === 'string' 
 export const PALABRA: Record<CondicionFranja, string> = {
   interlock: 'Interlock', alarma: 'Alarma', atencion: 'Atención', aviso: 'Aviso', 'sin-comunicacion': 'Sin comunicación',
 }
-
-/** «Plan simulado: volver antes de 39 h (2.072 bbl), y 2 planes más»: lo del ciclo que toca este equipo. */
-export const resumenPlanes = (ps: readonly string[]) =>
-  ps.length === 1 ? ps[0]! : `${ps[0]!}, y ${ps.length - 1} ${ps.length === 2 ? 'plan más' : 'planes más'}`
 
 /** Lleva a un lugar del producto: la pantalla que el rol tiene para eso (la primera
  *  que le toque de la lista), o la ficha del equipo. */
@@ -24,12 +21,14 @@ export function useIr() {
     switch (d.a) {
       case 'equipo': setCampo(d.campoId); abrirEquipo(d.equipo); return
       case 'paradas': return ir(['causa'])
-      case 'planta': return ir(['plantaViva', 'planta', 'resumen'])
+      case 'planta': return ir(['plantaViva', 'planta'])
       case 'agua': return ir(['agua', 'plantaViva', 'bombas'])
       case 'turno': return ir(['turno'])
       case 'asignacion': return ir(['produccion'])
       case 'metas': return ir(['configuracion'])
       case 'planes': return ir(['mantenimiento', 'causa', 'turno'])
+      // P-10: la lista de Equipos, con el tren de esos equipos.
+      case 'equipos': useFiltrosEquipos.getState().poner({ tren: d.tren ?? 'todos' }); return ir(['equipos'])
     }
   }
 }

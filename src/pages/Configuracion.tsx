@@ -1,5 +1,5 @@
-import { useId, useMemo, useState, type KeyboardEvent } from 'react'
-import { Lock, Plus, Trash2, PenLine, Check } from 'lucide-react'
+import { useId, useMemo, useState } from 'react'
+import { Lock, Plus, Trash2, PenLine, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp, useCampo, useCampos, useRol, usePersona } from '@/app/store'
 import { useCtx, usePotencialReciente } from '@/shared/api/diferidos'
 import { diferenciasPorGrupo, validarConfig, conTramo, conMes, metaEn, mismoTramo, diaCo, perfilDe, NOMBRE_GAS, SIN_META, type Config, type ParadaProgramada, type PerfilCampo } from '@/entities/configuracion'
@@ -9,7 +9,7 @@ import { PAPEL_NOMBRE } from '@/entities/bombas'
 import { pedirPerfilesBomba, pedirPerfilBomba, pedirMaquinasBomba, pedirRegistroDeEquipos } from '@/shared/api/equipos'
 import { pedirPozosDelCampo, pedirMedicionOficial, textoBanda, useCampoAhora } from '@/shared/api/medicion'
 import { fechaHora, AHORA } from '@/entities/reloj'
-import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Boton, Chip, Hueco, Enlace } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { VerMas } from '@/shared/ui/VerMas'
@@ -24,17 +24,28 @@ import type { FilaPlan } from '@/entities/plan'
 import { cajaNumero, cajaMala, fechaDia, edicionDe } from '@/widgets/configuracion/comun'
 import { Accesos } from '@/widgets/configuracion/Accesos'
 import { FilosofiaOperacional, type PasoFilosofia } from '@/widgets/configuracion/Filosofia'
+import { MarcaEstado, MarcaFalta } from '@/widgets/configuracion/marcas'
 import {
-  conTopologia, faltanParaFirmar, capacidadesQueBloquean,
+  conTopologia, faltanParaFirmar, capacidadesQueBloquean, estadoConfiguracion,
   type TopologiaVigente, type RespuestaEquipo, type TopologiaEnBorrador, type CapacidadesCampo,
+  type EstadoConfiguracion, type PasoConfiguracion,
 } from '@/shared/api/choke'
 import { useSesion, useVersiones, usePlantas } from '@/shared/api/sesion'
 
 const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento disabled:opacity-70'
 
+/** Las partes de Configurar (UI-01: ninguna pestaña horizontal). Cada una con su
+ *  título (I-adm-3). El administrador abre en «Estado» (X4 §3.4): lo que falta en
+ *  el campo, y cada paso lleva a la parte donde se hace. */
 type Pestana = 'metas' | 'accesos' | 'tecnica' | 'filosofia'
+type Parte = 'estado' | Pestana
 const PESTANA: Record<Pestana, string> = {
   metas: 'Metas de los campos', accesos: 'Usuarios y accesos', tecnica: 'Configuración técnica', filosofia: 'Filosofía operacional',
+}
+/** Dónde se hace cada paso del estado: la parte y, en la filosofía, su paso. */
+const DONDE_PASO: Record<PasoConfiguracion, { parte: Pestana; paso?: PasoFilosofia }> = {
+  perfil: { parte: 'tecnica' }, tanques: { parte: 'tecnica' }, topologia: { parte: 'filosofia', paso: 1 },
+  capacidades: { parte: 'filosofia', paso: 2 }, factor: { parte: 'filosofia', paso: 2 }, metas: { parte: 'metas' },
 }
 
 /** Lo único que se escribe a mano en TRIM: las metas, los accesos y la
@@ -46,31 +57,37 @@ const PESTANA: Record<Pestana, string> = {
  *  firma es una versión y ninguna se sobrescribe. Lo demás (producido,
  *  diferido, causas, salud) sale de los equipos y no se configura aquí. */
 export function Configuracion() {
-  // Cada rol arranca en su primera pestaña: la del administrador no es la del gerente.
-  return <ConPestanas key={useRol().id} />
+  // Cada rol arranca en su primera parte: la del administrador (el estado) no es la del gerente.
+  return <ConPartes key={useRol().id} />
 }
 
-function ConPestanas() {
+function ConPartes() {
   const versiones = useVersiones()
   const rol = useRol()
   const pantalla = useApp(s => s.pantalla), setPantalla = useApp(s => s.setPantalla)
   // La filosofía operacional la prepara y la firma el administrador; producción y
   // confiabilidad abren Configuración en solo lectura (la filosofía, lo técnico y
   // las metas); el gerente no entra a la filosofía (U2 §8.1).
-  const pestanas: Pestana[] = rol.puede['config:firmar'] ? ['tecnica', 'filosofia', 'metas', 'accesos']
+  const conEstado = !!rol.puede['config:firmar']
+  const pestanas: Pestana[] = conEstado ? ['tecnica', 'filosofia', 'metas', 'accesos']
     : rol.nivel === 'ingenieria' ? ['filosofia', 'tecnica', 'metas'] : ['metas', 'accesos']
-  // La filosofía operacional tiene dirección propia (#/…/filosofia/…): su pestaña
-  // es esa pantalla. Las demás son pestañas de Configuración.
+  // La filosofía operacional tiene dirección propia (#/…/filosofia/…): su parte
+  // es esa pantalla. Las demás son partes de Configuración.
   const otras: Pestana[] = pestanas.filter(p => p !== 'filosofia')
-  const [pestana, setPestana] = useState<Pestana>(otras[0]!)
-  const actual: Pestana = pantalla === 'filosofia' && pestanas.includes('filosofia') ? 'filosofia' : otras.includes(pestana) ? pestana : otras[0]!
-  const irA = (p: Pestana) => {
-    if (p === 'filosofia') return setPantalla('filosofia')
-    setPestana(p)
-    if (pantalla !== 'configuracion') setPantalla('configuracion')
-  }
+  const inicio: Parte = conEstado ? 'estado' : otras[0]!
+  const [parte, setParte] = useState<Parte>(inicio)
+  const actual: Parte = pantalla === 'filosofia' && pestanas.includes('filosofia') ? 'filosofia'
+    : parte === 'estado' || otras.includes(parte as Pestana) ? parte : inicio
   // El paso de la filosofía vive aquí, como el modo de las metas: al firmar, el editor se rehace y no lo pierde.
   const [pasoFilosofia, setPasoFilosofia] = useState<PasoFilosofia>(1)
+  const irA = (p: Parte, paso?: PasoFilosofia) => {
+    if (paso) setPasoFilosofia(paso)
+    if (p === 'filosofia') return setPantalla('filosofia')
+    setParte(p)
+    if (pantalla !== 'configuracion') setPantalla('configuracion')
+    // Arriba de la vista, con el foco en el título de la parte: quien usa teclado o lector sabe dónde quedó.
+    requestAnimationFrame(() => { document.querySelector('.vista')?.scrollTo({ top: 0 }); document.getElementById(idTitulo)?.focus({ preventScroll: true }) })
+  }
   // Si ya hay un plan cargado (meses con cifra propia del mes en curso en adelante), se abre en
   // el plan. El modo vive aquí y no en el editor: al firmar, el editor se rehace y no lo pierde.
   const config = useSesion(s => s.ctx.config)
@@ -81,54 +98,135 @@ function ConPestanas() {
   // Cuántas versiones había al entrar: si hay más, se acaba de firmar y se dice.
   const [alEntrar] = useState(versiones.length)
   const firmada = versiones.length > alEntrar ? versiones.at(-1)! : null
-  // Pestañas de verdad (ARIA): cada una controla el panel, solo la activa entra
-  // en el orden del Tab y las flechas, Inicio y Fin se mueven entre ellas.
-  const idBase = useId()
-  const idPestana = (p: Pestana) => `${idBase}-pestana-${p}`, idPanel = `${idBase}-panel`
-  const moverCon = (e: KeyboardEvent, i: number) => {
-    const n = pestanas.length
-    const sig = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : null
-    if (sig === null) return
-    e.preventDefault()
-    const p = pestanas[(sig + n) % n]!
-    irA(p)
-    requestAnimationFrame(() => document.getElementById(idPestana(p))?.focus())
-  }
+  const idTitulo = `${useId()}-parte`
   return (
-    <>
+    <div className="grid gap-3 sm:gap-4" data-configurar={actual}>
       {firmada && (
-        <p role="status" className="mb-2.5 flex flex-wrap items-center gap-1.5 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[14px]">
-          <Check className="size-3.5 shrink-0" />
+        <p role="status" className="flex flex-wrap items-center gap-1.5 rounded-[14px] bg-[var(--panel)] px-4 py-2.5 text-[15px]">
+          <Check className="size-4 shrink-0" />
           <span>Firmada la <b>versión {firmada.version}</b> · «{firmada.motivo}»</span>
           <Info titulo="Desde cuándo rige" texto="Cada cambio rige desde la fecha que lleva; desde ahí las pantallas se miden contra él." />
         </p>
       )}
-      <div role="tablist" aria-label="Partes de la configuración" className="mb-2.5 flex flex-wrap gap-1">
-        {pestanas.map((p, i) => (
-          <button key={p} id={idPestana(p)} role="tab" aria-selected={actual === p} aria-controls={idPanel}
-            tabIndex={actual === p ? 0 : -1} onKeyDown={e => moverCon(e, i)} onClick={() => irA(p)}
-            className={cn('cursor-pointer rounded-full border px-3 py-1.5 text-[14px]',
-              actual === p ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
-            {PESTANA[p]}
+      {/* Ninguna pestaña (UI-01): el administrador vuelve al estado; los demás tienen sus partes en una lista. */}
+      {actual !== 'estado' && (conEstado
+        ? <button type="button" onClick={() => irA('estado')} data-volver-estado
+            className="no-imprimir inline-flex min-h-11 cursor-pointer items-center gap-0.5 justify-self-start text-[15px] font-semibold text-[var(--tinta)] hover:underline">
+            <ChevronLeft aria-hidden className="size-4 text-[var(--tinta2)]" />Estado de la configuración
           </button>
-        ))}
-      </div>
-      {/* Al firmar cambia la versión vigente: el editor arranca de nuevo sobre ella. El borrador sobrevive al cambiar de pestaña. */}
-      <div role="tabpanel" id={idPanel} aria-labelledby={idPestana(actual)}>
-        <Editor key={versiones.length} pestana={actual} modo={modo} setModo={setModo}
+        : pestanas.length > 1 && <ListaPartes partes={pestanas} actual={actual} onIr={irA} />)}
+      {/* Un título por parte (I-adm-3); la filosofía trae el suyo. */}
+      {actual !== 'filosofia' && (
+        <h2 id={idTitulo} tabIndex={-1} className={cn('text-[20px] font-semibold leading-tight outline-none', actual === 'estado' && 'sr-only')}>
+          {actual === 'estado' ? 'Estado de la configuración' : PESTANA[actual]}
+        </h2>
+      )}
+      {/* Al firmar cambia la versión vigente: el editor arranca de nuevo sobre ella. El borrador sobrevive al cambiar de parte. */}
+      <div className="grid gap-3 sm:gap-4">
+        <Editor key={versiones.length} pestana={actual} modo={modo} setModo={setModo} partes={pestanas}
           pasoFilosofia={pasoFilosofia} setPasoFilosofia={setPasoFilosofia} onPestana={irA} />
       </div>
+    </div>
+  )
+}
+
+/** Las partes de la configuración en una lista (no en pestañas): la que se ve,
+ *  marcada; las demás, con «›». */
+function ListaPartes({ partes, actual, onIr }: { partes: Pestana[]; actual: Parte; onIr: (p: Pestana) => void }) {
+  return (
+    <nav aria-label="Partes de la configuración" className="no-imprimir rounded-[20px] bg-[var(--panel)] px-4 py-1 sm:px-6" data-partes>
+      <ul>
+        {partes.map(p => (
+          <li key={p} className="border-t border-[var(--linea2)] first:border-t-0">
+            <button type="button" aria-current={actual === p ? 'page' : undefined} onClick={() => onIr(p)}
+              className={cn('flex min-h-11 w-full cursor-pointer items-center gap-2 py-1.5 text-left text-[15px] hover:underline',
+                actual === p ? 'font-semibold text-[var(--tinta)]' : 'text-[var(--tinta2)]')}>
+              <span className="min-w-0 flex-1">{PESTANA[p]}</span>
+              {actual === p ? <Check aria-hidden className="size-4 shrink-0" /> : <ChevronRight aria-hidden className="size-4 shrink-0 text-[var(--tinta3)]" />}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+/** El estado de la configuración del campo (P-04; X4 §3.4, adm): la cifra «N de M
+ *  pasos listos», lo que falta y una fila por paso que lleva a donde se hace. Lo
+ *  arma el motor (`estadoConfiguracion`): aquí solo se pinta. */
+function EstadoDelCampo({ estado, otros, partes, cambios, onPaso, onParte, onCampo }: {
+  estado: EstadoConfiguracion
+  /** Los demás campos del rol, con su cuenta. */
+  otros: Array<{ id: string; nombre: string; listos: number; total: number }>
+  partes: Pestana[]
+  /** Cambios del borrador sin firmar, y dónde se firman. */
+  cambios: { n: number; parte: Pestana }
+  onPaso: (p: PasoConfiguracion) => void
+  onParte: (p: Pestana) => void
+  onCampo: (id: string) => void
+}) {
+  const campo = useCampo()
+  // K2 · En el teléfono, los otros campos detrás de un toque: cada uno trae su «N de M» y la primera
+  // pantalla es la de este campo (el campo se cambia también en la píldora de la banda).
+  const [verOtros, setVerOtros] = useState(false)
+  return (
+    <>
+      <section aria-label={estado.frase} data-estado-config={campo.id} className="rounded-[20px] bg-[var(--panel)] px-5 pb-2 pt-4 sm:px-7 sm:pt-5">
+        {/* K2 · En el teléfono el campo ya está en la píldora de la banda (como I-sup-1). */}
+        <p className="text-[15px] font-medium text-[var(--tinta2)] max-sm:sr-only">{campo.nombre}</p>
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <b className="tabular text-[48px] font-bold leading-[.95] tracking-[-.03em] sm:text-[60px]" data-cifra>{estado.listos} de {estado.total}</b>
+          <span className="text-[22px] font-medium text-[var(--tinta2)]">pasos listos</span>
+        </p>
+        <p className="mt-2.5 text-[19px] font-medium leading-snug sm:text-[21px]" data-falta>{estado.falta ?? 'Todo firmado.'}</p>
+        {cambios.n > 0 && (
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[16px] text-[var(--tinta2)]" data-borrador>
+            {plural(cambios.n, 'cambio sin firmar', 'cambios sin firmar')} en el borrador.
+            <Enlace onClick={() => onParte(cambios.parte)}>Firmar la versión</Enlace>
+          </p>
+        )}
+        <ul className="mt-3" aria-label="Pasos del campo">
+          {estado.pasos.map(p => (
+            <li key={p.paso} className="border-t border-[var(--linea2)]">
+              <button type="button" onClick={() => onPaso(p.paso)} data-paso={p.paso} data-listo={p.listo ? 'si' : 'no'}
+                aria-label={`${p.nombre}: ${p.listo ? 'listo' : 'falta'}. ${p.detalle}.${p.firma === 'gerente' ? ' Lo firma el gerente de activo.' : ''}`}
+                className="flex min-h-14 w-full cursor-pointer items-center gap-3 py-2.5 text-left hover:bg-[var(--panel2)]/60">
+                <span className="grid size-5 shrink-0 place-items-center">{p.listo ? <MarcaEstado estado="firmado" /> : <MarcaFalta decorativa />}</span>
+                <span className="min-w-0 flex-1">
+                  <b className="block text-[16px] font-semibold leading-snug">{p.nombre}</b>
+                  {/* K2 · En el teléfono, el estado en una o dos palabras (el motor da `corto`); el detalle, en el paso. */}
+                  <span className="block text-[14px] leading-snug text-[var(--tinta2)] max-sm:hidden">{p.detalle}{p.firma === 'gerente' ? ' · la firma el gerente de activo' : ''}</span>
+                  <span className="block text-[14px] leading-snug text-[var(--tinta2)] sm:hidden" data-corto>{p.corto}</span>
+                </span>
+                <ChevronRight aria-hidden className="size-5 shrink-0 text-[var(--tinta3)]" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+      {otros.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[15px] text-[var(--tinta2)]" data-otros-campos>
+          <button type="button" aria-expanded={verOtros} onClick={() => setVerOtros(x => !x)} data-ver-otros
+            className="toque inline-flex min-h-11 cursor-pointer items-center gap-1 font-semibold text-[var(--tinta)] sm:hidden">
+            Sus otros campos<ChevronDown aria-hidden className={cn('size-4 text-[var(--tinta2)] transition-transform duration-[120ms]', verOtros && 'rotate-180')} />
+          </button>
+          <span className="max-sm:hidden">Sus otros campos:</span>
+          {otros.map(o => <Enlace key={o.id} onClick={() => onCampo(o.id)} className={verOtros ? undefined : 'max-sm:hidden'}>{o.nombre} · {o.listos} de {o.total}</Enlace>)}
+        </p>
+      )}
+      <ListaPartes partes={partes} actual="estado" onIr={onParte} />
     </>
   )
 }
 
-function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPestana }: {
-  pestana: Pestana; modo: 'vigente' | 'plan'; setModo: (m: 'vigente' | 'plan') => void
-  pasoFilosofia: PasoFilosofia; setPasoFilosofia: (p: PasoFilosofia) => void; onPestana: (p: Pestana) => void
+function Editor({ pestana, partes, modo, setModo, pasoFilosofia, setPasoFilosofia, onPestana }: {
+  pestana: Parte; partes: Pestana[]; modo: 'vigente' | 'plan'; setModo: (m: 'vigente' | 'plan') => void
+  pasoFilosofia: PasoFilosofia; setPasoFilosofia: (p: PasoFilosofia) => void; onPestana: (p: Parte, paso?: PasoFilosofia) => void
 }) {
   const campo = useCampo(); const rol = useRol(); const persona = usePersona(); const ctx = useCtx()
   const campos = useCampos()
   const campoId = useApp(s => s.campoId), versiones = useVersiones(), firmarConfig = useApp(s => s.firmarConfig), setPantalla = useApp(s => s.setPantalla)
+  const setCampo = useApp(s => s.setCampo)
   const puedeMetas = rol.puede['metas:firmar'], puedeTecnica = rol.puede['config:firmar']
   const desdeMin = `${diaIso(AHORA).slice(0, 8)}01`
   const [borrador, setBorrador] = useState<Config>(() => structuredClone(ctx.config))
@@ -251,10 +349,21 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
     if (!r.ok && !alcanza(motivo, MOTIVO_MINIMO)) document.getElementById(idMotivo)?.focus()
   }
 
+  // El estado del campo (P-04): lo arma el motor con lo firmado y lo contestado en el borrador.
+  if (pestana === 'estado') {
+    const estado = estadoConfiguracion(campoId, ctx, topologia)
+    const otros = campos.filter(c => c.id !== campoId).map(c => { const e = estadoConfiguracion(c.id, ctx, topologia); return { id: c.id, nombre: c.nombre, listos: e.listos, total: e.total } })
+    const irPaso = (p: PasoConfiguracion) => { const d = DONDE_PASO[p]; onPestana(partes.includes(d.parte) ? d.parte : 'tecnica', d.paso) }
+    return (
+      <EstadoDelCampo estado={estado} otros={otros} partes={partes} cambios={{ n: cambios.length, parte: grupos.tecnica.length ? 'tecnica' : 'metas' }}
+        onPaso={irPaso} onParte={p => onPestana(p)} onCampo={setCampo} />
+    )
+  }
+
   if (pestana === 'accesos') return <Accesos puede={rol.puede['usuarios:administrar']} />
 
   const firma = (
-    <Panel className="mb-2.5" titulo="FIRMAR LA VERSIÓN" extra={cambios.length ? `${plural(cambios.length, 'cambio', 'cambios')} en el borrador` : 'sin cambios'}>
+    <Panel titulo="Firmar la versión" extra={cambios.length ? `${plural(cambios.length, 'cambio', 'cambios')} en el borrador` : 'sin cambios'}>
       {cambios.length === 0 ? <p className="text-[14px] text-[var(--tinta2)]">No hay nada que firmar.</p> : (
         <>
           {/* La lista la arma el motor (diferenciasPorGrupo): cada cambio con su fecha. */}
@@ -264,7 +373,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       )}
       {errores.length > 0 && (
         <div role="alert" className="mb-2 rounded border-2 border-[var(--tinta)] px-2.5 py-1.5">
-          <p className="font-cond text-[12px] font-semibold tracking-[.11em]">CORRIJA ANTES DE FIRMAR</p>
+          <p className="text-[15px] font-semibold">Corrija antes de firmar</p>
           <ul className="list-disc pl-4 text-[14px] text-[var(--tinta)]">{errores.map(e => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
@@ -305,7 +414,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
 
   const selectorModo = (
     // Es un modo de la misma pestaña, no otra pestaña: botones que dicen cuál está puesto.
-    <div role="group" aria-label="Cómo se fijan las metas" className="mb-2.5 flex flex-wrap items-center gap-1">
+    <div role="group" aria-label="Cómo se fijan las metas" className="flex flex-wrap items-center gap-1">
       {([['vigente', 'Meta vigente'], ['plan', 'Plan mes a mes']] as const).map(([m, t]) => (
         <button key={m} type="button" aria-pressed={modo === m} onClick={() => setModo(m)}
           className={cn('cursor-pointer rounded-full border px-3 py-1 text-[14px]',
@@ -320,7 +429,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
 
   // Quien no firma ve lo que rige, sin poder cambiarlo: lo dice una vez, arriba.
   const soloLectura = !puedeMetas && (
-    <div className="mb-2.5"><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: los fija y firma el gerente de activo.</Hueco></div>
+    <div><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: los fija y firma el gerente de activo.</Hueco></div>
   )
 
   if (pestana === 'metas' && modo === 'plan') return (
@@ -330,7 +439,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       <PlanMensual propuesta={propuesta} campos={campos} campoInicial={campoId} mesActual={mesActual} puede={puedeMetas}
         valor={valorMes} propio={propioMes} onEditar={editarMes} onCargar={cargarPlan} />
       {firmaVisible && firma}
-      <div className="mb-2.5">{historial}</div>
+      {historial}
     </>
   )
 
@@ -339,7 +448,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       {soloLectura}
       {selectorModo}
       {puedeMetas && (
-        <Panel className="mb-2.5" titulo="DESDE CUÁNDO RIGE">
+        <Panel titulo="Desde cuándo rige">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
             <label className="flex items-center gap-2">
               <span>Desde el</span>
@@ -363,12 +472,12 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
           </div>
         </Panel>
       )}
-      <div className="mb-2.5">
+      <div>
         <MetasCampos vigente={ctx.config} propuesta={propuesta} campos={campos} desde={desde}
           puede={puedeMetas} potencial={potencial} valor={valor} base={base}
           onEditar={editar} />
       </div>
-      <Panel className="mb-2.5" titulo="PRECIO Y PUBLICACIÓN" extra={puedeMetas ? `desde el ${fechaDia(desde)}` : 'vigentes hoy'}>
+      <Panel titulo="Precio y publicación" extra={puedeMetas ? `desde el ${fechaDia(desde)}` : 'vigentes hoy'}>
         <Lectura>
           El precio neto pasa barriles a dinero; sin él, ese campo no muestra dinero. La regla para publicar
           dice cuánto puede quedar sin causa identificada para cerrar el libro del mes. Los dos llevan fecha,
@@ -386,7 +495,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
           return (
             <div key={c.id} className="grid grid-cols-[minmax(0,1fr)_minmax(76px,108px)_minmax(76px,108px)] items-center gap-x-2 border-b border-[var(--linea2)] py-1.5 last:border-0">
               <span className="min-w-0">
-                <b className="block truncate text-[14px]">{c.nombre}</b>
+                <b className="block break-words text-[14px]" data-nombre-campo>{c.nombre}</b>
                 {cambiado && <small className="block text-[12px] text-[var(--tinta3)]">antes {sinMeta ? SIN_META : <>{b.netbackUsd ?? 'sin precio'}{b.netbackUsd !== undefined ? ' USD/bbl' : ''} · {b.criterioSinCausa} %</>}</small>}
                 {!cambiado && sinMeta && <small className="block text-[12px] text-[var(--tinta3)]">{SIN_META}</small>}
               </span>
@@ -401,18 +510,18 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
         })}
       </Panel>
       {firmaVisible && firma}
-      <div className="mb-2.5">{historial}</div>
+      {historial}
     </>
   )
 
   return (
     <>
       {!puedeTecnica && (
-        <div className="mb-2.5"><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: lo prepara y lo firma el administrador de la implementación.</Hueco></div>
+        <div><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: lo prepara y lo firma el administrador de la implementación.</Hueco></div>
       )}
       {/* Lo que la pestaña reúne y quién es dueño de qué: lo dicen los paneles de abajo
           y la pestaña de metas; aquí queda para quien lo pida con «¿cómo se lee?». */}
-      <div className="mb-2.5 empty:hidden">
+      <div className="empty:hidden">
         <Lectura>
           Aquí va el perfil del campo, los tanques, el respaldo de las bombas, el programa de paradas y el
           membrete de los informes. Las metas y los accesos son del gerente de activo; producción, diferido,
@@ -426,17 +535,17 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
       <PerfilDelCampo campoId={campoId} perfil={perfilDe(borrador, campoId)} puede={puedeTecnica}
         onCambio={p => cambiar(c => { c.campos[campoId]!.perfil = { ...perfilDe(c, campoId), ...p } })} />
 
-      <Panel className="mb-2.5" titulo="MEMBRETE DEL INFORME" extra="todos los campos">
+      <Panel titulo="Membrete del informe" extra="todos los campos">
         <Texto rotulo="Nombre de la empresa" valor={borrador.empresa} disabled={!puedeTecnica}
           onCambio={v => cambiar(c => { c.empresa = v })} />
       </Panel>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        <Panel titulo="TANQUES DE AGUA">
+      <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+        <Panel titulo="Tanques de agua">
           {borrador.tanques.filter(t => t.campoId === campoId).map(t => (
             <div key={t.id} className="mb-2 border-b border-[var(--linea2)] pb-2 last:mb-0 last:border-0">
               <b className="block text-[14px]">{t.nombre}</b>
-              <small className="font-mono block text-[12px] text-[var(--tinta3)]">{t.id} · lo vacía {t.bomba} · nivel ahora {(nv => (nv ? `${n1(nv.pct)} %` : 'sin lectura'))(Object.hasOwn(niveles, t.id) ? niveles[t.id] : undefined)}</small>
+              <small className="block text-[13px] text-[var(--tinta2)]">{t.id} · lo vacía {t.bomba} · nivel ahora {(nv => (nv ? `${n1(nv.pct)} %` : 'sin lectura'))(Object.hasOwn(niveles, t.id) ? niveles[t.id] : undefined)}</small>
               <div className="mt-1.5 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(130px,1fr))]">
                 <Numero rotulo="Capacidad" sufijo="bbl" valor={t.capacidadBbl} paso={100} min={100} max={500000} disabled={!puedeTecnica}
                   onCambio={v => cambiar(c => { c.tanques.find(x => x.id === t.id)!.capacidadBbl = v })} />
@@ -457,7 +566,7 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
           )}
         </Panel>
 
-        <Panel titulo="RESPALDO DE BOMBAS">
+        <Panel titulo="Respaldo de bombas">
           {!pedirPerfilesBomba(campoId).length && (
             // «con perfil»: Perfil del campo también cuenta las bombas registradas sin perfil; sin esa palabra, la pantalla se contradice.
             <p className="text-[14px] text-[var(--tinta2)]">Ninguna bomba con perfil: no hay respaldo que declarar.</p>
@@ -484,24 +593,24 @@ function Editor({ pestana, modo, setModo, pasoFilosofia, setPasoFilosofia, onPes
         </Panel>
       </div>
 
-      <div className="mb-2.5"><Programa borrador={borrador} campoId={campoId} puede={puedeTecnica} onCambio={cambiar} /></div>
+      <div><Programa borrador={borrador} campoId={campoId} puede={puedeTecnica} onCambio={cambiar} /></div>
 
       {firmaVisible && firma}
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+      <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         {historial}
         <Fuentes campoId={campoId} niveles={borrador.tanques.filter(t => t.campoId === campoId).map(t => `${t.id} · ${t.tagNivel}`)}
           onConectores={rol.pantallas.includes('conectores') ? () => setPantalla('conectores') : undefined} />
       </div>
 
       <details className="group">
-        <summary className="mb-2 flex cursor-pointer list-none items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-[14px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
+        <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center gap-x-2 rounded-[20px] bg-[var(--panel)] px-4 py-3 text-[15px] hover:bg-[var(--panel2)] sm:px-6">
           <b className="flex-1">Esquema de planta</b>
           {/* Con el modelo choke el esquema sí cambia algo: de él sale a qué pozos sirve cada equipo (U2 §8.5 y §12, punto 7). */}
           <span className="text-[13px] text-[var(--tinta3)]">de él TRIM deduce a qué pozos sirve cada equipo</span>
-          <span className="text-[12px] text-[var(--tinta3)] group-open:rotate-180">▾</span>
+          <span aria-hidden className="text-[13px] text-[var(--tinta2)] group-open:rotate-180">▾</span>
         </summary>
-        <Esquema puede={rol.puede['conector:configurar']} conGas={perfilDe(borrador, campoId).gas !== 'no'} />
+        <div className="mt-3 grid gap-3 sm:gap-4"><Esquema puede={rol.puede['conector:configurar']} conGas={perfilDe(borrador, campoId).gas !== 'no'} /></div>
       </details>
       {cfgCampo === undefined && <Hueco>{campo.nombre} no tiene configuración.</Hueco>}
     </>
@@ -520,7 +629,7 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
   const idsBombas = pedirMaquinasBomba().filter(id => pedirPerfilBomba(campoId, id) || registrados.has(id))
   const bombas = idsBombas.length
   const enGas = planta?.gas.length ?? 0
-  const queda = 'No saldrán sus avisos ni sus predicciones; lo que pierdan se sigue contando en el libro.'
+  const queda = 'No saldrán sus avisos ni sus predicciones; lo que dejen de producir se sigue contando en el libro.'
   const vacia = 'La subpantalla saldrá vacía hasta que se registren.'
   // Lo que pasa si se firma así: el hecho a la vista y su consecuencia en el ⓘ (y en el papel).
   const avisos = ([
@@ -538,7 +647,7 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
     </label>
   )
   return (
-    <Panel className="mb-2.5" titulo="PERFIL DEL CAMPO">
+    <Panel titulo="Perfil del campo">
       <Lectura>
         Cada campo es distinto: uno sin gas no tiene tren de gas, uno de bombeo mecánico no tiene
         electrosumergibles. Lo que se marque aquí decide lo que se dibuja en Planta y las subpantallas
@@ -576,7 +685,7 @@ function PerfilDelCampo({ campoId, perfil, puede, onCambio }: {
 function Grupo({ titulo, lista }: { titulo: string; lista: string[] }) {
   return (
     <div className="mb-2">
-      <p className="font-cond mb-0.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{titulo.toUpperCase()}</p>
+      <p className="mb-0.5 text-[14px] font-semibold text-[var(--tinta2)]">{titulo}</p>
       <ul className="list-disc pl-4 text-[14px] text-[var(--tinta2)]">{lista.map(c => <li key={c}>{c}</li>)}</ul>
     </div>
   )
@@ -598,7 +707,7 @@ function Historial({ versiones }: { versiones: ReturnType<typeof useVersiones> }
     </div>
   )
   return (
-    <Panel titulo="VERSIONES FIRMADAS" extra={`${versiones.length}`}>
+    <Panel titulo="Versiones firmadas" extra={`${versiones.length}`}>
       {corta.visibles.map(fila)}
       {corta.resto.length > 0 && <div className="solo-impresion">{corta.resto.map(fila)}</div>}
       <VerMas ocultas={corta.ocultas} abierto={corta.abierto} onAlternar={corta.alternar} />
@@ -644,7 +753,7 @@ function Programa({ borrador, campoId, puede, onCambio }: {
     </div>
   )
   return (
-    <Panel titulo="PARADAS PROGRAMADAS" extra={`${lista.length}`}>
+    <Panel titulo="Paradas programadas" extra={`${lista.length}`}>
       <Lectura>Es el programa de paradas aprobado. Una parada que esté aquí cuenta como programada, no como falla. Por eso se aprueba con firma y antes de que empiece: una falla no se puede volver programada después, ni una parada programada quitarse cuando ya pasó.</Lectura>
       {corta.visibles.map(fila)}
       {corta.resto.length > 0 && <div className="solo-impresion">{corta.resto.map(fila)}</div>}
@@ -685,7 +794,7 @@ function Fuentes({ campoId, niveles, onConectores }: { campoId: string; niveles:
     ['Banda de asignación', textoBanda(medicion)],
   ]
   return (
-    <Panel titulo="NO SE CONFIGURA" extra="sale de los equipos">
+    <Panel titulo="No se configura" extra="sale de los equipos">
       <Lectura>Esto no se escribe en ningún formulario: lo entrega cada equipo con su tag. Si una fuente falta, la pantalla lo dice como hueco de custodia.</Lectura>
       {filas.map(([k, v]) => (
         <div key={k} className={cn('grid grid-cols-[minmax(0,150px)_1fr] gap-3 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0')}>

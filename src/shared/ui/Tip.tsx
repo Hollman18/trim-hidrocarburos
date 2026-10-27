@@ -62,7 +62,10 @@ export function Tip({ titulo, filas, pista, pistaEnPapel, children, as, tabIndex
   return (
     <>
       <Tag {...rest}
-        role={rest.role ?? (dibujo ? (rest.onClick ? 'button' : 'img') : undefined)}
+        // Fuera de un dibujo y sin acción, pero con el foco (para leer el globo): un
+        // botón que despliega (A17), así el lector dice qué es y si está abierto.
+        role={rest.role ?? (dibujo ? (rest.onClick ? 'button' : 'img') : !rest.onClick && !aLaVista && tabIndex === undefined && as !== 'button' ? 'button' : undefined)}
+        aria-expanded={!dibujo && !rest.onClick && !aLaVista && tabIndex === undefined && as !== 'button' && !rest.role ? abierto : undefined}
         aria-label={rest['aria-label'] ?? (dibujo ? (rest.onClick && pista ? `${resumen}. ${pista}` : resumen) : undefined)}
         aria-describedby={pos ? id : undefined}
         tabIndex={tabIndex ?? (rest.onClick || !aLaVista ? 0 : undefined)}

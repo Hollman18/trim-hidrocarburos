@@ -1,9 +1,9 @@
 import { useId, useState } from 'react'
-import { CalendarDays, Check, ChevronDown, ChevronRight } from 'lucide-react'
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp, useCampo, usePeriodo, useAmbito, useRango, useRol, useCampos, portafolioPermitido } from '@/app/store'
 import { PERIODOS } from '@/entities/campos'
 import type { Periodo } from '@/entities/tipos'
-import { PANTALLAS, GRUPOS, grupoDe } from '@/app/pantallas'
+import { PANTALLAS, GRUPOS, grupoDe, tituloDe } from '@/app/pantallas'
 import { Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
@@ -13,6 +13,7 @@ import { AHORA, fechaCorta } from '@/entities/reloj'
 import { Exportar } from '@/widgets/informe/Exportar'
 import { PRIMER_DIA, ULTIMO_DIA, abreNivel3 } from '@/app/url'
 import { useDesplegable } from '@/shared/ui/foco'
+import { useTelefono } from '@/shared/ui/telefono'
 import { useUsuarios } from '@/shared/api/usuarios'
 import { Franja } from './Franja'
 
@@ -54,7 +55,7 @@ function SelectorPeriodo() {
   return (
     <div ref={contenedor} className="relative max-lg:static">
       <button {...propsBoton} aria-label={`Período: ${enVista}`}
-        className="inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] px-3.5 text-[14px] font-semibold shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-[var(--panel2)]">
+        className="toque inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] px-3.5 text-[14px] font-semibold shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-[var(--panel2)]">
         <CalendarDays aria-hidden className="size-4 text-[var(--tinta2)]" />
         {/* También en el teléfono, entero: un ícono solo no dice qué período se mira. */}
         <span>{enVista}</span>
@@ -73,7 +74,7 @@ function SelectorPeriodo() {
                 <span className="block text-[13px] text-[var(--tinta2)]">{o.detalle}</span>
               </span>
               {/* «Mes en curso» ya lo dice en el nombre: la marca va solo donde el nombre no lo dice. */}
-              {o.parcial && !/en curso/i.test(o.nombre) && <Chip>EN CURSO</Chip>}
+              {o.parcial && !/en curso/i.test(o.nombre) && <Chip>en curso</Chip>}
               {!rango && o.id === periodoId && <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--foco)]" />}
             </button>
           ))}
@@ -110,17 +111,19 @@ function SelectorPeriodo() {
 
 /** Una sola marca para toda la aplicación: los campos son ficticios (calibrados con fuentes
  *  publicadas) y SAP y WhatsApp se muestran como conectados. Cada pantalla, sin notas de demo.
- *  Solo en el demo (X4 §3.5). */
+ *  Solo en el demo (X4 §3.5). En frase, a 13 px y sin espaciado (UI-22; X5 §3.4), en la
+ *  línea de las migas sin agrandarla (H14). En el teléfono dice «Demo», con su nombre
+ *  entero para el lector (A11). Es un desplegable: Escape y un toque afuera lo cierran. */
 export function MarcaDemo() {
-  const [abierto, setAbierto] = useState(false)
+  const { abierto, contenedor, id, propsBoton } = useDesplegable()
   return (
-    <span>
-      <button type="button" onClick={() => setAbierto(v => !v)} aria-expanded={abierto}
-        className="inline-flex h-6 cursor-pointer items-center whitespace-nowrap rounded-full border-[1.5px] border-dashed border-[var(--tinta3)] px-2 text-[12px] font-semibold tracking-[.03em] text-[var(--tinta2)] hover:bg-[var(--panel2)]">
-        <span className="max-sm:hidden">DATOS DE DEMOSTRACIÓN</span><span className="sm:hidden" aria-hidden>DEMO</span>
+    <span ref={contenedor} className="max-lg:relative">
+      <button type="button" {...propsBoton} aria-label="Datos de demostración" data-demo
+        className="toque inline-flex h-5 cursor-pointer items-center whitespace-nowrap rounded-full border-[1.5px] border-dashed border-[var(--tinta3)] px-2 text-[13px] font-medium leading-none text-[var(--tinta2)] hover:bg-[var(--panel2)]">
+        <span aria-hidden className="max-sm:hidden">Datos de demostración</span><span aria-hidden className="sm:hidden">Demo</span>
       </button>
       {abierto && (
-        <span role="note" className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[260px] max-lg:left-0 max-lg:right-auto max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-3 text-[14px] text-[var(--tinta2)] shadow-[var(--sombra-flota)]">
+        <span id={id} role="note" className="absolute left-0 top-[calc(100%+6px)] z-[90] w-[260px] max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-3 text-[14px] font-normal text-[var(--tinta2)] shadow-[var(--sombra-flota)]">
           <span className="block">Cinco campos ficticios, calibrados con fuentes publicadas.</span>
           <span className="mt-1 block">SAP y WhatsApp, simulados: ver el contrato con el backend.</span>
         </span>
@@ -133,55 +136,87 @@ export function MarcaDemo() {
  *  («Todos mis campos › La Ceiba»), el título con la hora de los datos y, a la
  *  derecha, la franja de condiciones. El período y Exportar se quedan donde la
  *  pantalla los usa (X4 §3.5). La navegación ya no vive aquí: es el panel
- *  lateral (y en el teléfono, la banda índigo con el ☰). */
+ *  lateral (y en el teléfono, la banda índigo con el ☰).
+ *
+ *  H6 (X2 N2; X5 §6.10): la franja va SIEMPRE en el mismo lugar —la primera
+ *  fila, a la derecha, a la altura de las migas— en el nivel 1, el 2 y el 3
+ *  (el nivel 3 trae su cabecera, `widgets/equipos/Nivel3.tsx`, con la misma
+ *  regla). El período y Exportar van debajo de ella: nunca la empujan.
+ *
+ *  T-1 (imágenes 2 y 3b): en el teléfono no van migas si la persona tiene un
+ *  solo campo; con varios, «‹ Todos mis campos». En Hoy, sin la fecha («datos
+ *  de las 14:00»), como la imagen 3b. */
 export function Cabecera() {
   const pantalla = useApp(s => s.pantalla), setAlcance = useApp(s => s.setAlcance)
   const campo = useCampo(); const ambito = useAmbito(); const rol = useRol(); const campos = useCampos(); const usuarios = useUsuarios()
+  const telefono = useTelefono()
   const p = PANTALLAS[pantalla]
   const puerta = grupoDe(pantalla)
   const varios = campos.length > 1 && portafolioPermitido(rol, usuarios)
   // La puerta va en las migas cuando la pantalla no es la primera de ella: «La Ceiba › Equipos».
   const conPuerta = puerta && GRUPOS[puerta]!.miembros[0] !== pantalla ? GRUPOS[puerta]!.corto : null
-  const hora = `hoy, ${fechaCorta(AHORA)} · datos de las ${HORA.format(AHORA)}`
+  const hora = telefono && pantalla === 'hoy' ? `datos de las ${HORA.format(AHORA)}` : `hoy, ${fechaCorta(AHORA)} · datos de las ${HORA.format(AHORA)}`
+  // K1 (pedido de K2; T-1, imagen 2 al medio): en el teléfono, La planta viva de UN campo de varios va solo con
+  // «‹ Todos mis campos» y la franja: sin el título ni la fecha. El título queda para el lector y para el foco (A14).
+  // Solo ahí: es lo que dibuja la imagen; en las demás vistas el título dice en cuál subpantalla se está.
+  const sinTitulo = telefono && pantalla === 'plantaViva' && varios && !ambito.global
   // C4 · El nivel 3 técnico trae su propia cabecera (las migas hasta el equipo, sus
   // vecinos, el tag y la franja; X4 §5.3): esta no se pinta encima.
   const equipoAbierto = useApp(s => s.equipoAbierto)
   if (pantalla === 'equipos' && equipoAbierto && abreNivel3(rol)) return null
+  const conSalida = !!p && (!p.ahora || !p.sinExportar)
 
   return (
-    <header data-cabecera className="no-imprimir mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 sm:mb-5">
-      <div className="min-w-0">
-        <nav aria-label="Dónde está" className="relative flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px] font-medium text-[var(--tinta2)]">
-          {varios && (ambito.global
-            ? <b className="font-semibold text-[var(--tinta)]">Todos mis campos</b>
-            : <button onClick={() => setAlcance('portafolio')} className="cursor-pointer hover:text-[var(--tinta)] hover:underline">Todos mis campos</button>)}
-          {!ambito.global && (<>
-            {varios && <ChevronRight aria-hidden className="size-3.5" />}
-            <b className={cn('font-semibold', conPuerta ? 'font-medium text-[var(--tinta2)]' : 'text-[var(--tinta)]')}>{campo.nombre}</b>
-          </>)}
-          {conPuerta && (<>
-            <ChevronRight aria-hidden className="size-3.5" />
-            <b className="font-semibold text-[var(--tinta)]">{conPuerta}</b>
-          </>)}
-          {/* Solo en el demo (X4 §3.5): junto a las migas, para no sumarle alto a la cabecera. */}
-          <span className="ml-2"><MarcaDemo /></span>
-        </nav>
-        <h1 className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[26px] font-bold leading-[1.15] tracking-[-.01em] max-sm:text-[21px]">
-          {p?.titulo ?? '—'}
-          <small className="text-[15px] font-normal tracking-normal text-[var(--tinta2)] max-sm:text-[13px]">{hora}</small>
-        </h1>
-      </div>
-      {/* A la derecha, arriba lo que la pantalla usa (el período, exportar) y abajo la franja,
-          a la altura del título. En el teléfono baja entera, debajo del título. */}
-      <div className="flex min-w-0 flex-col items-end gap-2.5 max-lg:w-full max-lg:items-start">
-        {p && (!p.ahora || !p.sinExportar) && (
-          <div className="relative flex flex-wrap items-center gap-2 max-lg:order-2">
-            {!p.ahora && <SelectorPeriodo />}
-            {!p.sinExportar && <Exportar />}
-          </div>
+    <header data-cabecera className="no-imprimir mb-4 grid grid-cols-1 gap-x-6 gap-y-2.5 sm:mb-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-y-2">
+      <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+        {telefono ? (
+          // En el teléfono: «‹ Todos mis campos» solo si hay varios (imagen 2); con uno, sin migas (imagen 3b).
+          varios && !ambito.global && (
+            <nav aria-label="Dónde está" className="flex items-center gap-x-1.5 text-[14px] font-medium text-[var(--tinta2)]">
+              <button onClick={() => setAlcance('portafolio')} className="toque -ml-0.5 inline-flex cursor-pointer items-center gap-0.5 hover:text-[var(--tinta)]">
+                <ChevronLeft aria-hidden className="size-4" />Todos mis campos
+              </button>
+            </nav>
+          )
+        ) : (
+          <nav aria-label="Dónde está" className="relative flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px] font-medium text-[var(--tinta2)]">
+            {varios && (ambito.global
+              ? <b className="font-semibold text-[var(--tinta)]">Todos mis campos</b>
+              : <button onClick={() => setAlcance('portafolio')} className="cursor-pointer hover:text-[var(--tinta)] hover:underline">Todos mis campos</button>)}
+            {!ambito.global && (<>
+              {varios && <ChevronRight aria-hidden className="size-3.5" />}
+              <b className={cn('font-semibold', conPuerta ? 'font-medium text-[var(--tinta2)]' : 'text-[var(--tinta)]')}>{campo.nombre}</b>
+            </>)}
+            {conPuerta && (<>
+              <ChevronRight aria-hidden className="size-3.5" />
+              <b className="font-semibold text-[var(--tinta)]">{conPuerta}</b>
+            </>)}
+            {/* Solo en el demo (X4 §3.5): en la línea de las migas, sin agrandarla. */}
+            <span className="ml-2"><MarcaDemo /></span>
+          </nav>
         )}
-        <Franja className="justify-end max-lg:justify-start" />
+        {/* En el teléfono, la marca del demo va a la derecha del título: sin migas no suma un renglón. */}
+        {telefono && <span className="float-right mt-1.5 ml-2"><MarcaDemo /></span>}
+        {/* tabIndex -1: al cerrar la introducción el foco vuelve aquí y no a <body> (A14). */}
+        {sinTitulo
+          // Sin verse, en un solo texto: el lector lo oye y el foco (A14) llega aquí.
+          ? <h1 tabIndex={-1} data-titulo-vista className="sr-only">{`${tituloDe(pantalla, rol.id) ?? '—'} · ${hora}`}</h1>
+          : (
+            <h1 tabIndex={-1} data-titulo-vista className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[26px] font-bold leading-[1.15] tracking-[-.01em] outline-none max-sm:text-[21px]">
+              {tituloDe(pantalla, rol.id) ?? '—'}
+              <small className="text-[15px] font-normal tracking-normal text-[var(--tinta2)] max-sm:text-[13px]">{hora}</small>
+            </h1>
+          )}
       </div>
+      {/* La franja: arriba a la derecha, a la altura de las migas (H6). En el teléfono, debajo del título. */}
+      <Franja className="justify-end max-lg:order-3 max-lg:justify-start lg:col-start-2 lg:row-start-1 lg:justify-self-end" />
+      {/* Lo que la pantalla usa (el período, exportar): debajo de la franja, nunca antes. */}
+      {conSalida && (
+        <div className="relative flex flex-wrap items-center gap-2 max-lg:order-2 lg:col-start-2 lg:row-start-2 lg:justify-self-end">
+          {!p.ahora && <SelectorPeriodo />}
+          {!p.sinExportar && <Exportar />}
+        </div>
+      )}
     </header>
   )
 }

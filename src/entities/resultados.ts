@@ -42,7 +42,9 @@ import { libro, conMeta, textoSinMeta, calendario, type Libro } from './libro'
 import { riesgoAhora, estadoCampo, type Riesgo } from './diferido'
 import { repartoPorMes, type OpcionesReparto } from './choke-reparto'
 import { horasPorClase, type OrdenSap } from './sap'
-import { plantaViva, FAMILIA, PALABRA_PRIORIDAD, MOMENTOS, NOMBRE_MOMENTO, LEMA_MOMENTO, type Momento, type MesDiferido, type FlechaTrim, type FilaEquipoDiferido } from './planta-viva'
+import { plantaViva, FAMILIA, PALABRA_PRIORIDAD, MOMENTOS, NOMBRE_MOMENTO, LEMA_MOMENTO, enPalabras, type Momento, type MesDiferido, type FlechaTrim, type FilaEquipoDiferido } from './planta-viva'
+import { enterosDelPeriodo, enteroDe, porcentajesEnteros } from './redondeo'
+import { programadoDe } from './mantenimiento'
 import { campoPorId } from './campos'
 import { PUESTA_EN_MARCHA } from './configuracion'
 import { sumarMeses } from './plan'
@@ -151,7 +153,10 @@ export interface VistaResultados {
   /** La cifra grande con su frase (X5 §5.1): el diferido del período contra el máximo firmado. */
   cifra: {
     previo: string
+    /** Exacta (el contrato y los `data-*`). */
     valor: number
+    /** Lo que se muestra: la raíz del campo o la suma de las raíces (la regla de redondeo). */
+    entero: number
     unidad: string
     frase: string
     /** Como mucho dos renglones: contra el máximo, quién se lo lleva, lo sin causa. */
@@ -227,6 +232,8 @@ export interface VistaResultados {
     programadoBbl: number
     noProgramadoBbl: number
     altoImpactoBbl: number
+    /** Lo programado y lo que no, en enteros que suman la cifra grande, su parte entera y la frase (P-mant-1). */
+    programado: { bbl: number; noBbl: number; pct: number; frase: string }
   } | null
   /** Confiabilidad: ¿le creo al vigía? */
   confiabilidad: {
@@ -319,24 +326,28 @@ function calcular(q: ConsultaResultados, ctx: Contexto, versiones: Historial | u
   const enCurso = meta.diasTotal > meta.dias + 0.01
   const periodoCorto = pv.periodo.replace(', en curso', '')
 
-  /* La cifra grande: el diferido del período contra el máximo firmado. */
+  /* La cifra grande: el diferido del período contra el máximo firmado. Lo que se muestra es el entero
+     de la raíz (o la suma de las raíces) y la diferencia con el máximo se hace con enteros: cuadra a la vista. */
+  const entero = pv.cifras.despues.entero
   const maximo = hayMeta ? meta.diferido : null
   const sobreMaximo = maximo !== null && lb.diferido > maximo
+  const maxE = maximo === null ? 0 : enteroDe(maximo)
+  // Primero la conclusión (P-resultados-1): cuánto va por debajo o por encima, y después contra qué.
   const contraMax = maximo === null
     ? `Sin máximo firmado (${sinMeta}): no hay contra qué compararlo.`
     : sobreMaximo
-      ? `Pasó el máximo firmado para ${enCurso ? `lo que va de ${periodoCorto}` : periodoCorto} (${n0(maximo)} bbl) en ${n0(lb.diferido - maximo)}.`
-      : `El máximo firmado para ${enCurso ? `lo que va de ${periodoCorto}` : periodoCorto} es ${n0(maximo)} bbl: va ${n0(maximo - lb.diferido)} por debajo.`
+      ? `Va ${n0(Math.max(0, entero - maxE))} bbl por encima del máximo firmado${enCurso ? ` a la fecha` : ''} (${n0(maxE)}).`
+      : `Va ${n0(Math.max(0, maxE - entero))} bbl por debajo del máximo firmado${enCurso ? ` a la fecha` : ''} (${n0(maxE)}).`
   const anterior = pv.esteMes.anterior
   const explica = [contraMax, pv.esteMes.nota ? `${mayus(pv.esteMes.nota)}.` : '', anterior ? `${mayus(anterior.nombre)} cerró en ${n0(anterior.bbl)} bbl.` : '']
     .filter(Boolean).join(' ')
   const donde = unCampo ? ` en ${nombre}` : ` en sus ${n0(campos.length)} campos`
   const fraseCorta = lb.diferido < 0.5
     ? `Nada se trabó${donde} en ${pv.periodo}.`
-    : `En ${periodoCorto} no se produjeron ${n0(lb.diferido)} bbl${donde}${maximo === null ? '' : sobreMaximo ? ', sobre el máximo firmado' : ', bajo el máximo firmado'}.`
+    : `En ${periodoCorto} no se produjeron ${n0(entero)} bbl${donde}${maximo === null ? '' : sobreMaximo ? ', sobre el máximo firmado' : ', bajo el máximo firmado'}.`
   const cifra: VistaResultados['cifra'] = {
     previo: `Lo que pasó · ${pv.periodo}`,
-    valor: lb.diferido, unidad: 'barriles',
+    valor: lb.diferido, entero, unidad: 'barriles',
     frase: lb.diferido < 0.5 ? `Nada se trabó${donde}.` : `no se produjeron${donde}.`,
     explica, fraseCorta, maximo, sobreMaximo,
     rango: pv.esteMes.rango, valorUsd: pv.esteMes.valorUsd,
@@ -409,15 +420,20 @@ function calcular(q: ConsultaResultados, ctx: Contexto, versiones: Historial | u
   })
   const sobre = meses.filter(x => x.sobre)
   const mx = pv.mesAMes.maximoBpd
-  const aria = `Diferido por día de ${meses[0]?.nombre ?? ''} a ${meses.at(-1)?.nombre ?? ''}${mx !== null ? ` contra el máximo firmado (${n0(mx)} bbl/d este mes)` : ''}. `
-    + (sobre.length ? `Lo pasaron ${sobre.map(x => `${x.nombre} (${n0(x.totalBpd)})`).join(', ')}.` : 'Ningún mes cerrado lo pasó.')
+  // El nombre del dibujo, con las unidades en palabras (A16).
+  const aria = enPalabras(`Diferido por día de ${meses[0]?.nombre ?? ''} a ${meses.at(-1)?.nombre ?? ''}${mx !== null ? ` contra el máximo firmado (${n0(mx)} bbl/d este mes)` : ''}. `
+    + (sobre.length ? `Lo pasaron ${sobre.map(x => `${x.nombre} (${n0(x.totalBpd)} bbl/d)`).join(', ')}.` : 'Ningún mes cerrado lo pasó.'))
 
-  /* El diferido por equipo: hasta seis, con la marca de hoy de cada uno. */
+  /* El diferido por equipo: hasta seis, con la marca de hoy de cada uno. Lo que se muestra: el entero de cada
+     equipo con su causa (el mismo en todas las vistas: LC-08 = 108) y su parte entera del total (Σ = 100). */
   const riesgo = riesgoAhora(campos, ctx)
   const marca = (c: string, e: string): Severidad => riesgo.find(r => r.campoId === c && r.equipo === e)?.prioridad ?? 0
-  const filasEq = lb.porEquipo.slice(0, 6).map((e): FilaEquipoDiferido & { campo: string } => {
+  const enteros = new Map(campos.map(c => [c, enterosDelPeriodo(c, desde, hasta, ctx, opReparto)]))
+  const pcts = porcentajesEnteros(lb.porEquipo.map(e => ({ id: `${e.campoId}:${e.equipo}:${e.tipo}`, valor: e.bbl })))
+  const filasEq = lb.porEquipo.slice(0, 6).map((e, i): FilaEquipoDiferido & { campo: string } => {
     const p = marca(e.campoId, e.equipo)
-    return { campoId: e.campoId, campo: campoPorId(e.campoId).nombre, equipo: e.equipo, familia: FAMILIA[e.tipo], prioridad: p, palabra: PALABRA_PRIORIDAD[p], bbl: e.bbl, pct: lb.diferido > 0 ? (e.bbl / lb.diferido) * 100 : 0 }
+    return { campoId: e.campoId, campo: campoPorId(e.campoId).nombre, equipo: e.equipo, familia: FAMILIA[e.tipo], prioridad: p, palabra: PALABRA_PRIORIDAD[p], bbl: e.bbl, pct: lb.diferido > 0 ? (e.bbl / lb.diferido) * 100 : 0,
+      bblEntero: enteros.get(e.campoId)?.porCausa[`${e.equipo}|${e.tipo}`] ?? enteroDe(e.bbl), pctEntero: pcts[i] ?? 0 }
   })
 
   /* El ciclo, simulado: una línea por momento (X4 §4.4, regla 2). */
@@ -436,6 +452,7 @@ function calcular(q: ConsultaResultados, ctx: Contexto, versiones: Historial | u
       : 'Sin fallas cerradas con su orden en SAP: no se sabe cuánto es espera.',
     fallas: rl?.fallas ?? 0, totalH: rl?.totalH ?? null, activaH: rl?.activaH ?? null, esperaH: rl?.esperaH ?? null,
     programadoBbl: lb.planeado, noProgramadoBbl: lb.noPlaneado, altoImpactoBbl: lb.altoImpacto,
+    programado: (() => { const x = programadoDe({ ...lb, diferido: entero }); return { bbl: x.programado, noBbl: x.noProgramado, pct: x.pct, frase: x.frase } })(),
   } : null
   const vg = op.vigia
   const juzgables = vg ? vg.aciertos + vg.falsas : 0

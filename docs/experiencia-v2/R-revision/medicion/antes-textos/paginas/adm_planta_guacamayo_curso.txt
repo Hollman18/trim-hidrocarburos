@@ -1,0 +1,141 @@
+#/adm/planta/guacamayo/curso
+
+Todos mis campos
+Guacamayo
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Planta
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+1
+en atención
+3
+0
+avisos
+0
+sin comunicación
+La tubería del campo
+qué limita hoy al campo
+potenciales con las pruebas vigentes al 2 de oct · capacidades del demo, sin firmar
+Punto de medición oficial (FQI-0101 · computador de flujo de la unidad LACT-01): en línea; el último día completo dio 6.611 bbl
+Ver como tabla
+Yacimiento
+Pozos · 12
+Planta o estación
+Afuera
+Sin identificar
+→
+→
+→
+→ venta
+0
+bbl en el período
+va con los pozos
+◄ limita
+6.828bbl/d
+con las pruebas de los pozos
+8.000bbl/d
+le sobran
+1.172
+dato del demo, sin firmar
+crudo 8.000 · el menor
+agua ≈ 8.334 (110.000 bbl/d de agua)
+Ver la tubería del agua
+gas · sin medir
+7.500bbl/d
+le sobran
+672
+dato del demo, sin firmar
+El oleoducto o el transportador: 7.500
+El terminal o el cliente (mercado): 9.000
+
+Afuera reciben 672 bbl/d más: lo que den de más los pozos pasa, hasta 672 bbl/d.
+
+Pasa hoy
+6.615 bbl/d
+Se deja de producir ahora
+0 bbl/d
+
+Nada: todos los pozos con prueba están produciendo.
+
+Los pozos dan 6.828 según sus pruebas: pasan 6.615, se pierden 0 y los otros 213 son lo que las pruebas dan de más que el medidor oficial.
+
+Se trabó en el período
+Octubre, en curso
+0 bbl
+
+Nada se trabó en octubre (en curso).
+
+ESQUEMA DE PLANTA
+gas para consumo propio
+8 de 11
+equipos con datos
++ 12 pozos
+Ver la tubería
+la planta
+
+Ahora:
+96.737 bbl/d de fluido
+6.615 bbl/d de crudo
+gas sin medición
+90.122 bbl/d de agua
+
+Tren de gas
+Tren de crudo
+Tren de agua
+Pozos productores
+12 pozos · 0 parados
+Manifold deproducción
+Separadortrifásico
+V-101
+Depurador de gas
+sin datos
+Tea / quemador
+Tratador térmico
+H-302
+Tanque enespecificación
+TK-102
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto ·nominación restri…
+Tanque de agua
+LT-2012 · 42,3 %
+Bombas de agua
+1 de 3 con datos
+Pozos inyectores
+Subestación 13,8kV
+SE-2
+Aire deinstrumentos
+K-101
+CAPTURANDO DATOS
+8 equipos
+V-101 · Separador trifásico
+LI-1012 48 %
+H-302 · Tratador térmico
+TI-3021 298 °C
+TK-102 · PMO-02
+LI-1102 7,8 pies
+LACT-01 · Unidad LACT
+FQI-0101 6.611 bbl/d
+TK-AG-GU · Tanque de agua de Guacamayo
+nivel
+42,3 %
+alto-alto 90 %
+ver 3 más
+CONFIGURADOS SIN DATOS
+3 equipos
+Depurador de gas
+sin instrumento
+P-201A · disposición
+sin instrumento
+P-201C · reserva
+sin instrumento
+Conectores y tags
+Capacidad por tren
+▾

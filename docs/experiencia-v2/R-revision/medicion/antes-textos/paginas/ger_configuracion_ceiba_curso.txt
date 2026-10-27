@@ -1,0 +1,73 @@
+#/ger/configuracion/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Metas, accesos y configuración
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Metas de los campos
+Usuarios y accesos
+Meta vigente
+Plan mes a mes
+DESDE CUÁNDO RIGE
+Desde el
+2 de oct de 2026
+Incluye 1 día ya corrido (hoy)
+METAS POR CAMPO
+Campo
+Producción, bbl/d
+Máx. de diferido, bbl/d
+La Ceiba
+pueden dar ≈ 11.534 bbl/d
+Morichal Norte
+pueden dar ≈ 17.330 bbl/d
+Guacamayo
+pueden dar ≈ 6.866 bbl/d
+El Palmar
+pueden dar ≈ 3.353 bbl/d
+La Zarza
+pueden dar ≈ 3.170 bbl/d
+Meta global
+suma de 5 campos · pueden dar ≈ 42.254 bbl/d
+40.200
+2.300
+
+Total de octubre de 2026: producción 1.246.200 bbl · máx. diferido 71.300 bbl
+
+PRECIO Y PUBLICACIÓN
+desde el 2 de oct de 2026
+Campo
+Precio neto, USD/bbl
+Máx. % sin causa
+La Ceiba
+Morichal Norte
+Guacamayo
+El Palmar
+La Zarza
+FIRMAR LA VERSIÓN
+sin cambios
+
+No hay nada que firmar.
+
+VERSIONES FIRMADAS
+1
+Versión 1
+vigente
+1 de sept, 08:00 · Hermes Leal · administrador de la implementación
+
+«Arranque de la implementación»
+
+Configuración inicial: metas por campo, precio neto, tanques de agua, respaldos de bombas y programa de paradas

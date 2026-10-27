@@ -30,7 +30,9 @@ export function MarcaEstado({ estado }: { estado: EstadoEquipo }) {
     <svg width={12} height={12} viewBox="0 0 14 14" aria-hidden style={{ flexShrink: 0 }}>
       {estado === 'propuesta' && <>
         <circle cx="7" cy="7" r="5.6" fill="none" stroke="var(--tinta2)" strokeWidth="1.4" />
-        <text x="7" y="10.2" textAnchor="middle" fontSize="8.4" fontWeight="700" fontFamily="system-ui, sans-serif" fill="var(--tinta2)">?</text>
+        {/* El «?» dibujado, no escrito (UI-16): un texto de 8,4 unidades saldría a 7 px en pantalla. */}
+        <path data-pregunta d="M5.1 5.4 A1.9 1.9 0 1 1 8.4 6.6 C7.6 7.1 7 7.5 7 8.4" fill="none" stroke="var(--tinta2)" strokeWidth="1.4" strokeLinecap="round" />
+        <circle cx="7" cy="10.3" r="0.9" fill="var(--tinta2)" />
       </>}
       {estado === 'firmado' && <path d="M2.2 7.4 L5.6 10.6 L11.8 3.4" fill="none" stroke="var(--tinta)" strokeWidth="2" />}
       {estado === 'contestado' && <>
@@ -54,7 +56,7 @@ export function EtiquetaFalta({ children, className }: { children: ReactNode; cl
  *  gris, con doble contorno y la palabra. */
 export function Limita() {
   return (
-    <span className="font-cond inline-flex items-center rounded-sm border-[3px] border-double border-[var(--tinta)] px-1 text-[12px] font-semibold tracking-[.05em] text-[var(--tinta)]">
+    <span className="inline-flex items-center rounded-sm border-[3px] border-double border-[var(--tinta)] px-1 text-[13px] font-semibold text-[var(--tinta)]">
       ◄ limita
     </span>
   )

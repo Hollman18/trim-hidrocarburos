@@ -69,7 +69,7 @@ export function Diaria({ dias }: { dias: Dia[] }) {
     <>
     <div ref={medir}><div ref={alFinal} className="overflow-x-auto">
       <svg ref={dibujo} width={W} height={196} viewBox={`0 0 ${W} 196`} className="block" role="group"
-        aria-label={`Producción diaria contra potencial y meta, ${pts.length} días. Con las flechas se pasa de un día a otro.`}>
+        aria-label={`Producción diaria contra el potencial del libro y la meta, ${pts.length} días. Con las flechas se pasa de un día a otro.`}>
         {marcas.map(v => (
           <g key={v}>
             <line x1={G.x0} x2={G.x1} y1={Y(v)} y2={Y(v)} stroke="var(--linea2)" strokeWidth={0.7} />
@@ -78,22 +78,21 @@ export function Diaria({ dias }: { dias: Dia[] }) {
         ))}
         {huecos.map((h, k) => <polygon key={k} points={h} fill="var(--panel2)" stroke="none" />)}
         {tramosMeta.map((t, k) => <polyline key={k} points={t.map(i => `${X(i)},${Y(pts[i]!.meta!)}`).join(' ')} fill="none" stroke="var(--tinta3)" strokeWidth={1} strokeDasharray="2 3" />)}
-        <polyline points={linea(p => p.pot)} fill="none" stroke="var(--tinta2)" strokeWidth={1.2} strokeDasharray="5 3" />
-        {/* El día en curso va punteado: es una tasa de un día a medias, no un desplome. */}
-        {tramos.map((t, k) => <polyline key={k} points={t.filter(i => !pts[i]!.parcial).map(i => `${X(i)},${Y(pts[i]!.real!)}`).join(' ')} fill="none" stroke="var(--dato-1)" strokeWidth={1.8} />)}
-        {pts.length > 1 && pts.at(-1)!.parcial && pts.at(-1)!.real !== null && pts.at(-2)!.real !== null && (
-          <line x1={X(pts.length - 2)} y1={Y(pts.at(-2)!.real!)} x2={X(pts.length - 1)} y2={Y(pts.at(-1)!.real!)} stroke="var(--dato-1)" strokeWidth={1.4} strokeDasharray="3 3" />
-        )}
+        {/* H18 (X2 §5.3, punto 8): lo discontinuo es solo lo proyectado. El potencial va continuo, fino y claro
+            (--dato3, 1,2 px); lo real, continuo y oscuro (--dato1, 1,8 px). */}
+        <polyline points={linea(p => p.pot)} fill="none" stroke="var(--dato3)" strokeWidth={1.2} data-curva="potencial" />
+        {/* El día en curso no se une con una raya: es una tasa de un día a medias, no un desplome. Va solo su punto hueco. */}
+        {tramos.map((t, k) => <polyline key={k} points={t.filter(i => !pts[i]!.parcial).map(i => `${X(i)},${Y(pts[i]!.real!)}`).join(' ')} fill="none" stroke="var(--dato1)" strokeWidth={1.8} data-curva="real" />)}
         {pts.map((p, i) => (
           <Tip key={p.d.dia.getTime()} as="g" data-dia={i} tabIndex={i === activo ? 0 : -1} onTecla={e => mover(e, i)} titulo={`${fechaCorta(p.d.dia)}${p.parcial ? ' · día en curso' : ''}`}
             pista={p.parcial ? `Parcial: ${n1(p.d.horas)} h. Se muestra como tasa diaria.` : undefined}
-            filas={[['Real', p.d.real === null ? 'sin fiscal del punto de medición oficial' : `${n0(p.d.real)} bbl`], ['Potencial', `${n0(p.d.potencial)} bbl`], ['Meta', p.d.meta === null ? SIN_META : `${n0(p.d.meta)} bbl`],
+            filas={[['Real', p.d.real === null ? 'sin fiscal del punto de medición oficial' : `${n0(p.d.real)} bbl`], ['Potencial del libro', `${n0(p.d.potencial)} bbl`], ['Meta', p.d.meta === null ? SIN_META : `${n0(p.d.meta)} bbl`],
               ['Diferido de los eventos', `${n0(p.d.diferido)} bbl`], ['Inventario entre días', p.d.residuo === null ? '—' : `${n0(p.d.residuo)} bbl`],
               ['Del potencial', p.d.real === null || !p.d.potencial ? '—' : `${n1((p.d.real / p.d.potencial) * 100)} %`]]}>
             <rect x={X(i) - (G.x1 - G.x0) / pts.length / 2} y={G.y0} width={(G.x1 - G.x0) / pts.length} height={G.y1 - G.y0} fill="transparent" />
             {p.real === null ? null : p.parcial
-              ? <circle cx={X(i)} cy={Y(p.real)} r={3} fill="var(--panel)" stroke="var(--dato-1)" strokeWidth={1.4} />
-              : pts.length <= 45 && <circle cx={X(i)} cy={Y(p.real)} r={1.8} fill="var(--dato-1)" />}
+              ? <circle cx={X(i)} cy={Y(p.real)} r={3.5} fill="var(--panel)" stroke="var(--dato1)" strokeWidth={1.6} data-dia-en-curso="" />
+              : pts.length <= 45 && <circle cx={X(i)} cy={Y(p.real)} r={1.8} fill="var(--dato1)" />}
             {conMarca(p, i) && (
               // El primer día arranca en el eje (no centrado): centrado se montaba sobre la cifra de abajo del eje vertical.
               <text x={X(i)} y={G.y1 + 17} fontSize={12} textAnchor={i === pts.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'} fill="var(--tinta2)">{etiqueta(p)}</text>
@@ -105,10 +104,12 @@ export function Diaria({ dias }: { dias: Dia[] }) {
     </div></div>
       {/* La leyenda va fuera del desplazable: en el teléfono la gráfica arranca al final y la cortaba. */}
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[var(--tinta2)]">
-        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato-1)" strokeWidth="2" /></svg>real medido</span>
-        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta2)" strokeWidth="1.2" strokeDasharray="5 3" /></svg>potencial</span>
+        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato1)" strokeWidth="1.8" /></svg>real medido</span>
+        {/* G-5: el potencial de las pruebas por el factor del mes es el «potencial del libro». */}
+        <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--dato3)" strokeWidth="1.2" /></svg>potencial del libro</span>
         <span className="inline-flex items-center gap-1.5"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta3)" strokeWidth="1" strokeDasharray="2 3" /></svg>meta firmada</span>
         <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 bg-[var(--panel2)] ring-1 ring-[var(--linea)]" />diferido</span>
+        {pts.at(-1)?.parcial && <span className="inline-flex items-center gap-1.5" data-leyenda-en-curso=""><svg width="10" height="10" aria-hidden><circle cx="5" cy="5" r="3.5" fill="var(--panel)" stroke="var(--dato1)" strokeWidth="1.6" /></svg>día en curso</span>}
       </div>
     </>
   )

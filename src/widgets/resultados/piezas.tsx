@@ -27,7 +27,8 @@ export function AlDetalle({ children, onClick, className }: { children: ReactNod
   if (!onClick) return null
   return (
     <button type="button" onClick={onClick}
-      className={cn('no-imprimir mt-3 inline-flex min-h-8 cursor-pointer items-center gap-0.5 text-[15px] font-semibold text-[var(--tinta)] hover:underline', className)}>
+      // 44 px de blanco en el teléfono (A5); en el escritorio, del alto del texto.
+      className={cn('no-imprimir mt-3 inline-flex min-h-11 cursor-pointer items-center gap-0.5 text-[15px] font-semibold text-[var(--tinta)] hover:underline sm:min-h-8', className)}>
       {children}<ChevronRight aria-hidden className="size-4 text-[var(--tinta2)]" />
     </button>
   )

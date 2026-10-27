@@ -52,7 +52,7 @@ export function Accesos({ puede }: { puede: boolean }) {
 
   return (
     <>
-      <Panel className="mb-2.5" titulo="USUARIOS Y ACCESOS"
+      <Panel titulo="Quién entra"
         extra={`${plural(cuenta('activo'), 'con acceso', 'con acceso')} · ${plural(cuenta('invitado'), 'invitado', 'invitados')} · ${plural(cuenta('suspendido'), 'suspendido', 'suspendidos')}`}>
         <Lectura>
           {puede ? 'Usted' : 'El gerente de activo'} decide quién entra, con qué rol y a qué campos. Lo que cada rol ve
@@ -67,7 +67,7 @@ export function Accesos({ puede }: { puede: boolean }) {
               <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
                 <span className="min-w-0 flex-1">
                   <b className={cn('block text-[15px]', u.estado === 'suspendido' && 'text-[var(--tinta3)] line-through')}>{u.nombre}{u.id === yo && <span className="font-normal text-[var(--tinta3)]"> · usted</span>}</b>
-                  {esCompleta(u) && <small className="block truncate font-mono text-[12px] text-[var(--tinta3)]">{u.correo}</small>}
+                  {esCompleta(u) && <small className="block break-all text-[13px] text-[var(--tinta2)]">{u.correo}</small>}
                   <small className="block text-[13px] text-[var(--tinta2)]">{rolPorId(u.rolId).nombre} · {nombreCampos(u.campos)}</small>
                   <small className="block text-[13px] text-[var(--tinta3)]">{u.telefono ? `WhatsApp ${telefonoLegible(u.telefono)}` : 'sin WhatsApp'}{u.alertas ? ' · recibe alertas' : ''}</small>
                 </span>
@@ -86,7 +86,7 @@ export function Accesos({ puede }: { puede: boolean }) {
           : <Boton variante="principal" className="mt-2 w-full" onClick={() => setAbierto(nuevo.id)}><UserPlus className="mr-1 inline size-3.5" />Invitar a una persona</Boton>)}
       </Panel>
 
-      <Panel className="mb-2.5" titulo="HISTORIAL DE ACCESOS" extra={plural(accesos.length, 'cambio', 'cambios')}>
+      <Panel titulo="Historial de accesos" extra={plural(accesos.length, 'cambio', 'cambios')}>
         <Lectura>Todo cambio de acceso queda escrito con quién lo hizo, cuándo y por qué. No se edita ni se borra.</Lectura>
         <ul>{historial.visibles.map(cambio)}</ul>
         {historial.resto.length > 0 && <ul className="solo-impresion">{historial.resto.map(cambio)}</ul>}

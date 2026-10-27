@@ -7,8 +7,8 @@ import { n0, n1 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { textoColchon } from '@/widgets/bombas/comun'
 import { lista } from './palabras'
+import { AYUDA_ACUATOSOS } from './Agua'
 
-const AYUDA_ACUATOSOS = '«Hay que parar los pozos acuatosos, los que más producen agua»: es la regla de operación del campo. TRIM los ordena por el crudo que dan por cada barril de agua: primero los que menos crudo pierden.'
 /** El colchón como lo dice la lista de «Si falla hoy»: bajo una hora, en minutos. */
 
 /** «LA TUBERÍA DEL AGUA, HOY» en corto, dentro de la ficha de una bomba de
@@ -34,7 +34,7 @@ export function AguaHoy({ campoId, bomba, className }: { campoId: string; bomba:
   const rotulo = 'w-[64px] shrink-0 text-[14px] font-semibold text-[var(--tinta2)]'
   return (
     <section aria-label="La tubería del agua, hoy" data-agua-hoy={campoId}
-      className={cn('rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[14px] shadow-[var(--sombra)]', className)}>
+      className={cn('rounded-[14px] bg-[var(--panel2)] p-3 text-[14px] sm:p-4', className)}>
       <h3 className="mb-1.5 text-[15px] font-semibold text-[var(--tinta)]">La tubería del agua, hoy</h3>
       {o && (
         <div className="grid gap-0.5" data-hoy-agua>
@@ -65,10 +65,10 @@ export function AguaHoy({ campoId, bomba, className }: { campoId: string; bomba:
             Si para otra bomba ahora, cierre primero los más acuatosos:<Info titulo="Los más acuatosos" texto={AYUDA_ACUATOSOS} />
           </p>
           <p className="tabular">
-            {o.pasos.map((x, i) => <span key={x.pozo}>{i > 0 ? ' · ' : ''}<b className="font-mono">{x.pozo}</b>{x.fraccion < 0.999 ? ` al ${n0(x.fraccion * 100)} %` : ''}</span>)}
+            {o.pasos.map((x, i) => <span key={x.pozo}>{i > 0 ? ' · ' : ''}<b>{x.pozo}</b>{x.fraccion < 0.999 ? ` al ${n0(x.fraccion * 100)} %` : ''}</span>)}
           </p>
           <p className="text-[var(--tinta2)]">
-            → se pierden <b className="tabular text-[var(--tinta)]">{n0(o.crudoBpd)}</b> bbl/d de crudo (parejo, <span className="tabular">{n0(o.crudoParejoBpd)}</span>)
+            → se dejan de producir <b className="tabular text-[var(--tinta)]">{n0(o.crudoBpd)}</b> bbl/d de crudo (parejo, <span className="tabular">{n0(o.crudoParejoBpd)}</span>)
             {o.colchonH !== undefined ? `, después de ${textoColchon(o.colchonH)} de colchón` : ''}.
           </p>
         </div>

@@ -26,7 +26,7 @@ const PUERTO_DEMO = Number(process.env.TRIM_PUERTO_DEMO ?? 4199)
 const URL_DEMO = `http://127.0.0.1:${PUERTO_DEMO}`
 const CI = !!process.env.CI
 /** Safari y Firefox de escritorio no repiten los anchos que ya cubre Chrome. */
-const OTROS_ANCHOS = /\b(1512|1024|768|390) px/
+const OTROS_ANCHOS = /\b(1512|1024|768|390|320) px/
 const ESCRITORIO = { viewport: { width: 1280, height: 900 } }
 
 export default defineConfig({

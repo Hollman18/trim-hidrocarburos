@@ -1,0 +1,448 @@
+#/prod/causa/morichal/cerrado
+
+Todos mis campos
+La Ceiba
+Hoy
+DATOS DE DEMOSTRACIÓN
+Paradas por identificar
+hoy, 2 de oct · datos de las 14:00
+Septiembre · cerrado
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Usted no tiene asignado el campo Morichal Norte: le mostramos La Ceiba.
+
+100,0 %
+causa probada por señal
+7.716 de 7.716 bbl diferidos
+0,0 %
+causa declarada
+0 bbl · sin identificar 0 bbl (0,0 %)
+3
+por identificar · histórico
+2 pozos · 1 bomba · 2 sin arrancar
+1
+no conformidades
+arrancaron sin identificar
+No arrancar hasta identificar el daño
+· si arranca antes: no conformidad
+Su rol no responde paradas: lo hace operación o mantenimiento.
+Por identificar · sin arrancar
+2
+sin arrancar
+1
+P-201B · bomba de la línea
+Paró 2 de oct, 03:52 · hace 10,1 h
+no arrancar
+573 bbl
+Señal
+no alcanzó
+ZS-2011 · marcha → paro · 2 de oct, 03:52
+WhatsApp
+03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+2
+LC-21 · pozo
+Paró 1 de oct, 18:20 · hace 19,7 h
+no arrancar
+247 bbl
+Señal
+no alcanzó
+POC-LC21 · código CMD · 1 de oct, 18:20
+WhatsApp
+18:21 pregunta → 18:50 recordatorio → 20:20 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+La cadena de cada parada · árbol de causas
+18 paradas (28 filas del reporte)
+del árbol de causas en Septiembre, cerrado
+
+Paradas: falta confirmar 8 · falta un dato 10
+¿qué método es?
+
+POR CONFIRMAR · 8 paradas (17 filas del reporte)
+LC-11 · cerró 25 de sept, 19:56 · electrosumergible
+3.677 bbl diferidos · 1 parada (5 filas del reporte)
+falta confirmar
+5 días
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: LC-11 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+Confirmar los 5 días
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Marcela Ríos · hora del sistema.
+Ver las 5 filas del reporte
+LC-04 · cerró 26 de sept, 13:46 · electrosumergible
+2.126 bbl diferidos · 1 parada (4 filas del reporte)
+falta confirmar
+4 días
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: LC-04 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+Confirmar los 4 días
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Marcela Ríos · hora del sistema.
+Ver las 4 filas del reporte
+LC-07 y LC-16 · cerraron 22 de sept, 11:41 · por P-201B
+1.041 bbl diferidos · 2 paradas (4 filas del reporte)
+falta confirmar
+2 días
+
+Una sola raíz, P-201B: LC-07 cerró a los 100 min · LC-16 cerró a los 96 min
+
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: Fallaron los rodamientos de la bomba: la Tabla 1 tiene esa causa exacta
+2
+¿Dónde se trabó?
+En la planta o estación
+TRIM lo dedujo: P-201B mueve el agua de 18 pozos: el pozo se cerró porque el tanque de agua se llenó con P-201B parada (paró el 22 de sept, 10:05), así que se trabó en la planta
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica superficie
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla rodamiento/cojinete (bearing box)
+TRIM lo dedujo por la misma razón del paso 1
+Confirmar los 2
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Marcela Ríos · hora del sistema.
+Ver las 4 filas del reporte
+LC-07 · cerró 14 de sept, 05:01 · electrosumergible
+131 bbl diferidos
+falta confirmar
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: LC-07 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+Confirmar
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Marcela Ríos · hora del sistema.
+LC-14 · cerró 11 de sept, 16:58 · electrosumergible
+67 bbl diferidos
+falta confirmar
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: LC-14 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+Confirmar
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Marcela Ríos · hora del sistema.
+ver las otras 2
+FALTA UN DATO · 10 paradas (11 filas del reporte)
+LC-04 · cerró 6 de sept, 17:14 · energía eléctrica
+135 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a LC-04: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+LC-16 · cerró 12 de sept, 09:10 · electrosumergible
+121 bbl diferidos
+falta un dato
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La electrosumergible paró por baja carga: eso no dice si fue la bomba, arena o el yacimiento
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: LC-16 tiene su propia electrosumergible: la falla queda en el pozo · falta: «Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?
+Sí, fue el yacimiento
+No, fue la bomba
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+LC-16 · cerró 11 de sept, 11:30 · electrosumergible
+96 bbl diferidos
+falta un dato
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La electrosumergible paró por baja carga: eso no dice si fue la bomba, arena o el yacimiento
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: LC-16 tiene su propia electrosumergible: la falla queda en el pozo · falta: «Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?
+Sí, fue el yacimiento
+No, fue la bomba
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+LC-12 · cerró 7 de sept, 08:44 · energía eléctrica
+63 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a LC-12: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+LC-08 · cerró 23 de sept, 13:02 · electrosumergible
+61 bbl diferidos
+falta un dato
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La electrosumergible paró por baja carga: eso no dice si fue la bomba, arena o el yacimiento
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: LC-08 tiene su propia electrosumergible: la falla queda en el pozo · falta: «Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+Las señales apuntan a que al pozo le faltó aporte (baja carga). ¿Fue el yacimiento?
+Sí, fue el yacimiento
+No, fue la bomba
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+ver las otras 5
+No conformidades
+1
+no conformidad
+LC-08 · pozo
+Paró 1 de oct, 22:15 · arrancó 2 de oct, 01:10 (2,9 h)
+arrancó sin identificar
+109 bbl
+Señal
+no alcanzó
+VSD-LC08 · código CMD · 1 de oct, 22:15
+WhatsApp
+22:16 pregunta → 22:45 recordatorio → 00:15 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+Declaradas
+1
+declarada
+LC-06 · 14 de ago, 03:30
+«Cabeza de pozo con fuga en el prensaestopas: cierre para cambiarlo»
+Nelson Ortiz · supervisor · 14 de ago, 04:10
+237 bbl

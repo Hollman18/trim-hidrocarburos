@@ -1,3 +1,4 @@
+import { useId, useState } from 'react'
 import { useApp, useRol } from '@/app/store'
 import { useTuberiaAgua, NOMBRE_TRAMO_AGUA, type TuberiaAgua, type TramoTuberiaAgua, type BombaDelTren } from '@/shared/api/choke'
 import { useEstadoCampos, usePrediccion, useParadas, useBarrilesDeEquipos } from '@/shared/api/diferidos'
@@ -23,8 +24,23 @@ const HORA = formatoFecha({ hour: '2-digit', minute: '2-digit', hour12: false, t
 const PALABRA = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez']
 const cuantas = (n: number) => PALABRA[n] ?? n0(n)
 
-const AYUDA_TUBERIA = 'Es el modelo choke del agua: el agua de los pozos pasa por el tratamiento, el tanque y las bombas de reinyección hasta los pozos inyectores. El tramo más angosto dice «limita»; el tanque no tiene caudal: es el colchón que da tiempo cuando para una bomba. Cada capacidad se dice también en crudo, con el crudo que trae cada barril de agua según las pruebas.'
-const AYUDA_ACUATOSOS = '«Hay que parar los pozos acuatosos, los que más producen agua»: es la regla de operación del campo. TRIM los ordena por el crudo que dan por cada barril de agua: primero los que menos crudo pierden.'
+const AYUDA_TUBERIA = 'Es el modelo choke del agua: el agua de los pozos pasa por el tratamiento, el tanque y las bombas de agua hasta los pozos inyectores. El tramo más angosto dice «limita»; el tanque no tiene caudal: es el colchón que da tiempo cuando para una bomba. Cada capacidad se dice también en crudo, con el crudo que trae cada barril de agua según las pruebas.'
+/** T-8: cerrar un pozo deja de producir su crudo; no es una pérdida. */
+export const AYUDA_ACUATOSOS = '«Hay que parar los pozos acuatosos, los que más producen agua»: es la regla de operación del campo. TRIM los ordena por el crudo que dan por cada barril de agua: primero los que menos crudo dan, para dejar de producir lo menos posible.'
+
+/** La frase de arriba (P-agua-1; X4 §6.1, tabla «Antes y después», fila de Agua):
+ *  «Con las tres bombas, al agua le sobra espacio. Si para una, hay que cerrar
+ *  pozos.» Las cifras van en la ⓘ de cada caja y en «Ver la cuenta» (las frases
+ *  del motor). Con el agua que limita o sin capacidades, la primera frase del motor. */
+function fraseCortaAgua(a: TuberiaAgua): string {
+  const enServicio = (a.tramos.find(x => x.tramo === 'bombas')?.bombas ?? []).filter(b => !b.reserva).length
+  if (a.campoDeGas || a.limita || !a.angosto || a.sobraBpd <= 0 || !enServicio) return a.frases[0] ?? ''
+  const con = enServicio === 1 ? 'Con su bomba' : `Con las ${cuantas(enServicio)} bombas`
+  const si = !a.sinUna ? ''
+    : a.sinUna.papel === 'recobro' ? ` Si para ${a.sinUna.bomba}, no cierra pozos: el agua tiene otra salida.`
+      : a.sinUna.aguaSinSalidaBpd > 0 ? ' Si para una, hay que cerrar pozos.' : ' Si para una, el respaldo toma su agua.'
+  return `${con}, al agua le sobra espacio.${si}`
+}
 
 /** «LA TUBERÍA DEL AGUA» (U2 §5 y §9.6): ¿cuánta agua entra, cuánta se puede
  *  sacar, cuánto aguanta el tanque y qué pasa si para una bomba? Cinco tramos
@@ -42,14 +58,16 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
   const marca = (equipo: string): Severidad => hoy(equipo, campoId)?.severidad ?? 0
   const linea = a.sinUna ? pedirPerfilesBomba(campoId).find(p => p.equipo === a.sinUna!.bomba) : undefined
   const corte = caudales.agua + caudales.crudo > 0 ? (caudales.agua / (caudales.agua + caudales.crudo)) * 100 : 0
+  const [cuenta, setCuenta] = useState(false)
+  const idCuenta = useId()
 
   return (
-    <Panel className="mb-2.5 print:break-inside-avoid" titulo="La tubería del agua"
+    <Panel className="mb-3 sm:mb-4 print:break-inside-avoid" titulo="La tubería del agua"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">hoy, {fechaHora(AHORA)}<Info titulo="La tubería del agua" texto={AYUDA_TUBERIA} /></span>}>
       <div data-tuberia-agua={campoId}>
-        <small className="mb-1.5 block text-[13px] text-[var(--tinta3)]">
+        <small className="mb-1.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
           <span className="solo-impresion">{nombre} · {periodo} · </span>
-          agua de las pruebas vigentes · cada capacidad dice de dónde sale: firmada o dato del demo, sin firmar
+          agua de las pruebas vigentes<Info titulo="Las capacidades" texto={`Cada capacidad dice de dónde sale: firmada o sin firmar. ${TEXTO.sinFirmar}`} />
         </small>
         <Lectura>
           De izquierda a derecha, el camino del agua. Cada tramo dice cuánta agua deja pasar por día y,
@@ -76,10 +94,19 @@ export function TuberiaDelAgua({ campoId, desde, hasta, periodo }: { campoId: st
           ))}
         </div>
 
-        {/* El colchón, sin teoría: las frases del motor (U2 §5.3). */}
-        <ul className="mt-3 space-y-0.5 border-t border-[var(--linea2)] pt-2 text-[15px] font-medium leading-snug" data-frases-agua>
-          {a.frases.map(f => <li key={f}>{f}</li>)}
-        </ul>
+        {/* P-agua-1: una frase arriba (X4 §6.1); las frases del motor con sus cuentas (U2 §5.3), detrás de «Ver la cuenta» y en el papel. */}
+        <div className="mt-3 border-t border-[var(--linea2)] pt-2">
+          <p className="flex flex-wrap items-baseline gap-x-2 text-[15px] font-medium leading-snug" data-frase-agua="">
+            <span>{fraseCortaAgua(a)}</span>
+            <button type="button" aria-expanded={cuenta} aria-controls={idCuenta} onClick={() => setCuenta(v => !v)}
+              className="no-imprimir cursor-pointer text-[14px] font-semibold text-[var(--tinta)] underline decoration-dotted underline-offset-2 hover:decoration-solid">
+              {cuenta ? 'Ocultar la cuenta' : 'Ver la cuenta'}
+            </button>
+          </p>
+          <ul id={idCuenta} className={cn('mt-1 list-disc space-y-0.5 pl-5 text-[14px] leading-snug text-[var(--tinta2)]', !cuenta && 'hidden print:block')} data-frases-agua>
+            {a.frases.map(f => <li key={f}>{f}</li>)}
+          </ul>
+        </div>
 
         {linea && a.sinUna && <LoDeLaBomba perfil={linea} a={a} marca={marca} desde={desde} hasta={hasta} periodo={periodo} />}
         {/* En el papel no hay globos: lo que dicen los ⓘ del dibujo va una vez, al final. */}
@@ -123,7 +150,7 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
     {!primero && <span aria-hidden className="absolute -left-[15px] top-1/2 hidden -translate-y-1/2 text-[14px] text-[var(--tinta3)] md:block print:block">→</span>}
     <section aria-label={NOMBRE_TRAMO_AGUA[x.tramo]} data-tramo-agua={x.tramo} data-limita={angosto ? '' : undefined}
       data-casi-igual={x.casiIgual ? '' : undefined}
-      className={cn('h-full min-w-0 rounded-[3px] px-2.5 py-2',
+      className={cn('h-full min-w-0 rounded-[14px] px-3 py-2.5',
         sinDato ? 'border border-dashed border-[var(--tinta3)]'
           : angosto ? 'border-[4px] border-double border-[var(--tinta)] bg-[var(--panel2)]'
             : x.casiIgual ? 'border-[3px] border-dashed border-[var(--tinta)] bg-[var(--panel2)]'
@@ -138,7 +165,10 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
             {x.crudoBpd !== null && <small className="block text-[13px] text-[var(--tinta3)]">≈ <span className="tabular">{n0(x.crudoBpd)}</span> de crudo</small>}
             {/* En el agua se mide contra lo que entra: «cabe más», no «le sobran», que en la tubería del campo es contra lo que limita (B-16). */}
             {x.holguraBpd !== null && <small className="block text-[13px] text-[var(--tinta2)]">{x.holguraBpd >= 0 ? <>cabe más: <span className="tabular">{n0(x.holguraBpd)}</span></> : <>le faltan <span className="tabular">{n0(-x.holguraBpd)}</span></>}</small>}
-            <small className="block text-[13px] text-[var(--tinta3)]" title={x.fuente} data-estado={x.estado}>{sinFirmar ? '┄ ' : ''}{ESTADO_TRAMO[x.estado]}</small>
+            {/* P-agua-2: «sin firmar» una vez por caja; de dónde sale, en su ⓘ. */}
+            <small className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]" data-estado={x.estado}>
+              {sinFirmar ? '┄ ' : ''}{ESTADO_TRAMO[x.estado]}<Info titulo={NOMBRE_TRAMO_AGUA[x.tramo]} texto={sinFirmar ? `${x.fuente}. ${TEXTO.sinFirmar}` : x.fuente} />
+            </small>
           </>
         ) : (
           <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
@@ -149,7 +179,7 @@ function Tramo({ x, primero, angosto, children }: { x: TramoTuberiaAgua; primero
       {(angosto || x.casiIgual) && (
         <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] font-semibold" data-limita-marca={angosto ? '' : undefined}>
           {angosto && <span className="font-semibold">◄ limita</span>}
-          {x.casiIgual && <span className="font-cond font-normal tracking-[.06em] text-[var(--tinta2)]" data-casi-igual>casi iguales</span>}
+          {x.casiIgual && <span className="font-normal text-[var(--tinta2)]" data-casi-igual>casi iguales</span>}
           {angosto && <Info titulo="Lo que limita el agua" texto={TEXTO.limita} />}
         </span>
       )}
@@ -235,9 +265,9 @@ function Bomba({ b, s }: { b: BombaDelTren; s: Severidad }) {
         // Sin instrumento es un dato que falta: el hueco discontinuo de «falta», no el círculo de «sin comunicación» (B-44).
         : b.marcha === 'sin-lectura' ? <i aria-hidden className="inline-block h-2.5 w-3.5 rounded-[1px] border border-dashed border-[var(--tinta3)]" />
           : <MarcaPrioridad s={s} tamano={12} />}
-      <b className="font-mono text-[13px]">{b.id}</b>
+      <b className="text-[13px]">{b.id}</b>
       {b.marcha === 'parada'
-        ? <b className="font-cond text-[13px] tracking-[.06em]">PARADA</b>
+        ? <b className="text-[13px]">parada</b>
         : <span className="tabular text-[var(--tinta2)]">{n0(b.capacidadBpd)}</span>}
       {b.marcha === 'sin-lectura' && <span className="text-[13px] text-[var(--tinta3)]">┄ sin instrumento</span>}
       {b.reserva && <span className="text-[13px] text-[var(--tinta3)]">· de reserva</span>}
@@ -276,7 +306,7 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
     <div className="mt-2" data-bomba-linea={perfil.equipo}>
       {sinUna.parada && (
         <div className={fila} data-hoy-agua>
-          <span className={rotulo}>HOY</span>
+          <span className={rotulo}>Hoy</span>
           <span className="min-w-0 flex-1">
             <span className="inline-flex items-center gap-1 font-semibold">{s > 0 ? <MarcaPrioridad s={s} tamano={12} /> : <Parada />}{perfil.equipo} parada</span>
             {llenado && bombas?.disponibleHoy && <>: {hermanas.length ? `${lista(hermanas)} toman` : 'quedan'} lo que entra (<span className="tabular">{n0(llenado.aguaEntraBpd)}</span> de <span className="tabular">{n0(bombas.disponibleHoy.valor)}</span> bbl/d de agua).</>}
@@ -311,12 +341,12 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
             </span>
             <span className="block">
               {a.siParaOtra.pasos.map((p, i) => (
-                <span key={p.pozo}>{i > 0 ? ' · ' : ''}<b className="font-mono">{p.pozo}</b>{p.fraccion >= 0.999
+                <span key={p.pozo}>{i > 0 ? ' · ' : ''}<b>{p.pozo}</b>{p.fraccion >= 0.999
                   ? <> (<span className="tabular">{n0(p.crudoPorAgua * 1000)}</span>{i === 0 ? ' de crudo por cada 1.000 de agua' : ''})</>
                   : <> al <span className="tabular">{n0(p.fraccion * 100)} %</span></>}</span>
               ))}
             </span>
-            <span className="block text-[var(--tinta2)]">→ se pierden <b className="tabular text-[var(--tinta)]">{n0(a.siParaOtra.crudoBpd)}</b> bbl/d de crudo; parejo, <span className="tabular">{n0(a.siParaOtra.crudoParejoBpd)}</span>{a.siParaOtra.colchonH !== undefined ? <> · después de {textoColchon(a.siParaOtra.colchonH)} de colchón</> : ''}</span>
+            <span className="block text-[var(--tinta2)]">→ se dejan de producir <b className="tabular text-[var(--tinta)]">{n0(a.siParaOtra.crudoBpd)}</b> bbl/d de crudo; parejo, <span className="tabular">{n0(a.siParaOtra.crudoParejoBpd)}</span>{a.siParaOtra.colchonH !== undefined ? <> · después de {textoColchon(a.siParaOtra.colchonH)} de colchón</> : ''}</span>
           </span>
         </div>
       )}
@@ -330,38 +360,44 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
             </span>
             <span className="block">
               {orden.pasos.map((p, i) => (
-                <span key={p.pozo.id}>{i > 0 ? ' · ' : ''}<b className="font-mono">{p.pozo.id}</b>{p.fraccion >= 0.999
+                <span key={p.pozo.id}>{i > 0 ? ' · ' : ''}<b>{p.pozo.id}</b>{p.fraccion >= 0.999
                   ? <> (<span className="tabular">{n0(p.crudoPorAgua * 1000)}</span>{i === 0 ? ' de crudo por cada 1.000 de agua' : ''})</>
                   : <> al <span className="tabular">{n0(p.fraccion * 100)} %</span></>}</span>
               ))}
             </span>
-            <span className="block text-[var(--tinta2)]">→ se pierden <b className="tabular text-[var(--tinta)]">{n0(orden.crudoBpd)}</b> bbl/d de crudo; parejo, <span className="tabular">{n0(orden.crudoParejoBpd)}</span></span>
+            <span className="block text-[var(--tinta2)]">→ se dejan de producir <b className="tabular text-[var(--tinta)]">{n0(orden.crudoBpd)}</b> bbl/d de crudo; parejo, <span className="tabular">{n0(orden.crudoParejoBpd)}</span></span>
           </span>
         </div>
       )}
 
+      {/* P-agua-1: «Por qué es crítica» en tres líneas cortas; lo demás, en la ⓘ de cada una. H32: viñetas, no números (los números son de las prioridades). */}
       {disposicion && historia && (
         <div className={fila} data-por-que>
           <span className={rotulo}>Por qué es crítica</span>
-          <ol className="min-w-0 flex-1 list-decimal space-y-0.5 pl-4">
+          <ul className="min-w-0 flex-1 list-disc space-y-0.5 pl-4">
             <li>
-              {!reserva && <b>No hay bomba de sobra. </b>}
-              {mayuscula(`con ${enServicio.length === 1 ? 'su bomba' : `las ${cuantas(enServicio.length)}`}`)} cabe más agua: <span className="tabular">{n0(a.sobraBpd)}</span> bbl/d; si para una, faltan <span className="tabular">{n0(sinUna.aguaSinSalidaBpd)}</span>.
+              <span className="inline-flex flex-wrap items-center gap-x-1">
+                <b>{reserva ? 'Tiene bomba de reserva.' : 'No hay bomba de sobra.'}</b>
+                <Info titulo="Las bombas" texto={`${mayuscula(`con ${enServicio.length === 1 ? 'su bomba' : `las ${cuantas(enServicio.length)}`}`)} cabe más agua: ${n0(a.sobraBpd)} bbl/d; si para una, faltan ${n0(sinUna.aguaSinSalidaBpd)}.`} />
+              </span>
             </li>
             {tk?.colchon && historia.mdtH !== undefined && (
               <li>
-                {tk.colchon.horas < historia.mdtH && <b>El tanque aguanta horas y la reparación dura días. </b>}
-                El tanque {tk.colchon.cuando === 'al-parar' ? 'aguantó' : 'aguanta'} <span className="tabular">{fmtHoras(tk.colchon.horas, true)}</span> y una falla de {perfil.equipo} dura en promedio <span className="tabular">{fmtHoras(historia.mdtH, true)}</span> fuera de servicio.
+                <span className="inline-flex flex-wrap items-center gap-x-1">
+                  <b>{tk.colchon.horas < historia.mdtH ? 'El tanque aguanta horas; la reparación, días.' : 'El tanque aguanta más que una reparación.'}</b>
+                  <Info titulo="El tanque y la reparación" texto={`El tanque ${tk.colchon.cuando === 'al-parar' ? 'aguantó' : 'aguanta'} ${fmtHoras(tk.colchon.horas, true)} y una falla de ${perfil.equipo} dura en promedio ${fmtHoras(historia.mdtH, true)} fuera de servicio.`} />
+                </span>
               </li>
             )}
             {historia.fallas > 0 && (
               <li>
-                {historia.fallas > 1 && <b>Para seguido. </b>}
-                Lleva {plural(historia.fallas, 'falla', 'fallas')} en <span className="tabular">{n0(historia.dias)}</span> días{historia.mtbfDias !== undefined ? <>, una cada <span className="tabular">{n0(historia.mtbfDias)}</span> días</> : ''}, y <span className="tabular">{n0(historia.bbl)}</span> bbl.
-                {partes.length > 0 && <> Las partes: {lista(partes.slice(0, 3).map((p, i) => `${NOMBRE_PARTE[p.parte].toLowerCase()} ${i === 0 ? plural(p.fallas, 'vez', 'veces') : n0(p.fallas)}`))}.</>}
+                <span className="inline-flex flex-wrap items-center gap-x-1">
+                  <b>{historia.fallas > 1 && historia.mtbfDias !== undefined ? `Para seguido: una falla cada ${n0(historia.mtbfDias)} días.` : `Lleva ${plural(historia.fallas, 'falla', 'fallas')} en ${n0(historia.dias)} días.`}</b>
+                  <Info titulo={`Las fallas de ${perfil.equipo}`} texto={`Lleva ${plural(historia.fallas, 'falla', 'fallas')} en ${n0(historia.dias)} días${historia.mtbfDias !== undefined ? `, una cada ${n0(historia.mtbfDias)} días` : ''}, y ${n0(historia.bbl)} bbl.${partes.length > 0 ? ` Las partes: ${lista(partes.slice(0, 3).map((p, i) => `${NOMBRE_PARTE[p.parte].toLowerCase()} ${i === 0 ? plural(p.fallas, 'vez', 'veces') : n0(p.fallas)}`))}.` : ''}`} />
+                </span>
               </li>
             )}
-          </ol>
+          </ul>
         </div>
       )}
 

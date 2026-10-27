@@ -1,4 +1,4 @@
-import { PASOS, cadenaVista, esDePersona, type ParadaAnh, type EstadoParadaAnh, type PasoAnh } from '@/shared/api/arbol'
+import { PASOS, cadenaVista, esDePersona, type ParadaAnh, type FilaAnh, type EstadoParadaAnh, type PasoAnh } from '@/shared/api/arbol'
 
 /** Una tarjeta de Identificar: las filas de una misma decisión. Son las de una
  *  misma raíz (una cascada de N pozos es N filas y una sola decisión: Unicidad,
@@ -10,7 +10,7 @@ export interface Grupo {
   clave: string
   estado: EstadoParadaAnh
   /** Las filas, por día y pozo (el orden del servidor). */
-  filas: ParadaAnh[]
+  filas: FilaAnh[]
   /** La que se muestra: todas las del grupo dicen lo mismo. */
   primera: ParadaAnh
   /** Los pozos, sin repetir, en orden. */
@@ -19,12 +19,14 @@ export interface Grupo {
   cascada: boolean
   /** La diferida del libro del grupo (solo lectura: no viaja a la ANH). */
   bbl: number
+  /** K1 · H2: la misma en enteros del reparto del campo (la suma de los de sus filas): lo que se ve. */
+  entero: number
   /** La cadena que vio quien confirma: va en el 409 («cambió desde que la vio»). */
   cadena: string
 }
 
-export function agrupar(ps: readonly ParadaAnh[]): Grupo[] {
-  const m = new Map<string, ParadaAnh[]>()
+export function agrupar(ps: readonly FilaAnh[]): Grupo[] {
+  const m = new Map<string, FilaAnh[]>()
   for (const p of ps) {
     // Lo marcado «Algo está mal» (sin atender) es otra decisión: no se confirma de un toque con lo demás.
     const revisar = p.revision && !p.revision.atendida ? `revisar:${p.revision.hora}` : ''
@@ -39,6 +41,8 @@ export function agrupar(ps: readonly ParadaAnh[]): Grupo[] {
       pozos: [...new Set(filas.map(f => f.pozo))],
       cascada: filas.some(f => f.raiz !== f.eventoId),
       bbl: filas.reduce((a, f) => a + f.diferidaTrimBbl, 0),
+      // Sin el entero de alguna fila (otra consulta), el exacto: la pantalla no redondea por su cuenta.
+      entero: filas.every(f => f.entero !== undefined) ? filas.reduce((a, f) => a + f.entero!, 0) : filas.reduce((a, f) => a + f.diferidaTrimBbl, 0),
       cadena: cadenaVista(primera.clasificacion),
     }
   }).sort((a, b) => b.bbl - a.bbl || a.primera.inicio.localeCompare(b.primera.inicio))

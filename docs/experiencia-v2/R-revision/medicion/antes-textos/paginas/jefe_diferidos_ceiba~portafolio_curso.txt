@@ -1,0 +1,273 @@
+#/jefe/diferidos/ceiba~portafolio/curso
+
+Todos mis campos
+Resultados
+DATOS DE DEMOSTRACIÓN
+Libro de diferidos
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+provisional
+2.377
+barriles diferidos
+2.132–2.622 bbl · calculado
+355 sin identificar
+valor · falta precio en La Zarza
+114mil USD
+diferido por día
+1.501
+bbl/d
+máx. 2.300
+0 % frente a jul a sep
+Mes a mes
+Por cómo se identificó
+Por dónde se trabó
+0
+40,0 k
+80,0 k
+47,6 k
+OCT
+2025
+32,1 k
+NOV
+48,3 k
+DIC
+18,3 k
+ENE
+2026
+32,1 k
+FEB
+53,4 k
+MAR
+26,0 k
+ABR
+57,2 k
+MAY
+29,7 k
+JUN
+51,0 k
+JUL
+53,8 k
+AGO
+33,9 k
+SEP
+2,4 k
+OCT
+en curso
+por señal
+declarado
+sin identificar
+máximo firmado
+pasó el máximo
+¿Se puede publicar? Cuadre y custodia
+Potencial
+66.524
+− Real medido
+64.147
+= No producido
+2.377
+Identificado por señal
+1.936
+Declarado por el operario
+86
+Sin identificar
+355
+¿El factor está en su banda?
+
+5 meses-campo · dentro de banda
+
+Cadena de custodia
+3
+Sin prueba: ZA-09
+Prueba estimada: LC-17, MN-11, MN-29, GU-09
+Corte de agua de laboratorio: Guacamayo, El Palmar
+Ir a Identificar
+Por campo
+bbl
+Morichal Norte · máx. 1.504 bbl
+1.253
+bbl diferidos
+La Ceiba · máx. 1.267 bbl
+1.046
+bbl diferidos
+El Palmar · máx. 79 bbl
+77
+bbl diferidos
+La Zarza · máx. 79 bbl
+0
+bbl diferidos
+Guacamayo · máx. 713 bbl
+0
+bbl diferidos
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+1.668
+bbl
+ 70 %
+Con parte vigilada
+1.095
+bbl
+ 46 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+573
+bbl
+ 24 %
+Evitable cerrando en orden
+30
+bbl
+ 1 %
+Tipo de causa
+Electrosumergible
+1.095 bbl · 46 %
+Bomba de reinyección
+573 bbl · 24 %
+Sin identificar
+355 bbl · 15 %
+Energía eléctrica
+190 bbl · 8 %
+Declarada por el operario
+86 bbl · 4 %
+Bombeo mecánico
+77 bbl · 3 %
+Por dónde se trabó
+bbl · el diferido del libro
+pozos
+planta
+sin identificar
+
+El conjunto de campos se trabó sobre todo en los pozos: 1.449 bbl de 2.377
+
+Por tramo
+En el yacimiento
+0
+En los pozos
+1.449
+61 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+MN-41 1.083 · LC-05 118 · MN-22 90 · y 3 más
+En la planta o estación
+573
+24 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+P-201B 573
+Afuera
+0
+Sin identificar
+355
+15 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+LC-21 247 · LC-08 109
+Identificar
+
+= el diferido del libro
+2.377 bbl
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+Por qué no se produjo
+
+el mismo total, por escalón
+
+Paradas no planeadas: fallas, disparos y terceros
+lo que TRIM tiene que bajar
+1.935
+81 %
+El yacimiento y los proyectos
+0
+Frecuencia bajada: el levantamiento sin optimizar
+0
+Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+0
+Restricción sin falla: nominación o despacho
+0
+Sin identificar: falta que una persona diga qué pasó
+441
+19 %
+
+276 bbl con dónde se trabó por confirmar
+
+Por campo
+La Ceiba
+pozos 118 · planta 573 · sin identificar 355
+1.046
+bbl
+Morichal Norte
+pozos 1.253
+1.253
+bbl
+Guacamayo
+nada se trabó
+0
+bbl
+El Palmar
+pozos 77
+77
+bbl
+La Zarza
+nada se trabó
+0
+bbl
+Cada tramo por qué no se produjo
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Por equipo
+9 equipos
+bbl
+acumulado
+1
+MN-41 · Morichal Norte
+electrosumergible
+aislamiento del motor y del cable
+1.083
+46 %
+1
+P-201B · La Ceiba
+bomba de reinyección
+2 pozos
+573
+70 %
+2
+LC-21 · La Ceiba
+sin identificar
+247
+80 %
+SE-2 · La Ceiba
+energía eléctrica
+118
+85 %
+LC-08 · La Ceiba
+sin identificar
+109
+90 %
+ver 4 más
+Por parte
+bombas y electrosumergibles
+Aislamiento del motor y del cable
+electrosumergible · 1 falla
+1.083
+bbl · 99 %
+Bomba de fondo
+electrosumergible · sin fallas · 1 disparo
+12
+bbl · 1 %
+
++ 573 bbl sin la parte identificada

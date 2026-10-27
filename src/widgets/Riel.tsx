@@ -49,17 +49,22 @@ export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'pl
   // de otro campo no puede salir «normal» porque el último escogido está bien.
   const estadoVista = enPortafolio ? peorSeveridad(campos.map(severidadDe)) : severidadDe(campo)
   const nombre = enPortafolio ? 'Todos mis campos' : campo.nombre
+  // La condición en palabras: plegada, la píldora solo lleva la marca y la sigla (X5 §4.1),
+  // así que la palabra va en su nombre y en su ayuda (ISA-101: color con forma y palabra).
+  const condicion = ({ 1: 'alarma', 2: 'atención', 3: 'aviso' } as Record<number, string>)[estadoVista]
+  const conCondicion = condicion ? `${nombre}, con ${condicion}` : nombre
 
   return (
     <div ref={contenedor} className={cn('relative', variante === 'panel' && 'w-full', variante === 'banda' && 'min-w-0')}>
       <button {...propsBoton} onClick={() => varios && setAbierto(v => !v)} disabled={!varios}
-        aria-expanded={varios ? abierto : undefined} aria-controls={varios ? idMenu : undefined}
-        aria-label={`Campo: ${nombre}${varios ? '. Cambiar de campo' : ''}`} title={variante === 'plegado' ? nombre : undefined}
+        aria-expanded={varios ? abierto : undefined} aria-controls={varios && abierto ? idMenu : undefined}
+        aria-label={`Campo: ${conCondicion}${varios ? '. Cambiar de campo' : ''}`} title={variante === 'plegado' ? conCondicion : undefined}
+        data-compacto={variante === 'plegado' ? '' : undefined}
         className={cn('blanca flex items-center rounded-full bg-white font-semibold text-[#15171a]',
           varios ? 'cursor-pointer hover:bg-[#f3f1ec]' : 'cursor-default',
           variante === 'panel' && 'w-full gap-2.5 px-3.5 py-[9px] text-left text-[15px]',
           variante === 'plegado' && 'h-10 w-[60px] justify-center gap-1 text-[13px]',
-          variante === 'banda' && 'min-w-0 max-w-full gap-2 px-3 py-1.5 text-[14px]')}>
+          variante === 'banda' && 'toque min-w-0 max-w-full gap-2 px-3 py-1.5 text-[14px]')}>
         <MarcaPrioridad s={estadoVista} tamano={variante === 'panel' ? 16 : 14} />
         {variante === 'plegado'
           ? <span aria-hidden>{enPortafolio ? 'Todos' : sigla(campo.nombre)}</span>
@@ -125,10 +130,15 @@ function usePuertas() {
       const ultima = ultimaSub(rol.id, g)
       // Se abre la que el rol prefiere (su orden), no la primera de la puerta.
       const preferida = rol.pantallas.find(p => subs.includes(p)) ?? subs[0]!
-      const destino = activo ? pantalla : ultima && subs.includes(ultima) ? ultima : preferida
+      // UI-23 (prompt §4.8): la primera subpantalla que repite el nombre de su puerta
+      // («Hoy › Hoy») no se lista: la abre la puerta. Desde adentro, la puerta abre
+      // esa primera; desde afuera, la última que el rol abrió en ella.
+      const repite = PANTALLAS[preferida]!.corto === GRUPOS[g]!.corto
+      const destino = activo ? preferida : ultima && subs.includes(ultima) ? ultima : preferida
       return [{
         id: g, corto: GRUPOS[g]!.corto, icono: GRUPOS[g]!.icono, activo, ir: () => setPantalla(destino),
-        subs: subs.filter(enElMenu).map(id => ({ id, corto: PANTALLAS[id]!.corto, icono: PANTALLAS[id]!.icono, activo: entradaDe(pantalla) === id, ir: () => setPantalla(id) })),
+        subs: subs.filter(id => enElMenu(id) && !(repite && id === preferida))
+          .map(id => ({ id, corto: PANTALLAS[id]!.corto, icono: PANTALLAS[id]!.icono, activo: entradaDe(pantalla) === id, ir: () => setPantalla(id) })),
       }]
     })
   }, [rol, pantalla, ambito.campos, config, setPantalla])
@@ -166,7 +176,7 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   const puertas = usePuertas()
 
   if (plegado) return (
-    <nav aria-label="Navegación" className="flex h-full flex-col items-center overflow-y-auto bg-[var(--marca)] px-3 pb-[18px] pt-5 text-white">
+    <nav aria-label="Navegación" className="sobre-marca flex h-full flex-col items-center overflow-y-auto bg-[var(--marca)] px-3 pb-[18px] pt-5 text-white">
       <span className="mb-4 grid size-11 shrink-0 place-items-center rounded-[12px] bg-white"><Isotipo className="size-[30px]" /></span>
       <div className="mb-4"><SelectorCampo variante="plegado" /></div>
       <div role="group" aria-label="Puertas" className="flex flex-col items-center gap-1">
@@ -179,14 +189,17 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
               {p.corto}
               {p.id === 'hoy' && <InsigniaHoy variante="plegado" />}
             </button>
-            {/* Plegado, las subpantallas de la puerta abierta van como íconos debajo de ella. */}
-            {p.activo && p.subs.length > 1 && (
+            {/* Plegado, las subpantallas de la puerta abierta van debajo de ella: el ícono
+                con su nombre corto a 12 px, en hasta dos renglones (UI-06: en la navegación
+                el ícono va siempre con su palabra). */}
+            {p.activo && p.subs.length > 0 && (
               <div role="group" aria-label={p.corto} data-subpantallas className="mt-1 flex flex-col items-center gap-0.5">
                 {p.subs.map(s => (
-                  <button key={s.id} onClick={s.ir} aria-current={s.activo ? 'page' : undefined} aria-label={s.corto} title={s.corto}
-                    className={cn('grid size-9 cursor-pointer place-items-center rounded-full',
-                      s.activo ? 'bg-white text-[var(--marca)]' : 'text-[var(--marca-tenue)] hover:bg-white/[.10] hover:text-white')}>
-                    <s.icono className="size-[18px]" />
+                  <button key={s.id} onClick={s.ir} aria-current={s.activo ? 'page' : undefined}
+                    className={cn('flex w-[66px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] px-0.5 pb-1.5 pt-1.5 text-center text-[12px] leading-[1.15] hyphens-auto [overflow-wrap:anywhere]',
+                      s.activo ? 'bg-white font-semibold text-[var(--marca)]' : 'font-medium text-[var(--marca-tenue)] hover:bg-white/[.10] hover:text-white')}>
+                    <s.icono className="size-[18px] shrink-0" />
+                    <span className="line-clamp-2">{s.corto}</span>
                   </button>
                 ))}
               </div>
@@ -211,12 +224,12 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   )
 
   return (
-    <nav aria-label="Navegación" className="flex h-full flex-col overflow-y-auto bg-[var(--marca)] px-4 pb-[18px] pt-6 text-white">
+    <nav aria-label="Navegación" className="sobre-marca flex h-full flex-col overflow-y-auto bg-[var(--marca)] px-4 pb-[18px] pt-6 text-white">
       <div className="relative mb-[22px] flex items-center">
         <span className="ml-2.5 mt-0.5 block"><WordmarkBlanco className="h-[21px]" /></span>
         {onCerrar && (
           <button onClick={onCerrar} aria-label="Cerrar la navegación"
-            className="absolute -top-1.5 right-0 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white">
+            className="toque absolute -top-1.5 right-0 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white">
             <X className="size-6" />
           </button>
         )}
@@ -235,11 +248,11 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
               {p.id === 'hoy' && <InsigniaHoy variante="panel" />}
             </button>
             {/* Las subpantallas de la puerta abierta, dentro del panel y debajo de su puerta. */}
-            {p.activo && p.subs.length > 1 && (
+            {p.activo && p.subs.length > 0 && (
               <div role="group" aria-label={p.corto} data-subpantallas className="mb-1 ml-[23px] mt-1 flex flex-col gap-0.5 border-l border-white/[.20] pl-3">
                 {p.subs.map(s => (
                   <button key={s.id} onClick={() => { s.ir(); onCerrar?.() }} aria-current={s.activo ? 'page' : undefined}
-                    className={cn('min-h-9 w-full cursor-pointer rounded-[10px] px-2.5 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms]',
+                    className={cn('min-h-9 w-full cursor-pointer rounded-[10px] px-2.5 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms] max-sm:min-h-11',
                       s.activo ? 'bg-white/[.10] font-semibold text-white' : 'text-[var(--marca-tenue)] hover:bg-white/[.08] hover:text-white')}>
                     {s.corto}
                   </button>

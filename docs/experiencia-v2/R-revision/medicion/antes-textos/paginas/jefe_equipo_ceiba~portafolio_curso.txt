@@ -1,0 +1,305 @@
+#/jefe/equipo/ceiba~portafolio/curso
+
+Todos mis campos
+Equipos
+DATOS DE DEMOSTRACIÓN
+Equipos
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+Parados
+5
+Avisan
+11
+Sin instrumento
+29
+Todos
+135
+Todos los tipos
+Bombas
+16
+Electrosumergibles
+68
+Pozos
+87
+Servicios y proceso
+32
+Todos los trenes
+Pozos
+87
+Recolección
+1
+Crudo
+20
+Agua
+14
+Gas
+3
+Servicios
+10
+Buscar por tag
+
+La Ceiba: Cambió hoy: P-201A y P-201C subieron al puesto 1 porque P-201B está parada. Ninguna de las dos tiene instrumento: TRIM no verá venir su falla.
+
+32 equipos
+por estado y, dentro de cada uno, por lo que costaría si falla hoy
+¿Lo vigila TRIM?
+ahora o si falla hoy
+1
+K-101
+La Ceiba
+aire de instrumentos
+Alarma · ya pasó el límite
+sí · 4 señales
+hasta 9.394bbl/d
+si falla hoy
+2
+TK-102
+La Ceiba
+tanque de crudo
+Atención · en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+3
+H-302
+La Ceiba
+tratamiento de crudo
+Aviso · en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+3
+SE-2
+Morichal Norte
+energía eléctrica
+sin respaldo
+Aviso · en servicio · corriente de barraje subiendo
+sí · 3 señales
+hasta 16.920bbl/d
+si falla hoy
+H-302
+Morichal Norte
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+Morichal Norte
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+H-302
+Guacamayo
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+Guacamayo
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+H-302
+El Palmar
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+El Palmar
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+V-101
+Morichal Norte
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 16.920bbl/d
+si falla hoy
+SE-2
+La Ceiba
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 9.394bbl/d
+si falla hoy
+V-101
+La Ceiba
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 9.394bbl/d
+si falla hoy
+SE-2
+Guacamayo
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 6.615bbl/d
+si falla hoy
+V-101
+Guacamayo
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 6.615bbl/d
+si falla hoy
+SE-2
+El Palmar
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 3.277bbl/d
+si falla hoy
+V-101
+El Palmar
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 3.277bbl/d
+si falla hoy
+C-401
+La Ceiba
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+La Ceiba
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+C-401
+Morichal Norte
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+Morichal Norte
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+Morichal Norte
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+LACT-01
+Guacamayo
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+Guacamayo
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+LACT-01
+El Palmar
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+El Palmar
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+C-401
+La Zarza
+compresor de gas
+sin respaldo
+en marcha · restringido por nominación
+sí · 2 señales
+sin dato
+si falla hoy
+K-101
+La Zarza
+aire de instrumentos
+en marcha
+sí · 4 señales
+sin dato
+si falla hoy
+LACT-01
+La Zarza
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+SE-2
+La Zarza
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+La Zarza
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+V-101
+La Zarza
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua, Pozos inyectores, TK-103 · PMO-03.

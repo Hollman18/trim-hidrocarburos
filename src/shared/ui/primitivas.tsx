@@ -21,14 +21,15 @@ export const Tarjeta = ({ children, className, as: Etiqueta = 'section', ...p }:
 )
 
 /** Un panel con título: la tarjeta de B con su cabecera (el título a la
- *  izquierda; el alcance o la calidad a la derecha). */
+ *  izquierda; el alcance o la calidad a la derecha). El título, a 16 px
+ *  Semibold en tinta (X5 §5.2; UI-04), como las tarjetas nuevas. */
 export const Panel = ({ titulo, extra, children, className }: {
   titulo?: string; extra?: ReactNode; children: ReactNode; className?: string
 }) => (
   <section className={cn('min-w-0 rounded-[20px] bg-[var(--panel)]', className)}>
     {titulo && (
       <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pt-4 sm:px-[24px] sm:pt-[18px]">
-        <h2 className="text-[13px] font-semibold tracking-[.04em] text-[var(--tinta2)]">{titulo}</h2>
+        <h2 className="text-[16px] font-semibold leading-snug text-[var(--tinta)]">{titulo}</h2>
         {extra && <span className="text-[13px] text-[var(--tinta2)]">{extra}</span>}
       </header>
     )}
@@ -55,10 +56,10 @@ export const Metrica = ({ titulo, valor, unidad, pie, children }: {
  *  en tinta. Escrito en amarillo sobre amarillo claro daba 1,7:1 y en salmón
  *  sobre el fondo oscuro, menos de 3:1: se leía la forma, no el texto. */
 const ETIQUETA: Record<Severidad, { texto: string; clase: string }> = {
-  0: { texto: 'NORMAL', clase: 'bg-[var(--panel2)] text-[var(--tinta2)]' },
-  1: { texto: 'P1 · ALARMA', clase: 'bg-[var(--p1-f)]' },
-  2: { texto: 'P2 · ATENCIÓN', clase: 'bg-[var(--p2-f)]' },
-  3: { texto: 'P3 · AVISO', clase: 'bg-[var(--p3-f)]' },
+  0: { texto: 'Normal', clase: 'bg-[var(--panel2)] text-[var(--tinta2)]' },
+  1: { texto: 'P1 · alarma', clase: 'bg-[var(--p1-f)]' },
+  2: { texto: 'P2 · atención', clase: 'bg-[var(--p2-f)]' },
+  3: { texto: 'P3 · aviso', clase: 'bg-[var(--p3-f)]' },
 }
 export const Severidad_ = ({ s }: { s: Severidad }) => (
   <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-px text-[12px] font-semibold tracking-[.02em] text-[var(--tinta)]', ETIQUETA[s].clase)}>
@@ -90,7 +91,8 @@ export const Boton = ({ children, variante = 'normal', className, ...p }:
   React.ButtonHTMLAttributes<HTMLButtonElement> & { variante?: 'normal' | 'principal' | 'chico' }) => (
   // Un botón es una acción: en el papel no hace nada, así que no se imprime.
   <button {...p} className={cn(
-    'no-imprimir inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full font-semibold transition-colors duration-[120ms] disabled:cursor-not-allowed disabled:opacity-45',
+    // `toque`: en el teléfono, 44 × 44 px de blanco aunque se vea más chico (A5).
+    'toque no-imprimir inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full font-semibold transition-colors duration-[120ms] disabled:cursor-not-allowed disabled:opacity-45',
     variante === 'chico' ? 'min-h-8 px-3.5 py-1 text-[14px]' : 'min-h-10 px-[18px] py-2 text-[15px]',
     variante === 'principal'
       ? 'bg-[var(--primario)] text-[var(--primario-sobre)] hover:opacity-90'
@@ -102,7 +104,7 @@ export const Boton = ({ children, variante = 'normal', className, ...p }:
 
 /** Un enlace de B: la palabra en Semibold y «›» (X5 §5.1: «Ver el plan ›»). */
 export const Enlace = ({ children, className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-  <button {...p} className={cn('no-imprimir inline-flex cursor-pointer items-center gap-0.5 whitespace-nowrap text-[15px] font-semibold text-[var(--tinta)] hover:underline', className)}>
+  <button {...p} className={cn('toque no-imprimir inline-flex cursor-pointer items-center gap-0.5 whitespace-nowrap text-[15px] font-semibold text-[var(--tinta)] hover:underline', className)}>
     {children}<ChevronRight aria-hidden className="size-4 text-[var(--tinta2)]" />
   </button>
 )

@@ -82,7 +82,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
   )
   const filaEquipo = (e: (typeof equipos)[number]) => (
     <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap items-baseline gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
-      <b className="font-mono">{e.equipo}</b>
+      <b className="font-cond font-bold tracking-[.02em]">{e.equipo}</b>
       <span className="text-[13px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
       <span className="tabular" data-paradas={e.eventos} data-filas={e.paradas}>{paradasYFilasDe(e)} · {e.corregidas} {e.corregidas === 1 ? 'corregida' : 'corregidas'}{e.paradas ? ` · ${n0(e.pctCorregido)} %` : ''}</span>
       {e.corregidas > 0 && <span className="text-[13px] text-[var(--tinta2)]">a: {cambios('choke', e.cambiadoA)}</span>}
@@ -100,10 +100,9 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
         // El paso 2 destacado: contorno más grueso, sin color (no es una alarma).
         <section aria-label="¿Dónde se trabó?: calidad" className="mb-2.5 rounded border-2 border-[var(--tinta3)] p-2.5">
           <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3">
-            <h3 className="text-[15px] font-semibold">Paso 2 · ¿Dónde se trabó?</h3>
-            {conRotulo
-              ? <small className="flex items-center gap-1 text-[13px] text-[var(--tinta3)]">modelo choke <Info titulo="Modelo choke" texto={INFO_METODO} /></small>
-              : <Info rotulo="¿qué método es?" titulo="¿Qué método es?" texto={INFO_METODO} />}
+            {/* Sin número (T-10) y sin el rótulo «modelo choke» (T-11; X4 §6.1.4): la ⓘ va junto al título. */}
+            <span className="flex items-center gap-1.5"><h3 className="text-[15px] font-semibold">¿Dónde se trabó?</h3>
+              <Info titulo={conRotulo ? 'Modelo choke' : '¿Qué método es?'} texto={INFO_METODO} /></span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <span className="grid gap-0.5">
@@ -136,9 +135,9 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
           </>
         )}
 
-      <h3 className={`${TITULO} mt-1.5`}>El paso 2 por equipo</h3>
+      <h3 className={`${TITULO} mt-1.5`}>Dónde se trabó, por equipo</h3>
       {equipos.length === 0
-        ? <p className="mb-2.5 text-[14px] text-[var(--tinta2)]">Ninguna parada con el paso 2 propuesto en {periodoEnFrase(periodo)}.</p>
+        ? <p className="mb-2.5 text-[14px] text-[var(--tinta2)]">Ninguna parada con «dónde se trabó» propuesto en {periodoEnFrase(periodo)}.</p>
         : (
           <>
             <ul className="mb-1 text-[14px]">{eqs.map(filaEquipo)}</ul>
@@ -156,7 +155,7 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
             <ul className="text-[14px]">
               {c.sinTopologia.map(e => (
                 <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
-                  <b className="font-mono">{e.equipo}</b><span className="text-[13px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
+                  <b className="font-cond font-bold tracking-[.02em]">{e.equipo}</b><span className="text-[13px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
                   <span className="tabular">{paradasYFilasDe(e)}</span>
                 </li>
               ))}

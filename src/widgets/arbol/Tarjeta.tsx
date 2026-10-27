@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react'
 import { useApp, useRol, usePersona } from '@/app/store'
 import {
   CONFIRMAN_EN_LOTE, CONFIRMAN_LO_QUE_APUNTA, PASOS_QUE_CONFIRMA, ROLES_QUE_CONTESTAN, esDePersona, esperaAQuienAbre,
-  type ParadaAnh, type PasoAnh, type RevisionAnh,
+  type ParadaAnh, type FilaAnh, type PasoAnh, type RevisionAnh,
 } from '@/shared/api/arbol'
 import { TIPO_CAUSA } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
@@ -128,7 +128,7 @@ export function TarjetaParada({ g, raiz, global, onHecho }: { g: Grupo; raiz: re
           <b id={`${id}-t`} className="text-[15px]">{pozos}</b>
           <span className="text-[13px] text-[var(--tinta3)]"> · {desdeCuando(g.filas, g.pozos.length > 1)} · {que}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
           <small className="block text-[13px] text-[var(--tinta2)]">
-            {n0(g.bbl)} bbl diferidos{g.filas.length > 1 ? ` · ${paradasYFilas(g.filas)}` : ''}
+            {n0(g.entero)} bbl diferidos{g.filas.length > 1 ? ` · ${paradasYFilas(g.filas)}` : ''}
             {p.tramo.m !== 1 && g.filas.length === 1 ? ` · tramo ${p.tramo.n}${p.tramo.m ? ` de ${p.tramo.m}` : ''}` : ''}
           </small>
         </span>
@@ -309,11 +309,12 @@ function AlgoEstaMal({ g, raiz, cambiar, onCerrar, onHecho }: {
 }
 
 /** Una fila del reporte: pozo × día, con sus horas y barriles (B-25: sin fechas ISO). */
-function Fila({ f }: { f: ParadaAnh }) {
+function Fila({ f }: { f: FilaAnh }) {
   return (
     <li className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
-      <b className="font-mono">{f.pozo}</b>
-      <span className="tabular text-[var(--tinta2)]">{horasDeFila(f)} · {n0(f.diferidaTrimBbl)} bbl</span>
+      <b className="font-cond font-bold tracking-[.02em]">{f.pozo}</b>
+      {/* H2 (K1): el entero de la fila en el reparto del campo: las filas suman la tarjeta. */}
+      <span className="tabular text-[var(--tinta2)]">{horasDeFila(f)} · {n0(f.entero ?? f.diferidaTrimBbl)} bbl</span>
     </li>
   )
 }

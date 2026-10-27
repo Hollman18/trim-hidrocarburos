@@ -19,14 +19,15 @@ export function PorEquipo({ v, onAbrir, onVerTodo }: { v: VistaResultados; onAbr
       {v.porEquipo.filas.length === 0 && <p className="mt-2 text-[15px] text-[var(--tinta2)]">Nada se trabó en {v.periodo}.</p>}
       <div className="mt-2">
         {v.porEquipo.filas.map(e => (
-          <button key={`${e.campoId}/${e.equipo}`} type="button" onClick={() => onAbrir(e)} data-equipo-diferido={e.equipo} data-bbl={e.bbl}
+          <button key={`${e.campoId}/${e.equipo}`} type="button" onClick={() => onAbrir(e)} data-equipo-diferido={e.equipo} data-bbl={e.bbl} data-entero={e.bblEntero}
             className="grid min-h-14 w-full cursor-pointer grid-cols-[18px_1fr_auto] items-center gap-x-2.5 gap-y-1 border-t border-[var(--linea2)] py-2 text-left first:border-t-0 hover:bg-[var(--panel2)]">
             <span className="flex">{e.prioridad ? <MarcaPrioridad s={e.prioridad} tamano={15} /> : null}</span>
             <span className="min-w-0">
               <span className="font-cond text-[16px] font-bold tracking-[.02em] text-[var(--tinta)]">{e.equipo}</span>{' '}
               <span className="text-[14px] text-[var(--tinta2)]">{e.familia}{e.palabra ? ` · ${e.palabra}` : ''}{varios ? ` · ${e.campo}` : ''}</span>
             </span>
-            <span className="text-right text-[16px] font-bold text-[var(--tinta)] tabular-nums">{n0(e.bbl)}<small className="block text-[13px] font-normal text-[var(--tinta2)]">{e.pct < 1 && e.pct > 0 ? '< 1' : n0(e.pct)} %</small></span>
+            {/* El entero del equipo (repartido de la cifra grande: suman lo mismo) y su parte entera (Σ = 100). */}
+            <span className="text-right text-[16px] font-bold text-[var(--tinta)] tabular-nums">{n0(e.bblEntero)}<small className="block text-[13px] font-normal text-[var(--tinta2)]">{e.pctEntero === 0 && e.pct > 0 ? '< 1' : n0(e.pctEntero)} %</small></span>
             <span className="relative col-span-2 col-start-2 h-[5px] rounded-full bg-[var(--pista)]"><i className="absolute inset-y-0 left-0 rounded-full bg-[var(--dato1)]" style={{ width: `${Math.min(100, e.pct)}%` }} /></span>
           </button>
         ))}
@@ -64,7 +65,7 @@ export function Bajando({ v }: { v: VistaResultados }) {
       )}
       <div className="mt-3 border-t border-[var(--linea2)] pt-3" data-proactivo={p.porcentaje ?? ''}>
         <p className="flex flex-wrap items-baseline gap-x-2">
-          <b className="text-[22px] font-bold text-[var(--tinta)] tabular-nums">{p.porcentaje !== null ? `${n0(p.porcentaje)} %` : 'sin dato'}</b>
+          <b className="text-[18px] font-bold text-[var(--tinta)] tabular-nums">{p.porcentaje !== null ? `${n0(p.porcentaje)} %` : 'sin dato'}</b>
           <span className="inline-flex items-center gap-1 text-[15px] text-[var(--tinta2)]">mantenimiento proactivo
             <Info titulo="Mantenimiento proactivo" texto="Horas preventivas o predictivas en SAP desde que entró TRIM, contra las correctivas. Si no sube, las fallas no bajan." />
           </span>
@@ -87,7 +88,7 @@ export function Ciclo({ v, onPlan }: { v: VistaResultados; onPlan: (e: Equipo) =
   return (
     <Tarjeta titulo="Retorno posible del ciclo" extra={<Calidad>simulado</Calidad>} data-ciclo={c.totalBbl}>
       <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
-        <b className="text-[22px] font-bold text-[var(--tinta)] tabular-nums">≈ {n0(c.totalBbl)}</b>
+        <b className="text-[18px] font-bold text-[var(--tinta)] tabular-nums">≈ {n0(c.totalBbl)}</b>
         <span className="text-[15px] text-[var(--tinta2)]">bbl · simulado, no entra al libro</span>
       </p>
       <div className="mt-2.5 flex flex-col">
@@ -99,7 +100,7 @@ export function Ciclo({ v, onPlan }: { v: VistaResultados; onPlan: (e: Equipo) =
             </p>
             <p className="text-[14px] leading-[1.45] text-[var(--tinta2)]" data-linea-simulada="">{m.texto}</p>
             {m.plan && m.bbl > 0.5 && (
-              <button type="button" onClick={() => onPlan(m.plan!)} className="no-imprimir mt-0.5 cursor-pointer text-[14px] font-semibold text-[var(--tinta)] hover:underline">Ver el plan ›</button>
+              <button type="button" onClick={() => onPlan(m.plan!)} className="no-imprimir mt-0.5 inline-flex min-h-11 cursor-pointer items-center text-[14px] font-semibold text-[var(--tinta)] hover:underline sm:min-h-0">Ver el plan ›</button>
             )}
           </div>
         ))}
@@ -113,8 +114,6 @@ export function Ciclo({ v, onPlan }: { v: VistaResultados; onPlan: (e: Equipo) =
 export function Mantenimiento({ v, onDetalle }: { v: VistaResultados; onDetalle?: () => void }) {
   const m = v.mantenimiento
   if (!m) return null
-  const total = m.programadoBbl + m.noProgramadoBbl
-  const pct = total > 0 ? (m.programadoBbl / total) * 100 : 0
   return (
     <Tarjeta titulo="Mantenimiento" extra={`${n0(m.fallas)} fallas cerradas · toda la historia`} data-mantenimiento="">
       <p className="mt-2 text-[16px] leading-[1.45] text-[var(--tinta)]">{m.frase}</p>
@@ -122,16 +121,19 @@ export function Mantenimiento({ v, onDetalle }: { v: VistaResultados; onDetalle?
         <div className="mt-2" role="img" aria-label={`Reparación activa ${n1((m.activaH ?? 0) / 24)} días y espera ${n1(m.esperaH / 24)} días de ${n1(m.totalH / 24)}`}>
           <span aria-hidden className="flex h-2.5 overflow-hidden rounded-full bg-[var(--pista)]">
             <i className="block h-full bg-[var(--dato1)]" style={{ width: `${((m.activaH ?? 0) / m.totalH) * 100}%` }} />
-            <i className="block h-full" style={{ width: `${(m.esperaH / m.totalH) * 100}%`, background: 'repeating-linear-gradient(45deg, var(--dato3) 0 2px, transparent 2px 5px)' }} />
+            {/* La espera es tiempo, no barriles: gris liso más claro, separado por 1 px (H24, H21). El rayado es de lo proyectado y de lo sin identificar. */}
+            <i className="block h-full border-l border-[var(--panel)] bg-[var(--dato3)]" style={{ width: `${(m.esperaH / m.totalH) * 100}%` }} />
           </span>
           <p className="mt-1 flex flex-wrap gap-x-4 text-[14px] text-[var(--tinta2)]">
             <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 rounded-[3px] bg-[var(--dato1)]" />reparación activa {n1((m.activaH ?? 0) / 24)} d</span>
-            <span>espera {n1(m.esperaH / 24)} d</span>
+            <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 rounded-[3px] bg-[var(--dato3)]" />espera {n1(m.esperaH / 24)} d</span>
           </p>
         </div>
       )}
-      <p className="mt-3 border-t border-[var(--linea2)] pt-2.5 text-[15px] text-[var(--tinta2)] tabular-nums">
-        Del diferido de {v.periodo.replace(', en curso', '')}, <b className="text-[var(--tinta)]">{n1(pct)} %</b> programado: {n0(m.programadoBbl)} bbl programados · {n0(m.noProgramadoBbl)} bbl no programados. De alto impacto, {n0(m.altoImpactoBbl)} bbl.
+      {/* La frase de X4 §6.1 (P-mant-1), con los enteros que suman la cifra grande; las cuentas, en su ⓘ. */}
+      <p className="mt-3 flex flex-wrap items-center gap-x-1.5 border-t border-[var(--linea2)] pt-2.5 text-[15px] text-[var(--tinta2)] tabular-nums" data-programado={m.programado.bbl}>
+        {m.programado.frase}
+        <Info titulo="Programado y no programado" texto={`${n0(m.programado.bbl)} bbl programados (${n0(m.programado.pct)} %) · ${n0(m.programado.noBbl)} bbl no programados. De alto impacto, ${n0(m.altoImpactoBbl)} bbl.`} />
       </p>
       <AlDetalle onClick={onDetalle}>Ver lo que hay que atacar</AlDetalle>
     </Tarjeta>
@@ -146,7 +148,7 @@ export function Confiabilidad({ v, onDetalle }: { v: VistaResultados; onDetalle?
   return (
     <Tarjeta titulo="¿Le creo al vigía?" extra="desde que entró TRIM" data-confiabilidad={c.tasa ?? ''}>
       <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
-        <b className="text-[22px] font-bold text-[var(--tinta)] tabular-nums">{c.tasa !== null ? `${n0(c.tasa)} %` : 'sin dato'}</b>
+        <b className="text-[18px] font-bold text-[var(--tinta)] tabular-nums">{c.tasa !== null ? `${n0(c.tasa)} %` : 'sin dato'}</b>
         <span className="text-[15px] text-[var(--tinta2)]">de lo que se puede juzgar fue verdad</span>
       </p>
       <p className="mt-1 text-[15px] leading-[1.45] text-[var(--tinta2)]">{c.frase}</p>

@@ -38,7 +38,8 @@ test('Producción: la eficiencia que no se puede creer dice por qué, sin númer
 test('Filosofía operacional, paso 2: el factor de medición va prellenado con lo que propone TRIM, se firma con lo demás y el motor lo usa (5E·H9)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/adm/configuracion/palmar/curso')
-  await page.getByRole('tab', { name: 'Filosofía operacional' }).click()
+  // F3 (UI-01): las partes de Configuración van en una lista, no en pestañas.
+  await page.locator('main nav[data-partes] button', { hasText: 'Filosofía operacional' }).click()
   await expect(page.getByRole('heading', { name: 'Filosofía operacional · El Palmar' })).toBeVisible()
   await page.getByRole('button', { name: '2 Capacidades' }).click()
   const panel = page.locator('main [data-factor-medicion]')
@@ -61,9 +62,13 @@ test('Filosofía operacional, paso 2: el factor de medición va prellenado con l
   await page.getByRole('button', { name: '2 Capacidades' }).click()
   await expect(panel.locator('[data-factor-rige]')).toContainText('Rige 0,998 · firmado en la versión 2')
   // El motor lo usa: los pozos de hoy se leen con él; septiembre, cerrado, no cambia (cada día con la configuración de su medianoche).
+  // K1 · P-16: Producción monta la tubería de La planta viva (lente técnica); lo que cabe en los pozos va debajo del
+  // dibujo y de dónde sale, en «Ver como tabla» (como decía la ⓘ de la tubería de antes).
   await f.ir('#/prod/produccion/palmar/cerrado')
-  await expect(page.getByRole('button', { name: /^Pozos, 7 pozos, 3\.314 barriles por día, limita/ })).toHaveCount(1)
-  const deLosPozos = await page.getByRole('img', { name: /^Lo que dan los pozos:/ }).first().getAttribute('aria-label') ?? ''
+  const tecnica = page.locator('main [data-tuberia-tecnica]')
+  await expect(tecnica.locator('[data-capacidad="pozo"]')).toContainText('dan 3.314 bbl/d')
+  await tecnica.getByRole('button', { name: 'Ver como tabla' }).click()
+  const deLosPozos = await tecnica.locator('[data-fuente-tramo="pozo"]').innerText()
   f.ok(deLosPozos.includes('× el factor de medición firmado (0,998)'), 'la tubería dice que los pozos (3.314 bbl/d, antes 3.321) se leen con el factor firmado')
   await expect(page.locator('main [data-escalera] [data-pe-no-creible]')).toContainText('El firmado (0,998) rige desde el 3 de oct.')
   f.cerrar()

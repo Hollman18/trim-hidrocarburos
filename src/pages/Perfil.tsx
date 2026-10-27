@@ -67,10 +67,10 @@ export function Perfil() {
   const { concedidas, negadas } = permisosDelRol(rol.puede)
 
   return (
-    <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))] items-start">
-      <Panel titulo="IDENTIDAD" className="lg:col-span-1">
+    <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))]">
+      <Panel titulo="Identidad" className="lg:col-span-1">
         <div className="flex items-center gap-3">
-          <span className="font-cond grid size-12 shrink-0 place-items-center rounded bg-marca-1 text-lg font-semibold text-white">
+          <span data-avatar className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--marca)] text-[18px] font-semibold text-[var(--marca-sobre)]">
             {persona.iniciales}
           </span>
           <span className="min-w-0">
@@ -79,7 +79,7 @@ export function Perfil() {
               {rol.nombre}
               <Info titulo="Rol activo" texto="Se cambia desde el menú de perfil, abajo a la izquierda." />
             </small>
-            <small className="block font-mono text-[13px] text-[var(--tinta3)]">
+            <small className="block break-all text-[14px] text-[var(--tinta2)]">
               {persona.correo ?? 'sin correo registrado'}
             </small>
           </span>
@@ -87,7 +87,7 @@ export function Perfil() {
         <div className="mt-3">
           <Fila etiqueta="WhatsApp" info="Del registro de usuarios: lo cambia el gerente de activo en Accesos.">
             {yo?.telefono?.trim()
-              ? <span className="tabular font-mono text-[14px]">{telefonoLegible(yo.telefono)}</span>
+              ? <span className="tabular text-[15px]">{telefonoLegible(yo.telefono)}</span>
               : <span className="text-[14px] text-[var(--tinta3)]">sin número registrado</span>}
           </Fila>
           <Fila etiqueta="Área" info="Cómo cuelga en el organigrama.">
@@ -99,12 +99,12 @@ export function Perfil() {
             </span>
           </Fila>
         </div>
-        <p className="mt-2 text-[13px]"><Info rotulo="tu foco" titulo="Tu foco" texto={rol.foco} /></p>
+        <p className="mt-2 text-[13px]"><Info rotulo="su foco" titulo="Su foco" texto={rol.foco} /></p>
       </Panel>
 
       {/* Lo que de verdad le llega: la regla de mensajes del rol y el registro de
           la persona. No hay otros canales ni otros avisos que encender. */}
-      <Panel titulo="AVISOS">
+      <Panel titulo="Avisos">
         {!conAlertas ? (
           <Hueco>
             <span className="flex flex-wrap items-center gap-x-1">
@@ -125,7 +125,7 @@ export function Perfil() {
         </p>
       </Panel>
 
-      <Panel titulo="APARIENCIA">
+      <Panel titulo="Apariencia">
         <div className="flex gap-1.5">
           {TEMAS.map(({ id, nombre, Icono }) => (
             <button key={id} onClick={() => setTema(id)} aria-pressed={tema === id}
@@ -138,7 +138,7 @@ export function Perfil() {
         </div>
       </Panel>
 
-      <Panel titulo="PERMISOS" extra="los otorga el servidor">
+      <Panel titulo="Permisos" extra="los otorga el servidor">
         {concedidas.map(k => <Permiso key={k} k={k} si />)}
         {negadas.map(k => <Permiso key={k} k={k} si={false} />)}
       </Panel>
@@ -147,7 +147,7 @@ export function Perfil() {
           CONTRATO «Sesión y autenticación»): TRIM no guarda contraseñas y solo lee
           quién es la persona con GET /api/sesion. Mientras el front no se conecte a
           ese servicio se dice el hueco en vez de pintar sesiones de demostración. */}
-      <Panel titulo="SESIONES Y CONTRASEÑA">
+      <Panel titulo="Sesiones y contraseña">
         <Hueco>
           <span className="flex flex-wrap items-center gap-x-1">
             Servicio de identidad de la empresa · sin conectar

@@ -32,3 +32,17 @@ export function useFranja(campos: string[]): Franja {
     campoId, equipos: Object.hasOwn(porCampo, campoId) ? porCampo[campoId]! : [], riesgo: riesgo.filter(r => r.campoId === campoId),
   }))), [clave, porCampo, riesgo])
 }
+
+/** F1 · H3 (X2 F2; X5 §6.4): la condición de cada equipo, la MISMA de la franja, para
+ *  pintar su marca en cualquier lista (Turno, Mi trabajo, Mantenimiento, Riesgo, la
+ *  placa de Bombas). Sale de las mismas dos vistas que la franja, sin endpoint nuevo.
+ *  Un equipo sin condición (normal, o parado sin prioridad propia) no lleva marca.
+ *  `condicionDe(campoId, equipo)`. */
+export function useCondiciones(campos: string[]): (campoId: string, equipo: string) => CondicionDeEquipo | undefined {
+  const f = useFranja(campos)
+  return useMemo(() => {
+    const m = new Map(f.equipos.map(e => [`${e.campoId}|${e.equipo}`, e.condicion]))
+    return (campoId: string, equipo: string) => m.get(`${campoId}|${equipo}`)
+  }, [f])
+}
+export type CondicionDeEquipo = import('@/entities/condiciones').CondicionFranja

@@ -3,6 +3,7 @@ import { useMedicionOficial } from '@/shared/api/medicion'
 import { campoPorId } from '@/entities/campos'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { n0, n2, n3 } from '@/shared/lib/formato'
 import { alFinal } from '@/shared/ui/alFinal'
 import { estadoFactor } from './publicacion'
@@ -56,8 +57,10 @@ export function Factor({ serie, campoId, desde, hasta }: { serie: MesResumen[]; 
                 filas={[['Factor', n3(f.fa)], ['Banda', estado === 'sin-verificar' ? 'sin verificar' : `${n2(1 - f.banda)} – ${n2(1 + f.banda)}`],
                   ['Fiscal del mes', `${n0(m.libro.real)} bbl`], ['Cierre', f.publicado ? 'publicado' : 'en curso']]}>
                 <g opacity={activo ? 1 : 0.5}>
+                  {/* K1 (H20, el mismo caso): fuera de banda, la marca de aviso de verdad (el cuadrado «3» de 12 px, X5 §3.3),
+                      no un cuadrito de 8 px sin su número. */}
                   {estado === 'fuera'
-                    ? <rect x={X(i) - 4} y={Y(f.fa) - 4} width={8} height={8} rx={0.8} fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} />
+                    ? <g transform={`translate(${X(i) - 6} ${Y(f.fa) - 6})`} data-fuera-de-banda=""><MarcaCondicion c="aviso" tamano={12} decorativa /></g>
                     : <circle cx={X(i)} cy={Y(f.fa)} r={3.6} fill="var(--panel)" stroke="var(--tinta)" strokeWidth={1.4}
                       strokeDasharray={estado === 'sin-verificar' ? '2 1.6' : undefined} />}
                   <text x={X(i)} y={G.y1 + 15} fontSize={12} textAnchor="middle" fill={activo ? 'var(--tinta)' : 'var(--tinta3)'}
@@ -72,7 +75,7 @@ export function Factor({ serie, campoId, desde, hasta }: { serie: MesResumen[]; 
         Factor = producción fiscal del mes ÷ lo que dicen las pruebas por las horas que cada pozo
         produjo. Si las pruebas y el punto de medición oficial cuentan la misma historia, el factor
         queda cerca de 1. La franja gris es la banda que acepta la regulación para este crudo
-        ({banda.fuente}).
+        ({banda.fuente}). Un mes fuera de la banda lleva la marca de aviso, el cuadrado «3».
       </Lectura>
     </>
   )

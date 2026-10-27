@@ -13,6 +13,7 @@ import {
 } from '@/entities/choke-arbol'
 import type { BorradorClasificacion } from '@/entities/anh-clasificacion'
 import { tuberiaCampo, serieChoke, brechaPorChoke, repartoPorMes, lineaBasePorTramo } from '@/entities/choke-reparto'
+import { enterosDeReparto } from '@/entities/redondeo'
 import {
   topologiaDe, topologiaFirmada, topologiaDerivada,
   propuestasTopologia, marcarCasosBorde, casoBordeDe, alcancePorPozos, chokeDeAlcance, validarTopologia, porSaberDelCampo, sinResponderDe,
@@ -42,7 +43,9 @@ import {
 import {
   RESPUESTAS_TOPOLOGIA, elementoDeRespuesta, respuestaDe, respuestaDePozos, fraseDe, renglonDe, dondeTramo, dondeCorto,
   conTopologia, pendientesDe, faltanParaFirmar, plantillaTopologia,
+  estadoConfiguracion, PASOS_CONFIGURACION, NOMBRE_PASO,
   type RespuestaTopologia, type RespuestaEquipo, type TopologiaEnBorrador,
+  type EstadoConfiguracion, type PasoDelEstado, type PasoConfiguracion,
   type ImpactoConfig, type ImpactoCampo, type CambioCriticidad, type CambioDeTramo, type TopologiaLeida, type HallazgoTopologia,
 } from '@/entities/choke-config'
 import type { Contexto } from '@/entities/causa-senal'
@@ -88,6 +91,8 @@ export {
   elementoDeRespuesta, respuestaDe, respuestaDePozos, conTopologia, pendientesDe, faltanParaFirmar, plantillaTopologia,
   // Las palabras de la filosofía operacional, hechas por el motor.
   fraseDe, renglonDe, dondeTramo, dondeCorto,
+  // F3 · Configuración: el estado de un campo (N de M pasos listos), de la configuración firmada y lo contestado en el borrador.
+  estadoConfiguracion, PASOS_CONFIGURACION, NOMBRE_PASO,
 }
 export type {
   ChokeAnh, ChokeCampo, ChokeOSinAsignar, EscalonBrecha, EscalonOSinClasificar, AlcanceElemento, ChokeDeElemento, ClaseElemento,
@@ -96,6 +101,7 @@ export type {
   TuberiaAgua, TramoTuberiaAgua, TramoAgua, BombaDelTren, ColchonAgua, SiParaOtra, FilaCriticidad, FamiliaCriticidad, AvisoTrabajoCritico,
   ImpactoConfig, ImpactoCampo, CambioCriticidad, CambioDeTramo, TopologiaLeida, HallazgoTopologia,
   RespuestaTopologia, RespuestaEquipo, TopologiaEnBorrador, VistaCapacidades,
+  EstadoConfiguracion, PasoDelEstado, PasoConfiguracion,
   FuenteCapacidad, CapacidadFirmada, CapacidadesCampo, CapacidadVigente, BombaVigente, CapacidadesVigentes, TramoCapacidad,
   EstadoCapacidad, HallazgoCapacidad, FirmaCapacidades, EntradaRevision, FactorMedicionFirmado, FactorMedicionVigente, PropuestaFactorMedicion,
   ArbolChoke, NodoArbol, OrdenArbol, NivelArbol, DimensionArbol, ConsultaArbol,
@@ -205,8 +211,11 @@ export function useCriticidad(campos: string[]): VistaCriticidad {
 
 /** `GET /api/vistas/choke/reparto?campos=&desde=&hasta=`: sobre las filas de
  *  la ANH con su clasificación vigente, las mismas del árbol (QA-A-01). */
-export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): BrechaChoke =>
-  brechaPorChoke(q.campos, q.desde, q.hasta, ctx, versiones, conGuardadas(guardadas))
+export const pedirRepartoChoke = (q: ConsultaPeriodo, ctx: Contexto, versiones: Historial | undefined, guardadas: Guardadas): BrechaChoke => {
+  const op = conGuardadas(guardadas)
+  // F2 · H2: con el entero de cada nodo que se muestra (la regla de redondeo): suma su total a la vista.
+  return { ...brechaPorChoke(q.campos, q.desde, q.hasta, ctx, versiones, op), enteros: enterosDeReparto(q.campos, q.desde, q.hasta, ctx, op) }
+}
 export function useRepartoChoke(q: ConsultaPeriodo): BrechaChoke {
   const ctx = useCtx(), versiones = useVersiones(), guardadas = useSesion(s => s.clasificacionesAnh)
   return useDato(REPARTO_CHOKE, q, vhg(ctx, versiones, guardadas), () => pedirRepartoChoke(q, ctx, versiones, guardadas))

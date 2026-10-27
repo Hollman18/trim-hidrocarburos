@@ -1,0 +1,95 @@
+#/oper/turno/ceiba/curso
+
+La Ceiba
+Hoy
+DATOS DE DEMOSTRACIÓN
+Entrega de turno
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+983bbl
+se dejarían de producir · turno que entra
+si nada cambia
+1.966
+bbl/d
+se deja de producir ahora
+3 pozos parados·
+1
+P-201B
+3
+por identificar
+2 sin arrancar ·
+1 arrancó sin identificar
+723
+bbl
+diferidos · 12 h
+Cierre de hoy · paradas por confirmar
+4 · 0 completas
+
+4 paradas hoy · 0 completas · faltan 4 · el reporte sale mañana antes de las 07:00
+
+2 iguales · TRIM las dedujo · falta confirmar
+
+Operador · Mantenimiento · En la planta o estación · Diferida · No planeada · No planeada - Proceso / Facilidades · Parada estación/bombeo afecta pozos
+
+por P-201B: LC-07 y LC-16 · desde 05:43
+Lo confirma supervisión o producción, que firman el día.
+Ver una por una
+
+2 paradas
+sin causa: LC-08 y LC-21 · 219 bbl hoy (355 desde que pararon)
+Responder en Identificar
+
+Parado ahora
+2 causas
+1
+P-201B
+bomba de reinyección
+2 pozos · desde 2 de oct, 03:52
+1.665
+bbl/d
+2
+LC-21
+sin identificar
+1 pozo · desde 1 de oct, 18:20
+301
+bbl/d
+Por identificar
+3
+1
+P-201B · 2 de oct, 03:52
+no arrancar
+LC-08 · 1 de oct, 22:15
+arrancó sin identificar
+2
+LC-21 · 1 de oct, 18:20
+no arrancar
+Identificar antes de entregar
+Por vigilar
+1 equipo
+1
+K-101
+aire de instrumentos
+ya pasó el límite
+hasta 9.394 bbl/d
+Paradas nuevas
+12 h · 1 causa
+2 pozos cerrados por P-201B · 05:43–05:46
+parte por identificar
+573 bbl · sigue
+WhatsApp del turno
+8 mensajes
+K-101
+09:11 orden liberada en SAP
+P-201B
+sin respuesta
+03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado

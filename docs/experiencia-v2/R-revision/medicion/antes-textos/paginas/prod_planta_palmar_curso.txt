@@ -1,0 +1,131 @@
+#/prod/planta/palmar/curso
+
+Todos mis campos
+El Palmar
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Planta
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+nada anormal
+La tubería del campo
+qué limita hoy al campo
+potenciales con las pruebas vigentes al 2 de oct · capacidades del demo, sin firmar
+Punto de medición oficial (LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho): en línea; el último día completo dio 3.186 bbl
+Ver como tabla
+Yacimiento
+Pozos · 7
+Planta o estación
+Afuera
+Sin identificar
+→
+→
+→
+→ venta
+0
+bbl en el período
+va con los pozos
+◄ limita
+3.321bbl/d
+con las pruebas de los pozos
+3.600bbl/d
+le sobran
+279
+dato del demo, sin firmar
+crudo 3.600 · el menor
+agua ≈ 4.028 (16.000 bbl/d de agua)
+Ver la tubería del agua
+4.200bbl/d
+le sobran
+879
+dato del demo, sin firmar
+El oleoducto o el transportador: 4.200
+El terminal o el cliente (mercado): 5.000
+
+A la planta le sobran 279 bbl/d: lo que den de más los pozos pasa, hasta 279 bbl/d.
+
+Pasa hoy
+3.277 bbl/d
+Se deja de producir ahora
+0 bbl/d
+
+Nada: todos los pozos con prueba están produciendo.
+
+Los pozos dan 3.321 según sus pruebas: pasan 3.277, se pierden 0 y los otros 44 son lo que las pruebas dan de más que el medidor oficial.
+
+Se trabó en el período
+Octubre, en curso
+77 bbl
+Ver por dónde se trabó
+en el yacimiento
+0
+en los pozos
+77
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(PA-07)
+en la planta
+0
+afuera
+0
+sin identificar
+0
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+ESQUEMA DE PLANTA
+no tiene tren de gas
+7 de 7
+equipos con datos
++ 7 pozos
+Ver la tubería
+la planta
+
+Ahora:
+16.469 bbl/d de fluido
+3.277 bbl/d de crudo
+13.192 bbl/d de agua
+
+Tren de crudo
+Tren de agua
+Pozos productores
+7 pozos · 0 parados
+Manifold deproducción
+Separador de agualibre
+V-101
+Tratador térmico
+H-302
+Tanque enespecificación
+TK-102
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto
+Tanque de agua
+Bomba de agua
+P-201B
+Pozos inyectores
+Subestación 13,8kV
+SE-2
+Aire deinstrumentos
+K-101
+CAPTURANDO DATOS
+7 equipos
+V-101 · Separador de agua libre
+LI-1012 48 %
+H-302 · Tratador térmico
+TI-3021 298 °C
+TK-102 · PMO-02
+LI-1102 6,1 pies
+LACT-01 · Unidad LACT
+FQI-0101 3.186 bbl/d
+P-201B · Bomba de agua
+PI-2010 12,1 psi
+ver 2 más
+CONFIGURADOS SIN DATOS
+ninguno
+
+Todo lo configurado captura datos.
+
+Capacidad por tren
+▾

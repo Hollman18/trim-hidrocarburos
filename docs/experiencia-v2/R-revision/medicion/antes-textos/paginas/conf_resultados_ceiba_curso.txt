@@ -1,0 +1,142 @@
+#/conf/resultados/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Resultados
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Lo que pasó · octubre, en curso
+
+1.046
+barriles
+
+no se produjeron en La Ceiba.
+
+El máximo firmado para lo que va de octubre es 1.267 bbl: va 221 por debajo. P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.
+
+calculado
+entre 889 y 1.203 bbl
+50 mil USD
+Provisional
+Ver qué se está haciendo
+Ver el libro de diferidos
+Diferido por día, mes a mes
+octubre: 661 bbl/d
+Por equipo
+Por dónde se trabó
+400
+800
+OCT 2025
+ENE 2026
+3
+ABR
+JUL
+661
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma
+573
+55 %
+2
+LC-21 sin identificar · atención
+247
+24 %
+SE-2 energía eléctrica
+118
+11 %
+LC-08 sin identificar
+109
+10 %
+Ver todos en el libro de diferidos
+¿Le creo al vigía?
+desde que entró TRIM
+
+100 %
+de lo que se puede juzgar fue verdad
+
+El vigía acertó 3 veces de 3, con 4,7 días de anticipo en promedio; anunció 3 de las 3 fallas que podía ver.
+
+aciertos
+3
+falsas alarmas
+0
+intervenidas antes
+1
+en seguimiento
+0
+Ver la confiabilidad
+¿Está bajando? Desde que entró TRIM
+
+en la planta
+268 → 51
+bbl/d · baja 81 %
+
+en los pozos
+122 → 215
+bbl/d · sube 76 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 310 → 255 bbl/d · −18 %
+
+14 %
+mantenimiento proactivo
+
+4,0 h proactivas · 24,0 h correctivas, desde el 1 de sept
+
+Mantenimiento
+14 fallas cerradas · toda la historia
+
+De 8,1 días que dura una falla, 7,7 son espera (repuesto, permisos, cuadrilla).
+
+reparación activa 0,3 d
+espera 7,7 d
+
+Del diferido de octubre, 0,0 % programado: 0 bbl programados · 1.046 bbl no programados. De alto impacto, 573 bbl.
+
+Retorno posible del ciclo
+simulado
+
+≈ 2.133
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+0
+
+Nada que intervenir antes de que falle · simulado
+
+Durante · ahora
+2.102
+
+Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado
+
+Ver el plan ›
+
+Después · lo que pasó
+30
+
+No repetir la parte que más costó: ≈ 30 bbl · simulado
+
+Ver el plan ›
+
+Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.

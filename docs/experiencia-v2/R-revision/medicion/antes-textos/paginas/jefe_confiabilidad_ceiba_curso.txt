@@ -1,0 +1,185 @@
+#/jefe/confiabilidad/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Resultados
+DATOS DE DEMOSTRACIÓN
+Confiabilidad
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Bombas de reinyección · 1
+41 d
+entre fallas
+9 fallas · 40,0 h fuera
+Electrosumergibles · 15
+916 d
+entre fallas
+6 fallas · 16,6 d fuera
+Historia
+12 meses
+eventos del PLC
+¿Acierta el vigía?
+desde el 1 de sept
+Acertó
+3 de 3
+100 % · 0 falsas alarmas
+1 intervenida, sin calificar
+Fallas anticipadas
+3 de 3
+en partes con instrumento
+Anticipación
+4,7 d
+promedio · de 2,0 a 8,0 d
+En seguimiento
+0
+nada en seguimiento
+Lo que anunció y en qué quedó · 4
+LC-14 · bomba de fondo
+avisó 24 de sept, 19:26 → orden 40012057 cerrada 26 de sept, 07:26
+intervenida antes
+LC-04 · aislamiento del motor y del cable
+avisó 22 de sept, 13:46 → falló 26 de sept, 13:46
+acierto
+4,0 d antes
+P-201B · rodamientos
+avisó 20 de sept, 10:05 → falló 22 de sept, 10:05
+acierto
+2,0 d antes
+LC-11 · aislamiento del motor y del cable
+avisó 17 de sept, 19:56 → falló 25 de sept, 19:56
+acierto
+8,0 d antes
+Lo que no anunció · 1 falla
+Sin parte identificada: no se sabe qué mirar
+1
+P-201B · 2 de oct, 03:52
+En seguimiento · 0
+
+Nada en seguimiento.
+
+Reparación activa y espera
+promedio · 14 fallas cerradas · toda la historia
+Reparación activa
+8 h
+Espera
+7,7 d
+Indisponibilidad total
+8,1 d
+Los más costosos
+bbl · toda la historia
+Equipo	Fallas	Entre fallas	Fuera	Parte	le ha costado
+por falla	bbl
+P-201B
+reinyección
+	9	41 d	40,0 h	Sello	4.593	37.315
+LC-16
+electrosumergible
+	1 +6	—	31,5 d	Aislamiento	29.722	30.328
+LC-09
+electrosumergible
+	1 +9	—	34,0 d	Aislamiento	22.075	22.632
+LC-05
+electrosumergible
+	1 +8	—	12,3 d	Aislamiento	10.877	11.394
+LC-12
+electrosumergible
+	1 +9	—	15,8 d	Aislamiento	6.588	6.813
+ver 2 más
+De qué fallan
+contra la referencia
+Bombas de reinyección · 8 fallas con parte
+Sello mecánico
+5 · 63 %
+Rodamientos y cámara de empuje
+3 · 38 %
+Electrosumergibles · 6 fallas con parte
+Aislamiento del motor y del cable
+6 · 100 %
+Fallas por mes
+sin disparos
+10
+11
+12
+01
+02
+03
+04
+05
+06
+07
+08
+09
+10
+bombas de reinyección
+electrosumergibles
+Calidad del registro
+ISO 14224: parte por falla
+por señal
+14 · 93 %
+por la firma de las señales
+0 · 0 %
+declarado por el operario
+0 · 0 %
+sin identificar
+1 · 7 %
+
+15 fallas
+16 equipos
+
+Calidad de la clasificación
+7 filas · Octubre, en curso
+Paso 2 · ¿Dónde se trabó?
+¿qué método es?
+confirmado por una persona
+0 %
+0 de 7 filas
+corregido: cuánto se equivoca la regla
+0 %
+0 de 3 propuestas · 4 en falta
+Los demás pasos
+confirmado
+corregido
+Quién
+0 %
+0 %
+4 en falta
+Qué pasó
+0 %
+0 %
+4 en falta
+¿Planeada?
+0 %
+0 %
+4 en falta
+Causa
+0 %
+0 %
+4 en falta
+Detalle
+0 %
+0 %
+5 en falta
+Las reglas que más se corrigen
+
+Nadie corrigió una propuesta de TRIM en octubre (en curso): todavía nadie ha revisado estas paradas.
+
+El paso 2 por equipo
+P-201B
+2 paradas · 0 corregidas · 0 %
+LC-05
+1 parada · 0 corregidas · 0 %
+Equipos sin topología
+
+Todos los equipos de estas paradas dicen a qué pozos sirven.

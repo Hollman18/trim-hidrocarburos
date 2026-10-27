@@ -1,20 +1,24 @@
-import { ALTO_IMPACTO } from '@/entities/causa-senal'
+import { useCallback, useMemo } from 'react'
 import type { FilaPozo } from '@/shared/api/diferidos'
-import type { Severidad } from '@/entities/tipos'
+import { useFranja, ORDEN_FRANJA, type CondicionFranja } from '@/shared/api/condiciones'
 import type { Senal } from '@/entities/vigia'
 
-/** Severidad de un pozo para la marca. Solo la causa lleva prioridad
- *  (ISA-18.2): un pozo cerrado porque paró la bomba o se cayó un servicio es
- *  consecuencia, va en gris y dice quién lo cerró. Su propia electrosumergible
- *  caída es 1; una parada sin identificar, 2; frenado o con una parte que
- *  avisa, 3. */
+/** Un pozo cerrado porque paró la bomba o se cayó un servicio es consecuencia
+ *  (ISA-18.2): va en gris y dice quién lo cerró. */
 export const cerradoPorOtro = (f: FilaPozo) => !!f.causa && f.causa.equipo !== f.pozo.id
-export const sevPozo = (f: FilaPozo): Severidad =>
-  !f.produce ? (cerradoPorOtro(f) ? 0 : f.causa && ALTO_IMPACTO.includes(f.causa.tipo) ? 1 : 2)
-    : f.hz && !cerradoPorOtro(f) ? 3 : f.salud && (f.salud.estado === 'fuera' || f.salud.estado === 'avisa') ? (f.salud.prioridad || 3) : 0
 
-/** Para ordenar: lo más grave primero, lo normal al final. */
-export const sevOrden = (f: FilaPozo) => { const s = sevPozo(f); return s === 0 ? 9 : s }
+/** F3 · La condición de cada equipo (pozo, bomba) es la de la franja: una por
+ *  equipo, la misma en todas partes (X2 F2; X5 §6.4; H3). La pantalla ya no
+ *  decide la prioridad de un pozo con sus propias reglas (H17): sin condición del
+ *  motor, sin marca. Un pozo cerrado por otro equipo no la lleva: la lleva quien lo cerró. */
+export function useCondiciones(campos: string[]): (campoId: string, equipo: string) => CondicionFranja | undefined {
+  const fr = useFranja(campos)
+  const porEquipo = useMemo(() => new Map(fr.equipos.map(e => [`${e.campoId}|${e.equipo}`, e.condicion])), [fr])
+  return useCallback((campoId: string, equipo: string) => porEquipo.get(`${campoId}|${equipo}`), [porEquipo])
+}
+
+/** Para ordenar: de la condición más grave a ninguna (el orden de la franja). */
+export const rangoCondicion = (c?: CondicionFranja) => (c ? ORDEN_FRANJA.indexOf(c) : ORDEN_FRANJA.length)
 
 /** Lo que ve de las señales de un pozo quien lo opera (ISA-101: solo lo
  *  anormal, cada cosa con su nombre).

@@ -1,0 +1,146 @@
+#/conf/bombas/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Equipos
+DATOS DE DEMOSTRACIÓN
+Bombas de la línea
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Se deja de producir ahora, por bombas paradas
+0bbl/d
+ningún pozo cerrado por una bomba
+Diferido que causaron
+0 bbl
+sin paradas con costo
+Próxima en fallar
+P-201B · Succión y filtro de entrada
+presión de succión · en 43 h · 41–45 h
+de las que tienen instrumento
+2
+bombas con instrumento
+2
+Bomba multietapa de transferencia de agua
+P-201B
+Reinyección
+
+en marcha · succión cayendo · disposición de agua
+
+Presión de succión
+2
+8,8psi
+Presión de descarga
+212psi
+Caudal
+79.905bbl/d
+Vibración
+2,2mm/s
+PARTES
+2
+Succión y filtro de entrada
+fuera de banda
+presión de succión · alarma en 43 h · 41–45 h
+2
+Sello mecánico
+cruza en 43 h
+3 partes estables
+
+si se para: 10,1 h de colchón, luego se pierden 783 bbl/d
+
+8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 2.765 bbl por falla
+
+Hora de referencia 2 de oct, 14:00
+3
+Bomba multifásica de doble tornillo · clúster norte
+MPP-301
+Multifásica
+
+en marcha · perdiendo eficiencia · lleva la producción a planta
+
+Caída de presión del filtro
+2
+9,6psi
+Vibración
+4,3mm/s
+Velocidad
+1.535rpm
+Nivel del depósito de barrera
+71%
+PARTES
+2
+Filtro de entrada
+fuera de banda
+caída de presión del filtro · alarma en 5,2 d · 4,7–5,7 d
+3
+Rodamientos
+cruza en 10,3 d
+3
+Tornillos y holguras
+cruza en 17,5 d
+3
+Sellos mecánicos (cuatro)
+cruza en 33,0 d
+2 partes estables
+
+si se para: 1.600 bbl/d de inmediato
+
+7 fallas en 12 meses · cada 52 d · 2,0 d fuera · le ha costado 3.226 bbl por falla
+
+Hora de referencia 2 de oct, 14:00
+SIN INSTRUMENTO
+6 bombas
+P-201A
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201C
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201D
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201E
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201F
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201G
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+1
+alarma
+2
+atención
+3
+aviso
+normal

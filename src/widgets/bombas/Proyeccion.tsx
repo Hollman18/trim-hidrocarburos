@@ -26,7 +26,9 @@ export function Proyeccion({ s }: { s: Senal }) {
   const finT = cruza ? ahora + Math.min(p.rango[1], TOPE_H) : ahora
   const lim = s.limite?.valor
   const ajustado = (h: number) => t.ordenada + t.pendiente * h
-  const ys = [...conLectura(serie), ...(lim !== undefined ? [lim] : []), ...(cruza ? [ajustado(finT)] : [])]
+  // F3 · H23 (X2 §5.3, puntos 2 y 6): la escala vertical incluye siempre la banda normal y el límite.
+  const banda = s.normal ? s.normal.filter(Number.isFinite) : []
+  const ys = [...conLectura(serie), ...banda, ...(lim !== undefined ? [lim] : []), ...(cruza ? [ajustado(finT)] : [])]
   const lo = Math.min(...ys), hi = Math.max(...ys), r = hi - lo || 1
   const X = (h: number) => G.x0 + (h / (finT || 1)) * (G.x1 - G.x0)
   const Y = (v: number) => G.y1 - ((v - lo) / r) * (G.y1 - G.y0)
@@ -45,6 +47,10 @@ export function Proyeccion({ s }: { s: Senal }) {
     <div className="relative" style={{ height: H }} role="img"
       aria-label={`Tendencia de ${s.plantilla.nombre}${cruza ? `: cruza el límite en ${dias(p.horas)} días` : ''}`}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 block h-full w-full" aria-hidden>
+        {/* La banda normal, sombreada en --banda; un lado abierto llega al borde de lo dibujado (X2 §5.3, punto 2). */}
+        {s.normal && <rect x={G.x0} width={G.x1 - G.x0} y={Y(Math.min(hi, Number.isFinite(s.normal[1]) ? s.normal[1] : hi))}
+          height={Math.max(1, Y(Math.max(lo, Number.isFinite(s.normal[0]) ? s.normal[0] : lo)) - Y(Math.min(hi, Number.isFinite(s.normal[1]) ? s.normal[1] : hi)))}
+          fill="var(--banda)" opacity={0.55} data-banda />}
         {lim !== undefined && <line x1={G.x0} x2={G.x1} y1={Y(lim)} y2={Y(lim)} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="5 3" vectorEffect="non-scaling-stroke" />}
         {/* hoy */}
         <line x1={X(ahora)} x2={X(ahora)} y1={G.y0 - 4} y2={G.y1} stroke="var(--linea)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
@@ -78,7 +84,9 @@ export function Proyeccion({ s }: { s: Senal }) {
           en {dias(p.horas)} d
         </span>
       )}
-      <span aria-hidden className={`${rotulo} text-[var(--tinta3)]`} style={{ left: pct(G.x0), top: G.y1 + 6 }}>hace {dias(ahora)} d</span>
+      {/* El piso de lo dibujado, rotulado en HTML a la izquierda (como el límite a la derecha): la escala se lee sin el cursor. */}
+      <span aria-hidden className={`${rotulo} tabular text-[var(--tinta2)]`} style={{ left: pct(G.x0 + 4), top: G.y1 - 15 }} data-piso>{n1(lo)} {s.unidad}</span>
+      <span aria-hidden className={`${rotulo} text-[var(--tinta2)]`} style={{ left: pct(G.x0), top: G.y1 + 6 }}>hace {dias(ahora)} d</span>
       {cercaDeHoy ? (
         // Un cruce muy cerca de hoy dejaba «hoy» encima de «+0,2 d»: van juntos, al final del eje.
         <span aria-hidden className={`${rotulo} -translate-x-full text-[var(--tinta3)]`} style={{ left: pct(G.x1), top: G.y1 + 6 }}>

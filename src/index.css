@@ -130,6 +130,13 @@
   --sombra:none;
   --sombra-flota:0 10px 28px rgb(21 23 26 / .14), 0 1px 3px rgb(21 23 26 / .10);
   --sombra2:var(--sombra-flota);
+  /* F1 · El aviso de abajo («Registrado… · Deshacer», X5 §5.7): en papel, oscuro
+     sobre claro; en noche, claro sobre oscuro, como el botón principal de la
+     imagen 6. «Deshacer» va en la mano: índigo tenue sobre la tinta, índigo
+     sobre el claro (UI-09). */
+  --aviso:var(--tinta); --aviso-sobre:var(--suelo); --aviso-accion:var(--marca-tenue);
+  /* El velo detrás de lo que flota (el panel del teléfono, una hoja, la introducción): uno solo (UI-10). */
+  --velo:rgb(10 12 16 / .40);
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
@@ -152,6 +159,8 @@
   --sombra:none;
   --sombra-flota:0 10px 28px rgb(0 0 0 / .45), 0 1px 3px rgb(0 0 0 / .35);
   --sombra2:var(--sombra-flota);
+  --aviso:var(--tinta); --aviso-sobre:var(--suelo); --aviso-accion:var(--marca);
+  --velo:rgb(0 0 0 / .45);
 }
 /* Alias que no tienen color propio: lo que hoy usa --invalido es el morado de
    «no le crea a este número»; --acento es la mano (el foco y lo seleccionado). */
@@ -174,9 +183,44 @@ body{
 }
 *{box-sizing:border-box}
 :focus-visible{outline:2px solid var(--foco); outline-offset:2px}
+/* F1 · A1: sobre el índigo (el panel, la banda del teléfono, la banda de la
+   pregunta del operador) el anillo índigo no se ve (1:1): ahí va blanco
+   (--marca-sobre, 11,9:1 sobre --marca), en los dos temas (X5 §3.1). */
+.sobre-marca :focus-visible, .sobre-marca:focus-visible{ outline-color:var(--marca-sobre) }
+/* Lo que recibe el foco por código y no es un control (el título de la vista, la pregunta
+   que entra, la tarjeta que quedó en su lugar: A2, A13, A14) no lleva anillo: el lector lo
+   dice y la vista no se marca con un recuadro. */
+:is(h1, h2, h3, p, section, #contenido)[tabindex="-1"]:focus-visible{ outline:none }
+/* Las casillas y los radios nativos, en la mano (UI-10): no en el azul del navegador. */
+:root{ accent-color:var(--primario) }
+/* A5 y UI-18: en el teléfono, todo blanco táctil mide 44 × 44 px o más (X5 §5;
+   WCAG 2.5.8) sin cambiar lo que se ve en las imágenes 2, 3b y 5: un área
+   invisible alrededor del control. */
+@media (max-width: 639.98px){
+  .toque{ position:relative }
+  .toque::after{ content:""; position:absolute; left:50%; top:50%; width:max(100%, 44px); height:max(100%, 44px); transform:translate(-50%, -50%) }
+}
+/* «Saltar al contenido» (A13): fuera de la vista hasta que recibe el foco. */
+.saltar{ position:fixed; left:12px; top:-60px; z-index:300; transition:top 120ms var(--curva) }
+.saltar:focus-visible{ top:12px }
 .tabular{font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+/* A19 · Más contraste (prefers-contrast: more): la tinta secundaria y las
+   líneas se oscurecen y el anillo del foco engrosa. Los colores de estado NO
+   cambian: su separación con daltonismo (X5 §6.14; C7 ≥ 10) se midió con estos. */
+@media (prefers-contrast: more){
+  :root:not([data-theme="dark"]){ --tinta2:#2f3338; --tinta3:#3d4248; --linea:#a9a59c; --linea2:#c4c0b8 }
+  :root[data-theme="dark"]{ --tinta2:#e1e4e8; --tinta3:#c8cdd3; --linea:#6b717a; --linea2:#4a5058 }
+  :focus-visible{ outline-width:3px }
+}
+/* Colores forzados (Windows, alto contraste): el sistema pinta todo; que el
+   foco, las tarjetas y las píldoras sigan teniendo borde. */
+@media (forced-colors: active){
+  :focus-visible{ outline:3px solid CanvasText }
+  .vista section, [role="dialog"], [data-aviso-hoy], [data-bloqueo]{ border:1px solid CanvasText }
+  svg{ forced-color-adjust:auto }
 }
 
 /* Las píldoras blancas del panel y de la banda (el campo, la insignia) son
@@ -233,19 +277,8 @@ body{
 .nodo:focus-visible{outline:none}
 .nodo:focus-visible .marco,.nodo:hover .marco{stroke:var(--acento); stroke-width:2}
 
-/* Indicador analógico (ISA-101). Se acomoda al ancho de SU contenedor, no
-   de la pantalla: en una placa angosta va en dos renglones (nombre y valor
-   arriba, barra abajo); con espacio, en uno solo. El valor nunca se recorta. */
-.analogico{container-type:inline-size; min-width:0}
-.analogico-rejilla{display:grid; grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"n v" "b b"; column-gap:.5rem; row-gap:.3rem; align-items:start}
-.a-nombre{grid-area:n; min-width:0}
-.a-valor{grid-area:v; justify-self:end}
-.a-barra{grid-area:b; min-width:0}
-@container (min-width: 460px){
-  .analogico-rejilla{grid-template-columns:minmax(0,1fr) minmax(150px,1.35fr) 104px;
-    grid-template-areas:"n b v"; align-items:center}
-}
+/* K1 (aviso de F3): las clases del indicador analógico viejo se retiraron con él (H12): el de alto
+   desempeño (`IndicadorFijo`) no las usa. */
 
 /* ─────────────── Informe impreso (Exportar → PDF) ───────────────
    El papel lleva membrete, la vista y el pie con el folio. Se imprime en
@@ -259,8 +292,14 @@ body{
     /* El membrete reemplaza este pie con el folio del informe (Membrete.tsx). */
     @bottom-left { content: "TRIM · lo producido se mide; lo diferido se calcula"; font-size: 8pt; color: #555; }
   }
+  /* A8: el papel siempre en claro, aunque la persona use el tema oscuro (store.ts también lo estampa). */
+  :root { color-scheme: light !important; }
   .solo-impresion { display: block; }
   .no-imprimir, [role="tooltip"] { display: none !important; }
+  /* A21: un título no queda al pie de una hoja con su contenido en la siguiente, y
+     un dibujo con su leyenda va en un bloque (`data-sin-partir`). */
+  h2, h3, [data-leyenda-antes] { break-after: avoid; }
+  [data-sin-partir], figure { break-inside: avoid; }
   html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
   .raiz-app { display: block !important; height: auto !important; overflow: visible !important; background: #fff !important; }
   .raiz-app > main, .raiz-app .vista { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
@@ -281,3 +320,7 @@ body{
   .overflow-x-auto > svg, .overflow-x-auto > table { min-width: 0 !important; width: 100% !important; }
   * { box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* F1 · UI-21: con «Pregunta 1 de 4» en la banda del teléfono (imagen 5), el campo
+   y la persona se quitan de ella (siguen en el panel del ☰). */
+[data-banda]:has(#banda-paso:not(:empty)) :is([data-banda-campo], [data-banda-persona]){ display:none }

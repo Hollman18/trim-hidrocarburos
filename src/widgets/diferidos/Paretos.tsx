@@ -11,11 +11,15 @@ import { Info } from '@/shared/ui/Info'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas, VISIBLES } from '@/shared/ui/listaCorta'
-import { marcaDeFila } from './marca'
+import { marcaDeFila, severidadDeCondicion } from './marca'
+import { useCondiciones } from '@/shared/api/condiciones'
+import { useRepartoChoke } from '@/shared/api/choke'
 import { NOMBRE_PRIORIDAD } from '@/shared/lib/prioridad'
 import { n0, n1, plural, pctParte } from '@/shared/lib/formato'
+import { FAMILIA as FAMILIA_EQUIPO } from '@/shared/api/plantaViva'
 
-const FAMILIA: Record<string, string> = { inyeccion: 'reinyección', multifasica: 'multifásica', electrosumergible: 'electrosumergible' }
+/** P-09 · Una familia por equipo, en palabras de campo (X5 §5.5): la bomba de reinyección es «bomba de agua». */
+const FAMILIA: Record<string, string> = { inyeccion: 'bomba de agua', multifasica: 'bomba multifásica', electrosumergible: 'electrosumergible' }
 const RAYADO = 'repeating-linear-gradient(45deg, var(--tinta3), var(--tinta3) 2px, transparent 2px, transparent 4px)'
 /** Cuántas filas a la vista: cinco, salvo que sobre una sola (un botón «ver 1
  *  más» ocupa lo mismo que la fila que esconde). */
@@ -41,12 +45,17 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
   // Los equipos de hoy de los campos que aparecen en el Pareto, en un pedido.
   const equipoEnCampo = useEquiposDeHoy([...new Set(lb.porEquipo.map(f => f.campoId))].sort())
   const filas = max ? lb.porEquipo.slice(0, max) : lb.porEquipo
+  // Lo que se muestra: el entero de cada fila (H2, la regla de redondeo): el mismo en todas las vistas (LC-08 = 108).
+  const enteros = useRepartoChoke({ campos: lb.porCampo.map(c => c.campoId).sort(), desde: lb.desde, hasta: lb.hasta }).enteros
+  const bblDe = (f: Libro['porEquipo'][number]) => enteros?.porCausa[`${f.campoId}|${f.equipo}|${f.tipo}`] ?? Math.round(f.bbl)
   const primero = lb.porEquipo[0]?.bbl ?? 1
   const acumulado = filas.reduce<number[]>((a, f) => [...a, (a.at(-1) ?? 0) + f.bbl], [])
   const items = filas.map((f, i) => ({ f, i }))
   // Con `max` la pantalla ya corta (y lleva «Ver los N equipos»): no se corta dos veces.
-  // La marca de la fila: el estado de hoy del equipo, solo en sus filas de falla (marca.ts).
-  const marca = (f: Libro['porEquipo'][number]) => marcaDeFila(f, equipoEnCampo(f.equipo, f.campoId)?.severidad)
+  // La marca de la fila: la condición del equipo en la franja (H3: una sola por equipo en todo el producto),
+  // solo en sus filas de falla (marca.ts).
+  const condicionDe = useCondiciones([...new Set(lb.porEquipo.map(f => f.campoId))].sort())
+  const marca = (f: Libro['porEquipo'][number]) => marcaDeFila(f, severidadDeCondicion(condicionDe(f.campoId, f.equipo)))
   const lista = useVerMas(items, { n: max ?? aLaVista(items.length), prioridad: ({ f }) => marca(f) })
   const columnaBbl = 'tabular w-[64px] shrink-0 text-right'
   const columnaAcum = 'tabular hidden w-[56px] shrink-0 text-right sm:block'
@@ -66,18 +75,18 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
     return (
       <div key={`${f.campoId}:${f.equipo}:${f.tipo}`} className={`${FILA} print:pb-1.5 ${oculta ? 'solo-impresion' : ''}`}>
         <Tip as="button" onClick={() => onAbrir(f.campoId, f.equipo)} imprimir="pista"
-          aria-label={`${NOMBRE_PRIORIDAD[s]}. ${f.equipo}${donde}, ${TIPO_CAUSA[f.tipo].toLowerCase()}${parteTop ? `, ${NOMBRE_PARTE[parteTop.parte].toLowerCase()}` : ''}: ${n0(f.bbl)} bbl${simple ? '' : `, acumulado ${n0(pAcum)} %`}`}
+          aria-label={`${NOMBRE_PRIORIDAD[s]}. ${f.equipo}${donde}, ${FAMILIA_EQUIPO[f.tipo]}${parteTop ? `, ${NOMBRE_PARTE[parteTop.parte].toLowerCase()}` : ''}: ${n0(bblDe(f))} bbl${simple ? '' : `, acumulado ${n0(pAcum)} %`}`}
           className="flex w-full cursor-pointer items-center gap-3 py-2 text-left hover:bg-[var(--panel2)]"
           titulo={`${f.equipo}${donde}`} pista={pista || undefined}
-          filas={[['Diferidos', `${n0(f.bbl)} bbl`], ...(simple ? [] : [['Tolerancia', `±${n0(f.tolerancia)} bbl`] as [string, string]]),
+          filas={[['Diferidos', `${n0(bblDe(f))} bbl`], ...(simple ? [] : [['Tolerancia', `±${n0(f.tolerancia)} bbl`] as [string, string]]),
             ['Del total', `${n1(lb.diferido ? (f.bbl / lb.diferido) * 100 : 0)} %`], ['Acumulado', `${n1(pAcum)} %`],
-            ['Tipo', TIPO_CAUSA[f.tipo]], ['Eventos', String(f.eventos)], ['Pozos afectados', String(f.pozos)],
+            ['Familia', FAMILIA_EQUIPO[f.tipo]], ['Eventos', String(f.eventos)], ['Pozos afectados', String(f.pozos)],
             ...f.partes.slice(0, 3).map(p => [NOMBRE_PARTE[p.parte], `${n0(p.bbl)} bbl`] as [string, string])]}>
           <MarcaPrioridad s={s} tamano={13} />
           <span className="min-w-0 flex-1">
             <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
               <b className="text-[15px]">{f.equipo}<span className="font-normal text-[var(--tinta3)]">{donde}</span></b>
-              <Chip tono={alto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[f.tipo].toLowerCase()}</Chip>
+              <Chip tono={alto ? 'fuerte' : 'neutro'}>{FAMILIA_EQUIPO[f.tipo]}</Chip>
               {/* Una baja tensión que tumbó un solo pozo cada vez no es una caída del alimentador: se dice así (B-12). */}
               {f.pozos > 1 && (f.tipo === 'energia' && f.eventos === f.pozos
                 ? <span className="text-[13px] text-[var(--tinta3)]" data-un-pozo-por-parada>{f.eventos} paradas de un solo pozo</span>
@@ -85,10 +94,10 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
               {parteTop && <span className="text-[13px] text-[var(--tinta2)]">{NOMBRE_PARTE[parteTop.parte].toLowerCase()}</span>}
             </span>
             <span className="mt-1 block h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]">
-              <i className="block h-full" style={{ width: `${(f.bbl / primero) * 100}%`, background: alto ? 'var(--dato-1)' : 'var(--dato-5)' }} />
+              <i className="block h-full" style={{ width: `${(f.bbl / primero) * 100}%`, background: alto ? 'var(--dato-1)' : 'var(--dato3)' }} />
             </span>
           </span>
-          <b className={`${columnaBbl} text-[15px] leading-tight`}>{n0(f.bbl)}</b>
+          <b className={`${columnaBbl} text-[15px] leading-tight`} data-entero={bblDe(f)}>{n0(bblDe(f))}</b>
           {!simple && <span className={`${columnaAcum} text-[14px]`}>{n0(pAcum)} %</span>}
         </Tip>
       </div>
@@ -99,7 +108,7 @@ export function ParetoEquipos({ lb, global, max, simple = false, onAbrir, onVerT
     <Panel titulo="Por equipo" extra={plural(lb.porEquipo.length, 'equipo', 'equipos')}>
       <Lectura>
         Ordenado por <b>barriles</b>, no por número de paradas. Un pozo cerrado porque la bomba de
-        reinyección paró se le carga a la bomba, no al pozo. Se ven los cinco primeros y toda fila de
+        agua paró se le carga a la bomba, no al pozo. Se ven los cinco primeros y toda fila de
         prioridad 1; «ver más» abre el resto. Toque o pase el cursor por una fila para ver el nombre
         del equipo{simple ? '' : ', su tolerancia'} y cuánto se lleva la parte; un clic lo abre.
         {!simple && ' El acumulado dice cuánto explican los primeros.'}
@@ -195,7 +204,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
         <span className="mt-1 block h-1.5 overflow-hidden rounded-sm bg-[var(--panel2)]">
           <i className="block h-full" style={{
             width: `${(t.bbl / primero) * 100}%`,
-            background: t.tipo === 'pendiente' ? RAYADO : alto ? 'var(--dato-1)' : 'var(--dato-5)' }} />
+            background: t.tipo === 'pendiente' ? RAYADO : alto ? 'var(--dato-1)' : 'var(--dato3)' }} />
         </span>
       </div>
     )
@@ -204,7 +213,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
     <Panel titulo="Tipo de causa">
       <Lectura>
         Qué familia de equipos o servicios se lleva el diferido. En oscuro y en negrita, los de alto
-        impacto (bombas de reinyección y electrosumergibles); rayado, lo que nadie ha identificado.
+        impacto (bombas de agua y electrosumergibles); rayado, lo que nadie ha identificado.
       </Lectura>
       {lb.porTipo.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Nada diferido.</p>}
       {lb.porTipo.map(t => fila(t, lista.resto.includes(t)))}
@@ -221,7 +230,7 @@ export function ParetoTipos({ lb }: { lb: Libro }) {
 export function Palancas({ lb, base, conMaximo = false }: { lb: Libro; base?: LineaBase; conMaximo?: boolean }) {
   const filas: Array<{ k: string; v: number; pie: string; fuerte?: boolean }> = [
     { k: 'Equipos de alto impacto', v: lb.altoImpacto, fuerte: true,
-      pie: 'Bombas de reinyección y electrosumergibles: el foco del producto.' },
+      pie: 'Bombas de agua y electrosumergibles: el foco del producto.' },
     { k: 'Con parte vigilada', v: lb.anticipable,
       pie: 'La parte que falló tiene un instrumento que la vigila: se pudo saber antes.' },
     { k: 'Con parte sin instrumento', v: lb.sinInstrumento,
@@ -260,7 +269,7 @@ export function Palancas({ lb, base, conMaximo = false }: { lb: Libro; base?: Li
       {conMaximo && (
         <div className="mt-2.5">
           <BarraMeta rotulo="diferido por día" valor={difDia} unidad="bbl/d" meta={hayMeta ? lb.meta.diferidoDia : undefined}
-            rotuloMeta={hayMeta ? `máx. ${n0(lb.meta.diferidoDia)}` : textoSinMeta(lb.meta, lb.porCampo.length > 1)} tipoMeta="máximo"
+            rotuloMeta={hayMeta ? `máximo ${n0(lb.meta.diferidoDia)}` : textoSinMeta(lb.meta, lb.porCampo.length > 1)} tipoMeta="máximo"
             fuera={hayMeta && difDia > lb.meta.diferidoDia}
             apoyo={base ? `antes ${n0(base.baseDia)} bbl/d · ${base.nombre}` : undefined} />
         </div>

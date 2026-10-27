@@ -1,0 +1,146 @@
+La Ceiba
+Reporte
+La planta viva
+Resultados
+¿Cómo se lee?
+IS
+Iván Salas
+Cumplimiento regulatorio
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Reporte al regulador
+hoy, 2 de oct datos de las 14:00
+Octubre, en curso
+Exportar
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+No se puede publicar todavía
+El período incluye días sin cierre publicado.
+solo lectura
+Exportar CSV
+Árbol de causas como la circular
+modelo choke
+1.046
+bbl
+7
+filas
+de paradas_pozo
+5
+paradas
+0
+bbl con los 6 pasos confirmados
+0
+1
+Quién
+resp_par
+2
+Dónde se trabó
+choke_mod
+3
+Qué pasó
+dif_perd
+4
+¿Planeada?
+pla_no_plan
+5
+Causa
+cau_niv1
+6
+Detalle
+cau_niv2
+Operador Mantenimiento
+resp_par
+Operador-Mantenimiento
+691
+66
+En la planta o estación
+choke_mod
+PLANTA
+573
+55
+Diferida
+dif_perd
+DIFERIDA
+No planeada
+pla_no_plan
+NO PLANEADA
+No planeada Proceso Facilidades
+cau_niv1
+NP_PROC
+Parada estación/bombeo afecta pozos
+cau_niv2
+Parada estación/bombeo afecta pozos
+573
+55
+Pérdida: TRIM todavía no tiene registro de pérdidas
+dif_perd
+PERDIDA
+0
+En el pozo
+choke_mod
+POZO
+118
+11
+Diferida
+dif_perd
+DIFERIDA
+No planeada
+pla_no_plan
+NO PLANEADA
+No planeada Eléctrica interna
+cau_niv1
+NP_ENINT
+118
+11
+Falta el detalle
+118
+11
+Pérdida: TRIM todavía no tiene registro de pérdidas
+dif_perd
+PERDIDA
+0
+Falta quién
+355
+34
+Sin identificar
+355
+34
+Pérdida: TRIM todavía no tiene registro de pérdidas
+dif_perd
+PERDIDA
+0
+Falta qué pasó
+355
+34
+Falta saber si fue planeada
+355
+34
+Falta la causa
+355
+34
+Falta el detalle
+355
+34
+el diferido del libro (Σ de las paradas del período)
+1.046
+bbl
+Puntos de medición oficial
+2 en La Ceiba
+FQI-0101 computador de flujo de la unidad LACT-01
+corte de agua:
+analizador
+También en PRODML
+ReasonLost Energistics
+Falla de equipo de superficie
+topside equipment failure-maint
+691
+Producción del período
+Real (punto de medición oficial)
+16.941 bbl

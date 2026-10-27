@@ -12,8 +12,7 @@ import { PlanesDe } from '@/widgets/ciclo/Ciclo'
 import { useApp, useRol, useRango } from '@/app/store'
 import { Panel, Chip, Hueco, Boton } from '@/shared/ui/primitivas'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
-import { DE_ESTADO } from '@/shared/lib/prioridad'
-import { Analogico } from '@/shared/ui/Analogico'
+import { useNivelEquipo, type SenalNivel3 } from '@/shared/api/equiposTecnico'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
@@ -23,14 +22,15 @@ import { Tip } from '@/shared/ui/Tip'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
-import { n0, n1, n3, decimalesDe, plural } from '@/shared/lib/formato'
+import { n0, n1, n3, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Proyeccion } from './Proyeccion'
 import { fmtBbl, fmtRango, fmtTol, fmtComponente, fmtHoras, textoPronostico, pronosticoCorto, tanqueAbierto, fraseParteCorta, respaldoAbsorbe } from './comun'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { BloqueParte } from './BloqueParte'
 import type { SaludParte } from '@/entities/salud'
-import type { BombaVista } from './vista'
+import { porTag, type BombaVista } from './vista'
+import { SenalFija } from './SenalFija'
 import type { NivelDetalle } from '@/entities/tipos'
 import { ESTADO_PARTE } from '@/entities/salud'
 import { desplazable } from '@/shared/ui/alFinal'
@@ -56,6 +56,8 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
   const planes = planesDeEquipo(ciclo, campoId, eq.id)
   // Cinco y «ver N más»: nunca se esconde la parada abierta ni una que espera que se identifique.
   const listaParadas = useVerMas(paradas, { prioridad: m => (m.abierto || (m.pide && !m.arrancoSinIdentificar) ? 1 : 3) })
+  // F3 · Cada variable con la escala fija del motor, la misma del nivel 3 (H5, H12): ni la escala ni la marca se deciden aquí.
+  const delMotor = porTag(useNivelEquipo(campoId, eq.id))
 
   if (!perfil || !ve) {
     return (
@@ -78,7 +80,7 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
       - (y.pronostico.tipo === 'cruza' ? y.pronostico.horas : Infinity))
 
   return (
-    <div className="grid gap-2.5" data-diagnostico-bomba={eq.id}>
+    <div className="grid gap-3 sm:gap-4" data-diagnostico-bomba={eq.id}>
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-[var(--tinta2)]">
         <span>{TECNOLOGIA_NOMBRE[perfil.tecnologia]} · {PAPEL_NOMBRE[perfil.papel]} · {ve.prediccion.respaldoLibreBpd > 0 ? `respaldo ${n0(ve.prediccion.respaldoLibreBpd)} bbl/d` : 'sin respaldo'}</span>
         {ing && <Info rotulo="norma" titulo="Norma" texto={perfil.norma} />}
@@ -86,7 +88,8 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
 
       {planes.length > 0 && (
         <div className="rounded-[20px] bg-[var(--panel)] p-4">
-          <PlanesDe planes={planes} />
+          {/* A15: en el diagnóstico va antes del primer h2 de la vista: su título también es h2. */}
+          <PlanesDe planes={planes} titulo="h2" />
         </div>
       )}
 
@@ -97,9 +100,9 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
         </div>
       )}
 
-      {!ing && <PartesOperacion partes={partes} senales={senales} />}
+      {!ing && <PartesOperacion partes={partes} senales={senales} delMotor={delMotor} />}
 
-      {ing && <Panel titulo="SALUD POR PARTE">
+      {ing && <Panel titulo="Salud por parte">
         <Lectura>
           El vigía agrupado por lo que falla, de la parte que más preocupa a la que menos. Cada parte
           junta las variables que la <b>anuncian</b>, las que la <b>dañan</b> y las que solo
@@ -111,20 +114,18 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
         ))}
       </Panel>}
 
-      {ing && <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
-        <Panel titulo="VARIABLES" extra={`${plantilla.length - faltan.length} de ${plantilla.length} instrumentadas`}>
+      {ing && <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+        <Panel titulo="Variables" extra={`${plantilla.length - faltan.length} de ${plantilla.length} instrumentadas`}>
           {plantilla.filter(pl => perfil.tags[pl.id]).map(pl => {
             const s = senales.find(x => x.plantilla.id === pl.id)
+            const m = s ? delMotor.get(s.tag) : undefined
             return (
               <div key={pl.id} className="border-b border-[var(--linea2)] py-2 last:border-0">
-                {s ? (
-                  <Analogico detalle nombre={pl.nombre} sub={`${perfil.tags[pl.id]} · ${s.origen}`} gris={eq.marcha === 'detenido'}
-                    valor={s.valor} unidad={s.unidad} normal={s.normal} alarma={s.alarma}
-                    decimales={decimalesDe(s.serie?.valores, s.valor)} estado={DE_ESTADO[s.estado] ?? undefined} />
-                ) : (
+                {/* Con la bomba detenida, una sola marca (la de la bomba) y sus variables en gris (X2 B9): lo dice el motor. */}
+                {s && m ? <SenalFija s={m} nombre={pl.nombre} sub={`${perfil.tags[pl.id]} · ${s.origen}`} detalle /> : (
                   <div className="flex items-baseline justify-between gap-2 text-[14px]">
                     <span>{pl.nombre}</span>
-                    <span className="text-[13px] text-[var(--tinta3)]">sin lectura numérica</span>
+                    <span className="text-[13px] text-[var(--tinta2)]">{s ? `${s.valor === null ? '---' : s.valor.toLocaleString('es-CO')} ${s.unidad}` : 'sin lectura numérica'}</span>
                   </div>
                 )}
               </div>
@@ -133,13 +134,13 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
           {faltan.length > 0 && (
             <>
               <div className="mb-1 mt-3 flex flex-wrap items-center gap-x-1">
-                <h4 className="text-[13px] font-semibold text-[var(--tinta2)]">Falta instrumentar</h4>
+                <h3 className="text-[13px] font-semibold text-[var(--tinta2)]">Falta instrumentar</h3>
                 <Info titulo="Falta instrumentar" texto="Lo que pide la norma y esta bomba no tiene. Toque o pase el cursor por cada una para ver dónde iría." />
               </div>
               {faltan.map(pl => (
                 <Tip key={pl.id} titulo={`${pl.isa} · ${pl.nombre}`} filas={[['Dónde', pl.donde]]} imprimir="todo" claseImpresion={NOTA_FILA}
                   className="flex items-center gap-2 border-b border-dashed border-[var(--linea2)] py-1 text-[13px] last:border-0 print:border-b-0">
-                  <span className="font-mono w-[34px] shrink-0 text-[12px] text-[var(--tinta3)]">{pl.isa}</span>
+                  <span className="font-cond w-[38px] shrink-0 text-[14px] font-semibold tracking-[.02em] text-[var(--tinta2)]">{pl.isa}</span>
                   <span className="min-w-0 flex-1 truncate text-[var(--tinta2)]">{pl.nombre}</span>
                 </Tip>
               ))}
@@ -147,13 +148,13 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
           )}
         </Panel>
 
-        <Panel titulo="VIGÍA" extra={vigia.length ? plural(vigia.length, 'señal', 'señales') : 'sin señales'}>
+        <Panel titulo="Vigía" extra={vigia.length ? plural(vigia.length, 'señal', 'señales') : 'sin señales'}>
           {vigia.length === 0 && <Hueco>Ninguna variable instrumentada anuncia degradación.</Hueco>}
           {vigia.map(s => (
             <div key={s.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <b className="text-[14px]">{s.plantilla.nombre}</b>
-                <span className="font-mono text-[12px] text-[var(--tinta3)]">
+                <span className="text-[13px] text-[var(--tinta2)]">
                   ISO 14224 {s.mecanismo!.codigo} · {s.mecanismo!.nombre}
                 </span>
               </div>
@@ -178,7 +179,7 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
         </Panel>
       </div>}
 
-      <Panel titulo={ing ? 'PARADAS DEL PLC' : 'ÚLTIMAS PARADAS'} extra={plural(paradas.length, 'parada', 'paradas')}>
+      <Panel titulo={ing ? 'Paradas del PLC' : 'Últimas paradas'} extra={plural(paradas.length, 'parada', 'paradas')}>
         {paradas.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Sin paradas registradas.</p>}
         {listaParadas.visibles.map((m, i) => <Parada key={m.evento.id} m={m} equipo={eq.id} simple={!ing} abiertaDeInicio={i === 0} />)}
         {listaParadas.resto.length > 0 && (
@@ -190,7 +191,7 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
         {ing && <p className="mt-2 flex flex-wrap items-center text-[12px] text-[var(--tinta3)]"><Info rotulo="tolerancia" titulo="Método de la tolerancia" texto={FUENTE_METODO} /></p>}
       </Panel>
 
-      {ing && <Panel titulo="PUNTOS CIEGOS">
+      {ing && <Panel titulo="Puntos ciegos">
         <Lectura>Lo que esta bomba no dice de sí misma, y de dónde sale. La ⓘ dice por qué.</Lectura>
         {NO_DA[perfil.subtipo].map(x => (
           <div key={x.que} className="grid grid-cols-[minmax(0,140px)_1fr] gap-3 border-b border-[var(--linea2)] py-1.5 text-[14px] last:border-0">
@@ -207,19 +208,22 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
   )
 }
 
+/** Un título de bloque dentro de una tarjeta: en frase, sin letra condensada (X5 §3.4; UI-04, UI-15). */
 const H5 = ({ children }: { children: React.ReactNode }) =>
-  <h5 className="font-cond mb-1 mt-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)] first:mt-0">{children}</h5>
+  <h3 className="mb-1 mt-2 text-[14px] font-semibold text-[var(--tinta2)] first:mt-0">{children}</h3>
 
 /** Un título de bloque con su ⓘ al lado (nunca adentro: el lector oiría la frase como nombre). */
 const H5Info = ({ children, info }: { children: React.ReactNode; info: React.ReactNode }) => (
   <div className="mb-1 mt-2 flex flex-wrap items-center gap-x-1 first:mt-0">
-    <h5 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{children}</h5>
+    <h3 className="text-[14px] font-semibold text-[var(--tinta2)]">{children}</h3>
     {info}
   </div>
 )
 
-/** Si la bomba se para ahora: cuánto aguanta el tanque, qué pozos cerrar y en
- *  qué orden, y cuánto se gana cerrando bien. */
+/** Si falla hoy (o, si ya está parada, mientras esté parada): cuánto aguanta el
+ *  tanque, qué pozos cerrar y en qué orden, y cuánto se gana cerrando bien. F3 · El
+ *  nombre es el mismo en todo el producto, «Si falla hoy», en bbl/d (D-2, G-16), y
+ *  lo diferido «se deja de producir» (T-8). */
 export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: boolean }) {
   const o = pr.orden
   const pasos = useVerMas(o?.pasos.slice(0, 12) ?? [])
@@ -228,7 +232,7 @@ export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: bool
   const fila = (x: NonNullable<typeof o>['pasos'][number], i: number, papel = false) => (
     <tr key={x.pozo.id} className={cn('border-t border-[var(--linea2)]', papel && 'hidden print:table-row')}>
       <td className="py-1 text-[var(--tinta3)]">{i + 1}</td>
-      <td className="font-mono">{x.pozo.id}</td>
+      <td className="font-cond font-semibold tracking-[.02em]">{x.pozo.id}</td>
       <td className="text-right">{n0(x.crudoBpd)}</td>
       <td className="text-right">{n0(x.aguaBpd)}</td>
       {/* Con 95-98 % de agua el crudo por barril de agua va de 0,01 a 0,05: dos decimales no separan los pozos. */}
@@ -237,13 +241,13 @@ export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: bool
     </tr>
   )
   return (
-    <Panel className="mt-2.5" titulo={pr.parada ? 'MIENTRAS ESTÉ PARADA' : 'SI SE PARA AHORA'}
+    <Panel className="mt-3 sm:mt-4" titulo={pr.parada ? 'Mientras esté parada' : 'Si falla hoy'}
       extra={pr.colchon ? `${pr.colchon.tanque.id} · ${pr.colchon.nivel.tag} ${n1(pr.colchon.nivel.pct)} %` : undefined}>
       {pr.parada && <p className="mb-2 text-[14px] text-[var(--tinta2)]">Parada desde {fechaHora(new Date(pr.parada.inicio))}</p>}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]">
         {pr.colchon && !pr.parada && (
           <div className="text-[14px]">
-            <H5>COLCHÓN DEL TANQUE</H5>
+            <H5>Colchón del tanque</H5>
             <BarraMeta tamano="chica" rotulo={`nivel ${pr.colchon.nivel.tag}`} valor={pr.colchon.nivel.pct} unidad="%"
               formato={v => `${n1(v)} %`} meta={pr.colchon.tanque.altoAlto * 100} tipoMeta="máximo"
               rotuloMeta={`alto-alto ${n0(pr.colchon.tanque.altoAlto * 100)} %`} />
@@ -262,8 +266,8 @@ export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: bool
         )}
         {pr.perdiendo && pr.perdiendo.pozos.length > 0 && (
           <div className="min-w-0 text-[13px]">
-            <H5Info info={<Info titulo="Al arrancar" texto={`Se pierden ${n0(pr.perdiendo.bblDia)} bbl/d mientras siga parada. Al arrancar, los pozos vuelven a producir a medida que el tanque baja.`} />}>
-              POZOS QUE CERRÓ · {pr.perdiendo.pozos.length}
+            <H5Info info={<Info titulo="Al arrancar" texto={`Se dejan de producir ${n0(pr.perdiendo.bblDia)} bbl/d mientras siga parada. Al arrancar, los pozos vuelven a producir a medida que el tanque baja.`} />}>
+              Pozos que cerró · {pr.perdiendo.pozos.length}
             </H5Info>
             <p className="text-[14px] text-[var(--tinta2)]">
               {cerrados.visibles.map(w => w.id).join(', ')}
@@ -274,7 +278,7 @@ export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: bool
         )}
         {!pr.parada && o && o.pasos.length > 0 && (
           <div className="min-w-0 text-[13px]">
-            <H5Info info={<Info titulo="Orden de cierre" texto="Menos crudo por barril de agua primero." />}>ORDEN DE CIERRE</H5Info>
+            <H5Info info={<Info titulo="Orden de cierre" texto="Menos crudo por barril de agua primero." />}>Orden de cierre</H5Info>
             <div {...desplazable('En qué orden cerrar los pozos')} className="overflow-x-auto">
               <table className="tabular w-full min-w-[360px] text-left">
                 <thead className="text-[12px] text-[var(--tinta3)]">
@@ -290,19 +294,19 @@ export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: bool
             <VerMas ocultas={pasos.ocultas} abierto={pasos.abierto} onAlternar={pasos.alternar} />
             {o.pasos.length > 12 && <small className="block text-[12px] text-[var(--tinta3)]">y {o.pasos.length - 12} pozos más: se cierra todo el campo.</small>}
             <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[14px]">
-              <span>pierde <b>{n0(o.crudoBpd)} bbl/d</b> en este orden{o.ahorroBpd > 1 && <> · <b>{n0(o.ahorroBpd)} bbl/d menos</b> que parejo</>}</span>
+              <span>deja de producir <b>{n0(o.crudoBpd)} bbl/d</b> en este orden{o.ahorroBpd > 1 && <> · <b>{n0(o.ahorroBpd)} bbl/d menos</b> que parejo</>}</span>
               {o.ahorroBpd > 1 && <Info titulo="Parejo" texto={`Cerrando parejo (la misma fracción a todos) serían ${n0(o.crudoParejoBpd)} bbl/d.`} />}
             </p>
           </div>
         )}
         {!o && pr.perfil.papel === 'transporte' && (
           <div className="text-[13px]">
-            <H5>POZOS QUE PASAN POR ELLA</H5>
+            <H5>Pozos que pasan por ella</H5>
             <ul className="list-disc pl-4 text-[var(--tinta2)]">{pr.supuestos.slice(0, -1).map(s => <li key={s}>{s}</li>)}</ul>
           </div>
         )}
       </div>
-      {/* Parada, el método solo repite «Parada desde…» y «POZOS QUE CERRÓ»: no va. */}
+      {/* Parada, el método solo repite «Parada desde…» y «Pozos que cerró»: no va. */}
       {(!pr.parada || !simple) && (
         <p className="mt-2 flex flex-wrap items-center gap-x-3 text-[13px]">
           {!pr.parada && <Info rotulo="método" titulo="Cómo se calcula" texto={`${pr.metodo}.`} />}
@@ -327,12 +331,12 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
   const lista = useVerMas(pozos)
   const filaPozo = (x: typeof pozos[number]) => (
     <div key={x.pozo} className="tabular flex justify-between gap-2 border-b border-[var(--linea2)] py-0.5 last:border-0">
-      <span className="font-mono">{x.pozo}</span>
+      <span className="font-cond font-semibold tracking-[.02em]">{x.pozo}</span>
       <span className="text-[var(--tinta2)]">{fmtHoras(x.horas, true)}{x.aprox ? ' · frecuencia reducida' : ''}</span>
       <b>{n0(x.bbl)}</b>
     </div>
   )
-  // El colchón en corto: lo previsto y lo que aguantó. La frase entera va abierta, en «EL TANQUE».
+  // El colchón en corto: lo previsto y lo que aguantó. La frase entera va abierta, en «El tanque».
   const colchon = m.colchon && `colchón ${fmtHoras(m.colchon.previsto.horas, true)}${m.colchon.observadoH !== undefined ? ` · aguantó ${fmtHoras(m.colchon.observadoH, true)}`
     : m.abierto ? (m.colchon.previsto.horas > m.horasParada ? ` · faltan ${fmtHoras(m.colchon.previsto.horas - m.horasParada, true)}` : ' · ya pasó, sin cerrar pozos') : ' · sin cerrar pozos'}`
   return (
@@ -371,15 +375,15 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
           <div>
             {/* Sin identificar, la frase repite lo que ya dicen el título y su marca: va en la ⓘ. */}
             {m.pide
-              ? <H5Info info={<Info titulo="Por qué paró" texto={c.texto} textoEnPapel={causaEnPapel(c)} />}>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5Info>
-              : <><H5>POR QUÉ PARÓ · {COMO[c.como].toUpperCase()}</H5><p className="text-[var(--tinta)]"><DichoEnPapel papel={causaEnPapel(c)}>{c.texto}</DichoEnPapel></p></>}
+              ? <H5Info info={<Info titulo="Por qué paró" texto={c.texto} textoEnPapel={causaEnPapel(c)} />}>Por qué paró · {COMO[c.como]}</H5Info>
+              : <><H5>Por qué paró · {COMO[c.como]}</H5><p className="text-[var(--tinta)]"><DichoEnPapel papel={causaEnPapel(c)}>{c.texto}</DichoEnPapel></p></>}
             <ul className="mt-1 list-disc pl-4 text-[var(--tinta2)]">
-              {c.evidencia.map((e, i) => <li key={e} className="font-mono text-[13px]"><DichoEnPapel papel={causaParaSalir(c).evidencia[i] ?? e}>{e}</DichoEnPapel></li>)}
+              {c.evidencia.map((e, i) => <li key={e} className="text-[13px]"><DichoEnPapel papel={causaParaSalir(c).evidencia[i] ?? e}>{e}</DichoEnPapel></li>)}
             </ul>
             {c.declarado && <p className="mt-1 text-[13px] text-[var(--tinta3)]">Declarado por <DichoEnPapel papel={rolDeQuien(c.declarado.por)}>{c.declarado.por}</DichoEnPapel> · {fechaHora(new Date(c.declarado.hora))}</p>}
             {m.colchon && (
               <>
-                <H5>EL TANQUE</H5>
+                <H5>El tanque</H5>
                 <dl className="tabular grid grid-cols-[1fr_auto] gap-x-3 text-[var(--tinta2)]">
                   <dt>Al parar · {m.colchon.previsto.nivel.tag}</dt><dd className="text-right">{n1(m.colchon.previsto.nivel.pct)} %</dd>
                   <dt>Libre hasta el alto-alto</dt><dd className="text-right">{n0(m.colchon.previsto.libreBbl)} bbl</dd>
@@ -393,7 +397,7 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
             )}
           </div>
           <div>
-            <H5>POZOS QUE CERRÓ · {pozos.length}</H5>
+            <H5>Pozos que cerró · {pozos.length}</H5>
             {pozos.length === 0 && <p className="text-[var(--tinta2)]">Ninguno.</p>}
             {lista.visibles.map(filaPozo)}
             {lista.resto.length > 0 && <div className="solo-impresion">{lista.resto.map(filaPozo)}</div>}
@@ -401,7 +405,7 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
             {m.evitable > 0 && (
               <p className="mt-1.5 flex flex-wrap items-center gap-x-1 text-[var(--tinta2)]">
                 <span>evitable en orden: <b className="text-[var(--tinta)]">{n0(m.evitable)} bbl</b></span>
-                <Info titulo="Evitable" texto={`Cerrando primero los de menos crudo por barril de agua se habrían perdido ${n0(m.evitable)} bbl menos.`} />
+                <Info titulo="Evitable" texto={`Cerrando primero los de menos crudo por barril de agua se habrían dejado de producir ${n0(m.evitable)} bbl menos.`} />
               </p>
             )}
             {m.aproximado > 0 && (
@@ -419,12 +423,12 @@ function Parada({ m, equipo, abiertaDeInicio, simple = false }: { m: ParadaMedid
 
 /** Las partes para quien opera: solo las que avisan, con lo que hay que hacer,
  *  y lo que está fuera de banda ahora. Sin tendencias ni proyecciones. */
-function PartesOperacion({ partes, senales }: { partes: SaludParte[]; senales: BombaVista['senales'] }) {
+function PartesOperacion({ partes, senales, delMotor }: { partes: SaludParte[]; senales: BombaVista['senales']; delMotor: ReadonlyMap<string, SenalNivel3> }) {
   const avisan = partes.filter(p => p.estado === 'fallo' || p.estado === 'fuera' || p.estado === 'avisa')
   const fuera = senales.filter(x => x.estado !== 'normal' && x.valor !== null)
   return (
-    <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
-      <Panel titulo="PARTES QUE AVISAN" extra={avisan.length ? `${avisan.length}` : undefined}>
+    <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
+      <Panel titulo="Partes que avisan" extra={avisan.length ? `${avisan.length}` : undefined}>
         {avisan.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Ninguna avisa.</p>}
         {avisan.map(sp => (
           <div key={sp.parte.id} className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
@@ -439,14 +443,21 @@ function PartesOperacion({ partes, senales }: { partes: SaludParte[]; senales: B
           </div>
         ))}
       </Panel>
-      <Panel titulo="FUERA DE BANDA" extra={fuera.length ? `${fuera.length}` : undefined}>
+      <Panel titulo="Fuera de banda" extra={fuera.length ? `${fuera.length}` : undefined}>
         {fuera.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todo en banda.</p>}
-        {fuera.map(x => (
-          <div key={x.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
-            <Analogico detalle nombre={x.plantilla.nombre} sub={x.tag} valor={x.valor} unidad={x.unidad} normal={x.normal}
-              alarma={x.alarma} decimales={decimalesDe(x.serie?.valores, x.valor)} estado={DE_ESTADO[x.estado] ?? undefined} />
-          </div>
-        ))}
+        {fuera.map(x => {
+          const m = delMotor.get(x.tag)
+          return (
+            <div key={x.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
+              {m ? <SenalFija s={m} nombre={x.plantilla.nombre} sub={x.tag} detalle /> : (
+                <div className="flex items-baseline justify-between gap-2 text-[14px]">
+                  <span>{x.plantilla.nombre}</span>
+                  <b className="tabular font-semibold">{x.valor === null ? '---' : x.valor.toLocaleString('es-CO')} <small className="font-normal text-[var(--tinta2)]">{x.unidad}</small></b>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </Panel>
     </div>
   )

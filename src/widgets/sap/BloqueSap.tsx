@@ -13,18 +13,22 @@ import { Info } from '@/shared/ui/Info'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
-import { n0, n1, plural } from '@/shared/lib/formato'
+import { n0, n1 } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
 
 const campoInput = 'min-h-10 w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento sm:min-h-0'
-const titulo = 'font-cond mb-1.5 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]'
+const titulo = 'mb-1.5 mt-3 text-[15px] font-semibold text-[var(--tinta)]'
 
 /** Lo que SAP dice de un equipo, junto a lo que TRIM ve: el aviso o la orden
  *  abierta, los repuestos críticos y (para ingeniería) el historial. Desde aquí
  *  se le ENVÍA a SAP el aviso con la evidencia; la orden la crea el planeador
  *  en SAP, no TRIM. Para quien decide va una sola línea. */
-export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo: string; nivel: 'decision' | 'operacion' | 'ingenieria' }) {
+export function BloqueSap({ campoId, equipo, nivel, titulo: Titulo = 'h3' }: {
+  campoId: string; equipo: string; nivel: 'decision' | 'operacion' | 'ingenieria'
+  /** El nivel del título: `h2` cuando el bloque es una tarjeta de la vista (el diagnóstico, A15). */
+  titulo?: 'h2' | 'h3'
+}) {
   const rol = useRol(); const usuarios = useUsuarios()
   // El aviso que se acaba de enviar desde aquí: su línea recibe el foco, porque
   // el formulario (y el botón que tenía el foco) desaparece al quedar abierto.
@@ -66,7 +70,7 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
   return (
     <section aria-label="SAP">
       <div className="mb-1.5 mt-3 flex flex-wrap items-center gap-x-1">
-        <h3 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">SAP · MANTENIMIENTO <span className="font-mono font-normal normal-case tracking-normal">· equipo {id.equipoSap} · {id.ubicacion}</span></h3>
+        <Titulo className="text-[15px] font-semibold text-[var(--tinta)]">SAP · mantenimiento <span className="text-[14px] font-normal text-[var(--tinta2)]">· equipo {id.equipoSap} · {id.ubicacion}</span></Titulo>
         <Info titulo="De dónde sale" texto="Avisos, órdenes, horas y stock vienen de SAP. La orden la crea el planeador en SAP; TRIM envía el aviso y avisa cuando la orden se libera." />
       </div>
       {/* Región viva: lo que cambia aquí (el aviso que se envió) se anuncia. */}
@@ -80,7 +84,7 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
 
       {repuestos.length > 0 && (
         <>
-          <h3 className={titulo}>REPUESTOS CRÍTICOS</h3>
+          <h3 className={titulo}>Repuestos críticos</h3>
           <ul className="grid gap-1 text-[14px]">
             {repuestos.map(r => {
               const falta = r.stock < r.minimo
@@ -101,7 +105,7 @@ export function BloqueSap({ campoId, equipo, nivel }: { campoId: string; equipo:
 
       {nivel === 'ingenieria' && ordenes.length > 0 && (
         <>
-          <h3 className={titulo}>HISTORIAL SAP · {plural(ordenes.length, 'ORDEN', 'ÓRDENES')}</h3>
+          <h3 className={titulo}>Historial SAP · {ordenes.length}</h3>
           <ul className="grid gap-1 text-[13px] text-[var(--tinta2)]">
             {historial.visibles.map(o => filaOrden(o))}
             {historial.resto.map(o => filaOrden(o, true))}

@@ -11,8 +11,9 @@ test('el demo construido carga cada pantalla', async ({ flujo: f }) => {
   await f.abrir('/#/oper/causa/ceiba/curso')
   for (const [ruta, debe] of [
     ['#/oper/causa/ceiba/curso', 'Ver mi chat de WhatsApp'],
-    ['#/conf/confiabilidad/morichal/curso', 'Lo que anunció y en qué quedó'],
-    ['#/adm/conectores/ceiba/curso', 'SISTEMAS CORPORATIVOS'],
+    // F2 (P-conf-1): «Lo que anunció y en qué quedó» va detrás de «Ver lo que anunció»; a la vista, su línea.
+    ['#/conf/confiabilidad/morichal/curso', '¿Le creo al vigía?'],
+    ['#/adm/conectores/ceiba/curso', 'Sistemas corporativos'],
     ['#/prod/produccion/ceiba/curso', 'Cuadre · asignación oficial'],
     ['#/ger/resultados/ceiba~portafolio/curso', 'no se produjeron en sus 5 campos'],
   ] as const) {

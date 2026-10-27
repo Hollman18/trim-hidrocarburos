@@ -1,0 +1,455 @@
+#/conf/equipos/morichal/MPP-301/diagnostico
+
+Morichal Norte
+Recolección
+MPP-301
+Diagnóstico
+DATOS DE DEMOSTRACIÓN
+MPP-301
+· diagnóstico
+bomba multifásica de doble tornillo · clúster norte · recolección multifásica · criticidad 5 de 5 · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Para sostener la misma presión diferencial necesita 4,9 % más velocidad que hace 11 días, y la caída de presión del filtro se duplicó: está entrando arena. Es el círculo que describe API 676: más velocidad, más erosión.
+
+Modo de falla
+Erosión de tornillos y camisa por arena
+Respaldo
+sin respaldo
+Aguas abajo
+3 pozos
+Diferido · octubre, en curso
+0 bbl
+
+Una señal apunta, no prueba: la causa la confirma quien abre el equipo.
+
+Doble tornillo · Lleva la producción a planta · sin respaldo
+norma
+
+SALUD POR PARTE
+2
+Filtro de entrada
+caída de presión del filtro · alarma en 5,2 d · 4,7–5,7 d
+fuera de banda
+límite
+12 psi
+en 5,2 d
+hace 11 d
+hoy
++5,7 d
+QUÉ LA ANUNCIA
+Caída de presión del filtro · anuncia
+PDT-3011 · en 5,2 d · 4,7–5,7 d
+9,6 psi
+Presión de succión · confirma
+PT-3011
+45 psi
+LO QUE HA COSTADO
+
+Sin fallas registradas.
+
+qué hacer
+anticipación
+cuánto pesa
+
+3
+Rodamientos
+vibración · cruza en 10,3 d · 9,8–11,0 d · +1 señal
+avisa
+3
+Tornillos y holguras
+velocidad · cruza en 17,5 d · 16,6–18,5 d
+avisa
+2 fallas · 7.949 bbl
+límite
+1.650 rpm
+en 17,5 d
+hace 11 d
+hoy
++18,5 d
+QUÉ LA ANUNCIA
+Velocidad · anuncia
+SI-3016 · en 17,5 d · 16,6–18,5 d
+1.535 rpm
+Temperatura de descarga · confirma
+TE-3012 · en más de 3 meses
+71 °C
+LO QUE HA COSTADO
+fallas
+2 · 7.949 bbl
+una cada
+183 días
+fuera
+3,0 d en promedio
+por falla
+3.975 bbl
+
+qué hacer
+anticipación
+cuánto pesa
+
+3
+Sellos mecánicos (cuatro)
+nivel del depósito de barrera · cruza en 33,0 d · 30,4–36,1 d
+avisa
+4 fallas · 13.875 bbl
+Lubricación
+estable
+1 falla · 758 bbl
+Motor eléctrico
+estable
+VARIABLES
+16 de 16 instrumentadas
+Presión de succión
+PT-3011 · PLC · 1 s
+45psi
+normal 35 – 60
+Temperatura de succión
+TE-3011 · PLC · 1 s
+58°C
+normal 45 – 75
+Caída de presión del filtro
+PDT-3011 · PLC · 1 s
+2
+9,6psi
+normal < 8,0
+alarma 12,0
+Presión de descarga
+PT-3012 · PLC · 1 s
+345psi
+normal 320 – 360
+Temperatura de descarga
+TE-3012 · PLC · 1 s
+71°C
+normal < 90
+alarma 90
+Temperatura de rodamiento
+TE-3013 · PLC · 1 s
+68°C
+normal < 85
+alarma 85
+Vibración
+VT-3013 · PLC · 1 s
+4,3mm/s
+normal < 5,5
+alarma 5,5
+Temperatura de devanado
+TE-3014 · PLC · 1 s
+96°C
+normal < 130
+Temperatura de rodamiento del motor
+TE-3015 · PLC · 1 s
+63°C
+normal < 85
+Vibración del motor
+VT-3015 · PLC · 1 s
+1,9mm/s
+normal < 4,5
+Velocidad
+SI-3016 · variador · 1 s
+1.535rpm
+normal 1.300 – 1.650
+alarma 1.650
+Corriente
+II-3016 · variador · 1 s
+182A
+normal 140 – 210
+Presión de barrera del sello
+PT-3017 · PLC · 1 s
+395psi
+normal 380 – 420
+Nivel del depósito de barrera
+LT-3017 · PLC · 1 s
+71%
+normal 50 – 90
+alarma 50
+Presión de aceite
+PT-3018 · PLC · 1 s
+32psi
+normal 25 – 45
+Temperatura de aceite
+TE-3018 · PLC · 1 s
+58°C
+normal < 75
+VIGÍA
+6 señales
+Caída de presión del filtro
+ISO 14224 5.1 · Bloqueo o taponamiento
+
+Llega a 12 psi en 5,2 d · 4,7–5,7 d
+anuncia
+
+límite
+12 psi
+en 5,2 d
+hace 11 d
+hoy
++5,7 d
+Vibración
+ISO 14224 1.2 · Vibración
+
+Llega a 5,5 mm/s en 10,3 d · 9,8–11,0 d
+anuncia
+
+límite
+5,5 mm/s
+en 10,3 d
+hace 11 d
+hoy
++11 d
+Velocidad
+ISO 14224 2.3 · Erosión
+
+Llega a 1.650 rpm en 17,5 d · 16,6–18,5 d
+anuncia
+
+límite
+1.650 rpm
+en 17,5 d
+hace 11 d
+hoy
++18,5 d
+Temperatura de rodamiento
+ISO 14224 2.4 · Desgaste
+
+Llega a 85 °C en 26,8 d · 24,7–29,3 d
+anuncia
+
+límite
+85 °C
+en 26,8 d
+hace 11 d
+hoy
++29,3 d
+Nivel del depósito de barrera
+ISO 14224 1.1 · Fuga
+
+Llega a 50 % en 33,0 d · 30,4–36,1 d
+anuncia
+
+límite
+50 %
+en 33 d
+hace 11 d
+hoy
++36,1 d
+Temperatura de descarga
+ISO 14224 2.7 · Sobrecalentamiento
+
+Llega a 90 °C en más de 3 meses
+anuncia
+
+límite
+90 °C
+hace 11 d
+hoy
++45 d
+PARADAS DEL PLC
+9 paradas
+24 de sept, 06:23
+hasta 26 de sept, 03:47 · bomba parada 45,4 h
+Sello mecánico · por señal
+3.027 bbl
+2.573 – 3.481 · ±15,0 %
+POR QUÉ PARÓ · POR SEÑAL
+
+Primera alarma: nivel bajo del depósito de barrera del sello
+
+Primera alarma LSL-3017 · nivel bajo del depósito de barrera del sello
+ZS-3016 · marcha → paro · 24 de sept, 06:23
+POZOS QUE CERRÓ · 3
+MN-07
+46,0 h
+1.138
+MN-18
+46,1 h
+1.017
+MN-33
+45,7 h
+871
+25 de ago, 15:06
+hasta 26 de ago, 03:10 · bomba parada 12,1 h
+Mantenimiento preventivo programado de la bomba
+845 bbl
+718 – 971 · ±15,0 %
+25 de jul, 10:28
+hasta 28 de jul, 11:07 · bomba parada 3,0 d
+Tornillos y holguras · por la firma de las señales
+5.047 bbl
+4.290 – 5.804 · ±15,0 %
+27 de jun, 02:00
+hasta 27 de jun, 12:32 · bomba parada 10,5 h
+Lubricación · por señal
+758 bbl
+644 – 872 · ±15,0 %
+7 de jun, 00:09
+hasta 8 de jun, 16:52 · bomba parada 40,7 h
+Sello mecánico · por señal
+2.867 bbl
+2.437 – 3.297 · ±15,0 %
+ver 4 más
+
+tolerancia
+
+PUNTOS CIEGOS
+Caudal real
+sale de medidor multifásico o pruebas de pozo
+Fracción de gas (GVF)
+sale de medidor multifásico o separador de prueba
+Corte de agua
+sale de pruebas de pozo
+Crudo que pasa
+sale de pruebas de pozo y asignación
+
+mecanismos
+
+Sus instrumentos
+toque uno para ver de dónde sale el dato
+PT-3011
+Presión de succión
+límite 35 – 60
+45
+psi
+TE-3011
+Temperatura de succión
+límite 45 – 75
+58
+°C
+2
+PDT-3011
+Caída de presión del filtro
+límite < 8
+9,6
+psi
+PT-3012
+Presión de descarga
+límite 320 – 360
+345
+psi
+TE-3012
+Temperatura de descarga
+límite < 90
+71
+°C
+TE-3013
+Temperatura de rodamiento
+límite < 85
+68
+°C
+VT-3013
+Vibración de la bomba
+límite < 5,5
+4,3
+mm/s
+TE-3014
+Temperatura de devanado
+límite < 130
+96
+°C
+TE-3015
+Temperatura de rodamiento del motor
+límite < 85
+63
+°C
+VT-3015
+Vibración del motor
+límite < 4,5
+1,9
+mm/s
+SI-3016
+Velocidad
+límite 1.300 – 1.650
+1.535
+rpm
+II-3016
+Corriente
+límite 140 – 210
+182
+A
+PT-3017
+Presión de barrera del sello
+límite 380 – 420
+395
+psi
+LT-3017
+Nivel del depósito de barrera
+límite 50 – 90
+71
+%
+PT-3018
+Presión de aceite
+límite 25 – 45
+32
+psi
+TE-3018
+Temperatura de aceite
+límite < 75
+58
+°C
+HISTORIA DEL PLC
+
+7 fallas en 12 meses · cada 52 d · 2,0 d fuera · le ha costado 3.226 bbl por falla
+sello mecánico 4 · tornillos y holguras 2 · lubricación 1
+
+8 eventos con pozos cerrados · 23.427 bbl
+
+24 de sept, 06:23 · 3 pozos cerrados hasta 46,1 h
+Sello mecánico · por señal
+3.027 bbl
+25 de ago, 15:06 · 3 pozos cerrados hasta 12,9 h
+Mantenimiento preventivo programado de la bomba
+845 bbl
+25 de jul, 10:28 · 3 pozos cerrados hasta 3,0 d
+Tornillos y holguras · por la firma de las señales
+5.047 bbl
+27 de jun, 02:00 · 3 pozos cerrados hasta 11,1 h
+Lubricación · por señal
+758 bbl
+7 de jun, 00:09 · 3 pozos cerrados hasta 41,2 h
+Sello mecánico · por señal
+2.867 bbl
+ver 3 más
+SAP · MANTENIMIENTO · equipo 10385444 · CO-MNO-BAT1-AGU-MPP-301
+Sin aviso ni orden abiertos
+Enviar aviso a SAP
+REPUESTOS CRÍTICOS
+3
+Juego de tornillos · 0 en bodega (mín. 1) · pedirlo: 60 días
+Filtro canasta de succión · 4 en bodega (mín. 2)
+HISTORIAL SAP · 9 ÓRDENES
+24 de sept
+40012044
+correctivo · Reparar sello mecánico de MPP-301
+cerrada · 8,0 h
+confirmadas
+6 de sept
+40012060
+predictivo · Revisar lubricación y alineación; programar el cambio con el repuesto en mano.
+cerrada · 4,0 h
+confirmadas
+18 de ago
+40012055
+preventivo · Mantenimiento preventivo programado de la bomba
+cerrada · 8,0 h
+confirmadas
+25 de jul
+40012033
+correctivo · Reparar tornillos y holguras de MPP-301
+cerrada · 8,0 h
+confirmadas
+27 de jun
+40012028
+correctivo · Reparar lubricación de MPP-301
+cerrada · 8,0 h
+confirmadas
+ver 4 más

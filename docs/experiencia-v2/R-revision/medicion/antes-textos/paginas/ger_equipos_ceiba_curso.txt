@@ -1,0 +1,89 @@
+#/ger/equipos/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Equipos
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Ahora: lo que está parado o avisa
+7 equipos · los demás, normales
+1
+P-201B
+bomba de agua
+Alarma · parada desde hoy, 03:52
+sí · 8 señales
+1.665bbl/d
+se deja de producir
+1
+K-101
+aire de instrumentos
+Alarma · ya pasó el límite
+sí · 4 señales
+hasta 9.394bbl/d
+si falla hoy
+2
+LC-21
+pozo · bombeo mecánico
+Atención · parado sin causa desde el 1 de oct, 18:20
+no: solo su controlador
+301bbl/d
+se deja de producir
+2
+TK-102
+tanque de crudo
+Atención · en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+3
+H-302
+tratamiento de crudo
+Aviso · en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+LC-16
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+869bbl/d
+se deja de producir
+LC-07
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+796bbl/d
+se deja de producir
+
+Lo que se le carga a cada equipo en octubre, en curso (el período se cambia en Resultados).
+
+Por equipo
+4 equipos
+bbl
+1
+P-201B
+bomba de reinyección
+2 pozos
+573
+2
+LC-21
+sin identificar
+247
+SE-2
+energía eléctrica
+118
+LC-08
+sin identificar
+109

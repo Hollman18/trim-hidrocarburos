@@ -1,0 +1,151 @@
+#/prod/produccion/ceiba~portafolio/ytd
+
+Todos mis campos
+Resultados
+DATOS DE DEMOSTRACIÓN
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+Año a la fecha, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+3
+no se puede publicar
+El Palmar · factor fuera de banda
+producción real
+4.069.813
+bbl
+meta 3.885.354
+14.822 bbl/d · 96,9 % del potencial
+potencial del libro
+4.200.887bbl
+15.299 bbl/d
+real · 1 de oct
+14.291bbl
+La tubería de cada campo
+qué limita hoy
+La Ceiba
+Qué limita hoy: los pozos (11.857 bbl/d)
+A la planta le sobran 1.143 bbl/d: lo que den de más los pozos pasa, hasta 1.143 bbl/d.
+115.498
+bbl no se produjeron
+El Palmar
+Qué limita hoy: los pozos (3.321 bbl/d)
+A la planta le sobran 279 bbl/d: lo que den de más los pozos pasa, hasta 279 bbl/d.
+15.576
+bbl no se produjeron
+Día a día
+bbl/d
+8,0 k
+10,0 k
+12,0 k
+14,0 k
+16,0 k
+18,0 k
+1 de ene
+24 de ene
+16 de feb
+11 de mar
+3 de abr
+26 de abr
+19 de may
+11 de jun
+4 de jul
+27 de jul
+2 de oct · en curso
+real medido
+potencial
+meta firmada
+diferido
+Lo que no se produjo, por tipo
+año a la fecha
+eficiencia de producción
+95,8 %
+4.069.813 de 4.246.794 bbl que los campos podían dejar pasar
+lo no planeado se llevó
+3,0 %
+127.787 bbl en paradas no planeadas
+Lo que dan los pozos según sus pruebas
+4.246.794 bbl
+− Lo que las pruebas dan de más que el medidor oficial
+45.907
+= El potencial del libro · lo mismo, medido como el punto oficial (pruebas × factor de asignación)
+4.200.887 bbl
+− El yacimiento y los proyectos
+0
+− Frecuencia bajada: el levantamiento sin optimizar
+0
+− Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+2.344
+− Paradas no planeadas: fallas, disparos y terceros
+Lo que TRIM baja
+127.787
+− Restricción sin falla: nominación o despacho
+0
+− Sin identificar: falta que una persona diga qué pasó
+944
+− Sin explicar: el inventario entre días
+0
+= Lo que salió por el punto de medición oficial
+4.069.813 bbl
+
+5.226 bbl tienen el tramo como propuesta de TRIM: falta que una persona conteste la pregunta que lo decide.
+
+Ver por tramo
+Medición oficial
+La Ceiba
+corte de agua: analizador
+factor 0,958 · banda ±15 %
+FQI-0101 · computador de flujo de la unidad LACT-01
+El Palmar
+corte de agua: laboratorio
+factor 0,987 · banda ±15 %
+LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho
+¿Cuadra? Mes por mes
+Mes	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+Enero 2026	465.753	476.398	10.645	0	97,8 %	438.650
+Febrero 2026	422.842	446.191	23.349	0	94,8 %	396.200
+Marzo 2026	478.087	495.108	17.021	0	96,6 %	438.650
+Abril 2026	431.355	442.434	11.079	0	97,5 %	424.500
+Mayo 2026	466.807	483.376	16.569	0	96,6 %	438.650
+Junio 2026	435.273	448.891	13.618	0	97,0 %	424.500
+Julio 2026	468.885	486.326	17.441	0	96,4 %	438.650
+Agosto 2026	443.382	451.904	8.522	0	98,1 %	438.650
+Septiembre 2026	435.377	447.083	11.706	0	97,4 %	424.500
+Octubre 2026 · en curso	
+3
+22.052	23.176	1.124	0	95,2 %	22.404
+Cuadre · asignación oficial
+mes cerrado
+Campo
+La Ceiba
+El Palmar
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 96.715 bbl · 7 pozos

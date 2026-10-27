@@ -40,6 +40,15 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
   onIdentificar?: () => void
 }) {
   const b = useRepartoChoke({ campos, desde, hasta })
+  // Lo que se muestra: el entero de cada nodo (H2, la regla de redondeo): los tramos y los escalones suman el total a la vista.
+  const ent = b.enteros
+  const enTramo = (k: ChokeOSinAsignar) => ent?.porTramo[k] ?? Math.round(b.porChoke[k])
+  const enEscalon = (x: EscalonOSinClasificar) => ent?.porEscalon[x] ?? Math.round(b.porEscalon[x])
+  const enElemento = (k: ChokeOSinAsignar, equipo: string, exacto: number) => {
+    if (!ent) return Math.round(exacto)
+    const xs = Object.entries(ent.porElemento[k]).filter(([c]) => c === equipo || c.endsWith(`|${equipo}`))
+    return xs.length ? xs.reduce((a, [, n]) => a + n, 0) : Math.round(exacto)
+  }
   const arbol = useArbolChoke({ campos, desde, hasta, orden: 'gestion' })
   const codigos = codigosDelRol(useRol().id)
   const rango = useRango()
@@ -80,11 +89,11 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
           <div className="min-w-0" data-por-tramo="">
             <h3 className={`${titulo} mb-0.5`}>Por tramo</h3>
             {CHOKES_Y_SIN_ASIGNAR.map(k => (
-              <TramoConRamas key={k} k={k} v={b.porChoke[k]} eq={b.porChokeEquipo[k]} parte={parte} fila={fila}
+              <TramoConRamas key={k} k={k} v={b.porChoke[k]} n={enTramo(k)} eq={b.porChokeEquipo[k]} nEq={x => enElemento(k, x.equipo, x.bbl)} parte={parte} fila={fila}
                 nodo={arbol.raiz.hijos.find(h => h.valor === k)} codigos={codigos} onIdentificar={onIdentificar} />
             ))}
             <p className="tabular mt-1 flex flex-wrap items-baseline justify-between gap-x-2 text-[14px]">
-              <span>= el diferido del libro</span><b className="text-[15px]" data-total-tramos={total}>{n0(total)} bbl</b>
+              <span>= el diferido del libro</span><b className="text-[15px]" data-total-tramos={total} data-entero={ent?.raiz}>{n0(ent?.raiz ?? total)} bbl</b>
             </p>
             {total >= 0.5 && <p className="no-imprimir text-[13px] text-[var(--tinta3)]">Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.</p>}
           </div>
@@ -110,7 +119,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
                     {ESCALON[e]}
                     {norte && <small className="block text-[12px] font-normal text-[var(--tinta2)]">lo que TRIM tiene que bajar</small>}
                   </span>
-                  <b className="tabular shrink-0 text-[15px]" data-escalon={e} data-bbl={v}>{n0(v)}</b>
+                  <b className="tabular shrink-0 text-[15px]" data-escalon={e} data-bbl={v}>{n0(enEscalon(e))}</b>
                   <small className="tabular w-[42px] shrink-0 text-right text-[12px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
                 </Tip>
               )
@@ -152,7 +161,7 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
                       : <small className="text-[13px] text-[var(--tinta3)]">nada se trabó</small>}
                     {c.diferido >= 0.5 && <small className="tabular block text-[13px] text-[var(--tinta2)]">{textoReparto(c.porChoke)}</small>}
                   </span>
-                  <b className="tabular text-[15px] sm:text-right">{n0(c.diferido)}<span className="sr-only"> bbl</span></b>
+                  <b className="tabular text-[15px] sm:text-right">{n0(ent?.porCampo[c.campoId] ?? c.diferido)}<span className="sr-only"> bbl</span></b>
                 </div>
               )
             })}
@@ -199,8 +208,11 @@ export function PorTramo({ campos, desde, hasta, global, onIdentificar }: {
 /** Un tramo de «POR TRAMO»: su muestra, sus barriles y su parte del diferido;
  *  con barriles, un botón que abre su árbol de pérdidas (`aria-expanded`; en
  *  el papel, desplegado). Los equipos van fuera del botón, en su renglón. */
-function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: {
-  k: ChokeOSinAsignar; v: number; eq: EquipoBbl[]; parte: (v: number) => string; fila: string
+function TramoConRamas({ k, v, n, eq, nEq, parte, fila, nodo, codigos, onIdentificar }: {
+  k: ChokeOSinAsignar; v: number
+  /** Lo que se muestra: el entero del tramo y el de cada equipo (H2). */
+  n: number; nEq: (x: EquipoBbl) => number
+  eq: EquipoBbl[]; parte: (v: number) => string; fila: string
   nodo: NodoArbol | undefined; codigos: VerCodigos; onIdentificar?: () => void
 }) {
   const [abierto, setAbierto] = useState(false)
@@ -211,7 +223,7 @@ function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: 
     <>
       <Muestra k={k} />
       <span className={cn('min-w-0 flex-1', !sin && v >= 0.5 && 'font-medium')}>{mayuscula(LARGO_TRAMO[k])}</span>
-      <b className="tabular shrink-0 text-[15px]" data-tramo={k} data-bbl={v}>{n0(v)}</b>
+      <b className="tabular shrink-0 text-[15px]" data-tramo={k} data-bbl={v} data-entero={n}>{n0(n)}</b>
       <small className="tabular w-[42px] shrink-0 text-right text-[12px] text-[var(--tinta3)]">{v >= 0.5 ? parte(v) : ''}</small>
     </>
   )
@@ -232,7 +244,7 @@ function TramoConRamas({ k, v, eq, parte, fila, nodo, codigos, onIdentificar }: 
       </div>
       {eq.length > 0 && (
         <small className="tabular flex flex-wrap items-center gap-x-1 pl-[38px] text-[13px] text-[var(--tinta2)]">
-          <span>{eq.slice(0, 3).map(x => `${x.equipo} ${n0(x.bbl)}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}</span>
+          <span>{eq.slice(0, 3).map(x => `${x.equipo} ${n0(nEq(x))}`).join(' · ')}{eq.length > 3 ? ` · y ${eq.length - 3} más` : ''}</span>
           {/* Un equipo con barriles de dos causas (la electrosumergible de LC-04 y su baja tensión) lo dice: si no, la cifra
               no cuadra con «POR EQUIPO», donde cada parte va con quien se la carga (B-12). */}
           {eq.slice(0, 3).filter(x => (x.porTipo?.length ?? 0) > 1).map(x => (

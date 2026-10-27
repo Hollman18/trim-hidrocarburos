@@ -105,10 +105,10 @@ const horaDelPlc = () => `${new Date(AHORA.getTime() - 5 * 3_600_000).toISOStrin
  *  `detalle` es el objeto `error` entero, por si trae más (los errores por
  *  caja de un acceso). Lo demás (sin red, 500) también vuelve como rechazo,
  *  diciendo que no se guardó. */
-async function escribir<T, J>(q: Credencial, metodo: 'POST' | 'PATCH' | 'PUT', ruta: string, cuerpo: unknown, cod: Codec<T, J>):
+async function escribir<T, J>(q: Credencial, metodo: 'POST' | 'PATCH' | 'PUT', ruta: string, cuerpo: unknown, cod: Codec<T, J>, o: { keepalive?: boolean } = {}):
   Promise<{ ok: true; datos: T } | { ok: false; error: string; estado: number; codigo?: string; detalle?: unknown }> {
   try {
-    const r = await pedirJson(ruta, undefined, { metodo, cuerpo, cabeceras: { 'x-rol': q.rolId } })
+    const r = await pedirJson(ruta, undefined, { metodo, cuerpo, cabeceras: { 'x-rol': q.rolId }, ...(o.keepalive ? { keepalive: true } : {}) })
     return { ok: true, datos: deRespuesta(cod, r) }
   } catch (e) {
     if (e instanceof ErrorApi) {
@@ -392,11 +392,12 @@ function anotarRespuesta(evento: string, r: Respuesta) {
  *  quedó (`por`, `porId`, `hora` y `canal` los pone el servidor). El cuerpo es
  *  el del contrato y nada más: si llevara `canal`, el servidor tendría que
  *  creerle al navegador por qué vía llegó la respuesta. */
-export async function responderParada(q: Credencial, c: CuerpoRespuesta): Promise<Resultado> {
+export async function responderParada(q: Credencial, c: CuerpoRespuesta, o: { keepalive?: boolean } = {}): Promise<Resultado> {
   if (FUENTE === 'http') {
     const cuerpo: CuerpoRespuesta = { evento: c.evento, campoId: c.campoId, equipo: c.equipo, texto: c.texto,
       ...(c.parte !== undefined ? { parte: c.parte } : {}), ...(c.modo !== undefined ? { modo: c.modo } : {}) }
-    const r = await escribir(q, 'POST', `/paradas/${encodeURIComponent(c.evento)}/respuesta`, cuerpo, R_RESPUESTA)
+    // F1 · P-08: desde Hoy, al salir de la página, con `keepalive` (el pedido sale aunque la página se cierre).
+    const r = await escribir(q, 'POST', `/paradas/${encodeURIComponent(c.evento)}/respuesta`, cuerpo, R_RESPUESTA, o)
     if (!r.ok) return r
     anotarRespuesta(c.evento, r.datos.respuesta)
     return { ok: true }
@@ -1006,11 +1007,11 @@ function vaConLoDicho(b: BorradorClasificacion, paso: PasoAnh, valor: string): b
  *  capacidad y persona (403), la fila (404), la cadena (409), la pregunta (409 si
  *  otra persona ya la contestó; 422 si no es de esta parada), quién la contesta
  *  (403), la opción (422) y el alcance (422/409). */
-export async function responderPreguntaAnh(q: Credencial, id: string, c: CuerpoRespuestaAnh): Promise<Resultado<{ parada: ParadaAnh }>> {
+export async function responderPreguntaAnh(q: Credencial, id: string, c: CuerpoRespuestaAnh, o: { keepalive?: boolean } = {}): Promise<Resultado<{ parada: ParadaAnh }>> {
   const cuerpoDe = (): CuerpoRespuestaAnh => ({ pregunta: c.pregunta, opcion: c.opcion,
     ...(c.aplicarAlEvento ? { aplicarAlEvento: true } : {}), ...(c.aplicarALaCascada ? { aplicarALaCascada: true, ids: c.ids ?? [] } : {}), ...(c.cadena !== undefined ? { cadena: c.cadena } : {}) })
   if (FUENTE === 'http') {
-    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/respuesta`, cuerpoDe(), R_CLASIFICACION)
+    const r = await escribir(q, 'POST', `/anh/paradas/${encodeURIComponent(id)}/respuesta`, cuerpoDe(), R_CLASIFICACION, o)
     if (!r.ok) return r
     anotarClasificaciones(r.datos.guardadas)
     return { ok: true, parada: r.datos.parada }

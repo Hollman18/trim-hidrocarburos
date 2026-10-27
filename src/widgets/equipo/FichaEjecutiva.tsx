@@ -6,17 +6,24 @@ import { useFichaEquipo } from '@/shared/api/equipos'
 import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
 import { fechaHora, fechaCorta, horasEntre, AHORA } from '@/entities/reloj'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
+import { PALABRA_CONDICION } from '@/shared/api/equiposTecnico'
 import { Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { n0, usd, plural } from '@/shared/lib/formato'
 import { siPara } from '@/shared/ui/costoHoy'
-import { fmtHoras, respaldoAbsorbe } from '@/widgets/bombas/comun'
+import { fmtHoras, textoColchon, respaldoAbsorbe } from '@/widgets/bombas/comun'
+import { useCondiciones } from '@/widgets/pozos/estado'
+import { Bloqueo } from '@/widgets/hoy/piezas'
 
 /** Lo que un directivo necesita de un equipo: cómo está, cuánto le ha
  *  costado, por qué parte falla y qué se está haciendo. Sin tags, sin
  *  señales, sin tolerancias: eso es de quien lo opera o lo repara. Los
- *  números son los mismos del libro. */
+ *  números son los mismos del libro.
+ *
+ *  F3 · La marca es la del equipo (la de la franja, con su palabra: H3, H16); lo
+ *  diferido «se deja de producir» (T-8); «Si falla hoy» en bbl/d (G-16); y «No
+ *  arrancar» es el bloqueo en tinta con ⊘, no un chip (H34; X5 §5.6). */
 export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: string }) {
   const rango = useRango()
   const riesgo = useRiesgo([campoId]).filter(r => r.equipo === equipo)
@@ -25,6 +32,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
   const pregunta = usePreguntas([campoId]).find(p => p.equipo === equipo && p.pide && !p.fin)
   // La ficha y su historia: toda la que hay, del libro (la misma cuenta que el Pareto).
   const ficha = useFichaEquipo(campoId, equipo, rango.desde, rango.hasta)
+  const condicion = useCondiciones([campoId])(campoId, equipo)
   if (!ficha) return <p className="text-[14px] text-[var(--tinta2)]">Este equipo no está en {campoPorId(campoId).nombre}.</p>
   const { eq, periodo, historia, hist, veces, prediccion: pr, cerradoPor, desdeCierre } = ficha
 
@@ -47,14 +55,13 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     ? `${perdiendo.desde ? `Parada desde ${fechaHora(perdiendo.desde)}` : 'Parada'}${perdiendo.cierreDesde && perdiendo.desde && perdiendo.cierreDesde.getTime() - perdiendo.desde.getTime() > 60_000 ? ` · pozos cerrados desde ${fechaHora(perdiendo.cierreDesde)}` : ''}`
     : cerradoPor ? `Cerrado por ${cerradoPor.equipo}${desdeCierre ? ` desde ${fechaHora(desdeCierre)}` : ''}`
       // Sin nada de eso, el estado ya va en la cabecera de la ficha («… · en servicio»): no se repite.
-      : enRiesgo ? `En marcha · si para, ${siPara(enRiesgo)}` : undefined
+      : enRiesgo ? `En marcha · si falla hoy, ${siPara(enRiesgo)}` : undefined
 
   // Qué se está haciendo, en corto; el porqué, en su ⓘ (y en el papel).
-  let haciendo: string, porque: string | undefined, noArrancar = false
+  let haciendo: string, porque: string | undefined
   if (pregunta) {
     haciendo = `Espera que se identifique el daño · hace ${fmtHoras(horasEntre(pregunta.inicio, AHORA), true)}`
     porque = 'Quien la revise tiene que registrar qué se dañó: por regla no se arranca hasta identificarlo.'
-    noArrancar = true
   } else if (cerradoPor) {
     haciendo = `Su pozo está bien · espera a ${cerradoPor.equipo}`
     porque = `Lo cerró ${cerradoPor.equipo}. Vuelve a producir cuando esa causa se resuelva.`
@@ -80,18 +87,21 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
   return (
     // El nombre del equipo ya va en la cabecera de la ficha.
     <div className="grid gap-3 text-[15px]">
-      {(cifra || estado) && <div className="flex items-start gap-2.5">
-        <MarcaPrioridad s={eq.severidad} tamano={16} className="mt-[3px]" />
+      {(cifra || estado || condicion) && <div className="flex items-start gap-2.5" data-condicion={condicion ?? ''}>
+        {condicion && <MarcaCondicion c={condicion} tamano={16} className="mt-[3px]" decorativa />}
         <span className="min-w-0">
-          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[13px] font-normal text-[var(--tinta3)]">se dejan de producir</small></b>}
-          {estado && <span className="block text-[14px] text-[var(--tinta2)]">{estado}</span>}
+          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[14px] font-normal text-[var(--tinta2)]">se dejan de producir</small></b>}
+          {(condicion || estado) && <span className="block text-[14px] text-[var(--tinta2)]">{condicion && <b className="font-semibold text-[var(--tinta)]">{PALABRA_CONDICION[condicion]}{estado ? ' · ' : ''}</b>}{estado}</span>}
         </span>
       </div>}
+
+      {/* «No arrancar» es un bloqueo de procedimiento: la franja en tinta con ⊘, no un chip (H34). */}
+      {pregunta && <Bloqueo b={{ texto: `No arrancar hasta identificar ${pregunta.sobre === 'pozo' ? 'por qué paró' : 'qué se dañó'}` }} />}
 
       {eq.clase === 'catalogo' && (
         <div className="flex flex-wrap gap-1">
           <Chip tono={eq.redundancia === 'sin respaldo' ? 'fuerte' : 'neutro'}>{eq.redundancia}</Chip>
-          <Chip>si para: {eq.aguasAbajo}</Chip>
+          <Chip>si falla: {eq.aguasAbajo}</Chip>
         </div>
       )}
       <Renglon k="Le ha costado"
@@ -109,10 +119,11 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
       )}
       {veces !== undefined && <Renglon k="Veces que cerró pozos" v={plural(veces, 'vez', 'veces')} />}
       {pr && !pr.parada && pr.inmediato && pr.colchon && (
-        <Renglon k="Si para ahora" v={respaldoAbsorbe(pr) ? 'no cierra pozos: el respaldo absorbe toda el agua'
-          : `el tanque aguanta ${fmtHoras(pr.colchon.horas)} · luego se pierden ${n0(pr.crudoBpd)} bbl/d`} />
+        // «Si falla hoy» en bbl/d, el mismo nombre y la misma cifra que Equipos y Bombas (D-2, G-16).
+        <Renglon k="Si falla hoy" v={respaldoAbsorbe(pr) ? 'no cierra pozos: el respaldo absorbe toda el agua'
+          : `${n0(pr.crudoBpd)} bbl/d se dejan de producir después de ${textoColchon(pr.colchon.horas)} de colchón`} />
       )}
-      <Renglon k="Qué se está haciendo" v={haciendo} info={porque} chip={noArrancar ? 'no arrancar' : undefined} />
+      <Renglon k="Qué se está haciendo" v={haciendo} info={porque} />
       {planes.length > 0 && <PlanesDe planes={planes} />}
     </div>
   )
@@ -120,13 +131,12 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
 
 const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
-function Renglon({ k, v, pie, info, chip }: { k: string; v: string; pie?: string; info?: string; chip?: string }) {
+function Renglon({ k, v, pie, info }: { k: string; v: string; pie?: string; info?: string }) {
   return (
     <div className="border-t border-[var(--linea2)] pt-2">
-      <small className="block text-[13px] text-[var(--tinta3)]">{k}</small>
+      <small className="block text-[14px] text-[var(--tinta2)]">{k}</small>
       <span className="flex flex-wrap items-center gap-x-1.5">
         <span>{v}</span>
-        {chip && <Chip tono="fuerte">{chip}</Chip>}
         {info && <Info titulo={k} texto={info} />}
       </span>
       {pie && <small className="block text-[13px] text-[var(--tinta2)]">{pie}</small>}

@@ -675,7 +675,7 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
       apunta: true,
       porque: 'La primera alarma de la bomba es de su variador o de su arrancador', fuente: 'P1 §2.1, fila 7; S1 P1-15' },
     { id: 'linea-sin-n2', tipos: LINEA,
-      cuando: 'Bomba de la línea con la parte sello, succión, filtro, desgaste interno o tornillos, o sin parte: la Tabla 1 no tiene causa para la bomba de reinyección ni para la multifásica',
+      cuando: 'Bomba de la línea con la parte sello, succión, filtro, desgaste interno o tornillos, o sin parte: la Tabla 1 no tiene causa para la bomba de agua ni para la multifásica',
       propone: { ...MANT, n1: 'NP_PROC', n2: 'NP_PROC/parada-estacion-bombeo-afecta-pozos' }, chokeEsperado: 'planta', opciones: {}, preguntas: [],
       porque: 'La bomba de la línea paró y le cortó el paso al pozo; la parte va en la descripción', fuente: 'P1 §2.1, fila 8; §3.1' },
     { id: 'linea-capacidad', tipos: LINEA,

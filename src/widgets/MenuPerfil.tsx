@@ -59,7 +59,7 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
       <button {...propsBoton} onClick={() => { setVista('menu'); setAbierto(v => !v) }}
         aria-label={quien} title={variante === 'panel' ? undefined : quien}
         className={cn('flex cursor-pointer items-center rounded-[14px] text-left text-white',
-          variante === 'panel' ? 'min-w-0 flex-1 gap-3 px-1.5 py-1.5 hover:bg-white/[.08]' : 'rounded-full p-0.5 hover:bg-white/[.10]')}>
+          variante === 'panel' ? 'min-w-0 flex-1 gap-3 px-1.5 py-1.5 hover:bg-white/[.08]' : 'toque rounded-full p-0.5 hover:bg-white/[.10]')}>
         {avatar}
         {variante === 'panel' && (
           <span className="min-w-0 flex-1">
@@ -104,7 +104,8 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
                     </button>
                   )
                 })}
-                <button onClick={() => { abrirOnboarding(); setAbierto(false) }}
+                {/* Las señas van sobre el inicio de verdad del rol (X4 §6.2): se pasa a él y se abren. */}
+                <button onClick={() => { setPantalla(rol.inicio); abrirOnboarding(); setAbierto(false) }}
                   className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
                   <BookOpen className="size-[18px] text-[var(--tinta2)]" /> Introducción
                 </button>

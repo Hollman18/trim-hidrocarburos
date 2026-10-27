@@ -32,9 +32,9 @@ export function PanelSapMantenimiento() {
   const impresion = 'border-b border-[var(--linea2)] pb-1.5 last:border-0'
 
   return (
-    <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+    <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
       {/* El período ya lo dice la cabecera: el panel no lo repite. */}
-      <Panel titulo="HORAS EN SAP">
+      <Panel titulo="Horas en SAP">
         <Lectura>
           Horas confirmadas en las órdenes de SAP cerradas en el período: preventivo y predictivo (lo que
           se hace antes de que falle) contra correctivo (lo que se hace porque falló). Si el proactivo no
@@ -68,13 +68,13 @@ export function PanelSapMantenimiento() {
         )}
         {reloj && (
           <>
-            <h3 className="font-cond mb-1 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">TRES RELOJES · PROMEDIO DE {plural(reloj.fallas, 'FALLA', 'FALLAS')}</h3>
+            <h3 className="mb-1 mt-3 text-[15px] font-semibold text-[var(--tinta)]">Tres relojes · promedio de {plural(reloj.fallas, 'falla', 'fallas')}</h3>
             <TresRelojes reloj={reloj} />
           </>
         )}
       </Panel>
 
-      <Panel titulo="ABIERTO EN SAP" extra={`ahora · ${plural(sinOrden.length, 'aviso', 'avisos')} · ${plural(abiertas.length, 'orden', 'órdenes')}`}>
+      <Panel titulo="Abierto en SAP" extra={`ahora · ${plural(sinOrden.length, 'aviso', 'avisos')} · ${plural(abiertas.length, 'orden', 'órdenes')}`}>
         <Lectura>
           TRIM no crea órdenes: manda el aviso a SAP y el planeador crea la orden. Avisos: lo que TRIM
           envió y todavía no tiene orden. Órdenes: las abiertas, con su estado y su técnico. Toque o pase

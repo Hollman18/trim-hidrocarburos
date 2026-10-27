@@ -1,0 +1,111 @@
+#/reg/resultados/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Resultados
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Lo que pasó · octubre, en curso
+
+1.046
+barriles
+
+no se produjeron en La Ceiba.
+
+El máximo firmado para lo que va de octubre es 1.267 bbl: va 221 por debajo. P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.
+
+calculado
+entre 889 y 1.203 bbl
+50 mil USD
+Provisional
+Ver qué se está haciendo
+Ver el reporte
+Promedio por día
+
+producción
+meta 10.900
+
+3
+10.700
+bbl/d
+
+diferido
+máx. 800
+
+661
+bbl/d
+
+Cierre proyectado
+proyectado
+
+producción
+meta 337.900
+
+3
+293.287
+bbl
+
+diferido
+máx. 24.800
+
+3
+58.880
+bbl
+
+Diferido por día, mes a mes
+octubre: 661 bbl/d
+Por equipo
+Por dónde se trabó
+400
+800
+OCT 2025
+ENE 2026
+3
+ABR
+JUL
+661
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma
+573
+55 %
+2
+LC-21 sin identificar · atención
+247
+24 %
+SE-2 energía eléctrica
+118
+11 %
+LC-08 sin identificar
+109
+10 %
+¿Se puede publicar?
+octubre, en curso
+
+Todavía no: el mes está en curso.
+
+Provisional: el mes está en curso y se publica cuando cierre.
+
+Ver el reporte al regulador
+
+Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.

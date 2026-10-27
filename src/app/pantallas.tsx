@@ -1,16 +1,14 @@
 import type { ComponentType } from 'react'
 import { pantalla } from '@/shared/lib/carga'
 import {
-  Gauge, Network, TriangleAlert, MessageSquareText, Wrench,
+  Gauge, Network, MessageSquareText, Wrench,
   Droplets, Activity, Scale, FileCheck2, SlidersHorizontal, UserRound, Plug,
-  TrendingUp, CircleDot, ClipboardCheck, Hammer, Scale3d, Fan, Zap,
-  ListChecks, ChartColumn, LayoutDashboard,
+  TrendingUp, CircleDot, ClipboardCheck, Scale3d, Fan, Zap,
+  ListChecks, ChartColumn, LayoutDashboard, ShieldCheck, ScrollText,
 } from 'lucide-react'
 import { IconoPlanta } from '@/shared/brand/Logo'
 
-const Resumen = pantalla(() => import('@/pages/Resumen'), 'Resumen')
 const Diferidos = pantalla(() => import('@/pages/Diferidos'), 'Diferidos')
-const Riesgo = pantalla(() => import('@/pages/Riesgo'), 'Riesgo')
 const Perfil = pantalla(() => import('@/pages/Perfil'), 'Perfil')
 const Planta = pantalla(() => import('@/pages/Planta'), 'Planta')
 const Configuracion = pantalla(() => import('@/pages/Configuracion'), 'Configuracion')
@@ -19,7 +17,6 @@ const Agua = pantalla(() => import('@/pages/Agua'), 'Agua')
 const Produccion = pantalla(() => import('@/pages/Produccion'), 'Produccion')
 const Pozos = pantalla(() => import('@/pages/Pozos'), 'Pozos')
 const Turno = pantalla(() => import('@/pages/Turno'), 'Turno')
-const Trabajo = pantalla(() => import('@/pages/Trabajo'), 'Trabajo')
 const Mantenimiento = pantalla(() => import('@/pages/Mantenimiento'), 'Mantenimiento')
 const Causa = pantalla(() => import('@/pages/Causa'), 'Causa')
 // C4 · «Superficie» se fundió en Equipos (X4 §3.6): su dirección abre Equipos con el filtro de servicios y proceso.
@@ -51,6 +48,8 @@ export interface Pantalla {
   /** Sin «Exportar» en la cabecera: la pantalla trae su propia salida
    *  («Compartir el informe» en La planta viva, «Entregar turno» en Hoy). */
   sinExportar?: boolean
+  /** F1 · I-adm-3: el título que ve un rol cuando no es el de todos («Metas y accesos» del gerente). */
+  tituloPorRol?: Readonly<Record<string, string>>
 }
 
 /** Qué pantalla entra en el primer producto NO se decide aquí: se decide en
@@ -61,32 +60,41 @@ export const PANTALLAS: Record<string, Pantalla> = {
   // La experiencia v2: la vista del gerente se llama «La planta viva» (lo decidió el dueño).
   plantaViva:   { corto: 'La planta viva', titulo: 'La planta viva',             ruta: 'planta-viva', agrega: true, ahora: true, sinExportar: true, icono: IconoPlanta, Vista: PlantaViva },
   hoy:          { corto: 'Hoy',           titulo: 'Hoy',                         ruta: 'hoy', agrega: true, ahora: true, sinExportar: true, icono: ListChecks,         Vista: Hoy },
-  equipos:      { corto: 'Equipos',       titulo: 'Equipos',                     ruta: 'equipos', agrega: true, ahora: true, icono: Gauge,              Vista: Equipos },
+  equipos:      { corto: 'Equipos',       titulo: 'Equipos',                     ruta: 'equipos', agrega: true, ahora: true, sinExportar: true, icono: Gauge,              Vista: Equipos },
   resultados:   { corto: 'Resultados',    titulo: 'Resultados',                  ruta: 'resultados', agrega: true,                      icono: ChartColumn,        Vista: Resultados },
   bombas:       { corto: 'Bombas',        titulo: 'Bombas de la línea', ruta: 'bombas', agrega: true, icono: Fan,                Vista: Bombas },
   esp:          { corto: 'Electrosumergibles', titulo: 'Electrosumergibles', ruta: 'esp', agrega: true, icono: Zap,               Vista: Esp },
   produccion:   { corto: 'Producción',    titulo: 'Producción contra plan',      ruta: 'produccion', agrega: true,   icono: TrendingUp,         Vista: Produccion },
   pozos:        { corto: 'Pozos',         titulo: 'Pozos',                       ruta: 'pozos', agrega: true,        icono: CircleDot,          Vista: Pozos },
   turno:        { corto: 'Turno',         titulo: 'Entrega de turno',            ruta: 'turno', ahora: true, agrega: true,        icono: ClipboardCheck,     Vista: Turno },
-  trabajo:      { corto: 'Mi trabajo',    titulo: 'Mi trabajo de hoy',           ruta: 'trabajo', ahora: true,                    icono: Hammer,             Vista: Trabajo },
+  // F1 · P-trabajo-1 y K1 · G-15: Mi trabajo se fundió en Hoy del técnico y ningún rol la ofrece: la pantalla se
+  // borró; su dirección («#/tec/trabajo/…») sigue abriendo Hoy (`FUSIONADA_EN`, url.ts).
   mantenimiento:{ corto: 'Mantenimiento', titulo: 'Mantenimiento: lo que hay que atacar',    ruta: 'mantenimiento', agrega: true, icono: Scale3d,            Vista: Mantenimiento },
-  resumen:      { corto: 'Resumen',       titulo: 'Resumen del activo',          ruta: 'resumen', agrega: true,                         icono: Gauge,              Vista: Resumen },
+  // F1 · P-21: el Resumen del gerente ya no es una pantalla (C5 lo fundió en La planta viva y Resultados);
+  // su dirección sigue abriendo La planta viva (`FUSIONADA_EN`, url.ts).
   diferidos:    { corto: 'Diferidos',     titulo: 'Libro de diferidos',          ruta: 'diferidos', agrega: true,                       icono: Activity,           Vista: Diferidos },
-  // C5: Riesgo ya no lee el período (sin el bloque del ciclo): es «ahora» (X4 §3.1, regla 8).
-  riesgo:       { corto: 'Riesgo',        titulo: 'Qué está en riesgo',          ruta: 'riesgo', agrega: true, ahora: true,             icono: TriangleAlert,      Vista: Riesgo },
-  perfil:       { corto: 'Mi perfil',     titulo: 'Mi perfil',                   ruta: 'perfil', ahora: true,                          icono: UserRound,          Vista: Perfil },
+  // K1 · P-10: Riesgo ya no es una pantalla. El del gerente vive en La planta viva (C5) y el del jefe y de
+  // confiabilidad, en su Equipos, debajo de la lista; su dirección abre ahí (`FUSIONADA_EN` y `FUSIONADA_EN_ROL`, url.ts).
+  perfil:       { corto: 'Mi perfil',     titulo: 'Mi perfil',                   ruta: 'perfil', ahora: true, sinExportar: true,       icono: UserRound,          Vista: Perfil },
   planta:       { corto: 'Planta',        titulo: 'Planta',                      ruta: 'planta',                          icono: Network,            Vista: Planta },
   causa:        { corto: 'Identificar',   titulo: 'Paradas por identificar',     ruta: 'causa', agrega: true,             icono: MessageSquareText,  Vista: Causa },
   equipo:       { corto: 'Servicios y proceso', titulo: 'Equipos',                ruta: 'equipo', agrega: true, ahora: true,             icono: Wrench,             Vista: Equipo },
   agua:         { corto: 'Agua',          titulo: 'Agua y almacenamiento',       ruta: 'agua',                            icono: Droplets,           Vista: Agua },
-  confiabilidad:{ corto: 'Confiabilidad', titulo: 'Confiabilidad',               ruta: 'confiabilidad', agrega: true,                   icono: Activity,           Vista: Confiabilidad },
+  confiabilidad:{ corto: 'Confiabilidad', titulo: 'Confiabilidad',               ruta: 'confiabilidad', agrega: true,                   icono: ShieldCheck,           Vista: Confiabilidad },
   evidencia:    { corto: 'Evidencia',     titulo: 'Evidencia de parada',         ruta: 'evidencia', agrega: true,                       icono: Scale,              Vista: Evidencia },
   regulatorio:  { corto: 'Regulatorio',   titulo: 'Reporte al regulador',        ruta: 'regulatorio',                     icono: FileCheck2,         Vista: Regulatorio },
-  configuracion:{ corto: 'Configuración', titulo: 'Metas, accesos y configuración', ruta: 'configuracion',                  icono: SlidersHorizontal,  Vista: Configuracion },
+  // I-adm-3: un nombre por pantalla; cada parte trae su título adentro (F3). UI-08: sin período ni Exportar (un formulario).
+  configuracion:{ corto: 'Configuración', titulo: 'Configurar', tituloPorRol: { ger: 'Metas y accesos' }, ruta: 'configuracion', ahora: true, sinExportar: true, icono: SlidersHorizontal,  Vista: Configuracion },
   // La misma vista que Configuración, abierta en la filosofía operacional: así el
   // enlace la conserva y el borrador no se pierde al pasar de una a otra.
-  filosofia:    { corto: 'Filosofía operacional', titulo: 'Filosofía operacional', ruta: 'filosofia',                    icono: SlidersHorizontal,  Vista: Configuracion },
-  conectores:   { corto: 'Conectores',    titulo: 'Conectores y tags del campo', ruta: 'conectores', ahora: true,                      icono: Plug,               Vista: Conectores },
+  filosofia:    { corto: 'Filosofía operacional', titulo: 'Filosofía operacional', ruta: 'filosofia', ahora: true, sinExportar: true, icono: ScrollText,  Vista: Configuracion },
+  conectores:   { corto: 'Conectores',    titulo: 'Conectores y tags del campo', ruta: 'conectores', ahora: true, sinExportar: true,   icono: Plug,               Vista: Conectores },
+}
+
+/** El título de una pantalla para un rol (I-adm-3): el suyo, si lo tiene, o el de todos. */
+export const tituloDe = (id: string, rolId: string): string | undefined => {
+  const p = PANTALLAS[id]
+  return p && Object.hasOwn(p.tituloPorRol ?? {}, rolId) ? p.tituloPorRol![rolId] : p?.titulo
 }
 
 /** Pantallas que viven DENTRO de otra: tienen dirección propia, pero en el
@@ -107,9 +115,9 @@ export const entradaDe = (id: string) => (Object.hasOwn(DENTRO_DE, id) ? DENTRO_
  *  antes funcionan igual. El orden de los miembros es uno para todos. */
 export interface Puerta { corto: string; icono: ComponentType<{ className?: string }>; miembros: string[] }
 export const GRUPOS: Record<string, Puerta> = {
-  hoy:        { corto: 'Hoy',            icono: ListChecks,        miembros: ['hoy', 'causa', 'turno', 'trabajo'] },
+  hoy:        { corto: 'Hoy',            icono: ListChecks,        miembros: ['hoy', 'causa', 'turno'] },
   // C5: el Resumen del gerente ya no se ofrece (cada panel tiene su lugar: X4 §3.7); su dirección abre La planta viva.
-  plantaViva: { corto: 'La planta viva', icono: IconoPlanta,       miembros: ['plantaViva', 'planta', 'agua', 'riesgo'] },
+  plantaViva: { corto: 'La planta viva', icono: IconoPlanta,       miembros: ['plantaViva', 'planta', 'agua'] },
   equipos:    { corto: 'Equipos',        icono: Gauge,             miembros: ['equipos', 'bombas', 'esp', 'pozos', 'equipo'] },
   resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['resultados', 'diferidos', 'produccion', 'confiabilidad', 'mantenimiento'] },
   reporte:    { corto: 'Reporte',        icono: FileCheck2,        miembros: ['regulatorio'] },

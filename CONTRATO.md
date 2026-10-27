@@ -2316,10 +2316,11 @@ con su orden, la cifra y la frase de su inicio. Viaja tal cual (JSON puro: las h
 | Completar el análisis de una falla declarada | las declaradas con parte y sin análisis | jefe, conf | `causa:completar` |
 | Cargar la asignación oficial del último mes cerrado | la asignación oficial sin cargar | prod | `asignacion:cargar` |
 | Firmar la meta de un campo | un campo sin meta firmada que rija hoy | ger | `metas:firmar` |
-| Decidir los planes del ciclo (simulados); los que tocan el equipo de otra tarjeta van como una línea en ella | `/vistas/ciclo`, propuestos y que mueven crudo | sup, jefe, conf | `planes:decidir` |
+| Decidir los planes del ciclo (simulados): una tarjeta por equipo, «Decidir N planes de P-201B · simulado», que abre su ficha (F1 · UI-20: nunca dentro del bloqueo ni de una tarjeta que pide confirmar) | `/vistas/ciclo`, propuestos y que mueven crudo | sup, jefe, conf | `planes:decidir` |
 | «Lo más frágil: el agua» (aviso) | `tuberiaAgua.siParaOtra` | sup, oper | — |
 | «Ojo: no intervenir hoy» y los trabajos del programa (avisos) | `/vistas/criticidad` | jefe, plan | — |
 | «Lo que viene» (aviso) | el programa firmado | tec | — |
+| «Por vigilar» y «Órdenes en SAP de otros puestos» (avisos; F1 · P-trabajo-1: Mi trabajo se fundió en Hoy) | `/vistas/riesgo` (`en-riesgo` con horas) y SAP | tec | — |
 
 **El orden** (X4 §3.3): `tareas` llega ordenada y la pantalla no la reordena. Primero `grupo: 'hora'` (lo que
 tiene hora límite: el reporte de mañana a las 07:00, C24 p.8-9; la más cercana primero), después `'barriles'`
@@ -2331,22 +2332,27 @@ tiene hora límite: el reporte de mañana a las 07:00, C24 p.8-9; la más cercan
 type Trozo = string | { b: string }                    // lo que va en negrita lo marca el motor
 type Destino = { a: 'paradas' } | { a: 'equipo'; campoId: string; equipo: string } | { a: 'planta' } | { a: 'agua' }
   | { a: 'turno' } | { a: 'asignacion' } | { a: 'metas' } | { a: 'planes' }
+  | { a: 'equipos'; tren?: TrenEquipo }                 // F1 · P-10: «Ver P-201A y P-201C», con su tren
 interface VistaHoy {
   rol: string; campos: string[]
-  inicio: { frase: string; previo?: string; cifra: string; unidad?: string; remate?: string; explica?: Trozo[] }
-  bloqueos: Array<{ campoId: string; equipos: string[]; texto: string; sub: string; planes?: string[] }>
+  inicio: { frase: string; previo?: string; cifra: string; unidad?: string; remate?: string; explica?: Trozo[]
+    remateCorto?: string                                 // F1 · I-sup-1: el remate en el teléfono (imagen 3b)
+    ayuda?: string }                                     // F1 · I-jefe-1: lo que explica la unidad, para su ⓘ
+  bloqueos: Array<{ campoId: string; equipos: string[]; texto: string; sub: string }>
   tareas: Array<{
     id: string; tipo: 'contestar' | 'conseguir-causa' | 'confirmar' | 'confirmar-apunta' | 'revisar' | 'precisar' | 'orden'
       | 'intervenir' | 'analisis' | 'planes' | 'asignacion' | 'metas' | 'aviso'
     campoId: string; capacidad?: Capacidad; pide: boolean; grupo: 'hora' | 'barriles' | 'demas' | 'aviso'
     titulo: string                                       // verbo + qué: «Confirmar 2 paradas iguales»
     donde?: { equipo: string; marca?: CondicionFranja; texto: string }   // la marca es la del EQUIPO (la de la franja)
+      // K2 · donde.corto?: string: en el teléfono, sin las horas que no deciden («cerró LC-07 y LC-16», sin «· 05:43»)
     porque?: Trozo[]
+    porqueCorto?: Trozo[]                                // F1 · I-sup-3, I-sup-5: el porqué en el teléfono (imagen 3b)
     accion?: { tipo: 'confirmar'; texto: string; ids: string[]; cadena: string; pozos: string[] }
       | { tipo: 'responder'; texto: string } | { tipo: 'ir'; texto: string; destino: Destino }
     ver?: { texto: string; destino: Destino }
     preguntas?: PreguntaHoy[]                            // las que se contestan desde la tarjeta, en orden
-    planes?: string[]; limite?: ISO; bblAhora?: number; bblSiPara?: number; desde?: ISO
+    limite?: ISO; bblAhora?: number; bblSiPara?: number; desde?: ISO
   }>
   insignia: number
   hechas: Array<{ id: string; titulo: string; detalle: string; hora: ISO }>   // lo que la persona hizo hoy y sigue rigiendo
@@ -2355,14 +2361,19 @@ interface VistaHoy {
   campo?: { campoId: string; tramos: Array<{ choke: 'pozo' | 'planta' | 'exportacion'; rotulo: string; limita: boolean; trabado: boolean }>; frases: Trozo[][] }
   whatsapp?: { mensajes: number; hilos: Array<{ equipo: string; pasos: string; estado?: Trozo[] }> }   // las últimas 12 h
   turno?: { horas: number; diferidoBbl: number }
+  // F1 · P-06: la entrega del turno del supervisor, con lo que Hoy ya sabe. Se comparte en PDF (Exportar);
+  // la firma espera su escritura, que todavía no está en el contrato.
+  entrega?: { horas: number; titulo: string; paro: Trozo[][]; pendiente: Trozo[][]; hecho: Trozo[][]; whatsapp: Trozo[][]; diferido?: Trozo[] }
 }
 interface PreguntaHoy {                                  // una pregunta de un toque (X5 §5.8)
   id: string; via: 'libro' | 'anh'; campoId: string; equipo: string; sobre: 'bomba' | 'pozo'; marca?: CondicionFranja
   contexto: string                                       // «P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h»
+  contextoCorto?: string                                 // K2 · en el teléfono, el momento en palabras: «P-201B · bomba de agua · paró hoy en la madrugada»
   texto: string; pista?: string
   opciones: Array<                                       // siempre termina en «Todavía no sé»
-    | { tipo: 'parte'; texto: string; dato?: string; parte: ParteId; modos: Array<{ codigo: string; texto: string; escribe?: true }> }
-    | { tipo: 'partes'; texto: string; dato?: string; partes: Array<{ parte: ParteId; texto: string; modos: … }> }
+    // F1 · P-07: la parte es un toque; «Sello mecánico: ¿qué vio?» (`pregunta`) entra como la pregunta siguiente
+    | { tipo: 'parte'; texto: string; dato?: string; parte: ParteId; modos: Array<{ codigo: string; texto: string; escribe?: true }>; pregunta: string }
+    | { tipo: 'partes'; texto: string; dato?: string; partes: Array<{ parte: ParteId; texto: string; modos: …; pregunta: string }> }
     | { tipo: 'texto'; texto: string; dato?: string; valor: string }
     | { tipo: 'causas'; texto: string; dato?: string; causas: Array<{ texto: string; dato?: string; valor: string }> }
     | { tipo: 'anh'; texto: string; dato?: string; valor: string }
@@ -2376,7 +2387,8 @@ interface PreguntaHoy {                                  // una pregunta de un t
 La cifra y la frase de cada rol (X4 §3.4), con el demo de La Ceiba: el supervisor, «Se dejan de producir
 1.966 bbl/d. Le faltan 4 paradas por confirmar: el reporte sale mañana antes de las 07:00.»; el operador,
 «Tiene 4 preguntas. Empiece por P-201B: está parada y no se puede arrancar.»; el técnico, «Le tocan N cosas
-hoy. Primero P-201B: diga qué encontró.»; el jefe de mantenimiento, «De 8,1 días que dura una falla, 7,7 son
+hoy. Primero P-201B: diga qué se dañó.» (F1 · P-07: un solo verbo para la pregunta propia, «Diga qué se dañó» y
+«Contestar»); el jefe de mantenimiento, «De 8,1 días que dura una falla, 7,7 son
 espera. El vigía anunció 3 de 3 fallas.» (los relojes de `/vistas/relojes` y el vigía de `/vistas/predicciones`).
 Los demás, cuántas cosas les tocan y la primera.
 
@@ -2393,7 +2405,11 @@ borra:
   que propone TRIM y su historia lo dice (`ParadaAnh.retiros`). La confirmación y su lote se quedan.
 - **Una respuesta** (al libro, `POST /api/paradas/:evento/respuesta`, o al árbol, `POST /api/anh/paradas/:id/respuesta`)
   la sostiene la pantalla mientras dura el aviso y la escribe al vencer, al registrar otra o al salir de la
-  página. «Deshacer» la suelta antes de escribirla: nada que borrar. (El libro guarda una respuesta por parada
+  página. «Deshacer» la suelta antes de escribirla: nada que borrar. **F1 · P-08:** mientras se sostiene, el
+  aviso dice «Se registra en 5 s: …» y no «Registrado» (lo dice cuando quedó escrita); la respuesta se guarda
+  en el navegador (`trim.hoy.pendiente`), al salir de la página sale con `fetch(…, { keepalive: true })`, y si
+  no alcanzó a llegar se manda al volver a Hoy (un 409 entonces es que ya había llegado: no es un error). El
+  reloj del aviso se detiene con el foco o el puntero encima (A3). (El libro guarda una respuesta por parada
   —la primera gana— y la conversación del árbol solo se alarga: deshacer una ya escrita borraría o dejaría la
   pregunta cerrada.)
 - «Todavía no sé» en el libro no escribe nada: la pregunta sigue abierta y vuelve en la próxima ronda de
@@ -2554,3 +2570,47 @@ jefe y planeación, `mantenimiento` primero; confiabilidad, `confiabilidad` prim
 
 **Las direcciones** (`src/app/url.ts`, `FUSIONADA_EN`; del front): `#/ger/resumen/…` abre La planta viva, y
 `#/ger/diferidos/…` y `#/ger/produccion/…`, Resultados con el mismo campo y período.
+
+## F2 · Regulatorio
+
+**El reporte a la ANH** (P-03; X4 §2 y §3.4: «¿El reporte pasa? Si no, ¿qué falta, quién lo debe y cuánto
+tiempo queda?»). Es el inicio de regulatorio (`#/reg/regulatorio/…`). El servidor corre `reporteAnh`
+(`src/entities/regulatorio.ts`) con la configuración firmada y lo que dijeron las personas en la clasificación
+(la vigente de cada fila); no escribe nada.
+
+### `GET /api/vistas/anh/reporte?campos=&desde=&hasta=`
+
+- **Si se puede publicar:** la misma regla de «¿Se puede publicar?» de Resultados y Diferidos, sobre los motivos
+  del libro: `publicable`; `provisional` si el único motivo es el mes en curso; `bloqueado` si hay otro.
+- **Las paradas sin causa:** los eventos del pozo (`eventoId`) con alguna fila del período sin el paso 5 de la
+  circular (la causa, N1), sobre las mismas filas de `GET /api/vistas/anh/paradas`. De cada una: los pasos que
+  le faltan, la primera pregunta que lo resuelve y **quién lo debe** (el primer rol que contesta esa pregunta,
+  `ROLES_QUE_CONTESTAN`; si alguien contestó «No sé», el supervisor), y **la hora límite**: el reporte diario de
+  su último día operacional sale el día siguiente antes de las 07:00 (`HORA_REPORTE`), con su zona.
+- **Los barriles, con la regla de redondeo** (`enterosDelPeriodo`, `src/entities/redondeo.ts`): el entero de cada
+  parada sale de repartir el del diferido del campo de arriba abajo por mayor residuo, y `bblSinCausa` es su
+  suma. El valor exacto va en `exacto`. La Ceiba, octubre: 2 paradas, LC-21 247 + LC-08 108 = 355 bbl.
+
+```ts
+{
+  campos: string[]
+  periodo: string                                  // «octubre», «1 de jul a 30 de sept»
+  estado: 'publicable' | 'provisional' | 'bloqueado'
+  titulo: string                                   // «Se puede publicar» | «No se puede publicar todavía»
+  cifra: { valor: number; unidad: string; frase: string; explica: string }   // las paradas sin causa, con su frase
+  bblSinCausa: number                              // Σ de los enteros de las paradas
+  paradas: Array<{
+    campoId: string; eventoId: string; pozo: string; equipo: string; filas: string[]
+    faltan: PasoAnh[]; falta: string                 // «faltan los 6 pasos», «falta la causa y el detalle»
+    pregunta: { id: IdPregunta; texto: string; quien: QuienContesta } | null; escalada: boolean
+    debe: { rol: string; nombre: string }
+    ultimoDia: string; inicioEvento: string; abierta: boolean
+    bbl: number; exacto: number
+    limite: string; vencido: boolean; cuando: string // «2026-10-03T07:00:00-05:00», «mañana antes de las 07:00»
+  }>                                               // de la que más barriles tiene a la que menos
+  motivos: string[]                                // los motivos del libro, en palabras
+}
+```
+
+**El CSV para la ANH** (el libro mes a mes del campo, con el factor de asignación contra su banda y las casillas
+de PRODML) sale de «Exportar», en la cabecera, solo en Regulatorio: es `GET /api/vistas/diferidos/mensual`.

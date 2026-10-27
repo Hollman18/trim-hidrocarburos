@@ -1,0 +1,128 @@
+#/ger/planta-viva/ceiba~portafolio/curso
+
+Todos mis campos
+DATOS DE DEMOSTRACIÓN
+La planta viva
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+
+Ahora mismo, en sus 5 campos
+
+2.650
+barriles por día
+
+se dejan de producir.
+
+Lo que más pesa: la bomba de agua P-201B, en La Ceiba. Hay 4 de 87 pozos parados.
+
+Ver qué se está haciendo
+Compartir el informe
+Dónde se trabó
+Antes
+lo que viene
+Durante
+ahora
+Después
+lo que pasó
+La Ceiba
+1.966 bbl/d
+1
+alarma · en la planta, P-201B (bomba de agua)
+Morichal Norte
+684 bbl/d
+1
+alarma · en los pozos, MN-41 (electrosumergible)
+Guacamayo
+0 bbl/d
+El Palmar
+0 bbl/d
+La Zarza
+0 bbl/d
+
+campo de gas: su tubería todavía no está
+
+Lo que todavía se puede mover ahora: ≈ 2.102 bbl simulado · Ver el plan ›
+
+Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.
+
+Este mes
+
+2.377
+barriles diferidos · 114 mil USD
+
+calculado, entre 2.132 y 2.622
+MN-41, el 46 % · 355 sin causa
+
+Producción por día
+
+40.514
+de 40.200 bbl/d
+
+Lo que todavía se puede mover
+simulado
+
+45.233
+bbl en el ciclo
+
+Antes
+42.017
+Durante
+2.102
+Después
+1.114
+
+Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado
+
+Ver el plan
+›
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma · Morichal Norte
+1.083
+46 %
+1
+P-201B bomba de agua · alarma · La Ceiba
+573
+24 %
+2
+LC-21 sin identificar · atención · La Ceiba
+247
+10 %
+SE-2 energía eléctrica · La Ceiba
+118
+5 %
+Diferido por día, mes a mes
+octubre: 1.501 bbl/d
+1.150
+2.300
+OCT 2025
+ENE 2026
+ABR
+JUL
+OCT
+alto impacto
+lo demás
+máximo 2.300
+
+¿Está bajando? Desde que entró TRIM
+
+en la planta
+561 → 308
+bbl/d · baja 45 %
+
+en los pozos
+820 → 771
+bbl/d · baja 6 %
+
+1 de sept, frente a jun a ago · muestra corta

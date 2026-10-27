@@ -654,7 +654,8 @@ export function tuberiaCampo(campoId: string, desde: Date, hasta: Date, ctx: Con
  *  (U1 §1.1: «nombre corto y familia»): singular y plural. La baja tensión de un
  *  solo pozo se dice así, no «energía eléctrica» (U2 §4.4, caso 8). */
 const FAMILIA: Record<TipoCausa, [string, string]> = {
-  reinyeccion: ['bomba de reinyección', 'bombas de reinyección'], transporte: ['bomba multifásica', 'bombas multifásicas'],
+  // P-09 (K1): la familia de campo, «bomba de agua» (la misma de `FAMILIA`, planta-viva.ts).
+  reinyeccion: ['bomba de agua', 'bombas de agua'], transporte: ['bomba multifásica', 'bombas multifásicas'],
   electrosumergible: ['electrosumergible', 'electrosumergibles'], levantamiento: ['bombeo mecánico', 'bombeo mecánico'],
   energia: ['energía eléctrica', 'energía eléctrica'], aire: ['aire de instrumentos', 'aire de instrumentos'],
   compresion: ['compresor de gas', 'compresores de gas'], evacuacion: ['despacho del crudo', 'despacho del crudo'],
@@ -664,7 +665,7 @@ const FAMILIA: Record<TipoCausa, [string, string]> = {
 }
 const familia = (t: TipoCausa, tramo: ChokeAnh, varios: boolean) =>
   t === 'energia' && tramo === 'pozo' ? 'baja tensión' : FAMILIA[t][varios ? 1 : 0]
-/** «LC-11 y LC-04 (electrosumergibles)»; «P-201B (bomba de reinyección) y V-101 (separador)». */
+/** «LC-11 y LC-04 (electrosumergibles)»; «P-201B (bomba de agua) y V-101 (separador)». */
 function conFamilia(eqs: readonly EquipoBbl[], tramo: ChokeAnh): string {
   const mismo = eqs.every(e => e.tipo === eqs[0]!.tipo)
   const y = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)

@@ -3,40 +3,21 @@ import { n0 } from '@/shared/lib/formato'
 import { Enlace } from '@/shared/ui/primitivas'
 import { cn } from '@/shared/lib/cn'
 import { Texto } from './comun'
+import { MiniTuberia as MiniTuberiaPlanta } from '@/widgets/plantaviva/Tuberia'
 import { useIr } from './palabras'
 
 type Tramo = CampoAhoraHoy['tramos'][number]
 
-/** La tubería en chico (X5 §5.3, «por fila»): tres tramos —pozos, planta,
- *  salida—; el que se trabó se angosta y su hueco va rayado. Gris siempre: el
- *  dibujo no es una alarma (la marca va en el equipo). Es la de `tuberia.js`
- *  (`miniTuberia`) en React; cuando La planta viva (C2) entregue la suya, esta
- *  se puede cambiar por aquella. */
+/** La tubería en chico (X5 §5.3, «por fila»): la MISMA de La planta viva
+ *  (`widgets/plantaviva/Tuberia.tsx`, H27), que guarda su proporción en vez de
+ *  estirarse a lo ancho. Tres tramos —pozos, planta, salida—; el que se trabó se
+ *  angosta y su hueco va rayado. Gris siempre: la marca va en el equipo. */
 export function MiniTuberia({ tramos, className, etiqueta }: { tramos: readonly Pick<Tramo, 'choke' | 'trabado'>[]; className?: string; etiqueta: string }) {
-  const ancho = 312, cy = 12, al = 20, nucleo = 8, L = ancho - 22
-  const seg = [[0, .34], [.37, .71], [.74, 1]].map(([a, b]) => [a! * L, b! * L] as const)
-  const id = `rayas-hoy-${tramos.map(t => (t.trabado ? 1 : 0)).join('')}`
+  const trabado = tramos.find(t => t.trabado)?.choke ?? null
   return (
-    <svg viewBox={`0 0 ${ancho} 24`} role="img" aria-label={etiqueta} className={cn('block h-6 w-full', className)} preserveAspectRatio="none">
-      <defs>
-        <pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <line x1="0" y1="0" x2="0" y2="6" stroke="var(--rayado)" strokeWidth="1.7" />
-        </pattern>
-      </defs>
-      {seg.map(([a, b], i) => {
-        const trabado = !!tramos[i]?.trabado, h = trabado ? nucleo + 6 : al
-        return (
-          <g key={i}>
-            <rect x={a} y={cy - h / 2} width={b - a} height={h} rx={h / 2} fill="var(--tubo-vacio)" stroke="var(--pared)" strokeWidth={1.2} />
-            {trabado && <>
-              {[cy - al / 2, cy + al / 2 - 0.5].map(y => <line key={y} x1={a + 6} x2={b - 6} y1={y} y2={y} stroke="var(--pared)" strokeWidth={1} strokeDasharray="3 2.5" />)}
-              <rect x={a + 8} y={cy - al / 2 + 1} width={b - a - 16} height={al / 2 - nucleo / 2 - 4} fill={`url(#${id})`} stroke="var(--rayado)" strokeWidth={0.9} />
-            </>}
-          </g>
-        )
-      })}
-      <path d={`M3 ${cy - nucleo / 2} L${L + 4} ${cy - nucleo / 2} L${L + 4} ${cy - nucleo / 2 - 4} L${ancho} ${cy} L${L + 4} ${cy + nucleo / 2 + 4} L${L + 4} ${cy + nucleo / 2} L3 ${cy + nucleo / 2} Z`} fill="var(--flujo)" />
-    </svg>
+    <div role="img" aria-label={etiqueta} data-mini-hoy className={cn('block', className)}>
+      <MiniTuberiaPlanta tramo={trabado} momento="durante" />
+    </div>
   )
 }
 
@@ -48,7 +29,7 @@ export function SuCampo({ c }: { c: CampoAhoraHoy }) {
   const ir = useIr()
   return (
     <section className={tarjeta} data-su-campo aria-label="Su campo, ahora">
-      <h3 className={cabeza}>Su campo, ahora <span className="text-[13px] font-normal text-[var(--tinta2)]">La planta viva</span></h3>
+      <h2 className={cabeza}>Su campo, ahora <span className="text-[13px] font-normal text-[var(--tinta2)]">La planta viva</span></h2>
       <MiniTuberia tramos={c.tramos} className="mt-3.5" etiqueta={c.frases.map(f => f.map(x => (typeof x === 'string' ? x : x.b)).join('')).join(' ')} />
       <div className="mt-1 grid grid-cols-3 text-[13px] text-[var(--tinta2)]">
         {c.tramos.map(t => <span key={t.choke} className={cn(t.trabado && 'font-bold text-[var(--tinta)]')}>{t.rotulo}</span>)}
@@ -65,7 +46,7 @@ export function SuCampo({ c }: { c: CampoAhoraHoy }) {
 export function TurnoWhatsapp({ w }: { w: WhatsappHoy }) {
   return (
     <section className={tarjeta} data-whatsapp aria-label="El turno en WhatsApp">
-      <h3 className={cabeza}>El turno en WhatsApp <span className="text-[13px] font-normal text-[var(--tinta2)]">{w.mensajes === 1 ? '1 mensaje' : `${w.mensajes} mensajes`}</span></h3>
+      <h2 className={cabeza}>El turno en WhatsApp <span className="text-[13px] font-normal text-[var(--tinta2)]">{w.mensajes === 1 ? '1 mensaje' : `${w.mensajes} mensajes`}</span></h2>
       {w.hilos.length === 0 && <p className="mt-2 text-[14px] text-[var(--tinta2)]">TRIM no mandó nada en el turno.</p>}
       <div className="mt-1.5">
         {w.hilos.map(h => (
@@ -83,7 +64,7 @@ export function TurnoWhatsapp({ w }: { w: WhatsappHoy }) {
 export function DiferidoTurno({ horas, bbl }: { horas: number; bbl: number }) {
   return (
     <section className={tarjeta} data-diferido-turno aria-label="Diferido de su turno">
-      <h3 className={cabeza}>Diferido de su turno <span className="text-[13px] font-normal text-[var(--tinta2)]">últimas {horas} h</span></h3>
+      <h2 className={cabeza}>Diferido de su turno <span className="text-[13px] font-normal text-[var(--tinta2)]">últimas {horas} h</span></h2>
       <p className="mt-1.5 flex items-baseline gap-2"><b className="tabular text-[24px] font-bold">{n0(bbl)}</b><span className="text-[14px] text-[var(--tinta2)]">barriles</span></p>
       <p className="mt-2.5 text-[14px] leading-[1.45] text-[var(--tinta2)]">«Entregar turno» abre la entrega del turno: lo que paró, lo que quedó pendiente y el WhatsApp del turno.</p>
     </section>

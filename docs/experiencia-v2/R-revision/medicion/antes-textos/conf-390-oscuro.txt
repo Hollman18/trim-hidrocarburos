@@ -1,0 +1,47 @@
+2
+La Ceiba
+EM
+Todos mis campos
+La Ceiba
+DEMO
+Equipos
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+¿Le creo al vigía? Desde el 1 de sept: acertó 3 de 3 avisos y 1 intervenida sin calificar.
+Ver el detalle
+Parados
+4
+Avisan
+3
+Sin instrumento
+5
+Todos
+28
+Todos los tipos
+Bombas
+3
+Electrosumergibles
+15
+Pozos
+18
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+18
+Crudo
+4
+Agua
+3
+Gas
+1
+Servicios
+2
+Cambió hoy
+P-201A y P-201C subieron al puesto 1 porque P-201B está parada. Ninguna de las dos tiene instrumento: TRIM no verá venir su falla.

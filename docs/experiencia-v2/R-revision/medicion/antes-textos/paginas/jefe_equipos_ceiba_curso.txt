@@ -1,0 +1,234 @@
+#/jefe/equipos/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Equipos
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Parados
+4
+Avisan
+3
+Sin instrumento
+5
+Todos
+28
+Todos los tipos
+Bombas
+3
+Electrosumergibles
+15
+Pozos
+18
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+18
+Crudo
+4
+Agua
+3
+Gas
+1
+Servicios
+2
+Buscar por tag
+
+Cambió hoy: P-201A y P-201C subieron al puesto 1 porque P-201B está parada. Ninguna de las dos tiene instrumento: TRIM no verá venir su falla.
+
+28 equipos
+por estado y, dentro de cada uno, por lo que costaría si falla hoy
+¿Lo vigila TRIM?
+ahora o si falla hoy
+1
+P-201B
+bomba de agua
+Alarma · parada desde hoy, 03:52
+sí · 8 señales
+1.665bbl/d
+se deja de producir
+1
+K-101
+aire de instrumentos
+Alarma · ya pasó el límite
+sí · 4 señales
+hasta 9.394bbl/d
+si falla hoy
+2
+LC-21
+pozo · bombeo mecánico
+Atención · parado sin causa desde el 1 de oct, 18:20
+no: solo su controlador
+301bbl/d
+se deja de producir
+2
+TK-102
+tanque de crudo
+Atención · en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+3
+H-302
+tratamiento de crudo
+Aviso · en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+LC-16
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+869bbl/d
+se deja de producir
+LC-07
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+796bbl/d
+se deja de producir
+P-201A
+bomba de agua
+sin instrumento: se supone en marcha · sube porque P-201B está parada
+no: sin instrumento
+3.059bbl/d
+si falla hoy · después de 2 min de colchón
+P-201C
+bomba de agua
+sin instrumento: se supone en marcha · sube porque P-201B está parada
+no: sin instrumento
+3.059bbl/d
+si falla hoy · después de 2 min de colchón
+LC-11
+electrosumergible
+produciendo
+sí · 6 señales
+1.031bbl/d
+si falla hoy
+LC-08
+electrosumergible
+produciendo
+sí · 6 señales
+893bbl/d
+si falla hoy
+LC-04
+electrosumergible
+produciendo
+sí · 6 señales
+825bbl/d
+si falla hoy
+LC-05
+electrosumergible
+produciendo
+sí · 6 señales
+812bbl/d
+si falla hoy
+LC-14
+electrosumergible
+produciendo
+sí · 6 señales
+783bbl/d
+si falla hoy
+LC-19
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+778bbl/d
+si falla hoy
+LC-06
+electrosumergible
+produciendo
+sí · 6 señales
+692bbl/d
+si falla hoy
+LC-09
+electrosumergible
+produciendo
+sí · 6 señales
+620bbl/d
+si falla hoy
+LC-17
+electrosumergible
+produciendo
+sí · 6 señales
+539bbl/d
+si falla hoy
+LC-15
+electrosumergible
+produciendo
+sí · 6 señales
+470bbl/d
+si falla hoy
+LC-10
+electrosumergible
+produciendo
+sí · 6 señales
+459bbl/d
+si falla hoy
+LC-12
+electrosumergible
+produciendo
+sí · 6 señales
+379bbl/d
+si falla hoy
+LC-02
+electrosumergible
+produciendo
+sí · 6 señales
+378bbl/d
+si falla hoy
+LC-03
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+374bbl/d
+si falla hoy
+LC-01
+electrosumergible
+produciendo
+sí · 6 señales
+360bbl/d
+si falla hoy
+SE-2
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 9.394bbl/d
+si falla hoy
+V-101
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 9.394bbl/d
+si falla hoy
+C-401
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua, Pozos inyectores.

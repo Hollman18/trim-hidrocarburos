@@ -11,17 +11,18 @@ import { DISPARO_MAX_H } from '@/entities/libro'
 import { fechaHora, fechaCorta } from '@/entities/reloj'
 import { Panel, Chip, Hueco, Boton } from '@/shared/ui/primitivas'
 import { MarcaPrioridad, MarcaCondicion } from '@/shared/ui/Prioridad'
-import { DE_ESTADO } from '@/shared/lib/prioridad'
-import { Analogico } from '@/shared/ui/Analogico'
+import { useNivelEquipo, PALABRA_CONDICION } from '@/shared/api/equiposTecnico'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { causaEnPapel } from '@/shared/ui/papel'
 import { Tip } from '@/shared/ui/Tip'
-import { n0, n1, decimalesDe, plural } from '@/shared/lib/formato'
+import { n0, n1, plural } from '@/shared/lib/formato'
 import { BloqueParte } from '@/widgets/bombas/BloqueParte'
 import { fmtHoras, fraseParte, fraseParteCorta } from '@/widgets/bombas/comun'
 import { ESTADO_PARTE } from '@/entities/salud'
-import { sevPozo, cerradoPorOtro, senalesParaOperar } from './estado'
+import { useCondiciones, cerradoPorOtro, senalesParaOperar } from './estado'
+import { SenalFija } from '@/widgets/bombas/SenalFija'
+import { porTag } from '@/widgets/bombas/vista'
 import { desplazable } from '@/shared/ui/alFinal'
 
 /** Un pozo de punta a punta: cómo está ahora y por qué, de dónde sale su
@@ -37,6 +38,9 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
   // las pruebas (custodia), todas las señales y la historia de fallas.
   const ing = useNivel() === 'ingenieria'
   const det = usePozo(campoId, pozoId, desde, hasta)
+  // F3 · La marca del pozo es la de la franja (H3, H17) y sus señales llevan la escala fija del motor (H5).
+  const condicion = useCondiciones([campoId])(campoId, pozoId)
+  const delMotor = porTag(useNivelEquipo(campoId, pozoId))
 
   const volver = volverA && onVolver && (
     <button onClick={onVolver} className="mb-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[14px] text-[var(--tinta2)] hover:text-[var(--tinta)]">
@@ -50,7 +54,6 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
   const ident = f.causa && f.evento ? estadoIdentificacion(f.causa, f.evento.fin) : undefined
   // La misma regla que la lista (ISA-18.2): un pozo que cerró otro equipo es
   // consecuencia y va en gris; la alarma es de quien lo cerró.
-  const sev = sevPozo(f)
   const porOtro = cerradoPorOtro(f)
   const paraOperar = senalesParaOperar(senales, f.produce)
   // Lo que falta identificar, como etiqueta, con la regla del motor
@@ -66,12 +69,12 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
   return (
     <>
       {volver}
-      <div className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
+      <div className="mb-3 rounded-[20px] bg-[var(--panel)] p-4 sm:px-6 sm:mb-4" data-detalle-pozo={p.id} data-condicion={condicion ?? ''}>
         <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
-          <MarcaPrioridad s={sev} tamano={18} className="mt-0.5" />
+          {condicion && <MarcaCondicion c={condicion} tamano={18} className="mt-0.5" decorativa />}
           <span className="min-w-0 flex-1">
-            <b className="block text-[16px] leading-tight">Pozo {p.id}</b>
-            <small className="font-mono text-[13px] text-[var(--tinta3)]">
+            <b className="block text-[16px] leading-tight">{condicion ? <span className="font-semibold">{PALABRA_CONDICION[condicion]} · </span> : null}Pozo {p.id}</b>
+            <small className="text-[14px] text-[var(--tinta2)]">
               {campoPorId(campoId).nombre} · {LEVANTAMIENTO_NOMBRE[p.levantamiento]} · {p.controlador} · alimentador {p.alimentador}
             </small>
           </span>
@@ -101,7 +104,8 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
               : { titulo: 'Sin prueba', texto: 'No se le inventa caudal: sin prueba no hay de dónde sacarlo.' }} />
           {ing && <Cifra rotulo="Agua" valor={p.pruebas.length ? `${n0(f.aguaBpd)} bbl/d` : '—'}
             pie={f.crudoBpd + f.aguaBpd > 0 ? `corte ${n0((f.aguaBpd / (f.aguaBpd + (f.prueba?.crudoBpd ?? 0))) * 100)} %` : ''} />}
-          <Cifra rotulo={`Diferido · ${periodo}`} valor={`${n0(f.diferido)} bbl`}
+          {/* H2: el entero del reparto del campo (el mismo de La planta viva, Resultados e Identificar), no el exacto redondeado aquí. */}
+          <Cifra rotulo={`Diferido · ${periodo}`} valor={`${n0(f.diferidoEntero)} bbl`}
             pie={`${f.eventos} ${f.eventos === 1 ? 'evento' : 'eventos'} · ${fmtHoras(f.horasParado, true)} equivalentes parado`} />
           {historial && ing && (
             <Cifra rotulo={`Electrosumergible · ${n0(historial.dias / 30.4)} meses`}
@@ -114,7 +118,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
 
       {ident?.pide && !f.evento?.fin && !porOtro && volverA && (
         // «No arrancar» es un bloqueo de procedimiento: franja en tinta con ⊘, nunca amarilla (X5 §5.6).
-        <div className="mb-2.5 flex flex-wrap items-center gap-3 rounded-[16px] bg-[var(--panel)] p-3 shadow-[inset_0_0_0_2px_var(--tinta)]" data-bloqueo>
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[16px] bg-[var(--panel)] p-3 shadow-[inset_0_0_0_2px_var(--tinta)] sm:mb-4" data-bloqueo>
           <MarcaCondicion c="bloqueo" tamano={20} decorativa />
           {/* «Ninguna señal lo explica» lo dice la etiqueta «sin identificar» de arriba. */}
           <span className="min-w-0 flex-1 text-[16px]"><b>No arrancar hasta identificar por qué paró.</b></span>
@@ -125,14 +129,14 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
           «parte por identificar»): lo que falta es la parte del equipo que lo
           cerró, y eso se identifica allá. */}
       {ident?.pide && !f.evento?.fin && porOtro && f.causa && (
-        <div className="mb-2.5 flex flex-wrap items-center gap-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[14px] shadow-[var(--sombra)]">
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[20px] bg-[var(--panel)] px-4 py-3 text-[15px] sm:mb-4">
           <span className="min-w-0 flex-1">Vuelve cuando <b>{f.causa.equipo}</b> arranque.</span>
           <Boton onClick={() => abrirEquipo(f.causa!.equipo)}>Ver {f.causa.equipo}</Boton>
         </div>
       )}
 
       {partes.length > 0 && !ing && (
-        <Panel className="mb-2.5" titulo="PARTES QUE AVISAN">
+        <Panel className="mb-3 sm:mb-4" titulo="Partes que avisan">
           {partes.filter(sp => anormal(sp.estado)).map(sp => (
             <div key={sp.parte.id} className="border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
               <span className="flex flex-wrap items-center gap-x-2"><MarcaPrioridad s={sp.prioridad} tamano={12} /><b>{sp.parte.nombre}</b><Chip tono={sp.estado === 'avisa' ? 'neutro' : 'fuerte'}>{ESTADO_PARTE[sp.estado]}</Chip></span>
@@ -147,7 +151,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
       )}
 
       {partes.length > 0 && ing && (
-        <Panel className="mb-2.5" titulo="SALUD POR PARTE">
+        <Panel className="mb-3 sm:mb-4" titulo="Salud por parte">
           <Lectura>
             Las partes de la electrosumergible con lo que las anuncia en el variador y en el sensor de
             fondo. Los límites son los ajustes de protección del variador del pozo: configuración del
@@ -157,28 +161,41 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
         </Panel>
       )}
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+      <div className="mb-3 grid items-start gap-3 sm:mb-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         {/* Ingeniería ve todas las señales; operación, solo lo anormal y con su
             nombre: fuera de banda por un lado, sin señal (con el pozo produciendo)
             por otro. Sin señal con el pozo parado es lo esperado y no se repite. */}
         {[
           // Con el pozo parado, la falta de lectura es lo esperado (senalesParaOperar): se dice una vez, arriba.
-          { titulo: 'SEÑALES DEL POZO', extra: !f.produce && senales.some(s => s.valor === null) ? 'sin lectura: motor parado' : undefined, lista: ing ? senales : [] },
-          { titulo: 'FUERA DE BANDA', extra: undefined, lista: ing ? [] : paraOperar.fuera },
-          { titulo: 'SIN SEÑAL', extra: 'con el pozo produciendo', lista: ing ? [] : paraOperar.sinSenal },
+          { titulo: 'Señales del pozo', extra: !f.produce && senales.some(s => s.valor === null) ? 'sin lectura: motor parado' : undefined, lista: ing ? senales : [] },
+          { titulo: 'Fuera de banda', extra: undefined, lista: ing ? [] : paraOperar.fuera },
+          { titulo: 'Sin señal', extra: 'con el pozo produciendo', lista: ing ? [] : paraOperar.sinSenal },
         ].filter(g => g.lista.length > 0).map(g => (
           <Panel key={g.titulo} titulo={g.titulo} extra={g.extra}>
-            {g.lista.map(s => (
-              <div key={s.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
-                {/* El tag sin la variable (ya es el nombre): «PIT-LC14 · sensor de fondo». Sin lectura con
-                    el pozo parado, el porqué ya va en el título del panel; produciendo, va entero en la fila. */}
-                <Analogico detalle nombre={s.plantilla.nombre} sub={`${s.tag.split(' · ')[0]} · ${!f.produce && s.valor === null ? s.origen.split(' · ')[0] : s.origen}`} valor={s.valor} unidad={s.unidad}
-                  normal={s.normal} alarma={s.alarma} decimales={decimalesDe(s.serie?.valores, s.valor)} estado={DE_ESTADO[s.estado] ?? undefined} />
-              </div>
-            ))}
+            {g.lista.map(s => {
+              // La escala fija, la banda, el gris y la marca de cada señal los da el motor (la misma del nivel 3).
+              const m = delMotor.get(s.tag)
+              // El tag sin la variable (ya es el nombre): «PIT-LC14 · sensor de fondo». Sin lectura con
+              // el pozo parado, el porqué ya va en el título del panel; produciendo, va entero en la fila.
+              const sub = `${s.tag.split(' · ')[0]} · ${!f.produce && s.valor === null ? s.origen.split(' · ')[0] : s.origen}`
+              return (
+                <div key={s.tag} className="border-b border-[var(--linea2)] py-2 last:border-0">
+                  {m ? <SenalFija s={m} nombre={s.plantilla.nombre} sub={sub} detalle /> : (
+                    <div className="flex items-baseline justify-between gap-2 text-[14px]">
+                      <span className="min-w-0 text-[var(--tinta2)]">{s.plantilla.nombre}<small className="block text-[13px]">{sub}</small></span>
+                      {/* H13.2: sin el dato con el pozo produciendo, «---» en tinta2 con el círculo punteado morado al lado (X2 E2);
+                          con el pozo parado no se lee nada y no lleva marca (X2 B9). */}
+                      <b className={`tabular inline-flex shrink-0 items-center gap-1.5 font-semibold ${s.valor === null ? 'text-[var(--tinta2)]' : ''}`}>
+                        {s.valor === null && f.produce && <MarcaCondicion c="sin-comunicacion" tamano={14} decorativa />}
+                        {s.valor === null ? '---' : s.valor.toLocaleString('es-CO')} <small className="font-normal text-[var(--tinta2)]">{s.valor === null ? (f.produce ? 'sin señal' : 'sin lectura') : s.unidad}</small></b>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </Panel>
         ))}
-        {ing && <Panel titulo="PRUEBAS" extra={p.pruebas.length || 'sin custodia'}>
+        {ing && <Panel titulo="Pruebas" extra={p.pruebas.length || 'sin custodia'}>
           <Lectura>
             De dónde sale su caudal: la prueba vigente (del separador de prueba o estimada desde la
             electrosumergible) por el factor de asignación del mes. «vigente · N d» es su edad.
@@ -221,7 +238,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
         </Panel>}
       </div>
 
-      <Panel titulo="EVENTOS" extra={tramos.length ? `${tramos.length} · ${periodo}` : periodo}>
+      <Panel titulo="Eventos" extra={tramos.length ? `${tramos.length} · ${periodo}` : periodo}>
         <Lectura>
           Cada vez que el controlador del pozo lo apagó o le bajó la frecuencia, con la hora del PLC, la
           causa que dijeron las señales y lo que costó: prueba × factor del mes × horas. Toque o pase el
@@ -242,7 +259,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
             <span className="min-w-0">
               <b className="tabular">{fechaHora(plc)}</b>
               <span className="text-[var(--tinta3)]"> · {t.abierto ? 'sigue' : recortado ? '' : fmtHoras(t.horas, true)}{recortado ? `${t.abierto ? ' · ' : ''}${fmtHoras(t.horas, true)} en el período` : ''} · </span>
-              <span className="font-mono text-[13px]">{t.evento.codigo}</span>
+              <span className="font-cond text-[14px] font-semibold tracking-[.02em]">{t.evento.codigo}</span>
               {t.evento.hz !== undefined && <span className="text-[var(--tinta3)]"> a {n1(t.evento.hz)} Hz</span>}
               <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[var(--tinta2)]">
                 {t.causa.tipo !== 'pendiente' && <b className="text-[var(--tinta)]">{t.causa.equipo !== p.id ? `por ${t.causa.equipo}` : TIPO_CAUSA[t.causa.tipo]}</b>}
@@ -251,7 +268,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
               </span>
             </span>
             <span className="tabular text-right">
-              <b className="block">{n0(t.bbl)} bbl</b>
+              <b className="block">{n0(f.enteroPorEvento[t.evento.id] ?? t.bbl)} bbl</b>
               <small className="text-[12px] text-[var(--tinta3)]">{t.aproximado ? 'aproximado' : t.sinCustodia ? 'sin custodia' : ing ? `±${n0(t.sesgo * 100)} %` : ''}</small>
             </span>
           </Tip>

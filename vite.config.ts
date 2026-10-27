@@ -3,8 +3,16 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, pathToFileURL, URL } from 'node:url'
 
-/** Simulador de la API. NO es el backend: es el contrato ejecutable, para
- *  que el front se desarrolle y se pruebe sin esperar al servidor real.
+/** Simulador de la API. NO es el backend ni el contrato entero: implementa
+ *  solo el registro de la cadena de datos (salud, inventario, pendientes,
+ *  procedencia, asociar un tag, inscripción y nacimiento del borde;
+ *  `simulador-api/api.mjs`). No sirve las vistas calculadas (`/api/vistas/*`),
+ *  ni los GET del arranque, ni las escrituras del contrato: con
+ *  `VITE_FUENTE=http` contra él la aplicación no arranca (A9 de la revisión,
+ *  pendiente; es trabajo de backend). Lo que un backend debe responder está en
+ *  `referencia/` y se compara con `node scripts/referencia.mjs comparar
+ *  --base-url=…`; `verificar-contrato --http` prueba el cliente contra un
+ *  servidor de prueba dentro de su propio proceso, no contra este.
  *  Solo se monta en desarrollo; el build no lo incluye. */
 const api = (): Plugin => ({
   name: 'trim-simulador-api',

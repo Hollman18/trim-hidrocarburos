@@ -1,4 +1,4 @@
-import type { VistaPlantaViva } from '@/shared/api/plantaViva'
+import type { Momento, VistaPlantaViva } from '@/shared/api/plantaViva'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { usd } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
@@ -8,27 +8,40 @@ import { useAcciones } from './acciones'
 
 /** Las filas de A en estilo B, debajo de la tarjeta principal (X5 §5.2, §5.4):
  *  «Este mes» (el diferido del libro, su valor y su rango: calculado, no medido)
- *  y la producción por día contra la meta firmada, con su barra (la de Few:
- *  pista, barra y la raya de la meta). Cada fila abre su pantalla de Resultados. */
-export function Filas({ v }: { v: VistaPlantaViva }) {
+ *  y el promedio por día contra la meta firmada, con su barra (la de Few:
+ *  pista, barra y la raya de la meta). Cada fila abre su pantalla de Resultados.
+ *  En Después la cifra grande ya es la del período: la primera fila dice el mes
+ *  cerrado de antes, para no repetir la misma cifra en dos tarjetas (H28). */
+export function Filas({ v, momento }: { v: VistaPlantaViva; momento?: Momento }) {
   const { ir } = useAcciones()
   const m = v.esteMes, p = v.produccion
   const dinero = m.valorUsd !== null ? usd(m.valorUsd) : null
+  const anterior = momento === 'despues' ? m.mesAnterior : null
   // La escala de la barra: la meta queda en el 80 % (la raya), como en la imagen aprobada.
   const escala = Math.max(1, (p.metaBpd ?? p.realBpd) * 1.25, p.realBpd)
   return (
     <section aria-label="Lo del período" className="min-w-0 rounded-[20px] bg-[var(--panel)] px-4 py-1 sm:px-7 sm:py-1.5">
-      <Fila onClick={ir('diferidos') ?? ir('resultados')} datos={{ 'data-este-mes': m.bbl }}
-        izquierda={<>
-          <p className="flex items-center gap-[7px] text-[15px] font-medium text-[var(--tinta2)]">{m.titulo}</p>
-          <p className="mt-px flex flex-wrap items-baseline gap-x-2">
-            <b className="text-[24px] font-bold tracking-[-.01em] text-[var(--tinta)]">{n0(m.bbl)}</b>
-            <span className="text-[15px] text-[var(--tinta2)]">barriles diferidos{dinero ? ` · ${dinero.valor} ${dinero.unidad}` : ' · sin precio'}</span>
-          </p>
-        </>}
-        derecha={<p className="text-[14px] leading-[1.45] text-[var(--tinta2)]">
-          calculado, entre {n0(m.rango[0])} y {n0(m.rango[1])}{m.nota && <><br />{m.nota}</>}
-        </p>} />
+      {anterior
+        ? <Fila onClick={ir('diferidos') ?? ir('resultados')} datos={{ 'data-mes-anterior': anterior.bbl }}
+          izquierda={<>
+            <p className="flex items-center gap-[7px] text-[15px] font-medium text-[var(--tinta2)]">{anterior.nombre[0]!.toUpperCase()}{anterior.nombre.slice(1)} cerró en</p>
+            <p className="mt-px flex flex-wrap items-baseline gap-x-2">
+              <b className="text-[24px] font-bold tracking-[-.01em] text-[var(--tinta)]">{n0(anterior.bblEntero)}</b>
+              <span className="text-[15px] text-[var(--tinta2)]">barriles diferidos</span>
+            </p>
+          </>}
+          derecha={<p className="text-[14px] leading-[1.45] text-[var(--tinta2)]">el mes cerrado, para comparar con {v.periodo}</p>} />
+        : <Fila onClick={ir('diferidos') ?? ir('resultados')} datos={{ 'data-este-mes': m.bbl }}
+          izquierda={<>
+            <p className="flex items-center gap-[7px] text-[15px] font-medium text-[var(--tinta2)]">{m.titulo}</p>
+            <p className="mt-px flex flex-wrap items-baseline gap-x-2">
+              <b className="text-[24px] font-bold tracking-[-.01em] text-[var(--tinta)]" data-este-mes-entero={m.bblEntero}>{n0(m.bblEntero)}</b>
+              <span className="text-[15px] text-[var(--tinta2)]">barriles diferidos{dinero ? ` · ${dinero.valor} ${dinero.unidad}` : ' · sin precio'}</span>
+            </p>
+          </>}
+          derecha={<p className="text-[14px] leading-[1.45] text-[var(--tinta2)]">
+            calculado, entre {n0(m.rango[0])} y {n0(m.rango[1])}{m.nota && <><br />{m.nota}</>}
+          </p>} />}
       <Fila onClick={ir('produccion') ?? ir('resultados')} datos={{ 'data-produccion': p.realBpd }}
         izquierda={<>
           <p className="flex items-center gap-[7px] text-[15px] font-medium text-[var(--tinta2)]">

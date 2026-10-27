@@ -76,12 +76,14 @@ export function MesAMes({ v, onMes, className }: { v: VistaResultados; onMes: (m
                     base += val
                     const sin = k === 'sin-asignar'
                     return <rect key={k} x={x} y={y0} width={an} height={Math.max(0.5, y1 - y0)} fill={rellenoSvg(k, idp)}
-                      stroke={sin ? 'var(--tinta3)' : 'var(--panel)'} strokeWidth={sin ? 0.8 : 0.6} strokeDasharray={sin ? '2 1.5' : undefined} />
+                      stroke={sin ? 'var(--tinta3)' : 'var(--panel)'} strokeWidth={sin ? 0.8 : 1} strokeDasharray={sin ? '2 1.5' : undefined} />
                   })
                   : (
                     <>
                       <path d={`M${x} ${G.y1} L${x} ${yT + tapa} Q${x} ${yT} ${x + tapa} ${yT} L${x + an - tapa} ${yT} Q${x + an} ${yT} ${x + an} ${yT + tapa} L${x + an} ${G.y1} Z`} fill="var(--dato3)" />
                       <rect x={x} y={Y(m.altoBpd)} width={an} height={Math.max(0, G.y1 - Y(m.altoBpd))} fill="var(--dato1)" />
+                      {/* 1 px del fondo entre los dos tonos: se separan sin depender del contraste entre grises (H21). */}
+                      {m.altoBpd > 0.5 && m.totalBpd - m.altoBpd > 0.5 && <line x1={x} x2={x + an} y1={Y(m.altoBpd)} y2={Y(m.altoBpd)} stroke="var(--panel)" strokeWidth={1} data-separador="" />}
                     </>
                   )}
                 {m.maximoBpd !== null && <line x1={x - 3} x2={x + an + 3} y1={Y(m.maximoBpd)} y2={Y(m.maximoBpd)} stroke="var(--tinta)" strokeWidth={1.6} strokeDasharray="4 2.5" />}

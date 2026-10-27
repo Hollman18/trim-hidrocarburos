@@ -189,7 +189,7 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
           </div>
         </>
       )}
-      {puede && <details className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)]">
+      {puede && <details className="mt-3 sm:mt-4 rounded border border-[var(--linea)] bg-[var(--panel)]">
         <summary className="cursor-pointer px-3 py-2 text-[14px] font-semibold">Aceptar lo que TRIM dedujo, por tipo de equipo</summary>
         <AceptarPorTipo equipos={equipos} onAceptar={aceptarGrupo} />
       </details>}
@@ -201,13 +201,13 @@ export function TopologiaPaso({ campoId, campoNombre, borrador, onResponder, est
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">{filtros}{botonCarga}</div>
       {carga}
       <div className="grid items-start gap-2.5 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-        <Panel titulo={`EQUIPOS · ${equipos.length}`} extra={campoNombre}>
+        <Panel titulo={`Equipos · ${equipos.length}`} extra={campoNombre}>
           {!visibles.length ? vacio : (
             <div className="-mx-1 max-h-[min(70vh,720px)] overflow-y-auto px-1">
               {grupos.map(({ g, lista, aceptables }) => (
                 <section key={g} aria-label={GRUPO[g]} className="mb-2 last:mb-0">
                   <header className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-b border-[var(--linea2)] pb-0.5">
-                    <h3 className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">{GRUPO[g].toUpperCase()} · {lista.length}</h3>
+                    <h3 className="text-[14px] font-semibold text-[var(--tinta2)]">{GRUPO[g]} · {lista.length}</h3>
                     {puede && aceptables > 0 && (
                       <Boton type="button" variante="chico" onClick={() => aceptarGrupo(g)}
                         aria-label={`Aceptar lo que TRIM dedujo para ${plural(aceptables, 'equipo', 'equipos')} de «${GRUPO[g]}»`}>
@@ -335,7 +335,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
   const nombre = `${e.rotulo}${e.detalle ? ` · ${e.detalle}` : ''}`
 
   return (
-    <Panel titulo={nombre.toUpperCase()} extra={e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}>
+    <Panel titulo={nombre} extra={e.conflicto ? 'dos fuentes no cuadran' : NOMBRE_ESTADO[e.estado]}>
       <fieldset className="min-w-0">
         <legend className="mb-1.5 text-[15px] font-semibold">¿A qué pozos sirve este equipo?</legend>
         <div className="grid gap-1">
@@ -404,7 +404,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
       )}
 
       {(candidatos.length > 0 || conflictos.length > 0) && (
-        <div className="mt-2.5 grid gap-1.5">
+        <div className="mt-3 sm:mt-4 grid gap-1.5">
           {conflictos.map((p, i) => (
             <p key={`conflicto-${i}`} className="flex items-start gap-1.5 rounded border border-dashed border-[var(--tinta3)] px-2 py-1.5 text-[14px]">
               <span className="mt-[3px]"><MarcaFalta etiqueta="Falta decidir" /></span>
@@ -418,7 +418,7 @@ function Pregunta({ equipo: e, campoId, todos, locacion, onResponder, onSiguient
         </div>
       )}
       {onSiguiente && (
-        <div className="mt-2.5 hidden justify-end md:flex">
+        <div className="mt-3 sm:mt-4 hidden justify-end md:flex">
           <Boton type="button" onClick={onSiguiente}>Siguiente equipo<ChevronRight className="ml-0.5 inline size-3.5" /></Boton>
         </div>
       )}
@@ -473,10 +473,15 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
   const frase = fraseDe(c.r, elemento, todos)
   return (
     <div className={cn('rounded border px-2 py-1.5 text-[14px]', c.propuestas.length ? 'border-[var(--linea2)] bg-[var(--panel2)]' : 'border-dashed border-[var(--tinta3)]')}>
-      <p className="font-cond text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-        {c.propuestas.length ? 'PROPUESTA DE TRIM' : firmado ? 'LO QUE ESTÁ FIRMADO' : 'LO QUE TRIM DEDUJO DEL REGISTRO'}
-      </p>
-      <ul className="mt-0.5 grid gap-1">
+      {/* Lo que TRIM solo dedujo del registro va plegado (P-filosofia-1; X4 §3.6, «se esconde»): queda la frase y «Aceptar». */}
+      {!c.propuestas.length && !firmado
+        ? <details data-dedujo>
+            <summary className="min-h-8 cursor-pointer text-[14px] font-semibold text-[var(--tinta2)]">Lo que dedujo TRIM</summary>
+            <ul className="mt-0.5 grid gap-1">{c.rige && <li>Así lo deduce TRIM del registro del campo (los pozos y el esquema de planta). Nadie lo ha confirmado todavía.</li>}
+              {c.deducido && <li>Es un equipo nuevo del registro que la versión firmada no trae: así lo deduce TRIM. Mientras nadie lo conteste, sus paradas toman el tramo de la regla por tipo de falla.</li>}</ul>
+          </details>
+        : <p className="text-[14px] font-semibold text-[var(--tinta2)]">{c.propuestas.length ? 'Propuesta de TRIM' : 'Lo que está firmado'}</p>}
+      {(c.propuestas.length > 0 || firmado) && <ul className="mt-0.5 grid gap-1">
         {c.rige && <li>{firmado ? 'Así está firmado en la versión vigente.' : 'Así lo deduce TRIM del registro del campo (los pozos y el esquema de planta). Nadie lo ha confirmado todavía.'}</li>}
         {c.deducido && <li>Es un equipo nuevo del registro que la versión firmada no trae: así lo deduce TRIM. Mientras nadie lo conteste, sus paradas toman el tramo de la regla por tipo de falla.</li>}
         {c.propuestas.map((p, i) => (
@@ -486,7 +491,7 @@ function Candidato({ c, equipo: e, todos, elemento, onAceptar, puede }: {
             {p.conflicto && <span className="mt-0.5 flex items-start gap-1.5"><span className="mt-[3px]"><MarcaFalta etiqueta="Falta decidir" /></span><span><b>Dos fuentes no cuadran.</b> {p.conflicto}</span></span>}
           </li>
         ))}
-      </ul>
+      </ul>}
       <p className="mt-1 text-[var(--tinta2)]">→ {frase}</p>
       {elemento?.casoBorde && <CasoBorde className="mt-1" />}
       <div className="mt-1 flex flex-wrap gap-1.5">

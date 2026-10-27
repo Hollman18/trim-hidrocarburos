@@ -545,6 +545,9 @@ export interface Libro {
   porCampo: Array<{ campoId: string; real: number; potencial: number; brecha: number; diferido: number; identificado: number; declarado: number; pendiente: number; altoImpacto: number; pe: number
     /** Lo que pide la meta del campo en lo que va del período, bbl. */
     metaProduccion: number; metaDiferido: number
+    /** F2 · H1: lo mismo por día, como lo pinta «Por campo». Lo diferido por día con piso en 0: un
+     *  campo que produjo sobre su potencial no dejó nada de producir (la brecha negativa no es una barra). */
+    realDia: number; diferidoDia: number; metaProduccionDia: number; metaDiferidoDia: number
     /** El campo no tiene meta firmada en algún día del período: sus dos metas no son comparables. */
     sinMeta: boolean }>
   fa: FilaFA[]
@@ -732,7 +735,7 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
     if (todo.sinMeta) sinMeta.push(c)
     porCampo.push({ campoId: c, real: rc, potencial: pc, brecha: pc - rc, diferido: dc, identificado: dc - pend - decl, declarado: decl,
       pendiente: pend, altoImpacto: suma(tc.filter(t => ALTO_IMPACTO.includes(t.causa.tipo))), pe: pc > 0 ? (rc / pc) * 100 : 0,
-      metaProduccion: ya.produccion, metaDiferido: ya.diferido, sinMeta: todo.sinMeta })
+      metaProduccion: ya.produccion, metaDiferido: ya.diferido, sinMeta: todo.sinMeta, realDia: 0, diferidoDia: 0, metaProduccionDia: 0, metaDiferidoDia: 0 })
     real += rc; potencial += pc
     if (faltan.length) sinFiscal.push({ campoId: c, dias: faltan })
     const banda = bandaDe(c)
@@ -746,6 +749,10 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
     }
   }
   porCampo.sort((a, b) => b.brecha - a.brecha)
+  // Por día, con los mismos días que la meta del período (F2 · H1).
+  const diasPeriodo = Math.max(1e-9, (h0 - d0) / D)
+  for (const c of porCampo) Object.assign(c, { realDia: c.real / diasPeriodo, diferidoDia: Math.max(0, c.brecha) / diasPeriodo,
+    metaProduccionDia: c.metaProduccion / diasPeriodo, metaDiferidoDia: c.metaDiferido / diasPeriodo })
 
   const diferido = suma(tramos)
   const pendiente = suma(tramos.filter(t => t.causa.tipo === 'pendiente'))

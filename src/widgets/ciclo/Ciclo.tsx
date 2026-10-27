@@ -21,17 +21,20 @@ import { fmtHoras } from '@/widgets/bombas/comun'
 
 /** Los planes de un equipo, en la ficha (B): a la vista, cada uno con su momento,
  *  lo que mueve (simulado) y, para quien decide, «Aceptar» o «Ya se hizo». */
-export function PlanesDe({ planes, onAbrir, className }: {
+export function PlanesDe({ planes, onAbrir, className, titulo: Titulo = 'h3' }: {
   planes: PlanAccion[]
   onAbrir?: (campoId: string, equipo: string) => void
   className?: string
+  /** A15: el nivel de su título, el que le toque donde va (como `BloqueSap`). En el diagnóstico va
+   *  antes del primer `h2` de la vista: ahí es `h2`; dentro de la ficha (que ya tiene su `h2`), `h3`. */
+  titulo?: 'h2' | 'h3'
 }) {
   const ordenados = [...planes].sort((a, b) => b.bbl - a.bbl)
   if (!ordenados.length) return null
   return (
     <section className={cn('min-w-0', className)} aria-label="Planes de acción" data-planes="">
       <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h3 className="text-[15px] font-semibold text-[var(--tinta)]">Planes · lo que todavía se puede mover</h3>
+        <Titulo className="text-[15px] font-semibold text-[var(--tinta)]">Planes · lo que todavía se puede mover</Titulo>
         <Calidad>simulado</Calidad>
       </header>
       <div className="mt-1.5">

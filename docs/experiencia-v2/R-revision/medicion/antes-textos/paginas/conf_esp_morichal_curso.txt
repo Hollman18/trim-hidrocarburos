@@ -1,0 +1,76 @@
+#/conf/esp/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Equipos
+DATOS DE DEMOSTRACIÓN
+Electrosumergibles
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+En falla ahora
+1
+1 de 41
+684 bbl/d se dejan de producir
+Con aviso
+3
+1.643 bbl/d en juego
+Diferido de sus electrosumergibles
+1.095 bbl
+99 % por aislamiento del motor y del cable
+Entre fallas · 12 meses
+1.670 d
+9 fallas · 266 disparos
+FLOTA
+41
+Pozo	Ahora	Crudo bbl/d	Por su ESP bbl	Fallas	Disparos	Entre fallas
+
+1
+MN-41
+57,0 Hz
+	
+parado · aislamiento del motor y del cable
+	684	1.083	1	0	—
+
+2
+MN-07
+59,0 Hz
+	
+Bomba de fondo (eje y etapas)
+fuera de banda
+corriente del motor · alarma en 4 h
+	607	0	0	5	—
+
+2
+MN-18
+57,0 Hz
+	
+Admisión y separador de gas
+fuera de banda
+presión de entrada · alarma en 30 h · 30–31 h
+	526	0	0	7	—
+
+2
+MN-27
+59,0 Hz
+	
+Protector (sello del motor)
+fuera de banda
+temperatura del motor · alarma en 10,9 d · 10,2–11,6 d
+	510	0	0	10	—
+
+MN-19
+55,0 Hz
+	estable	641	0	0	7	—
+ver 36 más

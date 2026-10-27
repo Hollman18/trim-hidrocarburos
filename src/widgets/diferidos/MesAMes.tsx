@@ -5,6 +5,7 @@ import { CHOKES_Y_SIN_ASIGNAR, type MesPorTramo } from '@/shared/api/choke'
 import { conMeta, textoSinMeta } from '@/entities/libro'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { n0, n1 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Muestra, PatronesTramo } from './tramos'
@@ -123,10 +124,12 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
                   )}
                   {hayMeta && <line x1={x - 3} x2={x + ancho + 3} y1={Y(l.meta.diferido)} y2={Y(l.meta.diferido)}
                     stroke="var(--tinta)" strokeWidth={1.4} strokeDasharray="4 2" />}
+                  {/* H20: la marca de aviso de verdad (el cuadrado «3» de 12 px, X5 §3.3), no un cuadrito de 7 sin número. */}
                   {sobre && !m.parcial && (
-                    <rect x={x + ancho / 2 - 3.5} y={yTope - 15} width={7} height={7} rx={0.8} fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1}>
+                    <g transform={`translate(${x + ancho / 2 - 6} ${yTope - 17})`} data-marca-mes="aviso">
                       <title>Pasó el máximo de diferido firmado</title>
-                    </rect>
+                      <MarcaCondicion c="aviso" tamano={12} decorativa />
+                    </g>
                   )}
                   {conCifra(activo) && <text x={Math.min(x + ancho / 2, W - 2 - 3.6 * k(l.brecha).length)} y={yTope - (sobre && !m.parcial ? 19 : 5)} fontSize={12} textAnchor="middle"
                     fill="var(--tinta2)" className="tabular">{k(l.brecha)}</text>}
@@ -163,7 +166,7 @@ export function MesAMes({ serie, desde, hasta, onMes, porTramo }: {
           <svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.4" strokeDasharray="4 2" /></svg>máximo firmado
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <svg width="8" height="8" aria-hidden><rect x="0.5" y="0.5" width="7" height="7" rx="0.8" fill="var(--p3)" stroke="var(--marca-trazo)" strokeWidth={1} /></svg>pasó el máximo
+          <MarcaCondicion c="aviso" tamano={12} decorativa />pasó el máximo
         </span>
       </div>
       <Lectura>

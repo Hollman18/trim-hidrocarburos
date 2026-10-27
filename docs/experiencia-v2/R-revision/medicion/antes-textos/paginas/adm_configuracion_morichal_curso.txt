@@ -1,0 +1,157 @@
+#/adm/configuracion/morichal/curso
+
+Todos mis campos
+Morichal Norte
+DATOS DE DEMOSTRACIÓN
+Metas, accesos y configuración
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Configuración técnica
+Filosofía operacional
+Metas de los campos
+Usuarios y accesos
+PERFIL DEL CAMPO
+Destino principal del gas
+No tiene tren de gas
+Gas a tea
+Gas para consumo propio
+Gas a venta
+4 elementos en el tren de gas
+Bombas de la línea
+2 bombas registradas
+Electrosumergibles
+41 pozos registrados
+MEMBRETE DEL INFORME
+todos los campos
+Nombre de la empresa
+TANQUES DE AGUA
+Tanque de agua de Morichal Norte
+TK-AG-MN · lo vacía P-201B · nivel ahora 61,8 %
+Capacidad
+bbl
+Alto-alto
+%
+Transmisor de nivel
+Certificado de aforo
+RESPALDO DE BOMBAS
+Bomba multietapa de transferencia de agua
+P-201B · Disposición de agua · capacidad 86.500 bbl/d
+Capacidad libre
+bbl/d
+Qué es el respaldo
+Bomba multifásica de doble tornillo · clúster norte
+MPP-301 · Lleva la producción a planta · capacidad 90.000 bbl/d · pozos MN-07, MN-18, MN-33
+Capacidad libre
+bbl/d
+Qué es el respaldo
+PARADAS PROGRAMADAS
+4
+MN-05 12 de sept, 09:37 a 13 de sept, 21:22
+Orden predictiva: el vigía anticipó la falla de bomba de fondo; cambio de la electrosumergible en ventana programada
+MN-16 4 de sept, 19:25 a 6 de sept, 06:03
+Orden predictiva: el vigía anticipó la falla de bomba de fondo; cambio de la electrosumergible en ventana programada
+MPP-301 25 de ago, 14:36 a 26 de ago, 05:10
+Mantenimiento preventivo programado de la bomba
+P-201B 17 de feb, 00:21 a 17 de feb, 15:48
+Mantenimiento preventivo programado de la bomba
+Equipo
+P-201B
+MPP-301
+K-101
+H-302
+V-101
+TK-102
+LACT-01
+C-401
+SE-2
+MN-01
+MN-02
+MN-03
+MN-04
+MN-05
+MN-06
+MN-07
+MN-08
+MN-09
+MN-10
+MN-11
+MN-12
+MN-13
+MN-14
+MN-15
+MN-16
+MN-17
+MN-18
+MN-19
+MN-20
+MN-21
+MN-22
+MN-23
+MN-24
+MN-25
+MN-26
+MN-27
+MN-28
+MN-29
+MN-30
+MN-31
+MN-32
+MN-33
+MN-34
+MN-35
+MN-36
+MN-37
+MN-38
+MN-39
+MN-40
+MN-41
+Desde
+Hasta
+Motivo
+Agregar al borrador
+FIRMAR LA VERSIÓN
+sin cambios
+
+No hay nada que firmar.
+
+VERSIONES FIRMADAS
+1
+Versión 1
+vigente
+1 de sept, 08:00 · Hermes Leal · administrador de la implementación
+
+«Arranque de la implementación»
+
+Configuración inicial: metas por campo, precio neto, tanques de agua, respaldos de bombas y programa de paradas
+NO SE CONFIGURA
+sale de los equipos
+Producción
+FQI-0101 · computador de flujo de la unidad LACT-01 · corte de agua: analizador
+Estado de pozos
+41 variadores · 0 controladores de bombeo · 0 válvulas de cabeza
+Pruebas de pozo
+39 con separador · 2 estimadas desde la electrosumergible · 0 sin prueba
+Nivel de tanques
+TK-AG-MN · LT-2012
+Paradas de bombas
+PLC · primera alarma (first-out)
+Límites de electrosumergibles
+Protecciones del variador de cada pozo
+Banda de asignación
+±15 % · crudo de 13,1 °API (Análisis de laboratorio del crudo en especificación)
+Ver conectores y tags
+Esquema de planta
+de él TRIM deduce a qué pozos sirve cada equipo
+▾

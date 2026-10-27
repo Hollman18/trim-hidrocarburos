@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/cn'
 import { Calidad, MarcaSvg } from './piezas'
 import { n0 } from './cifras'
 import { useAcciones } from './acciones'
+import { useAncho } from '@/widgets/resultados/ancho'
 
 /* La columna de la derecha (352 px en el escritorio): los gráficos de A
    redibujados en el estilo de B (X5 §5.4). Lo simulado, aparte y con su
@@ -13,7 +14,7 @@ import { useAcciones } from './acciones'
 const Mini = ({ titulo, extra, children, className, ...p }: { titulo: string; extra?: ReactNode; children: ReactNode; className?: string } & Record<`data-${string}`, unknown>) => (
   <section {...p} aria-label={titulo} className={cn('min-w-0 rounded-[20px] bg-[var(--panel)] px-[22px] py-4', className)}>
     <header className="flex items-center justify-between gap-2">
-      <h3 className="text-[15px] font-semibold text-[var(--tinta)]">{titulo}</h3>
+      <h2 className="text-[15px] font-semibold text-[var(--tinta)]">{titulo}</h2>
       {extra}
     </header>
     {children}
@@ -29,7 +30,7 @@ export function Mover({ v, momento }: { v: VistaPlantaViva; momento: Momento }) 
     <Mini titulo="Lo que todavía se puede mover" extra={<Calidad>simulado</Calidad>} data-mover={v.mover.totalBbl}>
       <p className="mt-1.5 flex items-baseline gap-2">
         <b className="text-[26px] font-bold tracking-[-.01em] text-[var(--tinta)]">{n0(v.mover.totalBbl)}</b>
-        <span className="text-[14px] text-[var(--tinta2)]">bbl en el ciclo</span>
+        <span className="text-[14px] text-[var(--tinta2)]">bbl · retorno posible del ciclo</span>
       </p>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {MOMENTOS.map(m => (
@@ -41,10 +42,12 @@ export function Mover({ v, momento }: { v: VistaPlantaViva; momento: Momento }) 
       </div>
       <p className="sr-only" data-linea-simulada="">{v.cifras[momento].simulado.texto}</p>
       {plan && (
-        <button type="button" onClick={() => abrir(plan)} className="mt-2 inline-flex cursor-pointer items-center gap-0.5 whitespace-nowrap text-[15px] font-semibold text-[var(--tinta)] hover:underline">
+        <button type="button" onClick={() => abrir(plan)} className="no-imprimir mt-2 inline-flex min-h-11 cursor-pointer items-center gap-0.5 whitespace-nowrap text-[15px] font-semibold text-[var(--tinta)] hover:underline sm:min-h-0">
           Ver el plan <span aria-hidden>›</span>
         </button>
       )}
+      {/* «3 de 11 planes en marcha» (X4 §3.7): los planes que mueven crudo, aceptados o ya hechos. */}
+      {v.planes && <p className="mt-1 text-[14px] text-[var(--tinta2)]" data-planes={v.planes.enMarcha}>{v.planes.texto}</p>}
     </Mini>
   )
 }
@@ -59,14 +62,15 @@ export function PorEquipo({ v }: { v: VistaPlantaViva }) {
       {v.porEquipo.length === 0 && <p className="mt-2 text-[15px] text-[var(--tinta2)]">Nada se trabó en {v.periodo}.</p>}
       <div className="mt-1.5">
         {v.porEquipo.map(e => (
-          <button key={`${e.campoId}/${e.equipo}`} type="button" onClick={() => abrir(e)} data-equipo-diferido={e.equipo} data-bbl={e.bbl}
+          <button key={`${e.campoId}/${e.equipo}`} type="button" onClick={() => abrir(e)} data-equipo-diferido={e.equipo} data-bbl={e.bbl} data-entero={e.bblEntero}
             className="grid w-full cursor-pointer grid-cols-[18px_1fr_auto] items-center gap-x-2 gap-y-0.5 border-t border-[var(--linea2)] py-1.5 text-left first:border-t-0 hover:bg-[var(--panel2)]">
             <span className="flex">{e.prioridad ? <MarcaPrioridad s={e.prioridad} tamano={15} /> : null}</span>
             <span className="min-w-0">
               <span className="font-cond text-[15px] font-bold tracking-[.02em] text-[var(--tinta)]">{e.equipo}</span>{' '}
               <span className="text-[13px] text-[var(--tinta2)]">{e.familia}{e.palabra ? ` · ${e.palabra}` : ''}{varios ? ` · ${nombreCampo(v, e.campoId)}` : ''}</span>
             </span>
-            <span className="text-right text-[15px] font-bold text-[var(--tinta)]">{n0(e.bbl)}<small className="block text-[13px] font-normal text-[var(--tinta2)]">{n0(e.pct)} %</small></span>
+            {/* El entero del equipo (repartido de la cifra del período: suman lo mismo) y su parte entera (Σ = 100). */}
+            <span className="text-right text-[15px] font-bold text-[var(--tinta)]">{n0(e.bblEntero)}<small className="block text-[13px] font-normal text-[var(--tinta2)]">{e.pctEntero === 0 && e.pct > 0 ? '< 1' : n0(e.pctEntero)} %</small></span>
             <span className="relative col-span-2 col-start-2 h-[5px] rounded-full bg-[var(--pista)]"><i className="absolute inset-y-0 left-0 rounded-full bg-[var(--dato1)]" style={{ width: `${Math.min(100, e.pct)}%` }} /></span>
           </button>
         ))}
@@ -83,21 +87,22 @@ const nombreCampo = (v: VistaPlantaViva, id: string) => v.filas.find(f => f.camp
 export function MesAMesYBajando({ v, className }: { v: VistaPlantaViva; className?: string }) {
   const { meses, actualBpd, nombreActual } = v.mesAMes
   const maximo = meses.reduce((a, m) => Math.max(a, m.maximoBpd ?? 0), 0)
+  // Se dibuja al ancho de verdad (H9): una unidad es un px y la letra de 12 se ve de 12, también a 320 px.
+  const [ref, medido] = useAncho(308)
   // El margen de la izquierda alcanza para el rótulo más ancho del eje («2.300»).
-  const W = 308, H = 98, G = { x0: Math.max(28, 10 + 7.2 * n0(maximo).length), x1: W, y0: 14, y1: H - 20 }
+  const W = Math.max(220, Math.min(420, medido)), H = 98, G = { x0: Math.max(28, 10 + 7.2 * n0(maximo).length), x1: W, y0: 14, y1: H - 20 }
   const tope = Math.max(1, ...meses.map(m => m.totalBpd), maximo) * 1.08
   const Y = (x: number) => G.y1 - (x / tope) * (G.y1 - G.y0)
   const paso = (G.x1 - G.x0) / Math.max(1, meses.length), an = Math.min(14, paso * 0.62)
   const lineas = maximo > 0 ? [maximo / 2, maximo] : []
-  const sobre = meses.filter(m => m.sobre)
-  const aria = `Diferido por día de ${meses[0]?.nombre ?? ''} a ${meses.at(-1)?.nombre ?? ''}${maximo ? ` contra el máximo firmado de ${n0(maximo)} bbl/d` : ''}. `
-    + (sobre.length ? `Lo pasaron ${sobre.map(m => `${m.nombre} (${n0(m.totalBpd)})`).join(', ')}.` : 'Ningún mes cerrado lo pasó.')
-    + (actualBpd !== null ? ` ${nombreActual[0]?.toUpperCase()}${nombreActual.slice(1)} va en ${n0(actualBpd)}.` : '')
+  // De tres en tres meses; si ni así caben (el teléfono más angosto), de cuatro en cuatro: nunca se achica la letra.
+  const cada = paso * 3 >= 56 ? 3 : 4
   const b = v.bajando
   return (
     <Mini titulo="Diferido por día, mes a mes" className={className} data-mes-a-mes=""
       extra={actualBpd !== null && <span className="text-[14px] text-[var(--tinta2)]">{nombreActual}: <b className="text-[var(--tinta)]">{n0(actualBpd)}</b> bbl/d</span>}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 block h-auto w-full max-w-[420px]" role="img" aria-label={aria}>
+      <div ref={ref} className="mt-2 w-full max-w-[420px]">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block" role="img" aria-label={v.mesAMes.aria}>
         {[0, ...lineas].map(l => (
           <g key={l}>
             <line x1={G.x0} x2={G.x1} y1={Y(l)} y2={Y(l)} stroke="var(--linea2)" strokeWidth={1} />
@@ -111,10 +116,12 @@ export function MesAMesYBajando({ v, className }: { v: VistaPlantaViva; classNam
             <g key={m.mes} data-mes={m.mes} data-total={m.totalBpd}>
               <path d={`M${x} ${G.y1} L${x} ${yT + 3} Q${x} ${yT} ${x + 3} ${yT} L${x + an - 3} ${yT} Q${x + an} ${yT} ${x + an} ${yT + 3} L${x + an} ${G.y1} Z`} fill="var(--dato3)" />
               <rect x={x} y={Y(m.altoBpd)} width={an} height={Math.max(0, G.y1 - Y(m.altoBpd))} fill="var(--dato1)" />
+              {/* 1 px del fondo entre los dos tonos (H21). */}
+              {m.altoBpd > 0.5 && m.totalBpd - m.altoBpd > 0.5 && <line x1={x} x2={x + an} y1={Y(m.altoBpd)} y2={Y(m.altoBpd)} stroke="var(--panel)" strokeWidth={1} />}
               {m.maximoBpd !== null && <line x1={x - 3} x2={x + an + 3} y1={Y(m.maximoBpd)} y2={Y(m.maximoBpd)} stroke="var(--tinta)" strokeWidth={1.6} strokeDasharray="4 2.5" />}
               {m.sobre && <MarcaSvg x={x + an / 2 - 6} y={Math.min(yT, Y(m.maximoBpd ?? 0)) - 15} s={3} t={12} />}
               {m.enCurso && <rect x={x - 2.5} y={yT - 2.5} width={an + 5} height={G.y1 - yT + 2.5} rx={4} fill="none" stroke="var(--tinta)" strokeWidth={1.3} strokeDasharray="3 2" />}
-              {(i % 3 === 0 || ult) && (
+              {((i % cada === 0 && i <= meses.length - cada + 1) || ult) && (
                 <text x={ult ? Math.min(W - 2, x + an) : x + an / 2} y={G.y1 + 15} textAnchor={ult ? 'end' : 'middle'} className="font-cond" fontWeight={ult ? 700 : 500} fontSize={12}
                   fill={ult ? 'var(--tinta)' : 'var(--tinta2)'}>{m.rotulo}</text>
               )}
@@ -123,13 +130,14 @@ export function MesAMesYBajando({ v, className }: { v: VistaPlantaViva; classNam
           )
         })}
       </svg>
+      </div>
       <div className="mt-1.5 flex flex-wrap gap-3 text-[13px] text-[var(--tinta2)]">
         <span className="inline-flex items-center gap-[5px]"><i className="inline-block size-2.5 rounded-[3px] bg-[var(--dato1)]" />alto impacto</span>
         <span className="inline-flex items-center gap-[5px]"><i className="inline-block size-2.5 rounded-[3px] bg-[var(--dato3)]" />lo demás</span>
         {maximo > 0 && <span className="inline-flex items-center gap-[5px]"><svg width="16" height="6" aria-hidden><line x1="0" x2="16" y1="3" y2="3" stroke="var(--tinta)" strokeWidth="1.6" strokeDasharray="4 2.5" /></svg>máximo {n0(v.mesAMes.maximoBpd ?? maximo)}</span>}
       </div>
       <div className="mt-3.5 flex flex-col gap-1 border-t border-[var(--linea2)] pt-3" data-bajando="">
-        <p className="mb-0.5 text-[15px] font-semibold text-[var(--tinta)]">¿Está bajando? Desde que entró TRIM</p>
+        <p className="mb-0.5 text-[15px] font-semibold text-[var(--tinta)]">¿Está bajando? Desde que entró TRIM <span className="font-normal text-[var(--tinta2)]">· lo no planeado, por día</span></p>
         {!b && <p className="text-[14px] text-[var(--tinta2)]">Sin tres meses de historia antes de TRIM: no hay con qué comparar.</p>}
         {b?.filas.map(f => (
           <p key={f.tramo} data-flecha={f.tramo} className="grid grid-cols-[96px_auto_1fr] items-baseline gap-2 text-[14px] text-[var(--tinta2)]">

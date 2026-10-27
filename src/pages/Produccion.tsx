@@ -1,5 +1,5 @@
-import { useAmbito, useRango, useNivel } from '@/app/store'
-import { useMemo, type ReactNode } from 'react'
+import { useAmbito, useRango } from '@/app/store'
+import { useMemo } from 'react'
 import { useLibro, useLibros, useSerie, useDias, useEstadoCampos } from '@/shared/api/diferidos'
 import { pedirMedicionOficial } from '@/shared/api/medicion'
 import { campoPorId } from '@/entities/campos'
@@ -7,7 +7,7 @@ import { conMeta, textoSinMeta } from '@/entities/libro'
 import { SIN_META } from '@/entities/configuracion'
 import { fechaCorta } from '@/entities/reloj'
 import { Panel, Chip } from '@/shared/ui/primitivas'
-import { FueraDeMeta } from '@/shared/ui/Prioridad'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { BarraMeta } from '@/shared/ui/BarraMeta'
@@ -19,7 +19,7 @@ import { Factor } from '@/widgets/diferidos/Factor'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { AsignacionOficial } from '@/widgets/produccion/AsignacionOficial'
 import { desplazable } from '@/shared/ui/alFinal'
-import { TuberiaDelCampo } from '@/widgets/choke/Tuberia'
+import { TuberiaTecnica } from '@/widgets/plantaviva/Tecnica'
 import { TuberiaDeCadaCampo } from '@/widgets/choke/Campos'
 import { SerieLimita } from '@/widgets/choke/Serie'
 import { Escalera } from '@/widgets/choke/Escalera'
@@ -27,20 +27,20 @@ import { useRepartoChoke } from '@/shared/api/choke'
 
 /** La curva es el hecho; el diferido es la consecuencia. Producción entra por
  *  aquí: cuánto salió por el punto de medición oficial, contra lo que daban
- *  las pruebas y contra la meta firmada, día por día. Lo real contra la meta
- *  va en barra; si el libro se puede publicar, en el sello de arriba.
+ *  las pruebas y contra la meta firmada, día por día. Arriba, dos líneas (P-produccion-1):
+ *  la producción medida contra la meta, en barra, y el potencial del libro; si el
+ *  libro se puede publicar, en el sello.
  *
  *  Para producción, entre el bloque de arriba y «Día a día», va «La tubería
- *  del campo» (U2 §2.4): qué limita hoy, lo que le sobra a cada tramo y lo que
- *  se perdió por tramo, con el total del libro; debajo, qué limitó cada día.
+ *  del campo»: la MISMA de La planta viva con la lente técnica (P-16, H8): el
+ *  rayado donde se trabó, lo que cabe y lo que le sobra a cada tramo, y la tabla;
+ *  debajo, qué limitó cada día.
  *  Con todos los campos, una fila por campo. Después de «Día a día», lo que no
  *  se produjo escalón por escalón con la eficiencia, y lo perdido por tramo mes
  *  a mes. El gerente no ve nada de esto: es detalle técnico (U2 §3.2). */
 export function Produccion() {
   const ambito = useAmbito(); const rango = useRango()
-  // El directivo ve la curva y si el número se puede publicar; la custodia,
-  // el factor y el cuadre diario son de producción.
-  const ing = useNivel() !== 'decision'
+  // P-21: ningún rol de decisión tiene Producción (la del gerente vive en Resultados): sin rama «decision».
   const ids = ambito.campos.map(c => c.id)
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
   const lb = useLibro(q)
@@ -80,33 +80,31 @@ export function Produccion() {
 
   return (
     <>
-      <section className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)]">
+      <section className="mb-3 rounded-[20px] bg-[var(--panel)] px-5 py-5 sm:mb-4 sm:px-7" data-produccion-cabeza="">
         <div className="flex flex-wrap items-start justify-between gap-2">
           {/* El ámbito y el período ya los dice la cabecera (también en el teléfono); la cabecera no sale en el papel, y aquí quedan para el papel. */}
-          <small className="text-[13px] tracking-[.04em] text-[var(--tinta3)] hidden print:block">{ambito.titulo.toUpperCase()} · {rango.nombre.toUpperCase()}</small>
+          <small className="hidden text-[13px] text-[var(--tinta3)] print:block">{ambito.titulo} · {rango.nombre}</small>
           <SelloPublicacion lb={lb} className="ml-auto" />
         </div>
-        <div className="mt-1 grid items-start gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))]">
-          <BarraMeta rotulo="producción real" valor={lb.real} unidad="bbl" meta={hayMeta ? lb.meta.produccion : undefined}
+        {/* Dos líneas (P-produccion-1): lo medido contra la meta y el potencial del libro (G-5). El resto, en sus ⓘ. */}
+        <div className="mt-1 max-w-[560px]">
+          <BarraMeta rotulo="producción medida" valor={lb.real} unidad="bbl" meta={hayMeta ? lb.meta.produccion : undefined}
             rotuloMeta={hayMeta ? `meta${enCurso ? ' a la fecha' : ''} ${n0(lb.meta.produccion)}` : textoSinMeta(lb.meta, ambito.global)} fuera={hayMeta && lb.real < lb.meta.produccion}
-            // Lo real sobre el potencial del libro: NO es la eficiencia de producción (esa va en la escalera, D3).
-            apoyo={<span className="inline-flex flex-wrap items-center gap-x-1" data-del-potencial>{n0(porDia(lb.real))} bbl/d · {n1(lb.pe)} % del potencial
-              {ing ? <InfoDelPotencial q={q} /> : <Info titulo="% del potencial" texto={DEL_POTENCIAL} />}</span>}
-            tip={{ titulo: 'Real contra la meta', filas: [['Real por día', `${n0(porDia(lb.real))} bbl/d`],
-              ...(hayMeta ? [['Meta por día', `${n0(porDia(lb.meta.produccion))} bbl/d`], ['Meta a la fecha', `${n0(lb.meta.produccion)} bbl`],
-                [enCurso ? 'Meta del mes completo' : 'Meta del período', `${n0(lb.meta.produccionTotal)} bbl`]] as Array<[string, string]> : [['Meta', SIN_META] as [string, string]])] }} />
-          <Cifra rotulo="potencial del libro" valor={n0(lb.potencial)} unidad="bbl"
-            pie={<>{n0(porDia(lb.potencial))} bbl/d<Info titulo="Potencial" texto={ing ? 'Pruebas de los pozos × factor de asignación.' : 'Lo que los pozos podían dar.'} /></>} />
-          <Cifra rotulo={`real · ${fechaAyer ? fechaCorta(fechaAyer) : 'último día'}`} valor={ayer === null ? '—' : n0(ayer)} unidad={ayer === null ? undefined : 'bbl'}
-            pie={ayer === null ? <>sin fiscal<Info titulo="Último día completo" texto="Falta el fiscal del último día en algún campo: la suma no está completa." /></> : undefined} />
+            apoyo={<span className="inline-flex flex-wrap items-center gap-x-1">{n0(porDia(lb.real))} bbl/d
+              <Info titulo="Real contra la meta" texto={`Lo que midió el punto de medición oficial.${ayer === null ? ' Falta el fiscal del último día en algún campo: la suma del último día no está completa.' : ` El último día completo${fechaAyer ? ` (${fechaCorta(fechaAyer)})` : ''}: ${n0(ayer)} bbl.`}${hayMeta ? ` Meta por día ${n0(porDia(lb.meta.produccion))} bbl/d; ${enCurso ? 'del mes completo' : 'del período'}, ${n0(lb.meta.produccionTotal)} bbl.` : ` ${SIN_META}.`}`} /></span>} />
         </div>
+        <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 border-t border-[var(--linea2)] pt-2.5 text-[15px] text-[var(--tinta2)]" data-del-potencial="">
+          Potencial del libro: <b className="text-[var(--tinta)] tabular-nums">{n0(lb.potencial)} bbl</b> · {n0(porDia(lb.potencial))} bbl/d · lo medido es el {n1(lb.pe)} %
+          {/* Lo real sobre el potencial del libro: NO es la eficiencia de producción (esa va en la escalera, D3). */}
+          <InfoDelPotencial q={q} />
+        </p>
       </section>
 
-      {ing && (ambito.global
+      {(ambito.global
         ? <TuberiaDeCadaCampo campos={ids} desde={rango.desde} hasta={rango.hasta} />
         : (
           <>
-            <TuberiaDelCampo campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
+            <TuberiaTecnica className="mb-3 sm:mb-4" />
             <SerieLimita campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
           </>
         ))}
@@ -114,18 +112,18 @@ export function Produccion() {
       <Panel className="mb-2.5" titulo="Día a día" extra="bbl/d">
         <Diaria dias={dias} />
         <Lectura>
-          La curva sólida es lo que midió el punto de medición oficial cada día; la discontinua, lo
-          que daban las pruebas de los pozos con el factor de asignación del mes; la punteada, la meta
-          firmada. Lo sombreado entre la discontinua y la sólida es lo que no se produjo. El día de
-          hoy va como tasa y con el punto hueco: está a medias. Toque o pase el cursor por un día para
-          ver sus cifras; con el teclado, las flechas pasan de un día a otro.
+          La curva oscura es lo que midió el punto de medición oficial cada día; la clara, lo que
+          daban las pruebas de los pozos con el factor de asignación del mes (el potencial del libro); la
+          punteada, la meta firmada. Lo sombreado entre las dos es lo que no se produjo. El día de hoy
+          va como tasa y con el punto hueco: está a medias. Toque o pase el cursor por un día para ver
+          sus cifras; con el teclado, las flechas pasan de un día a otro.
         </Lectura>
       </Panel>
 
-      {ing && <Escalera campos={ids} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />}
+      {<Escalera campos={ids} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />}
       {/* C5 · «Lo perdido por tramo, mes a mes» vive una sola vez: en Resultados (mes a mes, «Por dónde se trabó») y en Diferidos (X4 §3.7). */}
 
-      {ing && <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+      {<div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
         <Panel titulo="Medición oficial">
           <Lectura>
             De dónde sale lo real. Lo real no lo escribe nadie: lo entrega el computador de flujo (o los
@@ -157,7 +155,7 @@ export function Produccion() {
         )}
       </div>}
 
-      {ing && <Panel titulo={largo ? '¿Cuadra? Mes por mes' : '¿Cuadra? Día por día'}>
+      {<Panel titulo={largo ? '¿Cuadra? Mes por mes' : '¿Cuadra? Día por día'}>
         <div {...desplazable('Cuadre del período')} className="overflow-x-auto">
           <table className="tabular w-full min-w-[620px] text-right text-[14px]">
             <thead className="text-[12px] text-[var(--tinta3)]">
@@ -168,7 +166,7 @@ export function Produccion() {
               {largo ? meses.map(m => (
                 <tr key={m.mes} className="border-t border-[var(--linea2)]">
                   <td className="py-1 text-left">{m.nombre}{m.recortado ? ` · ${fechaCorta(m.desde)} a ${fechaCorta(new Date(m.hasta.getTime() - 1))}` : m.parcial ? ' · en curso' : ''}</td>
-                  <td><FueraDeMeta si={conMeta(m.libro.meta) && m.libro.real < m.libro.meta.produccion} tamano={9} />{n0(m.libro.real)}</td><td>{n0(m.libro.potencial)}</td><td>{n0(m.libro.diferido)}</td>
+                  <td><BajoLaMeta si={conMeta(m.libro.meta) && m.libro.real < m.libro.meta.produccion} />{n0(m.libro.real)}</td><td>{n0(m.libro.potencial)}</td><td>{n0(m.libro.diferido)}</td>
                   <td className="text-[var(--tinta3)]">{n0(m.libro.residuo)}</td>
                   <td>{n1(m.libro.pe)} %</td>
                   <td className="text-[var(--tinta3)]">{conMeta(m.libro.meta) ? n0(m.libro.meta.produccion) : SIN_META}</td>
@@ -180,7 +178,7 @@ export function Produccion() {
                 return (
                   <tr key={d.dia.getTime()} className={`border-t border-[var(--linea2)] ${oculta ? 'hidden print:table-row' : ''}`}>
                     <td className="py-1 text-left">{fechaCorta(d.dia)}{d.horas < 23.99 ? ` · ${n1(d.horas)} h` : ''}</td>
-                    <td>{d.real === null ? 'sin fiscal' : <><FueraDeMeta si={d.meta !== null && d.real < d.meta} tamano={9} />{n0(d.real)}</>}</td><td>{n0(d.potencial)}</td><td>{n0(d.diferido)}</td>
+                    <td>{d.real === null ? 'sin fiscal' : <><BajoLaMeta si={d.meta !== null && d.real < d.meta} />{n0(d.real)}</>}</td><td>{n0(d.potencial)}</td><td>{n0(d.diferido)}</td>
                     <td className="text-[var(--tinta3)]">{d.residuo === null ? '—' : n0(d.residuo)}</td>
                     <td>{pe === undefined ? '—' : `${n1(pe)} %`}</td>
                     <td className="text-[var(--tinta3)]">{d.meta === null ? SIN_META : n0(d.meta)}</td>
@@ -198,7 +196,7 @@ export function Produccion() {
         </Lectura>
       </Panel>}
 
-      {ing && <AsignacionOficial campos={ids} />}
+      <AsignacionOficial campos={ids} />
     </>
   )
 }
@@ -223,16 +221,13 @@ function InfoDelPotencial({ q }: { q: { campos: string[]; desde: Date; hasta: Da
   return <Info titulo="% del potencial" texto={`${DEL_POTENCIAL} No es la eficiencia de producción («Lo que no se produjo, por tipo»): esa parte de las pruebas sin el factor y ${porque}. ${aqui}`} />
 }
 
-/** Cifra de la cabecera, con la misma forma que la barra de al lado: rótulo,
- *  número con su unidad y, si hace falta, una línea de apoyo. */
-function Cifra({ rotulo, valor, unidad, pie }: { rotulo: string; valor: string; unidad?: string; pie?: ReactNode }) {
+/** K1 (color sin forma, X2 §4): la marca de aviso de la celda «Real» lleva su palabra en la misma celda.
+ *  Lo que avisa es que el día (o el mes) quedó bajo la meta firmada; sin meta, ninguna marca. */
+function BajoLaMeta({ si }: { si: boolean }) {
+  if (!si) return null
   return (
-    <span className="min-w-0">
-      <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
-      <b className="tabular block text-[20px] leading-none">
-        {valor}{unidad && <small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">{unidad}</small>}
-      </b>
-      {pie && <small className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[13px] leading-snug text-[var(--tinta2)]">{pie}</small>}
+    <span className="mr-1.5 inline-flex items-center gap-1 whitespace-nowrap align-[-2px] text-[12px] text-[var(--tinta2)]" data-bajo-meta="">
+      <MarcaCondicion c="aviso" tamano={12} decorativa />bajo la meta
     </span>
   )
 }

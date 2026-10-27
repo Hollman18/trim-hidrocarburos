@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { X, Maximize2, Minimize2 } from 'lucide-react'
 import { useApp, useCampo, useRol, useRango, useNivel } from '@/app/store'
 import { abreNivel3 } from '@/app/url'
@@ -11,7 +11,7 @@ import { fechaHora, horasEntre, AHORA } from '@/entities/reloj'
 import { DetallePozo } from '@/widgets/pozos/DetallePozo'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { CadenaDato } from './CadenaDato'
-import { Severidad_, Chip, Boton, Hueco } from '@/shared/ui/primitivas'
+import { Chip, Boton, Hueco } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
 import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
@@ -28,6 +28,10 @@ import { pedirPozosDelCampo } from '@/shared/api/medicion'
 import { BloqueSap } from '@/widgets/sap/BloqueSap'
 import { ExportarFicha } from '@/widgets/informe/Exportar'
 import { useModal } from '@/shared/ui/foco'
+import { useTelefono } from '@/shared/ui/telefono'
+import { useNivelEquipo } from '@/shared/api/equiposTecnico'
+import { useCondiciones } from '@/shared/api/condiciones'
+import { CondicionEquipo } from '@/widgets/bombas/SenalFija'
 import { puedeHacer, type Dispositivo, type NivelDetalle } from '@/entities/tipos'
 import { useTuberiaAgua, useCriticidad } from '@/shared/api/choke'
 import { AguaHoy } from '@/widgets/choke/AguaHoy'
@@ -56,7 +60,82 @@ export function PanelEquipo() {
     s.setPantalla('equipos')
     useApp.getState().abrirEquipo(equipoAbierto)
   }, [tecnico, pantalla, equipoAbierto])
-  return equipoAbierto && !tecnico ? <PanelAbierto equipoAbierto={equipoAbierto} /> : null
+  // Con `key`: al pasar a otro equipo la ficha arranca de nuevo (sin la cadena del dato del anterior).
+  return equipoAbierto && !tecnico ? <PanelAbierto key={equipoAbierto} equipoAbierto={equipoAbierto} /> : null
+}
+
+/** H7 (X2 N5 y B11): en el escritorio la ficha no tapa ni bloquea lo de atrás. Es un
+ *  diálogo NO modal a la derecha, debajo de la cabecera (la franja queda a la vista y
+ *  la pantalla se sigue usando): el foco entra al abrir, Escape la cierra (si el foco
+ *  no está en otro diálogo, como la introducción) y el foco vuelve a quien la abrió.
+ *  En el teléfono sigue siendo la hoja modal con su velo (`useModal`). */
+function useNoModal<T extends HTMLElement>(alEscape: () => void, activo: boolean, contenido?: unknown) {
+  const [el, setEl] = useState<T | null>(null)
+  const escape = useRef(alEscape)
+  useEffect(() => { escape.current = alEscape }, [alEscape])
+  useEffect(() => {
+    if (!el || !activo) return
+    const antes = document.activeElement instanceof HTMLElement || document.activeElement instanceof SVGElement ? document.activeElement : null
+    if (!el.contains(document.activeElement)) el.focus()
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      const otro = (document.activeElement as Element | null)?.closest('[role=dialog]')
+      if ((otro && otro !== el && !el.contains(otro)) || document.querySelector('[aria-modal="true"]')) return
+      e.preventDefault(); escape.current()
+    }
+    document.addEventListener('keydown', tecla)
+    return () => {
+      document.removeEventListener('keydown', tecla)
+      const a = document.activeElement
+      if (antes && antes.isConnected && !antes.closest('[inert]') && (!a || a === document.body || !a.isConnected)) antes.focus()
+    }
+  }, [el, activo])
+  // Lo de adentro cambió sin cerrar (otro equipo, la cadena del dato): el foco no se pierde.
+  useEffect(() => {
+    if (el && activo && (!document.activeElement || document.activeElement === document.body)) el.focus()
+  }, [el, activo, contenido])
+  return setEl
+}
+
+/** H7: en el escritorio la ficha empieza debajo de la cabecera de la vista, para que
+ *  la franja de condiciones no quede tapada. */
+function useBajoCabecera(activo: boolean): number {
+  const [top, setTop] = useState(0)
+  useLayoutEffect(() => {
+    if (!activo) return
+    const medir = () => {
+      const c = document.querySelector('[data-cabecera], [data-cabecera-equipo]')
+      setTop(Math.max(8, Math.round(c?.getBoundingClientRect().bottom ?? 0)))
+    }
+    medir()
+    addEventListener('resize', medir)
+    return () => removeEventListener('resize', medir)
+  }, [activo])
+  return top
+}
+
+/** La ficha flotante: en el teléfono, la hoja modal con su velo; en el escritorio,
+ *  el panel no modal a la derecha, debajo de la cabecera (H7). */
+function Flotante({ telefono, refModal, refNoModal, idTitulo, ancho, expandido = false, onCerrar, children, ...datos }: {
+  telefono: boolean; refModal: (el: HTMLDivElement | null) => void; refNoModal: (el: HTMLDivElement | null) => void
+  idTitulo: string; ancho: string; expandido?: boolean; onCerrar: () => void; children: ReactNode
+} & Record<`data-${string}`, string | boolean>) {
+  const top = useBajoCabecera(!telefono)
+  const caja = 'flex flex-col overflow-hidden bg-[var(--superficie)] shadow-[var(--sombra-flota)]'
+  if (telefono) return (
+    <div ref={refModal} tabIndex={-1} className="fixed inset-0 z-[120] flex outline-none" role="dialog" aria-modal="true" aria-labelledby={idTitulo} data-panel-equipo {...datos}>
+      {/* El velo cierra con el dedo; con teclado, Escape o «Cerrar» de la cabecera. Un <div>, no un botón: no entra en el ciclo de Tab. */}
+      <div aria-hidden data-velo onClick={onCerrar} className="no-imprimir flex-1 cursor-default bg-[var(--velo)]" />
+      <aside className={cn(caja, 'w-full')}>{children}</aside>
+    </div>
+  )
+  return (
+    <div ref={refNoModal} tabIndex={-1} role="dialog" aria-labelledby={idTitulo} data-panel-equipo data-no-modal {...datos}
+      style={{ top }} className={cn('fixed bottom-2 z-[120] rounded-l-[20px] outline-none', caja,
+        expandido ? 'left-[6vw] right-[6vw] rounded-[20px]' : `right-0 ${ancho}`)}>
+      {children}
+    </div>
+  )
 }
 
 function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
@@ -75,18 +154,20 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   // ficha; si encima está la introducción, Escape es de ella. Pasar a otro
   // equipo o abrir y cerrar la cadena cambia lo de adentro sin cerrar: el
   // foco no se queda en un botón que ya no está.
-  const dialogo = useModal<HTMLDivElement>(
-    () => { if (cadenaTag) setCadenaTag(null); else abrirEquipo(null) },
-    `${equipoAbierto}|${cadenaTag ?? ''}`)
+  const telefono = useTelefono()
+  const alEscape = () => { if (cadenaTag) setCadenaTag(null); else abrirEquipo(null) }
+  const dialogo = useModal<HTMLDivElement>(alEscape, `${equipoAbierto}|${cadenaTag ?? ''}`)
+  const noModal = useNoModal<HTMLDivElement>(alEscape, !telefono, `${equipoAbierto}|${cadenaTag ?? ''}`)
   const idTitulo = useId()
+  // Con el equipo parado, sus señales van en gris y sin marca propia (X2 B9; UI-07, H4); la marca del equipo, la de la franja (H3).
+  const nivelEq = useNivelEquipo(campoId, equipoAbierto)
+  const condicion = useCondiciones([campoId])(campoId, equipoAbierto)
   // La historia que dejó el PLC: lo que se le cargó y, en una bomba, sus fallas por parte.
   const historia = useHistoriaEquipo(campoId, eq && eq.clase !== 'pozo' ? eq.id : null)
   // Una bomba de reinyección parada: lo que pasa hoy lo dice el motor (B-17), no la frase fija del registro.
   const agua = useTuberiaAgua(campoId)
   const delTren = agua.tramos.find(x => x.tramo === 'bombas')?.bombas?.find(b => b.id === equipoAbierto)
   const paradaDelTren = delTren?.papel === 'disposicion' && delTren.marcha === 'parada'
-
-  useEffect(() => { setCadenaTag(null) }, [equipoAbierto])
 
   const disp = eq?.dispositivos ?? []
   // En operación solo se muestra lo que está fuera de banda: lo demás no pide nada.
@@ -99,38 +180,32 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   const sinSenalN = visibles.filter(sinLectura).length, fueraN = visibles.length - sinSenalN
   const activo = cadenaTag ? disp.find(d => d.tag === cadenaTag) : undefined
 
-  const fila = (d: Dispositivo) => <FilaDispositivo key={d.tag} d={d} nivel={nivel} onCadena={setCadenaTag} />
+  const fila = (d: Dispositivo) => <FilaDispositivo key={d.tag} d={d} nivel={nivel} gris={!!nivelEq?.parado} onCadena={setCadenaTag} />
 
   return (
-    <div ref={dialogo} tabIndex={-1} className="fixed inset-0 z-[120] flex outline-none" role="dialog" aria-modal="true" aria-labelledby={idTitulo} data-panel-equipo>
-      {/* El fondo cierra con el ratón o el dedo; con teclado se cierra con Escape o con «Cerrar» de la cabecera. */}
-      {/* Un <div>, no un botón: no entra en el ciclo de Tab de la ficha (un control escondido del lector). */}
-      <div aria-hidden onClick={() => abrirEquipo(null)}
-        className="no-imprimir flex-1 cursor-default bg-black/35" />
-      <aside className={cn('flex flex-col overflow-hidden border-l border-[var(--linea)] bg-[var(--superficie)] shadow-[var(--sombra2)]',
-        equipoExpandido
-          ? 'absolute inset-2 rounded border sm:inset-4 lg:inset-x-[6vw] lg:inset-y-[4vh]'
-          : 'w-full sm:w-[min(560px,80vw)]')}>
-
-        <header className="flex flex-wrap items-start gap-2 border-b border-[var(--linea)] bg-[var(--panel)] px-3 py-2.5">
+    <Flotante telefono={telefono} refModal={dialogo} refNoModal={noModal} idTitulo={idTitulo} ancho="w-[min(560px,80vw)]"
+      expandido={equipoExpandido} onCerrar={() => abrirEquipo(null)}>
+        <header className="flex flex-wrap items-start gap-2 bg-[var(--panel)] px-4 py-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[13px] text-[var(--tinta3)]">{eq.id}</span>
-              <Severidad_ s={eq.severidad} />
+            <div className="flex flex-wrap items-center gap-2">
+              <b className="font-cond text-[15px] font-bold tracking-[.02em]">{eq.id}</b>
+              {/* La marca del equipo es la de la franja, con su palabra (H3; X2 F1): la misma en todas partes. */}
+              <CondicionEquipo c={condicion} />
             </div>
             {/* Entero, sin cortar: la ficha del gerente ya no lo repite debajo. */}
-            <h2 id={idTitulo} className="block text-[14px] font-bold leading-tight [text-wrap:balance]">{eq.nombre}</h2>
-            <small className="block text-[13px] text-[var(--tinta3)]">{eq.sistema} · {campo.nombre} · {eq.estado}</small>
+            <h2 id={idTitulo} className="block text-[16px] font-semibold leading-tight [text-wrap:balance]">{eq.nombre}</h2>
+            {/* La familia, la misma de todas las pantallas («bomba de agua»; P-09). */}
+            <small className="block text-[13px] text-[var(--tinta2)]">{nivelEq?.familia ?? eq.sistema.toLowerCase()} · {campo.nombre} · {eq.estado}</small>
           </div>
           <ExportarFicha />
           <button onClick={() => abrirEquipo(eq.id, !equipoExpandido)}
             aria-label={equipoExpandido ? 'Contraer' : 'Expandir'}
-            className="no-imprimir cursor-pointer rounded border border-[var(--linea)] bg-[var(--panel)] p-1.5 hover:bg-[var(--elevado)]">
-            {equipoExpandido ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+            className="toque no-imprimir cursor-pointer rounded-full p-2 hover:bg-[var(--panel2)]">
+            {equipoExpandido ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
           </button>
           <button onClick={() => abrirEquipo(null)} aria-label="Cerrar"
-            className="no-imprimir cursor-pointer rounded border border-[var(--linea)] bg-[var(--panel)] p-1.5 hover:bg-[var(--elevado)]">
-            <X className="size-3.5" />
+            className="toque no-imprimir cursor-pointer rounded-full p-2 hover:bg-[var(--panel2)]">
+            <X className="size-4" />
           </button>
         </header>
 
@@ -179,8 +254,8 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
 
             <BloqueSap key={`${campoId}|${eq.id}`} campoId={campoId} equipo={eq.id} nivel={nivel} />
 
-            <h3 className="font-cond mb-1.5 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">
-              {nivel === 'operacion' ? `FUERA DE BANDA · ${fueraN} DE ${disp.length}${sinSenalN ? ` · ${sinSenalN} SIN SEÑAL` : ''}` : `DISPOSITIVOS · ${disp.length}`}
+            <h3 className="mb-1.5 mt-3 text-[15px] font-semibold text-[var(--tinta)]">
+              {nivel === 'operacion' ? `Fuera de banda · ${fueraN} de ${disp.length}${sinSenalN ? ` · ${sinSenalN} sin señal` : ''}` : `Dispositivos · ${disp.length}`}
             </h3>
             {!eq.instrumentado && (
               <Hueco>
@@ -228,48 +303,57 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
             </div>
           </div>
         )}
-      </aside>
-    </div>
+    </Flotante>
   )
 }
 
 
-/** Una fila por dispositivo. El origen de la lectura (PI, PLC…) va en el globo y en el papel;
- *  a la vista, solo cuando el dato es de una ruta manual (sin señal).
- *  Sin lectura (lo dice su estado o llega con `valor: null`) es un dato
- *  inválido (ISA-101): se marca y se dice «sin señal», nunca «—» a secas. */
-function FilaDispositivo({ d, nivel, onCadena }: { d: Dispositivo; nivel: NivelDetalle; onCadena: (tag: string) => void }) {
+/** Una fila por dispositivo (X5 §5.5: una fila de B, sin caja). El origen de la
+ *  lectura (PI, PLC…) va en el globo y en el papel; a la vista, solo cuando el dato
+ *  es de una ruta manual (sin señal).
+ *  - Sin lectura (lo dice su estado o llega con `valor: null`) es un dato inválido
+ *    (ISA-101): «---» en tinta suave con la marca morada al lado; el texto no se
+ *    pinta (X2 B5, C1; H13).
+ *  - Con el equipo parado (`gris`), sus señales van en gris y sin marca propia: la
+ *    marca la lleva el equipo, una vez (X2 B9; UI-07, H4). Sin lectura con el equipo
+ *    parado es lo esperado: «sin lectura», no «sin señal».
+ *  - En el teléfono, el nombre arriba y la minitendencia y el valor debajo: nada se
+ *    sale de la tarjeta (UI-03, A7; WCAG 1.4.10); por debajo de 400 px, sin la
+ *    minitendencia (está en el nivel 3). */
+function FilaDispositivo({ d, nivel, gris = false, onCadena }: { d: Dispositivo; nivel: NivelDetalle; gris?: boolean; onCadena: (tag: string) => void }) {
   const ss = sinLectura(d), e = ss ? 'sin señal' as const : d.estado
+  const marca = !gris && (ss || e !== 'normal')
   return (
     <Tip as="button" onClick={() => onCadena(d.tag)}
-      titulo={`${d.tag} · ${d.tipo}`} pista="Clic para ver la cadena técnica de este dato"
-      filas={[['Valor', ss ? 'sin señal' : `${num(d.valor)} ${d.unidad}`.trim()], ['Límite', d.limite],
-        ['Estado', NOMBRE_ESTADO[e]], ['Origen', d.origen],
+      titulo={`${d.tag} · ${d.tipo}`} pista="Toque para ver la cadena técnica de este dato"
+      filas={[['Valor', ss ? (gris ? 'sin lectura: el equipo está parado' : 'sin señal') : `${num(d.valor)} ${d.unidad}`.trim()], ['Límite', d.limite],
+        ['Estado', gris ? 'equipo parado' : NOMBRE_ESTADO[e]], ['Origen', d.origen],
         ['Minigráfica', d.serie ? lecturasDe(d.serie)
           : ss ? 'sin lecturas en línea: no hay serie que graficar'
           : 'variable discreta: no lleva gráfica']]}
-      className="flex w-full cursor-pointer items-center gap-2.5 rounded border border-[var(--linea2)] bg-[var(--panel)] px-2.5 py-2 text-left hover:bg-[var(--elevado)]">
-      <MarcaEstado e={e} tamano={11} />
-      <span className="min-w-0 flex-1">
-        <small className="block font-mono text-[12px] text-[var(--tinta3)]">{d.tag}</small>
-        <b className="block truncate text-[14px] font-medium">{d.tipo}</b>
-        <small className="block text-[12px] text-[var(--tinta3)]">
-          {ss ? `${d.origen} · ` : <span className="hidden print:inline">{d.origen} · </span>}límite {d.limite}
+      data-dispositivo={d.tag} data-gris={gris ? 'si' : 'no'}
+      className="grid min-h-14 w-full cursor-pointer grid-cols-[14px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1 border-t border-[var(--linea2)] py-2 text-left first:border-t-0 hover:bg-[var(--panel2)]/60 sm:grid-cols-[14px_minmax(0,1fr)_96px_84px]">
+      <span className="col-start-1 row-start-1 flex self-start pt-0.5">{marca ? <MarcaEstado e={e} tamano={14} /> : null}</span>
+      <span className="col-span-2 col-start-2 row-start-1 min-w-0 sm:col-span-1">
+        <b className="font-cond block text-[13px] font-bold tracking-[.02em] text-[var(--tinta2)]">{d.tag}</b>
+        <b className="block text-[15px] font-medium leading-snug">{d.tipo}</b>
+        <small className="block text-[13px] leading-snug text-[var(--tinta2)]">
+          {ss && !gris ? `${d.origen} · ` : <span className="hidden print:inline">{d.origen} · </span>}límite {d.limite}
         </small>
       </span>
-      {nivel === 'operacion' ? null : d.serie
-        ? <Sparkline serie={d.serie.valores} limite={banda(d.limite)} ancho={96} alto={26} prioridad={DE_ESTADO[e] ?? undefined} />
-        // Sin serie: el dato inválido se dice (ISA-101, magenta); la discreta, en gris.
-        : <span className={cn('font-cond w-[96px] text-center text-[12px] leading-tight', ss ? 'text-[var(--invalido)]' : 'text-[var(--tinta3)]')}>
-            {ss ? 'SIN SEÑAL' : 'DISCRETA'}
-          </span>}
-      <span className="tabular w-[84px] shrink-0 text-right">
+      <span className="col-start-2 row-start-2 justify-self-end max-[399px]:hidden sm:col-start-3 sm:row-start-1">
+        {nivel === 'operacion' ? null : d.serie
+          ? <Sparkline serie={d.serie.valores} limite={banda(d.limite)} ancho={96} alto={26} prioridad={gris ? undefined : DE_ESTADO[e] ?? undefined} gris={gris} />
+          // Sin serie: lo que es, en palabras y en tinta suave (sin pintar el texto).
+          : <span className="block w-[96px] text-center text-[13px] leading-tight text-[var(--tinta2)]">{ss ? (gris ? 'sin lectura' : 'sin señal') : 'interruptor'}</span>}
+      </span>
+      <span className="tabular col-start-3 row-start-2 w-[84px] text-right sm:col-start-4 sm:row-start-1">
         {/* El estado lo lleva la forma al inicio de la fila: el valor, en tinta. */}
-        <b className={cn('block text-[14px] leading-tight', ss && 'text-[var(--tinta3)]')}>
-          {ss ? '—' : num(d.valor)}
+        <b className={cn('block text-[15px] leading-tight', (ss || gris) && 'font-semibold text-[var(--tinta2)]')} data-valor>
+          {ss ? '---' : num(d.valor)}
         </b>
         {/* Sin unidad (un interruptor) se escribe su estado, con su nombre para leer: «atención», no la clave. */}
-        <small className={cn('text-[12px]', ss ? 'text-[var(--invalido)]' : 'text-[var(--tinta3)]')}>{ss ? 'sin señal' : d.unidad || NOMBRE_ESTADO[e]}</small>
+        <small className="text-[13px] text-[var(--tinta2)]">{ss ? (gris ? 'sin lectura' : 'sin señal') : d.unidad || (gris ? 'parado' : NOMBRE_ESTADO[e])}</small>
       </span>
     </Tip>
   )
@@ -277,18 +361,20 @@ function FilaDispositivo({ d, nivel, onCadena }: { d: Dispositivo; nivel: NivelD
 
 /** C4 · Los instrumentos de un equipo, en el diagnóstico (nivel 4; X4 §5.1: «el
  *  instrumento: tag, calibración, sin comunicación»): cada dispositivo con su
- *  lectura, y al tocarlo, la cadena del dato (de dónde sale ese número). Antes
- *  vivía solo en la ficha flotante. */
+ *  lectura, y al tocarlo, la cadena del dato (de dónde sale ese número). Con el
+ *  equipo parado, en gris y sin marca propia: lo dice el motor (`nivelEquipo`,
+ *  `parado`), el mismo de «Sus señales» del nivel 3 (UI-07, H4). */
 export function Instrumentos({ campoId, equipo }: { campoId: string; equipo: string }) {
   const nivel = useNivel()
   const eq = useEquipo(campoId, equipo)
+  const n = useNivelEquipo(campoId, equipo)
   const [cadenaTag, setCadenaTag] = useState<string | null>(null)
   if (!eq) return null
   const activo = cadenaTag ? eq.dispositivos.find(d => d.tag === cadenaTag) : undefined
   if (activo) return <CadenaDato campoId={campoId} disp={activo} equipoNombre={eq.nombre} norma={eq.norma} onVolver={() => setCadenaTag(null)} />
   return (
-    <div className="grid gap-1.5" data-instrumentos={equipo}>
-      {eq.dispositivos.map(d => <FilaDispositivo key={d.tag} d={d} nivel={nivel} onCadena={setCadenaTag} />)}
+    <div className="grid" data-instrumentos={equipo} data-parado={n?.parado ? 'si' : 'no'}>
+      {eq.dispositivos.map(d => <FilaDispositivo key={d.tag} d={d} nivel={nivel} gris={!!n?.parado} onCadena={setCadenaTag} />)}
       {!eq.dispositivos.length && <p className="text-[14px] text-[var(--tinta2)]">Sin instrumentos registrados.</p>}
     </div>
   )
@@ -314,7 +400,7 @@ const corto = (t: string) => t.trim().split(/\s+/).length <= 6
 /** Lo que el PLC dejó de este equipo: sus fallas (en una bomba) y cada evento
  *  que cerró pozos. Cinco y «ver N más»; la causa de cada evento, en su globo
  *  y en el papel (se repite de un evento a otro: la misma frase del pozo). */
-export function Historia({ historia }: { historia: HistoriaEquipo }) {
+export function Historia({ historia, sinTitulo = false }: { historia: HistoriaEquipo; sinTitulo?: boolean }) {
   const lista = useVerMas(historia.eventos)
   const total = historia.eventos.reduce((a, x) => a + x.bbl, 0)
   // Esta duración va de la parada hasta que reabrió el último pozo: no es la de
@@ -340,7 +426,7 @@ export function Historia({ historia }: { historia: HistoriaEquipo }) {
   )
   return (
     <>
-      <h3 className="font-cond mb-1.5 mt-3 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">HISTORIA DEL PLC</h3>
+      {!sinTitulo && <h3 className="mb-1.5 mt-3 text-[15px] font-semibold text-[var(--tinta)]">Historia del PLC</h3>}
       {historia.bomba && (
         <p className="tabular mb-1.5 text-[14px] text-[var(--tinta2)]">
           <b className="text-[var(--tinta)]">{plural(historia.bomba.fallas, 'falla', 'fallas')}</b> en {n0(historia.bomba.dias / 30.4)} meses
@@ -377,21 +463,22 @@ function FichaMinima({ campoId, equipo }: { campoId: string; equipo: string }) {
   const nivel = useNivel()
   const crit = useCriticidad([campoId])
   const fila = crit.ranking.find(f => f.equipo === equipo && f.campoId === campoId)
+  const telefono = useTelefono()
   const dialogo = useModal<HTMLDivElement>(() => abrirEquipo(null), equipo)
+  const noModal = useNoModal<HTMLDivElement>(() => abrirEquipo(null), !telefono, equipo)
   const idTitulo = useId()
   return (
-    <div ref={dialogo} tabIndex={-1} className="fixed inset-0 z-[120] flex outline-none" role="dialog" aria-modal="true" aria-labelledby={idTitulo} data-panel-equipo data-ficha-minima={equipo}>
-      <div aria-hidden onClick={() => abrirEquipo(null)} className="no-imprimir flex-1 cursor-default bg-black/35" />
-      <aside className="flex w-full flex-col overflow-hidden border-l border-[var(--linea)] bg-[var(--superficie)] shadow-[var(--sombra2)] sm:w-[min(560px,80vw)]">
-        <header className="flex items-start gap-2 border-b border-[var(--linea)] bg-[var(--panel)] px-3 py-2.5">
+    <Flotante telefono={telefono} refModal={dialogo} refNoModal={noModal} idTitulo={idTitulo} ancho="w-[min(560px,80vw)]"
+      onCerrar={() => abrirEquipo(null)} data-ficha-minima={equipo}>
+        <header className="flex items-start gap-2 bg-[var(--panel)] px-4 py-3">
           <div className="min-w-0 flex-1">
-            <span className="font-mono text-[13px] text-[var(--tinta3)]">{equipo}</span>
-            <h2 id={idTitulo} className="block text-[14px] font-bold leading-tight">{fila?.nombre ?? equipo}</h2>
-            <small className="block text-[13px] text-[var(--tinta3)]">Tren de agua · {campo.nombre}</small>
+            <b className="font-cond text-[15px] font-bold tracking-[.02em]">{equipo}</b>
+            <h2 id={idTitulo} className="block text-[16px] font-semibold leading-tight">{fila?.nombre ?? equipo}</h2>
+            <small className="block text-[13px] text-[var(--tinta2)]">Tren de agua · {campo.nombre}</small>
           </div>
           <button onClick={() => abrirEquipo(null)} aria-label="Cerrar"
-            className="no-imprimir min-h-12 cursor-pointer rounded border border-[var(--linea)] bg-[var(--panel)] p-1.5 hover:bg-[var(--elevado)] sm:min-h-0">
-            <X className="size-3.5" />
+            className="toque no-imprimir cursor-pointer rounded-full p-2 hover:bg-[var(--panel2)]">
+            <X className="size-4" />
           </button>
         </header>
         <div className="flex-1 overflow-y-auto p-3 text-[14px]">
@@ -403,7 +490,6 @@ function FichaMinima({ campoId, equipo }: { campoId: string; equipo: string }) {
           {nivel !== 'decision' && <SiFallaHoyFicha campoId={campoId} equipo={equipo} className="mt-2.5" />}
           <AguaHoy campoId={campoId} bomba={equipo} className="mt-2.5" />
         </div>
-      </aside>
-    </div>
+    </Flotante>
   )
 }

@@ -17,7 +17,12 @@ import { estadoFactor } from './publicacion'
  *  fuera de banda) queda a la vista en corto, con su porqué en el ⓘ. Si el
  *  libro se puede publicar lo dice el sello de arriba de cada pantalla
  *  (`SelloPublicacion`), no el cuadre. */
-export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () => void }) {
+export function Cuadre({ lb, periodo, onIdentificar }: {
+  lb: Libro
+  /** El período en palabras («octubre (en curso)»): va con el nombre del potencial (G-5). */
+  periodo?: string
+  onIdentificar?: () => void
+}) {
   const tol = lb.diferido > 0 ? lb.tolerancia / lb.diferido : 0
   const parte = (v: number) => lb.brecha > 0 ? Math.max(0, Math.min(100, (v / lb.brecha) * 100)) : 0
   // Los meses que no están dentro: fuera de banda (con su marca) o con la banda
@@ -35,9 +40,11 @@ export function Cuadre({ lb, onIdentificar }: { lb: Libro; onIdentificar?: () =>
         ver de dónde sale cada cifra.
       </Lectura>
       <dl className="grid grid-cols-[1fr_auto] gap-x-4 text-[14px]">
-        <Fila k="Potencial" v={n0(lb.potencial)} info={<Info titulo="Potencial" texto={`${FUENTE_POTENCIAL}.`} />} />
+        {/* G-5 · Un nombre, una cifra (NOMBRE_CIFRA.potencial): las pruebas por el factor del mes son el «Potencial del libro». */}
+        <Fila k={`Potencial del libro${periodo ? ` · ${periodo[0]!.toLowerCase()}${periodo.slice(1)}` : ''}`} v={n0(lb.potencial)} info={<Info titulo="Potencial del libro" texto={`${FUENTE_POTENCIAL}.`} />} />
         <Fila k="− Real medido" v={n0(lb.real)} info={<Info titulo="Real medido" texto={`${FUENTE_REAL}.`} />} />
-        <Fila k="= No producido" v={n0(lb.brecha)} fuerte />
+        {/* G-8: el rótulo de la cuenta es el de la cifra: «Diferido», no «No producido». */}
+        <Fila k="= Diferido" v={n0(lb.brecha)} fuerte />
         <Fila k="Identificado por señal" v={n0(Math.round(lb.diferido) - Math.round(lb.declarado) - Math.round(lb.pendiente))} barra={parte(lb.identificado)} tono="var(--dato-1)"
           info={<Info titulo="Identificado por señal" texto={`Código del controlador, primera alarma del PLC, firma de las señales o programa aprobado. Tolerancia ±${n1(tol * 100)} % (Res. 40236).`} />} />
         <Fila k="Declarado por el operario" v={n0(lb.declarado)} barra={parte(lb.declarado)} tono="var(--dato-3)"

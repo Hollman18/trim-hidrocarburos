@@ -43,7 +43,8 @@ const ramas = (page: Page, sel: string) => page.evaluate((s): Rama[] | null => {
     for (const x of [...cadena].reverse()) abajo = [{ ...x, visible, hijos: abajo }]
     return abajo[0]!
   }) : [])
-  return leer(raiz.querySelector(':scope > ul'))
+  // K2: las ramas van en un contenedor que se pliega en el teléfono (`plegadoEnTelefono`).
+  return leer(raiz.querySelector(':scope > ul') ?? raiz.querySelector(':scope > div > ul'))
 }, sel)
 
 const todas = (rs: Rama[]): Rama[] => rs.flatMap(r => [r, ...todas(r.hijos)])
@@ -65,16 +66,18 @@ const todoElTexto = (page: Page) => page.evaluate(() => {
   return [m.innerText, ...[...m.querySelectorAll('[aria-label],[title]')].map(e => `${e.getAttribute('aria-label') ?? ''} ${e.getAttribute('title') ?? ''}`)].join('\n')
 })
 
+// K1 · P-16 / H8: «Se trabó en el período» de la tubería de antes (Producción) vive en Diferidos, «Por tramo», con el
+// mismo árbol de cada tramo (`Ramas`): se prueba ahí.
 test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y equipos, y las ramas suman el tramo', async ({ flujo: f }) => {
-  await f.abrir('/#/prod/produccion/ceiba/curso')
-  await f.esperarTexto('Se trabó en el período')
+  await f.abrir('/#/prod/diferidos/ceiba/curso')
+  await f.esperarTexto('Por tramo')
 
   await test.step('Octubre: el tramo de la planta se abre con un toque y sus ramas suman el tramo', async () => {
-    const fila = f.page.locator('[data-se-trabo] [data-tramo-periodo="planta"]')
-    const tramo = Number(await fila.getAttribute('data-bbl'))
+    const fila = f.page.locator('[data-por-tramo] [data-tramo-fila="planta"]')
+    const tramo = Number(await fila.locator('[data-tramo="planta"]').getAttribute('data-bbl'))
     // El botón del tramo, no los de sus ramas.
     const boton = fila.locator(':scope > div > button[aria-expanded]')
-    const caja = f.page.locator('[data-ramas="planta"]')
+    const caja = f.page.locator('[data-por-tramo] [data-ramas="planta"]')
     f.ok(await boton.getAttribute('aria-expanded') === 'false' && !(await caja.isVisible()), 'el tramo de la planta empieza cerrado')
     await boton.click()
     f.ok(await boton.getAttribute('aria-expanded') === 'true' && await caja.isVisible(), 'un toque lo abre (aria-expanded)')
@@ -95,7 +98,8 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
     const cifras = texto.match(/\b573 bbl/g)?.length ?? 0
     f.ok(renglones === 1 && cifras === 1, `la cadena de un solo equipo va en un renglón, sin repetir «573 bbl» en cada nivel (${renglones} renglón, ${cifras} vez)`)
     // Safari junta lo que el lector oye aparte («bbl,100 %»): se compara sin depender de ese espacio.
-    f.ok(/P-201B · bomba de reinyección · sin parte 573 bbl, ?100 % ?del tramo/.test(texto), `el equipo, su parte y lo que pesa en el tramo: «${texto.slice(0, 200)}»`)
+    // P-09 (K1): la familia de campo, «bomba de agua», también en el árbol.
+    f.ok(/P-201B · bomba de agua · sin parte 573 bbl, ?100 % ?del tramo/.test(texto), `el equipo, su parte y lo que pesa en el tramo: «${texto.slice(0, 200)}»`)
     f.ok(!CODIGO_ANH.test(texto) && !/choke/i.test(texto), 'producción no ve códigos de la ANH ni «choke»')
     // Con el teclado: el mismo botón la cierra con Enter.
     await boton.focus()
@@ -104,17 +108,17 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
   })
 
   await test.step('Septiembre: el pozo se abre hasta la parte de cada electrosumergible', async () => {
-    await f.ir('#/prod/produccion/ceiba/cerrado')
-    await f.esperarTexto('Se trabó en el período')
-    const fila = f.page.locator('[data-se-trabo] [data-tramo-periodo="pozo"]')
-    const tramo = Number(await fila.getAttribute('data-bbl'))
+    await f.ir('#/prod/diferidos/ceiba/cerrado')
+    await f.esperarTexto('Por tramo')
+    const fila = f.page.locator('[data-por-tramo] [data-tramo-fila="pozo"]')
+    const tramo = Number(await fila.locator('[data-tramo="pozo"]').getAttribute('data-bbl'))
     await fila.locator(':scope > div > button[aria-expanded]').click()
-    const rs = await ramas(f.page, '[data-ramas="pozo"]') ?? []
+    const rs = await ramas(f.page, '[data-por-tramo] [data-ramas="pozo"]') ?? []
     const suma = rs.reduce((a, r) => a + r.bbl, 0)
     const n1 = rs[0]?.hijos ?? []
     f.ok(cerca(suma, tramo) && sinCuadre(rs).length === 0, `las ramas del pozo suman el tramo (${suma.toFixed(1)} = ${tramo.toFixed(1)} bbl) y cada una las suyas`)
     f.ok(n1.length >= 2 && n1.every((x, i) => i === 0 || x.bbl <= n1[i - 1]!.bbl || x.valor === 'falta'), `las causas van de más a menos barriles (${n1.map(x => `${x.valor} ${x.bbl.toFixed(0)}`).join(', ')})`)
-    const texto = (await f.page.locator('[data-ramas="pozo"]').innerText()).replace(/\s+/g, ' ')
+    const texto = (await f.page.locator('[data-por-tramo] [data-ramas="pozo"]').innerText()).replace(/\s+/g, ' ')
     f.ok(texto.includes('No planeada - Mecánica subsuelo') && texto.includes('Falla ESP') && texto.includes('LC-11 · electrosumergible · parte: Aislamiento del motor y del cable'),
       'la causa mayor, su detalle y cada electrosumergible con su parte')
     f.ok(/Falta el detalle/.test(texto), 'lo que falta va en su rama, «Falta el detalle», sin repartirse')
@@ -122,7 +126,7 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y eq
 
   await test.step('En el papel, todos los tramos salen desplegados', async () => {
     await f.page.emulateMedia({ media: 'print' })
-    const abiertos = await f.page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-se-trabo] [data-ramas]')].map(e => [e.dataset.ramas, e.offsetParent !== null] as const))
+    const abiertos = await f.page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-por-tramo] [data-ramas]')].map(e => [e.dataset.ramas, e.offsetParent !== null] as const))
     f.ok(abiertos.length >= 2 && abiertos.every(([, v]) => v), `cada tramo con barriles sale con sus ramas (${abiertos.map(([k]) => k).join(', ')})`)
     const papel = await f.textoPagina()
     f.ok(papel.includes('Falla rodamiento/cojinete (bearing box)') && papel.includes('parte: Rodamientos'), 'también la planta, que en la pantalla estaba cerrada')
@@ -198,10 +202,16 @@ test('regulatorio ve el árbol en el orden de la circular, con la cadena de cada
   f.ok(raiz > 0 && cerca(raiz, libro) && cerca(rs.reduce((a, r) => a + r.bbl, 0), raiz), `la raíz es el diferido del libro y sus ramas la suman (${raiz.toFixed(1)} = ${libro.toFixed(1)} bbl)`)
   f.ok(sinCuadre(rs).length === 0, `cada paso suma lo que cuelga de él${sinCuadre(rs).length ? `: ${sinCuadre(rs).join(', ')}` : ''}`)
   f.ok(camino(rs).join(' → ') === 'responsable → tramo → impacto → planeacion → n1 → n2', `el orden de la circular: ${camino(rs).join(' → ')}`)
+  // F2 · P-reg-1: los códigos ANH van detrás de «Ver los códigos ANH» (en el papel, siempre): se abren y se leen.
+  await f.page.locator('[data-ver-codigos]').click()
+  await expect(caja).toHaveAttribute('data-codigos', 'vista')
   const texto = (await caja.innerText()).replace(/\s+/g, ' ')
   const cadenas = ['resp_par Operador-Mantenimiento', 'choke_mod POZO', 'choke_mod PLANTA', 'dif_perd DIFERIDA', 'pla_no_plan NO PLANEADA', 'cau_niv1 NP_SUB', 'cau_niv2 Falla ESP']
   f.ok(cadenas.every(x => texto.includes(x)), `cada paso con la cadena que viaja a la ANH${cadenas.filter(x => !texto.includes(x)).map(x => `; falta «${x}»`).join('')}`)
-  f.ok(texto.includes('1. Quién (resp_par)') && texto.includes('6. Detalle (cau_niv2)'), 'arriba, el orden de los seis pasos con su campo de paradas_pozo')
+  // T-10: los pasos sin numerar (los números son de las prioridades); el orden lo da la lista.
+  const orden = (await f.page.locator('[data-arbol-circular] ol[aria-label="El orden de la circular"] li').allInnerTexts()).map(x => x.replace(/^→\s*/, '').trim())
+  f.ok(orden.length === 6 && orden[0]!.startsWith('Quién') && orden[0]!.includes('(resp_par)') && orden[5]!.includes('(cau_niv2)') && !/^\d/.test(orden[0]!),
+    `arriba, el orden de los seis pasos con su campo de paradas_pozo (${orden.join(' → ')})`)
   const perdidas = todas(rs).filter(r => r.nodo === 'impacto' && r.valor === 'perdida')
   const tramos = todas(rs).filter(r => r.nodo === 'tramo')
   f.ok(perdidas.length === tramos.length && perdidas.every(p => p.bbl === 0) && texto.includes('Pérdida: TRIM todavía no tiene registro de pérdidas'),
@@ -235,8 +245,9 @@ test.describe('teléfono', () => {
     }
     let primero = true
     for (const [ruta, abrir] of [
-      ['#/prod/produccion/ceiba/cerrado', '[data-se-trabo] [data-tramo-periodo="pozo"] button'],
-      ['#/prod/produccion/ceiba/curso', '[data-se-trabo] [data-tramo-periodo="planta"] button'],
+      // K1 · P-16: el árbol de cada tramo vive en Diferidos («Por tramo»), no en la tubería de antes.
+      ['#/prod/diferidos/ceiba/cerrado', '[data-por-tramo] [data-tramo-fila="pozo"] button'],
+      ['#/prod/diferidos/ceiba/curso', '[data-por-tramo] [data-tramo-fila="planta"] button'],
       ['#/conf/diferidos/morichal/cerrado', '[data-tramo-fila="planta"] button'],
       ['#/ger/resultados/ceiba~portafolio/cerrado', ''],
       ['#/reg/regulatorio/ceiba/curso', ''],

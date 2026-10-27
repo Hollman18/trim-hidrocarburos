@@ -34,7 +34,7 @@ export function Pildoras<K extends string>({ etiqueta, opciones, valor, onCambio
             className={cn('inline-flex min-h-10 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-[15px] font-semibold transition-colors duration-[120ms]',
               activo ? 'bg-[var(--primario)] text-[var(--primario-sobre)]' : 'bg-[var(--panel)] text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-[var(--panel2)]')}>
             {o.texto}
-            {o.n !== undefined && <span className={cn('tabular text-[14px] font-normal', activo ? 'text-[var(--marca-tenue)] [:root[data-theme=dark]_&]:text-[#464b52]' : 'text-[var(--tinta2)]')}>{o.n}</span>}
+            {o.n !== undefined && <span className={cn('tabular text-[14px] font-normal', activo ? 'text-[var(--primario-sobre)] opacity-80' : 'text-[var(--tinta2)]')}>{o.n}</span>}
           </button>
         )
       })}

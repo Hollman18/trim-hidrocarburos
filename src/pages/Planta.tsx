@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Crosshair, Plug } from 'lucide-react'
+import { ChevronRight, Plug } from 'lucide-react'
 import { useApp, useCampo, usePlanta, usePerfil, useRango, useRol, useNivel } from '@/app/store'
 import { useBarrilesDeEquipos, useEstadoCampos, useCtx, usePrediccion } from '@/shared/api/diferidos'
 import type { EquipoEnCampo } from '@/entities/equipos'
@@ -20,10 +20,11 @@ import { n0, n1, num, plural, sinLectura } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { cn } from '@/shared/lib/cn'
 import type { Severidad } from '@/entities/tipos'
-import { MarcaPrioridad, FueraDeMeta } from '@/shared/ui/Prioridad'
-import { NOMBRE_PRIORIDAD } from '@/shared/lib/prioridad'
+import { MarcaCondicion, FueraDeMeta } from '@/shared/ui/Prioridad'
+import { PALABRA_CONDICION, type CondicionFranja } from '@/shared/api/equiposTecnico'
+import { useCondiciones, rangoCondicion } from '@/widgets/pozos/estado'
 import { pantallaVisible } from '@/shared/config/producto'
-import { TuberiaDelCampo } from '@/widgets/choke/Tuberia'
+import { TuberiaTecnica } from '@/widgets/plantaviva/Tecnica'
 
 const COLOR: Record<Corriente, string> = {
   multi: 'var(--f-multi)', crudo: 'var(--f-crudo)', gas: 'var(--f-gas)',
@@ -35,7 +36,14 @@ const TRAZO: Record<Corriente, { ancho: number; patron?: string }> = {
   multi: { ancho: 3 }, crudo: { ancho: 2.4 }, gas: { ancho: 2, patron: '8 4' },
   agua: { ancho: 2, patron: '2 3' }, elec: { ancho: 2 }, aire: { ancho: 2, patron: '6 4' },
 }
-const SEV_COLOR = ['transparent', 'var(--p1)', 'var(--p2)', 'var(--p3)']
+/** El color del borde de una caja con condición: el de su marca (X2 §4; el rojo, solo el interlock). */
+const COLOR_CONDICION: Record<CondicionFranja, string> = {
+  interlock: 'var(--interlock)', alarma: 'var(--p1)', atencion: 'var(--p2)', aviso: 'var(--p3)', 'sin-comunicacion': 'var(--sincom)',
+}
+/** La prioridad del llenado del tanque (la da el motor: `Prediccion.llenado`), dicha como condición. */
+const DE_SEVERIDAD: Record<Severidad, CondicionFranja | undefined> = { 0: undefined, 1: 'alarma', 2: 'atencion', 3: 'aviso' }
+/** A18 · El desplazamiento suave solo si quien mira no pidió menos movimiento (WCAG 2.3.3; X2 M1). */
+const comportamiento = (): ScrollBehavior => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth')
 /** Lo que es límite de batería o paso de proceso sin máquina propia: se
  *  dibuja sin caja y no cuenta como equipo que debería capturar datos. */
 const SOLO_PROCESO: Simbolo[] = ['salida', 'manifold', 'tea', 'inyeccion', 'pozos']
@@ -82,7 +90,10 @@ const estadoCorto = (eq: EquipoEnCampo) =>
 
 /** Una fila de las listas: un equipo con su ficha o el tanque de agua (que se lee por su transmisor). */
 interface Fila {
-  id: string; etiqueta: string; nodo: string; eq?: EquipoEnCampo; estado: string; lectura?: string; sev: Severidad; abrir?: string
+  id: string; etiqueta: string; nodo: string; eq?: EquipoEnCampo; estado: string; lectura?: string
+  /** La condición del equipo: la de la franja, una por equipo y la misma en todas partes (H3). */
+  cond?: CondicionFranja
+  abrir?: string
   /** El tanque de agua: su nivel contra el alto-alto, en % (va como barra). */
   nivel?: { pct: number; altoAlto: number }
   /** Con la bomba detenida: cuándo llega al alto-alto con el agua que entra, o que no sube. */
@@ -104,7 +115,7 @@ export function Planta() {
   const plantaCfg = usePlanta()
   const campo = useCampo()
   // Un campo sin esquema registrado muestra el hueco: nunca la planta de otro campo.
-  if (!plantaCfg) return <Panel titulo={`PLANTA · ${campo.nombre.toUpperCase()}`}><Hueco>{campo.nombre} no tiene esquema de planta registrado.</Hueco></Panel>
+  if (!plantaCfg) return <Panel titulo={`Planta de ${campo.nombre}`}><Hueco>{campo.nombre} no tiene esquema de planta registrado.</Hueco></Panel>
   return <PlantaDelCampo plantaCfg={plantaCfg} />
 }
 
@@ -139,6 +150,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const nivelTanque = tanque && Object.hasOwn(niveles, tanque.id) ? niveles[tanque.id] : undefined
 
   const equipoDeHoy = useEquiposDeHoy([campoId])
+  // F3 · La condición de cada equipo es la de la franja (H3): la caja, la fila y la tubería dicen la misma.
+  const condicionDe = useCondiciones([campoId])
   const equipoReiny = reinyeccion?.equipo
   // La bomba de reinyección vacía el tanque de agua: detenida, el tanque sube con el agua que entra.
   const bombaParada = !!equipoReiny && equipoDeHoy(equipoReiny, campoId)?.marcha === 'detenido'
@@ -174,13 +187,13 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
     for (const el of trenes) {
       if (el.simbolo === 'pozos') continue
       if (el.id === 'tanqueAgua') {
-        if (tanque && nivelTanque) capturan.push({ id: tanque.id, etiqueta: tanque.nombre, nodo: el.id, sev: tanqueSev,
+        if (tanque && nivelTanque) capturan.push({ id: tanque.id, etiqueta: tanque.nombre, nodo: el.id, cond: DE_SEVERIDAD[tanqueSev],
           estado: `nivel ${n1(nivelTanque.pct)} % · alto-alto ${n0(tanque.altoAlto * 100)} %`, lectura: `${nivelTanque.tag} ${n1(nivelTanque.pct)} %`,
           nivel: { pct: nivelTanque.pct, altoAlto: tanque.altoAlto * 100 }, aviso: avisoTanque })
         // Configurado y sin lectura: el dibujo lo pinta «sin datos», así que también
         // cuenta y va en la lista de lo que falta por instrumentar, con su tag declarado.
         // «Registrado» ya lo dice el título de la lista (CONFIGURADOS SIN DATOS).
-        else if (tanque) sinDatos.push({ id: tanque.id, etiqueta: tanque.nombre, nodo: el.id, sev: 0,
+        else if (tanque) sinDatos.push({ id: tanque.id, etiqueta: tanque.nombre, nodo: el.id,
           estado: `sin señal · ${tanque.tagNivel}` })
         continue
       }
@@ -191,23 +204,24 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
         const eq = it.equipo ? equipoDeHoy(it.equipo, campoId) : undefined
         if (captura(eq)) {
           con++
-          capturan.push({ id: it.id, etiqueta: it.etiqueta, nodo: el.id, eq, sev: eq!.severidad, abrir: eq!.id,
+          capturan.push({ id: it.id, etiqueta: it.etiqueta, nodo: el.id, eq, cond: condicionDe(campoId, eq!.id), abrir: eq!.id,
             estado: eq!.estado, lectura: lecturaClave(eq!) })
-        } else sinDatos.push({ id: it.id, etiqueta: it.etiqueta, nodo: el.id, eq, sev: 0,
+        } else sinDatos.push({ id: it.id, etiqueta: it.etiqueta, nodo: el.id, eq,
           estado: eq ? 'sin señal' : 'sin instrumento' })
       }
       if (el.miembros?.length) porConjunto.set(el.id, { con, total: items.length })
     }
-    capturan.sort((a, b) => (a.sev || 9) - (b.sev || 9) || (b.eq ? bblDe(b.eq.id, campoId) : 0) - (a.eq ? bblDe(a.eq.id, campoId) : 0))
+    capturan.sort((a, b) => rangoCondicion(a.cond) - rangoCondicion(b.cond) || (b.eq ? bblDe(b.eq.id, campoId) : 0) - (a.eq ? bblDe(a.eq.id, campoId) : 0))
     return { capturan, sinDatos, porConjunto }
-  }, [cfg, campoId, bblDe, tanque, nivelTanque, tanqueSev, avisoTanque, equipoDeHoy])
+  }, [cfg, campoId, bblDe, tanque, nivelTanque, tanqueSev, avisoTanque, equipoDeHoy, condicionDe])
 
   // Lo que está en alarma, con el tanque en alto-alto (P1 ya calculado arriba: `tanqueSev`).
-  const enAlarma = capturan.filter(f => f.sev === 1)
+  const urgente = (c?: CondicionFranja) => c === 'alarma' || c === 'interlock'
+  const enAlarma = capturan.filter(f => urgente(f.cond))
   const tanqueCerca = (f: Fila) => !!f.nivel && (f.nivel.pct >= f.nivel.altoAlto - MARGEN_TANQUE || bombaParada)
   // Cinco a la vista y «ver N más»; una fila en alarma (prioridad 1) nunca se esconde, ni el
   // tanque cerca de su alto-alto. `prioridad` solo decide qué no se esconde: la marca no cambia.
-  const listaCapturan = useVerMas(capturan, { prioridad: f => (tanqueCerca(f) ? 1 : f.sev) })
+  const listaCapturan = useVerMas(capturan, { prioridad: f => (tanqueCerca(f) || urgente(f.cond) ? 1 : 9) })
   const listaSinDatos = useVerMas(sinDatos)
   const lee = useContext(ComoSeLee)
   const pozos = estadoCampo?.pozos ?? 0, parados = estadoCampo?.parados ?? 0
@@ -225,7 +239,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
 
   const ubicar = (id: string) => {
     setDestacado(id)
-    refs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    refs.current.get(id)?.scrollIntoView({ behavior: comportamiento(), block: 'nearest', inline: 'center' })
   }
   /** Sin el blur, el anillo de foco se queda pintado después del clic. */
   const abrir = (equipo: string) => {
@@ -274,7 +288,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       <span className="inline-flex items-center gap-1.5"><i className="inline-block h-3 w-4 rounded-sm border border-[var(--linea)] bg-[var(--panel)]" />captura datos</span>
       <span className="inline-flex items-center gap-1.5"><i className="inline-block h-3 w-4 rounded-sm border border-dashed border-[var(--tinta3)]" />configurado, sin datos</span>
       <span className="inline-flex items-center gap-1.5"><i className="inline-block h-3 w-4" />sin caja: proceso o límite de batería</span>
-      <span className="inline-flex items-center gap-1.5"><MarcaPrioridad s={1} tamano={11} decorativa />forma y color: condición anormal</span>
+      <span className="inline-flex items-center gap-1.5"><MarcaCondicion c="alarma" tamano={12} decorativa />forma y color: condición anormal</span>
       <span>solo el código: en marcha, sin nada anormal</span>
       {corrientes.map(c => (
         <span key={c} className="inline-flex items-center gap-1.5">
@@ -286,7 +300,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   )
 
   const dibujo = (
-    <Panel className="mb-2.5 min-w-0" titulo="ESQUEMA DE PLANTA" extra={NOMBRE_GAS[perfil.gas]}>
+    <Panel className="mb-3 min-w-0 sm:mb-4" titulo="Esquema de planta" extra={NOMBRE_GAS[perfil.gas]}>
       {!estrecho && cobertura}
       <p className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] text-[var(--tinta2)]" data-caudales>
         <span className="font-semibold text-[var(--tinta)]">Ahora:</span>
@@ -326,7 +340,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           {plano.lineas.map(l => {
             const quieta = detenido(l.deId) || detenido(l.aId)
             const sinSalida = detenido(l.deId)
-            const sevSalida: Severidad = sinSalida ? estado.get(l.deId)?.severidad ?? 0 : 0
+            const deSalida = sinSalida ? estado.get(l.deId) : undefined
+            const condSalida = deSalida ? condicionDe(campoId, deSalida.id) : undefined
             const [sx, sy] = l.inicio
             return (
               // Lo que dice el tooltip de una tubería ya está dibujado (la línea, el
@@ -344,9 +359,9 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                   // y el color solo en la forma, con la prioridad del equipo que paró.
                   <>
                     <rect x={sx - 64} y={sy - 15} width={128} height={30} rx={6} fill="var(--panel)"
-                      stroke={sevSalida ? `var(--p${sevSalida})` : 'var(--linea)'} strokeWidth={0.9} />
-                    {sevSalida > 0 && <g transform={`translate(${sx - 58},${sy - 8})`}><MarcaPrioridad s={sevSalida} tamano={16} decorativa /></g>}
-                    <text x={sevSalida ? sx + 10 : sx} y={sy + 6} fontSize={LETRA} fontWeight={600} textAnchor="middle" fill="var(--tinta)">sin flujo</text>
+                      stroke={condSalida ? COLOR_CONDICION[condSalida] : 'var(--linea)'} strokeWidth={0.9} />
+                    {condSalida && <g transform={`translate(${sx - 58},${sy - 8})`}><MarcaCondicion c={condSalida} tamano={16} decorativa /></g>}
+                    <text x={condSalida ? sx + 10 : sx} y={sy + 6} fontSize={LETRA} fontWeight={600} textAnchor="middle" fill="var(--tinta)">sin flujo</text>
                   </>
                 )}
               </Tip>
@@ -360,7 +375,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
             const conjunto = porConjunto.get(n.id)
             const vivo = esPozos || esTanqueAgua || (conjunto ? conjunto.con > 0 : captura(eq))
             const proceso = !eq && !esTanqueAgua && (SOLO_PROCESO.includes(n.simbolo) || (n.id === 'tanqueAgua' && !tanque))
-            const sev = esTanqueAgua ? tanqueSev : vivo && eq ? eq.severidad : 0
+            // La condición de la caja es la del equipo (la de la franja: H3); la del tanque, la de su llenado (el motor).
+            const cond = esTanqueAgua ? DE_SEVERIDAD[tanqueSev] : vivo && eq ? condicionDe(campoId, eq.id) : undefined
             const nivelD = n.nivelDe ? eq?.dispositivos.find(d => d.tag === n.nivelDe!.tag) : undefined
             const nivelV = esTanqueAgua ? nivelTanque!.pct / 100 : nivelD && typeof nivelD.valor === 'number' ? nivelD.valor / n.nivelDe!.tope : undefined
             const clave = vivo && eq ? lecturaClave(eq) : undefined
@@ -402,25 +418,25 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
               <Tip key={n.id} as="g" data-nodo={n.id} titulo={n.etiqueta}
                 // El nodo que se abre se anuncia como botón, con el equipo y su estado.
                 role={clicable ? 'button' : undefined}
-                aria-label={clicable ? `${n.etiqueta}: ${leido}${sev ? ` · ${NOMBRE_PRIORIDAD[sev]}` : ''}. ${clicPozos ? 'Abre los pozos uno por uno' : 'Abre el equipo'}` : undefined}
+                aria-label={clicable ? `${n.etiqueta}: ${leido}${cond ? ` · ${PALABRA_CONDICION[cond]}` : ''}. ${clicPozos ? 'Abre los pozos uno por uno' : 'Abre el equipo'}` : undefined}
                 pista={clicPozos ? 'Clic para ver los pozos uno por uno' : clicable ? 'Clic para abrir el equipo y sus dispositivos' : undefined}
                 filas={filas} className={clicable ? 'nodo' : undefined}
                 onClick={clicPozos ? () => setPantalla('pozos') : clicable ? () => abrir(eq!.id) : undefined}>
                 <g transform={`translate(${n.x},${n.y})`} ref={(el: SVGGElement | null) => { if (el) refs.current.set(n.id, el) }}>
-                  {sev === 1 && <circle cx={0} cy={0} r={46} fill="none" stroke="var(--p1)" strokeWidth={2} data-anillo-alarma />}
+                  {cond === 'alarma' && <circle cx={0} cy={0} r={46} fill="none" stroke="var(--p1)" strokeWidth={2} data-anillo-alarma />}
                   {destacado === n.id && <rect x={-64} y={-48} width={128} height={96} rx={11} fill="none" stroke="var(--acento)" strokeWidth={2.4} strokeDasharray="7 5" />}
                   {!proceso && (
                     // C4 · ISA-101 (X5 §6.5; X2 §5.4): la caja no se tiñe y no lleva sombra. El equipo se ve por
                     // su brillo: en marcha, claro; detenido, más oscuro y con contorno de 2 px; sin datos, sin
                     // relleno y discontinuo. La condición va en la marca, el borde y (prioridad 1) el anillo.
-                    <rect className="marco" x={-58} y={-42} width={116} height={84} rx={8} data-marcha={vivo && eq ? eq.marcha : 'sin-dato'}
+                    <rect className="marco" x={-58} y={-42} width={116} height={84} rx={8} data-marcha={vivo && eq ? eq.marcha : 'sin-dato'} data-condicion={cond ?? ''}
                       fill={!vivo ? 'none' : eq?.marcha === 'detenido' ? 'var(--banda)' : 'var(--eq-marcha)'}
-                      stroke={sev ? SEV_COLOR[sev] : eq?.marcha === 'detenido' && vivo ? 'var(--tinta)' : vivo ? 'var(--linea)' : 'var(--tinta3)'}
-                      strokeWidth={sev || (vivo && eq?.marcha === 'detenido') ? 2 : vivo ? 1.2 : 1.1}
+                      stroke={cond ? COLOR_CONDICION[cond] : eq?.marcha === 'detenido' && vivo ? 'var(--tinta)' : vivo ? 'var(--linea)' : 'var(--tinta3)'}
+                      strokeWidth={cond || (vivo && eq?.marcha === 'detenido') ? 2 : vivo ? 1.2 : 1.1}
                       strokeDasharray={vivo ? undefined : '5 4'} />
                   )}
                   <g opacity={vivo ? 1 : proceso ? 0.5 : 0.45}><Glifo simbolo={n.simbolo} nivel={nivelV} fluido={n.fluido} /></g>
-                  {sev > 0 && <g transform="translate(-54,-38)"><MarcaPrioridad s={sev} tamano={16} /></g>}
+                  {cond && <g transform="translate(-54,-38)"><MarcaCondicion c={cond} tamano={16} etiqueta={PALABRA_CONDICION[cond]} /></g>}
                   {n.pmo && (
                     <g transform="translate(34,-32)">
                       <rect x={-34} y={-14} width={68} height={26} rx={4} fill="var(--panel2)" stroke="var(--linea)" strokeWidth={0.8} />
@@ -431,8 +447,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                   <text y={62} fontSize={LETRA_NOMBRE} textAnchor="middle" fill={proceso ? 'var(--tinta2)' : 'var(--tinta)'} fontWeight={proceso ? 400 : 600}>
                     {renglones.map((r, i) => <tspan key={i} x={0} dy={i ? 21 : 0}>{r}</tspan>)}
                   </text>
-                  {pie && <text y={yPie} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)" className="font-mono">{pie}</text>}
-                  {pieProceso && <text y={yPie} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)" className="solo-impresion font-mono">{pieProceso}</text>}
+                  {pie && <text y={yPie} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)">{pie}</text>}
+                  {pieProceso && <text y={yPie} fontSize={LETRA} textAnchor="middle" fill="var(--tinta2)" className="solo-impresion">{pieProceso}</text>}
                 </g>
               </Tip>
             )
@@ -442,77 +458,80 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
     </Panel>
   )
 
-  const ubicarBoton = (f: Fila) => !estrecho && (
-    <Boton variante="chico" onClick={() => ubicar(f.nodo)} aria-label={`Ubicar ${f.etiqueta} en el dibujo`} title="Ubicar en el dibujo">
-      <Crosshair className="inline size-3.5" aria-hidden />
-    </Boton>
-  )
+  /** UI-19 · Una fila de B (X5 §5.2): toda la fila es el blanco del toque, con «›», y una sola acción. La que tiene
+   *  ficha abre el equipo; pasar el cursor o el foco por ella lo marca en el dibujo (antes, un botón «Ubicar» por
+   *  fila). La que no tiene ficha (el tanque, lo que no da datos) lo ubica en el dibujo; en el teléfono, donde el
+   *  dibujo va cerrado, no tiene acción. */
+  const fila = (f: Fila, accion: 'abrir' | 'ubicar' | undefined, etiqueta: string, contenido: React.ReactNode, marca?: React.ReactNode) => {
+    const marcar = !estrecho ? { onMouseEnter: () => setDestacado(f.nodo), onMouseLeave: () => setDestacado(null), onFocus: () => setDestacado(f.nodo), onBlur: () => setDestacado(null) } : {}
+    const clase = 'flex min-h-14 w-full items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0'
+    return accion ? (
+      <button key={f.id} type="button" onClick={() => (accion === 'abrir' && f.abrir ? abrir(f.abrir) : ubicar(f.nodo))} aria-label={etiqueta} data-fila-planta={f.id} {...marcar}
+        className={cn(clase, 'cursor-pointer hover:bg-[var(--panel2)]/60')}>
+        {marca}<span className="min-w-0 flex-1">{contenido}</span>
+        <ChevronRight aria-hidden className="size-5 shrink-0 text-[var(--tinta3)]" />
+      </button>
+    ) : <div key={f.id} className={clase} data-fila-planta={f.id}>{marca}<span className="min-w-0 flex-1">{contenido}</span></div>
+  }
+  const marcaDe = (f: Fila) => (f.cond ? <MarcaCondicion c={f.cond} tamano={12} decorativa /> : <i aria-hidden className="inline-block w-3 shrink-0" />)
 
-  /** Una fila de lo que captura datos: el equipo, lo anormal de su estado, su lectura y lo que ha diferido. */
+  /** Una fila de lo que captura datos: el equipo, su condición, lo anormal de su estado, su lectura y lo que ha diferido. */
   const filaCaptura = (f: Fila) => {
     const corto = f.eq ? estadoCorto(f.eq) : ''
     const bbl = f.eq ? bblDe(f.eq.id, campoId) : 0
     const nombre = f.eq && !f.etiqueta.startsWith(f.eq.id) ? `${f.eq.id} · ${f.etiqueta}` : f.etiqueta
-    return (
-      <div key={f.id} className="flex items-center gap-2 border-b border-[var(--linea2)] py-2 last:border-0">
-        <MarcaPrioridad s={f.sev} tamano={12} />
-        {f.abrir ? (
-          // Lo normal no se escribe («en marcha»): el lector oye el estado entero.
-          <button onClick={() => abrir(f.abrir!)} className="min-w-0 flex-1 cursor-pointer text-left hover:underline"
-            aria-label={`${nombre}: ${[f.estado, f.lectura, bbl > 0 ? `${n0(bbl)} bbl diferidos` : ''].filter(Boolean).join(' · ')}`}>
-            <b className="block truncate text-[15px] leading-tight">{nombre}</b>
-            <small className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta3)]">
-              {/* Si se escribe es porque es anormal: siempre con el mismo énfasis. */}
-              {corto && <Chip tono="fuerte">{corto}</Chip>}
-              {f.lectura && <span className="tabular">{f.lectura}</span>}
-              {bbl > 0 && <span className="tabular">{f.lectura ? '· ' : ''}{n0(bbl)} bbl diferidos</span>}
-            </small>
-          </button>
-        ) : (
-          <span className="min-w-0 flex-1">
-            <b className="block truncate text-[15px] leading-tight">{f.id} · {f.etiqueta}</b>
-            {f.nivel ? (
-              <span className="mt-0.5 block max-w-[320px]">
-                <BarraMeta tamano="chica" rotulo="nivel" valor={f.nivel.pct} unidad="%" formato={v => `${n1(v)} %`}
-                  meta={f.nivel.altoAlto} tipoMeta="máximo" rotuloMeta={`alto-alto ${n0(f.nivel.altoAlto)} %`} />
-                {f.aviso && <small className="block text-[13px] text-[var(--tinta2)]">{f.aviso}</small>}
-              </span>
-            ) : <small className="block truncate text-[13px] text-[var(--tinta3)]">{f.estado}</small>}
+    const palabra = f.cond ? PALABRA_CONDICION[f.cond] : ''
+    if (f.abrir) return fila(f, 'abrir',
+      // Lo normal no se escribe («en marcha»): el lector oye el estado entero.
+      `${nombre}: ${[palabra, f.estado, f.lectura, bbl > 0 ? `${n0(bbl)} bbl diferidos` : ''].filter(Boolean).join(' · ')}`,
+      <>
+        <b className="block truncate text-[15px] leading-tight">{nombre}</b>
+        <small className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[14px] text-[var(--tinta2)]">
+          {palabra && <b className="font-semibold text-[var(--tinta)]">{palabra}</b>}
+          {/* Si se escribe es porque es anormal: siempre con el mismo énfasis. */}
+          {corto && <Chip tono="fuerte">{corto}</Chip>}
+          {f.lectura && <span className="tabular">{f.lectura}</span>}
+          {bbl > 0 && <span className="tabular">{f.lectura ? '· ' : ''}{n0(bbl)} bbl diferidos</span>}
+        </small>
+      </>, marcaDe(f))
+    return fila(f, estrecho ? undefined : 'ubicar', `Ubicar ${f.etiqueta} en el dibujo`,
+      <>
+        <b className="block truncate text-[15px] leading-tight">{f.id} · {f.etiqueta}</b>
+        {palabra && <small className="block text-[14px] font-semibold">{palabra}</small>}
+        {f.nivel ? (
+          <span className="mt-0.5 block max-w-[320px]">
+            <BarraMeta tamano="chica" rotulo="nivel" valor={f.nivel.pct} unidad="%" formato={v => `${n1(v)} %`}
+              meta={f.nivel.altoAlto} tipoMeta="máximo" rotuloMeta={`alto-alto ${n0(f.nivel.altoAlto)} %`} />
+            {f.aviso && <small className="block text-[14px] text-[var(--tinta2)]">{f.aviso}</small>}
           </span>
-        )}
-        {ubicarBoton(f)}
-      </div>
-    )
+        ) : <small className="block truncate text-[14px] text-[var(--tinta2)]">{f.estado}</small>}
+      </>, marcaDe(f))
   }
 
   /** Una fila de lo configurado sin datos: el equipo y lo que le falta («sin señal», «sin instrumento»). */
-  const filaSinDatos = (f: Fila) => (
-    <div key={f.id} className="flex items-center gap-2 border-b border-[var(--linea2)] py-2 last:border-0">
-      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5">
-        <b className="truncate text-[15px] leading-tight text-[var(--tinta2)]">{f.eq && !f.etiqueta.startsWith(f.eq.id) ? `${f.eq.id} · ` : ''}{f.etiqueta}</b>
-        <Chip>{f.estado}</Chip>
-      </span>
-      {ubicarBoton(f)}
-    </div>
-  )
+  const filaSinDatos = (f: Fila) => fila(f, estrecho ? undefined : 'ubicar', `Ubicar ${f.etiqueta} en el dibujo: ${f.estado}`,
+    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+      <b className="truncate text-[15px] leading-tight text-[var(--tinta2)]">{f.eq && !f.etiqueta.startsWith(f.eq.id) ? `${f.eq.id} · ` : ''}{f.etiqueta}</b>
+      <Chip>{f.estado}</Chip>
+    </span>)
 
   const listas = (
-    <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
-      <Panel titulo="CAPTURANDO DATOS" extra={plural(capturan.length, 'equipo', 'equipos')}>
-        <Lectura>Lo que se está midiendo ahora, lo anormal primero. Un clic abre el equipo; la mira (⌖) lo marca en el dibujo. Lo normal no se escribe: solo la lectura.</Lectura>
+    <div className="mb-3 grid items-start gap-3 sm:mb-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
+      <Panel titulo="Capturando datos" extra={plural(capturan.length, 'equipo', 'equipos')}>
+        <Lectura>Lo que se está midiendo ahora, lo anormal primero. Un clic abre el equipo; con el cursor o el foco encima, se marca en el dibujo. Lo normal no se escribe: solo la lectura.</Lectura>
         {listaCapturan.visibles.map(filaCaptura)}
         {listaCapturan.resto.length > 0 && <div className="solo-impresion">{listaCapturan.resto.map(filaCaptura)}</div>}
         <VerMas ocultas={listaCapturan.ocultas} abierto={listaCapturan.abierto} onAlternar={listaCapturan.alternar} />
       </Panel>
 
-      <Panel titulo="CONFIGURADOS SIN DATOS" extra={sinDatos.length ? plural(sinDatos.length, 'equipo', 'equipos') : 'ninguno'}>
-        <Lectura>Están en el registro del campo, pero todavía no dan datos: es lo que falta por instrumentar. «Sin señal»: su instrumento está declarado y no da señal. «Sin instrumento»: falta montarlo y declarar su tag.</Lectura>
+      <Panel titulo="Configurados sin datos" extra={sinDatos.length ? plural(sinDatos.length, 'equipo', 'equipos') : 'ninguno'}>
+        <Lectura>Están en el registro del campo, pero todavía no dan datos: es lo que falta por instrumentar. «Sin señal»: su instrumento está declarado y no da señal. «Sin instrumento»: falta montarlo y declarar su tag. Un clic lo ubica en el dibujo.</Lectura>
         {sinDatos.length === 0 && <p className="text-[14px] text-[var(--tinta2)]">Todo lo configurado captura datos.</p>}
         {listaSinDatos.visibles.map(filaSinDatos)}
         {listaSinDatos.resto.length > 0 && <div className="solo-impresion">{listaSinDatos.resto.map(filaSinDatos)}</div>}
         <VerMas ocultas={listaSinDatos.ocultas} abierto={listaSinDatos.abierto} onAlternar={listaSinDatos.alternar} />
         {sinDatos.length > 0 && rol.pantallas.includes('conectores') && (
-          <Boton className="mt-2 w-full" onClick={() => setPantalla('conectores')}><Plug className="mr-1 inline size-3.5" aria-hidden />Conectores y tags</Boton>
+          <Boton className="mt-2 w-full max-sm:min-h-11" onClick={() => setPantalla('conectores')}><Plug className="mr-1 inline size-3.5" aria-hidden />Conectores y tags</Boton>
         )}
       </Panel>
     </div>
@@ -527,15 +546,15 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
           (el tanque en alto-alto también: se ubica en el dibujo, no tiene ficha). Sus nombres van
           en la lista de abajo (una fila en alarma nunca se esconde) y en el papel. */}
       {enAlarma.length > 0 && (
-        <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[16px] bg-[var(--panel)] px-4 py-3">
-          <MarcaPrioridad s={1} tamano={18} />
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] bg-[var(--panel)] px-4 py-3 sm:mb-4" data-en-alarma>
+          <MarcaCondicion c="alarma" tamano={18} decorativa />
           <b className="min-w-0 flex-1 text-[15px] leading-tight">
             {/* El período lo dicen la cabecera y el membrete del papel. */}
-            {enAlarma.length} {enAlarma.length === 1 ? 'detenido o en alarma' : 'detenidos o en alarma'} · <span className="tabular">{n0(bblAlarma)}</span> bbl diferidos
+            Alarma · {enAlarma.length} {enAlarma.length === 1 ? 'detenido o en alarma' : 'detenidos o en alarma'} · <span className="tabular">{n0(bblAlarma)}</span> bbl diferidos
           </b>
           <span className="flex flex-wrap gap-1.5">
             {enAlarma.filter(f => f.abrir || !estrecho).map((f, i) => (
-              <Boton key={f.id} variante={i === 0 ? 'principal' : 'normal'} onClick={() => (f.abrir ? abrir(f.abrir) : ubicar(f.nodo))}
+              <Boton key={f.id} variante={i === 0 ? 'principal' : 'normal'} className="max-sm:min-h-11" onClick={() => (f.abrir ? abrir(f.abrir) : ubicar(f.nodo))}
                 aria-label={f.abrir ? `Abrir ${codigo(f)} · ${f.etiqueta}` : `Ubicar ${f.etiqueta} en el dibujo`} title={f.etiqueta}>{codigo(f)}</Boton>
             ))}
           </span>
@@ -543,14 +562,17 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
         </div>
       )}
 
+      {/* K1 · P-16 / H8: la tubería de La planta viva con la lente técnica (la de Producción), no la de antes.
+          La hoja de la planta lleva lo que tenía la de antes en esta pantalla: el esquema (y el agua, en la tubería). */}
       <div ref={refTuberia}>
-        <TuberiaDelCampo campoId={campoId} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} onUbicarPlanta={estrecho ? undefined : verEsquema} />
+        <TuberiaTecnica className="mb-3 sm:mb-4"
+          accionesDe={tramo => (tramo === 'planta' && !estrecho ? [{ texto: 'Ver la planta en el esquema', hacer: verEsquema }] : [])} />
       </div>
 
       {/* En el teléfono el dibujo no se lee: primero las listas, y el dibujo a un clic. */}
       {estrecho ? (
         <>
-          <div className="mb-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 shadow-[var(--sombra)]">{cobertura}</div>
+          <div className="mb-3 rounded-[20px] bg-[var(--panel)] p-4">{cobertura}</div>
           {listas}
           <Desplegable titulo="Ver el esquema">{dibujo}</Desplegable>
         </>
@@ -594,11 +616,11 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
 function Desplegable({ titulo, imprimir, children }: { titulo: string; imprimir?: boolean; children: React.ReactNode }) {
   const [abierto, setAbierto] = useState(false)
   return (
-    <div className="mb-2.5">
+    <div className="mb-3 sm:mb-4">
       <button onClick={() => setAbierto(v => !v)} aria-expanded={abierto}
-        className="no-imprimir mb-2 flex w-full cursor-pointer items-center gap-2 rounded border border-[var(--linea)] bg-[var(--panel)] px-3 py-2 text-left text-[14px] shadow-[var(--sombra)] hover:bg-[var(--elevado)]">
-        <b className="flex-1">{titulo}</b>
-        <span className={cn('text-[12px] text-[var(--tinta3)]', abierto && 'rotate-180')}>▾</span>
+        className="no-imprimir mb-2 flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-[16px] bg-[var(--panel)] px-4 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
+        <b className="flex-1 font-semibold">{titulo}</b>
+        <span aria-hidden className={cn('text-[14px] text-[var(--tinta2)]', abierto && 'rotate-180')}>▾</span>
       </button>
       {imprimir && <b className="solo-impresion mb-1 text-[13px]">{titulo}</b>}
       {abierto ? children : imprimir && <div className="solo-impresion">{children}</div>}

@@ -1,0 +1,107 @@
+#/conf/equipo/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Equipos
+DATOS DE DEMOSTRACIÓN
+Equipos
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+¿Le creo al vigía? Desde el 1 de sept: acertó 1 de 3 avisos, 2 falsas alarmas, 3 intervenidas sin calificar y 4 en seguimiento.Ver el detalle
+
+Parados
+1
+Avisan
+6
+Sin instrumento
+6
+Todos
+56
+Todos los tipos
+Bombas
+8
+Electrosumergibles
+41
+Pozos
+41
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+41
+Recolección
+1
+Crudo
+4
+Agua
+7
+Gas
+1
+Servicios
+2
+Buscar por tag
+7 equipos
+por estado y, dentro de cada uno, por lo que costaría si falla hoy
+¿Lo vigila TRIM?
+ahora o si falla hoy
+3
+SE-2
+energía eléctrica
+sin respaldo
+Aviso · en servicio · corriente de barraje subiendo
+sí · 3 señales
+hasta 16.920bbl/d
+si falla hoy
+H-302
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+V-101
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 16.920bbl/d
+si falla hoy
+C-401
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, TK-103 · PMO-03, Tanque de agua, Pozos inyectores.

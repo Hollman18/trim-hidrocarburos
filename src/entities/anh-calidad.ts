@@ -16,7 +16,7 @@
  *  % confirmado = avaladas ÷ filas; % corregido = corregidas ÷ propuestas (las
  *  filas donde TRIM propuso algo): cuánto se equivoca la regla. */
 import { PASOS, type PasoAnh, type ChokeAnh } from './anh-catalogo'
-import { avalado, type DatoClasificado } from './anh-clasificacion'
+import { avalado, type DatoClasificado, type IdPregunta, type QuienContesta } from './anh-clasificacion'
 import { chokeDeCausa, REGLA_CHOKE } from './choke'
 import type { ParadaAnh } from './anh-paradas'
 import type { Contexto } from './causa-senal'
@@ -162,4 +162,56 @@ export function calidadClasificacion(ps: readonly ParadaAnh[], ctx: Contexto): C
     .sort((a, b) => b.corregidas - a.corregidas || b.paradas - a.paradas || a.campoId.localeCompare(b.campoId) || a.equipo.localeCompare(b.equipo))
   const sinTopologia = [...sinTopo.values()].sort((a, b) => b.paradas - a.paradas || a.campoId.localeCompare(b.campoId) || a.equipo.localeCompare(b.equipo))
   return { paradas: ps.length, porPaso, porRegla, chokePorEquipo, sinTopologia }
+}
+
+/* ───────────── F2 · Regulatorio: las paradas que todavía no tienen causa ───────────── */
+
+/** Una parada del período (un evento del pozo) que todavía no tiene causa: alguna
+ *  de sus filas no tiene el paso 5 de la circular (la causa, N1). Esa fila no se
+ *  puede reportar completa a la ANH (P1 §1.5; X4 §3.4, el inicio de regulatorio).
+ *  Lo que le falta y la pregunta que lo resuelve, con quién la contesta. */
+export interface ParadaSinCausa {
+  campoId: string
+  /** El evento del controlador del pozo: une las filas de la misma parada. */
+  eventoId: string
+  pozo: string
+  /** El equipo de la causa de TRIM (el pozo mismo si no se sabe). */
+  equipo: string
+  /** Las filas del período sin causa (pozo × día operacional). */
+  filas: string[]
+  /** Los pasos que faltan, en el orden de la circular. */
+  faltan: PasoAnh[]
+  /** La primera pregunta que lo resuelve y a quién se le pide (`QuienContesta`). Null: ninguna. */
+  pregunta: { id: IdPregunta; texto: string; quien: QuienContesta } | null
+  /** Alguien contestó «No sé»: escala al supervisor (U1 §2.4). */
+  escalada: boolean
+  /** El último día operacional de sus filas (`AAAA-MM-DD`): el reporte que la lleva sale el día siguiente. */
+  ultimoDia: string
+  /** Cuándo empezó el evento (hora de Colombia, con su zona). */
+  inicioEvento: string
+  /** Seguía parada al último corte. */
+  abierta: boolean
+}
+
+/** Las paradas sin causa de unas filas, en el orden en que llegan sus filas. */
+export function paradasSinCausa(ps: readonly ParadaAnh[]): ParadaSinCausa[] {
+  const por = new Map<string, ParadaSinCausa>()
+  for (const p of ps) {
+    if (!p.faltan.includes('n1')) continue
+    const k = `${p.campoId}|${p.eventoId}`
+    const q = p.propuesta.preguntas[0]
+    const x = por.get(k)
+    if (!x) {
+      por.set(k, { campoId: p.campoId, eventoId: p.eventoId, pozo: p.pozo, equipo: p.causa.equipo, filas: [p.id], faltan: [...p.faltan],
+        pregunta: q ? { id: q.id, texto: q.texto, quien: q.quien } : null, escalada: !!p.propuesta.escalada,
+        ultimoDia: p.diaOperacional, inicioEvento: p.inicioEvento, abierta: p.abiertaAlCorte })
+      continue
+    }
+    x.filas.push(p.id)
+    x.faltan = PASOS.filter(s => x.faltan.includes(s) || p.faltan.includes(s))
+    x.escalada ||= !!p.propuesta.escalada
+    if (!x.pregunta && q) x.pregunta = { id: q.id, texto: q.texto, quien: q.quien }
+    if (p.diaOperacional >= x.ultimoDia) { x.ultimoDia = p.diaOperacional; x.abierta = p.abiertaAlCorte }
+  }
+  return [...por.values()]
 }

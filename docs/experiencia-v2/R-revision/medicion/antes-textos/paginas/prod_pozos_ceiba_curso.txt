@@ -1,0 +1,81 @@
+#/prod/pozos/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Equipos
+DATOS DE DEMOSTRACIÓN
+Pozos
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Pozos
+15 de 18
+produciendo · 0 frenados
+Potencial ahora
+11.360 bbl/d
+Se deja de producir ahora
+1
+1.966 bbl/d
+3 pozos parados
+Custodia completa
+17 de 18
+1 estimada
+Todos
+Parados o frenados · 3
+Electrosumergible con aviso · 0
+Sin custodia completa · 1
+POZOS
+18
+Pozo	Ahora	Crudo bbl/d	Agua bbl/d	Prueba	Electrosumergible	Diferido bbl
+
+2
+LC-21
+Bombeo mecánico
+	
+sin identificar
+	301	1.532	
+separador ·
+10 d	—	247
+1 evento
+
+
+LC-17
+	produciendo	539	15.740	estimada · 5 d	estable	0
+0 eventos
+
+
+LC-16
+	
+cerrado por P-201B
+	869	25.289	
+separador ·
+26 d	equipo detenido	300
+1 evento
+
+
+LC-07
+	
+cerrado por P-201B
+	796	23.221	
+separador ·
+32 d	equipo detenido	273
+1 evento
+
+
+LC-05
+	produciendo	812	11.666	
+separador ·
+12 d	estable	118
+1 evento
+ver 13 más

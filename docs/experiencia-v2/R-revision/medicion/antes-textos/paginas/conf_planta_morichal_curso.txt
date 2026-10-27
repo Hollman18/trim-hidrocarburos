@@ -1,0 +1,176 @@
+#/conf/planta/morichal/curso
+
+Todos mis campos
+Morichal Norte
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Planta
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+La tubería del campo
+qué limita hoy al campo
+potenciales con las pruebas vigentes al 2 de oct · capacidades del demo, sin firmar
+Punto de medición oficial (FQI-0101 · computador de flujo de la unidad LACT-01): en línea; el último día completo dio 16.685 bbl
+Ver como tabla
+Yacimiento
+Pozos · 41
+1
+MN-41
+Planta o estación
+Afuera
+Sin identificar
+→
+→
+→
+→ venta
+0
+bbl en el período
+va con los pozos
+◄ limita
+17.937bbl/d
+con las pruebas de los pozos
+18.666bbl/d
+le sobran
+729
+dato del demo, sin firmar
+crudo 19.500
+agua ≈ 18.666 (605.500 bbl/d de agua) · el menor
+Ver la tubería del agua
+gas · sin medir
+21.000bbl/d
+le sobran
+3.063
+dato del demo, sin firmar
+El oleoducto o el transportador: 21.000
+El terminal o el cliente (mercado): 24.000
+
+A la planta le sobran 729 bbl/d: lo que den de más los pozos pasa, hasta 729 bbl/d.
+
+Pasa hoy
+16.920 bbl/d
+Se deja de producir ahora
+684 bbl/d
+
+Los pozos dan 17.937 según sus pruebas: pasan 16.920, se pierden 684 y los otros 333 son lo que las pruebas dan de más que el medidor oficial.
+
+en los pozos
+684
+1
+MN-41 · cerró MN-41 · desde 25 de sept, 06:40
+Abrir
+Se trabó en el período
+Octubre, en curso
+1.253 bbl
+Ver por dónde se trabó
+en el yacimiento
+0
+en los pozos
+1.253
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(MN-41 · MN-22 · MN-31)
+en la planta
+0
+afuera
+0
+sin identificar
+0
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+ESQUEMA DE PLANTA
+gas a venta
+10 de 19
+equipos con datos
++ 41 pozos
+Ver la tubería
+la planta
+
+Ahora:
+576.309 bbl/d de fluido
+16.920 bbl/d de crudo
+gas sin medición
+559.389 bbl/d de agua
+
+Tren de gas
+Tren de crudo
+Tren de agua
+Pozos productores
+41 pozos · 1 parado
+3
+Bomba multifásica· clúster norte
+MPP-301 · perdiendo…
+Manifold deproducción
+Separadortrifásico
+V-101
+Depurador de gas
+sin datos
+Tea / quemador
+Compresor de gas
+C-401
+Gas a venta
+Tratador térmico
+H-302
+Tanques enespecificación
+1 de 3 con datos
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto
+Tanque de agua
+LT-2012 · 61,8 %
+2
+Bombas de agua
+1 de 7 con datos
+Pozos inyectores
+3
+Subestación 13,8kV
+SE-2 · corriente de…
+Aire deinstrumentos
+K-101
+CAPTURANDO DATOS
+10 equipos
+2
+P-201B
+succión cayendo
+PI-2010 8,8 psi
+3
+SE-2 · Subestación 13,8 kV
+corriente de barraje subiendo
+II-0021 528 A
+· 72 bbl diferidos
+3
+MPP-301 · Bomba multifásica · clúster norte
+perdiendo eficiencia
+PT-3011 45 psi
+V-101 · Separador trifásico
+LI-1012 52 %
+C-401 · Compresor de gas
+PI-4011 1.180 psi
+ver 5 más
+CONFIGURADOS SIN DATOS
+9 equipos
+Depurador de gas
+sin instrumento
+TK-101 · respaldo
+sin instrumento
+TK-103 · PMO-03
+sin instrumento
+P-201A
+sin instrumento
+P-201C
+sin instrumento
+ver 4 más
+Capacidad por tren
+▾

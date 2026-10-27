@@ -10,6 +10,8 @@ import { pedirTuberia, pedirTuberiaAgua, pedirCriticidad } from './choke'
 import { pedirPredicciones } from './predicciones'
 import { pedirMesesCerrados, pedirInicioDeHistoria } from './calendario'
 import { hoy, type VistaHoy, type EntradaHoy } from '@/entities/hoy'
+import { enterosDelPeriodo } from '@/entities/redondeo'
+import { guardadasDe } from './arbol'
 import { franja } from '@/entities/condiciones'
 import { rolExacto } from '@/entities/roles'
 import { camposAsignados, personaDelRol } from '@/entities/usuarios'
@@ -30,7 +32,7 @@ import { AHORA } from '@/entities/reloj'
  *  `rol` es el de la persona: el servidor lo toma del token (un `rol` que no es
  *  el suyo es 403). `campos` se recorta a los que la persona tiene asignados. */
 
-export type { VistaHoy, TareaHoy, PreguntaHoy, OpcionHoy, ModoHoy, BloqueoHoy, HechaHoy, InicioHoy, Frase, Trozo, Destino, AccionHoy, CampoAhoraHoy, WhatsappHoy } from '@/entities/hoy'
+export type { VistaHoy, TareaHoy, PreguntaHoy, OpcionHoy, ModoHoy, BloqueoHoy, HechaHoy, InicioHoy, Frase, Trozo, Destino, AccionHoy, CampoAhoraHoy, WhatsappHoy, EntregaTurno } from '@/entities/hoy'
 export { DESHACER_MS, MOTIVO_DESHACER, TURNO_H } from '@/entities/hoy'
 
 /** Lo que el servidor tiene de la sesión (lo que entra a mano). Lo que falta vale vacío. */
@@ -69,13 +71,15 @@ export function pedirHoy(q: ConsultaHoy, s: SesionHoy): VistaHoy {
     riesgo: pedirRiesgo(campos, ctx),
     condiciones: Object.fromEntries(franja(campos, ctx).equipos.map(x => [`${x.campoId}|${x.equipo}`, x.condicion])),
     // El registro de WhatsApp: el hilo del turno (supervisión y operación) y cuándo se escaló una pregunta (quien revisa).
-    mensajes: ['sup', 'oper', 'jefe', 'conf'].includes(rol.id) ? pedirMensajes(campos) : [],
+    // F1 · P-trabajo-1: también el técnico, para saber si su orden le llegó por WhatsApp.
+    mensajes: ['sup', 'oper', 'jefe', 'conf', 'tec'].includes(rol.id) ? pedirMensajes(campos) : [],
     ordenes: pedirOrdenesSap(campos, ctx),
     avisosSap: pedirAvisosSap(campos, ctx, s.avisosEnviados ?? []),
     planes: [...ciclo.antes.planes, ...ciclo.durante.planes, ...ciclo.despues.planes],
     tuberias: Object.fromEntries(campos.map(c => [c, pedirTuberia(c, curso.desde, curso.hasta, ctx, versiones, guardadas)])),
     aguas: Object.fromEntries(campos.map(c => [c, pedirTuberiaAgua(c, ctx, versiones)])),
-    criticidad: pedirCriticidad(campos, ctx).campos,
+    // F1 · P-10: con la lista de cada campo, para saber qué equipos subieron («Ver P-201A y P-201C»).
+    criticidad: (v => v.campos.map(c => ({ ...c, ranking: v.ranking.filter(r => r.campoId === c.campoId) })))(pedirCriticidad(campos, ctx)),
     ...(relojes?.totalH !== undefined ? { relojes: { totalH: relojes.totalH, ...(relojes.esperaH !== undefined ? { esperaH: relojes.esperaH } : {}) } } : {}),
     ...(predicciones ? { vigia: { anunciadas: vigiladas.filter(f => aciertos.some(p => p.falla?.id === f.falla.id)).length, vigiladas: vigiladas.length } } : {}),
     asignacionSinCargar: ultimoCerrado ? campos.filter(c => !(s.asignacionOficial ?? []).some(f => f.mes === ultimoCerrado && f.campoId === c))
@@ -85,8 +89,22 @@ export function pedirHoy(q: ConsultaHoy, s: SesionHoy): VistaHoy {
     programa: ctx.config.programa.filter(p => campos.includes(p.campoId)).map(p => ({ id: p.id, campoId: p.campoId, equipo: p.equipo, desde: p.desde, hasta: p.hasta, motivo: p.motivo })),
     nombres: Object.fromEntries(usuarios.map(u => [u.id, u.nombre])),
     diferidoTurnoBbl: pedirLibro({ campos, desde: new Date(AHORA.getTime() - 12 * 3_600_000), hasta: AHORA }, ctx).diferido,
+    // F1 · H2: los enteros del mes en curso que publica el motor (la regla de redondeo, de F2).
+    enteros: enterosDeHoy(campos, curso.desde, curso.hasta, ctx, guardadas),
   }
   return hoy(entrada)
+}
+
+/** H2 · El entero de cada evento y de cada fila del mes en curso, de los campos que se miran
+ *  (`enterosDelPeriodo`, entities/redondeo.ts): cada campo reparte el suyo, y no se cruzan. */
+function enterosDeHoy(campos: readonly string[], desde: Date, hasta: Date, ctx: SesionHoy['ctx'], guardadas: NonNullable<SesionHoy['clasificacionesAnh']>): NonNullable<EntradaHoy['enteros']> {
+  const porEvento: Record<string, number> = {}, porFila: Record<string, number> = {}
+  const op = { guardadas: guardadasDe(guardadas) }
+  for (const c of campos) {
+    const z = enterosDelPeriodo(c, desde, hasta, ctx, op)
+    Object.assign(porEvento, z.porEvento); Object.assign(porFila, z.porFila)
+  }
+  return { desde: desde.toISOString(), porEvento, porFila }
 }
 
 /** Hoy del rol que se está viendo, en los campos de la vista. */

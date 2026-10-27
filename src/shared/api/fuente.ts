@@ -48,6 +48,9 @@ export interface OpcionesPedido {
   /** Se manda como JSON. */
   cuerpo?: unknown
   cabeceras?: Record<string, string>
+  /** F1 · P-08: el navegador manda el pedido aunque la página se cierre (una
+   *  respuesta de Hoy que se escribe al salir). */
+  keepalive?: boolean
 }
 
 /** El único camino por el que el front le pide algo al servidor. `ruta` va
@@ -62,7 +65,7 @@ export async function pedirJson<T = unknown>(ruta: string, params?: Record<strin
   let res: Response
   try {
     res = await fetch(url, {
-      method: o.metodo ?? 'GET', signal: o.signal,
+      method: o.metodo ?? 'GET', signal: o.signal, ...(o.keepalive ? { keepalive: true } : {}),
       headers: { accept: 'application/json', ...(o.cuerpo !== undefined ? { 'content-type': 'application/json' } : {}), ...o.cabeceras },
       ...(o.cuerpo !== undefined ? { body: JSON.stringify(o.cuerpo) } : {}),
     })

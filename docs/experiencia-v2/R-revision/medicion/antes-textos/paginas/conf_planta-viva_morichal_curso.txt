@@ -1,0 +1,126 @@
+#/conf/planta-viva/morichal/curso
+
+Todos mis campos
+Morichal Norte
+DATOS DE DEMOSTRACIÓN
+La planta viva
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Ahora mismo
+
+684
+barriles por día
+
+se dejan de producir en Morichal Norte.
+
+La electrosumergible de MN-41 paró el 25 de sept a las 06:40.
+
+Ver qué se está haciendo
+Compartir el informe
+Dónde se trabó
+Antes
+lo que viene
+Durante
+ahora
+Después
+lo que pasó
+Yacimiento
+la roca
+Pozos · ◄ limita
+aquí se trabó
+no pasan 684 bbl/d
+Planta
+pasa lo que llega
+Salida
+el oleoducto recibe
+Sale hoy
+16.920 bbl/d
+meta 16.700
+tanque 61,8 %
+alto-alto 90 %
+agua que entra: 559.389 bbl/d
+P-201B en marcha · las otras seis, sin instrumento
+inyectores: el agua vuelve al yacimiento
+
+Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.
+
+Este mes
+
+1.253
+barriles diferidos · 60 mil USD
+
+calculado, entre 1.065 y 1.441
+MN-41, más de la mitad
+
+Producción por día
+
+16.813
+de 16.700 bbl/d
+
+Lo que todavía se puede mover
+simulado
+
+30.973
+bbl en el ciclo
+
+Antes
+29.890
+Durante
+0
+Después
+1.083
+
+Nada que mover · simulado
+
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma
+1.083
+86 %
+MN-22 según el operario
+86
+7 %
+SE-2 energía eléctrica
+72
+6 %
+MN-25 electrosumergible
+12
+1 %
+Diferido por día, mes a mes
+octubre: 792 bbl/d
+475
+950
+OCT 2025
+ENE 2026
+3
+ABR
+3
+JUL
+OCT
+alto impacto
+lo demás
+máximo 950
+
+¿Está bajando? Desde que entró TRIM
+
+en los pozos
+460 → 266
+bbl/d · baja 42 %
+
+en la planta
+293 → 216
+bbl/d · baja 26 %
+
+1 de sept, frente a jun a ago · muestra corta

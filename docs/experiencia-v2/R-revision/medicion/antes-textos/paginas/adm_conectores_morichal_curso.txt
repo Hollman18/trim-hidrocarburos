@@ -1,0 +1,139 @@
+#/adm/conectores/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Configurar
+DATOS DE DEMOSTRACIÓN
+Conectores y tags del campo
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+SISTEMAS CORPORATIVOS
+sincronizado 2 de oct, 13:58
+SAP S/4HANA · Mantenimiento (PM)
+conectado
+TRIM → SAP · avisos
+7 en total
+SAP → TRIM · órdenes
+28 órdenes · 0 abiertas
+SAP → TRIM · horas
+207,7 h
+SAP → TRIM · repuestos
+6 materiales
+PLC ↔ SAP · equipos
+43 de 43
+CATÁLOGOS DE DAÑO
+
+Bomba de reinyección
+5 partes (cat. B) · 11 daños (cat. C) · 5 causas (cat. 5)
+
+Bomba multifásica
+6 partes (cat. B) · 12 daños (cat. C) · 5 causas (cat. 5)
+
+Electrosumergible
+5 partes (cat. B) · 7 daños (cat. C) · 5 causas (cat. 5)
+
+WhatsApp Business
+conectado
+Número
++57 601 555 0100
+verificado por Meta
+Respuestas hoy
+0 · webhook activo
+Últimas 24 h
+4 enviados
+2 personas reciben alertas
+PLANTILLAS APROBADAS · UTILIDAD
+trim_equipo_parado
+TRIM · {equipo} de {campo} paró a las {hora}. {consecuencia}
+trim_electrosumergible_parada
+TRIM · {equipo} de {campo} (electrosumergible) paró a las {hora}. {consecuencia}
+trim_pozos_cerrandose
+TRIM · Por {equipo} parado se empezaron a cerrar pozos de {campo} a las {hora}.
+trim_que_se_dano
+TRIM · {equipo} de {campo} paró el {fecha}. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número. {opciones}
+trim_recordatorio_causa
+TRIM · Recordatorio: {equipo} sigue sin causa. Antes de arrancar, diga {pregunta}. Responda con un número. {opciones}
+ver 5 más
+BORDES CONECTADOS
+2
+TAGS REGISTRADOS
+49
+
+46 asociados
+
+POR ASOCIAR
+3
+
+sin equipo resuelto
+
+EQUIPOS DEL CAMPO
+9
+
+del registro de ingeniería
+
+BORDES
+EPIC-MORICHAL-02
+GRV-EPIC-PR1 · serie GRVMOR9003 · firmware 3.6.0 · enlace starlink · buffer 48 h
+3 tags
+reportó hace instantes
+EPIC-MORICHAL-01
+GRV-EPIC-PR1 · serie GRVMOR0017 · firmware 3.6.2 · enlace starlink · buffer 48 h
+46 tags
+reportó hace instantes
+Inscribir un borde nuevo
+TAGS POR ASOCIAR
+3 de 3 con sugerencia
+Aplicar las 3
+XI-3016
+Presión de succión · psi · opc-ua · cada 5 s · EPIC-MORICHAL-02
+sugerido MPP-301
+sin asociar
+C-401 · Compresor de gas
+H-302 · Tratador térmico
+K-101 · Sistema de aire de instrumentos
+LACT-01 · Unidad LACT · punto de medición oficial
+MPP-301 · Bomba multifásica de doble tornillo · clúster norte
+P-201B · Bomba multietapa de transferencia de agua
+SE-2 · Pórtico 13,8 kV · subestación 2
+TK-102 · Tanque de crudo en especificación
+V-101 · Separador trifásico
+Asociar
+XP-3016
+Caída de presión del filtro · psi · opc-ua · cada 5 s · EPIC-MORICHAL-02
+sugerido MPP-301
+sin asociar
+C-401 · Compresor de gas
+H-302 · Tratador térmico
+K-101 · Sistema de aire de instrumentos
+LACT-01 · Unidad LACT · punto de medición oficial
+MPP-301 · Bomba multifásica de doble tornillo · clúster norte
+P-201B · Bomba multietapa de transferencia de agua
+SE-2 · Pórtico 13,8 kV · subestación 2
+TK-102 · Tanque de crudo en especificación
+V-101 · Separador trifásico
+Asociar
+XT-3016
+Temperatura de succión · °C · opc-ua · cada 5 s · EPIC-MORICHAL-02
+sugerido MPP-301
+sin asociar
+C-401 · Compresor de gas
+H-302 · Tratador térmico
+K-101 · Sistema de aire de instrumentos
+LACT-01 · Unidad LACT · punto de medición oficial
+MPP-301 · Bomba multifásica de doble tornillo · clúster norte
+P-201B · Bomba multietapa de transferencia de agua
+SE-2 · Pórtico 13,8 kV · subestación 2
+TK-102 · Tanque de crudo en especificación
+V-101 · Separador trifásico
+Asociar

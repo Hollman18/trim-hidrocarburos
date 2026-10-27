@@ -1,0 +1,256 @@
+#/conf/riesgo/morichal/curso
+
+Todos mis campos
+Morichal Norte
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Qué está en riesgo
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Se deja de producir ahora
+684
+bbl/d
+3,9 % del potencial · 1 pozo parado
+·
+1
+MN-41
+Equipos que avisan
+5
+si paran, 4.026 bbl/d en juego
+≈ 33.134 bbl de exposición si fallan hoy
+El más cercano
+MN-07
+Bomba de fondo
+cruza en 4 h
+Se deja de producir ahora, por causa
+1 causa
+1
+MN-41
+electrosumergible
+aislamiento del motor y del cable
+desde 25 de sept, 06:40
+684
+bbl/d · 1 pozo
+Equipos que avisan
+ver «Si falla hoy»
+cruza en
+si para
+2
+MN-07
+electrosumergible
+bomba de fondo
+fuera de banda
+se trabaría en el pozo
+cruza en
+4 h
+si para
+607 bbl/d
+≈ 10.579 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+2
+MN-18
+electrosumergible
+admisión y gas
+fuera de banda
+se trabaría en el pozo
+cruza en
+30 h
+30–31 h
+si para
+526 bbl/d
+≈ 9.175 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+2
+P-201B
+bomba de reinyección
+succión y filtro de entrada
+fuera de banda
+se trabaría en la planta
+cruza en
+43 h
+41–45 h
+si para
+783 bbl/d
+≈ 1.235 bbl si falla hoy
+0 si vuelve antes de 10 h
+qué hacer
+si falla hoy
+2
+MPP-301
+bomba multifásica
+filtro de entrada
+fuera de banda
+se trabaría en la planta
+cruza en
+5,2 d
+4,7–5,7 d
+si para
+1.600 bbl/d
+≈ 3.245 bbl si falla hoy
+qué hacer
+si falla hoy
+2
+MN-27
+electrosumergible
+protector del motor
+fuera de banda
+se trabaría en el pozo
+cruza en
+10,9 d
+10,2–11,6 d
+si para
+510 bbl/d
+≈ 8.901 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+Si falla hoy
+de lo que más le quita al campo por día a lo que menos
+
+modelo choke
+
+Lo que el campo deja de sacar por día si el equipo falla hoy
+
+Parados: MN-41 · van en «Se deja de producir ahora», no en la lista.
+
+¿Dónde va el próximo instrumento? Lo primero de la lista sin instrumento: P-201A, P-201C, P-201D, P-201E, P-201F y P-201G (puesto 3, 783 bbl/d si falla hoy). TRIM no ve venir su falla.
+
+#
+Equipo
+Se trabaría en
+Si falla hoy
+Después de
+Una falla ≈
+¿Lo vigila TRIM?
+1
+MPP-301
+Bomba multifásica de doble tornillo · clúster norte
+en la planta · 3 pozos
+1.600 bbl/d
+sin colchón
+≈ 3.245 bbl
+sí
+·
+3
+2
+P-201B
+Bomba multietapa de transferencia de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+≈ 1.235 bbl
+sí
+·
+2
+3
+P-201A
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201C
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201D
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201E
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201F
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201G
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+ver 42 más
+Sin cifra todavía · techo si cierran todos sus pozos
+┄
+SE-2
+Pórtico 13,8 kV · subestación 2
+en la planta · 41 pozos
+hasta 16.920 bbl/d
+sin colchón
+—
+sí
+·
+3
+┄
+V-101
+Separador trifásico
+en la planta · 41 pozos
+hasta 16.920 bbl/d
+sin colchón
+—
+sí
+
+«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.
+
+Sin dato · lo que falta para calcularlos
+┄
+C-401
+Compresor de gas
+en la planta · 41 pozos
+sin dato
+Falta saber a qué pozos cierra: sin eso no se calcula cuánto cuesta
+sí
+┄
+LACT-01
+Unidad LACT · punto de medición oficial
+en la planta · 41 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+┄
+TK-102
+Tanque de crudo en especificación
+en la planta · 41 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+
+sin dato
+Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, TK-103 · PMO-03, Tanque de agua y Pozos inyectores.
+Sin equipo registrado en TRIM: no hay con qué medir su falla.

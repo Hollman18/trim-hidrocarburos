@@ -1,0 +1,576 @@
+#/jefe/riesgo/ceiba~portafolio/curso
+
+Todos mis campos
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Qué está en riesgo
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+Se deja de producir ahora
+2.650
+bbl/d
+6,3 % del potencial · 4 pozos parados
+·
+1
+P-201B
+Equipos que avisan
+8
+si paran, hasta 14.655 bbl/d en juego
+≈ 45.262 bbl de exposición si fallan hoy · sin 1 servicio
+El más cercano
+K-101 · La Ceiba
+ya pasó el límite
+Se deja de producir ahora, por causa
+3 causas
+1
+P-201B · La Ceiba
+bomba de reinyección
+desde 2 de oct, 03:52
+1.665
+bbl/d · 2 pozos
+1
+MN-41 · Morichal Norte
+electrosumergible
+aislamiento del motor y del cable
+desde 25 de sept, 06:40
+684
+bbl/d · 1 pozo
+2
+LC-21 · La Ceiba
+sin identificar
+desde 1 de oct, 18:20
+301
+bbl/d · 1 pozo
+Equipos que avisan
+ver «Si falla hoy»
+cruza en
+si para
+1
+K-101 · La Ceiba
+aire de instrumentos
+se trabaría en la planta
+cruza en
+ya pasó el límite
+si para
+hasta 9.394 bbl/d
+qué hacer
+1
+GU-07 · Guacamayo
+electrosumergible
+aislamiento del motor y del cable
+fuera de banda
+se trabaría en el pozo
+cruza en
+ya pasó el límite
+si para
+588 bbl/d
+≈ 1.488 bbl si falla hoy
+qué hacer
+si falla hoy
+2
+MN-07 · Morichal Norte
+electrosumergible
+bomba de fondo
+fuera de banda
+se trabaría en el pozo
+cruza en
+4 h
+si para
+607 bbl/d
+≈ 10.579 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+2
+MN-18 · Morichal Norte
+electrosumergible
+admisión y gas
+fuera de banda
+se trabaría en el pozo
+cruza en
+30 h
+30–31 h
+si para
+526 bbl/d
+≈ 9.175 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+2
+P-201B · Morichal Norte
+bomba de reinyección
+succión y filtro de entrada
+fuera de banda
+se trabaría en la planta
+cruza en
+43 h
+41–45 h
+si para
+783 bbl/d
+≈ 1.235 bbl si falla hoy
+0 si vuelve antes de 10 h
+qué hacer
+si falla hoy
+ver 3 más
+Si falla hoy
+de lo que más le quita al campo por día a lo que menos
+
+Lo que el campo deja de sacar por día si el equipo falla hoy
+
+La Ceiba
+
+1
+P-201B está parada: se pierden 1.665 bbl/d ahora. Cuando vuelva, si falla otra vez: 1.426 bbl/d cerrando en el orden de TRIM después de unas 2,1 h de colchón (con el tanque al 77,3 %, como suele estar al parar).
+
+También parados: LC-16, LC-07 y LC-21 · van en «Se deja de producir ahora», no en la lista.
+
+Cambió hoy: P-201A y P-201C subieron al puesto 1 porque P-201B está parada. Ninguna de las dos tiene instrumento: TRIM no verá venir su falla.
+
+Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.
+
+#
+Equipo
+Se trabaría en
+Si falla hoy
+Después de
+Una falla ≈
+¿Lo vigila TRIM?
+1
+P-201A
+bomba de reinyección
+sube
+en la planta · 18 pozos
+3.059 bbl/d
+2 min
+—
+sin instrumento
+1
+P-201C
+bomba de reinyección
+sube
+en la planta · 18 pozos
+3.059 bbl/d
+2 min
+—
+sin instrumento
+3
+LC-11
+electrosumergible
+en el pozo
+1.031 bbl/d
+sin colchón
+≈ 3.636 bbl
+sí
+4
+LC-08
+electrosumergible
+en el pozo
+893 bbl/d
+sin colchón
+≈ 14.827 bbl
+flota
+sí
+5
+LC-04
+electrosumergible
+en el pozo
+825 bbl/d
+sin colchón
+≈ 2.102 bbl
+sí
+ver 13 más
+Sin cifra todavía · techo si cierran todos sus pozos
+┄
+K-101
+Sistema de aire de instrumentos
+en la planta · 18 pozos
+hasta 9.394 bbl/d
+sin colchón
+—
+sí
+·
+1
+┄
+SE-2
+Pórtico 13,8 kV · subestación 2
+en la planta · 18 pozos
+hasta 9.394 bbl/d
+sin colchón
+—
+sí
+┄
+V-101
+Separador trifásico
+en la planta · 18 pozos
+hasta 9.394 bbl/d
+sin colchón
+—
+sí
+
+«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.
+
+Sin dato · lo que falta para calcularlos
+┄
+C-401
+Compresor de gas
+en la planta · 18 pozos
+sin dato
+Falta saber a qué pozos cierra: sin eso no se calcula cuánto cuesta
+sí
+┄
+LACT-01
+Unidad LACT · punto de medición oficial
+en la planta · 18 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+┄
+TK-102
+Tanque de crudo en especificación
+en la planta · 18 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+·
+2
+
+sin dato
+Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua y Pozos inyectores.
+Sin equipo registrado en TRIM: no hay con qué medir su falla.
+
+Morichal Norte
+
+Parados: MN-41 · van en «Se deja de producir ahora», no en la lista.
+
+#
+Equipo
+Se trabaría en
+Si falla hoy
+Después de
+Una falla ≈
+¿Lo vigila TRIM?
+1
+MPP-301
+Bomba multifásica de doble tornillo · clúster norte
+en la planta · 3 pozos
+1.600 bbl/d
+sin colchón
+≈ 3.245 bbl
+sí
+·
+3
+2
+P-201B
+Bomba multietapa de transferencia de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+≈ 1.235 bbl
+sí
+·
+2
+3
+P-201A
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201C
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201D
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201E
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201F
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+3
+P-201G
+bomba de reinyección
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+ver 42 más
+Sin cifra todavía · techo si cierran todos sus pozos
+┄
+SE-2
+Pórtico 13,8 kV · subestación 2
+en la planta · 41 pozos
+hasta 16.920 bbl/d
+sin colchón
+—
+sí
+·
+3
+┄
+V-101
+Separador trifásico
+en la planta · 41 pozos
+hasta 16.920 bbl/d
+sin colchón
+—
+sí
+
+«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.
+
+Sin dato · lo que falta para calcularlos
+┄
+C-401
+Compresor de gas
+en la planta · 41 pozos
+sin dato
+Falta saber a qué pozos cierra: sin eso no se calcula cuánto cuesta
+sí
+┄
+LACT-01
+Unidad LACT · punto de medición oficial
+en la planta · 41 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+┄
+TK-102
+Tanque de crudo en especificación
+en la planta · 41 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+
+sin dato
+Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, TK-103 · PMO-03, Tanque de agua y Pozos inyectores.
+Sin equipo registrado en TRIM: no hay con qué medir su falla.
+
+Guacamayo
+#
+Equipo
+Se trabaría en
+Si falla hoy
+Después de
+Una falla ≈
+¿Lo vigila TRIM?
+1
+P-201A
+bomba de reinyección
+en la planta · 12 pozos
+2.136 bbl/d
+5,7 h
+—
+sin instrumento
+2
+GU-01
+electrosumergible
+en el pozo
+810 bbl/d
+sin colchón
+≈ 13.315 bbl
+flota
+sí
+3
+GU-03
+electrosumergible
+en el pozo
+714 bbl/d
+sin colchón
+≈ 11.738 bbl
+flota
+sí
+4
+GU-06
+electrosumergible
+en el pozo
+660 bbl/d
+sin colchón
+≈ 7.988 bbl
+sí
+5
+GU-04
+electrosumergible
+en el pozo
+647 bbl/d
+sin colchón
+≈ 10.639 bbl
+flota
+sí
+·
+2
+6
+GU-07
+electrosumergible
+en el pozo
+588 bbl/d
+sin colchón
+≈ 1.488 bbl
+sí
+·
+1
+ver 11 más
+Sin cifra todavía · techo si cierran todos sus pozos
+┄
+SE-2
+Pórtico 13,8 kV · subestación 2
+en la planta · 12 pozos
+hasta 6.615 bbl/d
+sin colchón
+—
+sí
+┄
+V-101
+Separador trifásico
+en la planta · 12 pozos
+hasta 6.615 bbl/d
+sin colchón
+—
+sí
+
+«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.
+
+Sin dato · lo que falta para calcularlos
+┄
+LACT-01
+Unidad LACT · punto de medición oficial
+en la planta · 12 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+┄
+TK-102
+Tanque de crudo en especificación
+en la planta · 12 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+
+sin dato
+Manifold de producción, Depurador de gas, Tea / quemador, Tanque de agua y Pozos inyectores.
+Sin equipo registrado en TRIM: no hay con qué medir su falla.
+
+El Palmar
+#
+Equipo
+Se trabaría en
+Si falla hoy
+Después de
+Una falla ≈
+¿Lo vigila TRIM?
+1
+P-201B
+bomba de reinyección
+en la planta · 7 pozos
+3.277 bbl/d
+sin dato
+—
+sí
+2
+PA-06
+bombeo mecánico
+en el pozo
+632 bbl/d
+sin colchón
+—
+sin instrumento
+3
+PA-05
+bombeo mecánico
+en el pozo
+567 bbl/d
+sin colchón
+—
+sin instrumento
+4
+PA-01
+bombeo mecánico
+en el pozo
+518 bbl/d
+sin colchón
+—
+sin instrumento
+5
+PA-02
+bombeo mecánico
+en el pozo
+476 bbl/d
+sin colchón
+—
+sin instrumento
+ver 5 más
+Sin cifra todavía · techo si cierran todos sus pozos
+┄
+SE-2
+Pórtico 13,8 kV · subestación 2
+en la planta · 7 pozos
+hasta 3.277 bbl/d
+sin colchón
+—
+sí
+┄
+V-101
+Separador trifásico
+en la planta · 7 pozos
+hasta 3.277 bbl/d
+sin colchón
+—
+sí
+
+«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.
+
+Sin dato · lo que falta para calcularlos
+┄
+LACT-01
+Unidad LACT · punto de medición oficial
+en la planta · 7 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+┄
+TK-102
+Tanque de crudo en especificación
+en la planta · 7 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+
+sin dato
+Manifold de producción, Tanque de agua y Pozos inyectores.
+Sin equipo registrado en TRIM: no hay con qué medir su falla.
+
+La Zarza
+
+La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.

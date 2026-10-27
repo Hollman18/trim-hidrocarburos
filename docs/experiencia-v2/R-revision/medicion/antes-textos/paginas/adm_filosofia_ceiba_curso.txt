@@ -1,0 +1,217 @@
+#/adm/filosofia/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Configurar
+DATOS DE DEMOSTRACIÓN
+Filosofía operacional
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Configuración técnica
+Filosofía operacional
+Metas de los campos
+Usuarios y accesos
+Filosofía operacional · La Ceiba
+
+modelo choke
+
+borrador · sin cambios
+
+1 Equipos y pozos
+2 Capacidades
+3 Ver el impacto y firmar
+Paso 1 · Equipos y pozos
+Sin responder 30
+Propuestas de TRIM 6
+Casos de borde 0
+Todos 36
+Subir Excel o CSV
+EQUIPOS · 36
+La Ceiba
+POZOS: SU LEVANTAMIENTO · 18
+Aceptar los 18
+LC-01
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-01 → se traba en el pozo
+LC-02
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-02 → se traba en el pozo
+LC-03
+bombeo mecánico
+sin responder
+TRIM deduce: sirve solo a LC-03 → se traba en el pozo
+LC-04
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-04 → se traba en el pozo
+LC-05
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-05 → se traba en el pozo
+LC-06
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-06 → se traba en el pozo
+LC-07
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-07 → se traba en el pozo
+LC-08
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-08 → se traba en el pozo
+LC-09
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-09 → se traba en el pozo
+LC-10
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-10 → se traba en el pozo
+LC-11
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-11 → se traba en el pozo
+LC-12
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-12 → se traba en el pozo
+LC-14
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-14 → se traba en el pozo
+LC-15
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-15 → se traba en el pozo
+LC-16
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-16 → se traba en el pozo
+LC-17
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a LC-17 → se traba en el pozo
+LC-19
+bombeo mecánico
+sin responder
+TRIM deduce: sirve solo a LC-19 → se traba en el pozo
+LC-21
+bombeo mecánico
+sin responder
+TRIM deduce: sirve solo a LC-21 → se traba en el pozo
+SERVICIOS DEL CAMPO · 3
+Aceptar los 3
+C-401
+Compresor de gas
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+?
+SE-2
+Subestación 13,8 kV
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+?
+K-101
+Aire de instrumentos
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+PROCESO · 5
+Aceptar los 4
+Manifold de producción
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+?
+V-101
+Separador trifásico
+dos fuentes no cuadran
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+Depurador de gas
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+Tea / quemador
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+?
+H-302
+Tratador térmico
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+TANQUES · 3
+Aceptar los 3
+TK-102
+PMO-02
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+TK-101
+respaldo
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+Tanque de agua
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+MEDICIÓN Y DESPACHO · 1
+Aceptar el que falta
+?
+LACT-01
+Unidad LACT
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+BOMBAS · 3
+Aceptar los 3
+P-201A
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+?
+P-201B
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+P-201C
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+POZOS INYECTORES · 1
+Aceptar el que falta
+Pozos inyectores
+sin responder
+TRIM deduce: sirve a todo el campo (18 pozos) → se traba en la planta
+SALIDAS DE LA BATERÍA · 2
+Aceptar los 2
+Gas a venta
+sin responder
+TRIM deduce: de otro dueño, más allá de la batería → se traba afuera
+Oleoducto
+sin responder
+TRIM deduce: de otro dueño, más allá de la batería → se traba afuera
+LC-01 · ELECTROSUMERGIBLE
+sin responder
+¿A qué pozos sirve este equipo?
+A un solo pozo: LC-01
+propuesta de TRIM, sin aceptar
+
+Es un pozo: solo se sirve a sí mismo. El tramo de sus paradas no se escoge: es «En el pozo».
+
+Nadie lo ha contestado. Lo del borde discontinuo es lo que TRIM deduce: acéptelo abajo o escoja otra respuesta.
+
+LO QUE TRIM DEDUJO DEL REGISTRO
+
+Así lo deduce TRIM del registro del campo (los pozos y el esquema de planta). Nadie lo ha confirmado todavía.
+
+→ Si para, se traba en el pozo: es solo de LC-01.
+
+Aceptar
+Siguiente equipo
+Siguiente: capacidades

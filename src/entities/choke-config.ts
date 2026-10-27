@@ -18,9 +18,12 @@
  *  pantallas solo dicen en palabras lo que sale de aquí. */
 import {
   topologiaDerivada, chokeDeCausa, chokeDeAlcance, alcancePorPozos, casoBordeDe, potencialesDelCampo,
+  topologiaDe, topologiaFirmada, porSaberDelCampo, sinResponderDe,
   NOMBRE_CHOKE, NOMBRE_CHOKE_CAMPO, DONDE_CHOKE, PREGUNTA_ORIGEN, n0,
   type ChokeAnh, type ChokeCampo, type ChokeDeElemento, type AlcanceElemento, type ElementoPorSaber,
 } from './choke'
+import { capacidadesDe, cifraFactor, type TramoCapacidad } from './capacidades'
+import { tienePerfil, metaEn, perfilDe } from './configuracion'
 import { criticidadDelCampo, type FilaCriticidad } from './criticidad'
 import { filasDelChoke } from './choke-reparto'
 import { esDePersona, type BorradorClasificacion } from './anh-clasificacion'
@@ -179,6 +182,120 @@ export function faltanParaFirmar(borrador: Readonly<Record<string, TopologiaEnBo
     const n = pendientesDe(t).length
     return n ? [`${campoPorId(id).nombre}: ${n === 1 ? 'un equipo queda' : `${n0(n)} equipos quedan`} sin contestar en la filosofía operacional. TRIM propone, pero no firma nada solo: contéstelos o acéptelos por tipo.`] : []
   })
+}
+
+/* ─────────────────── el estado de la configuración (adm) ─────────────────── */
+
+/** F3 · Configuración (X4 §2 y §3.4, adm: «¿Está completo y bien armado cada
+ *  campo, y qué falta para firmar?»). Los pasos de un campo, en el orden en que
+ *  los completa el administrador; la meta va al final porque la firma el gerente. */
+export type PasoConfiguracion = 'perfil' | 'tanques' | 'topologia' | 'capacidades' | 'factor' | 'metas'
+export const PASOS_CONFIGURACION: readonly PasoConfiguracion[] = ['perfil', 'tanques', 'topologia', 'capacidades', 'factor', 'metas']
+export const NOMBRE_PASO: Record<PasoConfiguracion, string> = {
+  perfil: 'Perfil del campo', tanques: 'Tanques de agua', topologia: 'A qué pozos sirve cada equipo',
+  capacidades: 'Lo que deja pasar cada tramo', factor: 'Factor de medición', metas: 'Meta de hoy',
+}
+/** Lo que falta, para la frase: «Falta firmar a qué pozos sirve cada equipo.» */
+const FALTA_PASO: Record<PasoConfiguracion, string> = {
+  perfil: 'firmar el perfil del campo', tanques: 'completar los tanques de agua', topologia: 'firmar a qué pozos sirve cada equipo',
+  capacidades: 'firmar lo que deja pasar cada tramo', factor: 'firmar el factor de medición', metas: 'la meta de hoy, que firma el gerente de activo',
+}
+/** Los tramos de capacidad en una palabra de campo, para la fila. */
+const TRAMO_CORTO: Record<TramoCapacidad, string> = {
+  crudo: 'tren de crudo', agua: 'tren de agua', gas: 'tren de gas', afuera: 'afuera', mercado: 'mercado',
+  tratamiento: 'tratamiento de agua', admision: 'admisión de los inyectores',
+}
+
+export interface PasoDelEstado {
+  paso: PasoConfiguracion
+  nombre: string
+  listo: boolean
+  /** Lo que dice la fila, en palabras: «firmado», «sin firmar: dato del demo en …». */
+  detalle: string
+  /** K2 · La fila en el teléfono: el estado en una o dos palabras («firmado», «sin firmar»). El
+   *  detalle entero va en su nombre accesible y en el paso, a un toque. */
+  corto: string
+  /** Quién lo firma. */
+  firma: 'administrador' | 'gerente'
+}
+export interface EstadoConfiguracion {
+  campoId: string
+  listos: number
+  total: number
+  pasos: PasoDelEstado[]
+  /** El primero que falta, en su orden. Ausente: todo listo. */
+  siguiente?: PasoConfiguracion
+  /** «Falta firmar a qué pozos sirve cada equipo.»; ausente con todo listo. */
+  falta?: string
+  /** «La Ceiba: 3 de 6 pasos listos. Falta firmar a qué pozos sirve cada equipo.» */
+  frase: string
+}
+
+/** El estado de la configuración de un campo: cada paso, listo o no, DERIVADO de
+ *  la configuración firmada (`ctx.config`) y, para la topología, de lo contestado
+ *  en el borrador (`pendientesDe`, la regla de la primera firma). Nada se supone:
+ *  los tanques solo cuentan si el campo los tiene; el tren de gas, si el perfil
+ *  dice que hay gas; un tramo de capacidad sin dato ni firma no se pide firmar
+ *  (no hay qué firmar), uno con el dato del demo sí. */
+export function estadoConfiguracion(campoId: string, ctx: Contexto, borrador?: Readonly<Record<string, TopologiaEnBorrador>>): EstadoConfiguracion {
+  const cfg = ctx.config
+  const nombre = campoPorId(campoId).nombre
+  const pasos: PasoDelEstado[] = []
+  const poner = (paso: PasoConfiguracion, listo: boolean, detalle: string, corto: string, firma: PasoDelEstado['firma'] = 'administrador') =>
+    pasos.push({ paso, nombre: NOMBRE_PASO[paso], listo, detalle, corto, firma })
+
+  // 1. El perfil: qué maneja el campo y qué familias de equipo tiene.
+  poner('perfil', tienePerfil(cfg, campoId), tienePerfil(cfg, campoId) ? 'firmado' : 'sin perfil: no se sabe qué equipos tiene', tienePerfil(cfg, campoId) ? 'firmado' : 'sin perfil')
+
+  // 2. Los tanques de agua, si el campo los tiene: su capacidad, su transmisor y su aforo.
+  const tanques = cfg.tanques.filter(t => t.campoId === campoId)
+  if (tanques.length) {
+    const faltan = tanques.flatMap(t => {
+      const q = [!(t.capacidadBbl > 0) && 'la capacidad', !t.tagNivel.trim() && 'el transmisor de nivel', !t.aforo.trim() && 'el certificado de aforo'].filter(Boolean) as string[]
+      return q.length ? [`${t.id}: falta ${lista(q)}`] : []
+    })
+    poner('tanques', !faltan.length, faltan.length ? faltan.join(' · ') : `${tanques.length === 1 ? 'el tanque tiene' : `los ${tanques.length} tienen`} capacidad, transmisor y aforo`,
+      faltan.length ? 'le falta un dato' : 'completos')
+  }
+
+  // 3. A qué pozos sirve cada equipo: firmada, sin «todavía no sé» ni equipos nuevos sin contestar.
+  const firmada = topologiaFirmada(campoId, ctx)
+  const porSaber = porSaberDelCampo(campoId, ctx).length, nuevos = sinResponderDe(campoId, ctx).length
+  const t = borrador?.[campoId]
+  const contestados = t ? Object.keys(t.respuestas).length : 0
+  const base = topologiaDe(campoId, ctx).length
+  const topo = firmada
+    ? [porSaber && `${porSaber === 1 ? '1 equipo' : `${n0(porSaber)} equipos`} en «todavía no sé»`, nuevos && `${nuevos === 1 ? '1 equipo nuevo' : `${n0(nuevos)} equipos nuevos`} sin contestar`].filter(Boolean).join(' · ') || 'firmada'
+    : contestados
+      ? (n => (n ? `en el borrador faltan ${n0(n)} de ${n0(t!.base.length)} equipos por contestar` : 'contestada en el borrador: falta firmarla'))(pendientesDe(t).length)
+      : `TRIM la deduce del registro: faltan ${n0(base)} equipos por confirmar y firmar`
+  poner('topologia', firmada && !porSaber && !nuevos, topo, firmada ? (porSaber || nuevos ? 'por contestar' : 'firmada') : 'sin firmar')
+
+  // 4. Lo que deja pasar cada tramo: lo que rige con el dato del demo pide su firma.
+  const cap = capacidadesDe(cfg, campoId)
+  const conGas = perfilDe(cfg, campoId).gas !== 'no'
+  const tramos: TramoCapacidad[] = ['crudo', 'agua', ...(conGas ? ['gas' as const] : []), 'afuera', 'mercado', 'tratamiento', 'admision']
+  const sinFirmar = tramos.filter(k => cap[k].estado === 'demo')
+  const firmados = tramos.filter(k => cap[k].estado === 'firmado')
+  poner('capacidades', !sinFirmar.length && firmados.length > 0,
+    sinFirmar.length ? `dato del demo, sin firmar: ${lista(sinFirmar.map(k => TRAMO_CORTO[k]))}`
+      : firmados.length ? 'firmadas' : 'ningún tramo tiene dato',
+    sinFirmar.length ? 'sin firmar' : firmados.length ? 'firmadas' : 'sin dato')
+
+  // 5. El factor de medición de los pozos: sin firma rige 1.
+  const factor = cap.factorMedicion
+  poner('factor', factor.estado === 'firmado', factor.estado === 'firmado' ? `firmado: ${cifraFactor(factor.valor)}` : 'sin firmar: rige 1',
+    factor.estado === 'firmado' ? 'firmado' : 'sin firmar')
+
+  // 6. La meta de hoy: la firma el gerente de activo.
+  const meta = metaEn(cfg, campoId, AHORA.getTime())
+  poner('metas', !!meta, meta ? 'firmada' : 'sin meta firmada para hoy', meta ? 'firmada por el gerente' : 'la firma el gerente', 'gerente')
+
+  const listos = pasos.filter(p => p.listo).length, total = pasos.length
+  const siguiente = pasos.find(p => !p.listo)?.paso
+  const falta = siguiente ? `Falta ${FALTA_PASO[siguiente]}.` : undefined
+  const frase = `${nombre}: ${listos} de ${total} pasos listos. ${falta ?? 'Todo firmado.'}`
+  return { campoId, listos, total, pasos, ...(siguiente ? { siguiente } : {}), ...(falta ? { falta } : {}), frase }
 }
 
 /* ───────────────────────── la vista previa ───────────────────────── */

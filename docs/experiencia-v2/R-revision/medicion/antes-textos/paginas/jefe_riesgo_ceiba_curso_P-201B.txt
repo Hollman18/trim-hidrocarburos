@@ -1,0 +1,145 @@
+#/jefe/riesgo/ceiba/curso/P-201B
+
+La Ceiba
+Agua
+P-201B
+P-201A
+P-201C
+DATOS DE DEMOSTRACIÓN
+P-201B
+bomba multietapa de transferencia de agua · tratamiento de agua · criticidad 5 de 5 · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+1
+Alarma · parada desde hoy, 03:52 · hace 10,1 h
+
+1.665
+barriles por día
+
+se dejan de producir: cerró LC-07 y LC-16.
+
+No arrancar hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Crear aviso en SAP
+Diga qué se dañó
+Sus señales
+tendencia de 12 días · parada: en gris y sin marca
+Presión de succión
+PI-2010
+normal > 10 · alarma 8
+18,2
+psi
+Caudal
+FI-2011
+normal 66.800 – 89.250
+0
+bbl/d
+Corriente del motor
+II-2011
+normal 320 – 445
+0
+A
+Temperatura de cojinete
+TI-2011
+normal < 85 · alarma 85
+41
+°C
+Presión de descarga
+PDI-2011
+normal 180 – 240
+0
+psi
+Vibración global
+VI-2011
+normal < 3,9 · alarma 3,9
+0,0
+mm/s
+Nivel del tanque de agua
+LT-2012
+normal > 15 · alarma 15
+89,6
+%
+Fuga del sello
+LSH-2013
+interruptor: no lleva gráfica
+sin fuga
+
+La banda gris es lo normal; la raya oscura, el límite de alarma. La escala de cada señal es fija. Falta el disparo de cada protección: el sistema todavía no lo trae.
+
+En su tren de agua
+discontinuo: sin instrumento
+Tanque
+89,6 %
+alto-alto 90 %
+a los inyectores
+P-201A
+P-201B
+1
+P-201C
+PI
+18,2
+PDI
+0
+FI
+0
+174.033 bbl/d entran:
+las toman P-201A y P-201C
+Mientras esté parada
+Entra
+174.033
+bbl/d de agua
+Caben
+178.500
+P-201A + P-201C
+Tanque
+89,6 %
+alto-alto 90 %
+
+El nivel no sube: P-201A y P-201C toman lo que entra.
+
+Si para otra bomba ahora, cierre primero los más acuatosos: LC-02 · LC-10 · LC-01 · LC-17 · LC-14 · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 %. Dejan de producirse 3.059 bbl/d después de 2 min de colchón (parejo, 4.577).
+
+Los 12 días antes de parar
+Temperatura de cojinete · °C
+85
+0
+21 de sept
+hoy, 2 de oct
+Corriente del motor · A
+445
+0
+21 de sept
+hoy, 2 de oct
+Presión de descarga · psi
+240
+0
+21 de sept
+hoy, 2 de oct
+
+Modo de falla registrado: lubricación de cojinete. Una señal apunta, no prueba: la causa la confirma quien abre la bomba.
+
+Su historia
+12 meses
+
+9 fallas, una cada 41 d, 40,0 h fuera cada vez. Le ha costado 4.593 bbl por falla. Sello mecánico 5 · rodamientos 3.
+
+22 de sept
+rodamientos
+1.041 bbl
+9 de ago
+sello mecánico
+3.806 bbl
+Kit de sello mecánico 0 en bodega · llega 1 el 9 de oct
+3
+Aviso · Impulsor y anillos de desgaste 0 en bodega · pedirlo: 45 días
+Ver el diagnóstico: salud por parte e historia del PLC

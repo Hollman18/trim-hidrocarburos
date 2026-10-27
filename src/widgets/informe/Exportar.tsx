@@ -23,11 +23,11 @@ export function Exportar() {
       {/* Al abrir se borra el aviso anterior: uno viejo («nadie con acceso…») ya no dice la verdad. */}
       <button {...propsBoton} onClick={() => { x.setAviso(null); setAbierto(v => !v) }} aria-label="Exportar" title="Exportar: informe en PDF o datos en CSV"
         className="inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] px-3.5 text-[14px] font-semibold shadow-[inset_0_0_0_1px_var(--linea)] hover:bg-[var(--panel2)]">
-        <Download aria-hidden className="size-4 text-[var(--tinta2)]" /><span className="hidden sm:inline">Exportar</span>
+        <Download aria-hidden className="size-4 text-[var(--tinta2)]" />{/* F1 · UI-08: con su palabra también en el teléfono. */}<span>Exportar</span>
       </button>
       {abierto && (
         <div id={id} role="group" aria-label={`Exportar ${x.titulo}`} className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[310px] max-w-[calc(100vw-24px)] rounded-[16px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-lg:left-0 max-lg:right-auto">
-          <p className="font-cond px-2 pb-1 pt-1.5 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)]">EXPORTAR · {x.titulo.toUpperCase()}</p>
+          <p className="px-2 pb-1 pt-1.5 text-[13px] font-semibold text-[var(--tinta2)]">Exportar · {x.titulo}</p>
           <button disabled={x.ocupado} onClick={() => x.pdf(cerrar)}
             className="flex w-full cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-left text-[14px] hover:bg-[var(--panel2)] disabled:opacity-60">
             <FileText className="mt-0.5 size-3.5 shrink-0 opacity-70" />
@@ -38,6 +38,13 @@ export function Exportar() {
             <Table className="mt-0.5 size-3.5 shrink-0 opacity-70" />
             <span>Datos en CSV<span className="block text-[12px] text-[var(--tinta3)]">Eventos del período, con causa y barriles</span></span>
           </button>
+          {x.csvAnh && (
+            <button disabled={x.ocupado} onClick={() => void x.csvAnh?.(cerrar)} data-csv-anh=""
+              className="flex w-full cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-left text-[14px] hover:bg-[var(--panel2)] disabled:opacity-60">
+              <Table className="mt-0.5 size-3.5 shrink-0 opacity-70" />
+              <span>CSV para la ANH<span className="block text-[12px] text-[var(--tinta3)]">El libro mes a mes, con el factor y las casillas de PRODML</span></span>
+            </button>
+          )}
           {x.aviso && <p role="alert" className="border-t border-[var(--linea2)] px-2 py-1.5 text-[13px] text-[var(--tinta)]">{x.aviso}</p>}
           {/* Por qué sirve de respaldo: en el ⓘ. A la vista, el último folio. */}
           <p className="flex flex-wrap items-center gap-x-1.5 border-t border-[var(--linea2)] px-2 py-1.5 text-[12px] leading-relaxed text-[var(--tinta3)]">

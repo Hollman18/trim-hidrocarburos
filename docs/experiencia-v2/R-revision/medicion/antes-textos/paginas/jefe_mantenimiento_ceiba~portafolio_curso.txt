@@ -1,0 +1,155 @@
+#/jefe/mantenimiento/ceiba~portafolio/curso
+
+Todos mis campos
+Resultados
+DATOS DE DEMOSTRACIÓN
+Mantenimiento: lo que hay que atacar
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+fallas de alto impacto
+1.668bbl
+diferido
+1.501
+bbl/d
+máx. 2.300
+antes 1.508 bbl/d (jul a sep)
+del diferido, programado
+0,0 %
+0 bbl · 2.377 bbl no programado (libro)
+por identificar
+4
+2 sin arrancar ·
+2 arrancaron sin identificar
+Intervenir ya
+8 equipos avisando
+si para
+1
+K-101 · La Ceiba
+aire de instrumentos
+ya pasó el límite
+si para
+hasta 9.394 bbl/d
+qué hacer
+1
+GU-07 · Guacamayo
+electrosumergible
+aislamiento del motor y del cable
+ya pasó el límite
+si para
+588 bbl/d
+≈ 1.488 bbl si falla hoy
+qué hacer
+si falla hoy
+2
+MN-07 · Morichal Norte
+electrosumergible
+bomba de fondo · cruza en 4 h
+si para
+607 bbl/d
+≈ 10.579 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+2
+MN-18 · Morichal Norte
+electrosumergible
+admisión y gas · cruza en 30 h
+si para
+526 bbl/d
+≈ 9.175 bbl si falla hoy
+flota
+qué hacer
+si falla hoy
+2
+P-201B · Morichal Norte
+bomba de reinyección
+succión y filtro de entrada · cruza en 43 h
+si para
+783 bbl/d
+≈ 1.235 bbl si falla hoy
+0 si vuelve antes de 10 h
+qué hacer
+si falla hoy
+ver 3 más
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+1.668
+bbl
+ 70 %
+Con parte vigilada
+1.095
+bbl
+ 46 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+573
+bbl
+ 24 %
+Evitable cerrando en orden
+30
+bbl
+ 1 %
+Por parte
+bombas y electrosumergibles
+Aislamiento del motor y del cable
+electrosumergible · 1 falla
+1.083
+bbl · 99 %
+Bomba de fondo
+electrosumergible · sin fallas · 1 disparo
+12
+bbl · 1 %
+
++ 573 bbl sin la parte identificada
+
+Programa de paradas
+firmado
+
+Nada programado de aquí en adelante.
+
+HORAS EN SAP
+
+Sin órdenes cerradas en el período
+
+ABIERTO EN SAP
+ahora · 0 avisos · 1 orden
+Orden 40012056 · predictivo · K-101 · La Ceiba
+2 de oct · Óscar Daza
+liberada
+Paradas por identificar
+2
+P-201B · La Ceiba · 2 de oct, 03:52
+sigue parado
+573 bbl
+2
+LC-21 · La Ceiba · 1 de oct, 18:20
+sigue parado
+247 bbl
+3
+LC-08 · La Ceiba · 1 de oct, 22:15
+arrancó sin identificar
+109 bbl
+3
+P-201B · Morichal Norte · 24 de sept, 16:51
+arrancó sin identificar
+3.789 bbl
+
+1 más, respondida después de arrancar
+
+Ir a identificar

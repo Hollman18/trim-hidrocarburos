@@ -1,0 +1,224 @@
+#/conf/confiabilidad/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Resultados
+DATOS DE DEMOSTRACIÓN
+Confiabilidad
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+Bombas de reinyección · 1
+46 d
+entre fallas
+8 fallas · 47,1 h fuera
+Electrosumergibles · 41
+1.670 d
+entre fallas
+9 fallas · 17,4 d fuera
+Bombas multifásicas · 1
+52 d
+entre fallas
+7 fallas · 2,0 d fuera
+Historia
+12 meses
+eventos del PLC
+¿Acierta el vigía?
+desde el 1 de sept
+Acertó
+1 de 3
+33 % · 2 falsas alarmas
+3 intervenidas, sin calificar
+Fallas anticipadas
+1 de 4
+en partes con instrumento
+Anticipación
+4,0 d
+promedio · de 4,0 a 4,0 d
+En seguimiento
+4
+la primera vence 2 de oct, 17:57
+Lo que anunció y en qué quedó · 6
+MN-33 · aislamiento del motor y del cable
+avisó 13 de sept, 02:26 → falló 17 de sept, 02:26
+acierto
+4,0 d antes
+MN-05 · bomba de fondo
+avisó 9 de sept, 21:37 → orden 40012059 cerrada 13 de sept, 18:22
+intervenida antes
+MPP-301 · rodamientos
+avisó 5 de sept, 23:17 → orden 40012060 cerrada 7 de sept, 11:17
+intervenida antes
+MN-40 · aislamiento del motor y del cable
+avisó 3 de sept, 03:59 → venció 7 de sept, 08:47
+falsa alarma
+MN-41 · aislamiento del motor y del cable
+avisó 3 de sept, 01:55 → venció 7 de sept, 06:43
+falsa alarma
+ver 1 más
+Lo que no anunció · 4 fallas
+Se le escaparon: tenían instrumento
+3
+MN-41 · 25 de sept, 06:40 · aislamiento del motor y del cable
+MPP-301 · 24 de sept, 06:23 · sello mecánico
+MN-23 · 5 de sept, 14:17 · admisión y gas
+Sin parte identificada: no se sabe qué mirar
+1
+P-201B · 24 de sept, 16:51
+En seguimiento · 4
+cruzaría el límite
+MN-07 · bomba de fondo
+VSD-MN07 · corriente
+2 de oct, 17:38–17:57
+MN-18 · admisión y gas
+PIT-MN18 · sensor de fondo
+3 de oct, 19:38–20:41
+P-201B · succión y filtro de entrada
+PI-2010
+4 de oct, 07:20–10:59
+MN-27 · protector del motor
+TIT-MN27 · sensor de fondo
+12 de oct, 19:55 – 14 de oct, 05:16
+Reparación activa y espera
+promedio · 23 fallas cerradas · toda la historia
+Reparación activa
+8 h
+Espera
+7,0 d
+Indisponibilidad total
+7,4 d
+Los más costosos
+bbl · toda la historia
+Equipo	Fallas	Entre fallas	Fuera	Parte	le ha costado
+por falla	bbl
+MPP-301
+multifásica
+	7	52 d	2,0 d	Sello	3.226	22.582
+P-201B
+reinyección
+	8	46 d	47,1 h	Sello	2.765	22.117
+MN-06
+electrosumergible
+	1 +4	—	28,9 d	Aislamiento	16.005	16.206
+MN-11
+electrosumergible
+	1 +8	—	28,9 d	Aislamiento	12.133	12.371
+MN-08
+electrosumergible
+	1 +8	—	20,4 d	Motor	11.415	11.823
+ver 6 más
+De qué fallan
+contra la referencia
+Bombas de reinyección · 7 fallas con parte
+Sello mecánico
+5 · 71 %
+Succión y filtro de entrada
+1 · 14 %
+Motor eléctrico
+1 · 14 %
+Electrosumergibles · 9 fallas con parte
+Aislamiento del motor y del cable
+6 · 67 %
+Motor de fondo
+2 · 22 %
+Admisión y separador de gas
+1 · 11 %
+Bombas multifásicas · 7 fallas con parte
+Sellos mecánicos (cuatro)
+4 · 57 %
+Tornillos y holguras
+2 · 29 %
+Lubricación
+1 · 14 %
+Fallas por mes
+sin disparos
+10
+11
+12
+01
+02
+03
+04
+05
+06
+07
+08
+09
+10
+bombas de reinyección
+electrosumergibles
+bombas multifásicas
+Calidad del registro
+ISO 14224: parte por falla
+por señal
+21 · 88 %
+por la firma de las señales
+2 · 8 %
+declarado por el operario
+0 · 0 %
+sin identificar
+1 · 4 %
+
+24 fallas
+43 equipos
+
+Calidad de la clasificación
+6 filas · Octubre, en curso
+Paso 2 · ¿Dónde se trabó?
+modelo choke
+confirmado por una persona
+0 %
+0 de 6 filas
+corregido: cuánto se equivoca la regla
+0 %
+0 de 6 propuestas
+Los demás pasos
+confirmado
+corregido
+Quién
+0 %
+0 %
+1 en falta
+Qué pasó
+0 %
+0 %
+nada en falta
+¿Planeada?
+0 %
+0 %
+1 en falta
+Causa
+0 %
+0 %
+1 en falta
+Detalle
+0 %
+0 %
+3 en falta
+Las reglas que más se corrigen
+
+Nadie corrigió una propuesta de TRIM en octubre (en curso): todavía nadie ha revisado estas paradas.
+
+El paso 2 por equipo
+MN-22
+2 paradas · 0 corregidas · 0 %
+MN-41
+1 parada (2 filas) · 0 corregidas · 0 %
+MN-25
+1 parada · 0 corregidas · 0 %
+MN-31
+1 parada · 0 corregidas · 0 %
+Equipos sin topología
+
+Todos los equipos de estas paradas dicen a qué pozos sirven.

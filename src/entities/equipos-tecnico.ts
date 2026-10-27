@@ -13,7 +13,15 @@
  *       (`criticidad.ts`): lo medido de mayor a menor, después los techos («hasta»)
  *       y al final lo que no tiene cifra (D6). Lo parado, por lo que ya deja de producir.
  *     - Los filtros: parados, avisan, sin instrumento y todos; por tipo y por tren.
- *       Cada fila dice en cuáles entra: la pantalla solo filtra.
+ *       Cada fila dice en cuáles entra: la pantalla solo filtra. «Avisan» cuenta lo
+ *       mismo que «Equipos que avisan» (`NOMBRE_CIFRA`, resultados.ts): lo que está
+ *       en riesgo según `riesgoAhora`, uno por equipo (G-15).
+ *     - Lo que se deja de producir ahora va en enteros que suman la raíz del campo
+ *       (`redondeo.ts`, H2); un pozo cerrado por otro equipo no lleva cifra propia:
+ *       lo suyo va dentro de la de ese equipo (G-1b).
+ *     - Arriba, el primero de «Si falla hoy» con su frase (la respuesta de
+ *       confiabilidad, X4 §3.4; P-02), dónde va el próximo instrumento y lo que no
+ *       conviene intervenir hoy (P-10).
  *     - «¿Lo vigila TRIM?» es `vigilado` de «Si falla hoy»: lo que TRIM lee.
  *     - Para confiabilidad, el acierto del vigía en una línea (`aciertos.ts`).
  *
@@ -26,7 +34,7 @@
  *  El motor no inventa: lo que no tiene, no lo trae (el rango del instrumento y el
  *  disparo de cada protección, X2 §7 pedido 4: `sinDisparo`). Todo es JSON puro
  *  (las horas van en ISO con zona): viaja tal cual por el contrato. */
-import type { Contexto } from './causa-senal'
+import { causaDeEvento, type Contexto } from './causa-senal'
 import type { Dispositivo, EstadoDispositivo } from './tipos'
 import { EQUIPOS } from './equipos'
 import { equipoVivo, type EquipoVivo } from './equipo-vivo'
@@ -46,6 +54,8 @@ import { textoHoras } from './salud'
 import { PUESTA_EN_MARCHA } from './configuracion'
 import { campoPorId } from './campos'
 import { AHORA } from './reloj'
+import { enteroDe, enterosPorId } from './redondeo'
+import { n0 } from './choke'
 import { banda, decimalesDe } from '@/shared/lib/formato'
 
 /* ─────────────────────────────── los nombres ─────────────────────────────── */
@@ -181,6 +191,11 @@ export interface CifraFila {
   que: 'se deja de producir' | 'si falla hoy'
   /** Lo que la acompaña: «después de 2 min de colchón», «sin dato: falta…». */
   detalle?: string
+  /** G-1b · Cerrado por otro equipo: no lleva cifra propia; lo suyo va dentro de la
+   *  de ese equipo («dentro de los 1.665 de P-201B»). `valor` es null. */
+  dentroDe?: { equipo: string; valor: number }
+  /** H2 · El exacto (bbl/d) cuando `valor` es el entero que le toca en el reparto del campo. */
+  exacto?: number
 }
 
 export interface FilaEquipoTecnico {
@@ -236,10 +251,62 @@ export interface VistaEquipos {
   sinRegistro: Array<{ campoId: string; nombre: string }>
   /** ¿Le creo al vigía? (para confiabilidad; X4 §3.7). */
   vigia: AciertoVigia
+  /** P-02 · El primero de «Si falla hoy»: la respuesta de confiabilidad (X4 §3.4). Ausente sin cifras. */
+  primero?: PrimeroSiFalla
+  /** P-10 · «¿Dónde va el próximo instrumento?», cuando no lo dice ya la frase del primero
+   *  (`criticidad.ts`, `proximoInstrumento`); uno por campo. */
+  instrumento: string[]
+  /** P-10 · Lo que no conviene intervenir hoy (para el jefe; `noIntervenir`), uno por campo. */
+  noIntervenir: string[]
+  /** P-10 · Los trabajos del programa sobre un equipo que hoy vale más (`avisosTrabajo`). */
+  avisosTrabajo: Array<{ campoId: string; tarea: string; texto: string }>
+}
+
+/** P-02 · La cabeza de Equipos para quien decide qué atacar primero (X4 §3.4, conf):
+ *  la cifra (bbl/d, D-2), la frase y los tres primeros de «Si falla hoy». */
+export interface PrimeroSiFalla {
+  /** El primero de lo medido, bbl/d si falla hoy. */
+  valor: number
+  /** «después de 2 min de colchón». */
+  detalle?: string
+  /** Los que comparten el primer puesto. */
+  equipos: Array<{ campoId: string; equipo: string }>
+  /** «Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila. Ahí va el próximo instrumento.» */
+  frase: string
+  /** Los tres primeros de «Si falla hoy», en su orden (lo medido, después los techos). */
+  filas: FilaEquipoTecnico[]
 }
 
 /** Para el orden de «Si falla hoy»: lo medido, los techos y lo que no tiene cifra (D6). */
 const GRUPO = { medido: 0, techo: 1, 'sin-dato': 2 } as const
+
+/** El equipo que cerró un pozo (la causa de su evento), si no es el pozo mismo. */
+function cerradoPor(campoId: string, id: string, ctx: Contexto): string | undefined {
+  const pozo = pozoDe(campoId, id)
+  const ev = pozo ? estadoAhora(pozo).evento : undefined
+  const c = ev ? causaDeEvento(ev, ctx) : undefined
+  return c && c.equipo !== id ? c.equipo : undefined
+}
+
+/** H2 · Lo que se deja de producir ahora en un campo, en enteros que suman (la regla de
+ *  `redondeo.ts`): la raíz es la del campo (Σ de lo que `riesgoAhora` da «perdiendo», la
+ *  de `estadoCampo` y de «Se deja de producir ahora»), repartida por equipo por mayor
+ *  residuo; dentro de cada equipo, los pozos que cerró (su parte, no una cifra aparte). */
+function enterosAhoraDe(campoId: string, riesgo: readonly Riesgo[], parados: readonly FilaCriticidad[], ctx: Contexto): Map<string, number> {
+  const perd = riesgo.filter(r => r.estado === 'perdiendo')
+  const raiz = enteroDe(perd.reduce((a, r) => a + r.bblDia, 0))
+  const out = new Map(Object.entries(enterosPorId(raiz, perd.map(r => ({ id: r.equipo, valor: r.bblDia })))))
+  const hijos = new Map<string, Array<{ id: string; valor: number }>>()
+  for (const f of parados) {
+    const otro = f.perdiendoBpd ? cerradoPor(campoId, f.equipo, ctx) : undefined
+    if (otro && !out.has(f.equipo)) hijos.set(otro, [...(hijos.get(otro) ?? []), { id: f.equipo, valor: f.perdiendoBpd! }])
+  }
+  for (const [otro, xs] of hijos) {
+    const padre = out.get(otro)
+    if (padre !== undefined) for (const [id, n] of Object.entries(enterosPorId(padre, xs))) out.set(id, n)
+  }
+  return out
+}
 
 function filasDelCampo(campoId: string, ctx: Contexto, versiones?: Versiones): Array<FilaEquipoTecnico & { _k: number[] }> {
   const crit = criticidadDelCampo(campoId, ctx)
@@ -247,6 +314,7 @@ function filasDelCampo(campoId: string, ctx: Contexto, versiones?: Versiones): A
   const riesgo = riesgoAhora([campoId], ctx)
   const agua = tuberiaAgua(campoId, ctx, versiones)
   const campoNombre = campoPorId(campoId).nombre
+  const enteros = enterosAhoraDe(campoId, riesgo, crit.parados, ctx)
   const vistos = new Set<string>()
   const out: Array<FilaEquipoTecnico & { _k: number[] }> = []
   for (const f of [...crit.parados, ...crit.ranking]) {
@@ -274,13 +342,19 @@ function filasDelCampo(campoId: string, ctx: Contexto, versiones?: Versiones): A
     else if (r?.estado === 'en-riesgo' && r.parte) palabra = `${NOMBRE_PARTE[r.parte].toLowerCase()} · ${r.horas !== undefined ? `alarma en ${textoHoras(r.horas)}` : 'ya en alarma'}`
     else if (r?.estado === 'en-riesgo') palabra = r.horas !== undefined ? `en marcha · alarma en ${textoHoras(r.horas)}` : 'ya pasó el límite'
     else palabra = eq.estado
-    const cifra: CifraFila = parado && f.perdiendoBpd !== undefined
-      ? { valor: f.perdiendoBpd, que: 'se deja de producir' }
+    // G-1b: un pozo cerrado por otro no suma aparte; su parte va dentro de la cifra de ese equipo.
+    const otro = parado ? cerradoPor(campoId, id, ctx) : undefined
+    const delOtro = otro !== undefined ? enteros.get(otro) : undefined
+    const cifra: CifraFila = parado && f.perdiendoBpd !== undefined && otro !== undefined && delOtro !== undefined
+      ? { valor: null, que: 'se deja de producir', dentroDe: { equipo: otro, valor: delOtro }, detalle: `dentro de los ${n0(delOtro)} de ${otro}`, exacto: f.perdiendoBpd }
+      : parado && f.perdiendoBpd !== undefined
+      ? { valor: enteros.get(id) ?? enteroDe(f.perdiendoBpd), que: 'se deja de producir', exacto: f.perdiendoBpd }
       : f.grupo === 'sin-dato' || f.bpd === null
         ? { valor: null, que: 'si falla hoy', detalle: 'sin dato' }
         : { valor: f.bpd, que: 'si falla hoy', ...(f.grupo === 'techo' ? { techo: true as const } : {}),
           ...(f.colchonH !== undefined && Number.isFinite(f.colchonH) && f.bpd > 0 ? { detalle: `después de ${colchon(f.colchonH)} de colchón` } : {}) }
-    const filtros: FiltroEstado[] = [...(parado ? ['parados' as const] : []), ...(!parado && condicion ? ['avisan' as const] : []),
+    // «Avisan» es lo que está en riesgo (`riesgoAhora`): el mismo conteo de «Equipos que avisan» (G-15).
+    const filtros: FiltroEstado[] = [...(parado ? ['parados' as const] : []), ...(!parado && r?.estado === 'en-riesgo' ? ['avisan' as const] : []),
       ...(!vigila ? ['sin-instrumento' as const] : []), 'todos']
     const rango = condicion ? ORDEN_FRANJA.indexOf(condicion) : ORDEN_FRANJA.length
     out.push({
@@ -310,6 +384,19 @@ export function listaEquipos(campos: readonly string[], ctx: Contexto, versiones
   const varios = campos.length > 1
   const cambioHoy = campos.flatMap(c => { const t = criticidadDelCampo(c, ctx).cambioHoy; return t ? [varios ? `${campoPorId(c).nombre}: ${t}` : t] : [] })
   const sinRegistro = campos.flatMap(c => criticidadDelCampo(c, ctx).sinCalcular.map(x => ({ campoId: c, nombre: x.nombre })))
+  const primero = primeroSiFalla(filas, varios)
+  // El próximo instrumento de cada campo, si la frase del primero no lo dice ya (P-10).
+  const yaDicho = new Set(primero && primero.equipos.every(e => !filas.find(f => f.campoId === e.campoId && f.equipo === e.equipo)?.vigila)
+    ? primero.equipos.map(e => `${e.campoId}|${e.equipo}`) : [])
+  const conCampo = (c: string, t: string) => (varios ? `${campoPorId(c).nombre}: ${t}` : t)
+  const instrumento = campos.flatMap(c => {
+    const cr = criticidadDelCampo(c, ctx)
+    const sinVigia = cr.ranking.filter(x => !x.vigilado && (x.bpd ?? 0) > 0)
+    const suyos = sinVigia.filter(x => x.puesto === sinVigia[0]?.puesto)
+    return cr.proximoInstrumento && !suyos.every(x => yaDicho.has(`${c}|${x.equipo}`)) ? [conCampo(c, cr.proximoInstrumento)] : []
+  })
+  const noIntervenir = campos.flatMap(c => { const t = criticidadDelCampo(c, ctx).noIntervenir; return t ? [conCampo(c, t)] : [] })
+  const avisosTrabajo = campos.flatMap(c => criticidadDelCampo(c, ctx).avisosTrabajo.map(a => ({ campoId: c, tarea: a.tarea, texto: conCampo(c, a.texto) })))
   return {
     filas,
     cuentas: {
@@ -319,6 +406,34 @@ export function listaEquipos(campos: readonly string[], ctx: Contexto, versiones
     },
     cambioHoy, sinRegistro,
     vigia: aciertoVigia(campos, ctx),
+    ...(primero ? { primero } : {}), instrumento, noIntervenir, avisosTrabajo,
+  }
+}
+
+/** P-02 · El primero de «Si falla hoy» (X4 §3.4, la respuesta de confiabilidad): la cifra
+ *  (lo medido, bbl/d, D-2), los que comparten el puesto, la frase con lo que se sabe de
+ *  ellos y los tres primeros de la lista. Nada nuevo: lo mismo que ya dicen sus filas. */
+function primeroSiFalla(filas: readonly FilaEquipoTecnico[], varios: boolean): PrimeroSiFalla | undefined {
+  const enLista = filas.filter(f => !f.parado && f.cifra.que === 'si falla hoy' && f.cifra.valor !== null)
+  const orden = [...enLista.filter(f => !f.cifra.techo), ...enLista.filter(f => f.cifra.techo)]
+    .sort((a, b) => Number(!!a.cifra.techo) - Number(!!b.cifra.techo) || b.cifra.valor! - a.cifra.valor!)
+  const top = orden[0]
+  if (!top || top.cifra.techo || !top.cifra.valor) return undefined
+  const primeros = orden.filter(f => !f.cifra.techo && f.cifra.valor === top.cifra.valor)
+  const n = primeros.length
+  const fem = primeros.every(f => f.tipo === 'bomba' || f.tipo === 'electrosumergible')
+  const sinVigia = primeros.every(f => !f.vigila)
+  const porque = [
+    primeros.every(f => f.sube) ? (n > 1 ? 'hoy valen más' : 'hoy vale más') : '',
+    primeros.every(f => f.filtros.includes('avisan')) ? (n > 1 ? 'ya avisan' : 'ya avisa') : '',
+    sinVigia ? `TRIM no ${fem ? (n > 1 ? 'las' : 'la') : (n > 1 ? 'los' : 'lo')} vigila` : '',
+  ].filter(Boolean)
+  const nombres = lista(primeros.map(f => (varios ? `${f.equipo} (${f.campoNombre})` : f.equipo)))
+  const frase = `Ataque primero ${nombres}: ${porque.length ? lista(porque)
+    : n > 1 ? 'son los que más le quitarían al campo si fallan hoy' : 'es lo que más le quitaría al campo si falla hoy'}.${sinVigia ? ' Ahí va el próximo instrumento.' : ''}`
+  return {
+    valor: top.cifra.valor, ...(top.cifra.detalle ? { detalle: top.cifra.detalle } : {}),
+    equipos: primeros.map(f => ({ campoId: f.campoId, equipo: f.equipo })), frase, filas: orden.slice(0, 3),
   }
 }
 
@@ -329,14 +444,13 @@ export function aciertoVigia(campos: readonly string[], ctx: Contexto): AciertoV
   const aciertos = cuenta('acierto'), falsas = cuenta('falsa-alarma'), intervenidas = cuenta('intervenida'), seguimiento = cuenta('seguimiento')
   const juzgadas = aciertos + falsas
   const desde = `${PUESTA_EN_MARCHA}T00:00:00-05:00`
-  const d = new Date(Date.parse(desde) - COT)
-  const partes = [juzgadas ? `acertó ${aciertos} de ${juzgadas} avisos` : 'todavía no hay avisos vencidos para calificar',
-    falsas ? `${falsas === 1 ? '1 falsa alarma' : `${falsas} falsas alarmas`}` : '',
-    intervenidas ? `${intervenidas === 1 ? '1 intervenida' : `${intervenidas} intervenidas`} sin calificar` : '',
-    seguimiento ? `${seguimiento} en seguimiento` : ''].filter(Boolean)
+  // K2 · Una línea, la que contesta: cuántos acertó de los que se pueden juzgar, «desde que entró TRIM»
+  // (el nombre de Resultados). Las falsas alarmas ya están en «de 3»; las intervenidas y las que siguen en
+  // seguimiento, en «Ver el detalle» (Confiabilidad), con la fecha de la puesta en marcha.
+  const frase = juzgadas ? `¿Le creo al vigía? Desde que entró TRIM, acertó ${aciertos} de ${juzgadas} avisos.`
+    : '¿Le creo al vigía? Todavía no hay avisos vencidos para calificar.'
   return {
-    aciertos, juzgadas, falsas, intervenidas, seguimiento, desde: iso(Date.parse(desde)),
-    frase: `¿Le creo al vigía? Desde el ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}: ${lista(partes)}.`,
+    aciertos, juzgadas, falsas, intervenidas, seguimiento, desde: iso(Date.parse(desde)), frase,
   }
 }
 
@@ -349,11 +463,11 @@ export interface SenalNivel3 {
   /** null: sin lectura (se dice «sin señal», nunca cero). */
   valor: number | null
   decimales: number
-  /** Escala fija del instrumento (X2 §5.1, punto 1): no depende del valor de ahora.
-   *  Mientras el motor no tenga el rango declarado, va de cero (o del límite menor
-   *  menos un margen) al mayor de los límites y las lecturas de la ventana, más
-   *  20 %; en porcentaje, de 0 a 100. Sus extremos no se rotulan. */
-  escala: [number, number]
+  /** La escala de la señal (X2 §5.1, punto 1; I1): sale SOLO de sus límites firmados,
+   *  nunca de las lecturas (`escalaDe`). Es provisional mientras el motor no tenga el
+   *  rango declarado del instrumento, y se dice. Sus extremos no se rotulan. Null: la
+   *  señal no tiene ningún límite declarado; no se dibuja el indicador (H5). */
+  escala: [number, number] | null
   /** Banda normal; null del lado abierto («> 10» no tiene techo). */
   banda: [number | null, number | null] | null
   /** Los límites de alarma (la base maestra de alarmas, ISA-18.2). */
@@ -377,6 +491,7 @@ export interface TendenciaNivel3 {
   nombre: string
   unidad: string
   serie: Array<number | null>
+  /** La misma de su señal (`SenalNivel3.escala`): de sus límites, nunca de las lecturas. */
   escala: [number, number]
   banda: [number | null, number | null] | null
   alarmas: number[]
@@ -478,17 +593,35 @@ export interface VistaNivel3 {
   diagnostico: boolean
 }
 
-/** La escala fija de una señal (ver `SenalNivel3.escala`). */
-export function escalaDe(unidad: string, bandaN: readonly [number, number] | undefined, alarmas: readonly number[], serie: ReadonlyArray<number | null>): [number, number] {
+/** H5 · La escala de una señal (X2 §5.1, punto 1, e I1: «nunca depende del valor de
+ *  ahora»): sale SOLO de los límites firmados —la banda normal y las alarmas—, nunca
+ *  de las lecturas, así el puntero se lee por su lugar. La banda queda en el tercio
+ *  del medio (Hollifield):
+ *   · banda cerrada [a, b] → [a − (b − a), b + (b − a)], con piso en 0 si la variable
+ *     no es negativa;
+ *   · banda de un solo lado (o una sola alarma) → [0, 2 × el límite];
+ *   · solo alarmas a los dos lados → como una banda cerrada entre ellas;
+ *   · en porcentaje, de 0 a 100.
+ *  Las alarmas siempre caen adentro. Es provisional: el rango declarado del
+ *  instrumento (X2 §7, pedido 4) todavía no llega, y la pantalla lo dice. Sin ningún
+ *  límite, null: no se dibuja ni se inventa (§7.8). */
+export function escalaDe(unidad: string, bandaN: readonly [number, number] | undefined, alarmas: readonly number[]): [number, number] | null {
   if (unidad === '%') return [0, 100]
-  const limites = [...(bandaN ?? []).filter(Number.isFinite), ...alarmas]
-  const lecturas = serie.filter(finito)
-  const todos = [...limites, ...lecturas]
-  if (!todos.length) return [0, 1]
-  const max = Math.max(...todos), min = Math.min(...todos)
-  const lo = min >= 0 ? 0 : min - 0.2 * (max - min || Math.abs(min) || 1)
-  const hi = max + 0.2 * (max - lo || Math.abs(max) || 1)
-  return [lo, hi > lo ? hi : lo + 1]
+  const b0 = bandaN && Number.isFinite(bandaN[0]) ? bandaN[0] : undefined
+  const b1 = bandaN && Number.isFinite(bandaN[1]) ? bandaN[1] : undefined
+  const al = alarmas.filter(finito)
+  const cerrada = (a: number, b: number): [number, number] => { const w = b - a || Math.abs(b) || 1; return [a >= 0 ? Math.max(0, a - w) : a - w, b + w] }
+  let e: [number, number]
+  if (b0 !== undefined && b1 !== undefined && b1 > b0) e = cerrada(b0, b1)
+  else {
+    const lim = b0 ?? b1 ?? (al.length === 1 ? al[0] : undefined)
+    if (lim === undefined && al.length >= 2) e = cerrada(Math.min(...al), Math.max(...al))
+    else if (lim === undefined) return null
+    else e = lim > 0 ? [0, 2 * lim] : lim < 0 ? [2 * lim, 0] : [0, Math.max(1, ...al.map(Math.abs))]
+  }
+  const m = 0.1 * (e[1] - e[0])
+  for (const a of al) { if (a > e[1]) e[1] = a + m; if (a < e[0]) e[0] = a - m }
+  return e
 }
 
 const DE_ESTADO: Partial<Record<EstadoDispositivo, CondicionFranja>> = {
@@ -511,14 +644,14 @@ function senalDe(campoId: string, d: Dispositivo, parado: boolean): SenalNivel3 
   const al = limiteDe(campoId, d.tag)?.alarma
   const alarmas = [al?.baja, al?.alta].filter(finito)
   const dec = decimalesDe(serie, valor)
-  const escala = escalaDe(d.unidad, bandaN, alarmas, [...serie, valor])
+  const escala = escalaDe(d.unidad, bandaN, alarmas)
   const cond = !parado ? (valor === null ? 'sin-comunicacion' as const : DE_ESTADO[d.estado]) : undefined
   return {
     tag: d.tag, nombre: d.tipo, unidad: d.unidad, valor, decimales: dec, escala,
     banda: bandaN ? [Number.isFinite(bandaN[0]) ? bandaN[0] : null, Number.isFinite(bandaN[1]) ? bandaN[1] : null] : null,
     alarmas, limite: textoLimite(bandaN, alarmas), serie: [...serie],
     ...(cond ? { condicion: cond } : {}), gris: parado,
-    ...(valor !== null && valor < escala[0] ? { fuera: 'abajo' as const } : valor !== null && valor > escala[1] ? { fuera: 'arriba' as const } : {}),
+    ...(escala && valor !== null && valor < escala[0] ? { fuera: 'abajo' as const } : escala && valor !== null && valor > escala[1] ? { fuera: 'arriba' as const } : {}),
   }
 }
 
@@ -536,6 +669,8 @@ function tendenciasDe(eq: EquipoVivo, campoId: string, parado: boolean, desde?: 
     const t = tendencia({ ...d.serie, valores: antes })
     if (!t || Math.abs(t.pendiente) <= 2 * t.errorPendiente || !t.ordenada) continue
     const s = senalDe(campoId, d, parado)
+    // Sin límite declarado no hay escala que no se mueva: no se grafica (H5).
+    if (!s.escala) continue
     cand.push({ s: { tag: s.tag, nombre: s.nombre, unidad: s.unidad, serie: s.serie, escala: s.escala, banda: s.banda, alarmas: s.alarmas, decimales: s.decimales },
       peso: Math.abs((t.pendiente * t.finH) / t.ordenada) })
   }
@@ -583,7 +718,9 @@ export function nivelEquipo(campoId: string, equipo: string, ctx: Contexto, vers
   let cifra: VistaNivel3['cifra']
   if (eq) {
     const pr = perfil && perfil.papel !== 'recobro' ? prediccion(perfil, ctx) : undefined
-    const perdiendo = parado ? fc?.perdiendoBpd ?? riesgo.find(r => r.equipo === equipo && r.estado === 'perdiendo')?.bblDia ?? 0 : 0
+    const exacto = parado ? fc?.perdiendoBpd ?? riesgo.find(r => r.equipo === equipo && r.estado === 'perdiendo')?.bblDia ?? 0 : 0
+    // H2: el entero que le toca en el reparto del campo (el mismo de la lista y de La planta viva).
+    const perdiendo = parado ? enterosAhoraDe(campoId, riesgo, crit.parados, ctx).get(equipo) ?? enteroDe(exacto) : 0
     const cerro = pr?.perdiendo?.pozos.map(p => p.id) ?? []
     cifra = {
       valor: perdiendo,

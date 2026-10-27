@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { pedirJson, cancelado, mensajeDe, type OpcionesPedido } from './fuente'
+import { pedirJson, cancelado, mensajeDe, ErrorApi, FUENTE, type OpcionesPedido } from './fuente'
 
 /** Cliente del registro de la cadena de datos. El front consume el contrato;
  *  quién lo implementa del otro lado es indiferente. */
@@ -46,7 +46,7 @@ export interface DatosRegistro { campo: string; inv: Inventario; pend: TagPendie
  *  después, se pintaba bajo el nombre del nuevo. */
 export function useRegistro(campo: string, capacidades: string[]) {
   const [datos, setDatos] = useState<DatosRegistro | null>(null)
-  const [error, setError] = useState<{ campo: string; texto: string } | null>(null)
+  const [error, setError] = useState<{ campo: string; texto: string; sinServicio: boolean } | null>(null)
   const [vuelta, setVuelta] = useState(0)
   const llaves = capacidades.join(',')
 
@@ -61,13 +61,16 @@ export function useRegistro(campo: string, capacidades: string[]) {
     ])
       // La marca de vigencia va DESPUÉS de la espera: lo que llegue de un pedido cancelado no se pinta.
       .then(([inv, pend]) => { if (!corte.signal.aborted) { setDatos({ campo, inv, pend }); setError(null) } })
-      .catch(e => { if (!corte.signal.aborted && !cancelado(e)) setError({ campo, texto: mensajeDe(e) }) })
+      // Con la fuente del demo y nada detrás de la ruta (el demo construido es un hosting estático), no es una
+      // falla: el registro lo sirve el backend (A24). Se dice así, sin inventar bordes ni tags.
+      .catch(e => { if (!corte.signal.aborted && !cancelado(e)) setError({ campo, texto: mensajeDe(e), sinServicio: FUENTE === 'demo' && e instanceof ErrorApi && e.codigo === 'sin-servicio' }) })
     return () => corte.abort()
   }, [campo, llaves, vuelta])
 
   const recargar = useCallback(() => { setError(null); setVuelta(v => v + 1) }, [])
   // Y si aun así queda algo de otro campo en el estado, no sale.
-  return { datos: datos?.campo === campo ? datos : null, error: error?.campo === campo ? error.texto : null, recargar }
+  const suyo = error?.campo === campo ? error : null
+  return { datos: datos?.campo === campo ? datos : null, error: suyo?.texto ?? null, sinServicio: !!suyo?.sinServicio, recargar }
 }
 
 /** Sugerencia de a qué equipo pertenece un tag recién descubierto.

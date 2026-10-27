@@ -13,7 +13,7 @@ import { TEXTO } from './palabras'
  *  Un toque abre la tubería completa de ese campo. */
 export function TuberiaDeCadaCampo({ campos, desde, hasta }: { campos: string[]; desde: Date; hasta: Date }) {
   return (
-    <Panel className="mb-2.5" titulo="La tubería de cada campo"
+    <Panel className="mb-3 sm:mb-4" titulo="La tubería de cada campo"
       extra={<span className="inline-flex items-center gap-1 print:[&_.solo-impresion]:hidden!">qué limita hoy<Info titulo="Lo que limita" texto={TEXTO.limita} /></span>}>
       <Lectura>
         Una fila por campo: el tramo más angosto de hoy y cuánto le sobra al siguiente. Lo que no se

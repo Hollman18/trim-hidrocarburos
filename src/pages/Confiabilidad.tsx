@@ -5,7 +5,7 @@ import { NOMBRE_FAMILIA as FAMILIA, type Familia } from '@/entities/flota'
 import { partesDe, NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { COMO, type ComoSeIdentifico } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
-import { Panel, Chip } from '@/shared/ui/primitivas'
+import { Panel, Chip, Tarjeta } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -20,8 +20,12 @@ import { AHORA } from '@/entities/reloj'
 import { desplazable } from '@/shared/ui/alFinal'
 import { CalidadClasificacion } from '@/widgets/arbol/Calidad'
 
+/** Los meses en corto, para el eje (Air Condensed, X5 §3.4) y en la frase con su año. */
+const MES_CORTO = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
+const nombreMes = (mes: string) => `${MES_CORTO[Number(mes.slice(5)) - 1]} ${mes.slice(0, 4)}`
+
 /** La familia de UN equipo, en corto (la tabla la dice por fila). */
-const UNA: Record<Familia, string> = { inyeccion: 'reinyección', multifasica: 'multifásica', electrosumergible: 'electrosumergible' }
+const UNA: Record<Familia, string> = { inyeccion: 'bomba de agua', multifasica: 'bomba multifásica', electrosumergible: 'electrosumergible' }
 
 /** Confiabilidad de los equipos de alto impacto con la historia que dejó el
  *  PLC: cada cuánto fallan, cuánto tardan, de qué parte, y qué tan bien está
@@ -61,14 +65,23 @@ export function Confiabilidad() {
   // Fallas por mes, por familia.
   const meses = pedirCalendario().map(m => ({ m, porFam: Object.fromEntries(familias.map(f => [f,
     equipos.filter(e => e.familia === f).reduce((a, e) => a + e.h.eventos.filter(x => !x.disparo && x.inicio.getTime() >= m.desde && x.inicio.getTime() < m.hasta).length, 0)])) as Record<Familia, number> }))
-  const topeMes = Math.max(1, ...meses.map(x => familias.reduce((a, f) => a + (x.porFam[f] ?? 0), 0)))
+  const totales = meses.map(x => familias.reduce((a, f) => a + (x.porFam[f] ?? 0), 0))
+  const topeMes = Math.max(1, ...totales)
+  // La frase con sus cifras, para quien no ve el dibujo (H22): el período, el total y el mes con más.
+  const totalFallas = totales.reduce((a, b) => a + b, 0)
+  const iMax = totales.indexOf(topeMes)
+  const ariaFallas = meses.length
+    ? `Fallas de los equipos de alto impacto por mes, sin disparos, de ${nombreMes(meses[0]!.m.mes)} a ${nombreMes(meses.at(-1)!.m.mes)}: ${plural(totalFallas, 'falla', 'fallas')} en total${totalFallas ? `; el mes con más, ${nombreMes(meses[iMax]!.m.mes)}, con ${totales[iMax]}` : ''}.`
+    : 'Sin meses con datos.'
   // Se abre la ficha del equipo escogido, también si es una electrosumergible:
   // llevar a la pantalla de la flota la dejaba en la lista, sin el pozo.
   const abrir = (e: Equipo) => { setCampo(e.campoId); abrirEquipo(e.equipo, false) }
 
   return (
     <>
-      <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+      {/* La tarjeta de B (X5 §5.2). H11: como mucho cuatro cifras de 24 px en la primera vista (una por flota,
+          que son tres o menos); la historia y lo del vigía, a 18. */}
+      <Tarjeta className="mb-3 grid gap-x-6 gap-y-3 sm:mb-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]" data-cabeza-confiabilidad="">
         {familias.map(f => {
           const x = flota(f)
           return (
@@ -80,7 +93,7 @@ export function Confiabilidad() {
                 ['Tiempo fuera promedio', x.mdt ? fmtHoras(x.mdt, true) : '—'], ['Barriles en la historia', `${n0(x.bbl)} bbl`]]}
               className="min-w-0">
               <small className="block text-[13px] text-[var(--tinta3)]">{FAMILIA[f]} · {x.n}</small>
-              <b className="tabular block text-[26px] leading-none">{x.mtbf ? `${n0(x.mtbf)} d` : '—'}</b>
+              <b className="tabular block text-[24px] leading-none" data-cifra-flota={f}>{x.mtbf ? `${n0(x.mtbf)} d` : '—'}</b>
               <small className="block text-[13px] text-[var(--tinta3)]">entre fallas</small>
               <small className="block text-[13px] text-[var(--tinta2)]">{plural(x.fallas, 'falla', 'fallas')}{x.mdt ? ` · ${fmtHoras(x.mdt, true)} fuera` : ''}</small>
             </Tip><small className="solo-impresion text-[9pt] text-[var(--tinta2)]">{plural(x.disparos, 'disparo', 'disparos')} · {n0(x.bbl)} bbl en la historia</small></div>
@@ -88,10 +101,10 @@ export function Confiabilidad() {
         })}
         <span>
           <small className="block text-[13px] text-[var(--tinta3)]">Historia</small>
-          <b className="tabular block text-[26px] leading-none">{n0(dias / 30.4)} meses</b>
+          <b className="tabular block text-[18px] leading-none">{n0(dias / 30.4)} meses</b>
           <small className="block text-[13px] text-[var(--tinta2)]">eventos del PLC</small>
         </span>
-      </div>
+      </Tarjeta>
 
       <Lectura>
         Una falla es una parada propia del equipo: la que causó otro equipo (se cayó la energía, paró
@@ -106,11 +119,11 @@ export function Confiabilidad() {
         if (e) abrir(e)
       }} />
 
-      <Panel className="mt-2.5" titulo="Reparación activa y espera" extra={reloj ? `promedio · ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
+      <Panel className="mt-3 sm:mt-4" titulo="Reparación activa y espera" extra={reloj ? `promedio · ${plural(reloj.fallas, 'falla cerrada', 'fallas cerradas')} · toda la historia` : 'toda la historia'}>
         {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[14px] text-[var(--tinta2)]">Sin fallas cerradas con orden en SAP.</p>}
       </Panel>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+      <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <Panel titulo="Los más costosos" extra="bbl · toda la historia">
           <div className="overflow-x-auto">
             <table className="tabular w-full text-left text-[14px]">
@@ -127,7 +140,7 @@ export function Confiabilidad() {
                     className={`cursor-pointer border-t border-[var(--linea2)] hover:bg-[var(--panel2)] ${listaMalos.resto.includes(e) ? 'hidden print:table-row' : ''}`}>
                     {/* El botón da el foco y el Enter al teclado; su clic sube a la fila,
                         que es la que abre (así el ratón abre desde cualquier celda). */}
-                    <td className="py-1.5"><button type="button" aria-label={`Abrir ${e.equipo}`} className="cursor-pointer rounded-sm font-mono font-bold">{e.equipo}</button><small className="block text-[12px] text-[var(--tinta3)]">{UNA[e.familia]}{ambito.global ? ` · ${campoPorId(e.campoId).nombre}` : ''}</small></td>
+                    <td className="py-1.5"><button type="button" aria-label={`Abrir ${e.equipo}`} className="cursor-pointer rounded-sm font-cond font-bold">{e.equipo}</button><small className="block text-[12px] text-[var(--tinta3)]">{UNA[e.familia]}{ambito.global ? ` · ${campoPorId(e.campoId).nombre}` : ''}</small></td>
                     <td className="text-right">{e.h.fallas}{e.h.disparos ? <small className="text-[var(--tinta3)]"> +{e.h.disparos}</small> : ''}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mtbfDias ? `${n0(e.h.mtbfDias)} d` : '—'}</td>
                     <td className="hidden text-right sm:table-cell">{e.h.mdtH ? fmtHoras(e.h.mdtH, true) : '—'}</td>
@@ -170,22 +183,29 @@ export function Confiabilidad() {
         </Panel>
       </div>
 
-      <div className="mt-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
-        <Panel titulo="Fallas por mes" extra="sin disparos">
+      <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+        <Panel titulo="Fallas por mes" extra="fallas · sin disparos">
           <div {...desplazable('Fallas por mes')} className="overflow-x-auto">
-            <svg viewBox="0 0 520 150" className="block h-auto w-full min-w-[420px]" role="img" aria-label="Fallas de equipos de alto impacto por mes">
+            {/* H22: la cifra de cada mes sobre su barra, los meses con su año y la frase con las cifras en el nombre
+                accesible. H21: 1 px de --panel entre los segmentos apilados. Letra de 15 en un dibujo que no baja de
+                420 px: nunca menos de 12 px en pantalla. */}
+            <svg viewBox="0 0 520 166" className="block h-auto w-full min-w-[420px]" role="img" aria-label={ariaFallas} data-fallas-por-mes="">
               {meses.map((x, i) => {
                 const w = 500 / meses.length, xx = 14 + i * w
+                const total = totales[i] ?? 0
                 let y = 120
+                const conAnio = i === 0 || i === meses.length - 1 || x.m.mes.endsWith('-01')
                 return (
-                  <g key={x.m.mes}>
+                  <g key={x.m.mes} data-mes={x.m.mes} data-fallas={total}>
                     {familias.map((f, j) => {
                       const v = x.porFam[f] ?? 0
-                      const hgt = (v / topeMes) * 100
+                      const hgt = (v / topeMes) * 96
                       y -= hgt
-                      return v > 0 ? <rect key={f} x={xx + w * 0.2} y={y} width={w * 0.6} height={hgt} fill={`var(--dato-${j + 1})`}><title>{`${x.m.mes} · ${FAMILIA[f]}: ${v}`}</title></rect> : null
+                      return v > 0 ? <rect key={f} x={xx + w * 0.2} y={y} width={w * 0.6} height={hgt} fill={`var(--dato-${j + 1})`} stroke="var(--panel)" strokeWidth={1}><title>{`${nombreMes(x.m.mes)} · ${FAMILIA[f]}: ${v}`}</title></rect> : null
                     })}
-                    <text x={xx + w / 2} y={138} fontSize={16} textAnchor="middle" fill="var(--tinta3)" className="font-cond">{x.m.mes.slice(5)}</text>
+                    {total > 0 && <text x={xx + w / 2} y={y - 5} fontSize={15} fontWeight={600} textAnchor="middle" fill="var(--tinta)" className="tabular">{total}</text>}
+                    <text x={xx + w / 2} y={139} fontSize={15} textAnchor="middle" fill="var(--tinta2)" className="font-cond">{MES_CORTO[Number(x.m.mes.slice(5)) - 1]}</text>
+                    {conAnio && <text x={xx + w / 2} y={157} fontSize={15} textAnchor="middle" fill="var(--tinta3)" className="font-cond">{x.m.mes.slice(0, 4)}</text>}
                   </g>
                 )
               })}

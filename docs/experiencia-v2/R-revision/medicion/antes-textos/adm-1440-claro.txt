@@ -1,0 +1,72 @@
+La Ceiba
+Configurar
+Configuración
+Conectores
+La planta viva
+¿Cómo se lee?
+HL
+Hermes Leal
+Administrador de la implementación
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Metas, accesos y configuración
+hoy, 2 de oct datos de las 14:00
+Octubre, en curso
+Exportar
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+Configuración técnica
+Filosofía operacional
+Metas de los campos
+Usuarios y accesos
+PERFIL DEL CAMPO
+Destino principal del gas
+4 elementos en el tren de gas
+Bombas de la línea
+1 bomba registrada
+Electrosumergibles
+15 pozos registrados
+MEMBRETE DEL INFORME
+todos los campos
+Nombre de la empresa
+TANQUES DE AGUA
+Tanque de agua de La Ceiba
+TK-AG-CE
+lo vacía
+P-201B
+nivel ahora
+89,6
+Capacidad
+bbl
+Alto-alto
+Transmisor de nivel
+Certificado de aforo
+RESPALDO DE BOMBAS
+Bomba multietapa de transferencia de agua
+P-201B
+Disposición de agua
+capacidad
+89.250
+bbl/d
+Capacidad libre
+bbl/d
+Qué es el respaldo
+PARADAS PROGRAMADAS
+2
+P-201B
+19 de ago, 17:49
+a
+20 de ago, 09:34
+Mantenimiento preventivo programado de la bomba
+LC-19
+22 de ene, 23:51
+a
+23 de ene, 17:50
+Cambio programado de la bomba de subsuelo

@@ -1,0 +1,142 @@
+#/conf/resultados/morichal/curso
+
+Todos mis campos
+Morichal Norte
+DATOS DE DEMOSTRACIÓN
+Resultados
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Lo que pasó · octubre, en curso
+
+1.253
+barriles
+
+no se produjeron en Morichal Norte.
+
+El máximo firmado para lo que va de octubre es 1.504 bbl: va 251 por debajo. MN-41, más de la mitad. Septiembre cerró en 15.539 bbl.
+
+calculado
+entre 1.065 y 1.441 bbl
+60 mil USD
+Provisional
+Ver qué se está haciendo
+Ver el libro de diferidos
+Diferido por día, mes a mes
+octubre: 792 bbl/d
+Por equipo
+Por dónde se trabó
+475
+950
+OCT 2025
+ENE 2026
+3
+ABR
+3
+JUL
+792
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma
+1.083
+86 %
+MN-22 según el operario
+86
+7 %
+SE-2 energía eléctrica
+72
+6 %
+MN-25 electrosumergible
+12
+< 1 %
+Ver todos en el libro de diferidos
+¿Le creo al vigía?
+desde que entró TRIM
+
+33 %
+de lo que se puede juzgar fue verdad
+
+El vigía acertó 1 vez de 3, con 4,0 días de anticipo en promedio; anunció 1 de las 4 fallas que podía ver.
+
+aciertos
+1
+falsas alarmas
+2
+intervenidas antes
+3
+en seguimiento
+4
+Ver la confiabilidad
+¿Está bajando? Desde que entró TRIM
+
+en los pozos
+460 → 266
+bbl/d · baja 42 %
+
+en la planta
+293 → 216
+bbl/d · baja 26 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 495 → 380 bbl/d · −23 %
+
+27 %
+mantenimiento proactivo
+
+12,0 h proactivas · 32,0 h correctivas, desde el 1 de sept
+
+Mantenimiento
+23 fallas cerradas · toda la historia
+
+De 7,4 días que dura una falla, 7,0 son espera (repuesto, permisos, cuadrilla).
+
+reparación activa 0,3 d
+espera 7,0 d
+
+Del diferido de octubre, 0,0 % programado: 0 bbl programados · 1.253 bbl no programados. De alto impacto, 1.095 bbl.
+
+Retorno posible del ciclo
+simulado
+
+≈ 30.973
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+29.890
+
+Si se interviene a tiempo en los 4 de alto impacto, se evitan ≈ 29.890 bbl · simulado
+
+Ver el plan ›
+
+Durante · ahora
+0
+
+Nada que mover · simulado
+
+Después · lo que pasó
+1.083
+
+No repetir la parte que más costó: ≈ 1.083 bbl · simulado
+
+Ver el plan ›
+
+Pérdida (lo que salió y no se vendió): sin eventos registrados en octubre.

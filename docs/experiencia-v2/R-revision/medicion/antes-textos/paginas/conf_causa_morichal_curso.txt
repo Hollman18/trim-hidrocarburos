@@ -1,0 +1,269 @@
+#/conf/causa/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Hoy
+DATOS DE DEMOSTRACIÓN
+Paradas por identificar
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+93,1 %
+causa probada por señal
+1.167 de 1.253 bbl diferidos
+6,9 %
+causa declarada
+86 bbl · sin identificar 0 bbl (0,0 %)
+1
+por identificar · histórico
+0 pozos · 1 bomba · 0 sin arrancar
+1
+no conformidades
+arrancaron sin identificar
+No arrancar hasta identificar el daño
+· si arranca antes: no conformidad
+Por identificar · sin arrancar
+0
+sin arrancar
+
+Ninguna.
+
+La cadena de cada parada · árbol de causas
+5 paradas (6 filas del reporte)
+del árbol de causas en Octubre, en curso
+
+Paradas: falta confirmar 2 · falta un dato 3
+¿qué método es?
+
+POR CONFIRMAR · 2 paradas (3 filas del reporte)
+MN-41 · parada desde el 25 de sept, 06:40 (en este período, desde el 1 de oct) · electrosumergible
+1.083 bbl diferidos · 1 parada (2 filas del reporte)
+falta confirmar
+sigue parado
+2 días
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: MN-41 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+Confirmar esta parada (2 días · 2 filas)
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Edwin Maestre · hora del sistema.
+Ver las 2 filas del reporte
+MN-25 · cerró 08:13 · electrosumergible
+12 bbl diferidos
+falta confirmar
+disparo
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La falla es de la propia electrosumergible
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo dedujo: MN-25 tiene su propia electrosumergible: la falla queda en el pozo
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Mecánica subsuelo
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+Falla ESP
+TRIM lo dedujo por la misma razón del paso 1
+Confirmar
+Corregir dónde se trabó
+Corregir otro paso
+Queda confirmado por Edwin Maestre · hora del sistema.
+FALTA UN DATO · 3 paradas
+MN-22 · parada desde el 30 de sept, 16:20 (en este período, desde el 1 de oct) · declarada por el operario
+86 bbl diferidos · tramo 2 de 2
+faltan 4 pasos
+1
+Quién
+falta
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: Lo declaró el operario con sus palabras: la propuesta es el pozo y la confirma una persona · falta: «¿Dónde se originó lo que se declaró: en el pozo, en la planta o afuera?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+falta
+5
+Causa
+falta
+6
+Detalle
+falta
+¿Qué lo paró?
+Se dañó un equipo
+Se fue la energía
+Lluvia, rayo, creciente o derrumbe
+Bloqueo, paro, robo o amenaza
+La planta no recibe (agua o proceso)
+El tanque de crudo está lleno
+El oleoducto o el cliente no recibe
+Una autoridad lo ordenó
+Era un trabajo o una prueba programada
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+MN-31 · cerró 1 de oct, 06:26 · energía eléctrica
+68 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a MN-31: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+MN-22 · cerró 1 de oct, 16:28 · energía eléctrica
+4 bbl diferidos
+falta un dato
+1
+Quién
+Operador · Mantenimiento
+TRIM lo dedujo: La energía le faltó al pozo; si vino de afuera, lo dice una persona (Externo · Proveedor de energía)
+2
+¿Dónde se trabó?
+En el pozo
+TRIM lo propone: La baja tensión tumbó solo a MN-22: SE-2 siguió alimentando a los demás pozos, así que se propone el pozo · falta: «¿De dónde vino el corte?»
+3
+Qué pasó
+Diferida
+TRIM lo dedujo: El pozo dejó de producir y lo que no produjo se recupera después: diferida. Una pérdida la declara una persona
+4
+¿Planeada?
+No planeada
+TRIM lo dedujo: No estaba en el programa firmado
+5
+Causa
+No planeada - Eléctrica interna
+TRIM lo dedujo por la misma razón del paso 1
+6
+Detalle
+falta
+
+Las señales apuntan a la causa, no la prueban: la causa y el detalle los confirma quien abra el equipo.
+
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Corregir dónde se trabó
+Completar lo que falta
+Corregir otro paso
+No conformidades
+1
+no conformidad
+2
+P-201B · bomba de la línea
+Paró 24 de sept, 16:51 · arrancó 28 de sept, 06:53 (3,6 d)
+arrancó sin identificar
+3.789 bbl
+Señal
+no alcanzó
+ZS-2011 · marcha → paro · 24 de sept, 16:51
+Qué se dañó
+1 · Parte de la bomba
+Pista · historia del equipo
+Sello mecánico · 5 de 7 fallas
+Succión y filtro de entrada · 1 de 7 fallas
+Motor eléctrico · 1 de 7 fallas
+O escoja cualquier parte…
+Sello mecánico
+Succión y filtro de entrada
+Rodamientos y cámara de empuje
+Impulsores y desgaste interno
+Motor eléctrico
+Qué encontró (opcional)
+Registrar respuesta
+Queda declarado por Edwin Maestre · hora del sistema
+
+WhatsApp: sin destinatario
+
+Declaradas
+1
+declarada
+MN-22 · 30 de sept, 16:20
+«Fuga en la línea de flujo del pozo: se cerró para repararla»
+Jairo Peña · operador de campo · 30 de sept, 17:02
+193 bbl

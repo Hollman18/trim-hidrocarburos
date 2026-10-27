@@ -40,7 +40,7 @@ function HoyLimitaCampo({ campoId, desde, hasta, conNombre, ranking }: {
   const suben = ranking.filter(x => x.subio && x.familia === 'bomba' && (x.bpd ?? 0) > 0)
   const sinInstrumento = suben.filter(x => !x.vigilado).map(x => x.equipo)
   const fragil = suben.length
-    ? `Si para otra bomba de reinyección hay que cerrar pozos${sinInstrumento.length ? `, y ${lista(sinInstrumento)} no ${sinInstrumento.length === 1 ? 'tiene' : 'tienen'} instrumento: TRIM no verá venir su falla` : ''}.`
+    ? `Si para otra bomba de agua hay que cerrar pozos${sinInstrumento.length ? `, y ${lista(sinInstrumento)} no ${sinInstrumento.length === 1 ? 'tiene' : 'tienen'} instrumento: TRIM no verá venir su falla` : ''}.`
     : una && una.papel === 'disposicion' && !una.parada && una.aguaSinSalidaBpd > 0 ? a.frases.find(f => f.startsWith(`Si para ${una.bomba}`)) : undefined
   const fila = 'grid gap-x-3 gap-y-0.5 sm:grid-cols-[10.5rem_minmax(0,1fr)] sm:items-baseline'
 

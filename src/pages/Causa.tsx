@@ -4,12 +4,17 @@ import { useLibro, usePreguntas, useCtx, useOpcionesRespuesta, contarPorIdentifi
 import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { useMensajes } from '@/shared/api/mensajes'
-import { pedirCatalogoDeDanos, useEquiposDeHoy } from '@/shared/api/equipos'
+import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
+import { useCondiciones, type CondicionDeEquipo } from '@/shared/api/condiciones'
+import { FAMILIA } from '@/shared/api/plantaViva'
+import { MarcaDeEquipo } from '@/widgets/hoy/comun'
+import { Bloqueo } from '@/widgets/hoy/piezas'
 import { CAUSAS_POZO, NO_FUE_ESP_CORTO, ORDEN_PASO, PASO_CORTO, type Mensaje } from '@/entities/mensajes'
 import { Telefono } from '@/widgets/whatsapp/Telefono'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
 import { ArbolIdentificar } from '@/widgets/arbol/ArbolIdentificar'
-import type { Pregunta } from '@/entities/libro'
+// H2 (K1): la pregunta con el entero de su parada en el reparto del campo (la de Hoy).
+import type { PreguntaConEntero as Pregunta } from '@/shared/api/diferidos'
 import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { modosDeParte, nombreModo, MECANISMOS_POR_FAMILIA, MECANISMO_SUGERIDO, MODO_OTRO } from '@/entities/catalogo'
 import { modo as modoIso, mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entities/iso14224'
@@ -17,7 +22,6 @@ import { campoPorId } from '@/entities/campos'
 import { fechaHora, horasEntre, AHORA } from '@/entities/reloj'
 import { fraseParte, fmtHoras } from '@/widgets/bombas/comun'
 import { Panel, Boton, Chip } from '@/shared/ui/primitivas'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
@@ -29,7 +33,8 @@ import { useUsuarios } from '@/shared/api/usuarios'
 import { ROLES_QUE_CONTESTAN, causaParaSalir } from '@/shared/api/arbol'
 import { rolDeQuien } from '@/entities/causa-senal'
 import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
-import { puedeHacer, type Severidad } from '@/entities/tipos'
+import { puedeHacer } from '@/entities/tipos'
+import { ChevronRight } from 'lucide-react'
 
 /** Paradas por identificar: las que ninguna señal explica. Es el único lugar
  *  donde una persona escribe algo que entra al libro, y entra marcado como
@@ -55,9 +60,11 @@ export function Causa() {
   // las que siguen paradas («no arrancar») y las que arrancaron sin
   // identificar (no conformidades, con las que se respondieron tarde).
   const pi = contarPorIdentificar(preguntas)
-  // La marca de un equipo es la de hoy, la misma en todas partes (B-20): la urgencia de identificar va en el texto «no arrancar».
-  const hoy = useEquiposDeHoy(ids)
-  const marca = (p: Pregunta): Severidad => hoy(p.equipo, p.campoId)?.severidad ?? 0
+  // H3: la marca de un equipo es la de la franja, la misma en todas partes: la urgencia de identificar va en el texto «no arrancar».
+  const condicion = useCondiciones(ids)
+  const marca = (p: Pregunta) => condicion(p.campoId, p.equipo)
+  // P-causa-1 (X4 §3.6, «se esconde»): una parada abierta a la vez; las demás, en una fila con «›».
+  const [abierta, setAbierta] = useState<string | null>(null)
   // El chat que alguien abrió sigue abierto cuando la respuesta llega: el cierre
   // «Así queda lo que usted contestó» sale en el mismo chat (B-05; U1 §2.6).
   const [chats, setChats] = useState<ReadonlySet<string>>(() => new Set())
@@ -146,8 +153,11 @@ export function Causa() {
       </Tip>
   )
 
-  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} sev={marca(p)}
-    chat={chats.has(p.id)} onChat={() => alternarChat(p.id)} />
+  // La primera que pide respuesta abre sola; tocar otra la abre y cierra la de antes.
+  const primeraAbierta = [...pendientes, ...noConformes.filter(x => !x.causa.declarado)][0]?.id
+  const abiertaId = abierta ?? primeraAbierta
+  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} hilo={hilo(p)} cond={marca(p)}
+    chat={chats.has(p.id)} onChat={() => alternarChat(p.id)} abierta={abiertaId === p.id} onAbrir={() => setAbierta(p.id)} />
   // Lo que se acaba de responder por WhatsApp con el chat abierto: sigue en su lugar, con el chat y su cierre.
   const conChat = recien.filter(p => chats.has(p.id))
   const respondidas = conChat.map(p => <RespondidaConChat key={`r-${p.id}`} p={p} hilo={hilo(p)} onCerrar={() => alternarChat(p.id)} />)
@@ -156,11 +166,11 @@ export function Causa() {
       Respondido: {recien.map(p => `${p.equipo} (${p.causa.declarado!.canal === 'whatsapp' ? 'por WhatsApp' : 'en pantalla'}, ${fechaHora(new Date(p.causa.declarado!.hora)).replace(/^.*?, /, '')})`).join(' · ')}. Pasó a «Declaradas».
     </p>
   )
+  // UI-05: la misma franja «No arrancar» de Hoy (X5 §5.6): en tinta, con borde de 2 px y el ⊘.
   const regla = (
-    <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded border border-[var(--linea)] bg-[var(--panel)] p-3 text-[14px] shadow-[var(--sombra)]">
-      <span><b>No arrancar</b> hasta identificar el daño</span>
-      <span className="text-[var(--tinta2)]"><span className="hidden sm:inline">· </span>si arranca antes: no conformidad</span>
-      <Info titulo="Regla de operación" texto={REGLA} />
+    <div className="mb-2.5 grid gap-1.5">
+      <Bloqueo b={{ texto: 'No arrancar hasta identificar el daño', sub: 'Si arranca antes, queda como no conformidad.' }} />
+      <span className="flex flex-wrap items-center gap-x-1.5 px-1 text-[14px] text-[var(--tinta2)]">La regla completa <Info titulo="Regla de operación" texto={REGLA} /></span>
       {hayTarjetas && !puede && <span className="basis-full text-[13px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
       {porResponder && puede && persona.sinAcceso && (
         <span className="flex basis-full flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
@@ -264,11 +274,13 @@ function RespondidaConChat({ p, hilo, onCerrar }: { p: Pregunta; hilo: Mensaje[]
 /** Una parada por identificar: qué dijeron las señales, el formulario para
  *  decir qué se dañó (parte y lo que se vio, del catálogo de la clase de
  *  equipo) y el hilo de WhatsApp por el que también se responde. */
-function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
+function Tarjeta({ p, global, responde, hilo, cond, chat, onChat, abierta, onAbrir }: {
   p: Pregunta; global: boolean; responde: boolean; hilo: Mensaje[]
-  /** La marca de hoy del equipo (B-20): la misma de «Pasando ahora». */
-  sev: Severidad
+  /** La condición del equipo, la de la franja (H3): la misma en todas partes. */
+  cond?: CondicionDeEquipo
   chat: boolean; onChat: () => void
+  /** P-causa-1: abierta, con su formulario; cerrada, una fila con «›». */
+  abierta: boolean; onAbrir: () => void
 }) {
   const persona = usePersona(); const rolActual = useRol(); const responder = useApp(s => s.responder), abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const [texto, setTexto] = useState('')
@@ -276,6 +288,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
   const [modo, setModo] = useState('')
   const [otraDelPozo, setOtraDelPozo] = useState(false)
   const [error, setError] = useState('')
+  const [verSenal, setVerSenal] = useState(false)
   // El catálogo de la clase (bomba de la línea o electrosumergible; un pozo sin
   // ella no tiene partes), las causas que sugiere la evidencia (en pantalla y
   // con la parada abierta, también las lecturas de hoy) y la parte que hoy está
@@ -315,15 +328,16 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
   const salir = causaParaSalir(p.causa).evidencia
   const enPapel = (e: string) => salir[p.causa.evidencia.indexOf(e)] ?? e
 
-  return (
-    <div className="border-b border-[var(--linea2)] py-3 last:border-0">
+  const familia = p.sobre === 'bomba' ? FAMILIA[p.causa.tipo] : 'pozo'
+  const cuerpo = (
+    <div className="border-b border-[var(--linea2)] py-3 last:border-0" data-parada={p.id} data-abierta={abierta || undefined}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
-        <MarcaPrioridad s={sev} tamano={14} className="mt-[2px]" />
+        <span className="mt-[2px]"><MarcaDeEquipo c={cond} tamano={14} /></span>
         <span className="min-w-0 flex-1">
           <button onClick={() => { setCampo(p.campoId); abrirEquipo(p.equipo) }} className="cursor-pointer text-left">
             <b className="text-[15px] underline-offset-2 hover:underline">{p.equipo}</b>
           </button>
-          <span className="text-[13px] text-[var(--tinta3)]"> · {p.sobre === 'bomba' ? 'bomba de la línea' : 'pozo'}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
+          <span className="text-[13px] text-[var(--tinta3)]"> · {familia}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span>
           {/* Sigue parado: lo dice «no arrancar»; aquí, desde cuándo. */}
           <small className="block text-[13px] text-[var(--tinta2)]">
             Paró {fechaHora(p.inicio)} · {p.fin ? `arrancó ${fechaHora(p.fin)} (${fmtHoras(horas, true)})` : `hace ${fmtHoras(horas, true)}`}
@@ -333,17 +347,22 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
         <span className="flex flex-wrap gap-1">
           {!p.fin && <Chip tono="fuerte">no arrancar</Chip>}
           {p.arrancoSinIdentificar && <Chip>arrancó sin identificar</Chip>}
-          <Chip>{n0(p.bbl)} bbl</Chip>
+          <Chip>{n0(p.entero ?? p.bbl)} bbl</Chip>
         </span>
       </div>
-      <div className="mt-2 grid gap-3 text-[13px] [grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]">
+      {/* Con la señal plegada, el formulario va a todo el ancho; abierta, al lado (P-causa-1). */}
+      <div className={cn('mt-2 grid gap-3 text-[13px]', verSenal && '[grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))] print:[grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))]')}>
         <div>
+          {/* La señal, detrás de «Ver la señal» (P-causa-1); la parte sospechosa queda a la vista: es una pista para contestar. */}
           <div className="mb-1 flex flex-wrap items-center gap-x-1">
-            <h5 className="text-[15px] font-semibold text-[var(--tinta)]">Señal</h5>
+            <button type="button" onClick={() => setVerSenal(v => !v)} aria-expanded={verSenal}
+              className="toque inline-flex cursor-pointer items-center gap-0.5 text-[15px] font-semibold text-[var(--tinta)] hover:underline">
+              {verSenal ? 'La señal' : 'Ver la señal'}<ChevronRight aria-hidden className={cn('size-4 text-[var(--tinta2)] transition-transform duration-[120ms]', verSenal && 'rotate-90')} />
+            </button>
             {porQueNo && <Info rotulo="no alcanzó" titulo="Por qué no alcanzó la señal" texto={porQueNo} />}
           </div>
-          <ul className="list-disc pl-4 text-[var(--tinta2)]">
-            {lecturas.map(e => <li key={e} className="font-mono text-[13px]">{enPapel(e) === e ? e : <DichoEnPapel papel={enPapel(e)}>{e}</DichoEnPapel>}</li>)}
+          <ul className={cn('list-disc pl-4 text-[var(--tinta2)]', !verSenal && 'hidden print:block')}>
+            {lecturas.map(e => <li key={e} className="text-[14px]">{enPapel(e) === e ? e : <DichoEnPapel papel={enPapel(e)}>{e}</DichoEnPapel>}</li>)}
           </ul>
           {/* La parte sospechosa es una pista: queda a la vista, con la variable que la delata. */}
           {sospechosa && (
@@ -358,11 +377,11 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
         </div>
         {responde && !p.causa.declarado && (
           <form className="grid gap-1.5" onSubmit={e => { e.preventDefault(); enviar() }}>
-            <h5 className="text-[15px] font-semibold text-[var(--tinta)]">{conPartes ? 'Qué se dañó' : 'Por qué paró'}</h5>
+            <h3 className="text-[15px] font-semibold text-[var(--tinta)]">{conPartes ? 'Qué se dañó' : 'Por qué paró'}</h3>
             {conPartes ? (
               <>
                 <span className="grid gap-1">
-                  <label htmlFor={`parte-${p.id}`} className={PASO_CLS}>1 · Parte {esp ? 'de la electrosumergible' : 'de la bomba'}</label>
+                  <label htmlFor={`parte-${p.id}`} className={PASO_CLS}>Parte {esp ? 'de la electrosumergible' : 'de la bomba'}</label>
                   {sugeridas?.conEvidencia && (
                     <>
                       {/* «Pista»: lo que sugiere, no lo que pasó. La fuente se dice porque no es lo mismo una señal que la historia. */}
@@ -392,7 +411,7 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
                 {parteSel && (
                   <span className="grid gap-1">
                     <span className="flex flex-wrap items-center gap-x-2">
-                      <span className={PASO_CLS}>2 · Qué vio</span>
+                      <span className={PASO_CLS}>Qué vio</span>
                       <Info rotulo="ISO 14224" titulo="Registro ISO 14224"
                         texto={`Se registra en el catálogo como ítem «${parteSel.itemIso}»${modo ? ` · daño ${modo} (${modoIso(modo)?.nombre.toLowerCase()})` : ''}.`} />
                     </span>
@@ -424,13 +443,32 @@ function Tarjeta({ p, global, responde, hilo, sev, chat, onChat }: {
                 className="resize-y rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[14px]" />
             </label>
             {error && <p className="text-[13px] text-[var(--tinta)]" role="alert">{error}</p>}
-            <Boton variante="principal" type="submit" className="min-h-12 sm:min-h-0">Registrar respuesta</Boton>
+            {/* Un solo verbo para contestar la pregunta propia (P-07): «Contestar». */}
+            <Boton variante="principal" type="submit" className="min-h-12 justify-self-start px-6">Contestar</Boton>
             <small className="text-[12px] text-[var(--tinta3)]">Queda declarado por <DichoEnPapel papel={rolDeQuien(` · ${rolActual.nombre.toLowerCase()}`)}>{persona.nombre}</DichoEnPapel> · hora del sistema</small>
           </form>
         )}
       </div>
       <HiloWhatsapp p={p} hilo={hilo} abierto={chat} onAlternar={onChat} />
     </div>
+  )
+  if (abierta) return cuerpo
+  // Cerrada: una fila con «›» en la pantalla; en el papel, la parada entera (la señal, el WhatsApp y a quién le llegó).
+  return (
+    <>
+    <button type="button" onClick={onAbrir} data-parada={p.id} aria-expanded={false}
+      className="no-imprimir flex min-h-14 w-full cursor-pointer items-center gap-3 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)]/60">
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-x-2"><MarcaDeEquipo c={cond} tamano={14} /><b className="text-[15px]">{p.equipo}</b>
+          <span className="text-[14px] text-[var(--tinta2)]">{familia}{global ? ` · ${campoPorId(p.campoId).nombre}` : ''}</span></span>
+        <small className="block text-[13px] text-[var(--tinta2)]">Paró {fechaHora(p.inicio)} · {p.fin ? `arrancó ${fechaHora(p.fin)}` : `hace ${fmtHoras(horas, true)}`}</small>
+      </span>
+      {!p.fin && <Chip tono="fuerte">no arrancar</Chip>}
+      <span className="tabular shrink-0 text-[14px]">{n0(p.entero ?? p.bbl)} bbl</span>
+      <ChevronRight aria-hidden className="size-5 shrink-0 text-[var(--tinta3)]" />
+    </button>
+      <div className="hidden print:block">{cuerpo}</div>
+    </>
   )
 }
 
@@ -448,9 +486,10 @@ const noFueEsp = NO_FUE_ESP_CORTO
 /** El rótulo de cada paso de la respuesta: se lee como instrucción, no como pie. */
 const PASO_CLS = 'text-[14px] font-semibold text-[var(--tinta)]'
 
-/** Botón de opción: en el teléfono, 48 px de alto, para el dedo con guantes (U1 §2.6; B-24); la marcada, con el color de selección. */
-const CHIP = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] px-1.5 py-0.5 text-[13px] hover:bg-[var(--panel2)] sm:min-h-0 sm:text-[13px]'
-const SELECCION = 'border-acento bg-acento-f text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--acento)]'
+/** Botón de opción: la misma opción de Hoy (`widgets/hoy/Pregunta.tsx`; UI-05; X5 §5.8): píldora de
+ *  radio 18 con aro, 56 px (64 en el teléfono) y 16 px de letra; la marcada, con el aro de la mano. */
+const CHIP = 'flex min-h-14 cursor-pointer items-center rounded-[18px] bg-[var(--panel)] px-4 py-2.5 text-left text-[16px] shadow-[inset_0_0_0_1.5px_var(--linea)] transition-colors duration-[120ms] hover:bg-[var(--panel2)] max-sm:min-h-16'
+const SELECCION = 'bg-[var(--marca-suave)] text-[var(--tinta)] shadow-[inset_0_0_0_2px_var(--foco)]'
 
 
 /** El hilo de WhatsApp de la parada en una línea (qué se mandó, a quién, y si
@@ -488,7 +527,7 @@ function HiloWhatsapp({ p, hilo, abierto: verChat, onAlternar }: { p: Pregunta; 
   // en el globo y en el papel. Lo que no se envió sigue a la vista, con su motivo.
   return (
     <div className="mt-2.5 border-t border-dashed border-[var(--linea2)] pt-2 text-[13px]">
-      <h5 className="mb-1 text-[15px] font-semibold text-[var(--tinta)]">WhatsApp</h5>
+      <h3 className="mb-1 text-[15px] font-semibold text-[var(--tinta)]">WhatsApp</h3>
       <Tip titulo={`WhatsApp · ${p.equipo}`} filas={pasos.map(x => [`${corta(x.hora)} ${x.que}`, x.para.join(', ') || '—'] as [string, string])}
         imprimir="todo" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--tinta2)]">
         <span>
@@ -628,7 +667,7 @@ function Declarada({ p, global, hilo }: { p: Pregunta; global: boolean; hilo: Me
           </>
         )}
       </span>
-      <b className="tabular text-right">{n0(p.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
+      <b className="tabular text-right">{n0(p.entero ?? p.bbl)} <small className="font-normal text-[var(--tinta3)]">bbl</small></b>
     </div>
   )
 }

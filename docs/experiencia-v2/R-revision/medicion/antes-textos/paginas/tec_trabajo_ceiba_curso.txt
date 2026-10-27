@@ -1,0 +1,68 @@
+#/tec/trabajo/ceiba/curso
+
+La Ceiba
+Hoy
+DATOS DE DEMOSTRACIÓN
+Mi trabajo de hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+1
+1
+equipo parado
+alto impacto · 1.665 bbl/d
+2
+3
+por identificar
+2 sin arrancar ·
+1 arrancó sin identificar
+1
+equipo avisando
+ya pasó el límite
+Parados
+1
+1
+P-201B
+bomba de reinyección · desde 2 de oct, 03:52
+parte sin identificar
+no arrancar
+Paradas por identificar
+3
+2
+P-201B · 2 de oct, 03:52
+no arrancar
+3
+LC-08 · 1 de oct, 22:15
+arrancó sin identificar
+2
+LC-21 · 1 de oct, 18:20
+no arrancar
+Registrar qué encontré
+Avisando · qué revisar
+1
+1
+K-101
+ya pasó el límite
+
+Orden 40012056 liberada a su nombre: vea «Órdenes en SAP».
+
+Órdenes en SAP
+1 a su nombre
+K-101 40012056
+Verificar que las tres unidades estén en servicio: hoy hay dos. Con el recibidor en 11 min de autonomía, una parada deja las válvulas en posición segura.
+predictivo · prioridad 2 · liberada 2 de oct, 09:10 · a su nombre
+TRIM le avisó por WhatsApp · 2 de oct, 09:11
+liberada
+Paradas programadas
+aprobadas
+
+Nada programado de aquí en adelante.

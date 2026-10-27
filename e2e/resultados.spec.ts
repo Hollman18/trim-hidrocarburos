@@ -43,7 +43,8 @@ test('la cifra del período contra el máximo firmado, con su frase, y lo simula
   f.ok(l.cifra === '1.046' && Math.round(l.valor) === 1046 && l.frase === 'no se produjeron en La Ceiba.',
     `la cifra grande: ${l.cifra} barriles «${l.frase}»`)
   f.ok(l.previo === 'Lo que pasó · octubre, en curso' && Math.round(Number(l.maximo)) === 1267
-      && l.explica.startsWith('El máximo firmado para lo que va de octubre es 1.267 bbl: va 221 por debajo.'),
+      // F2 (P-resultados-1): la conclusión primero.
+      && l.explica.startsWith('Va 221 bbl por debajo del máximo firmado a la fecha (1.267).'),
     `contra el máximo firmado, en palabras («${l.explica.slice(0, 80)}…»)`)
   const t = await f.texto()
   f.ok(/calculado\s*entre 889 y 1\.203 bbl/.test(t) && t.includes('50 mil USD') && l.sello === 'provisional', 'calculado, con su rango, su valor y el sello «provisional» (el mes sigue abierto)')
@@ -112,8 +113,55 @@ test('cada rol ve lo suyo, con la misma cifra', async ({ flujo: f }) => {
   // Todos los campos: «Por campo» (con su «dónde se trabó») en vez del panel de un campo.
   await f.ir('#/ger/resultados/ceiba~portafolio/curso')
   const todos = await lectura(page)
-  f.ok(todos.alcance === 'portafolio' && todos.cifra === '2.377' && todos.secciones.includes('porCampo') && !todos.secciones.includes('dondeSeTrabo')
+  // F2 (H2): encima de la raíz, la suma de las raíces: 1.253 + 1.046 + 77 = 2.376 (no 2.377, que es el exacto redondeado).
+  f.ok(todos.alcance === 'portafolio' && todos.cifra === '2.376' && todos.secciones.includes('porCampo') && !todos.secciones.includes('dondeSeTrabo')
       && await page.locator('main [data-bbl-campo]').count() === 5, `todos los campos: ${todos.cifra} bbl, con «Por campo» (cinco campos)`)
+  f.cerrar()
+})
+
+test('F2 · la regla de redondeo, la barra de un campo sin diferido y lo programado del jefe', async ({ flujo: f }) => {
+  const { page } = f
+  await f.abrir('/#/ger/resultados/ceiba/curso')
+  await expect(page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'ger')
+  // H2: las partes que se ven suman la cifra que se ve, y LC-08 es 108 (el mismo de las demás vistas).
+  const filas = await page.locator('[data-por-equipo] [data-equipo-diferido]').evaluateAll(es => es.map(e => ({ eq: e.getAttribute('data-equipo-diferido'), n: Number(e.getAttribute('data-entero')), t: (e as HTMLElement).innerText })))
+  const suma = filas.reduce((a, x) => a + x.n, 0)
+  f.ok(suma === 1046 && filas.find(x => x.eq === 'LC-08')?.n === 108 && /\b108\b/.test(filas.find(x => x.eq === 'LC-08')?.t ?? ''),
+    `por equipo: ${filas.map(x => `${x.eq} ${x.n}`).join(' + ')} = ${suma} (LC-08 = 108)`)
+  // H2 y H3 en el libro de diferidos: el Pareto dice los mismos enteros (LC-08 = 108) y la marca de la franja (P-201B, alarma).
+  await f.ir('#/prod/diferidos/ceiba/curso')
+  const pareto = page.locator('main section', { has: page.getByRole('heading', { name: 'Por equipo', exact: true }) })
+  await expect(pareto).toBeVisible()
+  const nombres = await pareto.locator('[aria-label*=" bbl"]').evaluateAll(es => es.map(e => e.getAttribute('aria-label') ?? ''))
+  f.ok(nombres.some(x => /^Prioridad 1, alarma\. P-201B/.test(x)) && nombres.some(x => /^Normal\. LC-08, sin identificar: 108 bbl/.test(x)),
+    `el Pareto: ${nombres.map(x => x.split(':')[0]).join(' · ')} (LC-08 con 108 bbl)`)
+  // H1: con todos los campos, un campo que produjo sobre su potencial no pinta la barra del diferido.
+  await f.ir('#/ger/resultados/ceiba~portafolio/curso')
+  const zarza = page.locator('[data-por-campo] button:has([data-bbl-campo="zarza"]) [data-relleno]')
+  await expect(zarza.first()).toBeAttached()
+  const anchos = await zarza.evaluateAll(es => es.map(e => e.getBoundingClientRect().width))
+  f.ok(anchos.length === 2 && anchos[1] === 0, `La Zarza: el relleno de su diferido mide ${anchos[1]} px (antes, la pista entera)`)
+  // H33: a 1280 px, «Por campo» pone las barras debajo del campo: cada pista con su ancho (antes, 32 px).
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await f.esperar(400)
+  const pistas = await page.locator('[data-por-campo] button [data-barra]').evaluateAll(es => es.map(e => Math.round(e.getBoundingClientRect().width)))
+  f.ok(pistas.length >= 10 && Math.min(...pistas) >= 80, `«Por campo» a 1280 px: la pista más angosta mide ${Math.min(...pistas)} px`)
+  // P-mant-1: lo programado del jefe en la frase de X4 §6.1; las cifras, en su ⓘ.
+  await f.ir('#/jefe/resultados/ceiba/curso')
+  await expect(page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'jefe')
+  const prog = await page.locator('[data-mantenimiento] [data-programado]').innerText()
+  f.ok(prog.startsWith('Ninguna parada de este mes estaba programada: los 1.046 bbl fueron fallas o siguen sin identificar.') && !/0,0 %/.test(prog), `lo programado: «${prog.split('\n')[0]}»`)
+  // H24: la espera es tiempo, no barriles: gris liso, sin el rayado de lo proyectado.
+  const espera = await page.locator('[data-mantenimiento] [role="img"] > span > i').evaluateAll(es => es.map(e => getComputedStyle(e).backgroundImage))
+  f.ok(espera.length === 2 && espera.every(x => x === 'none'), 'la reparación y la espera en gris liso (sin rayado)')
+  // H11: una cifra grande y, en la tarjeta de la cifra, como mucho dos más de 22 px (las demás, de 18).
+  await f.ir('#/ger/resultados/ceiba/curso')
+  await expect(page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'ger')
+  const grandes = await page.evaluate(() => [...document.querySelectorAll('main b, main span, main p')].filter(e => e.getClientRects().length && e.children.length === 0 && /\d/.test(e.textContent ?? '')
+    && parseFloat(getComputedStyle(e).fontSize) >= 22 && e.getBoundingClientRect().top < 900).map(e => parseFloat(getComputedStyle(e).fontSize)))
+  f.ok(grandes.filter(x => x >= 54).length === 1 && grandes.filter(x => x < 54).length <= 4, `cifras grandes en la primera vista: ${grandes.join(', ')} px (una sola de 54 o más; las secundarias, 4 o menos)`)
+  // H21: 1 px del fondo entre los dos tonos de cada mes.
+  f.ok(await page.locator('[data-mes-a-mes] [data-separador]').count() >= 6, 'cada mes apilado separa sus dos tonos con 1 px del fondo')
   f.cerrar()
 })
 
@@ -156,6 +204,10 @@ test.describe('teléfono', () => {
       await revisar(ruta)
       if (await f.clic('Por dónde se trabó')) { await f.esperar(250); await revisar(`${ruta} [por dónde se trabó]`) }
     }
+    // A5: «Ver …» de las tarjetas, con 44 px de blanco en el teléfono.
+    await f.ir('#/ger/resultados/ceiba/curso')
+    const altos = await f.page.locator('[data-seccion] button').evaluateAll(es => es.filter(e => /^Ver /.test((e as HTMLElement).innerText) && e.getClientRects().length).map(e => Math.round(e.getBoundingClientRect().height)))
+    f.ok(altos.length > 0 && Math.min(...altos) >= 44, `los «Ver …» de las tarjetas miden ${Math.min(...altos)} px de alto o más`)
     // La cifra va arriba de todo, con su frase, antes de cualquier tarjeta.
     await f.ir('#/ger/resultados/ceiba/curso')
     const orden = await f.page.evaluate(() => {

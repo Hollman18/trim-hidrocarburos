@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
-import { Plug, KeyRound, Check, Lock } from 'lucide-react'
+import { useId, useMemo, useState } from 'react'
+import { Plug, KeyRound, Check, Lock, ChevronRight } from 'lucide-react'
 import { useApp, useRol } from '@/app/store'
 import { useRegistro, sugerir, asociarTag, inscribirBorde, type TagPendiente } from '@/shared/api/registro'
 import type { Capacidad } from '@/entities/tipos'
-import { Panel, Metrica, Chip, Boton, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Metrica, Chip, Boton, Hueco, Enlace } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
 import { cadencia } from '@/entities/cadena'
@@ -23,11 +23,11 @@ const hace = (iso: string) => {
 
 export function Conectores() {
   const rol = useRol()
-  const campoId = useApp(s => s.campoId)
+  const campoId = useApp(s => s.campoId), setPantalla = useApp(s => s.setPantalla)
   const caps = useMemo(() => (Object.entries(rol.puede) as Array<[Capacidad, boolean]>)
     .filter(([, v]) => v).map(([k]) => k), [rol])
   const puede = rol.puede['conector:configurar']
-  const { datos, error, recargar } = useRegistro(campoId, caps)
+  const { datos, error, sinServicio, recargar } = useRegistro(campoId, caps)
   // El código de inscripción es del campo para el que se pidió: al cambiar de
   // campo no se sigue pintando (un gateway inscrito con él quedaría en el otro
   // campo y sus barriles se atribuirían mal), y dice de qué campo es.
@@ -85,8 +85,15 @@ export function Conectores() {
 
   // SAP y WhatsApp no dependen del registro de los bordes: se muestran aunque este no responda.
   const sistemas = <Integraciones campoId={campoId} />
-  if (error) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><Hueco>No se pudo consultar el registro: {error}.</Hueco></Panel></>
-  if (!datos) return <>{sistemas}<Panel titulo="REGISTRO DE BORDES"><p className="text-[14px] text-[var(--tinta3)]">Consultando…</p></Panel></>
+  // En el demo construido no hay quién sirva el registro: se dice qué es y adónde ir, sin inventar bordes ni tags (A24).
+  if (sinServicio) return (
+    <div className="grid gap-3 sm:gap-4">{sistemas}<Panel titulo="Registro de bordes"><div data-registro-sin-servicio><Hueco>
+      En el demo no hay bordes conectados: el registro lo sirve el backend.{' '}
+      {rol.pantallas.includes('configuracion') && <Enlace onClick={() => setPantalla('configuracion')}>Ver la configuración</Enlace>}
+    </Hueco></div></Panel></div>
+  )
+  if (error) return <div className="grid gap-3 sm:gap-4">{sistemas}<Panel titulo="Registro de bordes"><Hueco>No se pudo consultar el registro: {error}.</Hueco></Panel></div>
+  if (!datos) return <div className="grid gap-3 sm:gap-4">{sistemas}<Panel titulo="Registro de bordes"><p className="text-[14px] text-[var(--tinta3)]">Consultando…</p></Panel></div>
 
   const { inv, pend } = datos
   const conSugerencia = pend.filter(t => sugerir(t.tag, inv.equipos))
@@ -96,15 +103,15 @@ export function Conectores() {
   )
 
   return (
-    <>
+    <div className="grid gap-3 sm:gap-4">
       {sistemas}
-      <div className="mb-2.5 grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-        <Metrica titulo="BORDES CONECTADOS" valor={String(inv.gateways.length)} />
-        <Metrica titulo="TAGS REGISTRADOS" valor={String(inv.tags.total)}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
+        <Metrica titulo="Bordes conectados" valor={String(inv.gateways.length)} />
+        <Metrica titulo="Tags registrados" valor={String(inv.tags.total)}
           pie={`${inv.tags.total - inv.tags.pendientes} asociados`} />
-        <Metrica titulo="POR ASOCIAR" valor={String(inv.tags.pendientes)}
+        <Metrica titulo="Por asociar" valor={String(inv.tags.pendientes)}
           pie={inv.tags.pendientes ? 'sin equipo resuelto' : undefined} />
-        <Metrica titulo="EQUIPOS DEL CAMPO" valor={String(inv.equipos.length)}
+        <Metrica titulo="Equipos del campo" valor={String(inv.equipos.length)}
           pie="del registro de ingeniería" />
       </div>
 
@@ -114,33 +121,33 @@ export function Conectores() {
         sabe de qué equipo es: hasta que se asocie, sus barriles no se pueden atribuir a nadie.
       </Lectura>
 
-      {aviso && <div className="mb-2.5"><Hueco>{aviso}</Hueco></div>}
+      {aviso && <div role="status"><Hueco>{aviso}</Hueco></div>}
 
-      <Panel className="mb-2.5" titulo="BORDES">
+      <Panel titulo="Bordes">
         {inv.gateways.map(g => (
           <div key={g.id} className="flex flex-wrap items-center gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
             <Plug className="size-4 shrink-0 text-[var(--tinta3)]" />
-            <span className="min-w-0 flex-1">
-              <b className="block font-mono text-[14px]">{g.id}</b>
+            <span className="min-w-[200px] flex-1">
+              <b className="font-cond block text-[15px] font-bold tracking-[.02em]">{g.id}</b>
               <small className="block text-[13px] text-[var(--tinta3)]">
                 {g.modelo} · serie {g.serie} · firmware {g.firmware} · enlace {g.enlace} · buffer {g.buffer_h} h
               </small>
             </span>
             <Chip>{g.tags} tags</Chip>
-            <span className="tabular w-[120px] text-right text-[13px] text-[var(--tinta2)]">
+            <span className="tabular text-right text-[13px] text-[var(--tinta2)]">
               reportó {hace(g.ultimo_visto)}
             </span>
           </div>
         ))}
         {puede ? (
-          <div className="mt-2.5 border-t border-[var(--linea2)] pt-2.5">
+          <div className="mt-3 border-t border-[var(--linea2)] pt-3">
             <Boton variante="principal" disabled={ocupado} onClick={inscribir}>
               <KeyRound className="mr-1 inline size-3.5" />Inscribir un borde nuevo
             </Boton>
             {codigo && (
-              <div className="mt-2 rounded border border-[var(--tinta2)] bg-[var(--panel)] p-2.5">
+              <div className="mt-3 rounded-[16px] bg-[var(--panel2)] p-4">
                 <small className="block text-[13px] text-[var(--tinta3)]">Código para {campoPorId(codigo.campo).nombre}</small>
-                <b className="font-mono text-[18px] tracking-[.12em] text-[var(--tinta)]">{codigo.codigo}</b>
+                <b className="tabular text-[20px] font-bold tracking-[.12em] text-[var(--tinta)]">{codigo.codigo}</b>
                 <p className="mt-1 text-[14px] text-[var(--tinta2)]">
                   {codigo.instruccion} Vence en {codigo.expiraEn}.
                 </p>
@@ -155,7 +162,7 @@ export function Conectores() {
         )}
       </Panel>
 
-      <Panel titulo="TAGS POR ASOCIAR">
+      <Panel titulo="Tags por asociar">
         {pend.length === 0 ? (
           <p className="text-[14px] text-[var(--tinta2)]">
             Los {inv.tags.total} tags tienen equipo.
@@ -163,7 +170,7 @@ export function Conectores() {
         ) : (
           <>
             {puede && conSugerencia.length > 0 && (
-              <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2.5 py-2">
+              <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[14px] bg-[var(--panel2)] px-3.5 py-2.5">
                 <span className="flex-1 text-[14px]">
                   {conSugerencia.length} de {pend.length} con sugerencia
                 </span>
@@ -172,12 +179,13 @@ export function Conectores() {
                 </Boton>
               </div>
             )}
-            {/* Es una cola de trabajo y «Aplicar las N» asocia todas: se ven todas, sin «ver N más». */}
-            {pend.map(fila)}
+            {/* Es una cola de trabajo y «Aplicar las N» asocia todas: se ven todas, sin «ver N más». Cada
+                fila abre su asociación a mano: una sola acción principal en la tarjeta (UI-19). */}
+            <ul>{pend.map(fila)}</ul>
           </>
         )}
       </Panel>
-    </>
+    </div>
   )
 }
 
@@ -190,36 +198,46 @@ function FilaPendiente({ t, equipos, puede, ocupado, onAsociar }: {
 }) {
   const s = sugerir(t.tag, equipos as never)
   const [elegido, setElegido] = useState(s?.codigo ?? '')
+  const [abierta, setAbierta] = useState(false)
+  const idAsociar = useId()
+  const detalle = <>
+    <b className="font-cond block text-[15px] font-bold tracking-[.02em]">{t.tag}</b>
+    <small className="block text-[13px] text-[var(--tinta2)]">
+      {t.tipo}{t.unidad ? ` · ${t.unidad}` : ''} · {t.protocolo} · cada {cadencia(t.cadencia_s)} · {t.gateway_id}
+    </small>
+  </>
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
-      <span className="min-w-[190px] flex-1">
-        <b className="block font-mono text-[14px]">{t.tag}</b>
-        <small className="block text-[13px] text-[var(--tinta3)]">
-          {t.tipo}{t.unidad ? ` · ${t.unidad}` : ''} · {t.protocolo} · cada {cadencia(t.cadencia_s)} · {t.gateway_id}
-        </small>
-      </span>
-      {s && (
-        // Por qué se sugiere (la nomenclatura del tag) va en el ⓘ y en el papel.
-        <span className="flex min-w-[160px] flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
-          <Chip tono={s.confianza === 'alta' ? 'fuerte' : 'neutro'}>sugerido {s.codigo}</Chip>
-          <Info titulo={`Sugerido ${s.codigo}`} texto={`Por nomenclatura: ${s.razon}.`} />
-        </span>
-      )}
-      {puede && (
-        <span className="flex min-w-0 max-w-full items-center gap-1.5">
+    <li className="border-t border-[var(--linea2)] first:border-t-0" data-tag-pendiente={t.tag}>
+      <div className="flex min-h-14 items-center gap-x-1.5 py-2">
+        {/* La fila entera abre la asociación (con «›» al final); el porqué de la sugerencia va en su ⓘ y en el papel. */}
+        {puede
+          ? <button type="button" aria-expanded={abierta} aria-controls={idAsociar} onClick={() => setAbierta(v => !v)}
+              className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-2 gap-y-1 text-left hover:[&_b]:underline">
+              <span className="min-w-[170px] flex-1">{detalle}</span>
+              {s && <Chip tono={s.confianza === 'alta' ? 'fuerte' : 'neutro'}>sugerido {s.codigo}</Chip>}
+              <ChevronRight aria-hidden className={cn('size-5 shrink-0 text-[var(--tinta3)] transition-transform duration-[120ms]', abierta && 'rotate-90')} />
+            </button>
+          : <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="min-w-[170px] flex-1">{detalle}</span>
+              {s && <Chip tono={s.confianza === 'alta' ? 'fuerte' : 'neutro'}>sugerido {s.codigo}</Chip>}
+            </span>}
+        {s && <Info titulo={`Sugerido ${s.codigo}`} texto={`Por nomenclatura: ${s.razon}.`} />}
+      </div>
+      {puede && abierta && (
+        <div id={idAsociar} className="flex min-w-0 max-w-full flex-wrap items-center gap-2 pb-3">
           {/* Un select toma el ancho de su opción más larga: en el teléfono se recorta, no se sale. */}
           <select value={elegido} onChange={e => setElegido(e.target.value)} aria-label={`Equipo de ${t.tag}`}
-            className={cn('min-w-0 max-w-[240px] rounded border bg-[var(--panel2)] px-1.5 py-[4px] text-[14px] outline-none focus:border-acento',
+            className={cn('min-h-10 min-w-0 max-w-[260px] rounded-[10px] border bg-[var(--panel2)] px-2 text-[15px] outline-none focus:border-acento',
               elegido ? 'border-[var(--linea)]' : 'border-dashed border-[var(--linea)]')}>
             <option value="">sin asociar</option>
             {equipos.map(e => <option key={e.codigo} value={e.codigo}>{e.codigo} · {e.nombre}</option>)}
           </select>
-          <Boton variante="chico" disabled={ocupado || !elegido} onClick={() => elegido && onAsociar(elegido, elegido === s?.codigo ? 'regla' : 'manual')}>
-            Asociar
+          <Boton disabled={ocupado || !elegido} onClick={() => elegido && onAsociar(elegido, elegido === s?.codigo ? 'regla' : 'manual')}>
+            Asociar {t.tag}
           </Boton>
-        </span>
+        </div>
       )}
-    </div>
+    </li>
   )
 }

@@ -1,0 +1,61 @@
+#/conf/esp/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Equipos
+DATOS DE DEMOSTRACIÓN
+Electrosumergibles
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+En falla ahora
+0 de 15
+las paradas, por otra causa
+Con aviso
+0
+ninguna parte avisa
+Diferido de sus electrosumergibles
+0 bbl
+ninguna parada propia
+Entre fallas · 12 meses
+916 d
+6 fallas · 113 disparos
+FLOTA
+15
+Pozo	Ahora	Crudo bbl/d	Por su ESP bbl	Fallas	Disparos	Entre fallas
+
+LC-16
+56,5 Hz
+	
+cerrado por P-201B
+	869	0	1	6	—
+
+LC-07
+55,5 Hz
+	
+cerrado por P-201B
+	796	0	0	3	—
+
+LC-11
+54,0 Hz
+	estable	1.031	0	1	11	—
+
+LC-08
+54,0 Hz
+	estable	893	0	0	9	—
+
+LC-04
+57,0 Hz
+	estable	825	0	1	7	—
+ver 10 más

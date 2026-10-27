@@ -1,0 +1,96 @@
+#/adm/agua/ceiba/curso
+
+Todos mis campos
+La Ceiba
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Agua y almacenamiento
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+La tubería del agua
+hoy, 2 de oct, 14:00
+agua de las pruebas vigentes · cada capacidad dice de dónde sale: firmada o dato del demo, sin firmar
+Agua de los pozos
+224.075bbl/d
+≈ 11.857 de crudo
+con las pruebas de los pozos
+con todos los pozos produciendo
+hoy 174.033 · 3 pozos parados
+corte de agua hoy 94,9 %
+→
+Tratamiento de agua
+sin dato
+→
+Tanque de agua
+TK-AG-CE · 30.000 bbl
+89,6 %
+alto-alto 90 %
+LT-2012 · 13:59
+al parar P-201B estaba al 78,7 %: aguantaba 1,8 h (1,7 h a 2,0 h)
+→
+Bombas de reinyección
+267.750bbl/d
+≈ 14.168 de crudo
+cabe más: 43.675
+┄ dato del demo, sin firmar
+casi iguales
+P-201A
+89.250
+┄ sin instrumento
+1
+P-201B
+PARADA
+P-201C
+89.250
+┄ sin instrumento
+3 × 90.000 de placa · el cabezal las deja en 89.250
+hoy, sin P-201B: 178.500 de 267.750 bbl/d de agua
+→
+Pozos inyectores (disposición)
+267.750bbl/d
+≈ 14.168 de crudo
+cabe más: 43.675
+┄ dato del demo, sin firmar
+casi iguales
+Con las tres bombas, cabe más agua: 43.675 bbl/d (sin contar la capacidad del tratamiento de agua: no tiene dato).
+Bombas de reinyección y pozos inyectores dan exactamente lo mismo: 267.750 bbl/d. Lo que se gane en uno lo frena el otro; la admisión de los inyectores no está firmada: el demo la deduce del mismo límite del cabezal que deja a cada bomba en su capacidad.
+Si para una con todos los pozos produciendo, faltan 44.100 bbl/d de salida: el tanque se llena en 1,8 h y hay que cerrar pozos.
+P-201B está parada desde el 2 de oct, 03:52: se cerraron LC-07 y LC-16 y se pierden 1.665 bbl/d de crudo.
+Cerrando primero los más acuatosos se pierden 1.426 bbl/d de crudo; cerrando parejo, 2.236.
+HOY
+1
+P-201B parada: P-201A y P-201C toman lo que entra (174.033 de 178.500 bbl/d de agua). El nivel no sube. Por P-201B se dejan de producir ahora 1.665 bbl/d de crudo.
+Lo que pasó
+2 de oct, 03:52 · P-201B paró con el tanque al 78,7 %: TRIM previó 1,8 h de colchón
+el tanque se llenó en 1,8 h · cerraron LC-07 y LC-16 · 1.665 bbl/d
+«evitable cerrando en orden»: 30 bbl hasta ahora · diferido de P-201B en octubre, en curso: 573 bbl
+Si para otra bomba
+con P-201A y P-201C solas, cerrar primero los más acuatosos para quitar
+84.783
+bbl/d de agua:
+LC-02 (30 de crudo por cada 1.000 de agua) · LC-10 (34) · LC-01 (36) · LC-17 (36) · LC-14 (40) · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 %
+→ se pierden 3.059 bbl/d de crudo; parejo, 4.577 · después de 2 min de colchón
+Por qué es crítica
+No hay bomba de sobra. Con las tres cabe más agua: 43.675 bbl/d; si para una, faltan 44.100.
+El tanque aguanta horas y la reparación dura días. El tanque aguantó 1,8 h y una falla de P-201B dura en promedio 40,0 h fuera de servicio.
+Para seguido. Lleva 9 fallas en 367 días, una cada 41 días, y 37.315 bbl. Las partes: sello mecánico 5 veces y rodamientos 3.
+Abrir P-201B
+La bomba de reinyección
+Parada desde 2 de oct, 03:52: 2 pozos cerrados por ella
+Mediana de FI-2011 mientras la bomba trabaja
+P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una
+Tanque de agua de La Ceiba: 30.000 bbl, alto-alto al 90 % · Certificado de aforo TK-AG-CE · tabla de 1 cm
+Nivel LT-2012: 89,6 %
+Ver P-201B

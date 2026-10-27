@@ -1,4 +1,5 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useAncho } from '@/widgets/resultados/ancho'
 import type { ChokeAnh } from '@/entities/choke'
 import type { Momento, PlantaDelCampo, TramoVivo } from '@/shared/api/plantaViva'
 import { Patrones, TextoSvg, MarcaSvg } from './piezas'
@@ -19,20 +20,27 @@ const TRAMOS: Array<{ k: Exclude<ChokeAnh, 'reservorio'>; x0: number; x1: number
   { k: 'pozo', x0: 110, x1: 244 }, { k: 'planta', x0: 256, x1: 452 }, { k: 'exportacion', x0: 464, x1: 556 },
 ]
 
+/** La ⓘ de «limita» (X4 §4.10; P-12): el tramo que limita se decidió con una capacidad sin firmar. */
+const notaLimita = (p: PlantaDelCampo, t: TramoVivo) => (t.limita && p.limitaSinFirmar ? `Limita ${p.limitaSinFirmar}.` : undefined)
+
 /** Las teclas que abren un tramo con el teclado (U2 §2.8). */
 const abreCon = (e: KeyboardEvent, abrir: () => void) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir() }
 }
 
 /** Lo que tienen en común los dos dibujos: un tramo que se recorre con Tab y se abre con Enter. */
-function TramoInteractivo({ t, onAbrir, foco, children }: {
-  t: TramoVivo; onAbrir: (k: ChokeAnh) => void; foco: { x: number; y: number; w: number; h: number }; children: ReactNode
+function TramoInteractivo({ t, onAbrir, foco, nota, children }: {
+  t: TramoVivo; onAbrir: (k: ChokeAnh) => void; foco: { x: number; y: number; w: number; h: number }
+  /** Lo que dice la ⓘ del tramo («Limita con una capacidad sin firmar»): va en el globo y en el nombre accesible. */
+  nota?: string
+  children: ReactNode
 }) {
   const [enfocado, setEnfocado] = useState(false)
   return (
-    <g role="button" tabIndex={0} aria-label={`${t.nombre}: ${t.frase}`} data-tramo={t.tramo} data-marcado={t.marcado ? '' : undefined}
-      data-valor={t.valor} className="cursor-pointer outline-none" onClick={() => onAbrir(t.tramo)} onKeyDown={e => abreCon(e, () => onAbrir(t.tramo))}
+    <g role="button" tabIndex={0} aria-label={`${t.nombre}: ${t.frase}${nota ? ` ${nota}` : ''}`} data-tramo={t.tramo} data-marcado={t.marcado ? '' : undefined}
+      data-valor={t.valor} data-entero={t.entero} className="cursor-pointer outline-none" onClick={() => onAbrir(t.tramo)} onKeyDown={e => abreCon(e, () => onAbrir(t.tramo))}
       onFocus={() => setEnfocado(true)} onBlur={() => setEnfocado(false)}>
+      {nota && <title>{nota}</title>}
       <rect x={foco.x} y={foco.y} width={foco.w} height={foco.h} rx={12} fill="transparent"
         stroke={enfocado ? 'var(--foco)' : 'none'} strokeWidth={2} />
       {children}
@@ -151,7 +159,7 @@ export function TuberiaAcostada({ planta: p, momento, onTramo, onSinIdentificar 
         const aparte = !!x.marca && t.k !== 'planta'
         const ry2 = ry + (aparte ? 17 : 0)
         return (
-          <TramoInteractivo key={t.k} t={x} onAbrir={onTramo} foco={{ x: t.x0 - 12, y: 2, w: t.x1 - t.x0 + 24, h: ry + 26 + (aparte ? 17 : 0) }}>
+          <TramoInteractivo key={t.k} t={x} onAbrir={onTramo} foco={{ x: t.x0 - 12, y: 2, w: t.x1 - t.x0 + 24, h: ry + 26 + (aparte ? 17 : 0) }} nota={notaLimita(p, x)}>
             {/* «aquí se trabó» va en el rótulo de la planta (ancha); en los pozos y afuera, en su propio renglón. */}
             <TextoSvg x={lx} y={ry} {...NOM} partes={x.marca && !aparte ? [...x.titulo, ` · ${x.marca}`] : x.titulo} />
             {aparte && <TextoSvg x={lx} y={ry + 17} tam={14} peso={600} color="var(--tinta)">{x.marca}</TextoSvg>}
@@ -170,11 +178,16 @@ export function TuberiaAcostada({ planta: p, momento, onTramo, onSinIdentificar 
           </TramoInteractivo>
         )
       })}
-      {/* La venta, con su meta (X4 §4.6). */}
-      <g data-venta="">
+      {/* La venta, con su meta (X4 §4.6). «Al cierre» es proyectado: su palabra y el trazo discontinuo (H10; X2 I7 y D1). */}
+      <g data-venta="" data-calidad={p.venta.calidad}>
         <TextoSvg x={606} y={ry} {...NOM}>{p.venta.titulo}</TextoSvg>
         <TextoSvg x={606} y={ry + 18} partes={[{ b: n0(p.venta.valor) }, ` ${p.venta.unidad}`]} />
-        {p.venta.metaTexto && <TextoSvg x={606} y={ry + 35}>{p.venta.metaTexto}</TextoSvg>}
+        {p.venta.calidad === 'proyectado'
+          ? <>
+            <TextoSvg x={606} y={ry + 35}>{`proyectado${p.venta.metaTexto ? ` · ${p.venta.metaTexto}` : ''}`}</TextoSvg>
+            <rect x={598} y={ry - 17} width={W - 600} height={58} rx={10} fill="none" stroke="var(--tinta3)" strokeWidth={1.3} strokeDasharray="4 3" data-proyectado="" />
+          </>
+          : p.venta.metaTexto && <TextoSvg x={606} y={ry + 35}>{p.venta.metaTexto}</TextoSvg>}
         {p.venta.bajoMeta && momento !== 'durante' && <MarcaSvg x={588} y={ry + 25} s={3} t={13} />}
       </g>
 
@@ -212,12 +225,13 @@ export function TuberiaAcostada({ planta: p, momento, onTramo, onSinIdentificar 
 
       {/* Sin identificar: aparte, con borde discontinuo (no es un tramo). */}
       {p.sinIdentificar && (
-        <g data-sin-identificar="" data-valor={p.sinIdentificar.valor} role="button" tabIndex={0} className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--foco)]"
+        <g data-sin-identificar="" data-valor={p.sinIdentificar.valor} data-entero={p.sinIdentificar.entero} role="button" tabIndex={0} className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--foco)]"
           aria-label={`${p.sinIdentificar.titulo}, ${p.sinIdentificar.linea}. Pedir la causa`} onClick={onSinIdentificar} onKeyDown={e => onSinIdentificar && abreCon(e, onSinIdentificar)}>
           <rect x={556} y={162} width={W - 557} height={62} rx={14} fill="none" stroke="var(--tinta3)" strokeWidth={1.4} strokeDasharray="5 4" />
           <TextoSvg x={570} y={184} partes={[{ b: p.sinIdentificar.titulo }]} />
           <TextoSvg x={570} y={202}>{p.sinIdentificar.linea.length > 22 ? 'sin identificar' : p.sinIdentificar.linea}</TextoSvg>
-          <TextoSvg x={570} y={217} peso={600} color="var(--tinta)">Pedir la causa ›</TextoSvg>
+          {/* En el papel un enlace no hace nada (V2-2). */}
+          <TextoSvg x={570} y={217} peso={600} color="var(--tinta)" className="no-imprimir">Pedir la causa ›</TextoSvg>
         </g>
       )}
     </svg>
@@ -230,11 +244,17 @@ const DE_PIE: Array<{ k: Exclude<ChokeAnh, 'reservorio'>; y0: number; y1: number
   { k: 'pozo', y0: 66, y1: 146, rotulo: 100 }, { k: 'planta', y0: 158, y1: 290, rotulo: 196 }, { k: 'exportacion', y0: 302, y1: 348, rotulo: 321 },
 ]
 
-export function TuberiaDePie({ planta: p, momento, onTramo, onSinIdentificar }: {
+export function TuberiaDePie({ planta: p, momento, onTramo, onSinIdentificar, ventaEnLaCifra = false }: {
   planta: PlantaDelCampo; momento: Momento; onTramo: (k: ChokeAnh) => void; onSinIdentificar?: () => void
+  /** K2 · La cifra grande ya es lo que sale hoy (la lente técnica, P-01): el renglón de la venta
+   *  no la repite («Sale hoy · meta 10.900»). La cifra queda en el nombre del dibujo. */
+  ventaEnLaCifra?: boolean
 }) {
   const id = useId().replace(/:/g, '')
-  const ancho = 326, cx = 34
+  // Al ancho de verdad (H9): una unidad es un px y la letra de 13 se ve de 13, también a 320 px. Angosta
+  // (menos de 300 px), los rótulos arrancan más cerca del tubo y lo largo baja a otro renglón.
+  const [ref, medido] = useAncho(326)
+  const ancho = Math.max(236, Math.min(420, medido)), angosta = ancho < 300, cx = 34
   const k = 60 / p.escalaBpd, w = (v: number) => (v * k) / 2
   const hf = w(p.pasaBpd)
   const tramo = (x: ChokeAnh) => p.tramos.find(t => t.tramo === x)!
@@ -266,18 +286,28 @@ export function TuberiaDePie({ planta: p, momento, onTramo, onSinIdentificar }: 
     + ` Q${xLu} ${yu + 8} ${xLu + 8} ${yu + 8} L${xRu - 8} ${yu + 8} Q${xRu} ${yu + 8} ${xRu} ${yu}`
     + caminoDe(der.inicio, der.segs).replace(/^M[^LC]*/, '')
     + ` L${xR0} ${y0 + 8} Q${xR0} ${y0} ${xR0 - 8} ${y0} L${xL0 + 8} ${y0} Q${xL0} ${y0} ${xL0} ${y0 + 8} Z`
-  const x = 90
+  const x = angosta ? 76 : 90
   const NOM = { tam: 15, peso: 600, color: 'var(--tinta)' }
   const r = p.ramal
   const parada = r.bombas.find(b => b.estado === 'parada')
   const planta = tramo('planta')
-  const nota = planta.marcado && momento === 'durante' ? planta.nota ?? [] : []
+  // Angosta, sin el primer renglón de la nota («se angostó: con P-201B parada»): el ramal de abajo ya dice la bomba parada.
+  const nota = planta.marcado && momento === 'durante' ? (angosta ? (planta.nota ?? []).slice(1) : planta.nota ?? []) : []
   const yRamal = 282
-  const H = p.sinIdentificar ? 454 : 404
+  // Angosta: «Pedir la causa ›» baja a su renglón dentro de la caja.
+  const altoSin = angosta ? 64 : 46
+  const H = p.sinIdentificar ? 406 + altoSin + 2 : 404
   const maxDespues = Math.max(1, ...p.tramos.map(t => t.valor), p.sinIdentificar?.valor ?? 0)
+  const tanque = r.tanque ? ['tanque ', { b: r.tanque.nivelPct !== null ? `${n1(r.tanque.nivelPct)} %` : 'sin dato' }] as const : ['tanque sin dato'] as const
+  // El renglón del ramal, medido a lo largo (13 px de Air: unos 6,9 px por letra, con margen) contra el ancho que queda.
+  const textoRamal = `${parada ? `${parada.id} parada · ` : r.bombas.length ? `bombas: ${r.resumen} · ` : 'agua: '}${r.tanque ? `tanque ${r.tanque.nivelPct !== null ? `${n1(r.tanque.nivelPct)} %` : 'sin dato'}` : 'tanque sin dato'}`
+  const cabeElRamal = textoRamal.length * 6.9 <= ancho - (parada ? x + 21 : x) - 4
+  const lineaBomba = `ahora: ${parada ? `${parada.id} parada` : r.bombas.length ? `bombas: ${r.resumen}` : 'agua'}`
+  const ahoraArriba = momento === 'despues' && lineaBomba.length * 6.9 > ancho - (parada ? x + 21 : x) - 4
 
   return (
-    <svg viewBox={`0 0 ${ancho} ${H}`} className="block h-auto w-full max-w-[420px]" role="group" aria-label={p.ariaLabel} data-tuberia="de-pie" data-momento={momento}>
+    <div ref={ref} className="w-full max-w-[420px]">
+    <svg width={ancho} height={H} viewBox={`0 0 ${ancho} ${H}`} className="block" role="group" aria-label={p.ariaLabel} data-tuberia="de-pie" data-momento={momento}>
       <Patrones id={id} />
       <TramoInteractivo t={tramo('reservorio')} onAbrir={onTramo} foco={{ x: 0, y: 0, w: ancho, h: 56 }}>
         <rect x={cx - 28} y={2} width={56} height={52} rx={16} fill="var(--roca)" />
@@ -302,49 +332,74 @@ export function TuberiaDePie({ planta: p, momento, onTramo, onSinIdentificar }: 
         return <rect x={cx - w(cabe(t.k)) - 8} y={t.y0 - 8} width={2 * w(cabe(t.k)) + 16} height={t.y1 - t.y0 + 16} rx={14} fill="none" stroke="var(--tinta2)" strokeWidth={1.5} strokeDasharray="4 3" data-riesgo="" />
       })()}
       {/* La rama del agua sale de la planta como un renglón propio. */}
-      <path d={`M${cx + w(cabe('planta'))} ${yRamal} L84 ${yRamal}`} stroke={r.hay ? 'var(--agua)' : 'var(--tinta3)'} strokeWidth={4} fill="none" strokeLinecap="round" strokeDasharray={r.hay ? undefined : '5 5'} />
+      {/* Sin bomba parada, el ramal termina antes del rótulo (angosta, el rótulo arranca en 76 y lo tocaba). */}
+      <path d={`M${cx + w(cabe('planta'))} ${yRamal} L${parada ? 84 : Math.min(84, x - 6)} ${yRamal}`} stroke={r.hay ? 'var(--agua)' : 'var(--tinta3)'} strokeWidth={4} fill="none" strokeLinecap="round" strokeDasharray={r.hay ? undefined : '5 5'} />
       {DE_PIE.map(t => {
         const y = tramo(t.k)
-        const yl = t.rotulo
+        // K2 · Angosta (320 px), «aquí se trabó» baja a su renglón: con «◄ limita ⓘ» no cabe en uno (se recortaba).
+        // (Solo en los pozos: la planta lleva su nota debajo y la salida tiene la venta pegada.)
+        const marcaAparte = angosta && !!y.marca && t.k === 'pozo'
+        const yl = t.rotulo, yl2 = yl + (marcaAparte ? 18 : 0)
         const delMomento = y.equipos[0]
         return (
-          <TramoInteractivo key={t.k} t={y} onAbrir={onTramo} foco={{ x: 0, y: t.y0 - 6, w: ancho, h: t.y1 - t.y0 + 12 - (t.k === 'planta' ? 30 : 0) }}>
-            <TextoSvg x={x} y={yl} {...NOM} partes={y.marca ? [...y.titulo, ` · ${y.marca}`] : y.titulo} />
+          <TramoInteractivo key={t.k} t={y} onAbrir={onTramo} foco={{ x: 0, y: t.y0 - 6, w: ancho, h: t.y1 - t.y0 + 12 - (t.k === 'planta' ? 30 : 0) }} nota={notaLimita(p, y)}>
+            <TextoSvg x={x} y={yl} {...NOM} partes={y.marca && !marcaAparte ? [...y.titulo, ` · ${y.marca}`] : y.titulo} />
+            {marcaAparte && <TextoSvg x={x} y={yl + 18} {...NOM} partes={[y.marca!]} />}
             {momento === 'despues' ? (
               <>
-                <rect x={x} y={yl + 10} width={80} height={7} rx={3.5} fill="var(--pista)" />
-                {y.valor > 0.5 && <rect x={x} y={yl + 10} width={Math.max(3, (80 * y.valor) / maxDespues)} height={7} rx={3.5} fill="var(--dato1)" data-barra-despues={y.valor} />}
-                <TextoSvg x={x + 88} y={yl + 20} tam={14} partes={y.linea} />
+                <rect x={x} y={yl2 + 10} width={80} height={7} rx={3.5} fill="var(--pista)" />
+                {y.valor > 0.5 && <rect x={x} y={yl2 + 10} width={Math.max(3, (80 * y.valor) / maxDespues)} height={7} rx={3.5} fill="var(--dato1)" data-barra-despues={y.valor} />}
+                <TextoSvg x={x + 88} y={yl2 + 20} tam={14} partes={y.linea} />
               </>
             ) : momento === 'antes' && y.marcado && delMomento && (delMomento.prioridad || delMomento.sinInstrumento) ? (
               <>
-                <MarcaSvg x={x} y={yl + 8} s={delMomento.prioridad} sinInstrumento={delMomento.sinInstrumento} t={14} />
-                <TextoSvg x={x + 19} y={yl + 20} tam={14} partes={y.linea} />
+                <MarcaSvg x={x} y={yl2 + 8} s={delMomento.prioridad} sinInstrumento={delMomento.sinInstrumento} t={14} />
+                <TextoSvg x={x + 19} y={yl2 + 20} tam={14} partes={y.linea} />
               </>
-            ) : <TextoSvg x={x} y={yl + 20} tam={14} partes={y.linea} />}
+            ) : <TextoSvg x={x} y={yl2 + 20} tam={14} partes={y.linea} />}
             {t.k === 'planta' && nota.map((l, i) => <TextoSvg key={l} x={x} y={yl + 40 + i * 17}>{l}</TextoSvg>)}
           </TramoInteractivo>
         )
       })}
       <g data-ramal-agua={r.hay ? '' : 'sin-dato'}>
         {parada && <MarcaSvg x={x} y={yRamal - 10} s={parada.prioridad} />}
-        <TextoSvg x={parada ? x + 21 : x} y={yRamal + 3}
-          partes={[...(parada ? [{ b: parada.id }, ' parada · '] : r.bombas.length ? [`bombas: ${r.resumen} · `] : ['agua: ']),
-            ...(r.tanque ? ['tanque ', { b: r.tanque.nivelPct !== null ? `${n1(r.tanque.nivelPct)} %` : 'sin dato' }] : ['tanque sin dato'])]} />
+        {/* K2 · En un renglón solo si cabe: «bombas: 7 de 7 en marcha · tanque 61,8 %» no cabe a 390 px (se recortaba). */}
+        {angosta || momento === 'despues' || !cabeElRamal
+          // Angosta (o en Después, con «ahora:» delante): la bomba en un renglón y el tanque en el de abajo.
+          ? <>
+            {/* K2 · Si «ahora: bombas: 7 de 7 en marcha» no cabe (Después, a 320 px), «ahora:» sube a su renglón:
+                en Después la planta no lleva nota y arriba del ramal hay lugar. */}
+            {ahoraArriba && <TextoSvg x={parada ? x + 21 : x} y={yRamal - 13}>ahora:</TextoSvg>}
+            <TextoSvg x={parada ? x + 21 : x} y={yRamal + 3}
+              partes={[...(momento === 'despues' && !ahoraArriba ? ['ahora: '] : []), ...(parada ? [{ b: parada.id }, ' parada'] : r.bombas.length ? [`bombas: ${r.resumen}`] : ['agua'])]} />
+            <TextoSvg x={parada ? x + 21 : x} y={yRamal + 19} partes={[...tanque]} />
+          </>
+          : <TextoSvg x={parada ? x + 21 : x} y={yRamal + 3}
+            partes={[...(parada ? [{ b: parada.id }, ' parada · '] : r.bombas.length ? [`bombas: ${r.resumen} · `] : ['agua: ']), ...tanque]} />}
       </g>
-      <g data-venta="">
-        <TextoSvg x={x} y={372} {...NOM} partes={[`${p.venta.titulo} `, { b: `${n0(p.venta.valor)} ${p.venta.unidad}` }]} />
-        {p.venta.metaTexto && <TextoSvg x={x} y={390}>{p.venta.metaTexto}</TextoSvg>}
+      <g data-venta="" data-calidad={p.venta.calidad}>
+        {ventaEnLaCifra && p.venta.calidad !== 'proyectado'
+          ? <TextoSvg x={x} y={372} tam={15} partes={[{ b: p.venta.titulo }, ...(p.venta.metaTexto ? [` · ${p.venta.metaTexto}`] : [])]} />
+          : <TextoSvg x={x} y={372} {...NOM} partes={[`${p.venta.titulo} `, { b: `${n0(p.venta.valor)} ${p.venta.unidad}` }]} />}
+        {p.venta.calidad === 'proyectado'
+          ? <>
+            <TextoSvg x={x} y={390}>{`proyectado${p.venta.metaTexto ? ` · ${p.venta.metaTexto}` : ''}`}</TextoSvg>
+            <rect x={x - 8} y={356} width={ancho - x + 6} height={42} rx={10} fill="none" stroke="var(--tinta3)" strokeWidth={1.3} strokeDasharray="4 3" data-proyectado="" />
+          </>
+          : p.venta.metaTexto && !ventaEnLaCifra && <TextoSvg x={x} y={390}>{p.venta.metaTexto}</TextoSvg>}
       </g>
       {p.sinIdentificar && (
-        <g data-sin-identificar="" data-valor={p.sinIdentificar.valor} role="button" tabIndex={0} className="cursor-pointer outline-none"
+        <g data-sin-identificar="" data-valor={p.sinIdentificar.valor} data-entero={p.sinIdentificar.entero} role="button" tabIndex={0} className="cursor-pointer outline-none"
           aria-label={`${p.sinIdentificar.titulo}, sin identificar. Pedir la causa`} onClick={onSinIdentificar} onKeyDown={e => onSinIdentificar && abreCon(e, onSinIdentificar)}>
-          <rect x={1} y={406} width={ancho - 2} height={46} rx={14} fill="none" stroke="var(--tinta3)" strokeWidth={1.4} strokeDasharray="5 4" />
+          <rect x={1} y={406} width={ancho - 2} height={altoSin} rx={14} fill="none" stroke="var(--tinta3)" strokeWidth={1.4} strokeDasharray="5 4" />
           <TextoSvg x={16} y={434} partes={[{ b: p.sinIdentificar.titulo }, momento === 'durante' ? ' sin identificar' : '']} />
-          <TextoSvg x={ancho - 14} y={434} ancla="end" peso={600} color="var(--tinta)">Pedir la causa ›</TextoSvg>
+          {angosta
+            ? <TextoSvg x={16} y={454} peso={600} color="var(--tinta)" className="no-imprimir">Pedir la causa ›</TextoSvg>
+            : <TextoSvg x={ancho - 14} y={434} ancla="end" peso={600} color="var(--tinta)" className="no-imprimir">Pedir la causa ›</TextoSvg>}
         </g>
       )}
     </svg>
+    </div>
   )
 }
 

@@ -6,9 +6,11 @@ import { test } from './apoyo.ts'
 
 /** Los tags de las filas de la lista, en el orden en que se ven. */
 const filas = (page: Page) => page.locator('main [data-fila-equipo]').evaluateAll(es => es.map(e => e.getAttribute('data-fila-equipo') ?? ''))
-/** Escoge una píldora de un filtro (un grupo de radios). */
+/** Escoge una píldora de un filtro (un grupo de radios). F3 (P-02): el tipo y el tren van detrás de «Más filtros». */
 const filtrar = async (page: Page, grupo: string, opcion: string) => {
-  await page.locator(`main [role=radiogroup][aria-label="${grupo}"] [data-opcion="${opcion}"]`).click()
+  const grupoEl = page.locator(`main [role=radiogroup][aria-label="${grupo}"]`)
+  if (!await grupoEl.isVisible()) await page.locator('main [data-mas-filtros]').click()
+  await grupoEl.locator(`[data-opcion="${opcion}"]`).click()
   await page.waitForTimeout(150)
 }
 /** Lo que se sale de la pantalla a lo ancho y el texto (HTML y SVG) de menos de 12 px, en el contenido. */
@@ -47,7 +49,9 @@ test('Equipos · la lista: todos los equipos del campo, en su orden, con sus fil
   // «¿Lo vigila TRIM?»: P-201A no tiene instrumento, con sus corchetes y su palabra.
   await expect(page.locator('main [data-fila-equipo="P-201A"]')).toContainText('no: sin instrumento')
   await expect(page.locator('main [data-fila-equipo="P-201A"]')).toContainText('sube porque P-201B está parada')
-  await expect(page.locator('main [data-cambio-hoy]')).toContainText('Cambió hoy:')
+  // F3 · P-02: a confiabilidad, «Cambió hoy» se lo dice su cabeza («hoy valen más») y cada fila («sube porque…»): no se repite.
+  await expect(page.locator('main [data-primero] [data-frase]')).toContainText('hoy valen más')
+  f.ok(await page.locator('main [data-cambio-hoy]').count() === 0, 'sin la línea «Cambió hoy» repetida')
   // La marca de cada fila es la de la franja: solo los equipos con condición la llevan.
   const conMarca = await page.locator('main [data-fila-equipo][data-condicion]:not([data-condicion=""])').evaluateAll(es => es.map(e => e.getAttribute('data-fila-equipo')))
   f.ok(conMarca.join(' ') === 'P-201B K-101 LC-21 TK-102 H-302', `con marca, los cinco de la franja (${conMarca.join(' ')})`)
@@ -55,7 +59,8 @@ test('Equipos · la lista: todos los equipos del campo, en su orden, con sus fil
   await filtrar(page, 'Estado', 'parados')
   f.ok((await filas(page)).join(' ') === 'P-201B LC-21 LC-16 LC-07', `parados: ${(await filas(page)).join(' ')}`)
   await filtrar(page, 'Estado', 'avisan')
-  f.ok((await filas(page)).join(' ') === 'K-101 TK-102 H-302', `avisan: ${(await filas(page)).join(' ')}`)
+  // F3 · G-15: «Avisan» cuenta lo mismo que «Equipos que avisan» (lo en riesgo); TK-102 y H-302 siguen con su marca.
+  f.ok((await filas(page)).join(' ') === 'K-101', `avisan: ${(await filas(page)).join(' ')}`)
   await filtrar(page, 'Estado', 'sin-instrumento')
   f.ok((await filas(page)).join(' ') === 'LC-21 P-201A P-201C LC-19 LC-03', `sin instrumento: ${(await filas(page)).join(' ')}`)
   await filtrar(page, 'Estado', 'todos')
@@ -116,7 +121,9 @@ test('Equipos · el nivel 3 de P-201B como la imagen 4: la cifra, el bloqueo, su
     `7 indicadores con su escala, su banda y su alarma, en gris (${indicadores[0]})`)
   f.ok(await senales.locator('[data-senal][data-condicion]:not([data-condicion=""])').count() === 0, 'parada: ninguna señal lleva marca propia (X2 B9)')
   await expect(senales.locator('[data-senal="LSH-2013"]')).toContainText('sin fuga')
-  await expect(senales).toContainText('Falta el disparo de cada protección')
+  // F3 · H5 e I1: la escala sale de los límites y es provisional; lo dice, con su ⓘ.
+  await expect(senales).toContainText('escala provisional')
+  f.ok((await senales.locator('[aria-label^="Escala provisional"]').getAttribute('aria-label') ?? '').includes('falta el rango de cada instrumento'), 'la ⓘ dice por qué es provisional')
   // En su tren de agua: el tanque, las tres bombas por su brillo y las burbujas PI, PDI y FI.
   const tren = page.locator('main [data-esquema-agua]')
   await expect(tren).toBeVisible()
@@ -142,7 +149,7 @@ test('Equipos · el nivel 3 de P-201B como la imagen 4: la cifra, el bloqueo, su
   await expect(historia.locator('[data-repuestos]')).toContainText('Aviso · Impulsor y anillos de desgaste 0 en bodega · pedirlo: 45 días')
   // «Crear aviso en SAP» abre SAP aquí mismo.
   await heroe.getByRole('button', { name: 'Crear aviso en SAP' }).click()
-  await expect(page.locator('main [data-sap-equipo]')).toContainText('SAP · MANTENIMIENTO')
+  await expect(page.locator('main [data-sap-equipo]')).toContainText('SAP · mantenimiento')
   // De lado, sin subir: el vecino del tren, y «atrás» vuelve.
   await cab.locator('[data-vecinos] button', { hasText: 'P-201C' }).click()
   await expect(page.locator('main [data-nivel3="P-201C"]')).toBeVisible()
@@ -170,7 +177,7 @@ test('Equipos · el nivel 4: el diagnóstico detrás de «Ver el diagnóstico»,
   f.ok((await f.hash()) === '#/conf/equipos/ceiba/P-201B/diagnostico', `la dirección del nivel 4 (${await f.hash()})`)
   await expect(page.locator('main [data-cabecera-equipo] nav')).toContainText(/La Ceiba\s*Agua\s*P-201B\s*Diagnóstico/)
   const t = await f.texto()
-  f.ok(t.includes('SALUD POR PARTE') && t.includes('VIGÍA') && t.includes('PARADAS DEL PLC') && t.includes('PUNTOS CIEGOS') && t.includes('HISTORIA DEL PLC') && t.includes('SAP · MANTENIMIENTO'),
+  f.ok(t.includes('Salud por parte') && t.includes('Vigía') && t.includes('Paradas del PLC') && t.includes('Puntos ciegos') && t.includes('Historia del PLC') && t.includes('SAP · mantenimiento'),
     'la salud por parte, el vigía, las paradas del PLC, los puntos ciegos, la historia del PLC y SAP')
   await expect(page.locator('main [data-diagnostico-bomba="P-201B"]')).toBeVisible()
   // Cada instrumento abre la cadena de su dato.

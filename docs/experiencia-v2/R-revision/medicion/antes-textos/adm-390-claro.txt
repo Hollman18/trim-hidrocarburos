@@ -1,0 +1,38 @@
+La Ceiba
+HL
+Todos mis campos
+La Ceiba
+DEMO
+Metas, accesos y configuración
+hoy, 2 de oct datos de las 14:00
+Octubre, en curso
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Configuración técnica
+Filosofía operacional
+Metas de los campos
+Usuarios y accesos
+PERFIL DEL CAMPO
+Destino principal del gas
+4 elementos en el tren de gas
+Bombas de la línea
+1 bomba registrada
+Electrosumergibles
+15 pozos registrados
+MEMBRETE DEL INFORME
+todos los campos
+Nombre de la empresa
+TANQUES DE AGUA
+Tanque de agua de La Ceiba
+TK-AG-CE
+lo vacía
+P-201B
+nivel ahora
+89,6
+Capacidad
+Alto-alto

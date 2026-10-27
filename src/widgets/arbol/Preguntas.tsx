@@ -7,8 +7,9 @@ import type { Grupo } from './grupos'
 import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
 import { rolEnPapel } from '@/shared/ui/papel'
 
-/** Botón de una respuesta: en el teléfono, 48 px de alto, para el dedo con guantes (U1 §2.6; B-24). */
-export const OPCION = 'min-h-12 cursor-pointer rounded-sm border border-[var(--linea)] bg-[var(--panel)] px-2 py-1 text-left text-[14px] hover:bg-[var(--panel2)] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-8 sm:text-[13px]'
+/** Botón de una respuesta: la misma opción de Hoy (`widgets/hoy/Pregunta.tsx`; UI-05; X5 §5.8):
+ *  píldora de radio 18 con aro, 56 px en el escritorio y 64 en el teléfono, a 16 px. */
+export const OPCION = 'flex min-h-14 cursor-pointer items-center rounded-[18px] bg-[var(--panel)] px-4 py-2.5 text-left text-[16px] font-medium text-[var(--tinta)] shadow-[inset_0_0_0_1.5px_var(--linea)] transition-colors duration-[120ms] hover:bg-[var(--panel2)] disabled:cursor-not-allowed disabled:opacity-50 max-sm:min-h-16'
 const ROTULO_PREGUNTA = 'text-[14px] font-semibold text-[var(--tinta)]'
 /** En el teléfono se ven cinco respuestas y «Más opciones…» (U1 §2.4); «No sé» siempre. */
 const A_LA_VISTA = 5

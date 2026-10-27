@@ -1,0 +1,107 @@
+La Ceiba
+Hoy
+2
+La planta viva
+Equipos
+Equipos
+Bombas
+Electrosumergibles
+Resultados
+¿Cómo se lee?
+EM
+Edwin Maestre
+Ingeniero de confiabilidad
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Equipos
+hoy, 2 de oct datos de las 14:00
+Exportar
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+¿Le creo al vigía? Desde el 1 de sept: acertó 3 de 3 avisos y 1 intervenida sin calificar.
+Ver el detalle
+Parados
+4
+Avisan
+3
+Sin instrumento
+5
+Todos
+28
+Todos los tipos
+Bombas
+3
+Electrosumergibles
+15
+Pozos
+18
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+18
+Crudo
+4
+Agua
+3
+Gas
+1
+Servicios
+2
+Cambió hoy
+P-201A y P-201C subieron al puesto 1 porque P-201B está parada. Ninguna de las dos tiene instrumento: TRIM no verá venir su falla.
+28 equipos
+por estado y, dentro de cada uno, por lo que costaría si falla hoy
+¿Lo vigila TRIM?
+ahora o si falla hoy
+P-201B
+bomba de agua
+Alarma
+parada desde hoy, 03:52
+sí 8 señales
+1.665
+bbl/d
+se deja de producir
+K-101
+aire de instrumentos
+Alarma
+ya pasó el límite
+sí 4 señales
+hasta
+9.394
+bbl/d
+si falla hoy
+LC-21
+pozo bombeo mecánico
+Atención
+parado sin causa desde el 1 de oct, 18:20
+no: solo su controlador
+301
+bbl/d
+se deja de producir
+TK-102
+tanque de crudo
+Atención
+en servicio
+sí 4 señales
+sin dato
+si falla hoy
+H-302
+tratamiento de crudo
+Aviso
+en marcha
+sí 4 señales
+0
+bbl/d
+si falla hoy
+LC-16
+electrosumergible
+869
+bbl/d

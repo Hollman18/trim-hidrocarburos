@@ -1,0 +1,216 @@
+#/conf/bombas/morichal~portafolio/curso
+
+Todos mis campos
+Equipos
+DATOS DE DEMOSTRACIÓN
+Bombas de la línea
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+Se deja de producir ahora, por bombas paradas
+1.665bbl/d
+1 bomba detenida · 2 pozos cerrados · 2 de oct, 14:00
+1
+P-201B
+Diferido que causaron
+573 bbl
+487 – 659 · calculado
+Próxima en fallar
+P-201B · Succión y filtro de entrada
+Morichal Norte · presión de succión · en 43 h · 41–45 h
+de las que tienen instrumento
+4
+bombas con instrumento
+1
+Bomba multietapa de transferencia de agua
+P-201B · La Ceiba
+Reinyección
+
+detenido · disposición de agua
+
+Presión de succión
+18,2psi
+Presión de descarga
+0psi
+Caudal
+0bbl/d
+Vibración
+0,0mm/s
+PARTES
+5 partes con la bomba detenida
+Detenida desde 2 de oct, 03:52
+573 bbl
+487 – 659 · calculado · 69 bbl/h · 2 pozos cerrados
+No arrancar hasta identificar
+
+9 fallas en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 4.593 bbl por falla
+
+Hora de referencia 2 de oct, 14:00
+2
+Bomba multietapa de transferencia de agua
+P-201B · Morichal Norte
+Reinyección
+
+en marcha · succión cayendo · disposición de agua
+
+Presión de succión
+2
+8,8psi
+Presión de descarga
+212psi
+Caudal
+79.905bbl/d
+Vibración
+2,2mm/s
+PARTES
+2
+Succión y filtro de entrada
+fuera de banda
+presión de succión · alarma en 43 h · 41–45 h
+2
+Sello mecánico
+cruza en 43 h
+3 partes estables
+
+si se para: 10,1 h de colchón, luego se pierden 783 bbl/d
+
+8 fallas en 12 meses · cada 46 d · 47,1 h fuera · le ha costado 2.765 bbl por falla
+
+Hora de referencia 2 de oct, 14:00
+3
+Bomba multifásica de doble tornillo · clúster norte
+MPP-301 · Morichal Norte
+Multifásica
+
+en marcha · perdiendo eficiencia · lleva la producción a planta
+
+Caída de presión del filtro
+2
+9,6psi
+Vibración
+4,3mm/s
+Velocidad
+1.535rpm
+Nivel del depósito de barrera
+71%
+PARTES
+2
+Filtro de entrada
+fuera de banda
+caída de presión del filtro · alarma en 5,2 d · 4,7–5,7 d
+3
+Rodamientos
+cruza en 10,3 d
+3
+Tornillos y holguras
+cruza en 17,5 d
+3
+Sellos mecánicos (cuatro)
+cruza en 33,0 d
+2 partes estables
+
+si se para: 1.600 bbl/d de inmediato
+
+7 fallas en 12 meses · cada 52 d · 2,0 d fuera · le ha costado 3.226 bbl por falla
+
+Hora de referencia 2 de oct, 14:00
+Bomba multietapa de transferencia de agua
+P-201B · Guacamayo
+Reinyección
+
+en marcha · inyección para recobro
+
+Presión de succión
+12,1psi
+Presión de descarga
+1.800psi
+Caudal
+45.000bbl/d
+Vibración
+2,2mm/s
+PARTES
+5 partes estables
+
+si se para: no cierra pozos hoy
+
+5 fallas en 12 meses · cada 73 d · 41,0 h fuera · le ha costado 0 bbl por falla
+
+Hora de referencia 2 de oct, 14:00
+SIN INSTRUMENTO · La Ceiba
+2 bombas
+P-201A
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 89.250 bbl/d de agua
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · sube porque P-201B está parada
+Abrir
+P-201C
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 89.250 bbl/d de agua
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · sube porque P-201B está parada
+Abrir
+SIN INSTRUMENTO · Morichal Norte
+6 bombas
+P-201A
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201C
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201D
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201E
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201F
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+P-201G
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 86.500 bbl/d de agua
+Si falla hoy: 783 bbl/d después de 10,1 h de colchón
+Abrir
+SIN INSTRUMENTO · Guacamayo
+1 bomba
+P-201A
+· bomba de reinyección
+┄ sin instrumento
+Se supone en marcha · 60.000 bbl/d de agua
+Si falla hoy: 2.136 bbl/d después de 5,7 h de colchón
+Abrir
+1
+alarma
+2
+atención
+3
+aviso
+normal

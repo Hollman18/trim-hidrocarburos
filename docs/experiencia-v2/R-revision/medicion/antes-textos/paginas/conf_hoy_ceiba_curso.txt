@@ -1,0 +1,59 @@
+#/conf/hoy/ceiba/curso
+
+Todos mis campos
+La Ceiba
+DATOS DE DEMOSTRACIÓN
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+2
+cosas le tocan hoy
+
+Primero conseguir la causa de 3 paradas.
+
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Conseguir la causa de 3 paradas
+
+1
+Alarma ·
+P-201B
+lleva 10,1 h sin saber qué se dañó; se escaló a las 05:52
+
+LC-21 lleva 19,7 h sin causa · LC-08 arrancó a la 01:10 sin identificar · 219 bbl hoy, 928 desde que pararon
+
+Plan simulado: volver antes de 39 h (2.072 bbl), y 2 planes más ›
+Responder yo
+Ver el chat
+Seguir la orden de K-101
+
+1
+Alarma ·
+K-101
+aire de instrumentos · ya pasó el límite
+
+Si para, hasta 9.394 bbl/d. Orden 40012056, liberada a Óscar Daza a las 09:10.
+
+Ver la orden
+Su campo, ahora
+La planta viva
+pozos
+planta
+salida
+
+En la planta no pasan 1.665 bbl/d; limitan los pozos.
+
+Tanque de agua 89,6 %: no sube, P-201A y P-201C toman lo que entra.
+
+Abrir La planta viva

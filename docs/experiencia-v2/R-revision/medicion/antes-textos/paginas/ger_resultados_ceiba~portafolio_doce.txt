@@ -1,0 +1,284 @@
+#/ger/resultados/ceiba~portafolio/doce
+
+Todos mis campos
+DATOS DE DEMOSTRACIÓN
+Resultados
+hoy, 2 de oct · datos de las 14:00
+Últimos 12 meses
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+
+Lo que pasó · 1 de oct de 2025 a 30 de sept
+
+483.307
+barriles
+
+no se produjeron en sus 5 campos.
+
+El máximo firmado para 1 de oct de 2025 a 30 de sept es 839.500 bbl: va 356.193 por debajo. SE-2, el 21 %.
+
+calculado
+entre 442.229 y 524.386 bbl
+22,8 M USD · sin La Zarza
+3
+Todavía no se puede publicar
+Ver qué se está haciendo
+Promedio por día
+
+producción
+meta 40.200
+
+42.286
+bbl/d
+
+diferido
+máx. 2.300
+
+1.324
+bbl/d
+
+Total del período
+
+producción
+meta 14.673.000
+
+15.434.529
+bbl
+
+diferido
+máx. 839.500
+
+483.307
+bbl
+
+Diferido por día, mes a mes
+octubre: 1.501 bbl/d
+Por equipo
+Por dónde se trabó
+1.150
+2.300
+1.534
+OCT 2025
+1.070
+1.557
+591
+ENE 2026
+1.146
+1.723
+865
+ABR
+1.844
+988
+1.646
+JUL
+1.735
+1.131
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+1 de oct de 2025 a 30 de sept · calculado
+SE-2 energía eléctrica · Morichal Norte
+103.699
+21 %
+1
+P-201B bomba de agua · alarma · La Ceiba
+36.742
+8 %
+LC-16 electrosumergible · La Ceiba
+30.328
+6 %
+LC-09 electrosumergible · La Ceiba
+22.632
+5 %
+2
+MPP-301 bomba multifásica · atención · Morichal Norte
+22.582
+5 %
+2
+P-201B bomba de agua · atención · Morichal Norte
+22.117
+5 %
+
+y 94 equipos más
+
+Por campo
+producción / meta · bbl/d
+diferido / máx. · bbl/d
+bbl diferidos
+Morichal Norte
+17.424
+16.700
+639
+950
+233.213
+bbl diferidos
+dónde se trabó
+pozos 35 %
+planta 65 %
+
+Se trabó sobre todo en la planta: SE-2 (energía eléctrica) y MPP-301 (bomba multifásica).
+
+Ver más de Morichal Norte
+La Ceiba
+11.741
+10.900
+398
+800
+145.213
+bbl diferidos
+dónde se trabó
+pozos 58 %
+planta 42 %
+
+Se trabó sobre todo en los pozos: LC-16 y LC-09 (electrosumergibles).
+
+Ver más de La Ceiba
+Guacamayo
+6.741
+6.300
+217
+450
+79.095
+bbl diferidos
+dónde se trabó
+pozos 81 %
+planta 19 %
+
+Se trabó sobre todo en los pozos: GU-02 y GU-11 (electrosumergibles).
+
+Ver más de Guacamayo
+El Palmar
+3
+3.236
+3.250
+49
+50
+18.007
+bbl diferidos
+dónde se trabó
+pozos 75 %
+planta 25 %
+
+Se trabó sobre todo en los pozos: PA-01 y PA-06 (bombeo mecánico).
+
+Ver más de El Palmar
+La Zarza
+3.144
+3.050
+21
+50
+7.780
+bbl diferidos
+dónde se trabó
+planta 71 %
+afuera 29 %
+
+Se trabó sobre todo en la planta: C-401 (compresor de gas) y SE-2 (energía eléctrica).
+
+Ver más de La Zarza
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+
+Pérdida
+· lo que salió y no se vendió:
+sin eventos registrados en el período
+
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+282.789
+bbl
+ 59 %
+Con parte vigilada
+278.106
+bbl
+ 58 %
+Con parte sin instrumento
+894
+bbl
+ < 1 %
+Sin la parte identificada
+3.789
+bbl
+ < 1 %
+Evitable cerrando en orden
+3.436
+bbl
+ < 1 %
+Tipo de causa
+Electrosumergible
+223.930 bbl · 46 %
+Energía eléctrica
+108.350 bbl · 22 %
+Bomba de reinyección
+58.859 bbl · 12 %
+Bomba multifásica
+22.582 bbl · 5 %
+Aire de instrumentos
+17.277 bbl · 4 %
+ver 7 más
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+›
+¿Está bajando? Desde que entró TRIM
+
+en la planta
+561 → 308
+bbl/d · baja 45 %
+
+en los pozos
+820 → 771
+bbl/d · baja 6 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 1.021 → 837 bbl/d · −18 %
+
+20 %
+mantenimiento proactivo
+
+20,0 h proactivas · 80,0 h correctivas, desde el 1 de sept
+
+Retorno posible del ciclo
+simulado
+
+≈ 225.736
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+42.017
+
+Si se interviene a tiempo en los 6 de alto impacto, se evitan ≈ 42.017 bbl · simulado
+
+Ver el plan ›
+
+Durante · ahora
+2.102
+
+Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado
+
+Ver el plan ›
+
+Después · lo que pasó
+181.617
+
+No repetir la parte que más costó: ≈ 181.617 bbl en todos · simulado
+
+Ver el plan ›

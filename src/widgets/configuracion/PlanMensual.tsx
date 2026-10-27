@@ -56,7 +56,7 @@ export function PlanMensual({ propuesta, campos, campoInicial, mesActual, puede,
   return (
     <>
       {puede && <Cargar campos={campos} mesActual={mesActual} valor={valor} onCargar={onCargar} />}
-      <Panel className="mb-2.5" titulo="PLAN MES A MES">
+      <Panel titulo="Plan mes a mes">
         <Lectura>
           El presupuesto de la empresa, mes por mes y campo por campo. Cada mes rige desde su día 1 y se mide
           contra lo que pasó ese mes. Un mes sin cifra propia («hereda») sigue con la del anterior (va más tenue). Una
@@ -184,7 +184,7 @@ function Cargar({ campos, mesActual, valor, onCargar }: {
   const meses = revision ? [...new Set(revision.filas.map(f => f.mes))].sort() : []
 
   return (
-    <Panel className="mb-2.5" titulo="CARGAR EL PRESUPUESTO">
+    <Panel titulo="Cargar el presupuesto">
       <Lectura>
         Una fila por mes y campo: mes, campo, producción, máximo de diferido y, si lo trae, precio. Descargue la
         plantilla con lo que rige hoy, llénela con el presupuesto y péguela aquí (o súbala). Los meses que ya

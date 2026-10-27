@@ -11,9 +11,11 @@ import { n0 } from '@/shared/lib/formato'
 
 type Costo = Pick<Riesgo, 'costoFalla' | 'colchonH' | 'mdtFuente'>
 
-/** «≈ 2.086 bbl si falla hoy»; sin cifra (sin historia con que estimarla), nada. */
+/** «≈ 2.086 bbl le costaría la falla»; sin cifra (sin historia con que estimarla), nada.
+ *  «Si falla hoy» es siempre una tasa en bbl/d (D-2, G-16): el costo de una
+ *  falla, en barriles, lleva su propio nombre. */
 export const costoHoy = (r: Costo): string | undefined =>
-  r.costoFalla === undefined ? undefined : `≈ ${n0(r.costoFalla)} bbl si falla hoy`
+  r.costoFalla === undefined ? undefined : `≈ ${n0(r.costoFalla)} bbl le costaría la falla`
 
 /** Con tanque: una reparación más corta que el colchón de hoy no cuesta
  *  crudo. «0 si vuelve antes de 19 h», con las horas truncadas (la regla de

@@ -6,11 +6,13 @@ import { trazoConHuecos } from '@/shared/lib/trazo'
  *  infinito se dibuja hasta el borde y nunca cuenta como desviación. Los
  *  valores van a paso fijo (el de la serie del historiador); un hueco (null)
  *  corta la línea en su lugar: no se une por encima ni se pinta en cero. */
-export function Sparkline({ serie, limite, alto = 28, ancho = 150, prioridad }: {
+export function Sparkline({ serie, limite, alto = 28, ancho = 150, prioridad, gris = false }: {
   serie: ReadonlyArray<number | null>; limite?: [number, number]; alto?: number; ancho?: number
-  /** La que reporta el instrumento. Si no viene y el valor está fuera de
-   *  banda, es un aviso (3): fuera de banda no es por sí solo una alarma. */
+  /** La que reporta el instrumento (la da el motor). Sin ella, sin marca: la
+   *  pantalla no decide una prioridad por su cuenta (H17; X2 B15). */
   prioridad?: Severidad
+  /** El equipo está parado: la línea en gris y sin marca propia (X2 B9; UI-07, H4). */
+  gris?: boolean
 }) {
   const medidos = serie.filter((v): v is number => v !== null)
   if (serie.length < 2 || medidos.length < 2) return null
@@ -23,9 +25,7 @@ export function Sparkline({ serie, limite, alto = 28, ancho = 150, prioridad }: 
   const d = trazoConHuecos(serie, x, y)
   // El estado se marca en la última lectura que hay, en su lugar.
   const ultimo = medidos.at(-1)!, iUltimo = serie.lastIndexOf(ultimo)
-  const fuera = !!limite && (
-    (Number.isFinite(limite[0]) && ultimo < limite[0]) ||
-    (Number.isFinite(limite[1]) && ultimo > limite[1]))
+  const trazo = gris ? 'var(--tinta3)' : 'var(--dato-1)'
   // Banda cerrada → rectángulo. Banda abierta por un lado → solo la raya del
   // tope, y únicamente si cae dentro de lo que se está dibujando: pintar un
   // bloque de borde a borde no dice nada.
@@ -43,11 +43,11 @@ export function Sparkline({ serie, limite, alto = 28, ancho = 150, prioridad }: 
       )}
       {/* ISA-101: la tendencia es gris siempre. Lo anormal se marca en el
           último punto con la forma y el color de su prioridad. */}
-      <path d={d} fill="none" stroke="var(--dato-1)" strokeWidth={1.6} />
+      <path d={d} fill="none" stroke={trazo} strokeWidth={1.6} />
       {(() => {
-        const s = prioridad ?? (fuera ? 3 : 0)
+        const s = gris ? 0 : prioridad ?? 0
         const cx = x(iUltimo), cy = y(ultimo)
-        if (!s) return <circle cx={cx} cy={cy} r={2.4} fill="var(--dato-1)" />
+        if (!s) return <circle cx={cx} cy={cy} r={2.4} fill={trazo} />
         const f = `var(--p${s})`
         return s === 1 ? <path d={`M${cx} ${cy - 4.6} L${cx + 4.6} ${cy} L${cx} ${cy + 4.6} L${cx - 4.6} ${cy} Z`} fill={f} />
           // El triángulo y el cuadrado amarillos no se distinguen del panel sin trazo (1,7:1): llevan el borde oscuro de MarcaPrioridad.

@@ -74,6 +74,7 @@ try {
   const HOYA = await cargar('/src/shared/api/hoy.ts') // C3 · Hoy
   const RSA = await cargar('/src/shared/api/resultados.ts') // C5 · Resultados
   const EQT = await cargar('/src/shared/api/equiposTecnico.ts') // C4 · Equipos
+  const RGA = await cargar('/src/shared/api/regulatorio.ts') // F2 · Regulatorio
   const ROLES_HOY = (await cargar('/src/entities/roles.ts')).ROLES_VISIBLES.map(r => r.id) // C3 · Hoy
   const ARB = await cargar('/src/shared/api/arbol.ts')
   // La locación de los pozos del demo (el caso de borde del choke) entra por fuente.ts, como en el navegador.
@@ -150,6 +151,8 @@ try {
     // C4 · Equipos: la lista de todos los equipos y el nivel 3 de cada uno, con el historial firmado (el colchón de la parada abierta).
     LISTA_EQUIPOS: p => EQT.pedirListaEquipos(p.campos, s.ctx, s.versiones),
     NIVEL_EQUIPO: p => EQT.pedirNivelEquipo(p.campo, p.equipo, s.ctx, s.versiones),
+    // F2 · Regulatorio: el reporte a la ANH, con lo que dijeron las personas encima (la clasificación vigente de cada fila).
+    REPORTE_ANH: p => RGA.pedirReporteAnh(p, s.ctx, s.clasificacionesAnh ?? {}),
   })
   const ENDPOINTS = Object.entries(C).filter(([, x]) => x && typeof x === 'object' && x.metodo === 'GET')
 
@@ -274,6 +277,8 @@ try {
       LISTA_EQUIPOS: porCampos(),
       NIVEL_EQUIPO: [...equipos, ...TODOS.flatMap(campo => (CHK.pedirTuberiaAgua(campo, s.ctx).tramos.find(t => t.tramo === 'bombas')?.bombas ?? [])
         .filter(b => !b.instrumentada).map(b => ({ campo, equipo: b.id }))), { campo: 'ceiba', equipo: 'NO-EXISTE' }],
+      // F2 · Regulatorio: cada campo y todos, en los tres períodos.
+      REPORTE_ANH: conPeriodo(),
     }
     const sinCasos = ENDPOINTS.map(([n]) => n).filter(n => !casos[n]?.length || !R[n])
     comprobar(sinCasos.length === 0, `cada endpoint de contrato.ts tiene su respuesta del demo y sus casos (${ENDPOINTS.length} endpoints${sinCasos.length ? `; faltan: ${sinCasos.join(', ')}` : ''})`)
@@ -1273,12 +1278,13 @@ try {
 
         // 1. El supervisor de La Ceiba (imagen 3a; X4 §3.4 y §5.5).
         const sup = ver('sup')
-        const [tc, tk, to, tf] = sup.tareas
+        // F1 (UI-20): los planes simulados de P-201B van en su propia tarjeta, después de las de barriles.
+        const [tc, tk, to, tp, tf] = sup.tareas
         comprobar(sup.inicio.frase === 'Se dejan de producir 1.966 bbl/d. Le faltan 4 paradas por confirmar: el reporte sale mañana antes de las 07:00.'
           && sup.inicio.cifra === '1.966' && sup.inicio.unidad === 'barriles por día' && sup.inicio.remate === 'se dejan de producir en La Ceiba.',
           `la cifra y la frase del supervisor: «${sup.inicio.frase}»`)
-        comprobar(sup.tareas.map(t => t.titulo).join(' | ') === 'Confirmar 2 paradas iguales | Conseguir la causa de 2 paradas | Seguir la orden de K-101 | Lo más frágil: el agua.'
-          && sup.tareas.map(t => t.grupo).join() === 'hora,barriles,barriles,aviso' && sup.insignia === 3,
+        comprobar(sup.tareas.map(t => t.titulo).join(' | ') === 'Confirmar 2 paradas iguales | Conseguir la causa de 2 paradas | Seguir la orden de K-101 | Decidir 3 planes de P-201B · simulado | Lo más frágil: el agua.'
+          && sup.tareas.map(t => t.grupo).join() === 'hora,barriles,barriles,demas,aviso' && sup.insignia === 4 && tp.tipo === 'planes',
           `el orden: lo que tiene hora, los barriles en juego (lo que se pierde ahora y después lo que se perdería si para) y al final lo que solo informa; la insignia cuenta ${sup.insignia}, sin el aviso (${sup.tareas.map(t => `${t.grupo}: ${t.titulo}`).join(' · ')})`)
         comprobar(sup.bloqueos.length === 1 && sup.bloqueos[0].texto === 'No arrancar P-201B ni LC-21 hasta identificar qué se dañó' && sup.bloqueos[0].sub === 'Si arranca antes, queda como no conformidad.',
           `lo que dice «no» va como franja, no como tarjeta: «${sup.bloqueos[0]?.texto}»`)
@@ -1287,10 +1293,16 @@ try {
           && tc.accion.ids.length === 2 && tc.ver.texto === 'Ver una por una' && tc.capacidad === 'anh:confirmar' && tc.limite === '2026-10-03T07:00:00-05:00',
           'la tarjeta: verbo + qué, P-201B con SU marca (la de la franja), por qué importa, «Confirmar las 2» y «Ver una por una»; la hora límite es el reporte de mañana a las 07:00')
         comprobar(tk.donde.equipo === 'LC-21' && tk.donde.marca === 'atencion' && tk.donde.texto === 'lleva 19,7 h sin causa; se escaló a las 20:20'
-          && linea(tk.porque) === 'LC-08 arrancó a la 01:10 sin identificar · 219 bbl hoy, 355 desde que pararon' && tk.accion.texto === 'Responder yo' && tk.preguntas.length === 2,
+          && linea(tk.porque) === 'LC-08 arrancó a la 01:10 sin identificar · Entre las 2: 219 bbl hoy · 355 desde que pararon' && tk.accion.texto === 'Responder yo' && tk.preguntas.length === 2,
           `lo igual va junto: «${tk.titulo}» (${tk.donde.equipo} ${tk.donde.texto}; ${linea(tk.porque)})`)
         comprobar(to.donde.texto === 'aire de instrumentos · ya pasó el límite' && linea(to.porque) === 'Si para, hasta 9.394 bbl/d. Orden 40012056, liberada a Óscar Daza a las 09:10.' && to.capacidad === 'sap:aviso',
           `la orden de SAP de lo que ya pasó el límite: «${linea(to.porque)}»`)
+        // K2 · En el teléfono, sin las horas que no deciden ni lo que trae «Ver…»: lo corto de cada tarjeta.
+        comprobar(tc.donde.corto === 'cerró LC-07 y LC-16' && tk.donde.corto === 'lleva 19,7 h sin causa'
+          && linea(tk.porqueCorto) === 'LC-08 arrancó sin identificar · Entre las 2: 219 bbl hoy'
+          && linea(to.porqueCorto) === 'Si para, hasta 9.394 bbl/d. '
+          && ![tc.donde.corto, tk.donde.corto, linea(tk.porqueCorto), linea(to.porqueCorto)].some(x => /\d{2}:\d{2}|40012056|desde que pararon/.test(x)),
+          `K2 · lo corto del supervisor: «${tc.donde.corto}», «${tk.donde.corto} · ${linea(tk.porqueCorto)}», «${linea(to.porqueCorto)}»`)
         comprobar(!tf.pide && !tf.capacidad && linea(tf.porque) === 'Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.',
           `«Lo más frágil» solo informa: va al final y no suma a la insignia («${linea(tf.porque)}»)`)
         comprobar(sup.whatsapp.mensajes === 8 && sup.whatsapp.hilos.some(h => h.equipo === 'P-201B' && h.pasos === '03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado' && linea(h.estado) === 'sin respuesta')
@@ -1308,6 +1320,10 @@ try {
           && q1.opciones.map(o => `${o.texto}${o.dato ? ` · ${o.dato}` : ''}`).join(' / ') === 'Sello mecánico · 5 de sus 8 fallas / Rodamientos y cámara de empuje · 3 de sus 8 fallas / Otra parte · escoja de la lista / Todavía no sé · se la vuelven a preguntar en la próxima ronda'
           && q1.opciones[0].modos.length > 0 && q1.tramo.rotulo === 'planta · agua' && q1.marca === 'alarma' && q1.bloqueo.texto === 'No la arranque hasta decir qué se dañó' && q1.libro.evento,
           'la primera: P-201B, «¿Qué parte se dañó?», lo que más le ha fallado (5 y 3 de sus 8 fallas), «Otra parte», «Todavía no sé» y la planta · agua marcada')
+        // K2 · En la banda del teléfono, el momento en palabras de campo: la hora no decide la respuesta.
+        comprobar(q1.contextoCorto === 'P-201B · bomba de agua · paró hoy en la madrugada' && q2.contextoCorto === 'LC-21 · pozo · paró ayer en la tarde'
+          && qs.every(q => !/\d{2}:\d{2}|hace \d/.test(q.contextoCorto ?? 'falta')),
+          `K2 · la banda del operador: «${q1.contextoCorto}» y «${q2.contextoCorto}»`)
         comprobar(q2.texto === '¿Por qué paró?' && q2.contexto === 'LC-21 · pozo · paró el 1 de oct a las 18:20, hace 19,7 h' && q2.tramo.rotulo === 'pozos' && q2.bloqueo.texto === 'No lo arranque hasta decir qué pasó'
           && q2.opciones.slice(0, -1).map(o => o.valor).join() === CAUSAS_POZO.join() && q2.opciones[2].texto === 'Orden de producción' && q2.opciones[2].dato === 'nominación o restricción del comprador',
           'la segunda: LC-21, «¿Por qué paró?», con las causas del pozo del libro')
@@ -1316,7 +1332,7 @@ try {
 
         // 3. El técnico y el jefe de mantenimiento (X4 §3.4).
         const tec = ver('tec'), jefe = ver('jefe')
-        comprobar(/^Le tocan \d+ cosas hoy\. Primero P-201B: diga qué encontró\.$/.test(tec.inicio.frase) && tec.tareas.some(t => t.tipo === 'orden' && t.donde.equipo === 'K-101' && linea(t.porque).includes('liberada a su nombre')),
+        comprobar(/^Le tocan \d+ cosas hoy\. Primero P-201B: diga qué se dañó\.$/.test(tec.inicio.frase) && tec.tareas.some(t => t.tipo === 'orden' && t.donde.equipo === 'K-101' && t.donde.texto.includes('orden 40012056') && !linea(t.porque).includes('Orden ')),
           `el técnico: «${tec.inicio.frase}», con su orden de K-101 una sola vez`)
         comprobar(jefe.inicio.frase === 'De 8,1 días que dura una falla, 7,7 son espera. El vigía anunció 3 de 3 fallas.' && jefe.inicio.cifra === '7,7 de 8,1'
           && jefe.tareas.some(t => t.titulo === 'Ojo: no intervenir hoy.' && !t.pide && linea(t.porque).startsWith('P-201A y P-201C valen más')),
@@ -1363,7 +1379,7 @@ try {
         const rc = await E.confirmarParadasAnh({ rolId: 'sup' }, { ids: c0.accion.ids, cadena: c0.accion.cadena })
         const ns = [...new Set(rc.paradas.flatMap(p => ARB.PASOS.map(x => p.clasificacion[x]).filter(d => d?.lote === rc.lote?.id && d.porId === 'sup').map(d => d.n)))]
         const tras = ver('sup')
-        comprobar(rc.ok && ns.length === 12 && !tras.tareas.some(t => t.tipo === 'confirmar') && tras.insignia === 2 && tras.hechas.length === 1 && tras.hechas[0].detalle === 'las 2 paradas de P-201B'
+        comprobar(rc.ok && ns.length === 12 && !tras.tareas.some(t => t.tipo === 'confirmar') && tras.insignia === 3 && tras.hechas.length === 1 && tras.hechas[0].detalle === 'las 2 paradas de P-201B'
           && tras.inicio.frase.includes('Le faltan 2 paradas por confirmar'),
           `«Confirmar las 2» la saca de la lista y pasa a «Hecho hoy (1) · ${tras.hechas[0]?.detalle}»`)
         const ajeno = await E.deshacerAnh({ rolId: 'prod' }, { ids: c0.accion.ids, n: ns })
@@ -1382,7 +1398,7 @@ try {
         comprobar(rd.ok && rd.paradas.every(p => p.estado === 'propuesta' && p.retiros?.length === 6 && p.retiros.every(x => x.motivo === MH.MOTIVO_DESHACER && x.porId === 'sup'))
           && retirados.length === 12 && retirados.every(d => d.procedencia === 'retirado' && d.n > n0 && d.porque === 'deshecho por quien contestó' && d.valor !== undefined)
           && SES.sesion().lotesAnh.some(l => l.id === rc.lote.id)
-          && despues.tareas[0].tipo === 'confirmar' && despues.insignia === 3 && despues.hechas.length === 0,
+          && despues.tareas[0].tipo === 'confirmar' && despues.insignia === 4 && despues.hechas.length === 0,
           'deshacer escribe un paso nuevo «retirado» (con el valor, quién, la hora y «deshecho por quien contestó», con un consecutivo mayor) que rige: la parada vuelve a lo que propone TRIM, el lote queda en la historia y la tarjeta vuelve a Hoy')
         const otraVez = await E.deshacerAnh({ rolId: 'sup' }, { ids: c0.accion.ids, n: ns })
         const rc2 = await E.confirmarParadasAnh({ rolId: 'sup' }, { ids: c0.accion.ids, cadena: c0.accion.cadena })
@@ -1395,6 +1411,66 @@ try {
         const url = C.urlDe(C.HOY, { rol: 'sup', campos: ['ceiba'] })
         const vueltaH = diferencia(sup, K.deRespuesta(C.HOY.codec, JSON.parse(JSON.stringify(K.aRespuesta(C.HOY.codec, sup)))))
         comprobar(url === '/vistas/hoy?campos=ceiba&rol=sup' && !vueltaH, `GET ${url} vuelve igual por JSON${vueltaH ? `: ${vueltaH}` : ''}`)
+
+        // 9. F1 · Revisión (fase 4 de PROMPT-REVISION-UX): lo que se arregló en el motor de Hoy.
+        //    Desde la sesión del arranque otra vez: la sección 7 confirmó y deshizo.
+        SES.cambiarSesion(fotoArranque)
+        {
+          const s1 = ver('sup'), o1 = ver('oper'), t1 = ver('tec'), j1 = ver('jefe')
+          const [c1, k1, , p1, f1] = s1.tareas
+          comprobar(s1.bloqueos.length === 1 && !('planes' in s1.bloqueos[0]) && !s1.tareas.some(t => 'planes' in t)
+            && p1.titulo === 'Decidir 3 planes de P-201B · simulado' && p1.capacidad === 'planes:decidir' && p1.pide
+            && p1.ver.destino.a === 'equipo' && p1.ver.destino.equipo === 'P-201B' && linea(p1.porque).startsWith('Simulado: '),
+            `F1 · UI-20, P-11, I-sup-4: lo simulado no va dentro del bloqueo ni de una tarjeta que pide confirmar; «${p1?.titulo}» es su propia tarjeta y abre la ficha de P-201B`)
+          comprobar(s1.inicio.remateCorto === 'se dejan de producir.' && linea(c1.porqueCorto) === 'TRIM las dedujo: en la planta, no planeada.'
+            && linea(f1.porqueCorto) === 'Si para otra bomba, cierre primero LC-02, LC-10 y LC-01.',
+            'F1 · I-sup-1, I-sup-3, I-sup-5: lo que la imagen 3b dice más corto en el teléfono lo da el motor (el remate, «Falta su confirmación.», la cifra de «Lo más frágil»)')
+          const co = o1.tareas.find(t => t.tipo === 'contestar' && t.preguntas?.[0]?.equipo === 'P-201B')
+          const qo = co?.preguntas?.[0], parte = qo?.opciones.find(o => o.tipo === 'parte'), otras = qo?.opciones.find(o => o.tipo === 'partes')
+          comprobar(co?.titulo === 'Diga qué se dañó en P-201B' && co.accion.texto === 'Contestar' && linea(co.porque) === 'Sigue parada.'
+            && parte?.pregunta === 'Sello mecánico: ¿qué vio?' && parte.modos.length > 0 && otras?.partes.every(x => x.pregunta === `${x.texto}: ¿qué vio?`),
+            `F1 · P-07, I-oper-4: «Diga qué se dañó» y «Contestar», «Sigue parada.» sin repetir la franja, y la parte de un toque con «¿qué vio?» como la pregunta siguiente («${co?.titulo}» · «${linea(co?.porque)}» · «${parte?.pregunta}»)`)
+          // K2 · En el teléfono, «Sigue parada» no repite la franja (porqueCorto vacío); el jefe, las otras por su nombre;
+          // la orden del técnico, sin su número ni la hora del WhatsApp (en «Ver la orden ›»).
+          const kj = j1.tareas.find(t => t.tipo === 'conseguir-causa')
+          const bj = j1.bloqueos[0]
+          comprobar(Array.isArray(co?.porqueCorto) && co.porqueCorto.length === 0 && kj?.donde.corto === 'lleva 10,1 h sin causa'
+            && linea(kj.porqueCorto) === 'Entre todas: 219 bbl hoy'
+            && bj?.textoCorto === 'No arrancar P-201B ni LC-21' && bj.subCorto === 'Hasta identificar qué se dañó. Si arranca antes, queda como no conformidad.'
+            && !('textoCorto' in s1.bloqueos[0]),
+            `K2 · lo corto: el operador sin «Sigue parada» en el teléfono; el jefe «${kj?.donde.corto} · ${linea(kj?.porqueCorto)}» y su franja «${bj?.textoCorto}» (el supervisor la conserva entera, imagen 3b)`)
+          const ordenTec = t1.tareas.find(t => t.tipo === 'orden' && t.donde?.equipo === 'K-101')
+          comprobar(ordenTec && !('corto' in ordenTec.donde), 'K2 · la orden del técnico va entera también en el teléfono: si le llegó por WhatsApp no está en otro lugar (P-trabajo-1)')
+          comprobar(t1.tareas.filter(t => t.tipo === 'contestar' && t.preguntas?.[0]?.via === 'libro').every(t => t.accion?.texto === 'Contestar' && /^Diga (qué se dañó|por qué paró) /.test(t.titulo))
+            && ordenTec?.porque.length === 1 && !/Orden |se notifica|liberada/.test(linea(ordenTec.porque)) && ordenTec.donde.texto.includes('· orden 40012056 · le llegó por WhatsApp a las 09:1'),
+            `F1 · I-tec-2, I-tec-3: el técnico contesta con el mismo verbo, y su orden dice en una línea qué hacer (lo demás, en la orden: «${linea(ordenTec?.porque)}» · ${ordenTec?.donde.texto})`)
+          // P-trabajo-1: lo que Mi trabajo tenía propio está en Hoy del técnico (sus órdenes con el aviso de WhatsApp,
+          // lo que vigilar y las órdenes de otros puestos), y la dirección de Mi trabajo abre Hoy.
+          const tecTodos = ver('tec', TODOS), { ROLES: TODOS_ROLES } = await cargar('/src/entities/roles.ts'), URL_ = await cargar('/src/app/url.ts')
+          const rolTec = TODOS_ROLES.find(r => r.id === 'tec')
+          comprobar(!rolTec.pantallas.includes('trabajo') && URL_.pantallaQueAbre(rolTec, 'trabajo') === 'hoy'
+            && tecTodos.tareas.every(t => t.tipo !== 'aviso' || !t.pide) && t1.tareas.some(t => t.tipo === 'orden' && t.donde?.texto.includes('le llegó por WhatsApp')),
+            `F1 · P-trabajo-1: Mi trabajo se fundió en Hoy del técnico (${t1.tareas.map(t => t.titulo).join(' · ')})`)
+          const cj = j1.tareas.find(t => t.tipo === 'conseguir-causa'), ojo = j1.tareas.find(t => t.titulo === 'Ojo: no intervenir hoy.')
+          comprobar(!j1.inicio.remate && j1.inicio.ayuda === 'La espera es el repuesto, los permisos o la cuadrilla: no la reparación.' && linea(j1.inicio.explica) === 'El vigía anunció 3 de 3 fallas.'
+            && /Entre las 3: /.test(linea(cj?.porque)) && ojo?.ver.texto === 'Ver P-201A y P-201C' && ojo.ver.destino.a === 'equipos' && ojo.ver.destino.tren === 'agua',
+            `F1 · I-jefe-1, I-jefe-2, P-10: la espera a la ⓘ; «Entre las 3: …» (${linea(cj?.porque)}); «${ojo?.ver.texto}» lleva a Equipos con el tren de agua`)
+          // H2: la suma de «desde que pararon» es la de los enteros que publica el motor (LC-08 = 108, no 109).
+          const RED = await cargar('/src/entities/redondeo.ts'), { rangoDePeriodo } = await cargar('/src/entities/diferido.ts')
+          const curso = rangoDePeriodo('curso'), ent = RED.enterosDelPeriodo('ceiba', curso.desde, curso.hasta, SES.sesion().ctx, {})
+          const evs = k1.preguntas.map(q => q.libro.evento), lc08 = k1.preguntas.find(q => q.equipo === 'LC-08')?.libro.evento
+          comprobar(evs.reduce((a, e) => a + ent.porEvento[e], 0) === 355 && ent.porEvento[lc08] === 108 && linea(k1.porque).includes('355 desde que pararon'),
+            `F1 · H2: «355 desde que pararon» es la suma de los enteros del motor (${evs.map(e => ent.porEvento[e]).join(' + ')}), y LC-08 es 108 como en las demás vistas`)
+          const e1 = s1.entrega
+          comprobar(!!e1 && e1.titulo === 'Entrega de turno · La Ceiba · 2 de oct, 14:00' && e1.horas === 12
+            && e1.paro.some(f => linea(f).startsWith('P-201B · bomba de agua · paró hoy a las 03:52 · por P-201B se dejan de producir 1.665 bbl/d'))
+            && e1.paro.some(f => linea(f) === 'No arrancar P-201B ni LC-21 hasta identificar qué se dañó.')
+            && e1.pendiente.length === s1.insignia && e1.whatsapp.length === s1.whatsapp.hilos.length && linea(e1.diferido) === '723 bbl diferidos en las últimas 12 h.'
+            && !o1.entrega && !j1.entrega,
+            `F1 · P-06: la entrega del turno del supervisor (lo que paró, lo pendiente, lo hecho, el WhatsApp de 12 h y el diferido), armada con lo que Hoy ya sabe (${e1?.paro.map(linea).join(' / ')})`)
+          const vuelta9 = diferencia(s1, K.deRespuesta(C.HOY.codec, JSON.parse(JSON.stringify(K.aRespuesta(C.HOY.codec, s1)))))
+          comprobar(!vuelta9, `F1 · la vista con la entrega y lo corto del teléfono vuelve igual por JSON${vuelta9 ? `: ${vuelta9}` : ''}`)
+        }
       } finally { SES.cambiarSesion(fotoAntesC3) }
     }
 
@@ -1468,7 +1544,9 @@ try {
       const p201b = lista.filas.find(f => f.equipo === 'P-201B')
       // Las mismas cifras que las vistas de donde salen: la marca de la franja, lo que se pierde en Riesgo, «Si falla hoy».
       comprobar(lista.filas.every(f => (fr.equipos.find(e => e.equipo === f.equipo)?.condicion ?? null) === (f.condicion ?? null))
-          && casi(p201b.cifra.valor, ri.find(r => r.equipo === 'P-201B' && r.estado === 'perdiendo').bblDia) && casi(n3.cifra.valor, p201b.cifra.valor)
+          // F3 · H2: la cifra es el entero que le toca en el reparto del campo; el exacto viaja aparte.
+          && casi(p201b.cifra.exacto, ri.find(r => r.equipo === 'P-201B' && r.estado === 'perdiendo').bblDia) && Number.isInteger(p201b.cifra.valor)
+          && Math.abs(p201b.cifra.valor - p201b.cifra.exacto) < 1 && n3.cifra.valor === p201b.cifra.valor
           && lista.filas.filter(f => !f.parado && f.cifra.valor !== null).every(f => casi(f.cifra.valor, crit.ranking.find(x => x.equipo === f.equipo).bpd))
           && casi(n3.mientras.crudoBpd, agua.siParaOtra.crudoBpd) && n3.mientras.entraBpd === agua.siParaOtra.entraBpd,
         `la lista y el nivel 3 dicen lo mismo que la franja, /vistas/riesgo (P-201B: ${Math.round(p201b.cifra.valor)} bbl/d), /vistas/criticidad («si falla hoy» de cada fila) y /vistas/campos/:campo/agua (si para otra: ${Math.round(n3.mientras.crudoBpd)} bbl/d)`)
@@ -1480,6 +1558,28 @@ try {
       comprobar(!vuelta(C.LISTA_EQUIPOS, lista) && !vuelta(C.NIVEL_EQUIPO, n3) && R.NIVEL_EQUIPO({ campo: 'ceiba', equipo: 'NO-EXISTE' }) === undefined
           && url === '/vistas/equipos/ceiba/P-201B/tecnico' && C.urlDe(C.LISTA_EQUIPOS, { campos: ['ceiba'] }) === '/vistas/lista-equipos?campos=ceiba',
         `GET ${url} y /vistas/lista-equipos vuelven iguales por JSON; un equipo que el campo no tiene responde null`)
+    }
+
+    // F2 · Regulatorio
+    console.log('\n=== F2 · Regulatorio (GET /api/vistas/anh/reporte): qué falta para el reporte, quién lo debe y para cuándo ===')
+    {
+      const s = SES.sesion(), R = responder(s)
+      const cal = L.calendario(), curso = cal.at(-1), cerrado = cal.filter(L.mesCerrado).at(-1)
+      const q = { campos: ['ceiba'], desde: new Date(curso.desde), hasta: new Date(curso.hasta) }
+      const rep = R.REPORTE_ANH(q), lb = R.DIFERIDOS(q), filas = R.PARADAS_ANH(q)
+      // Las paradas sin causa son los eventos de /vistas/anh/paradas cuyas filas no tienen el paso 5 (la causa).
+      const sinCausa = [...new Set(filas.filter(f => f.faltan.includes('n1')).map(f => f.eventoId))].sort()
+      comprobar(rep.paradas.map(p => p.eventoId).sort().join() === sinCausa.join() && rep.cifra.valor === sinCausa.length
+          && rep.bblSinCausa === rep.paradas.reduce((a, p) => a + p.bbl, 0) && rep.paradas.every(p => Number.isInteger(p.bbl) && Math.abs(p.bbl - p.exacto) < 1)
+          && rep.estado === (lb.publicable ? 'publicable' : lb.motivos.some(m => m.codigo !== 'en-curso') ? 'bloqueado' : 'provisional'),
+        `octubre en La Ceiba: ${rep.cifra.valor} paradas sin causa (las de /vistas/anh/paradas sin el paso 5), ${rep.bblSinCausa} bbl enteros que suman; el estado «${rep.estado}» es el del libro`)
+      const c = R.REPORTE_ANH({ campos: ['ceiba'], desde: new Date(cerrado.desde), hasta: new Date(cerrado.hasta) }), lbc = R.DIFERIDOS({ campos: ['ceiba'], desde: new Date(cerrado.desde), hasta: new Date(cerrado.hasta) })
+      comprobar(c.estado === (lbc.publicable ? 'publicable' : 'bloqueado') && (c.estado !== 'publicable' || c.titulo === 'Se puede publicar'),
+        `un mes cerrado (${cerrado.mes}): «${c.titulo}», ${c.cifra.valor} paradas sin causa`)
+      const j = JSON.parse(JSON.stringify(K.aRespuesta(C.REPORTE_ANH.codec, rep)))
+      const url = C.urlDe(C.REPORTE_ANH, q)
+      comprobar(!diferencia(rep, K.deRespuesta(C.REPORTE_ANH.codec, j)) && url.startsWith('/vistas/anh/reporte?campos=ceiba&desde=') && rep.paradas.every(p => /T07:00:00-05:00$/.test(p.limite)),
+        `GET ${url.slice(0, 44)}… vuelve igual por JSON; la hora límite va con su zona (${rep.paradas[0]?.limite ?? 'sin paradas'})`)
     }
   }
 

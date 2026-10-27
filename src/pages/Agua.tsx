@@ -25,10 +25,10 @@ export function Agua() {
       <Lectura>
         El agua no se mide en cada pozo: sale de sus pruebas. La que saca la bomba sí se mide, en su
         medidor de caudal. Lo que las bombas no sacan llena el tanque; cuando llega al alto-alto, hay
-        que cerrar pozos, primero los más acuatosos. Por eso la bomba de reinyección es de alto impacto.
+        que cerrar pozos, primero los más acuatosos. Por eso la bomba de agua es de alto impacto.
       </Lectura>
       {perfil && pr && (
-        <Panel className="mt-2.5" titulo="La bomba de reinyección" extra={pr.metodo}>
+        <Panel className="mt-3 sm:mt-4" titulo="La bomba de agua" extra={pr.metodo}>
           <ul className="list-disc pl-4 text-[15px] text-[var(--tinta2)]">{pr.supuestos.map(s => <li key={s}>{s}</li>)}</ul>
           {/* C4 · Bajar es tocar (X4 §5.3): del tren (nivel 2) a la bomba (nivel 3). */}
           <Enlace className="mt-2" onClick={() => abrirEquipo(perfil.equipo)}>Ver {perfil.equipo}</Enlace>

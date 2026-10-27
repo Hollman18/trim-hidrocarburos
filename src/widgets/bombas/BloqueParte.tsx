@@ -11,8 +11,9 @@ import { cn } from '@/shared/lib/cn'
 import { Proyeccion } from './Proyeccion'
 import { fmtBbl, fmtHoras, pronosticoCorto, fraseParteCorta } from './comun'
 
+/** Un título de bloque: en frase, sin letra condensada (X5 §3.4; UI-04, UI-15). */
 const H5 = ({ children }: { children: React.ReactNode }) =>
-  <h5 className="font-cond mb-1 mt-2 text-[12px] font-semibold tracking-[.11em] text-[var(--tinta3)] first:mt-0">{children}</h5>
+  <h5 className="mb-1 mt-2 text-[14px] font-semibold text-[var(--tinta2)] first:mt-0">{children}</h5>
 
 const PAPEL: Record<PapelVariable, string> = { avisa: 'anuncia', causa: 'la daña', confirma: 'confirma' }
 
@@ -49,14 +50,15 @@ export function BloqueParte({ sp, h }: { sp: SaludParte; h?: HistorialParte }) {
           {sp.primera && <div className="mb-2"><Proyeccion s={sp.primera.senal} /></div>}
           <div className="grid gap-3 text-[13px] [grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr))]">
             <div>
-              <H5>QUÉ LA ANUNCIA</H5>
+              <H5>Qué la anuncia</H5>
               {senales.map(x => (
                 <div key={x.tag} className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--linea2)] py-1 last:border-0">
                   <span className="min-w-0">
                     {x.nombre} <span className="text-[12px] text-[var(--tinta3)]">· {PAPEL[x.papel]}</span>
-                    <small className="font-mono block text-[12px] text-[var(--tinta3)]">{x.tag}{x.pron ? ` · ${x.pron}` : ''}</small>
+                    <small className="block text-[13px] text-[var(--tinta2)]"><span className="font-cond font-semibold tracking-[.02em]">{x.tag}</span>{x.pron ? ` · ${x.pron}` : ''}</small>
                   </span>
-                  <span className={cn('tabular shrink-0 text-right', x.valor === 'sin señal' && 'text-[var(--invalido)]')}>{x.valor}</span>
+                  {/* «Sin señal» en gris, nunca pintado: el texto no lleva el color (X2 B5, C1; H13). */}
+                  <span className={cn('tabular shrink-0 text-right', x.valor === 'sin señal' && 'text-[var(--tinta2)]')}>{x.valor}</span>
                 </div>
               ))}
               {sp.faltan.length > 0 && (
@@ -67,7 +69,7 @@ export function BloqueParte({ sp, h }: { sp: SaludParte; h?: HistorialParte }) {
               {senales.length === 0 && <Hueco>Nada de lo que la anuncia está instrumentado.</Hueco>}
             </div>
             <div>
-              <H5>LO QUE HA COSTADO</H5>
+              <H5>Lo que ha costado</H5>
               {h ? (
                 <dl className="tabular grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
                   <dt className="text-[var(--tinta3)]">{h.fallas === 1 ? 'falla' : 'fallas'}</dt>

@@ -1,9 +1,10 @@
 import { useCriticidad, DONDE_CHOKE, type FilaCriticidad, type VistaCriticidad } from '@/shared/api/choke'
 import { useEquiposDeHoy } from '@/shared/api/equipos'
+import { useFranja, type CondicionFranja } from '@/shared/api/condiciones'
+import { condicionDe, PALABRA_CONDICION } from './condicion'
 import { campoPorId } from '@/entities/campos'
-import type { Severidad } from '@/entities/tipos'
 import { Chip } from '@/shared/ui/primitivas'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
@@ -15,8 +16,22 @@ import { fmtHoras } from '@/widgets/bombas/comun'
 
 /** El ⓘ del título (U2 §6.2, texto exacto). */
 const QUE_ES = 'Cuánto dejaría de sacar el campo por día si este equipo para hoy, después de lo que aguanta el tanque y de lo que toma el respaldo. Cambia con lo que esté parado: si para una bomba, sus hermanas valen más.'
-/** El ⓘ de «modelo choke» (U2 §1.3, texto exacto): solo lo ve confiabilidad. */
-const MODELO_CHOKE = 'Es un método internacional para ubicar dónde se pierde producción: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
+/** El ⓘ del método (U2 §1.3): solo lo ve confiabilidad, pegado al título y sin
+ *  el rótulo «modelo choke» al lado (T-11; X4 §6.1.4). Diferido no es pérdida (T-8). */
+const MODELO_CHOKE = 'Es el modelo choke, un método internacional para ubicar dónde se deja de producir: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
+
+/** La marca de la condición de un equipo con su palabra (H16). Sin condición, nada (H17: no se inventa una prioridad). */
+export function MarcaConPalabra({ c, equipo, conPalabra = true, tamano = 14 }: {
+  c: CondicionFranja | undefined; equipo?: string; conPalabra?: boolean; tamano?: number
+}) {
+  if (!c) return null
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 text-[13px] text-[var(--tinta2)]" data-condicion={c} data-marca-de={equipo}>
+      <MarcaCondicion c={c} tamano={tamano} decorativa={conPalabra} />
+      {conPalabra && <span>{PALABRA_CONDICION[c]}</span>}
+    </span>
+  )
+}
 
 const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
 /** El colchón como lo dice la ficha de la bomba («10,1 h»); bajo una hora, en minutos («2 min»). */
@@ -30,34 +45,39 @@ const esRaiz = (f: FilaCriticidad) => f.familia === 'bomba' || f.familia === 'se
 /** «SI FALLA HOY» (U2 §6; CHOKE-COMPLETO §10): TODOS los equipos de cada
  *  campo, de lo que más le quitaría al campo por día si fallara hoy a lo que
  *  menos, con dónde se trabaría, el colchón, lo que costaría una falla y si
- *  TRIM lo vigila. Lo ya parado no entra en la lista (va en «Perdiéndose
- *  ahora»): lleva su renglón arriba, con lo que costaría cuando vuelva. Todo
+ *  TRIM lo vigila. Lo ya parado no entra en la lista (va en «Se deja de
+ *  producir ahora»): lleva su renglón arriba, con lo que costaría cuando vuelva. Todo
  *  lo calcula el motor (`useCriticidad`): la cifra de cada bomba es la misma
  *  de su ficha y de «En riesgo», el puesto de cada fila, lo que dice lo ya
  *  parado y la línea de lo que decide cada rol con la lista (§6.4). Es para
  *  confiabilidad y el jefe de mantenimiento. */
-export function SiFallaHoy({ campos, global, rol, onAbrir }: {
+export function SiFallaHoy({ campos, global, rol, sinDecisiones = false, sinCambioHoy = false, onAbrir }: {
   campos: string[]; global: boolean
-  /** Confiabilidad ve «modelo choke ⓘ» y dónde va el próximo instrumento; el jefe, lo que no debe intervenir hoy. */
+  /** Confiabilidad ve la ⓘ del método y dónde va el próximo instrumento; el jefe, lo que no debe intervenir hoy. */
   rol: 'conf' | 'jefe' | 'otro'
+  /** K1 · P-10: en Equipos, lo que cada rol decide con la lista (el próximo instrumento, no intervenir hoy,
+   *  los trabajos del programa) ya va arriba de la lista: aquí no se repite. */
+  sinDecisiones?: boolean
+  /** K1 · P-10: «Cambió hoy» ya va arriba de la lista: la línea del jefe; a confiabilidad se lo dicen su
+   *  cabeza y cada fila (F3 · P-02). Aquí no se repite. */
+  sinCambioHoy?: boolean
   onAbrir: (campoId: string, equipo: string) => void
 }) {
   const v = useCriticidad(campos)
   const hoy = useEquiposDeHoy(campos)
-  const sev = (f: FilaCriticidad): Severidad => hoy(f.equipo, f.campoId)?.severidad ?? 0
-  const titulo = 'text-[15px] font-semibold text-[var(--tinta)]'
+  // La marca de cada equipo es la de la franja (H3): la misma de la cabecera, de Equipos y de su nivel 3.
+  const franja = useFranja(campos)
+  const sev = (f: FilaCriticidad): CondicionFranja | undefined => condicionDe(franja, f.campoId, f.equipo)
   return (
-    <section id="si-falla-hoy" tabIndex={-1} className="mt-2.5 scroll-mt-4 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)] outline-none">
-      <header className="flex flex-wrap items-center justify-between gap-x-2 border-b border-[var(--linea2)] px-3 py-[7px]">
-        <h2 className={titulo}>Si falla hoy</h2>
-        <span className="font-cond text-[12px] tracking-[.08em] text-[var(--tinta3)]">de lo que más le quita al campo por día a lo que menos</span>
+    <section id="si-falla-hoy" tabIndex={-1} aria-labelledby="si-falla-hoy-titulo" className="scroll-mt-4 rounded-[20px] bg-[var(--panel)] outline-none">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pt-4 sm:px-[24px] sm:pt-[18px]">
+        <h2 id="si-falla-hoy-titulo" className="flex flex-wrap items-center gap-x-1 text-[16px] font-semibold leading-snug text-[var(--tinta)]">
+          Si falla hoy
+          {rol === 'conf' && <Info titulo="Modelo choke" texto={MODELO_CHOKE} />}
+        </h2>
+        <span className="text-[13px] text-[var(--tinta2)]">de lo que más le quita al campo por día a lo que menos</span>
       </header>
-      <div className="p-3">
-        {rol === 'conf' && (
-          <p className="-mt-1 mb-1 flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
-            <span>modelo choke</span><Info titulo="Modelo choke" texto={MODELO_CHOKE} />
-          </p>
-        )}
+      <div className="px-4 pb-4 pt-2 sm:px-[24px] sm:pb-[20px]">
         <p className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
           <span>Lo que el campo deja de sacar por día si el equipo falla hoy</span>
           <Info titulo="Si falla hoy" texto={QUE_ES} />
@@ -71,17 +91,17 @@ export function SiFallaHoy({ campos, global, rol, onAbrir }: {
         </Lectura>
         {v.campos.map(c => (
           <CampoSiFalla key={c.campoId} c={c} filas={v.ranking.filter(f => f.campoId === c.campoId)}
-            global={global} rol={rol} sev={sev} abrible={(f: FilaCriticidad) => !!hoy(f.equipo, f.campoId) || f.familia === 'bomba'} onAbrir={onAbrir} />
+            global={global} rol={rol} sinDecisiones={sinDecisiones} sinCambioHoy={sinCambioHoy} sev={sev} abrible={(f: FilaCriticidad) => !!hoy(f.equipo, f.campoId) || f.familia === 'bomba'} onAbrir={onAbrir} />
         ))}
       </div>
     </section>
   )
 }
 
-function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
+function CampoSiFalla({ c, filas, global, rol, sinDecisiones, sinCambioHoy, sev, abrible, onAbrir }: {
   c: VistaCriticidad['campos'][number]; filas: FilaCriticidad[]; global: boolean
-  rol: 'conf' | 'jefe' | 'otro'
-  sev: (f: FilaCriticidad) => Severidad
+  rol: 'conf' | 'jefe' | 'otro'; sinDecisiones: boolean; sinCambioHoy: boolean
+  sev: (f: FilaCriticidad) => CondicionFranja | undefined
   abrible: (f: FilaCriticidad) => boolean
   onAbrir: (campoId: string, equipo: string) => void
 }) {
@@ -96,26 +116,25 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
   const quinto = medidos[VISIBLES - 1]
   const corte = quinto ? medidos.findIndex((f, i) => i >= VISIBLES && f.puesto !== quinto.puesto) : -1
   // Siempre a la vista: lo que subió por otro equipo parado y lo que está en alarma (ISA-18.2: una alarma no se tapa).
-  const lista_ = useVerMas(medidos, { n: corte === -1 ? (quinto ? medidos.length : VISIBLES) : corte, prioridad: f => (f.subio || sev(f) === 1 ? 1 : 2) })
+  const lista_ = useVerMas(medidos, { n: corte === -1 ? (quinto ? medidos.length : VISIBLES) : corte, prioridad: f => (f.subio || sev(f) === 'alarma' || sev(f) === 'interlock' ? 1 : 2) })
   const raices = c.parados.filter(esRaiz), pozosParados = c.parados.filter(f => !esRaiz(f))
+  // T-10: sin la columna del puesto (1, 1, 3…): la lista ya va en orden; el puesto queda en `data-puesto`.
   const rejilla = cn('grid items-baseline gap-x-2 gap-y-0.5',
-    'grid-cols-[1.75rem_minmax(0,1fr)_auto] [grid-template-areas:"n_e_c"_"._t_t"_"._x_x"]',
-    'lg:grid-cols-[1.75rem_minmax(0,1.5fr)_minmax(0,1.15fr)_7.5rem_5.5rem_6.5rem_8rem] lg:[grid-template-areas:"n_e_t_c_d_f_v"]')
+    'grid-cols-[minmax(0,1fr)_auto] [grid-template-areas:"e_c"_"t_t"_"x_x"]',
+    'lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.15fr)_7.5rem_5.5rem_6.5rem_9rem] lg:[grid-template-areas:"e_t_c_d_f_v"]')
   const subtitulo = 'mt-2 border-b border-[var(--linea2)] pb-1 text-[13px] font-semibold text-[var(--tinta2)]'
 
   const fila = (f: FilaCriticidad, oculta: boolean) => {
     const s = sev(f)
-    const p = f.puesto
     const otro = nombreSinId(f)
     const donde = `${DONDE_CHOKE[f.tramo]}${f.tramo === 'planta' && f.servidos > 0 ? ` · ${plural(f.servidos, 'pozo', 'pozos')}` : ''}`
     const cifra = f.bpd === null ? 'sin dato' : f.grupo === 'techo' && f.bpd > 0 ? `hasta ${n0(f.bpd)}` : n0(f.bpd)
     const despues = f.colchonH !== undefined ? colchon(f.colchonH)
       : f.bpd === null || f.bpd === 0 ? '—' : f.familia === 'bomba' && f.sinDato ? 'sin dato' : 'sin colchón'
-    const leido = `${p === null ? '' : `Puesto ${p}. `}${f.equipo}${otro ? `, ${otro}` : ''}: si falla hoy, ${f.bpd === null ? `sin dato${f.sinDato ? `: ${f.sinDato}` : ''}` : `${cifra} barriles por día`}; se trabaría ${donde}; ${f.colchonH !== undefined ? `después de ${colchon(f.colchonH)} de colchón` : despues === '—' ? (f.bpd === 0 ? 'no cierra pozos' : 'sin dato del colchón') : despues}; ${f.costoFalla !== undefined ? `una falla, unos ${n0(f.costoFalla)} barriles` : 'sin cifra de una falla'}; ${f.vigilado ? 'lo vigila TRIM' : 'sin instrumento'}${s > 0 ? `, con una alarma de prioridad ${s}` : ''}${f.subio ? '. Subió hoy' : ''}`
+    const leido = `${f.equipo}${otro ? `, ${otro}` : ''}: si falla hoy, ${f.bpd === null ? `sin dato${f.sinDato ? `: ${f.sinDato}` : ''}` : `${cifra} barriles por día`}; se trabaría ${donde}; ${f.colchonH !== undefined ? `después de ${colchon(f.colchonH)} de colchón` : despues === '—' ? (f.bpd === 0 ? 'no cierra pozos' : 'sin dato del colchón') : despues}; ${f.costoFalla !== undefined ? `una falla, unos ${n0(f.costoFalla)} barriles` : 'sin cifra de una falla'}; ${f.vigilado ? 'lo vigila TRIM' : 'sin instrumento'}${s ? `, ${PALABRA_CONDICION[s]}` : ''}${f.subio ? '. Subió hoy' : ''}`
     const pista = [f.porque, f.sinDato, f.costoFalla !== undefined && f.mdtFuente ? `Una falla: ${f.mdtFuente}` : ''].filter(Boolean).join('. ')
     const cuerpo = (
       <>
-        <span className="tabular text-[14px] text-[var(--tinta3)] [grid-area:n]">{p ?? '┄'}</span>
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 [grid-area:e]">
           <b className="text-[15px]">{f.equipo}</b>
           {otro && <span className="min-w-0 text-[13px] text-[var(--tinta2)]">{otro}</span>}
@@ -141,7 +160,7 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
           <span className="inline-flex items-center gap-1 lg:justify-end lg:[grid-area:v]">
             <span aria-hidden className="lg:hidden">· </span>
             {f.vigilado
-              ? <><span className="lg:hidden">vigilado</span><span className="hidden lg:inline">sí</span>{s > 0 && <> · <MarcaPrioridad s={s} tamano={11} /></>}</>
+              ? <><span className="lg:hidden">vigilado</span><span className="hidden lg:inline">sí</span>{s && <> · <MarcaConPalabra c={s} equipo={f.equipo} tamano={12} /></>}</>
               : <span className="whitespace-nowrap rounded-sm border border-dashed border-[var(--tinta3)] px-1 text-[13px] text-[var(--tinta3)]">sin instrumento</span>}
           </span>
         </span>
@@ -151,7 +170,7 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
       filas: [['Si falla hoy', f.bpd === null ? 'sin dato' : `${cifra} bbl/d`], ['Se trabaría', donde], ['Después de', despues],
         ['Una falla', f.costoFalla !== undefined ? `≈ ${n0(f.costoFalla)} bbl` : 'sin cifra'], ['¿Lo vigila TRIM?', f.vigilado ? 'sí' : 'sin instrumento']] as Array<[string, string]>,
       ...(f.subio || f.sinDato ? { imprimir: 'pista' as const } : {}),
-      'data-fila-critica': f.equipo, 'data-campo': f.campoId, 'data-bpd': f.bpd ?? '', 'data-costo': f.costoFalla ?? '', 'data-grupo': f.grupo }
+      'data-fila-critica': f.equipo, 'data-campo': f.campoId, 'data-puesto': f.puesto ?? '', 'data-bpd': f.bpd ?? '', 'data-costo': f.costoFalla ?? '', 'data-grupo': f.grupo }
     return (
       <div key={`${f.campoId}:${f.equipo}`} className={cn('border-b border-[var(--linea2)] last:border-0', oculta && 'solo-impresion')}>
         {abrible(f)
@@ -165,28 +184,29 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
     <div data-partible className="mt-2 border-t border-[var(--linea2)] pt-2 first-of-type:border-0 first-of-type:pt-0" data-si-falla={c.campoId}>
       {global && <h3 className="mb-1 text-[15px] font-semibold">{nombre}</h3>}
       {raices.map(f => (
-        <p key={f.equipo} data-parado={f.equipo} data-perdiendo={f.perdiendoBpd ?? ''} className="mb-1 flex items-start gap-1.5 text-[14px]">
-          <MarcaPrioridad s={sev(f)} tamano={13} className="mt-0.5" />
-          {/* La frase la hace el motor: la bomba, «está parada… cuando vuelva…»; el servicio, «está caído: se pierden N bbl/d ahora». */}
+        <p key={f.equipo} data-parado={f.equipo} data-perdiendo={f.perdiendoBpd ?? ''} className="mb-1 flex flex-wrap items-start gap-x-1.5 text-[14px]">
+          <MarcaConPalabra c={sev(f)} equipo={f.equipo} />
+          {/* La frase la hace el motor (criticidad.ts, de F3): la bomba, «está parada… cuando vuelva…»; el servicio, «está caído…». */}
           <span className="min-w-0">{f.porque}{/[.?!]$/.test(f.porque) ? '' : '.'}</span>
         </p>
       ))}
       {pozosParados.length > 0 && (
-        <p className="mb-1 pl-[19px] text-[13px] text-[var(--tinta2)]">
-          {raices.length ? 'También parados' : 'Parados'}: {lista(pozosParados.map(f => f.equipo))} · van en «Se deja de producir ahora», no en la lista.
+        // P-riesgo-1: la nota corta; lo parado va arriba, en «Se deja de producir ahora».
+        <p className="mb-1 text-[13px] text-[var(--tinta2)]" data-parados-arriba="">
+          {lista(pozosParados.map(f => f.equipo))}, {pozosParados.length === 1 ? 'parado: va' : 'parados: van'} arriba.
         </p>
       )}
-      {c.cambioHoy && <p className="mb-1 text-[14px]" data-cambio-hoy="">{c.cambioHoy}</p>}
-      {rol === 'conf' && c.proximoInstrumento && (
+      {!sinCambioHoy && c.cambioHoy && <p className="mb-1 text-[14px]" data-cambio-hoy="">{c.cambioHoy}</p>}
+      {!sinDecisiones && rol === 'conf' && c.proximoInstrumento && (
         <p className="mb-1 text-[14px] text-[var(--tinta2)]" data-decide="conf">
           <b className="font-semibold text-[var(--tinta)]">¿Dónde va el próximo instrumento?</b> {c.proximoInstrumento}
         </p>
       )}
-      {rol === 'jefe' && c.noIntervenir && (
+      {!sinDecisiones && rol === 'jefe' && c.noIntervenir && (
         <p className="mb-1 text-[14px] text-[var(--tinta2)]" data-decide="jefe">{c.noIntervenir}</p>
       )}
       {/* El cruce con el programa (U2 §6.4): un trabajo sobre lo que hoy vale más. Moverlo es del programa de paradas firmado. */}
-      {rol === 'jefe' && c.avisosTrabajo.map(a => (
+      {!sinDecisiones && rol === 'jefe' && c.avisosTrabajo.map(a => (
         <p key={a.tarea} className="mb-1 text-[14px] text-[var(--tinta2)]" data-aviso-trabajo={a.tarea}>
           {a.texto} <span className="text-[var(--tinta3)]">El programa lo cambia el administrador en Configuración, con firma.</span>
         </p>
@@ -199,7 +219,7 @@ function CampoSiFalla({ c, filas, global, rol, sev, abrible, onAbrir }: {
           : (
             <>
               <div aria-hidden className={cn(rejilla, 'hidden border-b border-[var(--linea2)] pb-1 text-[12px] text-[var(--tinta3)] lg:grid')}>
-                <span className="[grid-area:n]">#</span><span className="[grid-area:e]">Equipo</span><span className="[grid-area:t]">Se trabaría en</span>
+                <span className="[grid-area:e]">Equipo</span><span className="[grid-area:t]">Se trabaría en</span>
                 <span className="text-right [grid-area:c]">Si falla hoy</span><span className="text-right [grid-area:d]">Después de</span>
                 <span className="text-right [grid-area:f]">Una falla ≈</span><span className="text-right [grid-area:v]">¿Lo vigila TRIM?</span>
               </div>
@@ -246,7 +266,7 @@ export function SiFallaHoyFicha({ campoId, equipo, className }: { campoId: strin
   const f = [...v.ranking, ...(c?.parados ?? [])].find(x => x.equipo === equipo && x.campoId === campoId)
   if (!f) return null
   const donde = `${DONDE_CHOKE[f.tramo]}${f.tramo === 'planta' && f.servidos > 0 ? ` (${plural(f.servidos, 'pozo', 'pozos')})` : ''}`
-  const cifra = f.parado ? `ya está parado: se pierden ${n0(f.perdiendoBpd ?? 0)} bbl/d ahora`
+  const cifra = f.parado ? `ya está parado: se dejan de producir ${n0(f.perdiendoBpd ?? 0)} bbl/d ahora`
     : c?.campoDeGas ? c.campoDeGas
       : f.bpd === null ? `sin dato${f.sinDato ? `: ${f.sinDato.replace(/\.$/, '')}` : ''}`
         : f.grupo === 'techo' ? `hasta ${n0(f.bpd)} bbl/d (un techo: supone que se cierran todos sus pozos)`

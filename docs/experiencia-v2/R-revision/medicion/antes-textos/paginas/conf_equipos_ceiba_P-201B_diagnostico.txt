@@ -1,0 +1,320 @@
+#/conf/equipos/ceiba/P-201B/diagnostico
+
+La Ceiba
+Agua
+P-201B
+Diagnóstico
+DATOS DE DEMOSTRACIÓN
+P-201B
+· diagnóstico
+bomba multietapa de transferencia de agua · tratamiento de agua · criticidad 5 de 5 · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+
+Detenida. P-201A y P-201C no alcanzan a tomar toda su agua: el tanque llegó al alto-alto y hubo que cerrar parte de los pozos.
+
+Modo de falla
+Lubricación de cojinete
+Respaldo
+P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una
+Aguas abajo
+la parte del campo que el respaldo no cubre
+Diferido · octubre, en curso
+573 bbl
+
+Una señal apunta, no prueba: la causa la confirma quien abre el equipo.
+
+Centrífuga horizontal multietapa · Disposición de agua · respaldo 30.100 bbl/d
+norma
+
+Planes · lo que todavía se puede mover
+simulado
+Durante · propuesto
+P-201B
+Volver antes de 39 h
+≈ 2.072
+bbl · simulado · 29,9 h
+Aceptar
+Durante · propuesto
+P-201B
+Cerrar el resto del agua en el orden TRIM
+≈ 30
+bbl · simulado
+Aceptar
+Después · propuesto
+P-201B
+La próxima parada: cerrar en el orden TRIM
+≈ 30
+bbl · simulado
+Aceptar
+Durante · propuesto
+P-201B
+Identificar el daño: no arrancar hasta entonces
+—
+no mueve crudo
+Aceptar
+La parada abierta espera que alguien diga qué se dañó.
+Identificar
+SALUD POR PARTE
+Sello mecánico
+equipo detenido
+5 fallas · 26.344 bbl
+Succión y filtro de entrada
+equipo detenido
+Rodamientos y cámara de empuje
+equipo detenido
+3 fallas · 10.397 bbl
+Impulsores y desgaste interno
+equipo detenido
+Motor eléctrico
+equipo detenido
+VARIABLES
+8 de 13 instrumentadas
+Presión de succión
+PI-2010 · PI · 47 s
+18,2psi
+normal > 10,0
+alarma 8,0
+Nivel del tanque de succión
+LT-2012 · PLC · 47 s
+89,6%
+normal > 15,0
+alarma 15,0
+Presión de descarga
+PDI-2011 · PI · 47 s
+0psi
+normal 180 – 240
+Caudal
+FI-2011 · PI · 47 s
+0bbl/d
+normal 66.800 – 89.250
+Temperatura de la cámara de empuje
+TI-2011 · PI · 47 s
+41°C
+normal < 85
+alarma 85
+Vibración
+VI-2011 · PLC · 47 s
+0,0mm/s
+normal < 3,9
+alarma 3,9
+Fuga del sello
+sin lectura numérica
+Corriente
+II-2011 · PI · 47 s
+0A
+normal 320 – 445
+Falta instrumentar
+JI
+Energía por barril
+LT
+Nivel de aceite de la cámara
+TE
+Temperatura de devanado
+SI
+Velocidad
+PT
+Presión del cabezal de inyección
+VIGÍA
+4 señales
+Presión de succión
+ISO 14224 2.1 · Cavitación
+
+Límite 8 psi · sin fecha
+anuncia
+
+Nivel del tanque de succión
+ISO 14224 2.1 · Cavitación
+
+Límite 15 % · sin fecha
+anuncia
+
+Temperatura de la cámara de empuje
+ISO 14224 2.4 · Desgaste
+
+Límite 85 °C · sin fecha
+anuncia
+
+Vibración
+ISO 14224 1.2 · Vibración
+
+Límite 3,9 mm/s · sin fecha
+anuncia
+
+PARADAS DEL PLC
+11 paradas
+2 de oct, 03:52
+abierta · bomba parada 10,1 h
+colchón 1,8 h · aguantó 1,8 h
+2
+por identificar
+573 bbl
+487 – 659 · ±15,0 %
+POR QUÉ PARÓ · SIN IDENTIFICAR
+ZS-2011 · marcha → paro · 2 de oct, 03:52
+Sin primera alarma y sin firma: el PLC no dice qué parte falló
+EL TANQUE
+Al parar · LT-2012
+78,7 %
+Libre hasta el alto-alto
+3.390 bbl
+Agua sin salida
+44.100 bbl/d
+Debía aguantar
+1,8 h
+Primer pozo cerrado
+a las 1,8 h
+POZOS QUE CERRÓ · 2
+LC-16
+8,3 h
+300
+LC-07
+8,2 h
+273
+
+evitable en orden: 30 bbl
+
+22 de sept, 10:05
+hasta 23 de sept, 02:04 · bomba parada 16,0 h
+Rodamientos · por señal · colchón 1,6 h · aguantó 1,6 h
+1.041 bbl
+884 – 1.197 · ±15,0 %
+19 de ago, 18:19
+hasta 20 de ago, 07:34 · bomba parada 13,2 h
+Mantenimiento preventivo programado de la bomba · colchón 2,3 h · aguantó 2,3 h
+1.523 bbl
+1.295 – 1.752 · ±15,0 %
+9 de ago, 21:14
+hasta 11 de ago, 07:59 · bomba parada 34,8 h
+Sello mecánico · por señal · colchón 2,1 h · aguantó 2,1 h
+3.806 bbl
+3.235 – 4.377 · ±15,0 %
+27 de jul, 19:10
+hasta 30 de jul, 09:17 · bomba parada 2,6 d
+Sello mecánico · por señal · colchón 1,2 h · aguantó 1,2 h
+7.453 bbl
+6.335 – 8.571 · ±15,0 %
+ver 6 más
+
+tolerancia
+
+PUNTOS CIEGOS
+Crudo en riesgo
+sale de caudales del campo y pruebas de pozo
+
+mecanismos
+
+Sus instrumentos
+toque uno para ver de dónde sale el dato
+PI-2010
+Presión de succión
+límite > 10
+18,2
+psi
+1
+FI-2011
+Caudal
+límite 66.800 – 89.250
+0
+bbl/d
+1
+II-2011
+Corriente del motor
+límite 320 – 445
+0
+A
+TI-2011
+Temperatura de cojinete
+límite < 85
+41
+°C
+1
+PDI-2011
+Presión de descarga
+límite 180 – 240
+0
+psi
+VI-2011
+Vibración global
+límite < 3,9
+0
+mm/s
+LSH-2013
+Fuga del sello
+límite —
+DISCRETA
+sin fuga
+normal
+LT-2012
+Nivel del tanque de agua
+límite > 15
+89,6
+%
+HISTORIA DEL PLC
+
+9 fallas en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 4.593 bbl por falla
+sello mecánico 5 · rodamientos 3
+
+10 eventos con pozos cerrados · 38.838 bbl
+
+2 de oct, 03:52 · 2 pozos cerrados · sigue · 10,1 h
+sin identificar
+573 bbl
+22 de sept, 10:05 · 2 pozos cerrados hasta 16,6 h
+Rodamientos · por señal
+1.041 bbl
+19 de ago, 18:19 · 3 pozos cerrados hasta 18,2 h
+Mantenimiento preventivo programado de la bomba
+1.523 bbl
+9 de ago, 21:14 · 3 pozos cerrados hasta 41,0 h
+Sello mecánico · por señal
+3.806 bbl
+27 de jul, 19:10 · 3 pozos cerrados hasta 2,9 d
+Sello mecánico · por señal
+7.453 bbl
+ver 5 más
+SAP · MANTENIMIENTO · equipo 10759915 · CO-CEI-BAT1-AGU-P-201B
+Sin aviso ni orden abiertos
+parado, SAP no lo sabe
+Enviar aviso a SAP
+REPUESTOS CRÍTICOS
+Kit de sello mecánico · 0 en bodega (mín. 1) · llega 1 el 9 de oct
+Juego de rodamientos · 2 en bodega (mín. 1)
+3
+Impulsor y anillos de desgaste · 0 en bodega (mín. 1) · pedirlo: 45 días
+HISTORIAL SAP · 9 ÓRDENES
+22 de sept
+40012043
+correctivo · Reparar rodamientos de P-201B
+cerrada · 8,0 h
+confirmadas
+12 de ago
+40012054
+preventivo · Mantenimiento preventivo programado de la bomba
+cerrada · 8,0 h
+confirmadas
+9 de ago
+40012037
+correctivo · Reparar sello mecánico de P-201B
+cerrada · 8,0 h
+confirmadas
+27 de jul
+40012036
+correctivo · Reparar sello mecánico de P-201B
+cerrada · 8,0 h
+confirmadas
+9 de jul
+40012031
+correctivo · Reparar sello mecánico de P-201B
+cerrada · 8,0 h
+confirmadas
+ver 4 más

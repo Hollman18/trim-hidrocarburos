@@ -72,7 +72,7 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
         cambia solo: queda para revisar en Identificar. Nada se guarda hasta que se firma.
       </Lectura>
       {conTopologia.length > 0 && (
-        <Panel className="mb-2.5" titulo="LA TOPOLOGÍA EN ESTE BORRADOR">
+        <Panel className="mb-3 sm:mb-4" titulo="La topología en este borrador">
           <ul className="grid gap-1.5 text-[14px]">
             {conTopologia.map(x => {
               const nombre = campoPorId(x.campoId).nombre
@@ -91,7 +91,7 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
           </ul>
         </Panel>
       )}
-      <Panel className="mb-2.5" titulo="SI FIRMA ESTA VERSIÓN" extra="rige desde la firma">
+      <Panel className="mb-3 sm:mb-4" titulo="Si firma esta versión" extra="rige desde la firma">
         {!puede && <p className="text-[14px] text-[var(--tinta2)]">La vista previa y la firma las hace el administrador de la implementación, sobre su borrador.</p>}
         {puede && !hayCambios && <p className="text-[14px] text-[var(--tinta2)]">No hay cambios en el borrador: conteste en el paso 1, o cambie el respaldo o los tanques en la configuración técnica.</p>}
         {pidiendo && <p role="status" className="text-[14px] text-[var(--tinta2)]">Calculando lo que cambia…</p>}
@@ -109,9 +109,9 @@ export function ImpactoPaso({ propuesta, puede, hayCambios: conCambios, resumen,
         )}
       </Panel>
       {estrecho
-        ? puede && <div className="mb-2.5"><Hueco>La firma se hace en el escritorio: allí se ve el impacto completo. Lo contestado queda en este borrador.</Hueco></div>
+        ? puede && <div className="mb-3 sm:mb-4"><Hueco>La firma se hace en el escritorio: allí se ve el impacto completo. Lo contestado queda en este borrador.</Hueco></div>
         : firma}
-      <div className="mb-2.5">{historial}</div>
+      <div className="mb-3 sm:mb-4">{historial}</div>
     </>
   )
 }
@@ -123,7 +123,7 @@ function DeUnCampo({ c, desde }: { c: ImpactoCampo; desde: Date }) {
   const libro = c.texto.find(t => t.startsWith('El libro'))
   return (
     <section aria-label={`Lo que cambia en ${nombre}`} className="border-b border-[var(--linea2)] py-2 first:pt-0 last:border-0 last:pb-0">
-      <h3 className="font-cond mb-1 text-[13px] font-semibold tracking-[.11em]">{nombre.toUpperCase()}</h3>
+      <h3 className="mb-1 text-[15px] font-semibold">{nombre}</h3>
       <dl className="grid gap-x-3 gap-y-1.5 text-[14px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
         <dt className="text-[var(--tinta2)]">Qué limita hoy</dt>
         <dd>{sujeto(c.limitaAntes)} → {sujeto(c.limitaDespues)}{c.limitaAntes === c.limitaDespues && <span className="text-[var(--tinta2)]"> (no cambia)</span>}</dd>

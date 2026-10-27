@@ -3,11 +3,13 @@ import { test } from './apoyo.ts'
 
 test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
   await f.abrir('/#/adm/configuracion/ceiba/curso')
+  // F3 (P-04): el administrador abre en el estado; el perfil está en la configuración técnica, a un toque.
+  await f.clic('Configuración técnica'); await f.esperar(300)
   let t = ''
 
   await test.step('Perfil del campo', async () => {
     t = await f.texto()
-    f.ok(t.includes('PERFIL DEL CAMPO') && t.includes('15 pozos registrados'), 'el administrador ve el perfil de La Ceiba con lo que tiene registrado')
+    f.ok(t.includes('Perfil del campo') && t.includes('15 pozos registrados'), 'el administrador ve el perfil de La Ceiba con lo que tiene registrado')
     f.ok(await f.marcar('Electrosumergibles'), 'le quita las electrosumergibles a La Ceiba'); await f.esperar(200)
     t = await f.texto()
     f.ok(t.includes('dejan de vigilarse') && t.includes('electrosumergibles sí → no'), 'avisa que quedan fuera y lo lista para firmar')
@@ -21,7 +23,7 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
     const h = await f.hash()
     f.ok(h.includes('/equipos/') || h.includes('/bombas/') || h.includes('/pozos/'), 'una dirección a Electrosumergibles de La Ceiba cae en otra subpantalla (C4: Equipos es la primera)')
     // Guacamayo sin gas: el administrador lo cambia y firma.
-    await f.ir('#/adm/configuracion/guacamayo/curso'); await f.esperar(400)
+    await f.ir('#/adm/configuracion/guacamayo/curso'); await f.clic('Configuración técnica'); await f.esperar(400)
     // Antes esta comprobación terminaba en «|| true» y no podía fallar.
     f.ok(await f.escribir('select:not([aria-label])', 'no'), 'escoge «no tiene tren de gas»')
     await f.esperar(200)
@@ -34,7 +36,7 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
 
   await test.step('Plan mes a mes', async () => {
     await f.ir('#/ger/configuracion/ceiba/curso'); await f.esperar(400)
-    f.ok(await f.clic('Plan mes a mes'), 'pasa al plan mes a mes'); await f.esperarTexto('CARGAR EL PRESUPUESTO')
+    f.ok(await f.clic('Plan mes a mes'), 'pasa al plan mes a mes'); await f.esperarTexto('Cargar el presupuesto')
     const pegado = '2026-11\tLa Ceiba\t11.200\t750\t48\n2026-12\tLa Ceiba\t11.400\t700\t48\n2026-11\tMorichal Norte\t17000\t900\t\n2026-09\tLa Ceiba\t1\t1\t'
     await f.escribir('textarea[aria-label="Filas del presupuesto"]', pegado)
     f.ok(await f.clic('Revisar'), 'revisa lo pegado'); await f.esperarTexto('Listas:')
@@ -46,7 +48,8 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
     await f.escribir('input[placeholder^="Ej.: presupuesto"]', 'Presupuesto 2027 aprobado')
     f.ok(await f.clic('Firmar como'), 'firma'); await f.esperarTexto('Firmada la versión')
     t = await f.texto()
-    f.ok(t.includes('Firmada la versión') && t.includes('PLAN MES A MES'), 'firma el plan y se queda en el plan')
+    // «Plan mes a mes» también es el selector: lo que solo está en el plan es «Cargar el presupuesto».
+    f.ok(t.includes('Firmada la versión') && t.includes('Cargar el presupuesto'), 'firma el plan y se queda en el plan')
     f.ok(t.includes('cifra propia'), 'los meses con cifra del presupuesto se marcan como propios')
   })
 

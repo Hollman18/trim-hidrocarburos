@@ -17,7 +17,7 @@ export function BarraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, apoy
   unidad: string
   /** La meta o el máximo firmado. Sin meta: ni raya ni barra, solo la cifra. */
   meta?: number
-  /** Junto a la barra: «meta 40.200», «máx. 2.300»; en una tabla, solo «10.900».
+  /** Junto a la barra: «meta 40.200», «máximo 2.300»; en una tabla, solo «10.900».
    *  Sin meta: la salvedad («sin meta firmada»). */
   rotuloMeta?: string
   /** El cuadrado P3 de fuera de meta. */
@@ -35,7 +35,11 @@ export function BarraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, apoy
   formato?: (v: number) => string
 }) {
   const conBarra = meta !== undefined && meta > 0
-  const ancho = conBarra ? Math.min(1.25, valor / meta) / 1.25 : 0
+  // Con piso en 0 (H1): un valor negativo daba un ancho negativo, React descartaba
+  // la declaración y el relleno, en bloque, llenaba toda la pista.
+  const ancho = conBarra ? Math.max(0, Math.min(1.25, valor / meta)) / 1.25 : 0
+  // «máximo», sin abreviar (G-10): la misma palabra que «máximo firmado» en el resto del producto.
+  rotuloMeta = rotuloMeta?.replace(/(^|\s)máx\.(?=\s)/g, '$1máximo')
   const barra = conBarra && (
     // La barra contra la meta de A en estilo B (X5 §5.4, Few): pista de 10 px, la barra en
     // `--dato1` y la meta como una raya vertical de 3 px en tinta, que sobresale de la pista.
@@ -46,7 +50,9 @@ export function BarraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, apoy
   )
 
   if (tamano === 'chica') {
-    const leido = `${rotulo}: ${formato(valor)} ${unidad}${rotuloMeta ? `, ${conBarra ? `${tipoMeta} ` : ''}${rotuloMeta}` : ''}`
+    // El rótulo de la raya ya puede decir lo que es («máximo 50»): no se repite la palabra.
+    const conPalabra = !!rotuloMeta && new RegExp(`^${tipoMeta}\\b`).test(rotuloMeta)
+    const leido = `${rotulo}: ${formato(valor)} ${unidad}${rotuloMeta ? `, ${conBarra && !conPalabra ? `${tipoMeta} ` : ''}${rotuloMeta}` : ''}`
       + (fuera ? (tipoMeta === 'máximo' ? ', por encima del máximo' : ', por debajo de la meta') : '')
     // En una tabla, cifra y meta van en columnas de ancho fijo: así cada barra
     // empieza y termina donde la de la fila de arriba y la raya cae en el mismo lugar.

@@ -64,9 +64,9 @@ Están en `IMG/fuente/sistema.css` como variables CSS, con los mismos nombres en
 | `--marca-capa` | blanco al 14 % | igual | La puerta activa del panel | Blanco sobre la capa: 8,11:1 |
 | `--primario` · `--primario-sobre` | `#142d88` · blanco | `#f3f4f5` · `#15171a` | El botón principal (píldora) y el momento escogido | 11,93:1 · 16,31:1 |
 | `--marca-suave` | `#e8ebf6` | `#1d2440` | Lo seleccionado sobre papel: la fila escogida, el ícono de la puerta | Tinta encima: 15,09:1 · 13,83:1 |
-| `--foco` | `#142d88` | `#f3f4f5` | El anillo de foco del teclado (2 px, separado 2 px) | 11,53:1 · 13,11:1 |
+| `--foco` | `#142d88` | `#f3f4f5` | El anillo de foco del teclado (2 px, separado 2 px). **Sobre el índigo (el panel, la banda del teléfono, la banda de la pregunta), el anillo es blanco** (`--marca-sobre`, 11,93:1): el índigo sobre el índigo no se ve (F1 · A1, 26-oct) | 11,53:1 · 13,11:1 |
 
-El índigo queda lejos de los cuatro colores de estado, también con daltonismo: el par más cercano es índigo contra morado, 19,85 con visión normal y 11,02 con deuteranopía (en claro). **Nunca va en un dato, una serie, una tubería ni un equipo.**
+El índigo queda lejos de los cuatro colores de estado con visión normal y con deuteranopía: el par más cercano es índigo contra morado, 19,85 con visión normal y 11,02 con deuteranopía (en claro). **Con protanopía, índigo contra morado baja a 6,24** (`paleta-medida.md:70`; corrección del 26-oct, H31): por debajo del umbral de 10. En la práctica no se cruzan: la marca morada nunca va sobre el índigo (en el panel y en la banda va dentro de las píldoras blancas, `.blanca`), y el índigo nunca es un dato. **Nunca va en un dato, una serie, una tubería ni un equipo.**
 
 ### 3.2 Neutros (los de B, medidos por X1)
 

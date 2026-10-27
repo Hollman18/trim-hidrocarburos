@@ -1,17 +1,17 @@
-import { useApp, useAmbito, useRol, useRango, useNivel } from '@/app/store'
-import { Tendencia } from '@/widgets/resumen/ResumenDirectivo'
+import { useApp, useAmbito, useRol, useRango } from '@/app/store'
 import { campoPorId } from '@/entities/campos'
 import { SIN_META } from '@/entities/configuracion'
 import { useLibro, useSerie, useBase } from '@/shared/api/diferidos'
 import { useRepartoMensual } from '@/shared/api/choke'
-import { Encabezado } from '@/widgets/diferidos/Encabezado'
 import { MesAMes } from '@/widgets/diferidos/MesAMes'
 import { Cuadre } from '@/widgets/diferidos/Cuadre'
 import { campoPublicable } from '@/widgets/diferidos/publicacion'
 import { ParetoEquipos, ParetoPartes, ParetoTipos, Palancas } from '@/widgets/diferidos/Paretos'
 import { PorTramo } from '@/widgets/diferidos/PorTramo'
-import { PanelDondeSeTrabo } from '@/widgets/resumen/DondeSeTrabo'
-import { Panel } from '@/shared/ui/primitivas'
+import { Panel, Tarjeta } from '@/shared/ui/primitivas'
+import { useResultados } from '@/shared/api/resultados'
+import { useTelefono } from '@/shared/ui/telefono'
+import { Cifra } from '@/widgets/resultados/Cifra'
 import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
@@ -21,7 +21,7 @@ import { n0, n1, diaIso as dia } from '@/shared/lib/formato'
  *  la medición oficial, a qué equipo y a qué parte se le carga, dónde se
  *  trabó (por tramo y por escalón, U2 §3.1) y dónde se puede bajar. */
 export function Diferidos() {
-  const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const nivel = useNivel()
+  const ambito = useAmbito(); const rango = useRango(); const rol = useRol()
   const abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla), setCampo = useApp(s => s.setCampo), setRango = useApp(s => s.setRango), campoId = useApp(s => s.campoId)
   const ids = ambito.campos.map(c => c.id)
   const q = { campos: ids, desde: rango.desde, hasta: rango.hasta }
@@ -29,6 +29,9 @@ export function Diferidos() {
   const serie = useSerie(ids)
   const porTramo = useRepartoMensual(ids)
   const base = useBase(q)
+  const telefono = useTelefono()
+  // El bloque de la cifra de Resultados, el mismo (P-diferidos-1): la vista de Resultados del rol.
+  const res = useResultados({ rol: rol.id, campos: ids, desde: rango.desde, hasta: rango.hasta })
 
   const abrir = (c: string, eq: string) => {
     if (c !== campoId || ambito.global) setCampo(c)
@@ -36,51 +39,30 @@ export function Diferidos() {
   }
   const irA = (p: string) => (rol.pantallas.includes(p) ? () => setPantalla(p) : undefined)
 
-  // El directivo ve el mismo libro sin el cuadre técnico: la tendencia de lo
-  // de alto impacto contra el máximo firmado, si se puede publicar (el sello
-  // del encabezado), dónde se puede bajar y quién se lo lleva. El diferido por
-  // día contra el máximo va en el encabezado: «Dónde bajarlo» no lo repite.
-  if (nivel === 'decision') return (
-    <>
-      <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} simple />
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
-        <Panel titulo="Mes a mes">
-          <Tendencia serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
-            onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
-          <Lectura>
-            Diferido por día de cada mes: lo de alto impacto, oscuro; la raya, el máximo que usted firmó
-            para ese mes. «Por dónde se trabó» parte cada mes por tramo. Toque o pase el cursor por un mes
-            para ver sus cifras; un clic lo abre.
-          </Lectura>
-        </Panel>
-        <Palancas lb={lb} base={base} />
-      </div>
-      {/* La vista «Por dónde se trabó» del gerente (U2 §3.1): la misma de su Resumen. */}
-      <PanelDondeSeTrabo className="mb-2.5" campos={ids} desde={rango.desde} hasta={rango.hasta} />
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))]">
-        <ParetoEquipos lb={lb} global={ambito.global} simple onAbrir={abrir} />
-        <ParetoTipos lb={lb} />
-      </div>
-    </>
-  )
-
   return (
     <>
-      <Encabezado lb={lb} base={base} nombrePeriodo={rango.nombre} ambito={ambito.titulo} />
+      {/* P-diferidos-1 (X4 §3.6.5; G-8): arriba, el MISMO bloque de la cifra de Resultados, con sus nombres
+          («Lo que pasó · octubre», «no se produjeron», calculado, el valor y el sello). Diferidos se queda
+          como el libro: el cuadre, la custodia, los Paretos y por tramo. El potencial, lo real y las partes
+          del diferido van en «¿Se puede publicar?»; el diferido por día contra el máximo, en «Dónde bajarlo». */}
+      <Tarjeta className="mb-3 sm:mb-4" aria-label={res.cifra.fraseCorta} data-cifra-diferidos="">
+        <Cifra v={res} telefono={telefono} />
+      </Tarjeta>
 
-      <Panel className="mb-2.5" titulo="Mes a mes">
+      {/* H22: la unidad, una vez, en el título. */}
+      <Panel className="mb-3 sm:mb-4" titulo="Mes a mes" extra="bbl">
         <MesAMes serie={serie} porTramo={porTramo} desde={rango.desde} hasta={rango.hasta}
           onMes={m => setRango(dia(m.desde), dia(new Date(m.hasta.getTime() - 1)))} />
       </Panel>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        <Cuadre lb={lb} onIdentificar={irA('causa')} />
+      <div className="mb-3 grid items-start gap-3 sm:mb-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+        <Cuadre lb={lb} periodo={rango.nombre} onIdentificar={irA('causa')} />
         {ambito.global ? (
           <Panel titulo="Por campo" extra="bbl">
             <Lectura>
               Cada campo con su diferido, el máximo que firmó el gerente para el período y cuánto tiene
               causa probada (la barra: por señal, declarado y, rayado, sin identificar). El cuadrado junto
-              a «máx.» marca el que lo pasó; junto a la cifra, el que no se puede publicar (el sello dice
+              a «máximo» marca el que lo pasó; junto a la cifra, el que no se puede publicar (el sello dice
               por qué). Un clic abre el campo.
             </Lectura>
             {lb.porCampo.map(f => {
@@ -97,7 +79,7 @@ export function Diferidos() {
                     ['Alto impacto', `${n0(f.altoImpacto)} bbl`], ['Máximo firmado', maximo], ['Publicable', bloqueado ? 'no' : 'sí']]}
                   className="mb-2 block w-full cursor-pointer text-left">
                   <div className="flex justify-between gap-2 text-[14px]">
-                    <span className="min-w-0 truncate">{c.nombre} <span className="text-[var(--tinta3)]">· <FueraDeMeta si={sobreMax} tamano={11} />{f.sinMeta ? SIN_META : `máx. ${n0(f.metaDiferido)} bbl`}</span></span>
+                    <span className="min-w-0 truncate">{c.nombre} <span className="text-[var(--tinta3)]">· <FueraDeMeta si={sobreMax} tamano={11} />{f.sinMeta ? SIN_META : `máximo ${n0(f.metaDiferido)} bbl`}</span></span>
                     <span className="tabular shrink-0"><FueraDeMeta si={bloqueado} tamano={10} />{n0(f.brecha)}<span className="sr-only"> bbl diferidos</span></span>
                   </div>
                   <div className="mt-1 flex h-2 overflow-hidden rounded-sm bg-[var(--panel2)]">
@@ -112,21 +94,21 @@ export function Diferidos() {
         ) : (
           // C5 · Un panel, una vez (X4 §3.6, punto 5): el factor de asignación mes a mes vive en
           // Producción («¿Cuadra?»); aquí su estado va dentro de «¿Se puede publicar?».
-          <Palancas lb={lb} base={base} />
+          <Palancas lb={lb} base={base} conMaximo />
         )}
       </div>
 
-      <div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
-        {ambito.global && <Palancas lb={lb} base={base} />}
+      <div className="mb-3 grid items-start gap-3 sm:mb-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">
+        {ambito.global && <Palancas lb={lb} base={base} conMaximo />}
         <ParetoTipos lb={lb} />
       </div>
 
       {/* Junto a los Paretos: el mismo total por tramo y por escalón (U2 §3.1; CHOKE-COMPLETO §6–§7). */}
-      <div className="mb-2.5">
+      <div className="mb-3 sm:mb-4">
         <PorTramo campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} onIdentificar={irA('causa')} />
       </div>
 
-      <div className="grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+      <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
         <ParetoEquipos lb={lb} global={ambito.global} onAbrir={abrir} />
         <ParetoPartes lb={lb} onIr={irA('bombas')} />
       </div>

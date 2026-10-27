@@ -13,7 +13,7 @@ import { saludDePartes, type SaludParte } from '@/entities/salud'
 import { saludDeEsp, senalesEsp } from '@/entities/esp'
 import { perfilBomba, paradasDe, esBomba, type PerfilBomba } from '@/entities/bombas'
 import {
-  prediccion, paradaMedida, riesgoAhora, estadoCampo,
+  prediccion, paradaMedida, riesgoAhora, estadoCampo, rangoDePeriodo,
   type Prediccion, type ParadaMedida, type Riesgo, type EstadoCampo, type Versiones,
 } from '@/entities/diferido'
 import { causaDeEvento, cuentaPorIdentificar, type Causa, type Contexto, type PorIdentificar } from '@/entities/causa-senal'
@@ -24,6 +24,7 @@ import { EQUIPOS } from '@/entities/equipos'
 import type { Senal } from '@/entities/vigia'
 import { AHORA, horasEntre } from '@/entities/reloj'
 import { perfilDe } from '@/entities/configuracion'
+import { enterosDelPeriodo } from '@/entities/redondeo'
 
 /** LA COSTURA: la única entrada de datos del front (src/shared/api).
  *
@@ -115,10 +116,21 @@ export const pedirPotencialReciente = (campo: string, ctx: Contexto): number =>
 export const pedirPotencialesRecientes = (campos: string[], ctx: Contexto): Record<string, number> =>
   Object.fromEntries(campos.map(id => [id, pedirPotencialReciente(id, ctx)]))
 
+/** K1 · H2 (pendiente de F1 y F2): la pregunta con el entero de su parada en el reparto del campo
+ *  (`enterosDelPeriodo`, entities/redondeo.ts) cuando empezó en el mes en curso: la misma cifra de Hoy, de
+ *  Pozos y del nivel 3 (LC-08 = 108, no 109). Una parada de antes no lo lleva: se dice el exacto redondeado. */
+export type PreguntaConEntero = Pregunta & { entero?: number }
+
 /** `GET /api/vistas/paradas/por-identificar?campos=a,b` · toda la historia:
  *  una pregunta sin responder no prescribe al cambiar de período. */
-export function pedirPreguntas(campos: string[], ctx: Contexto): Pregunta[] {
-  return libro(campos, new Date(calendario()[0]!.desde), AHORA, ctx).preguntas
+export function pedirPreguntas(campos: string[], ctx: Contexto): PreguntaConEntero[] {
+  const ps = libro(campos, new Date(calendario()[0]!.desde), AHORA, ctx).preguntas
+  const curso = rangoDePeriodo('curso')
+  const enteros = new Map(campos.map(c => [c, enterosDelPeriodo(c, curso.desde, curso.hasta, ctx).porEvento]))
+  return ps.map(p => {
+    const z = p.inicio >= curso.desde ? enteros.get(p.campoId) : undefined
+    return z && Object.hasOwn(z, p.id) ? { ...p, entero: z[p.id]! } : p
+  })
 }
 
 /** «Por identificar» con una sola cuenta para todas las pantallas, sobre las
@@ -244,6 +256,11 @@ export interface FilaPozo {
   diasDesdePrueba?: number
   /** En el período: todo lo que el pozo dejó de producir, sea cual sea la causa. */
   diferido: number
+  /** F3 · H2: el mismo diferido en enteros que suman (la regla de `redondeo.ts`): la suma de
+   *  los enteros de sus eventos en el reparto del campo; LC-08 dice 108 en todas partes. */
+  diferidoEntero: number
+  /** F3 · H2: el entero de cada evento del período en el reparto del campo (por id del evento). */
+  enteroPorEvento: Record<string, number>
   /** En el período: solo lo que costaron las fallas de su propia electrosumergible
    *  (por señal o declaradas). Una parada sin identificar o de otra causa del pozo
    *  no está aquí: ninguna señal se la probó a la ESP. Cuadra con la línea
@@ -258,6 +275,10 @@ export interface FilaPozo {
 /** Las filas de pozos de un campo en el período. */
 export function pedirPozos(campo: string, desde: Date, hasta: Date, ctx: Contexto): FilaPozo[] {
   const ts = tramosEntre([campo], desde, hasta, ctx)
+  // F3 · H2: los enteros de cada evento salen del reparto único del campo (F2, redondeo.ts); un
+  // evento que el reparto no trae (sin barriles en el período) cuenta su entero más cercano.
+  const z = enterosDelPeriodo(campo, desde, hasta, ctx)
+  const entero = (t: (typeof ts)[number]) => z.porEvento[t.evento.id] ?? Math.round(t.bbl)
   return pozosDe(campo).map(p => {
     const e = estadoAhora(p)
     const prueba = p.pruebas.length ? pruebaEn(p, AHORA.getTime()) : undefined
@@ -268,6 +289,8 @@ export function pedirPozos(campo: string, desde: Date, hasta: Date, ctx: Context
       crudoBpd: crudoAsignado(p), aguaBpd: aguaDePrueba(p), prueba,
       diasDesdePrueba: prueba ? (AHORA.getTime() - new Date(prueba.fecha).getTime()) / 86_400_000 : undefined,
       diferido: mios.reduce((a, t) => a + t.bbl, 0),
+      diferidoEntero: mios.reduce((a, t) => a + entero(t), 0),
+      enteroPorEvento: Object.fromEntries(mios.map(t => [t.evento.id, entero(t)])),
       diferidoEsp: mios.filter(t => t.causa.equipo === p.id && t.causa.tipo === 'electrosumergible').reduce((a, t) => a + t.bbl, 0),
       horasParado: mios.reduce((a, t) => a + t.horas * t.factor, 0),
       eventos: mios.length, salud,
@@ -382,7 +405,7 @@ export function useAsignacionPorPozo(campo: string, mes: string): AsignacionPozo
   return useDato(ASIGNACION, { campo, mes }, v(ctx), () => asignacionPorPozo(campo, mes, ctx))
 }
 
-export function usePreguntas(campos: string[]): Pregunta[] {
+export function usePreguntas(campos: string[]): PreguntaConEntero[] {
   const ctx = useCtx()
   return useDato(PREGUNTAS, { campos }, v(ctx), () => pedirPreguntas(campos, ctx))
 }

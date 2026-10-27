@@ -148,7 +148,8 @@ function DiaADia({ v }: { v: VistaResultados }) {
   return (
     <Tarjeta titulo="Producción día a día" extra="bbl/d · el punto oficial contra las pruebas y la meta" data-dia-a-dia={abierto ? 'abierto' : 'cerrado'}>
       <button type="button" aria-expanded={abierto} onClick={() => setAbierto(x => !x)}
-        className="no-imprimir mt-2 inline-flex min-h-9 cursor-pointer items-center gap-1 text-[15px] font-semibold text-[var(--tinta)] hover:underline">
+        // 44 px de blanco en el teléfono (A5).
+        className="no-imprimir mt-2 inline-flex min-h-11 cursor-pointer items-center gap-1 text-[15px] font-semibold text-[var(--tinta)] hover:underline sm:min-h-9">
         {abierto ? 'Ver menos' : 'Ver la producción día a día'} <span aria-hidden>{abierto ? '‹' : '›'}</span>
       </button>
       <div className={cn('mt-2', !abierto && 'hidden print:block')}>

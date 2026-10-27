@@ -18,19 +18,28 @@ import { chromium } from '@playwright/test'
 process.env.VITE_FUENTE = 'demo'
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 const SALIDA = `${RAIZ}docs/pantallas/`
-const ROLES = ['ger', 'prod', 'sup', 'oper', 'jefe', 'conf', 'tec', 'adm']
+const ROLES = ['ger', 'prod', 'sup', 'oper', 'jefe', 'conf', 'tec', 'reg', 'adm']
 
 /** Archivo y ruta; si hace falta, el botón que se toca antes de capturar, el
  *  elemento que se captura solo (en vez de la ventana) y otro tamaño de ventana. */
 const PANTALLAS = [
-  { archivo: 'resumen-gerente', ruta: '#/ger/resumen/ceiba~portafolio/curso' },
-  { archivo: 'diferidos', ruta: '#/ger/diferidos/ceiba/curso' },
+  // F4 (P-22): el Resumen, los Diferidos y la Producción del gerente se fundieron en La planta viva y
+  // Resultados (C5); su dirección vieja abría otra pantalla. Los nombres de archivo que ya muestra el README
+  // se quedan con la pantalla que los reemplaza; las pantallas nuevas llevan el suyo.
+  { archivo: 'planta-viva-gerente', ruta: '#/ger/planta-viva/ceiba/curso' },
+  { archivo: 'resumen-gerente', ruta: '#/ger/resultados/ceiba~portafolio/curso' },
+  { archivo: 'diferidos', ruta: '#/prod/diferidos/ceiba/curso' },
+  { archivo: 'hoy-supervisor', ruta: '#/sup/hoy/ceiba/curso' },
+  { archivo: 'equipos-confiabilidad', ruta: '#/conf/equipos/ceiba' },
   { archivo: 'bombas-vigia', ruta: '#/conf/bombas/morichal/curso' },
-  { archivo: 'ficha-bomba-parada', ruta: '#/sup/bombas/ceiba/curso/P-201B' },
+  // El detalle de una bomba es su nivel 3 (C4): la dirección de antes (`#/sup/bombas/…/P-201B`) abre aquí.
+  { archivo: 'ficha-bomba-parada', ruta: '#/sup/equipos/ceiba/P-201B' },
   { archivo: 'turno', ruta: '#/sup/turno/ceiba/curso' },
   { archivo: 'whatsapp-operario', ruta: '#/oper/causa/ceiba/curso', boton: 'Ver mi chat de WhatsApp', elemento: /^Chat de WhatsApp de / },
   { archivo: 'confiabilidad', ruta: '#/conf/confiabilidad/morichal/curso' },
-  { archivo: 'ordenes-sap-tecnico', ruta: '#/tec/trabajo/ceiba/curso' },
+  // Mi trabajo se fundió en Hoy (F1, P-trabajo-1): las órdenes de SAP del técnico son tarjetas de su Hoy.
+  { archivo: 'ordenes-sap-tecnico', ruta: '#/tec/hoy/ceiba/curso' },
+  { archivo: 'reporte-regulatorio', ruta: '#/reg/regulatorio/ceiba/curso' },
   // Septiembre, cerrado: el mes en curso va en su día 2 y su gráfica tendría dos puntos.
   { archivo: 'produccion-cuadre', ruta: '#/prod/produccion/ceiba/cerrado' },
   // El dibujo pide 1184 px: a 1280 se desplaza de lado; a 1512 cabe entero.

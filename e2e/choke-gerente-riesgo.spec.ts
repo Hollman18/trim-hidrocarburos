@@ -101,10 +101,12 @@ test('gerente: dónde se trabó cada campo suma el diferido del libro, sin códi
   f.cerrar()
 })
 
+// K1 · P-10: el Riesgo de confiabilidad y del jefe se fundió en su Equipos (debajo de la lista); sus direcciones abren ahí.
 test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta lo mismo que en su ficha', async ({ flujo: f }) => {
   /** Las filas de la lista de un campo, en el orden en que se ven (las de «ver más» también están: van al papel). */
   const filas = (campo: string) => f.page.evaluate(c => [...document.querySelectorAll(`main [data-si-falla="${c}"] [data-fila-critica]`)].map(e => ({
     equipo: e.getAttribute('data-fila-critica') ?? '', grupo: e.getAttribute('data-grupo') ?? '', bpd: e.getAttribute('data-bpd') ?? '', costo: e.getAttribute('data-costo') ?? '', texto: (e as HTMLElement).innerText,
+    puesto: e.getAttribute('data-puesto') ?? '',
   })), campo)
   /** D6 (B-06): tres grupos en su orden (lo medido, con puesto; los techos; lo que no tiene dato) y,
    *  dentro de cada uno, de mayor a menor. Un techo no se compara con una cifra medida. */
@@ -131,6 +133,7 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
   await test.step('Confiabilidad · La Ceiba (P-201B parada)', async () => {
     await f.abrir('/#/conf/riesgo/ceiba/curso')
     await f.esperarTexto('Si falla hoy')
+    f.ok((await f.hash()).startsWith('#/conf/equipos/ceiba'), `la dirección del Riesgo de confiabilidad abre su Equipos (${await f.hash()})`)
     const xs = await filas('ceiba')
     f.ok(xs.length >= 20, `la lista trae todos los equipos del campo (${xs.length})`)
     f.ok(ordenada(xs), 'en tres grupos (lo medido, los techos, sin dato) y, en cada uno, de mayor a menor por lo que el campo deja de sacar por día')
@@ -140,12 +143,19 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
       && xs.filter(x => x.grupo === 'techo').every(x => /hasta\s*[\d.]+\s*bbl\/d/.test(x.texto)), 'los techos dicen «hasta …» y van aparte de lo medido')
     f.ok(!xs.some(x => x.equipo === 'P-201B'), 'P-201B, que ya está parada, no entra en la lista: va arriba, aparte')
     const t = await f.texto()
-    f.ok(t.includes('modelo choke') && /Cambió hoy: P-201A y P-201C subieron al puesto \d+/.test(t), 'confiabilidad ve «modelo choke» y la línea «Cambió hoy»')
-    f.ok(t.includes('¿Dónde va el próximo instrumento?'), 'y lo que decide: dónde va el próximo instrumento (U2 §6.4)')
-    // El puesto que dice «Cambió hoy» es el de la fila.
-    const puesto = t.match(/subieron al puesto (\d+)/)?.[1]
+    // T-11 (F2): «modelo choke» ya no es un rótulo: es la ⓘ pegada al título «Si falla hoy», solo de confiabilidad.
+    f.ok(await f.page.locator('#si-falla-hoy-titulo').getByRole('img', { name: /^Modelo choke:/ }).count() === 1 && !/modelo choke/i.test(t),
+      'confiabilidad ve la ⓘ del modelo choke, sin el rótulo a la vista')
+    // F3 · P-02 y K1 · P-10: lo que decía «Cambió hoy» (P-201A y P-201C subieron al primer puesto porque P-201B está
+    // parada, y no tienen instrumento) y dónde va el próximo instrumento los dice la cabeza de su Equipos y cada fila.
+    const frase = await f.page.locator('main [data-primero] [data-frase]').innerText()
+    f.ok(/Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila\. Ahí va el próximo instrumento\./.test(frase),
+      `y lo que decide, arriba: lo que cambió hoy y dónde va el próximo instrumento (U2 §6.4): «${frase}»`)
+    f.ok(await f.page.locator('main [data-cambio-hoy]').count() === 0, 'sin la línea «Cambió hoy» repetida')
+    // Subieron al primer puesto: P-201A va primera en «Si falla hoy» (T-10: el puesto, en data-puesto) y su fila lo dice.
     const fila = xs.find(x => x.equipo === 'P-201A')
-    f.ok(!!fila && !!puesto && fila.texto.trim().startsWith(puesto), `P-201A está en el puesto que dice «Cambió hoy» (${puesto})`)
+    f.ok(!!fila && fila.puesto === '1' && xs[0]?.equipo === 'P-201A', `P-201A está en el primer puesto (${fila?.puesto})`)
+    await expect(f.page.locator('main [data-fila-equipo="P-201A"]')).toContainText('sube porque P-201B está parada')
     const parada = await f.page.evaluate(() => {
       const p = document.querySelector('main [data-parado="P-201B"]')
       return { perdiendo: Number(p?.getAttribute('data-perdiendo')), texto: (p as HTMLElement | null)?.innerText ?? '' }
@@ -160,24 +170,24 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
   await test.step('Confiabilidad · Morichal Norte (P-201B en marcha)', async () => {
     await f.ir('#/conf/riesgo/morichal/curso')
     await f.esperarTexto('Si falla hoy')
+    f.ok((await f.hash()).startsWith('#/conf/equipos/morichal'), `abre Equipos de Morichal (${await f.hash()})`)
+    f.ok((await f.texto()).includes('¿Dónde va el próximo instrumento?'), 'donde la frase del primero no lo dice, «¿Dónde va el próximo instrumento?» va arriba de Equipos')
     const xs = await filas('morichal')
     f.ok(ordenada(xs), 'Morichal: de mayor a menor')
     const p = xs.find(x => x.equipo === 'P-201B')
     const bpd = p ? Math.round(Number(p.bpd)).toLocaleString('es-CO') : '?'
     const costo = p && p.costo !== '' ? Math.round(Number(p.costo)).toLocaleString('es-CO') : '?'
     f.ok(!!p && p.texto.includes(`${bpd} bbl/d`) && p.texto.includes(`≈ ${costo} bbl`), `la fila de P-201B: ${bpd} bbl/d si falla hoy, una falla ≈ ${costo} bbl`)
-    // La misma cifra de «En riesgo», en la misma pantalla.
-    const t = await f.texto()
-    // El panel «Equipos que avisan» (el segundo: el primero es el rótulo de su conteo, arriba) hasta el título de «Si falla hoy».
-    const ini = t.indexOf('Equipos que avisan', t.indexOf('Se deja de producir ahora, por causa'))
-    const enRiesgo = t.slice(ini, t.search(/\nSi falla hoy\n/) > ini ? t.search(/\nSi falla hoy\n/) : undefined)
-    const deEnRiesgo = enRiesgo.match(/P-201B[\s\S]*?≈ ([\d.]+) bbl si falla hoy/)?.[1]
+    // La misma cifra de «En riesgo», en la misma vista: el panel «Equipos que avisan» de «Qué está en riesgo».
+    // D-2 (G-16): el costo de una falla, en bbl, se llama «le costaría la falla».
+    const enRiesgo = await f.page.locator('main [data-riesgo] section', { has: f.page.getByRole('heading', { name: 'Equipos que avisan', exact: true }) }).innerText()
+    const deEnRiesgo = enRiesgo.match(/P-201B[\s\S]*?≈ ([\d.]+) bbl le costaría la falla/)?.[1]
     f.ok(deEnRiesgo === costo, `«Equipos que avisan» dice lo mismo de una falla de P-201B (${deEnRiesgo} y ${costo} bbl)`)
     f.ok(/P-201B[\s\S]{0,200}?se trabaría en la planta/.test(enRiesgo), '«Equipos que avisan» dice dónde se trabaría')
     const colchonFila = p?.texto.match(/(\d+(?:,\d)?) h/)?.[1]
     const tf = await ficha('morichal')
     const m = tf.match(/Si falla hoy:\s*([\d.]+) bbl\/d después de ([\d,]+) h de colchón/)
-    const o = tf.match(/pierde ([\d.]+) bbl\/d en este orden/)
+    const o = tf.match(/deja de producir ([\d.]+) bbl\/d en este orden/)
     f.ok(m?.[1] === bpd && o?.[1] === bpd, `el nivel 3 de P-201B dice lo mismo si falla hoy y si se para ahora (${m?.[1]}, ${o?.[1]} y ${bpd} bbl/d)`)
     f.ok(m?.[2] === colchonFila, `y el mismo colchón (${m?.[2]} h y ${colchonFila} h)`)
   })
@@ -185,10 +195,12 @@ test('confiabilidad y jefe: «Si falla hoy» de mayor a menor, y P-201B cuesta l
   await test.step('Jefe de mantenimiento · La Ceiba', async () => {
     await f.ir('#/jefe/riesgo/ceiba/curso')
     await f.esperarTexto('Si falla hoy')
+    f.ok((await f.hash()).startsWith('#/jefe/equipos/ceiba'), `la dirección del Riesgo del jefe abre su Equipos (${await f.hash()})`)
     const xs = await filas('ceiba')
     f.ok(xs.length >= 20 && ordenada(xs), `el jefe ve la misma lista, de mayor a menor (${xs.length})`)
     const t = await f.texto()
     f.ok(/Ojo: P-201A y P-201C valen más/.test(t) && t.includes('no conviene intervenirlas hoy'), 'y lo que decide: no intervenir hoy lo que hoy vale más (U2 §6.4)')
+    f.ok(await f.page.locator('main [data-decide="jefe"]').count() === 1, 'lo dice una vez, arriba de la lista (no se repite en «Si falla hoy»)')
     f.ok(!/choke/i.test(t), 'el jefe no ve «choke»: es rótulo solo de confiabilidad, regulatorio y el administrador')
   })
 
@@ -216,8 +228,9 @@ test.describe('teléfono', () => {
     for (const [ruta, clic] of [
       ['#/ger/resultados/ceiba~portafolio/curso', 'Por dónde se trabó'],
       ['#/ger/resultados/ceiba/cerrado', 'Por dónde se trabó'],
-      ['#/conf/riesgo/ceiba/curso', 'ver «Si falla hoy»'],
-      ['#/jefe/riesgo/ceiba~portafolio/curso', ''],
+      // K1 · P-10: Riesgo de confiabilidad y del jefe vive en su Equipos, debajo de la lista.
+      ['#/conf/equipos/ceiba', 'ver «Si falla hoy»'],
+      ['#/jefe/equipos/ceiba~portafolio', ''],
       ['#/prod/diferidos/ceiba~portafolio/curso', 'Por dónde se trabó'],
       ['#/conf/diferidos/morichal/curso', 'Cada tramo por qué no se produjo'],
     ] as const) {

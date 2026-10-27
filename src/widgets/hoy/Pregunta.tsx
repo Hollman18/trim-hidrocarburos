@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import type { PreguntaHoy, OpcionHoy, ModoHoy } from '@/shared/api/hoy'
 import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
@@ -13,7 +13,7 @@ export type RespuestaHoy =
 
 type Paso =
   | { tipo: 'inicio' }
-  | { tipo: 'modos'; texto: string; parte: string; modos: ModoHoy[] }
+  | { tipo: 'modos'; texto: string; pregunta: string; parte: string; modos: ModoHoy[] }
   | { tipo: 'partes'; partes: Extract<OpcionHoy, { tipo: 'partes' }>['partes'] }
   | { tipo: 'causas'; causas: Extract<OpcionHoy, { tipo: 'causas' }>['causas'] }
 
@@ -34,16 +34,30 @@ function Opcion({ titulo, dato, sigue, onClick, grande }: { titulo: string; dato
   )
 }
 
-/** Una pregunta de una sola respuesta (X5 §5.8): un toque registra. La parte de
- *  una bomba lleva, además, «¿qué vio?»: el libro guarda la parte con lo que se
- *  vio (ISO 14224), así que son dos toques (U1 §2.2, caso B). «Todavía no sé»
- *  siempre está. Lo que encontró se escribe solo si quiere (y no sale de TRIM, D2). */
-export function Pregunta({ q, onRespuesta, grande = false, quien }: {
+/** Una pregunta de una sola respuesta (X5 §5.8): un toque. La parte de una bomba es
+ *  un toque (imagen 5; P-07) y «Sello mecánico: ¿qué vio?» entra como la pregunta
+ *  siguiente, con «Todavía no sé»: el libro guarda la parte con lo que se vio
+ *  (ISO 14224) al contestar esa. `onParte` le avisa a quien la contiene (la cuenta
+ *  «Pregunta 2 de 5», el aviso con «Deshacer», que vuelve a las partes). «Todavía
+ *  no sé» siempre está. Lo que encontró se escribe solo si quiere (y no sale de TRIM, D2). */
+export function Pregunta({ q, onRespuesta, grande = false, quien, onParte, conTitulo = false }: {
   q: PreguntaHoy; onRespuesta: (r: RespuestaHoy) => void; grande?: boolean
   /** «Un toque y queda a nombre de …». */
   quien?: string
+  /** Se tocó una parte: la pregunta que sigue y cómo volver a la de antes. Con `null`, se volvió. */
+  onParte?: (p: { texto: string; pregunta: string; volver: () => void } | null) => void
+  /** La pregunta de lo que vio lleva su título aquí (en la tarjeta; el operador la pone en la banda). */
+  conTitulo?: boolean
 }) {
-  const [paso, setPaso] = useState<Paso>({ tipo: 'inicio' })
+  const [paso, setPasoLocal] = useState<Paso>({ tipo: 'inicio' })
+  const titulo = useRef<HTMLParagraphElement>(null)
+  const setPaso = (p: Paso) => {
+    setPasoLocal(p)
+    if (p.tipo === 'modos') onParte?.({ texto: p.texto, pregunta: p.pregunta, volver: () => { setPasoLocal({ tipo: 'inicio' }); onParte?.(null) } })
+    else onParte?.(null)
+  }
+  // A2: al entrar la pregunta siguiente, el foco va a ella (y el lector la dice).
+  useEffect(() => { if (paso.tipo !== 'inicio') titulo.current?.focus() }, [paso])
   const [nota, setNota] = useState('')
   const [conNota, setConNota] = useState(false)
   const [otro, setOtro] = useState<ModoHoy | null>(null)
@@ -56,7 +70,7 @@ export function Pregunta({ q, onRespuesta, grande = false, quien }: {
   const escoger = (o: OpcionHoy) => {
     setError('')
     switch (o.tipo) {
-      case 'parte': return setPaso({ tipo: 'modos', texto: o.texto, parte: o.parte, modos: o.modos })
+      case 'parte': return setPaso({ tipo: 'modos', texto: o.texto, pregunta: o.pregunta, parte: o.parte, modos: o.modos })
       case 'partes': return setPaso({ tipo: 'partes', partes: o.partes })
       case 'causas': return setPaso({ tipo: 'causas', causas: o.causas })
       case 'texto': return responderLibro(libre ? `${o.valor}. ${libre}` : o.valor, o.texto.toLowerCase())
@@ -70,6 +84,8 @@ export function Pregunta({ q, onRespuesta, grande = false, quien }: {
   }
 
   const lista = 'grid gap-2.5'
+  // «Todavía no sé» también en «¿qué vio?»: la pregunta queda abierta (no se escribe la parte sola).
+  const noSe = q.opciones.find(o => o.tipo === 'no-se')
   const volver = (
     <button type="button" onClick={() => { setPaso({ tipo: 'inicio' }); setOtro(null); setError('') }}
       className="inline-flex min-h-11 cursor-pointer items-center gap-1 self-start text-[15px] font-semibold text-[var(--tinta)]">
@@ -90,17 +106,20 @@ export function Pregunta({ q, onRespuesta, grande = false, quien }: {
       {paso.tipo === 'modos' && (
         <>
           {volver}
-          <p className="text-[17px] font-semibold text-[var(--tinta)]">{paso.texto}: ¿qué vio?</p>
-          <div className={lista}>{paso.modos.map(m => <Opcion key={m.codigo} titulo={m.texto} grande={grande} onClick={() => modo(paso, m)} />)}</div>
+          <p ref={titulo} tabIndex={-1} data-pregunta-sigue className={cn('font-semibold text-[var(--tinta)] outline-none', conTitulo ? 'text-[17px]' : 'sr-only')}>{paso.pregunta}</p>
+          <div className={lista}>
+            {paso.modos.map(m => <Opcion key={m.codigo} titulo={m.texto} grande={grande} onClick={() => modo(paso, m)} />)}
+            {noSe && <Opcion titulo={noSe.texto} dato={noSe.dato} grande={grande} onClick={() => onRespuesta({ via: 'no-se' })} />}
+          </div>
           {otro && <button type="button" onClick={() => modo(paso, otro)}
-            className="min-h-12 cursor-pointer self-start rounded-full bg-[var(--primario)] px-5 text-[16px] font-semibold text-[var(--primario-sobre)]">Registrar</button>}
+            className="min-h-12 cursor-pointer self-start rounded-full bg-[var(--primario)] px-5 text-[16px] font-semibold text-[var(--primario-sobre)]">Contestar</button>}
         </>
       )}
       {paso.tipo === 'partes' && (
         <>
           {volver}
           <div className={lista}>{paso.partes.map(p => <Opcion key={p.parte} titulo={p.texto} sigue grande={grande}
-            onClick={() => setPaso({ tipo: 'modos', texto: p.texto, parte: p.parte, modos: p.modos })} />)}</div>
+            onClick={() => setPaso({ tipo: 'modos', texto: p.texto, pregunta: p.pregunta, parte: p.parte, modos: p.modos })} />)}</div>
         </>
       )}
       {paso.tipo === 'causas' && (

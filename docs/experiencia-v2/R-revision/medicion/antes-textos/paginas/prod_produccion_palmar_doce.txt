@@ -1,0 +1,239 @@
+#/prod/produccion/palmar/doce
+
+Todos mis campos
+El Palmar
+Resultados
+DATOS DE DEMOSTRACIÓN
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+Últimos 12 meses
+Exportar
+nada anormal
+3
+no se puede publicar
+El Palmar · factor fuera de banda
+producción real
+3
+1.180.973
+bbl
+meta 1.186.250
+3.236 bbl/d · 98,5 % del potencial
+potencial del libro
+1.198.980bbl
+3.285 bbl/d
+real · 1 de oct
+3.186bbl
+La tubería del campo
+qué limita hoy al campo
+potenciales con las pruebas vigentes al 2 de oct · capacidades del demo, sin firmar
+Punto de medición oficial (LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho): en línea; el último día completo dio 3.186 bbl
+Ver como tabla
+Yacimiento
+Pozos · 7
+Planta o estación
+Afuera
+Sin identificar
+→
+→
+→
+→ venta
+0
+bbl en el período
+va con los pozos
+◄ limita
+3.321bbl/d
+con las pruebas de los pozos
+3.600bbl/d
+le sobran
+279
+dato del demo, sin firmar
+crudo 3.600 · el menor
+agua ≈ 4.028 (16.000 bbl/d de agua)
+Ver la tubería del agua
+4.200bbl/d
+le sobran
+879
+dato del demo, sin firmar
+El oleoducto o el transportador: 4.200
+El terminal o el cliente (mercado): 5.000
+
+A la planta le sobran 279 bbl/d: lo que den de más los pozos pasa, hasta 279 bbl/d.
+
+Pasa hoy
+3.277 bbl/d
+Se deja de producir ahora
+0 bbl/d
+
+Nada: todos los pozos con prueba están produciendo.
+
+Los pozos dan 3.321 según sus pruebas: pasan 3.277, se pierden 0 y los otros 44 son lo que las pruebas dan de más que el medidor oficial.
+
+Se trabó en el período
+Últimos 12 meses
+18.007 bbl
+Ver por dónde se trabó
+en el yacimiento
+0
+en los pozos
+13.502
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(PA-01 · PA-06 · PA-07)
+en la planta
+4.505
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(V-101)
+afuera
+0
+sin identificar
+0
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+Qué limitó, día por día
+últimos 12 meses
+Sin cambios: en el período limitaron los pozos todos los días.
+limitó
+1.313
+0
+1 de oct de 2025
+16 de nov de 2025
+1 de ene
+16 de feb
+3 de abr
+19 de may
+4 de jul
+19 de ago
+30 de sept
+Franja y barras:
+en el yacimiento
+(solo barras)
+Po · en los pozos
+Pl · en la planta
+Af · afuera
+sin identificar
+Día a día
+bbl/d
+1,0 k
+2,0 k
+3,0 k
+4,0 k
+1 de oct de 2025
+23 de nov de 2025
+15 de ene
+9 de mar
+1 de may
+23 de jun
+15 de ago
+30 de sept
+real medido
+potencial
+meta firmada
+diferido
+Lo que no se produjo, por tipo
+últimos 12 meses
+eficiencia de producción
+95,5 %
+1.180.973 de 1.236.972 bbl que el campo podía dejar pasar
+lo no planeado se llevó
+1,4 %
+17.112 bbl en paradas no planeadas
+Lo que dan los pozos según sus pruebas
+1.236.972 bbl
+− Lo que las pruebas dan de más que el medidor oficial
+37.992
+= El potencial del libro · lo mismo, medido como el punto oficial (pruebas × factor de asignación)
+1.198.980 bbl
+− El yacimiento y los proyectos
+0
+− Frecuencia bajada: el levantamiento sin optimizar
+0
+− Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+543
+− Paradas no planeadas: fallas, disparos y terceros
+Lo que TRIM baja
+17.112
+− Restricción sin falla: nominación o despacho
+0
+− Sin identificar: falta que una persona diga qué pasó
+352
+− Sin explicar: el inventario entre días
+0
+= Lo que salió por el punto de medición oficial
+1.180.973 bbl
+
+352 bbl tienen el tramo como propuesta de TRIM: falta que una persona conteste la pregunta que lo decide.
+
+Ver por tramo
+Medición oficial
+El Palmar
+corte de agua: laboratorio
+factor 1,008 · banda ±15 %
+LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho
+Factor de asignación
+contra su banda
+0,75
+0,85
+1,00
+1,15
+1,25
+OCT
+NOV
+DIC
+ENE
+FEB
+MAR
+ABR
+MAY
+JUN
+JUL
+AGO
+SEP
+OCT
+¿Cuadra? Mes por mes
+Mes	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+Octubre 2025	104.691	104.691	0	0	100,0 %	100.750
+Noviembre 2025	
+3
+96.525	97.934	1.409	0	98,6 %	97.500
+Diciembre 2025	106.400	107.499	1.099	0	99,0 %	100.750
+Enero 2026	
+3
+96.542	101.832	5.290	0	94,8 %	100.750
+Febrero 2026	97.458	97.458	0	0	100,0 %	91.000
+Marzo 2026	105.965	105.965	0	0	100,0 %	100.750
+Abril 2026	
+3
+81.033	82.043	1.010	0	98,8 %	97.500
+Mayo 2026	
+3
+95.777	98.895	3.118	0	96,8 %	100.750
+Junio 2026	
+3
+93.883	95.974	2.091	0	97,8 %	97.500
+Julio 2026	103.259	103.259	0	0	100,0 %	100.750
+Agosto 2026	102.725	102.725	0	0	100,0 %	100.750
+Septiembre 2026	
+3
+96.715	100.705	3.990	0	96,0 %	97.500
+Cuadre · asignación oficial
+mes cerrado
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 96.715 bbl · 7 pozos

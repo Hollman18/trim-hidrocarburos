@@ -1,0 +1,133 @@
+#/adm/conectores/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Configurar
+DATOS DE DEMOSTRACIÓN
+Conectores y tags del campo
+hoy, 2 de oct · datos de las 14:00
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+SISTEMAS CORPORATIVOS
+sincronizado 2 de oct, 13:58
+SAP S/4HANA · Mantenimiento (PM)
+conectado
+TRIM → SAP · avisos
+5 en total
+SAP → TRIM · órdenes
+18 órdenes · 1 abierta
+SAP → TRIM · horas
+132,0 h
+SAP → TRIM · repuestos
+5 materiales
+PLC ↔ SAP · equipos
+16 de 16
+CATÁLOGOS DE DAÑO
+
+Bomba de reinyección
+5 partes (cat. B) · 11 daños (cat. C) · 5 causas (cat. 5)
+
+Electrosumergible
+5 partes (cat. B) · 7 daños (cat. C) · 5 causas (cat. 5)
+
+WhatsApp Business
+conectado
+Número
++57 601 555 0100
+verificado por Meta
+Respuestas hoy
+0 · webhook activo
+Últimas 24 h
+14 enviados
+5 personas reciben alertas
+PLANTILLAS APROBADAS · UTILIDAD
+trim_equipo_parado
+TRIM · {equipo} de {campo} paró a las {hora}. {consecuencia}
+trim_electrosumergible_parada
+TRIM · {equipo} de {campo} (electrosumergible) paró a las {hora}. {consecuencia}
+trim_pozos_cerrandose
+TRIM · Por {equipo} parado se empezaron a cerrar pozos de {campo} a las {hora}.
+trim_que_se_dano
+TRIM · {equipo} de {campo} paró el {fecha}. Ninguna señal dice qué se dañó. ¿Qué encontró? Responda con un número. {opciones}
+trim_recordatorio_causa
+TRIM · Recordatorio: {equipo} sigue sin causa. Antes de arrancar, diga {pregunta}. Responda con un número. {opciones}
+ver 5 más
+BORDES CONECTADOS
+2
+TAGS REGISTRADOS
+33
+
+30 asociados
+
+POR ASOCIAR
+3
+
+sin equipo resuelto
+
+EQUIPOS DEL CAMPO
+8
+
+del registro de ingeniería
+
+BORDES
+EPIC-CEIBA-02
+GRV-EPIC-PR1 · serie GRVCEI9003 · firmware 3.6.0 · enlace starlink · buffer 48 h
+3 tags
+reportó hace instantes
+EPIC-CEIBA-01
+GRV-EPIC-PR1 · serie GRVCEI0016 · firmware 3.6.2 · enlace starlink · buffer 48 h
+30 tags
+reportó hace instantes
+Inscribir un borde nuevo
+TAGS POR ASOCIAR
+3 de 3 con sugerencia
+Aplicar las 3
+XI-1017
+Nivel de interfase · % · opc-ua · cada 5 s · EPIC-CEIBA-02
+sugerido K-101
+sin asociar
+C-401 · Compresor de gas
+H-302 · Tratador térmico
+K-101 · Sistema de aire de instrumentos
+LACT-01 · Unidad LACT · punto de medición oficial
+P-201B · Bomba multietapa de transferencia de agua
+SE-2 · Pórtico 13,8 kV · subestación 2
+TK-102 · Tanque de crudo en especificación
+V-101 · Separador trifásico
+Asociar
+XP-4016
+Presión de descarga · psi · opc-ua · cada 5 s · EPIC-CEIBA-02
+sugerido C-401
+sin asociar
+C-401 · Compresor de gas
+H-302 · Tratador térmico
+K-101 · Sistema de aire de instrumentos
+LACT-01 · Unidad LACT · punto de medición oficial
+P-201B · Bomba multietapa de transferencia de agua
+SE-2 · Pórtico 13,8 kV · subestación 2
+TK-102 · Tanque de crudo en especificación
+V-101 · Separador trifásico
+Asociar
+XT-1017
+Presión diferencial · psi · opc-ua · cada 5 s · EPIC-CEIBA-02
+sugerido K-101
+sin asociar
+C-401 · Compresor de gas
+H-302 · Tratador térmico
+K-101 · Sistema de aire de instrumentos
+LACT-01 · Unidad LACT · punto de medición oficial
+P-201B · Bomba multietapa de transferencia de agua
+SE-2 · Pórtico 13,8 kV · subestación 2
+TK-102 · Tanque de crudo en especificación
+V-101 · Separador trifásico
+Asociar

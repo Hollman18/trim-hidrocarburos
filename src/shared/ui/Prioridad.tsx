@@ -1,5 +1,6 @@
 import type { Severidad, EstadoDispositivo } from '@/entities/tipos'
 import { NOMBRE_PRIORIDAD, DE_ESTADO } from '@/shared/lib/prioridad'
+import { cn } from '@/shared/lib/cn'
 
 /** ISA-101 e ISA-18.2: la condición se codifica tres veces — color, forma y
  *  número — para que se lea sin depender del color: daltonismo, una pantalla
@@ -83,9 +84,12 @@ export function MarcaCondicion({ c, tamano = 14, className, decorativa, etiqueta
   c: Condicion; tamano?: number; className?: string; decorativa?: boolean; etiqueta?: string
 }) {
   const nombre = decorativa ? { 'aria-hidden': true } : { role: 'img', 'aria-label': etiqueta ?? NOMBRE_CONDICION[c] }
+  // H19: ninguna marca de menos de 12 px en el escritorio ni de 14 en el teléfono
+  // (X2 §4.2; X5 §5.6). Así no hay que cuidar el tamaño en cada sitio que la usa.
+  const t = Math.max(tamano, 12)
   return (
-    <svg width={tamano} height={tamano} viewBox="0 0 14 14" {...nombre} className={className}
-      style={{ flexShrink: 0, overflow: 'visible' }}>
+    <svg width={t} height={t} viewBox="0 0 14 14" {...nombre} className={cn('max-sm:size-[max(14px,var(--t-marca))]', className)}
+      style={{ flexShrink: 0, overflow: 'visible', '--t-marca': `${t}px` } as React.CSSProperties}>
       <Forma c={c} />
     </svg>
   )

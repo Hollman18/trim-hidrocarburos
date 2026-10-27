@@ -29,12 +29,18 @@ const palabra = (c: CondicionFranja, n: number, corta: boolean): string => {
   }
 }
 
+/** H13 (regla 1, nada inventado; X2 E2 y C1): «sin comunicación» solo sabe hoy
+ *  del computador de flujo del punto de medición oficial (`condiciones.ts`). El
+ *  0 no es de todos los tags del campo: la píldora dice su alcance. */
+const ALCANCE_SIN_COM = 'TRIM todavía solo sabe si llega el dato del punto de medición oficial.'
+
 function Cuenta({ c, n, equipos }: { c: CondicionFranja; n: number; equipos: EquipoEnFranja[] }) {
   const { abierto, setAbierto, contenedor, id, propsBoton } = useDesplegable()
   const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo), campoId = useApp(s => s.campoId)
   const ambito = useAmbito()
   const texto = `${n} ${palabra(c, n, false)}`
   const soloForma = c === 'sin-comunicacion' && n === 0
+  const sinCom = c === 'sin-comunicacion'
   const abrir = (e: EquipoEnFranja) => {
     // Desde «Todos mis campos», la ficha es de su campo: se pasa a él y se abre.
     if (e.campoId !== campoId || ambito.global) setCampo(e.campoId)
@@ -43,13 +49,16 @@ function Cuenta({ c, n, equipos }: { c: CondicionFranja; n: number; equipos: Equ
   }
   return (
     <div ref={contenedor} className="relative max-sm:static">
-      <button {...propsBoton} disabled={n === 0} aria-label={n ? `${texto}: ver la lista` : texto}
-        className={cn('inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] pl-[11px] pr-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--linea)] max-sm:h-[30px] max-sm:gap-1.5 max-sm:pl-2 max-sm:pr-2.5 max-sm:text-[13px]',
+      <button {...propsBoton} disabled={n === 0} aria-label={n ? `${texto}: ver la lista` : sinCom ? `${texto}. ${ALCANCE_SIN_COM}` : texto}
+        title={sinCom ? ALCANCE_SIN_COM : undefined}
+        className={cn('toque inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-full bg-[var(--panel)] pl-[11px] pr-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--linea)] max-sm:h-[30px] max-sm:gap-1.5 max-sm:pl-2 max-sm:pr-2.5 max-sm:text-[13px]',
           n ? 'cursor-pointer text-[var(--tinta)] hover:bg-[var(--panel2)]' : 'cursor-default text-[var(--tinta2)]')}>
         <MarcaCondicion c={MARCA[c]} tamano={14} decorativa />
         <b className="font-bold">{n}</b>
         <span className={cn(c === 'atencion' && 'max-sm:hidden', soloForma && 'max-sm:hidden')}>{palabra(c, n, false)}</span>
         {c === 'atencion' && <span className="sm:hidden">{palabra(c, n, true)}</span>}
+        {/* El alcance, en el escritorio: «· medidor oficial». */}
+        {sinCom && <span data-alcance className="text-[var(--tinta2)] max-lg:hidden">· medidor oficial</span>}
       </button>
       {abierto && n > 0 && (
         <div id={id} role="group" aria-label={texto}

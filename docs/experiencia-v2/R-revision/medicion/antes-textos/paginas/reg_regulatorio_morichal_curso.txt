@@ -1,0 +1,164 @@
+#/reg/regulatorio/morichal/curso
+
+Todos mis campos
+Morichal Norte
+DATOS DE DEMOSTRACIÓN
+Reporte al regulador
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+3
+No se puede publicar todavía
+El período incluye días sin cierre publicado.
+solo lectura
+Exportar CSV
+Árbol de causas · como la circular
+modelo choke
+
+1.253 bbl
+6 filas de paradas_pozo · 5 paradas
+0 bbl con los 6 pasos confirmados (0 %)
+
+1. Quién (resp_par)
+→
+2. Dónde se trabó (choke_mod)
+→
+3. Qué pasó (dif_perd)
+→
+4. ¿Planeada? (pla_no_plan)
+→
+5. Causa (cau_niv1)
+→
+6. Detalle (cau_niv2)
+Operador · Mantenimientoresp_par Operador-Mantenimiento · En el pozochoke_mod POZO
+1.167 
+bbl,
+93 %
+del período
+Diferidadif_perd DIFERIDA · No planeadapla_no_plan NO PLANEADA
+1.167 
+bbl,
+93 %
+del período
+No planeada - Mecánica subsuelocau_niv1 NP_SUB · Falla ESPcau_niv2 Falla ESP
+1.095 
+bbl,
+87 %
+del período
+No planeada - Eléctrica internacau_niv1 NP_ENINT
+72 
+bbl,
+6 %
+del período
+Falta el detalle
+72 
+bbl,
+6 %
+del período
+Pérdida: TRIM todavía no tiene registro de pérdidasdif_perd PERDIDA
+0 
+bbl
+Falta quién · En el pozochoke_mod POZO
+86 
+bbl,
+7 %
+del período
+Diferidadif_perd DIFERIDA
+86 
+bbl,
+7 %
+del período
+Falta saber si fue planeada
+86 
+bbl,
+7 %
+del período
+Falta la causa
+86 
+bbl,
+7 %
+del período
+Falta el detalle
+86 
+bbl,
+7 %
+del período
+Pérdida: TRIM todavía no tiene registro de pérdidasdif_perd PERDIDA
+0 
+bbl
+
+= el diferido del libro (Σ de las paradas del período)
+1.253 bbl
+
+Puntos de medición oficial
+3 en Morichal Norte
+
+FQI-0101 · computador de flujo de la unidad LACT-01 · corte de agua: analizador
+
+PMO-02
+TK-102 · PMO-02
+TK-102
+PMO-03
+TK-103 · PMO-03
+sin instrumentar
+PMO-01
+Unidad LACT
+LACT-01
+Calibración declarada
+LI-1102
+Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027
+LI-1103
+Verificado contra cinta el 3 de marzo de 2026 · vigente hasta marzo de 2027
+FQI-0101
+Probado el 12 de abril de 2026 · factor 1,0021 · vigente hasta abril de 2027
+AI-0101
+Analizador verificado el 20 de enero de 2026 · vigente hasta enero de 2027
+DI-0101
+Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027
+También en PRODML
+ReasonLost · Energistics
+Falla de equipo de superficie
+topside equipment failure-maint
+72
+Falla de equipo de pozo
+well equipment failure-maint
+1.095
+Mantenimiento programado
+planned maint turnaround · preventive maint topside
+0
+Proceso y operación
+process and operation problem
+0
+Restricción externa
+3rd party processing · unavailable tanker storage · weather problem
+0
+Yacimiento
+reservoir
+0
+Sin casilla todavía (declarado o sin identificar)
+86
+Producción del período
+Real (punto de medición oficial)
+26.620 bbl
+Potencial (pruebas × factor)
+27.873 bbl
+Diferidos
+1.253 bbl ±188
+Del potencial
+95,5 %
+Pozos sin prueba
+ninguno
+Pruebas estimadas
+MN-11, MN-29
+Condiciones estándar: 14,65 psia y 60 °F. Banda: Res. MME 40236/2022, Anexo 2, Tabla 10, Figura 10.2 · Límites de los factores de campo y de asignación · campo de 1.000 bpd o más, banda 0,85–1,15.

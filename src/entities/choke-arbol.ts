@@ -193,7 +193,7 @@ function filaDe(p: ParadaAnh, ctx: Contexto, d0: number, hh: number): FilaArbol 
 /** Solo claves propias: un valor que llega de afuera no devuelve algo del prototipo. */
 const propio = <T,>(o: Readonly<Record<string, T>>, k: string): T | undefined => (Object.hasOwn(o, k) ? o[k] : undefined)
 
-/** El tipo de causa que más pesa en las filas de un equipo: «P-201B · bomba de reinyección». */
+/** El tipo de causa que más pesa en las filas de un equipo: «P-201B · bomba de agua». */
 function tipoMayor(fs: readonly FilaArbol[]): TipoCausa | undefined {
   const por = new Map<TipoCausa, number>()
   for (const f of fs) por.set(f.tipo, (por.get(f.tipo) ?? 0) + f.bbl)

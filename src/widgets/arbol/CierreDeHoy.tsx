@@ -10,6 +10,9 @@ import { Lectura } from '@/shared/ui/Lectura'
 import { diaIso, n0, plural } from '@/shared/lib/formato'
 import { ESTADO, horaCorta, lista, valorEnPalabras, cuantasParadas } from './palabras'
 import { Falta } from './Cadena'
+import { Info } from '@/shared/ui/Info'
+import { DONDE_CHOKE } from '@/entities/choke'
+import { ETIQUETA_PLANEACION } from '@/entities/anh-catalogo'
 
 /** Un lote: las paradas propuestas con la misma cadena de 6 pasos, y sus raíces. */
 interface Lote { cadena: string; filas: ParadaAnh[]; raices: Array<{ raiz: string; equipo: string; pozos: string[]; inicio: string }> }
@@ -69,17 +72,16 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
   }
 
   return (
-    <Panel className="mb-2.5" titulo="Cierre de hoy · paradas por confirmar" extra={`${cuantasParadas(ps)} · ${cuantasParadas(completas)} ${cuantasParadas(completas) === 1 ? 'completa' : 'completas'}`}>
+    // P-turno-2: la cuenta, una sola vez: «Cierre de hoy · faltan 4 de 4 · antes de las 07:00».
+    <Panel className="mb-2.5" titulo="Cierre de hoy" extra={ps.length === 0 ? 'nada que cerrar'
+      : cuantasParadas(ps) > cuantasParadas(completas) ? `faltan ${cuantasParadas(ps) - cuantasParadas(completas)} de ${cuantasParadas(ps)} · antes de las 07:00`
+        : `${plural(cuantasParadas(ps), 'parada completa', 'paradas completas')} para el reporte`}>
       <Lectura>
         Las paradas de hoy, cada una con sus 6 pasos del árbol de causas. Las que TRIM propuso con la misma
         cadena se confirman de un toque por grupo; la raíz de cada grupo queda a la vista para no cargarle
         a una raíz lo que fue de otra. Lo que alguien cambió sale del grupo solo. Con lo confirmado se
         miden las paradas no planeadas, y el reporte a la ANH sale mañana antes de las 07:00.
       </Lectura>
-      <p className="mb-2 text-[14px]">
-        <b className="tabular">{plural(cuantasParadas(ps), 'parada', 'paradas')}</b> hoy · {cuantasParadas(completas)} {cuantasParadas(completas) === 1 ? 'completa' : 'completas'}
-        {cuantasParadas(ps) > cuantasParadas(completas) && <> · <b>faltan {cuantasParadas(ps) - cuantasParadas(completas)}</b></>} · el reporte sale mañana antes de las 07:00
-      </p>
       {aviso && <p ref={avisoRef} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[14px] text-[var(--tinta2)]">{aviso}</p>}
       {ps.length === 0 && <Hueco>Hoy no ha parado ningún pozo: no hay nada que cerrar.</Hueco>}
 
@@ -89,8 +91,13 @@ export function CierreDeHoy({ campos, global }: { campos: string[]; global: bool
           <div key={l.cadena} data-lote className="mb-2 rounded border border-[var(--linea2)] p-2.5">
             <b className="text-[14px]">{l.filas.length === 1 ? '1 propuesta' : `${l.filas.length} iguales`}</b>
             <span className="text-[13px] text-[var(--tinta2)]"> · TRIM {l.filas.length === 1 ? 'la dedujo' : 'las dedujo'} · {ESTADO.propuesta}</span>
-            {/* La cadena completa: lo que se confirma (sin códigos). */}
-            <p className="mt-0.5 text-[13px] text-[var(--tinta)]">{PASOS.map(x => valorEnPalabras(x, String(p.clasificacion[x]!.valor))).join(' · ')}</p>
+            {/* P-turno-3: la frase de Hoy («en la planta, no planeada»), no la cadena del catálogo de la
+                ANH entera; la cadena completa queda para quien la lee, en la ⓘ, y en Identificar. */}
+            <p className="mt-0.5 flex flex-wrap items-center gap-1 text-[14px] text-[var(--tinta)]">
+              {[p.clasificacion.choke ? DONDE_CHOKE[p.clasificacion.choke.valor] : undefined,
+                p.clasificacion.planeacion ? ETIQUETA_PLANEACION[p.clasificacion.planeacion.valor].toLowerCase() : undefined].filter(Boolean).join(', ')}
+              <Info titulo="Lo que se confirma" texto={PASOS.map(x => valorEnPalabras(x, String(p.clasificacion[x]!.valor))).join(' · ')} />
+            </p>
             <ul className="mt-1 grid gap-0.5 text-[13px] text-[var(--tinta2)]" aria-label="Raíces del grupo">
               {l.raices.map(r => (
                 <li key={r.raiz}>

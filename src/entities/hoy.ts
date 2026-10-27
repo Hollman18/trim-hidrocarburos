@@ -39,9 +39,10 @@ import type { TuberiaAgua } from './choke-agua'
 import type { CriticidadDelCampo } from './criticidad'
 import type { CondicionFranja } from './condiciones'
 import { modosDeParte, nombreModo, MODO_OTRO, type Catalogo } from './catalogo'
-import type { ParteId } from './partes'
-import type { TipoCausa } from './causa-senal'
+import { NOMBRE_PARTE, type ParteId } from './partes'
+import { textoHoras } from './salud'
 import { campoPorId } from './campos'
+import { FAMILIA as FAMILIA_EN_CAMPO } from './planta-viva'
 
 /* ─────────────────────────────── la vista ─────────────────────────────── */
 
@@ -59,6 +60,8 @@ export type Destino =
   | { a: 'asignacion' }
   | { a: 'metas' }
   | { a: 'planes' }
+  /** F1 · P-10: la lista de Equipos, con el tren de esos equipos. */
+  | { a: 'equipos'; tren?: 'agua' | 'crudo' | 'gas' | 'pozos' | 'recoleccion' | 'servicios' }
 
 /** La acción de un toque de una tarjeta. */
 export type AccionHoy =
@@ -77,10 +80,12 @@ export type GrupoHoy = 'hora' | 'barriles' | 'demas' | 'aviso'
 
 /** Una opción de una pregunta de un toque (X5 §5.8). */
 export type OpcionHoy =
-  /** Una parte del equipo: después, «¿Qué vio?» con sus modos (la regla del libro: parte y lo que se vio). */
-  | { tipo: 'parte'; texto: string; dato?: string; parte: ParteId; modos: ModoHoy[] }
+  /** Una parte del equipo, de un toque (imagen 5; P-07). «¿Qué vio en …?» entra como la
+   *  pregunta siguiente (`pregunta`), con sus modos y «Todavía no sé»: el libro recibe la
+   *  parte con lo que se vio (ISO 14224) al contestar esa. */
+  | { tipo: 'parte'; texto: string; dato?: string; parte: ParteId; modos: ModoHoy[]; pregunta: string }
   /** «Otra parte»: la lista entera del catálogo. */
-  | { tipo: 'partes'; texto: string; dato?: string; partes: Array<{ parte: ParteId; texto: string; modos: ModoHoy[] }> }
+  | { tipo: 'partes'; texto: string; dato?: string; partes: Array<{ parte: ParteId; texto: string; modos: ModoHoy[]; pregunta: string }> }
   /** Una causa del pozo: se guarda su texto (`POST /api/paradas/:evento/respuesta`). */
   | { tipo: 'texto'; texto: string; dato?: string; valor: string }
   /** «No fue la electrosumergible»: después, las causas del pozo. */
@@ -104,6 +109,9 @@ export interface PreguntaHoy {
   marca?: CondicionFranja
   /** «P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h». */
   contexto: string
+  /** K2 · En el teléfono, el momento en palabras de campo («P-201B · bomba de agua · paró
+   *  hoy en la madrugada»): la hora no decide la respuesta; la exacta va en `contexto`. */
+  contextoCorto?: string
   texto: string
   /** «Lo que más le ha fallado a esta bomba:». */
   pista?: string
@@ -119,7 +127,12 @@ export interface PreguntaHoy {
 }
 
 /** El equipo de una tarjeta con SU marca (la de la franja: X2 B10; X4 §3.3). */
-export interface DondeHoy { equipo: string; marca?: CondicionFranja; texto: string }
+export interface DondeHoy {
+  equipo: string; marca?: CondicionFranja; texto: string
+  /** K2 · En el teléfono, sin las horas que no deciden (la de la tarjeta, la del escalamiento):
+   *  «cerró LC-07 y LC-16» en vez de «cerró LC-07 y LC-16 · 05:43». */
+  corto?: string
+}
 
 /** Una tarjeta de Hoy (X4 §3.3; X5 §5.7): verbo + qué, dónde, por qué importa y la acción. */
 export interface TareaHoy {
@@ -132,14 +145,17 @@ export interface TareaHoy {
   pide: boolean
   grupo: GrupoHoy
   titulo: string
+  /** K2 · El título en el teléfono, cuando el de siempre repite lo que la tarjeta ya dice. */
+  tituloCorto?: string
   donde?: DondeHoy
   porque?: Frase
+  /** F1 · El porqué en el teléfono, cuando la imagen 3b lo lleva más corto (I-sup-3,
+   *  I-sup-5): sin lo que ya dice el botón o lo que «Ver…» trae. */
+  porqueCorto?: Frase
   accion?: AccionHoy
   ver?: { texto: string; destino: Destino }
   /** Las preguntas que se contestan desde la tarjeta, en orden. */
   preguntas?: PreguntaHoy[]
-  /** Lo del ciclo que toca este equipo (simulado), para quien decide los planes. */
-  planes?: string[]
   /** Para el orden y para leer: la hora límite, los barriles en juego y desde cuándo. */
   limite?: string
   bblAhora?: number
@@ -148,7 +164,12 @@ export interface TareaHoy {
 }
 
 /** La franja «No arrancar … hasta identificar qué se dañó» (X5 §5.6): va en tinta, nunca en color. */
-export interface BloqueoHoy { campoId: string; equipos: string[]; texto: string; sub: string; planes?: string[] }
+export interface BloqueoHoy {
+  campoId: string; equipos: string[]; texto: string; sub: string
+  /** K2 · En el teléfono de quien no opera (jefe, conf): «No arrancar P-201B ni LC-21»; el resto, en `subCorto` (la ⓘ). */
+  textoCorto?: string
+  subCorto?: string
+}
 
 /** Lo que se hizo hoy (se pliega al final: «Hecho hoy (n)»). */
 export interface HechaHoy { id: string; titulo: string; detalle: string; hora: string }
@@ -161,7 +182,11 @@ export interface InicioHoy {
   cifra: string
   unidad?: string
   remate?: string
+  /** F1 · I-sup-1: el remate en el teléfono, como la imagen 3b («se dejan de producir.»). */
+  remateCorto?: string
   explica?: Frase
+  /** F1 · I-jefe-1: lo que explica la unidad, para la ⓘ junto a ella (no en la primera capa). */
+  ayuda?: string
 }
 
 /** «Su campo, ahora»: la tubería en chico y dos frases (lo que se deja de producir y el agua). */
@@ -191,6 +216,28 @@ export interface VistaHoy {
   campo?: CampoAhoraHoy
   whatsapp?: WhatsappHoy
   turno?: { horas: number; diferidoBbl: number }
+  /** F1 · P-06: la entrega del turno (X4 §5.5), para quien lo entrega: lo que paró,
+   *  lo que queda pendiente, lo confirmado y el WhatsApp de las últimas 12 h. Todo
+   *  sale de lo que ya calcula Hoy: nada nuevo. La firma y su escritura esperan su
+   *  contrato (una escritura nueva que todavía no existe). */
+  entrega?: EntregaTurno
+}
+
+/** La entrega del turno (P-06): renglones en palabras de campo, para la hoja y el papel. */
+export interface EntregaTurno {
+  horas: number
+  /** «Entrega de turno · La Ceiba · 2 de oct, 14:00». */
+  titulo: string
+  /** Lo que paró en el turno o sigue parado: «P-201B · paró a las 03:52 · sigue parada». */
+  paro: Frase[]
+  /** Lo que queda por hacer, en el orden de Hoy. */
+  pendiente: Frase[]
+  /** Lo que se confirmó o se contestó hoy. */
+  hecho: Frase[]
+  /** El WhatsApp del turno, un hilo por renglón. */
+  whatsapp: Frase[]
+  /** «723 bbl diferidos en las últimas 12 h». */
+  diferido?: Frase
 }
 
 /* ─────────────────────────────── la entrada ─────────────────────────────── */
@@ -220,7 +267,11 @@ export interface EntradaHoy {
   planes: readonly PlanAccion[]
   tuberias: Readonly<Record<string, TuberiaCampo>>
   aguas: Readonly<Record<string, TuberiaAgua>>
-  criticidad: ReadonlyArray<Pick<CriticidadDelCampo, 'campoId' | 'noIntervenir' | 'avisosTrabajo'>>
+  criticidad: ReadonlyArray<Pick<CriticidadDelCampo, 'campoId' | 'noIntervenir' | 'avisosTrabajo'> & { ranking?: ReadonlyArray<{ equipo: string; subio?: unknown }> }>
+  /** F1 · H2 (la regla de redondeo, `entities/redondeo.ts`): el entero de cada evento
+   *  del mes en curso, publicado una vez por el motor. Hoy suma esos enteros, no los
+   *  exactos: «355 desde que pararon» = 247 + 108, como en las demás vistas. */
+  enteros?: { desde: string; porEvento: Readonly<Record<string, number>>; porFila: Readonly<Record<string, number>> }
   /** Los tres relojes de las fallas cerradas (horas): para la cifra del jefe. */
   relojes?: { totalH?: number; esperaH?: number }
   /** Las fallas que el vigía podía ver y las que anunció. */
@@ -268,15 +319,25 @@ function cuando(t: number, ahora: number): string {
   return `el ${d.getUTCDate()} de ${MES[d.getUTCMonth()]} ${aLas(t)}`
 }
 const horasDesde = (t: number, ahora: number) => `${uno(Math.max(0, (ahora - t) / H))} h`
+/** K2 · El momento en palabras de campo, para el teléfono, donde la hora no decide nada
+ *  (PROMPT-REVISION-UX §4: «desde la madrugada»): «hoy en la madrugada», «ayer en la
+ *  tarde»; de antier para atrás, el día («el 29 de sept»). Madrugada hasta las 06:00,
+ *  mañana hasta el mediodía, tarde hasta las 19:00 y noche hasta la medianoche. */
+function momento(t: number, ahora: number): string {
+  const h = Number(horaCo(t).slice(0, 2))
+  const parte = h < 6 ? 'en la madrugada' : h < 12 ? 'en la mañana' : h < 19 ? 'en la tarde' : 'en la noche'
+  const dias = Math.round((Date.parse(`${diaCo(ahora)}T00:00:00Z`) - Date.parse(`${diaCo(t)}T00:00:00Z`)) / 86_400_000)
+  if (dias <= 0) return `hoy ${parte}`
+  if (dias === 1) return `ayer ${parte}`
+  const d = new Date(t - COT)
+  return `el ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}`
+}
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
 const minus = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
-/** La familia en palabras de campo (X5 §5.5: «bomba de agua», «aire de instrumentos»). */
-const FAMILIA: Record<TipoCausa, string> = {
-  reinyeccion: 'bomba de agua', transporte: 'bomba multifásica', electrosumergible: 'electrosumergible', levantamiento: 'bombeo mecánico',
-  energia: 'energía eléctrica', aire: 'aire de instrumentos', compresion: 'compresor de gas', evacuacion: 'despacho del crudo',
-  proceso: 'separador', tratamiento: 'tratamiento de crudo', programada: 'parada programada', declarada: 'pozo', pendiente: 'pozo',
-}
+/** La familia en palabras de campo (X5 §5.5: «bomba de agua», «aire de instrumentos»): UNA
+ *  para todo el producto (P-09), la de La planta viva (`FAMILIA`, planta-viva.ts). */
+const FAMILIA = FAMILIA_EN_CAMPO
 const ROTULO_CHOKE: Record<'pozo' | 'planta' | 'exportacion', string> = { pozo: 'pozos', planta: 'planta', exportacion: 'salida' }
 const deChoke = (c: ChokeAnh | null | undefined): 'pozo' | 'planta' | 'exportacion' | undefined =>
   c === 'pozo' || c === 'planta' || c === 'exportacion' ? c : c === 'reservorio' ? 'pozo' : undefined
@@ -333,9 +394,13 @@ export function hoy(e: EntradaHoy): VistaHoy {
   if (declara) for (const c of e.campos) {
     const parados = preguntas.filter(p => p.campoId === c && !p.fin)
     if (!parados.length) continue
+    const cuales = parados.length === 1 ? parados[0]!.equipo : `${parados.slice(0, -1).map(p => p.equipo).join(', ')} ni ${parados.at(-1)!.equipo}`
     bloqueos.push({ campoId: c, equipos: parados.map(p => p.equipo),
-      texto: `No arrancar ${parados.length === 1 ? parados[0]!.equipo : `${parados.slice(0, -1).map(p => p.equipo).join(', ')} ni ${parados.at(-1)!.equipo}`} hasta identificar qué se dañó`,
-      sub: 'Si arranca antes, queda como no conformidad.' })
+      texto: `No arrancar ${cuales} hasta identificar qué se dañó`,
+      sub: 'Si arranca antes, queda como no conformidad.',
+      // K2 · Al jefe y a confiabilidad, que no operan ni contestan qué se dañó, en el teléfono: el «no» y a quién;
+      // hasta cuándo y la salvedad, en su ⓘ (su tarjeta «Conseguir la causa» ya dice qué falta).
+      ...(rol === 'jefe' || rol === 'conf' ? { textoCorto: `No arrancar ${cuales}`, subCorto: 'Hasta identificar qué se dañó. Si arranca antes, queda como no conformidad.' } : {}) })
   }
 
   /** Lo que más tiene que ver con una pregunta del libro: los barriles que se pierden ahora o desde cuándo. */
@@ -344,12 +409,27 @@ export function hoy(e: EntradaHoy): VistaHoy {
     return r ? { grupo: 'barriles', bblAhora: r.bblDia, desde: p.inicio.toISOString() } : { grupo: 'demas', desde: p.inicio.toISOString() }
   }
 
+  /** «Sello mecánico: ¿qué vio?»: la pregunta que sigue a la parte (P-07). */
+  const queVio = (parte: string) => `${parte}: ¿qué vio?`
+  /** H2: el entero que el motor publicó para el evento o la fila en el mes en curso
+   *  (`entities/redondeo.ts`); si la parada empezó antes o no hay enteros, el exacto. */
+  const enteroDe = (p: Pregunta): number => {
+    const z = e.enteros
+    if (!z || p.inicio.getTime() < ms(z.desde)) return p.bbl
+    if (Object.hasOwn(z.porEvento, p.id)) return z.porEvento[p.id]!
+    const fs = e.paradas.filter(f => f.campoId === p.campoId && f.raiz === p.id && Object.hasOwn(z.porFila, f.id))
+    return fs.length ? fs.reduce((a, f) => a + z.porFila[f.id]!, 0) : p.bbl
+  }
+  const enteroFila = (f: ParadaAnh) => (e.enteros && Object.hasOwn(e.enteros.porFila, f.id) ? e.enteros.porFila[f.id]! : f.diferidaTrimBbl)
+
   /** La pregunta del libro, como se contesta de un toque. */
   const preguntaDelLibro = (p: Pregunta): PreguntaHoy => {
     const op = e.opciones[p.id] ?? {}
     const familia = p.sobre === 'bomba' ? FAMILIA[p.causa.tipo] : 'pozo'
     const t0 = p.inicio.getTime()
     const contexto = `${p.equipo} · ${familia} · ${p.fin ? `paró ${cuando(t0, e.ahora)} y arrancó ${cuando(p.fin.getTime(), e.ahora)} sin identificar` : `paró ${cuando(t0, e.ahora)}, hace ${horasDesde(t0, e.ahora)}`}`
+    // En el teléfono, el momento en palabras (K2): «paró hoy en la madrugada»; la hora exacta, en la ficha.
+    const contextoCorto = `${p.equipo} · ${familia} · ${p.fin ? `arrancó ${momento(p.fin.getTime(), e.ahora)} sin identificar` : `paró ${momento(t0, e.ahora)}`}`
     const conPartes = !!op.catalogo
     const esp = op.catalogo?.clase === 'bomba-electrosumergible'
     const modos = (parte: ParteId): ModoHoy[] => {
@@ -363,11 +443,11 @@ export function hoy(e: EntradaHoy): VistaHoy {
     const opciones: OpcionHoy[] = []
     if (conPartes) {
       const sugeridas = (op.sugeridas?.opciones ?? []).filter(o => o.parte)
-      for (const o of sugeridas) opciones.push({ tipo: 'parte', texto: o.texto, parte: o.parte!, modos: modos(o.parte!),
+      for (const o of sugeridas) opciones.push({ tipo: 'parte', texto: o.texto, parte: o.parte!, modos: modos(o.parte!), pregunta: queVio(o.texto),
         ...(o.veces !== undefined && o.total !== undefined ? { dato: `${o.veces} de sus ${o.total} ${o.total === 1 ? 'falla' : 'fallas'}` } : o.porque ? { dato: o.porque } : {}) })
       const resto = op.catalogo!.partes.filter(x => !sugeridas.some(o => o.parte === x.id))
       if (resto.length) opciones.push({ tipo: 'partes', texto: sugeridas.length ? 'Otra parte' : 'La parte', dato: 'escoja de la lista',
-        partes: resto.map(x => ({ parte: x.id, texto: x.nombre, modos: modos(x.id) })) })
+        partes: resto.map(x => ({ parte: x.id, texto: x.nombre, modos: modos(x.id), pregunta: queVio(x.nombre) })) })
       if (esp) opciones.push({ tipo: 'causas', texto: NO_FUE_ESP_CORTO, dato: 'otra causa del pozo', causas })
     } else for (const c of causas) opciones.push({ tipo: 'texto', ...c })
     opciones.push({ tipo: 'no-se', texto: 'Todavía no sé', dato: 'se la vuelven a preguntar en la próxima ronda' })
@@ -376,7 +456,7 @@ export function hoy(e: EntradaHoy): VistaHoy {
     const rotulo = `${ROTULO_CHOKE[choke]}${p.causa.tipo === 'reinyeccion' ? ' · agua' : ''}`
     return {
       id: `libro:${p.id}`, via: 'libro', campoId: p.campoId, equipo: p.equipo, sobre: p.sobre, ...(marca(p.campoId, p.equipo) ? { marca: marca(p.campoId, p.equipo) } : {}),
-      contexto, texto: conPartes ? (esp ? '¿Qué se dañó?' : '¿Qué parte se dañó?') : '¿Por qué paró?',
+      contexto, contextoCorto, texto: conPartes ? (esp ? '¿Qué se dañó?' : '¿Qué parte se dañó?') : '¿Por qué paró?',
       ...(conPartes && op.sugeridas?.conEvidencia ? { pista: `Lo que más le ha fallado a esta ${p.sobre === 'bomba' ? 'bomba' : 'electrosumergible'}:` } : {}),
       opciones,
       ...(!p.fin ? { bloqueo: p.sobre === 'bomba'
@@ -399,14 +479,18 @@ export function hoy(e: EntradaHoy): VistaHoy {
       // El operador y el técnico: una pregunta por parada (X4 §5.5).
       for (const p of preguntas) {
         const q = preguntaDelLibro(p)
-        const tec = rol === 'tec'
         tareas.push({
           id: `contestar:${p.campoId}:${p.id}`, tipo: 'contestar', campoId: p.campoId, capacidad: 'causa:declarar', pide: true, ...ordenDe(p),
-          titulo: tec ? `Diga qué encontró en ${p.equipo}` : p.sobre === 'bomba' ? `Contestar qué se dañó en ${p.equipo}` : `Contestar por qué paró ${p.equipo}`,
-          donde: { equipo: p.equipo, ...(q.marca ? { marca: q.marca } : {}), texto: q.contexto.split(' · ').slice(1).join(' · ') },
+          // Para la pregunta propia, un solo verbo (P-07; imagen 4): «Diga qué se dañó» y «Contestar».
+          titulo: p.sobre === 'bomba' ? `Diga qué se dañó en ${p.equipo}` : `Diga por qué paró ${p.equipo}`,
+          donde: { equipo: p.equipo, ...(q.marca ? { marca: q.marca } : {}), texto: q.contexto.split(' · ').slice(1).join(' · '),
+            ...(q.contextoCorto ? { corto: q.contextoCorto.split(' · ').slice(1).join(' · ') } : {}) },
+          // «No se arranca hasta…» ya lo dice la franja de arriba (I-oper-4, I-tec-1).
           porque: p.fin ? ['Arrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.']
-            : [`Sigue ${p.sobre === 'bomba' ? 'parada' : 'parado'}: no se arranca hasta decir qué ${p.sobre === 'bomba' ? 'se dañó' : 'pasó'}.`],
-          accion: { tipo: 'responder', texto: tec ? 'Registrar qué encontré' : 'Contestar' },
+            : [`Sigue ${p.sobre === 'bomba' ? 'parada' : 'parado'}.`],
+          // K2 · En el teléfono, «Sigue parada» repite la franja «No arrancar …» de arriba, que la nombra: nada.
+          ...(!p.fin ? { porqueCorto: [] } : {}),
+          accion: { tipo: 'responder', texto: 'Contestar' },
           ver: { texto: `Ver ${p.equipo}`, destino: { a: 'equipo', campoId: p.campoId, equipo: p.equipo } },
           preguntas: [q],
         })
@@ -427,20 +511,33 @@ export function hoy(e: EntradaHoy): VistaHoy {
           ? `arrancó ${aLas(p.fin.getTime())} sin identificar`
           : `lleva ${horasDesde(p.inicio.getTime(), e.ahora)} ${p.sobre === 'bomba' ? 'sin saber qué se dañó' : 'sin causa'}`
         const otras = enOrden.slice(1)
-        const deHoy = filasHoyDe(suyas.map(p => p.id)).reduce((a, f) => a + f.diferidaTrimBbl, 0)
-        const desdeQueParo = suyas.reduce((a, p) => a + p.bbl, 0)
+        const deHoy = filasHoyDe(suyas.map(p => p.id)).reduce((a, f) => a + enteroFila(f), 0)
+        const desdeQueParo = suyas.reduce((a, p) => a + enteroDe(p), 0)
         const ahoraBbl = suyas.reduce((a, p) => a + (!p.fin ? perdiendo(p.campoId, p.equipo)?.bblDia ?? 0 : 0), 0)
         const porque: Frase = []
         for (const p of otras) porque.push({ b: p.equipo }, ` ${decirUna(p)}`, ' · ')
-        if (deHoy > 0) porque.push({ b: `${n0(deHoy)} bbl hoy` }, Math.round(desdeQueParo) > Math.round(deHoy) ? `, ${n0(desdeQueParo)} desde que pararon` : '')
+        // La suma es de todas, no de la última que se nombró (I-jefe-2): «Entre las 3: …».
+        if (suyas.length > 1) porque.push(`Entre las ${suyas.length}: `)
+        if (deHoy > 0) porque.push({ b: `${n0(deHoy)} bbl hoy` }, Math.round(desdeQueParo) > Math.round(deHoy) ? ` · ${n0(desdeQueParo)} desde que pararon` : '')
         else porque.push(`${n0(desdeQueParo)} bbl desde que pararon`)
+        // K2 · En el teléfono, sin las horas que no deciden («arrancó sin identificar», no «a la 01:10»)
+        // ni el acumulado: lo de hoy, entre todas. Lo demás, en «Ver el chat» y en el escritorio.
+        // («sin causa» también para una bomba: «qué se dañó» ya lo dice la franja de arriba).
+        const decirCorta = (p: Pregunta): string => p.fin ? 'arrancó sin identificar' : `lleva ${horasDesde(p.inicio.getTime(), e.ahora)} sin causa`
+        const porqueCorto: Frase = []
+        // Una sola otra, con lo que le pasa (la imagen 3b: «LC-08 arrancó sin identificar»); con varias, el título ya
+        // las cuenta («de 3 paradas») y sus nombres están en «Ver el chat»: solo lo de hoy, entre todas.
+        if (otras.length === 1) porqueCorto.push({ b: otras[0]!.equipo }, ` ${otras[0]!.fin ? 'arrancó sin identificar' : 'sin causa'}`, ' · ')
+        // Con una sola otra, «Entre las 2» (la imagen 3b); con más, el título ya las cuenta: «Entre todas».
+        if (suyas.length > 1) porqueCorto.push(otras.length > 1 ? 'Entre todas: ' : `Entre las ${suyas.length}: `)
+        porqueCorto.push({ b: `${n0(deHoy > 0 ? deHoy : desdeQueParo)} bbl ${deHoy > 0 ? 'hoy' : 'desde que pararon'}` })
         tareas.push({
           id: `conseguir-causa:${c}`, tipo: 'conseguir-causa', campoId: c, capacidad: 'causa:declarar', pide: true,
           grupo: ahoraBbl > 0 ? 'barriles' : 'demas', ...(ahoraBbl > 0 ? { bblAhora: ahoraBbl } : {}), desde: primera.inicio.toISOString(),
           titulo: suyas.length === 1 ? `Conseguir la causa de ${primera.equipo}` : `Conseguir la causa de ${suyas.length} paradas`,
           donde: { equipo: primera.equipo, ...(marca(c, primera.equipo) ? { marca: marca(c, primera.equipo) } : {}),
-            texto: `${decirUna(primera)}${esc && esc >= t0 ? `; se escaló ${aLas(esc)}` : ''}` },
-          porque,
+            texto: `${decirUna(primera)}${esc && esc >= t0 ? `; se escaló ${aLas(esc)}` : ''}`, corto: decirCorta(primera) },
+          porque, porqueCorto,
           accion: { tipo: 'responder', texto: 'Responder yo' },
           ver: { texto: 'Ver el chat', destino: { a: 'paradas' } },
           preguntas: enOrden.map(preguntaDelLibro),
@@ -468,6 +565,8 @@ export function hoy(e: EntradaHoy): VistaHoy {
       const equipo = raices.length === 1 && p.raiz !== p.eventoId ? p.causa.equipo : p.pozo
       const inicio = Math.min(...fs.map(f => ms(f.inicio)))
       const donde = raices.length === 1 && p.raiz !== p.eventoId ? `cerró ${lista(pozos)} · ${horaCo(inicio)}` : `${lista(pozos.filter(x => x !== equipo))} · ${horaCo(inicio)}`.replace(/^ · /, '')
+      // K2 · En el teléfono, sin la hora de la tarjeta: para confirmar no decide (está en «Ver una por una»).
+      const dondeCorto = raices.length === 1 && p.raiz !== p.eventoId ? `cerró ${lista(pozos)}` : lista(pozos.filter(x => x !== equipo))
       const tramo = p.clasificacion.choke ? DONDE_CHOKE[p.clasificacion.choke.valor] : undefined
       const pl = p.clasificacion.planeacion ? minus(ETIQUETA_PLANEACION[p.clasificacion.planeacion.valor]) : undefined
       const bbl = fs.reduce((a, f) => a + (perdiendo(f.campoId, f.causa.equipo)?.bblDia ?? 0), 0)
@@ -476,8 +575,10 @@ export function hoy(e: EntradaHoy): VistaHoy {
         id: `confirmar:${k}`, tipo: 'confirmar', campoId: p.campoId, capacidad: 'anh:confirmar', pide: true, grupo: 'hora',
         limite: limiteReporte(hoyDia), ...(bbl > 0 ? { bblAhora: perdiendo(p.campoId, p.causa.equipo)?.bblDia ?? bbl } : {}), desde: new Date(inicio).toISOString(),
         titulo: n === 1 ? `Confirmar la parada de ${pozos[0]}` : `Confirmar ${n} paradas iguales`,
-        donde: { equipo, ...(marca(p.campoId, equipo) ? { marca: marca(p.campoId, equipo) } : {}), texto: donde },
+        donde: { equipo, ...(marca(p.campoId, equipo) ? { marca: marca(p.campoId, equipo) } : {}), texto: donde, ...(dondeCorto ? { corto: dondeCorto } : {}) },
         porque: [`TRIM ${n === 1 ? 'la dedujo' : 'las dedujo'}: `, { b: [tramo, pl].filter(Boolean).join(', ') }, '. Falta su confirmación.'],
+        // En el teléfono, sin «Falta su confirmación.»: lo dice el botón (imagen 3b; I-sup-3).
+        porqueCorto: [`TRIM ${n === 1 ? 'la dedujo' : 'las dedujo'}: `, { b: [tramo, pl].filter(Boolean).join(', ') }, '.'],
         accion: { tipo: 'confirmar', texto: n === 1 ? 'Confirmar' : `Confirmar las ${n}`, ids: fs.map(f => f.id), cadena: PASOS.map(x => String(p.clasificacion[x]?.valor ?? '—')).join(' · '), pozos },
         ver: { texto: 'Ver una por una', destino: { a: 'paradas' } },
       })
@@ -573,7 +674,11 @@ export function hoy(e: EntradaHoy): VistaHoy {
   const avisosAbiertos = enCampos(e.avisosSap).filter(a => !a.cerrado)
   const nombre = (id?: string) => (id && Object.hasOwn(e.nombres, id) ? e.nombres[id]! : undefined)
   const yaPaso = riesgo.filter(r => r.estado === 'en-riesgo' && r.horas === undefined)
-  const ordenEnPalabras = (o: OrdenSap) => `Orden ${o.numero}, ${o.liberada ? `liberada a ${o.tecnico === e.persona?.id ? 'su nombre' : nombre(o.tecnico) ?? `el puesto ${o.puesto}`} ${aLas(ms(o.liberada))}` : 'creada, sin liberar'}.`
+  const aQuien = (o: OrdenSap) => (o.tecnico === e.persona?.id ? 'su nombre' : nombre(o.tecnico) ?? `el puesto ${o.puesto}`)
+  const ordenEnPalabras = (o: OrdenSap) => `Orden ${o.numero}, ${o.liberada ? `liberada a ${aQuien(o)} ${aLas(ms(o.liberada))}` : 'creada, sin liberar'}.`
+  // K2 · En el teléfono, lo que pasa si para y nada más: el título ya dice que hay orden («Seguir la orden de …»);
+  // su número, a quién y a qué hora se liberó, en «Ver la orden ›». Sin liberar sí se dice: es lo que hay que seguir.
+  const ordenCorta = (o: OrdenSap): Frase => (o.liberada ? [] : ['Orden creada, sin liberar.'])
   const siPara = (r: Riesgo): Frase => [`Si para, ${r.techo ? 'hasta ' : ''}`, { b: `${n0(r.bblDia)} bbl/d` }, '. ']
   const familiaDe = (r: Riesgo) => FAMILIA[r.tipo]
   if (revisa && puede('sap:aviso')) for (const r of yaPaso) {
@@ -582,11 +687,17 @@ export function hoy(e: EntradaHoy): VistaHoy {
     const base = { campoId: r.campoId, capacidad: 'sap:aviso' as const, pide: true, grupo: 'barriles' as const, bblSiPara: r.bblDia,
       donde: { equipo: r.equipo, ...(marca(r.campoId, r.equipo) ? { marca: marca(r.campoId, r.equipo) } : {}), texto: `${familiaDe(r)} · ya pasó el límite` } }
     if (o) tareas.push({ ...base, id: `orden:${r.campoId}:${o.numero}`, tipo: 'orden', titulo: `Seguir la orden de ${r.equipo}`, desde: o.liberada ?? o.creada,
-      porque: [...siPara(r), ordenEnPalabras(o)], ver: { texto: 'Ver la orden', destino: { a: 'equipo', campoId: r.campoId, equipo: r.equipo } } })
+      porque: [...siPara(r), ordenEnPalabras(o)], porqueCorto: [...siPara(r), ...ordenCorta(o)],
+      ver: { texto: 'Ver la orden', destino: { a: 'equipo', campoId: r.campoId, equipo: r.equipo } } })
     else if (a) tareas.push({ ...base, id: `aviso-sap:${r.campoId}:${a.numero}`, tipo: 'orden', titulo: `Seguir el aviso de ${r.equipo}`, desde: a.creado,
       porque: [...siPara(r), `Aviso ${a.numero} en SAP, todavía sin orden.`], ver: { texto: 'Ver el aviso', destino: { a: 'equipo', campoId: r.campoId, equipo: r.equipo } } })
     else if (rol === 'jefe' || rol === 'conf') tareas.push({ ...base, id: `intervenir:${r.campoId}:${r.equipo}`, tipo: 'intervenir', titulo: `Intervenir ${r.equipo}: ya pasó el límite`,
       porque: [...siPara(r), r.accion ?? r.motivo], accion: { tipo: 'ir', texto: 'Crear el aviso', destino: { a: 'equipo', campoId: r.campoId, equipo: r.equipo } } })
+  }
+  /** Si TRIM le avisó la orden por WhatsApp (lo que decía Mi trabajo, P-trabajo-1): «· le llegó por WhatsApp a las 09:11». */
+  const porWhatsapp = (o: OrdenSap) => {
+    const m = e.mensajes.find(x => x.regla === 'orden' && x.orden === o.numero && x.para === e.persona?.id)
+    return !m ? '' : m.noEnviado ? ` · no le llegó por WhatsApp: ${m.noEnviado}` : ` · le llegó por WhatsApp ${aLas(ms(m.hora))}`
   }
   // Las órdenes a nombre de quien mira (el técnico): una tarjeta por orden, sin repetir el equipo.
   if (rol === 'tec' && e.persona) for (const o of abiertas.filter(x => x.tecnico === e.persona!.id)) {
@@ -596,8 +707,11 @@ export function hoy(e: EntradaHoy): VistaHoy {
       grupo: r ? 'barriles' : 'demas', ...(r?.estado === 'perdiendo' ? { bblAhora: r.bblDia } : r ? { bblSiPara: r.bblDia } : {}), desde: o.liberada ?? o.creada,
       titulo: `Atender la orden de ${o.equipo}`,
       donde: { equipo: o.equipo, ...(marca(o.campoId, o.equipo) ? { marca: marca(o.campoId, o.equipo) } : {}),
-        texto: r ? `${familiaDe(r)}${r.estado === 'en-riesgo' && r.horas === undefined ? ' · ya pasó el límite' : ''}` : `orden ${o.numero}` },
-      porque: [o.descripcion, ` Orden ${o.numero}, liberada a su nombre${o.liberada ? ` ${aLas(ms(o.liberada))}` : ''}; se notifica y se cierra en SAP.`],
+        // (Entero también en el teléfono: si le llegó o no por WhatsApp no está en ningún otro lugar; P-trabajo-1.)
+        texto: `${r ? `${familiaDe(r)}${r.estado === 'en-riesgo' && r.horas === undefined ? ' · ya pasó el límite' : ''} · ` : ''}orden ${o.numero}${porWhatsapp(o)}` },
+      // Una línea (I-tec-2; X5 §5.7): lo que hay que hacer, la primera oración de la orden. La
+      // autonomía, el número, a quién se liberó y cómo se cierra van en la orden («Ver la orden ›»).
+      porque: [o.descripcion.split(/(?<=\.)\s/)[0] ?? o.descripcion],
       ver: { texto: 'Ver la orden', destino: { a: 'equipo', campoId: o.campoId, equipo: o.equipo } },
     })
   }
@@ -648,15 +762,45 @@ export function hoy(e: EntradaHoy): VistaHoy {
       id: `aviso:fragil:${c}`, tipo: 'aviso', campoId: c, pide: false, grupo: 'aviso',
       titulo: 'Lo más frágil: el agua.',
       porque: [`Si para otra bomba, cierre primero ${lista(primeros.length ? primeros : s.pasos.slice(0, 3).map(x => x.pozo))}: dejan de producirse ${n0(s.crudoBpd)} bbl/d${colchon}.`],
+      // En el teléfono, sin la cifra: «Ver el orden ›» la lleva (imagen 3b; I-sup-5).
+      porqueCorto: [`Si para otra bomba, cierre primero ${lista(primeros.length ? primeros : s.pasos.slice(0, 3).map(x => x.pozo))}.`],
       ver: { texto: 'Ver el orden', destino: { a: 'agua' } },
     })
   }
   // «Ojo: no intervenir» (el jefe y la planeadora): lo que hoy vale más porque otro está parado.
   if (rol === 'jefe' || rol === 'plan') for (const k of e.criticidad.filter(x => campos.has(x.campoId))) {
-    if (k.noIntervenir) tareas.push({ id: `aviso:no-intervenir:${k.campoId}`, tipo: 'aviso', campoId: k.campoId, pide: false, grupo: 'aviso',
-      titulo: 'Ojo: no intervenir hoy.', porque: [k.noIntervenir.replace(/^Ojo: /, '')], ver: { texto: 'Ver los equipos', destino: { a: 'planta' } } })
+    if (k.noIntervenir) {
+      // P-10: «Ver P-201A y P-201C ›» lleva a Equipos, con su tren si todos son del mismo (no a La planta viva).
+      const filas = (k.ranking ?? []).filter(x => !!x.subio), suben = filas.map(x => x.equipo)
+      // Valen más porque su hermana está parada: el tren es el de ella (P-201B, de agua → el tren de agua).
+      const otro = (filas[0]?.subio as { otro?: string } | undefined)?.otro
+      const tren = otro && riesgo.find(r => r.campoId === k.campoId && r.equipo === otro)?.tipo === 'reinyeccion' ? 'agua' as const : undefined
+      tareas.push({ id: `aviso:no-intervenir:${k.campoId}`, tipo: 'aviso', campoId: k.campoId, pide: false, grupo: 'aviso',
+        titulo: 'Ojo: no intervenir hoy.', porque: [k.noIntervenir.replace(/^Ojo: /, '')],
+        ver: { texto: suben.length ? `Ver ${lista(suben)}` : 'Ver los equipos', destino: { a: 'equipos', ...(tren ? { tren } : {}) } } })
+    }
     for (const a of k.avisosTrabajo) tareas.push({ id: `aviso:trabajo:${a.campoId}:${a.tarea}`, tipo: 'aviso', campoId: a.campoId, pide: false, grupo: 'aviso',
       titulo: `Ojo con el trabajo de ${a.equipo}.`, porque: [a.texto.replace(/^Ojo: /, '')], ver: { texto: `Ver ${a.equipo}`, destino: { a: 'equipo', campoId: a.campoId, equipo: a.equipo } } })
+  }
+  // P-trabajo-1 (X4 §3.6.3 y §3.7: Mi trabajo se funde en Hoy): lo único que Mi trabajo tenía
+  // propio llega aquí al técnico. «Por vigilar»: lo que avisa y todavía no cruza su límite (lo que
+  // ya lo cruzó tiene su orden arriba), y las órdenes abiertas de otros puestos, en una línea cada una.
+  if (rol === 'tec') {
+    const conTarjeta = (campoId: string, equipo: string) => tareas.some(t => t.campoId === campoId && t.donde?.equipo === equipo)
+    for (const r of riesgo.filter(x => x.estado === 'en-riesgo' && x.horas !== undefined && !conTarjeta(x.campoId, x.equipo)).sort((a, b) => a.horas! - b.horas!))
+      tareas.push({
+        id: `aviso:vigilar:${r.campoId}:${r.equipo}`, tipo: 'aviso', campoId: r.campoId, pide: false, grupo: 'aviso',
+        titulo: `Por vigilar: ${r.equipo}`,
+        porque: [`${r.parte ? `${NOMBRE_PARTE[r.parte]}: ` : ''}cruza su límite en `, { b: textoHoras(r.horas!) }, `.${r.accion ? ` ${r.accion}` : ''}`],
+        ver: { texto: `Ver ${r.equipo}`, destino: { a: 'equipo', campoId: r.campoId, equipo: r.equipo } },
+      })
+    const deOtros = abiertas.filter(o => o.tecnico !== e.persona?.id)
+    if (deOtros.length) tareas.push({
+      id: 'aviso:ordenes-otros', tipo: 'aviso', campoId: deOtros[0]!.campoId, pide: false, grupo: 'aviso',
+      titulo: `Órdenes en SAP de otros puestos: ${deOtros.length}`,
+      porque: [deOtros.map(o => `${o.equipo} · orden ${o.numero}${o.liberada ? `, liberada a ${nombre(o.tecnico) ?? `el puesto ${o.puesto}`}` : ', sin liberar'}`).join(' · ')],
+      ver: { texto: `Ver ${deOtros[0]!.equipo}`, destino: { a: 'equipo', campoId: deOtros[0]!.campoId, equipo: deOtros[0]!.equipo } },
+    })
   }
   // «Lo que viene» (el técnico): las paradas programadas, al final (X4 §5.5).
   if (rol === 'tec') for (const p of e.programa.filter(x => campos.has(x.campoId) && ms(x.hasta) >= e.ahora)) tareas.push({
@@ -665,30 +809,27 @@ export function hoy(e: EntradaHoy): VistaHoy {
     ver: { texto: `Ver ${p.equipo}`, destino: { a: 'equipo', campoId: p.campoId, equipo: p.equipo } },
   })
 
-  /* — los planes del ciclo, para quien los decide (sin repetir el equipo de otra tarjeta) — */
+  /* — los planes del ciclo, para quien los decide — */
+  // UI-20, P-11 e I-sup-4 (regla 5: lo simulado no va dentro de una advertencia ni de una
+  // tarjeta que pide confirmar): los planes de un equipo van en SU tarjeta, «Decidir N
+  // planes · simulado», después de las de barriles, y abren la ficha de ese equipo, donde
+  // están los planes con «Aceptar» y «Ya se hizo». Los que no mueven crudo (identificar el
+  // daño) ya son una tarjeta o la franja: no se repiten.
   if (puede('planes:decidir')) {
-    // Los que no mueven crudo (identificar el daño) ya son una tarjeta o la franja: no se repiten.
     const propuestos = enCampos(e.planes).filter(p => !p.estado && p.bbl > 0)
-    const enTarjeta = (p: PlanAccion) => tareas.find(t => t.campoId === p.campoId && (t.donde?.equipo === p.equipo || t.preguntas?.some(q => q.equipo === p.equipo)))
-    const enBloqueo = (p: PlanAccion) => bloqueos.find(b => b.campoId === p.campoId && b.equipos.includes(p.equipo))
-    const linea = (p: PlanAccion) => `Plan simulado: ${minus(p.titulo)}${p.bbl > 0 ? ` (${n0(p.bbl)} bbl)` : ''}`
-    const sueltos: PlanAccion[] = []
-    for (const p of propuestos) {
-      const t = enTarjeta(p), b = enBloqueo(p)
-      if (t) t.planes = [...(t.planes ?? []), linea(p)]
-      else if (b) b.planes = [...(b.planes ?? []), linea(p)]
-      else sueltos.push(p)
-    }
-    for (const c of e.campos) {
-      const ps = sueltos.filter(p => p.campoId === c)
-      if (!ps.length) continue
-      const bbl = ps.reduce((a, p) => a + p.bbl, 0)
+    const porEquipo = new Map<string, PlanAccion[]>()
+    for (const p of propuestos) { const k = `${p.campoId}|${p.equipo}`; const g = porEquipo.get(k); if (g) g.push(p); else porEquipo.set(k, [p]) }
+    for (const [k, ps] of porEquipo) {
+      const p = ps[0]!
+      const bbl = ps.reduce((a, x) => a + x.bbl, 0)
       tareas.push({
-        id: `planes:${c}`, tipo: 'planes', campoId: c, capacidad: 'planes:decidir', pide: true, grupo: 'demas',
-        titulo: ps.length === 1 ? `Decidir el plan de ${ps[0]!.equipo}` : `Decidir ${ps.length} planes de acción`,
-        donde: { equipo: ps[0]!.equipo, ...(marca(c, ps[0]!.equipo) ? { marca: marca(c, ps[0]!.equipo) } : {}), texto: minus(ps[0]!.titulo) },
-        porque: [`Simulado: `, { b: `${n0(bbl)} bbl` }, ' que se pueden mover si se ejecutan.'],
-        ver: { texto: 'Ver los planes', destino: { a: 'planes' } },
+        id: `planes:${k}`, tipo: 'planes', campoId: p.campoId, capacidad: 'planes:decidir', pide: true, grupo: 'demas',
+        titulo: `${ps.length === 1 ? 'Decidir el plan' : `Decidir ${ps.length} planes`} de ${p.equipo} · simulado`,
+        // K2 · En el teléfono, sin la cuenta ni el equipo: los dice la tarjeta (su renglón y «Ver los planes»).
+        tituloCorto: `${ps.length === 1 ? 'Decidir el plan' : 'Decidir planes'} · simulado`,
+        donde: { equipo: p.equipo, ...(marca(p.campoId, p.equipo) ? { marca: marca(p.campoId, p.equipo) } : {}), texto: minus(p.titulo) },
+        porque: ['Simulado: ', { b: `${n0(bbl)} bbl` }, ` que se pueden mover si ${ps.length === 1 ? 'se ejecuta' : 'se ejecutan'}.`],
+        ver: { texto: ps.length === 1 ? 'Ver el plan' : 'Ver los planes', destino: { a: 'equipo', campoId: p.campoId, equipo: p.equipo } },
       })
     }
   }
@@ -700,6 +841,7 @@ export function hoy(e: EntradaHoy): VistaHoy {
   const insignia = enOrden.filter(t => t.pide).length
   const vacio = !enOrden.some(t => t.pide) && !bloqueos.length ? `Nada pendiente. ${e.campos.length <= 1 ? 'El campo está normal.' : 'Sus campos están normales.'}` : undefined
   const unCampo = e.campos.length === 1 ? e.campos[0] : undefined
+  const whatsapp = rol === 'sup' || rol === 'oper' ? whatsappDelTurno(e) : undefined
   return {
     rol, campos: e.campos,
     inicio: inicioDe(e, enOrden, filas, hoyDia, bloqueos),
@@ -707,8 +849,32 @@ export function hoy(e: EntradaHoy): VistaHoy {
     ...(vacio ? { vacio } : {}),
     entregarTurno: rol === 'sup',
     ...(unCampo && e.tuberias[unCampo] ? { campo: campoAhora(unCampo, e.tuberias[unCampo]!, e.aguas[unCampo]) } : {}),
-    ...(rol === 'sup' || rol === 'oper' ? { whatsapp: whatsappDelTurno(e) } : {}),
+    ...(whatsapp ? { whatsapp } : {}),
     ...(rol === 'sup' && e.diferidoTurnoBbl !== undefined ? { turno: { horas: TURNO_H, diferidoBbl: e.diferidoTurnoBbl } } : {}),
+    ...(rol === 'sup' ? { entrega: entregaDelTurno(e, riesgo, bloqueos, enOrden, hechas, whatsapp) } : {}),
+  }
+}
+
+/* ─────────────────────────────── la entrega del turno ─────────────────────────────── */
+
+/** F1 · P-06 (X4 §5.5; imagen 3a): lo que el supervisor entrega al turno que entra,
+ *  armado con lo que Hoy ya sabe —lo que está parado, la franja, lo que queda por
+ *  hacer, lo hecho hoy y el WhatsApp de las últimas 12 h—. Ninguna cifra nueva. */
+function entregaDelTurno(e: EntradaHoy, riesgo: readonly Riesgo[], bloqueos: readonly BloqueoHoy[], tareas: readonly TareaHoy[],
+  hechas: readonly HechaHoy[], w: WhatsappHoy | undefined): EntregaTurno {
+  const d = new Date(e.ahora - COT)
+  const donde = e.campos.length === 1 ? campoPorId(e.campos[0]!).nombre : 'sus campos'
+  const paro: Frase[] = [...riesgo].filter(r => r.estado === 'perdiendo').sort((a, b) => b.bblDia - a.bblDia).map(r => [
+    { b: r.equipo }, ` · ${FAMILIA[r.tipo]}${r.desde ? ` · paró ${cuando(r.desde.getTime(), e.ahora)}` : ''} · por ${r.equipo} se dejan de producir `, { b: `${n0(r.bblDia)} bbl/d` }])
+  for (const b of bloqueos) paro.push([{ b: `${b.texto}.` }])
+  return {
+    horas: TURNO_H,
+    titulo: `Entrega de turno · ${donde} · ${d.getUTCDate()} de ${MES[d.getUTCMonth()]}, ${horaCo(e.ahora)}`,
+    paro,
+    pendiente: tareas.filter(t => t.pide).map(t => [{ b: t.titulo }, ...(t.donde ? [` · ${t.donde.equipo} ${t.donde.texto}`] : [])]),
+    hecho: hechas.map(h => [{ b: h.titulo }, ` · ${h.detalle}`]),
+    whatsapp: (w?.hilos ?? []).map(h => [{ b: h.equipo }, ` ${h.pasos}`, ...(h.estado ? [' · ', ...h.estado] : [])]),
+    ...(e.diferidoTurnoBbl !== undefined ? { diferido: [{ b: `${n0(e.diferidoTurnoBbl)} bbl` }, ` diferidos en las últimas ${TURNO_H} h.`] } : {}),
   }
 }
 
@@ -733,7 +899,7 @@ function inicioDe(e: EntradaHoy, tareas: readonly TareaHoy[], filas: readonly Pa
     return {
       frase: `Se dejan de producir ${n0(ahora)} bbl/d. ${explica.map(x => (typeof x === 'string' ? x : x.b)).join('')}`,
       previo: 'Ahora mismo', cifra: n0(ahora), unidad: 'barriles por día',
-      remate: `se dejan de producir${nombreCampo ? ` en ${nombreCampo}` : ' en sus campos'}.`, explica,
+      remate: `se dejan de producir${nombreCampo ? ` en ${nombreCampo}` : ' en sus campos'}.`, remateCorto: 'se dejan de producir.', explica,
     }
   }
   if (rol === 'oper') {
@@ -749,13 +915,15 @@ function inicioDe(e: EntradaHoy, tareas: readonly TareaHoy[], filas: readonly Pa
     const vigia = e.vigia && e.vigia.vigiladas > 0 ? ` El vigía anunció ${e.vigia.anunciadas} de ${e.vigia.vigiladas} fallas.` : ''
     return {
       frase: `De ${uno(total)} días que dura una falla, ${uno(espera)} son espera.${vigia}`,
-      previo: 'De lo que dura una falla', cifra: `${uno(espera)} de ${uno(total)}`, unidad: 'días son espera',
-      remate: 'el repuesto, los permisos o la cuadrilla: no la reparación.', explica: vigia ? [vigia.trim()] : undefined,
+      // K2 · «De cada falla» (3 palabras): la frase de X4 sigue entera en `frase` y en el nombre del grupo.
+      previo: 'De cada falla', cifra: `${uno(espera)} de ${uno(total)}`, unidad: 'días son espera',
+      // Lo que es la espera, a la ⓘ (I-jefe-1): X4 §3.4 pone la cifra y el vigía.
+      ayuda: 'La espera es el repuesto, los permisos o la cuadrilla: no la reparación.', explica: vigia ? [vigia.trim()] : undefined,
     }
   }
   const primero = pide[0]
   if (!primero) return { frase: 'Nada pendiente.', cifra: '0', unidad: 'cosas por hacer' }
-  const que = primero.tipo === 'contestar' && rol === 'tec' ? `${primero.donde?.equipo ?? ''}: diga qué encontró`
+  const que = primero.tipo === 'contestar' && rol === 'tec' ? `${primero.donde?.equipo ?? ''}: diga ${primero.preguntas?.[0]?.sobre === 'pozo' ? 'por qué paró' : 'qué se dañó'}`
     : primero.tipo === 'orden' && rol === 'tec' ? `${primero.donde?.equipo ?? ''}: su orden` : minus(primero.titulo)
   return {
     frase: `Le ${pide.length === 1 ? 'toca 1 cosa' : `tocan ${pide.length} cosas`} hoy. Primero ${que}.`,

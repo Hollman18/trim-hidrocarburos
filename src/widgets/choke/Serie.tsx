@@ -26,7 +26,7 @@ const PASADO: Record<ChokeCampo, string> = { pozos: 'limitaron', planta: 'limit�
 
 /** «QUÉ LIMITÓ, DÍA POR DÍA» (U2 §7.1–7.2): una celda por día con lo que
  *  limitó (su abreviatura y su patrón), partida en diagonal los días «casi
- *  iguales», y debajo lo que se perdió cada día por tramo, con «sin
+ *  iguales», y debajo lo que no se produjo cada día por tramo, con «sin
  *  identificar» en gris discontinuo. Arriba, el aviso «Cambió lo que limita»
  *  con su umbral y su persistencia, o «sin cambios». Todo del motor
  *  (`useSerieChoke`); la pantalla solo dibuja. */
@@ -40,7 +40,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
   const casi = conDato.filter(d => d.casiIguales[campoId]).length
   const vueltas = s.vueltas[campoId] ?? 0
 
-  // El dibujo: la franja de lo que limitó y, debajo, lo perdido por día.
+  // El dibujo: la franja de lo que limitó y, debajo, lo que no se produjo cada día (bbl).
   // C5 · Se dibuja al ancho de verdad (una unidad = un px): sus rótulos no bajan de 12 px (X3 §5.5).
   const [medir, W] = useAnchoDibujo(540, 720)
   const G = { x0: 48, x1: W - 8 }, FRANJA = { y0: 8, y1: 40 }, BARRAS = { y0: 54, y1: 150 }
@@ -67,7 +67,8 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
     : 'Sin avisos: lo que limita no cambió de forma sostenida en el período.'
 
   return (
-    <Panel className="mb-2.5" titulo="Qué limitó, día por día" extra={periodo.toLowerCase()}>
+    // H22: la unidad, una vez, en el título de la tarjeta (las barras son bbl por día).
+    <Panel className="mb-3 sm:mb-4" titulo="Qué limitó, día por día" extra={`${periodo.toLowerCase()} · barras en bbl`}>
       <div data-serie>
         {/* El aviso: no pide nada urgente; va en gris, con su campana y su texto. */}
         <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1 text-[14px]" data-aviso={s.cambios.length ? 'cambio' : 'sin-cambios'}>
@@ -93,10 +94,12 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
         {dias.length > 0 && (
           <div ref={medir} className="hidden md:block print:block"><div ref={alFinal} className="overflow-x-auto">
             <svg ref={dibujo} width={W} height={178} viewBox={`0 0 ${W} 178`} className="block" role="group"
-              aria-label={`Qué limitó cada día en ${nombre}, ${dias.length === 1 ? 'un día' : `${dias.length} días`}: ${tramos.length ? lista(tramos.map(k => SUJETO[k])) : 'sin dato'}. Debajo, lo que se perdió cada día por tramo. Con las flechas se pasa de un día a otro.`}>
+              aria-label={`Qué limitó cada día en ${nombre}, ${dias.length === 1 ? 'un día' : `${dias.length} días`}: ${tramos.length ? lista(tramos.map(k => SUJETO[k])) : 'sin dato'}. Debajo, los barriles que no se produjeron cada día, por tramo. Con las flechas se pasa de un día a otro.`}>
               <defs><PatronesTramo id={id} /></defs>
               <text x={G.x0 - 6} y={(FRANJA.y0 + FRANJA.y1) / 2 + 4} fontSize={12} textAnchor="end" fill="var(--tinta3)">limitó</text>
-              <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={12} textAnchor="end" fill="var(--tinta3)" className="tabular">{n0(tope)}</text>
+              {/* H22: el eje dice su unidad. */}
+              <text x={G.x0 - 6} y={BARRAS.y0 + 6} fontSize={12} textAnchor="end" fill="var(--tinta3)" className="tabular" data-eje-tope="">{n0(tope)}</text>
+              <text x={G.x0 - 6} y={BARRAS.y0 + 20} fontSize={12} textAnchor="end" fill="var(--tinta3)">bbl</text>
               <text x={G.x0 - 6} y={BARRAS.y1} fontSize={12} textAnchor="end" fill="var(--tinta3)">0</text>
               <line x1={G.x0} x2={G.x1} y1={BARRAS.y1} y2={BARRAS.y1} stroke="var(--linea)" />
               {dias.map((d, i) => {
@@ -135,7 +138,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
                         </text>
                       </g>
                     )}
-                    {/* Lo perdido ese día, apilado por tramo; lo sin identificar arriba, discontinuo. */}
+                    {/* Lo que no se produjo ese día, apilado por tramo; lo sin identificar arriba, discontinuo. */}
                     {ORDEN_CHOKE.map(t => {
                       const v = d.porChoke[t]
                       if (v < 0.5) return null
@@ -161,7 +164,7 @@ export function SerieLimita({ campoId, desde, hasta, periodo }: { campoId: strin
         <div className="hidden md:block print:block"><Leyenda /></div>
         <Lectura>
           Arriba, una celda por día con lo que limitó: «Po» los pozos, «Pl» la planta, «Af» afuera. Un día
-          «casi iguales» lleva la celda partida con los dos. Debajo, lo que se perdió cada día por tramo,
+          «casi iguales» lleva la celda partida con los dos. Debajo, lo que no se produjo cada día por tramo,
           con el mismo dibujo de arriba: la leyenda vale para los dos. Lo rayado y discontinuo todavía no
           tiene causa. Toque o pase el cursor por un día para ver sus cifras; con el teclado, las flechas
           pasan de un día a otro.

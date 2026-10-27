@@ -1,0 +1,194 @@
+#/adm/planta/ceiba/curso
+
+Todos mis campos
+La Ceiba
+La planta viva
+DATOS DE DEMOSTRACIÓN
+Planta
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+1
+2 detenidos o en alarma · 573 bbl diferidos
+P-201B
+K-101
+La tubería del campo
+qué limita hoy al campo
+potenciales con las pruebas vigentes al 2 de oct · capacidades del demo, sin firmar
+Punto de medición oficial (FQI-0101 · computador de flujo de la unidad LACT-01): en línea; el último día completo dio 11.105 bbl
+Ver como tabla
+Yacimiento
+Pozos · 18
+Planta o estación
+1
+P-201B
+Afuera
+Sin identificar
+→
+→
+→
+→ venta
+355
+bbl en el período
+301 bbl/d sin identificar, ahora
+LC-21 · LC-08
+va con los pozos
+◄ limita
+11.857bbl/d
+con las pruebas de los pozos
+13.000bbl/d
+le sobran
+1.143
+dato del demo, sin firmar
+crudo 13.000 · el menor
+agua ≈ 14.168 (267.750 bbl/d de agua)
+Ver la tubería del agua
+gas · sin medir
+hoy, sin P-201B: 178.500 de 267.750 bbl/d de agua, unos 9.445 bbl/d de crudo; ya entran 174.033 de agua
+14.000bbl/d
+le sobran
+2.143
+dato del demo, sin firmar
+El oleoducto o el transportador: 14.000
+El terminal o el cliente (mercado): 15.000
+
+A la planta le sobran 1.143 bbl/d: lo que den de más los pozos pasa, hasta 1.143 bbl/d.
+
+Hoy, con P-201B parada, el agua de la planta deja pasar 178.500 bbl/d y ya entran 174.033: lo que den de más los pozos pasa solo hasta unos 236 bbl/d de crudo, hasta que vuelva.
+
+Pasa hoy
+9.394 bbl/d
+Se deja de producir ahora
+1.966 bbl/d
+
+Los pozos dan 11.857 según sus pruebas: pasan 9.394, se pierden 1.966 y los otros 497 son lo que las pruebas dan de más que el medidor oficial.
+
+en la planta
+1.665
+1
+P-201B · cerró LC-07 y LC-16 · desde 2 de oct, 05:43
+Abrir
+sin identificar
+301
+LC-21 · todavía sin causa · desde 1 de oct, 18:20
+Se trabó en el período
+Octubre, en curso
+1.046 bbl
+en el yacimiento
+0
+en los pozos
+118
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(LC-05)
+en la planta
+573
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(P-201B)
+afuera
+0
+sin identificar
+355
+bbl, con sus ramas: planeada o no, causa, detalle y equipos
+(LC-21 247 · LC-08 109)
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+ESQUEMA DE PLANTA
+gas a venta
+9 de 13
+equipos con datos
++ 18 pozos
+Ver la tubería
+la planta
+
+Ahora:
+183.427 bbl/d de fluido
+9.394 bbl/d de crudo
+gas sin medición
+174.033 bbl/d de agua
+
+Tren de gas
+Tren de crudo
+Tren de agua
+Pozos productores
+18 pozos · 3 parados
+Manifold deproducción
+Separadortrifásico
+V-101
+Depurador de gas
+sin datos
+Tea / quemador
+Compresor de gas
+C-401
+Gas a venta
+3
+Tratador térmico
+H-302
+2
+Tanques enespecificación
+1 de 2 con datos
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto
+Tanque de agua
+LT-2012 · 89,6 %
+1
+Bombas de agua
+P-201B · detenido
+Pozos inyectores
+Subestación 13,8kV
+SE-2
+1
+Aire deinstrumentos
+K-101 · degradado
+CAPTURANDO DATOS
+9 equipos
+1
+P-201B
+detenido
+PI-2010 18,2 psi
+· 573 bbl diferidos
+1
+K-101 · Aire de instrumentos
+degradado
+PT-1011 112 psi
+2
+TK-102 · PMO-02
+LI-1102 14,2 pies
+3
+H-302 · Tratador térmico
+TI-3021 318 °C
+SE-2 · Subestación 13,8 kV
+II-0021 412 A
+· 118 bbl diferidos
+TK-AG-CE · Tanque de agua de La Ceiba
+nivel
+89,6 %
+alto-alto 90 %
+P-201B detenida: el respaldo toma el agua que entra, el nivel no sube
+ver 3 más
+CONFIGURADOS SIN DATOS
+4 equipos
+Depurador de gas
+sin instrumento
+TK-101 · respaldo
+sin instrumento
+P-201A
+sin instrumento
+P-201C
+sin instrumento
+Conectores y tags
+Capacidad por tren
+▾

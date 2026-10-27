@@ -4,25 +4,27 @@ import { useCifrasDeUnNombre, NOMBRE_CIFRA } from '@/shared/api/resultados'
 import { useMensajes } from '@/shared/api/mensajes'
 import { PASO_CORTO, ORDEN_PASO } from '@/entities/mensajes'
 import { NoEnviado } from '@/widgets/whatsapp/NoEnviado'
-import { TIPO_CAUSA, COMO, rolDeQuien } from '@/entities/causa-senal'
+import { COMO, rolDeQuien } from '@/entities/causa-senal'
 import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
 import { causaEnPapel } from '@/shared/ui/papel'
 import { NOMBRE_PARTE } from '@/entities/partes'
 import { ESTADO_PARTE } from '@/entities/salud'
 import { campoPorId } from '@/entities/campos'
 import { AHORA, fechaHora } from '@/entities/reloj'
-import { Panel, Boton, Chip, Hueco } from '@/shared/ui/primitivas'
+import { Panel, Boton, Chip, Hueco, Tarjeta } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
 import { Lectura } from '@/shared/ui/Lectura'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, plural } from '@/shared/lib/formato'
 import { ArrowRight } from 'lucide-react'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { useCondiciones } from '@/shared/api/condiciones'
+import { FAMILIA } from '@/shared/api/plantaViva'
+import { MarcaDeEquipo } from '@/widgets/hoy/comun'
 import { ApoyoPorIdentificar } from '@/shared/ui/PorIdentificar'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
-import { useEquiposDeHoy, esServicio } from '@/shared/api/equipos'
+import { esServicio } from '@/shared/api/equipos'
 import { siPara, siParaLargo } from '@/shared/ui/costoHoy'
 import { HoyLimita, DondeSeTrabo } from '@/widgets/arbol/HoyLimita'
 import { CierreDeHoy } from '@/widgets/arbol/CierreDeHoy'
@@ -50,8 +52,9 @@ export function Turno() {
   const preguntas = todas.filter(p => p.pide)
   // La cuenta única de «por identificar» (Turno, Mi trabajo, Identificar, Mantenimiento).
   const pi = contarPorIdentificar(todas)
-  // La marca de un equipo es la de hoy, en todas partes (B-20): la urgencia de identificar va en el texto.
-  const hoy = useEquiposDeHoy(ids)
+  // H3 (X2 F2): la marca de un equipo es la de la franja, la misma en todas partes; la
+  // urgencia (cruzar el límite dentro del turno) va en el texto, no en otra marca (H17).
+  const condicion = useCondiciones(ids)
   const enviados = useMensajes(ids).filter(m => new Date(m.hora).getTime() >= inicioTurno.getTime())
   const nombre = (id: string) => usuarios.find(x => x.id === id)?.nombre ?? id
   // Todo lo de este panel y del de paradas nuevas es de las últimas 12 h: basta la hora.
@@ -101,18 +104,21 @@ export function Turno() {
   }
   const grupos = [...porEvento.values()]
 
+  // El orden de «ver más» sigue la urgencia; la MARCA es la del equipo (H3).
   const prioridadVigilar = (r: (typeof vigilar)[number]) => (r.horas !== undefined && r.horas < TURNO_H ? Math.min(r.prioridad || 3, 2) as 1 | 2 : r.prioridad)
   const listaPerdiendo = useVerMas(perdiendo, { prioridad: r => (r.altoImpacto ? 1 : 2) })
   // «No arrancar» es una instrucción de seguridad: esas filas nunca quedan detrás de «ver más».
   const listaPreguntas = useVerMas(preguntas, { prioridad: p => (!p.fin ? 1 : 3) })
   const listaVigilar = useVerMas(vigilar, { prioridad: prioridadVigilar })
+  /** La marca del equipo con su palabra (H16), o nada si el equipo no tiene condición. */
+  const marca = (campoId: string, equipo: string) => <MarcaDeEquipo c={condicion(campoId, equipo)} tamano={13} />
   const listaGrupos = useVerMas(grupos)
   const listaHilos = useVerMas(hilos)
   const sinEnviar = enviados.filter(m => m.noEnviado).length
 
   const filaPerdiendo = (r: (typeof perdiendo)[number]) => (
     <Tip key={`${r.campoId}${r.equipo}${r.tipo}`} as="button" onClick={() => abrir(r.campoId, r.equipo)}
-      titulo={`${r.equipo} · ${TIPO_CAUSA[r.tipo]}`} pista={r.motivo}
+      titulo={`${r.equipo} · ${FAMILIA[r.tipo]}`} pista={r.motivo}
       // Lo que escribió una persona va en la pantalla; en el papel, quién lo contestó, por su rol (D2).
       pistaEnPapel={r.declaradoPor ? `Lo contestó ${r.declaradoPor}` : undefined}
       filas={[['Pozos parados', String(r.pozos)], [`Por ${r.equipo} se dejan de producir`, `${n0(r.bblDia)} bbl/d`],
@@ -120,11 +126,11 @@ export function Turno() {
         ...(r.cierreDesde && r.desde && r.cierreDesde.getTime() - r.desde.getTime() > 60_000 ? [['Pozos cerrados desde', fechaHora(r.cierreDesde)] as [string, string]] : [])]}
       imprimir="todo" claseImpresion="border-b border-[var(--linea2)] pb-1.5 last:border-0"
       className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2.5 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
-      <MarcaPrioridad s={r.altoImpacto ? 1 : 2} tamano={13} />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-2">
+          {marca(r.campoId, r.equipo)}
           <b className="text-[15px] leading-tight">{r.equipo}{donde(r.campoId)}</b>
-          <Chip tono={r.altoImpacto ? 'fuerte' : 'neutro'}>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>
+          <span className="text-[14px] text-[var(--tinta2)]">{FAMILIA[r.tipo]}</span>
           {veTramo && <DondeSeTrabo campoId={r.campoId} equipo={r.equipo} desde={inicioTurno} hasta={AHORA} />}
           {r.parte && <span className="text-[13px] text-[var(--tinta2)]">{NOMBRE_PARTE[r.parte].toLowerCase()}</span>}
         </span>
@@ -139,9 +145,8 @@ export function Turno() {
 
   const filaPregunta = (p: (typeof preguntas)[number]) => (
     <div key={p.id} className="flex items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-[14px] last:border-0">
-      <MarcaPrioridad s={hoy(p.equipo, p.campoId)?.severidad ?? 0} tamano={12} />
       <span className="min-w-0 flex-1">
-        <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span>
+        {marca(p.campoId, p.equipo)} <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)} · {fechaHora(p.inicio)}</span>
       </span>
       {!p.fin ? <Chip tono="fuerte">no arrancar</Chip> : <Chip>arrancó sin identificar</Chip>}
     </div>
@@ -153,13 +158,12 @@ export function Turno() {
       filas={[['Parte', r.parte ? NOMBRE_PARTE[r.parte] : '—'], ['Cruza su límite', r.horas !== undefined ? `en ${fmtHoras(r.horas)}` : 'ya pasó el límite'],
         ['Si para', siParaLargo(r, esServicio(r))]]}
       className="flex w-full cursor-pointer items-center gap-2.5 border-b border-[var(--linea2)] py-2 text-left last:border-0 hover:bg-[var(--panel2)] print:border-b-0">
-      <MarcaPrioridad s={prioridadVigilar(r)} tamano={13} />
       <span className="min-w-0 flex-1">
-        <b className="block truncate text-[14px]">{r.equipo}{donde(r.campoId)}</b>
+        <span className="flex flex-wrap items-baseline gap-x-2">{marca(r.campoId, r.equipo)}<b className="truncate text-[14px]">{r.equipo}{donde(r.campoId)}</b></span>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-[var(--tinta2)]">
           {r.parte
             ? <>{NOMBRE_PARTE[r.parte].toLowerCase()}{r.estadoParte && <Chip tono={r.estadoParte === 'fuera' ? 'fuerte' : 'neutro'}>{ESTADO_PARTE[r.estadoParte]}</Chip>}</>
-            : <Chip>{TIPO_CAUSA[r.tipo].toLowerCase()}</Chip>}
+            : <Chip>{FAMILIA[r.tipo]}</Chip>}
         </span>
       </span>
       <span className="tabular text-right text-[13px]">
@@ -188,7 +192,7 @@ export function Turno() {
             <span><b>{plural(g.length, 'pozo cerrado', 'pozos cerrados')}</b> por <b>{t.causa.equipo}</b>{donde(t.pozo.campoId)}
               <span className="tabular text-[var(--tinta3)]"> · {hora(new Date(Math.min(...ini.map(x => x.getTime()))))}–{hora(new Date(Math.max(...ini.map(x => x.getTime()))))}</span></span>
           ) : (
-            <span><b className="tabular">{hora(ini[0]!)}</b> · <b className="font-mono">{t.pozo.id}</b>{donde(t.pozo.campoId)}{porOtro && <> · por <b>{t.causa.equipo}</b></>}</span>
+            <span><b className="tabular">{hora(ini[0]!)}</b> · <b className="font-cond font-bold tracking-[.02em]">{t.pozo.id}</b>{donde(t.pozo.campoId)}{porOtro && <> · por <b>{t.causa.equipo}</b></>}</span>
           )}
           <Chip>{como}</Chip>
         </span>
@@ -211,46 +215,39 @@ export function Turno() {
     </Tip>
   )
 
-  const cifra = 'tabular flex items-center gap-1.5 text-[20px] leading-none'
-  const rotulo = 'block text-[13px] text-[var(--tinta3)]'
-  const apoyo = 'block text-[13px] text-[var(--tinta2)]'
 
   return (
     <>
-      {/* El bloque del ciclo ya no va aquí (X4 §3.7): lo simulado del turno está en Hoy y en La planta viva. */}
-      <div className="mb-2.5 grid gap-x-6 gap-y-3 rounded border border-[var(--linea)] bg-[var(--panel)] p-4 shadow-[var(--sombra)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-        <Tip titulo="Turno que entra" pista={`Lo que se deja de producir ahora, sostenido las ${TURNO_H} horas del turno.`}
-          filas={[[NOMBRE_CIFRA.ahora, `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]} className="block">
-          <b className="tabular block text-[36px] leading-none">{n0(porDia * TURNO_H / 24)}<small className="ml-1 text-[13px] font-normal text-[var(--tinta3)]">bbl</small></b>
-          <small className={rotulo}>se dejarían de producir · turno que entra</small>
-          <small className={apoyo}>si nada cambia</small>
-        </Tip>
-        <span>
+      {/* P-05 (regla 5: lo medido manda y lo simulado acompaña): la cifra grande es lo que se
+          deja de producir AHORA, medido; la proyección del turno que entra va debajo, chica, con su
+          palabra y en trazo discontinuo. Lo demás que traía el bloque (por identificar, el diferido
+          del turno) va en una línea, sin cifras grandes (UI-15). */}
+      <Tarjeta className="mb-2.5" data-turno-cifras>
+        <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           {/* Un total no es una alarma: la marca va en el equipo que lo causa (B-40; U2 §0, principio 4). */}
-          <b className={cifra}>{n0(porDia)}<small className="text-[13px] font-normal text-[var(--tinta3)]">bbl/d</small></b>
-          <small className={rotulo}>se deja de producir ahora</small>
-          <small className={apoyo}>
-            {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
-            {causaMayor && <span className="inline-flex items-center gap-1"> · <MarcaPrioridad s={causaMayor.altoImpacto ? 1 : 2} tamano={11} />{causaMayor.equipo}</span>}
-          </small>
-        </span>
-        <span>
-          <b className={cifra}>{pi.porIdentificar}</b>
-          <small className={rotulo}>por identificar</small>
-          <ApoyoPorIdentificar pi={pi} />
-        </span>
-        <span>
-          <b className={cifra}>{n0(lb.diferido)}<small className="text-[13px] font-normal text-[var(--tinta3)]">bbl</small></b>
-          <small className={rotulo}>diferidos · {TURNO_H} h</small>
-        </span>
-      </div>
+          <b className="tabular text-[30px] font-bold leading-none tracking-[-.01em]" data-medida>{n0(porDia)}</b>
+          <span className="text-[16px] text-[var(--tinta2)]">bbl/d se dejan de producir ahora</span>
+        </p>
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[15px] text-[var(--tinta2)]">
+          {plural(perdiendo.reduce((a, r) => a + r.pozos, 0), 'pozo parado', 'pozos parados')}
+          {causaMayor && <> · {marca(causaMayor.campoId, causaMayor.equipo)}<b className="text-[var(--tinta)]">{causaMayor.equipo}</b></>}
+          <span> · {pi.porIdentificar} por identificar</span><ApoyoPorIdentificar pi={pi} />
+          <span> · {n0(lb.diferido)} bbl diferidos en {TURNO_H} h</span>
+        </p>
+        <Tip titulo="Turno que entra" pista={`Lo que se deja de producir ahora, sostenido las ${TURNO_H} horas del turno, si nada cambia.`}
+          filas={[[NOMBRE_CIFRA.ahora, `${n0(porDia)} bbl/d`], ['Turno', `${TURNO_H} h`]]}
+          className="mt-2.5 inline-flex rounded-full border-[1.5px] border-dashed border-[var(--tinta3)] px-2.5 text-[14px] leading-[1.6] text-[var(--tinta2)]"
+          data-proyectado="">
+          ≈ {n0(porDia * TURNO_H / 24)} bbl en el turno que entra si nada cambia · proyectado
+        </Tip>
+      </Tarjeta>
 
       <Lectura>
         Lo que deja el turno que sale y lo que recibe el que entra. Las cifras salen de los
         controladores de los pozos y del vigía; para entregar no hay que escribir nada, salvo
-        responder las paradas que ninguna señal explica. Turno que entra: lo que se deja de producir ahora,
-        sostenido las {TURNO_H} horas, si nada cambia. Toque o pase el cursor por un hilo de WhatsApp para
-        ver a quién le llegó cada mensaje; lo que no se envió se marca en la fila.
+        responder las paradas que ninguna señal explica. «Proyectado»: lo que se deja de producir ahora,
+        sostenido las {TURNO_H} horas del turno que entra, si nada cambia. Toque o pase el cursor por un hilo
+        de WhatsApp para ver a quién le llegó cada mensaje; lo que no se envió se marca en la fila.
       </Lectura>
 
       {/* «Hoy limita» separa lo que limita, lo más frágil y lo que más cuesta si falla (U2 §3.1, §12 punto 1). */}

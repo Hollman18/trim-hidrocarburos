@@ -170,15 +170,18 @@ export function PanelDondeSeTrabo({ campos, desde, hasta, conPerdida = false, cl
         identificado va aparte, rayado: no se reparte. La barra suma los barriles diferidos del período,
         los mismos de arriba.
       </Lectura>
-      <div className="mt-1.5 grid gap-3">
-        {campos.map(c => (
-          <div key={c} data-partible className="min-w-0 border-b border-[var(--linea2)] pb-2.5 last:border-0 last:pb-0">
-            {campos.length > 1 && <b className="mb-1 block text-[15px]">{campoPorId(c).nombre}</b>}
-            <DondeSeTraboCampo campoId={c} desde={desde} hasta={hasta} />
-          </div>
-        ))}
+      {/* En el papel, la barra y su leyenda no se separan de hoja (A21): con un campo, un solo bloque; con varios, la leyenda pegada al último. */}
+      <div data-sin-partir={campos.length === 1 ? '' : undefined}>
+        <div className="mt-1.5 grid gap-3">
+          {campos.map(c => (
+            <div key={c} data-partible={campos.length > 1 ? '' : undefined} className="min-w-0 border-b border-[var(--linea2)] pb-2.5 last:border-0 last:pb-0">
+              {campos.length > 1 && <b className="mb-1 block text-[15px]">{campoPorId(c).nombre}</b>}
+              <DondeSeTraboCampo campoId={c} desde={desde} hasta={hasta} />
+            </div>
+          ))}
+        </div>
+        {total >= 0.5 && <LeyendaTramos className="mt-2.5 print:break-before-avoid" />}
       </div>
-      {total >= 0.5 && <LeyendaTramos className="mt-2.5" />}
       {conPerdida && <LineaPerdida className="mt-2.5 border-t border-[var(--linea2)] pt-2" />}
     </section>
   )

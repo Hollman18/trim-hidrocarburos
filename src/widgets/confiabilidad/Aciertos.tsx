@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useAmbito } from '@/app/store'
 import { useSap } from '@/shared/api/sap'
 import { usePredicciones } from '@/shared/api/predicciones'
@@ -18,9 +18,12 @@ const VISIBILIDADES: Visibilidad[] = ['sin-instrumento', 'sin-parte', 'fuera-de-
 const RESULTADO: Record<Exclude<Calificacion, 'seguimiento'>, string> = { acierto: 'acierto', intervenida: 'intervenida antes', 'falsa-alarma': 'falsa alarma' }
 const D = 86_400_000
 
-/** ¿Acierta el vigía? Lo que anunció y en qué quedó, cuánto antes avisó, y las
- *  fallas que nadie anunció: las que podía ver y se le escaparon, y las que no
- *  podía ver (sin instrumento, sin parte). */
+/** ¿Le creo al vigía? (P-conf-1: el mismo título de Resultados, X4 §3.7). A la
+ *  vista, las dos cifras que contestan (cuánto acertó y cuánto antes avisó) y, si
+ *  las hay, las fallas que tenían instrumento y se le escaparon: un historial que
+ *  a la vista solo muestra aciertos maquilla al vigía. Lo demás (lo que anunció y
+ *  en qué quedó, las fallas que no podía ver, lo que está en seguimiento) va
+ *  detrás de «Ver lo que anunció», y entero en el papel. */
 export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: string) => void }) {
   const ambito = useAmbito()
   const ids = ambito.campos.map(c => c.id)
@@ -49,6 +52,7 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
   // Cinco a la vista y «ver N más»; lo que se esconde sale en el papel. Una falsa alarma
   // nunca queda escondida: un historial que a la vista solo muestra aciertos maquilla al vigía.
   const listaVencidas = useVerMas(vencidas, { prioridad: p => (p.calificacion === 'falsa-alarma' ? 1 : 3) })
+  const [abierto, setAbierto] = useState(false)
   const columna = 'tabular text-right text-[13px] text-[var(--tinta2)]'
 
   /** Una predicción vencida en una línea: cuándo avisó → en qué quedó. Las dos
@@ -77,7 +81,19 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
   }
 
   return (
-    <Panel className="mt-2.5" titulo="¿Acierta el vigía?" extra={`desde el ${fechaCorta(inicio)}`}>
+    <Panel className="mt-3 sm:mt-4" titulo="¿Le creo al vigía?" extra={`desde el ${fechaCorta(inicio)}`}>
+      {/* Las dos que contestan, en una línea (P-conf-1); lo que se le escapó con instrumento no se esconde. */}
+      <p className="text-[16px] leading-[1.45] text-[var(--tinta)]" data-vigia-resumen="">
+        {tasa !== undefined
+          ? <>Acertó <b className="tabular">{aciertos.length} de {aciertos.length + falsas.length}</b>{promedio !== undefined ? <> · anticipó <b className="tabular">{n1(promedio)} días</b> en promedio</> : ''}</>
+          : 'Todavía no tiene un aviso vencido que juzgar.'}
+        {escapadas.length > 0 && <> · se le {escapadas.length === 1 ? 'escapó' : 'escaparon'} <b className="tabular">{escapadas.length}</b> con instrumento</>}
+      </p>
+      <button type="button" aria-expanded={abierto} aria-controls="vigia-detalle" onClick={() => setAbierto(x => !x)} data-ver-lo-que-anuncio=""
+        className="no-imprimir mt-1.5 inline-flex min-h-11 cursor-pointer items-center gap-1 text-[15px] font-semibold text-[var(--tinta)] hover:underline sm:min-h-9">
+        {abierto ? 'Ver menos' : 'Ver lo que anunció'} <span aria-hidden>{abierto ? '‹' : '›'}</span>
+      </button>
+      <div id="vigia-detalle" className={abierto ? 'mt-2' : 'hidden print:block'} data-vigia-detalle={abierto ? 'abierto' : 'cerrado'}>
       <Lectura>
         Cada predicción se califica al vencer su ventana: acierto si esa parte falló; intervenida si
         se le hizo mantenimiento antes (es lo que se busca, pero no prueba que iba a fallar y no
@@ -160,13 +176,14 @@ export function Aciertos({ onAbrir }: { onAbrir: (campoId: string, equipo: strin
               className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-x-3 border-b border-[var(--linea2)] py-1.5 text-left text-[14px] last:border-0 hover:bg-[var(--panel2)]">
               <span className="min-w-0">
                 <b>{p.equipo}</b><span className="text-[var(--tinta3)]">{donde(p.campoId)}</span> · {parte(p.parte)}
-                {p.tag && <small className="block font-mono text-[12px] text-[var(--tinta3)]">{p.tag}</small>}
+                {p.tag && <small className="block font-cond text-[13px] text-[var(--tinta3)]">{p.tag}</small>}
               </span>
               <small className={columna}>{ventana(p.desde, p.hasta)}</small>
             </button>
           ))}
 
         </div>
+      </div>
       </div>
     </Panel>
   )
@@ -179,7 +196,8 @@ function Cifra({ rotulo, valor, pie, parte, nota }: { rotulo: string; valor: str
   return (
     <span className="min-w-0">
       <small className="block text-[13px] text-[var(--tinta3)]">{rotulo}</small>
-      <b className="tabular block text-[24px] leading-none">{valor}</b>
+      {/* H11: a 18 px; las de 24 van solo arriba de la pantalla (X5 §3.4: una grande y cuatro secundarias). */}
+      <b className="tabular block text-[18px] leading-none">{valor}</b>
       {parte !== undefined && (
         <span aria-hidden className="mt-1 block h-1.5 max-w-[140px] overflow-hidden rounded-sm bg-[var(--panel2)]">
           <i className="block h-full bg-[var(--dato-2)]" style={{ width: `${Math.min(1, parte) * 100}%` }} />

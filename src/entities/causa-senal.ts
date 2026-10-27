@@ -38,7 +38,8 @@ export type TipoCausa =
   | 'programada' | 'declarada' | 'pendiente'
 
 export const TIPO_CAUSA: Record<TipoCausa, string> = {
-  reinyeccion: 'Bomba de reinyección',
+  // P-09 (K1): una familia por equipo, la de campo (`FAMILIA` de planta-viva.ts): «bomba de agua».
+  reinyeccion: 'Bomba de agua',
   transporte: 'Bomba multifásica',
   electrosumergible: 'Electrosumergible',
   levantamiento: 'Bombeo mecánico',

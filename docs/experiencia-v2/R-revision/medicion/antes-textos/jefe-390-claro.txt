@@ -1,0 +1,35 @@
+2
+La Ceiba
+CR
+Todos mis campos
+La Ceiba
+DEMO
+Hoy
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+De lo que dura una falla
+7,7 de 8,1
+días son espera
+el repuesto, los permisos o la cuadrilla: no la reparación.
+El vigía anunció 3 de 3 fallas.
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Conseguir la causa de 3 paradas
+Alarma
+P-201B
+lleva 10,1 h sin saber qué se dañó; se escaló a las 05:52
+LC-21
+lleva 19,7 h sin causa
+LC-08
+arrancó a la 01:10 sin identificar
+219 bbl hoy
+928 desde que pararon
+Plan simulado: volver antes de 39 h (2.072 bbl), y 2 planes más
+Responder yo
+Ver el chat

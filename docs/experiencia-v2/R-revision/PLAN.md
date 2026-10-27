@@ -54,8 +54,8 @@ Marca **confirmado** (con su severidad S1/S2/S3) o **refutado** (con su porqué)
 
 ## Estado
 
-- [ ] Tanda 2 cerrada (C4, C5)
-- [ ] Fases 1–2 (R1–R4)
-- [ ] Fase 3 (V1, V2)
-- [ ] Fase 4 (F1–F4)
+- [x] Tanda 2 cerrada (C4, C5): 5aaa7f2
+- [x] Fases 1–2 (R1–R4): ~230 hallazgos (texto 79, UI y producto 46, ISA-101 y gráficos 34, accesibilidad y frontend 24)
+- [x] Fase 3 (V1, V2): confirmados 110 + 56; decisiones D-1 (la imagen manda; −40 % a 390 px), D-2 («Si falla hoy» en bbl/d), D-3 (títulos en frase), redondeo por mayor residuo en el motor; A9 (fuente http) fuera de esta tanda
+- [ ] Fase 4 (F1–F4): en curso
 - [ ] Fase 5

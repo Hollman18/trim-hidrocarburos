@@ -9,9 +9,10 @@ import { detectar } from './auditoria/detector.ts'
 const RUTA = '/#/adm/configuracion/ceiba/curso'
 const CSV_MALO = 'equipo;pozos a los que sirve\nK-101;LC-11 LC-12\nXX-99;LC-01\nSE-2;todos'
 
-/** El administrador abre «Filosofía operacional» en Configuración. */
+/** El administrador abre «Filosofía operacional» en Configuración: desde la lista de partes, no
+ *  desde una pestaña (F3, UI-01: ninguna pestaña horizontal; el administrador abre en el estado). */
 async function abrirFilosofia(page: Page) {
-  await page.getByRole('tab', { name: 'Filosofía operacional' }).click()
+  await page.locator('main nav[data-partes] button', { hasText: 'Filosofía operacional' }).click()
   await expect(page.getByRole('heading', { name: 'Filosofía operacional · La Ceiba' })).toBeVisible()
 }
 
@@ -44,8 +45,10 @@ test('adm: un equipo de la planta que sirve a un solo pozo pasa sus paradas de l
   await f.abrir(RUTA)
   await abrirFilosofia(page)
   let t = await f.texto()
-  f.ok(t.includes('modelo choke') && /Sin responder \d+/.test(t) && /Propuestas de TRIM \d+/.test(t) && t.includes('Todos 36'),
-    'la página dice «modelo choke» de segundo y filtra lo que falta, lo que propone TRIM y todo (36 equipos)')
+  // F3 (T-11): «modelo choke» ya no es un rótulo; la palabra queda en la ⓘ junto al título (X4 §6.1.4).
+  f.ok(!t.includes('modelo choke') && await page.getByRole('img', { name: /^Modelo choke: / }).count() === 1
+      && /Sin responder \d+/.test(t) && /Propuestas de TRIM \d+/.test(t) && t.includes('Todos 36'),
+    'el modelo choke va en la ⓘ del título, y la página filtra lo que falta, lo que propone TRIM y todo (36 equipos)')
   f.ok(!/\b(dedicado|compartido|frontera|tercero)\b/.test(t), 'el administrador no ve los nombres internos del alcance: ve botones y frases')
   // B-29: sin tag, el equipo se llama por su nombre, nunca por la clave del esquema.
   const nombres = (await page.locator('main button[aria-pressed] b').allInnerTexts()).map(x => x.trim())
@@ -171,7 +174,7 @@ test('capacidades: lo que bloquea la firma lo dice con la marca de aviso y la pa
   await abrirFilosofia(page)
   await page.getByRole('button', { name: '2 Capacidades' }).click()
   await page.getByLabel('Tren de crudo, bbl/d de crudo').fill('5000')
-  const revision = page.locator('main section').filter({ has: page.getByText('REVISIÓN CON LAS REGLAS DE LA FIRMA', { exact: true }) })
+  const revision = page.locator('main section').filter({ has: page.getByText('Revisión con las reglas de la firma', { exact: true }) })
   await expect(revision.locator('[data-bloquea]').first()).toContainText('Bloquea la firma:')
   const reglas = await revision.locator('li').allInnerTexts()
   // B-30: el morado es solo de «sin comunicación» y «dato inválido»; bloquear o no se dice con palabra y forma.
@@ -203,7 +206,7 @@ for (const ancho of [390, 320, 1280, 1512]) {
       }
       await f.abrir(RUTA)
       await abrirFilosofia(page)
-      f.ok(telefono ? (await f.texto()).includes('Equipo 1 de 36 · borrador') : (await f.texto()).includes('EQUIPOS · 36'),
+      f.ok(telefono ? (await f.texto()).includes('Equipo 1 de 36 · borrador') : (await f.texto()).includes('Equipos · 36'),
         telefono ? 'en el teléfono va una pregunta por pantalla' : 'en el escritorio, la lista de los 36 equipos al lado de la pregunta')
       await revisar('paso 1')
       await deUnSoloPozo(page)
@@ -218,12 +221,12 @@ for (const ancho of [390, 320, 1280, 1512]) {
       await f.esperarTexto('Fila 3: XX-99')
       await revisar('carga con una fila mala')
       await page.getByRole('button', { name: '2 Capacidades' }).click()
-      await f.esperarTexto('REVISIÓN CON LAS REGLAS DE LA FIRMA')
+      await f.esperarTexto('Revisión con las reglas de la firma')
       await revisar('paso 2')
       await page.getByRole('button', { name: '3 Ver el impacto y firmar' }).click()
       await f.esperarTexto('pasan de «En la planta o estación»')
       const t = await f.texto()
-      f.ok(telefono ? t.includes('La firma se hace en el escritorio') && !t.includes('FIRMAR LA VERSIÓN') : t.includes('FIRMAR LA VERSIÓN'),
+      f.ok(telefono ? t.includes('La firma se hace en el escritorio') && !t.includes('Firmar la versión') : t.includes('Firmar la versión'),
         telefono ? 'en el teléfono la firma se hace en el escritorio (U2 §8.7)' : 'en el escritorio la firma va debajo de la vista previa')
       await revisar('paso 3')
       f.cerrar()

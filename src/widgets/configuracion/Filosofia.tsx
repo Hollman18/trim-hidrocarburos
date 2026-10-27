@@ -12,8 +12,8 @@ import { TopologiaPaso } from './TopologiaPaso'
 import { CapacidadesPaso } from './CapacidadesPaso'
 import { ImpactoPaso } from './ImpactoPaso'
 
-/** El ⓘ de «modelo choke», el rótulo secundario de Configuración (U2 §1.3, texto exacto). */
-const EXPLICA_MODELO_CHOKE = 'Es un método internacional para ubicar dónde se pierde producción: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
+/** El ⓘ de la filosofía operacional: qué es el modelo choke (U2 §1.3). Diferido no es pérdida: lo que no se produce «se deja de producir». */
+const EXPLICA_MODELO_CHOKE = 'Es un método internacional para ubicar dónde se deja de producir: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
 
 export type PasoFilosofia = 1 | 2 | 3
 const PASOS: ReadonlyArray<[PasoFilosofia, string]> = [[1, 'Equipos y pozos'], [2, 'Capacidades'], [3, 'Ver el impacto y firmar']]
@@ -71,21 +71,26 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, onCapaci
     <div ref={arriba} className="scroll-mt-2">
       <header className="mb-2 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold leading-tight">Filosofía operacional · {campo.nombre}</h2>
-          <p className="flex flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta3)]">
-            modelo choke <Info titulo="Modelo choke" texto={EXPLICA_MODELO_CHOKE} />
-          </p>
+          {/* Sin el rótulo «modelo choke» (T-11; X4 §6.1.4): la palabra queda solo en la ⓘ, pegada al título. */}
+          <div className="flex flex-wrap items-center gap-x-1.5">
+            <h2 className="text-[20px] font-semibold leading-tight">Filosofía operacional · {campo.nombre}</h2>
+            <Info titulo="Modelo choke" texto={EXPLICA_MODELO_CHOKE} />
+          </div>
         </div>
         <p className="text-[13px] text-[var(--tinta2)]">borrador · {cambios ? plural(cambios, 'cambio sin firmar', 'cambios sin firmar') : 'sin cambios'}</p>
       </header>
-      <nav aria-label="Pasos de la filosofía operacional" className="mb-2.5">
-        <ol className="flex flex-wrap gap-1">
+      {/* Los pasos, en una lista (no en una barra de pestañas: UI-01); el que se ve, marcado. */}
+      <nav aria-label="Pasos de la filosofía operacional" className="no-imprimir mb-3 rounded-[20px] bg-[var(--panel)] px-4 py-1 sm:mb-4 sm:px-6" data-pasos-filosofia>
+        <ol>
           {PASOS.map(([n, t]) => (
-            <li key={n}>
+            <li key={n} className="border-t border-[var(--linea2)] first:border-t-0">
               <button type="button" aria-current={paso === n ? 'step' : undefined} onClick={() => ir(n)}
-                className={cn('min-h-8 cursor-pointer rounded-full border px-2.5 py-1 text-left text-[14px]',
-                  paso === n ? 'border-[var(--primario)] bg-[var(--primario)] font-semibold text-[var(--primario-sobre)]' : 'border-[var(--linea2)] text-[var(--tinta2)] hover:bg-[var(--panel2)]')}>
-                <span className="tabular">{n}</span> {t}
+                className={cn('flex min-h-11 w-full cursor-pointer items-center gap-2.5 py-1.5 text-left text-[15px] hover:underline',
+                  paso === n ? 'font-semibold text-[var(--tinta)]' : 'text-[var(--tinta2)]')}>
+                <span className={cn('tabular grid size-6 shrink-0 place-items-center rounded-full text-[13px] font-semibold',
+                  paso === n ? 'bg-[var(--primario)] text-[var(--primario-sobre)]' : 'shadow-[inset_0_0_0_1.5px_var(--linea)]')}>{n}</span>
+                <span className="min-w-0 flex-1">{t}</span>
+                {paso !== n && <ChevronRight aria-hidden className="size-4 shrink-0 text-[var(--tinta3)]" />}
               </button>
             </li>
           ))}
@@ -102,7 +107,7 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, onCapaci
         Paso {paso} · {nombrePaso}
       </h3>
       {!puede && (
-        <div className="mb-2.5"><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: la prepara y la firma el administrador de la implementación.</Hueco></div>
+        <div className="mb-3 sm:mb-4"><Hueco><Lock className="mr-1 inline size-3.5" />Solo lectura: la prepara y la firma el administrador de la implementación.</Hueco></div>
       )}
 
       {paso === 1 && (
@@ -119,7 +124,7 @@ export function FilosofiaOperacional({ campoId, topologia, onResponder, onCapaci
           estrecho={estrecho} onFaltan={id => { if (id !== campoId) setCampo(id); ir(1, true) }} />
       )}
 
-      <div className="mt-2.5 flex flex-wrap justify-between gap-1.5">
+      <div className="mt-3 sm:mt-4 flex flex-wrap justify-between gap-1.5">
         {paso > 1
           ? <Boton type="button" onClick={() => ir((paso - 1) as PasoFilosofia)}><ChevronLeft className="mr-0.5 inline size-3.5" />Volver a {PASOS[paso - 2]![1].toLowerCase()}</Boton>
           : <span />}

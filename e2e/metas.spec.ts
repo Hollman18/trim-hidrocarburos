@@ -68,7 +68,8 @@ test('metas firmadas y accesos', async ({ flujo: f }) => {
     await f.marcar('Suspender el acceso')
     await f.escribir('input[placeholder^="Ej.: pasa a cubrir"]', 'Prueba: deja la implementación')
     await f.clic('Guardar el cambio'); await f.esperar(300)
-    await f.ir('#/adm/configuracion/ceiba/curso'); await f.esperar(300)
+    // F3 (P-04): el administrador abre en el estado; lo técnico es una parte, a un toque.
+    await f.ir('#/adm/configuracion/ceiba/curso'); await f.clic('Configuración técnica'); await f.esperar(300)
     await f.escribir('input[value="Operadora de demostración"]', 'Operadora de prueba'); await f.esperar(200)
     t = await f.texto()
     f.ok(t.includes('Nadie con acceso activo tiene este rol') && !t.includes('Firmar como Hermes Leal'), 'con Hermes Leal suspendido, el rol de administrador no tiene quién firme')
@@ -89,14 +90,15 @@ test('metas firmadas y accesos', async ({ flujo: f }) => {
   })
 
   await test.step('Permisos', async () => {
-    await f.ir('#/adm/configuracion/ceiba/curso'); await f.esperar(300)
+    await f.ir('#/adm/configuracion/ceiba/curso'); await f.clic('Configuración técnica'); await f.esperar(300)
     t = await f.texto()
-    f.ok(t.includes('TANQUES DE AGUA') && t.includes('MEMBRETE DEL INFORME'), 'el administrador ve lo técnico')
-    await f.clic('Metas de los campos'); await f.esperar(300)
+    f.ok(t.includes('Tanques de agua') && t.includes('Membrete del informe'), 'el administrador ve lo técnico')
+    // Desde una parte, el administrador vuelve a su estado y de ahí va a otra (F3: sin pestañas).
+    await f.clic('Estado de la configuración'); await f.clic('Metas de los campos'); await f.esperar(300)
     t = await f.texto()
     f.ok(t.includes('los fija y firma el gerente de activo')
       && await f.page.evaluate(() => document.querySelector<HTMLInputElement>('input[aria-label="Meta de producción de La Ceiba, bbl/d"]')?.disabled === true), 'y las metas las ve sin poder cambiarlas')
-    await f.clic('Usuarios y accesos'); await f.esperar(300)
+    await f.clic('Estado de la configuración'); await f.clic('Usuarios y accesos'); await f.esperar(300)
     t = await f.texto()
     f.ok(t.includes('Solo lectura: los da el gerente de activo') && !t.includes('Invitar a una persona'), 'los accesos, igual: solo lectura')
   })

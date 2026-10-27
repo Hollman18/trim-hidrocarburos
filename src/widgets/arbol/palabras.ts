@@ -20,9 +20,10 @@ export const ESTADO: Record<EstadoParadaAnh, string> = {
   propuesta: 'falta confirmar', 'por-precisar': 'falta un dato', confirmada: 'completa', pendiente: 'sin causa',
 }
 
-/** El título de cada bloque de Identificar (U2 §9.3), en el orden en que se atienden. */
+/** El título de cada bloque de Identificar (U2 §9.3), en el orden en que se atienden. En frase,
+ *  nunca en MAYÚSCULAS (D-3; prompt §4). */
 export const SECCION: Record<EstadoParadaAnh, string> = {
-  propuesta: 'POR CONFIRMAR', 'por-precisar': 'FALTA UN DATO', pendiente: 'SIN CAUSA', confirmada: 'COMPLETAS',
+  propuesta: 'Por confirmar', 'por-precisar': 'Falta un dato', pendiente: 'Sin causa', confirmada: 'Completas',
 }
 export const ORDEN_SECCIONES: readonly EstadoParadaAnh[] = ['propuesta', 'por-precisar', 'pendiente', 'confirmada']
 
@@ -35,7 +36,7 @@ export const PASO_EN_LA_CIRCULAR = PASO_CIRCULAR
 /** El ⓘ del paso 2, texto exacto (U2 §1.5). */
 export const INFO_PASO_2 = 'Dónde empezó lo que paró el pozo, no dónde está el pozo: si la planta no recibe y el pozo cierra, se trabó en la planta. Es el paso 2 de la Circular 024 de la ANH ("componente del sistema de producción").'
 /** «¿Qué método es?»: el ⓘ del método, en dos líneas (U2 §1.3). */
-export const INFO_METODO = 'Es un método internacional para ubicar dónde se pierde producción: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
+export const INFO_METODO = 'Es un método internacional para ubicar dónde se deja de producir: lo publicó BP en 1996 (artículo SPE-36848), lo usa el regulador británico (NSTA) y la ANH lo adoptó en 2026 (Circulares 003 y 024). No es la válvula choke de la cabeza del pozo (Circular 024, p. 4).'
 
 /** Las opciones del paso 2 en el selector, en su orden fijo y con su línea (U2 §1.5). */
 export const OPCIONES_CHOKE: readonly ChokeAnh[] = ['pozo', 'planta', 'exportacion', 'reservorio']

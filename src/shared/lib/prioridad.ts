@@ -1,8 +1,9 @@
 import type { Severidad, EstadoDispositivo } from '@/entities/tipos'
 
-/** Nombre de cada prioridad, para lectores de pantalla y tooltips. */
+/** Nombre de cada prioridad, para lectores de pantalla y tooltips. Con coma (A16):
+ *  el lector la lee como una pausa; el «·» lo leía como «punto». */
 export const NOMBRE_PRIORIDAD: Record<Severidad, string> = {
-  0: 'Normal', 1: 'Prioridad 1 · alarma', 2: 'Prioridad 2 · atención', 3: 'Prioridad 3 · aviso',
+  0: 'Normal', 1: 'Prioridad 1, alarma', 2: 'Prioridad 2, atención', 3: 'Prioridad 3, aviso',
 }
 
 /** Del estado que reporta un instrumento a su prioridad. «Sin señal» no es

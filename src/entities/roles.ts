@@ -40,7 +40,8 @@ const con = (...ks: Capacidad[]) => ({ ...sin, ...Object.fromEntries(ks.map(k =>
  *  trabajo para el técnico; el gerente abre cualquier equipo desde Resumen y
  *  Riesgo. Al jefe de mantenimiento y a confiabilidad Riesgo sí les aporta: lo
  *  parado ahora y los equipos que no son de alto impacto (el aire de
- *  instrumentos). La topología es una proyección distinta según cómo piensa cada rol. */
+ *  instrumentos); desde la revisión de la tanda 3 (K1 · P-10) eso vive en su
+ *  Equipos, debajo de la lista. La topología es una proyección distinta según cómo piensa cada rol. */
 /** Experiencia v2 (25-oct-2026, CONSTRUCCION.md): cada rol suma «La planta viva»
  *  y «Hoy» según sus puertas, sin perder ninguna pantalla de antes (sus
  *  direcciones siguen abriendo), y abre en su respuesta (X4 §3.4): el gerente y
@@ -79,14 +80,17 @@ export const ROLES: Rol[] = [
     campos: ['ceiba'],
     puede: con('causa:declarar', 'sap:aviso', 'anh:clasificar') },
   { id: 'jefe', nivel: 'ingenieria', nombre: 'Jefe de mantenimiento', persona: 'Camilo Rueda', iniciales: 'CR',
-    pantallas: ['hoy', 'plantaViva', 'equipos', 'resultados', 'mantenimiento', 'diferidos', 'bombas', 'esp', 'confiabilidad', 'equipo', 'riesgo', 'causa'], inicio: 'hoy',
+    // K1 · P-10 (X4 §3.6, punto 2): su Riesgo se fundió en Equipos (debajo de la lista, con «Ojo: no conviene
+    // intervenirlas hoy» arriba); su dirección abre Equipos (`FUSIONADA_EN_ROL`, url.ts).
+    pantallas: ['hoy', 'plantaViva', 'equipos', 'resultados', 'mantenimiento', 'diferidos', 'bombas', 'esp', 'confiabilidad', 'equipo', 'causa'], inicio: 'hoy',
     topologia: null,
     foco: 'Antes: intervenir a tiempo. Durante: identificar y planes simulados. Después: palancas y partes — para que bajen los barriles diferidos.',
     area: 'mantenimiento',
     campos: 'todos',
     puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar') },
   { id: 'conf', nivel: 'ingenieria', nombre: 'Ingeniero de confiabilidad', persona: 'Edwin Maestre', iniciales: 'EM',
-    pantallas: ['equipos', 'bombas', 'esp', 'hoy', 'plantaViva', 'resultados', 'confiabilidad', 'diferidos', 'riesgo', 'equipo', 'causa', 'planta', 'agua', 'configuracion', 'filosofia'], inicio: 'equipos', topologia: 'proceso',
+    // K1 · P-10: su Riesgo se fundió en Equipos (debajo de la lista; «¿Dónde va el próximo instrumento?» arriba).
+    pantallas: ['equipos', 'bombas', 'esp', 'hoy', 'plantaViva', 'resultados', 'confiabilidad', 'diferidos', 'equipo', 'causa', 'planta', 'agua', 'configuracion', 'filosofia'], inicio: 'equipos', topologia: 'proceso',
     foco: 'Antes: vigía, aciertos y riesgo. Después: MTBF y costo por falla. La reparación activa, no la espera del repuesto.',
     area: 'mantenimiento',
     campos: ['ceiba', 'morichal', 'guacamayo'],
@@ -98,7 +102,9 @@ export const ROLES: Rol[] = [
     campos: ['ceiba', 'morichal'],
     puede: con('evidencia:exportar') },
   { id: 'tec', nivel: 'operacion', nombre: 'Técnico de mantenimiento', persona: 'Óscar Daza', iniciales: 'OD',
-    pantallas: ['hoy', 'plantaViva', 'equipos', 'trabajo', 'bombas', 'esp', 'causa'], inicio: 'hoy', topologia: 'proceso',
+    // F1 · P-trabajo-1 (X4 §3.6.3 y §3.7): Mi trabajo se fundió en Hoy (sus órdenes, lo que vigilar y el
+    // programa ya están ahí); su dirección abre Hoy (`FUSIONADA_EN`, url.ts).
+    pantallas: ['hoy', 'plantaViva', 'equipos', 'bombas', 'esp', 'causa'], inicio: 'hoy', topologia: 'proceso',
     foco: 'Abres el equipo y dices qué encontraste cuando la señal no lo dice. De ahí aprende el vigía.',
     area: 'mantenimiento',
     campos: ['ceiba'],

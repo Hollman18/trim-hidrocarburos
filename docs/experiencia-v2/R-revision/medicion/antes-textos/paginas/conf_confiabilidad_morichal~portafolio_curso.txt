@@ -1,0 +1,250 @@
+#/conf/confiabilidad/morichal~portafolio/curso
+
+Todos mis campos
+Resultados
+DATOS DE DEMOSTRACIÓN
+Confiabilidad
+hoy, 2 de oct · datos de las 14:00
+Octubre, en curso
+Exportar
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+Bombas de reinyección · 3
+50 d
+entre fallas
+22 fallas · 42,9 h fuera
+Electrosumergibles · 68
+1.133 d
+entre fallas
+22 fallas · 16,9 d fuera
+Bombas multifásicas · 1
+52 d
+entre fallas
+7 fallas · 2,0 d fuera
+Historia
+12 meses
+eventos del PLC
+¿Acierta el vigía?
+desde el 1 de sept
+Acertó
+5 de 7
+71 % · 2 falsas alarmas
+5 intervenidas, sin calificar
+Fallas anticipadas
+5 de 9
+en partes con instrumento
+Anticipación
+4,8 d
+promedio · de 2,0 a 8,0 d
+En seguimiento
+5
+la primera vence 2 de oct, 17:57
+Lo que anunció y en qué quedó · 12
+LC-14 · La Ceiba · bomba de fondo
+avisó 24 de sept, 19:26 → orden 40012057 cerrada 26 de sept, 07:26
+intervenida antes
+LC-04 · La Ceiba · aislamiento del motor y del cable
+avisó 22 de sept, 13:46 → falló 26 de sept, 13:46
+acierto
+4,0 d antes
+P-201B · La Ceiba · rodamientos
+avisó 20 de sept, 10:05 → falló 22 de sept, 10:05
+acierto
+2,0 d antes
+LC-11 · La Ceiba · aislamiento del motor y del cable
+avisó 17 de sept, 19:56 → falló 25 de sept, 19:56
+acierto
+8,0 d antes
+P-201B · Guacamayo · sello mecánico
+avisó 13 de sept, 05:23 → orden 40012058 cerrada 14 de sept, 17:23
+intervenida antes
+MN-40 · Morichal Norte · aislamiento del motor y del cable
+avisó 3 de sept, 03:59 → venció 7 de sept, 08:47
+falsa alarma
+MN-41 · Morichal Norte · aislamiento del motor y del cable
+avisó 3 de sept, 01:55 → venció 7 de sept, 06:43
+falsa alarma
+ver 5 más
+Lo que no anunció · 6 fallas
+Se le escaparon: tenían instrumento
+4
+GU-07 · Guacamayo · 26 de sept, 02:04 · aislamiento del motor y del cable
+MN-41 · Morichal Norte · 25 de sept, 06:40 · aislamiento del motor y del cable
+MPP-301 · Morichal Norte · 24 de sept, 06:23 · sello mecánico
+MN-23 · Morichal Norte · 5 de sept, 14:17 · admisión y gas
+Sin parte identificada: no se sabe qué mirar
+2
+P-201B · La Ceiba · 2 de oct, 03:52
+P-201B · Morichal Norte · 24 de sept, 16:51
+En seguimiento · 5
+cruzaría el límite
+MN-07 · Morichal Norte · bomba de fondo
+VSD-MN07 · corriente
+2 de oct, 17:38–17:57
+MN-18 · Morichal Norte · admisión y gas
+PIT-MN18 · sensor de fondo
+3 de oct, 19:38–20:41
+P-201B · Morichal Norte · succión y filtro de entrada
+PI-2010
+4 de oct, 07:20–10:59
+GU-04 · Guacamayo · aislamiento del motor y del cable
+VSD-GU04 · desbalance de corriente
+5 de oct, 02:15–03:55
+MN-27 · Morichal Norte · protector del motor
+TIT-MN27 · sensor de fondo
+12 de oct, 19:55 – 14 de oct, 05:16
+Reparación activa y espera
+promedio · 49 fallas cerradas · toda la historia
+Reparación activa
+8 h
+Espera
+8,0 d
+Indisponibilidad total
+8,3 d
+Los más costosos
+bbl · toda la historia
+Equipo	Fallas	Entre fallas	Fuera	Parte	le ha costado
+por falla	bbl
+P-201B
+reinyección · La Ceiba
+	9	41 d	40,0 h	Sello	4.593	37.315
+LC-16
+electrosumergible · La Ceiba
+	1 +6	—	31,5 d	Aislamiento	29.722	30.328
+LC-09
+electrosumergible · La Ceiba
+	1 +9	—	34,0 d	Aislamiento	22.075	22.632
+MPP-301
+multifásica · Morichal Norte
+	7	52 d	2,0 d	Sello	3.226	22.582
+P-201B
+reinyección · Morichal Norte
+	8	46 d	47,1 h	Sello	2.765	22.117
+ver 7 más
+De qué fallan
+contra la referencia
+Bombas de reinyección · 20 fallas con parte
+Sello mecánico
+11 · 55 %
+Rodamientos y cámara de empuje
+4 · 20 %
+Succión y filtro de entrada
+2 · 10 %
+Motor eléctrico
+2 · 10 %
+Impulsores y desgaste interno
+1 · 5 %
+Electrosumergibles · 22 fallas con parte
+Aislamiento del motor y del cable
+18 · 82 %
+Motor de fondo
+2 · 9 %
+Bomba de fondo (eje y etapas)
+1 · 5 %
+Admisión y separador de gas
+1 · 5 %
+Bombas multifásicas · 7 fallas con parte
+Sellos mecánicos (cuatro)
+4 · 57 %
+Tornillos y holguras
+2 · 29 %
+Lubricación
+1 · 14 %
+Fallas por mes
+sin disparos
+10
+11
+12
+01
+02
+03
+04
+05
+06
+07
+08
+09
+10
+bombas de reinyección
+electrosumergibles
+bombas multifásicas
+Calidad del registro
+ISO 14224: parte por falla
+por señal
+46 · 90 %
+por la firma de las señales
+3 · 6 %
+declarado por el operario
+0 · 0 %
+sin identificar
+2 · 4 %
+
+51 fallas
+72 equipos
+
+Calidad de la clasificación
+13 filas · Octubre, en curso
+Paso 2 · ¿Dónde se trabó?
+modelo choke
+confirmado por una persona
+0 %
+0 de 13 filas
+corregido: cuánto se equivoca la regla
+0 %
+0 de 9 propuestas · 4 en falta
+Los demás pasos
+confirmado
+corregido
+Quién
+0 %
+0 %
+5 en falta
+Qué pasó
+0 %
+0 %
+4 en falta
+¿Planeada?
+0 %
+0 %
+5 en falta
+Causa
+0 %
+0 %
+5 en falta
+Detalle
+0 %
+0 %
+8 en falta
+Las reglas que más se corrigen
+
+Nadie corrigió una propuesta de TRIM en octubre (en curso): todavía nadie ha revisado estas paradas.
+
+El paso 2 por equipo
+P-201B
+La Ceiba
+2 paradas · 0 corregidas · 0 %
+MN-22
+Morichal Norte
+2 paradas · 0 corregidas · 0 %
+MN-41
+Morichal Norte
+1 parada (2 filas) · 0 corregidas · 0 %
+LC-05
+La Ceiba
+1 parada · 0 corregidas · 0 %
+MN-25
+Morichal Norte
+1 parada · 0 corregidas · 0 %
+ver los otros 1
+Equipos sin topología
+
+Todos los equipos de estas paradas dicen a qué pozos sirven.

@@ -13,11 +13,11 @@ export function Partes({ partes }: { partes: PedazoRotulo[] }) {
 }
 
 /** Lo mismo dentro de un SVG: un <text> con sus <tspan>. */
-export function TextoSvg({ x, y, partes, tam = 13, peso = 400, color = 'var(--tinta2)', ancla, children }: {
-  x: number; y: number; partes?: PedazoRotulo[]; tam?: number; peso?: number; color?: string; ancla?: 'start' | 'middle' | 'end'; children?: ReactNode
+export function TextoSvg({ x, y, partes, tam = 13, peso = 400, color = 'var(--tinta2)', ancla, className, children }: {
+  x: number; y: number; partes?: PedazoRotulo[]; tam?: number; peso?: number; color?: string; ancla?: 'start' | 'middle' | 'end'; className?: string; children?: ReactNode
 }) {
   return (
-    <text x={x} y={y} fontSize={tam} fontWeight={peso} fill={color} textAnchor={ancla}>
+    <text x={x} y={y} fontSize={tam} fontWeight={peso} fill={color} textAnchor={ancla} className={className}>
       {partes?.map((p, i) => (typeof p === 'string' ? p : <tspan key={i} fontWeight={700} fill="var(--tinta)">{p.b}</tspan>))}
       {children}
     </text>

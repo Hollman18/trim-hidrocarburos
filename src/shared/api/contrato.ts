@@ -737,3 +737,16 @@ export const LISTA_EQUIPOS = get<PorCampos>()('/vistas/lista-equipos', tal<impor
  *  días antes de parar, su historia, los repuestos que faltan y sus vecinos del tren.
  *  `null`: el campo no tiene ese equipo. */
 export const NIVEL_EQUIPO = get<PorEquipo>()('/vistas/equipos/:campo/:equipo/tecnico', oNada(tal<import('@/entities/equipos-tecnico').VistaNivel3>()))
+
+/* ───────────────────── F2 · Regulatorio ───────────────────── */
+// F2 · Regulatorio (P-03; X4 §2 y §3.4): el reporte a la ANH del período, la
+// respuesta del inicio de regulatorio: si se puede publicar, las paradas que
+// todavía no tienen causa (el paso 5 de la circular), quién lo debe y la hora
+// límite. Todo es JSON puro: las horas van en ISO con zona y las frases las arma
+// el motor (entities/regulatorio.ts); los barriles, con la regla de redondeo.
+
+/** `GET /api/vistas/anh/reporte?campos=&desde=&hasta=`: el estado de publicación
+ *  (la regla del libro), la cifra (paradas sin causa) con su frase, y una fila por
+ *  parada sin causa: sus barriles enteros (Σ = `bblSinCausa`) y exactos, lo que le
+ *  falta, quién lo debe (el rol que contesta su primera pregunta) y la hora límite. */
+export const REPORTE_ANH = get<ConsultaPeriodo>()('/vistas/anh/reporte', tal<import('@/entities/regulatorio').VistaReporteAnh>())

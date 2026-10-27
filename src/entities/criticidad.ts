@@ -93,8 +93,9 @@ export interface FilaCriticidad {
    *  (1 + cuántos medidos cuestan más). Null: un techo, sin dato, o ya parado
    *  (va en «Perdiéndose ahora»). Un techo no corre el puesto de lo medido. */
   puesto: number | null
-  /** Una frase en palabras de campo: «Si falla P-201B hoy, el campo pierde 783
-   *  bbl/d después de 10 h de colchón»; si ya está parado o caído, lo de ahora. */
+  /** Una frase en palabras de campo: «Si falla P-201B hoy, el campo deja de producir
+   *  783 bbl/d después de 10 h de colchón»; si ya está parado o caído, lo de ahora.
+   *  Lo diferido nunca «se pierde» (T-8, regla 3): se deja de producir. */
   porque: string
 }
 
@@ -173,8 +174,8 @@ function dePozo(p: Pozo, base: Base, ctx: Contexto): FilaCriticidad {
   const parado = !!e.evento
   const perdiendo = parado ? crudo * (e.produce ? perdidaPorFrecuencia(e.hz, pruebaEn(p, ahora)?.hz) : 1) : undefined
   const porque = !p.pruebas.length ? `${p.id} no tiene prueba: no se le inventa caudal`
-    : parado ? `${p.id} ya está ${e.produce ? 'con la frecuencia bajada' : 'parado'}: se pierden ${n0(perdiendo ?? 0)} bbl/d ahora`
-      : `Si ${p.id} falla hoy, se pierden sus ${n0(crudo)} bbl/d: no hay tanque que aguante`
+    : parado ? `${p.id} ya está ${e.produce ? 'con la frecuencia bajada' : 'parado'}: se dejan de producir ${n0(perdiendo ?? 0)} bbl/d ahora`
+      : `Si ${p.id} falla hoy, se dejan de producir sus ${n0(crudo)} bbl/d: no hay tanque que aguante`
   return { ...base, nombre: `${p.id} · ${LEVANTAMIENTO_NOMBRE[p.levantamiento].toLowerCase()}`,
     familia: esp ? 'electrosumergible' : p.levantamiento === 'bombeo-mecanico' ? 'bombeo-mecanico' : 'pozo',
     bpd: crudo, ...costo, vigilado: esp && perfilDe(ctx.config, p.campoId).electrosumergibles,
@@ -209,7 +210,7 @@ function deBomba(p: PerfilBomba, base: Base, ctx: Contexto): FilaCriticidad {
   const siFalla = p.papel === 'recobro' ? `${p.equipo} inyecta para recobro: si falla hoy no cierra pozos; baja la presión del yacimiento en semanas`
     : p.papel === 'disposicion' && pr.aguaSinSalidaBpd <= 0 ? `Si falla ${p.equipo} hoy, el respaldo toma toda su agua: no cierra pozos`
       : p.papel === 'transporte' ? `Si falla ${p.equipo} hoy, se frenan ${pr.orden?.pasos.length ?? p.pozos?.length ?? 0} pozos que mueve: ${n0(pr.crudoBpd)} bbl/d`
-        : `Si falla ${p.equipo} hoy, el campo pierde ${n0(pr.crudoBpd)} bbl/d${colchonH !== undefined ? ` después de ${textoH(colchonH)} de colchón` : ''}`
+        : `Si falla ${p.equipo} hoy, el campo deja de producir ${n0(pr.crudoBpd)} bbl/d${colchonH !== undefined ? ` después de ${textoH(colchonH)} de colchón` : ''}`
   const despues = alVolver ? ` después de unas ${textoH(alVolver.horas)} de colchón (con el tanque al ${alVolver.nivelPct.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %, como suele estar al parar)` : ''
   return { ...base, nombre: EQUIPOS[p.equipo]?.nombre ?? p.equipo, familia: 'bomba', bpd: pr.crudoBpd,
     ...(colchonH !== undefined ? { colchonH } : {}), ...(cf.costoFalla !== undefined ? { costoFalla: cf.costoFalla } : {}),
@@ -218,7 +219,7 @@ function deBomba(p: PerfilBomba, base: Base, ctx: Contexto): FilaCriticidad {
     // Ya parada: lo que cuesta ahora (los pozos que se cerraron por ella) y,
     // cuando vuelva, lo que costaría otra falla en el orden de TRIM.
     porque: parado && p.papel !== 'recobro' && pr.crudoBpd > 0
-      ? `${p.equipo} está parada: se pierden ${n0(perdiendo ?? 0)} bbl/d ahora. Cuando vuelva, si falla otra vez: ${n0(pr.crudoBpd)} bbl/d cerrando en el orden de TRIM${despues}`
+      ? `${p.equipo} está parada: se dejan de producir ${n0(perdiendo ?? 0)} bbl/d ahora. Cuando vuelva, si falla otra vez: ${n0(pr.crudoBpd)} bbl/d cerrando en el orden de TRIM${despues}`
       : parado ? `${p.equipo} está parada. ${siFalla}` : siFalla }
 }
 
@@ -233,7 +234,9 @@ function deHermana(id: string, base: Base, ctx: Contexto): FilaCriticidad {
   // La capacidad de cada bomba: la firmada o, sin firma, la del demo (capacidades.ts).
   const bombas = capacidadesDe(ctx.config, c).bombas
   const esta = bombas.find(b => b.equipo === id)!
-  const nombre = `${id} · bomba de ${esta.papel === 'recobro' ? 'recobro' : 'reinyección'}`
+  // P-09 · Una familia por equipo: la del motor (`FAMILIA.reinyeccion`, planta-viva.ts), «bomba de agua»,
+  // sea de disposición o de recobro (el papel lo dice `porque`).
+  const nombre = `${id} · bomba de agua`
   const paradaDe = (b: string) => (perfilBomba(b, c) ? paradasDe(b, c).find(e => !e.fin) : undefined)
   const comun = { ...base, nombre, familia: 'bomba' as const, vigilado: vigiladoEn(id, c), estimacion: false, grupo: 'medido' as const, parado: false,
     mdtFuente: 'Sin historia propia: no tiene instrumento' }
@@ -256,9 +259,9 @@ function deHermana(id: string, base: Base, ctx: Contexto): FilaCriticidad {
   const parada = paradas[0]
   const desde = parada ? paradaDe(parada.equipo) : undefined
   const porque = sinSalida <= 0 ? `Si ${id} falla hoy, las otras bombas sacan toda el agua: no cierra pozos`
-    : `Si ${id} falla hoy, quedan ${n0(sinSalida)} bbl/d de agua sin salida: el campo pierde ${n0(bpd)} bbl/d${despues}`
+    : `Si ${id} falla hoy, quedan ${n0(sinSalida)} bbl/d de agua sin salida: el campo deja de producir ${n0(bpd)} bbl/d${despues}`
   return { ...comun, bpd, ...(colchonH !== undefined ? { colchonH } : {}), ...(sinDato ? { sinDato } : {}),
-    ...(desde && parada && bpd > 0 ? { subio: { desde: new Date(desde.inicio), otro: parada.equipo, porque: `${id} sube porque ${parada.equipo} está parada: si ${id} falla ahora, el campo pierde ${n0(bpd)} bbl/d${despues}` } } : {}),
+    ...(desde && parada && bpd > 0 ? { subio: { desde: new Date(desde.inicio), otro: parada.equipo, porque: `${id} sube porque ${parada.equipo} está parada: si ${id} falla ahora, el campo deja de producir ${n0(bpd)} bbl/d${despues}` } } : {}),
     porque }
 }
 
@@ -290,7 +293,7 @@ function deServicio(e: ChokeDeElemento, base: Base, ctx: Contexto): FilaCriticid
   const caido = serviciosDeCampo(base.campoId).some(s => s.equipo === e.elemento && !s.fin)
   const perdiendo = caido ? riesgoAhora([base.campoId], ctx).find(r => r.equipo === e.elemento && r.estado === 'perdiendo')?.bblDia : undefined
   // Ya caído, la frase es la de ahora, no la de «si cae hoy».
-  const caidoTexto = `${e.elemento} está caído: se pierden ${n0(perdiendo ?? 0)} bbl/d ahora`
+  const caidoTexto = `${e.elemento} está caído: se dejan de producir ${n0(perdiendo ?? 0)} bbl/d ahora`
   const comun = { ...base, nombre: eq?.nombre ?? `Alimentador ${e.elemento}`, familia: 'servicio' as const, vigilado: vigiladoEn(e.elemento, base.campoId),
     parado: caido, ...(perdiendo !== undefined ? { perdiendoBpd: perdiendo } : {}) }
   const sinCifra = (sinDato: string): FilaCriticidad => ({ ...comun, bpd: null, estimacion: false, grupo: 'sin-dato', sinDato,
@@ -309,7 +312,7 @@ function deServicio(e: ChokeDeElemento, base: Base, ctx: Contexto): FilaCriticid
 }
 
 /** Una fila de un campo de gas: sin cifra (B-18), y su porqué tampoco dice
- *  barriles de crudo (5E·H36: «Si ZA-01 falla hoy, se pierden sus 479 bbl/d»).
+ *  barriles de crudo (5E·H36: «Si ZA-01 falla hoy, se dejan de producir sus 479 bbl/d»).
  *  La que tenía una cifra dice que no la hay y por qué; la que ya no la tenía
  *  («no cierra pozos», «no tiene prueba») queda como estaba. Sin «sube»: su
  *  porqué es una cifra de crudo. */

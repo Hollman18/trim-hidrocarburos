@@ -58,7 +58,7 @@ export function CargaTopologia({ campoId, campoNombre, elementos, porSaber, todo
   }
 
   return (
-    <Panel className="mb-2.5" titulo="SUBIR EXCEL O CSV" extra={campoNombre}>
+    <Panel className="mb-3 sm:mb-4" titulo="Subir Excel o CSV" extra={campoNombre}>
       <Lectura>
         Una fila por equipo, con dos columnas: el equipo y los pozos a los que sirve. Los pozos van en lista
         (separados por espacios) o con una palabra: «todos», «otro dueño» (más allá de la batería), «punto de

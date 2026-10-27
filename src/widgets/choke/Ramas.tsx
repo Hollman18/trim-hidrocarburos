@@ -99,7 +99,7 @@ function Rama({ n: cabeza, oculta = false, ...c }: Comun & { n: NodoArbol; ocult
   const codigoDe = (m: NodoArbol) => {
     const k = CAMPO_ANH[m.dimension as keyof typeof CAMPO_ANH]
     return c.codigos === 'vista' && m.cadena && k ? (
-      <span className="ml-1.5 break-words rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1 font-mono text-[12px] leading-snug text-[var(--tinta)] [box-decoration-break:clone]" data-cadena={k}>
+      <span className="ml-1.5 break-words rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-1 text-[12px] leading-snug text-[var(--tinta)] [box-decoration-break:clone]" data-cadena={k}>
         <span className="text-[var(--tinta3)]">{k}</span> {m.cadena}
       </span>
     ) : null

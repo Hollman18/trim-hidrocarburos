@@ -2,7 +2,7 @@ import { Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStor
 import { Menu } from 'lucide-react'
 import { ComoSeLee } from '@/shared/ui/comoSeLee'
 import { cn } from '@/shared/lib/cn'
-import { useApp, useRol, claveDeVista } from '@/app/store'
+import { useApp, useRol, useAmbito, claveDeVista } from '@/app/store'
 import { PANTALLAS } from '@/app/pantallas'
 import { Pendiente } from '@/pages/Pendiente'
 import { SoloCampo } from '@/pages/SoloCampo'
@@ -15,11 +15,12 @@ import { LimiteDeError } from '@/shared/ui/LimiteDeError'
 import { Membrete, PieInforme } from '@/widgets/informe/Membrete'
 import { Subpantallas } from '@/widgets/Subpantallas'
 import { useSubpantallas, useSinPerfil } from '@/app/grupos'
-import { PUERTAS_DEL_ROL } from '@/app/pantallas'
+import { PUERTAS_DEL_ROL, tituloDe } from '@/app/pantallas'
 import { grupoDe } from '@/app/pantallas'
 import { Hueco } from '@/shared/ui/primitivas'
 import { WordmarkBlanco } from '@/shared/brand/Logo'
 import { useModal } from '@/shared/ui/foco'
+import { RANURA_PASO } from '@/shared/ui/ranura'
 
 /** El panel fijo solo existe desde la anchura de escritorio (lg de Tailwind).
  *  Debajo, la banda índigo con el ☰ abre el mismo panel desde la izquierda
@@ -50,6 +51,8 @@ const recordarPlegado = (rolId: string, plegado: boolean) => {
  *  `role="status"`: el lector de pantalla anuncia que está cargando.
  *  `data-cargando`: las pruebas de navegador esperan a que no quede ninguno. */
 const CARGANDO = <p role="status" data-cargando="" className="p-3 text-[14px] text-[var(--tinta2)]">Cargando…</p>
+/** Mientras llega la cabecera, su mismo alto (A20): lo de abajo no salta al llegar. */
+const CARGANDO_CABECERA = <p role="status" data-cargando="" className="mb-4 min-h-[52px] p-0 text-[14px] text-[var(--tinta2)] sm:mb-5 lg:min-h-[78px]"><span className="sr-only">Cargando…</span></p>
 const CARGANDO_PANEL = <p role="status" data-cargando="" className="p-4 text-[14px] text-[var(--marca-tenue)]">Cargando…</p>
 
 /** Una dirección compartida que pedía un campo (o el portafolio) que la persona
@@ -68,16 +71,20 @@ function BandaTelefono({ onMenu }: { onMenu: () => void }) {
   // El ☰ lleva la insignia de Hoy: así se sabe que hay algo sin abrir el panel.
   const conHoy = (PUERTAS_DEL_ROL[rol.id] ?? []).includes('hoy') && rol.pantallas.includes('hoy')
   return (
-    <div className="no-imprimir flex min-h-16 shrink-0 items-center gap-2.5 bg-[var(--marca)] px-4 py-3 text-white lg:hidden">
+    <div data-banda className="sobre-marca no-imprimir flex min-h-16 shrink-0 items-center gap-2.5 bg-[var(--marca)] px-4 py-3 text-white lg:hidden">
       <button onClick={onMenu}
-        className="relative -ml-1.5 grid size-10 shrink-0 cursor-pointer place-items-center rounded-full hover:bg-white/[.10]">
+        className="toque relative -ml-1.5 grid size-10 shrink-0 cursor-pointer place-items-center rounded-full hover:bg-white/[.10]">
         <Menu aria-hidden className="size-6" />
         <span className="sr-only">Abrir la navegación</span>
         {conHoy && <InsigniaHoy variante="menu" />}
       </button>
       <span className="shrink-0 max-[359px]:hidden"><WordmarkBlanco className="h-[15px]" /></span>
-      <span className="flex min-w-0 flex-1 justify-center"><SelectorCampo variante="banda" /></span>
-      <MenuPerfil variante="banda" />
+      <span data-banda-campo className="flex min-w-0 flex-1 justify-center"><SelectorCampo variante="banda" /></span>
+      <span data-banda-persona className="contents"><MenuPerfil variante="banda" /></span>
+      {/* UI-21 (imagen 5): con la pregunta del operador, «Pregunta 1 de 4» va aquí, en la
+          banda, en lugar del campo y la persona (los dos siguen en el panel del ☰). Lo pone
+          `widgets/hoy/Operador.tsx`. */}
+      <span id={RANURA_PASO} className="ml-auto empty:hidden" />
     </div>
   )
 }
@@ -90,11 +97,12 @@ function PanelTelefono({ onCerrar }: { onCerrar: () => void }) {
   const toque = useRef<number | null>(null)
   return (
     <div className="no-imprimir fixed inset-0 z-[110] lg:hidden">
-      <div aria-hidden onClick={onCerrar} className="aparece absolute inset-0 bg-[rgb(10_12_16/.40)]" />
+      {/* `data-velo`: no queda inerte con el diálogo (foco.ts), así tocar afuera lo cierra (UI-02). */}
+      <div aria-hidden data-velo onClick={onCerrar} className="aparece absolute inset-0 bg-[var(--velo)]" />
       <div ref={dialogo} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Navegación"
         onTouchStart={e => { toque.current = e.touches[0]?.clientX ?? null }}
         onTouchMove={e => { const x0 = toque.current, x = e.touches[0]?.clientX; if (x0 !== null && x !== undefined && x0 - x > 60) { toque.current = null; onCerrar() } }}
-        className="entra-izquierda absolute inset-y-0 left-0 w-[84%] max-w-[360px] shadow-[var(--sombra-flota)] outline-none">
+        className="entra-izquierda sobre-marca absolute inset-y-0 left-0 w-[84%] max-w-[360px] shadow-[var(--sombra-flota)] outline-none">
         <Suspense fallback={CARGANDO_PANEL}><Riel onCerrar={onCerrar} /></Suspense>
       </div>
     </div>
@@ -129,6 +137,12 @@ export default function App() {
   const sinSub = !!grupo && subs.length === 0
   const sinPerfil = useSinPerfil()
 
+  // A12 (WCAG 2.4.2): cada vista tiene su título en la pestaña: «Hoy · La Ceiba · TRIM».
+  const ambito = useAmbito()
+  useEffect(() => {
+    document.title = `${tituloDe(pantalla, rolId) ?? 'TRIM'} · ${ambito.global ? 'Todos mis campos' : ambito.titulo} · TRIM`
+  }, [pantalla, rolId, ambito.global, ambito.titulo])
+
   const alternarPanel = useCallback(() => {
     recordarPlegado(rolId, !plegado); setPanel({ rol: rolId, plegado: !plegado })
   }, [rolId, plegado])
@@ -154,6 +168,11 @@ export default function App() {
   return (
     <ComoSeLee.Provider value={comoSeLee}>
     <div className="raiz-app flex h-dvh overflow-hidden bg-[var(--suelo)] text-[var(--tinta)]">
+      {/* A13: «Saltar al contenido», lo primero de la página: lleva el foco al título de la vista sin tocar la dirección. */}
+      <a href="#contenido" className="saltar sobre-marca no-imprimir rounded-full bg-[var(--marca)] px-4 py-2.5 text-[15px] font-semibold text-white"
+        onClick={e => { e.preventDefault(); (document.querySelector<HTMLElement>('main [data-titulo-vista]') ?? document.getElementById('contenido'))?.focus() }}>
+        Saltar al contenido
+      </a>
       {/* En el papel: membrete arriba, la vista (o la ficha del equipo abierta) y el pie. */}
       <Membrete />
       <aside className={cn('no-imprimir hidden shrink-0 transition-[width] duration-200 ease-[cubic-bezier(.2,0,0,1)] lg:block', plegado ? 'w-[88px]' : 'w-[240px]')}>
@@ -174,9 +193,9 @@ export default function App() {
             <Suspense fallback={CARGANDO_PANEL}><BandaTelefono onMenu={() => setNavEn(pantalla)} /></Suspense>
           </LimiteDeError>
         )}
-        <div className="vista flex-1 overflow-y-auto px-4 pb-6 pt-4 sm:px-6 sm:pt-5 xl:px-8 xl:pt-[22px]">
+        <div id="contenido" tabIndex={-1} className="vista flex-1 overflow-y-auto px-4 pb-6 pt-4 outline-none sm:px-6 sm:pt-5 xl:px-8 xl:pt-[22px]">
           <LimiteDeError clave={clave} que="La cabecera" salida={alInicio}>
-            <Suspense fallback={CARGANDO}><Cabecera /></Suspense>
+            <Suspense fallback={CARGANDO_CABECERA}><Cabecera /></Suspense>
           </LimiteDeError>
           <AvisoDeDireccion />
           <Subpantallas />
