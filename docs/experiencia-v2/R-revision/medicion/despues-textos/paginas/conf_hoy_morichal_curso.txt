@@ -1,0 +1,97 @@
+#/conf/hoy/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Datos de demostración
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+6
+cosas le tocan hoy
+
+Primero conseguir la causa de P-201B.
+
+Conseguir la causa de P-201B
+
+2
+Atención ·
+P-201B
+arrancó a las 06:53 sin identificar
+
+3.789 bbl desde que pararon
+
+Responder yo
+Ver el chat
+Decidir el plan de MN-07 · simulado
+
+2
+Atención ·
+MN-07
+intervenir bomba antes de que pare
+
+Simulado: 10.579 bbl que se pueden mover si se ejecuta.
+
+Ver el plan
+Decidir el plan de MN-18 · simulado
+
+2
+Atención ·
+MN-18
+intervenir admision antes de que pare
+
+Simulado: 9.175 bbl que se pueden mover si se ejecuta.
+
+Ver el plan
+Decidir el plan de MN-27 · simulado
+
+2
+Atención ·
+MN-27
+intervenir protector antes de que pare
+
+Simulado: 8.901 bbl que se pueden mover si se ejecuta.
+
+Ver el plan
+Decidir el plan de MN-41 · simulado
+
+1
+Alarma ·
+MN-41
+atacar aislamiento: es la parte que más costó
+
+Simulado: 1.083 bbl que se pueden mover si se ejecuta.
+
+Ver el plan
+Decidir el plan de P-201B · simulado
+
+2
+Atención ·
+P-201B
+intervenir succion antes de que pare
+
+Simulado: 1.235 bbl que se pueden mover si se ejecuta.
+
+Ver el plan
+Su campo, ahora
+La planta viva
+pozos
+planta
+salida
+
+En el pozo no pasan 684 bbl/d; limitan los pozos.
+
+Tanque de agua 61,8 %.
+
+Abrir La planta viva

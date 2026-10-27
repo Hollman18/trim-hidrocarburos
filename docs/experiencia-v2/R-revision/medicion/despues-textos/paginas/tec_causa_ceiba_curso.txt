@@ -1,0 +1,87 @@
+#/tec/causa/ceiba/curso
+
+La Ceiba
+Hoy
+Datos de demostración
+Paradas por identificar
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+No arrancar hasta identificar el daño
+Si arranca antes, queda como no conformidad.
+La regla completa
+Por contestar
+4 paradas
+por contestar en Octubre, en curso
+
+Conteste aquí, una pregunta a la vez. Lo técnico lo revisa su supervisor.
+
+1
+Alarma ·
+P-201B · bomba de agua
+Paró 2 de oct, 03:52 · hace 10,1 h
+no arrancar
+573 bbl
+Ver la señal
+no alcanzó
+Qué se dañó
+Parte de la bomba
+Pista · historia del equipo
+Sello mecánico
+· 5 de 8 fallas
+Rodamientos y cámara de empuje
+· 3 de 8 fallas
+O escoja cualquier parte…
+Sello mecánico
+Succión y filtro de entrada
+Rodamientos y cámara de empuje
+Impulsores y desgaste interno
+Motor eléctrico
+Qué encontró (opcional)
+Contestar
+Queda declarado por Óscar Daza · hora del sistema
+WhatsApp
+03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado
+sin respuesta
+Ver el chat de Jairo Peña
+2
+Atención ·
+LC-21
+pozo
+Paró 1 de oct, 18:20 · hace 19,7 h
+no arrancar
+247 bbl
+LC-08
+pozo
+Paró 1 de oct, 22:15 · arrancó 2 de oct, 01:10
+108 bbl
+LC-05 · cerró 1 de oct, 09:16 · energía eléctrica
+118 bbl diferidos
+falta un dato
+Lo técnico (dónde se trabó, la causa y el detalle) lo propone TRIM; lo confirma su supervisor
+¿De dónde vino el corte?
+Del proveedor: la red de la empresa de energía
+Del campo: pórtico, red de media o subestación
+De este pozo: su transformador, su variador o su cable
+No sé
+Después, una pregunta más.
+Algo está mal
+Declaradas
+1
+declarada
+LC-06 · 14 de ago, 03:30
+«Cabeza de pozo con fuga en el prensaestopas: cierre para cambiarlo»
+Nelson Ortiz · supervisor · 14 de ago, 04:10
+237 bbl
+Cómo va la identificación del período

@@ -1,0 +1,134 @@
+La Ceiba
+Hoy
+2
+La planta viva
+Planta
+Agua
+Equipos
+Resultados
+¿Cómo se lee?
+MR
+Marcela Ríos
+Ingeniera de producción
+Todos mis campos
+La Ceiba
+Datos de demostración
+La planta viva
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+Ahora mismo
+9.394
+barriles por día
+salen hoy de La Ceiba.
+Limitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.
+Ver qué se está haciendo
+Ver Hoy
+Dónde se trabó
+Antes
+lo que viene
+Durante
+ahora
+Después
+lo que pasó
+Yacimiento
+la roca
+Pozos
+limita
+15 de 18 en marcha
+Planta
+aquí se trabó
+no pasan
+1.665 bbl/d
+Salida
+el oleoducto recibe
+Sale hoy
+9.394
+bbl/d
+meta 10.900
+tanque
+89,6
+alto-alto 90
+agua que entra: 174.033 bbl/d
+P-201B parada
+desde 03:52
+las otras dos, sin instrumento
+inyectores: el agua vuelve al yacimiento
+LC-21 301 bbl/d
+sin identificar
+Pedir la causa
+Pozos
+dan 11.857 bbl/d
+limita
+Planta
+caben 13.000 bbl/d le sobran 1.143
+sin firmar
+Salida
+caben 14.000 bbl/d le sobran 2.143
+sin firmar
+Ver como tabla
+Este mes
+1.046
+barriles diferidos
+50 mil USD
+calculado, entre
+889
+y
+1.203
+P-201B, más de la mitad 355 sin causa
+Si falla hoy
+los 3 primeros bbl/d
+P-201A
+bomba de agua
+sin instrumento
+3.059
+después de 2 min
+P-201C
+bomba de agua
+sin instrumento
+3.059
+después de 2 min
+LC-11
+electrosumergible
+1.031
+sin colchón
+Ver todos los equipos
+Lo que todavía se puede mover
+simulado
+2.133
+bbl retorno posible del ciclo
+Antes
+0
+Durante
+2.102
+Después
+30
+Ver el plan
+0 de 3 planes en marcha
+Diferido por equipo
+octubre
+calculado
+P-201B
+bomba de agua
+alarma
+573
+55
+LC-21
+sin identificar
+atención
+247
+24
+SE-2
+energía eléctrica
+118
+11
+LC-08
+sin identificar
+108

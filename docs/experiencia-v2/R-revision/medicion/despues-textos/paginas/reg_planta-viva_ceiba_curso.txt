@@ -1,0 +1,135 @@
+#/reg/planta-viva/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+La planta viva
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Ahora mismo
+
+1.966
+barriles por día
+
+se dejan de producir en La Ceiba.
+
+La bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.
+
+Ver qué se está haciendo
+Compartir el informe
+Dónde se trabó
+Antes
+lo que viene
+Durante
+ahora
+Después
+lo que pasó
+Yacimiento
+la roca
+Pozos · ◄ limita ⓘ
+15 de 18 en marcha
+Planta · aquí se trabó
+no pasan 1.665 bbl/d
+Salida
+el oleoducto recibe
+Sale hoy
+9.394 bbl/d
+meta 10.900
+tanque 89,6 %
+alto-alto 90 %
+agua que entra: 174.033 bbl/d
+1
+P-201B parada desde 03:52 · las otras dos, sin instrumento
+inyectores: el agua vuelve al yacimiento
+LC-21 · 301 bbl/d
+sin identificar
+Pedir la causa ›
+Ver como tabla
+
+Este mes
+
+1.046
+barriles diferidos · 50 mil USD
+
+calculado, entre 889 y 1.203
+P-201B, más de la mitad · 355 sin causa
+
+3
+Aviso · promedio por día, bajo la meta
+
+10.700
+de 10.900 bbl/d
+
+Lo que todavía se puede mover
+simulado
+
+2.133
+bbl · retorno posible del ciclo
+
+Antes
+0
+Durante
+2.102
+Después
+30
+
+Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado
+
+Ver el plan
+›
+
+0 de 3 planes en marcha
+
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma
+573
+55 %
+2
+LC-21 sin identificar · atención
+247
+24 %
+SE-2 energía eléctrica
+118
+11 %
+LC-08 sin identificar
+108
+10 %
+Diferido por día, mes a mes
+octubre: 661 bbl/d
+400
+800
+OCT 2025
+ENE 2026
+3
+ABR
+JUL
+OCT
+alto impacto
+lo demás
+máximo 800
+
+¿Está bajando? Desde que entró TRIM · lo no planeado, por día
+
+en la planta
+268 → 51
+bbl/d · baja 81 %
+
+en los pozos
+122 → 215
+bbl/d · sube 76 %
+
+1 de sept, frente a jun a ago · muestra corta

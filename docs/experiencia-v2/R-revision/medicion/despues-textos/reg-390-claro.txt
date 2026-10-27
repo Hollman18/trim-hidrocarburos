@@ -1,0 +1,31 @@
+La Ceiba
+IS
+Todos mis campos
+Demo
+Reporte al regulador
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Octubre, en curso
+Exportar
+2
+paradas sin causa
+No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl).
+Las contesta el operador de campo mañana antes de las 07:00.
+LC-21
+247
+bbl
+LC-08
+108
+bbl
+Árbol de causas como la circular
+Ver los códigos ANH
+1.046
+bbl
+Medición oficial
+Ver más

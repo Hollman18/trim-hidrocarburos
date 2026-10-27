@@ -1,0 +1,31 @@
+#/conf/planta/morichal~portafolio/curso
+
+Todos mis campos
+La planta viva
+Datos de demostración
+Planta
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+Planta · elija un campo
+1
+La Ceiba
+Llanos · 11.105 bbl último día · 3 pozos parados
+1
+Morichal Norte
+Llanos · 16.685 bbl último día · 1 pozo parado
+3
+Guacamayo
+Putumayo · 6.611 bbl último día · 0 pozos parados

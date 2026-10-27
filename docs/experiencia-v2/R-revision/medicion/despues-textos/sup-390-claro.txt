@@ -1,0 +1,39 @@
+4
+La Ceiba
+NO
+Demo
+Hoy
+datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Ahora mismo
+1.966
+barriles por día
+se dejan de producir.
+Le faltan
+4 paradas por confirmar
+el reporte sale mañana antes de las 07:00.
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Confirmar 2 paradas iguales
+Alarma
+P-201B
+cerró LC-07 y LC-16
+TRIM las dedujo:
+en la planta, no planeada
+Confirmar las 2
+Ver una por una
+Conseguir la causa de 2 paradas
+Atención
+LC-21
+lleva 19,7 h sin causa
+LC-08
+arrancó sin identificar
+Entre las 2:
+219 bbl hoy
+Responder yo
+Ver el chat

@@ -1,0 +1,91 @@
+La Ceiba
+Hoy
+3
+La planta viva
+Equipos
+Bombas
+Electrosumergibles
+Resultados
+¿Cómo se lee?
+EM
+Edwin Maestre
+Ingeniero de confiabilidad
+Todos mis campos
+La Ceiba
+Datos de demostración
+Equipos
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+Si falla hoy
+3.059
+barriles por día
+Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila. Ahí va el próximo instrumento.
+calculado
+P-201A
+bomba de agua
+sin instrumento: se supone en marcha
+sube porque P-201B está parada
+no: sin instrumento
+3.059
+bbl/d
+si falla hoy
+después de 2 min de colchón
+P-201C
+bomba de agua
+sin instrumento: se supone en marcha
+sube porque P-201B está parada
+no: sin instrumento
+3.059
+bbl/d
+si falla hoy
+después de 2 min de colchón
+LC-11
+electrosumergible
+produciendo
+sí 6 señales
+1.031
+bbl/d
+si falla hoy
+¿Le creo al vigía? Desde que entró TRIM, acertó 3 de 3 avisos.
+Ver el detalle
+Parados
+4
+Avisan
+1
+Sin instrumento
+5
+Todos
+28
+Más filtros
+28 equipos
+ordenados por estado
+¿Lo vigila TRIM?
+P-201B
+bomba de agua
+Alarma
+parada desde hoy, 03:52
+sí 8 señales
+1.665
+bbl/d
+se deja de producir
+K-101
+aire de instrumentos
+Alarma
+ya pasó el límite
+sí 4 señales
+hasta
+9.394
+bbl/d
+si falla hoy
+LC-21
+pozo bombeo mecánico
+301
+bbl/d

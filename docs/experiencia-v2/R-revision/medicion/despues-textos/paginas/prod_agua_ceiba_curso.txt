@@ -1,0 +1,96 @@
+#/prod/agua/ceiba/curso
+
+Todos mis campos
+La Ceiba
+La planta viva
+Datos de demostración
+Agua y almacenamiento
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+La tubería del agua
+hoy, 2 de oct, 14:00
+agua de las pruebas vigentes
+Agua de los pozos
+224.075bbl/d
+≈ 11.857 de crudo
+con las pruebas de los pozos
+con todos los pozos produciendo
+hoy 174.033 · 3 pozos parados
+corte de agua hoy 94,9 %
+→
+Tratamiento de agua
+sin dato
+→
+Tanque de agua
+TK-AG-CE · 30.000 bbl
+89,6 %
+alto-alto 90 %
+LT-2012 · 13:59
+al parar P-201B estaba al 78,7 %: aguantaba 1,8 h (1,7 h a 2,0 h)
+→
+Bombas de agua
+267.750bbl/d
+≈ 14.168 de crudo
+cabe más: 43.675
+┄ sin firmar
+casi iguales
+P-201A
+89.250
+┄ sin instrumento
+1
+P-201B
+parada
+P-201C
+89.250
+┄ sin instrumento
+3 × 90.000 de placa · el cabezal las deja en 89.250
+hoy, sin P-201B: 178.500 de 267.750 bbl/d de agua
+→
+Pozos inyectores (disposición)
+267.750bbl/d
+≈ 14.168 de crudo
+cabe más: 43.675
+┄ sin firmar
+casi iguales
+
+Con las tres bombas, al agua le sobra espacio. Si para una, hay que cerrar pozos.
+Ver la cuenta
+
+Hoy
+1
+P-201B parada: P-201A y P-201C toman lo que entra (174.033 de 178.500 bbl/d de agua). El nivel no sube. Por P-201B se dejan de producir ahora 1.665 bbl/d de crudo.
+Lo que pasó
+2 de oct, 03:52 · P-201B paró con el tanque al 78,7 %: TRIM previó 1,8 h de colchón
+el tanque se llenó en 1,8 h · cerraron LC-07 y LC-16 · 1.665 bbl/d
+«evitable cerrando en orden»: 30 bbl hasta ahora · diferido de P-201B en octubre, en curso: 573 bbl
+Si para otra bomba
+con P-201A y P-201C solas, cerrar primero los más acuatosos para quitar
+84.783
+bbl/d de agua:
+LC-02 (30 de crudo por cada 1.000 de agua) · LC-10 (34) · LC-01 (36) · LC-17 (36) · LC-14 (40) · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 %
+→ se dejan de producir 3.059 bbl/d de crudo; parejo, 4.577 · después de 2 min de colchón
+Por qué es crítica
+No hay bomba de sobra.
+El tanque aguanta horas; la reparación, días.
+Para seguido: una falla cada 41 días.
+Abrir P-201B
+La bomba de agua
+Parada desde 2 de oct, 03:52: 2 pozos cerrados por ella
+Mediana de FI-2011 mientras la bomba trabaja
+P-201A y P-201C en paralelo, con 30.100 bbl/d libres entre las dos: el cabezal de disposición las limita a unos 89.250 cada una
+Tanque de agua de La Ceiba: 30.000 bbl, alto-alto al 90 % · Certificado de aforo TK-AG-CE · tabla de 1 cm
+Nivel LT-2012: 89,6 %
+Ver P-201B

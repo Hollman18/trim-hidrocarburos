@@ -1,0 +1,191 @@
+#/prod/produccion/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Resultados
+Datos de demostración
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+provisional
+producción medida
+3
+16.941
+bbl
+meta a la fecha 17.258
+10.700 bbl/d
+
+Potencial del libro:
+17.987 bbl
+· 11.360 bbl/d · lo medido es el 94,2 %
+
+La tubería del campo
+
+Limitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.
+
+Yacimiento
+la roca
+Pozos · ◄ limita ⓘ
+15 de 18 en marcha
+Planta · aquí se trabó
+no pasan 1.665 bbl/d
+Salida
+el oleoducto recibe
+Sale hoy
+9.394 bbl/d
+meta 10.900
+tanque 89,6 %
+alto-alto 90 %
+agua que entra: 174.033 bbl/d
+1
+P-201B parada desde 03:52 · las otras dos, sin instrumento
+inyectores: el agua vuelve al yacimiento
+LC-21 · 301 bbl/d
+sin identificar
+Pedir la causa ›
+
+Pozos
+dan 11.857 bbl/d
+· ◄ limita
+
+Planta
+caben 13.000 bbl/d · le sobran 1.143
+· sin firmar
+
+Salida
+caben 14.000 bbl/d · le sobran 2.143
+· sin firmar
+
+Ver como tabla
+Qué limitó, día por día
+octubre, en curso · barras en bbl
+Sin cambios: en el período limitaron los pozos todos los días.
+limitó
+792
+bbl
+0
+Po
+1 de oct
+Po
+2 de oct
+Franja y barras:
+en el yacimiento
+(solo barras)
+Po · en los pozos
+Pl · en la planta
+Af · afuera
+sin identificar
+Día a día
+bbl/d
+9,0 k
+10,0 k
+11,0 k
+12,0 k
+1 de oct
+2 de oct · en curso
+real medido
+potencial del libro
+meta firmada
+diferido
+día en curso
+Lo que no se produjo, por tipo
+octubre, en curso
+eficiencia de producción
+90,2 %
+16.941 de 18.774 bbl que el campo podía dejar pasar
+lo no planeado se llevó
+3,7 %
+691 bbl en paradas no planeadas
+Lo que dan los pozos según sus pruebas
+18.774 bbl
+− Lo que las pruebas dan de más que el medidor oficial
+787
+= El potencial del libro · lo mismo, medido como el punto oficial (pruebas × factor de asignación)
+17.987 bbl
+− El yacimiento y los proyectos
+0
+− Frecuencia bajada: el levantamiento sin optimizar
+0
+− Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+0
+− Paradas no planeadas: fallas, disparos y terceros
+Lo que TRIM baja
+691
+− Restricción sin falla: nominación o despacho
+0
+− Sin identificar: falta que una persona diga qué pasó
+355
+− Sin explicar: el inventario entre días
+0
+= Lo que salió por el punto de medición oficial
+16.941 bbl
+
+118 bbl tienen el tramo como propuesta de TRIM: falta que una persona conteste la pregunta que lo decide.
+
+Ver por tramo
+Medición oficial
+La Ceiba
+corte de agua: analizador
+factor 0,958 · banda ±15 %
+FQI-0101 · computador de flujo de la unidad LACT-01
+Factor de asignación
+contra su banda
+0,75
+0,85
+1,00
+1,15
+1,25
+OCT
+NOV
+DIC
+ENE
+FEB
+MAR
+ABR
+MAY
+JUN
+JUL
+AGO
+SEP
+OCT
+¿Cuadra? Día por día
+Día	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+2 de oct · 14,0 h	
+3
+bajo la meta5.836	6.627	792	-1	88,1 %	6.358
+1 de oct	11.105	11.360	254	1	97,8 %	10.900
+Cuadre · asignación oficial
+mes cerrado
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 338.662 bbl · 18 pozos

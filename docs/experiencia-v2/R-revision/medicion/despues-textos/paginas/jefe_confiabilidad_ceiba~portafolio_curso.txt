@@ -1,0 +1,204 @@
+#/jefe/confiabilidad/ceiba~portafolio/curso
+
+Todos mis campos
+Resultados
+Datos de demostración
+Confiabilidad
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+Bombas de agua · 3
+50 d
+entre fallas
+22 fallas · 42,9 h fuera
+Electrosumergibles · 68
+1.133 d
+entre fallas
+22 fallas · 16,9 d fuera
+Bombas multifásicas · 1
+52 d
+entre fallas
+7 fallas · 2,0 d fuera
+Historia
+12 meses
+eventos del PLC
+¿Le creo al vigía?
+desde el 1 de sept
+
+Acertó 5 de 7 · anticipó 4,8 días en promedio · se le escaparon 4 con instrumento
+
+Ver lo que anunció
+›
+Reparación activa y espera
+promedio · 49 fallas cerradas · toda la historia
+Reparación activa
+8 h
+Espera
+8,0 d
+Indisponibilidad total
+8,3 d
+Los más costosos
+bbl · toda la historia
+Equipo	Fallas	Entre fallas	Fuera	Parte	le ha costado
+por falla	bbl
+P-201B
+bomba de agua · La Ceiba
+	9	41 d	40,0 h	Sello	4.593	37.315
+LC-16
+electrosumergible · La Ceiba
+	1 +6	—	31,5 d	Aislamiento	29.722	30.328
+LC-09
+electrosumergible · La Ceiba
+	1 +9	—	34,0 d	Aislamiento	22.075	22.632
+MPP-301
+bomba multifásica · Morichal Norte
+	7	52 d	2,0 d	Sello	3.226	22.582
+P-201B
+bomba de agua · Morichal Norte
+	8	46 d	47,1 h	Sello	2.765	22.117
+ver 7 más
+De qué fallan
+contra la referencia
+Bombas de agua · 20 fallas con parte
+Sello mecánico
+11 · 55 %
+Rodamientos y cámara de empuje
+4 · 20 %
+Succión y filtro de entrada
+2 · 10 %
+Motor eléctrico
+2 · 10 %
+Impulsores y desgaste interno
+1 · 5 %
+Electrosumergibles · 22 fallas con parte
+Aislamiento del motor y del cable
+18 · 82 %
+Motor de fondo
+2 · 9 %
+Bomba de fondo (eje y etapas)
+1 · 5 %
+Admisión y separador de gas
+1 · 5 %
+Bombas multifásicas · 7 fallas con parte
+Sellos mecánicos (cuatro)
+4 · 57 %
+Tornillos y holguras
+2 · 29 %
+Lubricación
+1 · 14 %
+Fallas por mes
+fallas · sin disparos
+4
+oct
+2025
+3
+nov
+3
+dic
+2
+ene
+2026
+1
+feb
+7
+mar
+1
+abr
+4
+may
+6
+jun
+6
+jul
+3
+ago
+10
+sept
+1
+oct
+2026
+bombas de agua
+electrosumergibles
+bombas multifásicas
+Calidad del registro
+ISO 14224: parte por falla
+por señal
+46 · 90 %
+por la firma de las señales
+3 · 6 %
+declarado por el operario
+0 · 0 %
+sin identificar
+2 · 4 %
+
+51 fallas
+72 equipos
+
+Calidad de la clasificación
+14 filas · Octubre, en curso
+¿Dónde se trabó?
+confirmado por una persona
+0 %
+0 de 14 filas
+corregido: cuánto se equivoca la regla
+0 %
+0 de 10 propuestas · 4 en falta
+Los demás pasos
+confirmado
+corregido
+Quién
+0 %
+0 %
+5 en falta
+Qué pasó
+0 %
+0 %
+4 en falta
+¿Planeada?
+0 %
+0 %
+5 en falta
+Causa
+0 %
+0 %
+5 en falta
+Detalle
+0 %
+0 %
+9 en falta
+Las reglas que más se corrigen
+
+Nadie corrigió una propuesta de TRIM en octubre (en curso): todavía nadie ha revisado estas paradas.
+
+Dónde se trabó, por equipo
+P-201B
+La Ceiba
+2 paradas · 0 corregidas · 0 %
+MN-22
+Morichal Norte
+2 paradas · 0 corregidas · 0 %
+MN-41
+Morichal Norte
+1 parada (2 filas) · 0 corregidas · 0 %
+LC-05
+La Ceiba
+1 parada · 0 corregidas · 0 %
+MN-25
+Morichal Norte
+1 parada · 0 corregidas · 0 %
+ver los otros 2
+Equipos sin topología
+
+Todos los equipos de estas paradas dicen a qué pozos sirven.

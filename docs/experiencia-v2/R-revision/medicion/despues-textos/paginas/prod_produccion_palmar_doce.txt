@@ -1,0 +1,208 @@
+#/prod/produccion/palmar/doce
+
+Todos mis campos
+El Palmar
+Resultados
+Datos de demostración
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+nada anormal
+Últimos 12 meses
+Exportar
+3
+no se puede publicar
+El Palmar · factor fuera de banda
+producción medida
+3
+1.180.973
+bbl
+meta 1.186.250
+3.236 bbl/d
+
+Potencial del libro:
+1.198.980 bbl
+· 3.285 bbl/d · lo medido es el 98,5 %
+
+La tubería del campo
+
+Limitan los pozos: a la planta le sobran 279 bbl/d.
+
+Yacimiento
+la roca
+Pozos · ◄ limita ⓘ
+7 de 7 en marcha
+Planta
+pasa lo que llega
+Salida
+el oleoducto recibe
+Sale hoy
+3.277 bbl/d
+meta 3.250
+tanque · sin dato
+agua que entra: 13.192 bbl/d
+P-201B, sin instrumento
+el agua del campo: sin dato
+
+Pozos
+dan 3.321 bbl/d
+· ◄ limita
+
+Planta
+caben 3.600 bbl/d · le sobran 279
+· sin firmar
+
+Salida
+caben 4.200 bbl/d · le sobran 879
+· sin firmar
+
+Ver como tabla
+Qué limitó, día por día
+últimos 12 meses · barras en bbl
+Sin cambios: en el período limitaron los pozos todos los días.
+limitó
+1.313
+bbl
+0
+1 de oct de 2025
+16 de nov de 2025
+1 de ene
+16 de feb
+3 de abr
+19 de may
+4 de jul
+19 de ago
+30 de sept
+Franja y barras:
+en el yacimiento
+(solo barras)
+Po · en los pozos
+Pl · en la planta
+Af · afuera
+sin identificar
+Día a día
+bbl/d
+1,0 k
+2,0 k
+3,0 k
+4,0 k
+1 de oct de 2025
+23 de nov de 2025
+15 de ene
+9 de mar
+1 de may
+23 de jun
+15 de ago
+30 de sept
+real medido
+potencial del libro
+meta firmada
+diferido
+Lo que no se produjo, por tipo
+últimos 12 meses
+eficiencia de producción
+95,5 %
+1.180.973 de 1.236.972 bbl que el campo podía dejar pasar
+lo no planeado se llevó
+1,4 %
+17.112 bbl en paradas no planeadas
+Lo que dan los pozos según sus pruebas
+1.236.972 bbl
+− Lo que las pruebas dan de más que el medidor oficial
+37.992
+= El potencial del libro · lo mismo, medido como el punto oficial (pruebas × factor de asignación)
+1.198.980 bbl
+− El yacimiento y los proyectos
+0
+− Frecuencia bajada: el levantamiento sin optimizar
+0
+− Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+543
+− Paradas no planeadas: fallas, disparos y terceros
+Lo que TRIM baja
+17.112
+− Restricción sin falla: nominación o despacho
+0
+− Sin identificar: falta que una persona diga qué pasó
+352
+− Sin explicar: el inventario entre días
+0
+= Lo que salió por el punto de medición oficial
+1.180.973 bbl
+
+352 bbl tienen el tramo como propuesta de TRIM: falta que una persona conteste la pregunta que lo decide.
+
+Ver por tramo
+Medición oficial
+El Palmar
+corte de agua: laboratorio
+factor 1,008 · banda ±15 %
+LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho
+Factor de asignación
+contra su banda
+0,75
+0,85
+1,00
+1,15
+1,25
+OCT
+NOV
+DIC
+ENE
+FEB
+MAR
+3
+ABR
+MAY
+JUN
+JUL
+AGO
+SEP
+OCT
+¿Cuadra? Mes por mes
+Mes	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+Octubre 2025	104.691	104.691	0	0	100,0 %	100.750
+Noviembre 2025	
+3
+bajo la meta96.525	97.934	1.409	0	98,6 %	97.500
+Diciembre 2025	106.400	107.499	1.099	0	99,0 %	100.750
+Enero 2026	
+3
+bajo la meta96.542	101.832	5.290	0	94,8 %	100.750
+Febrero 2026	97.458	97.458	0	0	100,0 %	91.000
+Marzo 2026	105.965	105.965	0	0	100,0 %	100.750
+Abril 2026	
+3
+bajo la meta81.033	82.043	1.010	0	98,8 %	97.500
+Mayo 2026	
+3
+bajo la meta95.777	98.895	3.118	0	96,8 %	100.750
+Junio 2026	
+3
+bajo la meta93.883	95.974	2.091	0	97,8 %	97.500
+Julio 2026	103.259	103.259	0	0	100,0 %	100.750
+Agosto 2026	102.725	102.725	0	0	100,0 %	100.750
+Septiembre 2026	
+3
+bajo la meta96.715	100.705	3.990	0	96,0 %	97.500
+Cuadre · asignación oficial
+mes cerrado
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 96.715 bbl · 7 pozos

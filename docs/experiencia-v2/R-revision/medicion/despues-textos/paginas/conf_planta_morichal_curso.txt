@@ -1,0 +1,145 @@
+#/conf/planta/morichal/curso
+
+Todos mis campos
+Morichal Norte
+La planta viva
+Datos de demostración
+Planta
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+La tubería del campo
+
+Limitan los pozos: a la planta le sobran 729 bbl/d.
+
+Yacimiento
+la roca
+Pozos · ◄ limita ⓘ
+aquí se trabó
+no pasan 684 bbl/d
+Planta
+pasa lo que llega
+Salida
+el oleoducto recibe
+Sale hoy
+16.920 bbl/d
+meta 16.700
+tanque 61,8 %
+alto-alto 90 %
+agua que entra: 559.389 bbl/d
+P-201B en marcha · las otras seis, sin instrumento
+inyectores: el agua vuelve al yacimiento
+
+Pozos
+dan 17.937 bbl/d
+· ◄ limita
+
+Planta
+caben 18.666 bbl/d · le sobran 729
+· sin firmar
+
+Salida
+caben 21.000 bbl/d · le sobran 3.063
+· sin firmar
+
+Ver como tabla
+Esquema de planta
+gas a venta
+10 de 19
+equipos con datos
++ 41 pozos
+Ver la tubería
+la planta
+
+Ahora:
+576.309 bbl/d de fluido
+16.920 bbl/d de crudo
+gas sin medición
+559.389 bbl/d de agua
+
+Tren de gas
+Tren de crudo
+Tren de agua
+Pozos productores
+41 pozos · 1 parado
+2
+Bomba multifásica· clúster norte
+MPP-301 · perdiendo…
+Manifold deproducción
+Separadortrifásico
+V-101
+Depurador de gas
+sin datos
+Tea / quemador
+Compresor de gas
+C-401
+Gas a venta
+Tratador térmico
+H-302
+Tanques enespecificación
+1 de 3 con datos
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto
+Tanque de agua
+LT-2012 · 61,8 %
+2
+Bombas de agua
+1 de 7 con datos
+Pozos inyectores
+3
+Subestación 13,8kV
+SE-2 · corriente de…
+Aire deinstrumentos
+K-101
+Capturando datos
+10 equipos
+2
+MPP-301 · Bomba multifásica · clúster norte
+Atención
+perdiendo eficiencia
+PT-3011 45 psi
+2
+P-201B
+Atención
+succión cayendo
+PI-2010 8,8 psi
+3
+SE-2 · Subestación 13,8 kV
+Aviso
+corriente de barraje subiendo
+II-0021 528 A
+· 72 bbl diferidos
+V-101 · Separador trifásico
+LI-1012 52 %
+C-401 · Compresor de gas
+PI-4011 1.180 psi
+ver 5 más
+Configurados sin datos
+9 equipos
+Depurador de gas
+sin instrumento
+TK-101 · respaldo
+sin instrumento
+TK-103 · PMO-03
+sin instrumento
+P-201A
+sin instrumento
+P-201C
+sin instrumento
+ver 4 más
+Capacidad por tren
+▾

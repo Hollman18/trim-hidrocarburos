@@ -1,0 +1,203 @@
+#/ger/resultados/morichal/trimestre
+
+Todos mis campos
+Morichal Norte
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Trimestre jul–sep
+Exportar
+
+Lo que pasó · 1 de jul a 30 de sept
+
+70.838
+barriles
+
+no se produjeron en Morichal Norte.
+
+Va 16.562 bbl por debajo del máximo firmado (87.400). MN-06, el 23 %.
+
+calculado
+entre 60.470 y 81.205 bbl
+3,4 M USD
+Se puede publicar
+Ver qué se está haciendo
+Promedio por día
+
+producción
+meta 16.700
+
+16.886
+bbl/d
+
+diferido
+máximo 950
+
+770
+bbl/d
+
+Total del período
+
+producción
+meta 1.536.400
+
+1.553.541
+bbl
+
+diferido
+máximo 87.400
+
+70.838
+bbl
+
+Diferido por día, mes a mes
+octubre: 792 bbl/d
+Por equipo
+Por dónde se trabó
+475
+950
+OCT 2025
+ENE 2026
+3
+ABR
+3
+849
+JUL
+935
+518
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+1 de jul a 30 de sept · calculado
+MN-06 electrosumergible
+16.005
+23 %
+SE-2 energía eléctrica
+13.167
+19 %
+2
+MPP-301 bomba multifásica · atención
+8.074
+12 %
+MN-24 electrosumergible
+6.421
+9 %
+MN-17 electrosumergible
+5.435
+8 %
+MN-01 electrosumergible
+5.143
+7 %
+
+y 36 equipos más
+
+Dónde se trabó
+pozos 62 %
+planta 38 %
+
+Se trabó sobre todo en los pozos: MN-06 y MN-24 (electrosumergibles).
+
+Ver más de Morichal Norte
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+45.540
+bbl
+ 64 %
+Con parte vigilada
+41.751
+bbl
+ 59 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+3.789
+bbl
+ 5 %
+Evitable cerrando en orden
+201
+bbl
+ < 1 %
+Tipo de causa
+Electrosumergible
+41.751 bbl · 59 %
+Energía eléctrica
+13.167 bbl · 19 %
+Bomba multifásica
+8.074 bbl · 11 %
+Bomba de agua
+3.789 bbl · 5 %
+Parada programada
+2.230 bbl · 3 %
+ver 2 más
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+›
+¿Está bajando? Desde que entró TRIM
+
+en los pozos
+460 → 266
+bbl/d · baja 42 %
+
+en la planta
+293 → 216
+bbl/d · baja 26 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 495 → 380 bbl/d · −23 %
+
+27 %
+mantenimiento proactivo
+
+12,0 h proactivas · 32,0 h correctivas, desde el 1 de sept
+
+Retorno posible del ciclo
+simulado
+
+≈ 63.623
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+29.890
+
+Si se interviene a tiempo en los 4 de alto impacto, se evitan ≈ 29.890 bbl · simulado
+
+Ver el plan ›
+
+Durante · ahora
+0
+
+Nada que mover · simulado
+
+Después · lo que pasó
+33.733
+
+No repetir la parte que más costó: ≈ 33.733 bbl · simulado
+
+Ver el plan ›
+
+Pérdida: nada registrado en 1 de jul a 30 de sept

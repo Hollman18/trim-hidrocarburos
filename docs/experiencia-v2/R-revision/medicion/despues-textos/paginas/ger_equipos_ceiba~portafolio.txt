@@ -1,0 +1,163 @@
+#/ger/equipos/ceiba~portafolio
+
+Todos mis campos
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Ahora: lo que está parado o avisa
+16 equipos · los demás, normales
+1
+P-201B
+La Ceiba
+bomba de agua
+Alarma · parada desde hoy, 03:52
+sí
+1.665bbl/d
+se deja de producir
+1
+MN-41
+Morichal Norte
+electrosumergible
+Alarma · parado desde el 25 de sept, 06:40
+sí
+684bbl/d
+se deja de producir
+1
+GU-07
+Guacamayo
+electrosumergible
+Alarma · aislamiento del motor y del cable · ya en alarma
+sí
+588bbl/d
+si falla hoy
+1
+K-101
+La Ceiba
+aire de instrumentos
+Alarma · ya pasó el límite
+sí
+hasta 9.394bbl/d
+si falla hoy
+2
+LC-21
+La Ceiba
+pozo · bombeo mecánico
+Atención · parado sin causa desde el 1 de oct, 18:20
+no
+301bbl/d
+se deja de producir
+2
+MPP-301
+Morichal Norte
+bomba multifásica
+sin respaldo
+Atención · filtro de entrada · alarma en 5,2 d
+sí
+1.600bbl/d
+si falla hoy
+2
+P-201B
+Morichal Norte
+bomba de agua
+Atención · succión y filtro de entrada · alarma en 43 h
+sí
+783bbl/d
+si falla hoy · después de 10 h de colchón
+2
+GU-04
+Guacamayo
+electrosumergible
+Atención · aislamiento del motor y del cable · alarma en 2,5 d
+sí
+647bbl/d
+si falla hoy
+2
+MN-07
+Morichal Norte
+electrosumergible
+Atención · bomba de fondo · alarma en 4 h
+sí
+607bbl/d
+si falla hoy
+2
+MN-18
+Morichal Norte
+electrosumergible
+Atención · admisión y gas · alarma en 30 h
+sí
+526bbl/d
+si falla hoy
+2
+MN-27
+Morichal Norte
+electrosumergible
+Atención · protector del motor · alarma en 10,9 d
+sí
+510bbl/d
+si falla hoy
+2
+TK-102
+La Ceiba
+tanque de crudo
+Atención · en servicio
+sí
+sin dato
+si falla hoy
+3
+H-302
+La Ceiba
+tratamiento de crudo
+Aviso · en marcha
+sí
+0bbl/d
+si falla hoy
+3
+SE-2
+Morichal Norte
+energía eléctrica
+sin respaldo
+Aviso · en servicio · corriente de barraje subiendo
+sí
+hasta 16.920bbl/d
+si falla hoy
+LC-16
+La Ceiba
+electrosumergible
+cerrado por P-201B
+sí
+dentro de los 1.665 de P-201B
+LC-07
+La Ceiba
+electrosumergible
+cerrado por P-201B
+sí
+dentro de los 1.665 de P-201B
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma · Morichal Norte
+1.083
+46 %
+1
+P-201B bomba de agua · alarma · La Ceiba
+573
+24 %
+2
+LC-21 sin identificar · atención · La Ceiba
+247
+10 %
+SE-2 energía eléctrica · La Ceiba
+118
+5 %

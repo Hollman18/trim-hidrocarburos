@@ -1,0 +1,265 @@
+#/conf/diferidos/morichal~portafolio/curso
+
+Todos mis campos
+Resultados
+Datos de demostración
+Libro de diferidos
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+2.299
+barriles
+
+no se produjeron en sus 3 campos.
+
+Va 1.184 bbl por debajo del máximo firmado a la fecha (3.483). MN-41, el 47 % · 355 sin causa. Septiembre cerró en 29.652 bbl.
+
+calculado
+entre 2.054 y 2.544 bbl
+110 mil USD
+Provisional
+Mes a mes
+bbl
+Por cómo se identificó
+Por dónde se trabó
+0
+40,0 k
+80,0 k
+47,6 k
+OCT
+2025
+28,4 k
+NOV
+46,1 k
+DIC
+11,8 k
+ENE
+2026
+31,2 k
+FEB
+53,0 k
+MAR
+24,1 k
+ABR
+54,0 k
+MAY
+27,1 k
+JUN
+50,8 k
+JUL
+53,7 k
+AGO
+29,7 k
+SEP
+2,3 k
+OCT
+en curso
+por señal
+declarado
+sin identificar
+máximo firmado
+3
+pasó el máximo
+¿Se puede publicar? Cuadre y custodia
+Potencial del libro · octubre, en curso
+56.334
+− Real medido
+54.035
+= Diferido
+2.299
+Identificado por señal
+1.858
+Declarado por el operario
+86
+Sin identificar
+355
+¿El factor está en su banda?
+
+3 meses-campo · dentro de banda
+
+Cadena de custodia
+Prueba estimada: LC-17, MN-11, MN-29, GU-09
+Corte de agua de laboratorio: Guacamayo
+Ir a Identificar
+Por campo
+bbl
+Morichal Norte · máximo 1.504 bbl
+1.253
+bbl diferidos
+La Ceiba · máximo 1.267 bbl
+1.046
+bbl diferidos
+Guacamayo · máximo 713 bbl
+0
+bbl diferidos
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+1.668
+bbl
+ 73 %
+Con parte vigilada
+1.095
+bbl
+ 48 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+573
+bbl
+ 25 %
+Evitable cerrando en orden
+30
+bbl
+ 1 %
+diferido por día
+1.452
+bbl/d
+máximo 2.200
+antes 1.458 bbl/d · jul a sep
+Tipo de causa
+Electrosumergible
+1.095 bbl · 48 %
+Bomba de agua
+573 bbl · 25 %
+Sin identificar
+355 bbl · 15 %
+Energía eléctrica
+190 bbl · 8 %
+Declarada por el operario
+86 bbl · 4 %
+Por dónde se trabó
+bbl · el diferido del libro
+pozos
+planta
+sin identificar
+
+El conjunto de campos se trabó sobre todo en los pozos: 1.371 bbl de 2.299
+
+Por tramo
+En el yacimiento
+0
+En los pozos
+1.371
+60 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+MN-41 1.083 · LC-05 118 · MN-22 90 · y 2 más
+En la planta o estación
+573
+25 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+P-201B 573
+Afuera
+0
+Sin identificar
+355
+15 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+LC-21 247 · LC-08 108
+Identificar
+
+= el diferido del libro
+2.299 bbl
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+Por qué no se produjo
+
+el mismo total, por escalón
+
+Paradas no planeadas: fallas, disparos y terceros
+lo que TRIM tiene que bajar
+1.858
+81 %
+El yacimiento y los proyectos
+0
+Frecuencia bajada: el levantamiento sin optimizar
+0
+Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+0
+Restricción sin falla: nominación o despacho
+0
+Sin identificar: falta que una persona diga qué pasó
+441
+19 %
+
+276 bbl con dónde se trabó por confirmar
+
+Por campo
+La Ceiba
+pozos 118 · planta 573 · sin identificar 355
+1.046
+bbl
+Morichal Norte
+pozos 1.253
+1.253
+bbl
+Guacamayo
+nada se trabó
+0
+bbl
+Cada tramo por qué no se produjo
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Por equipo
+8 equipos
+bbl
+acumulado
+1
+MN-41 · Morichal Norte
+electrosumergible
+aislamiento del motor y del cable
+1.083
+47 %
+1
+P-201B · La Ceiba
+bomba de agua
+2 pozos
+573
+72 %
+2
+LC-21 · La Ceiba
+sin identificar
+247
+83 %
+SE-2 · La Ceiba
+energía eléctrica
+118
+88 %
+LC-08 · La Ceiba
+sin identificar
+108
+93 %
+ver 3 más
+Por parte
+bombas y electrosumergibles
+Aislamiento del motor y del cable
+electrosumergible · 1 falla
+1.083
+bbl · 99 %
+Bomba de fondo
+electrosumergible · sin fallas · 1 disparo
+12
+bbl · 1 %
+
++ 573 bbl sin la parte identificada

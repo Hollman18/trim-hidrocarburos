@@ -1,0 +1,77 @@
+#/adm/perfil/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Mi perfil
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Identidad
+HL
+Hermes Leal
+Administrador de la implementación
+hermes.leal@operadora.example
+WhatsApp
++57 300 555 0109
+Área
+Plataforma
+Campos
+5 de 5
+La Ceiba
+Morichal Norte
+Guacamayo
+El Palmar
+La Zarza
+
+su foco
+
+Avisos
+Su rol no recibe alertas por WhatsApp.
+
+Las cambia el gerente de activo
+
+Apariencia
+Sistema
+Claro
+Oscuro
+Permisos
+los otorga el servidor
+Puede:
+Exportar evidencia con folio
+Puede:
+Configurar conectores y tags
+Puede:
+Firmar la configuración técnica
+No puede:
+Responder qué se dañó
+No puede:
+Completar el análisis de la falla
+No puede:
+Firmar metas y precio
+No puede:
+Dar acceso a otras personas
+No puede:
+Enviar avisos a SAP
+No puede:
+Cargar la asignación oficial
+No puede:
+Aceptar planes de acción
+No puede:
+Clasificar paradas en el árbol de causas
+No puede:
+Confirmar las paradas del día
+No puede:
+Decir que fue el yacimiento
+Sesiones y contraseña
+Servicio de identidad de la empresa · sin conectar

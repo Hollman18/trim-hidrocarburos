@@ -1,0 +1,272 @@
+#/ger/resultados/ceiba~portafolio/curso
+
+Todos mis campos
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+2.376
+barriles
+
+no se produjeron en sus 5 campos.
+
+Va 1.266 bbl por debajo del máximo firmado a la fecha (3.642). MN-41, el 46 % · 355 sin causa. Septiembre cerró en 33.945 bbl.
+
+calculado
+entre 2.132 y 2.622 bbl
+114 mil USD · sin La Zarza
+Provisional
+Ver qué se está haciendo
+Promedio por día
+
+producción
+meta 40.200
+
+40.514
+bbl/d
+
+diferido
+máximo 2.300
+
+1.501
+bbl/d
+
+Cierre proyectado
+proyectado
+
+producción
+meta 1.246.200
+
+3
+1.222.131
+bbl
+
+diferido
+máximo 71.300
+
+3
+80.334
+bbl
+
+Diferido por día, mes a mes
+octubre: 1.501 bbl/d
+Por equipo
+Por dónde se trabó
+1.150
+2.300
+OCT 2025
+ENE 2026
+ABR
+JUL
+1.501
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma · Morichal Norte
+1.083
+46 %
+1
+P-201B bomba de agua · alarma · La Ceiba
+573
+24 %
+2
+LC-21 sin identificar · atención · La Ceiba
+247
+10 %
+SE-2 energía eléctrica · La Ceiba
+118
+5 %
+LC-08 sin identificar · La Ceiba
+108
+5 %
+MN-22 según el operario · Morichal Norte
+86
+4 %
+
+y 3 equipos más
+
+Por campo
+producción / meta · bbl/d
+diferido / máximo · bbl/d
+bbl diferidos
+Morichal Norte
+16.813
+16.700
+792
+950
+1.253
+bbl diferidos
+dónde se trabó
+pozos 100 %
+
+Se trabó en los pozos: MN-41 (electrosumergible) y MN-22 (según el operario).
+
+Ver más de Morichal Norte
+La Ceiba
+3
+10.700
+10.900
+661
+800
+1.046
+bbl diferidos
+dónde se trabó
+planta 55 %
+sin identificar 34 %
+pozos 11 %
+
+Se trabó sobre todo en la planta: P-201B (bomba de agua). 355 bbl todavía sin identificar.
+
+Ver más de La Ceiba
+El Palmar
+3
+3.228
+3.250
+49
+50
+77
+bbl diferidos
+dónde se trabó
+pozos 100 %
+
+Se trabó en los pozos: PA-07 (bombeo mecánico).
+
+Ver más de El Palmar
+La Zarza
+3.159
+3.050
+0
+50
+0
+bbl diferidos
+dónde se trabó
+
+Nada se trabó en octubre (en curso).
+
+Guacamayo
+6.615
+6.300
+0
+450
+0
+bbl diferidos
+dónde se trabó
+
+Nada se trabó en octubre (en curso).
+
+Ver más de Guacamayo
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+
+Pérdida
+· lo que salió y no se vendió:
+sin eventos registrados en el período
+
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+1.668
+bbl
+ 70 %
+Con parte vigilada
+1.095
+bbl
+ 46 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+573
+bbl
+ 24 %
+Evitable cerrando en orden
+30
+bbl
+ 1 %
+Tipo de causa
+Electrosumergible
+1.095 bbl · 46 %
+Bomba de agua
+573 bbl · 24 %
+Sin identificar
+355 bbl · 15 %
+Energía eléctrica
+190 bbl · 8 %
+Declarada por el operario
+86 bbl · 4 %
+Bombeo mecánico
+77 bbl · 3 %
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+›
+¿Está bajando? Desde que entró TRIM
+
+en la planta
+561 → 308
+bbl/d · baja 45 %
+
+en los pozos
+820 → 771
+bbl/d · baja 6 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 1.021 → 837 bbl/d · −18 %
+
+20 %
+mantenimiento proactivo
+
+20,0 h proactivas · 80,0 h correctivas, desde el 1 de sept
+
+Retorno posible del ciclo
+simulado
+
+≈ 45.233
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+42.017
+
+Si se interviene a tiempo en los 6 de alto impacto, se evitan ≈ 42.017 bbl · simulado
+
+Ver el plan ›
+
+Durante · ahora
+2.102
+
+Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado
+
+Ver el plan ›
+
+Después · lo que pasó
+1.114
+
+No repetir la parte que más costó: ≈ 1.114 bbl en todos · simulado
+
+Ver el plan ›

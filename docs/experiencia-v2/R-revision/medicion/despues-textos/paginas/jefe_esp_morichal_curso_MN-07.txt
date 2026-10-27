@@ -1,0 +1,167 @@
+#/jefe/esp/morichal/curso/MN-07
+
+Morichal Norte
+Pozos
+MN-07
+Datos de demostración
+MN-06
+MN-08
+MN-07
+pozo MN-07 · electrosumergible · pozos productores · criticidad 3 de 5 · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+2
+Atención · produciendo
+
+0
+barriles por día
+
+se dejan de producir por él: está en marcha.
+
+Si falla hoy: 607 bbl/d · se trabaría en el pozo · puesto 12 de lo que más cuesta
+
+Crear aviso en SAP
+Sus señales
+tendencia de 12 días · escala provisional
+Corriente del motor
+VSD-MN07 · corriente
+normal < 330
+2
+329,4
+A
+Frecuencia
+VSD-MN07 · frecuencia
+normal 58 – 60
+59
+Hz
+Presión de entrada
+PIT-MN07 · sensor de fondo
+normal > 266
+763,7
+psi
+Temperatura del motor
+TIT-MN07 · sensor de fondo
+normal < 150
+120,0
+°C
+Desbalance de corriente entre fases
+VSD-MN07 · desbalance de corriente
+normal < 10
+2,5
+%
+Estado del controlador
+VSD-MN07
+interruptor: no lleva gráfica
+en marcha
+Los últimos 12 días
+Corriente del motor · A
+330
+0
+21 de sept
+hoy, 2 de oct
+Temperatura del motor · °C
+150
+0
+21 de sept
+hoy, 2 de oct
+
+Una señal apunta, no prueba: la causa la confirma quien abre el equipo.
+
+Su historia
+12 meses
+
+0 fallas.
+
+Ver el diagnóstico: salud por parte e historia del PLC
+2
+Atención · Pozo MN-07
+Morichal Norte · Electrosumergible · VSD-MN07 · alimentador SE-2
+produciendo
+Crudo asignado
+607 bbl/d
+Agua
+28.124 bbl/d
+corte 98 %
+Diferido · octubre, en curso
+0 bbl
+0 eventos · 0,0 h equivalentes parado
+Electrosumergible · 12 meses
+0 fallas
+5 disparos
+Salud por parte
+2
+Bomba de fondo (eje y etapas)
+corriente del motor · alarma en 4 h
+fuera de banda
+0 fallas · 8 bbl
+2
+Aislamiento del motor y del cable
+corriente del motor · alarma en 4 h
+fuera de banda
+0 fallas · 34 bbl
+2
+Admisión y separador de gas
+corriente del motor · alarma en 4 h
+fuera de banda
+0 fallas · 119 bbl
+2
+Motor de fondo
+corriente del motor · cruza en 4 h
+avisa
+Protector (sello del motor)
+temperatura del motor · más de 3 meses
+estable
+Señales del pozo
+Corriente del motor
+VSD-MN07 · variador del pozo
+2
+329,4
+A
+normal < 330
+Frecuencia
+VSD-MN07 · variador del pozo
+59
+Hz
+normal 58 – 60
+Presión de entrada
+PIT-MN07 · sensor de fondo
+763,7
+psi
+normal > 266
+Temperatura del motor
+TIT-MN07 · sensor de fondo
+120,0
+°C
+normal < 150
+Desbalance de corriente entre fases
+VSD-MN07 · variador del pozo
+2,5
+%
+normal < 10
+Pruebas
+5
+
+Separador de prueba automatizado SP-MN1
+
+Fecha	Crudo bbl/d	Agua bbl/d	Corte	Hz
+13 de septvigente · 19 d	618	28.124	98 %	59,0
+11 de jul	619	27.740	98 %	59,0
+11 de abr	641	27.911	98 %	59,0
+8 de ene	637	27.267	98 %	59,0
+8 de oct de 2025	641	26.803	98 %	59,0
+Eventos
+octubre, en curso
+
+Ningún evento.

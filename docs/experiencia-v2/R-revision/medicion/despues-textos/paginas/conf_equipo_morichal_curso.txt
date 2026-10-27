@@ -1,0 +1,370 @@
+#/conf/equipo/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Equipos
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+Si falla hoy
+
+1.600
+barriles por día
+
+Ataque primero MPP-301: ya avisa.
+
+calculado
+
+2
+MPP-301
+bomba multifásica
+sin respaldo
+Atención · filtro de entrada · alarma en 5,2 d
+sí · 16 señales
+1.600bbl/d
+si falla hoy
+2
+P-201B
+bomba de agua
+Atención · succión y filtro de entrada · alarma en 43 h
+sí · 8 señales
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201A
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+
+¿Le creo al vigía? Desde que entró TRIM, acertó 1 de 3 avisos.Ver el detalle
+
+¿Dónde va el próximo instrumento? Lo primero de la lista sin instrumento: P-201A, P-201C, P-201D, P-201E, P-201F y P-201G (puesto 3, 783 bbl/d si falla hoy). TRIM no ve venir su falla.
+
+Parados
+1
+Avisan
+5
+Sin instrumento
+6
+Todos
+56
+Más filtros
+(1)
+Todos los tipos
+Bombas
+8
+Electrosumergibles
+41
+Pozos
+41
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+41
+Recolección
+1
+Crudo
+4
+Agua
+7
+Gas
+1
+Servicios
+2
+Buscar por tag
+7 equipos
+· ordenados por estado
+¿Lo vigila TRIM?
+3
+SE-2
+energía eléctrica
+sin respaldo
+Aviso · en servicio · corriente de barraje subiendo
+sí · 3 señales
+hasta 16.920bbl/d
+si falla hoy
+H-302
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+V-101
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 16.920bbl/d
+si falla hoy
+C-401
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+Qué está en riesgo
+Se deja de producir ahora
+684
+bbl/d
+3,9 % del potencial · 1 pozo parado
+·
+1
+MN-41
+Equipos que avisan
+5
+si paran, 4.026 bbl/d en juego
+≈ 33.134 bbl de exposición si fallan hoy
+El más cercano
+MN-07
+Bomba de fondo
+cruza en 4 h
+Por qué
+1 causa
+1
+alarma
+MN-41
+electrosumergible
+aislamiento del motor y del cable
+desde 25 de sept, 06:40
+684
+bbl/d · 1 pozo
+Equipos que avisan
+ver «Si falla hoy»
+cruza en
+si para
+2
+atención
+MN-07
+electrosumergible
+bomba de fondo
+fuera de banda
+se trabaría en el pozo
+cruza en
+4 h
+si para
+607 bbl/d
+≈ 10.579 bbl le costaría la falla
+flota
+qué hacer
+la falla
+2
+atención
+MN-18
+electrosumergible
+admisión y gas
+fuera de banda
+se trabaría en el pozo
+cruza en
+30 h
+30–31 h
+si para
+526 bbl/d
+≈ 9.175 bbl le costaría la falla
+flota
+qué hacer
+la falla
+2
+atención
+P-201B
+bomba de agua
+succión y filtro de entrada
+fuera de banda
+se trabaría en la planta
+cruza en
+43 h
+41–45 h
+si para
+783 bbl/d
+≈ 1.235 bbl le costaría la falla
+0 si vuelve antes de 10 h
+qué hacer
+la falla
+2
+atención
+MPP-301
+bomba multifásica
+filtro de entrada
+fuera de banda
+se trabaría en la planta
+cruza en
+5,2 d
+4,7–5,7 d
+si para
+1.600 bbl/d
+≈ 3.245 bbl le costaría la falla
+qué hacer
+la falla
+2
+atención
+MN-27
+electrosumergible
+protector del motor
+fuera de banda
+se trabaría en el pozo
+cruza en
+10,9 d
+10,2–11,6 d
+si para
+510 bbl/d
+≈ 8.901 bbl le costaría la falla
+flota
+qué hacer
+la falla
+Si falla hoy
+de lo que más le quita al campo por día a lo que menos
+
+Lo que el campo deja de sacar por día si el equipo falla hoy
+
+MN-41, parado: va arriba.
+
+Equipo
+Se trabaría en
+Si falla hoy
+Después de
+Una falla ≈
+¿Lo vigila TRIM?
+MPP-301
+Bomba multifásica de doble tornillo · clúster norte
+en la planta · 3 pozos
+1.600 bbl/d
+sin colchón
+≈ 3.245 bbl
+sí
+·
+2
+atención
+P-201B
+Bomba multietapa de transferencia de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+≈ 1.235 bbl
+sí
+·
+2
+atención
+P-201A
+bomba de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+P-201C
+bomba de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+P-201D
+bomba de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+P-201E
+bomba de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+P-201F
+bomba de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+P-201G
+bomba de agua
+en la planta · 41 pozos
+783 bbl/d
+10,1 h
+—
+sin instrumento
+ver 42 más
+Sin cifra todavía · techo si cierran todos sus pozos
+SE-2
+Pórtico 13,8 kV · subestación 2
+en la planta · 41 pozos
+hasta 16.920 bbl/d
+sin colchón
+—
+sí
+·
+3
+aviso
+V-101
+Separador trifásico
+en la planta · 41 pozos
+hasta 16.920 bbl/d
+sin colchón
+—
+sí
+
+«hasta»: supone que se cierran todos los pozos que dependen del equipo; no descuenta respaldo ni tanque. No tiene puesto: no se ordena con las cifras calculadas.
+
+Sin dato · lo que falta para calcularlos
+C-401
+Compresor de gas
+en la planta · 41 pozos
+sin dato
+Falta saber a qué pozos cierra: sin eso no se calcula cuánto cuesta
+sí
+LACT-01
+Unidad LACT · punto de medición oficial
+en la planta · 41 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+TK-102
+Tanque de crudo en especificación
+en la planta · 41 pozos
+sin dato
+Falta el colchón del tanque de crudo: sin él no se sabe cuánto aguanta antes de cerrar pozos
+sí
+
+sin dato
+Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, TK-103 · PMO-03, Tanque de agua y Pozos inyectores.
+Sin equipo registrado en TRIM: no hay con qué medir su falla.
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, TK-103 · PMO-03, Tanque de agua, Pozos inyectores.

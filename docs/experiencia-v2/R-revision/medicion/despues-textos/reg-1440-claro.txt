@@ -1,0 +1,93 @@
+La Ceiba
+Reporte
+Regulatorio
+La planta viva
+Resultados
+¿Cómo se lee?
+IS
+Iván Salas
+Cumplimiento regulatorio
+Todos mis campos
+La Ceiba
+Datos de demostración
+Reporte al regulador
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+Octubre, en curso
+Exportar
+Reporte a la ANH
+octubre
+2
+paradas sin causa
+No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl).
+Las contesta el operador de campo mañana antes de las 07:00.
+LC-21
+247
+bbl
+LC-08
+108
+bbl
+Árbol de causas como la circular
+Ver los códigos ANH
+1.046
+bbl
+5
+paradas
+0
+bbl con los 6 pasos confirmados
+0
+Quién
+Dónde se trabó
+Qué pasó
+¿Planeada?
+Causa
+Detalle
+Operador Mantenimiento
+691
+66
+En la planta o estación
+573
+55
+Diferida
+No planeada
+No planeada Proceso Facilidades
+Parada estación/bombeo afecta pozos
+573
+55
+Pérdida: TRIM todavía no tiene registro de pérdidas
+0
+En el pozo
+118
+11
+Diferida
+No planeada
+No planeada Eléctrica interna
+118
+11
+Falta el detalle
+118
+11
+Pérdida: TRIM todavía no tiene registro de pérdidas
+0
+Falta quién
+355
+34
+Sin identificar
+355
+34
+Pérdida: TRIM todavía no tiene registro de pérdidas
+0
+Falta qué pasó
+355
+34
+Falta saber si fue planeada
+355
+34

@@ -1,0 +1,82 @@
+#/ger/equipos/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Ahora: lo que está parado o avisa
+7 equipos · los demás, normales
+1
+P-201B
+bomba de agua
+Alarma · parada desde hoy, 03:52
+sí
+1.665bbl/d
+se deja de producir
+1
+K-101
+aire de instrumentos
+Alarma · ya pasó el límite
+sí
+hasta 9.394bbl/d
+si falla hoy
+2
+LC-21
+pozo · bombeo mecánico
+Atención · parado sin causa desde el 1 de oct, 18:20
+no
+301bbl/d
+se deja de producir
+2
+TK-102
+tanque de crudo
+Atención · en servicio
+sí
+sin dato
+si falla hoy
+3
+H-302
+tratamiento de crudo
+Aviso · en marcha
+sí
+0bbl/d
+si falla hoy
+LC-16
+electrosumergible
+cerrado por P-201B
+sí
+dentro de los 1.665 de P-201B
+LC-07
+electrosumergible
+cerrado por P-201B
+sí
+dentro de los 1.665 de P-201B
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma
+573
+55 %
+2
+LC-21 sin identificar · atención
+247
+24 %
+SE-2 energía eléctrica
+118
+11 %
+LC-08 sin identificar
+108
+10 %

@@ -1,0 +1,247 @@
+#/prod/diferidos/ceiba~portafolio/curso
+
+Todos mis campos
+Resultados
+Datos de demostración
+Libro de diferidos
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+1.123
+barriles
+
+no se produjeron en sus 2 campos.
+
+Va 223 bbl por debajo del máximo firmado a la fecha (1.346). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 11.706 bbl.
+
+calculado
+entre 966 y 1.281 bbl
+54 mil USD
+Provisional
+Mes a mes
+bbl
+Por cómo se identificó
+Por dónde se trabó
+0
+15,0 k
+30,0 k
+16,9 k
+OCT
+2025
+8,9 k
+NOV
+7,5 k
+DIC
+10,6 k
+ENE
+2026
+23,3 k
+FEB
+17,0 k
+MAR
+11,1 k
+ABR
+16,6 k
+MAY
+13,6 k
+JUN
+17,4 k
+JUL
+8,5 k
+AGO
+11,7 k
+SEP
+1,1 k
+OCT
+en curso
+por señal
+declarado
+sin identificar
+máximo firmado
+3
+pasó el máximo
+¿Se puede publicar? Cuadre y custodia
+Potencial del libro · octubre, en curso
+23.176
+− Real medido
+22.052
+= Diferido
+1.124
+Identificado por señal
+769
+Declarado por el operario
+0
+Sin identificar
+355
+¿El factor está en su banda?
+
+2 meses-campo · dentro de banda
+
+Cadena de custodia
+Prueba estimada: LC-17
+Corte de agua de laboratorio: El Palmar
+Ir a Identificar
+Por campo
+bbl
+La Ceiba · máximo 1.267 bbl
+1.046
+bbl diferidos
+El Palmar · máximo 79 bbl
+77
+bbl diferidos
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+573
+bbl
+ 51 %
+Con parte vigilada
+0
+bbl
+ 0 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+573
+bbl
+ 51 %
+Evitable cerrando en orden
+30
+bbl
+ 3 %
+diferido por día
+710
+bbl/d
+máximo 850
+antes 409 bbl/d · jul a sep
+Tipo de causa
+Bomba de agua
+573 bbl · 51 %
+Sin identificar
+355 bbl · 32 %
+Energía eléctrica
+118 bbl · 10 %
+Bombeo mecánico
+77 bbl · 7 %
+Por dónde se trabó
+bbl · el diferido del libro
+pozos
+planta
+sin identificar
+
+El conjunto de campos se trabó sobre todo en la planta: 573 bbl de 1.124
+
+Por tramo
+En el yacimiento
+0
+En los pozos
+195
+17 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+LC-05 118 · PA-07 77
+En la planta o estación
+573
+51 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+P-201B 573
+Afuera
+0
+Sin identificar
+355
+32 %
+, con sus ramas: planeada o no, causa, detalle y equipos
+LC-21 247 · LC-08 108
+Identificar
+
+= el diferido del libro
+1.123 bbl
+
+Toque un tramo para abrirlo: planeada o no, causa, detalle, equipos y partes.
+
+Por qué no se produjo
+
+el mismo total, por escalón
+
+Paradas no planeadas: fallas, disparos y terceros
+lo que TRIM tiene que bajar
+768
+68 %
+El yacimiento y los proyectos
+0
+Frecuencia bajada: el levantamiento sin optimizar
+0
+Paradas planeadas: mantenimiento, pruebas y trabajos de pozo
+0
+Restricción sin falla: nominación o despacho
+0
+Sin identificar: falta que una persona diga qué pasó
+355
+32 %
+
+118 bbl con dónde se trabó por confirmar
+
+Por campo
+La Ceiba
+pozos 118 · planta 573 · sin identificar 355
+1.046
+bbl
+El Palmar
+pozos 77
+77
+bbl
+Cada tramo por qué no se produjo
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Por equipo
+5 equipos
+bbl
+acumulado
+1
+P-201B · La Ceiba
+bomba de agua
+2 pozos
+573
+51 %
+2
+LC-21 · La Ceiba
+sin identificar
+247
+73 %
+SE-2 · La Ceiba
+energía eléctrica
+118
+83 %
+LC-08 · La Ceiba
+sin identificar
+108
+93 %
+PA-07 · El Palmar
+bombeo mecánico
+77
+100 %
+Por parte
+bombas y electrosumergibles
+
+Ninguna falla con la parte identificada.
+
++ 573 bbl sin la parte identificada

@@ -1,0 +1,311 @@
+#/conf/filosofia/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Configurar
+Datos de demostración
+Filosofía operacional
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Filosofía operacional
+Configuración técnica
+Metas de los campos
+Filosofía operacional · Morichal Norte
+
+borrador · sin cambios
+
+1
+Equipos y pozos
+2
+Capacidades
+3
+Ver el impacto y firmar
+Paso 1 · Equipos y pozos
+Solo lectura: la prepara y la firma el administrador de la implementación.
+Sin responder 58
+Propuestas de TRIM 7
+Casos de borde 1
+Todos 65
+Equipos · 65
+Morichal Norte
+Pozos y su levantamiento · 41
+MN-01
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-01 → se traba en el pozo
+MN-02
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-02 → se traba en el pozo
+MN-03
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-03 → se traba en el pozo
+MN-04
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-04 → se traba en el pozo
+MN-05
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-05 → se traba en el pozo
+MN-06
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-06 → se traba en el pozo
+MN-07
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-07 → se traba en el pozo
+MN-08
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-08 → se traba en el pozo
+MN-09
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-09 → se traba en el pozo
+MN-10
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-10 → se traba en el pozo
+MN-11
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-11 → se traba en el pozo
+MN-12
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-12 → se traba en el pozo
+MN-13
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-13 → se traba en el pozo
+MN-14
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-14 → se traba en el pozo
+MN-15
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-15 → se traba en el pozo
+MN-16
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-16 → se traba en el pozo
+MN-17
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-17 → se traba en el pozo
+MN-18
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-18 → se traba en el pozo
+MN-19
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-19 → se traba en el pozo
+MN-20
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-20 → se traba en el pozo
+MN-21
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-21 → se traba en el pozo
+MN-22
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-22 → se traba en el pozo
+MN-23
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-23 → se traba en el pozo
+MN-24
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-24 → se traba en el pozo
+MN-25
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-25 → se traba en el pozo
+MN-26
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-26 → se traba en el pozo
+MN-27
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-27 → se traba en el pozo
+MN-28
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-28 → se traba en el pozo
+MN-29
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-29 → se traba en el pozo
+MN-30
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-30 → se traba en el pozo
+MN-31
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-31 → se traba en el pozo
+MN-32
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-32 → se traba en el pozo
+MN-33
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-33 → se traba en el pozo
+MN-34
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-34 → se traba en el pozo
+MN-35
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-35 → se traba en el pozo
+MN-36
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-36 → se traba en el pozo
+MN-37
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-37 → se traba en el pozo
+MN-38
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-38 → se traba en el pozo
+MN-39
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-39 → se traba en el pozo
+MN-40
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-40 → se traba en el pozo
+MN-41
+electrosumergible
+sin responder
+TRIM deduce: sirve solo a MN-41 → se traba en el pozo
+Servicios del campo · 3
+C-401
+Compresor de gas
+dos fuentes no cuadran
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+SE-2
+Subestación 13,8 kV
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+K-101
+Aire de instrumentos
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Proceso · 5
+Manifold de producción
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+V-101
+Separador trifásico
+dos fuentes no cuadran
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Depurador de gas
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Tea / quemador
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+H-302
+Tratador térmico
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Tanques · 4
+TK-102
+PMO-02
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+TK-101
+respaldo
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+TK-103
+PMO-03
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Tanque de agua
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Medición y despacho · 1
+LACT-01
+Unidad LACT
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Bombas · 8
+MPP-301
+Bomba multifásica · clúster norte
+propuesta de TRIM
+TRIM deduce: sirve a MN-07, MN-18 y MN-33 → se traba en la planta
+caso de borde: misma locación
+P-201A
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+P-201B
+propuesta de TRIM
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+P-201C
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+P-201D
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+P-201E
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+P-201F
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+P-201G
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Pozos inyectores · 1
+Pozos inyectores
+sin responder
+TRIM deduce: sirve a todo el campo (41 pozos) → se traba en la planta
+Salidas de la batería · 2
+Gas a venta
+sin responder
+TRIM deduce: de otro dueño, más allá de la batería → se traba afuera
+Oleoducto
+sin responder
+TRIM deduce: de otro dueño, más allá de la batería → se traba afuera
+MN-01 · electrosumergible
+sin responder
+¿A qué pozos sirve este equipo?
+A un solo pozo: MN-01
+propuesta de TRIM, sin aceptar
+
+Es un pozo: solo se sirve a sí mismo. El tramo de sus paradas no se escoge: es «En el pozo».
+
+Nadie lo ha contestado. Lo del borde discontinuo es lo que TRIM deduce: acéptelo abajo o escoja otra respuesta.
+Lo que dedujo TRIM
+
+→ Si para, se traba en el pozo: es solo de MN-01.
+
+Siguiente equipo
+Siguiente: capacidades

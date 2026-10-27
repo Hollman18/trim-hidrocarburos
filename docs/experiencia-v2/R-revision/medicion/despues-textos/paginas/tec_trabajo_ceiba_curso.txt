@@ -1,0 +1,87 @@
+#/tec/trabajo/ceiba/curso
+
+La Ceiba
+Datos de demostración
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+5
+cosas le tocan hoy
+
+Primero P-201B: diga qué se dañó.
+
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Diga qué se dañó en P-201B
+
+1
+Alarma ·
+P-201B
+bomba de agua · paró hoy a las 03:52, hace 10,1 h
+
+Sigue parada.
+
+Contestar
+Ver P-201B
+Diga por qué paró LC-21
+
+2
+Atención ·
+LC-21
+pozo · paró el 1 de oct a las 18:20, hace 19,7 h
+
+Sigue parado.
+
+Contestar
+Ver LC-21
+Atender la orden de K-101
+
+1
+Alarma ·
+K-101
+aire de instrumentos · ya pasó el límite · orden 40012056 · le llegó por WhatsApp a las 09:11
+
+Verificar que las tres unidades estén en servicio: hoy hay dos.
+
+Ver la orden
+Contestar «¿De dónde vino el corte?» de LC-05
+
+LC-05
+pozo · paró el 1 de oct a las 09:16
+
+Para el reporte a la ANH falta el detalle.
+
+Contestar
+Ver la parada
+Diga por qué paró LC-08
+
+LC-08
+pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar
+
+Arrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.
+
+Contestar
+Ver LC-08
+Su campo, ahora
+La planta viva
+pozos
+planta
+salida
+
+En la planta no pasan 1.665 bbl/d; limitan los pozos.
+
+Tanque de agua 89,6 %: no sube, P-201A y P-201C toman lo que entra.
+
+Abrir La planta viva

@@ -1,0 +1,114 @@
+#/reg/regulatorio/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Datos de demostración
+Reporte al regulador
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Reporte a la ANH · octubre
+
+1
+parada sin causa
+
+No se puede publicar todavía: octubre sigue abierto y le falta la causa (86 bbl).
+
+La contesta el operador de campo: el reporte venció el 2 de oct a las 07:00.
+
+MN-22 · falta quién, si fue planeada, la causa y el detalle
+. Lo debe el operador de campo · venció el 2 de oct a las 07:00
+86 bbl
+Árbol de causas · como la circular
+Ver los códigos ANH
+
+1.253 bbl
+5 paradas · 0 bbl con los 6 pasos confirmados (0 %)
+
+Quién
+→
+Dónde se trabó
+→
+Qué pasó
+→
+¿Planeada?
+→
+Causa
+→
+Detalle
+Operador · Mantenimiento · En el pozo
+1.167 
+bbl,
+93 %
+del período
+Diferida · No planeada
+1.167 
+bbl,
+93 %
+del período
+No planeada - Mecánica subsuelo · Falla ESP
+1.095 
+bbl,
+87 %
+del período
+No planeada - Eléctrica interna
+72 
+bbl,
+6 %
+del período
+Falta el detalle
+72 
+bbl,
+6 %
+del período
+Pérdida: TRIM todavía no tiene registro de pérdidas
+0 
+bbl
+Falta quién · En el pozo
+86 
+bbl,
+7 %
+del período
+Diferida
+86 
+bbl,
+7 %
+del período
+Falta saber si fue planeada
+86 
+bbl,
+7 %
+del período
+Falta la causa
+86 
+bbl,
+7 %
+del período
+Falta el detalle
+86 
+bbl,
+7 %
+del período
+Pérdida: TRIM todavía no tiene registro de pérdidas
+0 
+bbl
+
+= el diferido del libro (Σ de las paradas del período)
+1.253 bbl
+
+Medición oficial
+Ver más
+· 3 puntos

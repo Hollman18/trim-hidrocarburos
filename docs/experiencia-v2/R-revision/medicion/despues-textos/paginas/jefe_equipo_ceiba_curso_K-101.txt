@@ -1,0 +1,93 @@
+#/jefe/equipo/ceiba/curso/K-101
+
+La Ceiba
+Servicios
+K-101
+Datos de demostración
+SE-2
+K-101
+sistema de aire de instrumentos · servicios industriales · criticidad 5 de 5 · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+1
+Alarma · en marcha · degradado
+
+0
+barriles por día
+
+se dejan de producir por él: está en marcha.
+
+Si falla hoy: hasta 9.394 bbl/d (un techo: supone que se cierran todos sus pozos) · se trabaría en la planta (18 pozos)
+
+Ver la orden en SAP
+Sus señales
+tendencia de 12 días · escala provisional
+Presión de cabezal
+PT-1011
+normal 115 – 130
+1
+112
+psi
+Derivada de presión
+PDT-1011
+normal > -0,2
+1
+-0,90
+psi/h
+Punto de rocío
+AIT-1011
+normal < -30
+-38
+°C
+Unidades en servicio
+ZI-1011
+interruptor: no lleva gráfica
+2 de 3
+En su tren: servicios
+1
+K-101 · aire de instrumentos · ya pasó el límite
+este
+SE-2 · energía eléctrica · en servicio
+Los últimos 12 días
+Derivada de presión · psi/h
+0
+0
+21 de sept
+hoy, 2 de oct
+Presión de cabezal · psi
+130
+100
+21 de sept
+hoy, 2 de oct
+Punto de rocío · °C
+-30
+-60
+21 de sept
+hoy, 2 de oct
+
+Una señal apunta, no prueba: la causa la confirma quien abre el equipo.
+
+Su historia
+12 meses
+
+6 eventos con pozos cerrados, uno cada 61 d.
+
+4 de ago
+presión baja del aire de instrumentos
+2.238 bbl
+15 de jul
+presión baja del aire de instrumentos
+2.552 bbl
+Ver el diagnóstico: salud por parte e historia del PLC

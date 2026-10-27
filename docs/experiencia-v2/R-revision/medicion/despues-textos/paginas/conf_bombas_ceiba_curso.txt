@@ -1,0 +1,78 @@
+#/conf/bombas/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Equipos
+Datos de demostración
+Bombas de la línea
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+Se deja de producir ahora, por bombas paradas
+1.665bbl/d
+1 bomba detenida · 2 pozos cerrados
+P-201B
+1
+Alarma
+Diferido que causaron
+573 bbl
+487 – 659 · calculado
+Próxima en fallar
+ninguna
+de las que tienen instrumento
+1
+bomba con instrumento
+1
+Bomba multietapa de transferencia de agua
+P-201B
+Bomba de agua
+
+Alarma · detenido · disposición de agua
+
+Presión de succión
+18,2
+psi
+Presión de descarga
+0
+psi
+Caudal
+0
+bbl/d
+Vibración
+0,0
+mm/s
+Partes
+5 partes con la bomba detenida
+Detenida desde 2 de oct, 03:52
+573 bbl
+calculado
+No arrancar hasta identificar
+
+9 fallas en 12 meses · cada 41 d · 40,0 h fuera · le ha costado 4.593 bbl por falla
+
+Sin instrumento
+2 bombas
+P-201A
+· bomba de agua
+┄ sin instrumento
+Se supone en marcha · reinyección · 89.250 bbl/d de agua
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · sube porque P-201B está parada
+Abrir
+P-201C
+· bomba de agua
+┄ sin instrumento
+Se supone en marcha · reinyección · 89.250 bbl/d de agua
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · sube porque P-201B está parada
+Abrir

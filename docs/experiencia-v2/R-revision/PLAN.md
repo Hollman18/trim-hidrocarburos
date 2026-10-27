@@ -57,5 +57,5 @@ Marca **confirmado** (con su severidad S1/S2/S3) o **refutado** (con su porqué)
 - [x] Tanda 2 cerrada (C4, C5): 5aaa7f2
 - [x] Fases 1–2 (R1–R4): ~230 hallazgos (texto 79, UI y producto 46, ISA-101 y gráficos 34, accesibilidad y frontend 24)
 - [x] Fase 3 (V1, V2): confirmados 110 + 56; decisiones D-1 (la imagen manda; −40 % a 390 px), D-2 («Si falla hoy» en bbl/d), D-3 (títulos en frase), redondeo por mayor residuo en el motor; A9 (fuente http) fuera de esta tanda
-- [ ] Fase 4 (F1–F4): en curso
-- [ ] Fase 5
+- [x] Fase 4 (F1–F4, K1, K2): ed559e4
+- [x] Fase 5: e2e 518/518, medición antes/después, demo actualizado. Ver qa-final.md (metas de palabras NO cumplidas: ver §3)

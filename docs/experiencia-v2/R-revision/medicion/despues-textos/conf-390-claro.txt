@@ -1,0 +1,34 @@
+3
+La Ceiba
+EM
+Todos mis campos
+Demo
+Equipos
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Si falla hoy
+3.059
+barriles por día
+Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila. Ahí va el próximo instrumento.
+calculado
+P-201A
+bomba de agua
+sin instrumento
+P-201C
+bomba de agua
+sin instrumento
+LC-11
+electrosumergible
+1.031
+bbl/d
+¿Le creo al vigía? Desde que entró TRIM, acertó 3 de 3 avisos.
+Ver el detalle
+Filtrar
+28 equipos
+ordenados por estado

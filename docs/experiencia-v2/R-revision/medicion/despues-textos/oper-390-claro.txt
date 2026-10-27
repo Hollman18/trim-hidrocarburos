@@ -1,0 +1,26 @@
+4
+Pregunta 1 de 4
+P-201B bomba de agua paró hoy en la madrugada
+¿Qué parte se dañó?
+2
+alarmas
+2
+atención
+1
+aviso
+0
+No la arranque hasta decir qué se dañó
+Si arranca antes, queda como no conformidad.
+pozos
+planta agua
+salida
+Lo que más le ha fallado a esta bomba:
+Sello mecánico
+5 de sus 8 fallas
+Rodamientos y cámara de empuje
+3 de sus 8 fallas
+Otra parte
+escoja de la lista
+Todavía no sé
+se la vuelven a preguntar en la próxima ronda
+Lo que encontró (si quiere)

@@ -1,0 +1,27 @@
+#/prod/planta/ceiba~portafolio/curso
+
+Todos mis campos
+La planta viva
+Datos de demostración
+Planta
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+Planta · elija un campo
+1
+La Ceiba
+Llanos · 11.105 bbl último día · 3 pozos parados
+El Palmar
+Magdalena Medio · 3.186 bbl último día · 0 pozos parados

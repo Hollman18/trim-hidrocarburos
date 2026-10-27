@@ -1,0 +1,33 @@
+5
+La Ceiba
+ÓD
+Demo
+Hoy
+datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+5
+cosas le tocan hoy
+Primero P-201B: diga qué se dañó.
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Diga qué se dañó en P-201B
+Alarma
+P-201B
+bomba de agua paró hoy en la madrugada
+Contestar
+Ver P-201B
+Diga por qué paró LC-21
+Atención
+LC-21
+pozo paró ayer en la tarde
+Contestar
+Ver LC-21
+Atender la orden de K-101
+Alarma
+K-101
+aire de instrumentos ya pasó el límite orden

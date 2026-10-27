@@ -1,0 +1,187 @@
+#/ger/resultados/morichal/curso/SE-2
+
+Todos mis campos
+Morichal Norte
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+1.253
+barriles
+
+no se produjeron en Morichal Norte.
+
+Va 251 bbl por debajo del máximo firmado a la fecha (1.504). MN-41, más de la mitad. Septiembre cerró en 15.539 bbl.
+
+calculado
+entre 1.065 y 1.441 bbl
+60 mil USD
+Provisional
+Ver qué se está haciendo
+Promedio por día
+
+producción
+meta 16.700
+
+16.813
+bbl/d
+
+diferido
+máximo 950
+
+792
+bbl/d
+
+Cierre proyectado
+proyectado
+
+producción
+meta 517.700
+
+524.352
+bbl
+
+diferido
+máximo 29.450
+
+21.376
+bbl
+
+Diferido por día, mes a mes
+octubre: 792 bbl/d
+Por equipo
+Por dónde se trabó
+475
+950
+OCT 2025
+ENE 2026
+3
+ABR
+3
+JUL
+792
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma
+1.083
+86 %
+MN-22 según el operario
+86
+7 %
+SE-2 energía eléctrica
+72
+6 %
+MN-25 electrosumergible
+12
+1 %
+Dónde se trabó
+pozos 100 %
+
+Se trabó en los pozos: MN-41 (electrosumergible) y MN-22 (según el operario).
+
+Ver más de Morichal Norte
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+1.095
+bbl
+ 87 %
+Con parte vigilada
+1.095
+bbl
+ 87 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+0
+bbl
+ 0 %
+Evitable cerrando en orden
+0
+bbl
+ 0 %
+Tipo de causa
+Electrosumergible
+1.095 bbl · 87 %
+Declarada por el operario
+86 bbl · 7 %
+Energía eléctrica
+72 bbl · 6 %
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+›
+¿Está bajando? Desde que entró TRIM
+
+en los pozos
+460 → 266
+bbl/d · baja 42 %
+
+en la planta
+293 → 216
+bbl/d · baja 26 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 495 → 380 bbl/d · −23 %
+
+27 %
+mantenimiento proactivo
+
+12,0 h proactivas · 32,0 h correctivas, desde el 1 de sept
+
+Retorno posible del ciclo
+simulado
+
+≈ 30.973
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+29.890
+
+Si se interviene a tiempo en los 4 de alto impacto, se evitan ≈ 29.890 bbl · simulado
+
+Ver el plan ›
+
+Durante · ahora
+0
+
+Nada que mover · simulado
+
+Después · lo que pasó
+1.083
+
+No repetir la parte que más costó: ≈ 1.083 bbl · simulado
+
+Ver el plan ›
+
+Pérdida: nada registrado en octubre

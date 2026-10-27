@@ -1,0 +1,35 @@
+3
+La Ceiba
+CR
+Todos mis campos
+Demo
+Hoy
+datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+De cada falla
+7,7 de 8,1
+días son espera
+El vigía anunció 3 de 3 fallas.
+No arrancar P-201B ni LC-21
+Conseguir la causa de 3 paradas
+Alarma
+P-201B
+lleva 10,1 h sin causa
+Entre todas:
+219 bbl hoy
+Responder yo
+Ver el chat
+Seguir la orden de K-101
+Alarma
+K-101
+aire de instrumentos ya pasó el límite
+Si para, hasta
+9.394 bbl/d
+Ver la orden
+Decidir planes simulado

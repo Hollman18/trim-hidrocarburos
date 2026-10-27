@@ -1,0 +1,106 @@
+#/sup/turno/ceiba/curso
+
+La Ceiba
+Hoy
+Datos de demostración
+Entrega de turno
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+1.966
+bbl/d se dejan de producir ahora
+
+3 pozos parados ·
+1
+Alarma ·
+P-201B
+· 3 por identificar
+2 sin arrancar ·
+1 arrancó sin identificar
+· 723 bbl diferidos en 12 h
+
+≈ 983 bbl en el turno que entra si nada cambia · proyectado
+Qué limita hoy al campo
+◄
+limita · los pozos ·
+11.857 bbl/d
+Hoy, con P-201B parada, el agua de la planta deja pasar 178.500 bbl/d y ya entran 174.033: lo que den de más los pozos pasa solo hasta unos 236 bbl/d de crudo, hasta que vuelva.
+Lo más frágil
+el agua. Si para otra bomba de agua hay que cerrar pozos, y P-201A y P-201C no tienen instrumento: TRIM no verá venir su falla.
+Cierre de hoy
+faltan 4 de 4 · antes de las 07:00
+2 iguales · TRIM las dedujo · falta confirmar
+
+en la planta, no planeada
+
+por P-201B: LC-07 y LC-16 · desde 05:43
+Confirmar las 2
+Ver una por una
+
+2 paradas
+sin causa: LC-08 y LC-21 · 219 bbl hoy (355 desde que pararon)
+Responder en Identificar
+
+Parado ahora
+2 causas
+1
+Alarma ·
+P-201B
+bomba de agua
+en la planta
+2 pozos · desde 2 de oct, 03:52
+1.665
+bbl/d
+2
+Atención ·
+LC-21
+sin identificar
+dónde: sin identificar todavía
+1 pozo · desde 1 de oct, 18:20
+301
+bbl/d
+Por identificar
+3
+1
+Alarma ·
+ P-201B · 2 de oct, 03:52
+no arrancar
+LC-08 · 1 de oct, 22:15
+arrancó sin identificar
+2
+Atención ·
+ LC-21 · 1 de oct, 18:20
+no arrancar
+Identificar antes de entregar
+Por vigilar
+1 equipo
+1
+Alarma ·
+K-101
+aire de instrumentos
+ya pasó el límite
+hasta 9.394 bbl/d
+Paradas nuevas
+12 h · 1 causa
+2 pozos cerrados por P-201B · 05:43–05:46
+parte por identificar
+573 bbl · sigue
+WhatsApp del turno
+8 mensajes
+K-101
+09:11 orden liberada en SAP
+P-201B
+sin respuesta
+03:53 parado → 03:53 pregunta → 04:22 recordatorio → 05:44 pozos cerrándose → 05:52 escalado

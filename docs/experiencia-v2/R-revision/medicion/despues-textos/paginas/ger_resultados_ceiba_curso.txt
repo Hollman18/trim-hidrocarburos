@@ -1,0 +1,192 @@
+#/ger/resultados/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+1.046
+barriles
+
+no se produjeron en La Ceiba.
+
+Va 221 bbl por debajo del máximo firmado a la fecha (1.267). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.
+
+calculado
+entre 889 y 1.203 bbl
+50 mil USD
+Provisional
+Ver qué se está haciendo
+Promedio por día
+
+producción
+meta 10.900
+
+3
+10.700
+bbl/d
+
+diferido
+máximo 800
+
+661
+bbl/d
+
+Cierre proyectado
+proyectado
+
+producción
+meta 337.900
+
+3
+293.287
+bbl
+
+diferido
+máximo 24.800
+
+3
+58.880
+bbl
+
+Diferido por día, mes a mes
+octubre: 661 bbl/d
+Por equipo
+Por dónde se trabó
+400
+800
+OCT 2025
+ENE 2026
+3
+ABR
+JUL
+661
+OCT
+alto impacto
+lo demás
+máximo firmado
+bbl/d · un toque abre el mes
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma
+573
+55 %
+2
+LC-21 sin identificar · atención
+247
+24 %
+SE-2 energía eléctrica
+118
+11 %
+LC-08 sin identificar
+108
+10 %
+Dónde se trabó
+planta 55 %
+sin identificar 34 %
+pozos 11 %
+
+Se trabó sobre todo en la planta: P-201B (bomba de agua). 355 bbl todavía sin identificar.
+
+Ver más de La Ceiba
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+Dónde bajarlo
+bbl · % del diferido
+Equipos de alto impacto
+573
+bbl
+ 55 %
+Con parte vigilada
+0
+bbl
+ 0 %
+Con parte sin instrumento
+0
+bbl
+ 0 %
+Sin la parte identificada
+573
+bbl
+ 55 %
+Evitable cerrando en orden
+30
+bbl
+ 3 %
+Tipo de causa
+Bomba de agua
+573 bbl · 55 %
+Sin identificar
+355 bbl · 34 %
+Energía eléctrica
+118 bbl · 11 %
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+›
+¿Está bajando? Desde que entró TRIM
+
+en la planta
+268 → 51
+bbl/d · baja 81 %
+
+en los pozos
+122 → 215
+bbl/d · sube 76 %
+
+Lo no planeado por día. 1 de sept, frente a jun a ago · muestra corta
+
+Lo de alto impacto (bombas de agua y electrosumergibles): 310 → 255 bbl/d · −18 %
+
+14 %
+mantenimiento proactivo
+
+4,0 h proactivas · 24,0 h correctivas, desde el 1 de sept
+
+Retorno posible del ciclo
+simulado
+
+≈ 2.133
+bbl · simulado, no entra al libro
+
+Antes · lo que viene
+0
+
+Nada que intervenir antes de que falle · simulado
+
+Durante · ahora
+2.102
+
+Si P-201B vuelve antes de 39 h, ≈ 2.072 bbl; cerrando en el orden de TRIM, 30 más · simulado
+
+Ver el plan ›
+
+Después · lo que pasó
+30
+
+No repetir la parte que más costó: ≈ 30 bbl · simulado
+
+Ver el plan ›
+
+Pérdida: nada registrado en octubre
