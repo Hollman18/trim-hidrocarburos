@@ -304,8 +304,8 @@ function deducirEvento(ev: EventoPozo, ctx: Contexto): Causa {
       ...(cb.porQueNo ? { porQueNo: cb.porQueNo } : {}),
       evidencia: ev2,
       texto: perfil.papel === 'transporte' ? 'La bomba multifásica que lo mueve estaba parada'
-        : ev.codigo === 'HZ' ? 'Se le bajó la frecuencia: la bomba de reinyección no daba abasto con el agua'
-          : 'Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno' }
+        : ev.codigo === 'HZ' ? 'Se le bajó la frecuencia: la bomba de agua no daba abasto'
+          : 'Se cerró porque la bomba de agua estaba parada y el tanque de agua lleno' }
   }
   // 3. Programa de paradas.
   const pr = enPrograma(ctx, ev.campoId, ev.pozo, t)
