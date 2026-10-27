@@ -84,14 +84,10 @@ test('Identificar · producción: una pregunta a la vez, y el porqué de la bomb
 test('Identificar · operador: lo que pregunta va primero; los indicadores, plegados al final; «Algo está mal» con atajos de un toque (B-52, B-54)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/oper/causa/ceiba/curso')
-  // B-54: los indicadores de gestión no van antes de sus preguntas: plegados, después de la lista.
-  const indicadores = page.locator('main details[data-indicadores]')
-  await expect(indicadores).toHaveCount(1)
-  f.ok(!(await indicadores.evaluate(d => (d as HTMLDetailsElement).open)), 'los indicadores empiezan plegados')
-  f.ok(await page.evaluate(() => {
-    const lista = document.querySelector('main [data-por-contestar]'), d = document.querySelector('main details[data-indicadores]')
-    return !!lista && !!d && !!(lista.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING)
-  }), 'y van después de lo que tiene que contestar')
+  // B3 · A-29: los porcentajes de identificación y el histórico son de confiabilidad y de producción: al operador, ninguno.
+  await expect(page.locator('main details[data-indicadores]')).toHaveCount(0)
+  // FF-2: se contesta en Hoy; aquí, a un toque.
+  await expect(page.locator('main [data-se-contesta-en-hoy]')).toContainText('Se contesta en Hoy')
   // B-52: «Algo está mal» no obliga a escribir: un toque y «Enviar a revisar».
   const lc05 = tarjeta(page, 'LC-05')
   await lc05.getByRole('button', { name: 'Algo está mal' }).click()
@@ -104,188 +100,29 @@ test('Identificar · operador: lo que pregunta va primero; los indicadores, pleg
   f.cerrar()
 })
 
-test('Producción: la tubería dice lo de hoy, la escalera se llama por tipo y la lista de campos dice lo que no se produjo (B-14, B-15, B-26, B-28, B-36, B-45, B-09)', async ({ flujo: f }) => {
+// v3 (A-10, C-03): la tubería del campo va una vez, en el inicio de producción (el kit SCADA), y la escalera es un escalón:
+// lo que se probaba de ellas se prueba donde quedó (la frase, lo que cabe en cada tramo con su ⓘ y el cuadre de las pruebas).
+test('Producción: la tubería dice lo de hoy y lo que cabe en cada tramo; el cuadre de las pruebas y el papel sin palabras internas (B-14, B-15, B-26, B-28, B-36, B-45, B-09)', async ({ flujo: f }) => {
   const { page } = f
-  await f.abrir('/#/prod/produccion/ceiba/curso')
-  await f.esperarTexto('La tubería del campo')
-  // K1 · P-16 / H8 (V1 y F2): Producción ya no monta la tubería de antes (`choke/Tuberia.tsx`, borrada): monta la de
-  // La planta viva con la lente técnica (`TuberiaTecnica`). Lo que se probaba de la de antes se prueba donde quedó.
-  const tecnica = page.locator('main [data-tuberia-tecnica]')
-  await expect(tecnica).toHaveCount(1)
-  // B-14: lo de hoy con P-201B parada va en la frase de la tubería; el dibujo, uno (acostado o de pie según el ancho).
-  await expect(tecnica.locator('[data-frase-tecnica]')).toContainText(/Con P-201B parada, el agua solo deja pasar [\d.]+ bbl\/d más de crudo\./)
-  f.ok(await tecnica.locator('svg[data-tuberia]').count() === 1 && await tecnica.locator('[data-ramal-agua]').count() === 1,
-    'un solo dibujo, con el ramal del agua de hoy')
-  // Lo que cabe y lo que le sobra a cada tramo (lo que decía el detalle de cada tramo de la de antes), debajo del dibujo.
-  const capacidades = await tecnica.locator('[data-capacidad]').evaluateAll(es => es.map(e => e.getAttribute('data-capacidad')))
-  f.ok(capacidades.length >= 3 && capacidades.includes('planta'), `lo que cabe y le sobra a cada tramo (${capacidades.join(', ')})`)
-  // D3 (de F2-B): el cuadre de las pruebas con el medidor oficial, en la escalera del período («Lo que no se produjo, por tipo»).
-  await expect(page.locator('main [data-brecha-pruebas]')).toContainText(/Lo que (las pruebas dan de más que el medidor oficial|el medidor oficial da de más que las pruebas)/)
-  // B-36: «Ver como tabla» abre la tabla con los mismos números del dibujo, justo debajo, y dice que está abierta.
-  const ver = tecnica.getByRole('button', { name: 'Ver como tabla' })
-  await ver.click()
-  const tabla = tecnica.locator('[data-tabla-tramos="abierta"] table')
-  await expect(tabla).toBeVisible()
-  const debajo = await page.evaluate(() => {
-    const dibujo = document.querySelector('main [data-tuberia-tecnica] svg[data-tuberia]'), t = document.querySelector('main [data-tabla-tramos] table')
-    return !!dibujo && !!t && !!(dibujo.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)
-  })
-  f.ok(debajo && await tecnica.getByRole('button', { name: 'Ocultar la tabla' }).getAttribute('aria-expanded') === 'true'
-      && (await tabla.locator('caption').innerText()).startsWith('La tubería de La Ceiba, por tramo'),
-    '«Ver como tabla» abre la tabla debajo del dibujo, con su título, y el botón dice que está abierta')
-  await tecnica.getByRole('button', { name: 'Ocultar la tabla' }).click()
-  // B-28 y H29: en el papel la tabla sale siempre, aunque en la pantalla esté plegada.
-  await page.emulateMedia({ media: 'print' })
-  f.ok(await tecnica.locator('[data-tabla-tramos] table').isVisible(), 'en el papel, la tabla de la tubería sale aunque esté plegada')
+  await f.abrir('/#/prod/planta-viva/ceiba/curso')
+  // B-14: lo de hoy con P-201B parada va en la frase del número; el dibujo, uno.
+  await expect(page.locator('main [data-produccion-cifra] [data-explica]')).toContainText(/Con P-201B parada, el agua solo deja pasar [\d.]+ bbl\/d más de crudo\./)
+  f.ok(await page.locator('main [data-tuberia-kit]').count() === 1, 'un solo dibujo de la tubería')
+  // Lo que cabe y lo que le sobra a cada tramo, debajo de su caja; de dónde sale, en su ⓘ (lo que decía «Ver como tabla»).
+  const tramos = await page.locator('main [data-tramo-kit]').evaluateAll(es => es.map(e => `${e.getAttribute('data-tramo-kit')}:${(e as HTMLElement).innerText.replace(/\s+/g, ' ')}`))
+  f.ok(tramos.length === 3 && /planta:.*13\.000.*caben · sobran 1\.143/.test(tramos.join(' | ')), `lo que cabe y le sobra a cada tramo (${tramos.join(' | ')})`)
+  f.ok(await page.locator('main [data-tramo-col="pozo"]').getByRole('img', { name: /^De dónde sale · Pozos:/ }).count() === 1, 'de dónde sale lo que dan los pozos, en su ⓘ')
+  // D3 (de F2-B): el cuadre de las pruebas con el medidor oficial, en la ⓘ del «% del potencial» de Producción.
+  await f.ir('#/prod/produccion/ceiba/curso')
+  const ayuda = await page.getByRole('img', { name: /^% del potencial:/ }).getAttribute('aria-label') ?? ''
+  f.ok(/(las pruebas dan de más que el medidor oficial|el medidor oficial da de más que las pruebas|las pruebas y el medidor oficial dan lo mismo)/.test(ayuda), 'el cuadre de las pruebas con el medidor oficial, en palabras')
   // B-28: el formulario del cuadre con la asignación oficial no sale en el papel con sus campos vacíos.
+  await page.emulateMedia({ media: 'print' })
   const formulario = page.getByLabel('Filas de la asignación oficial')
   if (await formulario.count()) await expect(formulario).toBeHidden()
   const papel = await f.textoPagina()
   f.ok(!INTERNAS.test(papel), `el papel no lleva palabras internas del proyecto (${papel.match(INTERNAS)?.[0] ?? 'ninguna'})`)
   await page.emulateMedia({ media: 'screen' })
-  // B-29: tampoco en los ⓘ (lo que oye el lector y lo que sale en el papel).
-  const conInfo = await todoElTexto(page)
-  f.ok(!INTERNAS.test(conInfo), `los ⓘ de Producción no dicen palabras internas (${conInfo.match(INTERNAS)?.[0] ?? 'ninguna'})`)
-  // B-26: la escalera se llama por tipo; B-09: una sola leyenda para la franja y las barras.
-  const t = await f.texto()
-  f.ok(t.includes('Lo que no se produjo, por tipo') && !t.includes('Por escalón'), 'la escalera: «LO QUE NO SE PRODUJO, POR TIPO»')
-  await expect(page.locator('main [data-leyenda-serie]')).toHaveCount(1)
-  // B-15: la lectura no dice «oscuro» (en el tema oscuro sería al revés). La de la tubería de antes («Lo relleno es lo
-  // que pasa ahora…») se fue con ella (P-16); la de La planta viva no habla de colores.
-  await page.getByRole('button', { name: /cómo se lee/i }).first().click()
-  await f.esperar(300)
-  f.ok(!(await f.texto()).includes('lo oscuro es lo que pasa ahora'), 'sin «lo oscuro es lo que pasa ahora»')
-  // B-45: con todos los campos, cada fila dice los barriles que no se produjeron.
-  await f.ir('#/prod/produccion/ceiba~portafolio/curso')
-  await f.esperarTexto('La tubería de cada campo')
-  f.ok(await page.locator('main [data-no-se-produjeron]').count() >= 2 && !(await f.texto()).includes('se trabaron'), '«bbl no se produjeron», no «se trabaron»')
-  f.cerrar()
-})
-
-test('Bombas y agua: las dos sin instrumento salen en la lista, con su ficha, y la bomba parada dice qué pasa si para otra (B-01, B-17, B-37, B-44)', async ({ flujo: f }) => {
-  const { page } = f
-  await f.abrir('/#/sup/bombas/ceiba/curso')
-  // B-01: P-201A y P-201C, sin instrumento, también se ven, con su forma (rectángulo discontinuo) y la palabra.
-  const sin = page.locator('main [data-sin-instrumento]')
-  await expect(sin).toContainText('Sin instrumento')
-  f.ok((await sin.locator('[data-bomba-sin-instrumento]').evaluateAll(es => es.map(e => e.getAttribute('data-bomba-sin-instrumento')))).join() === 'P-201A,P-201C',
-    'las dos hermanas de P-201B sin instrumento')
-  await expect(sin.locator('[data-bomba-sin-instrumento="P-201A"]')).toContainText(/Si falla hoy: [\d.]+ bbl\/d después de \d+ min de colchón/)
-  // C4: la ficha de un equipo, para un rol técnico, es su nivel 3 (una vista entera): P-201A, sin instrumento,
-  // dice lo que se sabe y lo que pasa hoy con el agua mientras P-201B esté parada.
-  await sin.locator('[data-bomba-sin-instrumento="P-201A"]').getByRole('button', { name: 'Abrir' }).click()
-  const minima = page.locator('main [data-nivel3="P-201A"]')
-  await expect(minima).toContainText('sin instrumento')
-  await expect(minima.locator('[data-mientras]')).toContainText('Mientras P-201B esté parada')
-  await page.goBack()
-  // B-01 y B-17: el nivel 3 de P-201B dice lo que pasa hoy con el agua y qué cerrar si para otra.
-  await page.locator('main article', { hasText: 'P-201B' }).locator('button[aria-label^="Abrir el detalle de"]').first().click()
-  const hoy = page.locator('main [data-nivel3="P-201B"] [data-mientras]')
-  await expect(hoy).toContainText('Mientras esté parada')
-  await expect(hoy).toContainText('El nivel no sube: P-201A y P-201C toman lo que entra.')
-  await expect(hoy.locator('[data-orden-si-para-otra]')).toContainText(/Si para otra bomba ahora, cierre primero los más acuatosos/)
-  // B-44: en el agua, «sin instrumento» tiene su forma (no la de «sin comunicación») y su palabra.
-  await f.ir('#/prod/agua/ceiba/curso')
-  await f.esperarTexto('La tubería del agua')
-  const marcas = await page.locator('[data-tuberia-agua] [data-bomba]').allInnerTexts()
-  f.ok(marcas.filter(x => x.includes('┄ sin instrumento')).length === 2, `«┄ sin instrumento» en P-201A y P-201C (${marcas.length} bombas)`)
-  // B-37: la ficha del equipo, para ingeniería, dice cuánto vale hoy y dónde se trabaría; P-201A, sin instrumento, también tiene la suya.
-  await f.ir('#/jefe/riesgo/ceiba/curso/K-101')
-  await expect(page.locator('[data-si-falla-ficha="K-101"]')).toContainText(/Si falla hoy: hasta [\d.]+ bbl\/d .* · se trabaría en la planta \(18 pozos\)/)
-  await f.ir('#/jefe/riesgo/ceiba/curso/P-201A')
-  await expect(page.locator('main [data-nivel3="P-201A"] [data-si-falla-ficha="P-201A"]')).toContainText(/puesto 1 de lo que más cuesta/)
-  f.cerrar()
-})
-
-test('Riesgo y mantenimiento: «ya pasó el límite», la marca en su columna, el campo de gas y «No programado (libro)» (B-18, B-40, B-42, B-43, D4)', async ({ flujo: f }) => {
-  const { page } = f
-  // K1 · P-10: el Riesgo del jefe vive en su Equipos («Qué está en riesgo», debajo de la lista).
-  await f.abrir('/#/jefe/riesgo/ceiba/curso')
-  await f.esperarTexto('Si falla hoy')
-  f.ok((await f.hash()).startsWith('#/jefe/equipos/ceiba'), `la dirección de Riesgo abre Equipos (${await f.hash()})`)
-  const t = await f.texto()
-  // B-42: K-101 está en marcha: «ya pasó el límite», no «ya fuera».
-  f.ok(t.includes('ya pasó el límite') && !t.includes('ya fuera'), '«ya pasó el límite» en lugar de «ya fuera»')
-  // B-43: el puesto va solo en su columna; la marca de alarma, en «¿Lo vigila TRIM?».
-  const puestos = await page.locator('main [data-si-falla="ceiba"] [data-fila-critica]').evaluateAll(es => es.map(e => {
-    const celdas = [...e.children] as HTMLElement[]
-    return { puesto: celdas[0]?.querySelectorAll('svg[role=img]').length ?? 0, texto: e.textContent ?? '' }
-  }))
-  f.ok(puestos.length > 0 && puestos.every(p => p.puesto === 0), 'ninguna marca de alarma pegada al puesto')
-  // B-40: lo que se deja de producir ahora es un total: sin marca; la marca va con P-201B, que lo causa (C5: sin «2 · Durante»).
-  const durante = page.locator('main [data-riesgo] [data-se-deja-de-producir]').first()
-  f.ok(await durante.locator('b svg[role=img]').count() === 0 && /P-201B/.test(await durante.innerText()) && await durante.locator('small svg[role=img]').count() === 1
-      && /^Se deja de producir ahora/.test(await durante.innerText()) && !(await f.texto()).includes('2 · Durante'),
-    'el total («Se deja de producir ahora») sin marca; la marca, al lado de P-201B')
-  // B-18: un campo de gas lo dice en una frase, sin una lista de ceros.
-  await f.ir('#/jefe/riesgo/zarza/curso')
-  await expect(page.locator('main [data-campo-de-gas]')).toHaveText('La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.')
-  // D4 (B-12 de F2-B): el libro llama «No programado (libro)» a lo que no estaba en el programa.
-  await f.ir('#/jefe/mantenimiento/ceiba/curso')
-  // P-mant-1 (F2): lo programado contra lo que no va en una frase del motor; las cifras, en su globo (y en el papel).
-  await page.locator('main [data-programado]').hover()
-  await expect(page.getByRole('tooltip')).toContainText('No programado (libro)')
-  // B-40: los totales no llevan marca de prioridad: la marca va en el equipo que los causa.
-  await f.ir('#/sup/turno/ceiba/curso')
-  // C5 · Un nombre, una cifra (X4 §1.3.3). F1 · P-05: la cifra grande es lo medido, «1.966 bbl/d se dejan de producir
-  // ahora», en su renglón; la marca va en el renglón de abajo, pegada a P-201B, que lo causa.
-  await f.esperarTexto('se dejan de producir ahora')
-  const cifras = page.locator('main [data-turno-cifras]')
-  const total = cifras.locator('p').filter({ hasText: 'se dejan de producir ahora' }).first()
-  const enTotal = await total.locator('svg[viewBox="0 0 14 14"]').count()
-  const marcas = await cifras.locator('p').nth(1).evaluate(p => [...p.querySelectorAll('svg[viewBox="0 0 14 14"]')].map(s => {
-    // Lo que sigue a la marca en su renglón (su palabra, «Alarma ·», y el equipo que la lleva).
-    let n: Node | null = s, t = ''
-    while (n && n !== p && t.trim().length < 12) { let x: Node | null = n.nextSibling; while (x && t.trim().length < 12) { t += x.textContent ?? ''; x = x.nextSibling } n = n.parentNode }
-    return t.trim()
-  }))
-  f.ok(enTotal === 0 && marcas.length > 0 && marcas.every(x => /P-201B/.test(x)), `la marca va con el equipo que lo causa, no con el total (${enTotal} en el total; ${JSON.stringify(marcas)})`)
-  // B-20: P-201B lleva la misma marca (la de hoy) en toda la pantalla; la urgencia de identificar va en palabras.
-  // F4 · A16: el nombre accesible lleva coma («Prioridad 1, alarma»). Y con H3/H16 (F1) la marca de un equipo
-  // puede ser decorativa con su palabra al lado («Alarma · P-201B»): la condición se lee de las dos formas.
-  const deP201B = await page.locator('main').evaluate(m => [...new Set([...m.querySelectorAll('svg[viewBox="0 0 14 14"]')]
-    .filter(s => { const t = (s.parentElement?.parentElement?.textContent ?? '').trim(); return t.includes('P-201B') && t.length < 90 })
-    .map(s => {
-      const nombre = s.getAttribute('aria-label')
-      if (nombre) return nombre
-      const palabra = (s.parentElement?.parentElement?.textContent ?? '').replace(/^[\s\d]+/, '').match(/^(\p{L}+)\s*·/u)?.[1]
-      return palabra ? { Alarma: 'Prioridad 1, alarma', Atención: 'Prioridad 2, atención', Aviso: 'Prioridad 3, aviso' }[palabra] ?? palabra : '(sin palabra)'
-    }))])
-  f.ok(deP201B.length === 1 && deP201B[0] === 'Prioridad 1, alarma', `P-201B con una sola marca en Turno (${deP201B.join(', ')})`)
-  f.cerrar()
-})
-
-test('Gerente: la misma base escrita igual, el papel con los planes desplegados y «Nada se trabó» sin leyenda (B-39, B-50, B-51, B-08)', async ({ flujo: f }) => {
-  const { page } = f
-  // C5: el Resumen del gerente se fundió en Resultados (X4 §3.6).
-  await f.abrir('/#/ger/resultados/ceiba/curso')
-  await f.esperarTexto('Dónde se trabó')
-  // B-50: la base de comparación, escrita igual: una sola vez, en «¿Está bajando?», con lo de alto impacto debajo.
-  const t = await f.texto()
-  const bases = t.match(/1 de sept, frente a jun a ago/g) ?? []
-  f.ok(bases.length === 1 && /Lo de alto impacto[^\n]*: [\d.]+ → [\d.]+ bbl\/d/.test(t), `«1 de sept, frente a jun a ago», una vez, con lo de alto impacto debajo (${bases.length})`)
-  // B-29: los ⓘ no dicen «LLM» ni palabras internas.
-  const conInfo = await todoElTexto(page)
-  f.ok(!INTERNAS.test(conInfo), `Resultados y sus ⓘ no dicen palabras internas (${conInfo.match(INTERNAS)?.[0] ?? 'ninguna'})`)
-  // B-51: en el papel, los planes de acción salen desplegados y el botón no.
-  await page.emulateMedia({ media: 'print' })
-  const papel = await f.textoPagina()
-  f.ok(!/Ver planes de acción/.test(papel), 'en el papel no queda el botón «Ver planes de acción»')
-  await page.emulateMedia({ media: 'screen' })
-  // B-08: el mes a mes por tramo no atenúa los meses fuera del período: el del período va con contorno.
-  await f.ir('#/prod/diferidos/ceiba/cerrado')
-  await page.getByRole('button', { name: 'Por dónde se trabó' }).first().click()
-  await expect(page.locator('main [data-mes-activo]')).toHaveCount(1)
-  // B-35: los tramos vecinos no se distinguen solo por el gris: la planta va a rayas, afuera a puntos y lo sin identificar, rayado.
-  const rellenos = await page.locator('main [data-barra-tramos] [data-tramo]').evaluateAll(es => Object.fromEntries(es.map(e => [e.getAttribute('data-tramo'), getComputedStyle(e).backgroundImage])))
-  // B-12: en «Por tramo», LC-04 vale más que en «Por equipo» porque lleva barriles de otra causa: el ⓘ lo dice.
-  await expect(page.getByRole('img', { name: /^LC-04 · [\d.]+ bbl: [\d.]+ de electrosumergible y [\d.]+ de energía eléctrica\./ })).toHaveCount(1)
-  const conDibujo = ['planta', 'exportacion', 'sin-asignar'].filter(k => k in rellenos)
-  f.ok(conDibujo.includes('planta') && conDibujo.every(k => /gradient/.test(rellenos[k] ?? '')), `la planta (y afuera y lo sin identificar, si están) llevan dibujo, no solo gris (${conDibujo.join(', ')})`)
-  // B-39: un campo sin nada trabado lo dice con su período y sin una leyenda que no corresponde a ninguna barra.
-  await f.ir('#/ger/resultados/zarza/curso')
-  await f.esperarTexto('Nada se trabó en octubre (en curso).')
-  f.ok(await page.locator('main [data-leyenda-tramos]').count() === 0, 'sin la leyenda de los tramos cuando no hay barra que leer')
   f.cerrar()
 })
 
@@ -295,13 +132,13 @@ test('Una dirección a un campo que la persona no tiene lo dice, y el esquema de
   await f.abrir('/#/prod/produccion/zarza/curso')
   await expect(page.locator('main [data-aviso-campo]')).toHaveText('Usted no tiene asignado el campo La Zarza: le mostramos La Ceiba.')
   f.ok((await f.hash()).startsWith('#/prod/produccion/ceiba'), `la dirección dice lo que se ve (${await f.hash()})`)
-  // B-29: el estado vacío de un campo de gas no nombra a nadie del proyecto.
-  await f.ir('#/adm/planta/zarza/curso')
+  // B-29: el estado vacío de un campo de gas no nombra a nadie del proyecto (v3: en la tubería del inicio del gerente).
+  await f.ir('#/ger/planta-viva/zarza/curso')
   await f.esperarTexto('La Zarza es un campo de gas')
   f.ok(!INTERNAS.test(await todoElTexto(page)), 'La Zarza (campo de gas) sin «(Edinson)»')
   // B-41: nada parpadea en el esquema de planta: la alarma lleva un anillo quieto.
   await f.ir('#/prod/planta/ceiba/curso')
-  await f.esperarTexto('La tubería del campo')
+  await f.esperarTexto('Capturando datos')
   const animados = await page.evaluate(() => [...document.querySelectorAll('main *')].filter(e => getComputedStyle(e).animationName !== 'none').length)
   f.ok(animados === 0 && await page.locator('main [data-anillo-alarma]').count() > 0, `ningún elemento animado (${animados}); el anillo de P-201B, quieto`)
   // B-47 y B-45: Calidad cuenta paradas con sus filas aparte y dice el período en palabras.

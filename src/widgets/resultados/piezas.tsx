@@ -12,7 +12,7 @@ export function Tarjeta({ titulo, extra, children, className, ...p }: {
   titulo: string; extra?: ReactNode; children: ReactNode; className?: string
 } & Record<`data-${string}`, unknown>) {
   return (
-    <section {...p} aria-label={titulo} className={cn('min-w-0 rounded-[20px] bg-[var(--panel)] px-[18px] py-4 sm:px-6 sm:py-5', className)}>
+    <section {...p} aria-label={titulo} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:px-6 sm:py-5', className)}>
       <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 className="text-[16px] font-semibold text-[var(--tinta)]">{titulo}</h2>
         {extra && <span className="text-[14px] text-[var(--tinta2)]">{extra}</span>}

@@ -1,11 +1,15 @@
-/* F2 · Regulatorio (P-03; X4 §2 y §3.4; T-8, T-10, T-11, P-reg-1, G-5, I-reg-2, UI-17):
+/* F2 · Regulatorio (P-03; X4 §2 y §3.4; T-8, T-10, T-11, P-reg-1, G-5, I-reg-2, UI-17).
+   v3 (B2, imagen d1-grafito-reg): la cifra va con el kit SCADA; a la izquierda, los números (sin
+   causa, sus barriles, la hora límite y la respuesta de la ANH); a la derecha, quién lo debe y
+   «Exportar el reporte», uno solo en la tarjeta (A-26); debajo, el balance y el árbol, con la
+   pérdida dicha una vez (A-25).
    - el inicio de regulatorio responde «¿qué falta, quién lo debe y para cuándo?»: la cifra
      (2 paradas sin causa en La Ceiba, octubre), la frase de X4 §3.4 y una fila por parada,
      con sus barriles enteros que suman (LC-21 247 + LC-08 108 = 355), quién lo debe y la hora;
    - el árbol como la circular va debajo, sin los códigos de la ANH en la primera capa: salen
      con «Ver los códigos ANH»; sin pasos numerados y sin el rótulo «modelo choke»;
    - la medición oficial y PRODML, detrás de «ver más»; «Potencial del libro»;
-   - un solo «Exportar», en la cabecera, con la opción «CSV para la ANH»;
+   - «Exportar el reporte» en la tarjeta, que baja el CSV para la ANH (el de la cabecera, si queda, ofrece lo mismo);
    - en el teléfono (390 px) nada se sale, se recorta ni se pisa. */
 import { expect } from '@playwright/test'
 import { test } from './apoyo.ts'
@@ -21,20 +25,29 @@ test('regulatorio abre en lo que falta: 2 paradas sin causa, quién lo debe y pa
   await expect(cabeza).toBeVisible()
 
   await test.step('la cifra, la frase y una fila por parada (los barriles suman)', async () => {
-    const cifra = await cabeza.locator('[data-cifra]').innerText()
-    const frase = await cabeza.locator('[data-frase]').innerText()
-    const explica = await cabeza.locator('[data-explica]').innerText()
-    f.ok(cifra === '2' && (await cabeza.innerText()).includes('paradas sin causa'), `la cifra grande: ${cifra} paradas sin causa`)
+    const cifra = await cabeza.locator('[data-cifra-grande] [data-cifra-numero]').innerText()
+    const frase = (await cabeza.locator('[data-frase]').innerText()).replace(/\s+/g, ' ').trim()
+    f.ok(cifra === '2' && Number(await cabeza.getAttribute('data-valor')) === 2 && (await cabeza.innerText()).includes('Paradas sin causa'), `la cifra grande: ${cifra} paradas sin causa`)
     // K2: la frase no repite la cifra grande («2 paradas sin causa»).
     f.ok(frase === 'No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl).', `la frase de X4 §3.4, sin repetir la cifra: «${frase}»`)
-    f.ok(explica.includes('operador de campo') && explica.includes('mañana antes de las 07:00'), `quién lo debe y para cuándo: «${explica}»`)
+    f.ok(Number((await cabeza.innerText()).match(/Sin causa\s+([\d.]+)\s+bbl/)?.[1]?.replace('.', '')) === 355, 'los barriles sin causa: 355')
+    const limite = page.locator('[data-limite]')
+    f.ok((await limite.getAttribute('data-limite')) === '2026-10-03T07:00:00-05:00' && /07:00\s+mañana/.test(await limite.innerText()), `la hora límite: mañana a las 07:00 («${(await limite.innerText()).replace(/\s+/g, ' ')}»)`)
     const filas = await page.locator('[data-parada-sin-causa]').evaluateAll(es => es.map(e => ({ equipo: e.getAttribute('data-parada-sin-causa'), bbl: Number(e.getAttribute('data-bbl')), texto: (e as HTMLElement).innerText })))
     f.ok(filas.map(x => `${x.equipo} ${x.bbl}`).join(', ') === 'LC-21 247, LC-08 108' && filas.reduce((a, x) => a + x.bbl, 0) === Number(await cabeza.getAttribute('data-bbl')),
       `una fila por parada, de mayor a menor, que suman los 355 bbl de la frase (${filas.map(x => `${x.equipo} ${x.bbl}`).join(' + ')})`)
-    // K2: si a todas les falta lo mismo y las debe la misma persona para la misma hora, la fila no lo repite a la
-    // vista (ya lo dicen la cifra y la explicación); queda para el lector de pantalla (e2e/inicios-k2.spec.ts).
-    f.ok(filas.every(x => /faltan todos los pasos/.test(x.texto) && /Lo debe el operador de campo/.test(x.texto) && /\b(247|108) bbl/.test(x.texto)), 'cada fila dice qué falta, quién lo debe y sus barriles enteros')
+    f.ok(filas.every(x => /faltan todos los pasos/.test(x.texto) && /Lo debe el operador de campo · mañana antes de las 07:00/.test(x.texto) && /\b(247|108) bbl/.test(x.texto)), 'cada fila dice qué falta, quién lo debe, para cuándo y sus barriles enteros')
     f.ok(!/Exportar CSV|solo lectura/.test(await cabeza.innerText()), 'la respuesta no compite con «Exportar CSV» ni con «solo lectura» (va en su ⓘ)')
+    // La respuesta de la ANH: sin nada registrado lo dice, nunca un «aceptado» inventado.
+    const anh = page.locator('[data-respuesta-anh]')
+    f.ok((await anh.getAttribute('data-respuesta-anh')) === 'sin-respuesta' && (await anh.innerText()).includes('sin respuesta registrada'), 'ANH: sin respuesta registrada')
+  })
+
+  await test.step('el balance del campo con sus pérdidas, aparte del diferido', async () => {
+    const b = page.locator('[data-balance]')
+    f.ok(Number(await b.getAttribute('data-diferido')) === 1046 && (await b.getAttribute('data-perdido')) === 'sin-registro', 'el balance: 1.046 diferidos y el perdido «sin registro»')
+    const tramos = await b.locator('[data-tramo-balance] td:first-of-type').evaluateAll(es => es.map(e => Number((e.textContent ?? '').replace(/\D/g, ''))))
+    f.ok(tramos.reduce((a, x) => a + x, 0) === 1046, `el diferido de los tramos suma el del campo (${tramos.join(' + ')})`)
   })
 
   await test.step('el árbol debajo, sin códigos en la primera capa; con «Ver los códigos ANH», salen', async () => {
@@ -46,6 +59,8 @@ test('regulatorio abre en lo que falta: 2 paradas sin causa, quién lo debe y pa
     const sin = (await arbol.innerText()).replace(/\s+/g, ' ')
     f.ok(!/resp_par|choke_mod|cau_niv1|paradas_pozo/.test(sin) && !/\b[1-6]\. (Quién|Detalle)/.test(sin), 'en la primera capa, el nombre de cada paso y su cifra: sin códigos ni pasos numerados')
     f.ok(!(await page.locator('main').innerText()).includes('modelo choke'), 'sin el rótulo «modelo choke»: la ⓘ va pegada al título')
+    // A-25: la rama vacía de la pérdida no se repite en cada tramo; se dice una vez, debajo del árbol.
+    f.ok(!sin.includes('Pérdida: TRIM todavía no tiene registro') && await page.locator('[data-perdida-arbol]').count() === 1, 'la pérdida, una sola línea (A-25)')
     await page.locator('[data-ver-codigos]').click()
     await expect(arbol).toHaveAttribute('data-codigos', 'vista')
     const con = (await arbol.innerText()).replace(/\s+/g, ' ')
@@ -64,12 +79,12 @@ test('regulatorio abre en lo que falta: 2 paradas sin causa, quién lo debe y pa
     f.ok(cortadas === 0, 'ninguna calibración queda cortada')
   })
 
-  await test.step('un solo «Exportar», en la cabecera, con el CSV para la ANH', async () => {
+  await test.step('«Exportar el reporte» en la tarjeta (1 toque): el CSV para la ANH', async () => {
     f.ok(await page.locator('main').getByRole('button', { name: /Exportar CSV/ }).count() === 0, 'la tarjeta ya no trae «Exportar CSV»')
-    await page.getByRole('button', { name: 'Exportar', exact: true }).first().click()
-    await expect(page.locator('[data-csv-anh]')).toBeVisible()
-    f.ok((await page.locator('[data-csv-anh]').innerText()).includes('CSV para la ANH'), '«Exportar» ofrece el CSV para la ANH')
-    await page.keyboard.press('Escape')
+    f.ok(await page.locator('main [data-exportar-reporte]').count() === 1, 'un solo «Exportar el reporte» en la pantalla (A-26)')
+    const descarga = page.waitForEvent('download')
+    await page.locator('[data-exportar-reporte]').click()
+    f.ok(/\.csv$/.test((await descarga).suggestedFilename()), '«Exportar el reporte» baja el CSV para la ANH')
   })
   f.cerrar()
 })
@@ -78,9 +93,9 @@ test('regulatorio, un mes cerrado: se puede publicar y no falta ninguna causa', 
   await f.abrir('/#/reg/regulatorio/ceiba/cerrado')
   const cabeza = f.page.locator('[data-reporte-anh]')
   await expect(cabeza).toHaveAttribute('data-reporte-anh', 'publicable')
-  f.ok(num(await cabeza.locator('[data-cifra]').innerText()) === 0 && (await cabeza.locator('[data-frase]').innerText()).startsWith('Se puede publicar'),
+  f.ok(num(await cabeza.locator('[data-cifra-grande] [data-cifra-numero]').innerText()) === 0 && (await cabeza.locator('[data-frase]').innerText()).startsWith('Se puede publicar'),
     'septiembre: 0 paradas sin causa, «Se puede publicar»')
-  f.ok(await f.page.locator('[data-parada-sin-causa]').count() === 0, 'sin filas de lo que falta')
+  f.ok(await f.page.locator('[data-parada-sin-causa]').count() === 0 && (await f.page.locator('[data-limite]').innerText()).includes('nada pendiente'), 'sin filas de lo que falta ni hora límite')
   f.cerrar()
 })
 

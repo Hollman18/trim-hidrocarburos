@@ -3,8 +3,11 @@
      1.046 barriles «no se produjeron en La Ceiba.», contra el máximo firmado (1.267);
    - el período vive aquí: la cabecera lo ofrece, otro período da otra cifra (septiembre: el
      total del período, sin proyección), y un toque en un mes del mes a mes lo abre;
-   - lo simulado con su palabra y nunca como cifra grande: el retorno posible del ciclo va en su
-     tarjeta con «simulado», una línea por momento, sin los números 1·2·3;
+   - lo simulado con su palabra y nunca como cifra grande ni en la primera capa (v3, A-30): «Lo que
+     todavía se puede mover» se abre a un toque y trae su tarjeta con «simulado», una línea por momento;
+   - v3: el balance producido · diferido · perdido por tramo (suma el diferido; el perdido aparte) y
+     «¿Está funcionando?» (antes, este mes y lo ganado, del motor); «Dónde bajarlo», «Tipo de causa» y
+     «¿Está bajando?» salen (borrado.md A-07, A-08); el mes a mes y la producción, con el kit SCADA;
    - cada rol ve lo suyo: el gerente lo que eran su Resumen, sus Diferidos y su Producción;
      producción «¿Se puede publicar?»; jefe y confiabilidad, Mantenimiento y «¿Le creo al vigía?»;
      regulatorio, la publicación primero y nada simulado;
@@ -35,7 +38,7 @@ const lectura = (page: Page) => page.evaluate(() => {
   }
 })
 
-test('la cifra del período contra el máximo firmado, con su frase, y lo simulado aparte con su palabra', async ({ flujo: f }) => {
+test('la cifra del período contra el máximo firmado, con su frase, el balance, «¿Está funcionando?» y lo simulado a un toque', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/ger/resultados/ceiba/curso')
   await expect(page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'ger')
@@ -51,7 +54,9 @@ test('la cifra del período contra el máximo firmado, con su frase, y lo simula
   // La cifra grande no es simulada y nunca va en color: ni la palabra, ni el chip.
   const enCifra = await page.locator('[data-cifra-grande] > p').first().innerText()
   f.ok(!/simulad/i.test(await page.locator('[data-cifra-grande] [data-frase]').innerText()) && !/simulad/i.test(enCifra), 'la cifra grande no es simulada')
-  // Lo simulado: su tarjeta, con «simulado» en el chip y en cada línea, sin 1·2·3.
+  // A-30: lo simulado no está en la primera capa; a un toque, su tarjeta con «simulado» en el chip y en cada línea, sin 1·2·3.
+  f.ok(await page.locator('[data-ciclo]').count() === 0 && !t.includes('Retorno posible del ciclo'), 'lo simulado no está en la primera capa')
+  await page.locator('[data-simulado] button').click()
   const ciclo = page.locator('[data-ciclo]')
   await expect(ciclo).toContainText('Retorno posible del ciclo')
   await expect(ciclo.getByText('simulado', { exact: true })).toHaveCount(1)
@@ -60,15 +65,27 @@ test('la cifra del período contra el máximo firmado, con su frase, y lo simula
   const momentos = await ciclo.locator('[data-fase]').allInnerTexts()
   f.ok(momentos.map(x => x.split('·')[0]!.trim()).join() === 'Antes,Durante,Después' && !momentos.some(x => /^\s*[123]\s/.test(x)), 'Antes · Durante · Después, sin los números de las prioridades')
   f.ok(Math.round(Number(await ciclo.getAttribute('data-ciclo'))) === 2133 && !t.includes('bbl · retorno') && !t.includes('Ver planes de acción'), 'el retorno (2.133 bbl) no es la cifra principal ni hay acordeón de planes')
-  // ¿Está bajando? y el mantenimiento proactivo.
-  f.ok(/en la planta\s*268 → 51/.test(t) && /en los pozos\s*122 → 215/.test(t) && /14 %\s*mantenimiento proactivo/.test(t), '¿está bajando? por tramo (las dos flechas) y el mantenimiento proactivo')
-  // La producción contra la meta y el cierre proyectado, en barras de Few.
-  f.ok(await page.locator('[data-produccion-meta] [data-barra] [data-raya]').count() === 4 && await page.locator('[data-cierre="proyectado"]').count() === 1,
-    'cuatro barras con su raya: lo de cada día y el cierre proyectado')
+  // El balance del choke: el diferido de cada tramo suma el del mes; el perdido, aparte y «sin registro».
+  const b = page.locator('[data-balance]')
+  f.ok(Number(await b.getAttribute('data-diferido')) === 1046 && Number(await b.getAttribute('data-producido')) === 16941 && (await b.getAttribute('data-perdido')) === 'sin-registro',
+    'el balance: producido 16.941, diferido 1.046 y perdido «sin registro»')
+  const tramos = await b.locator('[data-tramo-balance]').evaluateAll(es => es.map(e => Number((e.querySelector('td')?.textContent ?? '').replace(/\D/g, ''))))
+  f.ok(tramos.reduce((a, x) => a + x, 0) === 1046, `los tramos suman el diferido (${tramos.join(' + ')})`)
+  // «¿Está funcionando?» (§0d): antes de TRIM, este mes y lo ganado, del motor (La Ceiba: 391 → 436 bbl/d, 3.934 bbl ganados).
+  const fn = page.locator('[data-funcionando]')
+  const tf = await fn.innerText()
+  f.ok(/Antes de TRIM\s*391/.test(tf) && /Este mes\s*436/.test(tf) && Number(await fn.getAttribute('data-ganado')) === 3934 && (await fn.getAttribute('data-meta')) === 'sin-meta',
+    '«¿Está funcionando?»: antes 391, este mes 436 (sin meta firmada) y 3.934 bbl ganados')
+  // A-07, A-08 y la v3: sin «Dónde bajarlo», «Tipo de causa» ni «¿Está bajando?».
+  f.ok(!/Dónde bajarlo|Tipo de causa|¿Está bajando\?/.test(t), 'sin «Dónde bajarlo», «Tipo de causa» ni «¿Está bajando?»')
+  // La producción contra la meta, con la barra del kit SCADA (escala desde la meta firmada), y el cierre proyectado con su palabra.
+  f.ok(await page.locator('[data-produccion-meta] [data-kit="barra"]').count() === 2 && await page.locator('[data-cierre="proyectado"]').count() === 1
+      && (await page.locator('[data-cierre="proyectado"]').innerText()).includes('proyectado'),
+    'dos barras del kit (producción y diferido por día) y el cierre proyectado con su palabra')
   f.cerrar()
 })
 
-test('el período vive aquí: la cabecera lo ofrece, otro período cambia la cifra y un mes del mes a mes se abre', async ({ flujo: f }) => {
+test('el período vive aquí: la cabecera lo ofrece y otro período cambia la cifra y el balance', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/ger/resultados/ceiba/curso')
   await expect(page.locator('header button[aria-label^="Período"]').filter({ visible: true }).first()).toBeVisible()
@@ -77,26 +94,27 @@ test('el período vive aquí: la cabecera lo ofrece, otro período cambia la cif
   const sep = await lectura(page)
   f.ok(sep.cifra === '7.716' && sep.previo === 'Lo que pasó · septiembre' && sep.sello === 'publicable', `septiembre: ${sep.cifra} bbl, «${sep.previo}», ${sep.sello}`)
   f.ok(await page.locator('[data-cierre="total"]').count() === 1 && !(await f.texto()).includes('Cierre proyectado'), 'un mes cerrado no proyecta: dice el total del período')
-  // Un toque en un mes del mes a mes: ese mes pasa a ser el período (y lo dice la cabecera).
-  await page.locator('[data-mes-a-mes] g[data-mes="2026-02"]').click()
-  await f.esperar(600)
+  // El balance del período: el mismo diferido (7.716) y lo producido de septiembre (338.662).
+  const b = page.locator('[data-balance]')
+  f.ok(Number(await b.getAttribute('data-diferido')) === 7716 && Number(await b.getAttribute('data-producido')) === 338662, 'el balance de septiembre: 338.662 producidos, 7.716 diferidos')
+  // Un rango escrito en la dirección (un mes del mes a mes) pasa a ser el período, y lo dice la cifra.
+  await f.ir('#/ger/resultados/ceiba/2026-02-01_2026-02-28')
   const feb = await lectura(page)
-  f.ok(feb.previo.startsWith('Lo que pasó · febrero') && (await f.hash()).includes('2026-02-01_2026-02-28'), `febrero abierto como período («${feb.previo}», ${await f.hash()})`)
-  f.ok(await page.locator('[data-mes-a-mes] g[data-en-periodo]').count() === 1, 'el mes del período va marcado, uno')
-  // «Por dónde se trabó» parte las mismas barras.
-  f.ok(await f.clic('Por dónde se trabó'), 'el mes a mes se puede partir por dónde se trabó')
-  await expect(page.locator('[data-mes-a-mes]')).toHaveAttribute('data-mes-a-mes', 'tramo')
+  f.ok(feb.previo.startsWith('Lo que pasó · febrero'), `febrero abierto como período («${feb.previo}»)`)
+  // El mes a mes es la tendencia del kit SCADA: dos trazas (todo y lo de alto impacto) contra la raya del máximo firmado.
+  const mm = page.locator('[data-mes-a-mes] [data-kit="tendencia"]')
+  f.ok(await mm.locator('[data-serie]').count() === 2 && await mm.locator('[data-alarma]').count() === 1, 'el mes a mes: dos trazas y la raya del máximo')
   f.cerrar()
 })
 
 test('cada rol ve lo suyo, con la misma cifra', async ({ flujo: f }) => {
   const { page } = f
+  // Las partes de cada rol (del motor), sin lo que la v3 sacó de la primera capa: «Dónde se trabó» en barras
+  // (lo dice el balance por tramo), «Dónde bajarlo», «Tipo de causa» y «¿Está bajando?» (lo dice «¿Está funcionando?»).
   const casos: Array<[string, string[], string[], string[]]> = [
-    ['#/ger/resultados/ceiba/curso', ['bajando', 'mesAMes', 'porEquipo', 'dondeSeTrabo', 'dondeBajarlo', 'tipos', 'diaADia', 'ciclo'], ['Dónde bajarlo', 'Tipo de causa', 'Producción día a día'], ['¿Se puede publicar?', 'Medición oficial']],
-    ['#/prod/resultados/ceiba/curso', ['publicar', 'bajando', 'mesAMes', 'porEquipo', 'ciclo'], ['¿Se puede publicar?', 'Ver el libro de diferidos'], ['Dónde bajarlo', 'Producción día a día']],
-    ['#/jefe/resultados/ceiba/curso', ['mantenimiento', 'bajando', 'mesAMes', 'porEquipo', 'confiabilidad', 'ciclo'], ['De 8,1 días que dura una falla, 7,7 son espera', '¿Le creo al vigía?'], ['¿Se puede publicar?']],
-    ['#/conf/resultados/ceiba/curso', ['confiabilidad', 'bajando', 'mesAMes', 'porEquipo', 'mantenimiento', 'ciclo'], ['¿Le creo al vigía?', 'de lo que se puede juzgar fue verdad'], ['¿Se puede publicar?']],
-    ['#/reg/resultados/ceiba/curso', ['publicar', 'mesAMes', 'porEquipo'], ['¿Se puede publicar?', 'Ver el reporte'], ['Retorno posible del ciclo', 'simulado']],
+    ['#/ger/resultados/ceiba/curso', ['mesAMes', 'porEquipo', 'diaADia', 'ciclo'], ['Producido · diferido · perdido', '¿Está funcionando?', 'Producción día a día', 'Lo que todavía se puede mover'], ['¿Se puede publicar?', 'Medición oficial', 'Dónde bajarlo', 'Tipo de causa']],
+    ['#/prod/resultados/ceiba/curso', ['publicar', 'mesAMes', 'porEquipo', 'ciclo'], ['¿Se puede publicar?', '¿Cuadra? Ver la medición y el factor', 'Producido · diferido · perdido', '¿Está funcionando?'], ['Dónde bajarlo', 'Producción día a día', 'Ver el libro de diferidos']],
+    ['#/jefe/resultados/ceiba/curso', ['mantenimiento', 'mesAMes', 'porEquipo', 'confiabilidad'], ['De 8,1 días que dura una falla, 7,7 son espera', '¿Le creo al vigía?', 'Producido · diferido · perdido'], ['¿Se puede publicar?', 'Retorno posible del ciclo']],
   ]
   let primero = true
   for (const [ruta, secciones, si, no] of casos) {
@@ -106,16 +124,18 @@ test('cada rol ve lo suyo, con la misma cifra', async ({ flujo: f }) => {
     const l = await lectura(page)
     const t = await f.texto()
     f.ok(l.cifra === '1.046', `${ruta}: la misma cifra (${l.cifra})`)
+    f.ok(Number(await page.locator('[data-balance]').getAttribute('data-diferido')) === 1046, `${ruta}: el balance con el mismo diferido`)
     // En el escritorio lo corto va a la derecha: aquí se cuenta qué partes hay; el orden, en el teléfono (una columna).
     f.ok([...l.secciones].sort().join() === [...secciones].sort().join(), `${ruta}: sus partes (${l.secciones.join(' · ')})`)
     f.ok(si.every(x => t.includes(x)) && !no.some(x => t.includes(x)), `${ruta}: dice ${si.map(x => `«${x}»`).join(', ')} y no ${no.map(x => `«${x}»`).join(', ')}`)
   }
-  // Todos los campos: «Por campo» (con su «dónde se trabó») en vez del panel de un campo.
+  // Todos los campos: «Por campo» (con su «dónde se trabó»).
   await f.ir('#/ger/resultados/ceiba~portafolio/curso')
   const todos = await lectura(page)
   // F2 (H2): encima de la raíz, la suma de las raíces: 1.253 + 1.046 + 77 = 2.376 (no 2.377, que es el exacto redondeado).
-  f.ok(todos.alcance === 'portafolio' && todos.cifra === '2.376' && todos.secciones.includes('porCampo') && !todos.secciones.includes('dondeSeTrabo')
+  f.ok(todos.alcance === 'portafolio' && todos.cifra === '2.376' && todos.secciones.includes('porCampo')
       && await page.locator('main [data-bbl-campo]').count() === 5, `todos los campos: ${todos.cifra} bbl, con «Por campo» (cinco campos)`)
+  f.ok(Number(await page.locator('[data-balance]').getAttribute('data-diferido')) === 2376, 'el balance de los cinco campos: el mismo 2.376')
   f.cerrar()
 })
 
@@ -128,13 +148,10 @@ test('F2 · la regla de redondeo, la barra de un campo sin diferido y lo program
   const suma = filas.reduce((a, x) => a + x.n, 0)
   f.ok(suma === 1046 && filas.find(x => x.eq === 'LC-08')?.n === 108 && /\b108\b/.test(filas.find(x => x.eq === 'LC-08')?.t ?? ''),
     `por equipo: ${filas.map(x => `${x.eq} ${x.n}`).join(' + ')} = ${suma} (LC-08 = 108)`)
-  // H2 y H3 en el libro de diferidos: el Pareto dice los mismos enteros (LC-08 = 108) y la marca de la franja (P-201B, alarma).
-  await f.ir('#/prod/diferidos/ceiba/curso')
-  const pareto = page.locator('main section', { has: page.getByRole('heading', { name: 'Por equipo', exact: true }) })
-  await expect(pareto).toBeVisible()
-  const nombres = await pareto.locator('[aria-label*=" bbl"]').evaluateAll(es => es.map(e => e.getAttribute('aria-label') ?? ''))
-  f.ok(nombres.some(x => /^Prioridad 1, alarma\. P-201B/.test(x)) && nombres.some(x => /^Normal\. LC-08, sin identificar: 108 bbl/.test(x)),
-    `el Pareto: ${nombres.map(x => x.split(':')[0]).join(' · ')} (LC-08 con 108 bbl)`)
+  // H2 en la trazabilidad: la parada de LC-08 dice los mismos 108 en el árbol de su tramo (sin identificar).
+  await page.locator('[data-tramo-balance="sin-asignar"] button').click()
+  f.ok(Number(await page.locator('[data-traza="sin-asignar"] [data-parada-balance="LC-08"]').getAttribute('data-bbl')) === 108, 'la trazabilidad dice LC-08 = 108')
+  await page.keyboard.press('Escape')
   // H1: con todos los campos, un campo que produjo sobre su potencial no pinta la barra del diferido.
   await f.ir('#/ger/resultados/ceiba~portafolio/curso')
   const zarza = page.locator('[data-por-campo] button:has([data-bbl-campo="zarza"]) [data-relleno]')
@@ -151,17 +168,14 @@ test('F2 · la regla de redondeo, la barra de un campo sin diferido y lo program
   await expect(page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'jefe')
   const prog = await page.locator('[data-mantenimiento] [data-programado]').innerText()
   f.ok(prog.startsWith('Ninguna parada de este mes estaba programada: los 1.046 bbl fueron fallas o siguen sin identificar.') && !/0,0 %/.test(prog), `lo programado: «${prog.split('\n')[0]}»`)
-  // H24: la espera es tiempo, no barriles: gris liso, sin el rayado de lo proyectado.
-  const espera = await page.locator('[data-mantenimiento] [role="img"] > span > i').evaluateAll(es => es.map(e => getComputedStyle(e).backgroundImage))
-  f.ok(espera.length === 2 && espera.every(x => x === 'none'), 'la reparación y la espera en gris liso (sin rayado)')
-  // H11: una cifra grande y, en la tarjeta de la cifra, como mucho dos más de 22 px (las demás, de 18).
+  // H24: la espera es tiempo, no barriles: en cifras (sin barra hecha a mano, la regla del kit).
+  f.ok(/reparación activa\s*[\d,]+ d\s*espera\s*7,7 d/.test(await page.locator('[data-mantenimiento] [data-espera]').innerText()), 'la reparación y la espera en días (7,7 d de espera)')
+  // H11: una cifra grande y, en la tarjeta de la cifra, como mucho cuatro más de 22 px (las demás, de 18).
   await f.ir('#/ger/resultados/ceiba/curso')
   await expect(page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'ger')
   const grandes = await page.evaluate(() => [...document.querySelectorAll('main b, main span, main p')].filter(e => e.getClientRects().length && e.children.length === 0 && /\d/.test(e.textContent ?? '')
     && parseFloat(getComputedStyle(e).fontSize) >= 22 && e.getBoundingClientRect().top < 900).map(e => parseFloat(getComputedStyle(e).fontSize)))
   f.ok(grandes.filter(x => x >= 54).length === 1 && grandes.filter(x => x < 54).length <= 4, `cifras grandes en la primera vista: ${grandes.join(', ')} px (una sola de 54 o más; las secundarias, 4 o menos)`)
-  // H21: 1 px del fondo entre los dos tonos de cada mes.
-  f.ok(await page.locator('[data-mes-a-mes] [data-separador]').count() >= 6, 'cada mes apilado separa sus dos tonos con 1 px del fondo')
   f.cerrar()
 })
 
@@ -179,11 +193,12 @@ test('las direcciones viejas del gerente abren donde se fundieron, y su menú ya
   // La cifra de La planta viva («Después» y «Este mes») es la de Resultados: un nombre, una cifra.
   await f.ir('#/ger/planta-viva/ceiba/curso')
   await expect(f.page.locator('[data-planta-viva]')).toHaveAttribute('data-planta-viva', 'campo')
-  const esteMes = await f.page.locator('[data-este-mes]').getAttribute('data-este-mes')
+  await expect(f.page.locator('[data-balance]').first()).toBeVisible()
+  const esteMes = await f.page.locator('[data-balance]').first().getAttribute('data-diferido')
   await f.ir('#/ger/resultados/ceiba/curso')
   await expect(f.page.locator('[data-resultados]')).toHaveAttribute('data-alcance', 'campo')
   const r = await lectura(f.page)
-  f.ok(Math.abs(Number(esteMes) - r.valor) < 1e-6, `«Este mes» de La planta viva = la cifra de Resultados (${Math.round(Number(esteMes))})`)
+  f.ok(Number(esteMes) === Number(r.cifra.replace(/\./g, '')), `el diferido del balance de La planta viva = la cifra de Resultados (${esteMes})`)
   f.cerrar()
 })
 
@@ -198,11 +213,12 @@ test.describe('teléfono', () => {
       if (ancho > 1) hallazgos.push(`${donde}: la página se desplaza de lado ${ancho} px`)
     }
     let primero = true
-    for (const ruta of ['#/ger/resultados/ceiba/curso', '#/ger/resultados/ceiba~portafolio/curso', '#/prod/resultados/ceiba/curso', '#/jefe/resultados/ceiba~portafolio/curso', '#/conf/resultados/morichal/curso', '#/reg/resultados/ceiba/cerrado']) {
+    for (const ruta of ['#/ger/resultados/ceiba/curso', '#/ger/resultados/ceiba~portafolio/curso', '#/prod/resultados/ceiba/curso', '#/jefe/resultados/ceiba~portafolio/curso', '#/ger/resultados/ceiba/cerrado']) {
       if (primero) await f.abrir(`/${ruta}`); else await f.ir(ruta)
       primero = false
       await revisar(ruta)
-      if (await f.clic('Por dónde se trabó')) { await f.esperar(250); await revisar(`${ruta} [por dónde se trabó]`) }
+      // Lo simulado y la trazabilidad, abiertos, tampoco se salen.
+      if (await f.clic('Lo que todavía se puede mover')) { await f.esperar(250); await revisar(`${ruta} [lo simulado]`) }
     }
     // A5: «Ver …» de las tarjetas, con 44 px de blanco en el teléfono.
     await f.ir('#/ger/resultados/ceiba/curso')
@@ -220,10 +236,10 @@ test.describe('teléfono', () => {
     // En una columna, el orden es el de la pregunta de cada rol (lo dice el motor).
     await f.ir('#/jefe/resultados/ceiba/curso')
     await expect(f.page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'jefe')
-    f.ok((await lectura(f.page)).secciones.join() === 'mantenimiento,bajando,mesAMes,porEquipo,confiabilidad,ciclo', 'el jefe: primero Mantenimiento, luego ¿está bajando?, el mes a mes, por equipo, el vigía y el ciclo')
-    await f.ir('#/reg/resultados/ceiba/curso')
-    await expect(f.page.locator('[data-resultados]')).toHaveAttribute('data-resultados', 'reg')
-    f.ok((await lectura(f.page)).secciones.join() === 'publicar,mesAMes,porEquipo', 'regulatorio: primero ¿se puede publicar?')
+    f.ok((await lectura(f.page)).secciones.join() === 'mantenimiento,mesAMes,porEquipo,confiabilidad', 'el jefe: primero Mantenimiento, luego el mes a mes, por equipo y el vigía')
+    // El balance y «¿Está funcionando?» van justo debajo de la cifra.
+    const bajo = await f.page.evaluate(() => [...document.querySelectorAll('[data-balance], [data-funcionando], [data-seccion]')].map(e => e.hasAttribute('data-balance') ? 'balance' : e.hasAttribute('data-funcionando') ? 'funciona' : e.getAttribute('data-seccion')).slice(0, 3).join())
+    f.ok(bajo === 'balance,funciona,mantenimiento', `debajo de la cifra, el balance y «¿Está funcionando?» (${bajo})`)
     expect.soft(hallazgos, 'nada se sale, se recorta ni se pisa a 390 px').toEqual([])
     f.cerrar()
   })

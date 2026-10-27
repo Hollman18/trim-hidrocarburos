@@ -51,7 +51,7 @@ export function TarjetaN3({ titulo, extra, children, className, ...p }: {
   titulo: string; extra?: ReactNode; children: ReactNode; className?: string
 } & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'>) {
   return (
-    <section {...p} aria-label={titulo} className={cn('min-w-0 rounded-[20px] bg-[var(--panel)] px-4 pb-4 pt-3.5 sm:px-5 sm:pb-5 sm:pt-4', className)}>
+    <section {...p} aria-label={titulo} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] px-4 pb-4 pt-3.5 sm:px-5 sm:pb-5 sm:pt-4', className)}>
       <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[16px] font-semibold">
         {titulo}
         {extra && <span className="text-[13px] font-normal text-[var(--tinta2)]">{extra}</span>}

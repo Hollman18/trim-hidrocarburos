@@ -14,7 +14,7 @@ import { seDeshace, type Envio } from './envio'
 export function Inicio({ i, onEntregar, entregaAbierta }: { i: InicioHoy; onEntregar?: () => void; entregaAbierta?: boolean }) {
   const remate = i.remate ?? (i.unidad && !i.explica ? i.frase : undefined)
   return (
-    <section aria-label={i.frase} data-inicio className="grid gap-x-6 gap-y-3 rounded-[20px] bg-[var(--panel)] px-5 pb-5 pt-4 sm:grid-cols-[1fr_auto] sm:items-end sm:px-7 sm:pb-[22px] sm:pt-5">
+    <section aria-label={i.frase} data-inicio className="grid gap-x-6 gap-y-3 rounded-[10px] bg-[var(--panel)] px-5 pb-5 pt-4 sm:grid-cols-[1fr_auto] sm:items-end sm:px-7 sm:pb-[22px] sm:pt-5">
       <div className="min-w-0">
         {i.previo && <p className="text-[15px] font-medium text-[var(--tinta2)]">{i.previo}</p>}
         <p className="mt-1 flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
@@ -42,7 +42,7 @@ export function Bloqueo({ b, grande = false, subEnInfo = false }: { b: { texto: 
   // K2 · El motor da la versión corta para quien no opera (jefe, conf): en el teléfono, el «no» y a quién; el resto, en la ⓘ.
   const corto = subEnInfo && b.textoCorto
   return (
-    <div role="note" data-bloqueo className={cn('flex items-start gap-3 rounded-[16px] bg-[var(--panel)] shadow-[inset_0_0_0_2px_var(--tinta)]', grande ? 'px-3.5 py-3' : 'px-4 py-[13px] sm:px-5')}>
+    <div role="note" data-bloqueo className={cn('flex items-start gap-3 rounded-[10px] bg-[var(--panel)] shadow-[inset_0_0_0_2px_var(--tinta)]', grande ? 'px-3.5 py-3' : 'px-4 py-[13px] sm:px-5')}>
       <span className="mt-0.5"><Prohibido tamano={22} /></span>
       <span className={cn('min-w-0 font-semibold leading-[1.35]', grande ? 'text-[18px]' : 'text-[16px]')}>
         {corto ? <><span className="max-sm:hidden">{b.texto}</span><span className="sm:hidden">{b.textoCorto}</span></> : b.texto}
@@ -59,7 +59,7 @@ export function Hechas({ hs, onCorregir }: { hs: readonly HechaHoy[]; onCorregir
   const [abierto, setAbierto] = useState(false)
   if (!hs.length) return null
   return (
-    <section data-hechas className="rounded-[20px] bg-[var(--panel)]">
+    <section data-hechas className="rounded-[10px] bg-[var(--panel)]">
       <button type="button" aria-expanded={abierto} onClick={() => setAbierto(v => !v)}
         className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-3 px-5 py-3 text-left text-[15px] font-medium text-[var(--tinta2)] sm:px-6">
         <span><b className="font-semibold text-[var(--tinta)]">Hecho hoy ({hs.length})</b> · {hs[0]!.detalle}</span>
@@ -70,8 +70,8 @@ export function Hechas({ hs, onCorregir }: { hs: readonly HechaHoy[]; onCorregir
           {hs.map(h => <li key={h.id} className="border-t border-[var(--linea2)] py-2 text-[15px]"><b className="font-semibold">{h.titulo}</b> <span className="text-[var(--tinta2)]">· {h.detalle}</span></li>)}
           {onCorregir && (
             <li className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--linea2)] pt-2.5 text-[14px] text-[var(--tinta2)]">
-              Para corregir algo de esto, en Identificar: nada se borra, queda con su motivo.
-              <Enlace onClick={onCorregir}>Ir a Identificar</Enlace>
+              Para corregir algo de esto, una por una: nada se borra, queda con su motivo.
+              <Enlace onClick={onCorregir}>Ver una por una</Enlace>
             </li>
           )}
         </ul>

@@ -9,25 +9,20 @@ import { test } from './apoyo.ts'
 /** La tarjeta de una parada de la ANH por lo que dice (sus pozos o su raíz). */
 const tarjeta = (page: Page, texto: string | RegExp) => page.locator('main article[data-parada-anh]').filter({ hasText: texto }).first()
 
-test('Un techo es «hasta N» en Riesgo, Turno y Mantenimiento, como en «Si falla hoy» (QA-R, vecino 1)', async ({ flujo: f }) => {
+test('Un techo es «hasta N» en Equipos, en la ficha y en el papel, como en «Si falla hoy» (QA-R, vecino 1)', async ({ flujo: f }) => {
   const { page } = f
   // «9.394 bbl/d» sin «hasta» delante: el techo de K-101 dicho como cifra exacta.
   const exacta = /(?<!hasta )9\.394 bbl\/d/
-  // K1 · P-10: el Riesgo del jefe vive en su Equipos («Qué está en riesgo», debajo de la lista): la dirección abre ahí.
+  // B3 · A-12, A-13 y A-01: Riesgo, Mantenimiento y Turno salieron; el techo de K-101 vive en la lista y en su ficha.
   await f.abrir('/#/jefe/riesgo/ceiba/curso')
   f.ok((await f.hash()).startsWith('#/jefe/equipos/ceiba'), `la dirección de Riesgo abre Equipos (${await f.hash()})`)
-  await expect(page.locator('main [data-riesgo] [data-en-juego]')).toContainText('hasta 9.394')
+  await expect(page.locator('main [data-fila-equipo="K-101"] [data-cifra-fila]')).toContainText(/hasta\s*9\.394/)
   let t = await f.texto()
-  f.ok(t.includes('hasta 9.394 bbl/d') && !exacta.test(t), `Riesgo: «En riesgo» y su cabecera dicen «hasta 9.394 bbl/d» (${t.match(exacta)?.[0] ?? 'ninguna cifra exacta'})`)
-  await f.ir('#/sup/turno/ceiba/curso')
-  await expect(page.locator('main [data-si-para]').first()).toHaveText('hasta 9.394 bbl/d')
+  f.ok(!exacta.test(t.replace(/\s+/g, ' ').replace(/hasta (\d)/g, 'hasta $1')), 'Equipos: el techo de K-101, con «hasta»')
+  await f.ir('#/jefe/equipos/ceiba/K-101')
+  await expect(page.locator('main [data-si-falla-ficha="K-101"]')).toContainText(/Si falla hoy: hasta 9\.394 bbl\/d/)
   t = await f.texto()
-  f.ok(!exacta.test(t), 'Turno: «Vigilar» dice el techo con «hasta»')
-  await f.ir('#/jefe/mantenimiento/ceiba/curso')
-  t = await f.texto()
-  f.ok(t.includes('hasta 9.394 bbl/d') && !exacta.test(t), 'Mantenimiento: «si para» con «hasta»')
-  // En el papel, el globo de K-101 también («Si para: hasta 9.394 bbl/d (un techo…)»).
-  await f.ir('#/jefe/riesgo/ceiba/curso')
+  f.ok(!exacta.test(t), 'la ficha de K-101: «si para» con «hasta»')
   await page.emulateMedia({ media: 'print' })
   const papel = await f.textoPagina()
   await page.emulateMedia({ media: 'screen' })
@@ -35,64 +30,54 @@ test('Un techo es «hasta N» en Riesgo, Turno y Mantenimiento, como en «Si fal
   f.cerrar()
 })
 
-test('Producción: una sola eficiencia, la del choke en la escalera; la del libro es «% del potencial» y su ⓘ dice la diferencia (QA-R, vecino 2; D3)', async ({ flujo: f }) => {
+// v3 (C-03 y A-10): la escalera y la tubería repetida salieron de Producción (la escalera es un escalón, encima de lo
+// necesario). Queda lo del cierre del mes: «% del potencial» con su ⓘ, que sigue diciendo que no es la eficiencia de producción.
+test('Producción: el «% del potencial» no es la eficiencia de producción, y su ⓘ dice la diferencia (QA-R, vecino 2; D3)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/prod/produccion/ceiba/cerrado')
   const t = await f.texto()
-  const eficiencias = t.match(/eficiencia[^\n]*/gi) ?? []
-  f.ok(eficiencias.length === 1 && /^eficiencia de producción/i.test(eficiencias[0] ?? ''), `una sola «eficiencia» en la pantalla, la de producción (${eficiencias.join(' | ')})`)
-  await expect(page.locator('main [data-del-potencial]')).toContainText(/[\d,]+ % del potencial/)
-  const ayudaPe = await page.getByRole('img', { name: /^Eficiencia de producción:/ }).getAttribute('aria-label') ?? ''
-  f.ok(!/es la misma eficiencia de arriba/.test(ayudaPe) && /No es el «% del potencial»/.test(ayudaPe) && /lo que las pruebas dan de más que el medidor oficial \([\d.]+ bbl en el período\)/.test(ayudaPe),
-    `el ⓘ de la eficiencia de producción dice la diferencia con el «% del potencial» (${ayudaPe.slice(0, 120)}…)`)
+  f.ok(!/eficiencia de producción\s*[\d,]+ %/i.test(t) && await page.locator('main [data-escalera]').count() === 0, 'sin la escalera ni la eficiencia en número en la primera capa')
+  await expect(page.locator('main [data-del-potencial]')).toContainText(/[\d,]+ % del potencial|lo medido es el [\d,]+ %/)
   const ayudaLibro = await page.getByRole('img', { name: /^% del potencial:/ }).getAttribute('aria-label') ?? ''
-  f.ok(/No es la eficiencia de producción/.test(ayudaLibro) && /de eficiencia de producción/.test(ayudaLibro), `el ⓘ del «% del potencial» dice que no es la eficiencia de producción (${ayudaLibro.slice(0, 120)}…)`)
-  // La escalera empieza donde empieza la eficiencia (las pruebas) y llega a lo real, sin saltos.
-  const bbl = (sel: string) => page.locator(`main [data-escalera] ${sel}`).first().getAttribute('data-bbl').then(Number)
-  const inicio = await bbl('[data-escalon-inicio]'), brecha = await bbl('[data-brecha-pruebas]'), libro = await bbl('[data-potencial-libro]'), real = await bbl('[data-escalon-real]')
-  const escalones = (await page.locator('main [data-escalera] [data-escalon]').evaluateAll(es => es.map(e => Number(e.getAttribute('data-bbl'))))).reduce((a, b) => a + b, 0)
-  f.ok(Math.abs(inicio - brecha - libro) < 1 && Math.abs(libro - escalones - real) < 1,
-    `la escalera cuadra: ${Math.round(inicio)} − ${Math.round(brecha)} = ${Math.round(libro)}; − ${Math.round(escalones)} = ${Math.round(real)}`)
-  const pe = Number((t.match(/eficiencia de producción[^\d]*([\d,]+) %/i)?.[1] ?? '').replace(',', '.'))
-  f.ok(Math.abs(pe - (real / inicio) * 100) < 0.06, `la eficiencia (${pe} %) es lo real sobre el renglón de arriba de la escalera (${((real / inicio) * 100).toFixed(2)} %)`)
+  f.ok(/No es la eficiencia de producción/.test(ayudaLibro) && /de eficiencia de producción/.test(ayudaLibro) && /lo que las pruebas dan de más que el medidor oficial \([\d.]+ bbl en el período\)/.test(ayudaLibro),
+    `el ⓘ del «% del potencial» dice que no es la eficiencia de producción, con la diferencia (${ayudaLibro.slice(0, 120)}…)`)
   // La tabla del cuadre y el globo del día ya no dicen «Eficiencia» por el % del potencial.
   f.ok(!/\tEficiencia\t/.test(t) && /\tDel potencial\t/.test(t), 'el cuadre diario dice «Del potencial»')
   f.cerrar()
 })
 
-test('Mes a mes «Por cómo se identificó»: ningún mes atenuado, el del período con contorno (QA-R, vecino 4; B-08)', async ({ flujo: f }) => {
+test('Mes a mes con el kit SCADA: ningún mes atenuado, contra la raya del máximo firmado (QA-R, vecino 4; B-08)', async ({ flujo: f }) => {
   const { page } = f
+  // A-09: la dirección de Diferidos abre Resultados; el mes a mes es la tendencia del kit.
   await f.abrir('/#/prod/diferidos/ceiba/cerrado')
-  await expect(page.getByRole('button', { name: 'Por cómo se identificó' })).toHaveAttribute('aria-pressed', 'true')
-  const svg = page.locator('main svg[aria-label^="Barriles diferidos mes a mes"]').first()
+  const svg = page.locator('main [data-mes-a-mes] [data-kit="tendencia"] svg').first()
+  await svg.waitFor()
   const atenuados = await svg.locator('g').evaluateAll(gs => gs.filter(g => { const o = g.getAttribute('opacity'); return o !== null && Number(o) < 1 }).length)
   f.ok(atenuados === 0, `ningún mes con opacidad menor que 1 (${atenuados})`)
-  await expect(svg.locator('[data-mes-activo]')).toHaveCount(1)
+  await expect(svg.locator('[data-alarma]')).toHaveCount(1)
   f.cerrar()
 })
 
 test('D2 en el papel: lo que escribió el operador sale en la pantalla de quien revisa, y en el papel va «Lo contestó el operador de campo» (QA-R, vecino 3)', async ({ flujo: f }) => {
   const { page } = f
   const libre = 'ZQX Lo encontró Jairo Peña con Nelson Ortiz: la válvula de la cabeza estaba cerrada'
-  await f.abrir('/#/oper/causa/ceiba/curso')
-  // F1 (P-causa-1): una parada abierta a la vez; LC-21 se abre tocando su fila.
-  const filaLc21 = page.locator('main button[data-parada]', { hasText: 'LC-21' })
-  if (await filaLc21.count()) await filaLc21.first().click()
-  const form = page.locator('main form').filter({ has: page.getByRole('button', { name: 'Cierre para prueba o intervención del pozo' }) }).first()
-  await form.getByRole('button', { name: 'Cierre para prueba o intervención del pozo' }).click()
-  await form.locator('textarea').fill(libre)
-  await form.getByRole('button', { name: 'Contestar' }).click()
-  await f.esperarTexto(libre)
-  for (const [ruta, que] of [['#/sup/causa/ceiba/curso', 'Identificar'], ['#/sup/turno/ceiba/curso', 'Turno']] as const) {
-    await f.ir(ruta)
-    const pantalla = await f.textoPagina()
-    await page.emulateMedia({ media: 'print' })
-    const papel = await f.textoPagina()
-    await page.emulateMedia({ media: 'screen' })
-    f.ok(!papel.includes('ZQX') && !/Jairo Peña con Nelson/.test(papel) && papel.includes('Lo contestó el operador de campo'),
-      `${que}: en el papel no va el texto libre ni quien lo escribió, va «Lo contestó el operador de campo» (${(papel.match(/[^\n]*ZQX[^\n]*/) ?? ['sin el texto'])[0].slice(0, 80)})`)
-    if (que === 'Identificar') f.ok(pantalla.includes(libre), 'en la pantalla del supervisor (que tiene permiso) sigue el texto')
-  }
+  // B3 · FF-2: se contesta en Hoy. P-201B queda para después; la siguiente es LC-21.
+  await f.abrir('/#/oper/hoy/ceiba/curso')
+  const pregunta = page.locator('main [data-operador="pregunta"]')
+  await pregunta.locator('[data-opcion="Todavía no sé"]').click()
+  await expect(pregunta.locator('h2')).toHaveText('¿Por qué paró?')
+  await pregunta.getByRole('button', { name: '+ Lo que encontró (si quiere)' }).click()
+  await pregunta.locator('textarea').fill(libre)
+  await pregunta.locator('[data-opcion="Cierre para prueba o intervención del pozo"]').click()
+  await expect(page.locator('[data-aviso-hoy]')).toContainText('Registrado: cierre para prueba o intervención del pozo en LC-21', { timeout: 9_000 })
+  await f.ir('#/sup/causa/ceiba/curso')
+  const pantalla = await f.textoPagina()
+  await page.emulateMedia({ media: 'print' })
+  const papel = await f.textoPagina()
+  await page.emulateMedia({ media: 'screen' })
+  f.ok(!papel.includes('ZQX') && !/Jairo Peña con Nelson/.test(papel) && papel.includes('Lo contestó el operador de campo'),
+    `en el papel no va el texto libre ni quien lo escribió, va «Lo contestó el operador de campo» (${(papel.match(/[^\n]*ZQX[^\n]*/) ?? ['sin el texto'])[0].slice(0, 80)})`)
+  f.ok(pantalla.includes(libre), 'en la pantalla del supervisor (que tiene permiso) sigue el texto')
   f.cerrar()
 })
 

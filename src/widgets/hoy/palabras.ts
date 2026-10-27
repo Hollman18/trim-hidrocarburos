@@ -22,11 +22,13 @@ export function useIr() {
       case 'equipo': setCampo(d.campoId); abrirEquipo(d.equipo); return
       case 'paradas': return ir(['causa'])
       case 'planta': return ir(['plantaViva', 'planta'])
-      case 'agua': return ir(['agua', 'plantaViva', 'bombas'])
-      case 'turno': return ir(['turno'])
+      case 'agua': if (!rol.pantallas.includes('agua') && !rol.pantallas.includes('plantaViva')) useFiltrosEquipos.getState().poner({ tren: 'agua' }); return ir(['agua', 'plantaViva', 'equipos'])
+      // B3 · A-01: el turno vive en Hoy.
+      case 'turno': return ir(['hoy'])
       case 'asignacion': return ir(['produccion'])
       case 'metas': return ir(['configuracion'])
-      case 'planes': return ir(['mantenimiento', 'causa', 'turno'])
+      // FF-3: los planes se abren en su tarjeta de Hoy.
+      case 'planes': return ir(['hoy', 'causa'])
       // P-10: la lista de Equipos, con el tren de esos equipos.
       case 'equipos': useFiltrosEquipos.getState().poner({ tren: d.tren ?? 'todos' }); return ir(['equipos'])
     }

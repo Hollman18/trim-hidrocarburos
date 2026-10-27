@@ -87,14 +87,14 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
       </p>
 
       {planes.length > 0 && (
-        <div className="rounded-[20px] bg-[var(--panel)] p-4">
+        <div className="rounded-[10px] bg-[var(--panel)] p-4">
           {/* A15: en el diagnóstico va antes del primer h2 de la vista: su título también es h2. */}
           <PlanesDe planes={planes} titulo="h2" />
         </div>
       )}
 
       {abierta?.pide && rol.pantallas.includes('causa') && (
-        <div className="flex flex-wrap items-center gap-3 rounded-[20px] bg-[var(--panel)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-[10px] bg-[var(--panel)] px-4 py-3">
           <span className="min-w-0 flex-1 text-[15px]">La parada abierta espera que alguien diga qué se dañó.</span>
           <Boton variante="principal" onClick={() => setPantalla('causa')}>Identificar</Boton>
         </div>

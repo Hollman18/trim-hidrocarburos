@@ -1,4 +1,4 @@
-import { ROLES, ROLES_VISIBLES, rolPorId } from '@/entities/roles'
+import { ROLES, ROLES_VISIBLES, ROLES_RETIRADOS, rolPorId } from '@/entities/roles'
 import { CAMPOS, esIdPeriodo } from '@/entities/campos'
 import { pedirInicioDeHistoria } from '@/shared/api/calendario'
 import { AHORA } from '@/entities/reloj'
@@ -47,12 +47,25 @@ export const rutaDe = (pantalla: string): string => PANTALLAS[pantalla]?.ruta ??
  *  Un enlace viejo («#/ger/diferidos/ceiba/cerrado») sigue abriendo. */
 export const FUSIONADA_EN: Readonly<Record<string, string>> = { resumen: 'plantaViva', diferidos: 'resultados', produccion: 'resultados', riesgo: 'plantaViva',
   // F1 · P-trabajo-1: Mi trabajo del técnico vive en Hoy.
-  trabajo: 'hoy' }
+  trabajo: 'hoy',
+  // B3 (experiencia v3, borrado.md): Turno (A-01) y Mantenimiento (A-12) viven en Hoy; Bombas, Electrosumergibles
+  // (A-15), Superficie y Pozos (B-05) son filtros de Equipos (`FILTRO_DE`); Identificar es «Una por una».
+  turno: 'hoy', mantenimiento: 'hoy', bombas: 'equipos', esp: 'equipos', equipo: 'equipos', pozos: 'equipos' }
+/** B3 · El filtro de Equipos con que abre la dirección de una pantalla que se volvió filtro (A-15). */
+export const FILTRO_DE: Readonly<Record<string, FiltroDireccion>> = {
+  bombas: { tipo: 'bomba' }, esp: { tipo: 'electrosumergible' }, equipo: { tipo: 'superficie' }, pozos: { tren: 'pozos' },
+}
+export interface FiltroDireccion { tipo?: 'bomba' | 'electrosumergible' | 'pozo' | 'superficie'; tren?: 'pozos' }
 /** K1 · P-10: una pantalla que se fundió en otra distinta según el rol. El Riesgo del jefe de
  *  mantenimiento y de confiabilidad vive en su Equipos (debajo de la lista, con lo que cada uno
  *  decide arriba); el del gerente sigue en La planta viva (`FUSIONADA_EN`). Va antes que la regla de todos. */
 export const FUSIONADA_EN_ROL: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   riesgo: { jefe: 'equipos', conf: 'equipos' },
+  // B3: el Hoy de confiabilidad se fundió en su Equipos; su Resultados es Confiabilidad (B-03); al jefe, su
+  // Confiabilidad está en Resultados (B-07); el Equipos del gerente, en Resultados («por equipo», A-16).
+  hoy: { conf: 'equipos', prod: 'plantaViva' }, resultados: { conf: 'confiabilidad', reg: 'regulatorio' }, confiabilidad: { jefe: 'resultados' },
+  // Pedidos de B2: el Equipos del gerente abre su inicio; La planta viva de reg y adm, su única pantalla.
+  equipos: { ger: 'plantaViva' }, plantaViva: { reg: 'regulatorio', adm: 'configuracion' },
 }
 /** La pantalla que abre una dirección para un rol: ella misma, o aquella en que se fundió (la de su rol primero). */
 export const pantallaQueAbre = (rol: Pick<Rol, 'pantallas'> & Partial<Pick<Rol, 'id'>>, p: string): string | undefined => {
@@ -93,9 +106,14 @@ export function rangoValido(a: string, b: string): { desde: string; hasta: strin
 /** Lo que se lee de la dirección: el contexto que se puede abrir y, aparte,
  *  el campo del registro que pedía y la persona no tiene (se dice: B-38). */
 export type DeLaDireccion = Partial<Contexto> & { campoAjeno?: string
-  /** F1 · P-17: un rol que existe pero no se ofrece en esta versión (plan, cont): se abre el de
-   *  siempre y se dice, como el campo ajeno. */
-  rolAjeno?: string }
+  /** P-17 y A-22: un rol que existe pero no se ofrece en esta versión (plan) o que salió del
+   *  producto (cont): la aplicación dice que no está disponible, sin abrir otro rol. */
+  rolAjeno?: string
+  /** B3 · A-15: la dirección era de una pantalla que hoy es un filtro de Equipos. */
+  filtro?: FiltroDireccion }
+/** El nombre de un rol que no se ofrece (apagado o retirado), para decirlo. */
+export const nombreRolAjeno = (id: string): string | undefined =>
+  ROLES.find(r => r.id === id)?.nombre ?? (Object.hasOwn(ROLES_RETIRADOS, id) ? ROLES_RETIRADOS[id] : undefined)
 
 /** C4 · Equipos: ¿este rol abre el nivel 3 técnico (una vista entera, no el panel
  *  flotante)? Los roles técnicos que tienen Equipos; el gerente sigue con su ficha
@@ -119,12 +137,15 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
   // dejaba guardado un rol que la cabecera mostraba como producción y con el
   // que nadie podía firmar ni exportar.
   if (rolId && ROLES_VISIBLES.some(r => r.id === rolId)) ctx.rolId = rolId
-  else if (rolId && ROLES.some(r => r.id === rolId)) ctx.rolAjeno = rolId
+  else if (rolId && nombreRolAjeno(rolId)) ctx.rolAjeno = rolId
   const rol = rolPorId(ctx.rolId ?? rolActual ?? '')
   // «portafolio» ya no es pantalla; se deja pasar para que el estado lo
   // traduzca a alcance y las direcciones viejas sigan sirviendo.
   if (pantalla === 'portafolio') ctx.pantalla = 'portafolio'
-  else if (pantalla && pantallaQueAbre(rol, pantalla)) ctx.pantalla = pantallaQueAbre(rol, pantalla)
+  else if (pantalla && pantallaQueAbre(rol, pantalla)) {
+    ctx.pantalla = pantallaQueAbre(rol, pantalla)
+    if (ctx.pantalla === 'equipos' && Object.hasOwn(FILTRO_DE, pantalla)) ctx.filtro = FILTRO_DE[pantalla]
+  }
   // Una pantalla que el rol no tiene (o que ya no existe) lleva a su inicio,
   // igual al cargar que con la aplicación abierta.
   else if (pantalla) ctx.pantalla = rol.inicio

@@ -1,5 +1,6 @@
 import type { VistaResultados } from '@/shared/api/resultados'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
+import { Barra, Cifra as CifraKit } from '@/shared/ui/scada'
 import { Calidad } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { usd } from '@/shared/lib/formato'
@@ -47,9 +48,11 @@ export function Cifra({ v, telefono }: { v: VistaResultados; telefono: boolean }
   )
 }
 
-/** La producción contra la meta, por día, y el cierre proyectado (o el total del
- *  período): la barra de Few (X5 §5.4), con el cuadrado de aviso junto a la cifra
- *  que se sale. Va debajo de la cifra, en la misma tarjeta. */
+/** La producción contra la meta, por día, y el cierre proyectado (o el total del período), con el
+ *  kit SCADA: la barra del instrumento (`Barra`) con la banda de lo normal desde la meta firmada
+ *  (producción: sobre la meta; diferido: bajo el máximo) y su marca de aviso si se sale. Lo
+ *  proyectado nunca lleva barra: va como cifra de apoyo con su palabra (kit §6). Va debajo de la
+ *  cifra, en la misma tarjeta. */
 export function ProduccionContraMeta({ v }: { v: VistaResultados }) {
   const p = v.produccion, c = p.cierre
   const sin = p.sinMeta ?? 'sin meta firmada'
@@ -57,49 +60,39 @@ export function ProduccionContraMeta({ v }: { v: VistaResultados }) {
     <div data-produccion-meta="" className="grid gap-x-8 gap-y-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
       <div className="grid content-start gap-3">
         <h3 className="flex flex-wrap items-center gap-x-1.5 text-[15px] font-semibold text-[var(--tinta)]">Promedio por día<Info titulo={p.totales.titulo} texto={p.totales.texto} /></h3>
-        <Barra rotulo="producción" valor={p.realBpd} unidad="bbl/d" meta={p.metaBpd} rotuloMeta={p.metaBpd !== null ? `meta ${n0(p.metaBpd)}` : sin} fuera={p.bajoMeta} />
-        <Barra rotulo="diferido" valor={p.diferidoBpd} unidad="bbl/d" meta={p.maximoBpd} rotuloMeta={p.maximoBpd !== null ? `máximo ${n0(p.maximoBpd)}` : sin} fuera={p.sobreMaximo} />
+        <ContraMeta rotulo="producción" valor={p.realBpd} unidad="bbl/d" meta={p.metaBpd} rotuloMeta={p.metaBpd !== null ? `meta ${n0(p.metaBpd)}` : sin} fuera={p.bajoMeta} sobre />
+        <ContraMeta rotulo="diferido" valor={p.diferidoBpd} unidad="bbl/d" meta={p.maximoBpd} rotuloMeta={p.maximoBpd !== null ? `máximo ${n0(p.maximoBpd)}` : sin} fuera={p.sobreMaximo} />
       </div>
       <div className="grid content-start gap-3" data-cierre={c.proyectado ? 'proyectado' : 'total'}>
         <h3 className="flex flex-wrap items-center gap-x-1.5 text-[15px] font-semibold text-[var(--tinta)]">
-          {c.titulo}{c.proyectado && <Calidad>proyectado</Calidad>}
+          {c.titulo}
           <Info titulo={c.titulo} texto={c.explica} />
         </h3>
-        <Barra rotulo="producción" valor={c.produccion} unidad="bbl" meta={c.metaProduccion} rotuloMeta={c.metaProduccion !== null ? `meta ${n0(c.metaProduccion)}` : sin} fuera={c.bajoMeta} proyectado={c.proyectado} chica />
-        <Barra rotulo="diferido" valor={c.diferido} unidad="bbl" meta={c.maximoDiferido} rotuloMeta={c.maximoDiferido !== null ? `máximo ${n0(c.maximoDiferido)}` : sin} fuera={c.sobreMaximo} proyectado={c.proyectado} chica />
+        <CifraKit rotulo="Producción" valor={Math.round(c.produccion)} unidad="bbl" mayusculas={false} calidad={c.proyectado ? 'proyectado' : undefined}
+          estado={c.bajoMeta ? 'anormal' : 'normal'} condicion={c.bajoMeta ? 'aviso' : undefined}
+          nota={c.metaProduccion !== null ? `meta ${n0(c.metaProduccion)}` : sin} />
+        <CifraKit rotulo="Diferido" valor={Math.round(c.diferido)} unidad="bbl" mayusculas={false} calidad={c.proyectado ? 'proyectado' : undefined}
+          estado={c.sobreMaximo ? 'anormal' : 'normal'} condicion={c.sobreMaximo ? 'aviso' : undefined}
+          nota={c.maximoDiferido !== null ? `máximo ${n0(c.maximoDiferido)}` : sin} />
       </div>
     </div>
   )
 }
 
-/** Una barra contra su meta: la cifra (con su cuadrado si se sale), la pista, la
- *  barra y la raya de la meta. Lo proyectado va con contorno y rayado (X5 §5.4).
- *  La escala parte de cero: un valor de cero o menos no pinta nada (H1), y lo que
- *  pasa de 1,25 veces la meta llega al final (X2 §5.2: lo dice la marca). `chica`:
- *  una cifra secundaria de la tarjeta (18 px; H11: como mucho 4 secundarias grandes). */
-function Barra({ rotulo, valor, unidad, meta, rotuloMeta, fuera, proyectado, chica }: {
-  rotulo: string; valor: number; unidad: string; meta: number | null; rotuloMeta: string; fuera: boolean; proyectado?: boolean; chica?: boolean
+/** Una cifra contra su meta con la barra del kit: la escala sale de la meta firmada (1,25 veces),
+ *  nunca de la lectura; sin meta no hay barra y se dice. `sobre`: lo normal es estar sobre la meta. */
+function ContraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, sobre = false }: {
+  rotulo: string; valor: number; unidad: string; meta: number | null; rotuloMeta: string; fuera: boolean; sobre?: boolean
 }) {
-  const conBarra = meta !== null && meta > 0
-  const ancho = conBarra ? Math.max(0, Math.min(1.25, valor / meta)) / 1.25 : 0
-  const leido = `${rotulo}: ${n0(valor)} ${unidad}${conBarra ? `, ${rotuloMeta}` : ''}${fuera ? (rotulo === 'diferido' ? ', por encima del máximo' : ', por debajo de la meta') : ''}${proyectado ? ' (proyectado)' : ''}`
   return (
-    <div className="min-w-0" role="img" aria-label={leido} data-barra-meta={rotulo}>
-      <p className="flex flex-wrap items-baseline justify-between gap-x-2">
-        <span className="text-[14px] text-[var(--tinta2)]">{rotulo}</span>
-        <span className="tabular-nums text-[14px] text-[var(--tinta2)]">{rotuloMeta}</span>
+    <div className="min-w-0" data-barra-meta={rotulo}>
+      <p className="flex flex-wrap items-baseline justify-between gap-x-2 text-[14px] text-[var(--tinta2)]">
+        <span>{rotulo}</span><span className="tabular-nums">{rotuloMeta}</span>
       </p>
-      <p className={cn('mt-0.5 flex items-center gap-1.5 font-bold leading-none text-[var(--tinta)] tabular-nums', chica ? 'text-[18px]' : 'text-[22px]')}>
-        {fuera && <MarcaPrioridad s={3} tamano={14} decorativa />}{n0(valor)}<small className="text-[14px] font-normal text-[var(--tinta2)]">{unidad}</small>
-      </p>
-      {conBarra && (
-        <span aria-hidden data-barra="" className="relative mt-2 block h-2.5 rounded-full bg-[var(--pista)]">
-          {/* Sin nada que pintar, no hay relleno: un 0 no es una barra llena (H1). */}
-          <i data-relleno="" className={cn('block h-full rounded-full', ancho > 0 && (proyectado ? 'border-[1.5px] border-[var(--tinta2)]' : 'bg-[var(--dato1)]'))}
-            style={{ width: `${ancho * 100}%`, ...(proyectado && ancho > 0 ? { background: 'repeating-linear-gradient(45deg, var(--dato3) 0 2px, transparent 2px 5px)' } : {}) }} />
-          <i data-raya="" className="absolute -inset-y-[5px] left-[80%] w-[3px] -translate-x-1/2 rounded-[2px] bg-[var(--tinta)]" />
-        </span>
-      )}
+      <Barra nombre={`${rotulo[0]!.toUpperCase()}${rotulo.slice(1)} por día, ${rotuloMeta}`} valor={valor} unidad={unidad} ancho={220} className="mt-1"
+        escala={meta !== null && meta > 0 ? { min: 0, max: meta * 1.25, firmada: true } : undefined}
+        banda={meta !== null && meta > 0 ? (sobre ? [meta, null] : [null, meta]) : undefined}
+        estado={fuera ? 'anormal' : 'normal'} condicion={fuera ? 'aviso' : undefined} />
     </div>
   )
 }

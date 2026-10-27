@@ -1,11 +1,10 @@
 import { Fragment, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { resumenPlegadas, PALABRA_CONDICION, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
-import { IndicadorFijo } from '@/shared/ui/Analogico'
-import { Minitendencia } from '@/shared/ui/Sparkline'
+import { resumenPlegadas, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
+import { Barra, Tendencia, type EstadoKit, type CondicionKit } from '@/shared/ui/scada'
 import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
-import { TarjetaN3, Marca } from './piezas'
+import { TarjetaN3 } from './piezas'
 
 /** I1 · Lo que se dice de la escala mientras el motor no tenga el rango de cada instrumento (H5). */
 export const ESCALA_PROVISIONAL = 'La escala sale de los límites firmados (la banda normal y la alarma), no de las lecturas: no se mueve con el valor de ahora. Es provisional: falta el rango de cada instrumento y el disparo de cada protección; el sistema todavía no los trae. La banda gris es lo normal; la raya oscura, el límite de alarma.'
@@ -16,40 +15,45 @@ const Limite = ({ texto }: { texto: string }) => (
   <>{texto.split(' · ').map((t, i) => <Fragment key={t}>{i ? ' · ' : ''}<span className="whitespace-nowrap">{t}</span></Fragment>)}</>
 )
 
-const valorDe = (s: Pick<SenalNivel3, 'valor' | 'decimales'>) =>
-  s.valor === null ? '---' : s.valor.toLocaleString('es-CO', { minimumFractionDigits: s.decimales, maximumFractionDigits: s.decimales })
+/** El estado de la señal en el kit SCADA (kit-scada.md §0): parado (el equipo), sin
+ *  comunicación, sin dato, anormal (la prioridad que da el motor) o normal. */
+function estadoKit(s: Pick<SenalNivel3, 'gris' | 'valor' | 'condicion'>): { estado: EstadoKit; condicion?: CondicionKit } {
+  if (s.gris) return { estado: 'parado' }
+  if (s.condicion === 'sin-comunicacion') return { estado: 'sin-comunicacion' }
+  if (s.valor === null) return { estado: 'sin-dato' }
+  return s.condicion ? { estado: 'anormal', condicion: s.condicion } : { estado: 'normal' }
+}
+/** El límite que cruzó una señal anormal: el de alarma del lado por donde salió de su banda. */
+const cruzoDe = (s: SenalNivel3) => {
+  if (s.valor === null || !s.condicion || !s.alarmas.length) return undefined
+  const v = s.valor
+  return s.alarmas.filter(a => (s.banda?.[0] !== null && s.banda?.[0] !== undefined && a <= s.banda[0] ? v <= a : v >= a))[0] ?? s.alarmas[0]
+}
 
-/** Una señal (X5 §5.4; X2 §5.1): el nombre y el tag, el indicador con su escala
- *  fija y su banda, el límite escrito debajo, la minitendencia de la ventana y el
- *  valor. El valor va en tinta; si es anormal, en negrita con la marca a su
- *  izquierda (X2 B5). Con el equipo parado, en gris y sin marca propia (X2 B9). */
+/** Una señal (X5 §5.4; kit SCADA §1 y §2): el nombre y el tag, la barra del kit con su escala
+ *  fija, su banda y su alarma (el valor a la derecha, con la marca si es anormal), el límite
+ *  escrito debajo y la tendencia compacta de la ventana. Con el equipo parado, en gris y sin
+ *  marca propia (X2 B9); sin lectura, «—» y su palabra, nunca un cero. */
 function Senal({ s }: { s: SenalNivel3 }) {
-  const etiqueta = `${s.nombre}, ${s.valor === null ? 'sin señal' : `${valorDe(s)} ${s.unidad}`}; ${s.limite}${s.gris ? '; equipo parado' : ''}${s.condicion ? `; ${PALABRA_CONDICION[s.condicion]}` : ''}`
+  const k = estadoKit(s)
+  const escala = s.escala ? { min: s.escala[0], max: s.escala[1], firmada: false } : undefined
   return (
     <div data-senal={s.tag} data-condicion={s.condicion ?? ''}
-      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-t border-[var(--linea2)] py-2 @min-[380px]:grid-cols-[minmax(96px,1fr)_minmax(96px,156px)_auto]">
-      <span className="col-start-1 row-start-1 min-w-0 text-[15px] font-medium leading-tight">
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-t border-[var(--linea2)] py-2 @min-[480px]:grid-cols-[minmax(110px,1fr)_auto_auto]">
+      <span className="min-w-0 text-[15px] font-medium leading-tight">
         {s.nombre}
-        <small className="font-cond mt-0.5 block text-[13px] font-medium tracking-[.03em] text-[var(--tinta2)]">{s.tag}</small>
+        <small className="font-cond mt-0.5 block text-[13px] font-medium tracking-[.03em] text-[var(--tinta2)]">{s.tag} · <span data-limite><Limite texto={s.limite} /></span></small>
       </span>
-      <span className="col-span-2 row-start-2 @min-[380px]:col-span-1 @min-[380px]:col-start-2 @min-[380px]:row-start-1">
-        {/* Sin ningún límite declarado no hay escala: no se dibuja ni se inventa (H5; X2 §7.8). */}
-        {s.escala
-          ? <IndicadorFijo escala={s.escala} banda={s.banda} alarmas={s.alarmas} valor={s.valor} gris={s.gris} fuera={s.fuera} etiqueta={etiqueta} />
-          : <span className="text-[13px] text-[var(--tinta2)]" data-sin-escala>no se dibuja</span>}
+      <span className="col-span-2 row-start-2 @min-[480px]:col-span-1 @min-[480px]:col-start-2 @min-[480px]:row-start-1" data-valor-kit>
+        <Barra nombre={s.nombre} valor={s.valor} unidad={s.unidad} escala={escala} banda={s.banda ?? undefined} alarmas={s.alarmas}
+          estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})} {...(k.condicion ? { cruzo: cruzoDe(s) } : {})} decimales={s.decimales} ancho={168} />
       </span>
-      <span className="col-span-2 row-start-3 -mt-0.5 text-[13px] text-[var(--tinta2)] @min-[380px]:col-span-1 @min-[380px]:col-start-2 @min-[380px]:row-start-2" data-limite><Limite texto={s.limite} /></span>
-      <span className="col-start-2 row-start-1 flex items-center justify-end gap-2 @min-[380px]:col-start-3">
-        {s.escala && <span className="max-[359px]:hidden"><Minitendencia serie={s.serie} escala={s.escala} banda={s.banda} gris={s.gris} /></span>}
-        <span className="flex min-w-[72px] items-center justify-end gap-1.5 whitespace-nowrap">
-          {s.condicion && <Marca c={s.condicion} tamano={15} decorativa />}
-          <b className={cn('tabular text-[17px] leading-none', s.gris || s.valor === null ? 'font-semibold text-[var(--tinta2)]' : s.condicion ? 'font-bold' : 'font-semibold')} data-valor>
-            {valorDe(s)}
-          </b>
-          {/* Sin lectura con el equipo parado es lo esperado (el motor apagado): no es «sin señal». */}
-          <small className="text-[13px] text-[var(--tinta2)]">{s.valor === null ? (s.gris ? 'sin lectura' : 'sin señal') : s.unidad}</small>
+      {escala && (
+        <span className="col-start-2 row-start-1 max-[359px]:hidden @min-[480px]:col-start-3">
+          <Tendencia titulo={s.nombre} ventana={`${s.serie.length} d`} series={[{ nombre: s.nombre, valores: s.serie }]} escala={escala} unidad={s.unidad}
+            banda={s.banda ?? undefined} alarmas={s.alarmas} estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})} decimales={s.decimales} compacta ancho={120} alto={30} />
         </span>
-      </span>
+      )}
     </div>
   )
 }

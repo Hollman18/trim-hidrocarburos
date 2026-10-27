@@ -42,8 +42,10 @@ export function Ramas({ nodo, base, codigos = 'no', abiertas = 3, rotuloBase = '
 interface Comun { base: number; codigos: VerCodigos; abiertas: number; profundidad: number; rotuloBase: string }
 
 /** Las ramas de un nivel: las primeras a la vista y las demás detrás de «ver más». */
-function Hermanas({ hijos, id, oculta = false, className, ...c }: Comun & { hijos: NodoArbol[]; id?: string; oculta?: boolean; className?: string }) {
+function Hermanas({ hijos: todos, id, oculta = false, className, ...c }: Comun & { hijos: NodoArbol[]; id?: string; oculta?: boolean; className?: string }) {
   const [todas, setTodas] = useState(false)
+  // A-25 (borrado.md): la rama vacía de la pérdida se repetía en cada tramo; se dice una vez, debajo del árbol.
+  const hijos = todos.filter(n => !(n.dimension === 'impacto' && n.valor === 'perdida' && n.filas === 0))
   const propio = useId()
   const idLista = id ?? propio
   const corta = hijos.length > A_LA_VISTA && !todas

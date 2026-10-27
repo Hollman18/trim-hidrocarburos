@@ -23,48 +23,43 @@ const fuera = (page: Page) => page.evaluate(() => {
   }).length
 })
 
-test('H3 · Bombas: la marca de cada placa es la del equipo, la misma que en Equipos y en la franja (MPP-301 ▲ atención, no ■ aviso)', async ({ flujo: f }) => {
+// B3 · A-15: la pantalla Bombas se borró (su contenido es un filtro de Equipos y la ficha vive en el nivel 3).
+// Lo que se probaba en cada placa se prueba ahora donde vive: la lista y el nivel 3, con el kit SCADA.
+test('H3 · la marca de la bomba en su nivel 3 es la del equipo, la misma que en la lista y en la franja (MPP-301 ▲ atención, no ■ aviso)', async ({ flujo: f }) => {
   const { page } = f
-  await f.abrir('/#/conf/bombas/morichal/curso')
-  await page.locator('main [data-placa="MPP-301"]').waitFor()
-  const placas = Object.fromEntries(await page.locator('main [data-placa]').evaluateAll(es => es.map(e => [e.getAttribute('data-placa') ?? '', e.getAttribute('data-condicion') ?? ''])))
-  const formas = await page.locator('main [data-placa="MPP-301"] > div').first().locator('svg[role=img]').evaluateAll(es => es.map(e => e.getAttribute('aria-label')))
-  await expect(page.locator('main [data-placa="MPP-301"]')).toContainText('Atención ·')
+  await f.abrir('/#/conf/equipos/morichal')
   const lista = await marcasDeLaLista(page, 'morichal')
-  f.ok(placas['MPP-301'] === 'atencion' && placas['MPP-301'] === lista['MPP-301'] && placas['P-201B'] === lista['P-201B'],
-    `la placa dice lo mismo que la lista de Equipos: MPP-301 ${placas['MPP-301']} = ${lista['MPP-301']}; P-201B ${placas['P-201B']} = ${lista['P-201B']}`)
-  f.ok(formas.length === 1 && formas[0] === 'Atención', `una sola marca en la cabecera de la placa, con su palabra (${formas.join(', ')})`)
+  await f.ir('#/conf/equipos/morichal/MPP-301')
+  const n3 = page.locator('main [data-nivel3="MPP-301"]')
+  await n3.waitFor()
+  await expect(n3).toContainText('Atención')
+  f.ok(lista['MPP-301'] === 'atencion', `en la lista, MPP-301 en atención (${lista['MPP-301']})`)
+  f.ok(/Atención ·/.test(await n3.innerText()), 'la condición con su palabra, la misma de la lista')
   f.cerrar()
 })
 
-test('H12 · H5 · G-16 · T-8 · Bombas: cada variable con la escala fija del motor; «Si falla hoy» en bbl/d; nada «se pierde»', async ({ flujo: f }) => {
+test('H12 · H5 · G-16 · T-8 · el nivel 3: cada variable con la barra del kit (escala fija, banda y alarma); «Si falla hoy» en bbl/d; nada «se pierde»', async ({ flujo: f }) => {
   const { page } = f
-  await f.abrir('/#/conf/bombas/morichal/curso')
-  const p201b = page.locator('main [data-placa="P-201B"]')
-  await p201b.locator('[data-senal-fija]').first().waitFor()
-  // El indicador de alto desempeño (con su banda y su alarma) y la minitendencia, en cada variable de la placa.
-  const variables = await p201b.locator('[data-senal-fija]').count()
-  const indicadores = await p201b.locator('[data-senal-fija] svg[role=img][aria-label*="normal"]').count()
-  f.ok(variables === 4 && indicadores === 4 && await page.locator('main .analogico').count() === 0,
-    `las 4 variables de la placa llevan el indicador de escala fija (${indicadores} de ${variables}) y ya no el indicador viejo`)
-  await expect(p201b.locator('[data-si-falla-hoy]')).toHaveText(/^Si falla hoy: 783 bbl\/d después de 10,1 h de colchón/)
+  await f.abrir('/#/conf/equipos/morichal/P-201B')
+  const senales = page.locator('main [data-sus-senales]')
+  await senales.locator('[data-kit="barra"]').first().waitFor()
+  const barras = await senales.locator('[data-kit="barra"]').count()
+  const conBanda = await senales.locator('[data-kit="barra"][aria-label*="normal"]').count()
+  f.ok(barras >= 4 && conBanda === barras && await page.locator('main .analogico').count() === 0, `cada variable con la barra del kit (${conBanda} de ${barras}) y ya no el indicador viejo`)
+  await expect(page.locator('main [data-si-falla-ficha="P-201B"]')).toHaveText(/^Si falla hoy: 783 bbl\/d después de 10,1 h de colchón/)
   const t = await texto(page)
   f.ok(!/se pierde|pierde \d|si se para/i.test(t), '«Si falla hoy», no «si se para»; y lo diferido no «se pierde»')
   f.cerrar()
 })
 
-test('P-bombas-1 · X2 B9 · Bombas de La Ceiba: la placa parada en gris y sin marca por señal; «573 bbl · calculado ⓘ» sin el rango ni la hora repetidos', async ({ flujo: f }) => {
+test('P-bombas-1 · X2 B9 · la bomba parada de La Ceiba: sus variables en gris y sin marca propia (el kit en «parado»)', async ({ flujo: f }) => {
   const { page } = f
-  await f.abrir('/#/sup/bombas/ceiba/curso')
-  const placa = page.locator('main [data-placa="P-201B"]')
-  await placa.locator('[data-senal-fija]').first().waitFor()
-  const senales = await placa.locator('[data-senal-fija]').evaluateAll(es => es.map(e => ({ gris: e.getAttribute('data-gris'), marcas: e.querySelectorAll('svg[viewBox="0 0 14 14"]').length })))
-  f.ok(senales.length > 0 && senales.every(s => s.gris === 'si' && s.marcas === 0), `con la bomba parada, sus ${senales.length} señales en gris y sin marca propia`)
-  await expect(placa.locator('[data-diferido-placa]')).toHaveText(/^573 bbl\s*calculado/)
-  const t = await texto(page)
-  f.ok(!t.includes('487 – 659') && !/bbl\/h/.test(t) && !/14:00/.test(await page.locator('main [data-bombas-detenidas]').innerText()),
-    'el rango y el ritmo van a la ⓘ; debajo de la cifra, «1 bomba detenida · 2 pozos cerrados», sin la hora')
-  await expect(page.locator('main [data-bombas-detenidas]')).toHaveText('1 bomba detenida · 2 pozos cerrados')
+  await f.abrir('/#/sup/bombas/ceiba/curso/P-201B')
+  f.ok((await f.hash()).startsWith('#/sup/equipos/ceiba/P-201B'), 'la dirección de antes abre su nivel 3')
+  const barras = page.locator('main [data-sus-senales] [data-kit="barra"]')
+  await barras.first().waitFor()
+  const estados = await barras.evaluateAll(es => es.map(e => ({ estado: e.getAttribute('data-estado'), marcas: e.querySelectorAll('svg[viewBox="0 0 14 14"]').length })))
+  f.ok(estados.length > 0 && estados.every(x => x.estado === 'parado' && x.marcas === 0), `con la bomba parada, sus ${estados.length} señales en gris y sin marca propia`)
   f.cerrar()
 })
 
@@ -83,13 +78,14 @@ test('G-5 · H17 · H16 · Pozos: «Potencial del libro»; la marca de cada pozo
   f.cerrar()
 })
 
-test('P-esp-1 · Electrosumergibles: ninguna en falla, y cuáles están paradas por otro equipo', async ({ flujo: f }) => {
+test('P-esp-1 · A-15 · Electrosumergibles es un filtro de Equipos: las que cerró otro equipo lo dicen', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/prod/esp/ceiba/curso')
-  const cifra = page.locator('main [data-cifra="En falla ahora"]')
-  await expect(cifra).toContainText('Ninguna')
-  await expect(cifra).toContainText(/LC-0?\d+ y LC-\d+, cerradas por P-201B/)
-  f.ok(!(await texto(page)).includes('las paradas, por otra causa'), 'el vacío enseña: dice cuáles y por quién, no «por otra causa»')
+  f.ok((await f.hash()).startsWith('#/prod/equipos/ceiba'), `la dirección de antes abre Equipos (${await f.hash()})`)
+  await page.locator('main [data-fila-equipo]').first().waitFor()
+  const tipos = await page.locator('main [data-fila-equipo]').evaluateAll(es => es.map(e => e.getAttribute('data-fila-equipo')))
+  f.ok(tipos.length > 0 && tipos.every(t => /^LC-/.test(t ?? '')), `con el filtro de electrosumergibles: solo pozos con ESP (${tipos.length})`)
+  f.ok(await page.locator('main [data-dentro-de="P-201B"]').count() >= 1, 'las cerradas por P-201B dicen que van dentro de su cifra')
   f.cerrar()
 })
 
@@ -170,10 +166,10 @@ test('H34 · H3 · T-8 · G-16 · La ficha del gerente: «No arrancar» en tinta
   f.cerrar()
 })
 
-test('390 px · Bombas, Pozos, Electrosumergibles y Planta: nada se sale de la pantalla', async ({ flujo: f }) => {
+test('390 px · Equipos (con los filtros de antes), el nivel 3, Pozos y Planta: nada se sale de la pantalla', async ({ flujo: f }) => {
   const { page } = f
   await page.setViewportSize({ width: 390, height: 844 })
-  for (const r of ['/#/sup/bombas/ceiba/curso', '/#/conf/bombas/morichal/curso', '/#/prod/pozos/ceiba/curso', '/#/prod/esp/ceiba/curso', '/#/prod/planta/ceiba/curso']) {
+  for (const r of ['/#/sup/equipos/ceiba', '/#/conf/equipos/morichal/P-201B', '/#/prod/pozos/ceiba/curso', '/#/prod/esp/ceiba/curso', '/#/prod/planta/ceiba/curso']) {
     await f.abrir(r)
     await page.waitForTimeout(300)
     const n = await fuera(page)

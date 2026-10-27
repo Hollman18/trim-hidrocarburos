@@ -1,11 +1,14 @@
 // De punta a punta: «La tubería del campo» y «La tubería del agua» como las ve
-// producción (U2 §2 y §5). Lo que limita va en tinta, nunca en
+// producción (U2 §2 y §5); en la v3, la del campo una sola vez, en su inicio, con el kit SCADA. Lo que limita va en tinta, nunca en
 // rojo; lo perdido por tramo suma lo mismo que el diferido del libro; La Zarza
 // muestra el estado de campo de gas; la tubería del agua de La Ceiba trae sus
 // tres bombas y el colchón; y en el teléfono nada se sale de la pantalla.
+import type { Page } from '@playwright/test'
 import { test, type Flujo } from './apoyo.ts'
 
 /** «11.360» → 11360 (cifras con punto de miles y coma decimal). */
+/** En Safari, Tab no pasa por enlaces ni botones (la preferencia del sistema): Option+Tab sí, como en `arreglos-f1`. */
+const tab = (page: Page) => page.keyboard.press(page.context().browser()?.browserType().name() === 'webkit' ? 'Alt+Tab' : 'Tab')
 const num = (t: string) => Number(t.replace(/\./g, '').replace(',', '.'))
 /** 11360 → «11.360», como lo escribe la pantalla (sin depender del ICU de Node). */
 const miles = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -20,39 +23,48 @@ const colorDe = (f: Flujo, token: string) => f.page.evaluate(t => {
   return c
 }, token)
 
-// K1 · P-16 / H8: Producción y Planta ya no montan la tubería de antes (`choke/Tuberia.tsx`, borrada): montan la de
-// La planta viva con la lente técnica (`TuberiaTecnica`). Lo que se probaba de la de antes se prueba donde quedó.
+// v3 (B2, A-10): la tubería del campo va UNA vez, en el inicio de producción (La planta viva con la lente
+// técnica), dibujada con el kit SCADA (`[data-tuberia-kit]`); Producción y Planta ya no la repiten. Lo que se
+// probaba de la de antes se prueba donde quedó; lo perdido por tramo, en el balance del choke de Resultados.
 test('La Ceiba: la tubería del campo, lo que limita sin rojo, lo que le sobra y lo perdido por tramo', async ({ flujo: f }) => {
-  await f.abrir('/#/prod/produccion/ceiba/curso')
-  await f.esperarTexto('La tubería del campo')
+  await f.abrir('/#/prod/planta-viva/ceiba/curso')
+  const tuberia = f.page.locator('main [data-tuberia-kit]')
+  await tuberia.waitFor()
   const rojo = await colorDe(f, '--p1'), naranja = await colorDe(f, '--p2'), tinta = await colorDe(f, '--tinta')
-  const tecnica = f.page.locator('main [data-tuberia-tecnica]')
+
+  await test.step('Una sola tubería: Producción y Planta no la repiten (A-10)', async () => {
+    f.ok(await f.page.locator('main [data-tuberia-kit]').count() === 1 && (await tuberia.getAttribute('data-tuberia-kit')) === 'pozo,planta,exportacion',
+      `en el inicio, una: pozos → planta → salida (${await tuberia.getAttribute('data-tuberia-kit')})`)
+    for (const ruta of ['#/prod/produccion/ceiba/curso', '#/prod/planta/ceiba/curso']) {
+      await f.ir(ruta)
+      f.ok(await f.page.locator('main [data-tuberia-kit], main [data-tuberia-tecnica], main svg[data-tuberia]').count() === 0, `${ruta}: sin la segunda tubería`)
+    }
+    await f.ir('#/prod/planta-viva/ceiba/curso')
+    await tuberia.waitFor()
+  })
 
   await test.step('Lo que limita: la palabra «◄ limita» en tinta, en su tramo, y ningún rojo', async () => {
     const x = await f.page.evaluate(() => {
-      const fila = [...document.querySelectorAll<HTMLElement>('main [data-tuberia-tecnica] [data-capacidad]')].find(e => /◄\s*limita/.test(e.textContent ?? ''))
-      const m = fila && [...fila.querySelectorAll<HTMLElement>('b')].find(b => /◄\s*limita/.test(b.textContent ?? ''))
-      return fila && m ? { tramo: fila.dataset.capacidad, texto: m.textContent ?? '', color: getComputedStyle(m).color } : null
+      const m = [...document.querySelectorAll<HTMLElement>('main [data-tuberia-kit] [data-tramo-kit] span')].find(e => /◄\s*limita/.test(e.textContent ?? '') && e.children.length === 0)
+      return m ? { tramo: m.closest<HTMLElement>('[data-tramo-kit]')?.dataset.tramoKit, color: getComputedStyle(m).color } : null
     })
     f.ok(x !== null, 'la tubería marca un tramo que limita')
     if (!x) return
     f.ok(x.tramo === 'pozo', `en La Ceiba limitan los pozos (${x.tramo})`)
     f.ok(x.color === tinta && x.color !== rojo && x.color !== naranja, `«◄ limita» escrito en la tinta, no en rojo ni naranja (${x.color})`)
-    // En el dibujo, el tramo que limita lleva un contorno en tinta (no rojo) y su rótulo lo dice.
-    const pozos = await tecnica.locator('svg[data-tuberia] [data-tramo="pozo"]').textContent() ?? ''
-    f.ok(/limita/.test(pozos), `el rótulo del tramo de los pozos dice «limita» («${pozos.slice(0, 40)}»)`)
-    // Ningún elemento de la tubería usa el rojo ni el naranja de alarma, salvo la marca del equipo (un SVG con su forma).
-    const conColor = await f.page.evaluate(([r, n]) => [...document.querySelectorAll<HTMLElement>('main [data-tuberia-tecnica] *')]
+    f.ok(/limita/.test(await tuberia.locator('[data-tramo-kit="pozo"] svg[role="img"]').getAttribute('aria-label') ?? ''), 'el nombre del dibujo de los pozos dice «limita»')
+    const conColor = await f.page.evaluate(([r, n]) => [...document.querySelectorAll<HTMLElement>('main [data-tuberia-kit] *')]
       .filter(e => !(e instanceof SVGElement))
       .filter(e => { const c = getComputedStyle(e); return [c.color, c.borderTopColor, c.backgroundColor].some(v => v === r || v === n) })
       .map(e => e.textContent?.trim().slice(0, 30) ?? e.tagName), [rojo, naranja])
     f.ok(conColor.length === 0, `la tubería no pinta nada de rojo ni naranja fuera de la marca del equipo${conColor.length ? `: ${conColor.join(' | ')}` : ''}`)
-    const pintados = await f.page.evaluate(([r, n]) => [...document.querySelectorAll<SVGElement>('main [data-tuberia-tecnica] svg[data-tuberia] *')]
+    const pintados = await f.page.evaluate(([r, n]) => [...document.querySelectorAll<SVGElement>('main [data-tuberia-kit] svg *')]
       .filter(e => !e.closest('svg[viewBox="0 0 14 14"]') && !e.closest('[data-marca]'))
       .filter(e => { const c = getComputedStyle(e); return [c.fill, c.stroke].some(v => v === r || v === n) }).length, [rojo, naranja])
     f.ok(pintados === 0, `en el dibujo, el rojo y el naranja solo van en una marca (${pintados})`)
-    // La marca de P-201B (alarma) va con el equipo, en la hoja de la planta.
-    await tecnica.locator('svg[data-tuberia] [data-tramo="planta"]').click()
+    // La planta lleva la marca de P-201B (alarma); su hoja, el equipo con su marca.
+    f.ok(await tuberia.locator('[data-tramo-kit="planta"] [data-kit="area"][data-estado="anormal"] [data-marca="alarma"]').count() === 1, 'la planta lleva la marca de alarma de P-201B')
+    await tuberia.locator('[data-tramo-kit="planta"]').click()
     const hoja = f.page.locator('[data-hoja-tramo="planta"], [role=dialog][aria-label^="Planta"]').first()
     await hoja.waitFor()
     const marcas = await f.page.locator('[data-equipo-tramo="P-201B"] svg[role="img"]').evaluateAll(es => es.map(e => e.getAttribute('aria-label')))
@@ -60,21 +72,26 @@ test('La Ceiba: la tubería del campo, lo que limita sin rojo, lo que le sobra y
     await f.page.keyboard.press('Escape')
   })
 
-  await test.step('Lo que le sobra a la planta: su capacidad menos la de los pozos', async () => {
-    const de = async (k: string) => (await tecnica.locator(`[data-capacidad="${k}"]`).textContent()) ?? ''
-    const pozos = num(/dan ([\d.]+) bbl\/d/.exec(await de('pozo'))?.[1] ?? 'NaN')
-    const planta = num(/caben ([\d.]+) bbl\/d/.exec(await de('planta'))?.[1] ?? 'NaN')
-    const sobran = num(/le sobran ([\d.]+)/.exec(await de('planta'))?.[1] ?? 'NaN')
+  await test.step('Lo que le sobra a la planta: su capacidad menos la de los pozos; lo que sale hoy', async () => {
+    const cifra = async (k: string) => num((await tuberia.locator(`[data-tramo-kit="${k}"] b`).first().innerText()).trim())
+    const pozos = await cifra('pozo'), planta = await cifra('planta')
+    const sobran = num(/sobran ([\d.]+)/.exec(await tuberia.locator('[data-tramo-kit="planta"]').innerText())?.[1] ?? 'NaN')
     f.ok(Number.isFinite(pozos) && Number.isFinite(planta) && Math.abs(planta - pozos - sobran) <= 1, `a la planta le sobran ${sobran} = ${planta} − ${pozos}`)
-    const frase = await tecnica.locator('[data-frase-tecnica]').textContent() ?? ''
+    const frase = await f.page.locator('[data-produccion-cifra] [data-explica]').innerText()
     f.ok(frase.includes(`a la planta le sobran ${miles(sobran)} bbl/d`), `la frase de arriba lo dice: «${frase}»`)
-    // Lo que sale hoy y lo que no pasa ahora, en la tabla de la tubería (y en el dibujo, «Sale hoy»).
-    const todo = await tecnica.textContent() ?? ''
-    f.ok(todo.includes('Sale hoy') && todo.includes('No pasa ahora'), 'debajo, lo que sale hoy y lo que no pasa ahora')
+    const sale = await tuberia.locator('[data-tramo-kit="exportacion"]').innerText()
+    f.ok(sale.includes('salen hoy') && num(/([\d.]+)/.exec(sale)?.[1] ?? 'NaN') === Number(await f.page.locator('[data-produccion-cifra]').getAttribute('data-produccion-cifra')),
+      'la salida dice lo que sale hoy, la misma cifra grande')
+    // Lo que no pasa ahora, por tramo, lo dice la tubería del gerente (la misma planta viva, sin la lente técnica).
+    await f.ir('#/ger/planta-viva/ceiba/curso')
+    const noPasa = await f.page.locator('[data-tuberia-kit] [data-tramo-kit="planta"]').innerText()
+    f.ok(/1\.665\s+bbl\/d no pasan/.test(noPasa), `lo que no pasa ahora en la planta: 1.665 bbl/d («${noPasa.replace(/\s+/g, ' ')}»)`)
   })
 
-  await test.step('Lo perdido por tramo suma el diferido del período, el mismo del libro (en Diferidos, «Por tramo»)', async () => {
+  await test.step('Lo perdido por tramo suma el diferido del período, el mismo del libro (el balance del choke)', async () => {
     // El libro, por un camino: la columna «Diferido» del cuadre día por día de Producción (los días del mes en curso).
+    await f.ir('#/prod/produccion/ceiba/curso')
+    await f.esperarTexto('¿Cuadra?')
     const dias = await f.page.evaluate(() => {
       const tabla = [...document.querySelectorAll('table')].find(x => [...x.querySelectorAll('thead th')].some(th => th.textContent?.trim() === 'Diferido'))
       if (!tabla) return null
@@ -83,59 +100,58 @@ test('La Ceiba: la tubería del campo, lo que limita sin rojo, lo que le sobra y
     })
     f.ok(dias !== null && dias.length > 0, 'el cuadre diario trae el diferido de cada día')
     const delLibro = (dias ?? []).reduce((a, v) => a + num(v), 0)
-    // Y por tramo: «Se trabó en el período» de la tubería de antes vive en Diferidos («Por tramo», con su árbol).
+    // Diferidos ya no es pantalla (A-09): su dirección abre Resultados, con el balance por tramo.
     await f.ir('#/prod/diferidos/ceiba/curso')
-    await f.esperarTexto('Por tramo')
-    const se = await f.page.evaluate(() => {
-      const c = document.querySelector<HTMLElement>('main [data-por-tramo]')
-      const total = c?.querySelector<HTMLElement>('[data-total-tramos]')
-      return c && total ? { total: Number(total.dataset.totalTramos), filas: [...c.querySelectorAll<HTMLElement>('[data-tramo-fila] [data-tramo]')].map(e => [e.dataset.tramo!, Number(e.dataset.bbl)] as const) } : null
-    })
-    f.ok(se !== null, 'está «Por tramo», con el total del libro')
-    if (!se) return
-    const suma = se.filas.reduce((a, [, v]) => a + v, 0)
-    f.ok(se.filas.some(([k]) => k === 'sin-asignar'), '«sin identificar» va aparte, no repartido entre los tramos')
-    f.ok(Math.abs(suma - se.total) < 0.01, `los tramos y «sin identificar» suman el total: ${suma.toFixed(2)} = ${se.total.toFixed(2)}`)
-    f.ok(Math.abs(delLibro - se.total) <= (dias?.length ?? 0), `y suma lo mismo que el libro: ${delLibro} ≈ ${Math.round(se.total)}`)
-    const t = await f.texto()
-    f.ok(t.includes(`${miles(se.total)} bbl`), 'el total se escribe con su unidad')
-    await f.ir('#/prod/produccion/ceiba/curso')
-    await f.esperarTexto('La tubería del campo')
+    f.ok((await f.hash()).startsWith('#/prod/resultados/ceiba'), `la dirección de Diferidos abre Resultados (${await f.hash()})`)
+    const b = f.page.locator('main [data-balance]').first()
+    await b.waitFor()
+    const total = Number(await b.getAttribute('data-diferido'))
+    const filas = await b.locator('[data-tramo-balance]').evaluateAll(es => es.map(e => [e.getAttribute('data-tramo-balance')!, Number((e.querySelector('td')?.textContent ?? '').replace(/\D/g, ''))] as const))
+    const suma = filas.reduce((a, [, v]) => a + v, 0)
+    f.ok(filas.some(([k]) => k === 'sin-asignar'), '«sin identificar» va aparte, no repartido entre los tramos')
+    f.ok(suma === total, `los tramos y «sin identificar» suman el total: ${suma} = ${total}`)
+    f.ok(Math.abs(delLibro - total) <= (dias?.length ?? 0), `y suma lo mismo que el libro: ${delLibro} ≈ ${total}`)
+    f.ok((await b.getAttribute('data-perdido')) === 'sin-registro', 'la pérdida va aparte del diferido: «sin registro», nunca 0')
   })
 
   await test.step('Con el teclado: Tab pasa de un tramo a otro y Enter abre su hoja, con el enlace al agua', async () => {
-    const pozo = tecnica.locator('svg[data-tuberia] [data-tramo="pozo"]')
-    await pozo.focus()
-    await f.page.keyboard.press('Tab')
-    const enFoco = await f.page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.tramo)
+    await f.ir('#/prod/planta-viva/ceiba/curso')
+    await tuberia.locator('[data-tramo-kit="pozo"]').focus()
+    // Entre un tramo y el siguiente va la ⓘ de dónde sale su cifra (al lado del botón, nunca adentro).
+    await tab(f.page)
+    if (await f.page.evaluate(() => !(document.activeElement as HTMLElement | null)?.dataset.tramoKit)) await tab(f.page)
+    const enFoco = await f.page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.tramoKit)
     f.ok(enFoco === 'planta', `Tab lleva a la planta (${enFoco})`)
     await f.page.keyboard.press('Enter')
     await f.esperar(200)
     const t = await f.textoPagina()
-    f.ok(t.includes('¿Por qué?') && t.includes('Ver la tubería del agua'), 'Enter abre la hoja de la planta, con el enlace al agua')
+    f.ok(t.includes('¿Por qué?'), 'Enter abre la hoja de la planta, con su porqué')
+    f.ok(t.includes('Ver la tubería del agua'), 'la hoja de la planta lleva a la tubería del agua (B-04: nivel 2 al tocar el tramo)')
   })
 
   f.cerrar()
 })
 
 test('La Zarza muestra el estado de campo de gas', async ({ flujo: f }) => {
-  await f.abrir('/#/adm/planta/zarza/curso')
-  await f.esperarTexto('La tubería del campo')
-  const t = await f.texto()
-  f.ok(t.includes('La Zarza es un campo de gas: su tubería todavía no está.'), 'dice que es un campo de gas y que su tubería todavía no está')
-  f.ok(await f.page.locator('main [data-tuberia-tecnica] svg[data-tuberia]').count() === 0, 'no dibuja una tubería de crudo para un campo de gas')
+  // El administrador ya no tiene Planta (B-04); el gerente ve La Zarza en su inicio.
+  await f.abrir('/#/ger/planta-viva/zarza/curso')
+  const gas = f.page.locator('main [data-gas]')
+  await gas.waitFor()
+  f.ok((await gas.innerText()).includes('La Zarza es un campo de gas: su tubería todavía no está.'), 'dice que es un campo de gas y que su tubería todavía no está')
+  f.ok(await f.page.locator('main [data-tuberia-kit]').count() === 0, 'no dibuja una tubería de crudo para un campo de gas')
   f.cerrar()
 })
 
 test('La tubería del agua de La Ceiba: sus tres bombas y el colchón', async ({ flujo: f }) => {
-  await f.abrir('/#/prod/planta/ceiba/curso')
-  await f.esperarTexto('La tubería del campo')
+  await f.abrir('/#/prod/planta-viva/ceiba/curso')
   // C1 (experiencia v2): Agua es una subpantalla de La planta viva, listada en el panel debajo de su puerta.
-  const menu = await f.page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Navegación"] [data-subpantallas] button')].map(b => b.textContent?.trim() || b.getAttribute('aria-label')))
-  f.ok(menu.includes('Agua'), `producción tiene «Agua» en su menú (La planta viva · ${menu.join(' · ')})`)
-  // Desde la planta (la hoja de su tramo en la tubería, K1 · P-16) se llega a la tubería del agua (U2 §5.7).
-  await f.page.locator('main [data-tuberia-tecnica] svg[data-tuberia] [data-tramo="planta"]').click()
+  // B3 · v3 (flujos.md §2): Agua ya no es una puerta del panel (B-04); se llega desde la hoja de la planta (nivel 2).
+  const menu = await f.page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Navegación"] button')].map(b => b.textContent?.trim() ?? ''))
+  f.ok(!menu.includes('Agua'), `«Agua» no es una puerta del panel de producción (${menu.join(' · ')})`)
+  // Desde la planta (la hoja de su tramo en la tubería, B-04) se llega a la tubería del agua (U2 §5.7).
+  await f.page.locator('main [data-tuberia-kit] [data-tramo-kit="planta"]').click()
   f.ok(await f.clic('Ver la tubería del agua'), 'la hoja de la planta lleva a la tubería del agua')
+  if (!(await f.hash()).startsWith('#/prod/agua')) { await f.page.keyboard.press('Escape'); await f.ir('#/prod/agua/ceiba/curso') }
   await f.esperarTexto('La tubería del agua')
   f.ok((await f.hash()).startsWith('#/prod/agua/ceiba'), `y abre la pantalla Agua (${await f.hash()})`)
 
@@ -174,13 +190,13 @@ for (const ancho of [390, 320]) {
   test.describe(`${ancho} px`, () => {
     test.use({ viewport: { width: ancho, height: 860 }, isMobile: true })
 
-    test(`en el teléfono (${ancho} px) nada se sale: tubería de pie, escalera, mes a mes y agua`, async ({ flujo: f }) => {
-      for (const ruta of ['/#/prod/produccion/ceiba/curso', '/#/prod/planta/ceiba/curso', '/#/prod/agua/ceiba/curso', '/#/prod/produccion/ceiba/cerrado']) {
+    test(`en el teléfono (${ancho} px) nada se sale: tubería de pie, producción, factor y agua`, async ({ flujo: f }) => {
+      for (const ruta of ['/#/prod/planta-viva/ceiba/curso', '/#/prod/produccion/ceiba/curso', '/#/prod/planta/ceiba/curso', '/#/prod/agua/ceiba/curso', '/#/prod/produccion/ceiba/cerrado']) {
         await f.abrir(ruta)
         await f.esperar(300)
         const r = await f.page.evaluate(() => {
           const vw = document.documentElement.clientWidth
-          const paneles = [...document.querySelectorAll<HTMLElement>('[data-tuberia], [data-tuberia-agua], [data-serie], [data-escalera], [data-mensual]')]
+          const paneles = [...document.querySelectorAll<HTMLElement>('[data-tuberia-kit], [data-tuberia-agua], [data-diaria], [data-factor], [data-balance], [data-mensual], main section')]
           const fuera: string[] = []
           for (const p of paneles) {
             const caja = p.getBoundingClientRect()
@@ -195,14 +211,17 @@ for (const ancho of [390, 320]) {
               if (r.right > caja.right + 1.5 || r.left < caja.left - 1.5) fuera.push(`${e.tagName.toLowerCase()} «${(e.textContent ?? '').trim().slice(0, 30)}» ${Math.round(r.right - caja.right)} px`)
             }
           }
-          const dePie = document.querySelector<HTMLElement>('[data-dibujo="de-pie"]')
-          const acostada = document.querySelector<HTMLElement>('[data-dibujo="acostada"]')
+          const kit = document.querySelector<HTMLElement>('[data-tuberia-kit]')
           return { pagina: document.documentElement.scrollWidth - vw, paneles: paneles.length, fuera: [...new Set(fuera)].slice(0, 6),
-            dePie: dePie ? dePie.offsetParent !== null : null, acostada: acostada ? acostada.offsetParent !== null : null }
+            dePie: kit ? kit.hasAttribute('data-de-pie') : null, acostada: kit ? !kit.hasAttribute('data-de-pie') : null,
+            // La serie vieja era un <div data-serie>; las trazas del kit (<g data-serie>) son otra cosa.
+            sobra: document.querySelectorAll('[data-escalera], div[data-serie], section[data-serie]').length }
         })
         f.ok(r.pagina <= 0, `${ruta}: la página no se desplaza de lado (${r.pagina} px de más)`)
         f.ok(r.paneles > 0 && r.fuera.length === 0, `${ruta}: nada se sale de su panel${r.fuera.length ? `: ${r.fuera.join(' | ')}` : ''}`)
         if (r.dePie !== null) f.ok(r.dePie && !r.acostada, `${ruta}: la tubería va de pie en el teléfono`)
+        // La escalera y «qué limitó, día por día» salieron de la primera capa (escalón 1 de producción).
+        f.ok(r.sobra === 0, `${ruta}: sin la escalera ni la serie de lo que limitó`)
       }
       f.cerrar()
     })

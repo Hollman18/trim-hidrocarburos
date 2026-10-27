@@ -84,7 +84,7 @@ export default defineConfig(({ mode }) => {
     // escanea buscando dependencias (Vite lee TODOS los .html de la raíz, y el de
     // la copia arrastraba su propio src/main.tsx).
     server: {
-      watch: { ignored: ['**/.respaldos/**'] },
+      watch: { ignored: ['**/.respaldos/**', '**/e2e/.resultados/**', '**/e2e/.informe/**'] },
       // El navegador pide /api/… a este mismo origen; el proxy lo cambia por la
       // raíz del backend (`/api/vistas/x` → `${VITE_API_URL}/vistas/x`).
       ...(destino ? { proxy: { '/api': { target: destino.target, changeOrigin: true, rewrite: (p: string) => `${destino.prefijo}${p.slice('/api'.length)}` } } } : {}),

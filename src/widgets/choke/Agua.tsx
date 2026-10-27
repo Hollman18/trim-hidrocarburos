@@ -9,7 +9,6 @@ import { NOMBRE_PARTE } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
 import { AHORA, fechaHora } from '@/entities/reloj'
 import type { Severidad } from '@/entities/tipos'
-import { pantallaVisible } from '@/shared/config/producto'
 import { Panel, Boton } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -403,7 +402,8 @@ function LoDeLaBomba({ perfil, a, marca, desde, hasta, periodo }: {
 
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         <Boton onClick={() => abrirEquipo(perfil.equipo, false)}>Abrir {perfil.equipo}</Boton>
-        {rol.pantallas.includes('bombas') && pantallaVisible('bombas') && <Boton onClick={() => setPantalla('bombas')}>Ver la bomba y el orden de cierre</Boton>}
+        {/* B3 · A-15: Bombas es un filtro de Equipos; el orden de cierre va en la ficha de la bomba. */}
+        {rol.pantallas.includes('equipos') && <Boton onClick={() => setPantalla('equipos')}>Ver los equipos</Boton>}
       </div>
     </div>
   )

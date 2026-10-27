@@ -43,7 +43,7 @@ export function Diagnostico({ v }: { v: VistaNivel3 }) {
         </TarjetaN3>
       )}
       {/* Los títulos de cada tarjeta, en h2 (A15): la vista se recorre por encabezados sin saltos. */}
-      <section aria-label="SAP" className="rounded-[20px] bg-[var(--panel)] px-5 pb-4 pt-1 sm:px-7">
+      <section aria-label="SAP" className="rounded-[10px] bg-[var(--panel)] px-5 pb-4 pt-1 sm:px-7">
         <BloqueSap campoId={v.campoId} equipo={v.equipo} nivel={nivel} titulo="h2" />
       </section>
     </div>

@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Search } from 'lucide-react'
 import { useApp, useAmbito, useRol } from '@/app/store'
 import {
   useListaEquipos, FILTROS_ESTADO, NOMBRE_FILTRO, TIPOS_EQUIPO, NOMBRE_TIPO, TRENES, NOMBRE_TREN, PALABRA_CONDICION,
-  type FilaEquipoTecnico, type TipoEquipo, type TrenEquipo, type VistaEquipos,
+  type FilaEquipoTecnico, type TipoEquipo, type TrenEquipo,
 } from '@/shared/api/equiposTecnico'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { Hueco, Chip } from '@/shared/ui/primitivas'
@@ -11,9 +11,12 @@ import { Info } from '@/shared/ui/Info'
 import { pantallaVisible } from '@/shared/config/producto'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { EnRiesgo } from '@/widgets/riesgo/EnRiesgo'
-import { ID_EN_RIESGO, irAlAncla } from '@/widgets/riesgo/ancla'
-import { useTelefono } from '@/shared/ui/telefono'
+import { CabezaConf } from './CabezaConf'
+import { useSesion } from '@/shared/api/sesion'
+import { perfilDe } from '@/entities/configuracion'
+import { hayEquipo } from '@/app/grupos'
+import { useCriticidad } from '@/shared/api/choke'
+import { TareasArriba } from '@/widgets/hoy/TareasArriba'
 import { useFiltrosEquipos } from './filtros'
 import { Pildoras, Tag, Marca, IrA } from './piezas'
 import { useIrA } from './navegar'
@@ -110,37 +113,11 @@ const coincide = (f: FilaEquipoTecnico, busca: string) => {
   return !b || f.equipo.toLowerCase().includes(b) || f.familia.toLowerCase().includes(b)
 }
 
-/** P-02 · La respuesta de confiabilidad, arriba de todo (X4 §3.4; X5 §5.1): el
- *  primero de «Si falla hoy» como cifra grande (bbl/d, D-2), la frase del motor
- *  y los tres primeros de la lista, cada uno con «›» a su nivel 3. Lo arma el
- *  motor (`primero`): aquí solo se pinta. */
-function Primero({ v, global }: { v: VistaEquipos; global: boolean }) {
-  const irA = useIrA()
-  const id = useId()
-  const p = v.primero
-  if (!p) return null
-  return (
-    <section aria-label="Si falla hoy, lo primero" data-primero className="rounded-[20px] bg-[var(--panel)] px-5 pb-2 pt-4 sm:px-7 sm:pt-5">
-      <div role="group" aria-labelledby={`${id}-cifra ${id}-unidad ${id}-frase`}>
-        {/* K2 · «Si falla hoy»: que es lo primero ya lo dicen la cifra y «Ataque primero…». */}
-        <p className="text-[17px] text-[var(--tinta2)]">Si falla hoy</p>
-        <p className="mt-1 flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
-          <b id={`${id}-cifra`} className="tabular text-[48px] font-bold leading-[1] tracking-[-.03em] sm:text-[54px]" data-cifra>{n0(p.valor)}</b>
-          <span id={`${id}-unidad`} className="text-[20px] text-[var(--tinta2)]">barriles por día</span>
-        </p>
-        <p id={`${id}-frase`} className="mt-2 text-[19px] font-medium leading-snug" data-frase>{p.frase}</p>
-        {/* K2 · El colchón («después de 2 min de colchón») es una salvedad de la cifra: va a su ⓘ. */}
-        <p className="mt-1 flex items-center gap-1.5 text-[15px] text-[var(--tinta2)]" data-calidad-primero>
-          calculado{p.detalle && <Info titulo="Si falla hoy" texto={`Lo que se dejaría de producir si falla hoy, ${p.detalle}.`} />}
-        </p>
-      </div>
-      <div className="mt-2" data-primeros>
-        {p.filas.map(f => <FilaEquipo key={`${f.campoId}|${f.equipo}`} f={f} global={global} enCabeza esLaGrande={!f.cifra.techo && f.cifra.valor === p.valor}
-          onAbrir={() => irA({ campoId: f.campoId, equipo: f.equipo })} />)}
-      </div>
-    </section>
-  )
-}
+/** Para confiabilidad, la lista va ordenada por «Si falla hoy» (flujos.md FF-8): lo medido de más a
+ *  menos, después los techos y al final lo demás, en el orden del motor. */
+const grupoSiFalla = (f: FilaEquipoTecnico) => (f.cifra.que === 'si falla hoy' && f.cifra.valor !== null ? (f.cifra.techo ? 1 : 0) : 2)
+const porSiFalla = (filas: readonly FilaEquipoTecnico[]) => [...filas].sort((a, b) => grupoSiFalla(a) - grupoSiFalla(b)
+  || (grupoSiFalla(a) < 2 ? (b.cifra.valor ?? 0) - (a.cifra.valor ?? 0) : 0))
 
 /** Equipos (X4 §3.6, fusión 1): todos los equipos de los campos en una lista,
  *  ordenada por estado y por «Si falla hoy», con sus filtros. El motor la arma
@@ -151,10 +128,16 @@ function Primero({ v, global }: { v: VistaEquipos; global: boolean }) {
  *  el tren y la búsqueda, detrás de «Más filtros» (una lista que se abre, no pestañas).
  *  Al jefe y a confiabilidad, debajo de la lista, lo que era su Riesgo (K1 · P-10). */
 export function ListaEquipos() {
-  const ambito = useAmbito(); const rol = useRol(); const telefono = useTelefono()
+  const ambito = useAmbito(); const rol = useRol()
   const setPantalla = useApp(s => s.setPantalla)
   const irA = useIrA()
   const v = useListaEquipos(ambito.campos.map(c => c.id))
+  const gas = useCriticidad(ambito.campos.map(c => c.id)).campos.filter(c => c.campoDeGas)
+  // Lo que era una subpantalla por familia (Bombas, Electrosumergibles) es un filtro: se ofrece si algún campo
+  // del alcance la tiene en su perfil firmado (la misma regla que `hayEquipo`, app/grupos.ts).
+  const config = useSesion(x => x.ctx.config)
+  const perfiles = ambito.campos.map(c => perfilDe(config, c.id))
+  const enPerfil = (t: TipoEquipo) => hayEquipo(t === 'bomba' ? 'bombas' : t === 'electrosumergible' ? 'esp' : t, perfiles)
   const { estado, tipo, tren, busca, poner } = useFiltrosEquipos()
   const idBusca = useId(), idMas = useId()
   const extras = (tipo !== 'todos' ? 1 : 0) + (tren !== 'todos' ? 1 : 0) + (busca.trim() ? 1 : 0)
@@ -163,16 +146,16 @@ export function ListaEquipos() {
   const [mas, setMas] = useState(extras > 0)
   const [extrasAntes, setExtrasAntes] = useState(extras)
   if (extras !== extrasAntes) { setExtrasAntes(extras); if (extras > extrasAntes) setMas(true) }
-  const filas = v.filas.filter(f => f.filtros.includes(estado) && (tipo === 'todos' || f.tipos.includes(tipo))
+  const conf = rol.id === 'conf', jefe = rol.id === 'jefe'
+  const filas = (conf ? porSiFalla(v.filas) : v.filas).filter(f => f.filtros.includes(estado) && (tipo === 'todos' || f.tipos.includes(tipo))
     && (tren === 'todos' || f.tren === tren) && coincide(f, busca))
   const trenes = TRENES.filter(t => v.cuentas.tren[t] > 0)
   const verAgua = tren === 'agua' && !ambito.global && rol.pantallas.includes('agua') && pantallaVisible('agua')
   const verPozos = tren === 'pozos' && rol.pantallas.includes('pozos') && pantallaVisible('pozos')
-  const conf = rol.id === 'conf', jefe = rol.id === 'jefe'
   const cabeza = conf && !!v.primero
-  // K2 · Con la cabeza de confiabilidad, en el teléfono, también el estado va detrás de «Filtrar ▾» (P-02:
-  // «los filtros, plegados en un desplegable»): la primera pantalla es la respuesta, no los filtros.
-  const plegar = cabeza && telefono
+  // B3 · Con la cabeza de confiabilidad, los filtros van todos detrás de «Filtrar» (borrado.md: «los 12 filtros»
+  // fuera de la primera capa): la primera pantalla es la respuesta, no los filtros.
+  const plegar = cabeza
   const puestos = extras + (plegar && estado !== 'todos' ? 1 : 0)
   const pildorasEstado = (
     <Pildoras etiqueta="Estado" valor={estado} onCambio={e => poner({ estado: e })}
@@ -181,32 +164,22 @@ export function ListaEquipos() {
 
   return (
     <div className="grid gap-3 sm:gap-4" data-lista-equipos>
-      {cabeza && <Primero v={v} global={ambito.global} />}
-
-      {/* Confiabilidad: el acierto del vigía, una línea arriba de Equipos (X4 §3.7). */}
-      {conf && (
-        <p className="rounded-[20px] bg-[var(--panel)] px-4 py-3 text-[16px] leading-snug sm:px-6" data-acierto-vigia>
-          {v.vigia.frase}
-          {rol.pantallas.includes('confiabilidad') && pantallaVisible('confiabilidad') && (
-            <IrA className="ml-2 align-middle" onClick={() => setPantalla('confiabilidad')}>Ver el detalle</IrA>
-          )}
-        </p>
-      )}
-
-      {/* P-10: lo que cada rol decide con «Si falla hoy» (U2 §6.4), arriba de la lista. */}
+      {cabeza && <CabezaConf v={v} />}
+      {/* P-10: dónde va el próximo instrumento, cuando no lo dice ya el primero (su decisión: el equipo, el modo y el instrumento). */}
       {conf && v.instrumento.map(t => (
         <p key={t} className="px-1 text-[15px] leading-snug text-[var(--tinta2)]" data-decide="conf">
           <b className="font-semibold text-[var(--tinta)]">¿Dónde va el próximo instrumento?</b> {t}
         </p>
       ))}
-      {jefe && v.noIntervenir.map(t => <p key={t} className="px-1 text-[15px] leading-snug text-[var(--tinta2)]" data-decide="jefe">{t}</p>)}
+      {/* Su Hoy se funde aquí: lo que le toca hacer, en tarjetas arriba de la lista. */}
+      {conf && <TareasArriba />}
       {jefe && v.avisosTrabajo.map(a => (
         <p key={`${a.campoId}|${a.tarea}`} className="px-1 text-[15px] leading-snug text-[var(--tinta2)]" data-aviso-trabajo={a.tarea}>
           {a.texto} <span className="text-[var(--tinta3)]">El programa lo cambia el administrador en Configuración, con firma.</span>
         </p>
       ))}
 
-      <section className="grid gap-3 rounded-[20px] bg-[var(--panel)] px-4 py-3 sm:px-6" aria-label="Filtros de la lista">
+      <section className="grid gap-3 rounded-[10px] bg-[var(--panel)] px-4 py-3 sm:px-6" aria-label="Filtros de la lista">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           {!plegar && pildorasEstado}
           <button type="button" aria-expanded={mas} aria-controls={idMas} onClick={() => setMas(x => !x)} data-mas-filtros
@@ -220,7 +193,7 @@ export function ListaEquipos() {
             {plegar && pildorasEstado}
             <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
               <Pildoras<TipoEquipo | 'todos'> etiqueta="Tipo" valor={tipo} onCambio={t => poner({ tipo: t })}
-                opciones={[{ id: 'todos', texto: 'Todos los tipos' }, ...TIPOS_EQUIPO.filter(t => v.cuentas.tipo[t] > 0).map(t => ({ id: t, texto: NOMBRE_TIPO[t], n: v.cuentas.tipo[t] }))]} />
+                opciones={[{ id: 'todos', texto: 'Todos los tipos' }, ...TIPOS_EQUIPO.filter(t => v.cuentas.tipo[t] > 0 && enPerfil(t)).map(t => ({ id: t, texto: NOMBRE_TIPO[t], n: v.cuentas.tipo[t] }))]} />
               <Pildoras<TrenEquipo | 'todos'> etiqueta="Tren" valor={tren} onCambio={t => poner({ tren: t })}
                 opciones={[{ id: 'todos', texto: 'Todos los trenes' }, ...trenes.map(t => ({ id: t, texto: NOMBRE_TREN[t], n: v.cuentas.tren[t] }))]} />
             </div>
@@ -234,21 +207,16 @@ export function ListaEquipos() {
         )}
       </section>
 
-      {/* «Cambió hoy»; a confiabilidad ya se lo dice su frase de arriba («hoy valen más») y cada fila («sube porque…»). */}
-      {!cabeza && v.cambioHoy.map(t => <p key={t} className="px-1 text-[15px] leading-snug text-[var(--tinta2)]" data-cambio-hoy><b className="font-semibold text-[var(--tinta)]">{t.split(':')[0]}:</b>{t.slice(t.indexOf(':') + 1)}</p>)}
-
-      <section className="rounded-[20px] bg-[var(--panel)] px-4 pb-4 pt-5 sm:px-6" aria-label={`Equipos: ${filas.length}`}>
+      {/* A-14: «Cambió hoy» ya no se repite aquí: lo dice cada fila («sube porque…») y, al jefe, su «Ojo» de Hoy. */}
+      <section className="rounded-[10px] bg-[var(--panel)] px-4 pb-4 pt-5 sm:px-6" aria-label={`Equipos: ${filas.length}`}>
         <header className="flex flex-wrap items-center gap-x-1 pb-1">
           <h2 className="text-[16px] font-semibold">{filas.length === 1 ? '1 equipo' : `${filas.length} equipos`}</h2>
-          <span className="text-[14px] text-[var(--tinta2)]">· ordenados por estado</span>
-          <Info titulo="El orden" texto="Por estado, de la condición más grave a ninguna (lo parado primero) y, dentro de cada estado, por lo que costaría si falla hoy. La cifra es lo que se deja de producir ahora o, si está en marcha, lo que costaría si falla hoy." />
+          <span className="text-[14px] text-[var(--tinta2)]">· {conf ? 'ordenados por «Si falla hoy»' : 'ordenados por estado'}</span>
+          <Info titulo="El orden" texto={conf ? 'Por lo que costaría si falla hoy, de más a menos: primero lo calculado, después los techos («hasta») y al final lo que no tiene cifra.' : 'Por estado, de la condición más grave a ninguna (lo parado primero) y, dentro de cada estado, por lo que costaría si falla hoy. La cifra es lo que se deja de producir ahora o, si está en marcha, lo que costaría si falla hoy.'} />
         </header>
         {(verAgua || verPozos) && (
           <IrA className="mb-1" onClick={() => setPantalla(verAgua ? 'agua' : 'pozos')}>{verAgua ? 'Ver la tubería del agua' : 'Ver los pozos uno por uno'}</IrA>
         )}
-        {/* K1 · P-10: lo que era Riesgo va debajo de la lista; al jefe, el enlace lleva ahí y le pasa el foco. A
-            confiabilidad no: su cabeza ya abre en «Si falla hoy» y Equipos es su inicio (el teléfono no suma palabras). */}
-        {jefe && <IrA className="mb-1" onClick={() => irAlAncla(ID_EN_RIESGO)} data-ir-en-riesgo>Ver qué está en riesgo</IrA>}
         <div className="hidden gap-3 pb-1 text-[13px] text-[var(--tinta2)] md:grid md:grid-cols-[18px_minmax(0,1fr)_170px_150px_20px]" aria-hidden>
           <span /><span /><span>¿Lo vigila TRIM?</span><span /><span />
         </div>
@@ -261,9 +229,10 @@ export function ListaEquipos() {
         </div>
       </section>
 
-      {/* K1 · P-10: Riesgo del jefe y de confiabilidad, fundido aquí (X4 §3.6): nada de lo que traía se pierde. */}
-      {(conf || jefe) && <EnRiesgo rol={conf ? 'conf' : 'jefe'} />}
+      {/* A-13: «Qué está en riesgo» debajo de la lista se borró: repetía la cabeza, la franja y la lista. */}
 
+      {/* B-18: un campo de gas lo dice en una frase (lo que traía Riesgo), sin una lista de ceros. */}
+      {gas.map(c => <p key={c.campoId} className="px-1 text-[15px] leading-snug text-[var(--tinta2)]" data-campo-de-gas>{c.campoDeGas}</p>)}
       {v.sinRegistro.length > 0 && (
         <p className="px-1 text-[14px] leading-snug text-[var(--tinta2)]" data-sin-registro>
           Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): {[...new Set(v.sinRegistro.map(x => x.nombre))].join(', ')}.

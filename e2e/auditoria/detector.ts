@@ -320,6 +320,13 @@ export function detectar(): Hallazgo[] {
       // (isa-101 C2 de R3: «el último punto de las minigráficas, con su marca en la fila»).
       const fila = el.closest('button, li, tr, [role=row], [role=listitem]')
       if (fila && fila.querySelector(MARCA) && PAL.test(fila.textContent ?? '')) continue
+      // B4 · El kit SCADA en estado anormal (kit-scada.md §1, «Anormal»; Barra y Tendencia): el límite que el valor
+      // cruzó (`data-alarma`) toma el color de su prioridad, y su forma y su palabra van en la MISMA pieza: la marca
+      // junto al valor y la frase de la pieza («…; en alarma»). Solo esa raya y solo con las dos: una raya pintada
+      // sin la marca en su pieza sigue saliendo. (Chrome no la medía: una raya vertical tiene 0 px de ancho;
+      // Firefox le cuenta el trazo, y el auditor a 1280 px la marcaba en la barra de MPP-301.)
+      const kit = el.hasAttribute('data-alarma') ? el.closest('[data-kit][data-estado="anormal"]') : null
+      if (kit && kit.querySelector(MARCA) && /\ben (alarma|atención|aviso|interlock)\b/i.test(kit.getAttribute('aria-label') ?? kit.querySelector('svg[aria-label]')?.getAttribute('aria-label') ?? '')) continue
     }
     const clave = `${nombre} sin forma: ${desc(el)}`
     sinForma.set(clave, (sinForma.get(clave) ?? 0) + 1)

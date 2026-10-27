@@ -109,7 +109,7 @@ function Heroe({ v, sap, onSap, sapAbierto }: { v: VistaNivel3; sap?: string; on
   const decir = v.pregunta && destino && puedeHacer(rol.puede, 'causa:declarar')
   return (
     <section aria-label={`${v.equipo}: ${v.previo}`} data-heroe-equipo
-      className="grid items-center gap-x-7 gap-y-4 rounded-[20px] bg-[var(--panel)] px-5 py-4 sm:px-7 sm:py-5 lg:grid-cols-[minmax(0,1fr)_auto]">
+      className="grid items-center gap-x-7 gap-y-4 rounded-[10px] bg-[var(--panel)] px-5 py-4 sm:px-7 sm:py-5 lg:grid-cols-[minmax(0,1fr)_auto]">
       <div className="min-w-0">
         {/* La marca va pegada a la primera palabra: nunca sola en su renglón (UI-13). */}
         <p className="text-[17px] text-[var(--tinta2)]">
@@ -165,7 +165,7 @@ function Ahora({ v }: { v: VistaNivel3 }) {
     <div className="grid gap-3 sm:gap-4" data-nivel3={v.equipo}>
       <Heroe v={v} sap={sap} sapAbierto={sapAbierto} onSap={() => setSapAbierto(x => !x)} />
       {sapAbierto && (
-        <section aria-label="SAP" className="rounded-[20px] bg-[var(--panel)] px-5 pb-4 pt-1 sm:px-7" data-sap-equipo>
+        <section aria-label="SAP" className="rounded-[10px] bg-[var(--panel)] px-5 pb-4 pt-1 sm:px-7" data-sap-equipo>
           <BloqueSap campoId={v.campoId} equipo={v.equipo} nivel={nivel} />
         </section>
       )}

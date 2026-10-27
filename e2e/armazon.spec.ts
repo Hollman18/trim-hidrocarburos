@@ -10,14 +10,18 @@ const puertas = (f: { page: import('@playwright/test').Page }) => f.page.evaluat
 
 test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ninguna pestaña', async ({ flujo: f }) => {
   await test.step('Cada rol ve sus puertas, en el orden fijo, y abre en su respuesta', async () => {
+    // B3 · Experiencia v3 (flujos.md §2): las puertas que pasaron las tareas medidas. Con una sola
+    // (oper, tec, reg y adm) no hay menú: el panel no lista ninguna puerta.
     const casos: Array<[string, string, string[]]> = [
-      // C4: el gerente tiene su Equipos (la versión ejecutiva) y confiabilidad abre en Equipos (X4 §3.4).
-      ['ger', 'planta-viva', ['La planta viva', 'Equipos', 'Resultados']],
-      ['conf', 'equipos', ['Hoy', 'La planta viva', 'Equipos', 'Resultados']],
-      ['sup', 'hoy', ['Hoy', 'La planta viva', 'Equipos']],
-      ['prod', 'planta-viva', ['Hoy', 'La planta viva', 'Equipos', 'Resultados']],
-      ['reg', 'regulatorio', ['Reporte', 'La planta viva', 'Resultados']], // C5: su Resultados (lo anotó C4 al correr esta prueba)
-      ['adm', 'configuracion', ['Configurar', 'La planta viva']],
+      ['ger', 'planta-viva', ['La planta viva', 'Resultados']],
+      ['conf', 'equipos', ['Equipos', 'Resultados']],
+      ['sup', 'hoy', ['Hoy', 'Equipos']],
+      ['jefe', 'hoy', ['Hoy', 'Equipos', 'Resultados']],
+      ['prod', 'planta-viva', ['La planta viva', 'Resultados']],
+      ['oper', 'hoy', []],
+      ['tec', 'hoy', []],
+      ['reg', 'regulatorio', []],
+      ['adm', 'configuracion', []],
     ]
     for (const [rol, inicio, esperadas] of casos) {
       await f.abrir(`/#/${rol}/x/ceiba/curso`)
@@ -28,15 +32,31 @@ test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ning
   })
 
   await test.step('Las subpantallas van en el panel, debajo de su puerta; arriba no hay pestañas', async () => {
-    await f.abrir('/#/sup/bombas/ceiba/curso')
+    // Confiabilidad: su Resultados es Confiabilidad (B-03), adentro del panel, debajo de su puerta.
+    await f.abrir('/#/conf/confiabilidad/ceiba/curso')
     const subs = await f.page.evaluate(() => [...document.querySelectorAll('nav [data-subpantallas] button')].map(b => b.textContent?.trim()))
-    // F1 (UI-23): la primera subpantalla, que repite el nombre de su puerta, no se lista: la abre la puerta.
-    f.ok(subs.join(',') === 'Bombas,Electrosumergibles,Pozos', `Equipos del supervisor, adentro del panel: ${subs.join(', ')}`)
+    f.ok(subs.join(',') === 'Confiabilidad', `Resultados de confiabilidad, adentro del panel: ${subs.join(', ')}`)
     const arriba = await f.page.evaluate(() => document.querySelectorAll('main [data-subpantallas], main > [role=tablist], header [role=tablist]').length)
     f.ok(arriba === 0, 'ninguna barra de subpantallas en el contenido ni en la cabecera')
-    f.ok((await f.hash()).startsWith('#/sup/bombas/ceiba/'), 'la dirección de antes (#/sup/bombas/…) sigue abriendo')
-    f.ok(await f.clic('Pozos'), 'escoge Pozos en el panel'); await f.esperar(500)
-    f.ok((await f.hash()).startsWith('#/sup/pozos/'), 'y se abre')
+    // A-15: Bombas y Electrosumergibles son filtros de Equipos; la dirección de antes abre Equipos con su filtro.
+    await f.abrir('/#/sup/bombas/ceiba/curso')
+    f.ok((await f.hash()).startsWith('#/sup/equipos/ceiba'), `la dirección de antes (#/sup/bombas/…) abre Equipos (${await f.hash()})`)
+    f.ok((await f.texto()).includes('3 equipos'), 'con el filtro de las bombas puesto: 3 equipos')
+    await f.abrir('/#/sup/turno/ceiba/curso')
+    f.ok((await f.hash()).startsWith('#/sup/hoy/'), 'A-01: la dirección de Turno abre Hoy')
+    await f.abrir('/#/jefe/mantenimiento/ceiba/curso')
+    f.ok((await f.hash()).startsWith('#/jefe/hoy/'), 'A-12: la dirección de Mantenimiento abre el Hoy del jefe')
+  })
+
+  await test.step('A-22: la planeadora (apagada) y abastecimiento (salió) dicen que no están, sin abrir producción', async () => {
+    for (const r of ['plan', 'cont']) {
+      await f.page.goto(`/#/${r}/hoy/ceiba/curso`); await f.esperar(900)
+      const t = await f.textoPagina()
+      f.ok(t.includes('Este rol todavía no está disponible') && !t.includes('La planta viva') && (await f.hash()).startsWith(`#/${r}/`),
+        `${r}: «Este rol todavía no está disponible», la dirección queda como vino (${await f.hash()})`)
+    }
+    f.ok(await f.clic('Entrar como'), 'y se puede entrar con el rol de siempre'); await f.esperar(600)
+    f.ok(!(await f.hash()).startsWith('#/cont/'), `sale del aviso (${await f.hash()})`)
   })
 
   await test.step('«[» pliega y despliega el panel, y se recuerda', async () => {
@@ -82,9 +102,9 @@ test.describe('en el teléfono', () => {
     f.ok(await f.clic('Abrir la navegación'), 'el ☰ abre el panel'); await f.esperar(400)
     const panel = await f.page.evaluate(() => { const d = document.querySelector('[role=dialog][aria-label="Navegación"]'); const r = d?.getBoundingClientRect(); return r ? { x: Math.round(r.left), w: Math.round(r.width) } : null })
     f.ok(!!panel && panel.x === 0 && Math.abs(panel.w - 390 * 0.84) < 2, `desde la izquierda, al 84 % del ancho (${JSON.stringify(panel)})`)
-    f.ok((await puertas(f)).join(' · ') === 'Hoy · La planta viva · Equipos', 'las mismas puertas del escritorio, en el mismo orden')
-    await f.page.locator('[role=dialog] button', { hasText: 'La planta viva' }).first().click(); await f.esperar(600)
-    f.ok((await f.hash()).startsWith('#/sup/planta-viva/') && await f.page.locator('[role=dialog][aria-label="Navegación"]').count() === 0, 'escoger una puerta la abre y cierra el panel')
+    f.ok((await puertas(f)).join(' · ') === 'Hoy · Equipos', 'las mismas puertas del escritorio, en el mismo orden')
+    await f.page.locator('[role=dialog] button', { hasText: 'Equipos' }).first().click(); await f.esperar(600)
+    f.ok((await f.hash()).startsWith('#/sup/equipos/') && await f.page.locator('[role=dialog][aria-label="Navegación"]').count() === 0, 'escoger una puerta la abre y cierra el panel')
     f.cerrar()
   })
 })

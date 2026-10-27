@@ -18,7 +18,7 @@ import { modo as modoIso, mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entit
 import { campoPorId } from '@/entities/campos'
 import { fechaHora, horasEntre, AHORA } from '@/entities/reloj'
 import { fraseParte, fmtHoras } from '@/widgets/bombas/comun'
-import { Panel, Boton, Chip } from '@/shared/ui/primitivas'
+import { Panel, Boton, Chip, Enlace } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
@@ -43,7 +43,7 @@ import { ChevronRight } from 'lucide-react'
 const REGLA = 'Un pozo o una bomba que paró sin causa identificable por su señal no se arranca hasta que quien lo revise registre aquí qué se dañó. TRIM no escribe en el PLC ni bloquea el arranque: la regla es de procedimiento. Si arranca antes, la parada queda como no conformidad, con la hora del PLC.'
 
 export function Causa() {
-  const ambito = useAmbito(); const rango = useRango(); const rol = useRol(); const persona = usePersona()
+  const ambito = useAmbito(); const rango = useRango(); const rol = useRol()
   const ids = ambito.campos.map(c => c.id)
   const lb = useLibro({ campos: ids, desde: rango.desde, hasta: rango.hasta })
   const preguntas = usePreguntas(ids)
@@ -93,10 +93,17 @@ export function Causa() {
   const opera = rol.nivel === 'operacion'
   // El operador y el técnico: UNA lista «POR CONTESTAR», una tarjeta por parada (B-02; U1 §2.7).
   const deCampo = !ROLES_QUE_CONTESTAN.revisa.includes(rol.id)
-  // Quien no puede responder (o el rol sin nadie con acceso) lo lee una vez, aquí, y no en cada tarjeta.
-  const responde = puede && !persona.sinAcceso
+  // B3 · FF-2 y B-06: la misma pregunta en un solo lugar. Aquí queda la cadena de 6 pasos, «una por
+  // una»; se CONTESTA en Hoy (o, a confiabilidad, arriba de su Equipos), con un toque y su «Deshacer».
+  const responde = false
+  const setPantalla = useApp(s => s.setPantalla)
+  const irAContestar = () => setPantalla(rol.pantallas.includes('hoy') ? 'hoy' : rol.inicio)
+  const dondeSeContesta = puede && (
+    <p className="mb-2.5 flex flex-wrap items-center gap-x-2 px-1 text-[15px] text-[var(--tinta2)]" data-se-contesta-en-hoy>
+      Se contesta en {rol.pantallas.includes('hoy') ? 'Hoy' : 'su inicio'}, con un toque. <Enlace onClick={irAContestar}>Contestar</Enlace>
+    </p>
+  )
   const hayTarjetas = pendientes.length + noConformes.length > 0
-  const porResponder = pendientes.length + noConformes.filter(p => !p.causa.declarado).length > 0
   // Las que esperan el análisis son trabajo pendiente: nunca quedan detrás de
   // «ver N más». Tampoco lo que en esta visita estuvo por analizar o se acaba
   // de responder: al guardarlo baja a su lugar por fecha, y no puede irse de la
@@ -159,12 +166,6 @@ export function Causa() {
       <Bloqueo b={{ texto: 'No arrancar hasta identificar el daño', sub: 'Si arranca antes, queda como no conformidad.' }} />
       <span className="flex flex-wrap items-center gap-x-1.5 px-1 text-[14px] text-[var(--tinta2)]">La regla completa <Info titulo="Regla de operación" texto={REGLA} /></span>
       {hayTarjetas && !puede && <span className="basis-full text-[13px] text-[var(--tinta2)]">Su rol no responde paradas: lo hace operación o mantenimiento.</span>}
-      {porResponder && puede && persona.sinAcceso && (
-        <span className="flex basis-full flex-wrap items-center gap-x-1 text-[13px] text-[var(--tinta2)]">
-          Nadie con acceso activo tiene este rol.
-          <Info titulo="Sin persona con acceso" texto="La respuesta la da una persona con acceso, no un rol." />
-        </span>
-      )}
     </div>
   )
   const declaradasPanel = (
@@ -189,15 +190,13 @@ export function Causa() {
     return (
       <>
         {regla}
+        {dondeSeContesta}
         {/* Otro rol es otra lente: lo que estaba abierto no pasa de un rol a otro. */}
         <ArbolIdentificar key={rol.id} campos={ids} desde={rango.desde} hasta={rango.hasta} global={ambito.global} periodo={rango.nombre}
           nAntes={delLibro.length} excluir={new Set(delLibro.map(p => p.id))}
           antes={<>{avisoRespondido}{delLibro.map(tarjeta)}</>} />
         {declaradasPanel}
-        <details className="mt-2.5 rounded border border-[var(--linea)] bg-[var(--panel)] shadow-[var(--sombra)] print:open:block" data-indicadores>
-          <summary className="flex min-h-12 cursor-pointer items-center px-3 text-[14px] text-[var(--tinta2)] sm:min-h-9">Cómo va la identificación del período</summary>
-          <div className="px-3 pb-3">{cabecera}</div>
-        </details>
+        {/* A-29: los porcentajes de identificación y el histórico son de confiabilidad y de producción. */}
       </>
     )
   }
@@ -208,6 +207,7 @@ export function Causa() {
 
       {/* La regla de operación: «no arrancar» a la vista; el procedimiento completo, en el ⓘ. */}
       {regla}
+      {dondeSeContesta}
 
       {/* Las que siguen paradas; las que ya arrancaron sin identificar van en «No conformidades». */}
       <Panel className="mb-2.5" titulo="Por identificar · sin arrancar" extra={<>{pendientes.length}<span className="sr-only"> sin arrancar</span></>}>
@@ -221,7 +221,7 @@ export function Causa() {
         {pendientes.map(tarjeta)}
       </Panel>
 
-      {opera && cabecera}
+      {/* A-29: a quien opera, sin los porcentajes del período. */}
 
       {/* La cadena de 6 pasos de cada parada para la ANH (U1 §2; U2 §4): después
           de lo que no se arranca, que es una instrucción de seguridad. */}

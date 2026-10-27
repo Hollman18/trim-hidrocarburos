@@ -1,5 +1,7 @@
 import { useCriticidad, DONDE_CHOKE, type FilaCriticidad, type VistaCriticidad } from '@/shared/api/choke'
 import { useEquiposDeHoy } from '@/shared/api/equipos'
+import { useRiesgo } from '@/shared/api/diferidos'
+import { costoHoy, detalleCostoHoy, colchonCorto } from '@/shared/ui/costoHoy'
 import { useFranja, type CondicionFranja } from '@/shared/api/condiciones'
 import { condicionDe, PALABRA_CONDICION } from './condicion'
 import { campoPorId } from '@/entities/campos'
@@ -69,7 +71,7 @@ export function SiFallaHoy({ campos, global, rol, sinDecisiones = false, sinCamb
   const franja = useFranja(campos)
   const sev = (f: FilaCriticidad): CondicionFranja | undefined => condicionDe(franja, f.campoId, f.equipo)
   return (
-    <section id="si-falla-hoy" tabIndex={-1} aria-labelledby="si-falla-hoy-titulo" className="scroll-mt-4 rounded-[20px] bg-[var(--panel)] outline-none">
+    <section id="si-falla-hoy" tabIndex={-1} aria-labelledby="si-falla-hoy-titulo" className="scroll-mt-4 rounded-[10px] bg-[var(--panel)] outline-none">
       <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pt-4 sm:px-[24px] sm:pt-[18px]">
         <h2 id="si-falla-hoy-titulo" className="flex flex-wrap items-center gap-x-1 text-[16px] font-semibold leading-snug text-[var(--tinta)]">
           Si falla hoy
@@ -262,6 +264,9 @@ function CampoSiFalla({ c, filas, global, rol, sinDecisiones, sinCambioHoy, sev,
  *  cifra: no se ordena con lo medido. Lo dice el motor (`useCriticidad`). */
 export function SiFallaHoyFicha({ campoId, equipo, className }: { campoId: string; equipo: string; className?: string }) {
   const v = useCriticidad([campoId])
+  // B3 · A-13: «Qué está en riesgo» salió de Equipos; lo que costaría la falla (bbl, `costoFallaHoy`) queda aquí, en la ficha.
+  const r = useRiesgo([campoId]).find(x => x.equipo === equipo)
+  const costo = r ? costoHoy(r) : undefined, detalle = r ? detalleCostoHoy(r) : undefined, corto = r ? colchonCorto(r) : undefined
   const c = v.campos.find(x => x.campoId === campoId)
   const f = [...v.ranking, ...(c?.parados ?? [])].find(x => x.equipo === equipo && x.campoId === campoId)
   if (!f) return null
@@ -275,6 +280,7 @@ export function SiFallaHoyFicha({ campoId, equipo, className }: { campoId: strin
     <p className={cn('text-[14px] leading-snug', className)} data-si-falla-ficha={equipo}>
       <b className="font-semibold">Si falla hoy:</b> {cifra}
       {!f.parado && !c?.campoDeGas && <> · se trabaría {donde}{f.puesto !== null ? ` · puesto ${f.puesto} de lo que más cuesta` : ''}</>}
+      {costo && <span className="block text-[var(--tinta2)]" data-costo-falla>{costo}{corto ? ` · ${corto}` : ''}{detalle && <Info titulo="Lo que costaría la falla" texto={detalle} />}</span>}
       {f.subio && <span className="block text-[var(--tinta2)]">{f.subio.porque}.</span>}
       {!f.vigilado && <span className="block text-[var(--tinta2)]">Sin instrumento: TRIM no ve venir su falla.</span>}
     </p>

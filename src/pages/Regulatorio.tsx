@@ -1,89 +1,108 @@
 import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { useApp, useCampo, usePlanta, useRango, useRol } from '@/app/store'
+import { useApp, useCampo, usePlanta, useRango } from '@/app/store'
 import { useLibro } from '@/shared/api/diferidos'
 import { useEquiposDeHoy } from '@/shared/api/equipos'
 import { pedirMedicionOficial } from '@/shared/api/medicion'
-import { useReporteAnh, type FaltaDeParada } from '@/shared/api/regulatorio'
+import { useReporteAnh } from '@/shared/api/regulatorio'
 import { NOMBRE_CIFRA } from '@/shared/api/resultados'
 import { CATALOGO, CATEGORIA_DE } from '@/entities/causas'
 import { Tarjeta } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { Lectura } from '@/shared/ui/Lectura'
-import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { useTelefono } from '@/shared/ui/telefono'
 import { n0, n1, num, sinLectura } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
-import { ArbolCircular } from '@/widgets/choke/ArbolCircular'
+import { formatoFecha } from '@/shared/lib/fecha'
 
-/** REPORTE AL REGULADOR, el inicio de regulatorio (X4 §2 y §3.4; P-03).
- *  «¿El reporte pasa? Si no, ¿qué falta, quién lo debe y cuánto tiempo queda?»
+const HORA = formatoFecha({ hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' })
+import { ArbolCircular } from '@/widgets/choke/ArbolCircular'
+import { Balance } from '@/widgets/choke/Balance'
+import { RespuestaAnh } from '@/widgets/informe/RespuestaAnh'
+import { ExportarReporte } from '@/widgets/informe/ExportarReporte'
+import { Cifra } from '@/shared/ui/scada'
+
+/** REPORTE A LA ANH, el inicio de regulatorio (experiencia v3; necesario-por-rol §10 y §14; imagen
+ *  d1-grafito-reg). Una sola pantalla y sin menú. «¿El reporte pasa? Si no, ¿qué falta, quién lo
+ *  debe y cuánto tiempo queda?»
  *
- *  Arriba, la cifra con su frase (X5 §5.1): las paradas del período que todavía
- *  no tienen causa, si se puede publicar, quién lo debe y la hora límite; una
- *  fila por parada con «›». Debajo, el árbol de causas como la circular, con sus
- *  códigos detrás de «Ver los códigos ANH». La medición oficial (los puntos, su
- *  calibración y la producción del período) y las casillas de PRODML, detrás de
- *  «ver más» y en el papel. El CSV para la ANH sale de «Exportar», en la cabecera.
- *  TRIM lee la medición; nunca escribe sobre ella.
- *
- *  El motor calcula y la pantalla pinta: todo sale de `useReporteAnh`
- *  (`GET /api/vistas/anh/reporte`), del libro y del árbol. */
+ *  - A la izquierda, los números: las paradas sin causa (lo que impide publicar), sus barriles, la
+ *    hora límite y la respuesta de la ANH con lo que queda de la hora para corregir (registrada a
+ *    mano por regulatorio).
+ *  - A la derecha, qué falta y quién lo debe, una fila por parada, y «Exportar el reporte» (uno solo).
+ *  - Debajo, el balance producido · diferido · perdido con su trazabilidad, el árbol de 6 pasos
+ *    como la circular (los códigos ANH, a un toque) y la medición oficial con PRODML (a un toque).
+ *  TRIM lee la medición; nunca escribe sobre ella. El motor calcula (`useReporteAnh`). */
 export function Regulatorio() {
-  const rango = useRango(); const rol = useRol(); const telefono = useTelefono()
-  const campoId = useApp(s => s.campoId), abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla)
+  const rango = useRango(); const telefono = useTelefono()
+  const campoId = useApp(s => s.campoId), abrirEquipo = useApp(s => s.abrirEquipo)
   const r = useReporteAnh({ campos: [campoId], desde: rango.desde, hasta: rango.hasta })
-  // Una parada abre Identificar si el rol la tiene; si no, la ficha del pozo (dice a quién se le pidió).
-  const abrir = (p: FaltaDeParada) => (rol.pantallas.includes('causa') ? setPantalla('causa') : abrirEquipo(p.equipo, false))
-  // K2 · Si todas las debe la misma persona para la misma hora, ya lo dice la explicación: la fila no lo repite
-  // (queda para el lector de pantalla). Si cambian, cada fila dice la suya.
-  const mismoDebe = r.paradas.every(p => p.debe.rol === r.paradas[0]?.debe.rol && p.cuando === r.paradas[0]?.cuando)
-  // Lo mismo con lo que falta: si a todas les falta lo mismo («faltan todos los pasos»), la cifra ya lo dice («sin causa»).
-  const mismaFalta = r.paradas.length > 1 && r.paradas.every(p => p.falta === r.paradas[0]?.falta)
+  const limite = r.paradas.reduce<(typeof r.paradas)[number] | undefined>((a, p) => (!a || p.limite < a.limite ? p : a), undefined)
   const solo = <Info titulo="Solo lectura" texto={`TRIM lee los puntos de medición; nunca escribe sobre ellos.${r.motivos.length ? ` ${r.motivos.join(' ')}` : ''}`} />
+  // En el teléfono, una sola ⓘ: la frase del motor, el plazo de la Circular 024 y lo de solo lectura.
+  const porQue = <Info titulo={r.titulo} texto={`${r.cifra.frase} El límite es el de la Circular 024. Solo lectura: TRIM lee los puntos de medición; nunca escribe sobre ellos.${r.motivos.length ? ` ${r.motivos.join(' ')}` : ''}`} />
+
+  const numeros = (
+    <Tarjeta aria-label={`${n0(r.cifra.valor)} ${r.cifra.unidad}. ${r.cifra.frase}`} data-reporte-anh={r.estado} data-valor={r.cifra.valor} data-bbl={r.bblSinCausa}
+      className="flex flex-col gap-4">
+      <div data-cifra-grande="">
+        <Cifra rotulo="Paradas sin causa" valor={r.cifra.valor} unidad={r.cifra.valor === 1 ? 'parada' : 'paradas'} tamano="principal" mayusculas={false}
+          estado={r.estado === 'bloqueado' ? 'anormal' : 'normal'} condicion={r.estado === 'bloqueado' ? 'aviso' : undefined}
+          // B4 · En el teléfono (necesario-por-rol §14: «Sin causa 2 paradas · no se puede publicar»), el porqué entero, en su ⓘ.
+          nota={telefono
+            ? <span data-frase=""><b className="font-semibold text-[var(--tinta)]">{r.titulo}</b> {porQue}</span>
+            : <span data-frase=""><b className="font-semibold text-[var(--tinta)]">{r.titulo}</b>{r.cifra.frase.replace(r.titulo, '')} {solo}</span>} />
+      </div>
+      <div className="grid grid-cols-2 gap-4 border-t border-[var(--linea2)] pt-4">
+        <Cifra rotulo="Sin causa" valor={r.bblSinCausa} unidad="bbl" mayusculas={false} nota={telefono ? undefined : 'no se puede reportar'} />
+        <div className="min-w-0" data-limite={limite?.limite ?? ''}>
+          <p className="font-cond text-[13px] font-semibold leading-tight text-[var(--tinta2)]">Límite</p>
+          {limite
+            ? <p className="mt-1 flex flex-wrap items-baseline gap-x-2"><b className="tabular text-[26px] font-bold leading-none tracking-[-.01em] text-[var(--tinta)]">{HORA.format(new Date(limite.limite))}</b>
+              <span className="text-[15px] text-[var(--tinta2)]">{limite.cuando.replace(/ antes de las \d\d:\d\d$/, '')}{limite.vencido ? ' · venció' : ''}</span></p>
+            : <p className="mt-1 text-[15px] text-[var(--tinta2)]">nada pendiente</p>}
+          {!telefono && <p className="mt-1.5 text-[14px] text-[var(--tinta2)]">Circular 024</p>}
+        </div>
+      </div>
+      {!telefono && <RespuestaAnh r={r} campoId={campoId} className="border-t border-[var(--linea2)] pt-4" />}
+    </Tarjeta>
+  )
+
+  const quien = (
+    <Tarjeta aria-labelledby="que-falta" className="flex flex-col">
+      <h2 id="que-falta" className="text-[16px] font-semibold text-[var(--tinta)]">Qué falta y quién lo debe</h2>
+      {r.paradas.length === 0 && <p className="mt-2 text-[15px] text-[var(--tinta2)]">Nada: todas las paradas del período tienen su causa.</p>}
+      {r.paradas.length > 0 && (
+        <ul className="mt-2" aria-label="Lo que falta">
+          {r.paradas.map(p => (
+            <li key={`${p.campoId}|${p.eventoId}`}>
+              <button type="button" onClick={() => abrirEquipo(p.equipo, false)} data-parada-sin-causa={p.equipo} data-bbl={p.bbl}
+                className="grid min-h-[56px] w-full cursor-pointer grid-cols-[1fr_auto_20px] items-center gap-x-3 border-t border-[var(--linea2)] py-2 text-left transition-colors duration-[120ms] hover:bg-[var(--panel2)]">
+                <span className="min-w-0 text-[15px]">
+                  <b className="font-semibold text-[var(--tinta)]">{p.equipo}</b>
+                  {!telefono && <span className="text-[var(--tinta2)]"> · {p.falta}</span>}
+                  {/* En el teléfono (§14: «LC-21 · 247 bbl · lo debe el operador»), la hora va una vez, en «Límite», si es la misma. */}
+                  <span className="block text-[14px] text-[var(--tinta2)]" data-debe="">Lo debe el {p.debe.nombre}{telefono && p.limite === limite?.limite ? '' : ` · ${p.cuando}`}</span>
+                </span>
+                <b className="whitespace-nowrap text-right text-[16px] font-bold tabular-nums text-[var(--tinta)]">{n0(p.bbl)} <small className="text-[14px] font-normal text-[var(--tinta2)]">bbl</small></b>
+                <ChevronRight aria-hidden className="size-5 text-[var(--tinta3)]" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <ExportarReporte className="mt-4" telefono={telefono} />
+    </Tarjeta>
+  )
 
   return (
     <div data-regulatorio={campoId} className="mx-auto flex max-w-[1600px] flex-col gap-3 sm:gap-4">
-      <Tarjeta aria-label={`${n0(r.cifra.valor)} ${r.cifra.unidad}. ${r.cifra.frase}`} data-reporte-anh={r.estado} data-valor={r.cifra.valor} data-bbl={r.bblSinCausa}
-        className={telefono ? 'px-[18px] pb-4 pt-4' : 'px-5 pb-5 pt-6 sm:px-7'}>
-        <div data-cifra-grande="">
-          <p className={cn('flex flex-wrap items-center gap-x-1.5 font-medium text-[var(--tinta2)]', telefono ? 'text-[14px]' : 'text-[15px]')}>
-            {r.estado === 'bloqueado' && <MarcaPrioridad s={3} tamano={15} decorativa />}
-            {/* K2 · En el teléfono el título («Reporte al regulador») y el período ya lo dicen: la ⓘ va junto a la cifra. */}
-            <span className="max-sm:sr-only">Reporte a la ANH · {r.periodo}</span>
-            <span className="max-sm:hidden">{solo}</span>
-          </p>
-          <p className={cn('mt-1 flex flex-wrap items-baseline font-bold tracking-[-.03em] text-[var(--tinta)] tabular-nums',
-            telefono ? 'gap-x-2.5 text-[48px] leading-[.95]' : 'gap-x-3.5 text-[64px] leading-[.95]')}>
-            <span data-cifra="">{n0(r.cifra.valor)}</span>
-            <small className={cn('font-medium tracking-normal text-[var(--tinta2)]', telefono ? 'text-[18px]' : 'text-[24px]')}>{r.cifra.unidad}</small>
-            {telefono && <span className="self-center">{solo}</span>}
-          </p>
-          <p data-frase="" className={cn('max-w-[760px] font-medium text-[var(--tinta)]', telefono ? 'mt-1.5 text-[19px] leading-[1.35]' : 'mt-2 text-[22px] leading-[1.35]')}>{r.cifra.frase}</p>
-          <p data-explica="" className={cn('max-w-[760px] text-[var(--tinta2)]', telefono ? 'mt-1.5 text-[16px] leading-[1.5]' : 'mt-1.5 text-[17px] leading-[1.5]')}>{r.cifra.explica}</p>
-        </div>
-        {r.paradas.length > 0 && (
-          <ul className="mt-3 max-w-[760px]" aria-label="Lo que falta">
-            {r.paradas.map(p => (
-              <li key={`${p.campoId}|${p.eventoId}`}>
-                <button type="button" onClick={() => abrir(p)} data-parada-sin-causa={p.equipo} data-bbl={p.bbl}
-                  className="grid min-h-[56px] w-full cursor-pointer grid-cols-[1fr_auto_20px] items-center gap-x-3 border-t border-[var(--linea2)] py-2 text-left transition-colors duration-[120ms] hover:bg-[var(--panel2)]">
-                  <span className="min-w-0 text-[15px]">
-                    <b className="font-semibold text-[var(--tinta)]">{p.equipo}</b>
-                    <span className={mismaFalta ? 'sr-only' : 'text-[var(--tinta2)]'}> · {p.falta}</span>
-                    <span className={mismoDebe ? 'sr-only' : 'block text-[14px] text-[var(--tinta2)]'} data-debe="">{mismoDebe ? '. ' : ''}Lo debe el {p.debe.nombre} · {p.cuando}</span>
-                  </span>
-                  <b className="whitespace-nowrap text-right text-[16px] font-bold tabular-nums text-[var(--tinta)]">{n0(p.bbl)} <small className="text-[14px] font-normal text-[var(--tinta2)]">bbl</small></b>
-                  <ChevronRight aria-hidden className="size-5 text-[var(--tinta3)]" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Tarjeta>
-
+      {telefono
+        // En el teléfono, primero lo que falta y quién lo debe; la respuesta de la ANH, en su tarjeta debajo.
+        ? <>{numeros}{quien}<Tarjeta aria-label="Respuesta de la ANH"><RespuestaAnh r={r} campoId={campoId} /></Tarjeta></>
+        : <div className="grid items-start gap-4 min-[1100px]:grid-cols-[minmax(0,420px)_1fr]">{numeros}{quien}</div>}
+      <Balance q={{ campos: [campoId], desde: rango.desde, hasta: rango.hasta }} />
       <ArbolCircular campoId={campoId} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} plegadoEnTelefono />
-
       <MedicionOficial campoId={campoId} />
     </div>
   )

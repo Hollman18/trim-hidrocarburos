@@ -949,7 +949,10 @@ comprobar(URLM.leerHash(undefined, 'ger').pantalla === 'perfil', '«Mi perfil» 
 
 est().setRol('ger'); ir('#/ger/resumen/ceiba/curso')
 ir('#/cont/resumen/ceiba/curso')
-comprobar(est().rolId === 'ger' && nav.hash.startsWith('#/ger/'), `pegar un enlace con un rol de v2 no deja guardado un rol fantasma (rol ${est().rolId}, dirección ${nav.hash})`)
+// B3 · A-22: un rol que salió del producto (cont) no abre otro rol en silencio: la aplicación dice que no está y la
+// dirección queda como vino; el rol guardado sigue siendo el de antes (nada fantasma).
+comprobar(est().rolId === 'ger' && est().rolNoDisponible === 'Abastecimiento y contratos' && nav.hash.startsWith('#/cont/'),
+  `pegar un enlace con un rol que no está no deja guardado un rol fantasma ni abre otro: lo dice (rol ${est().rolId}, aviso ${est().rolNoDisponible}, dirección ${nav.hash})`)
 est().setRol('oper'); ir('#/oper/bombas/ceiba/curso')
 ir('#//produccion/palmar/curso')
 comprobar(est().rolId === 'oper' && est().pantalla === ROL.rolPorId('oper').inicio && est().campoId === 'ceiba', `operador con «#//produccion/palmar»: sigue en lo suyo de La Ceiba (${est().pantalla}, ${est().campoId})`)
@@ -972,9 +975,10 @@ ir('#/ger/perfil/ceiba/curso')
 comprobar(est().pantalla === 'perfil', 'atrás/adelante a «Mi perfil» lo vuelve a abrir')
 
 est().setRol('ger'); est().setAlcance('portafolio'); est().setRol('adm')
-// C1 (25-oct): La planta viva suma campos y el administrador la tiene: puede ver todos sus campos, solo por ella.
+// B3 · B-01: el administrador ya no tiene La planta viva (una sola pantalla, Configurar, de un campo): sin pantallas que
+// sumen campos, no queda en «Todos mis campos» aunque venga del portafolio del gerente.
 const sumanAdm = ROL.rolPorId('adm').pantallas.filter(x => PANT.PANTALLAS[x]?.agrega)
-comprobar(est().alcance === 'portafolio' && sumanAdm.join() === 'plantaViva', `el administrador queda en «Todos mis campos» solo porque La planta viva suma campos (${sumanAdm.join(', ')})`)
+comprobar(est().alcance === 'campo' && sumanAdm.length === 0, `el administrador, sin pantallas que sumen campos, queda en un campo (${est().alcance}; suman: ${sumanAdm.join(', ') || 'ninguna'})`)
 est().setRol('tec'); est().setAlcance('portafolio')
 comprobar(est().alcance === 'campo', 'el técnico (un solo campo) no queda en portafolio')
 est().setRol('prod'); est().setCampo('ceiba'); est().redirigir('pozos', 'aviso de prueba'); est().setCampo('palmar')
@@ -2095,9 +2099,12 @@ console.log('\n=== 19. Corrección de la revisión (8-oct-2026): tanque con la b
   const pantallas = ['src/pages/Esp.tsx', 'src/widgets/equipos/Lista.tsx', 'src/widgets/riesgo/Ahora.tsx', 'src/pages/Riesgo.tsx', 'src/pages/Mantenimiento.tsx', 'src/pages/Turno.tsx', 'src/widgets/equipo/FichaEjecutiva.tsx'].filter(existe)
   const siFallaBpd = pantallas.filter(rel => /bbl\/d si fallan?\b|[Ee]n juego si falla|por día si fallan?\b/.test(fuente(rel)))
   comprobar(!siFallaBpd.length, `los bbl/d se rotulan «si para» o «en juego», nunca «si falla(n)» (que es la cifra en bbl de hoy)${siFallaBpd.length ? `: ${siFallaBpd.join(', ')}` : ''}`)
-  const ahoraTxt = existe('src/widgets/riesgo/Ahora.tsx') ? sinComentarios(fuente('src/widgets/riesgo/Ahora.tsx')) : null, mantTxt = sinComentarios(fuente('src/pages/Mantenimiento.tsx'))
-  comprobar((ahoraTxt === null || (/contarPorIdentificar\(usePreguntas\(/.test(ahoraTxt) && !/\.filter\(p => p\.pide\)/.test(ahoraTxt) && !/ninguna parte va hacia su límite/.test(ahoraTxt))) && /deFlota\(r, rol\.nivel\)/.test(mantTxt),
-    `${ahoraTxt === null ? 'Ahora ya no existe (P-21)' : 'Ahora cuenta «por identificar» con contarPorIdentificar y usa la frase del Resumen'}; Mantenimiento marca «flota» con la misma regla que Riesgo (deFlota)`)
+  // B3 · A-12: Mantenimiento se borró; lo que costaría la falla vive en la ficha (`riesgo/SiFallaHoy.tsx`, con `costoHoy`).
+  const ahoraTxt = existe('src/widgets/riesgo/Ahora.tsx') ? sinComentarios(fuente('src/widgets/riesgo/Ahora.tsx')) : null
+  const mantTxt = existe('src/pages/Mantenimiento.tsx') ? sinComentarios(fuente('src/pages/Mantenimiento.tsx')) : null
+  comprobar((ahoraTxt === null || (/contarPorIdentificar\(usePreguntas\(/.test(ahoraTxt) && !/\.filter\(p => p\.pide\)/.test(ahoraTxt) && !/ninguna parte va hacia su límite/.test(ahoraTxt)))
+      && (mantTxt === null ? /costoHoy\(r\)/.test(sinComentarios(fuente('src/widgets/riesgo/SiFallaHoy.tsx'))) : /deFlota\(r, rol\.nivel\)/.test(mantTxt)),
+    `${ahoraTxt === null ? 'Ahora ya no existe (P-21)' : 'Ahora cuenta «por identificar» con contarPorIdentificar y usa la frase del Resumen'}; ${mantTxt === null ? 'Mantenimiento ya no existe (A-12): lo que costaría la falla va en la ficha, con su nombre (costoHoy)' : 'Mantenimiento marca «flota» con la misma regla que Riesgo (deFlota)'}`)
   const rutaPorCampo = dondeEsta('PorCampo.tsx')
   const css = fuente('src/index.css'), porCampo = rutaPorCampo ? fuente(rutaPorCampo) : ''
   comprobar(/section \.border-b\[data-partible\] \{ break-inside: auto; \}/.test(css) && /<div data-partible className="border-b/.test(porCampo),
@@ -3664,8 +3671,9 @@ console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P
   const escritoDiag = navC.hash
   comprobar(viejo.pantalla === 'equipos' && viejo.equipoAbierto === 'P-201B' && viejo.periodoId === 'curso' && nuevo.pantalla === 'equipos' && nuevo.equipoAbierto === 'P-201B' && nuevo.periodoId === undefined
       && diag.equipoAbierto === 'P-201B/diagnostico' && conPer.equipoAbierto === 'P-201B' && conPer.periodoId === 'curso' && lista.pantalla === 'equipos' && lista.equipoAbierto === undefined
-      // C5 (26-oct): el Riesgo del gerente se fundió en La planta viva: su dirección abre ahí, con su ficha.
-      && ger.pantalla === 'plantaViva' && ger.equipoAbierto === 'P-201B' && gerEq.pantalla === 'equipos' && gerEq.equipoAbierto === 'P-201B' && pozoProd.pantalla === 'equipos' && pozoProd.equipoAbierto === 'LC-16'
+      // C5 (26-oct): el Riesgo del gerente se fundió en La planta viva: su dirección abre ahí, con su ficha. B3 · A-16: su
+      // Equipos, también (la ficha ejecutiva, encima de su inicio).
+      && ger.pantalla === 'plantaViva' && ger.equipoAbierto === 'P-201B' && gerEq.pantalla === 'plantaViva' && gerEq.equipoAbierto === 'P-201B' && pozoProd.pantalla === 'equipos' && pozoProd.equipoAbierto === 'LC-16'
       && escrito === '#/conf/equipos/ceiba/P-201B' && escritoDiag === '#/conf/equipos/ceiba/P-201B/diagnostico',
     `las direcciones: #/sup/bombas/ceiba/curso/P-201B abre su nivel 3 (#/sup/equipos/ceiba/P-201B), «/diagnostico» el 4, la de producción a un pozo también; el gerente sigue con su ficha (${ger.pantalla} + P-201B); Equipos se escribe sin período (${escrito})`)
   comprobar(ROLC.rolPorId('conf').inicio === 'equipos' && URLC.abreNivel3(ROLC.rolPorId('conf')) && !URLC.abreNivel3(ROLC.rolPorId('ger')) && !URLC.abreNivel3(ROLC.rolPorId('adm'))
@@ -3784,7 +3792,9 @@ console.log('\n=== F3 · Bombas y pozos: se deja de producir, «Si falla hoy», 
 {
   const { readFileSync, readdirSync, statSync } = await import('node:fs')
   const SRC = `${RAIZ}src/`
-  const archivos = ['pages/Bombas.tsx', 'pages/Esp.tsx', 'pages/Pozos.tsx', 'pages/Planta.tsx', 'pages/Agua.tsx', 'widgets/equipo/FichaEjecutiva.tsx']
+  // B3 · A-15: Bombas y Electrosumergibles se borraron (son filtros de Equipos); se lee lo que exista.
+  const { existsSync: existeBo } = await import('node:fs')
+  const archivos = ['pages/Bombas.tsx', 'pages/Esp.tsx', 'pages/Pozos.tsx', 'pages/Planta.tsx', 'pages/Agua.tsx', 'widgets/equipo/FichaEjecutiva.tsx'].filter(a => existeBo(`${SRC}${a}`))
   for (const d of ['bombas', 'pozos', 'planta'])
     for (const x of readdirSync(`${SRC}widgets/${d}`)) if (statSync(`${SRC}widgets/${d}/${x}`).isFile()) archivos.push(`widgets/${d}/${x}`)
   // Sin los comentarios: lo que se lee en la pantalla es el código, no la nota que explica por qué.
@@ -3845,13 +3855,15 @@ console.log('\n=== F2 · Riesgo y agua: se deja de producir, la marca de la fran
   const pasaHoy = con(/[Pp]asa hoy/)
   // Letra de máquina o condensada en lo que se lee (los meses y las abreviaturas de un eje sí van condensados: Serie).
   const maquina = con(/font-mono|font-cond|>\s*(PARADA|HOY)\s*</, archivos.filter(a => !a.endsWith('Serie.tsx')))
-  const marcaDePantalla = con(/MarcaPrioridad s=\{(r\.altoImpacto|perdiendo\[0\]\.altoImpacto|r\.prioridad|sev\(f\))|severidad \?\? 0/, ['widgets/riesgo/EnRiesgo.tsx', 'widgets/riesgo/SiFallaHoy.tsx'])
-  const costoComoSiFalla = con(/\['Si falla hoy', `≈|rotulo="si falla hoy"/, ['widgets/riesgo/EnRiesgo.tsx'])
+  // B3 · A-13: «Qué está en riesgo» (EnRiesgo y su salto, ancla) salió de Equipos: lo que se lee de él vale mientras exista.
+  const riesgoVivo = ['widgets/riesgo/EnRiesgo.tsx', 'widgets/riesgo/SiFallaHoy.tsx'].filter(a => existeRie(`${SRC}${a}`))
+  const marcaDePantalla = con(/MarcaPrioridad s=\{(r\.altoImpacto|perdiendo\[0\]\.altoImpacto|r\.prioridad|sev\(f\))|severidad \?\? 0/, riesgoVivo)
+  const costoComoSiFalla = con(/\['Si falla hoy', `≈|rotulo="si falla hoy"/, riesgoVivo)
   const numerados = con(/list-decimal|\[grid-area:n\]|<span>modelo choke<\/span>/)
-  const rd = `${fuente('widgets/riesgo/EnRiesgo.tsx')}\n${fuente('widgets/riesgo/ancla.ts')}`
+  const rd = ['widgets/riesgo/EnRiesgo.tsx', 'widgets/riesgo/ancla.ts'].filter(a => existeRie(`${SRC}${a}`)).map(fuente).join('\n')
   const suave = /behavior: 'smooth'/.test(rd) && !/prefers-reduced-motion/.test(rd)
   comprobar(pierde.length === 0 && pasaHoy.length === 0 && maquina.length === 0 && marcaDePantalla.length === 0 && costoComoSiFalla.length === 0 && numerados.length === 0 && !suave
-      && /titulo="Por qué"/.test(rd) && !/Se deja de producir ahora, por causa/.test(rd) && /FAMILIA\[/.test(rd),
+      && (rd === '' || (/titulo="Por qué"/.test(rd) && !/Se deja de producir ahora, por causa/.test(rd) && /FAMILIA\[/.test(rd))),
     `Riesgo, «Si falla hoy» y los widgets de la tubería y del agua: nada «se pierde» (${pierde.join(', ') || 'ninguno'}), «Sale hoy» y no «Pasa hoy» (${pasaHoy.join(', ') || 'ninguno'}), sin letra de máquina (${maquina.join(', ') || 'ninguno'}), ninguna marca decidida en la pantalla (${marcaDePantalla.join(', ') || 'ninguna'}), el costo de una falla con su nombre (${costoComoSiFalla.join(', ') || 'bien'}), sin puestos ni listas numeradas ni el rótulo «modelo choke» (${numerados.join(', ') || 'ninguno'}), el reparto se llama «Por qué», la familia es la de campo y el salto respeta «reducir movimiento»`)
 
   // Las palabras de la tubería: la línea corta sale de las cifras del motor; «sin firmar» una vez, lo del demo en su ⓘ.
@@ -3906,20 +3918,28 @@ console.log('\n=== F2 · Diferidos, mantenimiento y confiabilidad ===')
 
   // En el código de las pantallas: lo que la revisión quitó no vuelve.
   const fuente = a => readFileSync(`${RAIZ}src/${a}`, 'utf8').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*|\{\/\*)/.test(l)).join('\n')
-  const mant = fuente('pages/Mantenimiento.tsx'), conf = fuente('pages/Confiabilidad.tsx'), aci = fuente('widgets/confiabilidad/Aciertos.tsx')
-  const par = fuente('widgets/diferidos/Paretos.tsx'), cua = fuente('widgets/diferidos/Cuadre.tsx'), mes = fuente('widgets/diferidos/MesAMes.tsx'), dia = fuente('widgets/produccion/Diaria.tsx')
-  const dif = fuente('pages/Diferidos.tsx')
+  // B3 · A-12: Mantenimiento se borró: lo que se comprobaba de él (el conteo único de «avisan», el costo de la falla con
+  // su nombre y la marca de la franja) vale mientras exista; hoy vive en el Hoy del jefe y en la ficha (e2e: b3-roles).
+  const { existsSync: existeMa } = await import('node:fs')
+  const mant = existeMa(`${RAIZ}src/pages/Mantenimiento.tsx`) ? fuente('pages/Mantenimiento.tsx') : null
+  const conf = fuente('pages/Confiabilidad.tsx'), aci = fuente('widgets/confiabilidad/Aciertos.tsx')
+  // B2 · A-09: la pantalla Diferidos y sus widgets se borraron (se fundieron en Resultados): se lee lo que exista.
+  const opcional = a => (existeMa(`${RAIZ}src/${a}`) ? fuente(a) : null)
+  const par = opcional('widgets/diferidos/Paretos.tsx'), cua = opcional('widgets/diferidos/Cuadre.tsx'), mes = opcional('widgets/diferidos/MesAMes.tsx'), dia = fuente('widgets/produccion/Diaria.tsx')
+  const dif = opcional('pages/Diferidos.tsx')
   // La rama de todos los roles (la de «decision» se va con P-21): desde su `return (` a dos espacios.
-  const principal = dif.slice(dif.indexOf('\n  return ('))
-  comprobar(!/\['Si falla hoy', `≈/.test(mant) && /Le costaría la falla/.test(mant) && !/equipo avisando|equipos avisando/.test(mant) && /useCifrasDeUnNombre\(ids\)\.avisan/.test(mant),
-    'G-15 y G-16 · Mantenimiento: «N equipo avisa» con el conteo único de «Equipos que avisan», y el costo de la falla en bbl con su nombre (no «si falla hoy»)')
-  comprobar(!/MarcaPrioridad s=\{(p\.arrancoSinIdentificar|r\.prioridad)/.test(mant) && /useCondiciones\(ids\)/.test(mant),
+  const principal = dif === null ? '' : dif.slice(dif.indexOf('\n  return ('))
+  const jefeHoy = fuente('widgets/hoy/Jefe.tsx'), ficha = fuente('widgets/riesgo/SiFallaHoy.tsx')
+  comprobar(mant === null ? /lista\.cuentas\.estado\.avisan/.test(jefeHoy) && /costoHoy\(r\)/.test(ficha) && !/\['Si falla hoy', `≈/.test(ficha)
+    : !/\['Si falla hoy', `≈/.test(mant) && /Le costaría la falla/.test(mant) && !/equipo avisando|equipos avisando/.test(mant) && /useCifrasDeUnNombre\(ids\)\.avisan/.test(mant),
+    mant === null ? 'G-15 y G-16 · (Mantenimiento se borró, A-12) el jefe cuenta «Avisan» con el conteo único de Equipos y la ficha dice el costo de la falla con su nombre (no «si falla hoy»)' : 'G-15 y G-16 · Mantenimiento: «N equipo avisa» con el conteo único de «Equipos que avisan», y el costo de la falla en bbl con su nombre (no «si falla hoy»)')
+  comprobar(mant === null || (!/MarcaPrioridad s=\{(p\.arrancoSinIdentificar|r\.prioridad)/.test(mant) && /useCondiciones\(ids\)/.test(mant)),
     'H3 · Mantenimiento: la marca de cada equipo es la de su condición en la franja, no la de la tarea ni la de la fila de riesgo')
-  comprobar(![mant, conf, aci, principal].some(x => /font-mono|text-\[(3\d|4\d)px\]/.test(x)) && !/text-\[26px\]/.test(conf) && (conf.match(/text-\[24px\]/g) ?? []).length === 1 && !/text-\[24px\]/.test(aci),
+  comprobar(![mant ?? '', conf, aci, principal].some(x => /font-mono|text-\[(3\d|4\d)px\]/.test(x)) && !/text-\[26px\]/.test(conf) && (conf.match(/text-\[24px\]/g) ?? []).length === 1 && !/text-\[24px\]/.test(aci),
     'UI-15 y H11 · sin letra de máquina ni cifras de 36 o 40 px; en Confiabilidad, a 24 px solo la de cada flota (tres o menos); el vigía a 18')
-  comprobar(!/<Encabezado /.test(principal) && /<Cifra v=\{res\}/.test(principal) && /conMaximo/.test(principal) && /Potencial del libro/.test(cua) && !/No producido/.test(cua) && /= Diferido/.test(cua),
+  comprobar(dif === null || cua === null || (!/<Encabezado /.test(principal) && /<Cifra v=\{res\}/.test(principal) && /conMaximo/.test(principal) && /Potencial del libro/.test(cua) && !/No producido/.test(cua) && /= Diferido/.test(cua)),
     'P-diferidos-1, G-5 y G-8 · Diferidos abre con el bloque de la cifra de Resultados; el diferido por día va en «Dónde bajarlo»; «Potencial del libro» y «= Diferido» en el cuadre')
-  comprobar(!/dato-5/.test(par) && /FAMILIA_EQUIPO\[f\.tipo\]/.test(par) && !/máx\. \$/.test(par) && !/<rect[^>]*width=\{7\}/.test(mes) && /MarcaCondicion c="aviso"/.test(mes),
+  comprobar(par === null || mes === null || (!/dato-5/.test(par) && /FAMILIA_EQUIPO\[f\.tipo\]/.test(par) && !/máx\. \$/.test(par) && !/<rect[^>]*width=\{7\}/.test(mes) && /MarcaCondicion c="aviso"/.test(mes)),
     'V2-1, P-09, G-10 y H20 · las barras secundarias en --dato3, la familia «bomba de agua», «máximo» sin abreviar y la marca de aviso de verdad sobre el mes que pasó su máximo')
   comprobar(!/strokeDasharray="5 3"/.test(dia) && !/strokeDasharray="3 3"/.test(dia) && /día en curso/.test(dia) && /potencial del libro/.test(dia),
     'H18 · en la producción día a día lo discontinuo es solo la meta: el potencial va continuo y claro, y el día en curso, con su punto hueco y su palabra')
@@ -4105,15 +4125,16 @@ console.log('\n=== F2 · La planta viva y Resultados: la regla de redondeo, la l
   const { readFileSync: leerF2, existsSync: existeF2 } = await import('node:fs')
   const srcF2 = rel => leerF2(new URL(`../src/${rel}`, import.meta.url), 'utf8')
   const prodF2 = srcF2('pages/Produccion.tsx'), dondeF2 = srcF2('widgets/resumen/DondeSeTrabo.tsx')
-  comprobar(/<TuberiaTecnica\b/.test(prodF2) && !/TuberiaDelCampo/.test(prodF2) && /data-sin-partir=\{campos\.length === 1/.test(dondeF2) && /print:break-before-avoid/.test(dondeF2)
+  // B2 (v3): el inicio de prod es su lente de La planta viva, con la tubería del kit; Producción ya no dibuja la tubería de antes.
+  comprobar(!/TuberiaDelCampo/.test(prodF2) && !existeF2(new URL('../src/widgets/choke/Tuberia.tsx', import.meta.url)) && /data-sin-partir=\{campos\.length === 1/.test(dondeF2) && /print:break-before-avoid/.test(dondeF2)
       && !['pages/Resumen.tsx', 'pages/Portafolio.tsx', 'widgets/resumen/ResumenDirectivo.tsx', 'widgets/riesgo/Ahora.tsx', 'widgets/resumen/enAlarma.ts', 'widgets/diferidos/Encabezado.tsx'].some(r => existeF2(new URL(`../src/${r}`, import.meta.url)))
       // K1 · P-10: Riesgo ya no es una pantalla: lo suyo vive en `widgets/riesgo/EnRiesgo.tsx` (Equipos del jefe y de confiabilidad).
-      && !/nivel === 'decision'|useNivel\(\) !== 'decision'|directivo/.test(srcF2('pages/Diferidos.tsx') + prodF2 + srcF2(existeF2(new URL('../src/pages/Riesgo.tsx', import.meta.url)) ? 'pages/Riesgo.tsx' : 'widgets/riesgo/EnRiesgo.tsx')),
+      && !/nivel === 'decision'|useNivel\(\) !== 'decision'|directivo/.test(['pages/Diferidos.tsx', 'pages/Riesgo.tsx', 'widgets/riesgo/EnRiesgo.tsx'].filter(r => existeF2(new URL(`../src/${r}`, import.meta.url))).map(srcF2).join('\n') + prodF2),
     'P-16 y H8 · Producción con la tubería de La planta viva (lente técnica); A21 · la barra y su leyenda en un bloque en el papel; P-21 · sin el Resumen, el Portafolio, ResumenDirectivo, riesgo/Ahora, enAlarma, el Encabezado viejo ni las ramas «decision»')
   // UI-10 y UI-18: el lema del momento escogido sale de los tokens (sin un color escrito a mano) y cada opción lleva su blanco de 44 px.
-  const momF2 = srcF2('widgets/plantaviva/Momentos.tsx').split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
-  comprobar(!/#[0-9a-f]{3,8}\b/i.test(momF2) && /\btoque\b/.test(momF2) && /var\(--primario-sobre\)/.test(momF2),
-    'UI-10 y UI-18 · Antes · Durante · Después sin colores escritos a mano y con 44 px de blanco en cada opción')
+  // v3, decisión 2 (opción A): el control Antes · Durante · Después salió del inicio del gerente; su archivo ya no existe.
+  comprobar(!existeF2(new URL('../src/widgets/plantaviva/Momentos.tsx', import.meta.url)),
+    'v3 · opción A: sin el control Antes · Durante · Después en La planta viva (su antes, durante y después vive en «¿Está funcionando?»)')
 }
 
 
@@ -4258,16 +4279,19 @@ console.log('\n=== K1 · Cierre: Riesgo en Equipos, sin Mi trabajo ni la tuberí
   comprobar(!ROLK.ROLES.some(r => r.pantallas.includes('riesgo')) && !PANK.PANTALLAS.riesgo && !hay('pages/Riesgo.tsx')
       && URLK.pantallaQueAbre(rol('jefe'), 'riesgo') === 'equipos' && URLK.pantallaQueAbre(rol('conf'), 'riesgo') === 'equipos'
       && URLK.pantallaQueAbre(rol('ger'), 'riesgo') === 'plantaViva'
-      && /\(conf \|\| jefe\) && <EnRiesgo/.test(lista)
-      && ['NOMBRE_CIFRA.ahora', 'NOMBRE_CIFRA.avisan', 'NOMBRE_CIFRA.exposicion', 'en juego', 'cruza en', 'rotulo="qué hacer"', 'costoHoy(r)', 'colchonCorto(r)', 'deFlota(', 'titulo="Por qué"', '<SiFallaHoy'].every(x => enRiesgo.includes(x)),
-    'P-10 · Riesgo se fundió: ningún rol lo tiene; «#/jefe/riesgo» y «#/conf/riesgo» abren Equipos (el gerente, La planta viva) y debajo de la lista va todo lo suyo: lo que se deja de producir, los que avisan, lo que está en juego, la exposición, «cruza en», «qué hacer», lo que le costaría la falla, el colchón, «flota», «Por qué» y «Si falla hoy»')
+      // B3 · A-13: «Qué está en riesgo» ya no va debajo de la lista (repetía la cabeza, la franja y la lista); lo que
+      // costaría la falla y el colchón quedan en la ficha del equipo (`riesgo/SiFallaHoy.tsx`).
+      && !/<EnRiesgo/.test(lista) && enRiesgo === ''
+      && ['costoHoy(r)', 'colchonCorto(r)'].every(x => fuenteK1('widgets/riesgo/SiFallaHoy.tsx').includes(x)),
+    'P-10 y A-13 · Riesgo se fundió: ningún rol lo tiene; «#/jefe/riesgo» y «#/conf/riesgo» abren Equipos (el gerente, La planta viva), sin el bloque de Riesgo debajo de la lista; lo que le costaría la falla y el colchón, en la ficha del equipo')
 
   // 2. G-15: Mi trabajo ya no existe (se fundió en Hoy) y su dirección abre Hoy; P-16: la tubería de antes tampoco.
   const usaVieja = ['pages/Planta.tsx', 'pages/Produccion.tsx', 'pages/Causa.tsx'].filter(a => /TuberiaDelCampo|choke\/Tuberia'/.test(fuenteK1(a)))
   comprobar(!hay('pages/Trabajo.tsx') && !PANK.PANTALLAS.trabajo && !Object.values(PANK.GRUPOS).some(g => g.miembros.includes('trabajo'))
       && URLK.pantallaQueAbre(rol('tec'), 'trabajo') === 'hoy'
-      && !hay('widgets/choke/Tuberia.tsx') && !usaVieja.length && /<TuberiaTecnica/.test(fuenteK1('pages/Planta.tsx')),
-    `G-15 y P-16 · Mi trabajo y la tubería de antes salieron del código; «#/tec/trabajo» abre Hoy y Planta monta la tubería de La planta viva${usaVieja.length ? `; todavía: ${usaVieja.join(', ')}` : ''}`)
+      // v3 · A-10 (borrado.md): la tubería va UNA sola vez, en La planta viva; Planta queda con su esquema, sin tubería repetida.
+      && !hay('widgets/choke/Tuberia.tsx') && !usaVieja.length && !/<TuberiaTecnica/.test(fuenteK1('pages/Planta.tsx')),
+    `G-15 y P-16 · Mi trabajo y la tubería de antes salieron del código; «#/tec/trabajo» abre Hoy; la tubería va una sola vez (A-10), no repetida en Planta${usaVieja.length ? `; todavía: ${usaVieja.join(', ')}` : ''}`)
 
   // 3. P-09: una familia por equipo, la del motor («bomba de agua»), también en el nombre de las hermanas sin instrumento y en Confiabilidad.
   const CRK = await v.ssrLoadModule('/src/entities/criticidad.ts')

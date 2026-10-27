@@ -1,6 +1,7 @@
 import { useApp, useAmbito, useRango } from '@/app/store'
 import { useConfiabilidad, type EquipoConfiable as Equipo } from '@/shared/api/equipos'
-import { pedirCalendario, pedirInicioDeHistoria } from '@/shared/api/calendario'
+import { pedirInicioDeHistoria } from '@/shared/api/calendario'
+import { useFallasMensual } from '@/shared/api/balance'
 import { NOMBRE_FAMILIA as FAMILIA, type Familia } from '@/entities/flota'
 import { partesDe, NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { COMO, type ComoSeIdentifico } from '@/entities/causa-senal'
@@ -36,6 +37,8 @@ export function Confiabilidad() {
   const clave = ambito.campos.map(c => c.id).join(',')
 
   const equipos = useConfiabilidad(clave.split(',').filter(Boolean))
+  // B3 · Las fallas por mes las cuenta el motor (`GET /api/vistas/fallas/mensual`, A2): la pantalla ya no las cuenta.
+  const mensual = useFallasMensual(clave.split(',').filter(Boolean))
 
   // Su foco es la reparación activa, no la espera del repuesto: los tres relojes,
   // en toda la historia (como el tiempo entre fallas de esta pantalla).
@@ -63,9 +66,8 @@ export function Confiabilidad() {
   const porComo = (['senal', 'firma', 'declarado', 'ninguno'] as ComoSeIdentifico[]).map(c => [c, fallas.filter(x => x.como === c).length] as const)
 
   // Fallas por mes, por familia.
-  const meses = pedirCalendario().map(m => ({ m, porFam: Object.fromEntries(familias.map(f => [f,
-    equipos.filter(e => e.familia === f).reduce((a, e) => a + e.h.eventos.filter(x => !x.disparo && x.inicio.getTime() >= m.desde && x.inicio.getTime() < m.hasta).length, 0)])) as Record<Familia, number> }))
-  const totales = meses.map(x => familias.reduce((a, f) => a + (x.porFam[f] ?? 0), 0))
+  const meses = mensual.map(m => ({ m: { mes: m.mes }, porFam: m.porFamilia }))
+  const totales = mensual.map(m => m.fallas)
   const topeMes = Math.max(1, ...totales)
   // La frase con sus cifras, para quien no ve el dibujo (H22): el período, el total y el mes con más.
   const totalFallas = totales.reduce((a, b) => a + b, 0)

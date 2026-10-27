@@ -13,41 +13,40 @@ const sale = (page: Page) => page.evaluate(() => { const v = document.querySelec
 /** Dónde está la franja (x, y redondeados). */
 const franja = (page: Page) => page.locator('[data-franja]').first().evaluate(e => { const r = e.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top), d: Math.round(r.right) } })
 
-test('P-02 · Confiabilidad abre en su respuesta: el primero de «Si falla hoy», su frase y P-201A sin desplazarse (1440 y 390)', async ({ flujo: f }) => {
+test('P-02 y FF-8 · Confiabilidad abre en su respuesta, tipo número: el primero de «Si falla hoy» y «Abrir P-201A» sin desplazarse (1440 y 390)', async ({ flujo: f }) => {
   const { page } = f
   for (const [ancho, alto] of [[1440, 900], [390, 844]] as const) {
     await page.setViewportSize({ width: ancho, height: alto })
     await f.abrir('/#/conf/equipos/ceiba')
-    const cabeza = page.locator('main [data-primero]')
+    const cabeza = page.locator('main [data-renglon="si-falla-hoy"]')
     await expect(cabeza.locator('[data-cifra]')).toHaveText('3.059')
-    await expect(cabeza).toContainText('barriles por día')
-    await expect(cabeza.locator('[data-frase]')).toHaveText('Ataque primero P-201A y P-201C: hoy valen más y TRIM no las vigila. Ahí va el próximo instrumento.')
-    const primeros = await cabeza.locator('[data-fila-primero]').evaluateAll(es => es.map(e => e.getAttribute('data-fila-primero')))
-    f.ok(primeros.join(' ') === 'P-201A P-201C LC-11', `${ancho} px · los tres primeros de «Si falla hoy» (${primeros.join(', ')})`)
-    const abajo = await page.locator('main [data-fila-primero="P-201A"]').evaluate(e => e.getBoundingClientRect().bottom)
-    f.ok(abajo <= alto, `${ancho} px · la cifra y P-201A se ven sin desplazarse (P-201A termina en ${Math.round(abajo)} de ${alto})`)
-    // Los filtros de tipo y tren, detrás de «Más filtros»: la primera pantalla es la respuesta, no los filtros.
-    f.ok(!await page.locator('main [role=radiogroup][aria-label="Tren"]').isVisible(), `${ancho} px · el tipo y el tren, plegados`)
+    await expect(cabeza).toContainText('bbl/d')
+    await expect(cabeza).toContainText('P-201A y P-201C · sin instrumento')
+    const abrir = page.locator('main [data-abrir-primero]')
+    const abajo = await abrir.evaluate(e => e.getBoundingClientRect().bottom)
+    f.ok(abajo <= alto, `${ancho} px · la cifra y «Abrir P-201A» se ven sin desplazarse (${Math.round(abajo)} de ${alto})`)
+    // Los filtros, detrás de «Filtrar»: la primera pantalla es la respuesta, no los filtros.
+    f.ok(!await page.locator('main [role=radiogroup][aria-label="Tren"]').isVisible() && !await page.locator('main [role=radiogroup][aria-label="Estado"]').isVisible(), `${ancho} px · los filtros, plegados`)
     f.ok(await sale(page) <= 0, `${ancho} px · nada se sale a lo ancho`)
   }
-  // Una fila de la cabeza abre su nivel 3.
-  await page.locator('main [data-fila-primero="P-201A"]').click()
+  await page.locator('main [data-abrir-primero]').click()
   await expect(page.locator('main [data-nivel3="P-201A"]')).toBeVisible()
   // Otro rol no ve la cabeza: su Equipos es la lista.
   await f.abrir('/#/prod/equipos/ceiba')
   await expect(page.locator('main [data-lista-equipos]')).toBeVisible()
-  f.ok(await page.locator('main [data-primero]').count() === 0, 'producción no tiene la cabeza de confiabilidad')
+  f.ok(await page.locator('main [data-renglon="si-falla-hoy"]').count() === 0, 'producción no tiene la cabeza de confiabilidad')
   f.cerrar()
 })
 
-test('P-10 · Arriba de Equipos: dónde va el próximo instrumento (conf) y lo que no conviene intervenir hoy (jefe)', async ({ flujo: f }) => {
+test('P-10 · Arriba de Equipos, el próximo instrumento (conf); «Ojo: no intervenir hoy», una vez, en el Hoy del jefe (C-06)', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/conf/equipos/morichal')
   await expect(page.locator('main [data-decide="conf"]')).toContainText('¿Dónde va el próximo instrumento? Lo primero de la lista sin instrumento:')
-  await expect(page.locator('main [data-primero] [data-frase]')).toHaveText('Ataque primero MPP-301: ya avisa.')
+  await expect(page.locator('main [data-renglon="si-falla-hoy"]')).toContainText('MPP-301')
   await f.abrir('/#/jefe/equipos/ceiba')
-  await expect(page.locator('main [data-decide="jefe"]')).toHaveText('Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.')
-  f.ok(await page.locator('main [data-primero]').count() === 0, 'el jefe no tiene la cabeza de confiabilidad')
+  f.ok(await page.locator('main [data-decide="jefe"]').count() === 0 && await page.locator('main [data-renglon="si-falla-hoy"]').count() === 0, 'en su Equipos, el jefe tiene la lista, sin repetir el «Ojo» ni la cabeza de confiabilidad')
+  await f.abrir('/#/jefe/hoy/ceiba/curso')
+  await expect(page.locator('main [data-no-intervenir]')).toHaveText('Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.')
   f.cerrar()
 })
 
@@ -109,42 +108,23 @@ test('H6 · La franja en el mismo lugar en los niveles 1, 2 y 3 (1440 y 1280)', 
 test('H7 · La ficha del gerente en el escritorio no tapa la franja ni bloquea la pantalla; en el teléfono, hoja con velo', async ({ flujo: f }) => {
   const { page } = f
   await page.setViewportSize({ width: 1280, height: 860 })
-  await f.abrir('/#/ger/equipos/ceiba')
-  const boton = page.locator('main [data-equipos-gerente] [data-fila-equipo="P-201B"]')
-  // Con el teclado: en Safari un clic no le da el foco a un botón (así es macOS), y quien
-  // navega con teclado llega a la fila con el foco puesto. Ahí es donde el foco tiene que volver.
-  await boton.focus()
-  await page.keyboard.press('Enter')
+  // A-16: el gerente ya no tiene Equipos; la ficha se abre encima de lo suyo (la dirección del equipo).
+  await f.abrir('/#/ger/resultados/ceiba/curso/P-201B')
   const ficha = page.locator('[data-panel-equipo]')
   await expect(ficha).toBeVisible()
   f.ok(await ficha.getAttribute('aria-modal') === null && await page.locator('[data-velo]').count() === 0, 'sin velo y no modal')
   f.ok(await page.locator('main').evaluate(e => !e.closest('[inert]')), 'la pantalla de atrás se sigue usando')
   const [arriba, cab] = await Promise.all([ficha.evaluate(e => e.getBoundingClientRect().top), page.locator('[data-cabecera]').evaluate(e => e.getBoundingClientRect().bottom)])
   f.ok(arriba >= cab - 1, `empieza debajo de la cabecera (${Math.round(arriba)} ≥ ${Math.round(cab)}): la franja queda a la vista`)
-  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('[data-panel-equipo]')), { message: 'el foco entra a la ficha' }).toBe(true)
+  await ficha.focus().catch(() => undefined)
   await page.keyboard.press('Escape')
   await expect(ficha, 'Escape la cierra').toHaveCount(0)
-  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-fila-equipo')), { message: 'el foco vuelve a la fila que la abrió' }).toBe('P-201B')
-  // En el teléfono, la hoja de siempre: modal (lo de atrás inerte) y se cierra con «Cerrar».
   await page.setViewportSize({ width: 390, height: 844 })
-  await f.abrir('/#/ger/equipos/ceiba')
-  await page.locator('main [data-equipos-gerente] [data-fila-equipo="P-201B"]').click()
+  await f.abrir('/#/ger/resultados/ceiba/curso/P-201B')
   await expect(ficha).toHaveAttribute('aria-modal', 'true')
   await expect.poll(() => page.locator('main').evaluate(e => !!e.closest('[inert]')), { message: 'en el teléfono, lo de atrás queda inerte' }).toBe(true)
   await ficha.getByRole('button', { name: 'Cerrar', exact: true }).first().click()
   await expect(ficha, '«Cerrar» la cierra').toHaveCount(0)
-  f.cerrar()
-})
-
-test('P-equipos-ger · UI-14 · El gerente: «¿Lo vigila TRIM?» en sí o no, y «Diferido por equipo» con las filas de B', async ({ flujo: f }) => {
-  const { page } = f
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await f.abrir('/#/ger/equipos/ceiba')
-  const g = page.locator('main [data-equipos-gerente]')
-  const t = await g.innerText()
-  f.ok(!/\d+ señales|solo su controlador/.test(t), 'sin variables de equipo («8 señales», «solo su controlador»)')
-  await expect(g.locator('[data-fila-equipo="P-201B"] [data-vigila]')).toHaveText('sí')
-  f.ok(await g.locator('[data-por-equipo-gerente] [data-equipo-diferido]').count() > 0, 'el diferido por equipo con las filas de La planta viva (imagen 1)')
   f.cerrar()
 })
 

@@ -7,83 +7,29 @@
    - P-agua-1, P-agua-2 y H32: Agua abre con la frase de X4 §6.1 y la cuenta va detrás de «Ver la cuenta»;
      «Por qué es crítica» en tres líneas con viñetas; «sin firmar» sin «dato del demo» en cada caja;
    - T-9 / P-planta-2, P-planta-3, G-6 y H22 en la tubería de antes, donde todavía se monte (Planta, Producción). */
-import { type Page } from '@playwright/test'
+import { expect } from '@playwright/test'
 import { test } from './apoyo.ts'
 
 /** Lo diferido dicho como pérdida (el texto que se ve, no el código). */
 const PIERDE = /\bse pierden?\b|\bpierden\b|se perdió|se está perdiendo/i
 
-/** Cada equipo con las condiciones que muestran sus marcas en la vista (H3: una sola por equipo). */
-const marcasPorEquipo = (page: Page) => page.evaluate(() => {
-  const m: Record<string, string[]> = {}
-  for (const el of document.querySelectorAll('main [data-condicion][data-marca-de]')) {
-    const equipo = el.getAttribute('data-marca-de') ?? '', c = el.getAttribute('data-condicion') ?? ''
-    if (!(m[equipo] ??= []).includes(c)) m[equipo].push(c)
-  }
-  return m
-})
-
-// K1 · P-10: el Riesgo del jefe y de confiabilidad vive en su Equipos («Qué está en riesgo», debajo de la lista).
-test('Riesgo del jefe: se deja de producir, una marca por equipo con su palabra, «Por qué» y el costo de una falla con su nombre', async ({ flujo: f }) => {
+// B3 · A-13: «Qué está en riesgo» salió de debajo de la lista de Equipos (repetía la cabeza, la franja y la lista). Lo
+// que se probaba de él vale para la lista: nada «se pierde», una marca por equipo con su palabra y «bomba de agua».
+test('Equipos del jefe (antes Riesgo): se deja de producir, una marca por equipo con su palabra y la familia de campo', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/jefe/riesgo/ceiba/curso')
-  await page.waitForSelector('[data-riesgo] [data-condicion]')
   f.ok((await f.hash()).startsWith('#/jefe/equipos/ceiba'), `la dirección de Riesgo abre Equipos (${await f.hash()})`)
-  // Toda la vista (la lista de Equipos y «Qué está en riesgo»).
+  await page.locator('main [data-fila-equipo]').first().waitFor()
   const t = await f.texto()
-  f.ok(!PIERDE.test(t), `nada «se pierde» en Riesgo (${t.match(PIERDE)?.[0] ?? 'ninguno'})`)
-  f.ok(t.includes('Por qué') && !t.includes('Se deja de producir ahora, por causa'), 'el reparto de la cifra se llama «Por qué» (no repite su rótulo)')
+  f.ok(!PIERDE.test(t), `nada «se pierde» en Equipos (${t.match(PIERDE)?.[0] ?? 'ninguno'})`)
   f.ok(!/\d bbl si falla hoy/.test(t), 'el costo de una falla (en bbl) no se llama «si falla hoy» (D-2)')
-  // P-09: en las filas que arma Riesgo, la familia es la de campo (los nombres de «Si falla hoy» los da el motor de F3).
-  const porQue = (await page.locator('[data-riesgo] section', { has: page.getByRole('heading', { name: 'Por qué', exact: true }) }).innerText())
-  f.ok(/P-201B[\s\S]*bomba de agua/.test(porQue) && !/bomba de reinyecci[oó]n/i.test(porQue), 'en «Por qué», P-201B es «bomba de agua», no «bomba de reinyección» (P-09)')
-
-  // La marca de P-201B es la de la franja (alarma) y va con su palabra; LC-21, atención.
-  const p201 = page.locator('[data-riesgo] [data-condicion="alarma"]').filter({ hasText: 'alarma' })
-  f.ok(await p201.count() >= 1, 'P-201B lleva su marca de alarma con la palabra «alarma» al lado (H16)')
-  // Una marca por equipo en toda la vista: la lista de Equipos y «Qué está en riesgo» dicen la misma.
-  const marcas = await marcasPorEquipo(page)
-  const dobles = Object.entries(marcas).filter(([, cs]) => cs.length > 1)
-  f.ok(dobles.length === 0 && marcas['P-201B']?.[0] === 'alarma' && marcas['LC-21']?.[0] === 'atencion',
-    `una sola marca por equipo, la de la franja (${JSON.stringify(marcas)})`)
-
-  // «Si falla hoy»: sin la columna del puesto (1, 1, 3…); el puesto queda en data-puesto.
-  const filas = await page.locator('[data-fila-critica]').evaluateAll(es => es.map(e => ({ texto: (e as HTMLElement).innerText.trim(), puesto: e.getAttribute('data-puesto') })))
-  f.ok(filas.length > 0 && filas.every(x => !/^\d/.test(x.texto)) && filas.some(x => x.puesto === '1'),
-    `las filas de «Si falla hoy» no empiezan por su puesto (${filas.slice(0, 3).map(x => x.texto.split('\n')[0]).join(' · ')})`)
+  await expect(page.locator('main [data-fila-equipo="P-201B"]')).toContainText('Alarma · parada')
+  await expect(page.locator('main [data-fila-equipo="P-201B"]')).toContainText('bomba de agua')
+  await expect(page.locator('main [data-fila-equipo="LC-21"]')).toContainText('Atención')
+  const marcas = await page.locator('main [data-fila-equipo]').evaluateAll(es => es.map(e => ({ eq: e.getAttribute('data-fila-equipo'), c: e.getAttribute('data-condicion'), n: e.querySelectorAll('svg[viewBox="0 0 14 14"]').length })))
+  f.ok(marcas.find(m => m.eq === 'P-201B')?.c === 'alarma' && marcas.find(m => m.eq === 'LC-21')?.c === 'atencion', 'la marca de la franja en cada fila')
+  f.ok(await page.locator('#si-falla-hoy, main [data-riesgo]').count() === 0, 'sin el bloque de Riesgo debajo de la lista')
   f.cerrar()
-})
-
-test('Riesgo de confiabilidad: la ⓘ del método pegada al título, sin el rótulo «modelo choke»', async ({ flujo: f }) => {
-  const { page } = f
-  await f.abrir('/#/conf/riesgo/morichal/curso')
-  await page.waitForSelector('#si-falla-hoy')
-  f.ok((await f.hash()).startsWith('#/conf/equipos/morichal'), `la dirección de Riesgo abre Equipos (${await f.hash()})`)
-  const t = await f.texto()
-  f.ok(!/modelo choke/i.test(t), 'confiabilidad no lee «modelo choke» como rótulo (T-11)')
-  f.ok(await page.locator('#si-falla-hoy-titulo').getByRole('img', { name: /^Modelo choke: Es el modelo choke, un método internacional para ubicar dónde se deja de producir/ }).count() === 1,
-    'la ⓘ del método va pegada al título «Si falla hoy» y dice «dónde se deja de producir» (T-8)')
-  f.cerrar()
-})
-
-test.describe('reducir movimiento', () => {
-  test.use({ reducedMotion: 'reduce' })
-  test('el salto a «Si falla hoy» llega sin animar (A18)', async ({ flujo: f }) => {
-    const { page } = f
-    await f.abrir('/#/jefe/riesgo/ceiba/curso')
-    await page.waitForSelector('#si-falla-hoy')
-    const top = () => page.evaluate(() => document.getElementById('si-falla-hoy')!.getBoundingClientRect().top)
-    // En Equipos, «Qué está en riesgo» va debajo de la lista: se baja hasta su panel y desde ahí se salta.
-    await page.getByRole('button', { name: 'ver «Si falla hoy»' }).scrollIntoViewIfNeeded()
-    const t0 = await top()
-    await page.getByRole('button', { name: 'ver «Si falla hoy»' }).click()
-    // Sin animación, el salto ya terminó cuando vuelve el clic; con «smooth», sigue a mitad de camino.
-    const t1 = await top()
-    await f.esperar(800)
-    const t2 = await top()
-    f.ok(t0 - t2 > 20 && Math.abs(t1 - t2) < 2, `«Si falla hoy» llega de una vez (${Math.round(t0)} → ${Math.round(t1)} → ${Math.round(t2)} px)`)
-    f.cerrar()
-  })
 })
 
 test('Agua: la frase de X4, la cuenta detrás de «Ver la cuenta» y «Por qué es crítica» en tres líneas', async ({ flujo: f }) => {

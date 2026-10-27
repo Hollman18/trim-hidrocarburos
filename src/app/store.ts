@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { create } from 'zustand'
 import { rangoDePeriodo } from '@/entities/diferido'
-import { rolPorId, ROL_INICIAL, ROLES } from '@/entities/roles'
+import { rolPorId, ROL_INICIAL } from '@/entities/roles'
 import { CAMPOS, periodoPorId, campoPorId } from '@/entities/campos'
 import type { Periodo, IdPeriodo } from '@/entities/tipos'
-import { leerHash, escribirHash, rangoValido, pantallaDelRol, PRIMER_DIA, ULTIMO_DIA, type DeLaDireccion, type MomentoDireccion } from './url'
+import { leerHash, escribirHash, rangoValido, pantallaDelRol, nombreRolAjeno, PRIMER_DIA, ULTIMO_DIA, type DeLaDireccion, type MomentoDireccion, type FiltroDireccion } from './url'
 import { pantallaVisible } from '@/shared/config/producto'
 import { PANTALLAS } from '@/app/pantallas'
 import type { Elemento, Miembro, CambioPlanta, Tren } from '@/entities/planta'
@@ -45,8 +45,15 @@ interface Estado {
   tema: Tema
   /** Interruptor de «¿cómo se lee?». */
   comoSeLee: boolean
-  /** Rol cuya introducción hay que mostrar, o null. */
-  onboarding: string | null
+  /** B3 · A-22: la dirección pedía un rol que no se ofrece (la planeadora, apagada) o que salió del
+   *  producto (abastecimiento): su nombre, y la aplicación lo dice en vez de abrir otro rol. */
+  rolNoDisponible: string | null
+  /** Sale del aviso «este rol no está disponible» al inicio del rol de siempre. */
+  salirDeRolNoDisponible: () => void
+  /** B3 · A-15: el filtro de Equipos que trae una dirección vieja (Bombas, Electrosumergibles…). Equipos lo
+   *  pone una vez y lo borra. */
+  filtroEquipos: FiltroDireccion | null
+  tomarFiltroEquipos: () => FiltroDireccion | null
   equipoAbierto: string | null
   equipoExpandido: boolean
   /** Una dirección que pedía un campo o el portafolio que la persona no tiene:
@@ -124,8 +131,6 @@ interface Estado {
   redirigir: (p: string, aviso: string) => void
   setTema: (t: Tema) => void
   setComoSeLee: (v: boolean) => void
-  abrirOnboarding: () => void
-  cerrarOnboarding: () => void
   abrirEquipo: (id: string | null, expandido?: boolean) => void
   /** El esquema de planta lo edita quien configura los conectores, una persona
    *  con acceso, en un campo suyo (`POST /api/planta/cambios`); cada cambio
@@ -140,13 +145,6 @@ interface Estado {
 export type ResultadoPlanta = { ok: true } | { ok: false; error: string }
 export type { CambioPlanta, Tren }
 
-/** La introducción se muestra la primera vez que se entra con cada rol. */
-const vistoOnboarding = (rolId: string) => {
-  try { return localStorage.getItem(`trim.intro.${rolId}`) === '1' } catch { return false }
-}
-const marcarOnboarding = (rolId: string) => {
-  try { localStorage.setItem(`trim.intro.${rolId}`, '1') } catch { /* modo privado */ }
-}
 
 const leerTema = (): Tema => {
   try { return (localStorage.getItem('trim.tema') as Tema) || 'system' } catch { return 'system' }
@@ -188,9 +186,7 @@ export const claveDeVista = (s: Pick<Estado, 'rolId' | 'pantalla' | 'campoId' | 
 function avisoDeDireccion(c: DeLaDireccion, s: Pick<Estado, 'rolId' | 'pantalla' | 'campoId' | 'alcance'>): Estado['avisoCampo'] {
   const visto = campoPorId(s.campoId).nombre
   // P-17: un rol que todavía no se ofrece (la planeadora, abastecimiento) no abre en silencio el de otro.
-  const rol = c.rolAjeno ? ROLES.find(r => r.id === c.rolAjeno) : undefined
-  const texto = rol ? `El rol «${rol.nombre}» todavía no está en esta versión: le mostramos ${rolPorId(s.rolId).nombre.toLowerCase()}.`
-    : c.campoAjeno && c.campoAjeno !== s.campoId ? `Usted no tiene asignado el campo ${campoPorId(c.campoAjeno).nombre}: le mostramos ${visto}.`
+  const texto = c.campoAjeno && c.campoAjeno !== s.campoId ? `Usted no tiene asignado el campo ${campoPorId(c.campoAjeno).nombre}: le mostramos ${visto}.`
     : c.alcance === 'portafolio' && s.alcance !== 'portafolio' ? `Usted no tiene asignado el portafolio: le mostramos ${visto}.` : null
   return texto ? { texto, clave: claveDeVista(s) } : null
 }
@@ -211,7 +207,10 @@ export const useApp = create<Estado>((set, get) => ({
   suplantando: false,
   tema: leerTema(),
   comoSeLee: false,
-  onboarding: vistoOnboarding(rolInicial.id) ? null : rolInicial.id,
+  rolNoDisponible: inicial.rolAjeno ? nombreRolAjeno(inicial.rolAjeno) ?? null : null,
+  salirDeRolNoDisponible: () => { set({ rolNoDisponible: null }); escribirHash(aDireccion(get()), true) },
+  filtroEquipos: inicial.equipoAbierto ? null : inicial.filtro ?? null,
+  tomarFiltroEquipos: () => { const f = get().filtroEquipos; if (f) set({ filtroEquipos: null }); return f },
   equipoAbierto: inicial.equipoAbierto ?? null,
   equipoExpandido: false,
   avisoCampo: null,
@@ -287,7 +286,6 @@ export const useApp = create<Estado>((set, get) => ({
     const nuevoCampo = asignados.some(c => c.id === campoId) ? campoId : asignados[0]?.id ?? campoId
     set({
       rolId: rol.id,
-      onboarding: vistoOnboarding(rol.id) ? null : rol.id,
       // Si la persona del rol no tiene ningún campo registrado (un id que el
       // catálogo no conoce), la vista se queda donde estaba en vez de reventar.
       campoId: nuevoCampo,
@@ -314,8 +312,6 @@ export const useApp = create<Estado>((set, get) => ({
   },
   setTema: t => { aplicarTema(t); set({ tema: t }) },
   setComoSeLee: v => set({ comoSeLee: v }),
-  abrirOnboarding: () => set({ onboarding: get().rolId }),
-  cerrarOnboarding: () => { marcarOnboarding(get().rolId); set({ onboarding: null }) },
   abrirEquipo: (id, expandido = false) => set({ equipoAbierto: id, equipoExpandido: expandido }),
 
   agregarMiembro: (campo, grupo, miembro) => E.cambiarPlanta(quien(), campo, { tipo: 'agregar-miembro', grupo, miembro }),
@@ -414,6 +410,15 @@ let reemplazando = false
 function aplicarDireccion() {
   const ahora = useApp.getState
   const c = leerHash(camposDelRegistro(sesion().usuarios), ahora().rolId)
+  // A-22: un rol que no se ofrece no abre otro en silencio: se dice, y la dirección queda como vino.
+  if (c.rolAjeno) return useApp.setState({ rolNoDisponible: nombreRolAjeno(c.rolAjeno) ?? null })
+  if (ahora().rolNoDisponible) useApp.setState({ rolNoDisponible: null })
+  // El filtro de una dirección vieja (Bombas, Electrosumergibles) vale para esa visita: al llegar a Equipos desde otra
+  // pantalla por una dirección sin filtro, la lista abre entera (el filtro de antes no se queda pegado).
+  // («Atrás» desde el nivel 3 del mismo rol vuelve a la lista con el filtro que tenía.)
+  const listaDeEquipos = c.pantalla === 'equipos' && !c.equipoAbierto
+  if (listaDeEquipos && c.filtro) useApp.setState({ filtroEquipos: c.filtro })
+  else if (listaDeEquipos && !(ahora().pantalla === 'equipos' && ahora().equipoAbierto && (!c.rolId || c.rolId === ahora().rolId))) useApp.setState({ filtroEquipos: {} })
   // Cada paso se compara contra el estado de ESE momento, no contra una foto
   // del principio: setCampo pone el alcance en «campo» y setRol/setPantalla
   // cierran el equipo, así que el portafolio o el equipo de un enlace pegado
@@ -467,9 +472,9 @@ export function iniciarApp(): void {
     aplicandoDireccion = true
     try { aplicarDireccion() } finally { aplicandoDireccion = false }
   })
-  useApp.subscribe((s, antes) => escribirHash(aDireccion(s), !aplicandoDireccion && !reemplazando
-    && (s.pantalla !== antes.pantalla || s.rolId !== antes.rolId || s.campoId !== antes.campoId || s.alcance !== antes.alcance)))
+  useApp.subscribe((s, antes) => { if (!s.rolNoDisponible) escribirHash(aDireccion(s), !aplicandoDireccion && !reemplazando
+    && (s.pantalla !== antes.pantalla || s.rolId !== antes.rolId || s.campoId !== antes.campoId || s.alcance !== antes.alcance)) })
   // Al cargar se escribe una vez: si la dirección pedía una pantalla que el rol
-  // no tiene, queda la que de verdad se muestra.
-  escribirHash(aDireccion(useApp.getState()))
+  // no tiene, queda la que de verdad se muestra. La de un rol que no está disponible queda como vino.
+  if (!useApp.getState().rolNoDisponible) escribirHash(aDireccion(useApp.getState()))
 }

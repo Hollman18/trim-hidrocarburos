@@ -7,10 +7,10 @@ import { conMeta, textoSinMeta } from '@/entities/libro'
 import { SIN_META } from '@/entities/configuracion'
 import { fechaCorta } from '@/entities/reloj'
 import { Panel, Chip } from '@/shared/ui/primitivas'
+import { Barra, Cifra } from '@/shared/ui/scada'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Info } from '@/shared/ui/Info'
-import { BarraMeta } from '@/shared/ui/BarraMeta'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas, VISIBLES } from '@/shared/ui/listaCorta'
 import { n0, n1, n3 } from '@/shared/lib/formato'
@@ -19,10 +19,6 @@ import { Factor } from '@/widgets/diferidos/Factor'
 import { SelloPublicacion } from '@/widgets/diferidos/Sello'
 import { AsignacionOficial } from '@/widgets/produccion/AsignacionOficial'
 import { desplazable } from '@/shared/ui/alFinal'
-import { TuberiaTecnica } from '@/widgets/plantaviva/Tecnica'
-import { TuberiaDeCadaCampo } from '@/widgets/choke/Campos'
-import { SerieLimita } from '@/widgets/choke/Serie'
-import { Escalera } from '@/widgets/choke/Escalera'
 import { useRepartoChoke } from '@/shared/api/choke'
 
 /** La curva es el hecho; el diferido es la consecuencia. Producción entra por
@@ -86,12 +82,17 @@ export function Produccion() {
           <small className="hidden text-[13px] text-[var(--tinta3)] print:block">{ambito.titulo} · {rango.nombre}</small>
           <SelloPublicacion lb={lb} className="ml-auto" />
         </div>
-        {/* Dos líneas (P-produccion-1): lo medido contra la meta y el potencial del libro (G-5). El resto, en sus ⓘ. */}
-        <div className="mt-1 max-w-[560px]">
-          <BarraMeta rotulo="producción medida" valor={lb.real} unidad="bbl" meta={hayMeta ? lb.meta.produccion : undefined}
-            rotuloMeta={hayMeta ? `meta${enCurso ? ' a la fecha' : ''} ${n0(lb.meta.produccion)}` : textoSinMeta(lb.meta, ambito.global)} fuera={hayMeta && lb.real < lb.meta.produccion}
-            apoyo={<span className="inline-flex flex-wrap items-center gap-x-1">{n0(porDia(lb.real))} bbl/d
+        {/* Dos líneas (P-produccion-1): lo medido contra la meta (con la barra del kit SCADA) y el potencial del libro (G-5). El resto, en sus ⓘ. */}
+        <div className="mt-1 grid max-w-[640px] gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr] sm:items-end" data-barra-meta="producción medida">
+          <Cifra rotulo="Producción medida" valor={Math.round(lb.real)} unidad="bbl" mayusculas={false}
+            estado={hayMeta && lb.real < lb.meta.produccion ? 'anormal' : 'normal'} condicion={hayMeta && lb.real < lb.meta.produccion ? 'aviso' : undefined}
+            nota={<span className="inline-flex flex-wrap items-center gap-x-1">{hayMeta ? `meta${enCurso ? ' a la fecha' : ''} ${n0(lb.meta.produccion)}` : textoSinMeta(lb.meta, ambito.global)} · {n0(porDia(lb.real))} bbl/d
               <Info titulo="Real contra la meta" texto={`Lo que midió el punto de medición oficial.${ayer === null ? ' Falta el fiscal del último día en algún campo: la suma del último día no está completa.' : ` El último día completo${fechaAyer ? ` (${fechaCorta(fechaAyer)})` : ''}: ${n0(ayer)} bbl.`}${hayMeta ? ` Meta por día ${n0(porDia(lb.meta.produccion))} bbl/d; ${enCurso ? 'del mes completo' : 'del período'}, ${n0(lb.meta.produccionTotal)} bbl.` : ` ${SIN_META}.`}`} /></span>} />
+          {hayMeta && (
+            <Barra nombre={`Producción medida, meta ${n0(lb.meta.produccion)} bbl`} valor={lb.real} unidad="bbl" ancho={220} className="[&>span:nth-child(2)]:hidden"
+              escala={{ min: 0, max: lb.meta.produccion * 1.25, firmada: true }} banda={[lb.meta.produccion, null]}
+              estado={lb.real < lb.meta.produccion ? 'anormal' : 'normal'} condicion={lb.real < lb.meta.produccion ? 'aviso' : undefined} />
+          )}
         </div>
         <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 border-t border-[var(--linea2)] pt-2.5 text-[15px] text-[var(--tinta2)]" data-del-potencial="">
           Potencial del libro: <b className="text-[var(--tinta)] tabular-nums">{n0(lb.potencial)} bbl</b> · {n0(porDia(lb.potencial))} bbl/d · lo medido es el {n1(lb.pe)} %
@@ -100,14 +101,7 @@ export function Produccion() {
         </p>
       </section>
 
-      {(ambito.global
-        ? <TuberiaDeCadaCampo campos={ids} desde={rango.desde} hasta={rango.hasta} />
-        : (
-          <>
-            <TuberiaTecnica className="mb-3 sm:mb-4" />
-            <SerieLimita campoId={ids[0]!} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />
-          </>
-        ))}
+      {/* A-10 · La tubería del campo va una sola vez, en el inicio de producción (La planta viva): aquí no se repite. */}
 
       <Panel className="mb-2.5" titulo="Día a día" extra="bbl/d">
         <Diaria dias={dias} />
@@ -120,7 +114,6 @@ export function Produccion() {
         </Lectura>
       </Panel>
 
-      {<Escalera campos={ids} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} />}
       {/* C5 · «Lo perdido por tramo, mes a mes» vive una sola vez: en Resultados (mes a mes, «Por dónde se trabó») y en Diferidos (X4 §3.7). */}
 
       {<div className="mb-2.5 grid items-start gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))]">

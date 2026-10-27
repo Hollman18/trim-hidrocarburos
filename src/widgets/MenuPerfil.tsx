@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronRight, Monitor, Sun, Moon, UserRound, ArrowLeft, BookOpen, PanelLeftClose } from 'lucide-react'
+import { ChevronRight, Monitor, Sun, Moon, UserRound, ArrowLeft, PanelLeftClose } from 'lucide-react'
 import { useApp, useRol, usePersona } from '@/app/store'
 import { ROLES_VISIBLES } from '@/entities/roles'
 import { AREAS } from '@/entities/tipos'
@@ -38,7 +38,7 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
   /** Plegar el panel (el botón del pie, junto a la persona). */
   onPlegar?: () => void
 }) {
-  const setRol = useApp(s => s.setRol), setPantalla = useApp(s => s.setPantalla), tema = useApp(s => s.tema), setTema = useApp(s => s.setTema), abrirOnboarding = useApp(s => s.abrirOnboarding), pantalla = useApp(s => s.pantalla)
+  const setRol = useApp(s => s.setRol), setPantalla = useApp(s => s.setPantalla), tema = useApp(s => s.tema), setTema = useApp(s => s.setTema), pantalla = useApp(s => s.pantalla)
   const rol = useRol(); const persona = usePersona()
   const usuarios = useUsuarios()
   const empresa = useSesion(s => s.ctx.config.empresa)
@@ -104,11 +104,7 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
                     </button>
                   )
                 })}
-                {/* Las señas van sobre el inicio de verdad del rol (X4 §6.2): se pasa a él y se abren. */}
-                <button onClick={() => { setPantalla(rol.inicio); abrirOnboarding(); setAbierto(false) }}
-                  className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
-                  <BookOpen className="size-[18px] text-[var(--tinta2)]" /> Introducción
-                </button>
+                {/* B3 · A-18: la introducción se borró; la ayuda es «¿Cómo se lee?», a un toque en el panel. */}
                 <button onClick={() => setVista('roles')}
                   className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[15px] hover:bg-[var(--panel2)]">
                   <ArrowLeft className="size-[18px] rotate-180 text-[var(--tinta2)]" />

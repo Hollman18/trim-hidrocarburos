@@ -1,40 +1,77 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAmbito, useRol, usePersona } from '@/app/store'
-import { useHoy, type TareaHoy } from '@/shared/api/hoy'
-import { useTelefono } from '@/shared/ui/telefono'
-import { Boton, Enlace } from '@/shared/ui/primitivas'
+import { useHoy, type TareaHoy, type VistaHoy } from '@/shared/api/hoy'
+import { useJornada } from '@/shared/api/balance'
+import { Boton } from '@/shared/ui/primitivas'
 import { Tarjeta } from '@/widgets/hoy/Tarjeta'
 import { Inicio, Bloqueo, Hechas, AvisoDeshacer } from '@/widgets/hoy/piezas'
-import { SuCampo, DiferidoTurno } from '@/widgets/hoy/Lateral'
-import { Operador } from '@/widgets/hoy/Operador'
+import { Operador, OrdenDeCierre } from '@/widgets/hoy/Operador'
+import { ordenDeCierre } from '@/widgets/hoy/vista'
 import { Entrega } from '@/widgets/hoy/Entrega'
-import { useEnvio } from '@/widgets/hoy/envio'
+import { Cifras } from '@/widgets/hoy/Cifras'
+import { MiTurno } from '@/widgets/hoy/MiTurno'
+import { InicioJefe, NoIntervenir } from '@/widgets/hoy/Jefe'
+import { LoQueVio, type Vio } from '@/widgets/hoy/LoQueVio'
+import { RegistrarPerdida } from '@/widgets/hoy/Perdida'
+import { SuOrden } from '@/widgets/sap/CerrarOrden'
+import { AvisarSap } from '@/widgets/sap/AvisarSap'
+import { useEnvio, type Envio } from '@/widgets/hoy/envio'
 import { useResponder, useConfirmar, useEscribir } from '@/widgets/hoy/acciones'
 import { useIr } from '@/widgets/hoy/palabras'
+import { Texto } from '@/widgets/hoy/comun'
+import { AHORA } from '@/entities/reloj'
 
-/** Hoy: un solo lugar para lo que a cada rol le toca hacer (X4 §3.3, §3.4 y
- *  §5.5; X5 §5.1, §5.6-5.8). Todo lo dice el motor (`GET /api/vistas/hoy`):
- *  la cifra con su frase, la franja «No arrancar», las tarjetas en su orden
- *  (lo que tiene hora, los barriles en juego, lo demás y, al final, lo que solo
- *  informa), «Hecho hoy» y, al lado, el campo ahora y el diferido del turno. Contestar o confirmar deja un aviso con «Deshacer». El
- *  operador, en el teléfono, contesta de a una pregunta por pantalla.
- *  «Entregar turno» abre la entrega del turno (P-06): en su lugar en el escritorio,
- *  como una hoja que sube en el teléfono. Cuando una tarjeta se va (se confirmó o se
- *  contestó), el foco pasa a la que quedó en su lugar y no se pierde (A2). */
+const y = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
+/** «mañana antes de las 07:00»: la hora límite del reporte, en palabras de campo. */
+const antesDe = (limite: string) => {
+  const dia = (d: Date) => new Date(d.getTime() - 5 * 3_600_000).toISOString().slice(0, 10)
+  const l = new Date(limite), hoy = dia(AHORA), manana = dia(new Date(AHORA.getTime() + 86_400_000))
+  return `${dia(l) === hoy ? 'hoy ' : dia(l) === manana ? 'mañana ' : ''}antes de las ${limite.slice(11, 16)}`
+}
+/** Lo que no arranca y lo que nadie ha contestado, de la vista del motor. */
+const noArrancan = (v: VistaHoy) => [...new Set(v.bloqueos.flatMap(b => b.equipos))]
+const sinCausa = (v: VistaHoy) => [...new Set(v.tareas.filter(t => t.tipo === 'conseguir-causa').flatMap(t => (t.preguntas ?? []).map(q => q.equipo)))]
+/** Las bombas paradas por las que alguien pregunta: a ellas les sale «SAP no lo sabe · Avisar» (FF-5). */
+const bombasParadas = (v: VistaHoy) => {
+  const vistas = new Map<string, { campoId: string; equipo: string; evento?: string; contexto: string }>()
+  for (const q of v.tareas.flatMap(t => t.preguntas ?? [])) if (q.sobre === 'bomba' && q.libro && !vistas.has(q.equipo))
+    vistas.set(q.equipo, { campoId: q.campoId, equipo: q.equipo, evento: q.libro.evento, contexto: q.contexto })
+  return [...vistas.values()]
+}
+
+/** El número de orden que nombra una tarjeta de orden del motor («…orden 40012056…» o su id). */
+const ordenesDe = (t: TareaHoy) => [...new Set(`${t.id} ${t.titulo} ${(t.porque ?? []).map(x => (typeof x === 'string' ? x : x.b)).join('')}`.match(/\b\d{8}\b/g) ?? [])]
+
+/** Hoy (experiencia v3): un solo lugar para lo que a cada rol le toca, con su número arriba «tipo
+ *  número» (necesario-por-rol §14) y el choke en cada parada. Todo lo dice el motor
+ *  (`GET /api/vistas/hoy`, `/vistas/jornada`, `/vistas/lista-equipos`…); aquí se pinta.
+ *  - sup: «Por confirmar 4», «Mi turno» (las paradas de su jornada con su hora y su cadena),
+ *    «Entregar turno» (en pantalla y en PDF) y «Registrar una pérdida»;
+ *  - oper: «Pregunta 1 de 4», contestar con un toque, una sola pantalla (`Operador`);
+ *  - tec: «5 cosas hoy», la primera pregunta abierta y su orden para cerrar en el teléfono;
+ *  - jefe: «1 equipo avisa», las fallas del mes y la espera en 5 tramos (`InicioJefe`).
+ *  Contestar o confirmar deja un aviso con «Deshacer». Cuando una tarjeta se va, el foco pasa
+ *  a la que quedó en su lugar y no se pierde (A2). */
 export function Hoy() {
   const rol = useRol(); const ambito = useAmbito(); const persona = usePersona()
-  const telefono = useTelefono()
   const ir = useIr()
   const v = useHoy(rol.id, ambito.campos.map(c => c.id))
   const envio = useEnvio(useEscribir(), rol.id)
-  const responder = useResponder(envio)
+  const [vio, setVio] = useState<Vio | null>(null)
+  const responder = useResponder(envio, setVio)
   const confirmar = useConfirmar(envio)
   const quien = persona.sinAcceso ? undefined : persona.nombre
   const [entrega, setEntrega] = useState(false)
 
   // Lo que se acaba de hacer no se vuelve a pintar mientras dura su «Deshacer».
   const visible = (t: TareaHoy) => !envio.ocultas.has(t.id) && (!t.preguntas?.length || t.preguntas.some(q => !envio.ocultas.has(q.id)))
-  const tareas = v.tareas.filter(visible)
+  const orden = ordenDeCierre(v)
+  const tareas = v.tareas.filter(visible).filter(t => t !== orden
+    // A-24 y FF-6: la orden de K-101 no es del supervisor; la del técnico va en «Su orden» (la cierra él); la
+    // del jefe, en su número («Ver la orden»).
+    && !(t.tipo === 'orden' && (rol.id === 'sup' || rol.id === 'tec' || rol.id === 'jefe'))
+    // C-06: «Ojo: no intervenir hoy» va una vez, en el número del jefe.
+    && !(rol.id === 'jefe' && t.grupo === 'aviso' && t.ver?.destino.a === 'equipos'))
 
   // A2: la tarjeta que tenía el foco se fue (se confirmó): el foco va al título de la que quedó en su lugar.
   const lista = useRef<HTMLDivElement>(null)
@@ -56,45 +93,94 @@ export function Hoy() {
     ts[Math.min(i, ts.length - 1)]?.querySelector<HTMLElement>('[data-titulo-tarea]')?.focus()
   }, [ids])
 
-  if (rol.id === 'oper' && telefono) return (
+  if (rol.id === 'oper') return (
     <>
-      <div data-hoy={rol.id} data-insignia={v.insignia}><Operador v={v} ocultas={envio.ocultas} onResponder={responder} quien={quien} envio={envio} /></div>
+      <div data-hoy={rol.id} data-insignia={v.insignia}><Operador v={v} ocultas={envio.ocultas} onResponder={responder} quien={quien} envio={envio} vio={vio} onVio={setVio} /></div>
       <AvisoDeshacer envio={envio} />
     </>
   )
 
-  const lado = !!(v.campo || v.turno)
+  // FF-2: a quien la debe (el técnico) la primera pregunta le llega abierta.
+  const primeraAbierta = rol.id === 'tec' ? tareas.find(t => t.accion?.tipo === 'responder')?.id : undefined
   const corregir = rol.pantallas.includes('causa') ? () => ir({ a: 'paradas' }) : undefined
+  const campo = ambito.campos.length === 1 ? ambito.campos[0]!.id : undefined
+  const tarjetas = (
+    <div ref={lista} className="grid gap-3" data-tareas>
+      {tareas.map(t => <Tarjeta key={t.id} t={t} global={ambito.global} ocultas={envio.ocultas} quien={quien}
+        abiertaDeEntrada={t.id === primeraAbierta} compacta={rol.id === 'sup' || rol.id === 'jefe'} onConfirmar={confirmar} onResponder={responder} />)}
+    </div>
+  )
+  const avisar = (rol.id === 'sup' || rol.id === 'jefe') && bombasParadas(v).map(b => <AvisarSap key={b.equipo} {...b} />)
+  const loQueVio = vio && <LoQueVio v={vio} envio={envio} onListo={() => setVio(null)} />
+
   return (
     <>
-      {entrega && v.entrega && <div className="mb-[14px]"><Entrega e={v.entrega} onCerrar={() => setEntrega(false)} /></div>}
-      <div data-hoy={rol.id} data-insignia={v.insignia} className={lado ? 'grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,352px)]' : 'grid gap-5'}>
-        <div className="grid min-w-0 content-start gap-[14px]">
-          {/* Sin nada que hacer, la cifra «0» repetiría el vacío: queda solo la cifra que dice algo del campo. */}
-          {!(v.vacio && !v.inicio.previo) && <Inicio i={v.inicio} entregaAbierta={entrega} onEntregar={v.entrega ? () => setEntrega(x => !x) : undefined} />}
-          {/* La salvedad del bloqueo, en el teléfono de quien no está frente al equipo, a la ⓘ (imagen 3b). */}
-          {v.bloqueos.map(b => <Bloqueo key={b.campoId} b={b} subEnInfo={rol.id !== 'oper'} />)}
-          {v.vacio && !tareas.some(t => t.pide) && (
-            <section data-vacio className="rounded-[20px] bg-[var(--panel)] px-6 py-5">
-              <p className="text-[18px] font-medium">{v.vacio}</p>
-              <div className="mt-2"><Enlace onClick={() => ir({ a: 'planta' })}>Abrir La planta viva</Enlace></div>
-            </section>
-          )}
-          <div ref={lista} className="grid gap-[14px]" data-tareas>
-            {tareas.map(t => <Tarjeta key={t.id} t={t} global={ambito.global} ocultas={envio.ocultas} quien={quien}
-              onConfirmar={confirmar} onResponder={responder} />)}
-          </div>
-          <Hechas hs={v.hechas} onCorregir={corregir} />
-          {v.entrega && <Boton onClick={() => setEntrega(x => !x)} aria-expanded={entrega} className="min-h-14 w-full text-[17px] sm:hidden">Entregar turno</Boton>}
+      <div data-hoy={rol.id} data-insignia={v.insignia} className="grid max-w-[1280px] content-start items-start gap-3 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-4">
+        {/* En el escritorio, el número a la izquierda y lo que le toca a la derecha (d1-grafito-sup). */}
+        <div className="grid content-start gap-3 lg:sticky lg:top-0">
+        {rol.id === 'sup' ? <InicioSup v={v} envio={envio} entrega={entrega} onEntregar={() => setEntrega(x => !x)} />
+          : rol.id === 'tec' ? <InicioTec v={v} />
+          : rol.id === 'jefe' ? <InicioJefe v={v} />
+          : <>
+            {!(v.vacio && !v.inicio.previo) && <Inicio i={v.inicio} />}
+            {v.bloqueos.map(b => <Bloqueo key={b.campoId} b={b} subEnInfo />)}
+          </>}
         </div>
-        {lado && (
-          <aside className="grid content-start gap-[14px] max-sm:hidden" aria-label="Al lado">
-            {v.campo && <SuCampo c={v.campo} />}
-            {v.turno && <DiferidoTurno horas={v.turno.horas} bbl={v.turno.diferidoBbl} />}
-          </aside>
+        <div className="grid min-w-0 content-start gap-3">
+        {entrega && v.entrega && <EntregaConJornada v={v} campo={campo} onCerrar={() => setEntrega(false)} />}
+        {loQueVio}
+        {v.vacio && !tareas.some(t => t.pide) && (
+          <section data-vacio className="rounded-[10px] bg-[var(--panel)] px-6 py-5"><p className="text-[18px] font-medium">{v.vacio}</p></section>
         )}
+        {tarjetas}
+        {rol.id === 'tec' && <SuOrden campos={ambito.campos.map(c => c.id)} onVerEquipo={(c, e) => ir({ a: 'equipo', campoId: c, equipo: e })}
+          queHacer={Object.fromEntries(v.tareas.filter(t => t.tipo === 'orden' && t.ver?.destino.a === 'equipo').flatMap(t => ordenesDe(t).map(n => [n, <Texto key={n} f={t.porque} />])))} />}
+        {avisar}
+        {rol.id === 'jefe' && <NoIntervenir />}
+        {orden && (rol.id === 'sup' || rol.id === 'tec') && <OrdenDeCierre t={orden} />}
+        {rol.id === 'sup' && campo && <MiTurno campoId={campo} onUnaPorUna={corregir} />}
+        <Hechas hs={v.hechas} onCorregir={corregir} />
+        </div>
       </div>
       <AvisoDeshacer envio={envio} />
     </>
   )
 }
+
+/** El supervisor (§3 y §14): «Por confirmar 4 · antes de las 07:00», lo que se deja de producir,
+ *  lo que no arranca y lo que nadie ha contestado; «Entregar turno» fijo arriba (FF-4) y
+ *  «Registrar una pérdida». */
+function InicioSup({ v, envio, entrega, onEntregar }: { v: VistaHoy; envio: Envio; entrega: boolean; onEntregar: () => void }) {
+  const na = noArrancan(v), sc = sinCausa(v)
+  const pc = v.porConfirmar
+  return (
+    <Cifras titulo="Su turno" principal={{ id: 'por-confirmar', rotulo: 'Paradas por confirmar', cifra: pc ? String(pc.n) : '0', detalle: pc ? `el reporte sale ${antesDe(pc.limite)}` : undefined }}
+      apoyo={[
+        { id: 'ahora', rotulo: 'Ahora', cifra: v.inicio.cifra, unidad: 'bbl/d', detalle: 'se dejan de producir' },
+        na.length > 0 && { id: 'no-arrancar', rotulo: 'No arrancar', cifra: String(na.length), detalle: y(na) },
+        sc.length > 0 && { id: 'sin-causa', rotulo: 'Sin causa', cifra: String(sc.length), detalle: y(sc) },
+      ]}>
+      {v.entrega && <Boton onClick={onEntregar} aria-expanded={entrega} className="min-h-12 px-5 text-[16px]" data-entregar-turno>Entregar turno</Boton>}
+      <RegistrarPerdida envio={envio} />
+    </Cifras>
+  )
+}
+
+/** El técnico (§8 y §14): «Hoy 5 cosas · primero P-201B», y lo que no arranca. */
+function InicioTec({ v }: { v: VistaHoy }) {
+  const na = noArrancan(v)
+  return (
+    <Cifras titulo="Lo de hoy" principal={{ id: 'cosas', rotulo: 'Hoy', cifra: v.inicio.cifra, unidad: Number(v.inicio.cifra) === 1 ? 'cosa' : 'cosas', detalle: v.inicio.remate }}
+      apoyo={[na.length > 0 && { id: 'no-arrancar', rotulo: 'No arrancar', cifra: String(na.length), detalle: y(na) }]} />
+  )
+}
+
+/** «Entregar turno» con la jornada (§0c): lo que paró con su hora de inicio y fin y su cadena. */
+function EntregaConJornada({ v, campo, onCerrar }: { v: VistaHoy; campo?: string; onCerrar: () => void }) {
+  return campo ? <ConJornada v={v} campo={campo} onCerrar={onCerrar} /> : <Entrega e={v.entrega!} onCerrar={onCerrar} />
+}
+function ConJornada({ v, campo, onCerrar }: { v: VistaHoy; campo: string; onCerrar: () => void }) {
+  const j = useJornada({ campo, jornada: 'actual' })
+  return <Entrega e={v.entrega!} jornada={j} onCerrar={onCerrar} />
+}
+

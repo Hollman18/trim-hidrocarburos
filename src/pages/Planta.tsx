@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { ChevronRight, Plug } from 'lucide-react'
-import { useApp, useCampo, usePlanta, usePerfil, useRango, useRol, useNivel } from '@/app/store'
+import { useApp, useCampo, usePlanta, usePerfil, useRango, useRol } from '@/app/store'
 import { useBarrilesDeEquipos, useEstadoCampos, useCtx, usePrediccion } from '@/shared/api/diferidos'
 import type { EquipoEnCampo } from '@/entities/equipos'
 import { useEquiposDeHoy, pedirPerfilesBomba } from '@/shared/api/equipos'
@@ -20,11 +20,9 @@ import { n0, n1, num, plural, sinLectura } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { cn } from '@/shared/lib/cn'
 import type { Severidad } from '@/entities/tipos'
-import { MarcaCondicion, FueraDeMeta } from '@/shared/ui/Prioridad'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { PALABRA_CONDICION, type CondicionFranja } from '@/shared/api/equiposTecnico'
 import { useCondiciones, rangoCondicion } from '@/widgets/pozos/estado'
-import { pantallaVisible } from '@/shared/config/producto'
-import { TuberiaTecnica } from '@/widgets/plantaviva/Tecnica'
 
 const COLOR: Record<Corriente, string> = {
   multi: 'var(--f-multi)', crudo: 'var(--f-crudo)', gas: 'var(--f-gas)',
@@ -120,7 +118,7 @@ export function Planta() {
 }
 
 function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
-  const campo = useCampo(); const rol = useRol(); const nivel = useNivel(); const perfil = usePerfil(); const ctx = useCtx()
+  const campo = useCampo(); const rol = useRol(); const perfil = usePerfil(); const ctx = useCtx()
   const campoId = useApp(s => s.campoId), abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla)
   const rango = useRango()
   const estrecho = useSyncExternalStore(suscribir, () => matchMedia(angosto).matches)
@@ -130,11 +128,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const { caudales, niveles } = useCampoAhora(campoId)
   const cfg = useMemo(() => ({ ...plantaCfg, caudales: { ...plantaCfg.caudales, ...caudales } }), [plantaCfg, caudales])
   const verPozos = rol.pantallas.includes('pozos')
-  const verAgua = rol.pantallas.includes('agua') && pantallaVisible('agua')
-  // La tubería y el esquema se enlazan (U2 §2.4): sin animación, nada se mueve solo (U2 §2.8).
-  const refTuberia = useRef<HTMLDivElement>(null), refEsquema = useRef<HTMLDivElement>(null)
-  const verTuberia = () => refTuberia.current?.scrollIntoView({ block: 'start' })
-  const verEsquema = () => refEsquema.current?.scrollIntoView({ block: 'start' })
+  const refEsquema = useRef<HTMLDivElement>(null)
 
   const [destacado, setDestacado] = useState<string | null>(null)
   const refs = useRef(new Map<string, SVGGElement>())
@@ -157,7 +151,6 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
   const bombaParada = !!equipoReiny && equipoDeHoy(equipoReiny, campoId)?.marcha === 'detenido'
   // El tren de agua sin la bomba de disposición detenida: las que siguen en
   // marcha son toda la capacidad que queda (La Ceiba: P-201A y P-201C, no las tres).
-  const capFuera = bombaParada && reinyeccion?.papel === 'disposicion' ? reinyeccion.capacidadBpd : 0
   // La prioridad del tanque (ISA-18.2: la da el tiempo hasta la consecuencia, no
   // un porcentaje fijo):
   //  - en el alto-alto: P1 (hay que cerrar pozos);
@@ -217,7 +210,6 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
 
   // Lo que está en alarma, con el tanque en alto-alto (P1 ya calculado arriba: `tanqueSev`).
   const urgente = (c?: CondicionFranja) => c === 'alarma' || c === 'interlock'
-  const enAlarma = capturan.filter(f => urgente(f.cond))
   const tanqueCerca = (f: Fila) => !!f.nivel && (f.nivel.pct >= f.nivel.altoAlto - MARGEN_TANQUE || bombaParada)
   // Cinco a la vista y «ver N más»; una fila en alarma (prioridad 1) nunca se esconde, ni el
   // tanque cerca de su alto-alto. `prioridad` solo decide qué no se esconde: la marca no cambia.
@@ -277,7 +269,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       )}
       {/* En el teléfono el dibujo va cerrado: el destino del gas (su salvedad, «no tiene tren de gas») se dice aquí. */}
       {estrecho && <span className="text-[14px] text-[var(--tinta2)]">{NOMBRE_GAS[perfil.gas]}</span>}
-      {!estrecho && <Boton variante="chico" className="sm:ml-auto" onClick={verTuberia}>Ver la tubería</Boton>}
+      {!estrecho && rol.pantallas.includes('plantaViva') && <Boton variante="chico" className="sm:ml-auto" onClick={() => setPantalla('plantaViva')}>Ver la tubería</Boton>}
       <Info className={estrecho ? 'sm:ml-auto' : undefined} rotulo="la planta" titulo="Nota de planta" texto={cfg.nota} />
     </div>
   )
@@ -323,7 +315,8 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
 
       {/* overflow-x (no overflow): en el papel la regla de impresión lo libera y el dibujo cabe en la hoja. */}
       <div className="overflow-x-auto rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
-        <svg viewBox={`0 0 ${plano.ancho} ${plano.alto}`} preserveAspectRatio="xMinYMin meet"
+        {/* 12 de más abajo: el pie de los servicios (a 28 del nombre, ver `yPie`) no se sale del dibujo. */}
+        <svg viewBox={`0 0 ${plano.ancho} ${plano.alto + 12}`} preserveAspectRatio="xMinYMin meet"
           style={{ width: '100%', minWidth: Math.round(plano.ancho * ESCALA_MINIMA), height: 'auto' }} className="block"
           // Un grupo, no una imagen: adentro hay equipos que se abren con el teclado, y un
           // role="img" los volvía mudos para el lector aunque recibieran el foco.
@@ -411,7 +404,9 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                     : [['Datos', 'configurado, sin datos todavía'], ['Qué falta', n.id === 'tanqueAgua' && tanque ? `que su transmisor de nivel (${tanque.tagNivel}) dé señal` : eq ? 'que su instrumento dé señal' : 'montar el instrumento y declarar su tag']]
             // El nombre en uno o dos renglones de 18 caracteres: con la letra de 12 px, uno de 26 pisaba al vecino.
             const renglones = partirNombre(n.etiqueta)
-            const yPie = renglones.length > 1 ? 103 : 82
+            // El pie, a 28 de la línea del nombre: Firefox mide cada texto con todo el alto de su letra (≈ 1,5 veces) y a
+            // 20 el pie pisaba 5 px al nombre («Tratador térmico» sobre «H-302», B4: el auditor a 1280 px en Firefox).
+            const yPie = renglones.length > 1 ? 111 : 90
             const clicPozos = esPozos && verPozos
             const clicable = clicPozos || (!esPozos && !esTanqueAgua && !!(vivo && eq))
             return (
@@ -537,38 +532,11 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
     </div>
   )
 
-  const bblAlarma = enAlarma.reduce((a, f) => a + (f.eq ? bblDe(f.eq.id, campoId) : 0), 0)
-  const codigo = (f: Fila) => f.eq?.id ?? f.id
 
   return (
     <>
-      {/* Lo anormal arriba, en una línea: cuántos, cuánto han diferido y un botón por equipo
-          (el tanque en alto-alto también: se ubica en el dibujo, no tiene ficha). Sus nombres van
-          en la lista de abajo (una fila en alarma nunca se esconde) y en el papel. */}
-      {enAlarma.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] bg-[var(--panel)] px-4 py-3 sm:mb-4" data-en-alarma>
-          <MarcaCondicion c="alarma" tamano={18} decorativa />
-          <b className="min-w-0 flex-1 text-[15px] leading-tight">
-            {/* El período lo dicen la cabecera y el membrete del papel. */}
-            Alarma · {enAlarma.length} {enAlarma.length === 1 ? 'detenido o en alarma' : 'detenidos o en alarma'} · <span className="tabular">{n0(bblAlarma)}</span> bbl diferidos
-          </b>
-          <span className="flex flex-wrap gap-1.5">
-            {enAlarma.filter(f => f.abrir || !estrecho).map((f, i) => (
-              <Boton key={f.id} variante={i === 0 ? 'principal' : 'normal'} className="max-sm:min-h-11" onClick={() => (f.abrir ? abrir(f.abrir) : ubicar(f.nodo))}
-                aria-label={f.abrir ? `Abrir ${codigo(f)} · ${f.etiqueta}` : `Ubicar ${f.etiqueta} en el dibujo`} title={f.etiqueta}>{codigo(f)}</Boton>
-            ))}
-          </span>
-          <span className="solo-impresion basis-full text-[9pt] text-[var(--tinta2)]">{enAlarma.map(f => `${codigo(f)} · ${f.etiqueta}`).join(' — ')}</span>
-        </div>
-      )}
-
-      {/* K1 · P-16 / H8: la tubería de La planta viva con la lente técnica (la de Producción), no la de antes.
-          La hoja de la planta lleva lo que tenía la de antes en esta pantalla: el esquema (y el agua, en la tubería). */}
-      <div ref={refTuberia}>
-        <TuberiaTecnica className="mb-3 sm:mb-4"
-          accionesDe={tramo => (tramo === 'planta' && !estrecho ? [{ texto: 'Ver la planta en el esquema', hacer: verEsquema }] : [])} />
-      </div>
-
+      {/* A-10 y A-11 (borrado.md): la tubería del campo va una vez, en el inicio de producción, y el aviso
+          «Alarma · N detenidos» repetía la marca del campo. Aquí queda el nivel 2: el esquema y lo que captura datos. */}
       {/* En el teléfono el dibujo no se lee: primero las listas, y el dibujo a un clic. */}
       {estrecho ? (
         <>
@@ -578,33 +546,6 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
         </>
       ) : <><div ref={refEsquema}>{dibujo}</div>{listas}</>}
 
-      {nivel === 'ingenieria' && (
-        <Desplegable titulo="Capacidad por tren" imprimir>
-          <Panel>
-            {([['Crudo', cfg.caudales.crudo, cfg.caudales.crudoCap, 0, 'bbl/d', 'crudo'],
-               ['Agua', cfg.caudales.agua, cfg.caudales.aguaCap - capFuera, capFuera, 'bbl/d de agua', 'agua']] as const).map(([nombre, v, cap, fuera, u, c]) => {
-              const pct = (v / cap) * 100
-              return (
-                <Tip key={nombre} titulo={`Tren de ${nombre.toLowerCase()}`} className="mb-2.5"
-                  pista={pct > 90 ? 'Por encima del 90 % no queda margen para una parada parcial' : undefined}
-                  filas={[['Caudal ahora', `${n0(v)} ${u}`],
-                    ['Capacidad', fuera > 0 ? `${n0(cap)} ${u} sin ${equipoReiny} (detenida); ${n0(cap + fuera)} con todo el tren` : `${n0(cap)} ${u}`],
-                    ['Uso', `${n1(pct)} %`], ['Holgura', `${n0(cap - v)} ${u}`]]}>
-                  <div className="flex justify-between text-[14px]">
-                    <span>{nombre}</span>
-                    <span className={cn('tabular', pct > 90 && 'font-semibold')}><FueraDeMeta si={pct > 90} tamano={11} />{n1(pct)} %</span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
-                    <i className="block h-full" style={{ width: `${Math.min(pct, 100)}%`, background: COLOR[c] }} />
-                  </div>
-                  <small className="tabular text-[12px] text-[var(--tinta3)]">{n0(v)} de {n0(cap)} {u}{fuera > 0 ? ` · sin ${equipoReiny}, detenida` : ''}</small>
-                </Tip>
-              )
-            })}
-            {verAgua && <Boton variante="chico" onClick={() => setPantalla('agua')}>Ver la tubería del agua</Boton>}
-          </Panel>
-        </Desplegable>
-      )}
     </>
   )
 }

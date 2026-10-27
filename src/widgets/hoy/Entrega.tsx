@@ -2,7 +2,9 @@ import type { EntregaTurno, Frase } from '@/shared/api/hoy'
 import { HojaInferior } from '@/shared/ui/HojaInferior'
 import { Boton } from '@/shared/ui/primitivas'
 import { useExportar } from '@/widgets/informe/useExportar'
+import type { VistaJornada } from '@/shared/api/balance'
 import { Texto } from './comun'
+import { Balance, FilaParada } from './MiTurno'
 
 /** Un bloque de la entrega: su título y un renglón por cosa. Vacío, lo dice. */
 function Bloque({ titulo, filas, vacio }: { titulo: string; filas: readonly Frase[]; vacio: string }) {
@@ -22,19 +24,29 @@ function Bloque({ titulo, filas, vacio }: { titulo: string; filas: readonly Fras
  *  escritorio va en su lugar, arriba de las tarjetas; en el teléfono, como una hoja
  *  que sube. La firma de la entrega espera su contrato (una escritura que todavía no
  *  existe): hasta entonces se dice, sin fingirla. */
-export function Entrega({ e, onCerrar }: { e: EntregaTurno; onCerrar: () => void }) {
+export function Entrega({ e, jornada, onCerrar }: { e: EntregaTurno; jornada?: VistaJornada; onCerrar: () => void }) {
   const x = useExportar()
   return (
     <HojaInferior titulo="Entrega de turno" onCerrar={onCerrar}>
-      <section data-entrega aria-label={e.titulo} className="grid gap-3.5 rounded-[20px] bg-[var(--panel)] px-5 py-4 sm:px-7 sm:py-5">
+      <section data-entrega aria-label={e.titulo} className="grid gap-3.5 rounded-[10px] bg-[var(--panel)] px-5 py-4 sm:px-7 sm:py-5">
         <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 className="text-[19px] font-semibold">{e.titulo}</h2>
-          <span className="text-[14px] text-[var(--tinta2)]">últimas {e.horas} h</span>
+          <span className="text-[14px] text-[var(--tinta2)]">{jornada ? jornada.jornada.nombre : `últimas ${e.horas} h`}</span>
         </header>
+        {/* B3 · §0c: la jornada con la hora de inicio y fin de cada parada y su cadena del choke
+            (la Circular 024 pide h_ini_paro y h_fin_paro), y lo diferido y lo perdido, nunca sumados. */}
+        {jornada && (
+          <section className="grid gap-2" data-sin-partir data-entrega-jornada>
+            <h3 className="text-[16px] font-semibold">La jornada</h3>
+            <Balance v={jornada} />
+            {jornada.paradas.length > 0 && <ul className="grid">{jornada.paradas.map(p => <FilaParada key={p.eventoId} p={p} />)}</ul>}
+            {jornada.nota && <small className="text-[13px] text-[var(--tinta2)]">{jornada.nota}</small>}
+          </section>
+        )}
         <Bloque titulo="Lo que paró" filas={e.paro} vacio="Nada parado en el turno." />
         <Bloque titulo="Lo que queda por hacer" filas={e.pendiente} vacio="Nada pendiente." />
         <Bloque titulo="Hecho hoy" filas={e.hecho} vacio="Nada confirmado ni contestado todavía." />
-        {e.diferido && <p className="text-[15px] text-[var(--tinta2)]"><Texto f={e.diferido} /></p>}
+        {e.diferido && !jornada && <p className="text-[15px] text-[var(--tinta2)]"><Texto f={e.diferido} /></p>}
         <p className="text-[14px] text-[var(--tinta2)]">La entrega todavía no se firma en TRIM: se comparte en PDF, con su folio.</p>
         <div className="no-imprimir flex flex-wrap items-center gap-3">
           {x.puede && <Boton variante="principal" disabled={x.ocupado} onClick={() => x.pdf()}>Compartir en PDF</Boton>}

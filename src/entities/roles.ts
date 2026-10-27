@@ -63,25 +63,31 @@ export const ROLES: Rol[] = [
     // C5 (X4 §3.6, puntos 2, 4 y 5): su Resumen, sus Diferidos y su Producción se fundieron en La planta viva y
     // Resultados, y su Riesgo en La planta viva (Durante y Antes) y Equipos (C4: lo parado o avisa); sus
     // direcciones abren ahí (`FUSIONADA_EN`, url.ts).
-    pantallas: ['plantaViva', 'equipos', 'resultados', 'configuracion'], inicio: 'plantaViva', topologia: null,
+    // B3 · A-16: su pantalla Equipos sale (repite «Diferido por equipo»); su dirección abre Resultados (`FUSIONADA_EN_ROL`).
+    pantallas: ['plantaViva', 'resultados', 'configuracion'], inicio: 'plantaViva', topologia: null,
     foco: 'Barriles que no se produjeron, el retorno posible del ciclo antes / durante / después, y si baja contra la meta que usted firmó. Usted fija las metas de cada campo y da los accesos.',
     area: 'direccion',
     campos: 'todos',
     puede: con('evidencia:exportar', 'metas:firmar', 'usuarios:administrar') },
   { id: 'prod', nivel: 'ingenieria', nombre: 'Ingeniera de producción', persona: 'Marcela Ríos', iniciales: 'MR',
-    pantallas: ['plantaViva', 'hoy', 'equipos', 'resultados', 'produccion', 'diferidos', 'pozos', 'esp', 'causa', 'planta', 'agua', 'configuracion', 'filosofia'], inicio: 'plantaViva', topologia: 'produccion',
+    // B3 (pedido de B2): Hoy sale (confirmar y la asignación van en su inicio) y Diferidos (A-09); Electrosumergibles
+    // es un filtro de Equipos (A-15). Sin puerta: Producción, «Una por una», Equipos, Pozos, Planta y Agua, a un toque.
+    pantallas: ['plantaViva', 'resultados', 'equipos', 'produccion', 'pozos', 'causa', 'planta', 'agua', 'configuracion', 'filosofia'], inicio: 'plantaViva', topologia: 'produccion',
     foco: 'Explicas el mes en barriles: el factor de asignación en banda, la custodia completa y nada sin identificar.',
     area: 'produccion',
     campos: ['ceiba', 'palmar'],
     puede: con('evidencia:exportar', 'asignacion:cargar', 'anh:clasificar', 'anh:confirmar', 'anh:yacimiento', 'perdidas:registrar') },
   { id: 'sup', nivel: 'operacion', nombre: 'Supervisor de operaciones', persona: 'Nelson Ortiz', iniciales: 'NO',
-    pantallas: ['hoy', 'plantaViva', 'equipos', 'bombas', 'esp', 'turno', 'causa', 'pozos'], inicio: 'hoy', topologia: 'proceso',
+    // B3 (experiencia v3, flujos.md §2): Hoy y Equipos. Turno (A-01), Bombas y Electrosumergibles (A-15), Pozos (B-05) y
+    // La planta viva (B-01) salen; «Ver una por una» abre la cadena de 6 pasos (`causa`, sin puerta propia).
+    pantallas: ['hoy', 'equipos', 'causa'], inicio: 'hoy', topologia: 'proceso',
     foco: 'Durante: turno, identificar y orden de cierre. Antes: bombas y lo que hay que vigilar. Si una para, cierras en el orden que menos cuesta.',
     area: 'produccion',
     campos: ['ceiba'],
     puede: con('causa:declarar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar', 'anh:confirmar', 'perdidas:registrar') },
   { id: 'oper', nivel: 'operacion', nombre: 'Operador de campo', persona: 'Jairo Peña', iniciales: 'JP',
-    pantallas: ['hoy', 'plantaViva', 'equipos', 'bombas', 'esp', 'causa', 'turno'], inicio: 'hoy', topologia: 'proceso',
+    // B3: una sola pantalla, sin menú (§9.4). Equipos queda solo para abrir la ficha (nivel 3) desde la pregunta.
+    pantallas: ['hoy', 'equipos', 'causa'], inicio: 'hoy', topologia: 'proceso',
     foco: 'Cómo están las bombas, a qué equipo vas, y qué se dañó cuando la señal no lo dice.',
     area: 'produccion',
     campos: ['ceiba'],
@@ -89,7 +95,9 @@ export const ROLES: Rol[] = [
   { id: 'jefe', nivel: 'ingenieria', nombre: 'Jefe de mantenimiento', persona: 'Camilo Rueda', iniciales: 'CR',
     // K1 · P-10 (X4 §3.6, punto 2): su Riesgo se fundió en Equipos (debajo de la lista, con «Ojo: no conviene
     // intervenirlas hoy» arriba); su dirección abre Equipos (`FUSIONADA_EN_ROL`, url.ts).
-    pantallas: ['hoy', 'plantaViva', 'equipos', 'resultados', 'mantenimiento', 'diferidos', 'bombas', 'esp', 'confiabilidad', 'equipo', 'causa'], inicio: 'hoy',
+    // B3: Hoy, Equipos y Resultados. Mantenimiento como estaba (A-12) se borra: lo suyo está en su Hoy (las fallas del
+    // mes, la espera en 5 tramos, «No intervenir hoy», el programa de paradas y «por parte», a un toque).
+    pantallas: ['hoy', 'equipos', 'resultados', 'causa'], inicio: 'hoy',
     topologia: null,
     foco: 'Antes: intervenir a tiempo. Durante: identificar y planes simulados. Después: palancas y partes — para que bajen los barriles diferidos.',
     area: 'mantenimiento',
@@ -97,7 +105,8 @@ export const ROLES: Rol[] = [
     puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar') },
   { id: 'conf', nivel: 'ingenieria', nombre: 'Ingeniero de confiabilidad', persona: 'Edwin Maestre', iniciales: 'EM',
     // K1 · P-10: su Riesgo se fundió en Equipos (debajo de la lista; «¿Dónde va el próximo instrumento?» arriba).
-    pantallas: ['equipos', 'bombas', 'esp', 'hoy', 'plantaViva', 'resultados', 'confiabilidad', 'diferidos', 'equipo', 'causa', 'planta', 'agua', 'configuracion', 'filosofia'], inicio: 'equipos', topologia: 'proceso',
+    // B3: Equipos (con lo que le toca hacer arriba: su Hoy se funde aquí) y Confiabilidad, en la puerta Resultados (B-03).
+    pantallas: ['equipos', 'confiabilidad', 'causa', 'configuracion', 'filosofia'], inicio: 'equipos', topologia: 'proceso',
     foco: 'Antes: vigía, aciertos y riesgo. Después: MTBF y costo por falla. La reparación activa, no la espera del repuesto.',
     area: 'mantenimiento',
     campos: ['ceiba', 'morichal', 'guacamayo'],
@@ -111,30 +120,30 @@ export const ROLES: Rol[] = [
   { id: 'tec', nivel: 'operacion', nombre: 'Técnico de mantenimiento', persona: 'Óscar Daza', iniciales: 'OD',
     // F1 · P-trabajo-1 (X4 §3.6.3 y §3.7): Mi trabajo se fundió en Hoy (sus órdenes, lo que vigilar y el
     // programa ya están ahí); su dirección abre Hoy (`FUSIONADA_EN`, url.ts).
-    pantallas: ['hoy', 'plantaViva', 'equipos', 'bombas', 'esp', 'causa'], inicio: 'hoy', topologia: 'proceso',
+    // B3: una sola pantalla, sin menú: Hoy (con su orden de SAP y la ficha del equipo a un toque).
+    pantallas: ['hoy', 'equipos', 'causa'], inicio: 'hoy', topologia: 'proceso',
     foco: 'Abres el equipo y dices qué encontraste cuando la señal no lo dice. De ahí aprende el vigía.',
     area: 'mantenimiento',
     campos: ['ceiba'],
     puede: con('causa:declarar', 'anh:clasificar', 'orden:cerrar') },
-  { id: 'cont', nivel: 'decision', nombre: 'Abastecimiento y contratos', persona: 'Paula Gómez', iniciales: 'PG',
-    pantallas: ['evidencia'], inicio: 'evidencia', topologia: null,
-    foco: 'La línea de tiempo viene del PLC: deja de ser acta y pasa a ser evidencia.',
-    area: 'soporte',
-    campos: 'todos',
-    puede: con('evidencia:exportar') },
   { id: 'reg', nivel: 'ingenieria', nombre: 'Cumplimiento regulatorio', persona: 'Iván Salas', iniciales: 'IS',
-    pantallas: ['regulatorio', 'plantaViva', 'resultados'], inicio: 'regulatorio', topologia: 'medicion',
+    // B3: una sola pantalla, sin menú: el Reporte (la planta viva y Resultados salen de sus puertas: B-01 y B-03).
+    pantallas: ['regulatorio'], inicio: 'regulatorio', topologia: 'medicion',
     foco: 'Cada parada en el árbol de la circular, con lo que va a la ANH, y la medición viva. Nunca la tocamos.',
     area: 'soporte',
     campos: 'todos',
     puede: con('evidencia:exportar', 'anh:enviar') },
   { id: 'adm', nivel: 'ingenieria', nombre: 'Administrador de la implementación', persona: 'Hermes Leal', iniciales: 'HL',
-    pantallas: ['configuracion', 'filosofia', 'conectores', 'plantaViva', 'planta', 'agua'], inicio: 'configuracion', topologia: 'proceso',
+    // B3: una sola pantalla, sin menú: Configurar (cada paso abre su editor; Conectores es uno). B-01 y B-04.
+    pantallas: ['configuracion', 'filosofia', 'conectores', 'planta', 'agua'], inicio: 'configuracion', topologia: 'proceso',
     foco: 'Configuras conectores, umbrales, tanques, respaldos y el programa de paradas. Las metas y los accesos los da el gerente de activo.',
     area: 'plataforma',
     campos: 'todos',
     puede: con('evidencia:exportar', 'conector:configurar', 'config:firmar') },
 ]
+/** B3 · A-21: abastecimiento (cont) salió del producto. Su dirección dice que no está, como la de un rol
+ *  apagado (la planeadora), sin abrir otro rol en silencio (A-22). */
+export const ROLES_RETIRADOS: Readonly<Record<string, string>> = { cont: 'Abastecimiento y contratos' }
 /** Roles del primer producto. Los de v2 siguen declarados pero no se ofrecen. */
 export const ROLES_VISIBLES = ROLES.filter(r => rolVisible(r.id))
 /** Con qué rol se entra. Se declara aparte para que reordenar el menú no

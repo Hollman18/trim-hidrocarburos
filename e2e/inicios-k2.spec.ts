@@ -21,33 +21,31 @@ const seVe = async (l: Locator) => (await l.innerText()).replace(/\s+/g, ' ')
 // «390 px» en el nombre: también corren en Safari de teléfono (el proyecto «iphone»).
 test.describe('inicios en el teléfono · 390 px', () => {
 
-  test('Hoy · supervisor en el teléfono: las tarjetas sin las horas que no deciden; en el escritorio, enteras', async ({ flujo: f }) => {
+  // B3 · Experiencia v3 (§14): el número arriba, tipo número; quien no la debe ve la tarjeta en una
+  // línea (FF-2) y la orden de K-101 no es del supervisor (A-24).
+  test('Hoy · supervisor en el teléfono: el número arriba y las tarjetas sin las horas que no deciden; en el escritorio, enteras', async ({ flujo: f }) => {
     const { page } = f
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/sup/hoy/ceiba/curso')
-    await f.esperarTexto('se dejan de producir.')
+    await expect(page.locator('main [data-renglon="por-confirmar"] [data-cifra]')).toHaveText('4')
     const lote = await seVe(page.locator('main [data-tarea="confirmar"]').first())
     f.ok(lote.includes('cerró LC-07 y LC-16') && !/\d{2}:\d{2}/.test(lote), `el lote dice qué cerró, sin la hora («${lote}»)`)
     const causa = await seVe(page.locator('main [data-tarea="conseguir-causa"]'))
-    f.ok(causa.includes('LC-21 lleva 19,7 h sin causa') && causa.includes('LC-08 arrancó sin identificar · Entre las 2: 219 bbl hoy')
-      && !/20:20|01:10|desde que pararon/.test(causa), `conseguir la causa: cuánto lleva y lo de hoy, sin la hora del escalamiento ni el acumulado («${causa}»)`)
-    const orden = await seVe(page.locator('main [data-tarea="orden"]'))
-    f.ok(orden.includes('Si para, hasta 9.394 bbl/d.') && !/40012056|Óscar Daza|09:10/.test(orden) && orden.includes('Ver la orden'),
-      `la orden: lo que pasa si para; su número, a quién y la hora, a un toque en «Ver la orden» («${orden}»)`)
-
+    f.ok(causa.includes('Conseguir la causa de 2 paradas') && causa.includes('Contestar yo') && !/20:20|01:10|desde que pararon/.test(causa),
+      `conseguir la causa en una línea: cuáles ya lo dice «Sin causa» arriba («${causa}»)`)
+    await expect(page.locator('main [data-renglon="sin-causa"]')).toContainText('LC-21 y LC-08')
+    await expect(page.locator('main [data-tarea="orden"]')).toHaveCount(0)
     await page.setViewportSize(ESCRITORIO)
     await expect(page.locator('main [data-tarea="confirmar"]').first()).toContainText('cerró LC-07 y LC-16 · 05:43', { useInnerText: true })
-    await expect(page.locator('main [data-tarea="conseguir-causa"]')).toContainText('355 desde que pararon', { useInnerText: true })
-    await expect(page.locator('main [data-tarea="orden"]')).toContainText('Orden 40012056, liberada a Óscar Daza a las 09:10.', { useInnerText: true })
     f.cerrar()
   })
 
-  test('Hoy · técnico y jefe en el teléfono: «Sigue parada» no repite la franja, el momento en palabras y las otras por su nombre', async ({ flujo: f }) => {
+  test('Hoy · técnico y jefe en el teléfono: el número arriba, el momento en palabras y la línea de quien no la debe', async ({ flujo: f }) => {
     const { page } = f
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/tec/hoy/ceiba/curso')
-    await f.esperarTexto('cosas le tocan hoy')
-    await expect(page.locator('main [data-bloqueo]').first()).toContainText('No arrancar P-201B ni LC-21')
+    await expect(page.locator('main [data-renglon="cosas"]')).toContainText('5')
+    await expect(page.locator('main [data-renglon="no-arrancar"]')).toContainText('P-201B y LC-21')
     const p201b = await seVe(page.locator('main [data-tarea="contestar"]').first())
     f.ok(p201b.includes('bomba de agua · paró hoy en la madrugada') && !p201b.includes('Sigue parada') && !/03:52|hace 10,1/.test(p201b),
       `la tarjeta de P-201B: el momento en palabras y sin repetir la franja («${p201b}»)`)
@@ -57,42 +55,44 @@ test.describe('inicios en el teléfono · 390 px', () => {
 
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/jefe/hoy/ceiba/curso')
-    await f.esperarTexto('días son espera')
+    await expect(page.locator('main [data-renglon="espera"]')).toContainText('7,7 de 8,1')
     const jefe = await seVe(page.locator('main [data-tarea="conseguir-causa"]'))
-    f.ok(jefe.includes('P-201B lleva 10,1 h sin causa') && jefe.includes('Entre todas: 219 bbl hoy')
-      && !/05:52|01:10|928/.test(jefe), `el jefe: la primera con su tiempo y lo de hoy entre todas («${jefe}»)`)
-    // Su franja, en el teléfono: el «no» y a quién; hasta cuándo, en la ⓘ. En el escritorio, entera.
-    const franja = page.locator('main [data-bloqueo]').first()
-    f.ok((await seVe(franja)) === 'No arrancar P-201B ni LC-21', `la franja del jefe en el teléfono («${await seVe(franja)}»)`)
-    await expect(franja.getByRole('img', { name: /Hasta identificar qué se dañó/ })).toBeVisible()
-    await page.setViewportSize(ESCRITORIO)
-    await expect(franja).toContainText('No arrancar P-201B ni LC-21 hasta identificar qué se dañó', { useInnerText: true })
+    f.ok(jefe.includes('Conseguir la causa de 3 paradas') && jefe.includes('Contestar yo') && !/05:52|01:10|928/.test(jefe),
+      `el jefe: la tarjeta en una línea; cuáles, en «Por identificar» («${jefe}»)`)
+    await expect(page.locator('main [data-renglon="por-identificar"]')).toContainText('P-201B, LC-21 y LC-08')
     f.cerrar()
   })
 
-  test('La planta viva · producción en el teléfono: el dibujo no repite la cifra grande', async ({ flujo: f }) => {
+  // v3 (imagen d1-grafito-prod en el teléfono): la cifra «de 11.857» arriba y la tubería de pie con lo que dan, caben y salen.
+  test('La planta viva · producción en el teléfono: la cifra contra lo que dan los pozos y la tubería de pie', async ({ flujo: f }) => {
     const { page } = f
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/prod/planta-viva/ceiba/curso')
-    await expect(page.locator('[data-cifra-grande] [data-cifra]').first()).toHaveText('9.394')
-    const venta = (await page.locator('[data-tuberia="de-pie"] [data-venta]').textContent() ?? '').replace(/\s+/g, ' ').trim()
-    f.ok(venta === 'Sale hoy · meta 10.900', `la salida dice «Sale hoy · meta», sin repetir 9.394 («${venta}»)`)
-    // El gerente no tiene la cifra de lo que sale hoy arriba: su dibujo la lleva (la imagen 2).
+    await expect(page.locator('[data-produccion-cifra]')).toHaveAttribute('data-produccion-cifra', '9394')
+    await expect(page.locator('[data-produccion-cifra]')).toContainText('de 11.857 bbl/d')
+    f.ok(await page.locator('[data-tuberia-kit][data-de-pie]').count() === 1, 'la tubería, de pie en el teléfono')
+    const salida = (await page.locator('[data-tramo-kit="exportacion"]').innerText()).replace(/\s+/g, ' ')
+    f.ok(/9\.394 salen hoy/.test(salida), `la salida dice lo que sale hoy, como la imagen («${salida}»)`)
+    // El gerente: su número es lo que se deja de producir; su tubería dice lo que no pasa por cada tramo.
     await f.abrir('/#/ger/planta-viva/ceiba/curso')
-    await expect(page.locator('[data-tuberia="de-pie"] [data-venta]')).toContainText('Sale hoy 9.394 bbl/d')
+    await expect(page.locator('[data-tramo-kit="planta"]')).toContainText('1.665')
+    await expect(page.locator('[data-tramo-kit="planta"]')).toContainText('bbl/d no pasan')
     f.cerrar()
   })
 
-  test('Regulatorio en el teléfono: la fila no repite quién lo debe ni lo que falta; queda para el lector', async ({ flujo: f }) => {
+  // v3 (imagen d1-grafito-reg): la cifra ya no lleva la explicación «Las contesta…»; quién lo debe va UNA vez, en cada fila.
+  test('Regulatorio en el teléfono: quién lo debe una sola vez, en su fila; el árbol plegado', async ({ flujo: f }) => {
     const { page } = f
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/reg/regulatorio/ceiba/curso')
     const cabeza = page.locator('[data-reporte-anh]')
-    await expect(cabeza.locator('[data-frase]')).toHaveText('No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl).')
-    // «Reporte a la ANH · octubre» repite el título y el período de la cabecera: en el teléfono va al lector, con su ⓘ junto a la cifra.
-    const previo = await cabeza.locator('[data-cifra-grande] > p').first().evaluate(e => { const s = e.querySelector('span'); return s ? getComputedStyle(s).position === 'absolute' && s.getBoundingClientRect().width <= 1 : false })
-    f.ok(previo, 'el previo «Reporte a la ANH · octubre» no se ve en el teléfono')
-    await expect(cabeza.getByRole('img', { name: /^Solo lectura: TRIM lee los puntos de medición/ }).first()).toBeVisible()
+    // B4 (v3, necesario-por-rol §14: «Sin causa 2 paradas · no se puede publicar»): a la vista, el título; el porqué del motor,
+    // la Circular 024 y lo de solo lectura, en UNA ⓘ al lado. «No se puede reportar» ya no repite lo mismo debajo de los 355 bbl.
+    await expect(cabeza.locator('[data-frase]')).toHaveText(/^No se puede publicar todavía\s*$/, { useInnerText: true })
+    // v3: el rótulo de la cifra («Paradas sin causa») ya no repite el título ni el período; la ⓘ va con la frase.
+    f.ok(!(await cabeza.innerText()).includes('Reporte a la ANH · octubre'), 'sin el previo «Reporte a la ANH · octubre» (lo dice la cabecera)')
+    await expect(cabeza.getByRole('img', { name: /^No se puede publicar todavía: No se puede publicar todavía: octubre sigue abierto y les falta la causa \(355 bbl\)\. El límite es el de la Circular 024\. Solo lectura: TRIM lee los puntos de medición/ })).toBeVisible()
+    f.ok(!/no se puede reportar|Circular 024/.test(await cabeza.innerText()), 'ni «no se puede reportar» ni «Circular 024» a la vista (en la ⓘ)')
     // El árbol, plegado: su título, sus códigos y su total, que lo abre.
     const arbol = page.locator('[data-arbol-circular]')
     await expect(arbol.getByRole('button', { name: 'Ver el árbol: 1.046 bbl' })).toBeVisible()
@@ -101,32 +101,28 @@ test.describe('inicios en el teléfono · 390 px', () => {
     await expect(arbol).toContainText('el diferido del libro', { useInnerText: true })
     const filas = page.locator('[data-parada-sin-causa]')
     await expect(filas).toHaveCount(2)
+    // B4 (§14: «LC-21 · 247 bbl · lo debe el operador»): cada fila, el equipo, sus barriles y quién lo debe; la hora límite, una
+    // vez, en «Límite» (es la misma para las dos); qué falta, al abrir la fila.
     for (const i of [0, 1]) {
-      const fila = filas.nth(i)
-      const visto = await fila.evaluate(e => [...e.querySelectorAll('span')].filter(s => s.children.length === 0 && s.getBoundingClientRect().width > 1).map(s => s.textContent).join(' '))
-      const todo = (await fila.textContent()) ?? ''
-      f.ok(!/Lo debe|faltan todos los pasos/.test(visto) && /Lo debe el operador de campo · mañana antes de las 07:00/.test(todo) && /faltan todos los pasos/.test(todo),
-        `la fila ${i + 1} no repite lo de la explicación, y el lector lo oye («${visto}»)`)
+      const visto = (await filas.nth(i).innerText()).replace(/\s+/g, ' ').trim()
+      f.ok(/^LC-(21|08) Lo debe el operador de campo (247|108) bbl$/.test(visto), `la fila ${i + 1} dice el equipo, quién lo debe y sus barriles («${visto}»)`)
     }
-    await expect(cabeza.locator('[data-explica]')).toHaveText('Las contesta el operador de campo mañana antes de las 07:00.')
+    f.ok(/07:00\s+mañana/.test(await page.locator('[data-limite]').innerText()), 'la hora límite, una vez, en «Límite»')
+    const veces = ((await page.locator('main').innerText()).match(/Lo debe el operador/g) ?? []).length
+    f.ok(veces === 2 && await cabeza.locator('[data-explica]').count() === 0, `quién lo debe, una vez por fila y no en la cifra (${veces})`)
     f.cerrar()
   })
 
-  test('Equipos · confiabilidad en el teléfono: la cabeza no repite la cifra grande; el colchón a la ⓘ; los filtros en «Filtrar»', async ({ flujo: f }) => {
+  test('Equipos · confiabilidad en el teléfono: el primero de «Si falla hoy» tipo número, sin repetirlo en la lista de arriba; los filtros en «Filtrar»', async ({ flujo: f }) => {
     const { page } = f
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/conf/equipos/ceiba')
-    const cabeza = page.locator('[data-primero]')
-    await expect(cabeza.locator('[data-cifra]')).toHaveText('3.059')
-    const fila = (e: string) => seVe(cabeza.locator(`[data-fila-primero="${e}"]`))
-    const a = await fila('P-201A'), c = await fila('P-201C'), lc = await fila('LC-11')
-    f.ok(!a.includes('3.059') && !c.includes('3.059') && a.includes('sin instrumento') && !a.includes('sube porque') && /1\.031\s*bbl\/d/.test(lc) && !lc.includes('vigila'),
-      `las dos de la cifra grande no la repiten; la tercera trae la suya («${a}» · «${c}» · «${lc}»)`)
-    await expect(cabeza.locator('[data-fila-primero="P-201A"]')).toHaveAttribute('aria-label', /3\.059 barriles por día si falla hoy/)
-    await expect(cabeza.locator('[data-calidad-primero]')).toHaveText('calculado', { useInnerText: true })
-    await expect(cabeza.getByRole('img', { name: /después de 2 min de colchón/ })).toBeVisible()
-    await expect(page.locator('[data-acierto-vigia]')).toContainText('¿Le creo al vigía? Desde que entró TRIM, acertó 3 de 3 avisos.')
-    // Los filtros, plegados: el estado también detrás de «Filtrar» (P-02).
+    const cabeza = page.locator('main [data-cifras]').first()
+    await expect(cabeza.locator('[data-renglon="si-falla-hoy"] [data-cifra]')).toHaveText('3.059')
+    // B3 · la cabeza ya no repite los tres primeros como un bloque aparte (FF-8): son las primeras filas de la lista.
+    await expect(page.locator('[data-fila-primero]')).toHaveCount(0)
+    await expect(cabeza.locator('[data-renglon="vigia"]')).toContainText('3 de 3')
+    // Los filtros, plegados: también el estado detrás de «Filtrar».
     const filtrar = page.locator('[data-mas-filtros]')
     await expect(filtrar).toHaveText(/^Filtrar/)
     await expect(page.getByRole('radio', { name: /^Parados/ })).toHaveCount(0)
@@ -134,9 +130,11 @@ test.describe('inicios en el teléfono · 390 px', () => {
     await page.getByRole('radio', { name: /^Parados/ }).click()
     await expect(filtrar).toHaveText(/^Filtrar\s*\(1\)/)
     await expect(page.locator('main [data-fila-equipo="P-201B"]')).toBeVisible()
-    // En el escritorio, la fila entera y los filtros de estado a la vista.
+    // «Sin instrumento 5» filtra la lista en un toque.
+    await cabeza.locator('[data-renglon="sin-instrumento"]').click()
+    await expect(page.locator('main section[aria-label^="Equipos: 5"]')).toBeVisible()
     await page.setViewportSize(ESCRITORIO)
-    await expect(page.locator('[data-mas-filtros]')).toHaveText(/^Más filtros/)
+    await expect(page.locator('[data-mas-filtros]')).toHaveText(/^Filtrar/)
     f.cerrar()
   })
 
@@ -145,7 +143,7 @@ test.describe('inicios en el teléfono · 390 px', () => {
     await page.setViewportSize(TELEFONO)
     await f.abrir('/#/adm/configuracion/ceiba/curso')
     const estado = page.locator('[data-estado-config]')
-    await expect(estado.locator('[data-cifra]')).toHaveText('3 de 6')
+    await expect(estado.locator('[data-cifra]')).toContainText(/3\s*de 6 pasos listos/)
     const pasos = await estado.locator('[data-paso]').evaluateAll(es => es.map(e => (e as HTMLElement).innerText.replace(/\s+/g, ' ').trim()))
     f.ok(pasos.join(' | ') === 'Perfil del campo firmado | Tanques de agua completos | A qué pozos sirve cada equipo sin firmar | Lo que deja pasar cada tramo sin firmar | Factor de medición sin firmar | Meta de hoy firmada por el gerente',
       `cada paso, su nombre y su estado (${pasos.join(' | ')})`)

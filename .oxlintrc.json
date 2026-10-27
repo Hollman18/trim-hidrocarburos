@@ -235,7 +235,7 @@
                   "respaldoDe",
                   "configEn",
                   "validarConfig"
-                ]
+                , "TURNOS_POR_DEFECTO", "MAXIMO_TURNOS", "validarTurnos"]
               },
               {
                 "name": "@/entities/condiciones",

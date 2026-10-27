@@ -18,6 +18,10 @@ import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { n0, n1, plural, diaIso } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { Esquema } from '@/widgets/configuracion/Esquema'
+import { Tags } from '@/widgets/configuracion/Tags'
+import { Conversion } from '@/widgets/configuracion/Conversion'
+import { Jornada } from '@/widgets/configuracion/Jornada'
+import { Cifra } from '@/shared/ui/scada'
 import { MetasCampos, type EdicionMeta } from '@/widgets/configuracion/Metas'
 import { PlanMensual } from '@/widgets/configuracion/PlanMensual'
 import type { FilaPlan } from '@/entities/plan'
@@ -69,7 +73,7 @@ function ConPartes() {
   // confiabilidad abren Configuración en solo lectura (la filosofía, lo técnico y
   // las metas); el gerente no entra a la filosofía (U2 §8.1).
   const conEstado = !!rol.puede['config:firmar']
-  const pestanas: Pestana[] = conEstado ? ['tecnica', 'filosofia', 'metas', 'accesos']
+  const pestanas: Pestana[] = conEstado ? ['tecnica', 'filosofia']
     : rol.nivel === 'ingenieria' ? ['filosofia', 'tecnica', 'metas'] : ['metas', 'accesos']
   // La filosofía operacional tiene dirección propia (#/…/filosofia/…): su parte
   // es esa pantalla. Las demás son partes de Configuración.
@@ -171,14 +175,18 @@ function EstadoDelCampo({ estado, otros, partes, cambios, onPaso, onParte, onCam
   const [verOtros, setVerOtros] = useState(false)
   return (
     <>
-      <section aria-label={estado.frase} data-estado-config={campo.id} className="rounded-[20px] bg-[var(--panel)] px-5 pb-2 pt-4 sm:px-7 sm:pt-5">
+      <section aria-label={estado.frase} data-estado-config={campo.id} className="rounded-[10px] bg-[var(--panel)] px-5 pb-2 pt-4 sm:px-7 sm:pt-5">
         {/* K2 · En el teléfono el campo ya está en la píldora de la banda (como I-sup-1). */}
         <p className="text-[15px] font-medium text-[var(--tinta2)] max-sm:sr-only">{campo.nombre}</p>
-        <p className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <b className="tabular text-[48px] font-bold leading-[.95] tracking-[-.03em] sm:text-[60px]" data-cifra>{estado.listos} de {estado.total}</b>
-          <span className="text-[22px] font-medium text-[var(--tinta2)]">pasos listos</span>
-        </p>
-        <p className="mt-2.5 text-[19px] font-medium leading-snug sm:text-[21px]" data-falta>{estado.falta ?? 'Todo firmado.'}</p>
+        <div data-cifra="">
+          <Cifra rotulo="Pasos listos" valor={estado.listos} unidad={`de ${estado.total} pasos listos`} tamano="principal" mayusculas={false}
+            nota={<span className="text-[17px] font-medium text-[var(--tinta)]" data-falta="">{estado.falta ?? 'Todo firmado.'}</span>} />
+        </div>
+        {estado.siguiente && (
+          <Boton variante="principal" className="no-imprimir mt-3 min-h-12 px-6 text-[16px]" onClick={() => onPaso(estado.siguiente!)} data-seguir-paso={estado.siguiente}>
+            Seguir el paso
+          </Boton>
+        )}
         {cambios.n > 0 && (
           <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[16px] text-[var(--tinta2)]" data-borrador>
             {plural(cambios.n, 'cambio sin firmar', 'cambios sin firmar')} en el borrador.
@@ -214,6 +222,12 @@ function EstadoDelCampo({ estado, otros, partes, cambios, onPaso, onParte, onCam
           {otros.map(o => <Enlace key={o.id} onClick={() => onCampo(o.id)} className={verOtros ? undefined : 'max-sm:hidden'}>{o.nombre} · {o.listos} de {o.total}</Enlace>)}
         </p>
       )}
+      {/* Lo que el administrador también firma o asocia, cada uno en su paso y a 1 toque (necesario-por-rol §11). */}
+      <section aria-label="También en el campo" className="grid gap-x-8 gap-y-4 rounded-[10px] bg-[var(--panel)] px-5 py-4 sm:px-7 md:grid-cols-3" data-estado-extra="">
+        <div className="min-w-0"><h3 className="mb-1 text-[16px] font-semibold">Tags sin equipo</h3><Tags /></div>
+        <div className="min-w-0"><h3 className="mb-1 text-[16px] font-semibold">Conversión del árbol</h3><Conversion /></div>
+        <div className="min-w-0"><h3 className="mb-1 text-[16px] font-semibold">Jornada</h3><Jornada /></div>
+      </section>
       <ListaPartes partes={partes} actual="estado" onIr={onParte} />
     </>
   )
@@ -353,7 +367,8 @@ function Editor({ pestana, partes, modo, setModo, pasoFilosofia, setPasoFilosofi
   if (pestana === 'estado') {
     const estado = estadoConfiguracion(campoId, ctx, topologia)
     const otros = campos.filter(c => c.id !== campoId).map(c => { const e = estadoConfiguracion(c.id, ctx, topologia); return { id: c.id, nombre: c.nombre, listos: e.listos, total: e.total } })
-    const irPaso = (p: PasoConfiguracion) => { const d = DONDE_PASO[p]; onPestana(partes.includes(d.parte) ? d.parte : 'tecnica', d.paso) }
+    // Un paso que firma otro rol (las metas, del gerente) no lleva a ninguna parte de este rol: se dice en su fila.
+    const irPaso = (p: PasoConfiguracion) => { const d = DONDE_PASO[p]; if (partes.includes(d.parte)) onPestana(d.parte, d.paso) }
     return (
       <EstadoDelCampo estado={estado} otros={otros} partes={partes} cambios={{ n: cambios.length, parte: grupos.tecnica.length ? 'tecnica' : 'metas' }}
         onPaso={irPaso} onParte={p => onPestana(p)} onCampo={setCampo} />

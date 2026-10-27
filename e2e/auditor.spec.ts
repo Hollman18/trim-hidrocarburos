@@ -9,8 +9,8 @@
    el texto de SVG chico o recortado, más de una cifra grande por vista, el color
    de estado sin forma y palabra, las pestañas horizontales y los títulos en
    MAYÚSCULAS (D-3); el ancho de 320 px; y, aparte, el inicio de cada rol a 390 px:
-   el presupuesto de palabras (`auditoria/presupuesto.ts`), como mucho 5 cifras y
-   una sola cifra grande sin desplazarse.
+   el presupuesto de palabras y cifras de lo necesario de la v3 (`auditoria/presupuesto.ts`)
+   y una sola cifra grande sin desplazarse.
 
    A diferencia de los flujos, aquí NO se marca la introducción de cada rol
    como vista: la primera vez que se entra con un rol también se audita
@@ -21,7 +21,11 @@ import { expect, test, type Page } from '@playwright/test'
 import { detectar, type Hallazgo } from './auditoria/detector.ts'
 import { medirInicio } from './auditoria/inicio.ts'
 import { CIFRAS_TELEFONO, GRANDES, PRESUPUESTO } from './auditoria/presupuesto.ts'
-import { ABRIR_BOMBA, ABRIR_BOTON, ABRIR_FILA, ANCHOS, ASERCIONES, RUTAS } from './auditoria/rutas.ts'
+import { ABRIR_BOMBA, ABRIR_BOTON, ABRIR_FILA, ANCHOS, ASERCIONES, RUTAS as TODAS } from './auditoria/rutas.ts'
+
+/** Para recorrer solo los roles de quien está trabajando (AUDITOR_ROLES=sup,oper): la suite completa los recorre todos. */
+const SOLO = process.env.AUDITOR_ROLES?.split(',').filter(Boolean)
+const RUTAS = SOLO?.length ? TODAS.filter(r => SOLO.some(x => r.startsWith(`#/${x}/`))) : TODAS
 
 test.describe.configure({ mode: 'parallel' })
 
@@ -38,13 +42,14 @@ function oirErrores(page: Page, donde: () => string) {
 }
 
 test('autoprueba: el detector ve lo que se sale y lo que se pisa', async ({ page }) => {
-  // Se plantan dos defectos conocidos dentro de la placa de una bomba: un
+  // Se plantan dos defectos conocidos dentro de la fila de un equipo: un
   // valor que se sale de su tarjeta y dos textos encimados. Sin la introducción
   // abierta: con un diálogo modal encima, el detector revisa solo el diálogo.
+  // B3 (v3, A-15): la pantalla Bombas se borró; sus placas son las filas de Equipos.
   await page.addInitScript(() => localStorage.setItem('trim.intro.sup', '1'))
-  await page.goto('/#/sup/bombas/ceiba/curso')
-  const placa = page.locator('[aria-label*="Abrir el detalle"]').first()
-  await expect(placa, 'la pantalla de bombas tiene al menos una placa donde plantar los defectos').toBeAttached()
+  await page.goto('/#/sup/equipos/ceiba')
+  const placa = page.locator('main [data-fila-equipo]').first()
+  await expect(placa, 'la lista de equipos tiene al menos una fila donde plantar los defectos').toBeAttached()
   await placa.evaluate(m => {
     const a = document.createElement('div'); a.style.cssText = 'border:1px solid;width:80px'
     a.innerHTML = '<span style="white-space:nowrap">VALOR-QUE-SE-SALE-DE-LA-TARJETA</span>'
@@ -74,8 +79,8 @@ test('autoprueba: el detector ve lo que se sale y lo que se pisa', async ({ page
 // F4 · Cada regla nueva ve su defecto y no ve lo que se le parece y está bien (sin falsos positivos).
 test('autoprueba F4: el detector ve las reglas de §11 y no ve lo que está bien', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('trim.intro.sup', '1'))
-  await page.goto('/#/sup/bombas/ceiba/curso')
-  await expect(page.locator('[aria-label*="Abrir el detalle"]').first(), 'la pantalla cargó').toBeAttached()
+  await page.goto('/#/sup/equipos/ceiba')
+  await expect(page.locator('main [data-fila-equipo]').first(), 'la pantalla cargó').toBeAttached()
   const antes = await page.evaluate(detectar)
   const ya = new Set(antes.map(h => JSON.stringify(h)))
   await page.locator('main').evaluate(m => {
@@ -101,6 +106,10 @@ test('autoprueba F4: el detector ve las reglas de §11 y no ve lo que está bien
       // «color» no: la marca con su nombre y su palabra al lado; la etiqueta pintada con su forma y su palabra.
       `<p>${ROMBO('role="img" aria-label="Prioridad 1, alarma"')} MARCA-BIEN alarma</p>`,
       `<span style="background:var(--p1-f)">${ROMBO('aria-hidden="true"')} ETIQUETA-BIEN alarma</span>`,
+      // B4 · El kit en estado anormal: el límite cruzado (`data-alarma`) en el color de su prioridad está bien con la marca y
+      // la frase en la misma pieza; sin la marca, sale. (Un rect de 2 px: Chrome y Firefox lo miden igual.)
+      `<div role="img" data-kit="barra" data-estado="anormal" aria-label="Vibración, 11 mm/s; en alarma"><svg width="60" height="28" aria-hidden="true"><rect class="kit-bien" data-alarma="" x="30" y="5" width="2" height="18" fill="var(--p2)"/></svg>${ROMBO('aria-hidden="true"')}<b>11</b> <small>mm/s</small></div>`,
+      `<div role="img" data-kit="barra" data-estado="anormal" aria-label="Vibración, 11 mm/s; en alarma"><svg width="60" height="28" aria-hidden="true"><rect class="kit-sin-marca" data-alarma="" x="30" y="5" width="2" height="18" fill="var(--p2)"/></svg><b>11</b> <small>mm/s</small></div>`,
       // «pestañas»: un tablist acostado y una fila con «el actual»; no, un asistente por pasos.
       '<div role="tablist" style="display:flex"><button role="tab" aria-selected="true">PESTAÑA-UNO</button><button role="tab">PESTAÑA-DOS</button></div>',
       '<div style="display:flex"><button aria-current="page">FILA-ACTUAL</button><button>FILA-OTRA</button></div>',
@@ -129,6 +138,8 @@ test('autoprueba F4: el detector ve las reglas de §11 y no ve lo que está bien
   expect.soft(nuevos.some(h => h[0] === 'color' && h[1].includes('marca sin nombre accesible') && h[1].includes('MARCA-SIN-NOMBRE')), 'una marca sin nombre accesible').toBe(true)
   expect.soft(nuevos.some(h => h[0] === 'color' && /marca sin palabra al lado: Prioridad 1, alarma en button/.test(h[1])), 'una marca con solo una cifra en su botón').toBe(true)
   expect.soft([...algo('MARCA-BIEN'), ...algo('ETIQUETA-BIEN')], 'la marca con su nombre y su palabra, y la etiqueta con su forma y su palabra, están bien').toEqual([])
+  expect.soft(algo('kit-bien'), 'el límite cruzado del kit, con la marca y la frase en su pieza, está bien').toEqual([])
+  expect.soft(nuevos.some(h => h[0] === 'color' && /--p2 sin forma: rect\.kit-sin-marca/.test(h[1])), 'el límite cruzado del kit sin la marca en su pieza es color sin forma').toBe(true)
   expect.soft(hay('pestañas', 'PESTAÑA-UNO'), 'un role=tablist acostado').toBe(true)
   expect.soft(hay('pestañas', 'FILA-ACTUAL'), 'una fila de botones con «el actual»').toBe(true)
   expect.soft(algo('PASO-UNO'), 'un asistente por pasos no es una barra de pestañas').toEqual([])
@@ -151,11 +162,11 @@ test('autoprueba F4: el detector ve las reglas de §11 y no ve lo que está bien
 
 test('cada aserción de lo que ve un rol cae en una ruta que se recorre', () => {
   // Una aserción cuya ruta se quitó de RUTAS no fallaría nunca: no se comprobaría.
-  const alcanzables = new Set([...RUTAS, ...RUTAS.filter(r => ABRIR_BOMBA.has(r)).map(r => `${r} [detalle]`),
-    ...RUTAS.flatMap(r => (ABRIR_BOTON[r] ?? []).map(b => `${r} [${b}]`))])
+  const alcanzables = new Set([...TODAS, ...TODAS.filter(r => ABRIR_BOMBA.has(r)).map(r => `${r} [detalle]`),
+    ...TODAS.flatMap(r => (ABRIR_BOTON[r] ?? []).map(b => `${r} [${b}]`))])
   expect(Object.keys(ASERCIONES).filter(k => !alcanzables.has(k))).toEqual([])
   // F4 · Un botón que se toca está en una ruta que se recorre.
-  expect(Object.keys(ABRIR_BOTON).filter(r => !RUTAS.includes(r))).toEqual([])
+  expect(Object.keys(ABRIR_BOTON).filter(r => !TODAS.includes(r))).toEqual([])
 })
 
 for (const ancho of ANCHOS) {
@@ -299,8 +310,9 @@ test.describe('inicio de cada rol · 390 px', () => {
       const p = PRESUPUESTO[rol]!
       const donde = `${rol} (${new URL(page.url()).hash})`
       tabla.push(`${rol}: ${m.palabras} palabras (antes ${p.antes}, tope ${p.tope}) · ${m.cifras.length} cifras (tope ${p.cifras ?? CIFRAS_TELEFONO}) · ${m.grandes.length} grandes`)
-      if (m.palabras > p.tope) fallas.push(`${donde}: ${m.palabras} palabras sin desplazarse; el tope es ${p.tope} (−40 % de ${p.antes}${p.porque ? `; ${p.porque}` : ''})`)
-      // K2 · D-1: como el de palabras, el tope de cifras de un rol sube solo si su imagen aprobada trae más (con su `porqueCifras`).
+      // v3 (B4): el tope es lo necesario del rol (necesario-por-rol §14) medido en su inicio; si sobra texto, se recorta la pantalla.
+      if (m.palabras > p.tope) fallas.push(`${donde}: ${m.palabras} palabras sin desplazarse; el tope es ${p.tope} (antes ${p.antes}; ${p.porque})`)
+      // K2 · D-1: como el de palabras, el tope de cifras de un rol sube solo si lo necesario trae más (con su `porqueCifras`).
       const topeCifras = p.cifras ?? CIFRAS_TELEFONO
       if (m.cifras.length > topeCifras) fallas.push(`${donde}: ${m.cifras.length} cifras sin desplazarse (como mucho ${topeCifras}${p.porqueCifras ? `; ${p.porqueCifras}` : ''}): ${m.cifras.join(' · ')}`)
       if (m.grandes.length > GRANDES) fallas.push(`${donde}: ${m.grandes.length} cifras grandes (una sola): ${m.grandes.join(' · ')}`)

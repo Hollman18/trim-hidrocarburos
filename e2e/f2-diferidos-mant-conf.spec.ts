@@ -11,91 +11,53 @@
      que anunció», entero en el papel (P-conf-1); como mucho cuatro cifras de 24 px (H11); «Fallas
      por mes» con su cifra, su año y su frase (H22) y la raya de --panel entre segmentos (H21).
    - Producción día a día: el potencial continuo y el día en curso con su punto hueco (H18). */
-import { type Page } from '@playwright/test'
 import { test } from './apoyo.ts'
 
-/** La marca de cada equipo de La Ceiba en la franja (C1: 2 · 2 · 1 · 0). */
-const MARCA_CEIBA: Record<string, RegExp> = {
-  'P-201B': /^Prioridad 1\b/, 'K-101': /^Prioridad 1\b/, 'LC-21': /^Prioridad 2\b/, 'TK-102': /^Prioridad 2\b/, 'H-302': /^Prioridad 3\b/,
-}
-
-/** Las marcas de las filas de una lista: el equipo y el nombre accesible de su marca (o nada). */
-const marcasDe = (page: Page, sel: string, atributo: string) => page.locator(sel).evaluateAll((es, a) => es.map(e => ({
-  equipo: e.getAttribute(a) ?? '', marca: e.querySelector('svg[role=img]')?.getAttribute('aria-label') ?? '',
-})), atributo)
-
-test('Mantenimiento: un conteo de «avisan», el costo de la falla con su nombre, la marca del equipo y lo programado en una frase', async ({ flujo: f }) => {
+// B3 · A-12: la pantalla Mantenimiento se borró: 6 de sus 9 paneles repetían Hoy o Resultados. Lo que traía vive
+// donde se decide: «Avisan» en el número del jefe (el mismo conteo de Equipos), lo programado en Resultados y lo que
+// costaría la falla, en la ficha del equipo.
+test('Mantenimiento → Hoy del jefe: un conteo de «avisan», lo programado en Resultados y el costo de la falla con su nombre', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/jefe/mantenimiento/ceiba/curso')
-  await f.esperarTexto('Intervenir ya')
+  f.ok((await f.hash()).startsWith('#/jefe/hoy/'), `la dirección de Mantenimiento abre el Hoy del jefe (${await f.hash()})`)
+  // G-15: el mismo conteo de «Equipos que avisan» (1 en La Ceiba) que el filtro «Avisan» de Equipos.
+  f.ok(await page.locator('main [data-renglon="avisan"] [data-cifra]').innerText() === '1', '«Avisan 1» en el número del jefe')
+  const grandes = await page.locator('main').evaluate(m => [...m.querySelectorAll('b')].filter(b => parseFloat(getComputedStyle(b).fontSize) >= 40).length)
+  f.ok(grandes === 1, `una sola cifra grande en el inicio del jefe (${grandes})`)
+  await f.ir('#/jefe/equipos/ceiba')
+  f.ok((await page.locator('main [role=radiogroup][aria-label="Estado"] [data-opcion="avisan"]').innerText()).includes('1'), 'el mismo conteo en el filtro «Avisan» de Equipos')
+  // G-16 (D-2): «le costaría la falla», nunca «… bbl si falla hoy».
+  await f.ir('#/jefe/equipos/morichal/MPP-301')
   const t = await f.texto()
-  // G-15: el mismo conteo de La planta viva y de Riesgo («Equipos que avisan»: 1 en La Ceiba).
-  f.ok(t.includes('1 equipo avisa') && !/equipos? avisando/.test(t) && await page.locator('main [data-avisan="1"]').count() === 1,
-    '«Intervenir ya» dice «1 equipo avisa», el conteo único de «Equipos que avisan»')
-  // P-mant-1: el ejemplo de X4 §6.1, con la raíz del libro.
-  const prog = await page.locator('main [data-programado]').innerText()
-  f.ok(prog === 'Ninguna parada de este mes estaba programada: los 1.046 bbl fueron fallas o siguen sin identificar.' && !t.includes('del diferido, programado'),
-    `lo programado en una frase («${prog}»)`)
-  // G-10 y UI-15: «máximo» sin abreviar; sin cifras de 36 px.
-  f.ok(/máximo 800/.test(t) && !/máx\. 800/.test(t), 'el máximo firmado, «máximo», sin abreviar')
-  const grandes = await page.locator('main').evaluate(m => [...m.querySelectorAll('b')].filter(b => parseFloat(getComputedStyle(b).fontSize) > 26).length)
-  f.ok(grandes === 0, `ninguna cifra de más de 26 px en la cabecera de Mantenimiento (${grandes})`)
-  // H3: la marca de cada fila es la del equipo en la franja; un equipo sin condición va sin marca.
-  const sin = await marcasDe(page, 'main [data-por-identificar]', 'data-por-identificar')
-  const malas = sin.filter(x => (MARCA_CEIBA[x.equipo] ? !MARCA_CEIBA[x.equipo]!.test(x.marca) : x.marca !== ''))
-  f.ok(sin.length > 0 && malas.length === 0, `«Paradas por identificar»: cada fila con la marca de su equipo (${sin.map(x => `${x.equipo} ${x.marca || 'sin marca'}`).join(' · ')})`)
-  const p201 = sin.find(x => x.equipo === 'P-201B'), lc08 = sin.find(x => x.equipo === 'LC-08')
-  f.ok((!p201 || /^Prioridad 1\b/.test(p201.marca)) && (!lc08 || lc08.marca === ''), 'P-201B con su ◆1 (no ▲2) y LC-08, que arrancó sin identificar, sin marca')
-  // En el papel, las cifras de lo programado siguen escritas (el globo sale en el papel).
-  await page.emulateMedia({ media: 'print' })
-  const papel = await f.textoPagina()
-  await page.emulateMedia({ media: 'screen' })
-  f.ok(/Programado: 0 bbl · 0 %/.test(papel) && /No programado \(libro\): 1\.046 bbl/.test(papel), 'en el papel, lo programado y lo no programado con sus cifras')
-
-  // G-16 (D-2): con todos los campos hay costo por falla: se dice «le costaría la falla», nunca «… bbl si falla hoy».
-  await f.ir('#/jefe/mantenimiento/ceiba~portafolio/curso')
-  await f.esperarTexto('Intervenir ya')
-  const todos = await f.texto()
-  f.ok(/≈ [\d.]+ bbl le costaría la falla/.test(todos) && !/bbl si falla hoy/i.test(todos), 'el costo de la falla va en bbl con su nombre, y «si falla hoy» no se dice en bbl')
+  f.ok(/≈ [\d.]+ bbl le costaría la falla/.test(t) && !/bbl si falla hoy/i.test(t), 'el costo de la falla va en bbl con su nombre, y «si falla hoy» no se dice en bbl')
   f.cerrar()
 })
 
-test('Diferidos: el bloque de la cifra de Resultados, el libro con sus nombres y las barras en la rampa de datos', async ({ flujo: f }) => {
+test('Diferidos se fundió en Resultados: la misma cifra, el cuadre, por equipo con sus nombres y el máximo del mes a mes', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/prod/diferidos/ceiba/curso')
-  await page.locator('main [data-cifra-diferidos]').waitFor()
-  // P-diferidos-1: el mismo bloque de Resultados, con sus nombres.
-  const cifra = page.locator('main [data-cifra-diferidos]')
+  f.ok((await f.hash()).startsWith('#/prod/resultados/ceiba/'), `la dirección de Diferidos abre Resultados (${await f.hash()})`)
+  const cifra = page.locator('main [data-cifra-grande]')
+  await cifra.waitFor()
   const c = await cifra.locator('[data-cifra]').innerText(), frase = await cifra.locator('[data-frase]').innerText(), previo = await cifra.locator('[data-periodo-resultados]').innerText()
-  f.ok(c === '1.046' && frase === 'no se produjeron en La Ceiba.' && previo === 'Lo que pasó · octubre, en curso', `arriba, «${previo} · ${c} · ${frase}» (el de Resultados)`)
+  f.ok(c === '1.046' && frase === 'no se produjeron en La Ceiba.' && previo === 'Lo que pasó · octubre, en curso', `arriba, «${previo} · ${c} · ${frase}»`)
   const t = await f.texto()
-  f.ok(!t.includes('barriles diferidos') && !/\+\d+ % frente a/.test(t), 'sin el bloque de antes con otros nombres («barriles diferidos», «+80 % frente a…»)')
-  // El diferido por día contra el máximo no se pierde: va en «Dónde bajarlo».
-  const donde = page.locator('main section', { has: page.getByRole('heading', { name: 'Dónde bajarlo', exact: true }) })
-  f.ok(/diferido por día/.test(await donde.innerText()) && /máximo 800/.test(await donde.innerText()), 'el diferido por día contra el máximo firmado, en «Dónde bajarlo»')
-  // G-5 y G-8: el cuadre con los nombres de siempre.
-  const cuadre = page.locator('main section', { has: page.getByRole('heading', { name: '¿Se puede publicar? Cuadre y custodia', exact: true }) })
-  const tc = await cuadre.innerText()
-  f.ok(/Potencial del libro · octubre/.test(tc) && /= Diferido/.test(tc) && !/No producido/.test(tc), '«Potencial del libro · octubre» y «= Diferido» en el cuadre')
-  // P-09: P-201B es «bomba de agua» en «Por equipo», no «bomba de reinyección».
-  const porEquipo = page.locator('main section', { has: page.getByRole('heading', { name: 'Por equipo', exact: true }) })
-  const te = await porEquipo.innerText()
-  f.ok(/P-201B[\s\S]{0,40}bomba de agua/.test(te) && !/reinyección/i.test(te), '«Por equipo»: P-201B, bomba de agua')
-  // V2-1: ninguna barra de dato en el gris de 2,12:1 (--dato-5).
-  const dato5 = await page.locator('main').evaluate(m => {
-    const prueba = document.createElement('i'); prueba.style.background = 'var(--dato-5)'; m.appendChild(prueba)
-    const gris = getComputedStyle(prueba).backgroundColor; prueba.remove()
-    return [...m.querySelectorAll('i')].filter(i => getComputedStyle(i).backgroundColor === gris).length
-  })
-  f.ok(dato5 === 0, `las barras secundarias de «Por equipo» y «Tipo de causa» en --dato3, no en --dato-5 (${dato5})`)
-  // H20: el mes que pasó su máximo lleva el cuadrado «3» de verdad (12 px o más), con su nombre accesible en el mes.
-  // El tamaño de la marca es su caja (X5 §3.3): el ancho del <svg> en pantalla, no el del cuadrado de adentro (getBoundingClientRect de un svg anidado mide su contenido).
-  const marcas = await page.locator('main [data-marca-mes="aviso"] svg').evaluateAll(es => es.map(e => {
-    const s = e as SVGSVGElement, padre = s.ownerSVGElement!, vb = padre.viewBox.baseVal
-    return s.width.baseVal.value * (vb && vb.width ? padre.getBoundingClientRect().width / vb.width : 1)
-  }))
-  f.ok(marcas.length >= 1 && marcas.every(w => w >= 11.5), `el mes que pasó su máximo, con su marca de aviso (${marcas.map(w => w.toFixed(1)).join(', ')} px)`)
-  f.ok(await page.locator('main section', { has: page.getByRole('heading', { name: 'Mes a mes', exact: true }) }).getByText('bbl', { exact: true }).count() >= 1, '«Mes a mes» dice su unidad en el título')
+  f.ok(!t.includes('barriles diferidos') && !/\+\d+ % frente a/.test(t) && !/Dónde bajarlo|Tipo de causa/.test(t), 'sin el bloque de antes ni «Dónde bajarlo» ni «Tipo de causa» (A-07, A-08)')
+  // El diferido por día contra el máximo no se pierde: va en la barra del kit, con su máximo firmado.
+  const diferido = page.locator('[data-produccion-meta] [data-barra-meta="diferido"]')
+  f.ok(/máximo 800/.test(await diferido.innerText()) && await diferido.locator('[data-kit="barra"]').count() === 1, 'el diferido por día contra el máximo firmado (800), con la barra del kit')
+  // C-02: el cuadre con los nombres de siempre, en «¿Se puede publicar?» y en «¿Cuadra?» de Producción.
+  f.ok(/¿Se puede publicar\?/.test(t) && /Todavía no: el mes está en curso/.test(t), '«¿Se puede publicar?»: todavía no, el mes está en curso')
+  // P-09: P-201B es «bomba de agua» en «Diferido por equipo», no «bomba de reinyección».
+  const te = await page.locator('main [data-por-equipo]').innerText()
+  f.ok(/P-201B[\s\S]{0,40}bomba de agua/.test(te) && !/reinyección/i.test(te), '«Diferido por equipo»: P-201B, bomba de agua')
+  // H20: el mes a mes es la tendencia del kit, contra la raya del máximo firmado y con su unidad.
+  const mm = page.locator('main [data-mes-a-mes]')
+  f.ok(await mm.locator('[data-kit="tendencia"] [data-alarma]').count() === 1 && /máximo firmado \(800\)/.test(await mm.innerText()) && /bbl\/d/.test(await mm.innerText()),
+    'el mes a mes contra la raya del máximo firmado (800), en bbl/d')
+  await f.ir('#/prod/produccion/ceiba/curso')
+  const potencial = await page.locator('main [data-del-potencial]').innerText()
+  f.ok(/Potencial del libro/.test(potencial) && (await f.texto()).includes('¿Cuadra? Día por día'), 'en Producción: «Potencial del libro» y «¿Cuadra? Día por día»')
   f.cerrar()
 })
 
@@ -146,15 +108,28 @@ test.describe('teléfono', () => {
   })
 })
 
-test('La producción día a día: lo discontinuo es solo la meta; el día en curso, con su punto hueco y su palabra', async ({ flujo: f }) => {
+test('La producción día a día con el kit: lo medido oscuro, el potencial continuo y claro, la meta lo único discontinuo, y el día en curso con su palabra', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/prod/produccion/ceiba/curso')
-  const g = page.locator('main svg[aria-label^="Producción diaria"]').first()
+  const g = page.locator('main [data-diaria] [data-kit="tendencia"]').first()
   await g.waitFor()
-  const pot = g.locator('[data-curva="potencial"]')
-  f.ok(await pot.count() === 1 && !(await pot.getAttribute('stroke-dasharray')), 'el potencial del libro va continuo')
-  const discontinuas = await g.locator('polyline[stroke-dasharray], line[stroke-dasharray]').evaluateAll(es => es.map(e => e.getAttribute('stroke-dasharray')))
-  f.ok(discontinuas.every(d => d === '2 3'), `lo único discontinuo es la meta (${discontinuas.join(', ') || 'ninguna'})`)
-  f.ok(await g.locator('[data-dia-en-curso]').count() === 1 && (await page.locator('main [data-leyenda-en-curso]').innerText()).includes('día en curso'), 'el día en curso, con su punto hueco y su palabra en la leyenda')
+  // H18 (confirmado; `verificar-libro`): lo discontinuo es solo la meta. Lo real y el potencial van continuos y se
+  // separan por el tono y el grosor: lo medido oscuro y más grueso, el potencial claro.
+  const series = await g.locator('[data-serie]').evaluateAll(es => es.map(e => {
+    const p = e.querySelector('path')!, cs = getComputedStyle(p)
+    return { nombre: e.getAttribute('data-serie'), trazo: e.getAttribute('data-trazo'), raya: cs.strokeDasharray, color: cs.stroke, grosor: parseFloat(cs.strokeWidth) }
+  }))
+  const de = (n: string) => series.find(x => x.nombre === n)
+  const real = de('Real medido'), pot = de('Potencial del libro'), meta = de('Meta firmada')
+  const sinRaya = (x?: { raya: string }) => !!x && (x.raya === 'none' || x.raya === '')
+  f.ok(series.map(x => `${x.nombre}:${x.trazo}`).join() === 'Real medido:continuo,Potencial del libro:continuo,Meta firmada:discontinuo',
+    `tres trazas: real y potencial continuos, la meta discontinua (${series.map(x => `${x.nombre}:${x.trazo}`).join(', ')})`)
+  f.ok(sinRaya(real) && sinRaya(pot) && !!meta && !sinRaya(meta) && series.filter(x => !sinRaya(x)).length === 1,
+    `lo único con raya en el dibujo es la meta (real ${real?.raya}, potencial ${pot?.raya}, meta ${meta?.raya})`)
+  f.ok(!!real && !!pot && real.color !== pot.color && real.grosor > pot.grosor, `el potencial, claro y más fino que lo medido (${real?.color} ${real?.grosor} px · ${pot?.color} ${pot?.grosor} px)`)
+  f.ok((await page.locator('main [data-diaria]').innerText()).includes('Oscura: real medido · clara: potencial del libro · discontinua: meta firmada'), 'la leyenda lo dice con palabras')
+  // El día en curso lo dice el eje y la leyenda.
+  f.ok((await g.innerText()).includes('en curso') || (await page.locator('main [data-diaria]').innerText()).includes('(en curso)'), 'el día en curso, con su palabra')
+  f.ok(!(await g.locator('[data-provisional]').count()), 'la escala sale de la meta firmada (no es provisional)')
   f.cerrar()
 })

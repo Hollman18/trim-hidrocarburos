@@ -133,31 +133,19 @@ test('tanques llenos: la pregunta va directa, «¿El oleoducto o el cliente esta
   f.cerrar()
 })
 
-test('Turno: «Hoy limita» dice en dos líneas qué limita hoy y lo más frágil, y el supervisor confirma en lote una cascada', async ({ flujo: f }) => {
+// B3 · A-01: la pantalla Turno se borró (repetía Hoy). Lo que se probaba aquí vive en Hoy: lo más frágil es el
+// orden de cierre (sale cuando para una bomba de agua) y la cascada de P-201B se confirma en un toque, en un lote.
+test('Turno → Hoy: lo más frágil como orden de cierre y la cascada de P-201B confirmada en un toque', async ({ flujo: f }) => {
   await f.abrir('/#/sup/turno/ceiba/curso')
-  const hoy = f.page.locator('main [data-hoy-limita="ceiba"]')
-  const linea = await hoy.innerText()
-  f.ok(/Qué limita hoy al campo\s*◄\s*limita · los pozos ·\s*[\d.]+ bbl\/d/.test(linea), `qué limita hoy: los pozos, en gris con doble contorno y «◄ limita» (${linea.slice(0, 90)})`)
-  const borde = await hoy.getByLabel(/^Limita: los pozos/).evaluate(e => getComputedStyle(e).borderStyle)
-  f.ok(borde === 'double', `«limita» lleva doble contorno, no color (${borde})`)
-  // B-14: con P-201B parada, al lado de lo que limita va lo de hoy.
-  await expect(hoy.locator('[data-frase-hoy]')).toContainText(/^Hoy, con P-201B parada, el agua de la planta deja pasar [\d.]+ bbl\/d/)
-  // B-19: dos líneas. Lo más frágil, el agua, con las hermanas sin instrumento; sin la lista de «lo que más cuesta».
-  // F1 (P-09): una familia por equipo en todo el producto, «bomba de agua».
-  await expect(hoy.locator('[data-fragil]')).toHaveText('el agua. Si para otra bomba de agua hay que cerrar pozos, y P-201A y P-201C no tienen instrumento: TRIM no verá venir su falla.')
-  f.ok(!/Lo que más cuesta/.test(linea), '«Hoy limita» son dos líneas: sin «lo que más cuesta si falla hoy» (B-19)')
-  await expect(f.page.locator('main').getByText('en la planta', { exact: true })).toBeVisible()
-  // F1 (P-turno-2): la cuenta, una sola vez, junto al título.
-  const cierre = f.page.locator('main section').filter({ has: f.page.getByRole('heading', { name: 'Cierre de hoy' }) })
-  await expect(cierre).toContainText('faltan 4 de 4 · antes de las 07:00')
-  const lote = cierre.locator('[data-lote]').filter({ hasText: 'por P-201B' })
+  f.ok((await f.hash()).startsWith('#/sup/hoy/'), 'la dirección de Turno abre Hoy')
+  await expect(f.page.locator('main [data-orden-cierre]')).toContainText('Si para otra bomba, cierre primero LC-02, LC-10 y LC-01')
+  const lote = f.page.locator('main [data-tarea="confirmar"]').filter({ hasText: 'P-201B' })
   await expect(lote).toContainText('LC-07 y LC-16')
-  // Un toque por grupo.
+  await expect(lote).toContainText('en la planta, no planeada')
   await lote.getByRole('button', { name: 'Confirmar las 2' }).click()
-  await expect(cierre.getByRole('status')).toContainText('2 paradas confirmadas de un toque, en un solo lote; quedan completas para el reporte.')
-  f.ok(!/LOTE-\d/.test(await cierre.innerText()), 'el aviso no dice el código interno del lote (B-29)')
-  await expect(cierre).toContainText('faltan 2 de 4 · antes de las 07:00')
-  await expect(cierre.locator('[data-lote]')).toHaveCount(0)
+  await expect(f.page.locator('[data-aviso-hoy]')).toContainText('Confirmadas LC-07 y LC-16')
+  f.ok(!/LOTE-\d/.test(await f.page.locator('[data-aviso-hoy]').innerText()), 'el aviso no dice el código interno del lote (B-29)')
+  await expect(f.page.locator('main [data-renglon="por-confirmar"] [data-cifra]')).toHaveText('2')
   f.cerrar()
 })
 

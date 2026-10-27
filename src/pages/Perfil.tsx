@@ -62,7 +62,8 @@ export function Perfil() {
   const rol = useRol(); const persona = usePersona(); const mios = useCampos()
   // Como negado va solo lo que no puede hacer: con «completar el análisis»
   // también responde qué se dañó, y negárselo aparte sería falso.
-  const { concedidas, negadas } = permisosDelRol(rol.puede)
+  // B3 · A-20: solo lo que PUEDE hacer; los «No puede» no habilitan ninguna acción.
+  const { concedidas } = permisosDelRol(rol.puede)
 
   return (
     <div className="grid items-start gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr))]">
@@ -92,7 +93,6 @@ export function Perfil() {
             </span>
           </Fila>
         </div>
-        <p className="mt-2 text-[13px]"><Info rotulo="su foco" titulo="Su foco" texto={rol.foco} /></p>
       </Panel>
 
       <Panel titulo="Apariencia">
@@ -108,9 +108,8 @@ export function Perfil() {
         </div>
       </Panel>
 
-      <Panel titulo="Permisos" extra="los otorga el servidor">
+      <Panel titulo="Lo que puede hacer" extra="lo otorga el servidor">
         {concedidas.map(k => <Permiso key={k} k={k} si />)}
-        {negadas.map(k => <Permiso key={k} k={k} si={false} />)}
       </Panel>
 
       {/* Sesiones y contraseña son del servicio de identidad del cliente (OIDC / SSO,

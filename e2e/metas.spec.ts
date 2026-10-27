@@ -93,14 +93,15 @@ test('metas firmadas y accesos', async ({ flujo: f }) => {
     await f.ir('#/adm/configuracion/ceiba/curso'); await f.clic('Configuración técnica'); await f.esperar(300)
     t = await f.texto()
     f.ok(t.includes('Tanques de agua') && t.includes('Membrete del informe'), 'el administrador ve lo técnico')
-    // Desde una parte, el administrador vuelve a su estado y de ahí va a otra (F3: sin pestañas).
-    await f.clic('Estado de la configuración'); await f.clic('Metas de los campos'); await f.esperar(300)
+    // B-08 (v3): las metas y los accesos son del gerente; el administrador ya no tiene esas partes, y su estado lo dice.
+    await f.clic('Estado de la configuración'); await f.esperar(300)
+    t = await f.texto()
+    f.ok(!/Metas de los campos|Usuarios y accesos/.test(t) && /Meta de hoy[\s\S]{0,60}la firma el gerente de activo/.test(t), 'el administrador no tiene las metas ni los accesos: su estado dice que la meta la firma el gerente')
+    // Quien no las firma las ve sin poder cambiarlas: producción, en solo lectura.
+    await f.ir('#/prod/configuracion/ceiba/curso'); await f.clic('Metas de los campos'); await f.esperar(300)
     t = await f.texto()
     f.ok(t.includes('los fija y firma el gerente de activo')
-      && await f.page.evaluate(() => document.querySelector<HTMLInputElement>('input[aria-label="Meta de producción de La Ceiba, bbl/d"]')?.disabled === true), 'y las metas las ve sin poder cambiarlas')
-    await f.clic('Estado de la configuración'); await f.clic('Usuarios y accesos'); await f.esperar(300)
-    t = await f.texto()
-    f.ok(t.includes('Solo lectura: los da el gerente de activo') && !t.includes('Invitar a una persona'), 'los accesos, igual: solo lectura')
+      && await f.page.evaluate(() => document.querySelector<HTMLInputElement>('input[aria-label="Meta de producción de La Ceiba, bbl/d"]')?.disabled === true), 'producción ve las metas sin poder cambiarlas')
   })
 
   f.cerrar()

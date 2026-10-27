@@ -66,71 +66,69 @@ const todoElTexto = (page: Page) => page.evaluate(() => {
   return [m.innerText, ...[...m.querySelectorAll('[aria-label],[title]')].map(e => `${e.getAttribute('aria-label') ?? ''} ${e.getAttribute('title') ?? ''}`)].join('\n')
 })
 
-// K1 · P-16 / H8: «Se trabó en el período» de la tubería de antes (Producción) vive en Diferidos, «Por tramo», con el
-// mismo árbol de cada tramo (`Ramas`): se prueba ahí.
-test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y equipos, y las ramas suman el tramo', async ({ flujo: f }) => {
-  await f.abrir('/#/prod/diferidos/ceiba/curso')
-  await f.esperarTexto('Por tramo')
+/** La trazabilidad de un tramo (v3: el balance del choke, `widgets/choke/Traza.tsx`): cada nodo con su nivel, valor y barriles enteros,
+ *  y las paradas de cada hoja. Cada nodo suma lo que cuelga de él. */
+interface NodoTraza { nivel: string; valor: string; bbl: number; hijos: NodoTraza[]; paradas: Array<[string, number]> }
+const traza = (page: Page, tramo: string) => page.evaluate((t): { bbl: number; hijos: NodoTraza[] } | null => {
+  type N = { nivel: string; valor: string; bbl: number; hijos: N[]; paradas: Array<[string, number]> }
+  const raiz = document.querySelector(`[data-traza="${t}"] [data-traza-diferida]`)
+  const leer = (li: Element): N => ({
+    nivel: li.getAttribute('data-nodo') ?? '', valor: li.getAttribute('data-valor') ?? '', bbl: Number(li.getAttribute('data-bbl')),
+    hijos: [...li.querySelectorAll(':scope > ul > li[data-nodo]')].map(leer),
+    paradas: [...li.querySelectorAll(':scope > ul > li[data-parada-balance]')].map((p): [string, number] => [p.getAttribute('data-parada-balance') ?? '', Number(p.getAttribute('data-bbl'))]),
+  })
+  return raiz ? { bbl: Number(raiz.getAttribute('data-traza-diferida')), hijos: [...raiz.querySelectorAll(':scope > ul > li[data-nodo]')].map(leer) } : null
+}, tramo)
+const cuadraTraza = (ns: NodoTraza[]): string[] => ns.flatMap(n => {
+  const abajo = n.hijos.reduce((a, h) => a + h.bbl, 0) + n.paradas.reduce((a, [, b]) => a + b, 0)
+  return [...(abajo === n.bbl ? [] : [`${n.valor}: ${abajo} ≠ ${n.bbl}`]), ...cuadraTraza(n.hijos)]
+})
+const caminoTraza = (ns: NodoTraza[]): string[] => (ns[0] ? [ns[0].nivel, ...caminoTraza(ns[0].hijos)] : [])
+
+// v3 (B2): «Se trabó en el período» de cada tramo ya no vive en Diferidos (la pantalla salió: A-09) sino en el balance
+// del choke, a un toque desde cada tramo: diferida → planeada → causa → detalle → las paradas, con quién dijo qué.
+test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y paradas, y las ramas suman el tramo', async ({ flujo: f }) => {
+  await f.abrir('/#/prod/resultados/ceiba/curso')
+  await f.esperarTexto('Producido · diferido · perdido')
 
   await test.step('Octubre: el tramo de la planta se abre con un toque y sus ramas suman el tramo', async () => {
-    const fila = f.page.locator('[data-por-tramo] [data-tramo-fila="planta"]')
-    const tramo = Number(await fila.locator('[data-tramo="planta"]').getAttribute('data-bbl'))
-    // El botón del tramo, no los de sus ramas.
-    const boton = fila.locator(':scope > div > button[aria-expanded]')
-    const caja = f.page.locator('[data-por-tramo] [data-ramas="planta"]')
-    f.ok(await boton.getAttribute('aria-expanded') === 'false' && !(await caja.isVisible()), 'el tramo de la planta empieza cerrado')
-    await boton.click()
-    f.ok(await boton.getAttribute('aria-expanded') === 'true' && await caja.isVisible(), 'un toque lo abre (aria-expanded)')
-    const rs = await ramas(f.page, '[data-ramas="planta"]') ?? []
-    const suma = rs.reduce((a, r) => a + r.bbl, 0)
-    f.ok(rs.length > 0 && rs.every(r => r.nodo === 'planeacion'), `lo primero es planeada o no (${rs.map(r => r.valor).join(', ')})`)
-    f.ok(tramo > 0 && cerca(suma, tramo), `las ramas suman el tramo: ${suma.toFixed(2)} = ${tramo.toFixed(2)} bbl`)
-    const malas = sinCuadre(rs)
-    f.ok(malas.length === 0, `y cada rama suma las suyas${malas.length ? `: ${malas.join(', ')}` : ''}`)
-    f.ok(camino(rs).join(' → ') === 'planeacion → n1 → n2 → equipo', `planeada o no → causa → detalle → equipo (${camino(rs).join(' → ')})`)
-    f.ok(todas(rs).every(r => r.visible), 'abierto, todo se ve: causas, detalles y equipos')
-    const texto = (await caja.innerText()).replace(/\s+/g, ' ')
-    // B-27: la causa con el mismo nombre que en Identificar (el de la Tabla 1).
-    f.ok(/No planeada/.test(texto) && texto.includes('No planeada - Proceso / Facilidades') && texto.includes('Parada estación/bombeo afecta pozos'),
-      'la causa y el detalle, en palabras')
-    // B-34: una rama de un solo hijo va en un renglón, con los barriles una vez.
-    const renglones = await caja.locator('li[data-cadena-larga]').count()
-    const cifras = texto.match(/\b573 bbl/g)?.length ?? 0
-    f.ok(renglones === 1 && cifras === 1, `la cadena de un solo equipo va en un renglón, sin repetir «573 bbl» en cada nivel (${renglones} renglón, ${cifras} vez)`)
-    // Safari junta lo que el lector oye aparte («bbl,100 %»): se compara sin depender de ese espacio.
-    // P-09 (K1): la familia de campo, «bomba de agua», también en el árbol.
-    f.ok(/P-201B · bomba de agua · sin parte 573 bbl, ?100 % ?del tramo/.test(texto), `el equipo, su parte y lo que pesa en el tramo: «${texto.slice(0, 200)}»`)
-    f.ok(!CODIGO_ANH.test(texto) && !/choke/i.test(texto), 'producción no ve códigos de la ANH ni «choke»')
-    // Con el teclado: el mismo botón la cierra con Enter.
+    const boton = f.page.locator('[data-balance] [data-tramo-balance="planta"] button')
+    const tramo = Number((await f.page.locator('[data-tramo-balance="planta"] td').first().innerText()).replace(/\D/g, ''))
+    f.ok(await f.page.locator('[data-traza]').count() === 0, 'el tramo de la planta empieza cerrado')
+    // Con el teclado: el botón del tramo la abre con Enter.
     await boton.focus()
     await f.page.keyboard.press('Enter')
-    f.ok(await boton.getAttribute('aria-expanded') === 'false' && !(await caja.isVisible()), 'Enter lo vuelve a cerrar')
+    await expect(f.page.locator('[data-traza="planta"]')).toBeVisible()
+    const t = await traza(f.page, 'planta')
+    const rs = t?.hijos ?? []
+    f.ok(!!t && t.bbl === tramo && tramo === 573, `la planta: ${t?.bbl} bbl, los del tramo en el balance (${tramo})`)
+    f.ok(rs.length > 0 && rs.every(r => r.nivel === 'planeacion') && rs.reduce((a, r) => a + r.bbl, 0) === tramo, `lo primero es planeada o no, y suma el tramo (${rs.map(r => `${r.valor} ${r.bbl}`).join(', ')})`)
+    const malas = cuadraTraza(rs)
+    f.ok(malas.length === 0, `y cada rama suma las suyas${malas.length ? `: ${malas.join(', ')}` : ''}`)
+    f.ok(caminoTraza(rs).join(' → ') === 'planeacion → n1 → n2', `planeada o no → causa → detalle, y debajo las paradas (${caminoTraza(rs).join(' → ')})`)
+    const hoja = rs[0]?.hijos[0]?.hijos[0]
+    f.ok(!!hoja && hoja.paradas.map(([p, b]) => `${p} ${b}`).join(', ') === 'LC-16 300, LC-07 273', `las paradas de la hoja: ${hoja?.paradas.map(x => x.join(' ')).join(', ')}`)
+    const texto = (await f.page.locator('[data-traza="planta"]').innerText()).replace(/\s+/g, ' ')
+    // B-27: la causa con el mismo nombre que en Identificar (el de la Tabla 1).
+    f.ok(/No planeada/.test(texto) && texto.includes('No planeada - Proceso / Facilidades') && texto.includes('Parada estación/bombeo afecta pozos'), 'la causa y el detalle, en palabras')
+    f.ok(texto.includes('P-201B') && /Todo es propuesta de TRIM|: /.test(texto), 'cada parada con su equipo y quién dijo qué (o que todo es la propuesta de TRIM)')
+    f.ok(!CODIGO_ANH.test(texto) && !/choke/i.test(texto), 'producción no ve códigos de la ANH ni «choke»')
+    // Escape la cierra y el foco vuelve.
+    await f.page.keyboard.press('Escape')
+    f.ok(await f.page.locator('[data-traza]').count() === 0, 'Escape la vuelve a cerrar')
   })
 
-  await test.step('Septiembre: el pozo se abre hasta la parte de cada electrosumergible', async () => {
-    await f.ir('#/prod/diferidos/ceiba/cerrado')
-    await f.esperarTexto('Por tramo')
-    const fila = f.page.locator('[data-por-tramo] [data-tramo-fila="pozo"]')
-    const tramo = Number(await fila.locator('[data-tramo="pozo"]').getAttribute('data-bbl'))
-    await fila.locator(':scope > div > button[aria-expanded]').click()
-    const rs = await ramas(f.page, '[data-por-tramo] [data-ramas="pozo"]') ?? []
-    const suma = rs.reduce((a, r) => a + r.bbl, 0)
+  await test.step('Septiembre: el pozo se abre hasta cada electrosumergible, lo que falta en su rama', async () => {
+    await f.ir('#/prod/resultados/ceiba/cerrado')
+    await f.page.locator('[data-tramo-balance="pozo"] button').click()
+    const t = await traza(f.page, 'pozo')
+    const rs = t?.hijos ?? []
     const n1 = rs[0]?.hijos ?? []
-    f.ok(cerca(suma, tramo) && sinCuadre(rs).length === 0, `las ramas del pozo suman el tramo (${suma.toFixed(1)} = ${tramo.toFixed(1)} bbl) y cada una las suyas`)
-    f.ok(n1.length >= 2 && n1.every((x, i) => i === 0 || x.bbl <= n1[i - 1]!.bbl || x.valor === 'falta'), `las causas van de más a menos barriles (${n1.map(x => `${x.valor} ${x.bbl.toFixed(0)}`).join(', ')})`)
-    const texto = (await f.page.locator('[data-por-tramo] [data-ramas="pozo"]').innerText()).replace(/\s+/g, ' ')
-    f.ok(texto.includes('No planeada - Mecánica subsuelo') && texto.includes('Falla ESP') && texto.includes('LC-11 · electrosumergible · parte: Aislamiento del motor y del cable'),
-      'la causa mayor, su detalle y cada electrosumergible con su parte')
+    f.ok(!!t && t.bbl === 6675 && cuadraTraza(rs).length === 0, `las ramas del pozo suman el tramo (${t?.bbl} bbl) y cada una las suyas`)
+    f.ok(n1.length >= 2 && n1.every((x, i) => i === 0 || x.bbl <= n1[i - 1]!.bbl), `las causas van de más a menos barriles (${n1.map(x => `${x.valor} ${x.bbl}`).join(', ')})`)
+    const texto = (await f.page.locator('[data-traza="pozo"]').innerText()).replace(/\s+/g, ' ')
+    f.ok(texto.includes('No planeada - Mecánica subsuelo') && texto.includes('Falla ESP') && /LC-11[\s\S]*3\.677/.test(texto), 'la causa mayor, su detalle y cada electrosumergible con sus barriles (LC-11, 3.677)')
     f.ok(/Falta el detalle/.test(texto), 'lo que falta va en su rama, «Falta el detalle», sin repartirse')
-  })
-
-  await test.step('En el papel, todos los tramos salen desplegados', async () => {
-    await f.page.emulateMedia({ media: 'print' })
-    const abiertos = await f.page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-por-tramo] [data-ramas]')].map(e => [e.dataset.ramas, e.offsetParent !== null] as const))
-    f.ok(abiertos.length >= 2 && abiertos.every(([, v]) => v), `cada tramo con barriles sale con sus ramas (${abiertos.map(([k]) => k).join(', ')})`)
-    const papel = await f.textoPagina()
-    f.ok(papel.includes('Falla rodamiento/cojinete (bearing box)') && papel.includes('parte: Rodamientos'), 'también la planta, que en la pantalla estaba cerrada')
-    await f.page.emulateMedia({ media: 'screen' })
   })
   f.cerrar()
 })
@@ -179,13 +177,11 @@ test('el gerente ve lo no planeado de cada tramo, con la cifra de la barra y sin
 
   await test.step('Octubre en Resultados: lo sin identificar no se cuenta como planeado ni como no planeado', async () => {
     await f.ir('#/ger/resultados/ceiba/curso')
-    await f.esperarTexto('dónde se trabó')
-    await abrirVerMas(f.page)
-    await f.esperarTexto('lo no planeado de cada tramo')
-    const sin = await f.page.locator('[data-tramo-no-planeado="sin-asignar"]').first()
-    f.ok(Number(await sin.getAttribute('data-no-planeada')) === 0 && /sin saber si fue planeado/.test(await sin.innerText()),
-      `lo sin identificar dice «sin saber si fue planeado» («${(await sin.innerText()).replace(/\s+/g, ' ')}»)`)
-    const todoD = await todoElTexto(f.page)
+    await f.page.locator('[data-tramo-balance="sin-asignar"] button').click()
+    const t = await traza(f.page, 'sin-asignar')
+    f.ok(!!t && t.bbl === 355 && t.hijos.length === 1 && t.hijos[0]!.valor === 'falta' && !t.hijos.some(h => h.valor === 'no-planeada' || h.valor === 'planeada'),
+      `lo sin identificar va en «Falta saber si fue planeada» (${t?.hijos.map(h => h.valor).join(', ')})`)
+    const todoD = await f.page.evaluate(() => document.body.innerText)
     f.ok(!CODIGO_ANH.test(todoD) && !/choke/i.test(todoD), 'Resultados del gerente: sin códigos ni «choke»')
   })
   f.cerrar()
@@ -212,10 +208,11 @@ test('regulatorio ve el árbol en el orden de la circular, con la cadena de cada
   const orden = (await f.page.locator('[data-arbol-circular] ol[aria-label="El orden de la circular"] li').allInnerTexts()).map(x => x.replace(/^→\s*/, '').trim())
   f.ok(orden.length === 6 && orden[0]!.startsWith('Quién') && orden[0]!.includes('(resp_par)') && orden[5]!.includes('(cau_niv2)') && !/^\d/.test(orden[0]!),
     `arriba, el orden de los seis pasos con su campo de paradas_pozo (${orden.join(' → ')})`)
+  // A-25 (borrado.md): la rama vacía de la pérdida ya no se repite en cada tramo; se dice una vez, debajo del árbol, y la pérdida va en el balance.
   const perdidas = todas(rs).filter(r => r.nodo === 'impacto' && r.valor === 'perdida')
-  const tramos = todas(rs).filter(r => r.nodo === 'tramo')
-  f.ok(perdidas.length === tramos.length && perdidas.every(p => p.bbl === 0) && texto.includes('Pérdida: TRIM todavía no tiene registro de pérdidas'),
-    `la rama de la pérdida está en cada tramo (${perdidas.length}), vacía y diciendo por qué`)
+  f.ok(perdidas.length === 0 && await f.page.locator('[data-perdida-arbol]').count() === 1 && !texto.includes('Pérdida: TRIM todavía no tiene registro de pérdidas')
+      && await f.page.locator('[data-balance]').count() === 1,
+    `la pérdida se dice una vez (no en cada tramo: ${perdidas.length}) y va en el balance`)
   const prodml = await f.page.evaluate(() => {
     const arbol = document.querySelector('[data-arbol-circular]')
     const panel = [...document.querySelectorAll('main h2')].find(h => h.textContent?.trim() === 'También en PRODML')
@@ -245,10 +242,10 @@ test.describe('teléfono', () => {
     }
     let primero = true
     for (const [ruta, abrir] of [
-      // K1 · P-16: el árbol de cada tramo vive en Diferidos («Por tramo»), no en la tubería de antes.
-      ['#/prod/diferidos/ceiba/cerrado', '[data-por-tramo] [data-tramo-fila="pozo"] button'],
-      ['#/prod/diferidos/ceiba/curso', '[data-por-tramo] [data-tramo-fila="planta"] button'],
-      ['#/conf/diferidos/morichal/cerrado', '[data-tramo-fila="planta"] button'],
+      // v3: el árbol de cada tramo vive en el balance del choke (Diferidos salió: A-09), a un toque.
+      ['#/prod/resultados/ceiba/cerrado', '[data-tramo-balance="pozo"] button'],
+      ['#/prod/resultados/ceiba/curso', '[data-tramo-balance="planta"] button'],
+      ['#/ger/resultados/morichal/cerrado', '[data-tramo-balance="pozo"] button'],
       ['#/ger/resultados/ceiba~portafolio/cerrado', ''],
       ['#/reg/regulatorio/ceiba/curso', ''],
       ['#/reg/regulatorio/morichal/cerrado', ''],

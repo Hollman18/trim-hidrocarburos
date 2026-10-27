@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { useNivel } from '@/app/store'
 import { useListaEquipos, NOMBRE_TREN, type VistaNivel3, type TendenciaNivel3 } from '@/shared/api/equiposTecnico'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
-import { TendenciaFija } from '@/shared/ui/Sparkline'
+import { Tendencia } from '@/shared/ui/scada'
 import { fechaCorta } from '@/entities/reloj'
 import { n0, n1 } from '@/shared/lib/formato'
 import { TarjetaN3, Marca, Tag, IrA } from './piezas'
@@ -37,31 +37,15 @@ export function MientrasParada({ v }: { v: VistaNivel3 }) {
   )
 }
 
-/** Una tendencia grande (X5 §5.4): el nombre con su unidad, el dibujo con la banda,
- *  la alarma en discontinuo y la escala fija, y la ventana escrita. Los rótulos van
- *  en HTML, a 12 px o más. Se rotula el cero y el límite firmado (no el extremo de
- *  la escala: el rango del instrumento todavía no lo trae el motor). */
-function Grafica({ s, desde, hasta }: { s: TendenciaNivel3; desde: string; hasta: string }) {
-  const ALTO = 64
-  const y = (x: number) => ALTO - 3 - ((x - s.escala[0]) / (s.escala[1] - s.escala[0] || 1)) * (ALTO - 8)
-  const limites: number[] = [...s.alarmas, ...[s.banda?.[0], s.banda?.[1]].filter((b): b is number => typeof b === 'number')]
-  const tope = limites.length ? Math.max(...limites) : undefined
+/** Una tendencia grande (X5 §5.4; kit SCADA §2): la tendencia del kit con su escala fija (de los
+ *  límites firmados, nunca de la lectura), la banda, la alarma en discontinuo y la ventana escrita. */
+function Grafica({ s, desde, hasta, parado }: { s: TendenciaNivel3; desde: string; hasta: string; parado: boolean }) {
   return (
-    <figure className="mt-2.5" data-tendencia={s.tag}>
-      <figcaption className="text-[15px] font-semibold">{s.nombre} · {s.unidad}</figcaption>
-      <div className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2">
-        <div className="tabular relative w-[44px] text-right text-[13px] text-[var(--tinta2)]" style={{ height: ALTO }} aria-hidden>
-          {tope !== undefined && <span className="absolute right-0" style={{ top: Math.max(0, y(tope) - 9) }}>{n0(tope)}</span>}
-          <span className="absolute bottom-0 right-0 leading-none">{n0(s.escala[0])}</span>
-        </div>
-        <TendenciaFija serie={s.serie} escala={s.escala} banda={s.banda} alarmas={s.alarmas} alto={ALTO} />
-        <span />
-        <div className="mt-0.5 flex justify-between text-[13px] text-[var(--tinta2)]">
-          <span>{fechaCorta(new Date(desde))}</span>
-          <span className="font-semibold">hoy, {fechaCorta(new Date(hasta))}</span>
-        </div>
-      </div>
-    </figure>
+    <div className="mt-2.5" data-tendencia={s.tag}>
+      <Tendencia titulo={`${s.nombre} · ${s.unidad}`} ventana={`${s.serie.length} d`} series={[{ nombre: s.nombre, valores: s.serie }]}
+        escala={{ min: s.escala[0], max: s.escala[1], firmada: false }} unidad={s.unidad} banda={s.banda ?? undefined} alarmas={s.alarmas}
+        estado={parado ? 'parado' : 'normal'} decimales={s.decimales} ejeX={[fechaCorta(new Date(desde)), `hoy, ${fechaCorta(new Date(hasta))}`]} ancho={240} alto={64} />
+    </div>
   )
 }
 
@@ -74,7 +58,7 @@ export function DiasAntes({ v }: { v: VistaNivel3 }) {
   if (!t) return null
   return (
     <TarjetaN3 titulo={t.titulo} data-dias-antes>
-      {t.series.map(s => <Grafica key={s.tag} s={s} desde={t.desde} hasta={t.hasta} />)}
+      {t.series.map(s => <Grafica key={s.tag} s={s} desde={t.desde} hasta={t.hasta} parado={v.parado} />)}
       <p className="mt-2.5 text-[15px] leading-snug text-[var(--tinta2)]">
         {t.modoFalla && ing ? `Modo de falla registrado: ${t.modoFalla.charAt(0).toLowerCase()}${t.modoFalla.slice(1)}. ` : ''}
         Una señal apunta, no prueba: la causa la confirma quien abre {v.tipo === 'bomba' ? 'la bomba' : 'el equipo'}.

@@ -124,7 +124,7 @@ export function Pozos() {
 
   return (
     <div className="grid gap-3 sm:gap-4">
-      <div className="grid gap-x-6 gap-y-3 rounded-[20px] bg-[var(--panel)] p-4 sm:px-6 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
+      <div className="grid gap-x-6 gap-y-3 rounded-[10px] bg-[var(--panel)] p-4 sm:px-6 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
         <Cifra rotulo="Pozos" valor={`${filas.length - parados.length} de ${filas.length}`} pie={`produciendo · ${plural(frenados.length, 'frenado', 'frenados')}`} />
         {/* Un nombre, una cifra (G-5): es el «Potencial del libro» de Producción y Resultados. */}
         <Cifra rotulo="Potencial del libro" valor={`${n0(potencial)} bbl/d`}

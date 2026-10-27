@@ -69,7 +69,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
   return (
     <>
       {volver}
-      <div className="mb-3 rounded-[20px] bg-[var(--panel)] p-4 sm:px-6 sm:mb-4" data-detalle-pozo={p.id} data-condicion={condicion ?? ''}>
+      <div className="mb-3 rounded-[10px] bg-[var(--panel)] p-4 sm:px-6 sm:mb-4" data-detalle-pozo={p.id} data-condicion={condicion ?? ''}>
         <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
           {condicion && <MarcaCondicion c={condicion} tamano={18} className="mt-0.5" decorativa />}
           <span className="min-w-0 flex-1">
@@ -129,7 +129,7 @@ export function DetallePozo({ campoId, pozoId, desde, hasta, nombrePeriodo, volv
           «parte por identificar»): lo que falta es la parte del equipo que lo
           cerró, y eso se identifica allá. */}
       {ident?.pide && !f.evento?.fin && porOtro && f.causa && (
-        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[20px] bg-[var(--panel)] px-4 py-3 text-[15px] sm:mb-4">
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[10px] bg-[var(--panel)] px-4 py-3 text-[15px] sm:mb-4">
           <span className="min-w-0 flex-1">Vuelve cuando <b>{f.causa.equipo}</b> arranque.</span>
           <Boton onClick={() => abrirEquipo(f.causa!.equipo)}>Ver {f.causa.equipo}</Boton>
         </div>

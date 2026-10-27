@@ -1,14 +1,12 @@
 import type { ComponentType } from 'react'
 import { pantalla } from '@/shared/lib/carga'
 import {
-  Gauge, Network, MessageSquareText, Wrench,
-  Droplets, Activity, Scale, FileCheck2, SlidersHorizontal, UserRound, Plug,
-  TrendingUp, CircleDot, ClipboardCheck, Scale3d, Fan, Zap,
-  ListChecks, ChartColumn, LayoutDashboard, ShieldCheck, ScrollText,
+  Gauge, Network, MessageSquareText,
+  Droplets, FileCheck2, SlidersHorizontal, UserRound, Plug,
+  TrendingUp, CircleDot, ListChecks, ChartColumn, ShieldCheck, ScrollText,
 } from 'lucide-react'
 import { IconoPlanta } from '@/shared/brand/Logo'
 
-const Diferidos = pantalla(() => import('@/pages/Diferidos'), 'Diferidos')
 const Perfil = pantalla(() => import('@/pages/Perfil'), 'Perfil')
 const Planta = pantalla(() => import('@/pages/Planta'), 'Planta')
 const Configuracion = pantalla(() => import('@/pages/Configuracion'), 'Configuracion')
@@ -16,16 +14,9 @@ const Conectores = pantalla(() => import('@/pages/Conectores'), 'Conectores')
 const Agua = pantalla(() => import('@/pages/Agua'), 'Agua')
 const Produccion = pantalla(() => import('@/pages/Produccion'), 'Produccion')
 const Pozos = pantalla(() => import('@/pages/Pozos'), 'Pozos')
-const Turno = pantalla(() => import('@/pages/Turno'), 'Turno')
-const Mantenimiento = pantalla(() => import('@/pages/Mantenimiento'), 'Mantenimiento')
 const Causa = pantalla(() => import('@/pages/Causa'), 'Causa')
-// C4 · «Superficie» se fundió en Equipos (X4 §3.6): su dirección abre Equipos con el filtro de servicios y proceso.
-const Equipo = pantalla(() => import('@/pages/Equipos'), 'EquiposDeSuperficie')
 const Confiabilidad = pantalla(() => import('@/pages/Confiabilidad'), 'Confiabilidad')
-const Evidencia = pantalla(() => import('@/pages/Evidencia'), 'Evidencia')
 const Regulatorio = pantalla(() => import('@/pages/Regulatorio'), 'Regulatorio')
-const Bombas = pantalla(() => import('@/pages/Bombas'), 'Bombas')
-const Esp = pantalla(() => import('@/pages/Esp'), 'Esp')
 // C2 y C3 (experiencia v2): La planta viva del gerente y Hoy, lo que a cada rol le toca.
 const PlantaViva = pantalla(() => import('@/pages/PlantaViva'), 'PlantaViva')
 const Hoy = pantalla(() => import('@/pages/Hoy'), 'Hoy')
@@ -62,27 +53,27 @@ export const PANTALLAS: Record<string, Pantalla> = {
   hoy:          { corto: 'Hoy',           titulo: 'Hoy',                         ruta: 'hoy', agrega: true, ahora: true, sinExportar: true, icono: ListChecks,         Vista: Hoy },
   equipos:      { corto: 'Equipos',       titulo: 'Equipos',                     ruta: 'equipos', agrega: true, ahora: true, sinExportar: true, icono: Gauge,              Vista: Equipos },
   resultados:   { corto: 'Resultados',    titulo: 'Resultados',                  ruta: 'resultados', agrega: true,                      icono: ChartColumn,        Vista: Resultados },
-  bombas:       { corto: 'Bombas',        titulo: 'Bombas de la línea', ruta: 'bombas', agrega: true, icono: Fan,                Vista: Bombas },
-  esp:          { corto: 'Electrosumergibles', titulo: 'Electrosumergibles', ruta: 'esp', agrega: true, icono: Zap,               Vista: Esp },
+  // B3 · A-15: Bombas y Electrosumergibles ya no son pantallas: son filtros de Equipos; sus direcciones
+  // abren Equipos con el filtro puesto (`FILTRO_DE`, url.ts) y, con un equipo, su nivel 3.
   produccion:   { corto: 'Producción',    titulo: 'Producción contra plan',      ruta: 'produccion', agrega: true,   icono: TrendingUp,         Vista: Produccion },
   pozos:        { corto: 'Pozos',         titulo: 'Pozos',                       ruta: 'pozos', agrega: true,        icono: CircleDot,          Vista: Pozos },
-  turno:        { corto: 'Turno',         titulo: 'Entrega de turno',            ruta: 'turno', ahora: true, agrega: true,        icono: ClipboardCheck,     Vista: Turno },
+  // B3 · A-01: la pantalla Turno se borró (repetía Hoy); «Entregar turno» vive en Hoy y su dirección abre Hoy.
   // F1 · P-trabajo-1 y K1 · G-15: Mi trabajo se fundió en Hoy del técnico y ningún rol la ofrece: la pantalla se
   // borró; su dirección («#/tec/trabajo/…») sigue abriendo Hoy (`FUSIONADA_EN`, url.ts).
-  mantenimiento:{ corto: 'Mantenimiento', titulo: 'Mantenimiento: lo que hay que atacar',    ruta: 'mantenimiento', agrega: true, icono: Scale3d,            Vista: Mantenimiento },
+  // B3 · A-12: Mantenimiento como estaba se borró; lo suyo vive en el Hoy del jefe y su dirección abre ahí.
   // F1 · P-21: el Resumen del gerente ya no es una pantalla (C5 lo fundió en La planta viva y Resultados);
   // su dirección sigue abriendo La planta viva (`FUSIONADA_EN`, url.ts).
-  diferidos:    { corto: 'Diferidos',     titulo: 'Libro de diferidos',          ruta: 'diferidos', agrega: true,                       icono: Activity,           Vista: Diferidos },
   // K1 · P-10: Riesgo ya no es una pantalla. El del gerente vive en La planta viva (C5) y el del jefe y de
   // confiabilidad, en su Equipos, debajo de la lista; su dirección abre ahí (`FUSIONADA_EN` y `FUSIONADA_EN_ROL`, url.ts).
   perfil:       { corto: 'Mi perfil',     titulo: 'Mi perfil',                   ruta: 'perfil', ahora: true, sinExportar: true,       icono: UserRound,          Vista: Perfil },
   planta:       { corto: 'Planta',        titulo: 'Planta',                      ruta: 'planta',                          icono: Network,            Vista: Planta },
-  causa:        { corto: 'Identificar',   titulo: 'Paradas por identificar',     ruta: 'causa', agrega: true,             icono: MessageSquareText,  Vista: Causa },
-  equipo:       { corto: 'Servicios y proceso', titulo: 'Equipos',                ruta: 'equipo', agrega: true, ahora: true,             icono: Wrench,             Vista: Equipo },
+  // B3 · B-06: ya no es una puerta. Contestar vive en Hoy; aquí queda la cadena de 6 pasos, «Ver una por una».
+  causa:        { corto: 'Una por una',   titulo: 'Paradas una por una',         ruta: 'causa', agrega: true,             icono: MessageSquareText,  Vista: Causa },
+  // B3 · «Superficie» ya no es pantalla: su dirección abre Equipos con el filtro de servicios (`FILTRO_DE`, url.ts).
   agua:         { corto: 'Agua',          titulo: 'Agua y almacenamiento',       ruta: 'agua',                            icono: Droplets,           Vista: Agua },
   confiabilidad:{ corto: 'Confiabilidad', titulo: 'Confiabilidad',               ruta: 'confiabilidad', agrega: true,                   icono: ShieldCheck,           Vista: Confiabilidad },
-  evidencia:    { corto: 'Evidencia',     titulo: 'Evidencia de parada',         ruta: 'evidencia', agrega: true,                       icono: Scale,              Vista: Evidencia },
-  regulatorio:  { corto: 'Regulatorio',   titulo: 'Reporte al regulador',        ruta: 'regulatorio',                     icono: FileCheck2,         Vista: Regulatorio },
+  // B3 · A-21: Evidencia salió del producto con el rol de abastecimiento.
+  regulatorio:  { corto: 'Regulatorio',   titulo: 'Reporte al regulador',        ruta: 'regulatorio', sinExportar: true,                     icono: FileCheck2,         Vista: Regulatorio },
   // I-adm-3: un nombre por pantalla; cada parte trae su título adentro (F3). UI-08: sin período ni Exportar (un formulario).
   configuracion:{ corto: 'Configuración', titulo: 'Configurar', tituloPorRol: { ger: 'Metas y accesos' }, ruta: 'configuracion', ahora: true, sinExportar: true, icono: SlidersHorizontal,  Vista: Configuracion },
   // La misma vista que Configuración, abierta en la filosofía operacional: así el
@@ -100,7 +91,11 @@ export const tituloDe = (id: string, rolId: string): string | undefined => {
 /** Pantallas que viven DENTRO de otra: tienen dirección propia, pero en el
  *  menú y en la introducción va la de afuera (la filosofía operacional es una
  *  pestaña de Configuración con su propio enlace). */
-export const DENTRO_DE: Readonly<Record<string, string>> = { filosofia: 'configuracion', equipo: 'equipos' }
+export const DENTRO_DE: Readonly<Record<string, string>> = {
+  filosofia: 'configuracion', conectores: 'configuracion',
+  // B3 (flujos.md §2; borrado.md B-04 a B-06): siguen a un toque desde su puerta, sin entrada propia en el panel.
+  causa: 'hoy', pozos: 'equipos', planta: 'plantaViva', agua: 'plantaViva',
+}
 /** ¿Va como entrada propia en el menú y en la introducción? */
 export const enElMenu = (id: string) => !Object.hasOwn(DENTRO_DE, id)
 /** La entrada del menú que se marca para una pantalla: ella misma, o la de afuera. */
@@ -115,33 +110,33 @@ export const entradaDe = (id: string) => (Object.hasOwn(DENTRO_DE, id) ? DENTRO_
  *  antes funcionan igual. El orden de los miembros es uno para todos. */
 export interface Puerta { corto: string; icono: ComponentType<{ className?: string }>; miembros: string[] }
 export const GRUPOS: Record<string, Puerta> = {
-  hoy:        { corto: 'Hoy',            icono: ListChecks,        miembros: ['hoy', 'causa', 'turno'] },
+  hoy:        { corto: 'Hoy',            icono: ListChecks,        miembros: ['hoy', 'causa'] },
   // C5: el Resumen del gerente ya no se ofrece (cada panel tiene su lugar: X4 §3.7); su dirección abre La planta viva.
   plantaViva: { corto: 'La planta viva', icono: IconoPlanta,       miembros: ['plantaViva', 'planta', 'agua'] },
-  equipos:    { corto: 'Equipos',        icono: Gauge,             miembros: ['equipos', 'bombas', 'esp', 'pozos', 'equipo'] },
-  resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['resultados', 'diferidos', 'produccion', 'confiabilidad', 'mantenimiento'] },
+  equipos:    { corto: 'Equipos',        icono: Gauge,             miembros: ['equipos', 'pozos'] },
+  resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['resultados', 'produccion', 'confiabilidad'] },
   reporte:    { corto: 'Reporte',        icono: FileCheck2,        miembros: ['regulatorio'] },
   configurar: { corto: 'Configurar',     icono: SlidersHorizontal, miembros: ['configuracion', 'filosofia', 'conectores'] },
-  paradas:    { corto: 'Paradas y evidencia', icono: LayoutDashboard, miembros: ['evidencia'] },
 }
-/** Las puertas de cada rol, en su orden (CONSTRUCCION.md, «Las puertas»): Hoy ·
- *  La planta viva · Equipos · Resultados, y las propias de regulatorio, del
- *  administrador y de abastecimiento. Lo que un rol tiene y no cae en ninguna de
- *  sus puertas (las metas del gerente, la configuración en solo lectura) va en
- *  el menú de la persona: nada se pierde. */
+/** Las puertas de cada rol, en su orden (experiencia v3, `flujos.md` §2): las que pasaron sus tareas
+ *  medidas. Un rol con UNA sola puerta no lleva menú (oper, tec, reg y adm; §9.4): el panel sigue
+ *  (el campo, la ayuda y la persona), sin lista de puertas. En el teléfono, el panel se abre con ☰
+ *  y no hay barra abajo (decisión 4). Lo que un rol tiene y no cae en ninguna puerta (la
+ *  configuración en solo lectura) va en el menú de la persona: nada se pierde. */
 export const PUERTAS_DEL_ROL: Readonly<Record<string, readonly string[]>> = {
-  ger: ['plantaViva', 'equipos', 'resultados'],
-  prod: ['hoy', 'plantaViva', 'equipos', 'resultados'],
-  sup: ['hoy', 'plantaViva', 'equipos'],
-  oper: ['hoy', 'plantaViva', 'equipos'],
-  jefe: ['hoy', 'plantaViva', 'equipos', 'resultados'],
-  conf: ['hoy', 'plantaViva', 'equipos', 'resultados'],
+  ger: ['plantaViva', 'resultados'],
+  prod: ['plantaViva', 'resultados'],
+  sup: ['hoy', 'equipos'],
+  oper: ['hoy'],
+  jefe: ['hoy', 'equipos', 'resultados'],
+  conf: ['equipos', 'resultados'],
   plan: ['hoy', 'equipos', 'resultados'],
-  tec: ['hoy', 'plantaViva', 'equipos'],
-  reg: ['reporte', 'plantaViva', 'resultados'],
-  adm: ['configurar', 'plantaViva'],
-  cont: ['paradas'],
+  tec: ['hoy'],
+  reg: ['reporte'],
+  adm: ['configurar'],
 }
+/** ¿El rol lleva menú de puertas? Con una sola, no (flujos.md §2). */
+export const conMenu = (rolId: string) => (PUERTAS_DEL_ROL[rolId] ?? []).length > 1
 /** La puerta de una pantalla. */
 export const grupoDe = (pantalla: string) => Object.keys(GRUPOS).find(g => GRUPOS[g]!.miembros.includes(pantalla))
 /** Nombre de la puerta en el panel. */
@@ -149,5 +144,8 @@ export const nombreGrupo = (grupo: string, _pantallasDelRol?: string[]) => GRUPO
 /** Las pantallas del rol que no caen en ninguna de sus puertas: van en el menú de la persona. */
 export const fueraDePuertas = (rol: { id: string; pantallas: string[] }) => {
   const suyas = PUERTAS_DEL_ROL[rol.id] ?? []
-  return rol.pantallas.filter(p => enElMenu(p) && !suyas.some(g => GRUPOS[g]!.miembros.includes(p)))
+  return rol.pantallas.filter(p => enElMenu(p) && !suyas.some(g => GRUPOS[g]!.miembros.includes(p)) && !(SOLO_A_UN_TOQUE[rol.id] ?? []).includes(p))
 }
+/** B3 · B-02: lo que un rol de una sola pantalla abre solo desde su tarjeta (el operador y el técnico, la ficha
+ *  del equipo en Equipos): no va en el menú de la persona, que no es un segundo menú. */
+const SOLO_A_UN_TOQUE: Readonly<Record<string, readonly string[]>> = { oper: ['equipos'], tec: ['equipos'] }

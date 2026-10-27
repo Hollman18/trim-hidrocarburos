@@ -1,12 +1,20 @@
 import type { EsquemaAgua, VistaNivel3 } from '@/shared/api/equiposTecnico'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
+import { Bomba, Tanque, type EstadoKit, type CondicionKit } from '@/shared/ui/scada'
+import { MARCA } from './filtros'
 import { n0, n1 } from '@/shared/lib/formato'
 import { TarjetaN3, Marca } from './piezas'
-import { MARCA } from './filtros'
 
 const lista = (xs: readonly string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs.at(-1)}`)
 const valor = (i: EsquemaAgua['instrumentos'][number]) =>
   i.valor === null ? '---' : i.valor.toLocaleString('es-CO', { minimumFractionDigits: i.decimales, maximumFractionDigits: i.decimales })
+
+/** El estado de una bomba en el kit: la que se mira con su condición (anormal), parada, sin
+ *  instrumento (sin dato: no se sabe si corre) o en marcha. */
+const estadoBomba = (b: EsquemaAgua['bombas'][number], condicion: VistaNivel3['condicion']): { estado: EstadoKit; condicion?: CondicionKit; corre?: boolean } =>
+  condicion && condicion !== 'sin-comunicacion' ? { estado: 'anormal', condicion, corre: b.marcha !== 'parada' }
+    : condicion === 'sin-comunicacion' ? { estado: 'sin-comunicacion' }
+      : b.marcha === 'parada' ? { estado: 'parado' } : !b.instrumentada ? { estado: 'sin-dato' } : { estado: 'normal' }
 
 /** El esquema del tren de agua de la bomba (nivel 3: «aquí sí puede parecerse a un
  *  P&ID», X2 §3.1; la imagen 4, `trenAgua` de `indicadores.js`): el tanque con su
@@ -14,7 +22,8 @@ const valor = (i: EsquemaAgua['instrumentos'][number]) =>
  *  clara; parada, oscura con contorno de 2 px; sin instrumento, sin relleno y
  *  discontinua, X5 §6.5), las burbujas de los instrumentos de la que se mira y la
  *  dirección del agua con flechas fijas (nada se mueve, X2 §5.5). Letra de 14 en el
- *  dibujo: se pinta solo donde cabe a 12 px o más; más angosto, en renglones. */
+ *  dibujo: se pinta solo donde cabe a 12 px o más; más angosto, en renglones. Del kit SCADA, la bomba y el
+ *  tanque (sin texto propio); las burbujas, a 14 px, para que encogidas no bajen de 12. */
 function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
   const n = e.bombas.length
   const paso = n <= 3 ? 84 : 52
@@ -23,8 +32,8 @@ function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
   const yUlt = ys.at(-1)!, yMid = (y0 + yUlt) / 2
   const iSel = e.bombas.findIndex(b => b.esta)
   const ySel = ys[iSel] ?? yMid
-  // Las burbujas: entre la bomba y la de abajo si caben (como la imagen); si no, debajo de todas.
-  const yBur = n <= 3 ? ySel + 40 : yUlt + 46
+  // Debajo de todas: el valor del medidor va bajo su burbuja (kit SCADA) y no pisa el rótulo de la bomba de abajo.
+  const yBur = yUlt + 46
   const alto = Math.max(yBur + 34, yUlt + 30) + 48
   const tanqueH = 112, tanqueY = Math.max(36, yMid - tanqueH * 0.79)
   const nivel = e.tanque?.nivelPct ?? null
@@ -43,11 +52,12 @@ function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
       {e.tanque && (
         <g data-tanque>
           <text x={6} y={tanqueY - 14} fontSize={14} fontWeight={600} fill="var(--tinta)">Tanque</text>
-          <rect x={6} y={tanqueY} width={50} height={tanqueH} rx={8} fill="var(--panel)" stroke="var(--pared)" strokeWidth={1.6} />
-          {nivel !== null && <rect x={10} y={tanqueY + 4 + (tanqueH - 8) * (1 - nivel / 100)} width={42} height={(tanqueH - 8) * (nivel / 100)} rx={5} fill="var(--dato3)" />}
-          <line x1={0} x2={62} y1={tanqueY + 4 + (tanqueH - 8) * (1 - e.tanque.altoAltoPct / 100)} y2={tanqueY + 4 + (tanqueH - 8) * (1 - e.tanque.altoAltoPct / 100)} stroke="var(--tinta)" strokeWidth={1.6} />
+          {/* El tanque del kit SCADA (§3): el nivel en gris y la raya del alto-alto en el costado. */}
+          <Tanque x={6} y={tanqueY} ancho={44} alto={tanqueH} nivel={nivel} estado={nivel === null ? 'sin-dato' : 'normal'} />
+          <line x1={0} x2={58} y1={tanqueY + tanqueH * (1 - e.tanque.altoAltoPct / 100)} y2={tanqueY + tanqueH * (1 - e.tanque.altoAltoPct / 100)} stroke="var(--tinta2)" strokeWidth={2} data-alto-alto />
           <text x={6} y={tanqueY + tanqueH + 22} fontSize={14} fontWeight={700} fill="var(--tinta)" className="tabular">{nivel !== null ? `${n1(nivel)} %` : 'sin dato'}</text>
-          <text x={6} y={tanqueY + tanqueH + 40} fontSize={14} fill="var(--tinta2)">alto-alto {n0(e.tanque.altoAltoPct)} %</text>
+          {/* A 22 del nivel: Firefox mide la caja del texto con todo el alto de la letra y a 18 el alto-alto pisaba el nivel (B4). */}
+          <text x={6} y={tanqueY + tanqueH + 44} fontSize={14} fill="var(--tinta2)">alto-alto {n0(e.tanque.altoAltoPct)} %</text>
           <path d={`M56 ${yMid} L100 ${yMid}`} {...L} />
         </g>
       )}
@@ -64,14 +74,12 @@ function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
           <g key={b.id} data-bomba-esquema={b.id} data-marcha={b.marcha}>
             <path d={`M100 ${y} L134 ${y}`} {...L} />
             <path d={`M166 ${y} L250 ${y}`} {...L} {...(esParada ? { strokeDasharray: '6 5' } : {})} />
-            {esParada
-              ? <circle cx={150} cy={y} r={17} fill="var(--eq-parado)" stroke="var(--tinta)" strokeWidth={2.2} />
-              : sinInst ? <circle cx={150} cy={y} r={16} fill="var(--panel)" stroke="var(--tinta3)" strokeWidth={1.6} strokeDasharray="4 3" />
-                : <circle cx={150} cy={y} r={16} fill="var(--eq-marcha)" stroke="var(--tinta2)" strokeWidth={1.5} />}
-            <path d={`M144 ${y - 7} L157 ${y} L144 ${y + 7} Z`} fill={esParada ? 'var(--eq-marcha)' : sinInst ? 'none' : 'var(--tinta2)'} stroke={sinInst ? 'var(--tinta3)' : 'none'} strokeWidth={1.3} />
-            <text x={174} y={y - 10} fontSize={15} fontWeight={700} className="font-cond" fill="var(--tinta)">{b.id}</text>
-            {sinInst && <g transform={`translate(${174 + b.id.length * 8 + 6},${y - 22})`}><MarcaCondicion c="sin-instrumento" tamano={14} decorativa /></g>}
+            {/* La bomba del kit SCADA (§3): por brillo si corre; la que se mira, con su marca y su anillo. */}
+            {/* Sin el anillo de color del kit: la marca va aparte, con su forma (el color nunca solo, ISA-101). */}
+            <Bomba x={150} y={y} {...(({ condicion: _c, ...k }) => k)(estadoBomba(b, b.esta ? v.condicion : undefined))} />
             {b.esta && v.condicion && <g transform={`translate(116,${y - 28})`}><MarcaCondicion c={MARCA[v.condicion]} tamano={16} decorativa /></g>}
+            <text x={176} y={y - 10} fontSize={15} fontWeight={700} className="font-cond" fill="var(--tinta)">{b.id}</text>
+            {sinInst && <g transform={`translate(${176 + b.id.length * 8 + 6},${y - 22})`}><MarcaCondicion c="sin-instrumento" tamano={14} decorativa /></g>}
           </g>
         )
       })}
@@ -80,11 +88,12 @@ function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
         const desde = ins.donde === 'caudal' ? yMid : ySel
         return (
           <g key={ins.tag} data-burbuja={ins.letras}>
-            <line x1={x} y1={desde} x2={x} y2={yBur - 21} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="2 2" />
-            <circle cx={x} cy={yBur} r={21} fill="var(--panel)" stroke="var(--tinta2)" strokeWidth={1.4} />
-            <line x1={x - 21} x2={x + 21} y1={yBur} y2={yBur} stroke="var(--tinta2)" strokeWidth={1} />
-            <text x={x} y={yBur - 5} fontSize={14} fontWeight={700} textAnchor="middle" fill="var(--tinta)">{ins.letras}</text>
-            <text x={x} y={yBur + 14} fontSize={14} textAnchor="middle" fill={parada ? 'var(--tinta2)' : 'var(--tinta)'} className="tabular">{valor(ins)}</text>
+            <line x1={x} y1={desde} x2={x} y2={yBur - 20} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="2 2" />
+            {/* La burbuja de ISA-5.1, como el medidor del kit (letras arriba, valor abajo), a 14 px. */}
+            <circle cx={x} cy={yBur} r={21} fill="var(--panel)" stroke="var(--tinta2)" strokeWidth={1.5} data-kit="medidor" data-estado={ins.valor === null ? 'sin-dato' : parada ? 'parado' : 'normal'} />
+            <line x1={x - 21} x2={x + 21} y1={yBur} y2={yBur} stroke="var(--tinta3)" strokeWidth={1} />
+            <text x={x} y={yBur - 5} fontSize={14} fontWeight={700} textAnchor="middle" fill="var(--tinta2)">{ins.letras}</text>
+            <text x={x} y={yBur + 14} fontSize={14} textAnchor="middle" fill={parada || ins.valor === null ? 'var(--tinta2)' : 'var(--tinta)'} className="tabular">{ins.valor === null ? '—' : valor(ins)}</text>
           </g>
         )
       })}

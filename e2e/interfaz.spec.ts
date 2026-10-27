@@ -11,60 +11,34 @@ const foco = (page: Page) => page.evaluate(() => {
   return d ? `dialogo:${d.getAttribute('aria-label') ?? (d.hasAttribute('data-panel-equipo') ? 'ficha' : '?')}` : a.tagName
 })
 
-// Sin marcar la introducción como vista: un rol nuevo que entra por un enlace
-// compartido con equipo abre la introducción y la ficha a la vez. Antes cada
-// una volvía `inert` a la otra y la aplicación no respondía (ni «Cerrar»).
-// C4: a un rol técnico el equipo se le abre en su nivel 3 (una vista, no un panel);
-// la ficha flotante es la ejecutiva del gerente: es la que se apila con la introducción.
-// F1 (P-15; X4 §6.2): la introducción ya no es un diálogo modal sino tres señas que
-// flotan sobre el inicio (la tercera pide hacer algo en la pantalla): la ficha, que sí
-// es modal, no la deja inerte, y cada una se cierra por su lado.
+// B3 · A-18: la introducción se borró. Un rol nuevo que entra por un enlace compartido con equipo abre
+// solo la ficha (la ejecutiva del gerente): nada queda inerte de más y se cierra con su botón o con Escape.
 for (const ancho of [390, 1280]) {
   base.describe(`${ancho} px`, () => {
     base.use({ viewport: { width: ancho, height: 860 }, isMobile: ancho < 600 })
 
-    base('la introducción y la ficha abiertas a la vez: se usa y se cierra todo', async ({ page }) => {
+    base('un enlace con equipo, sin haber entrado antes: la ficha sola, sin introducción, y se cierra', async ({ page }) => {
       const errores: string[] = []
       page.on('pageerror', e => errores.push(e.message))
-      await page.goto('/#/ger/equipos/ceiba/P-201B')
-      const intro = page.locator('[role=dialog][aria-label="Introducción"]')
+      await page.goto('/#/ger/resultados/ceiba/curso/P-201B')
       const ficha = page.locator('[data-panel-equipo]')
-      await expect(intro, 'la introducción del rol nuevo se abre').toBeVisible()
-      await expect(ficha, 'la ficha de P-201B, que viene en la dirección, también').toBeVisible()
-
-      // Ninguna deja inerte a la otra: la introducción no es modal y la ficha no la aísla.
-      await expect.poll(() => intro.evaluate(e => !e.closest('[inert]')), { message: 'la introducción no queda inerte' }).toBe(true)
-      await expect.poll(() => ficha.evaluate(e => !e.closest('[inert]')), { message: 'la ficha tampoco' }).toBe(true)
-
-      // Se usa: pasar de seña y cerrarla.
-      await intro.getByRole('button', { name: 'Siguiente' }).click()
-      await expect(intro).toContainText('2 de 3')
-      await intro.getByRole('button', { name: 'Ya entendí' }).first().click()
-      await expect(intro, '«Ya entendí» la cierra').toHaveCount(0)
-
-      // La ficha sigue y se cierra con su botón (si aísla lo de atrás o no es de la ficha: H7, F3).
-      await expect(ficha).toBeVisible()
+      await expect(ficha, 'la ficha de P-201B, que viene en la dirección').toBeVisible()
+      await expect(page.locator('[role=dialog][aria-label="Introducción"], [data-introduccion]'), 'sin introducción (A-18)').toHaveCount(0)
       await ficha.getByRole('button', { name: 'Cerrar' }).first().click()
       await expect(ficha, '«Cerrar» de la ficha la cierra').toHaveCount(0)
-
       expect(await page.evaluate(() => document.querySelectorAll('[inert]').length), 'no queda nada inerte').toBe(0)
-      await page.locator('main button').filter({ visible: true }).first().click()
       expect(errores, 'sin errores de la página').toEqual([])
     })
   })
 }
 
-base('con los dos abiertos, Escape cierra la introducción desde ella y la ficha desde la ficha', async ({ page }) => {
-  await page.goto('/#/ger/equipos/ceiba/P-201B')
-  const intro = page.locator('[role=dialog][aria-label="Introducción"]')
+base('Escape cierra la ficha y no deja nada inerte', async ({ page }) => {
+  await page.goto('/#/ger/resultados/ceiba/curso/P-201B')
   const ficha = page.locator('[data-panel-equipo]')
-  await expect(intro).toBeVisible(); await expect(ficha).toBeVisible()
-  await intro.focus()
+  await expect(ficha).toBeVisible()
+  await ficha.focus().catch(() => undefined)
   await page.keyboard.press('Escape')
-  await expect(intro, 'Escape en la introducción la cierra').toHaveCount(0)
-  await expect(ficha, 'y no la ficha').toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(ficha, 'el segundo Escape cierra la ficha').toHaveCount(0)
+  await expect(ficha, 'Escape cierra la ficha').toHaveCount(0)
   expect(await page.evaluate(() => document.querySelectorAll('[inert]').length)).toBe(0)
 })
 
@@ -85,7 +59,7 @@ test('el foco no se pierde cuando la ficha cambia de equipo', async ({ flujo: f 
 
 test('las tuberías del dibujo de Planta no son paradas de Tab; el tren de agua sigue con flujo con P-201B detenida', async ({ flujo: f }) => {
   await f.page.addInitScript(() => localStorage.setItem('trim.tema', 'dark'))
-  await f.abrir('/#/conf/planta/ceiba/curso')
+  await f.abrir('/#/prod/planta/ceiba/curso')
   // K1 · P-16: arriba va la tubería de La planta viva (otro dibujo con role=group); el esquema es el que dice «Planta de …».
   const dibujo = f.page.locator('main svg[role=group][aria-label^="Planta de "]').first()
   const lineas = dibujo.locator('[data-linea]')
@@ -122,20 +96,13 @@ test('las tuberías del dibujo de Planta no son paradas de Tab; el tren de agua 
 test.describe('390 px', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true })
 
-  // Experiencia v3: sin el canal de mensajes. El último toque es «Contestar», en la pantalla.
-  test('el último toque de «Contestar» deja el foco en el aviso «Respondido»', async ({ flujo: f }) => {
-    await f.abrir('/#/oper/causa/ceiba/curso')
-    f.ok(await f.clic('Sello mecánico'), 'escoge la parte sugerida')
-    f.ok(await f.clic('Fuga hacia afuera'), 'y lo que vio')
-    // Con el teclado, como en el hallazgo: foco en «Contestar» y Enter.
-    await f.page.locator('main form').filter({ has: f.page.getByRole('button', { name: 'Contestar' }) }).first().getByRole('button', { name: 'Contestar' }).focus()
+  // B3 · FF-2: se contesta en Hoy con un toque. Con el teclado, el foco no se pierde: va a «¿qué vio?» (opcional).
+  test('contestar con el teclado en Hoy deja el foco en la pregunta que sigue, no en BODY', async ({ flujo: f }) => {
+    await f.abrir('/#/oper/hoy/ceiba/curso')
+    await f.page.locator('main [data-operador="pregunta"] [data-opcion="Sello mecánico"]').focus()
     await f.page.keyboard.press('Enter')
-    await expect(f.page.getByRole('status').filter({ hasText: 'Respondido: P-201B' })).toBeVisible()
-    const donde = await f.page.evaluate(() => {
-      const a = document.activeElement
-      return a === document.body ? 'BODY' : `${a?.getAttribute('role')}: ${a?.textContent ?? ''}`
-    })
-    f.ok(/^status: Respondido: P-201B \(\d\d:\d\d\)/.test(donde), `el foco queda en el aviso de la respuesta, que sigue en la página (${donde})`)
+    await expect(f.page.getByRole('status').filter({ hasText: 'Se registra en 5 s: sello mecánico en P-201B' })).toBeVisible()
+    await expect.poll(() => f.page.evaluate(() => !!document.activeElement?.closest('[data-lo-que-vio]')), { message: 'el foco queda en «¿qué vio?»' }).toBe(true)
     f.cerrar()
   })
 })
@@ -150,26 +117,23 @@ test('los resultados del gerente miden contra la meta con barras', async ({ fluj
     raya: !!b.querySelector('[data-raya]'),
     relleno: (b.querySelector('[data-relleno]') as HTMLElement | null)?.getBoundingClientRect().width ?? -1,
   })))
-  // 2 del promedio diario + 2 del cierre proyectado + 2 por cada uno de los 5 campos.
-  f.ok(barras.length === 14, `14 barras en los resultados del portafolio (${barras.length})`)
+  // v3: el promedio diario va con la barra del kit SCADA (la banda desde la meta firmada y el puntero); el cierre
+  // proyectado, como cifra con su palabra (lo proyectado no lleva barra, kit §6); «Por campo», 2 barras por campo.
+  const kit = await f.page.evaluate(() => [...document.querySelectorAll('main [data-produccion-meta] [data-kit="barra"]')].map(b => !!b.querySelector('[data-banda]') && !!b.querySelector('[data-puntero]')))
+  f.ok(kit.length === 2 && kit.every(Boolean), `el promedio diario: 2 barras del kit, con su banda y su puntero (${kit.length})`)
+  f.ok(barras.length === 10, `10 barras en «Por campo» (${barras.length})`)
   f.ok(barras.every(b => b.raya && b.relleno >= 0), 'cada barra tiene su raya de meta y su relleno')
-  f.ok((barras[0]?.relleno ?? 0) > 0, 'la producción del día llena su barra')
+  f.ok((barras[0]?.relleno ?? 0) > 0, 'la producción del primer campo llena su barra')
   f.cerrar()
 })
 
 // Lo que la pantalla deja en un ⓘ o detrás de «ver N más» sale escrito en el
 // papel: el informe es la pantalla impresa y en el papel no hay globos.
 test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas', async ({ flujo: f }) => {
-  // K1 · P-10: el Riesgo del jefe vive en su Equipos («Qué está en riesgo», debajo de la lista): se imprime con ella.
-  await f.abrir('/#/jefe/riesgo/ceiba~portafolio/curso')
-  f.ok((await f.hash()).startsWith('#/jefe/equipos/ceiba~portafolio'), `la dirección de Riesgo abre Equipos (${await f.hash()})`)
-  await f.page.emulateMedia({ media: 'print' })
+  // B3 · A-13: «Qué está en riesgo» salió de Equipos; lo que costaría la falla vive en la ficha del equipo.
+  await f.abrir('/#/conf/equipos/morichal/MPP-301')
   let t = await f.textoPagina()
-  // D-2 (G-16): el costo de cada falla, en bbl, se llama «Le costaría la falla»; «Si falla hoy» queda para los bbl/d.
-  f.ok(t.includes('Qué hacer · K-101:') && t.includes('Exposición si fallan hoy:') && t.includes('Le costaría la falla · ') && !t.includes('Si falla hoy · '), 'Riesgo: el «qué hacer», el costo y su origen salen escritos')
-  f.ok(t.includes('MPP-301') && !t.includes('ver 2 más'), 'Riesgo: las filas que «ver 2 más» esconde salen en el papel, y el botón no')
-  f.ok(/salió de su banda normal|ya llegó a su alarma/.test(t), 'Riesgo: el porqué de cada fila (su globo) sale escrito')
-  await f.page.emulateMedia({ media: 'screen' })
+  f.ok(/≈ [\d.]+ bbl le costaría la falla/.test(t), 'la ficha: lo que costaría la falla, con su nombre')
   await f.ir('#/ger/resultados/ceiba~portafolio/curso')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
@@ -184,11 +148,6 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   f.ok(/MN-41[\s\S]{0,80}bbl · \d+ %/.test(t) && t.includes('bbl · < 1 %') && !/bbl · 0 %/.test(t), 'Resultados: «Por campo» sale desplegado, y lo menor de 1 % se dice «< 1 %»')
   // P-09 (K1): la familia de campo, «bomba de agua».
   f.ok(/P-201B\s+bomba de agua · 5 fallas · no costó crudo/.test(t), 'Resultados: el equipo que falló sin costar crudo sale al final de su campo')
-  await f.page.emulateMedia({ media: 'screen' })
-  await f.ir('#/sup/turno/ceiba/curso')
-  await f.page.emulateMedia({ media: 'print' })
-  t = await f.textoPagina()
-  f.ok(t.includes('Se cerró porque') && !t.includes('WhatsApp'), 'Turno: la causa de las paradas nuevas sale escrita')
 
   // Identificar: «ver N más» esconde declaradas en la pantalla y en el papel salen todas.
   await f.page.emulateMedia({ media: 'screen' })
@@ -227,12 +186,16 @@ test('en el papel salen los ⓘ, los globos de cada fila y las filas escondidas'
   t = await f.textoPagina()
   f.ok(t.includes('Firmar la configuración técnica: tanques, respaldos de bombas'), 'Mi perfil: el nombre completo de cada permiso sale en el papel')
 
-  // Planta: el contenido de «Capacidad por tren» sale en el papel, y no el control.
+  // Planta: lo que se lee en el papel, sin los controles. v3 (C-08): «Capacidad por tren» pasó al Estado del administrador
+  // («Lo que deja pasar cada tramo», la filosofía paso 2): Planta ya no la repite.
   await f.page.emulateMedia({ media: 'screen' })
   await f.ir('#/prod/planta/ceiba/curso')
   await f.page.emulateMedia({ media: 'print' })
   t = await f.textoPagina()
-  f.ok(/Capacidad por tren[\s\S]{0,60}Crudo/.test(t) && !t.includes('▾'), 'Planta: la capacidad por tren sale escrita y el desplegable no')
+  f.ok(t.includes('Capturando datos') && !t.includes('Capacidad por tren') && !t.includes('▾'), 'Planta: lo que captura datos sale escrito, sin la capacidad repetida ni el desplegable')
+  await f.page.emulateMedia({ media: 'screen' })
+  await f.ir('#/adm/configuracion/ceiba/curso')
+  f.ok((await f.texto()).includes('Lo que deja pasar cada tramo'), 'la capacidad de cada tramo, en el Estado del administrador')
 
   // El papel de la demostración lo dice (también sin folio, con su período).
   await f.page.emulateMedia({ media: 'screen' })
@@ -252,16 +215,6 @@ test('año a la fecha: la cabecera dice que está en curso', async ({ flujo: f }
   const etiqueta = (await f.page.locator('header button[aria-label^="Período"]').first().getAttribute('aria-label'))?.replace(/\u00a0/g, ' ')
   f.ok(etiqueta === 'Período: Año a la fecha, en curso', `el botón dice «en curso» (${etiqueta})`)
   f.cerrar()
-})
-
-// Introducción: tras «Siguiente» el foco se queda en las señas (el lector dice la nueva) y un segundo
-// Enter no se salta nada. F1 (P-15): ya no hay lista de pantallas; las puertas están en el panel.
-base('introducción: tras «Siguiente» el foco se queda en las señas', async ({ page }) => {
-  await page.goto('/#/sup/bombas/ceiba/curso')
-  const intro = page.locator('[role=dialog][aria-label="Introducción"]')
-  await intro.getByRole('button', { name: 'Siguiente' }).focus(); await page.keyboard.press('Enter')
-  await expect(intro).toContainText('2 de 3')
-  expect(await page.evaluate(() => !!document.activeElement?.closest('[data-introduccion]')), 'el foco sigue en la introducción').toBe(true)
 })
 
 // En el teléfono el período se ve entero (antes el subtítulo lo cortaba y el calendario era solo un ícono).

@@ -57,7 +57,10 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
 }) {
   const id = useId().replace(/:/g, '')
   const visibles = series.slice(0, 4)
-  const L = compacta ? 2 : 40, R = compacta ? 4 : 8, T = compacta ? 3 : 8, B = compacta ? 3 : 20
+  // El margen izquierdo alcanza para el rótulo más largo del eje y (la mono de 12 px, ≈ 7,3 px por carácter): «4.600» no se corta.
+  // El de arriba, para el rótulo del tope de la escala: Firefox mide la caja del texto con todo el alto de la letra (≈ 16 px
+  // para 12) y con 8 px el tope («1.600») se salía 2 px por arriba del dibujo (B4: el auditor a 1280 px en Firefox).
+  const L = compacta ? 2 : Math.max(40, Math.ceil(10 + 7.3 * Math.max(...[...alarmas, escala.min, escala.max].map(v => cifra(v, decimales).length)))), R = compacta ? 4 : 8, T = compacta ? 3 : 12, B = compacta ? 3 : 20
   const N = Math.max(2, ...visibles.map(s => s.valores.length))
   const X = (i: number) => L + (i / (N - 1)) * (ancho - L - R)
   const Y = (v: number) => T + (1 - (Math.min(escala.max, Math.max(escala.min, v)) - escala.min) / (escala.max - escala.min || 1)) * (alto - T - B)

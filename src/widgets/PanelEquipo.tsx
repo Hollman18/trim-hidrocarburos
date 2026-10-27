@@ -132,7 +132,7 @@ function Flotante({ telefono, refModal, refNoModal, idTitulo, ancho, expandido =
   return (
     <div ref={refNoModal} tabIndex={-1} role="dialog" aria-labelledby={idTitulo} data-panel-equipo data-no-modal {...datos}
       style={{ top }} className={cn('fixed bottom-2 z-[120] rounded-l-[20px] outline-none', caja,
-        expandido ? 'left-[6vw] right-[6vw] rounded-[20px]' : `right-0 ${ancho}`)}>
+        expandido ? 'left-[6vw] right-[6vw] rounded-[10px]' : `right-0 ${ancho}`)}>
       {children}
     </div>
   )

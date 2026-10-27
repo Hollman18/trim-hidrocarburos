@@ -15,13 +15,14 @@ test('perfil del campo y plan mes a mes', async ({ flujo: f }) => {
     f.ok(t.includes('dejan de vigilarse') && t.includes('electrosumergibles sí → no'), 'avisa que quedan fuera y lo lista para firmar')
     await f.escribir('input[placeholder^="Ej.: nuevo certificado"]', 'Prueba: sin vigilancia de electrosumergibles')
     await f.clic('Firmar como'); await f.esperar(500)
-    await f.ir('#/sup/bombas/ceiba/curso'); await f.esperar(300)
-    // S5: las subpantallas dejaron de ser role=tab (navegación con aria-current, #69).
-    const tabs = await f.page.evaluate(() => [...document.querySelectorAll('[data-subpantallas] button')].map(b => b.textContent.trim()).join(','))
-    f.ok(!tabs.includes('Electrosumergibles') && tabs.includes('Bombas'), `sin esa familia, «Pozos y equipos» de La Ceiba ya no ofrece Electrosumergibles (${tabs})`)
+    // B3 · A-15: Bombas y Electrosumergibles son filtros de Equipos: sin esa familia, el filtro de tipo no la ofrece.
+    await f.ir('#/sup/equipos/ceiba'); await f.esperar(300)
+    await f.page.locator('main [data-mas-filtros]').click(); await f.esperar(200)
+    const tipos = await f.page.locator('main [role=radiogroup][aria-label="Tipo"] [data-opcion]').evaluateAll(es => es.map(e => e.getAttribute('data-opcion')).join(','))
+    f.ok(!tipos.includes('electrosumergible') && tipos.includes('bomba'), `sin esa familia, el filtro de tipo de La Ceiba ya no ofrece Electrosumergibles (${tipos})`)
     await f.ir('#/sup/esp/ceiba/curso'); await f.esperar(400)
     const h = await f.hash()
-    f.ok(h.includes('/equipos/') || h.includes('/bombas/') || h.includes('/pozos/'), 'una dirección a Electrosumergibles de La Ceiba cae en otra subpantalla (C4: Equipos es la primera)')
+    f.ok(h.includes('/equipos/'), 'una dirección a Electrosumergibles de La Ceiba abre Equipos')
     // Guacamayo sin gas: el administrador lo cambia y firma.
     await f.ir('#/adm/configuracion/guacamayo/curso'); await f.clic('Configuración técnica'); await f.esperar(400)
     // Antes esta comprobación terminaba en «|| true» y no podía fallar.

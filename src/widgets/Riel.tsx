@@ -181,10 +181,14 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   onCerrar?: () => void
 }) {
   const comoSeLee = useApp(s => s.comoSeLee), setComoSeLee = useApp(s => s.setComoSeLee)
-  const puertas = usePuertas()
+  const todas = usePuertas()
+  // B3 · Con una sola puerta (oper, tec, reg, adm) no hay menú (flujos.md §2): sin la puerta; si su puerta
+  // tiene más de una pantalla (adm: Configuración y Conectores), van ellas, como entradas.
+  const unaSola = todas.length === 1
+  const puertas = !unaSola ? todas : todas[0]!.subs.length > 1 ? todas[0]!.subs.map(x => ({ ...x, subs: [] as typeof x[] })) : []
 
   if (plegado) return (
-    <nav aria-label="Navegación" className="flex h-full flex-col items-center overflow-y-auto border-r border-[var(--nav-linea)] bg-[var(--nav)] px-3 pb-[18px] pt-5 text-[var(--nav-tinta)]">
+    <nav aria-label="Navegación" className="flex h-full flex-col items-center overflow-y-auto border-r border-[var(--nav-linea)] bg-[var(--nav)] px-[10px] pb-[18px] pt-5 text-[var(--nav-tinta)]">
       <span className="mb-4 grid size-11 shrink-0 place-items-center"><Isotipo className="size-[30px]" /></span>
       <div className="mb-4"><SelectorCampo variante="plegado" /></div>
       <div role="group" aria-label="Puertas" className="flex flex-col items-center gap-1">

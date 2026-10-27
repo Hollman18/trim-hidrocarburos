@@ -35,9 +35,12 @@ test('Equipos · la lista: todos los equipos del campo, en su orden, con sus fil
   // Confiabilidad abre en Equipos (X4 §3.4).
   await f.abrir('/#/conf/x/ceiba/curso')
   f.ok((await f.hash()).startsWith('#/conf/equipos/ceiba'), `confiabilidad abre en Equipos (${await f.hash()})`)
-  await f.esperarTexto('¿Le creo al vigía?')
-  await expect(page.locator('main [data-acierto-vigia]')).toContainText(/acertó \d+ de \d+ avisos/)
-  // El orden: por estado (la marca, de la más grave; lo parado primero) y por «Si falla hoy».
+  // B3: tipo número, «Vigía 3 de 3 aciertos»; y su lista va ordenada por «Si falla hoy» (FF-8).
+  await expect(page.locator('main [data-renglon="vigia"]')).toContainText(/\d+ de \d+/)
+  const deConf = await filas(page)
+  f.ok(deConf.slice(0, 2).join(' ') === 'P-201A P-201C' && deConf.length === 28, `confiabilidad, por «Si falla hoy»: ${deConf.slice(0, 3).join(' ')} … (${deConf.length})`)
+  // El orden de los demás (el jefe): por estado (la marca, de la más grave; lo parado primero) y por «Si falla hoy».
+  await f.ir('#/jefe/equipos/ceiba')
   const todas = await filas(page)
   f.ok(todas.slice(0, 9).join(' ') === 'P-201B K-101 LC-21 TK-102 H-302 LC-16 LC-07 P-201A P-201C' && todas.length === 28,
     `el orden: ${todas.slice(0, 9).join(' ')} … (${todas.length} equipos)`)
@@ -49,8 +52,7 @@ test('Equipos · la lista: todos los equipos del campo, en su orden, con sus fil
   // «¿Lo vigila TRIM?»: P-201A no tiene instrumento, con sus corchetes y su palabra.
   await expect(page.locator('main [data-fila-equipo="P-201A"]')).toContainText('no: sin instrumento')
   await expect(page.locator('main [data-fila-equipo="P-201A"]')).toContainText('sube porque P-201B está parada')
-  // F3 · P-02: a confiabilidad, «Cambió hoy» se lo dice su cabeza («hoy valen más») y cada fila («sube porque…»): no se repite.
-  await expect(page.locator('main [data-primero] [data-frase]')).toContainText('hoy valen más')
+  // A-14: «Cambió hoy» lo dice cada fila («sube porque…»): la línea aparte no se repite.
   f.ok(await page.locator('main [data-cambio-hoy]').count() === 0, 'sin la línea «Cambió hoy» repetida')
   // La marca de cada fila es la de la franja: solo los equipos con condición la llevan.
   const conMarca = await page.locator('main [data-fila-equipo][data-condicion]:not([data-condicion=""])').evaluateAll(es => es.map(e => e.getAttribute('data-fila-equipo')))
@@ -81,7 +83,7 @@ test('Equipos · la lista: todos los equipos del campo, en su orden, con sus fil
   // «Superficie» ya no se ofrece en el panel; su dirección abre Equipos con servicios y proceso.
   const subs = await page.evaluate(() => [...document.querySelectorAll('nav [data-subpantallas] button')].map(b => b.textContent?.trim() || b.getAttribute('aria-label') || ''))
   f.ok(!subs.some(x => /Superficie|Servicios y proceso/.test(x)), `el panel ya no ofrece «Superficie» (${subs.join(', ')})`)
-  await f.ir('#/conf/equipo/ceiba/curso')
+  await f.ir('#/jefe/equipo/ceiba/curso')
   await expect(page.locator('main [role=radiogroup][aria-label="Tipo"] [data-opcion="superficie"]')).toHaveAttribute('aria-checked', 'true')
   f.ok((await filas(page)).join(' ') === 'K-101 TK-102 H-302 SE-2 V-101 C-401 LACT-01', `la dirección de Superficie: ${(await filas(page)).join(' ')}`)
   f.cerrar()
@@ -116,8 +118,9 @@ test('Equipos · el nivel 3 de P-201B como la imagen 4: la cifra, el bloqueo, su
   // Sus señales: 7 indicadores analógicos con su minitendencia, en gris y sin marca (parada), y el interruptor.
   const senales = page.locator('main [data-sus-senales]')
   await expect(senales.locator('[data-senal]')).toHaveCount(8)
-  const indicadores = await senales.locator('svg[role=img]').evaluateAll(es => es.map(e => e.getAttribute('aria-label') ?? ''))
-  f.ok(indicadores.length === 7 && indicadores.every(x => x.includes('equipo parado')) && indicadores[0]!.startsWith('Presión de succión, 18,2 psi; normal > 10 · alarma 8'),
+  // B3 · la barra del kit SCADA (§1): su nombre accesible dice el valor, la banda, la alarma y que el equipo está parado.
+  const indicadores = await senales.locator('[data-kit="barra"]').evaluateAll(es => es.map(e => e.getAttribute('aria-label') ?? ''))
+  f.ok(indicadores.length === 7 && indicadores.every(x => x.includes('equipo parado')) && /^Presión de succión, 18,2 psi; normal sobre 10(,0)?; alarma en 8(,0)?/.test(indicadores[0]!),
     `7 indicadores con su escala, su banda y su alarma, en gris (${indicadores[0]})`)
   f.ok(await senales.locator('[data-senal][data-condicion]:not([data-condicion=""])').count() === 0, 'parada: ninguna señal lleva marca propia (X2 B9)')
   await expect(senales.locator('[data-senal="LSH-2013"]')).toContainText('sin fuga')
@@ -160,7 +163,8 @@ test('Equipos · el nivel 3 de P-201B como la imagen 4: la cifra, el bloqueo, su
   // Subir es por las migas: «Agua» vuelve a la lista con el tren de agua.
   await cab.locator('nav button', { hasText: 'Agua' }).click()
   await expect(page.locator('main [data-lista-equipos]')).toBeVisible()
-  f.ok((await filas(page)).join(' ') === 'P-201B P-201A P-201C', `la miga del tren vuelve a la lista con su filtro (${(await filas(page)).join(' ')})`)
+  // Confiabilidad ve su lista por «Si falla hoy» (FF-8): las dos que valen más primero.
+  f.ok((await filas(page)).join(' ') === 'P-201A P-201C P-201B', `la miga del tren vuelve a la lista con su filtro (${(await filas(page)).join(' ')})`)
   // Nada de texto de menos de 12 px ni nada que se salga, a 1440.
   await page.locator('main [data-fila-equipo="P-201B"]').click()
   await expect(page.locator('main [data-nivel3="P-201B"]')).toBeVisible()
@@ -223,11 +227,10 @@ test('Equipos · las direcciones de antes y desde cualquier lugar: el nivel 3 pa
   await expect(page.locator('main [data-si-falla-ficha="K-101"]')).toContainText(/Si falla hoy: hasta [\d.]+ bbl\/d/)
   await page.goBack(); await f.esperar(600)
   f.ok((await f.hash()).startsWith('#/sup/hoy/ceiba') && await page.locator('main [data-nivel3]').count() === 0, `«atrás» vuelve a Hoy (${await f.hash()})`)
-  // El gerente: su Equipos es la versión ejecutiva, y un equipo abre su ficha ejecutiva en el panel.
+  // El gerente (A-16: sin Equipos): su dirección abre su inicio, y un equipo abre su ficha ejecutiva en el panel.
   await f.abrir('/#/ger/equipos/ceiba')
-  await expect(page.locator('main [data-equipos-gerente]')).toContainText('Ahora: lo que está parado o avisa')
-  await expect(page.locator('main [data-equipos-gerente]')).toContainText(/por equipo/i)
-  await page.locator('main [data-equipos-gerente] [data-fila-equipo="P-201B"]').click()
+  f.ok(!(await f.hash()).startsWith('#/ger/equipos'), `la dirección de Equipos del gerente abre su inicio (${await f.hash()})`)
+  await f.abrir('/#/ger/resultados/ceiba/curso/P-201B')
   await expect(page.locator('[data-panel-equipo]')).toBeVisible()
   await expect(page.locator('[data-panel-equipo]')).toContainText('Le ha costado')
   f.ok(await page.locator('main [data-nivel3]').count() === 0, 'el gerente no abre el nivel técnico')

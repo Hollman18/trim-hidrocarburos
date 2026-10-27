@@ -10,28 +10,21 @@ import { test } from './apoyo.ts'
 /** Los porcentajes que se leen en un texto («94,7 %», «100,8 %»), como números. */
 const porcentajes = (t: string) => [...t.matchAll(/(\d{1,3}(?:\.\d{3})*(?:,\d+)?) ?%/g)].map(m => Number(m[1]!.replace(/\./g, '').replace(',', '.')))
 
+// v3: la escalera salió de la primera capa de Producción (C-03, escalón): la regla de 5E·H30 se comprueba donde sigue la
+// eficiencia, en la ⓘ del «% del potencial»: la que no se puede creer se dice en palabras y nunca con un número sobre 100 %.
 test('Producción: la eficiencia que no se puede creer dice por qué, sin número; la que sí, con su número (5E·H30)', async ({ flujo: f }) => {
   const { page } = f
   // El Palmar, septiembre: las pruebas dan menos de lo que midió el punto oficial y el factor no está firmado.
   await f.abrir('/#/prod/produccion/palmar/cerrado')
-  const escalera = page.locator('main [data-escalera]')
-  await expect(escalera.locator('[data-pe-no-creible]')).toContainText(
-    'Las pruebas dan menos de lo que midió el punto oficial: la eficiencia no se puede creer hasta firmar el factor de medición. TRIM propone 0,998, medido en 80 días sin paradas.')
-  let t = await escalera.innerText()
-  f.ok(!/eficiencia de producción\s*[\d,]+ %/.test(t) && porcentajes(t).every(x => x <= 100),
-    `la escalera de El Palmar no da la eficiencia en número ni ningún número sobre 100 % (${porcentajes(t).join(', ') || 'ninguno'})`)
-  f.ok(/lo no planeado se llevó\s*[\d.]+ bbl/.test(t) && t.includes('el porcentaje sale con la eficiencia'), 'lo no planeado va en barriles: su porcentaje espera la eficiencia')
   const ayuda = await page.getByRole('img', { name: /^% del potencial:/ }).getAttribute('aria-label') ?? ''
   f.ok(/la eficiencia de producción del período no se puede creer: Las pruebas dan menos/.test(ayuda) && !/% de eficiencia de producción/.test(ayuda),
-    'el ⓘ del «% del potencial» tampoco da la eficiencia en número')
+    'El Palmar: el ⓘ del «% del potencial» dice por qué no se puede creer, sin el número')
+  const t = await f.texto()
+  f.ok(porcentajes(t).every(x => x <= 100), `ningún número sobre 100 % en la pantalla (${porcentajes(t).filter(x => x > 100).join(', ') || 'ninguno'})`)
   // La Ceiba, septiembre: las pruebas dan más que el punto oficial; la eficiencia se cree y va con su número.
   await f.ir('#/prod/produccion/ceiba/cerrado')
-  await expect(escalera.locator('[data-pe-no-creible]')).toHaveCount(0)
-  t = await escalera.innerText()
-  f.ok(/eficiencia de producción\s*94,7 %/.test(t), 'La Ceiba: «eficiencia de producción 94,7 %»')
-  // Los dos campos de producción juntos: el conjunto no se cree mientras no se crea la de El Palmar.
-  await f.ir('#/prod/produccion/ceiba~portafolio/cerrado')
-  await expect(escalera.locator('[data-pe-no-creible]')).toContainText('La eficiencia del conjunto no se puede creer: en El Palmar las pruebas dan menos de lo que midió el punto oficial y falta firmar su factor de medición.')
+  const ceiba = await page.getByRole('img', { name: /^% del potencial:/ }).getAttribute('aria-label') ?? ''
+  f.ok(/94,7 % de eficiencia de producción/.test(ceiba), `La Ceiba: «94,7 % de eficiencia de producción» (${ceiba.slice(-90)})`)
   f.cerrar()
 })
 
@@ -62,14 +55,17 @@ test('Filosofía operacional, paso 2: el factor de medición va prellenado con l
   await page.getByRole('button', { name: '2 Capacidades' }).click()
   await expect(panel.locator('[data-factor-rige]')).toContainText('Rige 0,998 · firmado en la versión 2')
   // El motor lo usa: los pozos de hoy se leen con él; septiembre, cerrado, no cambia (cada día con la configuración de su medianoche).
-  // K1 · P-16: Producción monta la tubería de La planta viva (lente técnica); lo que cabe en los pozos va debajo del
-  // dibujo y de dónde sale, en «Ver como tabla» (como decía la ⓘ de la tubería de antes).
-  await f.ir('#/prod/produccion/palmar/cerrado')
-  const tecnica = page.locator('main [data-tuberia-tecnica]')
-  await expect(tecnica.locator('[data-capacidad="pozo"]')).toContainText('dan 3.314 bbl/d')
-  await tecnica.getByRole('button', { name: 'Ver como tabla' }).click()
-  const deLosPozos = await tecnica.locator('[data-fuente-tramo="pozo"]').innerText()
+  // v3 (A-10): la tubería va una vez, en el inicio de producción (el kit); lo que dan los pozos, en su tramo, y de dónde
+  // sale, en su ⓘ (como decía «Ver como tabla» de la tubería de antes).
+  await f.ir('#/prod/planta-viva/palmar/curso')
+  const pozos = page.locator('main [data-tramo-kit="pozo"]')
+  await expect(pozos).toContainText('3.314')
+  await expect(pozos).toContainText('dan, bbl/d')
+  const deLosPozos = await page.locator('main [data-tramo-col="pozo"]').getByRole('img', { name: /^De dónde sale · Pozos:/ }).getAttribute('aria-label') ?? ''
   f.ok(deLosPozos.includes('× el factor de medición firmado (0,998)'), 'la tubería dice que los pozos (3.314 bbl/d, antes 3.321) se leen con el factor firmado')
-  await expect(page.locator('main [data-escalera] [data-pe-no-creible]')).toContainText('El firmado (0,998) rige desde el 3 de oct.')
+  // Septiembre, cerrado, no cambia: lo dice la ⓘ del «% del potencial» de Producción.
+  await f.ir('#/prod/produccion/palmar/cerrado')
+  const ayuda = await page.getByRole('img', { name: /^% del potencial:/ }).getAttribute('aria-label') ?? ''
+  f.ok(ayuda.includes('El firmado (0,998) rige desde el 3 de oct.'), `el factor firmado rige desde el 3 de oct. (${ayuda.slice(-120)})`)
   f.cerrar()
 })

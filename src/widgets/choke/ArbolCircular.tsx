@@ -97,6 +97,9 @@ export function ArbolCircular({ campoId, desde, hasta, periodo, plegadoEnTelefon
           <span>= el diferido del libro (Σ de las paradas del período)</span><b>{n0(lb.diferido)} bbl</b>
         </p>
         </div>
+        <p className="mt-1.5 flex max-w-[860px] flex-wrap items-center gap-x-1 text-[14px] text-[var(--tinta2)]" data-perdida-arbol="">
+          Pérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)<Info titulo="Pérdida" texto={EXPLICA_PERDIDA} imprimir={false} />
+        </p>
         {/* En el papel no hay globos: lo que dicen los ⓘ que se repiten va una vez, aquí (B-10). */}
         <dl className="solo-impresion mt-2 max-w-[860px] text-[9pt] text-[var(--tinta2)]">
           <div><dt className="inline font-semibold">Pérdida: </dt><dd className="inline">{EXPLICA_PERDIDA}</dd></div>

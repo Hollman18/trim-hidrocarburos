@@ -9,6 +9,8 @@ export type Resultado = { ok: true } | { ok: false; error: string }
 export type Pendiente =
   | { via: 'libro'; rolId: string; dicho: string; cuerpo: { evento: string; campoId: string; equipo: string; texto: string; parte?: string; modo?: string } }
   | { via: 'anh'; rolId: string; dicho: string; fila: string; cuerpo: { pregunta: string; opcion: string; cadena: string; aplicarAlEvento?: true; aplicarALaCascada?: true; ids?: string[] } }
+  /** A3 · Lo que vio, después de la parte (`POST /api/paradas/:evento/vio`). */
+  | { via: 'vio'; rolId: string; dicho: string; evento: string; cuerpo: { modo: string; texto?: string } }
 
 /** Lo que se acaba de hacer desde Hoy, con su aviso y su «Deshacer» (X5 §5.7; X4 §5.5). */
 export interface Hecho {

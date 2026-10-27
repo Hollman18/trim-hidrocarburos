@@ -3,7 +3,7 @@
 // (UI-04/UI-15), el «?» dibujado (UI-16), el nombre del campo sin cortar (UI-17), la filosofía sin el rótulo
 // «modelo choke» y sin «se pierde» (T-11, T-8), «Lo que dedujo TRIM» plegado (P-filosofia-1), Conectores con
 // filas y una acción principal (P-conectores-1, UI-19), el registro sin servicio en el demo (A24) y el avatar
-// en el índigo (UI-10). Se prueba lo que ve la persona.
+// en el color de la marca (UI-10; v3, decisión 5: el petróleo cálido, ya no el índigo). Se prueba lo que ve la persona.
 import { expect, type Page } from '@playwright/test'
 import { test } from './apoyo.ts'
 
@@ -18,14 +18,19 @@ test('Configurar · el administrador abre en el estado del campo, sin pestañas,
   await f.abrir('/#/adm/configuracion/ceiba/curso')
   // P-04: la cifra «3 de 6», lo que falta y una fila por paso, sin desplazarse.
   const estado = page.locator('main [data-estado-config="ceiba"]')
-  await expect(estado.locator('[data-cifra]')).toHaveText('3 de 6')
+  // v3: la cifra del kit (3, «de 6 pasos listos») con lo que falta debajo y «Seguir el paso», la acción principal.
+  await expect(estado.locator('[data-cifra]')).toContainText(/3\s*de 6 pasos listos/)
   await expect(estado.locator('[data-falta]')).toHaveText('Falta firmar a qué pozos sirve cada equipo.')
+  await expect(estado.locator('[data-seguir-paso="topologia"]')).toBeVisible()
   f.ok(await estado.locator('[data-cifra]').evaluate(e => e.getBoundingClientRect().bottom <= innerHeight), 'la cifra se ve sin desplazarse')
   const pasos = await estado.locator('[data-paso]').evaluateAll(es => es.map(e => `${e.getAttribute('data-paso')}:${e.getAttribute('data-listo')}`))
   f.ok(pasos.join(' ') === 'perfil:si tanques:si topologia:no capacidades:no factor:no metas:si', `una fila por paso, en su orden (${pasos.join(' ')})`)
   // UI-01: ninguna pestaña; las partes, en una lista.
   f.ok(await page.locator('[role=tablist], [role=tab]').count() === 0, 'ninguna pestaña en Configuración')
-  await expect(page.locator('main nav[data-partes] button')).toHaveText(['Configuración técnica', 'Filosofía operacional', 'Metas de los campos', 'Usuarios y accesos'])
+  // B-08: las metas y los accesos son del gerente; el administrador tiene lo técnico y la filosofía.
+  await expect(page.locator('main nav[data-partes] button')).toHaveText(['Configuración técnica', 'Filosofía operacional'])
+  // En el mismo estado, a un toque: los tags sin equipo, la conversión del árbol y la jornada (necesario-por-rol §11).
+  await expect(page.locator('main [data-estado-extra]')).toContainText(/Tags sin equipo[\s\S]*Conversión del árbol[\s\S]*Jornada/)
   // Los otros campos con su cuenta, a un toque.
   await expect(page.locator('main [data-otros-campos]')).toContainText('Morichal Norte · 3 de 6')
 
@@ -56,7 +61,7 @@ test('Configurar · el administrador abre en el estado del campo, sin pestañas,
   f.ok(tecnica.includes('Tanques de agua') && tecnica.includes('Membrete del informe') && !tecnica.includes('TANQUES DE AGUA'), 'lo técnico, con sus títulos en frase')
   f.ok((await mayusculas(page)).length === 0, `ningún título en MAYÚSCULAS (${(await mayusculas(page)).join(' | ')})`)
   await page.locator('main [data-volver-estado]').click()
-  await expect(estado.locator('[data-cifra]')).toHaveText('3 de 6')
+  await expect(estado.locator('[data-cifra]')).toContainText(/3\s*de 6 pasos listos/)
   f.cerrar()
 })
 
@@ -82,8 +87,10 @@ test('Configurar · en el teléfono el nombre del campo no se corta y nada se sa
   const { page } = f
   await page.setViewportSize({ width: 390, height: 844 })
   await f.abrir('/#/adm/configuracion/morichal/curso')
-  await expect(page.locator('main [data-estado-config] [data-cifra]')).toHaveText('3 de 6')
+  await expect(page.locator('main [data-estado-config] [data-cifra]')).toContainText(/3\s*de 6 pasos listos/)
   f.ok(await sale(page) <= 0, 'el estado no se sale a 390 px')
+  // Las metas son del gerente (B-08): se prueban en su Configuración.
+  await f.abrir('/#/ger/configuracion/morichal/curso')
   await f.clic('Metas de los campos'); await f.esperar(400)
   const cortados = await page.locator('main [data-nombre-campo]').evaluateAll(es => es.filter(e => e.scrollWidth > e.clientWidth + 1 || getComputedStyle(e).textOverflow === 'ellipsis').map(e => e.textContent))
   f.ok(cortados.length === 0 && await page.locator('main [data-nombre-campo]', { hasText: 'Morichal Norte' }).count() > 0, `«Morichal Norte» completo en las metas (cortados: ${cortados.join(', ') || 'ninguno'})`)
@@ -138,18 +145,27 @@ test('Conectores · las filas de SAP dicen qué va y qué viene; una sola acció
   f.cerrar()
 })
 
-test('Mi perfil · el avatar en el índigo de la marca y los títulos en frase', async ({ flujo: f }) => {
+// v3 (decisión 5 de CONSTRUCCION.md): la identidad es cálida y sin índigo. El avatar va en --marca, que es el
+// acento petróleo de la marca (#2c7371) con su letra blanca; nunca vuelve el índigo de la v2 (#142d88).
+test('Mi perfil · el avatar en el color de la marca (el petróleo cálido, sin índigo) y los títulos en frase', async ({ flujo: f }) => {
   const { page } = f
   await f.abrir('/#/adm/perfil/ceiba/curso')
-  const [fondo, marca] = await page.evaluate(() => {
+  const m = await page.evaluate(() => {
     const a = document.querySelector('main [data-avatar]')!
-    const p = document.createElement('i'); p.style.color = 'var(--marca)'; document.body.append(p)
-    const m = getComputedStyle(p).color; p.remove()
-    return [getComputedStyle(a).backgroundColor, m]
+    const color = (v: string) => { const p = document.createElement('i'); p.style.color = v; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c }
+    return { fondo: getComputedStyle(a).backgroundColor, letra: getComputedStyle(a).color, marca: color('var(--marca)'), acento: color('var(--acento)'), sobre: color('var(--marca-sobre)') }
   })
-  f.ok(fondo === marca, `el avatar va en --marca (${fondo})`)
+  f.ok(m.fondo === m.marca, `el avatar va en --marca (${m.fondo})`)
+  f.ok(m.marca === 'rgb(44, 115, 113)' && m.marca === m.acento, `--marca es el petróleo de la marca, el mismo del acento (${m.marca}; acento ${m.acento})`)
+  f.ok(m.fondo !== 'rgb(20, 45, 136)', 'sin el índigo de la v2')
+  // La letra, en --marca-sobre (blanco) y legible: 5,5:1 sobre el petróleo (WCAG 2.2, 4,5:1 o más).
+  const lum = (c: string) => { const [r, g, b] = c.match(/\d+/g)!.map(Number).map(x => { const s = x / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4 }); return 0.2126 * r! + 0.7152 * g! + 0.0722 * b! }
+  const contraste = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x! + 0.05) / (y! + 0.05) }
+  f.ok(m.letra === m.sobre && contraste(m.letra, m.fondo) >= 4.5, `la letra del avatar en --marca-sobre, ${contraste(m.letra, m.fondo).toFixed(1)}:1`)
   const t = await f.texto()
   f.ok(t.includes('Identidad') && t.includes('Sesiones y contraseña') && (await mayusculas(page)).length === 0, 'los títulos en frase')
-  f.ok(t.includes('su foco') && !/\btu foco\b/.test(t), 'de usted: «su foco»')
+  // De usted: «Lo que puede hacer», nunca de tú. Sin «Su foco» (A-19) ni los «No puede» (A-20): lo dice lo que puede.
+  f.ok(t.includes('Lo que puede hacer') && !/\b(tu|tus|puedes|tienes)\b/i.test(t), 'de usted: «Lo que puede hacer»')
+  f.ok(!/su foco/i.test(t) && !/No puede:/.test(t), 'sin «Su foco» (A-19) ni la lista de lo que no puede (A-20)')
   f.cerrar()
 })

@@ -10,12 +10,12 @@ import { Riel, SelectorCampo, InsigniaHoy } from '@/widgets/Riel'
 import { Cabecera } from '@/widgets/Cabecera'
 import { MenuPerfil } from '@/widgets/MenuPerfil'
 import { PanelEquipo } from '@/widgets/PanelEquipo'
-import { Onboarding } from '@/widgets/Onboarding'
+import { RolNoDisponible } from '@/pages/RolNoDisponible'
 import { LimiteDeError } from '@/shared/ui/LimiteDeError'
 import { Membrete, PieInforme } from '@/widgets/informe/Membrete'
 import { Subpantallas } from '@/widgets/Subpantallas'
 import { useSubpantallas, useSinPerfil } from '@/app/grupos'
-import { PUERTAS_DEL_ROL, tituloDe } from '@/app/pantallas'
+import { PUERTAS_DEL_ROL, conMenu, tituloDe } from '@/app/pantallas'
 import { grupoDe } from '@/app/pantallas'
 import { Hueco } from '@/shared/ui/primitivas'
 import { Wordmark } from '@/shared/brand/Logo'
@@ -70,7 +70,8 @@ function AvisoDeDireccion() {
 function BandaTelefono({ onMenu }: { onMenu: () => void }) {
   const rol = useRol()
   // El ☰ lleva la insignia de Hoy: así se sabe que hay algo sin abrir el panel.
-  const conHoy = (PUERTAS_DEL_ROL[rol.id] ?? []).includes('hoy') && rol.pantallas.includes('hoy')
+  // Con una sola puerta (oper, tec) no hay a dónde ir: la insignia ya está en la pantalla.
+  const conHoy = conMenu(rol.id) && (PUERTAS_DEL_ROL[rol.id] ?? []).includes('hoy') && rol.pantallas.includes('hoy')
   return (
     <div data-banda className="no-imprimir flex min-h-16 shrink-0 items-center gap-2.5 border-b border-[var(--nav-linea)] bg-[var(--nav)] px-4 py-3 text-[var(--nav-tinta)] lg:hidden">
       <button onClick={onMenu}
@@ -116,7 +117,7 @@ export default function App() {
   const campoId = useApp(s => s.campoId)
   const rolId = useApp(s => s.rolId)
   const equipoAbierto = useApp(s => s.equipoAbierto)
-  const onboarding = useApp(s => s.onboarding)
+  const rolNoDisponible = useApp(s => s.rolNoDisponible)
   const setPantalla = useApp(s => s.setPantalla)
   const abrirEquipo = useApp(s => s.abrirEquipo)
   const rol = useRol()
@@ -166,6 +167,8 @@ export default function App() {
   // Al cambiar de pantalla, alcance, campo o rol se vuelve a intentar: varias pantallas son de varios roles.
   const clave = `${pantalla}|${alcance}|${campoId}|${rolId}`
 
+  // A-22: un rol que no se ofrece no abre otro en silencio.
+  if (rolNoDisponible) return <RolNoDisponible nombre={rolNoDisponible} />
   return (
     <ComoSeLee.Provider value={comoSeLee}>
     <div className="raiz-app flex h-dvh overflow-hidden bg-[var(--suelo)] text-[var(--tinta)]">
@@ -216,7 +219,6 @@ export default function App() {
         salida={{ texto: 'Cerrar la ficha', accion: () => abrirEquipo(null) }}>
         <Suspense fallback={null}><PanelEquipo /></Suspense>
       </LimiteDeError>
-      {onboarding && <Onboarding />}
       <PieInforme />
     </div>
     </ComoSeLee.Provider>

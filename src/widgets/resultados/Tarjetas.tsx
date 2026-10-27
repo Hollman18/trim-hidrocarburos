@@ -3,15 +3,14 @@ import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { Calidad } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
-import { fechaCorta } from '@/entities/reloj'
 import { Tarjeta, AlDetalle } from './piezas'
 import { n0, n1 } from './cifras'
 
 type Equipo = { campoId: string; equipo: string }
 
 /** «Diferido por equipo» del período (X5 §5.4): la marca de hoy y su palabra, el
- *  tag en letra condensada, la familia, los barriles, la parte y una barra de
- *  5 px. Cada fila abre la ficha del equipo. */
+ *  tag en letra condensada, la familia, los barriles y su parte (sin barra hecha a
+ *  mano: la cifra basta). Cada fila abre la ficha del equipo. */
 export function PorEquipo({ v, onAbrir, onVerTodo }: { v: VistaResultados; onAbrir: (e: Equipo) => void; onVerTodo?: () => void }) {
   const varios = v.campos.length > 1
   return (
@@ -28,53 +27,11 @@ export function PorEquipo({ v, onAbrir, onVerTodo }: { v: VistaResultados; onAbr
             </span>
             {/* El entero del equipo (repartido de la cifra grande: suman lo mismo) y su parte entera (Σ = 100). */}
             <span className="text-right text-[16px] font-bold text-[var(--tinta)] tabular-nums">{n0(e.bblEntero)}<small className="block text-[13px] font-normal text-[var(--tinta2)]">{e.pctEntero === 0 && e.pct > 0 ? '< 1' : n0(e.pctEntero)} %</small></span>
-            <span className="relative col-span-2 col-start-2 h-[5px] rounded-full bg-[var(--pista)]"><i className="absolute inset-y-0 left-0 rounded-full bg-[var(--dato1)]" style={{ width: `${Math.min(100, e.pct)}%` }} /></span>
           </button>
         ))}
       </div>
       {v.porEquipo.total > v.porEquipo.filas.length && <p className="mt-1 text-[14px] text-[var(--tinta2)]">y {n0(v.porEquipo.total - v.porEquipo.filas.length)} equipos más</p>}
       <AlDetalle onClick={onVerTodo}>Ver todos en el libro de diferidos</AlDetalle>
-    </Tarjeta>
-  )
-}
-
-/** «¿Está bajando? Desde que entró TRIM»: lo no planeado por día de cada tramo,
- *  antes y con TRIM (las dos flechas, la que baja y la que sube: U2 §7.3), lo de
- *  alto impacto y el mantenimiento proactivo (si no sube, las fallas no bajan). */
-export function Bajando({ v }: { v: VistaResultados }) {
-  const b = v.bajando, p = v.proactivo
-  return (
-    <Tarjeta titulo="¿Está bajando? Desde que entró TRIM" data-bajando="">
-      {!b && <p className="mt-2 text-[15px] text-[var(--tinta2)]">Sin tres meses de historia antes de TRIM: no hay con qué comparar.</p>}
-      {b && (
-        <div className="mt-2.5 flex flex-col gap-1.5">
-          {b.filas.map(f => (
-            <p key={f.tramo} data-flecha={f.tramo} className="grid grid-cols-[104px_auto_1fr] items-baseline gap-2 text-[15px] text-[var(--tinta2)]">
-              <span>{f.nombre}</span>
-              <b className="text-[18px] font-bold text-[var(--tinta)] tabular-nums">{n0(f.antesBpd)} → {n0(f.ahoraBpd)}</b>
-              <span>bbl/d{f.cambio !== null ? ` · ${f.cambio < 0 ? 'baja' : 'sube'} ${n0(Math.abs(f.cambio) * 100)} %` : ''}</span>
-            </p>
-          ))}
-          {b.filas.length === 0 && <p className="text-[15px] text-[var(--tinta2)]">Nada no planeado ni antes ni con TRIM.</p>}
-          <p className="text-[14px] text-[var(--tinta2)]">Lo no planeado por día. {b.nota}</p>
-          <p className="mt-1.5 border-t border-[var(--linea2)] pt-2.5 text-[15px] text-[var(--tinta2)]" data-alto-impacto="">
-            {b.altoImpacto.texto}
-            <Info titulo="Lo de alto impacto, antes y con TRIM" texto={`Lo de las bombas de agua y las electrosumergibles por día: los tres meses antes de que entrara TRIM (${b.base}) contra desde el ${fechaCorta(b.desde)}. Es una comparación histórica, no el «Antes» del ciclo.`} />
-          </p>
-        </div>
-      )}
-      <div className="mt-3 border-t border-[var(--linea2)] pt-3" data-proactivo={p.porcentaje ?? ''}>
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          <b className="text-[18px] font-bold text-[var(--tinta)] tabular-nums">{p.porcentaje !== null ? `${n0(p.porcentaje)} %` : 'sin dato'}</b>
-          <span className="inline-flex items-center gap-1 text-[15px] text-[var(--tinta2)]">mantenimiento proactivo
-            <Info titulo="Mantenimiento proactivo" texto="Horas preventivas o predictivas en SAP desde que entró TRIM, contra las correctivas. Si no sube, las fallas no bajan." />
-          </span>
-        </p>
-        {p.porcentaje !== null && (
-          <span aria-hidden className="mt-1.5 block h-2.5 rounded-full bg-[var(--pista)]"><i className="block h-full rounded-full bg-[var(--dato1)]" style={{ width: `${p.porcentaje}%` }} /></span>
-        )}
-        <p className="mt-1 text-[14px] text-[var(--tinta2)] tabular-nums">{p.texto}</p>
-      </div>
     </Tarjeta>
   )
 }
@@ -118,17 +75,10 @@ export function Mantenimiento({ v, onDetalle }: { v: VistaResultados; onDetalle?
     <Tarjeta titulo="Mantenimiento" extra={`${n0(m.fallas)} fallas cerradas · toda la historia`} data-mantenimiento="">
       <p className="mt-2 text-[16px] leading-[1.45] text-[var(--tinta)]">{m.frase}</p>
       {m.totalH !== null && m.esperaH !== null && (
-        <div className="mt-2" role="img" aria-label={`Reparación activa ${n1((m.activaH ?? 0) / 24)} días y espera ${n1(m.esperaH / 24)} días de ${n1(m.totalH / 24)}`}>
-          <span aria-hidden className="flex h-2.5 overflow-hidden rounded-full bg-[var(--pista)]">
-            <i className="block h-full bg-[var(--dato1)]" style={{ width: `${((m.activaH ?? 0) / m.totalH) * 100}%` }} />
-            {/* La espera es tiempo, no barriles: gris liso más claro, separado por 1 px (H24, H21). El rayado es de lo proyectado y de lo sin identificar. */}
-            <i className="block h-full border-l border-[var(--panel)] bg-[var(--dato3)]" style={{ width: `${(m.esperaH / m.totalH) * 100}%` }} />
-          </span>
-          <p className="mt-1 flex flex-wrap gap-x-4 text-[14px] text-[var(--tinta2)]">
-            <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 rounded-[3px] bg-[var(--dato1)]" />reparación activa {n1((m.activaH ?? 0) / 24)} d</span>
-            <span className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5 rounded-[3px] bg-[var(--dato3)]" />espera {n1(m.esperaH / 24)} d</span>
-          </p>
-        </div>
+        <p className="mt-2 flex flex-wrap gap-x-4 text-[14px] text-[var(--tinta2)] tabular-nums" data-espera="">
+          <span>reparación activa <b className="text-[var(--tinta)]">{n1((m.activaH ?? 0) / 24)} d</b></span>
+          <span>espera <b className="text-[var(--tinta)]">{n1(m.esperaH / 24)} d</b></span>
+        </p>
       )}
       {/* La frase de X4 §6.1 (P-mant-1), con los enteros que suman la cifra grande; las cuentas, en su ⓘ. */}
       <p className="mt-3 flex flex-wrap items-center gap-x-1.5 border-t border-[var(--linea2)] pt-2.5 text-[15px] text-[var(--tinta2)] tabular-nums" data-programado={m.programado.bbl}>

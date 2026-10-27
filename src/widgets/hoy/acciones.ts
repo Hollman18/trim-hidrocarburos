@@ -3,10 +3,11 @@ import { useApp, usePersona } from '@/app/store'
 import { PASOS } from '@/shared/api/arbol'
 // «Deshacer» es una escritura del contrato que la vista llama directo (como las del
 // store): `POST /api/anh/paradas/deshacer`, con el rol que se está viendo.
-import { deshacerAnh } from '@/shared/api/escrituras'
+import { deshacerAnh, responderLoQueVio } from '@/shared/api/escrituras'
 import type { PreguntaHoy, TareaHoy } from '@/shared/api/hoy'
 import type { ParteId } from '@/entities/partes'
 import type { RespuestaHoy } from './Pregunta'
+import type { Vio } from './LoQueVio'
 import type { Envio, Pendiente, Resultado } from './envio'
 import { vibrar } from './palabras'
 
@@ -20,6 +21,10 @@ const a = (r: { ok: true } | { ok: false; error: string }): Resultado => (r.ok ?
 export function useEscribir() {
   const responder = useApp(s => s.responder), responderAnh = useApp(s => s.responderAnh)
   return useCallback(async (p: Pendiente, o?: { keepalive?: boolean }): Promise<Resultado> => {
+    if (p.via === 'vio') {
+      const r = await responderLoQueVio({ rolId: p.rolId }, p.evento, p.cuerpo, o)
+      return !r.ok && 'estado' in r && r.estado === 409 ? { ok: true } : a(r)
+    }
     const { parte, ...resto } = p.via === 'libro' ? p.cuerpo : { parte: undefined }
     const r = p.via === 'libro'
       ? await responder({ ...(resto as Omit<typeof p.cuerpo, 'parte'>), ...(parte ? { parte: parte as ParteId } : {}) }, o)
@@ -32,7 +37,7 @@ export function useEscribir() {
  *  sostiene mientras dura el aviso (y se guarda en el navegador) y después se
  *  escribe; el aviso no dice «Registrado» hasta que se escribió (P-08). «Todavía no
  *  sé» en el libro no escribe nada: la pregunta queda abierta y sigue en Hoy. */
-export function useResponder(envio: Envio) {
+export function useResponder(envio: Envio, alSeguir?: (v: Vio | null) => void) {
   const rolId = useApp(s => s.rolId)
   return (q: PreguntaHoy, r: RespuestaHoy) => {
     vibrar()
@@ -41,9 +46,16 @@ export function useResponder(envio: Envio) {
       if (r.via === 'no-se') return envio.registrar({ id: q.id, texto: `${q.equipo} queda abierta: la pregunta sigue en Hoy.`, local: true })
       if (r.via !== 'libro') return
       const dicho = `${r.dicho} en ${q.equipo}`
-      return envio.registrar({ id: q.id, texto: `Se registra en 5 s: ${dicho}`, escrito: `Registrado: ${dicho}`,
+      // A3 · La parte se guarda sola (sin `modo`): la parada queda identificada en un toque, y lo
+      // que vio entra como la pregunta siguiente, opcional. «Deshacer» la suelta también.
+      const sigue: Vio | null = r.parte && !r.modo && r.sigue
+        ? { id: q.id, evento: l.evento, equipo: q.equipo, parte: r.sigue.texto, pregunta: r.sigue.pregunta, modos: r.sigue.modos } : null
+      envio.registrar({ id: q.id, texto: `Se registra en 5 s: ${dicho}`, escrito: `Registrado: ${dicho}`,
         pendiente: { via: 'libro', rolId, dicho, cuerpo: { evento: l.evento, campoId: l.campoId, equipo: l.equipo, texto: r.texto,
-          ...(r.parte ? { parte: r.parte, ...(r.modo ? { modo: r.modo } : {}) } : {}) } } })
+          ...(r.parte ? { parte: r.parte, ...(r.modo ? { modo: r.modo } : {}) } : {}) } },
+        ...(sigue ? { alDeshacer: () => alSeguir?.(null) } : {}) })
+      if (sigue) alSeguir?.(sigue)
+      return
     }
     if (!q.anh || r.via === 'libro') return
     const x = q.anh
