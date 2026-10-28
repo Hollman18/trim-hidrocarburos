@@ -162,6 +162,21 @@ Pedido del dueño (28-oct): «el historial de diferidos y pérdidas para los car
 - El fondo de cada mes **cerrado**: rojo pálido si pasó su máximo firmado (`sobre: true`) y verde pálido si no (`false`). El mes en curso no se juzga. Lo decide el motor (`src/entities/historial.ts`); la pantalla lo pinta (`src/widgets/resultados/Historial.tsx`, con `Columnas` del kit: hasta 5 partes en grises de dato y el fondo por período).
 - Mes a mes, en miles de barriles («47,6»); por turno, en barriles.
 
+![El historial del gerente, mes a mes](img/v3-historial-gerente.png)
+
+| # | Lo que se ve |
+|---|---|
+| 1 | Octubre, en curso: 2.376 bbl (2,4 mil), el mismo del balance del mes; no se juzga contra su máximo (sin fondo) |
+| 2 | Un mes cerrado bajo su máximo firmado: fondo verde pálido (`sobre: false`). Uno que lo pasa iría en rojo pálido |
+| 3 | El perdido, aparte: «sin registro en los 13 meses», sin dibujar ceros |
+
+![Los últimos 14 turnos del supervisor](img/v3-historial-supervisor.png)
+
+| # | Lo que se ve |
+|---|---|
+| 1 | Cada jornada de La Ceiba (06:00 y 18:00), con su diferido por tramo; el eje dice la hora de inicio («18 h») y el día |
+| 2 | El perdido de las 14 jornadas, aparte |
+
 ## 6.10 La propuesta de valor en el producto
 
 Con **«¿Cómo se lee?»** encendido, arriba de cada pantalla va la propuesta de valor (`src/shared/brand/Propuesta.tsx`): «Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial» y su segunda línea. Apagado, nada: la pantalla de trabajo no suma texto. Qué es hoy esa inteligencia artificial: capítulo 1, nota técnica.

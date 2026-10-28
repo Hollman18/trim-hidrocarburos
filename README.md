@@ -1,25 +1,28 @@
 # Trim · Hidrocarburos
 
-Front-end del producto que **baja los barriles diferidos de los equipos de alto impacto**
-de un campo de crudo: las bombas de reinyección de agua y las electrosumergibles.
+**Anticipe la falla. Produzca más.** Anticipamos la falla de sus equipos críticos para que produzca más, con
+inteligencia artificial: electrosumergibles, multifásicas y bombas de reinyección, conectadas a sus variables, y por
+qué se difiere y se pierde cada barril (el modelo choke). Este repositorio es el front-end del producto.
 
 > **¿Va a construir el backend?** Empiece por [`docs/backend/`](docs/backend/README.md): el documento técnico completo. Trae cada cifra de la aplicación con su fórmula, su ejemplo calculado y el texto que se muestra según su valor, y todas las pantallas anotadas. También la cadena de datos, la API, el modelo de datos en PostgreSQL ([`sql/esquema.sql`](docs/backend/sql/esquema.sql), validado con filas reales del demo) y el libro de Excel de las tablas y sus relaciones ([`modelo-de-datos.xlsx`](docs/backend/modelo-de-datos.xlsx)). El contrato endpoint por endpoint sigue en [`CONTRATO.md`](CONTRATO.md).
 
 ## Cómo se ve
 
-Doce pantallas con los datos del demo: los cinco campos y la operadora son de demostración, y
-cada pantalla lo dice arriba («Datos de demostración»). Cada rol ve solo las suyas (ver «Cada rol
-ve lo que su decisión exige»). Un clic en una imagen la abre en grande. Se regeneran desde la
-aplicación con `npm run pantallazos`.
+Catorce pantallas de la experiencia v3 con los datos del demo: los cinco campos y la operadora son de
+demostración, y cada pantalla lo dice arriba («Datos de demostración»). Los colores dicen **qué atacar**:
+rojo pálido lo frenado (parado o en alarma), amarillo pálido lo que está en riesgo y verde pálido solo los
+resultados que cumplen su meta; lo normal va en gris (ISA-101). Un clic en una imagen la abre en grande. Se
+regeneran desde la aplicación con `npm run pantallazos`.
 
 | | |
 |---|---|
-| [![Resumen del activo · gerente](docs/pantallas/resumen-gerente.png)](docs/pantallas/resumen-gerente.png)<br>**Resumen del activo · gerente.** Los barriles diferidos del mes con su rango («calculado»; el porqué, en el ⓘ), su valor en USD, el promedio diario y el cierre proyectado como barras contra la meta firmada, y qué equipos se llevan más. | [![Libro de diferidos](docs/pantallas/diferidos.png)](docs/pantallas/diferidos.png)<br>**Libro de diferidos.** Cuántos barriles se perdieron, por equipo y por tipo de causa, mes a mes contra el máximo firmado. «Dónde bajarlo» separa la parte vigilada, la que no tiene instrumento y la que nadie identificó. |
-| [![Bombas · confiabilidad](docs/pantallas/bombas-vigia.png)](docs/pantallas/bombas-vigia.png)<br>**Bombas · confiabilidad.** Una placa por bomba: cada variable contra su banda normal y su alarma, y cada parte (succión, sello, rodamientos…) con su estado y cuándo cruzaría su límite («cruza en 43 h»). | [![Ficha de una bomba parada](docs/pantallas/ficha-bomba-parada.png)](docs/pantallas/ficha-bomba-parada.png)<br>**Ficha de una bomba parada.** P-201B se detuvo sin primera alarma: «no arrancar hasta identificar qué se dañó». Trae el respaldo (no hay), los repuestos críticos en SAP, el botón para enviar el aviso a SAP y las señales fuera de banda. |
-| [![Entrega de turno · supervisor](docs/pantallas/turno.png)](docs/pantallas/turno.png)<br>**Entrega de turno · supervisor.** Lo que se está perdiendo ahora, lo que hay que identificar antes de entregar, lo que hay que vigilar y lo que TRIM mandó por WhatsApp en el turno: aviso, pregunta, recordatorio y escalamiento. | <a href="docs/pantallas/whatsapp-operario.png"><img src="docs/pantallas/whatsapp-operario.png" alt="WhatsApp del operario" width="230"></a><br>**WhatsApp del operario.** TRIM pregunta qué se dañó y ofrece las partes que más han fallado en ese equipo; el operario responde con un número. En este front es visual: el envío real lo hace el backend. |
-| [![Confiabilidad · ¿acierta el vigía?](docs/pantallas/confiabilidad.png)](docs/pantallas/confiabilidad.png)<br>**Confiabilidad · ¿acierta el vigía?.** Tiempo entre fallas por familia de equipo; lo que el vigía anunció y en qué quedó (acierto, falsa alarma, intervenida antes); lo que no anunció, y lo que sigue en seguimiento. | [![Mi trabajo · técnico](docs/pantallas/ordenes-sap-tecnico.png)](docs/pantallas/ordenes-sap-tecnico.png)<br>**Mi trabajo · técnico.** Lo parado, lo que falta identificar y las órdenes de SAP a su nombre. TRIM no crea órdenes: manda el aviso con su evidencia, las lee y avisa por WhatsApp cuando se liberan. |
-| [![Producción contra plan](docs/pantallas/produccion-cuadre.png)](docs/pantallas/produccion-cuadre.png)<br>**Producción contra plan.** Lo real (punto de medición oficial) contra el potencial y la meta firmada, día a día; el factor de asignación contra su banda, y el cuadre: real + diferido + inventario = potencial. | [![Planta](docs/pantallas/planta.png)](docs/pantallas/planta.png)<br>**Planta.** El esquema del campo. Lleno: el equipo captura datos; punteado: configurado, sin datos. Lo anormal lleva forma y color (ISA-101): aquí P-201B detenida deja la reinyección «sin flujo». |
-| [![Metas firmadas · gerente](docs/pantallas/metas-firmadas.png)](docs/pantallas/metas-firmadas.png)<br>**Metas firmadas · gerente.** Meta de producción y máximo de diferido por campo, desde una fecha; la meta global es la suma. Cada cambio se firma con motivo y queda en el historial. | [![Conectores · administrador](docs/pantallas/conectores.png)](docs/pantallas/conectores.png)<br>**Conectores · administrador.** SAP PM (avisos, órdenes, horas, repuestos y catálogos de daño) y WhatsApp Business (plantillas aprobadas). Se muestran conectados; en este front son visuales. |
+| [![La planta viva · gerente](docs/pantallas/planta-viva-gerente.png)](docs/pantallas/planta-viva-gerente.png)<br>**La planta viva · gerente.** Lo que se deja de producir ahora (2.650 bbl/d) y el equipo que más pesa; la producción del día contra su meta (verde pálido: la cumple) y el cierre del mes (amarillo pálido: va por debajo); el balance producido · diferido · perdido por tramo del choke. | [![Diferido y perdido, mes a mes](docs/pantallas/historial-gerente.png)](docs/pantallas/historial-gerente.png)<br>**Diferido y perdido, mes a mes.** 13 meses, cada uno partido por tramo (pozos, planta, salida, sin identificar). Fondo verde pálido: el mes cerrado quedó bajo su máximo firmado; rojo pálido: lo pasó. El perdido va aparte, nunca sumado («sin registro»). |
+| [![La ficha de P-201B · gerente](docs/pantallas/ficha-p201b-gerente.png)](docs/pantallas/ficha-p201b-gerente.png)<br>**La ficha de P-201B · gerente.** Un modal «tipo número»: Ahora (1.665 bbl/d, 10,1 h parada, 2 pozos cerrados, en rojo pálido) · Le ha costado · Por qué falla (sello 72 % / rodamientos 28 %) · Respaldo · Qué se está haciendo · Planes · SAP. | [![La traza de un tramo](docs/pantallas/traza-planta.png)](docs/pantallas/traza-planta.png)<br>**La traza de un tramo.** Un toque en «Planta» y salen sus causas: la cadena en un renglón («No planeada › Proceso / Facilidades › Parada estación/bombeo») y cada parada con su pozo, su hora y quién la confirmó. El perdido, aparte. |
+| [![La planta viva · producción](docs/pantallas/planta-viva-produccion.png)](docs/pantallas/planta-viva-produccion.png)<br>**La planta viva · producción.** Salen 9.394 de 11.857 bbl/d y qué tramo limita (los pozos); la tubería pozos → planta → salida; confirmar las paradas en lote; «Si falla hoy». | [![Hoy · supervisor](docs/pantallas/hoy-supervisor.png)](docs/pantallas/hoy-supervisor.png)<br>**Hoy · supervisor.** 4 paradas por confirmar; las tarjetas de lo que le toca (rojo pálido: P-201B en alarma; amarillo pálido: en riesgo); el orden de cierre si para otra bomba y «Mi turno» de 06:00 a 18:00. |
+| [![Sus últimos 14 turnos · supervisor](docs/pantallas/turnos-supervisor.png)](docs/pantallas/turnos-supervisor.png)<br>**Sus últimos 14 turnos · supervisor.** El diferido de cada jornada por tramo, y el perdido aparte. | [![Hoy · jefe de mantenimiento](docs/pantallas/hoy-jefe.png)](docs/pantallas/hoy-jefe.png)<br>**Hoy · jefe de mantenimiento.** Lo que avisa antes de fallar (K-101 ya pasó su límite), la espera (7,7 de 8,1 días por falla) y lo que no conviene tocar hoy. |
+| [![Equipos · confiabilidad](docs/pantallas/equipos-confiabilidad.png)](docs/pantallas/equipos-confiabilidad.png)<br>**Equipos · confiabilidad.** «Si falla hoy» 3.059 bbl/d, el vigía 3 de 3, los equipos sin instrumento y la flota ordenada por lo que costaría; lo parado o en alarma en rojo pálido, lo que avisa en amarillo pálido. | [![El detalle de un equipo parado](docs/pantallas/detalle-p201b.png)](docs/pantallas/detalle-p201b.png)<br>**El detalle de un equipo parado.** La cabeza en rojo pálido, sus señales con su límite y su tendencia de 12 días, el tren de agua y su historia de fallas. |
+| [![El vigía · MPP-301](docs/pantallas/diagnostico-mpp301.png)](docs/pantallas/diagnostico-mpp301.png)<br>**El vigía · MPP-301.** La salud por parte y la proyección: el filtro de entrada cruza su alarma en 5,2 días (4,7–5,7). En la tendencia, más allá de la alarma en rojo pálido y entre la banda y la alarma en amarillo pálido. | [![Configurar · administrador](docs/pantallas/configurar-admin.png)](docs/pantallas/configurar-admin.png)<br>**Configurar · administrador.** 3 de 6 pasos listos para firmar el campo, el que sigue y los otros campos con su avance. |
+| <a href="docs/pantallas/operador-telefono.png"><img src="docs/pantallas/operador-telefono.png" alt="Operador, en el celular" width="230"></a><br>**Operador, en el celular.** Una pregunta a la vez («¿Qué parte se dañó?») con lo que más le ha fallado a esa bomba; un toque y queda la causa. | <a href="docs/pantallas/tecnico-telefono.png"><img src="docs/pantallas/tecnico-telefono.png" alt="Técnico, en el celular" width="230"></a><br>**Técnico, en el celular.** Lo que le toca hoy, en orden; qué se dañó con un toque y la orden de SAP cerrada desde el teléfono. |
 
 ## Una sola promesa
 
@@ -75,24 +78,21 @@ Todo lo que se muestra sale de un equipo: el **estado de cada pozo** de su contr
    - **Accesos, del gerente** (`usuarios:administrar`, `entities/usuarios.ts`): invita, cambia
      rol o campos y suspende; nadie se borra y cada cambio queda con su motivo. Siempre queda
      al menos un gerente con acceso.
-2. **La respuesta del operario** (`pages/Causa.tsx`, «Identificar», o por WhatsApp en el hilo
-   de la parada) cuando ninguna señal explica una parada. Queda marcada como declarada, con el
+2. **La respuesta del operario** (su Hoy, «Pregunta 1 de 4», o «Identificar» en `pages/Causa.tsx`)
+   cuando ninguna señal explica una parada. Queda marcada como declarada, con el
    canal por el que llegó; la primera respuesta gana. Regla de operación: el equipo no se
    arranca hasta que se identifique el daño; TRIM no escribe en el PLC y, si arranca antes,
    registra la no conformidad.
 
 La asignación oficial que se sube en Producción no entra al libro: es un cotejo.
 
-## El carril caliente: WhatsApp y SAP
+## El carril caliente: la pregunta y SAP
 
-- **WhatsApp** (`entities/mensajes.ts`): TRIM avisa a quien tiene que actuar con reglas fijas
-  del producto. Parada de alto impacto, al supervisor y al operador. «¿Qué se dañó?», al
-  operador, con hasta tres causas sugeridas y su porqué; recordatorio a los 30 min y al
-  supervisor a las 2 h. Cuando el vigía anticipa la falla de una parte, a confiabilidad y al
-  jefe de mantenimiento, con la ventana en que la espera. Orden liberada en SAP, al técnico. Cada
-  mensaje dice solo lo que se sabía a su hora. Turno muestra lo enviado; en Identificar se abre
-  el chat de quien recibió la pregunta, como lo ve en su teléfono, y desde ahí se responde en
-  dos toques: la parte y lo que vio.
+- **Dentro de la aplicación, no por WhatsApp** (experiencia v3): el aviso por WhatsApp se retiró
+  (`docs/experiencia-v3/whatsapp.md`; en el contrato queda RETIRADO, al lado de la v1). Lo que tenía
+  valor vive en la app: la pregunta «¿Qué se dañó?» le llega al operador en su Hoy, una a la vez y con
+  las partes que más le han fallado a ese equipo, y se contesta con un toque; el vigía le avisa a
+  confiabilidad y al jefe de mantenimiento en su Hoy, con la ventana en que espera la falla.
 - **Catálogo de daños** (`entities/catalogo.ts`): por clase de equipo, parte → modo de falla →
   mecanismo → causa raíz (ISO 14224 B.6, B.2, B.3), con su lugar en los catálogos de SAP PM.
   Quien abrió el equipo dice parte y modo; confiabilidad completa mecanismo y causa raíz. Un

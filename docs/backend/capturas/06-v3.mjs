@@ -54,11 +54,23 @@ export const CAPTURAS = [
       { n: 2, sel: '[data-traza] [data-parada-balance="LC-16"]', caja: 'elemento' },
       { n: 3, texto: 'Nadie ha registrado una pérdida en este tramo.', dentro: '[data-traza]' },
     ] },
+  // 28-oct · El historial del diferido y del perdido (GET /api/vistas/historial): mes a mes del gerente y los 14 turnos del supervisor.
+  { archivo: 'v3-historial-gerente', ruta: '#/ger/planta-viva/ceiba~portafolio/curso', completa: false,
+    antes: [{ sel: 'main [data-historial="mes"] h2' }], marcas: [
+      { n: 1, sel: 'main [data-historial="mes"] [data-periodo="2026-10"]', caja: 'elemento' },
+      { n: 2, sel: 'main [data-historial="mes"] [data-fondo="bien"]', caja: 'elemento' },
+      { n: 3, sel: 'main [data-historial="mes"] [data-historial-perdido]', caja: 'elemento' },
+    ] },
+  { archivo: 'v3-historial-supervisor', ruta: '#/sup/hoy/ceiba/curso', completa: false,
+    antes: [{ sel: 'main [data-historial="turno"] h2' }], marcas: [
+      { n: 1, sel: 'main [data-historial="turno"] [data-periodo]', caja: 'elemento' },
+      { n: 2, sel: 'main [data-historial="turno"] [data-historial-perdido]', caja: 'elemento' },
+    ] },
   { archivo: 'v3-diagnostico-mpp301', ruta: '#/conf/equipos/morichal/MPP-301/diagnostico', marcas: [
     { n: 1, texto: 'Cómo está y por qué', exacto: true },
     { n: 2, texto: 'Filtro de entrada', exacto: true, i: 0 },
-    { n: 3, sel: 'main svg [data-zona="frenado"]', caja: 'elemento' },
-    { n: 4, sel: 'main svg [data-zona="riesgo"]', caja: 'elemento' },
+    { n: 3, sel: 'main svg [data-zona-tono="frenado"]', caja: 'elemento' },
+    { n: 4, sel: 'main svg [data-zona-tono="riesgo"]', caja: 'elemento' },
     { n: 5, texto: 'Qué la anuncia', exacto: true, i: 0 },
   ] },
 ]
