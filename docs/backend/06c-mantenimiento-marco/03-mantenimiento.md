@@ -1,5 +1,8 @@
 ## 6C.3 Mantenimiento — «Mantenimiento: lo que hay que atacar» · jefe de mantenimiento
 
+> **RETIRADO como pantalla (v3, 27-oct-2026; [borrado.md](../../experiencia-v3/borrado.md) A-12).** Lo que valía está en **Hoy** del jefe (avisan, espera, ver la orden, «Ojo»). Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.5.
+
+
 **Para qué.** «Antes: intervenir a tiempo. Después: palancas y partes que más costaron.» (`src/widgets/Onboarding.tsx:17`, `PARA_QUE.mantenimiento`).
 **Ruta.** `#/jefe/mantenimiento/<campo>[~portafolio]/<período>` · **Roles y nivel.** Solo `jefe` (ingeniería); es su pantalla de inicio. Agrega campos.
 **Lee.** `GET /api/vistas/diferidos?campos&desde&hasta` → `Libro` (`altoImpacto`, `planeado`, `noPlaneado`, `anticipable`, `sinInstrumento`, `sinParte`, `evitablePorOrden`, `brecha`, `diferido`, `meta`, `porParte`); `GET /api/vistas/diferidos/base?campos&desde&hasta` → `LineaBase`; `GET /api/vistas/riesgo?campos`; `GET /api/vistas/paradas/por-identificar?campos`; `GET /api/sap/avisos?campos`, `GET /api/sap/ordenes?campos`, `GET /api/vistas/relojes?campos&desde&hasta`; el programa de paradas de la configuración firmada vigente (arranque: `GET /api/configuracion/historial`); `GET /api/usuarios` (nombre del técnico).

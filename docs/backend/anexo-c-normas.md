@@ -45,6 +45,19 @@ El campo `choke` del registro de campos (`Campo.choke`, «Pozos», «Planta», �
 | **ISA-101** (interfaces humano-máquina de alto desempeño) | Lo normal en gris, el color solo para lo anormal, prioridad con color + forma + número, indicador analógico, resolución de los decimales (Tabla 7), dato inválido aparte. En la tubería del choke, todo en gris: lo que limita lleva doble contorno y la palabra, y lo que falta va en gris claro con raya discontinua | `src/shared/ui/*`, `src/index.css` (8); `src/widgets/choke/Tuberia.tsx`, `Ramas.tsx` (6D) |
 | **WCAG 2.2** (accesibilidad web): 1.4.11, 1.4.13, 2.1.1, 2.4.3, 2.4.7, 2.5.8, 3.3.1 | Contraste de la forma de las marcas, globos alcanzables con teclado, foco visible, blancos de toque de 24 px, errores en texto | componentes compartidos (8.8) |
 
+### Los tonos de «qué atacar» (decisión del dueño, 28-oct-2026)
+
+Sobre ISA-101 va un **fondo pálido con una raya a la izquierda** para que se vea de un vistazo qué atacar. No reemplaza la marca ISA: la forma y el número siguen encima (WCAG 1.4.1, el color no es la única señal). La traducción vive en un solo lugar, `src/shared/ui/tono.ts`, y los colores son tokens de `src/index.css` (claro y noche).
+
+| Condición | Tono | Token (fondo · raya) | Dónde se ve |
+|---|---|---|---|
+| Alarma (prioridad 1) o interlock: **frenado**, urgente e importante | Rojo pálido | `--frenado-f` · `--frenado-raya` | Franja de alarmas, tarjetas de Hoy, filas de Equipos, bloque «Ahora» de la ficha |
+| Atención o aviso (prioridad 2 y 3): **en riesgo** | Amarillo pálido | `--riesgo-f` · `--riesgo-raya` | Los mismos lugares; un resultado por debajo de su meta |
+| Meta cumplida o mejor que antes: **bien** | Verde pálido | `--bien-f` · `--bien-raya` | **Solo en resultados:** producción por día y cierre del mes contra su meta, «¿Está funcionando?» (este mes y lo ganado) |
+| Normal | Sin tono: gris | — | Todo lo demás (ISA-101: si todo tuviera color, lo urgente no resaltaría) |
+
+En las **tendencias** (`src/shared/ui/scada/Tendencia.tsx`), más allá de la alarma la zona va en `--frenado-f` y entre la banda normal y la alarma, en `--riesgo-f`; no en la minitendencia ni con el equipo parado (sus señales van en gris). La prueba es `e2e/tonos.spec.ts`: cada pieza dice su tono en `data-tono` y pinta el token de su tono.
+
 ## Datos y cable
 
 | Norma | Para qué se usa | Dónde |

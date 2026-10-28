@@ -102,7 +102,7 @@ Términos del sector y del producto, en el sentido en que se usan en este docume
 
 | Término | Qué es |
 |---|---|
-| **Choke · modelo choke** | El campo como una tubería en serie: yacimiento → pozos → planta → afuera. Lo que limita es el tramo más estrecho, y cada parada se trabó en uno de los tramos. Viene de SPE-36848 (BP, 1996); la ANH lo adoptó como el paso 2 de su árbol (`choke_mod`). |
+| **Choke · modelo choke** | El campo como una tubería en serie: yacimiento → pozos → planta → afuera. Lo que limita es el tramo más estrecho, y cada parada se trabó en uno de los tramos. Viene de SPE-36848 (BP, 1996): un estándar internacional que sirve en cualquier planta para entender de dónde vienen los diferidos y las pérdidas. En Colombia, además, la ANH lo está incorporando como el paso 2 de su árbol (`choke_mod`). |
 | **Tramo** (de la tubería) (`ChokeAnh`) | Yacimiento, pozo, planta o afuera (`reservorio`, `pozo`, `planta`, `exportacion`). No confundir con el **tramo del libro** (`Tramo`): un pedazo de tiempo de una parada. Lo que no tiene tramo todavía va «sin identificar» (`sin-asignar`). |
 | **Mercado** | Lo de afuera que no recibe: el terminal, el cliente o la nominación. La NSTA lo pone como quinto tramo; en TRIM es un **subnivel** de afuera. |
 | **Alcance** (`AlcanceElemento`) | A quién sirve un equipo: **dedicado** (a un solo pozo → el pozo), **compartido** (a varios → la planta), **frontera** o **tercero** (la brida de salida, otro dueño → afuera). El tramo sale del alcance: nadie lo escoge. |

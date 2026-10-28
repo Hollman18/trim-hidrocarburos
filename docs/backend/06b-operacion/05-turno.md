@@ -1,5 +1,8 @@
 # 6B.5 Turno — supervisor, operador
 
+> **RETIRADO como pantalla (v3, 27-oct-2026; [borrado.md](../../experiencia-v3/borrado.md) A-01).** Lo que valía del Turno está en **Hoy** del supervisor («Mi turno», de 06:00 a 18:00, `GET /api/vistas/jornada`). Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.3.
+
+
 **Para qué.** «Durante: turno en curso e identificar. Antes: qué vigilar.» (`PARA_QUE.turno`, `src/widgets/Onboarding.tsx:22`). Título de la pantalla: «Entrega de turno».
 
 **Ruta.** `#/<rol>/turno/<campo>[~portafolio]/<período>`. **El período de la cabecera no aplica**: el turno son siempre las **12 horas que terminan en AHORA** (`TURNO_H = 12`, rotación 7×7 sobre una operación 24/7, `src/pages/Turno.tsx:32`). En el demo, del 2-oct 02:00 al 2-oct 14:00. De arriba abajo: el cinturón `CicloCifras` (capítulo 11), las cuatro cifras del turno, «Qué limita hoy al campo» y «Lo más frágil» (`HoyLimita`), «CIERRE DE HOY» (`CierreDeHoy`), los paneles «**2 · Pasando ahora**», «**2 · Identificar**» y «**1 · Vigilar**» (palancas Durante / Antes), «PARADAS NUEVAS» y «WHATSAPP DEL TURNO» (este, **RETIRADO (27-oct-2026)**). Lo que trajo el choke —el tramo que limita, lo más frágil, el cierre de hoy y el chip del tramo— lo explica 6D.6; aquí va cada cosa en una fila corta (31-36).

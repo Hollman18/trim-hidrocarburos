@@ -1,6 +1,11 @@
 # 1. El problema y su solución técnica
 
-> **En una frase.** TRIM es un producto **global** para **prevenir paradas no planificadas** (y medir las que ocurren) en **electrosumergibles**, **bombas multifásicas** y **bombas de reinyección o disposición de agua**: cadena de custodia del diferido en barriles por equipo y parte, **vigía** antes de la falla, y ciclo **antes · durante · después** desde operación hasta gerencia.
+> **En una frase.** Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial.
+> *Electrosumergibles, multifásicas y bombas de reinyección, conectadas a sus variables: entendemos por qué se difiere y se pierde cada barril.*
+>
+> TRIM es un producto **global** para **prevenir paradas no planificadas** (y medir las que ocurren) en esos tres equipos: cadena de custodia del diferido en barriles por equipo y parte, **vigía** antes de la falla, y ciclo **antes · durante · después** desde operación hasta gerencia. La misma frase está en el producto (`src/shared/brand/Propuesta.tsx`, con «¿Cómo se lee?» encendido) y en la presentación de venta.
+>
+> **Qué es hoy la «inteligencia artificial» (nota técnica, 28-oct-2026).** El vigía predice el cruce de la alarma de cada variable con **mínimos cuadrados y su error estándar**, por parte del equipo (5C · [`02-vigia.md`](05c-salud-vigia/02-vigia.md)), y **mide su acierto** contra lo que de verdad pasó: en el demo, 5 de 7 avisos acertaron. Es estadística, no un modelo entrenado. Los modelos que aprenden de cada falla confirmada son **hoja de ruta** (capítulo 10). Ninguna pantalla ni este documento afirman más que eso.
 
 Este capítulo explica el problema físico, la cadena de cálculo que lo resuelve, dónde se trabó cada barril con el modelo choke y la cifra del norte (§1.3b) y un caso real del demo de punta a punta. Incluye el alcance **global** del producto y la línea **gemelo digital** de simulación (§1.6, distinta del pitch de TRIM), las **tres palancas** de venta (§1.7) y el encargo al backend (§1.8). Cada paso remite al capítulo donde están sus fórmulas completas.
 
@@ -52,7 +57,7 @@ El mismo cálculo responde preguntas distintas según quién mira. Lo que cambia
 | **Mantenimiento y confiabilidad** | ¿Qué parte va a fallar, cuándo, y cuánto crudo arriesga? | Vigía (cruce de la alarma en horas, con rango), salud por parte, riesgo por equipo, costo por falla, historia (MTBF, horas fuera) | 5C, 5B |
 | **Aguas abajo** del equipo | ¿A quién afecta? | Los pozos que cierra cada bomba (chip «aguas abajo: todo el campo»), el servicio que paró a todo lo demás | 5B |
 | **Todos, con el modelo choke** | ¿Dónde se trabó lo que no se produjo, qué limita hoy al campo y qué equipo cuesta más si falla hoy? | El tramo de cada barril (yacimiento, pozo, planta, afuera), lo que limita y su holgura, la cifra del norte (lo no planeado) y «si falla hoy» por equipo | 5E |
-| **Cumplimiento regulatorio** | ¿Qué le reporto a la ANH de cada parada y quién lo confirmó? | La clasificación de seis pasos de cada fila de `paradas_pozo` (Circular ANH 0024 de 2026), con lo que propuso TRIM, lo que dijo cada persona y lo que falta | 5E |
+| **Cumplimiento regulatorio** (valor agregado) | ¿Qué le reporto a la ANH de cada parada y quién lo confirmó? Sale de la misma clasificación que se usa para gestionar: es un valor agregado, no el fin del producto. | La clasificación de seis pasos de cada fila de `paradas_pozo` (Circular ANH 0024 de 2026), con lo que propuso TRIM, lo que dijo cada persona y lo que falta | 5E |
 
 ## 1.3 La cadena de cálculo, en siete pasos
 
@@ -126,7 +131,7 @@ Las **metas** y el **precio** los firma el gerente, por tramos y con motivo, en 
 
 ## 1.3b Dónde se trabó cada barril: el modelo choke y la cifra del norte
 
-Los siete pasos dicen **cuánto** se dejó de producir y **por qué equipo y qué parte**. El modelo choke agrega **dónde**: el campo es una tubería en serie (yacimiento → pozos → planta → afuera), lo que limita es su tramo más angosto y cada parada se trabó en uno de los tramos. Es el método de SPE-36848 (BP, 1996), el mismo que la ANH adoptó como el paso 2 de la clasificación de paradas que la Circular 0024 de 2026 exige desde el 1 de diciembre de 2026. Con él, el mismo barril sirve para gestionar y para reportar (capítulo 5E):
+Los siete pasos dicen **cuánto** se dejó de producir y **por qué equipo y qué parte**. El modelo choke agrega **dónde**: el campo es una tubería en serie (yacimiento → pozos → planta → afuera), lo que limita es su tramo más angosto y cada parada se trabó en uno de los tramos. Es el método de SPE-36848 (BP, 1996), un **estándar internacional** que sirve en cualquier planta para entender de dónde vienen los diferidos y las pérdidas. En Colombia, además, la ANH lo está incorporando como el paso 2 de la clasificación de paradas de la Circular 0024 de 2026: el mismo barril sirve para gestionar y, como valor agregado, para reportar (capítulo 5E):
 
 - **Qué limita hoy.** Lo que dan los pozos según sus pruebas (con un factor de medición firmado, nunca el factor de asignación del mes), el tren más angosto de la planta y lo que deja salir el oleoducto. En La Ceiba, hoy (2-oct-2026, 14:00), limitan los pozos: 11.857 bbl/d, con 1.143 bbl/d de holgura en la planta. Si la planta limitara, abrir más pozos no daría nada (5E.2).
 - **Una sola cifra del norte.** Lo que el producto busca bajar es **lo no planeado**: las paradas por fallas, disparos y terceros, contadas fila por fila con la clasificación vigente. En los 13 meses del demo son **462.267,1 bbl** de 485.684,2 diferidos; sin La Zarza (de gas: la eficiencia de crudo no aplica), la eficiencia de producción es 95,33 % y la no planeada, 3,04 % del potencial del sistema. La misma cifra sale en el reparto, el árbol, el mes a mes y la línea base (5E.4).
@@ -145,26 +150,25 @@ Todas las cifras salen del motor con los datos del demo (capítulo 5B §4).
 | **05:43** | Primer pozo cerrado: LC-16, por nivel alto-alto (`LSHH`). | El tanque aguantó **1,845 h**: el modelo acertó al minuto. | Fila de la parada: «colchón 1,8 h · aguantó 1,8 h». |
 | **05:46** | Los operarios cierran LC-07. Cierran primero los pozos que más agua dan, como haría un buen operador: con esos dos se quita el agua sin salida. | Crudo de los dos pozos cerrados = **1.665 bbl/d**. En el orden de TRIM (primero los de menos crudo por barril de agua: LC-02, LC-10 y LC-01 enteros, y bajar la frecuencia de LC-17 y LC-07) serían **1.426 bbl/d**: 14 % menos. | Detalle de la bomba: «Orden de cierre»; la parada abierta dice «evitable en orden: 30 bbl» (lo que lleva hasta ahora). |
 | **14:00** (ahora) | La parada sigue abierta. El tanque está quieto en 89,6 %: con los dos pozos cerrados, P-201A y P-201C sacan toda el agua que entra. | Perdiéndose **1.665 bbl/d** $=$ 69 bbl/h. Diferido de la parada $=$ **573 bbl** (487–659, ±15,0 %). | Bombas: «Perdiéndose ahora 1.665 bbl/d · 69 bbl/h · 2 pozos cerrados». Placa: «573 bbl · 487 – 659 · calculado». Planta: el tanque, gris («P-201B detenida: el respaldo toma el agua que entra, el nivel no sube»). |
-| **Gerencia** | La misma parada en el Resumen del portafolio, octubre en curso. | 573 de 2.377 bbl diferidos del portafolio $=$ 24 %. MN-41, la electrosumergible de Morichal caída desde el 25-sep, lleva 1.083 (46 %). | «Causa mayor: P-201B · La Ceiba» (lo que más se pierde ahora). Por equipo: «MN-41 · 1.083 bbl · 46 %», «P-201B · 573 bbl · 24 %». |
+| **Gerencia** | La misma parada en La planta viva del portafolio, octubre en curso (v3). | 573 de 2.376 bbl diferidos del portafolio $=$ 24 %. MN-41, la electrosumergible de Morichal caída desde el 25-sep, lleva 1.083 (46 %). | «Lo que más pesa: la bomba de agua P-201B, en La Ceiba» y «Ver P-201B», que abre su ficha. Por equipo, en Resultados: «MN-41 · 1.083 bbl · 46 %», «P-201B · 573 bbl · 24 %». |
 | **Historia** | Lo que esta bomba le ha costado al campo. | 9 fallas, una cada **41 días**, **40,0 h** fuera en promedio, **4.593 bbl** por falla. | Ficha del equipo y Confiabilidad: «le ha costado por falla». |
 
-La misma parada en la pantalla de la bomba (confiabilidad, La Ceiba, octubre en curso):
+La misma parada en la ficha del equipo que ve el gerente (un modal, La Ceiba, octubre en curso; v3, 28-oct-2026). El bloque «Ahora» va en rojo pálido porque la bomba está parada y cerrando pozos (anexo C, «Los tonos de qué atacar»):
 
-![P-201B de La Ceiba detenida, vista de ingeniería](img/cap1-ceiba-p201b-detalle.png)
+![P-201B de La Ceiba detenida, la ficha del gerente](img/cap1-ceiba-p201b-detalle.png)
 
 | # | Lo que se ve | Valor | De dónde sale |
 |---|---|---|---|
-| 1 | Respaldo de la bomba | «respaldo 30.100 bbl/d» | configuración firmada: `respaldos[]` (P-201A y P-201C en paralelo; 5B §4.2) |
-| 2 | Diferido que causó | 573 bbl (487 – 659 · ±15,0 %) | Σ de los tramos de los pozos cuya causa es esta parada (5B §4.4) |
-| 3 | Perdiéndose ahora | 1.665 bbl/d · 69 bbl/h · 2 pozos cerrados | Σ del crudo asignado de los pozos cerrados por ella (5B §4.3) |
-| 4 | Le ha costado por falla | 4.593 bbl · 9 fallas en 12 meses · cada 41 d · 40,0 h fuera | historia del equipo: lo que costaron sus fallas pasadas (5B §7) |
-| 5 | «No arrancar hasta identificar el daño» | P2 | ninguna señal explica la parte (5B §3) |
-| 6 | Pozos que cerró | 2 (LC-07, LC-16) | eventos de pozo cargados a la parada (5B §4.3) |
-| 7 | Colchón contra lo observado | «colchón 1,8 h · aguantó 1,8 h» | previsto con el nivel al parar; observado = primer cierre − paro (5B §4.4) |
-| 8 | Libre hasta el alto-alto | 3.390 bbl | $(0{,}90 - 0{,}787) \cdot 30.000$ |
-| 9 | Agua sin salida | 44.100 bbl/d | mediana de FI-2011 (74.200) − respaldo (30.100) |
-| 10 | Primer pozo cerrado | a las 1,8 h | LC-16 a las 05:43 |
-| 11 | Por qué paró | «Sin primera alarma y sin firma: el PLC no dice qué parte falló» | árbol de causas de la bomba (5B §3) |
+| 1 | Se deja de producir ahora | 1.665 bbl/d | Σ del crudo asignado de los pozos cerrados por la parada (5B §4.3) |
+| 2 | Pozos cerrados | 2, desde las 05:43 (LC-16 y LC-07) | eventos de pozo cargados a la parada (5B §4.3) |
+| 3 | «No arrancar hasta identificar qué se dañó» | bloqueo de procedimiento (en tinta, con ⊘) | ninguna señal explica la parte (5B §3) |
+| 4 | Le ha costado en el período | 573 bbl · 28 mil USD | Σ de los tramos de los pozos cuya causa es esta parada (5B §4.4); el precio que regía cada día |
+| 5 | Le ha costado en la historia | 38.838 bbl · 1,9 M USD desde el 1-oct-2025 | el libro de toda la historia del equipo (5A) |
+| 6 | Por qué falla | sello mecánico 72 % · rodamientos 28 % de los barriles de sus fallas; 9 fallas, una cada 41 días | historia del equipo por parte (ISO 14224; 5B §7) |
+| 7 | Por falla, en promedio | 4.593 bbl | lo que costaron sus fallas pasadas ÷ número de fallas (5B §7) |
+| 8 | Respaldo | P-201A y P-201C en paralelo, con 30.100 bbl/d libres | configuración firmada: `respaldos[]` (5B §4.2); el detalle del cabezal y a quién deja sin agua, en la ⓘ |
+
+Debajo, en el mismo modal: «Qué se está haciendo» (espera que se identifique el daño, hace 10,1 h), los planes simulados (el mayor, «Volver antes de 39 h ≈ 2.072 bbl», y «Ver 3 planes más») y SAP en renglones. El detalle de ingeniería de la misma parada (el colchón previsto contra el observado, el agua sin salida, el árbol de la causa) está en el nivel 3 y en el diagnóstico del equipo para confiabilidad (6C).
 
 **La misma bomba con más respaldo: P-201B de Morichal.** Morichal mueve **581.849 bbl/d de agua** (97 %) con siete bombas de 90.000 bbl/d. P-201B mueve 79.900; las otras seis tienen 39.500 libres entre todas. Con la bomba en marcha y el tanque TK-AG-MN (60.000 bbl) en 61,8 %, si P-201B se para ahora:
 
@@ -176,30 +180,30 @@ La misma parada en la pantalla de la bomba (confiabilidad, La Ceiba, octubre en 
 
 En la historia del demo, los operarios de Morichal cerraron primero los pozos más aguateros; cerrar en el orden de TRIM habría evitado **1.029 bbl** en 12 meses (201 solo en la parada del 24 de septiembre). Es poco contra un buen operador, y así debe ser: la ganancia grande está en no cerrar parejo, en reparar antes de que el tanque se llene y en anticipar la falla.
 
-![P-201B de Morichal en marcha: si se para ahora](img/cap1-morichal-p201b-detalle.png)
+![P-201B de Morichal en marcha: si se para ahora (nivel 3 de confiabilidad)](img/cap1-morichal-p201b-detalle.png)
 
 | # | Lo que se ve | Valor | De dónde sale |
 |---|---|---|---|
-| 1 | Respaldo | «respaldo 39.500 bbl/d» | configuración firmada (las otras seis bombas del tren) |
-| 2 | Si se para ahora | 783 bbl/d tras 10,1 h de colchón | crudo en orden (5B §4.2) |
-| 3 | Nivel del tanque | LT-2012 61,8 % contra alto-alto 90 % | transmisor de nivel |
-| 4 | Volumen libre | 16.920 bbl | $(0{,}90 - 0{,}618) \cdot 60.000$ |
-| 5 | Agua sin salida | 40.400 bbl/d | 79.900 − 39.500 |
-| 6 | Aguanta | 10,1 h (9,0 h a 11,1 h) | colchón con su rango (aforo y medidor de agua) |
-| 7 | Orden de cierre | MN-27 entero; MN-36 y MN-13 al 25 %; MN-39 al 16 % | crudo por barril de agua, de menor a mayor, con el tope de frecuencia (5B §4.2) |
-| 8 | Ahorro contra cerrar parejo | «439 bbl/d menos que parejo» | 1.222 − 783 |
+| 1 | Si falla hoy | 783 bbl/d después de 10,1 h de colchón | crudo en orden de cierre (5B §4.2) |
+| 2 | Nivel del tanque | LT-2012 61,8 % contra alto-alto 90 % | transmisor de nivel |
+| 3 | Volumen libre | 16.920 bbl | $(0{,}90 - 0{,}618) \cdot 60.000$ |
+| 4 | Agua sin salida | 40.400 bbl/d | 79.900 − 39.500 |
+| 5 | Aguanta | 10,1 h (9,0 h a 11,1 h) | colchón con su rango (aforo y medidor de agua) |
+| 6 | Orden de cierre | MN-27 entero; MN-36 y MN-13 al 25 %; MN-39 al 16 % | crudo por barril de agua, de menor a mayor, con el tope de frecuencia (5B §4.2) |
+| 7 | Ahorro contra cerrar parejo | «439 bbl/d menos que parejo» | 1.222 − 783 |
 
-Y lo que ve el gerente en el resumen del portafolio, el mismo día:
+Y lo que ve el gerente en La planta viva del portafolio, el mismo día (la v3 fundió el Resumen en esta pantalla: borrado.md A-16):
 
-![Resumen del gerente, portafolio, octubre en curso](img/cap1-resumen-portafolio.png)
+![La planta viva del gerente, todos los campos, octubre en curso](img/cap1-resumen-portafolio.png)
 
 | # | Lo que se ve | Valor | De dónde sale |
 |---|---|---|---|
-| 1 | Barriles diferidos del portafolio | 2.377 | Σ de los tramos de los cinco campos en octubre (5A §3) |
-| 2 | Su rango | «2.132–2.622 bbl · calculado» | tolerancia por la Ec. 22, en cuadratura entre campos (5A §4) |
-| 3 | Perdiéndose ahora | 2.650 bbl/d · 4 de 87 pozos parados | riesgo ahora del portafolio (5B §5) |
-| 4 | Causa mayor | «P-201B · La Ceiba» | lo que más se pierde ahora (5B §5) |
-| 5 | Por equipo | MN-41 · 1.083 bbl · 46 %; P-201B · 573 bbl · 24 %; LC-21 · 247 bbl · 10 % | Pareto por equipo del período (5A §8) |
+| 1 | Se deja de producir ahora | 2.650 bbl/d · 4 de 87 pozos parados | riesgo ahora del portafolio (5B §5) |
+| 2 | El equipo que más pesa, a un toque | «Ver P-201B» abre su ficha (la de arriba) | el primero de lo que se pierde ahora |
+| 3 | Producido del mes | 64.147 bbl, medido | Σ del fiscal de los cinco campos (5A §3) |
+| 4 | Diferido del mes | 2.376 bbl · 114 mil USD | Σ de los tramos de los cinco campos en octubre (5A §3) |
+| 5 | Perdido | «sin registro»: nadie ha registrado una pérdida (nunca 0 inventado) | `POST /api/perdidas` (5E) |
+| 6 | Diferido sin identificar | 355 bbl | lo que todavía no tiene causa, por tramo del choke (5E) |
 
 **Esto es la operatividad de los equipos críticos traducida a barriles.** La bomba de agua no produce un barril, pero su respaldo, su tanque y el orden de cierre deciden si una parada cuesta 0 bbl (el tanque la absorbe), unos cientos de bbl/d o miles. Con 95 % de agua el margen es de horas, no de días: por eso hay que saberlo al minuto.
 

@@ -1,5 +1,8 @@
 # 6D · Pantallas del choke y del árbol de causas
 
+> **v3 (27 y 28-oct-2026): las pantallas que hay hoy están en [06-pantallas-v3.md](../06-pantallas-v3.md).** Este capítulo conserva las fórmulas, los textos según su valor y los endpoints; los archivos de pantallas que la v3 borró o cambió dicen **RETIRADO** o **CAMBIADO** arriba, con su reemplazo. **Las capturas de este capítulo son de la v2 (25-oct-2026) y se conservan como histórico:** sus marcas apuntan a textos que la v3 cambió o borró, así que `npm run pantallazos:doc` ya no las regenera (cada una falla y no se guarda: ninguna imagen queda con un número que apunta a nada nuevo). Las capturas vigentes son las de `img/v3-*` y `img/cap1-*`.
+
+
 Capítulo 6, parte D: las pantallas del **modelo choke** («¿Dónde se trabó?», «Qué limita hoy al campo», «Si falla hoy») y del **árbol de causas de 6 pasos** de la Circular 024 de la ANH (commit `30132ea`, con las correcciones F4 del 23-oct: la eficiencia que no se puede creer y el factor de medición en «Filosofía operacional», 6D.1 y 6D.11). Cada pantalla trae su captura anotada y una tabla: por cada número de la captura, qué se ve, el valor exacto, cómo se calcula (remitiendo a la ficha del capítulo 5E, el motor del choke, o a 5A-5D), qué texto sale según el valor (con `archivo:línea`) y de qué endpoint y campo viene (capítulo 7 y CONTRATO.md, «Anexo A · Las formas del modelo choke y del árbol de paradas»).
 
 Lo que estas pantallas comparten con las de antes (la curva de Producción, el libro de Diferidos, el resto del Resumen, de Riesgo, de Turno, de Identificar o de Configuración) sigue en 6A, 6B y 6C; aquí va solo lo del choke y del árbol, y cada sección dice a cuál remite.

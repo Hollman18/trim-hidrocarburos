@@ -1,5 +1,8 @@
 # 6D.3 Resumen del activo — «dónde se trabó» cada campo, con lo no planeado · gerente
 
+> **CAMBIADO (v3, 27 y 28-oct-2026).** El gerente ve el choke en **La planta viva** (producido · diferido · perdido por tramo, con su traza a un toque) y los tonos de resultados. Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.1 y §6.7.
+
+
 **Para qué.** «Lo perdido, el retorno posible y a qué equipo ir.» (`PARA_QUE_DECISION.resumen`, `src/widgets/Onboarding.tsx:37`). Lo del choke responde la pregunta que U2 §3.1 le da al gerente: «¿En qué tramo se me trabó cada campo este mes, y con qué equipos?».
 **Ruta.** `#/ger/resumen/ceiba~portafolio/<período>` (todos los campos: «POR CAMPO») y `#/ger/resumen/<campo>/<período>` (un campo: el panel «DÓNDE SE TRABÓ») · **Roles y nivel.** `ger` → `decision`: el Resumen de ese nivel es `ResumenDirectivo` (`src/pages/Resumen.tsx:34`). Lo demás de la pantalla (el ciclo, MEDIDO · PERÍODO, «Durante», el alto impacto, POR EQUIPO y la lista de equipos de cada campo) está en 6A.1; aquí va solo lo del choke.
 **Lee.** Una consulta por campo, con el período de la cabecera (`DondeSeTraboCampo`, `src/widgets/resumen/DondeSeTrabo.tsx:35-88`), más dos de todos los campos juntos (CONTRATO.md, Anexo A):

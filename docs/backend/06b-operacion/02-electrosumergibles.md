@@ -1,5 +1,8 @@
 # 6B.2 Electrosumergibles — producción, supervisor, operador, técnico, jefe de mantenimiento, confiabilidad
 
+> **RETIRADO como pantalla (v3, 27-oct-2026; [borrado.md](../../experiencia-v3/borrado.md) A-15).** Electrosumergibles es un filtro de **Equipos**. Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.5 y §6.8. Las fórmulas siguen vigentes.
+
+
 **Para qué.** «Antes: qué ESP va a fallar y cuánto crudo arriesga.» (`PARA_QUE.esp`, `src/widgets/Onboarding.tsx:15`).
 
 **Ruta.** `#/<rol>/esp/<campo>[~portafolio]/<período>`. La fila abierta (detalle del pozo) es estado de la pantalla (`src/pages/Esp.tsx:32`); con un pozo en la dirección (`…/curso/MN-07`) se abre la **ficha** del pozo encima.

@@ -1,5 +1,8 @@
 # 6A.2 Libro de diferidos — gerente (decisión) e ingeniería (producción, mantenimiento, confiabilidad)
 
+> **RETIRADO como pantalla (v3, 27-oct-2026; [borrado.md](../../experiencia-v3/borrado.md) A-09).** Diferidos repetía Resultados (la misma cifra, 1.046, y las mismas barras); su cuadre y custodia quedaron en Resultados. Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md). Las fórmulas siguen vigentes.
+
+
 **Para qué.** Decisión: «Mes a mes: a qué equipo y dónde bajar.» (`PARA_QUE_DECISION.diferidos`, `src/widgets/Onboarding.tsx:38`). Ingeniería: «Después: por qué, parte, palancas y si el mes se publica.» (`PARA_QUE.diferidos`, `src/widgets/Onboarding.tsx:24`).
 **Ruta.** `#/<rol>/diferidos/<campo | campo~portafolio>/<período>` · **Roles y nivel.** `ger` (decisión); `prod`, `jefe`, `conf` (ingeniería). Operación no tiene la pantalla. `src/pages/Diferidos.tsx:44-66` (decisión) y `:68-135` (ingeniería).
 **Lee.**

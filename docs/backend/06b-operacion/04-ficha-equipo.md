@@ -1,5 +1,8 @@
 # 6B.4 La ficha de un equipo — todos los roles
 
+> **CAMBIADO (v3, 27 y 28-oct-2026).** La ficha es un **modal** con un bloque por pregunta y la cifra primero (Ahora · Le ha costado · Por qué falla · Respaldo · Qué se está haciendo · Planes · SAP). Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.6 y el capítulo 1 (la captura de P-201B). Los datos y sus fórmulas de este archivo siguen vigentes.
+
+
 **Para qué.** Lo que hay que saber de **un** equipo sin salir de la pantalla en que se está: cómo está, qué lo dice, qué le ha costado, qué dice SAP y qué hacer. Flota sobre cualquier pantalla (`src/widgets/PanelEquipo.tsx`), siempre montada pero calculada solo con un equipo abierto.
 
 **Ruta.** Cualquier pantalla con el id del equipo al final: `#/<rol>/<pantalla>/<campo>/<período>/<equipo>` (`src/app/url.ts:61, 88`). Se abre también con un clic en un equipo (Riesgo, Turno, Diferidos, Superficie, Planta, Resumen…). Abrir un equipo **no** deja entrada en el historial; Escape o «×» la cierran; el botón de expandir la pasa a casi toda la pantalla.

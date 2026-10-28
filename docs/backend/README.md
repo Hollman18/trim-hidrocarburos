@@ -2,6 +2,8 @@
 
 Para quien va a construir el servidor. Con este documento se construye el backend que reemplaza al simulador del demo **sin leer el código del front**, y cada número que el front muestra sale igual: con su fórmula, su ejemplo calculado con los datos del demo y el texto que se muestra según su valor.
 
+> **Propuesta de valor.** Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial. *Electrosumergibles, multifásicas y bombas de reinyección, conectadas a sus variables: entendemos por qué se difiere y se pierde cada barril.* Qué es hoy la «inteligencia artificial» y qué es hoja de ruta: capítulo 1, nota técnica al inicio.
+
 > **Lo que resuelve.** Cuántos barriles se dejaron de producir por cada equipo crítico (bombas de reinyección de agua y electrosumergibles) y por qué parte, con cadena de custodia, desde el pozo hasta la gerencia. En Colombia los pozos producen sobre todo agua (cortes de 92–98 %): si la bomba de reinyección se para y el respaldo no alcanza, el tanque de agua se llena y hay que cerrar pozos. El capítulo 1 lo explica de punta a punta con un caso real del demo.
 
 ## La versión 1 y lo que cambió (léalo primero)
@@ -27,7 +29,7 @@ Deck (10 diapositivas, marca gotrim.ai): [`TRIM-pitch-comercial.pdf`](TRIM-pitch
 1. **[Capítulo 1](01-propuesta-de-valor.md)**: el problema, la cadena de cálculo en siete pasos y el caso de P-201B, de la parada a la gerencia.
 2. **[Capítulo 2](02-arquitectura.md)**: qué hace el servidor, cómo viaja un número hasta la pantalla, el reloj, los períodos y los roles.
 3. **[Capítulo 7](07-api.md)**: el índice de la API (qué endpoint usa cada pantalla). El contrato completo está en [`CONTRATO.md`](../../CONTRATO.md) (anexo A).
-4. Después, según lo que esté construyendo: el modelo de datos (3), la cadena de datos (4), las fórmulas (5A–5D) o una pantalla (6).
+4. Después, según lo que esté construyendo: el modelo de datos (3), la cadena de datos (4), las fórmulas (5A–5D) o una pantalla: primero **[las pantallas de la v3](06-pantallas-v3.md)** y, para el detalle de cada cifra, 6A–6D.
 5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (344 casos y 48 escrituras de `referencia/`).
 6. **[Capítulo 10](10-pendientes.md)**: decisiones abiertas, atajos del demo y defectos conocidos.
 7. **[Capítulo 11](11-ciclo-de-valor.md)**: ciclo ANTES / DURANTE / DESPUÉS. El front ya lo muestra; este capítulo es el encargo para implementar `GET /vistas/ciclo` y `POST /planes/:id` en el servidor.
@@ -45,6 +47,7 @@ Deck (10 diapositivas, marca gotrim.ai): [`TRIM-pitch-comercial.pdf`](TRIM-pitch
 | [5C · Salud y vigía](05c-salud-vigia/00-indice.md) | Series y límites, pronóstico de cruce, salud por parte, electrosumergibles, «¿acierta el vigía?», catálogo de daños ISO 14224 |
 | [5D · Entradas y salidas](05d-entradas-salidas/00-indice.md) | Reloj, configuración firmada, plan, usuarios y permisos, informes con folio y huella, WhatsApp (RETIRADO, 27-oct-2026), SAP PM, planta, registro de la cadena |
 | [5E · El choke y el árbol de causas](05e-choke-arbol/00-indice.md) | Los cuatro tramos (SPE-36848) y la topología con el criterio de Edinson; potenciales y lo que limita; el choke de cada parada; el reparto con la cifra única del norte; el árbol de pérdidas del choke; la tubería del agua; «si falla hoy»; la serie; el árbol de 6 pasos de la Circular 024 con el guardado por paso y la privacidad |
+| **[6 · Las pantallas de la v3, por rol](06-pantallas-v3.md)** | **Lo que hay hoy (27 y 28-oct-2026):** La planta viva, Hoy, Equipos, Resultados, el modal de un equipo, la traza de un tramo, el diagnóstico, Configurar, los tonos de «qué atacar» y la propuesta de valor. Léalo antes que 6A–6D |
 | [6A · Pantallas del libro y la gerencia](06a-libro-gerencia/00-indice.md) | Resumen, Diferidos, Producción, Configuración, Mi perfil, Conectores |
 | [6B · Pantallas de operación](06b-operacion/00-indice.md) | Bombas, Electrosumergibles, Pozos, ficha de un equipo, Turno, teléfono (RETIRADO, 27-oct-2026) |
 | [6C · Mantenimiento, confiabilidad y marco](06c-mantenimiento-marco/00-indice.md) | Riesgo, Identificar, Mantenimiento, Confiabilidad, Superficie, Mi trabajo, Planta, y la cabecera, el riel, la introducción, Exportar y el papel |
@@ -78,7 +81,7 @@ Las cifras de ejemplo salen del motor con los datos de demostración, con el rel
 
 | Qué | Cómo |
 |---|---|
-| Las capturas anotadas (`img/`) | `npm run pantallazos:doc` (todas) o `npm run pantallazos:doc -- --solo <prefijo>`. Las marcas están en [`capturas.mjs`](capturas.mjs) y [`capturas/`](capturas/). Una marca que no se encuentra hace fallar la captura: no se guarda una imagen con un número que apunta a nada. Las siete que el generador no hace (la introducción de cada rol, el papel impreso y un cambio de esquema de planta) tienen su guion en [`capturas/guiones/`](capturas/guiones/) |
+| Las capturas anotadas (`img/`) | Vigentes (v3, 28-oct-2026): `npm run pantallazos:doc -- --solo v3-` y `--solo cap1-`. Las de 6A–6D son de la v2 y quedan como histórico: sus marcas apuntan a textos que la v3 cambió y ya no se regeneran. `npm run pantallazos:doc` (todas) o `npm run pantallazos:doc -- --solo <prefijo>`. Las marcas están en [`capturas.mjs`](capturas.mjs) y [`capturas/`](capturas/). Una marca que no se encuentra hace fallar la captura: no se guarda una imagen con un número que apunta a nada. Las siete que el generador no hace (la introducción de cada rol, el papel impreso y un cambio de esquema de planta) tienen su guion en [`capturas/guiones/`](capturas/guiones/) |
 | El esquema | [`sql/esquema.sql`](sql/esquema.sql) se corre tal cual en PostgreSQL 16 (`psql -v ON_ERROR_STOP=1 -f sql/esquema.sql`) y [`sql/v1-cadena.sql`](sql/v1-cadena.sql) después (el esquema `v1`); [`sql/timescale.sql`](sql/timescale.sql) después, solo si la extensión TimescaleDB está instalada. `zsh docs/backend/sql/herramientas/validar.sh .` lo valida de punta a punta en un PostgreSQL 16 temporal (esquema, carga de los ejemplos, que las restricciones muerden, cuadres y que la especificación coincide) y deja el resultado en [`sql/validacion.log`](sql/validacion.log) |
 | El libro de Excel | `node docs/backend/herramientas/diagramas-er.mjs` dibuja los diagramas del capítulo 3 y [`herramientas/armar-excel.py`](herramientas/armar-excel.py) arma el libro desde [`sql/tablas.json`](sql/tablas.json) (necesita `openpyxl` y `pillow`; ver la cabecera de cada script) |
 | El PDF | [`herramientas/armar-pdf.mjs`](herramientas/armar-pdf.mjs) con la lista [`herramientas/pdf.json`](herramientas/pdf.json): fórmulas con KaTeX y diagramas con Mermaid, impreso con el Chromium de Playwright del proyecto. Las dependencias se instalan sin tocar `package.json`: `npm i --no-save marked@15 marked-katex-extension@5 katex@0.16 mermaid@11`. El PDF va en el paquete de entrega, no en el repositorio |

@@ -1,5 +1,8 @@
 # 6B.1 Bombas — supervisor, operador, técnico, jefe de mantenimiento, confiabilidad
 
+> **RETIRADO como pantalla (v3, 27-oct-2026; [borrado.md](../../experiencia-v3/borrado.md) A-15).** Bombas es un filtro de **Equipos**; el detalle de una bomba va en su nivel 3 y su diagnóstico. Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.5–6.8. Las fórmulas (colchón, orden de cierre, si falla hoy) siguen vigentes.
+
+
 **Para qué.** «Antes: vigía y partes que avisan. Durante: orden de cierre y tanque.» (`PARA_QUE.bombas`, `src/widgets/Onboarding.tsx:14`; las palancas «Antes» y «Durante» son las del ciclo de valor, capítulo 11).
 
 **Ruta.** `#/<rol>/bombas/<campo>[~portafolio]/<período>`; con el detalle de una bomba abierto por clic en su placa (no tiene dirección propia: es estado de la pantalla, `src/pages/Bombas.tsx:21`). Con un equipo en la dirección (`…/curso/P-201B`) se abre **la ficha** del equipo encima (6B.4), no este detalle.

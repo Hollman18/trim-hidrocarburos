@@ -1,5 +1,8 @@
 # 6C · Mantenimiento, confiabilidad e identificar; planta; y el marco común de la aplicación
 
+> **v3 (27 y 28-oct-2026): las pantallas que hay hoy están en [06-pantallas-v3.md](../06-pantallas-v3.md).** Este capítulo conserva las fórmulas, los textos según su valor y los endpoints; los archivos de pantallas que la v3 borró o cambió dicen **RETIRADO** o **CAMBIADO** arriba, con su reemplazo. **Las capturas de este capítulo son de la v2 (25-oct-2026) y se conservan como histórico:** sus marcas apuntan a textos que la v3 cambió o borró, así que `npm run pantallazos:doc` ya no las regenera (cada una falla y no se guarda: ninguna imagen queda con un número que apunta a nada nuevo). Las capturas vigentes son las de `img/v3-*` y `img/cap1-*`.
+
+
 Pantalla por pantalla, con capturas anotadas: para cada número, chip, marca, barra o frase que depende de un dato, **cómo se calcula** (con remisión a la ficha de los capítulos 5A-5D), **el valor exacto de la captura**, **el texto según el valor** (sacado del código, con archivo:línea) y **de qué endpoint y campo sale** (capítulo 7).
 
 Datos: el demo (`VITE_FUENTE=demo`), `AHORA = 2026-10-02T14:00-05:00`, período «Octubre, en curso» salvo que se diga otro. Los números se comprobaron corriendo el motor (`src/entities/*`) y leyendo el texto de cada pantalla.

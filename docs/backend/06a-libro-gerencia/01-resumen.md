@@ -1,5 +1,8 @@
 # 6A.1 Resumen del activo — gerente (decisión)
 
+> **RETIRADO como pantalla (v3, 27-oct-2026).** El Resumen del gerente se fundió en **La planta viva** y **Resultados** (C5; [borrado.md](../../experiencia-v3/borrado.md) A-16). Lo que rige: [06-pantallas-v3.md](../06-pantallas-v3.md) §6.1. Las fórmulas y los textos según su valor de este archivo siguen vigentes.
+
+
 **Para qué.** «Lo perdido, el retorno posible y a qué equipo ir.» (`PARA_QUE_DECISION.resumen`, `src/widgets/Onboarding.tsx:37`).
 **Ruta.** `#/ger/resumen/<campo | ceiba~portafolio>/<período>` · **Roles y nivel.** Solo el gerente de activo (`ger`, nivel `decision`) tiene la pantalla «resumen» (`src/entities/roles.ts:47-48`). Con nivel `decision`, `Resumen()` dibuja `ResumenDirectivo` (`src/pages/Resumen.tsx:31-37`). Las variantes `Portafolio` y `ResumenCampo` del mismo archivo existen para niveles de ingeniería/operación, pero ningún rol de hoy las alcanza (5A §Huecos 16); se describen al final.
 **Lee.**

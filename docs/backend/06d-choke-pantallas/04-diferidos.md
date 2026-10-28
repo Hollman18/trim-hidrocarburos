@@ -1,5 +1,8 @@
 # 6D.4 Diferidos — por dónde se trabó y el árbol de cada tramo · producción, mantenimiento, confiabilidad y gerente
 
+> **RETIRADO como pantalla (v3, 27-oct-2026; [borrado.md](../../experiencia-v3/borrado.md) A-09).** Lo que rige: el balance por tramo en La planta viva y Resultados ([06-pantallas-v3.md](../06-pantallas-v3.md) §6.1, §6.7).
+
+
 **Para qué.** «Después: por qué, parte, palancas y si el mes se publica.» (`PARA_QUE.diferidos`, `src/widgets/Onboarding.tsx:24`); para el gerente, «Mes a mes: a qué equipo y dónde bajar.» (`PARA_QUE_DECISION.diferidos`, `:38`).
 **Ruta.** `#/<rol>/diferidos/<campo>[~portafolio]/<período>` · **Roles y nivel.** `prod`, `jefe`, `conf` → `ingenieria`: el panel «POR DÓNDE SE TRABÓ» con el árbol de cada tramo y el mes a mes «Por cómo se identificó» / «Por dónde se trabó». `ger` → `decision`: el panel «DÓNDE SE TRABÓ» de su Resumen (6D.3) y el mes a mes «Por equipo» / «Por dónde se trabó» (`src/pages/Diferidos.tsx:44-66`). Lo demás de Diferidos (la cabecera, el cuadre, el factor, las palancas, el tipo de causa, POR EQUIPO y POR PARTE) está en 6A.2; aquí va solo lo del choke.
 **Lee.** (CONTRATO.md, Anexo A)

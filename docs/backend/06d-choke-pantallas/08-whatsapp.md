@@ -1,5 +1,8 @@
 # 6D.8 WhatsApp — el chat de la parada: el respaldo en corto, el cierre en el mismo hilo y «2 Algo está mal» · operador, supervisor (y quien mire el chat) · RETIRADO (27-oct-2026)
 
+> **RETIRADO (27-oct-2026).** El canal de WhatsApp no se construye (CAMBIOS-CONTRATO.md §3): lo que tenía valor quedó en pantalla, dentro de TRIM (Hoy).
+
+
 > **RETIRADO (27-oct-2026).** El dueño decidió quitar el canal de WhatsApp: el backend no lo construye. Reemplazo dentro de TRIM: la pregunta de cada parada se contesta en **la pregunta de Hoy** y en «Contestar» de Identificar; el respaldo en corto y el cierre se leen en la tarjeta de la parada en Hoy; «2 Algo está mal» es el botón **«Algo está mal»** (`POST /api/anh/paradas/:id/revision`); quien no contestó lo recoge el supervisor con la tarjeta **«Conseguir la causa»** y su insignia. Ver [CAMBIOS-CONTRATO.md §3](../CAMBIOS-CONTRATO.md#3-retirado-whatsapp-propuesto-el-27-oct-2026) y [whatsapp.md](../../experiencia-v3/whatsapp.md). Este capítulo queda como histórico.
 
 **Para qué.** «El carril caliente: lo que TRIM le manda por WhatsApp a quien tiene que actuar, en minutos, por el canal que ya usa. Y la respuesta en el mismo hilo: un toque para decir qué se dañó, escogiendo entre las causas que la señal sugiere.» (`src/entities/mensajes.ts:1-4`).
