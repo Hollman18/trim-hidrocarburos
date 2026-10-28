@@ -16,6 +16,12 @@ export function tonoDeCondicion(c: Condicion | null | undefined): Tono | undefin
   return undefined
 }
 
+/** Un equipo o un pozo: PARADO es frenado (el dueño, 28-oct: «cuando esté frenado algo, una máquina o un pozo, lo
+ *  que sea, en rojo pálido»), aunque su prioridad ISA sea atención; en marcha, el tono de su condición. */
+export function tonoDeEquipo(c: Condicion | null | undefined, parado: boolean | undefined): Tono | undefined {
+  return parado ? 'frenado' : tonoDeCondicion(c)
+}
+
 export function tonoDeSeveridad(s: Severidad | null | undefined): Tono | undefined {
   return s === 1 ? 'frenado' : s === 2 || s === 3 ? 'riesgo' : undefined
 }

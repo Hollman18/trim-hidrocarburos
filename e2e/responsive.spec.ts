@@ -31,7 +31,9 @@ const alto = (w: number) => (w < 640 ? 800 : w < 1100 ? 760 : 900)
 const INICIOS = ['#/ger/planta-viva/ceiba/curso', '#/prod/planta-viva/ceiba/curso', '#/sup/hoy/ceiba/curso', '#/oper/hoy/ceiba/curso',
   '#/jefe/hoy/ceiba/curso', '#/conf/equipos/morichal', '#/tec/hoy/ceiba/curso', '#/reg/regulatorio/ceiba/curso', '#/adm/configuracion/ceiba/curso']
 const PANTALLAS = ['#/ger/planta-viva/ceiba~portafolio/curso', '#/ger/resultados/ceiba/curso', '#/prod/produccion/ceiba/curso', '#/prod/resultados/ceiba~portafolio/curso',
-  '#/sup/equipos/ceiba', '#/jefe/equipos/ceiba~portafolio', '#/conf/confiabilidad/morichal/curso', '#/sup/equipos/ceiba/P-201A', '#/prod/causa/ceiba/curso']
+  '#/sup/equipos/ceiba', '#/jefe/equipos/ceiba~portafolio', '#/conf/confiabilidad/morichal/curso', '#/sup/equipos/ceiba/P-201A', '#/prod/causa/ceiba/curso',
+  // 28-oct (el dueño, captura a ~1512 px): en el detalle de P-201B, «normal 66.800 – 89.250» se encimaba con la barra.
+  '#/prod/equipos/ceiba/P-201B', '#/conf/equipos/morichal/MPP-301']
 /** Lo que el auditor de este encargo cuenta: lo que se sale, se recorta o se pisa (lo demás lo audita el auditor). */
 const DE_LUGAR = new Set<Hallazgo[0]>(['pantalla', 'desborde', 'sale', 'recortado', 'encimado'])
 

@@ -36,8 +36,10 @@ test('los tonos pálidos: frenado en rojo, en riesgo en amarillo y bien en verde
     await f.abrir('/#/jefe/equipos/ceiba')
     const filas = page.locator('main [data-fila-equipo]')
     await expect(filas.first()).toBeVisible()
-    const tonos = await filas.evaluateAll(es => es.map(e => [e.getAttribute('data-condicion') ?? '', e.getAttribute('data-tono') ?? '']))
-    const mal = tonos.filter(([c, t]) => (c === 'alarma' || c === 'interlock' ? t !== 'frenado' : c === 'atencion' || c === 'aviso' ? t !== 'riesgo' : t !== ''))
+    const tonos = await filas.evaluateAll(es => es.map(e => [e.getAttribute('data-condicion') ?? '', e.getAttribute('data-tono') ?? '', e.getAttribute('data-parado') ?? '']))
+    // Parado (una máquina o un pozo) es frenado aunque su prioridad sea atención (el dueño, 28-oct).
+    const mal = tonos.filter(([c, t, p]) => (p === 'si' || c === 'alarma' || c === 'interlock' ? t !== 'frenado' : c === 'atencion' || c === 'aviso' ? t !== 'riesgo' : t !== ''))
+    f.ok(tonos.some(([, t, p]) => p === 'si' && t === 'frenado'), 'lo parado va en rojo pálido')
     f.ok(tonos.some(([, t]) => t === 'frenado') && mal.length === 0, `cada fila con el tono de su condición (${mal.map(x => x.join('→')).join(', ') || 'todas bien'})`)
     f.ok(!tonos.some(([, t]) => t === 'bien'), 'ninguna fila de equipo en verde: lo normal va en gris')
   })
@@ -54,6 +56,11 @@ test('los tonos pálidos: frenado en rojo, en riesgo en amarillo y bien en verde
     await f.abrir('/#/ger/planta-viva/ceiba/curso')
     // La Ceiba este mes (436) va peor que antes (391): en amarillo pálido, no se esconde.
     await expect(page.locator('main [data-funcionando] [data-funcionando-mes]')).toHaveAttribute('data-tono', 'riesgo')
+  })
+
+  await test.step('el detalle de un equipo parado: su cabeza en rojo pálido', async () => {
+    await f.abrir('/#/prod/equipos/ceiba/P-201B')
+    await expect(page.locator('main [data-heroe-equipo]')).toHaveAttribute('data-tono', 'frenado')
   })
 
   await test.step('la ficha de P-201B: «Ahora» en rojo pálido (parada y cerrando pozos)', async () => {

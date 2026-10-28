@@ -1,3 +1,4 @@
+import { fondoTono, tonoDeEquipo, atributoTono } from '@/shared/ui/tono'
 import { useEffect, useId, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { useApp, useRol, useRango, useNivel } from '@/app/store'
@@ -108,8 +109,9 @@ function Heroe({ v, sap, onSap, sapAbierto }: { v: VistaNivel3; sap?: string; on
   const destino = rol.pantallas.includes('causa') && pantallaVisible('causa') ? 'causa' : rol.pantallas.includes('hoy') ? 'hoy' : null
   const decir = v.pregunta && destino && puedeHacer(rol.puede, 'causa:declarar')
   return (
-    <section aria-label={`${v.equipo}: ${v.previo}`} data-heroe-equipo
-      className="grid items-center gap-x-7 gap-y-4 rounded-[10px] bg-[var(--panel)] px-5 py-4 sm:px-7 sm:py-5 lg:grid-cols-[minmax(0,1fr)_auto]">
+    // 28-oct · Qué atacar: parado o en alarma, la cabeza del equipo en rojo pálido; en marcha con atención o aviso, en amarillo pálido.
+    <section aria-label={`${v.equipo}: ${v.previo}`} data-heroe-equipo {...atributoTono(tonoDeEquipo(v.condicion, v.parado))}
+      className={cn('grid items-center gap-x-7 gap-y-4 rounded-[10px] bg-[var(--panel)] px-5 py-4 sm:px-7 sm:py-5 lg:grid-cols-[minmax(0,1fr)_auto]', fondoTono(tonoDeEquipo(v.condicion, v.parado)))}>
       <div className="min-w-0">
         {/* La marca va pegada a la primera palabra: nunca sola en su renglón (UI-13). */}
         <p className="text-[17px] text-[var(--tinta2)]">

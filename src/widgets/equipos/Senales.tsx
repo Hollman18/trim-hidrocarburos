@@ -25,14 +25,18 @@ function Senal({ s }: { s: SenalNivel3 }) {
   const escala = s.escala ? { min: s.escala[0], max: s.escala[1], firmada: false } : undefined
   return (
     <div data-senal={s.tag} data-condicion={s.condicion ?? ''}
-      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-t border-[var(--linea2)] py-2 @min-[480px]:grid-cols-[minmax(110px,1fr)_auto_auto]">
+      // 28-oct (el dueño, captura): «normal 66.800 – 89.250» no cabía en 110 px y se metía debajo de la barra. La columna
+      // del nombre ya no baja de lo que mide su parte más larga (min-content), y la barra se ajusta a lo que queda.
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-t border-[var(--linea2)] py-2 @min-[480px]:grid-cols-[minmax(min-content,1fr)_auto_auto]">
       <span className="min-w-0 text-[15px] font-medium leading-tight">
         {s.nombre}
         <small className="font-cond mt-0.5 block text-[13px] font-medium tracking-[.03em] text-[var(--tinta2)]">{s.tag} · <span data-limite><Limite texto={s.limite} /></span></small>
       </span>
       <span className="col-span-2 row-start-2 @min-[480px]:col-span-1 @min-[480px]:col-start-2 @min-[480px]:row-start-1" data-valor-kit>
         <Barra nombre={s.nombre} valor={s.valor} unidad={s.unidad} escala={escala} banda={s.banda ?? undefined} alarmas={s.alarmas}
-          estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})} {...(k.condicion ? { cruzo: cruzoDe(s) } : {})} decimales={s.decimales} ancho={168} />
+          estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})} {...(k.condicion ? { cruzo: cruzoDe(s) } : {})} decimales={s.decimales} ancho={168}
+          // «escala provisional» ya va una vez en la cabecera de «Sus señales» (con su ⓘ): no se repite en cada fila.
+          className="[&_[data-provisional]]:hidden" />
       </span>
       {escala && (
         <span className="col-start-2 row-start-1 max-[359px]:hidden @min-[480px]:col-start-3">

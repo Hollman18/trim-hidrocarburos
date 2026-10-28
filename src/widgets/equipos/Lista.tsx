@@ -1,4 +1,4 @@
-import { fondoTono, tonoDeCondicion, atributoTono } from '@/shared/ui/tono'
+import { fondoTono, tonoDeEquipo, atributoTono } from '@/shared/ui/tono'
 import { useId, useState } from 'react'
 import { ChevronDown, ChevronRight, Search } from 'lucide-react'
 import { useApp, useAmbito, useRol } from '@/app/store'
@@ -65,10 +65,10 @@ export function FilaEquipo({ f, global, onAbrir, breve = false, enCabeza = false
   const vigila = breve ? (f.vigila ? 'sí' : 'no') : f.vigilaTexto
   const nombre = `${f.condicion ? `${PALABRA_CONDICION[f.condicion]}. ` : ''}${f.equipo}${global ? `, ${f.campoNombre}` : ''}: ${f.familia}, ${f.palabra}. ${leerCifra(f.cifra)}. ¿Lo vigila TRIM? ${vigila}.`
   return (
-    <button type="button" onClick={onAbrir} aria-label={nombre} {...(enCabeza ? { 'data-fila-primero': f.equipo } : { 'data-fila-equipo': f.equipo })} data-campo={f.campoId} data-condicion={f.condicion ?? ''} {...atributoTono(tonoDeCondicion(f.condicion))}
-      // 28-oct · Qué atacar: la fila en alarma, en rojo pálido; en atención o aviso, en amarillo pálido (la marca ISA sigue al inicio).
+    <button type="button" onClick={onAbrir} aria-label={nombre} {...(enCabeza ? { 'data-fila-primero': f.equipo } : { 'data-fila-equipo': f.equipo })} data-campo={f.campoId} data-condicion={f.condicion ?? ''} data-parado={f.parado ? 'si' : 'no'} {...atributoTono(tonoDeEquipo(f.condicion, f.parado))}
+      // 28-oct · Qué atacar: la fila parada o en alarma, en rojo pálido; en marcha con atención o aviso, en amarillo pálido (la marca ISA sigue al inicio).
       className={cn('grid min-h-14 w-full cursor-pointer grid-cols-[18px_minmax(0,1fr)_auto_20px] items-center gap-x-3 gap-y-1 border-t border-[var(--linea2)] py-2.5 text-left first:border-t-0 hover:bg-[var(--panel2)]/60 md:grid-cols-[18px_minmax(0,1fr)_170px_150px_20px]',
-        tonoDeCondicion(f.condicion) && cn('rounded-[6px] px-2 hover:bg-[var(--panel2)]/0', fondoTono(tonoDeCondicion(f.condicion))))}>
+        tonoDeEquipo(f.condicion, f.parado) && cn('rounded-[6px] px-2 hover:bg-[var(--panel2)]/0', fondoTono(tonoDeEquipo(f.condicion, f.parado))))}>
       <span className="self-start pt-1">{f.condicion ? <Marca c={f.condicion} decorativa /> : null}</span>
       <span className="min-w-0">
         <span className="flex flex-wrap items-baseline gap-x-2">
