@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { NOMBRE_MOMENTO, LEMA_MOMENTO, type Momento, type PlantaDelCampo, type TramoVivo } from '@/shared/api/plantaViva'
+import { LEMA_MOMENTO, type Momento, type PlantaDelCampo, type TramoVivo } from '@/shared/api/plantaViva'
 import { MarcaPrioridad, MarcaCondicion } from '@/shared/ui/Prioridad'
 import { Modal } from '@/shared/ui/Modal'
 import { n0 } from './cifras'
@@ -31,7 +31,7 @@ export function HojaTramo(p: Props) {
   )
 }
 
-function Contenido({ planta, tramo: t, momento, periodo, onCerrar, acciones }: Props) {
+function Contenido({ planta, tramo: t, periodo, onCerrar, acciones }: Props) {
   const { abrir } = useAcciones()
   const abrirEquipo = (equipo: string) => { onCerrar(); abrir({ campoId: planta.campoId, equipo }) }
   return (
@@ -82,7 +82,7 @@ function Contenido({ planta, tramo: t, momento, periodo, onCerrar, acciones }: P
           </>
         )}
         {acciones && <div className="mt-5 flex flex-wrap gap-2" data-acciones-tramo="">{acciones}</div>}
-        <p className="mt-5 text-[13px] text-[var(--tinta2)]">{NOMBRE_MOMENTO[momento]} · {LEMA_MOMENTO[momento]}: lo de este tramo cambia con el momento escogido.</p>
+        {/* 28-oct: el momento ya va en el subtítulo del modal; la frase que lo repetía al pie salió (menos texto). */}
     </>
   )
 }

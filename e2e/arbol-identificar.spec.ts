@@ -186,7 +186,8 @@ test.describe('390 px', () => {
     await f.abrir('/#/prod/causa/ceiba/curso')
     const t = tarjeta(f.page, 'LC-07 y LC-16')
     await t.getByRole('button', { name: 'Corregir dónde se trabó' }).click()
-    const hoja = t.getByRole('form', { name: /^¿Dónde se trabó\?/ })
+    // En el teléfono la hoja de corregir sale fuera de la tarjeta (`HojaInferior` va en `.raiz-app`, sobre todo lo demás).
+    const hoja = f.page.locator('[data-hoja-inferior]').getByRole('form', { name: /^¿Dónde se trabó\?/ })
     await expect(hoja.getByRole('group', { name: '¿Aplica a los 2 pozos de esta parada?' })).toBeVisible()
     await revisar('prod · corregir dónde se trabó en una cascada')
     await expect(hoja.getByRole('radio', { name: /^En el yacimiento/ })).toBeVisible()

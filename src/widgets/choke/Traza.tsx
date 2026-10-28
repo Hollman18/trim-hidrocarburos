@@ -3,6 +3,7 @@ import type { NodoBalance, ParadaDelBalance, TramoDelBalance, VistaBalance } fro
 import { Modal } from '@/shared/ui/Modal'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
+import { Info } from '@/shared/ui/Info'
 import { cuandoCorto } from './horas'
 
 /** LA TRAZABILIDAD DE UN TRAMO, a un toque desde el balance (CONSTRUCCION.md: «de cada número,
@@ -50,28 +51,44 @@ function ContenidoTraza({ a }: { a: Arbol }) {
         </h3>
         {a.perdida
           ? <Nodos nodos={a.perdida.hijos} nivel={0} />
-          : <p className="mt-2 text-[14px] leading-snug text-[var(--tinta2)]">{EXPLICA_PERDIDA}</p>}
+          // 28-oct: una línea; el porqué (qué es una pérdida y por qué no es 0), en la ⓘ.
+          : <p className="mt-2 flex items-center gap-1 text-[14px] text-[var(--tinta2)]">Nadie ha registrado una pérdida en este tramo.<Info titulo="Perdido" texto={EXPLICA_PERDIDA} /></p>}
       </section>
       <p className="mt-5 text-[13px] text-[var(--tinta2)]">El diferido y el perdido van aparte: nunca se suman.</p>
     </>
   )
 }
 
-/** Un nivel del árbol: su texto y sus barriles; debajo, lo que cuelga (o las paradas y pérdidas de la hoja). */
-function Nodos({ nodos, nivel }: { nodos: NodoBalance[]; nivel: number }) {
+/** Un nodo que tiene un solo hijo con sus mismos barriles (y nada más colgando) se lee en el mismo renglón
+ *  que su hijo: «No planeada › Proceso / Facilidades › Parada estación/bombeo afecta pozos · 573 bbl», no
+ *  tres renglones con 573 (28-oct; como `Ramas`, B-34). El árbol sigue anidado en la página: solo no se
+ *  repite el renglón. */
+const sigue = (n: NodoBalance) => n.hijos.length === 1 && n.hijos[0]!.bblEntero === n.bblEntero && !n.paradas?.length && !n.perdidas?.length
+
+/** Un nivel del árbol: su texto y sus barriles; debajo, lo que cuelga (o las paradas y pérdidas de la hoja).
+ *  `enCadena`: este nivel ya va escrito en el renglón de su padre. */
+function Nodos({ nodos, nivel, enCadena = false }: { nodos: NodoBalance[]; nivel: number; enCadena?: boolean }) {
   return (
-    <ul className={cn('flex flex-col', nivel > 0 && 'ml-3 border-l border-[var(--linea2)] pl-3')}>
-      {nodos.filter(n => n.bblEntero > 0 || n.eventos > 0).map(n => (
-        <li key={`${n.nivel}|${n.valor}`} data-nodo={n.nivel} data-valor={n.valor} data-bbl={n.bblEntero} className="pt-2">
-          <p className="flex items-baseline justify-between gap-3 text-[14px]">
-            <span className={cn('min-w-0', nivel === 0 ? 'font-semibold text-[var(--tinta)]' : 'text-[var(--tinta)]')}>{n.texto}</span>
-            <span className="shrink-0 tabular-nums text-[var(--tinta)]">{n0(n.bblEntero)} <small className="text-[12px] text-[var(--tinta2)]">bbl</small></span>
-          </p>
-          {n.hijos.length > 0 && <Nodos nodos={n.hijos} nivel={nivel + 1} />}
-          {n.paradas && n.paradas.length > 0 && <Paradas paradas={n.paradas} />}
-          {n.perdidas && n.perdidas.length > 0 && <Perdidas perdidas={n.perdidas} />}
-        </li>
-      ))}
+    <ul className={cn('flex flex-col', nivel > 0 && !enCadena && 'ml-3 border-l border-[var(--linea2)] pl-3')}>
+      {nodos.filter(n => n.bblEntero > 0 || n.eventos > 0).map(n => {
+        const cadena = [n]
+        for (let x = n; sigue(x);) { x = x.hijos[0]!; cadena.push(x) }
+        return (
+          <li key={`${n.nivel}|${n.valor}`} data-nodo={n.nivel} data-valor={n.valor} data-bbl={n.bblEntero} className={enCadena ? undefined : 'pt-2'}>
+            {!enCadena && (
+              <p className="flex items-baseline justify-between gap-3 text-[14px]">
+                <span className={cn('min-w-0', nivel === 0 ? 'font-semibold text-[var(--tinta)]' : 'text-[var(--tinta)]')}>
+                  {cadena.map((c, i) => <span key={`${c.nivel}|${c.valor}`}>{i > 0 && <span aria-hidden className="text-[var(--tinta3)]"> › </span>}{c.texto}</span>)}
+                </span>
+                <span className="shrink-0 tabular-nums text-[var(--tinta)]">{n0(n.bblEntero)} <small className="text-[12px] text-[var(--tinta2)]">bbl</small></span>
+              </p>
+            )}
+            {n.hijos.length > 0 && <Nodos nodos={n.hijos} nivel={nivel + 1} enCadena={sigue(n)} />}
+            {n.paradas && n.paradas.length > 0 && <Paradas paradas={n.paradas} />}
+            {n.perdidas && n.perdidas.length > 0 && <Perdidas perdidas={n.perdidas} />}
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -91,9 +108,8 @@ function Paradas({ paradas }: { paradas: ParadaDelBalance[] }) {
             <span className="tabular-nums text-[var(--tinta)]">{n0(p.bblEntero)} <small className="text-[12px] text-[var(--tinta2)]">bbl</small></span>
           </p>
           <p className="text-[13px] text-[var(--tinta2)]">{cuandoCorto(p.inicio)} → {p.fin ? cuandoCorto(p.fin) : 'sigue'} · {ESTADO[p.estado]}</p>
-          {p.dijeron.length === 0
-            ? <p className="text-[13px] text-[var(--tinta2)]">Todo es propuesta de TRIM: nadie ha dicho nada todavía.</p>
-            : (
+          {/* 28-oct: sin nadie que haya dicho nada, la línea de arriba ya lo dice («propuesta de TRIM»): no se repite. */}
+          {p.dijeron.length > 0 && (
               <ul className="mt-0.5" aria-label={`Quién dijo qué de ${p.pozo}`}>
                 {p.dijeron.map(d => (
                   <li key={`${d.paso}|${d.hora}|${d.valor}`} className="text-[13px] text-[var(--tinta2)]" data-dicho={d.paso}>

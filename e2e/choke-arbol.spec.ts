@@ -111,7 +111,7 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y pa
     const texto = (await f.page.locator('[data-traza="planta"]').innerText()).replace(/\s+/g, ' ')
     // B-27: la causa con el mismo nombre que en Identificar (el de la Tabla 1).
     f.ok(/No planeada/.test(texto) && texto.includes('No planeada - Proceso / Facilidades') && texto.includes('Parada estación/bombeo afecta pozos'), 'la causa y el detalle, en palabras')
-    f.ok(texto.includes('P-201B') && /Todo es propuesta de TRIM|: /.test(texto), 'cada parada con su equipo y quién dijo qué (o que todo es la propuesta de TRIM)')
+    f.ok(texto.includes('P-201B') && /propuesta de TRIM|: /.test(texto), 'cada parada con su equipo y quién dijo qué (o que todo es la propuesta de TRIM)')
     f.ok(!CODIGO_ANH.test(texto) && !/choke/i.test(texto), 'producción no ve códigos de la ANH ni «choke»')
     // Escape la cierra y el foco vuelve.
     await f.page.keyboard.press('Escape')

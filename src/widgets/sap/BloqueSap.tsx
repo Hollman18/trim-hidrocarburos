@@ -16,6 +16,9 @@ import { FueraDeMeta } from '@/shared/ui/Prioridad'
 import { n0, n1 } from '@/shared/lib/formato'
 import { fmtHoras } from '@/widgets/bombas/comun'
 import { useUsuarios } from '@/shared/api/usuarios'
+import { Bloque } from '@/shared/ui/Cifras'
+
+const mayus = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 const campoInput = 'min-h-10 w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento sm:min-h-0'
 const titulo = 'mb-1.5 mt-3 text-[15px] font-semibold text-[var(--tinta)]'
@@ -48,13 +51,15 @@ export function BloqueSap({ campoId, equipo, nivel, titulo: Titulo = 'h3' }: {
   // El historial: cinco y «ver N más»; lo que no se ve en la pantalla sale en el papel.
   const historial = useVerMas(ordenes)
 
+  // 28-oct: para quien decide, un bloque más del detalle («SAP»), con cada cosa en su renglón corto.
   if (nivel === 'decision') return (
-    <p className="text-[14px] text-[var(--tinta2)]">
-      <b className="text-[var(--tinta)]">En SAP:</b>{' '}
-      {ordenAbierta ? `orden ${ordenAbierta.numero} ${NOMBRE_ESTADO_ORDEN[ordenAbierta.estado]}` : abierto ? `aviso ${abierto.numero} abierto, sin orden todavía` : 'sin aviso ni orden abiertos'}
-      {sinStock.length > 0 && <> · <FueraDeMeta si tamano={10} />sin stock de {sinStock.map(r => r.descripcion.toLowerCase()).join(', ')}</>}
-      {enCamino.map(r => <span key={r.material}> · {r.descripcion.toLowerCase()} llega el {llega(r)}</span>)}
-    </p>
+    <Bloque titulo="SAP" sinLinea data-sap-decision="">
+      <ul className="grid gap-0.5 text-[15px]">
+        <li>{ordenAbierta ? `Orden ${ordenAbierta.numero} ${NOMBRE_ESTADO_ORDEN[ordenAbierta.estado]}` : abierto ? `Aviso ${abierto.numero} abierto, sin orden todavía` : 'Sin aviso ni orden abiertos'}</li>
+        {sinStock.length > 0 && <li className="flex items-center gap-1.5"><FueraDeMeta si tamano={10} />Sin stock de {sinStock.map(r => r.descripcion.toLowerCase()).join(', ')}</li>}
+        {enCamino.map(r => <li key={r.material} className="text-[var(--tinta2)]">{mayus(r.descripcion.toLowerCase())} llega el {llega(r)}</li>)}
+      </ul>
+    </Bloque>
   )
 
   const filaOrden = (o: OrdenSap, papel = false) => (

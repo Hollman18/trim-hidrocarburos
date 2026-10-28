@@ -5,7 +5,7 @@ import { puedeHacer } from '@/entities/tipos'
 import { NOMBRE_FASE, ESTADO_PLAN, type PlanAccion, type EstadoPlan } from '@/shared/api/ciclo'
 import { Boton, Calidad } from '@/shared/ui/primitivas'
 import { Tip } from '@/shared/ui/Tip'
-import { n0 } from '@/shared/lib/formato'
+import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { fmtHoras } from '@/widgets/bombas/comun'
 
@@ -21,16 +21,21 @@ import { fmtHoras } from '@/widgets/bombas/comun'
 
 /** Los planes de un equipo, en la ficha (B): a la vista, cada uno con su momento,
  *  lo que mueve (simulado) y, para quien decide, «Aceptar» o «Ya se hizo». */
-export function PlanesDe({ planes, onAbrir, className, titulo: Titulo = 'h3' }: {
+export function PlanesDe({ planes, onAbrir, className, titulo: Titulo = 'h3', primeros }: {
   planes: PlanAccion[]
   onAbrir?: (campoId: string, equipo: string) => void
   className?: string
   /** A15: el nivel de su título, el que le toque donde va (como `BloqueSap`). En el diagnóstico va
    *  antes del primer `h2` de la vista: ahí es `h2`; dentro de la ficha (que ya tiene su `h2`), `h3`. */
   titulo?: 'h2' | 'h3'
+  /** 28-oct: en un modal se ven los que más mueven y el resto se despliega («Ver N planes más»). */
+  primeros?: number
 }) {
+  const [todos, setTodos] = useState(false)
   const ordenados = [...planes].sort((a, b) => b.bbl - a.bbl)
   if (!ordenados.length) return null
+  const ocultos = primeros !== undefined && !todos ? Math.max(0, ordenados.length - primeros) : 0
+  const vistos = ocultos ? ordenados.slice(0, primeros) : ordenados
   return (
     <section className={cn('min-w-0', className)} aria-label="Planes de acción" data-planes="">
       <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -38,8 +43,16 @@ export function PlanesDe({ planes, onAbrir, className, titulo: Titulo = 'h3' }: 
         <Calidad>simulado</Calidad>
       </header>
       <div className="mt-1.5">
-        {ordenados.map(p => <PlanFila key={p.id} plan={p} onAbrir={onAbrir} />)}
+        {vistos.map(p => <PlanFila key={p.id} plan={p} onAbrir={onAbrir} />)}
       </div>
+      {/* Lo que no se ve en la pantalla sale en el papel. */}
+      {ocultos > 0 && <div className="solo-impresion">{ordenados.slice(primeros).map(p => <PlanFila key={p.id} plan={p} onAbrir={onAbrir} />)}</div>}
+      {primeros !== undefined && ordenados.length > primeros && (
+        <button type="button" onClick={() => setTodos(!todos)} aria-expanded={todos} data-ver-planes=""
+          className="toque mt-1 text-[14px] font-semibold text-[var(--tinta)] hover:underline">
+          {todos ? 'Ver menos' : `Ver ${plural(ocultos, 'plan más', 'planes más')}`}
+        </button>
+      )}
     </section>
   )
 }

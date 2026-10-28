@@ -27,6 +27,7 @@ import { pedirPozosDelCampo } from '@/shared/api/medicion'
 import { BloqueSap } from '@/widgets/sap/BloqueSap'
 import { ExportarFicha } from '@/widgets/informe/Exportar'
 import { Modal } from '@/shared/ui/Modal'
+import { Cifras, Cifra } from '@/shared/ui/Cifras'
 import { useNivelEquipo, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
 import { useCondiciones } from '@/shared/api/condiciones'
 import { CondicionEquipo } from '@/widgets/bombas/SenalFija'
@@ -141,9 +142,13 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
               </div>
             )}
             <section>
+              {/* 28-oct: las cifras primero (lo diferido del período y la criticidad); el respaldo y lo de aguas abajo, en chips. */}
+              <Cifras className="mb-2.5">
+                <Cifra valor={n0(bblDe(eq.id, campoId) ?? 0)} unidad="bbl" rotulo={`diferido · ${rango.nombre.toLowerCase()}`} />
+                <Cifra valor={eq.criticidad} unidad="de 5" rotulo="criticidad" />
+              </Cifras>
               <div className="flex flex-wrap items-center gap-1">
-                <Chip>criticidad {eq.criticidad}/5</Chip>
-                <Chip tono={eq.redundancia === 'sin respaldo' ? 'fuerte' : 'neutro'}>{eq.redundancia}</Chip>
+                <Chip tono={eq.redundancia === 'sin respaldo' ? 'fuerte' : 'neutro'}>{eq.redundancia.split(': ')[0]}</Chip>
                 <Chip>aguas abajo: {eq.aguasAbajo}</Chip>
                 {nivel === 'ingenieria' && <Info rotulo="norma" titulo="Norma" texto={eq.norma} />}
               </div>
@@ -152,11 +157,11 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
               {!paradaDelTren && <p className="mt-2 text-[14px] leading-relaxed">{eq.lectura}</p>}
               {nivel === 'ingenieria' && <SiFallaHoyFicha campoId={campoId} equipo={eq.id} className="mt-2" />}
               <AguaHoy campoId={campoId} bomba={eq.id} className="mt-2.5" />
-              <dl className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[14px]">
-                {nivel === 'ingenieria' && <><dt className="text-[var(--tinta3)]">Modo de falla</dt><dd className="m-0">{eq.modoFalla}</dd></>}
-                <dt className="text-[var(--tinta3)]">Diferido · {rango.nombre.toLowerCase()}</dt>
-                <dd className="tabular m-0">{n0(bblDe(eq.id, campoId) ?? 0)} bbl</dd>
-              </dl>
+              {nivel === 'ingenieria' && (
+                <dl className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[14px]">
+                  <dt className="text-[var(--tinta3)]">Modo de falla</dt><dd className="m-0">{eq.modoFalla}</dd>
+                </dl>
+              )}
             </section>
 
             <BloqueSap key={`${campoId}|${eq.id}`} campoId={campoId} equipo={eq.id} nivel={nivel} />

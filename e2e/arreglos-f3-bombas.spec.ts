@@ -158,11 +158,12 @@ test('H34 · H3 · T-8 · G-16 · La ficha del gerente: «No arrancar» en tinta
   const t = await ficha.innerText()
   const chips = await ficha.locator('span').evaluateAll(es => es.filter(e => e.textContent?.trim().toLowerCase() === 'no arrancar').length)
   f.ok(chips === 0 && !/se pierde/.test(t), `ni el chip «no arrancar» (${chips}) ni «se pierden»`)
-  f.ok(await ficha.locator('[data-condicion="alarma"]').count() > 0 && t.includes('Alarma ·'), 'la marca de la franja (alarma) con su palabra')
+  // 28-oct: la palabra va en la cabecera del modal («P-201B ◆ Alarma»); el bloque «Ahora» lleva la condición.
+  f.ok(await ficha.locator('[data-condicion="alarma"]').count() > 0 && /P-201B[\s\d]*Alarma/.test(t), 'la marca de la franja (alarma) con su palabra')
   await page.evaluate(() => { location.hash = '#/ger/equipos/morichal/P-201B' })
   await page.waitForFunction(() => (document.querySelector('[data-panel-equipo]') as HTMLElement | null)?.innerText.includes('Morichal') ?? false)
   const tm = await page.locator('[data-panel-equipo]').innerText()
-  f.ok(/Si falla hoy\s*783 bbl\/d se dejan de producir después de 10,1 h de colchón/.test(tm) && !/Si para ahora/.test(tm), '«Si falla hoy» en bbl/d, como en Equipos y Bombas')
+  f.ok(/Si falla hoy\s*783\s*bbl\/d\s*se dejan de producir\s*después de 10,1 h de colchón/.test(tm) && !/Si para ahora/.test(tm), '«Si falla hoy» en bbl/d, como en Equipos y Bombas')
   f.cerrar()
 })
 

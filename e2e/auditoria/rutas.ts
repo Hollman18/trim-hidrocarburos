@@ -154,7 +154,7 @@ export const ASERCIONES: Record<string, { si: Array<string | RegExp>; no: Array<
   '#/prod/filosofia/ceiba/curso': { si: ['Filosofía operacional · La Ceiba', 'Solo lectura: la prepara y la firma el administrador'], no: [titulo('Firmar la versión'), 'Subir Excel o CSV'] },
   '#/conf/configuracion/morichal/curso': { si: ['Solo lectura: lo prepara y lo firma el administrador', titulo('Tanques de agua'), 'Filosofía operacional'], no: [titulo('Firmar la versión'), 'Usuarios y accesos'] },
   // Lo que viene en camino no es «sin stock»: se dice cuándo llega, sin marca (6B·H8).
-  '#/ger/resultados/ceiba/cerrado/P-201B': { si: ['Qué se está haciendo', 'Le ha costado', 'pozos cerrados desde', 'llega el 9 de oct'], no: [...NO_DECISION, 'sin stock de kit'] },
+  '#/ger/resultados/ceiba/cerrado/P-201B': { si: ['Qué se está haciendo', 'Le ha costado', 'pozos cerrados', 'llega el 9 de oct'], no: [...NO_DECISION, 'sin stock de kit'] },
   // Los «no» van en minúsculas: en ingeniería «supuestos» y «tolerancia» son ahora rótulos de ⓘ.
   // C4 · La placa abre el nivel 3 (una vista): lo de ahora, sus dos últimas fallas en «Su historia» y el bloqueo;
   // al supervisor, sin el vigía ni el modo de falla (son del diagnóstico, nivel 4).

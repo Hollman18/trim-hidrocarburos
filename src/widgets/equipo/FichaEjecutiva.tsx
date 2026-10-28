@@ -6,24 +6,20 @@ import { useFichaEquipo } from '@/shared/api/equipos'
 import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { campoPorId } from '@/entities/campos'
 import { fechaHora, fechaCorta, horasEntre, AHORA } from '@/entities/reloj'
-import { MarcaCondicion } from '@/shared/ui/Prioridad'
-import { PALABRA_CONDICION } from '@/shared/api/equiposTecnico'
-import { Chip } from '@/shared/ui/primitivas'
-import { Info } from '@/shared/ui/Info'
+import { Bloque, Cifras, Cifra, Reparto } from '@/shared/ui/Cifras'
 import { n0, usd, plural } from '@/shared/lib/formato'
 import { siPara } from '@/shared/ui/costoHoy'
 import { fmtHoras, textoColchon, respaldoAbsorbe } from '@/widgets/bombas/comun'
 import { useCondiciones } from '@/widgets/pozos/estado'
 import { Bloqueo } from '@/widgets/hoy/piezas'
 
-/** Lo que un directivo necesita de un equipo: cómo está, cuánto le ha
- *  costado, por qué parte falla y qué se está haciendo. Sin tags, sin
- *  señales, sin tolerancias: eso es de quien lo opera o lo repara. Los
- *  números son los mismos del libro.
+/** Lo que un directivo necesita de un equipo, en el orden en que lo pregunta: cómo está ahora,
+ *  cuánto le ha costado, por qué falla, qué se está haciendo y qué se puede mover. Sin tags, sin
+ *  señales, sin tolerancias: eso es de quien lo opera o lo repara. Los números son los mismos del libro.
  *
- *  F3 · La marca es la del equipo (la de la franja, con su palabra: H3, H16); lo
- *  diferido «se deja de producir» (T-8); «Si falla hoy» en bbl/d (G-16); y «No
- *  arrancar» es el bloqueo en tinta con ⊘, no un chip (H34; X5 §5.6). */
+ *  28-oct (el dueño: «poco texto, números, que se entienda»): cada pregunta es un `Bloque` con la cifra
+ *  primero (`Cifra`), el reparto por parte dibujado (`Reparto`) y el porqué en la ⓘ. La marca del
+ *  equipo va en la cabecera del modal (H3); «No arrancar» es el bloqueo en tinta con ⊘ (H34; X5 §5.6). */
 export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: string }) {
   const rango = useRango()
   const riesgo = useRiesgo([campoId]).filter(r => r.equipo === equipo)
@@ -40,22 +36,19 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
   const enRiesgo = riesgo.find(r => r.estado === 'en-riesgo')
   // Cada tramo con el precio que regía cuando pasó (lo calcula el servidor).
   const vPeriodo = periodo.usd !== undefined ? usd(periodo.usd) : undefined, vHistoria = historia.usd !== undefined ? usd(historia.usd) : undefined
-  const desdeHistoria = fechaCorta(ficha.desdeHistoria)
-  // De qué falla: solo fallas (un disparo que arrancó solo no es falla).
+  // De qué falla: solo fallas (un disparo que arrancó solo no es falla). Todas las partes, para que la barra sume 100.
   const fallas = hist?.eventos.filter(x => !x.disparo) ?? []
   const porParte = new Map<ParteId, number>()
   for (const x of fallas) if (x.parte) porParte.set(x.parte, (porParte.get(x.parte) ?? 0) + x.bbl)
   const totalPartes = [...porParte.values()].reduce((a, b) => a + b, 0)
-  const partes = [...porParte.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2)
+  const partes = [...porParte.entries()].sort((a, b) => b[1] - a[1])
+    .map(([p, b]) => ({ nombre: NOMBRE_PARTE[p].toLowerCase(), pct: Math.round((b / totalPartes) * 100) }))
   const abierta = fallas.find(x => !x.fin)
 
-  // Cómo está: lo que se pierde (la cifra) y, debajo, las dos horas cuando son distintas.
-  const cifra = perdiendo ? `${n0(perdiendo.bblDia)} bbl/d` : undefined
-  const estado = perdiendo
-    ? `${perdiendo.desde ? `Parada desde ${fechaHora(perdiendo.desde)}` : 'Parada'}${perdiendo.cierreDesde && perdiendo.desde && perdiendo.cierreDesde.getTime() - perdiendo.desde.getTime() > 60_000 ? ` · pozos cerrados desde ${fechaHora(perdiendo.cierreDesde)}` : ''}`
-    : cerradoPor ? `Cerrado por ${cerradoPor.equipo}${desdeCierre ? ` desde ${fechaHora(desdeCierre)}` : ''}`
-      // Sin nada de eso, el estado ya va en la cabecera de la ficha («… · en servicio»): no se repite.
-      : enRiesgo ? `En marcha · si falla hoy, ${siPara(enRiesgo)}` : undefined
+  // Ahora, sin pérdida en curso: una frase de estado (lo que se pierde va en cifras).
+  const estado = cerradoPor ? `Cerrado por ${cerradoPor.equipo}${desdeCierre ? ` desde ${fechaHora(desdeCierre)}` : ''}`
+    // Sin nada de eso, el estado ya va en la cabecera del modal («… · en servicio»): no se repite.
+    : enRiesgo ? `En marcha · si falla hoy, ${siPara(enRiesgo)}` : undefined
 
   // Qué se está haciendo, en corto; el porqué, en su ⓘ (y en el papel).
   let haciendo: string, porque: string | undefined
@@ -84,62 +77,69 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     porque = eq.severidad ? eq.lectura : undefined
   }
 
+  // El respaldo, en corto: lo que va antes de «:» se ve; el detalle y a quién deja sin agua, en la ⓘ.
+  const [respaldo, ...detalleRespaldo] = eq.redundancia.split(': ')
+  const infoRespaldo = [detalleRespaldo.join(': '), eq.aguasAbajo && `Si falla: ${eq.aguasAbajo}.`].filter(Boolean).join(' · ')
+
   return (
     // El nombre del equipo ya va en la cabecera de la ficha.
-    <div className="grid gap-3 text-[15px]">
-      {(cifra || estado || condicion) && <div className="flex items-start gap-2.5" data-condicion={condicion ?? ''}>
-        {condicion && <MarcaCondicion c={condicion} tamano={16} className="mt-[3px]" decorativa />}
-        <span className="min-w-0">
-          {cifra && <b className="tabular block text-[18px] leading-tight">{cifra} <small className="text-[14px] font-normal text-[var(--tinta2)]">se dejan de producir</small></b>}
-          {(condicion || estado) && <span className="block text-[14px] text-[var(--tinta2)]">{condicion && <b className="font-semibold text-[var(--tinta)]">{PALABRA_CONDICION[condicion]}{estado ? ' · ' : ''}</b>}{estado}</span>}
-        </span>
-      </div>}
+    <div className="grid gap-4 text-[15px]" data-ficha-ejecutiva={equipo}>
+      {(perdiendo || estado || pregunta) && (
+        <Bloque titulo="Ahora" sinLinea className="rounded-[10px] bg-[var(--panel2)] p-4" data-condicion={condicion ?? ''}>
+          {perdiendo ? (
+            <Cifras>
+              <Cifra grande valor={n0(perdiendo.bblDia)} unidad="bbl/d" rotulo="se dejan de producir" />
+              {perdiendo.desde && <Cifra valor={fmtHoras(horasEntre(perdiendo.desde, AHORA), true)} rotulo="parada" pie={`desde ${fechaHora(perdiendo.desde)}`} />}
+              {perdiendo.pozos > 0 && <Cifra valor={n0(perdiendo.pozos)} rotulo={perdiendo.pozos === 1 ? 'pozo cerrado' : 'pozos cerrados'}
+                pie={perdiendo.cierreDesde ? `desde ${fechaHora(perdiendo.cierreDesde)}` : undefined} />}
+            </Cifras>
+          ) : estado && <p className="text-[16px] font-semibold leading-snug">{estado}</p>}
+          {/* «No arrancar» es un bloqueo de procedimiento: la franja en tinta con ⊘, no un chip (H34). */}
+          {pregunta && <div className="mt-3"><Bloqueo b={{ texto: `No arrancar hasta identificar ${pregunta.sobre === 'pozo' ? 'por qué paró' : 'qué se dañó'}` }} /></div>}
+        </Bloque>
+      )}
 
-      {/* «No arrancar» es un bloqueo de procedimiento: la franja en tinta con ⊘, no un chip (H34). */}
-      {pregunta && <Bloqueo b={{ texto: `No arrancar hasta identificar ${pregunta.sobre === 'pozo' ? 'por qué paró' : 'qué se dañó'}` }} />}
+      <Bloque titulo="Le ha costado">
+        <Cifras>
+          <Cifra valor={n0(periodo.bbl)} unidad="bbl" rotulo={rango.nombre} pie={vPeriodo && `${vPeriodo.valor} ${vPeriodo.unidad}`} />
+          <Cifra valor={n0(historia.bbl)} unidad="bbl" rotulo={`desde ${fechaCorta(ficha.desdeHistoria)}`} pie={vHistoria && `${vHistoria.valor} ${vHistoria.unidad}`} />
+        </Cifras>
+      </Bloque>
+
+      {hist && (
+        <Bloque titulo="Por qué falla" data-por-que-falla=""
+          derecha={hist.fallas ? `${plural(hist.fallas, 'falla', 'fallas')}${hist.mtbfDias ? ` · una cada ${n0(hist.mtbfDias)} días` : ''}` : undefined}
+          info={partes.length ? 'El porcentaje es de los barriles que costaron sus fallas, no del número de fallas.' : undefined}>
+          {partes.length > 0 && totalPartes > 0 && <Reparto partes={partes} />}
+          <p className="mt-1.5 text-[14px] text-[var(--tinta2)]">
+            {hist.fallas
+              ? [hist.bblPorFalla !== undefined && `${n0(hist.bblPorFalla)} bbl por falla, en promedio`, veces !== undefined && `cerró pozos ${plural(veces, 'vez', 'veces')}`].filter(Boolean).join(' · ')
+              : hist.disparos ? `No ha fallado · ${plural(hist.disparos, 'disparo', 'disparos')} que volvieron a arrancar` : 'No ha fallado'}
+          </p>
+        </Bloque>
+      )}
 
       {eq.clase === 'catalogo' && (
-        <div className="flex flex-wrap gap-1">
-          <Chip tono={eq.redundancia === 'sin respaldo' ? 'fuerte' : 'neutro'}>{eq.redundancia}</Chip>
-          <Chip>si falla: {eq.aguasAbajo}</Chip>
-        </div>
+        <Bloque titulo="Respaldo" info={infoRespaldo || undefined}>
+          <p className="text-[15px] leading-snug">{respaldo}</p>
+        </Bloque>
       )}
-      <Renglon k="Le ha costado"
-        v={`${n0(periodo.bbl)} bbl en ${rango.nombre.toLowerCase()}${vPeriodo ? ` · ${vPeriodo.valor} ${vPeriodo.unidad}` : ''}`}
-        pie={`${n0(historia.bbl)} bbl desde ${desdeHistoria}${vHistoria ? ` · ${vHistoria.valor} ${vHistoria.unidad}` : ''}`} />
-      {hist && (
-        <Renglon k="Cada cuánto falla"
-          v={hist.fallas ? `${plural(hist.fallas, 'falla', 'fallas')}${hist.mtbfDias ? ` · una cada ${n0(hist.mtbfDias)} días` : ''}`
-            : hist.disparos ? `No ha fallado · ${plural(hist.disparos, 'disparo', 'disparos')} que volvieron a arrancar` : 'No ha fallado'}
-          pie={hist.bblPorFalla !== undefined ? `le ha costado ${n0(hist.bblPorFalla)} bbl por falla, en promedio` : undefined} />
-      )}
-      {partes.length > 0 && totalPartes > 0 && (
-        <Renglon k="Por qué parte · % de bbl" info="Porcentaje de los barriles de sus fallas."
-          v={partes.map(([p, b]) => `${NOMBRE_PARTE[p].toLowerCase()} ${n0((b / totalPartes) * 100)} %`).join(' · ')} />
-      )}
-      {veces !== undefined && <Renglon k="Veces que cerró pozos" v={plural(veces, 'vez', 'veces')} />}
+
       {pr && !pr.parada && pr.inmediato && pr.colchon && (
         // «Si falla hoy» en bbl/d, el mismo nombre y la misma cifra que Equipos y Bombas (D-2, G-16).
-        <Renglon k="Si falla hoy" v={respaldoAbsorbe(pr) ? 'no cierra pozos: el respaldo absorbe toda el agua'
-          : `${n0(pr.crudoBpd)} bbl/d se dejan de producir después de ${textoColchon(pr.colchon.horas)} de colchón`} />
+        <Bloque titulo="Si falla hoy">
+          {respaldoAbsorbe(pr) ? <p className="text-[15px]">No cierra pozos: el respaldo absorbe toda el agua.</p>
+            : <Cifra valor={n0(pr.crudoBpd)} unidad="bbl/d" rotulo="se dejan de producir" pie={`después de ${textoColchon(pr.colchon.horas)} de colchón`} />}
+        </Bloque>
       )}
-      <Renglon k="Qué se está haciendo" v={haciendo} info={porque} />
-      {planes.length > 0 && <PlanesDe planes={planes} />}
+
+      <Bloque titulo="Qué se está haciendo" info={porque}>
+        <p className="text-[15px] leading-snug">{haciendo}</p>
+      </Bloque>
+
+      {planes.length > 0 && <div className="border-t border-[var(--linea2)] pt-3"><PlanesDe planes={planes} primeros={1} /></div>}
     </div>
   )
 }
 
 const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
-
-function Renglon({ k, v, pie, info }: { k: string; v: string; pie?: string; info?: string }) {
-  return (
-    <div className="border-t border-[var(--linea2)] pt-2">
-      <small className="block text-[14px] text-[var(--tinta2)]">{k}</small>
-      <span className="flex flex-wrap items-center gap-x-1.5">
-        <span>{v}</span>
-        {info && <Info titulo={k} texto={info} />}
-      </span>
-      {pie && <small className="block text-[13px] text-[var(--tinta2)]">{pie}</small>}
-    </div>
-  )
-}
