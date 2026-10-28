@@ -274,3 +274,21 @@ test.describe('las rejillas se acomodan al ancho que tienen', () => {
     f.cerrar()
   })
 })
+
+/* 28-oct (el dueño, captura de Arc en #/ger/resultados/ceiba/curso): al llegar al final del contenido, la ventana
+   seguía bajando 620 px y se llevaba el panel lateral, con un hueco gris debajo. Los `sr-only` (posición absoluta)
+   tomaban el <body> como referencia y alargaban la página. Solo se desplaza el contenido: la página mide la ventana. */
+test.describe('solo se desplaza el contenido', () => {
+  test('R5 · 1440 y 430 de ancho · la página nunca es más alta que la ventana, en los inicios y en las pantallas largas', async ({ flujo: f }) => {
+    // Sin «1512 px» ni «390 px» en el nombre: así también corre en Safari y Firefox (OTROS_ANCHOS los salta).
+    for (const [w, h] of [[1440, 800], [430, 800]] as const) {
+      await f.page.setViewportSize({ width: w, height: h })
+      for (const ruta of [...INICIOS, ...PANTALLAS]) {
+        await abrir(f.page, ruta)
+        const [alto, ventana] = await f.page.evaluate(() => [document.scrollingElement!.scrollHeight, innerHeight])
+        f.ok(alto <= ventana, `${w} px · ${ruta}: la página mide ${alto} px con una ventana de ${ventana}`)
+      }
+    }
+    f.cerrar()
+  })
+})

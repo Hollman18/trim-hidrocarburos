@@ -207,7 +207,10 @@ export default function App() {
             <Suspense fallback={CARGANDO_PANEL}><BandaTelefono onMenu={() => setNavEn(pantalla)} /></Suspense>
           </LimiteDeError>
         )}
-        <div id="contenido" tabIndex={-1} className="vista flex-1 overflow-y-auto px-4 pb-6 pt-4 outline-none sm:px-6 sm:pt-5 xl:px-8 xl:pt-[22px]">
+        {/* `relative`: lo posicionado de adentro (los `sr-only`) queda en este desplazable y no en el <body>.
+            Sin eso alargaban la página (620 px en Resultados) y, al llegar al final, la ventana seguía bajando
+            y se llevaba el panel lateral (el dueño, 28-oct, en Arc). Solo se desplaza el contenido. */}
+        <div id="contenido" tabIndex={-1} className="vista relative flex-1 overflow-y-auto px-4 pb-6 pt-4 outline-none sm:px-6 sm:pt-5 xl:px-8 xl:pt-[22px]">
           <LimiteDeError clave={clave} que="La cabecera" salida={alInicio}>
             <Suspense fallback={CARGANDO_CABECERA}><Cabecera /></Suspense>
           </LimiteDeError>
