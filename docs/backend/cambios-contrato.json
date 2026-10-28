@@ -1481,6 +1481,15 @@
    "motivo": "«Contestar» en 1 toque (A3): la parte se guarda sola y lo que vio llega después por POST /paradas/:evento/vio",
    "reemplazo": "el backend acepta la parte sin modo; con modo, la regla de v1 sigue",
    "efecto": "un backend de v1 responde 422 a una parte sin modo hasta que adopte esto: es la única regla de v1 que se relaja"
+  },
+  {
+   "fecha": "2026-10-28",
+   "commit": "pendiente",
+   "id": "H1",
+   "tipo": "AGREGADO",
+   "objeto": "ruta",
+   "clave": "GET /vistas/historial",
+   "motivo": "el historial del diferido por tramo y del perdido aparte, mes a mes o turno a turno (el dueño, 28-oct)"
   }
  ]
 }

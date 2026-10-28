@@ -72,8 +72,8 @@ test('los tonos pálidos: frenado en rojo, en riesgo en amarillo y bien en verde
   await test.step('las tendencias: más allá de la alarma en rojo pálido; entre la banda y la alarma, en amarillo pálido', async () => {
     await f.abrir('/#/conf/equipos/morichal/MPP-301/diagnostico')
     const zonas = page.locator('main svg [data-zonas]').first()
-    await expect(zonas.locator('[data-zona="frenado"]')).toHaveCount(1)
-    f.ok(await zonas.locator('[data-zona="frenado"]').getAttribute('fill') === 'var(--frenado-f)', 'la zona de la alarma, en --frenado-f')
+    await expect(zonas.locator('[data-zona-tono="frenado"]')).toHaveCount(1)
+    f.ok(await zonas.locator('[data-zona-tono="frenado"]').getAttribute('fill') === 'var(--frenado-f)', 'la zona de la alarma, en --frenado-f')
   })
   f.cerrar()
 })

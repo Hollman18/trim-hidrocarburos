@@ -1,3 +1,4 @@
+import { Historial } from '@/widgets/resultados/Historial'
 import { fondoTono, tonoDeMeta, atributoTono } from '@/shared/ui/tono'
 import { useState } from 'react'
 import type { ChokeAnh } from '@/entities/choke'
@@ -119,10 +120,10 @@ export function Gerente({ v }: { v: VistaPlantaViva }) {
   return (
     <div data-inicio-gerente={v.alcance} className="flex flex-col gap-3 sm:gap-4">
       {telefono
-        ? (<>{principal}{firmar}{explica}{apoyo}{balance}<Funcionando campos={v.campos} /></>)
+        ? (<>{principal}{firmar}{explica}{apoyo}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></>)
         : (
           <div className="grid gap-4 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]">
-            <div className="flex min-w-0 flex-col gap-4">{principal}{firmar}{apoyo}{balance}<Funcionando campos={v.campos} /></div>
+            <div className="flex min-w-0 flex-col gap-4">{principal}{firmar}{apoyo}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></div>
             <div className="min-w-0">{explica}</div>
           </div>
         )}

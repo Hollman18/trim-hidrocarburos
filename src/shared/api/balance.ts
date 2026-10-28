@@ -1,7 +1,7 @@
 import { useCtx, useVersiones, useSesion } from './sesion'
 import { useDato, versionDe } from './consulta'
 import { guardadasDe } from './arbol'
-import { BALANCE, JORNADA, EFECTIVIDAD, FALLAS_MENSUAL } from './contrato'
+import { BALANCE, JORNADA, EFECTIVIDAD, FALLAS_MENSUAL, HISTORIAL } from './contrato'
 import {
   balance, NOMBRE_TRAMO_BALANCE, EXPLICA_BALANCE,
   type VistaBalance, type ConsultaBalance, type CifraBalance, type CifrasBalance, type CampoDelBalance, type TramoDelBalance,
@@ -10,6 +10,7 @@ import {
 import { vistaJornada, JORNADAS, type VistaJornada, type Jornada, type CualJornada, type ParadaDeJornada, type PasoDeLaCadena } from '@/entities/jornada'
 import { efectividad, fallasPorMes, type VistaEfectividad, type TramoEfectividad, type MesFallas, type FallasDeEquipo } from '@/entities/efectividad'
 import type { RegistroPerdida } from '@/entities/perdidas'
+import { historial, type VistaHistorial, type PeriodoDelHistorial, type ConsultaHistorial, type TramoDelHistorial } from '@/entities/historial'
 import type { BorradorClasificacion } from '@/entities/anh-clasificacion'
 import type { Contexto } from '@/entities/causa-senal'
 import type { Historial } from '@/entities/choke'
@@ -35,6 +36,7 @@ export { NOMBRE_TRAMO_BALANCE, EXPLICA_BALANCE, JORNADAS }
 export type {
   VistaBalance, ConsultaBalance, CifraBalance, CifrasBalance, CampoDelBalance, TramoDelBalance, ArbolDelTramo, NodoBalance, ParadaDelBalance, DichoDeParada,
   VistaJornada, Jornada, CualJornada, ParadaDeJornada, PasoDeLaCadena, VistaEfectividad, TramoEfectividad, MesFallas, FallasDeEquipo,
+  VistaHistorial, PeriodoDelHistorial, ConsultaHistorial, TramoDelHistorial,
 }
 
 type Guardadas = Record<string, BorradorClasificacion>
@@ -70,4 +72,12 @@ export const pedirFallasMensual = (campos: string[], ctx: Contexto): MesFallas[]
 export function useFallasMensual(campos: string[]): MesFallas[] {
   const ctx = useCtx()
   return useDato(FALLAS_MENSUAL, { campos }, String(versionDe(ctx)), () => pedirFallasMensual(campos, ctx))
+}
+
+/** `GET /api/vistas/historial`: el diferido por tramo y el perdido aparte, mes a mes (o turno a turno). */
+export const pedirHistorial = (q: ConsultaHistorial, ctx: Contexto, guardadas: Guardadas | undefined, perdidas: readonly RegistroPerdida[] | undefined): VistaHistorial =>
+  historial(q, ctx, { guardadas: guardadasDe(guardadas ?? {}), perdidas: perdidas ?? NINGUNA })
+export function useHistorial(q: ConsultaHistorial): VistaHistorial {
+  const ctx = useCtx(), guardadas = useSesion(s => s.clasificacionesAnh), perdidas = useSesion(registroDe)
+  return useDato(HISTORIAL, q, `${versionDe(ctx)}.${versionDe(guardadas)}.${versionDe(perdidas)}`, () => pedirHistorial(q, ctx, guardadas, perdidas))
 }

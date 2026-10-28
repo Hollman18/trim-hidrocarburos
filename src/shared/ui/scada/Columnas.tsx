@@ -28,15 +28,22 @@ export interface PeriodoColumna {
   /** La cifra de arriba, si no es la suma de las partes (la cuenta del motor: una parte puede no
    *  dibujarse). Sin ella, la suma. */
   total?: number
+  /** 28-oct · El tono del período, detrás de su columna (rojo pálido, amarillo pálido o verde pálido): lo decide el
+   *  motor (un mes que pasó su máximo) y la pantalla lo traduce. Es un fondo, nunca el color de una parte. */
+  fondo?: 'frenado' | 'riesgo' | 'bien'
   /** Los atributos que la pantalla pone en el grupo del período (`data-mes`, `data-fallas`). */
   datos?: { [dato: `data-${string}`]: string | number }
 }
 
 const ANCHO = 520, ALTO = 166, PISO = 120, CAMPO = 96, DER = 514
 const Y = (v: number, tope: number) => PISO - (v / tope) * CAMPO
-const GRIS = ['var(--dato-1)', 'var(--dato-2)', 'var(--dato-3)'] as const
+// 28-oct · Hasta cinco partes (los tramos del choke), en los grises de dato, del más oscuro al más claro. Con pocas
+// partes se saltan grises: así dos partes vecinas nunca quedan en tonos casi iguales (Pozos y Planta se confundían).
+const GRIS = ['var(--dato-1)', 'var(--dato-2)', 'var(--dato-3)', 'var(--dato-4)', 'var(--dato-5)'] as const
+const PALETA: Record<number, readonly number[]> = { 1: [0], 2: [0, 3], 3: [0, 2, 4], 4: [0, 2, 3, 4], 5: [0, 1, 2, 3, 4] }
+const gris = (n: number, j: number) => GRIS[PALETA[Math.min(Math.max(n, 1), 5)]![j] ?? 4]!
 
-export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nombrePeriodo, unidad, detalle = false, minimo = 420, className, ...datos }: {
+export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nombrePeriodo, unidad, detalle = false, minimo = 420, formato = String, className, ...datos }: {
   periodos: readonly PeriodoColumna[]
   /** El nombre de cada parte apilada (como mucho 3), para la leyenda y la ficha. */
   partes: readonly string[]
@@ -51,13 +58,15 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
   /** D2 · En el modal de detalle: más marcas en la cuadrícula. */
   detalle?: boolean
   minimo?: number
+  /** 28-oct · Cómo se escribe una cifra (la del total, la del eje y la de la ficha): «47,6» en miles de bbl. Sin él, tal cual. */
+  formato?: (v: number) => string
   className?: string
 } & { [dato: `data-${string}`]: string | number | boolean | undefined }) {
   const totales = useMemo(() => periodos.map(p => p.total ?? p.valores.reduce((a, b) => a + b, 0)), [periodos])
   const tope = Math.max(1, ...totales)
   const marcas = useMemo(() => marcasRedondas(0, tope, detalle ? 6 : 3).filter(v => v > 0 && v <= tope), [tope, detalle])
   // El margen de los rótulos del eje y (a 15, como el resto del dibujo).
-  const IZQ = 14 + Math.max(0, ...marcas.map(v => String(v).length)) * 9
+  const IZQ = 14 + Math.max(0, ...marcas.map(v => formato(v).length)) * 9
   const w = (DER - IZQ) / Math.max(1, periodos.length)
   const [refCaja, anidado] = useAnidado<HTMLDivElement>()
   const nombre = (p: PeriodoColumna) => nombrePeriodo?.(p) ?? `${p.rotulo}${p.segundo ? ` ${p.segundo}` : ''}`
@@ -67,8 +76,8 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
     return {
       titulo: nombre(p),
       filas: [
-        ...partes.map((parte, j) => ({ clave: parte, gris: GRIS[j] ?? GRIS[2], nombre: parte, valor: String(p.valores[j] ?? 0) })),
-        { clave: 'total', nombre: 'Total', valor: total > 0 ? String(total) : 'ninguna', unidad: total > 0 ? unidad : undefined, fuerte: true },
+        ...partes.map((parte, j) => ({ clave: parte, gris: gris(partes.length, j), nombre: parte, valor: formato(p.valores[j] ?? 0) })),
+        { clave: 'total', nombre: 'Total', valor: total > 0 ? formato(total) : 'ninguna', unidad: total > 0 ? unidad : undefined, fuerte: true },
       ],
     }
   }
@@ -79,8 +88,8 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
     anuncio: i => {
       const p = periodos[i]!
       // Con `titulo`, cada parte se dice como la pantalla la escribe («sept 2026 · Bombas de agua: 1»).
-      const partesDichas = partes.map((parte, j) => (titulo ? titulo(p, parte, p.valores[j] ?? 0) : `${nombre(p)} · ${parte}: ${p.valores[j] ?? 0}`))
-      return `${partesDichas.join('; ')}; total de ${nombre(p)}: ${totales[i] ?? 0}${unidad ? ` ${unidad}` : ''}`
+      const partesDichas = partes.map((parte, j) => (titulo ? titulo(p, parte, p.valores[j] ?? 0) : `${nombre(p)} · ${parte}: ${formato(p.valores[j] ?? 0)}`))
+      return `${partesDichas.join('; ')}; total de ${nombre(p)}: ${formato(totales[i] ?? 0)}${unidad ? ` ${unidad}` : ''}`
     },
   })
 
@@ -91,7 +100,7 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
         {marcas.map(v => (
           <g key={v}>
             <line x1={IZQ} x2={DER} y1={Math.round(Y(v, tope)) + 0.5} y2={Math.round(Y(v, tope)) + 0.5} stroke="var(--linea2)" strokeWidth={1} />
-            <text x={IZQ - 6} y={Y(v, tope) + 5} fontSize={15} textAnchor="end" fill="var(--tinta3)" className="tabular">{v}</text>
+            <text x={IZQ - 6} y={Y(v, tope) + 5} fontSize={15} textAnchor="end" fill="var(--tinta3)" className="tabular">{formato(v)}</text>
           </g>
         ))}
       </g>
@@ -99,13 +108,14 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
         const xx = IZQ + i * w, total = totales[i] ?? 0
         let y = PISO
         return (
-          <g key={p.clave} {...p.datos}>
+          <g key={p.clave} {...p.datos} data-fondo={p.fondo ?? ''}>
+            {p.fondo && <rect x={xx + 1} y={PISO - CAMPO - 22} width={Math.max(0, w - 2)} height={CAMPO + 22} fill={`var(--${p.fondo}-f)`} data-fondo-periodo="" />}
             {p.valores.map((v, j) => {
               const h = (v / tope) * CAMPO
               y -= h
-              return v > 0 ? <rect key={partes[j] ?? j} x={xx + w * 0.2} y={y} width={w * 0.6} height={h} fill={GRIS[j] ?? GRIS[2]} stroke="var(--panel)" strokeWidth={1} /> : null
+              return v > 0 ? <rect key={partes[j] ?? j} x={xx + w * 0.2} y={y} width={w * 0.6} height={h} fill={gris(partes.length, j)} stroke="var(--panel)" strokeWidth={1} /> : null
             })}
-            {total > 0 && <text x={xx + w / 2} y={y - 5} fontSize={15} fontWeight={600} textAnchor="middle" fill="var(--tinta)" className="tabular">{total}</text>}
+            {total > 0 && <text x={xx + w / 2} y={y - 5} fontSize={15} fontWeight={600} textAnchor="middle" fill="var(--tinta)" className="tabular">{formato(total)}</text>}
             <text x={xx + w / 2} y={139} fontSize={15} textAnchor="middle" fill="var(--tinta2)" className="font-cond">{p.rotulo}</text>
             {p.segundo && <text x={xx + w / 2} y={157} fontSize={15} textAnchor="middle" fill="var(--tinta3)" className="font-cond">{p.segundo}</text>}
           </g>
@@ -113,7 +123,7 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
       })}
       <line x1={IZQ - 4} x2={DER} y1={PISO} y2={PISO} stroke="var(--linea)" />
     </>
-  ), [periodos, partes, totales, marcas, IZQ, w, tope])
+  ), [periodos, partes, totales, marcas, IZQ, w, tope, formato])
 
   let resalte = null, ficha = null
   if (cursor) {
@@ -144,7 +154,7 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
 export function LeyendaColumnas({ partes, className }: { partes: readonly string[]; className?: string }) {
   return (
     <div className={cn('mt-1 flex flex-wrap gap-3 text-[13px] text-[var(--tinta2)]', className)} data-kit="leyenda-columnas">
-      {partes.map((p, j) => <span key={p} className="inline-flex items-center gap-1.5"><i aria-hidden className="inline-block size-2.5" style={{ background: GRIS[j] ?? GRIS[2] }} />{p}</span>)}
+      {partes.map((p, j) => <span key={p} className="inline-flex items-center gap-1.5"><i aria-hidden className="inline-block size-2.5" style={{ background: gris(partes.length, j) }} />{p}</span>)}
     </div>
   )
 }

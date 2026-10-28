@@ -1,3 +1,4 @@
+import { Historial } from '@/widgets/resultados/Historial'
 import { useState, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { useApp, useAmbito, useRango, useRol } from '@/app/store'
@@ -48,7 +49,8 @@ export function Resultados() {
     produccion: () => null,
     publicar: () => <Publicar v={v} onDetalle={rol.id === 'reg' ? ir('regulatorio') : ir('produccion')}
       textoDetalle={rol.id === 'reg' ? 'Ver el reporte al regulador' : '¿Cuadra? Ver la medición y el factor'} />,
-    mesAMes: () => <MesAMes v={v} />,
+    // 28-oct · Primero el historial del diferido por tramo y del perdido aparte; después, por día contra el máximo.
+    mesAMes: () => <><Historial campos={campos} /><MesAMes v={v} /></>,
     porEquipo: () => <PorEquipo v={v} onAbrir={abrir} />,
     porCampo: () => <DelLibro v={v} onAbrir={(c, eq) => abrir({ campoId: c, equipo: eq })} onCampo={c => setCampo(c)} />,
     // A-12: lo que hay que atacar vive en el Hoy del jefe.

@@ -162,6 +162,7 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | `GET /vistas/jornada` (A2-2) | **AGREGAR AHORA** | sup |
 | `GET /vistas/efectividad` (A2-3) | **AGREGAR AHORA** | ger y prod |
 | `GET /vistas/fallas/mensual` (M7, A2) | **AGREGAR AHORA** | jefe |
+| `GET /vistas/historial` (H1, 28-oct) | **AGREGAR AHORA** | ger, prod, jefe y conf (mes a mes); sup (sus 14 turnos) |
 | `POST /paradas/:evento/vio` (A3-1) | **AGREGAR AHORA** | oper y tec |
 | `POST /sap/ordenes/:numero/cierre` (M2, A3) | **AGREGAR AHORA** | tec |
 | `POST /anh/respuestas` y `GET /vistas/anh/respuestas` (M3, A3) | **AGREGAR AHORA** | reg. Hoy la pantalla lee la respuesta dentro de `/vistas/anh/reporte` (`respuestaAnh`); la historia propia no la pide ninguna (C3) |
@@ -737,6 +738,12 @@ M5  GET /vistas/relojes?campos&desde&hasta → además, por promedio:
 
 M6  GET /vistas/hoy?rol=sup&campos=ceiba → además "porConfirmar": { "n": 4, "limite": "2026-10-03T07:00:00-05:00" }   (opcional; sup y prod)
 
+H1  GET /api/vistas/historial?campos=ceiba,morichal,guacamayo,palmar,zarza
+    → { "por": "mes", "periodos": [ …, { "clave": "2026-10", "enCurso": true, "diferido": { "entero": 2376 },
+         "porTramo": [{ "tramo": "pozo", "diferido": 1448 }, { "tramo": "planta", "diferido": 573 }, …, { "tramo": "sin-asignar", "diferido": 355 }],
+         "perdido": null, "maximo": 3642, "sobre": null } ], "conPerdido": false, … }
+    GET /api/vistas/historial?campos=ceiba&por=turno → las 14 jornadas, «De 06:00 a 18:00 del 2 de oct» la última
+
 M7  GET /api/vistas/fallas/mensual?campos=ceiba
     → [{ "mes": "2026-10", "desde": "…", "hasta": "…", "parcial": true, "fallas": 1,
          "porEquipo": [{ "campoId": "ceiba", "equipo": "P-201B", "fallas": 1, "disparos": 0 }] }, …]
@@ -836,6 +843,7 @@ y sus casos en `referencia/`. El detalle, en `CONTRATO.md`, «A2 · El balance d
 | A2-2 | **La jornada del supervisor** («Mi turno» y la entrega de turno) | `GET /api/vistas/jornada?campo&jornada=actual\|anterior`; campo opcional `Config.campos[campo].turnos` (`["06:00","18:00"]`) en `POST /api/configuracion` | `config:firmar` (la de v1) para el cambio de turno | 422 de `validarConfig` (hora que no es HH:MM, repetida, más de 4) | `jornada/` (4): La Ceiba y Morichal, jornada actual y anterior | **AGREGAR AHORA** (sup). Sin firma rige 06:00 y 18:00, y se dice |
 | A2-3 | **«¿Está funcionando?»**: antes de TRIM, este mes contra la meta, lo ganado; por tramo | `GET /api/vistas/efectividad?campos`; campo opcional `Config.campos[campo].metas[].reduccionPct` en `POST /api/configuracion` | `metas:firmar` (la de v1) para la meta de reducción | 422 de `validarConfig` (fuera de 0 a 100 %) | `efectividad/` (2) | **AGREGAR AHORA** (ger y prod; Resultados) |
 | M7 | **Las fallas por mes** de los equipos críticos, en el motor | `GET /api/vistas/fallas/mensual?campos` | la de la vista | — | `fallas/` (2) | **AGREGAR AHORA** (jefe, apoyo 2) |
+| H1 | **El historial del diferido y del perdido** (el dueño, 28-oct): el diferido por tramo y el perdido aparte, mes a mes o turno a turno, y si cada mes cerrado pasó su máximo firmado | `GET /api/vistas/historial?campos&por=mes\|turno` | la de la vista | 400 si `por=turno` con más de un campo | `historial/` (3) | **AGREGAR AHORA** (ger, prod, jefe, conf y sup). Cada período es el balance con ese período |
 
 **Capacidad nueva** (de 13 a 14): `perdidas:registrar` (oper, sup y prod). Ningún rol pierde una.
 

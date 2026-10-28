@@ -281,8 +281,8 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
         const riesgo = limiteBanda !== null && limiteBanda !== a ? [Y(limiteBanda), ya] : null
         return (
           <g data-zonas="">
-            <rect x={L} y={Math.min(ya, yb)} width={W - L - R} height={Math.abs(yb - ya)} fill="var(--frenado-f)" data-zona="frenado" />
-            {riesgo && <rect x={L} y={Math.min(riesgo[0]!, riesgo[1]!)} width={W - L - R} height={Math.abs(riesgo[1]! - riesgo[0]!)} fill="var(--riesgo-f)" data-zona="riesgo" />}
+            <rect x={L} y={Math.min(ya, yb)} width={W - L - R} height={Math.abs(yb - ya)} fill="var(--frenado-f)" data-zona-tono="frenado" />
+            {riesgo && <rect x={L} y={Math.min(riesgo[0]!, riesgo[1]!)} width={W - L - R} height={Math.abs(riesgo[1]! - riesgo[0]!)} fill="var(--riesgo-f)" data-zona-tono="riesgo" />}
           </g>
         )
       })()}

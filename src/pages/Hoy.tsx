@@ -1,3 +1,4 @@
+import { Historial } from '@/widgets/resultados/Historial'
 import { useEffect, useRef, useState } from 'react'
 import { useAmbito, useRol, usePersona, useRango } from '@/app/store'
 import { useHoy, type TareaHoy, type VistaHoy } from '@/shared/api/hoy'
@@ -153,6 +154,8 @@ export function Hoy() {
         {rol.id === 'jefe' && <NoIntervenir />}
         {orden && (rol.id === 'sup' || rol.id === 'tec') && <OrdenDeCierre t={orden} />}
         {rol.id === 'sup' && campo && <MiTurno campoId={campo} onUnaPorUna={corregir} />}
+        {/* 28-oct · El historial del supervisor: sus últimas 14 jornadas, con el diferido por tramo y el perdido aparte. */}
+        {rol.id === 'sup' && campo && <Historial campos={[campo]} por="turno" />}
         {/* C1 (QA v3) · El balance del choke del período para el supervisor (CONSTRUCCION.md): «Mi turno» trae lo diferido
             y lo perdido de la jornada; aquí, lo producido, lo diferido y lo perdido del mes, por tramo, con su árbol a un toque. */}
         {rol.id === 'sup' && campo && <Balance q={{ campos: [campo], desde: rango.desde, hasta: rango.hasta }} />}

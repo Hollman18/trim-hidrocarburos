@@ -146,6 +146,22 @@ Los roles técnicos abren el equipo en su **nivel 3** (una vista entera con sus 
 
 (1) «3 de 6 pasos listos» y el que sigue: firmar a qué pozos sirve cada equipo (36 por confirmar). (2) «Seguir el paso». Debajo, los seis pasos con su estado, sus otros campos con su «N de M», la conversión del árbol de la operadora y la jornada.
 
+## 6.9b El historial del diferido y del perdido (`GET /api/vistas/historial`)
+
+Pedido del dueño (28-oct): «el historial de diferidos y pérdidas para los cargos clave, en gráficos».
+
+| Quién | Dónde | Qué |
+|---|---|---|
+| Gerente y producción | La planta viva, debajo de «¿Está funcionando?»; y Resultados | 13 meses: una columna por mes con su diferido partido por tramo del choke |
+| Jefe de mantenimiento | Resultados | lo mismo, de su campo |
+| Confiabilidad | Confiabilidad, al lado de «Fallas por mes» | lo mismo |
+| Supervisor | Hoy, debajo de «Mi turno» | sus últimas 14 jornadas (`por=turno`) |
+
+- Cada período es **el balance con ese período**: octubre del portafolio da 2.376 bbl (1.448 pozos · 573 planta · 355 sin identificar), el mismo del bloque «Producido · diferido · perdido».
+- El **perdido va aparte**, debajo y nunca sumado. Sin registro lo dice una vez («sin registro en los 13 meses»), sin dibujar ceros.
+- El fondo de cada mes **cerrado**: rojo pálido si pasó su máximo firmado (`sobre: true`) y verde pálido si no (`false`). El mes en curso no se juzga. Lo decide el motor (`src/entities/historial.ts`); la pantalla lo pinta (`src/widgets/resultados/Historial.tsx`, con `Columnas` del kit: hasta 5 partes en grises de dato y el fondo por período).
+- Mes a mes, en miles de barriles («47,6»); por turno, en barriles.
+
 ## 6.10 La propuesta de valor en el producto
 
 Con **«¿Cómo se lee?»** encendido, arriba de cada pantalla va la propuesta de valor (`src/shared/brand/Propuesta.tsx`): «Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial» y su segunda línea. Apagado, nada: la pantalla de trabajo no suma texto. Qué es hoy esa inteligencia artificial: capítulo 1, nota técnica.

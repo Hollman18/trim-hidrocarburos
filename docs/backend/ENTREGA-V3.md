@@ -69,6 +69,7 @@ principales.
 | 6 | **El tiempo fuera en 5 tramos y las fallas por mes** | `tramos` en `GET /vistas/relojes`; `GET /vistas/fallas/mensual` | jefe | la pieza 5 (sin cierre, logística y arranque van en `null`) |
 | 7 | **La respuesta de la ANH y la hora para corregir** | `POST /anh/respuestas`; `GET /vistas/anh/respuestas`; `respuestaAnh` en `GET /vistas/anh/reporte`; capacidad `anh:enviar` | reg | E15 (el reporte) |
 | 8 | **«¿Está funcionando?»** | `GET /vistas/efectividad`; `metas[].reduccionPct` en la configuración | ger y prod (Resultados) | la línea base y el libro |
+| 8b | **El historial del diferido y del perdido** (28-oct) | `GET /vistas/historial?campos&por=mes\|turno` | ger, prod, jefe y conf (mes a mes, 13 meses por tramo); sup (sus 14 turnos) | la pieza 1: cada período es el balance con ese período |
 | 9 | **La configuración del administrador** | `GET /vistas/configuracion/estado`; `POST /anh/conversion/importar`; `GET /vistas/anh/conversion`; `Config.conversionAnh` | adm | `POST /configuracion` (se firma con él) |
 
 Notas:

@@ -1,3 +1,4 @@
+import { Historial } from '@/widgets/resultados/Historial'
 import { useState } from 'react'
 import { useApp, usePersona, useRango, useRol } from '@/app/store'
 import type { VistaPlantaViva } from '@/shared/api/plantaViva'
@@ -121,10 +122,10 @@ export function InicioProduccion({ v }: { v: VistaPlantaViva }) {
     <div data-inicio-produccion={p.campoId} className="flex flex-col gap-3 sm:gap-4">
       {principal}
       {telefono
-        ? <>{porConfirmarBloque}{siFalla}{balance}<Funcionando campos={v.campos} />{finDeMes}{perdidaBoton}</>
+        ? <>{porConfirmarBloque}{siFalla}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} />{finDeMes}{perdidaBoton}</>
         : (
           <div className="grid gap-4 min-[1100px]:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="flex min-w-0 flex-col gap-4">{balance}<Funcionando campos={v.campos} /></div>
+            <div className="flex min-w-0 flex-col gap-4">{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></div>
             <div className="flex min-w-0 flex-col gap-4">{porConfirmarBloque}{siFalla}{finDeMes}{perdidaBoton}</div>
           </div>
         )}

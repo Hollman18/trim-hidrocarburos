@@ -1895,6 +1895,11 @@
    "descripcion": "Las fallas de los equipos críticos de ceiba, mes a mes (sin disparos)"
   },
   {
+   "id": "historial/ceiba",
+   "endpoint": "/api/vistas/historial?campos=ceiba",
+   "descripcion": "El historial de ceiba, mes a mes: el diferido por tramo y el perdido aparte (sin registro: null)"
+  },
+  {
    "id": "balance/portafolio-2026-09",
    "endpoint": "/api/vistas/balance?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza&desde=2026-09-01T00%3A00%3A00.000-05%3A00&hasta=2026-10-01T00%3A00%3A00.000-05%3A00",
    "descripcion": "El balance de portafolio, 2026-09: producido · diferido · perdido por tramo, con el árbol de cada tramo"
@@ -1928,6 +1933,16 @@
    "id": "fallas/portafolio",
    "endpoint": "/api/vistas/fallas/mensual?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
    "descripcion": "Las fallas de los equipos críticos de portafolio, mes a mes (sin disparos)"
+  },
+  {
+   "id": "historial/portafolio",
+   "endpoint": "/api/vistas/historial?campos=ceiba%2Cmorichal%2Cguacamayo%2Cpalmar%2Czarza",
+   "descripcion": "El historial de portafolio, mes a mes: el diferido por tramo y el perdido aparte (sin registro: null)"
+  },
+  {
+   "id": "historial/ceiba-turnos",
+   "endpoint": "/api/vistas/historial?campos=ceiba&por=turno",
+   "descripcion": "El historial de La Ceiba turno a turno: las últimas 14 jornadas (06:00 y 18:00)"
   },
   {
    "id": "balance/ceiba-jornada-actual",

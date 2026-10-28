@@ -806,6 +806,7 @@ import type { VistaBalance, ConsultaBalance, CampoDelBalance } from '@/entities/
 import type { Jornada, VistaJornada, CualJornada } from '@/entities/jornada'
 import type { VistaPerdidas, RegistroPerdida, CuerpoPerdida as CuerpoPerdidaMotor } from '@/entities/perdidas'
 import type { VistaEfectividad, MesFallas } from '@/entities/efectividad'
+import type { VistaHistorial, PeriodoDelHistorial, ConsultaHistorial } from '@/entities/historial'
 
 const jornadaCodec = obj<Jornada>()({ desde: fecha, hasta: fecha })
 const vistaBalance = obj<VistaBalance>()({
@@ -837,6 +838,13 @@ export const EFECTIVIDAD = get<PorCampos>()('/vistas/efectividad', obj<VistaEfec
  *  disparos) de cada mes del calendario, por familia, por tramo y por equipo. Era la
  *  cuenta de la pantalla de Confiabilidad («Fallas por mes»): ahora la hace el motor. */
 export const FALLAS_MENSUAL = get<PorCampos>()('/vistas/fallas/mensual', lista(obj<MesFallas>()({ desde: fecha, hasta: fecha })))
+/** `GET /api/vistas/historial?campos=&por=mes|turno` (28-oct, el dueño: «el historial de diferidos y pérdidas para
+ *  los cargos clave»): cada mes del calendario (o, con `por=turno`, las últimas 14 jornadas de UN campo) con su
+ *  diferido por tramo del choke y su perdido APARTE (null sin registro, nunca 0), y de cada mes cerrado si pasó su
+ *  máximo firmado. Cada período es el balance de `/vistas/balance` con ese período: cuadran por construcción. */
+export const HISTORIAL = get<ConsultaHistorial>()('/vistas/historial', obj<VistaHistorial>()({
+  periodos: lista(obj<PeriodoDelHistorial>()({ desde: fecha, hasta: fecha })),
+}))
 /** `POST /api/perdidas`: registrar una pérdida (`perdidas:registrar`), o corregirla o
  *  retirarla con motivo (`corrige`, `motivo`, `retirar`). Solo por inserción (D1). */
 export type CuerpoPerdida = CuerpoPerdidaMotor

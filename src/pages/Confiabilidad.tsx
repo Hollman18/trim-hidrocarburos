@@ -2,6 +2,7 @@ import { useApp, useAmbito, useRango } from '@/app/store'
 import { useConfiabilidad, type EquipoConfiable as Equipo } from '@/shared/api/equipos'
 import { pedirInicioDeHistoria } from '@/shared/api/calendario'
 import { useFallasMensual } from '@/shared/api/balance'
+import { Historial } from '@/widgets/resultados/Historial'
 import { NOMBRE_FAMILIA as FAMILIA, type Familia } from '@/entities/flota'
 import { partesDe, NOMBRE_PARTE, type ParteId } from '@/entities/partes'
 import { COMO, type ComoSeIdentifico } from '@/entities/causa-senal'
@@ -208,6 +209,9 @@ export function Confiabilidad() {
           </div>
           <LeyendaColumnas partes={familias.map(f => FAMILIA[f].toLowerCase())} />
         </Panel>
+
+        {/* 28-oct · El historial del diferido por tramo y del perdido aparte, al lado de las fallas por mes. */}
+        <Historial campos={clave.split(',').filter(Boolean)} />
 
         <Panel titulo="Calidad del registro" extra="ISO 14224: parte por falla">
           <Lectura>

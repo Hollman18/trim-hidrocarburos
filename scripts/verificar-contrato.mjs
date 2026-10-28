@@ -166,6 +166,7 @@ try {
     JORNADA: p => BAL.pedirJornada(p, s.ctx, s.clasificacionesAnh ?? {}, s.perdidas ?? []),
     EFECTIVIDAD: p => BAL.pedirEfectividad(p.campos, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
     FALLAS_MENSUAL: p => BAL.pedirFallasMensual(p.campos, s.ctx),
+    HISTORIAL: p => BAL.pedirHistorial(p, s.ctx, s.clasificacionesAnh ?? {}, s.perdidas ?? []),
   })
   const ENDPOINTS = Object.entries(C).filter(([, x]) => x && typeof x === 'object' && x.metodo === 'GET')
 
@@ -301,6 +302,8 @@ try {
       PERDIDAS: conPeriodo(),
       JORNADA: TODOS.flatMap(campo => ['actual', 'anterior'].map(jornada => ({ campo, jornada }))),
       EFECTIVIDAD: porCampos(), FALLAS_MENSUAL: porCampos(),
+      // 28-oct · El historial: mes a mes de cada campo y de todos; turno a turno de cada campo.
+      HISTORIAL: [...porCampos(), ...TODOS.map(campo => ({ campos: [campo], por: 'turno' }))],
     }
     const sinCasos = ENDPOINTS.map(([n]) => n).filter(n => !casos[n]?.length || !R[n])
     comprobar(sinCasos.length === 0, `cada endpoint de contrato.ts tiene su respuesta del demo y sus casos (${ENDPOINTS.length} endpoints${sinCasos.length ? `; faltan: ${sinCasos.join(', ')}` : ''})`)
@@ -1699,7 +1702,7 @@ try {
           && casi(ef2.meta.noPlaneadoDia.exacto, ef2.antes.noPlaneadoDia.exacto * 0.8) && typeof ef2.cumple.noPlaneado === 'boolean',
         `el cambio de turno lo firma el administrador (el gerente no; «25:00» no es hora) y la jornada pasa a «${jJ.jornada.nombre}»; la meta de reducción del 20 % la firma el gerente: meta ${ef2.meta?.noPlaneadoDia.entero} bbl/d no planeados (${ef2.cumple.noPlaneado ? 'cumple' : 'no cumple'})`)
       // j. Lo nuevo está en CONTRATO.md: las cinco vistas, la escritura y la capacidad.
-      const sinDocA2 = [...['BALANCE', 'PERDIDAS', 'JORNADA', 'EFECTIVIDAD', 'FALLAS_MENSUAL'].map(n => `\`GET /api${C[n].ruta}`), '`POST /api/perdidas`', '`perdidas:registrar`']
+      const sinDocA2 = [...['BALANCE', 'PERDIDAS', 'JORNADA', 'EFECTIVIDAD', 'FALLAS_MENSUAL', 'HISTORIAL'].map(n => `\`GET /api${C[n].ruta}`), '`POST /api/perdidas`', '`perdidas:registrar`']
         .filter(r => !leerTexto('CONTRATO.md').includes(r))
       comprobar(sinDocA2.length === 0, `las cinco vistas de A2, POST /api/perdidas y perdidas:registrar están en CONTRATO.md${sinDocA2.map(r => `; falta ${r}`).join('')}`)
       SES.cambiarSesion({ ...fotoA2, perdidas: fotoA2.perdidas })

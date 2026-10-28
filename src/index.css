@@ -139,7 +139,7 @@
   --tubo-vacio:#e6e3de; --roca:#d9d5ce; --pista:#dedbd6; --banda:#cdcac4;
   /* ISA-101: el dato normal NO lleva color. La rampa es de grises, del más
      oscuro (lo que manda) al más claro. El color queda para lo anormal. */
-  --dato-1:#34373b; --dato-2:#4f5257; --dato-3:#65686d; --dato-4:#76797e; --dato-5:#a2a3a4;
+  --dato-1:#34373b; --dato-2:#5a5d62; --dato-3:#7a7d81; --dato-4:#9a9c9f; --dato-5:#bcbdbe;
   /* Corrientes del proceso: también gris. El fluido se distingue por el
      trazo de la línea y su etiqueta, nunca por el color (planta.tsx). */
   --f-multi:#4c4f54; --f-crudo:#383b40; --f-gas:#65686d; --f-agua:#5a5d62;

@@ -703,7 +703,12 @@ function casosDe(M, escenarios) {
       casos.push(caso(`efectividad/${nombre}`, `«¿Está funcionando?» en ${nombre}: antes de TRIM, este mes contra la meta y lo ganado, por tramo`, C.EFECTIVIDAD, { campos: grupo },
         M.BAL.pedirEfectividad(grupo, ctx, v0, {}), conEsp(grupo)))
       casos.push(caso(`fallas/${nombre}`, `Las fallas de los equipos críticos de ${nombre}, mes a mes (sin disparos)`, C.FALLAS_MENSUAL, { campos: grupo }, M.BAL.pedirFallasMensual(grupo, ctx)))
+      // 28-oct · El historial del diferido por tramo y del perdido aparte, mes a mes.
+      casos.push(caso(`historial/${nombre}`, `El historial de ${nombre}, mes a mes: el diferido por tramo y el perdido aparte (sin registro: null)`, C.HISTORIAL, { campos: grupo },
+        M.BAL.pedirHistorial({ campos: grupo }, ctx, {}, [])))
     }
+    casos.push(caso('historial/ceiba-turnos', 'El historial de La Ceiba turno a turno: las últimas 14 jornadas (06:00 y 18:00)', C.HISTORIAL, { campos: ['ceiba'], por: 'turno' },
+      M.BAL.pedirHistorial({ campos: ['ceiba'], por: 'turno' }, ctx, {}, [])))
     for (const jornada of ['actual', 'anterior']) {
       casos.push(caso(`balance/ceiba-jornada-${jornada}`, `El balance de La Ceiba en la jornada ${jornada} (el cambio de turno por defecto, 06:00 y 18:00)`, C.BALANCE, { campos: ['ceiba'], jornada },
         M.BAL.pedirBalance({ campos: ['ceiba'], jornada }, ctx, {}, [])))

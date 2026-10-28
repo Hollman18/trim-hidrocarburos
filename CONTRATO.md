@@ -2776,6 +2776,22 @@ por tramo y por equipo: `[{ mes, nombre, desde, hasta, parcial, fallas, disparos
 Una falla cuenta en el mes en que empezó. Era la cuenta de la pantalla de Confiabilidad («Fallas por mes»): ahora la
 hace el motor. Demo: La Ceiba, octubre, 1 falla (P-201B, 2-oct), parcial.
 
+### `GET /api/vistas/historial?campos=&por=mes|turno`
+
+El historial del diferido y del perdido (28-oct; el dueño: «para los cargos clave, en gráficos»). Con `por=mes` (por
+defecto): cada mes del calendario hasta hoy; con `por=turno`: las últimas 14 jornadas de **un** campo (con su cambio de
+turno). Responde `{ campos, por, periodos[], conPerdido, tramos[], frase, regla }`, y cada período
+`{ clave, rotulo, segundo?, nombre, desde, hasta, enCurso, diferido, porTramo[{ tramo, nombre, diferido }], perdido, maximo, sobre }`.
+
+- Cada período es **el balance de `/vistas/balance` con ese período**: su diferido es el mismo, entero y exacto.
+- El **perdido va aparte**, nunca sumado al diferido; sin registro es `null`, nunca 0.
+- `maximo`: el máximo firmado del mes en bbl (el de diferido por día × los días del mes); `null` sin meta o en un turno.
+- `sobre`: un mes **cerrado** que pasó su máximo (`true`) o no (`false`); `null` en curso o sin máximo. La pantalla lo
+  pinta (rojo pálido o verde pálido); el motor lo decide (`src/entities/historial.ts`, `historial@1`).
+
+Demo: los 5 campos, 13 meses (oct 2025 a oct 2026, en curso); octubre, 2.376 bbl (1.448 pozos · 573 planta · 355 sin
+identificar), perdido sin registro. La Ceiba por turno: 14 jornadas de 06:00 y 18:00.
+
 ### Los dos campos opcionales de la configuración (`POST /api/configuracion`)
 
 - `campos[campo].turnos?: string[]`: las horas de cambio de turno, «HH:MM», de 1 a 4, sin repetir. Técnico: lo firma
