@@ -1,3 +1,4 @@
+import { fondoTono, tonoDeMeta, atributoTono } from '@/shared/ui/tono'
 import { useState } from 'react'
 import type { ChokeAnh } from '@/entities/choke'
 import { useApp, useRango, useRol } from '@/app/store'
@@ -75,10 +76,13 @@ export function Gerente({ v }: { v: VistaPlantaViva }) {
   )
 
   const prod = v.produccion
+  // 28-oct · Contra la meta: alcanzada en verde pálido, por debajo en amarillo pálido; sin meta firmada, sin tono.
+  const tonoProd = prod.metaBpd !== null ? (prod.bajoMeta ? 'riesgo' as const : 'bien' as const) : undefined
+  const tonoCierre = cierre && cierre.metaProduccion !== null ? tonoDeMeta(cierre.produccion, cierre.metaProduccion) : undefined
   const escala = prod.metaBpd !== null ? { min: 0, max: Math.max(prod.metaBpd * 1.25, 1), firmada: true } : undefined
   const apoyo = (
     <div className="grid min-w-0 grid-cols-2 gap-3">
-      <section aria-label="Producción por día" data-produccion={prod.realBpd} className="min-w-0 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:px-6">
+      <section aria-label="Producción por día" data-produccion={prod.realBpd} {...atributoTono(tonoProd)} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:px-6', fondoTono(tonoProd))}>
         <Cifra rotulo="Producción por día" valor={Math.round(prod.realBpd)} unidad="bbl/d" mayusculas={false}
           estado={prod.bajoMeta ? 'anormal' : 'normal'} condicion={prod.bajoMeta ? 'aviso' : undefined}
           nota={prod.metaBpd !== null ? `meta ${n0(prod.metaBpd)}` : 'sin meta firmada'} />
@@ -87,7 +91,7 @@ export function Gerente({ v }: { v: VistaPlantaViva }) {
             estado={prod.bajoMeta ? 'anormal' : 'normal'} condicion={prod.bajoMeta ? 'aviso' : undefined} ancho={telefono ? 150 : 200} className="mt-2 [&>span:nth-child(2)]:hidden" />
         )}
       </section>
-      <section aria-label="Cierre del mes" data-cierre={cierre?.produccion ?? ''} className="min-w-0 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:px-6">
+      <section aria-label="Cierre del mes" data-cierre={cierre?.produccion ?? ''} {...atributoTono(tonoCierre)} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:px-6', fondoTono(tonoCierre))}>
         {cierre
           ? <Cifra rotulo="Cierre del mes" valor={Math.round(cierre.produccion)} unidad="bbl" calidad="proyectado" mayusculas={false}
             nota={cierre.metaProduccion !== null ? `meta ${n0(cierre.metaProduccion)}` : 'sin meta firmada'} />

@@ -268,6 +268,24 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
           {detalle && intermedios.map(i => <line key={`rx${i}`} x1={Math.round(X(i)) + 0.5} x2={Math.round(X(i)) + 0.5} y1={T} y2={H - B} stroke="var(--linea2)" strokeWidth={1} />)}
         </g>
       )}
+      {/* 28-oct · Qué atacar: más allá de la alarma, la zona en rojo pálido (frenado); entre la banda normal y la
+          alarma, en amarillo pálido (en riesgo). Debajo de todo, para que la línea y la banda se lean encima; no en
+          la compacta (96 × 26: sería solo color) ni con el equipo parado (sus señales van en gris). */}
+      {!compacta && !gris && alarmas.length > 0 && (() => {
+        const a = alarmas[0]!
+        const tope = banda?.[1] ?? null, piso = banda?.[0] ?? null
+        const alta = sentidoAlarma ? sentidoAlarma === 'alta' : tope !== null ? a >= tope : piso !== null ? a > piso : true
+        const borde = alta ? escala.max : escala.min
+        const limiteBanda = alta ? tope : piso
+        const ya = Y(a), yb = Y(borde)
+        const riesgo = limiteBanda !== null && limiteBanda !== a ? [Y(limiteBanda), ya] : null
+        return (
+          <g data-zonas="">
+            <rect x={L} y={Math.min(ya, yb)} width={W - L - R} height={Math.abs(yb - ya)} fill="var(--frenado-f)" data-zona="frenado" />
+            {riesgo && <rect x={L} y={Math.min(riesgo[0]!, riesgo[1]!)} width={W - L - R} height={Math.abs(riesgo[1]! - riesgo[0]!)} fill="var(--riesgo-f)" data-zona="riesgo" />}
+          </g>
+        )
+      })()}
       {banda && (() => {
         const a = Y(banda[1] ?? escala.max), b = Y(banda[0] ?? escala.min)
         return <rect x={L} y={a} width={W - L - R} height={Math.max(b - a, 1)} fill="var(--banda)" opacity={gris ? 0.45 : 0.6} data-banda="" />
@@ -333,7 +351,7 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
         <text x={W - R} y={H - 5} textAnchor="end" fontSize={12} fontWeight={hoy !== undefined && hoy < fin ? 400 : 600} fill="var(--tinta2)">{ejeXFinal[1]}</text>
       </g>)}
     </>
-  ), [geo, L, R, T, B, X, Y, W, H, ocultas, visibles, banda, alarmas, estado, marca, cruzo, hoy, fin, rango, rotuloRango, paradaDesde, compacta, gris, decimales, escala, unidad, ejeXFinal, intermedios, rotX, detalle, id])
+  ), [geo, L, R, T, B, X, Y, W, H, ocultas, visibles, banda, alarmas, estado, marca, cruzo, hoy, fin, rango, rotuloRango, paradaDesde, compacta, gris, decimales, escala, unidad, ejeXFinal, intermedios, rotX, detalle, id, sentidoAlarma])
 
   // ── La capa del cursor: la raya vertical, el punto de cada serie y la ficha.
   let capa = null, ficha = null

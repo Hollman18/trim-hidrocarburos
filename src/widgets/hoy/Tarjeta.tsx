@@ -1,3 +1,4 @@
+import { fondoTono, tonoDeCondicion, atributoTono } from '@/shared/ui/tono'
 import { useEffect, useRef, useState } from 'react'
 import type { TareaHoy, PreguntaHoy } from '@/shared/api/hoy'
 import { campoPorId } from '@/entities/campos'
@@ -57,9 +58,12 @@ export function Tarjeta({ t, global, ocultas, onConfirmar, onResponder, quien, a
     ? <><span className="max-sm:hidden"><Texto f={t.porque} /></span><span className="sm:hidden"><Texto f={t.porqueCorto} /></span></>
     : <Texto f={t.porque} />
 
+  // 28-oct · Qué atacar: la tarjeta lleva el tono de su equipo (alarma en rojo pálido; atención y aviso en amarillo).
+  const tono = tonoDeCondicion(t.donde?.marca)
+
   // FF-6 · La orden que ya pasó el límite no le pide nada a jefe ni a confiabilidad: es una línea que informa.
   if (t.grupo === 'aviso' || t.tipo === 'orden') return (
-    <section data-tarea={t.tipo} data-id={t.id} data-pide={t.pide} className="flex items-center justify-between gap-4 rounded-[10px] bg-[var(--panel)] px-5 py-3.5 text-[15px] text-[var(--tinta2)] sm:px-6">
+    <section data-tarea={t.tipo} data-id={t.id} data-pide={t.pide} {...atributoTono(tono)} className={cn('flex items-center justify-between gap-4 rounded-[10px] bg-[var(--panel)] px-5 py-3.5 text-[15px] text-[var(--tinta2)] sm:px-6', fondoTono(tono))}>
       <span className="min-w-0"><b className="font-semibold text-[var(--tinta)]">{t.titulo}</b>{donde} {porque}</span>
       {t.ver && <Enlace onClick={() => ir(t.ver!.destino)} className="shrink-0">{t.ver.texto}</Enlace>}
     </section>
@@ -84,8 +88,8 @@ export function Tarjeta({ t, global, ocultas, onConfirmar, onResponder, quien, a
     ir(accion.destino)
   }
   return (
-    <section data-tarea={t.tipo} data-id={t.id} data-pide={t.pide} aria-label={t.titulo}
-      className="grid gap-x-5 gap-y-1 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:px-6 sm:py-[18px]">
+    <section data-tarea={t.tipo} data-id={t.id} data-pide={t.pide} aria-label={t.titulo} {...atributoTono(tono)}
+      className={cn('grid gap-x-5 gap-y-1 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:px-6 sm:py-[18px]', fondoTono(tono))}>
       {/* h2 (A15): el título de la vista es h1 y cada tarjeta, su sección. tabIndex −1: el foco
           puede caer aquí cuando la tarjeta de arriba se va (A2, `Hoy.tsx`). */}
       <h2 tabIndex={-1} data-titulo-tarea className="text-[18px] font-semibold leading-snug outline-none sm:col-start-1">

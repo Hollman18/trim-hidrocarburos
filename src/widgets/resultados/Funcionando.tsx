@@ -1,3 +1,4 @@
+import { fondoTono, tonoDeMeta, atributoTono, type Tono } from '@/shared/ui/tono'
 import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { useEfectividad, type VistaEfectividad } from '@/shared/api/balance'
@@ -28,6 +29,12 @@ export function FuncionandoDe({ v, className }: { v: VistaEfectividad; className
   const [abierto, setAbierto] = useState(false)
   const meta = v.meta
   const fuera = v.cumple.noPlaneado === false
+  // 28-oct · Qué atacar, y lo que va bien: «este mes» en verde pálido si va por debajo de la meta (o de antes, sin
+  // meta) y en amarillo pálido si no; lo ganado, en verde pálido si es ganancia. «Antes» es la base: sin tono.
+  const tonoMes: Tono | undefined = meta ? tonoDeMeta(v.esteMes.noPlaneadoDia.entero, meta.noPlaneadoDia.entero, false)
+    : v.antes.noPlaneadoDia ? tonoDeMeta(v.esteMes.noPlaneadoDia.entero, v.antes.noPlaneadoDia.entero, false) : undefined
+  const tonoGanado: Tono | undefined = v.ganado.bbl ? (v.ganado.bbl.entero >= 0 ? 'bien' : 'riesgo') : undefined
+  const caja = (t: Tono | undefined) => cn('min-w-0 rounded-[8px]', t && cn('px-3 py-2', fondoTono(t)))
   const tramos = v.porTramo.filter(t => (t.antesDia?.entero ?? 0) > 0 || t.ahoraDia.entero > 0)
   return (
     <section aria-label="¿Está funcionando?" data-funcionando="" data-ganado={v.ganado.bbl?.entero ?? ''} data-meta={meta ? meta.noPlaneadoDia.entero : 'sin-meta'}
@@ -42,12 +49,16 @@ export function FuncionandoDe({ v, className }: { v: VistaEfectividad; className
       <div className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 @min-[28rem]:grid-cols-3">
         <Dato rotulo="Antes de TRIM" valor={v.antes.noPlaneadoDia?.entero ?? null} unidad="bbl/d"
           nota={v.base ? `${v.base.nombre}${v.antes.fallasMes !== null ? ` · ${plural(v.antes.fallasMes, 'falla', 'fallas')} al mes` : ''}` : 'sin base: faltan tres meses'} />
-        <Dato rotulo="Este mes" valor={v.esteMes.noPlaneadoDia.entero} unidad="bbl/d" aviso={fuera}
-          nota={<>{meta ? `meta ${n0(meta.noPlaneadoDia.entero)}${fuera ? ' · por encima' : ''}` : 'sin meta firmada'} · {plural(v.esteMes.fallas, 'falla', 'fallas')}</>} />
-        <Dato rotulo="Ya se ganó" valor={v.ganado.bbl?.entero ?? null} unidad="bbl"
-          nota={v.ganado.bbl
-            ? `${v.ganado.bbl.entero >= 0 ? 'dejaron de diferirse' : 'se difirió de más'} desde el ${DESDE.format(v.desde)} · ${v.ganado.fallasAnticipadas} de ${v.ganado.juzgadas} avisos acertaron`
-            : 'sin base con qué comparar'} />
+        <div className={caja(tonoMes)} {...atributoTono(tonoMes)} data-funcionando-mes="">
+          <Dato rotulo="Este mes" valor={v.esteMes.noPlaneadoDia.entero} unidad="bbl/d" aviso={fuera}
+            nota={<>{meta ? `meta ${n0(meta.noPlaneadoDia.entero)}${fuera ? ' · por encima' : ''}` : 'sin meta firmada'} · {plural(v.esteMes.fallas, 'falla', 'fallas')}</>} />
+        </div>
+        <div className={caja(tonoGanado)} {...atributoTono(tonoGanado)} data-funcionando-ganado="">
+          <Dato rotulo="Ya se ganó" valor={v.ganado.bbl?.entero ?? null} unidad="bbl"
+            nota={v.ganado.bbl
+              ? `${v.ganado.bbl.entero >= 0 ? 'dejaron de diferirse' : 'se difirió de más'} desde el ${DESDE.format(v.desde)} · ${v.ganado.fallasAnticipadas} de ${v.ganado.juzgadas} avisos acertaron`
+              : 'sin base con qué comparar'} />
+        </div>
       </div>
       {tramos.length > 0 && (
         <>

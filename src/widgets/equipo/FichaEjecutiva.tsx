@@ -1,3 +1,5 @@
+import { cn } from '@/shared/lib/cn'
+import { fondoTono, atributoTono, type Tono } from '@/shared/ui/tono'
 import { useRango } from '@/app/store'
 import { useRiesgo, usePreguntas } from '@/shared/api/diferidos'
 import { useCiclo, planesDeEquipo } from '@/shared/api/ciclo'
@@ -45,6 +47,7 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     .map(([p, b]) => ({ nombre: NOMBRE_PARTE[p].toLowerCase(), pct: Math.round((b / totalPartes) * 100) }))
   const abierta = fallas.find(x => !x.fin)
 
+  const tonoAhora: Tono | undefined = perdiendo || cerradoPor ? 'frenado' : enRiesgo ? 'riesgo' : undefined
   // Ahora, sin pérdida en curso: una frase de estado (lo que se pierde va en cifras).
   const estado = cerradoPor ? `Cerrado por ${cerradoPor.equipo}${desdeCierre ? ` desde ${fechaHora(desdeCierre)}` : ''}`
     // Sin nada de eso, el estado ya va en la cabecera del modal («… · en servicio»): no se repite.
@@ -85,7 +88,8 @@ export function FichaEjecutiva({ campoId, equipo }: { campoId: string; equipo: s
     // El nombre del equipo ya va en la cabecera de la ficha.
     <div className="grid gap-4 text-[15px]" data-ficha-ejecutiva={equipo}>
       {(perdiendo || estado || pregunta) && (
-        <Bloque titulo="Ahora" sinLinea className="rounded-[10px] bg-[var(--panel2)] p-4" data-condicion={condicion ?? ''}>
+        // 28-oct · Qué atacar: parado y cerrando pozos, en rojo pálido; en marcha con una parte que avisa, en amarillo pálido.
+        <Bloque titulo="Ahora" sinLinea className={cn('rounded-[10px] bg-[var(--panel2)] p-4', fondoTono(tonoAhora))} data-condicion={condicion ?? ''} {...atributoTono(tonoAhora)}>
           {perdiendo ? (
             <Cifras>
               <Cifra grande valor={n0(perdiendo.bblDia)} unidad="bbl/d" rotulo="se dejan de producir" />

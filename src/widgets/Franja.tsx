@@ -4,6 +4,7 @@ import { MarcaCondicion, type Condicion } from '@/shared/ui/Prioridad'
 import { useDesplegable } from '@/shared/ui/foco'
 import { campoPorId } from '@/entities/campos'
 import { n0 } from '@/shared/lib/formato'
+import { fondoTonoSuave, tonoDeCondicion, atributoTono } from '@/shared/ui/tono'
 import { cn } from '@/shared/lib/cn'
 
 /* C1 · La franja de condiciones (X2 §3.5, X5 §5.6): una píldora por
@@ -55,7 +56,10 @@ function Cuenta({ c, n, equipos }: { c: CondicionFranja; n: number; equipos: Equ
         // R5 · En la cabecera mediana la píldora queda en forma y número: su nombre va en la ayuda.
         title={sinCom ? `${texto}. ${ALCANCE_SIN_COM}` : texto}
         className={cn('toque inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[8px] bg-[var(--panel)] pl-[11px] pr-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--linea)] max-sm:h-[30px] max-sm:gap-1.5 max-sm:pl-2 max-sm:pr-2.5 max-sm:text-[13px]',
-          n ? 'cursor-pointer text-[var(--tinta)] hover:bg-[var(--panel2)]' : 'cursor-default text-[var(--tinta2)]')}>
+          n ? 'cursor-pointer text-[var(--tinta)] hover:bg-[var(--panel2)]' : 'cursor-default text-[var(--tinta2)]',
+          // 28-oct · Qué atacar: con algo que contar, la alarma en rojo pálido y la atención y el aviso en amarillo pálido.
+          n > 0 && fondoTonoSuave(tonoDeCondicion(MARCA[c])))}
+        {...atributoTono(n > 0 ? tonoDeCondicion(MARCA[c]) : undefined)}>
         <MarcaCondicion c={MARCA[c]} tamano={14} decorativa />
         <b className="font-bold">{n}</b>
         {/* `data-palabra` y `data-alcance`: la cabecera las esconde cuando no caben (index.css, R5). */}

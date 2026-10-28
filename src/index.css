@@ -122,6 +122,11 @@
   /* Estado · nunca decorativo (X2 §4.4). */
   --interlock:#8b1a1a; --p1:#bf4000; --p2:#f9a825; --p3:#f9a825; --sincom:#8420a3;
   --interlock-f:#f0dada; --p1-f:#f5e2d4; --p2-f:#f6eed4; --p3-f:#f6eed4; --sincom-f:#f0e3f4;
+  /* Tonos de «qué atacar» (el dueño, 28-oct): un fondo pálido con su raya, nunca chillón. Frenado (alarma o
+     interlock: urgente e importante) en rojo pálido, en riesgo (atención o aviso) en amarillo pálido y bien en
+     verde pálido, SOLO donde «bien» es un resultado (meta cumplida, mejor que antes): lo normal sigue en gris
+     (ISA-101). La marca ISA (forma y número) va encima: el tono no es la única señal. */
+  --frenado-f:#f5e1de; --frenado-raya:#d49890; --riesgo-f:#f7efd6; --riesgo-raya:#d9bd6a; --bien-f:#e3efe3; --bien-raya:#8fbf95;
   /* El número dentro de la forma: blanco en el rombo naranja del claro, oscuro
      en los tonos claros del oscuro. El amarillo lleva siempre número y trazo oscuros. */
   --marca-num:#ffffff; --marca-trazo:#1f2328;
@@ -161,6 +166,7 @@
   --marca:#2c7371; --marca-sobre:#ffffff; --marca-tenue:#e3f1ef; --marca-suave:#213836;
   --interlock:#ff8080; --p1:#ffb347; --p2:#fff176; --p3:#fff176; --sincom:#c99cff;
   --interlock-f:#4a2a2a; --p1-f:#473425; --p2-f:#433d25; --p3-f:#433d25; --sincom-f:#3b3149;
+  --frenado-f:#3d2826; --frenado-raya:#a0544b; --riesgo-f:#39331f; --riesgo-raya:#a08a3e; --bien-f:#22332a; --bien-raya:#4f8a5c;
   --marca-num:#1f2328; --marca-trazo:#1f2328;
   --eq-marcha:#d8d6d2; --eq-parado:#0f0e0d;
   --eq-off:#6d6b67; --eq-on:#cbc9c5; --eq-sin:#83817c; --eq-trazo:#a9a6a0; --eq-alto:#e0ded9;
