@@ -48,21 +48,25 @@ function Cuenta({ c, n, equipos }: { c: CondicionFranja; n: number; equipos: Equ
     setAbierto(false)
   }
   return (
-    <div ref={contenedor} className="relative max-sm:static">
+    // R5 · Debajo de lg la franja va a la izquierda en su renglón: la lista se alinea a la franja (no a la
+    // píldora), así no se sale por la izquierda (a 768 px quedaba en −201).
+    <div ref={contenedor} className="relative max-lg:static">
       <button {...propsBoton} disabled={n === 0} aria-label={n ? `${texto}: ver la lista` : sinCom ? `${texto}. ${ALCANCE_SIN_COM}` : texto}
-        title={sinCom ? ALCANCE_SIN_COM : undefined}
+        // R5 · En la cabecera mediana la píldora queda en forma y número: su nombre va en la ayuda.
+        title={sinCom ? `${texto}. ${ALCANCE_SIN_COM}` : texto}
         className={cn('toque inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[8px] bg-[var(--panel)] pl-[11px] pr-3.5 text-[14px] font-medium shadow-[inset_0_0_0_1px_var(--linea)] max-sm:h-[30px] max-sm:gap-1.5 max-sm:pl-2 max-sm:pr-2.5 max-sm:text-[13px]',
           n ? 'cursor-pointer text-[var(--tinta)] hover:bg-[var(--panel2)]' : 'cursor-default text-[var(--tinta2)]')}>
         <MarcaCondicion c={MARCA[c]} tamano={14} decorativa />
         <b className="font-bold">{n}</b>
-        <span className={cn(c === 'atencion' && 'max-sm:hidden', soloForma && 'max-sm:hidden')}>{palabra(c, n, false)}</span>
-        {c === 'atencion' && <span className="sm:hidden">{palabra(c, n, true)}</span>}
-        {/* El alcance, en el escritorio: «· medidor oficial». */}
+        {/* `data-palabra` y `data-alcance`: la cabecera las esconde cuando no caben (index.css, R5). */}
+        <span data-palabra className={cn(c === 'atencion' && 'max-sm:hidden', soloForma && 'max-sm:hidden')}>{palabra(c, n, false)}</span>
+        {c === 'atencion' && <span data-palabra className="sm:hidden">{palabra(c, n, true)}</span>}
+        {/* El alcance, en el escritorio ancho: «· medidor oficial». Si no cabe, va solo en la ayuda. */}
         {sinCom && <span data-alcance className="text-[var(--tinta2)] max-lg:hidden">· medidor oficial</span>}
       </button>
       {abierto && n > 0 && (
         <div id={id} role="group" aria-label={texto}
-          className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[340px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-sm:left-0 max-sm:right-auto">
+          className="absolute right-0 top-[calc(100%+6px)] z-[90] w-[340px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-1.5 shadow-[var(--sombra-flota)] max-lg:left-0 max-lg:right-auto">
           <p className="flex items-center gap-2 px-2.5 pb-1 pt-1.5 text-[13px] font-semibold text-[var(--tinta2)]">
             <MarcaCondicion c={MARCA[c]} tamano={14} decorativa />{texto[0]!.toUpperCase() + texto.slice(1)}
           </p>

@@ -14,6 +14,7 @@ import { MenuPerfil } from './MenuPerfil'
 import { peorSeveridad } from '@/shared/lib/prioridad'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
 import { useDesplegable } from '@/shared/ui/foco'
+import { Desplegado } from '@/shared/ui/Desplegado'
 import { useUsuarios } from '@/shared/api/usuarios'
 import { useSesion } from '@/shared/api/sesion'
 
@@ -47,7 +48,7 @@ export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'pl
   // frenándolo es prioridad 1; otra causa, 2; algo en riesgo, 3.
   const estados = useEstadoCampos(campos.map(c => c.id))
   const severidadDe = (c: { id: string }) => estados.find(e => e.campoId === c.id)?.severidad ?? 0
-  const { abierto, setAbierto, contenedor, id: idMenu, propsBoton } = useDesplegable()
+  const { abierto, setAbierto, contenedor, boton, panel, id: idMenu, propsBoton } = useDesplegable()
   // La misma regla que aplica el store (`portafolioPermitido`): no se ofrece lo que el estado no acepta.
   const ofrecePortafolio = portafolioPermitido(rol, usuarios)
   const enPortafolio = alcance === 'portafolio' && ofrecePortafolio
@@ -64,7 +65,7 @@ export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'pl
     <div ref={contenedor} className={cn('relative', variante === 'panel' && 'w-full', variante === 'banda' && 'min-w-0')}>
       <button {...propsBoton} onClick={() => varios && setAbierto(v => !v)} disabled={!varios}
         aria-expanded={varios ? abierto : undefined} aria-controls={varios && abierto ? idMenu : undefined}
-        aria-label={`Campo: ${conCondicion}${varios ? '. Cambiar de campo' : ''}`} title={variante === 'plegado' ? conCondicion : undefined}
+        aria-label={`Campo: ${conCondicion}${varios ? '. Cambiar de campo' : ''}`} title={variante === 'banda' ? undefined : conCondicion}
         data-compacto={variante === 'plegado' ? '' : undefined}
         className={cn('flex items-center bg-[var(--panel)] font-semibold text-[var(--tinta)] shadow-[inset_0_0_0_1px_var(--nav-linea)]',
           varios ? 'cursor-pointer hover:bg-[var(--elevado)]' : 'cursor-default',
@@ -80,48 +81,59 @@ export function SelectorCampo({ variante = 'panel' }: { variante?: 'panel' | 'pl
         {varios && variante !== 'plegado' && <ChevronDown aria-hidden className={cn('ml-auto shrink-0 text-[var(--tinta2)]', variante === 'panel' ? 'size-[18px]' : 'size-4')} />}
       </button>
       {abierto && (
-        <div id={idMenu} role="group" aria-label="Escoger campo"
-          className={cn('absolute z-[130] w-[300px] max-w-[calc(100vw-24px)] rounded-[10px] bg-[var(--elevado)] p-1.5 text-[var(--tinta)] shadow-[var(--sombra-flota)]',
-            variante === 'banda' ? 'left-1/2 top-[calc(100%+8px)] -translate-x-1/2' : variante === 'plegado' ? 'left-[calc(100%+12px)] top-0' : 'inset-x-0 top-[calc(100%+6px)] w-auto')}>
+        // D1 · En un portal, con su ancho (328 px) y alineado al botón: el panel lateral ya no lo
+        // recorta ni lo aprieta (el dueño, captura 3). Plegado, sale a la derecha del panel.
+        <Desplegado ancla={boton} panel={panel} id={idMenu} etiqueta="Escoger campo" onCerrar={() => setAbierto(false)} data-menu-campo={variante}
+          ancho={328} lado={variante === 'plegado' ? 'derecha' : 'abajo'} alinear={variante === 'banda' ? 'centro' : 'inicio'} separacion={variante === 'plegado' ? 14 : 8}
+          className="p-1.5">
           {ofrecePortafolio && (<>
             <button onClick={() => { setAlcance('portafolio'); setAbierto(false) }} aria-current={alcance === 'portafolio'}
-              className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-[15px] font-semibold hover:bg-[var(--panel2)]">
+              className={cn(FILA_CAMPO, alcance === 'portafolio' && FILA_ACTIVA)} data-opcion-campo="portafolio">
               <MarcaPrioridad s={peorSeveridad(campos.map(severidadDe))} tamano={14} />
-              <span className="flex-1">Todos mis campos
-                <span className="block text-[13px] font-normal text-[var(--tinta2)]">{campos.length} campos sumados</span>
+              <span className="min-w-0">
+                <span className="block truncate font-semibold">Todos mis campos</span>
+                <span className="block truncate text-[13px] text-[var(--tinta2)]">{campos.length} campos sumados</span>
               </span>
-              {alcance === 'portafolio' && <Check aria-hidden className="size-4 text-[var(--foco)]" />}
+              <span />
+              <Escogido si={alcance === 'portafolio'} />
             </button>
-            <hr className="my-1 border-[var(--linea2)]" />
+            <hr className="mx-2 my-1.5 border-[var(--linea2)]" />
           </>)}
           {/* Lo producido ayer va en una columna con su rótulo arriba: la cifra se compara de un vistazo. */}
-          <p className="flex justify-between gap-2 px-2.5 pb-1 pt-1 text-[13px] font-semibold text-[var(--tinta2)]">
-            <span>Campos · {campos.length}</span><span aria-hidden className="pr-6">producido ayer</span>
+          <p className="grid grid-cols-[16px_minmax(0,1fr)_auto_16px] gap-x-3 px-3 pb-1 pt-1 text-[13px] font-semibold text-[var(--tinta2)]">
+            <span className="col-span-2">Campos · {campos.length}</span><span aria-hidden className="text-right">producido ayer</span>
           </p>
           {campos.map(c => {
             const b = estados.find(e => e.campoId === c.id)?.ayer.bbl
             const es = c.id === campoId && alcance === 'campo'
             return (
-              <button key={c.id} onClick={() => { setCampo(c.id); setAbierto(false) }} aria-current={es}
-                className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 py-1.5 text-left text-[15px] hover:bg-[var(--panel2)]">
+              <button key={c.id} onClick={() => { setCampo(c.id); setAbierto(false) }} aria-current={es} className={cn(FILA_CAMPO, es && FILA_ACTIVA)} data-opcion-campo={c.id}>
                 <MarcaPrioridad s={severidadDe(c)} tamano={14} />
-                <span className="min-w-0 flex-1 font-medium">{c.nombre}
-                  <span className="block text-[13px] font-normal text-[var(--tinta2)]">{c.cuenca}</span>
+                <span className="min-w-0">
+                  <span className={cn('block truncate', es ? 'font-semibold' : 'font-medium')}>{c.nombre}</span>
+                  <span className="block truncate text-[13px] text-[var(--tinta2)]">{c.cuenca}</span>
                 </span>
-                <span className="tabular shrink-0 text-right text-[14px] text-[var(--tinta2)]">
+                <span className="tabular whitespace-nowrap text-right text-[14px] text-[var(--tinta)]">
                   {b === null || b === undefined
-                    ? <>sin fiscal<span className="sr-only"> ayer</span></>
-                    : <>{`${n0(b)} bbl`}<span className="sr-only"> producidos ayer</span></>}
+                    ? <span className="text-[var(--tinta2)]">sin fiscal<span className="sr-only"> ayer</span></span>
+                    : <>{n0(b)}<small className="ml-1 text-[12px] text-[var(--tinta2)]">bbl</small><span className="sr-only"> producidos ayer</span></>}
                 </span>
-                <span className="grid w-4 shrink-0 place-items-center">{es && <Check aria-hidden className="size-4 text-[var(--foco)]" />}</span>
+                <Escogido si={es} />
               </button>
             )
           })}
-        </div>
+        </Desplegado>
       )}
     </div>
   )
 }
+
+/** Una fila del selector de campo: la marca, el nombre con su región debajo, la cifra a la derecha y
+ *  la ✓ del escogido. Una sola línea por dato: nada se parte (D1, captura 3). */
+const FILA_CAMPO = 'grid min-h-12 w-full cursor-pointer grid-cols-[16px_minmax(0,1fr)_auto_16px] items-center gap-x-3 rounded-[8px] px-3 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms] hover:bg-[var(--panel2)]'
+/** El escogido: el fondo de lo seleccionado y la raya del acento, como la puerta activa del panel. */
+const FILA_ACTIVA = 'bg-[var(--panel2)] shadow-[inset_3px_0_0_var(--acento)]'
+const Escogido = ({ si }: { si: boolean }) => <span className="grid w-4 place-items-center">{si && <Check aria-hidden className="size-4 text-[var(--acento)]" />}</span>
 
 /** Las puertas del rol, en su orden, con sus subpantallas. Una puerta sin
  *  ninguna pantalla para este campo no se ofrece. Lleva a la última
@@ -188,7 +200,7 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   const puertas = !unaSola ? todas : todas[0]!.subs.length > 1 ? todas[0]!.subs.map(x => ({ ...x, subs: [] as typeof x[] })) : []
 
   if (plegado) return (
-    <nav aria-label="Navegación" className="flex h-full flex-col items-center overflow-y-auto border-r border-[var(--nav-linea)] bg-[var(--nav)] px-[10px] pb-[18px] pt-5 text-[var(--nav-tinta)]">
+    <nav aria-label="Navegación" className="flex h-full min-w-0 flex-col items-center overflow-y-auto overflow-x-hidden border-r border-[var(--nav-linea)] bg-[var(--nav)] px-[10px] pb-[18px] pt-5 text-[var(--nav-tinta)]">
       <span className="mb-4 grid size-11 shrink-0 place-items-center"><Isotipo className="size-[30px]" /></span>
       <div className="mb-4"><SelectorCampo variante="plegado" /></div>
       <div role="group" aria-label="Puertas" className="flex flex-col items-center gap-1">
@@ -236,12 +248,14 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
   )
 
   return (
-    <nav aria-label="Navegación" className="flex h-full flex-col overflow-y-auto border-r border-[var(--nav-linea)] bg-[var(--nav)] px-4 pb-[18px] pt-6 text-[var(--nav-tinta)]">
-      <div className="relative mb-[22px] flex items-center">
-        <span className="ml-2 mt-0.5 block"><Wordmark className="h-[19px]" /></span>
+    <nav aria-label="Navegación" className="flex h-full min-w-0 flex-col overflow-y-auto overflow-x-hidden border-r border-[var(--nav-linea)] bg-[var(--nav)] px-4 pb-[18px] pt-6 text-[var(--nav-tinta)]">
+      {/* D1 · La X va al borde derecho en su fila (antes `absolute`, pero `.toque` la vuelve `relative` en el
+          teléfono y quedaba pegada al logo). */}
+      <div className={cn('mb-[22px] flex min-h-10 items-center justify-between gap-2', onCerrar && '-mt-1.5')}>
+        <span className="ml-2 mt-0.5 block shrink-0"><Wordmark className="h-[19px]" /></span>
         {onCerrar && (
           <button onClick={onCerrar} aria-label="Cerrar la navegación"
-            className="toque absolute -top-1.5 right-0 grid size-10 cursor-pointer place-items-center rounded-full text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]">
+            className="toque -mr-1 grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--nav-tinta2)] hover:bg-[var(--nav-hover)] hover:text-[var(--nav-tinta)]">
             <X className="size-6" />
           </button>
         )}
@@ -252,19 +266,20 @@ export function Riel({ plegado = false, onPlegar, onCerrar }: {
       <div role="group" aria-label="Puertas" className="flex flex-col gap-1">
         {puertas.map(p => (
           <div key={p.id}>
-            <button onClick={() => { p.ir(); onCerrar?.() }} aria-current={p.activo ? 'page' : undefined}
-              className={cn('flex min-h-[46px] w-full cursor-pointer items-center gap-3.5 rounded-[10px] px-3.5 py-[11px] text-left text-[16px] transition-colors duration-[120ms]',
+            <button onClick={() => { p.ir(); onCerrar?.() }} aria-current={p.activo ? 'page' : undefined} title={p.corto}
+              className={cn('flex min-h-[46px] w-full min-w-0 cursor-pointer items-center gap-3.5 rounded-[10px] px-3.5 py-[11px] text-left text-[16px] transition-colors duration-[120ms]',
                 p.activo ? ACTIVO : INACTIVO)}>
               <p.icono className="size-[22px] shrink-0" />
-              {p.corto}
+              {/* R5 · Nada se sale del panel: si no cabe, «…» y el nombre entero en la ayuda. */}
+              <span className="min-w-0 truncate">{p.corto}</span>
               {p.id === 'hoy' && <InsigniaHoy variante="panel" />}
             </button>
             {/* Las subpantallas de la puerta abierta, dentro del panel y debajo de su puerta. */}
             {p.activo && p.subs.length > 0 && (
-              <div role="group" aria-label={p.corto} data-subpantallas className="mb-1 ml-[23px] mt-1 flex flex-col gap-0.5 border-l border-[var(--nav-linea)] pl-3">
+              <div role="group" aria-label={p.corto} data-subpantallas className="mb-1 ml-[23px] mt-1 flex min-w-0 flex-col gap-0.5 border-l border-[var(--nav-linea)] pl-3">
                 {p.subs.map(s => (
-                  <button key={s.id} onClick={() => { s.ir(); onCerrar?.() }} aria-current={s.activo ? 'page' : undefined}
-                    className={cn('min-h-9 w-full cursor-pointer rounded-[8px] px-2.5 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms] max-sm:min-h-11',
+                  <button key={s.id} onClick={() => { s.ir(); onCerrar?.() }} aria-current={s.activo ? 'page' : undefined} title={s.corto}
+                    className={cn('block min-h-9 w-full min-w-0 cursor-pointer truncate rounded-[8px] px-2.5 py-1.5 text-left text-[15px] leading-snug transition-colors duration-[120ms] max-sm:min-h-11',
                       s.activo ? ACTIVO : INACTIVO)}>
                     {s.corto}
                   </button>

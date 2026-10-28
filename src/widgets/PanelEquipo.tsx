@@ -1,5 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { X, Maximize2, Minimize2 } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useApp, useCampo, useRol, useRango, useNivel } from '@/app/store'
 import { abreNivel3 } from '@/app/url'
 import { FichaEjecutiva } from '@/widgets/equipo/FichaEjecutiva'
@@ -27,8 +26,7 @@ import { MarcaEstado, MarcaCondicion } from '@/shared/ui/Prioridad'
 import { pedirPozosDelCampo } from '@/shared/api/medicion'
 import { BloqueSap } from '@/widgets/sap/BloqueSap'
 import { ExportarFicha } from '@/widgets/informe/Exportar'
-import { useModal } from '@/shared/ui/foco'
-import { useTelefono } from '@/shared/ui/telefono'
+import { Modal } from '@/shared/ui/Modal'
 import { useNivelEquipo, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
 import { useCondiciones } from '@/shared/api/condiciones'
 import { CondicionEquipo } from '@/widgets/bombas/SenalFija'
@@ -64,80 +62,6 @@ export function PanelEquipo() {
   return equipoAbierto && !tecnico ? <PanelAbierto key={equipoAbierto} equipoAbierto={equipoAbierto} /> : null
 }
 
-/** H7 (X2 N5 y B11): en el escritorio la ficha no tapa ni bloquea lo de atrás. Es un
- *  diálogo NO modal a la derecha, debajo de la cabecera (la franja queda a la vista y
- *  la pantalla se sigue usando): el foco entra al abrir, Escape la cierra (si el foco
- *  no está en otro diálogo, como la introducción) y el foco vuelve a quien la abrió.
- *  En el teléfono sigue siendo la hoja modal con su velo (`useModal`). */
-function useNoModal<T extends HTMLElement>(alEscape: () => void, activo: boolean, contenido?: unknown) {
-  const [el, setEl] = useState<T | null>(null)
-  const escape = useRef(alEscape)
-  useEffect(() => { escape.current = alEscape }, [alEscape])
-  useEffect(() => {
-    if (!el || !activo) return
-    const antes = document.activeElement instanceof HTMLElement || document.activeElement instanceof SVGElement ? document.activeElement : null
-    if (!el.contains(document.activeElement)) el.focus()
-    const tecla = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return
-      const otro = (document.activeElement as Element | null)?.closest('[role=dialog]')
-      if ((otro && otro !== el && !el.contains(otro)) || document.querySelector('[aria-modal="true"]')) return
-      e.preventDefault(); escape.current()
-    }
-    document.addEventListener('keydown', tecla)
-    return () => {
-      document.removeEventListener('keydown', tecla)
-      const a = document.activeElement
-      if (antes && antes.isConnected && !antes.closest('[inert]') && (!a || a === document.body || !a.isConnected)) antes.focus()
-    }
-  }, [el, activo])
-  // Lo de adentro cambió sin cerrar (otro equipo, la cadena del dato): el foco no se pierde.
-  useEffect(() => {
-    if (el && activo && (!document.activeElement || document.activeElement === document.body)) el.focus()
-  }, [el, activo, contenido])
-  return setEl
-}
-
-/** H7: en el escritorio la ficha empieza debajo de la cabecera de la vista, para que
- *  la franja de condiciones no quede tapada. */
-function useBajoCabecera(activo: boolean): number {
-  const [top, setTop] = useState(0)
-  useLayoutEffect(() => {
-    if (!activo) return
-    const medir = () => {
-      const c = document.querySelector('[data-cabecera], [data-cabecera-equipo]')
-      setTop(Math.max(8, Math.round(c?.getBoundingClientRect().bottom ?? 0)))
-    }
-    medir()
-    addEventListener('resize', medir)
-    return () => removeEventListener('resize', medir)
-  }, [activo])
-  return top
-}
-
-/** La ficha flotante: en el teléfono, la hoja modal con su velo; en el escritorio,
- *  el panel no modal a la derecha, debajo de la cabecera (H7). */
-function Flotante({ telefono, refModal, refNoModal, idTitulo, ancho, expandido = false, onCerrar, children, ...datos }: {
-  telefono: boolean; refModal: (el: HTMLDivElement | null) => void; refNoModal: (el: HTMLDivElement | null) => void
-  idTitulo: string; ancho: string; expandido?: boolean; onCerrar: () => void; children: ReactNode
-} & Record<`data-${string}`, string | boolean>) {
-  const top = useBajoCabecera(!telefono)
-  const caja = 'flex flex-col overflow-hidden bg-[var(--superficie)] shadow-[var(--sombra-flota)]'
-  if (telefono) return (
-    <div ref={refModal} tabIndex={-1} className="fixed inset-0 z-[120] flex outline-none" role="dialog" aria-modal="true" aria-labelledby={idTitulo} data-panel-equipo {...datos}>
-      {/* El velo cierra con el dedo; con teclado, Escape o «Cerrar» de la cabecera. Un <div>, no un botón: no entra en el ciclo de Tab. */}
-      <div aria-hidden data-velo onClick={onCerrar} className="no-imprimir flex-1 cursor-default bg-[var(--velo)]" />
-      <aside className={cn(caja, 'w-full')}>{children}</aside>
-    </div>
-  )
-  return (
-    <div ref={refNoModal} tabIndex={-1} role="dialog" aria-labelledby={idTitulo} data-panel-equipo data-no-modal {...datos}
-      style={{ top }} className={cn('fixed bottom-2 z-[120] rounded-l-[20px] outline-none', caja,
-        expandido ? 'left-[6vw] right-[6vw] rounded-[10px]' : `right-0 ${ancho}`)}>
-      {children}
-    </div>
-  )
-}
-
 function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   const equipoExpandido = useApp(s => s.equipoExpandido), abrirEquipo = useApp(s => s.abrirEquipo), campoId = useApp(s => s.campoId), setPantalla = useApp(s => s.setPantalla)
   const campo = useCampo()
@@ -154,11 +78,7 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   // ficha; si encima está la introducción, Escape es de ella. Pasar a otro
   // equipo o abrir y cerrar la cadena cambia lo de adentro sin cerrar: el
   // foco no se queda en un botón que ya no está.
-  const telefono = useTelefono()
   const alEscape = () => { if (cadenaTag) setCadenaTag(null); else abrirEquipo(null) }
-  const dialogo = useModal<HTMLDivElement>(alEscape, `${equipoAbierto}|${cadenaTag ?? ''}`)
-  const noModal = useNoModal<HTMLDivElement>(alEscape, !telefono, `${equipoAbierto}|${cadenaTag ?? ''}`)
-  const idTitulo = useId()
   // Con el equipo parado, sus señales van en gris y sin marca propia (X2 B9; UI-07, H4); la marca del equipo, la de la franja (H3).
   const nivelEq = useNivelEquipo(campoId, equipoAbierto)
   const condicion = useCondiciones([campoId])(campoId, equipoAbierto)
@@ -183,39 +103,26 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   const fila = (d: Dispositivo) => <FilaDispositivo key={d.tag} d={d} senal={senalDe(nivelEq, d.tag)} nivel={nivel} gris={!!nivelEq?.parado} onCadena={setCadenaTag} />
 
   return (
-    <Flotante telefono={telefono} refModal={dialogo} refNoModal={noModal} idTitulo={idTitulo} ancho="w-[min(560px,80vw)]"
-      expandido={equipoExpandido} onCerrar={() => abrirEquipo(null)}>
-        <header className="flex flex-wrap items-start gap-2 bg-[var(--panel)] px-4 py-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <b className="font-cond text-[15px] font-bold tracking-[.02em]">{eq.id}</b>
-              {/* La marca del equipo es la de la franja, con su palabra (H3; X2 F1): la misma en todas partes. */}
-              <CondicionEquipo c={condicion} />
-            </div>
-            {/* Entero, sin cortar: la ficha del gerente ya no lo repite debajo. */}
-            <h2 id={idTitulo} className="block text-[16px] font-semibold leading-tight [text-wrap:balance]">{eq.nombre}</h2>
-            {/* La familia, la misma de todas las pantallas («bomba de agua»; P-09). */}
-            <small className="block text-[13px] text-[var(--tinta2)]">{nivelEq?.familia ?? eq.sistema.toLowerCase()} · {campo.nombre} · {eq.estado}</small>
-          </div>
-          <ExportarFicha />
-          <button onClick={() => abrirEquipo(eq.id, !equipoExpandido)}
-            aria-label={equipoExpandido ? 'Contraer' : 'Expandir'}
-            className="toque no-imprimir cursor-pointer rounded-full p-2 hover:bg-[var(--panel2)]">
-            {equipoExpandido ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-          </button>
-          <button onClick={() => abrirEquipo(null)} aria-label="Cerrar"
-            className="toque no-imprimir cursor-pointer rounded-full p-2 hover:bg-[var(--panel2)]">
-            <X className="size-4" />
-          </button>
-        </header>
-
+    // D1 · El detalle como modal (el dueño, 27-oct): centrado en el escritorio, hoja casi completa en el teléfono.
+    <Modal enSitio ancho="amplio" data-panel-equipo="" onCerrar={() => abrirEquipo(null)} alEscape={alEscape} contenido={`${equipoAbierto}|${cadenaTag ?? ''}`}
+      ampliado={equipoExpandido} onAmpliar={() => abrirEquipo(eq.id, !equipoExpandido)} sinRelleno={!!activo && nivel !== 'decision' && eq.clase !== 'pozo'}
+      antetitulo={<>
+        <b className="font-cond text-[15px] font-bold tracking-[.02em] text-[var(--tinta)]">{eq.id}</b>
+        {/* La marca del equipo es la de la franja, con su palabra (H3; X2 F1): la misma en todas partes. */}
+        <CondicionEquipo c={condicion} />
+      </>}
+      // Entero, sin cortar: la ficha del gerente ya no lo repite debajo.
+      titulo={eq.nombre}
+      // La familia, la misma de todas las pantallas («bomba de agua»; P-09).
+      subtitulo={`${nivelEq?.familia ?? eq.sistema.toLowerCase()} · ${campo.nombre} · ${eq.estado}`}
+      acciones={<span className={ACCION_EXPORTAR}><ExportarFicha /></span>}>
         {nivel === 'decision' ? (
-          <div className="flex-1 overflow-y-auto p-3">
+          <div>
             <FichaEjecutiva campoId={campoId} equipo={eq.id} />
-            <div className="mt-3 border-t border-[var(--linea2)] pt-2"><BloqueSap campoId={campoId} equipo={eq.id} nivel="decision" /></div>
+            <div className="mt-4 border-t border-[var(--linea2)] pt-3"><BloqueSap campoId={campoId} equipo={eq.id} nivel="decision" /></div>
           </div>
         ) : eq.clase === 'pozo' ? (
-          <div className="flex-1 overflow-y-auto p-3">
+          <div>
             <DetallePozo campoId={campoId} pozoId={eq.id} desde={rango.desde} hasta={rango.hasta}
               nombrePeriodo={rango.nombre} volverA="Cerrar" onVolver={() => abrirEquipo(null)} />
             {pedirPozosDelCampo(campoId).some(p => p.id === eq.id && p.levantamiento === 'electrosumergible') && <BloqueSap campoId={campoId} equipo={eq.id} nivel={nivel} />}
@@ -224,7 +131,7 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
           <CadenaDato campoId={campoId} disp={activo} equipoNombre={eq.nombre}
             norma={eq.norma} onVolver={() => setCadenaTag(null)} />
         ) : (
-          <div className="flex-1 overflow-y-auto p-3">
+          <div>
             {nivel === 'operacion' && pendiente && (
               // «No arrancar» es un bloqueo de procedimiento: franja en tinta con ⊘ (X5 §5.6), nunca un color.
               <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-[16px] bg-[var(--panel)] p-2.5 text-[15px] shadow-[inset_0_0_0_2px_var(--tinta)]" data-bloqueo>
@@ -303,9 +210,12 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
             </div>
           </div>
         )}
-    </Flotante>
+    </Modal>
   )
 }
+
+/** El botón de exportar de la ficha (`ExportarFicha`, de informe) con la forma de los de la cabecera del modal. */
+const ACCION_EXPORTAR = 'contents [&_button]:grid [&_button]:size-10 [&_button]:place-items-center [&_button]:rounded-full [&_button]:border-0 [&_button]:bg-transparent [&_button]:p-0 [&_button]:text-[var(--tinta2)] [&_button:hover]:bg-[var(--panel2)] [&_button:hover]:text-[var(--tinta)] [&_svg]:size-[18px]'
 
 
 /** Una fila por dispositivo (X5 §5.5: una fila de B, sin caja). El origen de la
@@ -473,25 +383,11 @@ function FichaMinima({ campoId, equipo }: { campoId: string; equipo: string }) {
   const nivel = useNivel()
   const crit = useCriticidad([campoId])
   const fila = crit.ranking.find(f => f.equipo === equipo && f.campoId === campoId)
-  const telefono = useTelefono()
-  const dialogo = useModal<HTMLDivElement>(() => abrirEquipo(null), equipo)
-  const noModal = useNoModal<HTMLDivElement>(() => abrirEquipo(null), !telefono, equipo)
-  const idTitulo = useId()
   return (
-    <Flotante telefono={telefono} refModal={dialogo} refNoModal={noModal} idTitulo={idTitulo} ancho="w-[min(560px,80vw)]"
-      onCerrar={() => abrirEquipo(null)} data-ficha-minima={equipo}>
-        <header className="flex items-start gap-2 bg-[var(--panel)] px-4 py-3">
-          <div className="min-w-0 flex-1">
-            <b className="font-cond text-[15px] font-bold tracking-[.02em]">{equipo}</b>
-            <h2 id={idTitulo} className="block text-[16px] font-semibold leading-tight">{fila?.nombre ?? equipo}</h2>
-            <small className="block text-[13px] text-[var(--tinta2)]">Tren de agua · {campo.nombre}</small>
-          </div>
-          <button onClick={() => abrirEquipo(null)} aria-label="Cerrar"
-            className="toque no-imprimir cursor-pointer rounded-full p-2 hover:bg-[var(--panel2)]">
-            <X className="size-4" />
-          </button>
-        </header>
-        <div className="flex-1 overflow-y-auto p-3 text-[14px]">
+    <Modal enSitio ancho="amplio" data-panel-equipo="" data-ficha-minima={equipo} onCerrar={() => abrirEquipo(null)} contenido={equipo}
+      antetitulo={<b className="font-cond text-[15px] font-bold tracking-[.02em] text-[var(--tinta)]">{equipo}</b>}
+      titulo={fila?.nombre ?? equipo} subtitulo={`Tren de agua · ${campo.nombre}`}>
+        <div className="text-[14px]">
           <Hueco>
             <span className="flex flex-wrap items-center gap-x-1">
               <b>Sin instrumento</b>: TRIM no ve si está en marcha; se supone que sí. No tiene historia propia de fallas.
@@ -500,6 +396,6 @@ function FichaMinima({ campoId, equipo }: { campoId: string; equipo: string }) {
           {nivel !== 'decision' && <SiFallaHoyFicha campoId={campoId} equipo={equipo} className="mt-2.5" />}
           <AguaHoy campoId={campoId} bomba={equipo} className="mt-2.5" />
         </div>
-    </Flotante>
+    </Modal>
   )
 }

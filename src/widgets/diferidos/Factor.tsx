@@ -31,6 +31,7 @@ export function Factor({ serie, campoId }: { serie: MesResumen[]; campoId: strin
           ancho={Math.max(240, ancho)} alto={120} escala={{ min: lo, max: hi, firmada: true }} banda={[1 - banda.valor, 1 + banda.valor]}
           estado={ultimoFuera ? 'anormal' : 'normal'} condicion={ultimoFuera ? 'aviso' : undefined}
           ejeX={serie.length ? [serie[0]!.corto.toUpperCase(), serie.at(-1)!.corto.toUpperCase()] : undefined}
+          etiquetas={serie.map(m => m.nombre)} rotulosX={serie.map(m => m.corto.toUpperCase())}
           series={[{ nombre: 'Factor', valores: filas.map(x => x.f?.fa ?? null) }]} />
       </div>
       <p className="mt-1.5 text-[14px] text-[var(--tinta2)]" data-factor-ultimo="">

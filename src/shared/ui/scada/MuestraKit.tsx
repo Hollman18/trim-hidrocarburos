@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Barra, Tendencia, Bomba, Tanque, Valvula, Separador, Pozo, Medidor, Area, Linea, Esquema, Marca, Cifra, TRAZO_FLUIDO, ESTADOS_KIT, type EstadoKit, type Fluido, type MarcaKitTipo } from './index'
+import { Barra, Tendencia, Columnas, LeyendaColumnas, ContraMeta, Bomba, Tanque, Valvula, Separador, Pozo, Medidor, Area, Linea, Esquema, Marca, Cifra, TRAZO_FLUIDO, ESTADOS_KIT, type EstadoKit, type Fluido, type MarcaKitTipo } from './index'
 
 /* La muestra del kit, solo para desarrollo (muestra.html): cada componente en sus 5 estados.
    Los valores son los de la lámina (kit-scada.md): lecturas del demo donde las hay, y «ejemplo
@@ -61,6 +61,27 @@ export function MuestraKit() {
         <div className="mt-5 flex flex-wrap items-center gap-6">
           <Tendencia titulo="Una placa" ventana="12 d" unidad="psi" compacta series={[{ nombre: 'PI-2010', valores: serie }]} escala={ESCALA} banda={[10, 30]} ancho={130} alto={30} />
           <Tendencia titulo="Dos trazas" ventana="12 d" unidad="psi" series={[{ nombre: 'medido', valores: serie }, { nombre: 'proyección', valores: serie.map(v => v + 3), proyectado: true }]} escala={ESCALA} ejeX={['21 sept', 'hoy']} ancho={300} />
+        </div>
+        {/* D2 · El modo detalle (el modal): a lo ancho, más marcas, el rango escrito, mínimo y máximo en la leyenda.
+            Pase el cursor, toque y arrastre, o llegue con Tab y use las flechas: la ficha con la fecha y cada valor. */}
+        <div className="mt-5" data-muestra-detalle="">
+          <Tendencia titulo="Cojinete y succión" ventana="12 d" unidad="°C" detalle alto={260}
+            series={[{ nombre: 'TI-2011', valores: hueco }, { nombre: 'Referencia', valores: sube.map(v => v - 6), trazo: 'punteado' }, { nombre: 'Proyección', valores: [], proyectado: true, puntos: [[11, 73], [14, 88]] }]}
+            escala={CIEN} banda={[0, 85]} alarmas={[85]} hasta={14} hoy={11} ejeX={['21 sept', '+3 d']} tiempo={{ desde: '2026-09-21T00:00:00-05:00', pasoH: 24 }} origen="TI-2011, ejemplo de estado" />
+        </div>
+      </Seccion>
+
+      <Seccion titulo="2b · Columnas, barra contra la meta (con su ficha)">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <Columnas periodos={[{ clave: '2026-07', rotulo: 'jul', segundo: '2026', valores: [2, 1, 0] }, { clave: '2026-08', rotulo: 'ago', valores: [1, 0, 1] }, { clave: '2026-09', rotulo: 'sept', valores: [0, 0, 0] }, { clave: '2026-10', rotulo: 'oct', valores: [3, 1, 1] }]}
+              partes={['Bombas', 'Motores', 'Válvulas']} aria-label="Fallas por mes, ejemplo de estado" unidad="fallas" minimo={320} />
+            <LeyendaColumnas partes={['bombas', 'motores', 'válvulas']} />
+          </div>
+          <div className="grid content-start gap-3">
+            <ContraMeta rotulo="producción" valor={10700} unidad="bbl/d" meta={10900} rotuloMeta="meta 10.900" fuera origen="el libro, ejemplo de estado" />
+            <ContraMeta rotulo="diferido" valor={600} unidad="bbl/d" meta={800} rotuloMeta="máximo 800" tipoMeta="máximo" />
+          </div>
         </div>
       </Seccion>
 

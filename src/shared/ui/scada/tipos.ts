@@ -100,3 +100,8 @@ export const TRAZO_FLUIDO: Record<Fluido, { ancho: number; dash?: string; nombre
 /** El nombre accesible de un equipo para su <Esquema>: «P-201B, bomba, parado · alarma». */
 export const nombreDeEquipo = (codigo: string, clase: string, estado: EstadoKit, o: { condicion?: CondicionKit; desde?: string } = {}) =>
   `${codigo}, ${clase}, ${fraseEstado(estado, o)}`
+
+/** Las 4 trazas de una gráfica, separadas POR TRAZO y no por color (kit-scada.md §2): continua,
+ *  discontinua 6-3, punteada 1,5-3 y guion y punto. */
+export type TrazoKit = 'continuo' | 'discontinuo' | 'punteado' | 'guion'
+export const DASH_TRAZO: Record<TrazoKit, string | undefined> = { continuo: undefined, discontinuo: '6 3', punteado: '1.5 3', guion: '10 3 2 3' }

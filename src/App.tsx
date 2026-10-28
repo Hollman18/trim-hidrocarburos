@@ -29,19 +29,28 @@ const ESCRITORIO = '(min-width: 1024px)'
 const suscribirAncho = (cb: () => void) => { const m = matchMedia(ESCRITORIO); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb) }
 const esEscritorio = () => matchMedia(ESCRITORIO).matches
 
-/** Plegado o desplegado, recordado por persona (X5 §4.1). Sin nada recordado,
- *  por debajo de 1280 px de ancho arranca plegado. Es una comodidad de quien la
- *  usa: vive en su navegador y, si no se puede leer, no pasa nada. */
-const claveRiel = (rolId: string) => `trim.riel.${rolId}`
-const leerPlegado = (rolId: string): boolean => {
+/** Plegado o desplegado, recordado por persona (X5 §4.1). R5 (el dueño: «100 % responsive»): por
+ *  debajo de 1280 px de ancho (la ventana mediana, o el zoom del navegador) el panel arranca y queda
+ *  plegado solo; desde 1280, desplegado. Lo que la persona escoge se recuerda **para ese ancho**
+ *  (una clave por ancho): quien lo despliega en una ventana mediana lo encuentra
+ *  desplegado ahí, y al agrandar o achicar la ventana el panel vuelve a lo que le toca a ese ancho
+ *  si ahí no ha escogido nada. Es una comodidad de quien la usa: vive en su navegador y, si no se
+ *  puede leer, no pasa nada. */
+const ANCHO_PANEL = '(min-width: 1280px)'
+type Banda = 'medio' | 'ancho'
+const bandaActual = (): Banda => typeof matchMedia === 'function' && !matchMedia(ANCHO_PANEL).matches ? 'medio' : 'ancho'
+const suscribirBanda = (cb: () => void) => { const m = matchMedia(ANCHO_PANEL); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb) }
+/** Una clave por ancho: `trim.riel.prod@medio`, `trim.riel.prod@ancho`. La de antes de R5 (sin «@») vale en el ancho. */
+const claveRiel = (rolId: string, banda: Banda) => `trim.riel.${rolId}@${banda}`
+const leerPlegado = (rolId: string, banda: Banda): boolean => {
   try {
-    const v = localStorage.getItem(claveRiel(rolId))
+    const v = localStorage.getItem(claveRiel(rolId, banda)) ?? (banda === 'ancho' ? localStorage.getItem(`trim.riel.${rolId}`) : null)
     if (v === 'plegado' || v === 'desplegado') return v === 'plegado'
   } catch { /* modo privado */ }
-  return typeof matchMedia === 'function' && !matchMedia('(min-width: 1280px)').matches
+  return banda === 'medio'
 }
-const recordarPlegado = (rolId: string, plegado: boolean) => {
-  try { localStorage.setItem(claveRiel(rolId), plegado ? 'plegado' : 'desplegado') } catch { /* modo privado */ }
+const recordarPlegado = (rolId: string, plegado: boolean, banda: Banda) => {
+  try { localStorage.setItem(claveRiel(rolId, banda), plegado ? 'plegado' : 'desplegado') } catch { /* modo privado */ }
 }
 
 /** Mientras llega lo que una parte pidió al servidor (con la fuente http) o
@@ -126,9 +135,10 @@ export default function App() {
   // El panel del teléfono se abre sobre una pantalla: al navegar se cierra solo (tapa el contenido).
   const [navEn, setNavEn] = useState<string | null>(null)
   const nav = navEn === pantalla
-  // Cada persona tiene su panel: al cambiar de rol se lee lo que esa persona dejó.
-  const [panel, setPanel] = useState(() => ({ rol: rolId, plegado: leerPlegado(rolId) }))
-  const plegado = panel.rol === rolId ? panel.plegado : leerPlegado(rolId)
+  // Cada persona tiene su panel: al cambiar de rol se lee lo que esa persona dejó; al cambiar de ancho, lo de ese ancho.
+  const banda = useSyncExternalStore(suscribirBanda, bandaActual)
+  const [panel, setPanel] = useState(() => ({ rol: rolId, banda, plegado: leerPlegado(rolId, banda) }))
+  const plegado = panel.rol === rolId && panel.banda === banda ? panel.plegado : leerPlegado(rolId, banda)
   const p = PANTALLAS[pantalla]
   // Si el alcance es portafolio y la pantalla es de un solo campo, se pide el
   // campo en vez de mostrar una suma que no significa nada.
@@ -146,8 +156,8 @@ export default function App() {
   }, [pantalla, rolId, ambito.global, ambito.titulo])
 
   const alternarPanel = useCallback(() => {
-    recordarPlegado(rolId, !plegado); setPanel({ rol: rolId, plegado: !plegado })
-  }, [rolId, plegado])
+    recordarPlegado(rolId, !plegado, banda); setPanel({ rol: rolId, banda, plegado: !plegado })
+  }, [rolId, plegado, banda])
   // «[» pliega y despliega el panel (X5 §4.1), salvo mientras se escribe.
   useEffect(() => {
     if (!escritorio) return

@@ -10,7 +10,7 @@
    - QA-08 · «Ver una por una» no pide `/opciones`: ahí no se contesta (C3; FF-2);
    - QA-09 · la cadena de una parada sin ningún paso se dice una vez (S3);
    - QA-10 · «Ya se ganó» dice desde cuándo suma (S3);
-   - QA-11 · la trazabilidad de un tramo no tapa la franja en el escritorio (X2 N5);
+   - QA-11 · la trazabilidad de un tramo (D1: ahora es el modal de detalle, con la franja fuera de él);
    - QA-12 · cerrar la orden en el teléfono baja el número del técnico (S2: el número mentía). */
 import { readFileSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
@@ -145,7 +145,9 @@ test('QA-10 · «¿Está funcionando?»: lo ganado dice desde cuándo suma (desd
   f.cerrar()
 })
 
-test('QA-11 · la trazabilidad de un tramo, en el escritorio, no tapa la franja ni oscurece lo de atrás (X2 N5)', async ({ flujo: f }) => {
+// D1 (el dueño, 27-oct): «que salga tipo modal». QA-11 pedía que la trazabilidad no tapara la franja ni oscureciera
+// lo de atrás; el dueño manda: es el modal de detalle, con su velo, y la franja queda fuera de él.
+test('QA-11 → D1 · la trazabilidad de un tramo, en el escritorio, es el modal de detalle: centrada, con velo y la franja fuera', async ({ flujo: f }) => {
   const { page } = f
   await page.setViewportSize({ width: 1440, height: 900 })
   await f.abrir('/#/prod/planta-viva/ceiba/curso')
@@ -156,12 +158,15 @@ test('QA-11 · la trazabilidad de un tramo, en el escritorio, no tapa la franja 
   const traza = page.locator('[data-traza="planta"]')
   await expect(traza).toBeVisible()
   await expect(traza).toContainText('LC-16')
-  const libre = await page.evaluate(() => [...document.querySelectorAll('[data-franja] button, [data-franja] [role=group] *')].filter(e => e.checkVisibility()).every(e => {
-    const r = e.getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2
-    const arriba = document.elementFromPoint(x, y); return !!arriba && !!arriba.closest('[data-franja]')
-  }))
-  f.ok(libre, 'cada cuenta de la franja sigue a la vista y se puede tocar')
-  f.ok(await page.locator('[data-traza] [data-velo], [data-velo]').filter({ visible: true }).count() === 0, 'sin velo: lo de atrás no se oscurece')
+  await expect(traza).toHaveAttribute('aria-modal', 'true')
+  await expect(traza.locator('[data-velo]'), 'con su velo').toBeVisible()
+  const m = await page.evaluate(() => {
+    const c = document.querySelector('[data-traza] [data-modal-caja]')!.getBoundingClientRect()
+    const fr = document.querySelector('[data-franja]')
+    return { izq: c.left, der: innerWidth - c.right, franja: !!fr && !document.querySelector('[data-traza]')!.contains(fr) && !!fr.closest('[inert]') }
+  })
+  f.ok(Math.abs(m.izq - m.der) <= 2, `centrada (${Math.round(m.izq)} | ${Math.round(m.der)})`)
+  f.ok(m.franja, 'la franja queda fuera del modal, detrás del velo')
   await page.keyboard.press('Escape')
   await expect(traza).toHaveCount(0)
   await expect(boton).toBeFocused()

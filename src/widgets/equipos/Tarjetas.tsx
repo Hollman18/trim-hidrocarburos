@@ -44,7 +44,8 @@ function Grafica({ s, desde, hasta, parado }: { s: TendenciaNivel3; desde: strin
     <div className="mt-2.5" data-tendencia={s.tag}>
       <Tendencia titulo={`${s.nombre} · ${s.unidad}`} ventana={`${s.serie.length} d`} series={[{ nombre: s.nombre, valores: s.serie }]}
         escala={{ min: s.escala[0], max: s.escala[1], firmada: false }} unidad={s.unidad} banda={s.banda ?? undefined} alarmas={s.alarmas}
-        estado={parado ? 'parado' : 'normal'} decimales={s.decimales} ejeX={[fechaCorta(new Date(desde)), `hoy, ${fechaCorta(new Date(hasta))}`]} ancho={240} alto={64} />
+        estado={parado ? 'parado' : 'normal'} decimales={s.decimales} ejeX={[fechaCorta(new Date(desde)), `hoy, ${fechaCorta(new Date(hasta))}`]} ancho={240} alto={64}
+        tiempo={{ desde, pasoH: s.serie.length > 1 ? (Date.parse(hasta) - Date.parse(desde)) / 3_600_000 / (s.serie.length - 1) : 24 }} origen={s.tag} />
     </div>
   )
 }

@@ -48,7 +48,7 @@ export function Proyeccion({ s, sinTitulo = false }: { s: Senal; sinTitulo?: boo
         {...(cruza ? { hoy, hasta: finT / paso, rango: [(ahora + p.rango[0]) / paso, Math.min(ahora + p.rango[1], finT) / paso] as const } : {})}
         {...(cruza ? { nota: `cruza el límite en ${dias(p.horas)} días` } : {})} {...(enHorizonte ? { rotuloRango: `en ${dias(p.horas)} d` } : {})}
         ejeX={[`hace ${dias(ahora)} d`, cruza ? `+${dias(finT - ahora)} d` : 'hoy']}
-        ancho={Math.max(240, ancho)} alto={112} />
+        ancho={Math.max(240, ancho)} alto={112} tiempo={{ desde: serie.desde, pasoH: serie.pasoH }} nombreLimite="el límite" />
     </div>
   )
 }

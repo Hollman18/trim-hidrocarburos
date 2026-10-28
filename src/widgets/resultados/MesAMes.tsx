@@ -25,6 +25,7 @@ export function MesAMes({ v, className }: { v: VistaResultados; className?: stri
         <Tendencia titulo="Diferido por día" ventana={`${meses.length} meses`} unidad="bbl/d" ancho={Math.max(240, ancho)} alto={132}
           escala={{ min: 0, max: tope, firmada }} alarmas={firmada ? [maximoBpd] : []}
           ejeX={meses.length ? [meses[0]!.rotulo, meses.at(-1)!.rotulo] : undefined}
+          etiquetas={meses.map(m => m.nombre)} rotulosX={meses.map(m => m.rotulo)} nombreLimite="el máximo firmado"
           series={[
             { nombre: 'Todo lo diferido', valores: meses.map(m => m.totalBpd) },
             { nombre: 'Lo de alto impacto', valores: meses.map(m => m.altoBpd), trazo: 'discontinuo' },

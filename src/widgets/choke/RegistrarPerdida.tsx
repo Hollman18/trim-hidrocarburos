@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
 import { useApp } from '@/app/store'
 import {
   registrarPerdida, TIPOS_PERDIDA, NOMBRE_TIPO_PERDIDA, EXPLICA_TIPO_PERDIDA, FUENTES_VOLUMEN, NOMBRE_FUENTE_VOLUMEN, MAXIMO_DONDE,
@@ -9,8 +8,7 @@ import { NOMBRE_TRAMO_BALANCE } from '@/shared/api/balance'
 import type { ChokeAnh } from '@/entities/choke'
 import { MOTIVO_MINIMO, TEXTO_MAXIMO, alcanza } from '@/entities/reglas'
 import { Boton } from '@/shared/ui/primitivas'
-import { useModal } from '@/shared/ui/foco'
-import { useTelefono } from '@/shared/ui/telefono'
+import { Modal } from '@/shared/ui/Modal'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 
@@ -31,9 +29,7 @@ const local = (d: Date) => new Date(d.getTime() - 5 * 3_600_000).toISOString().s
 export function RegistrarPerdida({ campoId, ahora, onCerrar, onHecho }: {
   campoId: string; ahora: Date; onCerrar: () => void; onHecho?: (p: RegistroPerdida) => void
 }) {
-  const telefono = useTelefono()
   const rolId = useApp(s => s.rolId)
-  const dialogo = useModal<HTMLDivElement>(onCerrar)
   const [tipo, setTipo] = useState<TipoPerdida | null>(null)
   const [tramo, setTramo] = useState<ChokeAnh | null>(null)
   const [donde, setDonde] = useState('')
@@ -62,22 +58,10 @@ export function RegistrarPerdida({ campoId, ahora, onCerrar, onHecho }: {
     setHecha(r.perdida); onHecho?.(r.perdida)
   }
 
+  // El mismo modal de los demás detalles (D1): centrado en el escritorio, hoja desde abajo en el teléfono.
   return (
-    <div className="no-imprimir fixed inset-0 z-[115] flex" data-registrar-perdida={campoId}>
-      <div aria-hidden data-velo onClick={onCerrar} className="flex-1 bg-[var(--velo)]" />
-      <div ref={dialogo} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Registrar una pérdida"
-        className={cn('flex flex-col overflow-y-auto bg-[var(--elevado)] shadow-[var(--sombra-flota)] outline-none',
-          telefono ? 'fixed inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[16px] px-4 pb-6 pt-3' : 'h-full w-[min(480px,100vw)] px-6 py-5')}>
-        <header className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-[18px] font-semibold text-[var(--tinta)]">Registrar una pérdida</h2>
-            <p className="text-[14px] text-[var(--tinta2)]">Lo que salió y no se vende. Va aparte del diferido.</p>
-          </div>
-          <button type="button" onClick={onCerrar} aria-label="Cerrar" className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-[8px] hover:bg-[var(--panel2)]">
-            <X aria-hidden className="size-5" />
-          </button>
-        </header>
-
+    <Modal titulo="Registrar una pérdida" subtitulo="Lo que salió y no se vende. Va aparte del diferido."
+      onCerrar={onCerrar} className="no-imprimir" data-registrar-perdida={campoId}>
         {hecha ? (
           <div className="mt-5" role="status" data-perdida-registrada={hecha.id}>
             <p className="text-[16px] font-semibold text-[var(--tinta)]">Registrada: {NOMBRE_TIPO_PERDIDA[hecha.tipo].toLowerCase()} en {NOMBRE_TRAMO_BALANCE[hecha.tramo].toLowerCase()} · {n0(hecha.volumen.bbl)} bbl</p>
@@ -136,8 +120,7 @@ export function RegistrarPerdida({ campoId, ahora, onCerrar, onHecho }: {
             </Boton>
           </form>
         )}
-      </div>
-    </div>
+    </Modal>
   )
 }
 

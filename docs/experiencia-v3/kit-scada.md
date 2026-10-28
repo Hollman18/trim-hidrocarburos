@@ -119,6 +119,39 @@ Si hay más, van como gráficas chicas iguales, una debajo de la otra, con el mi
 - colorear las series por categoría;
 - dibujar lo proyectado igual que lo medido (lo proyectado va discontinuo y con su palabra).
 
+## 2b. Los gráficos profesionales: ejes, leyenda y ficha (D2, 27-oct)
+
+**El dueño (27-oct):** «gráficos profesionales, tipo Grafana… cuando tú pases el cursor te muestre más detalle». Con la disciplina de ISA-101: gris lo normal; el color, solo en la marca de lo anormal, con su forma y su palabra.
+
+**Ejes y cuadrícula** (`Tendencia`, `Columnas`):
+- marcas redondas (1, 2 o 5 por una potencia de 10, `ejes.ts`) dentro de la escala de la señal: **la escala no cambia**, solo se escoge dónde van las marcas;
+- la cuadrícula, una raya de 1 px en `--linea2`, **solo donde hay rótulo** (una raya sin su cifra no se lee). Primero se rotulan los límites, después los extremos y al final las marcas; la que pisaría a otra no se escribe;
+- rótulos a 12 px, en la mono y tabulares; los límites, en `tinta2`;
+- **la unidad en el eje**, arriba a la izquierda del dibujo (desde 70 px de alto; en las de 64 px va en el título);
+- el eje x con sus marcas de 4 px y, entre el primero y el último, los rótulos que caben (`etiquetas` o `rotulosX`); con la proyección (`hoy`), solo los extremos;
+- en `Columnas`, la cuadrícula con su cifra a la izquierda y **nunca el 0** (el piso ya lo dice).
+
+**La leyenda** (`Tendencia`, con 2 series o más): un botón por serie con su muestra de trazo, su nombre, su último valor y, si lo es, «proyectado» o «simulado». Tocar una la deja sola; otra vez, vuelven todas; con Mayús (o Ctrl), la apaga. La apagada va tachada (no solo en otro tono). Apagar una serie **no mueve la escala**.
+
+**Lo que no se midió:** `SerieKit.proyectado` y `SerieKit.simulado` van discontinuos, sin el punto final y con su palabra en el título, la leyenda y la ficha. `SerieKit.esMeta` marca la meta: la ficha dice si lo medido quedó «bajo la meta por 200» o «sobre la meta por 1.281».
+
+**La ficha** (`Ficha.tsx`; los ganchos, en `cursor.ts`):
+- **al pasar el cursor**: la raya vertical de seguimiento (1 px, `tinta2`), el punto de cada serie (anillo de 3,5) y la ficha al lado, sin salirse de la pantalla;
+- **en el teléfono**: tocar abre la ficha **arriba de la gráfica** (el dedo no la tapa) y arrastrar de lado la mueve. El desplazamiento vertical sigue siendo de la página (`touch-action: pan-y`). Tocar fuera la cierra;
+- **con el teclado**: la gráfica es una parada de Tab. Las flechas recorren los puntos, Inicio y Fin van a los extremos, Re Pág y Av Pág saltan una décima, y Escape la cierra sin cerrar el modal. Lo que dice la ficha **se anuncia** en una región `aria-live`;
+- **qué dice**: el cuándo (`etiquetas`, o la fecha que sale de `tiempo: { desde, pasoH }`, con la hora si el paso es de horas). Si no hay ninguna de las dos, «lectura 3 de 12»: **nunca una fecha inventada**. Después, cada serie con su valor y su unidad, y su estado en palabras: «sobre la alarma (85)», «bajo el máximo firmado (800)», «en banda», «sin dato» (nunca 0), «---» y «sin comunicación desde las 14:07», «proyectado», «equipo parado» (solo en el tramo rayado). Al pie, la banda y los límites, «escala provisional» y de dónde sale (`origen`);
+- **cómo se ve**: `--elevado` con borde de 1 px en `--linea`, **sin sombra ni color**, letra de 12 px o más y cifras tabulares. Va en `<body>`, así que no la recorta la tarjeta ni el modal (z 210, sobre el modal de 120), y en el papel no sale;
+- **en `Barra` y `ContraMeta`**: al pasar el cursor, al tocarla o con Tab, la ficha con el valor y su estado, la banda, la alarma, el disparo y la escala (firmada o provisional). En la barra contra la meta: la meta o el máximo, cuánto falta o cuánto se pasa, y de dónde sale;
+- **dentro de una fila que ya es un botón o un enlace** (la de `PorCampo`, la de un tanque en Planta, la del dispositivo en la ficha del gerente), la pieza **no abre otra ficha ni es otra parada de Tab**: la fila responde por ella. Lo dice el DOM al montarse (`useAnidado`). La compacta responde al puntero, pero no es parada de Tab (su barra de al lado sí lo es).
+
+**El modo detalle** (`detalle`, para el modal de D1): 640 × 240 si no se dice el tamaño, a lo ancho de su caja (`ajustar`, medida con `ResizeObserver`), más marcas en los dos ejes, el rango escrito en el título («de 21 de sept a 2 de oct») y el mínimo y el máximo de cada serie en la leyenda. `Columnas` acepta `detalle` (más marcas). Uso: `<Tendencia … detalle />` y listo; con `alto` se cambia el alto.
+
+**Rendimiento:** pasar el cursor no toca el motor ni rehace el dibujo. El dibujo fijo se arma una vez por datos y tamaño (`useMemo`). El índice se calcula en un `requestAnimationFrame`, uno por cuadro aunque lleguen veinte eventos, y el estado solo cambia si cambia el punto. Medido: 300 movimientos sobre los 275 días de Producción, sin ninguna tarea larga.
+
+**Sus pruebas:**
+- `verificar-kit` (D2): las marcas redondas, el cuándo de cada punto, la cuadrícula solo con rótulo, la unidad, las paradas de Tab, la leyenda, el detalle, las columnas sin el 0 y la ficha sin sombra, en `<body>` y con `requestAnimationFrame`;
+- `e2e/kit-graficos.spec.ts`: el ratón, el teclado y el teléfono sobre el mes a mes, las fallas por mes y la barra de la planta viva. La ficha dice **la misma cifra que la pantalla**, no se sale de la ventana, su letra es de 12 px o más y abrirla no agrega hallazgos del detector.
+
 ## 3. Símbolos de proceso (`KIT.bomba`, `tanque`, `valvula`, `separador`, `pozo`, `medidor`, `area`)
 
 Son de ISA-5.1 simplificada, en 2D. **El relleno dice si el equipo corre, por brillo:**

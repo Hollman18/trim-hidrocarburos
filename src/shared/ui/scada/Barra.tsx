@@ -1,6 +1,9 @@
 import { cn } from '@/shared/lib/cn'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
-import { COLOR_CONDICION, cifra, fraseEstado, valorEscrito, type Banda, type CondicionKit, type Escala, type EstadoKit } from './tipos'
+import { COLOR_CONDICION, PALABRA_CONDICION, cifra, fraseEstado, valorEscrito, type Banda, type CondicionKit, type Escala, type EstadoKit } from './tipos'
+import { textoBanda } from './ejes'
+import { FichaFlotante, type ContenidoFicha, type FilaFicha } from './Ficha'
+import { CLASE_FOCO, useFichaPieza } from './cursor'
 
 /* 1 · El indicador analógico de barra (kit-scada.md §1; X2 §5.1). De izquierda a derecha:
    la escala fija del instrumento (una pista de 8 px en --pista, sin rotular sus extremos), la
@@ -11,12 +14,15 @@ import { COLOR_CONDICION, cifra, fraseEstado, valorEscrito, type Banda, type Con
    a 18 px tabular con su unidad a 12 px y la marca a su izquierda si es anormal.
    Lo que nunca hace: pintar la barra o el número del color del estado; mover la escala con la
    lectura; inventar un rango (sin firma dice «escala provisional»; sin escala ni límites, no se
-   dibuja); poner una marca en las variables de un equipo parado. */
+   dibuja); poner una marca en las variables de un equipo parado.
+   D2 · Al pasar el cursor, tocarla o llegar con Tab: la ficha con el valor, la banda, los límites, la
+   escala (firmada o provisional), el estado en palabras y de dónde sale. Dentro de una fila que ya es
+   un botón, no (la fila responde por ella). */
 
 const ALTO = 28
 const PISTA_Y = 10, PISTA_H = 8
 
-export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disparos = [], estado = 'normal', condicion, cruzo, desde, decimales = 0, ancho = 200, tag, conValor = true, className }: {
+export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disparos = [], estado = 'normal', condicion, cruzo, desde, decimales = 0, ancho = 200, tag, conValor = true, origen, interactiva = true, className }: {
   /** El nombre de la señal: «Presión de succión». */
   nombre: string
   valor: number | null
@@ -41,8 +47,13 @@ export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disp
   /** false: el valor (con su marca) ya lo escribe la fila, a la derecha del nombre (la señal del
    *  nivel 4, `SenalFija`): la barra no lo repite. El nombre accesible lo lleva igual. */
   conValor?: boolean
+  /** D2 · De dónde sale el dato, para la ficha: «PT-1011, del PLC», «el libro de diferidos». */
+  origen?: string
+  /** D2 · false: sin ficha (y sin parada de Tab). */
+  interactiva?: boolean
   className?: string
 }) {
+  const { ref, ancla, props: eventos } = useFichaPieza<HTMLDivElement>(interactiva)
   const gris = estado === 'parado'
   const sinValor = estado === 'sin-dato' || estado === 'sin-comunicacion' || valor === null
   const marca = estado === 'anormal' && condicion ? condicion : null
@@ -59,9 +70,39 @@ export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disp
   if (escala && !escala.firmada) partes.push('escala provisional')
   const etiqueta = partes.join('; ')
 
+  // La ficha: lo mismo que el nombre accesible, en filas, y de dónde sale.
+  const fichaDe = (): ContenidoFicha => {
+    const u = unidad || undefined
+    const tope = banda?.[1] ?? null, piso = banda?.[0] ?? null
+    let estadoValor: string | undefined, fuerte = !!marca
+    if (estado === 'sin-dato' || estado === 'sin-comunicacion' || valor === null) estadoValor = fraseEstado(estado === 'sin-comunicacion' ? estado : 'sin-dato', { desde })
+    else if (gris) estadoValor = 'equipo parado'
+    else {
+      const medio = escala ? (escala.min + escala.max) / 2 : 0
+      const cruzada = alarmas.find(a => { const alta = tope !== null ? a >= tope : piso !== null ? a > piso : a >= medio; return alta ? valor > a : valor < a })
+      estadoValor = cruzada !== undefined ? `${valor > cruzada ? 'sobre' : 'bajo'} la alarma (${cifra(cruzada, decimales)})`
+        : tope !== null && valor > tope ? `sobre la banda normal (${cifra(tope, decimales)})`
+        : piso !== null && valor < piso ? `bajo la banda normal (${cifra(piso, decimales)})`
+        : banda ? 'en banda' : undefined
+      if (cruzada !== undefined) fuerte = true
+      if (marca) estadoValor = `${PALABRA_CONDICION[marca]}${estadoValor ? ` · ${estadoValor}` : ''}`
+    }
+    const filas: Array<FilaFicha | false> = [
+      { clave: 'valor', nombre: 'Valor', valor: valorEscrito(estado, valor, decimales), unidad: sinValor ? undefined : u, nota: estadoValor, fuerte },
+      !!banda && { clave: 'banda', nombre: 'Normal', valor: textoBanda(banda, decimales).replace(/^normal ?/, '') || '—', unidad: u },
+      alarmas.length > 0 && { clave: 'alarma', nombre: 'Alarma', valor: alarmas.map(a => cifra(a, decimales)).join(' y '), unidad: u },
+      disparos.length > 0 && { clave: 'disparo', nombre: 'Disparo', valor: disparos.map(a => cifra(a, decimales)).join(' y '), unidad: u },
+      !!escala && { clave: 'escala', nombre: 'Escala', valor: `${cifra(escala.min, decimales)} a ${cifra(escala.max, decimales)}`, unidad: u, nota: escala.firmada ? 'firmada' : 'provisional' },
+    ]
+    return {
+      titulo: nombre, sub: tag, filas: filas.filter((f): f is FilaFicha => !!f),
+      pie: [fuera ? `Fuera de la escala, por ${fuera === 'arriba' ? 'encima' : 'debajo'}` : '', !escala ? 'Sin escala firmada: no se dibuja' : '', origen ? `De dónde sale: ${origen}` : ''].filter(Boolean),
+    }
+  }
+
   return (
-    <div role="img" aria-label={etiqueta} data-kit="barra" data-estado={estado}
-      className={cn('inline-grid max-w-full items-center gap-x-3 gap-y-0.5', conValor ? 'grid-cols-[auto_auto]' : 'grid-cols-[auto]', className)}>
+    <div ref={ref} role="img" aria-label={etiqueta} data-kit="barra" data-estado={estado} {...eventos}
+      className={cn('inline-grid max-w-full items-center gap-x-3 gap-y-0.5 rounded-[4px]', CLASE_FOCO, conValor ? 'grid-cols-[auto_auto]' : 'grid-cols-[auto]', className)}>
       {escala ? <Dibujo {...{ ancho, escala, banda, alarmas, disparos, valor, estado, marca, cruzo, fuera, gris, sinValor }} />
         : <span className="text-[12px] text-[var(--tinta3)]" style={{ width: ancho }}>sin escala firmada</span>}
       {conValor && <span className="flex items-baseline gap-1 whitespace-nowrap" aria-hidden>
@@ -80,6 +121,7 @@ export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disp
           {escala && !escala.firmada && <span data-provisional>escala provisional</span>}
         </span>
       )}
+      {ancla && <FichaFlotante contenido={fichaDe()} ancla={ancla} />}
     </div>
   )
 }

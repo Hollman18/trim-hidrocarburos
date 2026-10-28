@@ -214,6 +214,20 @@ body{
   .toque{ position:relative }
   .toque::after{ content:""; position:absolute; left:50%; top:50%; width:max(100%, 44px); height:max(100%, 44px); transform:translate(-50%, -50%) }
 }
+/* R5 (el dueño, captura a 90 % de zoom: «sin comunicación · medidor of…» cortada) · LA FRANJA SE
+   ACOMODA AL ANCHO DE SU CABECERA, no al de la ventana: el panel lateral desplegado o plegado cambia
+   lo que queda. Desde lg la franja comparte el renglón con las migas y el título:
+   - 1180 px o más: entera, con «· medidor oficial»;
+   - de 1060 a 1179: sin «· medidor oficial» (va en la ayuda de la píldora);
+   - menos de 1060: forma y número; la palabra, en su `aria-label` y su `title`.
+   Debajo de lg la franja va en su propio renglón, con sus palabras (y en el teléfono, las cortas).
+   La contención vuelve la cabecera un contexto de apilamiento: va sobre lo que sigue (z 5) para
+   que sus listas (la franja, el período, Exportar) no queden debajo de las tarjetas. */
+:is([data-cabecera], [data-cabecera-equipo]){ container:cabecera / inline-size; position:relative; z-index:5 }
+@media (min-width: 1024px){
+  @container cabecera (max-width: 1179.98px){ [data-franja] [data-alcance]{ display:none } }
+  @container cabecera (max-width: 1059.98px){ [data-franja] [data-palabra]{ display:none } }
+}
 /* «Saltar al contenido» (A13): fuera de la vista hasta que recibe el foco. */
 .saltar{ position:fixed; left:12px; top:-60px; z-index:300; transition:top 120ms var(--curva) }
 .saltar:focus-visible{ top:12px }
@@ -317,8 +331,11 @@ body{
   .raiz-app > main, .raiz-app .vista { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
   .raiz-app:has([data-panel-equipo]) > main { display: none !important; }
   [data-panel-equipo] { position: static !important; display: block !important; }
-  [data-panel-equipo] aside { position: static !important; width: 100% !important; height: auto !important; border: 0 !important; }
-  [data-panel-equipo] aside, [data-panel-equipo] aside * { overflow: visible !important; max-height: none !important; }
+  /* D1: la ficha es el modal de detalle (`shared/ui/Modal`): en el papel, su caja a todo el ancho, sin sombra ni alto máximo. */
+  [data-panel-equipo] [data-modal-caja] { position: static !important; width: 100% !important; height: auto !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+  [data-panel-equipo] [data-modal-caja], [data-panel-equipo] [data-modal-caja] * { overflow: visible !important; max-height: none !important; }
+  [data-panel-equipo] [data-modal-cabecera] { padding-left: 0 !important; padding-right: 0 !important; }
+  [data-panel-equipo] [data-modal-cuerpo] { padding-left: 0 !important; padding-right: 0 !important; }
   /* Un panel largo se parte entre filas: entero saltaba a la hoja siguiente y dejaba
      la primera casi en blanco (Planta, Conectores). No se parten el dibujo, una
      tarjeta chica, una fila ni el título de un panel con lo que sigue. */

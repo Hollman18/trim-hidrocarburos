@@ -134,10 +134,12 @@ export function Confiabilidad() {
         {reloj ? <TresRelojes reloj={reloj} /> : <p className="text-[14px] text-[var(--tinta2)]">Sin fallas cerradas con orden en SAP.</p>}
       </Panel>
 
-      <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+      {/* R5 · Dos tarjetas por fila solo si cada una tiene 440 px: con 340, a 1024 px «Los más costosos»
+          apretaba su tabla («3.22622.582», «47,1 / h» partido). */}
+      <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr))]">
         <Panel titulo="Los más costosos" extra="bbl · toda la historia">
           <div className="overflow-x-auto">
-            <table className="tabular w-full text-left text-[14px]">
+            <table className="tabular w-full text-left text-[14px] [&_td]:whitespace-nowrap [&_td+td]:pl-3 [&_th+th]:pl-3">
               <thead className="text-[12px] text-[var(--tinta3)]">
                 <tr><th className="py-1 font-normal">Equipo</th><th className="text-right font-normal">Fallas</th><th className="hidden text-right font-normal sm:table-cell">Entre fallas</th>
                   <th className="hidden text-right font-normal sm:table-cell">Fuera</th><th className="pl-3 font-normal">Parte</th>
@@ -194,13 +196,15 @@ export function Confiabilidad() {
         </Panel>
       </div>
 
-      <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))]">
+      {/* R5 · Dos tarjetas por fila solo si cada una tiene 440 px: con 340, a 1024 px «Los más costosos»
+          apretaba su tabla («3.22622.582», «47,1 / h» partido). */}
+      <div className="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr))]">
         <Panel titulo="Fallas por mes" extra="fallas · sin disparos">
           <div {...desplazable('Fallas por mes')} className="overflow-x-auto">
             {/* H22: la cifra de cada mes sobre su barra, los meses con su año y la frase con las cifras en el nombre
                 accesible. H21: 1 px de --panel entre los segmentos apilados. Las columnas del kit SCADA (K3). */}
             <Columnas periodos={periodos} partes={familias.map(f => FAMILIA[f])} aria-label={ariaFallas} data-fallas-por-mes=""
-              titulo={(p, parte, v) => `${nombreMes(p.clave)} · ${parte}: ${v}`} />
+              titulo={(p, parte, v) => `${nombreMes(p.clave)} · ${parte}: ${v}`} nombrePeriodo={p => nombreMes(p.clave)} unidad="fallas" />
           </div>
           <LeyendaColumnas partes={familias.map(f => FAMILIA[f].toLowerCase())} />
         </Panel>

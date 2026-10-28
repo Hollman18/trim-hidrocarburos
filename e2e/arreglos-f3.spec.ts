@@ -2,7 +2,7 @@
 // próximo instrumento y lo que no conviene intervenir arriba de Equipos (P-10), un pozo cerrado por otro no
 // suma aparte (G-1b), «Avisan» = «Equipos que avisan» (G-15), «Sus instrumentos» del nivel 4 sin salirse a
 // 390 y 320 px y sin marcas con la bomba parada (UI-03, A7, UI-07, H4), la franja en el mismo lugar en los
-// niveles 1, 2 y 3 (H6), la ficha del gerente no modal en el escritorio (H7), la escala provisional (H5, I1),
+// niveles 1, 2 y 3 (H6), la ficha del gerente como modal (H7, cambiado por D1), la escala provisional (H5, I1),
 // el gerente con «sí» o «no» y las filas de B (P-equipos-ger, UI-14), y el nivel 3 en el teléfono (UI-13,
 // UI-08, A5). Se prueba lo que ve la persona; cada caso falla con la pantalla de antes.
 import { expect, type Page } from '@playwright/test'
@@ -105,23 +105,33 @@ test('H6 · La franja en el mismo lugar en los niveles 1, 2 y 3 (1440 y 1280)', 
   f.cerrar()
 })
 
-test('H7 · La ficha del gerente en el escritorio no tapa la franja ni bloquea la pantalla; en el teléfono, hoja con velo', async ({ flujo: f }) => {
+// D1 (el dueño, 27-oct): «que salga tipo modal». H7 pedía un panel no modal que no tapara la franja; el dueño
+// manda: la ficha es el modal de detalle, centrado, con velo, y la franja queda fuera de él (detrás del velo).
+test('H7 → D1 · La ficha del gerente es un modal centrado (la franja fuera de él); en el teléfono, hoja casi completa desde abajo', async ({ flujo: f }) => {
   const { page } = f
   await page.setViewportSize({ width: 1280, height: 860 })
   // A-16: el gerente ya no tiene Equipos; la ficha se abre encima de lo suyo (la dirección del equipo).
   await f.abrir('/#/ger/resultados/ceiba/curso/P-201B')
   const ficha = page.locator('[data-panel-equipo]')
   await expect(ficha).toBeVisible()
-  f.ok(await ficha.getAttribute('aria-modal') === null && await page.locator('[data-velo]').count() === 0, 'sin velo y no modal')
-  f.ok(await page.locator('main').evaluate(e => !e.closest('[inert]')), 'la pantalla de atrás se sigue usando')
-  const [arriba, cab] = await Promise.all([ficha.evaluate(e => e.getBoundingClientRect().top), page.locator('[data-cabecera]').evaluate(e => e.getBoundingClientRect().bottom)])
-  f.ok(arriba >= cab - 1, `empieza debajo de la cabecera (${Math.round(arriba)} ≥ ${Math.round(cab)}): la franja queda a la vista`)
+  await expect(ficha).toHaveAttribute('aria-modal', 'true')
+  await expect(ficha.locator('[data-velo]')).toBeVisible()
+  const m = await page.evaluate(() => {
+    const c = document.querySelector('[data-panel-equipo] [data-modal-caja]')!.getBoundingClientRect()
+    return { izq: c.left, der: innerWidth - c.right, ancho: c.width, franjaFuera: !document.querySelector('[data-panel-equipo] [data-franja]') && !!document.querySelector('[data-franja]')?.closest('[inert]') }
+  })
+  f.ok(Math.abs(m.izq - m.der) <= 2 && m.ancho >= 720 && m.ancho <= 880, `centrado y de 720 a 880 px (${Math.round(m.izq)} | ${Math.round(m.ancho)} | ${Math.round(m.der)})`)
+  f.ok(m.franjaFuera, 'la franja queda fuera del modal, detrás del velo')
+  await expect.poll(() => page.locator('main').evaluate(e => !!e.closest('[inert]')), { message: 'lo de atrás queda inerte' }).toBe(true)
   await ficha.focus().catch(() => undefined)
   await page.keyboard.press('Escape')
   await expect(ficha, 'Escape la cierra').toHaveCount(0)
   await page.setViewportSize({ width: 390, height: 844 })
   await f.abrir('/#/ger/resultados/ceiba/curso/P-201B')
   await expect(ficha).toHaveAttribute('aria-modal', 'true')
+  await expect(ficha).toHaveAttribute('data-modal', 'hoja')
+  const h = await ficha.locator('[data-modal-caja]').evaluate(e => { const r = e.getBoundingClientRect(); return { abajo: innerHeight - r.bottom, alto: r.height, ancho: r.width } })
+  f.ok(h.abajo <= 1 && h.ancho >= 389 && h.alto >= 844 * 0.6, `la hoja sube desde abajo, a todo el ancho y casi completa (${Math.round(h.alto)} de 844)`)
   await expect.poll(() => page.locator('main').evaluate(e => !!e.closest('[inert]')), { message: 'en el teléfono, lo de atrás queda inerte' }).toBe(true)
   await ficha.getByRole('button', { name: 'Cerrar', exact: true }).first().click()
   await expect(ficha, '«Cerrar» la cierra').toHaveCount(0)

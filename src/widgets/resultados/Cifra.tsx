@@ -60,8 +60,8 @@ export function ProduccionContraMeta({ v }: { v: VistaResultados }) {
     <div data-produccion-meta="" className="grid gap-x-8 gap-y-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
       <div className="grid content-start gap-3">
         <h3 className="flex flex-wrap items-center gap-x-1.5 text-[15px] font-semibold text-[var(--tinta)]">Promedio por día<Info titulo={p.totales.titulo} texto={p.totales.texto} /></h3>
-        <ContraMeta rotulo="producción" valor={p.realBpd} unidad="bbl/d" meta={p.metaBpd} rotuloMeta={p.metaBpd !== null ? `meta ${n0(p.metaBpd)}` : sin} fuera={p.bajoMeta} sobre />
-        <ContraMeta rotulo="diferido" valor={p.diferidoBpd} unidad="bbl/d" meta={p.maximoBpd} rotuloMeta={p.maximoBpd !== null ? `máximo ${n0(p.maximoBpd)}` : sin} fuera={p.sobreMaximo} />
+        <ContraMeta rotulo="producción" valor={p.realBpd} unidad="bbl/d" meta={p.metaBpd} rotuloMeta={p.metaBpd !== null ? `meta ${n0(p.metaBpd)}` : sin} fuera={p.bajoMeta} sobre origen={p.totales.texto} />
+        <ContraMeta rotulo="diferido" valor={p.diferidoBpd} unidad="bbl/d" meta={p.maximoBpd} rotuloMeta={p.maximoBpd !== null ? `máximo ${n0(p.maximoBpd)}` : sin} fuera={p.sobreMaximo} origen={p.totales.texto} />
       </div>
       <div className="grid content-start gap-3" data-cierre={c.proyectado ? 'proyectado' : 'total'}>
         <h3 className="flex flex-wrap items-center gap-x-1.5 text-[15px] font-semibold text-[var(--tinta)]">
@@ -81,15 +81,15 @@ export function ProduccionContraMeta({ v }: { v: VistaResultados }) {
 
 /** Una cifra contra su meta con la barra del kit: la escala sale de la meta firmada (1,25 veces),
  *  nunca de la lectura; sin meta no hay barra y se dice. `sobre`: lo normal es estar sobre la meta. */
-function ContraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, sobre = false }: {
-  rotulo: string; valor: number; unidad: string; meta: number | null; rotuloMeta: string; fuera: boolean; sobre?: boolean
+function ContraMeta({ rotulo, valor, unidad, meta, rotuloMeta, fuera, sobre = false, origen }: {
+  rotulo: string; valor: number; unidad: string; meta: number | null; rotuloMeta: string; fuera: boolean; sobre?: boolean; origen?: string
 }) {
   return (
     <div className="min-w-0" data-barra-meta={rotulo}>
       <p className="flex flex-wrap items-baseline justify-between gap-x-2 text-[14px] text-[var(--tinta2)]">
         <span>{rotulo}</span><span className="tabular-nums">{rotuloMeta}</span>
       </p>
-      <Barra nombre={`${rotulo[0]!.toUpperCase()}${rotulo.slice(1)} por día, ${rotuloMeta}`} valor={valor} unidad={unidad} ancho={220} className="mt-1"
+      <Barra nombre={`${rotulo[0]!.toUpperCase()}${rotulo.slice(1)} por día, ${rotuloMeta}`} valor={valor} unidad={unidad} ancho={220} className="mt-1" origen={origen}
         escala={meta !== null && meta > 0 ? { min: 0, max: meta * 1.25, firmada: true } : undefined}
         banda={meta !== null && meta > 0 ? (sobre ? [meta, null] : [null, meta]) : undefined}
         estado={fuera ? 'anormal' : 'normal'} condicion={fuera ? 'aviso' : undefined} />

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { Fragment, useId, useState } from 'react'
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp, useCampo, usePeriodo, useAmbito, useRango, useRol, useCampos, portafolioPermitido } from '@/app/store'
 import { PERIODOS } from '@/entities/campos'
@@ -183,14 +183,19 @@ export function Cabecera() {
             {varios && (ambito.global
               ? <b className="font-semibold text-[var(--tinta)]">Todos mis campos</b>
               : <button onClick={() => setAlcance('portafolio')} className="cursor-pointer hover:text-[var(--tinta)] hover:underline">Todos mis campos</button>)}
-            {!ambito.global && (<>
-              {varios && <ChevronRight aria-hidden className="size-3.5" />}
-              <b className={cn('font-semibold', conPuerta ? 'font-medium text-[var(--tinta2)]' : 'text-[var(--tinta)]')}>{campo.nombre}</b>
-            </>)}
-            {conPuerta && (<>
-              <ChevronRight aria-hidden className="size-3.5" />
-              <b className="font-semibold text-[var(--tinta)]">{conPuerta}</b>
-            </>)}
+            {/* R5 · Si las migas no caben en un renglón, cada paso baja entero, con su «›». */}
+            {!ambito.global && (
+              <span className="inline-flex items-center gap-x-1.5 whitespace-nowrap">
+                {varios && <ChevronRight aria-hidden className="size-3.5" />}
+                <b className={cn('font-semibold', conPuerta ? 'font-medium text-[var(--tinta2)]' : 'text-[var(--tinta)]')}>{campo.nombre}</b>
+              </span>
+            )}
+            {conPuerta && (
+              <span className="inline-flex items-center gap-x-1.5 whitespace-nowrap">
+                <ChevronRight aria-hidden className="size-3.5" />
+                <b className="font-semibold text-[var(--tinta)]">{conPuerta}</b>
+              </span>
+            )}
             {/* Solo en el demo (X4 §3.5): en la línea de las migas, sin agrandarla. */}
             <span className="ml-2"><MarcaDemo /></span>
           </nav>
@@ -204,7 +209,10 @@ export function Cabecera() {
           : (
             <h1 tabIndex={-1} data-titulo-vista className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[26px] font-bold leading-[1.15] tracking-[-.01em] outline-none max-sm:text-[21px]">
               {tituloDe(pantalla, rol.id) ?? '—'}
-              <small className="text-[15px] font-normal tracking-normal text-[var(--tinta2)] max-sm:text-[13px]">{hora}</small>
+              {/* R5 · La fecha y la hora se parten por su «·», nunca a media frase («datos de las / 14:00»). */}
+              <small className="text-[15px] font-normal tracking-normal text-[var(--tinta2)] max-sm:text-[13px]">
+                {hora.split(' · ').map((t, i) => <Fragment key={t}>{i > 0 && ' · '}<span className="whitespace-nowrap">{t}</span></Fragment>)}
+              </small>
             </h1>
           )}
       </div>

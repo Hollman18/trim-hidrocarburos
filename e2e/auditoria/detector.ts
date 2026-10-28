@@ -353,7 +353,13 @@ export function detectar(): Hallazgo[] {
     // «la misma píldora, chica, con la marca») lleva la palabra en su nombre y en su ayuda.
     const compacto = m.closest('[data-compacto]')
     const nombraCondicion = !!compacto && /alarma|atenci[oó]n|aviso|interlock|sin comunicaci[oó]n/i.test(`${compacto.getAttribute('aria-label') ?? ''} ${compacto.getAttribute('title') ?? ''}`)
-    if (!enDibujo && !ceroDeLaFranja && !nombraCondicion && !palabraAlLado(m)) out.push(['color', `marca sin palabra al lado: ${(m.getAttribute('aria-label') ?? '').slice(0, 30)} en ${desc(m.parentElement ?? m)}`, 1])
+    // R5 (el dueño, 27-oct: «las píldoras sin la palabra larga, solo forma y número, con el nombre en su
+    // aria-label y title»): en una cabecera mediana la franja queda en forma y número (index.css). Vale solo
+    // si la píldora nombra su condición en los DOS: el lector la oye y el cursor la muestra.
+    const pildora = m.closest('[data-franja]') ? m.closest('button') : null
+    const nombra = (t: string | null) => /alarma|atenci[oó]n|aviso|interlock|sin comunicaci[oó]n/i.test(t ?? '')
+    const franjaCompacta = !!pildora && nombra(pildora.getAttribute('aria-label')) && nombra(pildora.getAttribute('title'))
+    if (!enDibujo && !ceroDeLaFranja && !nombraCondicion && !franjaCompacta && !palabraAlLado(m)) out.push(['color', `marca sin palabra al lado: ${(m.getAttribute('aria-label') ?? '').slice(0, 30)} en ${desc(m.parentElement ?? m)}`, 1])
   }
 
   // F4 · «pestañas»: ninguna barra horizontal (el dueño; X5 §4). Ni `role=tablist` acostado,

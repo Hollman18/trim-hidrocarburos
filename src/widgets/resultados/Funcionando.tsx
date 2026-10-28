@@ -31,13 +31,15 @@ export function FuncionandoDe({ v, className }: { v: VistaEfectividad; className
   const tramos = v.porTramo.filter(t => (t.antesDia?.entero ?? 0) > 0 || t.ahoraDia.entero > 0)
   return (
     <section aria-label="¿Está funcionando?" data-funcionando="" data-ganado={v.ganado.bbl?.entero ?? ''} data-meta={meta ? meta.noPlaneadoDia.entero : 'sin-meta'}
-      className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] p-4 sm:px-6 sm:py-5', className)}>
+      className={cn('@container min-w-0 rounded-[10px] bg-[var(--panel)] p-4 sm:px-6 sm:py-5', className)}>
       <header className="flex flex-wrap items-center gap-x-1.5">
         <h2 className="text-[16px] font-semibold text-[var(--tinta)]">¿Está funcionando?</h2>
         <span className="text-[14px] text-[var(--tinta2)]">· lo no planeado, por día</span>
         <Info titulo="¿Está funcionando?" texto={[v.frase, ...v.notas, v.base?.fuente].filter(Boolean).join(' ')} />
       </header>
-      <div className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 min-[420px]:grid-cols-3">
+      {/* R5 · Las tres cifras en fila cuando la tarjeta tiene con qué (no la ventana): a 900 px, en una
+          columna de 350, cada nota se partía en cinco renglones. */}
+      <div className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 @min-[28rem]:grid-cols-3">
         <Dato rotulo="Antes de TRIM" valor={v.antes.noPlaneadoDia?.entero ?? null} unidad="bbl/d"
           nota={v.base ? `${v.base.nombre}${v.antes.fallasMes !== null ? ` · ${plural(v.antes.fallasMes, 'falla', 'fallas')} al mes` : ''}` : 'sin base: faltan tres meses'} />
         <Dato rotulo="Este mes" valor={v.esteMes.noPlaneadoDia.entero} unidad="bbl/d" aviso={fuera}

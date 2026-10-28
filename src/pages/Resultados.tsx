@@ -63,7 +63,8 @@ export function Resultados() {
   const secciones = v.secciones.filter(s => s !== 'produccion' && !FUERA.includes(s))
   const izquierda = secciones.filter(s => !AL_LADO.includes(s)), derecha = secciones.filter(s => AL_LADO.includes(s))
   const detalle = rol.id === 'reg' ? ir('regulatorio') : undefined
-  const funciona = v.secciones.includes('bajando') ? <Funcionando campos={campos} /> : null
+  // R5 · De md a 1279 px lo de la derecha va en dos columnas: «¿Está funcionando?» las toma las dos (sola, en una, quedaba apretada).
+  const funciona = v.secciones.includes('bajando') ? <Funcionando campos={campos} className="md:col-span-2" /> : null
 
   const cabeza = (
     <section aria-label={v.cifra.fraseCorta} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)]', telefono ? 'px-4 pb-4 pt-4' : 'px-5 pb-5 pt-6 sm:px-7')}>

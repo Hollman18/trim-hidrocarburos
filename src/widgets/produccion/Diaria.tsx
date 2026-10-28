@@ -25,10 +25,11 @@ export function Diaria({ dias }: { dias: Dia[] }) {
       <Tendencia titulo="Producción por día" ventana={`${dias.length} ${dias.length === 1 ? 'día' : 'días'}`} unidad="bbl/d"
         ancho={Math.max(240, ancho)} alto={150} escala={{ min: 0, max: tope, firmada }}
         ejeX={dias.length ? [fechaCorta(dias[0]!.dia), `${fechaCorta(ultimo!.dia)}${parcial ? ' · en curso' : ''}`] : undefined}
+        etiquetas={dias.map((d, i) => `${fechaCorta(d.dia)}${i === dias.length - 1 && parcial ? ' · en curso' : ''}`)}
         series={[
           { nombre: 'Real medido', valores: real },
           { nombre: 'Potencial del libro', valores: pot, trazo: 'continuo' },
-          { nombre: 'Meta firmada', valores: meta, trazo: 'discontinuo' },
+          { nombre: 'Meta firmada', valores: meta, trazo: 'discontinuo', esMeta: true },
         ]} />
       <p className="mt-1.5 text-[14px] text-[var(--tinta2)]">
         Oscura: real medido · clara: potencial del libro · discontinua: meta firmada

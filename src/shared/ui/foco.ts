@@ -150,16 +150,23 @@ export function useModal<T extends HTMLElement>(alEscape?: () => void, contenido
 /** Un desplegable (período, exportar, perfil, campo): un botón con
  *  `aria-expanded` que muestra un panel. No es un `role="menu"`: adentro hay
  *  fechas, textos y avisos, y un menú ARIA promete flechas y solo ítems.
- *  Cierra con Escape (y el foco vuelve al botón) y con un clic afuera. */
+ *  Cierra con Escape (y el foco vuelve al botón) y con un clic afuera.
+ *
+ *  `panel` es para el panel que se pinta fuera del contenedor (`Desplegado`, en un portal: los
+ *  menús del panel lateral, D1): un clic adentro de él tampoco es «afuera». */
 export function useDesplegable() {
   const [abierto, setAbierto] = useState(false)
   const contenedor = useRef<HTMLDivElement>(null)
   const boton = useRef<HTMLButtonElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
   const id = useId()
 
   useEffect(() => {
     if (!abierto) return
-    const fuera = (e: MouseEvent) => { if (!contenedor.current?.contains(e.target as Node)) setAbierto(false) }
+    const fuera = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (!contenedor.current?.contains(t) && !panel.current?.contains(t)) setAbierto(false)
+    }
     // En captura y marcado como atendido: dentro de un diálogo (exportar la
     // ficha), Escape cierra el desplegable y no también el diálogo.
     const esc = (e: KeyboardEvent) => {
@@ -176,5 +183,5 @@ export function useDesplegable() {
   /** Lo que lleva el botón que abre: el estado y a qué panel controla. */
   // `aria-controls` solo mientras el panel existe (A10): apuntar a un id que no está no sirve al lector.
   const propsBoton = { ref: boton, onClick: alternar, 'aria-expanded': abierto, 'aria-controls': abierto ? id : undefined }
-  return { abierto, setAbierto, contenedor, boton, id, propsBoton }
+  return { abierto, setAbierto, contenedor, boton, panel, id, propsBoton }
 }

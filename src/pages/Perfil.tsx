@@ -10,7 +10,7 @@ import { cn } from '@/shared/lib/cn'
 const TEMAS = [
   { id: 'system', nombre: 'Sistema', Icono: Monitor },
   { id: 'light', nombre: 'Claro', Icono: Sun },
-  { id: 'dark', nombre: 'Oscuro', Icono: Moon },
+  { id: 'dark', nombre: 'Noche', Icono: Moon },
 ] as const
 
 /** El nombre corto de cada permiso, para la lista; el completo (CAPACIDAD_NOMBRE)

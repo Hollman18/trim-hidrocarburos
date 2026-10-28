@@ -151,6 +151,40 @@ try {
   comprobar(/data-kit="columnas"/.test(col) && />4</.test(col) && !/>0</.test(col) && (col.match(/stroke="var\(--panel\)"/g) ?? []).length === 2 && !/var\(--p[123]|var\(--interlock/.test(col),
     'columnas: el total del motor arriba, un período sin nada sin cifra ni cero, 1 px de --panel entre partes y ningún color de estado')
 
+  // D2 · Los gráficos profesionales: ejes, cuadrícula, unidad, leyenda, el cursor y la ficha.
+  const E = await v.ssrLoadModule('/src/shared/ui/scada/ejes.ts')
+  comprobar(E.marcasRedondas(0, 1600, 4).join() === '0,500,1000,1500' && E.marcasRedondas(0, 7, 3).join() === '0,5' && E.marcasRedondas(0.8, 1.2, 4, 2).join() === '0.8,0.9,1,1.1,1.2' && E.marcasRedondas(0, 3, 8, 0).every(x => Number.isInteger(x)),
+    'D2 · las marcas del eje son redondas (1, 2 o 5 por una potencia de 10) y, sin decimales, enteras')
+  const dias = E.etiquetasDeTiempo({ desde: '2026-09-21T00:00:00-05:00', pasoH: 24 }, 12), horas = E.etiquetasDeTiempo({ desde: '2026-10-02T12:00:00-05:00', pasoH: 1 }, 3)
+  comprobar(dias.length === 12 && /^21 de sept$/.test(dias[0]) && /^2 de oct$/.test(dias[11]) && /14:00$/.test(horas[2]) && E.etiquetasDeTiempo({ desde: 'no', pasoH: 24 }, 3).length === 0,
+    `D2 · el cuándo de cada punto sale del comienzo y el paso de la serie («${dias[0]}» … «${dias[11]}», «${horas[2]}»); sin fecha válida, ninguna (nunca inventada)`)
+  const tGrande = tend({ alto: 150, ancho: 480, etiquetas: ['21 sept', '22 sept', '23 sept', '24 sept', '25 sept', '26 sept'], ejeX: undefined })
+  const rotY = [...tGrande.matchAll(/<text x="[\d.]+" y="([\d.]+)" text-anchor="end"[^>]*>([^<]+)</g)].map(m => [Number(m[1]) - 4, m[2]])
+  const rejilla = [...(tGrande.match(/<g data-rejilla="">([\s\S]*?)<\/g>/)?.[1] ?? '').matchAll(/y1="([\d.]+)"/g)].map(m => Number(m[1]))
+  comprobar(rejilla.length > 0 && rejilla.every(y => rotY.some(([ry]) => Math.abs(ry - y) < 1)) && !/<path[^>]*stroke="var\(--linea2\)"/.test(tGrande),
+    `D2 · tendencia: la cuadrícula fina (--linea2, 1 px) solo donde hay rótulo en el eje y (${rejilla.length} rayas, rótulos ${rotY.map(r => r[1]).join(' ')})`)
+  comprobar(/data-unidad="">°C</.test(tGrande) && !/data-unidad/.test(tend({ alto: 64 })) && (tGrande.match(/<g data-eje-x="">[\s\S]*?<\/g>/)?.[0].match(/<text/g) ?? []).length > 2 && /21 sept/.test(tGrande),
+    'D2 · tendencia: la unidad en el eje (no en la de 64 px, que la lleva en el título) y marcas intermedias del tiempo con su rótulo')
+  comprobar(/<svg[^>]*tabindex="0"[^>]*role="img"|<svg[^>]*role="img"[^>]*tabindex="0"/.test(tN) && /data-zona=""/.test(tN) && !/tabindex/.test(tend({ compacta: true, ancho: 120, alto: 30 })) && /aria-live="polite"/.test(tN),
+    'D2 · tendencia: la gráfica es una parada del teclado con su región viva; la compacta responde al puntero pero no es parada de Tab')
+  const dosSeries = tend({ series: [{ nombre: 'Real', valores: [1, 2, 3] }, { nombre: 'Meta', valores: [2, 2, 2], trazo: 'discontinuo', esMeta: true }, { nombre: 'Sim', valores: [3, 3, 3], simulado: true }] })
+  comprobar((dosSeries.match(/data-leyenda-serie=/g) ?? []).length === 3 && (dosSeries.match(/aria-pressed="true"/g) ?? []).length === 3 && (dosSeries.match(/data-serie=/g) ?? []).length === 3
+      && !/data-leyenda-kit/.test(tN) && /· simulado/.test(dosSeries) && /data-serie="Sim" data-trazo="discontinuo"/.test(dosSeries),
+    'D2 · tendencia: con 2 series o más, la leyenda (un botón por serie, que aísla o apaga); con una, no. Lo simulado va discontinuo y con su palabra')
+  const det = r(h(K.Tendencia, { titulo: 'Cojinete', ventana: '12 d', unidad: '°C', detalle: true, escala: { min: 0, max: 100, firmada: true }, banda: [0, 85], alarmas: [85], series: [{ nombre: 'TI', valores: [70, 72, 74, 76, 78, 80] }, { nombre: 'P', valores: [71, 71, 72, 72, 73, 73] }], tiempo: { desde: '2026-09-27T00:00:00-05:00', pasoH: 24 } }))
+  comprobar(/data-detalle=""/.test(det) && /de 27 de sept a 2 de oct/.test(det) && /width="640" height="240"/.test(det) && /mín 70 · máx 80/.test(det)
+      && (det.match(/<g data-rejilla="">[\s\S]*?<\/g>/)?.[0].match(/<line/g) ?? []).length > (tN.match(/<g data-rejilla="">[\s\S]*?<\/g>/)?.[0].match(/<line/g) ?? []).length,
+    'D2 · tendencia en detalle (el modal): 640 × 240 si no se dice, el rango escrito, mínimo y máximo en la leyenda y más marcas')
+  const colD = r(h(K.Columnas, { 'aria-label': 'Fallas', partes: ['a'], periodos: [{ clave: '1', rotulo: 'ene', valores: [7] }, { clave: '2', rotulo: 'feb', valores: [0] }] }))
+  comprobar(/tabindex="0"/.test(colD) && /data-rejilla/.test(colD) && !/<title>/.test(colD) && !/>0</.test(colD) && !/data-zona/.test(colD),
+    'D2 · columnas: parada del teclado, la cuadrícula con sus cifras (nunca el 0: el piso ya lo dice) y la ficha en lugar del globo del navegador (sin un <rect> que no sea una parte: el <svg> entero recibe el puntero)')
+  comprobar(/tabindex="0"/.test(barra({ valor: 12 })) && /tabindex="0"/.test(cm({})) && !/tabindex/.test(barra({ valor: 12, interactiva: false })),
+    'D2 · la barra y la barra contra la meta abren su ficha al pasar el cursor, al tocarlas o con Tab (y se puede apagar)')
+  const fuentesD2 = ['Ficha.tsx', 'cursor.ts', 'ejes.ts'].map(n => sinComentarios(leer(`src/shared/ui/scada/${n}`))).join('\n')
+  comprobar(/requestAnimationFrame/.test(fuentesD2) && /createPortal/.test(fuentesD2) && /aria-hidden data-kit="ficha"/.test(fuentesD2) && !/shadow|sombra-flota/.test(fuentesD2)
+      && !/@\/entities|@\/shared\/api/.test(fuentesD2 + sinComentarios(leer('src/shared/ui/scada/Tendencia.tsx'))),
+    'D2 · la ficha: un cuadro por cuadro de animación (requestAnimationFrame), en <body> (no la recorta la tarjeta ni el modal), sin sombra; el cursor no llama al motor')
+
   // K3 · Ninguna pantalla dibuja un <svg> propio: lo dibuja el kit (el auditor lo mira en vivo, «kit»).
   const enPantallas = []
   const recorrerK3 = d => { for (const n of readdirSync(`${RAIZ}${d}`)) { const x = `${d}/${n}`; statSync(`${RAIZ}${x}`).isDirectory() ? recorrerK3(x) : /\.tsx$/.test(n) && enPantallas.push(x) } }

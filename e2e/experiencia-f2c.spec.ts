@@ -182,8 +182,11 @@ test.describe('390 px', () => {
     await t.getByRole('button', { name: 'Corregir dónde se trabó' }).click()
     const hoja = page.getByRole('dialog', { name: /^¿Dónde se trabó\?/ })
     await expect(hoja).toBeVisible()
+    // La hoja sube en 200 ms (D1): se mide cuando terminó de subir.
+    await expect.poll(() => hoja.evaluate(e => Math.round(e.getBoundingClientRect().bottom) - innerHeight)).toBeLessThanOrEqual(1)
     const caja = await hoja.evaluate(e => { const r = e.getBoundingClientRect(); return { alto: r.height, abajo: Math.round(r.bottom), vh: innerHeight } })
-    f.ok(caja.abajo === caja.vh && caja.alto <= caja.vh * 0.9 + 1, `la hoja sale desde abajo, hasta el 90 % de la pantalla (${Math.round(caja.alto)} de ${caja.vh} px)`)
+    // D1 (v3): la hoja es la del Modal: pegada abajo y deja al menos 48 px arriba para ver de dónde se abrió.
+    f.ok(Math.abs(caja.abajo - caja.vh) <= 1 && caja.alto <= caja.vh - 47, `la hoja sale desde abajo y deja ver arriba (${Math.round(caja.alto)} de ${caja.vh} px, abajo en ${caja.abajo})`)
     await page.keyboard.press('Escape')
     await expect(hoja).toHaveCount(0)
     f.cerrar()

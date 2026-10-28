@@ -163,26 +163,24 @@ test('producción: la lente técnica, su respuesta (lo que sale hoy, lo que limi
   f.cerrar()
 })
 
-test('la hoja del tramo no tapa la franja en el escritorio, la cifra es un grupo con nombre y el papel', async ({ flujo: f }) => {
+test('la hoja del tramo es el modal de detalle (D1), la cifra es un grupo con nombre y el papel', async ({ flujo: f }) => {
   await f.page.setViewportSize({ width: 1440, height: 900 })
   await f.abrir('/#/ger/planta-viva/ceiba/curso')
   await f.page.waitForSelector('[data-planta-viva]')
   // A6: la cifra con su nombre accesible, en una sola lectura.
   const nombre = await f.page.locator('[data-kit="cifra"][data-tamano="principal"] [role=img]').getAttribute('aria-label')
   f.ok(!!nombre && nombre.includes('Se deja de producir ahora') && nombre.includes('1.966'), `la cifra se anuncia con su rótulo: «${nombre}»`)
-  // H7 / UI-02: en el escritorio la hoja no es modal ni lleva velo, y empieza debajo de la cabecera.
+  // D1 (el dueño, 27-oct; antes H7 / UI-02, no modal): la hoja es el modal de detalle, centrado y con velo; la franja, fuera de él.
   await f.page.locator('[data-tramo-kit="planta"]').focus()
   await f.page.keyboard.press('Enter')
   const hoja = f.page.locator('[data-hoja-tramo="planta"]')
   await hoja.waitFor()
   const h = await f.page.evaluate(() => {
     const d = document.querySelector('[data-hoja-tramo]')!, fr = document.querySelector('[data-franja]')
-    const r = fr?.getBoundingClientRect()
-    const encima = r ? document.elementFromPoint(r.left + Math.min(20, r.width / 2), r.top + r.height / 2) : null
-    return { modal: d.getAttribute('aria-modal'), arriba: d.getBoundingClientRect().top, cabecera: document.querySelector('[data-cabecera]')?.getBoundingClientRect().bottom ?? 0,
-      franjaLibre: !fr || (!!encima && fr.contains(encima) && !fr.closest('[inert]')), foco: d.contains(document.activeElement) }
+    const c = d.querySelector('[data-modal-caja]')!.getBoundingClientRect()
+    return { modal: d.getAttribute('aria-modal'), centro: Math.abs(c.left - (innerWidth - c.right)), franjaFuera: !fr || (!d.contains(fr) && !!fr.closest('[inert]')), foco: d.contains(document.activeElement) }
   })
-  f.ok(h.modal === null && h.arriba >= h.cabecera - 1 && h.franjaLibre && h.foco, `no modal, debajo de la cabecera (${Math.round(h.arriba)} ≥ ${Math.round(h.cabecera)}), la franja libre y el foco adentro`)
+  f.ok(h.modal === 'true' && h.centro <= 2 && h.franjaFuera && h.foco, `modal, centrado (${Math.round(h.centro)}), la franja fuera y el foco adentro`)
   await f.page.keyboard.press('Escape')
   f.ok(await hoja.count() === 0 && await f.page.evaluate(() => document.activeElement?.getAttribute('data-tramo-kit')) === 'planta', 'Escape la cierra y el foco vuelve al tramo')
   await f.page.locator('[data-tramo-kit="planta"]').click()
