@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Menu } from 'lucide-react'
 import { ComoSeLee } from '@/shared/ui/comoSeLee'
+import { PropuestaDeValor } from '@/shared/brand/Propuesta'
 import { cn } from '@/shared/lib/cn'
 import { useApp, useRol, useAmbito, claveDeVista } from '@/app/store'
 import { PANTALLAS } from '@/app/pantallas'
@@ -214,6 +215,8 @@ export default function App() {
           <LimiteDeError clave={clave} que="La cabecera" salida={alInicio}>
             <Suspense fallback={CARGANDO_CABECERA}><Cabecera /></Suspense>
           </LimiteDeError>
+          {/* 28-oct · Con «¿Cómo se lee?» encendido, primero para qué sirve TRIM (la propuesta de valor). */}
+          <PropuestaDeValor />
           <AvisoDeDireccion />
           <Subpantallas />
           {sinSub

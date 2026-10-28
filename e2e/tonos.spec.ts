@@ -70,3 +70,15 @@ test('los tonos pálidos: frenado en rojo, en riesgo en amarillo y bien en verde
   })
   f.cerrar()
 })
+
+/* 28-oct · La propuesta de valor en el producto: con «¿Cómo se lee?» encendido, arriba de cada pantalla; apagado, nada. */
+test('la propuesta de valor: aparece con «¿Cómo se lee?» y no estorba la pantalla de trabajo', async ({ flujo: f }) => {
+  const { page } = f
+  await f.abrir('/#/ger/planta-viva/ceiba~portafolio/curso')
+  f.ok(await page.locator('[data-propuesta-valor]').count() === 0, 'apagado, la pantalla no la muestra')
+  await page.getByRole('button', { name: '¿Cómo se lee?' }).first().click()
+  const p = page.locator('main [data-propuesta-valor]')
+  await expect(p).toBeVisible()
+  await expect(p).toContainText('Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial.')
+  f.cerrar()
+})
