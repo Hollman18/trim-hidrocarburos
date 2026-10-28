@@ -1,0 +1,37 @@
+4
+La Ceiba
+NO
+Demo
+Hoy
+datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Paradas por confirmar
+4
+el reporte sale mañana antes de las 07:00
+Ahora
+1.966
+bbl/d
+se dejan de producir
+No arrancar
+2
+P-201B y LC-21
+Sin causa
+2
+LC-21 y LC-08
+Entregar turno
+Registrar una pérdida
+Confirmar 2 paradas iguales
+Alarma
+P-201B
+cerró LC-07 y LC-16
+TRIM las dedujo:
+en la planta, no planeada
+Confirmar las 2
+Ver una por una
+Conseguir la causa de 2 paradas

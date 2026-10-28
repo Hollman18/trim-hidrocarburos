@@ -1,0 +1,64 @@
+#/prod/planta/palmar/curso
+
+Todos mis campos
+El Palmar
+La planta viva
+Datos de demostración
+Planta
+hoy, 2 de oct · datos de las 14:00
+nada anormal
+Octubre, en curso
+Exportar
+Esquema de planta
+no tiene tren de gas
+7 de 7
+equipos con datos
++ 7 pozos
+Ver la tubería
+la planta
+
+Ahora:
+16.469 bbl/d de fluido
+3.277 bbl/d de crudo
+13.192 bbl/d de agua
+
+Tren de crudo
+Tren de agua
+Pozos productores
+7 pozos · 0 parados
+Manifold deproducción
+Separador de agualibre
+V-101
+Tratador térmico
+H-302
+Tanque enespecificación
+TK-102
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto
+Tanque de agua
+Bomba de agua
+P-201B
+Pozos inyectores
+Subestación 13,8kV
+SE-2
+Aire deinstrumentos
+K-101
+Capturando datos
+7 equipos
+V-101 · Separador de agua libre
+LI-1012 48 %
+H-302 · Tratador térmico
+TI-3021 298 °C
+TK-102 · PMO-02
+LI-1102 6,1 pies
+LACT-01 · Unidad LACT
+FQI-0101 3.186 bbl/d
+P-201B · Bomba de agua
+PI-2010 12,1 psi
+ver 2 más
+Configurados sin datos
+ninguno
+
+Todo lo configurado captura datos.

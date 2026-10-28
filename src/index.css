@@ -255,13 +255,10 @@ body{
 .vista .bg-\[var\(--panel\)\] :is(section, div, details, article).rounded.border.bg-\[var\(--panel\)\]{
   background:var(--panel2); border-radius:8px }
 
-/* El operador en el teléfono contesta de a una pregunta (imagen 5; X5 §5.8): la
-   pregunta va en su banda, pegada a la del ☰, y la franja debajo de ella
-   (la pinta la vista de Hoy). La cabecera de la vista no se interpone. */
-@media (max-width: 639.98px){
-  .vista:has([data-operador="pregunta"]){ padding-top:0 }
-  .vista:has([data-operador="pregunta"]) [data-cabecera]{ display:none }
-}
+/* C1 (QA v3): aquí se escondía la cabecera de la vista cuando el operador tenía una pregunta en el
+   teléfono, porque «Pregunta 1 de 4» iba en la banda y la franja debajo de ella. En la v3 la pregunta
+   vive en la vista (widgets/hoy/Operador.tsx) y nadie pintaba la franja: el operador se quedaba sin la
+   franja de condiciones (X2 N2) y sin la hora de los datos (X2 D3). La cabecera ya no se esconde. */
 
 /* El panel lateral en el teléfono entra desde la izquierda en 200 ms (X5 §4.2);
    con «menos movimiento», aparece sin moverse (la regla de arriba). */
@@ -292,8 +289,8 @@ body{
 .nodo:focus-visible{outline:none}
 .nodo:focus-visible .marco,.nodo:hover .marco{stroke:var(--acento); stroke-width:2}
 
-/* K1 (aviso de F3): las clases del indicador analógico viejo se retiraron con él (H12): el de alto
-   desempeño (`IndicadorFijo`) no las usa. */
+/* K1 (aviso de F3): las clases del indicador analógico viejo se retiraron con él (H12). K3: el de alto
+   desempeño (`IndicadorFijo`) también: cada indicador es la `Barra` del kit SCADA. */
 
 /* ─────────────── Informe impreso (Exportar → PDF) ───────────────
    El papel lleva membrete, la vista y el pie con el folio. Se imprime en

@@ -1,0 +1,259 @@
+#/ger/resultados/ceiba~portafolio/doce
+
+Todos mis campos
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Últimos 12 meses
+Exportar
+
+Lo que pasó · 1 de oct de 2025 a 30 de sept
+
+483.308
+barriles
+
+no se produjeron en sus 5 campos.
+
+Va 356.192 bbl por debajo del máximo firmado (839.500). SE-2, el 22 %.
+
+calculado
+entre 442.229 y 524.386 bbl
+22,8 M USD · sin La Zarza
+3
+Todavía no se puede publicar
+Ver SE-2
+Promedio por día
+
+producción
+meta 40.200
+
+42.286
+bbl/d
+
+diferido
+máximo 2.300
+
+1.324
+bbl/d
+Total del período
+
+Producción
+
+15.434.529
+bbl
+
+meta 14.673.000
+
+Diferido
+
+483.307
+bbl
+
+máximo 839.500
+
+Producido · diferido · perdido
+· 1 de oct de 2025 a 30 de sept
+
+Producido
+
+15.434.529
+bbl
+
+medido
+
+Diferido
+
+483.308
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	244.301bbl	—	
+
+
+Planta
+	236.734bbl	—	
+
+
+Salida
+	2.273bbl	—	
+Diferido por día, mes a mes
+octubre: 1.501 bbl/d
+Diferido por día
+13 meses
+2.300
+0
+4.600
+OCT 2025
+OCT
+
+Continua: todo · discontinua: lo de alto impacto · raya: máximo firmado (2.300)
+
+Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (2.300 barriles por día este mes). Ningún mes cerrado lo pasó.
+
+Diferido por equipo
+1 de oct de 2025 a 30 de sept · calculado
+SE-2 energía eléctrica · Morichal Norte
+103.700
+22 %
+1
+P-201B bomba de agua · alarma · La Ceiba
+36.742
+8 %
+LC-16 electrosumergible · La Ceiba
+30.328
+6 %
+LC-09 electrosumergible · La Ceiba
+22.632
+5 %
+2
+MPP-301 bomba multifásica · atención · Morichal Norte
+22.582
+5 %
+2
+P-201B bomba de agua · atención · Morichal Norte
+22.117
+5 %
+
+y 94 equipos más
+
+Por campo
+producción / meta · bbl/d
+diferido / máximo · bbl/d
+bbl diferidos
+Morichal Norte
+17.424
+16.700
+639
+950
+233.213
+bbl diferidos
+dónde se trabó
+pozos 35 %
+planta 65 %
+
+Se trabó sobre todo en la planta: SE-2 (energía eléctrica) y MPP-301 (bomba multifásica).
+
+Ver más de Morichal Norte
+La Ceiba
+11.741
+10.900
+398
+800
+145.213
+bbl diferidos
+dónde se trabó
+pozos 58 %
+planta 42 %
+
+Se trabó sobre todo en los pozos: LC-16 y LC-09 (electrosumergibles).
+
+Ver más de La Ceiba
+Guacamayo
+6.741
+6.300
+217
+450
+79.095
+bbl diferidos
+dónde se trabó
+pozos 81 %
+planta 19 %
+
+Se trabó sobre todo en los pozos: GU-02 y GU-11 (electrosumergibles).
+
+Ver más de Guacamayo
+El Palmar
+3
+3.236
+3.250
+49
+50
+18.007
+bbl diferidos
+dónde se trabó
+pozos 75 %
+planta 25 %
+
+Se trabó sobre todo en los pozos: PA-01 y PA-06 (bombeo mecánico).
+
+Ver más de El Palmar
+La Zarza
+3.144
+3.050
+21
+50
+7.780
+bbl diferidos
+dónde se trabó
+planta 71 %
+afuera 29 %
+
+Se trabó sobre todo en la planta: C-401 (compresor de gas) y SE-2 (energía eléctrica).
+
+Ver más de La Zarza
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+
+Pérdida
+· lo que salió y no se vendió:
+sin eventos registrados en el período
+
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+1.381
+bbl/d
+
+jun a ago · 5 fallas al mes
+
+Este mes
+
+1.222
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+9.520
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 5 de 7 avisos acertaron
+
+Por tramo
+Lo que todavía se puede mover

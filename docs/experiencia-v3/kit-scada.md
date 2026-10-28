@@ -227,6 +227,11 @@ Las formas son las de X2 §4.2, sin cambios, en un cuadro de 14 × 14. Miden com
    - Reemplazan a `IndicadorFijo`, `Sparkline`, `Simbolos.tsx` y `MarcaCondicion`.
    - Se borran los que se dupliquen.
 2. **La regla del auditor:** ningún indicador ni tendencia hecho a mano fuera del kit. Es un grep de `<svg` en `pages/` y `widgets/` que no venga del kit, más las comprobaciones I1–I7 y E1–E6 de X2.
+**Hecho (K3, 27-oct):** el kit vive en `src/shared/ui/scada/` (no en `kit/`) y ya se usa en todas partes.
+- `Sparkline`, `BarraMeta`, `IndicadorFijo` (`Analogico.tsx`), `Minitendencia`, `TendenciaFija` y `shared/lib/trazo.ts` se borraron.
+- Entraron al kit `ContraMeta` (la barra contra la meta de §6), `Columnas` (las fallas por mes, apiladas en los grises de dato) y `MuestraFluido` (la muestra de una línea en una leyenda). `Esquema` acepta `grupo` (el esquema de planta, con equipos que se abren con el teclado); `Linea`, un camino ya armado (`d`); `Tendencia`, lo proyectado después de hoy (`hoy`, `hasta`, `rango`, `rotuloRango`, `SerieKit.puntos`); `Barra`, `conValor={false}` cuando la fila ya escribe el valor.
+- La regla del auditor es «kit» (`e2e/auditoria/detector.ts`): ningún `<svg>` fuera de una pieza del kit (`data-kit`), salvo la marca de 14 × 14 y los íconos. `verificar-kit` comprueba lo mismo en el código: ningún `<svg` en `pages/` ni `widgets/` (salvo el ícono de `configuracion/marcas.tsx`).
+
 3. **Los datos que el kit pide y el motor todavía no da:**
    - el rango declarado del instrumento (hoy, «escala provisional»);
    - «parado normal» contra «parado anormal» (X2 §4.3);

@@ -1,0 +1,224 @@
+#/conf/confiabilidad/morichal/curso
+
+Todos mis campos
+Morichal Norte
+Resultados
+Datos de demostración
+Confiabilidad
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+Bombas de agua · 1
+46 d
+entre fallas
+8 fallas · 47,1 h fuera
+Electrosumergibles · 41
+1.670 d
+entre fallas
+9 fallas · 17,4 d fuera
+Bombas multifásicas · 1
+52 d
+entre fallas
+7 fallas · 2,0 d fuera
+Historia
+12 meses
+eventos del PLC
+¿Le creo al vigía?
+desde el 1 de sept
+
+Acertó 1 de 3 · anticipó 4,0 días en promedio · se le escaparon 3 con instrumento
+
+Ver lo que anunció
+›
+Reparación activa y espera
+promedio · 23 fallas cerradas · toda la historia
+Reparación activa
+8 h
+Espera
+7,0 d
+Indisponibilidad total
+7,4 d
+Los más costosos
+bbl · toda la historia
+Equipo	Fallas	Entre fallas	Fuera	Parte	le ha costado
+por falla	bbl
+MPP-301
+bomba multifásica
+	7	52 d	2,0 d	Sello	3.226	22.582
+P-201B
+bomba de agua
+	8	46 d	47,1 h	Sello	2.765	22.117
+MN-06
+electrosumergible
+	1 +4	—	28,9 d	Aislamiento	16.005	16.206
+MN-11
+electrosumergible
+	1 +8	—	28,9 d	Aislamiento	12.133	12.371
+MN-08
+electrosumergible
+	1 +8	—	20,4 d	Motor	11.415	11.823
+ver 6 más
+De qué fallan
+contra la referencia
+Bombas de agua · 7 fallas con parte
+Sello mecánico
+5 · 71 %
+Succión y filtro de entrada
+1 · 14 %
+Motor eléctrico
+1 · 14 %
+Electrosumergibles · 9 fallas con parte
+Aislamiento del motor y del cable
+6 · 67 %
+Motor de fondo
+2 · 22 %
+Admisión y separador de gas
+1 · 11 %
+Bombas multifásicas · 7 fallas con parte
+Sellos mecánicos (cuatro)
+4 · 57 %
+Tornillos y holguras
+2 · 29 %
+Lubricación
+1 · 14 %
+Fallas por mes
+fallas · sin disparos
+2
+oct
+2025
+1
+nov
+1
+dic
+1
+ene
+2026
+feb
+4
+mar
+abr
+2
+may
+5
+jun
+3
+jul
+ago
+5
+sept
+oct
+2026
+bombas de agua
+electrosumergibles
+bombas multifásicas
+Calidad del registro
+ISO 14224: parte por falla
+por señal
+21 · 88 %
+por la firma de las señales
+2 · 8 %
+declarado por el operario
+0 · 0 %
+sin identificar
+1 · 4 %
+
+24 fallas
+43 equipos
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+26.620
+bbl
+
+medido
+
+Diferido
+
+1.253
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	1.253bbl	—	
+
+
+Planta
+	0bbl	—	
+
+
+Salida
+	0bbl	—	
+Calidad de la clasificación
+6 filas · Octubre, en curso
+¿Dónde se trabó?
+confirmado por una persona
+0 %
+0 de 6 filas
+corregido: cuánto se equivoca la regla
+0 %
+0 de 6 propuestas
+Los demás pasos
+confirmado
+corregido
+Quién
+0 %
+0 %
+1 en falta
+Qué pasó
+0 %
+0 %
+nada en falta
+¿Planeada?
+0 %
+0 %
+1 en falta
+Causa
+0 %
+0 %
+1 en falta
+Detalle
+0 %
+0 %
+3 en falta
+Las reglas que más se corrigen
+
+Nadie corrigió una propuesta de TRIM en octubre (en curso): todavía nadie ha revisado estas paradas.
+
+Dónde se trabó, por equipo
+MN-22
+2 paradas · 0 corregidas · 0 %
+MN-41
+1 parada (2 filas) · 0 corregidas · 0 %
+MN-25
+1 parada · 0 corregidas · 0 %
+MN-31
+1 parada · 0 corregidas · 0 %

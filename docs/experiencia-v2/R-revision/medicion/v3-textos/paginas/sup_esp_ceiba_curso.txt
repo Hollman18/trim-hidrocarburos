@@ -1,0 +1,142 @@
+#/sup/esp/ceiba/curso
+
+La Ceiba
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Parados
+4
+Avisan
+1
+Sin instrumento
+5
+Todos
+28
+Más filtros
+(1)
+Todos los tipos
+Bombas
+3
+Electrosumergibles
+15
+Pozos
+18
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+18
+Crudo
+4
+Agua
+3
+Gas
+1
+Servicios
+2
+Buscar por tag
+15 equipos
+· ordenados por estado
+¿Lo vigila TRIM?
+LC-16
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+dentro de los 1.665 de P-201B
+LC-07
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+dentro de los 1.665 de P-201B
+LC-11
+electrosumergible
+produciendo
+sí · 6 señales
+1.031bbl/d
+si falla hoy
+LC-08
+electrosumergible
+produciendo
+sí · 6 señales
+893bbl/d
+si falla hoy
+LC-04
+electrosumergible
+produciendo
+sí · 6 señales
+825bbl/d
+si falla hoy
+LC-05
+electrosumergible
+produciendo
+sí · 6 señales
+812bbl/d
+si falla hoy
+LC-14
+electrosumergible
+produciendo
+sí · 6 señales
+783bbl/d
+si falla hoy
+LC-06
+electrosumergible
+produciendo
+sí · 6 señales
+692bbl/d
+si falla hoy
+LC-09
+electrosumergible
+produciendo
+sí · 6 señales
+620bbl/d
+si falla hoy
+LC-17
+electrosumergible
+produciendo
+sí · 6 señales
+539bbl/d
+si falla hoy
+LC-15
+electrosumergible
+produciendo
+sí · 6 señales
+470bbl/d
+si falla hoy
+LC-10
+electrosumergible
+produciendo
+sí · 6 señales
+459bbl/d
+si falla hoy
+LC-12
+electrosumergible
+produciendo
+sí · 6 señales
+379bbl/d
+si falla hoy
+LC-02
+electrosumergible
+produciendo
+sí · 6 señales
+378bbl/d
+si falla hoy
+LC-01
+electrosumergible
+produciendo
+sí · 6 señales
+360bbl/d
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua, Pozos inyectores.

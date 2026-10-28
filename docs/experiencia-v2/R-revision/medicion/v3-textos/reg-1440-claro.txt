@@ -1,0 +1,78 @@
+Campo
+La Ceiba
+¿Cómo se lee?
+IS
+Iván Salas
+Cumplimiento regulatorio
+La Ceiba
+Datos de demostración
+Reporte al regulador
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+Octubre, en curso
+Paradas sin causa
+2
+paradas
+No se puede publicar todavía
+octubre sigue abierto y les falta la causa (355 bbl).
+Sin causa
+355
+bbl
+no se puede reportar
+Límite
+07:00
+mañana
+Circular 024
+Respuesta de la ANH
+sin respuesta registrada
+Registrar la respuesta
+Qué falta y quién lo debe
+LC-21
+faltan todos los pasos
+Lo debe el
+operador de campo
+mañana antes de las 07:00
+247
+bbl
+LC-08
+faltan todos los pasos
+Lo debe el
+operador de campo
+mañana antes de las 07:00
+108
+bbl
+Exportar el reporte
+Informe en PDF
+CSV para la ANH queda con folio y huella
+Producido diferido perdido
+octubre
+Producido
+16.941
+bbl
+medido
+Diferido
+1.046
+bbl
+se produce después
+Perdido
+sin registro
+Tramo
+Diferido
+Perdido
+Yacimiento
+0
+bbl
+Pozos
+118
+bbl
+Planta
+573
+bbl

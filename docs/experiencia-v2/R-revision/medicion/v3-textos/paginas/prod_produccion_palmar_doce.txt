@@ -1,0 +1,105 @@
+#/prod/produccion/palmar/doce
+
+Todos mis campos
+El Palmar
+Resultados
+Datos de demostración
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+nada anormal
+Últimos 12 meses
+Exportar
+3
+no se puede publicar
+El Palmar · factor fuera de banda
+
+Producción medida
+
+3
+1.180.973
+bbl
+
+meta 1.186.250 · 3.236 bbl/d
+
+Potencial del libro:
+1.198.980 bbl
+· 3.285 bbl/d · lo medido es el 98,5 %
+
+Día a día
+bbl/d
+Producción por día
+365 días
+0
+5.000
+1 de oct de 2025
+30 de sept
+
+Oscura: real medido · clara: potencial del libro · discontinua: meta firmada · último día: 3.000 bbl/d
+
+Medición oficial
+El Palmar
+corte de agua: laboratorio
+factor 1,008 · banda ±15 %
+LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho
+Factor de asignación
+contra su banda
+Factor de asignación · El Palmar
+13 meses
+0,75
+1,25
+OCT
+OCT
+
+Octubre 2026: 0,987 · banda ±15 %
+
+3
+Fuera de la banda: Abril 2026
+
+¿Cuadra? Mes por mes
+Mes	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+Octubre 2025	104.691	104.691	0	0	100,0 %	100.750
+Noviembre 2025	
+3
+bajo la meta96.525	97.934	1.409	0	98,6 %	97.500
+Diciembre 2025	106.400	107.499	1.099	0	99,0 %	100.750
+Enero 2026	
+3
+bajo la meta96.542	101.832	5.290	0	94,8 %	100.750
+Febrero 2026	97.458	97.458	0	0	100,0 %	91.000
+Marzo 2026	105.965	105.965	0	0	100,0 %	100.750
+Abril 2026	
+3
+bajo la meta81.033	82.043	1.010	0	98,8 %	97.500
+Mayo 2026	
+3
+bajo la meta95.777	98.895	3.118	0	96,8 %	100.750
+Junio 2026	
+3
+bajo la meta93.883	95.974	2.091	0	97,8 %	97.500
+Julio 2026	103.259	103.259	0	0	100,0 %	100.750
+Agosto 2026	102.725	102.725	0	0	100,0 %	100.750
+Septiembre 2026	
+3
+bajo la meta96.715	100.705	3.990	0	96,0 %	97.500
+Cuadre · asignación oficial
+mes cerrado
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 96.715 bbl · 7 pozos

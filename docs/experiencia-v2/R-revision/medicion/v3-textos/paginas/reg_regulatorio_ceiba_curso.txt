@@ -1,0 +1,190 @@
+#/reg/regulatorio/ceiba/curso
+
+La Ceiba
+Datos de demostración
+Reporte al regulador
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+
+Paradas sin causa
+
+2
+paradas
+
+No se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl). 
+
+Sin causa
+
+355
+bbl
+
+no se puede reportar
+
+Límite
+
+07:00
+mañana
+
+Circular 024
+
+Respuesta de la ANH
+
+—
+
+sin respuesta registrada
+
+Registrar la respuesta
+Qué falta y quién lo debe
+LC-21 · faltan todos los pasos
+Lo debe el operador de campo · mañana antes de las 07:00
+247 bbl
+LC-08 · faltan todos los pasos
+Lo debe el operador de campo · mañana antes de las 07:00
+108 bbl
+Exportar el reporte
+Informe en PDF
+
+CSV para la ANH · queda con folio y huella
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+16.941
+bbl
+
+medido
+
+Diferido
+
+1.046
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	118bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+Árbol de causas · como la circular
+Ver los códigos ANH
+
+1.046 bbl
+5 paradas · 0 bbl con los 6 pasos confirmados (0 %)
+
+Quién
+→
+Dónde se trabó
+→
+Qué pasó
+→
+¿Planeada?
+→
+Causa
+→
+Detalle
+Operador · Mantenimiento
+691 
+bbl,
+66 %
+del período
+En la planta o estación
+573 
+bbl,
+55 %
+del período
+Diferida · No planeada · No planeada - Proceso / Facilidades · Parada estación/bombeo afecta pozos
+573 
+bbl,
+55 %
+del período
+En el pozo
+118 
+bbl,
+11 %
+del período
+Diferida · No planeada · No planeada - Eléctrica interna
+118 
+bbl,
+11 %
+del período
+Falta el detalle
+118 
+bbl,
+11 %
+del período
+Falta quién
+355 
+bbl,
+34 %
+del período
+Sin identificar
+355 
+bbl,
+34 %
+del período
+Falta qué pasó
+355 
+bbl,
+34 %
+del período
+Falta saber si fue planeada
+355 
+bbl,
+34 %
+del período
+Falta la causa
+355 
+bbl,
+34 %
+del período
+Falta el detalle
+355 
+bbl,
+34 %
+del período
+
+= el diferido del libro (Σ de las paradas del período)
+1.046 bbl
+
+Pérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)
+
+Medición oficial
+Ver más
+· 2 puntos

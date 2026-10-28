@@ -1,0 +1,404 @@
+#/conf/equipos/morichal
+
+Todos mis campos
+Morichal Norte
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Si falla hoy
+1.600
+bbl/d
+MPP-301 · se trabaría en la planta
+
+Vigía
+1 de 3
+· aciertos
+Sin instrumento
+6
+equipos
+Entre fallas
+52 d
+· bombas multifásicas
+
+Clasificación confirmada
+0 de 6
+filas
+· planeada o no
+
+Abrir MPP-301
+
+¿Dónde va el próximo instrumento? Lo primero de la lista sin instrumento: P-201A, P-201C, P-201D, P-201E, P-201F y P-201G (puesto 3, 783 bbl/d si falla hoy). TRIM no ve venir su falla.
+
+Le tocan 6 cosas · conseguir la causa de P-201B
+Ver lo que le toca
+
+P-201B · SAP no lo sabe
+Avisar
+
+Filtrar
+56 equipos
+· ordenados por «Si falla hoy»
+¿Lo vigila TRIM?
+2
+MPP-301
+bomba multifásica
+sin respaldo
+Atención · filtro de entrada · alarma en 5,2 d
+sí · 16 señales
+1.600bbl/d
+si falla hoy
+2
+P-201B
+bomba de agua
+Atención · succión y filtro de entrada · alarma en 43 h
+sí · 8 señales
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201A
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201C
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201D
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201E
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201F
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201G
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+MN-19
+electrosumergible
+produciendo
+sí · 6 señales
+641bbl/d
+si falla hoy
+MN-32
+electrosumergible
+produciendo
+sí · 6 señales
+630bbl/d
+si falla hoy
+MN-40
+electrosumergible
+produciendo
+sí · 6 señales
+617bbl/d
+si falla hoy
+2
+MN-07
+electrosumergible
+Atención · bomba de fondo · alarma en 4 h
+sí · 6 señales
+607bbl/d
+si falla hoy
+MN-21
+electrosumergible
+produciendo
+sí · 6 señales
+586bbl/d
+si falla hoy
+MN-16
+electrosumergible
+produciendo
+sí · 6 señales
+575bbl/d
+si falla hoy
+MN-02
+electrosumergible
+produciendo
+sí · 6 señales
+561bbl/d
+si falla hoy
+MN-08
+electrosumergible
+produciendo
+sí · 6 señales
+558bbl/d
+si falla hoy
+MN-06
+electrosumergible
+produciendo
+sí · 6 señales
+556bbl/d
+si falla hoy
+MN-24
+electrosumergible
+produciendo
+sí · 6 señales
+551bbl/d
+si falla hoy
+2
+MN-18
+electrosumergible
+Atención · admisión y gas · alarma en 30 h
+sí · 6 señales
+526bbl/d
+si falla hoy
+2
+MN-27
+electrosumergible
+Atención · protector del motor · alarma en 10,9 d
+sí · 6 señales
+510bbl/d
+si falla hoy
+MN-36
+electrosumergible
+produciendo
+sí · 6 señales
+500bbl/d
+si falla hoy
+MN-05
+electrosumergible
+produciendo
+sí · 6 señales
+484bbl/d
+si falla hoy
+MN-33
+electrosumergible
+produciendo
+sí · 6 señales
+467bbl/d
+si falla hoy
+MN-25
+electrosumergible
+produciendo
+sí · 6 señales
+463bbl/d
+si falla hoy
+MN-39
+electrosumergible
+produciendo
+sí · 6 señales
+439bbl/d
+si falla hoy
+MN-35
+electrosumergible
+produciendo
+sí · 6 señales
+432bbl/d
+si falla hoy
+MN-34
+electrosumergible
+produciendo
+sí · 6 señales
+424bbl/d
+si falla hoy
+MN-10
+electrosumergible
+produciendo
+sí · 6 señales
+413bbl/d
+si falla hoy
+MN-17
+electrosumergible
+produciendo
+sí · 6 señales
+410bbl/d
+si falla hoy
+MN-31
+electrosumergible
+produciendo
+sí · 6 señales
+407bbl/d
+si falla hoy
+MN-11
+electrosumergible
+produciendo
+sí · 6 señales
+401bbl/d
+si falla hoy
+MN-03
+electrosumergible
+produciendo
+sí · 6 señales
+389bbl/d
+si falla hoy
+MN-15
+electrosumergible
+produciendo
+sí · 6 señales
+354bbl/d
+si falla hoy
+MN-09
+electrosumergible
+produciendo
+sí · 6 señales
+351bbl/d
+si falla hoy
+MN-29
+electrosumergible
+produciendo
+sí · 6 señales
+349bbl/d
+si falla hoy
+MN-38
+electrosumergible
+produciendo
+sí · 6 señales
+349bbl/d
+si falla hoy
+MN-22
+electrosumergible
+produciendo
+sí · 6 señales
+341bbl/d
+si falla hoy
+MN-30
+electrosumergible
+produciendo
+sí · 6 señales
+320bbl/d
+si falla hoy
+MN-13
+electrosumergible
+produciendo
+sí · 6 señales
+319bbl/d
+si falla hoy
+MN-28
+electrosumergible
+produciendo
+sí · 6 señales
+300bbl/d
+si falla hoy
+MN-14
+electrosumergible
+produciendo
+sí · 6 señales
+280bbl/d
+si falla hoy
+MN-23
+electrosumergible
+produciendo
+sí · 6 señales
+274bbl/d
+si falla hoy
+MN-20
+electrosumergible
+produciendo
+sí · 6 señales
+272bbl/d
+si falla hoy
+MN-26
+electrosumergible
+produciendo
+sí · 6 señales
+266bbl/d
+si falla hoy
+MN-01
+electrosumergible
+produciendo
+sí · 6 señales
+263bbl/d
+si falla hoy
+MN-12
+electrosumergible
+produciendo
+sí · 6 señales
+260bbl/d
+si falla hoy
+MN-04
+electrosumergible
+produciendo
+sí · 6 señales
+247bbl/d
+si falla hoy
+MN-37
+electrosumergible
+produciendo
+sí · 6 señales
+226bbl/d
+si falla hoy
+H-302
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+3
+SE-2
+energía eléctrica
+sin respaldo
+Aviso · en servicio · corriente de barraje subiendo
+sí · 3 señales
+hasta 16.920bbl/d
+si falla hoy
+V-101
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 16.920bbl/d
+si falla hoy
+1
+MN-41
+electrosumergible
+Alarma · parado desde el 25 de sept, 06:40
+sí · 6 señales
+684bbl/d
+se deja de producir
+C-401
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, TK-103 · PMO-03, Tanque de agua, Pozos inyectores.

@@ -1,0 +1,167 @@
+#/ger/resultados/morichal/curso/SE-2
+
+Todos mis campos
+Morichal Norte
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+1.253
+barriles
+
+no se produjeron en Morichal Norte.
+
+Va 251 bbl por debajo del máximo firmado a la fecha (1.504). MN-41, más de la mitad. Septiembre cerró en 15.539 bbl.
+
+calculado
+entre 1.065 y 1.441 bbl
+60 mil USD
+Provisional
+Ver MN-41
+Promedio por día
+
+producción
+meta 16.700
+
+16.813
+bbl/d
+
+diferido
+máximo 950
+
+792
+bbl/d
+Cierre proyectado
+
+Producción
+
+524.352
+bbl
+proyectado
+
+meta 517.700
+
+Diferido
+
+21.376
+bbl
+proyectado
+
+máximo 29.450
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+26.620
+bbl
+
+medido
+
+Diferido
+
+1.253
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	1.253bbl	—	
+
+
+Planta
+	0bbl	—	
+
+
+Salida
+	0bbl	—	
+Diferido por día, mes a mes
+octubre: 792 bbl/d
+Diferido por día
+13 meses
+950
+0
+1.900
+OCT 2025
+OCT
+
+Continua: todo · discontinua: lo de alto impacto · raya: máximo firmado (950)
+
+Pasó el máximo: Marzo 2026, Mayo 2026.
+
+Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (950 barriles por día este mes). Lo pasaron Marzo 2026 (1.028 barriles por día), Mayo 2026 (1.291 barriles por día).
+
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma
+1.083
+86 %
+MN-22 según el operario
+86
+7 %
+SE-2 energía eléctrica
+72
+6 %
+MN-25 electrosumergible
+12
+1 %
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+752
+bbl/d
+
+jun a ago · 3 fallas al mes
+
+Este mes
+
+737
+bbl/d
+
+sin meta firmada · 0 fallas
+
+Ya se ganó
+
+8.550
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 1 de 3 avisos acertaron
+
+Por tramo
+Lo que todavía se puede mover

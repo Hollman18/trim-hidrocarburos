@@ -1,0 +1,173 @@
+#/reg/regulatorio/morichal/curso
+
+Morichal Norte
+Datos de demostración
+Reporte al regulador
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+
+Paradas sin causa
+
+1
+parada
+
+No se puede publicar todavía: octubre sigue abierto y le falta la causa (86 bbl). 
+
+Sin causa
+
+86
+bbl
+
+no se puede reportar
+
+Límite
+
+07:00
+venció el 2 de oct a las 07:00 · venció
+
+Circular 024
+
+Respuesta de la ANH
+
+—
+
+sin respuesta registrada
+
+Registrar la respuesta
+Qué falta y quién lo debe
+MN-22 · falta quién, si fue planeada, la causa y el detalle
+Lo debe el operador de campo · venció el 2 de oct a las 07:00
+86 bbl
+Exportar el reporte
+Informe en PDF
+
+CSV para la ANH · queda con folio y huella
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+26.620
+bbl
+
+medido
+
+Diferido
+
+1.253
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	1.253bbl	—	
+
+
+Planta
+	0bbl	—	
+
+
+Salida
+	0bbl	—	
+Árbol de causas · como la circular
+Ver los códigos ANH
+
+1.253 bbl
+5 paradas · 0 bbl con los 6 pasos confirmados (0 %)
+
+Quién
+→
+Dónde se trabó
+→
+Qué pasó
+→
+¿Planeada?
+→
+Causa
+→
+Detalle
+Operador · Mantenimiento · En el pozo
+1.167 
+bbl,
+93 %
+del período
+Diferida · No planeada
+1.167 
+bbl,
+93 %
+del período
+No planeada - Mecánica subsuelo · Falla ESP
+1.095 
+bbl,
+87 %
+del período
+No planeada - Eléctrica interna
+72 
+bbl,
+6 %
+del período
+Falta el detalle
+72 
+bbl,
+6 %
+del período
+Falta quién · En el pozo
+86 
+bbl,
+7 %
+del período
+Diferida
+86 
+bbl,
+7 %
+del período
+Falta saber si fue planeada
+86 
+bbl,
+7 %
+del período
+Falta la causa
+86 
+bbl,
+7 %
+del período
+Falta el detalle
+86 
+bbl,
+7 %
+del período
+
+= el diferido del libro (Σ de las paradas del período)
+1.253 bbl
+
+Pérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)
+
+Medición oficial
+Ver más
+· 3 puntos

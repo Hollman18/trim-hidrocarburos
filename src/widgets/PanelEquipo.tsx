@@ -18,18 +18,18 @@ import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
 import { causaEnPapel } from '@/shared/ui/papel'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
-import { Sparkline } from '@/shared/ui/Sparkline'
+import { Tendencia } from '@/shared/ui/scada'
+import { estadoKit } from '@/widgets/equipos/estadoKit'
 import { lecturasDe } from '@/entities/serie'
-import { n0, num, banda, plural, sinLectura, NOMBRE_ESTADO } from '@/shared/lib/formato'
+import { n0, num, plural, sinLectura, NOMBRE_ESTADO } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { MarcaEstado, MarcaCondicion } from '@/shared/ui/Prioridad'
-import { DE_ESTADO } from '@/shared/lib/prioridad'
 import { pedirPozosDelCampo } from '@/shared/api/medicion'
 import { BloqueSap } from '@/widgets/sap/BloqueSap'
 import { ExportarFicha } from '@/widgets/informe/Exportar'
 import { useModal } from '@/shared/ui/foco'
 import { useTelefono } from '@/shared/ui/telefono'
-import { useNivelEquipo } from '@/shared/api/equiposTecnico'
+import { useNivelEquipo, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
 import { useCondiciones } from '@/shared/api/condiciones'
 import { CondicionEquipo } from '@/widgets/bombas/SenalFija'
 import { puedeHacer, type Dispositivo, type NivelDetalle } from '@/entities/tipos'
@@ -180,7 +180,7 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
   const sinSenalN = visibles.filter(sinLectura).length, fueraN = visibles.length - sinSenalN
   const activo = cadenaTag ? disp.find(d => d.tag === cadenaTag) : undefined
 
-  const fila = (d: Dispositivo) => <FilaDispositivo key={d.tag} d={d} nivel={nivel} gris={!!nivelEq?.parado} onCadena={setCadenaTag} />
+  const fila = (d: Dispositivo) => <FilaDispositivo key={d.tag} d={d} senal={senalDe(nivelEq, d.tag)} nivel={nivel} gris={!!nivelEq?.parado} onCadena={setCadenaTag} />
 
   return (
     <Flotante telefono={telefono} refModal={dialogo} refNoModal={noModal} idTitulo={idTitulo} ancho="w-[min(560px,80vw)]"
@@ -320,9 +320,13 @@ function PanelAbierto({ equipoAbierto }: { equipoAbierto: string }) {
  *  - En el teléfono, el nombre arriba y la minitendencia y el valor debajo: nada se
  *    sale de la tarjeta (UI-03, A7; WCAG 1.4.10); por debajo de 400 px, sin la
  *    minitendencia (está en el nivel 3). */
-function FilaDispositivo({ d, nivel, gris = false, onCadena }: { d: Dispositivo; nivel: NivelDetalle; gris?: boolean; onCadena: (tag: string) => void }) {
+function FilaDispositivo({ d, senal, nivel, gris = false, onCadena }: { d: Dispositivo; senal?: SenalNivel3; nivel: NivelDetalle; gris?: boolean; onCadena: (tag: string) => void }) {
   const ss = sinLectura(d), e = ss ? 'sin señal' as const : d.estado
   const marca = !gris && (ss || e !== 'normal')
+  // K3 · La minigráfica es la tendencia compacta del kit, con la escala de su señal (la del nivel 3: de
+  // sus límites, nunca de las lecturas). Sin ningún límite declarado no hay escala: no se dibuja.
+  const escala = senal?.escala ? { min: senal.escala[0], max: senal.escala[1], firmada: false } : undefined
+  const k = senal ? estadoKit(senal) : { estado: gris ? 'parado' as const : 'normal' as const }
   return (
     <Tip as="button" onClick={() => onCadena(d.tag)}
       titulo={`${d.tag} · ${d.tipo}`} pista="Toque para ver la cadena técnica de este dato"
@@ -342,8 +346,11 @@ function FilaDispositivo({ d, nivel, gris = false, onCadena }: { d: Dispositivo;
         </small>
       </span>
       <span className="col-start-2 row-start-2 justify-self-end max-[399px]:hidden sm:col-start-3 sm:row-start-1">
-        {nivel === 'operacion' ? null : d.serie
-          ? <Sparkline serie={d.serie.valores} limite={banda(d.limite)} ancho={96} alto={26} prioridad={gris ? undefined : DE_ESTADO[e] ?? undefined} gris={gris} />
+        {nivel === 'operacion' ? null : d.serie && escala
+          ? <Tendencia titulo={d.tipo} ventana={lecturasDe(d.serie)} series={[{ nombre: d.tipo, valores: d.serie.valores }]} escala={escala} unidad={d.unidad}
+              banda={senal?.banda ?? undefined} alarmas={senal?.alarmas ?? []} estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})}
+              decimales={senal?.decimales ?? 0} compacta ancho={96} alto={26} />
+          : d.serie ? <span className="block w-[96px] text-center text-[13px] leading-tight text-[var(--tinta2)]">sin límite: sin gráfica</span>
           // Sin serie: lo que es, en palabras y en tinta suave (sin pintar el texto).
           : <span className="block w-[96px] text-center text-[13px] leading-tight text-[var(--tinta2)]">{ss ? (gris ? 'sin lectura' : 'sin señal') : 'interruptor'}</span>}
       </span>
@@ -374,11 +381,14 @@ export function Instrumentos({ campoId, equipo }: { campoId: string; equipo: str
   if (activo) return <CadenaDato campoId={campoId} disp={activo} equipoNombre={eq.nombre} norma={eq.norma} onVolver={() => setCadenaTag(null)} />
   return (
     <div className="grid" data-instrumentos={equipo} data-parado={n?.parado ? 'si' : 'no'}>
-      {eq.dispositivos.map(d => <FilaDispositivo key={d.tag} d={d} nivel={nivel} gris={!!n?.parado} onCadena={setCadenaTag} />)}
+      {eq.dispositivos.map(d => <FilaDispositivo key={d.tag} d={d} senal={senalDe(n, d.tag)} nivel={nivel} gris={!!n?.parado} onCadena={setCadenaTag} />)}
       {!eq.dispositivos.length && <p className="text-[14px] text-[var(--tinta2)]">Sin instrumentos registrados.</p>}
     </div>
   )
 }
+
+/** La señal del nivel 3 de un dispositivo (su escala, banda y alarma), si el motor la trae. */
+const senalDe = (v: VistaNivel3 | null | undefined, tag: string) => v ? [...v.senales, ...v.plegadas].find(s => s.tag === tag) : undefined
 
 /** Cinco y «ver N más»; lo que no está normal (fuera de banda, sin señal) nunca
  *  se esconde. Lo que no se ve en la pantalla sale en el papel. */

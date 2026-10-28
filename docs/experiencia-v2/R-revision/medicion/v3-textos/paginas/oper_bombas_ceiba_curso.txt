@@ -1,0 +1,73 @@
+#/oper/bombas/ceiba/curso
+
+La Ceiba
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Parados
+4
+Avisan
+1
+Sin instrumento
+5
+Todos
+28
+Más filtros
+(1)
+Todos los tipos
+Bombas
+3
+Electrosumergibles
+15
+Pozos
+18
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+18
+Crudo
+4
+Agua
+3
+Gas
+1
+Servicios
+2
+Buscar por tag
+3 equipos
+· ordenados por estado
+¿Lo vigila TRIM?
+1
+P-201B
+bomba de agua
+Alarma · parada desde hoy, 03:52
+sí · 8 señales
+1.665bbl/d
+se deja de producir
+P-201A
+bomba de agua
+sin instrumento: se supone en marcha · sube porque P-201B está parada
+no: sin instrumento
+3.059bbl/d
+si falla hoy · después de 2 min de colchón
+P-201C
+bomba de agua
+sin instrumento: se supone en marcha · sube porque P-201B está parada
+no: sin instrumento
+3.059bbl/d
+si falla hoy · después de 2 min de colchón
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua, Pozos inyectores.

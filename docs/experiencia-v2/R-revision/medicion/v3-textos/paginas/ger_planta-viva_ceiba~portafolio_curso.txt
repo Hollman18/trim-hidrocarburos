@@ -1,0 +1,126 @@
+#/ger/planta-viva/ceiba~portafolio/curso
+
+Todos mis campos
+Datos de demostración
+La planta viva
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+
+Se deja de producir ahora
+
+2.650
+bbl/d
+
+Lo que más pesa: la bomba de agua P-201B, en La Ceiba. Hay 4 de 87 pozos parados.
+
+Ver P-201B
+Compartir el informe
+Metas
+
+Producción por día
+
+40.514
+bbl/d
+
+meta 40.200
+
+Cierre del mes
+
+1.222.131
+bbl
+proyectado
+
+meta 1.246.200
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+64.147
+bbl
+
+medido
+
+Diferido
+
+2.376
+bbl
+
+114 mil USD · máximo 3.642
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	1.448bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+1.381
+bbl/d
+
+jun a ago · 5 fallas al mes
+
+Este mes
+
+1.222
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+9.520
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 5 de 7 avisos acertaron
+
+Por tramo
+Por campo
+ahora · bbl/d
+La Ceiba
+1.966 bbl/d
+1
+P-201B · bomba de agua
+Morichal Norte
+684 bbl/d
+1
+MN-41 · electrosumergible
+
+Guacamayo, El Palmar, La Zarza (gas: sin tubería): sin paradas ahora.

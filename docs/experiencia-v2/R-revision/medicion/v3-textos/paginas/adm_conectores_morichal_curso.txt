@@ -1,0 +1,83 @@
+#/adm/conectores/morichal/curso
+
+Morichal Norte
+Configurar
+Datos de demostración
+Conectores y tags del campo
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Sistemas corporativos
+sincronizado 2 de oct, 13:58
+SAP S/4HANA · Mantenimiento (PM)
+conectado
+Avisos a SAP
+7
+Órdenes de SAP
+28 · 0 abiertas
+Horas de SAP
+207,7 h
+Repuestos de SAP
+6 materiales
+Equipos del PLC en SAP
+43 de 43
+Catálogos de daño
+
+Bomba de reinyección
+5 partes (cat. B) · 11 daños (cat. C) · 5 causas (cat. 5)
+
+Bomba multifásica
+6 partes (cat. B) · 12 daños (cat. C) · 5 causas (cat. 5)
+
+Electrosumergible
+5 partes (cat. B) · 7 daños (cat. C) · 5 causas (cat. 5)
+
+Bordes conectados
+2
+Tags registrados
+49
+
+46 asociados
+
+Por asociar
+3
+
+sin equipo resuelto
+
+Equipos del campo
+9
+
+del registro de ingeniería
+
+Bordes
+EPIC-MORICHAL-02
+GRV-EPIC-PR1 · serie GRVMOR9003 · firmware 3.6.0 · enlace starlink · buffer 48 h
+3 tags
+reportó hace instantes
+EPIC-MORICHAL-01
+GRV-EPIC-PR1 · serie GRVMOR0017 · firmware 3.6.2 · enlace starlink · buffer 48 h
+46 tags
+reportó hace instantes
+Inscribir un borde nuevo
+Tags por asociar
+3 de 3 con sugerencia
+Aplicar las 3
+XI-3016
+Presión de succión · psi · opc-ua · cada 5 s · EPIC-MORICHAL-02
+sugerido MPP-301
+XP-3016
+Caída de presión del filtro · psi · opc-ua · cada 5 s · EPIC-MORICHAL-02
+sugerido MPP-301
+XT-3016
+Temperatura de succión · °C · opc-ua · cada 5 s · EPIC-MORICHAL-02
+sugerido MPP-301

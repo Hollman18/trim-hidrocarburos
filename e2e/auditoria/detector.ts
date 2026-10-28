@@ -42,10 +42,18 @@
    - «simulado»: una cifra simulada o proyectada tan grande como la mayor medida
      (P-05; regla 5: lo medido manda);
    - «pérdida»: lo diferido dicho como pérdida, «se pierde(n)» o «pierde N bbl»
-     (T-8; regla 3: diferido no es pérdida). */
+     (T-8; regla 3: diferido no es pérdida).
+
+   K3 (P-01; kit-scada.md §7, punto 2) suma:
+   - «kit»: un <svg> de indicador o gráfica hecho a mano, fuera del kit SCADA. Cada <svg> que
+     dibuja el kit lleva `data-kit`, en él o en la caja de su pieza (la barra, la tendencia, las columnas, la barra contra la meta,
+     el esquema de proceso —también la tubería de La planta viva y el esquema de planta— y la
+     muestra de una línea). Quedan permitidos la marca de estado (el cuadro de 14 × 14 de
+     `Prioridad.tsx`, que el kit usa tal cual) y los íconos (lucide, o un dibujo de 32 px o menos
+     sin nombre propio). Un <svg> dentro de otro es parte de su dibujo. */
 
 /** [tipo, elemento, cuánto (px, px², o una cuenta), contenedor o vecino] */
-export type Hallazgo = [tipo: 'pantalla' | 'desborde' | 'sale' | 'recortado' | 'encimado' | 'chico' | 'grande' | 'simulado' | 'color' | 'pestañas' | 'mayúsculas' | 'pérdida',
+export type Hallazgo = [tipo: 'pantalla' | 'desborde' | 'sale' | 'recortado' | 'encimado' | 'chico' | 'grande' | 'simulado' | 'color' | 'pestañas' | 'mayúsculas' | 'pérdida' | 'kit',
   elemento: string, cuanto: number, otro?: string]
 
 export function detectar(): Hallazgo[] {
@@ -386,6 +394,18 @@ export function detectar(): Hallazgo[] {
     const gritadas = texto.split(/[\s·,:;()¿?¡!«»"/–—]+/)
       .filter(p => /^\p{L}{5,}$/u.test(p) && p === p.toUpperCase() && !SIGLAS.test(p.normalize('NFD').replace(/\p{M}/gu, '')))
     if (gritadas.length) out.push(['mayúsculas', `${el.tagName.toLowerCase()} «${texto.replace(/\s+/g, ' ').slice(0, 40)}»`, gritadas.length])
+  }
+
+  // K3 · «kit»: ningún <svg> de indicador o gráfica fuera del kit SCADA (`data-kit`, que pone el kit).
+  for (const s of raiz.querySelectorAll('svg')) {
+    if (s.parentElement?.closest('svg') || s.closest('[role=tooltip]') || !seVe(s)) continue
+    // Del kit: el <svg> lleva `data-kit`, o va dentro de su pieza (la barra y la barra contra la meta
+    // ponen `data-kit` en su caja, con el valor en HTML al lado del dibujo).
+    if (s.closest('[data-kit]') || s.getAttribute('viewBox') === '0 0 14 14') continue
+    const r = s.getBoundingClientRect()
+    if (r.width < 1 || r.height < 1) continue
+    const icono = /(^|\s)lucide(\s|-|$)/.test(clase(s)) || (Math.max(r.width, r.height) <= 32 && !s.getAttribute('aria-label')?.trim())
+    if (!icono) out.push(['kit', `<svg> fuera del kit SCADA (sin data-kit): ${desc(s)}`, Math.round(Math.max(r.width, r.height))])
   }
 
   // Textos que se pisan entre sí, renglón por renglón. F4 · Solo dentro de la misma capa: un diálogo

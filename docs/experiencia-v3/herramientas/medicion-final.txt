@@ -1,5 +1,5 @@
 # Experiencia v3 · la paleta final (decisión 5), medida desde src/index.css
-# 2026-10-27 · node docs/experiencia-v3/herramientas/medir-final.mjs
+# 2026-10-28 · node docs/experiencia-v3/herramientas/medir-final.mjs
 
 ### claro
 fondos: suelo #e8e6e2 · superficie #dfddd8 · panel #f6f5f2 · panel2 #eeece8 · elevado #fcfbf9

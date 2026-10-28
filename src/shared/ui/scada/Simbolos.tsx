@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { COLOR_CONDICION, TRAZO_FLUIDO, cuerpoDe, valorEscrito, type CondicionKit, type EstadoKit, type Fluido } from './tipos'
@@ -188,30 +188,52 @@ export function Area({ x, y, estado = 'normal', condicion, corre, texto, ancho =
 /** 4 · Una línea por fluido: el trazo de la app (Planta.tsx, `TRAZO`), en --dato1, con una
  *  flecha fija de 8 px al final. El fluido se distingue por el trazo y su rótulo, nunca por el
  *  color ni por una animación. Sin flujo: el mismo trazo en --dato3 al 55 %. */
-export function Linea({ puntos, fluido, sinFlujo = false, flecha = true }: {
-  puntos: ReadonlyArray<readonly [number, number]>
+export function Linea({ puntos, d: camino, fluido, sinFlujo = false, flecha = true }: {
+  /** Los quiebres de la línea; la flecha va en el último tramo. */
+  puntos?: ReadonlyArray<readonly [number, number]>
+  /** O el camino ya armado (el esquema de planta, `entities/planta`): sin flecha. */
+  d?: string
   fluido: Fluido
   sinFlujo?: boolean
   flecha?: boolean
 }) {
   const f = TRAZO_FLUIDO[fluido], color = sinFlujo ? 'var(--dato3)' : 'var(--dato1)'
-  const d = puntos.map((p, i) => `${i ? 'L' : 'M'}${p[0]} ${p[1]}`).join(' ')
-  const a = puntos.at(-2), b = puntos.at(-1)
+  const p = puntos ?? []
+  const d = camino ?? p.map((q, i) => `${i ? 'L' : 'M'}${q[0]} ${q[1]}`).join(' ')
+  const a = camino ? undefined : p.at(-2), b = camino ? undefined : p.at(-1)
   const angulo = a && b ? (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI : 0
   return (
     <g data-kit="linea" data-fluido={fluido} data-sin-flujo={sinFlujo ? '' : undefined} opacity={sinFlujo ? 0.55 : undefined}>
       <path d={d} fill="none" stroke={color} strokeWidth={f.ancho} strokeDasharray={f.dash} strokeLinejoin="miter" />
-      {flecha && b && <path d="M0 -4.5 L8 0 L0 4.5Z" fill={color} transform={`translate(${b[0]} ${b[1]}) rotate(${angulo}) translate(-8 0)`} />}
+      {flecha && a && b && <path d="M0 -4.5 L8 0 L0 4.5Z" fill={color} transform={`translate(${b[0]} ${b[1]}) rotate(${angulo}) translate(-8 0)`} />}
     </g>
   )
 }
 
-/** El <svg> de un esquema, con su nombre accesible (cada gráfica lleva `role="img"`). */
-export function Esquema({ ancho, alto, etiqueta, children, className }: { ancho: number; alto: number; etiqueta: string; children: ReactNode; className?: string }) {
+/** El <svg> de un esquema, con su nombre accesible (cada gráfica lleva `role="img"`). Con `grupo`,
+ *  `role="group"`: adentro hay equipos que se abren con el teclado (el esquema de planta), y una
+ *  imagen los volvería mudos para el lector aunque recibieran el foco. */
+export function Esquema({ ancho, alto, etiqueta, grupo = false, ajuste, style, children, className, ...datos }: {
+  ancho: number; alto: number; etiqueta: string; grupo?: boolean
+  /** El `preserveAspectRatio` de un esquema que se estira con su caja. */
+  ajuste?: string
+  style?: CSSProperties
+  children: ReactNode; className?: string
+} & { [dato: `data-${string}`]: string | number | boolean | undefined }) {
   return (
-    <svg width={ancho} height={alto} viewBox={`0 0 ${ancho} ${alto}`} role="img" aria-label={etiqueta} data-kit="esquema"
-      className={cn('block h-auto max-w-full overflow-visible', className)}>
+    <svg width={ancho} height={alto} viewBox={`0 0 ${ancho} ${alto}`} preserveAspectRatio={ajuste} role={grupo ? 'group' : 'img'} aria-label={etiqueta}
+      {...datos} data-kit="esquema" style={style} className={cn('block h-auto max-w-full overflow-visible', className)}>
       {children}
+    </svg>
+  )
+}
+
+/** La muestra de una línea por fluido, para una leyenda o una fila (22 × 8, sin flecha): el
+ *  fluido por su trazo, junto a su palabra. Va sin nombre propio: la palabra está al lado. */
+export function MuestraFluido({ fluido }: { fluido: Fluido }) {
+  return (
+    <svg width={22} height={8} viewBox="0 0 22 8" aria-hidden data-kit="muestra-fluido" className="inline-block shrink-0">
+      <Linea puntos={[[1, 4], [21, 4]]} fluido={fluido} flecha={false} />
     </svg>
   )
 }

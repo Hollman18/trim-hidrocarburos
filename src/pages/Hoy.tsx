@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useAmbito, useRol, usePersona } from '@/app/store'
+import { useAmbito, useRol, usePersona, useRango } from '@/app/store'
 import { useHoy, type TareaHoy, type VistaHoy } from '@/shared/api/hoy'
 import { useJornada } from '@/shared/api/balance'
 import { Boton } from '@/shared/ui/primitivas'
@@ -10,11 +10,13 @@ import { ordenDeCierre } from '@/widgets/hoy/vista'
 import { Entrega } from '@/widgets/hoy/Entrega'
 import { Cifras } from '@/widgets/hoy/Cifras'
 import { MiTurno } from '@/widgets/hoy/MiTurno'
+import { Balance } from '@/widgets/choke/Balance'
 import { InicioJefe, NoIntervenir } from '@/widgets/hoy/Jefe'
 import { LoQueVio, type Vio } from '@/widgets/hoy/LoQueVio'
 import { RegistrarPerdida } from '@/widgets/hoy/Perdida'
 import { SuOrden } from '@/widgets/sap/CerrarOrden'
 import { AvisarSap } from '@/widgets/sap/AvisarSap'
+import { useListaEquipos } from '@/shared/api/equiposTecnico'
 import { useEnvio, type Envio } from '@/widgets/hoy/envio'
 import { useResponder, useConfirmar, useEscribir } from '@/widgets/hoy/acciones'
 import { useIr } from '@/widgets/hoy/palabras'
@@ -39,6 +41,17 @@ const bombasParadas = (v: VistaHoy) => {
   return [...vistas.values()]
 }
 
+/** C1 (QA v3) · FF-5 para el supervisor: su Hoy no trae la pregunta de la bomba (la debe quien la abre), así que
+ *  «SAP no lo sabe · Avisar» no le salía y tenía que ir a Equipos → la ficha. Le sale por cada bomba PARADA que da
+ *  el motor (`GET /vistas/lista-equipos`, `parado`), además de las que tienen pregunta. Un toque, como al jefe. */
+function AvisarParadas({ campos, desdePreguntas }: { campos: string[]; desdePreguntas: ReturnType<typeof bombasParadas> }) {
+  const lista = useListaEquipos(campos)
+  const ya = new Set(desdePreguntas.map(b => b.equipo))
+  const paradas = lista.filas.filter(f => f.tipo === 'bomba' && f.parado && !ya.has(f.equipo))
+    .map(f => ({ campoId: f.campoId, equipo: f.equipo, contexto: `${f.familia} · ${f.palabra}` }))
+  return <>{[...desdePreguntas, ...paradas].map(b => <AvisarSap key={`${b.campoId}|${b.equipo}`} {...b} />)}</>
+}
+
 /** El número de orden que nombra una tarjeta de orden del motor («…orden 40012056…» o su id). */
 const ordenesDe = (t: TareaHoy) => [...new Set(`${t.id} ${t.titulo} ${(t.porque ?? []).map(x => (typeof x === 'string' ? x : x.b)).join('')}`.match(/\b\d{8}\b/g) ?? [])]
 
@@ -53,7 +66,7 @@ const ordenesDe = (t: TareaHoy) => [...new Set(`${t.id} ${t.titulo} ${(t.porque 
  *  Contestar o confirmar deja un aviso con «Deshacer». Cuando una tarjeta se va, el foco pasa
  *  a la que quedó en su lugar y no se pierde (A2). */
 export function Hoy() {
-  const rol = useRol(); const ambito = useAmbito(); const persona = usePersona()
+  const rol = useRol(); const ambito = useAmbito(); const persona = usePersona(); const rango = useRango()
   const ir = useIr()
   const v = useHoy(rol.id, ambito.campos.map(c => c.id))
   const envio = useEnvio(useEscribir(), rol.id)
@@ -110,7 +123,8 @@ export function Hoy() {
         abiertaDeEntrada={t.id === primeraAbierta} compacta={rol.id === 'sup' || rol.id === 'jefe'} onConfirmar={confirmar} onResponder={responder} />)}
     </div>
   )
-  const avisar = (rol.id === 'sup' || rol.id === 'jefe') && bombasParadas(v).map(b => <AvisarSap key={b.equipo} {...b} />)
+  const avisar = rol.id === 'jefe' ? bombasParadas(v).map(b => <AvisarSap key={b.equipo} {...b} />)
+    : rol.id === 'sup' ? <AvisarParadas campos={ambito.campos.map(c => c.id)} desdePreguntas={bombasParadas(v)} /> : null
   const loQueVio = vio && <LoQueVio v={vio} envio={envio} onListo={() => setVio(null)} />
 
   return (
@@ -139,6 +153,9 @@ export function Hoy() {
         {rol.id === 'jefe' && <NoIntervenir />}
         {orden && (rol.id === 'sup' || rol.id === 'tec') && <OrdenDeCierre t={orden} />}
         {rol.id === 'sup' && campo && <MiTurno campoId={campo} onUnaPorUna={corregir} />}
+        {/* C1 (QA v3) · El balance del choke del período para el supervisor (CONSTRUCCION.md): «Mi turno» trae lo diferido
+            y lo perdido de la jornada; aquí, lo producido, lo diferido y lo perdido del mes, por tramo, con su árbol a un toque. */}
+        {rol.id === 'sup' && campo && <Balance q={{ campos: [campo], desde: rango.desde, hasta: rango.hasta }} />}
         <Hechas hs={v.hechas} onCorregir={corregir} />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { PALABRA_CONDICION, type SenalNivel3, type CondicionFranja } from '@/shared/api/equiposTecnico'
-import { IndicadorFijo } from '@/shared/ui/Analogico'
-import { Minitendencia } from '@/shared/ui/Sparkline'
+import { Barra, Tendencia } from '@/shared/ui/scada'
+import { estadoKit } from '@/widgets/equipos/estadoKit'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { cn } from '@/shared/lib/cn'
 
@@ -23,8 +23,9 @@ const valorDe = (s: Pick<SenalNivel3, 'valor' | 'decimales'>) =>
   s.valor === null ? '---' : s.valor.toLocaleString('es-CO', { minimumFractionDigits: s.decimales, maximumFractionDigits: s.decimales })
 
 /** F3 · Una señal con la escala FIJA que da el motor (`nivelEquipo`; X2 §5.1 e I1;
- *  H5 y H12): el indicador de alto desempeño con su banda normal y su alarma, la
- *  minitendencia de la ventana sobre la misma escala, y el valor en tinta (en
+ *  H5 y H12): la barra del kit SCADA con su banda normal y su alarma (K3: antes el
+ *  indicador propio, `IndicadorFijo`), la tendencia compacta del kit sobre la misma
+ *  escala, y el valor en tinta (en
  *  negrita si es anormal, con la marca a su izquierda: X2 B5). Con el equipo
  *  parado, en gris y sin marca propia (X2 B9). La pantalla no calcula escala ni
  *  prioridad: las dos vienen del motor. Sin lectura, «---» y su porqué en gris
@@ -39,7 +40,8 @@ export function SenalFija({ s, nombre, sub, detalle = false, className }: {
   detalle?: boolean
   className?: string
 }) {
-  const etiqueta = `${s.nombre}, ${s.valor === null ? 'sin señal' : `${valorDe(s)} ${s.unidad}`}; ${s.limite}${s.gris ? '; equipo parado' : ''}${s.condicion ? `; ${PALABRA_CONDICION[s.condicion]}` : ''}`
+  const k = estadoKit(s)
+  const escala = s.escala ? { min: s.escala[0], max: s.escala[1], firmada: false } : undefined
   return (
     <div className={cn('min-w-0', className)} data-senal-fija={s.tag} data-condicion={s.condicion ?? ''} data-gris={s.gris ? 'si' : 'no'}>
       <div className="flex items-start justify-between gap-2">
@@ -57,12 +59,18 @@ export function SenalFija({ s, nombre, sub, detalle = false, className }: {
         </span>
       </div>
       {/* Sin ningún límite declarado no hay escala: el indicador no se dibuja ni se inventa, se dice (H5; X2 §7.8). */}
-      {s.escala ? (
+      {/* El valor y su marca ya van arriba, junto al nombre: la barra no los repite (`conValor`). Sin la marca en
+          la barra, el límite cruzado no se pinta: el color va solo donde va su forma (X2 §4). */}
+      {escala ? (
         <div className="mt-1 flex items-center gap-2">
           <span className="min-w-0 flex-1">
-            <IndicadorFijo escala={s.escala} banda={s.banda} alarmas={s.alarmas} valor={s.valor} gris={s.gris} fuera={s.fuera} etiqueta={etiqueta} />
+            <Barra nombre={s.nombre} valor={s.valor} unidad={s.unidad} escala={escala} banda={s.banda ?? undefined} alarmas={s.alarmas}
+              estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})} decimales={s.decimales} ancho={156} conValor={false} />
           </span>
-          <span className="max-[359px]:hidden"><Minitendencia serie={s.serie} escala={s.escala} banda={s.banda} gris={s.gris} /></span>
+          <span className="max-[359px]:hidden">
+            <Tendencia titulo={s.nombre} ventana={`${s.serie.length} d`} series={[{ nombre: s.nombre, valores: s.serie }]} escala={escala} unidad={s.unidad}
+              banda={s.banda ?? undefined} alarmas={s.alarmas} estado={k.estado} {...(k.condicion ? { condicion: k.condicion } : {})} decimales={s.decimales} compacta ancho={80} alto={32} />
+          </span>
         </div>
       ) : <small className="mt-1 block text-[13px] text-[var(--tinta2)]" data-sin-escala>sin límite declarado: no se dibuja su indicador</small>}
       {detalle && <small className="tabular mt-0.5 block text-[13px] text-[var(--tinta2)]">{s.limite}</small>}

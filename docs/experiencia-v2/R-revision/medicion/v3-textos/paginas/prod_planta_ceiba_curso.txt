@@ -1,0 +1,111 @@
+#/prod/planta/ceiba/curso
+
+Todos mis campos
+La Ceiba
+La planta viva
+Datos de demostración
+Planta
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+Esquema de planta
+gas a venta
+9 de 13
+equipos con datos
++ 18 pozos
+Ver la tubería
+la planta
+
+Ahora:
+183.427 bbl/d de fluido
+9.394 bbl/d de crudo
+gas sin medición
+174.033 bbl/d de agua
+
+Tren de gas
+Tren de crudo
+Tren de agua
+Pozos productores
+18 pozos · 3 parados
+Manifold deproducción
+Separadortrifásico
+V-101
+Depurador de gas
+sin datos
+Tea / quemador
+Compresor de gas
+C-401
+Gas a venta
+3
+Tratador térmico
+H-302
+2
+Tanques enespecificación
+1 de 2 con datos
+PMO-01
+Unidad LACT
+LACT-01
+Oleoducto
+Tanque de agua
+LT-2012 · 89,6 %
+1
+Bombas de agua
+P-201B · detenido
+Pozos inyectores
+Subestación 13,8kV
+SE-2
+1
+Aire deinstrumentos
+K-101 · degradado
+Capturando datos
+9 equipos
+1
+P-201B
+Alarma
+detenido
+PI-2010 18,2 psi
+· 573 bbl diferidos
+1
+K-101 · Aire de instrumentos
+Alarma
+degradado
+PT-1011 112 psi
+2
+TK-102 · PMO-02
+Atención
+LI-1102 14,2 pies
+3
+H-302 · Tratador térmico
+Aviso
+TI-3021 318 °C
+SE-2 · Subestación 13,8 kV
+II-0021 412 A
+· 118 bbl diferidos
+TK-AG-CE · Tanque de agua de La Ceiba
+89,6
+%
+alto-alto 90 %
+P-201B detenida: el respaldo toma el agua que entra, el nivel no sube
+ver 3 más
+Configurados sin datos
+4 equipos
+Depurador de gas
+sin instrumento
+TK-101 · respaldo
+sin instrumento
+P-201A
+sin instrumento
+P-201C
+sin instrumento

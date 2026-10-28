@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { ChevronRight, X } from 'lucide-react'
 import { NOMBRE_MOMENTO, LEMA_MOMENTO, type Momento, type PlantaDelCampo, type TramoVivo } from '@/shared/api/plantaViva'
 import { MarcaPrioridad, MarcaCondicion } from '@/shared/ui/Prioridad'
 import { useModal } from '@/shared/ui/foco'
-import { Chevron } from './piezas'
 import { n0 } from './cifras'
 import { useAcciones } from './acciones'
 
@@ -115,7 +114,7 @@ function Contenido({ planta, tramo: t, momento, periodo, onCerrar, acciones }: P
                       <span className="text-[var(--tinta2)]"> · {e.familia} · {e.condicion}</span>
                       <span className="block font-semibold text-[var(--tinta)]">{e.texto}</span>
                     </span>
-                    <Chevron t={16} />
+                    <ChevronRight aria-hidden size={16} strokeWidth={2} className="shrink-0 text-[var(--tinta3)]" />
                   </button>
                 </li>
               ))}

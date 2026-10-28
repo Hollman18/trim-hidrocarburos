@@ -35,6 +35,7 @@ import {
   type EstadoConfiguracion, type PasoConfiguracion,
 } from '@/shared/api/choke'
 import { useSesion, useVersiones, usePlantas } from '@/shared/api/sesion'
+import { useEstadoConfiguracion } from '@/shared/api/configuracionEstado'
 
 const campoInput = 'w-full rounded border border-[var(--linea)] bg-[var(--panel2)] px-2 py-[5px] text-[14px] outline-none focus:border-acento disabled:opacity-70'
 
@@ -158,10 +159,32 @@ function ListaPartes({ partes, actual, onIr }: { partes: Pestana[]; actual: Part
 /** El estado de la configuración del campo (P-04; X4 §3.4, adm): la cifra «N de M
  *  pasos listos», lo que falta y una fila por paso que lleva a donde se hace. Lo
  *  arma el motor (`estadoConfiguracion`): aquí solo se pinta. */
-function EstadoDelCampo({ estado, otros, partes, cambios, onPaso, onParte, onCampo }: {
-  estado: EstadoConfiguracion
-  /** Los demás campos del rol, con su cuenta. */
-  otros: Array<{ id: string; nombre: string; listos: number; total: number }>
+/** C1 (QA v3, hallazgo de C3): «3 de 6 pasos» lo da el motor, `GET /vistas/configuracion/estado`
+ *  (`useEstadoConfiguracion`), con lo firmado; la pantalla ya no corre `estadoConfiguracion`. Lo
+ *  contestado en el borrador de la topología (sin firmar) es de la pantalla y no viaja (la costura lo
+ *  dice): solo cambia la frase de ese paso («en el borrador faltan…»), nunca la cuenta ni lo listo. */
+function useEstadoDelCampo(campoId: string, borrador: Readonly<Record<string, TopologiaEnBorrador>>): EstadoConfiguracion {
+  const firmado = useEstadoConfiguracion(campoId)
+  const ctx = useCtx()
+  return useMemo(() => {
+    if (!borrador[campoId]) return firmado
+    const enBorrador = estadoConfiguracion(campoId, ctx, borrador).pasos.find(p => p.paso === 'topologia')
+    return enBorrador ? { ...firmado, pasos: firmado.pasos.map(p => (p.paso === 'topologia' ? { ...p, detalle: enBorrador.detalle, corto: enBorrador.corto } : p)) } : firmado
+  }, [firmado, borrador, campoId, ctx])
+}
+
+/** Un campo de «Sus otros campos», con su «N de M» del motor. */
+function OtroCampo({ id, nombre, oculto, onCampo }: { id: string; nombre: string; oculto: boolean; onCampo: (id: string) => void }) {
+  const e = useEstadoConfiguracion(id)
+  return <Enlace onClick={() => onCampo(id)} className={oculto ? 'max-sm:hidden' : undefined}>{nombre} · {e.listos} de {e.total}</Enlace>
+}
+
+function EstadoDelCampo({ campoId, borrador, otros, partes, cambios, onPaso, onParte, onCampo }: {
+  campoId: string
+  /** Lo contestado de la topología, sin firmar (solo cambia la frase de ese paso). */
+  borrador: Readonly<Record<string, TopologiaEnBorrador>>
+  /** Los demás campos del rol; su cuenta la da el motor. */
+  otros: Array<{ id: string; nombre: string }>
   partes: Pestana[]
   /** Cambios del borrador sin firmar, y dónde se firman. */
   cambios: { n: number; parte: Pestana }
@@ -170,6 +193,7 @@ function EstadoDelCampo({ estado, otros, partes, cambios, onPaso, onParte, onCam
   onCampo: (id: string) => void
 }) {
   const campo = useCampo()
+  const estado = useEstadoDelCampo(campoId, borrador)
   // K2 · En el teléfono, los otros campos detrás de un toque: cada uno trae su «N de M» y la primera
   // pantalla es la de este campo (el campo se cambia también en la píldora de la banda).
   const [verOtros, setVerOtros] = useState(false)
@@ -219,7 +243,7 @@ function EstadoDelCampo({ estado, otros, partes, cambios, onPaso, onParte, onCam
             Sus otros campos<ChevronDown aria-hidden className={cn('size-4 text-[var(--tinta2)] transition-transform duration-[120ms]', verOtros && 'rotate-180')} />
           </button>
           <span className="max-sm:hidden">Sus otros campos:</span>
-          {otros.map(o => <Enlace key={o.id} onClick={() => onCampo(o.id)} className={verOtros ? undefined : 'max-sm:hidden'}>{o.nombre} · {o.listos} de {o.total}</Enlace>)}
+          {otros.map(o => <OtroCampo key={o.id} id={o.id} nombre={o.nombre} oculto={!verOtros} onCampo={onCampo} />)}
         </p>
       )}
       {/* Lo que el administrador también firma o asocia, cada uno en su paso y a 1 toque (necesario-por-rol §11). */}
@@ -365,12 +389,11 @@ function Editor({ pestana, partes, modo, setModo, pasoFilosofia, setPasoFilosofi
 
   // El estado del campo (P-04): lo arma el motor con lo firmado y lo contestado en el borrador.
   if (pestana === 'estado') {
-    const estado = estadoConfiguracion(campoId, ctx, topologia)
-    const otros = campos.filter(c => c.id !== campoId).map(c => { const e = estadoConfiguracion(c.id, ctx, topologia); return { id: c.id, nombre: c.nombre, listos: e.listos, total: e.total } })
+    const otros = campos.filter(c => c.id !== campoId).map(c => ({ id: c.id, nombre: c.nombre }))
     // Un paso que firma otro rol (las metas, del gerente) no lleva a ninguna parte de este rol: se dice en su fila.
     const irPaso = (p: PasoConfiguracion) => { const d = DONDE_PASO[p]; if (partes.includes(d.parte)) onPestana(d.parte, d.paso) }
     return (
-      <EstadoDelCampo estado={estado} otros={otros} partes={partes} cambios={{ n: cambios.length, parte: grupos.tecnica.length ? 'tecnica' : 'metas' }}
+      <EstadoDelCampo campoId={campoId} borrador={topologia} otros={otros} partes={partes} cambios={{ n: cambios.length, parte: grupos.tecnica.length ? 'tecnica' : 'metas' }}
         onPaso={irPaso} onParte={p => onPestana(p)} onCampo={setCampo} />
     )
   }

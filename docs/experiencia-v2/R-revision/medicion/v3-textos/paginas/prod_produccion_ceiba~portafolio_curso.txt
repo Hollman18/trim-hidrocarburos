@@ -1,0 +1,86 @@
+#/prod/produccion/ceiba~portafolio/curso
+
+Todos mis campos
+Resultados
+Datos de demostración
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+provisional
+
+Producción medida
+
+3
+22.052
+bbl
+
+meta a la fecha 22.404 · 13.928 bbl/d
+
+Potencial del libro:
+23.176 bbl
+· 14.637 bbl/d · lo medido es el 95,2 %
+
+Día a día
+bbl/d
+Producción por día
+2 días
+0
+20.000
+1 de oct
+2 de oct · en curso
+
+Oscura: real medido · clara: potencial del libro · discontinua: meta firmada · día en curso: 13.305 bbl/d
+
+Medición oficial
+La Ceiba
+corte de agua: analizador
+factor 0,958 · banda ±15 %
+FQI-0101 · computador de flujo de la unidad LACT-01
+El Palmar
+corte de agua: laboratorio
+factor 0,987 · banda ±15 %
+LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho
+¿Cuadra? Día por día
+Día	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+2 de oct · 14,0 h	
+3
+bajo la meta7.761	8.538	792	-15	90,9 %	8.254
+1 de oct	14.291	14.637	332	15	97,6 %	14.150
+Cuadre · asignación oficial
+mes cerrado
+Campo
+La Ceiba
+El Palmar
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 338.662 bbl · 18 pozos

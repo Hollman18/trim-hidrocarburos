@@ -1,0 +1,141 @@
+#/prod/planta-viva/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+La planta viva
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Salen hoy
+
+9.394
+de 11.857 bbl/d
+
+Limitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.
+
+Confirmar las 2
+◄ limita
+Pozos
+11.857
+dan, bbl/d
+1
+Planta
+13.000
+caben · sobran 1.143
+P-201B parada · capacidad sin firmar
+Salida
+9.394
+salen hoy
+capacidad sin firmar
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+16.941
+bbl
+
+medido
+
+Diferido
+
+1.046
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	118bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+391
+bbl/d
+
+jun a ago · 1 falla al mes
+
+Este mes
+
+436
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+3.934
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 3 de 3 avisos acertaron
+
+Por tramo
+
+Por confirmar
+
+4
+paradas
+
+antes de las 07:00, para el reporte
+
+LC-07, LC-16
+
+Planta · diferida · no planeada · Proceso / Facilidades · Parada estación/bombeo afecta pozos
+
+2 esperan la causa: se confirman cuando alguien conteste.
+
+Ver una por una
+
+Si falla hoy
+
+3.059
+bbl/d
+
+P-201A · sin instrumento · después de 2 min
+
+Ver P-201A
+Fin de mes
+
+Cargar la asignación de septiembre
+
+Cargarla
+¿Cuadra? Medición oficial y factor
+Registrar una pérdida

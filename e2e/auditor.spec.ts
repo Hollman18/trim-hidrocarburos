@@ -120,6 +120,11 @@ test('autoprueba F4: el detector ve las reglas de §11 y no ve lo que está bien
       '<div><b style="font-size:96px">45.233</b> <span>bbl · SIMULADA-GRANDE simulado</span></div>',
       // «pérdida»: lo diferido dicho como pérdida (T-8); no, la pérdida de verdad.
       '<p>Hoy SE-DICE-MAL: se pierden 1.665 bbl/d</p><p>Pérdida BIEN-DICHA: lo que salió y no se vendió</p>',
+      // K3 · «kit»: un <svg> de gráfica hecho a mano (sin `data-kit`); no, el del kit, un ícono ni una marca.
+      '<svg width="150" height="28"><title>GRAFICA-A-MANO</title><path d="M2 20 L60 8 L148 14" fill="none" stroke="var(--dato1)" stroke-width="2"/></svg>',
+      '<svg width="150" height="28" data-kit="tendencia" role="img" aria-label="KIT-BIEN"><title>GRAFICA-DEL-KIT</title><path d="M2 20 L148 14" fill="none" stroke="var(--dato1)" stroke-width="2"/></svg>',
+      '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><title>ICONO-BIEN</title><path d="m9 18 6-6-6-6" fill="none" stroke="currentColor"/></svg>',
+      `<span>${ROMBO('aria-hidden="true"')} MARCA-KIT alarma</span>`,
       // «encimado» no: un diálogo que no es modal flota sobre la vista (la ficha sin velo, las señas de la introducción).
       '<div role="dialog" style="position:fixed;left:0;top:0;width:420px;padding:8px;background:var(--elevado)">CAPA-QUE-FLOTA encima de la página</div>',
     ].join('')
@@ -149,6 +154,9 @@ test('autoprueba F4: el detector ve las reglas de §11 y no ve lo que está bien
   expect.soft(hay('pérdida', 'se pierden 1.665'), 'lo diferido dicho como pérdida').toBe(true)
   expect.soft(algo('BIEN-DICHA'), 'la pérdida de verdad («lo que salió y no se vendió») está bien').toEqual([])
   expect.soft(nuevos.filter(h => h[0] === 'encimado' && (h[1] + (h[3] ?? '')).includes('CAPA-QUE-FLOTA')).map(h => h[1]), 'un diálogo que flota no «pisa» la página que tapa').toEqual([])
+  expect.soft(hay('kit', 'GRAFICA-A-MANO'), 'K3 · un <svg> de gráfica hecho a mano, fuera del kit SCADA').toBe(true)
+  expect.soft([...algo('GRAFICA-DEL-KIT'), ...algo('ICONO-BIEN')].filter(t => t === 'kit'), 'K3 · el <svg> del kit (data-kit) y un ícono están bien').toEqual([])
+  expect.soft(algo('MARCA-KIT').filter(t => t === 'kit'), 'K3 · la marca de estado (14 × 14) está bien').toEqual([])
 
   // «desborde»: `.vista` se desplaza de lado (no es un desplazable a propósito); la página no.
   await page.locator('.vista').evaluate(m => {
@@ -265,14 +273,14 @@ for (const ancho of ANCHOS) {
         }
       }
 
-      const orden: Record<Hallazgo[0], number> = { pantalla: 0, desborde: 1, sale: 2, recortado: 3, encimado: 4, chico: 5, grande: 6, simulado: 7, color: 8, pestañas: 9, mayúsculas: 10, pérdida: 11 }
+      const orden: Record<Hallazgo[0], number> = { pantalla: 0, desborde: 1, sale: 2, recortado: 3, encimado: 4, chico: 5, grande: 6, simulado: 7, color: 8, pestañas: 9, mayúsculas: 10, pérdida: 11, kit: 12 }
       const lista = [...hallazgos.entries()]
         .sort((a, b) => orden[a[1].tipo] - orden[b[1].tipo] || b[1].donde.size - a[1].donde.size)
         .map(([clave, x]) => `[${x.tipo}] máx ${x.max}  ${clave}  · en ${x.donde.size}: ${[...x.donde].slice(0, 4).join(' · ')}${x.donde.size > 4 ? ' …' : ''}`)
       test.info().annotations.push({ type: 'auditoría', description: `${RUTAS.length} rutas · ${comprobaciones} comprobaciones de lo que ve cada rol · ${lista.length} hallazgos · ${errores.length} errores` })
       expect.soft([...new Set(fallasAsercion)], 'lo que cada rol ve').toEqual([])
       expect.soft([...new Set(errores)], 'errores de la página').toEqual([])
-      expect.soft(lista, 'lo que se sale, se recorta, se pisa, queda vacío o chico; las cifras grandes y simuladas; el color sin forma; las pestañas; los títulos en MAYÚSCULAS; lo diferido dicho como pérdida').toEqual([])
+      expect.soft(lista, 'lo que se sale, se recorta, se pisa, queda vacío o chico; las cifras grandes y simuladas; el color sin forma; las pestañas; los títulos en MAYÚSCULAS; lo diferido dicho como pérdida; un <svg> fuera del kit SCADA').toEqual([])
     })
   })
 }

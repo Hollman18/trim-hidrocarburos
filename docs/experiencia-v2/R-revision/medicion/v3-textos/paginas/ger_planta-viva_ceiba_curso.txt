@@ -1,0 +1,129 @@
+#/ger/planta-viva/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+La planta viva
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Se deja de producir ahora
+
+1.966
+bbl/d
+
+La bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.
+
+Ver P-201B
+Compartir el informe
+Metas
+
+Producción por día
+
+3
+10.700
+bbl/d
+
+meta 10.900
+
+Cierre del mes
+
+293.287
+bbl
+proyectado
+
+meta 337.900
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+16.941
+bbl
+
+medido
+
+Diferido
+
+1.046
+bbl
+
+50 mil USD · máximo 1.267
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	118bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+391
+bbl/d
+
+jun a ago · 1 falla al mes
+
+Este mes
+
+436
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+3.934
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 3 de 3 avisos acertaron
+
+Por tramo
+Dónde se trabó · La Ceiba
+Yacimiento
+la roca
+◄ limita
+Pozos
+15 de 18 en marcha
+1
+Planta
+1.665
+bbl/d no pasan
+P-201B · bomba de agua
+Salida
+el oleoducto recibe

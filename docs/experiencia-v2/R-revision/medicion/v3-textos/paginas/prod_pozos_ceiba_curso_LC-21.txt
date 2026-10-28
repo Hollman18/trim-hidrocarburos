@@ -1,0 +1,78 @@
+#/prod/pozos/ceiba/curso/LC-21
+
+La Ceiba
+Pozos
+LC-21
+Datos de demostración
+LC-19
+LC-21
+pozo LC-21 · bombeo mecánico · pozos productores · criticidad 3 de 5 · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+2
+Atención · parado desde el 1 de oct, 18:20 · hace 19,7 h
+
+301
+barriles por día
+
+se dejan de producir: el pozo está parado.
+
+No arrancar hasta identificar por qué paró
+Si arranca antes, queda como no conformidad.
+Sus señales
+tendencia de 12 días · parada: en gris y sin marca
+Estado del controlador
+POC-LC21
+interruptor: no lleva gráfica
+parado · CMD
+Su historia
+12 meses
+
+1 evento con pozos cerrados.
+
+Ver el diagnóstico: salud por parte e historia del PLC
+2
+Atención · Pozo LC-21
+La Ceiba · Bombeo mecánico · POC-LC21 · alimentador SE-2
+parado
+
+desde 1 de oct, 18:20 ·
+sin identificar
+
+Crudo asignado
+301 bbl/d
+Agua
+1.532 bbl/d
+corte 83 %
+Diferido · octubre, en curso
+247 bbl
+1 evento · 19,7 h equivalentes parado
+Pruebas
+5
+
+Separador de prueba automatizado SP-CE1
+
+Fecha	Crudo bbl/d	Agua bbl/d	Corte
+22 de septvigente · 10 d	314	1.532	83 %
+12 de jul	313	1.499	83 %
+11 de abr	314	1.473	82 %
+9 de ene	318	1.458	82 %
+9 de oct de 2025	328	1.455	82 %
+Eventos
+1 · octubre, en curso
+1 de oct, 18:20 · sigue · CMD
+sin identificar
+247 bbl
+±15 %

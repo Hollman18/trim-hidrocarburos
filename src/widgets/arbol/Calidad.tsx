@@ -146,22 +146,8 @@ export function CalidadClasificacion({ campos, desde, hasta, periodo, global }: 
           </>
         )}
 
-      <h3 className={`${TITULO} mt-1.5`}>Equipos sin topología</h3>
-      {c.sinTopologia.length === 0
-        ? <p className="text-[14px] text-[var(--tinta2)]">Todos los equipos de estas paradas dicen a qué pozos sirven.</p>
-        : (
-          <>
-            <p className="mb-1 text-[13px] text-[var(--tinta2)]">Sus paradas tomaron el tramo de la regla por tipo de causa: pídale al administrador que diga a qué pozos sirven (Configuración).</p>
-            <ul className="text-[14px]">
-              {c.sinTopologia.map(e => (
-                <li key={`${e.campoId}|${e.equipo}`} className="flex flex-wrap gap-x-2 border-b border-dashed border-[var(--linea2)] py-1 last:border-0">
-                  <b className="font-cond font-bold tracking-[.02em]">{e.equipo}</b><span className="text-[13px] text-[var(--tinta3)]">{donde(e.campoId).replace(/^ · /, '')}</span>
-                  <span className="tabular">{paradasYFilasDe(e)}</span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
+      {/* A-28 (borrado.md; C1, QA v3): «Equipos sin topología» salió de aquí: es trabajo del administrador y ya está
+          en su Estado («A qué pozos sirve cada equipo»). El dato sigue en el motor (`calidadClasificacion().sinTopologia`). */}
     </Panel>
   )
 }

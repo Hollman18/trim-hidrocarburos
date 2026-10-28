@@ -1,0 +1,47 @@
+#/oper/hoy/ceiba/curso
+
+La Ceiba
+Datos de demostración
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Pregunta
+1
+de 4
+
+1
+P-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h · planta · agua
+
+¿Qué parte se dañó?
+
+Lo que más le ha fallado a esta bomba:
+
+Sello mecánico
+5 de sus 8 fallas
+Rodamientos y cámara de empuje
+3 de sus 8 fallas
+Otra parte
+escoja de la lista
+Todavía no sé
+la pregunta sigue en Hoy
++ Lo que encontró (si quiere)
+
+Un toque y queda a nombre de Jairo Peña, con la hora del sistema.
+
+Ver P-201B
+No arrancar P-201B ni LC-21 hasta identificar qué se dañó
+Si arranca antes, queda como no conformidad.
+Orden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.
+Registrar una pérdida

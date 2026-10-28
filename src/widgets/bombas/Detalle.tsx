@@ -19,7 +19,7 @@ import { DichoEnPapel } from '@/shared/ui/DichoEnPapel'
 import { causaEnPapel } from '@/shared/ui/papel'
 import { causaParaSalir } from '@/shared/api/arbol'
 import { Tip } from '@/shared/ui/Tip'
-import { BarraMeta } from '@/shared/ui/BarraMeta'
+import { Barra } from '@/shared/ui/scada'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, n3, plural } from '@/shared/lib/formato'
@@ -166,12 +166,12 @@ export function DiagnosticoBomba({ b, nivel = 'ingenieria' }: { b: BombaVista; n
                 {(s.pronostico.tipo === 'sin-tendencia' || s.pronostico.tipo === 'no-atribuible') && <Info titulo="Sin fecha" texto={textoPronostico(s.pronostico)} />}
                 {s.plantilla.anuncia?.por && <Info rotulo="anuncia" titulo={`Qué anuncia · ${s.plantilla.nombre}`} texto={s.plantilla.anuncia.por} />}
               </p>
-              {s.pronostico.tipo !== 'sin-tendencia' && <div className="mt-1"><Proyeccion s={s} /></div>}
+              {s.pronostico.tipo !== 'sin-tendencia' && <div className="mt-1"><Proyeccion s={s} sinTitulo /></div>}
             </div>
           ))}
           <Lectura>
-            La línea continua y gruesa es lo medido; la punteada que sale de hoy, la tendencia
-            prolongada; la raya discontinua con su valor, el límite; la barra sobre el límite,
+            La línea continua y gruesa es lo medido; la delgada y discontinua que sale de hoy, la tendencia
+            prolongada; la raya discontinua de lado a lado, con su valor a la izquierda, el límite; la barra sobre el límite,
             el rango de días en que lo cruzaría («en 43 h · 41–45 h»: la cifra y su rango). El rango
             sale de la pendiente más o menos dos errores estándar. Si la pendiente no los supera, el
             vigía no da fecha («sin fecha»): sería inventarla. La ⓘ de cada señal dice qué anuncia.
@@ -248,9 +248,10 @@ export function SiSePara({ pr, simple = false }: { pr: Prediccion; simple?: bool
         {pr.colchon && !pr.parada && (
           <div className="text-[14px]">
             <H5>Colchón del tanque</H5>
-            <BarraMeta tamano="chica" rotulo={`nivel ${pr.colchon.nivel.tag}`} valor={pr.colchon.nivel.pct} unidad="%"
-              formato={v => `${n1(v)} %`} meta={pr.colchon.tanque.altoAlto * 100} tipoMeta="máximo"
-              rotuloMeta={`alto-alto ${n0(pr.colchon.tanque.altoAlto * 100)} %`} />
+            {/* El nivel con la barra del kit SCADA (§1): la escala del instrumento (0 a 100 %) y el alto-alto como su límite. */}
+            <Barra nombre={`Nivel ${pr.colchon.nivel.tag}`} valor={pr.colchon.nivel.pct} unidad="%" decimales={1} tag={pr.colchon.nivel.tag}
+              escala={{ min: 0, max: 100, firmada: true }} alarmas={[pr.colchon.tanque.altoAlto * 100]} ancho={168} />
+            <small className="tabular block text-[13px] text-[var(--tinta2)]">alto-alto {n0(pr.colchon.tanque.altoAlto * 100)} %</small>
             <dl className="mt-1.5 grid grid-cols-[1fr_auto] gap-x-3">
               <dt className="py-0.5 text-[var(--tinta2)]">Capacidad</dt><dd className="tabular py-0.5 text-right">{n0(pr.colchon.tanque.capacidadBbl)} bbl</dd>
               <dt className="py-0.5 text-[var(--tinta2)]">Volumen libre</dt><dd className="tabular py-0.5 text-right">{n0(pr.colchon.libreBbl)} bbl</dd>

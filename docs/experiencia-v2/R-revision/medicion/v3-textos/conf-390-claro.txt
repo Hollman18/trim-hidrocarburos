@@ -1,0 +1,44 @@
+La Ceiba
+EM
+Todos mis campos
+Demo
+Equipos
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Si falla hoy
+3.059
+bbl/d
+P-201A y P-201C
+sin instrumento
+se trabaría en la planta
+Vigía
+3 de 3
+aciertos
+Sin instrumento
+5
+equipos
+Entre fallas
+41 d
+bombas de agua
+Clasificación confirmada
+0 de 7
+filas
+planeada o no
+Abrir
+P-201A
+Le
+tocan
+2
+cosas
+c
+onseguir la causa de 3 paradas
+Ver lo que le toca
+P-201B
+SAP no lo sabe
+Avisar

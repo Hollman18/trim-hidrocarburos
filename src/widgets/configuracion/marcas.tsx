@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/shared/lib/cn'
+import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import type { EstadoEquipo } from './topologia'
 
 /* Las marcas de la filosofía operacional. Todo es gris (ISA-101): aquí no hay
@@ -10,20 +11,17 @@ import type { EstadoEquipo } from './topologia'
    - el tramo que limita: doble contorno y «◄ limita», nunca rojo.
    El morado (dato inválido) lo usa solo la carga por CSV, con `DatoInvalido`. */
 
-/** Un círculo gris punteado: lo que falta. `etiqueta` es su nombre para el
- *  lector; si el texto de al lado ya lo dice, va decorativa. */
+/** Lo que falta: la marca «falta» de X2 §4.2 (el rectángulo gris discontinuo), del punto de entrada
+ *  único (`MarcaCondicion`). C1 (QA v3): antes era un círculo punteado, la MISMA forma de «sin
+ *  comunicación» en otro color: en blanco y negro no se distinguían (X2 C8 y D2). `etiqueta` es su
+ *  nombre para el lector; si el texto de al lado ya lo dice, va decorativa. */
 export function MarcaFalta({ etiqueta, decorativa }: { etiqueta?: string; decorativa?: boolean }) {
-  const nombre = decorativa || !etiqueta ? { 'aria-hidden': true } : { role: 'img', 'aria-label': etiqueta }
-  return (
-    <svg width={12} height={12} viewBox="0 0 14 14" {...nombre} style={{ flexShrink: 0 }}>
-      <circle cx="7" cy="7" r="5.2" fill="none" stroke="var(--tinta3)" strokeWidth="1.5" strokeDasharray="2.2 1.8" />
-    </svg>
-  )
+  return <MarcaCondicion c="falta" tamano={12} decorativa={decorativa || !etiqueta} etiqueta={etiqueta} className="shrink-0" />
 }
 
 /** La forma de cada estado; el texto va al lado (la marca es decorativa).
  *  Firmado: un visto. En el borrador: el visto dentro de un cuadro (falta la
- *  firma). Propuesta: «?». Sin responder: el círculo punteado de lo que falta. */
+ *  firma). Propuesta: «?». Sin responder: la marca «falta». */
 export function MarcaEstado({ estado }: { estado: EstadoEquipo }) {
   if (estado === 'sin-responder') return <MarcaFalta decorativa />
   return (

@@ -4,7 +4,7 @@ import type { Libro, FilaEquipo, EquipoSinCosto } from '@/entities/libro'
 import { TIPO_CAUSA, type TipoCausa } from '@/entities/causa-senal'
 import { campoPorId } from '@/entities/campos'
 import { SIN_META } from '@/entities/configuracion'
-import { BarraMeta } from '@/shared/ui/BarraMeta'
+import { ContraMeta } from '@/shared/ui/scada'
 import { Boton, Chip } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
@@ -118,11 +118,11 @@ function Campo({ c, rejilla, angosto, desde, hasta, filas, sinCosto, onAbrir, on
           {c.sinMeta && <Chip>{SIN_META}</Chip>}
         </span>
         <span className={`col-start-1 row-start-2 min-w-0 @3xl:col-start-2 @3xl:row-start-1 ${angosto.prod}`}>
-          <BarraMeta tamano="chica" ocultarRotulo rotulo="producción" valor={r} unidad="bbl/d" meta={c.sinMeta ? undefined : mp}
+          <ContraMeta ocultarRotulo rotulo="producción" valor={r} unidad="bbl/d" meta={c.sinMeta ? undefined : mp}
             rotuloMeta={c.sinMeta ? undefined : n0(mp)} fuera={!c.sinMeta && r < mp} />
         </span>
         <span className={`col-start-2 row-start-2 min-w-0 @3xl:col-start-3 @3xl:row-start-1 ${angosto.dif}`}>
-          <BarraMeta tamano="chica" ocultarRotulo tipoMeta="máximo" rotulo="diferido" valor={d} unidad="bbl/d" meta={c.sinMeta ? undefined : md}
+          <ContraMeta ocultarRotulo tipoMeta="máximo" rotulo="diferido" valor={d} unidad="bbl/d" meta={c.sinMeta ? undefined : md}
             rotuloMeta={c.sinMeta ? undefined : n0(md)} fuera={!c.sinMeta && d > md} />
         </span>
         <b className="tabular col-start-2 row-start-1 justify-self-end @3xl:col-start-4" data-bbl-campo={c.campoId}>{n0(c.brecha)}<span className="sr-only"> bbl diferidos</span></b>

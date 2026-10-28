@@ -1,0 +1,81 @@
+Campo
+La Ceiba
+Hoy
+4
+Equipos
+¿Cómo se lee?
+NO
+Nelson Ortiz
+Supervisor de operaciones
+La Ceiba
+Datos de demostración
+Hoy
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+Paradas por confirmar
+4
+el reporte sale mañana antes de las 07:00
+Ahora
+1.966
+bbl/d
+se dejan de producir
+No arrancar
+2
+P-201B y LC-21
+Sin causa
+2
+LC-21 y LC-08
+Entregar turno
+Registrar una pérdida
+Confirmar 2 paradas iguales
+Alarma
+P-201B
+cerró LC-07 y LC-16 05:43
+TRIM las dedujo:
+en la planta, no planeada
+Falta su confirmación.
+Confirmar las 2
+Ver una por una
+Conseguir la causa de 2 paradas
+Contestar yo
+Ver la parada
+Decidir 3 planes de P-201B simulado
+Ver los planes
+P-201B
+SAP no lo sabe
+Avisar
+Orden de cierre.
+Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.
+Mi turno
+d
+e 06:00 a 18:00 del 2 de oct
+Ver la jornada anterior
+Por confirmar
+3
+Diferido
+655
+bbl
+Perdido
+sin registro
+LC-21
+Venía del 1 de oct, 18:20 sigue
+falta toda la cadena
+100
+bbl
+por confirmar
+LC-16
+por
+P-201B
+Venía de las 05:43 sigue
+Planta Diferida No planeada Parada estación/bombeo afecta pozos
+290
+bbl
+por confirmar

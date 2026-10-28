@@ -13,7 +13,7 @@ import { Lectura } from '@/shared/ui/Lectura'
 import { ComoSeLee } from '@/shared/ui/comoSeLee'
 import { Tip } from '@/shared/ui/Tip'
 import { Info } from '@/shared/ui/Info'
-import { BarraMeta } from '@/shared/ui/BarraMeta'
+import { Barra, Esquema, Linea, MuestraFluido, type Fluido } from '@/shared/ui/scada'
 import { VerMas } from '@/shared/ui/VerMas'
 import { useVerMas } from '@/shared/ui/listaCorta'
 import { n0, n1, num, plural, sinLectura } from '@/shared/lib/formato'
@@ -24,15 +24,11 @@ import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { PALABRA_CONDICION, type CondicionFranja } from '@/shared/api/equiposTecnico'
 import { useCondiciones, rangoCondicion } from '@/widgets/pozos/estado'
 
-const COLOR: Record<Corriente, string> = {
-  multi: 'var(--f-multi)', crudo: 'var(--f-crudo)', gas: 'var(--f-gas)',
-  agua: 'var(--f-agua)', elec: 'var(--f-elec)', aire: 'var(--f-aire)',
-}
-/** El fluido se distingue por el trazo, no por el color (ISA-101): la línea
- *  principal es más gruesa, el gas va a trazos, el agua punteada. */
-const TRAZO: Record<Corriente, { ancho: number; patron?: string }> = {
-  multi: { ancho: 3 }, crudo: { ancho: 2.4 }, gas: { ancho: 2, patron: '8 4' },
-  agua: { ancho: 2, patron: '2 3' }, elec: { ancho: 2 }, aire: { ancho: 2, patron: '6 4' },
+/** K3 · Cada corriente es una línea por fluido del kit SCADA (kit-scada.md §4, `TRAZO_FLUIDO`): el
+ *  fluido se distingue por el trazo, no por el color (ISA-101): la línea principal es más gruesa, el
+ *  gas va a trazos, el agua punteada; todas en --dato1 y, sin flujo, tenues. */
+const FLUIDO: Record<Corriente, Fluido> = {
+  multi: 'multifasico', crudo: 'crudo', gas: 'gas', agua: 'agua', elec: 'electrica', aire: 'aire',
 }
 /** El color del borde de una caja con condición: el de su marca (X2 §4; el rojo, solo el interlock). */
 const COLOR_CONDICION: Record<CondicionFranja, string> = {
@@ -284,7 +280,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       <span>solo el código: en marcha, sin nada anormal</span>
       {corrientes.map(c => (
         <span key={c} className="inline-flex items-center gap-1.5">
-          <svg width={22} height={6} aria-hidden><line x1={1} x2={21} y1={3} y2={3} stroke={COLOR[c]} strokeWidth={TRAZO[c].ancho} strokeDasharray={TRAZO[c].patron} /></svg>
+          <MuestraFluido fluido={FLUIDO[c]} />
           {NOMBRE_CORRIENTE[c]}
         </span>
       ))}
@@ -298,7 +294,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
         <span className="font-semibold text-[var(--tinta)]">Ahora:</span>
         {corrientes.map(c => (
           <span key={c} className="inline-flex items-center gap-1.5 tabular">
-            <svg width={22} height={6} aria-hidden><line x1={1} x2={21} y1={3} y2={3} stroke={COLOR[c]} strokeWidth={TRAZO[c].ancho} strokeDasharray={TRAZO[c].patron} /></svg>
+            <MuestraFluido fluido={FLUIDO[c]} />
             {caudal[c]}
           </span>
         ))}
@@ -316,15 +312,15 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
       {/* overflow-x (no overflow): en el papel la regla de impresión lo libera y el dibujo cabe en la hoja. */}
       <div className="overflow-x-auto rounded-sm border border-[var(--linea2)] bg-[var(--panel2)]">
         {/* 12 de más abajo: el pie de los servicios (a 28 del nombre, ver `yPie`) no se sale del dibujo. */}
-        <svg viewBox={`0 0 ${plano.ancho} ${plano.alto + 12}`} preserveAspectRatio="xMinYMin meet"
-          style={{ width: '100%', minWidth: Math.round(plano.ancho * ESCALA_MINIMA), height: 'auto' }} className="block"
-          // Un grupo, no una imagen: adentro hay equipos que se abren con el teclado, y un
-          // role="img" los volvía mudos para el lector aunque recibieran el foco.
-          role="group" aria-label={`Planta de ${campo.nombre}: ${capturan.length} de ${plural(total, 'equipo', 'equipos')} capturando datos.`}>
+        {/* El esquema del kit SCADA (K3). Un grupo, no una imagen: adentro hay equipos que se abren con el
+            teclado, y un role="img" los volvía mudos para el lector aunque recibieran el foco. */}
+        <Esquema ancho={plano.ancho} alto={plano.alto + 12} ajuste="xMinYMin meet" grupo
+          style={{ width: '100%', minWidth: Math.round(plano.ancho * ESCALA_MINIMA), height: 'auto' }} className="max-w-none overflow-hidden"
+          etiqueta={`Planta de ${campo.nombre}: ${capturan.length} de ${plural(total, 'equipo', 'equipos')} capturando datos.`}>
 
           {plano.bandas.map(b => (
             <g key={b.titulo}>
-              <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={10} fill={COLOR[b.corriente]} opacity={0.07} />
+              <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={10} fill="var(--dato3)" opacity={0.07} />
               {/* C4 · Toda letra del esquema mide 12 px o más a 1440 (el dibujo nunca baja de 0,7: 17,5 unidades). */}
               <text x={b.x0 + 12} y={b.y0 + 24} fontSize={LETRA} fontWeight={600} fill="var(--tinta2)">{b.titulo}</text>
             </g>
@@ -344,9 +340,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
                 filas={[['Corriente', NOMBRE_CORRIENTE[l.corriente]], ['Viene de', l.de], ['Va a', l.a],
                   ['Caudal ahora', caudal[l.corriente] ?? 'sin medidor en línea'], ['Estado', quieta ? 'sin flujo' : 'corriendo']]}>
                 <path d={l.d} fill="none" stroke="transparent" strokeWidth={16} strokeLinejoin="round" />
-                <path d={l.d} fill="none" stroke={COLOR[l.corriente]} strokeWidth={5} opacity={quieta ? 0.12 : 0.22} strokeLinejoin="round" />
-                <path d={l.d} fill="none" stroke={COLOR[l.corriente]} strokeWidth={TRAZO[l.corriente].ancho}
-                  strokeDasharray={TRAZO[l.corriente].patron} strokeLinejoin="round" className={cn(quieta && 'detenido')} />
+                <Linea d={l.d} fluido={FLUIDO[l.corriente]} sinFlujo={quieta} />
                 {sinSalida && (
                   // ISA-101: el texto en tinta (en rojo oscuro no llegaba a 4,5:1 a 13 px)
                   // y el color solo en la forma, con la prioridad del equipo que paró.
@@ -448,7 +442,7 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
               </Tip>
             )
           })}
-        </svg>
+        </Esquema>
       </div>
     </Panel>
   )
@@ -495,8 +489,11 @@ function PlantaDelCampo({ plantaCfg }: { plantaCfg: PlantaCampo }) {
         {palabra && <small className="block text-[14px] font-semibold">{palabra}</small>}
         {f.nivel ? (
           <span className="mt-0.5 block max-w-[320px]">
-            <BarraMeta tamano="chica" rotulo="nivel" valor={f.nivel.pct} unidad="%" formato={v => `${n1(v)} %`}
-              meta={f.nivel.altoAlto} tipoMeta="máximo" rotuloMeta={`alto-alto ${n0(f.nivel.altoAlto)} %`} />
+            {/* El nivel con la barra del kit SCADA (§1): la escala del instrumento (0 a 100 %) y el alto-alto como su
+                límite. La condición del tanque la lleva la fila (su marca y su palabra), una sola vez. */}
+            <Barra nombre={`Nivel de ${f.etiqueta}`} valor={f.nivel.pct} unidad="%" decimales={1}
+              escala={{ min: 0, max: 100, firmada: true }} alarmas={[f.nivel.altoAlto]} ancho={168} />
+            <small className="tabular block text-[13px] text-[var(--tinta2)]">alto-alto {n0(f.nivel.altoAlto)} %</small>
             {f.aviso && <small className="block text-[14px] text-[var(--tinta2)]">{f.aviso}</small>}
           </span>
         ) : <small className="block truncate text-[14px] text-[var(--tinta2)]">{f.estado}</small>}

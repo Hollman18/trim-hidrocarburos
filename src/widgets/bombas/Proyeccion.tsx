@@ -1,103 +1,54 @@
 import type { Senal } from '@/entities/vigia'
 import { conLectura, ultimaLectura } from '@/entities/serie'
-import { trazoConHuecos } from '@/shared/lib/trazo'
+import { escalaDe } from '@/shared/api/equiposTecnico'
+import { decimalesDe } from '@/shared/lib/formato'
+import { Tendencia, type SerieKit } from '@/shared/ui/scada'
+import { useAncho } from '@/widgets/resultados/ancho'
 
 const n1 = (v: number) => v.toLocaleString('es-CO', { maximumFractionDigits: 1 })
 const dias = (h: number) => n1(h / 24)
+const finito = (v: number | undefined): v is number => typeof v === 'number' && Number.isFinite(v)
 
-/** La tendencia del vigía: lo medido, la recta prolongada hasta el límite y
- *  el rango de días en que lo cruzaría. Lleva su propia escala de tiempo
- *  («hace 11 d», «hoy») y el valor del límite escrito sobre su línea: se lee
- *  sin pasar el cursor. Gris, porque una proyección no es una alarma. */
-export function Proyeccion({ s }: { s: Senal }) {
+/** La tendencia del vigía con el kit SCADA (kit-scada.md §2; K3): lo medido, la recta prolongada
+ *  desde hoy hasta el límite (discontinua: lo proyectado nunca se dibuja igual que lo medido) y la
+ *  barra del rango de días en que lo cruzaría, con «en N d». El eje del tiempo dice «hace N d», «hoy»
+ *  (arriba de su raya) y «+N d». La escala es la de su señal (`escalaDe`, la misma del nivel 3: de la
+ *  banda normal y la alarma, nunca de las lecturas), así que no se mueve con lo que se lee. En gris:
+ *  una proyección no es una alarma (la marca de la señal la lleva su fila). Se dibuja al ancho
+ *  medido: ningún rótulo baja de 12 px. */
+export function Proyeccion({ s, sinTitulo = false }: { s: Senal; sinTitulo?: boolean }) {
+  const [ref, ancho] = useAncho(520)
   const t = s.tendencia, serie = s.serie
   const ultimo = ultimaLectura(serie)
   if (!t || !serie || conLectura(serie).length < 2 || ultimo === undefined) return null
-  const W = 520, H = 112
-  // El último sexto, para el rótulo del límite (a 12 px cabe «1.650 rpm» también en el teléfono).
-  const G = { x0: 6, x1: 410, y0: 12, y1: 82 }
+  const alarmas = [s.alarma?.baja, s.alarma?.alta].filter(finito)
+  const e = escalaDe(s.unidad, s.normal, alarmas)
+  // Sin ningún límite declarado no hay escala que no se mueva: no se dibuja ni se inventa (H5).
+  if (!e) return <p className="text-[13px] text-[var(--tinta2)]" data-sin-escala>sin límite declarado: no se dibuja su tendencia</p>
   // El tiempo sale de la serie (su paso), igual que en el ajuste: «hoy» es su último lugar.
-  const ahora = t.finH
+  const ahora = t.finH, paso = serie.pasoH, hoy = serie.valores.length - 1
   const p = s.pronostico
   const cruza = p.tipo === 'cruza'
-  // Se dibuja hasta el final del rango, pero nunca más de 45 días adelante:
-  // más allá, una recta ya no se sostiene.
+  // Se dibuja hasta el final del rango, pero nunca más de 45 días adelante: más allá, una recta ya no se sostiene.
   const TOPE_H = 45 * 24
   const finT = cruza ? ahora + Math.min(p.rango[1], TOPE_H) : ahora
   const lim = s.limite?.valor
   const ajustado = (h: number) => t.ordenada + t.pendiente * h
-  // F3 · H23 (X2 §5.3, puntos 2 y 6): la escala vertical incluye siempre la banda normal y el límite.
-  const banda = s.normal ? s.normal.filter(Number.isFinite) : []
-  const ys = [...conLectura(serie), ...banda, ...(lim !== undefined ? [lim] : []), ...(cruza ? [ajustado(finT)] : [])]
-  const lo = Math.min(...ys), hi = Math.max(...ys), r = hi - lo || 1
-  const X = (h: number) => G.x0 + (h / (finT || 1)) * (G.x1 - G.x0)
-  const Y = (v: number) => G.y1 - ((v - lo) / r) * (G.y1 - G.y0)
-  // Cada punto en su hora (i × paso); un hueco del historiador corta la línea.
-  const linea = trazoConHuecos(serie.valores, i => X(i * serie.pasoH), Y)
   const tCruce = cruza ? ahora + Math.min(p.horas, TOPE_H) : undefined
   const enHorizonte = cruza && p.horas <= TOPE_H
-
-  // C4 · Los rótulos van en HTML sobre el dibujo (X5 §3.4: nada bajo 12 px): el dibujo se estira a lo
-  // ancho que tenga y su letra no se encoge con él. Las x en porcentaje del ancho; las y, en píxeles.
-  const pct = (x: number) => `${(x / W) * 100}%`
-  const rotulo = 'pointer-events-none absolute whitespace-nowrap text-[12px] leading-none'
-  const cercaDeHoy = cruza && G.x1 - X(ahora) < 46
-
+  const series: SerieKit[] = [{ nombre: s.plantilla.nombre, valores: serie.valores }]
+  if (cruza && lim !== undefined && tCruce !== undefined)
+    series.push({ nombre: 'Tendencia prolongada', valores: [], proyectado: true, puntos: [[hoy, ajustado(ahora)], [tCruce / paso, ajustado(tCruce)]] })
   return (
-    <div className="relative" style={{ height: H }} role="img"
-      aria-label={`Tendencia de ${s.plantilla.nombre}${cruza ? `: cruza el límite en ${dias(p.horas)} días` : ''}`}>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 block h-full w-full" aria-hidden>
-        {/* La banda normal, sombreada en --banda; un lado abierto llega al borde de lo dibujado (X2 §5.3, punto 2). */}
-        {s.normal && <rect x={G.x0} width={G.x1 - G.x0} y={Y(Math.min(hi, Number.isFinite(s.normal[1]) ? s.normal[1] : hi))}
-          height={Math.max(1, Y(Math.max(lo, Number.isFinite(s.normal[0]) ? s.normal[0] : lo)) - Y(Math.min(hi, Number.isFinite(s.normal[1]) ? s.normal[1] : hi)))}
-          fill="var(--banda)" opacity={0.55} data-banda />}
-        {lim !== undefined && <line x1={G.x0} x2={G.x1} y1={Y(lim)} y2={Y(lim)} stroke="var(--tinta2)" strokeWidth={1} strokeDasharray="5 3" vectorEffect="non-scaling-stroke" />}
-        {/* hoy */}
-        <line x1={X(ahora)} x2={X(ahora)} y1={G.y0 - 4} y2={G.y1} stroke="var(--linea)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-        {/* lo medido */}
-        <path d={linea} fill="none" stroke="var(--dato-1)" strokeWidth={1.8} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        {/* la recta prolongada hasta el cruce, y el rango sobre el límite */}
-        {cruza && lim !== undefined && tCruce !== undefined && (
-          <>
-            <line x1={X(ahora)} y1={Y(ajustado(ahora))} x2={X(tCruce)} y2={Y(ajustado(tCruce))}
-              stroke="var(--tinta3)" strokeWidth={1.4} strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
-            <rect x={X(ahora + p.rango[0])} y={Y(lim) - 3.5}
-              width={Math.max(3, X(Math.min(ahora + p.rango[1], finT)) - X(ahora + p.rango[0]))} height={7}
-              fill="var(--tinta2)" opacity={0.5} rx={1.5} />
-          </>
-        )}
-        {/* eje del tiempo */}
-        <line x1={G.x0} x2={G.x1} y1={G.y1} y2={G.y1} stroke="var(--linea2)" strokeWidth={0.8} vectorEffect="non-scaling-stroke" />
-      </svg>
-      {/* el último punto, en HTML: estirado con el dibujo sería un óvalo */}
-      <i aria-hidden className="absolute block size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--dato-1)]"
-        style={{ left: pct(X(serie.valores.lastIndexOf(ultimo) * serie.pasoH)), top: Y(ultimo) }} />
-      {/* el límite, con su valor escrito al final de la línea */}
-      {lim !== undefined && (
-        <span aria-hidden className={`${rotulo} text-[var(--tinta2)]`} style={{ left: pct(G.x1 + 8), top: Y(lim) - 14 }}>
-          límite<b className="tabular mt-0.5 block font-semibold text-[var(--tinta)]">{lim.toLocaleString('es-CO')} {s.unidad}</b>
-        </span>
-      )}
-      {cruza && lim !== undefined && tCruce !== undefined && enHorizonte && (
-        <span aria-hidden className={`${rotulo} tabular -translate-x-full font-semibold text-[var(--tinta)]`}
-          style={{ left: pct(Math.min(X(tCruce), G.x1 - 4)), top: Y(lim) + (Y(lim) > (G.y0 + G.y1) / 2 ? -21 : 7) }}>
-          en {dias(p.horas)} d
-        </span>
-      )}
-      {/* El piso de lo dibujado, rotulado en HTML a la izquierda (como el límite a la derecha): la escala se lee sin el cursor. */}
-      <span aria-hidden className={`${rotulo} tabular text-[var(--tinta2)]`} style={{ left: pct(G.x0 + 4), top: G.y1 - 15 }} data-piso>{n1(lo)} {s.unidad}</span>
-      <span aria-hidden className={`${rotulo} text-[var(--tinta2)]`} style={{ left: pct(G.x0), top: G.y1 + 6 }}>hace {dias(ahora)} d</span>
-      {cercaDeHoy ? (
-        // Un cruce muy cerca de hoy dejaba «hoy» encima de «+0,2 d»: van juntos, al final del eje.
-        <span aria-hidden className={`${rotulo} -translate-x-full text-[var(--tinta3)]`} style={{ left: pct(G.x1), top: G.y1 + 6 }}>
-          <b className="font-semibold text-[var(--tinta2)]">hoy</b> · +{dias(finT - ahora)} d
-        </span>
-      ) : (
-        <>
-          <span aria-hidden className={`${rotulo} font-semibold text-[var(--tinta2)] ${cruza ? '-translate-x-1/2' : '-translate-x-full'}`} style={{ left: pct(X(ahora)), top: G.y1 + 6 }}>hoy</span>
-          {cruza && <span aria-hidden className={`${rotulo} -translate-x-full text-[var(--tinta3)]`} style={{ left: pct(G.x1), top: G.y1 + 6 }}>+{dias(finT - ahora)} d</span>}
-        </>
-      )}
+    <div ref={ref} className="w-full min-w-0">
+      <Tendencia titulo={s.plantilla.nombre} ventana={`${dias(ahora)} d${cruza ? ' y lo proyectado' : ''}`} sinTitulo={sinTitulo}
+        series={series} escala={{ min: e[0], max: e[1], firmada: false }} unidad={s.unidad} decimales={decimalesDe(serie.valores, ultimo)}
+        banda={s.normal ? [Number.isFinite(s.normal[0]) ? s.normal[0] : null, Number.isFinite(s.normal[1]) ? s.normal[1] : null] : undefined}
+        alarmas={lim !== undefined ? [lim] : []}
+        {...(cruza ? { hoy, hasta: finT / paso, rango: [(ahora + p.rango[0]) / paso, Math.min(ahora + p.rango[1], finT) / paso] as const } : {})}
+        {...(cruza ? { nota: `cruza el límite en ${dias(p.horas)} días` } : {})} {...(enHorizonte ? { rotuloRango: `en ${dias(p.horas)} d` } : {})}
+        ejeX={[`hace ${dias(ahora)} d`, cruza ? `+${dias(finT - ahora)} d` : 'hoy']}
+        ancho={Math.max(240, ancho)} alto={112} />
     </div>
   )
 }

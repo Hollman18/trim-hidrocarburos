@@ -1,0 +1,1562 @@
+[
+ {
+  "rol": "ger",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/ger/planta-viva/ceiba/curso",
+  "alto": 1184,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nLa planta viva\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nSe deja de producir ahora\n\n1.966\nbbl/d\n\nLa bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.\n\nVer P-201B\nCompartir el informe\nMetas\n\nProducción por día\n\n3\n10.700\nbbl/d\n\nmeta 10.900\n\nCierre del mes\n\n293.287\nbbl\nproyectado\n\nmeta 337.900\n\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\n50 mil USD · máximo 1.267\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo\nDónde se trabó · La Ceiba\nYacimiento\nla roca\n◄ limita\nPozos\n15 de 18 en marcha\n1\nPlanta\n1.665\nbbl/d no pasan\nP-201B · bomba de agua\nSalida\nel oleoducto recibe",
+  "auditor": [],
+  "inicio": {
+   "palabras": 171,
+   "cifras": [
+    "1.966",
+    "03:52",
+    "1.665",
+    "301",
+    "10.700",
+    "10.900",
+    "293.287",
+    "337.900",
+    "16.941",
+    "1.046",
+    "50",
+    "1.267",
+    "0",
+    "118",
+    "573",
+    "0",
+    "355",
+    "15",
+    "18",
+    "1.665"
+   ],
+   "grandes": [
+    "1.966 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "prod",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/prod/planta-viva/ceiba/curso",
+  "alto": 1108,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nLa planta viva\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nSalen hoy\n\n9.394\nde 11.857 bbl/d\n\nLimitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.\n\nConfirmar las 2\n◄ limita\nPozos\n11.857\ndan, bbl/d\n1\nPlanta\n13.000\ncaben · sobran 1.143\nP-201B parada · capacidad sin firmar\nSalida\n9.394\nsalen hoy\ncapacidad sin firmar\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo\n\nPor confirmar\n\n4\nparadas\n\nantes de las 07:00, para el reporte\n\nLC-07, LC-16\n\nPlanta · diferida · no planeada · Proceso / Facilidades · Parada estación/bombeo afecta pozos\n\n2 esperan la causa: se confirman cuando alguien conteste.\n\nVer una por una\n\nSi falla hoy\n\n3.059\nbbl/d\n\nP-201A · sin instrumento · después de 2 min\n\nVer P-201A\nFin de mes\n\nCargar la asignación de septiembre\n\nCargarla\n¿Cuadra? Medición oficial y factor\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 211,
+   "cifras": [
+    "9.394",
+    "11.857",
+    "1.143",
+    "236",
+    "2",
+    "11.857",
+    "13.000",
+    "1.143",
+    "9.394",
+    "16.941",
+    "1.046",
+    "0",
+    "118",
+    "573",
+    "0",
+    "355",
+    "391",
+    "436",
+    "3.934",
+    "4",
+    "07:00,",
+    "2",
+    "3.059",
+    "2"
+   ],
+   "grandes": [
+    "9.394 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "sup",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/sup/hoy/ceiba/curso",
+  "alto": 1487,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nParadas por confirmar\n4\nel reporte sale mañana antes de las 07:00\n\nAhora\n1.966\nbbl/d\n· se dejan de producir\n\nNo arrancar\n2\n· P-201B y LC-21\n\nSin causa\n2\n· LC-21 y LC-08\n\nEntregar turno\nRegistrar una pérdida\nConfirmar 2 paradas iguales\n\n1\nAlarma ·\nP-201B\ncerró LC-07 y LC-16 · 05:43\n\nTRIM las dedujo: en la planta, no planeada. Falta su confirmación.\n\nConfirmar las 2\nVer una por una\nConseguir la causa de 2 paradas\nContestar yo\nVer la parada\nDecidir 3 planes de P-201B · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nMi turno · de 06:00 a 18:00 del 2 de oct\nVer la jornada anterior\n\nPor confirmar\n3\n\nDiferido\n655 bbl\n\nPerdido\nsin registro\n\nLC-21\nVenía del 1 de oct, 18:20 · sigue\nfalta · falta · falta · falta\n100 bbl\npor confirmar\nLC-16 · por P-201B\nVenía de las 05:43 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n290 bbl\npor confirmar\nLC-07 · por P-201B\nVenía de las 05:46 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n265 bbl\npor confirmar\nHorario por defecto, sin firmar: cambio de turno a las 06:00 y 18:00.\nVer una por una\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t",
+  "auditor": [],
+  "inicio": {
+   "palabras": 214,
+   "cifras": [
+    "4",
+    "4",
+    "07:00",
+    "1.966",
+    "2",
+    "2",
+    "2",
+    "05:43",
+    "2",
+    "2",
+    "3",
+    "3.059",
+    "2",
+    "06:00",
+    "18:00",
+    "2",
+    "3",
+    "655",
+    "1",
+    "18:20",
+    "100",
+    "05:43",
+    "290"
+   ],
+   "grandes": [
+    "4 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "oper",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/oper/hoy/ceiba/curso",
+  "alto": 1046,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nPregunta\n1\nde 4\n\n1\nP-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h · planta · agua\n\n¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\nUn toque y queda a nombre de Jairo Peña, con la hora del sistema.\n\nVer P-201B\nNo arrancar P-201B ni LC-21 hasta identificar qué se dañó\nSi arranca antes, queda como no conformidad.\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 138,
+   "cifras": [
+    "1",
+    "4",
+    "03:52,",
+    "10,1",
+    "5",
+    "8",
+    "3",
+    "8"
+   ],
+   "grandes": [
+    "1 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "jefe",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/jefe/hoy/ceiba/curso",
+  "alto": 900,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nAvisan\n1\nK-101 ya pasó el límite · frenaría en la planta\n\nPor identificar\n3\n· P-201B, LC-21 y LC-08\n\nFallas críticas · octubre\n1\n· P-201B (planta)\n\nEspera\n7,7 de 8,1\ndías por falla\nVer la orden\nConseguir la causa de 3 paradas\nContestar yo\nVer la parada\nDecidir 3 planes de P-201B · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOjo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.",
+  "auditor": [],
+  "inicio": {
+   "palabras": 119,
+   "cifras": [
+    "3",
+    "1",
+    "3",
+    "1",
+    "7,7",
+    "8,1",
+    "3",
+    "3"
+   ],
+   "grandes": [
+    "1 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "conf",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/conf/equipos/ceiba",
+  "alto": 2798,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nEquipos\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nSi falla hoy\n3.059\nbbl/d\nP-201A y P-201C · sin instrumento · se trabaría en la planta\n\nVigía\n3 de 3\n· aciertos\nSin instrumento\n5\nequipos\nEntre fallas\n41 d\n· bombas de agua\n\nClasificación confirmada\n0 de 7\nfilas\n· planeada o no\n\nAbrir P-201A\n\nLe tocan 2 cosas · conseguir la causa de 3 paradas\nVer lo que le toca\n\nP-201B · SAP no lo sabe\nAvisar\n\nFiltrar\n28 equipos\n· ordenados por «Si falla hoy»\n¿Lo vigila TRIM?\nP-201A\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\nno: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nP-201C\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\nno: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nLC-11\nelectrosumergible\nproduciendo\nsí · 6 señales\n1.031bbl/d\nsi falla hoy\nLC-08\nelectrosumergible\nproduciendo\nsí · 6 señales\n893bbl/d\nsi falla hoy\nLC-04\nelectrosumergible\nproduciendo\nsí · 6 señales\n825bbl/d\nsi falla hoy\nLC-05\nelectrosumergible\nproduciendo\nsí · 6 señales\n812bbl/d\nsi falla hoy\nLC-14\nelectrosumergible\nproduciendo\nsí · 6 señales\n783bbl/d\nsi falla hoy\nLC-19\npozo · bombeo mecánico\nproduciendo\nno: solo su controlador\n778bbl/d\nsi falla hoy\nLC-06\nelectrosumergible\nproduciendo\nsí · 6 señales\n692bbl/d\nsi falla hoy\nLC-09\nelectrosumergible\nproduciendo\nsí · 6 señales\n620bbl/d\nsi falla hoy\nLC-17\nelectrosumergible\nproduciendo\nsí · 6 señales\n539bbl/d\nsi falla hoy\nLC-15\nelectrosumergible\nproduciendo\nsí · 6 señales\n470bbl/d\nsi falla hoy\nLC-10\nelectrosumergible\nproduciendo\nsí · 6 señales\n459bbl/d\nsi falla hoy\nLC-12\nelectrosumergible\nproduciendo\nsí · 6 señales\n379bbl/d\nsi falla hoy\nLC-02\nelectrosumergible\nproduciendo\nsí · 6 señales\n378bbl/d\nsi falla hoy\nLC-03\npozo · bombeo mecánico\nproduciendo\nno: solo su controlador\n374bbl/d\nsi falla hoy\nLC-01\nelectrosumergible\nproduciendo\nsí · 6 señales\n360bbl/d\nsi falla hoy\n3\nH-302\ntratamiento de crudo\nAviso · en marcha\nsí · 4 señales\n0bbl/d\nsi falla hoy\n1\nK-101\naire de instrumentos\nAlarma · ya pasó el límite\nsí · 4 señales\nhasta 9.394bbl/d\nsi falla hoy\nSE-2\nenergía eléctrica\nsin respaldo\nen servicio\nsí · 3 señales\nhasta 9.394bbl/d\nsi falla hoy\nV-101\nseparador\nsin respaldo\nen marcha\nsí · 2 señales\nhasta 9.394bbl/d\nsi falla hoy\n1\nP-201B\nbomba de agua\nAlarma · parada desde hoy, 03:52\nsí · 8 señales\n1.665bbl/d\nse deja de producir\n2\nLC",
+  "auditor": [],
+  "inicio": {
+   "palabras": 147,
+   "cifras": [
+    "3.059",
+    "3",
+    "3",
+    "5",
+    "41",
+    "0",
+    "7",
+    "2",
+    "3",
+    "28",
+    "3.059",
+    "2"
+   ],
+   "grandes": [
+    "3.059 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "tec",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/tec/hoy/ceiba/curso",
+  "alto": 1301,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nHoy\n5\ncosas\nPrimero P-201B: diga qué se dañó.\n\nNo arrancar\n2\n· P-201B y LC-21\n\nDiga qué se dañó en P-201B\n\n1\nAlarma ·\nP-201B\nbomba de agua · paró hoy a las 03:52, hace 10,1 h\n\nSigue parada.\n\nContestar\nVer P-201B\n\nP-201B · ¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\nUn toque y queda a nombre de Óscar Daza, con la hora del sistema.\n\nDiga por qué paró LC-21\n\n2\nAtención ·\nLC-21\npozo · paró el 1 de oct a las 18:20, hace 19,7 h\n\nSigue parado.\n\nContestar\nVer LC-21\nContestar «¿De dónde vino el corte?» de LC-05\n\nLC-05\npozo · paró el 1 de oct a las 09:16\n\nPara el reporte a la ANH falta el detalle.\n\nContestar\nVer la parada\nDiga por qué paró LC-08\n\nLC-08\npozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar\n\nArrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.\n\nContestar\nVer LC-08\nOrden 40012056 · K-101\n\nVerificar que las tres unidades estén en servicio: hoy hay dos.\n\nCerrar la orden\nVer K-101",
+  "auditor": [],
+  "inicio": {
+   "palabras": 184,
+   "cifras": [
+    "5",
+    "2",
+    "03:52,",
+    "10,1",
+    "5",
+    "8",
+    "3",
+    "8",
+    "1",
+    "18:20,",
+    "19,7",
+    "1",
+    "09:16"
+   ],
+   "grandes": [
+    "5 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "reg",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/reg/regulatorio/ceiba/curso",
+  "alto": 1658,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nReporte al regulador\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\nOctubre, en curso\n\nParadas sin causa\n\n2\nparadas\n\nNo se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl). \n\nSin causa\n\n355\nbbl\n\nno se puede reportar\n\nLímite\n\n07:00\nmañana\n\nCircular 024\n\nRespuesta de la ANH\n\n—\n\nsin respuesta registrada\n\nRegistrar la respuesta\nQué falta y quién lo debe\nLC-21 · faltan todos los pasos\nLo debe el operador de campo · mañana antes de las 07:00\n247 bbl\nLC-08 · faltan todos los pasos\nLo debe el operador de campo · mañana antes de las 07:00\n108 bbl\nExportar el reporte\nInforme en PDF\n\nCSV para la ANH · queda con folio y huella\n\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\nÁrbol de causas · como la circular\nVer los códigos ANH\n\n1.046 bbl\n5 paradas · 0 bbl con los 6 pasos confirmados (0 %)\n\nQuién\n→\nDónde se trabó\n→\nQué pasó\n→\n¿Planeada?\n→\nCausa\n→\nDetalle\nOperador · Mantenimiento\n691 \nbbl,\n66 %\ndel período\nEn la planta o estación\n573 \nbbl,\n55 %\ndel período\nDiferida · No planeada · No planeada - Proceso / Facilidades · Parada estación/bombeo afecta pozos\n573 \nbbl,\n55 %\ndel período\nEn el pozo\n118 \nbbl,\n11 %\ndel período\nDiferida · No planeada · No planeada - Eléctrica interna\n118 \nbbl,\n11 %\ndel período\nFalta el detalle\n118 \nbbl,\n11 %\ndel período\nFalta quién\n355 \nbbl,\n34 %\ndel período\nSin identificar\n355 \nbbl,\n34 %\ndel período\nFalta qué pasó\n355 \nbbl,\n34 %\ndel período\nFalta saber si fue planeada\n355 \nbbl,\n34 %\ndel período\nFalta la causa\n355 \nbbl,\n34 %\ndel período\nFalta el detalle\n355 \nbbl,\n34 %\ndel período\n\n= el diferido del libro (Σ de las paradas del período)\n1.046 bbl\n\nPérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)\n\nMedición oficial\nVer más\n· 2 puntos",
+  "auditor": [],
+  "inicio": {
+   "palabras": 171,
+   "cifras": [
+    "2",
+    "(355",
+    "355",
+    "07:00",
+    "024",
+    "07:00",
+    "247",
+    "07:00",
+    "108",
+    "16.941",
+    "1.046",
+    "0",
+    "118",
+    "573"
+   ],
+   "grandes": [
+    "2 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "adm",
+  "ancho": 1440,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/adm/configuracion/ceiba/curso",
+  "alto": 1068,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nConfigurar\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\nEstado de la configuración\n\nLa Ceiba\n\nPasos listos\n\n3\nde 6 pasos listos\n\nFalta firmar a qué pozos sirve cada equipo.\n\nSeguir el paso\nPerfil del campo\nfirmado\nTanques de agua\nel tanque tiene capacidad, transmisor y aforo\nA qué pozos sirve cada equipo\nTRIM la deduce del registro: faltan 36 equipos por confirmar y firmar\nLo que deja pasar cada tramo\ndato del demo, sin firmar: tren de crudo, tren de agua, tren de gas, afuera, mercado y admisión de los inyectores\nFactor de medición\nsin firmar: rige 1\nMeta de hoy\nfirmada · la firma el gerente de activo\n\nSus otros campos:\nMorichal Norte · 3 de 6\nGuacamayo · 3 de 6\nEl Palmar · 2 de 5\nLa Zarza · 2 de 5\n\nTags sin equipo\n\n3 tags sin equipo · 3 con sugerencia\n\nAplicar las 3\nVer los conectores\nConversión del árbol\n\nSin tabla firmada: las paradas se clasifican directo en el árbol de la ANH.\n\nImportar la tabla\nJornada\n\nCambio de turno 06:00 y 18:00 · por defecto, sin firmar\n\nFirmar la jornada\nConfiguración técnica\nFilosofía operacional",
+  "auditor": [],
+  "inicio": {
+   "palabras": 207,
+   "cifras": [
+    "3",
+    "6",
+    "36",
+    "1",
+    "3",
+    "6",
+    "3",
+    "6",
+    "2",
+    "5",
+    "2",
+    "5",
+    "3",
+    "3",
+    "3",
+    "06:00",
+    "18:00"
+   ],
+   "grandes": [
+    "3 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "ger",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/ger/planta-viva/ceiba/curso",
+  "alto": 1774,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nAV\nTodos mis campos\nDemo\nLa planta viva · hoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nSe deja de producir ahora\n\n1.966\nbbl/d\n\npor qué\n\nVer P-201B\nCompartir el informe\nMetas\nDónde se trabó · La Ceiba\nYacimiento\nla roca\n◄ limita\nPozos\n15 de 18 en marcha\n1\nPlanta\n1.665\nbbl/d no pasan\nP-201B · bomba de agua\nSalida\nel oleoducto recibe\n\nProducción por día\n\n3\n10.700\nbbl/d\n\nmeta 10.900\n\nCierre del mes\n\n293.287\nbbl\nproyectado\n\nmeta 337.900\n\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\n50 mil USD · máximo 1.267\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo",
+  "auditor": [],
+  "inicio": {
+   "palabras": 57,
+   "cifras": [
+    "1.966",
+    "15",
+    "18",
+    "1.665"
+   ],
+   "grandes": [
+    "1.966 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "prod",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/prod/planta-viva/ceiba/curso",
+  "alto": 2123,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nMR\nTodos mis campos\nDemo\nLa planta viva · hoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nSalen hoy\n\n9.394\nde 11.857 bbl/d\n\npor qué\n\nConfirmar las 2\n◄ limita\nPozos\n11.857\ndan, bbl/d\n1\nPlanta\n13.000\ncaben · sobran 1.143\nP-201B parada · capacidad sin firmar\nSalida\n9.394\nsalen hoy\ncapacidad sin firmar\n\nPor confirmar\n\n4\nparadas\n\nantes de las 07:00, para el reporte\n\nLC-07, LC-16\n\nPlanta · diferida · no planeada · Proceso / Facilidades · Parada estación/bombeo afecta pozos\n\n2 esperan la causa: se confirman cuando alguien conteste.\n\nVer una por una\n\nSi falla hoy\n\n3.059\nbbl/d\n\nP-201A · sin instrumento · después de 2 min\n\nVer P-201A\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo\nFin de mes\n\nCargar la asignación de septiembre\n\nCargarla\n¿Cuadra? Medición oficial y factor\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 65,
+   "cifras": [
+    "9.394",
+    "11.857",
+    "2",
+    "11.857",
+    "13.000",
+    "1.143",
+    "9.394",
+    "4",
+    "07:00,"
+   ],
+   "grandes": [
+    "9.394 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "sup",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/sup/hoy/ceiba/curso",
+  "alto": 2216,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n4\npor hacer en Hoy\n1\nLa Ceiba\nNO\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nParadas por confirmar\n4\nel reporte sale mañana antes de las 07:00\n\nAhora\n1.966\nbbl/d\n· se dejan de producir\n\nNo arrancar\n2\n· P-201B y LC-21\n\nSin causa\n2\n· LC-21 y LC-08\n\nEntregar turno\nRegistrar una pérdida\nConfirmar 2 paradas iguales\n\n1\nAlarma ·\nP-201B\ncerró LC-07 y LC-16\n\nTRIM las dedujo: en la planta, no planeada.\n\nConfirmar las 2\nVer una por una\nConseguir la causa de 2 paradas\nContestar yo\nVer la parada\nDecidir planes · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nMi turno · de 06:00 a 18:00 del 2 de oct\nVer la jornada anterior\n\nPor confirmar\n3\n\nDiferido\n655 bbl\n\nPerdido\nsin registro\n\nLC-21\nVenía del 1 de oct, 18:20 · sigue\nfalta · falta · falta · falta\n100 bbl\npor confirmar\nLC-16 · por P-201B\nVenía de las 05:43 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n290 bbl\npor confirmar\nLC-07 · por P-201B\nVenía de las 05:46 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n265 bbl\npor confirmar\nHorario por defecto, sin firmar: cambio de turno a las 06:00 y 18:00.\nVer una por una\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t",
+  "auditor": [],
+  "inicio": {
+   "palabras": 84,
+   "cifras": [
+    "4",
+    "4",
+    "07:00",
+    "1.966",
+    "2",
+    "2",
+    "2",
+    "2",
+    "2"
+   ],
+   "grandes": [
+    "4 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "oper",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/oper/hoy/ceiba/curso",
+  "alto": 1192,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nJP\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nPregunta\n1\nde 4\n\n1\nP-201B · bomba de agua · paró hoy en la madrugada · planta · agua\n\n¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\na su nombre\n\nVer P-201B\nNo arrancar P-201B ni LC-21 hasta identificar qué se dañó\nSi arranca antes, queda como no conformidad.\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 80,
+   "cifras": [
+    "1",
+    "4",
+    "5",
+    "8",
+    "3",
+    "8"
+   ],
+   "grandes": [
+    "1 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "jefe",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/jefe/hoy/ceiba/curso",
+  "alto": 949,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n3\npor hacer en Hoy\n1\nLa Ceiba\nCR\nTodos mis campos\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nAvisan\n1\nK-101 ya pasó el límite · frenaría en la planta\n\nPor identificar\n3\n· P-201B, LC-21 y LC-08\n\nFallas críticas · octubre\n1\n· P-201B (planta)\n\nEspera\n7,7 de 8,1\ndías por falla\nVer la orden\nConseguir la causa de 3 paradas\nContestar yo\nVer la parada\nDecidir planes · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOjo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.",
+  "auditor": [],
+  "inicio": {
+   "palabras": 71,
+   "cifras": [
+    "3",
+    "1",
+    "3",
+    "1",
+    "7,7",
+    "8,1",
+    "3"
+   ],
+   "grandes": [
+    "1 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "conf",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/conf/equipos/ceiba",
+  "alto": 4937,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nEM\nTodos mis campos\nDemo\nEquipos\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nSi falla hoy\n3.059\nbbl/d\nP-201A y P-201C · sin instrumento · se trabaría en la planta\n\nVigía\n3 de 3\n· aciertos\nSin instrumento\n5\nequipos\nEntre fallas\n41 d\n· bombas de agua\n\nClasificación confirmada\n0 de 7\nfilas\n· planeada o no\n\nAbrir P-201A\n\nLe tocan 2 cosas · conseguir la causa de 3 paradas\nVer lo que le toca\n\nP-201B · SAP no lo sabe\nAvisar\n\nFiltrar\n28 equipos\n· ordenados por «Si falla hoy»\nP-201A\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\n¿Lo vigila TRIM? no: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nP-201C\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\n¿Lo vigila TRIM? no: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nLC-11\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n1.031bbl/d\nsi falla hoy\nLC-08\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n893bbl/d\nsi falla hoy\nLC-04\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n825bbl/d\nsi falla hoy\nLC-05\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n812bbl/d\nsi falla hoy\nLC-14\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n783bbl/d\nsi falla hoy\nLC-19\npozo · bombeo mecánico\nproduciendo\n¿Lo vigila TRIM? no: solo su controlador\n778bbl/d\nsi falla hoy\nLC-06\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n692bbl/d\nsi falla hoy\nLC-09\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n620bbl/d\nsi falla hoy\nLC-17\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n539bbl/d\nsi falla hoy\nLC-15\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n470bbl/d\nsi falla hoy\nLC-10\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n459bbl/d\nsi falla hoy\nLC-12\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n379bbl/d\nsi falla hoy\nLC-02\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n378bbl/d\nsi falla hoy\nLC-03\npozo · bombeo mecánico\nproduciendo\n¿Lo vigila TRIM? no: solo su controlador\n374bbl/d\nsi falla hoy\nLC-01\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n360bbl/d\nsi falla hoy\n3\nH-302\ntratamiento de crudo\nAviso · en marcha\n¿Lo vigila TRIM? sí · 4 señales\n0bbl/d\nsi falla hoy\n1\nK-101\naire de instrumentos\nAlarma · ya pasó el límite\n¿Lo vigila TRIM? sí · 4 señales\nhasta 9.394bbl/d\nsi falla hoy\nSE-2\nen",
+  "auditor": [],
+  "inicio": {
+   "palabras": 87,
+   "cifras": [
+    "3.059",
+    "3",
+    "3",
+    "5",
+    "41",
+    "0",
+    "7",
+    "2",
+    "3"
+   ],
+   "grandes": [
+    "3.059 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "tec",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/tec/hoy/ceiba/curso",
+  "alto": 1791,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nÓD\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nHoy\n5\ncosas\nPrimero P-201B: diga qué se dañó.\n\nNo arrancar\n2\n· P-201B y LC-21\n\nDiga qué se dañó en P-201B\n\n1\nAlarma ·\nP-201B\nbomba de agua · paró hoy en la madrugada\n\nContestar\nVer P-201B\n\nP-201B · ¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\na su nombre\n\nDiga por qué paró LC-21\n\n2\nAtención ·\nLC-21\npozo · paró ayer en la tarde\n\nContestar\nVer LC-21\nContestar «¿De dónde vino el corte?» de LC-05\n\nLC-05\npozo · paró el 1 de oct a las 09:16\n\nPara el reporte a la ANH falta el detalle.\n\nContestar\nVer la parada\nDiga por qué paró LC-08\n\nLC-08\npozo · arrancó hoy en la madrugada sin identificar\n\nArrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.\n\nContestar\nVer LC-08\nOrden 40012056 · K-101\n\nVerificar que las tres unidades estén en servicio: hoy hay dos.\n\nCerrar la orden\nVer K-101",
+  "auditor": [],
+  "inicio": {
+   "palabras": 87,
+   "cifras": [
+    "5",
+    "2",
+    "5",
+    "8",
+    "3",
+    "8"
+   ],
+   "grandes": [
+    "5 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "reg",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/reg/regulatorio/ceiba/curso",
+  "alto": 1650,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nIS\nDemo\nReporte al regulador\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\nOctubre, en curso\n\nParadas sin causa\n\n2\nparadas\n\nNo se puede publicar todavía \n\nSin causa\n\n355\nbbl\n\nLímite\n\n07:00\nmañana\n\nQué falta y quién lo debe\nLC-21\nLo debe el operador de campo\n247 bbl\nLC-08\nLo debe el operador de campo\n108 bbl\nExportar el reporte\nInforme en PDF\n\nRespuesta de la ANH\n\n—\n\nsin respuesta registrada\n\nRegistrar la respuesta\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\nÁrbol de causas · como la circular\nVer los códigos ANH\n\n1.046 bbl\n\nPérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)\n\nMedición oficial\nVer más",
+  "auditor": [],
+  "inicio": {
+   "palabras": 76,
+   "cifras": [
+    "2",
+    "355",
+    "07:00",
+    "247",
+    "108"
+   ],
+   "grandes": [
+    "2 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "adm",
+  "ancho": 390,
+  "tema": "light",
+  "errores": [],
+  "hash": "#/adm/configuracion/ceiba/curso",
+  "alto": 1322,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nHL\nDemo\nConfigurar\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\nEstado de la configuración\n\nLa Ceiba\n\nPasos listos\n\n3\nde 6 pasos listos\n\nFalta firmar a qué pozos sirve cada equipo.\n\nSeguir el paso\nPerfil del campo\nfirmado\nTanques de agua\ncompletos\nA qué pozos sirve cada equipo\nsin firmar\nLo que deja pasar cada tramo\nsin firmar\nFactor de medición\nsin firmar\nMeta de hoy\nfirmada por el gerente\n\nSus otros campos\n\nTags sin equipo\n\n3 tags sin equipo · 3 con sugerencia\n\nAplicar las 3\nVer los conectores\nConversión del árbol\n\nSin tabla firmada: las paradas se clasifican directo en el árbol de la ANH.\n\nImportar la tabla\nJornada\n\nCambio de turno 06:00 y 18:00 · por defecto, sin firmar\n\nFirmar la jornada\nConfiguración técnica\nFilosofía operacional",
+  "auditor": [],
+  "inicio": {
+   "palabras": 77,
+   "cifras": [
+    "3",
+    "6"
+   ],
+   "grandes": [
+    "3 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "ger",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/ger/planta-viva/ceiba/curso",
+  "alto": 1184,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nLa planta viva\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nSe deja de producir ahora\n\n1.966\nbbl/d\n\nLa bomba de agua P-201B paró a las 03:52 y obligó a cerrar dos pozos: 1.665 de esos barriles. Los otros 301 son de LC-21, que todavía no tiene causa.\n\nVer P-201B\nCompartir el informe\nMetas\n\nProducción por día\n\n3\n10.700\nbbl/d\n\nmeta 10.900\n\nCierre del mes\n\n293.287\nbbl\nproyectado\n\nmeta 337.900\n\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\n50 mil USD · máximo 1.267\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo\nDónde se trabó · La Ceiba\nYacimiento\nla roca\n◄ limita\nPozos\n15 de 18 en marcha\n1\nPlanta\n1.665\nbbl/d no pasan\nP-201B · bomba de agua\nSalida\nel oleoducto recibe",
+  "auditor": [],
+  "inicio": {
+   "palabras": 171,
+   "cifras": [
+    "1.966",
+    "03:52",
+    "1.665",
+    "301",
+    "10.700",
+    "10.900",
+    "293.287",
+    "337.900",
+    "16.941",
+    "1.046",
+    "50",
+    "1.267",
+    "0",
+    "118",
+    "573",
+    "0",
+    "355",
+    "15",
+    "18",
+    "1.665"
+   ],
+   "grandes": [
+    "1.966 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "prod",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/prod/planta-viva/ceiba/curso",
+  "alto": 1108,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nLa planta viva\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nSalen hoy\n\n9.394\nde 11.857 bbl/d\n\nLimitan los pozos: a la planta le sobran 1.143 bbl/d. Con P-201B parada, el agua solo deja pasar 236 bbl/d más de crudo.\n\nConfirmar las 2\n◄ limita\nPozos\n11.857\ndan, bbl/d\n1\nPlanta\n13.000\ncaben · sobran 1.143\nP-201B parada · capacidad sin firmar\nSalida\n9.394\nsalen hoy\ncapacidad sin firmar\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo\n\nPor confirmar\n\n4\nparadas\n\nantes de las 07:00, para el reporte\n\nLC-07, LC-16\n\nPlanta · diferida · no planeada · Proceso / Facilidades · Parada estación/bombeo afecta pozos\n\n2 esperan la causa: se confirman cuando alguien conteste.\n\nVer una por una\n\nSi falla hoy\n\n3.059\nbbl/d\n\nP-201A · sin instrumento · después de 2 min\n\nVer P-201A\nFin de mes\n\nCargar la asignación de septiembre\n\nCargarla\n¿Cuadra? Medición oficial y factor\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 211,
+   "cifras": [
+    "9.394",
+    "11.857",
+    "1.143",
+    "236",
+    "2",
+    "11.857",
+    "13.000",
+    "1.143",
+    "9.394",
+    "16.941",
+    "1.046",
+    "0",
+    "118",
+    "573",
+    "0",
+    "355",
+    "391",
+    "436",
+    "3.934",
+    "4",
+    "07:00,",
+    "2",
+    "3.059",
+    "2"
+   ],
+   "grandes": [
+    "9.394 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "sup",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/sup/hoy/ceiba/curso",
+  "alto": 1487,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nParadas por confirmar\n4\nel reporte sale mañana antes de las 07:00\n\nAhora\n1.966\nbbl/d\n· se dejan de producir\n\nNo arrancar\n2\n· P-201B y LC-21\n\nSin causa\n2\n· LC-21 y LC-08\n\nEntregar turno\nRegistrar una pérdida\nConfirmar 2 paradas iguales\n\n1\nAlarma ·\nP-201B\ncerró LC-07 y LC-16 · 05:43\n\nTRIM las dedujo: en la planta, no planeada. Falta su confirmación.\n\nConfirmar las 2\nVer una por una\nConseguir la causa de 2 paradas\nContestar yo\nVer la parada\nDecidir 3 planes de P-201B · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nMi turno · de 06:00 a 18:00 del 2 de oct\nVer la jornada anterior\n\nPor confirmar\n3\n\nDiferido\n655 bbl\n\nPerdido\nsin registro\n\nLC-21\nVenía del 1 de oct, 18:20 · sigue\nfalta · falta · falta · falta\n100 bbl\npor confirmar\nLC-16 · por P-201B\nVenía de las 05:43 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n290 bbl\npor confirmar\nLC-07 · por P-201B\nVenía de las 05:46 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n265 bbl\npor confirmar\nHorario por defecto, sin firmar: cambio de turno a las 06:00 y 18:00.\nVer una por una\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t",
+  "auditor": [],
+  "inicio": {
+   "palabras": 214,
+   "cifras": [
+    "4",
+    "4",
+    "07:00",
+    "1.966",
+    "2",
+    "2",
+    "2",
+    "05:43",
+    "2",
+    "2",
+    "3",
+    "3.059",
+    "2",
+    "06:00",
+    "18:00",
+    "2",
+    "3",
+    "655",
+    "1",
+    "18:20",
+    "100",
+    "05:43",
+    "290"
+   ],
+   "grandes": [
+    "4 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "oper",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/oper/hoy/ceiba/curso",
+  "alto": 1046,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nPregunta\n1\nde 4\n\n1\nP-201B · bomba de agua · paró hoy a las 03:52, hace 10,1 h · planta · agua\n\n¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\nUn toque y queda a nombre de Jairo Peña, con la hora del sistema.\n\nVer P-201B\nNo arrancar P-201B ni LC-21 hasta identificar qué se dañó\nSi arranca antes, queda como no conformidad.\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 138,
+   "cifras": [
+    "1",
+    "4",
+    "03:52,",
+    "10,1",
+    "5",
+    "8",
+    "3",
+    "8"
+   ],
+   "grandes": [
+    "1 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "jefe",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/jefe/hoy/ceiba/curso",
+  "alto": 900,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nAvisan\n1\nK-101 ya pasó el límite · frenaría en la planta\n\nPor identificar\n3\n· P-201B, LC-21 y LC-08\n\nFallas críticas · octubre\n1\n· P-201B (planta)\n\nEspera\n7,7 de 8,1\ndías por falla\nVer la orden\nConseguir la causa de 3 paradas\nContestar yo\nVer la parada\nDecidir 3 planes de P-201B · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOjo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.",
+  "auditor": [],
+  "inicio": {
+   "palabras": 119,
+   "cifras": [
+    "3",
+    "1",
+    "3",
+    "1",
+    "7,7",
+    "8,1",
+    "3",
+    "3"
+   ],
+   "grandes": [
+    "1 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "conf",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/conf/equipos/ceiba",
+  "alto": 2798,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "P.flex flex-wrap items-center justify-betw",
+   "P.flex flex-wrap items-center justify-betw",
+   "SECTION.grid gap-3 rounded-[10px] bg-[var(--pane"
+  ],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "Todos mis campos\nLa Ceiba\nDatos de demostración\nEquipos\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nSi falla hoy\n3.059\nbbl/d\nP-201A y P-201C · sin instrumento · se trabaría en la planta\n\nVigía\n3 de 3\n· aciertos\nSin instrumento\n5\nequipos\nEntre fallas\n41 d\n· bombas de agua\n\nClasificación confirmada\n0 de 7\nfilas\n· planeada o no\n\nAbrir P-201A\n\nLe tocan 2 cosas · conseguir la causa de 3 paradas\nVer lo que le toca\n\nP-201B · SAP no lo sabe\nAvisar\n\nFiltrar\n28 equipos\n· ordenados por «Si falla hoy»\n¿Lo vigila TRIM?\nP-201A\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\nno: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nP-201C\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\nno: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nLC-11\nelectrosumergible\nproduciendo\nsí · 6 señales\n1.031bbl/d\nsi falla hoy\nLC-08\nelectrosumergible\nproduciendo\nsí · 6 señales\n893bbl/d\nsi falla hoy\nLC-04\nelectrosumergible\nproduciendo\nsí · 6 señales\n825bbl/d\nsi falla hoy\nLC-05\nelectrosumergible\nproduciendo\nsí · 6 señales\n812bbl/d\nsi falla hoy\nLC-14\nelectrosumergible\nproduciendo\nsí · 6 señales\n783bbl/d\nsi falla hoy\nLC-19\npozo · bombeo mecánico\nproduciendo\nno: solo su controlador\n778bbl/d\nsi falla hoy\nLC-06\nelectrosumergible\nproduciendo\nsí · 6 señales\n692bbl/d\nsi falla hoy\nLC-09\nelectrosumergible\nproduciendo\nsí · 6 señales\n620bbl/d\nsi falla hoy\nLC-17\nelectrosumergible\nproduciendo\nsí · 6 señales\n539bbl/d\nsi falla hoy\nLC-15\nelectrosumergible\nproduciendo\nsí · 6 señales\n470bbl/d\nsi falla hoy\nLC-10\nelectrosumergible\nproduciendo\nsí · 6 señales\n459bbl/d\nsi falla hoy\nLC-12\nelectrosumergible\nproduciendo\nsí · 6 señales\n379bbl/d\nsi falla hoy\nLC-02\nelectrosumergible\nproduciendo\nsí · 6 señales\n378bbl/d\nsi falla hoy\nLC-03\npozo · bombeo mecánico\nproduciendo\nno: solo su controlador\n374bbl/d\nsi falla hoy\nLC-01\nelectrosumergible\nproduciendo\nsí · 6 señales\n360bbl/d\nsi falla hoy\n3\nH-302\ntratamiento de crudo\nAviso · en marcha\nsí · 4 señales\n0bbl/d\nsi falla hoy\n1\nK-101\naire de instrumentos\nAlarma · ya pasó el límite\nsí · 4 señales\nhasta 9.394bbl/d\nsi falla hoy\nSE-2\nenergía eléctrica\nsin respaldo\nen servicio\nsí · 3 señales\nhasta 9.394bbl/d\nsi falla hoy\nV-101\nseparador\nsin respaldo\nen marcha\nsí · 2 señales\nhasta 9.394bbl/d\nsi falla hoy\n1\nP-201B\nbomba de agua\nAlarma · parada desde hoy, 03:52\nsí · 8 señales\n1.665bbl/d\nse deja de producir\n2\nLC",
+  "auditor": [],
+  "inicio": {
+   "palabras": 147,
+   "cifras": [
+    "3.059",
+    "3",
+    "3",
+    "5",
+    "41",
+    "0",
+    "7",
+    "2",
+    "3",
+    "28",
+    "3.059",
+    "2"
+   ],
+   "grandes": [
+    "3.059 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "tec",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/tec/hoy/ceiba/curso",
+  "alto": 1301,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nHoy\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\n\nHoy\n5\ncosas\nPrimero P-201B: diga qué se dañó.\n\nNo arrancar\n2\n· P-201B y LC-21\n\nDiga qué se dañó en P-201B\n\n1\nAlarma ·\nP-201B\nbomba de agua · paró hoy a las 03:52, hace 10,1 h\n\nSigue parada.\n\nContestar\nVer P-201B\n\nP-201B · ¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\nUn toque y queda a nombre de Óscar Daza, con la hora del sistema.\n\nDiga por qué paró LC-21\n\n2\nAtención ·\nLC-21\npozo · paró el 1 de oct a las 18:20, hace 19,7 h\n\nSigue parado.\n\nContestar\nVer LC-21\nContestar «¿De dónde vino el corte?» de LC-05\n\nLC-05\npozo · paró el 1 de oct a las 09:16\n\nPara el reporte a la ANH falta el detalle.\n\nContestar\nVer la parada\nDiga por qué paró LC-08\n\nLC-08\npozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar\n\nArrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.\n\nContestar\nVer LC-08\nOrden 40012056 · K-101\n\nVerificar que las tres unidades estén en servicio: hoy hay dos.\n\nCerrar la orden\nVer K-101",
+  "auditor": [],
+  "inicio": {
+   "palabras": 184,
+   "cifras": [
+    "5",
+    "2",
+    "03:52,",
+    "10,1",
+    "5",
+    "8",
+    "3",
+    "8",
+    "1",
+    "18:20,",
+    "19,7",
+    "1",
+    "09:16"
+   ],
+   "grandes": [
+    "5 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "reg",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/reg/regulatorio/ceiba/curso",
+  "alto": 1658,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "SECTION.min-w-0 rounded-[10px] bg-[var(--panel)]"
+  ],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nReporte al regulador\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\nOctubre, en curso\n\nParadas sin causa\n\n2\nparadas\n\nNo se puede publicar todavía: octubre sigue abierto y les falta la causa (355 bbl). \n\nSin causa\n\n355\nbbl\n\nno se puede reportar\n\nLímite\n\n07:00\nmañana\n\nCircular 024\n\nRespuesta de la ANH\n\n—\n\nsin respuesta registrada\n\nRegistrar la respuesta\nQué falta y quién lo debe\nLC-21 · faltan todos los pasos\nLo debe el operador de campo · mañana antes de las 07:00\n247 bbl\nLC-08 · faltan todos los pasos\nLo debe el operador de campo · mañana antes de las 07:00\n108 bbl\nExportar el reporte\nInforme en PDF\n\nCSV para la ANH · queda con folio y huella\n\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\nÁrbol de causas · como la circular\nVer los códigos ANH\n\n1.046 bbl\n5 paradas · 0 bbl con los 6 pasos confirmados (0 %)\n\nQuién\n→\nDónde se trabó\n→\nQué pasó\n→\n¿Planeada?\n→\nCausa\n→\nDetalle\nOperador · Mantenimiento\n691 \nbbl,\n66 %\ndel período\nEn la planta o estación\n573 \nbbl,\n55 %\ndel período\nDiferida · No planeada · No planeada - Proceso / Facilidades · Parada estación/bombeo afecta pozos\n573 \nbbl,\n55 %\ndel período\nEn el pozo\n118 \nbbl,\n11 %\ndel período\nDiferida · No planeada · No planeada - Eléctrica interna\n118 \nbbl,\n11 %\ndel período\nFalta el detalle\n118 \nbbl,\n11 %\ndel período\nFalta quién\n355 \nbbl,\n34 %\ndel período\nSin identificar\n355 \nbbl,\n34 %\ndel período\nFalta qué pasó\n355 \nbbl,\n34 %\ndel período\nFalta saber si fue planeada\n355 \nbbl,\n34 %\ndel período\nFalta la causa\n355 \nbbl,\n34 %\ndel período\nFalta el detalle\n355 \nbbl,\n34 %\ndel período\n\n= el diferido del libro (Σ de las paradas del período)\n1.046 bbl\n\nPérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)\n\nMedición oficial\nVer más\n· 2 puntos",
+  "auditor": [],
+  "inicio": {
+   "palabras": 171,
+   "cifras": [
+    "2",
+    "(355",
+    "355",
+    "07:00",
+    "024",
+    "07:00",
+    "247",
+    "07:00",
+    "108",
+    "16.941",
+    "1.046",
+    "0",
+    "118",
+    "573"
+   ],
+   "grandes": [
+    "2 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "adm",
+  "ancho": 1440,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/adm/configuracion/ceiba/curso",
+  "alto": 1068,
+  "altoVentana": 900,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "SECTION.grid gap-x-8 gap-y-4 rounded-[10px] bg-[",
+   "NAV.no-imprimir rounded-[20px] bg-[var(--pan"
+  ],
+  "navFondo": "rgba(0, 0, 0, 0)",
+  "franja": 1,
+  "texto": "La Ceiba\nDatos de demostración\nConfigurar\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\nen atención\n3\n1\naviso\n0\nsin comunicación\n· medidor oficial\nEstado de la configuración\n\nLa Ceiba\n\nPasos listos\n\n3\nde 6 pasos listos\n\nFalta firmar a qué pozos sirve cada equipo.\n\nSeguir el paso\nPerfil del campo\nfirmado\nTanques de agua\nel tanque tiene capacidad, transmisor y aforo\nA qué pozos sirve cada equipo\nTRIM la deduce del registro: faltan 36 equipos por confirmar y firmar\nLo que deja pasar cada tramo\ndato del demo, sin firmar: tren de crudo, tren de agua, tren de gas, afuera, mercado y admisión de los inyectores\nFactor de medición\nsin firmar: rige 1\nMeta de hoy\nfirmada · la firma el gerente de activo\n\nSus otros campos:\nMorichal Norte · 3 de 6\nGuacamayo · 3 de 6\nEl Palmar · 2 de 5\nLa Zarza · 2 de 5\n\nTags sin equipo\n\n3 tags sin equipo · 3 con sugerencia\n\nAplicar las 3\nVer los conectores\nConversión del árbol\n\nSin tabla firmada: las paradas se clasifican directo en el árbol de la ANH.\n\nImportar la tabla\nJornada\n\nCambio de turno 06:00 y 18:00 · por defecto, sin firmar\n\nFirmar la jornada\nConfiguración técnica\nFilosofía operacional",
+  "auditor": [],
+  "inicio": {
+   "palabras": 207,
+   "cifras": [
+    "3",
+    "6",
+    "36",
+    "1",
+    "3",
+    "6",
+    "3",
+    "6",
+    "2",
+    "5",
+    "2",
+    "5",
+    "3",
+    "3",
+    "3",
+    "06:00",
+    "18:00"
+   ],
+   "grandes": [
+    "3 (60 px)"
+   ]
+  }
+ },
+ {
+  "rol": "ger",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/ger/planta-viva/ceiba/curso",
+  "alto": 1774,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nAV\nTodos mis campos\nDemo\nLa planta viva · hoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nSe deja de producir ahora\n\n1.966\nbbl/d\n\npor qué\n\nVer P-201B\nCompartir el informe\nMetas\nDónde se trabó · La Ceiba\nYacimiento\nla roca\n◄ limita\nPozos\n15 de 18 en marcha\n1\nPlanta\n1.665\nbbl/d no pasan\nP-201B · bomba de agua\nSalida\nel oleoducto recibe\n\nProducción por día\n\n3\n10.700\nbbl/d\n\nmeta 10.900\n\nCierre del mes\n\n293.287\nbbl\nproyectado\n\nmeta 337.900\n\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\n50 mil USD · máximo 1.267\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo",
+  "auditor": [],
+  "inicio": {
+   "palabras": 57,
+   "cifras": [
+    "1.966",
+    "15",
+    "18",
+    "1.665"
+   ],
+   "grandes": [
+    "1.966 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "prod",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/prod/planta-viva/ceiba/curso",
+  "alto": 2123,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "SECTION.min-w-0 rounded-[10px] bg-[var(--panel)]"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nMR\nTodos mis campos\nDemo\nLa planta viva · hoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nSalen hoy\n\n9.394\nde 11.857 bbl/d\n\npor qué\n\nConfirmar las 2\n◄ limita\nPozos\n11.857\ndan, bbl/d\n1\nPlanta\n13.000\ncaben · sobran 1.143\nP-201B parada · capacidad sin firmar\nSalida\n9.394\nsalen hoy\ncapacidad sin firmar\n\nPor confirmar\n\n4\nparadas\n\nantes de las 07:00, para el reporte\n\nLC-07, LC-16\n\nPlanta · diferida · no planeada · Proceso / Facilidades · Parada estación/bombeo afecta pozos\n\n2 esperan la causa: se confirman cuando alguien conteste.\n\nVer una por una\n\nSi falla hoy\n\n3.059\nbbl/d\n\nP-201A · sin instrumento · después de 2 min\n\nVer P-201A\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\n¿Está funcionando?\n· lo no planeado, por día\n\nAntes de TRIM\n\n391\nbbl/d\n\njun a ago · 1 falla al mes\n\nEste mes\n\n436\nbbl/d\n\nsin meta firmada · 1 falla\n\nYa se ganó\n\n3.934\nbbl\n\ndejaron de diferirse · 3 de 3 avisos acertaron\n\nPor tramo\nFin de mes\n\nCargar la asignación de septiembre\n\nCargarla\n¿Cuadra? Medición oficial y factor\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 65,
+   "cifras": [
+    "9.394",
+    "11.857",
+    "2",
+    "11.857",
+    "13.000",
+    "1.143",
+    "9.394",
+    "4",
+    "07:00,"
+   ],
+   "grandes": [
+    "9.394 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "sup",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/sup/hoy/ceiba/curso",
+  "alto": 2216,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "SECTION.grid gap-x-5 gap-y-1 rounded-[10px] bg-[",
+   "SECTION.grid gap-x-5 gap-y-1 rounded-[10px] bg-[",
+   "P.flex flex-wrap items-center justify-betw",
+   "SECTION.rounded-[10px] bg-[var(--panel)] px-5 py"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n4\npor hacer en Hoy\n1\nLa Ceiba\nNO\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nParadas por confirmar\n4\nel reporte sale mañana antes de las 07:00\n\nAhora\n1.966\nbbl/d\n· se dejan de producir\n\nNo arrancar\n2\n· P-201B y LC-21\n\nSin causa\n2\n· LC-21 y LC-08\n\nEntregar turno\nRegistrar una pérdida\nConfirmar 2 paradas iguales\n\n1\nAlarma ·\nP-201B\ncerró LC-07 y LC-16\n\nTRIM las dedujo: en la planta, no planeada.\n\nConfirmar las 2\nVer una por una\nConseguir la causa de 2 paradas\nContestar yo\nVer la parada\nDecidir planes · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nMi turno · de 06:00 a 18:00 del 2 de oct\nVer la jornada anterior\n\nPor confirmar\n3\n\nDiferido\n655 bbl\n\nPerdido\nsin registro\n\nLC-21\nVenía del 1 de oct, 18:20 · sigue\nfalta · falta · falta · falta\n100 bbl\npor confirmar\nLC-16 · por P-201B\nVenía de las 05:43 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n290 bbl\npor confirmar\nLC-07 · por P-201B\nVenía de las 05:46 · sigue\nPlanta · Diferida · No planeada · Parada estación/bombeo afecta pozos\n265 bbl\npor confirmar\nHorario por defecto, sin firmar: cambio de turno a las 06:00 y 18:00.\nVer una por una\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t",
+  "auditor": [],
+  "inicio": {
+   "palabras": 84,
+   "cifras": [
+    "4",
+    "4",
+    "07:00",
+    "1.966",
+    "2",
+    "2",
+    "2",
+    "2",
+    "2"
+   ],
+   "grandes": [
+    "4 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "oper",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/oper/hoy/ceiba/curso",
+  "alto": 1192,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "DIV.flex items-start gap-3 rounded-[10px] bg",
+   "SECTION.rounded-[10px] bg-[var(--panel)] px-5 py",
+   "BUTTON.toque no-imprimir inline-flex cursor-poi"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nJP\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nPregunta\n1\nde 4\n\n1\nP-201B · bomba de agua · paró hoy en la madrugada · planta · agua\n\n¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\na su nombre\n\nVer P-201B\nNo arrancar P-201B ni LC-21 hasta identificar qué se dañó\nSi arranca antes, queda como no conformidad.\nOrden de cierre. Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.\nRegistrar una pérdida",
+  "auditor": [],
+  "inicio": {
+   "palabras": 80,
+   "cifras": [
+    "1",
+    "4",
+    "5",
+    "8",
+    "3",
+    "8"
+   ],
+   "grandes": [
+    "1 (52 px)"
+   ]
+  }
+ },
+ {
+  "rol": "jefe",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/jefe/hoy/ceiba/curso",
+  "alto": 949,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "SECTION.grid gap-x-5 gap-y-1 rounded-[10px] bg-[",
+   "SECTION.grid gap-x-5 gap-y-1 rounded-[10px] bg-[",
+   "P.flex flex-wrap items-center justify-betw",
+   "P.rounded-[10px] bg-[var(--panel)] px-5 py"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n3\npor hacer en Hoy\n1\nLa Ceiba\nCR\nTodos mis campos\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nAvisan\n1\nK-101 ya pasó el límite · frenaría en la planta\n\nPor identificar\n3\n· P-201B, LC-21 y LC-08\n\nFallas críticas · octubre\n1\n· P-201B (planta)\n\nEspera\n7,7 de 8,1\ndías por falla\nVer la orden\nConseguir la causa de 3 paradas\nContestar yo\nVer la parada\nDecidir planes · simulado\nVer los planes\n\nP-201B · SAP no lo sabe\nAvisar\n\nOjo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.",
+  "auditor": [],
+  "inicio": {
+   "palabras": 71,
+   "cifras": [
+    "3",
+    "1",
+    "3",
+    "1",
+    "7,7",
+    "8,1",
+    "3"
+   ],
+   "grandes": [
+    "1 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "conf",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/conf/equipos/ceiba",
+  "alto": 4937,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "P.flex flex-wrap items-center justify-betw",
+   "P.flex flex-wrap items-center justify-betw",
+   "SECTION.grid gap-3 rounded-[10px] bg-[var(--pane"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nEM\nTodos mis campos\nDemo\nEquipos\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nSi falla hoy\n3.059\nbbl/d\nP-201A y P-201C · sin instrumento · se trabaría en la planta\n\nVigía\n3 de 3\n· aciertos\nSin instrumento\n5\nequipos\nEntre fallas\n41 d\n· bombas de agua\n\nClasificación confirmada\n0 de 7\nfilas\n· planeada o no\n\nAbrir P-201A\n\nLe tocan 2 cosas · conseguir la causa de 3 paradas\nVer lo que le toca\n\nP-201B · SAP no lo sabe\nAvisar\n\nFiltrar\n28 equipos\n· ordenados por «Si falla hoy»\nP-201A\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\n¿Lo vigila TRIM? no: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nP-201C\nbomba de agua\nsin instrumento: se supone en marcha · sube porque P-201B está parada\n¿Lo vigila TRIM? no: sin instrumento\n3.059bbl/d\nsi falla hoy · después de 2 min de colchón\nLC-11\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n1.031bbl/d\nsi falla hoy\nLC-08\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n893bbl/d\nsi falla hoy\nLC-04\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n825bbl/d\nsi falla hoy\nLC-05\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n812bbl/d\nsi falla hoy\nLC-14\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n783bbl/d\nsi falla hoy\nLC-19\npozo · bombeo mecánico\nproduciendo\n¿Lo vigila TRIM? no: solo su controlador\n778bbl/d\nsi falla hoy\nLC-06\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n692bbl/d\nsi falla hoy\nLC-09\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n620bbl/d\nsi falla hoy\nLC-17\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n539bbl/d\nsi falla hoy\nLC-15\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n470bbl/d\nsi falla hoy\nLC-10\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n459bbl/d\nsi falla hoy\nLC-12\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n379bbl/d\nsi falla hoy\nLC-02\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n378bbl/d\nsi falla hoy\nLC-03\npozo · bombeo mecánico\nproduciendo\n¿Lo vigila TRIM? no: solo su controlador\n374bbl/d\nsi falla hoy\nLC-01\nelectrosumergible\nproduciendo\n¿Lo vigila TRIM? sí · 6 señales\n360bbl/d\nsi falla hoy\n3\nH-302\ntratamiento de crudo\nAviso · en marcha\n¿Lo vigila TRIM? sí · 4 señales\n0bbl/d\nsi falla hoy\n1\nK-101\naire de instrumentos\nAlarma · ya pasó el límite\n¿Lo vigila TRIM? sí · 4 señales\nhasta 9.394bbl/d\nsi falla hoy\nSE-2\nen",
+  "auditor": [],
+  "inicio": {
+   "palabras": 87,
+   "cifras": [
+    "3.059",
+    "3",
+    "3",
+    "5",
+    "41",
+    "0",
+    "7",
+    "2",
+    "3"
+   ],
+   "grandes": [
+    "3.059 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "tec",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/tec/hoy/ceiba/curso",
+  "alto": 1791,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "BUTTON.flex w-full cursor-pointer items-center ",
+   "BUTTON.flex w-full cursor-pointer items-center "
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nÓD\nDemo\nHoy\ndatos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\n\nHoy\n5\ncosas\nPrimero P-201B: diga qué se dañó.\n\nNo arrancar\n2\n· P-201B y LC-21\n\nDiga qué se dañó en P-201B\n\n1\nAlarma ·\nP-201B\nbomba de agua · paró hoy en la madrugada\n\nContestar\nVer P-201B\n\nP-201B · ¿Qué parte se dañó?\n\nLo que más le ha fallado a esta bomba:\n\nSello mecánico\n5 de sus 8 fallas\nRodamientos y cámara de empuje\n3 de sus 8 fallas\nOtra parte\nescoja de la lista\nTodavía no sé\nla pregunta sigue en Hoy\n+ Lo que encontró (si quiere)\n\na su nombre\n\nDiga por qué paró LC-21\n\n2\nAtención ·\nLC-21\npozo · paró ayer en la tarde\n\nContestar\nVer LC-21\nContestar «¿De dónde vino el corte?» de LC-05\n\nLC-05\npozo · paró el 1 de oct a las 09:16\n\nPara el reporte a la ANH falta el detalle.\n\nContestar\nVer la parada\nDiga por qué paró LC-08\n\nLC-08\npozo · arrancó hoy en la madrugada sin identificar\n\nArrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.\n\nContestar\nVer LC-08\nOrden 40012056 · K-101\n\nVerificar que las tres unidades estén en servicio: hoy hay dos.\n\nCerrar la orden\nVer K-101",
+  "auditor": [],
+  "inicio": {
+   "palabras": 87,
+   "cifras": [
+    "5",
+    "2",
+    "5",
+    "8",
+    "3",
+    "8"
+   ],
+   "grandes": [
+    "5 (44 px)"
+   ]
+  }
+ },
+ {
+  "rol": "reg",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/reg/regulatorio/ceiba/curso",
+  "alto": 1650,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "SECTION.min-w-0 rounded-[10px] bg-[var(--panel)]"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nIS\nDemo\nReporte al regulador\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\nOctubre, en curso\n\nParadas sin causa\n\n2\nparadas\n\nNo se puede publicar todavía \n\nSin causa\n\n355\nbbl\n\nLímite\n\n07:00\nmañana\n\nQué falta y quién lo debe\nLC-21\nLo debe el operador de campo\n247 bbl\nLC-08\nLo debe el operador de campo\n108 bbl\nExportar el reporte\nInforme en PDF\n\nRespuesta de la ANH\n\n—\n\nsin respuesta registrada\n\nRegistrar la respuesta\nProducido · diferido · perdido\n· octubre\n\nProducido\n\n16.941\nbbl\n\nmedido\n\nDiferido\n\n1.046\nbbl\n\nse produce después\n\nPerdido\n\n—\n\nsin registro\n\nPor tramo: el diferido y el perdido, lado a lado\nTramo\tDiferido\tPerdido\t\n\nYacimiento\n\t0bbl\t—\t\n\n\nPozos\n\t118bbl\t—\t\n\n\nPlanta\n\t573bbl\t—\t\n\n\nSalida\n\t0bbl\t—\t\n\n\nSin identificar\n\t355bbl\t—\t\nÁrbol de causas · como la circular\nVer los códigos ANH\n\n1.046 bbl\n\nPérdida: va aparte del diferido, en el balance de arriba (dónde se perdió y cuánto)\n\nMedición oficial\nVer más",
+  "auditor": [],
+  "inicio": {
+   "palabras": 76,
+   "cifras": [
+    "2",
+    "355",
+    "07:00",
+    "247",
+    "108"
+   ],
+   "grandes": [
+    "2 (48 px)"
+   ]
+  }
+ },
+ {
+  "rol": "adm",
+  "ancho": 390,
+  "tema": "dark",
+  "errores": [],
+  "hash": "#/adm/configuracion/ceiba/curso",
+  "alto": 1322,
+  "altoVentana": 844,
+  "desbordeLado": false,
+  "c1": [],
+  "acentoEnMarca": 0,
+  "chicos": [],
+  "nChicos": 0,
+  "sinTabular": [],
+  "nSinTabular": 0,
+  "anim": [],
+  "smil": 0,
+  "oscuras": [
+   "DIV.no-imprimir flex min-h-16 shrink-0 items",
+   "NAV.no-imprimir rounded-[20px] bg-[var(--pan"
+  ],
+  "navFondo": null,
+  "franja": 1,
+  "texto": "Abrir la navegación\n1\nLa Ceiba\nHL\nDemo\nConfigurar\nhoy, 2 de oct · datos de las 14:00\n1\n2\nalarmas\n2\n2\natención\n3\n1\naviso\n0\nEstado de la configuración\n\nLa Ceiba\n\nPasos listos\n\n3\nde 6 pasos listos\n\nFalta firmar a qué pozos sirve cada equipo.\n\nSeguir el paso\nPerfil del campo\nfirmado\nTanques de agua\ncompletos\nA qué pozos sirve cada equipo\nsin firmar\nLo que deja pasar cada tramo\nsin firmar\nFactor de medición\nsin firmar\nMeta de hoy\nfirmada por el gerente\n\nSus otros campos\n\nTags sin equipo\n\n3 tags sin equipo · 3 con sugerencia\n\nAplicar las 3\nVer los conectores\nConversión del árbol\n\nSin tabla firmada: las paradas se clasifican directo en el árbol de la ANH.\n\nImportar la tabla\nJornada\n\nCambio de turno 06:00 y 18:00 · por defecto, sin firmar\n\nFirmar la jornada\nConfiguración técnica\nFilosofía operacional",
+  "auditor": [],
+  "inicio": {
+   "palabras": 77,
+   "cifras": [
+    "3",
+    "6"
+   ],
+   "grandes": [
+    "3 (48 px)"
+   ]
+  }
+ }
+]

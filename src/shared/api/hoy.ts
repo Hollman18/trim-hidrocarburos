@@ -36,7 +36,7 @@ export { DESHACER_MS, MOTIVO_DESHACER, TURNO_H } from '@/entities/hoy'
 
 /** Lo que el servidor tiene de la sesión (lo que entra a mano). Lo que falta vale vacío. */
 export type SesionHoy = Pick<Sesion, 'ctx' | 'versiones' | 'usuarios'> & Partial<Pick<Sesion,
-  'clasificacionesAnh' | 'planes' | 'avisosEnviados' | 'asignacionOficial' | 'analisis'>>
+  'clasificacionesAnh' | 'planes' | 'avisosEnviados' | 'asignacionOficial' | 'analisis' | 'cierresOrden'>>
 
 /** `GET /api/vistas/hoy?rol=&campos=` · la respuesta del demo: la misma fórmula que el backend. */
 export function pedirHoy(q: ConsultaHoy, s: SesionHoy): VistaHoy {
@@ -69,7 +69,8 @@ export function pedirHoy(q: ConsultaHoy, s: SesionHoy): VistaHoy {
     paradas: pedirParadasAnh({ campos, desde: curso.desde, hasta: AHORA }, ctx, guardadas),
     riesgo: pedirRiesgo(campos, ctx),
     condiciones: Object.fromEntries(franja(campos, ctx).equipos.map(x => [`${x.campoId}|${x.equipo}`, x.condicion])),
-    ordenes: pedirOrdenesSap(campos, ctx),
+    // C1 (QA v3): con los cierres de orden (A3): una orden cerrada en el teléfono deja de ser «cosa por hacer».
+    ordenes: pedirOrdenesSap(campos, ctx, s.cierresOrden ?? []),
     avisosSap: pedirAvisosSap(campos, ctx, s.avisosEnviados ?? []),
     planes: [...ciclo.antes.planes, ...ciclo.durante.planes, ...ciclo.despues.planes],
     tuberias: Object.fromEntries(campos.map(c => [c, pedirTuberia(c, curso.desde, curso.hasta, ctx, versiones, guardadas)])),
@@ -103,14 +104,17 @@ function enterosDeHoy(campos: readonly string[], desde: Date, hasta: Date, ctx: 
   return { desde: desde.toISOString(), porEvento, porFila }
 }
 
+const SIN_CIERRES: never[] = []
+
 /** Hoy del rol que se está viendo, en los campos de la vista. */
 export function useHoy(rol: string, campos: string[]): VistaHoy {
   const ctx = useCtx()
   const versiones = useSesion(x => x.versiones), usuarios = useSesion(x => x.usuarios)
   const clasificacionesAnh = useSesion(x => x.clasificacionesAnh), planes = useSesion(x => x.planes)
   const avisosEnviados = useSesion(x => x.avisosEnviados), asignacionOficial = useSesion(x => x.asignacionOficial), analisis = useSesion(x => x.analisis)
-  const version = [ctx, versiones, usuarios, clasificacionesAnh, planes, avisosEnviados, asignacionOficial, analisis].map(versionDe).join('.')
-  return useDato(HOY, { rol, campos }, version, () => pedirHoy({ rol, campos }, { ctx, versiones, usuarios, clasificacionesAnh, planes, avisosEnviados, asignacionOficial, analisis }))
+  const cierresOrden = useSesion(x => x.cierresOrden)
+  const version = [ctx, versiones, usuarios, clasificacionesAnh, planes, avisosEnviados, asignacionOficial, analisis, cierresOrden ?? SIN_CIERRES].map(versionDe).join('.')
+  return useDato(HOY, { rol, campos }, version, () => pedirHoy({ rol, campos }, { ctx, versiones, usuarios, clasificacionesAnh, planes, avisosEnviados, asignacionOficial, analisis, cierresOrden }))
 }
 
 /** La insignia de Hoy para el panel y el ☰ (X5 §4.1-4.2): las tarjetas que piden una acción. */

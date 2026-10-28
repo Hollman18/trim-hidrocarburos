@@ -1,6 +1,6 @@
 import type { EsquemaAgua, VistaNivel3 } from '@/shared/api/equiposTecnico'
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
-import { Bomba, Tanque, type EstadoKit, type CondicionKit } from '@/shared/ui/scada'
+import { Bomba, Esquema, Tanque, type EstadoKit, type CondicionKit } from '@/shared/ui/scada'
 import { MARCA } from './filtros'
 import { n0, n1 } from '@/shared/lib/formato'
 import { TarjetaN3, Marca } from './piezas'
@@ -43,7 +43,8 @@ function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
   const xs = { succion: 124, descarga: 210, caudal: 306 }
   const aria = `${e.tanque ? `El tanque de agua${nivel !== null ? ` al ${n1(nivel)} por ciento` : ''} alimenta ` : ''}${n === 1 ? 'una bomba' : `${n} bombas en paralelo`}: ${e.bombas.map(b => `${b.id} ${b.marcha === 'parada' ? 'parada' : !b.instrumentada ? 'sin instrumento' : 'en marcha'}`).join(', ')}.${e.instrumentos.length ? ` ${e.instrumentos.map(i => `${i.letras} ${valor(i)}`).join(', ')}.` : ''}`
   return (
-    <svg width={360} height={alto} viewBox={`0 0 360 ${alto}`} role="img" aria-label={aria} className="mt-2.5 block h-auto max-w-full" data-esquema-agua>
+    // El <svg> es el esquema del kit (K3): su nombre accesible y `data-kit`.
+    <Esquema ancho={360} alto={alto} etiqueta={aria} className="mt-2.5 overflow-hidden" data-esquema-agua="">
       <defs>
         <marker id="flecha-agua" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 Z" fill="var(--agua)" />
@@ -103,7 +104,7 @@ function Dibujo({ e, v }: { e: EsquemaAgua; v: VistaNivel3 }) {
           <text x={354} y={alto - 8} fontSize={14} textAnchor="end" fill="var(--tinta2)">{e.toman.length ? `${e.toman.length === 1 ? 'la toma' : 'las toman'} ${lista(e.toman)}` : 'ninguna bomba las toma'}</text>
         </>
       )}
-    </svg>
+    </Esquema>
   )
 }
 

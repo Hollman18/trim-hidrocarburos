@@ -7,6 +7,8 @@
 > - **El registro para la máquina:** [`cambios-contrato.json`](cambios-contrato.json): una entrada por cambio, con su fecha, su commit, su motivo, su reemplazo y si quedó compatible (`resuelto`).
 > - **La prueba:** `npm run verificar:contrato`, sección «A1» (§8). Si alguien rompe el contrato sin registrarlo, falla y dice qué rompió.
 > - **Cómo repetir la medición:** §7.
+>
+> **27-oct-2026 · C3 (revisión contra `main`, `262df1f`).** La tanda B no agregó rutas, códecs ni campos: `contrato.ts` sigue con 68 lecturas y las escrituras con 23 (22 en `escrituras.ts` y `POST /perdidas`); `verificar-contrato` 251/251 y `referencia.mjs comprobar` 344/344 y 48/48. Lo que sí cambió son **las pantallas que piden cada ruta**, y con eso la columna «¿lo usa lo necesario?». Se volvió a medir con la regla: **AGREGAR AHORA** = la pide el arranque o una pantalla de lo necesario en `main`; **PARA DESPUÉS** = solo la pide un escalón (o un botón que, sin ella, dice el error y no tumba la pantalla); **YA NO CONSTRUIR** = ninguna pantalla la pide. Ojo: una lectura que falta tumba la pantalla entera que la pide (el aviso con «Reintentar»), así que una ruta que una pantalla de lo necesario pide no puede ir en «ya no». Cambiaron 13 rutas (marcadas «C3» en §1.1 y §5): `GET /planta/cambios` (es del arranque: sin ella el front no arranca), `/vistas/criticidad`, `/vistas/ciclo`, `/sap/equipos`, `/vistas/diferidos/mensual`, `/vistas/predicciones`, `/vistas/paradas/:evento/opciones`, `/vistas/bombas/paradas`, `/vistas/pozos/:campo/:pozo` y `/vistas/equipos/:campo/:equipo/historia` suben a AGREGAR AHORA; `POST /planta/cambios` pasa a PARA DESPUÉS; `/vistas/diferidos/base` y `/vistas/electrosumergibles` bajan a YA NO CONSTRUIR. La entrega corta para el desarrollador: [`ENTREGA-V3.md`](ENTREGA-V3.md).
 
 ---
 
@@ -30,7 +32,7 @@
 | C19, Q1–Q5 | SQL de la cadena: 9 tablas con otra forma en el SQL nuevo | CAMBIADO · **al lado** | **Rige el SQL de v1** (`simulador-api/esquema.sql`, sin cambios). `docs/backend/sql/v1-cadena.sql` da sus tablas y columnas desde el modelo nuevo (§4.6) | **AGREGAR AHORA** (adm: tags sin equipo) |
 | C3, C4, C14, C15, C17 | Compatibles | CAMBIADO · compatible | Nada obligatorio (§4.7) | **AGREGAR AHORA** (C3 y C4 son insumos) |
 | A3-1 | `POST /api/paradas/:evento/respuesta`: `modo` pasa a opcional con `parte` («Contestar» en 1 toque) | CAMBIADO · registrado | Aceptar la parte sin `modo`. **Ojo:** un backend de v1 responde `422` hasta que lo adopte; es la única regla de v1 que se relaja (§9.2) | **AGREGAR AHORA** (oper y tec) |
-| E1–E29 | 29 endpoints nuevos de la v2 | **AGREGADO** | 23 ahora, 3 después y 3 no (§1.1, §5) | ver §1.1 |
+| E1–E29 | 29 endpoints nuevos de la v2 | **AGREGADO** | 25 ahora, 2 después y 2 no (§1.1, §5; C3) | ver §1.1 |
 | M1–M8, A2, A3 | Lo que faltaba en el motor, **ya construido**: pérdidas, balance, jornada, efectividad, fallas por mes (A2); cierre de la orden, respuesta de la ANH, conversión del árbol, 5 tramos (A3); `porConfirmar` y el estado de la configuración (A1) | **AGREGADO** | Construir lo de **AGREGAR AHORA**, con su caso en `referencia/` (§9.2, §9.3 y §9.4) | **AGREGAR AHORA** |
 | F1–F17 | Campos, capacidades y códigos nuevos | **AGREGADO** | §5.3. F3, F9, F10 y F11 ya están escritos en `CONTRATO.md` («A1») | ver §5.3 |
 
@@ -38,10 +40,12 @@
 
 | | AGREGAR AHORA | PARA DESPUÉS | YA NO CONSTRUIR | Total |
 |---|---|---|---|---|
-| Las 50 de v1 (41 lecturas + 9 escrituras) | **35** (27 + 8) | **5** (5 + 0) | **10** (9 + 1): 1 RETIRADO (`GET /mensajes`) y 9 «no prioritario» | 50 |
-| Las 29 de la v2 (20 lecturas + 9 escrituras) | **23** (15 + 8) | **3** (2 + 1) | **3** (3 + 0) | 29 |
+| Las 50 de v1 (41 lecturas + 9 escrituras) | **42** (34 + 8) | **3** (2 + 1) | **5** (5 + 0): 1 RETIRADO (`GET /mensajes`) y 4 «no prioritario» | 50 |
+| Las 29 de la v2 (20 lecturas + 9 escrituras) | **25** (17 + 8) | **2** (1 + 1) | **2** (2 + 0) | 29 |
 | Las 13 de la v3 (A1, A2 y A3: 8 lecturas + 5 escrituras) | **13** | — | — | 13 |
-| **En el código hoy:** 68 lecturas en `contrato.ts` y 23 escrituras (22 en `escrituras.ts` y `POST /perdidas`) | **71** | **8** | **12** | **91** |
+| **En el código hoy:** 68 lecturas en `contrato.ts` y 23 escrituras (22 en `escrituras.ts` y `POST /perdidas`) | **80** | **5** | **6** | **91** |
+
+Antes de la revisión C3 (contra la tanda A) las cuentas eran 71, 8 y 12.
 
 Hay además 2 rutas que solo estaban en `CONTRATO.md`: `GET` y `POST /api/webhooks/whatsapp`. Son **YA NO CONSTRUIR** (RETIRADO). Las de la cadena de datos y los insumos están al final de §1.1.
 
@@ -54,27 +58,27 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | Endpoint | ¿lo usa lo necesario? | Quién |
 |---|---|---|
 | `GET /vistas/diferidos` | **AGREGAR AHORA** | reg (¿se puede publicar?, Regulatorio); ger y prod (Resultados, informe del mes) |
-| `GET /vistas/diferidos/mensual` | **YA NO CONSTRUIR** (no prioritario) | Solo Producción y Diferidos (A-09). El mes a mes del gerente llega dentro de `/vistas/planta-viva`. |
-| `GET /vistas/diferidos/base` | **AGREGAR AHORA** | Resultados de ger, prod y jefe |
+| `GET /vistas/diferidos/mensual` | **AGREGAR AHORA** (C3; antes «ya no») | reg: el CSV para la ANH de «Exportar el reporte» (`useExportar`, con un campo); prod: Producción, fin de mes (`useSerie`). El mes a mes del gerente llega dentro de `/vistas/planta-viva`. |
+| `GET /vistas/diferidos/base` | **YA NO CONSTRUIR** (no prioritario; C3, antes «ahora») | Ninguna pantalla la pide desde la tanda B: «¿Está bajando?» salió de Resultados y lo dice «¿Está funcionando?» (`/vistas/efectividad`, que hace su propia base) |
 | `GET /vistas/produccion/diaria` | **AGREGAR AHORA** | Resultados: producción por día contra la meta (ger) |
 | `GET /vistas/potencial-reciente` | **AGREGAR AHORA** | ger firma las metas (Configuración) |
 | `GET /vistas/paradas/por-identificar` | **AGREGAR AHORA** | La ficha ejecutiva del gerente (`FichaEjecutiva`) y la orden en la ficha |
-| `GET /vistas/paradas/:evento/opciones` | **YA NO CONSTRUIR** (no prioritario) | Solo Identificar (B-06). Las opciones de «Contestar» llegan dentro de `/vistas/hoy`. |
+| `GET /vistas/paradas/:evento/opciones` | **AGREGAR AHORA** (C3; antes «ya no») | «Ver una por una» (pantalla `causa`: prod, sup, oper, tec, jefe y conf) todavía pinta la tarjeta de contestar de cada parada pendiente, y cada tarjeta la pide. Las opciones de «Contestar» en Hoy llegan dentro de `/vistas/hoy`. |
 | `GET /vistas/bombas/prediccion` | **PARA DESPUÉS** | prod, escalón 2 (el tren de agua). El orden de cierre de sup y oper llega por `/vistas/campos/:campo/agua`. |
-| `GET /vistas/bombas/paradas` | **YA NO CONSTRUIR** (no prioritario) | Ninguna pantalla la pide |
+| `GET /vistas/bombas/paradas` | **AGREGAR AHORA** (C3; antes «ya no») | El nivel 4 de una bomba (conf: el diagnóstico, `DiagnosticoBomba`) y la tubería del agua |
 | `GET /vistas/bombas/paradas-en-periodo` | **YA NO CONSTRUIR** (no prioritario) | Solo la pantalla Evidencia del rol cont, que sale (A-21) |
 | `GET /vistas/riesgo` | **AGREGAR AHORA** | La ficha ejecutiva del gerente («qué se está haciendo»). Ver C1. |
 | `GET /vistas/estado` | **AGREGAR AHORA** | La marca del campo en la cabecera, todos los roles (C-01) |
 | `GET /vistas/pozos` | **PARA DESPUÉS** | prod, escalón 3 (los pozos en tabla) |
-| `GET /vistas/pozos/:campo/:pozo` | **PARA DESPUÉS** | prod, escalón 3 |
-| `GET /vistas/electrosumergibles` | **PARA DESPUÉS** | prod, escalón 3 (`pedirFlotaEsp`) |
+| `GET /vistas/pozos/:campo/:pozo` | **AGREGAR AHORA** (C3; antes «después») | El nivel 3 de un pozo y su ficha (`DetallePozo`): oper, tec y conf lo abren desde la pregunta |
+| `GET /vistas/electrosumergibles` | **YA NO CONSTRUIR** (no prioritario; C3, antes «después») | Ninguna pantalla la pide desde la tanda B: Electrosumergibles salió (A-15) y es un filtro de Equipos |
 | `GET /vistas/asignacion` | **AGREGAR AHORA** | prod: cargar y cotejar la asignación oficial |
-| `GET /vistas/predicciones` | **YA NO CONSTRUIR** (no prioritario) | El «3 de 3» de conf llega en `/vistas/lista-equipos` (`vigia`) |
+| `GET /vistas/predicciones` | **AGREGAR AHORA** (C3; antes «ya no») | conf: el «3 de 3» llega en `/vistas/lista-equipos` (`vigia`), pero tocarlo abre los aciertos (`Aciertos`, en su Equipos y en Confiabilidad), que piden esta |
 | `GET /vistas/relojes` | **AGREGAR AHORA** | jefe: los días de espera (apoyo 3). Lleva los 5 tramos (M5). |
 | `GET /vistas/campos/:campo/ahora` | **AGREGAR AHORA** | adm: el paso de los tanques (Configuración) |
 | `GET /vistas/equipos/:campo/:equipo` | **AGREGAR AHORA** | conf: el diagnóstico (nivel 4) |
 | `GET /vistas/equipos-hoy` | **AGREGAR AHORA** | reg (Regulatorio) |
-| `GET /vistas/equipos/:campo/:equipo/historia` | **PARA DESPUÉS** | conf, escalón 2 (la historia del PLC) |
+| `GET /vistas/equipos/:campo/:equipo/historia` | **AGREGAR AHORA** (C3; antes «después») | La ficha de cualquier equipo que no es pozo (`PanelEquipo`: «Ver P-201B» del gerente, «Abrir P-201A» de conf) y el nivel 4 |
 | `GET /vistas/equipos/:campo/:equipo/ficha` | **AGREGAR AHORA** | ger: la ficha ejecutiva |
 | `GET /vistas/equipos` | **YA NO CONSTRUIR** (no prioritario) | Ninguna pantalla la pide; la reemplaza `/vistas/lista-equipos` |
 | `GET /vistas/confiabilidad` | **AGREGAR AHORA** | conf (tiempo entre fallas, los más costosos) y jefe |
@@ -82,7 +86,7 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | `GET /mensajes` | **YA NO CONSTRUIR** (RETIRADO) | WhatsApp (§3) |
 | `GET /sap/avisos` | **AGREGAR AHORA** | jefe: ver o crear el aviso del que avisa |
 | `GET /sap/ordenes` | **AGREGAR AHORA** | jefe (la orden abierta) y tec (su orden) |
-| `GET /sap/equipos` | **YA NO CONSTRUIR** (no prioritario) | Solo la integración de Conectores. Lo necesario de adm no la nombra. |
+| `GET /sap/equipos` | **AGREGAR AHORA** (C3; antes «ya no») | tec: «Cerrar la orden» lee de aquí el catálogo de partes del equipo (`CerrarOrden`); adm: Conectores |
 | `GET /sap/equipos/:equipo` | **AGREGAR AHORA** | jefe: la orden y el equipo SAP en la ficha (`BloqueSap`) |
 | `GET /campos` | **AGREGAR AHORA** | Arranque, todos |
 | `GET /catalogo` | **AGREGAR AHORA** | Arranque; la medición oficial de prod y reg |
@@ -93,7 +97,7 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | `GET /informes` | **AGREGAR AHORA** | ger y reg: el informe y el reporte con folio |
 | `GET /asignacion-oficial` | **AGREGAR AHORA** | prod |
 | `GET /analisis` | **AGREGAR AHORA** | jefe y conf completan el análisis |
-| `GET /planta/cambios` | **YA NO CONSTRUIR** (no prioritario) | Solo la pantalla Planta de adm (B-04) |
+| `GET /planta/cambios` | **AGREGAR AHORA** (C3; antes «ya no») | **Es uno de los 10 GET del arranque** (`servidor.ts`): sin ella el front no arranca. Basta `[]` mientras nadie cambie la planta |
 
 **Las 9 escrituras de v1**
 
@@ -107,18 +111,18 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | `POST /sap/avisos` | **AGREGAR AHORA** | jefe (crear la orden del que avisa); sup, escalón 2 |
 | `POST /informes` | **AGREGAR AHORA** | ger (compartir el informe) y reg (exportar el reporte) |
 | `POST /asignacion-oficial` | **AGREGAR AHORA** | prod |
-| `POST /planta/cambios` | **YA NO CONSTRUIR** (no prioritario) | Solo la pantalla Planta de adm |
+| `POST /planta/cambios` | **PARA DESPUÉS** (C3; antes «ya no») | adm: «Esquema de planta», desplegable de la configuración técnica. Sin ella, el cambio dice el error |
 
 **Las 20 lecturas nuevas**
 
 | Endpoint | ¿lo usa lo necesario? | Quién |
 |---|---|---|
-| E1 `GET /vistas/ciclo` | **PARA DESPUÉS** | ger, escalón 2; sup, escalón 3; jefe, escalón 2 (los planes, simulados) |
+| E1 `GET /vistas/ciclo` | **AGREGAR AHORA** (C3; antes «después») | La ficha ejecutiva del gerente la pide siempre (`FichaEjecutiva`); también los planes en la tarjeta de Hoy (FF-3, al abrirlos). Decidir un plan (E21) sigue para después |
 | E2 `GET /vistas/campos/:campo/tuberia` | **AGREGAR AHORA** | prod: la tubería del campo, una vez |
 | E3 `GET /vistas/campos/:campo/choke/serie` | **PARA DESPUÉS** | prod, escalón 1 (qué limitó día por día) |
 | E4 `GET /vistas/campos/:campo/agua` | **AGREGAR AHORA** | sup y oper: el orden de cierre en la alarma; prod, escalón 2 |
 | E5 `GET /vistas/campos/:campo/capacidades` | **AGREGAR AHORA** | adm: los pasos de capacidades y del factor |
-| E6 `GET /vistas/criticidad` | **YA NO CONSTRUIR** como endpoint propio | «Si falla hoy» llega en `/vistas/lista-equipos` (`primero`, `noIntervenir`) y `/vistas/planta-viva` (`siFallaHoy`). **Su cálculo sí hay que hacerlo.** |
+| E6 `GET /vistas/criticidad` | **AGREGAR AHORA** (C3; antes «ya no») | conf (la cabeza de su Equipos y la lista), jefe (su Hoy), la ficha de cada equipo y «Por campo» de Resultados la piden. «Si falla hoy» también llega en `/vistas/lista-equipos` y `/vistas/planta-viva` |
 | E7 `GET /vistas/choke/reparto` | **AGREGAR AHORA** | adm: el paso de capacidades revisa los días en que el real pasó la capacidad (`superado`); prod, escalón 1 |
 | E8 `GET /vistas/choke/mensual` | **YA NO CONSTRUIR** | Solo Diferidos y el mes a mes viejo (A-09) |
 | E9 `GET /vistas/choke/base` | **YA NO CONSTRUIR** | Solo «Dónde se trabó» del resumen viejo |
@@ -142,7 +146,7 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 | E22 `POST /anh/paradas/:id/clasificacion` | **AGREGAR AHORA** | prod y conf corrigen dónde se trabó |
 | E23 `POST /anh/paradas/:id/yacimiento` | **AGREGAR AHORA** | prod (y conf) |
 | E24 `POST /anh/paradas/:id/respuesta` | **AGREGAR AHORA** | oper y sup (`responderPreguntaAnh`) |
-| E25 `POST /anh/paradas/:id/revision` | **AGREGAR AHORA** (a confirmar con M1) | Es el reemplazo de «2 Algo está mal» de WhatsApp ([`whatsapp.md`](../experiencia-v3/whatsapp.md), fila 9). `necesario-por-rol.md` no la nombra. |
+| E25 `POST /anh/paradas/:id/revision` | **AGREGAR AHORA** | El botón «Algo está mal» de cada parada en «Ver una por una» (`widgets/arbol/Tarjeta.tsx`). Es el reemplazo de «2 Algo está mal» de WhatsApp ([`whatsapp.md`](../experiencia-v3/whatsapp.md), fila 9) |
 | E26 `POST /anh/paradas/confirmar` | **AGREGAR AHORA** | sup y prod: confirmar en lote, su acción principal |
 | E27 `POST /anh/paradas/deshacer` | **AGREGAR AHORA** | sup y prod (Deshacer en vez de confirmar dos veces) |
 | E28 `POST /configuracion/vista-previa` | **AGREGAR AHORA** | adm: el impacto antes de firmar (`ImpactoPaso`) |
@@ -152,15 +156,15 @@ En «Quién», el rol y lo que hace con él. Sale de `necesario-por-rol.md` («V
 
 | Endpoint | ¿lo usa lo necesario? | Quién |
 |---|---|---|
-| `GET /vistas/configuracion/estado` (M8, A1) | **AGREGAR AHORA** | adm: su número principal |
+| `GET /vistas/configuracion/estado` (M8, A1) | **AGREGAR AHORA** | adm: su número principal. **Hoy la pantalla no la pide** (C3): arma el estado en el front con `estadoConfiguracion` y el borrador sin firmar. La vista da lo firmado |
 | `GET /vistas/balance` (A2-1) | **AGREGAR AHORA** | ger, prod, sup, reg, jefe y conf: producido · diferido · perdido |
-| `GET /vistas/perdidas` y `POST /perdidas` (M1, A2) | **AGREGAR AHORA** | oper, sup y prod registran; los roles clave la ven |
+| `GET /vistas/perdidas` y `POST /perdidas` (M1, A2) | **AGREGAR AHORA** | oper, sup y prod registran; los roles clave la ven. Hoy las pantallas leen las pérdidas dentro de `/vistas/balance` y `/vistas/jornada` (C3): la vista propia no la pide ninguna |
 | `GET /vistas/jornada` (A2-2) | **AGREGAR AHORA** | sup |
 | `GET /vistas/efectividad` (A2-3) | **AGREGAR AHORA** | ger y prod |
 | `GET /vistas/fallas/mensual` (M7, A2) | **AGREGAR AHORA** | jefe |
 | `POST /paradas/:evento/vio` (A3-1) | **AGREGAR AHORA** | oper y tec |
 | `POST /sap/ordenes/:numero/cierre` (M2, A3) | **AGREGAR AHORA** | tec |
-| `POST /anh/respuestas` y `GET /vistas/anh/respuestas` (M3, A3) | **AGREGAR AHORA** | reg |
+| `POST /anh/respuestas` y `GET /vistas/anh/respuestas` (M3, A3) | **AGREGAR AHORA** | reg. Hoy la pantalla lee la respuesta dentro de `/vistas/anh/reporte` (`respuestaAnh`); la historia propia no la pide ninguna (C3) |
 | `POST /anh/conversion/importar` y `GET /vistas/anh/conversion` (M4, A3) | **AGREGAR AHORA** | adm |
 
 **Fuera de `contrato.ts`** (en `CONTRATO.md` y `simulador-api/`; no entran en las 91):
@@ -381,12 +385,12 @@ Todo es opcional para un backend de v1: una pantalla que no lo recibe dice «sin
 
 | # | Ruta | Para qué | Casos en `referencia/` | Commit | ¿lo usa lo necesario? |
 |---|---|---|---|---|---|
-| E1 | `/vistas/ciclo?campos&desde&hasta` | Ciclo antes · durante · después, con los planes simulados | 6 (`ciclo/`) | `45a7b49` | **PARA DESPUÉS** |
+| E1 | `/vistas/ciclo?campos&desde&hasta` | Ciclo antes · durante · después, con los planes simulados | 6 (`ciclo/`) | `45a7b49` | **AGREGAR AHORA** (C3) |
 | E2 | `/vistas/campos/:campo/tuberia?desde&hasta` | La tubería del campo: qué limita y lo perdido por tramo | 11 (`choke/tuberia-*`) | `f4dd5bb` | **AGREGAR AHORA** |
 | E3 | `/vistas/campos/:campo/choke/serie?desde&hasta` | Qué limitó cada día y «Cambió lo que limita» | 10 | `f4dd5bb` | **PARA DESPUÉS** |
 | E4 | `/vistas/campos/:campo/agua` | La tubería del agua y el colchón | 5 (`agua-choke/`) | `f4dd5bb` | **AGREGAR AHORA** |
 | E5 | `/vistas/campos/:campo/capacidades` | Capacidades firmadas y factor de medición propuesto | 8 | `9b6a659`, `8a7c89f` | **AGREGAR AHORA** |
-| E6 | `/vistas/criticidad?campos` | «Si falla hoy» | 6 | `f4dd5bb` | **YA NO CONSTRUIR (endpoint)** |
+| E6 | `/vistas/criticidad?campos` | «Si falla hoy» | 6 | `f4dd5bb` | **AGREGAR AHORA** (C3) |
 | E7 | `/vistas/choke/reparto?campos&desde&hasta` | Brecha por tramo y por escalón, y la eficiencia de producción (PE) | 15 | `f4dd5bb` | **AGREGAR AHORA** |
 | E8 | `/vistas/choke/mensual?campos` | Lo perdido por tramo, mes a mes | 7 | `f4dd5bb` | **YA NO CONSTRUIR** |
 | E9 | `/vistas/choke/base?campos&desde&hasta` | Línea base por tramo | 7 | `f4dd5bb` | **YA NO CONSTRUIR** |
@@ -505,7 +509,7 @@ E20 GET /api/vistas/equipos/ceiba/P-201B/tecnico
 | E22 | `/anh/paradas/:id/clasificacion` | `anh:clasificar` | `{ parada, guardadas }` | 403 `paso-ajeno`; 404; 409 `cadena-cambio`, `cascada-cambio` y `cambia-a-otra-persona`; 422 `clasificacion-incoherente`, `falta-motivo`, `cascada-sin-ids` y `texto-largo` | `f4dd5bb` | **AGREGAR AHORA** |
 | E23 | `/anh/paradas/:id/yacimiento` | `anh:yacimiento` | `{ parada, guardadas }` | 403, 404, 409 y 422 | `f4dd5bb` | **AGREGAR AHORA** |
 | E24 | `/anh/paradas/:id/respuesta` | `anh:clasificar` | `{ parada, guardadas }` | 409 `pregunta-cerrada`; 422 `pregunta-ajena`; 403 `paso-ajeno` | `9b6a659` | **AGREGAR AHORA** |
-| E25 | `/anh/paradas/:id/revision` | `anh:clasificar` | `{ parada, guardadas }` | 422 `texto-corto` | `9b6a659` | **AGREGAR AHORA (a confirmar)** |
+| E25 | `/anh/paradas/:id/revision` | `anh:clasificar` | `{ parada, guardadas }` | 422 `texto-corto` | `9b6a659` | **AGREGAR AHORA** |
 | E26 | `/anh/paradas/confirmar` | `anh:clasificar` (una parada) o `anh:confirmar` (lote) | `{ paradas, lote? }` | 403 `paso-ajeno`; 409 `lote-sin-pasos`; 422 | `f4dd5bb` | **AGREGAR AHORA** |
 | E27 | `/anh/paradas/deshacer` | la de lo que se deshace | `{ paradas, guardadas }` | 409 si alguien dijo otra cosa después | `1b14930` | **AGREGAR AHORA** |
 | E28 | `/configuracion/vista-previa` | `config:firmar` | `{ impacto, errores? }` (no guarda) | 403; 422 | `f4dd5bb` | **AGREGAR AHORA** |
@@ -595,8 +599,8 @@ E29 POST /api/topologia/importar
 
 ```bash
 # rutas: lecturas del contrato y escrituras, en v1 y hoy
-git show cde8214:src/shared/api/contrato.ts | grep -oE "\('(/[^']+)'" | sort -u     # 41 (hoy: 61)
-git show cde8214:src/shared/api/escrituras.ts | grep -oE "'(POST|PATCH|PUT)', *[\`'][^\`']+"   # 9 (hoy: 18)
+git show cde8214:src/shared/api/contrato.ts | grep -oE "\('(/[^']+)'" | sort -u     # 41 (hoy: 68)
+git show cde8214:src/shared/api/escrituras.ts | grep -oE "'(POST|PATCH|PUT)', *[\`'][^\`']+"   # 9 (hoy: 22, más POST /perdidas en perdidas.ts)
 # texto del contrato y códecs
 git diff cde8214 HEAD -- CONTRATO.md src/shared/api/contrato.ts src/shared/api/escrituras.ts
 # referencia: 89 archivos de v1 que cambiaron, clave por clave, tipo, texto y número; y commit por commit

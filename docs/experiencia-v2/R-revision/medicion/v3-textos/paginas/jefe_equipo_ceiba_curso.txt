@@ -1,0 +1,104 @@
+#/jefe/equipo/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Parados
+4
+Avisan
+1
+Sin instrumento
+5
+Todos
+28
+Más filtros
+(1)
+Todos los tipos
+Bombas
+3
+Electrosumergibles
+15
+Pozos
+18
+Servicios y proceso
+7
+Todos los trenes
+Pozos
+18
+Crudo
+4
+Agua
+3
+Gas
+1
+Servicios
+2
+Buscar por tag
+7 equipos
+· ordenados por estado
+¿Lo vigila TRIM?
+1
+K-101
+aire de instrumentos
+Alarma · ya pasó el límite
+sí · 4 señales
+hasta 9.394bbl/d
+si falla hoy
+2
+TK-102
+tanque de crudo
+Atención · en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+3
+H-302
+tratamiento de crudo
+Aviso · en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+SE-2
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 9.394bbl/d
+si falla hoy
+V-101
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 9.394bbl/d
+si falla hoy
+C-401
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua, Pozos inyectores.

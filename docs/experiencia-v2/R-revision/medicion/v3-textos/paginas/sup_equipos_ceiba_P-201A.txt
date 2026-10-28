@@ -1,0 +1,57 @@
+#/sup/equipos/ceiba/P-201A
+
+La Ceiba
+Agua
+P-201A
+Datos de demostración
+P-201B
+P-201A
+bomba de agua · sin instrumento · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+sin instrumento: TRIM no ve si está en marcha; se supone que sí
+
+Si falla hoy: 3.059 bbl/d después de 2 min de colchón · se trabaría en la planta (18 pozos) · puesto 1 de lo que más cuesta
+P-201A sube porque P-201B está parada: si P-201A falla ahora, el campo deja de producir 3.059 bbl/d después de 2 min de colchón.
+Sin instrumento: TRIM no ve venir su falla.
+
+Sus señales
+
+Sin instrumento: TRIM no recibe ninguna señal de este equipo.
+
+En su tren de agua
+discontinuo: sin instrumento
+Tanque
+89,6 %
+alto-alto 90 %
+a los inyectores
+P-201A
+P-201B
+P-201C
+174.033 bbl/d entran:
+las toman P-201A y P-201C
+Mientras P-201B esté parada
+Entra
+174.033
+bbl/d de agua
+Caben
+178.500
+P-201A + P-201C
+Tanque
+89,6 %
+alto-alto 90 %
+
+El nivel no sube: P-201A y P-201C toman lo que entra.
+
+Si para otra bomba ahora, cierre primero los más acuatosos: LC-02 · LC-10 · LC-01 · LC-17 · LC-14 · LC-06 al 25 % · LC-09 al 25 % · LC-11 al 20 %. Dejan de producirse 3.059 bbl/d después de 2 min de colchón (parejo, 4.577).

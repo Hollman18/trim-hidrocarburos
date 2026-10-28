@@ -16,7 +16,7 @@ import { COLOR_CONDICION, cifra, fraseEstado, valorEscrito, type Banda, type Con
 const ALTO = 28
 const PISTA_Y = 10, PISTA_H = 8
 
-export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disparos = [], estado = 'normal', condicion, cruzo, desde, decimales = 0, ancho = 200, tag, className }: {
+export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disparos = [], estado = 'normal', condicion, cruzo, desde, decimales = 0, ancho = 200, tag, conValor = true, className }: {
   /** El nombre de la señal: «Presión de succión». */
   nombre: string
   valor: number | null
@@ -38,6 +38,9 @@ export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disp
   ancho?: number
   /** El tag del instrumento («PI-2010»), en la mono. */
   tag?: string
+  /** false: el valor (con su marca) ya lo escribe la fila, a la derecha del nombre (la señal del
+   *  nivel 4, `SenalFija`): la barra no lo repite. El nombre accesible lo lleva igual. */
+  conValor?: boolean
   className?: string
 }) {
   const gris = estado === 'parado'
@@ -58,19 +61,19 @@ export function Barra({ nombre, valor, unidad, escala, banda, alarmas = [], disp
 
   return (
     <div role="img" aria-label={etiqueta} data-kit="barra" data-estado={estado}
-      className={cn('inline-grid max-w-full grid-cols-[auto_auto] items-center gap-x-3 gap-y-0.5', className)}>
+      className={cn('inline-grid max-w-full items-center gap-x-3 gap-y-0.5', conValor ? 'grid-cols-[auto_auto]' : 'grid-cols-[auto]', className)}>
       {escala ? <Dibujo {...{ ancho, escala, banda, alarmas, disparos, valor, estado, marca, cruzo, fuera, gris, sinValor }} />
         : <span className="text-[12px] text-[var(--tinta3)]" style={{ width: ancho }}>sin escala firmada</span>}
-      <span className="flex items-baseline gap-1 whitespace-nowrap" aria-hidden>
+      {conValor && <span className="flex items-baseline gap-1 whitespace-nowrap" aria-hidden>
         {marca && <MarcaCondicion c={marca} tamano={14} decorativa className="self-center" />}
         {estado === 'sin-comunicacion' && <MarcaCondicion c="sin-comunicacion" tamano={14} decorativa className="self-center" />}
         <b className={cn('tabular text-[18px] leading-none', marca ? 'font-bold' : 'font-semibold', gris || sinValor ? 'text-[var(--tinta2)]' : 'text-[var(--tinta)]')}>
           {valorEscrito(estado, valor, decimales)}
         </b>
         <small className="text-[12px] text-[var(--tinta2)]">{unidad}</small>
-      </span>
+      </span>}
       {(tag || estado === 'sin-dato' || estado === 'sin-comunicacion' || (escala && !escala.firmada)) && (
-        <span aria-hidden className="col-span-2 flex flex-wrap gap-x-2 text-[12px] leading-tight text-[var(--tinta3)]">
+        <span aria-hidden className="col-span-full flex flex-wrap gap-x-2 text-[12px] leading-tight text-[var(--tinta3)]">
           {tag && <span className="font-mono">{tag}</span>}
           {estado === 'sin-dato' && <span>sin lectura</span>}
           {estado === 'sin-comunicacion' && <span>{desde ? `sin comunicación desde ${desde}` : 'sin comunicación'}</span>}

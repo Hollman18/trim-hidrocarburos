@@ -1,0 +1,95 @@
+#/prod/produccion/ceiba~portafolio/ytd
+
+Todos mis campos
+Resultados
+Datos de demostración
+Producción contra plan
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Año a la fecha, en curso
+Exportar
+3
+no se puede publicar
+El Palmar · factor fuera de banda
+
+Producción medida
+
+4.069.813
+bbl
+
+meta 3.885.354 · 14.822 bbl/d
+
+Potencial del libro:
+4.200.887 bbl
+· 15.299 bbl/d · lo medido es el 96,9 %
+
+Día a día
+bbl/d
+Producción por día
+275 días
+0
+20.000
+1 de ene
+2 de oct · en curso
+
+Oscura: real medido · clara: potencial del libro · discontinua: meta firmada · día en curso: 13.305 bbl/d
+
+Medición oficial
+La Ceiba
+corte de agua: analizador
+factor 0,958 · banda ±15 %
+FQI-0101 · computador de flujo de la unidad LACT-01
+El Palmar
+corte de agua: laboratorio
+factor 0,987 · banda ±15 %
+LIT-1021 y LIT-1022 · medidores automáticos de los tanques de despacho
+¿Cuadra? Mes por mes
+Mes	Real	Potencial	Diferido	Inventario	Del potencial	Meta
+Enero 2026	465.753	476.398	10.645	0	97,8 %	438.650
+Febrero 2026	422.842	446.191	23.349	0	94,8 %	396.200
+Marzo 2026	478.087	495.108	17.021	0	96,6 %	438.650
+Abril 2026	431.355	442.434	11.079	0	97,5 %	424.500
+Mayo 2026	466.807	483.376	16.569	0	96,6 %	438.650
+Junio 2026	435.273	448.891	13.618	0	97,0 %	424.500
+Julio 2026	468.885	486.326	17.441	0	96,4 %	438.650
+Agosto 2026	443.382	451.904	8.522	0	98,1 %	438.650
+Septiembre 2026	435.377	447.083	11.706	0	97,4 %	424.500
+Octubre 2026 · en curso	
+3
+bajo la meta22.052	23.176	1.124	0	95,2 %	22.404
+Cuadre · asignación oficial
+mes cerrado
+Campo
+La Ceiba
+El Palmar
+Mes
+septiembre de 2026
+agosto de 2026
+julio de 2026
+junio de 2026
+mayo de 2026
+abril de 2026
+marzo de 2026
+febrero de 2026
+enero de 2026
+diciembre de 2025
+noviembre de 2025
+octubre de 2025
+Plantilla
+Subir un CSV
+Motivo de la carga · obligatorio
+Cotejar
+
+sin cargar
+TRIM asigna 96.715 bbl · 7 pozos

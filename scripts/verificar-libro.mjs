@@ -4317,7 +4317,7 @@ console.log('\n=== K1 · Cierre: Riesgo en Equipos, sin Mi trabajo ni la tuberí
 
   // 5. Color con forma y palabra: el mes fuera de banda del factor es la marca de aviso; la celda «Real» de «¿Cuadra?»
   //    dice «bajo la meta»; el indicador sin lectura no pinta el morado sin su forma (H13.2).
-  const factor = fuenteK1('widgets/diferidos/Factor.tsx'), prodK = fuenteK1('pages/Produccion.tsx'), anal = fuenteK1('shared/ui/Analogico.tsx')
+  const factor = fuenteK1('widgets/diferidos/Factor.tsx'), prodK = fuenteK1('pages/Produccion.tsx'), anal = existeK1(`${SRCK}shared/ui/Analogico.tsx`) ? fuenteK1('shared/ui/Analogico.tsx') : '' /* K3: el indicador propio se borró; lo dibuja el kit SCADA */
   comprobar(!/fill="var\(--p3\)"/.test(factor) && /<MarcaCondicion c="aviso"/.test(factor)
       && !/<FueraDeMeta/.test(prodK) && /bajo la meta/.test(prodK) && !/--sincom/.test(anal)
       && !/\.analogico\b/.test(leerK1(`${SRCK}index.css`, 'utf8')),

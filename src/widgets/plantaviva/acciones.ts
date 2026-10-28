@@ -2,8 +2,8 @@ import { useApp, useRol } from '@/app/store'
 import { useExportar } from '@/widgets/informe/useExportar'
 
 /** Lo que hacen los botones de La planta viva: abren lo que ya existe.
- *  - Un equipo abre su ficha ejecutiva (`PanelEquipo` → `FichaEjecutiva`), como
- *    en el Resumen: si es de otro campo, primero se pasa a ese campo.
+ *  - Un equipo abre su ficha ejecutiva (`PanelEquipo` → `FichaEjecutiva`) encima de lo que
+ *    se ve: si es de otro campo, la ficha toma ese campo sin salir de «Todos mis campos».
  *  - «Ver el plan» abre la ficha del equipo del plan: ahí están sus planes del ciclo.
  *  - «Pedir la causa» lleva a Identificar a quien la tiene; al gerente (no identifica
  *    él) le abre la ficha del pozo, que dice a quién se le pidió y desde cuándo.
@@ -11,10 +11,16 @@ import { useExportar } from '@/widgets/informe/useExportar'
 export function useAcciones() {
   const rol = useRol()
   const campoId = useApp(s => s.campoId), alcance = useApp(s => s.alcance)
-  const setCampo = useApp(s => s.setCampo), abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla)
+  const setCampo = useApp(s => s.setCampo), setAlcance = useApp(s => s.setAlcance), abrirEquipo = useApp(s => s.abrirEquipo), setPantalla = useApp(s => s.setPantalla)
+  // C1 (QA v3) · FF-9: la ficha se abre ENCIMA de «Todos mis campos» y, al cerrarla, se vuelve ahí. Antes
+  // pasaba al campo del equipo en silencio y el gerente quedaba en La Ceiba. El campo del equipo se fija
+  // (la ficha lo lee), pero el alcance del portafolio se conserva.
   const abrir = (eq: { campoId: string; equipo: string } | null | undefined) => {
     if (!eq) return
-    if (eq.campoId !== campoId || alcance !== 'campo') setCampo(eq.campoId)
+    if (eq.campoId !== campoId) {
+      setCampo(eq.campoId)
+      if (alcance === 'portafolio') setAlcance('portafolio')
+    }
     abrirEquipo(eq.equipo, false)
   }
   const ir = (p: string) => (rol.pantallas.includes(p) ? () => setPantalla(p) : undefined)

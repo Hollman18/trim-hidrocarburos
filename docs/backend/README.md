@@ -6,6 +6,10 @@ Para quien va a construir el servidor. Con este documento se construye el backen
 
 ## La versión 1 y lo que cambió (léalo primero)
 
+> **Empiece aquí: [`ENTREGA-V3.md`](ENTREGA-V3.md).** Una página: qué construir ahora (80 rutas), qué para después (5)
+> y qué ya no (7, con WhatsApp RETIRADO); las 9 piezas nuevas en orden; lo que se relajó; cómo probar su backend contra
+> este front; qué SQL rige, y los datos que todavía no existen. Lo demás de este documento es el detalle.
+
 > **Al lado, nunca encima.** La línea base del contrato es la **versión 1** (`cde8214`, 7-oct-2026). Lo de v1 no se renombra, no se borra ni cambia de significado: lo nuevo va al lado y lo que sale queda **RETIRADO**, con su fecha, su motivo y su reemplazo.
 >
 > - **Qué hacer, en una tabla corta:** [`CAMBIOS-CONTRATO.md`](CAMBIOS-CONTRATO.md) §1 (agregar ahora, para después, ya no construir).
@@ -19,11 +23,12 @@ Deck (10 diapositivas, marca gotrim.ai): [`TRIM-pitch-comercial.pdf`](TRIM-pitch
 
 ## Por dónde empezar
 
+0. **[`ENTREGA-V3.md`](ENTREGA-V3.md)**: si ya construyó la versión 1, qué cambió y en qué orden seguir.
 1. **[Capítulo 1](01-propuesta-de-valor.md)**: el problema, la cadena de cálculo en siete pasos y el caso de P-201B, de la parada a la gerencia.
 2. **[Capítulo 2](02-arquitectura.md)**: qué hace el servidor, cómo viaja un número hasta la pantalla, el reloj, los períodos y los roles.
 3. **[Capítulo 7](07-api.md)**: el índice de la API (qué endpoint usa cada pantalla). El contrato completo está en [`CONTRATO.md`](../../CONTRATO.md) (anexo A).
 4. Después, según lo que esté construyendo: el modelo de datos (3), la cadena de datos (4), las fórmulas (5A–5D) o una pantalla (6).
-5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (122 casos de `referencia/`).
+5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (344 casos y 48 escrituras de `referencia/`).
 6. **[Capítulo 10](10-pendientes.md)**: decisiones abiertas, atajos del demo y defectos conocidos.
 7. **[Capítulo 11](11-ciclo-de-valor.md)**: ciclo ANTES / DURANTE / DESPUÉS. El front ya lo muestra; este capítulo es el encargo para implementar `GET /vistas/ciclo` y `POST /planes/:id` en el servidor.
 

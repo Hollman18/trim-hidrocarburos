@@ -1,0 +1,148 @@
+#/prod/pozos/morichal/curso/LC-14
+
+Usted no tiene asignado el campo Morichal Norte: le mostramos La Ceiba.
+
+La Ceiba
+Pozos
+LC-14
+Datos de demostración
+LC-12
+LC-15
+LC-14
+pozo LC-14 · electrosumergible · pozos productores · criticidad 3 de 5 · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+produciendo
+
+0
+barriles por día
+
+se dejan de producir por él: está en marcha.
+
+Si falla hoy: 783 bbl/d · se trabaría en el pozo · puesto 7 de lo que más cuesta
+
+Sus señales
+tendencia de 12 días · escala provisional
+Corriente del motor
+VSD-LC14 · corriente · normal < 211
+169,3
+A
+escala provisional
+Frecuencia
+VSD-LC14 · frecuencia · normal 59 – 61
+60
+Hz
+escala provisional
+Presión de entrada
+PIT-LC14 · sensor de fondo · normal > 238
+681,9
+psi
+escala provisional
+Temperatura del motor
+TIT-LC14 · sensor de fondo · normal < 150
+107,5
+°C
+escala provisional
+Desbalance de corriente entre fases
+VSD-LC14 · desbalance de corriente · normal < 10
+2,8
+%
+escala provisional
+Estado del controlador
+VSD-LC14
+interruptor: no lleva gráfica
+en marcha
+Su historia
+12 meses
+
+0 fallas.
+
+Cable de potencia y empalme 0 en bodega · llegan 2 el 20 de oct
+Ver el diagnóstico: salud por parte e historia del PLC
+Pozo LC-14
+La Ceiba · Electrosumergible · VSD-LC14 · alimentador SE-2
+produciendo
+Crudo asignado
+783 bbl/d
+Agua
+20.295 bbl/d
+corte 96 %
+Diferido · octubre, en curso
+0 bbl
+0 eventos · 0,0 h equivalentes parado
+Electrosumergible · 12 meses
+0 fallas
+11 disparos
+Salud por parte
+Aislamiento del motor y del cable
+estable
+0 fallas · 75 bbl
+Protector (sello del motor)
+estable
+Bomba de fondo (eje y etapas)
+estable
+0 fallas · 131 bbl
+Admisión y separador de gas
+estable
+0 fallas · 548 bbl
+Motor de fondo
+estable
+0 fallas · 66 bbl
+Señales del pozo
+Corriente del motor
+VSD-LC14 · variador del pozo
+169,3
+A
+escala provisional
+normal < 211
+Frecuencia
+VSD-LC14 · variador del pozo
+60
+Hz
+escala provisional
+normal 59 – 61
+Presión de entrada
+PIT-LC14 · sensor de fondo
+681,9
+psi
+escala provisional
+normal > 238
+Temperatura del motor
+TIT-LC14 · sensor de fondo
+107,5
+°C
+escala provisional
+normal < 150
+Desbalance de corriente entre fases
+VSD-LC14 · variador del pozo
+2,8
+%
+escala provisional
+normal < 10
+Pruebas
+5
+
+Separador de prueba automatizado SP-CE1
+
+Fecha	Crudo bbl/d	Agua bbl/d	Corte	Hz
+25 de septvigente · 7 d	817	20.295	96 %	60,0
+10 de jul	832	20.433	96 %	60,0
+12 de abr	847	20.263	96 %	60,0
+10 de ene	850	19.802	96 %	60,0
+9 de oct de 2025	855	20.020	96 %	60,0
+Eventos
+octubre, en curso
+
+Ningún evento.

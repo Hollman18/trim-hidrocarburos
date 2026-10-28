@@ -1,0 +1,66 @@
+Campo
+La Ceiba
+Equipos
+Resultados
+¿Cómo se lee?
+EM
+Edwin Maestre
+Ingeniero de confiabilidad
+Todos mis campos
+La Ceiba
+Datos de demostración
+Equipos
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+Si falla hoy
+3.059
+bbl/d
+P-201A y P-201C
+sin instrumento
+se trabaría en la planta
+Vigía
+3 de 3
+aciertos
+Sin instrumento
+5
+equipos
+Entre fallas
+41 d
+bombas de agua
+Clasificación confirmada
+0 de 7
+filas
+planeada o no
+Abrir
+P-201A
+Le
+tocan
+2
+cosas
+c
+onseguir la causa de 3 paradas
+Ver lo que le toca
+P-201B
+SAP no lo sabe
+Avisar
+Filtrar
+28 equipos
+ordenados por «Si falla hoy»
+¿Lo vigila TRIM?
+P-201A
+bomba de agua
+sin instrumento: se supone en marcha
+sube porque P-201B está parada
+no: sin instrumento
+3.059
+bbl/d
+si falla hoy
+después de 2 min de colchón

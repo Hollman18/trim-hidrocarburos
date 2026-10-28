@@ -1,0 +1,30 @@
+La Ceiba
+HL
+Demo
+Configurar
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Pasos listos
+3
+de 6 pasos listos
+Falta firmar a qué pozos sirve cada equipo.
+Seguir el paso
+Perfil del campo
+firmado
+Tanques de agua
+completos
+A qué pozos sirve cada equipo
+sin firmar
+Lo que deja pasar cada tramo
+sin firmar
+Factor de medición
+sin firmar
+Meta de hoy
+firmada por el gerente
+Sus otros campos

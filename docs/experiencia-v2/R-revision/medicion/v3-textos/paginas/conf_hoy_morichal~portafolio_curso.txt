@@ -1,0 +1,816 @@
+#/conf/hoy/morichal~portafolio/curso
+
+Todos mis campos
+Datos de demostración
+Equipos
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+
+Si falla hoy
+3.059
+bbl/d
+P-201A y P-201C · sin instrumento · se trabaría en la planta
+
+Vigía
+5 de 7
+· aciertos
+Sin instrumento
+13
+equipos
+Entre fallas
+50 d
+· bombas de agua
+
+Clasificación confirmada
+0 de 13
+filas
+· planeada o no
+
+Abrir P-201A
+
+¿Dónde va el próximo instrumento? Morichal Norte: Lo primero de la lista sin instrumento: P-201A, P-201C, P-201D, P-201E, P-201F y P-201G (puesto 3, 783 bbl/d si falla hoy). TRIM no ve venir su falla.
+
+¿Dónde va el próximo instrumento? Guacamayo: Lo primero de la lista sin instrumento: P-201A (puesto 1, 2.136 bbl/d si falla hoy). TRIM no ve venir su falla.
+
+Le tocan 11 cosas · conseguir la causa de 3 paradas
+Ver lo que le toca
+
+P-201B · SAP no lo sabe
+Avisar
+
+Filtrar
+105 equipos
+· ordenados por «Si falla hoy»
+¿Lo vigila TRIM?
+P-201A
+La Ceiba
+bomba de agua
+sin instrumento: se supone en marcha · sube porque P-201B está parada
+no: sin instrumento
+3.059bbl/d
+si falla hoy · después de 2 min de colchón
+P-201C
+La Ceiba
+bomba de agua
+sin instrumento: se supone en marcha · sube porque P-201B está parada
+no: sin instrumento
+3.059bbl/d
+si falla hoy · después de 2 min de colchón
+P-201A
+Guacamayo
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+2.136bbl/d
+si falla hoy · después de 6 h de colchón
+2
+MPP-301
+Morichal Norte
+bomba multifásica
+sin respaldo
+Atención · filtro de entrada · alarma en 5,2 d
+sí · 16 señales
+1.600bbl/d
+si falla hoy
+LC-11
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+1.031bbl/d
+si falla hoy
+LC-08
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+893bbl/d
+si falla hoy
+LC-04
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+825bbl/d
+si falla hoy
+LC-05
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+812bbl/d
+si falla hoy
+GU-01
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+810bbl/d
+si falla hoy
+2
+P-201B
+Morichal Norte
+bomba de agua
+Atención · succión y filtro de entrada · alarma en 43 h
+sí · 8 señales
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201A
+Morichal Norte
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201C
+Morichal Norte
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201D
+Morichal Norte
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201E
+Morichal Norte
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201F
+Morichal Norte
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+P-201G
+Morichal Norte
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+783bbl/d
+si falla hoy · después de 10 h de colchón
+LC-14
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+783bbl/d
+si falla hoy
+LC-19
+La Ceiba
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+778bbl/d
+si falla hoy
+GU-03
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+714bbl/d
+si falla hoy
+LC-06
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+692bbl/d
+si falla hoy
+GU-06
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+660bbl/d
+si falla hoy
+2
+GU-04
+Guacamayo
+electrosumergible
+Atención · aislamiento del motor y del cable · alarma en 2,5 d
+sí · 6 señales
+647bbl/d
+si falla hoy
+MN-19
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+641bbl/d
+si falla hoy
+MN-32
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+630bbl/d
+si falla hoy
+LC-09
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+620bbl/d
+si falla hoy
+MN-40
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+617bbl/d
+si falla hoy
+2
+MN-07
+Morichal Norte
+electrosumergible
+Atención · bomba de fondo · alarma en 4 h
+sí · 6 señales
+607bbl/d
+si falla hoy
+1
+GU-07
+Guacamayo
+electrosumergible
+Alarma · aislamiento del motor y del cable · ya en alarma
+sí · 6 señales
+588bbl/d
+si falla hoy
+MN-21
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+586bbl/d
+si falla hoy
+GU-09
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+585bbl/d
+si falla hoy
+MN-16
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+575bbl/d
+si falla hoy
+MN-02
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+561bbl/d
+si falla hoy
+MN-08
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+558bbl/d
+si falla hoy
+MN-06
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+556bbl/d
+si falla hoy
+MN-24
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+551bbl/d
+si falla hoy
+LC-17
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+539bbl/d
+si falla hoy
+GU-08
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+539bbl/d
+si falla hoy
+2
+MN-18
+Morichal Norte
+electrosumergible
+Atención · admisión y gas · alarma en 30 h
+sí · 6 señales
+526bbl/d
+si falla hoy
+2
+MN-27
+Morichal Norte
+electrosumergible
+Atención · protector del motor · alarma en 10,9 d
+sí · 6 señales
+510bbl/d
+si falla hoy
+MN-36
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+500bbl/d
+si falla hoy
+MN-05
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+484bbl/d
+si falla hoy
+GU-05
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+473bbl/d
+si falla hoy
+LC-15
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+470bbl/d
+si falla hoy
+MN-33
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+467bbl/d
+si falla hoy
+MN-25
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+463bbl/d
+si falla hoy
+LC-10
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+459bbl/d
+si falla hoy
+GU-11
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+441bbl/d
+si falla hoy
+MN-39
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+439bbl/d
+si falla hoy
+MN-35
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+432bbl/d
+si falla hoy
+GU-02
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+425bbl/d
+si falla hoy
+MN-34
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+424bbl/d
+si falla hoy
+MN-10
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+413bbl/d
+si falla hoy
+MN-17
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+410bbl/d
+si falla hoy
+MN-31
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+407bbl/d
+si falla hoy
+MN-11
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+401bbl/d
+si falla hoy
+MN-03
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+389bbl/d
+si falla hoy
+LC-12
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+379bbl/d
+si falla hoy
+GU-12
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+379bbl/d
+si falla hoy
+LC-02
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+378bbl/d
+si falla hoy
+LC-03
+La Ceiba
+pozo · bombeo mecánico
+produciendo
+no: solo su controlador
+374bbl/d
+si falla hoy
+LC-01
+La Ceiba
+electrosumergible
+produciendo
+sí · 6 señales
+360bbl/d
+si falla hoy
+GU-10
+Guacamayo
+electrosumergible
+produciendo
+sí · 6 señales
+355bbl/d
+si falla hoy
+MN-15
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+354bbl/d
+si falla hoy
+MN-09
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+351bbl/d
+si falla hoy
+MN-29
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+349bbl/d
+si falla hoy
+MN-38
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+349bbl/d
+si falla hoy
+MN-22
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+341bbl/d
+si falla hoy
+MN-30
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+320bbl/d
+si falla hoy
+MN-13
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+319bbl/d
+si falla hoy
+MN-28
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+300bbl/d
+si falla hoy
+MN-14
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+280bbl/d
+si falla hoy
+MN-23
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+274bbl/d
+si falla hoy
+MN-20
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+272bbl/d
+si falla hoy
+MN-26
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+266bbl/d
+si falla hoy
+MN-01
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+263bbl/d
+si falla hoy
+MN-12
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+260bbl/d
+si falla hoy
+MN-04
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+247bbl/d
+si falla hoy
+MN-37
+Morichal Norte
+electrosumergible
+produciendo
+sí · 6 señales
+226bbl/d
+si falla hoy
+3
+H-302
+La Ceiba
+tratamiento de crudo
+Aviso · en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+H-302
+Morichal Norte
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+Morichal Norte
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+H-302
+Guacamayo
+tratamiento de crudo
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+K-101
+Guacamayo
+aire de instrumentos
+en marcha
+sí · 4 señales
+0bbl/d
+si falla hoy
+P-201B
+Guacamayo
+bomba de agua
+en marcha
+sí · 8 señales
+0bbl/d
+si falla hoy
+P-201C
+Guacamayo
+bomba de agua
+sin instrumento: se supone en marcha
+no: sin instrumento
+0bbl/d
+si falla hoy
+3
+SE-2
+Morichal Norte
+energía eléctrica
+sin respaldo
+Aviso · en servicio · corriente de barraje subiendo
+sí · 3 señales
+hasta 16.920bbl/d
+si falla hoy
+V-101
+Morichal Norte
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 16.920bbl/d
+si falla hoy
+1
+K-101
+La Ceiba
+aire de instrumentos
+Alarma · ya pasó el límite
+sí · 4 señales
+hasta 9.394bbl/d
+si falla hoy
+SE-2
+La Ceiba
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 9.394bbl/d
+si falla hoy
+V-101
+La Ceiba
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 9.394bbl/d
+si falla hoy
+SE-2
+Guacamayo
+energía eléctrica
+sin respaldo
+en servicio
+sí · 3 señales
+hasta 6.615bbl/d
+si falla hoy
+V-101
+Guacamayo
+separador
+sin respaldo
+en marcha
+sí · 2 señales
+hasta 6.615bbl/d
+si falla hoy
+1
+P-201B
+La Ceiba
+bomba de agua
+Alarma · parada desde hoy, 03:52
+sí · 8 señales
+1.665bbl/d
+se deja de producir
+1
+MN-41
+Morichal Norte
+electrosumergible
+Alarma · parado desde el 25 de sept, 06:40
+sí · 6 señales
+684bbl/d
+se deja de producir
+2
+LC-21
+La Ceiba
+pozo · bombeo mecánico
+Atención · parado sin causa desde el 1 de oct, 18:20
+no: solo su controlador
+301bbl/d
+se deja de producir
+2
+TK-102
+La Ceiba
+tanque de crudo
+Atención · en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+LC-16
+La Ceiba
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+dentro de los 1.665 de P-201B
+LC-07
+La Ceiba
+electrosumergible
+cerrado por P-201B
+sí · 6 señales
+dentro de los 1.665 de P-201B
+C-401
+La Ceiba
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+La Ceiba
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+C-401
+Morichal Norte
+compresor de gas
+sin respaldo
+en marcha
+sí · 2 señales
+sin dato
+si falla hoy
+LACT-01
+Morichal Norte
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+Morichal Norte
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+LACT-01
+Guacamayo
+medición oficial
+sin respaldo
+despachando
+sí · 3 señales
+sin dato
+si falla hoy
+TK-102
+Guacamayo
+tanque de crudo
+en servicio
+sí · 4 señales
+sin dato
+si falla hoy
+
+Del esquema de planta, sin equipo registrado en TRIM (no se mide su falla): Manifold de producción, Depurador de gas, Tea / quemador, TK-101 · respaldo, Tanque de agua, Pozos inyectores, TK-103 · PMO-03.

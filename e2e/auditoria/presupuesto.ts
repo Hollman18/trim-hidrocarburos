@@ -65,11 +65,12 @@ export const PRESUPUESTO: Record<string, Presupuesto> = {
       + 'de «Confirmar las 2» y de «la causa de 2 paradas» (las dos acciones de §3 con lo que tocan), y la insignia del ☰ (4)',
   },
   oper: {
-    antes: 93, tope: 72,
+    antes: 93, tope: 80,
     porque: 'necesario §4 y §14: «Pregunta 1 de 4», «P-201B · bomba de agua · paró hoy en la madrugada · planta · agua» (el tramo, §0b), '
       + '«¿Qué parte se dañó?» con sus 4 opciones a un toque y el dato de cada una («5 de sus 8 fallas», «escoja de la lista», «la pregunta sigue en Hoy»), '
       + '«+ Lo que encontró (si quiere)» (lo que vio, opcional: HACE principal), «a su nombre» (D1, en su ⓘ) y «Ver P-201B» (TIENE: la ficha a un toque): '
-      + '69 de contenido (boceto 25, sin el dato de cada opción); cabecera 3 (sin título ni franja: una sola pantalla)',
+      + '69 de contenido (boceto 25, sin el dato de cada opción); cabecera 11: «Hoy · datos de las 14:00» y la franja (C1, QA v3: la imagen '
+      + 'd1-grafito-oper aprobada las trae, y ISA-101 N2 y D3 las piden en todo nivel 1; antes una regla de CSS las escondía y el tope era 72)',
     cifras: 6,
     porqueCifras: '1 de 4 (el principal) y las fallas de cada parte: 5 de sus 8 y 3 de sus 8 (el orden de las opciones, imagen 5)',
   },

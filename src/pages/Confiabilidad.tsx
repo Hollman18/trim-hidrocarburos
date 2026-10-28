@@ -19,7 +19,9 @@ import { TresRelojes } from '@/widgets/sap/TresRelojes'
 import { useRelojes } from '@/shared/api/sap'
 import { AHORA } from '@/entities/reloj'
 import { desplazable } from '@/shared/ui/alFinal'
+import { Columnas, LeyendaColumnas } from '@/shared/ui/scada'
 import { CalidadClasificacion } from '@/widgets/arbol/Calidad'
+import { Balance } from '@/widgets/choke/Balance'
 
 /** Los meses en corto, para el eje (Air Condensed, X5 §3.4) y en la frase con su año. */
 const MES_CORTO = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
@@ -68,6 +70,13 @@ export function Confiabilidad() {
   // Fallas por mes, por familia.
   const meses = mensual.map(m => ({ m: { mes: m.mes }, porFam: m.porFamilia }))
   const totales = mensual.map(m => m.fallas)
+  // Cada mes, una columna del kit: el total del motor arriba y las familias apiladas en gris.
+  const periodos = meses.map((x, i) => ({
+    clave: x.m.mes, rotulo: MES_CORTO[Number(x.m.mes.slice(5)) - 1]!, total: totales[i] ?? 0,
+    ...(i === 0 || i === meses.length - 1 || x.m.mes.endsWith('-01') ? { segundo: x.m.mes.slice(0, 4) } : {}),
+    valores: familias.map(f => x.porFam[f] ?? 0),
+    datos: { 'data-mes': x.m.mes, 'data-fallas': totales[i] ?? 0 },
+  }))
   const topeMes = Math.max(1, ...totales)
   // La frase con sus cifras, para quien no ve el dibujo (H22): el período, el total y el mes con más.
   const totalFallas = totales.reduce((a, b) => a + b, 0)
@@ -189,34 +198,11 @@ export function Confiabilidad() {
         <Panel titulo="Fallas por mes" extra="fallas · sin disparos">
           <div {...desplazable('Fallas por mes')} className="overflow-x-auto">
             {/* H22: la cifra de cada mes sobre su barra, los meses con su año y la frase con las cifras en el nombre
-                accesible. H21: 1 px de --panel entre los segmentos apilados. Letra de 15 en un dibujo que no baja de
-                420 px: nunca menos de 12 px en pantalla. */}
-            <svg viewBox="0 0 520 166" className="block h-auto w-full min-w-[420px]" role="img" aria-label={ariaFallas} data-fallas-por-mes="">
-              {meses.map((x, i) => {
-                const w = 500 / meses.length, xx = 14 + i * w
-                const total = totales[i] ?? 0
-                let y = 120
-                const conAnio = i === 0 || i === meses.length - 1 || x.m.mes.endsWith('-01')
-                return (
-                  <g key={x.m.mes} data-mes={x.m.mes} data-fallas={total}>
-                    {familias.map((f, j) => {
-                      const v = x.porFam[f] ?? 0
-                      const hgt = (v / topeMes) * 96
-                      y -= hgt
-                      return v > 0 ? <rect key={f} x={xx + w * 0.2} y={y} width={w * 0.6} height={hgt} fill={`var(--dato-${j + 1})`} stroke="var(--panel)" strokeWidth={1}><title>{`${nombreMes(x.m.mes)} · ${FAMILIA[f]}: ${v}`}</title></rect> : null
-                    })}
-                    {total > 0 && <text x={xx + w / 2} y={y - 5} fontSize={15} fontWeight={600} textAnchor="middle" fill="var(--tinta)" className="tabular">{total}</text>}
-                    <text x={xx + w / 2} y={139} fontSize={15} textAnchor="middle" fill="var(--tinta2)" className="font-cond">{MES_CORTO[Number(x.m.mes.slice(5)) - 1]}</text>
-                    {conAnio && <text x={xx + w / 2} y={157} fontSize={15} textAnchor="middle" fill="var(--tinta3)" className="font-cond">{x.m.mes.slice(0, 4)}</text>}
-                  </g>
-                )
-              })}
-              <line x1={10} x2={514} y1={120} y2={120} stroke="var(--linea)" />
-            </svg>
+                accesible. H21: 1 px de --panel entre los segmentos apilados. Las columnas del kit SCADA (K3). */}
+            <Columnas periodos={periodos} partes={familias.map(f => FAMILIA[f])} aria-label={ariaFallas} data-fallas-por-mes=""
+              titulo={(p, parte, v) => `${nombreMes(p.clave)} · ${parte}: ${v}`} />
           </div>
-          <div className="mt-1 flex flex-wrap gap-3 text-[13px] text-[var(--tinta2)]">
-            {familias.map((f, j) => <span key={f} className="inline-flex items-center gap-1.5"><i className="inline-block size-2.5" style={{ background: `var(--dato-${j + 1})` }} />{FAMILIA[f].toLowerCase()}</span>)}
-          </div>
+          <LeyendaColumnas partes={familias.map(f => FAMILIA[f].toLowerCase())} />
         </Panel>
 
         <Panel titulo="Calidad del registro" extra="ISO 14224: parte por falla">
@@ -236,6 +222,10 @@ export function Confiabilidad() {
           <p className="mt-2 flex flex-wrap gap-1"><Chip>{plural(fallas.length, 'falla', 'fallas')}</Chip><Chip>{plural(equipos.length, 'equipo', 'equipos')}</Chip></p>
         </Panel>
       </div>
+
+      {/* C1 (QA v3) · El balance del choke para confiabilidad (CONSTRUCCION.md: ger, prod, sup, reg, jefe y conf): producido,
+          diferido y perdido del período, por tramo, y cada tramo abre su árbol hasta la parada. Lo calcula el motor (`/vistas/balance`). */}
+      <Balance className="mt-3 sm:mt-4" q={{ campos: clave.split(',').filter(Boolean), desde: rango.desde, hasta: rango.hasta }} />
 
       {/* Cuánto de lo que TRIM propone para la ANH confirma o corrige la gente, con el paso 2 aparte (U2 §4.6). */}
       <CalidadClasificacion campos={clave.split(',').filter(Boolean)} desde={rango.desde} hasta={rango.hasta} periodo={rango.nombre} global={ambito.global} />

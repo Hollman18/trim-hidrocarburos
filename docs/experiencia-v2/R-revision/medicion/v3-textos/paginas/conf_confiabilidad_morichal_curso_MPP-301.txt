@@ -1,0 +1,108 @@
+#/conf/confiabilidad/morichal/curso/MPP-301
+
+Morichal Norte
+Recolección
+MPP-301
+Datos de demostración
+MPP-301
+bomba multifásica de doble tornillo · clúster norte · recolección multifásica · criticidad 5 de 5 · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Exportar
+
+2
+Atención · en marcha · perdiendo eficiencia
+
+0
+barriles por día
+
+se dejan de producir por él: está en marcha.
+
+Si falla hoy: 1.600 bbl/d · se trabaría en la planta (3 pozos) · puesto 1 de lo que más cuesta
+≈ 3.245 bbl le costaría la falla
+
+Crear aviso en SAP
+Sus señales
+tendencia de 12 días · escala provisional
+Caída de presión del filtro
+PDT-3011 · normal < 8 · alarma 12
+2
+9,6
+psi
+escala provisional
+Vibración de la bomba
+VT-3013 · normal < 5,5 · alarma 5,5
+4,3
+mm/s
+escala provisional
+Velocidad
+SI-3016 · normal 1.300 – 1.650 · alarma 1.650
+1.535
+rpm
+escala provisional
+Nivel del depósito de barrera
+LT-3017 · normal 50 – 90 · alarma 50
+71
+%
+escala provisional
+12 señales más: 6 temperaturas, 4 presiones, 1 de vibración y 1 de corriente · todas en banda
+Si falla hoy
+Pozos que pasan por ella
+MN-07: 607 bbl/d · prueba del 2026-09-13
+MN-18: 526 bbl/d · prueba del 2026-09-25
+MN-33: 467 bbl/d · prueba del 2026-09-05
+
+método
+supuestos
+
+Los últimos 12 días
+Caída de presión del filtro · psi
+12 d
+· escala provisional
+12,0
+0,0
+21 de sept
+hoy, 2 de oct
+Vibración de la bomba · mm/s
+12 d
+· escala provisional
+5,5
+0,0
+11,0
+21 de sept
+hoy, 2 de oct
+Temperatura de rodamiento · °C
+12 d
+· escala provisional
+85
+0
+170
+21 de sept
+hoy, 2 de oct
+
+Modo de falla registrado: erosión de tornillos y camisa por arena. Una señal apunta, no prueba: la causa la confirma quien abre la bomba.
+
+Su historia
+12 meses
+
+7 fallas, una cada 52 d, 48,7 h fuera cada vez. Le ha costado 3.226 bbl por falla. Sello mecánico 4 · tornillos y holguras 2 · lubricación 1.
+
+24 de sept
+sello mecánico
+3.027 bbl
+25 de jul
+tornillos y holguras
+5.047 bbl
+3
+Aviso · Juego de tornillos 0 en bodega · pedirlo: 60 días
+Ver el diagnóstico: salud por parte e historia del PLC

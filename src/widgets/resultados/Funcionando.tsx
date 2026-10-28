@@ -5,6 +5,11 @@ import { Dato } from '@/widgets/choke/Dato'
 import { Info } from '@/shared/ui/Info'
 import { n0, plural } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
+import { formatoFecha } from '@/shared/lib/fecha'
+
+/** C1 (QA v3): «Ya se ganó» suma desde que entró TRIM, no este mes; sin la fecha, «este mes 436» por encima de «antes
+ *  391» y «ya se ganó 3.934» se leían como una contradicción. */
+const DESDE = formatoFecha({ day: 'numeric', month: 'long', timeZone: 'America/Bogota' })
 
 /** «¿ESTÁ FUNCIONANDO?» (necesario-por-rol §0d; decisión 2 del dueño: el Antes · Durante ·
  *  Después vive aquí, no como control en el inicio del gerente).
@@ -39,7 +44,7 @@ export function FuncionandoDe({ v, className }: { v: VistaEfectividad; className
           nota={<>{meta ? `meta ${n0(meta.noPlaneadoDia.entero)}${fuera ? ' · por encima' : ''}` : 'sin meta firmada'} · {plural(v.esteMes.fallas, 'falla', 'fallas')}</>} />
         <Dato rotulo="Ya se ganó" valor={v.ganado.bbl?.entero ?? null} unidad="bbl"
           nota={v.ganado.bbl
-            ? `${v.ganado.bbl.entero >= 0 ? 'dejaron de diferirse' : 'se difirió de más'} · ${v.ganado.fallasAnticipadas} de ${v.ganado.juzgadas} avisos acertaron`
+            ? `${v.ganado.bbl.entero >= 0 ? 'dejaron de diferirse' : 'se difirió de más'} desde el ${DESDE.format(v.desde)} · ${v.ganado.fallasAnticipadas} de ${v.ganado.juzgadas} avisos acertaron`
             : 'sin base con qué comparar'} />
       </div>
       {tramos.length > 0 && (

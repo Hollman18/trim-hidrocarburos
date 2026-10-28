@@ -1,7 +1,8 @@
 import { Fragment, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { resumenPlegadas, type SenalNivel3, type VistaNivel3 } from '@/shared/api/equiposTecnico'
-import { Barra, Tendencia, type EstadoKit, type CondicionKit } from '@/shared/ui/scada'
+import { Barra, Tendencia } from '@/shared/ui/scada'
+import { estadoKit, cruzoDe } from './estadoKit'
 import { Info } from '@/shared/ui/Info'
 import { cn } from '@/shared/lib/cn'
 import { TarjetaN3 } from './piezas'
@@ -14,21 +15,6 @@ export const ESCALA_PROVISIONAL = 'La escala sale de los límites firmados (la b
 const Limite = ({ texto }: { texto: string }) => (
   <>{texto.split(' · ').map((t, i) => <Fragment key={t}>{i ? ' · ' : ''}<span className="whitespace-nowrap">{t}</span></Fragment>)}</>
 )
-
-/** El estado de la señal en el kit SCADA (kit-scada.md §0): parado (el equipo), sin
- *  comunicación, sin dato, anormal (la prioridad que da el motor) o normal. */
-function estadoKit(s: Pick<SenalNivel3, 'gris' | 'valor' | 'condicion'>): { estado: EstadoKit; condicion?: CondicionKit } {
-  if (s.gris) return { estado: 'parado' }
-  if (s.condicion === 'sin-comunicacion') return { estado: 'sin-comunicacion' }
-  if (s.valor === null) return { estado: 'sin-dato' }
-  return s.condicion ? { estado: 'anormal', condicion: s.condicion } : { estado: 'normal' }
-}
-/** El límite que cruzó una señal anormal: el de alarma del lado por donde salió de su banda. */
-const cruzoDe = (s: SenalNivel3) => {
-  if (s.valor === null || !s.condicion || !s.alarmas.length) return undefined
-  const v = s.valor
-  return s.alarmas.filter(a => (s.banda?.[0] !== null && s.banda?.[0] !== undefined && a <= s.banda[0] ? v <= a : v >= a))[0] ?? s.alarmas[0]
-}
 
 /** Una señal (X5 §5.4; kit SCADA §1 y §2): el nombre y el tag, la barra del kit con su escala
  *  fija, su banda y su alarma (el valor a la derecha, con la marca si es anormal), el límite

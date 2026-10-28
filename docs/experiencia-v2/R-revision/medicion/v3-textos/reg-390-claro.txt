@@ -1,0 +1,37 @@
+La Ceiba
+IS
+Demo
+Reporte al regulador
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Octubre, en curso
+Paradas sin causa
+2
+paradas
+No se puede publicar todavía
+Sin causa
+355
+bbl
+Límite
+07:00
+mañana
+Qué falta y quién lo debe
+LC-21
+Lo debe el
+operador de campo
+247
+bbl
+LC-08
+Lo debe el
+operador de campo
+108
+bbl
+Exportar el reporte
+Informe en PDF
+Respuesta de la ANH

@@ -1,0 +1,91 @@
+#/tec/trabajo/ceiba/curso
+
+La Ceiba
+Datos de demostración
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Hoy
+5
+cosas
+Primero P-201B: diga qué se dañó.
+
+No arrancar
+2
+· P-201B y LC-21
+
+Diga qué se dañó en P-201B
+
+1
+Alarma ·
+P-201B
+bomba de agua · paró hoy a las 03:52, hace 10,1 h
+
+Sigue parada.
+
+Contestar
+Ver P-201B
+
+P-201B · ¿Qué parte se dañó?
+
+Lo que más le ha fallado a esta bomba:
+
+Sello mecánico
+5 de sus 8 fallas
+Rodamientos y cámara de empuje
+3 de sus 8 fallas
+Otra parte
+escoja de la lista
+Todavía no sé
+la pregunta sigue en Hoy
++ Lo que encontró (si quiere)
+
+Un toque y queda a nombre de Óscar Daza, con la hora del sistema.
+
+Diga por qué paró LC-21
+
+2
+Atención ·
+LC-21
+pozo · paró el 1 de oct a las 18:20, hace 19,7 h
+
+Sigue parado.
+
+Contestar
+Ver LC-21
+Contestar «¿De dónde vino el corte?» de LC-05
+
+LC-05
+pozo · paró el 1 de oct a las 09:16
+
+Para el reporte a la ANH falta el detalle.
+
+Contestar
+Ver la parada
+Diga por qué paró LC-08
+
+LC-08
+pozo · paró el 1 de oct a las 22:15 y arrancó hoy a la 01:10 sin identificar
+
+Arrancó sin identificar: queda como no conformidad hasta que alguien diga qué pasó.
+
+Contestar
+Ver LC-08
+Orden 40012056 · K-101
+
+Verificar que las tres unidades estén en servicio: hoy hay dos.
+
+Cerrar la orden
+Ver K-101

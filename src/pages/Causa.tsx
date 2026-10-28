@@ -1,23 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
-import { useApp, useAmbito, useRol, useRango, usePersona } from '@/app/store'
-import { useLibro, usePreguntas, useCtx, useOpcionesRespuesta, contarPorIdentificar } from '@/shared/api/diferidos'
+import { useApp, useAmbito, useRol, useRango } from '@/app/store'
+import { useLibro, usePreguntas, useCtx, contarPorIdentificar } from '@/shared/api/diferidos'
 import { useAnalisis, useAnalisisAnteriores } from '@/shared/api/sesion'
-import { TEXTO_LIBRE_MINIMO, alcanza } from '@/entities/reglas'
 import { pedirCatalogoDeDanos } from '@/shared/api/equipos'
 import { useCondiciones, type CondicionDeEquipo } from '@/shared/api/condiciones'
 import { FAMILIA } from '@/shared/api/plantaViva'
 import { MarcaDeEquipo } from '@/widgets/hoy/comun'
 import { Bloqueo } from '@/widgets/hoy/piezas'
-import { CAUSAS_POZO, NO_FUE_ESP_CORTO } from '@/entities/causas-sugeridas'
 import { ArbolIdentificar } from '@/widgets/arbol/ArbolIdentificar'
 // H2 (K1): la pregunta con el entero de su parada en el reparto del campo (la de Hoy).
 import type { PreguntaConEntero as Pregunta } from '@/shared/api/diferidos'
-import { NOMBRE_PARTE, type ParteId } from '@/entities/partes'
-import { modosDeParte, nombreModo, MECANISMOS_POR_FAMILIA, MECANISMO_SUGERIDO, MODO_OTRO } from '@/entities/catalogo'
-import { modo as modoIso, mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entities/iso14224'
+import { NOMBRE_PARTE } from '@/entities/partes'
+import { nombreModo, MECANISMOS_POR_FAMILIA, MECANISMO_SUGERIDO } from '@/entities/catalogo'
+import { mecanismo as mecanismoIso, CAUSAS_RAIZ } from '@/entities/iso14224'
 import { campoPorId } from '@/entities/campos'
 import { fechaHora, horasEntre, AHORA } from '@/entities/reloj'
-import { fraseParte, fmtHoras } from '@/widgets/bombas/comun'
+import { fmtHoras } from '@/widgets/bombas/comun'
 import { Panel, Boton, Chip, Enlace } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
 import { Tip } from '@/shared/ui/Tip'
@@ -95,7 +93,6 @@ export function Causa() {
   const deCampo = !ROLES_QUE_CONTESTAN.revisa.includes(rol.id)
   // B3 · FF-2 y B-06: la misma pregunta en un solo lugar. Aquí queda la cadena de 6 pasos, «una por
   // una»; se CONTESTA en Hoy (o, a confiabilidad, arriba de su Equipos), con un toque y su «Deshacer».
-  const responde = false
   const setPantalla = useApp(s => s.setPantalla)
   const irAContestar = () => setPantalla(rol.pantallas.includes('hoy') ? 'hoy' : rol.inicio)
   const dondeSeContesta = puede && (
@@ -153,7 +150,7 @@ export function Causa() {
   // La primera que pide respuesta abre sola; tocar otra la abre y cierra la de antes.
   const primeraAbierta = [...pendientes, ...noConformes.filter(x => !x.causa.declarado)][0]?.id
   const abiertaId = abierta ?? primeraAbierta
-  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} responde={responde} cond={marca(p)}
+  const tarjeta = (p: Pregunta) => <Tarjeta key={p.id} p={p} global={ambito.global} cond={marca(p)}
     abierta={abiertaId === p.id} onAbrir={() => setAbierta(p.id)} />
   const avisoRespondido = recien.length > 0 && (
     <p ref={aviso} tabIndex={-1} role="status" className="mb-2 rounded-sm border border-[var(--linea2)] bg-[var(--panel2)] px-2 py-1.5 text-[14px] text-[var(--tinta2)]">
@@ -242,48 +239,18 @@ export function Causa() {
 /** Una parada por identificar: qué dijeron las señales, el formulario para
  *  decir qué se dañó (parte y lo que se vio, del catálogo de la clase de
  *  equipo). */
-function Tarjeta({ p, global, responde, cond, abierta, onAbrir }: {
-  p: Pregunta; global: boolean; responde: boolean
+function Tarjeta({ p, global, cond, abierta, onAbrir }: {
+  p: Pregunta; global: boolean
   /** La condición del equipo, la de la franja (H3): la misma en todas partes. */
   cond?: CondicionDeEquipo
   /** P-causa-1: abierta, con su formulario; cerrada, una fila con «›». */
   abierta: boolean; onAbrir: () => void
 }) {
-  const persona = usePersona(); const rolActual = useRol(); const responder = useApp(s => s.responder), abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
-  const [texto, setTexto] = useState('')
-  const [parte, setParte] = useState<ParteId | ''>('')
-  const [modo, setModo] = useState('')
-  const [otraDelPozo, setOtraDelPozo] = useState(false)
-  const [error, setError] = useState('')
+  const abrirEquipo = useApp(s => s.abrirEquipo), setCampo = useApp(s => s.setCampo)
   const [verSenal, setVerSenal] = useState(false)
-  // El catálogo de la clase (bomba de la línea o electrosumergible; un pozo sin
-  // ella no tiene partes), las causas que sugiere la evidencia (en pantalla y
-  // con la parada abierta, también las lecturas de hoy) y la parte que hoy está
-  // fuera de límite: todo del servidor, en un pedido.
-  const { catalogo: cat, sugeridas, sospechosa } = useOpcionesRespuesta(p)
-  const esp = cat?.clase === 'bomba-electrosumergible'
-  const conPartes = !!cat && !otraDelPozo
-  const parteSel = cat?.partes.find(x => x.id === parte)
-  const deLaSenal = !!sugeridas?.opciones.some(o => o.fuente === 'senal')
+  // C1 (QA v3, hallazgo de C3): aquí ya no se contesta (FF-2, B-06: se contesta en Hoy, con un
+  // toque), así que la tarjeta no pide `/opciones`: es la evidencia de la parada, de solo lectura.
   const horas = horasEntre(p.inicio, p.fin ?? AHORA)
-  const escoger = (id: ParteId | '') => { setParte(id); setModo(''); setError('') }
-
-  // El store responde con las reglas del servidor (403, 409 si alguien ya
-  // respondió, 422): lo que rechace se dice aquí, no se pierde en silencio.
-  const enviarRespuesta = async (r: { texto: string; parte?: ParteId; modo?: string }) => {
-    const res = await responder({ evento: p.id, campoId: p.campoId, equipo: p.equipo, ...r })
-    if (!res.ok) setError(res.error)
-  }
-  const enviar = () => {
-    if (conPartes) {
-      if (!parteSel) return setError(esp ? 'Diga qué parte de la electrosumergible se dañó, o que no fue ella.' : 'Diga qué parte de la bomba se dañó.')
-      if (!modo) return setError('Diga qué vio en esa parte.')
-      if (modo === MODO_OTRO && !alcanza(texto, TEXTO_LIBRE_MINIMO)) return setError('Escribió «Otra cosa»: diga qué vio, con al menos una frase corta.')
-      return void enviarRespuesta({ texto: texto.trim(), parte: parteSel.id, modo })
-    }
-    if (!alcanza(texto, TEXTO_LIBRE_MINIMO)) return setError('Escoja una de las causas o escriba qué encontró, con al menos una frase corta.')
-    void enviarRespuesta({ texto: texto.trim() })
-  }
 
   // Por qué ninguna señal alcanzó («Sin primera alarma y sin firma…»): explica,
   // no es una lectura, y va al ⓘ de «señal». Solo si el motor lo manda con
@@ -331,90 +298,11 @@ function Tarjeta({ p, global, responde, cond, abierta, onAbrir }: {
           <ul className={cn('list-disc pl-4 text-[var(--tinta2)]', !verSenal && 'hidden print:block')}>
             {lecturas.map(e => <li key={e} className="text-[14px]">{enPapel(e) === e ? e : <DichoEnPapel papel={enPapel(e)}>{e}</DichoEnPapel>}</li>)}
           </ul>
-          {/* La parte sospechosa es una pista: queda a la vista, con la variable que la delata. */}
-          {sospechosa && (
-            <p className="mt-1.5 text-[var(--tinta2)]">
-              Sospechosa: <b className="text-[var(--tinta)]">{sospechosa.parte.nombre.toLowerCase()}</b> · {fraseParte(sospechosa)}
-            </p>
-          )}
           {/* Quién lo declaró ya está en la evidencia («Declarado por …»). */}
           {p.causa.declarado && (
             <p className="mt-1.5 text-[var(--tinta2)]">Respondido tras arrancar: <DichoEnPapel papel={`lo contestó ${rolDeQuien(p.causa.declarado.por)}`}>«{p.causa.declarado.texto}»</DichoEnPapel></p>
           )}
         </div>
-        {responde && !p.causa.declarado && (
-          <form className="grid gap-1.5" onSubmit={e => { e.preventDefault(); enviar() }}>
-            <h3 className="text-[15px] font-semibold text-[var(--tinta)]">{conPartes ? 'Qué se dañó' : 'Por qué paró'}</h3>
-            {conPartes ? (
-              <>
-                <span className="grid gap-1">
-                  <label htmlFor={`parte-${p.id}`} className={PASO_CLS}>Parte {esp ? 'de la electrosumergible' : 'de la bomba'}</label>
-                  {sugeridas?.conEvidencia && (
-                    <>
-                      {/* «Pista»: lo que sugiere, no lo que pasó. La fuente se dice porque no es lo mismo una señal que la historia. */}
-                      <small className="text-[13px] text-[var(--tinta2)]">Pista · {deLaSenal ? 'señal e historia' : 'historia del equipo'}</small>
-                      <span className="flex flex-wrap gap-1">
-                        {sugeridas.opciones.filter(o => o.parte).map(o => (
-                          <button type="button" key={o.clave} onClick={() => escoger(o.parte!)} aria-pressed={parte === o.parte}
-                            className={cn(CHIP, 'text-left', parte === o.parte && SELECCION)}>
-                            <b className="font-semibold">{o.texto}</b> <span className="text-[var(--tinta3)]">· {pista(o)}</span>
-                          </button>
-                        ))}
-                      </span>
-                    </>
-                  )}
-                  <select id={`parte-${p.id}`} value={parte} onChange={e => escoger(e.target.value as ParteId | '')}
-                    className="min-h-12 rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[14px] sm:min-h-0">
-                    <option value="">{sugeridas?.conEvidencia ? 'O escoja cualquier parte…' : 'Escoja la parte…'}</option>
-                    {cat!.partes.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
-                  </select>
-                  {/* «: otra causa del pozo» lo dice el paso siguiente (las causas del pozo). */}
-                  {esp && (
-                    <button type="button" onClick={() => { setOtraDelPozo(true); escoger(''); setTexto('') }} className={cn(CHIP, 'justify-self-start')}>
-                      {noFueEsp}
-                    </button>
-                  )}
-                </span>
-                {parteSel && (
-                  <span className="grid gap-1">
-                    <span className="flex flex-wrap items-center gap-x-2">
-                      <span className={PASO_CLS}>Qué vio</span>
-                      <Info rotulo="ISO 14224" titulo="Registro ISO 14224"
-                        texto={`Se registra en el catálogo como ítem «${parteSel.itemIso}»${modo ? ` · daño ${modo} (${modoIso(modo)?.nombre.toLowerCase()})` : ''}.`} />
-                    </span>
-                    <span className="flex flex-wrap gap-1">
-                      {modosDeParte(parteSel).map(m => (
-                        <button type="button" key={m.codigo} onClick={() => { setModo(m.codigo); setError('') }} aria-pressed={modo === m.codigo}
-                          className={cn(CHIP, modo === m.codigo && SELECCION)}>{nombreModo(m.codigo, parteSel.id)}</button>
-                      ))}
-                    </span>
-                  </span>
-                )}
-              </>
-            ) : (
-              <>
-                {esp && <button type="button" onClick={() => { setOtraDelPozo(false); setTexto('') }} className="min-h-12 justify-self-start text-[13px] text-[var(--tinta2)] underline underline-offset-2 sm:min-h-0">Volver a las partes</button>}
-                <span className="flex flex-wrap gap-1">
-                  {CAUSAS_POZO.map(f => (
-                    <button type="button" key={f} onClick={() => { setTexto(f); setError('') }} aria-pressed={texto === f}
-                      className={cn(CHIP, texto === f && SELECCION)}>{f}</button>
-                  ))}
-                </span>
-              </>
-            )}
-            <label className="grid gap-0.5">
-              {/* Escogió «Otra cosa»: el campo pasa a obligatorio (el porqué está en el botón marcado). */}
-              <span className="text-[13px] text-[var(--tinta2)]">{!conPartes ? 'Qué encontró' : modo === MODO_OTRO ? 'Qué vio (obligatorio)' : 'Qué encontró (opcional)'}</span>
-              <textarea value={texto} onChange={e => { setTexto(e.target.value); setError('') }} rows={2}
-                placeholder={conPartes ? (esp ? 'Ej.: el motor dio a tierra al megger' : 'Ej.: sello con fuga por el lado de acople; se cambió') : 'Ej.: se cerró para cambiar la válvula de la cabeza'}
-                className="resize-y rounded border border-[var(--linea)] bg-[var(--panel)] px-2 py-1.5 text-[14px]" />
-            </label>
-            {error && <p className="text-[13px] text-[var(--tinta)]" role="alert">{error}</p>}
-            {/* Un solo verbo para contestar la pregunta propia (P-07): «Contestar». */}
-            <Boton variante="principal" type="submit" className="min-h-12 justify-self-start px-6">Contestar</Boton>
-            <small className="text-[12px] text-[var(--tinta3)]">Queda declarado por <DichoEnPapel papel={rolDeQuien(` · ${rolActual.nombre.toLowerCase()}`)}>{persona.nombre}</DichoEnPapel> · hora del sistema</small>
-          </form>
-        )}
       </div>
     </div>
   )
@@ -438,24 +326,6 @@ function Tarjeta({ p, global, responde, cond, abierta, onAbrir }: {
   )
 }
 
-/** «5 de 8 fallas»: el rótulo de encima ya dice que es la historia del equipo.
- *  Se escribe de los datos con nombre (`veces`, `total`); una sugerencia que no
- *  los trae (una señal: «PT-2013 salió de su banda normal») va con su `porque`. */
-function pista(o: { porque?: string; veces?: number; total?: number }): string {
-  if (o.veces !== undefined && o.total !== undefined) return `${o.veces} de ${o.total} ${o.total === 1 ? 'falla' : 'fallas'}`
-  return o.porque ?? ''
-}
-
-/** «No fue la electrosumergible»: lo que sigue (otra causa del pozo) lo dice el paso siguiente. */
-const noFueEsp = NO_FUE_ESP_CORTO
-
-/** El rótulo de cada paso de la respuesta: se lee como instrucción, no como pie. */
-const PASO_CLS = 'text-[14px] font-semibold text-[var(--tinta)]'
-
-/** Botón de opción: la misma opción de Hoy (`widgets/hoy/Pregunta.tsx`; UI-05; X5 §5.8): píldora de
- *  radio 18 con aro, 56 px (64 en el teléfono) y 16 px de letra; la marcada, con el aro de la mano. */
-const CHIP = 'flex min-h-14 cursor-pointer items-center rounded-[18px] bg-[var(--panel)] px-4 py-2.5 text-left text-[16px] shadow-[inset_0_0_0_1.5px_var(--linea)] transition-colors duration-[120ms] hover:bg-[var(--panel2)] max-sm:min-h-16'
-const SELECCION = 'bg-[var(--marca-suave)] text-[var(--tinta)] shadow-[inset_0_0_0_2px_var(--foco)]'
 
 
 /** El análisis de una falla declarada: mecanismo (ISO 14224 B.2) y causa raíz

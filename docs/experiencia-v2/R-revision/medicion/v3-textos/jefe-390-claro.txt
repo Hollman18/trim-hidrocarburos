@@ -1,0 +1,34 @@
+3
+La Ceiba
+CR
+Todos mis campos
+Demo
+Hoy
+datos de las 14:00
+2
+alarmas
+2
+atención
+1
+aviso
+0
+Avisan
+1
+K-101
+ya pasó el límite
+frenaría en la planta
+Por identificar
+3
+P-201B, LC-21 y LC-08
+Fallas críticas octubre
+1
+P-201B (planta)
+Espera
+7,7 de 8,1
+días por falla
+Ver la orden
+Conseguir la causa de 3 paradas
+Contestar yo
+Ver la parada
+Decidir planes simulado
+Ver los planes

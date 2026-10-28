@@ -1,0 +1,251 @@
+#/jefe/resultados/ceiba~portafolio/curso
+
+Todos mis campos
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+2.376
+barriles
+
+no se produjeron en sus 5 campos.
+
+Va 1.266 bbl por debajo del máximo firmado a la fecha (3.642). MN-41, el 46 % · 355 sin causa. Septiembre cerró en 33.945 bbl.
+
+calculado
+entre 2.132 y 2.622 bbl
+114 mil USD · sin La Zarza
+Provisional
+Ver MN-41
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+64.147
+bbl
+
+medido
+
+Diferido
+
+2.376
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	1.448bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+Diferido por día, mes a mes
+octubre: 1.501 bbl/d
+Diferido por día
+13 meses
+2.300
+0
+4.600
+OCT 2025
+OCT
+
+Continua: todo · discontinua: lo de alto impacto · raya: máximo firmado (2.300)
+
+Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (2.300 barriles por día este mes). Ningún mes cerrado lo pasó.
+
+Diferido por equipo
+octubre · calculado
+1
+MN-41 electrosumergible · alarma · Morichal Norte
+1.083
+46 %
+1
+P-201B bomba de agua · alarma · La Ceiba
+573
+24 %
+2
+LC-21 sin identificar · atención · La Ceiba
+247
+10 %
+SE-2 energía eléctrica · La Ceiba
+118
+5 %
+LC-08 sin identificar · La Ceiba
+108
+5 %
+MN-22 según el operario · Morichal Norte
+86
+4 %
+
+y 3 equipos más
+
+Por campo
+producción / meta · bbl/d
+diferido / máximo · bbl/d
+bbl diferidos
+Morichal Norte
+16.813
+16.700
+792
+950
+1.253
+bbl diferidos
+dónde se trabó
+pozos 100 %
+
+Se trabó en los pozos: MN-41 (electrosumergible) y MN-22 (según el operario).
+
+Ver más de Morichal Norte
+La Ceiba
+3
+10.700
+10.900
+661
+800
+1.046
+bbl diferidos
+dónde se trabó
+planta 55 %
+sin identificar 34 %
+pozos 11 %
+
+Se trabó sobre todo en la planta: P-201B (bomba de agua). 355 bbl todavía sin identificar.
+
+Ver más de La Ceiba
+El Palmar
+3
+3.228
+3.250
+49
+50
+77
+bbl diferidos
+dónde se trabó
+pozos 100 %
+
+Se trabó en los pozos: PA-07 (bombeo mecánico).
+
+Ver más de El Palmar
+La Zarza
+3.159
+3.050
+0
+50
+0
+bbl diferidos
+dónde se trabó
+
+Nada se trabó en octubre (en curso).
+
+Guacamayo
+6.615
+6.300
+0
+450
+0
+bbl diferidos
+dónde se trabó
+
+Nada se trabó en octubre (en curso).
+
+Ver más de Guacamayo
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+
+Pérdida
+· lo que salió y no se vendió:
+sin eventos registrados en el período
+
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+1.381
+bbl/d
+
+jun a ago · 5 fallas al mes
+
+Este mes
+
+1.222
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+9.520
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 5 de 7 avisos acertaron
+
+Por tramo
+Mantenimiento
+49 fallas cerradas · toda la historia
+
+De 8,3 días que dura una falla, 8,0 son espera (repuesto, permisos, cuadrilla).
+
+reparación activa 0,3 d
+espera 8,0 d
+
+Ninguna parada de este mes estaba programada: los 2.376 bbl fueron fallas o siguen sin identificar.
+
+Ver lo que hay que atacar
+¿Le creo al vigía?
+desde que entró TRIM
+
+71 %
+de lo que se puede juzgar fue verdad
+
+El vigía acertó 5 veces de 7, con 4,8 días de anticipo en promedio; anunció 5 de las 9 fallas que podía ver.
+
+aciertos
+5
+falsas alarmas
+2
+intervenidas antes
+5
+en seguimiento
+5

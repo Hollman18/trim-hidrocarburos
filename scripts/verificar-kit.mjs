@@ -140,7 +140,27 @@ try {
   comprobar(/---/.test(cifra({ estado: 'sin-comunicacion', desde: '14:07' })) && !/2\.650/.test(cifra({ estado: 'sin-comunicacion', desde: '14:07' })), 'cifra · sin comunicación: «---» y desde cuándo')
   comprobar(/text-\[var\(--tinta2\)\][^"]*"[^>]*>0</.test(cifra({ valor: 0, estado: 'parado' })) || /data-cifra-numero=""[^>]*text-\[var\(--tinta2\)\]/.test(cifra({ valor: 0, estado: 'parado' })), 'cifra · parado: el 0 medido, en gris')
 
-  // Ninguna pantalla lo usa todavía (lo monta la tanda B), pero no puede traer colores propios.
+  // K3 · La barra contra la meta y las columnas por período (antes BarraMeta y la gráfica a mano de Confiabilidad).
+  const cm = p => r(h(K.ContraMeta, { rotulo: 'diferido', valor: 0, unidad: 'bbl/d', meta: 800, rotuloMeta: 'máx. 800', tipoMeta: 'máximo', ocultarRotulo: true, ...p }))
+  comprobar(/data-kit="contra-meta"/.test(cm({})) && /width="0%"[^>]*data-relleno/.test(cm({})) && /x1="80%"[^>]*stroke-width="2"[^>]*data-raya/.test(cm({}))
+      && /aria-label="diferido: 0 bbl\/d, máximo 800"/.test(cm({})) && !/data-barra/.test(cm({ meta: undefined })),
+    'contra la meta: en 0 no llena la pista, la raya de 2 px al 80 %, «máximo» sin abreviar y sin meta no hay barra')
+  comprobar(/width="100%"[^>]*data-relleno/.test(cm({ valor: 5000 })) && !/var\(--p[123]\)"/.test(cm({ valor: 5000, fuera: true }).replace(/<svg[^>]*viewBox="0 0 14 14"[\s\S]*?<\/svg>/g, '')),
+    'contra la meta: lo que se pasa llega al tope (1,25 veces) y la barra nunca se pinta del estado (la marca va aparte)')
+  const col = r(h(K.Columnas, { 'aria-label': 'Fallas por mes', partes: ['a', 'b'], titulo: () => '', periodos: [{ clave: '2026-01', rotulo: 'ene', segundo: '2026', valores: [2, 1], total: 4 }, { clave: '2026-02', rotulo: 'feb', valores: [0, 0] }] }))
+  comprobar(/data-kit="columnas"/.test(col) && />4</.test(col) && !/>0</.test(col) && (col.match(/stroke="var\(--panel\)"/g) ?? []).length === 2 && !/var\(--p[123]|var\(--interlock/.test(col),
+    'columnas: el total del motor arriba, un período sin nada sin cifra ni cero, 1 px de --panel entre partes y ningún color de estado')
+
+  // K3 · Ninguna pantalla dibuja un <svg> propio: lo dibuja el kit (el auditor lo mira en vivo, «kit»).
+  const enPantallas = []
+  const recorrerK3 = d => { for (const n of readdirSync(`${RAIZ}${d}`)) { const x = `${d}/${n}`; statSync(`${RAIZ}${x}`).isDirectory() ? recorrerK3(x) : /\.tsx$/.test(n) && enPantallas.push(x) } }
+  for (const d of ['src/pages', 'src/widgets']) recorrerK3(d)
+  // La única excepción es un ícono: la marca de la configuración (12 × 12, `widgets/configuracion/marcas.tsx`).
+  const conSvg = enPantallas.filter(a => /<svg\b/.test(sinComentarios(leer(a))) && a !== 'src/widgets/configuracion/marcas.tsx')
+  comprobar(conSvg.length === 0 && !existsSync(`${RAIZ}src/shared/ui/Sparkline.tsx`) && !existsSync(`${RAIZ}src/shared/ui/BarraMeta.tsx`) && !existsSync(`${RAIZ}src/shared/ui/Analogico.tsx`),
+    `ningún <svg> a mano en pages/ ni widgets/, y Sparkline, BarraMeta e IndicadorFijo se borraron${conSvg.length ? `: ${conSvg.join(', ')}` : ''}`)
+
+  // El kit no puede traer colores propios.
   const fuentes = readdirSync(`${RAIZ}src/shared/ui/scada`).filter(n => /\.tsx?$/.test(n) && !/Muestra|entrada/.test(n)).map(n => sinComentarios(leer(`src/shared/ui/scada/${n}`))).join('\n')
   comprobar(!/#[0-9a-f]{3,6}\b/i.test(fuentes.replace(/'#'|`#/g, '')) && !/animate|animation|drop-shadow|linearGradient|radialGradient/.test(fuentes), 'el kit usa solo tokens: ningún color propio, ni animación, sombra o degradado')
 } finally {

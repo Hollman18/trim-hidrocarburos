@@ -8,5 +8,8 @@ export const ordenDeCierre = (v: VistaHoy): TareaHoy | undefined => v.tareas.fin
 /** Los pasos de la cadena que se leen en la fila (el paso 1, «quién», va en «Ver una por una»). */
 const PASOS_FILA = ['choke', 'impacto', 'planeacion', 'n2'] as const
 /** La cadena del choke de una parada, en una línea: tramo · diferida o pérdida · planeada · causa. */
-export const cadenaCorta = (p: ParadaDeJornada) =>
-  PASOS_FILA.map(paso => p.cadena.find(c => c.paso === paso)).map(c => (!c || c.valor === null ? 'falta' : c.texto)).join(' · ')
+export const cadenaCorta = (p: ParadaDeJornada) => {
+  const pasos = PASOS_FILA.map(paso => p.cadena.find(c => c.paso === paso)).map(c => (!c || c.valor === null ? 'falta' : c.texto))
+  // C1 (QA v3): sin ningún paso, «falta · falta · falta · falta» no se lee; se dice una vez.
+  return pasos.every(x => x === 'falta') ? 'falta toda la cadena' : pasos.join(' · ')
+}

@@ -1,0 +1,174 @@
+#/ger/resultados/ceiba/cerrado
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Septiembre · cerrado
+Exportar
+
+Lo que pasó · septiembre
+
+7.716
+barriles
+
+no se produjeron en La Ceiba.
+
+Va 16.284 bbl por debajo del máximo firmado (24.000). LC-11, el 48 %.
+
+calculado
+entre 6.559 y 8.873 bbl
+370 mil USD
+Se puede publicar
+Ver LC-11
+Promedio por día
+
+producción
+meta 10.900
+
+11.289
+bbl/d
+
+diferido
+máximo 800
+
+257
+bbl/d
+Total del período
+
+Producción
+
+338.662
+bbl
+
+meta 327.000
+
+Diferido
+
+7.716
+bbl
+
+máximo 24.000
+
+Producido · diferido · perdido
+· septiembre
+
+Producido
+
+338.662
+bbl
+
+medido
+
+Diferido
+
+7.716
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	6.675bbl	—	
+
+
+Planta
+	1.041bbl	—	
+
+
+Salida
+	0bbl	—	
+Diferido por día, mes a mes
+octubre: 661 bbl/d
+Diferido por día
+13 meses
+800
+0
+1.600
+OCT 2025
+OCT
+
+Continua: todo · discontinua: lo de alto impacto · raya: máximo firmado (800)
+
+Pasó el máximo: Febrero 2026.
+
+Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (800 barriles por día este mes). Lo pasaron Febrero 2026 (834 barriles por día).
+
+Diferido por equipo
+septiembre · calculado
+LC-11 electrosumergible
+3.677
+48 %
+LC-04 electrosumergible
+2.125
+28 %
+1
+P-201B bomba de agua · alarma
+1.041
+13 %
+SE-2 energía eléctrica
+239
+3 %
+LC-16 electrosumergible
+217
+3 %
+LC-07 electrosumergible
+131
+2 %
+
+y 6 equipos más
+
+Producción día a día
+bbl/d · el punto oficial contra las pruebas y la meta
+Ver la producción día a día
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+391
+bbl/d
+
+jun a ago · 1 falla al mes
+
+Este mes
+
+436
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+3.934
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 3 de 3 avisos acertaron
+
+Por tramo
+Lo que todavía se puede mover

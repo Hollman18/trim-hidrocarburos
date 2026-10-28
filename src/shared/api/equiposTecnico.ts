@@ -2,7 +2,7 @@ import { useCtx, useVersiones } from './sesion'
 import { useDato, versionDe } from './consulta'
 import { LISTA_EQUIPOS, NIVEL_EQUIPO } from './contrato'
 import {
-  listaEquipos, nivelEquipo, resumenPlegadas,
+  listaEquipos, nivelEquipo, resumenPlegadas, escalaDe,
   TIPOS_EQUIPO, NOMBRE_TIPO, TRENES, NOMBRE_TREN, FILTROS_ESTADO, NOMBRE_FILTRO, PALABRA_CONDICION, VARIABLES_CLAVE, SENALES_ABIERTAS,
   type TipoEquipo, type TrenEquipo, type FiltroEstado, type CifraFila, type FilaEquipoTecnico, type AciertoVigia, type VistaEquipos,
   type SenalNivel3, type DiscretaNivel3, type TendenciaNivel3, type EsquemaAgua, type MientrasParada, type HistoriaNivel3,
@@ -24,6 +24,10 @@ import type { Contexto } from '@/entities/causa-senal'
  *  las pantallas no importen el motor. */
 
 export { TIPOS_EQUIPO, NOMBRE_TIPO, TRENES, NOMBRE_TREN, FILTROS_ESTADO, NOMBRE_FILTRO, PALABRA_CONDICION, VARIABLES_CLAVE, SENALES_ABIERTAS, resumenPlegadas }
+/** K3 · La regla de la escala de una señal (X2 §5.1 e I1: de sus límites firmados, nunca de las
+ *  lecturas), la misma que da `SenalNivel3.escala`: con ella se dibuja la proyección del vigía, que
+ *  el motor entrega sin escala. Es una regla de presentación, como las palabras. */
+export { escalaDe }
 export type {
   TipoEquipo, TrenEquipo, FiltroEstado, CifraFila, FilaEquipoTecnico, AciertoVigia, VistaEquipos,
   SenalNivel3, DiscretaNivel3, TendenciaNivel3, EsquemaAgua, MientrasParada, HistoriaNivel3, RepuestoNivel3, VistaNivel3,

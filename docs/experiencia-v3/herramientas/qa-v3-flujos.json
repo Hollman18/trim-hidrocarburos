@@ -1,0 +1,557 @@
+[
+ {
+  "n": 1,
+  "rol": "sup",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/sup/equipos/ceiba"
+  ]
+ },
+ {
+  "n": 1,
+  "rol": "sup",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/equipos/ceiba"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "oper",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/oper/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "tec",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/tec/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "jefe",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "primera opción: Sello mecánico5 de sus 8 fallas"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso",
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "sup",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "primera opción: Cierre para prueba o intervención del po"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "conf",
+  "ancho": 1440,
+  "toques": 3,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/conf/equipos/ceiba",
+   "#/conf/equipos/ceiba",
+   "#/conf/equipos/ceiba"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "oper",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/oper/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "tec",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/tec/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "jefe",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 1,
+  "notas": [
+   "primera opción: Sello mecánico5 de sus 8 fallas"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso",
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "sup",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 2,
+  "notas": [
+   "primera opción: Cierre para prueba o intervención del po"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 2,
+  "rol": "conf",
+  "ancho": 390,
+  "toques": 3,
+  "desplaz": 1,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/conf/equipos/ceiba",
+   "#/conf/equipos/ceiba",
+   "#/conf/equipos/ceiba"
+  ]
+ },
+ {
+  "n": 3,
+  "rol": "sup",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 3,
+  "rol": "jefe",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso",
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 3,
+  "rol": "sup",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 1,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 3,
+  "rol": "jefe",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 1,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso",
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 4,
+  "rol": "sup",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 1,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 4,
+  "rol": "sup",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 1,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso",
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "jefe",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "sup",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "conf",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/conf/equipos/ceiba"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "oper",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "sin «Avisar» en el inicio: por la ficha",
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/oper/equipos/ceiba/P-201B",
+   "#/oper/equipos/ceiba/P-201B"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "jefe",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 1,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "sup",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 1,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/sup/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "conf",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/conf/equipos/ceiba"
+  ]
+ },
+ {
+  "n": 5,
+  "rol": "oper",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 1,
+  "notas": [
+   "sin «Avisar» en el inicio: por la ficha",
+   "sin «Deshacer» a la vista"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/oper/equipos/ceiba/P-201B",
+   "#/oper/equipos/ceiba/P-201B"
+  ]
+ },
+ {
+  "n": 6,
+  "rol": "tec",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 1,
+  "notas": [
+   "abre: "
+  ],
+  "ok": true,
+  "hashes": [
+   "#/tec/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 6,
+  "rol": "jefe",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "queda en #/jefe/hoy/ceiba/curso · se ve la orden 40012056"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 6,
+  "rol": "sup",
+  "ancho": 1440,
+  "toques": 0,
+  "desplaz": 0,
+  "notas": [
+   "sin K-101 en el Hoy del supervisor (A-24)"
+  ],
+  "ok": true,
+  "hashes": []
+ },
+ {
+  "n": 6,
+  "rol": "tec",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 1,
+  "notas": [
+   "abre: "
+  ],
+  "ok": true,
+  "hashes": [
+   "#/tec/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 6,
+  "rol": "jefe",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "queda en #/jefe/hoy/ceiba/curso · se ve la orden 40012056"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/jefe/hoy/ceiba/curso"
+  ]
+ },
+ {
+  "n": 6,
+  "rol": "sup",
+  "ancho": 390,
+  "toques": 0,
+  "desplaz": 0,
+  "notas": [
+   "sin K-101 en el Hoy del supervisor (A-24)"
+  ],
+  "ok": true,
+  "hashes": []
+ },
+ {
+  "n": 7,
+  "rol": "reg",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "abre: LC-21 2 Atención Pozo LC-21 · bombeo mecánico pozo · bombeo mecánico · La Ceiba · detenido · parada por orden Cerrar 2 Atención · Pozo LC-21 La Ceiba · Bombeo m"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/reg/regulatorio/ceiba/curso/LC-21"
+  ]
+ },
+ {
+  "n": 7,
+  "rol": "reg",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "abre: LC-21 2 Atención Pozo LC-21 · bombeo mecánico pozo · bombeo mecánico · La Ceiba · detenido · parada por orden Cerrar 2 Atención · Pozo LC-21 La Ceiba · Bombeo m"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/reg/regulatorio/ceiba/curso/LC-21"
+  ]
+ },
+ {
+  "n": 8,
+  "rol": "conf",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "P-201A aparece 3 veces en la página"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/conf/equipos/ceiba/P-201A"
+  ]
+ },
+ {
+  "n": 8,
+  "rol": "conf",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [
+   "P-201A aparece 3 veces en la página"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/conf/equipos/ceiba/P-201A"
+  ]
+ },
+ {
+  "n": 9,
+  "rol": "ger",
+  "ancho": 1440,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "la ficha se abre encima",
+   "vuelve a Todos mis campos"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/ger/planta-viva/ceiba~portafolio/curso/P-201B",
+   "#/ger/planta-viva/ceiba~portafolio/curso"
+  ]
+ },
+ {
+  "n": 9,
+  "rol": "ger",
+  "ancho": 390,
+  "toques": 2,
+  "desplaz": 0,
+  "notas": [
+   "la ficha se abre encima",
+   "vuelve a Todos mis campos"
+  ],
+  "ok": true,
+  "hashes": [
+   "#/ger/planta-viva/ceiba~portafolio/curso/P-201B",
+   "#/ger/planta-viva/ceiba~portafolio/curso"
+  ]
+ },
+ {
+  "n": 10,
+  "rol": "prod",
+  "ancho": 1440,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/prod/planta-viva/ceiba/curso"
+  ]
+ },
+ {
+  "n": 10,
+  "rol": "prod",
+  "ancho": 390,
+  "toques": 1,
+  "desplaz": 0,
+  "notas": [],
+  "ok": true,
+  "hashes": [
+   "#/prod/planta-viva/ceiba/curso"
+  ]
+ }
+]

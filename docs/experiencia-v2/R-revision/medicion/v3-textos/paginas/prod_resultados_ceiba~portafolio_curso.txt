@@ -1,0 +1,224 @@
+#/prod/resultados/ceiba~portafolio/curso
+
+Todos mis campos
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+1.123
+barriles
+
+no se produjeron en sus 2 campos.
+
+Va 223 bbl por debajo del máximo firmado a la fecha (1.346). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 11.706 bbl.
+
+calculado
+entre 966 y 1.281 bbl
+54 mil USD
+Provisional
+Ver P-201B
+Promedio por día
+
+producción
+meta 14.150
+
+3
+13.928
+bbl/d
+
+diferido
+máximo 850
+
+710
+bbl/d
+Cierre proyectado
+
+Producción
+
+3
+394.795
+bbl
+proyectado
+
+meta 438.650
+
+Diferido
+
+3
+58.957
+bbl
+proyectado
+
+máximo 26.350
+
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+22.052
+bbl
+
+medido
+
+Diferido
+
+1.123
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	195bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+Diferido por día, mes a mes
+octubre: 710 bbl/d
+Diferido por día
+13 meses
+850
+0
+1.700
+OCT 2025
+OCT
+
+Continua: todo · discontinua: lo de alto impacto · raya: máximo firmado (850)
+
+Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (850 barriles por día este mes). Ningún mes cerrado lo pasó.
+
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma · La Ceiba
+573
+51 %
+2
+LC-21 sin identificar · atención · La Ceiba
+247
+22 %
+SE-2 energía eléctrica · La Ceiba
+118
+10 %
+LC-08 sin identificar · La Ceiba
+108
+10 %
+PA-07 bombeo mecánico · El Palmar
+77
+7 %
+Por campo
+producción / meta · bbl/d
+diferido / máximo · bbl/d
+bbl diferidos
+La Ceiba
+3
+10.700
+10.900
+661
+800
+1.046
+bbl diferidos
+dónde se trabó
+planta 55 %
+sin identificar 34 %
+pozos 11 %
+
+Se trabó sobre todo en la planta: P-201B (bomba de agua). 355 bbl todavía sin identificar.
+
+Ver más de La Ceiba
+El Palmar
+3
+3.228
+3.250
+49
+50
+77
+bbl diferidos
+dónde se trabó
+pozos 100 %
+
+Se trabó en los pozos: PA-07 (bombeo mecánico).
+
+Ver más de El Palmar
+en el yacimiento
+en los pozos
+en la planta o estación
+afuera
+sin identificar
+
+Pérdida
+· lo que salió y no se vendió:
+sin eventos registrados en el período
+
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+410
+bbl/d
+
+jun a ago · 1 falla al mes
+
+Este mes
+
+485
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+463
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 3 de 3 avisos acertaron
+
+Por tramo
+¿Se puede publicar?
+octubre, en curso
+
+Todavía no: el mes está en curso.
+
+Provisional: el mes está en curso y se publica cuando cierre.
+
+¿Cuadra? Ver la medición y el factor
+Lo que todavía se puede mover

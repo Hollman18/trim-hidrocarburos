@@ -1,0 +1,46 @@
+#/adm/perfil/morichal/curso
+
+Morichal Norte
+Datos de demostración
+Mi perfil
+hoy, 2 de oct · datos de las 14:00
+1
+1
+alarma
+2
+5
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Identidad
+HL
+Hermes Leal
+Administrador de la implementación
+hermes.leal@operadora.example
+Área
+Plataforma
+Campos
+5 de 5
+La Ceiba
+Morichal Norte
+Guacamayo
+El Palmar
+La Zarza
+Apariencia
+Sistema
+Claro
+Oscuro
+Lo que puede hacer
+lo otorga el servidor
+Puede:
+Exportar evidencia con folio
+Puede:
+Configurar conectores y tags
+Puede:
+Firmar la configuración técnica
+Sesiones y contraseña
+Servicio de identidad de la empresa · sin conectar

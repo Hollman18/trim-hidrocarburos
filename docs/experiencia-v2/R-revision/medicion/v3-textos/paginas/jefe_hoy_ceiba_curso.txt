@@ -1,0 +1,46 @@
+#/jefe/hoy/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+
+Avisan
+1
+K-101 ya pasó el límite · frenaría en la planta
+
+Por identificar
+3
+· P-201B, LC-21 y LC-08
+
+Fallas críticas · octubre
+1
+· P-201B (planta)
+
+Espera
+7,7 de 8,1
+días por falla
+Ver la orden
+Conseguir la causa de 3 paradas
+Contestar yo
+Ver la parada
+Decidir 3 planes de P-201B · simulado
+Ver los planes
+
+P-201B · SAP no lo sabe
+Avisar
+
+Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.

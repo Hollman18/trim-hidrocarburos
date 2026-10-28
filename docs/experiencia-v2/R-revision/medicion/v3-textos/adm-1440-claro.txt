@@ -1,0 +1,69 @@
+Campo
+La Ceiba
+¿Cómo se lee?
+HL
+Hermes Leal
+Administrador de la implementación
+La Ceiba
+Datos de demostración
+Configurar
+hoy, 2 de oct datos de las 14:00
+2
+alarmas
+2
+en atención
+1
+aviso
+0
+sin comunicación
+medidor oficial
+La Ceiba
+Pasos listos
+3
+de 6 pasos listos
+Falta firmar a qué pozos sirve cada equipo.
+Seguir el paso
+Perfil del campo
+firmado
+Tanques de agua
+el tanque tiene capacidad, transmisor y aforo
+A qué pozos sirve cada equipo
+TRIM la deduce del registro: faltan 36 equipos por confirmar y firmar
+Lo que deja pasar cada tramo
+dato del demo, sin firmar: tren de crudo, tren de agua, tren de gas, afuera, mercado y admisión de los inyectores
+Factor de medición
+sin firmar: rige 1
+Meta de hoy
+firmada
+la firma el gerente de activo
+Sus otros campos:
+Morichal Norte
+3
+de
+6
+Guacamayo
+3
+de
+6
+El Palmar
+2
+de
+5
+La Zarza
+2
+de
+5
+Tags sin equipo
+3 tags
+sin equipo
+3 con sugerencia
+Aplicar las 3
+Ver los conectores
+Conversión del árbol
+Sin tabla firmada: las paradas se clasifican directo en el árbol de la ANH.
+Importar la tabla
+Jornada
+Cambio de turno
+06:00 y 18:00
+por defecto, sin firmar
+Firmar la jornada

@@ -1,0 +1,80 @@
+#/adm/conectores/ceiba/curso
+
+La Ceiba
+Configurar
+Datos de demostración
+Conectores y tags del campo
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Sistemas corporativos
+sincronizado 2 de oct, 13:58
+SAP S/4HANA · Mantenimiento (PM)
+conectado
+Avisos a SAP
+5
+Órdenes de SAP
+18 · 1 abierta
+Horas de SAP
+132,0 h
+Repuestos de SAP
+5 materiales
+Equipos del PLC en SAP
+16 de 16
+Catálogos de daño
+
+Bomba de reinyección
+5 partes (cat. B) · 11 daños (cat. C) · 5 causas (cat. 5)
+
+Electrosumergible
+5 partes (cat. B) · 7 daños (cat. C) · 5 causas (cat. 5)
+
+Bordes conectados
+2
+Tags registrados
+33
+
+30 asociados
+
+Por asociar
+3
+
+sin equipo resuelto
+
+Equipos del campo
+8
+
+del registro de ingeniería
+
+Bordes
+EPIC-CEIBA-02
+GRV-EPIC-PR1 · serie GRVCEI9003 · firmware 3.6.0 · enlace starlink · buffer 48 h
+3 tags
+reportó hace instantes
+EPIC-CEIBA-01
+GRV-EPIC-PR1 · serie GRVCEI0016 · firmware 3.6.2 · enlace starlink · buffer 48 h
+30 tags
+reportó hace instantes
+Inscribir un borde nuevo
+Tags por asociar
+3 de 3 con sugerencia
+Aplicar las 3
+XI-1017
+Nivel de interfase · % · opc-ua · cada 5 s · EPIC-CEIBA-02
+sugerido K-101
+XP-4016
+Presión de descarga · psi · opc-ua · cada 5 s · EPIC-CEIBA-02
+sugerido C-401
+XT-1017
+Presión diferencial · psi · opc-ua · cada 5 s · EPIC-CEIBA-02
+sugerido K-101

@@ -1,0 +1,75 @@
+#/jefe/mantenimiento/ceiba~portafolio/curso
+
+Todos mis campos
+Datos de demostración
+Hoy
+hoy, 2 de oct · datos de las 14:00
+1
+4
+alarmas
+2
+8
+en atención
+3
+2
+avisos
+0
+sin comunicación
+· medidor oficial
+
+Avisan
+8
+GU-07 aislamiento del motor y del cable · ya en alarma · frenaría en el pozo
+
+Por identificar
+3
+· P-201B, LC-21 y LC-08
+
+Fallas críticas · octubre
+1
+· P-201B (planta)
+
+Espera
+8,0 de 8,3
+días por falla
+
+GU-07 · SAP no lo sabe
+Avisar
+
+Conseguir la causa de 3 paradas · La Ceiba
+Contestar yo
+Ver la parada
+Intervenir GU-07: ya pasó el límite · Guacamayo
+
+1
+Alarma ·
+GU-07
+electrosumergible · ya pasó el límite
+
+Si para, 588 bbl/d. Programar la prueba de aislamiento desde superficie y tener listo el equipo de reemplazo y el taladro.
+
+Crear el aviso
+Conseguir la causa de P-201B · Morichal Norte
+Contestar yo
+Ver la parada
+Decidir 3 planes de P-201B · simulado · La Ceiba
+Ver los planes
+Decidir el plan de GU-04 · simulado · Guacamayo
+Ver el plan
+Decidir el plan de GU-07 · simulado · Guacamayo
+Ver el plan
+Decidir el plan de MN-07 · simulado · Morichal Norte
+Ver el plan
+Decidir el plan de MN-18 · simulado · Morichal Norte
+Ver el plan
+Decidir el plan de MN-27 · simulado · Morichal Norte
+Ver el plan
+Decidir el plan de MN-41 · simulado · Morichal Norte
+Ver el plan
+Decidir el plan de P-201B · simulado · Morichal Norte
+Ver el plan
+
+P-201B · SAP no lo sabe
+Avisar
+
+La Ceiba: Ojo: P-201A y P-201C valen más mientras P-201B esté parada: no conviene intervenirlas hoy.

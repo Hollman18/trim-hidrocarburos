@@ -25,9 +25,12 @@ export interface SerieKit {
   trazo?: TrazoKit
   /** Lo que no se midió (una proyección): discontinuo y con la palabra «proyectado». */
   proyectado?: boolean
+  /** En lugar de `valores`, los puntos (lugar, valor): una recta proyectada, que puede terminar entre
+   *  dos lugares de la ventana. */
+  puntos?: ReadonlyArray<readonly [number, number]>
 }
 
-export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alarmas = [], estado = 'normal', condicion, cruzo, desde, paradaDesde, ejeX, decimales = 0, ancho = 320, alto = 72, compacta = false, className }: {
+export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alarmas = [], estado = 'normal', condicion, cruzo, desde, paradaDesde, ejeX, hoy, hasta, rango, rotuloRango, nota, sinTitulo = false, decimales = 0, ancho = 320, alto = 72, compacta = false, className }: {
   /** Lo que mide: «Temperatura de cojinete». */
   titulo: string
   /** La ventana, escrita: «12 d», «Los 12 días antes de parar». */
@@ -45,8 +48,23 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
   desde?: string
   /** Desde qué punto el equipo está parado: ese tramo va rayado y la línea, en gris. */
   paradaDesde?: number
-  /** El primer día y el último («hoy»). */
+  /** El primer día y el último («hoy»). Con `hoy`, el último es el fin de lo proyectado («+12 d»). */
   ejeX?: readonly [string, string]
+  /** El punto de hoy cuando la ventana sigue hacia adelante (la proyección del vigía): una raya
+   *  vertical de 1 px con «hoy» arriba, en negrita. Lo de después es proyectado, nunca medido. */
+  hoy?: number
+  /** El último lugar de la ventana, si no es el de la serie más larga: lo proyectado sigue después de
+   *  hoy y puede terminar entre dos lugares (`SerieKit.puntos`). */
+  hasta?: number
+  /** Los puntos entre los que la proyección cruzaría el límite (el primero de `alarmas`): una barra
+   *  sobre su raya. */
+  rango?: readonly [number, number]
+  /** Lo que se escribe junto al rango: «en 5,2 d». */
+  rotuloRango?: string
+  /** Lo que se agrega al nombre accesible: «cruza el límite en 5,2 días». */
+  nota?: string
+  /** Sin el título escrito: lo dice la fila de arriba (la ventana va igual en el eje). */
+  sinTitulo?: boolean
   decimales?: number
   /** En la ficha, 300 × 56 o más; en el nivel 1, 240 × 64 o más. */
   ancho?: number
@@ -60,9 +78,11 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
   // El margen izquierdo alcanza para el rótulo más largo del eje y (la mono de 12 px, ≈ 7,3 px por carácter): «4.600» no se corta.
   // El de arriba, para el rótulo del tope de la escala: Firefox mide la caja del texto con todo el alto de la letra (≈ 16 px
   // para 12) y con 8 px el tope («1.600») se salía 2 px por arriba del dibujo (B4: el auditor a 1280 px en Firefox).
-  const L = compacta ? 2 : Math.max(40, Math.ceil(10 + 7.3 * Math.max(...[...alarmas, escala.min, escala.max].map(v => cifra(v, decimales).length)))), R = compacta ? 4 : 8, T = compacta ? 3 : 12, B = compacta ? 3 : 20
+  // Con `hoy`, 8 más arriba: ahí va su rótulo, sobre su raya.
+  const L = compacta ? 2 : Math.max(40, Math.ceil(10 + 7.3 * Math.max(...[...alarmas, escala.min, escala.max].map(v => cifra(v, decimales).length)))), R = compacta ? 4 : 8, T = compacta ? 3 : hoy !== undefined ? 20 : 12, B = compacta ? 3 : 20
   const N = Math.max(2, ...visibles.map(s => s.valores.length))
-  const X = (i: number) => L + (i / (N - 1)) * (ancho - L - R)
+  const fin = hasta ?? N - 1
+  const X = (i: number) => L + (i / (fin || 1)) * (ancho - L - R)
   const Y = (v: number) => T + (1 - (Math.min(escala.max, Math.max(escala.min, v)) - escala.min) / (escala.max - escala.min || 1)) * (alto - T - B)
   const gris = estado === 'parado'
   const marca = estado === 'anormal' && condicion ? condicion : null
@@ -72,7 +92,7 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
   const etiqueta = [`${titulo}, ${ventana}`, leido,
     alarmas.length ? `alarma en ${alarmas.map(a => cifra(a, decimales)).join(' y ')}` : '',
     marca ? `en ${fraseEstado('anormal', { condicion: marca })}` : '', gris ? 'equipo parado' : '',
-    escala.firmada ? '' : 'escala provisional'].filter(Boolean).join('; ')
+    escala.firmada ? '' : 'escala provisional', nota ?? ''].filter(Boolean).join('; ')
   // El eje y, rotulado solo en los límites y en los extremos de la escala. Primero los límites:
   // un extremo que quedaría encima de otro rótulo (a menos de 12 px) no se escribe.
   const rotulosY: number[] = []
@@ -80,7 +100,7 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
 
   return (
     <figure data-kit="tendencia" data-estado={estado} className={cn('m-0 inline-block max-w-full', className)}>
-      {!compacta && (
+      {!compacta && !sinTitulo && (
         <figcaption className="mb-1 flex flex-wrap items-baseline gap-x-2 text-[13px] text-[var(--tinta2)]">
           <span className="font-semibold text-[var(--tinta)]">{titulo}</span><span>{ventana}</span>
           {series.some(s => s.proyectado) && <span>· proyectado en discontinuo</span>}
@@ -101,27 +121,45 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
         })()}
         {!compacta && <line x1={L} x2={ancho - R} y1={Y(escala.min)} y2={Y(escala.min)} stroke="var(--linea)" strokeWidth={1} />}
         {rotulosY.map(v => (
-          <text key={`y${v}`} x={L - 6} y={Y(v) + 4} textAnchor="end" fontSize={12} fill="var(--tinta3)" fontFamily="var(--font-mono)">{cifra(v, decimales)}</text>
+          <text key={`y${v}`} x={L - 6} y={Y(v) + 4} textAnchor="end" fontSize={12} fill="var(--tinta3)" fontFamily="var(--font-mono)"
+            data-piso={v === escala.min ? '' : undefined}>{cifra(v, decimales)}</text>
         ))}
         {alarmas.map(a => (
           <line key={`a${a}`} x1={L} x2={ancho - R} y1={Y(a)} y2={Y(a)} strokeWidth={1.2} strokeDasharray="5 3" data-alarma=""
             stroke={marca && cruzo === a ? COLOR_CONDICION[marca] : 'var(--tinta2)'} />
         ))}
+        {hoy !== undefined && hoy < fin && (
+          <g data-hoy="">
+            <line x1={X(hoy)} x2={X(hoy)} y1={T - 4} y2={alto - B} stroke="var(--linea)" strokeWidth={1} />
+            {!compacta && <text x={X(hoy)} y={T - 6} textAnchor="middle" fontSize={12} fontWeight={600} fill="var(--tinta2)">hoy</text>}
+          </g>
+        )}
+        {rango && alarmas.length > 0 && (() => {
+          // La barra del rango sobre la raya del límite; su rótulo, del lado que tiene espacio.
+          const ya = Y(alarmas[0]!), x0 = X(Math.min(rango[0], fin)), x1 = X(Math.min(rango[1], fin))
+          const abajo = ya < (T + alto - B) / 2
+          return (<g data-rango="">
+            <rect x={x0} y={ya - 3.5} width={Math.max(3, x1 - x0)} height={7} fill="var(--tinta2)" opacity={0.5} />
+            {!compacta && rotuloRango && <text x={Math.max(L + 4, Math.min(x1, ancho - R - 4))} y={abajo ? ya + 19 : ya - 8} textAnchor="end" fontSize={12} fontWeight={600} fill="var(--tinta)">{rotuloRango}</text>}
+          </g>)
+        })()}
         {paradaDesde !== undefined && <rect x={X(paradaDesde)} y={T} width={Math.max(ancho - R - X(paradaDesde), 0)} height={alto - T - B} fill={`url(#rayado-${id})`} data-parado="" />}
         {visibles.map((s, k) => {
           // Un hueco corta la línea: nunca se une por encima ni se pinta en cero.
           let d = '', abierto = false
-          s.valores.forEach((v, i) => {
+          if (s.puntos) d = s.puntos.map(([i, v], j) => `${j ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ')
+          else s.valores.forEach((v, i) => {
             if (v === null) { abierto = false; return }
             d += `${abierto ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `; abierto = true
           })
           const trazo = s.proyectado ? 'discontinuo' : s.trazo ?? ORDEN_TRAZO[k]!
           const color = gris ? 'var(--dato3)' : k === 0 ? 'var(--dato1)' : 'var(--tinta2)'
-          const ult = s.valores.length - 1, uv = s.valores[ult]
+          // El último punto es la última lectura: la ventana puede seguir sin lectura (la proyección, adelante).
+          const ult = s.valores.findLastIndex(v => v !== null), uv = ult >= 0 ? s.valores[ult] : undefined
           return (
             <g key={s.nombre} data-serie={s.nombre} data-trazo={trazo}>
               <path d={d.trim()} fill="none" stroke={color} strokeWidth={k === 0 ? 2 : 1.6} strokeLinejoin="round" strokeDasharray={DASH[trazo]} />
-              {k === 0 && estado === 'sin-comunicacion'
+              {(k === 0 && estado === 'sin-comunicacion') || s.proyectado
                 ? null
                 : uv !== null && uv !== undefined && <circle cx={X(ult)} cy={Y(uv)} r={2.6} fill={color} />}
             </g>
@@ -134,7 +172,8 @@ export function Tendencia({ titulo, ventana, series, escala, unidad, banda, alar
         )}
         {!compacta && ejeX && (<>
           <text x={L} y={alto - 5} fontSize={12} fill="var(--tinta3)">{ejeX[0]}</text>
-          <text x={ancho - R} y={alto - 5} textAnchor="end" fontSize={12} fontWeight={600} fill="var(--tinta2)">{ejeX[1]}</text>
+          {/* Con `hoy` adentro, el final es lo proyectado: sin negrita (la negrita es de hoy). */}
+          <text x={ancho - R} y={alto - 5} textAnchor="end" fontSize={12} fontWeight={hoy !== undefined && hoy < fin ? 400 : 600} fill="var(--tinta2)">{ejeX[1]}</text>
         </>)}
       </svg>
       {!compacta && (marca || estado === 'sin-comunicacion' || series.length > 4) && (

@@ -1,0 +1,164 @@
+#/jefe/resultados/ceiba/curso
+
+Todos mis campos
+La Ceiba
+Datos de demostración
+Resultados
+hoy, 2 de oct · datos de las 14:00
+1
+2
+alarmas
+2
+2
+en atención
+3
+1
+aviso
+0
+sin comunicación
+· medidor oficial
+Octubre, en curso
+Exportar
+
+Lo que pasó · octubre, en curso
+
+1.046
+barriles
+
+no se produjeron en La Ceiba.
+
+Va 221 bbl por debajo del máximo firmado a la fecha (1.267). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.
+
+calculado
+entre 889 y 1.203 bbl
+50 mil USD
+Provisional
+Ver P-201B
+Producido · diferido · perdido
+· octubre
+
+Producido
+
+16.941
+bbl
+
+medido
+
+Diferido
+
+1.046
+bbl
+
+se produce después
+
+Perdido
+
+—
+
+sin registro
+
+Por tramo: el diferido y el perdido, lado a lado
+Tramo	Diferido	Perdido	
+
+Yacimiento
+	0bbl	—	
+
+
+Pozos
+	118bbl	—	
+
+
+Planta
+	573bbl	—	
+
+
+Salida
+	0bbl	—	
+
+
+Sin identificar
+	355bbl	—	
+Diferido por día, mes a mes
+octubre: 661 bbl/d
+Diferido por día
+13 meses
+800
+0
+1.600
+OCT 2025
+OCT
+
+Continua: todo · discontinua: lo de alto impacto · raya: máximo firmado (800)
+
+Pasó el máximo: Febrero 2026.
+
+Diferido por día de Octubre 2025 a Octubre 2026 contra el máximo firmado (800 barriles por día este mes). Lo pasaron Febrero 2026 (834 barriles por día).
+
+Diferido por equipo
+octubre · calculado
+1
+P-201B bomba de agua · alarma
+573
+55 %
+2
+LC-21 sin identificar · atención
+247
+24 %
+SE-2 energía eléctrica
+118
+11 %
+LC-08 sin identificar
+108
+10 %
+¿Está funcionando?
+· lo no planeado, por día
+
+Antes de TRIM
+
+391
+bbl/d
+
+jun a ago · 1 falla al mes
+
+Este mes
+
+436
+bbl/d
+
+sin meta firmada · 1 falla
+
+Ya se ganó
+
+3.934
+bbl
+
+dejaron de diferirse desde el 1 de septiembre · 3 de 3 avisos acertaron
+
+Por tramo
+Mantenimiento
+14 fallas cerradas · toda la historia
+
+De 8,1 días que dura una falla, 7,7 son espera (repuesto, permisos, cuadrilla).
+
+reparación activa 0,3 d
+espera 7,7 d
+
+Ninguna parada de este mes estaba programada: los 1.046 bbl fueron fallas o siguen sin identificar.
+
+Ver lo que hay que atacar
+¿Le creo al vigía?
+desde que entró TRIM
+
+100 %
+de lo que se puede juzgar fue verdad
+
+El vigía acertó 3 veces de 3, con 4,7 días de anticipo en promedio; anunció 3 de las 3 fallas que podía ver.
+
+aciertos
+3
+falsas alarmas
+0
+intervenidas antes
+1
+en seguimiento
+0
