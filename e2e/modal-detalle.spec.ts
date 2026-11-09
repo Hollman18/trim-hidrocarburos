@@ -13,7 +13,12 @@ import { test } from './apoyo.ts'
 
 const tab = (page: Page, atras = false) => page.keyboard.press(`${page.context().browser()?.browserType().name() === 'webkit' ? 'Alt+' : ''}${atras ? 'Shift+' : ''}Tab`)
 /** Espera a que termine la entrada (≤ 200 ms) para medir el lugar final. */
-const quieto = (page: Page) => page.waitForFunction(() => document.getAnimations().every(a => a.playState !== 'running'))
+/** Quieto: la transición ya arrancó (dos cuadros) y ya terminó. Sin los dos cuadros, en un runner lento
+ *  `getAnimations()` podía mirar antes de que la transición existiera y dejar medir el modal a medio entrar. */
+const quieto = async (page: Page) => {
+  await page.evaluate(() => new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
+  await page.waitForFunction(() => document.getAnimations().every(a => a.playState !== 'running'))
+}
 const dentro = (page: Page, sel: string) => page.evaluate(s => !!document.activeElement && !!document.querySelector(s)?.contains(document.activeElement), sel)
 
 /** Lo que dice el modal de sí mismo: su nombre, su caja, su cabecera y su cuerpo. */

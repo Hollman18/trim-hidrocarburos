@@ -182,8 +182,15 @@ test.describe('390 px', () => {
     await t.getByRole('button', { name: 'Corregir dónde se trabó' }).click()
     const hoja = page.getByRole('dialog', { name: /^¿Dónde se trabó\?/ })
     await expect(hoja).toBeVisible()
-    // La hoja sube en 200 ms (D1): se mide cuando terminó de subir.
-    await expect.poll(() => hoja.evaluate(e => Math.round(e.getBoundingClientRect().bottom) - innerHeight)).toBeLessThanOrEqual(1)
+    // La hoja sube en 200 ms (D1): se mide cuando terminó de subir, quieta dos cuadros seguidos (en el primer
+    // cuadro, antes de que arranque la transición, ya puede estar abajo).
+    await expect.poll(() => hoja.evaluate(e => new Promise<number>(r => {
+      const a = e.getBoundingClientRect().bottom
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const b = e.getBoundingClientRect().bottom
+        r(a === b && document.getAnimations().every(x => x.playState !== 'running') ? Math.round(b) - innerHeight : 999)
+      }))
+    }))).toBeLessThanOrEqual(1)
     const caja = await hoja.evaluate(e => { const r = e.getBoundingClientRect(); return { alto: r.height, abajo: Math.round(r.bottom), vh: innerHeight } })
     // D1 (v3): la hoja es la del Modal: pegada abajo y deja al menos 48 px arriba para ver de dónde se abrió.
     f.ok(Math.abs(caja.abajo - caja.vh) <= 1 && caja.alto <= caja.vh - 47, `la hoja sale desde abajo y deja ver arriba (${Math.round(caja.alto)} de ${caja.vh} px, abajo en ${caja.abajo})`)
