@@ -23,7 +23,8 @@ jobs:
   pruebas:
     # Con un runner propio: gh variable set RUNNER_LABEL --body <etiqueta>
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
-    timeout-minutes: 45
+    # 790 pruebas de navegador en 3 motores tardan ~40 min en ubuntu-latest (2 a la vez): 45 se quedaba corto.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v7
 
