@@ -2,6 +2,8 @@
 
 Para quien va a construir el servidor. Con este documento se construye el backend que reemplaza al simulador del demo **sin leer el código del front**, y cada número que el front muestra sale igual: con su fórmula, su ejemplo calculado con los datos del demo y el texto que se muestra según su valor.
 
+> **4-nov-2026 · Fase 2 de facilidades.** El factor de asignación es **diario** (D1; `05a-libro/02`, «El factor del día») y el libro descuenta la nafta en los campos que diluyen (`05a-libro/02`, «El fiscal en crudo neto»). Los ejemplos de otros capítulos pueden traer cifras del libro de antes de D1 (hasta 0,5 % distintas); manda `referencia/`.
+
 > **Propuesta de valor.** Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial. *Electrosumergibles, multifásicas y bombas de reinyección, conectadas a sus variables: entendemos por qué se difiere y se pierde cada barril.* Qué es hoy la «inteligencia artificial» y qué es hoja de ruta: capítulo 1, nota técnica al inicio.
 
 > **Lo que resuelve.** Cuántos barriles se dejaron de producir por cada equipo crítico (bombas de reinyección de agua y electrosumergibles) y por qué parte, con cadena de custodia, desde el pozo hasta la gerencia. En Colombia los pozos producen sobre todo agua (cortes de 92–98 %): si la bomba de reinyección se para y el respaldo no alcanza, el tanque de agua se llena y hay que cerrar pozos. El capítulo 1 lo explica de punta a punta con un caso real del demo.
@@ -57,6 +59,8 @@ Deck (10 diapositivas, marca gotrim.ai): [`TRIM-pitch-comercial.pdf`](TRIM-pitch
 | [9 · Verificación](09-verificacion.md) | La referencia por HTTP, el front contra su servidor, el contrato, las identidades que siempre valen, lista de aceptación |
 | [10 · Pendientes](10-pendientes.md) | Decisiones para el dueño del producto, lo que el servidor hace distinto al demo, defectos encontrados, endpoints y casos que faltan |
 | [11 · Ciclo de valor](11-ciclo-de-valor.md) | Por qué Antes / Durante / Después (venta), UI plegada y cinturón por rol (front hecho). Encargo backend: fórmulas, `GET /vistas/ciclo`, `POST /planes/:id`, `decision_plan`, referencia y e2e |
+| [12 · Energía y evento de planta](12-energia-evento-de-planta.md) | Fase 4 de facilidades: el apagón (total o parcial, por relé, firma de cargas o silencio del gateway), los relojes, el aviso por rol, el aviso de prueba, la notificación push, el rol de energía y las familias de energía y aire. Fase 5: la pieza Planta y el vigía de planta. Fase 6: el re-arranque guiado, el cronómetro por fases y el margen N-1 |
+| [13 · Panel de indicadores](13-panel-de-indicadores.md) | Fase 7 de facilidades: el catálogo con fórmula, fuente y caso a mano, «sin dato» y por qué, las señales conectadas y cómo se guarda el panel de cada persona |
 | [Anexo A · Contrato de la API](../../CONTRATO.md) | La forma exacta de cada respuesta y las reglas de cada escritura |
 | [Anexo B · Glosario](anexo-b-glosario.md) | Los términos del sector y del producto |
 | [Anexo C · Normas](anexo-c-normas.md) | Las normas que el código aplica y dónde |

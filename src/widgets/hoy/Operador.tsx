@@ -22,8 +22,10 @@ export function OrdenDeCierre({ t }: { t: TareaHoy }) {
  *  que se contesta con UN toque (A3: la parte se guarda sola y lo que vio sigue, opcional);
  *  «No arrancar»; el orden de cierre cuando para una bomba de agua; y «Registrar una pérdida».
  *  Cada toque deja su «Deshacer». El foco va a la pregunta nueva (A2). */
-export function Operador({ v, ocultas, onResponder, quien, envio, vio, onVio }: {
+export function Operador({ v, ocultas, onResponder, quien, envio, vio, onVio, perdidas = true }: {
   v: VistaHoy; ocultas: ReadonlySet<string>; onResponder: (q: PreguntaHoy, r: RespuestaHoy) => void; quien?: string; envio: Envio
+  /** Fase 1 (facilidades): registrar una pérdida es de la pieza Barriles. */
+  perdidas?: boolean
   /** Lo que vio, pendiente de la parte que se acaba de decir. */
   vio: Vio | null; onVio: (v: Vio | null) => void
 }) {
@@ -48,7 +50,7 @@ export function Operador({ v, ocultas, onResponder, quien, envio, vio, onVio }: 
     <>
       {v.bloqueos.map(b => <Bloqueo key={b.campoId} b={b} grande />)}
       {orden && <OrdenDeCierre t={orden} />}
-      <RegistrarPerdida envio={envio} className="w-full" />
+      {perdidas && <RegistrarPerdida envio={envio} className="w-full" />}
       <Hechas hs={v.hechas} />
     </>
   )

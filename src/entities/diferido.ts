@@ -14,6 +14,7 @@
  *  `GET /api/vistas/bombas/paradas?campo=&equipo=`, `GET /api/vistas/riesgo?campos=`
  *  y `GET /api/vistas/estado?campos=` (formas en shared/api/contrato.ts).
  */
+import { vigiaDePlanta, fraseVigia, TIPO_DE_FAMILIA } from './vigia-planta'
 import { conLectura } from './serie'
 import { pozosDe, pruebaEn, estadoAhora, NIVEL_AHORA, servicioPorId, type Pozo } from './pozos'
 import { equipoEnCampo, EQUIPOS } from './equipos'
@@ -448,6 +449,10 @@ export interface Riesgo {
    *  «Si falla hoy» (D6; K-101 de La Ceiba). Ausente en lo calculado: lo que ya
    *  se pierde, las bombas de la línea y las electrosumergibles. */
   techo?: true
+  /** Fase 5 de facilidades: no hay cifra de lo que costaría si para (un equipo de despacho o de compresión:
+   *  falta el colchón o a qué pozos cierra, la misma regla de «Si falla hoy»). `bblDia` va en 0 y no se lee:
+   *  la pantalla dice «sin dato». */
+  sinCifra?: true
   /** `motivo` es lo que respondió una persona con sus palabras (una parada
    *  declarada): quién, por su rol («el operador de campo»). En el papel va
    *  «Lo contestó …», nunca el texto ni el nombre (D2). Ausente si `motivo` es de TRIM. */
@@ -627,6 +632,25 @@ function riesgoDeCampo(campoId: string, ctx: Contexto): Riesgo[] {
       out.push({ campoId, equipo: id, tipo: eq.servicio ?? 'proceso', estado: 'en-riesgo', prioridad: eq.severidad, bblDia: produciendo, techo: true,
         pozos: pozosDe(campoId).filter(p => estadoAhora(p).produce).length, altoImpacto: false,
         motivo: `${eq.nombre}: ${eq.estado}. ${eq.lectura}`, accion: eq.intervencion?.accionInmediata })
+    }
+
+    // En riesgo (Fase 5 de facilidades): los equipos de planta con una variable que va hacia su alarma
+    // (vigia-planta.ts). Si fallan se cierra lo que dependa de ellos: un techo, como los servicios (D6).
+    for (const a of vigiaDePlanta(campoId)) {
+      if (out.some(r => r.campoId === campoId && r.equipo === a.equipo)) continue
+      const eq = equipoEnCampo(a.equipo, campoId)
+      const produciendo = pozosDe(campoId).filter(p => estadoAhora(p).produce)
+      // Lo que costaría si para, con la regla de «Si falla hoy» (criticidad.ts, deServicio): con respaldo, cero;
+      // despacho o compresión, sin cifra; lo demás, el techo de lo que esté produciendo.
+      const conRespaldo = !!eq?.redundancia && !/sin respaldo/i.test(eq.redundancia)
+      const sinCifra = eq?.servicio === 'evacuacion' || eq?.servicio === 'compresion'
+      const cuanto = sinCifra ? { bblDia: 0, sinCifra: true as const } : conRespaldo ? { bblDia: 0 }
+        : { bblDia: produciendo.reduce((x, p) => x + crudoAsignado(p), 0), techo: true as const }
+      out.push({ campoId, equipo: a.equipo, tipo: TIPO_DE_FAMILIA[a.familia], estado: 'en-riesgo',
+        prioridad: a.pronostico.tipo === 'cruzado' ? 1 : a.pronostico.horas <= 7 * 24 ? 2 : 3,
+        ...cuanto, pozos: sinCifra || conRespaldo ? 0 : produciendo.length, altoImpacto: false,
+        ...(a.pronostico.tipo === 'cruza' ? { horas: a.pronostico.horas, rango: a.pronostico.rango } : {}),
+        tag: a.tag, motivo: `${eq?.nombre ?? a.equipo}: ${fraseVigia(a)}`, ...(a.accion ? { accion: a.accion } : {}) })
     }
 
     // En riesgo: electrosumergibles que producen con una parte que avisa.

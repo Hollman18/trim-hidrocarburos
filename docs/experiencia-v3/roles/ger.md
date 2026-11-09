@@ -109,3 +109,17 @@ Los toques se midieron en la app (27-oct) y en `R-revision/roles/ger.md`. Los se
 | Palabras del inicio (vista / página, 390) | 85 / 280 | 42 |
 | Pantallas | 3 | 2 (la suya, y Resultados a un toque) |
 | Toques: mandar a actuar / cierre del mes | 1 / 1 y desplazarse | 1 / 0 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | «Mi panel», en Resultados: los indicadores del catálogo y cualquier señal conectada, armados por él. De ejemplo: diferido por causa, horas proactivas, cortes de energía y margen N-1 | Cada uno con su fórmula y su fuente en la ⓘ; lo que no tiene dato dice «Sin dato» y por qué | Cada mañana | 7 (4-nov) |
+| **Equipos** | Solo el equipo que más barriles pone en riesgo, ahora con los de planta | Barriles en juego; sin códigos ni datos técnicos | Primera capa | Existe; se amplía en 4–5 |
+| **Energía** | El apagón mientras dura, arriba de La planta viva, y en su notificación push si la activó | «Se fue la energía en La Ceiba. 11.360 bbl/d en juego. Mantenimiento ya está avisado.» En un parcial: «Todavía no se pierde crudo; el tanque de agua da 2,1 h antes de que haya que cerrar pozos.» | Solo durante el evento, en la primera capa | Desde 4 (4-nov) |
+| **Planta** | — | Le llega por el equipo que más pesa | — | — |
+| **Barriles** | Diferido por causa, «energía» incluida, y su costo; el perdido al lado | Barriles y dólares; diferido y perdido nunca sumados | Cada mañana; a fin de mes | Existe; la causa «Falta de diluyente» desde 2 (4-nov), con su costo como cualquier causa; la causa «energía» medida en 4 |
+| **Mantenimiento** | — | — | — | — |

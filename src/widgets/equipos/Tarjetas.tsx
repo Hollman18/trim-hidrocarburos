@@ -1,3 +1,4 @@
+import { Info } from '@/shared/ui/Info'
 import { ChevronRight } from 'lucide-react'
 import { useNivel } from '@/app/store'
 import { useListaEquipos, NOMBRE_TREN, type VistaNivel3, type TendenciaNivel3 } from '@/shared/api/equiposTecnico'
@@ -52,6 +53,25 @@ function Grafica({ s, desde, hasta, parado }: { s: TendenciaNivel3; desde: strin
 
 /** «Los 12 días antes de parar» (o «los últimos 12 días»): las señales que se
  *  movieron, en gráficas chicas iguales, como mucho tres (X2 §5.3). */
+/** Fase 5 de facilidades · lo que avisa el vigía de planta en este equipo: la variable que va hacia su
+ *  alarma, cuándo llega y qué hacer. La fuente del límite, en la ⓘ. */
+export function LoQueAvisa({ v }: { v: VistaNivel3 }) {
+  if (!v.vigia?.length) return null
+  return (
+    <TarjetaN3 titulo="Lo que avisa el vigía" data-vigia-planta>
+      <ul className="grid gap-2.5">
+        {v.vigia.map(a => (
+          <li key={a.tag} data-aviso-vigia={a.tag} className="grid gap-1">
+            <p className="flex flex-wrap items-baseline gap-x-1 text-[16px] font-medium leading-snug">{a.frase}<Info titulo={`La alarma de ${a.tag}`} texto={a.fuente} /></p>
+            {a.accion && <p className="text-[15px] leading-snug text-[var(--tinta2)]">{a.accion}</p>}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2.5 text-[14px] leading-snug text-[var(--tinta2)]">Una tendencia apunta, no prueba: lo confirma quien revisa el equipo.</p>
+    </TarjetaN3>
+  )
+}
+
 export function DiasAntes({ v }: { v: VistaNivel3 }) {
   // El modo de falla es de ingeniería (como en la ficha de antes): a operación, la regla y la tendencia.
   const ing = useNivel() === 'ingenieria'

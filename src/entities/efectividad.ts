@@ -173,6 +173,20 @@ function partir(total: number, partes: Record<ChokeOSinAsignar, number>): { tota
 /** Una cifra que puede ser negativa (lo ganado): el entero del valor absoluto, con su signo. */
 const conSigno = (x: number): CifraBalance => ({ exacto: x, entero: x < 0 ? -enteroDe(-x) : enteroDe(x) })
 
+/** Lo ganado de cada tramo en enteros que suman el entero del total (la regla de
+ *  redondeo, `redondeo.ts`). Un tramo puede ser negativo (difirió más que antes),
+ *  así que no sirve `enterosPorId`, que cuenta los negativos como cero: el piso de
+ *  cada parte y lo que falta, de a uno, a las de mayor residuo (a residuo igual, en
+ *  el orden de los tramos). Redondear cada tramo por su lado dejaba un barril de
+ *  diferencia con el total. */
+function ganadoPorTramo(total: number, partes: Record<ChokeOSinAsignar, number>): Record<ChokeOSinAsignar, CifraBalance> {
+  const pisos = CHOKES_Y_SIN_ASIGNAR.map(k => Math.floor(partes[k]))
+  let falta = conSigno(total).entero - pisos.reduce((a, x) => a + x, 0)
+  const orden = CHOKES_Y_SIN_ASIGNAR.map((k, i) => ({ i, r: partes[k] - pisos[i]! })).sort((a, b) => b.r - a.r || a.i - b.i)
+  for (const { i } of orden) { if (falta <= 0) break; pisos[i]!++; falta-- }
+  return Object.fromEntries(CHOKES_Y_SIN_ASIGNAR.map((k, i) => [k, { exacto: partes[k], entero: pisos[i] === 0 ? 0 : pisos[i]! }])) as Record<ChokeOSinAsignar, CifraBalance>
+}
+
 /** `GET /api/vistas/efectividad?campos`. */
 export function efectividad(q: { campos: string[] }, ctx: Contexto, versiones?: Historial, op: OpcionesReparto = {}): VistaEfectividad {
   let porV = CACHE.get(ctx)
@@ -242,10 +256,11 @@ function calcular(campos: string[], ctx: Contexto, versiones: Historial | undefi
   const vigia = aciertoVigia(campos, ctx)
   if (dias < 60) notas.push(`Muestra corta: TRIM lleva ${n0(dias)} días.`)
   if (fallasMes.parcial) notas.push(`${fallasMes.nombre.charAt(0).toUpperCase()}${fallasMes.nombre.slice(1)} va en curso: las fallas del mes pueden subir.`)
+  const ganadoE = ganadoTramo && ganadoTotal !== undefined ? ganadoPorTramo(ganadoTotal, ganadoTramo) : undefined
   const porTramo: TramoEfectividad[] = CHOKES_Y_SIN_ASIGNAR.map(k => ({
     tramo: k, nombre: NOMBRE_TRAMO_BALANCE[k],
     antesDia: antesP ? antesP.porTramo[k] : null, ahoraDia: ahoraP.porTramo[k], metaDia: metaP ? metaP.porTramo[k] : null,
-    ganadoBbl: ganadoTramo ? conSigno(ganadoTramo[k]) : null,
+    ganadoBbl: ganadoE ? ganadoE[k] : null,
   }))
   const ganado = ganadoTotal === undefined ? null : conSigno(ganadoTotal)
   const frase = antesP && ganado

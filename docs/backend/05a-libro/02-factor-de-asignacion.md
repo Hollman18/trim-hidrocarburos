@@ -1,6 +1,6 @@
 # 5A.2 · El factor de asignación del mes y su banda regulatoria
 
-La **asignación de producción** reparte lo que midió el punto de medición oficial (un número por campo y día) entre los pozos que lo produjeron. Se hace con las pruebas de cada pozo y las horas que cada uno estuvo abierto. El **factor de asignación** (FA) es el cociente entre lo medido y lo que dicen las pruebas: si las pruebas y el PMO cuentan la misma historia, queda cerca de 1. Todo el libro (potencial, diferido de cada evento, valor) se calcula con él.
+La **asignación de producción** reparte lo que midió el punto de medición oficial (un número por campo y día) entre los pozos que lo produjeron. Se hace con las pruebas de cada pozo y las horas que cada uno estuvo abierto. El **factor de asignación** (FA) es el cociente entre lo medido y lo que dicen las pruebas: si las pruebas y el PMO cuentan la misma historia, queda cerca de 1. Desde D1 (4-nov-2026) el libro (potencial, diferido de cada evento, valor) se calcula con el factor **de cada día**; el del mes, su promedio pesado, es el que se compara con la banda (abajo, «El factor del día»).
 
 ---
 
@@ -78,6 +78,74 @@ $$
 
 ---
 
+### El fiscal en crudo neto: campos que diluyen (Fase 2 de facilidades, 4-nov-2026)
+
+**Qué es.** En un campo que diluye el crudo pesado con nafta **en planta** o **en fondo de pozo**, el punto de medición oficial mide la **mezcla**. Si R fuera la mezcla, el factor subiría por la nafta y el potencial y cada diferido quedarían inflados en la misma proporción, con la identidad del libro cuadrando: nadie lo vería. Por eso, en esos campos, $F_d$ es el **crudo neto de nafta** (Res. MME 40236/2022, art. 25).
+
+**Dónde se ve.** No se muestra como cifra aparte: es el $F_d$ de todo lo de arriba. Lo que se ve es el motivo «falta la nafta» del sello de publicación cuando falta un dato (abajo).
+
+**Fórmula** (`crudoNeto`, `src/entities/diluyente.ts`; convención proporcional: cada componente se encoge lo mismo):
+
+$$
+F_d = \frac{M_d}{1 - s} - N_d
+\qquad\qquad
+q_{p,d} = q^{\text{prueba}}_{p,d} - n^{\text{prueba}}_{p,d} \quad (\text{solo en fondo de pozo})
+$$
+
+| Símbolo | Significado | Unidad | De dónde sale |
+|---|---|---|---|
+| $M_d$ | mezcla del día en el punto de medición oficial | bbl | `produccion-diaria → meses[].dias[i]` |
+| $N_d$ | nafta que se le agregó ese día | bbl | `meses[].nafta[i]` (art. 25, parágrafo 1) |
+| $s$ | encogimiento de la mezcla crudo–nafta | fracción | `origen.diluyente.encogimiento`: el de la fórmula que el operador validó en laboratorio |
+| $n^{\text{prueba}}_{p,d}$ | nafta que se le inyectaba al pozo durante su prueba | bbl/d | `pruebas[].diluyenteBpd` |
+
+Con `esquema: 'oleoducto'` la mezcla ocurre después del punto de medición: nada cambia. Sin `origen.diluyente`, el campo no diluye y $F_d$ es lo del computador de flujo, como antes.
+
+**Ejemplo** (el «Campo X» de la investigación 20, §8.3: **hipotético, no es del demo**; el demo no tiene campos que diluyan). Pozos de 600, 400 y 200 bbl/d, nafta a 0,22 bbl por bbl de crudo, $s$ = 0,458 %. Un día normal: $M_d = 1.464 \times (1 - 0{,}00458) = 1.457{,}3$; $F_d = 1.457{,}3 / 0{,}99542 - 264 = 1.200{,}0$. El factor del mes da **1,000**, y P3 parado 12 h da **100 bbl** de diferido. Con la mezcla como fiscal daba 1,214 y 121,4 bbl. `scripts/verificar-diluyente.mjs` lo comprueba, con las variantes en fondo de pozo, en el oleoducto y sin diluyente (los mismos números).
+
+**Casos borde.**
+
+| Caso | Motor | Pantalla |
+|---|---|---|
+| Día con mezcla y sin $N_d$ | El día no entra en T, ni en R, ni en el potencial (`Calc.sinNafta`); va a `Libro.sinNafta[].dias` | Motivo `sin-nafta`: «no se puede publicar» · «falta la nafta» |
+| Prueba de fondo sin `diluyenteBpd` | Se usa lo que midió el separador; el pozo va a `Libro.sinNafta[].pozos` | Motivo `sin-nafta` |
+| Día sin $M_d$ | Igual que hoy: `sinFiscal` | «faltan días de fiscal» |
+
+**Lo que no se modela.** El encogimiento cambia un poco cuando para un pozo liviano (centésimas de barril: 0,18 bbl en un día de 1.336, investigación 20, §8.3 paso 7). TRIM usa un $s$ por campo. Tampoco se calcula el encogimiento entre crudos sin nafta: el factor lo absorbe.
+
+---
+
+### El factor del día (D1, 4-nov-2026)
+
+**Qué es.** La Res. 40236, art. 21, dice que el factor de campo **«será calculado diariamente por el Operador»**. Desde el 4-nov-2026 (decisión D1 del dueño) TRIM valora cada barril con el factor **de su día**.
+
+**Fórmula** (`factorDelDia`, `src/entities/libro.ts`):
+
+$$
+\text{FA}_d = \frac{F_d}{T_d}
+\qquad
+T_d = \sum_{p \,\in\, \text{pozos con prueba}} q_{p,d} \cdot \frac{\max(0,\ H_d - P_{p,d})}{24}
+$$
+
+Con él salen el potencial del día, cada tramo del libro, el día a día y la asignación por pozo (5A.3, 5A.9, 5A.10). La identidad del libro queda exacta **día por día** (5A.3).
+
+**Lo que sigue siendo del mes.** $\text{FA}_m = R_m / T_m$ es el promedio de los factores diarios pesado por su teórico. Es la cifra que se compara con la banda de la Fig. 10.2 (el cuadro 1A es mensual), la del gráfico «FACTOR DE ASIGNACIÓN» y el chip de Medición oficial, y la que usan los caudales «de ahora» (`faDe`: riesgo, predicción, «si falla hoy»). Un día no se juzga contra la banda.
+
+**Casos borde.**
+
+| Caso | Factor con que se valora el día |
+|---|---|
+| Día con fiscal y teórico | $\text{FA}_d$ |
+| Día sin fiscal (hueco del computador de flujo) | El del mes, como antes de D1; el libro ya dice `sin-fiscal` |
+| Día con fiscal y teórico 0 (ningún pozo con prueba produjo) | El del mes |
+| Mes sin un día con fiscal | Ninguno: `sinFactor` |
+
+**Lo que hay que saber.** El fiscal del día lo mide el punto de medición oficial **al despachar**. Si el despacho de un día no sigue a la producción (el tanque de venta se llena un día y se vacía al siguiente), el factor de ese día lo sigue y con él el valor de sus paradas. En el demo el fiscal sigue a la producción y las cifras cambiaron poco: La Ceiba, septiembre, de 7.716 a 7.754 bbl diferidos (+0,5 %); el portafolio, de 33.945 a 33.970.
+
+**Ejemplo con los datos del demo.** La Ceiba, 22-sep: $\text{FA}_d$ = 0,960896; 23-sep: 0,973758; el del mes, 0,968930. LC-16 parado del 22 al 23 da 447,266 + 89,546 = **536,812** bbl (con el del mes eran 540,108). `scripts/verificar-diluyente.mjs` §9 lo comprueba con un día de fiscal 5 % arriba: la parada de ese día vale 105, no 100,2.
+
+---
+
 ### Factor de asignación (FA) del mes
 
 **Qué es.** El cociente entre lo que midió el PMO y lo que dicen las pruebas en los mismos días: el «ajuste» con que las pruebas se llevan a lo medido.
@@ -98,7 +166,7 @@ $$
 **Ejemplo con los datos del demo.**
 
 - La Ceiba, septiembre: $\text{FA} = 338.662 / 349.521{,}518 = 0{,}96893$ → pantalla **«0,969»** (`n3`).
-- La Ceiba, octubre en curso: $16.941 / 17.681{,}816 = 0{,}95810$ → **«0,958»**. Es el factor con que se valoran los barriles de octubre y el que muestra el chip de Medición oficial.
+- La Ceiba, octubre en curso: $16.941 / 17.681{,}816 = 0{,}95810$ → **«0,958»**. Es el que muestra el chip de Medición oficial; desde D1 los barriles de octubre se valoran con el factor de cada día.
 - Serie de La Ceiba, oct-2025 a oct-2026: 1,007 · 0,969 · 1,030 · 0,985 · 1,020 · 1,028 · 0,990 · 1,027 · 0,974 · 1,029 · 0,941 · 0,969 · 0,958.
 - Septiembre en los demás: Morichal 0,961 · Guacamayo 1,007 · El Palmar 1,008 · La Zarza 1,032.
 - Con el demo del 9-oct (agua real) los factores son los mismos de antes a tres decimales: las paradas de la bomba de reinyección cierran menos pozos, y el real y el teórico de cada mes suben en la misma proporción (La Ceiba sep: los dos un 4,3 %).

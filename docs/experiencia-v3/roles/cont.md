@@ -51,3 +51,8 @@ No aplica.
 ## 7. Hoy contra lo necesario
 
 No aplica: no se ofrece y sale.
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+**Rol fuera del producto: no ve ninguna pieza.** Si el dueño lo enciende, su ficha se arma con el mismo molde que las demás (`../PROMPT-FACILIDADES-POR-FASES.md` §3).

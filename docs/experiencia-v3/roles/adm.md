@@ -85,3 +85,17 @@ Los segundos no se midieron aquí: los mide §9.
 | Palabras del inicio (vista / página, 390) | 79 / 89 | 31 |
 | Pantallas | 5 | 2 (Configurar y Conectores) |
 | Toques para asociar tags | 2 y desplazarse | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | Las piezas contratadas por el cliente y, por campo, cómo se conecta: historiador, directo a los equipos, mezcla o la entrada mínima de «hay tensión»; qué analizadores, relés y UPS están conectados y cuáles no | Lista de lo conectado y lo que falta firmar. En Conectores, una línea por campo: «Cómo se conecta: Directo a los equipos, sin historiador» (El Palmar en el demo); cada tag, en su cadena del dato, dice por dónde llega (relé IEC 61850, Modbus RTU, SNMP, entrada «hay tensión») y que es solo lectura. Un equipo que todavía no está en el catálogo (la UPS) llega como tag por asociar | Al configurar cada campo | Piezas en 1; conexión desde 3 (4-nov); la conexión llega del registro de campos, no se firma a mano |
+| **Equipos** | El catálogo de equipos de planta y sus señales | Qué tag tiene cada parte | Al configurar | 4–5 · falta en el motor |
+| **Energía** | «Probar el aviso de apagón» en Conectores: un apagón de prueba total o parcial que todos ven marcado como prueba y que no entra al libro. Qué cargas alimenta cada barra o alimentador | Lista de lo conectado; el resultado de la notificación («Notificación enviada a 3 dispositivos») | Al configurar | Prueba desde 4 (4-nov). Los circuitos salen del alimentador de cada pozo; la topología eléctrica firmada sigue pendiente |
+| **Planta** | La capacidad de los tanques y del tanque de aire, para los relojes de consecuencia | Firmar capacidades | Al configurar | 4–5 · capacidad de tanques existe |
+| **Barriles** | El esquema de dilución del campo (en planta, en fondo de pozo, en oleoducto o ninguno), su encogimiento y el medidor de la nafta | Llega del registro del punto de medición oficial, como el °API: no se firma a mano | Al conectar el campo | Motor en 2 (4-nov); en Configuración, todavía no se muestra |
+| **Mantenimiento** | — | — | — | — |

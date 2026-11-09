@@ -2,6 +2,7 @@ import { useAmbito, useRango, useRol } from '@/app/store'
 import { usePlantaViva, conLenteTecnica } from '@/shared/api/plantaViva'
 import { Gerente } from '@/widgets/plantaviva/Gerente'
 import { InicioProduccion } from '@/widgets/produccion/Inicio'
+import { AvisoPlanta } from '@/widgets/AvisoPlanta'
 
 /** LA PLANTA VIVA: el inicio del gerente y de producción (experiencia v3; necesario-por-rol §1, §2 y
  *  §14; imágenes d1-grafito ger y prod, opción A: sin el control Antes · Durante · Después).
@@ -18,6 +19,8 @@ export function PlantaViva() {
   const c = tecnica ? v.tecnica!.cifra : v.cifras.durante
   return (
     <div data-planta-viva={v.alcance} data-momento="durante" data-valor={c.valor} data-entero={c.entero} data-lente={tecnica ? 'tecnica' : 'gerente'} className="mx-auto max-w-[1600px]">
+      {/* Fase 4 de facilidades: el apagón, arriba (solo a quien se le avisa; sin evento no ocupa lugar). */}
+      <AvisoPlanta campos={campos} className="mb-3" />
       {tecnica ? <InicioProduccion v={v} /> : <Gerente v={v} />}
     </div>
   )

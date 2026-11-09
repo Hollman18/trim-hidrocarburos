@@ -1,0 +1,15 @@
+{
+  "nota": "Línea de tiempo común a ES y EN. inicio/dura de cada frame; voz = segundo (local) en que empieza a hablar su frase.",
+  "frames": [
+    {"id": "f01", "archivo": "01-noche",     "inicio": 0.00,  "dura": 5.91,  "voz": 0.90},
+    {"id": "f02", "archivo": "02-alarma",    "inicio": 5.91,  "dura": 6.43,  "voz": 0.20},
+    {"id": "f03", "archivo": "03-senales",   "inicio": 12.34, "dura": 10.02, "voz": 0.50},
+    {"id": "f04", "archivo": "04-marca",     "inicio": 22.36, "dura": 7.00,  "voz": 0.20},
+    {"id": "f05", "archivo": "05-vigila",    "inicio": 29.36, "dura": 9.80,  "voz": 0.80},
+    {"id": "f06", "archivo": "06-aviso",     "inicio": 39.16, "dura": 8.82,  "voz": 0.45},
+    {"id": "f07", "archivo": "07-energia",   "inicio": 47.98, "dura": 9.65,  "voz": 0.50},
+    {"id": "f08", "archivo": "08-historial", "inicio": 57.63, "dura": 7.10,  "voz": 0.60},
+    {"id": "f09", "archivo": "09-cierre",    "inicio": 64.73, "dura": 7.41,  "voz": 0.85}
+  ],
+  "total": 72.14
+}

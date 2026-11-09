@@ -3,7 +3,7 @@ import { pantalla } from '@/shared/lib/carga'
 import {
   Gauge, Network, MessageSquareText,
   Droplets, FileCheck2, SlidersHorizontal, UserRound, Plug,
-  TrendingUp, CircleDot, ListChecks, ChartColumn, ShieldCheck, ScrollText,
+  TrendingUp, CircleDot, ListChecks, ChartColumn, ShieldCheck, ScrollText, LayoutDashboard,
 } from 'lucide-react'
 import { IconoPlanta } from '@/shared/brand/Logo'
 
@@ -23,6 +23,8 @@ const Hoy = pantalla(() => import('@/pages/Hoy'), 'Hoy')
 // C4 y C5 (experiencia v2): Equipos en un solo lugar y Resultados del período.
 const Equipos = pantalla(() => import('@/pages/Equipos'), 'Equipos')
 const Resultados = pantalla(() => import('@/pages/Resultados'), 'Resultados')
+// Fase 7 de facilidades: el panel de indicadores que arma cada persona.
+const Panel = pantalla(() => import('@/pages/Panel'), 'Panel')
 
 export interface Pantalla {
   corto: string
@@ -79,6 +81,8 @@ export const PANTALLAS: Record<string, Pantalla> = {
   // La misma vista que Configuración, abierta en la filosofía operacional: así el
   // enlace la conserva y el borrador no se pierde al pasar de una a otra.
   filosofia:    { corto: 'Filosofía operacional', titulo: 'Filosofía operacional', ruta: 'filosofia', ahora: true, sinExportar: true, icono: ScrollText,  Vista: Configuracion },
+  // Fase 7 de facilidades (pieza Núcleo): «Mi panel», en la puerta Resultados del gerente, producción y confiabilidad.
+  panel:        { corto: 'Mi panel',      titulo: 'Mi panel',                    ruta: 'panel', ahora: true, sinExportar: true, icono: LayoutDashboard,    Vista: Panel },
   conectores:   { corto: 'Conectores',    titulo: 'Conectores y tags del campo', ruta: 'conectores', ahora: true, sinExportar: true,   icono: Plug,               Vista: Conectores },
 }
 
@@ -114,7 +118,7 @@ export const GRUPOS: Record<string, Puerta> = {
   // C5: el Resumen del gerente ya no se ofrece (cada panel tiene su lugar: X4 §3.7); su dirección abre La planta viva.
   plantaViva: { corto: 'La planta viva', icono: IconoPlanta,       miembros: ['plantaViva', 'planta', 'agua'] },
   equipos:    { corto: 'Equipos',        icono: Gauge,             miembros: ['equipos', 'pozos'] },
-  resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['resultados', 'produccion', 'confiabilidad'] },
+  resultados: { corto: 'Resultados',     icono: ChartColumn,       miembros: ['resultados', 'produccion', 'confiabilidad', 'panel'] },
   reporte:    { corto: 'Reporte',        icono: FileCheck2,        miembros: ['regulatorio'] },
   configurar: { corto: 'Configurar',     icono: SlidersHorizontal, miembros: ['configuracion', 'filosofia', 'conectores'] },
 }

@@ -5,7 +5,7 @@ import { AHORA } from '@/entities/reloj'
 import type { Rol, IdPeriodo } from '@/entities/tipos'
 import { diaIso } from '@/shared/lib/formato'
 import { PANTALLAS } from '@/app/pantallas'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida, inicioOfrecido } from '@/shared/api/piezas'
 
 
 /** F1 · P-18 (X4 §3.8): el momento de La planta viva va en la dirección: «#/ger/planta-viva/ceiba/antes». */
@@ -79,7 +79,7 @@ export const pantallaQueAbre = (rol: Pick<Rol, 'pantallas'> & Partial<Pick<Rol, 
  *  estado y la vista: la pantalla existe, es del producto (no de v2) y es del
  *  rol o de todos. */
 export const pantallaDelRol = (rol: Pick<Rol, 'pantallas'>, p: string) =>
-  !!PANTALLAS[p] && pantallaVisible(p) && (rol.pantallas.includes(p) || PANTALLAS_COMUNES.includes(p))
+  !!PANTALLAS[p] && pantallaOfrecida(p) && (rol.pantallas.includes(p) || PANTALLAS_COMUNES.includes(p))
 
 /** Un rango escrito en la dirección solo vale con fechas reales: se endereza
  *  si viene al revés y se recorta a los días que tienen datos. Si queda fuera
@@ -119,7 +119,7 @@ export const nombreRolAjeno = (id: string): string | undefined =>
  *  flotante)? Los roles técnicos que tienen Equipos; el gerente sigue con su ficha
  *  ejecutiva en el panel (X4 §3.7, «Ficha del equipo»). */
 export const abreNivel3 = (rol: Pick<Rol, 'nivel' | 'pantallas'>) =>
-  rol.nivel !== 'decision' && rol.pantallas.includes('equipos') && pantallaVisible('equipos')
+  rol.nivel !== 'decision' && rol.pantallas.includes('equipos') && pantallaOfrecida('equipos')
 /** C4 · El nivel 4 (diagnóstico) va en la dirección del equipo: «…/P-201B/diagnostico» (X4 §5.1). */
 export const DIAGNOSTICO = 'diagnostico'
 
@@ -148,7 +148,7 @@ export const leerHash = (camposDe: (rolId: string) => 'todos' | string[] = id =>
   }
   // Una pantalla que el rol no tiene (o que ya no existe) lleva a su inicio,
   // igual al cargar que con la aplicación abierta.
-  else if (pantalla) ctx.pantalla = rol.inicio
+  else if (pantalla) ctx.pantalla = inicioOfrecido(rol) ?? rol.inicio
   // El campo tiene que estar ASIGNADO al rol: una dirección no debe abrir un
   // campo que esa persona no tiene.
   const soloCampo = campoId?.replace('~portafolio', '')

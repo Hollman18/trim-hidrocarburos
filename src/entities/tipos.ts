@@ -1,4 +1,5 @@
 import type { TipoServicio } from './pozos'
+import type { ConexionPlanta } from './conexion'
 
 /** Severidad según la práctica de alarmas industriales.
  *  0 = normal. El color se reserva para lo anormal. */
@@ -65,6 +66,9 @@ export interface Equipo {
   /** Si la máquina solo existe en algunos campos. Sin esto, el catálogo
    *  (que describe La Ceiba) la pondría en todos. */
   soloEn?: string[]
+  /** La familia de planta del equipo (`familias-planta.ts`, Fases 4 y 5 de facilidades): con ella el
+   *  vigía de planta lo vigila y las listas lo ponen en su tren. */
+  familia?: import('./familias-planta').FamiliaPlanta
   /** Servicio o equipo de proceso que, al caer, apaga pozos: qué tipo de causa
    *  se le carga. Es del registro del equipo (su clase), no de su id: un
    *  cliente con otro compresor de aire lo declara igual y la regla no cambia. */
@@ -101,6 +105,9 @@ export interface Campo {
   /** Qué limita al campo, dicho por la operación. Descriptivo. */
   choke: 'Pozos' | 'Planta' | 'Evacuación' | 'Mercado'
   nota: string
+  /** Cómo se conecta TRIM a la planta (`conexion.ts`, Fase 3 de facilidades): del historiador,
+   *  mezcla, directo a los equipos o solo la entrada «hay tensión». Ausente: `mezcla`. */
+  conexion?: ConexionPlanta
   /** Un id que el registro de campos no conoce (`campoPorId`): se muestra como hueco, nunca como otro campo. */
   desconocido?: true
 }
@@ -178,7 +185,7 @@ export type Capacidad =
   | 'anh:confirmar'
   /** Poner «En el yacimiento» en el paso 2 de una parada, con su evidencia (producción y confiabilidad). */
   | 'anh:yacimiento'
-  /** A2 · Registrar una pérdida (pitera, derrame, tea, venteo o rechazo) con su volumen, y corregirla con motivo (oper, sup y prod). */
+  /** A2 · Registrar una pérdida (pitera, derrame, tea, venteo, rechazo, evaporación o fondos de tanque) con su volumen, y corregirla con motivo (oper, sup y prod). */
   | 'perdidas:registrar'
   /** A3 · Cerrar una orden de SAP en el teléfono: qué hizo, la parte, las lecturas y las horas (el técnico). */
   | 'orden:cerrar'
@@ -200,7 +207,7 @@ export const CAPACIDAD_NOMBRE: Record<Capacidad, string> = {
   'anh:confirmar': 'Confirmar de una vez las paradas del día que tienen la misma cadena propuesta por TRIM',
   'anh:yacimiento': 'Decir que una parada fue del yacimiento, con lo que lo muestra (la prueba del pozo, el corte de agua o la presión de fondo)',
   // A2 · Las pérdidas.
-  'perdidas:registrar': 'Registrar una pérdida (pitera, derrame, tea, venteo o rechazo) con su volumen y cómo se estimó, y corregirla con motivo',
+  'perdidas:registrar': 'Registrar una pérdida (pitera, derrame, tea, venteo, rechazo, evaporación o fondos de tanque) con su volumen y cómo se estimó, y corregirla con motivo',
   // A3 · Las acciones que faltan.
   'orden:cerrar': 'Cerrar en el teléfono una orden de SAP que tiene a su nombre: qué hizo, qué parte se reparó, las lecturas de arranque y las horas del trabajo',
   'anh:enviar': 'Registrar la respuesta de la ANH al reporte diario: aceptado o rechazado, con su motivo de la lista y la hora en que llegó (desde ahí corre la hora para corregir)',

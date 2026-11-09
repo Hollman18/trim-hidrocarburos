@@ -38,12 +38,17 @@ import { AHORA } from './reloj'
 
 /* ───────────────────────────── las palabras ───────────────────────────── */
 
-/** Los cinco tipos de pérdida (PLAN-MAESTRO §2, punto 5; el pedido de Edinson [T 30:10]). */
-export type TipoPerdida = 'pitera' | 'derrame' | 'tea' | 'venteo' | 'rechazo'
-export const TIPOS_PERDIDA: readonly TipoPerdida[] = ['pitera', 'derrame', 'tea', 'venteo', 'rechazo']
+/** Los tipos de pérdida: los cinco del pedido de Edinson (PLAN-MAESTRO §2, punto 5;
+ *  [T 30:10]) y, desde la Fase 2 de facilidades, la evaporación (los livianos y la
+ *  nafta que se van del tanque) y los fondos de tanque (el lodo que se saca y no se
+ *  vende). Investigación 20, §4: son pérdidas físicas, no el encogimiento de la
+ *  mezcla, que es un ajuste de volumen y no se registra aquí. */
+export type TipoPerdida = 'pitera' | 'derrame' | 'tea' | 'venteo' | 'rechazo' | 'evaporacion' | 'fondos'
+export const TIPOS_PERDIDA: readonly TipoPerdida[] = ['pitera', 'derrame', 'tea', 'venteo', 'rechazo', 'evaporacion', 'fondos']
 /** El botón del operador. */
 export const NOMBRE_TIPO_PERDIDA: Record<TipoPerdida, string> = {
   pitera: 'Pitera', derrame: 'Derrame', tea: 'Tea', venteo: 'Venteo', rechazo: 'Rechazo',
+  evaporacion: 'Evaporación', fondos: 'Fondos de tanque',
 }
 /** La línea debajo del botón. */
 export const EXPLICA_TIPO_PERDIDA: Record<TipoPerdida, string> = {
@@ -52,6 +57,8 @@ export const EXPLICA_TIPO_PERDIDA: Record<TipoPerdida, string> = {
   tea: 'Gas quemado en la tea',
   venteo: 'Gas soltado al aire, sin quemar',
   rechazo: 'Crudo que el oleoducto o el cliente no recibió por especificación',
+  evaporacion: 'Livianos o nafta que se fueron del tanque al aire',
+  fondos: 'Lodo del fondo del tanque que se sacó y no se vende',
 }
 /** Cómo se sabe el volumen. */
 export type FuenteVolumen = 'medido' | 'estimado'
@@ -61,7 +68,7 @@ export const NOMBRE_FUENTE_VOLUMEN: Record<FuenteVolumen, string> = { medido: 'M
 /** Lo que dice la pantalla sin registros: nunca un 0. */
 export const SIN_REGISTRO = 'sin registro'
 /** La ⓘ de la pérdida, en todas las vistas. */
-export const EXPLICA_PERDIDA = 'La pérdida es lo que ya salió y no se vendió: pitera, derrame, tea, venteo o rechazo. La registra una persona con su volumen y cómo lo estimó. Va aparte y nunca se suma a lo diferido (lo que se dejó de producir). Sin registros, TRIM dice «sin registro»: que nadie la haya registrado no prueba que no se perdió nada.'
+export const EXPLICA_PERDIDA = 'La pérdida es lo que ya salió y no se vendió: pitera, derrame, tea, venteo, rechazo, evaporación o fondos de tanque. La registra una persona con su volumen y cómo lo estimó. Va aparte y nunca se suma a lo diferido (lo que se dejó de producir). Sin registros, TRIM dice «sin registro»: que nadie la haya registrado no prueba que no se perdió nada.'
 
 /** La versión de la regla con que se cuenta. */
 export const REGLA_PERDIDAS = 'perdidas@1'

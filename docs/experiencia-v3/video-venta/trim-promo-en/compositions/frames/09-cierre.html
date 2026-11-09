@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+        @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+        @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+        @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+        #root { position: absolute; inset: 0; overflow: hidden; color: #f4f3f0; font-family: "IBM Plex Sans", sans-serif; }
+
+        .f09-ln { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .f09-ln .f09-thin { stroke-width: 2; opacity: 0.45; }
+        .f09-pipe-wall { fill: none; stroke: #a9dad6; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
+        .f09-pipe-core { fill: none; stroke: #101418; stroke-width: 13; stroke-linecap: round; stroke-linejoin: round; }
+        .f09-flow { fill: none; stroke: #a9dad6; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 10 22; }
+        #f09-cam { position: absolute; inset: 0; transform-origin: 960px 530px; }
+        #f09-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        #f09-motor, #f09-tanque, #f09-tuberias { color: #a9dad6; }
+        #f09-bomba { color: #a9dad6; }
+        #f09-rodete { filter: drop-shadow(0 0 6px rgba(169, 218, 214, 0.45)); }
+        #f09-piloto { color: #a9dad6; filter: drop-shadow(0 0 12px currentColor); }
+        #f09-marcas { color: #c9cbcd; opacity: 0; }
+        #f09-rotulo { position: absolute; left: 1128px; top: 384px; padding: 6px 0 6px 16px; border-left: 4px solid #e0897c;
+          font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 26px; letter-spacing: 0.12em; color: #e0897c;
+          background: rgba(16, 20, 24, 0.85); white-space: nowrap; opacity: 0; }
+        #f09-fondo { position: absolute; inset: 0; background-color: #101418; background-image: radial-gradient(circle, #343b42 1.6px, transparent 2px); background-size: 40px 40px; background-position: 20px 20px; }
+        #f09-rejilla-clara { position: absolute; inset: 0; opacity: 0; background-image: radial-gradient(circle, #7f878e 1.6px, transparent 2px); background-size: 40px 40px; background-position: 20px 20px; }
+        #f09-alba { position: absolute; inset: 0; opacity: 0; background: linear-gradient(to top, rgba(44, 115, 113, 0.55) 0%, rgba(44, 115, 113, 0.18) 38%, rgba(44, 115, 113, 0) 70%); }
+        #f09-vineta { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 70% at 50% 46%, rgba(16,20,24,0) 55%, rgba(5,7,9,0.7) 100%); pointer-events: none; }
+        #f09-texto { position: absolute; left: 0; right: 0; top: 0; height: 890px; }
+        #f09-logo { position: absolute; left: 50%; top: 132px; width: 330px; height: 100px; margin-left: -165px; opacity: 0; }
+        .f09-linea { position: absolute; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 104px; line-height: 116px; letter-spacing: -0.02em; white-space: nowrap; }
+        #f09-l1 { top: 312px; color: #f4f3f0; }
+        #f09-l2 { top: 438px; color: #a9dad6; }
+        .f09-pal { display: inline-block; opacity: 0; }
+        #f09-cta { position: absolute; left: 50%; top: 636px; width: 760px; height: 92px; margin-left: -380px; border: 2px solid #a9dad6; border-radius: 16px;
+          overflow: hidden; opacity: 0; background: rgba(16, 20, 24, 0.6); }
+        #f09-cta-txt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: "IBM Plex Mono", monospace;
+          font-weight: 500; font-size: 30px; letter-spacing: 0.12em; color: #a9dad6; white-space: nowrap; }
+        #f09-brillo { position: absolute; top: -20px; left: 0; width: 160px; height: 132px; background: linear-gradient(90deg, rgba(169,218,214,0) 0%, rgba(169,218,214,0.28) 50%, rgba(169,218,214,0) 100%); }
+        #f09-negro { position: absolute; inset: 0; background: #000; opacity: 0; }
+        /* estado inicial = estado final de F1 */
+        #f09-bomba { color: #e0897c; }
+        #f09-piloto { color: #e0897c; }
+        #f09-marcas { opacity: 1; color: #e0897c; }
+        #f09-rotulo { opacity: 1; }
+        #f09-rodete { filter: drop-shadow(0 0 0px rgba(224, 137, 124, 0)); }
+        .f09-flow { stroke-dashoffset: -533.5; opacity: 0.35; }
+      </style>
+      <div data-hf-id="hf-iigc" id="root" data-composition-id="f09" data-width="1920" data-height="1080" data-duration="7.41">
+
+        <div data-hf-id="hf-no80" id="f09-fondo" class="clip" data-start="0" data-duration="7.41" data-track-index="0">
+          <div data-hf-id="hf-fd2w" id="f09-rejilla-clara"></div>
+          <div data-hf-id="hf-749l" id="f09-alba"></div>
+        </div>
+        <div data-hf-id="hf-qa82" id="f09-cam">
+          <svg data-hf-id="hf-x7a6" id="f09-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <g data-hf-id="hf-x4pg" class="f09-ln" style="color:#343b42"><line data-hf-id="hf-4wcz" x1="140" y1="704" x2="1780" y2="704" stroke-dasharray="2 10" /></g>
+            <g data-hf-id="hf-wpvi" id="f09-tuberias"><path data-hf-id="hf-05jk" class="f09-pipe-wall" d="M-40 770 H1240 V600 H1066" /><path data-hf-id="hf-95je" class="f09-pipe-wall" d="M1020 372 V240 H1590 V300" /><path data-hf-id="hf-20z1" class="f09-pipe-wall" d="M1700 620 H1960" /><path data-hf-id="hf-sexh" class="f09-pipe-core" d="M-40 770 H1240 V600 H1066" /><path data-hf-id="hf-b813" class="f09-pipe-core" d="M1020 372 V240 H1590 V300" /><path data-hf-id="hf-p8vo" class="f09-pipe-core" d="M1700 620 H1960" /><path data-hf-id="hf-5xnd" class="f09-flow" d="M-40 770 H1240 V600 H1066" /><path data-hf-id="hf-9w97" class="f09-flow" d="M1020 372 V240 H1590 V300" /><path data-hf-id="hf-2cvc" class="f09-flow" d="M1700 620 H1960" /></g>
+            <g data-hf-id="hf-94fq" id="f09-tanque" class="f09-ln">
+              <path data-hf-id="hf-4ayp" d="M1480 330 Q1480 300 1510 296 L1670 296 Q1700 300 1700 330 V680 H1480 Z" />
+              <line data-hf-id="hf-r5yv" x1="1500" y1="680" x2="1500" y2="700" /><line data-hf-id="hf-eg7f" x1="1680" y1="680" x2="1680" y2="700" />
+              <rect data-hf-id="hf-jbym" x="1482" y="470" width="216" height="208" fill="#a9dad6" fill-opacity="0.06" stroke="none" />
+              <path data-hf-id="hf-wxwt" class="f09-thin" d="M1490 470 H1690" stroke-dasharray="14 10" />
+              <line data-hf-id="hf-fbuc" class="f09-thin" x1="1720" y1="330" x2="1720" y2="660" />
+              <line data-hf-id="hf-01cv" class="f09-thin" x1="1712" y1="470" x2="1728" y2="470" />
+            </g>
+            <g data-hf-id="hf-k3k4" id="f09-valvula" class="f09-ln" style="color:#a9dad6">
+              <path data-hf-id="hf-bfm0" d="M1278 220 L1300 240 L1278 260 Z M1322 220 L1300 240 L1322 260 Z" fill="#101418" />
+              <line data-hf-id="hf-r7d0" x1="1300" y1="240" x2="1300" y2="206" /><line data-hf-id="hf-ilvq" x1="1284" y1="206" x2="1316" y2="206" />
+            </g>
+            <g data-hf-id="hf-mkrd" class="f09-ln" style="color:#a9dad6">
+              <rect data-hf-id="hf-lyr5" x="340" y="676" width="880" height="20" rx="6" />
+            </g>
+            <g data-hf-id="hf-iub5" id="f09-motor" class="f09-ln">
+              <rect data-hf-id="hf-3pa7" x="370" y="430" width="320" height="200" rx="24" />
+              <g data-hf-id="hf-1bby" class="f09-thin" style="opacity:0.6"><line data-hf-id="hf-zibz" x1="410" y1="454" x2="410" y2="606" /><line data-hf-id="hf-6qhd" x1="440" y1="454" x2="440" y2="606" /><line data-hf-id="hf-o0wr" x1="470" y1="454" x2="470" y2="606" /><line data-hf-id="hf-n85f" x1="500" y1="454" x2="500" y2="606" /><line data-hf-id="hf-8bkl" x1="530" y1="454" x2="530" y2="606" /><line data-hf-id="hf-7g8z" x1="560" y1="454" x2="560" y2="606" /><line data-hf-id="hf-u62p" x1="590" y1="454" x2="590" y2="606" /><line data-hf-id="hf-w4j9" x1="620" y1="454" x2="620" y2="606" /><line data-hf-id="hf-n8iz" x1="650" y1="454" x2="650" y2="606" /></g>
+              <rect data-hf-id="hf-8d35" x="690" y="472" width="36" height="116" rx="10" />
+              <rect data-hf-id="hf-3bqm" x="470" y="400" width="90" height="30" rx="6" />
+              <line data-hf-id="hf-bf90" x1="420" y1="630" x2="420" y2="676" /><line data-hf-id="hf-7sls" x1="640" y1="630" x2="640" y2="676" />
+              <line data-hf-id="hf-tl9q" x1="515" y1="400" x2="515" y2="372" />
+            </g>
+            <g data-hf-id="hf-o7vb" id="f09-piloto" class="f09-ln">
+              <circle data-hf-id="hf-8v5x" id="f09-halo" cx="515" cy="352" r="16" style="opacity:0" />
+              <circle data-hf-id="hf-ro47" cx="515" cy="352" r="16" fill="currentColor" fill-opacity="0.3" />
+              <circle data-hf-id="hf-xbcu" cx="515" cy="352" r="6" fill="currentColor" stroke="none" />
+            </g>
+            <g data-hf-id="hf-xbxj" id="f09-bomba" class="f09-ln">
+              <line data-hf-id="hf-t10z" x1="726" y1="530" x2="752" y2="530" /><line data-hf-id="hf-t5qj" x1="808" y1="530" x2="836" y2="530" />
+              <rect data-hf-id="hf-jxa9" x="752" y="498" width="56" height="64" rx="8" />
+              <line data-hf-id="hf-3v34" class="f09-thin" x1="770" y1="498" x2="770" y2="562" /><line data-hf-id="hf-wf7o" class="f09-thin" x1="790" y1="498" x2="790" y2="562" />
+              <circle data-hf-id="hf-o87v" cx="960" cy="530" r="125" />
+              <circle data-hf-id="hf-d2dw" class="f09-thin" cx="960" cy="530" r="104" />
+              <path data-hf-id="hf-pi3w" d="M990 409 V372 M1050 443 V372" />
+              <line data-hf-id="hf-ykx9" x1="978" y1="370" x2="1062" y2="370" style="stroke-width:5" />
+              <path data-hf-id="hf-1gaa" d="M1066 586 V614" style="stroke-width:5" />
+              <line data-hf-id="hf-jmh9" x1="912" y1="646" x2="912" y2="676" /><line data-hf-id="hf-5yff" x1="1008" y1="646" x2="1008" y2="676" />
+              <g data-hf-id="hf-yxvq" id="f09-rodete">
+                <circle data-hf-id="hf-yxk6" cx="960" cy="530" r="30" />
+                <circle data-hf-id="hf-jpiv" cx="960" cy="530" r="9" fill="currentColor" stroke="none" />
+                <path data-hf-id="hf-616n" d="M960.0 500.0 C990.0 480.0 1006.0 456.0 992.0 434.0" /><path data-hf-id="hf-m0y7" d="M988.5 520.7 C1016.8 543.1 1044.6 550.9 1061.2 530.8" /><path data-hf-id="hf-2sud" d="M977.6 554.3 C965.1 588.1 966.3 616.9 990.5 626.5" /><path data-hf-id="hf-lv4f" d="M942.4 554.3 C906.3 552.8 879.3 562.8 877.7 588.9" /><path data-hf-id="hf-92bj" d="M931.5 520.7 C921.7 486.0 903.8 463.4 878.6 469.9" />
+              </g>
+            </g>
+            <g data-hf-id="hf-q1o5" id="f09-marcas" class="f09-ln">
+              <path data-hf-id="hf-e1sq" d="M812 414 V384 H842" /><path data-hf-id="hf-2hv5" d="M1108 414 V384 H1078" /><path data-hf-id="hf-fax3" d="M812 634 V664 H842" /><path data-hf-id="hf-unq2" d="M1108 634 V664 H1078" />
+            </g>
+          </svg>
+          <div data-hf-id="hf-zzhy" id="f09-rotulo">P-201B · STOPPED</div>
+        </div>
+        <div data-hf-id="hf-2yfk" id="f09-vineta"></div>
+        <div data-hf-id="hf-ze93" id="f09-texto">
+          <img data-hf-id="hf-0xyp" id="f09-logo" src="assets/brand/logo_trim_light.png" alt="TRIM">
+          <div data-hf-id="hf-pae8" class="f09-linea" id="f09-l1"><span class="f09-pal">Predict</span> <span class="f09-pal">failure.</span></div>
+          <div data-hf-id="hf-05vv" class="f09-linea" id="f09-l2"><span class="f09-pal">Produce</span> <span class="f09-pal">more.</span></div>
+          <div data-hf-id="hf-6gr5" id="f09-cta"><div data-hf-id="hf-gxa5" id="f09-brillo"></div><div data-hf-id="hf-z62v" id="f09-cta-txt">BOOK A PILOT · GOTRIM.AI</div></div>
+        </div>
+        <div data-hf-id="hf-u7rs" id="f09-negro"></div>
+      </div>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          const tl = gsap.timeline({ paused: true });
+
+          const ORIG = "960 530";
+          // Amanece: degradé petróleo desde abajo + rejilla un poco más clara
+          tl.fromTo("#f09-alba", { opacity: 0 }, { opacity: 1, duration: 3.2, ease: "sine.inOut" }, 0);
+          tl.fromTo("#f09-rejilla-clara", { opacity: 0 }, { opacity: 0.35, duration: 3.2, ease: "sine.inOut" }, 0);
+          // Rodete arranca (desde el ángulo final de F1) y acelera hasta 540°/s en 1.2 s, luego constante
+          tl.fromTo("#f09-rodete", { rotation: 2619, svgOrigin: ORIG }, { rotation: 2943, svgOrigin: ORIG, duration: 1.2, ease: "power2.in" }, 0);
+          tl.to("#f09-rodete", { rotation: 2943 + 6.21 * 540, svgOrigin: ORIG, duration: 6.21, ease: "none" }, 1.2);
+          tl.to("#f09-rodete", { filter: "drop-shadow(0 0 6px rgba(169, 218, 214, 0.45))", duration: 1.0 }, 0.3);
+          // Flujo vuelve a avanzar
+          tl.fromTo(".f09-flow", { strokeDashoffset: -533.5, opacity: 0.35 }, { strokeDashoffset: -533.5 - 66, opacity: 1, duration: 1.2, ease: "power2.in" }, 0);
+          tl.to(".f09-flow", { strokeDashoffset: -533.5 - 66 - 6.21 * 110, duration: 6.21, ease: "none" }, 1.2);
+          // Bomba vuelve a petróleo claro; piloto pasa a --bien (resultado)
+          tl.fromTo("#f09-bomba", { color: "#e0897c" }, { color: "#a9dad6", duration: 0.8, ease: "power2.inOut" }, 0.25);
+          tl.fromTo("#f09-marcas", { opacity: 1 }, { opacity: 0, duration: 0.5, ease: "power2.out" }, 0.3);
+          tl.fromTo("#f09-rotulo", { opacity: 1 }, { opacity: 0, duration: 0.35, ease: "power2.out" }, 0.2);
+          tl.fromTo("#f09-piloto", { color: "#e0897c" }, { color: "#8fbf95", duration: 0.35, ease: "power2.out" }, 0.55);
+          tl.fromTo("#f09-halo", { opacity: 0.9, scale: 1, svgOrigin: "515 352" }, { opacity: 0, scale: 3.2, svgOrigin: "515 352", duration: 0.8, ease: "power2.out" }, 0.6);
+          // 0.95–1.55: la cámara se aleja y el esquema baja a 25 % ANTES de que entre el texto
+          tl.fromTo("#f09-cam", { scale: 1.08, opacity: 1 }, { scale: 0.86, opacity: 0.25, duration: 0.6, ease: "power2.inOut" }, 0.95);
+          tl.to("#f09-cam", { scale: 0.82, duration: 5.86, ease: "none" }, 1.55);
+          // «TRIM» → logo arriba
+          tl.fromTo("#f09-logo", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "expo.out" }, 1.05);
+          // «Anticipe la falla.» 1.5–2.7 (el esquema ya está al 25 %)
+          tl.fromTo("#f09-l1 .f09-pal", { y: 46, opacity: 0, filter: "blur(8px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out", stagger: 0.25 }, 1.9);
+          // «Produzca más.» 3.3–4.1
+          tl.fromTo("#f09-l2 .f09-pal", { y: 46, opacity: 0, filter: "blur(8px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out", stagger: 0.3 }, 3.55);
+          tl.fromTo("#f09-l2", { textShadow: "0 0 0px rgba(169,218,214,0)" }, { textShadow: "0 0 28px rgba(169,218,214,0.45)", duration: 0.8, ease: "power2.out" }, 3.6);
+          // 4.6: CTA
+          tl.fromTo("#f09-cta", { y: 24, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "expo.out" }, 4.6);
+          tl.fromTo("#f09-brillo", { x: -200 }, { x: 800, duration: 1.1, ease: "power2.inOut" }, 5.0);
+          tl.fromTo("#f09-cta", { boxShadow: "0 0 0px rgba(169,218,214,0)" }, { boxShadow: "0 0 36px rgba(169,218,214,0.35)", duration: 0.9, ease: "power2.out", immediateRender: false }, 5.1);
+          // 6.6–7.41: funde a negro
+          tl.fromTo("#f09-negro", { opacity: 0 }, { opacity: 1, duration: 0.75, ease: "power2.in" }, 6.6);
+          window.__timelines["f09"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

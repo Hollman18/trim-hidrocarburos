@@ -71,6 +71,7 @@ export const FAMILIA: Record<TipoCausa, string> = {
   evacuacion: 'evacuación del crudo',
   proceso: 'separación',
   tratamiento: 'tratamiento de crudo',
+  diluyente: 'sistema de diluyente',
   programada: 'parada programada',
   declarada: 'según el operario',
   pendiente: 'sin identificar',

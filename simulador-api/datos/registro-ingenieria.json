@@ -86,6 +86,13 @@
       "criticidad": 5
     },
     {
+      "id": "FWKO-101",
+      "campoId": "morichal",
+      "nombre": "Separador de agua libre (FWKO)",
+      "clase": "separador-agua-libre",
+      "criticidad": 4
+    },
+    {
       "id": "V-101",
       "campoId": "morichal",
       "nombre": "Separador trifásico",
@@ -107,11 +114,25 @@
       "criticidad": 4
     },
     {
+      "id": "TE-501",
+      "campoId": "morichal",
+      "nombre": "Tratador electrostático",
+      "clase": "tratador-electrostatico",
+      "criticidad": 4
+    },
+    {
       "id": "TK-102",
       "campoId": "morichal",
       "nombre": "Tanque de crudo en especificación",
       "clase": "tanque-atmosferico",
       "criticidad": 5
+    },
+    {
+      "id": "P-401",
+      "campoId": "morichal",
+      "nombre": "Bomba de despacho de crudo",
+      "clase": "bomba-transferencia",
+      "criticidad": 4
     },
     {
       "id": "LACT-01",
@@ -121,11 +142,25 @@
       "criticidad": 5
     },
     {
+      "id": "P-701",
+      "campoId": "morichal",
+      "nombre": "Bomba de diluyente",
+      "clase": "bomba-diluyente",
+      "criticidad": 5
+    },
+    {
       "id": "P-201B",
       "campoId": "morichal",
       "nombre": "Bomba multietapa de transferencia de agua",
       "clase": "bomba-centrifuga",
       "criticidad": 5
+    },
+    {
+      "id": "CT-601",
+      "campoId": "morichal",
+      "nombre": "Torre de enfriamiento de agua",
+      "clase": "torre-enfriamiento",
+      "criticidad": 4
     },
     {
       "id": "SE-2",
@@ -238,6 +273,13 @@
       "nombre": "Sistema de aire de instrumentos",
       "clase": "compresor-aire",
       "criticidad": 5
+    },
+    {
+      "id": "UPS-SALA",
+      "campoId": "palmar",
+      "nombre": "UPS de la sala de control",
+      "clase": "ups",
+      "criticidad": 4
     },
     {
       "id": "V-101",

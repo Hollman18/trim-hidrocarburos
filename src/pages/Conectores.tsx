@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 import { Plug, KeyRound, Check, Lock, ChevronRight } from 'lucide-react'
 import { useApp, useRol } from '@/app/store'
-import { useRegistro, sugerir, asociarTag, inscribirBorde, type TagPendiente } from '@/shared/api/registro'
+import { useRegistro, sugerir, asociarTag, inscribirBorde, conexionDe, NOMBRE_CONEXION, type TagPendiente } from '@/shared/api/registro'
 import type { Capacidad } from '@/entities/tipos'
 import { Panel, Metrica, Chip, Boton, Hueco, Enlace } from '@/shared/ui/primitivas'
 import { Lectura } from '@/shared/ui/Lectura'
@@ -9,6 +9,7 @@ import { Info } from '@/shared/ui/Info'
 import { cadencia } from '@/entities/cadena'
 import { cn } from '@/shared/lib/cn'
 import { Integraciones } from '@/widgets/conectores/Integraciones'
+import { PruebaApagon } from '@/widgets/conectores/PruebaApagon'
 import { AHORA } from '@/entities/reloj'
 import { campoPorId } from '@/entities/campos'
 
@@ -84,7 +85,8 @@ export function Conectores() {
   }
 
   // SAP no depende del registro de los bordes: se muestran aunque este no responda.
-  const sistemas = <Integraciones campoId={campoId} />
+  // Fase 4 de facilidades: probar el aviso de apagón va con los sistemas, haya o no registro de bordes.
+  const sistemas = <><Integraciones campoId={campoId} /><PruebaApagon campoId={campoId} /></>
   // En el demo construido no hay quién sirva el registro: se dice qué es y adónde ir, sin inventar bordes ni tags (A24).
   if (sinServicio) return (
     <div className="grid gap-3 sm:gap-4">{sistemas}<Panel titulo="Registro de bordes"><div data-registro-sin-servicio><Hueco>
@@ -124,6 +126,11 @@ export function Conectores() {
       {aviso && <div role="status"><Hueco>{aviso}</Hueco></div>}
 
       <Panel titulo="Bordes">
+        {/* Fase 3 de facilidades: cómo se conecta TRIM a esta planta (docs/backend/04-cadena-de-datos.md §4.2). */}
+        <p className="flex flex-wrap items-center gap-x-1 border-b border-[var(--linea2)] pb-2.5 text-[14px] text-[var(--tinta2)]" data-conexion={conexionDe(campoId)}>
+          Cómo se conecta: <b className="text-[var(--tinta)]">{NOMBRE_CONEXION[conexionDe(campoId)]}</b>
+          <Info titulo="Cómo se conecta" texto="Se decide en la visita técnica, por el estado de la planta: del historiador, mezclando el historiador con la conexión directa, directo a los equipos (PLC, relés, analizadores de red, controladores, UPS) o solo con la entrada «hay tensión» del gateway. En todos los casos es solo lectura, la conexión sale desde adentro y la lista de tags es cerrada." />
+        </p>
         {inv.gateways.map(g => (
           <div key={g.id} className="flex flex-wrap items-center gap-2 border-b border-[var(--linea2)] py-2.5 last:border-0">
             <Plug className="size-4 shrink-0 text-[var(--tinta3)]" />

@@ -50,6 +50,7 @@ import { PUESTA_EN_MARCHA } from './configuracion'
 import { sumarMeses } from './plan'
 import { AHORA, fechaCorta } from './reloj'
 import { diaIso } from '@/shared/lib/formato'
+import { piezasDe, PIEZA_DE_SECCION } from './piezas-trim'
 
 /* ───────────────────────── un nombre, una cifra ───────────────────────── */
 
@@ -444,7 +445,9 @@ function calcular(q: ConsultaResultados, ctx: Contexto, versiones: Historial | u
   }
 
   /* Mantenimiento y confiabilidad (jefe, planeación y confiabilidad). */
-  const secciones = seccionesDe(q.rol, !unCampo)
+  // Fase 1 (facilidades): solo las secciones de las piezas contratadas en estos campos.
+  const piezas = piezasDe(ctx.config, campos)
+  const secciones = seccionesDe(q.rol, !unCampo).filter(s => piezas.has(PIEZA_DE_SECCION[s]))
   const rl = op.relojes
   const mantenimiento: VistaResultados['mantenimiento'] = secciones.includes('mantenimiento') ? {
     frase: rl?.totalH && rl.esperaH !== undefined

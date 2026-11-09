@@ -55,7 +55,7 @@ export const CATEGORIA_DE: Record<TipoCausa, Categoria['id'] | undefined> = {
   reinyeccion: 'superficie', transporte: 'superficie', energia: 'superficie', aire: 'superficie', compresion: 'superficie',
   electrosumergible: 'pozo', levantamiento: 'pozo',
   programada: 'programado',
-  proceso: 'proceso', tratamiento: 'proceso',
+  proceso: 'proceso', tratamiento: 'proceso', diluyente: 'proceso',
   evacuacion: 'externa',
   declarada: undefined, pendiente: undefined,
 }

@@ -106,3 +106,17 @@ Los segundos no se midieron aquí: los mide §9.
 | Botones del inicio (página) | 59 | 3 |
 | Pantallas | 11 | 2 (Equipos y Confiabilidad) |
 | Toques para «de qué falla» | 2 y desplazarse | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | «Mi panel», en Resultados, con el catálogo de indicadores (MTBF, MTTR, horas-hombre preventivo + predictivo contra correctivo, cortes de energía por mes). La cadena del dato de cada instrumento: en un campo sin historiador (El Palmar) dice que llega directo del equipo (relé, analizador de red, controlador) y que es solo lectura. La subestación suma el interruptor y la entrada «hay tensión» del gateway | Tendencias con su fórmula y su fuente | Cada semana | panel desde 7 (4-nov); conexión directa desde 3 (4-nov) |
+| **Equipos** | Las familias de planta (despacho, tratadores, torres de enfriamiento, separadores y FWKO, diluyente) en su lista y en «Avisan», con la tendencia del vigía en su ficha | Qué variable va hacia su alarma, cuándo llega y qué hacer | Cada semana; cuando cambia el primero | Desde 5 (4-nov) |
+| **Energía** | Cortes de energía por mes en su panel (cuántos y cuántas horas, del relé); la confiabilidad de cada generador | Frecuencia y duración de cada corte | Cada semana | Las familias (generador, transformador, UPS, aire) en el catálogo desde 4; los cortes por mes en «Mi panel» desde 7 (4-nov); la confiabilidad del generador espera un generador instrumentado |
+| **Planta** | El tren de cada equipo (filtro «Tren»): la torre de enfriamiento en agua; despacho, tratadores, FWKO y diluyente en crudo | El tren y lo que avisa | Al revisar | Desde 5 (4-nov) |
+| **Barriles** | Qué equipo pone más diferido, energía incluida | «Si falla hoy»: el primero de la lista | Cada semana | Existe; el sistema de diluyente como equipo desde 2 (4-nov); energía en 4 |
+| **Mantenimiento** | El análisis de cada falla confirmada | Mecanismo y causa según la norma | Al cerrar una falla | Existe |

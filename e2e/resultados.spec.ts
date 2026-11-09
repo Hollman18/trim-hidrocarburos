@@ -71,11 +71,11 @@ test('la cifra del período contra el máximo firmado, con su frase, el balance,
     'el balance: producido 16.941, diferido 1.046 y perdido «sin registro»')
   const tramos = await b.locator('[data-tramo-balance]').evaluateAll(es => es.map(e => Number((e.querySelector('td')?.textContent ?? '').replace(/\D/g, ''))))
   f.ok(tramos.reduce((a, x) => a + x, 0) === 1046, `los tramos suman el diferido (${tramos.join(' + ')})`)
-  // «¿Está funcionando?» (§0d): antes de TRIM, este mes y lo ganado, del motor (La Ceiba: 391 → 436 bbl/d, 3.934 bbl ganados).
+  // «¿Está funcionando?» (§0d): antes de TRIM, este mes y lo ganado, del motor (La Ceiba: 391 → 436 bbl/d, 3.901 bbl ganados).
   const fn = page.locator('[data-funcionando]')
   const tf = await fn.innerText()
-  f.ok(/Antes de TRIM\s*391/.test(tf) && /Este mes\s*436/.test(tf) && Number(await fn.getAttribute('data-ganado')) === 3934 && (await fn.getAttribute('data-meta')) === 'sin-meta',
-    '«¿Está funcionando?»: antes 391, este mes 436 (sin meta firmada) y 3.934 bbl ganados')
+  f.ok(/Antes de TRIM\s*391/.test(tf) && /Este mes\s*436/.test(tf) && Number(await fn.getAttribute('data-ganado')) === 3901 && (await fn.getAttribute('data-meta')) === 'sin-meta',
+    '«¿Está funcionando?»: antes 391, este mes 436 (sin meta firmada) y 3.901 bbl ganados')
   // A-07, A-08 y la v3: sin «Dónde bajarlo», «Tipo de causa» ni «¿Está bajando?».
   f.ok(!/Dónde bajarlo|Tipo de causa|¿Está bajando\?/.test(t), 'sin «Dónde bajarlo», «Tipo de causa» ni «¿Está bajando?»')
   // La producción contra la meta, con la barra del kit SCADA (escala desde la meta firmada), y el cierre proyectado con su palabra.
@@ -92,11 +92,11 @@ test('el período vive aquí: la cabecera lo ofrece y otro período cambia la ci
   // Septiembre, por la dirección: el total del período, sin proyectar.
   await f.ir('#/ger/resultados/ceiba/cerrado')
   const sep = await lectura(page)
-  f.ok(sep.cifra === '7.716' && sep.previo === 'Lo que pasó · septiembre' && sep.sello === 'publicable', `septiembre: ${sep.cifra} bbl, «${sep.previo}», ${sep.sello}`)
+  f.ok(sep.cifra === '7.754' && sep.previo === 'Lo que pasó · septiembre' && sep.sello === 'publicable', `septiembre: ${sep.cifra} bbl, «${sep.previo}», ${sep.sello}`)
   f.ok(await page.locator('[data-cierre="total"]').count() === 1 && !(await f.texto()).includes('Cierre proyectado'), 'un mes cerrado no proyecta: dice el total del período')
-  // El balance del período: el mismo diferido (7.716) y lo producido de septiembre (338.662).
+  // El balance del período: el mismo diferido (7.754) y lo producido de septiembre (338.662).
   const b = page.locator('[data-balance]')
-  f.ok(Number(await b.getAttribute('data-diferido')) === 7716 && Number(await b.getAttribute('data-producido')) === 338662, 'el balance de septiembre: 338.662 producidos, 7.716 diferidos')
+  f.ok(Number(await b.getAttribute('data-diferido')) === 7754 && Number(await b.getAttribute('data-producido')) === 338662, 'el balance de septiembre: 338.662 producidos, 7.754 diferidos')
   // Un rango escrito en la dirección (un mes del mes a mes) pasa a ser el período, y lo dice la cifra.
   await f.ir('#/ger/resultados/ceiba/2026-02-01_2026-02-28')
   const feb = await lectura(page)

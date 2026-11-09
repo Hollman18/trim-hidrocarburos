@@ -15,7 +15,7 @@ Notación común: $d$ recorre los días del período (hora de Colombia); $h_d$ s
 **Fórmula.**
 
 $$
-\text{Real} = \sum_{c} \ \sum_{d \,:\, F_{c,d}\ \text{existe y}\ \text{FA}_{c,m(d)}\ \text{existe}} F_{c,d}\cdot\frac{h_d}{H_d}
+\text{Real} = \sum_{c} \ \sum_{d \,:\, F_{c,d}\ \text{existe y}\ \text{FA}_{c,d}\ \text{existe}} F_{c,d}\cdot\frac{h_d}{H_d}
 $$
 
 | Símbolo | Significado | Unidad | De dónde sale |
@@ -44,10 +44,10 @@ $$
 **Fórmula.**
 
 $$
-\text{Potencial} = \sum_{c}\ \sum_{d \,:\, F_{c,d},\ \text{FA}_{c,m(d)}} \ \sum_{p \,\in\, \text{pozos con prueba de } c} q_{p,d}\cdot \text{FA}_{c,m(d)} \cdot \frac{h_d}{24}
+\text{Potencial} = \sum_{c}\ \sum_{d \,:\, F_{c,d},\ \text{FA}_{c,d}} \ \sum_{p \,\in\, \text{pozos con prueba de } c} q_{p,d}\cdot \text{FA}_{c,d} \cdot \frac{h_d}{24}
 $$
 
-**Ejemplo con los datos del demo.** La Ceiba, septiembre: 346.378,059 bbl → «346.378». Día a día va de 11.579,69 (1-sep) a 11.488,61 (30-sep) porque las pruebas cambian. Octubre en curso: 17.987,026 → «17.987» (11.360,227 del 1-oct + 6.626,799 de las 14 h del 2-oct). Portafolio septiembre: 1.268.266,738; octubre: 66.523,755. El potencial casi no cambió con el demo del 9-oct (el crudo de las pruebas y el factor son los mismos; solo se movió el factor en el sexto decimal).
+**Ejemplo con los datos del demo** (con el factor del día, D1, 4-nov-2026). La Ceiba, septiembre: 346.416,119 bbl → «346.416». Un día sin paradas tiene potencial igual a lo real: el 1-sep, 11.706; el 30-sep, 11.602. El 22-sep, con P-201B parada, 11.447,160. Octubre en curso: 17.987,157 → «17.987» (11.359,038 del 1-oct + 6.628,118 de las 14 h del 2-oct). Portafolio septiembre: 1.268.291,824; octubre: 66.522,902.
 
 Pie de Producción: $\text{potencial} \times 24 / \sum h$ con $\sum h$ = horas de los días del período (720 en septiembre; 38 en octubre): «11.546 bbl/d» (La Ceiba sep), «11.360 bbl/d» (La Ceiba oct).
 
@@ -63,7 +63,7 @@ Pie de Producción: $\text{potencial} \times 24 / \sum h$ con $\sum h$ = horas d
 
 **Qué es.** Potencial menos real: lo que no se produjo pudiendo. **Es el número que manda la pantalla de Diferidos** y el del resumen del gerente.
 
-**Dónde se ve.** Encabezado de Diferidos y del Resumen del gerente: cifra de 40/44 px «**7.716**» + «barriles diferidos». Cuadre: «= No producido». Mes a mes: rótulo de cada columna (`k()`: «7,7 k»; la altura apilada es el diferido, igual en un mes entero). Por campo. Producción: «Diferido» (no se muestra como cifra; es el área sombreada de la gráfica).
+**Dónde se ve.** Encabezado de Diferidos y del Resumen del gerente: cifra de 40/44 px «**7.754**» + «barriles diferidos». Cuadre: «= No producido». Mes a mes: rótulo de cada columna (`k()`: «7,7 k»; la altura apilada es el diferido, igual en un mes entero). Por campo. Producción: «Diferido» (no se muestra como cifra; es el área sombreada de la gráfica).
 
 **Fórmula.**
 
@@ -75,8 +75,8 @@ $$
 
 | Período | Potencial | Real | Brecha | Pantalla |
 |---|---:|---:|---:|---|
-| La Ceiba · sep (cerrado) | 346.378,059 | 338.662 | 7.716,059 | «7.716» |
-| La Ceiba · oct (en curso) | 17.987,026 | 16.941 | 1.046,026 | «1.046» |
+| La Ceiba · sep (cerrado) | 346.416,119 | 338.662 | 7.754,119 | «7.754» |
+| La Ceiba · oct (en curso) | 17.987,157 | 16.941 | 1.046,157 | «1.046» |
 | Portafolio · sep | 1.268.266,738 | 1.234.322 | 33.944,738 | «33.945» |
 | Portafolio · oct | 66.523,755 | 64.147 | 2.376,755 | «2.377» |
 
@@ -99,7 +99,7 @@ $$
 **Fórmula.**
 
 $$
-\text{bbl}_e = \sum_{d} q_{p,d}\cdot \text{FA}_{c,m(d)}\cdot h^{\text{ef}}_{e,d}\cdot \frac{f_{e,d}}{24}
+\text{bbl}_e = \sum_{d} q_{p,d}\cdot \text{FA}_{c,d}\cdot h^{\text{ef}}_{e,d}\cdot \frac{f_{e,d}}{24}
 $$
 
 $$
@@ -110,7 +110,7 @@ $$
 |---|---|---|---|
 | $h^{\text{ef}}_{e,d}$ | horas del evento en el día, recortadas al período y sin lo que cubre otro evento del pozo | h | 5A.2 |
 | $f_{e,d}$ | 1 si es paro; $1 - hz/hz_{\text{prueba}}$ (entre 0 y 1) si es HZ | — | 5A.2 |
-| $\text{FA}$ | factor del mes de ese día; si el mes no tiene, 0 y el tramo queda `sinFactor` | — | 5A.2 |
+| $\text{FA}_{c,d}$ | factor **del día** (D1, 4-nov-2026: `factorDelDia`); un día sin fiscal o sin teórico va con el del mes; si el mes tampoco tiene, 0 y el tramo queda `sinFactor` | — | 5A.2 |
 
 Campos del tramo (contrato: `{ evento, pozo, causa, inicio, fin, abierto, horas, factor, bbl, aproximado, sinCustodia, sinFactor, sesgo, azar }`):
 
@@ -124,28 +124,28 @@ Campos del tramo (contrato: `{ evento, pozo, causa, inicio, fin, abierto, horas,
 | `sesgo` | banda del campo (5A.4) |
 | `azar` | $\sqrt{2}\cdot(1/3600)/\text{horas}$; 0 si es aproximado o sin horas |
 
-**Ejemplo con los datos del demo (paro).** LC-16, evento `EP-LC16-260922-71` (LSHH, causa: bomba de reinyección P-201B, parte «rodamientos», por señal: «Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno»; evidencia «ZS-2011 · marcha → paro · 22 de sept, 10:05», «Primera alarma TSH-2011 · temperatura alta en la cámara de empuje», «VSD-LC16 · código LSHH · 22 de sept, 11:41»). Prueba vigente: 907 bbl/d de crudo (y 25.289 de agua: es el pozo que más agua da, el primero que se cierra). FA de septiembre 0,968930.
+**Ejemplo con los datos del demo (paro).** LC-16, evento `EP-LC16-260922-71` (LSHH, causa: bomba de reinyección P-201B, parte «rodamientos», por señal: «Se cerró porque la bomba de reinyección estaba parada y el tanque de agua lleno»; evidencia «ZS-2011 · marcha → paro · 22 de sept, 10:05», «Primera alarma TSH-2011 · temperatura alta en la cámara de empuje», «VSD-LC16 · código LSHH · 22 de sept, 11:41»). Prueba vigente: 907 bbl/d de crudo (y 25.289 de agua: es el pozo que más agua da, el primero que se cierra). Factor del 22-sep 0,960896 y del 23-sep 0,973758 (D1: cada día con el suyo).
 
 | Día | Horas | bbl |
 |---|---:|---:|
-| 22-sep | 12,317 | $907 \times 0{,}968930 \times 12{,}317/24 = 451{,}005$ |
-| 23-sep | 2,433 | $907 \times 0{,}968930 \times 2{,}433/24 = 89{,}103$ |
-| **Tramo** | **14,750** | **540,108** |
+| 22-sep | 12,317 | $907 \times 0{,}960896 \times 12{,}317/24 = 447{,}266$ |
+| 23-sep | 2,433 | $907 \times 0{,}973758 \times 2{,}433/24 = 89{,}546$ |
+| **Tramo** | **14,750** | **536,812** |
 
-Otro, de un solo día: LC-04, `EP-LC04-260906-85` (UV → energía, alimentador SE-2), 3,883 h × 861 bbl/d × 0,968930 / 24 = **134,986** bbl.
+Otro, de un solo día: LC-04, `EP-LC04-260906-85` (UV → energía, alimentador SE-2), 3,883 h × 861 bbl/d × 0,958468 (factor del 6-sep) / 24 = **133,529** bbl.
 
-**Ejemplo (frecuencia reducida).** MN-07 (Morichal), `EP-MN07-260214-32`, código HZ a 47 Hz, prueba del 8-ene-2026 con 637 bbl/d a 59 Hz, FA de febrero 0,943: $f = 1 - 47/59 = 0{,}2034$; 24,55 h → **125,016** bbl, `aproximado: true`.
+**Ejemplo (frecuencia reducida).** MN-07 (Morichal), `EP-MN07-260214-32`, código HZ a 47 Hz, prueba del 8-ene-2026 con 637 bbl/d a 59 Hz, con el factor de cada uno de sus dos días: $f = 1 - 47/59 = 0{,}2034$; 24,55 h → **124,152** bbl, `aproximado: true`.
 
 **Casos borde.**
 
 | Caso | Resultado |
 |---|---|
 | Pozo sin prueba | `bbl = 0`, `sinCustodia: true` (el tramo existe: el evento pasó) |
-| Mes sin factor | esa parte vale 0, `sinFactor: true` |
+| Mes sin factor (ni un día con fiscal) | esa parte vale 0, `sinFactor: true` |
 | HZ sin `hz` o prueba sin `hz` | $f = 1$ (se cuenta como cerrado) y `aproximado: true` |
 | Evento abierto | llega hasta ahora; `abierto: true` |
 | Evento tapado por otro del mismo pozo | sus horas efectivas bajan (pueden quedar en 0) |
-| Evento de un día sin fiscal | **sí** suma bbl (con el FA del mes), aunque ese día no entre a lo real ni al potencial: rompe la identidad (ver residuo) |
+| Evento de un día sin fiscal | **sí** suma bbl (sin factor propio, con el del mes), aunque ese día no entre a lo real ni al potencial: rompe la identidad (ver residuo) |
 
 **Quién lo calcula y por dónde viaja.** Servidor (`tramosDe`, `src/entities/libro.ts:314-347`). `GET /api/vistas/diferidos` → `tramos[]` con `evento` y `pozo` como claves de `refs.eventos` y `refs.pozos`. La serie mensual no los trae.
 
@@ -155,7 +155,7 @@ Otro, de un solo día: LC-04, `EP-LC04-260906-85` (UV → energía, alimentador 
 
 **Qué es.** La suma de los tramos del período: lo que se le puede cargar a un evento con causa.
 
-**Dónde se ve.** Globo del encabezado: «Σ de los eventos: 7.716 bbl ±15,0 % (Res. 40236)» (el gerente, nivel `decision`, ve «7.716 bbl» sin la tolerancia). Cuadre: es la base de «Identificado por señal». Paretos y palancas: los porcentajes van contra él. Producción (ingeniería): columna «Diferido» del cuadre diario/mensual. Tendencia del gerente: diferido por día de cada mes.
+**Dónde se ve.** Globo del encabezado: «Σ de los eventos: 7.754 bbl ±15,0 % (Res. 40236)» (el gerente, nivel `decision`, ve «7.754 bbl» sin la tolerancia). Cuadre: es la base de «Identificado por señal». Paretos y palancas: los porcentajes van contra él. Producción (ingeniería): columna «Diferido» del cuadre diario/mensual. Tendencia del gerente: diferido por día de cada mes.
 
 **Fórmula.**
 
@@ -163,7 +163,7 @@ $$
 \text{diferido} = \sum_{e \,\in\, \text{tramos}} \text{bbl}_e
 $$
 
-**Ejemplo.** La Ceiba sep: 18 tramos, 7.716,059 bbl. Octubre en curso: 5 tramos, 1.046,026 bbl. Portafolio sep: 69 tramos, 33.944,738; oct: 11 tramos, 2.376,755.
+**Ejemplo.** La Ceiba sep: 18 tramos, 7.754,119 bbl. Octubre en curso: 5 tramos, 1.046,157 bbl. Portafolio sep: 69 tramos, 33.969,824; oct: 11 tramos, 2.375,902.
 
 **Quién lo calcula.** Servidor. `Libro.diferido`.
 
@@ -173,22 +173,22 @@ $$
 
 **Qué es.** La prueba de que el libro cuadra con la medición oficial: en un mes entero la brecha y la suma de los diferidos son **el mismo número**, no dos parecidos.
 
-**Fórmula (demostración).** Con un mes $m$, días con fiscal, y $T_m$ de 5A.2:
+**Fórmula (demostración).** Desde D1 (4-nov-2026) el factor es del día: con un día $d$ con fiscal y teórico $T_d = \sum_p q_{p,d}(H_d - P_{p,d})/24$ (5A.2):
 
 $$
-\text{Potencial}_m - \text{Real}_m
-= \text{FA}_m \sum_{d,p} q_{p,d}\frac{H_d}{24} - \text{FA}_m\, T_m
-= \text{FA}_m \sum_{d,p} q_{p,d}\frac{P_{p,d}}{24}
-= \sum_e \text{bbl}_e
+\text{Potencial}_d - \text{Real}_d
+= \text{FA}_d \sum_{p} q_{p,d}\frac{H_d}{24} - \text{FA}_d\, T_d
+= \text{FA}_d \sum_{p} q_{p,d}\frac{P_{p,d}}{24}
+= \sum_e \text{bbl}_{e,d}
 $$
 
-porque $\text{Real}_m = R_m = \text{FA}_m\,T_m$ y $T_m = \sum q\,(H_d - P_{p,d})/24$. Vale igual para el mes en curso hasta ahora (su FA es de esos mismos días).
+porque $\text{Real}_d = F_d = \text{FA}_d\,T_d$. La identidad es exacta **día por día**, y por eso también en el mes y en cualquier período de días enteros. Con el factor del mes (antes de D1) solo era exacta en el mes entero.
 
-**Ejemplo con los datos del demo.** La Ceiba sep: 346.378,059 − 338.662 = 7.716,059 = Σ de 18 tramos. Octubre en curso: 17.987,026 − 16.941 = 1.046,026 = Σ de 5 tramos. `verificar-libro.mjs` sección 1 lo comprueba con tolerancia $10^{-9}$ relativa en cada mes y campo, y además: identificado + declarado + pendiente = diferido; planeado + noPlaneado = diferido; Σ `porEquipo` = diferido.
+**Ejemplo con los datos del demo.** La Ceiba sep: 346.416,119 − 338.662 = 7.754,119 = Σ de 18 tramos. Octubre en curso: 17.987,157 − 16.941 = 1.046,157 = Σ de 5 tramos. `verificar-libro.mjs` sección 1 lo comprueba con tolerancia $10^{-9}$ relativa en cada mes y campo, y además: identificado + declarado + pendiente = diferido; planeado + noPlaneado = diferido; Σ `porEquipo` = diferido.
 
 **Cuándo NO es exacta.**
 
-1. Un período que corta un mes (o un día): ver «residuo».
+1. Un período que corta un día: ver «residuo». Desde D1 un período de días enteros cuadra exacto.
 2. Un evento en un día **sin fiscal**: su diferido está en los tramos pero el día no entra en potencial ni real. Residuo = −(diferido de ese día).
 3. $P_{p,d} > H_d$ (más horas perdidas que horas del día, por datos malos): el `max(0, …)` del teórico rompe la igualdad.
 
@@ -235,7 +235,7 @@ $$
 \text{pe} = \begin{cases} 100\cdot\dfrac{\text{Real}}{\text{Potencial}} & \text{Potencial} > 0 \\ 0 & \text{si no} \end{cases}
 $$
 
-**Ejemplo.** La Ceiba sep: $338.662/346.378{,}059 = 97{,}772\,\%$ → «97,8 %». Octubre: 94,185 → «94,2 %». Portafolio sep: 97,324 → «97,3 %»; oct: 96,427 → «96,4 %». Día 22-sep: $10.578/11.542{,}867 = 91{,}6\,\%$. Día 30-sep: 101,0 % (un día puede pasar de 100 % por el inventario).
+**Ejemplo.** La Ceiba sep: $338.662/346.416{,}119 = 97{,}762\,\%$ → «97,8 %». Octubre: 94,184 → «94,2 %». Portafolio sep: 97,322 → «97,3 %»; oct: 96,428 → «96,4 %». Día 22-sep: $10.578/11.447{,}160 = 92{,}4\,\%$. Día 30-sep: 100,0 %: desde D1 un día sin paradas da exactamente 100 % (antes el inventario lo podía pasar de 100 %).
 
 **Casos borde.** Potencial 0: el libro devuelve 0 (la pantalla diaria pone «—» si el día no tiene fiscal o el potencial es 0).
 
@@ -301,7 +301,7 @@ En el Cuadre, la fila «Identificado por señal» se pinta como $\text{round}(\t
 
 | Período | Identificado | Declarado | Pendiente | Cuadre muestra |
 |---|---:|---:|---:|---|
-| La Ceiba · sep | 7.716,059 | 0 | 0 | 7.716 · 0 · 0 |
+| La Ceiba · sep | 7.754,119 | 0 | 0 | 7.754 · 0 · 0 |
 | La Ceiba · oct | 690,982 | 0 | 355,044 | 691 · 0 · 355 |
 | Portafolio · sep | 33.535,615 | 409,123 | 0 | 33.536 · 409 · 0 |
 | Portafolio · oct | 1.935,388 | 86,323 | 355,044 | 1.936 · 86 · 355 |

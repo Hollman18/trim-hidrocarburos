@@ -3,10 +3,13 @@ import { Menu } from 'lucide-react'
 import { ComoSeLee } from '@/shared/ui/comoSeLee'
 import { PropuestaDeValor } from '@/shared/brand/Propuesta'
 import { cn } from '@/shared/lib/cn'
-import { useApp, useRol, useAmbito, claveDeVista } from '@/app/store'
+import { useApp, useRol, useAmbito, claveDeVista, inicioDe } from '@/app/store'
 import { PANTALLAS } from '@/app/pantallas'
 import { Pendiente } from '@/pages/Pendiente'
 import { SoloCampo } from '@/pages/SoloCampo'
+import { SinPieza } from '@/pages/SinPieza'
+import { pantallaContratada } from '@/entities/piezas-trim'
+import { piezasDelCliente } from '@/shared/api/piezas'
 import { Riel, SelectorCampo, InsigniaHoy } from '@/widgets/Riel'
 import { Cabecera } from '@/widgets/Cabecera'
 import { MenuPerfil } from '@/widgets/MenuPerfil'
@@ -143,11 +146,13 @@ export default function App() {
   const p = PANTALLAS[pantalla]
   // Si el alcance es portafolio y la pantalla es de un solo campo, se pide el
   // campo en vez de mostrar una suma que no significa nada.
-  const Vista = !p ? Pendiente : alcance === 'portafolio' && !p.agrega ? SoloCampo : p.Vista
+  // Fase 1 (facilidades): la pantalla de una pieza que el cliente no contrató lo dice (`SinPieza`).
+  const Vista = !p ? Pendiente : !pantallaContratada(pantalla, piezasDelCliente()) ? SinPieza : alcance === 'portafolio' && !p.agrega ? SoloCampo : p.Vista
   // Una subpantalla de una puerta que este campo no tiene en su perfil no se pinta vacía: se dice.
   const grupo = grupoDe(pantalla)
   const subs = useSubpantallas(grupo)
-  const sinSub = !!grupo && subs.length === 0
+  // Sin subpantallas por el perfil del campo se dice; sin su pieza contratada lo dice `SinPieza`.
+  const sinSub = !!grupo && subs.length === 0 && pantallaContratada(pantalla, piezasDelCliente())
   const sinPerfil = useSinPerfil()
 
   // A12 (WCAG 2.4.2): cada vista tiene su título en la pestaña: «Hoy · La Ceiba · TRIM».
@@ -174,7 +179,7 @@ export default function App() {
 
   // La salida de un error de dibujo es el inicio del rol, sin recargar: recargar
   // borraba lo hecho en la sesión y entraba como producción.
-  const alInicio = { texto: 'Volver al inicio', accion: () => setPantalla(rol.inicio) }
+  const alInicio = { texto: 'Volver al inicio', accion: () => setPantalla(inicioDe(rol)) }
   // Al cambiar de pantalla, alcance, campo o rol se vuelve a intentar: varias pantallas son de varios roles.
   const clave = `${pantalla}|${alcance}|${campoId}|${rolId}`
 

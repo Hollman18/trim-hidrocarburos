@@ -1,0 +1,8 @@
+work/.venv/
+work/mezcla-cruda.wav
+snapshots/
+renders/
+assets/musica/*.wav
+assets/sfx/*.wav
+.hyperframes/
+node_modules/

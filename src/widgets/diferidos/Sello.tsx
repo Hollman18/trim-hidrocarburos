@@ -11,7 +11,7 @@ const TITULO = { publicable: 'Se puede publicar', provisional: 'Provisional', bl
 /** Cada motivo que impide publicar, en corto: sale del código del motivo,
  *  nunca de su frase (la frase la redacta el servidor y va al globo). */
 const CORTO: Record<Exclude<CodigoMotivo, 'en-curso'>, string> = {
-  'fa-fuera-de-banda': 'factor fuera de banda', 'sin-causa': 'mucho sin identificar', 'sin-fiscal': 'faltan días de fiscal',
+  'fa-fuera-de-banda': 'factor fuera de banda', 'sin-causa': 'mucho sin identificar', 'sin-fiscal': 'faltan días de fiscal', 'sin-nafta': 'falta la nafta',
   'sin-factor': 'sin factor de asignación', 'banda-sin-verificar': 'banda sin verificar', 'sin-meta': 'sin meta firmada',
 }
 

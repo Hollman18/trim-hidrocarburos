@@ -78,6 +78,8 @@ try {
   const ACC = await cargar('/src/shared/api/acciones.ts') // A3 · Las acciones que faltan
   const BAL = await cargar('/src/shared/api/balance.ts') // A2 · Balance
   const PER = await cargar('/src/shared/api/perdidas.ts') // A2 · Pérdidas
+  const EVP = await cargar('/src/shared/api/eventoPlanta.ts') // Fase 4 de facilidades · el apagón
+  const PAN = await cargar('/src/shared/api/panel.ts') // Fase 7 de facilidades · el panel de indicadores
   const ROLES_HOY = (await cargar('/src/entities/roles.ts')).ROLES_VISIBLES.map(r => r.id) // C3 · Hoy
   const ARB = await cargar('/src/shared/api/arbol.ts')
   // La locación de los pozos del demo (el caso de borde del choke) entra por fuente.ts, como en el navegador.
@@ -163,6 +165,13 @@ try {
     // A2 · Balance: producido · diferido · perdido, la jornada, «¿Está funcionando?» y las fallas por mes, con lo dicho y el registro de pérdidas.
     BALANCE: p => BAL.pedirBalance(p, s.ctx, s.clasificacionesAnh ?? {}, s.perdidas ?? []),
     PERDIDAS: p => PER.pedirPerdidas(p, s.perdidas ?? []),
+    // Fase 4 de facilidades · los eventos de planta abiertos (en el demo, las pruebas de la sesión).
+    PLANTA_EVENTO: p => EVP.pedirEventosPlanta(p, s.eventosPlanta ?? []),
+    PLANTA_ARRANQUE: p => EVP.pedirArranques(p, s.eventosPlanta ?? []),
+    // Fase 7 de facilidades · el panel de indicadores: el catálogo, el panel de cada rol y las señales.
+    INDICADORES_CATALOGO: () => [...PAN.CATALOGO_INDICADORES],
+    PANEL: p => PAN.pedirPanel(p, s.paneles),
+    PANEL_SENALES: p => PAN.pedirSenales(p),
     JORNADA: p => BAL.pedirJornada(p, s.ctx, s.clasificacionesAnh ?? {}, s.perdidas ?? []),
     EFECTIVIDAD: p => BAL.pedirEfectividad(p.campos, s.ctx, s.versiones, s.clasificacionesAnh ?? {}),
     FALLAS_MENSUAL: p => BAL.pedirFallasMensual(p.campos, s.ctx),
@@ -300,6 +309,11 @@ try {
       // A2 · Balance: cada campo y todos, en los tres períodos y en las dos jornadas; la jornada de cada campo; la efectividad y las fallas por mes.
       BALANCE: [...conPeriodo(), ...grupos.flatMap(campos => ['actual', 'anterior'].map(jornada => ({ campos, jornada })))],
       PERDIDAS: conPeriodo(),
+      PLANTA_EVENTO: porCampos(),
+      PLANTA_ARRANQUE: porCampos(),
+      INDICADORES_CATALOGO: [{}],
+      PANEL: ['ger', 'prod', 'conf'].flatMap(rol => [['ceiba'], TODOS].map(campos => ({ rol, campos }))),
+      PANEL_SENALES: porCampos(),
       JORNADA: TODOS.flatMap(campo => ['actual', 'anterior'].map(jornada => ({ campo, jornada }))),
       EFECTIVIDAD: porCampos(), FALLAS_MENSUAL: porCampos(),
       // 28-oct · El historial: mes a mes de cada campo y de todos; turno a turno de cada campo.
@@ -422,7 +436,8 @@ try {
       'POST /configuracion/vista-previa', 'POST /topologia/importar',
       'POST /anh/paradas/deshacer', // C3 · Hoy: «Deshacer»
       'POST /perdidas', // A2 · Pérdidas
-      'POST /paradas/:evento/vio', 'POST /sap/ordenes/:numero/cierre', 'POST /anh/respuestas', 'POST /anh/conversion/importar'] // A3 · Acciones
+      'POST /paradas/:evento/vio', 'POST /sap/ordenes/:numero/cierre', 'POST /anh/respuestas', 'POST /anh/conversion/importar', // A3 · Acciones
+      'POST /planta/eventos/prueba', 'POST /planta/eventos/:id/terminar', 'POST /planta/eventos/:id/respuesta', 'POST /planta/eventos/:id/fase', 'POST /paneles'] // Facilidades: fases 4, 6 y 7
     const repetidas = rutas.filter((r, i) => rutas.indexOf(r) !== i)
     // Dos rutas chocan si un mismo camino puede caer en las dos: mismo método,
     // mismo número de tramos y en cada tramo el mismo literal o un :parámetro.
@@ -434,7 +449,7 @@ try {
       if (a.every((x, k) => x === b[k] || x.startsWith(':') || b[k].startsWith(':'))) choques.push(`${rutas[i]} ↔ ${rutas[j]}`)
     }
     comprobar(repetidas.length === 0 && choques.length === 0, `${rutas.length} rutas sin repetir y sin dos que atiendan el mismo camino${[...repetidas, ...choques].map(x => `; ${x}`).join('')}`)
-    const vistas = ENDPOINTS.filter(([n]) => !['SAP_AVISOS', 'SAP_ORDENES', 'SAP_EQUIPOS', 'SAP_EQUIPO', 'LISTA_CAMPOS', 'CATALOGO', 'CONFIGURACION_HISTORIAL', 'RESPUESTAS', 'USUARIOS', 'ACCESOS', 'INFORMES', 'ASIGNACION_OFICIAL', 'ANALISIS', 'CAMBIOS_PLANTA'].includes(n))
+    const vistas = ENDPOINTS.filter(([n]) => !['SAP_AVISOS', 'SAP_ORDENES', 'SAP_EQUIPOS', 'SAP_EQUIPO', 'LISTA_CAMPOS', 'CATALOGO', 'CONFIGURACION_HISTORIAL', 'RESPUESTAS', 'USUARIOS', 'ACCESOS', 'INFORMES', 'ASIGNACION_OFICIAL', 'ANALISIS', 'CAMBIOS_PLANTA', 'INDICADORES_CATALOGO'].includes(n))
     comprobar(vistas.every(([, e]) => e.ruta.startsWith('/vistas/')) && ENDPOINTS.every(([, e]) => !e.ruta.startsWith('/campos/')),
       'lo calculado vive bajo /vistas/ y ninguna consulta de pantalla usa /campos/… (los insumos del borde): la misma ruta no sirve el insumo y la vista')
 
@@ -1325,10 +1340,10 @@ try {
           `K2 · lo corto del supervisor: «${tc.donde.corto}», «${tk.donde.corto} · ${linea(tk.porqueCorto)}», «${linea(to.porqueCorto)}»`)
         comprobar(!tf.pide && !tf.capacidad && linea(tf.porque) === 'Si para otra bomba, cierre primero LC-02, LC-10 y LC-01: dejan de producirse 3.059 bbl/d después de 2 min.',
           `«Lo más frágil» solo informa: va al final y no suma a la insignia («${linea(tf.porque)}»)`)
-        comprobar(!('whatsapp' in sup) && sup.turno.horas === 12 && Math.round(sup.turno.diferidoBbl) === 723 && sup.entregarTurno
+        comprobar(!('whatsapp' in sup) && sup.turno.horas === 12 && Math.round(sup.turno.diferidoBbl) === 724 && sup.entregarTurno
           && sup.campo.frases.map(linea).join(' ') === 'En la planta no pasan 1.665 bbl/d; limitan los pozos. Tanque de agua 89,6 %: no sube, P-201A y P-201C toman lo que entra.'
           && sup.campo.tramos.map(t => `${t.rotulo}${t.trabado ? '*' : ''}`).join() === 'pozos,planta*,salida',
-          'al lado: el diferido del turno (723 bbl) y «Su campo, ahora» con el tramo trabado; el registro de mensajes ya no va (R6)')
+          'al lado: el diferido del turno (724 bbl) y «Su campo, ahora» con el tramo trabado; el registro de mensajes ya no va (R6)')
 
         // 2. El operador: una pregunta por pantalla (imagen 5; U1 §2.4).
         const op = ver('oper'), qs = op.tareas.flatMap(t => t.preguntas ?? [])
@@ -1484,7 +1499,7 @@ try {
           comprobar(!!e1 && e1.titulo === 'Entrega de turno · La Ceiba · 2 de oct, 14:00' && e1.horas === 12
             && e1.paro.some(f => linea(f).startsWith('P-201B · bomba de agua · paró hoy a las 03:52 · por P-201B se dejan de producir 1.665 bbl/d'))
             && e1.paro.some(f => linea(f) === 'No arrancar P-201B ni LC-21 hasta identificar qué se dañó.')
-            && e1.pendiente.length === s1.insignia && !('whatsapp' in e1) && linea(e1.diferido) === '723 bbl diferidos en las últimas 12 h.'
+            && e1.pendiente.length === s1.insignia && !('whatsapp' in e1) && linea(e1.diferido) === '724 bbl diferidos en las últimas 12 h.'
             && !o1.entrega && !j1.entrega,
             `F1 · P-06: la entrega del turno del supervisor (lo que paró, lo pendiente, lo hecho y el diferido), armada con lo que Hoy ya sabe (${e1?.paro.map(linea).join(' / ')})`)
           const vuelta9 = diferencia(s1, K.deRespuesta(C.HOY.codec, JSON.parse(JSON.stringify(K.aRespuesta(C.HOY.codec, s1)))))

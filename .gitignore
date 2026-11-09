@@ -42,3 +42,16 @@ e2e/.informe/
 docs/backend/sql/herramientas/motor.json
 docs/backend/sql/herramientas/cuenta-ejemplos.json
 !docs/backend/sql/validacion.log
+
+# Llaves VAPID del simulador (notificación push del demo): la privada no se versiona.
+simulador-api/datos/vapid.json
+
+# Video de venta: se versionan el guion, las composiciones y los scripts; el audio, los
+# renders y los cachés se regeneran (pesan cientos de MB).
+docs/experiencia-v3/video-venta/**/*.wav
+docs/experiencia-v3/video-venta/**/*.mp4
+docs/experiencia-v3/video-venta/**/.thumbnails/
+docs/experiencia-v3/video-venta/**/.waveform-cache/
+docs/experiencia-v3/video-venta/**/.hyperframes/
+docs/experiencia-v3/video-venta/**/AGENTS.md
+docs/experiencia-v3/video-venta/**/CLAUDE.md

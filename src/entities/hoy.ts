@@ -25,6 +25,7 @@
  *  y este módulo solo los cruza. Sin estado y sin reloj propio: lo mismo da
  *  lo mismo, y cabe holgado en los 300 ms de D7. */
 import { puedeHacer, type Capacidad } from './tipos'
+import { piezasDeTarea, TODAS, type PiezaTrim } from './piezas-trim'
 import type { Pregunta } from './libro'
 import type { ParadaAnh } from './anh-paradas'
 import { esperaAQuienAbre, esperaRevision, esNoSe, cadenaDe, ROLES_QUE_CONTESTAN, CONFIRMAN_LO_QUE_APUNTA, type PreguntaCampo } from './anh-clasificacion'
@@ -287,7 +288,14 @@ export interface EntradaHoy {
   nombres: Readonly<Record<string, string>>
   /** El diferido de las últimas 12 h (el turno). */
   diferidoTurnoBbl?: number
+  /** Fase 1 (facilidades) · Las piezas contratadas en estos campos (`piezas-trim.ts`).
+   *  Opcional: ausente, todas. Una tarea de una pieza que no se contrató no sale. */
+  piezas?: ReadonlySet<PiezaTrim>
 }
+
+/** Las tareas de las piezas contratadas: sale la que tenga alguna de las suyas. */
+export const tareasContratadas = <T extends { tipo: TipoTarea; id: string }>(tareas: readonly T[], piezas: ReadonlySet<PiezaTrim>): T[] =>
+  tareas.filter(t => piezasDeTarea(t).some(p => piezas.has(p)))
 
 /* ─────────────────────────────── palabras ─────────────────────────────── */
 
@@ -390,7 +398,9 @@ export function hoy(e: EntradaHoy): VistaHoy {
   const declara = puede('causa:declarar')
 
   // Lo que dice «no» (X4 §3.3, punto 1): una franja por campo, con lo que sigue parado sin identificar.
-  if (declara) for (const c of e.campos) {
+  // Fase 1 (facilidades): el «no arrancar» sale del libro de causas (Barriles o Mantenimiento).
+  const piezas = e.piezas ?? TODAS
+  if (declara && (piezas.has('barriles') || piezas.has('mantenimiento'))) for (const c of e.campos) {
     const parados = preguntas.filter(p => p.campoId === c && !p.fin)
     if (!parados.length) continue
     const cuales = parados.length === 1 ? parados[0]!.equipo : `${parados.slice(0, -1).map(p => p.equipo).join(', ')} ni ${parados.at(-1)!.equipo}`
@@ -672,7 +682,7 @@ export function hoy(e: EntradaHoy): VistaHoy {
   // K2 · En el teléfono, lo que pasa si para y nada más: el título ya dice que hay orden («Seguir la orden de …»);
   // su número, a quién y a qué hora se liberó, en «Ver la orden ›». Sin liberar sí se dice: es lo que hay que seguir.
   const ordenCorta = (o: OrdenSap): Frase => (o.liberada ? [] : ['Orden creada, sin liberar.'])
-  const siPara = (r: Riesgo): Frase => [`Si para, ${r.techo ? 'hasta ' : ''}`, { b: `${n0(r.bblDia)} bbl/d` }, '. ']
+  const siPara = (r: Riesgo): Frase => (r.sinCifra ? ['Si para: sin dato de cuánto cuesta. '] : [`Si para, ${r.techo ? 'hasta ' : ''}`, { b: `${n0(r.bblDia)} bbl/d` }, '. '])
   const familiaDe = (r: Riesgo) => FAMILIA[r.tipo]
   if (revisa && puede('sap:aviso')) for (const r of yaPaso) {
     const o = abiertas.find(x => x.campoId === r.campoId && x.equipo === r.equipo)
@@ -824,9 +834,12 @@ export function hoy(e: EntradaHoy): VistaHoy {
   /* — lo hecho hoy — */
   const hechas = hechasHoy(e, filas, hoyDia)
 
-  const enOrden = ordenar(tareas)
+  const enOrden = tareasContratadas(ordenar(tareas), piezas)
   const insignia = enOrden.filter(t => t.pide).length
-  const vacio = !enOrden.some(t => t.pide) && !bloqueos.length ? `Nada pendiente. ${e.campos.length <= 1 ? 'El campo está normal.' : 'Sus campos están normales.'}` : undefined
+  // El responsable de energía (Fase 4 de facilidades) no responde por todo el campo: su vacío no lo juzga.
+  const vacio = !enOrden.some(t => t.pide) && !bloqueos.length
+    ? rol === 'ener' ? 'Nada pendiente para usted. Si se va la energía, el aviso le llega aquí y en su notificación.'
+      : `Nada pendiente. ${e.campos.length <= 1 ? 'El campo está normal.' : 'Sus campos están normales.'}` : undefined
   const unCampo = e.campos.length === 1 ? e.campos[0] : undefined
   return {
     rol, campos: e.campos,

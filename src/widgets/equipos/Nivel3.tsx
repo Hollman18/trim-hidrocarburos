@@ -8,7 +8,7 @@ import { useSapDeEquipo } from '@/shared/api/sap'
 import { puedeHacer } from '@/entities/tipos'
 import { AHORA } from '@/entities/reloj'
 import { Boton, Hueco } from '@/shared/ui/primitivas'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida } from '@/shared/api/piezas'
 import { formatoFecha } from '@/shared/lib/fecha'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
@@ -25,7 +25,7 @@ import { partirEquipo, useIrA } from './navegar'
 import { Marca, IrA } from './piezas'
 import { SusSenales } from './Senales'
 import { EnSuTrenDeAgua } from './TrenAgua'
-import { MientrasParada, DiasAntes, SuHistoria, EnSuTren } from './Tarjetas'
+import { MientrasParada, DiasAntes, SuHistoria, EnSuTren, LoQueAvisa } from './Tarjetas'
 import { Diagnostico } from './Nivel4'
 
 const HORA = formatoFecha({ hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' })
@@ -106,7 +106,7 @@ function CabezaEquipo({ v, diagnostico }: { v: VistaNivel3; diagnostico: boolean
 function Heroe({ v, sap, onSap, sapAbierto }: { v: VistaNivel3; sap?: string; onSap: () => void; sapAbierto: boolean }) {
   const rol = useRol(); const setPantalla = useApp(s => s.setPantalla)
   const id = useId()
-  const destino = rol.pantallas.includes('causa') && pantallaVisible('causa') ? 'causa' : rol.pantallas.includes('hoy') ? 'hoy' : null
+  const destino = rol.pantallas.includes('causa') && pantallaOfrecida('causa') ? 'causa' : rol.pantallas.includes('hoy') ? 'hoy' : null
   const decir = v.pregunta && destino && puedeHacer(rol.puede, 'causa:declarar')
   return (
     // 28-oct · Qué atacar: parado o en alarma, la cabeza del equipo en rojo pálido; en marcha con atención o aviso, en amarillo pálido.
@@ -181,6 +181,7 @@ function Ahora({ v }: { v: VistaNivel3 }) {
             <EnSuTren v={v} />
           </div>
           <div className="grid min-w-0 gap-3 sm:gap-4">
+            <LoQueAvisa v={v} />
             <DiasAntes v={v} />
             <SuHistoria v={v} onDiagnostico={v.diagnostico ? () => irA({ equipo: v.equipo, diagnostico: true }) : undefined} />
           </div>

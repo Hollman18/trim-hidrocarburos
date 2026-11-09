@@ -5,6 +5,7 @@
    mensajes y lo demás todavía se calculan dentro del front; sus salidas de
    referencia están en referencia/ (scripts/referencia.mjs). El backend real
    reemplaza este módulo sin tocar el front. */
+import * as PUSH from './push.mjs'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { dirname, join } from 'node:path'
@@ -140,6 +141,19 @@ async function atender(req, res, url) {
 
   if (req.method === 'GET' && url.pathname === '/api/salud') {
     json(res, 200, { ok: true, base: 'sqlite' }); return
+  }
+
+  // Fase 4 de facilidades · notificación push del aviso de apagón (push.mjs).
+  if (url.pathname.startsWith('/api/push/')) {
+    // Mandar el aviso es del servidor (o de la prueba del administrador): nunca una ruta abierta.
+    if (url.pathname === '/api/push/enviar' && !puede(req, 'conector:configurar')) { fallo(res, 403, 'sin-capacidad', 'sin la capacidad conector:configurar'); return }
+    const r = req.method === 'GET' && url.pathname === '/api/push/llave' ? { estado: 200, cuerpo: { llave: PUSH.llavePublica() } }
+      : req.method === 'POST' && url.pathname === '/api/push/suscripciones' ? PUSH.suscribir(await cuerpo(req))
+        : req.method === 'POST' && url.pathname === '/api/push/suscripciones/baja' ? PUSH.desuscribir(await cuerpo(req))
+          : req.method === 'POST' && url.pathname === '/api/push/enviar' ? await PUSH.enviar(await cuerpo(req))
+            : req.method === 'GET' && url.pathname === '/api/push/aviso' ? PUSH.aviso(url.searchParams.get('endpoint') ?? '')
+              : { estado: 404, cuerpo: { error: { codigo: 'ruta-no-encontrada', mensaje: 'ruta no encontrada' } } }
+    json(res, r.estado, r.cuerpo); return
   }
 
   // /api/campos/:campo/tags/:tag/procedencia

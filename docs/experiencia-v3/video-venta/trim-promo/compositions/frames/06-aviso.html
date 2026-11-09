@@ -1,0 +1,165 @@
+<template>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "IBM Plex Sans", sans-serif; color: #f4f3f0; }
+    #f06-fondo {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 45% 55% at 20% 40%, rgba(217,189,106,0.10), rgba(16,20,24,0) 70%),
+        radial-gradient(ellipse 60% 60% at 72% 55%, rgba(44,115,113,0.16), rgba(16,20,24,0) 70%),
+        radial-gradient(circle at 1px 1px, rgba(52,59,66,0.75) 1.2px, rgba(0,0,0,0) 1.6px) 0 0 / 40px 40px,
+        #101418;
+    }
+    #f06-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #f06-stage { position: absolute; inset: 0; perspective: 2400px; }
+
+    /* ---- monitor (right) ---- */
+    #f06-monitor {
+      position: absolute; left: 812px; top: 254px; width: 988px; height: 628px;
+      padding: 14px; background: #1d2125; border: 1px solid #343b42; border-radius: 18px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    #f06-mshot { position: relative; width: 960px; height: 600px; border-radius: 8px; overflow: hidden; background: #f4f3f0; }
+    #f06-mshot img { position: absolute; left: 0; top: 0; width: 960px; height: 600px; display: block; }
+    #f06-mdim { position: absolute; inset: 0; background: #101418; opacity: 0; }
+
+    #f06-titulo {
+      position: absolute; left: 812px; top: 124px; padding-left: 24px; border-left: 4px solid #d9bd6a;
+      font-weight: 600; font-size: 76px; line-height: 1.05; letter-spacing: -0.02em; color: #f4f3f0; white-space: nowrap;
+    }
+
+    /* ---- phone (left) ---- */
+    #f06-phone {
+      position: absolute; left: 150px; top: 150px; width: 428px; height: 894px;
+      padding: 14px; background: #0b0e11; border-radius: 56px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.07);
+    }
+    #f06-pglow { position: absolute; inset: 0; border-radius: 56px; box-shadow: 0 0 0 2px rgba(217,189,106,0.55), 0 0 70px rgba(217,189,106,0.35); opacity: 0; }
+    #f06-pscreen { position: relative; width: 400px; height: 866px; border-radius: 42px; overflow: hidden; background: #f4f3f0; }
+    #f06-pscreen img { position: absolute; left: 0; top: 0; width: 400px; height: 866px; display: block; }
+
+    /* ---- notification ---- */
+    #f06-noti {
+      position: absolute; left: 100px; top: 200px; width: 620px;
+      display: flex; align-items: center; gap: 18px;
+      padding: 20px 24px 20px 20px; background: #1d2125; border: 1px solid #343b42; border-left: 6px solid #d9bd6a;
+      border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    #f06-icon { position: relative; flex: 0 0 44px; width: 44px; height: 44px; }
+    #f06-icon .f06-core { position: absolute; left: 13px; top: 13px; width: 18px; height: 18px; border-radius: 50%; background: #d9bd6a; box-shadow: 0 0 12px #d9bd6a; }
+    #f06-icon .f06-ring { position: absolute; left: 4px; top: 4px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #d9bd6a; opacity: 0; }
+    #f06-ntext { display: flex; align-items: baseline; gap: 12px; white-space: nowrap; }
+    #f06-napp { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 22px; letter-spacing: 0.12em; color: #a9dad6; }
+    #f06-nmsg { font-weight: 600; font-size: 27px; line-height: 1.15; letter-spacing: -0.01em; color: #f4f3f0; white-space: nowrap; }
+
+    /* ---- what / why / how long ---- */
+    #f06-link { position: absolute; left: 708px; top: 224px; width: 60px; height: 420px; overflow: visible; }
+    #f06-link path { fill: none; stroke: #d9bd6a; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0.8; }
+    .f06-tag {
+      position: absolute; left: 758px; white-space: nowrap;
+      font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 25px; letter-spacing: 0.06em;
+      padding: 16px 24px 16px 20px; background: rgba(29,33,37,0.97); border: 1px solid #343b42; border-left: 4px solid #d9bd6a;
+      border-radius: 10px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .f06-tag .f06-k { color: #7f878e; letter-spacing: 0.12em; }
+    .f06-tag .f06-v { color: #f4f3f0; }
+    #f06-t1 { top: 340px; }
+    #f06-t2 { top: 434px; }
+    #f06-t3 { top: 528px; border-left-color: #e0897c; }
+    #f06-t3 .f06-v { color: #e0897c; }
+
+    #f06-demo {
+      position: absolute; right: 120px; top: 70px;
+      font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 18px; color: #7f878e;
+      border: 1px solid #343b42; border-radius: 999px; padding: 8px 16px; background: rgba(16,20,24,0.7);
+    }
+  </style>
+
+  <div data-hf-id="hf-lnjl" id="root" data-composition-id="f06" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-jugt" id="f06-fondo" class="clip" data-start="0" data-duration="8.82" data-track-index="0"></div>
+
+    <div data-hf-id="hf-09jh" id="f06-cam">
+      <div data-hf-id="hf-oloa" id="f06-stage">
+        <div data-hf-id="hf-z50i" id="f06-monitor">
+          <div data-hf-id="hf-ropx" id="f06-mshot">
+            <img data-hf-id="hf-fprj" src="assets/pantallas/hoy-supervisor.png" alt="">
+            <div data-hf-id="hf-i3i5" id="f06-mdim"></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-1vsw" id="f06-titulo">Aviso antes de la falla.</div>
+
+      <div data-hf-id="hf-8i4k" id="f06-phone">
+        <div data-hf-id="hf-rooj" id="f06-pglow"></div>
+        <div data-hf-id="hf-wl7g" id="f06-pscreen"><img data-hf-id="hf-d5se" src="assets/pantallas/tecnico-telefono.png" alt=""></div>
+      </div>
+
+      <svg data-hf-id="hf-l8de" id="f06-link" viewBox="0 0 60 420"><path data-hf-id="hf-owb0" pathLength="1" d="M12,16 L30,16 L30,142 L50,142 M30,142 L30,236 L50,236 M30,236 L30,330 L50,330" /></svg>
+
+      <div data-hf-id="hf-b2p4" id="f06-noti">
+        <div data-hf-id="hf-51rf" id="f06-icon">
+          <div data-hf-id="hf-ti3b" class="f06-ring" id="f06-r1"></div>
+          <div data-hf-id="hf-ku7g" class="f06-ring" id="f06-r2"></div>
+          <div data-hf-id="hf-llv9" class="f06-ring" id="f06-r3"></div>
+          <div data-hf-id="hf-ul0k" class="f06-core"></div>
+        </div>
+        <div data-hf-id="hf-rusj" id="f06-ntext">
+          <div data-hf-id="hf-ghii" id="f06-napp">TRIM ·</div>
+          <div data-hf-id="hf-6j2d" id="f06-nmsg">P-201B se está degradando</div>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-3qix" class="f06-tag" id="f06-t1"><span data-hf-id="hf-v81l" class="f06-k">QUÉ EQUIPO</span><span data-hf-id="hf-o4tg" class="f06-k"> · </span><span data-hf-id="hf-gp9c" class="f06-v">P-201B</span></div>
+      <div data-hf-id="hf-7omy" class="f06-tag" id="f06-t2"><span data-hf-id="hf-fzrt" class="f06-k">POR QUÉ</span><span data-hf-id="hf-flss" class="f06-k"> · </span><span data-hf-id="hf-5k50" class="f06-v">sello mecánico</span></div>
+      <div data-hf-id="hf-bmqz" class="f06-tag" id="f06-t3"><span data-hf-id="hf-0mnu" class="f06-k">CUÁNTO LE QUEDA</span><span data-hf-id="hf-eevp" class="f06-k"> · </span><span data-hf-id="hf-g040" class="f06-v">días al límite</span></div>
+    </div>
+
+    <div data-hf-id="hf-jxn5" id="f06-demo">Datos de demostración</div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+
+      // camera: slow lateral drift across the whole frame
+      tl.fromTo("#f06-cam", { x: 18, scale: 1 }, { x: -34, scale: 1.025, duration: 8.82, ease: "sine.inOut" }, 0);
+
+      // monitor straightens in 3D, phone rises from below
+      tl.fromTo("#f06-monitor", { rotationY: -8, rotationX: 3, x: 90, z: -120, opacity: 0 },
+        { rotationY: 0, rotationX: 0, x: 0, z: 0, opacity: 1, duration: 0.85, ease: "expo.out" }, 0);
+      tl.fromTo("#f06-phone", { y: 620, rotation: -3, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.7, ease: "expo.out" }, 0.2);
+      tl.fromTo("#f06-demo", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+
+      // "empieza a degradarse": the phone warms up
+      tl.fromTo("#f06-pglow", { opacity: 0 }, { opacity: 1, duration: 1.4, ease: "sine.inOut" }, 0.8);
+
+      // 2.3 "le avisa": notification drops onto the phone + headline
+      tl.fromTo("#f06-noti", { y: -90, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.65, ease: "expo.out" }, 2.55);
+      tl.fromTo("#f06-titulo", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.7, ease: "expo.out" }, 2.4);
+      [["#f06-r1", 2.55], ["#f06-r2", 3.55], ["#f06-r3", 4.55]].forEach(function (r) {
+        tl.fromTo(r[0], { scale: 1 }, { scale: 2.8, duration: 1.0, ease: "power2.out" }, r[1]);
+        tl.fromTo(r[0], { opacity: 0 }, { opacity: 0.85, duration: 0.08, ease: "none" }, r[1]);
+        tl.fromTo(r[0], { opacity: 0.85 }, { opacity: 0, duration: 0.9, ease: "power1.out", immediateRender: false }, r[1] + 0.08);
+      });
+
+      // 4.9 / 5.4 / 6.0: what / why / how long
+      tl.fromTo("#f06-mdim", { opacity: 0 }, { opacity: 0.38, duration: 0.8, ease: "power2.out" }, 4.7);
+      tl.fromTo("#f06-link path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, 4.75);
+      [["#f06-t1", 4.1], ["#f06-t2", 5.1], ["#f06-t3", 6.1]].forEach(function (t) {
+        tl.fromTo(t[0], { opacity: 0, x: -30, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 0.55, ease: "expo.out" }, t[1]);
+      });
+      // "cuántos días le quedan": the limit tag glows
+      tl.fromTo("#f06-t3", { boxShadow: "0 20px 50px rgba(0,0,0,0.5), 0 0 0px rgba(224,137,124,0)" },
+        { boxShadow: "0 20px 50px rgba(0,0,0,0.5), 0 0 34px rgba(224,137,124,0.45)", duration: 1.2, ease: "sine.inOut", immediateRender: false }, 6.6);
+
+      window.__timelines["f06"] = tl;
+    })();
+  </script>
+</template>

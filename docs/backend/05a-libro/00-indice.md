@@ -23,17 +23,19 @@ Cada cifra sigue la plantilla de la guía: qué es, dónde se ve, fórmula, ejem
 
 ## Las cifras que hay que reproducir (demo)
 
+> **D1 · 4-nov-2026: el factor de asignación es diario** (Res. 40236, art. 21; 5A.2, «El factor del día»). Las filas de potencial, diferido, rango, alto impacto, valor y diferido por día están recalculadas con él; la fila «frente a los 3 meses antes» es de antes de D1. En los demás capítulos de `docs/backend/`, un ejemplo con cifras del libro que no diga «D1» puede traer la cifra de antes (hasta 0,5 % distinta: La Ceiba sep 7.716 → 7.754). La cifra que manda es la de `referencia/`.
+
 | | La Ceiba · sep (cerrado) | La Ceiba · oct (en curso) | Portafolio · sep | Portafolio · oct |
 |---|---:|---:|---:|---:|
 | Factor de asignación | 0,969 | 0,958 | 0,961–1,032 | 0,958–1,032 |
 | Real (bbl) | 338.662 | 16.941 | 1.234.322 | 64.147 |
-| Potencial (bbl) | 346.378,059 | 17.987,026 | 1.268.266,738 | 66.523,755 |
-| Barriles diferidos | **7.716** | **1.046** | **33.945** | **2.377** |
-| Rango | 6.559–8.873 | 889–1.203 | 31.255–36.634 | 2.132–2.622 |
+| Potencial (bbl) | 346.416,119 | 17.987,157 | 1.268.291,824 | 66.522,902 |
+| Barriles diferidos | **7.754** | **1.046** | **33.970** | **2.376** |
+| Rango | 6.591–8.917 | 889–1.203 | 31.280–36.660 | 2.131–2.621 |
 | Sin identificar | 0 | 355 | 0 | 355 |
-| Alto impacto | 7.477 (97 %) | 573 (55 %) | 24.782 (73 %) | 1.668 (70 %) |
-| Valor | 370 mil USD | 50 mil USD | 1,6 M USD · falta precio en La Zarza | 114 mil USD · falta precio en La Zarza |
-| Diferido por día · máx. | 257 · 800 | 661 · 800 | 1.131 · 2.300 | 1.501 · 2.300 |
+| Alto impacto | 7.517 (97 %) | 573 (55 %) | 24.828 (73 %) | 1.668 (70 %) |
+| Valor | 372 mil USD | 50 mil USD | 1,6 M USD · falta precio en La Zarza | 114 mil USD · falta precio en La Zarza |
+| Diferido por día · máx. | 258 · 800 | 661 · 800 | 1.132 · 2.300 | 1.501 · 2.300 |
 | Frente a los 3 meses antes | −37 % frente a jun a ago | +80 % frente a jul a sep | −23 % frente a jun a ago | 0 % frente a jul a sep |
 | Sello | ✓ PUBLICABLE | PROVISIONAL | ✓ PUBLICABLE | PROVISIONAL |
 

@@ -7,14 +7,16 @@
  *   teórico del mes (T)= Σ pozos con prueba: crudo de la prueba vigente ×
  *                        horas que produjo ÷ 24 (a frecuencia reducida, la parte
  *                        que produjo: hz ÷ hz de la prueba)
- *   factor (FA)        = R ÷ T   · debe caer en la banda de la Res. 40236
+ *   factor (FA)        = R ÷ T   · el del DÍA valora los barriles (D1, Res. 40236
+ *                        art. 21: `factorDelDia`); el del mes, su promedio pesado,
+ *                        debe caer en la banda de la Res. 40236
  *   potencial          = Σ pozos con prueba: crudo de la prueba × FA × horas ÷ 24
  *   diferido de un paro= crudo de la prueba × FA × horas apagado ÷ 24
  *                        (a frecuencia reducida: × (1 − hz ÷ hz de la prueba))
  *
- *  Por construcción, en un mes la suma de los diferidos es exactamente
- *  potencial − real. Lo que queda es el efecto del inventario de cada día
- *  cuando el período no es un mes entero. Cada barril lleva su causa
+ *  Por construcción, en cada día la suma de los diferidos es exactamente
+ *  potencial − real. Lo que queda es el reparto parejo por hora de lo real de
+ *  un día cuando el período lo corta. Cada barril lleva su causa
  *  (`causa-senal.ts`) y los tags que la sostienen.
  *
  *  Nada de esto lo escribe una persona, salvo las metas y la configuración,
@@ -30,6 +32,7 @@ import {
   type Causa, type Contexto, type TipoCausa, type ComoSeIdentifico,
 } from './causa-senal'
 import { METROLOGIA_CAMPO, toleranciaAsignacion } from './metrologia'
+import { crudoDePrueba, crudoNeto, diluyenteDe, mideMezcla } from './diluyente'
 import { campoPorId } from './campos'
 import { metaEn, precioEn, criterioEn, configInicial, SIN_META, type Config } from './configuracion'
 import { partesDe, type ParteId, type Familia } from './partes'
@@ -81,7 +84,13 @@ export const mesCerrado = (m: Mes) => inicioMes(sigMes(m.mes)) <= ahora
 
 /* ───────────── pre-cálculo por campo: horas perdidas, teórico y factor ───────────── */
 
-const crudo = (p: Pozo, dia: number) => (p.pruebas.length ? pruebaEn(p, dia)?.crudoBpd ?? 0 : 0)
+/** Crudo de la prueba vigente, neto de la nafta si el campo diluye en fondo de
+ *  pozo (`crudoDePrueba`). Una prueba de fondo sin la nafta inyectada se queda con
+ *  lo que midió el separador, y el libro no se publica (`sinNafta`). */
+const crudo = (p: Pozo, dia: number) => {
+  const x = p.pruebas.length ? pruebaEn(p, dia) : undefined
+  return x ? crudoDePrueba(x, diluyenteDe(p.campoId)) ?? x.crudoBpd : 0
+}
 const agua = (p: Pozo, dia: number) => (p.pruebas.length ? pruebaEn(p, dia)?.aguaBpd ?? 0 : 0)
 
 /** Fracción del caudal que se deja de producir a frecuencia reducida: por ley
@@ -150,14 +159,23 @@ function porDiasDelEvento(campoId: string, ev: EventoPozo, a: number, b: number,
 interface Calc {
   /** Factor de asignación de cada mes con al menos un día fiscal: lo real ÷
    *  lo teórico DE LOS DÍAS CON DATO. Un día que el computador de flujo no
-   *  reportó no entra como cero: bajaría el factor y con él todo el mes. */
+   *  reportó no entra como cero: bajaría el factor y con él todo el mes. Es el
+   *  promedio de los factores diarios, pesado por su teórico: el que se compara
+   *  con la banda de la Fig. 10.2 y el que usan los caudales «de ahora». */
   fa: Map<string, number>
+  /** D1 (4-nov-2026) · Factor de asignación de cada día con fiscal y teórico:
+   *  lo real del día ÷ lo teórico del día (Res. 40236, art. 21: «calculado
+   *  diariamente»). Con él se valoran los barriles del libro (`factorDelDia`). */
+  faDia: Map<number, number>
   real: Map<string, number>
   teorico: Map<string, number>
   /** Fiscal de cada día con dato. Un día sin dato NO está: es un hueco. */
   realDia: Map<number, number>
   /** Días transcurridos de cada mes sin dato fiscal. */
   faltan: Map<string, number[]>
+  /** Días con fiscal de la mezcla pero sin la nafta que se le agregó: sin ella no
+   *  hay crudo neto. Como un día sin fiscal, no entran en el factor ni en lo real. */
+  sinNafta: Set<number>
 }
 const CALC = new Map<string, Calc>()
 
@@ -166,6 +184,17 @@ const CALC = new Map<string, Calc>()
 const fiscalDelDia = (x: ProduccionMes | undefined, i: number): number | undefined => {
   const v = x?.dias[i]
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined
+}
+
+/** El fiscal de un día en crudo neto: lo del computador de flujo o, si el campo
+ *  mide la mezcla con nafta, la mezcla llevada a crudo neto (`crudoNeto`).
+ *  `sin-nafta`: hay mezcla pero no la nafta del día, y sin ella no hay cifra. */
+function fiscalNetoDelDia(campoId: string, x: ProduccionMes | undefined, i: number): number | undefined | 'sin-nafta' {
+  const v = fiscalDelDia(x, i)
+  const d = diluyenteDe(campoId)
+  if (v === undefined || !mideMezcla(d)) return v
+  const n = x?.nafta?.[i]
+  return typeof n === 'number' && Number.isFinite(n) ? crudoNeto(v, n, d) : 'sin-nafta'
 }
 
 function calcCampo(campoId: string): Calc {
@@ -182,27 +211,37 @@ function calcCampo(campoId: string): Calc {
     })
   }
   const fa = new Map<string, number>(), real = new Map<string, number>(), teorico = new Map<string, number>()
-  const realDia = new Map<number, number>(), faltan = new Map<string, number[]>()
+  const realDia = new Map<number, number>(), faltan = new Map<string, number[]>(), sinNafta = new Set<number>(), faDia = new Map<number, number>()
   for (const m of calendario()) {
     const fiscal = FISCAL().get(`${campoId}|${m.mes}`)
     let t = 0, r = 0, conDato = 0
     const sin: number[] = []
     let i = 0
     for (let d = m.desde; d < m.hasta; d += D, i++) {
-      const v = fiscalDelDia(fiscal, i)
+      const v = fiscalNetoDelDia(campoId, fiscal, i)
+      if (v === 'sin-nafta') { sinNafta.add(d); continue }
       if (v === undefined) { sin.push(d); continue }
       const horasDia = (Math.min(d + D, m.hasta) - d) / H
-      for (const p of pozos) if (p.pruebas.length) t += crudo(p, d) * Math.max(0, horasDia - (perdidas.get(`${p.id}|${d}`) ?? 0)) / 24
+      let td = 0
+      for (const p of pozos) if (p.pruebas.length) td += crudo(p, d) * Math.max(0, horasDia - (perdidas.get(`${p.id}|${d}`) ?? 0)) / 24
+      if (td > 0) faDia.set(d, v / td)
+      t += td
       realDia.set(d, v); r += v; conDato++
     }
     real.set(m.mes, r); teorico.set(m.mes, t)
     if (conDato && t > 0) fa.set(m.mes, r / t)
     if (sin.length) faltan.set(m.mes, sin)
   }
-  const c = { fa, real, teorico, realDia, faltan }
+  const c = { fa, faDia, real, teorico, realDia, faltan, sinNafta }
   CALC.set(campoId, c)
   return c
 }
+
+/** El factor con que se valoran los barriles de un día (D1, 4-nov-2026): el del
+ *  día. Un día sin fiscal, o en que ningún pozo con prueba produjo, no tiene
+ *  factor propio: va con el del mes, el de los días con dato (como antes de D1).
+ *  Undefined si el mes tampoco tiene: no hay con qué valorar. */
+const factorDelDia = (calc: Calc, dia: number): number | undefined => calc.faDia.get(dia) ?? calc.fa.get(mesDe(dia)?.mes ?? '')
 
 /** Factor de asignación del mes que contiene `t`. Si ese mes todavía no
  *  tiene un día fiscal (el primero del mes, o un hueco del computador de
@@ -233,7 +272,8 @@ export function fiscalPromedio(campoId: string): number | undefined {
   const todos = produccionDiaria()
   let m: ProduccionMes | undefined
   for (let i = todos.length - 1; i >= 0 && !m; i--) if (todos[i]!.campoId === campoId && todos[i]!.publicado) m = todos[i]
-  const vs = (m?.dias ?? []).filter((v): v is number => typeof v === 'number' && Number.isFinite(v))
+  // En crudo neto: con la mezcla, la nafta podría pasar el campo a la fila de 1.000 bpd o más.
+  const vs = (m?.dias ?? []).map((_, i) => fiscalNetoDelDia(campoId, m, i)).filter((v): v is number => typeof v === 'number' && Number.isFinite(v))
   return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : undefined
 }
 
@@ -337,7 +377,7 @@ function tramosDe(campoIds: string[], desde: number, hasta: number, ctx: Context
       // Solo lo que el evento cobra: lo que otro evento del pozo ya cubre no se repite.
       porDiasDelEvento(campoId, ev, a, b, (dia, h) => {
         const f = fraccion(ev, p, dia)
-        const fa = calc.fa.get(mesDe(dia)?.mes ?? '')
+        const fa = factorDelDia(calc, dia)
         if (fa === undefined) sinFactor = true
         bbl += crudo(p, dia) * (fa ?? 0) * h * f / 24
         horas += h
@@ -395,11 +435,11 @@ export interface AsignacionPozo {
 export function asignacionPorPozo(campoId: string, mes: string, ctx: Contexto): AsignacionPozo[] {
   const m = calendario().find(x => x.mes === mes)
   if (!m || !mesCerrado(m)) return []
-  const fa = calcCampo(campoId).fa.get(mes) ?? 0
+  const calc = calcCampo(campoId)
   const ts = tramosDe([campoId], m.desde, m.hasta, ctx)
   const filas = pozosDe(campoId).filter(p => p.pruebas.length).map(p => {
     let potencial = 0
-    porDias(m.desde, m.hasta, (dia, h) => { potencial += crudo(p, dia) * fa * h / 24 })
+    porDias(m.desde, m.hasta, (dia, h) => { potencial += crudo(p, dia) * (factorDelDia(calc, dia) ?? 0) * h / 24 })
     const mios = ts.filter(t => t.pozo.id === p.id)
     const cerrado = mios.filter(t => !t.aproximado).reduce((a, t) => a + t.horas, 0)
     const diferido = suma(mios)
@@ -566,6 +606,11 @@ export interface Libro {
   sinFiscal: Array<{ campoId: string; dias: Date[] }>
   /** Meses sin un solo día fiscal, por campo: sin factor de asignación. */
   sinFactor: Array<{ campoId: string; mes: string }>
+  /** Campos que diluyen con lo que falta para llevar la mezcla a crudo neto
+   *  (diluyente.ts): los días del período con fiscal pero sin la nafta del día (no
+   *  entran ni en lo real ni en el potencial) y, en fondo de pozo, los pozos cuya
+   *  prueba no trae la nafta que se le inyectaba. El libro no se publica. */
+  sinNafta: Array<{ campoId: string; dias: Date[]; pozos: string[] }>
   publicable: boolean
   /** Por qué no se puede publicar. El `codigo` es lo que se compara (el
    *  estado de publicación, la alerta del cuadre); el `texto`, lo que se lee.
@@ -575,10 +620,11 @@ export interface Libro {
 }
 
 /** en-curso: hay días sin cierre publicado (no es una anomalía: es el mes que
- *  corre) · sin-fiscal · sin-factor · banda-sin-verificar · fa-fuera-de-banda
+ *  corre) · sin-fiscal · sin-nafta: un campo que diluye sin la nafta de un día o
+ *  de una prueba de fondo (`Libro.sinNafta`) · sin-factor · banda-sin-verificar · fa-fuera-de-banda
  *  · sin-causa: más de lo sin identificar que permite el criterio de cierre ·
  *  sin-meta: un campo sin meta ni regla de cierre firmadas en el período. */
-export type CodigoMotivo = 'en-curso' | 'sin-fiscal' | 'sin-factor' | 'banda-sin-verificar' | 'fa-fuera-de-banda' | 'sin-causa' | 'sin-meta'
+export type CodigoMotivo = 'en-curso' | 'sin-fiscal' | 'sin-nafta' | 'sin-factor' | 'banda-sin-verificar' | 'fa-fuera-de-banda' | 'sin-causa' | 'sin-meta'
 export interface MotivoLibro { codigo: CodigoMotivo; texto: string; campoId?: string; mes?: string }
 
 /** Lo que piden las metas firmadas en el período. Se compara lo producido
@@ -702,19 +748,24 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
   const conPrecio: string[] = [], sinPrecio: string[] = []
   const porCampo: Libro['porCampo'] = []
   const fa: FilaFA[] = []
-  const sinFiscal: Libro['sinFiscal'] = [], sinFactor: Libro['sinFactor'] = [], bandaSinVerificar: string[] = []
+  const sinFiscal: Libro['sinFiscal'] = [], sinFactor: Libro['sinFactor'] = [], sinNafta: Libro['sinNafta'] = [], bandaSinVerificar: string[] = []
   for (const c of campoIds) {
     const calc = calcCampo(c)
     const pozos = pozosDe(c).filter(p => p.pruebas.length)
     let rc = 0, pc = 0, algunPrecio = false, algunoSin = false
-    const faltan: Date[] = []
+    const faltan: Date[] = [], diasSinNafta: Date[] = []
+    // En fondo de pozo, las pruebas vigentes en el período que no traen la nafta inyectada.
+    const dil = diluyenteDe(c), pozosSinNafta = new Set<string>()
     porDias(d0, h0, (dia, h) => {
       const m = mesDe(dia)!
       const horasDia = (Math.min(dia + D, m.hasta) - dia) / H
+      if (dil?.esquema === 'fondo') for (const x of pozos) { const pr = pruebaEn(x, dia); if (pr && crudoDePrueba(pr, dil) === undefined) pozosSinNafta.add(x.id) }
+      // La mezcla sin la nafta del día no es una cifra: ni real ni potencial, y se dice.
+      if (calc.sinNafta.has(dia)) { diasSinNafta.push(new Date(dia)); return }
       // Un día sin fiscal no entra ni en lo real ni en el potencial: es un
       // hueco del punto de medición oficial y se dice, no un día en cero.
       const fiscal = calc.realDia.get(dia)
-      const f = calc.fa.get(m.mes)
+      const f = factorDelDia(calc, dia)
       if (fiscal === undefined || f === undefined) { if (fiscal === undefined) faltan.push(new Date(dia)); return }
       const r = fiscal * h / horasDia
       let p = 0
@@ -738,6 +789,7 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
       metaProduccion: ya.produccion, metaDiferido: ya.diferido, sinMeta: todo.sinMeta, realDia: 0, diferidoDia: 0, metaProduccionDia: 0, metaDiferidoDia: 0 })
     real += rc; potencial += pc
     if (faltan.length) sinFiscal.push({ campoId: c, dias: faltan })
+    if (diasSinNafta.length || pozosSinNafta.size) sinNafta.push({ campoId: c, dias: diasSinNafta, pozos: [...pozosSinNafta].sort() })
     const banda = bandaDe(c)
     if (!banda.verificable) bandaSinVerificar.push(c)
     for (const m of calendario()) if (m.hasta > d0 && m.desde < h0) {
@@ -851,6 +903,11 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
   const motivos: MotivoLibro[] = []
   if (fa.some(f => !f.publicado)) motivos.push({ codigo: 'en-curso', texto: 'El período incluye días sin cierre publicado.' })
   for (const x of sinFiscal) motivos.push({ codigo: 'sin-fiscal', campoId: x.campoId, texto: `${campoPorId(x.campoId).nombre}: faltan ${x.dias.length} ${x.dias.length === 1 ? 'día' : 'días'} de producción fiscal del punto de medición oficial; no entran ni en lo real ni en el potencial.` })
+  for (const x of sinNafta) {
+    const d = diluyenteDe(x.campoId), nombre = campoPorId(x.campoId).nombre
+    if (x.dias.length) motivos.push({ codigo: 'sin-nafta', campoId: x.campoId, texto: `${nombre}: faltan ${x.dias.length} ${x.dias.length === 1 ? 'día' : 'días'} de la nafta que se le agrega al crudo${d ? ` (${d.medidor})` : ''}; sin ella la producción fiscal es de la mezcla y no se lleva a crudo neto: esos días no entran ni en lo real ni en el potencial.` })
+    if (x.pozos.length) motivos.push({ codigo: 'sin-nafta', campoId: x.campoId, texto: `${nombre}: ${x.pozos.length === 1 ? `la prueba de ${x.pozos[0]} no trae` : `las pruebas de ${x.pozos.join(', ')} no traen`} la nafta que se inyectaba en el fondo; su crudo no se lleva a neto.` })
+  }
   for (const x of sinFactor) motivos.push({ codigo: 'sin-factor', campoId: x.campoId, mes: x.mes, texto: `${campoPorId(x.campoId).nombre}, ${NOMBRE_MES[Number(x.mes.slice(5)) - 1]} de ${x.mes.slice(0, 4)}: sin un día de producción fiscal no hay factor de asignación; sus diferidos no se pueden valorar.` })
   for (const c of bandaSinVerificar) motivos.push({ codigo: 'banda-sin-verificar', campoId: c, texto: `${campoPorId(c).nombre}: ${bandaDe(c).fuente.split(':')[0]}; no se puede verificar el factor contra la banda de la Res. 40236.` })
   for (const f of fa) if (!f.dentro && !bandaSinVerificar.includes(f.campoId)) motivos.push({ codigo: 'fa-fuera-de-banda', campoId: f.campoId, mes: f.mes, texto: `${campoPorId(f.campoId).nombre}, ${NOMBRE_MES[Number(f.mes.slice(5)) - 1]} de ${f.mes.slice(0, 4)}: factor de asignación ${f.fa.toLocaleString('es-CO', { minimumFractionDigits: 3, maximumFractionDigits: 3 })} fuera de la banda ±${Math.round(f.banda * 100)} %.` })
@@ -890,7 +947,7 @@ export function libro(campoIds: string[], desde: Date, hasta: Date, ctx: Context
     meta: { produccion: metaP, diferido: metaD, produccionDia: metaP / dias, diferidoDia: metaD / dias,
       produccionTotal: totalP, diferidoTotal: totalD, dias, diasTotal: Math.max(dias, (finTotal - d0) / D), sinMeta },
     valorUsd, valorCampos: { con: conPrecio.length, total: porCampo.length }, sinPrecio,
-    sinFiscal, sinFactor,
+    sinFiscal, sinFactor, sinNafta,
     publicable: motivos.length === 0, motivos,
   }
 }
@@ -960,25 +1017,36 @@ export const BAJA_MAXIMA_ESP = 0.25
  *  siguiente del orden. Si al final todavía falta agua (casi todo el campo hay
  *  que quitar), las que se bajaron en parte se cierran enteras, en el mismo orden. */
 export function ordenOptimo(pozos: Pozo[], aguaAQuitar: number, t: number) {
-  const orden = [...pozos].sort((a, b) => crudo(a, t) / Math.max(1, agua(a, t)) - crudo(b, t) / Math.max(1, agua(b, t)))
+  const m = mochila(pozos, p => crudo(p, t), p => agua(p, t), aguaAQuitar,
+    (p, f) => (f < 1 && p.levantamiento === 'electrosumergible' ? Math.min(f, BAJA_MAXIMA_ESP) : f))
+  return { crudo: m.valor, agua: m.peso, pasos: m.pasos.map(x => ({ pozo: x.item, fraccion: x.fraccion, crudo: x.valor, agua: x.peso })) }
+}
+
+/** La mochila fraccionaria del orden de cierre, para cualquier recurso: quitar `objetivo` de `peso`
+ *  (agua del tanque, kW de la generación) perdiendo el menor `valor` (crudo), primero lo que menos
+ *  valor da por unidad de peso. `tope` acota la fracción de cada uno: una electrosumergible no baja
+ *  más de `BAJA_MAXIMA_ESP`; una carga que suelta un interruptor va entera (`() => 1`). Si al final
+ *  todavía falta, lo que quedó a medias se completa, en el mismo orden. */
+export function mochila<T>(items: readonly T[], valor: (x: T) => number, peso: (x: T) => number, objetivo: number,
+  tope: (x: T, fraccion: number) => number = (_, f) => f) {
+  const orden = [...items].sort((a, b) => valor(a) / Math.max(1, peso(a)) - valor(b) / Math.max(1, peso(b)))
   let w = 0
-  const pasos: Array<{ pozo: Pozo; fraccion: number; crudo: number; agua: number }> = []
-  for (const p of orden) {
-    if (w >= aguaAQuitar - 1e-9) break
-    const ag = agua(p, t), cr = crudo(p, t)
-    let frac = Math.min(1, (aguaAQuitar - w) / Math.max(1, ag))
-    if (frac < 1 && p.levantamiento === 'electrosumergible') frac = Math.min(frac, BAJA_MAXIMA_ESP)
-    w += ag * frac
-    pasos.push({ pozo: p, fraccion: frac, crudo: cr * frac, agua: ag * frac })
+  const pasos: Array<{ item: T; fraccion: number; valor: number; peso: number }> = []
+  for (const x of orden) {
+    if (w >= objetivo - 1e-9) break
+    const pe = peso(x), va = valor(x)
+    const frac = tope(x, Math.min(1, (objetivo - w) / Math.max(1, pe)))
+    w += pe * frac
+    pasos.push({ item: x, fraccion: frac, valor: va * frac, peso: pe * frac })
   }
   for (const x of pasos) {
-    if (w >= aguaAQuitar - 1e-9) break
+    if (w >= objetivo - 1e-9) break
     if (x.fraccion >= 1) continue
-    const ag = agua(x.pozo, t)
-    w += ag * (1 - x.fraccion)
-    Object.assign(x, { fraccion: 1, crudo: crudo(x.pozo, t), agua: ag })
+    const pe = peso(x.item)
+    w += pe * (1 - x.fraccion)
+    Object.assign(x, { fraccion: 1, valor: valor(x.item), peso: pe })
   }
-  return { crudo: pasos.reduce((a, x) => a + x.crudo, 0), agua: w, pasos }
+  return { valor: pasos.reduce((a, x) => a + x.valor, 0), peso: w, pasos }
 }
 
 function evitable(tramos: Tramo[]): number {
@@ -1025,7 +1093,7 @@ export function porDia(campoIds: string[], desde: Date, hasta: Date, ctx: Contex
     porDias(d0, h0, (dia, h) => {
       const m = mesDe(dia)!
       const horasDia = (Math.min(dia + D, m.hasta) - dia) / H
-      const fa = calc.fa.get(m.mes)
+      const fa = factorDelDia(calc, dia)
       const fiscal = calc.realDia.get(dia)
       const x: Dia = dias.get(dia) ?? { dia: new Date(dia), horas: h, real: null, faltan: [], potencial: 0, diferido: 0, residuo: null, meta: 0 }
       // Como en el libro: el campo sin fiscal ese día no entra ni en lo real
@@ -1046,7 +1114,7 @@ export function porDia(campoIds: string[], desde: Date, hasta: Date, ctx: Contex
       if (b <= a) continue
       porDiasDelEvento(c, ev, a, b, (dia, h) => {
         const x = dias.get(dia)
-        if (x) x.diferido += crudo(p, dia) * (calc.fa.get(mesDe(dia)?.mes ?? '') ?? 0) * h * fraccion(ev, p, dia) / 24
+        if (x) x.diferido += crudo(p, dia) * (factorDelDia(calc, dia) ?? 0) * h * fraccion(ev, p, dia) / 24
       })
     }
   }

@@ -46,3 +46,8 @@ Que cada trabajo de la semana tenga su repuesto y su gente antes de que llegue l
 ## 7. Hoy contra lo necesario
 
 No aplica: no se ofrece. Cuando se encienda, se mide con el mismo guion.
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+**Rol apagado: no ve ninguna pieza.** Si el dueño lo enciende, su ficha se arma con el mismo molde que las demás (`../PROMPT-FACILIDADES-POR-FASES.md` §3).

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useAmbito, useRol } from './store'
 import { perfilDe, tienePerfil, type PerfilCampo } from '@/entities/configuracion'
 import { GRUPOS, grupoDe } from '@/app/pantallas'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida } from '@/shared/api/piezas'
 import { useSesion } from '@/shared/api/sesion'
 
 /** ¿Hay en el alcance algún campo con ese tipo de equipo? Los pozos siempre. */
@@ -21,7 +21,7 @@ export function useSubpantallas(grupo: string | undefined): string[] {
   return useMemo(() => {
     if (!grupo) return []
     const perfiles = campos.split(',').map(id => perfilDe(config, id))
-    return GRUPOS[grupo]!.miembros.filter(p => rol.pantallas.includes(p) && pantallaVisible(p) && hayEquipo(p, perfiles))
+    return GRUPOS[grupo]!.miembros.filter(p => rol.pantallas.includes(p) && pantallaOfrecida(p) && hayEquipo(p, perfiles))
   }, [grupo, rol, campos, config])
 }
 

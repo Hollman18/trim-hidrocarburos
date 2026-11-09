@@ -34,7 +34,7 @@ import { formatoFecha } from '@/shared/lib/fecha'
 
 export type TipoCausa =
   | 'reinyeccion' | 'transporte' | 'electrosumergible' | 'levantamiento'
-  | 'energia' | 'aire' | 'compresion' | 'evacuacion' | 'proceso' | 'tratamiento'
+  | 'energia' | 'aire' | 'compresion' | 'evacuacion' | 'proceso' | 'tratamiento' | 'diluyente'
   | 'programada' | 'declarada' | 'pendiente'
 
 export const TIPO_CAUSA: Record<TipoCausa, string> = {
@@ -49,6 +49,7 @@ export const TIPO_CAUSA: Record<TipoCausa, string> = {
   evacuacion: 'Evacuación del crudo',
   proceso: 'Separación',
   tratamiento: 'Tratamiento de crudo',
+  diluyente: 'Falta de diluyente',
   programada: 'Parada programada',
   declarada: 'Declarada por el operario',
   pendiente: 'Sin identificar',
@@ -115,7 +116,7 @@ const FMT_HORA = formatoFecha({ timeZone: 'America/Bogota', day: 'numeric', mont
 const hora = (s: string) => FMT_HORA.format(new Date(s))
 
 const SERVICIO_A_TIPO: Record<EventoServicio['tipo'], TipoCausa> = {
-  aire: 'aire', energia: 'energia', compresion: 'compresion', evacuacion: 'evacuacion', proceso: 'proceso', tratamiento: 'tratamiento',
+  aire: 'aire', energia: 'energia', compresion: 'compresion', evacuacion: 'evacuacion', proceso: 'proceso', tratamiento: 'tratamiento', diluyente: 'diluyente',
 }
 
 /** De varios servicios candidatos, el que cayó primero; si cayeron a la vez,

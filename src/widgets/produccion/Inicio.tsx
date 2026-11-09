@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { useApp, usePersona, useRango, useRol } from '@/app/store'
 import type { VistaPlantaViva } from '@/shared/api/plantaViva'
 import { useHoy, type TareaHoy } from '@/shared/api/hoy'
+import { usePiezas, pantallaOfrecida } from '@/shared/api/piezas'
+import { AvisoSinPieza } from '@/widgets/SinPieza'
 import { PASOS, ETIQUETA_IMPACTO, ETIQUETA_PLANEACION, textoN1, textoN2, type ClaveN1, type CodigoN2, type Impacto, type Planeacion } from '@/shared/api/arbol'
 import { NOMBRE_TRAMO_BALANCE } from '@/shared/api/balance'
 import { deshacerAnh } from '@/shared/api/escrituras'
@@ -41,6 +43,8 @@ export function InicioProduccion({ v }: { v: VistaPlantaViva }) {
   const [perdida, setPerdida] = useState(false)
   const hoy = useHoy(rol.id, v.campos)
   const lote = useConfirmarLote()
+  // Fase 1 (facilidades): lo que sale hoy y «si falla hoy» son de la planta; el libro, de Barriles.
+  const libro = usePiezas(v.campos).has('barriles')
   const t = v.tecnica, p = v.planta
   if (!t || !p) return null
   const limita = t.tramos.find(x => x.limita)
@@ -51,7 +55,7 @@ export function InicioProduccion({ v }: { v: VistaPlantaViva }) {
   const esperan = Math.max(0, porConfirmar - enLote)
   const primero = t.siFallaHoy[0]
   const tramo = abierto ? p.tramos.find(x => x.tramo === abierto) : undefined
-  const ir = (s: string) => (rol.pantallas.includes(s) ? () => setPantalla(s) : undefined)
+  const ir = (s: string) => (rol.pantallas.includes(s) && pantallaOfrecida(s) ? () => setPantalla(s) : undefined)
   const puedePerdida = rol.puede['perdidas:registrar']
 
   const principal = (
@@ -122,11 +126,11 @@ export function InicioProduccion({ v }: { v: VistaPlantaViva }) {
     <div data-inicio-produccion={p.campoId} className="flex flex-col gap-3 sm:gap-4">
       {principal}
       {telefono
-        ? <>{porConfirmarBloque}{siFalla}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} />{finDeMes}{perdidaBoton}</>
+        ? <>{libro && porConfirmarBloque}{siFalla}{libro && <>{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} />{finDeMes}{perdidaBoton}</>}</>
         : (
           <div className="grid gap-4 min-[1100px]:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="flex min-w-0 flex-col gap-4">{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></div>
-            <div className="flex min-w-0 flex-col gap-4">{porConfirmarBloque}{siFalla}{finDeMes}{perdidaBoton}</div>
+            <div className="flex min-w-0 flex-col gap-4">{libro ? <>{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></> : <AvisoSinPieza piezas={['barriles']} que="El balance del mes" />}</div>
+            <div className="flex min-w-0 flex-col gap-4">{libro && porConfirmarBloque}{siFalla}{libro && <>{finDeMes}{perdidaBoton}</>}</div>
           </div>
         )}
       {/* B-04: el nivel 2 de la planta (el esquema y la tubería del agua), a un toque desde la hoja de su tramo. */}

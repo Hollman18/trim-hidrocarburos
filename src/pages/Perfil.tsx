@@ -6,6 +6,7 @@ import { Panel, Chip, Hueco } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { Tip } from '@/shared/ui/Tip'
 import { cn } from '@/shared/lib/cn'
+import { AvisoEnDispositivo } from '@/widgets/AvisoEnDispositivo'
 
 const TEMAS = [
   { id: 'system', nombre: 'Sistema', Icono: Monitor },
@@ -107,6 +108,9 @@ export function Perfil() {
           ))}
         </div>
       </Panel>
+
+      {/* Fase 4 de facilidades · D2: la notificación push del aviso de apagón. */}
+      <AvisoEnDispositivo />
 
       <Panel titulo="Lo que puede hacer" extra="lo otorga el servidor">
         {concedidas.map(k => <Permiso key={k} k={k} si />)}

@@ -80,3 +80,17 @@ Los segundos no se midieron aquí: los mide §9. Este rol ya estaba cerca de lo 
 | Palabras del inicio (vista / página, 390) | 81 / 84 | 34 |
 | Pantallas | 3 | 1 |
 | Toques para entregar | 1 | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | — | — | — | — |
+| **Equipos** | — | — | — | — |
+| **Energía** | La parada por energía ya clasificada, con el relé (52-SE2) en la evidencia | La fila del reporte con su causa | Cada mañana, antes de las 07:00 | Existe; comprobado en 4 |
+| **Planta** | — | — | — | — |
+| **Barriles** | Las paradas con su causa para el reporte; en campos con diluyente, el fiscal neto de nafta. Sin el dato de nafta, el reporte dice «falta el dato de la nafta que se le agrega al crudo». La falta de diluyente entra al árbol de la ANH por «Tanque de crudo o despacho de la batería» [SUPUESTO: lo confirma el experto] | Completo o qué falta. El factor de asignación es diario, como pide el art. 21 de la Res. 40236; el del mes se compara con la banda | Cada mañana | Existe; diluyente y factor diario desde 2 (4-nov) |
+| **Mantenimiento** | — | — | — | — |

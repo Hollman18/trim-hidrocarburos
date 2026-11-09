@@ -1,0 +1,31 @@
+{
+  "historial-gerente": [
+    "Feb"
+  ],
+  "ficha-p201b-gerente": [
+    "La Ceiba",
+    "Andrés Vélez",
+    "no comms",
+    "Water pump P-201B stopped at 03:52 and forced two wells to shut in: 1,665 of those barrels. The other 301 are from LC-21, which still has no cause.",
+    "water pump · La Ceiba · stopped",
+    "Waiting for the failure to be identified · 10.1 h ago"
+  ],
+  "hoy-supervisor": [
+    "La Ceiba",
+    "NO",
+    "Operations supervisor",
+    "no comms",
+    "No cause"
+  ],
+  "diagnostico-mpp301": [
+    "no comms",
+    "To hold the same differential pressure it needs 4.9 % more speed than 11 days ago, and the filter pressure drop has doubled: sand is getting in. It is the loop API 676 describes: more speed, more erosion.",
+    "no backup",
+    "11 d ago",
+    "No failures recorded."
+  ],
+  "tecnico-telefono": [
+    "La Ceiba",
+    "ÓD"
+  ]
+}

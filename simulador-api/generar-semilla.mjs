@@ -32,7 +32,9 @@ try {
 const CLASE = {
   'P-201B': 'bomba-centrifuga', 'MPP-301': 'bomba-multifasica', 'K-101': 'compresor-aire',
   'H-302': 'tratador-termico', 'V-101': 'separador-trifasico', 'TK-102': 'tanque-atmosferico',
-  'LACT-01': 'unidad-lact', 'C-401': 'compresor-gas', 'SE-2': 'switchgear',
+  'LACT-01': 'unidad-lact', 'C-401': 'compresor-gas', 'SE-2': 'switchgear', 'UPS-SALA': 'ups',
+  // Fase 5 de facilidades.
+  'P-401': 'bomba-transferencia', 'TE-501': 'tratador-electrostatico', 'CT-601': 'torre-enfriamiento', 'FWKO-101': 'separador-agua-libre', 'P-701': 'bomba-diluyente',
 }
 
 /** Librería de fórmulas del producto, versionada. Una fórmula produce UNA
@@ -44,8 +46,13 @@ const FORMULAS = {
   'compresor-aire|Derivada de presión': ['pendiente de la presión de cabezal (PT-1011) en la ventana, en psi/h', 2, 15],
 }
 
-/** De cómo se lee el tag salen el protocolo y quién estampa la hora. */
+/** De cómo se lee el tag salen el protocolo y quién estampa la hora. Las vías directas
+ *  (Fase 3 de facilidades) van primero: «analizador de red» no es el analizador del PLC. */
 const PROTOCOLO = [
+  [/^relé/, { protocolo: 'iec-61850', endpoint: 'mms://rele-se2-{campo}.ot.local:102', reloj: 'el relé de la subestación' }],
+  [/^analizador de red|^controlador del (compresor|generador)/, { protocolo: 'modbus-rtu', endpoint: 'rtu://epic-{campo}-01/rs485-1', reloj: 'el gateway, al leer (Modbus RTU no trae hora)' }],
+  [/^UPS/, { protocolo: 'snmp', endpoint: 'snmp://ups-sala-{campo}.ot.local:161', reloj: 'el gateway, al consultar la UPS' }],
+  [/^entrada digital del gateway/, { protocolo: 'entrada-digital', endpoint: 'epic-{campo}-01/DI-0', reloj: 'el gateway' }],
   [/^PI/, { protocolo: 'pi-web-api', endpoint: 'https://pi.{campo}.local/piwebapi', reloj: 'el PLC de la batería' }],
   [/^PLC/, { protocolo: 'modbus-tcp', endpoint: 'plc-{campo}.ot.local:502', reloj: 'el PLC de la batería' }],
   [/^variador/, { protocolo: 'modbus-tcp', endpoint: 'vfd-{campo}.ot.local:502', reloj: 'el variador' }],

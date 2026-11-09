@@ -1,6 +1,6 @@
 import { useApp, useRol } from '@/app/store'
 import { useTuberiaAgua } from '@/shared/api/choke'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida } from '@/shared/api/piezas'
 import { Boton } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
 import { n0, n1 } from '@/shared/lib/formato'
@@ -30,7 +30,7 @@ export function AguaHoy({ campoId, bomba, className }: { campoId: string; bomba:
   const sube = o ? o.entraBpd > o.cabenBpd : false
   // Para quien opera, las frases del colchón; la del empate de las capacidades es de ingeniería (está en Agua).
   const frases = a.frases.filter(f => !/exactamente lo mismo|casi iguales/.test(f))
-  const veAgua = rol.pantallas.includes('agua') && pantallaVisible('agua')
+  const veAgua = rol.pantallas.includes('agua') && pantallaOfrecida('agua')
   const rotulo = 'w-[64px] shrink-0 text-[14px] font-semibold text-[var(--tinta2)]'
   return (
     <section aria-label="La tubería del agua, hoy" data-agua-hoy={campoId}

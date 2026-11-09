@@ -40,3 +40,10 @@ Lo que no se pudo resolver leyendo el código, lo que parece inconsistente y lo 
 
 20. No hay caso en `referencia/` para `GET /api/vistas/diferidos/base`, `GET /api/vistas/potencial-reciente`, el libro y el día a día del **mes en curso**, ni para un período que corte meses (residuo ≠ 0). Los números de este capítulo para esos casos salen de correr el motor; un backend no tiene contra qué compararlos por HTTP. Conviene agregar al menos: `diferidos/<campo>-curso`, `diferidos/<campo>-2026-09-15_2026-10-02`, `base/<campo>-curso` y `potencial-reciente/portafolio`.
 21. **Eventos que se pisan.** El contrato pide escoger entre normalizar (lo que hace el motor) o rechazar en la ingesta (`CONTRATO.md:868-871`). Hasta que se escoja, un backend que rechace dará otros números en los mismos datos.
+
+### Del diluyente (Fase 2 de facilidades, 4-nov-2026)
+
+22. **[SUPUESTO] La convención del encogimiento.** `crudoNeto` usa la proporcional, $M/(1-s) - N$. El art. 25 dice «tener en cuenta el efecto» sin fijar convención; la de «todo al crudo» ($M - N$) da 0,56 % menos crudo con 18 % de nafta (investigación 20, §6.2). Pregunta al área de fiscalización del operador.
+23. **[SUPUESTO] Un encogimiento por campo.** El operador valida una fórmula en laboratorio (art. 25); TRIM recibe una cifra. Si la fórmula depende de la proporción de nafta del día, hay que mandar el encogimiento por día.
+24. **[SUPUESTO] La falta de diluyente en la ANH.** La Tabla 1 no tiene esa causa: entra por la fila de evacuación del crudo (`REGLAS_ANH@2#evacuacion`) porque sin nafta el crudo pesado no se puede despachar. Lo confirma el experto.
+25. **El °API de la fila de la banda.** Si `METROLOGIA_CAMPO.api` fuera el de la mezcla con nafta y no el del crudo, se podría escoger la fila equivocada de la Fig. 10.2 (investigación 20, §8.2 g). Hay que confirmar qué °API pide la figura.

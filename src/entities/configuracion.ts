@@ -20,6 +20,8 @@ import { pozoDe } from './pozos'
 import { validarCapacidades, normalizarCapacidades, diferenciasCapacidades, capacidadesFirmadas, type CapacidadesCampo } from './capacidades'
 import { validarConversion, normalizarConversion, diferenciasConversion, type FilaConversionAnh } from './anh-conversion' // A3
 import { formatoFecha } from '@/shared/lib/fecha'
+import { validarPiezas, esPieza, type PiezaTrim } from './piezas-trim'
+import { PIEZAS_DEMO } from '@/shared/config/producto'
 
 /** Un tramo de lo que fija el gerente de activo para un campo: rige desde su
  *  día hasta que empiece el siguiente. Una meta vigente es un tramo; un plan
@@ -121,6 +123,9 @@ export interface ConfigCampo {
    *  sin ellas rige `TURNOS_POR_DEFECTO` y la jornada dice «horario por defecto,
    *  sin firmar» (`jornada.ts`). Es técnica: la firma el administrador. */
   turnos?: string[]
+  /** Fase 1 (facilidades) · Las piezas de TRIM de este campo, si no son las del
+   *  cliente (`Config.piezas`). Opcional: ausente, rigen las del cliente. */
+  piezas?: PiezaTrim[]
 }
 
 /** A2 · Las horas de cambio de turno de un campo que no las tiene firmadas. */
@@ -162,6 +167,10 @@ export interface Config {
    *  campo (anh-conversion.ts). Técnica: la firma el administrador. Opcional:
    *  ausente, no hay tabla firmada. */
   conversionAnh?: FilaConversionAnh[]
+  /** Fase 1 (facilidades) · Las piezas de TRIM que contrató el cliente
+   *  (`entities/piezas-trim.ts`). Opcional: ausente, todas encendidas (lo de hoy).
+   *  El Núcleo va siempre. */
+  piezas?: PiezaTrim[]
 }
 
 /** Cada cambio de configuración es una versión firmada. Nunca se sobrescribe:
@@ -195,6 +204,7 @@ const CAMPOS_INICIALES: Config['campos'] = Object.fromEntries(Object.entries(SEM
  *  siempre el mismo objeto. */
 export const configInicial = perezoso((): Config => ({
   empresa: 'Operadora de demostración',
+  ...(PIEZAS_DEMO ? { piezas: PIEZAS_DEMO.filter(esPieza) } : {}),
   campos: CAMPOS_INICIALES,
   tanques: [
     { id: 'TK-AG-CE', nombre: 'Tanque de agua de La Ceiba', campoId: 'ceiba', bomba: 'P-201B', capacidadBbl: 30000,
@@ -580,6 +590,7 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
   const nombre = (id: string) => CAMPOS.find(x => x.id === id)?.nombre ?? id
   const conocido = (id: string) => CAMPOS.some(x => x.id === id)
   if (!c.empresa.trim()) e.push('Falta el nombre de la empresa para el membrete.')
+  e.push(...validarPiezas(c.piezas, 'Las piezas del cliente'))
   // Un campo no se quita si alguna de sus metas midió un mes cerrado.
   for (const [cid, x] of Object.entries(antes.campos))
     if (!c.campos[cid] && x.metas.some(t => t.desde < desdeMinimo)) e.push(`${nombre(cid)}: no se puede quitar el campo: sus metas midieron meses que ya cerraron.`)
@@ -607,6 +618,7 @@ export function validarConfig(c: Config, antes: Config, desdeMinimo: string, aho
       if (t.desde < desdeMinimo && !x.metas.some(m => m.desde === t.desde)) e.push(`${id}: no se puede quitar la meta que regía desde el ${fechaDia(t.desde)}: es de un mes cerrado.`)
     // A2 · El cambio de turno, si viene: de 1 a 4 horas HH:MM sin repetir.
     if (x.turnos != null) e.push(...validarTurnos(x.turnos, id))
+    e.push(...validarPiezas(x.piezas, `${id}: las piezas`))
   }
   const idsTanque = new Set<string>(), bombasConTanque = new Set<string>()
   for (const t of c.tanques) {

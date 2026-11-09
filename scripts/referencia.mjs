@@ -610,12 +610,13 @@ function casosDe(M, escenarios) {
     casos.push(caso(`choke-arbol/${c}-${mes}-gestion`, `El árbol de pérdidas del choke de ${c}, ${mes} (${por}), en el orden de gestión`, C.ARBOL_CHOKE, { ...q, orden: 'gestion' }, CHK.pedirArbolChoke({ ...q, orden: 'gestion' }, ctx, {})))
   }
   for (const p of ARB.pedirParadasAnh({ campos: todos, ...rango(ultimo) }, ctx, {})) filasVistas.add(p.propuesta.fila)
-  // 5E·H37: el umbral de cierre de la NSTA (lo sin explicar ≤ 2,5 % del potencial, `cuadra`) puesto a prueba. En un
-  // mes entero lo sin explicar es 0; en un día no: es el inventario del tanque de venta (La Ceiba, 22-sep: 88 bbl,
-  // 0,8 %). En dos horas de ese día, con P-201B parada, pasa el 2,5 %: el fiscal es diario, lo real se reparte
-  // parejo por hora y lo diferido de esas horas no. Los escenarios no sirven aquí: lo sin explicar sale del libro.
+  // 5E·H37: el umbral de cierre de la NSTA (lo sin explicar ≤ 2,5 % del potencial, `cuadra`) puesto a prueba. Desde D1
+  // (4-nov, factor de asignación diario) un día entero y un mes entero dejan 0. Una jornada que corta dos días (La
+  // Ceiba, 21-sep 18:00 a 22-sep 18:00) no: lo real de cada día se reparte parejo por hora y lo diferido no (200 bbl,
+  // 1,75 %, cuadra). En dos horas del 22, con P-201B parada, pasa el 2,5 %. Los escenarios no sirven aquí: lo sin
+  // explicar sale del libro.
   for (const [id, descripcion, desde, hasta] of [
-    ['reparto-ceiba-2026-09-22', 'Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre (un día): lo sin explicar no es 0, es el inventario del tanque de venta, y cuadra', '2026-09-22T00:00:00-05:00', '2026-09-23T00:00:00-05:00'],
+    ['reparto-ceiba-2026-09-21-18a18', 'Lo perdido por tramo y por escalón en La Ceiba del 21 de septiembre a las 18:00 al 22 a las 18:00 (una jornada que corta dos días): lo sin explicar no es 0 porque lo real de cada día se reparte parejo por hora, y cuadra', '2026-09-21T18:00:00-05:00', '2026-09-22T18:00:00-05:00'],
     ['reparto-ceiba-2026-09-22-12a14', 'Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre de 12:00 a 14:00, con P-201B parada: lo sin explicar pasa el 2,5 % del potencial (no cuadra), porque el fiscal es diario', '2026-09-22T12:00:00-05:00', '2026-09-22T14:00:00-05:00'],
   ]) {
     const q = { campos: ['ceiba'], desde: new Date(desde), hasta: new Date(hasta) }

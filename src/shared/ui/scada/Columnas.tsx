@@ -13,7 +13,8 @@ import { CLASE_FOCO, useAnidado, useCursor } from './cursor'
    redondas con su rótulo a la izquierda (nunca el 0: el piso ya lo dice) y, al pasar el cursor, tocar
    o moverse con las flechas, el período resaltado y la ficha con cada parte y el total. El dibujo no
    baja de `minimo` px (por debajo se desplaza de lado): así su letra de 15 nunca queda de menos de 12
-   en pantalla. Un período sin nada no lleva columna ni cifra; nunca un cero pintado (en la ficha,
+   en pantalla. Si la cifra más ancha de los totales no cabe sobre su columna («1.001» en 14 turnos), el
+   dibujo se ensancha lo justo, y `minimo` con él: la letra no se achica y las cifras no se pisan. Un período sin nada no lleva columna ni cifra; nunca un cero pintado (en la ficha,
    «ninguna»). La leyenda va debajo, con el mismo gris de cada parte y su palabra. */
 
 export interface PeriodoColumna {
@@ -67,7 +68,12 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
   const marcas = useMemo(() => marcasRedondas(0, tope, detalle ? 6 : 3).filter(v => v > 0 && v <= tope), [tope, detalle])
   // El margen de los rótulos del eje y (a 15, como el resto del dibujo).
   const IZQ = 14 + Math.max(0, ...marcas.map(v => formato(v).length)) * 9
-  const w = (DER - IZQ) / Math.max(1, periodos.length)
+  // Cada columna lleva su total encima a 15: lo que mide la cifra más ancha (≈ 8,4 un dígito tabular,
+  // ≈ 4 el punto o la coma) más 3 de aire.
+  const anchoCifra = (t: string) => [...t].reduce((a, c) => a + (/\d/.test(c) ? 8.4 : 4), 3)
+  const necesita = Math.max(0, ...totales.map(t => (t > 0 ? anchoCifra(formato(t)) : 0)))
+  const der = Math.max(DER, IZQ + necesita * periodos.length), ancho = der + (ANCHO - DER)
+  const w = (der - IZQ) / Math.max(1, periodos.length)
   const [refCaja, anidado] = useAnidado<HTMLDivElement>()
   const nombre = (p: PeriodoColumna) => nombrePeriodo?.(p) ?? `${p.rotulo}${p.segundo ? ` ${p.segundo}` : ''}`
 
@@ -82,7 +88,7 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
     }
   }
   const { ref: refSvg, cursor, props: { style: estiloCursor, ...eventos }, dicho } = useCursor({
-    n: periodos.length, vista: ANCHO, activo: !anidado && periodos.length > 0, enfocable: !anidado,
+    n: periodos.length, vista: ancho, activo: !anidado && periodos.length > 0, enfocable: !anidado,
     indiceEn: x => Math.floor((x - IZQ) / w),
     inicial: () => periodos.length - 1,
     anuncio: i => {
@@ -99,7 +105,7 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
       <g data-rejilla="">
         {marcas.map(v => (
           <g key={v}>
-            <line x1={IZQ} x2={DER} y1={Math.round(Y(v, tope)) + 0.5} y2={Math.round(Y(v, tope)) + 0.5} stroke="var(--linea2)" strokeWidth={1} />
+            <line x1={IZQ} x2={der} y1={Math.round(Y(v, tope)) + 0.5} y2={Math.round(Y(v, tope)) + 0.5} stroke="var(--linea2)" strokeWidth={1} />
             <text x={IZQ - 6} y={Y(v, tope) + 5} fontSize={15} textAnchor="end" fill="var(--tinta3)" className="tabular">{formato(v)}</text>
           </g>
         ))}
@@ -121,9 +127,9 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
           </g>
         )
       })}
-      <line x1={IZQ - 4} x2={DER} y1={PISO} y2={PISO} stroke="var(--linea)" />
+      <line x1={IZQ - 4} x2={der} y1={PISO} y2={PISO} stroke="var(--linea)" />
     </>
-  ), [periodos, partes, totales, marcas, IZQ, w, tope, formato])
+  ), [periodos, partes, totales, marcas, IZQ, w, der, tope, formato])
 
   let resalte = null, ficha = null
   if (cursor) {
@@ -132,15 +138,15 @@ export function Columnas({ periodos, partes, 'aria-label': etiqueta, titulo, nom
     resalte = <rect x={xx + 1} y={PISO - CAMPO - 22} width={Math.max(0, w - 2)} height={CAMPO + 22} fill="var(--panel2)" data-cursor={i} pointerEvents="none" />
     const r = cursor.caja
     if (r.width > 0) {
-      const s = r.width / ANCHO
+      const s = r.width / ancho
       ficha = <FichaFlotante contenido={fichaDe(i)} ancla={{ x: r.left + (xx + w / 2) * s, y: r.top + (PISO - CAMPO / 2) * s, arriba: r.top, abajo: r.top + r.height, lado: cursor.modo !== 'toque' }} />
     }
   }
 
   return (
     <div ref={refCaja} className="contents">
-      <svg ref={refSvg} viewBox={`0 0 ${ANCHO} ${ALTO}`} role="img" aria-label={etiqueta} data-kit="columnas" data-estado="normal" {...datos}
-        className={cn('block h-auto w-full', CLASE_FOCO, 'focus-visible:outline-offset-[-2px]', className)} style={{ minWidth: minimo, ...estiloCursor }} {...eventos}>
+      <svg ref={refSvg} viewBox={`0 0 ${ancho} ${ALTO}`} role="img" aria-label={etiqueta} data-kit="columnas" data-estado="normal" {...datos}
+        className={cn('block h-auto w-full', CLASE_FOCO, 'focus-visible:outline-offset-[-2px]', className)} style={{ minWidth: minimo * ancho / ANCHO, ...estiloCursor }} {...eventos}>
         {resalte}
         {fijo}
       </svg>

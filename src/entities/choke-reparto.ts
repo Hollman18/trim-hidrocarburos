@@ -660,6 +660,7 @@ const FAMILIA: Record<TipoCausa, [string, string]> = {
   energia: ['energía eléctrica', 'energía eléctrica'], aire: ['aire de instrumentos', 'aire de instrumentos'],
   compresion: ['compresor de gas', 'compresores de gas'], evacuacion: ['despacho del crudo', 'despacho del crudo'],
   proceso: ['separador', 'separadores'], tratamiento: ['tratamiento de crudo', 'tratamiento de crudo'],
+  diluyente: ['sistema de diluyente', 'sistemas de diluyente'],
   programada: ['parada programada', 'paradas programadas'], declarada: ['según el operario', 'según el operario'],
   pendiente: ['sin identificar', 'sin identificar'],
 }

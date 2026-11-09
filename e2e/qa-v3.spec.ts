@@ -141,7 +141,7 @@ test('QA-10 · «¿Está funcionando?»: lo ganado dice desde cuándo suma (desd
   await f.abrir('/#/ger/planta-viva/ceiba/curso')
   const t = page.locator('main [data-funcionando]')
   await expect(t).toContainText('Antes de TRIM')
-  await expect(t).toContainText(/Ya se ganó\s*3\.934\s*bbl\s*dejaron de diferirse desde el 1 de septiembre/)
+  await expect(t).toContainText(/Ya se ganó\s*3\.901\s*bbl\s*dejaron de diferirse desde el 1 de septiembre/)
   f.cerrar()
 })
 

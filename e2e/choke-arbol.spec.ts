@@ -124,10 +124,10 @@ test('producción abre la planta de La Ceiba: planeada o no, causa, detalle y pa
     const t = await traza(f.page, 'pozo')
     const rs = t?.hijos ?? []
     const n1 = rs[0]?.hijos ?? []
-    f.ok(!!t && t.bbl === 6675 && cuadraTraza(rs).length === 0, `las ramas del pozo suman el tramo (${t?.bbl} bbl) y cada una las suyas`)
+    f.ok(!!t && t.bbl === 6720 && cuadraTraza(rs).length === 0, `las ramas del pozo suman el tramo (${t?.bbl} bbl) y cada una las suyas`)
     f.ok(n1.length >= 2 && n1.every((x, i) => i === 0 || x.bbl <= n1[i - 1]!.bbl), `las causas van de más a menos barriles (${n1.map(x => `${x.valor} ${x.bbl}`).join(', ')})`)
     const texto = (await f.page.locator('[data-traza="pozo"]').innerText()).replace(/\s+/g, ' ')
-    f.ok(texto.includes('No planeada - Mecánica subsuelo') && texto.includes('Falla ESP') && /LC-11[\s\S]*3\.677/.test(texto), 'la causa mayor, su detalle y cada electrosumergible con sus barriles (LC-11, 3.677)')
+    f.ok(texto.includes('No planeada - Mecánica subsuelo') && texto.includes('Falla ESP') && /LC-11[\s\S]*3\.710/.test(texto), 'la causa mayor, su detalle y cada electrosumergible con sus barriles (LC-11, 3.710)')
     f.ok(/Falta el detalle/.test(texto), 'lo que falta va en su rama, «Falta el detalle», sin repartirse')
   })
   f.cerrar()

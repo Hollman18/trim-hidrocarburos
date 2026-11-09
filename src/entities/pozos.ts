@@ -24,6 +24,10 @@ export interface Prueba {
   aguaBpd: number
   /** Frecuencia del variador durante la prueba (electrosumergible). */
   hz?: number
+  /** Solo en un campo que diluye en fondo de pozo: la nafta que se le inyectaba
+   *  durante la prueba, bbl/d. El separador midió `crudoBpd` con ella adentro
+   *  (`crudoDePrueba`, diluyente.ts). */
+  diluyenteBpd?: number
 }
 
 export interface Pozo {
@@ -96,7 +100,9 @@ export interface EventoPozo {
   respuesta?: Respuesta
 }
 
-export type TipoServicio = 'aire' | 'energia' | 'compresion' | 'evacuacion' | 'proceso' | 'tratamiento'
+/** `diluyente`: el sistema de dilución (la dosificadora o el tanque de nafta). Si
+ *  falta la nafta, el crudo pesado no se puede bombear y se cierran pozos. */
+export type TipoServicio = 'aire' | 'energia' | 'compresion' | 'evacuacion' | 'proceso' | 'tratamiento' | 'diluyente'
 
 /** Un servicio o equipo de proceso que, al caer, apaga o frena pozos. */
 export interface EventoServicio {
@@ -118,8 +124,14 @@ export interface ProduccionMes {
   publicado: boolean
   /** Barriles netos de cada día. El último día del mes en curso es parcial.
    *  Un día que el computador de flujo no reportó va como null (o falta al
-   *  final del arreglo): es un hueco de custodia, nunca un cero. */
+   *  final del arreglo): es un hueco de custodia, nunca un cero. En un campo que
+   *  diluye en planta o en fondo de pozo, es la MEZCLA con la nafta. */
   dias: Array<number | null>
+  /** Solo en un campo que diluye en planta o en fondo de pozo: la nafta que se le
+   *  agregó cada día, bbl, del medidor del diluyente (Res. 40236, art. 25,
+   *  parágrafo 1). Con ella el libro lleva la mezcla a crudo neto. Un día sin dato
+   *  va como null (o falta al final): ese día no se publica. */
+  nafta?: Array<number | null>
 }
 
 /* Los insumos se leen de `insumos.ts`, nunca de `datos/*`: ver allí por qué. */

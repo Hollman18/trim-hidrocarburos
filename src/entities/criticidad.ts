@@ -347,6 +347,9 @@ export function criticidadDelCampo(campoId: string, ctx: Contexto): CriticidadDe
     if (perfil) { filas.push(deBomba(perfil, base, ctx)); continue }
     if (delTren.has(e.elemento)) { filas.push(deHermana(e.elemento, base, ctx)); continue }
     const nombre = EQUIPOS[e.elemento]?.nombre ?? derivada.get(e.elemento)?.nombre ?? e.elemento
+    // Fase 5 de facilidades: una bomba de despacho o de diluyente es un equipo de planta con su familia
+    // (familias-planta.ts), no una bomba de la línea sin perfil: se mide como los demás de la planta.
+    if (EQUIPOS[e.elemento]?.familia) { filas.push(deServicio(e, base, ctx)); continue }
     if (esBomba(e.elemento) || derivada.get(e.elemento)?.clase === 'bomba') {
       sinCalcular.push({ equipo: e.elemento, nombre, motivo: 'Bomba sin perfil en este campo: no se sabe cuánto mueve ni cuánto duran sus fallas' })
       continue

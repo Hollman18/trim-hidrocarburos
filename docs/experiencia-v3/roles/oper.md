@@ -84,3 +84,17 @@ Los segundos no se midieron aquí: los mide §9.
 | Palabras del inicio (vista / página, 390) | 93 / 110 | 25 |
 | Pantallas | 7 | 1 |
 | Toques para decir qué se dañó | 2 | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | El aviso del evento de planta aunque no tenga TRIM abierto: la notificación push en el celular (D2), si la activó en Perfil | Una pregunta con botones | Al instante | Desde 4 (4-nov) |
+| **Equipos** | Una pregunta por vez cuando la señal no sabe, también de equipos de planta | Botones grandes, un toque | Cuando le preguntan | Existe; se amplía en 4–5 |
+| **Energía** | La confirmación de lo que la señal no ve, arriba de su Hoy y en su notificación | «¿Ve luz en la subestación 2? [Sí] [No]»: lo que responde lo ven el supervisor y el de energía | Durante el evento | Desde 4 (4-nov) |
+| **Planta** | — | Le llega como pregunta | — | — |
+| **Barriles** | Después del evento: si hubo derrame, quema o crudo fuera de especificación. Al registrar una pérdida, dos botones más: «Evaporación» y «Fondos de tanque» (los dos en la planta, que ya viene escogida) | «¿Hubo derrame, quema o crudo fuera de especificación? [Sí] [No]»: alimenta el perdido | Al cerrar el evento | Registro de pérdidas existe; evaporación y fondos desde 2 (4-nov); la pregunta tras el apagón en 4 |
+| **Mantenimiento** | — | — | — | — |

@@ -1490,6 +1490,180 @@
    "objeto": "ruta",
    "clave": "GET /vistas/historial",
    "motivo": "el historial del diferido por tramo y del perdido aparte, mes a mes o turno a turno (el dueño, 28-oct)"
+  },
+  {
+   "fecha": "2026-11-03",
+   "commit": "pendiente",
+   "id": "PZ1",
+   "tipo": "AGREGADO",
+   "objeto": "campo",
+   "clave": "POST /configuracion · Config.piezas y ConfigCampo.piezas",
+   "motivo": "las piezas de TRIM que contrata cada cliente (Fase 1 de facilidades): sin el campo, todas encendidas como en v1; el Núcleo va siempre; validarConfig rechaza una pieza que no existe"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "DL1",
+   "objeto": "campo",
+   "clave": "GET /api/campos/:campo/produccion-diaria · origen.diluyente y meses[].nafta",
+   "motivo": "el diluyente de cada campo (Fase 2 de facilidades): con esquema planta o fondo el fiscal es la mezcla y el libro la lleva a crudo neto = mezcla ÷ (1 − encogimiento) − nafta (Res. 40236, art. 25); sin origen.diluyente el campo no diluye y nada cambia"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "DL2",
+   "objeto": "campo",
+   "clave": "GET /api/campos/:campo/pozos · pruebas[].diluyenteBpd",
+   "motivo": "en fondo de pozo la prueba mide crudo + nafta: el libro usa crudoBpd − diluyenteBpd; una prueba de fondo sin ella deja el libro no publicable"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "DL3",
+   "objeto": "campo",
+   "clave": "GET /api/vistas/diferidos y /mensual · sinNafta[] y motivos[].codigo sin-nafta",
+   "motivo": "un día con fiscal de la mezcla y sin la nafta no es una cifra: no entra ni en lo real ni en el potencial y el libro no se publica; un backend que no mande sinNafta se lee como []"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "DL4",
+   "objeto": "valor",
+   "clave": "servicios/eventos tipo diluyente · causa diluyente · POST /api/perdidas tipo evaporacion y fondos",
+   "motivo": "la falta de diluyente como causa de parada (en la ANH, por la fila evacuacion de REGLAS_ANH@2) y la evaporación y los fondos de tanque como pérdidas, aparte del diferido"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "id": "D1",
+   "tipo": "CAMBIADO",
+   "objeto": "regla",
+   "clave": "GET /api/vistas/diferidos, /mensual, /produccion/diaria, /asignacion · el factor con que se valora cada barril",
+   "motivo": "D1 del dueño: el factor de asignación es diario (Res. 40236, art. 21); cada barril se valora con el de su día y el del mes queda para la banda, el gráfico y los caudales de ahora; la identidad del libro queda exacta día por día; cambian números de la referencia, ninguna forma",
+   "reemplazo": "el factor del día (factorDelDia, src/entities/libro.ts): lo real del día ÷ lo teórico del día; un día sin fiscal o sin teórico va con el del mes; fa[] sigue siendo el del mes (la banda, el gráfico, faDe)",
+   "resuelto": "registrado",
+   "efecto": "cambian números de la referencia (La Ceiba sep: 7.716 → 7.754 bbl diferidos); ninguna forma"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "CX1",
+   "objeto": "campo",
+   "clave": "GET /api/campos · conexion",
+   "motivo": "cómo se conecta TRIM a cada planta (Fase 3 de facilidades): historiador, mezcla, directa o minima; ausente = mezcla, lo de v1"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "CX2",
+   "objeto": "valor",
+   "clave": "fuente.protocolo · iec-61850, dnp3, modbus-rtu, snmp, entrada-digital",
+   "motivo": "las vías de conexión directa a los equipos de planta, todas de solo lectura; en un campo sin historiador el origen de cada instrumento es el directo"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "EV1",
+   "objeto": "ruta",
+   "clave": "GET /api/vistas/planta/evento · POST /api/planta/eventos/prueba, /:id/terminar, /:id/respuesta",
+   "motivo": "el evento de planta (Fase 4 de facilidades): el apagón total o parcial, por relé, firma de cargas o silencio del gateway, con sus relojes; el aviso de prueba que nunca entra al libro y la respuesta del operador"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "PU1",
+   "objeto": "ruta",
+   "clave": "GET /api/push/llave · POST /api/push/suscripciones, /baja, /enviar · GET /api/push/aviso",
+   "motivo": "D2 del dueño: notificación push del aviso de apagón en el celular o el escritorio, Web Push con VAPID y sin contenido"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "RO1",
+   "objeto": "valor",
+   "clave": "rol ener · Responsable de energía",
+   "motivo": "D3 del dueño: el rol existe y se enciende si el cliente tiene esa persona; si no, lo de energía lo recibe el jefe de mantenimiento"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "FA1",
+   "objeto": "valor",
+   "clave": "GET /api/catalogo · UPS-SALA (clase ups) y las familias de energía y aire",
+   "motivo": "las familias generador, transformador, ups y compresor-aire con sus partes, variables y límites con fuente o [SUPUESTO]; la UPS de El Palmar pasa a ser un equipo"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "PL1",
+   "objeto": "valor",
+   "clave": "GET /api/catalogo · Equipo.familia y los equipos de planta P-401, TE-501, CT-601, FWKO-101 y P-701",
+   "motivo": "la pieza Planta (Fase 5 de facilidades): las familias de planta con su tren, y un equipo de demo de cada una en Morichal"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "PL2",
+   "objeto": "campo",
+   "clave": "GET /api/vistas/riesgo · sinCifra; GET /api/vistas/equipos/:campo/:equipo/tecnico · vigia",
+   "motivo": "el vigía de planta: lo que avisa entra al riesgo con la misma cifra de «Si falla hoy» (sin cifra en despacho y compresión) y a la ficha del equipo; los dos campos son opcionales"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "AR1",
+   "objeto": "ruta",
+   "clave": "GET /api/vistas/planta/arranque · POST /api/planta/eventos/:id/fase",
+   "motivo": "el re-arranque guiado (Fase 6 de facilidades): el orden de arranque por barriles con sus límites y su fuente, el cronómetro por fases y el margen N-1 con qué soltar primero en barriles"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "AR2",
+   "objeto": "campo",
+   "clave": "RegistroEventoPlanta.fases",
+   "motivo": "las marcas del cronómetro del arranque (fase, hora y quién), en orden y una vez; opcional: un evento sin marcas no la trae"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "IN1",
+   "objeto": "ruta",
+   "clave": "GET /api/indicadores/catalogo · GET /api/vistas/panel · GET /api/vistas/panel/senales · POST /api/paneles",
+   "motivo": "el panel de indicadores (Fase 7 de facilidades): cada persona arma el suyo con indicadores de fórmula y fuente y con cualquier señal conectada; sin dato dice «sin dato»"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "IN2",
+   "objeto": "valor",
+   "clave": "pantalla panel · Mi panel, en ger, prod y conf",
+   "motivo": "la pantalla del panel, en la puerta Resultados de quienes lo arman; los demás roles no cambian"
+  },
+  {
+   "fecha": "2026-11-04",
+   "commit": "pendiente",
+   "tipo": "AGREGADO",
+   "id": "IN3",
+   "objeto": "valor",
+   "clave": "indicadores · diferido-por-causa, mtbf, mttr, horas-proactivas, cortes-energia, margen-n1",
+   "motivo": "el catálogo inicial que pidió el prompt de fases, cada uno con su caso calculado a mano en scripts/verificar-indicadores.mjs"
   }
  ]
 }

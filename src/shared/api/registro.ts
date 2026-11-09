@@ -97,3 +97,6 @@ export function sugerir(tag: string, equipos: EquipoRegistrado[]) {
     confianza: mejor.comun >= 4 ? 'alta' : 'media',
   } as const
 }
+
+/** Cómo se conecta TRIM a cada planta (Fase 3 de facilidades): viene del registro de campos. */
+export { conexionDe, NOMBRE_CONEXION, type ConexionPlanta } from '@/entities/conexion'

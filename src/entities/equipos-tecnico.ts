@@ -34,6 +34,8 @@
  *  El motor no inventa: lo que no tiene, no lo trae (el rango del instrumento y el
  *  disparo de cada protección, X2 §7 pedido 4: `sinDisparo`). Todo es JSON puro
  *  (las horas van en ISO con zona): viaja tal cual por el contrato. */
+import { FAMILIAS_PLANTA } from './familias-planta'
+import { vigiaDePlanta, fraseVigia } from './vigia-planta'
 import { causaDeEvento, type Contexto } from './causa-senal'
 import type { Dispositivo, EstadoDispositivo } from './tipos'
 import { EQUIPOS } from './equipos'
@@ -134,6 +136,9 @@ function familiaDe(campoId: string, id: string, perfil?: PerfilBomba, agua?: Tub
   if (bombasDelTren(agua).some(b => b.id === id)) return 'bomba de agua'
   const eq = Object.hasOwn(EQUIPOS, id) ? EQUIPOS[id] : undefined
   if (!eq) return 'equipo'
+  // Fases 4 y 5 de facilidades: con familia de planta, su nombre (las de antes siguen como estaban).
+  if (eq.familia && !eq.servicio) return FAMILIAS_PLANTA[eq.familia].nombre.toLowerCase()
+  if (eq.familia && eq.servicio && !Object.hasOwn(FAMILIA_SERVICIO, eq.servicio)) return FAMILIAS_PLANTA[eq.familia].nombre.toLowerCase()
   if (eq.servicio && Object.hasOwn(FAMILIA_SERVICIO, eq.servicio)) return FAMILIA_SERVICIO[eq.servicio]!
   // Lo de evacuación es el tanque o la medición oficial: lo dice su sistema.
   return eq.sistema === 'Almacenamiento' ? 'tanque de crudo' : eq.sistema === 'Medición fiscal' ? 'medición oficial' : eq.sistema.toLowerCase()
@@ -147,6 +152,9 @@ function trenDe(campoId: string, id: string, perfil?: PerfilBomba, agua?: Tuberi
   if (perfil) return perfil.subtipo === 'multifasica' ? 'recoleccion' : 'agua'
   if (bombasDelTren(agua).some(b => b.id === id)) return 'agua'
   const s = Object.hasOwn(EQUIPOS, id) ? EQUIPOS[id]!.servicio : undefined
+  // Fase 5 de facilidades: el tren de su familia de planta (la torre de enfriamiento es del agua).
+  const f = Object.hasOwn(EQUIPOS, id) ? EQUIPOS[id]!.familia : undefined
+  if (f) return FAMILIAS_PLANTA[f].tren
   return s === 'aire' || s === 'energia' ? 'servicios' : s === 'compresion' ? 'gas' : 'crudo'
 }
 
@@ -589,6 +597,9 @@ export interface VistaNivel3 {
   historia?: HistoriaNivel3
   /** Los repuestos críticos bajo su mínimo (los demás, en el diagnóstico). */
   repuestos: RepuestoNivel3[]
+  /** Fase 5 de facilidades · lo que avisa el vigía de planta en este equipo (vigia-planta.ts), en frases:
+   *  «Vibración de P-401: 3,1 mm/s; sube hacia su alarma (3,9 mm/s) y llega en 8 d.» Ausente si no avisa. */
+  vigia?: Array<{ tag: string; frase: string; accion?: string; fuente: string }>
   /** Hay qué mostrar en el nivel 4 (salud por parte, historia del PLC, instrumentos). */
   diagnostico: boolean
 }
@@ -637,7 +648,7 @@ function textoLimite(bandaN: readonly [number, number] | undefined, alarmas: rea
   return [b, a].filter(Boolean).join(' · ') || 'sin límite declarado'
 }
 
-function senalDe(campoId: string, d: Dispositivo, parado: boolean): SenalNivel3 {
+export function senalDe(campoId: string, d: Dispositivo, parado: boolean): SenalNivel3 {
   const valor = typeof d.valor === 'number' ? d.valor : null
   const serie = d.serie?.valores ?? []
   const bandaN = banda(d.limite)
@@ -831,6 +842,8 @@ export function nivelEquipo(campoId: string, equipo: string, ctx: Contexto, vers
     aviso: !r.enTransito,
   }))
 
+  // Fase 5 de facilidades: lo que avisa el vigía de planta en este equipo.
+  const avisosVigia = vigiaDePlanta(campoId).filter(a => a.equipo === equipo).map(a => ({ tag: a.tag, frase: fraseVigia(a), ...(a.accion ? { accion: a.accion } : {}), fuente: a.limite.fuente }))
   const crit5 = eq ? `criticidad ${eq.criticidad} de 5` : ''
   const subtitulo = eq ? [eq.nombre.charAt(0).toLowerCase() + eq.nombre.slice(1), eq.sistema.toLowerCase(), crit5].join(' · ')
     : `${familia} · sin instrumento`
@@ -843,6 +856,7 @@ export function nivelEquipo(campoId: string, equipo: string, ctx: Contexto, vers
     senales, plegadas, discretas, sinDisparo: todas.length > 0,
     ...(esquemaAgua ? { esquemaAgua } : {}), ...(mientras ? { mientras } : {}), ...(tendencias ? { tendencias } : {}),
     ...(historia ? { historia } : {}), repuestos, diagnostico: !!eq,
+    ...(avisosVigia.length ? { vigia: avisosVigia } : {}),
   }
 }
 

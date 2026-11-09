@@ -1,0 +1,17 @@
+Son las tres de la mañana. En la planta, una bomba se detiene.
+
+Cuando suena la alarma, la producción ya se está perdiendo. Y nadie lo vio venir.
+
+Un corte de energía. Un variador desbalanceado. Un motor que pide más corriente para mover lo mismo. Las señales estaban ahí.
+
+TRIM Hidrocarburos vigila los equipos críticos de sus facilidades de producción, con inteligencia artificial.
+
+Lee la corriente, la vibración, la presión y la temperatura de cada bomba, compresor y motor de la planta, y sigue su tendencia.
+
+Cuando algo empieza a degradarse, le avisa antes de la falla: qué equipo, por qué, y cuántos días le quedan.
+
+Y si cae la energía o el aire comprimido, le dice qué se va a parar en la planta, cuántos barriles están en juego y quién tiene que actuar.
+
+Cada barril diferido en la planta queda explicado: dónde, por qué, y cuánto le costó.
+
+TRIM. Anticipe la falla. Produzca más.

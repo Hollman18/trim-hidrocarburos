@@ -642,7 +642,7 @@ const seFrenan = (n: number | undefined, verbo: string) => `si ${verbo}, se fren
 const VERBO: Partial<Record<TipoCausa, string>> = {
   reinyeccion: 'mueve el agua de', transporte: 'lleva la producción de', energia: 'alimenta',
   aire: 'le da aire de instrumentos a', compresion: 'comprime el gas de', proceso: 'separa lo que llega de',
-  tratamiento: 'trata el crudo de', evacuacion: 'despacha el crudo de',
+  tratamiento: 'trata el crudo de', evacuacion: 'despacha el crudo de', diluyente: 'le da la nafta a',
 }
 function verboDe(equipo: string, campoId: string, tipo: TipoCausa): string {
   const p = perfilBomba(equipo, campoId)

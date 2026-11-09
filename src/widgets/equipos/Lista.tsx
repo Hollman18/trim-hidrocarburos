@@ -9,7 +9,7 @@ import {
 import { MarcaCondicion } from '@/shared/ui/Prioridad'
 import { Hueco, Chip } from '@/shared/ui/primitivas'
 import { Info } from '@/shared/ui/Info'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida } from '@/shared/api/piezas'
 import { n0 } from '@/shared/lib/formato'
 import { cn } from '@/shared/lib/cn'
 import { CabezaConf } from './CabezaConf'
@@ -153,8 +153,8 @@ export function ListaEquipos() {
   const filas = (conf ? porSiFalla(v.filas) : v.filas).filter(f => f.filtros.includes(estado) && (tipo === 'todos' || f.tipos.includes(tipo))
     && (tren === 'todos' || f.tren === tren) && coincide(f, busca))
   const trenes = TRENES.filter(t => v.cuentas.tren[t] > 0)
-  const verAgua = tren === 'agua' && !ambito.global && rol.pantallas.includes('agua') && pantallaVisible('agua')
-  const verPozos = tren === 'pozos' && rol.pantallas.includes('pozos') && pantallaVisible('pozos')
+  const verAgua = tren === 'agua' && !ambito.global && rol.pantallas.includes('agua') && pantallaOfrecida('agua')
+  const verPozos = tren === 'pozos' && rol.pantallas.includes('pozos') && pantallaOfrecida('pozos')
   const cabeza = conf && !!v.primero
   // B3 · Con la cabeza de confiabilidad, los filtros van todos detrás de «Filtrar» (borrado.md: «los 12 filtros»
   // fuera de la primera capa): la primera pantalla es la respuesta, no los filtros.

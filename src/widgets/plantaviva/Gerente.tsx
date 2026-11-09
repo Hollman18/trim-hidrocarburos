@@ -6,6 +6,7 @@ import { useApp, useRango, useRol } from '@/app/store'
 import type { VistaPlantaViva } from '@/shared/api/plantaViva'
 import { useResultados } from '@/shared/api/resultados'
 import { useHoy } from '@/shared/api/hoy'
+import { usePiezas } from '@/shared/api/piezas'
 import { Barra, Cifra, Marca } from '@/shared/ui/scada'
 import { Boton } from '@/shared/ui/primitivas'
 import { useTelefono } from '@/shared/ui/telefono'
@@ -38,6 +39,9 @@ export function Gerente({ v }: { v: VistaPlantaViva }) {
   const [abierto, setAbierto] = useState<ChokeAnh | null>(null)
   const r = useResultados({ rol: rol.id, campos: v.campos, desde: rango.desde, hasta: rango.hasta })
   const hoy = useHoy(rol.id, v.campos)
+  // Fase 1 (facilidades): lo de «ahora» y la tubería son de la planta; el libro (metas, producción
+  // contra la meta, el balance, «¿Está funcionando?» y el historial), de la pieza Barriles.
+  const libro = usePiezas(v.campos).has('barriles')
   const metas = hoy.tareas.filter(t => t.tipo === 'metas')
   const c = v.cifras.durante
   const { abrir } = useAcciones()
@@ -120,10 +124,10 @@ export function Gerente({ v }: { v: VistaPlantaViva }) {
   return (
     <div data-inicio-gerente={v.alcance} className="flex flex-col gap-3 sm:gap-4">
       {telefono
-        ? (<>{principal}{firmar}{explica}{apoyo}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></>)
+        ? (<>{principal}{libro && firmar}{explica}{libro && <>{apoyo}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></>}</>)
         : (
           <div className="grid gap-4 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]">
-            <div className="flex min-w-0 flex-col gap-4">{principal}{firmar}{apoyo}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></div>
+            <div className="flex min-w-0 flex-col gap-4">{principal}{libro && <>{firmar}{apoyo}{balance}<Funcionando campos={v.campos} /><Historial campos={v.campos} /></>}</div>
             <div className="min-w-0">{explica}</div>
           </div>
         )}

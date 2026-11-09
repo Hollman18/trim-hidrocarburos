@@ -1,0 +1,349 @@
+<template>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+
+    #root { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; color: #f4f3f0; font-family: "IBM Plex Sans", sans-serif; }
+
+    #f07-fondo { position: absolute; inset: 0; background: #101418; }
+    #f07-rejilla { position: absolute; inset: 0; background-image: radial-gradient(circle, #343b42 1.4px, transparent 1.8px); background-size: 40px 40px; background-position: 20px 20px; opacity: 0.6; }
+    #f07-vineta { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 75% at 45% 50%, rgba(16,20,24,0) 50%, rgba(5,7,9,0.8) 100%); }
+    #f07-brillo-rojo { position: absolute; left: 260px; top: 40px; width: 900px; height: 520px; background: radial-gradient(ellipse 50% 50% at 40% 40%, rgba(224,137,124,0.16), rgba(224,137,124,0) 70%); opacity: 0; }
+
+    #f07-escena { position: absolute; inset: 0; }
+    #f07-camara { position: absolute; inset: 0; }
+
+    #f07-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    #f07-svg text { font-family: "IBM Plex Mono", monospace; }
+    .f07-base { fill: none; stroke: #a9dad6; stroke-opacity: 0.28; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .f07-flujo { fill: none; stroke: #a9dad6; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 3 15; }
+    .f07-tubo { fill: none; stroke: #a9dad6; stroke-opacity: 0.32; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .f07-agua { fill: none; stroke: #a9dad6; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 4 14; }
+    .f07-rojo { fill: none; stroke: #e0897c; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px #e0897c); }
+    .f07-trazo { fill: none; stroke: #a9dad6; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .f07-rot { font-size: 24px; letter-spacing: 0.12em; fill: #c9cbcd; font-weight: 500; }
+    .f07-rot-c { text-anchor: middle; }
+    .f07-rot-chico { font-size: 20px; letter-spacing: 0.12em; fill: #7f878e; font-weight: 500; }
+
+    /* chip demo */
+    #f07-demo { position: absolute; right: 120px; top: 96px; padding: 8px 16px; border: 1px solid #343b42; border-radius: 999px; font-family: "IBM Plex Mono", monospace; font-size: 18px; color: #7f878e; letter-spacing: 0.04em; white-space: nowrap; }
+
+    /* rótulo superior */
+    #f07-rotulo { position: absolute; left: 120px; top: 92px; padding-left: 24px; border-left: 4px solid #a9dad6; font-weight: 600; font-size: 40px; line-height: 52px; letter-spacing: -0.02em; color: #f4f3f0; white-space: nowrap; }
+    #f07-rotulo .f07-pieza { display: inline-block; }
+    #f07-rotulo .f07-punto { color: #7f878e; }
+
+    /* tarjeta */
+    #f07-tarjeta { position: absolute; left: 1270px; top: 556px; width: 530px; padding: 30px 38px 32px; box-sizing: border-box; background: #1d2125; border: 1px solid #343b42; border-radius: 18px; box-shadow: 0 40px 120px rgba(0,0,0,0.55); }
+    #f07-tarjeta-raya { position: absolute; left: -1px; top: 26px; bottom: 26px; width: 4px; border-radius: 2px; background: #e0897c; box-shadow: 0 0 12px #e0897c; }
+    #f07-en-juego { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 22px; letter-spacing: 0.12em; color: #e0897c; }
+    #f07-cifra { margin-top: 10px; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 72px; line-height: 84px; color: #f4f3f0; white-space: nowrap; letter-spacing: -0.01em; }
+    #f07-unidad { font-size: 40px; color: #c9cbcd; margin-left: 10px; }
+    #f07-sep { margin: 22px 0 20px; height: 1px; background: #343b42; }
+    #f07-resp { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px 18px 12px 22px; background: rgba(44,115,113,0.16); border-radius: 6px; overflow: hidden; white-space: nowrap; }
+    #f07-resp-raya { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #a9dad6; box-shadow: 0 0 10px #a9dad6; }
+    #f07-resp-a { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 20px; letter-spacing: 0.12em; color: #7f878e; }
+    #f07-resp-b { font-weight: 600; font-size: 30px; color: #f4f3f0; letter-spacing: -0.01em; }
+  </style>
+
+  <div data-hf-id="hf-va5y" id="root" data-composition-id="f07" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-1q4u" id="f07-fondo" class="clip" data-start="0" data-duration="9.65" data-track-index="0">
+      <div data-hf-id="hf-1uok" id="f07-rejilla"></div>
+      <div data-hf-id="hf-k4mo" id="f07-brillo-rojo"></div>
+      <div data-hf-id="hf-jk2i" id="f07-vineta"></div>
+    </div>
+
+    <div data-hf-id="hf-9omu" id="f07-escena" class="clip" data-start="0" data-duration="9.65" data-track-index="1">
+      <div data-hf-id="hf-8blq" id="f07-camara">
+        <svg data-hf-id="hf-dpac" id="f07-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+          <g data-hf-id="hf-f7tb" id="f07-tuberias" />
+          <g data-hf-id="hf-206b" id="f07-lineas" />
+          <g data-hf-id="hf-rgea" id="f07-rojas" />
+          <g data-hf-id="hf-gk62" id="f07-nodos" />
+        </svg>
+
+        <div data-hf-id="hf-9co8" id="f07-rotulo"><span data-hf-id="hf-orrr" class="f07-pieza">Qué se para</span> <span data-hf-id="hf-73tx" class="f07-pieza f07-punto">·</span> <span data-hf-id="hf-q9hh" class="f07-pieza">cuántos barriles</span> <span data-hf-id="hf-61kp" class="f07-pieza f07-punto">·</span> <span data-hf-id="hf-3aj3" class="f07-pieza">quién actúa</span></div>
+
+        <div data-hf-id="hf-lsg2" id="f07-tarjeta">
+          <div data-hf-id="hf-h236" id="f07-tarjeta-raya"></div>
+          <div data-hf-id="hf-q3tm" id="f07-en-juego">EN JUEGO</div>
+          <div data-hf-id="hf-8upg" id="f07-cifra"><span data-hf-id="hf-k37w" id="f07-num">0</span><span data-hf-id="hf-5z60" id="f07-unidad">bbl/d</span></div>
+          <div data-hf-id="hf-kwfx" id="f07-sep"></div>
+          <div data-hf-id="hf-8kox" id="f07-resp">
+            <div data-hf-id="hf-6u9b" id="f07-resp-raya"></div>
+            <span data-hf-id="hf-ze71" id="f07-resp-a">RESPONSABLE ·</span>
+            <span data-hf-id="hf-ze73" id="f07-resp-b">Mantenimiento</span>
+          </div>
+        </div>
+      </div>
+      <div data-hf-id="hf-jwwg" id="f07-demo">Datos de demostración</div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const NS = "http://www.w3.org/2000/svg";
+      const D = 9.65;
+      const T = {
+        energia: "ENERGÍA 13,8 kV",
+        aire: "AIRE COMPRIMIDO",
+        tanque: "TANQUE DE AGUA",
+        alto: "ALTO-ALTO",
+        subiendo1: "SUBIENDO AL",
+        subiendo2: "ALTO-ALTO",
+        bombas: "Bombas de transferencia",
+        reiny: "REINYECCIÓN",
+        miles: "."
+      };
+      const tuberias = document.getElementById("f07-tuberias");
+      const lineas = document.getElementById("f07-lineas");
+      const rojas = document.getElementById("f07-rojas");
+      const nodos = document.getElementById("f07-nodos");
+
+      function el(tag, attrs, parent) {
+        const n = document.createElementNS(NS, tag);
+        Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+        if (parent) parent.appendChild(n);
+        return n;
+      }
+      function texto(str, attrs, parent) { const t = el("text", attrs, parent); t.textContent = str; return t; }
+      function largo(p, def) { return Math.ceil(p.getTotalLength ? p.getTotalLength() : def) + 2; }
+
+      // ---------- geometría ----------
+      const PY = 610;                       // eje de las bombas
+      const BOMBAS = [["A", 700], ["B", 920], ["C", 1140]];
+      const YS = 770;                       // colector de succión
+      const YD = 480;                       // colector de descarga → reinyección
+      const TQ = { x: 150, y: 400, w: 180, h: 400 };
+      const FONDO = 797, ALTO_INT = 394;    // interior del tanque
+      function nivelY(L) { return FONDO - L * ALTO_INT; }
+      const L0 = 0.55, LAA = 0.9;
+
+      // ---------- tuberías de agua ----------
+      const W = [
+        { id: "ent", d: "M120,330 L240,330 L240,400" },
+        { id: "suc", d: "M330," + YS + " L" + (BOMBAS[2][1] - 70) + "," + YS }
+      ];
+      BOMBAS.forEach(function (b) {
+        const cx = b[1];
+        W.push({ id: "s" + b[0], d: "M" + (cx - 70) + "," + YS + " L" + (cx - 70) + "," + PY + " L" + (cx - 44) + "," + PY });
+        W.push({ id: "d" + b[0], d: "M" + (cx + 44) + "," + PY + " L" + (cx + 70) + "," + PY + " L" + (cx + 70) + "," + YD });
+      });
+      W.push({ id: "col", d: "M" + (BOMBAS[0][1] + 70) + "," + YD + " L1796," + YD });
+      W.forEach(function (w) {
+        el("path", { d: w.d, class: "f07-tubo", id: "f07-tubo-" + w.id }, tuberias);
+        el("path", { d: w.d, class: "f07-agua", id: "f07-agua-" + w.id }, tuberias);
+      });
+      // punta de flecha de la reinyección
+      el("path", { d: "M1782,468 L1800," + YD + " L1782,492", class: "f07-trazo", id: "f07-flecha" }, tuberias);
+      texto(T.reiny, { id: "f07-reiny", x: 1800, y: YD + 38, class: "f07-rot", "text-anchor": "end" }, tuberias);
+
+      // ---------- líneas de servicio (energía / aire) ----------
+      const EX = 620, EY = 294;
+      const C = [
+        { id: "EA", d: "M" + EX + "," + EY + " C" + EX + ",420 700,430 700," + (PY - 44) },
+        { id: "EB", d: "M" + EX + "," + EY + " C" + EX + ",420 920,410 920," + (PY - 44) },
+        { id: "EC", d: "M" + EX + "," + EY + " C" + EX + ",400 1140,390 1140," + (PY - 44) },
+        { id: "EK", d: "M" + EX + "," + EY + " C" + EX + ",370 1300,380 1456,380" },
+        { id: "AK", d: "M1500," + EY + " L1500,336" }
+      ];
+      // puente: donde una línea de energía cruza el colector de descarga, el colector se corta
+      C.forEach(function (c) {
+        const p = el("path", { d: c.d, fill: "none", stroke: "none" }, lineas);
+        if (p.getTotalLength && (c.id === "EB" || c.id === "EC")) {
+          const L = p.getTotalLength();
+          let best = null;
+          for (let s = 0; s <= 200; s++) {
+            const q = p.getPointAtLength(L * s / 200);
+            if (best === null || Math.abs(q.y - YD) < Math.abs(best.y - YD)) best = q;
+          }
+          el("line", { x1: best.x - 11, y1: YD, x2: best.x + 11, y2: YD, stroke: "#101418", "stroke-width": 10, "stroke-linecap": "butt" }, lineas);
+        }
+        lineas.removeChild(p);
+      });
+      C.forEach(function (c) {
+        el("path", { d: c.d, class: "f07-base", id: "f07-base-" + c.id }, lineas);
+        el("path", { d: c.d, class: "f07-flujo", id: "f07-flujo-" + c.id }, lineas);
+      });
+
+      // ---------- trazos rojos (el corte se propaga) ----------
+      const rojo = {};
+      function trazoRojo(id, d) {
+        const p = el("path", { d: d, class: "f07-rojo", id: "f07-rojo-" + id }, rojas);
+        const L = largo(p, 300);
+        p.setAttribute("stroke-dasharray", L + " " + L);
+        p.setAttribute("stroke-dashoffset", String(L));
+        rojo[id] = L;
+      }
+      trazoRojo("EB", C[1].d);
+      trazoRojo("dB", W.filter(function (w) { return w.id === "dB"; })[0].d);
+
+      // ---------- nodos de servicio ----------
+      function servicio(id, cx, rotulo, icono) {
+        const g = el("g", { id: "f07-srv-" + id }, nodos);
+        el("rect", { id: "f07-srv-pulso-" + id, x: cx - 180, y: 206, width: 360, height: 88, rx: 14, fill: "none", stroke: "#e0897c", "stroke-width": 2, opacity: 0 }, g);
+        el("rect", { id: "f07-srv-caja-" + id, x: cx - 180, y: 206, width: 360, height: 88, rx: 14, fill: "#1d2125", stroke: "#a9dad6", "stroke-width": 2.5 }, g);
+        const ic = el("g", { id: "f07-srv-ico-" + id, fill: "none", stroke: "#a9dad6", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
+        icono(ic, cx - 146, 250);
+        texto(rotulo, { id: "f07-srv-txt-" + id, x: cx - 112, y: 259, "font-size": 24, "font-weight": 500, "letter-spacing": "2", fill: "#f4f3f0" }, g);
+        return g;
+      }
+      servicio("E", EX, T.energia, function (g, x, y) {
+        el("path", { d: "M" + (x + 4) + "," + (y - 18) + " L" + (x - 8) + "," + (y + 2) + " L" + (x + 4) + "," + (y + 2) + " L" + (x - 4) + "," + (y + 20) + " L" + (x + 12) + "," + (y - 4) + " L" + x + "," + (y - 4) + " Z" }, g);
+      });
+      servicio("A", 1500, T.aire, function (g, x, y) {
+        el("path", { d: "M" + (x - 12) + "," + (y - 10) + " L" + (x + 6) + "," + (y - 10) + " Q" + (x + 16) + "," + (y - 10) + " " + (x + 14) + "," + (y - 18) }, g);
+        el("path", { d: "M" + (x - 16) + "," + y + " L" + (x + 14) + "," + y }, g);
+        el("path", { d: "M" + (x - 12) + "," + (y + 10) + " L" + (x + 6) + "," + (y + 10) + " Q" + (x + 16) + "," + (y + 10) + " " + (x + 14) + "," + (y + 18) }, g);
+      });
+
+      // ---------- tanque de agua ----------
+      const tq = el("g", { id: "f07-tanque" }, nodos);
+      el("rect", { id: "f07-agua-cuerpo", x: TQ.x + 3, y: nivelY(L0), width: TQ.w - 6, height: L0 * ALTO_INT, fill: "rgba(169,218,214,0.13)", stroke: "none" }, tq);
+      el("line", { id: "f07-agua-sup", x1: TQ.x + 4, y1: nivelY(L0), x2: TQ.x + TQ.w - 4, y2: nivelY(L0), stroke: "#a9dad6", "stroke-width": 3, "stroke-linecap": "round", style: "filter: drop-shadow(0 0 6px #a9dad6)" }, tq);
+      el("line", { id: "f07-agua-onda", x1: TQ.x + 8, y1: nivelY(L0) + 12, x2: TQ.x + TQ.w - 8, y2: nivelY(L0) + 12, stroke: "#a9dad6", "stroke-opacity": 0.5, "stroke-width": 2, "stroke-linecap": "round", "stroke-dasharray": "10 12" }, tq);
+      el("rect", { id: "f07-tq-caja", x: TQ.x, y: TQ.y, width: TQ.w, height: TQ.h, rx: 12, fill: "none", stroke: "#a9dad6", "stroke-width": 2.5 }, tq);
+      [0.25, 0.5, 0.75].forEach(function (f) {
+        el("line", { x1: TQ.x - 12, y1: nivelY(f), x2: TQ.x, y2: nivelY(f), stroke: "#7f878e", "stroke-width": 2, "stroke-linecap": "round" }, tq);
+      });
+      // marca ALTO-ALTO
+      el("line", { id: "f07-aa-linea", x1: TQ.x - 14, y1: nivelY(LAA), x2: TQ.x + TQ.w + 8, y2: nivelY(LAA), stroke: "#e0897c", "stroke-width": 2, "stroke-dasharray": "8 7", "stroke-linecap": "round" }, tq);
+      texto(T.alto, { id: "f07-aa-txt", x: TQ.x + TQ.w + 16, y: nivelY(LAA) + 7, "font-size": 20, "letter-spacing": "2.4", "font-weight": 500, fill: "#e0897c" }, tq);
+      texto(T.tanque, { id: "f07-tq-txt", x: TQ.x, y: TQ.y + TQ.h + 40, class: "f07-rot" }, tq);
+      // aviso «subiendo»
+      const sub = el("g", { id: "f07-subiendo", opacity: 0 }, nodos);
+      el("path", { d: "M356,568 L356,522 M346,534 L356,522 L366,534", fill: "none", stroke: "#d9bd6a", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, sub);
+      texto(T.subiendo1, { x: 378, y: 540, "font-size": 20, "letter-spacing": "2.4", "font-weight": 500, fill: "#d9bd6a" }, sub);
+      texto(T.subiendo2, { x: 378, y: 568, "font-size": 20, "letter-spacing": "2.4", "font-weight": 500, fill: "#d9bd6a" }, sub);
+
+      // ---------- equipos ----------
+      function equipo(id, cx, cy, rotulo, compresor, rotX, rotY, centrado) {
+        const g = el("g", { id: "f07-eq-" + id }, nodos);
+        el("circle", { id: "f07-eq-c-" + id, cx: cx, cy: cy, r: 44, fill: "#101418", stroke: "#a9dad6", "stroke-width": 2.5 }, g);
+        const rot = el("g", { id: "f07-rodete-" + id, class: "f07-trazo", stroke: "#a9dad6" }, g);
+        if (compresor) {
+          el("path", { d: "M" + (cx - 38) + "," + (cy - 18) + " L" + (cx + 38) + "," + (cy - 10) + " M" + (cx - 38) + "," + (cy + 18) + " L" + (cx + 38) + "," + (cy + 10), class: "f07-trazo" }, g);
+          el("circle", { cx: cx, cy: cy, r: 22, fill: "none", stroke: "#a9dad6", "stroke-width": 2, "stroke-dasharray": "5 7", "stroke-linecap": "round" }, rot);
+        } else {
+          for (let k = 0; k < 4; k++) {
+            const a = k * Math.PI / 2;
+            const ca = Math.cos(a), sa = Math.sin(a);
+            const pt = function (x, y) { return (cx + x * ca - y * sa).toFixed(1) + "," + (cy + x * sa + y * ca).toFixed(1); };
+            el("path", { d: "M" + pt(6, 0) + " Q" + pt(20, 4) + " " + pt(30, -14) }, rot);
+          }
+          el("circle", { cx: cx, cy: cy, r: 6, fill: "#a9dad6", stroke: "none" }, rot);
+        }
+        texto(rotulo, { id: "f07-eq-t-" + id, x: rotX, y: rotY, class: "f07-rot" + (centrado ? " f07-rot-c" : "") }, g);
+      }
+      BOMBAS.forEach(function (b) { equipo(b[0], b[1], PY, "P-201" + b[0], false, b[1], PY + 84, true); });
+      equipo("K", 1500, 380, "K-101", true, 1558, 389, false);
+      texto(T.bombas, { id: "f07-bombas-txt", x: BOMBAS[1][1], y: YS + 70, class: "f07-rot-chico f07-rot-c" }, nodos);
+
+      // =================== línea de tiempo ===================
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo("#f07-camara", { scale: 1 }, { scale: 1.02, duration: D, ease: "none", transformOrigin: "45% 55%" }, 0);
+      tl.fromTo("#f07-rejilla", { backgroundPosition: "20px 20px" }, { backgroundPosition: "20px 50px", duration: D, ease: "none" }, 0);
+
+      // entrada rápida de la planta (visible antes de 0.5)
+      tl.fromTo("#f07-srv-E, #f07-srv-A", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);
+      tl.fromTo("#f07-tanque", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.45, ease: "power3.out" }, 0.04);
+      tl.fromTo("#f07-eq-A, #f07-eq-B, #f07-eq-C, #f07-eq-K", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.04 }, 0.08);
+      tl.fromTo("#f07-bombas-txt", { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "power2.out" }, 0.2);
+      tl.fromTo("#f07-tuberias, #f07-lineas", { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "power2.out" }, 0.05);
+      tl.fromTo("#f07-demo", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 0);
+
+      // flujo vivo: servicios y agua
+      C.forEach(function (c) {
+        tl.fromTo("#f07-flujo-" + c.id, { strokeDashoffset: 0 }, { strokeDashoffset: -540, duration: D, ease: "none" }, 0);
+      });
+      W.forEach(function (w) {
+        tl.fromTo("#f07-agua-" + w.id, { strokeDashoffset: 0 }, { strokeDashoffset: -620, duration: D, ease: "none" }, 0);
+      });
+      tl.fromTo("#f07-agua-onda", { strokeDashoffset: 0 }, { strokeDashoffset: -180, duration: D, ease: "none" }, 0);
+
+      // rodetes girando; P-201B se frena tras el corte
+      const VUELTAS = 3.2;
+      ["A", "C", "K"].forEach(function (id) {
+        tl.fromTo("#f07-rodete-" + id, { rotation: 0 }, { rotation: 360 * VUELTAS, duration: D, ease: "none", transformOrigin: "50% 50%" }, 0);
+      });
+      const tFreno = 3.9, durFreno = 1.2;
+      const angFreno = 360 * VUELTAS * tFreno / D;
+      const velo = 360 * VUELTAS / D;
+      tl.fromTo("#f07-rodete-B", { rotation: 0 }, { rotation: angFreno, duration: tFreno, ease: "none", transformOrigin: "50% 50%" }, 0);
+      tl.fromTo("#f07-rodete-B", { rotation: angFreno }, { rotation: angFreno + velo * durFreno / 2, duration: durFreno, ease: "power2.out", transformOrigin: "50% 50%", immediateRender: false }, tFreno);
+
+      // 0.8 · cae la ENERGÍA: rojo con pulso
+      const tE = 0.8;
+      tl.to("#f07-srv-caja-E", { attr: { stroke: "#e0897c", fill: "#2a1f1f" }, duration: 0.2, ease: "power2.out" }, tE);
+      tl.to("#f07-srv-ico-E", { attr: { stroke: "#e0897c" }, duration: 0.2 }, tE);
+      tl.to("#f07-srv-txt-E", { attr: { fill: "#e0897c" }, duration: 0.2 }, tE);
+      tl.fromTo("#f07-srv-E", { filter: "drop-shadow(0 0 0px #e0897c)" }, { filter: "drop-shadow(0 0 14px #e0897c)", duration: 0.3 }, tE);
+      tl.fromTo("#f07-brillo-rojo", { opacity: 0 }, { opacity: 1, duration: 0.6 }, tE);
+      for (let t = tE + 0.05; t < D - 0.6; t += 0.9) {
+        tl.fromTo("#f07-srv-pulso-E", { opacity: 0.9, scaleX: 1, scaleY: 1 }, { opacity: 0, scaleX: 1.12, scaleY: 1.5, duration: 0.85, ease: "power2.out", transformOrigin: "50% 50%", immediateRender: false }, t);
+      }
+
+      // 1.4 · AIRE parpadea en riesgo y se queda amarillo
+      const tA = 1.4;
+      [tA, tA + 0.28, tA + 0.56].forEach(function (t, i) {
+        tl.fromTo("#f07-srv-caja-A", { attr: { stroke: i === 0 ? "#a9dad6" : "#d9bd6a" } }, { attr: { stroke: "#d9bd6a" }, duration: 0.06, immediateRender: false }, t);
+        tl.fromTo("#f07-srv-A", { opacity: 1 }, { opacity: 0.35, duration: 0.07, ease: "none", immediateRender: false }, t + 0.07);
+        tl.fromTo("#f07-srv-A", { opacity: 0.35 }, { opacity: 1, duration: 0.1, ease: "none", immediateRender: false }, t + 0.14);
+      });
+      tl.to("#f07-srv-ico-A", { attr: { stroke: "#d9bd6a" }, duration: 0.1 }, tA);
+      tl.to("#f07-srv-txt-A", { attr: { fill: "#d9bd6a" }, duration: 0.1 }, tA);
+      tl.to("#f07-flujo-AK", { stroke: "#d9bd6a", duration: 0.2 }, tA);
+      tl.fromTo("#f07-srv-A", { filter: "drop-shadow(0 0 0px #d9bd6a)" }, { filter: "drop-shadow(0 0 8px #d9bd6a)", duration: 0.3, immediateRender: false }, tA);
+
+      // 3.3–5.2 · el rojo viaja ENERGÍA → P-201B; la bomba se frena y su descarga se corta
+      tl.to("#f07-flujo-EB", { opacity: 0, duration: 0.4 }, 3.3);
+      tl.fromTo("#f07-rojo-EB", { strokeDashoffset: rojo.EB }, { strokeDashoffset: 0, duration: 0.8, ease: "power1.in" }, 3.3);
+      tl.to("#f07-eq-c-B", { attr: { stroke: "#e0897c", fill: "rgba(224,137,124,0.22)" }, duration: 0.3, ease: "power2.out" }, 4.05);
+      tl.to("#f07-rodete-B", { stroke: "#e0897c", duration: 0.3 }, 4.05);
+      tl.to("#f07-rodete-B circle", { attr: { fill: "#e0897c" }, duration: 0.3 }, 4.05);
+      tl.to("#f07-eq-t-B", { fill: "#e0897c", duration: 0.3 }, 4.05);
+      tl.fromTo("#f07-eq-B", { filter: "drop-shadow(0 0 0px #e0897c)" }, { filter: "drop-shadow(0 0 14px #e0897c)", duration: 0.4 }, 4.05);
+      tl.to("#f07-agua-sB, #f07-agua-dB", { opacity: 0, duration: 0.6 }, 4.2);
+      tl.fromTo("#f07-rojo-dB", { strokeDashoffset: rojo.dB }, { strokeDashoffset: 0, duration: 0.7, ease: "power1.inOut" }, 4.4);
+
+      // el agua ya no sale: el tanque sube hacia el ALTO-ALTO hasta el final
+      const tSube = 4.2;
+      const nivel = { L: L0 };
+      const cuerpo = document.getElementById("f07-agua-cuerpo");
+      const supf = document.getElementById("f07-agua-sup");
+      const onda = document.getElementById("f07-agua-onda");
+      function pintaNivel() {
+        const y = nivelY(nivel.L);
+        cuerpo.setAttribute("y", y.toFixed(2));
+        cuerpo.setAttribute("height", (nivel.L * ALTO_INT).toFixed(2));
+        supf.setAttribute("y1", y.toFixed(2)); supf.setAttribute("y2", y.toFixed(2));
+        onda.setAttribute("y1", (y + 12).toFixed(2)); onda.setAttribute("y2", (y + 12).toFixed(2));
+      }
+      tl.fromTo(nivel, { L: L0 }, { L: 0.89, duration: 9.0 - tSube, ease: "none", onUpdate: pintaNivel }, tSube);
+      tl.fromTo(nivel, { L: 0.89 }, { L: 0.9, duration: D - 9.0, ease: "none", immediateRender: false, onUpdate: pintaNivel }, 9.0);
+      tl.to("#f07-tq-caja", { attr: { stroke: "#d9bd6a" }, duration: 0.4 }, 4.4);
+      tl.fromTo("#f07-tq-caja", { filter: "drop-shadow(0 0 0px #d9bd6a)" }, { filter: "drop-shadow(0 0 10px #d9bd6a)", duration: 0.5 }, 4.4);
+      tl.to("#f07-tq-txt", { fill: "#d9bd6a", duration: 0.4 }, 4.4);
+      tl.fromTo("#f07-subiendo", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 4.6);
+
+      // 5.6 · tarjeta EN JUEGO con cifra que cuenta
+      tl.fromTo("#f07-tarjeta", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.7, ease: "expo.out" }, 5.6);
+      tl.fromTo("#f07-tarjeta-raya", { scaleY: 0, transformOrigin: "50% 0%" }, { scaleY: 1, duration: 0.6, ease: "power3.out" }, 5.75);
+      const numEl = document.getElementById("f07-num");
+      const cuenta = { v: 0 };
+      function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, T.miles); }
+      tl.fromTo(cuenta, { v: 0 }, { v: 1665, duration: 1.4, ease: "power2.out", onUpdate: function () { numEl.textContent = fmt(Math.round(cuenta.v)); } }, 5.75);
+
+      // 7.2 · responsable + rótulo superior
+      tl.fromTo("#f07-resp-raya", { scaleY: 0, transformOrigin: "50% 50%" }, { scaleY: 1, duration: 0.35, ease: "power3.out" }, 7.2);
+      tl.fromTo("#f07-resp", { opacity: 0, clipPath: "inset(0% 100% 0% 0%)" }, { opacity: 1, clipPath: "inset(0% 0% 0% 0%)", duration: 0.7, ease: "power3.out" }, 7.25);
+      tl.fromTo("#f07-rotulo", { borderLeftColor: "rgba(169,218,214,0)" }, { borderLeftColor: "rgba(169,218,214,1)", duration: 0.4 }, 7.3);
+      tl.fromTo("#f07-rotulo .f07-pieza", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out", stagger: 0.14 }, 7.35);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["f07"] = tl;
+    })();
+  </script>
+</template>

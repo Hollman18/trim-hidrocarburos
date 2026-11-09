@@ -1,0 +1,17 @@
+It's three in the morning. At the plant, a pump stops.
+
+By the time the alarm goes off, production is already being lost. And no one saw it coming.
+
+A power outage. An unbalanced drive. A motor drawing more current to move the same flow. The signals were there.
+
+TRIM Oil and Gas watches the critical equipment in your production facilities, with artificial intelligence.
+
+It reads the current, vibration, pressure and temperature of every pump, compressor and motor in the plant, and tracks the trend.
+
+When something starts to degrade, it warns you before it fails: which equipment, why, and how many days are left.
+
+And if power or compressed air goes down, it tells you what will stop in the plant, how many barrels are at stake, and who needs to act.
+
+Every deferred barrel in the plant is explained: where, why, and what it cost you.
+
+TRIM. Predict failure. Produce more.

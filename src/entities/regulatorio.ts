@@ -85,6 +85,7 @@ const FALTA_PASO: Record<PasoAnh, string> = {
  *  causa no va aquí: la dicen las paradas sin causa. */
 const MOTIVO_CORTO: Partial<Record<CodigoMotivo, string>> = {
   'sin-fiscal': 'faltan días de producción fiscal',
+  'sin-nafta': 'falta el dato de la nafta que se le agrega al crudo',
   'sin-factor': 'falta el factor de asignación de un mes',
   'banda-sin-verificar': 'no se puede verificar el factor contra su banda',
   'fa-fuera-de-banda': 'el factor de asignación está fuera de su banda',

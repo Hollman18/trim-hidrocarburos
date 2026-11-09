@@ -150,6 +150,8 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
         restantes: { cuantos: 37, etiqueta: 'en la pantalla de pozos' } },
       { id: 'mpp', etiqueta: 'Bomba multifásica · clúster norte', simbolo: 'bomba', equipo: 'MPP-301' },
       { id: 'manifold', etiqueta: 'Manifold de producción', simbolo: 'manifold', pie: 'cabezal común' },
+      // Fase 5 de facilidades: el separador de agua libre antes del trifásico (el último del tronco sigue siendo el separador).
+      { id: 'fwko', etiqueta: 'Separador de agua libre', simbolo: 'separador', equipo: 'FWKO-101' },
       { id: 'separador', etiqueta: 'Separador trifásico', simbolo: 'separador', equipo: 'V-101' },
     ],
     gas: [
@@ -160,6 +162,7 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
     ],
     crudo: [
       { id: 'tratador', etiqueta: 'Tratador térmico', simbolo: 'tratador', equipo: 'H-302' },
+      { id: 'electrostatico', etiqueta: 'Tratador electrostático', simbolo: 'tratador', equipo: 'TE-501' },
       { id: 'tanques', etiqueta: 'Tanques en especificación', simbolo: 'tanque', equipo: 'TK-102',
         fluido: 'crudo', nivelDe: { tag: 'LI-1102', tope: 18.5 },
         miembros: [
@@ -167,7 +170,10 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
           tanque('TK-101', 'TK-101 · respaldo'),
           tanque('TK-103', 'TK-103 · PMO-03', undefined, 'PMO-03'),
         ] },
+      { id: 'despacho', etiqueta: 'Bombas de despacho', simbolo: 'bomba', equipo: 'P-401' },
       { id: 'lact', etiqueta: 'Unidad LACT', simbolo: 'medicion', equipo: 'LACT-01', pmo: 'PMO-01' },
+      // El diluyente entra al oleoducto, después del punto de medición: el fiscal es de crudo solo.
+      { id: 'diluyente', etiqueta: 'Bomba de diluyente', simbolo: 'bomba', equipo: 'P-701' },
       { id: 'oleoducto', etiqueta: 'Oleoducto', simbolo: 'salida', pie: 'límite de batería' },
     ],
     agua: [
@@ -175,6 +181,7 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'tanqueAgua', etiqueta: 'Tanque de agua', simbolo: 'tanque', pie: 'proceso', fluido: 'agua' },
       { id: 'bomba', etiqueta: 'Bombas de agua', simbolo: 'bomba', equipo: 'P-201B',
         miembros: ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(l => ({ id: `P-201${l}`, etiqueta: `P-201${l}`, ...(l === 'B' ? { equipo: 'P-201B' } : {}) })) },
+      { id: 'torre', etiqueta: 'Torre de enfriamiento', simbolo: 'tratador', equipo: 'CT-601' },
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
     ],
     servicios: SERVICIOS,
@@ -252,7 +259,8 @@ export const CAMPO_PLANTA: Record<string, PlantaCampo> = {
       { id: 'bomba', etiqueta: 'Bomba de agua', simbolo: 'bomba', equipo: 'P-201B' },
       { id: 'inyeccion', etiqueta: 'Pozos inyectores', simbolo: 'inyeccion', pie: 'disposición' },
     ],
-    servicios: SERVICIOS,
+    // Fase 4 de facilidades: la UPS de la sala de control, que el gateway lee por SNMP (sin historiador).
+    servicios: [...SERVICIOS, { id: 'ups', etiqueta: 'UPS de la sala de control', simbolo: 'subestacion', equipo: 'UPS-SALA' }],
     chokes: { pozos: 3500, planta: 3295, evacuacion: 4200, mercado: 5000 },
     caudales: { crudo: 3100, crudoCap: 3600, agua: 13180, aguaCap: 16000, gas: 0, gasCap: 0 },
     nota: 'Campo chico de bombeo mecánico, sin tren de gas, con holgura en crudo y agua (80 % de agua, que saca una sola bomba de 16.000 bbl/d).',

@@ -57,6 +57,16 @@ const ALARMAS: Record<string, Record<string, Alarma>> = {
     'TI-2011': { alta: 85, fuente: 'Hoja de datos del fabricante' },
     'LT-2012': { baja: 15, fuente: 'Hoja de datos del fabricante: nivel mínimo de succión' },
   },
+  // Fase 5 de facilidades: los demás equipos de la planta (familias-planta.ts).
+  'P-401': { 'VI-4013': API_610_VIB },
+  'TE-501': { 'EI-5011': { baja: 18, fuente: '[SUPUESTO] Tensión mínima de la rejilla: se reemplaza con la hoja de datos del tratador' } },
+  'CT-601': { 'TI-6011': { alta: 40, fuente: 'El agua no puede verterse a más de 40 °C (investigación 19 §2.2)' } },
+  'FWKO-101': { 'LI-7011': { alta: 70, fuente: '[SUPUESTO] Nivel alto de interfase: se reemplaza con la base de alarmas del cliente' } },
+  'P-701': { 'FI-8011': { baja: 2000, fuente: '[SUPUESTO] Caudal mínimo de nafta para la viscosidad de despacho: se reemplaza con el del cliente' } },
+  // Fase 4 de facilidades: la UPS (familias-planta.ts). Sin hoja de datos, el punto es [SUPUESTO].
+  'UPS-SALA': {
+    'EIB-0031': { baja: 50, fuente: '[SUPUESTO] Media carga: con la batería por debajo de la mitad, la planta tiene poca vista si se va la energía. Se reemplaza con la hoja de datos de la UPS' },
+  },
   'MPP-301': {
     'VT-3013': API_676_VIB,
     'PDT-3011': { alta: 12, fuente: 'Hoja de datos del fabricante · API 676 B.2.1.4 pide la alarma' },

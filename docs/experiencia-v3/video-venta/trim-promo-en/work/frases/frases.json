@@ -1,0 +1,56 @@
+[
+ {
+  "frase": 1,
+  "previo": 0.12,
+  "habla": 4.31,
+  "archivo": "work/frases/f1.wav"
+ },
+ {
+  "frase": 2,
+  "previo": 0.12,
+  "habla": 5.95,
+  "archivo": "work/frases/f2.wav"
+ },
+ {
+  "frase": 3,
+  "previo": 0.12,
+  "habla": 7.92,
+  "archivo": "work/frases/f3.wav"
+ },
+ {
+  "frase": 4,
+  "previo": 0.12,
+  "habla": 6.47,
+  "archivo": "work/frases/f4.wav"
+ },
+ {
+  "frase": 5,
+  "previo": 0.12,
+  "habla": 8.51,
+  "archivo": "work/frases/f5.wav"
+ },
+ {
+  "frase": 6,
+  "previo": 0.12,
+  "habla": 7.64,
+  "archivo": "work/frases/f6.wav"
+ },
+ {
+  "frase": 7,
+  "previo": 0.12,
+  "habla": 7.78,
+  "archivo": "work/frases/f7.wav"
+ },
+ {
+  "frase": 8,
+  "previo": 0.12,
+  "habla": 5.83,
+  "archivo": "work/frases/f8.wav"
+ },
+ {
+  "frase": 9,
+  "previo": 0.12,
+  "habla": 3.78,
+  "archivo": "work/frases/f9.wav"
+ }
+]

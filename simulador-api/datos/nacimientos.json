@@ -603,7 +603,7 @@
     "gateway": {
       "id": "EPIC-MORICHAL-01",
       "modelo": "GRV-EPIC-PR1",
-      "serie": "GRVMOR0017",
+      "serie": "GRVMOR0022",
       "firmware": "3.6.2",
       "enlace": "starlink",
       "bufferH": 48
@@ -780,6 +780,26 @@
         ]
       },
       {
+        "nombre": "FWKO-101",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "LI-7011",
+            "tipo": "Nivel de interfase",
+            "unidad": "%",
+            "limite": "35 – 65",
+            "bajo": 35,
+            "alto": 65,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
         "nombre": "V-101",
         "fuente": {
           "protocolo": "pi-web-api",
@@ -900,6 +920,36 @@
         ]
       },
       {
+        "nombre": "TE-501",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "EI-5011",
+            "tipo": "Tensión de rejilla",
+            "unidad": "kV",
+            "limite": "20 – 26",
+            "bajo": 20,
+            "alto": 26,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "TI-5012",
+            "tipo": "Temperatura de tratamiento",
+            "unidad": "°C",
+            "limite": "70 – 90",
+            "bajo": 70,
+            "alto": 90,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
         "nombre": "TK-102",
         "fuente": {
           "protocolo": "atg",
@@ -978,6 +1028,36 @@
         ]
       },
       {
+        "nombre": "P-401",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "VI-4013",
+            "tipo": "Vibración",
+            "unidad": "mm/s",
+            "limite": "< 3,5",
+            "bajo": null,
+            "alto": 3.5,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "FI-4014",
+            "tipo": "Caudal",
+            "unidad": "bbl/d",
+            "limite": "12.000 – 18.000",
+            "bajo": 12000,
+            "alto": 18000,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
         "nombre": "LACT-01",
         "fuente": {
           "protocolo": "roc-plus",
@@ -1036,6 +1116,26 @@
               "vigenteHasta": "enero de 2027",
               "detalle": "Densitómetro verificado el 20 de enero de 2026 · vigente hasta enero de 2027"
             }
+          }
+        ]
+      },
+      {
+        "nombre": "P-701",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "FI-8011",
+            "tipo": "Caudal de nafta",
+            "unidad": "bbl/d",
+            "limite": "> 2.200",
+            "bajo": 2200,
+            "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
           }
         ]
       },
@@ -1134,6 +1234,36 @@
             "limite": "> 15",
             "bajo": 15,
             "alto": null,
+            "cadenciaS": 47,
+            "clase": "continua"
+          }
+        ]
+      },
+      {
+        "nombre": "CT-601",
+        "fuente": {
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-morichal.ot.local:502",
+          "reloj": "el PLC de la batería"
+        },
+        "metricas": [
+          {
+            "nombre": "TI-6011",
+            "tipo": "Temperatura del agua de salida",
+            "unidad": "°C",
+            "limite": "< 38",
+            "bajo": null,
+            "alto": 38,
+            "cadenciaS": 47,
+            "clase": "continua"
+          },
+          {
+            "nombre": "VI-6012",
+            "tipo": "Vibración del ventilador",
+            "unidad": "mm/s",
+            "limite": "< 7",
+            "bajo": null,
+            "alto": 7,
             "cadenciaS": 47,
             "clase": "continua"
           }
@@ -1835,7 +1965,7 @@
     "gateway": {
       "id": "EPIC-PALMAR-01",
       "modelo": "GRV-EPIC-PR1",
-      "serie": "GRVPAL0015",
+      "serie": "GRVPAL0017",
       "firmware": "3.6.2",
       "enlace": "starlink",
       "bufferH": 48
@@ -1844,8 +1974,8 @@
       {
         "nombre": "V-101",
         "fuente": {
-          "protocolo": "pi-web-api",
-          "endpoint": "https://pi.palmar.local/piwebapi",
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-palmar.ot.local:502",
           "reloj": "el PLC de la batería"
         },
         "metricas": [
@@ -1874,8 +2004,8 @@
       {
         "nombre": "H-302",
         "fuente": {
-          "protocolo": "pi-web-api",
-          "endpoint": "https://pi.palmar.local/piwebapi",
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-palmar.ot.local:502",
           "reloj": "el PLC de la batería"
         },
         "metricas": [
@@ -2074,8 +2204,8 @@
       {
         "nombre": "P-201B",
         "fuente": {
-          "protocolo": "pi-web-api",
-          "endpoint": "https://pi.palmar.local/piwebapi",
+          "protocolo": "modbus-tcp",
+          "endpoint": "plc-palmar.ot.local:502",
           "reloj": "el PLC de la batería"
         },
         "metricas": [
@@ -2128,17 +2258,7 @@
             "alto": 240,
             "cadenciaS": 47,
             "clase": "continua"
-          }
-        ]
-      },
-      {
-        "nombre": "P-201B",
-        "fuente": {
-          "protocolo": "modbus-tcp",
-          "endpoint": "plc-palmar.ot.local:502",
-          "reloj": "el PLC de la batería"
-        },
-        "metricas": [
+          },
           {
             "nombre": "VI-2011",
             "tipo": "Vibración global",
@@ -2174,9 +2294,9 @@
       {
         "nombre": "SE-2",
         "fuente": {
-          "protocolo": "pi-web-api",
-          "endpoint": "https://pi.palmar.local/piwebapi",
-          "reloj": "el PLC de la batería"
+          "protocolo": "modbus-rtu",
+          "endpoint": "rtu://epic-palmar-01/rs485-1",
+          "reloj": "el gateway, al leer (Modbus RTU no trae hora)"
         },
         "metricas": [
           {
@@ -2222,11 +2342,51 @@
         ]
       },
       {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "iec-61850",
+          "endpoint": "mms://rele-se2-palmar.ot.local:102",
+          "reloj": "el relé de la subestación"
+        },
+        "metricas": [
+          {
+            "nombre": "52-SE2",
+            "tipo": "Interruptor de llegada",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 1,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "SE-2",
+        "fuente": {
+          "protocolo": "entrada-digital",
+          "endpoint": "epic-palmar-01/DI-0",
+          "reloj": "el gateway"
+        },
+        "metricas": [
+          {
+            "nombre": "EI-0020",
+            "tipo": "Hay tensión en el gabinete del gateway",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 1,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
         "nombre": "K-101",
         "fuente": {
-          "protocolo": "pi-web-api",
-          "endpoint": "https://pi.palmar.local/piwebapi",
-          "reloj": "el PLC de la batería"
+          "protocolo": "modbus-rtu",
+          "endpoint": "rtu://epic-palmar-01/rs485-1",
+          "reloj": "el gateway, al leer (Modbus RTU no trae hora)"
         },
         "metricas": [
           {
@@ -2287,6 +2447,36 @@
             "bajo": null,
             "alto": null,
             "cadenciaS": 47,
+            "clase": "discreta"
+          }
+        ]
+      },
+      {
+        "nombre": "UPS-SALA",
+        "fuente": {
+          "protocolo": "snmp",
+          "endpoint": "snmp://ups-sala-palmar.ot.local:161",
+          "reloj": "el gateway, al consultar la UPS"
+        },
+        "metricas": [
+          {
+            "nombre": "EIB-0031",
+            "tipo": "Carga de la batería de la UPS",
+            "unidad": "%",
+            "limite": "> 80",
+            "bajo": 80,
+            "alto": null,
+            "cadenciaS": 60,
+            "clase": "continua"
+          },
+          {
+            "nombre": "ZI-0031",
+            "tipo": "En batería",
+            "unidad": null,
+            "limite": null,
+            "bajo": null,
+            "alto": null,
+            "cadenciaS": 60,
             "clase": "discreta"
           }
         ]

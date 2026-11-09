@@ -5,15 +5,15 @@ import { AHORA, calendarioDe } from './reloj'
  *  en `GET /api/campos`. */
 const CAMPOS_DEMO: Campo[] = [
   { id: 'ceiba', nombre: 'La Ceiba', cuenca: 'Llanos', choke: 'Planta',
-    nota: 'Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos.' },
+    nota: 'Tres bombas de agua en paralelo, sin reserva: si para una, se cierran pozos.', conexion: 'mezcla' },
   { id: 'morichal', nombre: 'Morichal Norte', cuenca: 'Llanos', choke: 'Pozos',
-    nota: 'Todos sus pozos con electrosumergible; la reinyección tiene respaldo parcial.' },
+    nota: 'Todos sus pozos con electrosumergible; la reinyección tiene respaldo parcial.', conexion: 'mezcla' },
   { id: 'guacamayo', nombre: 'Guacamayo', cuenca: 'Putumayo', choke: 'Evacuación',
-    nota: 'La reinyección es para recobro: el agua tiene salida alterna.' },
+    nota: 'La reinyección es para recobro: el agua tiene salida alterna.', conexion: 'mezcla' },
   { id: 'palmar', nombre: 'El Palmar', cuenca: 'Magdalena Medio', choke: 'Planta',
-    nota: 'Campo chico de bombeo mecánico.' },
+    nota: 'Campo chico de bombeo mecánico.', conexion: 'directa' },
   { id: 'zarza', nombre: 'La Zarza', cuenca: 'Llanos', choke: 'Mercado',
-    nota: 'Gas con condensado: lo limita la nominación del comprador.' },
+    nota: 'Gas con condensado: lo limita la nominación del comprador.', conexion: 'mezcla' },
 ]
 
 /** El registro de campos de la empresa. En el demo es `CAMPOS_DEMO`; con la

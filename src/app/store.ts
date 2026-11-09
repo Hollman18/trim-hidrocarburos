@@ -5,7 +5,7 @@ import { rolPorId, ROL_INICIAL } from '@/entities/roles'
 import { CAMPOS, periodoPorId, campoPorId } from '@/entities/campos'
 import type { Periodo, IdPeriodo } from '@/entities/tipos'
 import { leerHash, escribirHash, rangoValido, pantallaDelRol, nombreRolAjeno, PRIMER_DIA, ULTIMO_DIA, type DeLaDireccion, type MomentoDireccion, type FiltroDireccion } from './url'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida, inicioOfrecido } from '@/shared/api/piezas'
 import { PANTALLAS } from '@/app/pantallas'
 import type { Elemento, Miembro, CambioPlanta, Tren } from '@/entities/planta'
 import { perfilDe, type Config } from '@/entities/configuracion'
@@ -162,6 +162,10 @@ export const aplicarTema = (t: Tema) => {
 
 
 // Funciones declaradas, no constantes: el estado inicial ya las usa al crear el store.
+/** Donde abre un rol: su inicio o, si su pieza no está contratada, la primera de sus
+ *  pantallas que sí lo esté. Sin ninguna, su inicio, y la aplicación dice qué pieza falta. */
+export const inicioDe = (rol: Rol) => inicioOfrecido(rol) ?? rol.inicio
+
 /** Campos que un rol tiene asignados: los que el gerente le dio a la persona
  *  que tiene ese rol (registro de usuarios); si nadie lo tiene, los del rol. */
 export function camposDelRol(rol: { id: string; campos: 'todos' | string[] }, usuarios: readonly PersonaVisible[] = sesion().usuarios) {
@@ -173,7 +177,7 @@ export function camposDelRol(rol: { id: string; campos: 'todos' | string[] }, us
  *  pantallas son todas de un campo) o el técnico (un solo campo) aterrizaban
  *  en «elija un campo» mientras el riel decía otra cosa. */
 export function portafolioPermitido(rol: Rol, usuarios: readonly PersonaVisible[] = sesion().usuarios) {
-  return camposDelRol(rol, usuarios).length > 1 && rol.pantallas.some(p => pantallaVisible(p) && !!PANTALLAS[p]?.agrega)
+  return camposDelRol(rol, usuarios).length > 1 && rol.pantallas.some(p => pantallaOfrecida(p) && !!PANTALLAS[p]?.agrega)
 }
 
 /** Los campos de cada rol según el registro de usuarios. */
@@ -192,7 +196,7 @@ function avisoDeDireccion(c: DeLaDireccion, s: Pick<Estado, 'rolId' | 'pantalla'
 }
 /** «portafolio» era una pantalla y ahora es un alcance. Una dirección vieja
  *  o una pestaña abierta desde antes aterrizan donde corresponde. */
-const migrar = (p: string | undefined) => (p === 'portafolio' ? rolInicial.inicio : p)
+const migrar = (p: string | undefined) => (p === 'portafolio' ? inicioDe(rolInicial) : p)
 
 export const useApp = create<Estado>((set, get) => ({
   campoId: inicial.campoId ?? CAMPOS[0]!.id,
@@ -202,7 +206,7 @@ export const useApp = create<Estado>((set, get) => ({
   momento: inicial.momento ?? 'durante',
   setMomento: m => set({ momento: m }),
   rolId: rolInicial.id,
-  pantalla: migrar(inicial.pantalla) ?? rolInicial.inicio,
+  pantalla: migrar(inicial.pantalla) ?? inicioDe(rolInicial),
 
   suplantando: false,
   tema: leerTema(),
@@ -290,7 +294,7 @@ export const useApp = create<Estado>((set, get) => ({
       // catálogo no conoce), la vista se queda donde estaba en vez de reventar.
       campoId: nuevoCampo,
       alcance: alcance === 'portafolio' && portafolioPermitido(rol, usuarios) ? 'portafolio' : 'campo',
-      pantalla: pantallaDelRol(rol, pantalla) ? pantalla : rol.inicio,
+      pantalla: pantallaDelRol(rol, pantalla) ? pantalla : inicioDe(rol),
       equipoAbierto: null,
       avisoSub: null,
     })
@@ -298,7 +302,7 @@ export const useApp = create<Estado>((set, get) => ({
   setPantalla: p => {
     const { rolId } = get(), { usuarios } = sesion()
     const rol = rolPorId(rolId)
-    if (p === 'portafolio') return set({ pantalla: rol.inicio, alcance: portafolioPermitido(rol, usuarios) ? 'portafolio' : 'campo', equipoAbierto: null, avisoSub: null })
+    if (p === 'portafolio') return set({ pantalla: inicioDe(rol), alcance: portafolioPermitido(rol, usuarios) ? 'portafolio' : 'campo', equipoAbierto: null, avisoSub: null })
     // Una pantalla que el rol no tiene no se abre: la misma regla que la dirección.
     if (!pantallaDelRol(rol, p)) return
     set({ pantalla: p, equipoAbierto: null, avisoSub: null })

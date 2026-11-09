@@ -9,7 +9,7 @@ import { n0 } from '@/shared/lib/formato'
 import { useEstadoCampos } from '@/shared/api/diferidos'
 import { cn } from '@/shared/lib/cn'
 import { PANTALLAS, GRUPOS, PUERTAS_DEL_ROL, grupoDe, enElMenu, entradaDe } from '@/app/pantallas'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida } from '@/shared/api/piezas'
 import { MenuPerfil } from './MenuPerfil'
 import { peorSeveridad } from '@/shared/lib/prioridad'
 import { MarcaPrioridad } from '@/shared/ui/Prioridad'
@@ -144,7 +144,7 @@ function usePuertas() {
   return useMemo(() => {
     const perfiles = ambito.campos.map(c => perfilDe(config, c.id))
     return (PUERTAS_DEL_ROL[rol.id] ?? []).flatMap(g => {
-      const subs = GRUPOS[g]!.miembros.filter(x => rol.pantallas.includes(x) && pantallaVisible(x) && hayEquipo(x, perfiles))
+      const subs = GRUPOS[g]!.miembros.filter(x => rol.pantallas.includes(x) && pantallaOfrecida(x) && hayEquipo(x, perfiles))
       if (!subs.length) return []
       const activo = grupoDe(pantalla) === g
       const ultima = ultimaSub(rol.id, g)

@@ -104,3 +104,19 @@ Los segundos no se midieron aquí: los mide §9.
 | Palabras del inicio (vista / página, 390) | 89 / 133 | 36 |
 | Pantallas | 10 | 2 (Hoy y Equipos; Resultados a un toque) |
 | Toques para intervenir lo que avisa | 1 | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | La cadena del dato de cada instrumento: en un campo sin historiador (El Palmar) dice que llega directo del equipo (relé, analizador de red, controlador) y que es solo lectura. La subestación suma el interruptor y la entrada «hay tensión» del gateway | Al tocar un instrumento: «De dónde sale» | Al revisar un equipo | Desde 3 (4-nov) |
+| **Equipos** | Los equipos que avisan, con los de planta: generador, transformador, UPS, compresor de aire, bombas de transferencia y despacho, tratadores, torres de enfriamiento | Qué equipo, por qué y cuántos días le quedan | Cada mañana; en la reunión semanal | 4 (energía y aire) · 5 (el resto) · falta en el motor; los de planta desde 5 (4-nov) |
+| **Energía** | Si el cliente no tiene responsable de energía (D3): el disparo, lo que paró y los circuitos que cayeron, arriba de su Hoy y en su notificación. Con responsable, no recibe el aviso | «Disparo 52-SE2 14:02:03. Paró: 18 pozos, 3 bombas de agua y el compresor de aire.» El margen de la generación, cuando el generador esté instrumentado | Durante el evento | Desde 4 (4-nov); el margen N-1, pendiente |
+| **Planta** | En qué tren está el equipo que avisa, en su lista de Equipos (filtro «Tren») y en su ficha «Lo que avisa el vigía» | «CT-601 · torre de enfriamiento de agua · Atención · alarma en 5,0 d» → en la ficha: «Temperatura del agua de salida de CT-601: 37,8 °C; sube hacia su alarma (40 °C) y llega en 5 d.» y qué hacer | A un toque | Desde 5 (4-nov) |
+| **Barriles** | — | — | — | — |
+| **Mantenimiento** | La orden del equipo que avisa. Un equipo que paró por el apagón **no** le abre una orden por falla propia | Ver o crear la orden, un toque | Cuando un equipo avisa | Existe; el filtro del apagón en 4 |
+
+**Pendiente (D3):** si el experto confirma que existe un responsable de energía, la fila «Energía» de esta ficha pasa a una ficha propia con el mismo molde.

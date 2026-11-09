@@ -32,10 +32,11 @@ test('el panel lateral: las puertas de cada rol, sus subpantallas adentro y ning
   })
 
   await test.step('Las subpantallas van en el panel, debajo de su puerta; arriba no hay pestañas', async () => {
-    // Confiabilidad: su Resultados es Confiabilidad (B-03), adentro del panel, debajo de su puerta.
+    // Confiabilidad: su Resultados es Confiabilidad (B-03) y, desde la Fase 7 de facilidades, «Mi panel», adentro
+    // del panel lateral, debajo de su puerta.
     await f.abrir('/#/conf/confiabilidad/ceiba/curso')
     const subs = await f.page.evaluate(() => [...document.querySelectorAll('nav [data-subpantallas] button')].map(b => b.textContent?.trim()))
-    f.ok(subs.join(',') === 'Confiabilidad', `Resultados de confiabilidad, adentro del panel: ${subs.join(', ')}`)
+    f.ok(subs.join(',') === 'Confiabilidad,Mi panel', `Resultados de confiabilidad, adentro del panel: ${subs.join(', ')}`)
     const arriba = await f.page.evaluate(() => document.querySelectorAll('main [data-subpantallas], main > [role=tablist], header [role=tablist]').length)
     f.ok(arriba === 0, 'ninguna barra de subpantallas en el contenido ni en la cabecera')
     // A-15: Bombas y Electrosumergibles son filtros de Equipos; la dirección de antes abre Equipos con su filtro.
@@ -87,7 +88,8 @@ test('la franja de condiciones: la cuenta del motor y su lista', async ({ flujo:
   f.ok(await f.page.locator('[data-panel-equipo]').count() > 0, 'cada fila abre el equipo')
   await f.abrir('/#/ger/planta-viva/ceiba~portafolio/curso')
   const todos = await franja()
-  f.ok(todos === '4 alarmas · 8 en atención · 2 avisos · 0 sin comunicación', `todos sus campos: ${todos}`)
+  // Fase 5 de facilidades: los 5 avisos del vigía de planta en Morichal (1 en atención, 4 avisos).
+  f.ok(todos === '4 alarmas · 9 en atención · 6 avisos · 0 sin comunicación', `todos sus campos: ${todos}`)
   f.cerrar()
 })
 

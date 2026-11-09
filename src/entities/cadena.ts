@@ -28,6 +28,12 @@ const COMO_SE_LEE: Record<string, string> = {
   'sis': 'Estado de un lazo de seguridad cableado e independiente',
   'laboratorio': 'Ensayo de laboratorio · no hay señal continua',
   'ruta-manual': 'Ruta de medición manual con equipo portátil',
+  // Fase 3 de facilidades: la conexión directa a los equipos de planta (04-cadena-de-datos §4.2).
+  'iec-61850': 'Estado en línea, directo del relé de protección',
+  'dnp3': 'Estado en línea, directo del relé o la unidad remota',
+  'modbus-rtu': 'Medición en línea, directa del analizador o del controlador',
+  'snmp': 'Estado en línea, consultado a la UPS',
+  'entrada-digital': 'Estado en línea, de la entrada «hay tensión» del gateway',
 }
 const SIN_SENAL_CONTINUA = new Set(['laboratorio', 'ruta-manual'])
 
@@ -125,6 +131,16 @@ const ADQUISICION: Record<string, [string, string]> = {
     'Entra por carga o por archivo del laboratorio. No pasa por el borde.'],
   'ruta-manual': ['Ruta de medición manual con equipo portátil',
     'Se carga al cerrar la ruta. No pasa por el borde.'],
+  'iec-61850': ['Relé de protección · IEC 61850 (MMS)',
+    'El gateway lee los reportes del relé por IEC 61850, en modo solo lectura: nunca opera el interruptor.'],
+  'dnp3': ['Relé o unidad remota · DNP3',
+    'El gateway consulta al equipo como maestro DNP3, en modo solo lectura: nunca manda una orden de control.'],
+  'modbus-rtu': ['Analizador de red o controlador de generador o compresor · Modbus RTU',
+    'El gateway lee los registros por la línea serial (RS-485) en modo solo lectura. Modbus RTU no trae hora: la pone el gateway al leer.'],
+  'snmp': ['UPS · SNMP',
+    'El gateway consulta la UPS por SNMP en modo solo lectura (sin comunidad de escritura).'],
+  'entrada-digital': ['Entrada digital «hay tensión» del gateway',
+    'Un contacto cableado a la entrada del gateway, que sigue con su batería si se va la energía: solo lectura. Es lo mínimo para avisar el apagón.'],
 }
 
 const TRANSPORTE: Record<string, string> = {

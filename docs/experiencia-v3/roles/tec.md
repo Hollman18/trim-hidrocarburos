@@ -77,3 +77,17 @@ Los segundos no se midieron aquí: los mide §9.
 | Palabras del inicio (vista / página, 390) | 88 / 174 | 25 |
 | Pantallas | 6 | 1 |
 | Toques para registrar qué encontró | 3 | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | La cadena del dato de cada instrumento: en un campo sin historiador (El Palmar) dice que llega directo del equipo (relé, analizador de red, controlador) y que es solo lectura. La subestación suma el interruptor y la entrada «hay tensión» del gateway | Al tocar un instrumento: «De dónde sale» | Al revisar un equipo | Desde 3 (4-nov) |
+| **Equipos** | Su trabajo del día, también en equipos de planta | «Revisar G-2: temperatura de escape alta» | Al empezar el día | 4–5 · falta en el motor |
+| **Energía** | Solo como trabajo asignado | Igual que cualquier trabajo | Cuando se lo asignan | 4 |
+| **Planta** | — | — | — | — |
+| **Barriles** | — | — | — | — |
+| **Mantenimiento** | Decir qué encontró | Un toque | Al cerrar el trabajo | Existe |

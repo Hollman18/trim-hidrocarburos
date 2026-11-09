@@ -100,3 +100,17 @@ Los segundos no se midieron aquí: los mide §9.
 | Palabras del inicio (vista / página, 390) | 104 / 172 | 29 |
 | Pantallas | 8 | 1 |
 | Toques: confirmar / responder | 1 / 3 | 1 / 2 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | El aviso del evento de planta aunque no tenga TRIM abierto: la notificación push en el celular o el escritorio (D2), si la activó en Perfil | Un mensaje corto con la acción | Al instante | Desde 4 (4-nov) |
+| **Equipos** | — | — | — | — |
+| **Energía** | Qué se paró, si el corte es total o parcial y los relojes de consecuencia, arriba de su Hoy y en su notificación; lo que respondió el operador. Debajo, el re-arranque guiado: el orden por barriles con sus límites y el cronómetro, con un solo botón (marcar la fase que sigue) | «Apagón 14:00. Aire: 11 min. …» · «Jairo Peña: no hay luz · 14:06» · «Re-arranque · La Ceiba. 11.360 bbl/d por recuperar en 10 pasos.» · «Marcar: Energía restablecida» | Solo durante el evento, ya abierto | Aviso desde 4 · arranque y cronómetro desde 6 (4-nov) |
+| **Planta** | Los relojes de consecuencia de cada tren y el orden de cierre | Minutos y horas que quedan; en qué orden cerrar | Solo en la alarma | Orden de cierre existe; relojes en 4–5 |
+| **Barriles** | Las paradas del turno por confirmar, también las del apagón y las de «Falta de diluyente». Al registrar una pérdida, también evaporación y fondos de tanque | Cuántas faltan; se confirman en lote | Al recibir y al entregar el turno | Existe; diluyente y las dos pérdidas desde 2 (4-nov) |
+| **Mantenimiento** | — | — | — | — |

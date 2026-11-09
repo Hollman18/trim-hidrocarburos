@@ -34,14 +34,14 @@ $$
 | Portafolio · sep | 33.944,7 | 24.482,6 | 9.159,5 | 302,6 | 0 | 0,0 |
 | Portafolio · 13 meses | 485.684,2 | 245.749,4 | 237.306,7 | 2.272,9 | 355,0 | 0,0 |
 
-En estos cuatro períodos lo sin explicar es 0: las filas suman exacto el libro. Día por día aparece el residuo del libro, el inventario del tanque de venta (5E.8), y con él el umbral de cierre se pone a prueba (5E·H37):
+En estos cuatro períodos lo sin explicar es 0: las filas suman exacto el libro. Desde D1 (4-nov-2026, factor de asignación diario) un día entero también da 0. Lo sin explicar aparece en un período que corta días, porque lo real de cada día se reparte parejo por hora y lo diferido no; con él el umbral de cierre se pone a prueba (5E·H37):
 
 | Período | Potencial | Real | Σ por tramo | Sin explicar | % del potencial | `cuadra` |
 |---|---:|---:|---:|---:|---:|---|
-| La Ceiba · 22-sep (un día) | 11.542,867 | 10.578 | 876,426 | **88,441** | 0,77 % | sí |
-| La Ceiba · 22-sep, 12:00 → 14:00 | 961,906 | 881,500 | 140,333 (P-201B, en la planta) | **−59,928** | −6,23 % | **no** |
+| La Ceiba · 21-sep 18:00 → 22-sep 18:00 (una jornada) | 11.427,870 | 10.776 | 451,650 | **200,220** | 1,75 % | sí |
+| La Ceiba · 22-sep, 12:00 → 14:00 | 953,930 | 881,500 | 139,170 (P-201B, en la planta) | **−66,740** | −7,00 % | **no** |
 
-En dos horas no cuadra porque el fiscal es diario: lo real se reparte parejo por hora y lo diferido de esas horas (P-201B parada desde las 11:41, con LC-16 y LC-07 cerrados) no. La escalera lo dice: «Lo sin explicar pasa del 2,5 % del potencial: hay que revisarlo antes de cerrar el mes.» Casos: `referencia/choke/reparto-ceiba-2026-09-22.json` y `reparto-ceiba-2026-09-22-12a14.json`; `referencia.mjs comprobar` falla si la referencia no trae uno con lo sin explicar distinto de cero y otro con `cuadra: false`. Los escenarios de configuración no servían para esto: lo sin explicar sale del libro.
+En dos horas no cuadra porque el fiscal es diario: lo real se reparte parejo por hora y lo diferido de esas horas (P-201B parada desde las 11:41, con LC-16 y LC-07 cerrados) no. La escalera lo dice: «Lo sin explicar pasa del 2,5 % del potencial: hay que revisarlo antes de cerrar el mes.» Casos: `referencia/choke/reparto-ceiba-2026-09-21-18a18.json` y `reparto-ceiba-2026-09-22-12a14.json`; `referencia.mjs comprobar` falla si la referencia no trae uno con lo sin explicar distinto de cero y otro con `cuadra: false`. Los escenarios de configuración no servían para esto: lo sin explicar sale del libro.
 
 **Los equipos de cada tramo** (`porChokeEquipo`, el elemento donde se originó, de mayor a menor, con sus tipos de causa si son más de uno, B-12): La Ceiba sep, pozo: LC-11 3.677,2; LC-04 2.260,6 (2.125,6 de su electrosumergible + 135,0 de una baja tensión que lo tumbó solo a él); LC-16 216,7; LC-07 131,4; planta: P-201B 1.040,6. 13 meses, planta: SE-2 103.705,0; P-201B 61.550,4 (59.432,1 de reinyección + 2.118,3 programados); MPP-301 23.426,9; K-101 17.277,0; afuera: ZA-03 1.309,8; ZA-01 534,4; ZA-06 302,6; ZA-04 126,1.
 

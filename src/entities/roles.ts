@@ -64,7 +64,7 @@ export const ROLES: Rol[] = [
     // Resultados, y su Riesgo en La planta viva (Durante y Antes) y Equipos (C4: lo parado o avisa); sus
     // direcciones abren ahí (`FUSIONADA_EN`, url.ts).
     // B3 · A-16: su pantalla Equipos sale (repite «Diferido por equipo»); su dirección abre Resultados (`FUSIONADA_EN_ROL`).
-    pantallas: ['plantaViva', 'resultados', 'configuracion'], inicio: 'plantaViva', topologia: null,
+    pantallas: ['plantaViva', 'resultados', 'configuracion', 'panel'], inicio: 'plantaViva', topologia: null,
     foco: 'Barriles que no se produjeron, el retorno posible del ciclo antes / durante / después, y si baja contra la meta que usted firmó. Usted fija las metas de cada campo y da los accesos.',
     area: 'direccion',
     campos: 'todos',
@@ -72,7 +72,7 @@ export const ROLES: Rol[] = [
   { id: 'prod', nivel: 'ingenieria', nombre: 'Ingeniera de producción', persona: 'Marcela Ríos', iniciales: 'MR',
     // B3 (pedido de B2): Hoy sale (confirmar y la asignación van en su inicio) y Diferidos (A-09); Electrosumergibles
     // es un filtro de Equipos (A-15). Sin puerta: Producción, «Una por una», Equipos, Pozos, Planta y Agua, a un toque.
-    pantallas: ['plantaViva', 'resultados', 'equipos', 'produccion', 'pozos', 'causa', 'planta', 'agua', 'configuracion', 'filosofia'], inicio: 'plantaViva', topologia: 'produccion',
+    pantallas: ['plantaViva', 'resultados', 'equipos', 'produccion', 'pozos', 'causa', 'planta', 'agua', 'configuracion', 'filosofia', 'panel'], inicio: 'plantaViva', topologia: 'produccion',
     foco: 'Explicas el mes en barriles: el factor de asignación en banda, la custodia completa y nada sin identificar.',
     area: 'produccion',
     campos: ['ceiba', 'palmar'],
@@ -106,11 +106,22 @@ export const ROLES: Rol[] = [
   { id: 'conf', nivel: 'ingenieria', nombre: 'Ingeniero de confiabilidad', persona: 'Edwin Maestre', iniciales: 'EM',
     // K1 · P-10: su Riesgo se fundió en Equipos (debajo de la lista; «¿Dónde va el próximo instrumento?» arriba).
     // B3: Equipos (con lo que le toca hacer arriba: su Hoy se funde aquí) y Confiabilidad, en la puerta Resultados (B-03).
-    pantallas: ['equipos', 'confiabilidad', 'causa', 'configuracion', 'filosofia'], inicio: 'equipos', topologia: 'proceso',
+    pantallas: ['equipos', 'confiabilidad', 'causa', 'configuracion', 'filosofia', 'panel'], inicio: 'equipos', topologia: 'proceso',
     foco: 'Antes: vigía, aciertos y riesgo. Después: MTBF y costo por falla. La reparación activa, no la espera del repuesto.',
     area: 'mantenimiento',
     campos: ['ceiba', 'morichal', 'guacamayo'],
     puede: con('causa:completar', 'evidencia:exportar', 'sap:aviso', 'planes:decidir', 'anh:clasificar', 'anh:yacimiento') },
+  // Fase 4 de facilidades · D3 (4-nov-2026): el rol existe y el cliente lo enciende si tiene esa persona
+  // (en el demo, `VITE_ROL_ENERGIA=1`; `rolVisible`). Recibe lo de energía: el disparo del relé, lo que
+  // paró y los relojes. Si está apagado, eso lo recibe el jefe de mantenimiento (`rolDeEnergia`).
+  { id: 'ener', nivel: 'ingenieria', nombre: 'Responsable de energía', persona: 'Diana Mora', iniciales: 'DM',
+    pantallas: ['hoy', 'equipos', 'causa'], inicio: 'hoy', topologia: 'proceso',
+    foco: 'El sistema eléctrico del campo: el disparo, lo que paró y cuánto aguanta la planta sin energía. Usted no opera interruptores desde TRIM: lo ve y avisa.',
+    area: 'mantenimiento',
+    campos: 'todos',
+    // Sin causa:declarar: las paradas de bombas y pozos no son suyas (las contesta quien está en el campo);
+    // las de energía las deduce la señal del relé.
+    puede: con('evidencia:exportar', 'sap:aviso') },
   { id: 'plan', nivel: 'ingenieria', nombre: 'Planeadora de mantenimiento', persona: 'Luz Caro', iniciales: 'LC',
     pantallas: ['hoy', 'equipos', 'resultados', 'equipo', 'confiabilidad'], inicio: 'hoy', topologia: 'proceso',
     foco: 'El horizonte es lo que deja pedir el repuesto sin pagar urgencia.',

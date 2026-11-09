@@ -16,6 +16,7 @@ import { rolExacto } from '@/entities/roles'
 import { camposAsignados, personaDelRol } from '@/entities/usuarios'
 import { rangoDePeriodo } from '@/entities/diferido'
 import { metaEn } from '@/entities/configuracion'
+import { piezasDe } from '@/entities/piezas-trim'
 import { nombreMes } from '@/entities/plan'
 import { AHORA } from '@/entities/reloj'
 
@@ -85,6 +86,7 @@ export function pedirHoy(q: ConsultaHoy, s: SesionHoy): VistaHoy {
     sinAnalisis: preguntas.filter(p => !p.pide && p.causa.declarado && p.causa.parte && !Object.hasOwn(s.analisis ?? {}, p.id)),
     programa: ctx.config.programa.filter(p => campos.includes(p.campoId)).map(p => ({ id: p.id, campoId: p.campoId, equipo: p.equipo, desde: p.desde, hasta: p.hasta, motivo: p.motivo })),
     nombres: Object.fromEntries(usuarios.map(u => [u.id, u.nombre])),
+    piezas: piezasDe(ctx.config, campos),
     diferidoTurnoBbl: pedirLibro({ campos, desde: new Date(AHORA.getTime() - 12 * 3_600_000), hasta: AHORA }, ctx).diferido,
     // F1 · H2: los enteros del mes en curso que publica el motor (la regla de redondeo, de F2).
     enteros: enterosDeHoy(campos, curso.desde, curso.hasta, ctx, guardadas),

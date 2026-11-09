@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+        @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+        @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+        @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+        #root { position: absolute; inset: 0; overflow: hidden; color: #f4f3f0; font-family: "IBM Plex Sans", sans-serif; }
+
+        #f03-fondo { position: absolute; inset: 0; background-color: #101418; background-image: radial-gradient(circle, #343b42 1.6px, transparent 2px); background-size: 40px 40px; background-position: 20px 20px; }
+        #f03-cam { position: absolute; inset: 0; transform-origin: 960px 480px; }
+        .f03-panel { position: absolute; top: 220px; width: 1040px; height: 520px; transform-origin: 520px 260px; opacity: 0; --f03-sw: 3.5; }
+        #f03-pa { left: -130px; } #f03-pb { left: 440px; } #f03-pc { left: 1010px; }
+        .f03-card { fill: #1d2125; stroke: #343b42; stroke-width: 2; }
+        .f03-ln { fill: none; stroke: currentColor; stroke-width: calc(var(--f03-sw) * 1px); stroke-linecap: round; stroke-linejoin: round; }
+        .f03-flujo { fill: none; stroke: #a9dad6; stroke-width: calc(var(--f03-sw) * 1px + 1px); stroke-linecap: round; stroke-dasharray: 10 22; }
+        .f03-cab { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 36px; letter-spacing: 0.12em; fill: #7f878e; }
+        .f03-mono { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 34px; letter-spacing: 0.12em; }
+        .f03-sans { font-family: "IBM Plex Sans", sans-serif; font-weight: 600; font-size: 42px; letter-spacing: -0.01em; }
+        #f03-titulo { position: absolute; left: 0; right: 0; top: 168px; text-align: center; font-weight: 600; font-size: 64px; line-height: 76px;
+          letter-spacing: -0.02em; color: #f4f3f0; white-space: nowrap; opacity: 0; }
+        .f03-senal { position: absolute; top: 371px; width: 28px; height: 28px; }
+        .f03-senal i { position: absolute; inset: 0; border-radius: 50%; }
+        .f03-dot { background: #a9dad6; box-shadow: 0 0 14px #a9dad6; transform: scale(0); }
+        .f03-anillo { border: 3px solid #a9dad6; opacity: 0; }
+        #f03-negro { position: absolute; inset: 0; background: #000; opacity: 0; }
+      </style>
+      <div data-hf-id="hf-gtef" id="root" data-composition-id="f03" data-width="1920" data-height="1080" data-duration="10.02">
+
+        <div data-hf-id="hf-rmij" id="f03-fondo" class="clip" data-start="0" data-duration="10.02" data-track-index="0"></div>
+        <div data-hf-id="hf-fi9c" id="f03-cam">
+          <div data-hf-id="hf-p6gd" class="f03-panel" id="f03-pa">
+            <svg data-hf-id="hf-o120" viewBox="0 0 1040 520" width="1040" height="520" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+              <rect data-hf-id="hf-o6jy" class="f03-card" x="1" y="1" width="1038" height="518" rx="24" />
+              <text data-hf-id="hf-s2x4" class="f03-cab" x="52" y="78">ENERGÍA</text>
+              
+              <g data-hf-id="hf-ffcz" class="f03-ln" style="color:#a9dad6">
+                <line data-hf-id="hf-4ccp" x1="72" y1="250" x2="72" y2="350" /><line data-hf-id="hf-r0in" x1="56" y1="262" x2="88" y2="262" />
+                <line data-hf-id="hf-9uu1" x1="72" y1="300" x2="200" y2="300" />
+                <rect data-hf-id="hf-n2qy" x="200" y="270" width="60" height="60" rx="8" /><line data-hf-id="hf-e45z" x1="212" y1="318" x2="248" y2="282" />
+                <line data-hf-id="hf-342w" x1="260" y1="300" x2="330" y2="300" />
+                <circle data-hf-id="hf-sr25" cx="380" cy="300" r="50" /><circle data-hf-id="hf-938w" cx="446" cy="300" r="50" />
+              </g>
+              <g data-hf-id="hf-ruja" id="f03-a-linea">
+                <g data-hf-id="hf-qa6b" class="f03-ln" style="color:#a9dad6"><line data-hf-id="hf-052h" x1="496" y1="300" x2="880" y2="300" />
+                  <path data-hf-id="hf-u0v6" d="M880 360 V258 L924 230 L968 258 V360 Z" /><line data-hf-id="hf-zy15" x1="868" y1="360" x2="980" y2="360" /></g>
+                <path data-hf-id="hf-6foh" class="f03-flujo" d="M500 300 H872" />
+                <text data-hf-id="hf-e9uc" class="f03-mono" x="560" y="262" fill="#a9dad6">13,8 kV</text>
+              </g>
+              <path data-hf-id="hf-8a74" class="f03-flujo" d="M76 300 H196" />
+              <g data-hf-id="hf-oav1" id="f03-a-corte" style="opacity:0">
+                <rect data-hf-id="hf-exer" x="560" y="378" width="6" height="52" fill="#d9bd6a" />
+                <text data-hf-id="hf-xbw8" class="f03-sans" x="584" y="418" fill="#d9bd6a">corte de energía</text>
+              </g>
+            </svg>
+          </div>
+          <div data-hf-id="hf-t4ke" class="f03-panel" id="f03-pb">
+            <svg data-hf-id="hf-qo4w" viewBox="0 0 1040 520" width="1040" height="520" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+              <rect data-hf-id="hf-rxv6" class="f03-card" x="1" y="1" width="1038" height="518" rx="24" />
+              <text data-hf-id="hf-d4fp" class="f03-cab" x="52" y="78">VARIADOR</text>
+              
+              <defs data-hf-id="hf-mh0t"><clippath data-hf-id="hf-wxlm" id="f03-b-clip"><rect data-hf-id="hf-9r02" x="40" y="110" width="960" height="380" /></clippath></defs>
+              <line data-hf-id="hf-9aqz" class="f03-ln" x1="48" y1="300" x2="992" y2="300" style="color:#343b42; stroke-width:2" stroke-dasharray="4 10" />
+              <g data-hf-id="hf-t2co" clip-path="url(#f03-b-clip)">
+                <g data-hf-id="hf-tvwj" id="f03-b-ondas">
+                  <path data-hf-id="hf-sspm" id="f03-b-t" class="f03-ln" style="color:#7f878e" />
+                  <path data-hf-id="hf-xrby" id="f03-b-s" class="f03-ln" style="color:#c9cbcd" />
+                  <path data-hf-id="hf-e6mk" id="f03-b-r" class="f03-ln" style="color:#a9dad6" />
+                </g>
+              </g>
+              <g data-hf-id="hf-m31w" id="f03-b-rot" style="opacity:0">
+                <text data-hf-id="hf-ikxa" class="f03-mono" x="988" y="470" text-anchor="end" fill="#d9bd6a">DESBALANCE</text>
+              </g>
+            </svg>
+          </div>
+          <div data-hf-id="hf-x2of" class="f03-panel" id="f03-pc">
+            <svg data-hf-id="hf-ph7t" viewBox="0 0 1040 520" width="1040" height="520" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+              <rect data-hf-id="hf-sc67" class="f03-card" x="1" y="1" width="1038" height="518" rx="24" />
+              <text data-hf-id="hf-8a6q" class="f03-cab" x="52" y="78">MOTOR</text>
+              
+              <g data-hf-id="hf-fjl3" class="f03-ln" style="color:#7f878e; opacity:0.6"><line data-hf-id="hf-6057" x1="90" y1="120" x2="90" y2="448" /><line data-hf-id="hf-sfnw" x1="90" y1="448" x2="980" y2="448" /></g>
+              <path data-hf-id="hf-j4mh" id="f03-c-caudal" class="f03-ln" d="M90 330 H700" style="color:#c9cbcd; stroke-dasharray:610 610" />
+              <path data-hf-id="hf-40tl" id="f03-c-corr" class="f03-ln" d="M90 390.2 L100 388.6 L110 387.0 L120 385.6 L130 384.4 L140 383.2 L150 381.7 L160 379.7 L170 377.1 L180 373.8 L190 369.9 L200 365.6 L210 361.3 L220 357.2 L230 353.6 L240 350.6 L250 348.3 L260 346.4 L270 344.7 L280 342.8 L290 340.4 L300 337.1 L310 333.0 L320 328.2 L330 322.8 L340 317.3 L350 312.2 L360 307.7 L370 304.1 L380 301.4 L390 299.3 L400 297.6 L410 295.8 L420 293.3 L430 289.9 L440 285.3 L450 279.8 L460 273.6 L470 267.2 L480 261.1 L490 255.9 L500 251.7 L510 248.7 L520 246.6 L530 245.0 L540 243.3 L550 241.0 L560 237.6 L570 232.8 L580 226.8 L590 219.9 L600 212.7 L610 205.8 L620 199.8 L630 195.0 L640 191.7 L650 189.6 L660 188.1 L670 186.7 L680 184.7 L690 181.4 L700 176.6" style="color:#d9bd6a; stroke-dasharray:655.4 655.4" />
+              <circle data-hf-id="hf-hqp8" id="f03-c-punto" cx="90" cy="392" r="9" fill="#d9bd6a" style="filter: drop-shadow(0 0 10px #d9bd6a); opacity:0" />
+              <g data-hf-id="hf-9bio" id="f03-c-rot1" style="opacity:0"><text data-hf-id="hf-cxg6" class="f03-mono" x="720" y="342" fill="#c9cbcd">CAUDAL =</text></g>
+              <g data-hf-id="hf-o1kj" id="f03-c-rot2" style="opacity:0"><text data-hf-id="hf-1vks" class="f03-mono" x="720" y="188.6" fill="#d9bd6a">CORRIENTE</text>
+                <path data-hf-id="hf-c5fn" class="f03-ln" style="color:#d9bd6a" d="M972 192.6 V158.6 M960 170.6 L972 158.6 L984 170.6" /></g>
+            </svg>
+          </div>
+          <div data-hf-id="hf-p8c7" class="f03-senal" id="f03-s0" style="left:606px"><i data-hf-id="hf-b0hh" class="f03-anillo" id="f03-s0-a1"></i><i data-hf-id="hf-eyli" class="f03-anillo" id="f03-s0-a2"></i><i data-hf-id="hf-8agx" class="f03-dot" id="f03-s0-d"></i></div>
+          <div data-hf-id="hf-ur0p" class="f03-senal" id="f03-s1" style="left:1176px"><i data-hf-id="hf-09ma" class="f03-anillo" id="f03-s1-a1"></i><i data-hf-id="hf-wbi9" class="f03-anillo" id="f03-s1-a2"></i><i data-hf-id="hf-l178" class="f03-dot" id="f03-s1-d"></i></div>
+          <div data-hf-id="hf-x7q9" class="f03-senal" id="f03-s2" style="left:1746px"><i data-hf-id="hf-n213" class="f03-anillo" id="f03-s2-a1"></i><i data-hf-id="hf-ee58" class="f03-anillo" id="f03-s2-a2"></i><i data-hf-id="hf-eknb" class="f03-dot" id="f03-s2-d"></i></div>
+          <div data-hf-id="hf-u2z8" id="f03-titulo">Las señales estaban ahí.</div>
+        </div>
+        <div data-hf-id="hf-57l6" id="f03-negro"></div>
+      </div>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          const tl = gsap.timeline({ paused: true });
+
+          const SLOTS = [390,960,1530], BIG = 1.385, SMALL = 0.519;
+          const ids = ["#f03-pa", "#f03-pb", "#f03-pc"];
+          const bx = (i) => 960 - SLOTS[i], by = 0;
+          // Ondas R S T (puras, deterministas)
+          function onda(amp, fase) {
+            let d = "";
+            for (let x = 40; x <= 2900; x += 6) {
+              const y = 300 + amp * Math.sin(((x - 40) / 280) * Math.PI * 2 + fase);
+              d += (x === 40 ? "M" : " L") + x + " " + y.toFixed(1);
+            }
+            return d;
+          }
+          const ondaR = document.querySelector("#f03-b-r");
+          document.querySelector("#f03-b-s").setAttribute("d", onda(80, (2 * Math.PI) / 3));
+          document.querySelector("#f03-b-t").setAttribute("d", onda(80, (4 * Math.PI) / 3));
+          const R = { amp: 80, fase: 0 };
+          const pintaR = () => ondaR.setAttribute("d", onda(R.amp, R.fase));
+          pintaR();
+          // Puntos de la corriente para el punto de cabeza
+          const CP = [[90,390.2],[100,388.6],[110,387],[120,385.6],[130,384.4],[140,383.2],[150,381.7],[160,379.7],[170,377.1],[180,373.8],[190,369.9],[200,365.6],[210,361.3],[220,357.2],[230,353.6],[240,350.6],[250,348.3],[260,346.4],[270,344.7],[280,342.8],[290,340.4],[300,337.1],[310,333],[320,328.2],[330,322.8],[340,317.3],[350,312.2],[360,307.7],[370,304.1],[380,301.4],[390,299.3],[400,297.6],[410,295.8],[420,293.3],[430,289.9],[440,285.3],[450,279.8],[460,273.6],[470,267.2],[480,261.1],[490,255.9],[500,251.7],[510,248.7],[520,246.6],[530,245],[540,243.3],[550,241],[560,237.6],[570,232.8],[580,226.8],[590,219.9],[600,212.7],[610,205.8],[620,199.8],[630,195],[640,191.7],[650,189.6],[660,188.1],[670,186.7],[680,184.7],[690,181.4],[700,176.6]];
+          const punto = document.querySelector("#f03-c-punto");
+          const C = { p: 0 };
+          const pintaC = () => {
+            const k = Math.min(CP.length - 1, C.p * (CP.length - 1));
+            const i = Math.floor(k), t = k - i, j = Math.min(CP.length - 1, i + 1);
+            punto.setAttribute("cx", (CP[i][0] + (CP[j][0] - CP[i][0]) * t).toFixed(1));
+            punto.setAttribute("cy", (CP[i][1] + (CP[j][1] - CP[i][1]) * t).toFixed(1));
+          };
+
+          // Cámara: empuje lento todo el frame
+          tl.fromTo("#f03-cam", { scale: 1 }, { scale: 1.04, duration: 10.02, ease: "sine.inOut" }, 0);
+          // Flujo eléctrico + ondas corriendo hacia la izquierda todo el frame
+          tl.fromTo("#f03-pa .f03-flujo", { strokeDashoffset: 0 }, { strokeDashoffset: -1200, duration: 10.02, ease: "none" }, 0);
+          tl.fromTo("#f03-b-ondas", { x: 0 }, { x: -280 * 6, duration: 10.02, ease: "none" }, 0);
+
+          // ---- A · Energía (0.1–1.2)
+          tl.fromTo(ids[0], { x: bx(0), y: by, scale: BIG * 1.06, opacity: 0 }, { x: bx(0), y: by, scale: BIG, opacity: 1, duration: 0.45, ease: "power3.out" }, 0.05);
+          // 0.5: la línea parpadea 3 veces y queda apagada un instante
+          [[0.5, 0.12], [0.56, 1], [0.62, 0.12], [0.68, 1], [0.74, 0.12], [0.8, 1], [0.86, 0.1]].forEach(([t, o]) => tl.set("#f03-a-linea", { opacity: o }, t));
+          tl.set("#f03-pa .f03-flujo", { opacity: 0 }, 0.86);
+          tl.fromTo("#f03-a-corte", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0.6);
+          tl.to("#f03-a-linea", { opacity: 0.45, duration: 0.25, ease: "power2.out" }, 1.05);
+
+          // ---- B · Variador (1.2–3.5)
+          tl.to(ids[0], { scale: BIG * 0.9, opacity: 0, duration: 0.45, ease: "power2.in" }, 1.2);
+          tl.fromTo(ids[1], { x: bx(1), y: by, scale: BIG * 1.08, opacity: 0 }, { x: bx(1), y: by, scale: BIG, opacity: 1, duration: 0.55, ease: "expo.out" }, 1.25);
+          tl.to(R, { amp: 132, fase: 0.95, duration: 1.4, ease: "sine.inOut", onUpdate: pintaR }, 1.8);
+          tl.to("#f03-b-r", { color: "#d9bd6a", duration: 0.8, ease: "power2.out" }, 2.1);
+          tl.fromTo("#f03-b-rot", { opacity: 0, x: 14 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 2.4);
+
+          // ---- C · Motor (3.5–6.9)
+          tl.to(ids[1], { scale: BIG * 0.9, opacity: 0, duration: 0.45, ease: "power2.in" }, 3.5);
+          tl.fromTo(ids[2], { x: bx(2), y: by, scale: BIG * 1.08, opacity: 0 }, { x: bx(2), y: by, scale: BIG, opacity: 1, duration: 0.55, ease: "expo.out" }, 3.55);
+          tl.fromTo("#f03-c-caudal", { strokeDashoffset: 610 }, { strokeDashoffset: 0, duration: 1.0, ease: "power2.inOut" }, 3.75);
+          tl.fromTo("#f03-c-rot1", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 4.6);
+          tl.fromTo("#f03-c-corr", { strokeDashoffset: 655.4 }, { strokeDashoffset: 0, duration: 2.75, ease: "none" }, 3.85);
+          tl.fromTo("#f03-c-punto", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 3.85);
+          tl.fromTo(C, { p: 0 }, { p: 1, duration: 2.75, ease: "none", onUpdate: pintaC }, 3.85);
+          tl.fromTo("#f03-c-rot2", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 6.45);
+
+          // ---- 7.0–7.8: los tres se reducen a una fila de tres tarjetas
+          ids.forEach((id, i) => {
+            tl.to(id, { x: 0, y: 0, scale: SMALL, opacity: 1, "--f03-sw": 5.5, duration: 0.8, ease: "power3.inOut" }, 7.0 + (i === 2 ? 0 : 0.06 * (i + 1)));
+          });
+          tl.to("#f03-a-linea", { opacity: 1, duration: 0.4 }, 7.0);
+          tl.set("#f03-pa .f03-flujo", { opacity: 1 }, 7.0);
+
+          // ---- 7.8–9.3: «Las señales estaban ahí.»
+          tl.fromTo("#f03-titulo", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "expo.out" }, 7.8);
+          [7.9, 8.3, 8.7].forEach((t, i) => {
+            tl.fromTo("#f03-s" + i + "-d", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2.5)" }, t);
+            tl.to(ids[i] + " .f03-card", { stroke: "#a9dad6", duration: 0.4, ease: "power2.out" }, t);
+            for (let k = 0; t + k * 0.5 < 9.4; k++) {
+              tl.fromTo("#f03-s" + i + "-a" + ((k % 2) + 1), { scale: 1, opacity: 0.9 }, { scale: 3, opacity: 0, duration: 0.9, ease: "power2.out", immediateRender: false }, t + k * 0.5);
+            }
+          });
+
+          // ---- 9.4–10.02: funde a negro puro
+          tl.fromTo("#f03-negro", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.in" }, 9.4);
+          window.__timelines["f03"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

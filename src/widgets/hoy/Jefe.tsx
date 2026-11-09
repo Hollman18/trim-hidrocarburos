@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAmbito } from '@/app/store'
 import type { VistaHoy } from '@/shared/api/hoy'
+import { usePiezas } from '@/shared/api/piezas'
 import { useListaEquipos } from '@/shared/api/equiposTecnico'
 import { useCriticidad, DONDE_CHOKE } from '@/shared/api/choke'
 import { useFallasMensual, NOMBRE_TRAMO_BALANCE } from '@/shared/api/balance'
@@ -35,31 +36,35 @@ export function InicioJefe({ v }: { v: VistaHoy }) {
   const usuarios = useUsuarios()
   const [verOrden, setVerOrden] = useState(false)
   const [espera, setEspera] = useState(false)
+  // Fase 1 (facilidades): «Avisan» es de Equipos; las fallas, la espera y la orden, de Mantenimiento.
+  const piezas = usePiezas(campos)
+  const eq = piezas.has('equipos'), mant = piezas.has('mantenimiento'), causas = mant || piezas.has('barriles')
 
   const avisan = lista.filas.filter(f => f.filtros.includes('avisan'))
-  const primero = avisan[0]
+  const primero = eq ? avisan[0] : undefined
   const tramo = primero ? ranking.find(r => r.campoId === primero.campoId && r.equipo === primero.equipo)?.tramo : undefined
   const orden = primero ? ordenes.find(o => o.campoId === primero.campoId && o.equipo === primero.equipo && o.estado !== 'TECO') : undefined
   const sinCausa = [...new Set(v.tareas.filter(t => t.tipo === 'conseguir-causa').flatMap(t => (t.preguntas ?? []).map(q => q.equipo)))]
   const mes = meses.at(-1)
   const conFalla = mes?.porEquipo.filter(e => e.fallas > 0) ?? []
+  const esperaCifra = { id: 'espera', rotulo: 'Espera', cifra: v.inicio.cifra, unidad: 'días por falla', onAbrir: () => setEspera(true), abrir: `Espera: ${v.inicio.cifra} días por falla. Ver el tiempo fuera en 5 tramos` }
 
   return (
     <>
-      <Cifras titulo="Lo de hoy" principal={{
+      <Cifras titulo="Lo de hoy" principal={eq ? {
         id: 'avisan', rotulo: 'Avisan', cifra: n0(lista.cuentas.estado.avisan),
         detalle: primero ? <><b className="font-cond font-bold">{primero.equipo}</b> {primero.palabra}{tramo ? ` · frenaría ${DONDE_CHOKE[tramo]}` : ''}</> : 'ninguno',
-      }} apoyo={[
-        { id: 'por-identificar', rotulo: 'Por identificar', cifra: n0(sinCausa.length), detalle: sinCausa.length ? y(sinCausa) : undefined },
-        mes && { id: 'fallas-mes', rotulo: `Fallas críticas · ${mes.nombre.split(' ')[0]}`, cifra: n0(mes.fallas),
+      } : esperaCifra} apoyo={[
+        causas && { id: 'por-identificar', rotulo: 'Por identificar', cifra: n0(sinCausa.length), detalle: sinCausa.length ? y(sinCausa) : undefined },
+        mant && mes && { id: 'fallas-mes', rotulo: `Fallas críticas · ${mes.nombre.split(' ')[0]}`, cifra: n0(mes.fallas),
           detalle: conFalla.length ? y(conFalla.map(e => `${e.equipo} (${NOMBRE_TRAMO_BALANCE[e.tramo].toLowerCase()})`)) : undefined },
-        { id: 'espera', rotulo: 'Espera', cifra: v.inicio.cifra, unidad: 'días por falla', onAbrir: () => setEspera(true), abrir: `Espera: ${v.inicio.cifra} días por falla. Ver el tiempo fuera en 5 tramos` },
+        mant && eq && esperaCifra,
       ]}>
-        {primero && (orden
+        {mant && primero && (orden
           ? <Boton variante="principal" aria-expanded={verOrden} onClick={() => setVerOrden(x => !x)} className="min-h-12 px-6 text-[16px]" data-ver-orden>{verOrden ? 'Ocultar la orden' : 'Ver la orden'}</Boton>
           : null)}
       </Cifras>
-      {primero && !orden && <AvisarSap campoId={primero.campoId} equipo={primero.equipo} contexto={`${primero.familia} · ${primero.palabra}`} />}
+      {mant && primero && !orden && <AvisarSap campoId={primero.campoId} equipo={primero.equipo} contexto={`${primero.familia} · ${primero.palabra}`} />}
       {verOrden && orden && (
         <section aria-label={`Orden ${orden.numero}`} data-orden-abierta={orden.numero} className="grid gap-1 rounded-[10px] bg-[var(--panel)] px-5 py-3.5 text-[15px] sm:px-7">
           <p><b className="font-semibold">Orden {orden.numero}</b> · {primero!.equipo} · {NOMBRE_ESTADO_ORDEN[orden.estado]}

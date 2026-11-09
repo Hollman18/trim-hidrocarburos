@@ -15,10 +15,12 @@
 import type { Pozo, EventoPozo, EventoServicio, ProduccionMes } from './pozos'
 import type { EventoBomba } from './bombas'
 import type { ParadaProgramada } from './configuracion'
+import type { Diluyente } from './diluyente'
 
-/** Cómo se mide la producción fiscal de un campo: el computador de flujo y
- *  de dónde sale el corte de agua. Es del registro del punto de medición. */
-export interface OrigenPmo { fuente: string; bsw: 'analizador' | 'laboratorio' }
+/** Cómo se mide la producción fiscal de un campo: el computador de flujo, de
+ *  dónde sale el corte de agua y, si el campo diluye, cómo (`diluyente.ts`). Es
+ *  del registro del punto de medición. Sin `diluyente`, el campo no diluye. */
+export interface OrigenPmo { fuente: string; bsw: 'analizador' | 'laboratorio'; diluyente?: Diluyente }
 
 export interface Insumos {
   /** `GET /api/campos/:campo/pozos` de todos los campos. */

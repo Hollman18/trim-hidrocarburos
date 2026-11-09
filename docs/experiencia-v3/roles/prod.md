@@ -118,3 +118,17 @@ Los segundos no se midieron aquí: los mide §9.
 | Palabras de todas sus puertas (1440) | 4.555 | — (2 pantallas) |
 | Pantallas | 11 | 2 |
 | Toques para confirmar | 2 | 1 |
+
+
+## 8. Piezas (facilidades, 3-nov-2026)
+
+Qué ve este rol de cada pieza y cómo lo lee (`../PROMPT-FACILIDADES-POR-FASES.md` §3). Lo visible es la intersección de **las piezas que contrató el cliente** con **lo necesario de este rol**. Sin la pieza, se muestra «sin dato» o la sección no aparece; nunca un hueco. Todo lo marcado **«falta en el motor»** se construye en la fase indicada y pasa las dos preguntas de `../necesario-por-rol.md` §5.1. Las cifras de los ejemplos muestran **la forma** del mensaje: no son datos del demo.
+
+| Pieza | Qué ve | Cómo lo lee | Cuándo | Fase |
+|---|---|---|---|---|
+| **Núcleo** | «Mi panel», en Resultados: indicadores del catálogo y cualquier señal conectada, armados por usted. La cadena del dato de cada instrumento: en un campo sin historiador (El Palmar) dice que llega directo del equipo (relé, analizador de red, controlador) y que es solo lectura. La subestación suma el interruptor y la entrada «hay tensión» del gateway | Producción diaria, diferido por tren y por causa | Al empezar el día | panel desde 7 (4-nov); conexión directa desde 3 (4-nov) |
+| **Equipos** | — | — | — | — |
+| **Energía** | El corte ya cargado como causa de cada pozo afectado, con el tag del relé en la evidencia | Barriles por pozo y por tramo del choke | Al confirmar el día | Existe; comprobado en 4 (`verificar-planta.mjs` §4) |
+| **Planta** | Qué tren de la planta frena la producción | El tren (agua, crudo, gas, servicios) y sus barriles | Primera capa cuando un tren frena | El tren de cada equipo existe desde 5 (4-nov); «qué tren frena» sigue en La planta viva |
+| **Barriles** | El balance completo: producido · diferido · perdido. En campos con diluyente, el crudo **neto de nafta**; sin el dato de nafta, el día dice «no publicable» | Cuadre exacto; «no publicable» con su motivo («falta la nafta»), nunca un número inflado. Registra también evaporación y fondos de tanque como pérdida. Desde D1 cada parada se valora con el factor de su día: el cuadre diario da potencial − real = diferido exacto, y un día sin paradas, 100 %. El chip del factor sigue siendo el del mes, contra su banda | Cada día; a fin de mes | Existe; diluyente y factor diario desde 2 (4-nov) |
+| **Mantenimiento** | — | — | — | — |

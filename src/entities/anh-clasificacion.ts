@@ -585,7 +585,10 @@ const preguntaChoke = (texto: string, chokes: readonly ChokeAnh[]): PreguntaCamp
 /** La versión de la tabla de reglas: va en `DatoClasificado.regla` de cada
  *  paso que propone. Una versión nueva se agrega; lo ya reportado conserva la
  *  suya (P1 §3.1). La @2 (22-oct) agrega la fila `declarada-mercado`: la
- *  declaración de que el comprador nominó menos (ZA-06; R2 §2.2). */
+ *  declaración de que el comprador nominó menos (ZA-06; R2 §2.2). La causa
+ *  `diluyente` (3-nov, Fase 2 de facilidades) entra por la fila `evacuacion`, que
+ *  ya existía: sin nafta el crudo pesado no se puede despachar (investigación 20,
+ *  §3). Ninguna propuesta cambia, así que no hay versión nueva. */
 export const REGLAS_ANH_ID = 'REGLAS_ANH@2'
 
 /** Las filas de `REGLAS_ANH` v1 (P1 §2.1), en su orden. */
@@ -706,7 +709,7 @@ export const REGLAS_ANH: { id: string; filas: readonly FilaRegla[] } = {
       propone: { ...MANT, n1: 'NP_PROC', n2: 'NP_PROC/capacidad-compresion-transferencia-gas-limitada' }, chokeEsperado: 'planta', opciones: {}, preguntas: [],
       perdida: 'tea',
       porque: 'Se detuvo la compresión del gas: es la única causa no planeada de la Tabla 1 que la nombra', fuente: 'P1 §2.1, fila 14; R2 §3.3' },
-    { id: 'evacuacion', tipos: ['evacuacion'], cuando: 'Evacuación del crudo con un equipo propio de la batería (tanque, LACT)',
+    { id: 'evacuacion', tipos: ['evacuacion', 'diluyente'], cuando: 'Evacuación del crudo con un equipo propio de la batería (tanque, LACT)',
       propone: { ...DIFERIDA_NP }, chokeEsperado: 'planta',
       opciones: { responsable: ['op-operacion', 'ext-transportador'], choke: ['planta', 'exportacion'], n1: ['NP_PROC', 'NP_TRANSP'],
         n2: ['NP_PROC/tanques-llenos-capacidad-limitada', ...todos('NP_TRANSP')] },
@@ -934,6 +937,9 @@ function filaDe(c: Causa, campoId: string, ctx: Contexto, op: OpcionesPropuesta,
     case 'proceso':
     case 'tratamiento':
       return c.tipo
+    // Sin nafta, el crudo pesado no se puede bombear ni despachar: es la evacuación del crudo (investigación 20, §3).
+    // [SUPUESTO] Lo confirma el experto (PROMPT-FACILIDADES-POR-FASES §2).
+    case 'diluyente': return 'evacuacion'
     case 'programada': {
       const pr = programaDeCausa(c, campoId, ctx)
       return pr && propio(op.parejaDelPrograma, pr.id) ? 'programada-con-pareja' : 'programada-sin-pareja'

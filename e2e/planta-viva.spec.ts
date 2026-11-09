@@ -75,7 +75,7 @@ test('gerente: la cifra, su explicación y el tramo marcado de La Ceiba, sin el 
     f.ok(/Antes de TRIM\s*391/.test(texto) && /Este mes\s*436/.test(texto), `antes 391 bbl/d y este mes 436 en La Ceiba (motor): «${texto.replace(/\s+/g, ' ').slice(0, 120)}»`)
     f.ok(texto.includes('sin meta firmada'), 'sin meta de reducción firmada, lo dice')
     const ganado = Number(await card.getAttribute('data-ganado'))
-    f.ok(ganado === 3934, `ya se ganó 3.934 bbl (${ganado})`)
+    f.ok(ganado === 3901, `ya se ganó 3.901 bbl (${ganado})`)
     await card.locator('[data-funcionando-tramos]').click()
     const porTramo = await card.locator('[data-funcionando-tramo]').evaluateAll(es => es.map(e => (e.querySelectorAll('td')[2]?.textContent ?? '')))
     const suma = porTramo.reduce((a, x) => a + Number(x.replace(/[^\d-]/g, '') || 0), 0)

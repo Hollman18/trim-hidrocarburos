@@ -819,9 +819,9 @@
    "descripcion": "El árbol de pérdidas del choke de morichal, 2025-12 (el motor de una bomba de la línea), en el orden de gestión"
   },
   {
-   "id": "choke/reparto-ceiba-2026-09-22",
-   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-22T00%3A00%3A00.000-05%3A00&hasta=2026-09-23T00%3A00%3A00.000-05%3A00",
-   "descripcion": "Lo perdido por tramo y por escalón en La Ceiba el 22 de septiembre (un día): lo sin explicar no es 0, es el inventario del tanque de venta, y cuadra"
+   "id": "choke/reparto-ceiba-2026-09-21-18a18",
+   "endpoint": "/api/vistas/choke/reparto?campos=ceiba&desde=2026-09-21T18%3A00%3A00.000-05%3A00&hasta=2026-09-22T18%3A00%3A00.000-05%3A00",
+   "descripcion": "Lo perdido por tramo y por escalón en La Ceiba del 21 de septiembre a las 18:00 al 22 a las 18:00 (una jornada que corta dos días): lo sin explicar no es 0 porque lo real de cada día se reparte parejo por hora, y cuadra"
   },
   {
    "id": "choke/reparto-ceiba-2026-09-22-12a14",

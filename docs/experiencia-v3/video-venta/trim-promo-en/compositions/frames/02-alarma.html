@@ -1,0 +1,194 @@
+<template>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+
+    #root { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; color: #f4f3f0; font-family: "IBM Plex Sans", sans-serif; }
+
+    #f02-fondo { position: absolute; inset: 0; background: #101418; }
+    #f02-rejilla { position: absolute; inset: 0; background-image: radial-gradient(circle, #343b42 1.4px, transparent 1.8px); background-size: 40px 40px; background-position: 20px 20px; opacity: 0.55; }
+    #f02-vineta { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(16,20,24,0) 40%, rgba(5,7,9,0.85) 100%); }
+    #f02-brillo-rojo { position: absolute; left: 0; right: 0; top: 0; height: 520px; background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(224,137,124,0.22), rgba(224,137,124,0) 70%); opacity: 0; }
+
+    #f02-escena { position: absolute; inset: 0; }
+    #f02-camara { position: absolute; inset: 0; }
+
+    /* Barra de alarma */
+    #f02-barra { position: absolute; left: 120px; top: 96px; width: 1680px; height: 88px; display: flex; align-items: center; gap: 24px; padding: 0 32px; box-sizing: border-box; background: rgba(224,137,124,0.18); border-left: 6px solid #e0897c; border-radius: 4px; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 30px; letter-spacing: 0.04em; color: #f4f3f0; white-space: nowrap; }
+    #f02-barra-luz { position: absolute; inset: 0; background: rgba(224,137,124,0.35); opacity: 0; pointer-events: none; }
+    #f02-punto { position: relative; width: 18px; height: 18px; border-radius: 50%; background: #e0897c; box-shadow: 0 0 16px #e0897c; flex: none; }
+    #f02-barra .f02-rojo { color: #e0897c; font-weight: 500; letter-spacing: 0.12em; }
+    #f02-barra .f02-sep { color: #7f878e; }
+
+    /* Rótulo */
+    #f02-rotulo { position: absolute; left: 120px; top: 300px; width: 540px; padding-left: 28px; border-left: 4px solid #e0897c; font-weight: 600; font-size: 56px; line-height: 1.14; letter-spacing: -0.02em; color: #f4f3f0; }
+    #f02-rotulo .f02-palabra { display: inline-block; }
+
+    /* Gráfica */
+    #f02-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    .f02-etiqueta { position: absolute; font-family: "IBM Plex Mono", monospace; font-size: 24px; letter-spacing: 0.06em; white-space: nowrap; }
+    #f02-titulo-graf { left: 760px; top: 214px; color: #c9cbcd; }
+    #f02-esperada-tag { left: 1600px; top: 290px; color: #7f878e; font-size: 20px; }
+    #f02-antes { left: 772px; top: 798px; color: #7f878e; font-size: 22px; }
+    #f02-alarma-tag { left: 1056px; top: 798px; color: #e0897c; font-size: 22px; font-weight: 500; letter-spacing: 0.12em; }
+
+    #f02-velo { position: absolute; inset: 0; }
+    #f02-velo-negro { position: absolute; inset: 0; background: #000; opacity: 0; }
+  </style>
+
+  <div data-hf-id="hf-bom5" id="root" data-composition-id="f02" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-ajsw" id="f02-fondo" class="clip" data-start="0" data-duration="6.43" data-track-index="0">
+      <div data-hf-id="hf-lqzp" id="f02-rejilla"></div>
+      <div data-hf-id="hf-f2y5" id="f02-brillo-rojo"></div>
+      <div data-hf-id="hf-xv61" id="f02-vineta"></div>
+    </div>
+
+    <div data-hf-id="hf-srfg" id="f02-escena" class="clip" data-start="0" data-duration="6.43" data-track-index="1">
+      <div data-hf-id="hf-lzat" id="f02-camara">
+        <svg data-hf-id="hf-j32f" id="f02-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+          <defs data-hf-id="hf-mh0t">
+            <clippath data-hf-id="hf-iir4" id="f02-recorte">
+              <rect data-hf-id="hf-cix3" id="f02-recorte-rect" x="760" y="200" width="140" height="540" />
+            </clippath>
+            <pattern data-hf-id="hf-xlf5" id="f02-rayado" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line data-hf-id="hf-ipun" x1="0" y1="0" x2="0" y2="12" stroke="#7f878e" stroke-width="2" stroke-opacity="0.35" />
+            </pattern>
+          </defs>
+
+          <!-- rejilla de la gráfica (sin cifras) -->
+          <g data-hf-id="hf-emob" id="f02-rejilla-graf" stroke="#343b42" stroke-width="1">
+            <line data-hf-id="hf-39su" x1="760" y1="290" x2="1800" y2="290" />
+            <line data-hf-id="hf-7xdu" x1="760" y1="380" x2="1800" y2="380" />
+            <line data-hf-id="hf-g8ai" x1="760" y1="470" x2="1800" y2="470" />
+            <line data-hf-id="hf-c7nq" x1="760" y1="560" x2="1800" y2="560" />
+            <line data-hf-id="hf-ij46" x1="760" y1="650" x2="1800" y2="650" />
+            <line data-hf-id="hf-j3wg" x1="890" y1="260" x2="890" y2="680" />
+            <line data-hf-id="hf-6apw" x1="1020" y1="260" x2="1020" y2="680" />
+            <line data-hf-id="hf-yq5w" x1="1150" y1="260" x2="1150" y2="680" />
+            <line data-hf-id="hf-tpec" x1="1280" y1="260" x2="1280" y2="680" />
+            <line data-hf-id="hf-3eec" x1="1410" y1="260" x2="1410" y2="680" />
+            <line data-hf-id="hf-3cfc" x1="1540" y1="260" x2="1540" y2="680" />
+            <line data-hf-id="hf-ivuw" x1="1670" y1="260" x2="1670" y2="680" />
+          </g>
+          <line data-hf-id="hf-p34l" x1="760" y1="680" x2="1800" y2="680" stroke="#7f878e" stroke-width="2" stroke-linecap="round" />
+
+          <!-- línea esperada (punteada) -->
+          <line data-hf-id="hf-lwma" id="f02-esperada" x1="760" y1="330" x2="1800" y2="330" stroke="#7f878e" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12" />
+
+          <!-- lo que se pierde + línea real, reveladas por el recorte -->
+          <g data-hf-id="hf-71i0" clip-path="url(#f02-recorte)">
+            <path data-hf-id="hf-p7g3" id="f02-perdida" d="M1040,330 L1800,330 L1800,562 L1058,562 L1040,338 Z" fill="rgba(224,137,124,0.25)" />
+            <path data-hf-id="hf-1kui" d="M1040,330 L1800,330 L1800,562 L1058,562 L1040,338 Z" fill="url(#f02-rayado)" opacity="0.5" />
+            <path data-hf-id="hf-108f" id="f02-real" d="M760,336 L800,333 L840,338 L880,334 L920,337 L960,333 L1000,336 L1040,338 L1058,562 L1100,559 L1140,564 L1180,560 L1220,563 L1260,559 L1300,562 L1340,560 L1380,564 L1420,559 L1460,563 L1500,560 L1540,562 L1580,559 L1620,564 L1660,560 L1700,563 L1740,559 L1800,562" fill="none" stroke="#a9dad6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <path data-hf-id="hf-hkia" id="f02-real-rojo" d="M1040,338 L1058,562 L1100,559 L1140,564 L1180,560 L1220,563 L1260,559 L1300,562 L1340,560 L1380,564 L1420,559 L1460,563 L1500,560 L1540,562 L1580,559 L1620,564 L1660,560 L1700,563 L1740,559 L1800,562" fill="none" stroke="#e0897c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #e0897c)" />
+          </g>
+          <circle data-hf-id="hf-ivoe" id="f02-cabeza" cx="900" cy="334" r="8" fill="#a9dad6" style="filter: drop-shadow(0 0 12px #a9dad6)" />
+
+          <!-- línea de tiempo inferior -->
+          <g data-hf-id="hf-rupq" id="f02-tiempo">
+            <rect data-hf-id="hf-k4nk" id="f02-antes-rect" x="760" y="742" width="280" height="36" rx="3" fill="url(#f02-rayado)" stroke="#7f878e" stroke-width="1.5" stroke-dasharray="4 6" />
+            <line data-hf-id="hf-j6lk" id="f02-tiempo-linea" x1="760" y1="760" x2="1800" y2="760" stroke="#7f878e" stroke-width="2" stroke-linecap="round" />
+            <line data-hf-id="hf-rtwh" id="f02-guia" x1="1040" y1="350" x2="1040" y2="742" stroke="#e0897c" stroke-width="2" stroke-dasharray="6 8" stroke-linecap="round" opacity="0.8" />
+            <g data-hf-id="hf-pr0x" id="f02-marcador">
+              <line data-hf-id="hf-cnva" x1="1040" y1="736" x2="1040" y2="784" stroke="#e0897c" stroke-width="3" stroke-linecap="round" />
+              <path data-hf-id="hf-itej" d="M1040,750 L1050,760 L1040,770 L1030,760 Z" fill="#e0897c" style="filter: drop-shadow(0 0 10px #e0897c)" />
+            </g>
+          </g>
+        </svg>
+
+        <div data-hf-id="hf-yw2o" id="f02-titulo-graf" class="f02-etiqueta">Production · bbl/d</div>
+        <div data-hf-id="hf-vjpk" id="f02-antes" class="f02-etiqueta">before: no warning</div>
+        <div data-hf-id="hf-dl23" id="f02-alarma-tag" class="f02-etiqueta">ALARM</div>
+
+        <div data-hf-id="hf-3vy7" id="f02-rotulo"><span class="f02-palabra">Every</span> <span class="f02-palabra">hour</span> <span class="f02-palabra">down</span> <span class="f02-palabra">is</span> <span class="f02-palabra">barrels</span> <span class="f02-palabra">you</span> <span class="f02-palabra">never</span> <span class="f02-palabra">get</span> <span class="f02-palabra">back.</span></div>
+
+        <div data-hf-id="hf-prcw" id="f02-barra">
+          <div data-hf-id="hf-872m" id="f02-barra-luz"></div>
+          <div data-hf-id="hf-jaxy" id="f02-punto"></div>
+          <span data-hf-id="hf-brxq"><span data-hf-id="hf-268k" class="f02-rojo">ALARM</span> <span data-hf-id="hf-kkrh" class="f02-sep">·</span> P-201B <span data-hf-id="hf-7bxt" class="f02-sep">·</span> transfer pump <span data-hf-id="hf-8iuw" class="f02-sep">·</span> down 03:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div data-hf-id="hf-pqag" id="f02-velo" class="clip" data-start="0" data-duration="6.43" data-track-index="2">
+      <div data-hf-id="hf-gkx4" id="f02-velo-negro"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const D = 6.43;
+
+      // Cámara: empuje lento continuo
+      tl.fromTo("#f02-camara", { scale: 1 }, { scale: 1.035, duration: D, ease: "none", transformOrigin: "62% 42%" }, 0);
+      tl.fromTo("#f02-rejilla", { backgroundPosition: "20px 20px" }, { backgroundPosition: "20px 44px", duration: D, ease: "none" }, 0);
+
+      // Línea real: avanza con una cabeza brillante; un solo proxy mueve recorte + cabeza
+      const rect = document.getElementById("f02-recorte-rect");
+      const cabeza = document.getElementById("f02-cabeza");
+      const p = { x: 900 };
+      function yEn(x) {
+        if (x <= 1040) return 336;
+        if (x >= 1058) return 561;
+        return 338 + (x - 1040) / 18 * 224;
+      }
+      function pintar() {
+        rect.setAttribute("width", String(p.x - 760));
+        cabeza.setAttribute("cx", String(p.x));
+        cabeza.setAttribute("cy", String(yEn(p.x)));
+      }
+      pintar();
+      tl.fromTo(p, { x: 900 }, { x: 1040, duration: 0.55, ease: "none", onUpdate: pintar }, 0);
+      tl.fromTo(p, { x: 1040 }, { x: 1058, duration: 0.3, ease: "power3.in", onUpdate: pintar, immediateRender: false }, 0.6);
+      tl.fromTo(p, { x: 1058 }, { x: 1800, duration: 3.1, ease: "power1.inOut", onUpdate: pintar, immediateRender: false }, 0.9);
+      tl.fromTo("#f02-cabeza", { attr: { fill: "#a9dad6" } }, { attr: { fill: "#e0897c" }, duration: 0.2 }, 0.6);
+      tl.fromTo("#f02-real-rojo", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.72);
+      tl.fromTo("#f02-cabeza", { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 4.0);
+
+      // Gráfica: rótulo del eje visible desde el inicio con leve entrada
+      tl.fromTo("#f02-titulo-graf", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0);
+      tl.fromTo("#f02-esperada", { strokeDashoffset: 0 }, { strokeDashoffset: -140, duration: D, ease: "none" }, 0);
+
+      // 0.5 · barra de alarma entra de golpe y parpadea 2 veces
+      tl.fromTo("#f02-barra", { y: -60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.14, ease: "power4.out" }, 0.5);
+      tl.fromTo("#f02-brillo-rojo", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 0.5);
+      [0.66, 0.98].forEach(function (t) {
+        tl.fromTo("#f02-barra-luz", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none", immediateRender: false }, t);
+        tl.fromTo("#f02-barra-luz", { opacity: 1 }, { opacity: 0, duration: 0.18, ease: "power1.out", immediateRender: false }, t + 0.1);
+        tl.fromTo("#f02-barra", { opacity: 1 }, { opacity: 0.45, duration: 0.07, ease: "none", immediateRender: false }, t + 0.1);
+        tl.fromTo("#f02-barra", { opacity: 0.45 }, { opacity: 1, duration: 0.09, ease: "none", immediateRender: false }, t + 0.18);
+      });
+      // punto de alarma: pulso continuo
+      for (let t = 0.7; t < D - 0.3; t += 0.6) {
+        tl.fromTo("#f02-punto", { scale: 1, opacity: 1 }, { scale: 0.55, opacity: 0.35, duration: 0.3, ease: "power1.in", immediateRender: false }, t);
+        tl.fromTo("#f02-punto", { scale: 0.55, opacity: 0.35 }, { scale: 1, opacity: 1, duration: 0.3, ease: "power1.out", immediateRender: false }, t + 0.3);
+      }
+      // brillo rojo respira
+      for (let t = 1.2; t < D - 0.6; t += 1.2) {
+        tl.fromTo("#f02-brillo-rojo", { opacity: 1 }, { opacity: 0.55, duration: 0.6, ease: "sine.inOut", immediateRender: false }, t);
+        tl.fromTo("#f02-brillo-rojo", { opacity: 0.55 }, { opacity: 1, duration: 0.6, ease: "sine.inOut", immediateRender: false }, t + 0.6);
+      }
+
+      // 3.0 · rótulo palabra por palabra
+      tl.fromTo("#f02-rotulo", { borderLeftColor: "rgba(224,137,124,0)" }, { borderLeftColor: "rgba(224,137,124,1)", duration: 0.4 }, 2.9);
+      tl.fromTo("#f02-rotulo .f02-palabra", { opacity: 0, y: 26, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out", stagger: 0.08 }, 3.0);
+
+      // 4.0–5.8 · línea de tiempo: «before: no warning» + marcador ALARM
+      tl.fromTo("#f02-tiempo-linea", { attr: { x2: 760 }, opacity: 0 }, { attr: { x2: 1800 }, opacity: 1, duration: 0.7, ease: "power3.out" }, 4.0);
+      tl.fromTo("#f02-antes-rect", { attr: { width: 0 } }, { attr: { width: 280 }, duration: 0.6, ease: "power3.out" }, 4.2);
+      tl.fromTo("#f02-antes", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 4.5);
+      tl.fromTo("#f02-guia", { attr: { y2: 350 } }, { attr: { y2: 742 }, duration: 0.5, ease: "power2.inOut" }, 4.4);
+      tl.fromTo("#f02-marcador", { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(2)" }, 4.85);
+      tl.fromTo("#f02-alarma-tag", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 4.95);
+      tl.fromTo("#f02-antes-rect", { strokeDashoffset: 0 }, { strokeDashoffset: -40, duration: 1.6, ease: "none", immediateRender: false }, 4.6);
+
+      // 6.1 · todo se apaga hacia negro
+      tl.fromTo("#f02-velo-negro", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.in" }, 6.1);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["f02"] = tl;
+    })();
+  </script>
+</template>

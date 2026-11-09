@@ -1,0 +1,131 @@
+<template>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+
+    #root { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; color: #f4f3f0; font-family: "IBM Plex Sans", sans-serif; }
+
+    #f04-fondo { position: absolute; inset: 0; background: #0c0f12; }
+    #f04-rejilla { position: absolute; inset: 0; background-image: radial-gradient(circle, #343b42 1.3px, transparent 1.7px); background-size: 40px 40px; background-position: 20px 20px; opacity: 0.35; }
+    #f04-rejilla-viva { --f04-r: 0px; position: absolute; inset: 0; background-image: radial-gradient(circle, #a9dad6 1.4px, transparent 1.9px); background-size: 40px 40px; background-position: 20px 20px; opacity: 0.42;
+      -webkit-mask-image: radial-gradient(circle var(--f04-r) at 50% 42%, #000 0%, rgba(0,0,0,0.35) 55%, transparent 100%);
+      mask-image: radial-gradient(circle var(--f04-r) at 50% 42%, #000 0%, rgba(0,0,0,0.35) 55%, transparent 100%); }
+    #f04-halo { position: absolute; left: 160px; top: -100px; width: 1600px; height: 1040px; background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(44,115,113,0.34) 0%, rgba(44,115,113,0.10) 45%, rgba(44,115,113,0) 70%); opacity: 0; }
+    #f04-vineta { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 70% at 50% 42%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.75) 100%); }
+
+    #f04-escena { position: absolute; inset: 0; }
+    #f04-camara { position: absolute; inset: 0; }
+
+    /* barrido de luz */
+    #f04-linea { position: absolute; left: 0; top: 360px; width: 1920px; height: 2px; background: linear-gradient(90deg, rgba(169,218,214,0) 0%, rgba(169,218,214,0.9) 50%, rgba(169,218,214,0) 100%); box-shadow: 0 0 18px rgba(169,218,214,0.7); opacity: 0; }
+    #f04-banda { position: absolute; left: 0; top: 190px; width: 180px; height: 340px; background: linear-gradient(90deg, rgba(169,218,214,0) 0%, rgba(169,218,214,0.55) 46%, rgba(244,243,240,0.95) 50%, rgba(169,218,214,0.55) 54%, rgba(169,218,214,0) 100%); filter: blur(6px); opacity: 0; mix-blend-mode: screen; -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%); }
+
+    /* lockup */
+    #f04-logo { position: absolute; left: 425px; top: 282px; width: 520px; height: 158px; clip-path: inset(0% 100% 0% 0%); }
+    #f04-logo-svg { display: block; width: 520px; height: 158px; overflow: visible; }
+    #f04-raya { position: absolute; left: 989px; top: 300px; width: 2px; height: 122px; background: #7f878e; }
+    #f04-hidro { position: absolute; left: 1035px; top: 318px; height: 86px; line-height: 86px; font-weight: 500; font-size: 64px; letter-spacing: -0.01em; color: #c9cbcd; white-space: nowrap; clip-path: inset(0% 100% 0% 0%); }
+
+    /* titular */
+    #f04-titular { position: absolute; left: 60px; right: 60px; top: 496px; text-align: center; font-weight: 700; font-size: 96px; line-height: 1.1; letter-spacing: -0.02em; color: #f4f3f0; white-space: nowrap; }
+    #f04-titular .f04-p { display: inline-block; }
+    #f04-titular .f04-acento { color: #a9dad6; text-shadow: 0 0 28px rgba(169,218,214,0.35); }
+
+    /* chip IA */
+    #f04-chip-fila { position: absolute; left: 0; right: 0; top: 672px; display: flex; justify-content: center; }
+    #f04-chip { position: relative; display: inline-flex; align-items: center; gap: 16px; padding: 14px 30px; border: 1.5px solid #2c7371; border-radius: 999px; background: rgba(44,115,113,0.14); overflow: hidden; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 26px; letter-spacing: 0.12em; color: #a9dad6; white-space: nowrap; box-shadow: 0 0 28px rgba(44,115,113,0.35); }
+    #f04-chip-punto { width: 12px; height: 12px; border-radius: 50%; background: #a9dad6; box-shadow: 0 0 12px #a9dad6; flex: none; }
+    #f04-brillo { position: absolute; top: 0; bottom: 0; left: -30%; width: 26%; background: linear-gradient(100deg, rgba(169,218,214,0) 0%, rgba(169,218,214,0.45) 50%, rgba(169,218,214,0) 100%); pointer-events: none; }
+  </style>
+
+  <div data-hf-id="hf-q4c7" id="root" data-composition-id="f04" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-jbq6" id="f04-fondo" class="clip" data-start="0" data-duration="7.0" data-track-index="0">
+      <div data-hf-id="hf-3w4f" id="f04-rejilla"></div>
+      <div data-hf-id="hf-f5rc" id="f04-halo"></div>
+      <div data-hf-id="hf-a3mk" id="f04-rejilla-viva"></div>
+      <div data-hf-id="hf-5rdb" id="f04-vineta"></div>
+    </div>
+
+    <div data-hf-id="hf-b3d2" id="f04-escena" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+      <div data-hf-id="hf-bxgb" id="f04-camara">
+        <div data-hf-id="hf-uqjh" id="f04-linea"></div>
+        <div data-hf-id="hf-2cjv" id="f04-logo"><svg data-hf-id="hf-cql8" id="f04-logo-svg" width="520" height="158" viewBox="0 0 520 158" xmlns="http://www.w3.org/2000/svg" aria-label="trim">
+          <defs data-hf-id="hf-mh0t">
+            <filter data-hf-id="hf-l39c" id="f04-limpia" x="-15%" y="-30%" width="130%" height="160%" color-interpolation-filters="sRGB">
+              <fecomponenttransfer data-hf-id="hf-be5n" in="SourceGraphic" result="f04-limpio">
+                <fefuncr data-hf-id="hf-d5i4" type="linear" slope="1.7" intercept="0" />
+                <fefuncg data-hf-id="hf-b31h" type="linear" slope="1.7" intercept="0" />
+                <fefuncb data-hf-id="hf-fgh8" type="linear" slope="1.7" intercept="0" />
+                <fefunca data-hf-id="hf-zxxl" type="linear" slope="1.5" intercept="-0.3" />
+              </fecomponenttransfer>
+              <fegaussianblur data-hf-id="hf-ls9b" in="f04-limpio" stdDeviation="9" result="f04-difuso" />
+              <feflood data-hf-id="hf-kf65" flood-color="#a9dad6" flood-opacity="0.4" />
+              <fecomposite data-hf-id="hf-ujba" in2="f04-difuso" operator="in" result="f04-halo-logo" />
+              <femerge data-hf-id="hf-zn2o"><femergenode data-hf-id="hf-1fgm" in="f04-halo-logo" /><femergenode data-hf-id="hf-ubpm" in="f04-limpio" /></femerge>
+            </filter>
+          </defs>
+          <image data-hf-id="hf-x9jz" href="assets/brand/logo_trim_light.png" x="0" y="0" width="520" height="158" filter="url(#f04-limpia)" />
+        </svg></div>
+        <div data-hf-id="hf-yx4z" id="f04-raya"></div>
+        <div data-hf-id="hf-5tir" id="f04-hidro">Oil &amp; Gas</div>
+        <div data-hf-id="hf-65v0" id="f04-banda"></div>
+
+        <div data-hf-id="hf-buzv" id="f04-titular"><span class="f04-p">Predict</span> <span class="f04-p">failure.</span> <span class="f04-p f04-acento">Produce</span> <span class="f04-p f04-acento">more.</span></div>
+
+        <div data-hf-id="hf-s3w3" id="f04-chip-fila">
+          <div data-hf-id="hf-qh7g" id="f04-chip">
+            <div data-hf-id="hf-39zl" id="f04-chip-punto"></div>
+            <span data-hf-id="hf-r10t">WITH ARTIFICIAL INTELLIGENCE</span>
+            <div data-hf-id="hf-cxjy" id="f04-brillo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const D = 6.14;
+
+      // cámara y fondo vivos
+      tl.fromTo("#f04-camara", { scale: 1 }, { scale: 1.05, duration: D, ease: "none", transformOrigin: "50% 45%" }, 0);
+      tl.fromTo("#f04-rejilla-viva", { "--f04-r": "0px" }, { "--f04-r": "1250px", duration: 3.6, ease: "power2.out" }, 0.1);
+      tl.fromTo("#f04-halo", { opacity: 0, scale: 0.55 }, { opacity: 1, scale: 1, duration: 2.2, ease: "power2.out" }, 0.15);
+      for (let t = 2.4; t < D - 0.8; t += 1.6) {
+        tl.fromTo("#f04-halo", { opacity: 1 }, { opacity: 0.7, duration: 0.8, ease: "sine.inOut", immediateRender: false }, t);
+        tl.fromTo("#f04-halo", { opacity: 0.7 }, { opacity: 1, duration: 0.8, ease: "sine.inOut", immediateRender: false }, t + 0.8);
+      }
+      tl.fromTo("#f04-rejilla", { backgroundPosition: "20px 20px" }, { backgroundPosition: "44px 20px", duration: D, ease: "none" }, 0);
+      tl.fromTo("#f04-rejilla-viva", { backgroundPosition: "20px 20px" }, { backgroundPosition: "44px 20px", duration: D, ease: "none", immediateRender: false }, 0);
+
+      // 0.0 · barrido de luz que cruza el centro y revela el logo (0.1–0.8)
+      tl.fromTo("#f04-linea", { opacity: 0, scaleX: 0, transformOrigin: "0% 50%" }, { opacity: 1, scaleX: 1, duration: 0.9, ease: "power2.inOut" }, 0);
+      tl.fromTo("#f04-linea", { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, 0.95);
+      tl.fromTo("#f04-banda", { x: -200, opacity: 0 }, { x: 425 - 90, opacity: 1, duration: 0.1, ease: "none" }, 0);
+      tl.fromTo("#f04-banda", { x: 425 - 90 }, { x: 945 - 90, duration: 0.7, ease: "power1.inOut", immediateRender: false }, 0.1);
+      tl.fromTo("#f04-banda", { x: 945 - 90 }, { x: 2120, duration: 0.45, ease: "power2.in", immediateRender: false }, 0.8);
+      tl.fromTo("#f04-logo", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.7, ease: "power1.inOut" }, 0.1);
+
+      // 0.5 · raya vertical + «Hidrocarburos»
+      tl.fromTo("#f04-raya", { scaleY: 0, transformOrigin: "50% 50%" }, { scaleY: 1, duration: 0.5, ease: "expo.out" }, 0.45);
+      tl.fromTo("#f04-hidro", { clipPath: "inset(0% 100% 0% 0%)", x: -24 }, { clipPath: "inset(0% 0% 0% 0%)", x: 0, duration: 0.8, ease: "power3.out" }, 0.5);
+
+      // 1.4 · titular palabra por palabra
+      tl.fromTo("#f04-titular .f04-p", { opacity: 0, y: 56, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power3.out", stagger: 0.16 }, 1.4);
+
+      // 3.1 · chip «WITH ARTIFICIAL INTELLIGENCE» con brillo que lo recorre
+      tl.fromTo("#f04-chip", { opacity: 0, y: 22, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, 4.75);
+      tl.fromTo("#f04-brillo", { xPercent: 0 }, { xPercent: 540, duration: 0.9, ease: "power2.inOut" }, 5.0);
+      tl.fromTo("#f04-brillo", { xPercent: 0 }, { xPercent: 540, duration: 0.9, ease: "power2.inOut", immediateRender: false }, 4.75);
+      for (let t = 3.4; t < D - 0.3; t += 0.7) {
+        tl.fromTo("#f04-chip-punto", { opacity: 1, scale: 1 }, { opacity: 0.35, scale: 0.7, duration: 0.35, ease: "sine.inOut", immediateRender: false }, t);
+        tl.fromTo("#f04-chip-punto", { opacity: 0.35, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.35, ease: "sine.inOut", immediateRender: false }, t + 0.35);
+      }
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["f04"] = tl;
+    })();
+  </script>
+</template>

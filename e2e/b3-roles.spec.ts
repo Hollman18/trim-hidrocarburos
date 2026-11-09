@@ -48,7 +48,7 @@ test('sup · registrar una pérdida con botones: queda PÉRDIDA en su tramo, apa
   await expect(turno.locator('[data-jornada-diferido]')).toHaveText('655')
   f.ok(await f.clic('Registrar una pérdida'), 'abre el registro')
   const form = page.locator('[data-perdida-formulario]')
-  await expect(form.locator('[data-tipo-perdida]')).toHaveCount(5)
+  await expect(form.locator('[data-tipo-perdida]')).toHaveCount(7)
   await form.locator('[data-tipo-perdida="pitera"]').click()
   // El tramo sale del tipo (se puede cambiar): la pitera, en los pozos.
   await expect(form.locator('[data-tramo="pozo"]')).toHaveAttribute('aria-pressed', 'true')

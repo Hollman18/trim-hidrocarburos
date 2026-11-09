@@ -14,6 +14,7 @@ import type { AvisoSap, OrdenSap } from '@/entities/sap'
 import type { EquipoVivo } from '@/entities/equipo-vivo'
 import type { EquipoEnCampo } from '@/entities/equipos'
 import type { Dispositivo, SerieTag, Campo } from '@/entities/tipos'
+import { esConexion } from '@/entities/conexion'
 import { faltaEnSerie } from '@/entities/serie'
 import type { LimiteTag } from '@/entities/limites'
 import { normalizarConfig, type Config, type Version } from '@/entities/configuracion'
@@ -175,11 +176,15 @@ const tramo = obj<Tramo>()({ evento: eventoPozo, pozo, inicio: fecha, fin: fecha
 const pregunta = obj<Pregunta>()({ inicio: fecha, fin: nulo(fecha) })
 const sinFiscal = obj<Libro['sinFiscal'][number]>()({ dias: lista(fecha) })
 const custodia = obj<Libro['custodia']>()({ sinPrueba: lista(pozo), estimados: lista(pozo) })
+const filasSinNafta = lista(obj<Libro['sinNafta'][number]>()({ dias: lista(fecha) }))
+/** F2 de facilidades · al lado (CAMBIOS-CONTRATO.md §5.3, F19): un backend de antes
+ *  del diluyente no manda `sinNafta`; al entrar es `[]`, ningún campo diluye. */
+const sinNafta: typeof filasSinNafta = { aDTO: filasSinNafta.aDTO, revivir: (j, l) => (j == null ? [] : filasSinNafta.revivir(j, l)) }
 
 const libro = obj<Libro>()({
-  desde: fecha, hasta: fecha, tramos: lista(tramo), preguntas: lista(pregunta), custodia, sinFiscal: lista(sinFiscal),
+  desde: fecha, hasta: fecha, tramos: lista(tramo), preguntas: lista(pregunta), custodia, sinFiscal: lista(sinFiscal), sinNafta,
 })
-const resumenLibro = obj<ResumenLibro>()({ desde: fecha, hasta: fecha, sinFiscal: lista(sinFiscal) })
+const resumenLibro = obj<ResumenLibro>()({ desde: fecha, hasta: fecha, sinFiscal: lista(sinFiscal), sinNafta })
 const mesResumen = obj<MesResumen>()({ desde: fecha, hasta: fecha, libro: resumenLibro })
 const lineaBase = obj<LineaBase>()({ desde: fecha, hasta: fecha })
 const dia = obj<Dia>()({ dia: fecha })
@@ -513,7 +518,8 @@ const registroCampos: Codec<Campo[], Campo[]> = {
       if (typeof c.nombre !== 'string' || !c.nombre.trim()) throw new ErrorDeContrato(`«${c.id}» no trae «nombre»`, ruta)
       if (typeof c.cuenca !== 'string') throw new ErrorDeContrato(`«${c.id}» no trae «cuenca»`, ruta)
       if (!CHOKES.includes(c.choke as Campo['choke'])) throw new ErrorDeContrato(`«${c.id}»: «choke» es ${CHOKES.join(', ')} y llegó ${JSON.stringify(c.choke)}`, ruta)
-      return { id: c.id, nombre: c.nombre, cuenca: c.cuenca, choke: c.choke as Campo['choke'], nota: typeof c.nota === 'string' ? c.nota : '' }
+      // F20 · al lado: `conexion` (Fase 3 de facilidades). Ausente o desconocida, no se inventa: queda la de antes (mezcla).
+      return { id: c.id, nombre: c.nombre, cuenca: c.cuenca, choke: c.choke as Campo['choke'], nota: typeof c.nota === 'string' ? c.nota : '', ...(esConexion(c.conexion) ? { conexion: c.conexion } : {}) }
     })
   },
 }
@@ -850,6 +856,28 @@ export const HISTORIAL = get<ConsultaHistorial>()('/vistas/historial', obj<Vista
 export type CuerpoPerdida = CuerpoPerdidaMotor
 /** → el registro nuevo, con `id`, `n`, `por`, `porId`, `rol` y `hora` del servidor. */
 export const R_PERDIDA = tal<{ perdida: RegistroPerdida }>()
+
+/** Fase 4 de facilidades · `GET /api/vistas/planta/evento?campos=`: los eventos de planta (el apagón)
+ *  abiertos, con lo que respondió el campo (entities/evento-planta.ts). */
+export const PLANTA_EVENTO = get<PorCampos>()('/vistas/planta/evento',
+  lista(obj<import('@/entities/evento-planta').EventoPlantaVista>()({ inicio: fecha })))
+/** `POST /api/planta/eventos/prueba`, `…/:id/terminar`, `…/:id/respuesta` y `…/:id/fase` → `{ evento }`, el registro como quedó. */
+export const R_EVENTO_PLANTA = tal<{ evento: import('@/entities/evento-planta').RegistroEventoPlanta }>()
+
+/** Fase 6 de facilidades · `GET /api/vistas/planta/arranque?campos=`: por evento abierto, el orden de arranque
+ *  con sus límites, el cronómetro por fases y el margen N-1 (`null` sin tabla de generación; entities/arranque.ts).
+ *  `POST /api/planta/eventos/:id/fase` `{ fase }` → `{ evento }` (R_EVENTO_PLANTA), con la marca en `fases`. */
+export const PLANTA_ARRANQUE = get<PorCampos>()('/vistas/planta/arranque', tal<import('@/entities/arranque').ArranqueVista[]>())
+
+/** Fase 7 de facilidades · el panel de indicadores (entities/indicadores.ts).
+ *  - `GET /api/indicadores/catalogo`: cada indicador con su fórmula, su fuente y su ventana.
+ *  - `GET /api/vistas/panel?rol=&campos=`: el panel de quien llama, con el valor de cada elemento (o «sin dato»).
+ *  - `GET /api/vistas/panel/senales?campos=`: las señales conectadas que se pueden poner.
+ *  - `POST /api/paneles` `{ elementos }` → `{ panel }` (R_PANEL): lo guarda entero. */
+export const INDICADORES_CATALOGO = get<object>()('/indicadores/catalogo', tal<import('@/entities/indicadores').Indicador[]>())
+export const PANEL = get<ConsultaHoy>()('/vistas/panel', tal<import('@/entities/indicadores').VistaPanel>())
+export const PANEL_SENALES = get<PorCampos>()('/vistas/panel/senales', tal<import('@/entities/indicadores').SenalDisponible[]>())
+export const R_PANEL = tal<{ panel: import('@/entities/indicadores').PanelGuardado }>()
 
 /* ───────────────────── A1 · Contrato v1 ───────────────────── */
 // A1 · Compatibilidad con la versión 1 (`cde8214`, la que tomó el desarrollador del

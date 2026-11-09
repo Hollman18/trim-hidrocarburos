@@ -93,6 +93,12 @@ export interface Sesion {
    *  `/vistas/perdidas`, `/vistas/balance` y `/vistas/jornada`. Opcional: ausente = ninguno
    *  (las vistas dicen «sin registro», nunca 0). En el demo arranca vacío: no se inventan pérdidas. */
   perdidas?: import('@/entities/perdidas').RegistroPerdida[]
+  /** Fase 4 de facilidades · los avisos de prueba del apagón y lo que respondió el campo
+   *  (`GET /api/vistas/planta/evento`). Opcional: ausente = ninguno. En el demo arranca vacío. */
+  eventosPlanta?: import('@/entities/evento-planta').RegistroEventoPlanta[]
+  /** Fase 7 de facilidades · el panel de indicadores de cada persona (`POST /api/paneles`), por rol en el
+   *  demo (una persona por rol). Opcional: ausente = el panel de ejemplo de su rol. */
+  paneles?: Record<string, import('@/entities/indicadores').PanelGuardado>
 }
 
 let instalada: Sesion | undefined

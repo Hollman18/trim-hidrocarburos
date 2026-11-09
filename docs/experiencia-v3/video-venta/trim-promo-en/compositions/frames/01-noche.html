@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+        @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+        @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+        @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+        #root { position: absolute; inset: 0; overflow: hidden; color: #f4f3f0; font-family: "IBM Plex Sans", sans-serif; }
+
+        .f01-ln { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .f01-ln .f01-thin { stroke-width: 2; opacity: 0.45; }
+        .f01-pipe-wall { fill: none; stroke: #a9dad6; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
+        .f01-pipe-core { fill: none; stroke: #101418; stroke-width: 13; stroke-linecap: round; stroke-linejoin: round; }
+        .f01-flow { fill: none; stroke: #a9dad6; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 10 22; }
+        #f01-cam { position: absolute; inset: 0; transform-origin: 960px 530px; }
+        #f01-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        #f01-motor, #f01-tanque, #f01-tuberias { color: #a9dad6; }
+        #f01-bomba { color: #a9dad6; }
+        #f01-rodete { filter: drop-shadow(0 0 6px rgba(169, 218, 214, 0.45)); }
+        #f01-piloto { color: #a9dad6; filter: drop-shadow(0 0 12px currentColor); }
+        #f01-marcas { color: #c9cbcd; opacity: 0; }
+        #f01-rotulo { position: absolute; left: 1128px; top: 384px; padding: 6px 0 6px 16px; border-left: 4px solid #e0897c;
+          font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 26px; letter-spacing: 0.12em; color: #e0897c;
+          background: rgba(16, 20, 24, 0.85); white-space: nowrap; opacity: 0; }
+        #f01-fondo { position: absolute; inset: 0; background-color: #101418; background-image: radial-gradient(circle, #343b42 1.6px, transparent 2px); background-size: 40px 40px; background-position: 20px 20px; }
+        #f01-vineta { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 70% at 50% 46%, rgba(16,20,24,0) 55%, rgba(5,7,9,0.7) 100%); pointer-events: none; }
+        #f01-reloj { position: absolute; left: 120px; top: 96px; padding: 4px 0 4px 20px; border-left: 4px solid #a9dad6; }
+        #f01-reloj .f01-hora { position: absolute; left: 20px; top: 4px; font-family: "IBM Plex Mono", monospace; font-weight: 500;
+          font-size: 56px; line-height: 64px; letter-spacing: 0.04em; color: #f4f3f0; white-space: nowrap; opacity: 0; }
+        #f01-reloj .f01-hora span { color: #7f878e; }
+        #f01-lugar { position: absolute; left: 124px; top: 184px; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 22px; letter-spacing: 0.14em; color: #a9dad6; opacity: 0; }
+        #f01-reloj-caja { width: 300px; height: 64px; }
+      </style>
+      <div data-hf-id="hf-wgrr" id="root" data-composition-id="f01" data-width="1920" data-height="1080" data-duration="5.91">
+
+        <div data-hf-id="hf-oyvv" id="f01-fondo" class="clip" data-start="0" data-duration="5.91" data-track-index="0"></div>
+        <div data-hf-id="hf-s2vu" id="f01-cam">
+          <svg data-hf-id="hf-cl7a" id="f01-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <g data-hf-id="hf-r0oc" class="f01-ln" style="color:#343b42"><line data-hf-id="hf-4wcz" x1="140" y1="704" x2="1780" y2="704" stroke-dasharray="2 10" /></g>
+            <g data-hf-id="hf-3k9i" id="f01-tuberias"><path data-hf-id="hf-9ojc" class="f01-pipe-wall" d="M-40 770 H1240 V600 H1066" /><path data-hf-id="hf-xp7m" class="f01-pipe-wall" d="M1020 372 V240 H1590 V300" /><path data-hf-id="hf-meyt" class="f01-pipe-wall" d="M1700 620 H1960" /><path data-hf-id="hf-abxp" class="f01-pipe-core" d="M-40 770 H1240 V600 H1066" /><path data-hf-id="hf-k63z" class="f01-pipe-core" d="M1020 372 V240 H1590 V300" /><path data-hf-id="hf-hkt8" class="f01-pipe-core" d="M1700 620 H1960" /><path data-hf-id="hf-osq9" class="f01-flow" d="M-40 770 H1240 V600 H1066" /><path data-hf-id="hf-g9ir" class="f01-flow" d="M1020 372 V240 H1590 V300" /><path data-hf-id="hf-i5ww" class="f01-flow" d="M1700 620 H1960" /></g>
+            <g data-hf-id="hf-78qu" id="f01-tanque" class="f01-ln">
+              <path data-hf-id="hf-4ayp" d="M1480 330 Q1480 300 1510 296 L1670 296 Q1700 300 1700 330 V680 H1480 Z" />
+              <line data-hf-id="hf-r5yv" x1="1500" y1="680" x2="1500" y2="700" /><line data-hf-id="hf-eg7f" x1="1680" y1="680" x2="1680" y2="700" />
+              <rect data-hf-id="hf-jbym" x="1482" y="470" width="216" height="208" fill="#a9dad6" fill-opacity="0.06" stroke="none" />
+              <path data-hf-id="hf-w9jp" class="f01-thin" d="M1490 470 H1690" stroke-dasharray="14 10" />
+              <line data-hf-id="hf-p0bg" class="f01-thin" x1="1720" y1="330" x2="1720" y2="660" />
+              <line data-hf-id="hf-gvx3" class="f01-thin" x1="1712" y1="470" x2="1728" y2="470" />
+            </g>
+            <g data-hf-id="hf-vr6c" id="f01-valvula" class="f01-ln" style="color:#a9dad6">
+              <path data-hf-id="hf-bfm0" d="M1278 220 L1300 240 L1278 260 Z M1322 220 L1300 240 L1322 260 Z" fill="#101418" />
+              <line data-hf-id="hf-r7d0" x1="1300" y1="240" x2="1300" y2="206" /><line data-hf-id="hf-ilvq" x1="1284" y1="206" x2="1316" y2="206" />
+            </g>
+            <g data-hf-id="hf-ei2p" class="f01-ln" style="color:#a9dad6">
+              <rect data-hf-id="hf-lyr5" x="340" y="676" width="880" height="20" rx="6" />
+            </g>
+            <g data-hf-id="hf-zlz5" id="f01-motor" class="f01-ln">
+              <rect data-hf-id="hf-3pa7" x="370" y="430" width="320" height="200" rx="24" />
+              <g data-hf-id="hf-996e" class="f01-thin" style="opacity:0.6"><line data-hf-id="hf-zibz" x1="410" y1="454" x2="410" y2="606" /><line data-hf-id="hf-6qhd" x1="440" y1="454" x2="440" y2="606" /><line data-hf-id="hf-o0wr" x1="470" y1="454" x2="470" y2="606" /><line data-hf-id="hf-n85f" x1="500" y1="454" x2="500" y2="606" /><line data-hf-id="hf-8bkl" x1="530" y1="454" x2="530" y2="606" /><line data-hf-id="hf-7g8z" x1="560" y1="454" x2="560" y2="606" /><line data-hf-id="hf-u62p" x1="590" y1="454" x2="590" y2="606" /><line data-hf-id="hf-w4j9" x1="620" y1="454" x2="620" y2="606" /><line data-hf-id="hf-n8iz" x1="650" y1="454" x2="650" y2="606" /></g>
+              <rect data-hf-id="hf-8d35" x="690" y="472" width="36" height="116" rx="10" />
+              <rect data-hf-id="hf-3bqm" x="470" y="400" width="90" height="30" rx="6" />
+              <line data-hf-id="hf-bf90" x1="420" y1="630" x2="420" y2="676" /><line data-hf-id="hf-7sls" x1="640" y1="630" x2="640" y2="676" />
+              <line data-hf-id="hf-tl9q" x1="515" y1="400" x2="515" y2="372" />
+            </g>
+            <g data-hf-id="hf-wtc7" id="f01-piloto" class="f01-ln">
+              <circle data-hf-id="hf-qyj1" id="f01-halo" cx="515" cy="352" r="16" style="opacity:0" />
+              <circle data-hf-id="hf-ro47" cx="515" cy="352" r="16" fill="currentColor" fill-opacity="0.3" />
+              <circle data-hf-id="hf-xbcu" cx="515" cy="352" r="6" fill="currentColor" stroke="none" />
+            </g>
+            <g data-hf-id="hf-sik7" id="f01-bomba" class="f01-ln">
+              <line data-hf-id="hf-t10z" x1="726" y1="530" x2="752" y2="530" /><line data-hf-id="hf-t5qj" x1="808" y1="530" x2="836" y2="530" />
+              <rect data-hf-id="hf-jxa9" x="752" y="498" width="56" height="64" rx="8" />
+              <line data-hf-id="hf-vqnc" class="f01-thin" x1="770" y1="498" x2="770" y2="562" /><line data-hf-id="hf-etu4" class="f01-thin" x1="790" y1="498" x2="790" y2="562" />
+              <circle data-hf-id="hf-o87v" cx="960" cy="530" r="125" />
+              <circle data-hf-id="hf-bix8" class="f01-thin" cx="960" cy="530" r="104" />
+              <path data-hf-id="hf-pi3w" d="M990 409 V372 M1050 443 V372" />
+              <line data-hf-id="hf-ykx9" x1="978" y1="370" x2="1062" y2="370" style="stroke-width:5" />
+              <path data-hf-id="hf-1gaa" d="M1066 586 V614" style="stroke-width:5" />
+              <line data-hf-id="hf-jmh9" x1="912" y1="646" x2="912" y2="676" /><line data-hf-id="hf-5yff" x1="1008" y1="646" x2="1008" y2="676" />
+              <g data-hf-id="hf-p5q6" id="f01-rodete">
+                <circle data-hf-id="hf-yxk6" cx="960" cy="530" r="30" />
+                <circle data-hf-id="hf-jpiv" cx="960" cy="530" r="9" fill="currentColor" stroke="none" />
+                <path data-hf-id="hf-616n" d="M960.0 500.0 C990.0 480.0 1006.0 456.0 992.0 434.0" /><path data-hf-id="hf-m0y7" d="M988.5 520.7 C1016.8 543.1 1044.6 550.9 1061.2 530.8" /><path data-hf-id="hf-2sud" d="M977.6 554.3 C965.1 588.1 966.3 616.9 990.5 626.5" /><path data-hf-id="hf-lv4f" d="M942.4 554.3 C906.3 552.8 879.3 562.8 877.7 588.9" /><path data-hf-id="hf-92bj" d="M931.5 520.7 C921.7 486.0 903.8 463.4 878.6 469.9" />
+              </g>
+            </g>
+            <g data-hf-id="hf-b1wl" id="f01-marcas" class="f01-ln">
+              <path data-hf-id="hf-e1sq" d="M812 414 V384 H842" /><path data-hf-id="hf-2hv5" d="M1108 414 V384 H1078" /><path data-hf-id="hf-fax3" d="M812 634 V664 H842" /><path data-hf-id="hf-unq2" d="M1108 634 V664 H1078" />
+            </g>
+          </svg>
+          <div data-hf-id="hf-hntq" id="f01-rotulo">P-201B · STOPPED</div>
+        </div>
+        <div data-hf-id="hf-8rt4" id="f01-vineta"></div>
+        <div id="f01-lugar">PRODUCTION FACILITY</div>
+        <div data-hf-id="hf-201t" id="f01-reloj"><div data-hf-id="hf-zt5h" id="f01-reloj-caja"></div>
+          <div data-hf-id="hf-pgza" class="f01-hora" id="f01-h0">02:59:<span data-hf-id="hf-nh1t">57</span></div>
+          <div data-hf-id="hf-92fv" class="f01-hora" id="f01-h1">02:59:<span data-hf-id="hf-ub64">58</span></div>
+          <div data-hf-id="hf-as0w" class="f01-hora" id="f01-h2">02:59:<span data-hf-id="hf-twv3">59</span></div>
+          <div data-hf-id="hf-slc0" class="f01-hora" id="f01-h3">03:00:<span data-hf-id="hf-otqh">00</span></div>
+          <div data-hf-id="hf-bbs7" class="f01-hora" id="f01-h4">03:00:<span data-hf-id="hf-p81i">01</span></div>
+          <div data-hf-id="hf-l28i" class="f01-hora" id="f01-h5">03:00:<span data-hf-id="hf-pmcj">02</span></div>
+          <div data-hf-id="hf-g7fd" class="f01-hora" id="f01-h6">03:00:<span data-hf-id="hf-q0nk">03</span></div>
+        </div>
+      </div>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          const tl = gsap.timeline({ paused: true });
+
+          const ORIG = "960 530";
+          // Cámara: empuje lento hacia la bomba todo el frame
+          tl.fromTo("#f01-cam", { scale: 1 }, { scale: 1.08, duration: 5.91, ease: "sine.inOut" }, 0);
+          // Reloj 02:59:57 → 03:00:00 en 2.0, luego segundos normales
+          const T = [0, 0.67, 1.33, 2.0, 3.0, 4.0, 5.0];
+          T.forEach((t, i) => {
+            if (i > 0) tl.set("#f01-h" + (i - 1), { opacity: 0 }, t);
+            tl.set("#f01-h" + i, { opacity: 1 }, t);
+          });
+          tl.fromTo("#f01-reloj", { x: -16, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0);
+          // «En la planta»: dónde pasa todo
+          tl.fromTo("#f01-lugar", { x: -12, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 2.9);
+          // Rodete: 540°/s, luego desacelera y para (4.4 → 5.3)
+          tl.fromTo("#f01-rodete", { rotation: 0, svgOrigin: ORIG }, { rotation: 2376, svgOrigin: ORIG, duration: 4.4, ease: "none" }, 0);
+          tl.to("#f01-rodete", { rotation: 2619, svgOrigin: ORIG, duration: 0.9, ease: "power2.out" }, 4.4);
+          // Flujo por las tuberías
+          tl.fromTo(".f01-flow", { strokeDashoffset: 0 }, { strokeDashoffset: -484, duration: 4.4, ease: "none" }, 0);
+          tl.to(".f01-flow", { strokeDashoffset: -533.5, duration: 0.9, ease: "power2.out" }, 4.4);
+          tl.to(".f01-flow", { opacity: 0.35, duration: 0.6, ease: "power2.out" }, 4.8);
+          // «Una bomba» (3.32): marcas de selección alrededor de la bomba
+          tl.fromTo("#f01-marcas", { opacity: 0, scale: 1.18, svgOrigin: ORIG }, { opacity: 1, scale: 1, svgOrigin: ORIG, duration: 0.6, ease: "expo.out" }, 3.35);
+          // «se detiene» (4.37): piloto a rojo + pulso, bomba a --frenado
+          tl.to("#f01-piloto", { color: "#e0897c", duration: 0.35, ease: "power2.out" }, 4.45);
+          tl.fromTo("#f01-halo", { opacity: 0.9, scale: 1, svgOrigin: "515 352" }, { opacity: 0, scale: 3, svgOrigin: "515 352", duration: 0.75, ease: "power2.out" }, 4.55);
+          tl.to("#f01-bomba", { color: "#e0897c", duration: 0.8, ease: "power2.inOut" }, 4.5);
+          tl.to("#f01-marcas", { color: "#e0897c", duration: 0.5, ease: "power2.out" }, 4.6);
+          tl.to("#f01-rodete", { filter: "drop-shadow(0 0 0px rgba(224, 137, 124, 0))", duration: 0.8 }, 4.5);
+          tl.fromTo("#f01-rotulo", { x: -14, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 5.0);
+          // 5.3–5.91: el piloto late una vez más
+          tl.fromTo("#f01-halo", { opacity: 0.9, scale: 1, svgOrigin: "515 352" }, { opacity: 0, scale: 3, svgOrigin: "515 352", duration: 0.55, ease: "power2.out", immediateRender: false }, 5.35);
+          window.__timelines["f01"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

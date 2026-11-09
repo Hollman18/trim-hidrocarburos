@@ -2,6 +2,7 @@ import type { Equipo, Dispositivo, Severidad, Marcha } from './tipos'
 import { perfilBomba, esBomba, type PerfilBomba } from './bombas'
 import { respaldoDe, type Config } from './configuracion'
 import { serieHasta } from './serie'
+import { dispositivosEnCampo } from './conexion'
 
 /** Las lecturas del demo se escriben como doce valores DIARIOS que terminan
  *  ahora; aquí se vuelven la serie del historiador con su inicio y su paso
@@ -110,7 +111,7 @@ export const EQUIPOS: Record<string, Equipo> = {
     ],
   },
   'K-101': {
-    id: 'K-101', servicio: 'aire', nombre: 'Sistema de aire de instrumentos', sistema: 'Servicios industriales',
+    id: 'K-101', servicio: 'aire', familia: 'compresor-aire', nombre: 'Sistema de aire de instrumentos', sistema: 'Servicios industriales',
     severidad: 1, marcha: 'en-marcha', estado: 'en marcha · degradado', criticidad: 5,
     aguasAbajo: 'todo el campo', redundancia: '3 unidades (N+1)',
     modoFalla: 'Pérdida de suministro → válvulas a posición segura',
@@ -247,6 +248,98 @@ export const EQUIPOS: Record<string, Equipo> = {
       d('TI-0021', 'Termografía de conexiones', 0, '°C', 'sin señal', 'campaña · cada 180 d', 'ΔT < 15'),
     ],
   },
+  // Fase 4 de facilidades: la UPS de la sala de control de El Palmar, que el gateway lee por SNMP
+  // (Fase 3). Familia `ups` (familias-planta.ts). Su caída no cierra pozos: deja a ciegas la planta.
+  'UPS-SALA': {
+    id: 'UPS-SALA', nombre: 'UPS de la sala de control', sistema: 'Distribución eléctrica', severidad: 0,
+    marcha: 'en-marcha', estado: 'en línea · con red', criticidad: 4,
+    aguasAbajo: 'el control, el SCADA y las comunicaciones de la planta', redundancia: 'sin respaldo declarado',
+    modoFalla: 'Baterías agotadas durante un corte → la planta queda a ciegas',
+    norma: 'Investigación 19 §2.2 y §3.3: su autonomía se mide por planta. Los límites dicen [SUPUESTO] hasta tener la hoja de datos.',
+    lectura: 'Con red. Si se va la energía, la carga de la batería dice cuánto le queda de vista a la planta.',
+    soloEn: ['palmar'], familia: 'ups',
+    intervencion: {
+      ubicacion: 'Sala de control de El Palmar',
+      accionInmediata: 'Con un apagón, contar con la autonomía de la batería: priorizar lo que hay que ver antes de que se apague.',
+      avisarA: 'Mantenimiento eléctrico',
+    },
+    dispositivos: [
+      d('EIB-0031', 'Carga de la batería de la UPS', 100, '%', 'normal', 'UPS (SNMP) · 60 s', '> 80',
+        [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]),
+      d('ZI-0031', 'En batería', 'no', '', 'normal', 'UPS (SNMP) · 60 s', '—'),
+    ],
+  },
+  // Fase 5 de facilidades: los demás equipos de la planta, en Morichal (crudo pesado, con diluyente en el
+  // oleoducto). Cada uno con una variable que tiende a su alarma: es el aviso que el vigía de planta detecta
+  // (vigia-planta.ts). Datos de demostración.
+  'P-401': {
+    id: 'P-401', servicio: 'evacuacion', familia: 'bomba-transferencia', nombre: 'Bomba de despacho de crudo', sistema: 'Despacho de crudo',
+    severidad: 3, marcha: 'en-marcha', estado: 'en marcha · vibración subiendo', criticidad: 4,
+    aguasAbajo: 'el despacho al oleoducto', redundancia: 'P-402 en paralelo',
+    modoFalla: 'Rodamientos: la vibración sube antes de la falla',
+    norma: 'API 610, Tabla 8: 3,9 mm/s RMS en la región permitida.',
+    lectura: 'La vibración subió de 2,0 a 3,1 mm/s en 12 días; sigue en banda, pero va hacia la alarma.',
+    soloEn: ['morichal'],
+    intervencion: { ubicacion: 'Morichal · patio de despacho', accionInmediata: 'Programar la revisión de rodamientos antes de que pase la alarma.', avisarA: 'Jefe de mantenimiento' },
+    dispositivos: [
+      d('VI-4013', 'Vibración', 3.1, 'mm/s', 'normal', 'PLC · 47 s', '< 3,5', [2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1]),
+      d('FI-4014', 'Caudal', 14800, 'bbl/d', 'normal', 'PLC · 47 s', '12.000 – 18.000', [14750, 14820, 14790, 14810, 14760, 14830, 14800, 14780, 14820, 14790, 14810, 14800]),
+    ],
+  },
+  'TE-501': {
+    id: 'TE-501', servicio: 'tratamiento', familia: 'tratador', nombre: 'Tratador electrostático', sistema: 'Tratamiento de crudo',
+    severidad: 3, marcha: 'en-marcha', estado: 'en marcha · tensión de rejilla bajando', criticidad: 4,
+    aguasAbajo: 'el crudo en especificación', redundancia: 'H-302 aguas arriba',
+    modoFalla: 'Agua que llega a la rejilla: la tensión cae y el crudo sale fuera de especificación',
+    norma: 'Límites de la rejilla [SUPUESTO] hasta tener la hoja de datos.',
+    lectura: 'La tensión de rejilla bajó de 24,0 a 21,2 kV en 12 días.',
+    soloEn: ['morichal'],
+    intervencion: { ubicacion: 'Morichal · tratamiento de crudo', accionInmediata: 'Revisar la interfase y el corte de agua de entrada.', avisarA: 'Supervisor de operaciones' },
+    dispositivos: [
+      d('EI-5011', 'Tensión de rejilla', 21.2, 'kV', 'normal', 'PLC · 47 s', '20 – 26', [24.0, 23.8, 23.5, 23.3, 23.0, 22.8, 22.5, 22.2, 22.0, 21.7, 21.5, 21.2]),
+      d('TI-5012', 'Temperatura de tratamiento', 82, '°C', 'normal', 'PLC · 47 s', '70 – 90', [82, 81, 82, 83, 82, 82, 81, 82, 83, 82, 82, 82]),
+    ],
+  },
+  'CT-601': {
+    id: 'CT-601', familia: 'torre-enfriamiento', nombre: 'Torre de enfriamiento de agua', sistema: 'Tratamiento de agua',
+    severidad: 3, marcha: 'en-marcha', estado: 'en marcha · agua de salida calentándose', criticidad: 4,
+    aguasAbajo: 'el vertimiento del agua', redundancia: 'sin respaldo declarado',
+    modoFalla: 'El relleno o los ventiladores pierden capacidad: el agua sale caliente',
+    norma: 'El agua no se puede verter a más de 40 °C (investigación 19 §2.2).',
+    lectura: 'El agua de salida subió de 33,0 a 37,8 °C en 12 días.',
+    soloEn: ['morichal'],
+    intervencion: { ubicacion: 'Morichal · tratamiento de agua', accionInmediata: 'Revisar el relleno y los ventiladores.', avisarA: 'Jefe de mantenimiento' },
+    dispositivos: [
+      d('TI-6011', 'Temperatura del agua de salida', 37.8, '°C', 'normal', 'PLC · 47 s', '< 38', [33.0, 33.4, 33.9, 34.2, 34.8, 35.1, 35.6, 36.0, 36.5, 36.9, 37.4, 37.8]),
+      d('VI-6012', 'Vibración del ventilador', 2.4, 'mm/s', 'normal', 'PLC · 47 s', '< 7', [2.4, 2.3, 2.4, 2.5, 2.4, 2.4, 2.3, 2.4, 2.5, 2.4, 2.4, 2.4]),
+    ],
+  },
+  'FWKO-101': {
+    id: 'FWKO-101', servicio: 'proceso', familia: 'separador', nombre: 'Separador de agua libre (FWKO)', sistema: 'Separación',
+    severidad: 3, marcha: 'en-marcha', estado: 'en marcha · interfase subiendo', criticidad: 4,
+    aguasAbajo: 'el separador y el tratamiento', redundancia: 'sin respaldo declarado',
+    modoFalla: 'El agua libre no sale: sube la interfase y pasa agua aguas abajo',
+    norma: 'La misma banda del separador trifásico; la alarma, [SUPUESTO].',
+    lectura: 'La interfase subió de 50 % a 59 % en 12 días.',
+    soloEn: ['morichal'],
+    intervencion: { ubicacion: 'Morichal · separación', accionInmediata: 'Revisar la válvula de descarga de agua y el transmisor de interfase.', avisarA: 'Supervisor de operaciones' },
+    dispositivos: [
+      d('LI-7011', 'Nivel de interfase', 59, '%', 'normal', 'PLC · 47 s', '35 – 65', [50, 51, 52, 52.5, 53.5, 54, 55, 56, 56.5, 57.5, 58, 59]),
+    ],
+  },
+  'P-701': {
+    id: 'P-701', servicio: 'diluyente', familia: 'bomba-diluyente', nombre: 'Bomba de diluyente', sistema: 'Diluyente',
+    severidad: 3, marcha: 'en-marcha', estado: 'en marcha · caudal de nafta bajando', criticidad: 5,
+    aguasAbajo: 'el despacho del crudo pesado (la nafta entra al oleoducto, después del punto de medición: el fiscal es de crudo solo)', redundancia: 'sin respaldo declarado',
+    modoFalla: 'La dosificadora pierde caudal: sin nafta el crudo pesado no se puede bombear',
+    norma: 'El caudal mínimo de nafta es [SUPUESTO] hasta tener el de la viscosidad de despacho.',
+    lectura: 'El caudal de nafta bajó de 2.700 a 2.360 bbl/d en 12 días.',
+    soloEn: ['morichal'],
+    intervencion: { ubicacion: 'Morichal · patio de diluyente', accionInmediata: 'Revisar la succión y las válvulas de la dosificadora.', avisarA: 'Supervisor de operaciones' },
+    dispositivos: [
+      d('FI-8011', 'Caudal de nafta', 2360, 'bbl/d', 'normal', 'PLC · 47 s', '> 2.200', [2700, 2680, 2650, 2610, 2580, 2560, 2520, 2490, 2460, 2420, 2390, 2360]),
+    ],
+  },
 }
 
 /** Cada campo tiene SU instancia del mismo tipo de equipo, con sus propias
@@ -353,6 +446,8 @@ const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, I
       },
       'MPP-301': {},
       'K-101': sano('K-101', 'en marcha'),
+      // Fase 5 de facilidades: los equipos que solo existen en Morichal traen sus datos del catálogo.
+      'P-401': {}, 'TE-501': {}, 'CT-601': {}, 'FWKO-101': {}, 'P-701': {},
     },
   },
 
@@ -394,6 +489,7 @@ const INSTANCIAS: Record<string, { catalogo?: boolean; equipos: Record<string, I
       'P-201B': sano('P-201B', 'en marcha', caudalAgua(13180, 16000, 80)),
       'K-101': sano('K-101', 'en marcha'),
       'SE-2': sano('SE-2', 'en servicio'),
+      'UPS-SALA': sano('UPS-SALA', 'en línea · con red'),
     },
   },
 
@@ -465,12 +561,13 @@ export const equipoEnCampo = (id: string, campo: string): EquipoEnCampo | undefi
     // configuración firmada (`conRespaldoFirmado`).
     redundancia: bomba ? SEGUN_FIRMA : esBomba(id) ? 'sin declarar en este campo' : inst.redundancia ?? base.redundancia,
     aguasAbajo: bomba ? SEGUN_FIRMA : esBomba(id) ? 'sin declarar en este campo' : inst.aguasAbajo ?? base.aguasAbajo,
-    dispositivos: base.dispositivos.map(d => {
+    // Cómo se lee cada instrumento depende de la planta (`conexion.ts`): sin historiador, directo.
+    dispositivos: dispositivosEnCampo(id, campo, base.dispositivos.map(d => {
       const x = inst.dispositivos?.[d.tag]
       if (!x) return d
       const { serie, ...resto } = x
       return { ...d, ...resto, ...(serie ? { serie: diaria(serie) } : {}) }
-    }),
+    })),
   }
 }
 

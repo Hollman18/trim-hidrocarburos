@@ -48,12 +48,12 @@ flowchart LR
   ING --> DB[("PostgreSQL<br/>(+ TimescaleDB)")]
 ```
 
-**Las fuentes del demo.** El registro de la cadena que carga el simulador (`simulador-api/datos/nacimientos.json`, que sale del catálogo de equipos con `simulador-api/generar-semilla.mjs`) tiene 10 gateways (dos por campo), 82 dispositivos y 173 tags; en el modelo del capítulo 3 son 45 conectores (`fuente`: uno por gateway, protocolo y dirección; el simulador junta conector y dispositivo en una sola fila). Por protocolo:
+**Las fuentes del demo.** El registro de la cadena que carga el simulador (`simulador-api/datos/nacimientos.json`, que sale del catálogo de equipos con `simulador-api/generar-semilla.mjs`) tiene 10 gateways (dos por campo), 84 dispositivos y 177 tags; en el modelo del capítulo 3 son 45 conectores (`fuente`: uno por gateway, protocolo y dirección; el simulador junta conector y dispositivo en una sola fila). Por protocolo:
 
 | Protocolo (`fuente.protocolo`) | Tags | Quién estampa la hora (`dispositivo.reloj`) | Ejemplos en La Ceiba |
 |---|---:|---|---|
-| `pi-web-api` | 73 | el PLC de la batería | PI-2010, FI-2011, II-2011, TI-2011, PDI-2011 (P-201B); PT-1011 (K-101); II-0021 (SE-2) |
-| `modbus-tcp` | 46 | el PLC de la batería | VI-2011, LSH-2013, LT-2012 (P-201B); ZI-1011 (K-101); AI-0101, DI-0101 (LACT-01) |
+| `pi-web-api` | 59 | el PLC de la batería | PI-2010, FI-2011, II-2011, TI-2011, PDI-2011 (P-201B); PT-1011 (K-101); II-0021 (SE-2) |
+| `modbus-tcp` | 56 | el PLC de la batería | VI-2011, LSH-2013, LT-2012 (P-201B); ZI-1011 (K-101); AI-0101, DI-0101 (LACT-01) |
 | `opc-ua` | 15 | el PLC del skid | XI-1017, XT-1017, XP-4016 (skid de ampliación, sin asociar) |
 | `atg` | 10 | la consola de tanques | LI-1102, LI-1103 (TK-102) |
 | `laboratorio` | 9 | la hora de la toma de muestra | AI-3021 (H-302), AI-1102 (TK-102) |
@@ -61,10 +61,27 @@ flowchart LR
 | `roc-plus` | 5 | el computador de flujo | FQI-0101 (LACT-01) |
 | `ruta-manual` | 5 | la hora en que se cerró la ruta | TI-0021, termografía de SE-2 |
 | `calculado` | 5 | el tag del que se deriva | PDT-1011 ← PT-1011 (fórmula `f1-compresor-aire`, versión 2, ventana 15 min) |
+| `modbus-rtu` | 4 | el gateway, al leer (Modbus RTU no trae hora) | Solo en El Palmar: PT-1011 y AIT-1011 del controlador del compresor K-101; II-0021 y VI-0021 del analizador de red de SE-2 |
+| `iec-61850` | 1 | el relé de la subestación | Solo en El Palmar: 52-SE2, el interruptor de llegada |
+| `entrada-digital` | 1 | el gateway | Solo en El Palmar: EI-0020, «hay tensión» en el gabinete del gateway |
+| `snmp` | 2 | el gateway, al consultar la UPS | Solo en El Palmar: EIB-0031 (carga de la batería) y ZI-0031 (en batería) de UPS-SALA, la UPS de la sala de control (equipo del catálogo desde la Fase 4, familia `ups`) |
+
+**Las vías de conexión directa a los equipos de planta (Fase 3 de facilidades, 4-nov-2026).** `fuente.protocolo` admite además `dnp3` (relés o unidades remotas). Las palabras de cada una están en `src/entities/cadena.ts` (`COMO_SE_LEE`, `ADQUISICION`); todas son de solo lectura (`fuente.modo = 'solo-lectura'`): el gateway nunca opera un interruptor, nunca manda una orden DNP3 y consulta la UPS sin comunidad de escritura.
 
 La instrumentación de esta fase en las bombas de reinyección es la del contrato: marcha/paro con primera alarma, presión de succión y de descarga, caudal, vibración en línea, temperatura de la cámara de empuje, interruptor de fuga de sello, corriente del motor y nivel del tanque de agua (`perfil_bomba_tag` de P-201B: `p_succion` PI-2010, `p_descarga` PDI-2011, `caudal` FI-2011, `v_bomba` VI-2011, `t_empuje` TI-2011, `fuga_sello` LSH-2013, `corriente` II-2011, `nivel_tanque` LT-2012). **No se mide la energía por barril**: el desgaste interno se ve cuando baja el caudal con la bomba en marcha. En las electrosumergibles: el variador (corriente, frecuencia, desbalance) y el sensor de fondo (presión de entrada, temperatura del motor).
 
-## 4.2 Dos formas de traer los datos (la escoge el cliente)
+## 4.2 Dos formas de traer los datos (según el estado de la planta)
+
+**La regla.** TRIM no tiene una sola forma de conectarse: **va a donde está el dato en esa planta**. Unas veces lee el historiador, otras se conecta directo a los PLC y a los equipos, y casi siempre mezcla las dos. Las plantas de facilidades muchas veces **no llegan al historiador**: sus datos viven sueltos en el PLC, en el sistema de energía, en el controlador de cada generador o compresor, en hojas de cálculo. Se decide planta por planta, en la visita técnica:
+
+| Estado de la planta | Cómo se conecta TRIM |
+|---|---|
+| Tiene historiador y las señales que se necesitan ya llegan a él | **B** · se lee el historiador |
+| Tiene historiador, pero faltan señales (casi siempre energía, generación, aire comprimido, UPS) | **Mezcla** · el historiador para lo que tiene; el gateway, directo a los equipos, para lo que falta |
+| No tiene historiador, o no llega a la planta | **A** · el gateway lee directo los PLC, analizadores de red, relés, controladores de generador y compresor y UPS (Modbus TCP/RTU, OPC UA, IEC 61850, DNP3, SNMP, ROC Plus) |
+| No hay ni de dónde leer el estado de la energía | **A mínima** · el gateway con su propia batería y una entrada digital de «hay tensión»: basta para avisar el apagón |
+
+En los cuatro casos se cumplen las mismas condiciones, porque son las que aprueba seguridad del cliente: **solo lectura** (nunca se escribe en un PLC, un relé ni un interruptor), **la conexión sale desde adentro** (nadie de afuera entra a la planta) y **lista cerrada de tags** documentada.
 
 | | **A. Sparkplug B desde el gateway** (leyendo el PLC, el computador de flujo y la consola de tanques) | **B. Leer el historiador PI** (PI Web API, o un conector del historiador a MQTT) |
 |---|---|---|
@@ -77,7 +94,9 @@ La instrumentación de esta fase en las bombas de reinyección es la del contrat
 | Costo y dependencias | Hardware de borde por campo y su mantenimiento; programar la lectura de cada PLC. | Licencias del PI (PI Web API, conectores), carga de consultas sobre el historiador de producción. |
 | Riesgo principal | Que el mapa de registros del PLC esté mal (se lee el registro equivocado y nadie lo nota): por eso el registro de ingeniería y el mapeo de tags. | Que la compresión y la hora del PI escondan el instante real de un evento, y que un cambio en el PI (renombrar un tag) rompa la lectura sin aviso. |
 
-**Mezclas.** El demo ya es una mezcla: los gateways leen 73 tags **del PI local** (`pi-web-api`) y los demás directo del PLC, del computador de flujo y de la consola de tanques, y todo sale por Sparkplug B. Lo que sí conviene, cualquiera que sea la forma: **los eventos** (marcha → paro de las bombas, paros de los controladores de pozo, interruptores de los servicios) y **el fiscal del día** llegan de la fuente primaria (PLC y computador de flujo), no del historiador comprimido, porque de su hora sale el libro. Esta recomendación no decide por el cliente: es lo que el motor necesita para que el diferido de un evento empiece en el segundo correcto.
+**El estado de cada planta viaja en el registro de campos** (`Campo.conexion` de `GET /api/campos`: `historiador`, `mezcla`, `directa` o `minima`; ausente, `mezcla`; `src/entities/conexion.ts`). En el demo, cuatro campos mezclan y **El Palmar es `directa`**: no tiene historiador y el gateway lee todo de los equipos. Lo que en los demás llega del PI, en El Palmar llega del PLC (Modbus TCP), del controlador del compresor y del analizador de red (Modbus RTU); el gateway lee además el interruptor de llegada por su relé (IEC 61850), su propia entrada «hay tensión» y la UPS (SNMP). `scripts/verificar-conexion.mjs` lo comprueba de punta a punta con el simulador.
+
+**Mezclas.** Los otros cuatro campos del demo mezclan: sus gateways leen 59 tags **del PI local** (`pi-web-api`) y los demás directo del PLC, del computador de flujo y de la consola de tanques, y todo sale por Sparkplug B. Lo que sí conviene, cualquiera que sea la forma: **los eventos** (marcha → paro de las bombas, paros de los controladores de pozo, interruptores de los servicios) y **el fiscal del día** llegan de la fuente primaria (PLC y computador de flujo), no del historiador comprimido, porque de su hora sale el libro. Esta recomendación no decide por el cliente: es lo que el motor necesita para que el diferido de un evento empiece en el segundo correcto.
 
 ## 4.3 Sparkplug B: nacimiento, datos y muerte
 

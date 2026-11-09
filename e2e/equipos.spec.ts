@@ -146,8 +146,8 @@ test('Equipos · el nivel 3 de P-201B como la imagen 4: la cifra, el bloqueo, su
   f.ok((await dias.locator('[data-tendencia]').evaluateAll(es => es.map(e => e.getAttribute('data-tendencia')))).slice(0, 2).join(',') === 'TI-2011,II-2011', 'la temperatura de cojinete y la corriente del motor')
   await expect(dias).toContainText('Modo de falla registrado: lubricación de cojinete.')
   const historia = page.locator('main [data-su-historia]')
-  await expect(historia).toContainText('9 fallas, una cada 41 d, 40,0 h fuera cada vez. Le ha costado 4.593 bbl por falla. Sello mecánico 5 · rodamientos 3.')
-  f.ok((await historia.locator('[data-ultima]').allInnerTexts()).map(x => x.replace(/\s+/g, ' ')).join(' | ') === '22 de sept rodamientos 1.041 bbl | 9 de ago sello mecánico 3.806 bbl', 'las dos últimas fallas')
+  await expect(historia).toContainText('9 fallas, una cada 41 d, 40,0 h fuera cada vez. Le ha costado 4.584 bbl por falla. Sello mecánico 5 · rodamientos 3.')
+  f.ok((await historia.locator('[data-ultima]').allInnerTexts()).map(x => x.replace(/\s+/g, ' ')).join(' | ') === '22 de sept rodamientos 1.034 bbl | 9 de ago sello mecánico 3.795 bbl', 'las dos últimas fallas')
   await expect(historia.locator('[data-repuestos]')).toContainText('Kit de sello mecánico 0 en bodega · llega 1 el 9 de oct')
   await expect(historia.locator('[data-repuestos]')).toContainText('Aviso · Impulsor y anillos de desgaste 0 en bodega · pedirlo: 45 días')
   // «Crear aviso en SAP» abre SAP aquí mismo.

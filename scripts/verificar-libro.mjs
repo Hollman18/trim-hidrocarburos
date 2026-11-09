@@ -1392,7 +1392,10 @@ const desacuerdos = []
 for (const n of JSON.parse(readFileSync(new URL('../simulador-api/datos/nacimientos.json', import.meta.url), 'utf8')).filter(n => n.gateway.id.endsWith('-01')))
   for (const m of n.dispositivos.flatMap(d => d.metricas)) {
     const l = LIM.limiteDe(n.campo, m.nombre)
-    if (!l || (m.limite ?? '—') !== l.texto || m.bajo !== sinNulo(l.normal?.[0] ?? null) || m.alto !== sinNulo(l.normal?.[1] ?? null)) desacuerdos.push(`${n.campo}:${m.nombre} (${m.limite} contra ${l?.texto})`)
+    // Un tag que todavía no es de un equipo del catálogo (la UPS de El Palmar, F3 de facilidades) no tiene límite en
+    // ningún lado: tampoco lo cita su nacimiento. Si lo citara, la banda tendría dos fuentes.
+    if (!l ? m.limite != null || m.bajo != null || m.alto != null
+      : (m.limite ?? '—') !== l.texto || m.bajo !== sinNulo(l.normal?.[0] ?? null) || m.alto !== sinNulo(l.normal?.[1] ?? null)) desacuerdos.push(`${n.campo}:${m.nombre} (${m.limite} contra ${l?.texto})`)
   }
 const senalesBomba = TODOS.flatMap(c => ['P-201B', 'MPP-301'].map(e => BO.perfilBomba(e, c)).filter(Boolean).flatMap(p => VGl.senalesDe(p).map(s => ({ c: p.campoId, s }))))
 const ajenas = senalesBomba.filter(({ c, s }) => s.alarma !== LIM.limiteDe(c, s.tag)?.alarma || JSON.stringify(s.normal) !== JSON.stringify(LIM.limiteDe(c, s.tag)?.normal))
@@ -1566,7 +1569,8 @@ comprobar(banda1 === L.bandaDe('ceiba') && L.fiscalPromedio('ceiba') === (() => 
 const motorTxt = ['diferido.ts', 'equipo-vivo.ts', 'causa-senal.ts'].map(n => readFileSync(join(RAIZ, 'src/entities', n), 'utf8').replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')).join('\n')
 const literales = ['K-101', 'SE-2', 'C-401', 'LACT-01', 'V-101', 'H-302', 'TK-102', 'FQI-0101', 'P-201B', 'MPP-301', 'LSH-2013'].filter(id => motorTxt.includes(`'${id}'`))
 const servicios = Object.values(EQ.EQUIPOS).filter(e => e.servicio)
-comprobar(literales.length === 0 && servicios.length === 7,
+// Fase 5 de facilidades: 4 equipos de planta más con su servicio (P-401, TE-501, FWKO-101 y P-701).
+comprobar(literales.length === 0 && servicios.length === 11,
   `las reglas del motor (causa, riesgo, equipo de hoy) no nombran equipos ni tags del demo (${literales.join(', ') || 'ninguno'}); el tipo de servicio va en el registro de ${servicios.length} equipos`)
 const lact = EVV.equipoVivo('LACT-01', 'morichal', ctx7)
 const serieFiscal = L.fiscalUltimosDias('morichal', 12)
@@ -1785,7 +1789,7 @@ console.log('\n=== 18. Corrección del motor (8-oct-2026): costo por falla, salu
   comprobar(pGu.papel === 'recobro' && cerradasDe('guacamayo', 'P-201B').length > 0 && cRec.costoFalla === 0 && cRec.costoDe === undefined && cRec.colchonH === undefined && /recobro/.test(cRec.mdtFuente),
     `la bomba de recobro de Guacamayo, con ${cerradasDe('guacamayo', 'P-201B').length} fallas cerradas, costaría 0 bbl si falla hoy («${cRec.mdtFuente}»)`)
   //    Lo que ya costó por falla sigue siendo otra cifra (la ficha y Confiabilidad: «le ha costado por falla»).
-  comprobar(cerca(D.veredicto(B.perfilBomba('P-201B', 'morichal'), ctx0).porFalla, historicoMo) && Math.abs(historicoMo - 2765) < 1 && Math.abs(historicoMo - rMo.costoFallaHoy) > 1,
+  comprobar(cerca(D.veredicto(B.perfilBomba('P-201B', 'morichal'), ctx0).porFalla, historicoMo) && Math.abs(historicoMo - 2757) < 1 && Math.abs(historicoMo - rMo.costoFallaHoy) > 1,
     `lo que P-201B de Morichal le ha costado por falla (histórico, ${f(historicoMo)} bbl) no cambia: es otra cifra que el costo si falla hoy`)
   //    C1 · al lado: `costoFalla` dice lo de v1 (cde8214): en una bomba, lo que ya costó por falla
   //    (`bblPorFalla`); en una electrosumergible, la misma cuenta de `costoFallaHoy`.
@@ -2797,7 +2801,7 @@ console.log('\n=== 29. Tanda 4: el mercado, «Todavía no sé», las capacidades
   const p201b = L.historialDeEquipo('ceiba', 'P-201B', ctx0).bblPorFalla
   // QA-A-08 · Es historia (lo que ya costaron sus fallas), no «si falla hoy»: lo dice así.
   comprobar(ce.desembotellar === `En La Ceiba, otra bomba de agua no sube la producción: evita que una falla cierre pozos. Cada falla de P-201B le ha costado en promedio unos ${f(p201b)} bbl. Para producir más hay que sacarles más a los pozos: la planta y afuera dejan pasar más.`
-    && Math.round(p201b) === 4593 && /^En Guacamayo, para producir más/.test(CR.criticidadDelCampo('guacamayo', ctx0).desembotellar) && CR.criticidadDelCampo('zarza', ctx0).desembotellar === undefined,
+    && Math.round(p201b) === 4584 && /^En Guacamayo, para producir más/.test(CR.criticidadDelCampo('guacamayo', ctx0).desembotellar) && CR.criticidadDelCampo('zarza', ctx0).desembotellar === undefined,
     `la frase de U2 §6.5, hecha en el motor: «${ce.desembotellar}»`)
   // El cruce con el programa: un trabajo sobre un equipo que hoy vale más se avisa al jefe.
   const conTrabajo = { ...ctx0, config: { ...ctx0.config, programa: [...ctx0.config.programa, { id: 'PR-PRUEBA-P201A', campoId: 'ceiba', equipo: 'P-201A', desde: '2026-10-04T07:00:00-05:00', hasta: '2026-10-04T15:00:00-05:00', motivo: 'Preventivo de la bomba' }] } }
@@ -3059,7 +3063,7 @@ console.log('\n=== 31. Correcciones del QA (F2-B): todas las vistas sobre las mi
   const bGu0 = RP.brechaPorChoke(['guacamayo'], h13.desde, h13.hasta, ctx0), bGu1 = RP.brechaPorChoke(['guacamayo'], h13.desde, h13.hasta, ctx0, undefined, { guardadas: gGu })
   const tGu1 = RP.tuberiaCampo('guacamayo', h13.desde, h13.hasta, ctx0, undefined, { guardadas: gGu }), aGu1 = AR.arbolDelChoke(['guacamayo'], h13.desde, h13.hasta, ctx0, { guardadas: gGu })
   const deEspera = espera.reduce((x, p) => x + p.diferidaTrimBbl, 0)
-  comprobar(espera.length === 127 && Math.round(deEspera) === 15179 && cerca(bGu1.porChoke.exportacion, bGu0.porChoke.exportacion + deEspera, 1e-9) && cerca(bGu1.porChoke.planta, bGu0.porChoke.planta - deEspera, 1e-9)
+  comprobar(espera.length === 127 && Math.round(deEspera) === 15144 && cerca(bGu1.porChoke.exportacion, bGu0.porChoke.exportacion + deEspera, 1e-9) && cerca(bGu1.porChoke.planta, bGu0.porChoke.planta - deEspera, 1e-9)
     && cerca(bGu1.porConfirmar, bGu0.porConfirmar - deEspera, 1e-9) && cerca(tGu1.perdidoPeriodo.find(x => x.tramo === 'exportacion').bbl, bGu1.porChoke.exportacion, 1e-9)
     && cerca(primer(aGu1).exportacion.bbl, bGu1.porChoke.exportacion, 1e-9) && cerca(bGu1.porEscalon.capacidad, bGu0.porEscalon.capacidad, 1e-9),
     `«No, no recibía» en las ${espera.length} filas del tanque de crudo de Guacamayo pone ${f(deEspera)} bbl afuera en el reparto, la tubería y el árbol, y salen de «por confirmar» (${f(bGu0.porConfirmar)} → ${f(bGu1.porConfirmar)} bbl); siguen siendo capacidad, no no planeado`)
@@ -3085,8 +3089,8 @@ console.log('\n=== 31. Correcciones del QA (F2-B): todas las vistas sobre las mi
   const mH = RP.repartoPorMes(TODOS, ctx0).reduce((x, m) => x + suma(m.noPlaneado), 0)
   const gu13 = AR.arbolDelChoke(['guacamayo'], h13.desde, h13.hasta, ctx0)
   comprobar(cerca(aH.raiz.noPlaneadaBbl, bH.porEscalon['disponibilidad-no-planeada'], 1e-9) && cerca(mH, bH.porEscalon['disponibilidad-no-planeada'], 1e-9)
-    && Math.round(gu13.raiz.noPlaneadaBbl) === 63916 && Math.round(bH.porEscalon['disponibilidad-no-planeada']) === 462267 && lbH.noPlaneado > bH.porEscalon['disponibilidad-no-planeada'],
-    `una sola cifra del norte en todas las vistas: ${f(bH.porEscalon['disponibilidad-no-planeada'])} bbl en 13 meses (árbol, reparto, mes a mes); en Guacamayo ${f(gu13.raiz.noPlaneadaBbl)}, sin los ${f(15179)} del despacho limitado; el «no programado (libro)» es otra pregunta (${f(lbH.noPlaneado)})`)
+    && Math.round(gu13.raiz.noPlaneadaBbl) === 63931 && Math.round(bH.porEscalon['disponibilidad-no-planeada']) === 462197 && lbH.noPlaneado > bH.porEscalon['disponibilidad-no-planeada'],
+    `una sola cifra del norte en todas las vistas: ${f(bH.porEscalon['disponibilidad-no-planeada'])} bbl en 13 meses (árbol, reparto, mes a mes); en Guacamayo ${f(gu13.raiz.noPlaneadaBbl)}, sin los ${f(15144)} del despacho limitado; el «no programado (libro)» es otra pregunta (${f(lbH.noPlaneado)})`)
 
   // QA-A-10 · La conciliación que sí puede fallar: Σ por N1 de las filas = el diferido del libro, y cada tipo de
   // causa cae solo en la N1 que propone su fila de REGLAS_ANH (o en «sin causa»).
@@ -3298,10 +3302,11 @@ console.log('\n=== 32. Correcciones del documento del backend (F4): el factor de
       && conCifraAntes.every(e => za.ranking.find(x => x.equipo === e)?.porque === `Si ${e} falla hoy: sin dato. La Zarza es un campo de gas: lo que cuesta una falla en gas todavía no se calcula.`)
       && za.ranking.find(x => x.equipo === 'ZA-09')?.porque === 'ZA-09 no tiene prueba: no se le inventa caudal',
     `5E·H36 · en La Zarza (gas) ninguna fila de «si falla hoy» dice barriles de crudo: «${za.ranking.find(x => x.equipo === 'ZA-01')?.porque}»`)
-  // 5E·H37 · El umbral de cierre de la NSTA, puesto a prueba: un día con lo sin explicar distinto de cero y dos horas que no cuadran.
+  // 5E·H37 · El umbral de cierre de la NSTA, puesto a prueba. D1 (4-nov): con el factor diario, un día entero ya no deja nada
+  // sin explicar (antes, con el del mes, el 22-sep dejaba 88,4 bbl); dos horas siguen sin cuadrar: el fiscal del día se reparte parejo.
   const dia22 = RP.brechaPorChoke(['ceiba'], new Date('2026-09-22T00:00:00-05:00'), new Date('2026-09-23T00:00:00-05:00'), ctx0)
   const horas22 = RP.brechaPorChoke(['ceiba'], new Date('2026-09-22T12:00:00-05:00'), new Date('2026-09-22T14:00:00-05:00'), ctx0)
-  comprobar(Math.abs(dia22.sinExplicar - 88.441) < 0.001 && dia22.cuadra && Math.abs(horas22.sinExplicar) > 0.025 * horas22.potencial && !horas22.cuadra,
+  comprobar(Math.abs(dia22.sinExplicar) < 1e-6 && dia22.cuadra && Math.abs(horas22.sinExplicar) > 0.025 * horas22.potencial && !horas22.cuadra,
     `5E·H37 · el 22-sep La Ceiba deja ${dia22.sinExplicar.toFixed(1)} bbl sin explicar (${(dia22.sinExplicar / dia22.potencial * 100).toFixed(2)} %, cuadra); de 12:00 a 14:00, con P-201B parada, ${horas22.sinExplicar.toFixed(1)} (${(horas22.sinExplicar / horas22.potencial * 100).toFixed(1)} %, no cuadra)`)
 }
 
@@ -3319,9 +3324,10 @@ console.log('\n=== C1. La franja de condiciones: una marca por equipo, contada p
   comprobar(ce.cuentas.alarma === 2 && ce.cuentas.atencion === 2 && ce.cuentas.aviso === 1 && ce.cuentas['sin-comunicacion'] === 0 && ce.cuentas.interlock === 0
       && ids(ce, 'alarma') === 'K-101 P-201B' && ids(ce, 'atencion') === 'LC-21 TK-102' && ids(ce, 'aviso') === 'H-302',
     `La Ceiba: ${ce.cuentas.alarma} alarmas (${ids(ce, 'alarma')}), ${ce.cuentas.atencion} en atención (${ids(ce, 'atencion')}), ${ce.cuentas.aviso} aviso (${ids(ce, 'aviso')}), 0 sin comunicación`)
-  // Todos los campos (imagen 2): 4 · 8 · 2 · 0. Cada equipo cuenta en su campo: la P-201B de Morichal no es la de La Ceiba.
+  // Todos los campos (imagen 2): 4 · 9 · 6 · 0. Cada equipo cuenta en su campo: la P-201B de Morichal no es la de La Ceiba.
+  // Fase 5 de facilidades: los 5 avisos del vigía de planta en Morichal suman 1 en atención (CT-601, 5 d) y 4 avisos.
   const todos = FR.franja(TODOS, ctxF)
-  comprobar(todos.cuentas.alarma === 4 && todos.cuentas.atencion === 8 && todos.cuentas.aviso === 2 && todos.cuentas['sin-comunicacion'] === 0
+  comprobar(todos.cuentas.alarma === 4 && todos.cuentas.atencion === 9 && todos.cuentas.aviso === 6 && todos.cuentas['sin-comunicacion'] === 0
       && todos.equipos.filter(e => e.equipo === 'P-201B').map(e => `${e.campoId}:${e.condicion}`).sort().join() === 'ceiba:alarma,morichal:atencion',
     `todos los campos: ${todos.cuentas.alarma} alarmas · ${todos.cuentas.atencion} en atención · ${todos.cuentas.aviso} avisos · ${todos.cuentas['sin-comunicacion']} sin comunicación`)
   // Una sola marca por equipo, la más grave: MPP-301 es aviso en su estado y atención en Riesgo → atención, una vez.
@@ -3398,7 +3404,7 @@ console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen h
       && ceD.planta.ariaLabel.startsWith(corta.replace('bbl/d', 'barriles por día')) && !ceD.planta.ariaLabel.includes('bbl/d'),
     `la frase de ahora: «${corta}» (${corta.split(/\s+/).length} palabras; es el nombre accesible de la tubería)`)
   comprobar(ceA.cifras.antes.valor === 1 && ceA.cifras.antes.unidad === 'equipo avisa' && ceA.cifras.antes.frase === 'K-101 (aire de instrumentos) ya pasó el límite.'
-      && todosA.cifras.antes.valor === 8 && todosA.cifras.antes.fraseCorta === '8 equipos avisan; el más cercano, K-101 (La Ceiba), ya pasó el límite.'
+      && todosA.cifras.antes.valor === 13 && todosA.cifras.antes.fraseCorta === '13 equipos avisan; el más cercano, K-101 (La Ceiba), ya pasó el límite.'
       && todosA.cifras.antes.valor === D.riesgoAhora(TODOS, ctx0).filter(r => r.estado === 'en-riesgo').length
       && Object.values(ceD.cifras).every(c => c.fraseCorta.split(/\s+/).length <= 20 && c.frase.length > 0),
     `la frase de lo que viene: un conteo y un nombre, nunca una suma de techos («${todosA.cifras.antes.fraseCorta}»); las tres frases cortas, 20 palabras o menos`)
@@ -3424,26 +3430,26 @@ console.log('\n=== C2. La planta viva: cuadres, frases y cifras de donde salen h
       // F2 (26-oct, H2): lo que se muestra es el entero repartido de la cifra (573 + 247 + 118 + 108 = 1.046; 55 + 24 + 11 + 10 = 100); el exacto sigue en `bbl`.
       && ceD.porEquipo.map(x => `${x.equipo} ${x.bblEntero} ${x.pctEntero}`).join(', ') === 'P-201B 573 55, LC-21 247 24, SE-2 118 11, LC-08 108 10'
       && ceD.porEquipo[0].prioridad === 1 && ceD.porEquipo[1].prioridad === 2 && ceD.porEquipo.every((x, i) => cerca(x.bbl, lb.porEquipo[i].bbl))
-      && m.length === 13 && m.length === serie.length && f(m[0].totalBpd) === '544' && f(m[0].altoBpd) === '421' && m[4].sobre && f(m[4].totalBpd) === '834'
+      && m.length === 13 && m.length === serie.length && f(m[0].totalBpd) === '544' && f(m[0].altoBpd) === '420' && m[4].sobre && f(m[4].totalBpd) === '833'
       && m.filter(x => x.sobre).length === 1 && m[12].enCurso && f(ceD.mesAMes.actualBpd) === '661' && f(ceD.mesAMes.maximoBpd) === '800'
-      && ceD.bajando.filas.map(x => `${x.tramo} ${f(x.antesBpd)}→${f(x.ahoraBpd)}`).join(', ') === 'planta 268→51, pozo 122→215'
+      && ceD.bajando.filas.map(x => `${x.tramo} ${f(x.antesBpd)}→${f(x.ahoraBpd)}`).join(', ') === 'planta 269→51, pozo 122→216'
       && cerca(ceD.bajando.filas[0].antesBpd, base.noPlaneado.planta.baseDia) && /muestra corta$/.test(ceD.bajando.nota)
       && f(ceD.produccion.realBpd) === '10.700' && ceD.produccion.metaBpd === 10900 && ceD.produccion.bajoMeta
       && ceD.esteMes.rango.map(f).join('–') === '889–1.203' && ceD.esteMes.nota === 'P-201B, más de la mitad · 355 sin causa',
-    'las cifras de A: lo que se puede mover (el ciclo: 0 · 2.102 · 30 = 2.133, simulado), el diferido por equipo (el Pareto del libro), los 13 meses contra el máximo (febrero 834 pasa 800; octubre 661), ¿está bajando? (268 → 51 en la planta, 122 → 215 en los pozos), la producción 10.700 de 10.900 y el rango 889–1.203')
+    'las cifras de A: lo que se puede mover (el ciclo: 0 · 2.102 · 30 = 2.133, simulado), el diferido por equipo (el Pareto del libro), los 13 meses contra el máximo (febrero 833 pasa 800; octubre 661), ¿está bajando? (269 → 51 en la planta, 122 → 216 en los pozos), la producción 10.700 de 10.900 y el rango 889–1.203')
   // La hoja del tramo: el árbol en el orden de gestión, sin códigos; para producir más.
   const planta = tr(ceD, 'planta')
   comprobar(planta.porque.map(x => `${x.texto} ${f(x.bbl)}`).join(', ') === 'No planeada 573, Planeada 0, Sin saber si fue planeada 0'
       && planta.porque.flatMap(x => x.detalle).every(d => !/\b(?:NP|P)_[A-Z]/.test(d)) && planta.equipos.map(e => e.equipo).join() === 'P-201B,K-101,P-201A,P-201C'
       && planta.frase === 'P-201B (bomba de agua) está parada desde las 03:52 y obligó a cerrar LC-07 y LC-16.'
-      && ceD.planta.paraProducirMas === CRV.criticidadDelCampo('ceiba', ctx0).desembotellar && planta.desdeTrim?.texto.includes('268 → 51'),
+      && ceD.planta.paraProducirMas === CRV.criticidadDelCampo('ceiba', ctx0).desembotellar && planta.desdeTrim?.texto.includes('269 → 51'),
     `la hoja de la planta: «${planta.frase}», sus equipos (P-201B, K-101, P-201A y P-201C), ¿por qué? sin códigos (${planta.porque[0].detalle.join(' | ')}) y para producir más`)
   // Los estados (X4 §4.10): campo de gas, nada parado, comienzo de mes.
   const za = PV.plantaViva(q(['zarza'], 'durante'), ctx0, V0), gu = PV.plantaViva(q(['guacamayo'], 'durante'), ctx0, V0)
   comprobar(za.planta.campoDeGas && za.planta.textoGas === 'La Zarza es un campo de gas: su tubería todavía no está.'
       && gu.cifras.durante.valor === 0 && gu.cifras.durante.explica === 'Guacamayo produce sin paradas ahora.' && !gu.planta.tramos.some(t => t.marcado)
-      && ceP.cifras.despues.explica.endsWith('Septiembre cerró en 7.716 bbl.') && ceP.esteMes.anterior?.bbl > 7715,
-    'los estados: La Zarza es de gas (su tubería todavía no está), Guacamayo produce sin paradas (nada marcado) y a comienzo de mes Después dice el mes anterior cerrado (septiembre, 7.716 bbl)')
+      && ceP.cifras.despues.explica.endsWith('Septiembre cerró en 7.754 bbl.') && ceP.esteMes.anterior?.bbl > 7753,
+    'los estados: La Zarza es de gas (su tubería todavía no está), Guacamayo produce sin paradas (nada marcado) y a comienzo de mes Después dice el mes anterior cerrado (septiembre, 7.754 bbl)')
   void todosP
 }
 
@@ -3473,13 +3479,15 @@ console.log('\n=== C5. Resultados y un nombre, una cifra ===')
   const cic = ESV.cicloValor(TODOS, curso.desde, curso.hasta, ctx0, V0)
   comprobar(f(todos.ahoraBpd) === '2.650' && cerca(todos.ahoraBpd, PV.plantaViva(qPV(TODOS, 'durante'), ctx0, V0).cifras.durante.valor) && f(cic.durante.bblDia) !== f(todos.ahoraBpd),
     `«Durante» en todos los campos es ${f(todos.ahoraBpd)} bbl/d; los ${f(cic.durante.bblDia)} bbl/d del ciclo (solo lo de alto impacto) no se muestran con ese nombre`)
-  // 3. «Antes» es un conteo, uno solo para todo el producto: los equipos que avisan (8), no los 6 de alto impacto.
+  // 3. «Antes» es un conteo, uno solo para todo el producto: los equipos que avisan (13 desde la Fase 5 de facilidades,
+  //    con los 5 del vigía de planta en Morichal), no los 6 de alto impacto.
   const riT = D.riesgoAhora(TODOS, ctx0)
-  comprobar(todos.avisan === 8 && todos.avisan === PV.plantaViva(qPV(TODOS, 'antes'), ctx0, V0).cifras.antes.valor && riT.filter(r => r.estado === 'en-riesgo' && r.altoImpacto).length === 6
+  comprobar(todos.avisan === 13 && todos.avisan === PV.plantaViva(qPV(TODOS, 'antes'), ctx0, V0).cifras.antes.valor && riT.filter(r => r.estado === 'en-riesgo' && r.altoImpacto).length === 6
       && ce.avisan === 1 && ce.primero?.equipo === 'K-101' && todos.primero?.equipo === 'K-101' && RS.NOMBRE_CIFRA.avisan === 'Equipos que avisan',
     `«${RS.NOMBRE_CIFRA.avisan}»: ${todos.avisan} en todos los campos (el mismo de La planta viva; de alto impacto son 6, y no se llaman igual) y 1 en La Ceiba, el más cercano K-101`)
   // 4. La exposición: la suma de lo que costaría cada uno que avisa si fallara hoy (45.262), distinta del retorno simulado (45.233), con otro nombre.
-  comprobar(f(todos.exposicionBbl) === '45.262' && f(cic.retornoBbl) === '45.233' && RS.NOMBRE_CIFRA.exposicion !== RS.NOMBRE_CIFRA.retorno && todos.sinExposicion === 1,
+  //    Los 5 avisos del vigía de planta (Fase 5 de facilidades) no tienen esa cifra (su «si falla» es un techo): 1 + 5 sin ella.
+  comprobar(f(todos.exposicionBbl) === '45.262' && f(cic.retornoBbl) === '45.233' && RS.NOMBRE_CIFRA.exposicion !== RS.NOMBRE_CIFRA.retorno && todos.sinExposicion === 6,
     `«${RS.NOMBRE_CIFRA.exposicion}» ≈ ${f(todos.exposicionBbl)} bbl (estimado; ${todos.sinExposicion} sin esa cifra) y «${RS.NOMBRE_CIFRA.retorno}» ${f(cic.retornoBbl)} bbl (simulado): dos cifras, dos nombres`)
   // 5. Lo que dan los pozos: según sus pruebas (la tubería, 11.857) no es el potencial del libro (con el factor del mes, 11.360).
   const pozosT = tub.tramos.find(t => t.tramo === 'pozo')
@@ -3501,10 +3509,11 @@ console.log('\n=== C5. Resultados y un nombre, una cifra ===')
   comprobar(ms < 300 && f(rc.cifra.valor) === '1.046' && cerca(rc.cifra.valor, lb.diferido) && cerca(rc.cifra.valor, pvP.cifras.despues.valor) && cerca(rc.cifra.valor, pvP.esteMes.bbl)
       && f(rc.cifra.maximo) === '1.267' && !rc.cifra.sobreMaximo && rc.cifra.frase === 'no se produjeron en La Ceiba.'
       // F2 (26-oct, P-resultados-1): la conclusión primero; la diferencia con enteros (1.267 − 1.046 = 221).
-      && rc.cifra.explica === 'Va 221 bbl por debajo del máximo firmado a la fecha (1.267). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.716 bbl.'
+      && rc.cifra.explica === 'Va 221 bbl por debajo del máximo firmado a la fecha (1.267). P-201B, más de la mitad · 355 sin causa. Septiembre cerró en 7.754 bbl.'
       && rc.cifra.fraseCorta.split(/\s+/).length <= 20 && rc.cifra.previo === 'Lo que pasó · octubre, en curso' && rc.cifra.primerEquipo?.equipo === 'P-201B'
-      // F2 (26-oct, H2): encima de la raíz, la suma de las raíces (1.253 + 1.046 + 77 = 2.376); el exacto, 2.376,75, se conserva.
-      && rt.cifra.entero === 2376 && f(rt.cifra.valor) === '2.377',
+      // F2 (26-oct, H2): encima de la raíz, la suma de las raíces (1.253 + 1.046 + 77 = 2.376); el exacto se conserva.
+      // D1 (4-nov): con el factor diario el exacto bajó de 2.376,75 a menos de 2.376,5: la cifra y el entero dicen lo mismo.
+      && rt.cifra.entero === 2376 && f(rt.cifra.valor) === '2.376',
     `la cifra grande: ${f(rc.cifra.valor)} bbl «${rc.cifra.frase}» (el libro, «Después» y «Este mes»), contra el máximo de ${f(rc.cifra.maximo)}; todos los campos ${f(rt.cifra.entero)} en ${ms.toFixed(0)} ms (D7)`)
   // 8. La producción contra la meta y el cierre proyectado: lo que va más el ritmo de hoy hasta el último día.
   const p = rc.produccion, est = D.estadoCampo('ceiba', ctx0)
@@ -3514,12 +3523,12 @@ console.log('\n=== C5. Resultados y un nombre, una cifra ===')
     `la producción ${f(p.realBpd)} de ${f(p.metaBpd)} bbl/d, y el cierre proyectado de octubre: ${f(p.cierre.produccion)} de ${f(p.cierre.metaProduccion)} bbl; diferido ${f(p.cierre.diferido)} contra ${f(p.cierre.maximoDiferido)}`)
   // 9. ¿Está bajando?, lo de alto impacto y el mantenimiento proactivo; el mes a mes con su parte por tramo.
   const m = rc.mesAMes.meses
-  comprobar(rc.bajando.filas.map(x => `${x.tramo} ${f(x.antesBpd)}→${f(x.ahoraBpd)}`).join(', ') === 'planta 268→51, pozo 122→215'
-      && f(rc.bajando.altoImpacto.antesBpd) === '310' && f(rc.bajando.altoImpacto.ahoraBpd) === '255' && rc.bajando.altoImpacto.texto.endsWith('−18 %')
+  comprobar(rc.bajando.filas.map(x => `${x.tramo} ${f(x.antesBpd)}→${f(x.ahoraBpd)}`).join(', ') === 'planta 269→51, pozo 122→216'
+      && f(rc.bajando.altoImpacto.antesBpd) === '311' && f(rc.bajando.altoImpacto.ahoraBpd) === '256' && rc.bajando.altoImpacto.texto.endsWith('−18 %')
       && f(rc.proactivo.porcentaje) === '14' && rc.proactivo.proactivoH === 4 && rc.proactivo.correctivoH === 24
       && m.length === 13 && m.every(x => cerca(Object.values(x.porTramo).reduce((a, y) => a + y, 0), x.totalBpd) || x.totalBpd < 0.5)
       && m.filter(x => x.enPeriodo).map(x => x.mes).join() === '2026-10' && m[12].desdeDia === '2026-10-01' && m[11].hastaDia === '2026-09-30' && m[4].sobre,
-    `¿está bajando? (planta 268 → 51, pozos 122 → 215; alto impacto 310 → 255, −18 %), proactivo 14 %, y los 13 meses partidos por tramo sin perder un barril (octubre en el período)`)
+    `¿está bajando? (planta 269 → 51, pozos 122 → 216; alto impacto 311 → 256, −18 %), proactivo 14 %, y los 13 meses partidos por tramo sin perder un barril (octubre en el período)`)
   // 10. Lo simulado nunca es la cifra grande: el ciclo va en su tarjeta, por momento, con «simulado».
   comprobar(f(rc.ciclo.totalBbl) === '2.133' && rc.ciclo.momentos.map(x => f(x.bbl)).join(' · ') === '0 · 2.102 · 30' && rc.ciclo.momentos.every(x => /simulado/.test(x.texto))
       && !cerca(rc.cifra.valor, rc.ciclo.totalBbl) && !Object.values(rc.cifra).some(x => typeof x === 'string' && /simulad/.test(x)),
@@ -3536,7 +3545,7 @@ console.log('\n=== C5. Resultados y un nombre, una cifra ===')
     `cada rol lo suyo: gerente (lo que eran su Resumen, sus Diferidos y su Producción), jefe «${jefe.mantenimiento.frase}», confiabilidad «${conf.confiabilidad.frase}», regulatorio con «¿Se puede publicar?» primero`)
   // 12. Un mes cerrado: el total del período (sin proyección) y su sello.
   const rcc = RS.resultados({ rol: 'ger', campos: ['ceiba'], desde: cerrado.desde, hasta: cerrado.hasta }, ctx0, V0, { ordenes })
-  comprobar(!rcc.enCurso && rcc.produccion.cierre.titulo === 'Total del período' && f(rcc.cifra.valor) === '7.716' && rcc.publicar.estado === 'publicable' && rcc.cifra.previo === 'Lo que pasó · septiembre',
+  comprobar(!rcc.enCurso && rcc.produccion.cierre.titulo === 'Total del período' && f(rcc.cifra.valor) === '7.754' && rcc.publicar.estado === 'publicable' && rcc.cifra.previo === 'Lo que pasó · septiembre',
     `septiembre: ${f(rcc.cifra.valor)} bbl, el total del período y «se puede publicar»`)
 
   // 13. En las pantallas de C5: ni «Perdiéndose ahora», ni los dígitos 1·2·3 del ciclo, ni títulos de panel en MAYÚSCULAS.
@@ -3640,10 +3649,10 @@ console.log('\n=== C4. Equipos y el nivel 3: la lista, sus filtros y su orden; P
   const h = n.historia
   comprobar(n.tendencias.titulo === 'Los 12 días antes de parar' && n.tendencias.series.slice(0, 2).map(x => x.tag).join() === 'TI-2011,II-2011' && n.tendencias.series.length <= 3
       && n.tendencias.modoFalla === 'Lubricación de cojinete'
-      && h.fallas === 9 && f(h.cadaDias) === '41' && h.fueraH.toFixed(1) === '40.0' && f(h.bblPorFalla) === '4.593' && h.porParte.map(x => `${x.parte} ${x.fallas}`).join(' · ') === 'Sello mecánico 5 · Rodamientos 3'
-      && h.ultimas.map(u => `${u.dia} ${u.que} ${f(u.bbl)}`).join(' | ') === '22 de sept rodamientos 1.041 | 9 de ago sello mecánico 3.806'
+      && h.fallas === 9 && f(h.cadaDias) === '41' && h.fueraH.toFixed(1) === '40.0' && f(h.bblPorFalla) === '4.584' && h.porParte.map(x => `${x.parte} ${x.fallas}`).join(' · ') === 'Sello mecánico 5 · Rodamientos 3'
+      && h.ultimas.map(u => `${u.dia} ${u.que} ${f(u.bbl)}`).join(' | ') === '22 de sept rodamientos 1.034 | 9 de ago sello mecánico 3.795'
       && n.repuestos.map(r => `${r.descripcion}${r.llega ? ` ${r.llega}` : ` ${r.plazoDias} d`}${r.aviso ? ' ■3' : ''}`).join(' | ') === 'Kit de sello mecánico llega 1 el 9 de oct | Impulsor y anillos de desgaste 45 d ■3',
-    `los días antes de parar (${n.tendencias.series.map(x => x.tag).join(', ')}: lo que se movió), su historia (9 fallas, una cada 41 d, 40,0 h fuera, 4.593 bbl por falla; 22 de sept rodamientos 1.041 · 9 de ago sello 3.806) y los repuestos que faltan`)
+    `los días antes de parar (${n.tendencias.series.map(x => x.tag).join(', ')}: lo que se movió), su historia (9 fallas, una cada 41 d, 40,0 h fuera, 4.584 bbl por falla; 22 de sept rodamientos 1.034 · 9 de ago sello 3.795) y los repuestos que faltan`)
   // Sin instrumento, en marcha con muchas señales, y lo que no existe.
   const a = ET.nivelEquipo('ceiba', 'P-201A', ctx, V0), mpp = ET.nivelEquipo('morichal', 'MPP-301', ctx, V0)
   comprobar(!a.registrado && !a.cifra && !a.vigila && a.senales.length === 0 && a.esquemaAgua && a.vecinos.siguiente === 'P-201B' && !a.vecinos.anterior && !a.diagnostico
@@ -4060,7 +4069,7 @@ console.log('\n=== F2 · La planta viva y Resultados: la regla de redondeo, la l
   const rep = CHA.pedirRepartoChoke({ campos: TODOS, desde: curso.desde, hasta: curso.hasta }, ctx0, V0, {})
   comprobar(toP.cifras.despues.entero === 2376 && suma(toP.filas.map(x => x.entero)) === 2376 && toP.esteMes.bblEntero === 2376 && rt.cifra.entero === 2376
       && toP.filas.find(x => x.campoId === 'palmar').entero === 77 && pa.cifras.despues.entero === 77 && toD.cifras.durante.entero === 2650 && suma(toD.filas.map(x => x.entero)) === 2650
-      && rep.enteros.raiz === 2376 && suma(Object.values(rep.enteros.porTramo)) === 2376 && suma(Object.values(rep.enteros.porEscalon)) === 2376 && f(rep.diferido) === '2.377',
+      && rep.enteros.raiz === 2376 && suma(Object.values(rep.enteros.porTramo)) === 2376 && suma(Object.values(rep.enteros.porEscalon)) === 2376 && f(rep.diferido) === '2.376',
     'H2 · todos los campos: 2.376 = 1.253 + 1.046 + 77 en la cifra, en las filas, en Resultados y en el reparto de «Por dónde se trabó» (por tramo y por escalón); El Palmar 77 en su fila y en su vista; ahora 2.650')
 
   // 4. H1: un campo que produjo sobre su potencial no tiene diferido por día (antes: una barra llena).
@@ -4095,8 +4104,8 @@ console.log('\n=== F2 · La planta viva y Resultados: la regla de redondeo, la l
     'G-7 · «Promedio por día, bajo la meta · 10.700 de 10.900 bbl/d»: el mismo nombre de Resultados; lo que sale hoy es otra cifra')
   comprobar(ceA.planta.venta.calidad === 'proyectado' && ceD.planta.venta.calidad === undefined && ceP.planta.venta.calidad === undefined,
     'H10 · «Al cierre» de Antes lleva su palabra, «proyectado» (y la pantalla, el trazo discontinuo)')
-  comprobar(ceP.planta.ramal.texto[0] === 'ahora: ' && ceD.planta.ramal.texto[0] !== 'ahora: ' && ceP.esteMes.mesAnterior?.nombre === 'septiembre' && ceP.esteMes.mesAnterior.bblEntero === 7716,
-    'H28 · en Después el estado del ramal va dicho como de ahora, y «Este mes» da el mes cerrado de antes (septiembre, 7.716): la cifra grande ya es la del período')
+  comprobar(ceP.planta.ramal.texto[0] === 'ahora: ' && ceD.planta.ramal.texto[0] !== 'ahora: ' && ceP.esteMes.mesAnterior?.nombre === 'septiembre' && ceP.esteMes.mesAnterior.bblEntero === 7754,
+    'H28 · en Después el estado del ramal va dicho como de ahora, y «Este mes» da el mes cerrado de antes (septiembre, 7.754): la cifra grande ya es la del período')
 
   // 7. P-19: el porqué en palabras del gerente; P-20: «N de M planes en marcha» con las decisiones guardadas.
   const det = hoja.porque[0].detalle[0]
@@ -4180,9 +4189,9 @@ console.log('\n=== F4 · El glosario como prueba: un nombre, una cifra y una uni
   }
   const distintas = cifras.flatMap(a => a.filas.filter(([, xs]) => new Set(xs.map(x => x[1])).size > 1).map(([n, xs]) => `${a.nombre} · «${n}»: ${xs.map(x => `${x[0]} ${f(x[1])}`).join(', ')}`))
   const ce = cifras.find(a => a.nombre === 'La Ceiba').filas, to = cifras.find(a => a.nombre === 'todos').filas
-  comprobar(!distintas.length && ce[0][1][0][1] === 1966 && to[0][1][0][1] === 2650 && ce[1][1][0][1] === 1 && to[1][1][0][1] === 8 && ce[2][1][0][1] === 2133
+  comprobar(!distintas.length && ce[0][1][0][1] === 1966 && to[0][1][0][1] === 2650 && ce[1][1][0][1] === 1 && to[1][1][0][1] === 13 && ce[2][1][0][1] === 2133
       && cifras.every(a => a.filas[0][2] === 'barriles por día'),
-    `«${NC.ahora}» (1.966 · 684 · 2.650 bbl/d), «${NC.avisan}» (1 en La Ceiba, 8 en todos) y «${NC.retorno}» (2.133 en La Ceiba): una cifra en cada vista que la trae${distintas.length ? `; distintas: ${distintas.join(' | ')}` : ''}`)
+    `«${NC.ahora}» (1.966 · 684 · 2.650 bbl/d), «${NC.avisan}» (1 en La Ceiba, 13 en todos) y «${NC.retorno}» (2.133 en La Ceiba): una cifra en cada vista que la trae${distintas.length ? `; distintas: ${distintas.join(' | ')}` : ''}`)
 
   // 2. «Si falla hoy» de cada equipo: la misma cifra en el motor de criticidad, la lista de Equipos y La planta viva.
   const siFalla = new Map()
@@ -4397,7 +4406,7 @@ console.log('\n=== A2 · El balance del choke, las pérdidas, la jornada y «¿E
   const desde13 = new Date(L.calendario()[0].desde)
   const [to, msTo] = ms(() => BA.balance({ campos: TODOS, desde: desde13, hasta: curso.hasta }, ctx0))
   const lbTo = L.libro(TODOS, desde13, curso.hasta, ctx0)
-  comprobar(se.total.diferido.entero === 7716 && cerca(se.total.producido.exacto, 338662) && se.periodo === 'septiembre'
+  comprobar(se.total.diferido.entero === 7754 && cerca(se.total.producido.exacto, 338662) && se.periodo === 'septiembre'
       && cerca(to.total.diferido.exacto, lbTo.diferido) && cerca(to.total.producido.exacto, lbTo.real)
       && to.total.diferido.entero === to.porCampo.reduce((a, c) => a + c.diferido.entero, 0) && to.total.producido.entero === to.porCampo.reduce((a, c) => a + c.producido.entero, 0)
       && msCe < 300 && msTo < 300,
@@ -4475,10 +4484,12 @@ console.log('\n=== A2 · El balance del choke, las pérdidas, la jornada y «¿E
   const pl = ef.porTramo.find(x => x.tramo === 'planta')
   const lbt = (await v.ssrLoadModule('/src/entities/choke-reparto.ts')).lineaBasePorTramo(TODOS, ef.desde, ef.ahora, ctx0, V0)
   const ganado = Object.values(lbt.noPlaneado).reduce((a, x) => a + (x.baseDia - x.periodoDia), 0) * ef.ganado.dias
-  comprobar(Math.round(fl.antesBpd) === 561 && Math.round(fl.ahoraBpd) === 308 && cerca(pl.antesDia.exacto, fl.antesBpd) && cerca(ef.ganado.bbl.exacto, ganado)
+  comprobar(Math.round(fl.antesBpd) === 560 && Math.round(fl.ahoraBpd) === 307 && cerca(pl.antesDia.exacto, fl.antesBpd) && cerca(ef.ganado.bbl.exacto, ganado)
       && ef.meta === null && ef.cumple.noPlaneado === null && ef.ganado.fallasAnticipadas === 5 && ef.ganado.juzgadas === 7 && ef.base.firmada === false
-      && ef.porTramo.reduce((a, x) => a + x.ahoraDia.entero, 0) === ef.esteMes.noPlaneadoDia.entero && ef.esteMes.fallas === EF.fallasPorMes(TODOS, ctx0).at(-1).fallas && msEf < 300,
-    `«¿Está funcionando?» (5 campos): antes ${ef.antes.noPlaneadoDia.entero} bbl/d no planeados (planta ${pl.antesDia.entero}, la base de «¿Está bajando?»: 561 → 308), este mes ${ef.esteMes.noPlaneadoDia.entero}; se dejaron de diferir ${f(ef.ganado.bbl.entero)} bbl en ${ef.ganado.dias.toFixed(1)} días; el vigía anticipó ${ef.ganado.fallasAnticipadas}; sin meta de reducción firmada; D7 ${msEf.toFixed(0)} ms`)
+      && ef.porTramo.reduce((a, x) => a + x.ahoraDia.entero, 0) === ef.esteMes.noPlaneadoDia.entero
+      // Lo ganado de cada tramo (puede ser negativo) suma el entero del total: la regla de redondeo (D1 lo destapó en La Ceiba: −2.972 + 6.874 ≠ 3.901).
+      && [TODOS, ['ceiba']].every(cs => { const e = EF.efectividad({ campos: cs }, ctx0, V0); return e.porTramo.reduce((a, x) => a + (x.ganadoBbl?.entero ?? 0), 0) === e.ganado.bbl.entero }) && ef.esteMes.fallas === EF.fallasPorMes(TODOS, ctx0).at(-1).fallas && msEf < 300,
+    `«¿Está funcionando?» (5 campos): antes ${ef.antes.noPlaneadoDia.entero} bbl/d no planeados (planta ${pl.antesDia.entero}, la base de «¿Está bajando?»: 560 → 307), este mes ${ef.esteMes.noPlaneadoDia.entero}; se dejaron de diferir ${f(ef.ganado.bbl.entero)} bbl en ${ef.ganado.dias.toFixed(1)} días; el vigía anticipó ${ef.ganado.fallasAnticipadas}; sin meta de reducción firmada; D7 ${msEf.toFixed(0)} ms`)
   const conMeta = structuredClone(ctx0.config)
   for (const c of TODOS) conMeta.campos[c].metas.push({ ...conMeta.campos[c].metas.at(-1), desde: '2026-10-01', reduccionPct: 25 })
   const ef25 = EF.efectividad({ campos: ['ceiba'] }, { ...ctx0, config: conMeta }, V0)

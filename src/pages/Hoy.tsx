@@ -1,3 +1,5 @@
+import { AvisoPlanta } from '@/widgets/AvisoPlanta'
+import { ArranqueGuiado } from '@/widgets/ArranqueGuiado'
 import { Historial } from '@/widgets/resultados/Historial'
 import { useEffect, useRef, useState } from 'react'
 import { useAmbito, useRol, usePersona, useRango } from '@/app/store'
@@ -18,6 +20,8 @@ import { RegistrarPerdida } from '@/widgets/hoy/Perdida'
 import { SuOrden } from '@/widgets/sap/CerrarOrden'
 import { AvisarSap } from '@/widgets/sap/AvisarSap'
 import { useListaEquipos } from '@/shared/api/equiposTecnico'
+import { usePiezas } from '@/shared/api/piezas'
+import { AvisoSinPieza } from '@/widgets/SinPieza'
 import { useEnvio, type Envio } from '@/widgets/hoy/envio'
 import { useResponder, useConfirmar, useEscribir } from '@/widgets/hoy/acciones'
 import { useIr } from '@/widgets/hoy/palabras'
@@ -70,6 +74,10 @@ export function Hoy() {
   const rol = useRol(); const ambito = useAmbito(); const persona = usePersona(); const rango = useRango()
   const ir = useIr()
   const v = useHoy(rol.id, ambito.campos.map(c => c.id))
+  // Fase 1 (facilidades): cada sección sale si su pieza está contratada en estos campos.
+  const piezas = usePiezas(ambito.campos.map(c => c.id))
+  // Decir qué pasó en una parada sirve al libro (Barriles) y al mantenimiento.
+  const causas = piezas.has('barriles') || piezas.has('mantenimiento')
   const envio = useEnvio(useEscribir(), rol.id)
   const [vio, setVio] = useState<Vio | null>(null)
   const responder = useResponder(envio, setVio)
@@ -109,7 +117,11 @@ export function Hoy() {
 
   if (rol.id === 'oper') return (
     <>
-      <div data-hoy={rol.id} data-insignia={v.insignia}><Operador v={v} ocultas={envio.ocultas} onResponder={responder} quien={quien} envio={envio} vio={vio} onVio={setVio} /></div>
+      {/* Fase 4 de facilidades: el apagón, arriba, con su pregunta. */}
+      <AvisoPlanta campos={ambito.campos.map(c => c.id)} className="mb-3" />
+      <div data-hoy={rol.id} data-insignia={v.insignia}>{causas
+        ? <Operador v={v} ocultas={envio.ocultas} onResponder={responder} quien={quien} envio={envio} vio={vio} onVio={setVio} perdidas={piezas.has('barriles')} />
+        : <AvisoSinPieza piezas={['barriles', 'mantenimiento']} que="Lo que le preguntan" />}</div>
       <AvisoDeshacer envio={envio} />
     </>
   )
@@ -124,18 +136,22 @@ export function Hoy() {
         abiertaDeEntrada={t.id === primeraAbierta} compacta={rol.id === 'sup' || rol.id === 'jefe'} onConfirmar={confirmar} onResponder={responder} />)}
     </div>
   )
-  const avisar = rol.id === 'jefe' ? bombasParadas(v).map(b => <AvisarSap key={b.equipo} {...b} />)
+  const avisar = !piezas.has('mantenimiento') ? null : rol.id === 'jefe' ? bombasParadas(v).map(b => <AvisarSap key={b.equipo} {...b} />)
     : rol.id === 'sup' ? <AvisarParadas campos={ambito.campos.map(c => c.id)} desdePreguntas={bombasParadas(v)} /> : null
   const loQueVio = vio && <LoQueVio v={vio} envio={envio} onListo={() => setVio(null)} />
 
   return (
     <>
+      {/* Fase 4 de facilidades: el apagón va primero y a lo ancho, también en el teléfono. */}
+      <AvisoPlanta campos={ambito.campos.map(c => c.id)} className="mb-3 max-w-[1280px] lg:mb-4" />
+      {/* Fase 6: el re-arranque guiado, debajo del aviso. */}
+      <ArranqueGuiado campos={ambito.campos.map(c => c.id)} className="mb-3 max-w-[1280px] lg:mb-4 lg:max-w-[640px]" />
       <div data-hoy={rol.id} data-insignia={v.insignia} className="grid max-w-[1280px] content-start items-start gap-3 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-4">
         {/* En el escritorio, el número a la izquierda y lo que le toca a la derecha (d1-grafito-sup). */}
         <div className="grid content-start gap-3 lg:sticky lg:top-0">
-        {rol.id === 'sup' ? <InicioSup v={v} envio={envio} entrega={entrega} onEntregar={() => setEntrega(x => !x)} />
-          : rol.id === 'tec' ? <InicioTec v={v} />
-          : rol.id === 'jefe' ? <InicioJefe v={v} />
+        {rol.id === 'sup' ? (piezas.has('barriles') ? <InicioSup v={v} envio={envio} entrega={entrega} onEntregar={() => setEntrega(x => !x)} /> : <AvisoSinPieza piezas={['barriles']} que="Su turno" />)
+          : rol.id === 'tec' ? (causas ? <InicioTec v={v} /> : <AvisoSinPieza piezas={['mantenimiento', 'barriles']} que="Su trabajo de hoy" />)
+          : rol.id === 'jefe' ? (piezas.has('equipos') || piezas.has('mantenimiento') ? <InicioJefe v={v} /> : <AvisoSinPieza piezas={['equipos', 'mantenimiento']} que="Lo que avisa" />)
           : <>
             {!(v.vacio && !v.inicio.previo) && <Inicio i={v.inicio} />}
             {v.bloqueos.map(b => <Bloqueo key={b.campoId} b={b} subEnInfo />)}
@@ -148,17 +164,17 @@ export function Hoy() {
           <section data-vacio className="rounded-[10px] bg-[var(--panel)] px-6 py-5"><p className="text-[18px] font-medium">{v.vacio}</p></section>
         )}
         {tarjetas}
-        {rol.id === 'tec' && <SuOrden campos={ambito.campos.map(c => c.id)} onVerEquipo={(c, e) => ir({ a: 'equipo', campoId: c, equipo: e })}
+        {rol.id === 'tec' && piezas.has('mantenimiento') && <SuOrden campos={ambito.campos.map(c => c.id)} onVerEquipo={(c, e) => ir({ a: 'equipo', campoId: c, equipo: e })}
           queHacer={Object.fromEntries(v.tareas.filter(t => t.tipo === 'orden' && t.ver?.destino.a === 'equipo').flatMap(t => ordenesDe(t).map(n => [n, <Texto key={n} f={t.porque} />])))} />}
         {avisar}
-        {rol.id === 'jefe' && <NoIntervenir />}
-        {orden && (rol.id === 'sup' || rol.id === 'tec') && <OrdenDeCierre t={orden} />}
-        {rol.id === 'sup' && campo && <MiTurno campoId={campo} onUnaPorUna={corregir} />}
+        {rol.id === 'jefe' && piezas.has('mantenimiento') && <NoIntervenir />}
+        {orden && piezas.has('planta') && (rol.id === 'sup' || rol.id === 'tec') && <OrdenDeCierre t={orden} />}
+        {rol.id === 'sup' && campo && piezas.has('barriles') && <MiTurno campoId={campo} onUnaPorUna={corregir} />}
         {/* 28-oct · El historial del supervisor: sus últimas 14 jornadas, con el diferido por tramo y el perdido aparte. */}
-        {rol.id === 'sup' && campo && <Historial campos={[campo]} por="turno" />}
+        {rol.id === 'sup' && campo && piezas.has('barriles') && <Historial campos={[campo]} por="turno" />}
         {/* C1 (QA v3) · El balance del choke del período para el supervisor (CONSTRUCCION.md): «Mi turno» trae lo diferido
             y lo perdido de la jornada; aquí, lo producido, lo diferido y lo perdido del mes, por tramo, con su árbol a un toque. */}
-        {rol.id === 'sup' && campo && <Balance q={{ campos: [campo], desde: rango.desde, hasta: rango.hasta }} />}
+        {rol.id === 'sup' && campo && piezas.has('barriles') && <Balance q={{ campos: [campo], desde: rango.desde, hasta: rango.hasta }} />}
         <Hechas hs={v.hechas} onCorregir={corregir} />
         </div>
       </div>

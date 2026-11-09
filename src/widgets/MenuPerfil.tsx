@@ -5,7 +5,7 @@ import { ROLES_VISIBLES } from '@/entities/roles'
 import { AREAS } from '@/entities/tipos'
 import { personaDelRol } from '@/entities/usuarios'
 import { PANTALLAS, fueraDePuertas } from '@/app/pantallas'
-import { pantallaVisible } from '@/shared/config/producto'
+import { pantallaOfrecida } from '@/shared/api/piezas'
 import { cn } from '@/shared/lib/cn'
 import { useDesplegable } from '@/shared/ui/foco'
 import { Desplegado } from '@/shared/ui/Desplegado'
@@ -50,7 +50,7 @@ export function MenuPerfil({ variante = 'panel', onPlegar }: {
   // Un desplegable, no un menú ARIA: adentro hay datos de la persona y botones de tema.
   const { abierto, setAbierto, contenedor, boton, panel, id, propsBoton } = useDesplegable()
   const [vista, setVista] = useState<'menu' | 'roles'>('menu')
-  const fuera = fueraDePuertas(rol).filter(pantallaVisible)
+  const fuera = fueraDePuertas(rol).filter(pantallaOfrecida)
   const quien = `${persona.nombre} · ${rol.nombre}`
 
   const avatar = (

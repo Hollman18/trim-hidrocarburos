@@ -18,7 +18,7 @@ import type { Envio } from './envio'
 
 /** El tramo donde suele ocurrir cada tipo (se puede cambiar): la pitera y el derrame, en
  *  las líneas de los pozos; la tea y el venteo, en la planta; el rechazo, afuera. */
-const TRAMO_DE: Record<TipoPerdida, ChokeAnh> = { pitera: 'pozo', derrame: 'pozo', tea: 'planta', venteo: 'planta', rechazo: 'exportacion' }
+const TRAMO_DE: Record<TipoPerdida, ChokeAnh> = { pitera: 'pozo', derrame: 'pozo', tea: 'planta', venteo: 'planta', rechazo: 'exportacion', evaporacion: 'planta', fondos: 'planta' }
 const ES_GAS = (t: TipoPerdida) => t === 'tea' || t === 'venteo'
 /** La hora de Colombia para un `datetime-local` («2026-10-02T14:00»), y de vuelta con su zona. */
 const local = (d: Date) => new Date(d.getTime() - 5 * 3_600_000).toISOString().slice(0, 16)
@@ -29,7 +29,7 @@ const OPCION = 'flex min-h-14 cursor-pointer flex-col items-start justify-center
 const ESCOGIDA = 'bg-[var(--acento-suave)] shadow-[inset_0_0_0_2px_var(--acento)]'
 
 /** «Registrar una pérdida» (A2 · `POST /api/perdidas`; necesario-por-rol §4): la ve quien está en
- *  el campo (oper) y también sup y prod. Con botones: pitera, derrame, tea, venteo o rechazo; el
+ *  el campo (oper) y también sup y prod. Con botones: pitera, derrame, tea, venteo, rechazo, evaporación o fondos de tanque; el
  *  tramo del choke donde ocurrió (la pérdida queda como PÉRDIDA en su tramo, nunca sumada a lo
  *  diferido), dónde, cuánto y cómo lo supo. Nada se calcula aquí: el servidor la guarda y el balance
  *  la cuenta. «Deshacer» la retira con su motivo (D1: nada se borra). */

@@ -1,0 +1,151 @@
+<template>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "IBM Plex Sans", sans-serif; color: #f4f3f0; }
+    #f08-fondo {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 65% 60% at 50% 58%, rgba(44,115,113,0.18), rgba(16,20,24,0) 70%),
+        radial-gradient(circle at 1px 1px, rgba(52,59,66,0.75) 1.2px, rgba(0,0,0,0) 1.6px) 0 0 / 40px 40px,
+        #101418;
+    }
+    #f08-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 50% 45%; }
+    #f08-stage { position: absolute; inset: 0; perspective: 2400px; }
+
+    /* ---- historial monitor ---- */
+    #f08-mwrap { position: absolute; left: 426px; top: 268px; width: 1068px; height: 616px; transform-origin: 50% 50%; }
+    #f08-monitor {
+      position: absolute; inset: 0; padding: 14px; background: #1d2125; border: 1px solid #343b42; border-radius: 18px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    #f08-hshot { position: relative; width: 1040px; height: 588px; border-radius: 8px; overflow: hidden; background: #f6f5f2; }
+    #f08-hshot img { position: absolute; left: 0; top: 0; width: 1040px; height: 588px; display: block; }
+    .f08-veil { position: absolute; top: 14.16%; height: 37.44%; background: #e3efe3; transform-origin: 50% 0%; }
+    .f08-veil.f08-last { background: #f6f5f2; }
+
+    /* ---- title + labels ---- */
+    #f08-titulo {
+      position: absolute; left: 120px; top: 100px; padding-left: 22px; border-left: 4px solid #a9dad6;
+      font-weight: 600; font-size: 56px; line-height: 1.1; letter-spacing: -0.02em; color: #f4f3f0; white-space: nowrap;
+    }
+    #f08-labs { position: absolute; left: 120px; top: 190px; display: flex; gap: 16px; }
+    .f08-lab {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 24px; letter-spacing: 0.12em; color: #f4f3f0;
+      padding: 10px 22px 10px 18px; border: 1px solid #a9dad6; border-radius: 999px; background: rgba(29,33,37,0.92);
+      opacity: 0;
+    }
+    .f08-lab .f08-dot { width: 10px; height: 10px; border-radius: 50%; background: #a9dad6; box-shadow: 0 0 12px #a9dad6; }
+
+    /* ---- ficha card ---- */
+    #f08-stage2 { position: absolute; inset: 0; perspective: 2000px; perspective-origin: 75% 50%; }
+    #f08-ficha {
+      position: absolute; left: 930px; top: 278px; width: 881px; height: 585px;
+      border-radius: 12px; overflow: hidden; background: #fbfaf8;
+      box-shadow: 0 50px 140px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    #f08-ficha img { position: absolute; left: -279.5px; top: -23px; width: 1440px; height: 900px; display: block; }
+    .f08-hl { position: absolute; border: 2px solid #2c7371; border-radius: 8px; box-shadow: 0 0 0 4px rgba(169,218,214,0.45); opacity: 0; }
+    #f08-hl1 { left: 12px; top: 12px; width: 398px; height: 90px; }
+    #f08-hl2 { left: 16px; top: 474px; width: 846px; height: 104px; }
+    #f08-hl3 { left: 16px; top: 348px; width: 846px; height: 114px; }
+
+    #f08-demo {
+      position: absolute; right: 120px; top: 70px;
+      font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 18px; color: #7f878e;
+      border: 1px solid #343b42; border-radius: 999px; padding: 8px 16px; background: rgba(16,20,24,0.7);
+    }
+  </style>
+
+  <div data-hf-id="hf-ckkr" id="root" data-composition-id="f08" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-aooe" id="f08-fondo" class="clip" data-start="0" data-duration="7.1" data-track-index="0"></div>
+
+    <div data-hf-id="hf-s89n" id="f08-cam">
+      <div data-hf-id="hf-tthg" id="f08-stage">
+        <div data-hf-id="hf-10z3" id="f08-mwrap">
+          <div data-hf-id="hf-3l4c" id="f08-monitor">
+            <div data-hf-id="hf-jyu2" id="f08-hshot">
+              <img data-hf-id="hf-s8p4" src="assets/pantallas/historial-gerente.png" alt="">
+              <div data-hf-id="hf-mhj1" class="f08-veil" style="left:12.50%;width:6.04%"></div>
+              <div data-hf-id="hf-0ix9" class="f08-veil" style="left:18.89%;width:6.04%"></div>
+              <div data-hf-id="hf-r6wc" class="f08-veil" style="left:25.28%;width:6.04%"></div>
+              <div data-hf-id="hf-ufia" class="f08-veil" style="left:31.74%;width:6.04%"></div>
+              <div data-hf-id="hf-fsz4" class="f08-veil" style="left:38.13%;width:6.04%"></div>
+              <div data-hf-id="hf-zz97" class="f08-veil" style="left:44.51%;width:6.04%"></div>
+              <div data-hf-id="hf-yirb" class="f08-veil" style="left:50.90%;width:6.04%"></div>
+              <div data-hf-id="hf-yq4k" class="f08-veil" style="left:57.36%;width:6.04%"></div>
+              <div data-hf-id="hf-uj9w" class="f08-veil" style="left:63.75%;width:6.04%"></div>
+              <div data-hf-id="hf-7lzt" class="f08-veil" style="left:70.14%;width:6.04%"></div>
+              <div data-hf-id="hf-q7ne" class="f08-veil" style="left:76.53%;width:6.04%"></div>
+              <div data-hf-id="hf-ekux" class="f08-veil" style="left:82.99%;width:6.04%"></div>
+              <div data-hf-id="hf-i6o1" class="f08-veil f08-last" style="left:89.31%;width:6.39%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-dtwe" id="f08-titulo">Diferido y perdido, mes a mes.</div>
+      <div data-hf-id="hf-tpea" id="f08-labs">
+        <span data-hf-id="hf-ycin" class="f08-lab" id="f08-l1"><span data-hf-id="hf-kqkb" class="f08-dot"></span>DÓNDE</span>
+        <span data-hf-id="hf-5dak" class="f08-lab" id="f08-l2"><span data-hf-id="hf-h7i3" class="f08-dot"></span>POR QUÉ</span>
+        <span data-hf-id="hf-gf2v" class="f08-lab" id="f08-l3"><span data-hf-id="hf-gt72" class="f08-dot"></span>CUÁNTO</span>
+      </div>
+
+      <div data-hf-id="hf-g7wu" id="f08-stage2">
+        <div data-hf-id="hf-t2bh" id="f08-ficha">
+          <img data-hf-id="hf-xa8k" src="assets/pantallas/ficha-p201b-gerente.png" alt="">
+          <div data-hf-id="hf-d9of" class="f08-hl" id="f08-hl1"></div>
+          <div data-hf-id="hf-4lsk" class="f08-hl" id="f08-hl2"></div>
+          <div data-hf-id="hf-5dgd" class="f08-hl" id="f08-hl3"></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-hf-id="hf-17vj" id="f08-demo">Datos de demostración</div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+
+      // slow camera push across the whole frame
+      tl.fromTo("#f08-cam", { scale: 1 }, { scale: 1.035, duration: 6.76, ease: "sine.inOut" }, 0);
+
+      // monitor floats in and straightens
+      tl.fromTo("#f08-monitor", { rotationY: 7, rotationX: 4, z: -140, y: 30, opacity: 0 },
+        { rotationY: 0, rotationX: 0, z: 0, y: 0, opacity: 1, duration: 0.8, ease: "expo.out" }, 0);
+      tl.fromTo("#f08-demo", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.2);
+
+      // columns build left to right (0.3-2.6): each veil lifts so its bar rises from the baseline
+      tl.fromTo("#f08-hshot .f08-veil", { scaleY: 1 }, { scaleY: 0, duration: 0.6, ease: "power2.inOut", stagger: 0.14 }, 0.3);
+
+      // 2.8 title, 3.55 / 4.2 / 5.1 labels light up
+      tl.fromTo("#f08-titulo", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 2.75);
+      tl.fromTo(".f08-lab", { opacity: 0, y: 10 }, { opacity: 0.28, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.06 }, 2.95);
+      [["#f08-l1", 3.55], ["#f08-l2", 4.2], ["#f08-l3", 5.1]].forEach(function (l) {
+        tl.fromTo(l[0], { opacity: 0.28, scale: 1 }, { opacity: 1, scale: 1.06, duration: 0.18, ease: "power2.out", immediateRender: false }, l[1]);
+        tl.fromTo(l[0], { scale: 1.06 }, { scale: 1, duration: 0.35, ease: "power2.out", immediateRender: false }, l[1] + 0.18);
+        tl.fromTo(l[0] + " .f08-dot", { scale: 0.4 }, { scale: 1, duration: 0.4, ease: "back.out(2.5)" }, l[1]);
+      });
+
+      // 5.05: the P-201B card slides in from the right, the history steps back
+      tl.fromTo("#f08-mwrap", { x: 0, scale: 1 }, { x: -250, scale: 0.95, duration: 1.0, ease: "power3.inOut" }, 5.0);
+      tl.fromTo("#f08-ficha", { x: 900, rotationY: -30, rotationZ: 4, opacity: 0 },
+        { x: 0, rotationY: -7, rotationZ: 1.2, opacity: 1, duration: 0.95, ease: "expo.out" }, 5.05);
+      tl.fromTo("#f08-ficha", { rotationY: -7, y: 0 }, { rotationY: -3.5, y: -8, duration: 1.1, ease: "sine.inOut", immediateRender: false }, 6.0);
+
+      // dónde / por qué / cuánto echoed on the card
+      [["#f08-hl1", 6.0], ["#f08-hl2", 6.3], ["#f08-hl3", 6.6]].forEach(function (h) {
+        tl.fromTo(h[0], { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, h[1]);
+      });
+
+      window.__timelines["f08"] = tl;
+    })();
+  </script>
+</template>

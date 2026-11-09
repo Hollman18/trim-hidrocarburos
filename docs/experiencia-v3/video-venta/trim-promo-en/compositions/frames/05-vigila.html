@@ -1,0 +1,162 @@
+<template>
+  <style>
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+    @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/IBMPlexSans-Bold-Latin1.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Regular-Latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium-Latin1.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+
+    #root {
+      position: absolute; inset: 0; overflow: hidden;
+      font-family: "IBM Plex Sans", sans-serif; color: #f4f3f0;
+      --suelo: #101418; --grafito: #1d2125; --borde: #343b42; --tinta: #f4f3f0; --tinta2: #c9cbcd; --tinta3: #7f878e;
+      --petroleo: #2c7371; --petroleo-claro: #a9dad6; --frenado: #e0897c; --riesgo: #d9bd6a;
+    }
+    #f05-fondo {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 68% 45%, rgba(44,115,113,0.20), rgba(16,20,24,0) 70%),
+        radial-gradient(circle at 1px 1px, rgba(52,59,66,0.75) 1.2px, rgba(0,0,0,0) 1.6px) 0 0 / 40px 40px,
+        #101418;
+    }
+    #f05-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+    #f05-stage { position: absolute; inset: 0; perspective: 2400px; perspective-origin: 70% 50%; }
+
+    /* ---- left column: signal chips ---- */
+    #f05-col { position: absolute; left: 120px; top: 236px; width: 500px; }
+    .f05-sig { position: relative; height: 66px; margin-bottom: 30px; display: flex; align-items: center; }
+    .f05-chip {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 24px; letter-spacing: 0.12em;
+      color: #f4f3f0; padding: 12px 22px 12px 18px; border: 1px solid #343b42; border-radius: 999px;
+      background: rgba(29,33,37,0.92);
+    }
+    .f05-dot { width: 10px; height: 10px; border-radius: 50%; background: #a9dad6; box-shadow: 0 0 10px #a9dad6; }
+    .f05-trace { position: absolute; left: 272px; top: 13px; width: 220px; height: 40px; overflow: visible; }
+    .f05-trace path { fill: none; stroke: #a9dad6; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 5px rgba(169,218,214,0.55)); }
+    #f05-equipos {
+      margin-top: 22px; padding-left: 22px; border-left: 4px solid #a9dad6;
+      font-weight: 500; font-size: 30px; line-height: 1.35; color: #c9cbcd; letter-spacing: -0.01em;
+    }
+
+    /* ---- monitor ---- */
+    #f05-monitor {
+      position: absolute; left: 672px; top: 140px; width: 1148px; height: 728px;
+      padding: 14px; background: #1d2125; border: 1px solid #343b42; border-radius: 18px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    #f05-shot { position: relative; width: 1120px; height: 700px; border-radius: 8px; overflow: hidden; background: #f4f3f0; }
+    #f05-shot img { position: absolute; left: 0; top: 0; width: 1120px; height: 700px; display: block; }
+    #f05-spot {
+      position: absolute; left: 20%; top: 50.6%; width: 76.4%; height: 30%;
+      border-radius: 10px; box-shadow: 0 0 0 2000px rgba(16,20,24,0.42), 0 0 0 2px rgba(169,218,214,0.9);
+      opacity: 0;
+    }
+    #f05-svg { position: absolute; left: 0; top: 0; width: 1120px; height: 700px; overflow: visible; }
+    #f05-trend { fill: none; stroke: #d9bd6a; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 8px rgba(217,189,106,0.75)); }
+    #f05-limit { fill: none; stroke: #e0897c; stroke-width: 3.5; stroke-dasharray: 14 10; }
+    #f05-head { fill: #d9bd6a; }
+    #f05-hit { fill: #e0897c; }
+    #f05-ring { fill: none; stroke: #e0897c; stroke-width: 3; }
+    #f05-limite {
+      position: absolute; left: 81.5%; top: 63.2%;
+      font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 14px; letter-spacing: 0.12em;
+      color: #e0897c; background: #1d2125; border: 1px solid #e0897c; border-radius: 999px; padding: 4px 10px;
+      box-shadow: 0 0 12px rgba(224,137,124,0.45);
+      opacity: 0;
+    }
+
+    /* ---- demo chip ---- */
+    #f05-demo {
+      position: absolute; right: 120px; top: 70px;
+      font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 18px; color: #7f878e;
+      border: 1px solid #343b42; border-radius: 999px; padding: 8px 16px; background: rgba(16,20,24,0.7);
+    }
+  </style>
+
+  <div data-hf-id="hf-u85w" id="root" data-composition-id="f05" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-rd9c" id="f05-fondo" class="clip" data-start="0" data-duration="9.8" data-track-index="0"></div>
+
+    <div data-hf-id="hf-2ufy" id="f05-cam">
+      <div data-hf-id="hf-uy81" id="f05-col">
+        <div data-hf-id="hf-kyix" class="f05-sig" id="f05-s1">
+          <span data-hf-id="hf-d1r0" class="f05-chip"><span data-hf-id="hf-s0ka" class="f05-dot"></span>CURRENT</span>
+          <svg data-hf-id="hf-2nqv" class="f05-trace" viewBox="0 0 220 40"><path data-hf-id="hf-k2cd" pathLength="1" d="M0,20 C14,8 26,8 40,20 S66,32 80,20 S106,8 120,20 S146,32 160,20 S186,8 200,20 S214,26 220,22" /></svg>
+        </div>
+        <div data-hf-id="hf-owmy" class="f05-sig" id="f05-s2">
+          <span data-hf-id="hf-b4xk" class="f05-chip"><span data-hf-id="hf-z8ji" class="f05-dot"></span>VIBRATION</span>
+          <svg data-hf-id="hf-75x3" class="f05-trace" viewBox="0 0 220 40"><path data-hf-id="hf-3keq" pathLength="1" d="M0,20 L7,12 L13,27 L19,9 L25,30 L31,14 L37,25 L43,7 L49,31 L55,15 L61,24 L67,10 L73,29 L79,13 L85,26 L91,6 L97,33 L103,12 L109,27 L115,9 L121,30 L127,15 L133,24 L139,8 L145,32 L151,13 L157,27 L163,10 L169,29 L175,14 L181,25 L187,7 L193,31 L199,12 L205,27 L211,15 L220,20" /></svg>
+        </div>
+        <div data-hf-id="hf-suqz" class="f05-sig" id="f05-s3">
+          <span data-hf-id="hf-gb3d" class="f05-chip"><span data-hf-id="hf-zmuj" class="f05-dot"></span>PRESSURE</span>
+          <svg data-hf-id="hf-6rm2" class="f05-trace" viewBox="0 0 220 40"><path data-hf-id="hf-8f8n" pathLength="1" d="M0,28 C40,28 60,27 90,22 S140,12 170,14 S205,19 220,13" /></svg>
+        </div>
+        <div data-hf-id="hf-5d9g" class="f05-sig" id="f05-s4">
+          <span data-hf-id="hf-dsyb" class="f05-chip"><span data-hf-id="hf-015k" class="f05-dot"></span>TEMPERATURE</span>
+          <svg data-hf-id="hf-6db1" class="f05-trace" viewBox="0 0 220 40"><path data-hf-id="hf-jkk6" pathLength="1" d="M0,32 C30,32 50,31 80,28 S130,24 160,19 S200,11 220,8" /></svg>
+        </div>
+        <div data-hf-id="hf-dzhm" id="f05-equipos">Transfer pumps · water injection · compressors · motors</div>
+      </div>
+
+      <div data-hf-id="hf-4ep1" id="f05-stage">
+        <div data-hf-id="hf-04d5" id="f05-monitor">
+          <div data-hf-id="hf-cnpl" id="f05-shot">
+            <img data-hf-id="hf-6lks" src="assets/pantallas/diagnostico-mpp301.png" alt="">
+            <div data-hf-id="hf-ozox" id="f05-spot"></div>
+            <svg data-hf-id="hf-f96h" id="f05-svg" viewBox="0 0 2000 1250">
+              <defs data-hf-id="hf-mh0t">
+                <clippath data-hf-id="hf-88dv" id="f05-limclip"><rect data-hf-id="hf-ysny" id="f05-limrect" x="470" y="820" width="0" height="70" /></clippath>
+              </defs>
+              <line data-hf-id="hf-gq0r" id="f05-limit" x1="472" y1="854" x2="1910" y2="854" clip-path="url(#f05-limclip)" />
+              <path data-hf-id="hf-z0wx" id="f05-trend" pathLength="1" d="M472,903 L600,900 L720,898 L840,894 L960,889 L1080,883 L1200,878.5 L1320,872.5 L1418,869 L1520,865.5 L1620,862 L1730,858 L1830,854.5" />
+              <circle data-hf-id="hf-wqmn" id="f05-ring" cx="1830" cy="854.5" r="12" />
+              <circle data-hf-id="hf-jwlh" id="f05-hit" cx="1830" cy="854.5" r="8" />
+            </svg>
+            <div data-hf-id="hf-bs3x" id="f05-limite">LIMIT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-hf-id="hf-vo0a" id="f05-demo">Demo data</div>
+  </div>
+
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var Q = function (s) { return document.querySelector(s); };
+
+      // ---- camera: gentle drift, then the push into the trend chart ----
+      gsap.set("#f05-cam", { transformOrigin: "0px 0px" });
+      tl.fromTo("#f05-cam", { scale: 1, x: 0, y: 0 }, { scale: 1.02, x: -19, y: -9, duration: 5.2, ease: "sine.inOut" }, 0.8);
+      tl.fromTo("#f05-cam", { scale: 1.02, x: -19, y: -9 }, { scale: 1.6, x: -1177, y: -504, duration: 2.7, ease: "power2.inOut", immediateRender: false }, 6.9);
+
+      // ---- monitor 3D entrance that straightens (0.0-0.8) ----
+      tl.fromTo("#f05-monitor", { rotationY: -8, rotationX: 3, x: 90, z: -120, opacity: 0 },
+        { rotationY: 0, rotationX: 0, x: 0, z: 0, opacity: 1, duration: 0.85, ease: "expo.out" }, 0);
+      tl.fromTo("#f05-demo", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+
+      // ---- signal chips synced to the voice ----
+      var beats = [["#f05-s1", 1.4], ["#f05-s2", 2.2], ["#f05-s3", 3.25], ["#f05-s4", 4.0]];
+      beats.forEach(function (b) {
+        tl.fromTo(b[0] + " .f05-chip", { opacity: 0, x: -28, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 0.55, ease: "expo.out" }, b[1]);
+        tl.fromTo(b[0] + " .f05-dot", { scale: 0 }, { scale: 1, duration: 0.4, ease: "back.out(2.4)" }, b[1] + 0.12);
+        tl.fromTo(b[0] + " .f05-trace path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.95, ease: "power2.out" }, b[1] + 0.15);
+      });
+      tl.fromTo("#f05-equipos", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 4.85);
+
+      // ---- trend: spotlight, risk trace, limit ----
+      tl.fromTo("#f05-spot", { opacity: 0 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, 7.2);
+      tl.fromTo("#f05-trend", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.5, ease: "power1.inOut" }, 7.4);
+      tl.fromTo("#f05-limrect", { attr: { width: 0 } }, { attr: { width: 1450 }, duration: 0.8, ease: "power2.out" }, 8.1);
+      tl.fromTo("#f05-hit", { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.4, ease: "back.out(2.5)" }, 8.95);
+      tl.fromTo("#f05-ring", { scale: 0.6, transformOrigin: "50% 50%" }, { scale: 2.6, duration: 0.9, ease: "power2.out", immediateRender: false }, 9.0);
+      tl.fromTo("#f05-ring", { opacity: 0 }, { opacity: 0.9, duration: 0.08, ease: "none" }, 9.0);
+      tl.fromTo("#f05-ring", { opacity: 0.9 }, { opacity: 0, duration: 0.8, ease: "power1.out", immediateRender: false }, 9.08);
+      tl.fromTo("#f05-limite", { opacity: 0, y: 8, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2)" }, 8.8);
+
+      window.__timelines["f05"] = tl;
+    })();
+  </script>
+</template>

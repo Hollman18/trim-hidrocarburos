@@ -141,7 +141,7 @@ dieciséis (las trece de antes, `perdidas:registrar` de A2 y `orden:cerrar` y `a
 | `anh:clasificar` | `POST /api/anh/paradas/:id/clasificacion`, `POST /api/anh/paradas/:id/respuesta`, `POST /api/anh/paradas/:id/revision` y `POST /api/anh/paradas/confirmar` con una sola parada, aunque traiga varias filas de la misma raíz (los días de un pozo o los pozos de una cascada: B-07) (quien declara: supervisor, operador, técnico, producción, jefe de mantenimiento y confiabilidad; cada rol dice solo los pasos que son suyos, `PASOS_QUE_DECLARA`, y contesta solo sus preguntas, `ROLES_QUE_CONTESTAN`) |
 | `anh:confirmar` | `POST /api/anh/paradas/confirmar` con varias paradas de la misma cadena, en lote (quien firma el día: supervisor y producción) |
 | `anh:yacimiento` | `POST /api/anh/paradas/:id/yacimiento` («En el yacimiento» en el paso 2, con su evidencia: producción y confiabilidad) |
-| `perdidas:registrar` | A2 · `POST /api/perdidas`: registrar una pérdida (pitera, derrame, tea, venteo o rechazo), o corregirla o retirarla con motivo (operador, supervisor y producción) |
+| `perdidas:registrar` | A2 · `POST /api/perdidas`: registrar una pérdida (pitera, derrame, tea, venteo, rechazo, evaporación o fondos de tanque), o corregirla o retirarla con motivo (operador, supervisor y producción) |
 | `orden:cerrar` | A3 · `POST /api/sap/ordenes/:numero/cierre`: cerrar en el teléfono la orden que tiene a su nombre (el técnico) |
 | `anh:enviar` | A3 · `POST /api/anh/respuestas`: registrar la respuesta de la ANH al reporte diario (regulatorio) |
 
@@ -369,7 +369,7 @@ tipo del motor. Lo que no se nombra va tal cual.
 
 | Ruta | Devuelve |
 |---|---|
-| `/vistas/diferidos?campos&desde&hasta` | `Libro` (`libro.ts`). `tramos[]`: `{ evento: clave en refs.eventos, pozo: clave en refs.pozos, causa, inicio, fin (ISO), abierto, horas, factor, bbl, aproximado, sinCustodia, sinFactor, sesgo, azar }`. `preguntas[]` con `inicio` y `fin` ISO o `null`. `custodia: { sinPrueba: [clave], estimados: [clave], bswLaboratorio }`. `sinFiscal: [{ campoId, dias: [ISO] }]`, `sinFactor: [{ campoId, mes }]`. `motivos: [{ codigo, texto, campoId?, mes? }]`, con `codigo` en `en-curso`, `sin-fiscal`, `sin-factor`, `banda-sin-verificar`, `fa-fuera-de-banda`, `sin-causa`, `sin-meta`: **el front decide por el código, nunca por la frase**. `valorUsd?`, `valorCampos: { con, total }`, `sinPrecio: [campoId]`. `meta.sinMeta: [campoId]` y `porCampo[].sinMeta` (ver «Sin meta firmada»). Paretos: `porEquipo` una fila por (campo, equipo, tipo); en las filas `reinyeccion`, `transporte` y `electrosumergible` van además `fallas` y `disparos` del período: los eventos de la historia de fallas del equipo (`historialDeEquipo`) que se solapan con `[desde, hasta)` (la misma regla de período que `porParte`; cuenta la abierta y las que el tanque absorbió; un disparo no es falla; en una bomba `disparos` es 0); en las demás filas no van; `sinCosto: [{ campoId, equipo, tipo, fallas, disparos }]` (nuevo) son los equipos de la línea (bombas de inyección, también la de recobro, y multifásicas con paradas en el campo; electrosumergibles) con `fallas + disparos > 0` en el período, con esa misma regla, y **sin fila de su familia** (`tipo` = `reinyeccion`, `transporte` o `electrosumergible`) en `porEquipo`: fallaron sin costar crudo (el tanque, el respaldo o la salida alterna lo absorbieron); sin barriles, no entran en ningún Pareto; por campo en el orden de la consulta, de más fallas a menos, luego disparos y el código del equipo (comparación de texto simple). Ejemplo: P-201B de Guacamayo (recobro), 5 fallas en 12 meses y 1 en el trimestre; `[]` si no hay; `porParte` una fila por (familia, parte) armada con los **eventos del equipo** (la parada de la bomba del PLC con su parte, el evento de la electrosumergible), también los que el tanque absorbió: `fallas`, `disparos` y `horas` (= unión de los intervalos de esos eventos por equipo, recortada al período) salen de ellos y `bbl` de los tramos que causaron (puede ser 0) |
+| `/vistas/diferidos?campos&desde&hasta` | `Libro` (`libro.ts`). `tramos[]`: `{ evento: clave en refs.eventos, pozo: clave en refs.pozos, causa, inicio, fin (ISO), abierto, horas, factor, bbl, aproximado, sinCustodia, sinFactor, sesgo, azar }`. `preguntas[]` con `inicio` y `fin` ISO o `null`. `custodia: { sinPrueba: [clave], estimados: [clave], bswLaboratorio }`. `sinFiscal: [{ campoId, dias: [ISO] }]`, `sinFactor: [{ campoId, mes }]`, `sinNafta: [{ campoId, dias: [ISO], pozos: [pozo] }]` (F19: un campo que diluye, con los días sin la nafta del día y, en fondo de pozo, los pozos cuya prueba no trae `diluyenteBpd`; `[]` si no hay; un backend que no lo mande se lee como `[]`). `motivos: [{ codigo, texto, campoId?, mes? }]`, con `codigo` en `en-curso`, `sin-fiscal`, `sin-nafta`, `sin-factor`, `banda-sin-verificar`, `fa-fuera-de-banda`, `sin-causa`, `sin-meta`: **el front decide por el código, nunca por la frase**. `valorUsd?`, `valorCampos: { con, total }`, `sinPrecio: [campoId]`. `meta.sinMeta: [campoId]` y `porCampo[].sinMeta` (ver «Sin meta firmada»). Paretos: `porEquipo` una fila por (campo, equipo, tipo); en las filas `reinyeccion`, `transporte` y `electrosumergible` van además `fallas` y `disparos` del período: los eventos de la historia de fallas del equipo (`historialDeEquipo`) que se solapan con `[desde, hasta)` (la misma regla de período que `porParte`; cuenta la abierta y las que el tanque absorbió; un disparo no es falla; en una bomba `disparos` es 0); en las demás filas no van; `sinCosto: [{ campoId, equipo, tipo, fallas, disparos }]` (nuevo) son los equipos de la línea (bombas de inyección, también la de recobro, y multifásicas con paradas en el campo; electrosumergibles) con `fallas + disparos > 0` en el período, con esa misma regla, y **sin fila de su familia** (`tipo` = `reinyeccion`, `transporte` o `electrosumergible`) en `porEquipo`: fallaron sin costar crudo (el tanque, el respaldo o la salida alterna lo absorbieron); sin barriles, no entran en ningún Pareto; por campo en el orden de la consulta, de más fallas a menos, luego disparos y el código del equipo (comparación de texto simple). Ejemplo: P-201B de Guacamayo (recobro), 5 fallas en 12 meses y 1 en el trimestre; `[]` si no hay; `porParte` una fila por (familia, parte) armada con los **eventos del equipo** (la parada de la bomba del PLC con su parte, el evento de la electrosumergible), también los que el tanque absorbió: `fallas`, `disparos` y `horas` (= unión de los intervalos de esos eventos por equipo, recortada al período) salen de ellos y `bbl` de los tramos que causaron (puede ser 0) |
 | `/vistas/diferidos/mensual?campos` | `[{ mes, corto, nombre, desde, hasta (ISO), parcial, libro }]`, con `libro` **sin** `tramos`, `porPozo`, `preguntas` ni `custodia` |
 | `/vistas/diferidos/base?campos&desde&hasta` | `{ desde, hasta (ISO), nombre, baseDia, periodoDia, cambio }` o `null` sin tres meses publicados antes |
 | `/vistas/produccion/diaria?campos&desde&hasta` | `[{ dia: ISO, horas, real \| null, faltan: [campoId], potencial, diferido, residuo \| null, meta \| null }]`: `meta` es `null` si algún campo pedido no tiene meta firmada ese día |
@@ -1187,6 +1187,9 @@ formas, están en `referencia/insumos/` (ver «Cómo se comprueba un backend»).
    "pruebas":[{ "fecha":"2026-09-12T10:00:00-05:00", "crudoBpd":820, "aguaBpd":1494, "hz":56.5 }] }]
 ```
 Sin `origen` y con `pruebas: []` el pozo no tiene custodia: no se le asigna caudal.
+`pruebas[].diluyenteBpd` (opcional, F19): solo en un campo que diluye **en fondo de pozo**, la nafta que se
+le inyectaba durante la prueba, bbl/d. El separador midió `crudoBpd` con ella adentro; el libro usa
+`crudoBpd − diluyenteBpd`. Una prueba de fondo sin ella deja el libro «no publicable» (`sin-nafta`).
 
 #### `GET /api/campos/:campo/pozos/eventos?desde=&hasta=`
 Del controlador de cada pozo (variador, controlador de bombeo, válvula de cabeza).
@@ -1202,11 +1205,12 @@ los solapes; hay que escoger una y decirla aquí.
 
 #### `GET /api/campos/:campo/servicios/eventos?desde=&hasta=`
 ```json
-[{ "id":"SV-SE-2-…", "campoId":"ceiba", "equipo":"SE-2", "tipo":"aire|energia|compresion|evacuacion|proceso|tratamiento",
+[{ "id":"SV-SE-2-…", "campoId":"ceiba", "equipo":"SE-2", "tipo":"aire|energia|compresion|evacuacion|proceso|tratamiento|diluyente",
    "inicio":"…", "fin":"… | null", "tag":"52-SE2", "texto":"interruptor del pórtico 13,8 kV abierto" }]
 ```
 `fin: null`: el servicio **sigue caído**. Su cascada usa el ahora como fin (los pozos que cierran
-en ella mientras sigue caído son suyos).
+en ella mientras sigue caído son suyos). `diluyente` (F19): el sistema de dilución (la dosificadora o el
+tanque de nafta); los pozos de su cascada llevan la causa «Falta de diluyente» (`tipo: 'diluyente'`).
 
 #### `GET /api/campos/:campo/bombas/:equipo/paradas?desde=&hasta=`
 Del PLC de la bomba. La parte que falló NO viene escrita a mano: se deduce de la primera alarma o
@@ -1226,12 +1230,28 @@ es la lectura del transmisor del tanque de agua en ese instante.
 
 #### `GET /api/campos/:campo/produccion-diaria?desde=&hasta=`
 ```json
-{ "origen":{ "fuente":"FQI-0101 · computador de flujo de la unidad LACT-01", "bsw":"analizador|laboratorio" },
-  "meses":[{ "mes":"2026-09", "publicado":true, "dias":[12443, 12582, null, …] }] }
+{ "origen":{ "fuente":"FQI-0101 · computador de flujo de la unidad LACT-01", "bsw":"analizador|laboratorio",
+             "diluyente":{ "esquema":"planta|fondo|oleoducto", "encogimiento":0.00458, "fuente":"…", "medidor":"FT-NAF-01" } },
+  "meses":[{ "mes":"2026-09", "publicado":true, "dias":[12443, 12582, null, …], "nafta":[2730, 2761, 2690, …] }] }
 ```
 Barriles netos de cada día del punto de medición oficial. `dias: (number | null)[]`: `null`, o
 un arreglo más corto, es un día **sin dato** del computador de flujo, nunca un cero. `publicado`
 es por campo: cada campo publica su mes. El último día del mes en curso es parcial.
+
+**Diluyente (F19, Fase 2 de facilidades).** `origen.diluyente` (opcional) dice cómo diluye el campo
+(`src/entities/diluyente.ts`). Ausente = el campo no diluye y nada cambia.
+- `esquema: 'planta'`: el punto de medición oficial mide la **mezcla** con nafta; la prueba de pozo, crudo solo.
+- `esquema: 'fondo'`: la nafta se inyecta en el pozo; la prueba y el punto de medición miden mezcla
+  (la de la prueba se descuenta con `pruebas[].diluyenteBpd`).
+- `esquema: 'oleoducto'`: la mezcla ocurre después del punto de medición; nada cambia y no se pide nafta.
+- `encogimiento`: fracción (0,00458 es 0,458 %), la de la fórmula que el operador validó en laboratorio
+  (Res. MME 40236, art. 25). `fuente`: de dónde sale. `medidor`: el tag de la nafta.
+
+Con `planta` o `fondo`, `meses[].nafta: (number | null)[]` es la nafta que se le agregó al crudo cada
+día, bbl (art. 25, parágrafo 1), y el libro usa **crudo neto = `dias[i]` ÷ (1 − encogimiento) − `nafta[i]`**
+(la convención proporcional). Un día con `dias[i]` y sin `nafta[i]` no es una cifra: no entra en el
+factor, ni en lo real, ni en el potencial, y el libro dice el motivo `sin-nafta`. El encogimiento es
+un ajuste de volumen: ni diferido ni perdido.
 
 #### Demás lecturas
 - `GET /api/campos/:campo/tanques/:tanque/nivel` → `{ "tag":"LT-2012", "pct":61.8, "hora":"…" }`.
@@ -2550,7 +2570,7 @@ el gerente sigue abriendo la ficha ejecutiva en el panel. Es del front (`src/app
 | «Se deja de producir ahora» | el total de los campos (Σ `perdiendoBpd`), todas las causas | 1.966 / 2.650 bbl/d |
 | «por bombas paradas» | lo de las bombas de la línea (reinyección y multifásicas) | 1.665 |
 | «Lo que dan los pozos» | según sus pruebas (la tubería, el tramo de los pozos) | 11.857 bbl/d |
-| «Potencial del libro» | las pruebas × el factor de asignación del mes | 11.360 bbl/d |
+| «Potencial del libro» | las pruebas × el factor de asignación del día (D1, 4-nov-2026; el del mes si el día no tiene) | 11.360 bbl/d |
 | «Equipos que avisan» | Antes: el conteo de los `en-riesgo`, uno por equipo | 1 / 8 |
 | «Exposición si fallan hoy» | Σ `costoFallaHoy` de los que avisan (estimado) | 45.262 bbl (todos) |
 | «Retorno posible del ciclo» | Antes + Durante + Después, **simulado**: solo en Resultados | 45.233 bbl (todos) |
@@ -2728,7 +2748,7 @@ la ANH ni a ningún informe (D2).
 `POST /api/perdidas` (capacidad `perdidas:registrar`: operador, supervisor y producción):
 
 ```ts
-{ campoId: string; tipo: 'pitera' | 'derrame' | 'tea' | 'venteo' | 'rechazo'
+{ campoId: string; tipo: 'pitera' | 'derrame' | 'tea' | 'venteo' | 'rechazo' | 'evaporacion' | 'fondos'
   tramo: 'reservorio' | 'pozo' | 'planta' | 'exportacion'      // dónde ocurrió
   donde: string                                                // el equipo o el punto (≤ 80)
   evento?: string                                              // la parada que la acompañó (EventoPozo.id)
@@ -2939,6 +2959,139 @@ vacío y sin `firma`.
 **Por decidir:** aplicar la tabla a una parada (la procedencia `conversion` del árbol) espera que el evento traiga el
 código de la operadora. Quedan fuera de lo necesario: el árbol con padres y la herencia por subárbol, `segun-programa`,
 `precisar` y las versiones de la tabla (P1 §1.10 y §2.3).
+
+### `Config.piezas` · `ConfigCampo.piezas` (Fase 1 de facilidades, 3-nov-2026)
+
+TRIM se contrata por piezas: `nucleo`, `equipos`, `energia`, `planta`, `barriles` y `mantenimiento`
+(`src/entities/piezas-trim.ts`). Con `POST /api/configuracion` viajan dos campos opcionales:
+
+- **`Config.piezas: PiezaTrim[]`**: las del cliente. Ausente = todas encendidas, que es lo de la versión 1.
+- **`ConfigCampo.piezas: PiezaTrim[]`**: las de un campo, si no son las del cliente. Mandan sobre las del cliente.
+
+El Núcleo va siempre, aunque no se escriba. `validarConfig` rechaza una pieza que no existe y la nombra
+(«`«turbinas» no es una pieza de TRIM`»). Es técnica (`config:firmar`).
+
+Lo que cambia con las piezas **no viaja**: el front y el motor dejan de ofrecer lo que no está contratado.
+Cada pantalla, cada sección de `GET /api/vistas/resultados` (`secciones`) y cada tarea de `GET /api/vistas/hoy`
+declara su pieza. Un backend que calcule esas vistas aplica la misma regla: las secciones y las tareas de una
+pieza que no está en los campos pedidos no salen. La frontera entre piezas: **los barriles en juego ahora**
+(lo que se deja de producir en este momento, por equipo o por tramo) son de Planta y de Equipos; **el libro**
+(lo producido, lo diferido y lo perdido de un período, por causa, y su publicación) es de Barriles.
+
+### `Campo.conexion` y las vías de conexión directa (Fase 3 de facilidades, 4-nov-2026)
+
+- **`GET /api/campos`** → cada campo puede traer `conexion: 'historiador' | 'mezcla' | 'directa' | 'minima'`: cómo se conecta TRIM a esa planta (`docs/backend/04-cadena-de-datos.md` §4.2; `src/entities/conexion.ts`). Ausente o con otro valor = `mezcla`, que es lo de la versión 1.
+- **`fuente.protocolo`** (nacimiento y procedencia de un tag) admite además `iec-61850` y `dnp3` (relés), `modbus-rtu` (analizadores de red y controladores de generador o compresor), `snmp` (UPS) y `entrada-digital` (la entrada «hay tensión» del gateway). `fuente.modo` sigue siendo `solo-lectura` en todos.
+- En un campo `directa`, los instrumentos que en otro llegan del historiador traen su origen directo (`origen` de cada dispositivo en `GET /api/catalogo`), y la subestación suma el interruptor de llegada por su relé y la entrada «hay tensión» (en el demo, `52-SE2` y `EI-0020` de El Palmar).
+
+### El evento de planta: el apagón (Fase 4 de facilidades, 4-nov-2026)
+
+El servidor detecta el apagón con la foto del momento que manda el gateway (`EstadoEnergia`,
+`src/entities/evento-planta.ts`): qué cargas pararon y cuándo, el disparo que reportó el relé y el último
+dato del sitio. Tres vías: `rele`, `firma-cargas` (3 cargas o más en el mismo minuto) y `silencio-gateway`
+(2 min sin datos, el `NDEATH` de Sparkplug). Distingue `total` de `parcial` (todos los circuitos o una
+parte) y calcula los relojes (minutos de aire, horas hasta el alto-alto del tanque de agua). El diferido
+del corte NO sale de aquí: lo carga el libro con la causa `energia` por la cascada del servicio caído.
+
+- **`GET /api/vistas/planta/evento?campos=`** → `EventoPlantaVista[]`, los abiertos: `{ id, campoId, tipo:
+  'total' | 'parcial', inicio (ISO), deteccion: 'rele' | 'firma-cargas' | 'silencio-gateway', rele?: { tag,
+  equipo, abrioEn (ms), texto }, paradas: [{ equipo, familia: 'pozo' | 'bomba-agua' | 'aire' | 'otro', circuito,
+  paroEn }], enMarcha, circuitos, relojes: [{ que: 'aire' | 'tanque-agua', minutos | null, texto, fuente }],
+  bblDiaEnJuego, prueba, respuestas: [{ por, rol, respuesta: 'Sí' | 'No', hora }] }`. Lo que lee cada rol
+  lo arma el front con `avisoPlanta` (el mismo evento dicho distinto): gerente, supervisor, operador y el de
+  energía (`ener` si el cliente tiene responsable de energía; si no, `jefe`: D3).
+- **`POST /api/planta/eventos/prueba`** `{ campoId, tipo }` (`conector:configurar`) → `{ evento }`: un aviso
+  de prueba para probar la cadena, que nunca entra al libro. `403 sin-capacidad`, `404 campo-ajeno`,
+  `409 prueba-abierta` (una por campo), `422 tipo-invalido`.
+- **`POST /api/planta/eventos/:id/terminar`** (`conector:configurar`) → `{ evento }` con `terminado`.
+  `404 evento-desconocido`, `409 ya-terminado`.
+- **`POST /api/planta/eventos/:id/respuesta`** `{ respuesta: 'Sí' | 'No' }` (`causa:declarar`) → `{ evento }`:
+  el operador dice si ve luz en la subestación; vale la última de cada persona. `404`, `422 respuesta-invalida`.
+
+**La notificación push del aviso (D2, 4-nov-2026).** El aviso llega aunque nadie tenga TRIM abierto, en el
+celular o en el escritorio, a quien la activó en su Perfil. Web Push estándar (RFC 8030) con VAPID (RFC 8292):
+el servidor manda el push **sin contenido** y el service worker del navegador (`public/sw.js`) pregunta qué
+decir, así cada dispositivo recibe lo de su rol. En un iPhone llega si TRIM está agregado a la pantalla de
+inicio (iOS 16.4 o más nuevo). En el demo lo sirve `simulador-api/push.mjs`.
+
+- **`GET /api/push/llave`** → `{ llave }`: la llave pública VAPID (base64url, punto P-256 sin comprimir).
+- **`POST /api/push/suscripciones`** `{ rol, campos, suscripcion }` (la de `PushManager.subscribe`, con
+  endpoint `https`) → `{ ok }`. `422 suscripcion-invalida` o `rol-o-campos`. Con sesión, el rol y los campos
+  salen del token.
+- **`POST /api/push/suscripciones/baja`** `{ endpoint }` → `{ ok }`.
+- **`POST /api/push/enviar`** `{ campoId, eventoId, avisos: { [rol]: { titulo, cuerpo } } }` (`conector:configurar`;
+  `403 sin-capacidad`) → `{ enviados, fallidos, sinDispositivo }`. En producción lo llama el propio servidor al
+  detectar el evento (no es una ruta pública); en el demo, el aviso de prueba. Un dispositivo que el servicio de
+  push da por vencido (404 o 410) se quita.
+- **Solo a los servicios de push conocidos:** una suscripción se acepta si su `endpoint` es `https`, sin puerto, de
+  `fcm.googleapis.com`, `android.googleapis.com`, `*.push.services.mozilla.com`, `*.notify.windows.com` o
+  `*.push.apple.com` (si no, `422 suscripcion-invalida`), y el envío no sigue redirecciones: el servidor no se
+  puede usar para pedir a la red interna.
+- **`GET /api/push/aviso?endpoint=`** → `{ titulo, cuerpo, url, evento }`: lo último que le toca a ese
+  dispositivo; `404 sin-aviso`.
+
+### La pieza Planta: las familias y el vigía de planta (Fase 5 de facilidades, 4-nov-2026)
+
+- **`GET /api/catalogo`**: cada equipo puede traer `familia` (`src/entities/familias-planta.ts`): `generador`,
+  `transformador`, `ups`, `compresor-aire`, `bomba-transferencia`, `tratador`, `torre-enfriamiento`, `separador` o
+  `bomba-diluyente`. Con ella el equipo va en el tren de su familia en `/vistas/lista-equipos`.
+- **El vigía de planta** (`vigia-planta.ts`): a cada variable continua con serie y alarma de un equipo con familia, la
+  tendencia y las horas hasta la alarma (± 2 errores estándar; horizonte de 30 días). Lo que avisa entra en
+  **`/vistas/riesgo`** como `en-riesgo` con `horas`, `rango`, `tag`, `motivo` y `accion`, y con la cifra de «Si falla
+  hoy»: con respaldo, `bblDia: 0`; despacho o compresión, **`sinCifra: true`** (opcional, nuevo; `bblDia` en 0 no se
+  lee); lo demás, `techo: true`.
+- **`/vistas/equipos/:campo/:equipo/tecnico`** (`VistaNivel3`): **`vigia`** (opcional, solo si avisa):
+  `[{ tag, frase, accion?, fuente }]`, «Lo que avisa el vigía» en la ficha.
+
+### El re-arranque guiado y el margen de generación (Fase 6 de facilidades, 4-nov-2026)
+
+Después de un apagón, TRIM sugiere el orden de arranque y registra cuánto duró cada fase
+(`src/entities/arranque.ts`). Sugiere y registra: quien arranca es el operador, y el deslastre es del relé y del PMS.
+
+- **`GET /api/vistas/planta/arranque?campos=`** → `ArranqueVista[]`, una por evento abierto: `{ eventoId, campoId,
+  plan, cronometro, margen, falta? }`.
+  - `plan` (`PlanArranque`): `pasos[{ n, fase: 'habilita' | 'agua' | 'pozos' | 'despacho', que, equipos, minuto, kw?,
+    bblDia, acumBblDia, limites[{ id, regla, fuente }] }]`, `bblDia`, `noventa?` (el paso con el que vuelve el 90 %),
+    `criterio`, `sinKw`, `sinCaber`, `conTabla`, `t0` (ms: la energía restablecida si ya se marcó; si no, ahora).
+    `minuto` cuenta desde `t0`. Los límites: lo que habilita primero, el agua antes que los pozos, un motor de
+    servicio a la vez, un arranque por motor (NEMA MG 1 §12.54), la espera del giro inverso de las
+    electrosumergibles (30 min `[SUPUESTO]`) y los lotes: de 4 pozos `[SUPUESTO]` sin tabla de generación, o lo
+    que quepa en el escalón de toma de carga (ISO 8528-5) con ella.
+  - `cronometro`: `{ tramos[{ fase, nombre, hora (ms), ms? }], siguiente?, totalMs, energia? }`. Cada tramo es lo que
+    duró desde la marca anterior; el primero es la detección (el inicio del evento).
+  - `margen` (`MargenN1` o `null` sin tabla de generación): `{ cae, reservaRapidaKw, capacidadKw, cargaKw, faltaKw,
+    alcanza, deslastre[{ equipo, kw, crudoBpd }], crudoBpd, noAlcanzaDeslastre }`. Qué soltar primero sale de la
+    misma mochila del orden de cierre (`mochila`, `libro.ts`), con cargas enteras. `falta` dice en palabras qué
+    hace falta para calcularlo.
+- **`POST /api/planta/eventos/:id/fase`** `{ fase: 'causa' | 'energia' | 'primer-pozo' | 'noventa' | 'normal' }`
+  (`causa:declarar`) → `{ evento }` con la marca `{ fase, hora, por }` agregada en **`fases`** (opcional, nuevo en el
+  registro del evento). En orden y una vez: `403 sin-capacidad`, `404 evento-desconocido`, `409 fuera-de-orden`,
+  `422 fase-invalida`. Un parcial sin pozos parados solo tiene `causa`, `energia` y `normal`.
+- **La tabla de generación** (`TablaGeneracion`: unidades con `capacidadKw`, `cargaKw` y `escalon`, y cargas con
+  `kw` y `esencial?`) no existe en el demo: ningún campo trae generación propia instrumentada. La configura el
+  ingeniero eléctrico (o sale del PMS) y con ella el orden va por crudo por kW y el margen N-1 se calcula.
+
+### El panel de indicadores (Fase 7 de facilidades, pieza Núcleo, 4-nov-2026)
+
+El gerente, producción y confiabilidad arman su panel («Mi panel», en la puerta Resultados) con indicadores del
+catálogo y con cualquier señal ya conectada (`src/entities/indicadores.ts`). Un indicador sin dato dice
+`sin-dato` con su motivo, nunca un cero que no se midió; uno de una pieza que el campo no contrató, también.
+
+- **`GET /api/indicadores/catalogo`** → `Indicador[]`: `{ id, nombre, pregunta, formula, fuente, ventana }`. Los ids:
+  `diferido-por-causa` (Barriles), `mtbf` (Equipos), `mttr` y `horas-proactivas` (Mantenimiento), `cortes-energia`
+  y `margen-n1` (Energía).
+- **`GET /api/vistas/panel?rol=&campos=`** → `VistaPanel`: `{ elementos[{ elemento, titulo, campo, indicador?, valor }],
+  ejemplo, actualizado? }`. Sin panel guardado, el de ejemplo del rol (`ejemplo: true`). `valor` es uno de:
+  `{ forma: 'cifra', valor, unidad, decimales, nota }`, `{ forma: 'columnas', partes, periodos[{ clave, rotulo,
+  segundo?, valores, total }], unidad, nota }`, `{ forma: 'tendencia', senal: TendenciaNivel3, desde, hasta, valor,
+  nota }` o `{ forma: 'sin-dato', motivo }`.
+- **`GET /api/vistas/panel/senales?campos=`** → `SenalDisponible[]`: `{ campoId, equipo, nombreEquipo, tag, nombre,
+  unidad }`, cada variable continua conectada con su serie.
+- **`POST /api/paneles`** `{ elementos: ElementoPanel[] }` → `{ panel: { elementos, actualizado, por } }`: guarda el
+  panel de quien llama, entero. `ElementoPanel` es `{ id, tipo: 'indicador', indicador, campoId }` o `{ id, tipo:
+  'senal', campoId, equipo, tag }`. Lo puede quien tiene la pantalla `panel` en su rol (gerente, producción y
+  confiabilidad): `403 sin-pantalla`. `404 campo-ajeno`; `422 panel-invalido` (sin lista, más de 12, id repetido,
+  indicador fuera del catálogo o señal no conectada). Con sesión, el rol y los campos salen del token.
 
 ## A1 · Compatibilidad con la versión 1
 
