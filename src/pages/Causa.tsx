@@ -267,7 +267,8 @@ function Tarjeta({ p, global, cond, abierta, onAbrir }: {
     <div className="border-b border-[var(--linea2)] py-3 last:border-0" data-parada={p.id} data-abierta={abierta || undefined}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
         <span className="mt-[2px]"><MarcaDeEquipo c={cond} tamano={14} /></span>
-        <span className="min-w-0 flex-1">
+        {/* Con un piso de ancho, las etiquetas bajan de renglón en vez de quedar encima del nombre (320 px). */}
+        <span className="min-w-[9rem] flex-1">
           <button onClick={() => { setCampo(p.campoId); abrirEquipo(p.equipo) }} className="cursor-pointer text-left">
             <b className="text-[15px] underline-offset-2 hover:underline">{p.equipo}</b>
           </button>

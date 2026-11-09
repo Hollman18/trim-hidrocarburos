@@ -85,8 +85,9 @@ export function Gerente({ v }: { v: VistaPlantaViva }) {
   const tonoProd = prod.metaBpd !== null ? (prod.bajoMeta ? 'riesgo' as const : 'bien' as const) : undefined
   const tonoCierre = cierre && cierre.metaProduccion !== null ? tonoDeMeta(cierre.produccion, cierre.metaProduccion) : undefined
   const escala = prod.metaBpd !== null ? { min: 0, max: Math.max(prod.metaBpd * 1.25, 1), firmada: true } : undefined
+  // A menos de 360 px las dos cifras no caben lado a lado («1.222.131» a 26 px se sale de su tarjeta): una debajo de otra.
   const apoyo = (
-    <div className="grid min-w-0 grid-cols-2 gap-3">
+    <div className="grid min-w-0 grid-cols-1 gap-3 min-[360px]:grid-cols-2">
       <section aria-label="Producción por día" data-produccion={prod.realBpd} {...atributoTono(tonoProd)} className={cn('min-w-0 rounded-[10px] bg-[var(--panel)] px-4 py-4 sm:px-6', fondoTono(tonoProd))}>
         <Cifra rotulo="Producción por día" valor={Math.round(prod.realBpd)} unidad="bbl/d" mayusculas={false}
           estado={prod.bajoMeta ? 'anormal' : 'normal'} condicion={prod.bajoMeta ? 'aviso' : undefined}
