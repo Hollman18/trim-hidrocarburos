@@ -2,7 +2,15 @@
 
 Para quien va a construir el servidor. Con este documento se construye el backend que reemplaza al simulador del demo **sin leer el código del front**, y cada número que el front muestra sale igual: con su fórmula, su ejemplo calculado con los datos del demo y el texto que se muestra según su valor.
 
-> **4-nov-2026 · Fase 2 de facilidades.** El factor de asignación es **diario** (D1; `05a-libro/02`, «El factor del día») y el libro descuenta la nafta en los campos que diluyen (`05a-libro/02`, «El fiscal en crudo neto»). Los ejemplos de otros capítulos pueden traer cifras del libro de antes de D1 (hasta 0,5 % distintas); manda `referencia/`.
+> **9-nov-2026 · Facilidades, fases 1 a 7 (construidas y probadas; commit `c54824b`).** Lo nuevo va al lado de la v3, en los registros F18 a F24 de [`CAMBIOS-CONTRATO.md`](CAMBIOS-CONTRATO.md) §5.3, y el orden para construirlo, en [`ENTREGA-V3.md`](ENTREGA-V3.md) (la nota del inicio):
+>
+> - **Las 6 piezas contratadas por campo** (Núcleo, Equipos, Energía, Planta, Barriles, Mantenimiento): una pantalla o sección de una pieza que el campo no tiene dice que no está contratada.
+> - **Barriles bien contados:** el diluyente y el crudo neto de nafta; el factor de asignación es **diario** (D1; `05a-libro/02`, «El factor del día»). Los ejemplos de otros capítulos pueden traer cifras del libro de antes de D1 (hasta 0,5 % distintas); manda `referencia/`.
+> - **La conexión según la planta:** historiador, directa a los equipos, mezcla o la entrada mínima «hay tensión».
+> - **Energía, Planta y re-arranque:** el apagón, el aviso por rol con notificación push, el rol «Responsable de energía», el vigía de planta, el arranque guiado y el margen N-1 ([capítulo 12](12-energia-evento-de-planta.md)).
+> - **Mi panel:** los indicadores con fórmula y fuente, y las señales conectadas ([capítulo 13](13-panel-de-indicadores.md)).
+>
+> El informe de cierre, con la matriz pieza × rol, los supuestos abiertos (S1 a S11) y las preguntas al experto: [`../experiencia-v3/INFORME-FACILIDADES.md`](../experiencia-v3/INFORME-FACILIDADES.md).
 
 > **Propuesta de valor.** Anticipamos la falla de sus equipos críticos para que produzca más, con inteligencia artificial. *Electrosumergibles, multifásicas y bombas de reinyección, conectadas a sus variables: entendemos por qué se difiere y se pierde cada barril.* Qué es hoy la «inteligencia artificial» y qué es hoja de ruta: capítulo 1, nota técnica al inicio.
 
@@ -32,7 +40,7 @@ Deck (10 diapositivas, marca gotrim.ai): [`TRIM-pitch-comercial.pdf`](TRIM-pitch
 2. **[Capítulo 2](02-arquitectura.md)**: qué hace el servidor, cómo viaja un número hasta la pantalla, el reloj, los períodos y los roles.
 3. **[Capítulo 7](07-api.md)**: el índice de la API (qué endpoint usa cada pantalla). El contrato completo está en [`CONTRATO.md`](../../CONTRATO.md) (anexo A).
 4. Después, según lo que esté construyendo: el modelo de datos (3), la cadena de datos (4), las fórmulas (5A–5D) o una pantalla: primero **[las pantallas de la v3](06-pantallas-v3.md)** y, para el detalle de cada cifra, 6A–6D.
-5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (344 casos y 48 escrituras de `referencia/`).
+5. **[Capítulo 9](09-verificacion.md)**: cómo se comprueba que su servidor da los mismos números (347 casos y 48 escrituras de `referencia/`, y los diez scripts de `npm run verificar`).
 6. **[Capítulo 10](10-pendientes.md)**: decisiones abiertas, atajos del demo y defectos conocidos.
 7. **[Capítulo 11](11-ciclo-de-valor.md)**: ciclo ANTES / DURANTE / DESPUÉS. El front ya lo muestra; este capítulo es el encargo para implementar `GET /vistas/ciclo` y `POST /planes/:id` en el servidor.
 

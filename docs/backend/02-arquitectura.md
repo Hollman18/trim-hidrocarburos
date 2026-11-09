@@ -8,7 +8,7 @@ El repositorio es solo el front. Por dentro tiene tres capas, y la frontera entr
 
 | Capa | Carpeta | Qué es | En producción |
 |---|---|---|---|
-| **Motor** | `src/entities/*.ts` (46 módulos, ≈ 16.100 líneas) | TypeScript puro, sin React: el libro de diferidos, la atribución de causas, el colchón del tanque, la salud de las partes, el vigía, el modelo choke y la clasificación ANH, las reglas de escritura, la huella de los informes… | **Lo corre el servidor.** Es la especificación ejecutable de cada número. |
+| **Motor** | `src/entities/*.ts` (70 módulos, ≈ 24.400 líneas) | TypeScript puro, sin React: el libro de diferidos, la atribución de causas, el colchón del tanque, la salud de las partes, el vigía, el modelo choke y la clasificación ANH, las reglas de escritura, la huella de los informes… | **Lo corre el servidor.** Es la especificación ejecutable de cada número. |
 | **Costura** | `src/shared/api/*.ts` | El único lugar por donde la interfaz pide datos. Cada consulta es un *endpoint* tipado de `contrato.ts`; cada escritura, una función de `escrituras.ts`. | Con `VITE_FUENTE=http`, cada consulta es un `GET` y cada escritura un `POST`/`PATCH` al servidor. |
 | **Interfaz** | `src/pages`, `src/widgets`, `src/app`, `src/shared/ui` | Pantallas, paneles y componentes. Solo muestran, ordenan y filtran lo que llega. | Igual. No cambia. |
 
@@ -150,20 +150,24 @@ Cada vista se pide para **una lista de campos** (`campos=a,b,c`). «Portafolio»
 - la **persona** (id y nombre),
 - su **rol** y el **nivel de detalle** del rol,
 - sus **campos** (`"todos"` o una lista: los que el gerente le asignó en Usuarios, no los de fábrica del rol),
-- sus **capacidades** (nueve permisos que cada escritura revisa).
+- sus **capacidades** (16 permisos que cada escritura revisa).
 
-Los 8 roles del producto (`src/entities/roles.ts`):
+Los roles del producto (`src/entities/roles.ts`; al 9-nov-2026). La v3 fundió pantallas: el gerente y producción entran por **La planta viva**, la operación por **Hoy**, y Equipos, Resultados y Causa reúnen lo que antes eran pantallas sueltas (capítulo 6).
 
 | Rol (id) | Nivel | Entra por | Pantallas | Campos de fábrica | Capacidades |
 |---|---|---|---|---|---|
-| Gerente de activo (`ger`) | decision | Resumen | resumen, diferidos, producción, riesgo, configuración | todos | `evidencia:exportar`, `metas:firmar`, `usuarios:administrar` |
-| Ingeniera de producción (`prod`) | ingenieria | Producción | producción, diferidos, pozos, electrosumergibles, identificar, planta | ceiba, palmar | `evidencia:exportar`, `asignacion:cargar` |
-| Supervisor de operaciones (`sup`) | operacion | Bombas | bombas, electrosumergibles, turno, identificar, pozos | ceiba | `causa:declarar`, `evidencia:exportar`, `sap:aviso` |
-| Operador de campo (`oper`) | operacion | Bombas | bombas, electrosumergibles, identificar, turno | ceiba | `causa:declarar`, `sap:aviso` |
-| Jefe de mantenimiento (`jefe`) | ingenieria | Mantenimiento | mantenimiento, diferidos, bombas, electrosumergibles, confiabilidad, superficie, riesgo, identificar | todos | `causa:completar`, `evidencia:exportar`, `sap:aviso` |
-| Ingeniero de confiabilidad (`conf`) | ingenieria | Bombas | bombas, electrosumergibles, confiabilidad, diferidos, riesgo, superficie, identificar, planta | ceiba, morichal, guacamayo | `causa:completar`, `evidencia:exportar`, `sap:aviso` |
-| Técnico de mantenimiento (`tec`) | operacion | Mi trabajo | mi trabajo, bombas, electrosumergibles, identificar | ceiba | `causa:declarar` |
-| Administrador de la implementación (`adm`) | ingenieria | Configuración | configuración, conectores, planta | todos | `evidencia:exportar`, `conector:configurar`, `config:firmar` |
+| Gerente de activo (`ger`) | decision | La planta viva | planta viva, resultados, configuración, **Mi panel** | todos | `evidencia:exportar`, `metas:firmar`, `usuarios:administrar` |
+| Ingeniera de producción (`prod`) | ingenieria | La planta viva | planta viva, resultados, equipos, producción, pozos, causa, planta, agua, configuración, filosofía, **Mi panel** | ceiba, palmar | `evidencia:exportar`, `asignacion:cargar`, `anh:clasificar`, `anh:confirmar`, `anh:yacimiento`, `perdidas:registrar` |
+| Supervisor de operaciones (`sup`) | operacion | Hoy | hoy, equipos, causa | ceiba | `causa:declarar`, `evidencia:exportar`, `sap:aviso`, `planes:decidir`, `anh:clasificar`, `anh:confirmar`, `perdidas:registrar` |
+| Operador de campo (`oper`) | operacion | Hoy | hoy, equipos, causa | ceiba | `causa:declarar`, `sap:aviso`, `anh:clasificar`, `perdidas:registrar` |
+| Jefe de mantenimiento (`jefe`) | ingenieria | Hoy | hoy, equipos, resultados, causa | todos | `causa:completar`, `evidencia:exportar`, `sap:aviso`, `planes:decidir`, `anh:clasificar` |
+| Ingeniero de confiabilidad (`conf`) | ingenieria | Equipos | equipos, confiabilidad, causa, configuración, filosofía, **Mi panel** | ceiba, morichal, guacamayo | `causa:completar`, `evidencia:exportar`, `sap:aviso`, `planes:decidir`, `anh:clasificar`, `anh:yacimiento` |
+| **Responsable de energía (`ener`)**, nuevo (D3, 4-nov-2026) | ingenieria | Hoy | hoy, equipos, causa | todos | `evidencia:exportar`, `sap:aviso` |
+| Técnico de mantenimiento (`tec`) | operacion | Hoy | hoy, equipos, causa | ceiba | `causa:declarar`, `anh:clasificar`, `orden:cerrar` |
+| Cumplimiento regulatorio (`reg`) | ingenieria | Regulatorio | regulatorio | todos | `evidencia:exportar`, `anh:enviar` |
+| Administrador de la implementación (`adm`) | ingenieria | Configuración | configuración, filosofía, conectores, planta, agua | todos | `evidencia:exportar`, `conector:configurar`, `config:firmar` |
+
+`plan` (planeadora de mantenimiento) existe en el código pero es de la v2 (`ROLES_V2` en `producto.ts`): el producto no lo muestra. **El rol `ener` se enciende por cliente:** solo si la operadora tiene esa persona (en el demo, `VITE_ROL_ENERGIA=1`). Si no lo tiene, lo de energía (el disparo, lo que paró y los relojes) lo recibe el jefe de mantenimiento (`rolDeEnergia`; capítulo 12). No tiene `causa:declarar`: las paradas de pozos y bombas las contesta quien está en el campo, y las de energía las deduce la señal del relé.
 
 Todos tienen además **Mi perfil** (se abre desde el menú de la persona).
 
@@ -200,7 +204,7 @@ Todo lo que **decide** un número o un permiso lo calcula el servidor.
 
 ## 2.11 Los módulos del modelo choke y del árbol de seis pasos
 
-Once módulos del motor (≈ 6.900 líneas de las 16.100) hacen el capítulo 5E. Leen el libro y la causa de la señal; **no cambian** ni el libro, ni la causa, ni la asignación: los parten por tramo y por día y los clasifican.
+Once módulos del motor (≈ 6.900 líneas de las 24.400) hacen el capítulo 5E. Leen el libro y la causa de la señal; **no cambian** ni el libro, ni la causa, ni la asignación: los parten por tramo y por día y los clasifican.
 
 | Módulo | Líneas | Qué hace | Lee de |
 |---|---:|---|---|

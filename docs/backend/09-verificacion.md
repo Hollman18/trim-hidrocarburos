@@ -78,7 +78,22 @@ prueba que cada endpoint de `contrato.ts` vuelve igual después de pasar por JSO
 npm run verificar
 ```
 
-corre `tsc -b`, el linter, `scripts/verificar-libro.mjs`, `scripts/verificar-arbol.mjs` y el contrato. `verificar-libro` hace **450 comprobaciones** del motor, de las reglas de escritura y del simulador (el número crece con cada corrección; el script imprime «N de N comprobaciones bien»). Sus secciones, que sirven de lista de lo que el motor garantiza:
+corre `tsc -b`, el linter y diez scripts de comprobación (al 9-nov-2026, todos en verde):
+
+| Script | Comprobaciones | Qué cubre |
+|---|---|---|
+| `verificar-libro.mjs` | 553 | El motor, las reglas de escritura y el simulador (las secciones, abajo) |
+| `verificar-arbol.mjs` | 128 | El choke y el árbol de causas (capítulo 5E) |
+| `verificar-contrato.mjs` | 257 | Que cada endpoint de `contrato.ts` vuelve igual por JSON y que lo de v1 sigue o está registrado («A1») |
+| `verificar-kit.mjs` | 63 | El kit SCADA en todas las pantallas |
+| `verificar-piezas.mjs` | 90 | Las 6 piezas contratadas por campo: cada pantalla, sección y tarea declara la suya (facilidades, fase 1) |
+| `verificar-diluyente.mjs` | 44 | El diluyente, el crudo neto de nafta, el día sin nafta y el factor de asignación diario D1 (fase 2) |
+| `verificar-conexion.mjs` | 25 | La conexión según la planta: historiador, directa, mezcla o mínima (fase 3) |
+| `verificar-planta.mjs` | 62 | El apagón, los relojes, el aviso por rol, la prueba, la push y la atribución a «energía» (§1–7, fase 4); las familias y el vigía de planta (§8, fase 5) |
+| `verificar-arranque.mjs` | 50 | El orden de arranque con sus límites, el cronómetro por fases y el margen N-1 (fase 6) |
+| `verificar-indicadores.mjs` | 36 | El catálogo de «Mi panel», el «sin dato» con su motivo y el guardado del panel (fase 7) |
+
+`verificar-libro` hace **553 comprobaciones** del motor, de las reglas de escritura y del simulador (el número crece con cada corrección; el script imprime «N de N comprobaciones bien»). Sus secciones, que sirven de lista de lo que el motor garantiza:
 
 | Sección | Qué garantiza |
 |---|---|

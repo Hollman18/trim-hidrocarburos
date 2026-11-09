@@ -8,6 +8,25 @@ está en [`CAMBIOS-CONTRATO.md`](CAMBIOS-CONTRATO.md) (§1.1) y la forma exacta 
 **La regla que no cambia: al lado, nunca encima.** Nada de su v1 se renombró ni se borró. Lo nuevo es una ruta nueva o
 un campo opcional; lo que sale queda marcado RETIRADO. Si usted construyó v1, sigue valiendo, salvo lo que dice §3.
 
+> **Actualización del 9-nov-2026 · facilidades, fases 1 a 7** (commit `c54824b`, 3 y 4 de noviembre). Esta página
+> sigue siendo la de la v3; lo de facilidades va **al lado**, con la misma regla, en los registros **F18 a F24** de
+> [`CAMBIOS-CONTRATO.md`](CAMBIOS-CONTRATO.md) §5.3, todos **AGREGAR AHORA**. En orden de construcción:
+>
+> 1. **Piezas contratadas** (F18): `Config.piezas` por campo (`nucleo`, `equipos`, `energia`, `planta`, `barriles`,
+>    `mantenimiento`); sin el campo, todas (lo de v1).
+> 2. **Diluyente** (F19): el libro en crudo neto de nafta, el motivo `sin-nafta`, la causa «Falta de diluyente» y las
+>    pérdidas `evaporacion` y `fondos`. **El factor de asignación pasa a diario (D1).**
+> 3. **Conexión según la planta** (F20): `Campo.conexion` y los protocolos de solo lectura nuevos.
+> 4. **Energía** (F21): `GET /api/vistas/planta/evento`, `POST /api/planta/eventos/prueba`, `…/:id/terminar`,
+>    `…/:id/respuesta`, las cinco rutas de `/api/push/*` y el rol `ener`. Capítulo 12.
+> 5. **Planta** (F22): `Equipo.familia` y el vigía de planta en `/vistas/riesgo` y en la ficha técnica. Capítulo 12.11.
+> 6. **Re-arranque** (F23): `GET /api/vistas/planta/arranque` y `POST /api/planta/eventos/:id/fase`. Capítulo 12.12.
+> 7. **Mi panel** (F24): `GET /api/indicadores/catalogo`, `GET /api/vistas/panel`, `GET /api/vistas/panel/senales` y
+>    `POST /api/paneles`. Capítulo 13.
+>
+> La referencia creció a **347 casos** (eran 344 el 27-oct) y sigue con 48 escrituras rechazadas.
+> El índice de rutas con sus códigos está en el capítulo 7 (7.1 y 7.4).
+
 ---
 
 ## 1. Qué cambió desde su v1
@@ -109,7 +128,7 @@ caracteres en la configuración (C16). Cada uno con su antes y después: CAMBIOS
 1. **Cargue los insumos** de [`referencia/insumos/`](../../referencia/insumos/): cada archivo es `{ endpoint,
    respuesta }` y trae los cinco campos del demo con el reloj del demo (2-oct-2026, 14:00, hora de Colombia).
 2. **Los números, por HTTP:** `node scripts/referencia.mjs comparar --base-url=http://su-servidor:8080` (el origen, sin
-   `/api`). Compara 344 casos de `referencia/`, incluidos los de la v3 (`balance/`, `perdidas/`, `jornada/`,
+   `/api`). Compara 347 casos de `referencia/`, incluidos los de la v3 (`balance/`, `perdidas/`, `jornada/`,
    `efectividad/`, `fallas/`, `configuracion/`, `sap/relojes-*-historia`, `anh/respuestas-*`, `anh/conversion-*`).
    Con sesión: `--token=…`. Los escenarios (otra configuración firmada): `--escenario=<id>`.
 3. **Las escrituras rechazadas:** el mismo comando con `--escrituras` manda las 48 secuencias de

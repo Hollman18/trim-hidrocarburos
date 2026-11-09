@@ -149,3 +149,23 @@ Términos del sector y del producto, en el sentido en que se usan en este docume
 | **Gemelo digital (línea futura)** | Modelo para **simular** el proceso, planta o línea del cliente, alimentado por **planos** (P&ID, layouts), datasheets y tags. Escenarios «qué pasa si…». **No** es el pitch de TRIM hoy. Capítulo 1 §1.6. |
 | **Ciclo de valor · Antes / Durante / Después** | Tres momentos comerciales traducidos a barriles **simulados** (`retornoBbl`): evitar la parada, perder menos tiempo en la parada, no repetir en el período. No entra al libro medido. Capítulo 11. |
 | **Medido vs simulado** | **Medido:** diferido del período, fiscal, libro publicable. **Simulado:** retorno del ciclo y planes de acción (chip «simulado» en pantalla). |
+
+## Facilidades: piezas, energía y re-arranque (3 y 4-nov-2026)
+
+| Término | Qué es |
+|---|---|
+| **Pieza** (`piezas`) | Lo que el cliente contrata por campo: **Núcleo** (siempre), **Equipos**, **Energía**, **Planta**, **Barriles** y **Mantenimiento**. Una pantalla o sección de una pieza no contratada dice que no está contratada; nunca muestra un cero. |
+| **Diluyente · nafta** | Hidrocarburo liviano que se mezcla con el crudo pesado para que fluya. Puede inyectarse en planta, en el fondo del pozo o en el oleoducto (`origen.diluyente.esquema`). El libro descuenta la nafta: cuenta **crudo neto** (Res. MME 40236, art. 25). Un día sin el dato de la nafta no se publica (`sin-nafta`). |
+| **Factor de asignación diario (D1)** | Desde el 4-nov-2026 el FA se calcula por día (Res. 40236, art. 21), no por mes. |
+| **Conexión del campo** (`Campo.conexion`) | Cómo llegan los datos: `historiador` (PI u otro), `directa` (a los equipos: Modbus, IEC 61850, DNP3, SNMP, siempre de solo lectura), `mezcla` o `minima` (una entrada digital que solo dice «hay tensión»). |
+| **Evento de planta · apagón** | Un corte de energía **total** (todos los circuitos) o **parcial**. Se detecta por el **relé** que dispara, por la **firma de cargas** (3 o más cargas que paran en el mismo minuto) o por el **silencio del gateway** (2 min sin datos). El diferido del corte lo carga el libro con la causa «energía», no como falla de cada pozo. |
+| **Relojes del apagón** | Cuánto aguanta la planta sin energía: minutos de **aire de instrumentos** (el recibidor) y horas hasta el alto-alto del **tanque de agua**. |
+| **Aviso de prueba** | Un apagón simulado que el administrador lanza para probar la cadena del aviso. Todo dice «Prueba» y nunca entra al libro. |
+| **Notificación push** | El aviso que llega al celular o al escritorio aunque TRIM esté cerrado (Web Push, RFC 8030, con llaves **VAPID**, RFC 8292). El push va sin contenido: el dispositivo pregunta qué decir según su rol. |
+| **Responsable de energía** (`ener`) | Rol que el cliente enciende si tiene esa persona. Si no, lo de energía lo recibe el jefe de mantenimiento. |
+| **Familia de planta** (`Equipo.familia`) | El tipo de equipo de facilidades: generador, transformador, UPS, compresor de aire, bomba de transferencia, tratador, torre de enfriamiento, separador, bomba de diluyente. Pone al equipo en su tren. |
+| **Vigía de planta** | El vigía aplicado a los equipos de facilidades: la variable que va hacia su alarma y en cuántas horas llega. |
+| **Re-arranque guiado** | El orden en que TRIM sugiere volver a arrancar después del apagón: primero lo que habilita (aire, energía), el agua antes que los pozos y los pozos por barriles, respetando los límites de los motores. TRIM sugiere y registra; quien arranca es el operador. |
+| **Cronómetro por fases** | Cuánto duró cada fase del re-arranque: detección → causa → energía → primer pozo → 90 % → normal. El supervisor marca cada fase una vez. |
+| **Margen N-1** | Si se cae la unidad de generación más cargada, ¿alcanza la reserva de las demás? Si no, qué soltar primero (**deslastre**): los pozos que menos crudo dan por kW. Necesita la **tabla de generación** (del **PMS**, el sistema de gestión de potencia, o del ingeniero eléctrico); sin ella dice «Sin dato». |
+| **Mi panel** | El tablero que arma cada persona (gerente, producción, confiabilidad) con indicadores del catálogo (diferido por causa, MTBF, MTTR, horas proactivas, cortes de energía, margen N-1) y señales conectadas. Hasta 12 elementos. |

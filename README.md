@@ -34,8 +34,8 @@ Lo que no sostiene esa frase no entra al primer producto. El alcance está en
 
 | En el MVP | En v2 |
 |---|---|
-| Resumen y portafolio · Diferidos · Producción · Pozos · **Electrosumergibles** · **Bombas** · **Identificar** · Turno · Riesgo · Mantenimiento · Confiabilidad · Superficie · Mi trabajo · Planta · Configuración · Conectores | Agua · Evidencia · Regulatorio |
-| Gerente · Producción · Supervisor · Operador · Jefe de mantenimiento · Confiabilidad · Técnico · Administrador | Planeación · Contratos · Cumplimiento |
+| Resumen y portafolio · Diferidos · Producción · Pozos · **Electrosumergibles** · **Bombas** · **Identificar** · Turno · Riesgo · Mantenimiento · Confiabilidad · Superficie · Mi trabajo · Planta · Configuración · Conectores · **Mi panel** | Agua · Evidencia · Regulatorio |
+| Gerente · Producción · Supervisor · Operador · Jefe de mantenimiento · Confiabilidad · Técnico · Administrador · **Responsable de energía** (si el cliente lo tiene) | Planeación · Contratos · Cumplimiento |
 
 ### El foco: los equipos que, cuando fallan, cierran pozos
 
@@ -51,6 +51,47 @@ rodamientos, succión, hidráulica; aislamiento, bomba de fondo, admisión, prot
 | 2 · control de la unidad | Bombas (una placa por bomba) y la flota de electrosumergibles | Supervisor, operador, confiabilidad |
 | 3 · detalle | Variables de la plantilla API 676 / API 610 y del variador, salud por parte, «si se para ahora» con el orden de cierre | Confiabilidad, mantenimiento, operación |
 | 4 · diagnóstico | Vigía con su proyección, y cada parada con su evidencia y su tolerancia | Confiabilidad, producción |
+
+## Facilidades: lo que se contrata por campo, la energía y el re-arranque
+
+Desde el 4-nov-2026 TRIM también cubre las **facilidades de producción**: la energía, la planta y el
+re-arranque después de un apagón. El informe completo (qué ve cada rol de cada pieza, los supuestos que siguen
+abiertos y las preguntas al experto) está en
+[`docs/experiencia-v3/INFORME-FACILIDADES.md`](docs/experiencia-v3/INFORME-FACILIDADES.md). Las fórmulas, en los
+capítulos [12](docs/backend/12-energia-evento-de-planta.md) y [13](docs/backend/13-panel-de-indicadores.md) del documento técnico.
+
+| Pieza | Qué hace | Dónde vive |
+|---|---|---|
+| **Núcleo** (siempre) | «Mi panel»: el gerente, producción y confiabilidad arman su tablero con indicadores de fórmula y fuente (diferido por causa, MTBF, MTTR, horas proactivas, cortes de energía, margen N-1) y con cualquier señal conectada. Lo que no tiene dato dice «Sin dato» y por qué | `entities/indicadores.ts`, `pages/Panel.tsx` |
+| **Barriles** | El libro de diferidos. Ahora con el **diluyente**: cuenta el crudo neto de nafta y un día sin el dato de la nafta no se publica. El factor de asignación es **diario**. El operador registra evaporación y fondos de tanque como pérdida | `entities/diluyente.ts`, `entities/libro.ts` |
+| **Equipos** | Las electrosumergibles, las bombas y su vigía | (lo de siempre) |
+| **Energía** | El **apagón**, total o parcial: lo detecta por el relé, por la firma de cargas (3 o más que paran en el mismo minuto) o por el silencio del gateway. Muestra los relojes (minutos de aire, horas del tanque de agua) y avisa a cada rol con lo suyo, también por **notificación push** al celular. El administrador puede lanzar un apagón de prueba | `entities/evento-planta.ts`, `widgets/AvisoPlanta.tsx`, `shared/api/push.ts`, `public/sw.js` |
+| **Planta** | Las familias de planta (tratador, torre de enfriamiento, separador, bomba de diluyente, generador, UPS…) con su tren, y el **vigía de planta**: la variable que va hacia su alarma y en cuántas horas llega | `entities/familias-planta.ts`, `entities/vigia-planta.ts` |
+| **Mantenimiento** | La orden y el análisis de cada falla. Un apagón no abre una falla propia de cada pozo: el libro lo carga a «energía» | (lo de siempre) |
+
+**El re-arranque guiado** (con la pieza Energía): el orden en que conviene volver a arrancar, por barriles y
+respetando los límites de los motores; el **cronómetro por fases** (detección → causa → energía → primer pozo →
+90 % → normal), que el supervisor marca con un botón; y el **margen N-1** (si cae el generador más cargado,
+¿alcanza la reserva?, y si no, qué soltar primero). TRIM sugiere y registra: no opera interruptores
+(`entities/arranque.ts`, `widgets/ArranqueGuiado.tsx`).
+
+**Cómo se conecta cada campo** (`entities/conexion.ts`): por historiador, directo a los equipos (Modbus,
+IEC 61850, DNP3, siempre de solo lectura), mezcla, o la entrada mínima «hay tensión». En el demo, El Palmar no
+tiene historiador.
+
+**Lo que no está contratado no se muestra con ceros:** cada pantalla, sección y tarea declara su pieza
+(`entities/piezas-trim.ts`) y, si el campo no la tiene, lo dice (`widgets/SinPieza.tsx`).
+
+**El rol «Responsable de energía»** se enciende solo si la operadora tiene esa persona (en el demo,
+`VITE_ROL_ENERGIA=1 npm run dev`). Si no, lo de energía lo recibe el jefe de mantenimiento.
+
+| | |
+|---|---|
+| [![El aviso del apagón · gerente](docs/experiencia-v3/capturas/facilidades/energia-apagon-gerente.png)](docs/experiencia-v3/capturas/facilidades/energia-apagon-gerente.png)<br>**El aviso del apagón · gerente.** «Se fue la energía en La Ceiba. 11.360 bbl/d en juego.» | [![El re-arranque · supervisor](docs/experiencia-v3/capturas/facilidades/energia-rearranque-supervisor.png)](docs/experiencia-v3/capturas/facilidades/energia-rearranque-supervisor.png)<br>**El re-arranque · supervisor.** El orden de arranque con sus límites y el cronómetro por fases. |
+| [![Mi panel · gerente](docs/experiencia-v3/capturas/facilidades/nucleo-panel-gerente.png)](docs/experiencia-v3/capturas/facilidades/nucleo-panel-gerente.png)<br>**Mi panel · gerente.** Diferido por causa, horas proactivas, cortes de energía y el margen N-1 en «Sin dato» (no hay tabla de generación). | [![El vigía de planta · CT-601](docs/experiencia-v3/capturas/facilidades/planta-vigia-ct601.png)](docs/experiencia-v3/capturas/facilidades/planta-vigia-ct601.png)<br>**El vigía de planta · CT-601.** La torre de enfriamiento sube hacia su alarma (40 °C) y llega en 5 días. |
+| <a href="docs/experiencia-v3/capturas/facilidades/energia-apagon-operador-telefono.png"><img src="docs/experiencia-v3/capturas/facilidades/energia-apagon-operador-telefono.png" alt="La pregunta del operador" width="230"></a><br>**La pregunta del operador.** «¿Ve luz en la subestación 2?» [Sí] [No]. | <a href="docs/experiencia-v3/capturas/facilidades/planta-diluyente-p701-telefono.png"><img src="docs/experiencia-v3/capturas/facilidades/planta-diluyente-p701-telefono.png" alt="La bomba de diluyente en el teléfono" width="230"></a><br>**La bomba de diluyente P-701, en el teléfono.** |
+
+Los pantallazos se regeneran con `node scripts/pantallazos-facilidades.mjs`.
 
 ## Cadena de custodia: a mano entran dos cosas
 
@@ -129,7 +170,7 @@ que `npm ci` lo diga de entrada en vez de fallar al arrancar.
 npm ci                              # instala exactamente las versiones del lock
 npm run dev                         # front + API en http://localhost:5173
 npm run build                       # tsc -b + vite build (con la Content-Security-Policy)
-npm run verificar                   # tsc -b + oxlint src + verificar:libro + verificar:contrato; sale con 1 si algo falla
+npm run verificar                   # tsc -b + oxlint src + los 10 scripts verificar-* (libro, árbol, contrato, kit y los 6 de facilidades); sale con 1 si algo falla
 npm run verificar:libro             # solo las comprobaciones de scripts/verificar-libro.mjs
 npm run verificar:contrato          # cada endpoint de src/shared/api/contrato.ts sobrevive al paso por JSON, y la fuente http de punta a punta
 npm test                            # verificar + referencia comprobar
@@ -328,7 +369,7 @@ Chrome (proyectos «dev» y «demo») corre todo en los cinco anchos. Safari y F
 («safari», «firefox») repiten los flujos, la interfaz y el auditor a 1280 px: son los otros dos
 motores, con otra medida del texto, otro manejo del foco y otra lectura de la política de seguridad.
 Safari de teléfono («iphone», «demo-iphone») corre el auditor y la interfaz a 390 px y el demo
-construido: es donde el operario abre el chat de WhatsApp. Firefox no tiene modo teléfono. Un solo
+construido: es donde el operario contesta la pregunta de la parada y recibe el aviso de apagón. Firefox no tiene modo teléfono. Un solo
 motor: `npx playwright test --project=safari`.
 
 | Archivo | Qué prueba | Comprobaciones |
@@ -336,11 +377,18 @@ motor: `npx playwright test --project=safari`.
 | `metas.spec.ts` | metas firmadas con fecha y motivo, accesos (invitar, suspender, propios campos), permisos del administrador | 23 |
 | `perfil-plan.spec.ts` | perfil del campo (sin electrosumergibles, sin gas) y el plan mes a mes pegado y firmado | 13 |
 | `qa2.spec.ts` | «atrás» después de una redirección; meses del plan que heredan; cifra del mes pegada como diaria | 5 |
-| `carril.spec.ts` | carril caliente por WhatsApp de punta a punta, análisis de confiabilidad, Turno, órdenes de SAP, aciertos del vigía, cuadre con la asignación oficial (con su motivo y su rastro), conectores y el menú de cada rol | 75 |
+| `carril.spec.ts` | carril caliente de punta a punta, en pantalla (sin WhatsApp, retirado el 27-oct), análisis de confiabilidad, Turno, órdenes de SAP, aciertos del vigía, cuadre con la asignación oficial (con su motivo y su rastro), conectores y el menú de cada rol | 75 |
 | `auditor.spec.ts` | 94 rutas × 5 anchos (1512, 1280, 1024, 768 y 390 px): nada se sale de su tarjeta ni de la pantalla, nada se recorta ni se pisa, ninguna pantalla vacía, ningún error de la página, y lo que cada rol debe ver y no ver (22 rutas con aserciones; una expresión regular exige además el orden, p. ej. la cifra junto a su meta). Con la ficha o la introducción abiertas se audita el diálogo. Antes de auditar se comprueba el detector plantándole dos defectos | 2 de la autoprueba; por ancho, 134 de lo que ve cada rol y 3 de conjunto (lo que se ve, errores, hallazgos) |
 | `interfaz.spec.ts` | dos diálogos abiertos a la vez (introducción y ficha): el de arriba recibe el foco y el de abajo queda inerte, Escape cierra uno por vez; el foco no se pierde cuando la ficha cambia de equipo; las tuberías de Planta no son paradas de Tab y «SIN FLUJO» se lee (4,5:1) y lleva forma; el chat de WhatsApp en el teléfono; las barras contra la meta del resumen; **en el papel** sale lo que la pantalla deja en un ⓘ, un globo o tras «ver N más» (Riesgo, Resumen, Turno, Identificar, Diferidos, Conectores, Metas, Mi perfil, Planta) y «DATOS DE DEMOSTRACIÓN»; un período parcial dice «en curso» y en el teléfono no se corta (390 y 320 px); la introducción no se salta su lista; el tanque de Planta a la vista en el teléfono | 55 escritas |
 | `pozo-operacion.spec.ts` | una electrosumergible parada: en operación no sale «fuera de banda» por estar sin señal; en ingeniería se ven todas sus señales | 2 |
 | `demo-construido.spec.ts` | el build servido como se entrega carga cada pantalla por partes sin que la política de seguridad bloquee nada | 6 |
+| `piezas-f1.spec.ts` | con todas las piezas ningún rol dice que le falte una; con solo Energía, cada rol ve lo suyo o qué pieza falta, nunca cifras de otra pieza | 2 pruebas |
+| `facilidades-f2.spec.ts` | el operador registra evaporación o fondos de tanque como pérdida (por ancho) | 1 prueba por ancho |
+| `facilidades-f3.spec.ts` | El Palmar sin historiador: la subestación se lee directo, con su relé y la entrada «hay tensión»; Conectores dice cómo se conecta cada planta | 2 pruebas |
+| `facilidades-f4.spec.ts` | el apagón total de prueba (cada rol lo suyo, el operador responde, al terminar se va), el parcial de las bombas de agua y quién activa el aviso en su dispositivo | 3 pruebas |
+| `facilidades-f5.spec.ts` | los equipos de planta de Morichal en «Avisan», en su tren y con el aviso del vigía en su ficha; la bomba de diluyente a 390 px | 2 pruebas |
+| `facilidades-f6.spec.ts` | el re-arranque: el supervisor ve el orden y marca cada fase; en un parcial no hay «primer pozo» | 2 pruebas |
+| `facilidades-f7.spec.ts` | «Mi panel» en claro y oscuro a 390 px, confiabilidad agrega una señal y quita un indicador, y el supervisor no lo tiene | 3 pruebas |
 
 Cada flujo termina con «sin errores de la página». Las comprobaciones son blandas: si una falla,
 el flujo sigue y el informe las lista todas. `e2e/apoyo.ts` tiene lo que comparten los flujos (la
@@ -367,7 +415,9 @@ src/
   app/        store (zustand): contexto, rol, campo, período y las acciones · URL · pantallas
   entities/   el motor, sin React: libro (asignación), diferido (predicción, riesgo),
               causa-senal, salud, vigia, esp, pozos, bombas, partes, configuracion,
-              usuarios, informe, mensajes, sap, aciertos, reglas, insumos, datos/ (demo)
+              usuarios, informe, mensajes, sap, aciertos, reglas, insumos, datos/ (demo);
+              facilidades: piezas-trim, diluyente, conexion, evento-planta, familias-planta,
+              vigia-planta, arranque, indicadores
   shared/
     api/      la costura con el servidor: contrato.ts (rutas y formas JSON), cable.ts,
               consulta.ts (GET con caché), escrituras.ts (POST/PATCH), sesion.ts, fuente.ts
@@ -379,7 +429,9 @@ src/
   pages/      una vista por pantalla (el mapa id → vista está en app/pantallas.tsx)
 public/       fonts/ (Air y Air Condensed en WOFF2) y brand/
 simulador-api/  el registro de la cadena de datos (Node + SQLite) y su esquema de referencia
-scripts/    verificar-libro, referencia (salidas esperadas por HTTP), gen-linea, armar-demo, pantallazos
+scripts/    verificar-* (libro, árbol, contrato, kit, piezas, diluyente, conexión, planta, arranque,
+            indicadores: los corre `npm run verificar`), referencia (salidas esperadas por HTTP), gen-linea,
+            armar-demo, pantallazos
 docs/pantallas/  las imágenes de «Cómo se ve» (las saca scripts/pantallazos.mjs)
 referencia/ insumos en JSON y salidas esperadas de los endpoints calculados (las genera scripts/referencia.mjs)
 e2e/        pruebas de navegador con Playwright: flujos, auditor visual y demo construido
@@ -465,7 +517,7 @@ según él, con los mismos números debajo:
 |---|---|---|---|
 | `decision` | Gerente | Barriles y su rango, valor, producción y diferido por día contra sus metas, total del mes, quién se los lleva, si está parado o en riesgo. Un equipo abre su ficha ejecutiva | Variables, gráficos, tags, método de la tolerancia, factor de asignación, custodia |
 | `operacion` | Supervisor, operador, técnico | Qué está parado, cuánto se pierde, cuánto aguanta el tanque, orden de cierre, qué identificar, qué hacer, solo lo que está fuera de banda | Tendencias, proyecciones, tolerancias, historia de fallas |
-| `ingenieria` | Producción, confiabilidad, mantenimiento, administración | Todo | — |
+| `ingenieria` | Producción, confiabilidad, mantenimiento, administración, energía | Todo | — |
 
 | Rol | Entra por | Para decidir |
 |---|---|---|
@@ -476,6 +528,7 @@ según él, con los mismos números debajo:
 | Ingeniero de confiabilidad | Bombas, Confiabilidad | cada cuánto falla cada equipo, de qué parte y qué tan bien está registrado; si el vigía acierta; avisos a SAP |
 | Técnico | Mi trabajo | qué se dañó, qué revisar y en qué tag; las órdenes que SAP liberó a su nombre |
 | Administrador | Configuración | tanques, respaldos, programa y membrete, con firma (las metas y los accesos son del gerente) |
+| Responsable de energía (si el cliente lo tiene) | Hoy | qué disparó, qué paró y cuánto aguanta la planta sin energía; el orden de re-arranque y el margen N-1. No opera interruptores desde TRIM |
 
 **Lo no producido lleva su rango para todos los roles** («5.729–6.734 bbl · calculado», con el
 «no medido» y su porqué en el globo y en el papel; `widgets/diferidos/Rango.tsx`): lo producido se
